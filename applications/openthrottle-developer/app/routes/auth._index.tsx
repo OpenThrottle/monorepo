@@ -15,15 +15,13 @@ import { GlobalScreen } from '@openthrottle/react-router-ui-global';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { GradientMesh } from '@openthrottle/react-router-ui-global';
 import { callLoginMutation } from '~/global/utils/utils.auth';
+import {
+  FORM_FADE_MS,
+  GRAIN_REST,
+  HOLD_MS,
+} from '~/routing/auth/config/animation';
 import { SITE_SUBDOMAIN, SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/_index';
-
-/** Resting value of the GradientMesh grain overlay before the exit tween. */
-const GRAIN_REST = 1.55;
-/** How long the form fades out, in ms. Keep in sync with the `duration-700` class on the content wrapper below. */
-const FORM_FADE_MS = 700;
-/** Beat to hold on the bare gradient after the form fades, before navigating. */
-const HOLD_MS = 800;
 
 type AuthFetcherData = { error?: string; ok?: boolean };
 
@@ -153,14 +151,6 @@ export default function Component(
         speed={0.8}
         swirl={1.6}
       />
-      {/* <GradientMesh
-        className="bg-black opacity-50"
-        // colors={['#990000', '#8A0000', '#7A0000', '#6B0000', '#4D0000']}
-        // colors={['#13171B', '#0F1216', '#0B0E10', '#060708', '#13171B']}
-        // colors={['#13171B', '#2B2E32', '#424549']}
-        colors={['#13171B', '#0F1216', '#343739', '#0F1216', '#13171B']}
-        speed={0.8}
-      /> */}
       <div
         className={clsx(
           'relative z-10 mx-auto flex h-full w-full max-w-xl flex-1 flex-col items-center justify-center gap-8 transition-opacity duration-700',

@@ -1,23 +1,17 @@
 import * as React from 'react';
-import {
-  DocPageView,
-  DocsLanding,
-  buildDocsNav,
-  flattenDocsNav,
-} from '@openthrottle/react-router-docs';
+import { DocPageView, DocsLanding } from '@openthrottle/react-router-docs';
 import { SITE_TITLE } from '~/global/config/settings';
 import {
   GlobalErrorBoundary,
   GlobalLayoutBreadcrumbsHandle,
 } from '@openthrottle/react-router-ui-global';
-import { docsManifest } from '~/routing/docs/data/docsManifest';
+import {
+  docsNav,
+  docsSequence,
+  indexEntry,
+} from '~/routing/docs/data/docs-navigation';
 import { useDocsFeatureFlags } from '~/global/hooks/useDocsFeatureFlags';
 import type { Route } from '@/app/routes/+types/docs._index';
-
-const indexEntry = docsManifest.find((entry) => entry.path === '/docs');
-
-const docsNav = buildDocsNav(docsManifest, 'docs');
-const docsSequence = flattenDocsNav(docsNav);
 
 type HandleData = Route.ComponentProps['loaderData'];
 

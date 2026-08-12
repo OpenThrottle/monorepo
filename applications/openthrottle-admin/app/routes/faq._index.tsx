@@ -8,12 +8,10 @@ import {
 import { FaqView } from '@openthrottle/react-router-docs';
 import { SITE_TITLE } from '~/global/config/settings';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { docsManifest } from '~/routing/docs/data/docsManifest';
+import { faqEntries } from '~/routing/faq/data/faq-navigation';
 import type { Route } from '@/app/routes/+types/faq._index';
 
 type HandleData = Route.ComponentProps['loaderData'];
-
-const faqEntries = docsManifest.filter((entry) => entry.section === 'faq');
 
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (_match) => 'FAQ',

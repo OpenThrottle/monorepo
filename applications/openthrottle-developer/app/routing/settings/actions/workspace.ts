@@ -1,0 +1,185 @@
+import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import {
+  AddWorkspaceFolderDocument,
+  ApplyWorkspaceEditorConfigurationDocument,
+  BrowseWorkspaceDirectoryDocument,
+  CloneRepositoryDocument,
+  DeleteWorkspaceLocalRepositoryDocument,
+  RefreshCheckoutDocument,
+  UpdateWorkspaceProfileDocument,
+} from '~/__generated__/graphql';
+import { formatEditorConfigApplyMessage } from '~/routing/settings/utils/format-editor-config-result';
+import {
+  optionalTrimmedString,
+  parseEnabledEditorsFromFormData,
+} from '~/routing/settings/utils/workspace-settings-action';
+import type { Route } from '@/app/routes/+types/settings.workspace._index';
+
+export const updateProfile = async (
+  args: Route.ActionArgs,
+  formData: FormData,
+) => {
+  const contactDisplayName = optionalTrimmedString(
+    formData.get('contactDisplayName'),
+  );
+  const contactEmail = optionalTrimmedString(formData.get('contactEmail'));
+  const enabledEditors = parseEnabledEditorsFromFormData(formData);
+
+  try {
+    await executeGraphqlWithAuth(args.request, UpdateWorkspaceProfileDocument, {
+      input: {
+        contactDisplayName,
+        contactEmail,
+        enabledEditors,
+      },
+    });
+    return { ok: true };
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : 'Failed to update profile.';
+    return { error: message };
+  }
+};
+
+export const addFolder = async (args: Route.ActionArgs, formData: FormData) => {
+  const path = optionalTrimmedString(formData.get('path'));
+  const displayName = optionalTrimmedString(formData.get('displayName'));
+
+  if (!path) {
+    return { error: 'A folder path is required.' };
+  }
+
+  try {
+    const data = await executeGraphqlWithAuth(
+      args.request,
+      AddWorkspaceFolderDocument,
+      { input: { displayName: displayName ?? null, path } },
+    );
+    return { addedFolder: data.addWorkspaceFolder };
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : 'Failed to add folder.';
+    return { error: message };
+  }
+};
+
+export const cloneRepo = async (args: Route.ActionArgs, formData: FormData) => {
+  const gitUrl = optionalTrimmedString(formData.get('gitUrl'));
+  const name = optionalTrimmedString(formData.get('name'));
+
+  if (!gitUrl) {
+    return { error: 'A git repository URL is required.' };
+  }
+
+  try {
+    const data = await executeGraphqlWithAuth(
+      args.request,
+      CloneRepositoryDocument,
+      { input: { gitUrl, name: name ?? null } },
+    );
+    return { addedFolder: data.cloneRepository };
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : 'Failed to clone repository.';
+    return { error: message };
+  }
+};
+
+export const browseDirectory = async (
+  args: Route.ActionArgs,
+  formData: FormData,
+) => {
+  const path = optionalTrimmedString(formData.get('path'));
+  if (!path) {
+    return { error: 'A directory path is required.' };
+  }
+
+  try {
+    const data = await executeGraphqlWithAuth(
+      args.request,
+      BrowseWorkspaceDirectoryDocument,
+      { path },
+    );
+    return { browse: { entries: data.browseDirectory, path } };
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : 'Failed to browse directory.';
+    return { error: message };
+  }
+};
+
+export const refreshCheckout = async (
+  args: Route.ActionArgs,
+  formData: FormData,
+) => {
+  const id = formData.get('id');
+  if (typeof id !== 'string' || !id.trim()) {
+    return { error: 'Missing checkout id.' };
+  }
+
+  try {
+    const data = await executeGraphqlWithAuth(
+      args.request,
+      RefreshCheckoutDocument,
+      { input: { id: id.trim() } },
+    );
+    return {
+      refreshed: {
+        checkoutId: data.refreshCheckout.checkout.id,
+        drift: data.refreshCheckout.drift,
+        merged: data.refreshCheckout.merged,
+      },
+    };
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : 'Failed to refresh checkout.';
+    return { error: message };
+  }
+};
+
+export const applyEditorConfig = async (
+  args: Route.ActionArgs,
+  formData: FormData,
+) => {
+  const repositoryId = optionalTrimmedString(formData.get('repositoryId'));
+
+  try {
+    const data = await executeGraphqlWithAuth(
+      args.request,
+      ApplyWorkspaceEditorConfigurationDocument,
+      {
+        input: repositoryId ? { repositoryIds: [repositoryId] } : {},
+      },
+    );
+    return { message: formatEditorConfigApplyMessage(data) };
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : 'Failed to apply editor configuration.';
+    return { error: message };
+  }
+};
+
+export const deleteRepo = async (
+  args: Route.ActionArgs,
+  formData: FormData,
+) => {
+  const id = formData.get('id');
+  if (typeof id !== 'string' || !id.trim()) {
+    return { error: 'Missing repository id.' };
+  }
+
+  try {
+    await executeGraphqlWithAuth(
+      args.request,
+      DeleteWorkspaceLocalRepositoryDocument,
+      { id: id.trim() },
+    );
+    return { ok: true };
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : 'Failed to remove repository.';
+    return { error: message };
+  }
+};

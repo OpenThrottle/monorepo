@@ -7,25 +7,20 @@ import {
 } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import {
-  AddWorkspaceFolderDocument,
-  ApplyWorkspaceEditorConfigurationDocument,
-  BrowseWorkspaceDirectoryDocument,
-  CloneRepositoryDocument,
-  DeleteWorkspaceLocalRepositoryDocument,
-  GetWorkspaceSettingsDocument,
-  RefreshCheckoutDocument,
-  UpdateWorkspaceProfileDocument,
-} from '~/__generated__/graphql';
+import { GetWorkspaceSettingsDocument } from '~/__generated__/graphql';
 import { SettingsWorkspaceApplyEditors } from '~/routing/settings/components/SettingsWorkspaceApplyEditors';
 import { SettingsWorkspaceIntro } from '~/routing/settings/components/SettingsWorkspaceIntro';
 import { SettingsWorkspaceProfileForm } from '~/routing/settings/components/SettingsWorkspaceProfileForm';
 import { SettingsWorkspaceRepositoriesSection } from '~/routing/settings/components/SettingsWorkspaceRepositoriesSection';
-import { formatEditorConfigApplyMessage } from '~/routing/settings/utils/format-editor-config-result';
 import {
-  optionalTrimmedString,
-  parseEnabledEditorsFromFormData,
-} from '~/routing/settings/utils/workspace-settings-action';
+  addFolder,
+  applyEditorConfig,
+  browseDirectory,
+  cloneRepo,
+  deleteRepo,
+  refreshCheckout,
+  updateProfile,
+} from '~/routing/settings/actions/workspace';
 import type { Route } from '@/app/routes/+types/settings.workspace._index';
 
 type HandleData = Route.ComponentProps['loaderData'];
@@ -59,6 +54,18 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
 export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
   const { actionData, loaderData, matches: _m, params: _p } = props;
   const { discoveredFolders, profile, repositories } = loaderData;
   const actionError =
@@ -101,165 +108,24 @@ export const action = async (args: Route.ActionArgs) => {
   const formData = await args.request.formData();
   const intent = formData.get('intent');
 
-  if (intent === 'updateProfile') {
-    const contactDisplayName = optionalTrimmedString(
-      formData.get('contactDisplayName'),
-    );
-    const contactEmail = optionalTrimmedString(formData.get('contactEmail'));
-    const enabledEditors = parseEnabledEditorsFromFormData(formData);
-
-    try {
-      await executeGraphqlWithAuth(
-        args.request,
-        UpdateWorkspaceProfileDocument,
-        {
-          input: {
-            contactDisplayName,
-            contactEmail,
-            enabledEditors,
-          },
-        },
-      );
-      return { ok: true };
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Failed to update profile.';
-      return { error: message };
-    }
+  switch (intent) {
+    case 'addFolder':
+      return addFolder(args, formData);
+    case 'applyEditorConfig':
+      return applyEditorConfig(args, formData);
+    case 'browseDirectory':
+      return browseDirectory(args, formData);
+    case 'cloneRepo':
+      return cloneRepo(args, formData);
+    case 'deleteRepo':
+      return deleteRepo(args, formData);
+    case 'refreshCheckout':
+      return refreshCheckout(args, formData);
+    case 'updateProfile':
+      return updateProfile(args, formData);
+    default:
+      throw new Error('Invalid intent');
   }
-
-  if (intent === 'addFolder') {
-    const path = optionalTrimmedString(formData.get('path'));
-    const displayName = optionalTrimmedString(formData.get('displayName'));
-
-    if (!path) {
-      return { error: 'A folder path is required.' };
-    }
-
-    try {
-      const data = await executeGraphqlWithAuth(
-        args.request,
-        AddWorkspaceFolderDocument,
-        { input: { displayName: displayName ?? null, path } },
-      );
-      return { addedFolder: data.addWorkspaceFolder };
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Failed to add folder.';
-      return { error: message };
-    }
-  }
-
-  if (intent === 'cloneRepo') {
-    const gitUrl = optionalTrimmedString(formData.get('gitUrl'));
-    const name = optionalTrimmedString(formData.get('name'));
-
-    if (!gitUrl) {
-      return { error: 'A git repository URL is required.' };
-    }
-
-    try {
-      const data = await executeGraphqlWithAuth(
-        args.request,
-        CloneRepositoryDocument,
-        { input: { gitUrl, name: name ?? null } },
-      );
-      return { addedFolder: data.cloneRepository };
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Failed to clone repository.';
-      return { error: message };
-    }
-  }
-
-  if (intent === 'browseDirectory') {
-    const path = optionalTrimmedString(formData.get('path'));
-    if (!path) {
-      return { error: 'A directory path is required.' };
-    }
-
-    try {
-      const data = await executeGraphqlWithAuth(
-        args.request,
-        BrowseWorkspaceDirectoryDocument,
-        { path },
-      );
-      return { browse: { entries: data.browseDirectory, path } };
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Failed to browse directory.';
-      return { error: message };
-    }
-  }
-
-  if (intent === 'refreshCheckout') {
-    const id = formData.get('id');
-    if (typeof id !== 'string' || !id.trim()) {
-      return { error: 'Missing checkout id.' };
-    }
-
-    try {
-      const data = await executeGraphqlWithAuth(
-        args.request,
-        RefreshCheckoutDocument,
-        { input: { id: id.trim() } },
-      );
-      return {
-        refreshed: {
-          checkoutId: data.refreshCheckout.checkout.id,
-          drift: data.refreshCheckout.drift,
-          merged: data.refreshCheckout.merged,
-        },
-      };
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Failed to refresh checkout.';
-      return { error: message };
-    }
-  }
-
-  if (intent === 'applyEditorConfig') {
-    const repositoryId = optionalTrimmedString(formData.get('repositoryId'));
-
-    try {
-      const data = await executeGraphqlWithAuth(
-        args.request,
-        ApplyWorkspaceEditorConfigurationDocument,
-        {
-          input: repositoryId ? { repositoryIds: [repositoryId] } : {},
-        },
-      );
-      return { message: formatEditorConfigApplyMessage(data) };
-    } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : 'Failed to apply editor configuration.';
-      return { error: message };
-    }
-  }
-
-  if (intent === 'deleteRepo') {
-    const id = formData.get('id');
-    if (typeof id !== 'string' || !id.trim()) {
-      return { error: 'Missing repository id.' };
-    }
-
-    try {
-      await executeGraphqlWithAuth(
-        args.request,
-        DeleteWorkspaceLocalRepositoryDocument,
-        { id: id.trim() },
-      );
-      return { ok: true };
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Failed to remove repository.';
-      return { error: message };
-    }
-  }
-
-  throw new Error('Invalid intent');
 };
 
 export const ErrorBoundary = GlobalErrorBoundary;

@@ -1,8 +1,5 @@
 import * as React from 'react';
-import {
-  DEFAULT_PAGINATION_LIMIT,
-  mergeRouteModuleMeta,
-} from '@openthrottle/react-router-utils';
+import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
   GlobalHeading,
@@ -12,59 +9,18 @@ import {
 import { OpenThrottlePaginationSimple } from '@openthrottle/react-router-ui';
 import { ListOrderedIcon } from 'lucide-react';
 import { useSearchParams } from 'react-router';
-import {
-  GetQueueDocument,
-  QueueDetailCleanQueueDocument,
-  QueueDetailPauseQueueDocument,
-  QueueDetailResumeQueueDocument,
-} from '~/__generated__/graphql';
+import { GetQueueDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { QueueDetailControls } from '~/routing/queues/components/QueueDetailControls';
 import { QueueHealthPill } from '~/routing/queues/components/QueueHealthPill';
 import { QueueJobsTable } from '~/routing/queues/components/QueueJobsTable';
 import { QueueOpsToolbar } from '~/routing/queues/components/QueueOpsToolbar';
 import { QueueStatRow } from '~/routing/queues/components/QueueStatRow';
+import { QUEUE_JOB_STATE_FILTER_OPTIONS } from '~/routing/queues/data/job-state-filter-options';
+import { parseQueueJobsPagination } from '~/routing/queues/utils/parse-queue-jobs-pagination';
+import { runQueueDetailAction } from '~/routing/queues/actions/queueId';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/queues.$queueId._index';
-
-const QUEUE_JOBS_LIMIT_MIN = 10;
-const QUEUE_JOBS_LIMIT_MAX = 100;
-
-/** Job states selectable from the detail toolbar and used as the loader default. */
-const QUEUE_JOB_STATE_FILTER_OPTIONS = [
-  'waiting',
-  'active',
-  'completed',
-  'failed',
-  'delayed',
-] as const;
-
-/**
- * @description Parses `page` and `limit` search params for BullMQ job pagination (GraphQL offset/limit).
- */
-const parseQueueJobsPagination = (
-  requestUrl: string,
-): { limit: number; offset: number; page: number } => {
-  const url = new URL(requestUrl);
-  const page = Math.max(
-    1,
-    parseInt(url.searchParams.get('page') ?? '1', 10) || 1,
-  );
-  const limitRaw = url.searchParams.get('limit');
-  const limitParsed =
-    limitRaw != null && limitRaw !== '' ? parseInt(limitRaw, 10) : Number.NaN;
-  const limit =
-    Number.isFinite(limitParsed) && limitParsed > 0
-      ? Math.min(
-          QUEUE_JOBS_LIMIT_MAX,
-          Math.max(QUEUE_JOBS_LIMIT_MIN, Math.floor(limitParsed)),
-        )
-      : DEFAULT_PAGINATION_LIMIT;
-
-  const offset = (page - 1) * limit;
-
-  return { limit, offset, page };
-};
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -202,67 +158,6 @@ export default function Component(
   );
 }
 
-export const action = async (args: Route.ActionArgs) => {
-  const queueName = args.params.queueId;
-  if (queueName == null || queueName === '') {
-    return { error: 'Queue name is required.' };
-  }
-
-  const formData = await args.request.formData();
-  const intent = formData.get('intent');
-
-  if (intent === 'pauseQueue') {
-    const { pauseQueue } = await executeGraphqlWithAuth(
-      args.request,
-      QueueDetailPauseQueueDocument,
-      { input: { queueName } },
-    );
-
-    if (!pauseQueue?.success) {
-      return { error: pauseQueue?.error ?? 'Failed to pause queue.' };
-    }
-
-    return { paused: pauseQueue.queueName ?? queueName };
-  }
-
-  if (intent === 'resumeQueue') {
-    const { resumeQueue } = await executeGraphqlWithAuth(
-      args.request,
-      QueueDetailResumeQueueDocument,
-      { input: { queueName } },
-    );
-
-    if (!resumeQueue?.success) {
-      return { error: resumeQueue?.error ?? 'Failed to resume queue.' };
-    }
-
-    return { resumed: resumeQueue.queueName ?? queueName };
-  }
-
-  if (intent === 'cleanQueue') {
-    const stateField = formData.get('state');
-    const state = typeof stateField === 'string' ? stateField : '';
-    const confirm = formData.get('confirm') === 'true';
-
-    const { cleanQueue } = await executeGraphqlWithAuth(
-      args.request,
-      QueueDetailCleanQueueDocument,
-      { input: { confirm, queueName, state } },
-    );
-
-    if (!cleanQueue?.success) {
-      return { error: cleanQueue?.error ?? 'Failed to clean queue.' };
-    }
-
-    return {
-      cleaned: {
-        queueName: cleanQueue.queueName ?? queueName,
-        removedCount: cleanQueue.removedCount,
-      },
-    };
-  }
-
-  return {};
-};
+export const action = (args: Route.ActionArgs) => runQueueDetailAction(args);
 
 export const ErrorBoundary = GlobalErrorBoundary;

@@ -3,6 +3,11 @@ export type {
   UseChatComposerMentionsOptions,
   UseChatComposerMentionsResult,
 } from './use-chat-composer-mentions';
+export { useChatComposerSlashCommands } from './use-chat-composer-slash-commands';
+export type {
+  UseChatComposerSlashCommandsOptions,
+  UseChatComposerSlashCommandsResult,
+} from './use-chat-composer-slash-commands';
 export { useChatConversationSidebar } from './use-chat-conversation-sidebar';
 export type {
   UseChatConversationSidebarOptions,

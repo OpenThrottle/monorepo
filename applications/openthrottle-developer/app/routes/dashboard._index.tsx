@@ -1,7 +1,5 @@
 import * as React from 'react';
-import { Button } from '@openthrottle/react-router-shadcn';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import { Await, Link, useFetcher, useNavigate } from 'react-router';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
   GlobalLayoutBreadcrumbsHandle,
@@ -13,20 +11,9 @@ import {
   GetDashboardQueryVariables,
   TriggerNotificationDocument,
 } from '~/__generated__/graphql';
-import { DashboardActivityChartSkeleton } from '~/routing/dashboard/components/DashboardActivityChartSkeleton';
-import { DashboardContributionsCard } from '~/routing/dashboard/components/DashboardContributionsCard';
-import { DashboardContributionsCardSkeleton } from '~/routing/dashboard/components/DashboardContributionsCardSkeleton';
-import { DashboardDailyStatsCard } from '~/routing/dashboard/components/DashboardDailyStatsCard';
-import { DashboardQueueHealthCard } from '~/routing/dashboard/components/DashboardQueueHealthCard';
-import { DashboardDailyStatsModal } from '~/routing/dashboard/components/DashboardDailyStatsModal';
+import { DashboardContentGrid } from '~/routing/dashboard/components/DashboardContentGrid';
 import { DashboardIntroduction } from '~/routing/dashboard/components/DashboardIntroduction';
-import { DashboardOpenPrsByAuthorCard } from '~/routing/dashboard/components/DashboardOpenPrsByAuthorCard';
-import { DashboardPrCardsSkeleton } from '~/routing/dashboard/components/DashboardPrCardsSkeleton';
-import { DashboardPrTimeInStateCard } from '~/routing/dashboard/components/DashboardPrTimeInStateCard';
-import { DashboardRecentActivity } from '~/routing/dashboard/components/DashboardRecentActivity';
-import { DashboardRecentChatsCard } from '~/routing/dashboard/components/DashboardRecentChatsCard';
-// import { DashboardStats } from '~/routing/dashboard/components/DashboardStats';
-import { DashboardToolbar } from '~/routing/dashboard/components/DashboardToolbar';
+import { CONTRIBUTIONS_DAYS_BACK } from '~/routing/dashboard/config/config.dashboard';
 import { parseDashboardGithubParams } from '~/routing/dashboard/utils/parsers';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { callListAgentConversations } from '~/global/utils/utils.agents-chat';
@@ -34,15 +21,6 @@ import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/dashboard._index';
 
 type HandleData = Route.ComponentProps['loaderData'];
-
-// Day windows for the shared `dailyStatsRange` fetch. The loader fetches the
-// wider CONTRIBUTIONS window (feeds the contributions heatmap); the "This
-// Week's Activity" bar chart slices the most-recent days off the same result,
-// so both share one round-trip (items come back date-ascending). Widen the
-// heatmap by bumping CONTRIBUTIONS_DAYS_BACK — no schema/codegen change, the
-// start/end are query variables on the existing dailyStatsRange field.
-const CONTRIBUTIONS_DAYS_BACK = 26 * 7 + 7; // 26-week grid + week-alignment slack
-const WEEKLY_ACTIVITY_DAYS = 14;
 
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (_match) => 'Dashboard',
@@ -111,26 +89,10 @@ export default function Component(
   const { core, githubStats, recentChats } = loaderData;
 
   // Hooks
-  const fetcher = useFetcher<typeof action>();
-  const navigate = useNavigate();
 
   // Setup
-  const _isIdle = fetcher.state !== 'idle';
-  const _devMessage =
-    fetcher.data != null && 'devTriggerWebsocket' in fetcher.data
-      ? fetcher.data.devTriggerWebsocket
-      : null;
 
   // Handlers
-  const handleSelectDate = React.useCallback(
-    (date: string): void => {
-      navigate(
-        `/dashboard?modal=${DashboardDailyStatsModal.key}&date=${date}`,
-        { preventScrollReset: true, viewTransition: true },
-      );
-    },
-    [navigate],
-  );
 
   // Markup
 
@@ -140,204 +102,12 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      {/* <DashboardStats /> */}
       <DashboardIntroduction />
-
-      <div
-        className="--lg:grid-cols-3 grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-8 lg:gap-12"
-        data-testid="dashboard-content-grid"
-      >
-        <div className="col-span-2 md:col-span-1">
-          <React.Suspense fallback={<DashboardPrCardsSkeleton />}>
-            <Await
-              errorElement={
-                <p className="text-muted-foreground text-sm">
-                  Couldn&rsquo;t load queue health.
-                </p>
-              }
-              resolve={core}
-            >
-              {(data) => <DashboardQueueHealthCard queues={data.queues} />}
-            </Await>
-          </React.Suspense>
-        </div>
-        <div className="col-span-2 md:col-span-1">
-          {/*
-              Deferred (recentChats): own boundary so a slow/failed conversation
-              fetch never blocks the other cards. The card self-titles.
-          */}
-          <React.Suspense fallback={<DashboardPrCardsSkeleton />}>
-            <Await
-              errorElement={
-                <p className="text-muted-foreground text-sm">
-                  Couldn&rsquo;t load recent chats.
-                </p>
-              }
-              resolve={recentChats}
-            >
-              {(data) => (
-                <DashboardRecentChatsCard
-                  className="h-full flex-1"
-                  conversations={data.conversations}
-                />
-              )}
-            </Await>
-          </React.Suspense>
-        </div>
-
-        <div className="col-span-2">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-            <h2>This Week's Activity</h2>
-            <Button asChild={true} size="sm" variant="outline">
-              <Link
-                preventScrollReset={true}
-                to="/dashboard?modal=daily-stats"
-                viewTransition={true}
-              >
-                Expand chart details
-              </Link>
-            </Button>
-          </div>
-          {/* Deferred (core): streams as soon as the dashboard query lands. */}
-          <React.Suspense fallback={<DashboardActivityChartSkeleton />}>
-            <Await
-              errorElement={
-                <p className="text-muted-foreground text-sm">
-                  Couldn&rsquo;t load this week&rsquo;s activity.
-                </p>
-              }
-              resolve={core}
-            >
-              {(data) => (
-                <DashboardDailyStatsCard
-                  dailyStats={data.dailyStatsRange.items.slice(
-                    -WEEKLY_ACTIVITY_DAYS,
-                  )}
-                  onSelectDate={handleSelectDate}
-                />
-              )}
-            </Await>
-          </React.Suspense>
-        </div>
-
-        <div className="col-span-2">
-          {/* Deferred (core): contributions heatmap over the full
-              dailyStatsRange window; day-clicks reuse handleSelectDate. */}
-          <React.Suspense fallback={<DashboardContributionsCardSkeleton />}>
-            <Await
-              errorElement={
-                <p className="text-muted-foreground text-sm">
-                  Couldn&rsquo;t load contribution activity.
-                </p>
-              }
-              resolve={core}
-            >
-              {(data) => (
-                <DashboardContributionsCard
-                  dailyStats={data.dailyStatsRange.items}
-                  onSelectDate={handleSelectDate}
-                />
-              )}
-            </Await>
-          </React.Suspense>
-        </div>
-
-        <DashboardToolbar className="col-span-2" />
-
-        <div>
-          <h3 className="mb-4">PR Time in State</h3>
-          {/* Deferred (githubStats): its own boundary so the GitHub round-trip
-              never blocks the activity chart. errorElement degrades the card. */}
-          <React.Suspense fallback={<DashboardPrCardsSkeleton />}>
-            <Await
-              errorElement={
-                <p className="text-muted-foreground text-sm">
-                  Couldn&rsquo;t load PR stats.
-                </p>
-              }
-              resolve={githubStats}
-            >
-              {(stats) => (
-                <DashboardPrTimeInStateCard
-                  prTimeInStateSummary={stats.prTimeInStateSummary}
-                />
-              )}
-            </Await>
-          </React.Suspense>
-        </div>
-
-        <div>
-          <h3 className="mb-4">PRs by author</h3>
-          <React.Suspense fallback={<DashboardPrCardsSkeleton />}>
-            <Await
-              errorElement={
-                <p className="text-muted-foreground text-sm">
-                  Couldn&rsquo;t load PR stats.
-                </p>
-              }
-              resolve={githubStats}
-            >
-              {(stats) => <DashboardOpenPrsByAuthorCard githubStats={stats} />}
-            </Await>
-          </React.Suspense>
-        </div>
-
-        <div className="col-span-2">
-          <React.Suspense fallback={<DashboardActivityChartSkeleton />}>
-            <Await
-              errorElement={
-                <p className="text-muted-foreground text-sm">
-                  Couldn&rsquo;t load recent activity.
-                </p>
-              }
-              resolve={core}
-            >
-              {(data) => <DashboardRecentActivity data={data.activityByDate} />}
-            </Await>
-          </React.Suspense>
-        </div>
-
-        {/* <div>
-          <h3 className="text-lg mb-4">Development</h3>
-          <p className="text-muted-foreground text-sm mb-4">
-            Trigger a test websocket notification to verify the notification
-            flow end-to-end. Check the notification bell for the alert.
-          </p>
-          <fetcher.Form method="post">
-            <Input
-              name="intent"
-              type="hidden"
-              value="triggerWebsocketNotification"
-            />
-            <Button disabled={isIdle} type="submit" variant="secondary">
-              {isIdle ? 'Triggering…' : 'Trigger websocket notification'}
-            </Button>
-          </fetcher.Form>
-          {devMessage != null && (
-            <p
-              className={
-                devMessage.success
-                  ? 'text-green-600 text-sm mt-2'
-                  : 'text-destructive text-sm mt-2'
-              }
-            >
-              {devMessage.success
-                ? 'Notification triggered. Check the bell.'
-                : devMessage.error}
-            </p>
-          )}
-        </div> */}
-      </div>
-
-      {/* Portal-rendered (Dialog): invisible until ?modal=daily-stats, so a
-          null fallback is fine and it simply waits on the core promise. */}
-      <React.Suspense fallback={null}>
-        <Await errorElement={null} resolve={core}>
-          {(data) => (
-            <DashboardDailyStatsModal dailyStats={data.dailyStatsRange.items} />
-          )}
-        </Await>
-      </React.Suspense>
+      <DashboardContentGrid
+        core={core}
+        githubStats={githubStats}
+        recentChats={recentChats}
+      />
     </GlobalScreen>
   );
 }

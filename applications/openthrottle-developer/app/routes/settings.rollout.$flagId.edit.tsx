@@ -19,6 +19,7 @@ import {
   optionalRolloutString,
   parseRolloutEnabled,
   parseRolloutTargetRoles,
+  rolloutFlagDetailPath,
 } from '~/routing/settings/utils/rollout-action';
 import {
   parseRolloutTypedConfig,
@@ -28,8 +29,6 @@ import type { Route } from '@/app/routes/+types/settings.rollout.$flagId.edit';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
-const detailPath = (flagId: string): string => `/settings/rollout/${flagId}`;
-
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (_match) => 'Edit',
   links: (match) => [
@@ -37,7 +36,7 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
     { children: ROLLOUT_COPY.title, to: '/settings/rollout' },
     {
       children: match.loaderData?.flag.key ?? 'Flag',
-      to: detailPath(match.loaderData?.flag.id ?? ''),
+      to: rolloutFlagDetailPath(match.loaderData?.flag.id ?? ''),
     },
   ],
 };
@@ -64,6 +63,18 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) => {
 export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
   const { actionData, loaderData, params } = props;
   const { flag } = loaderData;
   const actionError =
@@ -73,7 +84,7 @@ export default function Component(
     <GlobalScreen>
       <RolloutFlagEditForm
         actionError={actionError}
-        cancelTo={detailPath(params.flagId)}
+        cancelTo={rolloutFlagDetailPath(params.flagId)}
         flag={flag}
       />
     </GlobalScreen>
@@ -106,7 +117,7 @@ export const action = async (args: Route.ActionArgs) => {
           ...toRolloutGraphqlTypedInput(typed.config),
         },
       });
-      return redirect(detailPath(args.params.flagId));
+      return redirect(rolloutFlagDetailPath(args.params.flagId));
     } catch (error) {
       const message =
         error instanceof Error ? error.message : 'Failed to update flag.';

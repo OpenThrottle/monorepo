@@ -2568,6 +2568,8 @@ export type ProjectObject = {
 /** A single skill in a project's ingested skill universe, with its static frontmatter tags and tri-state disable-model-invocation flag. */
 export type ProjectSkillObject = {
   __typename?: 'ProjectSkillObject';
+  /** Skill description from SKILL.md frontmatter; null when the ingested row omits it. Lets the developer app's `/skills` slash-command menu show descriptions in deployed environments with no local checkout for filesystem discovery. */
+  description?: Maybe<Scalars['String']['output']>;
   /** Skill slug (the skill frontmatter `name`). */
   slug: Scalars['String']['output'];
   /** Skill provenance from frontmatter `source`: 'openthrottle' for skills OpenThrottle authors and manages, 'external' for skills installed from an outside source (omitted frontmatter normalizes to 'external'). */

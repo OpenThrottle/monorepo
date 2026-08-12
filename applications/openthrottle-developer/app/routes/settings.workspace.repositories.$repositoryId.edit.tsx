@@ -16,13 +16,11 @@ import { WorkspaceRepositoryEditForm } from '~/routing/settings/components/Works
 import {
   optionalTrimmedString,
   parseProjectIdFromFormData,
+  workspaceRepositoryDetailPath,
 } from '~/routing/settings/utils/workspace-settings-action';
 import type { Route } from '@/app/routes/+types/settings.workspace.repositories.$repositoryId.edit';
 
 type HandleData = Route.ComponentProps['loaderData'];
-
-const detailPath = (repositoryId: string): string =>
-  `/settings/workspace/repositories/${repositoryId}`;
 
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (_match) => 'Edit',
@@ -31,7 +29,7 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
     { children: 'Workspace', to: '/settings/workspace' },
     {
       children: match.loaderData?.repository.name ?? 'Repository',
-      to: detailPath(match.loaderData?.repository.id ?? ''),
+      to: workspaceRepositoryDetailPath(match.loaderData?.repository.id ?? ''),
     },
   ],
 };
@@ -58,6 +56,18 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) => {
 export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
   const { actionData, loaderData, params } = props;
   const { projects, repository } = loaderData;
   const actionError =
@@ -67,7 +77,7 @@ export default function Component(
     <GlobalScreen>
       <WorkspaceRepositoryEditForm
         actionError={actionError}
-        cancelTo={detailPath(params.repositoryId)}
+        cancelTo={workspaceRepositoryDetailPath(params.repositoryId)}
         projects={projects}
         repository={repository}
       />
@@ -89,7 +99,7 @@ export const action = async (args: Route.ActionArgs) => {
           projectId: parseProjectIdFromFormData(formData.get('projectId')),
         },
       });
-      return redirect(detailPath(args.params.repositoryId));
+      return redirect(workspaceRepositoryDetailPath(args.params.repositoryId));
     } catch (error) {
       const message =
         error instanceof Error ? error.message : 'Failed to update repository.';

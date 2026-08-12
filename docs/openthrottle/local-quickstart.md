@@ -77,6 +77,7 @@ Tokens are shown once; store them securely and rotate via admin GraphQL when nee
 
 `ot_sa_<generated>` stands in for the real token the script prints — **never commit the real value**.
 
+> [!TIP]
 > If you miss the once-only output, a durable copy of the minted tokens (and the default-user login) is written to the git-ignored `.bootstrap-secrets.local` at the repo root — recover the values from there instead of revoking and re-minting.
 
 1. Copy the `OPENTHROTTLE_MCP_AUTH_TOKEN=ot_sa_…` line into:

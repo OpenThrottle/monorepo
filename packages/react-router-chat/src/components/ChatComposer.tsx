@@ -1,10 +1,14 @@
 import * as React from 'react';
-import { TextArea } from '@openthrottle/react-router-shadcn';
 import clsx from 'clsx';
-import type { ChatMentionProvider, ChatTokenUsage } from '../types';
+import type {
+  ChatMentionProvider,
+  ChatSlashCommandProvider,
+  ChatTokenUsage,
+} from '../types';
 import { ChatComposerFooter } from './ChatComposerFooter';
-import { ChatMentionPopover } from './ChatMentionPopover';
+import { ChatComposerInput } from './ChatComposerInput';
 import { useChatComposerMentions } from '../hooks/use-chat-composer-mentions';
+import { useChatComposerSlashCommands } from '../hooks/use-chat-composer-slash-commands';
 
 export interface ChatComposerProps {
   readonly className?: string;
@@ -48,6 +52,13 @@ export interface ChatComposerProps {
    * Omit, or pass an all-empty usage, to hide the counter.
    */
   readonly sessionUsage?: ChatTokenUsage;
+  /**
+   * Optional `/`-command skill source. When provided, typing `/` at the start of
+   * a line opens a skill-picker popover backed by
+   * {@link ChatSlashCommandProvider.onQuerySkills} and inserts `/<slug> ` at the
+   * caret. Omit to keep the composer free of a `/`-trigger. Presentational.
+   */
+  readonly slashCommandProvider?: ChatSlashCommandProvider;
   readonly stopLabel?: string;
   readonly submitLabel?: string;
   /** Ref to the underlying textarea (focus / cursor placement). */
@@ -74,6 +85,7 @@ export const ChatComposer = (props: ChatComposerProps): React.ReactElement => {
     placeholder = 'Type a message…',
     readOnly = false,
     sessionUsage,
+    slashCommandProvider,
     stopLabel = 'Stop',
     submitLabel = 'Send',
     textAreaRef,
@@ -100,17 +112,17 @@ export const ChatComposer = (props: ChatComposerProps): React.ReactElement => {
     setDraft,
     textAreaRef,
   });
+  // `textAreaRef` is forwarded by the mentions hook (above); the slash hook only
+  // needs the node for post-insert caret placement, so it is not passed here.
+  const slash = useChatComposerSlashCommands({
+    disabled,
+    draft,
+    readOnly,
+    setDraft,
+    slashCommandProvider,
+  });
 
   // Setup
-  const {
-    activeIndex,
-    listboxId,
-    loading,
-    mentionEnabled,
-    optionId,
-    popoverOpen,
-    results,
-  } = mentions;
 
   // Handlers
   const submitDraft = (): void => {
@@ -121,6 +133,7 @@ export const ChatComposer = (props: ChatComposerProps): React.ReactElement => {
     onSubmit(trimmed);
     setDraft('');
     mentions.reset();
+    slash.reset();
   };
 
   const onFormSubmit = (event: React.FormEvent<HTMLFormElement>): void => {
@@ -131,7 +144,10 @@ export const ChatComposer = (props: ChatComposerProps): React.ReactElement => {
   const onTextAreaKeyDown = (
     event: React.KeyboardEvent<HTMLTextAreaElement>,
   ): void => {
-    if (mentions.handleKeyDown(event)) {
+    // Only one popover can be open at once (`/` is anchored to a line start,
+    // `@` scans back mid-text), so the order here is not a precedence conflict —
+    // whichever consumed the key bails before Enter-to-send.
+    if (mentions.handleKeyDown(event) || slash.handleKeyDown(event)) {
       return;
     }
     if (event.key !== 'Enter' || event.shiftKey) {
@@ -153,43 +169,17 @@ export const ChatComposer = (props: ChatComposerProps): React.ReactElement => {
       data-testid="ChatComposer"
       onSubmit={onFormSubmit}
     >
-      <div className="relative">
-        <TextArea
-          aria-activedescendant={
-            popoverOpen && results.length > 0
-              ? optionId(activeIndex)
-              : undefined
-          }
-          aria-autocomplete={mentionEnabled ? 'list' : undefined}
-          aria-controls={popoverOpen ? listboxId : undefined}
-          aria-expanded={mentionEnabled ? popoverOpen : undefined}
-          aria-label="Message"
-          className={clsx({ 'text-muted-foreground': readOnly })}
-          disabled={disabled}
-          onChange={mentions.onChange}
-          onClick={mentions.onClick}
-          onKeyDown={onTextAreaKeyDown}
-          onKeyUp={mentions.onKeyUp}
-          placeholder={placeholder}
-          readOnly={readOnly}
-          ref={mentions.setRefs}
-          rows={3}
-          value={draft}
-        />
-        {popoverOpen ? (
-          <ChatMentionPopover
-            activeIndex={activeIndex}
-            emptyLabel={mentionProvider?.emptyLabel ?? 'No matching files.'}
-            listboxId={listboxId}
-            loading={loading}
-            loadingLabel={mentionProvider?.loadingLabel ?? 'Searching files…'}
-            onHoverOption={mentions.setActiveIndex}
-            onSelectOption={mentions.selectOption}
-            optionId={optionId}
-            results={results}
-          />
-        ) : null}
-      </div>
+      <ChatComposerInput
+        disabled={disabled}
+        draft={draft}
+        mentionProvider={mentionProvider}
+        mentions={mentions}
+        onKeyDown={onTextAreaKeyDown}
+        placeholder={placeholder}
+        readOnly={readOnly}
+        slash={slash}
+        slashCommandProvider={slashCommandProvider}
+      />
       <ChatComposerFooter
         disabled={disabled}
         draft={draft}

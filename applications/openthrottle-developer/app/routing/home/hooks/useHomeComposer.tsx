@@ -21,6 +21,7 @@ import type { RepositoryOption } from '~/routing/home/data/models.server';
 import type { UseAgenticChatTurnResult } from '~/routing/home/hooks/useAgenticChatTurn';
 import type { UseConversationListResult } from '~/routing/home/hooks/useConversationList';
 import { useFileMentionProvider } from '~/routing/home/hooks/useFileMentionProvider';
+import { useSkillCommandProvider } from '~/routing/home/hooks/useSkillCommandProvider';
 import { useVoiceInput } from '~/routing/home/hooks/useVoiceInput';
 
 export interface UseHomeComposerOptions {
@@ -93,6 +94,10 @@ export const useHomeComposer = (options: UseHomeComposerOptions) => {
   // Backs the composer's @-mention file picker for the selected checkout;
   // undefined (trigger disabled) until a repository is chosen.
   const mentionProvider = useFileMentionProvider(repositoryId);
+
+  // Backs the composer's /-command skill picker. Skills are global to the
+  // running checkout (not repo-scoped), so this is always present.
+  const slashCommandProvider = useSkillCommandProvider();
 
   const voice = useVoiceInput({
     draft,
@@ -245,6 +250,7 @@ export const useHomeComposer = (options: UseHomeComposerOptions) => {
     setReasoning,
     setRepositoryId,
     setServiceTier,
+    slashCommandProvider,
     voice,
   };
 };

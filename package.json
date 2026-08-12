@@ -416,6 +416,7 @@
   "private": true,
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {
+    "audit:strict": "pnpm run \"/^audit:.*:strict$/\"",
     "audit:component-shape": "tsx ./scripts/audit-component-shape.ts",
     "audit:component-shape:shadcn": "tsx ./scripts/audit-component-shape.ts --shadcn",
     "audit:component-shape:shadcn:strict": "tsx ./scripts/audit-component-shape.ts --shadcn --strict",

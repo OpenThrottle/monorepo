@@ -1897,6 +1897,11 @@ type ProjectSkillObject {
   slug: String!
 
   """
+  Skill description from SKILL.md frontmatter; null when the ingested row omits it. Lets the developer app's `/skills` slash-command menu show descriptions in deployed environments with no local checkout for filesystem discovery.
+  """
+  description: String
+
+  """
   Skill provenance from frontmatter `source`: 'openthrottle' for skills OpenThrottle authors and manages, 'external' for skills installed from an outside source (omitted frontmatter normalizes to 'external').
   """
   source: String!

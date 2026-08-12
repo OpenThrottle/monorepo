@@ -14,25 +14,18 @@ import {
   GetPlanCountsByStatusDocument,
   GetPlansByStatusDocument,
 } from '~/__generated__/graphql';
-import { parsePlansSortFromSearch } from '~/routing/plans/utils/parsers';
 import {
-  PLAN_STATUS_FILTER_OPTIONS,
-  parseStatusesFromSearchParams,
-} from '~/routing/plans/config/status-options';
+  buildStatusFilterUrls,
+  parseAssigneesFromSearchParams,
+  parsePlansSortFromSearch,
+} from '~/routing/plans/utils/parsers';
+import { parseStatusesFromSearchParams } from '~/routing/plans/config/status-options';
 import { PlansIntroduction } from '~/routing/plans/components/PlansIntroduction';
 import { PlansStats } from '~/routing/plans/components/PlansStats';
 import { PlansTable } from '~/routing/plans/components/PlansTable';
 import { PlansToolbar } from '~/routing/plans/components/PlansToolbar';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/plans._index';
-
-/** Parse multiple assignee values from URL (repeated params or comma-separated). */
-function parseAssigneesFromSearchParams(
-  searchParams: URLSearchParams,
-): string[] {
-  const raw = searchParams.getAll('assignee').flatMap((a) => a.split(','));
-  return raw.map((a) => a.trim()).filter(Boolean);
-}
 
 export const handle = {
   breadcrumb: () => 'Plans',
@@ -159,19 +152,10 @@ export default function Component(
     [searchParams],
   );
 
-  const statusFilterUrls = React.useMemo(() => {
-    return Object.fromEntries(
-      PLAN_STATUS_FILTER_OPTIONS.map((option) => {
-        const params = new URLSearchParams(searchParams);
-
-        params.delete('status');
-        params.append('status', option.value);
-        params.set('page', '1');
-
-        return [option.value, `/plans?${params.toString()}`] as const;
-      }),
-    );
-  }, [searchParams]);
+  const statusFilterUrls = React.useMemo(
+    () => buildStatusFilterUrls(searchParams),
+    [searchParams],
+  );
 
   // 🔌 Short Circuit
 

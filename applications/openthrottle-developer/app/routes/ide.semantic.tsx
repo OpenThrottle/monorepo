@@ -2,7 +2,6 @@ import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { IDE_SEMANTIC_STATUS } from '@openthrottle/react-router-ide';
 import type {
   IdeSemanticResult,
-  IdeSemanticStatus,
   SemanticMatch,
 } from '@openthrottle/react-router-ide';
 import {
@@ -11,22 +10,9 @@ import {
   GetWorkspaceSettingsDocument,
   IndexCodeRepositoryDocument,
 } from '~/__generated__/graphql';
+import { toSemanticStatus } from '~/routing/ide/utils/semantic-status';
 import { resolveSelectedRepository } from '~/routing/ide/utils/repositories';
 import type { Route } from '@/app/routes/+types/ide.semantic';
-
-/** Coerce the server's status string into the client's {@link IdeSemanticStatus} union. */
-function toSemanticStatus(value: string): IdeSemanticStatus {
-  switch (value) {
-    case 'indexing':
-      return IDE_SEMANTIC_STATUS.indexing;
-    case 'notIndexed':
-      return IDE_SEMANTIC_STATUS.notIndexed;
-    case 'ready':
-      return IDE_SEMANTIC_STATUS.ready;
-    default:
-      return IDE_SEMANTIC_STATUS.unavailable;
-  }
-}
 
 /**
  * Resource route for the semantic tier (GraphQL-backed, architecture B). The loader

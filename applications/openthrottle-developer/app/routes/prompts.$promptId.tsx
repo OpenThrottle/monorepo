@@ -1,23 +1,18 @@
 import * as React from 'react';
-import { redirect, useFetcher } from 'react-router';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import { Editor, getLanguageFromExt } from '@openthrottle/react-router-editor';
+import { Editor } from '@openthrottle/react-router-editor';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { Button } from '@openthrottle/react-router-shadcn';
 import {
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import {
-  DeletePromptDocument,
-  GetPromptDocument,
-  UpdatePromptDocument,
-  WritePromptToFileSystemDocument,
-  type UpdateCustomPromptInput,
-} from '~/__generated__/graphql';
+import { GetPromptDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { PROMPTS_BASE_PATH } from '~/routing/prompts/config';
 import { PromptDetailMetadataPanel } from '~/routing/prompts/components/PromptDetailMetadataPanel';
+import { usePromptEditor } from '~/routing/prompts/hooks/usePromptEditor';
+import { runPromptDetailAction } from '~/routing/prompts/actions/promptId';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/prompts.$promptId';
 
@@ -62,82 +57,25 @@ export default function Component(
   const { prompt } = loaderData;
 
   // Hooks
-  const fetcher = useFetcher();
-  const [content, setContent] = React.useState(prompt.content);
-  const [isDirty, setIsDirty] = React.useState(false);
+  const {
+    content,
+    handleDelete,
+    handleEditorChange,
+    handleSave,
+    handleWriteToFileSystem,
+    isDirty,
+    isSubmitting,
+    language,
+    statusText,
+  } = usePromptEditor(prompt, actionData);
 
   // Setup
-  const isSubmitting = fetcher.state === 'submitting';
-  const extension = prompt.filePath?.split('.').pop() ?? 'md';
-  const language = getLanguageFromExt(extension);
 
   // Handlers
-  const handleEditorChange = (value: string | undefined): void => {
-    const newContent = value ?? '';
-    setContent(newContent);
-    setIsDirty(newContent !== prompt.content);
-  };
-
-  const handleSave = React.useCallback((): void => {
-    if (!isDirty || isSubmitting) return;
-
-    const formData = new FormData();
-    formData.set('intent', 'update');
-    formData.set('content', content);
-
-    fetcher.submit(formData, { method: 'post' });
-  }, [content, fetcher, isDirty, isSubmitting]);
-
-  const handleWriteToFileSystem = (): void => {
-    const formData = new FormData();
-    formData.set('intent', 'writeToFileSystem');
-
-    fetcher.submit(formData, { method: 'post' });
-  };
-
-  const handleDelete = (): void => {
-    if (!window.confirm('Are you sure you want to delete this prompt?')) return;
-
-    const formData = new FormData();
-    formData.set('intent', 'delete');
-
-    fetcher.submit(formData, { method: 'post' });
-  };
-
-  const handleKeyDown = React.useCallback(
-    (e: KeyboardEvent): void => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
-        e.preventDefault();
-        handleSave();
-      }
-    },
-    [handleSave],
-  );
 
   // Markup
-  const statusText = React.useMemo(() => {
-    if (isSubmitting) return 'Saving...';
-    if (actionData?.error) return actionData.error;
-    if (actionData?.success) return 'Saved';
-    if (isDirty) return 'Unsaved changes';
-
-    return '';
-  }, [actionData, isDirty, isSubmitting]);
 
   // Life Cycle
-  React.useEffect(() => {
-    document.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [handleKeyDown]);
-
-  React.useEffect(() => {
-    if (actionData?.success) {
-      setIsDirty(false);
-    }
-  }, [actionData?.success]);
 
   // 🔌 Short Circuit
 
@@ -220,77 +158,6 @@ export default function Component(
   );
 }
 
-export const action = async (args: Route.ActionArgs) => {
-  const promptId = args.params.promptId;
-
-  if (!promptId) {
-    return { error: 'Missing prompt id.' };
-  }
-
-  const decodedId = decodeURIComponent(promptId);
-  const formData = await args.request.formData();
-  const intent = formData.get('intent');
-
-  // Handle delete
-  if (intent === 'delete') {
-    try {
-      await executeGraphqlWithAuth(args.request, DeletePromptDocument, {
-        id: decodedId,
-      });
-
-      return redirect(PROMPTS_BASE_PATH);
-    } catch {
-      return { error: 'Failed to delete prompt.' };
-    }
-  }
-
-  // Handle write to file system
-  if (intent === 'writeToFileSystem') {
-    try {
-      await executeGraphqlWithAuth(
-        args.request,
-        WritePromptToFileSystemDocument,
-        { id: decodedId },
-      );
-
-      return { success: true };
-    } catch {
-      return { error: 'Failed to write to file system.' };
-    }
-  }
-
-  // Handle update
-  if (intent === 'update') {
-    const content = formData.get('content');
-
-    if (typeof content !== 'string') {
-      return { error: 'Content is required.' };
-    }
-
-    try {
-      const input: UpdateCustomPromptInput = {
-        content,
-        id: decodedId,
-      };
-
-      const result = await executeGraphqlWithAuth(
-        args.request,
-        UpdatePromptDocument,
-        { input },
-      );
-
-      if (!result.updateCustomPrompt) {
-        return { error: 'Prompt not found.' };
-      }
-
-      return { success: true };
-    } catch {
-      return { error: 'Failed to update prompt.' };
-    }
-  }
-
-  // 🚨 Default to invalid action error when no intent is provided.
-  throw new Error('Invalid intent');
-};
+export const action = (args: Route.ActionArgs) => runPromptDetailAction(args);
 
 export const ErrorBoundary = GlobalErrorBoundary;

@@ -36,7 +36,7 @@ export const OpenThrottleProductGetStarted = (
   // 🔌 Short Circuit
 
   return (
-    <>
+    <div>
       <div className="mb-4 flex w-auto items-center justify-start gap-2">
         <OpenThrottleLogo className="!pr-0 text-xl" />
         <span className="text-muted-foreground/50 font-extralight">|</span>
@@ -96,6 +96,6 @@ export const OpenThrottleProductGetStarted = (
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };

@@ -4,6 +4,34 @@ import {
   PlansSortBy,
   PlansSortOrder,
 } from '~/routing/plans/config/types';
+import { PLAN_STATUS_FILTER_OPTIONS } from '~/routing/plans/config/status-options';
+
+/** Parse multiple assignee values from URL (repeated params or comma-separated). */
+export const parseAssigneesFromSearchParams = (
+  searchParams: URLSearchParams,
+): string[] => {
+  const raw = searchParams.getAll('assignee').flatMap((a) => a.split(','));
+  return raw.map((a) => a.trim()).filter(Boolean);
+};
+
+/**
+ * @description Build the per-status filter URLs for the plans list (one `/plans?…`
+ * link per status option, resetting to page 1). Pure over the current search params.
+ */
+export const buildStatusFilterUrls = (
+  searchParams: URLSearchParams,
+): Record<string, string> =>
+  Object.fromEntries(
+    PLAN_STATUS_FILTER_OPTIONS.map((option) => {
+      const params = new URLSearchParams(searchParams);
+
+      params.delete('status');
+      params.append('status', option.value);
+      params.set('page', '1');
+
+      return [option.value, `/plans?${params.toString()}`] as const;
+    }),
+  );
 
 /** Valid tab keys for the plan detail page (`/plans/:planId`). */
 export type PlanDetailTab =

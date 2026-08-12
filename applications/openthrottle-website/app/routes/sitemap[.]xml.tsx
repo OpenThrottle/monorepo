@@ -1,12 +1,6 @@
 import { buildSitemapResponse } from '@openthrottle/react-router-utils';
+import { STATIC_PATHS } from '~/routing/home/data/sitemap-paths';
 import type { Route } from '@/app/routes/+types/sitemap[.]xml';
-
-/**
- * Static, crawlable page routes. Kept in sync by hand with the file-based
- * routes under `app/routes/`. The marketing site currently exposes only the
- * index route; the docs/FAQ/demo routes were removed in the pre-launch trim.
- */
-const STATIC_PATHS: readonly string[] = ['/'];
 
 /**
  * `GET /sitemap.xml` — a resource route (loader-only, no default export) that

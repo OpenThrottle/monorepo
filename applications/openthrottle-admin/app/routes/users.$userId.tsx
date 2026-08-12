@@ -1,31 +1,5 @@
 import * as React from 'react';
-import { redirect } from 'react-router';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-  Badge,
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Input,
-  Label,
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@openthrottle/react-router-shadcn';
-import { Link, useFetcher } from 'react-router';
-import { formatDate } from 'date-fns';
+import { redirect, useFetcher } from 'react-router';
 import {
   executeGraphqlWithAuth,
   isAuthError,
@@ -36,21 +10,20 @@ import {
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import {
-  AssignRoleToUserDocument,
-  DisableUserDocument,
-  EnableUserDocument,
   GetRolesForUserDocument,
   GetUserDocument,
   ListRolesForAssignDocument,
-  RemoveRoleFromUserDocument,
-  UpdateUserDocument,
 } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/users.$userId';
-import { UserIcon } from 'lucide-react';
 import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
-import { AssignRoleSelectForm } from '~/routing/users/components/AssignRoleSelectForm';
+import { runUserDetailAction } from '~/routing/users/actions/userId';
+import { SITE_TITLE } from '~/global/config/settings';
+import { UserDetailSummary } from '~/routing/users/components/UserDetailSummary';
+import { UserEditSheet } from '~/routing/users/components/UserEditSheet';
+import { UserIcon } from 'lucide-react';
+import { UserRolesCard } from '~/routing/users/components/UserRolesCard';
+import { UserStatusActions } from '~/routing/users/components/UserStatusActions';
+import type { Route } from '@/app/routes/+types/users.$userId';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -126,8 +99,6 @@ export default function Component(
     actionData != null && 'ok' in actionData && actionData.ok === true;
 
   const isDisabled = user?.disabledAt != null;
-  const UpdateForm = fetcher.Form;
-  const ActionForm = fetcher.Form;
 
   // Handlers
 
@@ -168,273 +139,29 @@ export default function Component(
         id="user-detail"
         legend={user.githubUsername}
       >
-        <div data-testid="user-detail">
-          <div className="grid gap-4">
-            <div>
-              <span className="text-muted-foreground text-sm">Email</span>
-              <p>{user.email ?? '—'}</p>
-            </div>
-            <Badge color={isDisabled ? 'red' : 'green'}>
-              {isDisabled ? 'Disabled' : 'Active'}
-            </Badge>
-
-            <div>
-              <span className="text-muted-foreground text-sm">
-                GitHub username
-              </span>
-              <p>{user.githubUsername}</p>
-            </div>
-            <div>
-              <span className="text-muted-foreground text-sm">Created</span>
-              <p>{formatDate(user.createdAt, 'MMM d, yyyy')}</p>
-            </div>
-
-            {user.updatedAt ? (
-              <div>
-                <span className="text-muted-foreground text-sm">Updated</span>
-                <p>{formatDate(user.updatedAt, 'MMM d, yyyy')}</p>
-              </div>
-            ) : null}
-
-            {user.disabledAt ? (
-              <div>
-                <span className="text-muted-foreground text-sm">
-                  Disabled at
-                </span>
-                <p>{formatDate(user.disabledAt, 'MMM d, yyyy')}</p>
-              </div>
-            ) : null}
-          </div>
-        </div>
+        <UserDetailSummary isDisabled={isDisabled} user={user} />
 
         <div className="flex flex-wrap items-center gap-2">
-          <Sheet onOpenChange={setEditOpen} open={editOpen}>
-            <SheetTrigger asChild={true}>
-              <Button type="button" variant="outline">
-                Edit user
-              </Button>
-            </SheetTrigger>
-            <SheetContent>
-              <SheetHeader>
-                <SheetTitle>Edit user</SheetTitle>
-              </SheetHeader>
-              <UpdateForm method="post">
-                <input name="intent" type="hidden" value="updateUser" />
-                <div className="grid gap-4 py-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="edit-githubUsername">GitHub username</Label>
-                    <Input
-                      defaultValue={user.githubUsername}
-                      id="edit-githubUsername"
-                      name="githubUsername"
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="edit-email">Email (optional)</Label>
-                    <Input
-                      defaultValue={user.email ?? ''}
-                      id="edit-email"
-                      name="email"
-                      type="email"
-                    />
-                  </div>
-                </div>
-                {fetcher.data != null && 'error' in fetcher.data ? (
-                  <p className="text-destructive text-sm" role="alert">
-                    {fetcher.data.error}
-                  </p>
-                ) : null}
-                <div className="flex justify-end gap-2">
-                  <Button
-                    onClick={() => setEditOpen(false)}
-                    type="button"
-                    variant="outline"
-                  >
-                    Cancel
-                  </Button>
-                  <Button disabled={fetcher.state !== 'idle'} type="submit">
-                    {fetcher.state !== 'idle' ? 'Saving…' : 'Save'}
-                  </Button>
-                </div>
-              </UpdateForm>
-            </SheetContent>
-          </Sheet>
-
-          {isDisabled ? (
-            <ActionForm method="post">
-              <input name="intent" type="hidden" value="enableUser" />
-              <Button
-                disabled={fetcher.state !== 'idle'}
-                type="submit"
-                variant="outline"
-              >
-                {fetcher.state !== 'idle' ? 'Enabling…' : 'Enable user'}
-              </Button>
-            </ActionForm>
-          ) : (
-            <AlertDialog>
-              <AlertDialogTrigger asChild={true}>
-                <Button
-                  disabled={fetcher.state !== 'idle'}
-                  type="button"
-                  variant="destructive"
-                >
-                  Disable user
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Disable user</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This will disable the user account. They will no longer be
-                    able to sign in until the account is re-enabled.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <ActionForm method="post">
-                    <input name="intent" type="hidden" value="disableUser" />
-                    <AlertDialogAction asChild={true}>
-                      <button disabled={fetcher.state !== 'idle'} type="submit">
-                        {fetcher.state !== 'idle' ? 'Disabling…' : 'Disable'}
-                      </button>
-                    </AlertDialogAction>
-                  </ActionForm>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          )}
+          <UserEditSheet
+            fetcher={fetcher}
+            onOpenChange={setEditOpen}
+            open={editOpen}
+            user={user}
+          />
+          <UserStatusActions fetcher={fetcher} isDisabled={isDisabled} />
         </div>
 
-        <Card data-testid="user-roles">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-lg">Roles</CardTitle>
-            {availableRoles.length > 0 ? (
-              <AssignRoleSelectForm
-                availableRoles={availableRoles}
-                fetcher={fetcher}
-              />
-            ) : null}
-          </CardHeader>
-          <CardContent>
-            {rolesForUser.length === 0 ? (
-              <p className="text-muted-foreground text-sm">
-                No roles assigned. Assign one above.
-              </p>
-            ) : (
-              <ul className="flex flex-wrap gap-2">
-                {rolesForUser.map((r) => (
-                  <li className="flex items-center gap-1" key={r.id}>
-                    <Link
-                      className="hover:text-primary font-medium underline underline-offset-2"
-                      to={`/roles/${r.id}`}
-                      viewTransition={true}
-                    >
-                      {r.name}
-                    </Link>
-                    <fetcher.Form method="post">
-                      <input name="intent" type="hidden" value="removeRole" />
-                      <input name="roleId" type="hidden" value={r.id} />
-                      <Button
-                        aria-label={`Remove role ${r.name}`}
-                        disabled={fetcher.state !== 'idle'}
-                        size="icon"
-                        type="submit"
-                        variant="ghost"
-                      >
-                        ×
-                      </Button>
-                    </fetcher.Form>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
+        <UserRolesCard
+          availableRoles={availableRoles}
+          fetcher={fetcher}
+          rolesForUser={rolesForUser}
+        />
       </OpenThrottleFieldset>
     </GlobalScreen>
   );
 }
 
-export const action = async (args: Route.ActionArgs) => {
-  const { request, params } = args;
-
-  const userId = params.userId;
-  if (!userId) {
-    return { error: 'User not found' };
-  }
-
-  const formData = await request.formData();
-  const intent = formData.get('intent');
-
-  try {
-    if (intent === 'assignRole') {
-      const roleId = formData.get('roleId');
-
-      if (typeof roleId === 'string' && roleId) {
-        await executeGraphqlWithAuth(request, AssignRoleToUserDocument, {
-          input: { roleId, userId },
-        });
-
-        return { ok: true };
-      }
-    }
-
-    if (intent === 'disableUser') {
-      await executeGraphqlWithAuth(request, DisableUserDocument, {
-        id: userId,
-      });
-
-      return { ok: true };
-    }
-
-    if (intent === 'enableUser') {
-      await executeGraphqlWithAuth(request, EnableUserDocument, { id: userId });
-
-      return { ok: true };
-    }
-
-    if (intent === 'removeRole') {
-      const roleId = formData.get('roleId');
-
-      if (typeof roleId === 'string' && roleId) {
-        await executeGraphqlWithAuth(request, RemoveRoleFromUserDocument, {
-          input: { roleId, userId },
-        });
-
-        return { ok: true };
-      }
-    }
-
-    if (intent === 'updateUser') {
-      const email = formData.get('email');
-      const githubUsername = formData.get('githubUsername');
-
-      await executeGraphqlWithAuth(request, UpdateUserDocument, {
-        input: {
-          email:
-            typeof email === 'string' && email.trim()
-              ? email.trim()
-              : undefined,
-          githubUsername:
-            typeof githubUsername === 'string' && githubUsername.trim()
-              ? githubUsername.trim()
-              : undefined,
-          id: userId,
-        },
-      });
-
-      return { ok: true };
-    }
-  } catch (error) {
-    const isError = error instanceof Error;
-    const message = isError ? error.message : 'Action failed';
-
-    return { error: message };
-  }
-
-  // 🚨 Default to invalid action error when no intent is provided.
-  throw new Error('Invalid intent');
-};
+export const action = async (args: Route.ActionArgs) =>
+  runUserDetailAction(args.request, args.params.userId);
 
 export const ErrorBoundary = GlobalErrorBoundary;

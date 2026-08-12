@@ -13,30 +13,11 @@ import { NotesEmpty } from '~/routing/notes/components/NotesEmpty';
 import { NotesIntroduction } from '~/routing/notes/components/NotesIntroduction';
 import { NotesTable } from '~/routing/notes/components/NotesTable';
 import { NotesToolbar } from '~/routing/notes/components/NotesToolbar';
+import { filterNotesBySearch } from '~/routing/notes/utils/filter-notes-by-search';
 import { SITE_TITLE } from '~/global/config/settings';
-import type { NoteCardFragment } from '~/__generated__/graphql';
 import type { Route } from '@/app/routes/+types/notes._index';
 
 type HandleData = Route.ComponentProps['loaderData'];
-
-/** Client-side filter until notes list supports server-side search. */
-function filterNotesBySearch(
-  notes: NoteCardFragment[],
-  search: string,
-): NoteCardFragment[] {
-  const q = search.trim().toLowerCase();
-
-  if (q.length === 0) {
-    return notes;
-  }
-
-  return notes.filter((note) => {
-    const content = note.content.toLowerCase();
-    const author = note.author?.trim().toLowerCase() ?? '';
-
-    return content.includes(q) || author.includes(q);
-  });
-}
 
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (_match) => 'Notes',

@@ -7,28 +7,21 @@ import {
 import {
   GetPlanByIdDocument,
   GetTaskByIdDocument,
-  PlanDetailAddHookDocument,
-  PlanDetailDetachHookDocument,
-  TaskDetailAddTaskTagDocument,
-  TaskDetailPromoteToPlanDocument,
-  TaskDetailRemoveTaskTagDocument,
   TaskLinkedArtifactsDocument,
   TaskOutputStreamChunksDocument,
-  UpdateTaskDocument,
 } from '~/__generated__/graphql';
-import {
-  AddHookInputSchema,
-  DetachHookInputSchema,
-} from '~/__generated__/schemas';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import { PlanTaskNotFound } from '~/routing/plans/components/PlanTaskNotFound';
 import { redirect } from 'react-router';
+import { detachHook } from '~/routing/plans/actions/planId';
 import {
-  messageOrFallback,
-  toErrorMessage,
-} from '~/global/utils/utils.error-message';
+  addTaskHook,
+  promoteTask,
+  setTaskStatus,
+  updateTaskTag,
+} from '~/routing/plans/actions/taskId';
 import { SITE_TITLE } from '~/global/config/settings';
 import { TaskDetailRoute } from '~/routing/plans/components/TaskDetailRoute';
 import type { Route } from '@/app/routes/+types/plans.$planId.tasks.$taskId._index';
@@ -158,148 +151,23 @@ export const action = async (args: Route.ActionArgs) => {
 
   const formData = await args.request.formData();
   const intent = formData.get('intent');
-  const tag = formData.get('tag');
 
-  if (intent === 'promoteTask') {
-    try {
-      const result = await executeGraphqlWithAuth(
-        args.request,
-        TaskDetailPromoteToPlanDocument,
-        { input: { taskId } },
-      );
-      const promote = result.promoteTaskToPlan;
-      if (promote == null || !promote.success) {
-        return {
-          promoteTaskError: messageOrFallback(
-            promote?.error,
-            'Failed to promote task.',
-          ),
-        };
-      }
-      return { promoteTask: promote };
-    } catch (error) {
-      return {
-        promoteTaskError: toErrorMessage(error, 'Failed to promote task.'),
-      };
-    }
+  switch (intent) {
+    case 'addHook':
+      return addTaskHook(args, taskId, formData);
+    case 'addTaskTag':
+      return updateTaskTag(args, taskId, formData, true);
+    case 'detachHook':
+      return detachHook(args.request, formData);
+    case 'promoteTask':
+      return promoteTask(args, taskId);
+    case 'removeTaskTag':
+      return updateTaskTag(args, taskId, formData, false);
+    case 'setTaskStatus':
+      return setTaskStatus(args, taskId, formData);
+    default:
+      return {};
   }
-
-  if (intent === 'setTaskStatus') {
-    const status = formData.get('status');
-    if (typeof status !== 'string' || status.trim() === '') {
-      return { setTaskStatusError: 'Status is required.' };
-    }
-    try {
-      const result = await executeGraphqlWithAuth(
-        args.request,
-        UpdateTaskDocument,
-        { input: { id: taskId, status: status.trim() } },
-      );
-      if (!result.updateTask) {
-        return { setTaskStatusError: 'Failed to update task status.' };
-      }
-      return { setTaskStatus: result.updateTask };
-    } catch (error) {
-      return {
-        setTaskStatusError: toErrorMessage(
-          error,
-          'Failed to update task status.',
-        ),
-      };
-    }
-  }
-
-  if (intent === 'addTaskTag' || intent === 'removeTaskTag') {
-    if (typeof tag !== 'string' || tag.trim() === '') {
-      return { taskTagError: 'Tag is required.' };
-    }
-    try {
-      if (intent === 'addTaskTag') {
-        await executeGraphqlWithAuth(
-          args.request,
-          TaskDetailAddTaskTagDocument,
-          { input: { tag: tag.trim(), taskId } },
-        );
-      } else {
-        await executeGraphqlWithAuth(
-          args.request,
-          TaskDetailRemoveTaskTagDocument,
-          { input: { tag: tag.trim(), taskId } },
-        );
-      }
-      return { taskTagUpdated: true };
-    } catch (error) {
-      return {
-        taskTagError: toErrorMessage(error, 'Failed to update task tag.'),
-      };
-    }
-  }
-
-  if (intent === 'addHook') {
-    const planId = args.params.planId;
-    if (planId == null || planId === '') {
-      return { addHookError: 'Missing plan id.' };
-    }
-
-    const optionalField = (key: string): string | undefined => {
-      const value = formData.get(key);
-      return typeof value === 'string' && value.trim() !== ''
-        ? value.trim()
-        : undefined;
-    };
-
-    try {
-      const input = AddHookInputSchema().parse({
-        anchorTaskId: taskId,
-        planId,
-        role: formData.get('role'),
-        scope: optionalField('scope'),
-        skillSlug: optionalField('skillSlug'),
-        source: formData.get('source'),
-        title: optionalField('title'),
-      });
-
-      const result = await executeGraphqlWithAuth(
-        args.request,
-        PlanDetailAddHookDocument,
-        { input },
-      );
-
-      if (!result.addHook) {
-        return { addHookError: 'Failed to add hook.' };
-      }
-
-      return { addHook: result.addHook };
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      return { addHookError: message };
-    }
-  }
-
-  if (intent === 'detachHook') {
-    try {
-      const input = DetachHookInputSchema().parse({
-        hookTaskId: formData.get('hookTaskId'),
-      });
-
-      const result = await executeGraphqlWithAuth(
-        args.request,
-        PlanDetailDetachHookDocument,
-        { input },
-      );
-
-      if (!result.detachHook) {
-        return { detachHookError: 'Failed to remove hook.' };
-      }
-
-      return { detachHook: result.detachHook };
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      return { detachHookError: message };
-    }
-  }
-
-  return {};
 };
 
 export const ErrorBoundary = GlobalErrorBoundary;

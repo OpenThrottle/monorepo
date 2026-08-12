@@ -20,10 +20,7 @@ import { UsageOverview } from '~/routing/usage/components/UsageOverview';
 import { UsageSkillUsage } from '~/routing/usage/components/UsageSkillUsage';
 import { UsageSnapshot } from '~/routing/usage/components/UsageSnapshot';
 import { UsageTokenUsage } from '~/routing/usage/components/UsageTokenUsage';
-import {
-  SKILL_USAGE_SCOPES,
-  type SkillUsageScopeFilter,
-} from '~/routing/usage/data/skill-usage-copy';
+import { parseSkillScope } from '~/routing/usage/utils/parse-skill-scope';
 import type { DashboardDailyStatsCardFragment } from '~/__generated__/graphql';
 import type { Route } from '@/app/routes/+types/usage._index';
 
@@ -32,16 +29,6 @@ type HandleData = Route.ComponentProps['loaderData'];
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (_match) => 'Usage',
   links: (_match) => [],
-};
-
-const parseSkillScope = (raw: string | null): SkillUsageScopeFilter => {
-  if (
-    raw === SKILL_USAGE_SCOPES.OURS ||
-    raw === SKILL_USAGE_SCOPES.THIRD_PARTY
-  ) {
-    return raw;
-  }
-  return null;
 };
 
 export const loader = async (args: Route.LoaderArgs) => {
