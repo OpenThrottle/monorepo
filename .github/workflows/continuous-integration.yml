@@ -277,6 +277,21 @@ jobs:
       - name: '🧩 Template compliance audit'
         run: pnpm run audit:strict
 
+      # Test-coverage guard-rail — WARNING MODE ONLY (report-only).
+      # This surfaces routes/components/hooks/utils missing a co-located spec so
+      # remediation plans can carve from the committed baseline. It is
+      # intentionally `continue-on-error` and is NOT part of the blocking
+      # `audit:strict` aggregate above (that step excludes test-coverage via a
+      # negative-lookahead pattern) nor the husky pre-commit/pre-push gate.
+      # Flip path: once a category's gap closes, drop test-coverage from the
+      # negative lookahead in the `audit:strict` script (so
+      # `audit:test-coverage:strict` joins the blocking aggregate) and mirror it
+      # into the husky three-surface gate the way the component-shape gate is.
+      # See docs/monorepo/test-coverage-audit.md.
+      - name: '🧪 Test-coverage audit (warn-only)'
+        continue-on-error: true
+        run: pnpm run audit:test-coverage
+
       # - name: '🗄️ Migration COMMENT ON TABLE (diff-scoped)'
       #   run: pnpm exec nx run monorepo:check-migration-table-comments
       #   env:

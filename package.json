@@ -425,7 +425,7 @@
   "private": true,
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {
-    "audit:strict": "pnpm run \"/^audit:.*:strict$/\"",
+    "audit:strict": "pnpm run \"/^audit:(?!test-coverage).*:strict$/\"",
     "audit:component-shape": "tsx ./scripts/audit-component-shape.ts",
     "audit:component-shape:shadcn": "tsx ./scripts/audit-component-shape.ts --shadcn",
     "audit:component-shape:shadcn:strict": "tsx ./scripts/audit-component-shape.ts --shadcn --strict",
@@ -433,6 +433,9 @@
     "audit:route-shape": "tsx ./scripts/audit-route-shape.ts",
     "audit:route-shape:strict": "tsx ./scripts/audit-route-shape.ts --strict",
     "audit:templates-compliance": "tsx ./scripts/audit-templates-compliance.ts",
+    "audit:test-coverage": "tsx ./scripts/audit-test-coverage.ts",
+    "audit:test-coverage:json": "tsx ./scripts/audit-test-coverage.ts --json",
+    "audit:test-coverage:strict": "tsx ./scripts/audit-test-coverage.ts --strict",
     "build": "pnpm run build:graphql && pnpm run build:packages",
     "build:all": "nx run-many --target=build,typecheck --all --parallel=2",
     "build:docker": "pnpm nx run openthrottle-server:docker-build",
