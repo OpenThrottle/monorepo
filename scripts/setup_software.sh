@@ -69,8 +69,8 @@ installSoftware () {
   # 🎒 Install the following tools via brew
   # installBrewPackage "1password-cli" "op"
   # installBrewPackage "langgraph-cli" "langgraph"
-  installBrewPackage "openjdk@17"
-  installBrewPackage "terraform"
+  # installBrewPackage "openjdk@17"
+  # installBrewPackage "terraform"
 
   # 👨‍💻 Agent CLIs (skip if present; otherwise prompt)
   installCliIfNeeded "Claude" "claude" "bash" "https://claude.ai/install.sh"
@@ -90,7 +90,7 @@ echo "This script installs the software we need to run the monorepo and it's app
 echo ""
 
 installSoftware;
-installMaestro;
+# installMaestro;
 # installPythonSoftware;
 
 echo ""
