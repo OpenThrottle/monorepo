@@ -12,7 +12,7 @@
 
 ## Scaffolding & Generators
 
-- For scaffolding with **`@tools/generators`** (`react-router`, `nestjs`, `react`, `package`, `folders`), ALWAYS invoke **`openthrottle-generators`** FIRST — before `nx-generate` or MCP tools. See [`.agents/skills/openthrottle-generators/SKILL.md`](./.agents/skills/openthrottle-generators/SKILL.md) (`NX_ISOLATE_PLUGINS=false`, `pnpm nx`, comma-separated `--name` batching, AGENT_USAGE).
+- For scaffolding with **`@tools/generators`** (`react-router`, `nestjs`, `react`, `package`, `folders`), ALWAYS invoke **`openthrottle-generators`** FIRST — before `nx-generate` or MCP tools. See [`skills/openthrottle-generators/SKILL.md`](./skills/openthrottle-generators/SKILL.md) (`NX_ISOLATE_PLUGINS=false`, `pnpm nx`, comma-separated `--name` batching, AGENT_USAGE).
 - For other scaffolding (apps/libs via Nx plugins, project structure, setup not covered by `@tools/generators`), invoke **`nx-generate`** FIRST before exploring or calling MCP tools.
 
 ## When to use nx_docs
