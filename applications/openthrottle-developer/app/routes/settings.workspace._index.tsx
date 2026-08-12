@@ -18,6 +18,7 @@ import {
   browseDirectory,
   cloneRepo,
   deleteRepo,
+  pickFolderNative,
   refreshCheckout,
   updateProfile,
 } from '~/routing/settings/actions/workspace';
@@ -38,6 +39,7 @@ export const loader = async (args: Route.LoaderArgs) => {
 
   return {
     discoveredFolders: data.discoveredFolders,
+    pickerCapabilities: data.workspacePickerCapabilities,
     profile: data.workspaceSettings.profile,
     repositories: data.workspaceRepositories,
   };
@@ -67,7 +69,8 @@ export default function Component(
   // 🔌 Short Circuit
 
   const { actionData, loaderData, matches: _m, params: _p } = props;
-  const { discoveredFolders, profile, repositories } = loaderData;
+  const { discoveredFolders, pickerCapabilities, profile, repositories } =
+    loaderData;
   const actionError =
     actionData && 'error' in actionData ? actionData.error : null;
   const actionMessage =
@@ -96,6 +99,7 @@ export default function Component(
           actionError={actionError}
           addedFolder={addedFolder}
           discoveredFolders={discoveredFolders}
+          pickerCapabilities={pickerCapabilities}
           refreshed={refreshed}
           repositories={repositories}
         />
@@ -119,6 +123,8 @@ export const action = async (args: Route.ActionArgs) => {
       return cloneRepo(args, formData);
     case 'deleteRepo':
       return deleteRepo(args, formData);
+    case 'pickFolderNative':
+      return pickFolderNative(args);
     case 'refreshCheckout':
       return refreshCheckout(args, formData);
     case 'updateProfile':

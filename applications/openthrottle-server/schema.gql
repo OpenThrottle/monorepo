@@ -2974,8 +2974,72 @@ type DiscoveredFolderObject {
 
 """A subdirectory listed by browseDirectory (server-host path)."""
 type BrowseDirectoryEntryObject {
+  """
+  True when this subdirectory is already registered as a checkout (matched by path or OT manifest checkout id).
+  """
+  alreadyRegistered: Boolean!
+
+  """
+  True when this subdirectory contains a .git entry (looks like a git repository).
+  """
+  isGitRepo: Boolean!
   name: String!
+
+  """Absolute path on the server host."""
   path: String!
+}
+
+"""
+An interactive listing from browseDirectory: the current directory's immediate subdirectories plus the navigation context (current + parent path, and whether the current directory is itself a git repo) so the client can render a breadcrumb, an Up control, and an "add this folder" action. All paths are on the server host.
+"""
+type WorkspaceDirectoryListingObject {
+  """
+  Immediate subdirectories of the current directory (or the configured roots when listing roots).
+  """
+  entries: [BrowseDirectoryEntryObject!]!
+
+  """
+  True when the currently-browsed directory is itself a git repository. Always false when listing roots (path is null).
+  """
+  isGitRepo: Boolean!
+
+  """
+  Absolute host path one level up, or null when at/above a configured root (containment-guarded) or when listing roots.
+  """
+  parentPath: String
+
+  """
+  Canonical absolute host path of the currently-browsed directory, or null when listing the configured roots (no directory is "current").
+  """
+  path: String
+}
+
+"""
+Capabilities that seed the add-folder picker: whether a native OS folder dialog can be opened on the server host, the configured workspace roots (host view), and a default path to open the in-app picker at — all server-host paths.
+"""
+type WorkspacePickerCapabilitiesObject {
+  """
+  True when the openthrottle-server host can open a native OS folder dialog for this request (request is loopback + a display is present, or forced via OPENTHROTTLE_NATIVE_PICKER). The client uses this to choose the Browse affordance; the pickFolderNative mutation re-checks it before spawning.
+  """
+  canUseNativeDialog: Boolean!
+
+  """
+  Absolute server-host path to seed the in-app picker at: the first configured workspace root, else the host home directory.
+  """
+  defaultBrowsePath: String!
+
+  """
+  Configured OPENTHROTTLE_WORKSPACE_ROOTS in the host view; empty when unset.
+  """
+  roots: [String!]!
+}
+
+"""
+Result of the native OS folder dialog: the chosen absolute server-host path, or null when the user cancelled (a clean no-op). The path may be outside the configured workspace roots — the native pick is an explicit user gesture. addWorkspaceFolder still re-validates and inspects it.
+"""
+type PickFolderNativePayloadObject {
+  """Chosen absolute path on the server host, or null on user-cancel."""
+  path: String
 }
 
 """
@@ -3629,9 +3693,14 @@ type Query {
   discoveredFolders: [DiscoveredFolderObject!]!
 
   """
-  Immediate subdirectories of a path within the configured workspace roots (server-host paths).
+  Interactive directory listing for the in-app picker: immediate subdirectories (annotated with isGitRepo / alreadyRegistered) plus navigation context (current + parent path, current-is-git-repo). With no path, lists the configured workspace roots as entries. All paths are on the server host.
   """
-  browseDirectory(path: String!): [BrowseDirectoryEntryObject!]!
+  browseDirectory(path: String): WorkspaceDirectoryListingObject!
+
+  """
+  Seed data for the add-folder picker: whether a native OS folder dialog can be opened on the server host for this request, the configured workspace roots (host view), and a default path to open the in-app picker at.
+  """
+  workspacePickerCapabilities: WorkspacePickerCapabilitiesObject!
 
   """
   The authenticated user's repositories with their checkouts and inspection snapshots (snapshots refresh on view past the 15-minute TTL).
@@ -4579,6 +4648,11 @@ type Mutation {
 
   """Re-enable a disabled user."""
   enableUser(id: ID!): UserObject
+
+  """
+  Open the host OS folder dialog and return the chosen absolute server-host path, or null on user-cancel. Guarded by the same same-machine predicate as workspacePickerCapabilities (re-checked before spawning) and bounded by a kill timeout. Does not register anything — the client confirms and calls addWorkspaceFolder.
+  """
+  pickFolderNative: PickFolderNativePayloadObject!
 
   """
   Register a server-host folder: validates and inspects the path, reconciles identity via the OT manifest or normalized git remote, creates or relinks the checkout, and returns the enriched graph.
