@@ -18,8 +18,8 @@ Always run tasks through Nx, prefixed with pnpm (`pnpm nx ...`), never the under
 ./scripts/setup.sh                                  # full environment setup/reset (also seeds the default login user)
 pnpm run worktree:new <name>                        # create + provision a git worktree (the ONE entrypoint; Claude/Cursor use it too). A plain `git worktree add` self-heals on first `:dev`
 pnpm run database:start                             # Postgres + Redis via docker compose
-pnpm run database:migrate                           # apply pending migrations (run-once/idempotent via schema_migrations ledger; safe to re-run, no data re-stamp; does NOT back up)
-pnpm nx run openthrottle-server:dev                 # NestJS GraphQL API
+pnpm run database:migrate                           # apply pending migrations manually (run-once/idempotent via schema_migrations ledger; safe to re-run, no data re-stamp; does NOT back up)
+pnpm nx run openthrottle-server:dev                 # NestJS GraphQL API (auto-applies pending migrations first via monorepo:ensure-migrations; fails fast if Postgres is down)
 pnpm nx run openthrottle-developer:dev              # Developer UI (React Router)
 
 pnpm nx run <project>:test                          # run a project's Vitest tests

@@ -15,7 +15,20 @@ import { readdir, readFile } from 'node:fs/promises';
  * transaction, so a failed migration rolls back cleanly and is retried on the next run.
  */
 
-const MIGRATIONS_DIR = join(process.cwd(), 'databases', 'migrations');
+/** Absolute path to the migration files, resolved from the current working directory. */
+export function defaultMigrationsDir(): string {
+  return join(process.cwd(), 'databases', 'migrations');
+}
+
+/** fs-backed {@link MigrationSource} reading `.sql` files from `dir` (default {@link defaultMigrationsDir}). */
+export function createFsMigrationSource(
+  dir: string = defaultMigrationsDir(),
+): MigrationSource {
+  return {
+    list: () => readdir(dir),
+    read: (file) => readFile(join(dir, file), 'utf-8'),
+  };
+}
 
 /** Ledger table recording which migration files have been applied. */
 export const LEDGER_TABLE = 'schema_migrations';
@@ -270,11 +283,7 @@ async function main(): Promise<void> {
 
   try {
     const store = new PgMigrationStore(client);
-    const source: MigrationSource = {
-      list: () => readdir(MIGRATIONS_DIR),
-      read: (file) => readFile(join(MIGRATIONS_DIR, file), 'utf-8'),
-    };
-    await runMigrations(store, source);
+    await runMigrations(store, createFsMigrationSource());
   } catch (e) {
     console.error(' 🔴  🔴  🔴 Migration failed:', e);
     process.exit(1);
