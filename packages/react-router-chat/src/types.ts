@@ -121,6 +121,28 @@ export type ChatTurnEvent =
   | ChatTurnToolEvent
   | ChatTurnUsageEvent;
 
+/**
+ * Coarse phase of an in-flight assistant turn, used to give the running
+ * indicator something more specific than a generic "Working…". Ordered roughly
+ * by how far the turn has progressed: `connecting` (request in flight, nothing
+ * back yet) → `waiting` (connected, awaiting the model's first token) →
+ * `thinking` (reasoning is streaming) / `runningTool` (a tool call is
+ * outstanding). `stillWorking` is the elapsed-escalation fallback shown when a
+ * generic wait drags on. As-const object (no enum, repo rule).
+ *
+ * @public
+ */
+export const ChatRunPhase = {
+  connecting: 'connecting',
+  runningTool: 'running-tool',
+  stillWorking: 'still-working',
+  thinking: 'thinking',
+  waiting: 'waiting',
+} as const;
+
+/** Union of {@link ChatRunPhase} values. @public */
+export type ChatRunPhase = (typeof ChatRunPhase)[keyof typeof ChatRunPhase];
+
 /** Single message in a modal chat thread. */
 export interface ChatMessage {
   readonly body: string;
@@ -141,6 +163,18 @@ export interface ChatMessage {
    * Ignored once `events` or a non-empty `body` are present.
    */
   readonly pending?: boolean;
+  /**
+   * Coarse phase for a {@link pending} assistant turn, driving the running
+   * indicator's copy (e.g. `connecting` → `waiting` → `still-working`). Optional
+   * and additive: when absent the indicator falls back to its `waiting` default.
+   * Only meaningful while `pending` is true.
+   */
+  readonly phase?: ChatRunPhase;
+  /**
+   * Subject for {@link phase} (a model or tool name) composed into the indicator
+   * label, when known. Ignored unless `phase` is set.
+   */
+  readonly phaseDetail?: string | null;
   readonly role: ChatMessageRole;
 }
 

@@ -474,7 +474,7 @@ describe('ConversationStreamService', () => {
     expect(service.cancel('conv-1')).toBe(false);
   });
 
-  it('treats keepalive liveness chunks as backstop-resetting only: never published/persisted, and they hold off the idle timeout', async () => {
+  it('surfaces keepalive liveness chunks as live-only phase pings (published, never buffered/persisted, no sortOrder), and they hold off the idle timeout', async () => {
     vi.useFakeTimers();
     process.env.OPENTHROTTLE_CHAT_IDLE_TIMEOUT_MS = '5000';
 
@@ -514,9 +514,12 @@ describe('ConversationStreamService', () => {
     const published = publish.mock.calls.map(
       ([, payload]) => payload.conversationStreamChunkAdded,
     );
-    // Keepalives are dropped: only the single text delta + terminal done reach
-    // the transcript, and the turn is NOT a timeout.
-    expect(published).toEqual([
+    // Keepalives are surfaced as live-only phase pings (kind `keepalive`, empty
+    // delta, model in metadata) but stay OUT of the transcript: the non-keepalive
+    // chunks are just the single text delta + terminal done, and the turn is NOT
+    // a timeout.
+    const transcript = published.filter((chunk) => chunk.kind !== 'keepalive');
+    expect(transcript).toEqual([
       expect.objectContaining({ delta: 'Hello', done: false, sortOrder: 0 }),
       expect.objectContaining({
         delta: '',
@@ -525,7 +528,19 @@ describe('ConversationStreamService', () => {
         sortOrder: 1,
       }),
     ]);
-    expect(published.some((chunk) => chunk.kind === 'keepalive')).toBe(false);
+    const keepalives = published.filter((chunk) => chunk.kind === 'keepalive');
+    expect(keepalives).toHaveLength(4);
+    // Each ping names the model and consumes no sortOrder (never enters the
+    // transcript's monotonic ordering, so a real chunk can reuse the value).
+    expect(keepalives[0]).toEqual(
+      expect.objectContaining({
+        delta: '',
+        done: false,
+        kind: 'keepalive',
+        metadataJson: JSON.stringify({ model: 'llama3' }),
+        sortOrder: 0,
+      }),
+    );
     // The persisted assistant message is the clean text — no keepalive noise in
     // tool_metadata.
     expect(conversations.appendMessages).toHaveBeenCalledWith(

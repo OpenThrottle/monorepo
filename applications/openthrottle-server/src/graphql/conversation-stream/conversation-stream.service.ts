@@ -290,6 +290,24 @@ export class ConversationStreamService {
           !chunk.done &&
           chunk.kind === CONVERSATION_STREAM_CHUNK_KINDS.keepalive
         ) {
+          // Surface keepalive as a live-only phase ping so the client can read
+          // "Waiting for {model}…" during the pre-content gap. It is published
+          // but NEVER buffered/persisted and does NOT consume a `sortOrder`, so
+          // it stays out of the transcript, token accounting, and replay — its
+          // only effect beyond resetting the idle backstop above.
+          await this.publishEphemeralChunk({
+            conversationId: run.conversationId,
+            delta: '',
+            done: false,
+            error: null,
+            id: randomUUID(),
+            kind: CONVERSATION_STREAM_CHUNK_KINDS.keepalive,
+            messageId: run.assistantMessageId,
+            metadataJson: run.model
+              ? JSON.stringify({ model: run.model })
+              : null,
+            sortOrder,
+          });
           continue;
         }
 
@@ -609,6 +627,28 @@ export class ConversationStreamService {
       const message = isError ? error.message : String(error);
 
       this.logger.error(`conversation-stream publish failed: ${message}`);
+    }
+  }
+
+  /**
+   * Publish a live-only chunk WITHOUT buffering it for replay. Used for
+   * `keepalive` phase pings: ephemeral liveness a late subscriber has no need to
+   * replay, and which must never enter the transcript or token accounting.
+   */
+  private async publishEphemeralChunk(
+    chunk: ConversationStreamChunkPayload,
+  ): Promise<void> {
+    try {
+      await this.pubSub.publish(conversationStreamTopic(chunk.conversationId), {
+        [CONVERSATION_STREAM_CHUNK_FIELD]: chunk,
+      });
+    } catch (error: unknown) {
+      const isError = error instanceof Error;
+      const message = isError ? error.message : String(error);
+
+      this.logger.error(
+        `conversation-stream keepalive publish failed: ${message}`,
+      );
     }
   }
 

@@ -5,7 +5,10 @@ import type {
   ChatTokenUsage,
   LoadAgentConversationMessagesResult,
 } from '@openthrottle/react-router-chat';
-import { sumUsage } from '@openthrottle/react-router-chat';
+import {
+  deriveRunPhaseFromElapsed,
+  sumUsage,
+} from '@openthrottle/react-router-chat';
 import { useConversationStream } from '~/routing/home/hooks/useConversationStream';
 import type { StartActionResult } from '~/routes/resources.conversation-stream';
 
@@ -101,6 +104,13 @@ export function useAgenticChatTurn(): UseAgenticChatTurnResult {
   // Set once the single auto-retry is spent on a timed-out turn → the UI offers
   // a manual Retry (Task 6).
   const [canRetry, setCanRetry] = React.useState(false);
+  // A 1s heartbeat that advances only while a turn is pending, so the pending
+  // placeholder's phase can escalate over the pre-content gap (connecting →
+  // waiting → still-working) without any chunk arriving to force a re-render.
+  const [nowMs, setNowMs] = React.useState<number>(() => Date.now());
+  // Wall-clock start of the current turn, captured at submit/replay so elapsed
+  // time spans the whole perceived wait (including the start round-trip).
+  const turnStartedAtRef = React.useRef<number | null>(null);
 
   const cancelFetcher = useFetcher();
   const localIdRef = React.useRef(0);
@@ -143,9 +153,41 @@ export function useAgenticChatTurn(): UseAgenticChatTurnResult {
       const stillEmpty = (base.body?.trim() ?? '') === '' && !hasTimeline;
       const isPendingTurn = message.id === pendingAssistantId && stillEmpty;
 
-      return isPendingTurn ? { ...base, pending: true } : base;
+      if (!isPendingTurn) {
+        return base;
+      }
+
+      // Prefer a server-reported phase (from a keepalive ping — names the model
+      // or a starting tool) when one has arrived; otherwise escalate the phase
+      // from elapsed time so the indicator reads "Connecting…" → "Waiting for
+      // the model…" → "Still working…" instead of a static spinner.
+      const serverPhase = stream.phaseByMessageId.get(message.id);
+      if (serverPhase !== undefined) {
+        return {
+          ...base,
+          pending: true,
+          phase: serverPhase.phase,
+          phaseDetail: serverPhase.detail,
+        };
+      }
+
+      const elapsedMs = Math.max(
+        0,
+        nowMs - (turnStartedAtRef.current ?? nowMs),
+      );
+      return {
+        ...base,
+        pending: true,
+        phase: deriveRunPhaseFromElapsed(elapsedMs),
+      };
     });
-  }, [messages, pendingAssistantId, streamedById]);
+  }, [
+    messages,
+    nowMs,
+    pendingAssistantId,
+    stream.phaseByMessageId,
+    streamedById,
+  ]);
 
   const isStreaming =
     startFetcher.state !== 'idle' ||
@@ -179,6 +221,7 @@ export function useAgenticChatTurn(): UseAgenticChatTurnResult {
     // it, and clear any prior manual-retry state.
     lastTurnRef.current = { fields, message };
     retryCountRef.current = 0;
+    turnStartedAtRef.current = Date.now();
     setCanRetry(false);
     setError(null);
     setIsRetrying(false);
@@ -226,6 +269,7 @@ export function useAgenticChatTurn(): UseAgenticChatTurnResult {
     }
 
     retryCountRef.current += 1;
+    turnStartedAtRef.current = Date.now();
     setCanRetry(false);
     setError(null);
     setPendingAssistantId(null);
@@ -383,6 +427,24 @@ export function useAgenticChatTurn(): UseAgenticChatTurnResult {
       clearTimeout(timer);
     };
   }, [pendingAssistantId, stream.lastActivityAt]);
+
+  // Heartbeat: while a turn is pending, tick `nowMs` every second so the pending
+  // placeholder's elapsed-based phase advances even when no chunk arrives. The
+  // interval only runs during the gap and is cleared on pending clear / unmount.
+  React.useEffect(() => {
+    if (pendingAssistantId === null) {
+      return;
+    }
+
+    setNowMs(Date.now());
+    const timer = setInterval(() => {
+      setNowMs(Date.now());
+    }, 1_000);
+
+    return () => {
+      clearInterval(timer);
+    };
+  }, [pendingAssistantId]);
 
   // Hydrate the thread from a restored conversation once its messages load. The
   // load-messages helper already maps rows to ChatMessage[]; a load error

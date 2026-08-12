@@ -26,6 +26,7 @@ vi.mock('~/routing/home/hooks/useConversationStream', () => ({
     isStreaming: boolean;
     lastActivityAt: number | null;
     messages: never[];
+    phaseByMessageId: ReadonlyMap<string, never>;
     retryableIds: ReadonlySet<string>;
   } => {
     const [retryableIds, setRetryableIds] = React.useState<ReadonlySet<string>>(
@@ -40,6 +41,7 @@ vi.mock('~/routing/home/hooks/useConversationStream', () => ({
       isStreaming: false,
       lastActivityAt: null,
       messages: [],
+      phaseByMessageId: new Map<string, never>(),
       retryableIds,
     };
   },
