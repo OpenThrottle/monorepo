@@ -10,6 +10,7 @@ import { AgentDiscoveryResolver } from './agent-discovery.resolver';
 import { AgentDiscoveryService } from './agent-discovery.service';
 
 @Module({
+  exports: [AgentDiscoveryService],
   imports: [LoggerModule, NestjsRepositoriesModule],
   providers: [
     AgentDiscoveryResolver,

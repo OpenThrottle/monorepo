@@ -70,6 +70,12 @@ export const opencodeDriver = defineDriver({
   capabilities,
   discoverModels,
   id: 'opencode',
+  install: {
+    installerShell: 'bash',
+    method: 'curl-shell',
+    url: 'https://opencode.ai/install',
+  },
   label: 'opencode',
+  update: { argv: ['upgrade'], method: 'command' },
   versionArgs: ['--version'],
 });

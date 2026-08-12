@@ -62,6 +62,12 @@ export const codexDriver = defineDriver({
   },
   capabilities,
   id: 'codex',
+  install: {
+    installerShell: 'sh',
+    method: 'curl-shell',
+    url: 'https://chatgpt.com/codex/install.sh',
+  },
   label: 'codex',
+  update: { argv: ['update'], method: 'command' },
   versionArgs: ['--version'],
 });

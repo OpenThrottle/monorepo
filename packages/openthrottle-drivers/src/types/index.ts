@@ -132,6 +132,29 @@ export type DriverModelListing =
   | { readonly mode: 'static'; readonly models: readonly string[] };
 
 /**
+ * @description How a driver's CLI is installed on the host. `method: 'curl-shell'` fetches `url` and
+ * pipes it to `installerShell` (`curl -fsSL <url> | <installerShell>`), mirroring the `curl | shell`
+ * installers in `scripts/setup_software.sh`. Kept as a pure descriptor — the leaf package never
+ * spawns; the impure executor (agentic-utils) reads this and is the only place a subprocess runs.
+ * @public
+ */
+export type DriverInstallDescriptor = {
+  readonly installerShell: 'bash' | 'sh';
+  readonly method: 'curl-shell';
+  readonly url: string;
+};
+
+/**
+ * @description How a driver's CLI updates itself. `method: 'command'` runs the CLI's own self-update
+ * subcommand (`<binary> <argv...>`, e.g. `claude update`, `opencode upgrade`); `method: 'curl-shell'`
+ * re-runs the install descriptor (idempotent latest-version installers). Pure descriptor only.
+ * @public
+ */
+export type DriverUpdateDescriptor =
+  | { readonly argv: readonly string[]; readonly method: 'command' }
+  | { readonly method: 'curl-shell' };
+
+/**
  * @description A single agent CLI, described once. Contributed via `defineDriver` and looked up
  * through the registry. `buildShellCommand` returns a `shell: true` command string and may throw
  * `UnsupportedDriverModeError` when the CLI has no viable headless mode.
@@ -148,8 +171,17 @@ export interface AgentDriver {
   readonly discoverModels?: DriverModelListing;
   /** Stable driver id (also a `DriverId`). */
   readonly id: string;
+  /**
+   * How this CLI is installed on the host (single source of truth shared with
+   * `scripts/setup_software.sh`). Omitted ⇒ not installable through the in-stack setup feature.
+   */
+  readonly install?: DriverInstallDescriptor;
   /** Human/iteration label, e.g. `claude-code`, `cursor-agent`. */
   readonly label: string;
+  /**
+   * How this CLI updates itself. Omitted ⇒ falls back to re-running {@link install} (when present).
+   */
+  readonly update?: DriverUpdateDescriptor;
   /** Args probing presence + version; default `['--version']`. */
   readonly versionArgs: readonly string[];
 }

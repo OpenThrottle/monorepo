@@ -76,6 +76,12 @@ export const grokDriver = defineDriver({
   capabilities,
   discoverModels,
   id: 'grok',
+  install: {
+    installerShell: 'bash',
+    method: 'curl-shell',
+    url: 'https://x.ai/cli/install.sh',
+  },
   label: 'grok',
+  update: { argv: ['update'], method: 'command' },
   versionArgs: ['--version'],
 });

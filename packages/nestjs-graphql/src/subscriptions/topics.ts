@@ -58,6 +58,16 @@ export function conversationStreamTopic(conversationId: string): string {
 }
 
 /**
+ * stdout/stderr streamed for a single agent-CLI install/update run:
+ * `agent-setup:<runId>:stream`.
+ *
+ * @public
+ */
+export function agentSetupStreamTopic(runId: string): string {
+  return instanceTopic('agent-setup', runId, 'stream');
+}
+
+/**
  * Live transcript snapshots for a single transcription session:
  * `transcription:<sessionId>:stream`.
  *

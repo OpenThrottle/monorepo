@@ -1,0 +1,19 @@
+mutation InstallAgentCli($backend: String!) {
+  installAgentCli(backend: $backend) {
+    backend
+    disabled
+    errorMessage
+    mode
+    runId
+  }
+}
+
+mutation UpdateAgentCli($backend: String!) {
+  updateAgentCli(backend: $backend) {
+    backend
+    disabled
+    errorMessage
+    mode
+    runId
+  }
+}

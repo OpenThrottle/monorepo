@@ -730,6 +730,69 @@ type DiscoverAgentClisResult {
   totalCount: Int!
 }
 
+type AgentCliSetupConfigObject {
+  """
+  True when the current user may run installs/updates (has the SETTINGS_WRITE permission). The UI disables the controls when false.
+  """
+  canManage: Boolean!
+
+  """
+  True when server-side install/update is enabled (OT_AGENT_CLI_INSTALL_ENABLED). Default-off; the UI explains disabled controls when false.
+  """
+  installEnabled: Boolean!
+}
+
+type AgentSetupStreamChunkObject {
+  """
+  Incremental stdout/stderr text for this chunk (empty on the terminal chunk).
+  """
+  data: String!
+
+  """True exactly once, on the terminal chunk of the run."""
+  done: Boolean!
+
+  """Executor failure classifier when the run failed; null otherwise."""
+  error: String
+
+  """
+  Child exit code on the terminal chunk; null while running or when killed by signal.
+  """
+  exitCode: Int
+
+  """Unique id for this chunk (subscription dedupe / cursor)."""
+  id: String!
+
+  """The install/update run id these chunks belong to."""
+  runId: String!
+
+  """Monotonic index within the run."""
+  sortOrder: Int!
+
+  """Which stream the text came from: stdout | stderr."""
+  stream: String!
+}
+
+type StartAgentSetupResult {
+  """The backend (driver id) this run targeted."""
+  backend: String!
+
+  """
+  True when the request was rejected because server-side install/update is disabled by env flag (OT_AGENT_CLI_INSTALL_ENABLED).
+  """
+  disabled: Boolean!
+
+  """Validation or policy error (no throw). Null on success."""
+  errorMessage: String
+
+  """install | update — the mode that was started."""
+  mode: String!
+
+  """
+  Correlation id to subscribe to via agentSetupChunkAdded. Null when the request was rejected.
+  """
+  runId: String
+}
+
 type AgentsChatTurnResult {
   """
   Assistant-visible reply text. Null when the turn failed (see errorMessage).
@@ -3135,6 +3198,11 @@ type Query {
   discoverAgentClis: DiscoverAgentClisResult!
 
   """
+  Whether server-side agent-CLI install/update is enabled (env flag) and whether the current user may run it (SETTINGS_WRITE). Drives the /settings/setup control gating.
+  """
+  agentCliSetupConfig: AgentCliSetupConfigObject!
+
+  """
   Natural-language code semantic search over a registered repository's indexed code. available=false when no embeddings provider is configured.
   """
   codeSemanticSearch(input: CodeSemanticSearchInput!): CodeSemanticSearchResult!
@@ -4056,6 +4124,16 @@ type Mutation {
 
   """Update the title on an owned agent conversation."""
   updateAgentConversationTitle(input: UpdateAgentConversationTitleInput!): AgentConversationObject!
+
+  """
+  Install an allowlisted agent CLI on the server host by driver id. Gated by SETTINGS_WRITE and the default-off OT_AGENT_CLI_INSTALL_ENABLED flag; returns a runId to stream via agentSetupChunkAdded.
+  """
+  installAgentCli(backend: String!): StartAgentSetupResult!
+
+  """
+  Update an allowlisted agent CLI on the server host by driver id. Gated by SETTINGS_WRITE and the default-off OT_AGENT_CLI_INSTALL_ENABLED flag; returns a runId to stream via agentSetupChunkAdded.
+  """
+  updateAgentCli(backend: String!): StartAgentSetupResult!
 
   """
   Agents namespace: run one chat turn against the server-side agents path (OpenThrottle / MCP developer). Returns assistant text, mcpTool, structuredPayloadJson, and toolMetadataJson; uses errorMessage instead of throws for expected validation failures.
@@ -5894,6 +5972,11 @@ input ApplyWorkspaceEditorConfigurationInput {
 }
 
 type Subscription {
+  """
+  Live stdout/stderr for an agent-CLI install/update run (topic agent-setup:<runId>:stream). Requires an authenticated connection.
+  """
+  agentSetupChunkAdded(runId: ID!): AgentSetupStreamChunkObject!
+
   """
   Live token stream for a conversation (topic conversation:<id>:stream). Requires an authenticated connection that owns the conversation.
   """

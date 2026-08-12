@@ -51,6 +51,12 @@ export const claudeDriver = defineDriver({
   capabilities,
   discoverModels,
   id: 'claude',
+  install: {
+    installerShell: 'bash',
+    method: 'curl-shell',
+    url: 'https://claude.ai/install.sh',
+  },
   label: 'claude-code',
+  update: { argv: ['update'], method: 'command' },
   versionArgs: ['--version'],
 });
