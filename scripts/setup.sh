@@ -46,6 +46,12 @@ pnpm database:bootstrap-service-accounts
 #     share this Postgres, so they inherit the seeded user and must NOT re-seed.
 pnpm database:bootstrap-default-user
 
+# 4c. Fail loudly if any of the six required .bootstrap-secrets.local keys are
+#     missing. This runs AFTER 4b because the service-account script writes the
+#     2 token keys and the default-user script writes the 4 URL/user keys — only
+#     here is the full set present. Guards against a silently dropped token.
+pnpm check:bootstrap-secrets
+
 echo "🤖 setup.sh complete: run "
 
 # Echo we're done and the run command to start things up

@@ -22,14 +22,16 @@ import {
   ServiceAccountCredential,
   ServiceAccountsService,
 } from '@openthrottle/nestjs-repositories';
+import { fileURLToPath } from 'node:url';
 import { DataSource, IsNull } from 'typeorm';
 
 import {
   LOCAL_SECRETS_FILENAME,
+  readLocalSecrets,
   upsertLocalSecrets,
 } from './local-secrets-file';
 
-const BOOTSTRAP_ACCOUNTS = [
+export const BOOTSTRAP_ACCOUNTS = [
   {
     envVar: 'OPENTHROTTLE_MCP_AUTH_TOKEN',
     label: 'bootstrap-openthrottle-mcp',
@@ -46,7 +48,8 @@ const BOOTSTRAP_ACCOUNTS = [
 const TOKEN_GENERATION_HINT =
   "node -e \"const c=require('node:crypto');const a='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';const r=n=>Array.from(c.randomBytes(n),b=>a[b%a.length]).join('');console.log('ot_sa_'+r(12)+'_'+r(32))\"";
 
-type ProvisionOutcome = 'created' | 'minted' | 'noop' | 'skipped' | 'updated';
+type ProvisionOutcome =
+  'created' | 'minted' | 'noop' | 'rotated' | 'skipped' | 'updated';
 
 async function countActiveCredentials(
   dataSource: DataSource,
@@ -87,6 +90,11 @@ async function upsertBootstrapCredentialFromEnv(
 
     console.log(`${account.name}: ${detail} from ${account.envVar}.`);
 
+    // The plaintext token is known here (it came from the environment), so
+    // persist a durable copy — otherwise a machine that provisions from env
+    // would leave this key absent from the local secrets file.
+    await upsertLocalSecrets({ [account.envVar]: token });
+
     return result.action;
   } catch (error) {
     console.error(
@@ -105,29 +113,17 @@ async function upsertBootstrapCredentialFromEnv(
   }
 }
 
-async function mintBootstrapCredential(
-  dataSource: DataSource,
+/**
+ * Mint a fresh credential, print it once, and persist it to the git-ignored
+ * local file. Secrets only exist at mint time and cannot be re-derived later,
+ * so the durable copy is written here. Shared by the fresh-mint and rotate
+ * paths.
+ */
+async function createAndRecordCredential(
   serviceAccountsService: ServiceAccountsService,
   account: (typeof BOOTSTRAP_ACCOUNTS)[number],
   serviceAccountId: string,
-): Promise<ProvisionOutcome> {
-  const activeCount = await countActiveCredentials(
-    dataSource,
-    serviceAccountId,
-  );
-
-  if (activeCount > 0) {
-    console.log(
-      `Skip ${account.name}: ${activeCount} active credential(s) already exist.`,
-    );
-
-    console.log(
-      `  Revoke old credentials via admin GraphQL, then re-run this script to mint a new token.`,
-    );
-
-    return 'skipped';
-  }
-
+): Promise<void> {
   const created = await serviceAccountsService.createCredential({
     label: account.label,
     serviceAccountId,
@@ -143,14 +139,86 @@ async function mintBootstrapCredential(
   console.log(`${account.envVar}=${created.token}`);
   console.log('');
 
-  // Secrets only exist at mint time and cannot be re-derived later, so persist
-  // a durable copy to the git-ignored local file here in the mint branch.
   await upsertLocalSecrets({ [account.envVar]: created.token });
+}
+
+/**
+ * Revoke every active credential for a bootstrap account, then mint a fresh
+ * one. Used to self-heal the skip branch when an active credential exists but
+ * its plaintext is absent from the local file and unrecoverable (only a bcrypt
+ * hash is stored). Restricted by its only callers to the two known
+ * BOOTSTRAP_ACCOUNTS — never a generalized revoke of arbitrary accounts.
+ */
+async function rotateBootstrapCredential(
+  serviceAccountsService: ServiceAccountsService,
+  account: (typeof BOOTSTRAP_ACCOUNTS)[number],
+  serviceAccountId: string,
+): Promise<ProvisionOutcome> {
+  const active =
+    await serviceAccountsService.findActiveCredentials(serviceAccountId);
+
+  /* eslint-disable no-await-in-loop -- revoke sequentially; small fixed set */
+  for (const credential of active) {
+    await serviceAccountsService.revokeCredential(credential.id);
+  }
+  /* eslint-enable no-await-in-loop */
+
+  console.log(
+    `Rotate ${account.name}: revoked ${active.length} stale credential(s) and minting a fresh token (${account.envVar} was missing from ${LOCAL_SECRETS_FILENAME}).`,
+  );
+
+  await createAndRecordCredential(
+    serviceAccountsService,
+    account,
+    serviceAccountId,
+  );
+
+  return 'rotated';
+}
+
+async function mintBootstrapCredential(
+  dataSource: DataSource,
+  serviceAccountsService: ServiceAccountsService,
+  account: (typeof BOOTSTRAP_ACCOUNTS)[number],
+  serviceAccountId: string,
+): Promise<ProvisionOutcome> {
+  const activeCount = await countActiveCredentials(
+    dataSource,
+    serviceAccountId,
+  );
+
+  if (activeCount > 0) {
+    const recorded = ((await readLocalSecrets())[account.envVar] ?? '').trim();
+
+    // Complete file + existing credential: nothing to do, stay a clean no-op.
+    if (recorded !== '') {
+      console.log(
+        `Skip ${account.name}: ${activeCount} active credential(s) and a durable token already recorded.`,
+      );
+
+      return 'skipped';
+    }
+
+    // Active credential but no durable copy: the old plaintext is unrecoverable,
+    // so rotate to a usable token (owner decision, 2026-08-13) rather than leave
+    // the file missing this key.
+    return rotateBootstrapCredential(
+      serviceAccountsService,
+      account,
+      serviceAccountId,
+    );
+  }
+
+  await createAndRecordCredential(
+    serviceAccountsService,
+    account,
+    serviceAccountId,
+  );
 
   return 'minted';
 }
 
-async function provisionAccount(
+export async function provisionAccount(
   dataSource: DataSource,
   serviceAccountsService: ServiceAccountsService,
   account: (typeof BOOTSTRAP_ACCOUNTS)[number],
@@ -208,7 +276,7 @@ async function main(): Promise<void> {
       ),
     );
 
-    if (outcomes.includes('minted')) {
+    if (outcomes.includes('minted') || outcomes.includes('rotated')) {
       console.log('Add the minted line(s) above to:');
       console.log('  - applications/openthrottle-server/.env');
       console.log(
@@ -232,7 +300,10 @@ async function main(): Promise<void> {
   }
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+// Only run when invoked directly (not when imported by tests).
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  main().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}

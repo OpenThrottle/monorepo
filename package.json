@@ -443,6 +443,7 @@
     "build:licenses": "pnpm dlx license-checker --csv --production --out \"$(basename $PWD)-licenses.csv\"",
     "build:packages": "nx run-many --target build --projects tag:type:package,tag:type:tool",
     "caddy": "caddy run --config tools/caddy/Caddyfile",
+    "check:bootstrap-secrets": "tsx ./scripts/check-bootstrap-secrets.ts",
     "check:catalog": "tsx ./scripts/check-catalog-coverage.ts",
     "check:rbac-admin-coverage": "tsx ./scripts/check-admin-permission-coverage.ts",
     "check:target-descriptions": "tsx ./scripts/audit-target-descriptions.ts --check",
