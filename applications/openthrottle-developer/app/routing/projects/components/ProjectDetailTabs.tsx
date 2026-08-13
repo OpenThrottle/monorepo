@@ -1,6 +1,7 @@
 import * as React from 'react';
 import {
   Badge,
+  Button,
   Card,
   CardContent,
   CardHeader,
@@ -13,7 +14,7 @@ import {
   TabsList,
   TabsTrigger,
 } from '@openthrottle/react-router-shadcn';
-import { useFetcher } from 'react-router';
+import { Link, useFetcher } from 'react-router';
 import {
   OpenThrottleClipboard,
   OpenThrottlePagination,
@@ -23,7 +24,7 @@ import { isProjectTabValue } from '~/routing/projects/utils/is-project-tab-value
 import { type ProjectTabValue } from '~/routing/projects/data/tabs';
 import { PlanTagChips } from '~/routing/plans/components/PlanTagChips';
 import { ProjectTasksTable } from '~/routing/projects/components/ProjectTasksTable';
-import type { Route } from '@/app/routes/+types/projects.$projectId';
+import type { Route } from '@/app/routes/+types/projects.$projectId._index';
 
 type ProjectDetailLoaderData = Route.ComponentProps['loaderData'];
 
@@ -91,9 +92,14 @@ export const ProjectDetailTabs = (
                 {project.name}
               </h1>
             </div>
-            <Badge className="shrink-0" variant="secondary">
-              <OpenThrottleClipboard label={project.id} text={project.id} />
-            </Badge>
+            <div className="flex shrink-0 items-center gap-2">
+              <Badge variant="secondary">
+                <OpenThrottleClipboard label={project.id} text={project.id} />
+              </Badge>
+              <Button asChild={true} size="sm" variant="outline">
+                <Link to={`/projects/${project.id}/edit`}>Edit</Link>
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
             {project.description != null && project.description !== '' && (

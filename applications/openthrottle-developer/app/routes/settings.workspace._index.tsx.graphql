@@ -85,6 +85,11 @@ query getWorkspaceSettings {
     name
     path
   }
+  workspacePickerCapabilities {
+    canUseNativeDialog
+    defaultBrowsePath
+    roots
+  }
   workspaceRepositories {
     ...WorkspaceRepositoryFields
   }
@@ -98,9 +103,22 @@ query getWorkspaceSettings {
   }
 }
 
-query browseWorkspaceDirectory($path: String!) {
+query browseWorkspaceDirectory($path: String) {
   browseDirectory(path: $path) {
-    name
+    entries {
+      alreadyRegistered
+      isGitRepo
+      name
+      path
+    }
+    isGitRepo
+    parentPath
+    path
+  }
+}
+
+mutation pickFolderNative {
+  pickFolderNative {
     path
   }
 }

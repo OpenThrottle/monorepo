@@ -7,6 +7,7 @@
 import { UseGuards } from '@nestjs/common';
 import {
   Args,
+  Context,
   ID,
   Mutation,
   Parent,
@@ -28,9 +29,11 @@ import {
 } from './workspace-folders.input';
 import {
   AddWorkspaceFolderPayloadObject,
-  BrowseDirectoryEntryObject,
   DiscoveredFolderObject,
+  PickFolderNativePayloadObject,
   RefreshCheckoutPayloadObject,
+  WorkspaceDirectoryListingObject,
+  WorkspacePickerCapabilitiesObject,
 } from './workspace-folders.object';
 import { WorkspaceFoldersService } from './workspace-folders.service';
 import { WorkspaceSettingsLoaders } from './workspace-settings-loaders';
@@ -62,14 +65,29 @@ export class WorkspaceFoldersResolver {
     return this.workspaceFoldersService.discoveredFolders(userId);
   }
 
-  @Query(() => [BrowseDirectoryEntryObject], {
-    description: `Immediate subdirectories of a path within the configured workspace roots (server-host paths).`,
+  @Query(() => WorkspaceDirectoryListingObject, {
+    description: `Interactive directory listing for the in-app picker: immediate subdirectories (annotated with isGitRepo / alreadyRegistered) plus navigation context (current + parent path, current-is-git-repo). With no path, lists the configured workspace roots as entries. All paths are on the server host.`,
   })
   @Permissions(PERMISSIONS.SETTINGS_READ)
   async browseDirectory(
-    @Args('path', { type: () => String }) path: string,
-  ): Promise<BrowseDirectoryEntryObject[]> {
-    return this.workspaceFoldersService.browseDirectory(path);
+    @CurrentUser('sub') userId: string,
+    @Args('path', { nullable: true, type: () => String })
+    path?: string | null,
+  ): Promise<WorkspaceDirectoryListingObject> {
+    return this.workspaceFoldersService.browseDirectory(userId, path);
+  }
+
+  @Query(() => WorkspacePickerCapabilitiesObject, {
+    description: `Seed data for the add-folder picker: whether a native OS folder dialog can be opened on the server host for this request, the configured workspace roots (host view), and a default path to open the in-app picker at.`,
+  })
+  @Permissions(PERMISSIONS.SETTINGS_READ)
+  workspacePickerCapabilities(
+    @Context() context: { req?: { socket?: { remoteAddress?: string } } },
+  ): WorkspacePickerCapabilitiesObject {
+    const remoteAddress = context.req?.socket?.remoteAddress ?? null;
+    return this.workspaceFoldersService.workspacePickerCapabilities(
+      remoteAddress,
+    );
   }
 
   @Query(() => [RepositoryObject], {
@@ -92,6 +110,17 @@ export class WorkspaceFoldersResolver {
     @Args('id', { type: () => ID }) id: string,
   ): Promise<RepositoryObject | null> {
     return this.workspaceFoldersService.workspaceRepository(userId, id);
+  }
+
+  @Mutation(() => PickFolderNativePayloadObject, {
+    description: `Open the host OS folder dialog and return the chosen absolute server-host path, or null on user-cancel. Guarded by the same same-machine predicate as workspacePickerCapabilities (re-checked before spawning) and bounded by a kill timeout. Does not register anything — the client confirms and calls addWorkspaceFolder.`,
+  })
+  @Permissions(PERMISSIONS.SETTINGS_WRITE)
+  async pickFolderNative(
+    @Context() context: { req?: { socket?: { remoteAddress?: string } } },
+  ): Promise<PickFolderNativePayloadObject> {
+    const remoteAddress = context.req?.socket?.remoteAddress ?? null;
+    return this.workspaceFoldersService.pickFolderNative(remoteAddress);
   }
 
   @Mutation(() => AddWorkspaceFolderPayloadObject, {

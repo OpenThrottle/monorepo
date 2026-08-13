@@ -5,6 +5,7 @@ import {
   BrowseWorkspaceDirectoryDocument,
   CloneRepositoryDocument,
   DeleteWorkspaceLocalRepositoryDocument,
+  PickFolderNativeDocument,
   RefreshCheckoutDocument,
   UpdateWorkspaceProfileDocument,
 } from '~/__generated__/graphql';
@@ -89,10 +90,8 @@ export const browseDirectory = async (
   args: Route.ActionArgs,
   formData: FormData,
 ) => {
-  const path = optionalTrimmedString(formData.get('path'));
-  if (!path) {
-    return { error: 'A directory path is required.' };
-  }
+  // An empty/omitted path lists the configured roots (zero-typing seed).
+  const path = optionalTrimmedString(formData.get('path')) ?? null;
 
   try {
     const data = await executeGraphqlWithAuth(
@@ -100,10 +99,26 @@ export const browseDirectory = async (
       BrowseWorkspaceDirectoryDocument,
       { path },
     );
-    return { browse: { entries: data.browseDirectory, path } };
+    return { browse: data.browseDirectory };
   } catch (error) {
     const message =
       error instanceof Error ? error.message : 'Failed to browse directory.';
+    return { error: message };
+  }
+};
+
+export const pickFolderNative = async (args: Route.ActionArgs) => {
+  try {
+    const data = await executeGraphqlWithAuth(
+      args.request,
+      PickFolderNativeDocument,
+    );
+    return { picked: { path: data.pickFolderNative.path } };
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : 'Failed to open the folder dialog.';
     return { error: message };
   }
 };

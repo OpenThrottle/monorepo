@@ -11,9 +11,14 @@ import {
   Input,
   Label,
 } from '@openthrottle/react-router-shadcn';
-import { FolderIcon, FolderPlusIcon } from 'lucide-react';
-import type { DiscoveredFolderObject } from '~/__generated__/graphql';
+import { FolderPlusIcon } from 'lucide-react';
+import type {
+  DiscoveredFolderObject,
+  WorkspacePickerCapabilitiesObject,
+} from '~/__generated__/graphql';
 import { WorkspaceAddFolderCandidate } from '~/routing/settings/components/WorkspaceAddFolderCandidate';
+import { WorkspaceDirectoryPicker } from '~/routing/settings/components/WorkspaceDirectoryPicker';
+import { WorkspaceNativeBrowse } from '~/routing/settings/components/WorkspaceNativeBrowse';
 import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
 import { useWorkspaceAddFolderDialog } from '~/routing/settings/hooks/useWorkspaceAddFolderDialog';
 
@@ -23,26 +28,23 @@ export interface WorkspaceAddFolderDialogProps {
     DiscoveredFolderObject,
     'alreadyRegistered' | 'name' | 'path'
   >[];
+  pickerCapabilities: Pick<
+    WorkspacePickerCapabilitiesObject,
+    'canUseNativeDialog' | 'defaultBrowsePath' | 'roots'
+  >;
 }
 
 export const WorkspaceAddFolderDialog = (
   props: WorkspaceAddFolderDialogProps,
 ): React.ReactElement => {
-  const { actionError, discoveredFolders } = props;
+  const { actionError, discoveredFolders, pickerCapabilities } = props;
 
   // Hooks
-  const {
-    browseEntries,
-    browseFetcher,
-    browsePath,
-    handleBrowse,
-    handleBrowseSubmit,
-    handleToggleManualPath,
-    isAdding,
-    open,
-    setOpen,
-    showManualPath,
-  } = useWorkspaceAddFolderDialog();
+  const picker = useWorkspaceAddFolderDialog({
+    canUseNativeDialog: pickerCapabilities.canUseNativeDialog,
+    defaultBrowsePath: pickerCapabilities.defaultBrowsePath,
+    roots: pickerCapabilities.roots,
+  });
 
   // Setup
 
@@ -55,7 +57,7 @@ export const WorkspaceAddFolderDialog = (
   // 🔌 Short Circuit
 
   return (
-    <Dialog onOpenChange={setOpen} open={open}>
+    <Dialog onOpenChange={picker.setOpen} open={picker.open}>
       <DialogTrigger asChild={true}>
         <Button data-testid="WorkspaceAddFolderDialogTrigger">
           <FolderPlusIcon aria-hidden={true} className="size-4" />
@@ -63,7 +65,7 @@ export const WorkspaceAddFolderDialog = (
         </Button>
       </DialogTrigger>
       <DialogContent
-        className="max-h-[80vh] overflow-y-auto sm:max-w-xl"
+        className="max-h-[85vh] overflow-y-auto sm:max-w-xl"
         data-testid="WorkspaceAddFolderDialog"
       >
         <DialogHeader>
@@ -73,103 +75,75 @@ export const WorkspaceAddFolderDialog = (
           </DialogDescription>
         </DialogHeader>
 
-        {discoveredFolders.length === 0 ? (
-          <p className="text-muted-foreground text-sm">
-            {WORKSPACE_FOLDERS_COPY.discoveredEmpty}
-          </p>
-        ) : (
-          <ul className="space-y-2">
-            {discoveredFolders.map((candidate) => (
-              <WorkspaceAddFolderCandidate
-                candidate={candidate}
-                isAdding={isAdding}
-                key={candidate.path}
-              />
-            ))}
-          </ul>
-        )}
+        {picker.canUseNativeDialog ? (
+          <WorkspaceNativeBrowse
+            isAdding={picker.isAdding}
+            isPicking={picker.isPicking}
+            onClearPicked={picker.handleClearPickedPath}
+            onPickNative={picker.handlePickNative}
+            pickError={picker.pickError}
+            pickedPath={picker.pickedPath}
+          />
+        ) : null}
 
-        {browseEntries ? (
-          <div className="space-y-2">
-            <p className="text-muted-foreground font-mono text-xs">
-              {browsePath}
+        <div className="space-y-2">
+          <div>
+            <p className="text-sm font-medium">
+              {WORKSPACE_FOLDERS_COPY.browseTitle}
             </p>
-            {browseEntries.length === 0 ? (
-              <p className="text-muted-foreground text-sm">
-                {WORKSPACE_FOLDERS_COPY.browseEmpty}
-              </p>
-            ) : (
-              <ul className="space-y-1">
-                {browseEntries.map((entry) => (
-                  <li
-                    className="flex items-center justify-between gap-2"
-                    key={entry.path}
-                  >
-                    <button
-                      className="flex min-w-0 items-center gap-2 text-left text-sm hover:underline"
-                      onClick={() => handleBrowse(entry.path)}
-                      type="button"
-                    >
-                      <FolderIcon
-                        aria-hidden={true}
-                        className="size-4 shrink-0"
-                      />
-                      <span className="truncate">{entry.name}</span>
-                    </button>
-                    <Form method="post">
-                      <input name="intent" type="hidden" value="addFolder" />
-                      <input name="path" type="hidden" value={entry.path} />
-                      <Button size="sm" type="submit" variant="outline">
-                        Add
-                      </Button>
-                    </Form>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <p className="text-muted-foreground text-xs">
+              {WORKSPACE_FOLDERS_COPY.browseInAppHint}
+            </p>
+          </div>
+          <WorkspaceDirectoryPicker
+            breadcrumbs={picker.breadcrumbs}
+            browseError={picker.browseError}
+            currentIsGitRepo={picker.currentIsGitRepo}
+            currentPath={picker.currentPath}
+            entries={picker.entries}
+            isAdding={picker.isAdding}
+            isBrowsing={picker.isBrowsing}
+            onAddCurrent={picker.handleAddCurrent}
+            onBrowseRoots={() => picker.handleBrowse('')}
+            onNavigateTo={picker.handleNavigateTo}
+            onOpen={picker.handleOpen}
+            onUp={picker.handleUp}
+            parentPath={picker.parentPath}
+          />
+        </div>
+
+        {discoveredFolders.length > 0 ? (
+          <div className="space-y-2 border-t pt-4">
+            <ul className="space-y-2">
+              {discoveredFolders.map((candidate) => (
+                <WorkspaceAddFolderCandidate
+                  candidate={candidate}
+                  isAdding={picker.isAdding}
+                  key={candidate.path}
+                />
+              ))}
+            </ul>
           </div>
         ) : null}
 
         <div className="space-y-2 border-t pt-4">
-          <p className="text-muted-foreground text-sm">
-            {WORKSPACE_FOLDERS_COPY.browseHint}
-          </p>
-          <browseFetcher.Form
-            className="flex items-end gap-2"
-            method="post"
-            onSubmit={handleBrowseSubmit}
-          >
-            <div className="flex-1 space-y-1">
-              <Label htmlFor="browse-directory-path">Browse from</Label>
-              <Input
-                id="browse-directory-path"
-                name="path"
-                placeholder="/Users/you/Development"
-                type="text"
-              />
-            </div>
-            <Button type="submit" variant="outline">
-              Browse
-            </Button>
-          </browseFetcher.Form>
-        </div>
-
-        <div className="space-y-2 border-t pt-4">
           <button
             className="text-muted-foreground text-sm hover:underline"
-            onClick={handleToggleManualPath}
+            onClick={picker.handleToggleManualPath}
             type="button"
           >
             {WORKSPACE_FOLDERS_COPY.advancedPathToggle}
           </button>
-          {showManualPath ? (
+          {picker.showManualPath ? (
             <Form className="space-y-2" method="post">
               <input name="intent" type="hidden" value="addFolder" />
               <p className="text-muted-foreground text-xs">
                 {WORKSPACE_FOLDERS_COPY.advancedPathHint}
               </p>
               <div className="space-y-1">
-                <Label htmlFor="manual-folder-path">Server path</Label>
+                <Label htmlFor="manual-folder-path">
+                  {WORKSPACE_FOLDERS_COPY.manualPathLabel}
+                </Label>
                 <Input
                   id="manual-folder-path"
                   name="path"
@@ -180,7 +154,7 @@ export const WorkspaceAddFolderDialog = (
               </div>
               <div className="space-y-1">
                 <Label htmlFor="manual-folder-display-name">
-                  Display name (optional)
+                  {WORKSPACE_FOLDERS_COPY.manualDisplayNameLabel}
                 </Label>
                 <Input
                   id="manual-folder-display-name"
@@ -188,8 +162,14 @@ export const WorkspaceAddFolderDialog = (
                   type="text"
                 />
               </div>
-              <Button disabled={isAdding} type="submit" variant="outline">
-                {isAdding ? 'Adding…' : WORKSPACE_FOLDERS_COPY.addFolderButton}
+              <Button
+                disabled={picker.isAdding}
+                type="submit"
+                variant="outline"
+              >
+                {picker.isAdding
+                  ? WORKSPACE_FOLDERS_COPY.pickerLoading
+                  : WORKSPACE_FOLDERS_COPY.addFolderButton}
               </Button>
             </Form>
           ) : null}

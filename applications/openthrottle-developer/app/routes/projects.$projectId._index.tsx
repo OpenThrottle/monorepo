@@ -15,7 +15,7 @@ import {
   PROJECT_TASKS_DEFAULT_PAGE,
 } from '~/routing/projects/config/projects.defaults';
 import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/projects.$projectId';
+import type { Route } from '@/app/routes/+types/projects.$projectId._index';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

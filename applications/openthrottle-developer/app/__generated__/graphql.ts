@@ -391,7 +391,12 @@ export type AttachWorkSessionSubjectInput = {
 /** A subdirectory listed by browseDirectory (server-host path). */
 export type BrowseDirectoryEntryObject = {
   __typename?: 'BrowseDirectoryEntryObject';
+  /** True when this subdirectory is already registered as a checkout (matched by path or OT manifest checkout id). */
+  alreadyRegistered: Scalars['Boolean']['output'];
+  /** True when this subdirectory contains a .git entry (looks like a git repository). */
+  isGitRepo: Scalars['Boolean']['output'];
   name: Scalars['String']['output'];
+  /** Absolute path on the server host. */
   path: Scalars['String']['output'];
 };
 
@@ -1621,6 +1626,8 @@ export type Mutation = {
   mintSubscriptionToken: Scalars['String']['output'];
   /** Pause a queue: workers stop picking up new jobs while in-flight jobs finish. Reversible via resumeQueue. */
   pauseQueue: QueueControlResultObject;
+  /** Open the host OS folder dialog and return the chosen absolute server-host path, or null on user-cancel. Guarded by the same same-machine predicate as workspacePickerCapabilities (re-checked before spawning) and bounded by a kill timeout. Does not register anything — the client confirms and calls addWorkspaceFolder. */
+  pickFolderNative: PickFolderNativePayloadObject;
   /** Promote a task into a new, first-class plan. Validates the task is promotable (exists, not a lifecycle hook, not already promoted) then enqueues an async task-promotion job (enqueue-after-validate, idempotency key doubles as the BullMQ job id). The job creates the plan, carries the task's tags, seeds an initial task, closes out the source task (→ SKIPPED + `promoted` tag), and records provenance. Returns the accepted job id; the new plan surfaces via the task-status subscription once the job completes. */
   promoteTaskToPlan: PromoteTaskToPlanResultObject;
   /** Bump the liveness heartbeat on a detached-CLI run row (from registerCliPlanRun). The CLI calls this on a ~15s timer so a hard crash (SIGKILL/power-loss) leaves a stale heartbeat the reader/sweeper can detect. Keyed on the run id. Returns null when the row no longer exists. */
@@ -2295,6 +2302,13 @@ export type PermissionObject = {
   name: Scalars['String']['output'];
 };
 
+/** Result of the native OS folder dialog: the chosen absolute server-host path, or null when the user cancelled (a clean no-op). The path may be outside the configured workspace roots — the native pick is an explicit user gesture. addWorkspaceFolder still re-validates and inspects it. */
+export type PickFolderNativePayloadObject = {
+  __typename?: 'PickFolderNativePayloadObject';
+  /** Chosen absolute path on the server host, or null on user-cancel. */
+  path?: Maybe<Scalars['String']['output']>;
+};
+
 export type PlanEmbeddingObject = {
   __typename?: 'PlanEmbeddingObject';
   content: Scalars['String']['output'];
@@ -2744,8 +2758,8 @@ export type Query = {
   activityByDateRange: ActivityByDateResultObject;
   /** Whether server-side agent-CLI install/update is enabled (env flag) and whether the current user may run it (SETTINGS_WRITE). Drives the /settings/setup control gating. */
   agentCliSetupConfig: AgentCliSetupConfigObject;
-  /** Immediate subdirectories of a path within the configured workspace roots (server-host paths). */
-  browseDirectory: Array<BrowseDirectoryEntryObject>;
+  /** Interactive directory listing for the in-app picker: immediate subdirectories (annotated with isGitRepo / alreadyRegistered) plus navigation context (current + parent path, current-is-git-repo). With no path, lists the configured workspace roots as entries. All paths are on the server host. */
+  browseDirectory: WorkspaceDirectoryListingObject;
   /** Index status for a registered repository: unavailable, indexing, ready, or notIndexed. */
   codeIndexStatus: CodeIndexStatusObject;
   /** Natural-language code semantic search over a registered repository's indexed code. available=false when no embeddings provider is configured. */
@@ -2957,6 +2971,8 @@ export type Query = {
   workspaceLocalRepositories: Array<WorkspaceLocalRepositoryObject>;
   /** Get a local repository by id for the authenticated user. */
   workspaceLocalRepository?: Maybe<WorkspaceLocalRepositoryObject>;
+  /** Seed data for the add-folder picker: whether a native OS folder dialog can be opened on the server host for this request, the configured workspace roots (host view), and a default path to open the in-app picker at. */
+  workspacePickerCapabilities: WorkspacePickerCapabilitiesObject;
   /** The authenticated user's repositories with their checkouts and inspection snapshots (snapshots refresh on view past the 15-minute TTL). */
   workspaceRepositories: Array<RepositoryObject>;
   /** A single repository the authenticated user has a checkout of, with those checkouts and inspection snapshots; null when the user owns no checkout of it. */
@@ -2974,7 +2990,7 @@ export type QueryActivityByDateRangeArgs = {
 };
 
 export type QueryBrowseDirectoryArgs = {
-  path: Scalars['String']['input'];
+  path?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type QueryCodeIndexStatusArgs = {
@@ -5079,6 +5095,19 @@ export type WorkSessionsByPlanInput = {
   planId: Scalars['ID']['input'];
 };
 
+/** An interactive listing from browseDirectory: the current directory's immediate subdirectories plus the navigation context (current + parent path, and whether the current directory is itself a git repo) so the client can render a breadcrumb, an Up control, and an "add this folder" action. All paths are on the server host. */
+export type WorkspaceDirectoryListingObject = {
+  __typename?: 'WorkspaceDirectoryListingObject';
+  /** Immediate subdirectories of the current directory (or the configured roots when listing roots). */
+  entries: Array<BrowseDirectoryEntryObject>;
+  /** True when the currently-browsed directory is itself a git repository. Always false when listing roots (path is null). */
+  isGitRepo: Scalars['Boolean']['output'];
+  /** Absolute host path one level up, or null when at/above a configured root (containment-guarded) or when listing roots. */
+  parentPath?: Maybe<Scalars['String']['output']>;
+  /** Canonical absolute host path of the currently-browsed directory, or null when listing the configured roots (no directory is "current"). */
+  path?: Maybe<Scalars['String']['output']>;
+};
+
 /** Result of applying editor configuration for one linked repository and editor. */
 export type WorkspaceEditorConfigApplicationObject = {
   __typename?: 'WorkspaceEditorConfigApplicationObject';
@@ -5122,6 +5151,17 @@ export type WorkspaceLocalRepositoryObject = {
   projectId?: Maybe<Scalars['ID']['output']>;
   updatedAt: Scalars['DateTime']['output'];
   userId: Scalars['ID']['output'];
+};
+
+/** Capabilities that seed the add-folder picker: whether a native OS folder dialog can be opened on the server host, the configured workspace roots (host view), and a default path to open the in-app picker at — all server-host paths. */
+export type WorkspacePickerCapabilitiesObject = {
+  __typename?: 'WorkspacePickerCapabilitiesObject';
+  /** True when the openthrottle-server host can open a native OS folder dialog for this request (request is loopback + a display is present, or forced via OPENTHROTTLE_NATIVE_PICKER). The client uses this to choose the Browse affordance; the pickFolderNative mutation re-checks it before spawning. */
+  canUseNativeDialog: Scalars['Boolean']['output'];
+  /** Absolute server-host path to seed the in-app picker at: the first configured workspace root, else the host home directory. */
+  defaultBrowsePath: Scalars['String']['output'];
+  /** Configured OPENTHROTTLE_WORKSPACE_ROOTS in the host view; empty when unset. */
+  roots: Array<Scalars['String']['output']>;
 };
 
 /** Workspace settings for the authenticated user: profile and local repositories. */
@@ -7151,6 +7191,38 @@ export type ProjectTagChipFragment = {
   tag: string;
 };
 
+export type GetProjectForEditQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+export type GetProjectForEditQuery = {
+  __typename?: 'Query';
+  project?: {
+    __typename?: 'ProjectObject';
+    description?: string | null;
+    id: string;
+    name: string;
+    nxProjectName?: string | null;
+    updatedAt: any;
+  } | null;
+};
+
+export type UpdateProjectMutationVariables = Exact<{
+  input: UpdateProjectInput;
+}>;
+
+export type UpdateProjectMutation = {
+  __typename?: 'Mutation';
+  updateProject?: {
+    __typename?: 'ProjectObject';
+    description?: string | null;
+    id: string;
+    name: string;
+    nxProjectName?: string | null;
+    updatedAt: any;
+  } | null;
+};
+
 export type ProjectCardFragment = {
   __typename?: 'ProjectObject';
   createdAt: any;
@@ -8751,6 +8823,12 @@ export type GetWorkspaceSettingsQuery = {
     name: string;
     path: string;
   }>;
+  workspacePickerCapabilities: {
+    __typename?: 'WorkspacePickerCapabilitiesObject';
+    canUseNativeDialog: boolean;
+    defaultBrowsePath: string;
+    roots: Array<string>;
+  };
   workspaceRepositories: Array<{
     __typename?: 'RepositoryObject';
     createdAt: any;
@@ -8837,16 +8915,34 @@ export type GetWorkspaceSettingsQuery = {
 };
 
 export type BrowseWorkspaceDirectoryQueryVariables = Exact<{
-  path: Scalars['String']['input'];
+  path?: InputMaybe<Scalars['String']['input']>;
 }>;
 
 export type BrowseWorkspaceDirectoryQuery = {
   __typename?: 'Query';
-  browseDirectory: Array<{
-    __typename?: 'BrowseDirectoryEntryObject';
-    name: string;
-    path: string;
-  }>;
+  browseDirectory: {
+    __typename?: 'WorkspaceDirectoryListingObject';
+    isGitRepo: boolean;
+    parentPath?: string | null;
+    path?: string | null;
+    entries: Array<{
+      __typename?: 'BrowseDirectoryEntryObject';
+      alreadyRegistered: boolean;
+      isGitRepo: boolean;
+      name: string;
+      path: string;
+    }>;
+  };
+};
+
+export type PickFolderNativeMutationVariables = Exact<{ [key: string]: never }>;
+
+export type PickFolderNativeMutation = {
+  __typename?: 'Mutation';
+  pickFolderNative: {
+    __typename?: 'PickFolderNativePayloadObject';
+    path?: string | null;
+  };
 };
 
 export type AddWorkspaceFolderMutationVariables = Exact<{
@@ -17725,6 +17821,122 @@ export const ProjectDetailRemoveProjectTagDocument = {
   ProjectDetailRemoveProjectTagMutation,
   ProjectDetailRemoveProjectTagMutationVariables
 >;
+export const GetProjectForEditDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getProjectForEdit' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'project' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'id' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'nxProjectName' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetProjectForEditQuery,
+  GetProjectForEditQueryVariables
+>;
+export const UpdateProjectDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'updateProject' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'UpdateProjectInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'updateProject' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'nxProjectName' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  UpdateProjectMutation,
+  UpdateProjectMutationVariables
+>;
 export const GetProjectsDocument = {
   kind: 'Document',
   definitions: [
@@ -21921,6 +22133,24 @@ export const GetWorkspaceSettingsDocument = {
           },
           {
             kind: 'Field',
+            name: { kind: 'Name', value: 'workspacePickerCapabilities' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'canUseNativeDialog' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'defaultBrowsePath' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'roots' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
             name: { kind: 'Name', value: 'workspaceRepositories' },
             selectionSet: {
               kind: 'SelectionSet',
@@ -22213,13 +22443,7 @@ export const BrowseWorkspaceDirectoryDocument = {
         {
           kind: 'VariableDefinition',
           variable: { kind: 'Variable', name: { kind: 'Name', value: 'path' } },
-          type: {
-            kind: 'NonNullType',
-            type: {
-              kind: 'NamedType',
-              name: { kind: 'Name', value: 'String' },
-            },
-          },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
         },
       ],
       selectionSet: {
@@ -22241,7 +22465,27 @@ export const BrowseWorkspaceDirectoryDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'entries' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'alreadyRegistered' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'isGitRepo' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'path' } },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'isGitRepo' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'parentPath' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'path' } },
               ],
             },
@@ -22253,6 +22497,34 @@ export const BrowseWorkspaceDirectoryDocument = {
 } as unknown as DocumentNode<
   BrowseWorkspaceDirectoryQuery,
   BrowseWorkspaceDirectoryQueryVariables
+>;
+export const PickFolderNativeDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'pickFolderNative' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'pickFolderNative' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'path' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  PickFolderNativeMutation,
+  PickFolderNativeMutationVariables
 >;
 export const AddWorkspaceFolderDocument = {
   kind: 'Document',

@@ -10,7 +10,8 @@
 import { execFile } from 'node:child_process';
 import { existsSync, realpathSync } from 'node:fs';
 import { mkdir, readdir, rm } from 'node:fs/promises';
-import { basename, isAbsolute, join } from 'node:path';
+import { homedir } from 'node:os';
+import { basename, dirname, isAbsolute, join } from 'node:path';
 import { promisify } from 'node:util';
 import {
   BadRequestException,
@@ -34,6 +35,11 @@ import {
 } from '@openthrottle/openthrottle-agentic-utils';
 import { RepositoryInspectionService } from '../repository-inspection/repository-inspection.service';
 import type { RepositoryInspectionSnapshot } from '../repository-inspection/repository-inspection.snapshot';
+import {
+  canUseNativeFolderDialog,
+  type NativeDialogRunner,
+  pickNativeFolder,
+} from './native-folder-picker';
 import type {
   RepositoryCheckoutObject,
   RepositoryInspectionObject,
@@ -44,7 +50,10 @@ import type {
   BrowseDirectoryEntryObject,
   CheckoutDriftObject,
   DiscoveredFolderObject,
+  PickFolderNativePayloadObject,
   RefreshCheckoutPayloadObject,
+  WorkspaceDirectoryListingObject,
+  WorkspacePickerCapabilitiesObject,
 } from './workspace-folders.object';
 import { WorkspaceFolderReconciliationEnum } from './workspace-folders.object';
 
@@ -178,6 +187,62 @@ export class WorkspaceFoldersService {
   }
 
   /**
+   * @description Seed data for the add-folder picker: whether a native OS
+   * folder dialog can be opened for this request (loopback + display, or the
+   * env override), the configured workspace roots in the host view, and a
+   * default path to open the in-app picker at (first root, else host home).
+   * `remoteAddress` is the raw TCP peer (`req.socket.remoteAddress`).
+   */
+  workspacePickerCapabilities(
+    remoteAddress: string | null,
+  ): WorkspacePickerCapabilitiesObject {
+    const roots = getWorkspaceRoots().map((root) => toHostPath(root));
+    const defaultBrowsePath = roots[0] ?? toHostPath(homedir());
+    return {
+      canUseNativeDialog: canUseNativeFolderDialog({ remoteAddress }),
+      defaultBrowsePath,
+      roots,
+    };
+  }
+
+  /**
+   * @description Opens the host OS folder dialog and returns the chosen absolute
+   * path, or null on user-cancel (a clean no-op). Hard-guards on the same
+   * same-machine predicate as the capabilities query BEFORE spawning, so a
+   * stale client flag cannot open a dialog on a remote/headless server. The
+   * child is killed on a bounded timeout. This does NOT register anything — the
+   * client confirms and calls addWorkspaceFolder, which re-validates the path.
+   * The runner is injectable for tests. `remoteAddress` is the raw TCP peer.
+   */
+  async pickFolderNative(
+    remoteAddress: string | null,
+    run?: NativeDialogRunner,
+  ): Promise<PickFolderNativePayloadObject> {
+    if (!canUseNativeFolderDialog({ remoteAddress })) {
+      throw new BadRequestException(
+        'The native folder dialog is not available on this server',
+      );
+    }
+
+    const result = await pickNativeFolder({ run });
+    switch (result.kind) {
+      case 'picked':
+        this.logger.debug(`🗂️ native folder picked: ${result.path}`);
+        return { path: result.path };
+      case 'cancelled':
+        return { path: null };
+      case 'timeout':
+        throw new BadRequestException('The folder dialog timed out');
+      case 'unavailable':
+        throw new BadRequestException(
+          'The native folder dialog is not available on this server',
+        );
+      case 'error':
+        throw new BadRequestException(result.message);
+    }
+  }
+
+  /**
    * @description Shallow-scans configured workspace roots for immediate child
    * directories containing `.git`, annotated with alreadyRegistered (matched
    * by OT manifest checkout id or by path). Symlinked directories are not
@@ -232,10 +297,20 @@ export class WorkspaceFoldersService {
   }
 
   /**
-   * @description Lists immediate subdirectories of a path that must resolve
-   * (after symlink resolution) under a configured workspace root.
+   * @description Interactive directory listing for the in-app picker. With no
+   * `path`, returns the configured roots as top-level entries (zero-typing
+   * seed). Otherwise lists a directory that must resolve (after symlink
+   * resolution) under a configured root, annotating each child with
+   * `isGitRepo` / `alreadyRegistered` and exposing the current + parent path
+   * (parent null at/above a root) plus whether the current directory is itself
+   * a git repo, so the client can render a breadcrumb, an Up control, and an
+   * "add this folder" action. Threads `userId` for the already-registered
+   * annotation. Path-safety guard is unchanged from the original browse.
    */
-  async browseDirectory(path: string): Promise<BrowseDirectoryEntryObject[]> {
+  async browseDirectory(
+    userId: string,
+    path?: string | null,
+  ): Promise<WorkspaceDirectoryListingObject> {
     const roots = getWorkspaceRoots();
     if (roots.length === 0) {
       throw new Error(
@@ -243,8 +318,35 @@ export class WorkspaceFoldersService {
       );
     }
 
-    const trimmed = path.trim();
-    if (trimmed === '' || trimmed.includes('\0') || !isAbsolute(trimmed)) {
+    // Resolve roots once in fully-resolved space so neither a symlinked request
+    // nor a symlinked root (e.g. macOS /var → /private/var) defeats the guard.
+    const resolvedRoots = roots.flatMap((root) => {
+      try {
+        return [realpathSync(root)];
+      } catch {
+        return [];
+      }
+    });
+
+    const registration = await this.loadRegistrationIndex(userId);
+
+    // List-roots seed: no current directory, no parent, entries are the roots.
+    const trimmed = path?.trim() ?? '';
+    if (trimmed === '') {
+      const entries = await Promise.all(
+        resolvedRoots.map((root) =>
+          this.toBrowseEntry(root, basename(root) || root, registration),
+        ),
+      );
+      return {
+        entries: entries.sort((a, b) => a.name.localeCompare(b.name)),
+        isGitRepo: false,
+        parentPath: null,
+        path: null,
+      };
+    }
+
+    if (trimmed.includes('\0') || !isAbsolute(trimmed)) {
       throw new Error('browseDirectory path must be an absolute path');
     }
 
@@ -256,32 +358,83 @@ export class WorkspaceFoldersService {
       throw new Error(`browseDirectory path does not exist: ${trimmed}`);
     }
 
-    // Compare in fully-resolved space so neither a symlinked request nor a
-    // symlinked root (e.g. macOS /var → /private/var) defeats the check.
-    const resolvedRoots = roots.flatMap((root) => {
-      try {
-        return [realpathSync(root)];
-      } catch {
-        return [];
-      }
-    });
-    const allowed = resolvedRoots.some(
-      (root) => resolved === root || resolved.startsWith(`${root}/`),
-    );
-    if (!allowed) {
+    const isUnderRoot = (candidate: string): boolean =>
+      resolvedRoots.some(
+        (root) => candidate === root || candidate.startsWith(`${root}/`),
+      );
+    if (!isUnderRoot(resolved)) {
       throw new Error(
         'browseDirectory path is not within the configured workspace roots',
       );
     }
 
-    const entries = await readdir(resolved, { withFileTypes: true });
-    return entries
-      .filter((entry) => entry.isDirectory())
-      .map((entry) => ({
-        name: entry.name,
-        path: join(trimmed, entry.name),
-      }))
-      .sort((a, b) => a.name.localeCompare(b.name));
+    const dirents = await readdir(resolved, { withFileTypes: true });
+    const entries = await Promise.all(
+      dirents
+        .filter((entry) => entry.isDirectory())
+        .map((entry) =>
+          this.toBrowseEntry(
+            join(resolved, entry.name),
+            entry.name,
+            registration,
+          ),
+        ),
+    );
+
+    // Parent is only offered while it still resolves under a root, so the
+    // client's Up control can never escape the configured roots.
+    const parent = dirname(resolved);
+    const parentPath =
+      parent !== resolved && isUnderRoot(parent) ? toHostPath(parent) : null;
+
+    return {
+      entries: entries.sort((a, b) => a.name.localeCompare(b.name)),
+      isGitRepo: existsSync(join(resolved, '.git')),
+      parentPath,
+      path: toHostPath(resolved),
+    };
+  }
+
+  /**
+   * @description Loads the user's checkouts once into path/id lookup sets for
+   * the already-registered annotation (shared by discoveredFolders and
+   * browseDirectory). Paths are host-view to match stored filesystemPath.
+   */
+  private async loadRegistrationIndex(
+    userId: string,
+  ): Promise<{ ids: Set<string>; paths: Set<string> }> {
+    const checkouts = await this.checkoutsService.listByUserId(userId, {
+      limit: 200,
+    });
+    return {
+      ids: new Set(checkouts.map((checkout) => checkout.id)),
+      paths: new Set(checkouts.map((checkout) => checkout.filesystemPath)),
+    };
+  }
+
+  /**
+   * @description Builds an annotated browse entry for a resolved process-view
+   * directory: host path, whether it holds a `.git`, and whether it is already
+   * registered (by host path, else by OT manifest checkout id for git repos).
+   */
+  private async toBrowseEntry(
+    processPath: string,
+    name: string,
+    registration: { ids: Set<string>; paths: Set<string> },
+  ): Promise<BrowseDirectoryEntryObject> {
+    const hostPath = toHostPath(processPath);
+    const isGitRepo = existsSync(join(processPath, '.git'));
+
+    let alreadyRegistered = registration.paths.has(hostPath);
+    if (!alreadyRegistered && isGitRepo) {
+      const manifest =
+        await this.inspectionService.readManifestIdentity(processPath);
+      alreadyRegistered =
+        manifest.checkoutId !== null &&
+        registration.ids.has(manifest.checkoutId);
+    }
+
+    return { alreadyRegistered, isGitRepo, name, path: hostPath };
   }
 
   /**
