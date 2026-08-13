@@ -29,9 +29,10 @@ export const PlanTabTasks = (_props: PlanTabTasksProps): React.ReactElement => {
   // Hooks
   const [view, setView] = usePersistentSetting<PlanTasksView>(
     'plans.tasksView',
-    PLAN_TASKS_VIEW.list,
+    PLAN_TASKS_VIEW.table,
     isPlanTasksView,
   );
+
   const { tasks } = usePlanDetailRouteData();
   const managedTaskIds = usePlanManagedTaskIds();
   const sortedTasks = React.useMemo(

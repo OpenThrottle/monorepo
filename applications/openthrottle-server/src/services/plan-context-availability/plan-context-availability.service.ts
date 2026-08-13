@@ -49,7 +49,7 @@ import {
 } from '@openthrottle/openthrottle-skills';
 
 /** nx_project_name of the dogfood project (the projectSkills anchor). */
-const DOGFOOD_NX_PROJECT_NAME = 'monorepo';
+const DOGFOOD_NX_PROJECT_NAME = 'OpenThrottle/monorepo';
 
 /** @public */
 export interface PlanContextResolvedSkill {

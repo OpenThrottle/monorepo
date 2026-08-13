@@ -38,7 +38,7 @@ const EMBEDDING_DIM = 1536;
  * same reconcile shape against the project their checkout links to (see the
  * stub note in `reconcileProjectSkills`).
  */
-const DOGFOOD_NX_PROJECT_NAME = 'monorepo';
+const DOGFOOD_NX_PROJECT_NAME = 'OpenThrottle/monorepo';
 
 /** ~3 chars/token; text-embedding-3-small max is 8192 tokens. */
 const MAX_EMBEDDING_CHARS = 24_000;
