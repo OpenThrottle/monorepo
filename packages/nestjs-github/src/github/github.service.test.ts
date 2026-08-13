@@ -959,4 +959,35 @@ describe('GitHubService', () => {
     ).toBeNull();
     vi.unstubAllGlobals();
   });
+
+  describe('isGithubTokenConfigured', () => {
+    test('returns true when GITHUB_TOKEN is set', () => {
+      const config = createMock<ConfigService>({
+        get: vi.fn((key: string) =>
+          key === 'GITHUB_TOKEN' ? 'ghp_secret_value' : undefined,
+        ),
+      });
+      const service = new GitHubService(config);
+
+      expect(service.isGithubTokenConfigured()).toBe(true);
+    });
+
+    test('returns false when GITHUB_TOKEN is unset', () => {
+      const config = createMock<ConfigService>({
+        get: vi.fn(() => undefined),
+      });
+      const service = new GitHubService(config);
+
+      expect(service.isGithubTokenConfigured()).toBe(false);
+    });
+
+    test('returns false when GITHUB_TOKEN is an empty string', () => {
+      const config = createMock<ConfigService>({
+        get: vi.fn((key: string) => (key === 'GITHUB_TOKEN' ? '' : undefined)),
+      });
+      const service = new GitHubService(config);
+
+      expect(service.isGithubTokenConfigured()).toBe(false);
+    });
+  });
 });

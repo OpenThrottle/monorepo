@@ -153,7 +153,7 @@ export class GitHubService {
    * place.
    */
   private buildHeaders(): Record<string, string> {
-    const token = this.config.get<string>('GITHUB_TOKEN');
+    const token = this.getGithubToken();
     const headers: Record<string, string> = {
       Accept: 'application/vnd.github+json',
       'X-GitHub-Api-Version': '2022-11-28',
@@ -162,6 +162,25 @@ export class GitHubService {
       headers['Authorization'] = `Bearer ${token}`;
     }
     return headers;
+  }
+
+  /**
+   * Reads the raw `GITHUB_TOKEN` from config. Single source of truth for the
+   * token so {@link buildHeaders} and {@link isGithubTokenConfigured} never
+   * drift. The value never leaves the server.
+   */
+  private getGithubToken(): string | undefined {
+    return this.config.get<string>('GITHUB_TOKEN');
+  }
+
+  /**
+   * Whether a `GITHUB_TOKEN` is configured on the server. Returns a boolean
+   * only — the token value, its length, and any secret-derived detail stay
+   * server-side. Used to surface a "configure GITHUB_TOKEN" empty state on the
+   * dashboard instead of silently rendering unauthenticated/zeroed stats.
+   */
+  isGithubTokenConfigured(): boolean {
+    return Boolean(this.getGithubToken());
   }
 
   /**

@@ -19,6 +19,7 @@ const mockGithubStats = {
     { author: 'visormatt', openCount: 1 },
     { author: 'other-user', openCount: 3 },
   ],
+  githubTokenConfigured: true,
   openPrCountByAuthor: [
     { author: 'visormatt', openCount: 5 },
     { author: 'other-user', openCount: 2 },

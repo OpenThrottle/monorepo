@@ -24,6 +24,16 @@ export const RECENT_CHATS_CARD_DESTINATION_LABELS: readonly string[] = [
   'Queues',
 ];
 
+/**
+ * Copy for the dashboard GitHub-stats empty state, shown when the server has no
+ * `GITHUB_TOKEN` configured. Names the env var and where it lives so the user can
+ * act without guessing, instead of staring at zeroed/unauthenticated charts.
+ */
+export const GITHUB_STATS_TOKEN_EMPTY_STATE_COPY = {
+  description: `GitHub stats need a personal access token. Set GITHUB_TOKEN in the server environment (e.g. your .env) and restart the server to see pull-request activity here.`,
+  title: `Configure GITHUB_TOKEN`,
+} as const;
+
 export const DAILY_STATS_MODAL_COPY = {
   completionAttributionCaveat: `Historical completion dates are approximate for rows completed before completed_at existed (backfilled from updated_at after migrate-time re-stamps). New completions use an immutable completed_at stamp.`,
   emptyDescription: `No daily stats available for the selected range.`,

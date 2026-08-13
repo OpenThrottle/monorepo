@@ -72,6 +72,13 @@ export class GithubResolver {
     return results;
   }
 
+  @Query(() => Boolean, {
+    description: `Whether GITHUB_TOKEN is configured on the server. Boolean only — the token value is never exposed. Used to prompt the user to set GITHUB_TOKEN instead of rendering empty/unauthenticated GitHub stats.`,
+  })
+  githubTokenConfigured(): boolean {
+    return this.githubService.isGithubTokenConfigured();
+  }
+
   @Query(() => PullListItemObject, {
     description: `Get one pull request by repository and PR number (GitHub API)`,
     nullable: true,
