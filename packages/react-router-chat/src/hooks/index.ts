@@ -1,3 +1,22 @@
+export {
+  AGENT_CONVERSATIONS_ACTION,
+  CONVERSATION_STREAM_ACTION,
+  useAgenticChatTurn,
+} from './use-agentic-chat-turn';
+export type {
+  ChatStartActionResult,
+  UseAgenticChatTurnConfig,
+  UseAgenticChatTurnResult,
+} from './use-agentic-chat-turn';
+export { useConversationList } from './use-conversation-list';
+export type { UseConversationListResult } from './use-conversation-list';
+export { useConversationStream } from './use-conversation-stream';
+export type {
+  ConversationStreamSubscriptionData,
+  ConversationStreamSubscriptionVariables,
+  UseConversationStreamArgs,
+  UseConversationStreamResult,
+} from './use-conversation-stream';
 export { useChatComposerMentions } from './use-chat-composer-mentions';
 export type {
   UseChatComposerMentionsOptions,

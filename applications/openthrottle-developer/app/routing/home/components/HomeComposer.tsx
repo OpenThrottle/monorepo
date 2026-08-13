@@ -6,8 +6,8 @@ import {
   type ChatModelOption,
   type ChatPersonaOption,
 } from '@openthrottle/react-router-chat';
+import { CHAT_TOOLBAR_CONTEXT_SOURCES } from '@openthrottle/react-router-chat-state';
 import { InlineErrors } from '@openthrottle/react-router-shadcn';
-import { CHAT_TOOLBAR_CONTEXT_SOURCES } from '~/routing/home/data/chat-toolbar';
 import { FEATURE_BETA_PREVIEW } from '@openthrottle/react-router-utils';
 import type { RepositoryOption } from '~/routing/home/data/models.server';
 import type { UseAgenticChatTurnResult } from '~/routing/home/hooks/useAgenticChatTurn';

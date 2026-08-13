@@ -2,6 +2,13 @@ import type {
   ChatModelOption,
   ChatPersonaOption,
 } from '@openthrottle/react-router-chat';
+import {
+  composeModelOptions,
+  toAgentChatOptions,
+  toChatModelOptions,
+  toPersonaOptions,
+} from '@openthrottle/react-router-chat-state';
+import type { RepositoryOption } from '@openthrottle/react-router-chat-state';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import type {
   DiscoverAgentClisQuery,
@@ -13,19 +20,13 @@ import {
   PersonaPromptsDocument,
   WorkspaceLocalRepositoriesDocument,
 } from '~/__generated__/graphql';
-import {
-  toAgentChatOptions,
-  toChatModelOptions,
-  toDriverEndpointChatOptions,
-} from '~/routing/home/utils/chat-model-option';
 
 /**
- * A registered local checkout selectable as the working directory for a CLI agent.
+ * The registered-checkout option type is single-sourced in
+ * `@openthrottle/react-router-chat-state`; re-exported here so existing
+ * `~/routing/home/data/models.server` importers keep their import path.
  */
-export interface RepositoryOption {
-  readonly displayName: string;
-  readonly id: string;
-}
+export type { RepositoryOption };
 
 type AgentClisPayload = DiscoverAgentClisQuery['discoverAgentClis'];
 type LocalModelsPayload = DiscoverLocalModelsQuery['discoverLocalModels'];
@@ -97,9 +98,8 @@ export async function loadAgentClis(
  * discovery queries exactly once and derive all three composer lists — local
  * models, agent CLIs, and the driver×local-endpoint join — from the shared
  * payloads (previously each query ran twice per home load because the
- * driver×endpoint join re-fetched them). Each list degrades to `[]`
- * independently on a discovery gap; concatenation order matches the prior
- * `[...local, ...agents, ...driverEndpoint]`.
+ * driver×endpoint join re-fetched them). The derivation is single-sourced in
+ * `@openthrottle/react-router-chat-state`'s {@link composeModelOptions}.
  */
 export async function loadComposerModels(
   request: Request,
@@ -109,13 +109,7 @@ export async function loadComposerModels(
     fetchLocalModels(request),
   ]);
 
-  return [
-    ...(localModels ? toChatModelOptions(localModels) : []),
-    ...(agents ? toAgentChatOptions(agents) : []),
-    ...(agents && localModels
-      ? toDriverEndpointChatOptions(agents, localModels)
-      : []),
-  ];
+  return composeModelOptions(localModels, agents);
 }
 
 /**
@@ -152,11 +146,7 @@ export async function loadPersonas(
   try {
     const data = await executeGraphqlWithAuth(request, PersonaPromptsDocument);
 
-    return data.customPrompts.map((persona) => ({
-      description: persona.description ?? undefined,
-      id: persona.id,
-      label: persona.title,
-    }));
+    return toPersonaOptions(data.customPrompts);
   } catch {
     return [];
   }

@@ -1,3 +1,4 @@
+export * from './agent-conversations-api';
 export * from './agents-chat-footer';
 export * from './components/ChatCheckoutSelector';
 export * from './components/ChatComposer';
@@ -18,6 +19,7 @@ export * from './components/ChatTurnTimeline';
 export * from './components/ChatUsageCounter';
 export * from './context';
 export * from './conversation-stream';
+export * from './conversation-stream-action';
 export * from './file-mentions';
 export * from './hooks';
 export * from './map-persisted-messages';

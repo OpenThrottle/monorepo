@@ -1,11 +1,7 @@
-import type {
-  AgentConversationListItem,
-  ChatTurnResult,
-  ListAgentConversationsResult,
-  LoadAgentConversationMessagesResult,
-  MutateAgentConversationResult,
+import {
+  createAgentConversationsApi,
+  type ChatTurnResult,
 } from '@openthrottle/react-router-chat';
-import { mapPersistedAgentConversationMessages } from '@openthrottle/react-router-chat';
 import {
   DeleteAgentConversationDocument,
   GetAgentConversationMessagesDocument,
@@ -16,30 +12,52 @@ import {
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { AgentsRunChatTurnInputSchema } from '~/__generated__/schemas';
 
+/**
+ * @description Persisted-conversation CRUD (list / load-messages / rename /
+ * soft-delete) for the home + header chat sidebar/switcher. The CRUD logic is
+ * single-sourced in `@openthrottle/react-router-chat`
+ * ({@link createAgentConversationsApi}); this module only supplies the app's
+ * generated documents.
+ */
+const agentConversations = createAgentConversationsApi({
+  deleteDocument: DeleteAgentConversationDocument,
+  getMessagesDocument: GetAgentConversationMessagesDocument,
+  listDocument: ListAgentConversationsDocument,
+  updateTitleDocument: UpdateAgentConversationTitleDocument,
+});
+
+export const callListAgentConversations =
+  agentConversations.callListAgentConversations;
+export const callLoadAgentConversationMessages =
+  agentConversations.callLoadAgentConversationMessages;
+export const handleDeleteAgentConversationIntent =
+  agentConversations.handleDeleteAgentConversationIntent;
+export const handleListAgentConversationsIntent =
+  agentConversations.handleListAgentConversationsIntent;
+export const handleLoadAgentConversationMessagesIntent =
+  agentConversations.handleLoadAgentConversationMessagesIntent;
+export const handleRenameAgentConversationIntent =
+  agentConversations.handleRenameAgentConversationIntent;
+
+// ---------------------------------------------------------------------------
+// Legacy non-streaming MCP-tool-router turn path (deliberately DELIMITED, kept).
+//
+// `agentsRunChatTurn` is NOT a model completion: it is the read-only agents-chat
+// MCP-tool-router (it returns mcpTool / routingConfidence / routingReason /
+// structuredPayloadJson, not streamed model tokens). It backs the `send-agent-message`
+// intent posted by `LegacyChatTurnProvider` (react-router-ui-global), which
+// `GlobalProviders` renders as the fallback when NO streaming chat surface is
+// injected — i.e. the logged-out header chat. The primary, authenticated chat
+// streams via `/resources/conversation-stream` instead. This path is retained on
+// purpose (removing it would break the logged-out fallback and needs coordination
+// with the openthrottle-drivers work, plan dde67342); it is intentionally scoped
+// to this app and not consolidated into the shared streaming surface.
+// ---------------------------------------------------------------------------
+
 export interface CallSendAgentMessageParams {
   readonly conversationId?: string | null;
   readonly message: string;
   readonly persist?: boolean;
-}
-
-export interface CallLoadAgentConversationMessagesParams {
-  readonly conversationId: string;
-  readonly limit?: number;
-}
-
-export interface CallListAgentConversationsParams {
-  readonly limit?: number;
-  readonly offset?: number;
-  readonly status?: string;
-}
-
-export interface CallRenameAgentConversationParams {
-  readonly conversationId: string;
-  readonly title: string;
-}
-
-export interface CallDeleteAgentConversationParams {
-  readonly conversationId: string;
 }
 
 export const emptyTurn = (
@@ -57,71 +75,6 @@ export const emptyTurn = (
   ...overrides,
 });
 
-export const emptyLoadAgentConversationMessagesResult = (
-  overrides: Partial<LoadAgentConversationMessagesResult>,
-): LoadAgentConversationMessagesResult => ({
-  conversationId: null,
-  errorMessage: null,
-  messages: [],
-  ...overrides,
-});
-
-export const emptyListAgentConversationsResult = (
-  overrides: Partial<ListAgentConversationsResult>,
-): ListAgentConversationsResult => ({
-  conversations: [],
-  errorMessage: null,
-  totalCount: 0,
-  ...overrides,
-});
-
-export const emptyMutateAgentConversationResult = (
-  overrides: Partial<MutateAgentConversationResult>,
-): MutateAgentConversationResult => ({
-  conversation: null,
-  errorMessage: null,
-  ...overrides,
-});
-
-/** Map a persisted conversation row (GraphQL) to the sidebar list-item shape. */
-const toAgentConversationListItem = (row: {
-  id: string;
-  status: string;
-  title?: string | null;
-  updatedAt: unknown;
-}): AgentConversationListItem => ({
-  id: row.id,
-  status: row.status,
-  title: row.title ?? null,
-  updatedAt: String(row.updatedAt),
-});
-
-/** Parse a non-empty trimmed string form field, or null. */
-const trimStringFormField = (
-  value: FormDataEntryValue | null,
-): string | null => {
-  if (typeof value !== 'string') {
-    return null;
-  }
-
-  const trimmed = value.trim();
-
-  return trimmed.length > 0 ? trimmed : null;
-};
-
-/** Parse a finite integer form field, or undefined. */
-const parseIntFormField = (
-  value: FormDataEntryValue | null,
-): number | undefined => {
-  if (typeof value !== 'string' || value.trim() === '') {
-    return undefined;
-  }
-
-  const parsed = Number.parseInt(value, 10);
-
-  return Number.isFinite(parsed) ? parsed : undefined;
-};
-
 const parsePersistFormFlag = (value: FormDataEntryValue | null): boolean => {
   if (typeof value !== 'string') {
     return false;
@@ -133,123 +86,8 @@ const parsePersistFormFlag = (value: FormDataEntryValue | null): boolean => {
 };
 
 /**
- * @description Root action handler for `intent: load-agent-conversation-messages`.
- */
-export async function handleLoadAgentConversationMessagesIntent(
-  request: Request,
-  formData: FormData,
-): Promise<LoadAgentConversationMessagesResult> {
-  const conversationIdRaw = formData.get('conversationId');
-  const conversationId =
-    typeof conversationIdRaw === 'string' && conversationIdRaw.trim().length > 0
-      ? conversationIdRaw.trim()
-      : null;
-
-  if (conversationId == null) {
-    return emptyLoadAgentConversationMessagesResult({
-      errorMessage: 'conversationId is required',
-    });
-  }
-
-  try {
-    return await callLoadAgentConversationMessages(request, {
-      conversationId,
-      limit: 100,
-    });
-  } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : 'Failed to load conversation';
-
-    return emptyLoadAgentConversationMessagesResult({
-      conversationId,
-      errorMessage,
-    });
-  }
-}
-
-/**
- * @description Root action handler for `intent: list-agent-conversations` — paginated conversation list for the sidebar/switcher.
- */
-export async function handleListAgentConversationsIntent(
-  request: Request,
-  formData: FormData,
-): Promise<ListAgentConversationsResult> {
-  const status = trimStringFormField(formData.get('status')) ?? undefined;
-  const limit = parseIntFormField(formData.get('limit'));
-  const offset = parseIntFormField(formData.get('offset'));
-
-  try {
-    return await callListAgentConversations(request, { limit, offset, status });
-  } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : 'Failed to list conversations';
-
-    return emptyListAgentConversationsResult({ errorMessage });
-  }
-}
-
-/**
- * @description Root action handler for `intent: rename-agent-conversation`.
- */
-export async function handleRenameAgentConversationIntent(
-  request: Request,
-  formData: FormData,
-): Promise<MutateAgentConversationResult> {
-  const conversationId = trimStringFormField(formData.get('conversationId'));
-  const title = trimStringFormField(formData.get('title'));
-
-  if (conversationId == null) {
-    return emptyMutateAgentConversationResult({
-      errorMessage: 'conversationId is required',
-    });
-  }
-
-  if (title == null) {
-    return emptyMutateAgentConversationResult({
-      errorMessage: 'title is required',
-    });
-  }
-
-  try {
-    return await callRenameAgentConversation(request, {
-      conversationId,
-      title,
-    });
-  } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : 'Failed to rename conversation';
-
-    return emptyMutateAgentConversationResult({ errorMessage });
-  }
-}
-
-/**
- * @description Root action handler for `intent: delete-agent-conversation` (soft-delete).
- */
-export async function handleDeleteAgentConversationIntent(
-  request: Request,
-  formData: FormData,
-): Promise<MutateAgentConversationResult> {
-  const conversationId = trimStringFormField(formData.get('conversationId'));
-
-  if (conversationId == null) {
-    return emptyMutateAgentConversationResult({
-      errorMessage: 'conversationId is required',
-    });
-  }
-
-  try {
-    return await callDeleteAgentConversation(request, { conversationId });
-  } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : 'Failed to delete conversation';
-
-    return emptyMutateAgentConversationResult({ errorMessage });
-  }
-}
-
-/**
- * @description Root action handler for `intent: send-agent-message` — validates FormData and returns JSON for fetchers.
+ * @description Root action handler for `intent: send-agent-message` — validates
+ * FormData and returns JSON for the legacy (logged-out) header-chat fetcher.
  */
 export async function handleSendAgentMessageIntent(
   request: Request,
@@ -294,115 +132,8 @@ export async function handleSendAgentMessageIntent(
 }
 
 /**
- * @description Load persisted agent conversation messages for the authenticated user.
- */
-export async function callLoadAgentConversationMessages(
-  request: Request,
-  params: CallLoadAgentConversationMessagesParams,
-): Promise<LoadAgentConversationMessagesResult> {
-  const data = await executeGraphqlWithAuth(
-    request,
-    GetAgentConversationMessagesDocument,
-    {
-      input: {
-        conversationId: params.conversationId,
-        limit: params.limit ?? 100,
-      },
-    },
-  );
-
-  const messages = mapPersistedAgentConversationMessages(
-    data.getAgentConversationMessages.messages.map((message) => ({
-      content: message.content,
-      createdAt: message.createdAt,
-      id: message.id,
-      role: message.role,
-      routingConfidence: message.routingConfidence ?? null,
-      routingReason: message.routingReason ?? null,
-      toolMetadataJson: message.toolMetadataJson ?? null,
-    })),
-  );
-
-  return emptyLoadAgentConversationMessagesResult({
-    conversationId: params.conversationId,
-    messages,
-  });
-}
-
-/**
- * @description List persisted conversations for the authenticated user (paginated).
- */
-export async function callListAgentConversations(
-  request: Request,
-  params: CallListAgentConversationsParams = {},
-): Promise<ListAgentConversationsResult> {
-  const data = await executeGraphqlWithAuth(
-    request,
-    ListAgentConversationsDocument,
-    {
-      input: {
-        limit: params.limit ?? undefined,
-        offset: params.offset ?? undefined,
-        status: params.status ?? undefined,
-      },
-    },
-  );
-
-  const list = data.listAgentConversations;
-
-  return emptyListAgentConversationsResult({
-    conversations: list.conversations.map(toAgentConversationListItem),
-    totalCount: list.totalCount,
-  });
-}
-
-/**
- * @description Rename an owned conversation (reuses updateAgentConversationTitle).
- */
-export async function callRenameAgentConversation(
-  request: Request,
-  params: CallRenameAgentConversationParams,
-): Promise<MutateAgentConversationResult> {
-  const data = await executeGraphqlWithAuth(
-    request,
-    UpdateAgentConversationTitleDocument,
-    {
-      input: {
-        conversationId: params.conversationId,
-        title: params.title,
-      },
-    },
-  );
-
-  return emptyMutateAgentConversationResult({
-    conversation: toAgentConversationListItem(
-      data.updateAgentConversationTitle,
-    ),
-  });
-}
-
-/**
- * @description Soft-delete an owned conversation (status=deleted; row retained).
- */
-export async function callDeleteAgentConversation(
-  request: Request,
-  params: CallDeleteAgentConversationParams,
-): Promise<MutateAgentConversationResult> {
-  const data = await executeGraphqlWithAuth(
-    request,
-    DeleteAgentConversationDocument,
-    {
-      input: { conversationId: params.conversationId },
-    },
-  );
-
-  return emptyMutateAgentConversationResult({
-    conversation: toAgentConversationListItem(data.deleteAgentConversation),
-  });
-}
-
-/**
- * @description Call `agentsRunChatTurn` on openthrottle-server with auth from the request cookie.
+ * @description Call `agentsRunChatTurn` (the read-only MCP-tool-router) on
+ * openthrottle-server with auth from the request cookie.
  */
 export async function callSendAgentMessage(
   request: Request,

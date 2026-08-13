@@ -69,6 +69,7 @@ const initFunction = (
 ): ts.ArrowFunction | ts.FunctionExpression | undefined => {
   if (init === undefined) return undefined;
   if (ts.isArrowFunction(init) || ts.isFunctionExpression(init)) return init;
+
   // Unwrap memo(...) / forwardRef(...) / React.memo(...).
   if (ts.isCallExpression(init) && init.arguments.length > 0) {
     const first = init.arguments[0];

@@ -5,10 +5,12 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
+    "@graphql-typed-document-node/core": "catalog:",
     "@openthrottle/react-router-chat": "workspace:^",
+    "@openthrottle/react-router-graphql": "workspace:^",
     "@openthrottle/react-router-utils": "workspace:^"
   },
-  "description": "Shared, presentational chat-toolbar state for React Router apps: the persisted (localStorage-backed, versioned) selection atom, migration-aware normalize, derive-only reconcile, the pure chat-option/capability helpers, and the dependency-free provider brand-glyph set for the model-picker rail. No GraphQL — consumed by both the developer and admin apps.",
+  "description": "Shared chat-toolbar state + header-chat composition for React Router apps: the persisted (localStorage-backed, versioned) selection atom, migration-aware normalize, derive-only reconcile, the pure chat-option/capability helpers, discovery-option mappers, the provider brand-glyph set for the model-picker rail, and the header-chat controller (which forwards a host-injected graphql-ws client + subscription document to the shared turn hook). Consumed by both the developer and admin apps.",
   "license": "Apache-2.0",
   "main": "./src/index.ts",
   "module": "./src/index.ts",
