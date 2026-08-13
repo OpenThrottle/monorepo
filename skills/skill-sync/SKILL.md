@@ -8,17 +8,19 @@ name: skill-sync
 
 # skill-sync
 
-This skill manages the **OpenThrottle agent-skills architecture** in whatever repository you're in. It exists so every AI tool — Cursor, Claude Code, VSCode/Copilot, Gemini CLI, OpenCode, and anything else — sees the **same skills from the same starting point**, no matter which tool a teammate used to install them.
+This skill manages the **OpenThrottle agent-skills architecture** in whatever repository you're in. It exists so every AI tool — Claude Code, Cursor 2.4+, Codex, Grok Build, OpenCode, VSCode/Copilot, Gemini CLI, and anything else — sees the **same skills from the same starting point**, no matter which tool a teammate used to install them.
+
+All of these CLIs now read the **`SKILL.md` standard**; they differ only in which directories they scan. `.agents/skills/` and `.claude/skills/` are the two near-universal in-repo targets (`.agents/skills/` for Claude Code, Cursor, Codex, OpenCode; `.claude/skills/` for Claude Code, Cursor, Grok Build). Several also read per-tool global dirs (`~/.claude/skills`, `~/.codex/skills`, `~/.grok/skills`) that live outside any repo and are not part of this layout.
 
 ## The architecture
 
 Every openthrottle repo has (at most) three skill locations with strict ownership:
 
-| Location                                   | Contents                                                                                                                                                                                              | Owned by                    |
-| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
-| `skills/`                                  | Hand-authored skills, committed to git                                                                                                                                                                | Humans (via PRs)            |
-| `.agents/skills/`                          | The merged SSOT view all universal tools read. **Real directories** = external skills installed by `npx skills` (tracked in `skills-lock.json`). **Symlinks** = the repo's own `skills/*`, generated. | The skills CLI / this skill |
-| `<agent>/skills/` (e.g. `.claude/skills/`) | Per-agent fan-out for tools that don't read `.agents/skills/` natively. All symlinks, all generated, all gitignored.                                                                                  | This skill                  |
+| Location                                   | Contents                                                                                                                                                                                                                                        | Owned by                    |
+| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
+| `skills/`                                  | Hand-authored skills, committed to git                                                                                                                                                                                                          | Humans (via PRs)            |
+| `.agents/skills/`                          | The merged SSOT view most CLIs read in-repo (Claude Code, Cursor 2.4+, Codex, OpenCode). **Real directories** = external skills installed by `npx skills` (tracked in `skills-lock.json`). **Symlinks** = the repo's own `skills/*`, generated. | The skills CLI / this skill |
+| `<agent>/skills/` (e.g. `.claude/skills/`) | Per-agent fan-out for CLIs that read a `.claude`-style dir rather than `.agents/skills/` (e.g. Grok Build; Cursor reads both). All symlinks, all generated, all gitignored.                                                                     | This skill                  |
 
 Sync is a two-stage pipeline: `skills/*` → `.agents/skills/` (stage 1), then `.agents/skills/*` → each agent folder (stage 2). A name collision between `skills/` and `skills-lock.json` is an **error**, never a silent precedence.
 
@@ -66,13 +68,13 @@ These scripts create symlinks and maintain a single static `.gitignore` block so
 2. Every `skills-lock.json` entry is materialized in `.agents/skills/`
 3. `.agents/skills/` contains nothing else (real dir ⇒ lockfile entry; symlink ⇒ points into `skills/`)
 4. No name collisions between `skills/` and the lockfile
-5. Agent folders contain exactly the `.agents/skills/` set, and no agent skill dir exists outside the configured list (catches per-tool installs like `-a cursor`)
+5. Agent folders contain exactly the `.agents/skills/` set, and no _generated_ fan-out dir exists outside the configured `AGENT_SKILL_DIRS` list. (This is about keeping the generated layout deterministic — not a judgment on any CLI: Cursor, Codex, and Grok all read skills natively. A `-a cursor`-style install that drops a stray `.cursor/skills` fan-out is drift only because it's an un-configured generated target, so route those tools through `.agents/skills/` / the configured fan-out instead.)
 6. The static `.gitignore` block is present and every generated symlink is gitignored
 7. No dangling generated links, and no legacy `.gitignore-symlinks` ledger remains
 
 ## Configuration
 
-Per-agent fan-out targets default to `.claude/skills` (most tools read `.agents/skills/` natively and need nothing). Override per repo — without editing this skill — via a space-separated env var:
+Per-agent fan-out targets default to `.claude/skills` — the near-universal `.claude`-style target that serves Claude Code, Cursor, and Grok Build. CLIs that read `.agents/skills/` in-repo (Claude Code, Cursor, Codex, OpenCode) need no extra fan-out. Override per repo — without editing this skill — via a space-separated env var:
 
 ```bash
 AGENT_SKILL_DIRS=".claude/skills .windsurf/skills" bash <path>/scripts/sync.sh

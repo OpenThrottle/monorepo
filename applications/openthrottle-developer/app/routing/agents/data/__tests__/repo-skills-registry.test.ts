@@ -53,6 +53,57 @@ describe('dedupeRepoSkillEntriesBySlug', () => {
     ]);
   });
 
+  test('prefers agents over a per-CLI layout (cursor) for a shared slug', () => {
+    const entries: RepoSkillEntry[] = [
+      {
+        disableModelInvocation: undefined,
+        layout: 'cursor',
+        repoRelativePath: '.cursor/skills/shared/SKILL.md',
+        slug: 'shared',
+        source: 'external',
+        summary: 'Cursor fan-out copy',
+        tags: undefined,
+      },
+      {
+        disableModelInvocation: undefined,
+        layout: 'agents',
+        repoRelativePath: '.agents/skills/shared/SKILL.md',
+        slug: 'shared',
+        source: 'external',
+        summary: 'Agents canonical',
+        tags: undefined,
+      },
+    ];
+
+    expect(dedupeRepoSkillEntriesBySlug(entries)).toEqual([
+      {
+        disableModelInvocation: undefined,
+        layout: 'agents',
+        repoRelativePath: '.agents/skills/shared/SKILL.md',
+        slug: 'shared',
+        source: 'external',
+        summary: 'Agents canonical',
+        tags: undefined,
+      },
+    ]);
+  });
+
+  test('keeps a grok-only slug that appears in no other layout', () => {
+    const entries: RepoSkillEntry[] = [
+      {
+        disableModelInvocation: undefined,
+        layout: 'grok',
+        repoRelativePath: '.grok/skills/grok-only/SKILL.md',
+        slug: 'grok-only',
+        source: 'external',
+        summary: 'Grok only',
+        tags: undefined,
+      },
+    ];
+
+    expect(dedupeRepoSkillEntriesBySlug(entries)).toEqual(entries);
+  });
+
   test('keeps fan-out-only slugs', () => {
     const entries: RepoSkillEntry[] = [
       {

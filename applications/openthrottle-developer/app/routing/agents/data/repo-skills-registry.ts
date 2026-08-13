@@ -9,12 +9,23 @@
  */
 import type { SkillSource } from '@openthrottle/openthrottle-skills';
 
-export type SkillRegistryLayout = 'agents' | 'claude' | 'opencode';
+export type SkillRegistryLayout =
+  'agents' | 'claude' | 'codex' | 'cursor' | 'grok' | 'opencode';
 
+/**
+ * Dedupe/sort precedence across layouts. `.agents/skills` is the canonical SSOT
+ * view and always wins; the remaining entries are the per-CLI dirs each tool
+ * reads (Claude Code, Codex, Cursor 2.4+, Grok Build, OpenCode all read the
+ * SKILL.md standard — they differ only in scanned directory). Order after
+ * `agents` is stable but not semantically ranked.
+ */
 const LAYOUT_PREFERENCE: Readonly<Record<SkillRegistryLayout, number>> = {
   agents: 0,
   claude: 1,
-  opencode: 2,
+  codex: 2,
+  cursor: 3,
+  grok: 4,
+  opencode: 5,
 };
 
 /**

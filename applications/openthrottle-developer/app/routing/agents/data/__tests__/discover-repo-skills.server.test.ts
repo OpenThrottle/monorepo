@@ -99,6 +99,97 @@ describe('discoverRepoSkills', () => {
     ]);
   });
 
+  test('discovers codex, cursor, and grok layouts and orders them after agents/claude', () => {
+    const root = makeTempDir();
+
+    writeSkill(
+      root,
+      '.agents/skills',
+      'agents-skill',
+      'name: agents-skill\ndescription: Canonical SSOT skill.',
+    );
+    writeSkill(
+      root,
+      '.codex/skills',
+      'codex-skill',
+      'name: codex-skill\ndescription: Codex reads .codex/skills.',
+    );
+    writeSkill(
+      root,
+      '.cursor/skills',
+      'cursor-skill',
+      'name: cursor-skill\ndescription: Cursor 2.4+ reads .cursor/skills.',
+    );
+    writeSkill(
+      root,
+      '.grok/skills',
+      'grok-skill',
+      'name: grok-skill\ndescription: Grok Build reads .grok/skills.',
+    );
+
+    expect(discoverRepoSkills(root).map((entry) => entry.layout)).toEqual([
+      'agents',
+      'codex',
+      'cursor',
+      'grok',
+    ]);
+  });
+
+  test('reports each per-CLI layout with its repo-relative path', () => {
+    const root = makeTempDir();
+
+    writeSkill(
+      root,
+      '.cursor/skills',
+      'only-cursor',
+      'name: only-cursor\ndescription: Present only under .cursor/skills.',
+    );
+
+    expect(discoverRepoSkills(root)).toEqual([
+      {
+        layout: 'cursor',
+        repoRelativePath: '.cursor/skills/only-cursor/SKILL.md',
+        slug: 'only-cursor',
+        source: 'external',
+        summary: 'Present only under .cursor/skills.',
+      },
+    ]);
+  });
+
+  test('dedupes a slug shared across per-CLI layouts, preferring agents', () => {
+    const root = makeTempDir();
+
+    writeSkill(
+      root,
+      '.agents/skills',
+      'shared',
+      'name: shared\ndescription: Canonical agents copy.',
+    );
+    // Same slug present as fan-out copies under codex/cursor/grok dirs.
+    for (const layoutDir of [
+      '.codex/skills',
+      '.cursor/skills',
+      '.grok/skills',
+    ]) {
+      writeSkill(
+        root,
+        layoutDir,
+        'shared',
+        'name: shared\ndescription: Fan-out copy.',
+      );
+    }
+
+    expect(discoverRepoSkills(root)).toEqual([
+      {
+        layout: 'agents',
+        repoRelativePath: '.agents/skills/shared/SKILL.md',
+        slug: 'shared',
+        source: 'external',
+        summary: 'Canonical agents copy.',
+      },
+    ]);
+  });
+
   test('threads disable-model-invocation and tags from frontmatter into the entry', () => {
     const root = makeTempDir();
 

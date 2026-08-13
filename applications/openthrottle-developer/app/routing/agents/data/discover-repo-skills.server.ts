@@ -26,19 +26,31 @@ const SKILL_FILE_NAME = 'SKILL.md';
 
 const MISSING_SUMMARY_PLACEHOLDER = 'No description in SKILL.md frontmatter.';
 
+// Every layout a supported CLI reads in-repo. `.agents/skills` is the canonical
+// SSOT view; the rest are per-CLI dirs that resolve back into it via generated
+// symlinks (Claude Code, Codex, Cursor 2.4+, Grok Build, OpenCode all read the
+// SKILL.md standard, differing only in scanned directory). Per-tool GLOBAL dirs
+// (~/.claude/skills, ~/.codex/skills, ~/.grok/skills) live outside the repo and
+// are intentionally out of scope for this repo-rooted scan.
 const LAYOUT_SCAN_TARGETS: ReadonlyArray<{
   readonly layout: SkillRegistryLayout;
   readonly skillsDir: string;
 }> = [
   { layout: 'agents', skillsDir: '.agents/skills' },
   { layout: 'claude', skillsDir: '.claude/skills' },
+  { layout: 'codex', skillsDir: '.codex/skills' },
+  { layout: 'cursor', skillsDir: '.cursor/skills' },
+  { layout: 'grok', skillsDir: '.grok/skills' },
   { layout: 'opencode', skillsDir: '.opencode/skills' },
 ] as const;
 
 const LAYOUT_SORT_ORDER: Readonly<Record<SkillRegistryLayout, number>> = {
   agents: 0,
   claude: 1,
-  opencode: 2,
+  codex: 2,
+  cursor: 3,
+  grok: 4,
+  opencode: 5,
 };
 
 const sortRepoSkillEntries = (

@@ -16,10 +16,13 @@ import {
 const monorepoRootCandidate = join(import.meta.dirname, '../../../../../../..');
 
 // Layouts discoverRepoSkills scans: the `.agents/skills` SSOT view plus the
-// generated fan-out, not the canonical `skills/` root.
+// per-CLI dirs each supported tool reads, not the canonical `skills/` root.
 const SKILL_LAYOUT_DIRS = [
   '.agents/skills',
   '.claude/skills',
+  '.codex/skills',
+  '.cursor/skills',
+  '.grok/skills',
   '.opencode/skills',
 ] as const;
 
