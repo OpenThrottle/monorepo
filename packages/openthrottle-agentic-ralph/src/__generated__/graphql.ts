@@ -221,6 +221,16 @@ export type AgentAssetSearchResult = {
   chunks: Array<AgentAssetChunk>;
 };
 
+export type AgentCliModelOption = {
+  __typename?: 'AgentCliModelOption';
+  /** Effective per-user enablement of this model: false when the user disabled this model OR disabled the whole agent (an agent-level OFF hard-overrides every model). Disabled models are hidden from chat/model pickers and rejected when starting new runs. Defaults to true for an unauthenticated request. */
+  enabled: Scalars['Boolean']['output'];
+  /** Whether the current user has favorited this model. Favorites float to the top of / are highlighted in chat/model pickers and run selection; favoriting is orthogonal to enablement. Defaults to false for an unauthenticated request. */
+  favorite: Scalars['Boolean']['output'];
+  /** Opaque driver-supplied model id as returned by discoverAgentClis (e.g. "gpt-5.2"). */
+  model: Scalars['String']['output'];
+};
+
 export type AgentCliOptionObject = {
   __typename?: 'AgentCliOptionObject';
   /** Backend discriminator (e.g. "cursor") used in StartConversationStreamInput. */
@@ -231,7 +241,12 @@ export type AgentCliOptionObject = {
   enabled: Scalars['Boolean']['output'];
   /** Human-readable label for the selector. */
   label: Scalars['String']['output'];
-  /** Models this CLI can run (empty when the CLI exposes no machine-listable models or listing failed). */
+  /** Models this CLI can run, each with the current user's per-model enabled + favorite state overlaid. Empty when the CLI exposes no machine-listable models. Prefer this over the deprecated `models` list. */
+  modelOptions: Array<AgentCliModelOption>;
+  /**
+   * Models this CLI can run (empty when the CLI exposes no machine-listable models or listing failed). Returns ALL discovered model ids, unfiltered by per-user preferences.
+   * @deprecated Use modelOptions, which carries per-user enabled + favorite state per model.
+   */
   models: Array<Scalars['String']['output']>;
   /** True when this driver can be pointed at a custom OpenAI-compatible base URL (a discovered local endpoint); gates driver×endpoint targeting in the composer. False for claude/cursor (own cloud wire protocol). */
   supportsCustomBaseUrl: Scalars['Boolean']['output'];
@@ -1683,6 +1698,10 @@ export type Mutation = {
   sendTranscriptionAudioChunk: Scalars['Boolean']['output'];
   /** Enable or disable an agent CLI backend for the current user. A disabled agent is hidden from chat/model pickers and rejected when starting new runs. Presence-as-disabled: enabled=false records the preference, enabled=true clears it (default is enabled). Gated by SETTINGS_WRITE, in parity with install/update; rejects unknown backends. */
   setAgentEnabled: SetAgentEnabledResult;
+  /** Enable or disable a single MODEL of an agent CLI backend for the current user. A disabled model is hidden from chat/model pickers and rejected when starting new runs, even while the agent itself stays enabled (an agent-level OFF hard-overrides all its models). Presence-as-disabled: enabled=false records the preference, enabled=true clears it (default is enabled). Gated by SETTINGS_WRITE; rejects unknown backends. */
+  setAgentModelEnabled: SetAgentModelEnabledResult;
+  /** Star or unstar a single MODEL of an agent CLI backend for the current user. Favorited models float to the top of / are highlighted in chat/model pickers and run selection. Favoriting is orthogonal to enablement — it never enables a disabled model. Presence-as-favorite: favorite=true records the star, favorite=false clears it. Gated by SETTINGS_WRITE; rejects unknown backends. */
+  setAgentModelFavorite: SetAgentModelFavoriteResult;
   /** Enable or disable the authenticated user's connection for a connector. */
   setMcpConnectorEnabled?: Maybe<McpConnectorConnectionResultObject>;
   /** Set a plan's status (e.g. COMPLETED). Convenience mutation for Mark Complete; equivalent to updatePlan with { id, status }. */
@@ -2135,6 +2154,18 @@ export type MutationSendTranscriptionAudioChunkArgs = {
 export type MutationSetAgentEnabledArgs = {
   backend: Scalars['String']['input'];
   enabled: Scalars['Boolean']['input'];
+};
+
+export type MutationSetAgentModelEnabledArgs = {
+  backend: Scalars['String']['input'];
+  enabled: Scalars['Boolean']['input'];
+  model: Scalars['String']['input'];
+};
+
+export type MutationSetAgentModelFavoriteArgs = {
+  backend: Scalars['String']['input'];
+  favorite: Scalars['Boolean']['input'];
+  model: Scalars['String']['input'];
 };
 
 export type MutationSetMcpConnectorEnabledArgs = {
@@ -4125,6 +4156,26 @@ export type SetAgentEnabledResult = {
   backend: Scalars['String']['output'];
   /** The per-user enablement state after the toggle: true = enabled, false = disabled (hidden from pickers + blocked from new runs). */
   enabled: Scalars['Boolean']['output'];
+};
+
+export type SetAgentModelEnabledResult = {
+  __typename?: 'SetAgentModelEnabledResult';
+  /** The backend (driver id) the toggled model belongs to. */
+  backend: Scalars['String']['output'];
+  /** The per-model enablement state after the toggle: true = enabled, false = disabled (this model hidden from pickers + blocked from new runs, even while the agent stays enabled). */
+  enabled: Scalars['Boolean']['output'];
+  /** The model id whose enablement was toggled. */
+  model: Scalars['String']['output'];
+};
+
+export type SetAgentModelFavoriteResult = {
+  __typename?: 'SetAgentModelFavoriteResult';
+  /** The backend (driver id) the favorited model belongs to. */
+  backend: Scalars['String']['output'];
+  /** The favorite state after the toggle: true = favorited (floated/highlighted in pickers), false = not favorited. */
+  favorite: Scalars['Boolean']['output'];
+  /** The model id whose favorite state was toggled. */
+  model: Scalars['String']['output'];
 };
 
 export type SetMcpConnectorEnabledInput = {

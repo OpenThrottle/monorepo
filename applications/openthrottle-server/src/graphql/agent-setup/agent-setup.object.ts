@@ -36,6 +36,51 @@ export class SetAgentEnabledResult {
   enabled!: boolean;
 }
 
+/**
+ * @description Result of `setAgentModelEnabled`: the per-user, per-model enablement state after the
+ * toggle. `enabled` echoes the persisted MODEL-level state (an agent-level OFF still hard-overrides it
+ * downstream); it does not reflect that override.
+ */
+@ObjectType()
+export class SetAgentModelEnabledResult {
+  @Field(() => String, {
+    description: `The backend (driver id) the toggled model belongs to.`,
+  })
+  backend!: string;
+
+  @Field(() => String, {
+    description: `The model id whose enablement was toggled.`,
+  })
+  model!: string;
+
+  @Field(() => Boolean, {
+    description: `The per-model enablement state after the toggle: true = enabled, false = disabled (this model hidden from pickers + blocked from new runs, even while the agent stays enabled).`,
+  })
+  enabled!: boolean;
+}
+
+/**
+ * @description Result of `setAgentModelFavorite`: the per-user favorite state for a model after the
+ * toggle. Favorite is orthogonal to enablement — it only reorders/highlights the model in pickers.
+ */
+@ObjectType()
+export class SetAgentModelFavoriteResult {
+  @Field(() => String, {
+    description: `The backend (driver id) the favorited model belongs to.`,
+  })
+  backend!: string;
+
+  @Field(() => String, {
+    description: `The model id whose favorite state was toggled.`,
+  })
+  model!: string;
+
+  @Field(() => Boolean, {
+    description: `The favorite state after the toggle: true = favorited (floated/highlighted in pickers), false = not favorited.`,
+  })
+  favorite!: boolean;
+}
+
 @ObjectType()
 export class AgentSetupStreamChunkObject {
   @Field(() => String, {

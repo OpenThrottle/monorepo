@@ -46,13 +46,23 @@ const AGENT_CLI_CATALOG: readonly AgentCliCatalogEntry[] = [
   },
 ];
 
+/** One model of an agent CLI with the current user's per-model preferences. */
+export interface AgentCliModelStatus {
+  /** Effective per-user enablement (agent-OFF already folded in server-side). */
+  readonly enabled: boolean;
+  /** Whether the user favorited this model. */
+  readonly favorite: boolean;
+  readonly model: string;
+}
+
 /** One available (installed) CLI as returned by the discoverAgentClis query. */
 export interface AvailableAgentCli {
   readonly backend: string;
   /** Per-user enablement (false = the user disabled this agent). */
   readonly enabled: boolean;
   readonly label: string;
-  readonly models: readonly string[];
+  /** Per-model enabled + favorite state (supersedes the deprecated flat models list). */
+  readonly modelOptions: readonly AgentCliModelStatus[];
   readonly version?: string | null;
 }
 
@@ -67,6 +77,9 @@ export interface AgentCliStatus {
   readonly installUrl: string;
   readonly installed: boolean;
   readonly label: string;
+  /** Per-model enabled + favorite state, in discovery order. Empty when the CLI lists no models. */
+  readonly modelOptions: readonly AgentCliModelStatus[];
+  /** Flat model-id list derived from {@link modelOptions}, for compact summaries. */
   readonly models: readonly string[];
   readonly version: string | null;
 }
@@ -74,7 +87,8 @@ export interface AgentCliStatus {
 /**
  * Merge the display catalog with the available (installed) CLIs from discoverAgentClis into one
  * status row per catalog entry, ordered by the catalog. An installed CLI carries its probed version
- * + models + per-user `enabled`; an absent one is marked `installed: false` and defaults to enabled.
+ * + per-model options (enabled + favorite) + per-user `enabled`; an absent one is marked
+ * `installed: false` and defaults to enabled with no models.
  */
 export const mergeAgentCliStatuses = (
   available: readonly AvailableAgentCli[],
@@ -83,13 +97,15 @@ export const mergeAgentCliStatuses = (
 
   return AGENT_CLI_CATALOG.map((entry) => {
     const agent = byBackend.get(entry.backend);
+    const modelOptions = agent?.modelOptions ?? [];
     return {
       backend: entry.backend,
       enabled: agent?.enabled ?? true,
       installUrl: entry.installUrl,
       installed: agent !== undefined,
       label: entry.label,
-      models: agent?.models ?? [],
+      modelOptions,
+      models: modelOptions.map((option) => option.model),
       version: agent?.version ?? null,
     };
   });

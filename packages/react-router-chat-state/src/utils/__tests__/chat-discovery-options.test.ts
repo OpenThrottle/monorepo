@@ -70,6 +70,7 @@ describe('toAgentChatOptions', () => {
     expect(options).toEqual([
       {
         description: 'cursor-agent',
+        favorite: false,
         groupId: 'cursor',
         id: 'cursor|auto',
         label: 'auto',
@@ -77,12 +78,71 @@ describe('toAgentChatOptions', () => {
       },
       {
         description: 'cursor-agent',
+        favorite: false,
         groupId: 'cursor',
         id: 'cursor|gpt-5.2',
         label: 'gpt-5.2',
         subLabel: 'cursor-agent',
       },
     ]);
+  });
+
+  it('prefers modelOptions: drops disabled models, flags favorites, and orders favorites first', () => {
+    const options = toAgentChatOptions({
+      agents: [
+        {
+          backend: 'cursor',
+          chatCapable: true,
+          enabled: true,
+          label: 'cursor-agent',
+          modelOptions: [
+            { enabled: true, favorite: false, model: 'auto' },
+            { enabled: false, favorite: false, model: 'disabled-one' },
+            { enabled: true, favorite: true, model: 'gpt-5.2' },
+          ],
+          models: ['auto', 'disabled-one', 'gpt-5.2'],
+          supportsCustomBaseUrl: false,
+        },
+      ],
+    });
+
+    // disabled-one is dropped; the favorite (gpt-5.2) leads.
+    expect(options).toEqual([
+      {
+        description: 'cursor-agent',
+        favorite: true,
+        groupId: 'cursor',
+        id: 'cursor|gpt-5.2',
+        label: 'gpt-5.2',
+        subLabel: 'cursor-agent',
+      },
+      {
+        description: 'cursor-agent',
+        favorite: false,
+        groupId: 'cursor',
+        id: 'cursor|auto',
+        label: 'auto',
+        subLabel: 'cursor-agent',
+      },
+    ]);
+  });
+
+  it('offers nothing for a driver whose every model is disabled', () => {
+    const options = toAgentChatOptions({
+      agents: [
+        {
+          backend: 'cursor',
+          chatCapable: true,
+          enabled: true,
+          label: 'cursor-agent',
+          modelOptions: [{ enabled: false, favorite: false, model: 'auto' }],
+          models: ['auto'],
+          supportsCustomBaseUrl: false,
+        },
+      ],
+    });
+
+    expect(options).toEqual([]);
   });
 
   it('falls back to a bare-backend option when a driver lists no models', () => {

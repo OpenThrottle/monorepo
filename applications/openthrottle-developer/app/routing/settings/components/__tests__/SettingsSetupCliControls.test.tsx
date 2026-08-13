@@ -17,6 +17,7 @@ const notInstalled: AgentCliStatus = {
   installUrl: 'https://x.ai/cli/install.sh',
   installed: false,
   label: 'Grok',
+  modelOptions: [],
   models: [],
   version: null,
 };
@@ -27,6 +28,7 @@ const installed: AgentCliStatus = {
   installUrl: 'https://claude.ai/install.sh',
   installed: true,
   label: 'Claude Code',
+  modelOptions: [{ enabled: true, favorite: false, model: 'opus' }],
   models: ['opus'],
   version: '2.1.0',
 };

@@ -58,8 +58,11 @@ export {
 export { WorkLedgerService } from './modules/work-ledger/work-ledger.service';
 export { AgentCliPreferencesModule } from './modules/agent-cli-preferences/agent-cli-preferences.module';
 export { AgentCliPreferencesService } from './modules/agent-cli-preferences/agent-cli-preferences.service';
+export type { ModelPreferenceMap } from './modules/agent-cli-preferences/agent-cli-preferences.service';
 export { UserDisabledAgentCli } from './modules/agent-cli-preferences/user-disabled-agent-cli.entity';
 export type { UserDisabledAgentCliData } from './modules/agent-cli-preferences/user-disabled-agent-cli.entity';
+export { UserFavoriteAgentModel } from './modules/agent-cli-preferences/user-favorite-agent-model.entity';
+export type { UserFavoriteAgentModelData } from './modules/agent-cli-preferences/user-favorite-agent-model.entity';
 export { AgentConversationMessage } from './modules/agent-conversations/agent-conversation-message.entity';
 export { AgentConversation } from './modules/agent-conversations/agent-conversation.entity';
 export {

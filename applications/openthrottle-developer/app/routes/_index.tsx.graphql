@@ -5,7 +5,11 @@ query DiscoverAgentClis {
       chatCapable
       enabled
       label
-      models
+      modelOptions {
+        enabled
+        favorite
+        model
+      }
       supportsCustomBaseUrl
       version
     }

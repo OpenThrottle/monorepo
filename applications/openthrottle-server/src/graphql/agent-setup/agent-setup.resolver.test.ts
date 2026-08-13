@@ -23,6 +23,8 @@ function build(
   permissions: readonly string[] = [],
 ): {
   resolver: AgentSetupResolver;
+  setModelEnabled: ReturnType<typeof vi.fn>;
+  setModelFavorite: ReturnType<typeof vi.fn>;
   setPreferenceEnabled: ReturnType<typeof vi.fn>;
   start: ReturnType<typeof vi.fn>;
 } {
@@ -40,12 +42,18 @@ function build(
     getPermissionsForUser: vi.fn().mockResolvedValue([...permissions]),
   });
   const setPreferenceEnabled = vi.fn().mockResolvedValue(undefined);
+  const setModelEnabled = vi.fn().mockResolvedValue(undefined);
+  const setModelFavorite = vi.fn().mockResolvedValue(undefined);
   const preferences = createMock<AgentCliPreferencesService>({
     setEnabled: setPreferenceEnabled,
+    setModelEnabled,
+    setModelFavorite,
   });
   const setupService = createMock<AgentSetupService>({ start });
   return {
     resolver: new AgentSetupResolver(config, preferences, roles, setupService),
+    setModelEnabled,
+    setModelFavorite,
     setPreferenceEnabled,
     start,
   };
@@ -145,6 +153,84 @@ describe('AgentSetupResolver', () => {
         resolver.setAgentEnabled(undefined, 'claude', false),
       ).rejects.toThrow(/authenticated user/);
       expect(setPreferenceEnabled).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('setAgentModelEnabled', () => {
+    it('persists a per-model disable and echoes the state', async () => {
+      const { resolver, setModelEnabled } = build(true);
+      const result = await resolver.setAgentModelEnabled(
+        human,
+        'claude',
+        'opus',
+        false,
+      );
+      expect(result).toEqual({
+        backend: 'claude',
+        enabled: false,
+        model: 'opus',
+      });
+      expect(setModelEnabled).toHaveBeenCalledWith(
+        'user-1',
+        'claude',
+        'opus',
+        false,
+      );
+    });
+
+    it('rejects an unknown backend without persisting', async () => {
+      const { resolver, setModelEnabled } = build(true);
+      await expect(
+        resolver.setAgentModelEnabled(human, 'nope', 'm', true),
+      ).rejects.toThrow(/Unknown agent CLI backend/);
+      expect(setModelEnabled).not.toHaveBeenCalled();
+    });
+
+    it('rejects an unauthenticated principal', async () => {
+      const { resolver, setModelEnabled } = build(true);
+      await expect(
+        resolver.setAgentModelEnabled(undefined, 'claude', 'opus', false),
+      ).rejects.toThrow(/authenticated user/);
+      expect(setModelEnabled).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('setAgentModelFavorite', () => {
+    it('persists a favorite and echoes the state', async () => {
+      const { resolver, setModelFavorite } = build(true);
+      const result = await resolver.setAgentModelFavorite(
+        human,
+        'cursor',
+        'gpt-5.2',
+        true,
+      );
+      expect(result).toEqual({
+        backend: 'cursor',
+        favorite: true,
+        model: 'gpt-5.2',
+      });
+      expect(setModelFavorite).toHaveBeenCalledWith(
+        'user-1',
+        'cursor',
+        'gpt-5.2',
+        true,
+      );
+    });
+
+    it('rejects an unknown backend without persisting', async () => {
+      const { resolver, setModelFavorite } = build(true);
+      await expect(
+        resolver.setAgentModelFavorite(human, 'nope', 'm', true),
+      ).rejects.toThrow(/Unknown agent CLI backend/);
+      expect(setModelFavorite).not.toHaveBeenCalled();
+    });
+
+    it('rejects an unauthenticated principal', async () => {
+      const { resolver, setModelFavorite } = build(true);
+      await expect(
+        resolver.setAgentModelFavorite(undefined, 'cursor', 'gpt-5.2', true),
+      ).rejects.toThrow(/authenticated user/);
+      expect(setModelFavorite).not.toHaveBeenCalled();
     });
   });
 });

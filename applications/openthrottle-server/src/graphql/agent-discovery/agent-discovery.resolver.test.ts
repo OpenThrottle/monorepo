@@ -62,6 +62,8 @@ describe('AgentDiscoveryResolver', () => {
     vi.mocked(service.discover).mockResolvedValue(SNAPSHOT);
     preferences = createMock<AgentCliPreferencesService>();
     vi.mocked(preferences.getDisabledBackends).mockResolvedValue(new Set());
+    vi.mocked(preferences.getDisabledModels).mockResolvedValue(new Map());
+    vi.mocked(preferences.getFavoriteModels).mockResolvedValue(new Map());
     resolver = new AgentDiscoveryResolver(service, preferences);
   });
 
@@ -76,6 +78,10 @@ describe('AgentDiscoveryResolver', () => {
         chatCapable: true,
         enabled: true,
         label: 'Cursor Agent',
+        modelOptions: [
+          { enabled: true, favorite: false, model: 'auto' },
+          { enabled: true, favorite: false, model: 'gpt-5.2' },
+        ],
         models: ['auto', 'gpt-5.2'],
         supportsCustomBaseUrl: false,
         version: '2026.06.15',
@@ -85,10 +91,40 @@ describe('AgentDiscoveryResolver', () => {
         chatCapable: true,
         enabled: true,
         label: 'OpenCode',
+        modelOptions: [
+          { enabled: true, favorite: false, model: 'opencode/big-pickle' },
+        ],
         models: ['opencode/big-pickle'],
         supportsCustomBaseUrl: true,
         version: '1.18.5',
       },
+    ]);
+  });
+
+  it('overlays per-model disabled + favorite state into modelOptions, and an agent-OFF forces every model disabled', async () => {
+    vi.mocked(preferences.getDisabledBackends).mockResolvedValue(
+      new Set(['opencode']),
+    );
+    vi.mocked(preferences.getDisabledModels).mockResolvedValue(
+      new Map([['cursor', new Set(['gpt-5.2'])]]),
+    );
+    vi.mocked(preferences.getFavoriteModels).mockResolvedValue(
+      new Map([['cursor', new Set(['auto'])]]),
+    );
+    const result = await resolver.discoverAgentClis(human);
+    const cursor = result.agents.find((agent) => agent.backend === 'cursor');
+    const opencode = result.agents.find(
+      (agent) => agent.backend === 'opencode',
+    );
+    expect(cursor?.modelOptions).toEqual([
+      { enabled: true, favorite: true, model: 'auto' },
+      { enabled: false, favorite: false, model: 'gpt-5.2' },
+    ]);
+    // opencode is agent-disabled → its model is forced disabled regardless of any
+    // per-model state.
+    expect(opencode?.enabled).toBe(false);
+    expect(opencode?.modelOptions).toEqual([
+      { enabled: false, favorite: false, model: 'opencode/big-pickle' },
     ]);
   });
 

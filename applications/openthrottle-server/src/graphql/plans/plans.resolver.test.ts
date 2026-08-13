@@ -199,8 +199,10 @@ describe('PlansResolver', () => {
   });
 
   const mockAgentIsEnabled = vi.fn().mockResolvedValue(true);
+  const mockAgentIsModelEnabled = vi.fn().mockResolvedValue(true);
   const mockAgentPreferences = createMock<AgentCliPreferencesService>({
     isEnabled: mockAgentIsEnabled,
+    isModelEnabled: mockAgentIsModelEnabled,
   });
 
   const mockRegisterWorktreeCheckout = vi.fn().mockResolvedValue(null);
@@ -948,6 +950,30 @@ describe('PlansResolver', () => {
       expect(mockEnqueueSpawn).toHaveBeenCalledWith(
         expect.objectContaining({ actorUserId: null }),
       );
+    });
+
+    test('rejects an explicitly-chosen model the actor disabled, without enqueueing', async () => {
+      mockEnqueueSpawn.mockClear();
+      mockAgentIsModelEnabled.mockResolvedValueOnce(false);
+      await expect(
+        resolver.enqueuePlanRun(
+          {
+            branch: 'feature/test',
+            planId: mockPlan.id,
+            priority: null,
+            ralph: { backend: 'claude', model: 'opus' },
+            workingDirectory: null,
+          },
+          'user-1',
+          'user',
+        ),
+      ).rejects.toThrow(/opus model is disabled/);
+      expect(mockAgentIsModelEnabled).toHaveBeenCalledWith(
+        'user-1',
+        'claude',
+        'opus',
+      );
+      expect(mockEnqueueSpawn).not.toHaveBeenCalled();
     });
   });
 

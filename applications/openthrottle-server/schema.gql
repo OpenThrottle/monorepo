@@ -691,6 +691,23 @@ type ListAgentConversationMessagesResultObject {
   totalCount: Int!
 }
 
+type AgentCliModelOption {
+  """
+  Opaque driver-supplied model id as returned by discoverAgentClis (e.g. "gpt-5.2").
+  """
+  model: String!
+
+  """
+  Effective per-user enablement of this model: false when the user disabled this model OR disabled the whole agent (an agent-level OFF hard-overrides every model). Disabled models are hidden from chat/model pickers and rejected when starting new runs. Defaults to true for an unauthenticated request.
+  """
+  enabled: Boolean!
+
+  """
+  Whether the current user has favorited this model. Favorites float to the top of / are highlighted in chat/model pickers and run selection; favoriting is orthogonal to enablement. Defaults to false for an unauthenticated request.
+  """
+  favorite: Boolean!
+}
+
 type AgentCliOptionObject {
   """
   Backend discriminator (e.g. "cursor") used in StartConversationStreamInput.
@@ -711,9 +728,14 @@ type AgentCliOptionObject {
   label: String!
 
   """
-  Models this CLI can run (empty when the CLI exposes no machine-listable models or listing failed).
+  Models this CLI can run (empty when the CLI exposes no machine-listable models or listing failed). Returns ALL discovered model ids, unfiltered by per-user preferences.
   """
-  models: [String!]!
+  models: [String!]! @deprecated(reason: "Use modelOptions, which carries per-user enabled + favorite state per model.")
+
+  """
+  Models this CLI can run, each with the current user's per-model enabled + favorite state overlaid. Empty when the CLI exposes no machine-listable models. Prefer this over the deprecated `models` list.
+  """
+  modelOptions: [AgentCliModelOption!]!
 
   """
   True when this driver can be pointed at a custom OpenAI-compatible base URL (a discovered local endpoint); gates driver×endpoint targeting in the composer. False for claude/cursor (own cloud wire protocol).
@@ -755,6 +777,32 @@ type SetAgentEnabledResult {
   The per-user enablement state after the toggle: true = enabled, false = disabled (hidden from pickers + blocked from new runs).
   """
   enabled: Boolean!
+}
+
+type SetAgentModelEnabledResult {
+  """The backend (driver id) the toggled model belongs to."""
+  backend: String!
+
+  """The model id whose enablement was toggled."""
+  model: String!
+
+  """
+  The per-model enablement state after the toggle: true = enabled, false = disabled (this model hidden from pickers + blocked from new runs, even while the agent stays enabled).
+  """
+  enabled: Boolean!
+}
+
+type SetAgentModelFavoriteResult {
+  """The backend (driver id) the favorited model belongs to."""
+  backend: String!
+
+  """The model id whose favorite state was toggled."""
+  model: String!
+
+  """
+  The favorite state after the toggle: true = favorited (floated/highlighted in pickers), false = not favorited.
+  """
+  favorite: Boolean!
 }
 
 type AgentSetupStreamChunkObject {
@@ -4218,6 +4266,16 @@ type Mutation {
   Enable or disable an agent CLI backend for the current user. A disabled agent is hidden from chat/model pickers and rejected when starting new runs. Presence-as-disabled: enabled=false records the preference, enabled=true clears it (default is enabled). Gated by SETTINGS_WRITE, in parity with install/update; rejects unknown backends.
   """
   setAgentEnabled(backend: String!, enabled: Boolean!): SetAgentEnabledResult!
+
+  """
+  Enable or disable a single MODEL of an agent CLI backend for the current user. A disabled model is hidden from chat/model pickers and rejected when starting new runs, even while the agent itself stays enabled (an agent-level OFF hard-overrides all its models). Presence-as-disabled: enabled=false records the preference, enabled=true clears it (default is enabled). Gated by SETTINGS_WRITE; rejects unknown backends.
+  """
+  setAgentModelEnabled(backend: String!, model: String!, enabled: Boolean!): SetAgentModelEnabledResult!
+
+  """
+  Star or unstar a single MODEL of an agent CLI backend for the current user. Favorited models float to the top of / are highlighted in chat/model pickers and run selection. Favoriting is orthogonal to enablement — it never enables a disabled model. Presence-as-favorite: favorite=true records the star, favorite=false clears it. Gated by SETTINGS_WRITE; rejects unknown backends.
+  """
+  setAgentModelFavorite(backend: String!, model: String!, favorite: Boolean!): SetAgentModelFavoriteResult!
 
   """
   Install an allowlisted agent CLI on the server host by driver id. Gated by SETTINGS_WRITE and the default-off OT_AGENT_CLI_INSTALL_ENABLED flag; returns a runId to stream via agentSetupChunkAdded.
