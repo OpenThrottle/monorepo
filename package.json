@@ -445,6 +445,7 @@
     "caddy": "caddy run --config tools/caddy/Caddyfile",
     "check:catalog": "tsx ./scripts/check-catalog-coverage.ts",
     "check:target-descriptions": "tsx ./scripts/audit-target-descriptions.ts --check",
+    "check:tsconfig-refs": "tsx ./scripts/check-tsconfig-refs.ts",
     "validate:licenses": "tsx ./scripts/validate-license-compliance.ts",
     "validate:notices": "tsx ./scripts/generate-third-party-notices.ts --check",
     "check:local": "pnpm run check:catalog && pnpm run check:target-descriptions && pnpm run validate:licenses && pnpm run validate:notices && pnpm run check:local:validate-tags && pnpm run check:local:format && pnpm run check:local:component-shape && pnpm run check:local:agent-assets && pnpm run check:local:migration-comments && pnpm run check:local:affected-lint && pnpm run check:local:affected-typecheck && pnpm run check:local:affected-test && pnpm run check:local:bundle-hooks && pnpm run check:local:verify && pnpm run check:local:codegen",

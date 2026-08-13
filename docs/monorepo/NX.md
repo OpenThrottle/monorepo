@@ -13,7 +13,7 @@ This monorepo uses **Nx** for task orchestration and caching, and **pnpm** for w
   - Setup notes: `docs/infra/gcs-nx-cache-verify.md`.
 - **CI patterns**: CI uses `nx affected` and distributes work using `scripts/parallelize-tasks.ts`. Gate priorities (P0–P4), owners, and job mapping: [CI-quality-gates.md](./CI-quality-gates.md).
 - **Dependency graph**: `scripts/nx-dependency-graph.ts` generates a static `dependency-graph.html` artifact; a scheduled workflow commits snapshots under `docs/nx/dependency-graphs/`.
-- **`pnpm sync` vs `nx sync`**: despite the shared name, these are unrelated. `pnpm sync` runs the root `sync:openthrottle:*` scripts (`scripts/sync-subtree.sh`), a **git subtree sync** of vendored application content. `nx sync` is Nx's **TypeScript project-reference tsconfig sync** — do **not** run it in this repo; it can inject bogus cross-project tsconfig references and break React Router app typechecks.
+- **`pnpm sync` vs `nx sync`**: despite the shared name, these are unrelated. `pnpm sync` runs the root `sync:openthrottle:*` scripts (`scripts/sync-subtree.sh`), a **git subtree sync** of vendored application content. `nx sync` is Nx's **TypeScript project-reference tsconfig sync** — do **not** run it in this repo; it can inject bogus cross-project tsconfig references and break React Router app typechecks. The `@nx/js:typescript-sync` generator is now **disabled workspace-wide** so it can no longer gate targets — see [tsconfig references & the disabled sync generator](#tsconfig-references--the-disabled-sync-generator).
 
 ### Operational decisions (2026-07-21)
 
@@ -24,6 +24,63 @@ Recorded from the Nx implementation audit:
   - The staging/production bucket ternaries remain no-ops (both resolve to `openthrottle-staging-nx-cache`); the real two-bucket model is only needed if PRs ever need to write. Requires the main CI service account to hold object write IAM on the bucket. Truncated-dist integrity (a separate class from CREEP) is guarded by `verify-dist-complete` (plan 935ea415 / PR #308).
 - **Nx Cloud — not adopted.** The workspace stays on self-hosted `@nx/gcs-cache`. The CI sharding infra (`scripts/parallelize-tasks.ts`, the matrix, the `merge_group` trigger) is built but pinned to a single runner as a deliberate cost tradeoff; **enable it when CI wall-time regularly approaches the 15-minute job timeout** (rough trigger: sustained > ~12 min). Distributed task execution, the test atomizer, flaky-task retries, and self-healing CI remain unavailable. The `monitor-ci` agent skill depends on Nx Cloud; it self-detects the missing connection (its "Step 0") and reports itself inoperable here, so it is a no-op until/unless Nx Cloud is adopted.
 - **Releases — manual only.** `nx release` stays invocable via the `workflow_dispatch`-only `nx-release.yml`; the duplicate commented-out release job in `continuous-integration.yml` has been removed. Nothing is `publish:true` today (nothing is being published), so there is no automated release on `main`. Flip a package to `publish:true` and revisit if publishing resumes.
+
+### tsconfig references & the disabled sync generator
+
+`nx.json` sets:
+
+```json
+"sync": {
+  "applyChanges": true,
+  "disabledTaskSyncGenerators": ["@nx/js:typescript-sync"]
+}
+```
+
+**Why it's disabled.** The custom `tools/nx-plugins/package-typecheck.ts` plugin
+owns the `typecheck` target and re-attaches `syncGenerators: ['@nx/js:typescript-sync']`,
+so before this change the tsconfig-reference sync gate fired on _every_
+`{applications,packages,tools}/*` typecheck. In a non-TTY shell (fresh worktrees,
+plain `bash -c`) `sync.applyChanges` cannot auto-apply — Nx has no TTY to apply
+into — so Nx **hard-failed the target** with `NX The workspace is out of sync …
+[@nx/js:typescript-sync]` before it ran. That made a freshly-provisioned worktree
+unusable until someone ran `nx sync` by hand. On Nx 22.7.4 the generator also emits
+**phantom cross-references between the React Router apps** (developer/website/admin →
+email, admin → developer) — `type: static` graph edges backed by no import, no
+tsconfig ref, no `paths` entry, unstable run-to-run ([Nx #36297](https://github.com/nrwl/nx/issues/36297)).
+So the generator could only produce noise or breakage here; disabling the gate is
+the durable fix.
+
+`disabledTaskSyncGenerators` disables **only** the tsconfig-ref sync gate. It does
+**not** touch `pluginsConfig.@nx/js.analyzeSourceFiles: true`, so the project-graph
+edges that drive `nx affected` and `^build`/`^typecheck` ordering are fully intact
+(verified: `nx affected` still resolves the full set and `openthrottle-server:build`
+still orders its 41 upstream `^build` deps). This is fundamentally different from
+`analyzeSourceFiles: false`, which _would_ drop ~85 real edges — never set that.
+
+**Never run bare `nx sync`.** tsconfig `references` are maintained **by hand**.
+
+**Reconciling a real reference by hand.** When a project starts importing a sibling
+workspace package (adds `@openthrottle/<pkg>` to `package.json` + an `import`), add
+the matching project reference to that project's `tsconfig.json` `references` array,
+e.g.:
+
+```jsonc
+{ "path": "../../packages/react-router-<pkg>" }
+```
+
+To _find_ genuine drift without ever gating work, run the opt-in, non-blocking:
+
+```bash
+pnpm run check:tsconfig-refs
+```
+
+It runs the sync generator in a throwaway pass (auto-restoring the tree), filters
+out the phantom app→app edges, and prints only real missing/stale references. It is
+**not** part of `check:local` and is never a required CI status.
+
+**Sibling fix.** Worktree `.env`/DB-seeding friction is handled separately by the
+tool-agnostic worktree provisioning work (OT `c9545bb0`); this sync-gate fix and
+that provisioning fix together make a fresh worktree usable immediately.
 
 **Features:**
 
