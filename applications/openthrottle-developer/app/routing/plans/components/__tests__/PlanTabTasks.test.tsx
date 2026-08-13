@@ -59,11 +59,13 @@ describe('PlanTabTasks Component', () => {
     const { getByText, getByTestId, queryByText } = renderTabTasks([mockTask]);
 
     expect(getByTestId('PlanTabTasks-view-toggle')).toBeInTheDocument();
-
-    expect(getByTestId('PlanTaskItems')).toBeInTheDocument();
     expect(getByText('First task')).toBeInTheDocument();
-    // Table-only column headers are absent in the list view.
-    expect(queryByText('Title / Context')).not.toBeInTheDocument();
+
+    // Not show in table view
+    expect(queryByText('PlanTaskItems')).not.toBeInTheDocument();
+
+    // Table-only column headers are present
+    expect(getByText('Title / Context')).toBeInTheDocument();
   });
 
   test('switches to the table view via the toggle', async () => {

@@ -24,7 +24,7 @@ import {
 } from './project-skill.object';
 
 /** nx_project_name of the dogfood project the monorepo's own skills reconcile into. */
-const DOGFOOD_NX_PROJECT_NAME = 'monorepo';
+const DOGFOOD_NX_PROJECT_NAME = 'OpenThrottle/monorepo';
 
 function toObject(view: ProjectSkillView): ProjectSkillObject {
   return {

@@ -39,7 +39,7 @@ import {
 } from './skill-availability-resolution.object';
 
 /** nx_project_name of the dogfood project the monorepo's own skills reconcile into. */
-const DOGFOOD_NX_PROJECT_NAME = 'monorepo';
+const DOGFOOD_NX_PROJECT_NAME = 'OpenThrottle/monorepo';
 
 /** Narrows a caller-supplied string to a known environment without an `as` cast. */
 function isKnownEnvironment(

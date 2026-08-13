@@ -23,7 +23,7 @@ describe('SkillAvailabilityResolutionResolver', () => {
 
   const dogfoodProject = createMock<Project>({
     id: 'monorepo-project-id',
-    nxProjectName: 'monorepo',
+    nxProjectName: 'OpenThrottle/monorepo',
   });
 
   const views: ProjectSkillView[] = [
@@ -237,7 +237,7 @@ describe('SkillAvailabilityResolutionResolver', () => {
     const result = await resolver.skillAvailability(userId);
 
     expect(mockProjectsService.findByNxProjectName).toHaveBeenCalledWith(
-      'monorepo',
+      'OpenThrottle/monorepo',
     );
     expect(mockProjectSkillsService.getSkillsForProject).toHaveBeenCalledWith(
       'monorepo-project-id',

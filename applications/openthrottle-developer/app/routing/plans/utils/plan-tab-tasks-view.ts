@@ -12,5 +12,6 @@ export const PLAN_TASKS_VIEW = {
 export type PlanTasksView =
   (typeof PLAN_TASKS_VIEW)[keyof typeof PLAN_TASKS_VIEW];
 
-export const isPlanTasksView = (value: unknown): value is PlanTasksView =>
-  value === PLAN_TASKS_VIEW.list || value === PLAN_TASKS_VIEW.table;
+export const isPlanTasksView = (value: unknown): value is PlanTasksView => {
+  return value === PLAN_TASKS_VIEW.list || value === PLAN_TASKS_VIEW.table;
+};

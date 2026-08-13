@@ -574,7 +574,9 @@ export class WorkspaceFoldersService {
 
     // Auto-provision: a NEW repository gets a project named from the remote
     // repo name (fallback: folder name); existing repositories inherit their
-    // link untouched (task 108bca14 / plan decision 1).
+    // link untouched (task 108bca14 / plan decision 1). `nx_project_name` is
+    // seeded to the same repo name so dogfood anchor lookups (projectSkills,
+    // plan-context availability) resolve the imported monorepo project.
     let project =
       repository.projectId === null
         ? null
@@ -586,6 +588,7 @@ export class WorkspaceFoldersService {
           repository.normalizedRemoteUrl ?? checkout.filesystemPath
         }.`,
         name: repository.name,
+        nxProjectName: repository.name,
       });
       const linked = await this.repositoriesService.update(repository.id, {
         projectId: project.id,

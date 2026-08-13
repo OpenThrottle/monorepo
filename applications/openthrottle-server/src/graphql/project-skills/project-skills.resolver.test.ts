@@ -14,7 +14,7 @@ import { ProjectSkillsResolver } from './project-skills.resolver';
 describe('ProjectSkillsResolver', () => {
   const dogfoodProject = createMock<Project>({
     id: 'monorepo-project-id',
-    nxProjectName: 'monorepo',
+    nxProjectName: 'OpenThrottle/monorepo',
   });
 
   const views: ProjectSkillView[] = [
@@ -120,7 +120,7 @@ describe('ProjectSkillsResolver', () => {
     const result = await resolver.projectSkills();
 
     expect(mockProjectsService.findByNxProjectName).toHaveBeenCalledWith(
-      'monorepo',
+      'OpenThrottle/monorepo',
     );
     expect(mockProjectSkillsService.getSkillsForProject).toHaveBeenCalledWith(
       'monorepo-project-id',

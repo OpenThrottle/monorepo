@@ -369,7 +369,10 @@ describe('WorkspaceFoldersService', () => {
       expect(payload.projectCreated).toBe(true);
       expect(payload.project?.id).toBe('auto-project');
       expect(mockProjectsService.create).toHaveBeenCalledWith(
-        expect.objectContaining({ name: 'Fixture' }),
+        expect.objectContaining({
+          name: 'Fixture',
+          nxProjectName: 'Fixture',
+        }),
       );
       expect(mockRepositoriesService.update).toHaveBeenCalledWith('repo-1', {
         projectId: 'auto-project',
