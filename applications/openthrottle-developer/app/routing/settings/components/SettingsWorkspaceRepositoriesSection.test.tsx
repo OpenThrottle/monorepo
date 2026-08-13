@@ -39,6 +39,11 @@ describe('SettingsWorkspaceRepositoriesSection Component', () => {
   beforeEach(() => {
     props = {
       discoveredFolders: [],
+      pickerCapabilities: {
+        canUseNativeDialog: false,
+        defaultBrowsePath: '/Users/dev/Development',
+        roots: ['/Users/dev/Development'],
+      },
       repositories: [],
     };
 

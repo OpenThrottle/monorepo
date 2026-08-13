@@ -3,7 +3,7 @@ import {
   ProjectDetailAddProjectTagDocument,
   ProjectDetailRemoveProjectTagDocument,
 } from '~/__generated__/graphql';
-import type { Route } from '@/app/routes/+types/projects.$projectId';
+import type { Route } from '@/app/routes/+types/projects.$projectId._index';
 
 /**
  * @description Project detail tag mutations (add / remove), dispatched by

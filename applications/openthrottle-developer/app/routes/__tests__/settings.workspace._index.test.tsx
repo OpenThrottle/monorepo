@@ -28,6 +28,11 @@ const mockLoaderPayload = {
       path: '/Users/dev/openthrottle',
     },
   ],
+  workspacePickerCapabilities: {
+    canUseNativeDialog: false,
+    defaultBrowsePath: '/Users/dev',
+    roots: ['/Users/dev'],
+  },
   workspaceRepositories: [
     {
       checkouts: [],
@@ -69,6 +74,8 @@ describe('routes/settings.workspace._index.tsx', () => {
       expect(result.profile).toEqual(mockProfile);
       expect(result.discoveredFolders).toHaveLength(1);
       expect(result.repositories).toHaveLength(1);
+      expect(result.pickerCapabilities.canUseNativeDialog).toBe(false);
+      expect(result.pickerCapabilities.roots).toEqual(['/Users/dev']);
     });
   });
 
@@ -182,9 +189,22 @@ describe('routes/settings.workspace._index.tsx', () => {
       });
     });
 
-    test('browseDirectory returns entries for the requested path', async () => {
+    test('browseDirectory returns the enriched listing for the requested path', async () => {
+      const listing = {
+        entries: [
+          {
+            alreadyRegistered: false,
+            isGitRepo: true,
+            name: 'repo',
+            path: '/Users/dev/repo',
+          },
+        ],
+        isGitRepo: false,
+        parentPath: null,
+        path: '/Users/dev',
+      };
       mockExecuteGraphqlWithAuth.mockResolvedValue({
-        browseDirectory: [{ name: 'repo', path: '/Users/dev/repo' }],
+        browseDirectory: listing,
       });
 
       const formData = new FormData();
@@ -193,12 +213,49 @@ describe('routes/settings.workspace._index.tsx', () => {
 
       const result = await action(actionArgs(formData));
 
-      expect(result).toEqual({
-        browse: {
-          entries: [{ name: 'repo', path: '/Users/dev/repo' }],
-          path: '/Users/dev',
-        },
+      expect(result).toEqual({ browse: listing });
+      expect(mockExecuteGraphqlWithAuth).toHaveBeenCalledWith(
+        expect.any(Request),
+        expect.any(Object),
+        { path: '/Users/dev' },
+      );
+    });
+
+    test('browseDirectory lists roots (null path) when no path is given', async () => {
+      const listing = {
+        entries: [],
+        isGitRepo: false,
+        parentPath: null,
+        path: null,
+      };
+      mockExecuteGraphqlWithAuth.mockResolvedValue({
+        browseDirectory: listing,
       });
+
+      const formData = new FormData();
+      formData.set('intent', 'browseDirectory');
+
+      const result = await action(actionArgs(formData));
+
+      expect(result).toEqual({ browse: listing });
+      expect(mockExecuteGraphqlWithAuth).toHaveBeenCalledWith(
+        expect.any(Request),
+        expect.any(Object),
+        { path: null },
+      );
+    });
+
+    test('pickFolderNative returns the chosen path', async () => {
+      mockExecuteGraphqlWithAuth.mockResolvedValue({
+        pickFolderNative: { path: '/Users/dev/picked' },
+      });
+
+      const formData = new FormData();
+      formData.set('intent', 'pickFolderNative');
+
+      const result = await action(actionArgs(formData));
+
+      expect(result).toEqual({ picked: { path: '/Users/dev/picked' } });
     });
 
     test('applyEditorConfig calls applyWorkspaceEditorConfiguration mutation', async () => {

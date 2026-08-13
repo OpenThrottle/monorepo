@@ -1,0 +1,19 @@
+query getProjectForEdit($id: ID!) {
+  project(id: $id) {
+    description
+    id
+    name
+    nxProjectName
+    updatedAt
+  }
+}
+
+mutation updateProject($input: UpdateProjectInput!) {
+  updateProject(input: $input) {
+    description
+    id
+    name
+    nxProjectName
+    updatedAt
+  }
+}

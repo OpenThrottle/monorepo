@@ -1,10 +1,19 @@
 import * as React from 'react';
-import { act, fireEvent, render } from '@testing-library/react';
+import { act, render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { useWorkspaceAddFolderDialog } from './useWorkspaceAddFolderDialog';
-import type { UseWorkspaceAddFolderDialogResult } from './useWorkspaceAddFolderDialog';
+import type {
+  UseWorkspaceAddFolderDialogResult,
+  WorkspaceAddFolderDialogOptions,
+} from './useWorkspaceAddFolderDialog';
+
+const options: WorkspaceAddFolderDialogOptions = {
+  canUseNativeDialog: false,
+  defaultBrowsePath: '/Users/dev/Development',
+  roots: ['/Users/dev/Development'],
+};
 
 function renderDialog(): {
   component: RenderResult;
@@ -14,13 +23,9 @@ function renderDialog(): {
     current: null,
   };
   function DialogProbe(): React.ReactElement {
-    const hook = useWorkspaceAddFolderDialog();
+    const hook = useWorkspaceAddFolderDialog(options);
     value.current = hook;
-    return (
-      <form data-testid="browse-form" onSubmit={hook.handleBrowseSubmit}>
-        <input defaultValue="" name="path" />
-      </form>
-    );
+    return <div data-testid="dialog-probe" />;
   }
   const Stub = createRoutesStub([
     { Component: DialogProbe, action: () => null, path: '/' },
@@ -30,19 +35,23 @@ function renderDialog(): {
 }
 
 describe('useWorkspaceAddFolderDialog', () => {
-  let component: RenderResult;
   let value: { current: UseWorkspaceAddFolderDialogResult | null };
 
   beforeEach(() => {
-    ({ component, value } = renderDialog());
+    ({ value } = renderDialog());
   });
 
-  test('starts closed with no browse results and manual path hidden', () => {
+  test('starts closed with no listing and manual path hidden', () => {
     expect(value.current?.open).toBe(false);
     expect(value.current?.showManualPath).toBe(false);
-    expect(value.current?.browseEntries).toBeNull();
-    expect(value.current?.browsePath).toBeNull();
+    expect(value.current?.hasListing).toBe(false);
+    expect(value.current?.currentPath).toBeNull();
+    expect(value.current?.entries).toEqual([]);
     expect(value.current?.isAdding).toBe(false);
+  });
+
+  test('surfaces the native-dialog capability from options', () => {
+    expect(value.current?.canUseNativeDialog).toBe(false);
   });
 
   test('setOpen toggles the dialog open state', () => {
@@ -59,36 +68,5 @@ describe('useWorkspaceAddFolderDialog', () => {
 
     act(() => value.current?.handleToggleManualPath());
     expect(value.current?.showManualPath).toBe(false);
-  });
-
-  test('handleBrowseSubmit submits the trimmed path from the form', () => {
-    const input = component.container.querySelector('input[name="path"]');
-    if (input == null) {
-      throw new Error('expected the path input to be rendered');
-    }
-    fireEvent.change(input, { target: { value: '  /repo  ' } });
-
-    act(() => {
-      fireEvent.submit(component.getByTestId('browse-form'));
-    });
-
-    expect(value.current?.browseFetcher.formData?.get('path')).toBe('/repo');
-    expect(value.current?.browseFetcher.formData?.get('intent')).toBe(
-      'browseDirectory',
-    );
-  });
-
-  test('handleBrowseSubmit ignores a blank path', () => {
-    const input = component.container.querySelector('input[name="path"]');
-    if (input == null) {
-      throw new Error('expected the path input to be rendered');
-    }
-    fireEvent.change(input, { target: { value: '   ' } });
-
-    act(() => {
-      fireEvent.submit(component.getByTestId('browse-form'));
-    });
-
-    expect(value.current?.browseFetcher.formData).toBeUndefined();
   });
 });

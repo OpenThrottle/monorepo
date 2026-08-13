@@ -1,7 +1,7 @@
 import { execFile } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, realpathSync } from 'node:fs';
 import { mkdtemp, mkdir, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { homedir, tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { createMock } from '@golevelup/ts-vitest';
@@ -29,6 +29,7 @@ import {
   vi,
 } from 'vitest';
 import { RepositoryInspectionService } from '../repository-inspection/repository-inspection.service';
+import { NATIVE_PICKER_ENV } from './native-folder-picker';
 import {
   CHECKOUT_ROOT_ENV,
   repositoryNameFromGitUrl,
@@ -161,24 +162,165 @@ describe('WorkspaceFoldersService', () => {
     });
   });
 
-  describe('browseDirectory', () => {
-    it('lists immediate subdirectories inside the roots', async () => {
-      const entries = await service.browseDirectory(workspaceRoot);
+  describe('workspacePickerCapabilities', () => {
+    it('exposes configured roots (host view) and seeds the default from the first root', () => {
+      const capabilities = service.workspacePickerCapabilities('127.0.0.1');
 
-      expect(entries.map((entry) => entry.name)).toEqual([
+      expect(capabilities.roots).toEqual([workspaceRoot]);
+      expect(capabilities.defaultBrowsePath).toBe(workspaceRoot);
+    });
+
+    it('falls back to the host home directory when no roots are configured', () => {
+      delete process.env[WORKSPACE_ROOTS_ENV];
+
+      const capabilities = service.workspacePickerCapabilities('127.0.0.1');
+
+      expect(capabilities.roots).toEqual([]);
+      expect(capabilities.defaultBrowsePath).toBe(homedir());
+    });
+
+    it('reports canUseNativeDialog false for a non-loopback or unknown peer', () => {
+      expect(
+        service.workspacePickerCapabilities('10.0.0.4').canUseNativeDialog,
+      ).toBe(false);
+      expect(service.workspacePickerCapabilities(null).canUseNativeDialog).toBe(
+        false,
+      );
+    });
+
+    it('honours the native-picker env override even for a remote peer', () => {
+      process.env[NATIVE_PICKER_ENV] = '1';
+      try {
+        expect(
+          service.workspacePickerCapabilities('10.0.0.4').canUseNativeDialog,
+        ).toBe(true);
+      } finally {
+        delete process.env[NATIVE_PICKER_ENV];
+      }
+    });
+  });
+
+  describe('pickFolderNative', () => {
+    it('rejects before spawning when the request is not same-machine', async () => {
+      const run = vi.fn();
+
+      await expect(
+        service.pickFolderNative('10.0.0.4', run),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(run).not.toHaveBeenCalled();
+    });
+
+    it('returns the chosen path when available and a folder is picked', async () => {
+      process.env[NATIVE_PICKER_ENV] = '1';
+      try {
+        const payload = await service.pickFolderNative(
+          '10.0.0.4',
+          async () => `${workspaceRoot}/`,
+        );
+
+        expect(payload.path).toBe(realpathSync(workspaceRoot));
+      } finally {
+        delete process.env[NATIVE_PICKER_ENV];
+      }
+    });
+
+    it('returns a null path (no error) on user-cancel', async () => {
+      process.env[NATIVE_PICKER_ENV] = '1';
+      try {
+        const payload = await service.pickFolderNative('10.0.0.4', async () => {
+          throw Object.assign(new Error('User canceled.'), {
+            code: 1,
+            stdout: '',
+          });
+        });
+
+        expect(payload.path).toBeNull();
+      } finally {
+        delete process.env[NATIVE_PICKER_ENV];
+      }
+    });
+
+    it('rejects when the dialog times out', async () => {
+      process.env[NATIVE_PICKER_ENV] = '1';
+      try {
+        await expect(
+          service.pickFolderNative('10.0.0.4', async () => {
+            throw Object.assign(new Error('timed out'), {
+              killed: true,
+              signal: 'SIGTERM',
+            });
+          }),
+        ).rejects.toThrow('timed out');
+      } finally {
+        delete process.env[NATIVE_PICKER_ENV];
+      }
+    });
+  });
+
+  describe('browseDirectory', () => {
+    it('lists immediate subdirectories annotated with isGitRepo', async () => {
+      const listing = await service.browseDirectory(userId, workspaceRoot);
+
+      expect(listing.entries.map((entry) => entry.name)).toEqual([
         'fixture-repo',
         'not-a-repo',
       ]);
+      const gitEntry = listing.entries.find((e) => e.name === 'fixture-repo');
+      const plainEntry = listing.entries.find((e) => e.name === 'not-a-repo');
+      expect(gitEntry?.isGitRepo).toBe(true);
+      expect(plainEntry?.isGitRepo).toBe(false);
+      expect(gitEntry?.alreadyRegistered).toBe(false);
+    });
+
+    it('marks an entry alreadyRegistered when a checkout matches its path', async () => {
+      vi.mocked(mockCheckoutsService.listByUserId).mockResolvedValue([
+        asMock<RepositoryCheckout>({
+          filesystemPath: join(realpathSync(workspaceRoot), 'fixture-repo'),
+          id: 'checkout-1',
+        }),
+      ]);
+
+      const listing = await service.browseDirectory(userId, workspaceRoot);
+
+      expect(
+        listing.entries.find((e) => e.name === 'fixture-repo')
+          ?.alreadyRegistered,
+      ).toBe(true);
+    });
+
+    it('lists the configured roots as entries when no path is given', async () => {
+      const listing = await service.browseDirectory(userId);
+
+      expect(listing.path).toBeNull();
+      expect(listing.parentPath).toBeNull();
+      expect(listing.isGitRepo).toBe(false);
+      expect(listing.entries).toHaveLength(1);
+      expect(listing.entries[0]?.path).toBe(realpathSync(workspaceRoot));
+    });
+
+    it('exposes current path + git-repo flag and a parent under a root', async () => {
+      const listing = await service.browseDirectory(userId, gitRepoDir);
+
+      expect(listing.path).toBe(realpathSync(gitRepoDir));
+      expect(listing.isGitRepo).toBe(true);
+      expect(listing.parentPath).toBe(realpathSync(workspaceRoot));
+    });
+
+    it('clamps parentPath to null at the root boundary', async () => {
+      const listing = await service.browseDirectory(userId, workspaceRoot);
+
+      expect(listing.path).toBe(realpathSync(workspaceRoot));
+      expect(listing.parentPath).toBeNull();
     });
 
     it('rejects paths outside the configured roots', async () => {
-      await expect(service.browseDirectory(tmpdir())).rejects.toThrow(
+      await expect(service.browseDirectory(userId, tmpdir())).rejects.toThrow(
         'not within the configured workspace roots',
       );
     });
 
     it('rejects relative paths', async () => {
-      await expect(service.browseDirectory('relative')).rejects.toThrow(
+      await expect(service.browseDirectory(userId, 'relative')).rejects.toThrow(
         'absolute path',
       );
     });
@@ -186,9 +328,9 @@ describe('WorkspaceFoldersService', () => {
     it('rejects when roots are unset', async () => {
       delete process.env[WORKSPACE_ROOTS_ENV];
 
-      await expect(service.browseDirectory(workspaceRoot)).rejects.toThrow(
-        WORKSPACE_ROOTS_ENV,
-      );
+      await expect(
+        service.browseDirectory(userId, workspaceRoot),
+      ).rejects.toThrow(WORKSPACE_ROOTS_ENV);
     });
   });
 

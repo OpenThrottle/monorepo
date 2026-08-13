@@ -3,7 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import ProjectDetail from '../projects.$projectId';
+import ProjectDetail from '../projects.$projectId._index';
 import { PROJECT_NOT_FOUND_COPY } from '~/routing/projects/data/data.copy';
 
 const mockProject = {
@@ -95,7 +95,7 @@ const renderRoute = (
   return { submitted };
 };
 
-describe('routes/projects.$projectId.tsx', () => {
+describe('routes/projects.$projectId._index.tsx', () => {
   test('should render project detail when project exists', async () => {
     renderRoute(defaultLoaderData);
     expect(

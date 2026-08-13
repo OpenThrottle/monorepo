@@ -49,11 +49,81 @@ export class DiscoveredFolderObject {
   description: `A subdirectory listed by browseDirectory (server-host path).`,
 })
 export class BrowseDirectoryEntryObject {
+  @Field(() => Boolean, {
+    description: `True when this subdirectory is already registered as a checkout (matched by path or OT manifest checkout id).`,
+  })
+  alreadyRegistered!: boolean;
+
+  @Field(() => Boolean, {
+    description: `True when this subdirectory contains a .git entry (looks like a git repository).`,
+  })
+  isGitRepo!: boolean;
+
   @Field(() => String)
   name!: string;
 
-  @Field(() => String)
+  @Field(() => String, {
+    description: `Absolute path on the server host.`,
+  })
   path!: string;
+}
+
+@ObjectType({
+  description: `An interactive listing from browseDirectory: the current directory's immediate subdirectories plus the navigation context (current + parent path, and whether the current directory is itself a git repo) so the client can render a breadcrumb, an Up control, and an "add this folder" action. All paths are on the server host.`,
+})
+export class WorkspaceDirectoryListingObject {
+  @Field(() => [BrowseDirectoryEntryObject], {
+    description: `Immediate subdirectories of the current directory (or the configured roots when listing roots).`,
+  })
+  entries!: BrowseDirectoryEntryObject[];
+
+  @Field(() => Boolean, {
+    description: `True when the currently-browsed directory is itself a git repository. Always false when listing roots (path is null).`,
+  })
+  isGitRepo!: boolean;
+
+  @Field(() => String, {
+    description: `Absolute host path one level up, or null when at/above a configured root (containment-guarded) or when listing roots.`,
+    nullable: true,
+  })
+  parentPath!: string | null;
+
+  @Field(() => String, {
+    description: `Canonical absolute host path of the currently-browsed directory, or null when listing the configured roots (no directory is "current").`,
+    nullable: true,
+  })
+  path!: string | null;
+}
+
+@ObjectType({
+  description: `Capabilities that seed the add-folder picker: whether a native OS folder dialog can be opened on the server host, the configured workspace roots (host view), and a default path to open the in-app picker at — all server-host paths.`,
+})
+export class WorkspacePickerCapabilitiesObject {
+  @Field(() => Boolean, {
+    description: `True when the openthrottle-server host can open a native OS folder dialog for this request (request is loopback + a display is present, or forced via OPENTHROTTLE_NATIVE_PICKER). The client uses this to choose the Browse affordance; the pickFolderNative mutation re-checks it before spawning.`,
+  })
+  canUseNativeDialog!: boolean;
+
+  @Field(() => String, {
+    description: `Absolute server-host path to seed the in-app picker at: the first configured workspace root, else the host home directory.`,
+  })
+  defaultBrowsePath!: string;
+
+  @Field(() => [String], {
+    description: `Configured OPENTHROTTLE_WORKSPACE_ROOTS in the host view; empty when unset.`,
+  })
+  roots!: string[];
+}
+
+@ObjectType({
+  description: `Result of the native OS folder dialog: the chosen absolute server-host path, or null when the user cancelled (a clean no-op). The path may be outside the configured workspace roots — the native pick is an explicit user gesture. addWorkspaceFolder still re-validates and inspects it.`,
+})
+export class PickFolderNativePayloadObject {
+  @Field(() => String, {
+    description: `Chosen absolute path on the server host, or null on user-cancel.`,
+    nullable: true,
+  })
+  path!: string | null;
 }
 
 @ObjectType({

@@ -5,6 +5,7 @@ import { FolderGit2Icon } from 'lucide-react';
 import type {
   AddWorkspaceFolderMutation,
   DiscoveredFolderObject,
+  WorkspacePickerCapabilitiesObject,
   WorkspaceRepositoryFieldsFragment,
 } from '~/__generated__/graphql';
 import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
@@ -22,6 +23,10 @@ export interface SettingsWorkspaceRepositoriesSectionProps {
     DiscoveredFolderObject,
     'alreadyRegistered' | 'name' | 'path'
   >[];
+  pickerCapabilities: Pick<
+    WorkspacePickerCapabilitiesObject,
+    'canUseNativeDialog' | 'defaultBrowsePath' | 'roots'
+  >;
   refreshed?: {
     checkoutId: string;
     drift: CheckoutDrift;
@@ -38,6 +43,7 @@ export const SettingsWorkspaceRepositoriesSection = (
     addedFolder,
     className,
     discoveredFolders,
+    pickerCapabilities,
     refreshed,
     repositories,
   } = props;
@@ -76,6 +82,7 @@ export const SettingsWorkspaceRepositoriesSection = (
             <WorkspaceAddFolderDialog
               actionError={actionError}
               discoveredFolders={discoveredFolders}
+              pickerCapabilities={pickerCapabilities}
             />
           </div>
         </div>

@@ -11,13 +11,28 @@ import {
   TextArea,
 } from '@openthrottle/react-router-shadcn';
 
+export interface ProjectFormDefaultValues {
+  description?: string | null;
+  name?: string | null;
+  nxProjectName?: string | null;
+}
+
 export interface ProjectFormProps {
   actionData?: { error?: string } | null;
+  cancelTo?: string;
   className?: string;
+  defaultValues?: ProjectFormDefaultValues;
+  submitLabel?: string;
 }
 
 export const ProjectForm = (props: ProjectFormProps): React.ReactElement => {
-  const { actionData, className } = props;
+  const {
+    actionData,
+    cancelTo = '/projects',
+    className,
+    defaultValues,
+    submitLabel = 'Create project',
+  } = props;
 
   // Hooks
 
@@ -39,6 +54,7 @@ export const ProjectForm = (props: ProjectFormProps): React.ReactElement => {
           <div className="space-y-2">
             <Label htmlFor="project-name">Name</Label>
             <Input
+              defaultValue={defaultValues?.name ?? undefined}
               id="project-name"
               name="name"
               placeholder="Project name"
@@ -50,6 +66,7 @@ export const ProjectForm = (props: ProjectFormProps): React.ReactElement => {
           <div className="space-y-2">
             <Label htmlFor="project-description">Description (optional)</Label>
             <TextArea
+              defaultValue={defaultValues?.description ?? undefined}
               id="project-description"
               name="description"
               placeholder="Project description"
@@ -62,6 +79,7 @@ export const ProjectForm = (props: ProjectFormProps): React.ReactElement => {
               NX project name (optional)
             </Label>
             <Input
+              defaultValue={defaultValues?.nxProjectName ?? undefined}
               id="project-nx-project-name"
               name="nxProjectName"
               placeholder="e.g. openthrottle-developer"
@@ -77,10 +95,10 @@ export const ProjectForm = (props: ProjectFormProps): React.ReactElement => {
 
           <CardFooter className="flex justify-end gap-3 p-0 pt-4">
             <Button asChild={true} variant="ghost">
-              <Link to="/projects">Cancel</Link>
+              <Link to={cancelTo}>Cancel</Link>
             </Button>
             <Button type="submit" variant="outline">
-              Create project
+              {submitLabel}
             </Button>
           </CardFooter>
         </Form>

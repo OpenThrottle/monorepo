@@ -55,7 +55,9 @@ export const WorkspaceAddFolderCandidate = (
           <input name="intent" type="hidden" value="addFolder" />
           <input name="path" type="hidden" value={candidate.path} />
           <Button disabled={isAdding} size="sm" type="submit">
-            {isAdding ? 'Adding…' : 'Add'}
+            {isAdding
+              ? WORKSPACE_FOLDERS_COPY.addingLabel
+              : WORKSPACE_FOLDERS_COPY.addEntryButton}
           </Button>
         </Form>
       )}
