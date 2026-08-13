@@ -208,9 +208,9 @@ export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
         to: '/settings/rollout',
       },
       {
-        beta: true,
+        beta: false,
         children: 'Setup',
-        disabled: false, // 🔴 🟠 🟡 🟢
+        disabled: false, // 🔴 🟠 🟡
         icon: WrenchIcon,
         to: '/settings/setup',
       },

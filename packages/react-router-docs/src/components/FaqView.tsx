@@ -60,7 +60,7 @@ export const FaqView = (props: FaqViewProps): React.ReactElement => {
                 key={entry.slug}
                 value={entry.slug}
               >
-                <AccordionTrigger className="text-sm">
+                <AccordionTrigger className="text-muted-foreground hover:text-foreground text-sm transition-colors">
                   {entry.title}
                 </AccordionTrigger>
                 <AccordionContent>
