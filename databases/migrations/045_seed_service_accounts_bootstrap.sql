@@ -5,6 +5,11 @@
 
 -- Permissions for plans/tasks GraphQL (MCP tools and Ralph workers). No @Permissions on plans resolvers yet;
 -- these support CLS/RBAC and future resolver guards.
+-- GOTCHA (fixed in 092): this migration grants plans:* ONLY to the mcp/workflow-ralph roles and did NOT
+-- re-grant admin. Migration 034's admin `CROSS JOIN permissions` is a point-in-time snapshot and does not
+-- pick up permissions added later, so admin silently lacked plans:read/plans:write on DBs migrated forward
+-- from 034. Any future permission-adding migration MUST also grant admin (see databases/README.md § RBAC and
+-- the check:rbac-admin-coverage gate). 092_grant_admin_all_permissions.sql backfills the historical gap.
 INSERT INTO
     permissions (name, description)
 VALUES (
