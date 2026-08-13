@@ -50,6 +50,8 @@ pnpm run database:import-agent-assets
 
 # Setup the MCP servers globally
 pnpm setup:mcp-instructions
+
+# pnpm run database:bootstrap-service-accounts
 ```
 
 **Server (API) only:**
@@ -93,7 +95,8 @@ OpenThrottle is open core and built in the open. The table below sets expectatio
 | `openthrottle-admin`     | 🧭 Planned      | Corporate management layer. On the roadmap; not production-ready.   |
 | `openthrottle-email`     | 🚧 Experimental | A web mail client we're prototyping. Expect rough edges.            |
 
-> [!NOTE] 🧭 **Planned** and 🚧 **Experimental** apps ship as previews so you can see where OpenThrottle is headed. They build and pass CI, but aren't feature-complete — don't depend on them yet.
+> [!NOTE]
+> 🧭 **Planned** and 🚧 **Experimental** apps ship as previews so you can see where OpenThrottle is headed. They build and pass CI, but aren't feature-complete — don't depend on them yet.
 
 ## 🛟 Troubleshooting
 

@@ -1,9 +1,6 @@
 {
   "version": 1,
   "overlays": {
-    "agents-code-review": {
-      "tags": ["pr-review"]
-    },
     "agents-ralph": {
       "tags": ["commit", "openthrottle", "planning"]
     },

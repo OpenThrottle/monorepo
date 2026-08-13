@@ -1,12 +1,12 @@
 import * as React from 'react';
 import type { RenderResult } from '@testing-library/react';
-import { within } from '@testing-library/react';
+import { waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { PlanToolbar } from '../PlanToolbar';
 import type { PlanToolbarProps } from '../PlanToolbar';
-import { renderRoutesStub } from '~/testing/route-fixtures';
+import { renderRouteHarness, renderRoutesStub } from '~/testing/route-fixtures';
 
 const renderToolbar = (toolbarProps: PlanToolbarProps): RenderResult =>
   renderRoutesStub(
@@ -242,5 +242,76 @@ describe('PlanToolbar Component', () => {
 
     await user.click(r.getByRole('button', { name: /Remove tag backend/i }));
     expect(onRemoveTag).toHaveBeenCalledWith('backend');
+  });
+
+  test('replaces Kill run with a Stale badge when the newest run is stale', () => {
+    const r = renderToolbar({
+      newestRunIsStale: true,
+      planId: 'p1',
+      planStatus: 'IN_PROGRESS',
+      planTitle: 'My Plan',
+    });
+
+    expect(
+      r.queryByRole('button', { name: /Kill plan run/i }),
+    ).not.toBeInTheDocument();
+    expect(r.getByText('Stale')).toBeInTheDocument();
+  });
+});
+
+const PLAN_ID = 'plan-123';
+
+/**
+ * Render the toolbar inside a routes stub whose action records submitted
+ * FormData, so we can assert the fetcher posts the right intent + planId.
+ */
+const renderToolbarWithAction = (
+  props: Partial<PlanToolbarProps> = {},
+): {
+  component: RenderResult;
+  submitted: {
+    intent: FormDataEntryValue | null;
+    planId: FormDataEntryValue | null;
+  }[];
+} => {
+  const submitted: {
+    intent: FormDataEntryValue | null;
+    planId: FormDataEntryValue | null;
+  }[] = [];
+
+  const action = async ({ request }: { request: Request }) => {
+    const formData = await request.formData();
+    submitted.push({
+      intent: formData.get('intent'),
+      planId: formData.get('planId'),
+    });
+    return { evaluatePlanRulesTriggered: true };
+  };
+
+  const component = renderRouteHarness([
+    {
+      Component: () => <PlanToolbar planId={PLAN_ID} {...props} />,
+      action,
+      path: '/',
+    },
+  ]);
+
+  return { component, submitted };
+};
+
+describe('PlanToolbar evaluate-rules submit', () => {
+  test('submits the evaluatePlanRules intent with the planId', async () => {
+    const { component, submitted } = renderToolbarWithAction();
+    const user = userEvent.setup();
+
+    await user.click(
+      component.getByRole('button', { name: /evaluate rules/i }),
+    );
+
+    await waitFor(() => expect(submitted).toHaveLength(1));
+    expect(submitted[0]).toEqual({
+      intent: 'evaluatePlanRules',
+      planId: PLAN_ID,
+    });
   });
 });

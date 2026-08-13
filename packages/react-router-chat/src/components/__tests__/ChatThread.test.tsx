@@ -45,8 +45,8 @@ describe('ChatThread Component', () => {
     });
 
     test('should render role labels', () => {
-      expect(component.getByText('You')).toBeInTheDocument();
-      expect(component.getByText('Assistant')).toBeInTheDocument();
+      expect(component.getByText('You:')).toBeInTheDocument();
+      expect(component.getByText('Clutch Assistant:')).toBeInTheDocument();
     });
 
     test('should render assistant content in Markdown wrapper', () => {
