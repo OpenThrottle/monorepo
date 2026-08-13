@@ -2,6 +2,7 @@ import * as React from 'react';
 import { useFetcher, useRevalidator } from 'react-router';
 import { Button, Spinner } from '@openthrottle/react-router-shadcn';
 import { useAgentSetupStream } from '~/routing/settings/hooks/useAgentSetupStream';
+import { SETTINGS_SETUP_COPY } from '~/routing/settings/data/data.copy';
 import type { AgentCliStatus } from '~/routing/settings/data/agent-clis.data';
 import type { action as agentSetupAction } from '~/routes/resources.agent-setup';
 
@@ -32,12 +33,14 @@ export const SettingsSetupCliControls = (
   const submitting = fetcher.state !== 'idle';
   const running = runId != null && !stream.done;
 
-  const disabledReason = !canManage
-    ? 'Requires the settings:write permission.'
-    : !installEnabled
-      ? 'Disabled. Set OT_AGENT_CLI_INSTALL_ENABLED on the server (local dev machines only).'
-      : null;
-  const disabled = disabledReason != null || submitting || running;
+  // The OT_AGENT_CLI_INSTALL_ENABLED explanation lives once at the route level
+  // (SettingsSetupInstallNotice); here we only surface the contextual per-row
+  // permission reason. The button is still disabled when the env flag is off.
+  const permissionReason = !canManage
+    ? SETTINGS_SETUP_COPY.permissionReason
+    : null;
+  const disabled =
+    permissionReason != null || !installEnabled || submitting || running;
 
   const serverDisabled = fetcher.data?.disabled === true;
   const errorMessage = stream.error ?? fetcher.data?.errorMessage ?? null;
@@ -79,14 +82,8 @@ export const SettingsSetupCliControls = (
         </Button>
       </fetcher.Form>
 
-      {disabledReason != null ? (
-        <p className="text-muted-foreground mt-2 text-xs">{disabledReason}</p>
-      ) : null}
-
-      {serverDisabled && fetcher.data?.errorMessage != null ? (
-        <p className="text-muted-foreground mt-2 text-xs">
-          {fetcher.data.errorMessage}
-        </p>
+      {permissionReason != null ? (
+        <p className="text-muted-foreground mt-2 text-xs">{permissionReason}</p>
       ) : null}
 
       {runId != null && logText !== '' ? (

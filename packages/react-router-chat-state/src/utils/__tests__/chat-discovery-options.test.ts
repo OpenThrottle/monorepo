@@ -59,6 +59,7 @@ describe('toAgentChatOptions', () => {
         {
           backend: 'cursor',
           chatCapable: true,
+          enabled: true,
           label: 'cursor-agent',
           models: ['auto', 'gpt-5.2'],
           supportsCustomBaseUrl: false,
@@ -90,6 +91,7 @@ describe('toAgentChatOptions', () => {
         {
           backend: 'claude',
           chatCapable: true,
+          enabled: true,
           label: 'claude-code',
           models: [],
           supportsCustomBaseUrl: false,
@@ -114,6 +116,7 @@ describe('toAgentChatOptions', () => {
         {
           backend: 'future-plan-run-driver',
           chatCapable: false,
+          enabled: true,
           label: 'future-plan-run-driver',
           models: [],
           supportsCustomBaseUrl: false,
@@ -121,6 +124,7 @@ describe('toAgentChatOptions', () => {
         {
           backend: 'another-plan-run-driver',
           chatCapable: false,
+          enabled: true,
           label: 'another-plan-run-driver',
           models: ['some-model'],
           supportsCustomBaseUrl: false,
@@ -130,6 +134,31 @@ describe('toAgentChatOptions', () => {
 
     expect(options).toEqual([]);
   });
+
+  it('omits agents the user has disabled (and their models transitively)', () => {
+    const options = toAgentChatOptions({
+      agents: [
+        {
+          backend: 'cursor',
+          chatCapable: true,
+          enabled: false,
+          label: 'cursor-agent',
+          models: ['auto', 'gpt-5.2'],
+          supportsCustomBaseUrl: false,
+        },
+        {
+          backend: 'opencode',
+          chatCapable: true,
+          enabled: true,
+          label: 'opencode',
+          models: ['big-pickle'],
+          supportsCustomBaseUrl: true,
+        },
+      ],
+    });
+
+    expect(options.map((option) => option.groupId)).toEqual(['opencode']);
+  });
 });
 
 describe('toDriverEndpointChatOptions', () => {
@@ -138,6 +167,7 @@ describe('toDriverEndpointChatOptions', () => {
       {
         backend: 'opencode',
         chatCapable: true,
+        enabled: true,
         label: 'opencode',
         models: ['opencode/big-pickle'],
         supportsCustomBaseUrl: true,
@@ -145,6 +175,7 @@ describe('toDriverEndpointChatOptions', () => {
       {
         backend: 'claude',
         chatCapable: true,
+        enabled: true,
         label: 'claude-code',
         models: [],
         supportsCustomBaseUrl: false,
@@ -204,9 +235,39 @@ describe('toDriverEndpointChatOptions', () => {
           {
             backend: 'claude',
             chatCapable: true,
+            enabled: true,
             label: 'claude-code',
             models: [],
             supportsCustomBaseUrl: false,
+          },
+        ],
+      },
+      {
+        endpoints: [
+          {
+            baseUrl: 'http://localhost:11434/v1',
+            host: 'localhost',
+            models: ['llama3'],
+            provider: 'ollama',
+          },
+        ],
+      },
+    );
+
+    expect(options).toEqual([]);
+  });
+
+  it('omits a disabled driver from the endpoint join', () => {
+    const options = toDriverEndpointChatOptions(
+      {
+        agents: [
+          {
+            backend: 'opencode',
+            chatCapable: true,
+            enabled: false,
+            label: 'opencode',
+            models: ['big-pickle'],
+            supportsCustomBaseUrl: true,
           },
         ],
       },

@@ -13,6 +13,7 @@ vi.mock('~/services/graphql-ws-client', () => ({
 
 const notInstalled: AgentCliStatus = {
   backend: 'grok',
+  enabled: true,
   installUrl: 'https://x.ai/cli/install.sh',
   installed: false,
   label: 'Grok',
@@ -22,6 +23,7 @@ const notInstalled: AgentCliStatus = {
 
 const installed: AgentCliStatus = {
   backend: 'claude',
+  enabled: true,
   installUrl: 'https://claude.ai/install.sh',
   installed: true,
   label: 'Claude Code',
@@ -61,16 +63,18 @@ describe('SettingsSetupCliControls', () => {
     expect(button).toBeEnabled();
   });
 
-  test('disabled-by-flag: button disabled with an explanation', () => {
+  test('disabled-by-flag: button disabled, but the env explanation is NOT repeated here', () => {
     const component = renderControls({
       canManage: true,
       installEnabled: false,
       status: notInstalled,
     });
     expect(component.getByRole('button', { name: 'Install' })).toBeDisabled();
+    // The OT_AGENT_CLI_INSTALL_ENABLED explanation now lives once at the route
+    // level (SettingsSetupInstallNotice), never inside the per-row controls.
     expect(
-      component.getByText(/OT_AGENT_CLI_INSTALL_ENABLED/),
-    ).toBeInTheDocument();
+      component.queryByText(/OT_AGENT_CLI_INSTALL_ENABLED/),
+    ).not.toBeInTheDocument();
   });
 
   test('no-permission: button disabled with a settings:write explanation', () => {

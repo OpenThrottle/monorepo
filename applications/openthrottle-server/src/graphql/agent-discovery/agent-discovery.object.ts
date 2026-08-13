@@ -19,6 +19,11 @@ export class AgentCliOptionObject {
   })
   chatCapable!: boolean;
 
+  @Field(() => Boolean, {
+    description: `Per-user enablement: true unless the current user has disabled this agent on /settings/setup. A disabled agent is hidden from chat/model pickers and rejected when starting new runs. Defaults to true for an unauthenticated request.`,
+  })
+  enabled!: boolean;
+
   @Field(() => String, {
     description: `Human-readable label for the selector.`,
   })

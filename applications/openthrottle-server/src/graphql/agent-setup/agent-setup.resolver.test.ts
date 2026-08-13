@@ -5,7 +5,10 @@ import {
   type AuthPrincipal,
 } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS } from '@openthrottle/nestjs-rbac';
-import { RolesService } from '@openthrottle/nestjs-repositories';
+import {
+  AgentCliPreferencesService,
+  RolesService,
+} from '@openthrottle/nestjs-repositories';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AGENT_CLI_INSTALL_ENABLED_ENV } from './agent-setup.config';
@@ -20,6 +23,7 @@ function build(
   permissions: readonly string[] = [],
 ): {
   resolver: AgentSetupResolver;
+  setPreferenceEnabled: ReturnType<typeof vi.fn>;
   start: ReturnType<typeof vi.fn>;
 } {
   const start = vi.fn().mockReturnValue('run-123');
@@ -35,9 +39,14 @@ function build(
   const roles = createMock<RolesService>({
     getPermissionsForUser: vi.fn().mockResolvedValue([...permissions]),
   });
+  const setPreferenceEnabled = vi.fn().mockResolvedValue(undefined);
+  const preferences = createMock<AgentCliPreferencesService>({
+    setEnabled: setPreferenceEnabled,
+  });
   const setupService = createMock<AgentSetupService>({ start });
   return {
-    resolver: new AgentSetupResolver(config, roles, setupService),
+    resolver: new AgentSetupResolver(config, preferences, roles, setupService),
+    setPreferenceEnabled,
     start,
   };
 }
@@ -97,5 +106,45 @@ describe('AgentSetupResolver', () => {
     const { resolver } = build(true);
     const config = await resolver.agentCliSetupConfig(undefined);
     expect(config).toEqual({ canManage: false, installEnabled: true });
+  });
+
+  describe('setAgentEnabled', () => {
+    it('persists a disable and echoes the state', async () => {
+      const { resolver, setPreferenceEnabled } = build(true);
+      const result = await resolver.setAgentEnabled(human, 'claude', false);
+      expect(result).toEqual({ backend: 'claude', enabled: false });
+      expect(setPreferenceEnabled).toHaveBeenCalledWith(
+        'user-1',
+        'claude',
+        false,
+      );
+    });
+
+    it('persists a re-enable and echoes the state', async () => {
+      const { resolver, setPreferenceEnabled } = build(true);
+      const result = await resolver.setAgentEnabled(human, 'cursor', true);
+      expect(result).toEqual({ backend: 'cursor', enabled: true });
+      expect(setPreferenceEnabled).toHaveBeenCalledWith(
+        'user-1',
+        'cursor',
+        true,
+      );
+    });
+
+    it('rejects an unknown backend without persisting', async () => {
+      const { resolver, setPreferenceEnabled } = build(true);
+      await expect(
+        resolver.setAgentEnabled(human, 'totally-not-a-cli', false),
+      ).rejects.toThrow(/Unknown agent CLI backend/);
+      expect(setPreferenceEnabled).not.toHaveBeenCalled();
+    });
+
+    it('rejects an unauthenticated principal', async () => {
+      const { resolver, setPreferenceEnabled } = build(true);
+      await expect(
+        resolver.setAgentEnabled(undefined, 'claude', false),
+      ).rejects.toThrow(/authenticated user/);
+      expect(setPreferenceEnabled).not.toHaveBeenCalled();
+    });
   });
 });

@@ -2,6 +2,7 @@ query SettingsSetupAgentClis {
   discoverAgentClis {
     agents {
       backend
+      enabled
       label
       models
       version
@@ -15,6 +16,13 @@ query AgentCliSetupConfig {
   agentCliSetupConfig {
     canManage
     installEnabled
+  }
+}
+
+mutation SetAgentEnabled($backend: String!, $enabled: Boolean!) {
+  setAgentEnabled(backend: $backend, enabled: $enabled) {
+    backend
+    enabled
   }
 }
 

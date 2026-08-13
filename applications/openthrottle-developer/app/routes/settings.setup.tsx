@@ -11,10 +11,14 @@ import {
   AgentCliSetupConfigDocument,
   SettingsSetupAgentClisDocument,
 } from '~/__generated__/graphql';
-import { mergeAgentCliStatuses } from '~/routing/settings/data/agent-clis.data';
-import { SettingsSetupCliCard } from '~/routing/settings/components/SettingsSetupCliCard';
-import { SettingsSetupCliControls } from '~/routing/settings/components/SettingsSetupCliControls';
+import {
+  filterAgentCliStatuses,
+  mergeAgentCliStatuses,
+  type AgentCliFilter,
+} from '~/routing/settings/data/agent-clis.data';
 import { SettingsSetupIntroduction } from '~/routing/settings/components/SettingsSetupIntroduction';
+import { SettingsSetupTable } from '~/routing/settings/components/SettingsSetupTable';
+import { SettingsSetupToolbar } from '~/routing/settings/components/SettingsSetupToolbar';
 import type { Route } from '@/app/routes/+types/settings.setup';
 
 type HandleData = Route.ComponentProps['loaderData'];
@@ -52,9 +56,11 @@ export default function Component(
   const { loaderData } = props;
 
   // Hooks
+  const [filter, setFilter] = React.useState<AgentCliFilter>('all');
 
   // Setup
   const statuses = mergeAgentCliStatuses(loaderData.agents);
+  const visibleStatuses = filterAgentCliStatuses(statuses, filter);
 
   // Handlers
 
@@ -67,20 +73,17 @@ export default function Component(
   return (
     <GlobalScreen>
       <SettingsSetupIntroduction scannedAt={loaderData.scannedAt} />
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {statuses.map((status) => (
-          <SettingsSetupCliCard
-            actions={
-              <SettingsSetupCliControls
-                canManage={loaderData.canManage}
-                installEnabled={loaderData.installEnabled}
-                status={status}
-              />
-            }
-            key={status.backend}
-            status={status}
-          />
-        ))}
+      <div className="mt-6 flex flex-col gap-4">
+        <SettingsSetupToolbar
+          filter={filter}
+          installEnabled={loaderData.installEnabled}
+          onFilterChange={setFilter}
+        />
+        <SettingsSetupTable
+          canManage={loaderData.canManage}
+          installEnabled={loaderData.installEnabled}
+          statuses={visibleStatuses}
+        />
       </div>
     </GlobalScreen>
   );

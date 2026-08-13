@@ -49,14 +49,21 @@ const AGENT_CLI_CATALOG: readonly AgentCliCatalogEntry[] = [
 /** One available (installed) CLI as returned by the discoverAgentClis query. */
 export interface AvailableAgentCli {
   readonly backend: string;
+  /** Per-user enablement (false = the user disabled this agent). */
+  readonly enabled: boolean;
   readonly label: string;
   readonly models: readonly string[];
   readonly version?: string | null;
 }
 
-/** Per-CLI merged status for the setup cards. */
+/** Per-CLI merged status for the setup table. */
 export interface AgentCliStatus {
   readonly backend: string;
+  /**
+   * Per-user enablement. Only an installed (available) CLI carries the server's value; a
+   * not-installed catalog entry defaults to enabled (there is nothing to disable yet).
+   */
+  readonly enabled: boolean;
   readonly installUrl: string;
   readonly installed: boolean;
   readonly label: string;
@@ -67,7 +74,7 @@ export interface AgentCliStatus {
 /**
  * Merge the display catalog with the available (installed) CLIs from discoverAgentClis into one
  * status row per catalog entry, ordered by the catalog. An installed CLI carries its probed version
- * + models; an absent one is marked `installed: false`.
+ * + models + per-user `enabled`; an absent one is marked `installed: false` and defaults to enabled.
  */
 export const mergeAgentCliStatuses = (
   available: readonly AvailableAgentCli[],
@@ -78,6 +85,7 @@ export const mergeAgentCliStatuses = (
     const agent = byBackend.get(entry.backend);
     return {
       backend: entry.backend,
+      enabled: agent?.enabled ?? true,
       installUrl: entry.installUrl,
       installed: agent !== undefined,
       label: entry.label,
@@ -85,4 +93,29 @@ export const mergeAgentCliStatuses = (
       version: agent?.version ?? null,
     };
   });
+};
+
+/** Toolbar filter for the setup table: all rows, only enabled, or only installed. */
+export const AGENT_CLI_FILTERS = ['all', 'enabled', 'installed'] as const;
+
+/** One of the {@link AGENT_CLI_FILTERS} values. */
+export type AgentCliFilter = (typeof AGENT_CLI_FILTERS)[number];
+
+/**
+ * Narrow the merged status list to the active toolbar filter. `all` passes everything; `installed`
+ * keeps detected CLIs; `enabled` keeps the ones the user has not disabled. Pure — the route owns the
+ * filter state and applies this before handing rows to the table.
+ */
+export const filterAgentCliStatuses = (
+  statuses: readonly AgentCliStatus[],
+  filter: AgentCliFilter,
+): readonly AgentCliStatus[] => {
+  switch (filter) {
+    case 'enabled':
+      return statuses.filter((status) => status.enabled);
+    case 'installed':
+      return statuses.filter((status) => status.installed);
+    default:
+      return statuses;
+  }
 };

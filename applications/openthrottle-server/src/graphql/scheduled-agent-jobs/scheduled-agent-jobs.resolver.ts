@@ -11,11 +11,18 @@ import {
   CurrentUser,
   type AuthPrincipal,
 } from '@openthrottle/nestjs-auth';
-import { ForbiddenException, UseGuards } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  UseGuards,
+} from '@nestjs/common';
 import { Args, ID, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
-import type { ScheduledAgentJob } from '@openthrottle/nestjs-repositories';
+import {
+  AgentCliPreferencesService,
+  type ScheduledAgentJob,
+} from '@openthrottle/nestjs-repositories';
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
 import { ScheduledAgentJobsGraphqlService } from './scheduled-agent-jobs-graphql.service';
 import {
@@ -39,6 +46,7 @@ const ownerUserIdFor = (principal: AuthPrincipal): string | null =>
 @UseGuards(GqlPermissionsGuard)
 export class ScheduledAgentJobsResolver {
   constructor(
+    private readonly agentPreferences: AgentCliPreferencesService,
     private readonly logger: LoggerService,
     private readonly service: ScheduledAgentJobsGraphqlService,
   ) {}
@@ -98,10 +106,9 @@ export class ScheduledAgentJobsResolver {
     @Args('input', { type: () => CreateScheduledAgentJobInputType })
     input: CreateScheduledAgentJobInputType,
   ): Promise<ScheduledAgentJobObject> {
-    const job = await this.service.create({
-      ...input,
-      ownerUserId: ownerUserIdFor(principal),
-    });
+    const ownerUserId = ownerUserIdFor(principal);
+    await this.assertAgentEnabled(ownerUserId, input.driverId);
+    const job = await this.service.create({ ...input, ownerUserId });
     return toScheduledAgentJobObject(job);
   }
 
@@ -115,6 +122,9 @@ export class ScheduledAgentJobsResolver {
     input: UpdateScheduledAgentJobInputType,
   ): Promise<ScheduledAgentJobObject> {
     await this.assertOwner(input.id, principal);
+    if (input.driverId != null) {
+      await this.assertAgentEnabled(ownerUserIdFor(principal), input.driverId);
+    }
     const { id, ...rest } = input;
     const job = await this.service.update(id, rest);
     return toScheduledAgentJobObject(job);
@@ -168,6 +178,25 @@ export class ScheduledAgentJobsResolver {
   ): Promise<ScheduledAgentJobRunObject> {
     const run = await this.service.cancelRun(runId);
     return toScheduledAgentJobRunObject(run);
+  }
+
+  /**
+   * @description Rejects scheduling a job against an agent backend the owner has disabled on
+   * /settings/setup. A null owner (service-account principal) has no per-user preferences, so the
+   * check is skipped — the job's driver id is still validated for existence by the service.
+   */
+  private async assertAgentEnabled(
+    ownerUserId: string | null,
+    driverId: string,
+  ): Promise<void> {
+    if (ownerUserId === null) {
+      return;
+    }
+    if (!(await this.agentPreferences.isEnabled(ownerUserId, driverId))) {
+      throw new BadRequestException(
+        `The ${driverId} agent is disabled. Re-enable it on Settings › Setup to schedule it.`,
+      );
+    }
   }
 
   /** @description Rejects a mutation on a schedule owned by a different user. Null-owner rows are open. */

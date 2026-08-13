@@ -227,6 +227,8 @@ export type AgentCliOptionObject = {
   backend: Scalars['String']['output'];
   /** True when this driver has a wired streaming chat backend and can be offered as a chat composer backend (false for plan-run-only drivers like codex/grok). */
   chatCapable: Scalars['Boolean']['output'];
+  /** Per-user enablement: true unless the current user has disabled this agent on /settings/setup. A disabled agent is hidden from chat/model pickers and rejected when starting new runs. Defaults to true for an unauthenticated request. */
+  enabled: Scalars['Boolean']['output'];
   /** Human-readable label for the selector. */
   label: Scalars['String']['output'];
   /** Models this CLI can run (empty when the CLI exposes no machine-listable models or listing failed). */
@@ -1679,6 +1681,8 @@ export type Mutation = {
   runScheduledAgentJobNow: ScheduledAgentJobRunObject;
   /** Relay one ~250ms chunk of base64-encoded 16kHz mono Int16 PCM to the session's WhisperLive connection. Executed over the same authenticated graphql-ws socket as the subscription. Returns false (no throw) for unauthenticated, unknown, foreign, or already-stopping sessions. */
   sendTranscriptionAudioChunk: Scalars['Boolean']['output'];
+  /** Enable or disable an agent CLI backend for the current user. A disabled agent is hidden from chat/model pickers and rejected when starting new runs. Presence-as-disabled: enabled=false records the preference, enabled=true clears it (default is enabled). Gated by SETTINGS_WRITE, in parity with install/update; rejects unknown backends. */
+  setAgentEnabled: SetAgentEnabledResult;
   /** Enable or disable the authenticated user's connection for a connector. */
   setMcpConnectorEnabled?: Maybe<McpConnectorConnectionResultObject>;
   /** Set a plan's status (e.g. COMPLETED). Convenience mutation for Mark Complete; equivalent to updatePlan with { id, status }. */
@@ -2126,6 +2130,11 @@ export type MutationSendTranscriptionAudioChunkArgs = {
   audioBase64: Scalars['String']['input'];
   sessionId: Scalars['ID']['input'];
   sortOrder: Scalars['Int']['input'];
+};
+
+export type MutationSetAgentEnabledArgs = {
+  backend: Scalars['String']['input'];
+  enabled: Scalars['Boolean']['input'];
 };
 
 export type MutationSetMcpConnectorEnabledArgs = {
@@ -2778,7 +2787,7 @@ export type Query = {
   databaseHealth: Scalars['String']['output'];
   /** Development ping. Returns "pong" when the development GraphQL API is reachable. */
   developmentPing: Scalars['String']['output'];
-  /** Discover allowlisted agentic CLI backends (e.g. cursor-agent) detected on the server host. Returns a cached snapshot (60s TTL); does not probe per request. */
+  /** Discover allowlisted agentic CLI backends (e.g. cursor-agent) detected on the server host. Returns a cached snapshot (60s TTL); does not probe per request. Each agent's `enabled` reflects the current user's per-user preference, overlaid per request on top of the shared discovery cache. */
   discoverAgentClis: DiscoverAgentClisResult;
   /** Discover locally-running OpenAI-compatible model servers (Ollama-primary) and the models they serve. Returns a cached snapshot (60s TTL); does not scan per request. */
   discoverLocalModels: DiscoverLocalModelsResult;
@@ -4106,6 +4115,14 @@ export type ServiceAccountObject = {
   id: Scalars['String']['output'];
   /** Stable identifier (e.g. openthrottle-mcp, workflow-ralph). */
   name: Scalars['String']['output'];
+};
+
+export type SetAgentEnabledResult = {
+  __typename?: 'SetAgentEnabledResult';
+  /** The backend (driver id) whose enablement was toggled. */
+  backend: Scalars['String']['output'];
+  /** The per-user enablement state after the toggle: true = enabled, false = disabled (hidden from pickers + blocked from new runs). */
+  enabled: Scalars['Boolean']['output'];
 };
 
 export type SetMcpConnectorEnabledInput = {

@@ -1,5 +1,6 @@
 import { createMock } from '@golevelup/ts-vitest';
 import {
+  AgentCliPreferencesService,
   getDefaultPlanRunConfigStorage,
   PlansService,
   PlanRunsService,
@@ -197,6 +198,11 @@ describe('PlansResolver', () => {
     settleCliRun: mockSettleCliRun,
   });
 
+  const mockAgentIsEnabled = vi.fn().mockResolvedValue(true);
+  const mockAgentPreferences = createMock<AgentCliPreferencesService>({
+    isEnabled: mockAgentIsEnabled,
+  });
+
   const mockRegisterWorktreeCheckout = vi.fn().mockResolvedValue(null);
   const mockPlanRunWorktreeCheckoutService =
     createMock<PlanRunWorktreeCheckoutService>({
@@ -232,6 +238,10 @@ describe('PlansResolver', () => {
     const app = await Test.createTestingModule({
       providers: [
         PlansResolver,
+        {
+          provide: AgentCliPreferencesService,
+          useValue: mockAgentPreferences,
+        },
         { provide: PlansLoaders, useValue: mockPlansLoaders },
         {
           provide: PlanRulesEvaluationService,
@@ -1271,6 +1281,26 @@ describe('PlansResolver', () => {
           workerId: null,
         }),
       ).rejects.toThrow(/Invalid executionBackend/);
+      expect(mockRegisterCliRun).not.toHaveBeenCalled();
+    });
+
+    test('rejects a backend the actor disabled, without touching the service', async () => {
+      mockRegisterCliRun.mockClear();
+      mockAgentIsEnabled.mockResolvedValueOnce(false);
+      await expect(
+        resolver.registerCliPlanRun(
+          {
+            executionBackend: 'claude',
+            hostname: null,
+            pid: null,
+            planId: mockPlan.id,
+            workerId: null,
+          },
+          'user-1',
+          AUTH_PRINCIPAL_KIND_USER,
+        ),
+      ).rejects.toThrow(/claude agent is disabled/);
+      expect(mockAgentIsEnabled).toHaveBeenCalledWith('user-1', 'claude');
       expect(mockRegisterCliRun).not.toHaveBeenCalled();
     });
   });

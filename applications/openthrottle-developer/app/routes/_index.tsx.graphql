@@ -3,6 +3,7 @@ query DiscoverAgentClis {
     agents {
       backend
       chatCapable
+      enabled
       label
       models
       supportsCustomBaseUrl

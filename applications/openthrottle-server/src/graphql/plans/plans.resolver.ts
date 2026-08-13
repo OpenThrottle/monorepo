@@ -31,6 +31,7 @@ import {
   CurrentUser,
 } from '@openthrottle/nestjs-auth';
 import {
+  AgentCliPreferencesService,
   getDefaultPlanRunConfigStorage,
   isPlanStatus,
   parsePlanRunConfigJson,
@@ -257,6 +258,7 @@ function isPlanRunStale(planRun: PlanRun): boolean {
 @Resolver(() => PlanObject)
 export class PlansResolver {
   constructor(
+    private readonly agentPreferences: AgentCliPreferencesService,
     private readonly loaders: PlansLoaders,
     private readonly planCreationService: PlanCreationService,
     private readonly planEnqueueService: PlanEnqueueService,
@@ -269,6 +271,26 @@ export class PlansResolver {
     private readonly tasksService: TasksService,
     private readonly workLedgerCapture: WorkLedgerCaptureService,
   ) {}
+
+  /**
+   * @description Rejects starting a plan run against an agent backend the actor disabled on
+   * /settings/setup. A null actor (service-account/system principal) has no per-user preferences, so
+   * the guard is skipped. Backends that are not agent-CLI driver ids (unknown strings) are left to the
+   * caller's own validation — this only blocks a KNOWN-but-disabled agent.
+   */
+  private async assertBackendEnabled(
+    actorUserId: string | null,
+    backend: string,
+  ): Promise<void> {
+    if (actorUserId === null) {
+      return;
+    }
+    if (!(await this.agentPreferences.isEnabled(actorUserId, backend))) {
+      throw new BadRequestException(
+        `The ${backend} agent is disabled. Re-enable it on Settings › Setup to run it.`,
+      );
+    }
+  }
 
   private toEnqueueResult(outcome: EnqueueOutcome): EnqueuePlanRunResultObject {
     const result = new EnqueuePlanRunResultObject();
@@ -413,8 +435,11 @@ export class PlansResolver {
       );
     }
 
+    const actorUserId = resolveActorUserId(actorSub, actorKind);
+    await this.assertBackendEnabled(actorUserId, input.executionBackend);
+
     const run = await this.planRunsService.registerCliRun({
-      actorUserId: resolveActorUserId(actorSub, actorKind),
+      actorUserId,
       branch: input.branch ?? null,
       executionBackend: input.executionBackend,
       hostname: input.hostname ?? null,
@@ -1148,8 +1173,19 @@ export class PlansResolver {
     @CurrentUser('sub') actorSub?: string,
     @CurrentUser('kind') actorKind?: string,
   ): Promise<EnqueuePlanRunResultObject> {
+    const actorUserId = resolveActorUserId(actorSub, actorKind);
+    // Guard only an explicitly-chosen agent backend; when omitted the backend is
+    // resolved later from worktree defaults, so there is nothing to gate here.
+    const requestedBackend = input.ralph?.backend ?? null;
+    if (
+      requestedBackend != null &&
+      isPlanRunExecutionBackend(requestedBackend)
+    ) {
+      await this.assertBackendEnabled(actorUserId, requestedBackend);
+    }
+
     const outcome = await this.planEnqueueService.enqueueSpawn({
-      actorUserId: resolveActorUserId(actorSub, actorKind),
+      actorUserId,
       branch: input.branch,
       checkoutId: input.checkoutId,
       idempotencyKey: input.idempotencyKey ?? null,
@@ -1235,8 +1271,17 @@ export class PlansResolver {
       }
     }
 
+    const actorUserId = resolveActorUserId(actorSub, actorKind);
+    const requestedBackend = input.ralph?.backend ?? null;
+    if (
+      requestedBackend != null &&
+      isPlanRunExecutionBackend(requestedBackend)
+    ) {
+      await this.assertBackendEnabled(actorUserId, requestedBackend);
+    }
+
     const outcome = await this.planEnqueueService.enqueueOrchestrator({
-      actorUserId: resolveActorUserId(actorSub, actorKind),
+      actorUserId,
       branch: input.branch,
       checkoutId: input.checkoutId,
       idempotencyKey: input.idempotencyKey ?? null,

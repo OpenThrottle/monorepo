@@ -19,6 +19,23 @@ export class AgentCliSetupConfigObject {
   installEnabled!: boolean;
 }
 
+/**
+ * @description Result of `setAgentEnabled`: the per-user enablement state after the toggle. `enabled`
+ * echoes the persisted state (true = the agent is available to this user; false = disabled/hidden).
+ */
+@ObjectType()
+export class SetAgentEnabledResult {
+  @Field(() => String, {
+    description: `The backend (driver id) whose enablement was toggled.`,
+  })
+  backend!: string;
+
+  @Field(() => Boolean, {
+    description: `The per-user enablement state after the toggle: true = enabled, false = disabled (hidden from pickers + blocked from new runs).`,
+  })
+  enabled!: boolean;
+}
+
 @ObjectType()
 export class AgentSetupStreamChunkObject {
   @Field(() => String, {

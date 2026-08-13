@@ -49,6 +49,13 @@ export interface DiscoveredLocalModels {
 export interface DiscoveredAgentCli {
   readonly backend: string;
   readonly chatCapable: boolean;
+  /**
+   * Whether the current user has left this agent enabled. Optional because the
+   * admin app's discovery query does not select it; a missing value is treated
+   * as enabled (the server default is all-enabled), so only an explicit `false`
+   * hides the agent (and its models) from the composer options.
+   */
+  readonly enabled?: boolean;
   readonly label: string;
   readonly models: readonly string[];
   /**
@@ -121,19 +128,21 @@ export function toChatModelOptions(
 
 /**
  * Map discovered agent CLIs into composer toolbar options. Only chat-capable
- * drivers are offered (plan-run-only drivers like codex/grok are discoverable
- * but have no streaming chat adapter). Each of a driver's models becomes its own
- * option (id `backend|model`, e.g. `cursor|gpt-5.2`); a driver with no listable
- * models falls back to a single bare-backend option at its default model. Each
- * driver gets its own picker rail group keyed on its backend ({@link cliGroupId}),
- * with the driver label as each row's sub-label to disambiguate same-named models.
+ * drivers the user has NOT disabled are offered (plan-run-only drivers like
+ * codex/grok are discoverable but have no streaming chat adapter; a disabled
+ * agent is hidden here and its models drop out transitively). Each of a driver's
+ * models becomes its own option (id `backend|model`, e.g. `cursor|gpt-5.2`); a
+ * driver with no listable models falls back to a single bare-backend option at
+ * its default model. Each driver gets its own picker rail group keyed on its
+ * backend ({@link cliGroupId}), with the driver label as each row's sub-label to
+ * disambiguate same-named models.
  * @public
  */
 export function toAgentChatOptions(
   discovery: DiscoveredAgentClis,
 ): ChatModelOption[] {
   return discovery.agents
-    .filter((agent) => agent.chatCapable)
+    .filter((agent) => agent.chatCapable && agent.enabled !== false)
     .flatMap((agent) => {
       if (agent.models.length === 0) {
         return [
@@ -160,12 +169,13 @@ export function toAgentChatOptions(
 /**
  * Join discovered agent CLIs with discovered local endpoints into "driver ×
  * local endpoint/model" composer options. Only base-URL-capable, chat-capable
- * drivers are offered (claude/cursor can't consume a raw OpenAI-compatible
- * endpoint); each option pairs such a driver with every discovered endpoint ×
- * model. Grouped under the driver's own rail ({@link cliGroupId}); the endpoint's
- * provider/host is surfaced in the description so the network vantage is visible
- * (a `host.docker.internal` endpoint is flagged, since it may be unreachable from
- * a driver process running outside that Docker network).
+ * drivers the user has NOT disabled are offered (claude/cursor can't consume a
+ * raw OpenAI-compatible endpoint; a disabled agent drops out here too); each
+ * option pairs such a driver with every discovered endpoint × model. Grouped
+ * under the driver's own rail ({@link cliGroupId}); the endpoint's provider/host
+ * is surfaced in the description so the network vantage is visible (a
+ * `host.docker.internal` endpoint is flagged, since it may be unreachable from a
+ * driver process running outside that Docker network).
  * @public
  */
 export function toDriverEndpointChatOptions(
@@ -173,7 +183,10 @@ export function toDriverEndpointChatOptions(
   localModels: DiscoveredLocalModels,
 ): ChatModelOption[] {
   const capableDrivers = agents.agents.filter(
-    (agent) => agent.chatCapable && agent.supportsCustomBaseUrl,
+    (agent) =>
+      agent.chatCapable &&
+      agent.enabled !== false &&
+      agent.supportsCustomBaseUrl,
   );
 
   return capableDrivers.flatMap((agent) =>

@@ -77,6 +77,7 @@ const initFunction = (
       return first;
     }
   }
+
   return undefined;
 };
 
@@ -84,6 +85,7 @@ const isExported = (node: ts.Node): boolean => {
   const modifiers = ts.canHaveModifiers(node)
     ? ts.getModifiers(node)
     : undefined;
+
   return (
     modifiers?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword) ?? false
   );
@@ -105,11 +107,14 @@ const countHookSignals = (
         : ts.isIdentifier(callee)
           ? callee.text
           : '';
+
       if (/^use[A-Z]/.test(text)) hookCalls += 1;
       if (text === 'useState') useStateCount += 1;
     }
+
     ts.forEachChild(node, visit);
   };
+
   visit(fn);
 
   return { hookCalls, statements, useStateCount };
@@ -122,6 +127,7 @@ const analyze = (absPath: string): FileReport | null => {
   } catch {
     return null;
   }
+
   const relativePath = path.relative(ROOT, absPath);
   const optOut = OPT_OUT.test(content.split('\n')[0] ?? '');
 
@@ -148,10 +154,12 @@ const analyze = (absPath: string): FileReport | null => {
       }
       continue;
     }
+
     if (!ts.isVariableStatement(statement)) continue;
 
     for (const decl of statement.declarationList.declarations) {
       if (!ts.isIdentifier(decl.name)) continue;
+
       const name = decl.name.text;
       const fn = initFunction(decl.initializer);
 
@@ -160,10 +168,12 @@ const analyze = (absPath: string): FileReport | null => {
         componentFn = componentFn ?? fn;
         continue;
       }
+
       if (fn && !name.startsWith('use')) {
         helperDecls += 1;
         continue;
       }
+
       if (
         decl.initializer &&
         (ts.isArrayLiteralExpression(decl.initializer) ||
@@ -174,10 +184,10 @@ const analyze = (absPath: string): FileReport | null => {
     }
   }
 
+  const lineCount = content.split('\n').length;
   const signals = componentFn
     ? countHookSignals(componentFn)
     : { hookCalls: 0, statements: 0, useStateCount: 0 };
-  const lineCount = content.split('\n').length;
 
   return {
     dataDecls,
@@ -197,11 +207,13 @@ const analyze = (absPath: string): FileReport | null => {
 /** True when an initializer is a `forwardRef(...)` / `React.forwardRef(...)` call. */
 const isForwardRefInit = (init: ts.Expression | undefined): boolean => {
   if (init === undefined || !ts.isCallExpression(init)) return false;
+
   const callee = init.expression;
   if (ts.isIdentifier(callee)) return callee.text === 'forwardRef';
   if (ts.isPropertyAccessExpression(callee)) {
     return callee.name.text === 'forwardRef';
   }
+
   return false;
 };
 
@@ -255,10 +267,12 @@ export const analyzePrimitiveSource = (
       exportedInterfaces.add(statement.name.text);
       continue;
     }
+
     if (ts.isTypeAliasDeclaration(statement) && isExported(statement)) {
       exportedInterfaces.add(statement.name.text);
       continue;
     }
+
     // `<Name>.displayName = …` assignments.
     if (
       ts.isExpressionStatement(statement) &&
@@ -271,6 +285,7 @@ export const analyzePrimitiveSource = (
       displayNames.add(statement.expression.left.expression.text);
       continue;
     }
+
     // The banned trailing `export { … }` re-export block (no module specifier).
     if (
       ts.isExportDeclaration(statement) &&
@@ -281,15 +296,19 @@ export const analyzePrimitiveSource = (
       reExportBlock = true;
       continue;
     }
+
     // Exported PascalCase const parts.
     if (!ts.isVariableStatement(statement) || !isExported(statement)) continue;
     for (const decl of statement.declarationList.declarations) {
       if (!ts.isIdentifier(decl.name)) continue;
+
       const name = decl.name.text;
       if (!isPascalCase(name) || initFunction(decl.initializer) === undefined) {
         continue;
       }
+
       parts.push(name);
+
       if (isForwardRefInit(decl.initializer)) forwardRefParts.push(name);
     }
   }
@@ -329,6 +348,7 @@ const runShadcn = (): void => {
     (n, r) => n + r.forwardRefParts.length,
     0,
   );
+
   const missingProps = reports.filter((r) => r.missingProps.length > 0);
   const missingDisplay = reports.filter((r) => r.missingDisplayName.length > 0);
   const reExport = reports.filter((r) => r.reExportBlock);
@@ -343,6 +363,7 @@ const runShadcn = (): void => {
   console.log(
     `VR1 — parts missing a <Part>Props: ${missingProps.length} file(s)`,
   );
+
   for (const r of missingProps) {
     console.log(`  ${r.file}  (${r.missingProps.join(', ')})`);
   }

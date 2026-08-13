@@ -26,6 +26,7 @@ import { NestjsModelDiscoveryService } from '@openthrottle/nestjs-model-discover
 import {
   AGENT_CONVERSATION_MESSAGE_ROLES,
   type AgentConversationMessage,
+  AgentCliPreferencesService,
   AgentConversationsService,
   CustomPromptsService,
   WorkspaceLocalRepositoriesService,
@@ -192,6 +193,7 @@ const resolveApiBaseUrl = (): string => {
 @Resolver()
 export class ConversationStreamResolver {
   constructor(
+    private readonly agentPreferences: AgentCliPreferencesService,
     private readonly conversations: AgentConversationsService,
     private readonly customPrompts: CustomPromptsService,
     private readonly logger: LoggerService,
@@ -264,6 +266,17 @@ export class ConversationStreamResolver {
     const backend = (input.backend ?? OPENAI_BACKEND).trim() || OPENAI_BACKEND;
     if (backend !== OPENAI_BACKEND && !CLI_BACKENDS.has(backend)) {
       return failed(`Unsupported backend: ${backend}.`);
+    }
+
+    // Per-user gate: a CLI backend the user disabled on /settings/setup cannot be
+    // started (the openai HTTP path is not an agent CLI, so it is never gated).
+    if (
+      backend !== OPENAI_BACKEND &&
+      !(await this.agentPreferences.isEnabled(userId, backend))
+    ) {
+      return failed(
+        `The ${backend} agent is disabled. Re-enable it on Settings › Setup to use it.`,
+      );
     }
 
     // All four composer controls are now honored end-to-end: `permissionMode`,
