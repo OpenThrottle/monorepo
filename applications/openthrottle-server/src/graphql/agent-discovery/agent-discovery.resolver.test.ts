@@ -6,11 +6,18 @@
  */
 
 import { createMock } from '@golevelup/ts-vitest';
+import {
+  AUTH_PRINCIPAL_KIND_USER,
+  type AuthPrincipal,
+} from '@openthrottle/nestjs-auth';
 import type { AgentCliDiscoveryResult } from '@openthrottle/openthrottle-agentic-utils';
+import { AgentCliPreferencesService } from '@openthrottle/nestjs-repositories';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AgentDiscoveryResolver } from './agent-discovery.resolver';
 import { AgentDiscoveryService } from './agent-discovery.service';
+
+const human: AuthPrincipal = { kind: AUTH_PRINCIPAL_KIND_USER, sub: 'user-1' };
 
 const SNAPSHOT: AgentCliDiscoveryResult = {
   agents: [
@@ -47,16 +54,19 @@ const SNAPSHOT: AgentCliDiscoveryResult = {
 
 describe('AgentDiscoveryResolver', () => {
   let service: AgentDiscoveryService;
+  let preferences: AgentCliPreferencesService;
   let resolver: AgentDiscoveryResolver;
 
   beforeEach(() => {
     service = createMock<AgentDiscoveryService>();
     vi.mocked(service.discover).mockResolvedValue(SNAPSHOT);
-    resolver = new AgentDiscoveryResolver(service);
+    preferences = createMock<AgentCliPreferencesService>();
+    vi.mocked(preferences.getDisabledBackends).mockResolvedValue(new Set());
+    resolver = new AgentDiscoveryResolver(service, preferences);
   });
 
-  it('surfaces only available agents (cursor + opencode, not the unavailable claude)', async () => {
-    const result = await resolver.discoverAgentClis();
+  it('surfaces only available agents (cursor + opencode, not the unavailable claude), all enabled by default', async () => {
+    const result = await resolver.discoverAgentClis(human);
     expect(service.discover).toHaveBeenCalledWith();
     expect(result.scannedAt).toBe('2026-06-19T00:00:00.000Z');
     expect(result.totalCount).toBe(2);
@@ -64,6 +74,7 @@ describe('AgentDiscoveryResolver', () => {
       {
         backend: 'cursor',
         chatCapable: true,
+        enabled: true,
         label: 'Cursor Agent',
         models: ['auto', 'gpt-5.2'],
         supportsCustomBaseUrl: false,
@@ -72,12 +83,33 @@ describe('AgentDiscoveryResolver', () => {
       {
         backend: 'opencode',
         chatCapable: true,
+        enabled: true,
         label: 'OpenCode',
         models: ['opencode/big-pickle'],
         supportsCustomBaseUrl: true,
         version: '1.18.5',
       },
     ]);
+  });
+
+  it("overlays the current user's disabled set onto enabled", async () => {
+    vi.mocked(preferences.getDisabledBackends).mockResolvedValue(
+      new Set(['cursor']),
+    );
+    const result = await resolver.discoverAgentClis(human);
+    expect(preferences.getDisabledBackends).toHaveBeenCalledWith('user-1');
+    expect(
+      result.agents.map((agent) => [agent.backend, agent.enabled]),
+    ).toEqual([
+      ['cursor', false],
+      ['opencode', true],
+    ]);
+  });
+
+  it('defaults every agent to enabled for an unauthenticated request (no preference lookup)', async () => {
+    const result = await resolver.discoverAgentClis(undefined);
+    expect(preferences.getDisabledBackends).not.toHaveBeenCalled();
+    expect(result.agents.every((agent) => agent.enabled)).toBe(true);
   });
 
   it('returns an empty payload when no agent CLIs are available', async () => {
@@ -95,7 +127,7 @@ describe('AgentDiscoveryResolver', () => {
       ],
       scannedAt: '2026-06-19T00:00:00.000Z',
     });
-    const result = await resolver.discoverAgentClis();
+    const result = await resolver.discoverAgentClis(human);
     expect(result.totalCount).toBe(0);
     expect(result.agents).toEqual([]);
   });

@@ -72,6 +72,44 @@ export const WORKSPACE_REPOSITORY_DETAIL_COPY = {
 } as const;
 
 /**
+ * @description Copy for the /settings/setup agent-CLI table (columns, empty/loading states, the
+ * per-agent enable toggle, compact model list, and the single install-enabled disclaimer).
+ */
+export const SETTINGS_SETUP_COPY = {
+  columnActions: `Setup`,
+  columnAgent: `Agent`,
+  columnEnabled: `Enabled`,
+  columnModels: `Models`,
+  columnStatus: `Status`,
+  emptyState: `No agent CLIs to show.`,
+  enabledToggleLabel: `Toggle agent`,
+  filterAllLabel: `All`,
+  filterEnabledLabel: `Enabled`,
+  filterInstalledLabel: `Installed`,
+  filterLabel: `Show`,
+  installDisclaimerOff: `Server-side install/update is disabled. Set OT_AGENT_CLI_INSTALL_ENABLED on the server (local dev machines only) to enable the Install/Update controls.`,
+  installDisclaimerOn: `Server-side install/update is enabled (OT_AGENT_CLI_INSTALL_ENABLED). Installs run allowlisted CLIs on the server host.`,
+  installedBadge: `Installed`,
+  modelsEmpty: `No machine-listable models.`,
+  modelsNotInstalled: `—`,
+  modelsPopoverTitle: `Models`,
+  notInstalledBadge: `Not installed`,
+  permissionReason: `Requires the settings:write permission.`,
+  toggleDisabledReason: `Requires the settings:write permission.`,
+} as const;
+
+/** Pluralize the compact models summary shown in the table cell. */
+export const settingsSetupModelsSummary = (count: number): string =>
+  count === 1 ? `1 model` : `${count} models`;
+
+/** Human labels for each setup-table filter value, keyed by the filter id. */
+export const SETTINGS_SETUP_FILTER_LABELS = {
+  all: SETTINGS_SETUP_COPY.filterAllLabel,
+  enabled: SETTINGS_SETUP_COPY.filterEnabledLabel,
+  installed: SETTINGS_SETUP_COPY.filterInstalledLabel,
+} as const;
+
+/**
  * @description Copy for the rollout (feature-flagging) settings routes.
  */
 export const ROLLOUT_COPY = {

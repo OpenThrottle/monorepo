@@ -1,3 +1,4 @@
+import { AgentCliPreferencesModule } from './modules/agent-cli-preferences/agent-cli-preferences.module';
 import { AgentConversationsModule } from './modules/agent-conversations/agent-conversations.module';
 import { AgentTokenUsageModule } from './modules/agent-token-usage/agent-token-usage.module';
 import { CustomPromptsModule } from './modules/prompts/custom-prompts.module';
@@ -34,6 +35,7 @@ import { WorkspaceSettingsModule } from './modules/workspace-settings/workspace-
 @Module({
   controllers: [],
   exports: [
+    AgentCliPreferencesModule,
     AgentConversationsModule,
     AgentTokenUsageModule,
     CustomPromptsModule,
@@ -72,6 +74,7 @@ import { WorkspaceSettingsModule } from './modules/workspace-settings/workspace-
         return { ...getTypeOrmOptions(), autoLoadEntities: true };
       },
     }),
+    AgentCliPreferencesModule,
     AgentConversationsModule,
     AgentTokenUsageModule,
     CustomPromptsModule,

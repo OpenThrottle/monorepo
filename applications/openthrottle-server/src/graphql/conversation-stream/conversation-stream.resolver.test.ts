@@ -9,6 +9,7 @@ import type { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   agentConversationMessagesFactory,
   agentConversationsFactory,
+  AgentCliPreferencesService,
   AgentConversationsService,
   CustomPromptsService,
   WorkspaceLocalRepositoriesService,
@@ -65,6 +66,7 @@ const userMessage = agentConversationMessagesFactory.build({
 });
 
 function build(): {
+  agentIsEnabled: ReturnType<typeof vi.fn>;
   conversations: AgentConversationsService;
   modelDiscovery: NestjsModelDiscoveryService;
   personaFindOne: ReturnType<typeof vi.fn>;
@@ -72,6 +74,10 @@ function build(): {
   resolver: ConversationStreamResolver;
   streamService: ConversationStreamService;
 } {
+  const agentIsEnabled = vi.fn().mockResolvedValue(true);
+  const agentPreferences = createMock<AgentCliPreferencesService>({
+    isEnabled: agentIsEnabled,
+  });
   const conversations = createMock<AgentConversationsService>({
     appendMessages: vi.fn().mockResolvedValue([userMessage]),
     createConversation: vi.fn().mockResolvedValue(conversation),
@@ -104,6 +110,7 @@ function build(): {
     warn: vi.fn(),
   });
   const resolver = new ConversationStreamResolver(
+    agentPreferences,
     conversations,
     customPrompts,
     logger,
@@ -112,6 +119,7 @@ function build(): {
     streamService,
   );
   return {
+    agentIsEnabled,
     conversations,
     modelDiscovery,
     personaFindOne,
@@ -213,6 +221,43 @@ describe('ConversationStreamResolver.startConversationStream', () => {
         serviceTier: 'fast',
       }),
     );
+  });
+
+  it('rejects a CLI backend the user has disabled, without starting a stream', async () => {
+    const { agentIsEnabled, resolver, streamService } = build();
+    agentIsEnabled.mockResolvedValue(false);
+
+    const result = await resolver.startConversationStream(human, {
+      backend: 'cursor',
+      baseUrl: null,
+      conversationId: null,
+      message: 'go',
+      modelId: null,
+      permissionMode: null,
+      reasoning: null,
+      repositoryId: 'repo-1',
+      serviceTier: null,
+    });
+
+    expect(agentIsEnabled).toHaveBeenCalledWith('user-1', 'cursor');
+    expect(result.errorMessage).toMatch(/cursor agent is disabled/);
+    expect(streamService.start).not.toHaveBeenCalled();
+  });
+
+  it('does not gate the openai HTTP path on agent enablement', async () => {
+    const { agentIsEnabled, resolver } = build();
+    agentIsEnabled.mockResolvedValue(false);
+
+    const result = await resolver.startConversationStream(human, {
+      backend: 'openai',
+      baseUrl: 'http://localhost:11434/v1',
+      conversationId: null,
+      message: 'hello',
+      modelId: 'llama3',
+    });
+
+    expect(agentIsEnabled).not.toHaveBeenCalled();
+    expect(result.errorMessage).toBeNull();
   });
 
   it('drops an unrecognized reasoning/tier string (transport guard) to null', async () => {

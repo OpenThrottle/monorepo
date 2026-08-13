@@ -37,6 +37,7 @@ const AGENT_PAYLOAD = {
       {
         backend: 'cursor',
         chatCapable: true,
+        enabled: true,
         label: 'Cursor Agent',
         models: ['gpt-5.2'],
         supportsCustomBaseUrl: true,

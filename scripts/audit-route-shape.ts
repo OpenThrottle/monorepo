@@ -24,11 +24,8 @@ import ts from 'typescript';
 
 const ROOT = process.cwd();
 const LINE_CAP = 210;
-
 const IN_SCOPE_GLOBS = ['applications/*/app/routes/*.{ts,tsx}'];
-
 const EXCLUDE = /(?:\/__tests__\/|\.test\.tsx?$|\/root\.tsx$)/;
-
 const OPT_OUT = /route-shape:\s*opt-out/;
 
 /** The React Router route module export surface (keep in sync with the rule). */
@@ -61,6 +58,7 @@ interface FileReport {
 
 const projectOf = (relativePath: string): string => {
   const match = relativePath.match(/^(applications|packages)\/([^/]+)/);
+
   return match ? `${match[1]}/${match[2]}` : 'unknown';
 };
 
@@ -68,6 +66,7 @@ const hasModifier = (node: ts.Node, kind: ts.SyntaxKind): boolean => {
   const modifiers = ts.canHaveModifiers(node)
     ? ts.getModifiers(node)
     : undefined;
+
   return modifiers?.some((m) => m.kind === kind) ?? false;
 };
 
@@ -114,6 +113,7 @@ const analyze = (absPath: string): FileReport => {
 
     if (ts.isFunctionDeclaration(statement)) {
       if (isDefault) continue; // default export Component
+
       const name = statement.name?.text ?? '(anonymous)';
       if (exported) {
         if (!ALLOWED_ROUTE_EXPORTS.has(name)) disallowedExports.push(name);
@@ -126,6 +126,7 @@ const analyze = (absPath: string): FileReport => {
     if (ts.isVariableStatement(statement)) {
       for (const decl of statement.declarationList.declarations) {
         if (!ts.isIdentifier(decl.name)) continue;
+
         const name = decl.name.text;
         if (exported) {
           if (!ALLOWED_ROUTE_EXPORTS.has(name)) disallowedExports.push(name);
@@ -166,7 +167,9 @@ const run = (): void => {
 
   if (json) {
     console.log(JSON.stringify(reports, null, 2));
+
     if (strict && reports.some(hasViolation)) process.exit(1);
+
     return;
   }
 
@@ -187,6 +190,7 @@ const run = (): void => {
       violations.filter((r) => r.disallowedExports.length > 0).length
     } file(s)`,
   );
+
   for (const r of violations.filter((v) => v.disallowedExports.length > 0)) {
     console.log(`  ${r.file}  (${r.disallowedExports.join(', ')})`);
   }
@@ -196,6 +200,7 @@ const run = (): void => {
       violations.filter((r) => r.moduleScopeDecls.length > 0).length
     } file(s)`,
   );
+
   for (const r of violations.filter((v) => v.moduleScopeDecls.length > 0)) {
     console.log(`  ${r.file}  (${r.moduleScopeDecls.join(', ')})`);
   }
@@ -203,6 +208,7 @@ const run = (): void => {
   console.log(
     `\nR4 — over the ${LINE_CAP}-line cap: ${overCap.length} file(s)`,
   );
+
   for (const r of overCap.sort((a, b) => b.lineCount - a.lineCount)) {
     console.log(`  ${r.file}  (${r.lineCount})`);
   }

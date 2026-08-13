@@ -702,6 +702,11 @@ type AgentCliOptionObject {
   """
   chatCapable: Boolean!
 
+  """
+  Per-user enablement: true unless the current user has disabled this agent on /settings/setup. A disabled agent is hidden from chat/model pickers and rejected when starting new runs. Defaults to true for an unauthenticated request.
+  """
+  enabled: Boolean!
+
   """Human-readable label for the selector."""
   label: String!
 
@@ -740,6 +745,16 @@ type AgentCliSetupConfigObject {
   True when server-side install/update is enabled (OT_AGENT_CLI_INSTALL_ENABLED). Default-off; the UI explains disabled controls when false.
   """
   installEnabled: Boolean!
+}
+
+type SetAgentEnabledResult {
+  """The backend (driver id) whose enablement was toggled."""
+  backend: String!
+
+  """
+  The per-user enablement state after the toggle: true = enabled, false = disabled (hidden from pickers + blocked from new runs).
+  """
+  enabled: Boolean!
 }
 
 type AgentSetupStreamChunkObject {
@@ -3257,7 +3272,7 @@ type Query {
   getAgentConversationMessages(input: GetAgentConversationMessagesInput!): ListAgentConversationMessagesResultObject!
 
   """
-  Discover allowlisted agentic CLI backends (e.g. cursor-agent) detected on the server host. Returns a cached snapshot (60s TTL); does not probe per request.
+  Discover allowlisted agentic CLI backends (e.g. cursor-agent) detected on the server host. Returns a cached snapshot (60s TTL); does not probe per request. Each agent's `enabled` reflects the current user's per-user preference, overlaid per request on top of the shared discovery cache.
   """
   discoverAgentClis: DiscoverAgentClisResult!
 
@@ -4193,6 +4208,11 @@ type Mutation {
 
   """Update the title on an owned agent conversation."""
   updateAgentConversationTitle(input: UpdateAgentConversationTitleInput!): AgentConversationObject!
+
+  """
+  Enable or disable an agent CLI backend for the current user. A disabled agent is hidden from chat/model pickers and rejected when starting new runs. Presence-as-disabled: enabled=false records the preference, enabled=true clears it (default is enabled). Gated by SETTINGS_WRITE, in parity with install/update; rejects unknown backends.
+  """
+  setAgentEnabled(backend: String!, enabled: Boolean!): SetAgentEnabledResult!
 
   """
   Install an allowlisted agent CLI on the server host by driver id. Gated by SETTINGS_WRITE and the default-off OT_AGENT_CLI_INSTALL_ENABLED flag; returns a runId to stream via agentSetupChunkAdded.

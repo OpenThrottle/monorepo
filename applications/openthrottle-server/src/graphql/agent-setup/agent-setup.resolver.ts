@@ -10,7 +10,11 @@
  * off the mutation resolves a `disabled` result and NEVER spawns.
  */
 
-import { ForbiddenException, UseGuards } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  UseGuards,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
   Args,
@@ -30,12 +34,16 @@ import {
 import { isDriverId } from '@openthrottle/openthrottle-drivers';
 import type { AgentSetupMode } from '@openthrottle/openthrottle-agentic-utils';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
-import { RolesService } from '@openthrottle/nestjs-repositories';
+import {
+  AgentCliPreferencesService,
+  RolesService,
+} from '@openthrottle/nestjs-repositories';
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
 import { readAgentCliInstallEnabledFromConfig } from './agent-setup.config';
 import {
   AgentCliSetupConfigObject,
   AgentSetupStreamChunkObject,
+  SetAgentEnabledResult,
   StartAgentSetupResult,
 } from './agent-setup.object';
 import { AgentSetupService } from './agent-setup.service';
@@ -45,6 +53,7 @@ import { type AgentSetupStreamChunkEnvelope } from './agent-setup.types';
 export class AgentSetupResolver {
   constructor(
     private readonly config: ConfigService,
+    private readonly preferences: AgentCliPreferencesService,
     private readonly roles: RolesService,
     private readonly setupService: AgentSetupService,
   ) {}
@@ -69,6 +78,28 @@ export class AgentSetupResolver {
     }
 
     return { canManage, installEnabled };
+  }
+
+  @Mutation(() => SetAgentEnabledResult, {
+    description: `Enable or disable an agent CLI backend for the current user. A disabled agent is hidden from chat/model pickers and rejected when starting new runs. Presence-as-disabled: enabled=false records the preference, enabled=true clears it (default is enabled). Gated by SETTINGS_WRITE, in parity with install/update; rejects unknown backends.`,
+    name: 'setAgentEnabled',
+  })
+  @UseGuards(GqlPermissionsGuard)
+  @Permissions(PERMISSIONS.SETTINGS_WRITE)
+  async setAgentEnabled(
+    @CurrentUser() principal: AuthPrincipal | undefined,
+    @Args('backend', { type: () => String }) backend: string,
+    @Args('enabled', { type: () => Boolean }) enabled: boolean,
+  ): Promise<SetAgentEnabledResult> {
+    if (principal == null) {
+      throw new ForbiddenException('An authenticated user is required.');
+    }
+    if (!isDriverId(backend)) {
+      throw new BadRequestException(`Unknown agent CLI backend: ${backend}.`);
+    }
+
+    await this.preferences.setEnabled(principal.sub, backend, enabled);
+    return { backend, enabled };
   }
 
   // 🔌 graphql-ws only: connection auth (onConnect) validated the token and
