@@ -32,6 +32,7 @@ describe('GithubResolver', () => {
   beforeAll(async () => {
     const mockGitHubService = createMock<GitHubService>({
       getPullListItem: vi.fn(),
+      isGithubTokenConfigured: vi.fn(),
       listPulls: vi.fn(),
     });
     const mockGitHubStatsService = createMock<GitHubStatsService>({
@@ -651,6 +652,21 @@ describe('GithubResolver', () => {
         'r',
         { maxPrs: 50, period: 'week' },
       );
+    });
+  });
+
+  describe('githubTokenConfigured', () => {
+    test('returns true when GitHubService reports the token configured', () => {
+      vi.mocked(githubService.isGithubTokenConfigured).mockReturnValue(true);
+
+      expect(resolver.githubTokenConfigured()).toBe(true);
+      expect(githubService.isGithubTokenConfigured).toHaveBeenCalled();
+    });
+
+    test('returns false when GitHubService reports the token unset', () => {
+      vi.mocked(githubService.isGithubTokenConfigured).mockReturnValue(false);
+
+      expect(resolver.githubTokenConfigured()).toBe(false);
     });
   });
 });

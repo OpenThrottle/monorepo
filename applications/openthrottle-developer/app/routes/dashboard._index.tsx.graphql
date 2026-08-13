@@ -78,12 +78,15 @@ query getDashboard(
 }
 
 query getDashboardGithubStats($owner: String!, $repo: String!) {
+
   closedPrCountByAuthor: openPrCountByAuthor(
     input: { owner: $owner, repo: $repo, state: "closed" }
   ) {
     author
     openCount
   }
+
+  githubTokenConfigured
 
   openPrCountByAuthor: openPrCountByAuthor(
     input: { owner: $owner, repo: $repo, state: "open" }

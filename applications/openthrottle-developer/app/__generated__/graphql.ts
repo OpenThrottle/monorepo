@@ -2805,6 +2805,8 @@ export type Query = {
   getAgentConversationMessages: ListAgentConversationMessagesResultObject;
   /** Fetch a single document chunk by id (UUID from plan_embeddings, task_embeddings, or documentation_embeddings). Use after semantic search to read full chunk content. */
   getDocument?: Maybe<SearchChunk>;
+  /** Whether GITHUB_TOKEN is configured on the server. Boolean only — the token value is never exposed. Used to prompt the user to set GITHUB_TOKEN instead of rendering empty/unauthenticated GitHub stats. */
+  githubTokenConfigured: Scalars['Boolean']['output'];
   /** Single job by id and queue name. Returns null if not found. */
   job?: Maybe<JobObject>;
   /** Single most recent activity (commit, plan output chunk, or task update) for a plan or task. Use for "What was the last thing we did for <plan> or <task>?". */
@@ -5924,6 +5926,7 @@ export type GetDashboardGithubStatsQueryVariables = Exact<{
 
 export type GetDashboardGithubStatsQuery = {
   __typename?: 'Query';
+  githubTokenConfigured: boolean;
   closedPrCountByAuthor: Array<{
     __typename?: 'OpenPrCountByAuthorObject';
     author: string;
@@ -13940,6 +13943,10 @@ export const GetDashboardGithubStatsDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'openCount' } },
               ],
             },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'githubTokenConfigured' },
           },
           {
             kind: 'Field',

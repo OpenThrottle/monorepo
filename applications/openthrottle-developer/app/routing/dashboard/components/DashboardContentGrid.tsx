@@ -7,6 +7,7 @@ import { DashboardContributionsCard } from '~/routing/dashboard/components/Dashb
 import { DashboardContributionsCardSkeleton } from '~/routing/dashboard/components/DashboardContributionsCardSkeleton';
 import { DashboardDailyStatsCard } from '~/routing/dashboard/components/DashboardDailyStatsCard';
 import { DashboardDeferredCard } from '~/routing/dashboard/components/DashboardDeferredCard';
+import { DashboardGithubTokenEmptyState } from '~/routing/dashboard/components/DashboardGithubTokenEmptyState';
 import { DashboardQueueHealthCard } from '~/routing/dashboard/components/DashboardQueueHealthCard';
 import { DashboardDailyStatsModal } from '~/routing/dashboard/components/DashboardDailyStatsModal';
 import { DashboardOpenPrsByAuthorCard } from '~/routing/dashboard/components/DashboardOpenPrsByAuthorCard';
@@ -144,11 +145,15 @@ export const DashboardContentGrid = (
             fallback={<DashboardPrCardsSkeleton />}
             resolve={githubStats}
           >
-            {(stats) => (
-              <DashboardPrTimeInStateCard
-                prTimeInStateSummary={stats.prTimeInStateSummary}
-              />
-            )}
+            {(stats) =>
+              stats.githubTokenConfigured ? (
+                <DashboardPrTimeInStateCard
+                  prTimeInStateSummary={stats.prTimeInStateSummary}
+                />
+              ) : (
+                <DashboardGithubTokenEmptyState />
+              )
+            }
           </DashboardDeferredCard>
         </div>
 
@@ -159,7 +164,13 @@ export const DashboardContentGrid = (
             fallback={<DashboardPrCardsSkeleton />}
             resolve={githubStats}
           >
-            {(stats) => <DashboardOpenPrsByAuthorCard githubStats={stats} />}
+            {(stats) =>
+              stats.githubTokenConfigured ? (
+                <DashboardOpenPrsByAuthorCard githubStats={stats} />
+              ) : (
+                <DashboardGithubTokenEmptyState />
+              )
+            }
           </DashboardDeferredCard>
         </div>
 
