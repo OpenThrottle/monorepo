@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
-import { installPolyfills, uninstallPolyfills } from './polyfills';
+import { installPolyfills, uninstallPolyfills } from '../polyfills';
 
 describe('installPolyfills', () => {
   test('defines the jsdom shims that are missing', () => {

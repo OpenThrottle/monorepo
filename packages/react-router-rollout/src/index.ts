@@ -1,25 +1,11 @@
-export {
-  assertRolloutFlagCatalog,
-  defineRolloutFlags,
-  isRolloutFlagKind,
-  isRolloutFlagValueForKind,
-  ROLLOUT_FLAG_KIND,
-  type RolloutBooleanFlagKey,
-  type RolloutFlagCatalog,
-  type RolloutFlagCatalogInput,
-  type RolloutFlagDefinition,
-  type RolloutFlagDefinitionForKind,
-  type RolloutFlagKey,
-  type RolloutFlagKind,
-  type RolloutFlagValue,
-  type RolloutFlagValueByKind,
-  type RolloutJsonValue,
-} from './catalog';
 export { RolloutProvider } from './components';
 export type { RolloutProviderProps } from './components';
 export {
   DEFAULT_ROLLOUT_CACHE_TTL_MS,
+  isRolloutFlagKind,
   ROLLOUT_CACHE_KEY_PREFIX,
+  ROLLOUT_FLAG_KIND,
+  type RolloutFlagKind,
 } from './config';
 export { RolloutContext } from './data';
 export type { RolloutContextValue } from './data';
@@ -35,21 +21,33 @@ export type {
   UseRolloutResult,
 } from './hooks';
 export type {
+  RolloutBooleanFlagKey,
   RolloutCacheOptions,
   RolloutCacheStorage,
   RolloutEvaluation,
   RolloutFetchEvaluations,
   RolloutFetchEvaluationsArgs,
+  RolloutFlagCatalog,
+  RolloutFlagDefinition,
+  RolloutFlagDefinitionForKind,
+  RolloutFlagKey,
+  RolloutFlagValue,
+  RolloutFlagValueByKind,
   RolloutHydrationState,
+  RolloutJsonValue,
 } from './types';
 export {
+  assertRolloutFlagCatalog,
   clearRolloutEvaluationMemoryCache,
   defaultsFromCatalog,
+  defineRolloutFlags,
+  isRolloutFlagValueForKind,
   mergeRolloutEvaluations,
   parseRolloutValueJson,
   readRolloutEvaluationCache,
-  writeRolloutEvaluationCache,
+  type RolloutFlagCatalogInput,
   type RolloutResolvedValues,
+  writeRolloutEvaluationCache,
 } from './utils';
 
 /**

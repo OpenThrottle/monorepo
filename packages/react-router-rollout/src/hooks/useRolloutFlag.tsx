@@ -2,7 +2,7 @@ import type {
   RolloutFlagCatalog,
   RolloutFlagKey,
   RolloutFlagValue,
-} from '../catalog';
+} from '../types';
 import { useRequiredRolloutContext } from './useRolloutContext';
 
 /**

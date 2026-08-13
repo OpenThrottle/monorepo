@@ -1,6 +1,6 @@
 import { afterAll, describe, expect, test } from 'vitest';
-import { installPolyfills, uninstallPolyfills } from './polyfills';
-import { setupReactRouterTest } from './setup';
+import { installPolyfills, uninstallPolyfills } from '../polyfills';
+import { setupReactRouterTest } from '../setup';
 
 // Called during collection, exactly as an app's tests/setup.ts would — this also
 // proves the baked-in afterEach(cleanup) registers without throwing.

@@ -1,7 +1,6 @@
 import * as React from 'react';
 
-import type { RolloutFlagCatalog } from '../catalog';
-import type { RolloutHydrationState } from '../types';
+import type { RolloutFlagCatalog, RolloutHydrationState } from '../types';
 import type { RolloutResolvedValues } from '../utils';
 
 /**

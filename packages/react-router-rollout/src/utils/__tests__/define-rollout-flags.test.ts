@@ -9,7 +9,7 @@ import {
   type RolloutBooleanFlagKey,
   type RolloutFlagKey,
   type RolloutFlagValue,
-} from '../index';
+} from '../../index';
 
 describe('ROLLOUT_FLAG_KIND', () => {
   it('pins wire values to GraphQL / nestjs-rollout kinds', () => {

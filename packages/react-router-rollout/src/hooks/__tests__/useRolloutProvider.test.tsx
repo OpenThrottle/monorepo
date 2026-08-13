@@ -1,7 +1,7 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
-import { defineRolloutFlags } from '../../catalog';
+import { defineRolloutFlags } from '../../index';
 import { clearRolloutEvaluationMemoryCache } from '../../utils';
 import { useRolloutProvider } from '../useRolloutProvider';
 

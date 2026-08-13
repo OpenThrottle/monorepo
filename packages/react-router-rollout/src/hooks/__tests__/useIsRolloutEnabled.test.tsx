@@ -2,7 +2,7 @@ import * as React from 'react';
 import { renderHook, waitFor } from '@testing-library/react';
 import { describe, expect, expectTypeOf, test, vi } from 'vitest';
 
-import { defineRolloutFlags, type RolloutBooleanFlagKey } from '../../catalog';
+import { defineRolloutFlags, type RolloutBooleanFlagKey } from '../../index';
 import { RolloutProvider } from '../../components/RolloutProvider';
 import { useIsRolloutEnabled } from '../useIsRolloutEnabled';
 

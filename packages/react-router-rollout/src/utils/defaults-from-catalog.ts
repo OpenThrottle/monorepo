@@ -1,10 +1,10 @@
+import type { RolloutFlagKind } from '../config/rollout-flag-kind';
 import type {
   RolloutFlagCatalog,
   RolloutFlagKey,
   RolloutFlagValue,
   RolloutFlagValueByKind,
-  RolloutFlagKind,
-} from '../catalog';
+} from '../types';
 
 /**
  * Resolved values map for a catalog (defaults only).

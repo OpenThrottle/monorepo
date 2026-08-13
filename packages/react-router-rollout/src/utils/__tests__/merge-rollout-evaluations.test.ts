@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { defineRolloutFlags } from '../../catalog';
+import { defineRolloutFlags } from '../../index';
 import { mergeRolloutEvaluations } from '../merge-rollout-evaluations';
 
 const catalog = defineRolloutFlags({

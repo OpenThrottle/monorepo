@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { defineRolloutFlags } from '../../catalog';
+import { defineRolloutFlags } from '../../index';
 import { defaultsFromCatalog } from '../defaults-from-catalog';
 
 describe('defaultsFromCatalog', () => {
