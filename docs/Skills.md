@@ -1,6 +1,6 @@
 # 🧰 Agent Skills
 
-Skills are reusable, model-invocable capabilities for AI agents (Cursor, Claude Code, Copilot, Gemini CLI, OpenCode, …). OpenThrottle manages them so **every tool sees the same skills from the same starting point**, regardless of who installed them or which tool they used.
+Skills are reusable, model-invocable capabilities for AI agents (Claude Code, Cursor, Codex, Grok Build, OpenCode, Copilot, Gemini CLI, …). OpenThrottle manages them so **every tool sees the same skills from the same starting point**, regardless of who installed them or which tool they used.
 
 The mechanism is the **`skill-sync`** skill — see [`skills/skill-sync/SKILL.md`](../skills/skill-sync/SKILL.md) for the full contract. This page is the human-facing summary of the policy + what's installed.
 
@@ -8,11 +8,11 @@ The mechanism is the **`skill-sync`** skill — see [`skills/skill-sync/SKILL.md
 
 Two-stage layout with strict ownership:
 
-| Location                                      | Contents                                                                                                                                                                        | Owned by         |
-| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
-| `skills/`                                     | Hand-authored, **OT-owned** skills, committed to git. Edit our own skills here.                                                                                                 | Humans (via PRs) |
-| `.agents/skills/`                             | Generated merged SSOT view all universal tools read. **Real dirs** = external installs (tracked in `skills-lock.json`). **Symlinks** = our own `skills/*`. **Never hand-edit.** | skill-sync       |
-| `<agent>/skills/` (default `.claude/skills/`) | Per-agent fan-out for tools that don't read `.agents/skills/` natively. All symlinks, all generated, all gitignored.                                                            | skill-sync       |
+| Location                                      | Contents                                                                                                                                                                                                                        | Owned by         |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
+| `skills/`                                     | Hand-authored, **OT-owned** skills, committed to git. Edit our own skills here.                                                                                                                                                 | Humans (via PRs) |
+| `.agents/skills/`                             | Generated merged SSOT view most CLIs read in-repo (Claude Code, Cursor 2.4+, Codex, OpenCode). **Real dirs** = external installs (tracked in `skills-lock.json`). **Symlinks** = our own `skills/*`. **Never hand-edit.**       | skill-sync       |
+| `<agent>/skills/` (default `.claude/skills/`) | Per-agent fan-out for CLIs that read a `.claude`-style dir (e.g. Grok Build; Cursor reads both). `.agents/skills/` + `.claude/skills/` are the two near-universal in-repo targets. All symlinks, all generated, all gitignored. | skill-sync       |
 
 ```bash
 # Rebuild/refresh the layout (idempotent, safe to re-run)

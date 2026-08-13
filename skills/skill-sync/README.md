@@ -1,6 +1,6 @@
 # 🔄 skill-sync
 
-The skill that manages our **agent-skills architecture** — install it in any OpenThrottle repo and every AI tool (Cursor, Claude Code, VSCode/Copilot, Gemini CLI, OpenCode, …) gets the same skills, laid out the same way, kept out of git.
+The skill that manages our **agent-skills architecture** — install it in any OpenThrottle repo and every AI tool (Claude Code, Cursor, Codex, Grok Build, OpenCode, VSCode/Copilot, Gemini CLI, …) gets the same skills, laid out the same way, kept out of git.
 
 > [!TIP]
 >
@@ -17,8 +17,8 @@ flowchart LR
 ```
 
 - **`skills/`** — skills this repo authors (committed).
-- **`.agents/skills/`** — the merged view every universal tool (Cursor, VSCode/Copilot, OpenCode, Gemini CLI, Codex, …) reads natively: real directories are `npx skills` installs (lockfile-owned, never touched by the sync); symlinks are the repo's own `skills/*` (generated). A name collision between the two is an error.
-- **`.claude/skills/`** (and any other configured agent folders) — generated symlinks for tools that don't read `.agents/skills/` natively.
+- **`.agents/skills/`** — the merged SSOT view most CLIs read in-repo (Claude Code, Cursor 2.4+, Codex, OpenCode, …): real directories are `npx skills` installs (lockfile-owned, never touched by the sync); symlinks are the repo's own `skills/*` (generated). A name collision between the two is an error.
+- **`.claude/skills/`** (and any other configured agent folders) — generated symlinks for the CLIs that read a `.claude`-style dir rather than `.agents/skills/` (e.g. Grok Build, and Cursor which also reads `.claude/skills`). `.agents/skills/` + `.claude/skills/` are the two near-universal in-repo targets; several CLIs additionally read per-tool global dirs (`~/.claude/skills`, `~/.codex/skills`, `~/.grok/skills`), which are outside this repo's layout.
 
 Skills travel between repos by **install, never by symlink** — each repo runs `npx skills add openthrottle/monorepo --skill <name> --agent universal` and owns its own lockfile.
 

@@ -2,7 +2,9 @@
 
 Plan: **Dynamic repo skills registry from `.agents/skills`** (`fca6f044-fcb2-48f9-8ff5-1e32a76773c3`).
 
-> **Updated 2026-07-20:** the `.cursor/skills` layout was retired. OpenThrottle standardizes on `.agents/skills` — the SSOT view combining authored `skills/` and lockfile-installed external skills — with `.claude/skills` as generated fan-out (deduped in, preferring `.agents`). Discovery + counts now cover `.agents/skills`; the cursor-specific details below are historical. See [docs/Skills.md](../../../docs/Skills.md) and [skills/skill-sync/SKILL.md](../../../skills/skill-sync/SKILL.md).
+> **Updated 2026-07-20:** the dedicated `.cursor/skills` _fan-out_ was retired. OpenThrottle standardizes on `.agents/skills` — the SSOT view combining authored `skills/` and lockfile-installed external skills — with `.claude/skills` as generated fan-out (deduped in, preferring `.agents`). See [docs/Skills.md](../../../docs/Skills.md) and [skills/skill-sync/SKILL.md](../../../skills/skill-sync/SKILL.md).
+>
+> **Updated 2026-08-13:** the _scan_ re-added per-CLI read dirs. Because Cursor 2.4+, Codex, and Grok Build read the `SKILL.md` standard, `discoverRepoSkills` now scans `.agents/skills`, `.claude/skills`, `.codex/skills`, `.cursor/skills`, `.grok/skills`, and `.opencode/skills` (all deduped by slug, still preferring `.agents`). This is a read-only discovery change and does **not** reinstate a `.cursor/skills` fan-out. The cursor-specific figures in the tables below are historical illustration, not the current layout set.
 
 ## Problem
 

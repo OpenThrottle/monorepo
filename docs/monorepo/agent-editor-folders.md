@@ -45,7 +45,7 @@ repo root
     ├── settings.json.default, extensions.json, launch.json, mcp.json
 ```
 
-> **Skills are two-stage and fully generated.** `skill-sync` builds `skills/*` → `.agents/skills/` (stage 1), then `.agents/skills/*` → each agent fan-out such as `.claude/skills/` (stage 2). The old `.cursor/skills` fan-out was **dropped** — most tools read `.agents/skills/` natively. **Never hand-edit** `.agents/skills/` or `.claude/skills/`.
+> **Skills are two-stage and fully generated.** `skill-sync` builds `skills/*` → `.agents/skills/` (stage 1), then `.agents/skills/*` → each agent fan-out such as `.claude/skills/` (stage 2). The dedicated `.cursor/skills` fan-out was **dropped**: Cursor 2.4+ reads `.agents/skills/` (and `.claude/skills/`) directly, so it needs no separate copy. Every supported CLI (Claude Code, Cursor, Codex, Grok Build, OpenCode) now reads the `SKILL.md` standard — they differ only in which dirs they scan, with `.agents/skills/` + `.claude/skills/` the two near-universal in-repo targets. **Never hand-edit** `.agents/skills/` or `.claude/skills/`.
 
 **Sync + drift gate:**
 
