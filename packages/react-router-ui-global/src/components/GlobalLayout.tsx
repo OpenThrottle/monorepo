@@ -74,7 +74,7 @@ export const GlobalLayout = (props: GlobalLayoutProps): React.ReactElement => {
             Legal: authenticated ? false : true,
             Settings: true,
             User: false,
-            Workspace: false,
+            Workspace: authenticated ? false : true,
           }}
         />
         {!hideFooter ? <GlobalSidebarFooter health={health} /> : null}

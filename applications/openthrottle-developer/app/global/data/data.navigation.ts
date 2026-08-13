@@ -248,17 +248,17 @@ export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
         to: '/notifications',
       },
     ],
-    Legal: linksLegal,
+    // Legal: linksLegal,
   };
 
 export const dataNavigationGuest: Record<string, GlobalSidebarLinkProps[]> = {
   Workspace: [
-    {
-      children: 'About',
-      end: true,
-      icon: BookOpenIcon,
-      to: '/about',
-    },
+    // {
+    //   children: 'About',
+    //   end: true,
+    //   icon: BookOpenIcon,
+    //   to: '/about',
+    // },
     {
       children: 'Login',
       icon: LogInIcon,

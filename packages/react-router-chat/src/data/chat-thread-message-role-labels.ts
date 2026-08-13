@@ -6,7 +6,7 @@ import type { ChatMessage } from '../types';
  * @public
  */
 export const CHAT_ROLE_LABEL: Record<ChatMessage['role'], string> = {
-  assistant: 'Assistant',
-  system: 'System',
-  user: 'You',
+  assistant: 'Clutch Assistant:',
+  system: 'System:',
+  user: 'You:',
 };

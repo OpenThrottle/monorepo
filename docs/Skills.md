@@ -56,7 +56,7 @@ Source of truth: `skills-lock.json`. Grouped by upstream:
 
 Ours to author and edit; fanned out by skill-sync:
 
-- **Agents/workflow:** agents-code-review, agents-ralph, workflow-ralph, validate-plan
+- **Agents/workflow:** agents-ralph, workflow-ralph, validate-plan
 - **GitHub:** github-branch, github-commit, github-create-issue, github-my-pull-requests, github-pull-request, github-squash, github-summarize, github-untracked, github-worktree
 - **OpenThrottle:** openthrottle-folders, openthrottle-generators, openthrottle-stack, ot-ask, ot-create-plan, ot-edit-task, ot-list-by-status, ot-list-sources, ot-pending, ot-planning-mode, ot-plans, ot-postgres
 - **Infra:** skill-sync
