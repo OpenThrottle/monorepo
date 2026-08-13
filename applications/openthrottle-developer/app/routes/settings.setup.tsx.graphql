@@ -4,7 +4,11 @@ query SettingsSetupAgentClis {
       backend
       enabled
       label
-      models
+      modelOptions {
+        enabled
+        favorite
+        model
+      }
       version
     }
     scannedAt
@@ -23,6 +27,30 @@ mutation SetAgentEnabled($backend: String!, $enabled: Boolean!) {
   setAgentEnabled(backend: $backend, enabled: $enabled) {
     backend
     enabled
+  }
+}
+
+mutation SetAgentModelEnabled(
+  $backend: String!
+  $model: String!
+  $enabled: Boolean!
+) {
+  setAgentModelEnabled(backend: $backend, model: $model, enabled: $enabled) {
+    backend
+    enabled
+    model
+  }
+}
+
+mutation SetAgentModelFavorite(
+  $backend: String!
+  $model: String!
+  $favorite: Boolean!
+) {
+  setAgentModelFavorite(backend: $backend, model: $model, favorite: $favorite) {
+    backend
+    favorite
+    model
   }
 }
 

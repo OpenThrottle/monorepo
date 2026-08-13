@@ -28,7 +28,10 @@ describe('mergeAgentCliStatuses', () => {
         backend: first.backend,
         enabled: true,
         label: first.label,
-        models: ['m-1'],
+        modelOptions: [
+          { enabled: true, favorite: true, model: 'm-1' },
+          { enabled: false, favorite: false, model: 'm-2' },
+        ],
         version: '1.2.3',
       },
     ]);
@@ -36,7 +39,12 @@ describe('mergeAgentCliStatuses', () => {
 
     expect(merged?.installed).toBe(true);
     expect(merged?.enabled).toBe(true);
-    expect(merged?.models).toEqual(['m-1']);
+    // Flat `models` is derived from modelOptions (all model ids, order preserved).
+    expect(merged?.models).toEqual(['m-1', 'm-2']);
+    expect(merged?.modelOptions).toEqual([
+      { enabled: true, favorite: true, model: 'm-1' },
+      { enabled: false, favorite: false, model: 'm-2' },
+    ]);
     expect(merged?.version).toBe('1.2.3');
   });
 
@@ -50,7 +58,7 @@ describe('mergeAgentCliStatuses', () => {
         backend: first.backend,
         enabled: false,
         label: first.label,
-        models: [],
+        modelOptions: [],
         version: '1.0.0',
       },
     ]);
@@ -68,6 +76,7 @@ describe('filterAgentCliStatuses', () => {
     installUrl: 'https://x',
     installed: true,
     label: 'X',
+    modelOptions: [],
     models: [],
     version: null,
     ...over,

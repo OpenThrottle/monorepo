@@ -42,6 +42,22 @@ export interface DiscoveredLocalModels {
 }
 
 /**
+ * A discovered agent CLI model with the current user's per-model preferences.
+ * Structural subset of the app-generated `discoverAgentClis` `modelOptions` row.
+ * @public
+ */
+export interface DiscoveredAgentCliModelOption {
+  /**
+   * Effective per-user enablement (agent-OFF already folded in server-side): a
+   * `false` model is dropped from the composer options.
+   */
+  readonly enabled: boolean;
+  /** Whether the user favorited this model — floats it into the Favorites group. */
+  readonly favorite: boolean;
+  readonly model: string;
+}
+
+/**
  * A discovered agent CLI backend. Structural subset of the app-generated
  * `discoverAgentClis` agent.
  * @public
@@ -57,7 +73,18 @@ export interface DiscoveredAgentCli {
    */
   readonly enabled?: boolean;
   readonly label: string;
-  readonly models: readonly string[];
+  /**
+   * Per-model enabled + favorite state. Preferred over {@link models} when
+   * present; optional because the admin app's discovery query does not select it
+   * (it falls back to the flat `models` list, all enabled + unfavorited).
+   */
+  readonly modelOptions?: readonly DiscoveredAgentCliModelOption[];
+  /**
+   * Flat model-id list (the deprecated server field). Optional because a query
+   * may select only {@link modelOptions} instead; a missing value with no
+   * `modelOptions` means the driver lists no models.
+   */
+  readonly models?: readonly string[];
   /**
    * Whether the driver accepts a custom OpenAI-compatible base URL — read only
    * by {@link toDriverEndpointChatOptions}. Optional because the admin app's
@@ -127,14 +154,44 @@ export function toChatModelOptions(
 }
 
 /**
+ * The user-facing models of an agent, resolved to `{ model, favorite }` pairs.
+ * Prefers the per-model `modelOptions` (dropping user-disabled models and
+ * carrying the favorite flag); falls back to the flat `models` list (all shown,
+ * none favorited) when the discovery query did not select `modelOptions`.
+ * Favorites are ordered first so they lead their picker group.
+ */
+function resolveAgentModels(
+  agent: DiscoveredAgentCli,
+): { favorite: boolean; model: string }[] {
+  const resolved =
+    agent.modelOptions != null
+      ? agent.modelOptions
+          .filter((option) => option.enabled)
+          .map((option) => ({ favorite: option.favorite, model: option.model }))
+      : (agent.models ?? []).map((model) => ({ favorite: false, model }));
+
+  // Favorites first, otherwise stable in discovery order.
+  return resolved
+    .map((entry, index) => ({ entry, index }))
+    .sort((a, b) => {
+      if (a.entry.favorite !== b.entry.favorite) {
+        return a.entry.favorite ? -1 : 1;
+      }
+      return a.index - b.index;
+    })
+    .map(({ entry }) => entry);
+}
+
+/**
  * Map discovered agent CLIs into composer toolbar options. Only chat-capable
  * drivers the user has NOT disabled are offered (plan-run-only drivers like
  * codex/grok are discoverable but have no streaming chat adapter; a disabled
  * agent is hidden here and its models drop out transitively). Each of a driver's
- * models becomes its own option (id `backend|model`, e.g. `cursor|gpt-5.2`); a
- * driver with no listable models falls back to a single bare-backend option at
- * its default model. Each driver gets its own picker rail group keyed on its
- * backend ({@link cliGroupId}), with the driver label as each row's sub-label to
+ * ENABLED models becomes its own option (id `backend|model`, e.g. `cursor|gpt-5.2`),
+ * favorited models flagged (`favorite: true`) and ordered first; a driver with no
+ * listable models falls back to a single bare-backend option at its default model.
+ * Each driver gets its own picker rail group keyed on its backend
+ * ({@link cliGroupId}), with the driver label as each row's sub-label to
  * disambiguate same-named models.
  * @public
  */
@@ -144,7 +201,15 @@ export function toAgentChatOptions(
   return discovery.agents
     .filter((agent) => agent.chatCapable && agent.enabled !== false)
     .flatMap((agent) => {
-      if (agent.models.length === 0) {
+      const models = resolveAgentModels(agent);
+      if (models.length === 0) {
+        // Distinguish "driver lists no models" (→ a single bare-backend option
+        // at its default model) from "every model disabled" (→ offer nothing).
+        const listedCount =
+          agent.modelOptions?.length ?? agent.models?.length ?? 0;
+        if (listedCount > 0) {
+          return [];
+        }
         return [
           {
             description: agent.label,
@@ -156,8 +221,9 @@ export function toAgentChatOptions(
         ];
       }
 
-      return agent.models.map((model) => ({
+      return models.map(({ favorite, model }) => ({
         description: agent.label,
+        favorite,
         groupId: cliGroupId(agent.backend),
         id: encodeCliOptionId(agent.backend, model),
         label: model,

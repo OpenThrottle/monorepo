@@ -273,14 +273,16 @@ export class PlansResolver {
   ) {}
 
   /**
-   * @description Rejects starting a plan run against an agent backend the actor disabled on
-   * /settings/setup. A null actor (service-account/system principal) has no per-user preferences, so
-   * the guard is skipped. Backends that are not agent-CLI driver ids (unknown strings) are left to the
-   * caller's own validation — this only blocks a KNOWN-but-disabled agent.
+   * @description Rejects starting a plan run against an agent backend — or a specific model of that
+   * backend — the actor disabled on /settings/setup. A null actor (service-account/system principal)
+   * has no per-user preferences, so the guard is skipped. Backends that are not agent-CLI driver ids
+   * (unknown strings) are left to the caller's own validation — this only blocks a KNOWN-but-disabled
+   * agent, and (when a model is given and non-empty) a KNOWN-but-disabled model.
    */
   private async assertBackendEnabled(
     actorUserId: string | null,
     backend: string,
+    model?: string | null,
   ): Promise<void> {
     if (actorUserId === null) {
       return;
@@ -288,6 +290,19 @@ export class PlansResolver {
     if (!(await this.agentPreferences.isEnabled(actorUserId, backend))) {
       throw new BadRequestException(
         `The ${backend} agent is disabled. Re-enable it on Settings › Setup to run it.`,
+      );
+    }
+    const trimmedModel = model?.trim() ?? '';
+    if (
+      trimmedModel !== '' &&
+      !(await this.agentPreferences.isModelEnabled(
+        actorUserId,
+        backend,
+        trimmedModel,
+      ))
+    ) {
+      throw new BadRequestException(
+        `The ${trimmedModel} model is disabled. Re-enable it on Settings › Setup to run it.`,
       );
     }
   }
@@ -1181,7 +1196,11 @@ export class PlansResolver {
       requestedBackend != null &&
       isPlanRunExecutionBackend(requestedBackend)
     ) {
-      await this.assertBackendEnabled(actorUserId, requestedBackend);
+      await this.assertBackendEnabled(
+        actorUserId,
+        requestedBackend,
+        input.ralph?.model,
+      );
     }
 
     const outcome = await this.planEnqueueService.enqueueSpawn({
@@ -1277,7 +1296,11 @@ export class PlansResolver {
       requestedBackend != null &&
       isPlanRunExecutionBackend(requestedBackend)
     ) {
-      await this.assertBackendEnabled(actorUserId, requestedBackend);
+      await this.assertBackendEnabled(
+        actorUserId,
+        requestedBackend,
+        input.ralph?.model,
+      );
     }
 
     const outcome = await this.planEnqueueService.enqueueOrchestrator({

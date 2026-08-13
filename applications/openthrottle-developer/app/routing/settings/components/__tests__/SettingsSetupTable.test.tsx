@@ -19,6 +19,11 @@ const installed: AgentCliStatus = {
   installUrl: 'https://cursor.com/install',
   installed: true,
   label: 'Cursor Agent',
+  modelOptions: [
+    { enabled: true, favorite: false, model: 'auto' },
+    { enabled: true, favorite: false, model: 'gpt-5.2' },
+    { enabled: true, favorite: false, model: 'sonnet' },
+  ],
   models: ['auto', 'gpt-5.2', 'sonnet'],
   version: '2026.06.15',
 };
@@ -29,6 +34,7 @@ const disabledAgent: AgentCliStatus = {
   installUrl: 'https://claude.ai/install.sh',
   installed: true,
   label: 'Claude Code',
+  modelOptions: [{ enabled: false, favorite: false, model: 'opus' }],
   models: ['opus'],
   version: '2.1.0',
 };

@@ -33,14 +33,20 @@ const createInput = {
   prompt: 'go',
 };
 
-function build(enabled: boolean): {
+function build(
+  enabled: boolean,
+  modelEnabled = true,
+): {
   create: ReturnType<typeof vi.fn>;
   isEnabled: ReturnType<typeof vi.fn>;
+  isModelEnabled: ReturnType<typeof vi.fn>;
   resolver: ScheduledAgentJobsResolver;
 } {
   const isEnabled = vi.fn().mockResolvedValue(enabled);
+  const isModelEnabled = vi.fn().mockResolvedValue(modelEnabled);
   const agentPreferences = createMock<AgentCliPreferencesService>({
     isEnabled,
+    isModelEnabled,
   });
   const create = vi
     .fn()
@@ -51,7 +57,7 @@ function build(enabled: boolean): {
     createMock<LoggerService>(),
     service,
   );
-  return { create, isEnabled, resolver };
+  return { create, isEnabled, isModelEnabled, resolver };
 }
 
 describe('ScheduledAgentJobsResolver.createScheduledAgentJob', () => {
@@ -77,5 +83,17 @@ describe('ScheduledAgentJobsResolver.createScheduledAgentJob', () => {
     await resolver.createScheduledAgentJob(serviceAccount, createInput);
     expect(isEnabled).not.toHaveBeenCalled();
     expect(create).toHaveBeenCalledOnce();
+  });
+
+  it('rejects and never creates when the owner disabled the targeted model', async () => {
+    const { create, isModelEnabled, resolver } = build(true, false);
+    await expect(
+      resolver.createScheduledAgentJob(human, {
+        ...createInput,
+        model: 'gpt-5.2',
+      }),
+    ).rejects.toThrow(/gpt-5.2 model is disabled/);
+    expect(isModelEnabled).toHaveBeenCalledWith('user-1', 'cursor', 'gpt-5.2');
+    expect(create).not.toHaveBeenCalled();
   });
 });

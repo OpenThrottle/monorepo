@@ -44,6 +44,8 @@ import {
   AgentCliSetupConfigObject,
   AgentSetupStreamChunkObject,
   SetAgentEnabledResult,
+  SetAgentModelEnabledResult,
+  SetAgentModelFavoriteResult,
   StartAgentSetupResult,
 } from './agent-setup.object';
 import { AgentSetupService } from './agent-setup.service';
@@ -100,6 +102,62 @@ export class AgentSetupResolver {
 
     await this.preferences.setEnabled(principal.sub, backend, enabled);
     return { backend, enabled };
+  }
+
+  @Mutation(() => SetAgentModelEnabledResult, {
+    description: `Enable or disable a single MODEL of an agent CLI backend for the current user. A disabled model is hidden from chat/model pickers and rejected when starting new runs, even while the agent itself stays enabled (an agent-level OFF hard-overrides all its models). Presence-as-disabled: enabled=false records the preference, enabled=true clears it (default is enabled). Gated by SETTINGS_WRITE; rejects unknown backends.`,
+    name: 'setAgentModelEnabled',
+  })
+  @UseGuards(GqlPermissionsGuard)
+  @Permissions(PERMISSIONS.SETTINGS_WRITE)
+  async setAgentModelEnabled(
+    @CurrentUser() principal: AuthPrincipal | undefined,
+    @Args('backend', { type: () => String }) backend: string,
+    @Args('model', { type: () => String }) model: string,
+    @Args('enabled', { type: () => Boolean }) enabled: boolean,
+  ): Promise<SetAgentModelEnabledResult> {
+    if (principal == null) {
+      throw new ForbiddenException('An authenticated user is required.');
+    }
+    if (!isDriverId(backend)) {
+      throw new BadRequestException(`Unknown agent CLI backend: ${backend}.`);
+    }
+
+    await this.preferences.setModelEnabled(
+      principal.sub,
+      backend,
+      model,
+      enabled,
+    );
+    return { backend, enabled, model };
+  }
+
+  @Mutation(() => SetAgentModelFavoriteResult, {
+    description: `Star or unstar a single MODEL of an agent CLI backend for the current user. Favorited models float to the top of / are highlighted in chat/model pickers and run selection. Favoriting is orthogonal to enablement — it never enables a disabled model. Presence-as-favorite: favorite=true records the star, favorite=false clears it. Gated by SETTINGS_WRITE; rejects unknown backends.`,
+    name: 'setAgentModelFavorite',
+  })
+  @UseGuards(GqlPermissionsGuard)
+  @Permissions(PERMISSIONS.SETTINGS_WRITE)
+  async setAgentModelFavorite(
+    @CurrentUser() principal: AuthPrincipal | undefined,
+    @Args('backend', { type: () => String }) backend: string,
+    @Args('model', { type: () => String }) model: string,
+    @Args('favorite', { type: () => Boolean }) favorite: boolean,
+  ): Promise<SetAgentModelFavoriteResult> {
+    if (principal == null) {
+      throw new ForbiddenException('An authenticated user is required.');
+    }
+    if (!isDriverId(backend)) {
+      throw new BadRequestException(`Unknown agent CLI backend: ${backend}.`);
+    }
+
+    await this.preferences.setModelFavorite(
+      principal.sub,
+      backend,
+      model,
+      favorite,
+    );
+    return { backend, favorite, model };
   }
 
   // 🔌 graphql-ws only: connection auth (onConnect) validated the token and

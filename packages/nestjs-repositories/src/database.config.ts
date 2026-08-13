@@ -5,6 +5,7 @@
 
 import type { DataSourceOptions } from 'typeorm';
 import { UserDisabledAgentCli } from './modules/agent-cli-preferences/user-disabled-agent-cli.entity';
+import { UserFavoriteAgentModel } from './modules/agent-cli-preferences/user-favorite-agent-model.entity';
 import { AgentConversationMessage } from './modules/agent-conversations/agent-conversation-message.entity';
 import { AgentConversation } from './modules/agent-conversations/agent-conversation.entity';
 import { AgentTokenUsage } from './modules/agent-token-usage/agent-token-usage.entity';
@@ -110,6 +111,7 @@ export function getTypeOrmOptions(): DataSourceOptions {
       TaskTag,
       User,
       UserDisabledAgentCli,
+      UserFavoriteAgentModel,
       UserSkillTag,
       UserWorkspaceSettings,
       WorkArtifact,

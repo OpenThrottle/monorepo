@@ -30,25 +30,41 @@ export class AgentDiscoveryResolver {
   ): Promise<DiscoverAgentClisResult> {
     const result = await this.agentDiscovery.discover();
 
-    // Per-user enablement is overlaid AFTER the shared 60s discovery cache: the
-    // cache holds only host-level availability; `enabled` is resolved per request
-    // from the caller's disabled-backend set (empty → all enabled).
-    const disabled =
+    // Per-user enablement + favorites are overlaid AFTER the shared 60s discovery
+    // cache: the cache holds only host-level availability. `enabled` / `favorite`
+    // are resolved per request from the caller's disabled-agent set, disabled-model
+    // map and favorite-model map (all empty → all enabled, none favorited). An
+    // agent-level OFF hard-overrides every model (all modelOptions enabled:false).
+    const [disabled, disabledModels, favoriteModels] =
       principal != null
-        ? await this.preferences.getDisabledBackends(principal.sub)
-        : new Set<string>();
+        ? await Promise.all([
+            this.preferences.getDisabledBackends(principal.sub),
+            this.preferences.getDisabledModels(principal.sub),
+            this.preferences.getFavoriteModels(principal.sub),
+          ])
+        : [new Set<string>(), null, null];
 
     const agents = result.agents
       .filter((agent) => agent.available)
-      .map((agent) => ({
-        backend: agent.backend,
-        chatCapable: agent.chatCapable,
-        enabled: !disabled.has(agent.backend),
-        label: agent.label,
-        models: [...agent.models],
-        supportsCustomBaseUrl: agent.supportsCustomBaseUrl,
-        version: agent.version,
-      }));
+      .map((agent) => {
+        const agentDisabled = disabled.has(agent.backend);
+        const disabledForAgent = disabledModels?.get(agent.backend);
+        const favoritesForAgent = favoriteModels?.get(agent.backend);
+        return {
+          backend: agent.backend,
+          chatCapable: agent.chatCapable,
+          enabled: !agentDisabled,
+          label: agent.label,
+          modelOptions: agent.models.map((model) => ({
+            enabled: !agentDisabled && !disabledForAgent?.has(model),
+            favorite: favoritesForAgent?.has(model) ?? false,
+            model,
+          })),
+          models: [...agent.models],
+          supportsCustomBaseUrl: agent.supportsCustomBaseUrl,
+          version: agent.version,
+        };
+      });
 
     return {
       agents,

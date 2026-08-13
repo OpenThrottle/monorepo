@@ -67,6 +67,7 @@ const userMessage = agentConversationMessagesFactory.build({
 
 function build(): {
   agentIsEnabled: ReturnType<typeof vi.fn>;
+  agentModelIsEnabled: ReturnType<typeof vi.fn>;
   conversations: AgentConversationsService;
   modelDiscovery: NestjsModelDiscoveryService;
   personaFindOne: ReturnType<typeof vi.fn>;
@@ -75,8 +76,10 @@ function build(): {
   streamService: ConversationStreamService;
 } {
   const agentIsEnabled = vi.fn().mockResolvedValue(true);
+  const agentModelIsEnabled = vi.fn().mockResolvedValue(true);
   const agentPreferences = createMock<AgentCliPreferencesService>({
     isEnabled: agentIsEnabled,
+    isModelEnabled: agentModelIsEnabled,
   });
   const conversations = createMock<AgentConversationsService>({
     appendMessages: vi.fn().mockResolvedValue([userMessage]),
@@ -120,6 +123,7 @@ function build(): {
   );
   return {
     agentIsEnabled,
+    agentModelIsEnabled,
     conversations,
     modelDiscovery,
     personaFindOne,
@@ -241,6 +245,31 @@ describe('ConversationStreamResolver.startConversationStream', () => {
 
     expect(agentIsEnabled).toHaveBeenCalledWith('user-1', 'cursor');
     expect(result.errorMessage).toMatch(/cursor agent is disabled/);
+    expect(streamService.start).not.toHaveBeenCalled();
+  });
+
+  it('rejects a CLI backend whose targeted model the user has disabled, without starting a stream', async () => {
+    const { agentModelIsEnabled, resolver, streamService } = build();
+    agentModelIsEnabled.mockResolvedValue(false);
+
+    const result = await resolver.startConversationStream(human, {
+      backend: 'cursor',
+      baseUrl: null,
+      conversationId: null,
+      message: 'go',
+      modelId: 'gpt-5.2',
+      permissionMode: null,
+      reasoning: null,
+      repositoryId: 'repo-1',
+      serviceTier: null,
+    });
+
+    expect(agentModelIsEnabled).toHaveBeenCalledWith(
+      'user-1',
+      'cursor',
+      'gpt-5.2',
+    );
+    expect(result.errorMessage).toMatch(/gpt-5.2 model is disabled/);
     expect(streamService.start).not.toHaveBeenCalled();
   });
 

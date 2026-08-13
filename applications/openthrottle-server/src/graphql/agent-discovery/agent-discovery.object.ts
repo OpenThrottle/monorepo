@@ -8,6 +8,24 @@
 import { Field, Int, ObjectType } from '@nestjs/graphql';
 
 @ObjectType()
+export class AgentCliModelOption {
+  @Field(() => String, {
+    description: `Opaque driver-supplied model id as returned by discoverAgentClis (e.g. "gpt-5.2").`,
+  })
+  model!: string;
+
+  @Field(() => Boolean, {
+    description: `Effective per-user enablement of this model: false when the user disabled this model OR disabled the whole agent (an agent-level OFF hard-overrides every model). Disabled models are hidden from chat/model pickers and rejected when starting new runs. Defaults to true for an unauthenticated request.`,
+  })
+  enabled!: boolean;
+
+  @Field(() => Boolean, {
+    description: `Whether the current user has favorited this model. Favorites float to the top of / are highlighted in chat/model pickers and run selection; favoriting is orthogonal to enablement. Defaults to false for an unauthenticated request.`,
+  })
+  favorite!: boolean;
+}
+
+@ObjectType()
 export class AgentCliOptionObject {
   @Field(() => String, {
     description: `Backend discriminator (e.g. "cursor") used in StartConversationStreamInput.`,
@@ -30,9 +48,15 @@ export class AgentCliOptionObject {
   label!: string;
 
   @Field(() => [String], {
-    description: `Models this CLI can run (empty when the CLI exposes no machine-listable models or listing failed).`,
+    deprecationReason: `Use modelOptions, which carries per-user enabled + favorite state per model.`,
+    description: `Models this CLI can run (empty when the CLI exposes no machine-listable models or listing failed). Returns ALL discovered model ids, unfiltered by per-user preferences.`,
   })
   models!: string[];
+
+  @Field(() => [AgentCliModelOption], {
+    description: `Models this CLI can run, each with the current user's per-model enabled + favorite state overlaid. Empty when the CLI exposes no machine-listable models. Prefer this over the deprecated \`models\` list.`,
+  })
+  modelOptions!: AgentCliModelOption[];
 
   @Field(() => Boolean, {
     description: `True when this driver can be pointed at a custom OpenAI-compatible base URL (a discovered local endpoint); gates driver×endpoint targeting in the composer. False for claude/cursor (own cloud wire protocol).`,

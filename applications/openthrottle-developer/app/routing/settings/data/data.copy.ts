@@ -90,6 +90,11 @@ export const SETTINGS_SETUP_COPY = {
   installDisclaimerOff: `Server-side install/update is disabled. Set OT_AGENT_CLI_INSTALL_ENABLED on the server (local dev machines only) to enable the Install/Update controls.`,
   installDisclaimerOn: `Server-side install/update is enabled (OT_AGENT_CLI_INSTALL_ENABLED). Installs run allowlisted CLIs on the server host.`,
   installedBadge: `Installed`,
+  modelExpandCollapse: `Collapse models`,
+  modelExpandExpand: `Expand models`,
+  modelFavoriteLabel: `Favorite model`,
+  modelToggleLabel: `Toggle model`,
+  modelsAgentOffReason: `The agent is disabled. Re-enable it to change its models.`,
   modelsEmpty: `No machine-listable models.`,
   modelsNotInstalled: `—`,
   modelsPopoverTitle: `Models`,
@@ -101,6 +106,12 @@ export const SETTINGS_SETUP_COPY = {
 /** Pluralize the compact models summary shown in the table cell. */
 export const settingsSetupModelsSummary = (count: number): string =>
   count === 1 ? `1 model` : `${count} models`;
+
+/** "N of M enabled" hint shown next to the model-expansion affordance. */
+export const settingsSetupModelsEnabledSummary = (
+  enabled: number,
+  total: number,
+): string => `${enabled} of ${total} enabled`;
 
 /** Human labels for each setup-table filter value, keyed by the filter id. */
 export const SETTINGS_SETUP_FILTER_LABELS = {

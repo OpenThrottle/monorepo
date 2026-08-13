@@ -270,13 +270,26 @@ export class ConversationStreamResolver {
 
     // Per-user gate: a CLI backend the user disabled on /settings/setup cannot be
     // started (the openai HTTP path is not an agent CLI, so it is never gated).
-    if (
-      backend !== OPENAI_BACKEND &&
-      !(await this.agentPreferences.isEnabled(userId, backend))
-    ) {
-      return failed(
-        `The ${backend} agent is disabled. Re-enable it on Settings › Setup to use it.`,
-      );
+    if (backend !== OPENAI_BACKEND) {
+      if (!(await this.agentPreferences.isEnabled(userId, backend))) {
+        return failed(
+          `The ${backend} agent is disabled. Re-enable it on Settings › Setup to use it.`,
+        );
+      }
+
+      // Per-model gate: when the run targets a specific model of an enabled agent,
+      // a model the user disabled on /settings/setup cannot be started. Only a
+      // KNOWN-but-disabled model is blocked — an unlisted model (or a local-endpoint
+      // model) is never in the disabled set, so it passes through untouched.
+      const model = input.modelId?.trim() ?? '';
+      if (
+        model !== '' &&
+        !(await this.agentPreferences.isModelEnabled(userId, backend, model))
+      ) {
+        return failed(
+          `The ${model} model is disabled. Re-enable it on Settings › Setup to use it.`,
+        );
+      }
     }
 
     // All four composer controls are now honored end-to-end: `permissionMode`,

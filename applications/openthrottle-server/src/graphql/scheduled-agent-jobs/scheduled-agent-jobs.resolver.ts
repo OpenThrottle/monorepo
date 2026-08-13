@@ -107,7 +107,7 @@ export class ScheduledAgentJobsResolver {
     input: CreateScheduledAgentJobInputType,
   ): Promise<ScheduledAgentJobObject> {
     const ownerUserId = ownerUserIdFor(principal);
-    await this.assertAgentEnabled(ownerUserId, input.driverId);
+    await this.assertAgentEnabled(ownerUserId, input.driverId, input.model);
     const job = await this.service.create({ ...input, ownerUserId });
     return toScheduledAgentJobObject(job);
   }
@@ -123,7 +123,11 @@ export class ScheduledAgentJobsResolver {
   ): Promise<ScheduledAgentJobObject> {
     await this.assertOwner(input.id, principal);
     if (input.driverId != null) {
-      await this.assertAgentEnabled(ownerUserIdFor(principal), input.driverId);
+      await this.assertAgentEnabled(
+        ownerUserIdFor(principal),
+        input.driverId,
+        input.model,
+      );
     }
     const { id, ...rest } = input;
     const job = await this.service.update(id, rest);
@@ -181,13 +185,16 @@ export class ScheduledAgentJobsResolver {
   }
 
   /**
-   * @description Rejects scheduling a job against an agent backend the owner has disabled on
-   * /settings/setup. A null owner (service-account principal) has no per-user preferences, so the
-   * check is skipped — the job's driver id is still validated for existence by the service.
+   * @description Rejects scheduling a job against an agent backend — or a specific model of that
+   * backend — the owner has disabled on /settings/setup. A null owner (service-account principal) has
+   * no per-user preferences, so the check is skipped — the job's driver id is still validated for
+   * existence by the service. When a model is given and non-empty, a KNOWN-but-disabled model is also
+   * rejected.
    */
   private async assertAgentEnabled(
     ownerUserId: string | null,
     driverId: string,
+    model?: string | null,
   ): Promise<void> {
     if (ownerUserId === null) {
       return;
@@ -195,6 +202,19 @@ export class ScheduledAgentJobsResolver {
     if (!(await this.agentPreferences.isEnabled(ownerUserId, driverId))) {
       throw new BadRequestException(
         `The ${driverId} agent is disabled. Re-enable it on Settings › Setup to schedule it.`,
+      );
+    }
+    const trimmedModel = model?.trim() ?? '';
+    if (
+      trimmedModel !== '' &&
+      !(await this.agentPreferences.isModelEnabled(
+        ownerUserId,
+        driverId,
+        trimmedModel,
+      ))
+    ) {
+      throw new BadRequestException(
+        `The ${trimmedModel} model is disabled. Re-enable it on Settings › Setup to schedule it.`,
       );
     }
   }
