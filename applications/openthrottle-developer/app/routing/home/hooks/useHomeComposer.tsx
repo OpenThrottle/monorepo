@@ -9,14 +9,15 @@ import {
   type ChatServiceTier,
 } from '@openthrottle/react-router-chat';
 import {
+  buildChatTurnFields,
   buildModelGroups,
   capabilitiesForChatOption,
+  CHAT_TOOLBAR_PERSONAS,
   chatToolbarStateAtom,
   decodeChatOption,
   reconcileChatToolbarState,
 } from '@openthrottle/react-router-chat-state';
 import { useAtom } from 'jotai';
-import { CHAT_TOOLBAR_PERSONAS } from '~/routing/home/data/chat-toolbar';
 import type { RepositoryOption } from '~/routing/home/data/models.server';
 import type { UseAgenticChatTurnResult } from '~/routing/home/hooks/useAgenticChatTurn';
 import type { UseConversationListResult } from '~/routing/home/hooks/useConversationList';
@@ -170,30 +171,16 @@ export const useHomeComposer = (options: UseHomeComposerOptions) => {
       (mention) => mention.path,
     );
 
-    // Three shapes: the plain openai HTTP backend (baseUrl + model, no repo); a
-    // CLI backend on its own cloud model; and a CLI backend pointed at a
-    // discovered local endpoint (a driver id + baseUrl) — the last carries both
-    // the endpoint fields AND the CLI/repo fields.
-    const fields: Record<string, string> =
-      decoded.backend === 'openai'
-        ? {
-            backend: 'openai',
-            baseUrl: decoded.baseUrl ?? '',
-            modelId: decoded.model ?? '',
-            persist: String(persist),
-          }
-        : {
-            backend: decoded.backend,
-            ...(decoded.baseUrl != null ? { baseUrl: decoded.baseUrl } : {}),
-            fileMentions: JSON.stringify(fileMentions),
-            modelId: decoded.model ?? '',
-            permissionMode: permissionMode ?? '',
-            persist: String(persist),
-            personaId: personaId ?? '',
-            reasoning: reasoning ?? '',
-            repositoryId: repositoryId ?? '',
-            serviceTier: serviceTier ?? '',
-          };
+    const fields = buildChatTurnFields({
+      decoded,
+      fileMentions,
+      permissionMode,
+      persist,
+      personaId,
+      reasoning,
+      repositoryId,
+      serviceTier,
+    });
 
     turn.submitTurn(trimmed, fields);
   };

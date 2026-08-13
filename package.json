@@ -452,6 +452,7 @@
     "check:local:affected-test": "pnpm nx affected --target=test --parallel --nxBail",
     "check:local:affected-typecheck": "pnpm nx affected --target=typecheck --parallel",
     "check:local:agent-assets": "pnpm nx run monorepo:check-agent-assets-ssot && pnpm nx run monorepo:validate-agent-assets-frontmatter",
+    "check:local:audit": "pnpm run \"/^audit:(?!test-coverage).*:strict$/\"",
     "check:local:bundle-hooks": "pnpm nx run @openthrottle/agentic-hooks:bundle-hooks-check",
     "check:local:codegen": "pnpm nx affected --target=codegen-graphql,codegen-react-router --parallel",
     "check:local:component-shape": "pnpm run audit:component-shape:strict && pnpm run audit:component-shape:shadcn:strict",

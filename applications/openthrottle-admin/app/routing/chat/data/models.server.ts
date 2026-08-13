@@ -3,77 +3,33 @@ import type {
   ChatPersonaOption,
 } from '@openthrottle/react-router-chat';
 import {
-  cliGroupId,
-  encodeCliOptionId,
-  encodeModelOptionId,
-  openaiGroupId,
+  toAgentChatOptions,
+  toChatModelOptions,
+  toPersonaOptions,
 } from '@openthrottle/react-router-chat-state';
+import type { RepositoryOption } from '@openthrottle/react-router-chat-state';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
   DiscoverAgentClisDocument,
   DiscoverLocalModelsDocument,
   PersonaPromptsDocument,
   WorkspaceLocalRepositoriesDocument,
-  type DiscoverAgentClisQuery,
-  type DiscoverLocalModelsQuery,
 } from '~/__generated__/graphql';
 
 /**
  * @description Server-only loader helpers for the admin header chat's composer
- * discovery data. Mirrors the developer app's `models.server.ts`; the GraphQL
- * discovery → toolbar-option mappers are inlined here (their only consumer),
- * reusing the pure id/group helpers from `@openthrottle/react-router-chat-state`.
- * Each loader degrades to `[]` on failure so the composer renders an
+ * discovery data. The GraphQL discovery → toolbar-option mappers are single-
+ * sourced in `@openthrottle/react-router-chat-state` (shared with the developer
+ * app). Each loader degrades to `[]` on failure so the composer renders an
  * empty/disabled state rather than erroring.
  */
 
-/** A registered local checkout selectable as the working directory for a CLI agent. */
-export interface RepositoryOption {
-  readonly displayName: string;
-  readonly id: string;
-}
-
-function toChatModelOptions(
-  discovery: DiscoverLocalModelsQuery['discoverLocalModels'],
-): ChatModelOption[] {
-  return discovery.endpoints.flatMap((endpoint) => {
-    const providerOrHost = endpoint.provider ?? endpoint.host;
-    return endpoint.models.map((model) => ({
-      description: providerOrHost,
-      groupId: openaiGroupId(providerOrHost),
-      id: encodeModelOptionId(endpoint.baseUrl, model),
-      label: model,
-    }));
-  });
-}
-
-function toAgentChatOptions(
-  discovery: DiscoverAgentClisQuery['discoverAgentClis'],
-): ChatModelOption[] {
-  return discovery.agents
-    .filter((agent) => agent.chatCapable)
-    .flatMap((agent) => {
-      if (agent.models.length === 0) {
-        return [
-          {
-            description: agent.label,
-            groupId: cliGroupId(agent.backend),
-            id: agent.backend,
-            label: agent.label,
-            subLabel: agent.label,
-          },
-        ];
-      }
-
-      return agent.models.map((model) => ({
-        description: agent.label,
-        groupId: cliGroupId(agent.backend),
-        id: encodeCliOptionId(agent.backend, model),
-        label: model,
-        subLabel: agent.label,
-      }));
-    });
-}
+/**
+ * The registered-checkout option type is single-sourced in
+ * `@openthrottle/react-router-chat-state`; re-exported here so existing
+ * `~/routing/chat/data/models.server` importers keep their import path.
+ */
+export type { RepositoryOption };
 
 export async function loadDiscoveredModels(
   request: Request,
@@ -129,11 +85,7 @@ export async function loadPersonas(
   try {
     const data = await executeGraphqlWithAuth(request, PersonaPromptsDocument);
 
-    return data.customPrompts.map((persona) => ({
-      description: persona.description ?? undefined,
-      id: persona.id,
-      label: persona.title,
-    }));
+    return toPersonaOptions(data.customPrompts);
   } catch {
     return [];
   }
