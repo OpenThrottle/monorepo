@@ -5,6 +5,11 @@
  * echo during `./scripts/setup.sh` can recover the values from disk without
  * revoking/re-minting credentials. Local convenience only — never committed
  * (see `.gitignore`), never a secrets manager.
+ *
+ * Recovery for a missing token line is documented in
+ * `packages/openthrottle-mcp/docs/AUTH.md` (§ "Recovering a missing token in
+ * `.bootstrap-secrets.local`"); the six-key invariant lives in
+ * `scripts/check-bootstrap-secrets.ts`.
  */
 
 import { chmod, readFile, writeFile } from 'node:fs/promises';
@@ -74,6 +79,16 @@ async function readExistingEntries(
 
     throw error;
   }
+}
+
+/**
+ * Read the current `KEY=VALUE` entries from the git-ignored local secrets file,
+ * or an empty record when the file does not exist yet. Lets callers decide
+ * whether a durable value is already recorded (e.g. the bootstrap scripts'
+ * self-heal check) without re-implementing the parse.
+ */
+export async function readLocalSecrets(): Promise<Record<string, string>> {
+  return readExistingEntries(localSecretsPath());
 }
 
 function render(entries: Record<string, string>): string {

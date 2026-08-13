@@ -34,7 +34,22 @@ Migration `045_seed_service_accounts_bootstrap.sql` creates service accounts `op
 
 4. Restart openthrottle-server and reload the MCP in Cursor after changing tokens.
 
-If the bootstrap script skips an account because an active credential already exists, rotate via [Credential rotation](#credential-rotation) or revoke the old credential in admin GraphQL, then re-run the script.
+Every minted/rotated line is also written to the git-ignored `.bootstrap-secrets.local` at the repo root (mode `0600`) so you can recover it without scrolling back through setup output. `./scripts/setup.sh` ends by running `pnpm check:bootstrap-secrets`, which fails loudly if any of the six required keys is missing.
+
+## Recovering a missing token in `.bootstrap-secrets.local`
+
+`.bootstrap-secrets.local` must always hold all six keys: `OPENTHROTTLE_ADMIN_URL`, `OPENTHROTTLE_BOOTSTRAP_USER_EMAIL`, `OPENTHROTTLE_BOOTSTRAP_USER_PASSWORD`, `OPENTHROTTLE_DEVELOPER_URL`, `OPENTHROTTLE_MCP_AUTH_TOKEN`, `OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN`. A token line only appears when its credential is **freshly minted, rotated, or provisioned from the environment** — the stored value is a bcrypt hash, so a plaintext token can **never** be re-derived from the database once minted.
+
+`pnpm database:bootstrap-service-accounts` now **self-heals**: if a service account already has an active credential but its key is absent from the file, it revokes the stale credential(s), mints a fresh token, and writes it (restricted to the `openthrottle-mcp` / `workflow-ralph` bootstrap accounts). So the normal recovery is simply:
+
+```bash
+pnpm database:bootstrap-service-accounts   # auto-rotates the missing key
+pnpm check:bootstrap-secrets               # confirms all six keys present
+```
+
+Any previously-distributed copy of the rotated token stops working — update `OPENTHROTTLE_MCP_AUTH_TOKEN` in `applications/openthrottle-server/.env` and Cursor MCP `env`, then reload the MCP. To rotate by hand instead, revoke the active credential in admin GraphQL (see [Credential rotation](#credential-rotation)), delete the stale line, and re-run the bootstrap script.
+
+**Nuke gotcha:** `pnpm database:stop` / `docker compose down` (no `-v`) leave the named Postgres volume — and thus the existing service-account credentials — intact, so the next bootstrap sees an active credential and takes the rotate path instead of a clean first mint. For a truly fresh mint you must remove the volume with `docker compose down -v` (this destroys the local database — see [databases/README.md](../../../databases/README.md)).
 
 ## Token source (openthrottle-mcp)
 
