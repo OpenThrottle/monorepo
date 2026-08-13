@@ -1,6 +1,6 @@
 import { useContext } from 'react';
 
-import type { RolloutFlagCatalog } from '../catalog';
+import type { RolloutFlagCatalog } from '../types';
 import { RolloutContext, type RolloutContextValue } from '../data';
 
 export interface UseRolloutContextOptions {}

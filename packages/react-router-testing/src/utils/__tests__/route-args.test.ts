@@ -1,7 +1,7 @@
 import { RouterContextProvider } from 'react-router';
 import { describe, expect, it } from 'vitest';
 
-import { createActionArgs, createLoaderArgs } from './route-args';
+import { createActionArgs, createLoaderArgs } from '../route-args';
 
 describe('createLoaderArgs', () => {
   it('builds a GET request with defaults', () => {

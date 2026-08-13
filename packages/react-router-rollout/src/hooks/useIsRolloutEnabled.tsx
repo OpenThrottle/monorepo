@@ -1,4 +1,4 @@
-import type { RolloutBooleanFlagKey, RolloutFlagCatalog } from '../catalog';
+import type { RolloutBooleanFlagKey, RolloutFlagCatalog } from '../types';
 import { useRequiredRolloutContext } from './useRolloutContext';
 
 /**

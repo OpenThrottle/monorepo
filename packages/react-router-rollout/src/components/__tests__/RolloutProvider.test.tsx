@@ -2,7 +2,7 @@ import * as React from 'react';
 import { render, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { defineRolloutFlags } from '../../catalog';
+import { defineRolloutFlags } from '../../index';
 import { useRolloutContext } from '../../hooks/useRolloutContext';
 import { clearRolloutEvaluationMemoryCache } from '../../utils';
 import { RolloutProvider } from '../RolloutProvider';

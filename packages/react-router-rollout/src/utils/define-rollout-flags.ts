@@ -1,5 +1,5 @@
+import type { RolloutFlagCatalog } from '../types';
 import { assertRolloutFlagCatalog } from './assert-rollout-flag-catalog';
-import type { RolloutFlagCatalog } from './types';
 
 /**
  * Declare the app's full flag catalog (key, kind, default). Preserves literal

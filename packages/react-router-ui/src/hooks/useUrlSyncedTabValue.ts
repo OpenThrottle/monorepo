@@ -3,12 +3,12 @@ import { useSearchParams } from 'react-router';
 import type {
   UseUrlSyncedTabValueOptions,
   UseUrlSyncedTabValueResult,
-} from '../tabs/open-throttle-tabs.api';
+} from '../config/open-throttle-tabs.api';
 
 export type {
   UseUrlSyncedTabValueOptions,
   UseUrlSyncedTabValueResult,
-} from '../tabs/open-throttle-tabs.api';
+} from '../config/open-throttle-tabs.api';
 
 /**
  * Boundary helper: without a `parse` validator the raw URL string is trusted as

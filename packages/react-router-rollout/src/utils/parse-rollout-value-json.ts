@@ -1,9 +1,9 @@
 import {
   isRolloutFlagKind,
-  isRolloutFlagValueForKind,
   type RolloutFlagKind,
-  type RolloutFlagValueByKind,
-} from '../catalog';
+} from '../config/rollout-flag-kind';
+import type { RolloutFlagValueByKind } from '../types';
+import { isRolloutFlagValueForKind } from './assert-rollout-flag-catalog';
 
 /**
  * Parse a server `valueJson` string into a typed value for the given kind.

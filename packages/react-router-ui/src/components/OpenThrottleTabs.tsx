@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { Tabs, cn } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleTabsWithUrlSync } from './OpenThrottleTabsWithUrlSync';
-import type { OpenThrottleTabsProps as OpenThrottleTabsPropsContract } from '../tabs/open-throttle-tabs.api';
+import type { OpenThrottleTabsProps as OpenThrottleTabsPropsContract } from '../config/open-throttle-tabs.api';
 
-/** @see ../tabs/open-throttle-tabs.api.ts */
+/** @see ../config/open-throttle-tabs.api.ts */
 export interface OpenThrottleTabsProps extends OpenThrottleTabsPropsContract {}
 
 /**

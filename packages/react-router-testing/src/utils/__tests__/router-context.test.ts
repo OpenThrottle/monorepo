@@ -1,7 +1,7 @@
 import { RouterContextProvider } from 'react-router';
 import { describe, expect, it } from 'vitest';
 
-import { createTestRouterContext } from './router-context';
+import { createTestRouterContext } from '../router-context';
 
 describe('createTestRouterContext', () => {
   it('builds a real RouterContextProvider (satisfies loader/action context typing)', () => {
