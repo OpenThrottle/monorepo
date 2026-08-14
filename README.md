@@ -13,73 +13,52 @@
 
 ```bash
 ├── .env.default           # Default environment variables (in VC)
+├── .agents
 ├── applications           # NodeJS client and server applications
-├── databases              # OpenThrottle Postgres schema, migrations, and local DB scripts
+├── databases              # Postgres schema, migrations, and local DB scripts
 ├── docs                   # Markdown documentation (see docs/)
 ├── infra                  # Infrastructure as code (e.g. GCP, Terraform)
 ├── packages               # Shared packages that can also be published
 ├── scripts                # Scripts to make life easier (Bash + TypeScript)
 ├── services               # Shared or standalone services
-├── skills                 # Agent skills (Ralph, code review, generators, …)
+├── skills                 # Custom agent skills (Ralph, code review, generators, …)
 └── tools                  # Nx plugins, templates, workflows (see tools/)
 ```
 
 ## ⚙️ Installation
 
-> [!IMPORTANT]
+> [!Tip]
 > The setup process is automated through an initialization script.
 >
-> You can run this script `ANYTIME` you need to **reset your environment** or resolve **setup-related issues**. See the Troubleshooting section below for common scenarios where running the setup script can help.
+> You can run this script **`ANYTIME`** you need to **reset your environment** or resolve **setup-related issues**. See the Troubleshooting section below for common scenarios where running the setup script can help.
 
 ```bash
-# ⚙️ Run our setup script
 ./scripts/setup.sh
 ```
 
 ## 🚀 Get Started
 
-OpenThrottle at its core is an AI Harness built within an NX monorepo. The local stack (full walkthrough: [local-quickstart.md](./docs/openthrottle/local-quickstart.md))
+OpenThrottle is a AI Harness built in a NX monorepo using NodeJS, TypeScript, PostgreSQL, Redis, NestJS, BullMQ, React Router and much more. The local stack (full walkthrough: [local-quickstart.md](./docs/openthrottle/local-quickstart.md))
 
 ```bash
-# From the repository root
-pnpm run database:start
-pnpm run database:migrate
+# from the "openthrottle/monorepo" root
+pnpm run start
 
-# Import our skills into our DB
-pnpm run database:import-agent-assets
+  # API: 🧠 http://localhost:6021/graphql
+  # UI: 🏍️💨 http://localhost:6020
 
-# Setup the MCP servers globally
-pnpm setup:mcp-instructions
-
-# pnpm run database:bootstrap-service-accounts
+# 👋 Turn it off (if you can...)
+pnpm run stop
 ```
 
-**Server (API) only:**
+> The start command starts both the developer and server applications.
 
 ```bash
+# Server only (API + MCP)
 pnpm nx run openthrottle-server:start
-```
 
-**Server (API) and Developer (UI):**
-
-```bash
+# Server (API + MCP) and Developer (UI)
 pnpm nx run openthrottle-developer:start
-```
-
-## 🧑‍💻 Development
-
-Monorepos streamline our development process by centralizing code management, enabling faster feedback cycles, and promoting code reuse. With shared tooling, consistent standards, and atomic commits, we can maintain high velocity while ensuring quality. The unified build system and dependency management reduce context switching and eliminate version conflicts, making the development experience both efficient and enjoyable.
-
-```bash
-# full walkthrough: docs/openthrottle/local-quickstart.md
-pnpm nx run openthrottle-server:dev
-pnpm nx run openthrottle-developer:dev
-
-# Stop Postgres + Redis when finished
-pnpm run database:stop
-
-# Developer UI on the local network
-pnpm nx run openthrottle-developer:dev -- --host
 ```
 
 ## 🚦 Project status

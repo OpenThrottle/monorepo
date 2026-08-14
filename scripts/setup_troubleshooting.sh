@@ -33,7 +33,6 @@ renderVersions() {
   echo "NPM Version: $(npm --version)"
   echo "$(nx --version)"
   echo "PNPM Version: $(pnpm --version)"
-  echo "Yarn Version: $(yarn --version)"
   echo ""
 }
 
@@ -43,7 +42,7 @@ renderVersions() {
 #
 ###############################################################################
 echo ""
-echo "🛟 troubleshooting.sh"
+echo "🛟 setup_troubleshooting.sh"
 echo ""
 echo "This script will check for known issues with your system that may cause issues with the monorepo \n"
 
@@ -56,7 +55,6 @@ check_brew_package "node"
 check_brew_package "nx" true
 check_brew_package "npm"
 check_brew_package "pnpm" true
-check_brew_package "yarn" true
 
 ###############################################################################
 #
@@ -99,7 +97,7 @@ then
   exit 1
 else
   echo ""
-  echo "✅ troubleshooting.sh ~ no issues found!"
+  echo "✅ setup_troubleshooting.sh ~ no issues found!"
   echo ""
 
   exit 0

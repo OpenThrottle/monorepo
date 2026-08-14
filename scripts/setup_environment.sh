@@ -43,7 +43,7 @@ then
 fi
 
 echo ""
-echo "🔐 environment.sh"
+echo "🔐 setup_environment.sh"
 echo ""
 echo "This script creates a local ".env" file, resetting to our defaults if the user wants to."
 echo ""
@@ -100,5 +100,5 @@ done
 cd "$DIR_START"
 
 echo ""
-echo "✅ environment.sh"
+echo "✅ setup_environment.sh"
 echo ""
