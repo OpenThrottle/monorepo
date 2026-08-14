@@ -792,6 +792,16 @@ type SetAgentModelEnabledResult {
   enabled: Boolean!
 }
 
+type SetAgentModelsEnabledResult {
+  """The backend (driver id) whose models were bulk-toggled."""
+  backend: String!
+
+  """
+  The per-model enablement state applied to every model of the backend: true = all enabled, false = all disabled.
+  """
+  enabled: Boolean!
+}
+
 type SetAgentModelFavoriteResult {
   """The backend (driver id) the favorited model belongs to."""
   backend: String!
@@ -4271,6 +4281,11 @@ type Mutation {
   Enable or disable a single MODEL of an agent CLI backend for the current user. A disabled model is hidden from chat/model pickers and rejected when starting new runs, even while the agent itself stays enabled (an agent-level OFF hard-overrides all its models). Presence-as-disabled: enabled=false records the preference, enabled=true clears it (default is enabled). Gated by SETTINGS_WRITE; rejects unknown backends.
   """
   setAgentModelEnabled(backend: String!, model: String!, enabled: Boolean!): SetAgentModelEnabledResult!
+
+  """
+  Bulk enable or disable EVERY model of an agent CLI backend for the current user (the select-all / deselect-all affordance). enabled=true clears all per-model disables for the backend; enabled=false records each supplied model id as disabled. An agent-level OFF still hard-overrides all its models. Gated by SETTINGS_WRITE; rejects unknown backends.
+  """
+  setAgentModelsEnabled(backend: String!, models: [String!]!, enabled: Boolean!): SetAgentModelsEnabledResult!
 
   """
   Star or unstar a single MODEL of an agent CLI backend for the current user. Favorited models float to the top of / are highlighted in chat/model pickers and run selection. Favoriting is orthogonal to enablement — it never enables a disabled model. Presence-as-favorite: favorite=true records the star, favorite=false clears it. Gated by SETTINGS_WRITE; rejects unknown backends.

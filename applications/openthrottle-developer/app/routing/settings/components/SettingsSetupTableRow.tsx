@@ -8,6 +8,7 @@ import {
 } from '~/routing/settings/data/data.copy';
 import { SettingsSetupAgentToggle } from '~/routing/settings/components/SettingsSetupAgentToggle';
 import { SettingsSetupCliControls } from '~/routing/settings/components/SettingsSetupCliControls';
+import { SettingsSetupModelBulkToggle } from '~/routing/settings/components/SettingsSetupModelBulkToggle';
 import { SettingsSetupModelRow } from '~/routing/settings/components/SettingsSetupModelRow';
 import type { AgentCliStatus } from '~/routing/settings/data/agent-clis.data';
 
@@ -129,6 +130,21 @@ export const SettingsSetupTableRow = (
         >
           <TableCell colSpan={SETTINGS_SETUP_COLUMN_COUNT}>
             <div className="bg-muted/30 rounded-md px-3 py-1">
+              <div className="flex items-center justify-between gap-3 border-b py-1">
+                <span className="text-muted-foreground text-xs">
+                  {settingsSetupModelsEnabledSummary(
+                    enabledCount,
+                    models.length,
+                  )}
+                </span>
+                <SettingsSetupModelBulkToggle
+                  agentDisabled={!enabled}
+                  backend={backend}
+                  canManage={canManage}
+                  enabledCount={enabledCount}
+                  models={models}
+                />
+              </div>
               {modelOptions.map((model) => (
                 <SettingsSetupModelRow
                   agentDisabled={!enabled}

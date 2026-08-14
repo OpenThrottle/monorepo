@@ -1702,6 +1702,8 @@ export type Mutation = {
   setAgentModelEnabled: SetAgentModelEnabledResult;
   /** Star or unstar a single MODEL of an agent CLI backend for the current user. Favorited models float to the top of / are highlighted in chat/model pickers and run selection. Favoriting is orthogonal to enablement — it never enables a disabled model. Presence-as-favorite: favorite=true records the star, favorite=false clears it. Gated by SETTINGS_WRITE; rejects unknown backends. */
   setAgentModelFavorite: SetAgentModelFavoriteResult;
+  /** Bulk enable or disable EVERY model of an agent CLI backend for the current user (the select-all / deselect-all affordance). enabled=true clears all per-model disables for the backend; enabled=false records each supplied model id as disabled. An agent-level OFF still hard-overrides all its models. Gated by SETTINGS_WRITE; rejects unknown backends. */
+  setAgentModelsEnabled: SetAgentModelsEnabledResult;
   /** Enable or disable the authenticated user's connection for a connector. */
   setMcpConnectorEnabled?: Maybe<McpConnectorConnectionResultObject>;
   /** Set a plan's status (e.g. COMPLETED). Convenience mutation for Mark Complete; equivalent to updatePlan with { id, status }. */
@@ -2166,6 +2168,12 @@ export type MutationSetAgentModelFavoriteArgs = {
   backend: Scalars['String']['input'];
   favorite: Scalars['Boolean']['input'];
   model: Scalars['String']['input'];
+};
+
+export type MutationSetAgentModelsEnabledArgs = {
+  backend: Scalars['String']['input'];
+  enabled: Scalars['Boolean']['input'];
+  models: Array<Scalars['String']['input']>;
 };
 
 export type MutationSetMcpConnectorEnabledArgs = {
@@ -4176,6 +4184,14 @@ export type SetAgentModelFavoriteResult = {
   favorite: Scalars['Boolean']['output'];
   /** The model id whose favorite state was toggled. */
   model: Scalars['String']['output'];
+};
+
+export type SetAgentModelsEnabledResult = {
+  __typename?: 'SetAgentModelsEnabledResult';
+  /** The backend (driver id) whose models were bulk-toggled. */
+  backend: Scalars['String']['output'];
+  /** The per-model enablement state applied to every model of the backend: true = all enabled, false = all disabled. */
+  enabled: Scalars['Boolean']['output'];
 };
 
 export type SetMcpConnectorEnabledInput = {

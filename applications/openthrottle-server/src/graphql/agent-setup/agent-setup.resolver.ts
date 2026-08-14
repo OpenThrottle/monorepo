@@ -46,6 +46,7 @@ import {
   SetAgentEnabledResult,
   SetAgentModelEnabledResult,
   SetAgentModelFavoriteResult,
+  SetAgentModelsEnabledResult,
   StartAgentSetupResult,
 } from './agent-setup.object';
 import { AgentSetupService } from './agent-setup.service';
@@ -130,6 +131,34 @@ export class AgentSetupResolver {
       enabled,
     );
     return { backend, enabled, model };
+  }
+
+  @Mutation(() => SetAgentModelsEnabledResult, {
+    description: `Bulk enable or disable EVERY model of an agent CLI backend for the current user (the select-all / deselect-all affordance). enabled=true clears all per-model disables for the backend; enabled=false records each supplied model id as disabled. An agent-level OFF still hard-overrides all its models. Gated by SETTINGS_WRITE; rejects unknown backends.`,
+    name: 'setAgentModelsEnabled',
+  })
+  @UseGuards(GqlPermissionsGuard)
+  @Permissions(PERMISSIONS.SETTINGS_WRITE)
+  async setAgentModelsEnabled(
+    @CurrentUser() principal: AuthPrincipal | undefined,
+    @Args('backend', { type: () => String }) backend: string,
+    @Args('models', { type: () => [String] }) models: string[],
+    @Args('enabled', { type: () => Boolean }) enabled: boolean,
+  ): Promise<SetAgentModelsEnabledResult> {
+    if (principal == null) {
+      throw new ForbiddenException('An authenticated user is required.');
+    }
+    if (!isDriverId(backend)) {
+      throw new BadRequestException(`Unknown agent CLI backend: ${backend}.`);
+    }
+
+    await this.preferences.setModelsEnabled(
+      principal.sub,
+      backend,
+      models,
+      enabled,
+    );
+    return { backend, enabled };
   }
 
   @Mutation(() => SetAgentModelFavoriteResult, {

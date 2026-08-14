@@ -25,6 +25,7 @@ function build(
   resolver: AgentSetupResolver;
   setModelEnabled: ReturnType<typeof vi.fn>;
   setModelFavorite: ReturnType<typeof vi.fn>;
+  setModelsEnabled: ReturnType<typeof vi.fn>;
   setPreferenceEnabled: ReturnType<typeof vi.fn>;
   start: ReturnType<typeof vi.fn>;
 } {
@@ -44,16 +45,19 @@ function build(
   const setPreferenceEnabled = vi.fn().mockResolvedValue(undefined);
   const setModelEnabled = vi.fn().mockResolvedValue(undefined);
   const setModelFavorite = vi.fn().mockResolvedValue(undefined);
+  const setModelsEnabled = vi.fn().mockResolvedValue(undefined);
   const preferences = createMock<AgentCliPreferencesService>({
     setEnabled: setPreferenceEnabled,
     setModelEnabled,
     setModelFavorite,
+    setModelsEnabled,
   });
   const setupService = createMock<AgentSetupService>({ start });
   return {
     resolver: new AgentSetupResolver(config, preferences, roles, setupService),
     setModelEnabled,
     setModelFavorite,
+    setModelsEnabled,
     setPreferenceEnabled,
     start,
   };
@@ -192,6 +196,41 @@ describe('AgentSetupResolver', () => {
         resolver.setAgentModelEnabled(undefined, 'claude', 'opus', false),
       ).rejects.toThrow(/authenticated user/);
       expect(setModelEnabled).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('setAgentModelsEnabled', () => {
+    it('bulk-persists the state for every model and echoes it', async () => {
+      const { resolver, setModelsEnabled } = build(true);
+      const result = await resolver.setAgentModelsEnabled(
+        human,
+        'cursor',
+        ['a', 'b'],
+        false,
+      );
+      expect(result).toEqual({ backend: 'cursor', enabled: false });
+      expect(setModelsEnabled).toHaveBeenCalledWith(
+        'user-1',
+        'cursor',
+        ['a', 'b'],
+        false,
+      );
+    });
+
+    it('rejects an unknown backend without persisting', async () => {
+      const { resolver, setModelsEnabled } = build(true);
+      await expect(
+        resolver.setAgentModelsEnabled(human, 'nope', ['a'], true),
+      ).rejects.toThrow(/Unknown agent CLI backend/);
+      expect(setModelsEnabled).not.toHaveBeenCalled();
+    });
+
+    it('rejects an unauthenticated principal', async () => {
+      const { resolver, setModelsEnabled } = build(true);
+      await expect(
+        resolver.setAgentModelsEnabled(undefined, 'cursor', ['a'], true),
+      ).rejects.toThrow(/authenticated user/);
+      expect(setModelsEnabled).not.toHaveBeenCalled();
     });
   });
 
