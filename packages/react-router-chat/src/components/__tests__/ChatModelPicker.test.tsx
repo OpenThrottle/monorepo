@@ -240,4 +240,35 @@ describe('ChatModelPicker Component', () => {
 
     expect(onModelChange).toHaveBeenCalledWith('claude::sonnet');
   });
+
+  test('renders the rail settings gear when onOpenSettings is provided', async () => {
+    const user = userEvent.setup();
+    const component = renderPicker({ onOpenSettings: vi.fn() });
+    await openPicker(component, user);
+
+    const gear = component.getByTestId('ChatModelPicker-rail-settings');
+    expect(gear).toBeInTheDocument();
+    expect(gear).toHaveAttribute('aria-label', 'Agent setup');
+  });
+
+  test('omits the rail settings gear when onOpenSettings is not provided', async () => {
+    const user = userEvent.setup();
+    const component = renderPicker();
+    await openPicker(component, user);
+
+    expect(
+      component.queryByTestId('ChatModelPicker-rail-settings'),
+    ).not.toBeInTheDocument();
+  });
+
+  test('invokes onOpenSettings when the rail gear is clicked', async () => {
+    const onOpenSettings = vi.fn();
+    const user = userEvent.setup();
+    const component = renderPicker({ onOpenSettings });
+    await openPicker(component, user);
+
+    await user.click(component.getByTestId('ChatModelPicker-rail-settings'));
+
+    expect(onOpenSettings).toHaveBeenCalledTimes(1);
+  });
 });

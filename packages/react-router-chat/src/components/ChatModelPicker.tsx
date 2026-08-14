@@ -12,6 +12,7 @@ import {
 import { ChevronsUpDown } from 'lucide-react';
 import clsx from 'clsx';
 import { ChatModelPickerRailItem } from './ChatModelPickerRailItem';
+import { ChatModelPickerRailSettings } from './ChatModelPickerRailSettings';
 import { ChatModelPickerRow } from './ChatModelPickerRow';
 import { useChatModelPicker } from '../hooks/use-chat-model-picker';
 import type { ChatModelGroup, ChatModelOption } from '../types';
@@ -34,6 +35,12 @@ export interface ChatModelPickerProps {
   readonly groups: readonly ChatModelGroup[];
   readonly models: readonly ChatModelOption[];
   readonly onModelChange: (modelId: string) => void;
+  /**
+   * Open the agent-setup surface. When provided, a gear button pins to the
+   * bottom of the left rail (below the agent selections). Omit to hide it.
+   * Presentational — the consumer supplies the navigation.
+   */
+  readonly onOpenSettings?: () => void;
   /**
    * Toggle a model's favorite flag. Omit to hide the star affordance entirely
    * (favorites still render in their own group when `favorite` is set).
@@ -70,6 +77,7 @@ export const ChatModelPicker = (
     groups,
     models,
     onModelChange,
+    onOpenSettings,
     onToggleFavorite,
     placeholder = 'Select model',
     searchPlaceholder = 'Search models…',
@@ -140,18 +148,23 @@ export const ChatModelPicker = (
         data-testid="ChatModelPicker-content"
       >
         <div
-          className="bg-muted/40 flex max-h-80 flex-col gap-1 overflow-y-auto border-r p-1.5"
+          className="bg-muted/40 --max-h-80 flex flex-col gap-1 border-r p-1.5"
           data-testid="ChatModelPicker-rail"
         >
-          {resolvedGroups.map((group, index) => (
-            <ChatModelPickerRailItem
-              group={group}
-              index={index}
-              isActive={activeGroup?.id === group.id}
-              key={`${group.id}-${index}`}
-              onSelect={onSelectRail}
-            />
-          ))}
+          <div className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
+            {resolvedGroups.map((group, index) => (
+              <ChatModelPickerRailItem
+                group={group}
+                index={index}
+                isActive={activeGroup?.id === group.id}
+                key={`${group.id}-${index}`}
+                onSelect={onSelectRail}
+              />
+            ))}
+          </div>
+          {onOpenSettings != null ? (
+            <ChatModelPickerRailSettings onOpenSettings={onOpenSettings} />
+          ) : null}
         </div>
         <Command className="min-w-0 flex-1" shouldFilter={true}>
           <CommandInput

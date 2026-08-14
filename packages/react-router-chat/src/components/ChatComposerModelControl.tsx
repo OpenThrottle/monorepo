@@ -11,6 +11,8 @@ export interface ChatComposerModelControlProps {
   /** Selectable models; the control renders nothing when empty/omitted. */
   readonly models?: readonly ChatModelOption[];
   readonly onModelChange?: (modelId: string) => void;
+  /** Forwarded to the grouped {@link ChatModelPicker}; omit to hide the gear. */
+  readonly onOpenSettings?: () => void;
   readonly onToggleFavorite?: (modelId: string) => void;
 }
 
@@ -31,6 +33,7 @@ export const ChatComposerModelControl = (
     modelId,
     models,
     onModelChange,
+    onOpenSettings,
     onToggleFavorite,
   } = props;
 
@@ -57,6 +60,7 @@ export const ChatComposerModelControl = (
         groups={modelGroups}
         models={models}
         onModelChange={onModelChange ?? (() => undefined)}
+        onOpenSettings={onOpenSettings}
         onToggleFavorite={onToggleFavorite}
         selectedModelId={modelId}
       />
