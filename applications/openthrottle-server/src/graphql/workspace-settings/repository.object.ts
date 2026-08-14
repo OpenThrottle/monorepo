@@ -116,6 +116,11 @@ export class RepositoryCheckoutObject {
   })
   managed!: boolean;
 
+  @Field(() => Boolean, {
+    description: `True when this user opts this checkout into foreign-workspace skill injection (OpenThrottle curated skills projected in on foreign runs). Default false (opt-in).`,
+  })
+  foreignSkillInjectionEnabled!: boolean;
+
   @Field(() => String, {
     description: `'primary' or 'worktree' (worktree reserved for future workflow unification).`,
   })

@@ -111,6 +111,49 @@ describe('buildForeignWorkspacePromptLayer', () => {
     expect(layer).not.toContain('the OpenThrottle monorepo lives at');
     expect(layer).toContain('/other/repo');
   });
+
+  it('forbids /skills when nothing was injected (default)', () => {
+    const layer = buildForeignWorkspacePromptLayer({
+      isForeign: true,
+      openThrottleRoot: OT_ROOT,
+      workingDirectory: '/other/repo',
+    });
+    expect(layer).toContain('/skills');
+    expect(layer).not.toContain('has made these curated skills available');
+  });
+
+  it('advertises injected skills and stops forbidding /skills', () => {
+    const layer = buildForeignWorkspacePromptLayer(
+      {
+        isForeign: true,
+        openThrottleRoot: OT_ROOT,
+        workingDirectory: '/other/repo',
+      },
+      { injectedSkillNames: ['create-readme', 'ot-plans'] },
+    );
+    expect(layer).toBeDefined();
+    // The curated skills are advertised as available…
+    expect(layer).toContain('/create-readme');
+    expect(layer).toContain('/ot-plans');
+    expect(layer).toContain('has made these curated skills available');
+    // …and the denylist no longer names /skills, but still forbids OT tooling.
+    expect(layer).not.toContain(' /skills');
+    expect(layer).toContain('@tools/generators');
+    expect(layer).toContain('OpenThrottle-monorepo-specific');
+  });
+
+  it('treats an empty injected list like no injection', () => {
+    const layer = buildForeignWorkspacePromptLayer(
+      {
+        isForeign: true,
+        openThrottleRoot: OT_ROOT,
+        workingDirectory: '/other/repo',
+      },
+      { injectedSkillNames: [] },
+    );
+    expect(layer).toContain('/skills');
+    expect(layer).not.toContain('has made these curated skills available');
+  });
 });
 
 describe('resolveForeignWorkspacePromptLayer', () => {

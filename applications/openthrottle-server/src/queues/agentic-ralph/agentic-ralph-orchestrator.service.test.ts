@@ -1,6 +1,7 @@
 /**
  * @description Unit tests for in-process Ralph orchestrator run-start worktree
- * checkout registration (soft-fail, once-per-start, skip when checkout_id set).
+ * checkout registration (soft-fail, once-per-start, skip when checkout_id set)
+ * and the per-user foreign-skill injection gate (opt-in via the actor's checkout).
  */
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -9,10 +10,31 @@ import type { AgenticWorkflowRegistry } from '@openthrottle/nestjs-agentic-workf
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   PlanRunsService,
+  RepositoryCheckoutsService,
   type PlanRun,
+  type RepositoryCheckout,
 } from '@openthrottle/nestjs-repositories';
 import { PlanRunWorktreeCheckoutService } from '../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.service';
 import { AgenticRalphOrchestratorService } from './agentic-ralph-orchestrator.service';
+
+// Force the run's path to read as foreign and stub the materializer so the gate is
+// exercised deterministically (no filesystem, no env-derived OT-root fragility).
+const { mockEnsureMaterialized, mockResolveForeign } = vi.hoisted(() => ({
+  mockEnsureMaterialized: vi.fn(),
+  mockResolveForeign: vi.fn(),
+}));
+
+vi.mock('@openthrottle/openthrottle-agentic-utils', async (importOriginal) => {
+  const actual =
+    await importOriginal<
+      typeof import('@openthrottle/openthrottle-agentic-utils')
+    >();
+  return {
+    ...actual,
+    ensureMaterialized: mockEnsureMaterialized,
+    resolveForeignWorkspaceContext: mockResolveForeign,
+  };
+});
 
 const mockExecute = vi.fn();
 const mockCreateOrchestrator = vi.fn(() => ({ execute: mockExecute }));
@@ -71,6 +93,7 @@ describe('AgenticRalphOrchestratorService worktree checkout registration', () =>
   const mockFindByQueueNameAndBullmqJobId = vi.fn();
   const mockReadCancelRequested = vi.fn().mockResolvedValue(null);
   const mockRegister = vi.fn().mockResolvedValue(null);
+  const mockFindByUserAndPath = vi.fn();
   const mockDebug = vi.fn();
   const mockWarn = vi.fn();
 
@@ -84,6 +107,18 @@ describe('AgenticRalphOrchestratorService worktree checkout registration', () =>
     mockFindByQueueNameAndBullmqJobId.mockReset();
     mockRegister.mockReset();
     mockRegister.mockResolvedValue(null);
+    mockFindByUserAndPath.mockReset();
+    mockFindByUserAndPath.mockResolvedValue(null);
+    mockEnsureMaterialized.mockReset();
+    mockEnsureMaterialized.mockReturnValue({
+      injectedNames: ['ot-plans'],
+      warnings: [],
+    });
+    mockResolveForeign.mockReset();
+    mockResolveForeign.mockReturnValue({
+      isForeign: true,
+      openThrottleRoot: '/ot-root',
+    });
     mockDebug.mockReset();
     mockWarn.mockReset();
 
@@ -96,6 +131,9 @@ describe('AgenticRalphOrchestratorService worktree checkout registration', () =>
       }),
       createMock<PlanRunWorktreeCheckoutService>({
         register: mockRegister,
+      }),
+      createMock<RepositoryCheckoutsService>({
+        findByUserAndPath: mockFindByUserAndPath,
       }),
     );
   });
@@ -189,5 +227,130 @@ describe('AgenticRalphOrchestratorService worktree checkout registration', () =>
       expect(mockRegister).not.toHaveBeenCalled();
       expect(mockExecute).toHaveBeenCalledTimes(1);
     });
+  });
+});
+
+describe('AgenticRalphOrchestratorService foreign-skill injection gate', () => {
+  const mockFindByQueueNameAndBullmqJobId = vi.fn();
+  const mockReadCancelRequested = vi.fn().mockResolvedValue(null);
+  const mockRegister = vi.fn().mockResolvedValue(null);
+  const mockFindByUserAndPath = vi.fn();
+
+  let service: AgenticRalphOrchestratorService;
+
+  const checkout = (enabled: boolean): RepositoryCheckout =>
+    createMock<RepositoryCheckout>({
+      filesystemPath: WORKTREE_PATH,
+      foreignSkillInjectionEnabled: enabled,
+      userId: USER_ID,
+    });
+
+  beforeEach(() => {
+    mockExecute.mockReset();
+    mockExecute.mockResolvedValue({ reason: 'done', status: 'finished' });
+    mockCreateOrchestrator.mockClear();
+    mockResolve.mockClear();
+    mockFindByQueueNameAndBullmqJobId.mockReset();
+    mockFindByQueueNameAndBullmqJobId.mockResolvedValue(buildRun());
+    mockRegister.mockReset();
+    mockRegister.mockResolvedValue(null);
+    mockFindByUserAndPath.mockReset();
+    mockEnsureMaterialized.mockReset();
+    mockEnsureMaterialized.mockReturnValue({
+      injectedNames: ['ot-plans'],
+      warnings: [],
+    });
+    mockResolveForeign.mockReset();
+    mockResolveForeign.mockReturnValue({
+      isForeign: true,
+      openThrottleRoot: '/ot-root',
+    });
+
+    service = new AgenticRalphOrchestratorService(
+      createMock<AgenticWorkflowRegistry>({ resolve: mockResolve }),
+      createMock<LoggerService>(),
+      createMock<PlanRunsService>({
+        findByQueueNameAndBullmqJobId: mockFindByQueueNameAndBullmqJobId,
+        readCancelRequested: mockReadCancelRequested,
+      }),
+      createMock<PlanRunWorktreeCheckoutService>({ register: mockRegister }),
+      createMock<RepositoryCheckoutsService>({
+        findByUserAndPath: mockFindByUserAndPath,
+      }),
+    );
+  });
+
+  const run = async (): Promise<void> => {
+    await service.runPlanOrchestratorJob({
+      correlation: {
+        correlationId: QUEUE_JOB_ID,
+        queueJobId: QUEUE_JOB_ID,
+        queueName: QUEUE_NAME,
+      },
+      jobData: {
+        planId: PLAN_ID,
+        runKind: 'orchestrator',
+        workingDirectory: WORKTREE_PATH,
+      },
+    });
+  };
+
+  it('materializes and forwards injected skills when the actor opted the checkout in', async () => {
+    mockFindByUserAndPath.mockResolvedValueOnce(checkout(true));
+
+    await run();
+
+    expect(mockFindByUserAndPath).toHaveBeenCalledWith(USER_ID, WORKTREE_PATH);
+    expect(mockEnsureMaterialized).toHaveBeenCalledTimes(1);
+    expect(mockEnsureMaterialized).toHaveBeenCalledWith(
+      expect.objectContaining({ repoPath: WORKTREE_PATH }),
+    );
+    expect(mockExecute).toHaveBeenCalledWith({
+      context: expect.objectContaining({ injectedSkillNames: ['ot-plans'] }),
+    });
+  });
+
+  it('skips injection when the checkout is opted out', async () => {
+    mockFindByUserAndPath.mockResolvedValueOnce(checkout(false));
+
+    await run();
+
+    expect(mockEnsureMaterialized).not.toHaveBeenCalled();
+    expect(mockExecute).toHaveBeenCalledWith({
+      context: expect.not.objectContaining({
+        injectedSkillNames: expect.anything(),
+      }),
+    });
+  });
+
+  it('skips injection when the path is not a registered checkout', async () => {
+    mockFindByUserAndPath.mockResolvedValueOnce(null);
+
+    await run();
+
+    expect(mockEnsureMaterialized).not.toHaveBeenCalled();
+  });
+
+  it('skips injection (no checkout lookup) when the run is not foreign', async () => {
+    mockResolveForeign.mockReturnValueOnce({
+      isForeign: false,
+      openThrottleRoot: '/ot-root',
+    });
+
+    await run();
+
+    expect(mockFindByUserAndPath).not.toHaveBeenCalled();
+    expect(mockEnsureMaterialized).not.toHaveBeenCalled();
+  });
+
+  it('skips injection when the actor user cannot be resolved', async () => {
+    mockFindByQueueNameAndBullmqJobId.mockResolvedValue(
+      buildRun({ actorUserId: null }),
+    );
+
+    await run();
+
+    expect(mockFindByUserAndPath).not.toHaveBeenCalled();
+    expect(mockEnsureMaterialized).not.toHaveBeenCalled();
   });
 });

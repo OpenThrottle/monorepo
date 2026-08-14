@@ -10,6 +10,7 @@
   "dependencies": {
     "@openthrottle/openthrottle-agentic-workflow": "workspace:^",
     "@openthrottle/openthrottle-drivers": "workspace:^",
+    "@openthrottle/openthrottle-skills": "workspace:^",
     "openai": "catalog:"
   },
   "devDependencies": {

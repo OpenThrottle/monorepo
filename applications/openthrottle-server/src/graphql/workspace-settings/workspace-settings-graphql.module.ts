@@ -7,6 +7,7 @@ import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
+import { ForeignSkillInjectionModule } from '../../services/foreign-skill-injection/foreign-skill-injection.module';
 import { RepositoryInspectionModule } from '../repository-inspection/repository-inspection.module';
 import './workspace-editor-id.enum';
 import './user-workspace-profile.object';
@@ -24,7 +25,12 @@ import { WorkspaceSettingsLoaders } from './workspace-settings-loaders';
 import { WorkspaceSettingsResolver } from './workspace-settings.resolver';
 
 @Module({
-  imports: [LoggerModule, NestjsRepositoriesModule, RepositoryInspectionModule],
+  imports: [
+    ForeignSkillInjectionModule,
+    LoggerModule,
+    NestjsRepositoriesModule,
+    RepositoryInspectionModule,
+  ],
   providers: [
     GqlPermissionsGuard,
     WorkspaceFoldersResolver,

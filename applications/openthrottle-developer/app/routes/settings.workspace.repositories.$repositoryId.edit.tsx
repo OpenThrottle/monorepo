@@ -94,6 +94,8 @@ export const action = async (args: Route.ActionArgs) => {
       await executeGraphqlWithAuth(args.request, UpdateRepositoryDocument, {
         input: {
           defaultBranch: optionalTrimmedString(formData.get('defaultBranch')),
+          foreignSkillInjectionEnabled:
+            formData.get('foreignSkillInjectionEnabled') === 'true',
           id: args.params.repositoryId,
           name: optionalTrimmedString(formData.get('name')),
           projectId: parseProjectIdFromFormData(formData.get('projectId')),

@@ -284,20 +284,14 @@ const KNOWN_CONTENT_DIVERGENCES: readonly KnownDivergence[] = [
     field: 'description',
     path: '.agents/skills/link-workspace-packages/SKILL.md',
   },
-  {
-    // This file's description uses a *clip*-chomped folded block scalar
-    // (`>`, not `>-`): real YAML keeps exactly one trailing newline, while
-    // the retired parser always `.trim()`ed the assembled block regardless
-    // of the chomping indicator. So the new value is exactly the old value
-    // plus one trailing `\n`.
-    assertRelationship: (oldValue, newValue) => {
-      assertIsString(oldValue);
-      assertIsString(newValue);
-      expect(`${oldValue}\n`).toBe(newValue);
-    },
-    field: 'description',
-    path: '.agents/skills/brag-sheet/SKILL.md',
-  },
+  // NOTE: `.agents/skills/brag-sheet/SKILL.md` used to diverge here (its
+  // description was a *clip*-chomped folded block scalar — `>`, not `>-` —
+  // so real YAML keeps exactly one trailing newline while the retired parser
+  // always `.trim()`ed the assembled block). That skill was removed in
+  // a57e40d9 ("remove unused skills"), so no corpus file exercises the
+  // clip-chomp divergence anymore and its entry is dropped from this list.
+  // Any future `>`-chomped frontmatter reintroduces the divergence and will
+  // fail this suite loudly until it is documented here again.
   {
     // This file declares `allowed-tools:` as a *block* sequence (`- item`
     // lines). The retired regex parser had no block-sequence support at all

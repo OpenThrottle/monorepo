@@ -2989,6 +2989,9 @@ importers:
       '@openthrottle/openthrottle-drivers':
         specifier: workspace:^
         version: link:../openthrottle-drivers
+      '@openthrottle/openthrottle-skills':
+        specifier: workspace:^
+        version: link:../openthrottle-skills
       openai:
         specifier: 'catalog:'
         version: 6.49.0(ws@8.21.1)(zod@4.4.3)

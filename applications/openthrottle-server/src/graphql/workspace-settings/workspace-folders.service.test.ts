@@ -28,6 +28,7 @@ import {
   it,
   vi,
 } from 'vitest';
+import { ForeignSkillMaterializationService } from '../../services/foreign-skill-injection/foreign-skill-materialization.service';
 import { RepositoryInspectionService } from '../repository-inspection/repository-inspection.service';
 import { NATIVE_PICKER_ENV } from './native-folder-picker';
 import {
@@ -69,12 +70,18 @@ describe('WorkspaceFoldersService', () => {
     mockCheckoutsService,
   );
 
+  const mockForeignSkillMaterialization =
+    createMock<ForeignSkillMaterializationService>({
+      applyForRepository: vi.fn(),
+    });
+
   const service = new WorkspaceFoldersService(
     createMock<LoggerService>(),
     mockCheckoutsService,
     inspectionService,
     mockProjectsService,
     mockRepositoriesService,
+    mockForeignSkillMaterialization,
   );
 
   let workspaceRoot: string;
@@ -111,6 +118,10 @@ describe('WorkspaceFoldersService', () => {
       [],
     );
     vi.mocked(mockCheckoutsService.saveInspection).mockReset();
+    vi.mocked(
+      mockCheckoutsService.setForeignSkillInjectionEnabledForRepository,
+    ).mockReset();
+    vi.mocked(mockForeignSkillMaterialization.applyForRepository).mockReset();
     vi.mocked(mockProjectsService.create).mockReset();
     vi.mocked(mockProjectsService.create).mockResolvedValue(
       asMock<Project>({ id: 'auto-project', name: 'Fixture' }),
@@ -721,6 +732,52 @@ describe('WorkspaceFoldersService', () => {
           projectId: null,
         },
       );
+    });
+
+    it('persists the injection flag and applies it to disk on a flag-only edit', async () => {
+      const repository = asMock<Repository>({
+        id: 'repo-inject',
+        name: 'acme/monorepo',
+        projectId: null,
+      });
+      vi.mocked(
+        mockCheckoutsService.findByRepositoryIdForUser,
+      ).mockResolvedValue([ownedCheckout(repository)]);
+
+      await service.updateRepository(userId, {
+        foreignSkillInjectionEnabled: true,
+        id: 'repo-inject',
+      });
+
+      expect(
+        mockCheckoutsService.setForeignSkillInjectionEnabledForRepository,
+      ).toHaveBeenCalledWith(userId, 'repo-inject', true);
+      expect(
+        mockForeignSkillMaterialization.applyForRepository,
+      ).toHaveBeenCalledWith(userId, 'repo-inject', true);
+      // Flag-only edit must not touch the shared repository row.
+      expect(mockRepositoriesService.update).not.toHaveBeenCalled();
+    });
+
+    it('does not apply injection when the flag is omitted', async () => {
+      const repository = asMock<Repository>({
+        id: 'repo-noinject',
+        name: 'acme/monorepo',
+        projectId: null,
+      });
+      vi.mocked(
+        mockCheckoutsService.findByRepositoryIdForUser,
+      ).mockResolvedValue([ownedCheckout(repository)]);
+      vi.mocked(mockRepositoriesService.update).mockResolvedValue(repository);
+
+      await service.updateRepository(userId, {
+        id: 'repo-noinject',
+        name: 'renamed',
+      });
+
+      expect(
+        mockForeignSkillMaterialization.applyForRepository,
+      ).not.toHaveBeenCalled();
     });
 
     it('rejects an edit when the user owns no checkout of the repository', async () => {

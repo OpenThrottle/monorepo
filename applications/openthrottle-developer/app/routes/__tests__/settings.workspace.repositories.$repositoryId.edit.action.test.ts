@@ -69,6 +69,7 @@ describe('routes/settings.workspace.repositories.$repositoryId.edit action', () 
       {
         input: {
           defaultBranch: 'main',
+          foreignSkillInjectionEnabled: false,
           id: 'repo-1',
           name: 'monorepo',
           projectId: 'project-1',

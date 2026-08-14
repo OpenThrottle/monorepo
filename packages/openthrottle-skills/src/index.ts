@@ -31,6 +31,25 @@ export type {
 } from './default-skill-tag-vocabulary.ts';
 
 /** @public */
+export { discoverSkillDirs } from './discover-skill-dirs.ts';
+export type {
+  DiscoveredSkill,
+  DiscoverSkillDirsResult,
+} from './discover-skill-dirs.ts';
+
+/** @public */
+export {
+  FOREIGN_SKILL_LAYER,
+  resolveForeignSkillManifest,
+} from './resolve-foreign-skill-manifest.ts';
+export type {
+  ForeignSkillLayer,
+  ForeignSkillManifestEntry,
+  ResolveForeignSkillManifestInput,
+  ResolveForeignSkillManifestResult,
+} from './resolve-foreign-skill-manifest.ts';
+
+/** @public */
 export { evaluateTagActionRules } from './evaluate-tag-action-rules.ts';
 export type {
   MatchedTagAction,
