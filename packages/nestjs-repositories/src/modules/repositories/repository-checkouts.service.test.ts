@@ -34,6 +34,7 @@ describe('RepositoryCheckoutsService', () => {
     find: vi.fn(),
     findOne: vi.fn(),
     save: vi.fn((entity: RepositoryCheckout) => Promise.resolve(entity)),
+    update: vi.fn(),
   };
 
   let service: RepositoryCheckoutsService;
@@ -249,6 +250,60 @@ describe('RepositoryCheckoutsService', () => {
       await expect(
         service.saveInspection(checkoutId, {}, new Date()),
       ).resolves.toBeNull();
+    });
+  });
+
+  describe('findByUserAndPath', () => {
+    it('resolves the checkout by the (userId, filesystemPath) key', async () => {
+      vi.mocked(mockOrmRepository.findOne).mockResolvedValue(mockEntity);
+
+      const result = await service.findByUserAndPath(
+        userId,
+        '/Users/dev/openthrottle',
+      );
+
+      expect(result).toEqual(mockEntity);
+      expect(mockOrmRepository.findOne).toHaveBeenCalledWith({
+        where: { filesystemPath: '/Users/dev/openthrottle', userId },
+      });
+    });
+
+    it('returns null when the path is not a registered checkout', async () => {
+      vi.mocked(mockOrmRepository.findOne).mockResolvedValue(null);
+
+      await expect(
+        service.findByUserAndPath(userId, '/nope'),
+      ).resolves.toBeNull();
+    });
+  });
+
+  describe('setForeignSkillInjectionEnabledForRepository', () => {
+    it('updates every one of the user checkouts and returns the affected count', async () => {
+      vi.mocked(mockOrmRepository.update).mockResolvedValue({ affected: 2 });
+
+      const result = await service.setForeignSkillInjectionEnabledForRepository(
+        userId,
+        repositoryId,
+        true,
+      );
+
+      expect(result).toBe(2);
+      expect(mockOrmRepository.update).toHaveBeenCalledWith(
+        { repositoryId, userId },
+        { foreignSkillInjectionEnabled: true },
+      );
+    });
+
+    it('returns 0 when the user owns no checkout of the repository', async () => {
+      vi.mocked(mockOrmRepository.update).mockResolvedValue({ affected: 0 });
+
+      await expect(
+        service.setForeignSkillInjectionEnabledForRepository(
+          userId,
+          repositoryId,
+          false,
+        ),
+      ).resolves.toBe(0);
     });
   });
 

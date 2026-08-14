@@ -11,6 +11,7 @@ const checkout = {
   createdAt: '2026-07-24T00:00:00.000Z',
   displayName: 'openthrottle',
   filesystemPath: '/Users/dev/Development/openthrottle',
+  foreignSkillInjectionEnabled: false,
   id: 'checkout-1',
   inspection: {
     agentConfig: {
@@ -93,6 +94,23 @@ describe('WorkspaceRepositoryDetail Component', () => {
     expect(
       component.getByTestId('WorkspaceRepositoryDetailCheckout-checkout-1'),
     ).toBeInTheDocument();
+  });
+
+  test('shows skill injection Off by default', () => {
+    setup();
+
+    expect(component.getByText('Skill injection')).toBeInTheDocument();
+    expect(component.getByText('Off')).toBeInTheDocument();
+  });
+
+  test('shows skill injection On when a checkout is opted in', () => {
+    props.repository = {
+      ...props.repository,
+      checkouts: [{ ...checkout, foreignSkillInjectionEnabled: true }],
+    };
+    setup();
+
+    expect(component.getByText('On')).toBeInTheDocument();
   });
 
   test('falls back to the no-project label when unlinked', () => {

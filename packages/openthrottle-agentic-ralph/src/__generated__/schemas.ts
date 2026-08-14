@@ -1463,6 +1463,7 @@ export function UpdateRepositoryInputSchema(): z.ZodObject<
 > {
   return z.object({
     defaultBranch: z.string().nullish(),
+    foreignSkillInjectionEnabled: z.boolean().nullish(),
     id: z.string(),
     name: z.string().nullish(),
     projectId: z.string().nullish(),

@@ -33,6 +33,9 @@ describe('WorkspaceRepositoryEditForm Component', () => {
           const formData = await request.formData();
           submitted.push({
             defaultBranch: formData.get('defaultBranch'),
+            foreignSkillInjectionEnabled: formData.get(
+              'foreignSkillInjectionEnabled',
+            ),
             intent: formData.get('intent'),
             name: formData.get('name'),
             projectId: formData.get('projectId'),
@@ -74,6 +77,7 @@ describe('WorkspaceRepositoryEditForm Component', () => {
     expect(submitted).toHaveLength(1);
     expect(submitted[0]).toEqual({
       defaultBranch: 'main',
+      foreignSkillInjectionEnabled: 'false',
       intent: 'updateRepository',
       name: 'acme/monorepo',
       projectId: '__none__',
@@ -84,6 +88,46 @@ describe('WorkspaceRepositoryEditForm Component', () => {
         component.queryByTestId('WorkspaceRepositoryEditForm'),
       ).not.toBeInTheDocument(),
     );
+  });
+
+  test('submits the injection toggle as true once enabled', async () => {
+    const user = userEvent.setup();
+    setup();
+
+    await user.click(
+      component.getByTestId('WorkspaceRepositoryEditForm-injection'),
+    );
+    await user.click(component.getByRole('button', { name: /Save changes/ }));
+
+    expect(submitted).toHaveLength(1);
+    expect(submitted[0]?.foreignSkillInjectionEnabled).toBe('true');
+  });
+
+  test('seeds the injection toggle from an opted-in checkout', () => {
+    props.repository = {
+      ...repository,
+      checkouts: [
+        {
+          createdAt: '2026-07-24T00:00:00.000Z',
+          displayName: 'monorepo',
+          filesystemPath: '/Users/dev/Development/openthrottle',
+          foreignSkillInjectionEnabled: true,
+          id: 'checkout-1',
+          inspection: null,
+          kind: 'primary',
+          managed: false,
+          repositoryId: 'repo-1',
+          scannedAt: null,
+          updatedAt: '2026-07-24T00:00:00.000Z',
+          userId: 'user-1',
+        },
+      ],
+    };
+    setup();
+
+    expect(
+      component.getByTestId('WorkspaceRepositoryEditForm-injection'),
+    ).toBeChecked();
   });
 
   test('surfaces an action error inline', () => {

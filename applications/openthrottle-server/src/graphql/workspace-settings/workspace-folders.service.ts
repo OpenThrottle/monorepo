@@ -35,6 +35,7 @@ import {
 } from '@openthrottle/openthrottle-agentic-utils';
 import { RepositoryInspectionService } from '../repository-inspection/repository-inspection.service';
 import type { RepositoryInspectionSnapshot } from '../repository-inspection/repository-inspection.snapshot';
+import { ForeignSkillMaterializationService } from '../../services/foreign-skill-injection/foreign-skill-materialization.service';
 import {
   canUseNativeFolderDialog,
   type NativeDialogRunner,
@@ -182,6 +183,7 @@ export class WorkspaceFoldersService {
     private readonly inspectionService: RepositoryInspectionService,
     private readonly projectsService: ProjectsService,
     private readonly repositoriesService: RepositoriesService,
+    private readonly foreignSkillMaterialization: ForeignSkillMaterializationService,
   ) {
     this.logger.debug('🧩 workspace-folders 🧩');
   }
@@ -833,6 +835,7 @@ export class WorkspaceFoldersService {
     userId: string,
     input: {
       defaultBranch?: string | null;
+      foreignSkillInjectionEnabled?: boolean | null;
       id: string;
       name?: string | null;
       projectId?: string | null;
@@ -844,6 +847,24 @@ export class WorkspaceFoldersService {
     );
     if (owned.length === 0) {
       throw new NotFoundException('Repository not found');
+    }
+
+    // The injection opt-in is a per-user, per-checkout flag (repository_checkouts),
+    // not a shared-identity field on `repositories`; flip every one of the user's
+    // checkouts of this repository so the repository-level toggle stays consistent.
+    if (input.foreignSkillInjectionEnabled != null) {
+      await this.checkoutsService.setForeignSkillInjectionEnabledForRepository(
+        userId,
+        input.id,
+        input.foreignSkillInjectionEnabled,
+      );
+      // Apply the change to disk immediately so the layer appears/disappears on save
+      // rather than only on the next run. Soft-fail: never blocks the settings update.
+      await this.foreignSkillMaterialization.applyForRepository(
+        userId,
+        input.id,
+        input.foreignSkillInjectionEnabled,
+      );
     }
 
     const data: {
@@ -868,12 +889,23 @@ export class WorkspaceFoldersService {
       data.projectId = input.projectId;
     }
 
-    const updated = await this.repositoriesService.update(input.id, data);
-    if (updated === null) {
+    // Only touch the shared repository row when a repository-level field changed;
+    // a flag-only edit must not depend on `repositories.update` accepting an empty
+    // patch. Re-read owned checkouts so the response reflects the new flag.
+    const repository =
+      Object.keys(data).length > 0
+        ? await this.repositoriesService.update(input.id, data)
+        : (owned[0].repository ??
+          (await this.repositoriesService.findById(input.id)));
+    if (repository === null) {
       throw new NotFoundException('Repository not found');
     }
 
-    return this.buildRepositoryObject(updated, owned);
+    const refreshed = await this.checkoutsService.findByRepositoryIdForUser(
+      input.id,
+      userId,
+    );
+    return this.buildRepositoryObject(repository, refreshed);
   }
 
   /**
@@ -946,6 +978,7 @@ export class WorkspaceFoldersService {
       createdAt: checkout.createdAt,
       displayName: checkout.displayName,
       filesystemPath: checkout.filesystemPath,
+      foreignSkillInjectionEnabled: checkout.foreignSkillInjectionEnabled,
       id: checkout.id,
       inspection: snapshot === null ? null : toInspectionObject(snapshot),
       kind: checkout.kind,

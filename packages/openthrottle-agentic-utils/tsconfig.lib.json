@@ -22,6 +22,9 @@
       "path": "../openthrottle-drivers/tsconfig.lib.json"
     },
     {
+      "path": "../openthrottle-skills/tsconfig.lib.json"
+    },
+    {
       "path": "../../tools/dotfiles/tsconfig.lib.json"
     }
   ]

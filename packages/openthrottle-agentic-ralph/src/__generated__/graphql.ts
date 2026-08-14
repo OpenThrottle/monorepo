@@ -3756,6 +3756,8 @@ export type RepositoryCheckoutObject = {
   displayName: Scalars['String']['output'];
   /** Absolute path on the server host. */
   filesystemPath: Scalars['String']['output'];
+  /** True when this user opts this checkout into foreign-workspace skill injection (OpenThrottle curated skills projected in on foreign runs). Default false (opt-in). */
+  foreignSkillInjectionEnabled: Scalars['Boolean']['output'];
   id: Scalars['ID']['output'];
   /** Cached inspection snapshot; null until the first scan completes. */
   inspection?: Maybe<RepositoryInspectionObject>;
@@ -4924,6 +4926,8 @@ export type UpdateProjectInput = {
 export type UpdateRepositoryInput = {
   /** New default branch; omit to leave unchanged. */
   defaultBranch?: InputMaybe<Scalars['String']['input']>;
+  /** Opt this user's checkouts of the repository into (or out of) foreign-workspace skill injection; omit to leave unchanged. */
+  foreignSkillInjectionEnabled?: InputMaybe<Scalars['Boolean']['input']>;
   /** Repository id. */
   id: Scalars['ID']['input'];
   /** New display name; omit to leave unchanged. */

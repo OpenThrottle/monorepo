@@ -54,6 +54,12 @@ export class UpdateRepositoryInput {
   })
   defaultBranch?: string | null;
 
+  @Field(() => Boolean, {
+    description: `Opt this user's checkouts of the repository into (or out of) foreign-workspace skill injection; omit to leave unchanged.`,
+    nullable: true,
+  })
+  foreignSkillInjectionEnabled?: boolean | null;
+
   @Field(() => ID, {
     description: `Repository id.`,
   })

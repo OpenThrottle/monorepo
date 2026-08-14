@@ -2997,6 +2997,11 @@ type RepositoryCheckoutObject {
   managed: Boolean!
 
   """
+  True when this user opts this checkout into foreign-workspace skill injection (OpenThrottle curated skills projected in on foreign runs). Default false (opt-in).
+  """
+  foreignSkillInjectionEnabled: Boolean!
+
+  """
   'primary' or 'worktree' (worktree reserved for future workflow unification).
   """
   kind: String!
@@ -6092,6 +6097,11 @@ Edit an owned repository's name, default branch, and/or project link. Omitted fi
 input UpdateRepositoryInput {
   """New default branch; omit to leave unchanged."""
   defaultBranch: String
+
+  """
+  Opt this user's checkouts of the repository into (or out of) foreign-workspace skill injection; omit to leave unchanged.
+  """
+  foreignSkillInjectionEnabled: Boolean
 
   """Repository id."""
   id: ID!

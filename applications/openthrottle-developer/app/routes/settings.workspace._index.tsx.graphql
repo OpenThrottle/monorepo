@@ -2,6 +2,7 @@ fragment RepositoryCheckoutFields on RepositoryCheckoutObject {
   createdAt
   displayName
   filesystemPath
+  foreignSkillInjectionEnabled
   id
   inspection {
     agentConfig {

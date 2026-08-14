@@ -82,6 +82,7 @@ const buildOrchestratorBasePrompt = (params: {
   const agentCwd = resolveOrchestratorAgentCwd(context);
   const foreignLayer = buildForeignWorkspacePromptLayer(
     resolveForeignWorkspaceContext(agentCwd, process.env),
+    { injectedSkillNames: context.injectedSkillNames },
   );
 
   // Layer ordering is security-relevant. `context.prompt` (a path fragment by

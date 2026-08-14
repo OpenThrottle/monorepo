@@ -33,7 +33,7 @@ export const SettingsSetupModelRow = (
 
   return (
     <div
-      className="flex items-center justify-between gap-3 py-1"
+      className="hover:bg-muted -mx-2 flex items-center justify-between gap-3 rounded-md px-2 py-1 transition-colors"
       data-testid={`SettingsSetupModelRow-${backend}-${model.model}`}
     >
       <code

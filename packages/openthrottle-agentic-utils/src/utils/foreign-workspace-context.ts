@@ -42,11 +42,26 @@ export const resolveForeignWorkspaceContext = (
   return { isForeign, openThrottleRoot, workingDirectory };
 };
 
+/** @description Options for {@link buildForeignWorkspacePromptLayer}. */
+export interface ForeignWorkspacePromptLayerOptions {
+  /**
+   * Names of OpenThrottle curated skills materialized into this foreign repo for the run
+   * (server-scoped injection). When non-empty, the prompt tells the agent these skills ARE
+   * available here instead of blanket-forbidding OT `/skills`.
+   */
+  readonly injectedSkillNames?: readonly string[];
+}
+
 /**
  * @description Builds repository-scope prompt text for foreign-cwd runs, or undefined when inside OT.
+ *
+ * When OpenThrottle has injected a curated skill subset into this repo (`injectedSkillNames`), the
+ * layer advertises those skills as available rather than forbidding `/skills` wholesale — it still
+ * forbids OT-monorepo-specific paths, generators, and tooling that do not apply to the target repo.
  */
 export const buildForeignWorkspacePromptLayer = (
   context: ForeignWorkspaceContext,
+  options: ForeignWorkspacePromptLayerOptions = {},
 ): string | undefined => {
   if (!context.isForeign) {
     return undefined;
@@ -57,12 +72,38 @@ export const buildForeignWorkspacePromptLayer = (
       ? ` (the OpenThrottle monorepo lives at ${context.openThrottleRoot} and is NOT this repository)`
       : '';
 
-  return [
+  const injected = options.injectedSkillNames ?? [];
+  const hasInjectedSkills = injected.length > 0;
+
+  // With curated skills injected, `/skills` is legitimately available here, so it is dropped from
+  // the denylist; the OT-monorepo-specific paths/generators/tooling remain forbidden.
+  const forbidden = hasInjectedSkills
+    ? `Do NOT reference, list, or run OpenThrottle-monorepo-specific paths, commands, rules, generators, or tooling (e.g. applications/openthrottle-developer, tools/workflows, @tools/generators, /settings/debug, ralphTuning). Use only the conventions, scripts, and structure of the target repository — plus the OpenThrottle skills noted below.`
+    : `Do NOT reference, list, or run OpenThrottle-specific paths, commands, rules, generators, or tooling (e.g. applications/openthrottle-developer, tools/workflows, @tools/generators, /skills, /settings/debug, ralphTuning). Use only the conventions, scripts, and structure of the target repository.`;
+
+  const lines = [
     `IMPORTANT — Repository scope: You are operating in the repository at ${context.workingDirectory}, NOT the OpenThrottle monorepo${otRootNote}.`,
     `Treat ${context.workingDirectory} as the only workspace. Make file changes under this directory when tasks require implementation work.`,
-    `Do NOT reference, list, or run OpenThrottle-specific paths, commands, rules, generators, or tooling (e.g. applications/openthrottle-developer, tools/workflows, @tools/generators, /skills, /settings/debug, ralphTuning). Use only the conventions, scripts, and structure of the target repository.`,
+    forbidden,
+  ];
+
+  if (hasInjectedSkills) {
+    lines.push(
+      `OpenThrottle has made these curated skills available in this repository (under .agents/skills and .claude/skills): ${[
+        ...injected,
+      ]
+        .map((name) => `/${name}`)
+        .join(
+          ', ',
+        )}. You MAY invoke them like any other skill; they are safe to use here.`,
+    );
+  }
+
+  lines.push(
     `The OpenThrottle plan and task context below is injected purely so you know what work to do; it is metadata, not a description of this repository's layout.`,
-  ].join('\n');
+  );
+
+  return lines.join('\n');
 };
 
 /**
@@ -71,5 +112,9 @@ export const buildForeignWorkspacePromptLayer = (
 export const resolveForeignWorkspacePromptLayer = (
   cwd: string = process.cwd(),
   env: NodeJS.ProcessEnv = process.env,
+  options: ForeignWorkspacePromptLayerOptions = {},
 ): string | undefined =>
-  buildForeignWorkspacePromptLayer(resolveForeignWorkspaceContext(cwd, env));
+  buildForeignWorkspacePromptLayer(
+    resolveForeignWorkspaceContext(cwd, env),
+    options,
+  );

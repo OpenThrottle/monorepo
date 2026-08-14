@@ -87,6 +87,20 @@ export class RepositoryCheckoutsService {
   }
 
   /**
+   * @description Resolves the checkout a run is executing in from its
+   * `(userId, filesystemPath)` pair — the DB's uniqueness key. Used by the
+   * foreign-skill injection gate to read the per-user opt-in flag for the exact
+   * on-disk path the run touches. Returns null when the path is not a registered
+   * checkout for the user (treated as opt-out).
+   */
+  async findByUserAndPath(
+    userId: string,
+    filesystemPath: string,
+  ): Promise<RepositoryCheckout | null> {
+    return this.repository.findOne({ where: { filesystemPath, userId } });
+  }
+
+  /**
    * @description Counts checkouts pointing at a repository (any user).
    */
   async countByRepositoryId(repositoryId: string): Promise<number> {
@@ -248,6 +262,24 @@ export class RepositoryCheckoutsService {
     if (!existing) return null;
     existing.repositoryId = repositoryId;
     return this.repository.save(existing);
+  }
+
+  /**
+   * @description Sets the per-user foreign-skill injection opt-in for every one
+   * of the user's checkouts of a repository (primary + any worktrees flip
+   * together, keeping the repository-level toggle consistent). Returns the number
+   * of rows updated (0 when the user owns no checkout of the repository).
+   */
+  async setForeignSkillInjectionEnabledForRepository(
+    userId: string,
+    repositoryId: string,
+    enabled: boolean,
+  ): Promise<number> {
+    const result = await this.repository.update(
+      { repositoryId, userId },
+      { foreignSkillInjectionEnabled: enabled },
+    );
+    return result.affected ?? 0;
   }
 
   /**

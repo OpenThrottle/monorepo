@@ -3756,6 +3756,8 @@ export type RepositoryCheckoutObject = {
   displayName: Scalars['String']['output'];
   /** Absolute path on the server host. */
   filesystemPath: Scalars['String']['output'];
+  /** True when this user opts this checkout into foreign-workspace skill injection (OpenThrottle curated skills projected in on foreign runs). Default false (opt-in). */
+  foreignSkillInjectionEnabled: Scalars['Boolean']['output'];
   id: Scalars['ID']['output'];
   /** Cached inspection snapshot; null until the first scan completes. */
   inspection?: Maybe<RepositoryInspectionObject>;
@@ -4924,6 +4926,8 @@ export type UpdateProjectInput = {
 export type UpdateRepositoryInput = {
   /** New default branch; omit to leave unchanged. */
   defaultBranch?: InputMaybe<Scalars['String']['input']>;
+  /** Opt this user's checkouts of the repository into (or out of) foreign-workspace skill injection; omit to leave unchanged. */
+  foreignSkillInjectionEnabled?: InputMaybe<Scalars['Boolean']['input']>;
   /** Repository id. */
   id: Scalars['ID']['input'];
   /** New display name; omit to leave unchanged. */
@@ -8853,6 +8857,7 @@ export type RepositoryCheckoutFieldsFragment = {
   createdAt: any;
   displayName: string;
   filesystemPath: string;
+  foreignSkillInjectionEnabled: boolean;
   id: string;
   kind: string;
   managed: boolean;
@@ -8906,6 +8911,7 @@ export type WorkspaceRepositoryFieldsFragment = {
     createdAt: any;
     displayName: string;
     filesystemPath: string;
+    foreignSkillInjectionEnabled: boolean;
     id: string;
     kind: string;
     managed: boolean;
@@ -9003,6 +9009,7 @@ export type GetWorkspaceSettingsQuery = {
       createdAt: any;
       displayName: string;
       filesystemPath: string;
+      foreignSkillInjectionEnabled: boolean;
       id: string;
       kind: string;
       managed: boolean;
@@ -9120,6 +9127,7 @@ export type AddWorkspaceFolderMutation = {
       createdAt: any;
       displayName: string;
       filesystemPath: string;
+      foreignSkillInjectionEnabled: boolean;
       id: string;
       kind: string;
       managed: boolean;
@@ -9173,6 +9181,7 @@ export type AddWorkspaceFolderMutation = {
         createdAt: any;
         displayName: string;
         filesystemPath: string;
+        foreignSkillInjectionEnabled: boolean;
         id: string;
         kind: string;
         managed: boolean;
@@ -9235,6 +9244,7 @@ export type CloneRepositoryMutation = {
       createdAt: any;
       displayName: string;
       filesystemPath: string;
+      foreignSkillInjectionEnabled: boolean;
       id: string;
       kind: string;
       managed: boolean;
@@ -9288,6 +9298,7 @@ export type CloneRepositoryMutation = {
         createdAt: any;
         displayName: string;
         filesystemPath: string;
+        foreignSkillInjectionEnabled: boolean;
         id: string;
         kind: string;
         managed: boolean;
@@ -9350,6 +9361,7 @@ export type RefreshCheckoutMutation = {
       createdAt: any;
       displayName: string;
       filesystemPath: string;
+      foreignSkillInjectionEnabled: boolean;
       id: string;
       kind: string;
       managed: boolean;
@@ -9408,6 +9420,7 @@ export type RefreshCheckoutMutation = {
         createdAt: any;
         displayName: string;
         filesystemPath: string;
+        foreignSkillInjectionEnabled: boolean;
         id: string;
         kind: string;
         managed: boolean;
@@ -9520,6 +9533,7 @@ export type GetWorkspaceRepositoryQuery = {
       createdAt: any;
       displayName: string;
       filesystemPath: string;
+      foreignSkillInjectionEnabled: boolean;
       id: string;
       kind: string;
       managed: boolean;
@@ -9583,6 +9597,7 @@ export type GetWorkspaceRepositoryForEditQuery = {
       createdAt: any;
       displayName: string;
       filesystemPath: string;
+      foreignSkillInjectionEnabled: boolean;
       id: string;
       kind: string;
       managed: boolean;
@@ -9645,6 +9660,7 @@ export type UpdateRepositoryMutation = {
       createdAt: any;
       displayName: string;
       filesystemPath: string;
+      foreignSkillInjectionEnabled: boolean;
       id: string;
       kind: string;
       managed: boolean;
@@ -11586,6 +11602,10 @@ export const RepositoryCheckoutFieldsFragmentDoc = {
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
           { kind: 'Field', name: { kind: 'Name', value: 'filesystemPath' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'foreignSkillInjectionEnabled' },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           {
             kind: 'Field',
@@ -11757,6 +11777,10 @@ export const WorkspaceRepositoryFieldsFragmentDoc = {
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
           { kind: 'Field', name: { kind: 'Name', value: 'filesystemPath' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'foreignSkillInjectionEnabled' },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           {
             kind: 'Field',
@@ -22807,6 +22831,10 @@ export const GetWorkspaceSettingsDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
           { kind: 'Field', name: { kind: 'Name', value: 'filesystemPath' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'foreignSkillInjectionEnabled' },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           {
             kind: 'Field',
@@ -23226,6 +23254,10 @@ export const AddWorkspaceFolderDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
           { kind: 'Field', name: { kind: 'Name', value: 'filesystemPath' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'foreignSkillInjectionEnabled' },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           {
             kind: 'Field',
@@ -23496,6 +23528,10 @@ export const CloneRepositoryDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
           { kind: 'Field', name: { kind: 'Name', value: 'filesystemPath' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'foreignSkillInjectionEnabled' },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           {
             kind: 'Field',
@@ -23773,6 +23809,10 @@ export const RefreshCheckoutDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
           { kind: 'Field', name: { kind: 'Name', value: 'filesystemPath' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'foreignSkillInjectionEnabled' },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           {
             kind: 'Field',
@@ -24196,6 +24236,10 @@ export const GetWorkspaceRepositoryDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
           { kind: 'Field', name: { kind: 'Name', value: 'filesystemPath' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'foreignSkillInjectionEnabled' },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           {
             kind: 'Field',
@@ -24427,6 +24471,10 @@ export const GetWorkspaceRepositoryForEditDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
           { kind: 'Field', name: { kind: 'Name', value: 'filesystemPath' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'foreignSkillInjectionEnabled' },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           {
             kind: 'Field',
@@ -24650,6 +24698,10 @@ export const UpdateRepositoryDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
           { kind: 'Field', name: { kind: 'Name', value: 'filesystemPath' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'foreignSkillInjectionEnabled' },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           {
             kind: 'Field',

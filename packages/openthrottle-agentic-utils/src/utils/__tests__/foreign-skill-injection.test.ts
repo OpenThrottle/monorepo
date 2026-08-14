@@ -1,0 +1,272 @@
+import { execFileSync } from 'node:child_process';
+import {
+  lstatSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readlinkSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
+
+import {
+  CONTAINER_WORKSPACES_DIR_ENV,
+  HOST_WORKSPACES_DIR_ENV,
+} from '../workspace-paths.ts';
+import {
+  ensureMaterialized,
+  teardown,
+} from '../foreign-skill-injection/index.ts';
+import {
+  FOREIGN_SKILL_LEDGER_DIR_ENV,
+  ledgerPathForRepo,
+  readLedger,
+} from '../foreign-skill-injection/index.ts';
+
+const git = (repo: string, ...args: string[]): string =>
+  execFileSync('git', ['-C', repo, ...args], { encoding: 'utf8' }).trim();
+
+const porcelain = (repo: string): string => git(repo, 'status', '--porcelain');
+
+const writeSkill = (root: string, name: string): void => {
+  const dir = join(root, name);
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(
+    join(dir, 'SKILL.md'),
+    `---\nname: ${name}\ndescription: The ${name} skill\n---\n\n# ${name}\n`,
+  );
+};
+
+describe('foreign-skill-injection materializer', () => {
+  let base: string;
+  let repo: string;
+  let otSkills: string;
+  let ledgerDir: string;
+  let hostEnv: NodeJS.ProcessEnv;
+
+  beforeEach(() => {
+    base = mkdtempSync(join(tmpdir(), 'ot-fsi-'));
+    repo = join(base, 'target-repo');
+    otSkills = join(base, 'ot', 'skills');
+    ledgerDir = join(base, 'ledgers');
+    mkdirSync(repo, { recursive: true });
+    mkdirSync(otSkills, { recursive: true });
+
+    // A committed target repo so `git status` has a meaningful clean baseline.
+    git(repo, 'init', '-q');
+    git(repo, 'config', 'user.email', 'test@example.com');
+    git(repo, 'config', 'user.name', 'Test');
+    writeFileSync(join(repo, 'README.md'), '# target\n');
+    git(repo, 'add', '.');
+    git(repo, 'commit', '-q', '-m', 'init');
+
+    writeSkill(otSkills, 'ot-plans');
+    writeSkill(otSkills, 'create-readme');
+
+    hostEnv = {
+      ...process.env,
+      // Ensure no stray container mapping leaks in from the real env.
+      [CONTAINER_WORKSPACES_DIR_ENV]: '',
+      [FOREIGN_SKILL_LEDGER_DIR_ENV]: ledgerDir,
+      [HOST_WORKSPACES_DIR_ENV]: '',
+    };
+  });
+
+  afterEach(() => {
+    rmSync(base, { force: true, recursive: true });
+  });
+
+  test('host mode: symlinks both dirs, ledger + exclude written, git clean', () => {
+    expect(porcelain(repo)).toBe('');
+
+    const result = ensureMaterialized({
+      env: hostEnv,
+      otCuratedSkillsDir: otSkills,
+      repoPath: repo,
+    });
+
+    expect(result.mode).toBe('symlink');
+    expect(result.injectedNames).toEqual(['create-readme', 'ot-plans']);
+
+    // Both target dirs got symlinks pointing at the OT source.
+    const link = join(repo, '.agents/skills/ot-plans');
+    expect(lstatSync(link).isSymbolicLink()).toBe(true);
+    expect(readlinkSync(link)).toBe(join(otSkills, 'ot-plans'));
+    expect(
+      lstatSync(join(repo, '.claude/skills/create-readme')).isSymbolicLink(),
+    ).toBe(true);
+
+    // The CLI can read the skill through the link.
+    expect(
+      readFileSync(join(repo, '.agents/skills/ot-plans/SKILL.md'), 'utf8'),
+    ).toContain('The ot-plans skill');
+
+    // Non-mutation: git status is clean DURING the run.
+    expect(porcelain(repo)).toBe('');
+
+    // Ledger records every created path.
+    const ledger = readLedger(ledgerPathForRepo(repo, hostEnv));
+    expect(ledger?.entries).toHaveLength(4);
+    expect(
+      new Set(ledger?.entries.map((entry) => entry.injectedRelativePath)),
+    ).toEqual(
+      new Set([
+        '.agents/skills/create-readme',
+        '.agents/skills/ot-plans',
+        '.claude/skills/create-readme',
+        '.claude/skills/ot-plans',
+      ]),
+    );
+  });
+
+  test('idempotent: a second ensure is a no-op and stays clean', () => {
+    const first = ensureMaterialized({
+      env: hostEnv,
+      otCuratedSkillsDir: otSkills,
+      repoPath: repo,
+    });
+    const linkStat = lstatSync(join(repo, '.agents/skills/ot-plans'));
+
+    const second = ensureMaterialized({
+      env: hostEnv,
+      otCuratedSkillsDir: otSkills,
+      repoPath: repo,
+    });
+
+    expect(second.injectedNames).toEqual(first.injectedNames);
+    // Symlink was not recreated (same inode/ctime).
+    expect(lstatSync(join(repo, '.agents/skills/ot-plans')).ctimeMs).toBe(
+      linkStat.ctimeMs,
+    );
+    expect(porcelain(repo)).toBe('');
+  });
+
+  test('teardown removes only ledgered paths and restores a clean tree', () => {
+    ensureMaterialized({
+      env: hostEnv,
+      otCuratedSkillsDir: otSkills,
+      repoPath: repo,
+    });
+    // The links exist on disk but are IGNORED (proof they are hidden, not absent).
+    expect(
+      lstatSync(join(repo, '.agents/skills/ot-plans')).isSymbolicLink(),
+    ).toBe(true);
+    expect(git(repo, 'status', '--porcelain', '--ignored')).not.toBe('');
+
+    teardown({ env: hostEnv, repoPath: repo });
+
+    // Ledger gone, links gone, dirs pruned, git clean.
+    expect(readLedger(ledgerPathForRepo(repo, hostEnv))).toBeUndefined();
+    expect(() => lstatSync(join(repo, '.agents/skills/ot-plans'))).toThrow();
+    expect(() => lstatSync(join(repo, '.agents'))).toThrow();
+    expect(porcelain(repo)).toBe('');
+    // Nothing ignored remains either — the exclude block was removed.
+    expect(git(repo, 'status', '--porcelain', '--ignored')).toBe('');
+  });
+
+  test('target-owned skill name is never injected or overwritten', () => {
+    // The repo defines its own create-readme (committed, tracked).
+    mkdirSync(join(repo, '.agents/skills/create-readme'), { recursive: true });
+    writeFileSync(
+      join(repo, '.agents/skills/create-readme/SKILL.md'),
+      '---\nname: create-readme\ndescription: repo house style\n---\n\nours\n',
+    );
+    git(repo, 'add', '.');
+    git(repo, 'commit', '-q', '-m', 'own skill');
+
+    const result = ensureMaterialized({
+      env: hostEnv,
+      otCuratedSkillsDir: otSkills,
+      repoPath: repo,
+    });
+
+    // create-readme excluded; only ot-plans injected.
+    expect(result.injectedNames).toEqual(['ot-plans']);
+    // The repo's own create-readme is untouched (still a real dir, our content).
+    expect(
+      lstatSync(join(repo, '.agents/skills/create-readme')).isSymbolicLink(),
+    ).toBe(false);
+    expect(
+      readFileSync(join(repo, '.agents/skills/create-readme/SKILL.md'), 'utf8'),
+    ).toContain('repo house style');
+    expect(porcelain(repo)).toBe('');
+  });
+
+  test('container mode materializes copies, not symlinks', () => {
+    const containerEnv: NodeJS.ProcessEnv = {
+      ...hostEnv,
+      [CONTAINER_WORKSPACES_DIR_ENV]: '/workspaces',
+      [HOST_WORKSPACES_DIR_ENV]: '/host/workspaces',
+    };
+
+    const result = ensureMaterialized({
+      env: containerEnv,
+      otCuratedSkillsDir: otSkills,
+      repoPath: repo,
+    });
+
+    expect(result.mode).toBe('copy');
+    const copied = join(repo, '.agents/skills/ot-plans');
+    expect(lstatSync(copied).isSymbolicLink()).toBe(false);
+    expect(lstatSync(copied).isDirectory()).toBe(true);
+    expect(readFileSync(join(copied, 'SKILL.md'), 'utf8')).toContain(
+      'The ot-plans skill',
+    );
+    expect(porcelain(repo)).toBe('');
+
+    // Ledger records copy-mode fingerprints.
+    const ledger = readLedger(ledgerPathForRepo(repo, containerEnv));
+    expect(
+      ledger?.entries.every(
+        (entry) => entry.mode === 'copy' && entry.fingerprint !== undefined,
+      ),
+    ).toBe(true);
+  });
+
+  test('personal tier overrides OT and injects personal-only skills', () => {
+    const personalDir = join(base, 'personal', 'skills');
+    mkdirSync(personalDir, { recursive: true });
+    // ot-plans exists in both layers; my-spike is personal-only.
+    writeSkill(personalDir, 'ot-plans');
+    writeSkill(personalDir, 'my-spike');
+
+    const result = ensureMaterialized({
+      env: hostEnv,
+      otCuratedSkillsDir: otSkills,
+      personalSkillsDir: personalDir,
+      repoPath: repo,
+    });
+
+    expect(result.injectedNames).toContain('my-spike');
+    // The injected ot-plans link points at the PERSONAL source, not the OT one.
+    expect(readlinkSync(join(repo, '.agents/skills/ot-plans'))).toBe(
+      join(personalDir, 'ot-plans'),
+    );
+    expect(porcelain(repo)).toBe('');
+  });
+
+  test('teardown leaves a user-replaced entry in place', () => {
+    ensureMaterialized({
+      env: hostEnv,
+      otCuratedSkillsDir: otSkills,
+      repoPath: repo,
+    });
+
+    // User replaces one injected symlink with their own real dir.
+    const replaced = join(repo, '.agents/skills/ot-plans');
+    rmSync(replaced, { force: true, recursive: true });
+    mkdirSync(replaced, { recursive: true });
+    writeFileSync(join(replaced, 'SKILL.md'), 'user content\n');
+
+    teardown({ env: hostEnv, repoPath: repo });
+
+    // The user's replacement survives; OT's other links are gone.
+    expect(readFileSync(join(replaced, 'SKILL.md'), 'utf8')).toBe(
+      'user content\n',
+    );
+    expect(() => lstatSync(join(repo, '.claude/skills/ot-plans'))).toThrow();
+  });
+});

@@ -56,6 +56,8 @@ bash skills/skill-sync/scripts/sync.sh --check  # validate without writing (CI d
 
 **CI guard:** `pnpm nx run monorepo:check-agent-assets-ssot` runs `skill-sync --check` (skill layout) + `.cursor/rules` symlink integrity + the skill-tag vocabulary check ([`scripts/check-skill-tag-vocabulary.ts`](../../scripts/check-skill-tag-vocabulary.ts) against [`skill-tag-overlays.json`](../../skill-tag-overlays.json)). CI materializes the generated skill symlinks with `sync.sh` before checking.
 
+> **External server-scoped consumer — foreign-workspace skill injection.** Beyond the in-repo `sync.sh` fan-out above, the running OpenThrottle **server** projects the curated `skills/` SSOT (plus an opt-in per-user tier) INTO **foreign** repos it drives — any checkout outside this monorepo — so OT's skills are available there. It is **layered** (OT curated < personal < target repo, target wins on a name collision), **server-scoped** (materialized lazily on the first foreign run per repo, reused across runs, torn down on shutdown + a boot reaper for crashes), and **non-mutating**: injected entries go into the target's `.agents/skills` + `.claude/skills` as symlinks (host) / copies (container path bridge), hidden from `git status` via the target's **untracked `.git/info/exclude`** (never the tracked `.gitignore`) plus a per-repo ledger stored outside the repo — so the consumer's tracked files are never touched and `git status` stays clean at all times. This is a separate consumer of the same SSOT; it does not change `sync.sh`. Full design: [foreign-workspace-skill-injection.md](./foreign-workspace-skill-injection.md).
+
 ---
 
 ## 2. What's authored vs generated

@@ -23,6 +23,7 @@ export type RepositoryCheckoutKind = (typeof REPOSITORY_CHECKOUT_KINDS)[number];
 export interface RepositoryCheckoutData {
   readonly displayName: string;
   readonly filesystemPath: string;
+  readonly foreignSkillInjectionEnabled: boolean;
   readonly id: string;
   readonly kind: RepositoryCheckoutKind;
   readonly managed: boolean;
@@ -58,6 +59,13 @@ export class RepositoryCheckout {
 
   @Column({ name: 'managed', type: 'boolean' })
   managed!: boolean;
+
+  @Column({
+    default: false,
+    name: 'foreign_skill_injection_enabled',
+    type: 'boolean',
+  })
+  foreignSkillInjectionEnabled!: boolean;
 
   @Column({ name: 'kind', type: 'text' })
   kind!: RepositoryCheckoutKind;

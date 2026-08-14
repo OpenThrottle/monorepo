@@ -9,6 +9,7 @@ import {
   CardTitle,
   Input,
   Label,
+  Switch,
 } from '@openthrottle/react-router-shadcn';
 import type { WorkspaceRepositoryFieldsFragment } from '~/__generated__/graphql';
 import { WORKSPACE_REPOSITORY_DETAIL_COPY } from '~/routing/settings/data/data.copy';
@@ -29,6 +30,13 @@ export const WorkspaceRepositoryEditForm = (
 
   // Hooks
   const navigation = useNavigation();
+  // The injection opt-in lives per-checkout; the user's checkouts of this repo are
+  // flipped together, so any checkout reflects the current state.
+  const [injectionEnabled, setInjectionEnabled] = React.useState(
+    (repository.checkouts ?? []).some(
+      (checkout) => checkout.foreignSkillInjectionEnabled,
+    ),
+  );
 
   // Setup
   const submitting =
@@ -97,6 +105,28 @@ export const WorkspaceRepositoryEditForm = (
               name="projectId"
               projects={projects}
             />
+          </div>
+
+          <div className="space-y-1">
+            <div className="flex items-center justify-between gap-4">
+              <Label htmlFor="repository-foreign-skill-injection">
+                {WORKSPACE_REPOSITORY_DETAIL_COPY.injectionLabel}
+              </Label>
+              <input
+                name="foreignSkillInjectionEnabled"
+                type="hidden"
+                value={String(injectionEnabled)}
+              />
+              <Switch
+                checked={injectionEnabled}
+                data-testid="WorkspaceRepositoryEditForm-injection"
+                id="repository-foreign-skill-injection"
+                onCheckedChange={setInjectionEnabled}
+              />
+            </div>
+            <p className="text-muted-foreground text-xs">
+              {WORKSPACE_REPOSITORY_DETAIL_COPY.injectionHelp}
+            </p>
           </div>
 
           {actionError ? (

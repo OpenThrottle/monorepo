@@ -92,7 +92,9 @@ export const ChatSlashCommandPopover = (
               onMouseEnter={() => onHoverOption(index)}
               role="option"
             >
-              <span className="font-medium">/{command.slug}</span>
+              <span className="font-medium whitespace-nowrap">
+                /{command.slug}
+              </span>
               {command.description ? (
                 <span className="text-muted-foreground truncate">
                   {command.description}

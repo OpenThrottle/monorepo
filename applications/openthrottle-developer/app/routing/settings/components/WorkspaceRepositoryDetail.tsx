@@ -30,6 +30,10 @@ export const WorkspaceRepositoryDetail = (
 
   // Setup
   const checkouts = repository.checkouts ?? [];
+  // The user's checkouts are flipped together, so any opted-in checkout means on.
+  const injectionEnabled = checkouts.some(
+    (checkout) => checkout.foreignSkillInjectionEnabled,
+  );
 
   // Handlers
 
@@ -84,6 +88,18 @@ export const WorkspaceRepositoryDetail = (
               <dd className="text-sm">
                 {repository.project?.name ??
                   WORKSPACE_REPOSITORY_DETAIL_COPY.noProject}
+              </dd>
+            </div>
+            <div className="space-y-1">
+              <dt className="text-muted-foreground text-xs">
+                {WORKSPACE_REPOSITORY_DETAIL_COPY.injectionStatusLabel}
+              </dt>
+              <dd className="text-sm">
+                <Badge variant={injectionEnabled ? 'default' : 'outline'}>
+                  {injectionEnabled
+                    ? WORKSPACE_REPOSITORY_DETAIL_COPY.injectionOn
+                    : WORKSPACE_REPOSITORY_DETAIL_COPY.injectionOff}
+                </Badge>
               </dd>
             </div>
           </dl>

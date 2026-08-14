@@ -37,6 +37,14 @@ export interface WorkflowContext extends WorkflowConfigLegacy {
   readonly correlation?: WorkflowCorrelation;
 
   /**
+   * @description Names of OpenThrottle curated skills materialized into the foreign target repo for
+   * this run (server-scoped foreign-skill injection). Surfaced in the foreign-workspace prompt layer
+   * so the agent knows the skills are genuinely available. Empty/omitted when not a foreign run or
+   * nothing was injected.
+   */
+  readonly injectedSkillNames?: readonly string[];
+
+  /**
    * Durable cancel-marker poll (Channel 1). When provided, the run loop awaits this at the same
    * iteration boundaries it checks {@link abortSignal}; a truthy result stops the run
    * (`workflow_cancelled`). This is the cross-process/host/CLI guarantee: even if the low-latency
