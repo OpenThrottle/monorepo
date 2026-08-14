@@ -15,6 +15,7 @@ import {
   Label,
   TextArea,
 } from '@openthrottle/react-router-shadcn';
+import { useNavigate } from 'react-router';
 import type { RepositoryOption } from '~/routing/home/data/models.server';
 import { SKILL_RUN_COPY } from '~/routing/skills/data/data.copy';
 import {
@@ -51,6 +52,7 @@ export const RunSkillDialog = (
   const { models, onOpenChange, onRun, open, repositories, slug } = props;
 
   // Hooks
+  const navigate = useNavigate();
   const {
     args,
     buildPayload,
@@ -104,6 +106,10 @@ export const RunSkillDialog = (
                   groups={modelGroups}
                   models={models}
                   onModelChange={setModelId}
+                  onOpenSettings={() => {
+                    onOpenChange(false);
+                    navigate('/settings/setup');
+                  }}
                   selectedModelId={modelId}
                 />
               </div>

@@ -59,11 +59,10 @@ export interface ChatComposerToolbarProps {
   readonly onMicToggle?: () => void;
   readonly onModeChange?: (mode: ChatComposerMode) => void;
   readonly onModelChange?: (modelId: string) => void;
+  /** Forwarded to the grouped {@link ChatModelPicker} rail's gear; omit to hide it. */
+  readonly onOpenSettings?: () => void;
   readonly onPermissionModeChange?: (mode: ChatPermissionMode) => void;
-  /**
-   * Toggle turn persistence. Supplying this renders the persist switch (always,
-   * never capability-gated); omit to hide it. Pair with {@link persist}.
-   */
+  /** Renders the (never capability-gated) persist switch when supplied; omit to hide. Pair with {@link persist}. */
   readonly onPersistChange?: (persist: boolean) => void;
   readonly onPersonaChange?: (personaId: string) => void;
   readonly onReasoningChange?: (level: ChatReasoningLevel) => void;
@@ -122,6 +121,7 @@ export const ChatComposerToolbar = (
     onCheckoutChange,
     onMicToggle,
     onModelChange,
+    onOpenSettings,
     onPermissionModeChange,
     onPersistChange,
     onPersonaChange,
@@ -164,6 +164,7 @@ export const ChatComposerToolbar = (
         modelId={modelId}
         models={models}
         onModelChange={onModelChange}
+        onOpenSettings={onOpenSettings}
         onToggleFavorite={onToggleFavorite}
       />
       {capabilities != null ? (

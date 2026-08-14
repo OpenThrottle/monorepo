@@ -7,6 +7,7 @@ import type {
   ChatPersonaOption,
 } from '@openthrottle/react-router-chat';
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
+import { createRoutesStub } from 'react-router';
 import type { RepositoryOption } from '~/routing/home/data/models.server';
 import type { UseAgenticChatTurnResult } from '~/routing/home/hooks/useAgenticChatTurn';
 import type { UseConversationListResult } from '~/routing/home/hooks/useConversationList';
@@ -52,12 +53,16 @@ const repositories: RepositoryOption[] = [
   { displayName: 'monorepo', id: 'repo-1' },
 ];
 
-const renderComposer = (composerProps: HomeComposerProps): RenderResult =>
-  render(
+const renderComposer = (composerProps: HomeComposerProps): RenderResult => {
+  const Wrapped = (): React.ReactElement => (
     <TooltipProvider>
       <HomeComposer {...composerProps} />
-    </TooltipProvider>,
+    </TooltipProvider>
   );
+  const RoutesStub = createRoutesStub([{ Component: Wrapped, path: '/' }]);
+
+  return render(<RoutesStub />);
+};
 
 describe('HomeComposer Component', () => {
   let component: RenderResult;
