@@ -39,7 +39,16 @@ const mockDashboardQuery = {
   queues: [],
 };
 
-// Raw GraphQL shape returned by the 3rd executeGraphqlWithAuth call (recentChats
+// Raw GraphQL shape returned by the 3rd executeGraphqlWithAuth call
+// (getDashboardOnboarding — the Get Started checklist signals).
+const mockOnboardingQuery = {
+  discoverAgentClis: { totalCount: 0 },
+  githubTokenConfigured: false,
+  planCountsByStatus: [],
+  workspaceLocalRepositories: [],
+};
+
+// Raw GraphQL shape returned by the 4th executeGraphqlWithAuth call (recentChats
 // via callListAgentConversations, which maps `data.listAgentConversations`).
 const mockConversationsQuery = {
   listAgentConversations: {
@@ -55,11 +64,13 @@ const mockConversationsQuery = {
   },
 };
 
-// Deferred loader shape: `core` (dashboard query) + `githubStats` + `recentChats`,
-// each a promise. `recentChats` is the mapped ListAgentConversationsResult.
+// Deferred loader shape: `core` (dashboard query) + `githubStats` +
+// `onboarding` + `recentChats`, each a promise. `recentChats` is the mapped
+// ListAgentConversationsResult.
 const mockLoaderData = {
   core: Promise.resolve(mockDashboardQuery),
   githubStats: Promise.resolve(mockGithubStats),
+  onboarding: Promise.resolve(mockOnboardingQuery),
   recentChats: Promise.resolve({
     conversations: mockConversationsQuery.listAgentConversations.conversations,
     errorMessage: null,
@@ -88,6 +99,7 @@ describe('routes/dashboard._index.tsx', () => {
       mockExecute
         .mockResolvedValueOnce(mockDashboardQuery)
         .mockResolvedValueOnce(mockGithubStats)
+        .mockResolvedValueOnce(mockOnboardingQuery)
         .mockResolvedValueOnce(mockConversationsQuery);
 
       const request = new Request(
@@ -103,10 +115,10 @@ describe('routes/dashboard._index.tsx', () => {
 
       const result = await loader(args);
 
-      // All three queries fire concurrently (no serial await gate): core,
-      // githubStats, and recentChats are each invoked by the time the loader
-      // returns.
-      expect(mockExecute).toHaveBeenCalledTimes(3);
+      // All four queries fire concurrently (no serial await gate): core,
+      // githubStats, onboarding, and recentChats are each invoked by the time
+      // the loader returns.
+      expect(mockExecute).toHaveBeenCalledTimes(4);
       // githubStats is now a deferred promise — await it to assert its value.
       expect(await result.githubStats).toEqual(mockGithubStats);
       expect(mockExecute).toHaveBeenNthCalledWith(
@@ -121,6 +133,7 @@ describe('routes/dashboard._index.tsx', () => {
       mockExecute
         .mockResolvedValueOnce(mockDashboardQuery)
         .mockResolvedValueOnce(mockGithubStats)
+        .mockResolvedValueOnce(mockOnboardingQuery)
         .mockResolvedValueOnce(mockConversationsQuery);
 
       const request = new Request(

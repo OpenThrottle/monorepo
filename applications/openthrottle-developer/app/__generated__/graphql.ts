@@ -5995,6 +5995,28 @@ export type GetDashboardQuery = {
   }>;
 };
 
+export type GetDashboardOnboardingQueryVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type GetDashboardOnboardingQuery = {
+  __typename?: 'Query';
+  githubTokenConfigured: boolean;
+  discoverAgentClis: {
+    __typename?: 'DiscoverAgentClisResult';
+    totalCount: number;
+  };
+  planCountsByStatus: Array<{
+    __typename?: 'PlanStatusCountObject';
+    count: number;
+    status: string;
+  }>;
+  workspaceLocalRepositories: Array<{
+    __typename?: 'WorkspaceLocalRepositoryObject';
+    id: string;
+  }>;
+};
+
 export type GetDashboardGithubStatsQueryVariables = Exact<{
   owner: Scalars['String']['input'];
   repo: Scalars['String']['input'];
@@ -14024,6 +14046,59 @@ export const GetDashboardDocument = {
     },
   ],
 } as unknown as DocumentNode<GetDashboardQuery, GetDashboardQueryVariables>;
+export const GetDashboardOnboardingDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getDashboardOnboarding' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'discoverAgentClis' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'githubTokenConfigured' },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'planCountsByStatus' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'count' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'workspaceLocalRepositories' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetDashboardOnboardingQuery,
+  GetDashboardOnboardingQueryVariables
+>;
 export const GetDashboardGithubStatsDocument = {
   kind: 'Document',
   definitions: [
