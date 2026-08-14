@@ -90,6 +90,8 @@ export const SETTINGS_SETUP_COPY = {
   installDisclaimerOff: `Server-side install/update is disabled. Set OT_AGENT_CLI_INSTALL_ENABLED on the server (local dev machines only) to enable the Install/Update controls.`,
   installDisclaimerOn: `Server-side install/update is enabled (OT_AGENT_CLI_INSTALL_ENABLED). Installs run allowlisted CLIs on the server host.`,
   installedBadge: `Installed`,
+  modelBulkDeselect: `Disable all`,
+  modelBulkSelect: `Enable all`,
   modelExpandCollapse: `Collapse models`,
   modelExpandExpand: `Expand models`,
   modelFavoriteLabel: `Favorite model`,

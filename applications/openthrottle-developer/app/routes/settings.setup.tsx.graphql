@@ -42,6 +42,17 @@ mutation SetAgentModelEnabled(
   }
 }
 
+mutation SetAgentModelsEnabled(
+  $backend: String!
+  $models: [String!]!
+  $enabled: Boolean!
+) {
+  setAgentModelsEnabled(backend: $backend, models: $models, enabled: $enabled) {
+    backend
+    enabled
+  }
+}
+
 mutation SetAgentModelFavorite(
   $backend: String!
   $model: String!

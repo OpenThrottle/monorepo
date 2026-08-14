@@ -3,7 +3,7 @@ import { Test } from '@nestjs/testing';
 import { createMock } from '@golevelup/ts-vitest';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { IsNull } from 'typeorm';
+import { IsNull, Not } from 'typeorm';
 import { AgentCliPreferencesService } from './agent-cli-preferences.service';
 import { UserDisabledAgentCli } from './user-disabled-agent-cli.entity';
 import { UserFavoriteAgentModel } from './user-favorite-agent-model.entity';
@@ -199,6 +199,38 @@ describe('AgentCliPreferencesService', () => {
         userId,
       });
       await service.setModelEnabled(userId, 'claude', 'opus', false);
+      expect(disabledRepository.save).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('setModelsEnabled', () => {
+    it('clears every per-model disable row (model NOT NULL) when enabling all', async () => {
+      await service.setModelsEnabled(userId, 'cursor', ['a', 'b'], true);
+      expect(disabledRepository.delete).toHaveBeenCalledWith({
+        backend: 'cursor',
+        model: Not(IsNull()),
+        userId,
+      });
+      expect(disabledRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('inserts a disable row for each not-yet-disabled model when disabling all', async () => {
+      disabledRepository.find.mockResolvedValue([
+        { backend: 'cursor', model: 'a', userId },
+      ]);
+      await service.setModelsEnabled(userId, 'cursor', ['a', 'b', 'c'], false);
+      expect(disabledRepository.save).toHaveBeenCalledWith([
+        { backend: 'cursor', model: 'b', userId },
+        { backend: 'cursor', model: 'c', userId },
+      ]);
+    });
+
+    it('does not save when every model is already disabled', async () => {
+      disabledRepository.find.mockResolvedValue([
+        { backend: 'cursor', model: 'a', userId },
+        { backend: 'cursor', model: 'b', userId },
+      ]);
+      await service.setModelsEnabled(userId, 'cursor', ['a', 'b'], false);
       expect(disabledRepository.save).not.toHaveBeenCalled();
     });
   });

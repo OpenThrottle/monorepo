@@ -12,7 +12,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { IsNull, Repository } from 'typeorm';
+import { IsNull, Not, Repository } from 'typeorm';
 import { UserDisabledAgentCli } from './user-disabled-agent-cli.entity';
 import { UserFavoriteAgentModel } from './user-favorite-agent-model.entity';
 
@@ -162,6 +162,46 @@ export class AgentCliPreferencesService {
     await this.disabledRepository.save(
       this.disabledRepository.create({ backend, model, userId }),
     );
+  }
+
+  /**
+   * @description Bulk enable/disable EVERY model of a backend for a user in one shot (the
+   * select-all / deselect-all affordance on the setup page). `enabled: true` clears all per-model
+   * disable rows for the backend (leaving the agent-level `model IS NULL` row untouched); `enabled:
+   * false` inserts a disable row for each id in `models`, skipping ones already disabled. Both are
+   * idempotent. Passing an empty `models` on disable is a no-op.
+   */
+  async setModelsEnabled(
+    userId: string,
+    backend: string,
+    models: readonly string[],
+    enabled: boolean,
+  ): Promise<void> {
+    if (enabled) {
+      await this.disabledRepository.delete({
+        backend,
+        model: Not(IsNull()),
+        userId,
+      });
+      return;
+    }
+
+    const existing = await this.disabledRepository.find({
+      where: { backend, userId },
+    });
+    const alreadyDisabled = new Set(
+      existing
+        .map((row) => row.model)
+        .filter((model): model is string => model != null),
+    );
+    const toInsert = models
+      .filter((model) => !alreadyDisabled.has(model))
+      .map((model) =>
+        this.disabledRepository.create({ backend, model, userId }),
+      );
+    if (toInsert.length > 0) {
+      await this.disabledRepository.save(toInsert);
+    }
   }
 
   // ── Per-model favorites (presence-as-favorite) ────────────────────────────

@@ -60,6 +60,24 @@ export class SetAgentModelEnabledResult {
 }
 
 /**
+ * @description Result of `setAgentModelsEnabled`: the bulk select-all / deselect-all outcome for a
+ * backend. `enabled` echoes the state applied to EVERY model of the backend (true = all cleared to
+ * enabled; false = all recorded disabled). An agent-level OFF still hard-overrides downstream.
+ */
+@ObjectType()
+export class SetAgentModelsEnabledResult {
+  @Field(() => String, {
+    description: `The backend (driver id) whose models were bulk-toggled.`,
+  })
+  backend!: string;
+
+  @Field(() => Boolean, {
+    description: `The per-model enablement state applied to every model of the backend: true = all enabled, false = all disabled.`,
+  })
+  enabled!: boolean;
+}
+
+/**
  * @description Result of `setAgentModelFavorite`: the per-user favorite state for a model after the
  * toggle. Favorite is orthogonal to enablement — it only reorders/highlights the model in pickers.
  */

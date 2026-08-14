@@ -71,6 +71,7 @@ export const SettingsSetupModelFavorite = (
     <Button
       aria-label={SETTINGS_SETUP_COPY.modelFavoriteLabel}
       aria-pressed={optimisticFavorite}
+      className="size-6"
       data-testid={`SettingsSetupModelFavorite-${backend}-${model}`}
       disabled={disabled}
       onClick={handleClick}
@@ -80,7 +81,7 @@ export const SettingsSetupModelFavorite = (
     >
       <StarIcon
         className={cn(
-          'size-4',
+          'size-3.5',
           optimisticFavorite
             ? 'fill-yellow-400 text-yellow-400'
             : 'text-muted-foreground',

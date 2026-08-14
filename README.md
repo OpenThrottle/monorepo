@@ -1,13 +1,13 @@
 # 🤖 OpenThrottle | AI
 
-[Continuous Integration](https://github.com/OpenThrottle/monorepo/actions/workflows/continuous-integration.yml?query=branch%3Amain)
-[NX Release](https://github.com/OpenThrottle/monorepo/actions/workflows/nx-release.yml?query=branch%3Amain)
+[![🤖 Continuous Integration](https://github.com/OpenThrottle/monorepo/actions/workflows/continuous-integration.yml/badge.svg?branch=main)](https://github.com/OpenThrottle/monorepo/actions/workflows/continuous-integration.yml)
+<!-- [![🚀 NX Release](https://github.com/OpenThrottle/monorepo/actions/workflows/nx-release.yml/badge.svg?branch=main)](https://github.com/OpenThrottle/monorepo/actions/workflows/nx-release.yml) -->
 
 **OpenThrottle** is an open-core, AI-native platform for planning and shipping software. At its core is a Postgres-backed knowledge base of **plans and tasks** with semantic search, exposed to your editor and agents over **MCP**, plus agentic execution (Ralph) and a developer dashboard that shows what's in progress and what shipped. The repo is an Nx + pnpm monorepo with TypeScript throughout.
 
 ## ⚙️ Installation
 
-Setup is simple and highly scripted:
+Setup is simple and scripted:
 
 ```bash
 ./scripts/setup.sh
@@ -29,14 +29,18 @@ OpenThrottle is a AI Harness built in a NX monorepo using NodeJS, TypeScript, Po
 
 1. Startup from the "openthrottle/monorepo" root
 
-   `pnpm run start`
+   ```bash
+   pnpm run start
+   ```
 
 2. Watch the logs for the two applications to start up
    1. http://localhost:6021 OpenThrottle Server 🧠
    2. http://localhost:6020 OpenThrottle Developer 🏍️💨
 3. Turn it off ~ _if you can..._
 
-   `pnpm run stop`
+   ```bash
+   pnpm run stop
+   ```
 
 ## 🏠 Architecture
 
@@ -76,26 +80,33 @@ When issues arise, our goal is to provide straightforward solutions that allow y
 
 **1. Build Issues?**
 
-We can always re-run the setup script `./scripts/setup.sh`
+Sometimes you just want to start fresh, to do that:
 
-- Ensures we have the latest NodeJS and NX versions
-- Then we can install the latest dependencies
-- And we'll build/rebuild anything that needs to be built
+```bash
+# Stop anything that's running
+pnpm run stop
+
+# Nuke all the artifacts and node modules
+pnpm run clean
+
+# Re-install and build things
+./scripts/setup.sh
+```
 
 **2. Database Issues?**
 
 Try stopping and starting Postgres + Redis with the root pnpm scripts:
 
-- `pnpm run database:stop`
-- `pnpm run database:start`
+```bash
+pnpm run database:stop
+pnpm run database:start
+```
 
-See [databases/README.md](./databases/README.md) and [local-quickstart.md](./docs/openthrottle/local-quickstart.md).
+> See [databases/README.md](./databases/README.md) and [local-quickstart.md](./docs/openthrottle/local-quickstart.md).
 
 **3. Version mismatches?**
 
-To see what versions of a package are installed we can use `pnpm list`. From there we typically need to set a specific resolution in our package.json.
-
-- e.g. `pnpm list react`
+To see what versions of a package are installed we can use `pnpm list`. From there we typically need to set a specific resolution in our package.json. e.g. `pnpm list react`
 
 **4. Other issues?**
 
@@ -103,7 +114,7 @@ Open a [GitHub issue](https://github.com/OpenThrottle/monorepo/issues) with what
 
 ## 📄 License
 
-OpenThrottle is **open core**: the core is licensed under the **Apache License, Version 2.0** (see `[LICENSE.md](./LICENSE.md)`), with commercial/enterprise modules reserved under a separate EULA. All current first-party code is Apache-2.0.
+OpenThrottle is **open core**: the core is licensed under the **Apache License, Version 2.0** (see [LICENSE.md](./LICENSE.md)), with commercial/enterprise modules reserved under a separate EULA. All current first-party code is Apache-2.0.
 
 See [LICENSING.md](./LICENSING.md) for the open-core boundary — which directories are Apache-2.0 vs EULA, and how to tell.
 

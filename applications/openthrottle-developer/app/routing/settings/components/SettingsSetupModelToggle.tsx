@@ -82,6 +82,7 @@ export const SettingsSetupModelToggle = (
       data-testid={`SettingsSetupModelToggle-${backend}-${model}`}
       disabled={disabled}
       onCheckedChange={handleCheckedChange}
+      size="sm"
     />
   );
 
