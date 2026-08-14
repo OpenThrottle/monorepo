@@ -8,6 +8,7 @@ import {
 import {
   GetDashboardDocument,
   GetDashboardGithubStatsDocument,
+  GetDashboardOnboardingDocument,
   GetDashboardQueryVariables,
   TriggerNotificationDocument,
 } from '~/__generated__/graphql';
@@ -65,13 +66,23 @@ export const loader = (args: Route.LoaderArgs) => {
     { owner, repo },
   );
 
+  // Deferred (onboarding): the real-state signals that drive the "Get Started"
+  // checklist (GitHub token, workspace repo count, agent-CLI count, plan counts
+  // by status). Its own naked promise so the non-critical nudge card streams
+  // independently and never blocks the activity chart or PR stats.
+  const onboarding = executeGraphqlWithAuth(
+    args.request,
+    GetDashboardOnboardingDocument,
+    {},
+  );
+
   // Deferred (recentChats): the 3 most-recent agent conversations, streamed in
   // its own Await boundary (mirroring githubStats) so it never blocks the
   // activity chart. Resolves to ListAgentConversationsResult; a rejection is
   // handled downstream by the card's errorElement.
   const recentChats = callListAgentConversations(args.request, { limit: 3 });
 
-  return { core, githubStats, recentChats };
+  return { core, githubStats, onboarding, recentChats };
 };
 
 export const links: Route.LinksFunction = () => {
@@ -86,7 +97,7 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData: _a, loaderData, matches: _m, params: _p } = props;
-  const { core, githubStats, recentChats } = loaderData;
+  const { core, githubStats, onboarding, recentChats } = loaderData;
 
   // Hooks
 
@@ -106,6 +117,7 @@ export default function Component(
       <DashboardContentGrid
         core={core}
         githubStats={githubStats}
+        onboarding={onboarding}
         recentChats={recentChats}
       />
     </GlobalScreen>

@@ -77,6 +77,26 @@ query getDashboard(
   # }
 }
 
+# First-run onboarding signals for the dashboard "Get Started" checklist.
+# Kept in its own query/promise so it streams independently and never blocks
+# the activity chart. All fields are cheap counts/booleans — never full lists.
+query getDashboardOnboarding {
+  discoverAgentClis {
+    totalCount
+  }
+
+  githubTokenConfigured
+
+  planCountsByStatus {
+    count
+    status
+  }
+
+  workspaceLocalRepositories {
+    id
+  }
+}
+
 query getDashboardGithubStats($owner: String!, $repo: String!) {
 
   closedPrCountByAuthor: openPrCountByAuthor(
