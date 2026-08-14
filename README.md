@@ -5,9 +5,42 @@
 
 **OpenThrottle** is an open-core, AI-native platform for planning and shipping software. At its core is a Postgres-backed knowledge base of **plans and tasks** with semantic search, exposed to your editor and agents over **MCP**, plus agentic execution (Ralph) and a developer dashboard that shows what's in progress and what shipped. The repo is an Nx + pnpm monorepo with TypeScript throughout.
 
-**New here?** Start with the [documentation index](./docs/README.md), or jump straight to the [Quickstart](./docs/openthrottle/local-quickstart.md) (clone → running server → verified MCP) and [first-time onboarding](./docs/openthrottle/first-time-onboarding.md).
+## ⚙️ Installation
 
-**See also:** [docs/](./docs/README.md) for guides; [tools/](./tools/) for Nx plugins and templates; [CONTRIBUTING.md](./CONTRIBUTING.md) and [MONOREPO.md](./MONOREPO.md) for structure and contribution guidelines; [AGENTS.md](./AGENTS.md) for agent and automation guidelines.
+Setup is simple and highly scripted:
+
+```bash
+./scripts/setup.sh
+```
+
+Then setup the MCP servers globally:
+
+```bash
+pnpm run setup:mcp-instructions
+```
+
+> [!Tip]
+>
+> You can run this setup script **`ANYTIME`** you need to **reset your environment** or resolve **setup-related issues**. See the Troubleshooting section below for common scenarios where running the setup script can help.
+
+## 🚀 Get Started
+
+OpenThrottle is a AI Harness built in a NX monorepo using NodeJS, TypeScript, PostgreSQL, Redis, NestJS, BullMQ, React Router and much more. The local stack (full walkthrough: [local-quickstart.md](./docs/openthrottle/local-quickstart.md))
+
+1. Startup from the "openthrottle/monorepo" root
+
+   ```bash
+   pnpm run start
+   ```
+
+2. Watch the logs for the two applications to start up
+   1. http://localhost:6021 OpenThrottle Server 🧠
+   2. http://localhost:6020 OpenThrottle Developer 🏍️💨
+3. Turn it off ~ _if you can..._
+
+   ```bash
+   pnpm run stop
+   ```
 
 ## 🏠 Architecture
 
@@ -23,42 +56,6 @@
 ├── services               # Shared or standalone services
 ├── skills                 # Custom agent skills (Ralph, code review, generators, …)
 └── tools                  # Nx plugins, templates, workflows (see tools/)
-```
-
-## ⚙️ Installation
-
-> [!Tip]
-> The setup process is automated through an initialization script.
->
-> You can run this script **`ANYTIME`** you need to **reset your environment** or resolve **setup-related issues**. See the Troubleshooting section below for common scenarios where running the setup script can help.
-
-```bash
-./scripts/setup.sh
-```
-
-## 🚀 Get Started
-
-OpenThrottle is a AI Harness built in a NX monorepo using NodeJS, TypeScript, PostgreSQL, Redis, NestJS, BullMQ, React Router and much more. The local stack (full walkthrough: [local-quickstart.md](./docs/openthrottle/local-quickstart.md))
-
-```bash
-# from the "openthrottle/monorepo" root
-pnpm run start
-
-  # API: 🧠 http://localhost:6021/graphql
-  # UI: 🏍️💨 http://localhost:6020
-
-# 👋 Turn it off (if you can...)
-pnpm run stop
-```
-
-> The start command starts both the developer and server applications.
-
-```bash
-# Server only (API + MCP)
-pnpm nx run openthrottle-server:start
-
-# Server (API + MCP) and Developer (UI)
-pnpm nx run openthrottle-developer:start
 ```
 
 ## 🚦 Project status
