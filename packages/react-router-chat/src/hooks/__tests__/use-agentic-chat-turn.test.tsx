@@ -181,9 +181,37 @@ const renderRecovery = (): RenderResult => {
   return render(<RoutesStub />);
 };
 
+// A start action that NEVER resolves: models a wedged `startConversationStream`
+// so the fetcher stays in flight and no assistant id ever arrives — the exact
+// window the mutation-in-flight watchdog covers. Counts only real (re)starts.
+let stalledStartCalls = 0;
+const hangingStreamAction = async ({
+  request,
+}: {
+  request: Request;
+}): Promise<Record<string, unknown>> => {
+  const form = await request.formData();
+  if (form.get('intent') === 'cancel') {
+    return { cancelled: true };
+  }
+  stalledStartCalls += 1;
+  return new Promise<Record<string, unknown>>(() => {
+    // Intentionally never resolves.
+  });
+};
+
+const renderStalledMutation = (): RenderResult => {
+  const RoutesStub = createRoutesStub([
+    { Component: Harness, path: '/' },
+    { action: hangingStreamAction, path: '/resources/conversation-stream' },
+  ]);
+  return render(<RoutesStub />);
+};
+
 describe('useAgenticChatTurn recovery', () => {
   beforeEach(() => {
     startCalls = 0;
+    stalledStartCalls = 0;
     streamControl = null;
   });
 
@@ -244,5 +272,34 @@ describe('useAgenticChatTurn recovery', () => {
     });
     expect(startCalls).toBe(2);
     expect(component.getByTestId('can-retry')).toHaveTextContent('yes');
+  });
+
+  test('mutation-in-flight watchdog recovers a stalled start mutation before any chunk', async () => {
+    vi.useFakeTimers();
+    const component = renderStalledMutation();
+
+    // Submit → the start mutation is in flight and never returns an assistant id
+    // (no chunk, no pending turn), so the chunk-based stall watchdog can never
+    // see it. Only the mutation-in-flight watchdog covers this window.
+    await act(async () => {
+      fireEvent.click(component.getByRole('button', { name: 'Submit' }));
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    expect(stalledStartCalls).toBe(1);
+
+    // Before the watchdog window, nothing recovers — the mutation is simply
+    // still in flight (this is the pre-fix "dead composer" moment).
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(44_000);
+    });
+    expect(stalledStartCalls).toBe(1);
+
+    // At the mutation-in-flight window, the watchdog replays the turn once
+    // instead of hanging forever. (The auto-retry budget + manual-retry
+    // escalation live in `recover`, covered by the stall-watchdog test above.)
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1_000);
+    });
+    expect(stalledStartCalls).toBe(2);
   });
 });

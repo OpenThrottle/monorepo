@@ -34,6 +34,7 @@ import {
   type ConversationReasoningEffort,
   type ConversationServiceTier,
   type ConversationStreamChunk,
+  createCursorAgentSession,
   openAiConversationBackend,
   resolveChatIdleTimeoutMs,
 } from '@openthrottle/openthrottle-agentic-utils';
@@ -55,6 +56,14 @@ const CLI_BACKENDS: Readonly<Record<string, ConversationBackend>> =
 
 /** Conversation-metadata key holding a backend's persisted session id. */
 const sessionMetadataKey = (backend: string): string => `${backend}SessionId`;
+
+/**
+ * The cursor backend discriminator. Cursor is the only CLI backend whose chat
+ * session must be minted (`cursor-agent create-chat`) BEFORE its first spawn —
+ * done lazily in {@link ConversationStreamService.runStream} so the ~2s mint
+ * never blocks the start mutation.
+ */
+const CURSOR_BACKEND = 'cursor';
 
 /**
  * How long a finished turn's chunk buffer is retained after its terminal chunk,
@@ -240,6 +249,57 @@ export class ConversationStreamService {
     // into the assistant message's tool_metadata on completion.
     const toolEvents: Array<Record<string, unknown>> = [];
 
+    // Cursor mints its chat session by spawning `cursor-agent create-chat`
+    // (~2s). We do it HERE — in the fire-and-forget stream — rather than in the
+    // start mutation so the mutation returns the assistant id immediately and
+    // the composer stays responsive; the client's subscription is already live
+    // to show progress and surface a mint failure. claude mints a UUID instantly
+    // and opencode mints mid-stream, so only cursor needs this pre-spawn step.
+    // A persisted session (later turns) already carries a non-null id here and
+    // skips the mint entirely.
+    let sessionId = run.sessionId;
+    if (
+      run.backend === CURSOR_BACKEND &&
+      (sessionId === null || sessionId === '')
+    ) {
+      // Liveness ping so the composer shows "Waiting for {model}…" during the
+      // mint instead of sitting idle. Ephemeral: never buffered or persisted.
+      await this.publishEphemeralChunk({
+        conversationId: run.conversationId,
+        delta: '',
+        done: false,
+        error: null,
+        id: randomUUID(),
+        kind: CONVERSATION_STREAM_CHUNK_KINDS.keepalive,
+        messageId: run.assistantMessageId,
+        metadataJson: run.model ? JSON.stringify({ model: run.model }) : null,
+        sortOrder,
+      });
+
+      try {
+        sessionId = await this.mintCursorSession(run, controller.signal);
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
+        this.logger.error(`conversation-stream cursor mint failed: ${message}`);
+        // Surface the mint failure as a terminal stream error the client can
+        // display and retry — never a silent hang. Buffered, so a late
+        // subscriber still replays it.
+        await this.publishChunk({
+          conversationId: run.conversationId,
+          delta: '',
+          done: true,
+          error: `Failed to start a cursor-agent session: ${message}`,
+          id: randomUUID(),
+          kind: CONVERSATION_STREAM_CHUNK_KINDS.text,
+          messageId: run.assistantMessageId,
+          metadataJson: null,
+          sortOrder,
+        });
+        this.controllers.delete(run.conversationId);
+        return;
+      }
+    }
+
     const backend: ConversationBackend =
       CLI_BACKENDS[run.backend] ?? openAiConversationBackend;
 
@@ -255,7 +315,7 @@ export class ConversationStreamService {
       reasoning: run.reasoning ?? undefined,
       resumeSession: run.resumeSession,
       serviceTier: run.serviceTier ?? undefined,
-      sessionId: run.sessionId ?? undefined,
+      sessionId: sessionId ?? undefined,
       signal: controller.signal,
       systemPrompt: run.systemPrompt ?? undefined,
     };
@@ -485,6 +545,42 @@ export class ConversationStreamService {
     } finally {
       void iterator.return?.(undefined)?.catch(() => undefined);
     }
+  }
+
+  /**
+   * Mint a fresh cursor-agent chat session and persist its id so later turns
+   * resume it. Spawns `cursor-agent create-chat` (internally bounded by
+   * DEFAULT_SESSION_TIMEOUT_MS). Called lazily from {@link runStream} on the
+   * first cursor turn so the ~2s spawn never blocks the start mutation; the
+   * caller surfaces a throw as a terminal stream error. Private mode
+   * (persist=false) mints an ephemeral session and skips persistence.
+   */
+  private async mintCursorSession(
+    run: StartConversationStreamRun,
+    signal: AbortSignal,
+  ): Promise<string> {
+    if (run.cwd === null || run.cwd === '') {
+      throw new Error('The cursor-agent backend requires a cwd.');
+    }
+
+    const sessionId = await createCursorAgentSession({ cwd: run.cwd, signal });
+
+    if (run.persist) {
+      try {
+        await this.conversations.updateMetadata(run.conversationId, {
+          [sessionMetadataKey(run.backend)]: sessionId,
+        });
+      } catch (error: unknown) {
+        // A metadata-write failure must not drop the freshly minted session for
+        // this turn: log and run with the id we hold (a later turn re-mints).
+        const message = error instanceof Error ? error.message : String(error);
+        this.logger.error(
+          `conversation-stream cursor session persist failed: ${message}`,
+        );
+      }
+    }
+
+    return sessionId;
   }
 
   /**

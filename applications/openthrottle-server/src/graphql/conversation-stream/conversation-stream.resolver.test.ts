@@ -404,14 +404,13 @@ describe('ConversationStreamResolver.startConversationStream', () => {
     expect(streamService.start).not.toHaveBeenCalled();
   });
 
-  it('routes a cursor backend: resolves the repo cwd, mints a session, starts the cursor stream', async () => {
-    const { repositories, resolver, streamService } = build();
+  it('routes a cursor backend: resolves the repo cwd, records the repo, and starts the stream WITHOUT minting (mint is deferred to the stream)', async () => {
+    const { conversations, repositories, resolver, streamService } = build();
     vi.mocked(repositories.findByIdForUser).mockResolvedValue(
       createMock<WorkspaceLocalRepository>({
         filesystemPath: '/repo/checkout',
       }),
     );
-    createCursorAgentSessionMock.mockResolvedValue('cursor-sess-1');
 
     const result = await resolver.startConversationStream(human, {
       backend: 'cursor',
@@ -424,15 +423,22 @@ describe('ConversationStreamResolver.startConversationStream', () => {
     });
 
     expect(result.errorMessage).toBeNull();
-    expect(createCursorAgentSessionMock).toHaveBeenCalledWith({
-      cwd: '/repo/checkout',
-    });
+    // The mutation must NOT spawn `cursor-agent create-chat` — that ~2s mint is
+    // deferred to ConversationStreamService.runStream so the composer stays
+    // responsive. It records the repository up front and hands the stream a null
+    // session id for it to fill in.
+    expect(createCursorAgentSessionMock).not.toHaveBeenCalled();
+    expect(conversations.updateMetadata).toHaveBeenCalledWith(
+      'conv-1',
+      expect.objectContaining({ cursorRepositoryId: 'repo-1' }),
+    );
     expect(streamService.start).toHaveBeenCalledWith(
       expect.objectContaining({
         backend: 'cursor',
         cwd: '/repo/checkout',
         provider: 'cursor',
-        sessionId: 'cursor-sess-1',
+        resumeSession: true,
+        sessionId: null,
         systemPrompt: expect.stringContaining('Architect'),
       }),
     );

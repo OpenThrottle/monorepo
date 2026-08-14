@@ -11,13 +11,19 @@ import {
   type StartConversationStreamRun,
 } from './conversation-stream.service';
 
-const { claudeStreamMock, openAiStreamMock, opencodeStreamMock } = vi.hoisted(
-  () => ({
-    claudeStreamMock: vi.fn(),
-    openAiStreamMock: vi.fn(),
-    opencodeStreamMock: vi.fn(),
-  }),
-);
+const {
+  claudeStreamMock,
+  createCursorAgentSessionMock,
+  cursorStreamMock,
+  openAiStreamMock,
+  opencodeStreamMock,
+} = vi.hoisted(() => ({
+  claudeStreamMock: vi.fn(),
+  createCursorAgentSessionMock: vi.fn(),
+  cursorStreamMock: vi.fn(),
+  openAiStreamMock: vi.fn(),
+  opencodeStreamMock: vi.fn(),
+}));
 
 vi.mock('@openthrottle/openthrottle-agentic-utils', async (importOriginal) => {
   const actual =
@@ -33,9 +39,13 @@ vi.mock('@openthrottle/openthrottle-agentic-utils', async (importOriginal) => {
     CONVERSATION_CLI_BACKENDS: {
       ...actual.CONVERSATION_CLI_BACKENDS,
       claude: { stream: claudeStreamMock },
+      cursor: { stream: cursorStreamMock },
       opencode: { stream: opencodeStreamMock },
     },
     claudeConversationBackend: { stream: claudeStreamMock },
+    // The service mints the cursor session itself (create-chat) before spawning
+    // the cursor stream, so this is stubbed to avoid a real child process.
+    createCursorAgentSession: createCursorAgentSessionMock,
     openAiConversationBackend: { stream: openAiStreamMock },
     opencodeConversationBackend: { stream: opencodeStreamMock },
   };
@@ -657,6 +667,105 @@ describe('ConversationStreamService', () => {
     expect(conversations.updateMetadata).toHaveBeenCalledWith('conv-1', {
       opencodeSessionId: 'ses_new',
     });
+  });
+
+  it('mints the cursor session in the stream (not the mutation) before the first spawn, persists it, and pings liveness', async () => {
+    createCursorAgentSessionMock.mockResolvedValue('cursor-new');
+    cursorStreamMock.mockReturnValue(fakeStream(['hi']));
+    const { conversations, publish, service } = buildService();
+
+    await service.runStream({
+      ...baseRun,
+      backend: 'cursor',
+      cwd: '/repo',
+      provider: 'cursor',
+      resumeSession: true,
+      sessionId: null,
+    });
+
+    // The mint happens here, in the fire-and-forget stream, with the run's cwd
+    // and an abort signal so cancel tears it down too.
+    expect(createCursorAgentSessionMock).toHaveBeenCalledWith({
+      cwd: '/repo',
+      signal: expect.any(AbortSignal),
+    });
+    // The minted id is threaded to the cursor adapter and persisted for resume.
+    expect(cursorStreamMock.mock.calls[0]?.[0]).toMatchObject({
+      sessionId: 'cursor-new',
+    });
+    expect(conversations.updateMetadata).toHaveBeenCalledWith('conv-1', {
+      cursorSessionId: 'cursor-new',
+    });
+    // A keepalive liveness ping precedes any content so the composer shows
+    // progress during the ~2s mint instead of sitting dead.
+    const kinds = publish.mock.calls.map(
+      ([, payload]) => payload.conversationStreamChunkAdded.kind,
+    );
+    expect(kinds[0]).toBe('keepalive');
+  });
+
+  it('reuses a persisted cursor session id without minting a new one', async () => {
+    cursorStreamMock.mockReturnValue(fakeStream(['hi']));
+    const { conversations, service } = buildService();
+
+    await service.runStream({
+      ...baseRun,
+      backend: 'cursor',
+      cwd: '/repo',
+      provider: 'cursor',
+      resumeSession: true,
+      sessionId: 'cursor-existing',
+    });
+
+    expect(createCursorAgentSessionMock).not.toHaveBeenCalled();
+    expect(cursorStreamMock.mock.calls[0]?.[0]).toMatchObject({
+      sessionId: 'cursor-existing',
+    });
+    expect(conversations.updateMetadata).not.toHaveBeenCalled();
+  });
+
+  it('surfaces a cursor mint failure as a terminal error chunk instead of hanging (no spawn)', async () => {
+    createCursorAgentSessionMock.mockRejectedValue(new Error('auth expired'));
+    const { service, publish } = buildService();
+
+    await service.runStream({
+      ...baseRun,
+      backend: 'cursor',
+      cwd: '/repo',
+      provider: 'cursor',
+      resumeSession: true,
+      sessionId: null,
+    });
+
+    // The cursor adapter is never spawned; the mint failure ends the turn.
+    expect(cursorStreamMock).not.toHaveBeenCalled();
+    const last = publish.mock.calls.at(-1)?.[1].conversationStreamChunkAdded;
+    expect(last).toMatchObject({ done: true });
+    expect(last?.error).toContain('Failed to start a cursor-agent session');
+    expect(last?.error).toContain('auth expired');
+  });
+
+  it('mints an ephemeral cursor session in Private mode without persisting it', async () => {
+    createCursorAgentSessionMock.mockResolvedValue('cursor-ephemeral');
+    cursorStreamMock.mockReturnValue(fakeStream(['hi']));
+    const { conversations, service } = buildService();
+
+    await service.runStream({
+      ...baseRun,
+      backend: 'cursor',
+      cwd: '/repo',
+      persist: false,
+      provider: 'cursor',
+      resumeSession: true,
+      sessionId: null,
+    });
+
+    expect(createCursorAgentSessionMock).toHaveBeenCalledOnce();
+    expect(cursorStreamMock.mock.calls[0]?.[0]).toMatchObject({
+      sessionId: 'cursor-ephemeral',
+    });
+    // No conversation row in Private mode → the minted id is never persisted.
+    expect(conversations.updateMetadata).not.toHaveBeenCalled();
   });
 
   it('Private mode (persist=false) streams every chunk but writes nothing to the DB', async () => {

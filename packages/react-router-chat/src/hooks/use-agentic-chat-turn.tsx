@@ -40,6 +40,19 @@ const MAX_AUTO_RETRIES = 1;
 const CLIENT_STALL_TIMEOUT_MS = 180_000;
 
 /**
+ * Mutation-in-flight watchdog window (ms): {@link CLIENT_STALL_TIMEOUT_MS} only
+ * arms once a turn has a pending assistant id — i.e. after `startConversationStream`
+ * returned and the stream began. The start mutation itself can stall (a slow or
+ * wedged mutation, a dead network) BEFORE any assistant id or chunk exists, which
+ * the chunk-based watchdog cannot see. This shorter timer covers exactly that gap
+ * so a stalled mutation recovers instead of hanging the composer indefinitely.
+ * Set well above a healthy mutation's round-trip (sub-second) and above the
+ * server's cursor create-chat ceiling (30s) so a merely-slow mutation still
+ * returns on its own before this fires.
+ */
+const MUTATION_STALL_TIMEOUT_MS = 45_000;
+
+/**
  * Result of the conversation-stream start action the hook reads. Structural, so
  * each app's route action result is assignable.
  * @public
@@ -465,6 +478,33 @@ export function useAgenticChatTurn(
       clearTimeout(timer);
     };
   }, [pendingAssistantId, stream.lastActivityAt]);
+
+  // Mutation-in-flight watchdog: cover the window the chunk-based watchdog above
+  // cannot — the start mutation is in flight but has not yet yielded an assistant
+  // id (so there is no pending turn and no chunk to time). A stalled/wedged
+  // `startConversationStream` would otherwise leave the composer busy forever with
+  // no recovery. While the start fetcher is busy AND no pending id exists, arm a
+  // recovery timer; on timeout replay once (nothing streamed → no server cancel),
+  // then fall through to manual Retry via the loop guard in `recover`. Disarms the
+  // instant the assistant id arrives (handoff to the chunk watchdog) or the
+  // fetcher goes idle.
+  React.useEffect(() => {
+    if (
+      startFetcher.state === 'idle' ||
+      pendingAssistantId !== null ||
+      canRetry
+    ) {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      recoverRef.current({ cancelFirst: false });
+    }, MUTATION_STALL_TIMEOUT_MS);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [canRetry, startFetcher.state, pendingAssistantId]);
 
   // Heartbeat: while a turn is pending, tick `nowMs` every second so the pending
   // placeholder's elapsed-based phase advances even when no chunk arrives. The

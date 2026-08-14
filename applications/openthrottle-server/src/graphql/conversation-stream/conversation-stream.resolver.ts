@@ -38,7 +38,6 @@ import {
   type ConversationPermissionMode,
   type ConversationReasoningEffort,
   type ConversationServiceTier,
-  createCursorAgentSession,
   toContainerPath,
   toConversationPermissionMode,
   toConversationReasoningEffort,
@@ -507,7 +506,6 @@ export class ConversationStreamResolver {
       backend,
       userId,
       conversationId,
-      cwd,
       input.repositoryId ?? null,
       persist,
     );
@@ -582,7 +580,6 @@ export class ConversationStreamResolver {
     backend: string,
     userId: string,
     conversationId: string,
-    cwd: string,
     repositoryId: string | null,
     persist: boolean,
   ): Promise<{ resumeSession: boolean; sessionId: string | null } | string> {
@@ -606,26 +603,22 @@ export class ConversationStreamResolver {
     }
 
     if (backend === CURSOR_BACKEND) {
-      let sessionId: string;
-      try {
-        sessionId = await createCursorAgentSession({ cwd });
-      } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : String(error);
-        this.logger.error(
-          `startConversationStream: cursor session start failed (cwd=${cwd}): ${message}`,
-          ConversationStreamResolver.name,
-        );
-        return `Failed to start a cursor-agent session: ${message}`;
-      }
-
+      // Do NOT mint the cursor session here. `createCursorAgentSession` spawns
+      // `cursor-agent create-chat` (~2s, up to 30s), and this runs inside the
+      // awaited start mutation — blocking it presents as a dead composer with no
+      // stream activity and no recovery (the client stall watchdog only arms once
+      // it has the assistant id from the mutation result). Defer the mint to the
+      // fire-and-forget stream (`ConversationStreamService.runStream`), which
+      // mints before the first cursor spawn and persists the id. Mirror
+      // opencode's shape: record the repository up front, return no session id
+      // yet (the stream fills it in).
       if (persist) {
         await this.conversations.updateMetadata(conversationId, {
           [repositoryMetadataKey(backend)]: repositoryId,
-          [sessionMetadataKey(backend)]: sessionId,
         });
       }
 
-      return { resumeSession: true, sessionId };
+      return { resumeSession: true, sessionId: null };
     }
 
     if (backend === CLAUDE_BACKEND) {
