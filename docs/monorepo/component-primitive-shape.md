@@ -105,10 +105,82 @@ Whitespace is part of the contract:
 - **Keep every marker even when its section is empty** — an empty section is
   just the marker followed by one blank line before the next marker. Do not
   delete a marker because you have nothing to put under it yet.
-- The optional props destructure (`const { … } = props;`) sits between the
-  signature and the first `// Hooks` marker, separated by one blank line.
 - The `🔌 Short Circuit` marker is the emoji + text exactly: `// 🔌 Short
 Circuit`.
+
+#### The pre-Hooks unpack block
+
+Between the signature and the first `// Hooks` marker (separated by one blank
+line) is the **only** place `props` is unpacked. This block is _unpack_, never
+_derive_:
+
+- `const { … } = props;` — the identity destructure of `props` (unused keys
+  prefixed `_`). An empty `const {} = props;` when the component takes no props
+  is fine; its presence is the point.
+- **Nested identity destructures** of those bindings: `const { id, name } =
+item;` when `item` came from `props`, `const { repository } = loaderData;` when
+  `loaderData` came from `props`. Peeling a nested value off a props-derived
+  binding is still _unpacking_, so it stays here — not under `// Setup`.
+- **Nothing derived** here. A formatted label, a `'x' in y` narrowing, a mapped
+  or filtered array — anything _computed from_ those bindings — belongs under
+  `// Setup`, never in this block.
+- **Never** unpack `props` (or a nested identity destructure of a props-derived
+  binding) after `// Hooks`, and especially not after `// 🔌 Short Circuit`
+  immediately above the `return`. That after-Short-Circuit dump is the exact
+  anti-pattern the enforcer flags.
+
+Hooks stay first (right after the unpack) so Rules-of-Hooks order is stable;
+`// Setup` can then read both the unpacked props and the hook results.
+
+```tsx
+// ✅ Good — identity unpack (incl. nested) before Hooks; derive under Setup.
+export const RepositoryRow = (
+  props: RepositoryRowProps,
+): React.ReactElement => {
+  const { repository } = props;
+  const { id, name } = repository;
+
+  // Hooks
+
+  // Setup
+  const label = `${name} (#${id})`;
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
+  return <div data-testid="RepositoryRow">{label}</div>;
+};
+
+// ❌ Bad — props unpacked after Short Circuit, jammed above the return.
+export const RepositoryRow = (
+  props: RepositoryRowProps,
+): React.ReactElement => {
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+  const { repository } = props;
+  const { id, name } = repository;
+
+  return (
+    <div data-testid="RepositoryRow">
+      {name} (#{id})
+    </div>
+  );
+};
+```
 
 > "Leave a line if there is no early return": the `Short Circuit` marker and its
 > trailing blank line stay even when the component has no guard clause — the

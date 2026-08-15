@@ -21,11 +21,11 @@ export const AddFolderResult = (
   props: AddFolderResultProps,
 ): React.ReactElement => {
   const { payload } = props;
+  const { checkout, project, projectCreated, repository } = payload;
 
   // Hooks
 
   // Setup
-  const { checkout, project, projectCreated, repository } = payload;
   const inspection = checkout.inspection ?? null;
   const detectedStack = inspection
     ? [

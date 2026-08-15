@@ -49,9 +49,16 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
 export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
+  const { actionData, loaderData, matches: _m, params: _p } = props;
+  const { profile } = loaderData;
+
   // Hooks
 
   // Setup
+  const actionError = getActionError(actionData) ?? null;
+  const actionMessage =
+    actionData && 'message' in actionData ? actionData.message : null;
+  const canApplyEditors = profile.enabledEditors.length > 0;
 
   // Handlers
 
@@ -60,13 +67,6 @@ export default function Component(
   // Life Cycle
 
   // 🔌 Short Circuit
-
-  const { actionData, loaderData, matches: _m, params: _p } = props;
-  const { profile } = loaderData;
-  const actionError = getActionError(actionData) ?? null;
-  const actionMessage =
-    actionData && 'message' in actionData ? actionData.message : null;
-  const canApplyEditors = profile.enabledEditors.length > 0;
 
   return (
     <GlobalScreen>

@@ -1,4 +1,5 @@
 import { componentPrimitiveShape } from './rules/component-primitive-shape.ts';
+import { preHooksUnpack } from './rules/pre-hooks-unpack.ts';
 import { routePrimitiveShape } from './rules/route-primitive-shape.ts';
 import { getDirname } from './vite-config.ts';
 import graphqlEslint, {
@@ -193,6 +194,7 @@ export const eslintConfig = tslint.config([
       openthrottle: {
         rules: {
           'component-primitive-shape': componentPrimitiveShape,
+          'pre-hooks-unpack': preHooksUnpack,
           'route-primitive-shape': routePrimitiveShape,
         },
       },
@@ -324,6 +326,12 @@ export const eslintConfig = tslint.config([
         { max: 210, skipBlankLines: false, skipComments: false },
       ],
       'openthrottle/component-primitive-shape': 'error',
+      // The pre-Hooks props-unpack contract (component R3, "The pre-Hooks unpack
+      // block"). Shipped warn-first on both surfaces — a shared rule, not a
+      // second checker — so an after-Hooks / after-Short-Circuit unpack is
+      // visible without breaking the build. Graduates to `error` later,
+      // independently per surface.
+      'openthrottle/pre-hooks-unpack': 'warn',
     },
   },
 
@@ -353,6 +361,10 @@ export const eslintConfig = tslint.config([
         'warn',
         { max: 210, skipBlankLines: false, skipComments: false },
       ],
+      // Same pre-Hooks unpack contract as the component surface — route keys
+      // (loaderData/actionData/params/matches) are just a props shape, so the
+      // shared rule covers the default Component here too (warn-first).
+      'openthrottle/pre-hooks-unpack': 'warn',
       'openthrottle/route-primitive-shape': 'warn',
     },
   },

@@ -36,7 +36,13 @@ describe('componentGenerator', () => {
     expect(source).toBeDefined();
     expect(source).toContain(`export interface ${name}Props`);
     expect(source).not.toMatch(/readonly\s+className/);
-    expect(source).toContain('_props: TestComponentProps');
+    expect(source).toContain('props: TestComponentProps');
+    // The props unpack is live and sits before // Hooks (not `_props` /
+    // commented out) — the pre-Hooks unpack block.
+    expect(source).toContain('const {} = props;');
+    expect(source).not.toMatch(/\(_props:/);
+    // The unpack sits before the first // Hooks marker (pre-Hooks block).
+    expect(source).toMatch(/const \{\} = props;[\s\S]*\/\/ Hooks/);
     expect(source).toContain('// Hooks');
     expect(source).toContain('// Setup');
     expect(source).toContain('// Handlers');
