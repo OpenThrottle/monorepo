@@ -13,6 +13,8 @@
  * malformed and browser-extension-noise payloads without erroring.
  */
 
+import { isRecord } from '@openthrottle/nodejs-utils';
+
 export interface CspViolationLogEntry {
   blockedUri?: string;
   disposition?: string;
@@ -27,9 +29,6 @@ export interface CspViolationLogEntry {
   userAgent?: string;
   violatedDirective?: string;
 }
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
 
 const readNumber = (
   record: Record<string, unknown>,

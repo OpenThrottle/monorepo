@@ -16,6 +16,7 @@ import type {
   TaskData,
   TaskEmbeddingSearchRow,
 } from '@openthrottle/nestjs-repositories';
+import { isRecord } from '@openthrottle/nodejs-utils';
 import { In } from 'typeorm';
 import { getOrCreateDataSource, runQuery } from './data-source.ts';
 import { embedQuery } from './embedding.ts';
@@ -39,9 +40,6 @@ interface PlanRawRow {
 /**
  * @description Normalizes TypeORM query result (array or pg-style { rows, rowCount }) to { rows, rowCount }.
  */
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
-
 const toRecord = (value: unknown): Record<string, unknown> =>
   isRecord(value) ? value : {};
 

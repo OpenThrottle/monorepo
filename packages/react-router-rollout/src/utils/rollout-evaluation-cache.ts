@@ -1,3 +1,4 @@
+import { isRecord } from '@openthrottle/nodejs-utils';
 import {
   DEFAULT_ROLLOUT_CACHE_TTL_MS,
   ROLLOUT_CACHE_KEY_PREFIX,
@@ -25,9 +26,6 @@ export const rolloutEvaluationCacheKey = (
   identityKey?: string | null,
 ): string =>
   `${ROLLOUT_CACHE_KEY_PREFIX}:${applicationKey}:${identityKey ?? 'anon'}`;
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
 
 const isEvaluation = (value: unknown): value is RolloutEvaluation => {
   if (!isRecord(value)) {

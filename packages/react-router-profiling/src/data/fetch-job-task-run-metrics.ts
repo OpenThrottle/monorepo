@@ -2,6 +2,8 @@
  * @description Fetches job with taskRunMetrics from openthrottle-server GraphQL job(jobId, queueName: "plans").
  */
 
+import { isRecord } from '@openthrottle/nodejs-utils';
+
 import type {
   JobWithTaskRunMetrics,
   ProcessMetricsSnapshot,
@@ -44,10 +46,6 @@ interface JobTaskRunMetricsData {
 interface GraphqlResponse {
   readonly data?: JobTaskRunMetricsData;
   readonly errors?: ReadonlyArray<GraphqlError>;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
 }
 
 /**

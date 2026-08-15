@@ -1,3 +1,5 @@
+import { isRecord } from '@openthrottle/nodejs-utils';
+
 import type { ChatOptionsResponse } from '~/routes/resources.chat-options';
 
 /**
@@ -23,10 +25,6 @@ interface CachedChatOptions {
 }
 
 let memoryEntry: CachedChatOptions | null = null;
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
 
 /** Structural guard so a tampered/legacy `sessionStorage` blob is ignored. */
 function isCachedChatOptions(value: unknown): value is CachedChatOptions {

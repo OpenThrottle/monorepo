@@ -4,6 +4,7 @@
  */
 
 import * as React from 'react';
+import { isRecord } from '@openthrottle/nodejs-utils';
 import { isRenderableMessage, toast } from '@openthrottle/react-router-shadcn';
 import type {
   NotificationEventName,
@@ -53,9 +54,7 @@ export function loadFromStorage(storageKey: string): NotificationInstance[] {
   }
 }
 
-export function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
+export { isRecord };
 
 export function isStoredNotification(
   item: unknown,

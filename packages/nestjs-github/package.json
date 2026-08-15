@@ -10,6 +10,7 @@
   "dependencies": {
     "@apollo/cache-control-types": "catalog:",
     "@nestjs/graphql": "catalog:",
+    "@openthrottle/nodejs-utils": "workspace:^",
     "graphql": "catalog:"
   },
   "devDependencies": {

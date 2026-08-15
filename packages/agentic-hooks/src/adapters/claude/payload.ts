@@ -4,13 +4,12 @@
  * into the tool-neutral shapes the shared core understands. Everything
  * downstream lives in the package core.
  */
+import { isRecord } from '@openthrottle/nodejs-utils';
+
 import type { NormalizedInvocation } from '../../types';
 
 /** Producer id stamped onto every event this adapter emits. @public */
 export const CLAUDE_SOURCE = 'claude-code';
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  value != null && typeof value === 'object';
 
 /**
  * Parse a Claude Code hook payload into a NormalizedInvocation, or null when

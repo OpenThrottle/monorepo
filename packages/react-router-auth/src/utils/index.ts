@@ -1,3 +1,4 @@
+import { isRecord } from '@openthrottle/nodejs-utils';
 import {
   AUTH_COOKIE_MAX_AGE_DAYS,
   AUTH_COOKIE_NAME,
@@ -111,9 +112,6 @@ export function getAuthTokenFromCookie(cookieHeader: string): string | null {
 export function getClearAuthCookieHeader(options?: AuthCookieOptions): string {
   return `${AUTH_COOKIE_NAME}=; ${buildAuthCookieAttributes(0, options)}`;
 }
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
 
 /**
  * @description Cheap pre-flight check: true when a JWT's `exp` claim is in the

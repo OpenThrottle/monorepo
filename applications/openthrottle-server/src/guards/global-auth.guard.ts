@@ -10,13 +10,11 @@ import {
   IS_PUBLIC_KEY,
   type AuthenticatedRequest,
 } from '@openthrottle/nestjs-auth';
+import { isRecord } from '@openthrottle/nodejs-utils';
 import { GlobalClsAuthHook } from '../auth/global-cls-auth-hook.service';
 import { ServiceAccountAuthService } from '../auth/service-account-auth.service';
 import { GqlJwtAuthGuard } from './gql-jwt-auth.guard';
 import { getRequestFromExecutionContext } from './get-request-from-execution-context';
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
 
 const readAuthorizationHeader = (req: object): string | undefined => {
   const headers = 'headers' in req ? req.headers : undefined;

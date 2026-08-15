@@ -1,3 +1,4 @@
+import { isRecord } from '@openthrottle/nodejs-utils';
 import { APP_NAME } from '@openthrottle/react-router-utils';
 import {
   ChatComposerMode,
@@ -85,9 +86,6 @@ export const DEFAULT_CHAT_TOOLBAR_STATE: ChatToolbarState = {
   serviceTier: undefined,
   version: CHAT_TOOLBAR_STATE_VERSION,
 };
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
 
 /** True when `value` is one of the string members of an as-const union. */
 function isMemberOf<T extends string>(

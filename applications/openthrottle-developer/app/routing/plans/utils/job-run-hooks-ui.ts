@@ -3,6 +3,8 @@
  * Constants align with `tools/workflows/src/types/job-run-lifecycle-hooks.ts` (no Node `fs` import).
  */
 
+import { isRecord } from '@openthrottle/nodejs-utils';
+
 import { DEFAULT_RALPH_PROMPT } from '~/routing/plans/utils/build-workflow-ralph-argv';
 
 /** When a hook runs relative to the main Ralph/orchestrator run. */
@@ -89,9 +91,6 @@ const JOB_RUN_HOOK_ON_FAILURE: readonly JobRunHookOnFailure[] = [
   'ignore',
   'warn',
 ];
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
 
 const trimOptional = (value: unknown, field: string): string | undefined => {
   if (value === undefined || value === null) return undefined;

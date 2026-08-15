@@ -7,6 +7,7 @@
   "dependencies": {
     "@graphql-typed-document-node/core": "catalog:",
     "@openthrottle/agentic-token-usage": "workspace:^",
+    "@openthrottle/nodejs-utils": "workspace:^",
     "@openthrottle/react-router-graphql": "workspace:^",
     "@openthrottle/react-router-markdown": "workspace:^",
     "@openthrottle/react-router-shadcn": "workspace:^",

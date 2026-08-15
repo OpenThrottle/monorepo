@@ -329,8 +329,10 @@ var drainJsonlFile = async ({
   return result;
 };
 
+// packages/nodejs-utils/dist/src/utils/is-record.js
+var isRecord = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
+
 // packages/agentic-hooks/src/data/persist.ts
-var isRecord = (value) => value != null && typeof value === "object";
 var readGraphqlErrors = (payload) => {
   if (!isRecord(payload) || !Array.isArray(payload.errors) || !payload.errors.length) {
     return null;

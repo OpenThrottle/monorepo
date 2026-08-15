@@ -5,6 +5,7 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
+    "@openthrottle/nodejs-utils": "workspace:^",
     "@openthrottle/openthrottle-developer-codegen": "workspace:^",
     "@openthrottle/react-router-chat": "workspace:^",
     "@openthrottle/react-router-notifications": "workspace:^",

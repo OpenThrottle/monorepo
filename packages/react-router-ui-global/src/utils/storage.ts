@@ -1,4 +1,5 @@
 import { GetRootMetricsQuery } from '@openthrottle/openthrottle-developer-codegen';
+import { isRecord } from '@openthrottle/nodejs-utils';
 import {
   GLOBAL_METRICS_COLLAPSED_KEY,
   GLOBAL_METRICS_STORAGE_KEY,
@@ -115,14 +116,11 @@ export const writeStoredMetricsCollapsed = (collapsed: boolean): void => {
 const isFiniteNumber = (value: unknown): value is number =>
   typeof value === 'number' && Number.isFinite(value);
 
-const isPlainObject = (value: unknown): value is Record<string, unknown> =>
-  value !== null && typeof value === 'object' && !Array.isArray(value);
-
 /**
  * @description Validates one chart row (metrics fields + sequential index `i`).
  */
 const isMetricsChartDatum = (value: unknown): value is MetricsChartDatum => {
-  if (!isPlainObject(value)) {
+  if (!isRecord(value)) {
     return false;
   }
 
@@ -157,7 +155,7 @@ const parsePayload = (raw: string): StoredMetricsChartHistoryPayload | null => {
     return null;
   }
 
-  if (!isPlainObject(parsed)) return null;
+  if (!isRecord(parsed)) return null;
 
   if (parsed.v !== GLOBAL_METRICS_CHART_HISTORY_SCHEMA_VERSION) return null;
 

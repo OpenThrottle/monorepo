@@ -6,6 +6,7 @@
   },
   "dependencies": {
     "@nx/devkit": "catalog:",
+    "@openthrottle/nodejs-utils": "workspace:^",
     "@openthrottle/openthrottle-agentic-ralph": "workspace:^",
     "@openthrottle/openthrottle-agentic-utils": "workspace:^",
     "@openthrottle/openthrottle-agentic-workflow": "workspace:^",

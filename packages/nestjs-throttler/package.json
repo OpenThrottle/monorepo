@@ -11,7 +11,8 @@
     "@nestjs/common": "catalog:",
     "@nestjs/core": "catalog:",
     "@nestjs/graphql": "catalog:",
-    "@nestjs/throttler": "catalog:"
+    "@nestjs/throttler": "catalog:",
+    "@openthrottle/nodejs-utils": "workspace:^"
   },
   "devDependencies": {
     "@apollo/server": "catalog:",

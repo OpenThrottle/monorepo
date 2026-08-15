@@ -8,6 +8,7 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
+    "@openthrottle/nodejs-utils": "workspace:^",
     "@openthrottle/openthrottle-agentic-workflow": "workspace:^",
     "@openthrottle/openthrottle-drivers": "workspace:^",
     "@openthrottle/openthrottle-skills": "workspace:^",

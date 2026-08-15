@@ -1,3 +1,4 @@
+import { isRecord } from '@openthrottle/nodejs-utils';
 import type { JwtPayload } from './strategies/jwt.strategy';
 
 /** Discriminant for {@link UserAuthPrincipal}. */
@@ -108,12 +109,6 @@ const userPrincipalFromUnknown = (
     ...(roles !== undefined ? { roles } : {}),
   };
 };
-
-/**
- * @description Narrows an unknown value to an indexable record without a cast.
- */
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
 
 /**
  * @description Type guard for {@link AuthPrincipal} on `request.user`.

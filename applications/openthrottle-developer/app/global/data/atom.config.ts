@@ -1,3 +1,4 @@
+import { isRecord } from '@openthrottle/nodejs-utils';
 import { APP_NAME, type ThemeMode } from '@openthrottle/react-router-utils';
 import { isThemeId } from '@openthrottle/react-router-shadcn';
 import { atomWithStorage, createJSONStorage } from 'jotai/utils';
@@ -26,9 +27,6 @@ export const DEFAULT_APPEARANCE_CONFIG: ConfigObject = {
 
 const isThemeMode = (value: unknown): value is ThemeMode =>
   value === 'dark' || value === 'light' || value === 'system';
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
 
 /**
  * @description Coerce unknown persisted JSON into a valid {@link ConfigObject}.

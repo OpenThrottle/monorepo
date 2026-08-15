@@ -18,6 +18,7 @@ import {
   normalizeRemoteUrl,
   RepositoryCheckoutsService,
 } from '@openthrottle/nestjs-repositories';
+import { isRecord } from '@openthrottle/nodejs-utils';
 import { toContainerPath } from '@openthrottle/openthrottle-agentic-utils';
 import type {
   RepositoryInspectionAgentConfig,
@@ -61,9 +62,6 @@ const PACKAGE_MANAGER_LOCKFILES: ReadonlyArray<readonly [string, string]> = [
 ];
 
 const SKILLS_DIRECTORIES = ['.agents/skills', '.claude/skills', 'skills'];
-
-const isJsonObject = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
 
 /**
  * Validates a path before any filesystem access: absolute, sane length, no
@@ -315,7 +313,7 @@ export class RepositoryInspectionService {
       const manifest: unknown = JSON.parse(
         await readFile(manifestPath, 'utf-8'),
       );
-      if (!isJsonObject(manifest)) {
+      if (!isRecord(manifest)) {
         warnings.push('OT manifest is not a JSON object');
         return { ...absent, present: true };
       }

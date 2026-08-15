@@ -1,3 +1,4 @@
+import { isRecord } from '@openthrottle/nodejs-utils';
 import type { ChartConfig } from '@openthrottle/react-router-shadcn';
 import type { QueueCardFragment } from '~/__generated__/graphql';
 
@@ -35,9 +36,6 @@ export type QueueStatsChartRow = Record<
 > & {
   name: string;
 };
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
 
 /** Narrow an unknown Recharts tooltip payload to a complete chart row. */
 export const isQueueStatsChartRow = (

@@ -416,9 +416,11 @@ var drainJsonlFile = async ({
 var import_node_fs5 = __toESM(require("node:fs"), 1);
 var import_node_path4 = __toESM(require("node:path"), 1);
 
+// packages/nodejs-utils/dist/src/utils/is-record.js
+var isRecord = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
+
 // packages/agentic-hooks/src/data/starts.ts
 var import_node_fs4 = __toESM(require("node:fs"), 1);
-var isRecord = (value) => value != null && typeof value === "object";
 var listStartsForSession = ({
   repoRoot,
   sessionId,
@@ -507,17 +509,16 @@ var drainStartsForSession = ({
 };
 
 // packages/agentic-hooks/src/data/persist.ts
-var isRecord2 = (value) => value != null && typeof value === "object";
 var readGraphqlErrors = (payload) => {
-  if (!isRecord2(payload) || !Array.isArray(payload.errors) || !payload.errors.length) {
+  if (!isRecord(payload) || !Array.isArray(payload.errors) || !payload.errors.length) {
     return null;
   }
-  return payload.errors.map((e) => isRecord2(e) && typeof e.message === "string" ? e.message : "").join("; ");
+  return payload.errors.map((e) => isRecord(e) && typeof e.message === "string" ? e.message : "").join("; ");
 };
 var readMutationId = (payload, field) => {
-  if (isRecord2(payload) && isRecord2(payload.data)) {
+  if (isRecord(payload) && isRecord(payload.data)) {
     const node = payload.data[field];
-    if (isRecord2(node) && node.id != null) {
+    if (isRecord(node) && node.id != null) {
       return String(node.id);
     }
   }
@@ -904,9 +905,8 @@ var drainBufferedUsage = async ({
 };
 
 // packages/agentic-hooks/src/adapters/claude/payload.ts
-var isRecord3 = (value) => value != null && typeof value === "object";
 var normalizeClaudeStopPayload = (raw) => {
-  if (!isRecord3(raw)) {
+  if (!isRecord(raw)) {
     return null;
   }
   const sessionId = typeof raw.session_id === "string" ? raw.session_id.trim() : "";

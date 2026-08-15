@@ -9,11 +9,9 @@
  *   {@link foldPersistedTurnEvents}.
  */
 
+import { isRecord } from '@openthrottle/nodejs-utils';
 import type { ChatTurnEvent, ChatTurnUsageEvent } from './types';
 import { hasUsageCounts, normalizeUsage, sumUsage } from './usage';
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
 
 const asString = (value: unknown): string | null =>
   typeof value === 'string' ? value : null;

@@ -1,3 +1,4 @@
+import { isRecord } from '@openthrottle/nodejs-utils';
 import * as React from 'react';
 import { useFetcher } from 'react-router';
 import { buildAgentsChatAssistantFooter } from '../agents-chat-footer';
@@ -95,9 +96,6 @@ const clearConversationIdFromStorage = (key: string): void => {
     // Ignore storage failures.
   }
 };
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
 
 const nullableString = (value: unknown): string | null =>
   typeof value === 'string' ? value : null;

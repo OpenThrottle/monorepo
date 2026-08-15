@@ -8,6 +8,7 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
+    "@openthrottle/nodejs-utils": "workspace:^",
     "yaml": "catalog:",
     "zod": "catalog:"
   },

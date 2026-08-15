@@ -1,4 +1,5 @@
 import { parse as parseYamlDocument } from 'yaml';
+import { isRecord } from '@openthrottle/nodejs-utils';
 
 import { extractFrontmatterBody } from './extract-frontmatter-body.ts';
 
@@ -22,9 +23,6 @@ export interface ParsedYamlFrontmatter {
  * meaningless empty string, rather than the real (unsupported) shape.
  */
 const UNSUPPORTED_CONSTRUCT_PLACEHOLDER = '';
-
-const isPlainRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
 
 const toFrontmatterArray = (
   items: readonly unknown[],
@@ -108,7 +106,7 @@ export const parseYamlFrontmatter = (
     return { fields: {} };
   }
 
-  if (!isPlainRecord(document)) {
+  if (!isRecord(document)) {
     return { fields: {} };
   }
 

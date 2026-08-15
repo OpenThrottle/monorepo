@@ -6,6 +6,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { isRecord } from '@openthrottle/nodejs-utils';
+
 import { resolveAuthToken, resolveGraphqlUrl } from '../config/env';
 import {
   buildOutcomeEvent,
@@ -35,9 +37,6 @@ import type {
   SkillUsageOutcome,
   UsageEvent,
 } from '../types';
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  value != null && typeof value === 'object';
 
 /**
  * Read GraphQL `errors` from a JSON payload. Returns null when there is no

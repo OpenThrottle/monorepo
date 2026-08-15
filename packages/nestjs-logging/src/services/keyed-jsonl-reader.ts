@@ -2,6 +2,7 @@ import { createReadStream } from 'node:fs';
 import { access } from 'node:fs/promises';
 import * as path from 'node:path';
 import { createInterface } from 'node:readline';
+import { isRecord } from '@openthrottle/nodejs-utils';
 import type { KeyedJsonlRunRecord } from './keyed-jsonl-writer';
 import {
   buildKeyedJsonlRelativePath,
@@ -63,9 +64,6 @@ export interface ReadKeyedJsonlRunParams {
   readonly options: ReadKeyedJsonlRunOptions;
   readonly queueName: string;
 }
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
 
 /**
  * @description Parse one JSONL line into a {@link KeyedJsonlRunRecord}, or return

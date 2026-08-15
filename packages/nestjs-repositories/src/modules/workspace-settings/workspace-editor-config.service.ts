@@ -7,6 +7,7 @@ import { constants } from 'fs';
 import { dirname, join } from 'path';
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import { isRecord } from '@openthrottle/nodejs-utils';
 import { toContainerPath } from '@openthrottle/openthrottle-agentic-utils';
 import { OPENTHROTTLE_REPO_SKILL_PATHS } from './openthrottle-repo-skill-paths';
 import type { WorkspaceEditorId } from './workspace-editor-id';
@@ -41,9 +42,6 @@ export interface WorkspaceEditorConfigApplication {
   readonly repositoryId: string;
   readonly warnings: readonly string[];
 }
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
 
 const parseJsonFile = (raw: string): McpServersJson => {
   const parsed: unknown = JSON.parse(raw);

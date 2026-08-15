@@ -6,6 +6,7 @@
   },
   "dependencies": {
     "@openthrottle/nestjs-repositories": "workspace:^",
+    "@openthrottle/nodejs-utils": "workspace:^",
     "@openthrottle/openthrottle-agentic-utils": "workspace:^",
     "openai": "catalog:",
     "pg": "catalog:",

@@ -1,4 +1,5 @@
 import { Logger } from '@nestjs/common';
+import { isRecord } from '@openthrottle/nodejs-utils';
 
 const LOG_CONTEXT = 'ProfileResponseTime';
 
@@ -19,9 +20,6 @@ interface ReflectWithKeys {
     propertyKey?: string | symbol,
   ) => (string | symbol)[];
 }
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
 
 const isReflectWithKeys = (value: unknown): value is ReflectWithKeys =>
   isRecord(value) &&

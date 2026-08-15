@@ -9,6 +9,7 @@ import type {
   NotificationEventName,
   NotificationPayload,
 } from '@openthrottle/openthrottle-notifications';
+import { isRecord } from '@openthrottle/nodejs-utils';
 import { IS_BROWSER } from '@openthrottle/react-router-utils';
 import { NOTIFICATIONS_STORAGE_KEY } from '../config/index';
 
@@ -22,10 +23,6 @@ export interface SystemNotificationsPreference {
 const DEFAULT_PREFERENCE: SystemNotificationsPreference = {
   enabled: false,
 };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
 
 /**
  * @description Reads system notification preference from localStorage.

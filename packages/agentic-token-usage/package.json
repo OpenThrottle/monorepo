@@ -4,7 +4,9 @@
     "name": "Matthew Scholta",
     "url": "https://mattscholta.com"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@openthrottle/nodejs-utils": "workspace:^"
+  },
   "description": "Isomorphic (Node + browser safe) canonical token-usage normalization: folds every agent-CLI backend's heterogeneous usage metadata into one NormalizedTokenUsage shape. Shared by the server persistence path and the chat UI so the SAME normalization runs everywhere.",
   "devDependencies": {},
   "exports": {

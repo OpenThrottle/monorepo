@@ -8,6 +8,7 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
+    "@openthrottle/nodejs-utils": "workspace:^",
     "@openthrottle/react-router-shadcn": "workspace:^"
   },
   "devDependencies": {},

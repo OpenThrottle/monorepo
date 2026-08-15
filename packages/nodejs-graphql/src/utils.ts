@@ -1,3 +1,5 @@
+import { isRecord } from '@openthrottle/nodejs-utils';
+
 /**
  * @description Default per-request timeout (milliseconds) applied to the
  * underlying `fetch` when a caller does not pass an explicit `timeoutMs`.
@@ -159,9 +161,6 @@ export interface GraphqlPayload<TData> {
   readonly data?: TData;
   readonly errors?: ReadonlyArray<GraphqlErrorItem>;
 }
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  value !== null && typeof value === 'object' && !Array.isArray(value);
 
 const isGraphqlPathSegment = (p: unknown): p is string | number =>
   typeof p === 'string' || typeof p === 'number';

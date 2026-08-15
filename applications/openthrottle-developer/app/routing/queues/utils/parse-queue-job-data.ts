@@ -2,6 +2,8 @@
  * @description Parses BullMQ job `data` JSON for plans-queue jobs (plan/task correlation).
  */
 
+import { isRecord } from '@openthrottle/nodejs-utils';
+
 interface ParsedQueueJobData {
   /** Optional idempotency or trace id if the worker or client put it in the JSON payload. */
   readonly correlationId: string | undefined;
@@ -12,9 +14,6 @@ interface ParsedQueueJobData {
   readonly runKind: string | undefined;
   readonly taskId: string | undefined;
 }
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
 
 /**
  * @description Parses optional JSON job payload; surfaces copy-friendly formatting for operators.

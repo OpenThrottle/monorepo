@@ -1,3 +1,4 @@
+import { isRecord } from '@openthrottle/nodejs-utils';
 import { buildAgentsChatAssistantFooter } from './agents-chat-footer';
 import { foldPersistedTurnEvents } from './turn-events';
 import type { ChatMessage, ChatTurnResult } from './types';
@@ -11,9 +12,6 @@ export interface PersistedAgentConversationMessage {
   readonly routingReason: string | null;
   readonly toolMetadataJson: string | null;
 }
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
 
 const parseMcpToolFromToolMetadataJson = (
   toolMetadataJson: string | null,
