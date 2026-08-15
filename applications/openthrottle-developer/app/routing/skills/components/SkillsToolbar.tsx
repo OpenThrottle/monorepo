@@ -6,13 +6,11 @@ import {
   Input,
   ToggleGroup,
   ToggleGroupItem,
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
-import { FilePlusIcon, SlidersHorizontalIcon } from 'lucide-react';
+import { SlidersHorizontalIcon, TagsIcon } from 'lucide-react';
 import {
   SKILL_AVAILABILITY_COPY,
+  SKILL_VOCABULARY_COPY,
   SKILLS_SOURCE_COPY,
 } from '~/routing/skills/data/data.copy';
 import {
@@ -87,18 +85,12 @@ export const SkillsToolbar = (
         </Link>
       </Button>
 
-      <Tooltip delayDuration={1_000}>
-        <TooltipTrigger asChild={true}>
-          <Button
-            aria-label="Toggle sidebar (Cmd/Ctrl+B)"
-            type="submit"
-            variant="outline"
-          >
-            <FilePlusIcon className="size-4" />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent side="right">Create new skill</TooltipContent>
-      </Tooltip>
+      <Button asChild={true} variant="outline">
+        <Link to="/skills/vocabulary">
+          <TagsIcon className="size-4" />
+          {SKILL_VOCABULARY_COPY.manageLink}
+        </Link>
+      </Button>
     </div>
   );
 };

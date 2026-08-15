@@ -23,6 +23,19 @@ describe('SkillsToolbar Component', () => {
     expect(link).toHaveAttribute('href', '/skills/availability');
   });
 
+  test('links to the tag-vocabulary manager', () => {
+    renderRoutesStub(<SkillsToolbar />);
+
+    const link = screen.getByRole('link', { name: /Manage vocabulary/i });
+    expect(link).toHaveAttribute('href', '/skills/vocabulary');
+  });
+
+  test('no longer renders the dead Create-new-skill control', () => {
+    renderRoutesStub(<SkillsToolbar />);
+
+    expect(screen.queryByText('Create new skill')).not.toBeInTheDocument();
+  });
+
   describe('source filter (All / OpenThrottle / External)', () => {
     const onSourceFilterChange = vi.fn();
 

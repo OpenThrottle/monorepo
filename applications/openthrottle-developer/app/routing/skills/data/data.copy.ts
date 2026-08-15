@@ -188,3 +188,16 @@ export const SKILL_AVAILABILITY_COPY = {
     tagColumn: `Tag`,
   },
 } as const;
+
+/**
+ * Page chrome for the standalone `/skills/vocabulary` route. The tag-manager
+ * widget still reads its own strings from `SKILL_AVAILABILITY_COPY.vocabulary`
+ * (the two components import that block directly); this const only holds the
+ * route-level title/description and the toolbar link that reaches it.
+ */
+export const SKILL_VOCABULARY_COPY = {
+  backLink: `Back to skills`,
+  manageLink: `Manage vocabulary`,
+  pageDescription: `Add, rename, or remove the workspace tag vocabulary. These tags constrain the tag pickers in the availability rules editor.`,
+  pageTitle: `Skill tag vocabulary`,
+} as const;

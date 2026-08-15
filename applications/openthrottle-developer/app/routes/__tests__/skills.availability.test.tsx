@@ -65,6 +65,20 @@ describe('routes/skills.availability.tsx', () => {
     );
   });
 
+  test('no longer renders the tag-vocabulary manager (moved to /skills/vocabulary)', () => {
+    const view = renderRoute({
+      posture: null,
+      projectId: 'p1',
+      projectName: 'monorepo',
+      rules: [],
+      vocabulary: [{ id: 't1', tag: 'github' }],
+    });
+
+    expect(
+      view.queryByTestId('SkillTagVocabularyManager'),
+    ).not.toBeInTheDocument();
+  });
+
   test('shows the no-project notice when the dogfood project is absent', () => {
     const view = renderRoute({
       posture: null,
