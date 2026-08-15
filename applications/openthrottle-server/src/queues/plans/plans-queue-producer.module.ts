@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsBullmqBoardModule } from '@openthrottle/nestjs-bullmq-board';
 import { NestjsBullmqModule } from '@openthrottle/nestjs-bullmq';
+import { NestjsRedisModule } from '@openthrottle/nestjs-redis';
 import { PLANS_QUEUE_NAME } from './plans.constants';
 import { PlanCancelChannelService } from './plan-cancel-channel.service';
 import { PlanRunCancellationService } from './plan-run-cancellation.service';
@@ -31,6 +32,7 @@ import { PlanRunCancellationService } from './plan-run-cancellation.service';
     LoggerModule,
     NestjsBullmqModule.registerQueue(PLANS_QUEUE_NAME),
     NestjsBullmqBoardModule.forFeature(PLANS_QUEUE_NAME),
+    NestjsRedisModule,
   ],
   providers: [PlanCancelChannelService, PlanRunCancellationService],
 })

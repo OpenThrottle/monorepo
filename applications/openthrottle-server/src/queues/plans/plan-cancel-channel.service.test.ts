@@ -1,10 +1,9 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Queue } from 'bullmq';
+import type { Redis } from 'ioredis';
 import { PlanCancelChannelService } from './plan-cancel-channel.service';
 import { PlanRunCancellationService } from './plan-run-cancellation.service';
-import type { RunPlanJobData } from './plans.types';
 
 const PLAN_ID = '2ab62876-4c4c-4b7e-8fc1-82d1ede05715';
 
@@ -12,43 +11,39 @@ describe('PlanCancelChannelService', () => {
   const mockAbort = vi.fn().mockReturnValue(true);
   const pmessageHandlers: Array<(...args: unknown[]) => void> = [];
 
-  // Minimal structural fakes for the ioredis surface the service touches. Fed to the
-  // service through the loosely-typed `client` getter below so we avoid re-declaring
-  // ioredis's heavily-overloaded Redis type.
-  const subscriber = {
-    on: vi.fn((event: string, listener: (...args: unknown[]) => void) => {
-      if (event === 'pmessage') {
-        pmessageHandlers.push(listener);
-      }
-    }),
-    psubscribe: vi.fn().mockResolvedValue(1),
-    quit: vi.fn().mockResolvedValue('OK'),
-  };
-  const publish = vi.fn().mockResolvedValue(1);
-  const baseClient = {
-    duplicate: () => subscriber,
-    publish,
-  };
-
-  const plansQueue = createMock<Queue<RunPlanJobData, void>>();
-  // `client` is a getter returning Promise<RedisClient>; resolve it to the fake base client.
-  Object.defineProperty(plansQueue, 'client', {
-    get: () => Promise.resolve(baseClient),
-  });
+  // The dedicated control-plane ioredis client and the subscribe-mode
+  // connection it `duplicate()`s. The service publishes on the base client and
+  // psubscribes on the duplicate.
+  const subscriber = createMock<Redis>();
+  const redis = createMock<Redis>();
 
   const build = (): PlanCancelChannelService =>
     new PlanCancelChannelService(
       createMock<LoggerService>(),
       createMock<PlanRunCancellationService>({ abort: mockAbort }),
-      plansQueue,
+      redis,
     );
 
   beforeEach(() => {
     mockAbort.mockClear();
-    publish.mockClear();
-    subscriber.psubscribe.mockClear();
-    subscriber.quit.mockClear();
     pmessageHandlers.length = 0;
+
+    subscriber.on.mockReset();
+    subscriber.on.mockImplementation((event, listener) => {
+      if (event === 'pmessage') {
+        pmessageHandlers.push(listener);
+      }
+
+      return subscriber;
+    });
+    subscriber.psubscribe.mockReset();
+    subscriber.psubscribe.mockResolvedValue(1);
+    subscriber.quit.mockReset();
+    subscriber.quit.mockResolvedValue('OK');
+
+    redis.duplicate.mockReturnValue(subscriber);
+    redis.publish.mockReset();
+    redis.publish.mockResolvedValue(1);
   });
 
   it('psubscribes to the plan-cancel pattern on bootstrap', async () => {
@@ -81,7 +76,7 @@ describe('PlanCancelChannelService', () => {
     const service = build();
     await service.publishCancel(PLAN_ID);
 
-    expect(publish).toHaveBeenCalledWith(`plan:${PLAN_ID}:cancel`, '1');
+    expect(redis.publish).toHaveBeenCalledWith(`plan:${PLAN_ID}:cancel`, '1');
   });
 
   it('quits the subscriber connection on shutdown', async () => {

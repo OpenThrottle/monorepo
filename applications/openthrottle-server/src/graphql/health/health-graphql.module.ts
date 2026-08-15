@@ -1,12 +1,12 @@
 /**
- * @description GraphQL module for databaseHealth and serverHealth. Imports NestjsRepositoriesModule for PlansService and PlansQueueProducerModule for Redis health.
+ * @description GraphQL module for databaseHealth and serverHealth. Imports NestjsRepositoriesModule for PlansService and NestjsRedisModule for the dedicated Redis health-ping client.
  */
 
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
+import { NestjsRedisModule } from '@openthrottle/nestjs-redis';
 import { Module } from '@nestjs/common';
 import { MetricsModule } from '../../metrics/metrics.module';
-import { PlansQueueProducerModule } from '../../queues/plans/plans-queue-producer.module';
 import { HealthResolver } from './health.resolver';
 import { HealthService } from './health.service';
 
@@ -15,8 +15,8 @@ import { HealthService } from './health.service';
   imports: [
     LoggerModule,
     MetricsModule,
+    NestjsRedisModule,
     NestjsRepositoriesModule,
-    PlansQueueProducerModule,
   ],
   providers: [HealthResolver, HealthService],
 })

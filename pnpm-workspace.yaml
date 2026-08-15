@@ -233,6 +233,7 @@ catalog:
   'ignore': '^7.0.5'
   'immutability-helper': '^3.1.1'
   'invariant': '^2.2.4'
+  'ioredis': '^5.11.1'
   'isbot': '^5.1.37'
   'jimp': '^1.6.0'
   'jiti': '^2.6.1'
