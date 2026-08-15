@@ -94,6 +94,31 @@ describe('RepositoryDetail Component', () => {
     ).toBeInTheDocument();
   });
 
+  test('renders the detected Stack and Agent config badges per checkout', () => {
+    setup();
+
+    expect(component.getByText('Stack')).toBeInTheDocument();
+    expect(component.getByText('Agent config')).toBeInTheDocument();
+    // Stack: nxWorkspace + pnpmWorkspace + packageManager + languages.
+    expect(component.getByText('Nx')).toBeInTheDocument();
+    expect(component.getByText('pnpm workspace')).toBeInTheDocument();
+    // Agent config: mcpJson + claudeMd + cursorRules + skillsDir (agentsMd off).
+    expect(component.getByText('.mcp.json')).toBeInTheDocument();
+    expect(component.getByText('.cursor/rules')).toBeInTheDocument();
+    expect(component.queryByText('AGENTS.md')).not.toBeInTheDocument();
+  });
+
+  test('omits the badge rows for a checkout with no inspection', () => {
+    props.repository = {
+      ...props.repository,
+      checkouts: [{ ...checkout, inspection: null }],
+    };
+    setup();
+
+    expect(component.queryByText('Stack')).not.toBeInTheDocument();
+    expect(component.queryByText('Agent config')).not.toBeInTheDocument();
+  });
+
   test('shows skill injection Off by default', () => {
     setup();
 

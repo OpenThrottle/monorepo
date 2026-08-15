@@ -12,6 +12,7 @@ import {
 import { CheckCircle2Icon } from 'lucide-react';
 import type { AddWorkspaceFolderMutation } from '~/__generated__/graphql';
 import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
+import { deriveCheckoutInspectionBadges } from '~/routing/settings/repositories/utils/checkout-inspection-badges';
 
 export interface AddFolderResultProps {
   payload: AddWorkspaceFolderMutation['addWorkspaceFolder'];
@@ -27,24 +28,8 @@ export const AddFolderResult = (
 
   // Setup
   const inspection = checkout.inspection ?? null;
-  const detectedStack = inspection
-    ? [
-        inspection.stack.nxWorkspace ? 'Nx' : null,
-        inspection.stack.pnpmWorkspace ? 'pnpm workspace' : null,
-        inspection.stack.turbo ? 'Turbo' : null,
-        inspection.stack.packageManager,
-        ...inspection.stack.languages,
-      ].filter((value): value is string => value != null)
-    : [];
-  const detectedAgentConfig = inspection
-    ? [
-        inspection.agentConfig.mcpJson ? '.mcp.json' : null,
-        inspection.agentConfig.claudeMd ? 'CLAUDE.md' : null,
-        inspection.agentConfig.agentsMd ? 'AGENTS.md' : null,
-        inspection.agentConfig.cursorRules ? '.cursor/rules' : null,
-        inspection.agentConfig.skillsDir ? 'skills' : null,
-      ].filter((value): value is string => value != null)
-    : [];
+  const { detectedAgentConfig, detectedStack } =
+    deriveCheckoutInspectionBadges(inspection);
 
   // Handlers
 
