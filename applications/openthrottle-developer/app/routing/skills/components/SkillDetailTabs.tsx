@@ -23,7 +23,7 @@ import {
 } from '~/routing/skills/utils/parse-skill-detail-tab';
 
 export interface SkillDetailTabsProps {
-  /** Raw SKILL.md content; empty renders the unreadable-file notice. */
+  /** SKILL.md body (frontmatter stripped) rendered in read mode; empty renders the unreadable-file notice. */
   content: string;
   /** Local checkout with a resolved monorepo root — edit mode available. */
   editable: boolean;
@@ -38,6 +38,11 @@ export interface SkillDetailTabsProps {
   onRun?: (payload: RunSkillPayload) => void;
   /** Invoked with the full draft on Save; wired to the route action. */
   onSave?: (draft: string) => void;
+  /**
+   * The untouched SKILL.md (frontmatter included) that seeds the editor, so a
+   * save round-trips the whole file instead of the stripped `content`.
+   */
+  rawContent: string;
   /** Deferred agent+model+repository options for the Run-skill modal. */
   runOptions?: Promise<RunSkillRunOptions>;
   /** Action-side rejection message, shown inline next to Save. */
@@ -72,6 +77,7 @@ export const SkillDetailTabs = (
     onRemoveTag,
     onRun,
     onSave,
+    rawContent,
     runOptions,
     saveError,
     saving = false,
@@ -92,7 +98,9 @@ export const SkillDetailTabs = (
     isEditing,
     isOpenThrottle,
     sourceTooltip,
-  } = useSkillDetail({ content, entry, onSave, saveError, saving });
+    // The editor round-trips the full file (frontmatter included); read mode
+    // still renders the stripped `content` below.
+  } = useSkillDetail({ content: rawContent, entry, onSave, saveError, saving });
 
   // Setup
 

@@ -53,6 +53,8 @@ describe('routes/skills.$slug loader', () => {
       content: '# body',
       editable: true,
       entry,
+      metadata: { name: 'ot-plans' },
+      rawContent: '---\nname: ot-plans\n---\n\n# body',
     });
     mockLoadProjectSkillFlags.mockReset().mockResolvedValue([]);
     mockLoadSkillTagVocabulary.mockReset().mockResolvedValue([]);
@@ -147,6 +149,8 @@ describe('routes/skills.$slug loader', () => {
       content: '',
       editable: true,
       entry: undefined,
+      metadata: {},
+      rawContent: '',
     });
 
     await expect(runLoader('does-not-exist')).rejects.toBeInstanceOf(Response);
@@ -157,6 +161,8 @@ describe('routes/skills.$slug loader', () => {
       content: '',
       editable: true,
       entry: undefined,
+      metadata: {},
+      rawContent: '',
     });
     mockLoadProjectSkillFlags.mockResolvedValue([
       {
@@ -178,5 +184,21 @@ describe('routes/skills.$slug loader', () => {
     expect(result.entry.orphanedAt).toBe('2026-08-14T00:00:00.000Z');
     expect(result.editable).toBe(false);
     expect(result.content).toBe('');
+    expect(result.metadata).toEqual({});
+    expect(result.rawContent).toBe('');
+  });
+
+  test('passes the parsed metadata and raw file through for a discovered skill', async () => {
+    mockExecuteGraphqlWithAuth.mockResolvedValue({
+      skillUsage: { byDay: [], bySkill: [] },
+    });
+
+    const result = await runLoader('ot-plans');
+
+    expect(result.metadata).toEqual({ name: 'ot-plans' });
+    // rawContent keeps the frontmatter so the editor can round-trip the file,
+    // while content is the stripped body.
+    expect(result.rawContent).toBe('---\nname: ot-plans\n---\n\n# body');
+    expect(result.content).toBe('# body');
   });
 });
