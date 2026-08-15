@@ -7,7 +7,10 @@ import {
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import {
+  getActionError,
+  mergeRouteModuleMeta,
+} from '@openthrottle/react-router-utils';
 import { Button } from '@openthrottle/react-router-shadcn';
 import {
   CancelScheduledAgentJobRunDocument,
@@ -76,8 +79,7 @@ export default function Component(
 
   // Setup
   const { job, queueName, run } = loaderData;
-  const actionError =
-    actionData != null && 'error' in actionData ? actionData.error : undefined;
+  const actionError = getActionError(actionData);
   const cancelRequested = run.cancelRequestedAt != null;
   const canCancel = CANCELABLE_RUN_STATUSES.has(run.status) && !cancelRequested;
 

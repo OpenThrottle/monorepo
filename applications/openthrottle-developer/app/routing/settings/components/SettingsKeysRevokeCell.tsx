@@ -13,6 +13,10 @@ import {
   Input,
   toast,
 } from '@openthrottle/react-router-shadcn';
+import {
+  getActionError,
+  isActionSuccess,
+} from '@openthrottle/react-router-utils';
 import type { ServiceAccountCredentialFieldsFragment } from '~/__generated__/graphql';
 import { action as settingsKeysAction } from '~/routes/settings.keys';
 import {
@@ -52,15 +56,14 @@ export const SettingsKeysRevokeCell = (
 
     if (revokeBusyRef.current && !busy) {
       const data = fetcher.data;
+      const error = getActionError(data);
 
-      if (data != null && typeof data === 'object') {
-        if ('ok' in data && data.ok === true) {
-          toast.success('Credential revoked.');
-          revalidator.revalidate();
-          setOpen(false);
-        } else if ('error' in data && typeof data.error === 'string') {
-          toast.error(data.error);
-        }
+      if (isActionSuccess(data)) {
+        toast.success('Credential revoked.');
+        revalidator.revalidate();
+        setOpen(false);
+      } else if (error != null) {
+        toast.error(error);
       }
     }
     revokeBusyRef.current = busy;

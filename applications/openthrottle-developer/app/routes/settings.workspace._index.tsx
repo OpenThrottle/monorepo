@@ -1,6 +1,9 @@
 import * as React from 'react';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import {
+  getActionError,
+  mergeRouteModuleMeta,
+} from '@openthrottle/react-router-utils';
 import {
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
@@ -71,8 +74,7 @@ export default function Component(
   const { actionData, loaderData, matches: _m, params: _p } = props;
   const { discoveredFolders, pickerCapabilities, profile, repositories } =
     loaderData;
-  const actionError =
-    actionData && 'error' in actionData ? actionData.error : null;
+  const actionError = getActionError(actionData) ?? null;
   const actionMessage =
     actionData && 'message' in actionData ? actionData.message : null;
   const addedFolder =

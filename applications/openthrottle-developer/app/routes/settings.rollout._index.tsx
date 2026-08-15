@@ -1,6 +1,9 @@
 import * as React from 'react';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import {
+  getActionError,
+  mergeRouteModuleMeta,
+} from '@openthrottle/react-router-utils';
 import {
   GlobalErrorBoundary,
   GlobalHeading,
@@ -54,8 +57,19 @@ export default function Component(
 ): React.ReactElement {
   const { actionData, loaderData } = props;
   const { flags } = loaderData;
-  const actionError =
-    actionData && 'error' in actionData ? actionData.error : null;
+
+  // Hooks
+
+  // Setup
+  const actionError = getActionError(actionData) ?? null;
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return (
     <GlobalScreen>

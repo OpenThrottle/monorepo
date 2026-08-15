@@ -1,7 +1,10 @@
 import * as React from 'react';
 import { redirect } from 'react-router';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import {
+  getActionError,
+  mergeRouteModuleMeta,
+} from '@openthrottle/react-router-utils';
 import {
   GlobalErrorBoundary,
   GlobalLayoutBreadcrumbsHandle,
@@ -70,8 +73,7 @@ export default function Component(
 
   const { actionData, loaderData, params } = props;
   const { projects, repository } = loaderData;
-  const actionError =
-    actionData && 'error' in actionData ? actionData.error : null;
+  const actionError = getActionError(actionData) ?? null;
 
   return (
     <GlobalScreen>

@@ -18,6 +18,7 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from '@openthrottle/react-router-shadcn';
+import { getActionError } from '@openthrottle/react-router-utils';
 import { SKILL_AVAILABILITY_COPY } from '~/routing/skills/data/data.copy';
 import {
   isSkillAvailabilityPosture,
@@ -53,13 +54,7 @@ export const SkillAvailabilityPostureCard = (
 
   // Setup
   const isSubmitting = fetcher.state !== 'idle';
-  const error =
-    fetcher.data != null &&
-    typeof fetcher.data === 'object' &&
-    'error' in fetcher.data &&
-    typeof fetcher.data.error === 'string'
-      ? fetcher.data.error
-      : undefined;
+  const error = getActionError(fetcher.data);
   const postureNote =
     selected === 'deny' ? COPY.postureDenyNote : COPY.postureAllowNote;
 

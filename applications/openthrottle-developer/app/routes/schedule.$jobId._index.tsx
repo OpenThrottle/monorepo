@@ -7,7 +7,10 @@ import {
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import {
+  getActionError,
+  mergeRouteModuleMeta,
+} from '@openthrottle/react-router-utils';
 import { Badge, Button } from '@openthrottle/react-router-shadcn';
 import { CalendarClockIcon } from 'lucide-react';
 import {
@@ -61,8 +64,7 @@ export default function Component(
 
   // Setup
   const { job, runs } = loaderData;
-  const actionError =
-    actionData != null && 'error' in actionData ? actionData.error : undefined;
+  const actionError = getActionError(actionData);
 
   // Handlers
 

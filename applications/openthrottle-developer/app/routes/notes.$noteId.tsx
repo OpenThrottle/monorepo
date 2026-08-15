@@ -1,5 +1,8 @@
 import * as React from 'react';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import {
+  getActionError,
+  mergeRouteModuleMeta,
+} from '@openthrottle/react-router-utils';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
   GlobalLayoutBreadcrumbsHandle,
@@ -75,8 +78,7 @@ export default function Component(
   // Setup
   const { note } = loaderData;
   const isEditing = searchParams.get(NOTE_MODE_PARAM) === NOTE_EDIT_MODE;
-  const actionError =
-    actionData != null && 'error' in actionData ? actionData.error : undefined;
+  const actionError = getActionError(actionData);
 
   // Handlers
   const onSetMode = (edit: boolean): void => {

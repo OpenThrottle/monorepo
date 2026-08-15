@@ -32,7 +32,10 @@
       "typecheck": {}
     }
   },
-  "peerDependencies": {},
+  "peerDependencies": {
+    "react": "catalog:",
+    "react-router": "catalog:"
+  },
   "private": true,
   "publishConfig": {
     "access": "restricted"

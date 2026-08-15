@@ -8,7 +8,7 @@ import {
   SETTINGS_SETUP_COPY,
   SETTINGS_SETUP_FILTER_LABELS,
 } from '~/routing/settings/data/data.copy';
-import { SettingsSetupInstallNotice } from '~/routing/settings/components/SettingsSetupInstallNotice';
+// import { SettingsSetupInstallNotice } from '~/routing/settings/components/SettingsSetupInstallNotice';
 
 export interface SettingsSetupToolbarProps {
   /** Active table filter. */
@@ -22,7 +22,8 @@ export interface SettingsSetupToolbarProps {
 export const SettingsSetupToolbar = (
   props: SettingsSetupToolbarProps,
 ): React.ReactElement => {
-  const { filter, installEnabled, onFilterChange } = props;
+  const { filter, onFilterChange } = props;
+  // const { filter, installEnabled, onFilterChange } = props;
 
   // Hooks
 
@@ -59,7 +60,7 @@ export const SettingsSetupToolbar = (
           ))}
         </ButtonGroup>
       </div>
-      <SettingsSetupInstallNotice installEnabled={installEnabled} />
+      {/* <SettingsSetupInstallNotice installEnabled={installEnabled} /> */}
     </div>
   );
 };
