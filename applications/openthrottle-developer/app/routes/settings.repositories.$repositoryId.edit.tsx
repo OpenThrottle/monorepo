@@ -59,9 +59,13 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) => {
 export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
+  const { actionData, loaderData, params } = props;
+  const { projects, repository } = loaderData;
+
   // Hooks
 
   // Setup
+  const actionError = getActionError(actionData) ?? null;
 
   // Handlers
 
@@ -70,10 +74,6 @@ export default function Component(
   // Life Cycle
 
   // 🔌 Short Circuit
-
-  const { actionData, loaderData, params } = props;
-  const { projects, repository } = loaderData;
-  const actionError = getActionError(actionData) ?? null;
 
   return (
     <GlobalScreen>

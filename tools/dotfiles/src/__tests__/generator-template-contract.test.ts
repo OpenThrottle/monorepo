@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { RuleTester } from '@typescript-eslint/rule-tester';
 import { afterAll, describe, expect, it } from 'vitest';
 import { componentPrimitiveShape } from '../rules/component-primitive-shape.ts';
+import { preHooksUnpack } from '../rules/pre-hooks-unpack.ts';
 import { routePrimitiveShape } from '../rules/route-primitive-shape.ts';
 
 /**
@@ -65,6 +66,29 @@ ruleTester.run('generator-template-contract', componentPrimitiveShape, {
 ruleTester.run('route-template-contract', routePrimitiveShape, {
   invalid: [],
   valid: [
+    {
+      code: readTemplate(ROUTE_TEMPLATE)
+        .replace(/<%= namePascal %>/g, 'SampleRoute')
+        .replace(/<%= name %>/g, 'sample-route'),
+      filename: 'sample-route.tsx',
+    },
+  ],
+});
+
+// Both generated surfaces MUST pass the pre-Hooks unpack rule — the component
+// template's `const {} = props;` and the route template's `const { … } = props;`
+// sit before `// Hooks`. This guards against a template edit sliding the unpack
+// below a marker.
+ruleTester.run('pre-hooks-unpack template contract', preHooksUnpack, {
+  invalid: [],
+  valid: [
+    {
+      code: readTemplate(REACT_ROUTER_TEMPLATE).replace(
+        /<%= name %>/g,
+        'SampleWidget',
+      ),
+      filename: 'SampleWidget.tsx',
+    },
     {
       code: readTemplate(ROUTE_TEMPLATE)
         .replace(/<%= namePascal %>/g, 'SampleRoute')

@@ -149,6 +149,16 @@ describe('source templates use the canonical primitive shape', () => {
     'react/files/hook/__name__.tsx',
   ];
 
+  // The two byte-identical component templates. Their props unpack must be
+  // live (`const {} = props;`) and sit in the pre-Hooks block — the drift this
+  // guard prevents is the old commented-out `// const {  } = props;` + `_props`
+  // param, or an unpack that slides below a marker
+  // (docs/monorepo/component-primitive-shape.md, "The pre-Hooks unpack block").
+  const componentTemplates = [
+    'react-router/files/component/__name__.tsx',
+    'react/files/component/__name__.tsx',
+  ];
+
   test.each(markerTemplates)(
     'uses the singular `// 🔌 Short Circuit` marker: %s',
     (relative) => {
@@ -170,4 +180,24 @@ describe('source templates use the canonical primitive shape', () => {
   test.each(hookTemplates)('does not use `any`: %s', (relative) => {
     expect(read(relative)).not.toMatch(/:\s*any\b/);
   });
+
+  test.each(componentTemplates)(
+    'unpacks props before // Hooks (live, not commented / not _props): %s',
+    (relative) => {
+      const source = read(relative);
+
+      // The unpack is live and matches the canonical snippet.
+      expect(source).toContain('const {} = props;');
+      // The parameter is `props`, not the old unused `_props`.
+      expect(source).toContain('props: ');
+      expect(source).not.toMatch(/\(_props:/);
+      // No commented-out unpack line (the old `// const {  } = props;` drift).
+      expect(source).not.toMatch(/\/\/\s*const\s*\{/);
+      // The unpack sits in the pre-Hooks block, above the first marker.
+      expect(source.indexOf('const {} = props;')).toBeGreaterThan(-1);
+      expect(source.indexOf('const {} = props;')).toBeLessThan(
+        source.indexOf('// Hooks'),
+      );
+    },
+  );
 });

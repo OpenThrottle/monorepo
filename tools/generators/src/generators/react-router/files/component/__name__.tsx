@@ -5,8 +5,8 @@ export interface <%= name %>Props {
   // className?: string;
 }
 
-export const <%= name %> = (_props: <%= name %>Props): React.ReactElement => {
-  // const {  } = props;
+export const <%= name %> = (props: <%= name %>Props): React.ReactElement => {
+  const {} = props;
 
   // Hooks
   const [_bool, _setBool] = React.useState(false);

@@ -142,9 +142,41 @@ the six section markers, in order, each preceded by one blank line.
 5. `// Life Cycle`
 6. `// 🔌 Short Circuit`
 
-Keep every marker even when its section is empty. The `props` destructure sits
-between the signature and `// Hooks`, separated by one blank line. This is the
-same contract, applied to the route's default component instead of a named one.
+Keep every marker even when its section is empty. The default Component also
+follows component R3's [**pre-Hooks unpack
+block**](./component-primitive-shape.md#the-pre-hooks-unpack-block) verbatim —
+there is no route-specific variant. `Route.ComponentProps` is just a particular
+props shape (`loaderData` / `actionData` / `params` / `matches`), so its unpack
+obeys the same split: the identity destructure of `props` and any nested
+identity destructures of those bindings go **before** `// Hooks`; anything
+_derived_ (discriminated-union narrowing like `actionData && 'error' in
+actionData ? actionData.error : null`, maps, formatters) goes under `// Setup`.
+
+```tsx
+// settings.repositories.$repositoryId._index.tsx
+export default function Component(
+  props: Route.ComponentProps,
+): React.ReactElement {
+  const { loaderData } = props;
+  const { repository } = loaderData;
+
+  // Hooks
+
+  // Setup
+
+  // 🔌 Short Circuit
+
+  return (
+    <GlobalScreen>
+      <RepositoryDetail repository={repository} />
+    </GlobalScreen>
+  );
+}
+```
+
+On the list route the split shows both halves: `loaderData` is unpacked before
+`// Hooks`, while the discriminated `actionData` narrowing stays a _derived_
+`const` under `// Setup` — see `settings.repositories._index.tsx`.
 
 ### R3 — Hoist module-scope helpers, constants, config, and data out of the route file
 
