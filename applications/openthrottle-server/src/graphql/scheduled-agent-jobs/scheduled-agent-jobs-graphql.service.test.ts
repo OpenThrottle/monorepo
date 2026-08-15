@@ -48,6 +48,7 @@ describe('ScheduledAgentJobsGraphqlService', () => {
       deleteJob: vi.fn().mockResolvedValue(true),
       findJobById: vi.fn().mockResolvedValue(jobFixture()),
       setJobEnabled: vi.fn(),
+      updateJob: vi.fn().mockResolvedValue(jobFixture()),
       updateNextRunAt: vi.fn().mockResolvedValue(undefined),
     });
     scheduler = createMock<ScheduledAgentJobSchedulerService>({
@@ -152,6 +153,24 @@ describe('ScheduledAgentJobsGraphqlService', () => {
         settingsJson: JSON.stringify({ nope: true }),
       }),
     ).rejects.toThrow(/Unknown settings key/);
+  });
+
+  it('update forwards prompt to jobsService.updateJob', async () => {
+    await service.update('j1', { prompt: 'a new prompt' });
+
+    expect(jobsService.updateJob).toHaveBeenCalledWith(
+      'j1',
+      expect.objectContaining({ prompt: 'a new prompt' }),
+    );
+  });
+
+  it('update leaves prompt undefined (no-op) when not supplied', async () => {
+    await service.update('j1', { name: 'renamed' });
+
+    expect(jobsService.updateJob).toHaveBeenCalledWith(
+      'j1',
+      expect.objectContaining({ name: 'renamed', prompt: undefined }),
+    );
   });
 
   it('runNow pre-creates a manual run and enqueues with jobId = runId', async () => {
