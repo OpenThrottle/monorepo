@@ -40,6 +40,20 @@ export const SKILL_DETAIL_COPY = {
 } as const;
 
 /**
+ * Copy for record-level skill tags (project_skills.tags) and DB-only orphans.
+ * Tags are edited against the caller's vocabulary; they are not written to
+ * SKILL.md. Orphans stay until an explicit remove.
+ */
+export const SKILL_RECORD_TAGS_COPY = {
+  addLabel: `Add`,
+  addTagLabel: `Add a domain tag`,
+  emptyTags: `No tags yet`,
+  orphanBadge: `Missing from disk`,
+  orphanRemoveLabel: `Remove from registry`,
+  tagsColumnHeader: `Tags`,
+} as const;
+
+/**
  * Copy for the per-skill usage detail card on /skills/:slug (last 30 days,
  * single skill). Formatting helpers live in `data/skill-usage-detail.ts`; the
  * "missing outcomes are normal" hint is reused from the /usage `SKILL_USAGE_COPY`.

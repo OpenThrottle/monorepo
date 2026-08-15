@@ -54,3 +54,19 @@ mutation AddTaskTag($input: AddTaskTagInput!) {
 mutation RemoveTaskTag($input: RemoveTaskTagInput!) {
   removeTaskTag(input: $input)
 }
+
+mutation AddProjectSkillTag($input: AddProjectSkillTagInput!) {
+  addProjectSkillTag(input: $input) {
+    description
+    orphanedAt
+    slug
+    source
+    sourceUrl
+    staticDisableModelInvocation
+    tags
+  }
+}
+
+mutation RemoveProjectSkillTag($input: RemoveProjectSkillTagInput!) {
+  removeProjectSkillTag(input: $input)
+}

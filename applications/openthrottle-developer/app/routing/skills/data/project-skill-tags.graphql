@@ -1,0 +1,28 @@
+# Record-level skill tags on project_skills (not SKILL.md frontmatter).
+# Domain tags only; phase tags are rejected server-side.
+
+query SkillsRecordTagVocabulary {
+  skillTagVocabulary {
+    tags {
+      dimension
+      id
+      tag
+    }
+    totalCount
+  }
+}
+
+mutation AddProjectSkillTag($input: AddProjectSkillTagInput!) {
+  addProjectSkillTag(input: $input) {
+    slug
+    tags
+  }
+}
+
+mutation RemoveProjectSkillTag($input: RemoveProjectSkillTagInput!) {
+  removeProjectSkillTag(input: $input)
+}
+
+mutation RemoveProjectSkill($projectId: ID, $slug: String!) {
+  removeProjectSkill(projectId: $projectId, slug: $slug)
+}

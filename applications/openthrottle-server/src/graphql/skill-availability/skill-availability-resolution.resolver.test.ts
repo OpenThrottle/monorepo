@@ -29,6 +29,7 @@ describe('SkillAvailabilityResolutionResolver', () => {
   const views: ProjectSkillView[] = [
     {
       description: undefined,
+      orphanedAt: undefined,
       slug: 'agents-ralph',
       source: 'openthrottle',
       sourceUrl: undefined,
@@ -37,6 +38,7 @@ describe('SkillAvailabilityResolutionResolver', () => {
     },
     {
       description: undefined,
+      orphanedAt: undefined,
       slug: 'git-commit',
       source: 'external',
       sourceUrl: undefined,
@@ -45,6 +47,7 @@ describe('SkillAvailabilityResolutionResolver', () => {
     },
     {
       description: undefined,
+      orphanedAt: undefined,
       slug: 'github-deep-review',
       source: 'external',
       sourceUrl: undefined,
@@ -258,6 +261,7 @@ describe('SkillAvailabilityResolutionResolver', () => {
     vi.mocked(mockProjectSkillsService.getSkillsForProject).mockResolvedValue([
       {
         description: undefined,
+        orphanedAt: undefined,
         slug: 'mystery-skill',
         source: 'external',
         sourceUrl: undefined,
@@ -274,5 +278,28 @@ describe('SkillAvailabilityResolutionResolver', () => {
     expect(result.warnings).toEqual([
       'unknown-tag:not-a-real-tag@mystery-skill',
     ]);
+  });
+
+  test('still resolves a DB-only orphan skill with no matching SKILL.md', async () => {
+    vi.mocked(mockProjectSkillsService.getSkillsForProject).mockResolvedValue([
+      {
+        description: undefined,
+        orphanedAt: new Date('2026-08-14T00:00:00.000Z'),
+        slug: 'deleted-from-disk',
+        source: 'external',
+        sourceUrl: undefined,
+        staticDisableModelInvocation: undefined,
+        tags: [],
+      },
+    ]);
+    vi.mocked(
+      mockSkillAvailabilityService.getRuleSetForProject,
+    ).mockResolvedValue({ posture: 'allow', rules: [] });
+
+    const result = await resolver.skillAvailability(userId, projectId);
+
+    expect(result.totalCount).toBe(1);
+    expect(result.skills[0]?.slug).toBe('deleted-from-disk');
+    expect(result.warnings).toEqual([]);
   });
 });

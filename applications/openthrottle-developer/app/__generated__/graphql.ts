@@ -136,6 +136,15 @@ export type AddPlanTagInput = {
   tag: Scalars['String']['input'];
 };
 
+export type AddProjectSkillTagInput = {
+  /** Project whose skill row to tag. Omit to target the dogfood monorepo project. */
+  projectId?: InputMaybe<Scalars['ID']['input']>;
+  /** Skill slug (project_skills.slug). */
+  slug: Scalars['String']['input'];
+  /** Kebab-case domain tag from the caller's skill-tag vocabulary. Phase tags are rejected. */
+  tag: Scalars['String']['input'];
+};
+
 export type AddProjectTagInput = {
   /** Project to tag. */
   projectId: Scalars['ID']['input'];
@@ -1505,6 +1514,8 @@ export type Mutation = {
   addPermissionToRole: Scalars['Boolean']['output'];
   /** Attach a tag to a plan. The tag must be in the caller's skill-tag vocabulary; source is derived from the caller identity. At most one phase tag per plan (equal-or-lower provenance is replaced, higher rejects). */
   addPlanTag: PlanTagObject;
+  /** Attach a domain tag to a project_skills row. The tag must be in the caller's skill-tag vocabulary; phase tags are rejected. Idempotent when the tag is already present. Omit projectId to target the dogfood monorepo project. */
+  addProjectSkillTag: ProjectSkillObject;
   /** Attach a tag to a project. The tag must be in the caller's skill-tag vocabulary; source is derived from the caller identity. Multiple tags per project are allowed (no phase-tag limit). Re-runs plan-rules evaluation for every plan in the project. */
   addProjectTag: ProjectTagObject;
   /** Add a rule to a project's rule set (creating the rule set with the default "allow" posture if absent). Tag references are validated against the caller's skill-tag vocabulary. */
@@ -1666,6 +1677,10 @@ export type Mutation = {
   removePermissionFromRole: Scalars['Boolean']['output'];
   /** Remove a tag from a plan under the provenance ladder (an agent cannot remove a human row; server-llm removes only its own). Returns false when the tag was not present. */
   removePlanTag: Scalars['Boolean']['output'];
+  /** Delete one project_skills row by slug. Distinct from ingest: vanished skills stay as orphans until this explicit remove. Omit projectId to target the dogfood monorepo project. Returns false when no row matched. */
+  removeProjectSkill: Scalars['Boolean']['output'];
+  /** Remove a tag from a project_skills row. Returns false when the row or tag is absent (never a 500). Omit projectId to target the dogfood monorepo project. */
+  removeProjectSkillTag: Scalars['Boolean']['output'];
   /** Remove a tag from a project under the provenance ladder (an agent cannot remove a human row; server-llm removes only its own). Returns false when the tag was not present. Re-runs plan-rules evaluation for every plan in the project when a tag was removed. */
   removeProjectTag: Scalars['Boolean']['output'];
   /** Remove a repeatable (scheduled) job by key. Key is returned by repeatableJobs(queueName). */
@@ -1788,6 +1803,10 @@ export type MutationAddPermissionToRoleArgs = {
 
 export type MutationAddPlanTagArgs = {
   input: AddPlanTagInput;
+};
+
+export type MutationAddProjectSkillTagArgs = {
+  input: AddProjectSkillTagInput;
 };
 
 export type MutationAddProjectTagArgs = {
@@ -2089,6 +2108,15 @@ export type MutationRemovePermissionFromRoleArgs = {
 
 export type MutationRemovePlanTagArgs = {
   input: RemovePlanTagInput;
+};
+
+export type MutationRemoveProjectSkillArgs = {
+  projectId?: InputMaybe<Scalars['ID']['input']>;
+  slug: Scalars['String']['input'];
+};
+
+export type MutationRemoveProjectSkillTagArgs = {
+  input: RemoveProjectSkillTagInput;
 };
 
 export type MutationRemoveProjectTagArgs = {
@@ -2689,6 +2717,8 @@ export type ProjectSkillObject = {
   __typename?: 'ProjectSkillObject';
   /** Skill description from SKILL.md frontmatter; null when the ingested row omits it. Lets the developer app's `/skills` slash-command menu show descriptions in deployed environments with no local checkout for filesystem discovery. */
   description?: Maybe<Scalars['String']['output']>;
+  /** When ingest last found this slug missing from disk; null while the skill is present on disk. The row is not auto-deleted. */
+  orphanedAt?: Maybe<Scalars['DateTime']['output']>;
   /** Skill slug (the skill frontmatter `name`). */
   slug: Scalars['String']['output'];
   /** Skill provenance from frontmatter `source`: 'openthrottle' for skills OpenThrottle authors and manages, 'external' for skills installed from an outside source (omitted frontmatter normalizes to 'external'). */
@@ -2697,13 +2727,15 @@ export type ProjectSkillObject = {
   sourceUrl?: Maybe<Scalars['String']['output']>;
   /** Static frontmatter `disable-model-invocation`. Tri-state: null = unset (frontmatter omits the key), true = auto-invocation suppressed, false = auto-invocation explicitly enabled. */
   staticDisableModelInvocation?: Maybe<Scalars['Boolean']['output']>;
-  /** Static frontmatter tags for this skill (empty when none). */
+  /** Static record tags for this skill (empty when none). */
   tags: Array<Scalars['String']['output']>;
 };
 
 /** A project's ingested skill universe, alphabetically by slug. */
 export type ProjectSkillsResult = {
   __typename?: 'ProjectSkillsResult';
+  /** Slugs ingested previously that are no longer on disk. Suggest an explicit removeProjectSkill; ingest does not delete these rows. */
+  orphanSlugs: Array<Scalars['String']['output']>;
   /** Skills ingested for the project, alphabetically by slug. */
   skills: Array<ProjectSkillObject>;
   /** Number of skills in the universe. */
@@ -3654,6 +3686,15 @@ export type RemovePermissionFromRoleInput = {
 export type RemovePlanTagInput = {
   /** Plan to remove the tag from. */
   planId: Scalars['ID']['input'];
+  /** Tag slug to remove. */
+  tag: Scalars['String']['input'];
+};
+
+export type RemoveProjectSkillTagInput = {
+  /** Project whose skill row to untag. Omit to target the dogfood monorepo project. */
+  projectId?: InputMaybe<Scalars['ID']['input']>;
+  /** Skill slug (project_skills.slug). */
+  slug: Scalars['String']['input'];
   /** Tag slug to remove. */
   tag: Scalars['String']['input'];
 };
@@ -9786,10 +9827,12 @@ export type ProjectSkillsQuery = {
   __typename?: 'Query';
   projectSkills: {
     __typename?: 'ProjectSkillsResult';
+    orphanSlugs: Array<string>;
     totalCount: number;
     skills: Array<{
       __typename?: 'ProjectSkillObject';
       description?: string | null;
+      orphanedAt?: any | null;
       slug: string;
       source: string;
       sourceUrl?: string | null;
@@ -10124,6 +10167,56 @@ export type GetUsageSkillUsageQuery = {
       gitBranches: Array<string>;
     };
   };
+};
+
+export type SkillsRecordTagVocabularyQueryVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type SkillsRecordTagVocabularyQuery = {
+  __typename?: 'Query';
+  skillTagVocabulary: {
+    __typename?: 'SkillTagVocabularyResult';
+    totalCount: number;
+    tags: Array<{
+      __typename?: 'SkillTagObject';
+      dimension: string;
+      id: string;
+      tag: string;
+    }>;
+  };
+};
+
+export type AddProjectSkillTagMutationVariables = Exact<{
+  input: AddProjectSkillTagInput;
+}>;
+
+export type AddProjectSkillTagMutation = {
+  __typename?: 'Mutation';
+  addProjectSkillTag: {
+    __typename?: 'ProjectSkillObject';
+    slug: string;
+    tags: Array<string>;
+  };
+};
+
+export type RemoveProjectSkillTagMutationVariables = Exact<{
+  input: RemoveProjectSkillTagInput;
+}>;
+
+export type RemoveProjectSkillTagMutation = {
+  __typename?: 'Mutation';
+  removeProjectSkillTag: boolean;
+};
+
+export type RemoveProjectSkillMutationVariables = Exact<{
+  projectId?: InputMaybe<Scalars['ID']['input']>;
+  slug: Scalars['String']['input'];
+}>;
+
+export type RemoveProjectSkillMutation = {
+  __typename?: 'Mutation';
+  removeProjectSkill: boolean;
 };
 
 export const HealthCardFragmentDoc = {
@@ -25133,6 +25226,7 @@ export const ProjectSkillsDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'orphanSlugs' } },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'skills' },
@@ -25142,6 +25236,10 @@ export const ProjectSkillsDocument = {
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'description' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'orphanedAt' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
                       {
@@ -26386,4 +26484,211 @@ export const GetUsageSkillUsageDocument = {
 } as unknown as DocumentNode<
   GetUsageSkillUsageQuery,
   GetUsageSkillUsageQueryVariables
+>;
+export const SkillsRecordTagVocabularyDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'SkillsRecordTagVocabulary' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'skillTagVocabulary' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'tags' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'dimension' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  SkillsRecordTagVocabularyQuery,
+  SkillsRecordTagVocabularyQueryVariables
+>;
+export const AddProjectSkillTagDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'AddProjectSkillTag' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'AddProjectSkillTagInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'addProjectSkillTag' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'tags' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  AddProjectSkillTagMutation,
+  AddProjectSkillTagMutationVariables
+>;
+export const RemoveProjectSkillTagDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'RemoveProjectSkillTag' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'RemoveProjectSkillTagInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'removeProjectSkillTag' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  RemoveProjectSkillTagMutation,
+  RemoveProjectSkillTagMutationVariables
+>;
+export const RemoveProjectSkillDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'RemoveProjectSkill' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'projectId' },
+          },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'slug' } },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'String' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'removeProjectSkill' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'projectId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'projectId' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'slug' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'slug' },
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  RemoveProjectSkillMutation,
+  RemoveProjectSkillMutationVariables
 >;

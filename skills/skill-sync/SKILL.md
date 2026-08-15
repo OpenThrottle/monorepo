@@ -10,7 +10,7 @@ name: skill-sync
 
 This skill manages the **OpenThrottle agent-skills architecture** in whatever repository you're in. It exists so every AI tool — Claude Code, Cursor 2.4+, Codex, Grok Build, OpenCode, VSCode/Copilot, Gemini CLI, and anything else — sees the **same skills from the same starting point**, no matter which tool a teammate used to install them.
 
-All of these CLIs now read the **`SKILL.md` standard**; they differ only in which directories they scan. `.agents/skills/` and `.claude/skills/` are the two near-universal in-repo targets (`.agents/skills/` for Claude Code, Cursor, Codex, OpenCode; `.claude/skills/` for Claude Code, Cursor, Grok Build). Several also read per-tool global dirs (`~/.claude/skills`, `~/.codex/skills`, `~/.grok/skills`) that live outside any repo and are not part of this layout.
+All of these CLIs now read the **[Agent Skills](https://agentskills.io/) `SKILL.md` standard**; they differ only in which directories they scan. `.agents/skills/` and `.claude/skills/` are the two near-universal in-repo targets (`.agents/skills/` for Claude Code, Cursor, Codex, OpenCode; `.claude/skills/` for Claude Code, Cursor, Grok Build). Several also read per-tool global dirs (`~/.claude/skills`, `~/.codex/skills`, `~/.grok/skills`) that live outside any repo and are not part of this layout.
 
 ## The architecture
 

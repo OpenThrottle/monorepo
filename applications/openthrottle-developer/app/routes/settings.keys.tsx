@@ -27,7 +27,7 @@ import {
   type SettingsKeysActionData,
 } from '~/routing/settings/utils/settings-keys-action';
 import type { Route } from '@/app/routes/+types/settings.keys';
-import { SettingsKeysServiceAccountCredentials } from '~/routing/settings/components/SettingsKeysServiceAccountCredentials';
+// import { SettingsKeysServiceAccountCredentials } from '~/routing/settings/components/SettingsKeysServiceAccountCredentials';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -134,6 +134,7 @@ export default function Component(
   return (
     <GlobalScreen>
       <SettingsKeysIntroduction />
+
       <div className="flex flex-col gap-4">
         <SettingsKeysToolbar
           canCreate={canManageCredentials}
@@ -150,7 +151,6 @@ export default function Component(
           credentials={credentials}
         />
       </div>
-      <SettingsKeysServiceAccountCredentials />
       <SettingsKeysForm
         actionData={createActionData}
         createDialogOpen={createDialogOpen}

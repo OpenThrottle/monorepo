@@ -10,6 +10,7 @@ import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
   ProjectSkillsDocument,
   SkillAvailabilityDocument,
+  SkillsRecordTagVocabularyDocument,
 } from '~/__generated__/graphql';
 import { type ProjectSkillFlagRow } from '~/routing/skills/utils/merge-project-skills';
 import { type SkillAvailabilityRow } from '~/routing/skills/utils/merge-skill-availability';
@@ -52,6 +53,27 @@ export const loadSkillAvailability = async (
     }
 
     return skillAvailability.skills;
+  } catch {
+    return [];
+  }
+};
+
+/**
+ * @description Loads the caller's skill-tag vocabulary (domain + phase). Never
+ * throws — an empty list disables add-tag options until the query succeeds.
+ */
+export const loadSkillTagVocabulary = async (
+  request: Request,
+): Promise<readonly { readonly dimension: string; readonly tag: string }[]> => {
+  try {
+    const { skillTagVocabulary } = await executeGraphqlWithAuth(
+      request,
+      SkillsRecordTagVocabularyDocument,
+    );
+    return skillTagVocabulary.tags.map((entry) => ({
+      dimension: entry.dimension,
+      tag: entry.tag,
+    }));
   } catch {
     return [];
   }

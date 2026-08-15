@@ -5,6 +5,7 @@ import {
   AddHookInput,
   AddPermissionToRoleInput,
   AddPlanTagInput,
+  AddProjectSkillTagInput,
   AddProjectTagInput,
   AddSkillTagInput,
   AddTaskTagInput,
@@ -94,6 +95,7 @@ import {
   RemainingTasksByPlanIdInput,
   RemovePermissionFromRoleInput,
   RemovePlanTagInput,
+  RemoveProjectSkillTagInput,
   RemoveProjectTagInput,
   RemoveRepeatableJobInput,
   RemoveRoleFromServiceAccountInput,
@@ -238,6 +240,16 @@ export function AddPlanTagInputSchema(): z.ZodObject<
 > {
   return z.object({
     planId: z.string().min(1),
+    tag: z.string().min(1),
+  });
+}
+
+export function AddProjectSkillTagInputSchema(): z.ZodObject<
+  Properties<AddProjectSkillTagInput>
+> {
+  return z.object({
+    projectId: z.string().nullish(),
+    slug: z.string().min(1),
     tag: z.string().min(1),
   });
 }
@@ -1117,6 +1129,16 @@ export function RemovePlanTagInputSchema(): z.ZodObject<
 > {
   return z.object({
     planId: z.string().min(1),
+    tag: z.string().min(1),
+  });
+}
+
+export function RemoveProjectSkillTagInputSchema(): z.ZodObject<
+  Properties<RemoveProjectSkillTagInput>
+> {
+  return z.object({
+    projectId: z.string().nullish(),
+    slug: z.string().min(1),
     tag: z.string().min(1),
   });
 }

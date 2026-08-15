@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Await, useSearchParams } from 'react-router';
+import { Await, useFetcher, useSearchParams } from 'react-router';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import {
@@ -18,6 +18,7 @@ import { SKILL_USAGE_RANGE_DAYS } from '~/routing/skills/config/skill-usage';
 import {
   loadProjectSkillFlags,
   loadSkillAvailability,
+  loadSkillTagVocabulary,
 } from '~/routing/skills/data/skill-index-loaders';
 import { mergeRepoSkillsWithProjectSkills } from '~/routing/skills/utils/merge-project-skills';
 import {
@@ -31,6 +32,10 @@ import {
 } from '~/routing/skills/utils/parse-skills-pagination';
 import { toSkillsIndexUsageData } from '~/routing/skills/utils/to-skills-index-usage-data';
 import type { SkillsIndexUsageData } from '~/routing/skills/data/skills-index-usage';
+import {
+  runSkillRecordTagAction,
+  SKILL_RECORD_TAG_INTENTS,
+} from '~/routing/skills/actions/project-skill-tags';
 import type { Route } from '@/app/routes/+types/skills._index';
 
 type HandleData = Route.ComponentProps['loaderData'];
@@ -50,9 +55,10 @@ export const loader = async (args: Route.LoaderArgs) => {
   const monorepoRoot = getMonorepoRoot();
   const diskEntries = discoverRepoSkills(monorepoRoot);
 
-  const [projectSkills, availability] = await Promise.all([
+  const [projectSkills, availability, tagVocabulary] = await Promise.all([
     loadProjectSkillFlags(args.request),
     loadSkillAvailability(args.request),
+    loadSkillTagVocabulary(args.request),
   ]);
 
   const withStatic = mergeRepoSkillsWithProjectSkills(
@@ -93,7 +99,7 @@ export const loader = async (args: Route.LoaderArgs) => {
     .then(({ skillUsage }) => toSkillsIndexUsageData(skillUsage))
     .catch(() => ({ available: false as const }));
 
-  return { entries, linkableSlugs, usage };
+  return { entries, linkableSlugs, tagVocabulary, usage };
 };
 
 export const links: Route.LinksFunction = () => {
@@ -107,18 +113,23 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
 export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
-  const { entries, linkableSlugs, usage } = props.loaderData;
+  const { entries, linkableSlugs, tagVocabulary, usage } = props.loaderData;
 
   // Hooks
   const [searchParams, setSearchParams] = useSearchParams();
   const [sourceFilter, setSourceFilter] =
     React.useState<SkillSourceFilter>('all');
+  const tagFetcher = useFetcher<typeof action>();
 
   // Setup
   const filteredEntries = React.useMemo(
     () => [...filterSkillsBySource(entries, sourceFilter)],
     [entries, sourceFilter],
   );
+  const pendingSlug =
+    tagFetcher.state === 'idle'
+      ? undefined
+      : String(tagFetcher.formData?.get('slug') ?? '');
 
   const limit = parsePaginationLimit(searchParams.get('limit'));
   const totalCount = filteredEntries.length;
@@ -151,6 +162,18 @@ export default function Component(
     );
   };
 
+  const submitTagIntent = (
+    intent: string,
+    slug: string,
+    tag?: string,
+  ): void => {
+    const payload: Record<string, string> = { intent, slug };
+    if (tag != null) {
+      payload.tag = tag;
+    }
+    void tagFetcher.submit(payload, { method: 'post' });
+  };
+
   // Markup
 
   // Life Cycle
@@ -167,7 +190,21 @@ export default function Component(
             onSourceFilterChange={handleSourceFilterChange}
             sourceFilter={sourceFilter}
           />
-          <SkillsTable className="bg-card" entries={pageEntries} />
+          <SkillsTable
+            className="bg-card"
+            entries={pageEntries}
+            onAddTag={(slug, tag) =>
+              submitTagIntent(SKILL_RECORD_TAG_INTENTS.ADD_TAG, slug, tag)
+            }
+            onRemoveOrphan={(slug) =>
+              submitTagIntent(SKILL_RECORD_TAG_INTENTS.REMOVE_ORPHAN, slug)
+            }
+            onRemoveTag={(slug, tag) =>
+              submitTagIntent(SKILL_RECORD_TAG_INTENTS.REMOVE_TAG, slug, tag)
+            }
+            pendingSlug={pendingSlug}
+            vocabulary={tagVocabulary}
+          />
         </div>
 
         <OpenThrottlePagination
@@ -203,8 +240,9 @@ export default function Component(
   );
 }
 
-export const action = async (_args: Route.ActionArgs) => {
-  return {};
+export const action = async (args: Route.ActionArgs) => {
+  const formData = await args.request.formData();
+  return runSkillRecordTagAction(args.request, formData);
 };
 
 export const ErrorBoundary = GlobalErrorBoundary;

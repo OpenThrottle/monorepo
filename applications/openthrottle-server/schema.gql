@@ -2047,8 +2047,13 @@ type ProjectSkillObject {
   """
   sourceUrl: String
 
-  """Static frontmatter tags for this skill (empty when none)."""
+  """Static record tags for this skill (empty when none)."""
   tags: [String!]!
+
+  """
+  When ingest last found this slug missing from disk; null while the skill is present on disk. The row is not auto-deleted.
+  """
+  orphanedAt: DateTime
 
   """
   Static frontmatter `disable-model-invocation`. Tri-state: null = unset (frontmatter omits the key), true = auto-invocation suppressed, false = auto-invocation explicitly enabled.
@@ -2063,6 +2068,85 @@ type ProjectSkillsResult {
 
   """Number of skills in the universe."""
   totalCount: Int!
+
+  """
+  Slugs ingested previously that are no longer on disk. Suggest an explicit removeProjectSkill; ingest does not delete these rows.
+  """
+  orphanSlugs: [String!]!
+}
+
+"""
+A tag attached to a plan. Source is derived from the writing identity (human > agent > server-llm) and never client-supplied.
+"""
+type PlanTagObject {
+  id: ID!
+  planId: ID!
+
+  """Kebab-case tag slug, unique per plan."""
+  tag: String!
+
+  """
+  Vocabulary axis: "domain" (subject area) or "phase" (lifecycle stage; at most one phase tag per plan).
+  """
+  dimension: String!
+
+  """
+  Writing identity class: "human", "agent", or "server-llm". Ranked human > agent > server-llm for replace/remove arbitration.
+  """
+  source: String!
+
+  """Model confidence (0-1) for server-llm rows; null otherwise."""
+  confidence: Float
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
+A tag attached to a project. Same shape and provenance semantics as plan tags; a project's tags feed the effective-tag-set rollup for its plans.
+"""
+type ProjectTagObject {
+  id: ID!
+  projectId: ID!
+
+  """Kebab-case tag slug, unique per project."""
+  tag: String!
+
+  """Vocabulary axis: "domain" (subject area) or "phase" (lifecycle stage)."""
+  dimension: String!
+
+  """
+  Writing identity class: "human", "agent", or "server-llm". Ranked human > agent > server-llm for replace/remove arbitration.
+  """
+  source: String!
+
+  """Model confidence (0-1) for server-llm rows; null otherwise."""
+  confidence: Float
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
+A tag attached to a task. Same shape and provenance semantics as plan tags.
+"""
+type TaskTagObject {
+  id: ID!
+  taskId: ID!
+
+  """Kebab-case tag slug, unique per task."""
+  tag: String!
+
+  """Vocabulary axis: "domain" (subject area) or "phase" (lifecycle stage)."""
+  dimension: String!
+
+  """
+  Writing identity class: "human", "agent", or "server-llm". Ranked human > agent > server-llm for replace/remove arbitration.
+  """
+  source: String!
+
+  """Model confidence (0-1) for server-llm rows; null otherwise."""
+  confidence: Float
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 """
@@ -2655,80 +2739,6 @@ type RuleApplicationObject {
   JSON-encoded executor context for the state (e.g. {"reason":"skill-unavailable"}).
   """
   detailsJson: String
-  createdAt: DateTime!
-  updatedAt: DateTime!
-}
-
-"""
-A tag attached to a plan. Source is derived from the writing identity (human > agent > server-llm) and never client-supplied.
-"""
-type PlanTagObject {
-  id: ID!
-  planId: ID!
-
-  """Kebab-case tag slug, unique per plan."""
-  tag: String!
-
-  """
-  Vocabulary axis: "domain" (subject area) or "phase" (lifecycle stage; at most one phase tag per plan).
-  """
-  dimension: String!
-
-  """
-  Writing identity class: "human", "agent", or "server-llm". Ranked human > agent > server-llm for replace/remove arbitration.
-  """
-  source: String!
-
-  """Model confidence (0-1) for server-llm rows; null otherwise."""
-  confidence: Float
-  createdAt: DateTime!
-  updatedAt: DateTime!
-}
-
-"""
-A tag attached to a project. Same shape and provenance semantics as plan tags; a project's tags feed the effective-tag-set rollup for its plans.
-"""
-type ProjectTagObject {
-  id: ID!
-  projectId: ID!
-
-  """Kebab-case tag slug, unique per project."""
-  tag: String!
-
-  """Vocabulary axis: "domain" (subject area) or "phase" (lifecycle stage)."""
-  dimension: String!
-
-  """
-  Writing identity class: "human", "agent", or "server-llm". Ranked human > agent > server-llm for replace/remove arbitration.
-  """
-  source: String!
-
-  """Model confidence (0-1) for server-llm rows; null otherwise."""
-  confidence: Float
-  createdAt: DateTime!
-  updatedAt: DateTime!
-}
-
-"""
-A tag attached to a task. Same shape and provenance semantics as plan tags.
-"""
-type TaskTagObject {
-  id: ID!
-  taskId: ID!
-
-  """Kebab-case tag slug, unique per task."""
-  tag: String!
-
-  """Vocabulary axis: "domain" (subject area) or "phase" (lifecycle stage)."""
-  dimension: String!
-
-  """
-  Writing identity class: "human", "agent", or "server-llm". Ranked human > agent > server-llm for replace/remove arbitration.
-  """
-  source: String!
-
-  """Model confidence (0-1) for server-llm rows; null otherwise."""
-  confidence: Float
   createdAt: DateTime!
   updatedAt: DateTime!
 }
@@ -4504,6 +4514,21 @@ type Mutation {
   attachWorkSessionSubject(input: AttachWorkSessionSubjectInput!): WorkSessionSubjectObject!
   endWorkSession(input: EndWorkSessionInput!): WorkSessionObject
 
+  """
+  Delete one project_skills row by slug. Distinct from ingest: vanished skills stay as orphans until this explicit remove. Omit projectId to target the dogfood monorepo project. Returns false when no row matched.
+  """
+  removeProjectSkill(slug: String!, projectId: ID): Boolean!
+
+  """
+  Attach a domain tag to a project_skills row. The tag must be in the caller's skill-tag vocabulary; phase tags are rejected. Idempotent when the tag is already present. Omit projectId to target the dogfood monorepo project.
+  """
+  addProjectSkillTag(input: AddProjectSkillTagInput!): ProjectSkillObject!
+
+  """
+  Remove a tag from a project_skills row. Returns false when the row or tag is absent (never a 500). Omit projectId to target the dogfood monorepo project.
+  """
+  removeProjectSkillTag(input: RemoveProjectSkillTagInput!): Boolean!
+
   """Create a project"""
   createProject(input: CreateProjectInput!): ProjectObject!
 
@@ -5448,6 +5473,34 @@ input EndWorkSessionInput {
 
   """Summary set at close (legibility for unpromoted sessions)"""
   summary: String
+}
+
+input AddProjectSkillTagInput {
+  """
+  Project whose skill row to tag. Omit to target the dogfood monorepo project.
+  """
+  projectId: ID
+
+  """Skill slug (project_skills.slug)."""
+  slug: String!
+
+  """
+  Kebab-case domain tag from the caller's skill-tag vocabulary. Phase tags are rejected.
+  """
+  tag: String!
+}
+
+input RemoveProjectSkillTagInput {
+  """
+  Project whose skill row to untag. Omit to target the dogfood monorepo project.
+  """
+  projectId: ID
+
+  """Skill slug (project_skills.slug)."""
+  slug: String!
+
+  """Tag slug to remove."""
+  tag: String!
 }
 
 input CreateProjectInput {

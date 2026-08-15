@@ -7,7 +7,6 @@ import { DashboardContributionsCard } from '~/routing/dashboard/components/Dashb
 import { DashboardContributionsCardSkeleton } from '~/routing/dashboard/components/DashboardContributionsCardSkeleton';
 import { DashboardDailyStatsCard } from '~/routing/dashboard/components/DashboardDailyStatsCard';
 import { DashboardDeferredCard } from '~/routing/dashboard/components/DashboardDeferredCard';
-import { DashboardGetStartedSection } from '~/routing/dashboard/components/DashboardGetStartedSection';
 import { DashboardGithubTokenEmptyState } from '~/routing/dashboard/components/DashboardGithubTokenEmptyState';
 import { DashboardQueueHealthCard } from '~/routing/dashboard/components/DashboardQueueHealthCard';
 import { DashboardDailyStatsModal } from '~/routing/dashboard/components/DashboardDailyStatsModal';
@@ -24,7 +23,6 @@ type DashboardLoaderData = Route.ComponentProps['loaderData'];
 export interface DashboardContentGridProps {
   core: DashboardLoaderData['core'];
   githubStats: DashboardLoaderData['githubStats'];
-  onboarding: DashboardLoaderData['onboarding'];
   recentChats: DashboardLoaderData['recentChats'];
 }
 
@@ -37,7 +35,7 @@ export interface DashboardContentGridProps {
 export const DashboardContentGrid = (
   props: DashboardContentGridProps,
 ): React.ReactElement => {
-  const { core, githubStats, onboarding, recentChats } = props;
+  const { core, githubStats, recentChats } = props;
 
   // Hooks
   const navigate = useNavigate();
@@ -70,9 +68,6 @@ export const DashboardContentGrid = (
         className="--lg:grid-cols-3 grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-8 lg:gap-12"
         data-testid="dashboard-content-grid"
       >
-        {/* Get Started onboarding checklist — first child, full width. */}
-        <DashboardGetStartedSection onboarding={onboarding} />
-
         <div className="col-span-2 md:col-span-1">
           <DashboardDeferredCard
             errorText="Couldn’t load queue health."
@@ -82,6 +77,7 @@ export const DashboardContentGrid = (
             {(data) => <DashboardQueueHealthCard queues={data.queues} />}
           </DashboardDeferredCard>
         </div>
+
         <div className="col-span-2 md:col-span-1">
           <DashboardDeferredCard
             errorText="Couldn’t load recent chats."

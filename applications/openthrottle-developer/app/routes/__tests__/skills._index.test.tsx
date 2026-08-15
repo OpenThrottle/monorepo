@@ -36,6 +36,7 @@ const buildLoaderData = (
 ): Route.ComponentProps['loaderData'] => ({
   entries,
   linkableSlugs: entries.map((entry) => entry.slug),
+  tagVocabulary: [],
   usage: Promise.resolve(usage),
 });
 

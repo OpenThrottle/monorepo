@@ -12,12 +12,13 @@ import {
   GetDashboardQueryVariables,
   TriggerNotificationDocument,
 } from '~/__generated__/graphql';
-import { DashboardContentGrid } from '~/routing/dashboard/components/DashboardContentGrid';
-import { DashboardIntroduction } from '~/routing/dashboard/components/DashboardIntroduction';
-import { CONTRIBUTIONS_DAYS_BACK } from '~/routing/dashboard/config/config.dashboard';
-import { parseDashboardGithubParams } from '~/routing/dashboard/utils/parsers';
-import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { callListAgentConversations } from '~/global/utils/utils.agents-chat';
+import { CONTRIBUTIONS_DAYS_BACK } from '~/routing/dashboard/config/config.dashboard';
+import { DashboardContentGrid } from '~/routing/dashboard/components/DashboardContentGrid';
+import { DashboardGetStartedSection } from '~/routing/dashboard/components/DashboardGetStartedSection';
+import { DashboardIntroduction } from '~/routing/dashboard/components/DashboardIntroduction';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import { parseDashboardGithubParams } from '~/routing/dashboard/utils/parsers';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/dashboard._index';
 
@@ -113,11 +114,12 @@ export default function Component(
 
   return (
     <GlobalScreen>
+      {/* Get Started onboarding checklist — first child, full width. */}
+      <DashboardGetStartedSection onboarding={onboarding} />
       <DashboardIntroduction />
       <DashboardContentGrid
         core={core}
         githubStats={githubStats}
-        onboarding={onboarding}
         recentChats={recentChats}
       />
     </GlobalScreen>

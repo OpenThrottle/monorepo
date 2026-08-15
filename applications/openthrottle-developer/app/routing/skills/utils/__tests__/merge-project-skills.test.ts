@@ -135,16 +135,29 @@ describe('mergeRepoSkillsWithProjectSkills', () => {
     expect(merged).toBe(untouched);
   });
 
-  test('disk remains the entry list — GraphQL-only slugs are not added', () => {
+  test('appends GraphQL-only slugs as orphan rows after the disk list', () => {
     const entries = [diskEntry('alpha')];
     const rows: ProjectSkillFlagRow[] = [
       { slug: 'alpha', staticDisableModelInvocation: true, tags: [] },
-      { slug: 'ghost', staticDisableModelInvocation: true, tags: [] },
+      {
+        description: 'Gone from disk.',
+        orphanedAt: '2026-08-14T00:00:00.000Z',
+        slug: 'ghost',
+        source: 'external',
+        staticDisableModelInvocation: true,
+        tags: ['github'],
+      },
     ];
 
     const merged = mergeRepoSkillsWithProjectSkills(entries, rows);
 
-    expect(merged).toHaveLength(1);
-    expect(merged[0].slug).toBe('alpha');
+    expect(merged.map((entry) => entry.slug)).toEqual(['alpha', 'ghost']);
+    expect(merged[1]).toMatchObject({
+      orphanedAt: '2026-08-14T00:00:00.000Z',
+      slug: 'ghost',
+      source: 'external',
+      summary: 'Gone from disk.',
+      tags: ['github'],
+    });
   });
 });

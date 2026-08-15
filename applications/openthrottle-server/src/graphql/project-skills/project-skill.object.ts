@@ -38,9 +38,15 @@ export class ProjectSkillObject {
   sourceUrl!: string | null;
 
   @Field(() => [String], {
-    description: `Static frontmatter tags for this skill (empty when none).`,
+    description: `Static record tags for this skill (empty when none).`,
   })
   tags!: string[];
+
+  @Field(() => Date, {
+    description: `When ingest last found this slug missing from disk; null while the skill is present on disk. The row is not auto-deleted.`,
+    nullable: true,
+  })
+  orphanedAt!: Date | null;
 
   @Field(() => Boolean, {
     description: `Static frontmatter \`disable-model-invocation\`. Tri-state: null = unset (frontmatter omits the key), true = auto-invocation suppressed, false = auto-invocation explicitly enabled.`,
@@ -60,4 +66,9 @@ export class ProjectSkillsResult {
 
   @Field(() => Int, { description: `Number of skills in the universe.` })
   totalCount!: number;
+
+  @Field(() => [String], {
+    description: `Slugs ingested previously that are no longer on disk. Suggest an explicit removeProjectSkill; ingest does not delete these rows.`,
+  })
+  orphanSlugs!: string[];
 }

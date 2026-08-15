@@ -10,11 +10,17 @@ import {
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 import { SkillDetailEditControls } from '~/routing/skills/components/SkillDetailEditControls';
+import { SkillOrphanRemoveButton } from '~/routing/skills/components/SkillOrphanRemoveButton';
 import { SkillRunControl } from '~/routing/skills/components/SkillRunControl';
 import type { RunSkillRunOptions } from '~/routing/skills/components/SkillRunControl';
 import type { RunSkillPayload } from '~/routing/skills/components/RunSkillDialog';
 import {
+  SkillTagChips,
+  type SkillTagVocabularyOption,
+} from '~/routing/skills/components/SkillTagChips';
+import {
   SKILL_DETAIL_COPY,
+  SKILL_RECORD_TAGS_COPY,
   SKILLS_SOURCE_COPY,
 } from '~/routing/skills/data/data.copy';
 import type { ModelInvocationBadge } from '~/routing/skills/utils/model-invocation-badge';
@@ -26,14 +32,19 @@ export interface SkillIntroductionProps {
   readonly isDirty: boolean;
   readonly isEditing: boolean;
   readonly isOpenThrottle: boolean;
+  readonly onAddTag?: (tag: string) => void;
   readonly onCancel: () => void;
   readonly onEdit: () => void;
+  readonly onRemoveOrphan?: () => void;
+  readonly onRemoveTag?: (tag: string) => void;
   readonly onRun: ((payload: RunSkillPayload) => void) | undefined;
   readonly onSave: () => void;
   readonly runOptions: Promise<RunSkillRunOptions> | undefined;
   readonly saveError: string | undefined;
   readonly saving: boolean;
   readonly sourceTooltip: string;
+  readonly tagPending?: boolean;
+  readonly tagVocabulary?: readonly SkillTagVocabularyOption[];
 }
 
 /**
@@ -50,19 +61,29 @@ export const SkillIntroduction = (
     isDirty,
     isEditing,
     isOpenThrottle,
+    onAddTag,
     onCancel,
     onEdit,
+    onRemoveOrphan,
+    onRemoveTag,
     onRun,
     onSave,
     runOptions,
     saveError,
     saving,
     sourceTooltip,
+    tagPending = false,
+    tagVocabulary,
   } = props;
 
   // Hooks
 
   // Setup
+  // Read-only badges when the record isn't editable through the tag chips
+  // (no add handler or no vocabulary loaded); otherwise the chips own display.
+  const showReadOnlyTags =
+    (entry.tags ?? []).length > 0 &&
+    (onAddTag == null || tagVocabulary == null);
 
   // Handlers
 
@@ -119,13 +140,38 @@ export const SkillIntroduction = (
           </TooltipContent>
         </Tooltip>
 
-        {(entry.tags ?? []).map((tag) => (
-          <Badge color="blue" key={tag} size="xs">
-            {tag}
+        {showReadOnlyTags
+          ? (entry.tags ?? []).map((tag) => (
+              <Badge color="blue" key={tag} size="xs">
+                {tag}
+              </Badge>
+            ))
+          : null}
+
+        {onAddTag != null && onRemoveTag != null && tagVocabulary != null ? (
+          <SkillTagChips
+            onAddTag={onAddTag}
+            onRemoveTag={onRemoveTag}
+            pending={tagPending}
+            tags={entry.tags ?? []}
+            vocabulary={tagVocabulary}
+          />
+        ) : null}
+
+        {entry.orphanedAt != null ? (
+          <Badge color="yellow" data-testid="skill-orphan-badge" size="xs">
+            {SKILL_RECORD_TAGS_COPY.orphanBadge}
           </Badge>
-        ))}
+        ) : null}
 
         <div className="flex-1" />
+
+        {entry.orphanedAt != null && onRemoveOrphan != null ? (
+          <SkillOrphanRemoveButton
+            disabled={tagPending}
+            onRemove={onRemoveOrphan}
+          />
+        ) : null}
 
         <SkillRunControl entry={entry} onRun={onRun} runOptions={runOptions} />
 

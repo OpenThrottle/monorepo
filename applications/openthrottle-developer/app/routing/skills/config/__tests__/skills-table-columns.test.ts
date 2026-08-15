@@ -53,7 +53,7 @@ describe('routing/skills config skills-table-columns', () => {
   });
 
   describe('skillsTableColumns', () => {
-    test('defines Owner, Source, Summary, Model invocation, and Actions columns', () => {
+    test('defines Source, Summary, and Invocation columns', () => {
       const headers = skillsTableColumns.map((column) => {
         const header = column.header;
         if (typeof header === 'function') {
@@ -62,7 +62,7 @@ describe('routing/skills config skills-table-columns', () => {
         return header;
       });
 
-      expect(headers).toHaveLength(4);
+      expect(headers).toHaveLength(3);
     });
   });
 });

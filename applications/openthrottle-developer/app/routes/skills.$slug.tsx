@@ -25,8 +25,17 @@ import {
   SKILL_RUN_COPY,
   SKILL_WRITE_COPY,
 } from '~/routing/skills/data/data.copy';
+import {
+  loadProjectSkillFlags,
+  loadSkillTagVocabulary,
+} from '~/routing/skills/data/skill-index-loaders';
 import { useRunSkill } from '~/routing/skills/hooks/useRunSkill';
+import { mergeRepoSkillsWithProjectSkills } from '~/routing/skills/utils/merge-project-skills';
 import { toSkillDetailUsageData } from '~/routing/skills/utils/to-skill-detail-usage-data';
+import {
+  runSkillRecordTagAction,
+  SKILL_RECORD_TAG_INTENTS,
+} from '~/routing/skills/actions/project-skill-tags';
 import type { SkillDetailUsageData } from '~/routing/skills/data/skill-usage-detail';
 import type { Route } from '@/app/routes/+types/skills.$slug';
 
@@ -47,11 +56,24 @@ export const loader = async (args: Route.LoaderArgs) => {
   const { readSkillFileBySlug } =
     await import('~/routing/skills/data/read-skill-file.server');
 
-  const { content, editable, entry } = readSkillFileBySlug(args.params.slug);
+  const disk = readSkillFileBySlug(args.params.slug);
+  const [projectSkills, tagVocabulary] = await Promise.all([
+    loadProjectSkillFlags(args.request),
+    loadSkillTagVocabulary(args.request),
+  ]);
+  const merged = mergeRepoSkillsWithProjectSkills(
+    disk.entry == null ? [] : [disk.entry],
+    projectSkills,
+  );
+  const entry = merged.find((candidate) => candidate.slug === args.params.slug);
 
   if (!entry) {
     throw new Response(SKILL_DETAIL_COPY.notFoundStatusText, { status: 404 });
   }
+
+  const isOrphan = entry.orphanedAt != null;
+  const content = isOrphan ? '' : disk.content;
+  const editable = isOrphan ? false : disk.editable;
 
   // Deferred: the Run-skill modal needs discovered agent+model options and the
   // registered repositories that satisfy `repositoryId` for CLI backends. Model
@@ -85,7 +107,7 @@ export const loader = async (args: Route.LoaderArgs) => {
     .then(({ skillUsage }) => toSkillDetailUsageData(skillUsage))
     .catch(() => ({ available: false as const }));
 
-  return { content, editable, entry, runOptions, usage };
+  return { content, editable, entry, runOptions, tagVocabulary, usage };
 };
 
 export const links: Route.LinksFunction = () => {
@@ -99,7 +121,8 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) => {
 export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
-  const { content, editable, entry, runOptions, usage } = props.loaderData;
+  const { content, editable, entry, runOptions, tagVocabulary, usage } =
+    props.loaderData;
 
   // Hooks
   const fetcher = useFetcher<typeof action>();
@@ -108,10 +131,21 @@ export default function Component(
   // Setup
   const saving = isFetcherBusy(fetcher);
   const saveError = getActionError(fetcher.data);
+  const tagPending =
+    fetcher.state !== 'idle' &&
+    typeof fetcher.formData?.get('intent') === 'string' &&
+    fetcher.formData.get('intent') !== '';
 
   // Handlers
   const handleSave = (draft: string): void => {
     void fetcher.submit({ content: draft }, { method: 'post' });
+  };
+  const submitTagIntent = (intent: string, tag?: string): void => {
+    const payload: Record<string, string> = { intent, slug: entry.slug };
+    if (tag != null) {
+      payload.tag = tag;
+    }
+    void fetcher.submit(payload, { method: 'post' });
   };
 
   // Markup
@@ -126,11 +160,22 @@ export default function Component(
         content={content}
         editable={editable}
         entry={entry}
+        onAddTag={(tag) =>
+          submitTagIntent(SKILL_RECORD_TAG_INTENTS.ADD_TAG, tag)
+        }
+        onRemoveOrphan={() =>
+          submitTagIntent(SKILL_RECORD_TAG_INTENTS.REMOVE_ORPHAN)
+        }
+        onRemoveTag={(tag) =>
+          submitTagIntent(SKILL_RECORD_TAG_INTENTS.REMOVE_TAG, tag)
+        }
         onRun={runSkill.onRun}
         onSave={handleSave}
         runOptions={runOptions}
         saveError={saveError}
         saving={saving}
+        tagPending={tagPending}
+        tagVocabulary={tagVocabulary}
         usage={usage}
       />
 
@@ -151,10 +196,15 @@ export default function Component(
 }
 
 export const action = async (args: Route.ActionArgs) => {
+  const formData = await args.request.formData();
+  const intent = formData.get('intent');
+  if (typeof intent === 'string' && intent.length > 0) {
+    return runSkillRecordTagAction(args.request, formData);
+  }
+
   const { writeSkillFileBySlug } =
     await import('~/routing/skills/data/write-skill-file.server');
 
-  const formData = await args.request.formData();
   const content = formData.get('content');
 
   if (typeof content !== 'string') {

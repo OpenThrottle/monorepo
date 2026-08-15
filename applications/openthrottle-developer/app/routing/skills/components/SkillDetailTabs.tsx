@@ -13,6 +13,7 @@ import { SkillDetail } from '~/routing/skills/components/SkillDetail';
 import { SkillDetailUsage } from '~/routing/skills/components/SkillDetailUsage';
 import { SkillIntroduction } from '~/routing/skills/components/SkillIntroduction';
 import type { RunSkillRunOptions } from '~/routing/skills/components/SkillRunControl';
+import type { SkillTagVocabularyOption } from '~/routing/skills/components/SkillTagChips';
 import { SKILL_USAGE_RANGE_DAYS } from '~/routing/skills/config/skill-usage';
 import type { SkillDetailUsageData } from '~/routing/skills/data/skill-usage-detail';
 import { useSkillDetail } from '~/routing/skills/hooks/useSkillDetail';
@@ -27,6 +28,12 @@ export interface SkillDetailTabsProps {
   /** Local checkout with a resolved monorepo root — edit mode available. */
   editable: boolean;
   entry: RepoSkillEntry;
+  /** Adds a tag to this skill record; enables the editable tag chips. */
+  onAddTag?: (tag: string) => void;
+  /** Clears the orphaned marker on this skill record. */
+  onRemoveOrphan?: () => void;
+  /** Removes a tag from this skill record. */
+  onRemoveTag?: (tag: string) => void;
   /** Composed run payload from the Run-skill modal; wired to the run mechanism. */
   onRun?: (payload: RunSkillPayload) => void;
   /** Invoked with the full draft on Save; wired to the route action. */
@@ -37,6 +44,10 @@ export interface SkillDetailTabsProps {
   saveError?: string;
   /** True while a save is submitting; disables Save/Cancel. */
   saving?: boolean;
+  /** True while a tag/orphan mutation is submitting; disables tag controls. */
+  tagPending?: boolean;
+  /** Available tag vocabulary; enables the editable tag chips when provided. */
+  tagVocabulary?: readonly SkillTagVocabularyOption[];
   /** Deferred per-skill usage; streamed inside the Usage tab (RR8 Single Fetch). */
   usage: Promise<SkillDetailUsageData>;
 }
@@ -56,11 +67,16 @@ export const SkillDetailTabs = (
     content,
     editable,
     entry,
+    onAddTag,
+    onRemoveOrphan,
+    onRemoveTag,
     onRun,
     onSave,
     runOptions,
     saveError,
     saving = false,
+    tagPending = false,
+    tagVocabulary,
     usage,
   } = props;
 
@@ -97,14 +113,19 @@ export const SkillDetailTabs = (
         isDirty={isDirty}
         isEditing={isEditing}
         isOpenThrottle={isOpenThrottle}
+        onAddTag={onAddTag}
         onCancel={handleCancel}
         onEdit={handleEdit}
+        onRemoveOrphan={onRemoveOrphan}
+        onRemoveTag={onRemoveTag}
         onRun={onRun}
         onSave={handleSave}
         runOptions={runOptions}
         saveError={saveError}
         saving={saving}
         sourceTooltip={sourceTooltip}
+        tagPending={tagPending}
+        tagVocabulary={tagVocabulary}
       />
 
       <OpenThrottleTabs
