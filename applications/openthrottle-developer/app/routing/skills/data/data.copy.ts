@@ -11,6 +11,16 @@ export const SKILLS_EMPTY_COPY = {
 } as const;
 
 /**
+ * Copy for the GlobalToolbarSearch control on the skills index toolbar. The
+ * control commits to `?search=` and the route filters entries client-side; the
+ * label/placeholder live here so specs assert the same constants the UI renders.
+ */
+export const SKILLS_SEARCH_COPY = {
+  ariaLabel: `Search skills`,
+  placeholder: `Filter by slug, path, or summary`,
+} as const;
+
+/**
  * Copy for the effective-first "Model invocation" column and the skill detail
  * cards. The override indicator marks a skill whose resolved (effective) state
  * diverges from its static frontmatter value.

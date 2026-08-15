@@ -10,6 +10,7 @@ import {
   GlobalErrorBoundary,
   GlobalFeatureOnboarding,
   GlobalScreen,
+  readSearchParam,
 } from '@openthrottle/react-router-ui-global';
 import { OpenThrottlePagination } from '@openthrottle/react-router-ui';
 import {
@@ -65,8 +66,8 @@ export const loader = async (args: Route.LoaderArgs) => {
   );
 
   const offset = (page - 1) * limit;
-  const q = searchParams.get('q')?.trim() ?? null;
-  const titleSubstring = q && q.length > 0 ? q : null;
+  const q = readSearchParam(searchParams);
+  const titleSubstring = q.length > 0 ? q : null;
 
   const [result, statusCountsResult, assigneeOptionsResult] = await Promise.all(
     [

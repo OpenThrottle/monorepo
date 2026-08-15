@@ -45,7 +45,7 @@ describe('QueueOpsToolbar Component', () => {
     ).toBeInTheDocument();
   });
 
-  test('submitting the search writes the q search param', async () => {
+  test('submitting the search writes the search search param', async () => {
     const user = userEvent.setup();
     const component = renderToolbar({});
 
@@ -56,7 +56,7 @@ describe('QueueOpsToolbar Component', () => {
     await user.click(component.getByRole('button', { name: 'Search' }));
 
     await waitFor(() => {
-      expect(component.getByTestId('echo')).toHaveTextContent('q=plans');
+      expect(component.getByTestId('echo')).toHaveTextContent('search=plans');
     });
   });
 

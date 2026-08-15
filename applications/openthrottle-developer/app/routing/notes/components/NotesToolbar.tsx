@@ -1,7 +1,8 @@
 import * as React from 'react';
 import clsx from 'clsx';
-import { Button, Input } from '@openthrottle/react-router-shadcn';
-import { Link, useSearchParams } from 'react-router';
+import { Button } from '@openthrottle/react-router-shadcn';
+import { GlobalToolbarSearch } from '@openthrottle/react-router-ui-global';
+import { Link } from 'react-router';
 import { PlusIcon } from 'lucide-react';
 
 export interface NotesToolbarProps {
@@ -9,72 +10,38 @@ export interface NotesToolbarProps {
 }
 
 /**
- * @description Compact toolbar: URL-driven search (q) and Create note link. Preserves role=search, data-testid, and URL-driven state.
+ * @description Compact toolbar: URL-driven search (search) and Create note link. Preserves data-testid and URL-driven state.
  */
 export const NotesToolbar = (props: NotesToolbarProps): React.ReactElement => {
   const { className } = props;
 
   // Hooks
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [searchInput, setSearchInput] = React.useState(
-    () => searchParams.get('q') ?? '',
-  );
 
   // Setup
-  const searchQuery = searchParams.get('q') ?? '';
 
   // Handlers
-  const handleSearchSubmit = React.useCallback(
-    (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
-
-      const next = new URLSearchParams(searchParams);
-      const q = searchInput.trim();
-
-      if (q) {
-        next.set('q', q);
-      } else {
-        next.delete('q');
-      }
-
-      setSearchParams(next, { replace: true });
-    },
-    [searchInput, searchParams, setSearchParams],
-  );
 
   // Markup
 
   // Life Cycle
-  React.useEffect(() => {
-    setSearchInput(searchQuery);
-  }, [searchQuery]);
 
   // 🔌 Short Circuit
 
   return (
     <div className={clsx('w-full', className)} data-testid="NotesToolbar">
-      <form onSubmit={handleSearchSubmit} role="search">
-        <div className={clsx('flex w-full flex-wrap items-center', 'gap-2')}>
-          <Input
-            aria-label="Search notes"
-            className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring w-[170px] min-w-[100px] border px-2.5 py-1 text-sm focus-visible:ring-2 focus-visible:outline-none"
-            name="q"
-            onChange={(e) => setSearchInput(e.target.value)}
-            placeholder="Search notes"
-            type="search"
-            value={searchInput}
-          />
-          <Button type="submit" variant="outline">
-            Search
-          </Button>
-          <div className="min-w-0 flex-1" />
-          <Button asChild={true} className="shrink-0" variant="outline">
-            <Link to="/notes/create" viewTransition={true}>
-              <PlusIcon className="h-4 w-4" /> Create note
-            </Link>
-          </Button>
-        </div>
-      </form>
+      <div className={clsx('flex w-full flex-wrap items-center', 'gap-2')}>
+        <GlobalToolbarSearch
+          aria-label="Search notes"
+          placeholder="Search notes"
+          transformCommittedParams={(next) => next.delete('q')}
+        />
+        <div className="min-w-0 flex-1" />
+        <Button asChild={true} className="shrink-0" variant="outline">
+          <Link to="/notes/create" viewTransition={true}>
+            <PlusIcon className="h-4 w-4" /> Create note
+          </Link>
+        </Button>
+      </div>
     </div>
   );
 };

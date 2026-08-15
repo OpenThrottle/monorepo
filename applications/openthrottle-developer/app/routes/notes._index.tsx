@@ -4,6 +4,7 @@ import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
+  readSearchParam,
 } from '@openthrottle/react-router-ui-global';
 import { GetNotesDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
@@ -27,7 +28,7 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
 export const loader = async (args: Route.LoaderArgs) => {
   const url = args.url;
   const searchParams = url?.searchParams ?? new URLSearchParams();
-  const search = searchParams.get('q')?.trim() ?? '';
+  const search = readSearchParam(searchParams);
 
   const { notes: allNotes } = await executeGraphqlWithAuth(
     args.request,

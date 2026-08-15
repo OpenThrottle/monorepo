@@ -3,6 +3,7 @@ import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
+  readSearchParam,
 } from '@openthrottle/react-router-ui-global';
 import { useSearchParams } from 'react-router';
 import {
@@ -59,7 +60,7 @@ export default function Component(
 
   // Setup
   const { queues } = loaderData;
-  const query = (searchParams.get('q') ?? '').trim().toLowerCase();
+  const query = readSearchParam(searchParams).toLowerCase();
   const filteredQueues =
     query === ''
       ? queues

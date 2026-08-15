@@ -1,18 +1,26 @@
 import * as React from 'react';
 import { cleanup, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { GLOBAL_TOOLBAR_SEARCH_COPY } from '@openthrottle/react-router-ui-global';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { SKILLS_SEARCH_COPY } from '~/routing/skills/data/data.copy';
 import { renderRoutesStub } from '../../../../testing/route-fixtures';
 import { SkillsToolbar } from '../SkillsToolbar';
 
 describe('SkillsToolbar Component', () => {
-  test('renders search input with placeholder and search button', () => {
+  test('renders the GlobalToolbarSearch control with skills copy', () => {
     renderRoutesStub(<SkillsToolbar />);
 
+    // The shared control owns its own form role=search + labeled searchbox.
+    expect(screen.getByRole('search')).toBeInTheDocument();
     expect(
-      screen.getByPlaceholderText('Filter by slug, path, or summary'),
+      screen.getByRole('searchbox', { name: SKILLS_SEARCH_COPY.ariaLabel }),
+    ).toHaveAttribute('placeholder', SKILLS_SEARCH_COPY.placeholder);
+    expect(
+      screen.getByRole('button', {
+        name: GLOBAL_TOOLBAR_SEARCH_COPY.buttonLabel,
+      }),
     ).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Search' })).toBeInTheDocument();
     expect(screen.getByTestId('SkillsToolbar')).toBeInTheDocument();
   });
 

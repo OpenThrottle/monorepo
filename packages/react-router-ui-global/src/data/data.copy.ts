@@ -11,3 +11,13 @@ export const GLOBAL_FEATURE_ONBOARDING_SECTION_COPY = {
   useCases: `What you could use it for`,
   whatItIs: `What it is`,
 } as const;
+
+/**
+ * @public
+ * Default copy for {@link GlobalToolbarSearch}. Consumers override the
+ * placeholder and aria-label per surface; the submit button falls back to this
+ * label when no override is supplied.
+ */
+export const GLOBAL_TOOLBAR_SEARCH_COPY = {
+  buttonLabel: `Search`,
+} as const;

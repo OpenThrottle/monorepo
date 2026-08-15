@@ -7,6 +7,7 @@ import {
   GlobalHeading,
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
+  readSearchParam,
 } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { OpenThrottlePagination } from '@openthrottle/react-router-ui';
@@ -57,11 +58,7 @@ export const loader = async (args: Route.LoaderArgs) => {
       Number(url.searchParams.get('limit')) || PROJECTS_DEFAULT_LIMIT,
     ),
   );
-  const search = (
-    url.searchParams.get('q') ??
-    url.searchParams.get('search') ??
-    ''
-  ).trim();
+  const search = readSearchParam(url.searchParams);
 
   const sortByParam = url.searchParams.get('sortBy') ?? '';
   const sortOrderParam = url.searchParams.get('sortOrder') ?? '';

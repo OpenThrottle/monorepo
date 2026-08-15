@@ -57,15 +57,15 @@ describe('NotesToolbar Component', () => {
     ).toHaveAttribute('href', '/notes/create');
   });
 
-  test('reflects q from initial search params in the search input', () => {
-    const component = renderToolbar('/?q=hello');
+  test('reflects search from initial search params in the search input', () => {
+    const component = renderToolbar('/?search=hello');
 
     expect(
       component.getByRole('searchbox', { name: /search notes/i }),
     ).toHaveValue('hello');
   });
 
-  test('updates URL q param on search submit', async () => {
+  test('updates URL search param on search submit', async () => {
     const user = userEvent.setup();
     const component = renderToolbar();
 
@@ -78,13 +78,13 @@ describe('NotesToolbar Component', () => {
       const qs = new URLSearchParams(
         component.getByTestId('current-search').textContent ?? '',
       );
-      expect(qs.get('q')).toBe('draft');
+      expect(qs.get('search')).toBe('draft');
     });
   });
 
-  test('removes q from URL when search is cleared on submit', async () => {
+  test('removes search from URL when search is cleared on submit', async () => {
     const user = userEvent.setup();
-    const component = renderToolbar('/?q=old');
+    const component = renderToolbar('/?search=old');
 
     const input = component.getByRole('searchbox', { name: /search notes/i });
     await user.clear(input);
@@ -94,7 +94,7 @@ describe('NotesToolbar Component', () => {
       const qs = new URLSearchParams(
         component.getByTestId('current-search').textContent ?? '',
       );
-      expect(qs.has('q')).toBe(false);
+      expect(qs.has('search')).toBe(false);
     });
   });
 });

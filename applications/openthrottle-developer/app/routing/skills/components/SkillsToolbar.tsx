@@ -3,14 +3,15 @@ import clsx from 'clsx';
 import { Link } from 'react-router';
 import {
   Button,
-  Input,
   ToggleGroup,
   ToggleGroupItem,
 } from '@openthrottle/react-router-shadcn';
+import { GlobalToolbarSearch } from '@openthrottle/react-router-ui-global';
 import { SlidersHorizontalIcon, TagsIcon } from 'lucide-react';
 import {
   SKILL_AVAILABILITY_COPY,
   SKILL_VOCABULARY_COPY,
+  SKILLS_SEARCH_COPY,
   SKILLS_SOURCE_COPY,
 } from '~/routing/skills/data/data.copy';
 import {
@@ -50,12 +51,14 @@ export const SkillsToolbar = (
 
   return (
     <div className={clsx('flex gap-2', className)} data-testid="SkillsToolbar">
-      <div className="flex gap-2">
-        <Input placeholder="Filter by slug, path, or summary" />
-        <Button type="submit" variant="outline">
-          Search
-        </Button>
-      </div>
+      {/* GlobalToolbarSearch owns its own <form role="search">; the source
+          filter and CTAs stay siblings outside it so no forms nest. It commits
+          to `?search=` and resets `?page` so a new query lands on page 1. */}
+      <GlobalToolbarSearch
+        aria-label={SKILLS_SEARCH_COPY.ariaLabel}
+        placeholder={SKILLS_SEARCH_COPY.placeholder}
+        transformCommittedParams={(next) => next.delete('page')}
+      />
 
       <ToggleGroup
         aria-label={SKILLS_SOURCE_COPY.filterGroupLabel}

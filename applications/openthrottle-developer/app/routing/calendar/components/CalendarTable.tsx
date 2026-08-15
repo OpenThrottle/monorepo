@@ -2,6 +2,7 @@ import * as React from 'react';
 import clsx from 'clsx';
 import { ArrowRightIcon } from 'lucide-react';
 import { Button, DataTable } from '@openthrottle/react-router-shadcn';
+import { readSearchParam } from '@openthrottle/react-router-ui-global';
 import { Link, useSearchParams } from 'react-router';
 import { CalendarEmpty } from '~/routing/calendar/components/CalendarEmpty';
 import { formatCalendarRange } from '~/routing/calendar/utils/formatters';
@@ -22,7 +23,7 @@ export const CalendarTable = (
   const [searchParams] = useSearchParams();
 
   // Setup
-  const search = searchParams.get('q') ?? '';
+  const search = readSearchParam(searchParams);
   const columns = React.useMemo(() => CalendarTable.buildTable(), [events]);
 
   // Handlers
