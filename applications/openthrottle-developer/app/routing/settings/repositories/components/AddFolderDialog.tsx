@@ -41,6 +41,7 @@ export const AddFolderDialog = (
 
   // Hooks
   const picker = useAddFolderDialog({
+    actionError,
     canUseNativeDialog: pickerCapabilities.canUseNativeDialog,
     defaultBrowsePath: pickerCapabilities.defaultBrowsePath,
     roots: pickerCapabilities.roots,

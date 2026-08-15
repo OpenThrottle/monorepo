@@ -1,7 +1,8 @@
 import * as React from 'react';
-import { act, render } from '@testing-library/react';
+import { act, render, waitFor } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
-import { createRoutesStub } from 'react-router';
+import userEvent from '@testing-library/user-event';
+import { createRoutesStub, Form, useActionData } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { useAddFolderDialog } from '../useAddFolderDialog';
 import type {
@@ -15,30 +16,42 @@ const options: AddFolderDialogOptions = {
   roots: ['/Users/dev/Development'],
 };
 
-function renderDialog(): {
-  component: RenderResult;
-  value: { current: UseAddFolderDialogResult | null };
-} {
-  const value: { current: UseAddFolderDialogResult | null } = {
-    current: null,
-  };
-  function DialogProbe(): React.ReactElement {
-    const hook = useAddFolderDialog(options);
-    value.current = hook;
-    return <div data-testid="dialog-probe" />;
-  }
+// A shared ref cell the single probe component writes the live hook result to,
+// so tests can drive/read the hook from outside the tree.
+const value: { current: UseAddFolderDialogResult | null } = { current: null };
+
+/**
+ * The one probe component (react/no-multi-comp): threads the route's action
+ * `error` into the hook via `actionError` — mirroring how the route surfaces a
+ * failed add — and renders an `addFolder` submit so tests can trigger the
+ * navigation edge the close-on-success effect keys off of.
+ */
+function DialogProbe(): React.ReactElement {
+  const actionData = useActionData<{ error?: string } | null>();
+  const hook = useAddFolderDialog({
+    ...options,
+    actionError: actionData?.error ?? null,
+  });
+  value.current = hook;
+  return (
+    <Form method="post">
+      <input name="intent" type="hidden" value="addFolder" />
+      <button type="submit">add</button>
+    </Form>
+  );
+}
+
+function renderDialog(action: () => unknown = () => null): RenderResult {
+  value.current = null;
   const Stub = createRoutesStub([
-    { Component: DialogProbe, action: () => null, path: '/' },
+    { Component: DialogProbe, action, path: '/' },
   ]);
-  const component = render(<Stub />);
-  return { component, value };
+  return render(<Stub />);
 }
 
 describe('useAddFolderDialog', () => {
-  let value: { current: UseAddFolderDialogResult | null };
-
   beforeEach(() => {
-    ({ value } = renderDialog());
+    renderDialog();
   });
 
   test('starts closed with no listing and manual path hidden', () => {
@@ -68,5 +81,35 @@ describe('useAddFolderDialog', () => {
 
     act(() => value.current?.handleToggleManualPath());
     expect(value.current?.showManualPath).toBe(false);
+  });
+});
+
+describe('useAddFolderDialog close-on-success', () => {
+  test('closes the dialog on a successful add', async () => {
+    const user = userEvent.setup();
+    const component = renderDialog(() => null);
+
+    act(() => value.current?.setOpen(true));
+    expect(value.current?.open).toBe(true);
+
+    await user.click(component.getByRole('button', { name: 'add' }));
+
+    await waitFor(() => expect(value.current?.open).toBe(false));
+  });
+
+  test('keeps the dialog open when the add fails', async () => {
+    const user = userEvent.setup();
+    const component = renderDialog(() => ({
+      error: 'That folder is already registered.',
+    }));
+
+    act(() => value.current?.setOpen(true));
+    expect(value.current?.open).toBe(true);
+
+    await user.click(component.getByRole('button', { name: 'add' }));
+
+    // Let the submission settle back to idle, then assert it stayed open.
+    await waitFor(() => expect(value.current?.isAdding).toBe(false));
+    expect(value.current?.open).toBe(true);
   });
 });

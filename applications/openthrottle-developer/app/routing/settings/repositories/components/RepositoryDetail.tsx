@@ -15,6 +15,7 @@ import {
   WORKSPACE_FOLDERS_COPY,
   WORKSPACE_REPOSITORY_DETAIL_COPY,
 } from '~/routing/settings/data/data.copy';
+import { deriveCheckoutInspectionBadges } from '~/routing/settings/repositories/utils/checkout-inspection-badges';
 
 export interface RepositoryDetailProps {
   editTo: string;
@@ -124,30 +125,58 @@ export const RepositoryDetail = (
                   checkout.inspection?.git.currentBranch ??
                   repository.defaultBranch ??
                   null;
+                const { detectedAgentConfig, detectedStack } =
+                  deriveCheckoutInspectionBadges(checkout.inspection);
                 return (
                   <li
-                    className="flex flex-wrap items-center justify-between gap-2 rounded-md border px-3 py-2"
+                    className="space-y-2 rounded-md border px-3 py-2"
                     data-testid={`RepositoryDetailCheckout-${checkout.id}`}
                     key={checkout.id}
                   >
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium">
-                        {checkout.displayName}
-                      </p>
-                      <p className="text-muted-foreground truncate font-mono text-xs">
-                        {checkout.filesystemPath}
-                      </p>
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">
+                          {checkout.displayName}
+                        </p>
+                        <p className="text-muted-foreground truncate font-mono text-xs">
+                          {checkout.filesystemPath}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        {branch ? (
+                          <Badge variant="outline">{branch}</Badge>
+                        ) : null}
+                        {checkout.managed ? (
+                          <Badge variant="secondary">
+                            {WORKSPACE_FOLDERS_COPY.managedBadge}
+                          </Badge>
+                        ) : null}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1">
-                      {branch ? (
-                        <Badge variant="outline">{branch}</Badge>
-                      ) : null}
-                      {checkout.managed ? (
-                        <Badge variant="secondary">
-                          {WORKSPACE_FOLDERS_COPY.managedBadge}
-                        </Badge>
-                      ) : null}
-                    </div>
+                    {detectedStack.length > 0 ? (
+                      <div className="flex flex-wrap items-center gap-1">
+                        <span className="text-muted-foreground w-24 shrink-0 text-xs">
+                          {WORKSPACE_REPOSITORY_DETAIL_COPY.stackLabel}
+                        </span>
+                        {detectedStack.map((item) => (
+                          <Badge key={item} variant="outline">
+                            {item}
+                          </Badge>
+                        ))}
+                      </div>
+                    ) : null}
+                    {detectedAgentConfig.length > 0 ? (
+                      <div className="flex flex-wrap items-center gap-1">
+                        <span className="text-muted-foreground w-24 shrink-0 text-xs">
+                          {WORKSPACE_REPOSITORY_DETAIL_COPY.agentConfigLabel}
+                        </span>
+                        {detectedAgentConfig.map((item) => (
+                          <Badge key={item} variant="outline">
+                            {item}
+                          </Badge>
+                        ))}
+                      </div>
+                    ) : null}
                   </li>
                 );
               })}

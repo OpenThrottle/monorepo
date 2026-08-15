@@ -25,6 +25,11 @@ export interface WorkspaceBreadcrumbSegment {
 }
 
 export interface AddFolderDialogOptions {
+  /**
+   * The latest add-folder action error, threaded from the route. Used to keep
+   * the dialog open on a failed add while auto-closing it on success.
+   */
+  actionError?: string | null;
   canUseNativeDialog: boolean;
   defaultBrowsePath: string;
   roots: string[];
@@ -89,13 +94,14 @@ const buildBreadcrumbs = (
 export const useAddFolderDialog = (
   options: AddFolderDialogOptions,
 ): UseAddFolderDialogResult => {
-  const { canUseNativeDialog, defaultBrowsePath, roots } = options;
+  const { actionError, canUseNativeDialog, defaultBrowsePath, roots } = options;
 
   // Hooks
   const [open, setOpen] = React.useState(false);
   const [showManualPath, setShowManualPath] = React.useState(false);
   const [pickDismissed, setPickDismissed] = React.useState(false);
   const seededRef = React.useRef(false);
+  const wasAddingRef = React.useRef(false);
   const browseFetcher = useFetcher<{
     browse?: WorkspaceBrowseListing;
     error?: string;
@@ -177,6 +183,17 @@ export const useAddFolderDialog = (
     }
     // handleBrowse is stable enough for a seed-on-open effect.
   }, [open, defaultBrowsePath]);
+
+  // Close the dialog on the addFolder submit's true→false edge, but only on a
+  // successful add — a failed add (actionError present) stays open so the error
+  // remains visible. The result card renders on the page from loader data, so
+  // closing here never wipes it.
+  React.useEffect(() => {
+    if (wasAddingRef.current && !isAdding && actionError == null) {
+      setOpen(false);
+    }
+    wasAddingRef.current = isAdding;
+  }, [actionError, isAdding]);
 
   // 🔌 Short Circuit
 

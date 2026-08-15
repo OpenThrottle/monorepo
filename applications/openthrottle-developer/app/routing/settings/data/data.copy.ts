@@ -51,6 +51,7 @@ export const WORKSPACE_FOLDERS_COPY = {
  * @description Copy for the workspace repository details and edit routes.
  */
 export const WORKSPACE_REPOSITORY_DETAIL_COPY = {
+  agentConfigLabel: `Agent config`,
   backToWorkspace: `Back to Workspace`,
   branchHelp: `The branch runs and checkouts default to.`,
   branchLabel: `Default branch`,
@@ -74,6 +75,7 @@ export const WORKSPACE_REPOSITORY_DETAIL_COPY = {
   remoteLabel: `Remote`,
   remoteLocalOnly: `Local only (no remote detected)`,
   saveButton: `Save changes`,
+  stackLabel: `Stack`,
 } as const;
 
 /**
