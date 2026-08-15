@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { toast } from '@openthrottle/react-router-shadcn';
+import { getActionError } from '@openthrottle/react-router-utils';
 
 /**
  * Resolves a toast message from an action result: either a static string or a
@@ -37,15 +38,6 @@ export interface UseActionToastOptions<TResult> {
   readonly success?: ToastMessage<TResult>;
 }
 
-/** Reads a string `error` field off an action result, if present. */
-const readError = (result: unknown): string | null => {
-  if (result != null && typeof result === 'object' && 'error' in result) {
-    const value = result.error;
-    return typeof value === 'string' && value.length > 0 ? value : null;
-  }
-  return null;
-};
-
 const resolveMessage = <TResult>(
   message: ToastMessage<TResult> | undefined,
   result: TResult,
@@ -81,7 +73,8 @@ export const useActionToast = <TResult>(
       return;
     }
 
-    const errorMessage = resolveMessage(error, result) ?? readError(result);
+    const errorMessage =
+      resolveMessage(error, result) ?? getActionError(result);
     if (errorMessage != null) {
       toast.error(errorMessage, id != null ? { id } : undefined);
       onError?.(result);

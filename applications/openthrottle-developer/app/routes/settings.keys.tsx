@@ -1,6 +1,9 @@
 import * as React from 'react';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import {
+  getActionError,
+  mergeRouteModuleMeta,
+} from '@openthrottle/react-router-utils';
 import {
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
@@ -101,8 +104,7 @@ export default function Component(
   // Hooks
 
   // Setup
-  const actionError =
-    actionData && 'error' in actionData ? actionData.error : null;
+  const actionError = getActionError(actionData) ?? null;
   const createActionData =
     actionData &&
     'intent' in actionData &&

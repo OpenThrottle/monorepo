@@ -12,6 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from '@openthrottle/react-router-shadcn';
+import { getActionError } from '@openthrottle/react-router-utils';
 import { SKILL_AVAILABILITY_COPY } from '~/routing/skills/data/data.copy';
 import { SkillTagVocabularyRow } from '~/routing/skills/components/SkillTagVocabularyRow';
 import {
@@ -46,13 +47,7 @@ export const SkillTagVocabularyManager = (
   );
 
   // Setup
-  const serverError =
-    addFetcher.data != null &&
-    typeof addFetcher.data === 'object' &&
-    'error' in addFetcher.data &&
-    typeof addFetcher.data.error === 'string'
-      ? addFetcher.data.error
-      : undefined;
+  const serverError = getActionError(addFetcher.data);
 
   // Handlers
   const handleAddSubmit = (event: React.FormEvent<HTMLFormElement>): void => {

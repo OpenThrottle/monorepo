@@ -20,6 +20,7 @@ import { SettingsSetupIntroduction } from '~/routing/settings/components/Setting
 import { SettingsSetupTable } from '~/routing/settings/components/SettingsSetupTable';
 import { SettingsSetupToolbar } from '~/routing/settings/components/SettingsSetupToolbar';
 import type { Route } from '@/app/routes/+types/settings.setup';
+import { SettingsSetupInstallNotice } from '~/routing/settings/components/SettingsSetupInstallNotice';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -54,6 +55,7 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { loaderData } = props;
+  const { installEnabled } = loaderData;
 
   // Hooks
   const [filter, setFilter] = React.useState<AgentCliFilter>('all');
@@ -76,14 +78,15 @@ export default function Component(
       <div className="mt-6 flex flex-col gap-4">
         <SettingsSetupToolbar
           filter={filter}
-          installEnabled={loaderData.installEnabled}
+          installEnabled={installEnabled}
           onFilterChange={setFilter}
         />
         <SettingsSetupTable
           canManage={loaderData.canManage}
-          installEnabled={loaderData.installEnabled}
+          installEnabled={installEnabled}
           statuses={visibleStatuses}
         />
+        <SettingsSetupInstallNotice installEnabled={installEnabled} />
       </div>
     </GlobalScreen>
   );

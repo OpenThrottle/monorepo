@@ -6,7 +6,10 @@ import {
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import {
+  getActionError,
+  mergeRouteModuleMeta,
+} from '@openthrottle/react-router-utils';
 import {
   ScheduledAgentJobDetailDocument,
   UpdateScheduledAgentJobDocument,
@@ -63,8 +66,7 @@ export default function Component(
 
   // Setup
   const { job } = loaderData;
-  const actionError =
-    actionData != null && 'error' in actionData ? actionData.error : undefined;
+  const actionError = getActionError(actionData);
 
   // Handlers
 

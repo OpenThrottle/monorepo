@@ -4,7 +4,10 @@ import {
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import {
+  getActionError,
+  mergeRouteModuleMeta,
+} from '@openthrottle/react-router-utils';
 import { redirect } from 'react-router';
 import { NoteForm } from '~/routing/notes/components/NoteForm';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
@@ -39,8 +42,7 @@ export default function Component(
   // Hooks
 
   // Setup
-  const actionError =
-    actionData != null && 'error' in actionData ? actionData.error : undefined;
+  const actionError = getActionError(actionData);
 
   // Handlers
 

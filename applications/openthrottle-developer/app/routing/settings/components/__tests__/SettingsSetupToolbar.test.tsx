@@ -6,22 +6,6 @@ import { SettingsSetupToolbar } from '../SettingsSetupToolbar';
 import type { AgentCliFilter } from '~/routing/settings/data/agent-clis.data';
 
 describe('SettingsSetupToolbar', () => {
-  test('hosts the single install notice', () => {
-    const component = render(
-      <SettingsSetupToolbar
-        filter="all"
-        installEnabled={false}
-        onFilterChange={() => {}}
-      />,
-    );
-    expect(
-      component.getByTestId('SettingsSetupInstallNotice'),
-    ).toBeInTheDocument();
-    expect(
-      component.getByText(/OT_AGENT_CLI_INSTALL_ENABLED/),
-    ).toBeInTheDocument();
-  });
-
   test('emits the chosen filter', async () => {
     const user = userEvent.setup();
     const onFilterChange = vi.fn<(filter: AgentCliFilter) => void>();

@@ -14,6 +14,7 @@ import {
   TableCell,
   TableRow,
 } from '@openthrottle/react-router-shadcn';
+import { getActionError } from '@openthrottle/react-router-utils';
 import { SKILL_AVAILABILITY_COPY } from '~/routing/skills/data/data.copy';
 import {
   isKebabCase,
@@ -47,13 +48,7 @@ export const SkillTagVocabularyRow = (
   );
 
   // Setup
-  const serverError =
-    renameFetcher.data != null &&
-    typeof renameFetcher.data === 'object' &&
-    'error' in renameFetcher.data &&
-    typeof renameFetcher.data.error === 'string'
-      ? renameFetcher.data.error
-      : undefined;
+  const serverError = getActionError(renameFetcher.data);
 
   // Handlers
   const handleRenameSubmit = (

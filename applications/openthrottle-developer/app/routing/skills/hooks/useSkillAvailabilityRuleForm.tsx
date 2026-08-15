@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useFetcher } from 'react-router';
+import { getActionError } from '@openthrottle/react-router-utils';
 import { SKILL_AVAILABILITY_COPY } from '~/routing/skills/data/data.copy';
 import {
   environmentValueToChoice,
@@ -82,13 +83,7 @@ export const useSkillAvailabilityRuleForm = (
   );
   const tagOptions = vocabulary.map((tag) => ({ label: tag, value: tag }));
   const isSubmitting = fetcher.state !== 'idle';
-  const serverError =
-    fetcher.data != null &&
-    typeof fetcher.data === 'object' &&
-    'error' in fetcher.data &&
-    typeof fetcher.data.error === 'string'
-      ? fetcher.data.error
-      : undefined;
+  const serverError = getActionError(fetcher.data);
 
   // Handlers
   const handleEnvironmentChange = (value: string): void => {

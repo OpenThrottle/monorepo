@@ -2,7 +2,11 @@ import * as React from 'react';
 import { Await, useFetcher } from 'react-router';
 import { ChatDialog } from '@openthrottle/react-router-chat';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import {
+  getActionError,
+  isFetcherBusy,
+  mergeRouteModuleMeta,
+} from '@openthrottle/react-router-utils';
 import {
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
@@ -103,9 +107,8 @@ export default function Component(
   const runSkill = useRunSkill();
 
   // Setup
-  const saving = fetcher.state !== 'idle';
-  const saveError =
-    fetcher.data && fetcher.data.ok === false ? fetcher.data.error : undefined;
+  const saving = isFetcherBusy(fetcher);
+  const saveError = getActionError(fetcher.data);
 
   // Handlers
   const handleSave = (draft: string): void => {

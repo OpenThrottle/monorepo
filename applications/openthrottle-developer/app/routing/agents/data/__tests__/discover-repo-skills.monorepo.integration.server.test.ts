@@ -65,6 +65,7 @@ describe('discoverRepoSkills monorepo integration', () => {
       if (monorepoRoot === null) {
         throw new Error('monorepoRoot should be resolved when test runs');
       }
+
       const entries = discoverRepoSkills(monorepoRoot);
       const counts = getRepoSkillsRegistryCounts(entries);
       const slugs = new Set(entries.map((entry: RepoSkillEntry) => entry.slug));
@@ -73,6 +74,7 @@ describe('discoverRepoSkills monorepo integration', () => {
       expect(counts.agents).toBe(
         countOnDiskSkillFolders(monorepoRoot, '.agents/skills'),
       );
+
       expect(counts.agents).toBe(entries.length);
     },
   );

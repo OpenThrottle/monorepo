@@ -1,6 +1,9 @@
 import * as React from 'react';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import {
+  getActionError,
+  mergeRouteModuleMeta,
+} from '@openthrottle/react-router-utils';
 import {
   GlobalErrorBoundary,
   GlobalLayoutBreadcrumbsHandle,
@@ -70,8 +73,7 @@ export default function Component(
   const { connection, connector } = loaderData;
 
   // Setup
-  const actionError =
-    actionData && 'error' in actionData ? actionData.error : null;
+  const actionError = getActionError(actionData) ?? null;
 
   // Markup
   if (!connector) {
