@@ -31,10 +31,14 @@ on:
       - 'docs/**'
       - '**/*.md'
 
-# Concurrency: Cancel in-progress runs when a new commit is pushed to the same ref
-# This prevents wasting resources on outdated runs while allowing parallel matrix jobs
+# Concurrency: Cancel in-progress runs when a new commit is pushed to the same ref.
+# This prevents wasting resources on outdated runs while allowing parallel matrix jobs.
+# EXCEPTION: never cancel on `main`. Consecutive pushes to main share one constant
+# group, so cancel-in-progress would kill the older run mid-flight — surfacing as a
+# spurious "cancelled" (non-error) result AND leaving that commit only partially
+# validated, which matters because main is the trusted read-write GCS Nx cache writer.
 concurrency:
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
   group: continuous-integration-${{ github.ref }}
 
 env:
@@ -133,8 +137,10 @@ jobs:
       (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
 
     # FIXME: 💰 Re-enable when we want to spend more
+    # Same main-exception as the workflow-level block above: PRs cancel stale runs,
+    # main always runs to completion so no push shows a spurious cancellation.
     concurrency:
-      cancel-in-progress: true
+      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
       group: continuous-integration-${{ github.ref }}-build-${{ matrix.target }}-${{ matrix.jobIndex }}
     env:
       jobCount: 1 # must be in sync with "jobIndex"

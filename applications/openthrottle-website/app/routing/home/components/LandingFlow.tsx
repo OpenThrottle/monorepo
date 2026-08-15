@@ -28,28 +28,26 @@ export const LandingFlow = (props: LandingFlowProps): React.ReactElement => {
       id="how"
     >
       <div className="mx-auto w-[min(68rem,100%)]">
-        <p className="landing-reveal mb-3 text-xs font-semibold tracking-[0.08em] text-[var(--brand)] uppercase">
-          {kicker}
-        </p>
-        <h2 className="landing-reveal max-w-[18ch] text-[clamp(1.75rem,4vw,2.6rem)] leading-tight font-bold tracking-[-0.035em]">
-          {title}
-        </h2>
-        <p className="landing-reveal text-muted-foreground mt-3 max-w-[42ch]">
-          {lede}
-        </p>
+        <div>
+          <p className="landing-reveal mb-3 text-xs font-semibold tracking-[0.08em] text-(--brand) uppercase">
+            {kicker}
+          </p>
+          <h2 className="landing-reveal text-[clamp(1.75rem,4vw,2.6rem)] leading-tight tracking-[-0.035em]">
+            {title}
+          </h2>
+          <p className="landing-reveal text-muted-foreground mt-3">{lede}</p>
+        </div>
 
         <ol className="landing-reveal mt-10 grid gap-0 md:grid-cols-4 md:gap-6">
           {steps.map((step, index) => (
             <li
-              className="border-foreground/15 md:border-foreground border-t py-5 md:border-t-2 md:pt-6"
+              className="border-t py-5 md:border-t-2 md:pt-6"
               key={step.title}
             >
-              <span className="mb-3 block font-mono text-sm font-bold tracking-[0.06em] text-[var(--brand)]">
+              <span className="mb-3 block font-mono text-sm tracking-[0.06em] text-(--brand)">
                 {String(index + 1).padStart(2, '0')}
               </span>
-              <h3 className="mb-2 text-lg font-bold tracking-[-0.02em]">
-                {step.title}
-              </h3>
+              <h3 className="mb-2 text-lg tracking-[-0.02em]">{step.title}</h3>
               <p className="text-muted-foreground text-[0.975rem]">
                 {step.body}
               </p>

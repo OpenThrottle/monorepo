@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { LANDING_NAV } from '~/routing/home/data/data.landing';
 import { Link } from 'react-router';
+import { OpenThrottleLogo } from '@openthrottle/react-router-ui';
 
 export interface LandingNavProps {
   className?: string;
@@ -12,7 +13,7 @@ export const LandingNav = (props: LandingNavProps): React.ReactElement => {
   // Hooks
 
   // Setup
-  const { brand, links } = LANDING_NAV;
+  const { links } = LANDING_NAV;
 
   // Handlers
 
@@ -24,11 +25,11 @@ export const LandingNav = (props: LandingNavProps): React.ReactElement => {
 
   return (
     <header
-      className={`absolute inset-x-0 top-0 z-10 flex items-center justify-between gap-4 px-6 py-5 text-[var(--landing-hero-line-strong)] ${className ?? ''}`}
+      className={`absolute inset-x-0 top-0 z-10 flex flex-col items-center justify-between gap-4 px-6 py-5 text-[var(--landing-hero-line-strong)] sm:flex-row ${className ?? ''}`}
       data-testid="LandingNav"
     >
       <Link className="font-bold tracking-tight no-underline" to="#top">
-        {brand}
+        <OpenThrottleLogo className="text-lg text-white" name="AI" />
       </Link>
 
       <nav

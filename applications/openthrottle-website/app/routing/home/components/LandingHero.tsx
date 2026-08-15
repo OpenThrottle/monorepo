@@ -5,20 +5,40 @@ import { HeroDotMesh } from './HeroDotMesh';
 import { LANDING_HERO } from '~/routing/home/data/data.landing';
 import { LandingNav } from './LandingNav';
 import { Link } from 'react-router';
-// import { HeroSoundArcs } from './HeroSoundArcs';
+import { useRotatingHeadline } from '~/routing/home/hooks/useRotatingHeadline';
 
 export interface LandingHeroProps {
+  /**
+   * Auto-advance delay in ms. `0` disables autoplay (click still advances).
+   * Defaults to `LANDING_HERO.headlineIntervalMs`.
+   */
+  headlineIntervalMs?: number;
   /** Optional lede override (e.g. the loader's rotating introduction). */
   lede?: string;
 }
 
+interface LandingHeroHeadlineStyle extends React.CSSProperties {
+  readonly '--landing-headline-crossfade': string;
+}
+
 export const LandingHero = (props: LandingHeroProps): React.ReactElement => {
-  const { lede: ledeProp } = props;
+  const {
+    headlineIntervalMs = LANDING_HERO.headlineIntervalMs,
+    lede: ledeProp,
+  } = props;
 
   // Hooks
+  const { advance, headline, incomingVisible, outgoing } = useRotatingHeadline({
+    crossfadeMs: LANDING_HERO.headlineCrossfadeMs,
+    intervalMs: headlineIntervalMs,
+    items: LANDING_HERO.headlines,
+  });
 
   // Setup
-  const { ctas, headline, lede, wordmark } = LANDING_HERO;
+  const { ctas, lede } = LANDING_HERO;
+  const headlineButtonStyle: LandingHeroHeadlineStyle = {
+    '--landing-headline-crossfade': `${LANDING_HERO.headlineCrossfadeMs}ms`,
+  };
 
   // Handlers
 
@@ -31,54 +51,42 @@ export const LandingHero = (props: LandingHeroProps): React.ReactElement => {
   return (
     <section
       aria-label="OpenThrottle"
-      className="landing-hero-ground relative grid min-h-[100svh] items-end overflow-hidden text-[var(--landing-hero-line-strong)]"
+      className="landing-hero-ground relative grid min-h-svh items-center justify-center overflow-hidden p-4 text-white md:p-0"
       data-testid="LandingHero"
       id="top"
     >
       <LandingNav />
-
-      {/* Interactive dot-lattice backdrop (replaces the static drifting grid) */}
       <HeroDotMesh />
 
-      {/* Velocity-reactive "sound wave" arcs (replaces the static arc SVG) */}
-      {/* <HeroSoundArcs /> */}
-
-      {/* Static mono labels riding over the arcs */}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-        <svg
-          className="h-full w-full object-cover"
-          preserveAspectRatio="xMidYMid slice"
-          role="presentation"
-          viewBox="0 0 1440 900"
-        >
-          <g
-            fill="#f3f0ea"
-            fontFamily="ui-monospace, SF Mono, Menlo, monospace"
-            fontSize="13"
-            opacity="0.55"
+      <div className="relative mx-auto max-w-3xl items-center justify-center">
+        <h1 className="mb-8 text-[clamp(1.75rem,4vw,2.6rem)]">
+          <button
+            className="grid w-full cursor-pointer bg-transparent p-0 text-left font-[inherit] text-inherit"
+            onClick={advance}
+            style={headlineButtonStyle}
+            type="button"
           >
-            <text x="980" y="620">
-              plan → task → run → commit
-            </text>
-            <text x="980" y="644">
-              Plan-Id · Task-Id · MCP
-            </text>
-          </g>
-        </svg>
-      </div>
-
-      {/* Copy */}
-      <div className="relative z-[1] w-[min(42rem,100%)] px-6 pt-26 pb-14">
-        <p className="mb-5 text-[clamp(2.75rem,9vw,5.5rem)] leading-[0.92] font-extrabold tracking-[-0.045em]">
-          {wordmark.lead}
-          <span className="text-[var(--brand)]">{wordmark.accent}</span>
-        </p>
-        <h1 className="mb-3 max-w-[18ch] text-[clamp(1.45rem,3.4vw,2.15rem)] leading-tight font-bold tracking-[-0.03em]">
-          {headline}
+            {outgoing ? (
+              <span
+                aria-hidden="true"
+                className={`landing-headline-fade col-start-1 row-start-1 ${
+                  incomingVisible ? 'opacity-0' : 'opacity-100'
+                }`}
+              >
+                {outgoing}
+              </span>
+            ) : null}
+            <span
+              aria-live="polite"
+              className={`landing-headline-fade col-start-1 row-start-1 ${
+                outgoing && !incomingVisible ? 'opacity-0' : 'opacity-100'
+              }`}
+            >
+              {headline}
+            </span>
+          </button>
         </h1>
-        <p className="mb-7 max-w-[34ch] text-[1.0625rem] text-[var(--landing-hero-line-strong)]/80">
-          {ledeProp ?? lede}
-        </p>
+        <p className="mb-12">{ledeProp ?? lede}</p>
 
         <div className="flex flex-wrap gap-3">
           <Button asChild={true} variant="brand">
@@ -87,7 +95,6 @@ export const LandingHero = (props: LandingHeroProps): React.ReactElement => {
               <GithubLogoIcon weight="fill" />
             </a>
           </Button>
-
           <Button
             asChild={true}
             className="border border-white/35 bg-transparent text-white hover:border-white hover:bg-white/5 hover:text-white"

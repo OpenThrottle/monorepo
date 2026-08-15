@@ -19,9 +19,9 @@ export interface GetStartedStepMeta {
  * loader state (see `deriveOnboardingCompletion`), not from following the link.
  */
 export const GET_STARTED_STEPS: readonly GetStartedStepMeta[] = [
-  { href: '/settings', id: ONBOARDING_STEP_ID.githubToken },
-  { href: '/settings/repositories', id: ONBOARDING_STEP_ID.workspaceRepo },
   { href: '/settings/setup', id: ONBOARDING_STEP_ID.agentCli },
+  { href: '/settings/repositories', id: ONBOARDING_STEP_ID.workspaceRepo },
   { href: '/plans', id: ONBOARDING_STEP_ID.firstPlan },
   { href: '/plans', id: ONBOARDING_STEP_ID.firstRun },
+  { href: '/settings', id: ONBOARDING_STEP_ID.githubToken },
 ];

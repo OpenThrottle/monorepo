@@ -12,3 +12,8 @@ export const PROTECTED_PATH_PREFIXES = [
   '/settings',
   '/skills',
 ];
+
+export const APP_LINKS = {
+  CHATS: '/',
+  DASHBOARD: '/dashboard',
+};

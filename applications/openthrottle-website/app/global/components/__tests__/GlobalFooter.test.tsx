@@ -22,7 +22,8 @@ describe('GlobalFooter Component', () => {
   test('renders brand and tagline', () => {
     expect(component.getByTestId('GlobalFooter')).toBeInTheDocument();
     expect(component.getByRole('contentinfo')).toBeInTheDocument();
-    expect(component.getByText('OpenThrottle')).toBeInTheDocument();
+    expect(component.getByText('Open')).toBeInTheDocument();
+    expect(component.getByText('Throttle')).toBeInTheDocument();
     expect(
       component.getByText(
         'Context-driven AI tools and workflows for the Agentic Developer.',

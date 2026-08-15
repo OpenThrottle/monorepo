@@ -57,7 +57,7 @@ export default function Component(
   return (
     <>
       <main className="z-10 flex flex-1 flex-col">
-        <div className="mx-auto flex max-w-7xl flex-1 flex-col items-center justify-center gap-4 p-4 md:gap-8 md:p-8 lg:gap-24 lg:p-12">
+        <div className="mx-auto flex min-h-svh max-w-7xl flex-1 flex-col items-center justify-center gap-4 p-4 md:gap-8 md:p-8 lg:gap-24 lg:p-12">
           {/*
             The GitHub stars count is no longer fetched in the root loader (it
             was blocking, uncached, and rate-limited). When the beta gate is

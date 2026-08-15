@@ -45,7 +45,22 @@ export const LANDING_HERO = {
       label: 'Get started locally',
     } satisfies LandingLink,
   },
-  headline: 'From idea to shipped commit — with agents you can trust.',
+  /** Cross-fade duration when the headline swaps (ms). */
+  headlineCrossfadeMs: 550,
+  /** Auto-advance delay for the rotating hero headline (ms). */
+  headlineIntervalMs: 5_000,
+  headlines: [
+    'Every commit + why it shipped',
+    'Every commit knows why it exists',
+    'Shipped code, still tied to the plan',
+    'The commit remembers the task',
+    'Plan it. Run it. Ship it. Point back',
+    'One task at a time — all the way to git',
+    'Your plans. Your runs. Your git history',
+    'Run agents on your box. Keep the receipts',
+    'Stop losing the agent run',
+    "Chat forgot. The commit shouldn't",
+  ],
   lede: 'The self-hostable harness that turns plans into agent runs and keeps every commit linked to the work that produced it.',
   wordmark: { accent: 'Throttle', lead: 'Open' },
 } as const;
@@ -91,53 +106,40 @@ export const LANDING_DOT_MESH = {
 
 /**
  * Tunables for the velocity-reactive hero "sound wave" arcs (see
- * `useSoundArcs`). Three flowing arcs sweep across the hero; a travelling sine
- * ripples along each one, and its amplitude swells with pointer speed — fast
- * mouse movement reads like an oscilloscope going loud, then rings back to a
- * calm idle. Colour is the brand → signal → paper gradient carried over from
- * the old static arc SVG.
+ * `useSoundArcs`). `n` stacked Béziers sweep across the hero (default 3); a
+ * travelling sine ripples along each one, and its amplitude swells with
+ * pointer speed — fast mouse movement reads like an oscilloscope going loud,
+ * then rings back to a calm idle. Colour is the brand → signal → paper
+ * gradient carried over from the old static arc SVG.
  */
+const SOUND_ARC_STACK = {
+  /**
+   * Right-side fan, -1..1. 0 packs every exit onto the lead path; 1 / -1
+   * span most of the right edge in opposite directions.
+   */
+  distributionEnd: 0.28,
+  /**
+   * Left-side fan, -1..1. 0 packs every entry onto the lead path; 1 / -1
+   * span most of the left edge in opposite directions.
+   */
+  distributionStart: 0.22,
+  /** Stacked wave count. */
+  n: 21,
+  /** Jitter amplitude in normalised space applied to Bézier handles. */
+  noise: 0.022,
+  /** PRNG seed so the jitter is stable across reloads. */
+  seed: 0x51ed,
+} as const;
+
 export const LANDING_SOUND_ARCS = {
   /**
-   * Arc geometry in normalised [x, y] space (0..1 of the hero box), as cubic
-   * Bézier control points [P0, P1, P2, P3]. Slightly stacked, sweeping from the
-   * lower-left off-screen to the upper-right.
+   * Stack tunables in normalised [x, y] space (0..1 of the hero box). `n`
+   * cubics fan around a lead stroke; `distributionStart` / `distributionEnd`
+   * (-1..1; 0 = packed, ±1 = far apart) set how much of the left vs right
+   * edge they cover. Geometry is built at draw time from these plus `noise`
+   * / `seed`.
    */
-  arcs: [
-    {
-      opacity: 0.55,
-      phase: 0,
-      points: [
-        [-0.06, 0.98],
-        [0.22, 0.1],
-        [0.64, 0.16],
-        [1.06, -0.04],
-      ],
-      weight: 1,
-    },
-    {
-      opacity: 0.4,
-      phase: 1.4,
-      points: [
-        [-0.06, 1.04],
-        [0.28, 0.22],
-        [0.7, 0.28],
-        [1.06, 0.08],
-      ],
-      weight: 0.82,
-    },
-    {
-      opacity: 0.28,
-      phase: 2.7,
-      points: [
-        [-0.06, 1.1],
-        [0.34, 0.34],
-        [0.76, 0.4],
-        [1.06, 0.2],
-      ],
-      weight: 0.64,
-    },
-  ],
+  ...SOUND_ARC_STACK,
   /** Attack rate as energy rises toward a faster pointer (snappy). */
   attack: 0.24,
   /** Gradient stops as "r, g, b" — brand red → teal signal → paper. */
