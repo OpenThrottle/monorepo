@@ -43,10 +43,9 @@ export async function appendPlanOutputToolHandler(
 ): Promise<AppendPlanOutputResult> {
   const parsed = appendPlanOutputToolParameters.safeParse(args);
   if (!parsed.success) {
+    // The generated schema enforces a non-empty `content` (`.min(1)` via the
+    // shared codegen `notAllowEmptyString`), so empty input is rejected here.
     return invalidArgsContent(parsed.error.message);
-  }
-  if (parsed.data.content.length === 0) {
-    return invalidArgsContent('content must be non-empty');
   }
 
   return runTool<{ chunk: AppendPlanOutputMutation['appendPlanOutput'] }>(

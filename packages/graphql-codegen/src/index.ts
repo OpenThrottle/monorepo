@@ -113,12 +113,22 @@ export const defineCodegen = (options: DefineCodegenOptions): CodegenConfig => {
     generates[`${outputDir}schemas.ts`] = {
       config: {
         importFrom: './graphql.js',
+        // Required (non-null) GraphQL string inputs reject `''` (emitted as
+        // `.min(1)`). Only applies to non-null strings — nullable/optional
+        // fields stay lenient — so route actions and MCP tools no longer need
+        // hand-rolled empty-string guards. See the FormData → schema util in
+        // `@openthrottle/react-router-graphql`.
+        notAllowEmptyString: true,
         scalars: {
           DateTime: Date,
         },
         schema: 'zod',
         strictScalars: true,
-        zodImportPath: 'zod/v3', // FIXME: See zodImportPath ~ https://www.npmjs.com/package/graphql-codegen-typescript-validation-schema
+        // Kept on the `zod/v3` compat subpath (catalog ships zod v4). Migrating
+        // the generated schemas to the native v4 API is a separate,
+        // cross-consumer (developer/admin/email/mcp/ralph) compatibility effort
+        // — not a silent flip. See https://www.npmjs.com/package/graphql-codegen-typescript-validation-schema
+        zodImportPath: 'zod/v3',
       },
       overwrite: true,
       plugins: ['typescript-validation-schema'],

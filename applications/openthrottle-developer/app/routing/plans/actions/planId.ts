@@ -1,11 +1,16 @@
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import {
+  executeGraphqlWithAuth,
+  parseFormData,
+} from '@openthrottle/react-router-graphql';
 import { PlanDetailCancelPlanRunDocument } from '@openthrottle/openthrottle-developer-codegen';
 import {
   AddHookInputSchema,
+  AddPlanTagInputSchema,
   CancelPlanRunInputSchema,
   DetachHookInputSchema,
   EnqueuePlanRunInputSchema,
   RalphPlanRunTuningInputSchema,
+  RemovePlanTagInputSchema,
   SetPlanStatusInputSchema,
   UpdateTaskInputSchema,
 } from '~/__generated__/schemas';
@@ -52,13 +57,18 @@ export const addPlanTag = async (
   planId: string,
   formData: FormData,
 ) => {
-  const tag = formData.get('tag');
-  if (typeof tag !== 'string' || tag.trim() === '') {
+  // `planId` is a route param, not a form field, so validate only `tag` from
+  // the generated schema and inject the id.
+  const parsed = parseFormData(
+    formData,
+    AddPlanTagInputSchema().omit({ planId: true }),
+  );
+  if (!parsed.success) {
     return { planTagError: 'Tag is required.' };
   }
   try {
     await executeGraphqlWithAuth(args.request, PlanDetailAddPlanTagDocument, {
-      input: { planId, tag: tag.trim() },
+      input: { planId, tag: parsed.data.tag },
     });
     return { planTagUpdated: true };
   } catch (error) {
@@ -72,8 +82,11 @@ export const removePlanTag = async (
   planId: string,
   formData: FormData,
 ) => {
-  const tag = formData.get('tag');
-  if (typeof tag !== 'string' || tag.trim() === '') {
+  const parsed = parseFormData(
+    formData,
+    RemovePlanTagInputSchema().omit({ planId: true }),
+  );
+  if (!parsed.success) {
     return { planTagError: 'Tag is required.' };
   }
   try {
@@ -81,7 +94,7 @@ export const removePlanTag = async (
       args.request,
       PlanDetailRemovePlanTagDocument,
       {
-        input: { planId, tag: tag.trim() },
+        input: { planId, tag: parsed.data.tag },
       },
     );
     return { planTagUpdated: true };
@@ -96,23 +109,19 @@ export const addHook = async (
   planId: string,
   formData: FormData,
 ) => {
-  const optionalField = (key: string): string | undefined => {
-    const value = formData.get(key);
-    return typeof value === 'string' && value.trim() !== ''
-      ? value.trim()
-      : undefined;
-  };
+  // Parse the form once through the generated schema (minus the `planId` route
+  // param), replacing the per-field optionalField reads + separate `.parse`.
+  const parsed = parseFormData(
+    formData,
+    AddHookInputSchema().omit({ planId: true }),
+    { strict: false },
+  );
+  if (!parsed.success) {
+    return { addHookError: parsed.error };
+  }
 
   try {
-    const input = AddHookInputSchema().parse({
-      anchorTaskId: optionalField('anchorTaskId'),
-      planId,
-      role: formData.get('role'),
-      scope: optionalField('scope'),
-      skillSlug: optionalField('skillSlug'),
-      source: formData.get('source'),
-      title: optionalField('title'),
-    });
+    const input = { ...parsed.data, planId };
 
     const result = await executeGraphqlWithAuth(
       args.request,

@@ -14,7 +14,8 @@
     "@openthrottle/react-router-utils": "workspace:^",
     "graphql": "catalog:",
     "graphql-ws": "catalog:",
-    "react": "catalog:"
+    "react": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@testing-library/react": "catalog:"

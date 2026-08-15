@@ -3,9 +3,14 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { Route } from '@/app/routes/+types/skills.availability';
 import { createTestRouterContext } from '@openthrottle/react-router-testing';
 
-vi.mock('@openthrottle/react-router-graphql', () => ({
-  executeGraphqlWithAuth: vi.fn(),
-}));
+// Keep the real `parseFormData` (the action validates FormData through it);
+// only stub the network call. `importOriginal` is SSR-safe here — the package's
+// transitive `window.env` read is guarded by `IS_BROWSER`, false under node.
+vi.mock('@openthrottle/react-router-graphql', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('@openthrottle/react-router-graphql')>();
+  return { ...actual, executeGraphqlWithAuth: vi.fn() };
+});
 
 const { executeGraphqlWithAuth } =
   await import('@openthrottle/react-router-graphql');
@@ -149,6 +154,9 @@ describe('routes/skills.availability action', () => {
     const result = await action(actionArgs(formData));
 
     expect(result).toEqual({ intent: 'addTag', ok: true });
+    // `dimension` stays optional (`.nullish()` short-circuits before the schema
+    // default), so validating through `AddSkillTagInputSchema()` forwards only
+    // the tag — same wire as before.
     expect(mockExecuteGraphqlWithAuth).toHaveBeenCalledWith(
       expect.any(Request),
       AddSkillTagDocument,
@@ -193,6 +201,43 @@ describe('routes/skills.availability action', () => {
         projectId: 'dogfood-1',
       },
     );
+  });
+
+  test('rejects a blank tag via the generated schema without calling the server', async () => {
+    const formData = new FormData();
+    formData.set('intent', 'addTag');
+    formData.set('tag', '   ');
+
+    const result = await action(actionArgs(formData));
+
+    expect(result).toEqual({ error: 'Tag is required.', intent: 'addTag' });
+    expect(mockExecuteGraphqlWithAuth).not.toHaveBeenCalled();
+  });
+
+  test('rejects renameTag when the new tag is missing', async () => {
+    const formData = new FormData();
+    formData.set('intent', 'renameTag');
+    formData.set('from', 'github');
+    formData.set('to', '');
+
+    const result = await action(actionArgs(formData));
+
+    expect(result).toEqual({
+      error: 'Both the current and new tag are required.',
+      intent: 'renameTag',
+    });
+    expect(mockExecuteGraphqlWithAuth).not.toHaveBeenCalled();
+  });
+
+  test('rejects removeRule when the rule id is blank', async () => {
+    const formData = new FormData();
+    formData.set('intent', 'removeRule');
+    formData.set('ruleId', '');
+
+    const result = await action(actionArgs(formData));
+
+    expect(result).toEqual({ error: 'Missing rule id.', intent: 'removeRule' });
+    expect(mockExecuteGraphqlWithAuth).not.toHaveBeenCalled();
   });
 
   test('surfaces the server error message (e.g. offending tags) as { error }', async () => {
