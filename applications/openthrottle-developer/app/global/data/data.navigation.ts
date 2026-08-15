@@ -15,6 +15,7 @@ import {
   ChartAreaIcon,
   CircleHelpIcon,
   CodeIcon,
+  FolderGit2Icon,
   FoldersIcon,
   GaugeIcon,
   GitPullRequest,
@@ -199,6 +200,12 @@ export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
         disabled: true, // 🔴 🟠 🟡 🟢
         icon: BlocksIcon,
         to: '/settings/mcp',
+      },
+      {
+        children: 'Repositories',
+        disabled: false, // 🔴 🟠 🟡 🟢
+        icon: FolderGit2Icon,
+        to: '/settings/repositories',
       },
       {
         beta: true,

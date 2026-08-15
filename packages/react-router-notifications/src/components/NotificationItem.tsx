@@ -88,6 +88,7 @@ export const NotificationItem = (
                 View plan
               </Link>
             ) : null}
+
             <p className="text-muted-foreground text-xs">
               {formatRelativeTime(notification.createdAt)}
             </p>
