@@ -6,8 +6,7 @@
  * back; installed skills stay byte-for-byte 1:1 with upstream.
  */
 
-const isPlainRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
+import { isRecord } from '@openthrottle/nodejs-utils';
 
 /** @public */
 export const SKILLS_LOCK_FILENAME = 'skills-lock.json';
@@ -36,13 +35,13 @@ export const parseSkillsLockFile = (content: string): SkillsLockMap => {
     return {};
   }
 
-  if (!isPlainRecord(document) || !isPlainRecord(document.skills)) {
+  if (!isRecord(document) || !isRecord(document.skills)) {
     return {};
   }
 
   const entries: Record<string, SkillsLockEntry> = {};
   for (const [slug, value] of Object.entries(document.skills)) {
-    if (!isPlainRecord(value) || typeof value.source !== 'string') {
+    if (!isRecord(value) || typeof value.source !== 'string') {
       continue;
     }
     entries[slug] = {

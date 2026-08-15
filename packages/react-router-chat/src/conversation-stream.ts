@@ -1,3 +1,4 @@
+import { isRecord } from '@openthrottle/nodejs-utils';
 import type { ResolvedRunPhase } from './run-phase';
 import { ChatRunPhase } from './types';
 import type { ChatMessage, ChatTurnEvent } from './types';
@@ -11,9 +12,6 @@ import {
   parseChunkMetadata,
   toolLabelFromMetadataJson,
 } from './turn-events';
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
 
 /**
  * Server-reported phase carried on a live-only `keepalive` ping's `metadataJson`

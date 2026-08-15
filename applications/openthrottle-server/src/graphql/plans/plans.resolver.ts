@@ -7,6 +7,7 @@ import {
   searchPlansBySemanticQuery,
 } from '@openthrottle/node-client';
 import type { PlanStatusCount } from '@openthrottle/node-client';
+import { isRecord } from '@openthrottle/nodejs-utils';
 import {
   BadRequestException,
   ForbiddenException,
@@ -164,10 +165,6 @@ function resolveActorUserId(
   kind: string | undefined,
 ): string | null {
   return kind === AUTH_PRINCIPAL_KIND_USER ? (sub ?? null) : null;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
 }
 
 /**

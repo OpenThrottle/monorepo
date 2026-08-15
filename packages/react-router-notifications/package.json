@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@graphql-typed-document-node/core": "catalog:",
+    "@openthrottle/nodejs-utils": "workspace:^",
     "@openthrottle/react-router-graphql": "workspace:^",
     "@openthrottle/react-router-shadcn": "workspace:^",
     "@openthrottle/openthrottle-notifications": "workspace:^",

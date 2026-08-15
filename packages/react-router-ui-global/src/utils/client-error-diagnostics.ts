@@ -1,3 +1,4 @@
+import { isRecord } from '@openthrottle/nodejs-utils';
 import { IS_BROWSER } from '@openthrottle/react-router-utils';
 import { isRouteErrorResponse } from 'react-router';
 
@@ -238,9 +239,6 @@ export const incidentClassificationSummary = (params: {
 /**
  * @description Best-effort stack string when the thrown value is not an {@link Error} but carries `stack` (e.g. some libraries).
  */
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
-
 export const getLooseErrorStack = (error: unknown): string | undefined => {
   if (error instanceof Error && typeof error.stack === 'string') {
     return error.stack;

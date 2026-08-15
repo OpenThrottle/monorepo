@@ -13,21 +13,14 @@ import {
   SystemCpuMetricsObject,
   SystemCpuSnapshotObject,
 } from '../metrics/system-cpu-metrics.object';
+import { isRecord } from '@openthrottle/nodejs-utils';
+
 import { TaskRunMetricsObject } from '../metrics/task-run-metrics.object';
 import {
   WallClockInterpretation,
   type WallClockInterpretationType,
   WallClockMetricsObject,
 } from '../metrics/wall-clock-metrics.object';
-
-/**
- * @description Narrows an unknown value to a plain (non-array) record before
- * property access. Arrays and non-objects are rejected; this matches the prior
- * behavior since every downstream field/typed check already excluded them.
- */
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
 
 /**
  * @description Reads a required numeric field. The default is unreachable when

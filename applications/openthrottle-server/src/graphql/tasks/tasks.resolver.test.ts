@@ -4,6 +4,7 @@ import {
   TasksService,
 } from '@openthrottle/nestjs-repositories';
 import type { Plan, Task } from '@openthrottle/nestjs-repositories';
+import { isRecord } from '@openthrottle/nodejs-utils';
 import { createMock } from '@golevelup/ts-vitest';
 import { BadRequestException, ConflictException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
@@ -16,9 +17,6 @@ import { TaggingEnqueueService } from '../../queues/tagging/tagging-enqueue.serv
 import { TaskPromotionEnqueueService } from '../../queues/task-promotion/task-promotion-enqueue.service';
 import { TasksResolver } from './tasks.resolver';
 import { WorkLedgerCaptureService } from '../work-ledger/work-ledger-capture.service';
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
 
 describe('TasksResolver', () => {
   let resolver: TasksResolver;

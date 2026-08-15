@@ -7,7 +7,9 @@
     "name": "Matthew Scholta",
     "url": "https://mattscholta.com"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@openthrottle/nodejs-utils": "workspace:^"
+  },
   "devDependencies": {
     "@testing-library/jest-dom": "catalog:"
   },

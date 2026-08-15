@@ -334,6 +334,9 @@ var defaultStartsDir = (repoRoot) => import_node_path3.default.join(repoRoot, DE
 var sanitizeSessionId = (sessionId) => String(sessionId).replace(/[^A-Za-z0-9._-]/g, "-");
 var startsFilePathForSession = (startsDir, sessionId) => import_node_path3.default.join(startsDir, `${sanitizeSessionId(sessionId)}.jsonl`);
 
+// packages/nodejs-utils/dist/src/utils/is-record.js
+var isRecord = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
+
 // packages/agentic-hooks/src/data/starts.ts
 var recordSkillStart = ({
   repoRoot,
@@ -370,7 +373,6 @@ var recordSkillStart = ({
 };
 
 // packages/agentic-hooks/src/data/persist.ts
-var isRecord = (value) => value != null && typeof value === "object";
 var readGraphqlErrors = (payload) => {
   if (!isRecord(payload) || !Array.isArray(payload.errors) || !payload.errors.length) {
     return null;
@@ -509,7 +511,6 @@ var persistUsageEvent = async ({
 
 // packages/agentic-hooks/src/adapters/cursor/payload.ts
 var CURSOR_SOURCE = "cursor";
-var isRecord2 = (value) => value != null && typeof value === "object";
 var firstString = (...values) => {
   for (const value of values) {
     if (typeof value === "string" && value) {
@@ -528,7 +529,7 @@ var resolveCwd = (payload) => {
   return null;
 };
 var normalizeCursorPayload = (raw) => {
-  if (!isRecord2(raw)) {
+  if (!isRecord(raw)) {
     return null;
   }
   const skillFromTool = firstString(raw.skill, raw.skill_name);

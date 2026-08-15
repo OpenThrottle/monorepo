@@ -6,10 +6,9 @@
  * make the line index a stable cursor.
  */
 
-const CURSOR_VERSION = 1;
+import { isRecord } from '@openthrottle/nodejs-utils';
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
+const CURSOR_VERSION = 1;
 
 /**
  * @description Encode a 0-based line index as an opaque cursor token.

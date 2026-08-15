@@ -1,10 +1,8 @@
 /**
- * @description Narrow an `unknown` value to a plain object (`Record<string,
- * unknown>`), excluding `null` and arrays. The type-predicate replacement for
- * `value as Record<string, unknown>` when reading dynamic/JSON-ish shapes in
- * tests and services.
+ * @description Re-export of the canonical `isRecord` type guard, now owned by
+ * `@openthrottle/nodejs-utils`. Kept as a thin wrapper so existing
+ * `@openthrottle/nestjs-testing` test imports keep compiling.
  *
  * @public
  */
-export const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
+export { isRecord } from '@openthrottle/nodejs-utils';

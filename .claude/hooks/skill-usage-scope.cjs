@@ -36,6 +36,9 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 var import_node_fs2 = __toESM(require("node:fs"), 1);
 var import_node_path3 = __toESM(require("node:path"), 1);
 
+// packages/nodejs-utils/dist/src/utils/is-record.js
+var isRecord = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
+
 // packages/agentic-hooks/src/utils/privacy.ts
 var PRIVACY_LEVELS = Object.freeze({
   FULL: "full",
@@ -90,7 +93,6 @@ var DEFAULT_STARTS_DIR_REL = import_node_path2.default.join(
 var DEFAULT_ABANDONED_MS = 6 * 60 * 60 * 1e3;
 
 // packages/agentic-hooks/src/adapters/claude/scope.ts
-var isRecord = (value) => value != null && typeof value === "object";
 var skillName = process.argv[2];
 var repoRoot = process.argv[3] || process.cwd();
 if (!skillName) {

@@ -4,7 +4,9 @@
     "name": "Matthew Scholta",
     "url": "https://mattscholta.com"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@openthrottle/nodejs-utils": "workspace:^"
+  },
   "description": "Tool-neutral skill-usage hook core (scope, privacy, buildUsageEvent, GraphQL/JSONL persistence, outcome/duration correlation, drain) authored in TS. Per-tool adapters are esbuild entrypoints bundled to self-contained committed .cjs under each tool's hook folder (.claude/hooks, .cursor/hooks, ...) — zero runtime node_modules dependency, fail-open. A drift check keeps committed bundles from rotting.",
   "devDependencies": {
     "esbuild": "catalog:"

@@ -8,6 +8,7 @@ import {
   type LogRedactor,
   type RedactionOptions,
 } from '../services/log-redaction';
+import { isRecord } from '@openthrottle/nodejs-utils';
 import { NestjsLoggingError } from './nestjs-logging.error';
 import {
   ALL_NESTJS_LOGGING_LEVELS,
@@ -256,9 +257,6 @@ export type ResolvedNestjsLoggingModuleOptions = ReturnType<
 
 const isPositiveInt = (n: number): boolean => Number.isInteger(n) && n > 0;
 
-const isObjectRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
-
 /**
  * @description Validates module options at bootstrap.
  * @throws NestjsLoggingError when required fields or numeric bounds are invalid.
@@ -272,7 +270,7 @@ export const validateNestjsLoggingModuleOptions: (
     );
   }
 
-  const opts: Record<string, unknown> = isObjectRecord(options) ? options : {};
+  const opts: Record<string, unknown> = isRecord(options) ? options : {};
   const logDirectory = opts.logDirectory;
 
   if (typeof logDirectory !== 'string' || logDirectory.trim() === '') {
@@ -374,7 +372,7 @@ export const validateNestjsLoggingModuleOptions: (
   const rotation = opts.rotation;
 
   if (rotation !== undefined) {
-    if (!isObjectRecord(rotation)) {
+    if (!isRecord(rotation)) {
       throw new NestjsLoggingError('rotation must be an object when provided.');
     }
 
@@ -416,7 +414,7 @@ export const validateNestjsLoggingModuleOptions: (
   const redaction = opts.redaction;
 
   if (redaction !== undefined && redaction !== false) {
-    if (!isObjectRecord(redaction)) {
+    if (!isRecord(redaction)) {
       throw new NestjsLoggingError(
         'redaction must be an object or false when provided.',
       );
@@ -467,7 +465,7 @@ export const validateNestjsLoggingModuleOptions: (
   const websocket = opts.websocket;
 
   if (websocket !== undefined) {
-    if (!isObjectRecord(websocket)) {
+    if (!isRecord(websocket)) {
       throw new NestjsLoggingError(
         'websocket must be an object when provided.',
       );

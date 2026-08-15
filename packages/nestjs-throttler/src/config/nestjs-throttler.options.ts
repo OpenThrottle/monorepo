@@ -1,4 +1,5 @@
 import type { FactoryProvider, ModuleMetadata } from '@nestjs/common';
+import { isRecord } from '@openthrottle/nodejs-utils';
 import { NestjsThrottlerError } from './nestjs-throttler.error';
 
 /**
@@ -83,10 +84,6 @@ export type ResolvedNestjsThrottlerModuleOptions = ReturnType<
 
 const isPositiveInt = (n: number): boolean => Number.isInteger(n) && n > 0;
 
-/** Type guard: a non-null object (matches the prior `typeof === 'object'` check). */
-const isObjectValue = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
-
 /**
  * Validates module options at bootstrap.
  * @throws NestjsThrottlerError when fields or numeric bounds are invalid.
@@ -100,7 +97,7 @@ export function validateNestjsThrottlerModuleOptions(
     );
   }
 
-  const throttlers = isObjectValue(options) ? options.throttlers : undefined;
+  const throttlers = isRecord(options) ? options.throttlers : undefined;
 
   if (throttlers === undefined) {
     return;
@@ -113,7 +110,7 @@ export function validateNestjsThrottlerModuleOptions(
   }
 
   for (const tier of throttlers) {
-    if (!isObjectValue(tier)) {
+    if (!isRecord(tier)) {
       throw new NestjsThrottlerError(
         'Each throttler tier must be an object with positive-integer limit and ttl.',
       );

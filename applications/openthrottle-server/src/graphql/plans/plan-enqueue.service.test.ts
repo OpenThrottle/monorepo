@@ -8,6 +8,7 @@ import {
   type Plan,
   type RepositoryCheckout,
 } from '@openthrottle/nestjs-repositories';
+import { isRecord } from '@openthrottle/nodejs-utils';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { Queue } from 'bullmq';
@@ -21,9 +22,6 @@ const mockPlan = createMock<Plan>({
   jobRunHooks: { hooks: [] },
   status: 'PENDING',
 });
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
 
 describe('PlanEnqueueService', () => {
   const mockAdd = vi.fn().mockResolvedValue({ id: 'job-1', name: 'run-plan' });

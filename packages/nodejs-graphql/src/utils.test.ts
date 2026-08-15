@@ -1,3 +1,4 @@
+import { isRecord } from '@openthrottle/nodejs-utils';
 import { afterEach, describe, expect, it } from 'vitest';
 import {
   getGraphQLToken,
@@ -10,9 +11,6 @@ function assertDate(value: unknown): asserts value is Date {
     throw new Error(`Expected a Date, received ${String(value)}`);
   }
 }
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
 
 describe('getGraphQLUrl', () => {
   const original = process.env.API_URL_INTERNAL;

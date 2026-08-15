@@ -25,6 +25,7 @@ import {
   type PubSubEngine,
 } from '@openthrottle/nestjs-graphql';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import { isRecord } from '@openthrottle/nodejs-utils';
 import {
   TRANSCRIPTION_STREAM_CHUNK_FIELD,
   type TranscriptionStreamChunkPayload,
@@ -485,11 +486,6 @@ function decodeInt16Base64ToFloat32(audioBase64: string): Float32Array {
   }
 
   return pcm;
-}
-
-/** True for any non-null object (arrays included), narrowing to an indexable record. */
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
 }
 
 /** Parse a WhisperLive JSON text frame; binary/unparseable frames yield null. */

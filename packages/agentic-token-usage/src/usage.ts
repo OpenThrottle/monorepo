@@ -20,6 +20,8 @@
  * - openai / others: OpenAI-style `{ prompt_tokens, completion_tokens, total_tokens }` or absent
  */
 
+import { isRecord } from '@openthrottle/nodejs-utils';
+
 /**
  * Normalized, best-effort token accounting for a single turn (or a cumulative
  * session total). Every field is optional: backends report wildly different
@@ -46,9 +48,6 @@ export interface NormalizedTokenUsage {
   /** Total tokens: the backend's explicit total, else the sum of input + output when either is present. */
   readonly totalTokens?: number;
 }
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
 
 const asFiniteNumber = (value: unknown): number | undefined =>
   typeof value === 'number' && Number.isFinite(value) ? value : undefined;

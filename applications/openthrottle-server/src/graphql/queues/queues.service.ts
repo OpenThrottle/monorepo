@@ -9,6 +9,7 @@ import { Queue as BullQueue } from 'bullmq';
 import { ConfigService } from '@nestjs/config';
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import { resolveQueuePrefix } from '@openthrottle/nestjs-bullmq';
+import { isRecord } from '@openthrottle/nodejs-utils';
 import {
   AGENTIC_TEST_JOB_NAME,
   AGENTIC_TEST_QUEUE_NAME,
@@ -133,11 +134,6 @@ type AnyJobData =
   | DocIngestionJobPayload
   | DynamicJobData
   | RunPlanJobData;
-
-/** @description Narrows an unknown value to a plain object for safe property access. */
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
 
 interface QueueStats {
   readonly activeCount: number;

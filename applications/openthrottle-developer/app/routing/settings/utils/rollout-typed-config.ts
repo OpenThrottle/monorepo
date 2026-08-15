@@ -3,6 +3,8 @@
  * rollout flag create/edit forms (kind, variations, offVariation, fallthrough).
  */
 
+import { isRecord } from '@openthrottle/nodejs-utils';
+
 import type { RolloutFlagFieldsFragment } from '~/__generated__/graphql';
 import { RolloutFlagKind } from '~/__generated__/graphql';
 import type { RolloutFlagKindOption } from '~/routing/settings/data/data.rollout-kinds';
@@ -207,9 +209,6 @@ export const decodeVariationValueForEdit = (
   return valueJson;
 };
 
-const isPlainRecord = (value: unknown): value is Record<string, unknown> =>
-  value !== null && typeof value === 'object' && !Array.isArray(value);
-
 const validateValueJsonForKind = (
   kind: RolloutFlagKindOption,
   valueJson: string,
@@ -255,7 +254,7 @@ const parseVariationsJson = (
 
   const variations: RolloutFormVariation[] = [];
   for (const [index, entry] of parsed.entries()) {
-    if (!isPlainRecord(entry)) {
+    if (!isRecord(entry)) {
       return {
         error: `${ROLLOUT_COPY.variationShapeError} (${index}).`,
       };
@@ -291,13 +290,13 @@ const parseFallthroughJson = (
   } catch {
     return { error: ROLLOUT_COPY.fallthroughParseError };
   }
-  if (!isPlainRecord(parsed) || !Array.isArray(parsed.variations)) {
+  if (!isRecord(parsed) || !Array.isArray(parsed.variations)) {
     return { error: ROLLOUT_COPY.fallthroughParseError };
   }
   const bucketsUnknown = parsed.variations;
   const buckets: RolloutFormFallthroughBucket[] = [];
   for (const bucket of bucketsUnknown) {
-    if (!isPlainRecord(bucket)) {
+    if (!isRecord(bucket)) {
       return { error: ROLLOUT_COPY.fallthroughParseError };
     }
     if (

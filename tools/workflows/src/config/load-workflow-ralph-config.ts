@@ -26,6 +26,7 @@ import {
   WORKFLOW_RALPH_VERBOSE_ENV,
   type WorkflowDebugLevel,
 } from '@openthrottle/openthrottle-agentic-utils';
+import { isRecord } from '@openthrottle/nodejs-utils';
 import {
   WORKFLOW_RALPH_TRANSPORT_ENV,
   type WorkflowRalphTransport,
@@ -109,9 +110,6 @@ const isNodeErrno = (error: unknown): error is NodeJS.ErrnoException =>
 const isEnoent = (error: unknown): boolean =>
   isNodeErrno(error) && error.code === 'ENOENT';
 
-const isPlainObject = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
-
 /**
  * @description Parses a positive integer from an env value; returns undefined if missing/invalid.
  */
@@ -170,7 +168,7 @@ const normalizeSpawnFile = (
   value: unknown,
   filePath: string,
 ): WorkflowRalphDefaultsSpawnJson => {
-  if (!isPlainObject(value)) {
+  if (!isRecord(value)) {
     throw new Error(`${filePath}: "spawn" must be a JSON object`);
   }
   assertKnownKeys(value, SPAWN_KNOWN_KEYS, filePath, 'spawn');
@@ -211,7 +209,7 @@ const normalizeDiagnosticsFile = (
   value: unknown,
   filePath: string,
 ): WorkflowRalphDefaultsDiagnosticsJson => {
-  if (!isPlainObject(value)) {
+  if (!isRecord(value)) {
     throw new Error(`${filePath}: "diagnostics" must be a JSON object`);
   }
   assertKnownKeys(value, DIAGNOSTICS_KNOWN_KEYS, filePath, 'diagnostics');
@@ -240,7 +238,7 @@ export const normalizeWorkflowRalphDefaultsFileV1 = (
   parsed: unknown,
   filePath: string = WORKFLOW_RALPH_DEFAULTS_FILENAME,
 ): WorkflowRalphDefaultsFileV1Json => {
-  if (!isPlainObject(parsed)) {
+  if (!isRecord(parsed)) {
     throw new Error(`${filePath} must be a JSON object`);
   }
   assertKnownKeys(parsed, V1_KNOWN_ROOT_KEYS, filePath, 'top-level');

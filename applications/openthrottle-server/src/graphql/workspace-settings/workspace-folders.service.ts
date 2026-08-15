@@ -19,6 +19,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import { isRecord } from '@openthrottle/nodejs-utils';
 import type {
   Repository,
   RepositoryCheckout,
@@ -79,17 +80,14 @@ export const getWorkspaceRoots = (
     .filter((path) => path.length > 0 && isAbsolute(path));
 };
 
-const isJsonObject = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
-
 /** Structural check for snapshots read back from the JSONB cache. */
 const isInspectionSnapshot = (
   value: unknown,
 ): value is RepositoryInspectionSnapshot =>
-  isJsonObject(value) &&
-  isJsonObject(value.agentConfig) &&
-  isJsonObject(value.git) &&
-  isJsonObject(value.stack) &&
+  isRecord(value) &&
+  isRecord(value.agentConfig) &&
+  isRecord(value.git) &&
+  isRecord(value.stack) &&
   typeof value.scannedAt === 'string';
 
 const toInspectionObject = (

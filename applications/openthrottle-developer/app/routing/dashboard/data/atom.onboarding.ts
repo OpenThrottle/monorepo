@@ -1,3 +1,4 @@
+import { isRecord } from '@openthrottle/nodejs-utils';
 import { APP_NAME } from '@openthrottle/react-router-utils';
 import { atomWithStorage, createJSONStorage } from 'jotai/utils';
 import type { SyncStorage } from 'jotai/vanilla/utils/atomWithStorage';
@@ -32,9 +33,6 @@ export const DEFAULT_ONBOARDING_STATE: OnboardingState = {
   dismissed: false,
   version: ONBOARDING_STATE_VERSION,
 };
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
 
 /**
  * Coerce a persisted record into a valid {@link OnboardingState}: a non-boolean

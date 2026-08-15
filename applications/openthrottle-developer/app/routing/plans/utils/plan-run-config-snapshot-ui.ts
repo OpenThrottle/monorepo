@@ -6,6 +6,7 @@ import {
   DEFAULT_PLAN_RUN_RALPH_ITERATIONS,
   DEFAULT_PLAN_RUN_RALPH_RUNNER,
 } from '@openthrottle/openthrottle-plan-config';
+import { isRecord } from '@openthrottle/nodejs-utils';
 import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import { formatWorkflowRalphExecutionBackendLabel } from '~/routing/plans/utils/build-workflow-ralph-argv';
 
@@ -20,9 +21,6 @@ interface PlanRunSnapshotShape {
     readonly workingDirectory?: string;
   };
 }
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
 
 const parseSnapshot = (
   runConfigSnapshotJson: string | null | undefined,

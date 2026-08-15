@@ -4,6 +4,7 @@
 
 import { existsSync } from 'node:fs';
 import { isAbsolute, resolve } from 'node:path';
+import { isRecord } from '@openthrottle/nodejs-utils';
 import { DEFAULT_RALPH_PROMPT } from './ralph-runtime-config';
 import {
   DEFAULT_JOB_RUN_HOOK_TIMEOUT_SECONDS,
@@ -47,9 +48,6 @@ const JOB_RUN_HOOK_PROMPT_DELIVERY: readonly JobRunHookPromptDelivery[] = [
   'named',
   'file',
 ];
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
 
 const isOneOf = <T extends string>(
   allowed: readonly T[],

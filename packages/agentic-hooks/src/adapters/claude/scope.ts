@@ -6,10 +6,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { detectScope } from '../../index';
+import { isRecord } from '@openthrottle/nodejs-utils';
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  value != null && typeof value === 'object';
+import { detectScope } from '../../index';
 
 const skillName = process.argv[2];
 const repoRoot = process.argv[3] || process.cwd();

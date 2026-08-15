@@ -1,3 +1,4 @@
+import { isRecord } from '@openthrottle/nodejs-utils';
 import {
   ALL_NESTJS_LOGGING_LEVELS,
   type NestjsLoggingLevel,
@@ -68,9 +69,6 @@ const ALLOWED_LEVELS = new Set<string>(ALL_NESTJS_LOGGING_LEVELS);
 
 const isNestjsLoggingLevel = (value: unknown): value is NestjsLoggingLevel =>
   typeof value === 'string' && ALLOWED_LEVELS.has(value);
-
-const isObjectRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
 
 const isJsonPrimitive = (value: unknown): value is JsonPrimitive =>
   value === null ||
@@ -233,7 +231,7 @@ export const parseJsonlLineToStructuredRecord = (
   try {
     const raw: unknown = JSON.parse(trimmed);
 
-    if (!isObjectRecord(raw)) {
+    if (!isRecord(raw)) {
       return undefined;
     }
 

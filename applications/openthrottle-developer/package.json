@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@openthrottle/graphql-codegen": "workspace:^",
+    "@openthrottle/nodejs-utils": "workspace:*",
     "@openthrottle/openthrottle-agentic-utils": "workspace:*",
     "@openthrottle/openthrottle-developer-codegen": "workspace:^",
     "@openthrottle/openthrottle-ide": "workspace:^",

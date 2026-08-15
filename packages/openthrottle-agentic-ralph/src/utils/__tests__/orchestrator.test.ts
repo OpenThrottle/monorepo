@@ -10,6 +10,7 @@ import {
   type GetTasksByPlanIdQuery,
 } from '../../__generated__/graphql.js';
 import type { WorkflowLifecycleDispatcher } from '@openthrottle/openthrottle-agentic-workflow';
+import { isRecord } from '@openthrottle/nodejs-utils';
 import type {
   WorkflowExecuteGraphqlV2,
   WorkflowRalphIterationOnChunk,
@@ -28,9 +29,6 @@ function asExecuteGraphqlV2(
 function asExecuteGraphqlV2(impl: unknown): unknown {
   return impl;
 }
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
 
 const PLAN_ID = '0f9e1a94-8d39-4aa7-ada2-2d107d41ab37';
 const TASK_A = 'a64424d1-4bb0-4b08-ade3-b9822411d05c';

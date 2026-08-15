@@ -4,7 +4,9 @@
     "name": "Matthew Scholta",
     "url": "https://mattscholta.com"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@openthrottle/nodejs-utils": "workspace:^"
+  },
   "description": "TODO: Add a description",
   "devDependencies": {},
   "exports": {

@@ -12,14 +12,10 @@
  * discriminator.
  */
 
+import { isRecord } from '@openthrottle/nodejs-utils';
+
 import { CONVERSATION_STREAM_CHUNK_KINDS } from '../types.ts';
 import type { ConversationStreamChunk } from '../types.ts';
-
-const isRecord = (value: unknown): value is Record<string, unknown> => {
-  const isObject = typeof value === 'object';
-
-  return isObject && value !== null && !Array.isArray(value);
-};
 
 const asString = (value: unknown): string | undefined => {
   const isString = typeof value === 'string';

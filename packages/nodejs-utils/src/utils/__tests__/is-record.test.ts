@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { isRecord } from '../is-record';
+import { isRecord } from '../is-record.ts';
 
 describe('isRecord', () => {
   it('accepts plain objects, including empty ones', () => {
@@ -11,6 +11,10 @@ describe('isRecord', () => {
 
   it('rejects null', () => {
     expect(isRecord(null)).toBe(false);
+  });
+
+  it('rejects undefined', () => {
+    expect(isRecord(undefined)).toBe(false);
   });
 
   it('rejects arrays, including empty ones', () => {
@@ -24,8 +28,9 @@ describe('isRecord', () => {
     expect(isRecord(true)).toBe(false);
   });
 
-  it('rejects undefined', () => {
-    expect(isRecord(undefined)).toBe(false);
+  it('rejects functions', () => {
+    expect(isRecord(() => undefined)).toBe(false);
+    expect(isRecord(function named() {})).toBe(false);
   });
 
   it('narrows to Record<string, unknown> for safe property access', () => {

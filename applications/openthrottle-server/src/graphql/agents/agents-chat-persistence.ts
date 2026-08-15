@@ -11,6 +11,7 @@ import {
   AgentConversationsService,
   deriveConversationTitleFromMessage,
 } from '@openthrottle/nestjs-repositories';
+import { isRecord } from '@openthrottle/nodejs-utils';
 import { NotFoundException } from '@nestjs/common';
 import type { AgentsRouterModelSnapshot } from './agents-mcp-router-llm.service';
 import type { AgentsMcpRouteDecision } from './agents-mcp-router';
@@ -23,10 +24,6 @@ export const PERSISTED_CONVERSATION_AUTH_ERROR =
 
 export const PERSISTED_CONVERSATION_NOT_FOUND_ERROR =
   'Agent conversation not found.';
-
-/** Narrows to a plain (non-array) object record. */
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
 
 /**
  * @description Returns the human JWT principal when present; otherwise null.

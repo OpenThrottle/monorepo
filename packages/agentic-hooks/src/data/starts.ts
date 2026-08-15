@@ -5,6 +5,8 @@
  */
 import fs from 'node:fs';
 
+import { isRecord } from '@openthrottle/nodejs-utils';
+
 import {
   appendJsonl,
   defaultStartsDir,
@@ -12,9 +14,6 @@ import {
   startsFilePathForSession,
 } from './jsonl';
 import { logHookError } from '../utils/logging';
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  value != null && typeof value === 'object';
 
 /**
  * Record a start-correlation entry (identifiers + timestamp only — NO args)

@@ -1,5 +1,6 @@
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { type DocumentNode, parse } from 'graphql';
+import { isRecord } from '@openthrottle/nodejs-utils';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { executeGraphqlV2 } from './index-v2.ts';
 import { GRAPHQL_TIMEOUT_ERROR_PREFIX } from './utils.ts';
@@ -13,9 +14,6 @@ function typedDocument<
 function typedDocument(source: string): DocumentNode {
   return parse(source);
 }
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
 
 const doc = typedDocument<{ readonly __typename: string }>('{ __typename }');
 

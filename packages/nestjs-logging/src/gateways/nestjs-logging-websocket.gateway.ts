@@ -12,6 +12,7 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
+import { isRecord } from '@openthrottle/nodejs-utils';
 import type { Server } from 'socket.io';
 import type { Socket } from 'socket.io';
 import {
@@ -41,9 +42,6 @@ interface ConnectedLogClientState {
 }
 
 const connectedClients = new WeakMap<Socket, ConnectedLogClientState>();
-
-const isObjectRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
 
 /**
  * @description Whether a structured record matches a single subscription filter (empty sets mean all).
@@ -323,7 +321,7 @@ export const buildNestjsLoggingWebsocketGatewayClass = (
         return { error: 'Socket is not initialized.', ok: false };
       }
 
-      if (!isObjectRecord(body)) {
+      if (!isRecord(body)) {
         return { error: 'Payload must be a JSON object.', ok: false };
       }
 
@@ -366,7 +364,7 @@ export const buildNestjsLoggingWebsocketGatewayClass = (
         return { error: 'Socket is not initialized.', ok: false };
       }
 
-      if (!isObjectRecord(body)) {
+      if (!isRecord(body)) {
         return { error: 'Payload must be a JSON object.', ok: false };
       }
 
@@ -397,7 +395,7 @@ export const buildNestjsLoggingWebsocketGatewayClass = (
       | { error: string; lines?: undefined; ok: false }
       | { lines: ReadonlyArray<Readonly<Record<string, unknown>>>; ok: true }
     > {
-      if (!isObjectRecord(body)) {
+      if (!isRecord(body)) {
         return { error: 'Payload must be a JSON object.', ok: false };
       }
 
@@ -432,7 +430,7 @@ export const buildNestjsLoggingWebsocketGatewayClass = (
           ok: true;
         }
     > {
-      if (!isObjectRecord(body)) {
+      if (!isRecord(body)) {
         return { error: 'Payload must be a JSON object.', ok: false };
       }
 
@@ -489,7 +487,7 @@ export const buildNestjsLoggingWebsocketGatewayClass = (
           ok: true;
         }
     > {
-      if (!isObjectRecord(body)) {
+      if (!isRecord(body)) {
         return { error: 'Payload must be a JSON object.', ok: false };
       }
 
