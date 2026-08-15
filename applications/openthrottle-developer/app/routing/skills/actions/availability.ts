@@ -5,20 +5,12 @@ import {
 import { z } from 'zod/v3';
 import {
   AddSkillAvailabilityRuleDocument,
-  AddSkillTagDocument,
   DeleteSkillAvailabilityRuleSetDocument,
   RemoveSkillAvailabilityRuleDocument,
-  RemoveSkillTagDocument,
-  RenameSkillTagDocument,
   SkillAvailabilityProjectsDocument,
   UpdateSkillAvailabilityRuleDocument,
   UpsertSkillAvailabilityRuleSetDocument,
 } from '~/__generated__/graphql';
-import {
-  AddSkillTagInputSchema,
-  RemoveSkillTagInputSchema,
-  RenameSkillTagInputSchema,
-} from '~/__generated__/schemas';
 import { DOGFOOD_NX_PROJECT_NAME } from '~/routing/skills/config/availability';
 import { readRuleInput } from '~/routing/skills/utils/skill-availability-action';
 import type { Route } from '@/app/routes/+types/skills.availability';
@@ -137,39 +129,6 @@ export const runAvailabilityAction = async (
         RemoveSkillAvailabilityRuleDocument,
         { ruleId: parsed.data.ruleId },
       );
-      return { intent, ok: true };
-    }
-
-    if (intent === 'addTag') {
-      const parsed = parseFormData(formData, AddSkillTagInputSchema());
-      if (!parsed.success) {
-        return { error: 'Tag is required.', intent };
-      }
-      await executeGraphqlWithAuth(args.request, AddSkillTagDocument, {
-        input: parsed.data,
-      });
-      return { intent, ok: true };
-    }
-
-    if (intent === 'renameTag') {
-      const parsed = parseFormData(formData, RenameSkillTagInputSchema());
-      if (!parsed.success) {
-        return { error: 'Both the current and new tag are required.', intent };
-      }
-      await executeGraphqlWithAuth(args.request, RenameSkillTagDocument, {
-        input: parsed.data,
-      });
-      return { intent, ok: true };
-    }
-
-    if (intent === 'removeTag') {
-      const parsed = parseFormData(formData, RemoveSkillTagInputSchema());
-      if (!parsed.success) {
-        return { error: 'Tag is required.', intent };
-      }
-      await executeGraphqlWithAuth(args.request, RemoveSkillTagDocument, {
-        input: parsed.data,
-      });
       return { intent, ok: true };
     }
 

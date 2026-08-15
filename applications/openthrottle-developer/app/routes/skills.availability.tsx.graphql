@@ -61,21 +61,3 @@ mutation UpdateSkillAvailabilityRule(
 mutation RemoveSkillAvailabilityRule($ruleId: ID!) {
   removeSkillAvailabilityRule(ruleId: $ruleId)
 }
-
-mutation AddSkillTag($input: AddSkillTagInput!) {
-  addSkillTag(input: $input) {
-    id
-    tag
-  }
-}
-
-mutation RenameSkillTag($input: RenameSkillTagInput!) {
-  renameSkillTag(input: $input) {
-    id
-    tag
-  }
-}
-
-mutation RemoveSkillTag($input: RemoveSkillTagInput!) {
-  removeSkillTag(input: $input)
-}

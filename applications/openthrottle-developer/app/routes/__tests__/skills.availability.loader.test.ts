@@ -16,7 +16,6 @@ const { executeGraphqlWithAuth } =
   await import('@openthrottle/react-router-graphql');
 const {
   AddSkillAvailabilityRuleDocument,
-  AddSkillTagDocument,
   SkillAvailabilityAuthoringRuleSetDocument,
   SkillAvailabilityAuthoringVocabularyDocument,
   SkillAvailabilityProjectsDocument,
@@ -142,26 +141,18 @@ describe('routes/skills.availability action', () => {
     mockExecuteGraphqlWithAuth.mockReset();
   });
 
-  test('addTag forwards the kebab-case tag to AddSkillTag', async () => {
-    mockExecuteGraphqlWithAuth.mockResolvedValue(
-      asMock<Awaited<ReturnType<typeof executeGraphqlWithAuth>>>({}),
-    );
-
+  test('returns an unknown-intent error for tag intents (moved to /skills/vocabulary)', async () => {
     const formData = new FormData();
     formData.set('intent', 'addTag');
     formData.set('tag', 'pr-review');
 
     const result = await action(actionArgs(formData));
 
-    expect(result).toEqual({ intent: 'addTag', ok: true });
-    // `dimension` stays optional (`.nullish()` short-circuits before the schema
-    // default), so validating through `AddSkillTagInputSchema()` forwards only
-    // the tag — same wire as before.
-    expect(mockExecuteGraphqlWithAuth).toHaveBeenCalledWith(
-      expect.any(Request),
-      AddSkillTagDocument,
-      { input: { tag: 'pr-review' } },
-    );
+    expect(result).toEqual({
+      error: 'Unknown intent "addTag".',
+      intent: 'addTag',
+    });
+    expect(mockExecuteGraphqlWithAuth).not.toHaveBeenCalled();
   });
 
   test('addRule parses the serialized tag/slug lists into the rule input', async () => {
@@ -203,32 +194,6 @@ describe('routes/skills.availability action', () => {
     );
   });
 
-  test('rejects a blank tag via the generated schema without calling the server', async () => {
-    const formData = new FormData();
-    formData.set('intent', 'addTag');
-    formData.set('tag', '   ');
-
-    const result = await action(actionArgs(formData));
-
-    expect(result).toEqual({ error: 'Tag is required.', intent: 'addTag' });
-    expect(mockExecuteGraphqlWithAuth).not.toHaveBeenCalled();
-  });
-
-  test('rejects renameTag when the new tag is missing', async () => {
-    const formData = new FormData();
-    formData.set('intent', 'renameTag');
-    formData.set('from', 'github');
-    formData.set('to', '');
-
-    const result = await action(actionArgs(formData));
-
-    expect(result).toEqual({
-      error: 'Both the current and new tag are required.',
-      intent: 'renameTag',
-    });
-    expect(mockExecuteGraphqlWithAuth).not.toHaveBeenCalled();
-  });
-
   test('rejects removeRule when the rule id is blank', async () => {
     const formData = new FormData();
     formData.set('intent', 'removeRule');
@@ -240,20 +205,24 @@ describe('routes/skills.availability action', () => {
     expect(mockExecuteGraphqlWithAuth).not.toHaveBeenCalled();
   });
 
-  test('surfaces the server error message (e.g. offending tags) as { error }', async () => {
+  test('surfaces the server error message as { error }', async () => {
     mockExecuteGraphqlWithAuth.mockRejectedValue(
-      new Error('Unknown tags not in your vocabulary: foobar.'),
+      new Error('No dogfood project reachable.'),
     );
 
     const formData = new FormData();
-    formData.set('intent', 'addTag');
-    formData.set('tag', 'pr-review');
+    formData.set('intent', 'addRule');
+    formData.set('environment', 'ci');
+    formData.set('tagAllow', JSON.stringify(['github']));
+    formData.set('tagDeny', JSON.stringify([]));
+    formData.set('slugAllow', JSON.stringify([]));
+    formData.set('slugDeny', JSON.stringify([]));
 
     const result = await action(actionArgs(formData));
 
     expect(result).toEqual({
-      error: 'Unknown tags not in your vocabulary: foobar.',
-      intent: 'addTag',
+      error: 'No dogfood project reachable.',
+      intent: 'addRule',
     });
   });
 });

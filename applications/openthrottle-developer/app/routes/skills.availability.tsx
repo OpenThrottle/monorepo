@@ -17,7 +17,6 @@ import {
 import { SITE_TITLE } from '~/global/config/settings';
 import { SkillAvailabilityPostureCard } from '~/routing/skills/components/SkillAvailabilityPostureCard';
 import { SkillAvailabilityRulesEditor } from '~/routing/skills/components/SkillAvailabilityRulesEditor';
-import { SkillTagVocabularyManager } from '~/routing/skills/components/SkillTagVocabularyManager';
 import { SKILL_AVAILABILITY_COPY } from '~/routing/skills/data/data.copy';
 import {
   isSkillAvailabilityPosture,
@@ -158,7 +157,6 @@ export default function Component(
               posture={posture}
             />
             <SkillAvailabilityRulesEditor rules={rules} vocabulary={tagNames} />
-            <SkillTagVocabularyManager tags={vocabulary} />
           </>
         )}
       </div>
