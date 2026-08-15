@@ -1,19 +1,21 @@
 import * as React from 'react';
-import { Link } from 'react-router';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
   GlobalErrorBoundary,
-  GlobalHeading,
+  GlobalFeatureOnboarding,
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import { Button } from '@openthrottle/react-router-shadcn';
 import { ScheduledAgentJobsDocument } from '~/__generated__/graphql';
+import { ScheduleIntroduction } from '~/routing/schedule/components/ScheduleIntroduction';
 import { ScheduleTable } from '~/routing/schedule/components/ScheduleTable';
 import { SITE_TITLE } from '~/global/config/settings';
+import {
+  SCHEDULE_COPY,
+  SCHEDULE_ONBOARDING,
+} from '~/routing/schedule/data/data.copy';
 import type { Route } from '@/app/routes/+types/schedule._index';
-import { CalendarClockIcon } from 'lucide-react';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -36,7 +38,7 @@ export const links: Route.LinksFunction = () => {
 };
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
-  return [{ title: `Schedule | ${SITE_TITLE}` }];
+  return [{ title: `${SCHEDULE_COPY.pageTitle} | ${SITE_TITLE}` }];
 });
 
 export default function Component(
@@ -48,6 +50,9 @@ export default function Component(
 
   // Setup
   const { jobs } = loaderData;
+  // Schedule has no filters, so an empty list always means a genuinely-new
+  // user — show the rich onboarding pitch instead of the terse empty paragraph.
+  const isNewUser = jobs.length === 0;
 
   // Handlers
 
@@ -59,34 +64,13 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <>
-        <div>
-          <GlobalHeading
-            className="mb-4"
-            heading="h1"
-            icon={CalendarClockIcon}
-            title="Schedule"
-          >
-            <Button asChild={true} size="xs">
-              <Link to="/schedule/create">New schedule</Link>
-            </Button>
-          </GlobalHeading>
-          <p className="text-muted-foreground text-sm">
-            Run an agent prompt on a cron schedule.
-          </p>
-        </div>
+      <ScheduleIntroduction />
 
-        {jobs.length === 0 ? (
-          <p
-            className="text-muted-foreground rounded-md border border-dashed p-8 text-center text-sm"
-            data-testid="ScheduleEmpty"
-          >
-            No scheduled jobs yet. Create one to run a prompt on a schedule.
-          </p>
-        ) : (
-          <ScheduleTable className="bg-card" jobs={jobs} />
-        )}
-      </>
+      {isNewUser ? (
+        <GlobalFeatureOnboarding content={SCHEDULE_ONBOARDING} />
+      ) : (
+        <ScheduleTable className="bg-card" jobs={jobs} />
+      )}
     </GlobalScreen>
   );
 }

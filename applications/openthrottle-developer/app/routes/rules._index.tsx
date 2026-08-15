@@ -3,6 +3,7 @@ import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import {
   GlobalErrorBoundary,
+  GlobalFeatureOnboarding,
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
@@ -20,7 +21,7 @@ import {
   type TagActionRuleRowData,
 } from '~/routing/rules/components/RulesTable';
 import { RulesToolbar } from '~/routing/rules/components/RulesToolbar';
-import { RULES_COPY } from '~/routing/rules/data/data.copy';
+import { RULES_COPY, RULES_ONBOARDING } from '~/routing/rules/data/data.copy';
 import {
   filterRulesList,
   parseRulesEnabledFilterFromSearchParams,
@@ -121,6 +122,10 @@ export default function Component(
   const totalCount = rules.length;
   const enabledCount = rules.filter((rule) => rule.enabled).length;
   const disabledCount = totalCount - enabledCount;
+  // A genuinely-new user has zero rules and no active filter — show the rich
+  // onboarding pitch instead of the toolbar/table. A zero-result *filtered*
+  // search still falls through to RulesTable -> RulesEmpty (clear-filters CTA).
+  const isNewUser = totalCount === 0 && !isFiltered;
 
   // Handlers
   const handleToggleEnabled = (rule: TagActionRuleRowData): void => {
@@ -155,16 +160,20 @@ export default function Component(
         </p>
       ) : null}
 
-      <div className="flex flex-col gap-4">
-        <RulesToolbar />
-        <RulesTable
-          isFiltered={isFiltered}
-          onDelete={handleDelete}
-          onToggleEnabled={handleToggleEnabled}
-          pending={pending}
-          rules={filteredRules}
-        />
-      </div>
+      {isNewUser ? (
+        <GlobalFeatureOnboarding content={RULES_ONBOARDING} />
+      ) : (
+        <div className="flex flex-col gap-4">
+          <RulesToolbar />
+          <RulesTable
+            isFiltered={isFiltered}
+            onDelete={handleDelete}
+            onToggleEnabled={handleToggleEnabled}
+            pending={pending}
+            rules={filteredRules}
+          />
+        </div>
+      )}
     </GlobalScreen>
   );
 }

@@ -1,5 +1,6 @@
 export * from './components/GlobalCollapsible';
 export * from './components/GlobalErrorBoundary';
+export * from './components/GlobalFeatureOnboarding';
 export * from './components/GlobalFooter';
 export * from './components/GlobalHeader';
 export * from './components/GlobalHeading';
@@ -21,6 +22,7 @@ export * from './components/GlobalSidebarHeader';
 export * from './components/GlobalTheme';
 export * from './components/GradientMesh';
 export * from './config';
+export * from './data/data.copy';
 export * from './hooks/usePrefersReducedMotion';
 export * from './hooks/useScrollContainerRestoration';
 export * from './hooks/useUrlSyncedOverlay';

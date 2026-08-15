@@ -53,7 +53,7 @@ describe('routes/schedule._index.tsx', () => {
     ).toBeInTheDocument();
   });
 
-  test('renders the empty state when there are no schedules', () => {
+  test('renders the onboarding pitch when there are no schedules', () => {
     renderRoutesStub(
       <ScheduleIndex
         actionData={undefined}
@@ -63,6 +63,11 @@ describe('routes/schedule._index.tsx', () => {
       />,
     );
 
-    expect(screen.getByTestId('ScheduleEmpty')).toBeInTheDocument();
+    expect(screen.getByTestId('GlobalFeatureOnboarding')).toBeInTheDocument();
+    expect(screen.getByTestId('ScheduleIntroduction')).toBeInTheDocument();
+    expect(screen.queryByTestId('ScheduleTable')).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: /create your first schedule/i }),
+    ).toHaveAttribute('href', '/schedule/create');
   });
 });

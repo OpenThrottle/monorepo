@@ -6,9 +6,12 @@ import {
   mergeRouteModuleMeta,
 } from '@openthrottle/react-router-utils';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { GlobalScreen } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalErrorBoundary,
+  GlobalFeatureOnboarding,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
 import { OpenThrottlePagination } from '@openthrottle/react-router-ui';
-import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import {
   GetPlanAssigneeOptionsDocument,
   GetPlanCountsByStatusDocument,
@@ -16,12 +19,14 @@ import {
 } from '~/__generated__/graphql';
 import {
   buildStatusFilterUrls,
+  hasActivePlansFilters,
   parseAssigneesFromSearchParams,
   parsePlansSortFromSearch,
 } from '~/routing/plans/utils/parsers';
 import { parseStatusesFromSearchParams } from '~/routing/plans/config/status-options';
 import { PlansIntroduction } from '~/routing/plans/components/PlansIntroduction';
 import { PlansStats } from '~/routing/plans/components/PlansStats';
+import { PLANS_ONBOARDING } from '~/routing/plans/data/data.copy';
 import { PlansTable } from '~/routing/plans/components/PlansTable';
 import { PlansToolbar } from '~/routing/plans/components/PlansToolbar';
 import { SITE_TITLE } from '~/global/config/settings';
@@ -142,6 +147,11 @@ export default function Component(
 
   const view: 'card' | 'table' = isCard ? 'card' : 'table';
 
+  // New user: zero plans workspace-wide and no active filter — show onboarding
+  // instead of the toolbar/table/pagination. Filtered no-results falls through
+  // to PlansTable -> PlanTasksEmpty (clear-filters CTA).
+  const isNewUser = totalCountAll === 0 && !hasActivePlansFilters(searchParams);
+
   // Handlers
 
   // Markup
@@ -169,32 +179,38 @@ export default function Component(
         totalCountAll={totalCountAll}
         totalCountQueued={totalCountQueued}
       />
-      <div className="flex flex-col gap-4">
-        <PlansToolbar
-          assigneeOptions={assigneeOptions}
-          assignees={assignees}
-          limit={limit}
-          page={page}
-          sortBy={sortBy}
-          sortOrder={sortOrder}
-          statuses={statuses}
-          view={view}
-        />
-        <PlansTable
-          className="bg-card"
-          plans={plans}
-          statusFilterUrls={statusFilterUrls}
-        />
-      </div>
-      <OpenThrottlePagination
-        assignees={assignees}
-        basePath="/plans"
-        className="mt-8"
-        limit={limit}
-        page={page}
-        statuses={statuses}
-        total={totalCount}
-      />
+      {isNewUser ? (
+        <GlobalFeatureOnboarding content={PLANS_ONBOARDING} />
+      ) : (
+        <>
+          <div className="flex flex-col gap-4">
+            <PlansToolbar
+              assigneeOptions={assigneeOptions}
+              assignees={assignees}
+              limit={limit}
+              page={page}
+              sortBy={sortBy}
+              sortOrder={sortOrder}
+              statuses={statuses}
+              view={view}
+            />
+            <PlansTable
+              className="bg-card"
+              plans={plans}
+              statusFilterUrls={statusFilterUrls}
+            />
+          </div>
+          <OpenThrottlePagination
+            assignees={assignees}
+            basePath="/plans"
+            className="mt-8"
+            limit={limit}
+            page={page}
+            statuses={statuses}
+            total={totalCount}
+          />
+        </>
+      )}
     </GlobalScreen>
   );
 }

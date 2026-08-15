@@ -4,6 +4,10 @@ import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 import Index from '../plans._index';
 import { buildRootMatch } from '~/testing/root-match-fixture';
+import {
+  PLANS_INDEX_EMPTY_COPY,
+  PLANS_ONBOARDING,
+} from '~/routing/plans/data/data.copy';
 import type { PlanCardFragment } from '~/__generated__/graphql';
 import type { Route } from '@/app/routes/+types/plans._index';
 
@@ -132,6 +136,60 @@ describe('routes/plans._index.tsx', () => {
     expect(component.getByText('In progress / Queued')).toBeInTheDocument();
     expect(component.getByText('Completed (all)')).toBeInTheDocument();
     expect(component.getAllByText('0').length).toBeGreaterThanOrEqual(3);
+  });
+
+  test('shows the onboarding pitch for a new user (no plans, unfiltered)', () => {
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
+    const Component = () => (
+      <Index
+        actionData={undefined}
+        loaderData={mockLoaderDataEmpty}
+        matches={matches}
+        params={{}}
+      />
+    );
+    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    const component = render(<RoutesStub />);
+
+    // New-user block replaces the toolbar/table/pagination.
+    expect(
+      component.getByTestId('GlobalFeatureOnboarding'),
+    ).toBeInTheDocument();
+    expect(component.getByTestId('PlansIntroduction')).toBeInTheDocument();
+    expect(component.queryByTestId('PlansTable')).not.toBeInTheDocument();
+    expect(
+      component.queryByTestId('OpenThrottlePagination'),
+    ).not.toBeInTheDocument();
+    expect(
+      component.getByRole('link', { name: PLANS_ONBOARDING.cta.label }),
+    ).toHaveAttribute('href', '/plans/create');
+  });
+
+  test('shows PlanTasksEmpty (not onboarding) for a filtered no-results view', () => {
+    // Plans exist in the workspace (totalCountAll > 0) but this filtered page
+    // returned none — the terse filtered-empty state, not the new-user pitch.
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
+    const Component = () => (
+      <Index
+        actionData={undefined}
+        loaderData={{
+          ...mockLoaderDataEmpty,
+          totalCountAll: 11,
+        }}
+        matches={matches}
+        params={{}}
+      />
+    );
+    const RoutesStub = createRoutesStub([{ Component, path: '/plans' }]);
+    const component = render(<RoutesStub initialEntries={['/plans?q=zzzz']} />);
+
+    expect(
+      component.queryByTestId('GlobalFeatureOnboarding'),
+    ).not.toBeInTheDocument();
+    expect(component.getByTestId('PlansTable')).toBeInTheDocument();
+    expect(
+      component.getByText(PLANS_INDEX_EMPTY_COPY.filteredTitle),
+    ).toBeInTheDocument();
   });
 
   test('should render pagination on /plans with assignee and status filters in links', () => {

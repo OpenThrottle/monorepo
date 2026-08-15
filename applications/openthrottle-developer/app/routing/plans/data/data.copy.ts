@@ -4,6 +4,34 @@
  * updates one place and no spec breaks on copy drift. Add new copy here rather than
  * inlining sentence-length literals in components.
  */
+import { ListChevronsUpDownIcon } from 'lucide-react';
+import type { GlobalFeatureOnboardingContent } from '@openthrottle/react-router-ui-global';
+
+/**
+ * @description New-user "teach-me-fast" onboarding copy for the plans index,
+ * shown only when a workspace has zero plans and no filters are active. Conforms
+ * to {@link GlobalFeatureOnboardingContent} and is rendered through the shared
+ * `GlobalFeatureOnboarding` layout.
+ */
+export const PLANS_ONBOARDING: GlobalFeatureOnboardingContent = {
+  cta: { label: `Create your first plan`, to: `/plans/create` },
+  icon: ListChevronsUpDownIcon,
+  internalUsage: `Every feature we ship starts as a plan: we break an idea or PRD into tasks, hand them to Ralph to execute one at a time, and each commit carries its Plan-Id and Task-Id — so shipped work on main traces straight back to the plan that asked for it.`,
+  steps: [
+    `Create a plan and give it a clear title and description.`,
+    `Break it into tasks — or drop in a PRD and let it decompose for you.`,
+    `Queue a run to have Ralph work the tasks one at a time.`,
+    `Follow the output and linked commits as the work lands.`,
+  ],
+  tagline: `Turn intent into shipped work: break an idea into tasks, run it agentically, and trace every commit back to the plan.`,
+  title: `Plans`,
+  useCases: [
+    `Break an idea or PRD into an ordered list of executable tasks.`,
+    `Drive agentic execution (Ralph) task-by-task with status tracking.`,
+    `Trace shipped commits on main back to the plan and task that drove them.`,
+  ],
+  whatItIs: `A plan is OpenThrottle's record of intended work — what you decided to build, broken into tasks with status, assignee, and summaries. Plans can be worked by hand or executed agentically, with commits linked back for traceability.`,
+};
 
 export const PLAN_TASK_NOT_FOUND_COPY = {
   description: `The task you are looking for does not exist.`,

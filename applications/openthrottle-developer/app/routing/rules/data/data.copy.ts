@@ -4,6 +4,34 @@
  * updates one place and no spec breaks on copy drift. Add new copy here rather than
  * inlining sentence-length literals in components.
  */
+import { WandSparklesIcon } from 'lucide-react';
+import type { GlobalFeatureOnboardingContent } from '@openthrottle/react-router-ui-global';
+
+/**
+ * @description New-user "teach-me-fast" onboarding copy for the rules index,
+ * shown only when a user has zero rules and no filters are active. Conforms to
+ * {@link GlobalFeatureOnboardingContent} and is rendered through the shared
+ * `GlobalFeatureOnboarding` layout.
+ */
+export const RULES_ONBOARDING: GlobalFeatureOnboardingContent = {
+  cta: { label: `Create your first rule`, to: `/rules/new` },
+  icon: WandSparklesIcon,
+  internalUsage: `We tag every plan by intent, then let rules do the wiring: a breakdown-tagged plan auto-gets a /grilling task, noisy skills stay off where they don't belong, and each project keeps its own defaults — so nobody hand-attaches the same skill twice.`,
+  steps: [
+    `Give the rule a clear name so it's easy to find later.`,
+    `Pick the tag combination a plan must match — leave it empty to match every plan.`,
+    `Choose the action to dispatch (inject a task, apply an availability exception, …).`,
+    `Save it — new matching plans pick up the action automatically.`,
+  ],
+  tagline: `Automate the busywork: map tag combinations on plans to actions, so the right skills and tasks show up without anyone wiring them by hand.`,
+  title: `Rules`,
+  useCases: [
+    `Auto-inject a skill or task into every plan carrying a given tag.`,
+    `Silence skills that are noisy or irrelevant in the wrong context.`,
+    `Give each project its own defaults with per-project rules.`,
+  ],
+  whatItIs: `Rules map a tag combination on a plan to an action — for example, injecting a /grilling task into every breakdown-tagged plan. A plan matches when all of a rule's tags are present, and the action fires automatically.`,
+};
 
 export const RULES_NOT_FOUND_COPY = {
   description: `The rule you're looking for doesn't exist or was removed.`,

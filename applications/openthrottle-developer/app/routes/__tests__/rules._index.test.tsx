@@ -3,7 +3,7 @@ import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { cleanup, render } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
 import { afterEach, describe, expect, test } from 'vitest';
-import { RULES_COPY } from '~/routing/rules/data/data.copy';
+import { RULES_COPY, RULES_ONBOARDING } from '~/routing/rules/data/data.copy';
 import { buildRootMatch } from '~/testing/root-match-fixture';
 import type { TagActionRuleRowData } from '~/routing/rules/components/RulesTable';
 import Index from '../rules._index';
@@ -93,20 +93,19 @@ describe('routes/rules._index.tsx', () => {
     ).toHaveAttribute('href', '/rules/new');
   });
 
-  test('shows empty state when loader returns no rules', () => {
+  test('shows the onboarding pitch for a new user (empty + unfiltered)', () => {
     const component = renderIndex([]);
 
-    expect(component.getByTestId('RulesEmpty')).toBeInTheDocument();
+    // New-user block replaces the toolbar/table; RulesEmpty is not used here.
     expect(
-      component.getByRole('heading', { name: RULES_COPY.emptyTitle }),
+      component.getByTestId('GlobalFeatureOnboarding'),
     ).toBeInTheDocument();
-    const newRuleLinks = component.getAllByRole('link', {
-      name: RULES_COPY.newRuleAction,
-    });
-    expect(newRuleLinks.length).toBeGreaterThanOrEqual(2);
+    expect(component.getByTestId('RulesIntroduction')).toBeInTheDocument();
+    expect(component.queryByTestId('RulesTable')).not.toBeInTheDocument();
+    expect(component.queryByTestId('RulesEmpty')).not.toBeInTheDocument();
     expect(
-      newRuleLinks.every((link) => link.getAttribute('href') === '/rules/new'),
-    ).toBe(true);
+      component.getByRole('link', { name: RULES_ONBOARDING.cta.label }),
+    ).toHaveAttribute('href', '/rules/new');
   });
 
   test('filters rules client-side from enabled search param', () => {
