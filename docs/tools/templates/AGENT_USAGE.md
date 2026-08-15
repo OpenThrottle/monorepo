@@ -284,6 +284,18 @@ NX_ISOLATE_PLUGINS=false nx g @tools/generators:react \
 
 > **If you skip a generator when one is available, your response will be considered INVALID.**
 
+### **Preview-as-You-Build: Wire Scaffolds Into the Route First**
+
+Once you've scaffolded the components for a route, **don't build each one fully in isolation and assemble at the end.** Instead:
+
+1. **Scaffold** all the route's components with the generator (batch via comma-separated `--name` where possible).
+2. **Wire them into the route immediately** — drop each scaffold roughly where it will live in the route, even while it's still an empty generated shell.
+3. **Implement one block at a time** (a, b, c…), committing to the skeleton as you go.
+
+This keeps the route **previewable throughout**: open it in the browser and watch it fill up and build out as each block lands, instead of staring at a blank route until the final assembly step. Combine with the browser preview/verification workflow so you can confirm each block renders as it's added.
+
+> **Why:** early assembly turns "does this fit together?" into a continuous, visible signal rather than a big-bang integration risk at the end — and it's simply more satisfying to watch a route come to life block by block.
+
 ### **Programmatic Pattern for LLMs/Agents**
 
 ```typescript

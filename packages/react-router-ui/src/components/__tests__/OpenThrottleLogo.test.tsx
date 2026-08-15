@@ -21,6 +21,7 @@ describe('OpenThrottleLogo Component', () => {
 
   test('renders OpenThrottle brand text', () => {
     expect(component.getByTestId('OpenThrottleLogo')).toBeInTheDocument();
-    expect(component.getByText('OpenThrottle')).toBeInTheDocument();
+    expect(component.getByText('Open')).toBeInTheDocument();
+    expect(component.getByText('Throttle')).toBeInTheDocument();
   });
 });

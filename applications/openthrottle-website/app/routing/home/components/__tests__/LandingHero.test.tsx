@@ -2,7 +2,9 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { userEvent } from '@testing-library/user-event';
+import { describe, expect, test } from 'vitest';
+import { LANDING_HERO } from '~/routing/home/data/data.landing';
 import { LandingHero } from '../LandingHero';
 
 const renderHero = (element: React.ReactElement): RenderResult => {
@@ -14,30 +16,40 @@ const renderHero = (element: React.ReactElement): RenderResult => {
 };
 
 describe('LandingHero Component', () => {
-  let component: RenderResult;
+  test('renders the first headline, lede, and GitHub CTA', () => {
+    const component = renderHero(<LandingHero headlineIntervalMs={0} />);
+    const first = LANDING_HERO.headlines[0] ?? '';
 
-  beforeEach(() => {
-    component = renderHero(<LandingHero />);
-  });
-
-  test('renders the wordmark, headline, and default lede', () => {
     expect(component.getByTestId('LandingHero')).toBeInTheDocument();
-    expect(component.getByText('Throttle')).toBeInTheDocument();
-    expect(
-      component.getByText(/from idea to shipped commit/i),
-    ).toBeInTheDocument();
-    expect(component.getByText(/self-hostable harness/i)).toBeInTheDocument();
-  });
+    expect(first).toBeDefined();
+    expect(component.getByRole('heading', { name: first })).toBeInTheDocument();
+    expect(component.getByText(LANDING_HERO.lede)).toBeInTheDocument();
 
-  test('renders the GitHub CTA as an external link', () => {
-    const github = component.getByRole('link', { name: /view on github/i });
+    const github = component.getByRole('link', {
+      name: LANDING_HERO.ctas.primary.label,
+    });
 
     expect(github).toHaveAttribute('target', '_blank');
   });
 
-  test('prefers the lede override when provided', () => {
-    const scoped = renderHero(<LandingHero lede="A custom hero lede" />);
+  test('clicking the headline advances to the next line', async () => {
+    const user = userEvent.setup();
+    const component = renderHero(<LandingHero headlineIntervalMs={0} />);
+    const first = LANDING_HERO.headlines[0] ?? '';
+    const second = LANDING_HERO.headlines[1] ?? '';
 
-    expect(scoped.getByText('A custom hero lede')).toBeInTheDocument();
+    await user.click(component.getByRole('button', { name: first }));
+
+    expect(
+      component.getByRole('heading', { name: second }),
+    ).toBeInTheDocument();
+  });
+
+  test('prefers the lede override when provided', () => {
+    const component = renderHero(
+      <LandingHero headlineIntervalMs={0} lede="A custom hero lede" />,
+    );
+
+    expect(component.getByText('A custom hero lede')).toBeInTheDocument();
   });
 });

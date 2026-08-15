@@ -27,11 +27,13 @@ export const OpenThrottleLogo = (
   // Markup
   const logoText = (
     <>
-      <span className="font-black text-current">OpenThrottle</span>
+      <span className="font-black text-current">
+        Open<span className="-text-accent pl-0.5">Throttle</span>
+      </span>
       {name ? (
         <>
           <span className="text-muted-foreground/50 font-extralight">|</span>
-          <span className="text-highlight font-semibold">{name}</span>
+          <span className="text-accent font-semibold">{name}</span>
         </>
       ) : null}
     </>

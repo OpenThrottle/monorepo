@@ -1,8 +1,8 @@
 import * as React from 'react';
-import { Button, Card } from '@openthrottle/react-router-shadcn';
-import { XIcon } from 'lucide-react';
-import { useAtom } from 'jotai';
 import clsx from 'clsx';
+import { Button, Card } from '@openthrottle/react-router-shadcn';
+import { useAtom } from 'jotai';
+import { XIcon } from 'lucide-react';
 import { DashboardGetStartedStep } from '~/routing/dashboard/components/DashboardGetStartedStep';
 import { GET_STARTED_STEPS } from '~/routing/dashboard/data/get-started-steps';
 import {
@@ -61,11 +61,12 @@ export const DashboardGetStartedCard = (
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <h2 className="text-sm font-medium">{GET_STARTED_CARD_COPY.title}</h2>
+          <h2 className="mb-1 text-lg">{GET_STARTED_CARD_COPY.title}</h2>
           <p className="text-muted-foreground text-xs">
             {GET_STARTED_CARD_COPY.description}
           </p>
         </div>
+
         <Button
           aria-label={GET_STARTED_CARD_COPY.dismissLabel}
           className="shrink-0"
@@ -81,6 +82,7 @@ export const DashboardGetStartedCard = (
       <ul className="divide-border divide-y">
         {GET_STARTED_STEPS.map((step) => {
           const copy = GET_STARTED_STEP_COPY[step.id];
+
           return (
             <DashboardGetStartedStep
               complete={completion[step.id]}

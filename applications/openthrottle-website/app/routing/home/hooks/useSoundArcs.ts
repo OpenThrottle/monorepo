@@ -1,14 +1,23 @@
 import * as React from 'react';
 import { LANDING_SOUND_ARCS } from '~/routing/home/data/data.landing';
+import { buildSoundArcs } from '~/routing/home/utils/build-sound-arcs';
+
+export interface UseSoundArcsOptions {
+  readonly distributionEnd: number | undefined;
+  readonly distributionStart: number | undefined;
+  readonly enabled: boolean | undefined;
+  readonly n: number | undefined;
+}
 
 /**
  * Velocity-reactive hero "sound wave" arcs — the animated, canvas-based
  * successor to the landing hero's static arc SVG.
  *
- * Three flowing arcs sweep across the hero. A travelling sine wave ripples
- * along each one; its amplitude swells with how fast the pointer is moving
- * (fast = an oscilloscope going loud) and rings back down to a calm idle when
- * the pointer slows. Ends are pinned so the arcs stay anchored.
+ * Stacked flowing arcs sweep across the hero (`LANDING_SOUND_ARCS.n`). A
+ * travelling sine wave ripples along each one; its amplitude swells with how
+ * fast the pointer is moving (fast = an oscilloscope going loud) and rings
+ * back down to a calm idle when the pointer slows. Ends are pinned so the
+ * arcs stay anchored.
  *
  * SSR-safe (all DOM work runs client-side in an effect) and degrades
  * gracefully: `prefers-reduced-motion: reduce` renders a single static frame of
@@ -46,9 +55,20 @@ const cubicDerivativeAt = (
 };
 
 export const useSoundArcs = <T extends HTMLCanvasElement = HTMLCanvasElement>(
-  enabled = true,
+  options: UseSoundArcsOptions = {
+    distributionEnd: undefined,
+    distributionStart: undefined,
+    enabled: undefined,
+    n: undefined,
+  },
 ): React.RefObject<T | null> => {
   const canvasRef = React.useRef<T>(null);
+  const distributionEnd =
+    options.distributionEnd ?? LANDING_SOUND_ARCS.distributionEnd;
+  const distributionStart =
+    options.distributionStart ?? LANDING_SOUND_ARCS.distributionStart;
+  const enabled = options.enabled ?? true;
+  const n = options.n ?? LANDING_SOUND_ARCS.n;
 
   React.useEffect(() => {
     const canvas = canvasRef.current;
@@ -65,7 +85,6 @@ export const useSoundArcs = <T extends HTMLCanvasElement = HTMLCanvasElement>(
 
     const ctx = context;
     const {
-      arcs,
       attack,
       colorEnd,
       colorMid,
@@ -73,13 +92,22 @@ export const useSoundArcs = <T extends HTMLCanvasElement = HTMLCanvasElement>(
       gain,
       idleAmplitude,
       lineWidth,
+      noise,
       release,
       samples,
+      seed,
       speed,
       speedGain,
       velocityRef,
       waveCycles,
     } = LANDING_SOUND_ARCS;
+    const arcs = buildSoundArcs({
+      distributionEnd,
+      distributionStart,
+      n,
+      noise,
+      seed,
+    });
 
     const prefersReducedMotion =
       typeof window.matchMedia === 'function' &&
@@ -101,6 +129,7 @@ export const useSoundArcs = <T extends HTMLCanvasElement = HTMLCanvasElement>(
     let frame = 0;
     let running = false;
     let startTime = 0;
+
     // Accumulated travelling phase — advances every frame at the constant base
     // speed, sped up (not merely amplified) while the pointer is moving fast.
     let phase = 0;
@@ -310,7 +339,7 @@ export const useSoundArcs = <T extends HTMLCanvasElement = HTMLCanvasElement>(
       intersectionObserver?.disconnect();
       window.removeEventListener('pointermove', onPointerMove);
     };
-  }, [enabled]);
+  }, [distributionEnd, distributionStart, enabled, n]);
 
   return canvasRef;
 };

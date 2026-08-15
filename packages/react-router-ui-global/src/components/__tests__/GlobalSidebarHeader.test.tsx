@@ -12,6 +12,7 @@ describe('GlobalSidebarHeader Component', () => {
 
     expect(screen.getByTestId('GlobalSidebarHeader')).toBeInTheDocument();
     expect(screen.getByRole('link')).toHaveAttribute('href', '/');
-    expect(screen.getByText('OpenThrottle')).toBeInTheDocument();
+    expect(screen.getByText('Open')).toBeInTheDocument();
+    expect(screen.getByText('Throttle')).toBeInTheDocument();
   });
 });

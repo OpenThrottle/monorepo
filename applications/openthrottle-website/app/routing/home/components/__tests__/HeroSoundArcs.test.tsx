@@ -20,4 +20,12 @@ describe('HeroSoundArcs Component', () => {
   test('mounts without throwing when disabled', () => {
     expect(() => renderArcs(<HeroSoundArcs enabled={false} />)).not.toThrow();
   });
+
+  test('accepts stack count and left/right distribution overrides', () => {
+    expect(() =>
+      renderArcs(
+        <HeroSoundArcs distributionEnd={1} distributionStart={0.2} n={8} />,
+      ),
+    ).not.toThrow();
+  });
 });

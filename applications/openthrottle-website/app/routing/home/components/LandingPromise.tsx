@@ -31,12 +31,10 @@ export const LandingPromise = (
     >
       <div className="landing-reveal mx-auto grid w-[min(68rem,100%)] gap-8 md:grid-cols-2 md:items-end md:gap-16">
         <div>
-          <p className="mb-3 text-xs font-semibold tracking-[0.08em] text-[var(--brand)] uppercase">
+          <p className="mb-3 text-xs font-semibold tracking-[0.08em] text-(--brand) uppercase">
             {kicker}
           </p>
-          <h2 className="max-w-[18ch] text-[clamp(1.75rem,4vw,2.6rem)] leading-tight font-bold tracking-[-0.035em]">
-            {title}
-          </h2>
+          <h2 className="text-[clamp(1.75rem,4vw,2.6rem)]">{title}</h2>
         </div>
         <p className="text-muted-foreground max-w-[42ch] text-[1.0625rem]">
           {lede}

@@ -36,7 +36,9 @@ export type OnboardingCompletion = Record<OnboardingStepId, boolean>;
  */
 const totalPlanCount = (
   counts: GetDashboardOnboardingQuery['planCountsByStatus'],
-): number => counts.reduce((sum, entry) => sum + entry.count, 0);
+): number => {
+  return counts.reduce((sum, entry) => sum + entry.count, 0);
+};
 
 /**
  * @description Number of plans whose status implies a run was started (see
@@ -44,14 +46,15 @@ const totalPlanCount = (
  */
 const runStartedPlanCount = (
   counts: GetDashboardOnboardingQuery['planCountsByStatus'],
-): number =>
-  counts.reduce(
+): number => {
+  return counts.reduce(
     (sum, entry) =>
       RUN_STARTED_PLAN_STATUSES.includes(entry.status.toUpperCase())
         ? sum + entry.count
         : sum,
     0,
   );
+};
 
 /**
  * @description Derive per-step completion for the Get Started checklist from
