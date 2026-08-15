@@ -1,4 +1,7 @@
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import {
+  executeGraphqlWithAuth,
+  parseFormData,
+} from '@openthrottle/react-router-graphql';
 import {
   AssignRoleToUserDocument,
   DisableUserDocument,
@@ -6,6 +9,11 @@ import {
   RemoveRoleFromUserDocument,
   UpdateUserDocument,
 } from '~/__generated__/graphql';
+import {
+  AssignRoleToUserInputSchema,
+  RemoveRoleFromUserInputSchema,
+  UpdateUserInputSchema,
+} from '~/__generated__/schemas';
 
 /**
  * Intent handler backing the `users.$userId` route action. Dispatches the
@@ -26,15 +34,20 @@ export const runUserDetailAction = async (
 
   try {
     if (intent === 'assignRole') {
-      const roleId = formData.get('roleId');
-
-      if (typeof roleId === 'string' && roleId) {
-        await executeGraphqlWithAuth(request, AssignRoleToUserDocument, {
-          input: { roleId, userId },
-        });
-
-        return { ok: true };
+      const parsed = parseFormData(
+        formData,
+        AssignRoleToUserInputSchema().omit({ userId: true }),
+        { strict: false },
+      );
+      if (!parsed.success) {
+        return { error: 'A role is required.' };
       }
+
+      await executeGraphqlWithAuth(request, AssignRoleToUserDocument, {
+        input: { roleId: parsed.data.roleId, userId },
+      });
+
+      return { ok: true };
     }
 
     if (intent === 'disableUser') {
@@ -52,33 +65,34 @@ export const runUserDetailAction = async (
     }
 
     if (intent === 'removeRole') {
-      const roleId = formData.get('roleId');
-
-      if (typeof roleId === 'string' && roleId) {
-        await executeGraphqlWithAuth(request, RemoveRoleFromUserDocument, {
-          input: { roleId, userId },
-        });
-
-        return { ok: true };
+      const parsed = parseFormData(
+        formData,
+        RemoveRoleFromUserInputSchema().omit({ userId: true }),
+        { strict: false },
+      );
+      if (!parsed.success) {
+        return { error: 'A role is required.' };
       }
+
+      await executeGraphqlWithAuth(request, RemoveRoleFromUserDocument, {
+        input: { roleId: parsed.data.roleId, userId },
+      });
+
+      return { ok: true };
     }
 
     if (intent === 'updateUser') {
-      const email = formData.get('email');
-      const githubUsername = formData.get('githubUsername');
+      const parsed = parseFormData(
+        formData,
+        UpdateUserInputSchema().omit({ disabledAt: true, id: true }),
+        { strict: false },
+      );
+      if (!parsed.success) {
+        return { error: parsed.error };
+      }
 
       await executeGraphqlWithAuth(request, UpdateUserDocument, {
-        input: {
-          email:
-            typeof email === 'string' && email.trim()
-              ? email.trim()
-              : undefined,
-          githubUsername:
-            typeof githubUsername === 'string' && githubUsername.trim()
-              ? githubUsername.trim()
-              : undefined,
-          id: userId,
-        },
+        input: { ...parsed.data, id: userId },
       });
 
       return { ok: true };

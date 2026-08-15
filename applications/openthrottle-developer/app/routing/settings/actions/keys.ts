@@ -1,29 +1,30 @@
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import {
+  executeGraphqlWithAuth,
+  parseFormData,
+} from '@openthrottle/react-router-graphql';
+import { z } from 'zod/v3';
+import { CreateServiceAccountCredentialInputSchema } from '~/__generated__/schemas';
 import {
   CreateServiceAccountCredentialDocument,
   RevokeServiceAccountCredentialDocument,
 } from '~/__generated__/graphql';
 import { toErrorMessage } from '~/global/utils/utils.error-message';
 import {
-  parseCredentialIdFromFormData,
   parseExpiresAtFromFormData,
-  parseServiceAccountIdFromFormData,
   type SettingsKeysActionData,
 } from '~/routing/settings/utils/settings-keys-action';
-import { optionalTrimmedString } from '~/routing/settings/utils/workspace-settings-action';
 import type { Route } from '@/app/routes/+types/settings.keys';
 
 export const createServiceAccountCredential = async (
   args: Route.ActionArgs,
   formData: FormData,
 ): Promise<SettingsKeysActionData> => {
-  const serviceAccountId = parseServiceAccountIdFromFormData(
-    formData.get('serviceAccountId'),
+  const parsed = parseFormData(
+    formData,
+    CreateServiceAccountCredentialInputSchema().omit({ expiresAt: true }),
+    { strict: false },
   );
-  const label = optionalTrimmedString(formData.get('label'));
-  const expiresAt = parseExpiresAtFromFormData(formData.get('expiresAt'));
-
-  if (!serviceAccountId) {
+  if (!parsed.success) {
     return { error: 'Service account is required.' };
   }
 
@@ -33,9 +34,10 @@ export const createServiceAccountCredential = async (
       CreateServiceAccountCredentialDocument,
       {
         input: {
-          expiresAt: expiresAt ?? null,
-          label: label ?? null,
-          serviceAccountId,
+          expiresAt:
+            parseExpiresAtFromFormData(formData.get('expiresAt')) ?? null,
+          label: parsed.data.label ?? null,
+          serviceAccountId: parsed.data.serviceAccountId,
         },
       },
     );
@@ -59,11 +61,12 @@ export const revokeServiceAccountCredential = async (
   args: Route.ActionArgs,
   formData: FormData,
 ): Promise<SettingsKeysActionData> => {
-  const credentialId = parseCredentialIdFromFormData(
-    formData.get('credentialId'),
+  const parsed = parseFormData(
+    formData,
+    z.object({ credentialId: z.string().min(1) }),
+    { strict: false },
   );
-
-  if (!credentialId) {
+  if (!parsed.success) {
     return { error: 'Credential id is required.' };
   }
 
@@ -71,7 +74,7 @@ export const revokeServiceAccountCredential = async (
     await executeGraphqlWithAuth(
       args.request,
       RevokeServiceAccountCredentialDocument,
-      { credentialId },
+      { credentialId: parsed.data.credentialId },
     );
     return { ok: true };
   } catch (error) {

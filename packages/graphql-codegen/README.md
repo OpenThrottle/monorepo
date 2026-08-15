@@ -75,3 +75,72 @@ await executeGraphqlWithAuth(request, AddSkillTagDocument, {
   more via `{ allow: ['intent', 'csrf'] }`. Any other key that is neither on the
   schema nor allow-listed fails strict — pass `{ strict: false }` when the form
   legitimately carries fields the schema does not (e.g. a shared authoring form).
+- **Non-string fields (booleans, numbers, JSON):** `parseFormData` is
+  string-centric, so wrap the non-string fields of a generated schema with the
+  coercion helpers (also from `@openthrottle/react-router-graphql`) inside
+  `.extend()` instead of reintroducing `formData.get(...) === 'true'` /
+  `Number(...)` at the call site:
+
+  ```ts
+  import {
+    coerceBoolean,
+    coerceJson,
+    coerceNumber,
+    isJsonString,
+    parseFormData,
+  } from '@openthrottle/react-router-graphql';
+
+  const parsed = parseFormData(
+    formData,
+    EnqueuePlanRunInputSchema().extend({
+      priority: coerceNumber(z.number().int().nullish()),
+    }),
+  );
+  ```
+
+  - `coerceBoolean(schema)` — checkbox / `'true'|'false'|'on'` → boolean; blank or
+    absent → `undefined` so the wrapped `.default()`/`.nullish()` decides.
+  - `coerceNumber(schema)` — numeric string → number; a non-numeric string is
+    passed through so the schema rejects it rather than sending `NaN`.
+  - `coerceJson(schema)` — a hidden field holding an object as JSON is
+    `JSON.parse`d and validated against the wrapped (usually nested, generated)
+    schema. **Only** for fields that become objects.
+  - Fields that stay a JSON **string** on the wire (`runConfigJson`,
+    `jobRunHooksJson`) keep the generated `z.string()`; add
+    `.refine(isJsonString, 'Must be valid JSON.')` for an early validity check.
+  - **Files** (`plans.upload-decompose`) stay a special case: a `File` value is
+    dropped by the parser, so keep reading it from `formData` directly.
+
+- **Action-result envelopes:** `parseFormData` shapes the request side; for the
+  response side, normalize on `ActionResult` and read it with `getActionError` /
+  `isActionSuccess` / `isActionFailure` from `@openthrottle/react-router-utils`
+  rather than hand-checking result keys. The two are orthogonal — adopt the
+  envelope helpers only when a task explicitly normalizes a result shape.
+
+### Intentional exceptions (do NOT force onto `parseFormData`)
+
+These form submissions are deliberately left hand-parsed because they do not map
+to a generated GraphQL `*InputSchema()`. Do not add parallel trim helpers for
+them, and do not treat them as un-migrated debt:
+
+- **Auth login** — `root.tsx` / `auth._index.tsx` (developer) and `root.tsx`
+  (admin). Credentials are posted to the auth layer, not a GraphQL Input type.
+- **Command palette / search jump** — `root.tsx`. UI navigation, not a mutation.
+- **Filesystem skill write** — `skills.$slug.tsx` writes to local disk, not
+  GraphQL.
+- **File upload** — `plans.upload-decompose`. `parseFormData` drops `File`
+  values (see above); read the upload from `formData` directly.
+- **`resources.agent-*` resource routes** — small boolean/string toggles; adopt
+  `parseFormData` only where a matching generated Input schema already exists.
+- **`@openthrottle/react-router-chat` conversation stream** — the shared chat
+  package feeds `AgentsRunChatTurnInputSchema` after its own reads
+  (`utils.agents-chat.ts`); migrating it is a separate follow-up in that package,
+  not an app-action change.
+
+### Deferred (out of scope — do not start from this convention)
+
+- Client-side React Hook Form / shadcn field binding.
+- Native zod v4 (the schemas run on the `zod/v3` compatibility path).
+- Operation-variable codegen (generating schemas for non-`input:` mutation
+  variables); until then, use a small composed `z.object` for those — see the
+  flatten-vs-`input` note above. Tracked as a later optional plan.

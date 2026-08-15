@@ -1,31 +1,36 @@
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import {
+  executeGraphqlWithAuth,
+  parseFormData,
+} from '@openthrottle/react-router-graphql';
+import { z } from 'zod/v3';
+import { UpdateWorkspaceProfileInputSchema } from '~/__generated__/schemas';
 import {
   ApplyWorkspaceEditorConfigurationDocument,
   UpdateWorkspaceProfileDocument,
 } from '~/__generated__/graphql';
 import { formatEditorConfigApplyMessage } from '~/routing/settings/utils/format-editor-config-result';
-import {
-  optionalTrimmedString,
-  parseEnabledEditorsFromFormData,
-} from '~/routing/settings/utils/workspace-settings-action';
+import { parseEnabledEditorsFromFormData } from '~/routing/settings/utils/workspace-settings-action';
 import type { Route } from '@/app/routes/+types/settings.workspace._index';
 
 export const updateProfile = async (
   args: Route.ActionArgs,
   formData: FormData,
 ) => {
-  const contactDisplayName = optionalTrimmedString(
-    formData.get('contactDisplayName'),
+  const parsed = parseFormData(
+    formData,
+    UpdateWorkspaceProfileInputSchema().omit({ enabledEditors: true }),
+    { strict: false },
   );
-  const contactEmail = optionalTrimmedString(formData.get('contactEmail'));
-  const enabledEditors = parseEnabledEditorsFromFormData(formData);
+  if (!parsed.success) {
+    return { error: parsed.error };
+  }
 
   try {
     await executeGraphqlWithAuth(args.request, UpdateWorkspaceProfileDocument, {
       input: {
-        contactDisplayName,
-        contactEmail,
-        enabledEditors,
+        contactDisplayName: parsed.data.contactDisplayName ?? null,
+        contactEmail: parsed.data.contactEmail ?? null,
+        enabledEditors: parseEnabledEditorsFromFormData(formData),
       },
     });
     return { ok: true };
@@ -40,7 +45,14 @@ export const applyEditorConfig = async (
   args: Route.ActionArgs,
   formData: FormData,
 ) => {
-  const repositoryId = optionalTrimmedString(formData.get('repositoryId'));
+  const parsed = parseFormData(
+    formData,
+    z.object({ repositoryId: z.string().nullish() }),
+    { strict: false },
+  );
+  const repositoryId = parsed.success
+    ? (parsed.data.repositoryId ?? null)
+    : null;
 
   try {
     const data = await executeGraphqlWithAuth(

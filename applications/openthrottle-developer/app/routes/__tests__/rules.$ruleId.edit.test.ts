@@ -3,9 +3,11 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { Route } from '@/app/routes/+types/rules.$ruleId.edit';
 import { createTestRouterContext } from '@openthrottle/react-router-testing';
 
-vi.mock('@openthrottle/react-router-graphql', () => ({
-  executeGraphqlWithAuth: vi.fn(),
-}));
+vi.mock('@openthrottle/react-router-graphql', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('@openthrottle/react-router-graphql')>();
+  return { ...actual, executeGraphqlWithAuth: vi.fn() };
+});
 
 const { executeGraphqlWithAuth } =
   await import('@openthrottle/react-router-graphql');

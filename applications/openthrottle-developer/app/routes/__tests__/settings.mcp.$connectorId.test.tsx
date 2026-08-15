@@ -16,7 +16,11 @@ import type {
 } from '~/__generated__/graphql';
 import type { Route } from '@/app/routes/+types/settings.mcp.$connectorId';
 
-vi.mock('@openthrottle/react-router-graphql');
+vi.mock('@openthrottle/react-router-graphql', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('@openthrottle/react-router-graphql')>();
+  return { ...actual, executeGraphqlWithAuth: vi.fn() };
+});
 const mockExec = vi.mocked(graphqlWithAuth.executeGraphqlWithAuth);
 
 const stripeConnector: McpConnectorFieldsFragment = {

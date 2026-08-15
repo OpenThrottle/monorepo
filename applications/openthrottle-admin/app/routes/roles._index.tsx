@@ -14,6 +14,7 @@ import { useFetcher } from 'react-router';
 import {
   executeGraphqlWithAuth,
   isAuthError,
+  parseFormData,
 } from '@openthrottle/react-router-graphql';
 import {
   GlobalHeading,
@@ -21,6 +22,7 @@ import {
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { CreateRoleDocument, GetRolesDocument } from '~/__generated__/graphql';
+import { CreateRoleInputSchema } from '~/__generated__/schemas';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { RolesTable } from '~/routing/roles/components/RolesTable';
 import { ShieldCheckIcon } from 'lucide-react';
@@ -168,20 +170,18 @@ export const action = async (args: Route.ActionArgs) => {
   const intent = formData.get('intent');
 
   if (intent === 'createRole') {
-    const name = formData.get('name');
-    const description = formData.get('description');
-
-    if (typeof name !== 'string' || !name.trim()) {
+    const parsed = parseFormData(formData, CreateRoleInputSchema(), {
+      strict: false,
+    });
+    if (!parsed.success) {
       return { error: 'Role name is required' };
     }
 
     try {
-      const hasDescription = typeof description === 'string';
       await executeGraphqlWithAuth(request, CreateRoleDocument, {
         input: {
-          description:
-            hasDescription && description.trim() ? description.trim() : null,
-          name: name.trim(),
+          description: parsed.data.description ?? null,
+          name: parsed.data.name,
         },
       });
 

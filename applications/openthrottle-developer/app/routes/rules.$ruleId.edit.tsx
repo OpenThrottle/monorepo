@@ -1,5 +1,10 @@
 import * as React from 'react';
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import {
+  coerceBoolean,
+  executeGraphqlWithAuth,
+  parseFormData,
+} from '@openthrottle/react-router-graphql';
+import { z } from 'zod/v3';
 import {
   GlobalErrorBoundary,
   GlobalLayoutBreadcrumbsHandle,
@@ -7,6 +12,7 @@ import {
 } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { redirect } from 'react-router';
+import { UpsertTagActionRuleInputSchema } from '~/__generated__/schemas';
 import {
   RuleEditLoaderDocument,
   RulesUpsertTagActionRuleDocument,
@@ -108,44 +114,41 @@ export const action = async (args: Route.ActionArgs) => {
 
   const formData = await args.request.formData();
 
-  const actionPayloadJson = formData.get('actionPayloadJson');
-  const actionType = formData.get('actionType');
-  const environment = formData.get('environment');
-  const id = formData.get('id');
-  const status = formData.get('status');
-  const title = formData.get('title');
-
-  if (typeof id !== 'string' || id !== ruleId) {
+  const parsed = parseFormData(
+    formData,
+    UpsertTagActionRuleInputSchema()
+      .omit({ projectId: true })
+      .extend({
+        enabled: coerceBoolean(z.boolean().default(true)),
+        // Absent `tagAll` (a rule with no tags) is valid — default to `[]` so it
+        // does not fail the generated required-array field.
+        tagAll: z.array(z.string().min(1)).default([]),
+      }),
+    { lists: ['tagAll'], strict: false },
+  );
+  if (!parsed.success) {
+    if (parsed.fieldErrors.title) return { error: 'Title is required.' };
+    if (parsed.fieldErrors.actionType) {
+      return { error: 'Action type is required.' };
+    }
+    if (parsed.fieldErrors.actionPayloadJson) {
+      return { error: 'Action payload is required.' };
+    }
+    return { error: parsed.error };
+  }
+  if (parsed.data.id !== ruleId) {
     return { error: 'Rule id does not match.' };
   }
-  if (typeof title !== 'string' || title.trim() === '') {
-    return { error: 'Title is required.' };
-  }
-  if (typeof actionType !== 'string' || actionType === '') {
-    return { error: 'Action type is required.' };
-  }
-  if (typeof actionPayloadJson !== 'string' || actionPayloadJson === '') {
-    return { error: 'Action payload is required.' };
-  }
-
-  const enabled = formData.get('enabled') !== 'false';
-  const tagAll = formData
-    .getAll('tagAll')
-    .filter((value): value is string => typeof value === 'string');
 
   const input = {
-    actionPayloadJson,
-    actionType,
-    enabled,
-    environment:
-      typeof environment === 'string' && environment.trim() !== ''
-        ? environment.trim()
-        : null,
+    actionPayloadJson: parsed.data.actionPayloadJson,
+    actionType: parsed.data.actionType,
+    enabled: parsed.data.enabled,
+    environment: parsed.data.environment ?? null,
     id: ruleId,
-    status:
-      typeof status === 'string' && status.trim() !== '' ? status.trim() : null,
-    tagAll,
-    title: title.trim(),
+    status: parsed.data.status ?? null,
+    tagAll: parsed.data.tagAll,
+    title: parsed.data.title,
   };
 
   try {

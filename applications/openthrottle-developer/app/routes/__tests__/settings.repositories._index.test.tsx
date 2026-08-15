@@ -4,7 +4,11 @@ import { action, loader } from '../settings.repositories._index';
 import type { Route } from '@/app/routes/+types/settings.repositories._index';
 import { createTestRouterContext } from '@openthrottle/react-router-testing';
 
-vi.mock('@openthrottle/react-router-graphql');
+vi.mock('@openthrottle/react-router-graphql', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('@openthrottle/react-router-graphql')>();
+  return { ...actual, executeGraphqlWithAuth: vi.fn() };
+});
 
 const mockExecuteGraphqlWithAuth = vi.mocked(
   graphqlWithAuth.executeGraphqlWithAuth,
@@ -112,6 +116,16 @@ describe('routes/settings.repositories._index.tsx', () => {
           input: { displayName: null, path: '/Users/dev/openthrottle' },
         },
       );
+    });
+
+    test('cloneRepo returns error when gitUrl is missing', async () => {
+      const formData = new FormData();
+      formData.set('intent', 'cloneRepo');
+
+      const result = await action(actionArgs(formData));
+
+      expect(result).toEqual({ error: 'A git repository URL is required.' });
+      expect(mockExecuteGraphqlWithAuth).not.toHaveBeenCalled();
     });
 
     test('refreshCheckout returns drift for the checkout', async () => {

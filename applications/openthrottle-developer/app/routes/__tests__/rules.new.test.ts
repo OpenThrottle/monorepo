@@ -3,9 +3,11 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { Route } from '@/app/routes/+types/rules.new';
 import { createTestRouterContext } from '@openthrottle/react-router-testing';
 
-vi.mock('@openthrottle/react-router-graphql', () => ({
-  executeGraphqlWithAuth: vi.fn(),
-}));
+vi.mock('@openthrottle/react-router-graphql', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('@openthrottle/react-router-graphql')>();
+  return { ...actual, executeGraphqlWithAuth: vi.fn() };
+});
 
 const { executeGraphqlWithAuth } =
   await import('@openthrottle/react-router-graphql');
@@ -118,6 +120,37 @@ describe('routes/rules.new action', () => {
           status: null,
           tagAll: ['breakdown'],
           title: 'Grill breakdowns',
+        },
+      },
+    );
+  });
+
+  test('defaults tagAll to an empty list when no tags are submitted', async () => {
+    mockExecuteGraphqlWithAuth.mockResolvedValue(
+      asMock<Awaited<ReturnType<typeof executeGraphqlWithAuth>>>({
+        upsertTagActionRule: { id: 'rule-1' },
+      }),
+    );
+
+    const formData = new FormData();
+    formData.set('title', 'No tags');
+    formData.set('actionType', 'inject-task');
+    formData.set('actionPayloadJson', '{}');
+
+    await action(actionArgs(formData));
+
+    expect(mockExecuteGraphqlWithAuth).toHaveBeenCalledWith(
+      expect.any(Request),
+      RulesUpsertTagActionRuleDocument,
+      {
+        input: {
+          actionPayloadJson: '{}',
+          actionType: 'inject-task',
+          enabled: true,
+          environment: null,
+          status: null,
+          tagAll: [],
+          title: 'No tags',
         },
       },
     );

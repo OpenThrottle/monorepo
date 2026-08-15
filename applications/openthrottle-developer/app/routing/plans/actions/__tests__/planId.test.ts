@@ -13,9 +13,25 @@ vi.mock('@openthrottle/react-router-graphql', async (importOriginal) => {
 
 const { executeGraphqlWithAuth } =
   await import('@openthrottle/react-router-graphql');
-const { PlanDetailAddPlanTagDocument, PlanDetailAddHookDocument } =
-  await import('~/__generated__/graphql');
-const { addPlanTag, removePlanTag, addHook } = await import('../planId');
+const {
+  PlanDetailAddPlanTagDocument,
+  PlanDetailAddHookDocument,
+  PlanDetailDetachHookDocument,
+  PlanDetailEnqueuePlanRunDocument,
+  PlanDetailSetPlanStatusDocument,
+  PlanDetailUpdatePlanRunConfigDocument,
+  PlanDetailUpdateTaskDocument,
+} = await import('~/__generated__/graphql');
+const {
+  addPlanTag,
+  removePlanTag,
+  addHook,
+  detachHook,
+  runPlan,
+  saveRunConfig,
+  setPlanStatus,
+  updateTaskStatus,
+} = await import('../planId');
 
 const mockExecute = vi.mocked(executeGraphqlWithAuth);
 
@@ -116,5 +132,198 @@ describe('plans/actions/planId tag + hook parsers', () => {
 
     expect(result.addHookError).toBeDefined();
     expect(mockExecute).not.toHaveBeenCalled();
+  });
+});
+
+describe('plans/actions/planId status + config parsers', () => {
+  beforeEach(() => {
+    mockExecute.mockReset();
+  });
+
+  test('setPlanStatus defaults to COMPLETED when status is omitted', async () => {
+    mockExecute.mockResolvedValue(
+      asMock<Awaited<ReturnType<typeof executeGraphqlWithAuth>>>({
+        setPlanStatus: { id: 'plan-1' },
+      }),
+    );
+
+    const result = await setPlanStatus(actionArgs(), 'plan-1', form({}));
+
+    expect(result).toEqual({ setPlanStatus: { id: 'plan-1' } });
+    expect(mockExecute).toHaveBeenCalledWith(
+      expect.any(Request),
+      PlanDetailSetPlanStatusDocument,
+      { input: { planId: 'plan-1', status: 'COMPLETED' } },
+    );
+  });
+
+  test('setPlanStatus forwards an explicit status', async () => {
+    mockExecute.mockResolvedValue(
+      asMock<Awaited<ReturnType<typeof executeGraphqlWithAuth>>>({
+        setPlanStatus: { id: 'plan-1' },
+      }),
+    );
+
+    await setPlanStatus(
+      actionArgs(),
+      'plan-1',
+      form({ status: 'IN_PROGRESS' }),
+    );
+
+    expect(mockExecute).toHaveBeenCalledWith(
+      expect.any(Request),
+      PlanDetailSetPlanStatusDocument,
+      { input: { planId: 'plan-1', status: 'IN_PROGRESS' } },
+    );
+  });
+
+  test('updateTaskStatus maps taskId to id and injects the plan id', async () => {
+    mockExecute.mockResolvedValue(
+      asMock<Awaited<ReturnType<typeof executeGraphqlWithAuth>>>({
+        updateTask: { id: 'task-1' },
+      }),
+    );
+
+    const result = await updateTaskStatus(
+      actionArgs(),
+      'plan-1',
+      form({ status: 'COMPLETED', taskId: 'task-1' }),
+    );
+
+    expect(result).toEqual({ ok: true });
+    expect(mockExecute).toHaveBeenCalledWith(
+      expect.any(Request),
+      PlanDetailUpdateTaskDocument,
+      { input: { id: 'task-1', planId: 'plan-1', status: 'COMPLETED' } },
+    );
+  });
+
+  test('updateTaskStatus rejects a blank task id without calling the server', async () => {
+    const result = await updateTaskStatus(
+      actionArgs(),
+      'plan-1',
+      form({ status: 'COMPLETED', taskId: '' }),
+    );
+
+    expect(result.updateTaskError).toBeDefined();
+    expect(mockExecute).not.toHaveBeenCalled();
+  });
+
+  test('detachHook forwards the hook task id', async () => {
+    mockExecute.mockResolvedValue(
+      asMock<Awaited<ReturnType<typeof executeGraphqlWithAuth>>>({
+        detachHook: { id: 'h1' },
+      }),
+    );
+
+    const result = await detachHook(
+      actionArgs().request,
+      form({ hookTaskId: 'task-9' }),
+    );
+
+    expect(result).toEqual({ detachHook: { id: 'h1' } });
+    expect(mockExecute).toHaveBeenCalledWith(
+      expect.any(Request),
+      PlanDetailDetachHookDocument,
+      { input: { hookTaskId: 'task-9' } },
+    );
+  });
+
+  test('detachHook rejects a blank hook task id', async () => {
+    const result = await detachHook(
+      actionArgs().request,
+      form({ hookTaskId: '' }),
+    );
+
+    expect(result.detachHookError).toBeDefined();
+    expect(mockExecute).not.toHaveBeenCalled();
+  });
+
+  test('saveRunConfig rejects invalid JSON with the user-facing message', async () => {
+    const result = await saveRunConfig(
+      actionArgs(),
+      'plan-1',
+      form({ runConfigJson: '{bad' }),
+    );
+
+    expect(result).toEqual({
+      saveRunConfigError: 'runConfigJson must be valid JSON.',
+    });
+    expect(mockExecute).not.toHaveBeenCalled();
+  });
+
+  test('saveRunConfig sends null for a blank config and the string otherwise', async () => {
+    mockExecute.mockResolvedValue(
+      asMock<Awaited<ReturnType<typeof executeGraphqlWithAuth>>>({
+        updatePlan: { id: 'plan-1' },
+      }),
+    );
+
+    await saveRunConfig(actionArgs(), 'plan-1', form({ runConfigJson: '' }));
+    expect(mockExecute).toHaveBeenCalledWith(
+      expect.any(Request),
+      PlanDetailUpdatePlanRunConfigDocument,
+      { input: { id: 'plan-1', runConfigJson: null } },
+    );
+
+    mockExecute.mockClear();
+    await saveRunConfig(
+      actionArgs(),
+      'plan-1',
+      form({ runConfigJson: '{"a":1}' }),
+    );
+    expect(mockExecute).toHaveBeenCalledWith(
+      expect.any(Request),
+      PlanDetailUpdatePlanRunConfigDocument,
+      { input: { id: 'plan-1', runConfigJson: '{"a":1}' } },
+    );
+  });
+
+  test('runPlan requires a branch and does not call the server without one', async () => {
+    const result = await runPlan(
+      actionArgs(),
+      'plan-1',
+      form({ priority: '3' }),
+    );
+
+    expect(result.runPlanError).toContain('branch is required');
+    expect(mockExecute).not.toHaveBeenCalled();
+  });
+
+  test('runPlan enqueues with the coerced priority and injected plan id', async () => {
+    mockExecute.mockResolvedValue(
+      asMock<Awaited<ReturnType<typeof executeGraphqlWithAuth>>>({
+        enqueuePlanRun: { id: 'run-1' },
+      }),
+    );
+
+    const result = await runPlan(
+      actionArgs(),
+      'plan-1',
+      form({ branch: 'main', priority: '5' }),
+    );
+
+    expect(result).toEqual({ runPlan: { id: 'run-1' } });
+    expect(mockExecute).toHaveBeenCalledWith(
+      expect.any(Request),
+      PlanDetailEnqueuePlanRunDocument,
+      { input: { branch: 'main', planId: 'plan-1', priority: 5 } },
+    );
+  });
+
+  test('runPlan defaults priority to 1 when omitted', async () => {
+    mockExecute.mockResolvedValue(
+      asMock<Awaited<ReturnType<typeof executeGraphqlWithAuth>>>({
+        enqueuePlanRun: { id: 'run-1' },
+      }),
+    );
+
+    await runPlan(actionArgs(), 'plan-1', form({ branch: 'main' }));
+
+    expect(mockExecute).toHaveBeenCalledWith(
+      expect.any(Request),
+      PlanDetailEnqueuePlanRunDocument,
+      { input: { branch: 'main', planId: 'plan-1', priority: 1 } },
+    );
   });
 });

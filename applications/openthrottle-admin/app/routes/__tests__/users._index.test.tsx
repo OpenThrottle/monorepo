@@ -2,22 +2,14 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 const executeGraphqlWithAuth = vi.fn();
 
-vi.mock('@openthrottle/react-router-graphql', () => {
-  class GraphqlAuthError extends Error {
-    readonly httpStatus: number;
-
-    constructor(message: string, httpStatus: number) {
-      super(message);
-      this.name = 'GraphqlAuthError';
-      this.httpStatus = httpStatus;
-    }
-  }
+vi.mock('@openthrottle/react-router-graphql', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('@openthrottle/react-router-graphql')>();
 
   return {
-    GraphqlAuthError,
+    ...actual,
     executeGraphqlWithAuth: (...args: unknown[]) =>
       executeGraphqlWithAuth(...args),
-    isAuthError: (error: unknown) => error instanceof GraphqlAuthError,
   };
 });
 

@@ -5,7 +5,12 @@ import { CustomPromptType } from '~/__generated__/graphql';
 import { createTestRouterContext } from '@openthrottle/react-router-testing';
 import { buildRootMatch } from '~/testing/root-match-fixture';
 
-vi.mock('@openthrottle/react-router-graphql');
+// Keep the real `parseFormData`; only stub the network call.
+vi.mock('@openthrottle/react-router-graphql', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('@openthrottle/react-router-graphql')>();
+  return { ...actual, executeGraphqlWithAuth: vi.fn() };
+});
 
 const mockExecuteGraphqlWithAuth = vi.mocked(
   graphqlWithAuth.executeGraphqlWithAuth,

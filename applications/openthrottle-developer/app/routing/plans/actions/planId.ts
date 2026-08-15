@@ -1,7 +1,10 @@
 import {
+  coerceNumber,
   executeGraphqlWithAuth,
+  isJsonString,
   parseFormData,
 } from '@openthrottle/react-router-graphql';
+import { z } from 'zod/v3';
 import { PlanDetailCancelPlanRunDocument } from '@openthrottle/openthrottle-developer-codegen';
 import {
   AddHookInputSchema,
@@ -141,15 +144,18 @@ export const addHook = async (
 };
 
 export const detachHook = async (request: Request, formData: FormData) => {
-  try {
-    const input = DetachHookInputSchema().parse({
-      hookTaskId: formData.get('hookTaskId'),
-    });
+  const parsed = parseFormData(formData, DetachHookInputSchema(), {
+    strict: false,
+  });
+  if (!parsed.success) {
+    return { detachHookError: parsed.error };
+  }
 
+  try {
     const result = await executeGraphqlWithAuth(
       request,
       PlanDetailDetachHookDocument,
-      { input },
+      { input: parsed.data },
     );
 
     if (!result.detachHook) {
@@ -190,23 +196,27 @@ export const setPlanStatus = async (
   planId: string,
   formData: FormData,
 ) => {
-  const statusField = formData.get('status');
-  const status =
-    typeof statusField === 'string' && statusField.trim() !== ''
-      ? statusField
-      : 'COMPLETED';
-
-  const input = SetPlanStatusInputSchema().parse({ planId, status });
-
-  if (!status || status.trim() === '') {
-    return { setPlanStatusError: 'Status is required.' };
+  // `planId` is the route param; `status` defaults to COMPLETED when the form
+  // omits it (the toolbar's primary action). `strict: false` lets the dispatch
+  // `intent` field pass through.
+  const parsed = parseFormData(
+    formData,
+    SetPlanStatusInputSchema().omit({ planId: true }),
+    { strict: false },
+  );
+  if (!parsed.success) {
+    return { setPlanStatusError: parsed.error };
   }
+  const status =
+    parsed.data.status != null && parsed.data.status !== ''
+      ? parsed.data.status
+      : 'COMPLETED';
 
   try {
     const result = await executeGraphqlWithAuth(
       args.request,
       PlanDetailSetPlanStatusDocument,
-      { input },
+      { input: { planId, status } },
     );
 
     if (!result.setPlanStatus) {
@@ -230,11 +240,22 @@ export const updateTaskStatus = async (
   planId: string,
   formData: FormData,
 ) => {
+  // The form posts `taskId` (the schema field is `id`) + `status`; read both
+  // through parseFormData, then assemble and validate the generated input.
+  const parsed = parseFormData(
+    formData,
+    z.object({ status: z.string().min(1), taskId: z.string().min(1) }),
+    { strict: false },
+  );
+  if (!parsed.success) {
+    return { updateTaskError: parsed.error };
+  }
+
   try {
     const input = UpdateTaskInputSchema().parse({
-      id: formData.get('taskId'),
+      id: parsed.data.taskId,
       planId,
-      status: formData.get('status'),
+      status: parsed.data.status,
     });
 
     const result = await executeGraphqlWithAuth(
@@ -260,19 +281,22 @@ export const saveRunConfig = async (
   planId: string,
   formData: FormData,
 ) => {
-  const configRaw = formData.get('runConfigJson');
-  const runConfigJson =
-    typeof configRaw === 'string' && configRaw.trim() !== ''
-      ? configRaw.trim()
-      : null;
-
-  if (runConfigJson != null) {
-    try {
-      JSON.parse(runConfigJson);
-    } catch {
-      return { saveRunConfigError: 'runConfigJson must be valid JSON.' };
-    }
+  // `runConfigJson` stays a JSON string on the wire — validate its JSON validity
+  // in place with `isJsonString` rather than parsing it into an object.
+  const parsed = parseFormData(
+    formData,
+    z.object({
+      runConfigJson: z
+        .string()
+        .refine(isJsonString, 'runConfigJson must be valid JSON.')
+        .nullish(),
+    }),
+    { strict: false },
+  );
+  if (!parsed.success) {
+    return { saveRunConfigError: parsed.error };
   }
+  const runConfigJson = parsed.data.runConfigJson ?? null;
 
   try {
     const result = await executeGraphqlWithAuth(
@@ -304,12 +328,21 @@ export const saveJobRunHooks = async (
   planId: string,
   formData: FormData,
 ) => {
-  const hooksRaw = formData.get('jobRunHooksJson');
+  const parsed = parseFormData(
+    formData,
+    z.object({ jobRunHooksJson: z.string().nullish() }),
+    { strict: false },
+  );
+  if (!parsed.success) {
+    return { saveJobRunHooksError: parsed.error };
+  }
   const jobRunHooksJson =
-    typeof hooksRaw === 'string' && hooksRaw.trim() !== ''
-      ? hooksRaw.trim()
+    parsed.data.jobRunHooksJson != null && parsed.data.jobRunHooksJson !== ''
+      ? parsed.data.jobRunHooksJson
       : JSON.stringify({ hooks: [] });
 
+  // Domain-validate (richer than plain JSON validity) and keep the exact
+  // user-facing message.
   try {
     parseJobRunHooksJsonFromPlan(jobRunHooksJson);
   } catch (error) {
@@ -347,17 +380,34 @@ export const runPlan = async (
   planId: string,
   formData: FormData,
 ) => {
-  const priorityRaw = formData.get('priority');
-  const priority =
-    priorityRaw != null && priorityRaw !== '' ? Number(priorityRaw) : 1; // Default to interactive priority (1) for UI-triggered runs
+  // Read every kickoff field through parseFormData (no `formData.get`). The
+  // generated `EnqueuePlanRunInputSchema` supplies checkoutId/repositoryId/
+  // workingDirectory/jobRunHooksJson; `planId` and `idempotencyKey` are not from
+  // the form, `branch` is relaxed to attach a friendly required message below,
+  // `priority` is coerced to a number, and `ralph` arrives as the raw
+  // `ralphTuning` JSON string (validated against its schema afterwards to keep
+  // the exact messages). `strict: false` lets the dispatch `intent` pass through.
+  const parsed = parseFormData(
+    formData,
+    EnqueuePlanRunInputSchema()
+      .omit({ idempotencyKey: true, planId: true, ralph: true })
+      .extend({
+        branch: z.string().nullish(),
+        priority: coerceNumber(z.number()).nullish(),
+        ralphTuning: z.string().nullish(),
+      }),
+    { strict: false },
+  );
+  if (!parsed.success) {
+    return { runPlanError: parsed.error };
+  }
+  const fields = parsed.data;
 
-  const ralphTuningRaw = formData.get('ralphTuning');
   let ralph: RalphPlanRunTuningInput | undefined;
-
-  if (typeof ralphTuningRaw === 'string' && ralphTuningRaw.trim() !== '') {
+  if (fields.ralphTuning != null && fields.ralphTuning !== '') {
     try {
-      const parsed: unknown = JSON.parse(ralphTuningRaw);
-      const tuningResult = RalphPlanRunTuningInputSchema().safeParse(parsed);
+      const tuning: unknown = JSON.parse(fields.ralphTuning);
+      const tuningResult = RalphPlanRunTuningInputSchema().safeParse(tuning);
       if (!tuningResult.success) {
         const issues = tuningResult.error.issues.map((i) => i.message);
         return {
@@ -374,11 +424,7 @@ export const runPlan = async (
   // Branch is a REQUIRED kickoff input (never inferred server-side). The run
   // config form pre-fills it from the selected checkout's current branch, but
   // the value is always sent explicitly; fail loud here when it is blank.
-  const branchRaw = formData.get('branch');
-  const branch =
-    typeof branchRaw === 'string' && branchRaw.trim() !== ''
-      ? branchRaw.trim()
-      : undefined;
+  const branch = fields.branch ?? undefined;
   if (branch === undefined) {
     return {
       runPlanError:
@@ -386,30 +432,17 @@ export const runPlan = async (
     };
   }
 
-  const workingDirectoryRaw = formData.get('workingDirectory');
-  const workingDirectory =
-    typeof workingDirectoryRaw === 'string' && workingDirectoryRaw.trim() !== ''
-      ? workingDirectoryRaw.trim()
-      : undefined;
+  // Default to interactive priority (1) for UI-triggered runs.
+  const priority = fields.priority ?? 1;
+  const workingDirectory = fields.workingDirectory ?? undefined;
+  const checkoutId = fields.checkoutId ?? undefined;
+  const repositoryId = fields.repositoryId ?? undefined;
 
-  const checkoutIdRaw = formData.get('checkoutId');
-  const checkoutId =
-    typeof checkoutIdRaw === 'string' && checkoutIdRaw.trim() !== ''
-      ? checkoutIdRaw.trim()
-      : undefined;
-
-  const repositoryIdRaw = formData.get('repositoryId');
-  const repositoryId =
-    typeof repositoryIdRaw === 'string' && repositoryIdRaw.trim() !== ''
-      ? repositoryIdRaw.trim()
-      : undefined;
-
-  const jobRunHooksRaw = formData.get('jobRunHooksJson');
   let jobRunHooksJson: string | undefined;
-  if (typeof jobRunHooksRaw === 'string' && jobRunHooksRaw.trim() !== '') {
+  if (fields.jobRunHooksJson != null && fields.jobRunHooksJson !== '') {
     try {
-      parseJobRunHooksJsonFromPlan(jobRunHooksRaw.trim());
-      jobRunHooksJson = jobRunHooksRaw.trim();
+      parseJobRunHooksJsonFromPlan(fields.jobRunHooksJson);
+      jobRunHooksJson = fields.jobRunHooksJson;
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       return {

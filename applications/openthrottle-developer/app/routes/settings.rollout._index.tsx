@@ -1,5 +1,10 @@
 import * as React from 'react';
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import {
+  coerceBoolean,
+  executeGraphqlWithAuth,
+  parseFormData,
+} from '@openthrottle/react-router-graphql';
+import { z } from 'zod/v3';
 import {
   getActionError,
   mergeRouteModuleMeta,
@@ -11,6 +16,7 @@ import {
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
+import { CreateRolloutFlagInputSchema } from '~/__generated__/schemas';
 import {
   CreateRolloutFlagDocument,
   DeleteRolloutFlagDocument,
@@ -20,11 +26,7 @@ import { RolloutFlagCreateDialog } from '~/routing/settings/components/RolloutFl
 import { RolloutFlagsTable } from '~/routing/settings/components/RolloutFlagsTable';
 import { RolloutSdkHydrationStatus } from '~/routing/settings/components/RolloutSdkHydrationStatus';
 import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
-import {
-  optionalRolloutString,
-  parseRolloutEnabled,
-  parseRolloutTargetRoles,
-} from '~/routing/settings/utils/rollout-action';
+import { parseRolloutTargetRoles } from '~/routing/settings/utils/rollout-action';
 import {
   parseRolloutTypedConfig,
   toRolloutGraphqlTypedInput,
@@ -98,8 +100,14 @@ export const action = async (args: Route.ActionArgs) => {
   const intent = formData.get('intent');
 
   if (intent === 'createRolloutFlag') {
-    const key = optionalRolloutString(formData.get('key'));
-    if (!key) {
+    const parsed = parseFormData(
+      formData,
+      CreateRolloutFlagInputSchema()
+        .pick({ description: true, key: true })
+        .extend({ enabled: coerceBoolean(z.boolean().default(false)) }),
+      { strict: false },
+    );
+    if (!parsed.success) {
       return { error: 'A flag key is required.' };
     }
 
@@ -111,9 +119,9 @@ export const action = async (args: Route.ActionArgs) => {
     try {
       await executeGraphqlWithAuth(args.request, CreateRolloutFlagDocument, {
         input: {
-          description: optionalRolloutString(formData.get('description')),
-          enabled: parseRolloutEnabled(formData.get('enabled')),
-          key,
+          description: parsed.data.description ?? null,
+          enabled: parsed.data.enabled,
+          key: parsed.data.key,
           targetRoles: parseRolloutTargetRoles(formData.get('targetRoles')),
           ...toRolloutGraphqlTypedInput(typed.config),
         },
@@ -127,14 +135,18 @@ export const action = async (args: Route.ActionArgs) => {
   }
 
   if (intent === 'deleteRolloutFlag') {
-    const id = formData.get('id');
-    if (typeof id !== 'string' || !id.trim()) {
+    const parsed = parseFormData(
+      formData,
+      z.object({ id: z.string().min(1) }),
+      { strict: false },
+    );
+    if (!parsed.success) {
       return { error: 'Missing flag id.' };
     }
 
     try {
       await executeGraphqlWithAuth(args.request, DeleteRolloutFlagDocument, {
-        id: id.trim(),
+        id: parsed.data.id,
       });
       return { ok: true };
     } catch (error) {

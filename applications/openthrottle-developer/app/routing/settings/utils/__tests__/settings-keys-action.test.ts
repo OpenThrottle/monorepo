@@ -1,8 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import {
-  parseCredentialIdFromFormData,
   parseExpiresAtFromFormData,
-  parseServiceAccountIdFromFormData,
   resolveSelectedServiceAccountId,
   SETTINGS_KEYS_ACCOUNT_SEARCH_PARAM,
 } from '../settings-keys-action';
@@ -58,20 +56,6 @@ describe('settings-keys-action', () => {
       const parsed = parseExpiresAtFromFormData('2026-12-31T00:00:00.000Z');
       expect(parsed).toBeInstanceOf(Date);
       expect(parsed?.toISOString()).toBe('2026-12-31T00:00:00.000Z');
-    });
-  });
-
-  describe('parseServiceAccountIdFromFormData', () => {
-    test('trims and returns id or null', () => {
-      expect(parseServiceAccountIdFromFormData('  sa-1  ')).toBe('sa-1');
-      expect(parseServiceAccountIdFromFormData('   ')).toBeNull();
-    });
-  });
-
-  describe('parseCredentialIdFromFormData', () => {
-    test('trims and returns id or null', () => {
-      expect(parseCredentialIdFromFormData('cred-1')).toBe('cred-1');
-      expect(parseCredentialIdFromFormData(null)).toBeNull();
     });
   });
 });

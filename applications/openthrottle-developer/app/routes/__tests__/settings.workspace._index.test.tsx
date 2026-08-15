@@ -5,7 +5,11 @@ import { action, loader } from '../settings.workspace._index';
 import type { Route } from '@/app/routes/+types/settings.workspace._index';
 import { createTestRouterContext } from '@openthrottle/react-router-testing';
 
-vi.mock('@openthrottle/react-router-graphql');
+vi.mock('@openthrottle/react-router-graphql', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('@openthrottle/react-router-graphql')>();
+  return { ...actual, executeGraphqlWithAuth: vi.fn() };
+});
 
 const mockExecuteGraphqlWithAuth = vi.mocked(
   graphqlWithAuth.executeGraphqlWithAuth,

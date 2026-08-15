@@ -1,11 +1,14 @@
 import { redirect } from 'react-router';
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import {
+  executeGraphqlWithAuth,
+  parseFormData,
+} from '@openthrottle/react-router-graphql';
 import {
   DeletePromptDocument,
   UpdatePromptDocument,
   WritePromptToFileSystemDocument,
-  type UpdateCustomPromptInput,
 } from '~/__generated__/graphql';
+import { UpdateCustomPromptInputSchema } from '~/__generated__/schemas';
 import { PROMPTS_BASE_PATH } from '~/routing/prompts/config';
 import type { Route } from '@/app/routes/+types/prompts.$promptId';
 
@@ -52,15 +55,21 @@ export const runPromptDetailAction = async (args: Route.ActionArgs) => {
   }
 
   if (intent === 'update') {
-    const content = formData.get('content');
-
-    if (typeof content !== 'string') {
-      return { error: 'Content is required.' };
+    // `id` is the route param; the editor only posts `content`.
+    const parsed = parseFormData(
+      formData,
+      UpdateCustomPromptInputSchema().omit({
+        id: true,
+        writeToFileSystem: true,
+      }),
+    );
+    if (!parsed.success) {
+      return { error: parsed.error };
     }
 
     try {
-      const input: UpdateCustomPromptInput = {
-        content,
+      const input = {
+        ...parsed.data,
         id: decodedId,
       };
 

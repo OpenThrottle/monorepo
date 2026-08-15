@@ -1,4 +1,12 @@
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import {
+  executeGraphqlWithAuth,
+  parseFormData,
+} from '@openthrottle/react-router-graphql';
+import { z } from 'zod/v3';
+import {
+  AddWorkspaceFolderInputSchema,
+  CloneRepositoryInputSchema,
+} from '~/__generated__/schemas';
 import {
   AddWorkspaceFolderDocument,
   BrowseWorkspaceDirectoryDocument,
@@ -7,14 +15,13 @@ import {
   PickFolderNativeDocument,
   RefreshCheckoutDocument,
 } from '~/__generated__/graphql';
-import { optionalTrimmedString } from '~/routing/settings/utils/workspace-settings-action';
 import type { Route } from '@/app/routes/+types/settings.repositories._index';
 
 export const addFolder = async (args: Route.ActionArgs, formData: FormData) => {
-  const path = optionalTrimmedString(formData.get('path'));
-  const displayName = optionalTrimmedString(formData.get('displayName'));
-
-  if (!path) {
+  const parsed = parseFormData(formData, AddWorkspaceFolderInputSchema(), {
+    strict: false,
+  });
+  if (!parsed.success) {
     return { error: 'A folder path is required.' };
   }
 
@@ -22,7 +29,12 @@ export const addFolder = async (args: Route.ActionArgs, formData: FormData) => {
     const data = await executeGraphqlWithAuth(
       args.request,
       AddWorkspaceFolderDocument,
-      { input: { displayName: displayName ?? null, path } },
+      {
+        input: {
+          displayName: parsed.data.displayName ?? null,
+          path: parsed.data.path,
+        },
+      },
     );
     return { addedFolder: data.addWorkspaceFolder };
   } catch (error) {
@@ -33,10 +45,10 @@ export const addFolder = async (args: Route.ActionArgs, formData: FormData) => {
 };
 
 export const cloneRepo = async (args: Route.ActionArgs, formData: FormData) => {
-  const gitUrl = optionalTrimmedString(formData.get('gitUrl'));
-  const name = optionalTrimmedString(formData.get('name'));
-
-  if (!gitUrl) {
+  const parsed = parseFormData(formData, CloneRepositoryInputSchema(), {
+    strict: false,
+  });
+  if (!parsed.success) {
     return { error: 'A git repository URL is required.' };
   }
 
@@ -44,7 +56,9 @@ export const cloneRepo = async (args: Route.ActionArgs, formData: FormData) => {
     const data = await executeGraphqlWithAuth(
       args.request,
       CloneRepositoryDocument,
-      { input: { gitUrl, name: name ?? null } },
+      {
+        input: { gitUrl: parsed.data.gitUrl, name: parsed.data.name ?? null },
+      },
     );
     return { addedFolder: data.cloneRepository };
   } catch (error) {
@@ -59,7 +73,12 @@ export const browseDirectory = async (
   formData: FormData,
 ) => {
   // An empty/omitted path lists the configured roots (zero-typing seed).
-  const path = optionalTrimmedString(formData.get('path')) ?? null;
+  const parsed = parseFormData(
+    formData,
+    z.object({ path: z.string().nullish() }),
+    { strict: false },
+  );
+  const path = parsed.success ? (parsed.data.path ?? null) : null;
 
   try {
     const data = await executeGraphqlWithAuth(
@@ -95,8 +114,10 @@ export const refreshCheckout = async (
   args: Route.ActionArgs,
   formData: FormData,
 ) => {
-  const id = formData.get('id');
-  if (typeof id !== 'string' || !id.trim()) {
+  const parsed = parseFormData(formData, z.object({ id: z.string().min(1) }), {
+    strict: false,
+  });
+  if (!parsed.success) {
     return { error: 'Missing checkout id.' };
   }
 
@@ -104,7 +125,7 @@ export const refreshCheckout = async (
     const data = await executeGraphqlWithAuth(
       args.request,
       RefreshCheckoutDocument,
-      { input: { id: id.trim() } },
+      { input: { id: parsed.data.id } },
     );
     return {
       refreshed: {
@@ -124,8 +145,10 @@ export const deleteRepo = async (
   args: Route.ActionArgs,
   formData: FormData,
 ) => {
-  const id = formData.get('id');
-  if (typeof id !== 'string' || !id.trim()) {
+  const parsed = parseFormData(formData, z.object({ id: z.string().min(1) }), {
+    strict: false,
+  });
+  if (!parsed.success) {
     return { error: 'Missing repository id.' };
   }
 
@@ -133,7 +156,7 @@ export const deleteRepo = async (
     await executeGraphqlWithAuth(
       args.request,
       DeleteWorkspaceLocalRepositoryDocument,
-      { id: id.trim() },
+      { id: parsed.data.id },
     );
     return { ok: true };
   } catch (error) {

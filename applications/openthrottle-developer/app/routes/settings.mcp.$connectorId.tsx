@@ -1,5 +1,10 @@
 import * as React from 'react';
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { z } from 'zod/v3';
+import {
+  coerceBoolean,
+  executeGraphqlWithAuth,
+  parseFormData,
+} from '@openthrottle/react-router-graphql';
 import {
   getActionError,
   mergeRouteModuleMeta,
@@ -12,6 +17,7 @@ import {
 import { Link } from 'react-router';
 import { SITE_TITLE } from '~/global/config/settings';
 import { toErrorMessage } from '~/global/utils/utils.error-message';
+import { ConnectMcpConnectorInputSchema } from '~/__generated__/schemas';
 import {
   ConnectMcpConnectorDocument,
   DisconnectMcpConnectorDocument,
@@ -21,13 +27,7 @@ import {
 import { SettingsMcpConnectForm } from '~/routing/settings/components/SettingsMcpConnectForm';
 import { SettingsMcpConnectionActions } from '~/routing/settings/components/SettingsMcpConnectionActions';
 import { SettingsMcpSetupDocs } from '~/routing/settings/components/SettingsMcpSetupDocs';
-import {
-  parseApiTokenFromFormData,
-  parseConnectorKeyFromFormData,
-  parseEnabledFromFormData,
-  parseLabelFromFormData,
-  type SettingsMcpActionData,
-} from '~/routing/settings/utils/settings-mcp-action';
+import type { SettingsMcpActionData } from '~/routing/settings/utils/settings-mcp-action';
 import type { Route } from '@/app/routes/+types/settings.mcp.$connectorId';
 
 type HandleData = Route.ComponentProps['loaderData'];
@@ -123,23 +123,38 @@ export const action = async (
 ): Promise<SettingsMcpActionData> => {
   const formData = await args.request.formData();
   const intent = formData.get('intent');
-  const connectorKey = parseConnectorKeyFromFormData(
-    formData.get('connectorKey'),
+  const connectorParsed = parseFormData(
+    formData,
+    z.object({ connectorKey: z.string().min(1) }),
+    { strict: false },
   );
 
-  if (!connectorKey) {
+  if (!connectorParsed.success) {
     return { error: 'Connector is required.' };
   }
+  const connectorKey = connectorParsed.data.connectorKey;
 
   if (intent === 'connect') {
-    const apiToken = parseApiTokenFromFormData(formData.get('apiToken'));
-    const label = parseLabelFromFormData(formData.get('label'));
+    const parsed = parseFormData(
+      formData,
+      ConnectMcpConnectorInputSchema().omit({ connectorKey: true }),
+      { strict: false },
+    );
+    if (!parsed.success) {
+      return { error: parsed.error };
+    }
 
     try {
       const data = await executeGraphqlWithAuth(
         args.request,
         ConnectMcpConnectorDocument,
-        { input: { apiToken, connectorKey, label } },
+        {
+          input: {
+            apiToken: parsed.data.apiToken ?? null,
+            connectorKey,
+            label: parsed.data.label ?? null,
+          },
+        },
       );
       return {
         connection: data.connectMcpConnector.connection,
@@ -151,7 +166,14 @@ export const action = async (
   }
 
   if (intent === 'setEnabled') {
-    const enabled = parseEnabledFromFormData(formData.get('enabled'));
+    const enabledParsed = parseFormData(
+      formData,
+      z.object({ enabled: coerceBoolean(z.boolean()).nullish() }),
+      { strict: false },
+    );
+    const enabled = enabledParsed.success
+      ? (enabledParsed.data.enabled ?? false)
+      : false;
     try {
       await executeGraphqlWithAuth(
         args.request,

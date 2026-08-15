@@ -8,9 +8,11 @@ import {
 import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
 import type { Route } from '@/app/routes/+types/settings.rollout.$flagId.edit';
 
-vi.mock('@openthrottle/react-router-graphql', () => ({
-  executeGraphqlWithAuth: vi.fn(),
-}));
+vi.mock('@openthrottle/react-router-graphql', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('@openthrottle/react-router-graphql')>();
+  return { ...actual, executeGraphqlWithAuth: vi.fn() };
+});
 
 const { executeGraphqlWithAuth } =
   await import('@openthrottle/react-router-graphql');

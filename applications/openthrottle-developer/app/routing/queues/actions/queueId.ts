@@ -1,4 +1,10 @@
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import {
+  coerceBoolean,
+  executeGraphqlWithAuth,
+  parseFormData,
+} from '@openthrottle/react-router-graphql';
+import { z } from 'zod/v3';
+import { CleanQueueInputSchema } from '~/__generated__/schemas';
 import {
   QueueDetailCleanQueueDocument,
   QueueDetailPauseQueueDocument,
@@ -49,14 +55,27 @@ export const runQueueDetailAction = async (args: Route.ActionArgs) => {
   }
 
   if (intent === 'cleanQueue') {
-    const stateField = formData.get('state');
-    const state = typeof stateField === 'string' ? stateField : '';
-    const confirm = formData.get('confirm') === 'true';
+    const parsed = parseFormData(
+      formData,
+      CleanQueueInputSchema()
+        .omit({ queueName: true })
+        .extend({ confirm: coerceBoolean(z.boolean().default(false)) }),
+      { strict: false },
+    );
+    if (!parsed.success) {
+      return { error: parsed.error };
+    }
 
     const { cleanQueue } = await executeGraphqlWithAuth(
       args.request,
       QueueDetailCleanQueueDocument,
-      { input: { confirm, queueName, state } },
+      {
+        input: {
+          confirm: parsed.data.confirm,
+          queueName,
+          state: parsed.data.state,
+        },
+      },
     );
 
     if (!cleanQueue?.success) {

@@ -14,6 +14,7 @@ import { useFetcher } from 'react-router';
 import {
   executeGraphqlWithAuth,
   isAuthError,
+  parseFormData,
 } from '@openthrottle/react-router-graphql';
 import {
   GlobalHeading,
@@ -21,6 +22,7 @@ import {
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { CreateUserDocument, GetUsersDocument } from '~/__generated__/graphql';
+import { CreateUserInputSchema } from '~/__generated__/schemas';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
 import { UserIcon } from 'lucide-react';
@@ -171,19 +173,18 @@ export const action = async (args: Route.ActionArgs) => {
   const intent = formData.get('intent');
 
   if (intent === 'createUser') {
-    const email = formData.get('email');
-    const githubUsername = formData.get('githubUsername');
-
-    if (typeof githubUsername !== 'string' || !githubUsername.trim()) {
+    const parsed = parseFormData(formData, CreateUserInputSchema(), {
+      strict: false,
+    });
+    if (!parsed.success) {
       return { error: 'GitHub username is required' };
     }
 
     try {
-      const hasEmail = typeof email === 'string';
       await executeGraphqlWithAuth(request, CreateUserDocument, {
         input: {
-          email: hasEmail && email.trim() ? email.trim() : null,
-          githubUsername: githubUsername.trim(),
+          email: parsed.data.email ?? null,
+          githubUsername: parsed.data.githubUsername,
         },
       });
       return { ok: true };
