@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Await, useFetcher } from 'react-router';
+import { useFetcher } from 'react-router';
 import { ChatDialog } from '@openthrottle/react-router-chat';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
@@ -18,8 +18,7 @@ import {
   loadComposerModels,
   loadRepositories,
 } from '~/routing/home/data/models.server';
-import { SkillDetail } from '~/routing/skills/components/SkillDetail';
-import { SkillDetailUsage } from '~/routing/skills/components/SkillDetailUsage';
+import { SkillDetailTabs } from '~/routing/skills/components/SkillDetailTabs';
 import { SKILL_USAGE_RANGE_DAYS } from '~/routing/skills/config/skill-usage';
 import {
   SKILL_DETAIL_COPY,
@@ -123,7 +122,7 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <SkillDetail
+      <SkillDetailTabs
         content={content}
         editable={editable}
         entry={entry}
@@ -132,23 +131,8 @@ export default function Component(
         runOptions={runOptions}
         saveError={saveError}
         saving={saving}
+        usage={usage}
       />
-
-      {/* Deferred per-skill usage: RR8 streams the loader promise, so the
-          SKILL.md shell above paints first and the stats hydrate in. The loader
-          already caught failures into the unavailable sentinel, so no
-          errorElement is needed here. */}
-      <React.Suspense
-        fallback={
-          <p className="text-muted-foreground mt-8 text-sm">Loading usage…</p>
-        }
-      >
-        <Await resolve={usage}>
-          {(data) => (
-            <SkillDetailUsage rangeDays={SKILL_USAGE_RANGE_DAYS} usage={data} />
-          )}
-        </Await>
-      </React.Suspense>
 
       {/* Controlled conversation surface: the run streams here once started. The
           trigger is visually hidden — the skill header's Run-now button drives

@@ -65,6 +65,19 @@ export const SKILL_USAGE_DETAIL_COPY = {
 } as const;
 
 /**
+ * Copy for the aggregate usage sections on the /skills index route (all skills,
+ * 30-day window). The "Usage over time" + "Top skills" headings and the empty
+ * message are shared with the /usage route (SKILL_USAGE_COPY) — only the index
+ * section heading, intro, and unavailable notice live here.
+ */
+export const SKILLS_INDEX_USAGE_COPY = {
+  intro: (rangeDays: number): string =>
+    `Harness-captured Skill invocations across all skills over the last ${rangeDays} days. Full analytics and filters live on the Usage route.`,
+  sectionHeading: `Skill usage`,
+  unavailableNotice: `Usage stats couldn't be loaded — this view needs the settings:read permission, or the server was unreachable. The skills list above is unaffected.`,
+} as const;
+
+/**
  * Copy for the /skills/:slug "Run skill" modal (interactive stream v1). The run
  * button mirrors the schedule detail Run-now affordance; the modal composes a
  * `/<slug> <args>` invocation and streams the result via the shared chat path.

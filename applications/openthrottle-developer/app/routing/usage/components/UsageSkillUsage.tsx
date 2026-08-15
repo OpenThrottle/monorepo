@@ -1,25 +1,12 @@
 import * as React from 'react';
 import clsx from 'clsx';
-import { Link } from 'react-router';
-import {
-  Badge,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@openthrottle/react-router-shadcn';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { SkillUsageDailyChart } from '~/global/components/SkillUsageDailyChart';
+import { SkillUsageLeaderboard } from '~/routing/usage/components/SkillUsageLeaderboard';
 import { UsageSkillUsageFilters } from '~/routing/usage/components/UsageSkillUsageFilters';
 import { UsageSkillUsageSummary } from '~/routing/usage/components/UsageSkillUsageSummary';
 import {
   SKILL_USAGE_COPY,
-  SKILL_USAGE_SCOPES,
-  skillUsageAvgDurationLabel,
-  skillUsageOutcomesLabel,
-  skillUsageScopeLabel,
   type SkillUsageScopeFilter,
 } from '~/routing/usage/data/skill-usage-copy';
 import type {
@@ -130,69 +117,10 @@ export const UsageSkillUsage = (
           {emptyMessage}
         </p>
       ) : (
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Skill</TableHead>
-                <TableHead>Scope</TableHead>
-                <TableHead className="text-right">Invocations</TableHead>
-                <TableHead className="text-right">
-                  {SKILL_USAGE_COPY.outcomesColumn}
-                </TableHead>
-                <TableHead className="text-right">
-                  {SKILL_USAGE_COPY.avgDurationColumn}
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {bySkill.map((row) => (
-                <TableRow key={`${row.skillName}:${row.scope}`}>
-                  <TableCell className="font-medium">
-                    {linkableSlugSet.has(row.skillName) ? (
-                      <Link
-                        className="hover:underline"
-                        to={`/skills/${encodeURIComponent(row.skillName)}`}
-                      >
-                        {row.skillName}
-                      </Link>
-                    ) : (
-                      row.skillName
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      color={
-                        row.scope === SKILL_USAGE_SCOPES.OURS
-                          ? 'green'
-                          : 'orange'
-                      }
-                      size="xs"
-                    >
-                      {skillUsageScopeLabel(row.scope)}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {row.count}
-                  </TableCell>
-                  <TableCell
-                    className="text-right tabular-nums"
-                    title={
-                      row.outcomeCount > 0
-                        ? `${row.successCount} success · ${row.abandonedCount} abandoned · ${row.errorCount} error`
-                        : 'No opt-in outcome reported (valid for third-party and uninstrumented skills)'
-                    }
-                  >
-                    {skillUsageOutcomesLabel(row.outcomeCount, row.count)}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {skillUsageAvgDurationLabel(row.avgDurationMs)}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        <SkillUsageLeaderboard
+          bySkill={bySkill}
+          linkableSlugs={linkableSlugSet}
+        />
       )}
     </div>
   );
