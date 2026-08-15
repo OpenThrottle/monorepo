@@ -3,14 +3,11 @@
  */
 
 import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { InjectQueue } from '@nestjs/bullmq';
-import { PLANS_QUEUE_NAME } from '../../queues/plans/plans.constants';
+import { REDIS_CLIENT } from '@openthrottle/nestjs-redis';
 import { PlansService } from '@openthrottle/nestjs-repositories';
-import type { Queue } from 'bullmq';
-import { getQueueRedisClient } from '../../queues/bullmq-redis-client';
-import type { RunPlanJobData } from '../../queues/plans/plans.types';
+import type { Redis } from 'ioredis';
 import type { ServerHealthStatus } from './server-health.object';
 
 export interface ServerHealthResponse {
@@ -23,8 +20,8 @@ export interface ServerHealthResponse {
 @Injectable()
 export class HealthService {
   constructor(
-    @InjectQueue(PLANS_QUEUE_NAME)
-    private readonly plansQueue: Queue<RunPlanJobData, void>,
+    @Inject(REDIS_CLIENT)
+    private readonly redis: Redis | null,
     private readonly plansService: PlansService,
     private readonly logger: LoggerService,
   ) {}
@@ -54,16 +51,15 @@ export class HealthService {
   }
 
   /**
-   * @description Pings Redis used by BullMQ. Returns ok if PING succeeds, unconfigured if Redis env missing, unreachable on error.
+   * @description Pings Redis via the dedicated control-plane client. Returns ok if PING succeeds, unconfigured if Redis env missing, unreachable on error.
    */
   async getRedisStatus(): Promise<ServerHealthStatus> {
-    if (!process.env.REDIS_HOST) {
+    if (!process.env.REDIS_HOST || this.redis === null) {
       return 'unconfigured';
     }
 
     try {
-      const client = await getQueueRedisClient(this.plansQueue);
-      await client.ping();
+      await this.redis.ping();
 
       return 'ok';
     } catch (error: unknown) {

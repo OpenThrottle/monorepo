@@ -3,14 +3,13 @@
  * redis (ok/unconfigured/unreachable), websocket, and aggregated server health.
  */
 
-import { createMock } from '@golevelup/ts-vitest';
-import { getQueueToken } from '@nestjs/bullmq';
+import { createMock, type DeepMocked } from '@golevelup/ts-vitest';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import { REDIS_CLIENT } from '@openthrottle/nestjs-redis';
 import { PlansService } from '@openthrottle/nestjs-repositories';
 import { Test } from '@nestjs/testing';
-import type { Queue } from 'bullmq';
+import type { Redis } from 'ioredis';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { PLANS_QUEUE_NAME } from '../../queues/plans/plans.constants';
 import { HealthService } from './health.service';
 
 const getPostgresUrl = vi.fn<() => string | undefined>();
@@ -22,24 +21,20 @@ describe('HealthService', () => {
   let service: HealthService;
   let plansService: PlansService;
   let query: ReturnType<typeof vi.fn>;
-  let ping: ReturnType<typeof vi.fn>;
-  let plansQueue: Queue;
+  let redis: DeepMocked<Redis>;
   const originalRedisHost = process.env.REDIS_HOST;
 
   beforeEach(async () => {
     query = vi.fn().mockResolvedValue([{ '?column?': 1 }]);
-    ping = vi.fn().mockResolvedValue('PONG');
-
-    plansQueue = createMock<Queue>({
-      client: Promise.resolve(createMock({ ping })),
-    });
+    redis = createMock<Redis>();
+    redis.ping.mockResolvedValue('PONG');
 
     const app = await Test.createTestingModule({
       providers: [
         HealthService,
         {
-          provide: getQueueToken(PLANS_QUEUE_NAME),
-          useValue: plansQueue,
+          provide: REDIS_CLIENT,
+          useValue: redis,
         },
         {
           provide: PlansService,
@@ -99,11 +94,11 @@ describe('HealthService', () => {
 
     test('returns ok when the client ping succeeds', async () => {
       await expect(service.getRedisStatus()).resolves.toBe('ok');
-      expect(ping).toHaveBeenCalledTimes(1);
+      expect(redis.ping).toHaveBeenCalledTimes(1);
     });
 
     test('returns unreachable when the client ping throws', async () => {
-      ping.mockRejectedValue(new Error('redis down'));
+      redis.ping.mockRejectedValue(new Error('redis down'));
 
       await expect(service.getRedisStatus()).resolves.toBe('unreachable');
     });
@@ -127,7 +122,7 @@ describe('HealthService', () => {
 
     test('reflects degraded subsystems in the aggregate', async () => {
       getPostgresUrl.mockReturnValue(undefined);
-      ping.mockRejectedValue(new Error('redis down'));
+      redis.ping.mockRejectedValue(new Error('redis down'));
 
       await expect(service.getServerHealth()).resolves.toEqual({
         api: 'ok',
