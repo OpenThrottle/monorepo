@@ -33,15 +33,6 @@ const mockRecentChats: DashboardContentGridProps['recentChats'] =
     totalCount: 0,
   });
 
-const mockOnboarding: DashboardContentGridProps['onboarding'] = Promise.resolve(
-  {
-    discoverAgentClis: { totalCount: 0 },
-    githubTokenConfigured: true,
-    planCountsByStatus: [],
-    workspaceLocalRepositories: [],
-  },
-);
-
 describe('DashboardContentGrid Component', () => {
   let component: RenderResult;
   let props: DashboardContentGridProps;
@@ -50,7 +41,6 @@ describe('DashboardContentGrid Component', () => {
     props = {
       core: mockCore,
       githubStats: mockGithubStats,
-      onboarding: mockOnboarding,
       recentChats: mockRecentChats,
     };
 

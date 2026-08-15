@@ -12,17 +12,21 @@ import type { z } from 'zod';
 
 import {
   AddPlanTagDocument,
+  AddProjectSkillTagDocument,
   AddProjectTagDocument,
   AddTaskTagDocument,
   RemovePlanTagDocument,
+  RemoveProjectSkillTagDocument,
   RemoveProjectTagDocument,
   RemoveTaskTagDocument,
 } from '../__generated__/graphql.js';
 import {
   AddPlanTagInputSchema,
+  AddProjectSkillTagInputSchema,
   AddProjectTagInputSchema,
   AddTaskTagInputSchema,
   RemovePlanTagInputSchema,
+  RemoveProjectSkillTagInputSchema,
   RemoveProjectTagInputSchema,
   RemoveTaskTagInputSchema,
 } from '../__generated__/schemas.ts';
@@ -62,6 +66,16 @@ type TaskTag = {
   tag: string;
   taskId: string;
   updatedAt: string;
+};
+
+type ProjectSkillTagResult = {
+  description: string | null;
+  orphanedAt: string | null;
+  slug: string;
+  source: string;
+  sourceUrl: string | null;
+  staticDisableModelInvocation: boolean | null;
+  tags: readonly string[];
 };
 
 // ── add_plan_tag ─────────────────────────────────────────────────────────────
@@ -266,6 +280,83 @@ export async function removeTaskTagToolHandler(
     const text = removed
       ? `Removed tag "${parsed.data.tag}" from task ${parsed.data.taskId}`
       : `Tag "${parsed.data.tag}" not present on task ${parsed.data.taskId}`;
+    return { structuredContent: { removed }, text };
+  });
+}
+
+// ── add_project_skill_tag ────────────────────────────────────────────────────
+
+export const addProjectSkillTagToolParameters = AddProjectSkillTagInputSchema();
+
+export const addProjectSkillTagToolDescription = `Attach a domain tag to a project_skills row via addProjectSkillTag. The tag must be kebab-case and in the caller's skill-tag vocabulary; phase tags are rejected. Idempotent when the tag is already present. Omit projectId to target the dogfood monorepo project.`;
+
+export async function addProjectSkillTagToolHandler(
+  args: z.infer<typeof addProjectSkillTagToolParameters>,
+): Promise<GenericResult<{ skill: ProjectSkillTagResult }>> {
+  const parsed = addProjectSkillTagToolParameters.safeParse(args);
+  if (!parsed.success) {
+    return invalidArgsContent(parsed.error.message);
+  }
+
+  return runTool<{ skill: ProjectSkillTagResult }>(
+    'add_project_skill_tag',
+    async () => {
+      const token = getAuthToken();
+      const result = await executeGraphqlWithAuth(
+        token,
+        AddProjectSkillTagDocument,
+        { input: parsed.data },
+      );
+      const added = result?.addProjectSkillTag;
+      if (!added) {
+        return null;
+      }
+
+      const skill: ProjectSkillTagResult = {
+        description: added.description ?? null,
+        orphanedAt: added.orphanedAt ?? null,
+        slug: added.slug,
+        source: added.source,
+        sourceUrl: added.sourceUrl ?? null,
+        staticDisableModelInvocation:
+          added.staticDisableModelInvocation ?? null,
+        tags: added.tags,
+      };
+      return {
+        structuredContent: { skill },
+        text: `Tagged skill "${skill.slug}" with "${parsed.data.tag}" (tags: ${skill.tags.join(', ') || 'none'})`,
+      };
+    },
+  );
+}
+
+// ── remove_project_skill_tag ─────────────────────────────────────────────────
+
+export const removeProjectSkillTagToolParameters =
+  RemoveProjectSkillTagInputSchema();
+
+export const removeProjectSkillTagToolDescription = `Remove a tag from a project_skills row via removeProjectSkillTag. Returns false when the row or tag is absent (never a 500). Omit projectId to target the dogfood monorepo project.`;
+
+export async function removeProjectSkillTagToolHandler(
+  args: z.infer<typeof removeProjectSkillTagToolParameters>,
+): Promise<GenericResult<{ removed: boolean }>> {
+  const parsed = removeProjectSkillTagToolParameters.safeParse(args);
+  if (!parsed.success) {
+    return invalidArgsContent(parsed.error.message);
+  }
+
+  return runTool<{ removed: boolean }>('remove_project_skill_tag', async () => {
+    const token = getAuthToken();
+    const result = await executeGraphqlWithAuth(
+      token,
+      RemoveProjectSkillTagDocument,
+      { input: parsed.data },
+    );
+    const removed = result?.removeProjectSkillTag ?? false;
+    const skillLabel = parsed.data.slug;
+    const text = removed
+      ? `Removed tag "${parsed.data.tag}" from skill "${skillLabel}"`
+      : `Tag "${parsed.data.tag}" not present on skill "${skillLabel}"`;
     return { structuredContent: { removed }, text };
   });
 }

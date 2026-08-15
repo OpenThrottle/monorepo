@@ -6,6 +6,7 @@
 import { Module } from '@nestjs/common';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import './project-skill.object';
+import './project-skills.input';
 import { ProjectSkillsResolver } from './project-skills.resolver';
 
 @Module({

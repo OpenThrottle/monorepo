@@ -1,13 +1,12 @@
 /**
- * @description Pure merge of the `projectSkills` GraphQL flag+tags onto the
- * disk-discovered skill entries. Disk discovery stays the source of the entry
- * LIST (which skills exist, their order, summary, path); a matching GraphQL row
- * (keyed by slug) wins for `disableModelInvocation`, `tags`, and — when it
- * carries a recognized value — `source`/`sourceUrl`. When the
- * GraphQL result is empty — the current local reality on a DB that has not been
- * migrated/ingested — disk entries pass through unchanged, which is the Skills
- * loader's silent fallback. See docs/monorepo/skill-availability-design.md
- * ("Surfacing" — display-only quick win).
+ * @description Merge of `projectSkills` GraphQL rows with disk-discovered skill
+ * entries. Disk entries stay the primary list (order, summary, path); a matching
+ * GraphQL row (keyed by slug) wins for `disableModelInvocation`, `tags`, and —
+ * when it carries a recognized value — `source`/`sourceUrl`. GraphQL slugs that
+ * are absent from disk are appended as orphan rows so the UI can suggest remove.
+ * When the GraphQL result is empty — a DB that has not been migrated/ingested —
+ * disk entries pass through unchanged. See
+ * docs/monorepo/skill-availability-design.md ("Surfacing").
  */
 
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
@@ -25,6 +24,11 @@ export interface ProjectSkillFlagRow {
    * merge does not read it — disk `summary` wins there.
    */
   readonly description?: string | null;
+  /**
+   * When ingest last found this slug missing from disk. Present on DB-only
+   * orphan rows; `null`/`undefined` while the skill is still on disk.
+   */
+  readonly orphanedAt?: Date | string | null;
   readonly slug: string;
   /**
    * Ingested provenance (`openthrottle` | `external`); any other/absent value
@@ -49,21 +53,48 @@ export const mergeRepoSkillsWithProjectSkills = (
     projectSkills.map((row) => [row.slug, row]),
   );
 
-  return entries.map((entry) => {
+  const mergedDisk = entries.map((entry): RepoSkillEntry => {
     const row = bySlug.get(entry.slug);
     if (row === undefined) {
       return entry;
     }
 
+    // The ingested row wins for provenance when it carries a recognized
+    // value; the disk-parsed source stays otherwise. The `row.source` checks
+    // stay inline so TypeScript narrows the string to the `SkillSource` union.
     return {
       ...entry,
       disableModelInvocation: row.staticDisableModelInvocation ?? undefined,
-      // The ingested row wins for provenance when it carries a recognized
-      // value; the disk-parsed source stays otherwise.
-      ...(row.source === 'external' || row.source === 'openthrottle'
-        ? { source: row.source, sourceUrl: row.sourceUrl ?? undefined }
-        : {}),
+      orphanedAt: undefined,
+      source:
+        row.source === 'external' || row.source === 'openthrottle'
+          ? row.source
+          : entry.source,
+      sourceUrl:
+        row.source === 'external' || row.source === 'openthrottle'
+          ? (row.sourceUrl ?? undefined)
+          : entry.sourceUrl,
       tags: row.tags,
     };
   });
+
+  const diskSlugs = new Set(entries.map((entry) => entry.slug));
+  const orphans = projectSkills
+    .filter((row) => !diskSlugs.has(row.slug))
+    .map(toOrphanEntry)
+    .sort((left, right) => left.slug.localeCompare(right.slug));
+
+  return orphans.length === 0 ? mergedDisk : [...mergedDisk, ...orphans];
 };
+
+const toOrphanEntry = (row: ProjectSkillFlagRow): RepoSkillEntry => ({
+  disableModelInvocation: row.staticDisableModelInvocation ?? undefined,
+  layout: 'agents',
+  orphanedAt: row.orphanedAt ?? new Date(0),
+  repoRelativePath: '',
+  slug: row.slug,
+  source: row.source === 'openthrottle' ? 'openthrottle' : 'external',
+  sourceUrl: row.sourceUrl ?? undefined,
+  summary: row.description ?? '',
+  tags: row.tags,
+});

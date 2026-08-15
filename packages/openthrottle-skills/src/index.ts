@@ -152,17 +152,7 @@ export { toProjectSkillInputs } from './project-skill-inputs.ts';
 export type { ProjectSkillInput } from './project-skill-inputs.ts';
 
 /** @public */
-export {
-  mergeSkillTags,
-  parseSkillTagOverlayFile,
-  SKILL_TAG_OVERLAYS_FILENAME,
-  skillTagOverlayFileSchema,
-} from './skill-tag-overlays.ts';
-export type {
-  SkillTagOverlayEntry,
-  SkillTagOverlayFile,
-  SkillTagOverlayMap,
-} from './skill-tag-overlays.ts';
+export { mergeSkillTags } from './skill-tag-overlays.ts';
 
 /** @public */
 export {

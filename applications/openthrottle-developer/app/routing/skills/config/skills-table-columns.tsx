@@ -4,28 +4,39 @@ import type { ColumnDef } from '@tanstack/react-table';
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 import {
   Badge,
-  Button,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
-import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
-import { ScanEyeIcon } from 'lucide-react';
 import {
+  SKILL_RECORD_TAGS_COPY,
   SKILLS_MODEL_INVOCATION_COPY,
   SKILLS_SOURCE_COPY,
 } from '~/routing/skills/data/data.copy';
+import { SkillOrphanRemoveButton } from '~/routing/skills/components/SkillOrphanRemoveButton';
+import {
+  SkillTagChips,
+  type SkillTagVocabularyOption,
+} from '~/routing/skills/components/SkillTagChips';
 import { getResolvedModelInvocationDisplay } from '~/routing/skills/utils/model-invocation-badge';
-// import { formatPromptType } from '~/routing/prompts/utils/formatters';
 
 export type SkillsTableColumnValue =
   | RepoSkillEntry['disableModelInvocation']
   | RepoSkillEntry['layout']
+  | RepoSkillEntry['orphanedAt']
   | RepoSkillEntry['repoRelativePath']
   | RepoSkillEntry['slug']
   | RepoSkillEntry['source']
   | RepoSkillEntry['summary']
   | RepoSkillEntry['tags'];
+
+export interface SkillsTableColumnOptions {
+  readonly onAddTag?: (slug: string, tag: string) => void;
+  readonly onRemoveOrphan?: (slug: string) => void;
+  readonly onRemoveTag?: (slug: string, tag: string) => void;
+  readonly pendingSlug?: string;
+  readonly vocabulary?: readonly SkillTagVocabularyOption[];
+}
 
 /**
  * @description Stable table row id for repository skills entries.
@@ -37,25 +48,9 @@ export const getSkillsTableRowId = (
   return entry.slug || entry.repoRelativePath || `skill-${index}`;
 };
 
-export const skillsTableColumns: ColumnDef<
-  RepoSkillEntry,
-  SkillsTableColumnValue
->[] = [
-  // {
-  //   accessorKey: 'owner',
-  //   cell: ({ row }) => {
-  //     const isAgent = row.original.layout === 'agents';
-  //
-  //     return (
-  //       <div className="p-2">
-  //         <Badge color={isAgent ? 'blue' : 'green'} size="xs">
-  //           {formatPromptType(row.original.layout)}
-  //         </Badge>
-  //       </div>
-  //     );
-  //   },
-  //   header: () => <div className="p-2">Owner</div>,
-  // },
+export const createSkillsTableColumns = (
+  options: SkillsTableColumnOptions = {},
+): ColumnDef<RepoSkillEntry, SkillsTableColumnValue>[] => [
   {
     accessorKey: 'source',
     cell: ({ row }) => {
@@ -108,20 +103,107 @@ export const skillsTableColumns: ColumnDef<
   },
   {
     accessorKey: 'summary',
-    cell: ({ row }) => (
-      <div className="p-2">
-        <h3 className="text-foreground mb-2 line-clamp-1">
-          <Link className="hover:underline" to={`/skills/${row.original.slug}`}>
-            /{row.original.slug}
-          </Link>
-        </h3>
-        <p className="text-muted-foreground line-clamp-2 text-xs">
-          {row.original.summary}
-        </p>
-      </div>
-    ),
+    cell: ({ row }) => {
+      const { onAddTag, onRemoveOrphan, onRemoveTag, pendingSlug, vocabulary } =
+        options;
+
+      const tags = row.original.tags ?? [];
+      const isOrphan = row.original.orphanedAt != null;
+      const slugLabel = `/${row.original.slug}`;
+
+      const tagActions =
+        onAddTag != null && onRemoveTag != null && vocabulary != null;
+
+      return (
+        <div className="p-2">
+          <h3 className="text-foreground mb-2 line-clamp-1 flex flex-wrap items-center gap-2">
+            {isOrphan ? (
+              <>
+                <span>{slugLabel}</span>
+                <Badge
+                  color="yellow"
+                  data-testid="skill-orphan-badge"
+                  size="xs"
+                >
+                  {SKILL_RECORD_TAGS_COPY.orphanBadge}
+                </Badge>
+                {onRemoveOrphan != null ? (
+                  <SkillOrphanRemoveButton
+                    disabled={pendingSlug === row.original.slug}
+                    onRemove={() => onRemoveOrphan(row.original.slug)}
+                  />
+                ) : null}
+              </>
+            ) : (
+              <Link
+                className="hover:underline"
+                to={`/skills/${row.original.slug}`}
+              >
+                {slugLabel}
+              </Link>
+            )}
+          </h3>
+          <p className="text-muted-foreground line-clamp-2 text-xs">
+            {row.original.summary}
+          </p>
+          <div className="mt-4 py-2">
+            <div>
+              {tagActions ? (
+                <SkillTagChips
+                  onAddTag={(tag) => onAddTag(row.original.slug, tag)}
+                  onRemoveTag={(tag) => onRemoveTag(row.original.slug, tag)}
+                  pending={pendingSlug === row.original.slug}
+                  tags={tags}
+                  vocabulary={vocabulary}
+                />
+              ) : (
+                tags.map((tag) => (
+                  <Badge color="blue" key={tag} size="xs">
+                    {tag}
+                  </Badge>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    },
     header: () => <div className="p-2">Summary</div>,
   },
+  // {
+  //   accessorKey: 'tags',
+  //   cell: ({ row }) => {
+  //     const { onAddTag, onRemoveTag, pendingSlug, vocabulary } = options;
+  //     const tags = row.original.tags ?? [];
+
+  //     if (onAddTag != null && onRemoveTag != null && vocabulary != null) {
+  //       return (
+  //         <div className="p-2">
+  //           <SkillTagChips
+  //             onAddTag={(tag) => onAddTag(row.original.slug, tag)}
+  //             onRemoveTag={(tag) => onRemoveTag(row.original.slug, tag)}
+  //             pending={pendingSlug === row.original.slug}
+  //             tags={tags}
+  //             vocabulary={vocabulary}
+  //           />
+  //         </div>
+  //       );
+  //     }
+
+  //     return (
+  //       <div className="flex flex-wrap gap-1 p-2">
+  //         {tags.map((tag) => (
+  //           <Badge color="blue" key={tag} size="xs">
+  //             {tag}
+  //           </Badge>
+  //         ))}
+  //       </div>
+  //     );
+  //   },
+  //   header: () => (
+  //     <div className="p-2">{SKILL_RECORD_TAGS_COPY.tagsColumnHeader}</div>
+  //   ),
+  // },
   {
     accessorKey: 'modelInvocation',
     cell: ({ row }) => {
@@ -164,29 +246,46 @@ export const skillsTableColumns: ColumnDef<
         </div>
       );
     },
-    header: () => <div className="p-2">Model invocation</div>,
+    header: () => <div className="p-2">Invocation</div>,
   },
-  {
-    accessorKey: 'actions',
-    cell: ({ row }) => (
-      <div className="flex gap-2 p-2">
-        <Button size="xs" variant="outline">
-          <OpenThrottleClipboard
-            label="Copy path"
-            text={row.original.repoRelativePath}
-          />
-        </Button>
-        <Button asChild={true} size="xs" variant="outline">
-          <Link
-            data-testid="skill-view-link"
-            to={`/skills/${row.original.slug}`}
-          >
-            <ScanEyeIcon className="size-4" />
-            <span className="sr-only">View Skill</span>
-          </Link>
-        </Button>
-      </div>
-    ),
-    header: () => <div className="p-2 text-center">Actions</div>,
-  },
+  // {
+  //   accessorKey: 'actions',
+  //   cell: ({ row }) => {
+  //     const isOrphan = row.original.orphanedAt != null;
+  //
+  //     return (
+  //       <div className="flex gap-2 p-2">
+  //         {isOrphan ? (
+  //           options.onRemoveOrphan != null ? (
+  //             <SkillOrphanRemoveButton
+  //               disabled={options.pendingSlug === row.original.slug}
+  //               onRemove={() => options.onRemoveOrphan?.(row.original.slug)}
+  //             />
+  //           ) : null
+  //         ) : (
+  //           <>
+  //             <Button size="xs" variant="outline">
+  //               <OpenThrottleClipboard
+  //                 label="Copy path"
+  //                 text={row.original.repoRelativePath}
+  //               />
+  //             </Button>
+  //             <Button asChild={true} size="xs" variant="outline">
+  //               <Link
+  //                 data-testid="skill-view-link"
+  //                 to={`/skills/${row.original.slug}`}
+  //               >
+  //                 <ScanEyeIcon className="size-4" />
+  //                 <span className="sr-only">View Skill</span>
+  //               </Link>
+  //             </Button>
+  //           </>
+  //         )}
+  //       </div>
+  //     );
+  //   },
+  //   header: () => <div className="p-2 text-center">Actions</div>,
+  // },
 ];
+
+export const skillsTableColumns = createSkillsTableColumns();

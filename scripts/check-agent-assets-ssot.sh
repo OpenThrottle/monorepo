@@ -51,15 +51,6 @@ while IFS= read -r -d '' rule; do
   fi
 done < <(find .agents/rules -name '*.mdc' -print0 2>/dev/null)
 
-# --- Skill tags: validate the repo-root skill-tag-overlays.json — every skill
-# has an overlay entry (complete coverage; zero tags is fine), no stale entries,
-# and every effective tag is in the committed default vocabulary. CI-only for
-# this monorepo's own corpus; external repos ingest permissively — see
-# docs/monorepo/skill-availability-design.md, "Tags" section. ---
-if ! pnpm exec tsx ./scripts/check-skill-tag-vocabulary.ts; then
-  fail "skill tag vocabulary check failed (see output above)"
-fi
-
 if [[ "$errors" -gt 0 ]]; then
   echo "check-agent-assets-ssot: $errors violation(s). Edit .agents/skills/ and .agents/rules/ only; recreate editor symlinks." >&2
   exit 1

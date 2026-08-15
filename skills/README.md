@@ -1,5 +1,9 @@
 # 🤹 Skills
 
+This directory contains **[Agent Skills](https://agentskills.io/)** — the open standard for packaging procedural knowledge so any compatible agent (Cursor, Claude Code, Codex, Copilot, Gemini CLI, OpenCode, …) can load it on demand.
+
+We follow that standard as far as it goes. Do **not** invent a parallel skill format, frontmatter dialect, or directory layout. If the spec covers it, use the spec.
+
 ```bash
 # https://github.com/nrwl/nx-ai-agents-config
 pnpm dlx skills add https://github.com/nrwl/nx-ai-agents-config --skill link-workspace-packages monitor-ci nx-generate nx-import nx-plugins nx-run-tasks nx-workspace --agent universal
@@ -23,9 +27,37 @@ pnpm dlx skills add https://github.com/microsoft/SkillOpt --agent universal
 
 > [!TIP]
 >
-> [Skills](https://skills.sh/) are reusable capabilities for AI agents — packaged procedural knowledge an agent can pull in to do a task the "OpenThrottle way." This folder is where **our own custom skills** live.
+> **Format vs registry.** [agentskills.io](https://agentskills.io/) is _what a skill is_ (folder + `SKILL.md` + progressive disclosure). [skills.sh](https://skills.sh/) is _how we install third-party skills_ into this repo. This folder is where **our own custom skills** live.
 
 If you're looking for the agent-facing version of this guidance, see [`AGENTS.md`](./AGENTS.md) right next to this file.
+
+## 📐 The standard (source of truth)
+
+Author and review skills against these pages — not against a local rewrite:
+
+| What                                                                                                           | Where                                                                                    |
+| -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| What a skill is                                                                                                | [Agent Skills overview](https://agentskills.io/)                                         |
+| Folder layout, `SKILL.md` frontmatter, optional `scripts/` / `references/` / `assets/`, progressive disclosure | [Specification](https://agentskills.io/specification)                                    |
+| Scope, token budget, templates, checklists                                                                     | [Best practices](https://agentskills.io/skill-creation/best-practices)                   |
+| `description` (what + when, trigger keywords)                                                                  | [Optimizing descriptions](https://agentskills.io/skill-creation/optimizing-descriptions) |
+| Bundled executables                                                                                            | [Using scripts](https://agentskills.io/skill-creation/using-scripts)                     |
+| Clients that already speak this format                                                                         | [Client showcase](https://agentskills.io/clients)                                        |
+
+Minimum shape from the spec — a directory whose name matches the `name` frontmatter field, with a `SKILL.md` at its root:
+
+```
+skill-name/
+├── SKILL.md          # Required: YAML frontmatter (`name`, `description`) + instructions
+├── scripts/          # Optional: executable code
+├── references/       # Optional: documentation loaded on demand
+├── assets/           # Optional: templates, resources
+└── ...
+```
+
+Required frontmatter: `name` (kebab-case, matches the directory) and `description` (what the skill does **and** when to use it). Keep `SKILL.md` under 500 lines; push detail into `references/` so agents can [progressively disclose](https://agentskills.io/specification#progressive-disclosure) it.
+
+Need a machine check? The spec’s validator is [`skills-ref`](https://github.com/agentskills/agentskills/tree/main/skills-ref) (`skills-ref validate ./skills/my-skill`) — a format check, not a production dependency.
 
 ## 🗂️ Where skills live
 
@@ -58,9 +90,10 @@ The layout every tool reads is built by our own [`skill-sync`](./skill-sync/READ
 
 **Repo-specific skills:**
 
+- [`ot-onboarding/`](./ot-onboarding/) — the front-door orientation skill new users invoke first: verifies the OT MCP is healthy, then tours the mental model, monorepo, shortcuts/workflows, and the skill catalog.
 - [`pubsub-local-setup/`](./pubsub-local-setup/) — spinning up the local GCP Pub/Sub emulator (pairs with [`docs/PubSub-Setup.md`](../docs/PubSub-Setup.md)).
 
-Each skill is its own directory with a `SKILL.md` at its root.
+Each skill is its own directory with a `SKILL.md` at its root, per the [specification](https://agentskills.io/specification).
 
 ## 🔁 Sharing across OpenThrottle repos
 
@@ -82,7 +115,7 @@ npx skills update
 
 ## ✍️ Adding a skill
 
-Use the CLI to scaffold a new skill — `npx skills init` creates the directory and a starter `SKILL.md` for you:
+Scaffold with the CLI, then write the skill to the [specification](https://agentskills.io/specification) and [best practices](https://agentskills.io/skill-creation/best-practices):
 
 ```bash
 # From this folder, scaffold skills/my-new-skill/SKILL.md
@@ -92,7 +125,7 @@ npx skills init my-new-skill
 
 Then:
 
-1. Flesh out the generated `SKILL.md` — describe what the skill does and how an agent should use it. Keep it focused and self-contained.
+1. Flesh out the generated `SKILL.md` — required `name` + `description` frontmatter, then instructions. Keep it focused and self-contained. Prefer the spec's optional dirs (`scripts/`, `references/`, `assets/`) over ad-hoc layouts.
 2. Only link relatively **within** the skill's own directory — anything outside it (repo docs, other skills) must be an **absolute URL** (e.g. `https://github.com/openthrottle/monorepo/blob/main/docs/...`). Skills are copied into other repos on install, so relative links that escape the skill directory break there.
 3. If it overlaps with existing docs (like the Pub/Sub setup), cross-link the two so folks can find either entry point.
 
@@ -102,5 +135,6 @@ Then:
 
 ## 📚 See also
 
+- [Agent Skills](https://agentskills.io/) — the open format this directory implements
 - [`AGENTS.md`](./AGENTS.md) — the agent-facing version of this guide
 - [`docs/Skills.md`](../docs/Skills.md) — the skills CLI and lockfile workflow

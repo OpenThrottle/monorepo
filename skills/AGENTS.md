@@ -2,7 +2,18 @@
 
 > Tier context for this repo's custom agent skills. Workspace-wide guidance: [root AGENTS.md](../AGENTS.md).
 
-This folder holds the **custom skills we author** — both OpenThrottle-wide workflow skills (the `github-*` family: `github-branch`, `github-commit`, `github-create-issue`, `github-merge`, `github-pull-request`, `github-squash`, `github-summarize`) and repo-specific ones like [`pubsub-local-setup/`](./pubsub-local-setup/) for the local GCP Pub/Sub emulator workflow (see also [`docs/PubSub-Setup.md`](../docs/PubSub-Setup.md)). Other OpenThrottle repos install these via `npx skills add openthrottle/monorepo --agent universal`.
+This folder holds **[Agent Skills](https://agentskills.io/)** — the open standard (folder + `SKILL.md` with YAML `name` / `description`, optional `scripts/` / `references/` / `assets/`, progressive disclosure). Follow that spec. Do **not** invent a parallel format, frontmatter dialect, or directory layout.
+
+Authoring references (load these; do not restate them here):
+
+- [Specification](https://agentskills.io/specification) — layout, required frontmatter, optional dirs, 500-line `SKILL.md` budget
+- [Best practices](https://agentskills.io/skill-creation/best-practices) — scope, token budget, templates, checklists
+- [Optimizing descriptions](https://agentskills.io/skill-creation/optimizing-descriptions) — what + when, trigger keywords
+- [Using scripts](https://agentskills.io/skill-creation/using-scripts) — bundled executables
+
+Need a machine check? [`skills-ref validate`](https://github.com/agentskills/agentskills/tree/main/skills-ref) against the skill directory — a format check, not a production dependency.
+
+This folder is both OpenThrottle-wide workflow skills (the `github-*` family: `github-branch`, `github-commit`, `github-create-issue`, `github-merge`, `github-pull-request`, `github-squash`, `github-summarize`) and repo-specific ones like [`ot-onboarding/`](./ot-onboarding/) (the new-user orientation on-ramp) and [`pubsub-local-setup/`](./pubsub-local-setup/) for the local GCP Pub/Sub emulator workflow (see also [`docs/PubSub-Setup.md`](../docs/PubSub-Setup.md)). Other OpenThrottle repos install these via `npx skills add openthrottle/monorepo --agent universal`.
 
 ## Where skills live
 
@@ -32,6 +43,7 @@ npx skills update
 
 ## Conventions
 
+- **Follow [the spec](https://agentskills.io/specification) first.** `name` matches the directory; `description` states what the skill does and when to use it; keep `SKILL.md` under 500 lines; prefer `scripts/` / `references/` / `assets/` over ad-hoc extra files.
 - Author repo-specific skills **here** in `skills/`; let `.agents/skills/` be the managed home for external skills.
 - Each skill is its own directory containing a `SKILL.md`. Keep it focused and self-contained.
 - **Never use relative links that point outside the skill's directory.** Skills are copied into other repos on install, so a `../../docs/...` link dangles there. Link within the skill relatively; link everything else by absolute URL (e.g. `https://github.com/openthrottle/monorepo/blob/main/docs/PubSub-Setup.md`) — anyone who installed the skill has repo access already.
@@ -39,4 +51,4 @@ npx skills update
 
 ## See also
 
-[root AGENTS.md](../AGENTS.md) · [`docs/Skills.md`](../docs/Skills.md)
+[Agent Skills](https://agentskills.io/) · [root AGENTS.md](../AGENTS.md) · [`docs/Skills.md`](../docs/Skills.md)

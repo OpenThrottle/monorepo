@@ -1,5 +1,6 @@
 /**
- * @description TypeORM entity for the project_skills table. Matches databases/migrations/061.
+ * @description TypeORM entity for the project_skills table. Matches
+ * databases/migrations (061, 074, 090, 093).
  */
 
 import {
@@ -55,6 +56,13 @@ export class ProjectSkill {
 
   @Column({ name: 'ingested_at', type: 'timestamp with time zone' })
   ingestedAt!: Date;
+
+  @Column({
+    name: 'orphaned_at',
+    nullable: true,
+    type: 'timestamp with time zone',
+  })
+  orphanedAt!: Date | null;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone' })
   createdAt!: Date;

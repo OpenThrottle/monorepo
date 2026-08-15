@@ -500,6 +500,28 @@ export class McpDeveloperMcpSurface {
   }
 
   @Tool({
+    description: Th.addProjectSkillTagToolDescription,
+    name: 'add_project_skill_tag',
+    parameters: asMcpParameters(Th.addProjectSkillTagToolParameters),
+  })
+  addProjectSkillTag(
+    args: Parameters<typeof Th.addProjectSkillTagToolHandler>[0],
+  ): ReturnType<typeof Th.addProjectSkillTagToolHandler> {
+    return Th.addProjectSkillTagToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.removeProjectSkillTagToolDescription,
+    name: 'remove_project_skill_tag',
+    parameters: asMcpParameters(Th.removeProjectSkillTagToolParameters),
+  })
+  removeProjectSkillTag(
+    args: Parameters<typeof Th.removeProjectSkillTagToolHandler>[0],
+  ): ReturnType<typeof Th.removeProjectSkillTagToolHandler> {
+    return Th.removeProjectSkillTagToolHandler(args);
+  }
+
+  @Tool({
     description: Th.addTaskTagToolDescription,
     name: 'add_task_tag',
     parameters: asMcpParameters(Th.addTaskTagToolParameters),

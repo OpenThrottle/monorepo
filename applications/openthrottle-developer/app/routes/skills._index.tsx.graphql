@@ -1,7 +1,9 @@
 query ProjectSkills($projectId: ID) {
   projectSkills(projectId: $projectId) {
+    orphanSlugs
     skills {
       description
+      orphanedAt
       slug
       source
       sourceUrl

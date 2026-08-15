@@ -4,10 +4,6 @@ import {
   type SkillsLockMap,
 } from './parse-skills-lock.ts';
 import type { SkillSource } from './schemas/agent-asset-frontmatter.schemas.ts';
-import {
-  mergeSkillTags,
-  type SkillTagOverlayMap,
-} from './skill-tag-overlays.ts';
 
 /**
  * A single skill's server-queryable projection, derived from an ingest record.
@@ -42,7 +38,10 @@ export interface ProjectSkillInput {
    * `undefined` for authored skills or when the lockfile has no usable source.
    */
   readonly sourceUrl: string | undefined;
-  /** Static `tags`; an empty list when the skill declares none. */
+  /**
+   * Frontmatter `tags` only (empty when omitted). Ingest does not merge overlay
+   * files; record-owned tags are written after ingest and preserved on upsert.
+   */
   readonly tags: readonly string[];
 }
 
@@ -54,14 +53,9 @@ const slugFromLabels = (record: AgentAssetIngestRecord): string | undefined => {
 /**
  * @description Projects skill ingest records to the per-project skill rows the
  * availability surface queries. Filters to `skills` records that carry a slug,
- * merges each skill's frontmatter `tags` with its overlay `tags` (order-preserving
- * union), and preserves the tri-state `disableModelInvocation` flag. Non-skill
- * records are dropped.
- *
- * `overlays` is the monorepo-local per-slug attachment map (from the repo-root
- * skill-tag overlay file). Omit it for external workspace repos, whose tags come
- * from frontmatter alone — behaviour then reduces to the prior frontmatter-only
- * projection.
+ * copies frontmatter `tags` as-is (empty when omitted — no overlay merge), and
+ * preserves the tri-state `disableModelInvocation` flag. Non-skill records are
+ * dropped.
  *
  * `lock` is the parsed repo-root skills-lock.json map; it supplies the origin
  * URL for lockfile-installed (non-authored) skills. Omit it when the repo has
@@ -70,7 +64,6 @@ const slugFromLabels = (record: AgentAssetIngestRecord): string | undefined => {
  */
 export const toProjectSkillInputs = (
   records: readonly AgentAssetIngestRecord[],
-  overlays?: SkillTagOverlayMap,
   lock?: SkillsLockMap,
 ): readonly ProjectSkillInput[] => {
   const inputs: ProjectSkillInput[] = [];
@@ -93,7 +86,7 @@ export const toProjectSkillInputs = (
       source: authored ? 'openthrottle' : 'external',
       sourcePath: record.filePath,
       sourceUrl: authored ? undefined : deriveSkillSourceUrl(lock?.[slug]),
-      tags: mergeSkillTags(record.tags, overlays?.[slug]?.tags),
+      tags: record.tags ?? [],
     });
   }
 

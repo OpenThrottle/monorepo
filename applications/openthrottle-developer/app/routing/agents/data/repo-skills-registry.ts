@@ -58,6 +58,11 @@ export interface RepoSkillEntry {
   readonly effectiveDisableModelInvocation?: boolean;
   readonly layout: SkillRegistryLayout;
   /**
+   * Set when this row exists in `project_skills` but is no longer on disk
+   * (ingest stamped `orphanedAt`). Absent for on-disk skills.
+   */
+  readonly orphanedAt?: Date | string;
+  /**
    * Decisive rung's provenance string from `skillAvailability` (closed grammar,
    * e.g. `frontmatter:true`, `posture:deny`, `tag-deny:<tag>@<ruleId>`).
    * Optional — present only alongside {@link effectiveDisableModelInvocation}.

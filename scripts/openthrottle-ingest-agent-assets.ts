@@ -9,18 +9,13 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
+import type { SkillsLockMap } from '@openthrottle/openthrottle-skills';
 import {
   AGENT_ASSET_INGEST_PATH_PREFIXES,
   collectAgentAssetsForIngest,
   parseSkillsLockFile,
-  parseSkillTagOverlayFile,
-  SKILL_TAG_OVERLAYS_FILENAME,
   SKILLS_LOCK_FILENAME,
   toProjectSkillInputs,
-} from '@openthrottle/openthrottle-skills';
-import type {
-  SkillsLockMap,
-  SkillTagOverlayMap,
 } from '@openthrottle/openthrottle-skills';
 import { Client } from 'pg';
 
@@ -137,9 +132,9 @@ const resolveDogfoodProjectId = async (client: Client): Promise<string> => {
 
 /**
  * @description Refreshes `project_skills` for the dogfood project from the
- * ingest records: upserts every skill on (project_id, slug) and deletes rows for
- * skills that no longer exist. Idempotent; a re-run converges the project's rows
- * to exactly the ingested skill set. Returns the upsert/delete counts.
+ * ingest records: upserts every skill on (project_id, slug) without overwriting
+ * `tags` (new rows insert `{}`), and marks vanished slugs as orphans instead of
+ * deleting them. Idempotent. Returns the upsert count and stale slug list.
  *
  * This is the trigger (a) — the monorepo's own skills (dogfood). Trigger (b), a
  * connected workspace repo, is not yet wired: it would `walkAgentAssetFiles`
@@ -151,33 +146,31 @@ const resolveDogfoodProjectId = async (client: Client): Promise<string> => {
 const reconcileDogfoodProjectSkills = async (
   client: Client,
   records: Parameters<typeof toProjectSkillInputs>[0],
-  overlays: SkillTagOverlayMap,
   lock: SkillsLockMap,
-): Promise<{ deleted: number; upserted: number }> => {
+): Promise<{ staleSlugs: string[]; upserted: number }> => {
   const projectId = await resolveDogfoodProjectId(client);
-  const inputs = toProjectSkillInputs(records, overlays, lock);
+  const inputs = toProjectSkillInputs(records, lock);
 
   for (const input of inputs) {
     await client.query(
       `INSERT INTO project_skills (
-         project_id, slug, description, tags, disable_model_invocation, source, source_url, source_path, ingested_at
+         project_id, slug, description, tags, disable_model_invocation, source, source_url, source_path, ingested_at, orphaned_at
        )
-       VALUES ($1, $2, $3, $4::text[], $5, $6, $7, $8, NOW())
+       VALUES ($1, $2, $3, '{}'::text[], $4, $5, $6, $7, NOW(), NULL)
        ON CONFLICT (project_id, slug)
        DO UPDATE SET
          description = EXCLUDED.description,
-         tags = EXCLUDED.tags,
          disable_model_invocation = EXCLUDED.disable_model_invocation,
          source = EXCLUDED.source,
          source_url = EXCLUDED.source_url,
          source_path = EXCLUDED.source_path,
          ingested_at = EXCLUDED.ingested_at,
+         orphaned_at = NULL,
          updated_at = NOW()`,
       [
         projectId,
         input.slug,
         input.description ?? null,
-        input.tags,
         input.disableModelInvocation ?? null,
         input.source,
         input.sourceUrl ?? null,
@@ -187,17 +180,28 @@ const reconcileDogfoodProjectSkills = async (
   }
 
   const keepSlugs = inputs.map((input) => input.slug);
-  const deleteResult =
+  const staleResult =
     keepSlugs.length > 0
-      ? await client.query(
-          'DELETE FROM project_skills WHERE project_id = $1 AND slug <> ALL($2::text[])',
+      ? await client.query<{ slug: string }>(
+          `UPDATE project_skills
+           SET orphaned_at = COALESCE(orphaned_at, NOW()), updated_at = NOW()
+           WHERE project_id = $1 AND slug <> ALL($2::text[])
+           RETURNING slug`,
           [projectId, keepSlugs],
         )
-      : await client.query('DELETE FROM project_skills WHERE project_id = $1', [
-          projectId,
-        ]);
+      : await client.query<{ slug: string }>(
+          `UPDATE project_skills
+           SET orphaned_at = COALESCE(orphaned_at, NOW()), updated_at = NOW()
+           WHERE project_id = $1
+           RETURNING slug`,
+          [projectId],
+        );
 
-  return { deleted: deleteResult.rowCount ?? 0, upserted: inputs.length };
+  const staleSlugs = staleResult.rows
+    .map((row) => row.slug)
+    .sort((left, right) => left.localeCompare(right));
+
+  return { staleSlugs, upserted: inputs.length };
 };
 
 /** Reads the repo-root skills-lock.json; a missing lockfile is an empty map. */
@@ -213,9 +217,6 @@ const readSkillsLock = (monorepoRoot: string): SkillsLockMap => {
 
 const main = async (): Promise<void> => {
   const monorepoRoot = process.cwd();
-  const overlayFile = parseSkillTagOverlayFile(
-    readFileSync(join(monorepoRoot, SKILL_TAG_OVERLAYS_FILENAME), 'utf8'),
-  );
   const skillsLock = readSkillsLock(monorepoRoot);
   const { records, validation } = collectAgentAssetsForIngest({
     monorepoRoot,
@@ -377,11 +378,13 @@ const main = async (): Promise<void> => {
       const projectSkills = await reconcileDogfoodProjectSkills(
         client,
         records,
-        overlayFile.overlays,
         skillsLock,
       );
       console.log(
-        `  project_skills reconciled: ${projectSkills.upserted} upserted, ${projectSkills.deleted} removed`,
+        `  project_skills reconciled: ${projectSkills.upserted} upserted` +
+          (projectSkills.staleSlugs.length > 0
+            ? `; orphans (suggest remove): ${projectSkills.staleSlugs.join(', ')}`
+            : ''),
       );
     } catch (error) {
       const message = `project_skills reconcile: ${String(error)}`;

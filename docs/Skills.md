@@ -1,6 +1,6 @@
 # 🧰 Agent Skills
 
-Skills are reusable, model-invocable capabilities for AI agents (Claude Code, Cursor, Codex, Grok Build, OpenCode, Copilot, Gemini CLI, …). OpenThrottle manages them so **every tool sees the same skills from the same starting point**, regardless of who installed them or which tool they used.
+Skills here are **[Agent Skills](https://agentskills.io/)** — the open format (folder + `SKILL.md`) that Claude Code, Cursor, Codex, Grok Build, OpenCode, Copilot, Gemini CLI, and others already speak. OpenThrottle manages them so **every tool sees the same skills from the same starting point**, regardless of who installed them or which tool they used. Author against the [specification](https://agentskills.io/specification); do not invent a parallel format.
 
 The mechanism is the **`skill-sync`** skill — see [`skills/skill-sync/SKILL.md`](../skills/skill-sync/SKILL.md) for the full contract. This page is the human-facing summary of the policy + what's installed.
 
@@ -81,4 +81,5 @@ Recorded so these aren't re-litigated.
 
 ## Browsing for more
 
+- [agentskills.io](https://agentskills.io/) — the open Agent Skills format this repo implements ([specification](https://agentskills.io/specification), [best practices](https://agentskills.io/skill-creation/best-practices)). See also [`skills/README.md`](../skills/README.md).
 - [skills.sh](https://skills.sh/) — registry of installable skills. Install any worth adopting via the `npx skills add … --agent universal` flow above, then `sync.sh`.

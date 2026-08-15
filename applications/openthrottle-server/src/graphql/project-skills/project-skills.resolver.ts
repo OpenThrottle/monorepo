@@ -12,16 +12,27 @@
  * gracefully on a DB that has not yet been migrated/ingested.
  */
 
+import { CurrentUser } from '@openthrottle/nestjs-auth';
+import type { AuthPrincipal } from '@openthrottle/nestjs-auth';
 import type { ProjectSkillView } from '@openthrottle/nestjs-repositories';
 import {
   ProjectSkillsService,
   ProjectsService,
+  ServiceAccountsService,
 } from '@openthrottle/nestjs-repositories';
-import { Args, ID, Query, Resolver } from '@nestjs/graphql';
+import { NotFoundException, UseGuards } from '@nestjs/common';
+import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
+import { resolveTagCaller } from '../tags/tags.resolver';
 import {
   ProjectSkillObject,
   ProjectSkillsResult,
 } from './project-skill.object';
+import {
+  AddProjectSkillTagInput,
+  RemoveProjectSkillTagInput,
+} from './project-skills.input';
 
 /** nx_project_name of the dogfood project the monorepo's own skills reconcile into. */
 const DOGFOOD_NX_PROJECT_NAME = 'OpenThrottle/monorepo';
@@ -29,6 +40,7 @@ const DOGFOOD_NX_PROJECT_NAME = 'OpenThrottle/monorepo';
 function toObject(view: ProjectSkillView): ProjectSkillObject {
   return {
     description: view.description ?? null,
+    orphanedAt: view.orphanedAt ?? null,
     slug: view.slug,
     source: view.source,
     sourceUrl: view.sourceUrl ?? null,
@@ -43,6 +55,7 @@ export class ProjectSkillsResolver {
   constructor(
     private readonly projectSkillsService: ProjectSkillsService,
     private readonly projectsService: ProjectsService,
+    private readonly serviceAccountsService: ServiceAccountsService,
   ) {}
 
   @Query(() => ProjectSkillsResult, {
@@ -56,14 +69,96 @@ export class ProjectSkillsResolver {
       projectId ?? (await this.resolveDogfoodProjectId());
 
     if (resolvedProjectId == null) {
-      return { skills: [], totalCount: 0 };
+      return { orphanSlugs: [], skills: [], totalCount: 0 };
     }
 
     const views =
       await this.projectSkillsService.getSkillsForProject(resolvedProjectId);
     const skills = views.map(toObject);
+    const orphanSlugs = views
+      .filter((view) => view.orphanedAt != null)
+      .map((view) => view.slug);
 
-    return { skills, totalCount: skills.length };
+    return { orphanSlugs, skills, totalCount: skills.length };
+  }
+
+  @Mutation(() => Boolean, {
+    description: `Delete one project_skills row by slug. Distinct from ingest: vanished skills stay as orphans until this explicit remove. Omit projectId to target the dogfood monorepo project. Returns false when no row matched.`,
+  })
+  @UseGuards(GqlPermissionsGuard)
+  @Permissions(PERMISSIONS.SETTINGS_WRITE)
+  async removeProjectSkill(
+    @Args('slug', { type: () => String }) slug: string,
+    @Args('projectId', { nullable: true, type: () => ID })
+    projectId?: string,
+  ): Promise<boolean> {
+    const resolvedProjectId =
+      projectId ?? (await this.resolveDogfoodProjectId());
+
+    if (resolvedProjectId == null) {
+      return false;
+    }
+
+    return this.projectSkillsService.removeProjectSkill(
+      resolvedProjectId,
+      slug,
+    );
+  }
+
+  @Mutation(() => ProjectSkillObject, {
+    description: `Attach a domain tag to a project_skills row. The tag must be in the caller's skill-tag vocabulary; phase tags are rejected. Idempotent when the tag is already present. Omit projectId to target the dogfood monorepo project.`,
+  })
+  @UseGuards(GqlPermissionsGuard)
+  @Permissions(PERMISSIONS.SETTINGS_WRITE)
+  async addProjectSkillTag(
+    @CurrentUser() principal: AuthPrincipal,
+    @Args('input', { type: () => AddProjectSkillTagInput })
+    input: AddProjectSkillTagInput,
+  ): Promise<ProjectSkillObject> {
+    const resolvedProjectId =
+      input.projectId ?? (await this.resolveDogfoodProjectId());
+
+    if (resolvedProjectId == null) {
+      throw new NotFoundException(
+        'Dogfood monorepo project not found; pass projectId explicitly.',
+      );
+    }
+
+    const caller = await resolveTagCaller(
+      principal,
+      this.serviceAccountsService,
+    );
+    const view = await this.projectSkillsService.addProjectSkillTag(
+      caller,
+      resolvedProjectId,
+      input.slug,
+      input.tag,
+    );
+
+    return toObject(view);
+  }
+
+  @Mutation(() => Boolean, {
+    description: `Remove a tag from a project_skills row. Returns false when the row or tag is absent (never a 500). Omit projectId to target the dogfood monorepo project.`,
+  })
+  @UseGuards(GqlPermissionsGuard)
+  @Permissions(PERMISSIONS.SETTINGS_WRITE)
+  async removeProjectSkillTag(
+    @Args('input', { type: () => RemoveProjectSkillTagInput })
+    input: RemoveProjectSkillTagInput,
+  ): Promise<boolean> {
+    const resolvedProjectId =
+      input.projectId ?? (await this.resolveDogfoodProjectId());
+
+    if (resolvedProjectId == null) {
+      return false;
+    }
+
+    return this.projectSkillsService.removeProjectSkillTag(
+      resolvedProjectId,
+      input.slug,
+      input.tag,
+    );
   }
 
   private async resolveDogfoodProjectId(): Promise<string | null> {

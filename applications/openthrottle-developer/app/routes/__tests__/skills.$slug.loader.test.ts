@@ -2,18 +2,26 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
 import { createTestRouterContext } from '@openthrottle/react-router-testing';
 import * as readSkillFile from '~/routing/skills/data/read-skill-file.server';
+import * as skillIndexLoaders from '~/routing/skills/data/skill-index-loaders';
 import * as modelsServer from '~/routing/home/data/models.server';
 import { loader } from '../skills.$slug';
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 
 vi.mock('@openthrottle/react-router-graphql');
 vi.mock('~/routing/skills/data/read-skill-file.server');
+vi.mock('~/routing/skills/data/skill-index-loaders');
 vi.mock('~/routing/home/data/models.server');
 
 const mockExecuteGraphqlWithAuth = vi.mocked(
   graphqlWithAuth.executeGraphqlWithAuth,
 );
 const mockReadSkillFileBySlug = vi.mocked(readSkillFile.readSkillFileBySlug);
+const mockLoadProjectSkillFlags = vi.mocked(
+  skillIndexLoaders.loadProjectSkillFlags,
+);
+const mockLoadSkillTagVocabulary = vi.mocked(
+  skillIndexLoaders.loadSkillTagVocabulary,
+);
 const mockLoadComposerModels = vi.mocked(modelsServer.loadComposerModels);
 const mockLoadRepositories = vi.mocked(modelsServer.loadRepositories);
 
@@ -46,6 +54,8 @@ describe('routes/skills.$slug loader', () => {
       editable: true,
       entry,
     });
+    mockLoadProjectSkillFlags.mockReset().mockResolvedValue([]);
+    mockLoadSkillTagVocabulary.mockReset().mockResolvedValue([]);
     mockLoadComposerModels.mockReset().mockResolvedValue([]);
     mockLoadRepositories.mockReset().mockResolvedValue([]);
     mockExecuteGraphqlWithAuth.mockReset();
@@ -140,5 +150,33 @@ describe('routes/skills.$slug loader', () => {
     });
 
     await expect(runLoader('does-not-exist')).rejects.toBeInstanceOf(Response);
+  });
+
+  test('returns a DB-only orphan when disk discovery misses the slug', async () => {
+    mockReadSkillFileBySlug.mockReturnValue({
+      content: '',
+      editable: true,
+      entry: undefined,
+    });
+    mockLoadProjectSkillFlags.mockResolvedValue([
+      {
+        description: 'Gone from disk.',
+        orphanedAt: '2026-08-14T00:00:00.000Z',
+        slug: 'ghost',
+        source: 'external',
+        staticDisableModelInvocation: null,
+        tags: ['github'],
+      },
+    ]);
+    mockExecuteGraphqlWithAuth.mockResolvedValue({
+      skillUsage: { byDay: [], bySkill: [] },
+    });
+
+    const result = await runLoader('ghost');
+
+    expect(result.entry.slug).toBe('ghost');
+    expect(result.entry.orphanedAt).toBe('2026-08-14T00:00:00.000Z');
+    expect(result.editable).toBe(false);
+    expect(result.content).toBe('');
   });
 });

@@ -34,6 +34,7 @@ const loaderDataFor = (
   editable: true,
   entry,
   runOptions: Promise.resolve({ models: [], repositories: [] }),
+  tagVocabulary: [],
   usage: Promise.resolve(usage),
 });
 

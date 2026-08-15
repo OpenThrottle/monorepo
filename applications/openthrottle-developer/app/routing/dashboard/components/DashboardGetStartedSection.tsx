@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Await } from 'react-router';
 import { DashboardGetStartedCard } from '~/routing/dashboard/components/DashboardGetStartedCard';
 import { deriveOnboardingCompletion } from '~/routing/dashboard/utils/onboarding-steps';
+import { FEATURE_BETA_PREVIEW } from '@openthrottle/react-router-utils';
 import type { Route } from '@/app/routes/+types/dashboard._index';
 
 type DashboardLoaderData = Route.ComponentProps['loaderData'];
@@ -26,6 +27,14 @@ export const DashboardGetStartedSection = (
 
   // Setup
 
+  const mockData = {
+    agentCli: false,
+    firstPlan: false,
+    firstRun: false,
+    githubToken: false,
+    workspaceRepo: false,
+  };
+
   // Handlers
 
   // Markup
@@ -37,12 +46,17 @@ export const DashboardGetStartedSection = (
   return (
     <React.Suspense fallback={null}>
       <Await errorElement={null} resolve={onboarding}>
-        {(data) => (
-          <DashboardGetStartedCard
-            className="col-span-2"
-            completion={deriveOnboardingCompletion(data)}
-          />
-        )}
+        {(data) => {
+          const calculated = deriveOnboardingCompletion(data);
+          const completion = FEATURE_BETA_PREVIEW ? mockData : calculated;
+
+          return (
+            <DashboardGetStartedCard
+              className="col-span-2"
+              completion={completion}
+            />
+          );
+        }}
       </Await>
     </React.Suspense>
   );

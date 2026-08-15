@@ -66,7 +66,6 @@ describe('toProjectSkillInputs', () => {
   test('derives external with a lockfile origin URL for an installed skill', () => {
     const [input] = toProjectSkillInputs(
       [skillRecord({ authored: false, labels: ['vendored'] })],
-      undefined,
       {
         vendored: { source: 'github/awesome-copilot', sourceType: 'github' },
       },
@@ -79,7 +78,6 @@ describe('toProjectSkillInputs', () => {
   test('an authored skill never picks up a lockfile URL', () => {
     const [input] = toProjectSkillInputs(
       [skillRecord({ authored: true, labels: ['owned'] })],
-      undefined,
       { owned: { source: 'github/elsewhere', sourceType: 'github' } },
     );
 
@@ -103,31 +101,20 @@ describe('toProjectSkillInputs', () => {
     expect(input?.source).toBe('external');
   });
 
-  test('merges overlay tags (order-preserving union) when overlays are supplied', () => {
-    const [input] = toProjectSkillInputs(
-      [skillRecord({ labels: ['brag-sheet'], tags: undefined })],
-      { 'brag-sheet': { tags: ['docs', 'git', 'github'] } },
-    );
+  test('does not merge overlay maps; frontmatter tags are copied as-is', () => {
+    const [input] = toProjectSkillInputs([
+      skillRecord({ labels: ['brag-sheet'], tags: undefined }),
+    ]);
 
-    expect(input?.tags).toEqual(['docs', 'git', 'github']);
+    expect(input?.tags).toEqual([]);
   });
 
-  test('overlay union dedupes against frontmatter tags', () => {
-    const [input] = toProjectSkillInputs(
-      [skillRecord({ labels: ['github-commit'], tags: ['git'] })],
-      { 'github-commit': { tags: ['git', 'github'] } },
-    );
+  test('keeps frontmatter tags without overlay union', () => {
+    const [input] = toProjectSkillInputs([
+      skillRecord({ labels: ['github-commit'], tags: ['git'] }),
+    ]);
 
-    expect(input?.tags).toEqual(['git', 'github']);
-  });
-
-  test('a skill absent from the overlay map keeps its frontmatter tags', () => {
-    const [input] = toProjectSkillInputs(
-      [skillRecord({ labels: ['loner'], tags: ['nx'] })],
-      { 'other-skill': { tags: ['docs'] } },
-    );
-
-    expect(input?.tags).toEqual(['nx']);
+    expect(input?.tags).toEqual(['git']);
   });
 
   test('defaults absent tags to an empty list and preserves unset flag', () => {

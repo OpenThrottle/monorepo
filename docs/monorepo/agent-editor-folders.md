@@ -26,7 +26,6 @@ repo root
 ├── .workflow-ralph.json.example      # Ralph CLI local defaults (example)
 ├── skills/                           # ★ SSOT for OT-authored skills (one dir per skill, committed)
 ├── skills-lock.json                  # Lockfile for external skills (npx skills add …), hash-pinned
-├── skill-tag-overlays.json           # Skill → tag vocabulary (one entry per skill)
 ├── .agents/                          # SSOT for rules, personas, prompts
 │   ├── skills/                       # GENERATED merged view: symlinks → skills/*  +  real dirs = external installs
 │   ├── rules/                        # All rule bodies (*.mdc) — SSOT (incl. frontend-design-openthrottle.mdc overlay)
@@ -54,7 +53,7 @@ bash skills/skill-sync/scripts/sync.sh          # (re)generate the layout (idemp
 bash skills/skill-sync/scripts/sync.sh --check  # validate without writing (CI drift gate)
 ```
 
-**CI guard:** `pnpm nx run monorepo:check-agent-assets-ssot` runs `skill-sync --check` (skill layout) + `.cursor/rules` symlink integrity + the skill-tag vocabulary check ([`scripts/check-skill-tag-vocabulary.ts`](../../scripts/check-skill-tag-vocabulary.ts) against [`skill-tag-overlays.json`](../../skill-tag-overlays.json)). CI materializes the generated skill symlinks with `sync.sh` before checking.
+**CI guard:** `pnpm nx run monorepo:check-agent-assets-ssot` runs `skill-sync --check` (skill layout) + `.cursor/rules` symlink integrity. CI materializes the generated skill symlinks with `sync.sh` before checking. Skill tags live on `project_skills` rows (GraphQL / `/skills` UI), not in a repo-root overlay file.
 
 > **External server-scoped consumer — foreign-workspace skill injection.** Beyond the in-repo `sync.sh` fan-out above, the running OpenThrottle **server** projects the curated `skills/` SSOT (plus an opt-in per-user tier) INTO **foreign** repos it drives — any checkout outside this monorepo — so OT's skills are available there. It is **layered** (OT curated < personal < target repo, target wins on a name collision), **server-scoped** (materialized lazily on the first foreign run per repo, reused across runs, torn down on shutdown + a boot reaper for crashes), and **non-mutating**: injected entries go into the target's `.agents/skills` + `.claude/skills` as symlinks (host) / copies (container path bridge), hidden from `git status` via the target's **untracked `.git/info/exclude`** (never the tracked `.gitignore`) plus a per-repo ledger stored outside the repo — so the consumer's tracked files are never touched and `git status` stays clean at all times. This is a separate consumer of the same SSOT; it does not change `sync.sh`. Full design: [foreign-workspace-skill-injection.md](./foreign-workspace-skill-injection.md).
 
@@ -68,7 +67,7 @@ bash skills/skill-sync/scripts/sync.sh --check  # validate without writing (CI d
 | External skills    | `npx skills add <owner>/<repo> --skill <name> --agent universal` (→ `skills-lock.json` + a real dir in `.agents/skills/`) | `.claude/skills/<slug>`                                    |
 | Rules              | `.agents/rules/**/*.mdc`                                                                                                  | `.cursor/rules/**/*.mdc`                                   |
 | Personas / prompts | `.agents/personas/`, `.agents/prompts/`                                                                                   | — (loaded via Ralph `--prompt-file`)                       |
-| Skill tags         | `skill-tag-overlays.json` (repo root)                                                                                     | —                                                          |
+| Skill tags         | `project_skills.tags` (GraphQL / `/skills` UI; ingest does not write tags)                                                | —                                                          |
 
 **Editor-native** (not generated, not SSOT-mirrored): `.cursor/hooks.json`, local `.cursor/mcp.json` (from `mcp.json`), `.cursor/worktrees.json`, generated `.cursor/rules/nx-rules.mdc` (gitignored).
 
@@ -80,8 +79,8 @@ bash skills/skill-sync/scripts/sync.sh --check  # validate without writing (CI d
 
 | I want to…                             | Do this                                                                                                               |
 | -------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| Add an **OT-owned skill**              | Create `skills/<slug>/SKILL.md`, add its `skill-tag-overlays.json` entry, run `sync.sh`                               |
-| Install an **external skill**          | `npx skills add <owner>/<repo> --skill <name> --agent universal`, add an overlay entry, run `sync.sh` (keep it 1:1)   |
+| Add an **OT-owned skill**              | Create `skills/<slug>/SKILL.md`, run `sync.sh`. Tag the ingested record in `/skills` (not a JSON overlay)             |
+| Install an **external skill**          | `npx skills add <owner>/<repo> --skill <name> --agent universal`, run `sync.sh` (keep it 1:1)                         |
 | **Customize** an external skill        | Author a companion skill/rule that references it — don't edit the vendored copy (see §2)                              |
 | Change **TypeScript / JS style**       | `.agents/rules/coding/*.mdc` (not the `.cursor/rules/` symlink)                                                       |
 | Change **OT / GitHub / Ralph rules**   | `.agents/rules/commands/*.mdc`                                                                                        |
@@ -97,7 +96,7 @@ bash skills/skill-sync/scripts/sync.sh --check  # validate without writing (CI d
 
 | Tracked                                                                                  | Ignored / local                                                                                 |
 | ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `skills/**` (OT-owned bodies), `skills-lock.json`, `skill-tag-overlays.json`             | —                                                                                               |
+| `skills/**` (OT-owned bodies), `skills-lock.json`                                        | —                                                                                               |
 | `.agents/skills/<external-slug>/**` (real dirs — vendored, pinned by `skills-lock.json`) | `.agents/skills/<own-slug>` (symlinks — generated, regenerated by `sync.sh`)                    |
 | `.agents/rules/**/*.mdc`, `.agents/personas/`, `.agents/prompts/`                        | —                                                                                               |
 | `.cursor/rules/**/*.mdc` (symlinks; except generated `nx-rules.mdc`)                     | `nx-rules.mdc`, `.cursor/mcp.json`, `.cursor/cli-config.json`                                   |

@@ -1,11 +1,12 @@
 import * as React from 'react';
 import { cleanup, screen, type RenderResult } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { renderRoutesStub } from '../../../../testing/route-fixtures';
 import { SkillsTable } from '../SkillsTable';
 import type { SkillsTableProps } from '../SkillsTable';
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
+import { SKILL_RECORD_TAGS_COPY } from '~/routing/skills/data/data.copy';
 
 const mockEntries: readonly RepoSkillEntry[] = [
   {
@@ -96,17 +97,42 @@ describe('SkillsTable Component', () => {
         screen.getByRole('columnheader', { name: 'Summary' }),
       ).toBeInTheDocument();
       expect(
-        screen.getByRole('columnheader', { name: 'Model invocation' }),
+        screen.getByRole('columnheader', { name: 'Invocation' }),
       ).toBeInTheDocument();
+    });
+
+    test('shows a missing-from-disk badge and registry remove for orphans', () => {
+      const onRemoveOrphan = vi.fn();
+      const component = renderRoutesStub(
+        <SkillsTable
+          entries={[
+            {
+              disableModelInvocation: undefined,
+              layout: 'agents',
+              orphanedAt: '2026-08-14T00:00:00.000Z',
+              repoRelativePath: '',
+              slug: 'ghost',
+              source: 'external',
+              summary: 'Gone from disk.',
+              tags: ['github'],
+            },
+          ]}
+          onRemoveOrphan={onRemoveOrphan}
+        />,
+      );
+
+      expect(component.getByTestId('skill-orphan-badge')).toHaveTextContent(
+        SKILL_RECORD_TAGS_COPY.orphanBadge,
+      );
       expect(
-        screen.getByRole('columnheader', { name: 'Actions' }),
+        component.getByTestId('SkillOrphanRemoveButton'),
       ).toBeInTheDocument();
+      expect(component.queryByTestId('skill-view-link')).toBeNull();
     });
 
     test('renders table rows from entries', () => {
       renderRoutesStub(<SkillsTable {...props} />);
 
-      // expect(screen.getAllByText('Agents')).toHaveLength(2);
       expect(screen.getByText('/grilling')).toBeInTheDocument();
       expect(screen.getByText('/nx-workspace')).toBeInTheDocument();
       expect(
