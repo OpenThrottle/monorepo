@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { render } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
@@ -50,21 +51,29 @@ const matchesFor = (
   },
 ];
 
-const renderRoute = (content: string, usage?: SkillDetailUsageData) => {
+const renderRoute = (
+  content: string,
+  usage?: SkillDetailUsageData,
+  initialPath = '/',
+) => {
+  // Build loaderData ONCE so the deferred `usage` promise is stable across
+  // re-renders — a fresh Promise per render makes <Await> re-suspend forever.
+  const loaderData = loaderDataFor(content, usage);
+  const matches = matchesFor(content, usage);
   // useFetcher in the route component requires a data router.
   const Wrapped = () => (
     <TooltipProvider>
       <Component
         actionData={undefined}
-        loaderData={loaderDataFor(content, usage)}
-        matches={matchesFor(content, usage)}
+        loaderData={loaderData}
+        matches={matches}
         params={{ slug: 'ot-plans' }}
       />
     </TooltipProvider>
   );
   const RoutesStub = createRoutesStub([{ Component: Wrapped, path: '/' }]);
 
-  return render(<RoutesStub />);
+  return render(<RoutesStub initialEntries={[initialPath]} />);
 };
 
 describe('routes/skills.$slug.tsx', () => {
@@ -98,47 +107,68 @@ describe('routes/skills.$slug.tsx', () => {
     ).toBeInTheDocument();
   });
 
-  test('streams the empty usage state beneath the SKILL.md content', async () => {
+  test('defaults to the Skill tab and does not mount the Usage tab', () => {
     const component = renderRoute('---\nname: ot-plans\n---\n\n# Body\n');
 
-    // Deferred (Await) — resolves after the shell paints.
-    expect(
-      await component.findByTestId('SkillDetailUsageEmpty'),
-    ).toBeInTheDocument();
-    // SKILL.md content still rendered.
     expect(
       component.getByRole('heading', { name: 'Body' }),
     ).toBeInTheDocument();
+    // Radix Tabs unmount inactive panels — usage is not rendered by default.
+    expect(component.queryByTestId('SkillDetailUsage')).not.toBeInTheDocument();
   });
 
-  test('streams populated per-skill usage stats when present', async () => {
-    const component = renderRoute('---\nname: ot-plans\n---\n\n# Body\n', {
-      available: true,
-      byDay: [
-        { date: '2026-08-05', oursCount: 5, thirdPartyCount: 0, totalCount: 5 },
-      ],
-      skill: {
-        abandonedCount: 0,
-        avgDurationMs: 1500,
-        count: 5,
-        errorCount: 0,
-        lastUsedAt: '2026-08-05T12:00:00.000Z',
-        outcomeCount: 3,
-        scope: 'ours',
-        skillName: 'ot-plans',
-        successCount: 3,
+  test('switching to the Usage tab streams the empty usage state', async () => {
+    const user = userEvent.setup();
+    const component = renderRoute('---\nname: ot-plans\n---\n\n# Body\n');
+
+    await user.click(component.getByRole('tab', { name: 'Usage' }));
+
+    // Deferred (Await) — resolves after the tab shell paints.
+    expect(
+      await component.findByTestId('SkillDetailUsageEmpty'),
+    ).toBeInTheDocument();
+  });
+
+  test('deep-linking ?tab=usage streams populated per-skill usage stats', async () => {
+    const component = renderRoute(
+      '---\nname: ot-plans\n---\n\n# Body\n',
+      {
+        available: true,
+        byDay: [
+          {
+            date: '2026-08-05',
+            oursCount: 5,
+            thirdPartyCount: 0,
+            totalCount: 5,
+          },
+        ],
+        skill: {
+          abandonedCount: 0,
+          avgDurationMs: 1500,
+          count: 5,
+          errorCount: 0,
+          lastUsedAt: '2026-08-05T12:00:00.000Z',
+          outcomeCount: 3,
+          scope: 'ours',
+          skillName: 'ot-plans',
+          successCount: 3,
+        },
       },
-    });
+      '/?tab=usage',
+    );
 
     expect(
       await component.findByTestId('SkillDetailUsageStats'),
     ).toBeInTheDocument();
   });
 
-  test('renders the unavailable notice when usage could not be loaded', async () => {
+  test('renders the unavailable notice in the Usage tab when usage could not load', async () => {
+    const user = userEvent.setup();
     const component = renderRoute('---\nname: ot-plans\n---\n\n# Body\n', {
       available: false,
     });
+
+    await user.click(component.getByRole('tab', { name: 'Usage' }));
 
     expect(
       await component.findByTestId('SkillDetailUsageUnavailable'),
