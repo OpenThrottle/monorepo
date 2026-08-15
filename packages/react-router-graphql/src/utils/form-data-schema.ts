@@ -189,3 +189,118 @@ export const parseFormData = <Schema extends z.ZodTypeAny>(
     success: false,
   };
 };
+
+/** Form string values (case-insensitive) that coerce to `true`. */
+const TRUE_TOKENS: ReadonlySet<string> = new Set(['1', 'on', 'true', 'yes']);
+/** Form string values (case-insensitive) that coerce to `false`. */
+const FALSE_TOKENS: ReadonlySet<string> = new Set(['0', 'false', 'no', 'off']);
+
+/**
+ * @description Wrap a boolean schema so a form's string value coerces to a real
+ * boolean before validation: `'true'`/`'on'`/`'1'`/`'yes'` → `true`,
+ * `'false'`/`'off'`/`'0'`/`'no'` → `false` (case-insensitive). A blank or absent
+ * value becomes `undefined`, so the wrapped schema's `.default()` / `.nullish()`
+ * decides the fallback (an unchecked HTML checkbox submits nothing). Non-string
+ * values and unrecognized strings pass through untouched for the schema to
+ * accept or reject.
+ *
+ * Use inside `.extend()` on a generated `*InputSchema()` for checkbox/confirm
+ * fields (`confirm`, `enabled`, `writeToFileSystem`) instead of comparing
+ * `formData.get(...) === 'true'` at the call site.
+ *
+ * @public
+ */
+export const coerceBoolean = <Schema extends z.ZodTypeAny>(
+  schema: Schema,
+): z.ZodEffects<Schema, z.infer<Schema>, unknown> => {
+  return z.preprocess((value) => {
+    if (typeof value !== 'string') {
+      return value;
+    }
+    const normalized = value.trim().toLowerCase();
+    if (normalized === '') {
+      return undefined;
+    }
+    if (TRUE_TOKENS.has(normalized)) {
+      return true;
+    }
+    if (FALSE_TOKENS.has(normalized)) {
+      return false;
+    }
+    return value;
+  }, schema);
+};
+
+/**
+ * @description Wrap a number schema so a numeric form string coerces to a number
+ * before validation (e.g. `EnqueuePlanRunInput.priority`). A blank or absent
+ * value becomes `undefined` (the wrapped schema decides the fallback); a
+ * non-numeric string passes through so the schema rejects it rather than
+ * silently sending `NaN`.
+ *
+ * @public
+ */
+export const coerceNumber = <Schema extends z.ZodTypeAny>(
+  schema: Schema,
+): z.ZodEffects<Schema, z.infer<Schema>, unknown> => {
+  return z.preprocess((value) => {
+    if (typeof value !== 'string') {
+      return value;
+    }
+    const trimmed = value.trim();
+    if (trimmed === '') {
+      return undefined;
+    }
+    const parsed = Number(trimmed);
+    return Number.isNaN(parsed) ? value : parsed;
+  }, schema);
+};
+
+/**
+ * @description Wrap a schema so a JSON form string is `JSON.parse`d before
+ * validation, then fed to the wrapped (typically nested, generated) schema —
+ * for inputs whose value is an object encoded as JSON in a hidden field
+ * (`ralphTuning`, a rollout `variations` blob). A blank or absent value becomes
+ * `undefined`; malformed JSON passes the raw string through so the wrapped
+ * schema rejects it.
+ *
+ * For fields that stay a JSON **string** on the GraphQL wire (`runConfigJson`,
+ * `jobRunHooksJson`), do NOT use this — keep the generated `z.string()` and, if
+ * you want an early validity check, add `.refine(isJsonString, 'Must be valid
+ * JSON.')`.
+ *
+ * @public
+ */
+export const coerceJson = <Schema extends z.ZodTypeAny>(
+  schema: Schema,
+): z.ZodEffects<Schema, z.infer<Schema>, unknown> => {
+  return z.preprocess((value) => {
+    if (typeof value !== 'string') {
+      return value;
+    }
+    const trimmed = value.trim();
+    if (trimmed === '') {
+      return undefined;
+    }
+    try {
+      const parsed: unknown = JSON.parse(trimmed);
+      return parsed;
+    } catch {
+      return value;
+    }
+  }, schema);
+};
+
+/**
+ * @description Whether `value` parses as JSON — a `.refine` predicate for
+ * string-on-wire JSON fields that must stay strings but should be rejected early
+ * when malformed. @public
+ */
+export const isJsonString = (value: string): boolean => {
+  try {
+    JSON.parse(value);
+    return true;
+  } catch {
+    return false;
+  }
+};

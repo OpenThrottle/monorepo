@@ -1,8 +1,15 @@
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import {
+  executeGraphqlWithAuth,
+  parseFormData,
+} from '@openthrottle/react-router-graphql';
 import {
   ProjectDetailAddProjectTagDocument,
   ProjectDetailRemoveProjectTagDocument,
 } from '~/__generated__/graphql';
+import {
+  AddProjectTagInputSchema,
+  RemoveProjectTagInputSchema,
+} from '~/__generated__/schemas';
 import type { Route } from '@/app/routes/+types/projects.$projectId._index';
 
 /**
@@ -18,24 +25,36 @@ export const runProjectDetailAction = async (args: Route.ActionArgs) => {
 
   const formData = await args.request.formData();
   const intent = formData.get('intent');
-  const tag = formData.get('tag');
 
   if (intent === 'addProjectTag' || intent === 'removeProjectTag') {
-    if (typeof tag !== 'string' || tag.trim() === '') {
+    // `projectId` is a route param; validate only `tag` from the generated
+    // schema, then inject the id.
+    const parsed =
+      intent === 'addProjectTag'
+        ? parseFormData(
+            formData,
+            AddProjectTagInputSchema().omit({ projectId: true }),
+          )
+        : parseFormData(
+            formData,
+            RemoveProjectTagInputSchema().omit({ projectId: true }),
+          );
+    if (!parsed.success) {
       return { projectTagError: 'Tag is required.' };
     }
+    const tag = parsed.data.tag;
     try {
       if (intent === 'addProjectTag') {
         await executeGraphqlWithAuth(
           args.request,
           ProjectDetailAddProjectTagDocument,
-          { input: { projectId, tag: tag.trim() } },
+          { input: { projectId, tag } },
         );
       } else {
         await executeGraphqlWithAuth(
           args.request,
           ProjectDetailRemoveProjectTagDocument,
-          { input: { projectId, tag: tag.trim() } },
+          { input: { projectId, tag } },
         );
       }
       return { projectTagUpdated: true };

@@ -1,6 +1,11 @@
 import * as React from 'react';
 import { redirect } from 'react-router';
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import {
+  coerceBoolean,
+  executeGraphqlWithAuth,
+  parseFormData,
+} from '@openthrottle/react-router-graphql';
+import { z } from 'zod/v3';
 import {
   getActionError,
   mergeRouteModuleMeta,
@@ -11,6 +16,7 @@ import {
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
+import { CreateRolloutFlagInputSchema } from '~/__generated__/schemas';
 import {
   DeleteRolloutFlagDocument,
   GetRolloutFlagDocument,
@@ -19,8 +25,6 @@ import {
 import { RolloutFlagEditForm } from '~/routing/settings/components/RolloutFlagEditForm';
 import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
 import {
-  optionalRolloutString,
-  parseRolloutEnabled,
   parseRolloutTargetRoles,
   rolloutFlagDetailPath,
 } from '~/routing/settings/utils/rollout-action';
@@ -98,8 +102,14 @@ export const action = async (args: Route.ActionArgs) => {
   const intent = formData.get('intent');
 
   if (intent === 'updateRolloutFlag') {
-    const key = optionalRolloutString(formData.get('key'));
-    if (!key) {
+    const parsed = parseFormData(
+      formData,
+      CreateRolloutFlagInputSchema()
+        .pick({ description: true, key: true })
+        .extend({ enabled: coerceBoolean(z.boolean().default(false)) }),
+      { strict: false },
+    );
+    if (!parsed.success) {
       return { error: 'A flag key is required.' };
     }
 
@@ -111,10 +121,10 @@ export const action = async (args: Route.ActionArgs) => {
     try {
       await executeGraphqlWithAuth(args.request, UpdateRolloutFlagDocument, {
         input: {
-          description: optionalRolloutString(formData.get('description')),
-          enabled: parseRolloutEnabled(formData.get('enabled')),
+          description: parsed.data.description ?? null,
+          enabled: parsed.data.enabled,
           id: args.params.flagId,
-          key,
+          key: parsed.data.key,
           targetRoles: parseRolloutTargetRoles(formData.get('targetRoles')),
           ...toRolloutGraphqlTypedInput(typed.config),
         },

@@ -3,7 +3,10 @@ import {
   getActionError,
   mergeRouteModuleMeta,
 } from '@openthrottle/react-router-utils';
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import {
+  executeGraphqlWithAuth,
+  parseFormData,
+} from '@openthrottle/react-router-graphql';
 import {
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
@@ -11,8 +14,8 @@ import {
 import {
   GetNoteByIdDocument,
   UpdateNoteDocument,
-  UpdateNoteInput,
 } from '~/__generated__/graphql';
+import { UpdateNoteInputSchema } from '~/__generated__/schemas';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
 import { NoteForm } from '~/routing/notes/components/NoteForm';
@@ -70,13 +73,13 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData, loaderData, matches: _m, params: _p } = props;
+  const { note } = loaderData;
 
   // Hooks
   const [searchParams, setSearchParams] = useSearchParams();
   const navigation = useNavigation();
 
   // Setup
-  const { note } = loaderData;
   const isEditing = searchParams.get(NOTE_MODE_PARAM) === NOTE_EDIT_MODE;
   const actionError = getActionError(actionData);
 
@@ -165,13 +168,20 @@ export const action = async (args: Route.ActionArgs) => {
   }
 
   const formData = await args.request.formData();
-  const content = formData.get('content');
-  const author = formData.get('author');
+  // `id` is the route param; `author`/`content` are optional. Preserve the
+  // clear-to-null on `author` (blank clears it) that the update form expects.
+  const parsed = parseFormData(
+    formData,
+    UpdateNoteInputSchema().omit({ id: true }),
+  );
+  if (!parsed.success) {
+    return { error: parsed.error };
+  }
 
   try {
-    const input: UpdateNoteInput = {
-      author: typeof author === 'string' ? author.trim() || null : undefined,
-      content: typeof content === 'string' ? content : undefined,
+    const input = {
+      author: parsed.data.author ?? null,
+      content: parsed.data.content,
       id: noteId,
     };
 

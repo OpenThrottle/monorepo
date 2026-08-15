@@ -1,6 +1,11 @@
 import * as React from 'react';
 import { redirect } from 'react-router';
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { z } from 'zod/v3';
+import {
+  coerceBoolean,
+  executeGraphqlWithAuth,
+  parseFormData,
+} from '@openthrottle/react-router-graphql';
 import {
   getActionError,
   mergeRouteModuleMeta,
@@ -11,16 +16,14 @@ import {
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
+import { UpdateRepositoryInputSchema } from '~/__generated__/schemas';
 import {
   GetWorkspaceRepositoryForEditDocument,
   UpdateRepositoryDocument,
 } from '~/__generated__/graphql';
 import { RepositoryEditForm } from '~/routing/settings/repositories/components/RepositoryEditForm';
 import { repositoryDetailPath } from '~/routing/settings/repositories/utils/paths';
-import {
-  optionalTrimmedString,
-  parseProjectIdFromFormData,
-} from '~/routing/settings/utils/workspace-settings-action';
+import { parseProjectIdFromFormData } from '~/routing/settings/utils/workspace-settings-action';
 import type { Route } from '@/app/routes/+types/settings.repositories.$repositoryId.edit';
 
 type HandleData = Route.ComponentProps['loaderData'];
@@ -92,14 +95,27 @@ export const action = async (args: Route.ActionArgs) => {
   const intent = formData.get('intent');
 
   if (intent === 'updateRepository') {
+    const parsed = parseFormData(
+      formData,
+      UpdateRepositoryInputSchema()
+        .omit({ id: true, projectId: true })
+        .extend({
+          foreignSkillInjectionEnabled: coerceBoolean(z.boolean()).nullish(),
+        }),
+      { strict: false },
+    );
+    if (!parsed.success) {
+      return { error: parsed.error };
+    }
+
     try {
       await executeGraphqlWithAuth(args.request, UpdateRepositoryDocument, {
         input: {
-          defaultBranch: optionalTrimmedString(formData.get('defaultBranch')),
+          defaultBranch: parsed.data.defaultBranch ?? null,
           foreignSkillInjectionEnabled:
-            formData.get('foreignSkillInjectionEnabled') === 'true',
+            parsed.data.foreignSkillInjectionEnabled ?? false,
           id: args.params.repositoryId,
-          name: optionalTrimmedString(formData.get('name')),
+          name: parsed.data.name ?? null,
           projectId: parseProjectIdFromFormData(formData.get('projectId')),
         },
       });

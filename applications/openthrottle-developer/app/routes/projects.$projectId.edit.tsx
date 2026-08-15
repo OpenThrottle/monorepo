@@ -1,5 +1,9 @@
 import * as React from 'react';
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { z } from 'zod/v3';
+import {
+  executeGraphqlWithAuth,
+  parseFormData,
+} from '@openthrottle/react-router-graphql';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { redirect } from 'react-router';
 import {
@@ -11,6 +15,7 @@ import {
   GetProjectForEditDocument,
   UpdateProjectDocument,
 } from '~/__generated__/graphql';
+import { UpdateProjectInputSchema } from '~/__generated__/schemas';
 import { ProjectForm } from '~/routing/projects/components/ProjectForm';
 import { ProjectNotFound } from '~/routing/projects/components/ProjectNotFound';
 import { SITE_TITLE } from '~/global/config/settings';
@@ -97,26 +102,25 @@ export default function Component(
 export const action = async (args: Route.ActionArgs) => {
   const projectId = args.params.projectId;
   const formData = await args.request.formData();
-  const name = formData.get('name');
 
-  if (typeof name !== 'string' || !name.trim()) {
+  // `id` is the route param. `name` is required at the UI layer (the generated
+  // Update schema leaves it optional), so tighten it to `min(1)`. `description`
+  // and `nxProjectName` clear to `null` when blank, matching the edit form.
+  const parsed = parseFormData(
+    formData,
+    UpdateProjectInputSchema()
+      .omit({ id: true })
+      .extend({ name: z.string().min(1) }),
+  );
+  if (!parsed.success) {
     return { error: 'Project name is required.' };
   }
 
-  const description = formData.get('description');
-  const nxProjectName = formData.get('nxProjectName');
-
   const input = {
-    description:
-      typeof description === 'string' && description.trim()
-        ? description.trim()
-        : null,
+    description: parsed.data.description ?? null,
     id: projectId,
-    name: name.trim(),
-    nxProjectName:
-      typeof nxProjectName === 'string' && nxProjectName.trim()
-        ? nxProjectName.trim()
-        : null,
+    name: parsed.data.name,
+    nxProjectName: parsed.data.nxProjectName ?? null,
   };
 
   try {

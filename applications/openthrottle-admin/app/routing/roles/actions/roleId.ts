@@ -1,11 +1,19 @@
 import { redirect } from 'react-router';
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import {
+  executeGraphqlWithAuth,
+  parseFormData,
+} from '@openthrottle/react-router-graphql';
 import {
   AddPermissionToRoleDocument,
   DeleteRoleDocument,
   RemovePermissionFromRoleDocument,
   UpdateRoleDocument,
 } from '~/__generated__/graphql';
+import {
+  AddPermissionToRoleInputSchema,
+  RemovePermissionFromRoleInputSchema,
+  UpdateRoleInputSchema,
+} from '~/__generated__/schemas';
 
 /**
  * Intent handler backing the `roles.$roleId` route action. Dispatches the
@@ -26,15 +34,20 @@ export const runRoleDetailAction = async (
 
   try {
     if (intent === 'addPermission') {
-      const permissionId = formData.get('permissionId');
-
-      if (typeof permissionId === 'string' && permissionId) {
-        await executeGraphqlWithAuth(request, AddPermissionToRoleDocument, {
-          input: { permissionId, roleId },
-        });
-
-        return { ok: true };
+      const parsed = parseFormData(
+        formData,
+        AddPermissionToRoleInputSchema().omit({ roleId: true }),
+        { strict: false },
+      );
+      if (!parsed.success) {
+        return { error: 'A permission is required.' };
       }
+
+      await executeGraphqlWithAuth(request, AddPermissionToRoleDocument, {
+        input: { permissionId: parsed.data.permissionId, roleId },
+      });
+
+      return { ok: true };
     }
 
     if (intent === 'deleteRole') {
@@ -43,31 +56,37 @@ export const runRoleDetailAction = async (
     }
 
     if (intent === 'removePermission') {
-      const permissionId = formData.get('permissionId');
-
-      if (typeof permissionId === 'string' && permissionId) {
-        await executeGraphqlWithAuth(
-          request,
-          RemovePermissionFromRoleDocument,
-          {
-            input: { permissionId, roleId },
-          },
-        );
-        return { ok: true };
+      const parsed = parseFormData(
+        formData,
+        RemovePermissionFromRoleInputSchema().omit({ roleId: true }),
+        { strict: false },
+      );
+      if (!parsed.success) {
+        return { error: 'A permission is required.' };
       }
+
+      await executeGraphqlWithAuth(request, RemovePermissionFromRoleDocument, {
+        input: { permissionId: parsed.data.permissionId, roleId },
+      });
+
+      return { ok: true };
     }
 
     if (intent === 'updateRole') {
-      const name = formData.get('name');
-      const description = formData.get('description');
-      const hasDescription = typeof description === 'string';
-      const hasName = typeof name === 'string';
+      const parsed = parseFormData(
+        formData,
+        UpdateRoleInputSchema().omit({ id: true }),
+        { strict: false },
+      );
+      if (!parsed.success) {
+        return { error: parsed.error };
+      }
 
       await executeGraphqlWithAuth(request, UpdateRoleDocument, {
         input: {
-          description: hasDescription ? description.trim() || null : undefined,
+          description: parsed.data.description ?? null,
           id: roleId,
-          name: hasName && name.trim() ? name.trim() : undefined,
+          name: parsed.data.name,
         },
       });
 

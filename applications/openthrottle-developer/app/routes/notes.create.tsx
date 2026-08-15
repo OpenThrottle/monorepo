@@ -1,5 +1,8 @@
 import * as React from 'react';
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import {
+  executeGraphqlWithAuth,
+  parseFormData,
+} from '@openthrottle/react-router-graphql';
 import {
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
@@ -11,7 +14,8 @@ import {
 import { redirect } from 'react-router';
 import { NoteForm } from '~/routing/notes/components/NoteForm';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { CreateNoteDocument, CreateNoteInput } from '~/__generated__/graphql';
+import { CreateNoteDocument } from '~/__generated__/graphql';
+import { CreateNoteInputSchema } from '~/__generated__/schemas';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/notes.create';
 
@@ -62,24 +66,18 @@ export default function Component(
 export const action = async (args: Route.ActionArgs) => {
   const formData = await args.request.formData();
 
-  const content = formData.get('content');
-  const author = formData.get('author');
-
-  if (typeof content !== 'string') {
+  // `content` is required (`min(1)` from codegen); `author` is optional and
+  // omitted when blank.
+  const parsed = parseFormData(formData, CreateNoteInputSchema());
+  if (!parsed.success) {
     return { error: 'Content is required.' };
   }
 
   try {
-    const isString = typeof author === 'string';
-    const input: CreateNoteInput = {
-      author: isString && author.trim() ? author.trim() : null,
-      content: content.trim(),
-    };
-
     const result = await executeGraphqlWithAuth(
       args.request,
       CreateNoteDocument,
-      { input },
+      { input: parsed.data },
     );
 
     return redirect(`/notes/${result.createNote.id}`);

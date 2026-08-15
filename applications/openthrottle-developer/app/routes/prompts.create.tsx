@@ -1,7 +1,11 @@
 import * as React from 'react';
 import { redirect } from 'react-router';
+import { z } from 'zod/v3';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import {
+  executeGraphqlWithAuth,
+  parseFormData,
+} from '@openthrottle/react-router-graphql';
 import {
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
@@ -10,12 +14,12 @@ import {
   CreatePromptDocument,
   CustomPromptType,
 } from '~/__generated__/graphql';
+import { CreateCustomPromptInputSchema } from '~/__generated__/schemas';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
 import { PROMPTS_BASE_PATH } from '~/routing/prompts/config';
 import { PromptCreateForm } from '~/routing/prompts/components/PromptCreateForm';
 import { usePromptCreateForm } from '~/routing/prompts/hooks/usePromptCreateForm';
-import type { CreateCustomPromptInput } from '~/__generated__/graphql';
 import type { Route } from '@/app/routes/+types/prompts.create';
 
 type HandleData = Route.ComponentProps['loaderData'];
@@ -65,53 +69,44 @@ export default function Component(
 export const action = async (args: Route.ActionArgs) => {
   const formData = await args.request.formData();
 
-  const content = formData.get('content');
-  const description = formData.get('description');
-  const filePath = formData.get('filePath');
-  const labelsRaw = formData.get('labels');
-  const promptType = formData.get('promptType');
-  const title = formData.get('title');
+  // `promptType` is dropped (the form posts the editor's local type; this route
+  // always creates a `Prompts` prompt) and re-injected below. `labels` arrives
+  // as a comma-separated string, so preprocess it into the schema's array.
+  // `writeToFileSystem` is omitted so the server default stands, unchanged.
+  const parsed = parseFormData(
+    formData,
+    CreateCustomPromptInputSchema()
+      .omit({ promptType: true, writeToFileSystem: true })
+      .extend({
+        labels: z.preprocess(
+          (value) =>
+            typeof value === 'string'
+              ? value
+                  .split(',')
+                  .map((label) => label.trim())
+                  .filter((label) => label.length > 0)
+              : [],
+          z.array(z.string().min(1)),
+        ),
+      }),
+    { allow: ['intent', 'promptType'] },
+  );
 
-  if (typeof title !== 'string' || !title.trim()) {
-    return { error: 'Title is required.' };
+  if (!parsed.success) {
+    if (parsed.fieldErrors.title) {
+      return { error: 'Title is required.' };
+    }
+    if (parsed.fieldErrors.content) {
+      return { error: 'Content is required.' };
+    }
+    return { error: parsed.error };
   }
-
-  if (typeof content !== 'string' || !content.trim()) {
-    return { error: 'Content is required.' };
-  }
-
-  if (typeof promptType !== 'string') {
-    return { error: 'Prompt type is required.' };
-  }
-
-  const labels =
-    typeof labelsRaw === 'string' && labelsRaw.trim()
-      ? labelsRaw
-          .split(',')
-          .map((l) => l.trim())
-          .filter((l) => l.length > 0)
-      : [];
 
   try {
-    const input: CreateCustomPromptInput = {
-      content,
-      description:
-        typeof description === 'string' && description.trim()
-          ? description.trim()
-          : undefined,
-      filePath:
-        typeof filePath === 'string' && filePath.trim()
-          ? filePath.trim()
-          : undefined,
-      labels,
-      promptType: CustomPromptType.Prompts,
-      title: title.trim(),
-    };
-
     const result = await executeGraphqlWithAuth(
       args.request,
       CreatePromptDocument,
-      { input },
+      { input: { ...parsed.data, promptType: CustomPromptType.Prompts } },
     );
 
     if (!result.createCustomPrompt) {

@@ -2,22 +2,14 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 const executeGraphqlWithAuth = vi.fn();
 
-vi.mock('@openthrottle/react-router-graphql', () => {
-  class GraphqlAuthError extends Error {
-    readonly httpStatus: number;
-
-    constructor(message: string, httpStatus: number) {
-      super(message);
-      this.name = 'GraphqlAuthError';
-      this.httpStatus = httpStatus;
-    }
-  }
+vi.mock('@openthrottle/react-router-graphql', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('@openthrottle/react-router-graphql')>();
 
   return {
-    GraphqlAuthError,
+    ...actual,
     executeGraphqlWithAuth: (...args: unknown[]) =>
       executeGraphqlWithAuth(...args),
-    isAuthError: (error: unknown) => error instanceof GraphqlAuthError,
   };
 });
 
@@ -143,6 +135,19 @@ describe('routes/users.$userId.tsx', () => {
       );
 
       expect(result).toEqual({ ok: true });
+      const callArgs = executeGraphqlWithAuth.mock.calls[0];
+      expect(callArgs[2]).toEqual({
+        input: { roleId: 'role-1', userId: 'user-1' },
+      });
+    });
+
+    test('returns an error when a role is not selected for assignRole', async () => {
+      const result = await RouteModule.action(
+        createActionArgs({ userId: 'user-1' }, { intent: 'assignRole' }),
+      );
+
+      expect(result).toEqual({ error: 'A role is required.' });
+      expect(executeGraphqlWithAuth).not.toHaveBeenCalled();
     });
 
     test('disables a user and returns ok', async () => {

@@ -60,21 +60,3 @@ export const parseExpiresAtFromFormData = (
   }
   return date;
 };
-
-/**
- * @description Parses required service account id from form data.
- */
-export const parseServiceAccountIdFromFormData = (
-  value: FormDataEntryValue | null,
-): string | null => {
-  return optionalTrimmedString(value);
-};
-
-/**
- * @description Parses required credential id from form data.
- */
-export const parseCredentialIdFromFormData = (
-  value: FormDataEntryValue | null,
-): string | null => {
-  return optionalTrimmedString(value);
-};

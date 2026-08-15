@@ -1,52 +1,9 @@
 import { describe, expect, test } from 'vitest';
 import {
   formatRolloutTargetRoles,
-  optionalRolloutString,
-  parseRolloutEnabled,
   parseRolloutTargetRoles,
   rolloutFlagDetailPath,
 } from '../rollout-action';
-
-describe('optionalRolloutString', () => {
-  test('returns null for a non-string value', () => {
-    expect(optionalRolloutString(null)).toBeNull();
-  });
-
-  test('returns null for an empty string', () => {
-    expect(optionalRolloutString('')).toBeNull();
-  });
-
-  test('returns null for a whitespace-only string', () => {
-    expect(optionalRolloutString('   ')).toBeNull();
-  });
-
-  test('returns the trimmed string', () => {
-    expect(optionalRolloutString('  hello  ')).toBe('hello');
-  });
-});
-
-describe('parseRolloutEnabled', () => {
-  test('returns true for "true"', () => {
-    expect(parseRolloutEnabled('true')).toBe(true);
-  });
-
-  test('returns true for "on"', () => {
-    expect(parseRolloutEnabled('on')).toBe(true);
-  });
-
-  test('returns false for "false"', () => {
-    expect(parseRolloutEnabled('false')).toBe(false);
-  });
-
-  test('returns false for null', () => {
-    expect(parseRolloutEnabled(null)).toBe(false);
-  });
-
-  test('returns false for a non-string value', () => {
-    const file = new File(['content'], 'file.txt');
-    expect(parseRolloutEnabled(file)).toBe(false);
-  });
-});
 
 describe('parseRolloutTargetRoles', () => {
   test('returns an empty list for a non-string value', () => {
