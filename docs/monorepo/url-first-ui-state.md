@@ -61,9 +61,46 @@ Conventions and **copy-paste examples** for backing **dialogs, sheets, drawers**
 
 ---
 
-## 7. Carve-out: debounced search and filters
+## 7. List-toolbar search
+
+### 7.1 Canonical: `GlobalToolbarSearch` (submit-to-URL)
+
+The **default** control for a list/table toolbar search box is [`GlobalToolbarSearch`](../../packages/react-router-ui-global/src/components/GlobalToolbarSearch.tsx) in `@openthrottle/react-router-ui-global`. It is **submit-only** (v1): the URL is the source of truth, and the committed value only changes on **Enter / Search-button submit** — no per-keystroke writes. Reach for it instead of hand-rolling another `Input` + Search `Button` + local submit handler.
+
+What it gives you:
+
+- **Default URL param `search`.** Pass `paramKey` to override (e.g. `paramKey="q"`) for **gradual `q` migrations** — during a surface's cutover, have the reader prefer the new param and fall back to the old one: `searchParams.get('search') ?? searchParams.get('q')`, so existing `?q=` bookmarks keep filtering.
+- **Local controlled input** hydrated from the committed param, **resynced** when it changes (Back/Forward, or a sibling control rewriting the URL).
+- **On submit:** trims, sets or deletes the param when empty, and writes with `setSearchParams(next, { replace: true, preventScrollReset: true })` — preserving other params (§2, §6).
+- **`transformCommittedParams(next)`** hook to mutate the next params before the write — e.g. paginated lists `next.delete('page')` to land a new query on page 1.
+
+**It owns its own `<form role="search">`.** HTML forms **must not nest**, so a toolbar that previously wrapped its whole row in one `<form>` must be **split**: `GlobalToolbarSearch` is a **sibling** of the other controls (source filters, sort dropdowns, Create CTAs), which live **outside** its form. Accessibility comes for free: `role="search"`, a `type="search"` input (pass `aria-label`), and a submit button.
+
+```tsx
+<div
+  className="flex w-full flex-wrap items-center gap-2"
+  data-testid="NotesToolbar"
+>
+  <GlobalToolbarSearch
+    aria-label="Search notes"
+    placeholder="Search notes"
+    // paginated lists reset page; clear any legacy param on submit
+    transformCommittedParams={(next) => next.delete('q')}
+  />
+  {/* filters and CTAs are SIBLINGS, never nested in the search form */}
+  <Button asChild variant="outline">
+    <Link to="/notes/create">Create note</Link>
+  </Button>
+</div>
+```
+
+Reference call sites: `SkillsToolbar`, `NotesToolbar`, `CalendarToolbar`, `ProjectsToolbar`, `QueueOpsToolbar`, `PlansToolbar` in `openthrottle-developer`.
+
+### 7.2 Carve-out: debounced / live search (`useDebouncedSearchParam`)
 
 **Problem:** mirroring every keystroke to the URL without discipline floods history and triggers excessive loader/refetch churn.
+
+When a surface genuinely needs **live typing → results** (not submit-only), use [`useDebouncedSearchParam`](../../packages/react-router-ui/src/hooks/useDebouncedSearchParam.ts) from `@openthrottle/react-router-ui` (default key `q`, live debounce + `commitNow`). This is a deliberate **carve-out**, not the default — `GlobalToolbarSearch` (§7.1) is. It is still used by `RulesToolbar` and `PromptToolbar`; those stay on the debounced hook **until they opt in** to submit-only. Do **not** change `useDebouncedSearchParam`'s default key until every call site has migrated.
 
 **Canonical pattern:**
 
@@ -76,8 +113,7 @@ Conventions and **copy-paste examples** for backing **dialogs, sheets, drawers**
 
 - Updating the URL on **every** keystroke with **push** (history noise).
 - Debouncing the URL but never aligning **initial** local state from the loader/URL on navigation (stale input after Back/Forward).
-
-**Documentation cross-link:** the reusable hook / proof integration for this carve-out is tracked as task work (“canonical debounced search ↔ URL pattern”); until then, follow the rules above at call sites.
+- Reaching for a bespoke submit-only `Input`+`Button` when `GlobalToolbarSearch` (§7.1) already covers it.
 
 ---
 

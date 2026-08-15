@@ -5,6 +5,7 @@ import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import {
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
+  readSearchParam,
 } from '@openthrottle/react-router-ui-global';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { OpenThrottlePagination } from '@openthrottle/react-router-ui';
@@ -21,6 +22,7 @@ import {
   loadSkillTagVocabulary,
 } from '~/routing/skills/data/skill-index-loaders';
 import { mergeRepoSkillsWithProjectSkills } from '~/routing/skills/utils/merge-project-skills';
+import { filterSkillsByQuery } from '~/routing/skills/utils/filter-skills-by-query';
 import {
   filterSkillsBySource,
   type SkillSourceFilter,
@@ -122,9 +124,15 @@ export default function Component(
   const tagFetcher = useFetcher<typeof action>();
 
   // Setup
+  const search = readSearchParam(searchParams);
   const filteredEntries = React.useMemo(
-    () => [...filterSkillsBySource(entries, sourceFilter)],
-    [entries, sourceFilter],
+    () => [
+      ...filterSkillsByQuery(
+        filterSkillsBySource(entries, sourceFilter),
+        search,
+      ),
+    ],
+    [entries, search, sourceFilter],
   );
   const pendingSlug =
     tagFetcher.state === 'idle'

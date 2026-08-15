@@ -2,6 +2,7 @@ import * as React from 'react';
 import clsx from 'clsx';
 import { ArrowRightIcon } from 'lucide-react';
 import { Button, DataTable } from '@openthrottle/react-router-shadcn';
+import { readSearchParam } from '@openthrottle/react-router-ui-global';
 import { Link, useSearchParams } from 'react-router';
 import { NotesEmpty } from '~/routing/notes/components/NotesEmpty';
 import {
@@ -23,7 +24,7 @@ export const NotesTable = (props: NotesTableProps): React.ReactElement => {
   const [searchParams] = useSearchParams();
 
   // Setup
-  const search = searchParams.get('q') ?? '';
+  const search = readSearchParam(searchParams);
   const columns = React.useMemo(() => NotesTable.buildTable(), [notes]);
 
   // Handlers

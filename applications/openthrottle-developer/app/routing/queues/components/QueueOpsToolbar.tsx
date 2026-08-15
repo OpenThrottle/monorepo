@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { Button, Input } from '@openthrottle/react-router-shadcn';
+import { Button } from '@openthrottle/react-router-shadcn';
+import { GlobalToolbarSearch } from '@openthrottle/react-router-ui-global';
 import { RefreshCwIcon } from 'lucide-react';
 import { useRevalidator, useSearchParams } from 'react-router';
 import clsx from 'clsx';
@@ -16,7 +17,7 @@ export interface QueueOpsToolbarProps {
 }
 
 /**
- * @description Live ops toolbar: URL-driven search (q), optional job-state filter (state), and a Refresh that revalidates the route.
+ * @description Live ops toolbar: URL-driven search (search), optional job-state filter (state), and a Refresh that revalidates the route.
  */
 export const QueueOpsToolbar = (
   props: QueueOpsToolbarProps,
@@ -32,34 +33,12 @@ export const QueueOpsToolbar = (
   // Hooks
   const [searchParams, setSearchParams] = useSearchParams();
   const revalidator = useRevalidator();
-  const [searchInput, setSearchInput] = React.useState(
-    () => searchParams.get('q') ?? '',
-  );
 
   // Setup
-  const searchQuery = searchParams.get('q') ?? '';
   const states = searchParams.getAll('state');
   const isRefreshing = revalidator.state === 'loading';
 
   // Handlers
-  const handleSearchSubmit = React.useCallback(
-    (event: React.FormEvent<HTMLFormElement>) => {
-      event.preventDefault();
-
-      const next = new URLSearchParams(searchParams);
-      const q = searchInput.trim();
-      if (q) {
-        next.set('q', q);
-      } else {
-        next.delete('q');
-      }
-      next.set('page', '1');
-
-      setSearchParams(next, { replace: true });
-    },
-    [searchInput, searchParams, setSearchParams],
-  );
-
   const handleStateChange = React.useCallback(
     (nextStates: string[]) => {
       const next = new URLSearchParams(searchParams);
@@ -81,55 +60,46 @@ export const QueueOpsToolbar = (
   // Markup
 
   // Life Cycle
-  React.useEffect(() => {
-    setSearchInput(searchQuery);
-  }, [searchQuery]);
 
   // 🔌 Short Circuit
 
   return (
     <div className={clsx('w-full', className)} data-testid="QueueOpsToolbar">
-      <form onSubmit={handleSearchSubmit} role="search">
-        <div className="flex w-full flex-wrap items-center gap-2">
-          <Input
-            aria-label={searchAriaLabel}
-            className="w-[200px] min-w-[120px]"
-            name="q"
-            onChange={(event) => setSearchInput(event.target.value)}
-            placeholder={searchPlaceholder}
-            type="search"
-            value={searchInput}
+      <div className="flex w-full flex-wrap items-center gap-2">
+        <GlobalToolbarSearch
+          aria-label={searchAriaLabel}
+          placeholder={searchPlaceholder}
+          transformCommittedParams={(next) => {
+            next.delete('q');
+            next.delete('page');
+          }}
+        />
+
+        {stateOptions && stateOptions.length > 0 ? (
+          <StatusMultiSelect
+            compact={true}
+            data-testid="QueueOpsToolbar-state-filter"
+            onChange={handleStateChange}
+            options={stateOptions}
+            value={states}
           />
-          <Button type="submit" variant="outline">
-            Search
-          </Button>
+        ) : null}
 
-          {stateOptions && stateOptions.length > 0 ? (
-            <StatusMultiSelect
-              compact={true}
-              data-testid="QueueOpsToolbar-state-filter"
-              onChange={handleStateChange}
-              options={stateOptions}
-              value={states}
-            />
-          ) : null}
+        <Button
+          aria-label="Refresh"
+          onClick={handleRefresh}
+          type="button"
+          variant="outline"
+        >
+          <RefreshCwIcon
+            className={clsx('h-4 w-4', isRefreshing && 'animate-spin')}
+          />
+          Refresh
+        </Button>
 
-          <Button
-            aria-label="Refresh"
-            onClick={handleRefresh}
-            type="button"
-            variant="outline"
-          >
-            <RefreshCwIcon
-              className={clsx('h-4 w-4', isRefreshing && 'animate-spin')}
-            />
-            Refresh
-          </Button>
-
-          <div className="min-w-0 flex-1" />
-          {actions}
-        </div>
-      </form>
+        <div className="min-w-0 flex-1" />
+        {actions}
+      </div>
     </div>
   );
 };

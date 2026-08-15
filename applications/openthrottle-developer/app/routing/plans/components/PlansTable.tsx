@@ -2,6 +2,7 @@ import * as React from 'react';
 import clsx from 'clsx';
 import { action as planDetailAction } from '~/routes/plans.$planId._index';
 import { DataTable } from '@openthrottle/react-router-shadcn';
+import { readSearchParam } from '@openthrottle/react-router-ui-global';
 import { useFetcher, useSearchParams } from 'react-router';
 import { PlanTasksEmpty } from '~/routing/plans/components/PlanTasksEmpty';
 import { buildPlansTableColumns } from '~/routing/plans/utils/plans-table-columns';
@@ -26,7 +27,7 @@ export const PlansTable = (props: PlansTableProps): React.ReactElement => {
   // active (search text, status, or assignee) — not just the `q` param — so the
   // empty state points at clearing filters rather than onboarding.
   const hasActiveFilters =
-    (searchParams.get('q') ?? '') !== '' ||
+    readSearchParam(searchParams) !== '' ||
     searchParams.getAll('status').length > 0 ||
     searchParams.getAll('assignee').length > 0;
 

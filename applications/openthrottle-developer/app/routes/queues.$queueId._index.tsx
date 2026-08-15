@@ -5,6 +5,7 @@ import {
   GlobalHeading,
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
+  readSearchParam,
 } from '@openthrottle/react-router-ui-global';
 import { OpenThrottlePaginationSimple } from '@openthrottle/react-router-ui';
 import { ListOrderedIcon } from 'lucide-react';
@@ -88,7 +89,7 @@ export default function Component(
   const queueBasePath = `/queues/${encodeURIComponent(queue.name)}`;
   const allJobs = queue.jobs?.jobs ?? [];
   const total = queue.jobs?.total ?? 0;
-  const query = (searchParams.get('q') ?? '').trim().toLowerCase();
+  const query = readSearchParam(searchParams).toLowerCase();
   const jobs =
     query === ''
       ? allJobs

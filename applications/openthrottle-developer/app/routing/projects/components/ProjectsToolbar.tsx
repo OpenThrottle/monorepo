@@ -1,6 +1,6 @@
 import * as React from 'react';
 import clsx from 'clsx';
-import { Button, Input } from '@openthrottle/react-router-shadcn';
+import { GlobalToolbarSearch } from '@openthrottle/react-router-ui-global';
 import { useSearchParams } from 'react-router';
 import { ProjectsSortDropdown } from '~/routing/projects/components/ProjectsSortDropdown';
 import {
@@ -23,12 +23,12 @@ export interface ProjectsToolbarProps {
 }
 
 /**
- * @description Single-row compact toolbar: URL-driven search (q), view toggle, sort, Create project. One form with role=search; preserves page/limit/sort/view on submit.
+ * @description Single-row compact toolbar: GlobalToolbarSearch-driven search (search param, resets page), sort. Sort is a sibling control outside the search form.
  */
 export const ProjectsToolbar = (
   props: ProjectsToolbarProps,
 ): React.ReactElement => {
-  const { className, limit, page, search, sortBy, sortOrder, view } = props;
+  const { className, limit, page, sortBy, sortOrder } = props;
 
   const resolvedSortBy: ProjectsSortBy =
     PROJECTS_SORT_BY.find((v) => v === sortBy) ?? 'createdAt';
@@ -37,7 +37,6 @@ export const ProjectsToolbar = (
 
   // Hooks
   const [searchParams, setSearchParams] = useSearchParams();
-  const [searchInput, setSearchInput] = React.useState(() => search);
 
   // Setup
 
@@ -70,75 +69,23 @@ export const ProjectsToolbar = (
     [applyParams],
   );
 
-  const handleSearchSubmit = React.useCallback(
-    (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
-      const next = new URLSearchParams(searchParams);
-      const q = searchInput.trim();
-
-      if (q) {
-        next.set('q', q);
-      } else {
-        next.delete('q');
-      }
-
-      next.set('page', '1');
-      next.set('limit', String(limit));
-      next.set('sortBy', sortBy);
-      next.set('sortOrder', sortOrder);
-      next.set('view', view);
-
-      setSearchParams(next, { replace: true });
-    },
-    [
-      limit,
-      searchParams,
-      searchInput,
-      sortBy,
-      sortOrder,
-      setSearchParams,
-      view,
-    ],
-  );
-
   // Markup
 
   // Life Cycle
-  React.useEffect(() => {
-    setSearchInput(search);
-  }, [search]);
 
   // 🔌 Short Circuit
 
   return (
     <div className={clsx('w-full', className)} data-testid="ProjectsToolbar">
-      <form
-        action="/projects"
-        className="flex w-full flex-wrap items-center gap-2"
-        method="get"
-        onSubmit={handleSearchSubmit}
-        role="search"
-      >
-        <div className="flex shrink-0 items-center gap-2">
-          <Input
-            aria-label="Search projects"
-            className="h-9 w-[140px] min-w-[100px] shrink-0"
-            id="projects-search-input"
-            name="q"
-            onChange={(e) => setSearchInput(e.target.value)}
-            placeholder="Search projects..."
-            type="search"
-            value={searchInput}
-          />
-          <Button
-            id="projects-search-submit"
-            size="sm"
-            type="submit"
-            variant="outline"
-          >
-            Search
-          </Button>
-        </div>
+      <div className="flex w-full flex-wrap items-center gap-2">
+        <GlobalToolbarSearch
+          aria-label="Search projects"
+          placeholder="Search projects..."
+          transformCommittedParams={(next) => {
+            next.delete('q');
+            next.delete('page');
+          }}
+        />
 
         <ProjectsSortDropdown
           onChange={handleSortChange}
@@ -147,7 +94,7 @@ export const ProjectsToolbar = (
         />
 
         <div className="min-w-0 flex-1" />
-      </form>
+      </div>
     </div>
   );
 };

@@ -2,6 +2,7 @@ import * as React from 'react';
 import {
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
+  readSearchParam,
 } from '@openthrottle/react-router-ui-global';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
@@ -23,7 +24,7 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
 export const loader = async (args: Route.LoaderArgs) => {
   const url = args.url;
   const searchParams = url?.searchParams ?? new URLSearchParams();
-  const search = searchParams.get('q')?.trim() ?? '';
+  const search = readSearchParam(searchParams);
 
   const events = filterCalendarEventsBySearch(CALENDAR_EVENTS, search);
 
@@ -42,11 +43,11 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData: _a, loaderData, matches: _m, params: _p } = props;
+  const { events } = loaderData;
 
   // Hooks
 
   // Setup
-  const { events } = loaderData;
 
   // Handlers
 

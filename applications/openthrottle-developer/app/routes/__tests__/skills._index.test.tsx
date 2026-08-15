@@ -149,6 +149,55 @@ describe('routes/skills._index.tsx pagination', () => {
   });
 });
 
+describe('routes/skills._index.tsx ?search filtering', () => {
+  test('narrows the rendered rows to entries matching ?search', () => {
+    const component = renderRoute('/skills?search=skill-007');
+
+    // Only the matching slug renders; unrelated slugs drop out.
+    expect(
+      component.getByRole('link', { name: '/skill-007' }),
+    ).toBeInTheDocument();
+    expect(
+      component.queryByRole('link', { name: '/skill-000' }),
+    ).not.toBeInTheDocument();
+    expect(
+      component.queryByRole('link', { name: '/skill-008' }),
+    ).not.toBeInTheDocument();
+  });
+
+  test('submitting a query via the toolbar filters the list off the stale page', async () => {
+    const user = userEvent.setup();
+    const component = renderRoute('/skills?page=2');
+
+    // Stranded on page 2 of the full 40-item list (rows 26-40).
+    expect(
+      component.getByRole('link', { name: '/skill-039' }),
+    ).toBeInTheDocument();
+    expect(
+      component.queryByRole('link', { name: '/skill-007' }),
+    ).not.toBeInTheDocument();
+
+    // `skill-007` lives on page 1 of the full list, so it is only reachable
+    // after the committed search filters + the pager lands back on page 1
+    // (transformCommittedParams drops ?page; the route also clamps).
+    await user.type(
+      component.getByRole('searchbox', { name: 'Search skills' }),
+      'skill-007',
+    );
+    await user.click(component.getByRole('button', { name: 'Search' }));
+
+    await waitFor(() => {
+      expect(
+        component.getByRole('link', { name: '/skill-007' }),
+      ).toBeInTheDocument();
+    });
+    // The former page-2 rows are gone — we are showing the filtered set.
+    expect(
+      component.queryByRole('link', { name: '/skill-039' }),
+    ).not.toBeInTheDocument();
+  });
+});
+
 describe('routes/skills._index.tsx usage sections', () => {
   test('streams the chart + leaderboard when usage is available', async () => {
     const component = renderRoute('/skills', {
