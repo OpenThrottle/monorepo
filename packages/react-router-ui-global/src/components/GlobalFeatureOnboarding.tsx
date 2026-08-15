@@ -1,10 +1,22 @@
 import * as React from 'react';
 import clsx from 'clsx';
-import { Button, Card, CardContent } from '@openthrottle/react-router-shadcn';
-import { Link } from 'react-router';
-import { ArrowRightIcon } from 'lucide-react';
+import {
+  Card,
+  CardContent,
+  DialogDescription,
+  DialogTitle,
+} from '@openthrottle/react-router-shadcn';
 import type { LucideIcon } from 'lucide-react';
-import { GLOBAL_FEATURE_ONBOARDING_SECTION_COPY } from '../data/data.copy';
+import { GlobalFeatureOnboardingBody } from './GlobalFeatureOnboardingBody';
+
+/**
+ * @description How {@link GlobalFeatureOnboarding} renders itself: as a standalone
+ * `Card` block (the empty-state pitch, default) or as dialog-native content (no
+ * `Card` chrome, title/tagline via `DialogTitle`/`DialogDescription`) for use
+ * inside a {@link GlobalFeatureOnboardingModal}.
+ * @public
+ */
+export type GlobalFeatureOnboardingRenderAs = 'block' | 'dialog';
 
 /**
  * @description A single call-to-action link used inside a
@@ -50,6 +62,13 @@ export interface GlobalFeatureOnboardingProps {
   className?: string;
   /** Typed, feature-supplied copy. The layout is purely presentational. */
   content: GlobalFeatureOnboardingContent;
+  /**
+   * Rendering surface. `'block'` (default) preserves the standalone `Card`
+   * empty-state pitch; `'dialog'` drops the `Card` chrome and renders the
+   * title/tagline via `DialogTitle`/`DialogDescription` for a
+   * {@link GlobalFeatureOnboardingModal}.
+   */
+  renderAs?: GlobalFeatureOnboardingRenderAs;
 }
 
 /**
@@ -64,30 +83,60 @@ export interface GlobalFeatureOnboardingProps {
 export const GlobalFeatureOnboarding = (
   props: GlobalFeatureOnboardingProps,
 ): React.ReactElement => {
-  const { className, content } = props;
+  const { className, content, renderAs = 'block' } = props;
+  const { icon: Icon, tagline, title } = content;
+  const isDialog = renderAs === 'dialog';
 
   // Hooks
 
   // Setup
-  const {
-    cta,
-    icon: Icon,
-    internalUsage,
-    secondary,
-    steps,
-    tagline,
-    title,
-    useCases,
-    whatItIs,
-  } = content;
 
   // Handlers
 
   // Markup
 
+  // Eyebrow / title / tagline. In dialog mode the title/tagline use
+  // `DialogTitle`/`DialogDescription` so Radix's accessible-title invariant is
+  // met without a duplicate header; otherwise a plain `<h2>`/`<p>`.
+  const header = (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center gap-3">
+        <span className="bg-muted text-foreground flex size-10 shrink-0 items-center justify-center rounded-lg">
+          <Icon className="size-4" />
+        </span>
+        {isDialog ? (
+          <DialogTitle className="text-lg tracking-tight">{title}</DialogTitle>
+        ) : (
+          <h2 className="text-lg tracking-tight">{title}</h2>
+        )}
+      </div>
+      {isDialog ? (
+        <DialogDescription className="text-muted-foreground text-base">
+          {tagline}
+        </DialogDescription>
+      ) : (
+        <p className="text-muted-foreground text-base">{tagline}</p>
+      )}
+    </div>
+  );
+
   // Life Cycle
 
   // 🔌 Short Circuit
+
+  // Dialog mode: the surrounding `Dialog` surface is already the card, so drop
+  // the `Card`/`CardContent` chrome and render the same layout in a plain container.
+  if (isDialog) {
+    return (
+      <div
+        className={clsx('flex flex-col gap-8', className)}
+        data-testid="GlobalFeatureOnboarding"
+      >
+        {header}
+        <GlobalFeatureOnboardingBody content={content} />
+      </div>
+    );
+  }
 
   return (
     <Card
@@ -95,80 +144,8 @@ export const GlobalFeatureOnboarding = (
       data-testid="GlobalFeatureOnboarding"
     >
       <CardContent className="flex flex-col gap-8 p-6 md:p-10">
-        {/* Eyebrow / title / tagline */}
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-3">
-            <span className="bg-muted text-foreground flex size-10 shrink-0 items-center justify-center rounded-lg">
-              <Icon className="size-4" />
-            </span>
-            <h2 className="text-lg tracking-tight">{title}</h2>
-          </div>
-          <p className="text-muted-foreground text-base">{tagline}</p>
-        </div>
-
-        <div className="grid gap-8 md:grid-cols-2">
-          {/* What it is */}
-          <section className="flex flex-col gap-2">
-            <h3 className="text-foreground text-sm font-semibold">
-              {GLOBAL_FEATURE_ONBOARDING_SECTION_COPY.whatItIs}
-            </h3>
-            <p className="text-muted-foreground text-sm/relaxed">{whatItIs}</p>
-          </section>
-
-          {/* How we use it internally */}
-          <section className="flex flex-col gap-2">
-            <h3 className="text-foreground text-sm font-semibold">
-              {GLOBAL_FEATURE_ONBOARDING_SECTION_COPY.internalUsage}
-            </h3>
-            <p className="text-muted-foreground text-sm/relaxed">
-              {internalUsage}
-            </p>
-          </section>
-
-          {/* What you could use it for */}
-          <section className="flex flex-col gap-2">
-            <h3 className="text-foreground text-sm font-semibold">
-              {GLOBAL_FEATURE_ONBOARDING_SECTION_COPY.useCases}
-            </h3>
-            <ul className="text-muted-foreground flex flex-col gap-1.5 text-sm/relaxed">
-              {useCases.map((useCase) => (
-                <li className="flex items-start gap-2" key={useCase}>
-                  <ArrowRightIcon className="text-muted-foreground mt-1 size-3.5 shrink-0" />
-                  <span>{useCase}</span>
-                </li>
-              ))}
-            </ul>
-          </section>
-
-          {/* Quick start */}
-          <section className="flex flex-col gap-2">
-            <h3 className="text-foreground text-sm font-semibold">
-              {GLOBAL_FEATURE_ONBOARDING_SECTION_COPY.steps}
-            </h3>
-            <ol className="text-muted-foreground flex flex-col gap-1.5 text-sm/relaxed">
-              {steps.map((step, index) => (
-                <li className="flex items-start gap-2.5" key={step}>
-                  <span className="bg-muted text-foreground mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full text-xs font-medium">
-                    {index + 1}
-                  </span>
-                  <span>{step}</span>
-                </li>
-              ))}
-            </ol>
-          </section>
-        </div>
-
-        {/* CTAs */}
-        <div className="flex flex-wrap items-center gap-3">
-          <Button asChild={true}>
-            <Link to={cta.to}>{cta.label}</Link>
-          </Button>
-          {secondary != null ? (
-            <Button asChild={true} variant="ghost">
-              <Link to={secondary.to}>{secondary.label}</Link>
-            </Button>
-          ) : null}
-        </div>
+        {header}
+        <GlobalFeatureOnboardingBody content={content} />
       </CardContent>
     </Card>
   );

@@ -3,6 +3,7 @@ import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
   GlobalErrorBoundary,
   GlobalFeatureOnboarding,
+  GlobalFeatureOnboardingModal,
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
@@ -45,11 +46,12 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData: _a, loaderData, matches: _m, params: _p } = props;
+  const { jobs } = loaderData;
 
   // Hooks
 
   // Setup
-  const { jobs } = loaderData;
+
   // Schedule has no filters, so an empty list always means a genuinely-new
   // user — show the rich onboarding pitch instead of the terse empty paragraph.
   const isNewUser = jobs.length === 0;
@@ -64,6 +66,7 @@ export default function Component(
 
   return (
     <GlobalScreen>
+      <GlobalFeatureOnboardingModal content={SCHEDULE_ONBOARDING} />
       <ScheduleIntroduction />
 
       {isNewUser ? (

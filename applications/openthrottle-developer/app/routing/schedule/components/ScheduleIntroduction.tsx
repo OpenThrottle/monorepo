@@ -2,7 +2,10 @@ import * as React from 'react';
 import { Link } from 'react-router';
 import { CalendarClockIcon } from 'lucide-react';
 import { Button } from '@openthrottle/react-router-shadcn';
-import { GlobalHeading } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalFeatureOnboardingTrigger,
+  GlobalHeading,
+} from '@openthrottle/react-router-ui-global';
 import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
 
 export interface ScheduleIntroductionProps {
@@ -39,6 +42,7 @@ export const ScheduleIntroduction = (
         icon={CalendarClockIcon}
         title={SCHEDULE_COPY.pageTitle}
       >
+        <GlobalFeatureOnboardingTrigger />
         <Button asChild={true} size="xs">
           <Link to="/schedule/create">{SCHEDULE_COPY.newScheduleAction}</Link>
         </Button>

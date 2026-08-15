@@ -13,6 +13,13 @@ export const GLOBAL_FEATURE_ONBOARDING_SECTION_COPY = {
 } as const;
 
 /**
+ * @description Default label for the {@link GlobalFeatureOnboardingTrigger}
+ * button that re-opens the onboarding pitch once a list is populated. Callers can
+ * override per feature via the trigger's `label` prop.
+ */
+export const GLOBAL_FEATURE_ONBOARDING_TRIGGER_LABEL = `How it works`;
+
+/**
  * @public
  * Default copy for {@link GlobalToolbarSearch}. Consumers override the
  * placeholder and aria-label per surface; the submit button falls back to this

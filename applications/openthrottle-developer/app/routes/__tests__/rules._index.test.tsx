@@ -108,6 +108,33 @@ describe('routes/rules._index.tsx', () => {
     ).toHaveAttribute('href', '/rules/new');
   });
 
+  test('renders the onboarding trigger in the header when populated', () => {
+    const component = renderIndex([enabledRule, disabledRule]);
+
+    expect(
+      component.getByTestId('GlobalFeatureOnboardingTrigger'),
+    ).toBeInTheDocument();
+    // The pitch is not inline when the list is populated.
+    expect(
+      component.queryByTestId('GlobalFeatureOnboarding'),
+    ).not.toBeInTheDocument();
+  });
+
+  test('reveals the onboarding modal over a populated list via ?modal=onboarding', () => {
+    const component = renderIndex(
+      [enabledRule, disabledRule],
+      '/rules?modal=onboarding',
+    );
+
+    expect(
+      component.getByTestId('GlobalFeatureOnboarding'),
+    ).toBeInTheDocument();
+    // Same pitch and CTA as the empty-state block.
+    expect(
+      component.getByRole('link', { name: RULES_ONBOARDING.cta.label }),
+    ).toHaveAttribute('href', '/rules/new');
+  });
+
   test('filters rules client-side from enabled search param', () => {
     const component = renderIndex(
       [enabledRule, disabledRule],

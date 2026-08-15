@@ -165,6 +165,51 @@ describe('routes/plans._index.tsx', () => {
     ).toHaveAttribute('href', '/plans/create');
   });
 
+  test('renders the onboarding trigger in the header when populated', () => {
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
+    const Component = () => (
+      <Index
+        actionData={undefined}
+        loaderData={mockLoaderDataWithStats}
+        matches={matches}
+        params={{}}
+      />
+    );
+    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    const component = render(<RoutesStub />);
+
+    expect(
+      component.getByTestId('GlobalFeatureOnboardingTrigger'),
+    ).toBeInTheDocument();
+    // Populated list: the pitch is not inline.
+    expect(
+      component.queryByTestId('GlobalFeatureOnboarding'),
+    ).not.toBeInTheDocument();
+  });
+
+  test('reveals the onboarding modal over a populated list via ?modal=onboarding', () => {
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
+    const Component = () => (
+      <Index
+        actionData={undefined}
+        loaderData={mockLoaderDataWithStats}
+        matches={matches}
+        params={{}}
+      />
+    );
+    const RoutesStub = createRoutesStub([{ Component, path: '/plans' }]);
+    const component = render(
+      <RoutesStub initialEntries={['/plans?modal=onboarding']} />,
+    );
+
+    expect(
+      component.getByTestId('GlobalFeatureOnboarding'),
+    ).toBeInTheDocument();
+    expect(
+      component.getByRole('link', { name: PLANS_ONBOARDING.cta.label }),
+    ).toHaveAttribute('href', '/plans/create');
+  });
+
   test('shows PlanTasksEmpty (not onboarding) for a filtered no-results view', () => {
     // Plans exist in the workspace (totalCountAll > 0) but this filtered page
     // returned none — the terse filtered-empty state, not the new-user pitch.
