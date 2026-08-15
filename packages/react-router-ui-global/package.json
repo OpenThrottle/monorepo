@@ -14,6 +14,7 @@
     "@openthrottle/react-router-utils": "workspace:^",
     "@paper-design/shaders-react": "catalog:",
     "clsx": "catalog:",
+    "lucide-react": "catalog:",
     "rollbar": "catalog:"
   },
   "description": "TODO: Add a description",

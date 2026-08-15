@@ -15,6 +15,18 @@ export const parseAssigneesFromSearchParams = (
 };
 
 /**
+ * @description True when any list-narrowing filter is active on the plans index
+ * (search text, status, or assignee). Used to distinguish a genuinely-new user
+ * (no plans + no filters → onboarding) from a filtered no-results view (→ the
+ * terse PlanTasksEmpty). Mirrors the signal PlansTable derives for its own empty
+ * state so both agree.
+ */
+export const hasActivePlansFilters = (searchParams: URLSearchParams): boolean =>
+  (searchParams.get('q') ?? '') !== '' ||
+  searchParams.getAll('status').length > 0 ||
+  searchParams.getAll('assignee').length > 0;
+
+/**
  * @description Build the per-status filter URLs for the plans list (one `/plans?…`
  * link per status option, resetting to page 1). Pure over the current search params.
  */

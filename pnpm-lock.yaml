@@ -3606,6 +3606,9 @@ importers:
       clsx:
         specifier: 'catalog:'
         version: 2.1.1
+      lucide-react:
+        specifier: 'catalog:'
+        version: 1.28.0(react@19.2.4)
       rollbar:
         specifier: 'catalog:'
         version: 3.1.0

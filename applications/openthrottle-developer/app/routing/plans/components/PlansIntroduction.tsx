@@ -24,7 +24,7 @@ export const PlansIntroduction = (
   // 🔌 Short Circuit
 
   return (
-    <div className={className}>
+    <div className={className} data-testid="PlansIntroduction">
       <GlobalHeading
         className="mb-4"
         heading="h1"
