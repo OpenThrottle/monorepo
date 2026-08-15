@@ -1,4 +1,8 @@
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import {
+  executeGraphqlWithAuth,
+  parseFormData,
+} from '@openthrottle/react-router-graphql';
+import { z } from 'zod/v3';
 import {
   AddSkillAvailabilityRuleDocument,
   AddSkillTagDocument,
@@ -10,9 +14,24 @@ import {
   UpdateSkillAvailabilityRuleDocument,
   UpsertSkillAvailabilityRuleSetDocument,
 } from '~/__generated__/graphql';
+import {
+  AddSkillTagInputSchema,
+  RemoveSkillTagInputSchema,
+  RenameSkillTagInputSchema,
+} from '~/__generated__/schemas';
 import { DOGFOOD_NX_PROJECT_NAME } from '~/routing/skills/config/availability';
 import { readRuleInput } from '~/routing/skills/utils/skill-availability-action';
 import type { Route } from '@/app/routes/+types/skills.availability';
+
+/**
+ * Loose-variable mutations (`upsertRuleSet`, `updateRule`, `removeRule`) do not
+ * take a single `input:` argument — their scalar fields are validated with
+ * these composed schemas (the `projectId` is resolved server-side, not from the
+ * form). `strict: false` at the call site lets the rule-authoring form's other
+ * fields — parsed separately by `readRuleInput` — pass through untouched.
+ */
+const PostureSchema = z.object({ posture: z.string().min(1).default('allow') });
+const RuleIdSchema = z.object({ ruleId: z.string().min(1) });
 
 export interface AvailabilityActionResult {
   readonly error?: string;
@@ -55,8 +74,8 @@ export const runAvailabilityAction = async (
 
   try {
     if (intent === 'upsertRuleSet') {
-      const postureField = formData.get('posture');
-      const posture = typeof postureField === 'string' ? postureField : 'allow';
+      const parsed = parseFormData(formData, PostureSchema, { strict: false });
+      const posture = parsed.success ? parsed.data.posture : 'allow';
       const project = await resolveDogfoodProject(args.request);
       if (project == null) {
         return { error: 'No dogfood project is provisioned.', intent };
@@ -96,66 +115,60 @@ export const runAvailabilityAction = async (
     }
 
     if (intent === 'updateRule') {
-      const ruleId = formData.get('ruleId');
-      if (typeof ruleId !== 'string' || ruleId === '') {
+      const parsed = parseFormData(formData, RuleIdSchema, { strict: false });
+      if (!parsed.success) {
         return { error: 'Missing rule id.', intent };
       }
       await executeGraphqlWithAuth(
         args.request,
         UpdateSkillAvailabilityRuleDocument,
-        { input: readRuleInput(formData), ruleId },
+        { input: readRuleInput(formData), ruleId: parsed.data.ruleId },
       );
       return { intent, ok: true };
     }
 
     if (intent === 'removeRule') {
-      const ruleId = formData.get('ruleId');
-      if (typeof ruleId !== 'string' || ruleId === '') {
+      const parsed = parseFormData(formData, RuleIdSchema, { strict: false });
+      if (!parsed.success) {
         return { error: 'Missing rule id.', intent };
       }
       await executeGraphqlWithAuth(
         args.request,
         RemoveSkillAvailabilityRuleDocument,
-        { ruleId },
+        { ruleId: parsed.data.ruleId },
       );
       return { intent, ok: true };
     }
 
     if (intent === 'addTag') {
-      const tag = formData.get('tag');
-      if (typeof tag !== 'string' || tag === '') {
+      const parsed = parseFormData(formData, AddSkillTagInputSchema());
+      if (!parsed.success) {
         return { error: 'Tag is required.', intent };
       }
       await executeGraphqlWithAuth(args.request, AddSkillTagDocument, {
-        input: { tag },
+        input: parsed.data,
       });
       return { intent, ok: true };
     }
 
     if (intent === 'renameTag') {
-      const from = formData.get('from');
-      const to = formData.get('to');
-      if (
-        typeof from !== 'string' ||
-        from === '' ||
-        typeof to !== 'string' ||
-        to === ''
-      ) {
+      const parsed = parseFormData(formData, RenameSkillTagInputSchema());
+      if (!parsed.success) {
         return { error: 'Both the current and new tag are required.', intent };
       }
       await executeGraphqlWithAuth(args.request, RenameSkillTagDocument, {
-        input: { from, to },
+        input: parsed.data,
       });
       return { intent, ok: true };
     }
 
     if (intent === 'removeTag') {
-      const tag = formData.get('tag');
-      if (typeof tag !== 'string' || tag === '') {
+      const parsed = parseFormData(formData, RemoveSkillTagInputSchema());
+      if (!parsed.success) {
         return { error: 'Tag is required.', intent };
       }
       await executeGraphqlWithAuth(args.request, RemoveSkillTagDocument, {
-        input: { tag },
+        input: parsed.data,
       });
       return { intent, ok: true };
     }

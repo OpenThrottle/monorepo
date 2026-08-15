@@ -3253,6 +3253,9 @@ importers:
       react:
         specifier: 19.2.4
         version: 19.2.4
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
     devDependencies:
       '@testing-library/react':
         specifier: 'catalog:'

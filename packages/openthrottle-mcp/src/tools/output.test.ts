@@ -44,7 +44,9 @@ describe('appendPlanOutputToolHandler', () => {
       });
 
       expect(result).toMatchObject({
-        content: [{ text: expect.stringMatching(/content must be non-empty/) }],
+        content: [
+          { text: expect.stringMatching(/at least 1 character|too_small/) },
+        ],
         isError: true,
       });
       expect(executeGraphqlWithAuth).not.toHaveBeenCalled();

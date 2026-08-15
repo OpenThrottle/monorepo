@@ -17,6 +17,7 @@
   "namedInputs": {
     "codegenGraphqlInputs": [
       "{workspaceRoot}/applications/openthrottle-server/schema.gql",
+      "{workspaceRoot}/packages/graphql-codegen/src/**/*.ts",
       "{projectRoot}/codegen.ts",
       "{projectRoot}/app/**/*.graphql",
       "{projectRoot}/app/**/*.ts",
@@ -24,7 +25,10 @@
       "{projectRoot}/src/**/*.ts",
       "!{projectRoot}/**/__generated__/**",
       {
-        "externalDependencies": ["@graphql-codegen/cli"]
+        "externalDependencies": [
+          "@graphql-codegen/cli",
+          "graphql-codegen-typescript-validation-schema"
+        ]
       }
     ],
     "noMarkdown": ["!{projectRoot}/**/*.md"],

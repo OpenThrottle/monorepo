@@ -204,10 +204,10 @@ export function ActivityByDateRangeInputSchema(): z.ZodObject<
   Properties<ActivityByDateRangeInput>
 > {
   return z.object({
-    endIso: z.string(),
+    endIso: z.string().min(1),
     limit: z.number().nullish(),
     offset: z.number().nullish(),
-    startIso: z.string(),
+    startIso: z.string().min(1),
   });
 }
 
@@ -215,11 +215,11 @@ export function AddHookInputSchema(): z.ZodObject<Properties<AddHookInput>> {
   return z.object({
     anchorTaskId: z.string().nullish(),
     description: z.string().nullish(),
-    planId: z.string(),
-    role: z.string(),
+    planId: z.string().min(1),
+    role: z.string().min(1),
     scope: z.string().nullish(),
     skillSlug: z.string().nullish(),
-    source: z.string(),
+    source: z.string().min(1),
     title: z.string().nullish(),
   });
 }
@@ -228,8 +228,8 @@ export function AddPermissionToRoleInputSchema(): z.ZodObject<
   Properties<AddPermissionToRoleInput>
 > {
   return z.object({
-    permissionId: z.string(),
-    roleId: z.string(),
+    permissionId: z.string().min(1),
+    roleId: z.string().min(1),
   });
 }
 
@@ -237,8 +237,8 @@ export function AddPlanTagInputSchema(): z.ZodObject<
   Properties<AddPlanTagInput>
 > {
   return z.object({
-    planId: z.string(),
-    tag: z.string(),
+    planId: z.string().min(1),
+    tag: z.string().min(1),
   });
 }
 
@@ -246,8 +246,8 @@ export function AddProjectTagInputSchema(): z.ZodObject<
   Properties<AddProjectTagInput>
 > {
   return z.object({
-    projectId: z.string(),
-    tag: z.string(),
+    projectId: z.string().min(1),
+    tag: z.string().min(1),
   });
 }
 
@@ -256,7 +256,7 @@ export function AddSkillTagInputSchema(): z.ZodObject<
 > {
   return z.object({
     dimension: z.string().default('domain').nullish(),
-    tag: z.string(),
+    tag: z.string().min(1),
   });
 }
 
@@ -264,8 +264,8 @@ export function AddTaskTagInputSchema(): z.ZodObject<
   Properties<AddTaskTagInput>
 > {
   return z.object({
-    tag: z.string(),
-    taskId: z.string(),
+    tag: z.string().min(1),
+    taskId: z.string().min(1),
   });
 }
 
@@ -274,7 +274,7 @@ export function AddWorkspaceFolderInputSchema(): z.ZodObject<
 > {
   return z.object({
     displayName: z.string().nullish(),
-    path: z.string(),
+    path: z.string().min(1),
   });
 }
 
@@ -285,7 +285,7 @@ export function AgentAssetSearchInputSchema(): z.ZodObject<
     limit: z.number().nullish(),
     projectId: z.string().nullish(),
     promptTypes: z.array(CustomPromptTypeSchema).nullish(),
-    query: z.string(),
+    query: z.string().min(1),
   });
 }
 
@@ -294,7 +294,7 @@ export function AgentsRunChatTurnInputSchema(): z.ZodObject<
 > {
   return z.object({
     conversationId: z.string().nullish(),
-    message: z.string(),
+    message: z.string().min(1),
     persist: z.boolean().default(false).nullish(),
   });
 }
@@ -303,9 +303,9 @@ export function AppendPlanOutputInputSchema(): z.ZodObject<
   Properties<AppendPlanOutputInput>
 > {
   return z.object({
-    content: z.string(),
+    content: z.string().min(1),
     iteration: z.number().nullish(),
-    planId: z.string(),
+    planId: z.string().min(1),
     taskId: z.string().nullish(),
   });
 }
@@ -314,7 +314,7 @@ export function ApplyWorkspaceEditorConfigurationInputSchema(): z.ZodObject<
   Properties<ApplyWorkspaceEditorConfigurationInput>
 > {
   return z.object({
-    repositoryIds: z.array(z.string()).nullish(),
+    repositoryIds: z.array(z.string().min(1)).nullish(),
   });
 }
 
@@ -322,7 +322,7 @@ export function ArchiveAgentConversationInputSchema(): z.ZodObject<
   Properties<ArchiveAgentConversationInput>
 > {
   return z.object({
-    conversationId: z.string(),
+    conversationId: z.string().min(1),
   });
 }
 
@@ -330,8 +330,8 @@ export function AssignRoleToServiceAccountInputSchema(): z.ZodObject<
   Properties<AssignRoleToServiceAccountInput>
 > {
   return z.object({
-    roleId: z.string(),
-    serviceAccountId: z.string(),
+    roleId: z.string().min(1),
+    serviceAccountId: z.string().min(1),
   });
 }
 
@@ -339,8 +339,8 @@ export function AssignRoleToUserInputSchema(): z.ZodObject<
   Properties<AssignRoleToUserInput>
 > {
   return z.object({
-    roleId: z.string(),
-    userId: z.string(),
+    roleId: z.string().min(1),
+    userId: z.string().min(1),
   });
 }
 
@@ -348,8 +348,8 @@ export function AttachWorkSessionSubjectInputSchema(): z.ZodObject<
   Properties<AttachWorkSessionSubjectInput>
 > {
   return z.object({
-    planId: z.string(),
-    sessionId: z.string(),
+    planId: z.string().min(1),
+    sessionId: z.string().min(1),
     taskId: z.string().nullish(),
   });
 }
@@ -358,7 +358,7 @@ export function CancelPlanRunInputSchema(): z.ZodObject<
   Properties<CancelPlanRunInput>
 > {
   return z.object({
-    planId: z.string(),
+    planId: z.string().min(1),
   });
 }
 
@@ -369,8 +369,8 @@ export function CleanQueueInputSchema(): z.ZodObject<
     confirm: z.boolean(),
     graceMs: z.number().nullish(),
     limit: z.number().nullish(),
-    queueName: z.string(),
-    state: z.string(),
+    queueName: z.string().min(1),
+    state: z.string().min(1),
   });
 }
 
@@ -378,7 +378,7 @@ export function CloneRepositoryInputSchema(): z.ZodObject<
   Properties<CloneRepositoryInput>
 > {
   return z.object({
-    gitUrl: z.string(),
+    gitUrl: z.string().min(1),
     name: z.string().nullish(),
   });
 }
@@ -388,8 +388,8 @@ export function CodeSemanticSearchInputSchema(): z.ZodObject<
 > {
   return z.object({
     limit: z.number().nullish(),
-    query: z.string(),
-    repositoryId: z.string(),
+    query: z.string().min(1),
+    repositoryId: z.string().min(1),
   });
 }
 
@@ -398,9 +398,9 @@ export function CommitsPerPrInputSchema(): z.ZodObject<
 > {
   return z.object({
     maxPrs: z.number().nullish(),
-    owner: z.string(),
+    owner: z.string().min(1),
     period: z.string().nullish(),
-    repo: z.string(),
+    repo: z.string().min(1),
   });
 }
 
@@ -409,7 +409,7 @@ export function ConnectMcpConnectorInputSchema(): z.ZodObject<
 > {
   return z.object({
     apiToken: z.string().nullish(),
-    connectorKey: z.string(),
+    connectorKey: z.string().min(1),
     label: z.string().nullish(),
   });
 }
@@ -429,13 +429,13 @@ export function CreateCustomPromptInputSchema(): z.ZodObject<
   Properties<CreateCustomPromptInput>
 > {
   return z.object({
-    content: z.string(),
+    content: z.string().min(1),
     description: z.string().nullish(),
     filePath: z.string().nullish(),
-    labels: z.array(z.string()),
+    labels: z.array(z.string().min(1)),
     projectId: z.string().nullish(),
     promptType: CustomPromptTypeSchema,
-    title: z.string(),
+    title: z.string().min(1),
     userId: z.string().nullish(),
     writeToFileSystem: z.boolean().default(false),
   });
@@ -446,7 +446,7 @@ export function CreateNoteInputSchema(): z.ZodObject<
 > {
   return z.object({
     author: z.string().nullish(),
-    content: z.string(),
+    content: z.string().min(1),
   });
 }
 
@@ -455,15 +455,15 @@ export function CreatePlanInputSchema(): z.ZodObject<
 > {
   return z.object({
     assignee: z.string().nullish(),
-    author: z.string(),
-    category: z.string(),
+    author: z.string().min(1),
+    category: z.string().min(1),
     description: z.string().nullish(),
     project: z.string().nullish(),
     projectId: z.string().nullish(),
     runConfigJson: z.string().nullish(),
     status: z.string().nullish(),
     summary: z.string().nullish(),
-    title: z.string(),
+    title: z.string().min(1),
   });
 }
 
@@ -480,7 +480,7 @@ export function CreateProjectInputSchema(): z.ZodObject<
 > {
   return z.object({
     description: z.string().nullish(),
-    name: z.string(),
+    name: z.string().min(1),
     nxProjectName: z.string().nullish(),
   });
 }
@@ -489,7 +489,7 @@ export function CreateQueueInputSchema(): z.ZodObject<
   Properties<CreateQueueInput>
 > {
   return z.object({
-    name: z.string(),
+    name: z.string().min(1),
   });
 }
 
@@ -498,7 +498,7 @@ export function CreateRoleInputSchema(): z.ZodObject<
 > {
   return z.object({
     description: z.string().nullish(),
-    name: z.string(),
+    name: z.string().min(1),
   });
 }
 
@@ -509,10 +509,10 @@ export function CreateRolloutFlagInputSchema(): z.ZodObject<
     description: z.string().nullish(),
     enabled: z.boolean().default(false),
     fallthrough: z.lazy(() => RolloutFallthroughInputSchema().nullish()),
-    key: z.string(),
+    key: z.string().min(1),
     kind: RolloutFlagKindSchema.nullish(),
     offVariation: z.number().nullish(),
-    targetRoles: z.array(z.string()),
+    targetRoles: z.array(z.string().min(1)),
     variations: z
       .array(z.lazy(() => RolloutFlagVariationInputSchema()))
       .nullish(),
@@ -523,13 +523,13 @@ export function CreateScheduledAgentJobInputTypeSchema(): z.ZodObject<
   Properties<CreateScheduledAgentJobInputType>
 > {
   return z.object({
-    cronPattern: z.string(),
+    cronPattern: z.string().min(1),
     cwd: z.string().nullish(),
-    driverId: z.string(),
+    driverId: z.string().min(1),
     enabled: z.boolean().nullish(),
     model: z.string().nullish(),
-    name: z.string(),
-    prompt: z.string(),
+    name: z.string().min(1),
+    prompt: z.string().min(1),
     settingsJson: z.string().nullish(),
     timeoutMs: z.number().nullish(),
     timezone: z.string().nullish(),
@@ -542,7 +542,7 @@ export function CreateServiceAccountCredentialInputSchema(): z.ZodObject<
   return z.object({
     expiresAt: definedNonNullAnySchema.nullish(),
     label: z.string().nullish(),
-    serviceAccountId: z.string(),
+    serviceAccountId: z.string().min(1),
   });
 }
 
@@ -551,7 +551,7 @@ export function CreateServiceAccountInputSchema(): z.ZodObject<
 > {
   return z.object({
     description: z.string().nullish(),
-    name: z.string(),
+    name: z.string().min(1),
   });
 }
 
@@ -562,14 +562,14 @@ export function CreateTaskInputSchema(): z.ZodObject<
     assignee: z.string().nullish(),
     category: z.string().nullish(),
     description: z.string().nullish(),
-    planId: z.string(),
+    planId: z.string().min(1),
     project: z.string().nullish(),
     projectId: z.string().nullish(),
     requirements: z.string().nullish(),
     sortOrder: z.number().nullish(),
     status: z.string().nullish(),
     summary: z.string().nullish(),
-    title: z.string(),
+    title: z.string().min(1),
   });
 }
 
@@ -577,7 +577,7 @@ export function CreateTasksInputSchema(): z.ZodObject<
   Properties<CreateTasksInput>
 > {
   return z.object({
-    planId: z.string(),
+    planId: z.string().min(1),
     tasks: z.array(z.lazy(() => CreateTasksItemInputSchema())),
   });
 }
@@ -595,7 +595,7 @@ export function CreateTasksItemInputSchema(): z.ZodObject<
     sortOrder: z.number().nullish(),
     status: z.string().nullish(),
     summary: z.string().nullish(),
-    title: z.string(),
+    title: z.string().min(1),
   });
 }
 
@@ -604,7 +604,7 @@ export function CreateUserInputSchema(): z.ZodObject<
 > {
   return z.object({
     email: z.string().nullish(),
-    githubUsername: z.string(),
+    githubUsername: z.string().min(1),
   });
 }
 
@@ -612,8 +612,8 @@ export function CreateWorkspaceLocalRepositoryInputSchema(): z.ZodObject<
   Properties<CreateWorkspaceLocalRepositoryInput>
 > {
   return z.object({
-    displayName: z.string(),
-    filesystemPath: z.string(),
+    displayName: z.string().min(1),
+    filesystemPath: z.string().min(1),
     gitDefaultBranch: z.string().nullish(),
     gitRemoteUrl: z.string().nullish(),
     projectId: z.string().nullish(),
@@ -624,7 +624,7 @@ export function DeleteAgentConversationInputSchema(): z.ZodObject<
   Properties<DeleteAgentConversationInput>
 > {
   return z.object({
-    conversationId: z.string(),
+    conversationId: z.string().min(1),
   });
 }
 
@@ -632,7 +632,7 @@ export function DeletePlanInputSchema(): z.ZodObject<
   Properties<DeletePlanInput>
 > {
   return z.object({
-    id: z.string(),
+    id: z.string().min(1),
   });
 }
 
@@ -641,7 +641,7 @@ export function DeletePlanOutputInputSchema(): z.ZodObject<
 > {
   return z.object({
     chunkId: z.string().nullish(),
-    planId: z.string(),
+    planId: z.string().min(1),
     taskId: z.string().nullish(),
   });
 }
@@ -650,7 +650,7 @@ export function DeleteProjectInputSchema(): z.ZodObject<
   Properties<DeleteProjectInput>
 > {
   return z.object({
-    id: z.string(),
+    id: z.string().min(1),
   });
 }
 
@@ -658,7 +658,7 @@ export function DeleteTagActionRuleInputSchema(): z.ZodObject<
   Properties<DeleteTagActionRuleInput>
 > {
   return z.object({
-    id: z.string(),
+    id: z.string().min(1),
   });
 }
 
@@ -666,7 +666,7 @@ export function DeleteTaskInputSchema(): z.ZodObject<
   Properties<DeleteTaskInput>
 > {
   return z.object({
-    id: z.string(),
+    id: z.string().min(1),
   });
 }
 
@@ -674,7 +674,7 @@ export function DetachHookInputSchema(): z.ZodObject<
   Properties<DetachHookInput>
 > {
   return z.object({
-    hookTaskId: z.string(),
+    hookTaskId: z.string().min(1),
   });
 }
 
@@ -682,8 +682,8 @@ export function DuplicateJobInputSchema(): z.ZodObject<
   Properties<DuplicateJobInput>
 > {
   return z.object({
-    jobId: z.string(),
-    queueName: z.string(),
+    jobId: z.string().min(1),
+    queueName: z.string().min(1),
   });
 }
 
@@ -691,7 +691,7 @@ export function EndWorkSessionInputSchema(): z.ZodObject<
   Properties<EndWorkSessionInput>
 > {
   return z.object({
-    sessionId: z.string(),
+    sessionId: z.string().min(1),
     summary: z.string().nullish(),
   });
 }
@@ -700,8 +700,8 @@ export function EnqueueDocIngestionInputSchema(): z.ZodObject<
   Properties<EnqueueDocIngestionInput>
 > {
   return z.object({
-    directories: z.array(z.string()).nullish(),
-    files: z.array(z.string()).nullish(),
+    directories: z.array(z.string().min(1)).nullish(),
+    files: z.array(z.string().min(1)).nullish(),
     repo: z.string().nullish(),
     scope: z.string().nullish(),
     sha: z.string().nullish(),
@@ -712,12 +712,12 @@ export function EnqueuePlanRalphOrchestratorInputSchema(): z.ZodObject<
   Properties<EnqueuePlanRalphOrchestratorInput>
 > {
   return z.object({
-    branch: z.string(),
+    branch: z.string().min(1),
     checkoutId: z.string().nullish(),
     idempotencyKey: z.string().nullish(),
     jobRunHooksJson: z.string().nullish(),
     mode: PlanRalphWorkflowModeSchema.nullish(),
-    planId: z.string(),
+    planId: z.string().min(1),
     priority: z.number().nullish(),
     ralph: z.lazy(() => RalphPlanRunTuningInputSchema().nullish()),
     repositoryId: z.string().nullish(),
@@ -730,11 +730,11 @@ export function EnqueuePlanRunInputSchema(): z.ZodObject<
   Properties<EnqueuePlanRunInput>
 > {
   return z.object({
-    branch: z.string(),
+    branch: z.string().min(1),
     checkoutId: z.string().nullish(),
     idempotencyKey: z.string().nullish(),
     jobRunHooksJson: z.string().nullish(),
-    planId: z.string(),
+    planId: z.string().min(1),
     priority: z.number().nullish(),
     ralph: z.lazy(() => RalphPlanRunTuningInputSchema().nullish()),
     repositoryId: z.string().nullish(),
@@ -746,7 +746,7 @@ export function GetAgentConversationMessagesInputSchema(): z.ZodObject<
   Properties<GetAgentConversationMessagesInput>
 > {
   return z.object({
-    conversationId: z.string(),
+    conversationId: z.string().min(1),
     limit: z.number().default(100).nullish(),
     offset: z.number().default(0).nullish(),
   });
@@ -756,7 +756,7 @@ export function GetGeneratorInputSchema(): z.ZodObject<
   Properties<GetGeneratorInput>
 > {
   return z.object({
-    name: z.string(),
+    name: z.string().min(1),
   });
 }
 
@@ -764,7 +764,7 @@ export function GetPlanEmbeddingInputSchema(): z.ZodObject<
   Properties<GetPlanEmbeddingInput>
 > {
   return z.object({
-    id: z.string(),
+    id: z.string().min(1),
   });
 }
 
@@ -772,15 +772,15 @@ export function GetPlanOutputStreamChunkInputSchema(): z.ZodObject<
   Properties<GetPlanOutputStreamChunkInput>
 > {
   return z.object({
-    id: z.string(),
+    id: z.string().min(1),
   });
 }
 
 export function GetPullInputSchema(): z.ZodObject<Properties<GetPullInput>> {
   return z.object({
     number: z.number(),
-    owner: z.string(),
-    repo: z.string(),
+    owner: z.string().min(1),
+    repo: z.string().min(1),
   });
 }
 
@@ -788,7 +788,7 @@ export function GetTaskEmbeddingInputSchema(): z.ZodObject<
   Properties<GetTaskEmbeddingInput>
 > {
   return z.object({
-    id: z.string(),
+    id: z.string().min(1),
   });
 }
 
@@ -796,9 +796,9 @@ export function GitHubRepoInputSchema(): z.ZodObject<
   Properties<GitHubRepoInput>
 > {
   return z.object({
-    owner: z.string(),
-    repo: z.string(),
-    state: z.string(),
+    owner: z.string().min(1),
+    repo: z.string().min(1),
+    state: z.string().min(1),
   });
 }
 
@@ -806,7 +806,7 @@ export function LastActivityInputSchema(): z.ZodObject<
   Properties<LastActivityInput>
 > {
   return z.object({
-    planId: z.string(),
+    planId: z.string().min(1),
     taskId: z.string().nullish(),
   });
 }
@@ -816,9 +816,9 @@ export function LinesAddedDeletedInputSchema(): z.ZodObject<
 > {
   return z.object({
     maxPrs: z.number().nullish(),
-    owner: z.string(),
+    owner: z.string().min(1),
     period: z.string().nullish(),
-    repo: z.string(),
+    repo: z.string().min(1),
   });
 }
 
@@ -837,7 +837,7 @@ export function ListCustomPromptsInputSchema(): z.ZodObject<
 > {
   return z.object({
     includeDeleted: z.boolean().default(false),
-    labels: z.array(z.string()).nullish(),
+    labels: z.array(z.string().min(1)).nullish(),
     projectId: z.string().nullish(),
     promptType: CustomPromptTypeSchema.nullish(),
     search: z.string().nullish(),
@@ -851,7 +851,7 @@ export function ListPlanOutputStreamChunksInputSchema(): z.ZodObject<
   return z.object({
     limit: z.number().nullish(),
     offset: z.number().nullish(),
-    planId: z.string(),
+    planId: z.string().min(1),
   });
 }
 
@@ -878,16 +878,16 @@ export function ListPullsInputSchema(): z.ZodObject<
   return z.object({
     base: z.string().nullish(),
     merged: z.boolean().nullish(),
-    owner: z.string(),
-    repo: z.string(),
+    owner: z.string().min(1),
+    repo: z.string().min(1),
     state: z.string().nullish(),
   });
 }
 
 export function LoginInputSchema(): z.ZodObject<Properties<LoginInput>> {
   return z.object({
-    email: z.string(),
-    password: z.string(),
+    email: z.string().min(1),
+    password: z.string().min(1),
   });
 }
 
@@ -895,9 +895,9 @@ export function OpenToMergedCycleTimeInputSchema(): z.ZodObject<
   Properties<OpenToMergedCycleTimeInput>
 > {
   return z.object({
-    owner: z.string(),
+    owner: z.string().min(1),
     period: z.string().nullish(),
-    repo: z.string(),
+    repo: z.string().min(1),
   });
 }
 
@@ -907,7 +907,7 @@ export function PlanEmbeddingsByPlanInputSchema(): z.ZodObject<
   return z.object({
     limit: z.number().nullish(),
     offset: z.number().nullish(),
-    planId: z.string(),
+    planId: z.string().min(1),
   });
 }
 
@@ -916,7 +916,7 @@ export function PlanRunsByPlanIdInputSchema(): z.ZodObject<
 > {
   return z.object({
     limit: z.number().nullish(),
-    planId: z.string(),
+    planId: z.string().min(1),
   });
 }
 
@@ -924,8 +924,8 @@ export function PrCountByLabelInputSchema(): z.ZodObject<
   Properties<PrCountByLabelInput>
 > {
   return z.object({
-    owner: z.string(),
-    repo: z.string(),
+    owner: z.string().min(1),
+    repo: z.string().min(1),
     state: z.string().nullish(),
   });
 }
@@ -935,7 +935,7 @@ export function PromoteTaskToPlanInputSchema(): z.ZodObject<
 > {
   return z.object({
     idempotencyKey: z.string().nullish(),
-    taskId: z.string(),
+    taskId: z.string().min(1),
   });
 }
 
@@ -943,9 +943,9 @@ export function PrsMergedPerPeriodInputSchema(): z.ZodObject<
   Properties<PrsMergedPerPeriodInput>
 > {
   return z.object({
-    owner: z.string(),
-    period: z.string(),
-    repo: z.string(),
+    owner: z.string().min(1),
+    period: z.string().min(1),
+    repo: z.string().min(1),
   });
 }
 
@@ -953,7 +953,7 @@ export function QueueControlInputSchema(): z.ZodObject<
   Properties<QueueControlInput>
 > {
   return z.object({
-    queueName: z.string(),
+    queueName: z.string().min(1),
   });
 }
 
@@ -963,9 +963,9 @@ export function QueueDetailsInputSchema(): z.ZodObject<
   return z.object({
     asc: z.boolean().nullish(),
     limit: z.number().nullish(),
-    name: z.string(),
+    name: z.string().min(1),
     offset: z.number().nullish(),
-    states: z.array(z.string()).nullish(),
+    states: z.array(z.string().min(1)).nullish(),
   });
 }
 
@@ -974,10 +974,10 @@ export function QueueJobLogsInputSchema(): z.ZodObject<
 > {
   return z.object({
     after: z.string().nullish(),
-    jobId: z.string(),
+    jobId: z.string().min(1),
     levelIn: z.array(QueueJobLogLevelSchema).nullish(),
     limit: z.number().nullish(),
-    queueName: z.string(),
+    queueName: z.string().min(1),
     since: definedNonNullAnySchema.nullish(),
   });
 }
@@ -1004,7 +1004,7 @@ export function RecordPlanRunHeartbeatInputSchema(): z.ZodObject<
   Properties<RecordPlanRunHeartbeatInput>
 > {
   return z.object({
-    planRunId: z.string(),
+    planRunId: z.string().min(1),
   });
 }
 
@@ -1022,9 +1022,9 @@ export function RecordSkillUsageInputSchema(): z.ZodObject<
     occurredAt: definedNonNullAnySchema,
     privacyLevel: z.string().nullish(),
     promptId: z.string().nullish(),
-    scope: z.string(),
+    scope: z.string().min(1),
     sessionId: z.string().nullish(),
-    skillName: z.string(),
+    skillName: z.string().min(1),
     source: z.string().nullish(),
     toolUseId: z.string().nullish(),
   });
@@ -1038,10 +1038,10 @@ export function RecordSkillUsageOutcomeInputSchema(): z.ZodObject<
     durationMs: z.number().nullish(),
     gitBranch: z.string().nullish(),
     occurredAt: definedNonNullAnySchema,
-    outcome: z.string(),
+    outcome: z.string().min(1),
     scope: z.string().nullish(),
     sessionId: z.string().nullish(),
-    skillName: z.string(),
+    skillName: z.string().min(1),
     toolUseId: z.string().nullish(),
   });
 }
@@ -1051,9 +1051,9 @@ export function RecordWorkArtifactInputSchema(): z.ZodObject<
 > {
   return z.object({
     message: z.string().nullish(),
-    payloadJson: z.string(),
-    sessionId: z.string(),
-    type: z.string(),
+    payloadJson: z.string().min(1),
+    sessionId: z.string().min(1),
+    type: z.string().min(1),
   });
 }
 
@@ -1061,7 +1061,7 @@ export function RefreshCheckoutInputSchema(): z.ZodObject<
   Properties<RefreshCheckoutInput>
 > {
   return z.object({
-    id: z.string(),
+    id: z.string().min(1),
   });
 }
 
@@ -1070,19 +1070,19 @@ export function RegisterCliPlanRunInputSchema(): z.ZodObject<
 > {
   return z.object({
     branch: z.string().nullish(),
-    executionBackend: z.string(),
+    executionBackend: z.string().min(1),
     hostname: z.string().nullish(),
     pid: z.number().nullish(),
-    planId: z.string(),
+    planId: z.string().min(1),
     workerId: z.string().nullish(),
   });
 }
 
 export function RegisterInputSchema(): z.ZodObject<Properties<RegisterInput>> {
   return z.object({
-    email: z.string(),
+    email: z.string().min(1),
     githubUsername: z.string().nullish(),
-    password: z.string(),
+    password: z.string().min(1),
   });
 }
 
@@ -1090,8 +1090,8 @@ export function RegisterPlanRunWorktreeCheckoutInputSchema(): z.ZodObject<
   Properties<RegisterPlanRunWorktreeCheckoutInput>
 > {
   return z.object({
-    filesystemPath: z.string(),
-    planRunId: z.string(),
+    filesystemPath: z.string().min(1),
+    planRunId: z.string().min(1),
   });
 }
 
@@ -1099,7 +1099,7 @@ export function RemainingTasksByPlanIdInputSchema(): z.ZodObject<
   Properties<RemainingTasksByPlanIdInput>
 > {
   return z.object({
-    planId: z.string(),
+    planId: z.string().min(1),
   });
 }
 
@@ -1107,8 +1107,8 @@ export function RemovePermissionFromRoleInputSchema(): z.ZodObject<
   Properties<RemovePermissionFromRoleInput>
 > {
   return z.object({
-    permissionId: z.string(),
-    roleId: z.string(),
+    permissionId: z.string().min(1),
+    roleId: z.string().min(1),
   });
 }
 
@@ -1116,8 +1116,8 @@ export function RemovePlanTagInputSchema(): z.ZodObject<
   Properties<RemovePlanTagInput>
 > {
   return z.object({
-    planId: z.string(),
-    tag: z.string(),
+    planId: z.string().min(1),
+    tag: z.string().min(1),
   });
 }
 
@@ -1125,8 +1125,8 @@ export function RemoveProjectTagInputSchema(): z.ZodObject<
   Properties<RemoveProjectTagInput>
 > {
   return z.object({
-    projectId: z.string(),
-    tag: z.string(),
+    projectId: z.string().min(1),
+    tag: z.string().min(1),
   });
 }
 
@@ -1134,8 +1134,8 @@ export function RemoveRepeatableJobInputSchema(): z.ZodObject<
   Properties<RemoveRepeatableJobInput>
 > {
   return z.object({
-    key: z.string(),
-    queueName: z.string(),
+    key: z.string().min(1),
+    queueName: z.string().min(1),
   });
 }
 
@@ -1143,8 +1143,8 @@ export function RemoveRoleFromServiceAccountInputSchema(): z.ZodObject<
   Properties<RemoveRoleFromServiceAccountInput>
 > {
   return z.object({
-    roleId: z.string(),
-    serviceAccountId: z.string(),
+    roleId: z.string().min(1),
+    serviceAccountId: z.string().min(1),
   });
 }
 
@@ -1152,8 +1152,8 @@ export function RemoveRoleFromUserInputSchema(): z.ZodObject<
   Properties<RemoveRoleFromUserInput>
 > {
   return z.object({
-    roleId: z.string(),
-    userId: z.string(),
+    roleId: z.string().min(1),
+    userId: z.string().min(1),
   });
 }
 
@@ -1161,7 +1161,7 @@ export function RemoveSkillTagInputSchema(): z.ZodObject<
   Properties<RemoveSkillTagInput>
 > {
   return z.object({
-    tag: z.string(),
+    tag: z.string().min(1),
   });
 }
 
@@ -1169,8 +1169,8 @@ export function RemoveTaskTagInputSchema(): z.ZodObject<
   Properties<RemoveTaskTagInput>
 > {
   return z.object({
-    tag: z.string(),
-    taskId: z.string(),
+    tag: z.string().min(1),
+    taskId: z.string().min(1),
   });
 }
 
@@ -1178,8 +1178,8 @@ export function RenameSkillTagInputSchema(): z.ZodObject<
   Properties<RenameSkillTagInput>
 > {
   return z.object({
-    from: z.string(),
-    to: z.string(),
+    from: z.string().min(1),
+    to: z.string().min(1),
   });
 }
 
@@ -1187,8 +1187,8 @@ export function ReorderPlanTasksInputSchema(): z.ZodObject<
   Properties<ReorderPlanTasksInput>
 > {
   return z.object({
-    planId: z.string(),
-    taskIds: z.array(z.string()),
+    planId: z.string().min(1),
+    taskIds: z.array(z.string().min(1)),
   });
 }
 
@@ -1198,15 +1198,15 @@ export function RepeatableJobsInputSchema(): z.ZodObject<
   return z.object({
     asc: z.boolean().nullish(),
     end: z.number().nullish(),
-    queueName: z.string(),
+    queueName: z.string().min(1),
     start: z.number().nullish(),
   });
 }
 
 export function RetryJobInputSchema(): z.ZodObject<Properties<RetryJobInput>> {
   return z.object({
-    jobId: z.string(),
-    queueName: z.string(),
+    jobId: z.string().min(1),
+    queueName: z.string().min(1),
   });
 }
 
@@ -1215,9 +1215,9 @@ export function ReviewCycleTimeInputSchema(): z.ZodObject<
 > {
   return z.object({
     maxPrs: z.number().nullish(),
-    owner: z.string(),
+    owner: z.string().min(1),
     period: z.string().nullish(),
-    repo: z.string(),
+    repo: z.string().min(1),
   });
 }
 
@@ -1244,14 +1244,14 @@ export function RolloutFlagVariationInputSchema(): z.ZodObject<
   return z.object({
     description: z.string().nullish(),
     name: z.string().nullish(),
-    valueJson: z.string(),
+    valueJson: z.string().min(1),
   });
 }
 
 export function SearchInputSchema(): z.ZodObject<Properties<SearchInput>> {
   return z.object({
     limit: z.number().nullish(),
-    query: z.string(),
+    query: z.string().min(1),
   });
 }
 
@@ -1260,7 +1260,7 @@ export function SearchPlansInputSchema(): z.ZodObject<
 > {
   return z.object({
     limit: z.number().nullish(),
-    query: z.string(),
+    query: z.string().min(1),
   });
 }
 
@@ -1268,7 +1268,7 @@ export function SetMcpConnectorEnabledInputSchema(): z.ZodObject<
   Properties<SetMcpConnectorEnabledInput>
 > {
   return z.object({
-    connectorKey: z.string(),
+    connectorKey: z.string().min(1),
     enabled: z.boolean(),
   });
 }
@@ -1277,7 +1277,7 @@ export function SetPlanStatusInputSchema(): z.ZodObject<
   Properties<SetPlanStatusInput>
 > {
   return z.object({
-    planId: z.string(),
+    planId: z.string().min(1),
     status: z.string().nullish(),
     statusEnum: PlanTaskStatusSchema.nullish(),
   });
@@ -1288,7 +1288,7 @@ export function SetScheduledAgentJobEnabledInputTypeSchema(): z.ZodObject<
 > {
   return z.object({
     enabled: z.boolean(),
-    id: z.string(),
+    id: z.string().min(1),
   });
 }
 
@@ -1296,7 +1296,7 @@ export function SetWorkspaceLocalRepositoryProjectInputSchema(): z.ZodObject<
   Properties<SetWorkspaceLocalRepositoryProjectInput>
 > {
   return z.object({
-    id: z.string(),
+    id: z.string().min(1),
     projectId: z.string().nullish(),
   });
 }
@@ -1305,8 +1305,8 @@ export function SettleCliPlanRunInputSchema(): z.ZodObject<
   Properties<SettleCliPlanRunInput>
 > {
   return z.object({
-    planRunId: z.string(),
-    status: z.string(),
+    planRunId: z.string().min(1),
+    status: z.string().min(1),
   });
 }
 
@@ -1315,10 +1315,10 @@ export function SkillAvailabilityRuleInputSchema(): z.ZodObject<
 > {
   return z.object({
     environment: z.string().nullish(),
-    slugAllow: z.array(z.string()),
-    slugDeny: z.array(z.string()),
-    tagAllow: z.array(z.string()),
-    tagDeny: z.array(z.string()),
+    slugAllow: z.array(z.string().min(1)),
+    slugDeny: z.array(z.string().min(1)),
+    tagAllow: z.array(z.string().min(1)),
+    tagDeny: z.array(z.string().min(1)),
   });
 }
 
@@ -1329,8 +1329,8 @@ export function StartConversationStreamInputSchema(): z.ZodObject<
     backend: z.string().nullish(),
     baseUrl: z.string().nullish(),
     conversationId: z.string().nullish(),
-    fileMentions: z.array(z.string()).nullish(),
-    message: z.string(),
+    fileMentions: z.array(z.string().min(1)).nullish(),
+    message: z.string().min(1),
     modelId: z.string().nullish(),
     permissionMode: z.string().nullish(),
     persist: z.boolean().nullish(),
@@ -1350,7 +1350,7 @@ export function StartWorkSessionInputSchema(): z.ZodObject<
     model: z.string().nullish(),
     onBehalfOfUserId: z.string().nullish(),
     planRunId: z.string().nullish(),
-    toolName: z.string(),
+    toolName: z.string().min(1),
     toolVersion: z.string().nullish(),
   });
 }
@@ -1361,7 +1361,7 @@ export function TaskEmbeddingsByTaskInputSchema(): z.ZodObject<
   return z.object({
     limit: z.number().nullish(),
     offset: z.number().nullish(),
-    taskId: z.string(),
+    taskId: z.string().min(1),
   });
 }
 
@@ -1369,7 +1369,7 @@ export function TasksByPlanIdInputSchema(): z.ZodObject<
   Properties<TasksByPlanIdInput>
 > {
   return z.object({
-    planId: z.string(),
+    planId: z.string().min(1),
   });
 }
 
@@ -1379,7 +1379,7 @@ export function TasksByProjectIdInputSchema(): z.ZodObject<
   return z.object({
     limit: z.number().nullish(),
     offset: z.number().nullish(),
-    projectId: z.string(),
+    projectId: z.string().min(1),
   });
 }
 
@@ -1396,8 +1396,8 @@ export function UpdateAgentConversationTitleInputSchema(): z.ZodObject<
   Properties<UpdateAgentConversationTitleInput>
 > {
   return z.object({
-    conversationId: z.string(),
-    title: z.string(),
+    conversationId: z.string().min(1),
+    title: z.string().min(1),
   });
 }
 
@@ -1408,8 +1408,8 @@ export function UpdateCustomPromptInputSchema(): z.ZodObject<
     content: z.string().nullish(),
     description: z.string().nullish(),
     filePath: z.string().nullish(),
-    id: z.string(),
-    labels: z.array(z.string()).nullish(),
+    id: z.string().min(1),
+    labels: z.array(z.string().min(1)).nullish(),
     projectId: z.string().nullish(),
     promptType: CustomPromptTypeSchema.nullish(),
     title: z.string().nullish(),
@@ -1424,7 +1424,7 @@ export function UpdateNoteInputSchema(): z.ZodObject<
   return z.object({
     author: z.string().nullish(),
     content: z.string().nullish(),
-    id: z.string(),
+    id: z.string().min(1),
   });
 }
 
@@ -1436,7 +1436,7 @@ export function UpdatePlanInputSchema(): z.ZodObject<
     author: z.string().nullish(),
     category: z.string().nullish(),
     description: z.string().nullish(),
-    id: z.string(),
+    id: z.string().min(1),
     jobRunHooksJson: z.string().nullish(),
     project: z.string().nullish(),
     projectId: z.string().nullish(),
@@ -1452,7 +1452,7 @@ export function UpdateProjectInputSchema(): z.ZodObject<
 > {
   return z.object({
     description: z.string().nullish(),
-    id: z.string(),
+    id: z.string().min(1),
     name: z.string().nullish(),
     nxProjectName: z.string().nullish(),
   });
@@ -1464,7 +1464,7 @@ export function UpdateRepositoryInputSchema(): z.ZodObject<
   return z.object({
     defaultBranch: z.string().nullish(),
     foreignSkillInjectionEnabled: z.boolean().nullish(),
-    id: z.string(),
+    id: z.string().min(1),
     name: z.string().nullish(),
     projectId: z.string().nullish(),
   });
@@ -1475,7 +1475,7 @@ export function UpdateRoleInputSchema(): z.ZodObject<
 > {
   return z.object({
     description: z.string().nullish(),
-    id: z.string(),
+    id: z.string().min(1),
     name: z.string().nullish(),
   });
 }
@@ -1487,11 +1487,11 @@ export function UpdateRolloutFlagInputSchema(): z.ZodObject<
     description: z.string().nullish(),
     enabled: z.boolean().nullish(),
     fallthrough: z.lazy(() => RolloutFallthroughInputSchema().nullish()),
-    id: z.string(),
+    id: z.string().min(1),
     key: z.string().nullish(),
     kind: RolloutFlagKindSchema.nullish(),
     offVariation: z.number().nullish(),
-    targetRoles: z.array(z.string()).nullish(),
+    targetRoles: z.array(z.string().min(1)).nullish(),
     variations: z
       .array(z.lazy(() => RolloutFlagVariationInputSchema()))
       .nullish(),
@@ -1505,7 +1505,7 @@ export function UpdateScheduledAgentJobInputTypeSchema(): z.ZodObject<
     cronPattern: z.string().nullish(),
     cwd: z.string().nullish(),
     driverId: z.string().nullish(),
-    id: z.string(),
+    id: z.string().min(1),
     model: z.string().nullish(),
     name: z.string().nullish(),
     prompt: z.string().nullish(),
@@ -1520,7 +1520,7 @@ export function UpdateServiceAccountInputSchema(): z.ZodObject<
 > {
   return z.object({
     description: z.string().nullish(),
-    id: z.string(),
+    id: z.string().min(1),
     name: z.string().nullish(),
   });
 }
@@ -1532,7 +1532,7 @@ export function UpdateTaskInputSchema(): z.ZodObject<
     assignee: z.string().nullish(),
     category: z.string().nullish(),
     description: z.string().nullish(),
-    id: z.string(),
+    id: z.string().min(1),
     planId: z.string().nullish(),
     project: z.string().nullish(),
     projectId: z.string().nullish(),
@@ -1551,7 +1551,7 @@ export function UpdateUserInputSchema(): z.ZodObject<
     disabledAt: definedNonNullAnySchema.nullish(),
     email: z.string().nullish(),
     githubUsername: z.string().nullish(),
-    id: z.string(),
+    id: z.string().min(1),
   });
 }
 
@@ -1562,7 +1562,7 @@ export function UpdateWorkspaceLocalRepositoryInputSchema(): z.ZodObject<
     displayName: z.string().nullish(),
     gitDefaultBranch: z.string().nullish(),
     gitRemoteUrl: z.string().nullish(),
-    id: z.string(),
+    id: z.string().min(1),
     projectId: z.string().nullish(),
   });
 }
@@ -1581,15 +1581,15 @@ export function UpsertTagActionRuleInputSchema(): z.ZodObject<
   Properties<UpsertTagActionRuleInput>
 > {
   return z.object({
-    actionPayloadJson: z.string(),
-    actionType: z.string(),
+    actionPayloadJson: z.string().min(1),
+    actionType: z.string().min(1),
     enabled: z.boolean().default(true).nullish(),
     environment: z.string().nullish(),
     id: z.string().nullish(),
     projectId: z.string().nullish(),
     status: z.string().nullish(),
-    tagAll: z.array(z.string()),
-    title: z.string(),
+    tagAll: z.array(z.string().min(1)),
+    title: z.string().min(1),
   });
 }
 
@@ -1597,7 +1597,7 @@ export function WorkArtifactsByPlanInputSchema(): z.ZodObject<
   Properties<WorkArtifactsByPlanInput>
 > {
   return z.object({
-    planId: z.string(),
+    planId: z.string().min(1),
   });
 }
 
@@ -1605,7 +1605,7 @@ export function WorkArtifactsBySessionInputSchema(): z.ZodObject<
   Properties<WorkArtifactsBySessionInput>
 > {
   return z.object({
-    sessionId: z.string(),
+    sessionId: z.string().min(1),
   });
 }
 
@@ -1613,7 +1613,7 @@ export function WorkArtifactsByTaskInputSchema(): z.ZodObject<
   Properties<WorkArtifactsByTaskInput>
 > {
   return z.object({
-    taskId: z.string(),
+    taskId: z.string().min(1),
   });
 }
 
@@ -1621,6 +1621,6 @@ export function WorkSessionsByPlanInputSchema(): z.ZodObject<
   Properties<WorkSessionsByPlanInput>
 > {
   return z.object({
-    planId: z.string(),
+    planId: z.string().min(1),
   });
 }

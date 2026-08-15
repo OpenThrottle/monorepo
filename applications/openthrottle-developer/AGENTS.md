@@ -70,6 +70,14 @@ for devtools/profiling/troubleshooting.
   is default-off on the server (`OT_AGENT_CLI_INSTALL_ENABLED`) — a local-dev tool, not for
   hosted deploys. CLI auth/login is out of scope.
 
+- **Route actions validate `FormData` through the generated Zod schema**, not
+  hand-rolled field reads. Use `parseFormData` from
+  `@openthrottle/react-router-graphql` + a `~/__generated__/schemas` input schema
+  (`.omit()` route-param ids, then assemble). See
+  [packages/graphql-codegen/README.md](../../packages/graphql-codegen/README.md).
+  Don't add new `formData.get` + `typeof === 'string'` + `.trim()` + empty-check
+  helpers.
+
 ## Don't
 
 - Don't hand-edit `app/__generated__/*` — regenerate via codegen.

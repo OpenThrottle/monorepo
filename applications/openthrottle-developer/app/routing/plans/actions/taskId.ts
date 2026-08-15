@@ -1,4 +1,7 @@
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import {
+  executeGraphqlWithAuth,
+  parseFormData,
+} from '@openthrottle/react-router-graphql';
 import {
   PlanDetailAddHookDocument,
   TaskDetailAddTaskTagDocument,
@@ -6,7 +9,11 @@ import {
   TaskDetailRemoveTaskTagDocument,
   UpdateTaskDocument,
 } from '~/__generated__/graphql';
-import { AddHookInputSchema } from '~/__generated__/schemas';
+import {
+  AddHookInputSchema,
+  AddTaskTagInputSchema,
+  RemoveTaskTagInputSchema,
+} from '~/__generated__/schemas';
 import {
   messageOrFallback,
   toErrorMessage,
@@ -74,20 +81,27 @@ export const updateTaskTag = async (
   formData: FormData,
   add: boolean,
 ) => {
-  const tag = formData.get('tag');
-  if (typeof tag !== 'string' || tag.trim() === '') {
+  // `taskId` is a route param; validate only `tag` from the generated schema.
+  const parsed = add
+    ? parseFormData(formData, AddTaskTagInputSchema().omit({ taskId: true }))
+    : parseFormData(
+        formData,
+        RemoveTaskTagInputSchema().omit({ taskId: true }),
+      );
+  if (!parsed.success) {
     return { taskTagError: 'Tag is required.' };
   }
+  const tag = parsed.data.tag;
   try {
     if (add) {
       await executeGraphqlWithAuth(args.request, TaskDetailAddTaskTagDocument, {
-        input: { tag: tag.trim(), taskId },
+        input: { tag, taskId },
       });
     } else {
       await executeGraphqlWithAuth(
         args.request,
         TaskDetailRemoveTaskTagDocument,
-        { input: { tag: tag.trim(), taskId } },
+        { input: { tag, taskId } },
       );
     }
     return { taskTagUpdated: true };
@@ -108,23 +122,19 @@ export const addTaskHook = async (
     return { addHookError: 'Missing plan id.' };
   }
 
-  const optionalField = (key: string): string | undefined => {
-    const value = formData.get(key);
-    return typeof value === 'string' && value.trim() !== ''
-      ? value.trim()
-      : undefined;
-  };
+  // Parse the form once through the generated schema; `planId` and
+  // `anchorTaskId` come from route params, not the form.
+  const parsed = parseFormData(
+    formData,
+    AddHookInputSchema().omit({ anchorTaskId: true, planId: true }),
+    { strict: false },
+  );
+  if (!parsed.success) {
+    return { addHookError: parsed.error };
+  }
 
   try {
-    const input = AddHookInputSchema().parse({
-      anchorTaskId: taskId,
-      planId,
-      role: formData.get('role'),
-      scope: optionalField('scope'),
-      skillSlug: optionalField('skillSlug'),
-      source: formData.get('source'),
-      title: optionalField('title'),
-    });
+    const input = { ...parsed.data, anchorTaskId: taskId, planId };
 
     const result = await executeGraphqlWithAuth(
       args.request,
