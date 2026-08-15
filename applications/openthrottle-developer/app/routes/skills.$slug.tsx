@@ -74,6 +74,8 @@ export const loader = async (args: Route.LoaderArgs) => {
   const isOrphan = entry.orphanedAt != null;
   const content = isOrphan ? '' : disk.content;
   const editable = isOrphan ? false : disk.editable;
+  const metadata = isOrphan ? {} : disk.metadata;
+  const rawContent = isOrphan ? '' : disk.rawContent;
 
   // Deferred: the Run-skill modal needs discovered agent+model options and the
   // registered repositories that satisfy `repositoryId` for CLI backends. Model
@@ -107,7 +109,16 @@ export const loader = async (args: Route.LoaderArgs) => {
     .then(({ skillUsage }) => toSkillDetailUsageData(skillUsage))
     .catch(() => ({ available: false as const }));
 
-  return { content, editable, entry, runOptions, tagVocabulary, usage };
+  return {
+    content,
+    editable,
+    entry,
+    metadata,
+    rawContent,
+    runOptions,
+    tagVocabulary,
+    usage,
+  };
 };
 
 export const links: Route.LinksFunction = () => {
@@ -121,8 +132,15 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) => {
 export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
-  const { content, editable, entry, runOptions, tagVocabulary, usage } =
-    props.loaderData;
+  const {
+    content,
+    editable,
+    entry,
+    rawContent,
+    runOptions,
+    tagVocabulary,
+    usage,
+  } = props.loaderData;
 
   // Hooks
   const fetcher = useFetcher<typeof action>();
@@ -171,6 +189,7 @@ export default function Component(
         }
         onRun={runSkill.onRun}
         onSave={handleSave}
+        rawContent={rawContent}
         runOptions={runOptions}
         saveError={saveError}
         saving={saving}

@@ -91,6 +91,9 @@ export type {
   FrontmatterScalar,
   ParsedYamlFrontmatter,
 } from './frontmatter/parse-yaml-frontmatter.ts';
+/** @public */
+export { splitFrontmatter } from './frontmatter/split-frontmatter.ts';
+export type { SplitFrontmatterResult } from './frontmatter/split-frontmatter.ts';
 
 /** @public */
 export {

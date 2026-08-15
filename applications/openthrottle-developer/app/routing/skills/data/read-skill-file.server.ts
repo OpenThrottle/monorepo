@@ -9,17 +9,26 @@
 import { readFileSync, realpathSync } from 'node:fs';
 import { join, sep } from 'node:path';
 
+import { splitFrontmatter } from '@openthrottle/openthrottle-skills';
 import { discoverRepoSkills } from '~/routing/agents/data/discover-repo-skills.server';
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 import { getMonorepoRoot } from '~/routing/agents/data/resolve-monorepo-root.server';
 
 export interface ReadSkillFileResult {
-  /** Raw SKILL.md content; empty string when unreadable (renders a notice). */
+  /** SKILL.md body with the YAML frontmatter stripped; empty when unreadable. */
   readonly content: string;
   /** Whether the checkout supports write-back (a monorepo root resolved). */
   readonly editable: boolean;
   /** The discovered entry, or `undefined` when the slug is unknown. */
   readonly entry: RepoSkillEntry | undefined;
+  /** Parsed frontmatter fields; `{}` when there is none or the file is unreadable. */
+  readonly metadata: Record<string, unknown>;
+  /**
+   * The untouched SKILL.md (frontmatter included); `''` when unreadable. The
+   * editor round-trips this so a save preserves the frontmatter that `content`
+   * strips for rendering.
+   */
+  readonly rawContent: string;
 }
 
 const isPathInsideRoot = (root: string, candidate: string): boolean => {
@@ -43,27 +52,44 @@ const isPathInsideRoot = (root: string, candidate: string): boolean => {
 export const readSkillFileBySlug = (slug: string): ReadSkillFileResult => {
   const monorepoRoot = getMonorepoRoot();
   if (!monorepoRoot) {
-    return { content: '', editable: false, entry: undefined };
+    return {
+      content: '',
+      editable: false,
+      entry: undefined,
+      metadata: {},
+      rawContent: '',
+    };
   }
 
   const entries = discoverRepoSkills(monorepoRoot);
   const entry = entries.find((candidate) => candidate.slug === slug);
   if (!entry) {
-    return { content: '', editable: true, entry: undefined };
+    return {
+      content: '',
+      editable: true,
+      entry: undefined,
+      metadata: {},
+      rawContent: '',
+    };
   }
 
   const absolutePath = join(monorepoRoot, entry.repoRelativePath);
   if (!isPathInsideRoot(monorepoRoot, absolutePath)) {
-    return { content: '', editable: true, entry: undefined };
+    return {
+      content: '',
+      editable: true,
+      entry: undefined,
+      metadata: {},
+      rawContent: '',
+    };
   }
 
   try {
-    return {
-      content: readFileSync(absolutePath, 'utf8'),
-      editable: true,
-      entry,
-    };
+    const { content, metadata, rawSkill } = splitFrontmatter(
+      readFileSync(absolutePath, 'utf8'),
+    );
+    return { content, editable: true, entry, metadata, rawContent: rawSkill };
   } catch {
-    return { content: '', editable: true, entry };
+    return { content: '', editable: true, entry, metadata: {}, rawContent: '' };
   }
 };

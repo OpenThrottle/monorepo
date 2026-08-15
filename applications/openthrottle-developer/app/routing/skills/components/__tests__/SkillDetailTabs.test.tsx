@@ -44,10 +44,14 @@ const emptyUsage: SkillDetailUsageData = {
 const renderTabs = (
   props: Partial<SkillDetailTabsProps> = {},
 ): RenderResult => {
+  const content = props.content ?? '# Detail heading\n\nDetail body.\n';
   const merged: SkillDetailTabsProps = {
-    content: '# Detail heading\n\nDetail body.\n',
+    content,
     editable: true,
     entry: baseEntry,
+    // Default the editor source to the rendered content so tests that pass only
+    // `content` still seed the editor from it; override to assert the split.
+    rawContent: content,
     usage: Promise.resolve(emptyUsage),
     ...props,
   };
@@ -138,6 +142,44 @@ describe('SkillDetailTabs Component', () => {
       expect(
         component.queryByRole('heading', { name: 'Seeded content' }),
       ).toBeNull();
+    });
+
+    test('seeds the editor from the full rawContent while read mode shows the stripped body', async () => {
+      const user = userEvent.setup();
+      const component = renderTabs({
+        content: '# Heading\n\nBody.\n',
+        rawContent: '---\nname: brag-sheet\n---\n\n# Heading\n\nBody.\n',
+      });
+
+      // Read mode renders the stripped body only — no frontmatter delimiters.
+      expect(
+        component.getByRole('heading', { name: 'Heading' }),
+      ).toBeInTheDocument();
+
+      await user.click(component.getByTestId('skill-edit-button'));
+
+      // The editor round-trips the whole file, frontmatter included.
+      expect(component.getByTestId('mock-monaco')).toHaveValue(
+        '---\nname: brag-sheet\n---\n\n# Heading\n\nBody.\n',
+      );
+    });
+
+    test('Save round-trips the full file so frontmatter is preserved', async () => {
+      const onSave = vi.fn();
+      const user = userEvent.setup();
+      const component = renderTabs({
+        content: '# Heading\n\nBody.\n',
+        onSave,
+        rawContent: '---\nname: brag-sheet\n---\n\n# Heading\n\nBody.\n',
+      });
+
+      await user.click(component.getByTestId('skill-edit-button'));
+      await user.type(component.getByTestId('mock-monaco'), '!');
+      await user.click(component.getByTestId('skill-save-button'));
+
+      expect(onSave).toHaveBeenCalledWith(
+        '---\nname: brag-sheet\n---\n\n# Heading\n\nBody.\n!',
+      );
     });
 
     test('typing marks the draft dirty and enables Save', async () => {
