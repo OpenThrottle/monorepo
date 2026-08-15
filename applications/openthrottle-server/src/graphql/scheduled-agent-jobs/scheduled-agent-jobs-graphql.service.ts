@@ -53,6 +53,7 @@ interface UpdateArgs {
   readonly driverId?: string;
   readonly model?: string | null;
   readonly name?: string;
+  readonly prompt?: string;
   readonly settingsJson?: string | null;
   readonly timeoutMs?: number | null;
   readonly timezone?: string | null;
@@ -132,6 +133,7 @@ export class ScheduledAgentJobsGraphqlService {
       driverId: args.driverId === undefined ? undefined : driverId,
       model: args.model,
       name: args.name,
+      prompt: args.prompt,
       settings:
         args.settingsJson === undefined
           ? undefined
