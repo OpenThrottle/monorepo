@@ -62,7 +62,3 @@ export const parseProjectIdFromFormData = (
   }
   return trimmed;
 };
-
-/** Path to a workspace repository's detail page. */
-export const workspaceRepositoryDetailPath = (repositoryId: string): string =>
-  `/settings/workspace/repositories/${repositoryId}`;

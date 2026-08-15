@@ -1,0 +1,148 @@
+fragment RepositoryCheckoutFields on RepositoryCheckoutObject {
+  createdAt
+  displayName
+  filesystemPath
+  foreignSkillInjectionEnabled
+  id
+  inspection {
+    agentConfig {
+      agentsMd
+      claudeMd
+      cursorRules
+      mcpJson
+      skillsDir
+    }
+    git {
+      currentBranch
+      defaultBranch
+      dirty
+      isRepo
+      linkedWorktrees
+      normalizedRemoteUrl
+    }
+    scannedAt
+    stack {
+      languages
+      nxWorkspace
+      packageManager
+      pnpmWorkspace
+      turbo
+    }
+    warnings
+  }
+  kind
+  managed
+  repositoryId
+  scannedAt
+  updatedAt
+  userId
+}
+
+fragment WorkspaceRepositoryFields on RepositoryObject {
+  checkouts {
+    ...RepositoryCheckoutFields
+  }
+  createdAt
+  defaultBranch
+  id
+  name
+  normalizedRemoteUrl
+  project {
+    id
+    name
+  }
+  projectId
+  updatedAt
+}
+
+query getSettingsRepositories {
+  discoveredFolders {
+    alreadyRegistered
+    name
+    path
+  }
+  workspacePickerCapabilities {
+    canUseNativeDialog
+    defaultBrowsePath
+    roots
+  }
+  workspaceRepositories {
+    ...WorkspaceRepositoryFields
+  }
+}
+
+query browseWorkspaceDirectory($path: String) {
+  browseDirectory(path: $path) {
+    entries {
+      alreadyRegistered
+      isGitRepo
+      name
+      path
+    }
+    isGitRepo
+    parentPath
+    path
+  }
+}
+
+mutation pickFolderNative {
+  pickFolderNative {
+    path
+  }
+}
+
+mutation addWorkspaceFolder($input: AddWorkspaceFolderInput!) {
+  addWorkspaceFolder(input: $input) {
+    checkout {
+      ...RepositoryCheckoutFields
+    }
+    project {
+      id
+      name
+    }
+    projectCreated
+    reconciliation
+    repository {
+      ...WorkspaceRepositoryFields
+    }
+  }
+}
+
+mutation cloneRepository($input: CloneRepositoryInput!) {
+  cloneRepository(input: $input) {
+    checkout {
+      ...RepositoryCheckoutFields
+    }
+    project {
+      id
+      name
+    }
+    projectCreated
+    reconciliation
+    repository {
+      ...WorkspaceRepositoryFields
+    }
+  }
+}
+
+mutation refreshCheckout($input: RefreshCheckoutInput!) {
+  refreshCheckout(input: $input) {
+    checkout {
+      ...RepositoryCheckoutFields
+    }
+    drift {
+      branchMoved
+      pathMissing
+      remoteChanged
+    }
+    merged
+    repository {
+      ...WorkspaceRepositoryFields
+    }
+    supersededProjectId
+  }
+}
+
+mutation deleteWorkspaceLocalRepository($id: ID!) {
+  deleteWorkspaceLocalRepository(id: $id)
+}

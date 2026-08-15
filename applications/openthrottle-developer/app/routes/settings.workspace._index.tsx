@@ -14,15 +14,8 @@ import { GetWorkspaceSettingsDocument } from '~/__generated__/graphql';
 import { SettingsWorkspaceApplyEditors } from '~/routing/settings/components/SettingsWorkspaceApplyEditors';
 import { SettingsWorkspaceIntro } from '~/routing/settings/components/SettingsWorkspaceIntro';
 import { SettingsWorkspaceProfileForm } from '~/routing/settings/components/SettingsWorkspaceProfileForm';
-import { SettingsWorkspaceRepositoriesSection } from '~/routing/settings/components/SettingsWorkspaceRepositoriesSection';
 import {
-  addFolder,
   applyEditorConfig,
-  browseDirectory,
-  cloneRepo,
-  deleteRepo,
-  pickFolderNative,
-  refreshCheckout,
   updateProfile,
 } from '~/routing/settings/actions/workspace';
 import type { Route } from '@/app/routes/+types/settings.workspace._index';
@@ -41,10 +34,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   );
 
   return {
-    discoveredFolders: data.discoveredFolders,
-    pickerCapabilities: data.workspacePickerCapabilities,
     profile: data.workspaceSettings.profile,
-    repositories: data.workspaceRepositories,
   };
 };
 
@@ -72,15 +62,10 @@ export default function Component(
   // 🔌 Short Circuit
 
   const { actionData, loaderData, matches: _m, params: _p } = props;
-  const { discoveredFolders, pickerCapabilities, profile, repositories } =
-    loaderData;
+  const { profile } = loaderData;
   const actionError = getActionError(actionData) ?? null;
   const actionMessage =
     actionData && 'message' in actionData ? actionData.message : null;
-  const addedFolder =
-    actionData && 'addedFolder' in actionData ? actionData.addedFolder : null;
-  const refreshed =
-    actionData && 'refreshed' in actionData ? actionData.refreshed : null;
   const canApplyEditors = profile.enabledEditors.length > 0;
 
   return (
@@ -97,14 +82,6 @@ export default function Component(
           actionMessage={actionMessage}
           disabled={!canApplyEditors}
         />
-        <SettingsWorkspaceRepositoriesSection
-          actionError={actionError}
-          addedFolder={addedFolder}
-          discoveredFolders={discoveredFolders}
-          pickerCapabilities={pickerCapabilities}
-          refreshed={refreshed}
-          repositories={repositories}
-        />
       </div>
     </GlobalScreen>
   );
@@ -115,20 +92,8 @@ export const action = async (args: Route.ActionArgs) => {
   const intent = formData.get('intent');
 
   switch (intent) {
-    case 'addFolder':
-      return addFolder(args, formData);
     case 'applyEditorConfig':
       return applyEditorConfig(args, formData);
-    case 'browseDirectory':
-      return browseDirectory(args, formData);
-    case 'cloneRepo':
-      return cloneRepo(args, formData);
-    case 'deleteRepo':
-      return deleteRepo(args, formData);
-    case 'pickFolderNative':
-      return pickFolderNative(args);
-    case 'refreshCheckout':
-      return refreshCheckout(args, formData);
     case 'updateProfile':
       return updateProfile(args, formData);
     default:
