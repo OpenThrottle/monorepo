@@ -1,5 +1,17 @@
 import { ChartConfig } from '@openthrottle/react-router-shadcn';
 
+/**
+ * @description The one source of truth for the URL search param / value that opens
+ * the `GlobalFeatureOnboardingModal`. Shared by both the modal and its trigger so
+ * there is no stringly-typed drift. Each page renders at most one onboarding modal,
+ * so a single shared value is unambiguous per-page and consistent app-wide.
+ * @public
+ */
+export const GLOBAL_FEATURE_ONBOARDING_MODAL = {
+  param: 'modal',
+  value: 'onboarding',
+} as const;
+
 export const GLOBAL_METRICS_STORAGE_KEY = `openthrottle-developer:metricsPollInterval`;
 
 /**

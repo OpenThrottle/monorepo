@@ -3,7 +3,11 @@ import { screen } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 import ScheduleIndex from '../schedule._index';
 import { buildRootMatch } from '~/testing/root-match-fixture';
-import { renderRoutesStub } from '~/testing/route-fixtures';
+import {
+  renderRoutesStub,
+  renderWithMemoryRouter,
+} from '~/testing/route-fixtures';
+import { SCHEDULE_ONBOARDING } from '~/routing/schedule/data/data.copy';
 import type { ScheduledJobCardFragment } from '~/__generated__/graphql';
 import type { Route } from '@/app/routes/+types/schedule._index';
 
@@ -68,6 +72,49 @@ describe('routes/schedule._index.tsx', () => {
     expect(screen.queryByTestId('ScheduleTable')).not.toBeInTheDocument();
     expect(
       screen.getByRole('link', { name: /create your first schedule/i }),
+    ).toHaveAttribute('href', '/schedule/create');
+  });
+
+  test('renders the onboarding trigger in the header when populated', () => {
+    renderRoutesStub(
+      <ScheduleIndex
+        actionData={undefined}
+        loaderData={{ jobs: [job()] }}
+        matches={matches}
+        params={{}}
+      />,
+    );
+
+    expect(
+      screen.getByTestId('GlobalFeatureOnboardingTrigger'),
+    ).toBeInTheDocument();
+    // Populated list: the pitch is not inline.
+    expect(
+      screen.queryByTestId('GlobalFeatureOnboarding'),
+    ).not.toBeInTheDocument();
+  });
+
+  test('reveals the onboarding modal over a populated list via ?modal=onboarding', () => {
+    renderWithMemoryRouter(
+      [
+        {
+          element: (
+            <ScheduleIndex
+              actionData={undefined}
+              loaderData={{ jobs: [job()] }}
+              matches={matches}
+              params={{}}
+            />
+          ),
+          path: '/schedule',
+        },
+      ],
+      { initialEntries: ['/schedule?modal=onboarding'] },
+    );
+
+    expect(screen.getByTestId('GlobalFeatureOnboarding')).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: SCHEDULE_ONBOARDING.cta.label }),
     ).toHaveAttribute('href', '/schedule/create');
   });
 });

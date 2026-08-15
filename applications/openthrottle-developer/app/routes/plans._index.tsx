@@ -9,6 +9,7 @@ import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
   GlobalErrorBoundary,
   GlobalFeatureOnboarding,
+  GlobalFeatureOnboardingModal,
   GlobalScreen,
   readSearchParam,
 } from '@openthrottle/react-router-ui-global';
@@ -42,7 +43,6 @@ export const loader = async (args: Route.LoaderArgs) => {
   const url = args.url;
 
   const searchParams = url?.searchParams ?? new URLSearchParams();
-
   const statuses = parseStatusesFromSearchParams(searchParams);
   const assignees = parseAssigneesFromSearchParams(searchParams);
   const pageRaw = url?.searchParams.get('page');
@@ -142,10 +142,8 @@ export default function Component(
     statusCounts.find((s) => s.status === status)?.count ?? 0;
 
   const isCard = searchParams.get('view') === 'card';
-
   const countInProgress = countByStatus('IN_PROGRESS');
   const countCompleted = countByStatus('COMPLETED');
-
   const view: 'card' | 'table' = isCard ? 'card' : 'table';
 
   // New user: zero plans workspace-wide and no active filter — show onboarding
@@ -172,6 +170,7 @@ export default function Component(
 
   return (
     <GlobalScreen>
+      <GlobalFeatureOnboardingModal content={PLANS_ONBOARDING} />
       <PlansIntroduction />
       <PlansStats
         countCompleted={countCompleted}

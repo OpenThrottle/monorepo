@@ -27,4 +27,10 @@ describe('ScheduleIntroduction Component', () => {
       component.getByRole('link', { name: SCHEDULE_COPY.newScheduleAction }),
     ).toHaveAttribute('href', '/schedule/create');
   });
+
+  test('renders the onboarding trigger', () => {
+    expect(
+      component.getByTestId('GlobalFeatureOnboardingTrigger'),
+    ).toBeInTheDocument();
+  });
 });

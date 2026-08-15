@@ -4,6 +4,7 @@ import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import {
   GlobalErrorBoundary,
   GlobalFeatureOnboarding,
+  GlobalFeatureOnboardingModal,
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
@@ -147,6 +148,7 @@ export default function Component(
 
   return (
     <GlobalScreen>
+      <GlobalFeatureOnboardingModal content={RULES_ONBOARDING} />
       <RulesIntroduction />
       <RulesStats
         disabledCount={disabledCount}

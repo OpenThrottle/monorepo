@@ -1,5 +1,8 @@
 import * as React from 'react';
-import { GlobalHeading } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalFeatureOnboardingTrigger,
+  GlobalHeading,
+} from '@openthrottle/react-router-ui-global';
 import { ListChevronsUpDownIcon } from 'lucide-react';
 
 export interface PlansIntroductionProps {
@@ -30,7 +33,9 @@ export const PlansIntroduction = (
         heading="h1"
         icon={ListChevronsUpDownIcon}
         title="Plans"
-      />
+      >
+        <GlobalFeatureOnboardingTrigger />
+      </GlobalHeading>
       <p className="text-muted-foreground text-sm">
         Plans are OpenThrottle&apos;s record of intended work—what you decided
         to build, broken into tasks with status, assignee, and optional
