@@ -1,0 +1,47 @@
+import * as React from 'react';
+import { LANDING_PROMISE } from '~/routing/home/data/data.landing';
+
+export interface LandingPromiseProps {
+  className?: string;
+}
+
+export const LandingPromise = (
+  props: LandingPromiseProps,
+): React.ReactElement => {
+  const { className } = props;
+
+  // Hooks
+
+  // Setup
+  const { kicker, lede, title } = LANDING_PROMISE;
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
+  return (
+    <section
+      className={`bg-background border-border border-y px-6 py-[clamp(3.5rem,8vw,6rem)] ${className ?? ''}`}
+      data-testid="LandingPromise"
+      id="why"
+    >
+      <div className="landing-reveal mx-auto grid w-[min(68rem,100%)] gap-8 md:grid-cols-2 md:items-end md:gap-16">
+        <div>
+          <p className="mb-3 text-xs font-semibold tracking-[0.08em] text-[var(--brand)] uppercase">
+            {kicker}
+          </p>
+          <h2 className="max-w-[18ch] text-[clamp(1.75rem,4vw,2.6rem)] leading-tight font-bold tracking-[-0.035em]">
+            {title}
+          </h2>
+        </div>
+        <p className="text-muted-foreground max-w-[42ch] text-[1.0625rem]">
+          {lede}
+        </p>
+      </div>
+    </section>
+  );
+};

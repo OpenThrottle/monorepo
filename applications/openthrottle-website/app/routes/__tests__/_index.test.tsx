@@ -24,18 +24,28 @@ describe('routes/_index.tsx', () => {
     component = render(<RoutesStub initialEntries={['/']} />);
   });
 
-  test('renders the public landing page with the GitHub CTA and clone command', async () => {
+  test('renders the landing sections with the hero GitHub CTA', async () => {
     expect(
       await component.findByRole('link', { name: /view on github/i }),
     ).toBeInTheDocument();
 
-    expect(
-      component.getByRole('button', {
-        name: 'git clone https://github.com/openthrottle/example-repo.git',
-      }),
-    ).toBeInTheDocument();
+    // Each translated section is present.
+    expect(component.getByTestId('LandingHero')).toBeInTheDocument();
+    expect(component.getByTestId('LandingPromise')).toBeInTheDocument();
+    expect(component.getByTestId('LandingFlow')).toBeInTheDocument();
+    expect(component.getByTestId('LandingSurfaces')).toBeInTheDocument();
+    expect(component.getByTestId('LandingClose')).toBeInTheDocument();
+  });
 
-    // The pre-launch holding copy is gone now that the page is public.
-    expect(component.queryByText("We're in private beta.")).toBeNull();
+  test('threads the loader repo into the self-host clone CTA', async () => {
+    expect(
+      await component.findByRole('link', { name: /clone the monorepo/i }),
+    ).toHaveAttribute('href', 'https://github.com/openthrottle/example-repo');
+  });
+
+  test('threads the loader introduction into the self-host lede', async () => {
+    expect(
+      await component.findByText('This is a test intro'),
+    ).toBeInTheDocument();
   });
 });
