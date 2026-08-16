@@ -11,7 +11,9 @@ describe('LandingClose Component', () => {
     expect(component.getByTestId('LandingClose')).toBeInTheDocument();
     expect(component.getByText(LANDING_CLOSE.title)).toBeInTheDocument();
     expect(component.getByText(LANDING_CLOSE.lede)).toBeInTheDocument();
-    expect(component.getByText('./scripts/setup.sh')).toBeInTheDocument();
+    expect(
+      component.getByText('cd monorepo && ./scripts/setup.sh'),
+    ).toBeInTheDocument();
 
     expect(
       component.getByRole('link', { name: LANDING_CLOSE.ctas.secondary.label }),
