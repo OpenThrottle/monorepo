@@ -36,7 +36,7 @@ export const runVocabularyAction = async (
     if (intent === 'addTag') {
       const parsed = parseFormData(formData, AddSkillTagInputSchema());
       if (!parsed.success) {
-        return { error: 'Tag is required.', intent };
+        return { error: parsed.error, intent };
       }
       await executeGraphqlWithAuth(args.request, AddSkillTagDocument, {
         input: parsed.data,
@@ -45,9 +45,11 @@ export const runVocabularyAction = async (
     }
 
     if (intent === 'renameTag') {
-      const parsed = parseFormData(formData, RenameSkillTagInputSchema());
+      const parsed = parseFormData(formData, RenameSkillTagInputSchema(), {
+        labels: { from: 'Current tag', to: 'New tag' },
+      });
       if (!parsed.success) {
-        return { error: 'Both the current and new tag are required.', intent };
+        return { error: parsed.error, intent };
       }
       await executeGraphqlWithAuth(args.request, RenameSkillTagDocument, {
         input: parsed.data,
@@ -58,7 +60,7 @@ export const runVocabularyAction = async (
     if (intent === 'removeTag') {
       const parsed = parseFormData(formData, RemoveSkillTagInputSchema());
       if (!parsed.success) {
-        return { error: 'Tag is required.', intent };
+        return { error: parsed.error, intent };
       }
       await executeGraphqlWithAuth(args.request, RemoveSkillTagDocument, {
         input: parsed.data,

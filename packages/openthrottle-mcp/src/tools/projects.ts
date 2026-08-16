@@ -24,7 +24,7 @@ export async function deleteProjectToolHandler(
 ): Promise<DeleteProjectResult> {
   const parsed = deleteProjectToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   return runTool<{ deleted: boolean }>('delete_project', async () => {

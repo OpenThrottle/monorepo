@@ -109,7 +109,7 @@ export const runAvailabilityAction = async (
     if (intent === 'updateRule') {
       const parsed = parseFormData(formData, RuleIdSchema, { strict: false });
       if (!parsed.success) {
-        return { error: 'Missing rule id.', intent };
+        return { error: parsed.error, intent };
       }
       await executeGraphqlWithAuth(
         args.request,
@@ -122,7 +122,7 @@ export const runAvailabilityAction = async (
     if (intent === 'removeRule') {
       const parsed = parseFormData(formData, RuleIdSchema, { strict: false });
       if (!parsed.success) {
-        return { error: 'Missing rule id.', intent };
+        return { error: parsed.error, intent };
       }
       await executeGraphqlWithAuth(
         args.request,

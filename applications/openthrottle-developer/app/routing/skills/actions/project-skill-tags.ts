@@ -3,13 +3,21 @@
  * project_skills row and for explicitly removing an orphan row.
  */
 
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import {
+  executeGraphqlWithAuth,
+  parseFormData,
+} from '@openthrottle/react-router-graphql';
+import { z } from 'zod/v3';
 import {
   AddProjectSkillTagDocument,
   RemoveProjectSkillDocument,
   RemoveProjectSkillTagDocument,
 } from '~/__generated__/graphql';
+import { AddProjectSkillTagInputSchema } from '~/__generated__/schemas';
 import { toErrorMessage } from '~/global/utils/utils.error-message';
+
+/** Skill-tag forms label their `slug` field as "Skill slug" in error copy. */
+const SKILL_TAG_LABELS = { slug: 'Skill slug' } as const;
 
 export const SKILL_RECORD_TAG_INTENTS = {
   ADD_TAG: 'addProjectSkillTag',
@@ -33,19 +41,16 @@ const readSlugAndTag = (
   | SkillRecordTagActionResult => {
   const intentField = formData.get('intent');
   const intent = typeof intentField === 'string' ? intentField : '';
-  const slugField = formData.get('slug');
-  const tagField = formData.get('tag');
-  const slug = typeof slugField === 'string' ? slugField.trim() : '';
-  const tag = typeof tagField === 'string' ? tagField.trim() : '';
-
-  if (slug === '') {
-    return { error: 'Skill slug is required.', intent };
-  }
-  if (tag === '') {
-    return { error: 'Tag is required.', intent };
+  const parsed = parseFormData(
+    formData,
+    AddProjectSkillTagInputSchema().omit({ projectId: true }),
+    { labels: SKILL_TAG_LABELS, strict: false },
+  );
+  if (!parsed.success) {
+    return { error: parsed.error, intent };
   }
 
-  return { slug, tag };
+  return { slug: parsed.data.slug, tag: parsed.data.tag };
 };
 
 /**
@@ -83,13 +88,16 @@ export const runSkillRecordTagAction = async (
     }
 
     if (intent === SKILL_RECORD_TAG_INTENTS.REMOVE_ORPHAN) {
-      const slugField = formData.get('slug');
-      const slug = typeof slugField === 'string' ? slugField.trim() : '';
-      if (slug === '') {
-        return { error: 'Skill slug is required.', intent };
+      const parsed = parseFormData(
+        formData,
+        z.object({ slug: z.string().min(1) }),
+        { labels: SKILL_TAG_LABELS, strict: false },
+      );
+      if (!parsed.success) {
+        return { error: parsed.error, intent };
       }
       await executeGraphqlWithAuth(request, RemoveProjectSkillDocument, {
-        slug,
+        slug: parsed.data.slug,
       });
       return { intent, ok: true };
     }

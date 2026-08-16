@@ -77,7 +77,7 @@ export async function listAgentConversationsToolHandler(
 ): Promise<ListAgentConversationsResult> {
   const parsed = listAgentConversationsToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   const limit = resolveListLimit(parsed.data.limit);
@@ -115,7 +115,7 @@ export async function getAgentConversationToolHandler(
 ): Promise<GetAgentConversationResult> {
   const parsed = getAgentConversationToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   return runTool<{
@@ -143,7 +143,7 @@ export async function getAgentConversationMessagesToolHandler(
 ): Promise<GetAgentConversationMessagesResult> {
   const parsed = getAgentConversationMessagesToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   const limit = resolveMessagesLimit(parsed.data.limit);

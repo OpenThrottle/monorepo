@@ -54,7 +54,7 @@ export async function recordArtifactToolHandler(
 ): Promise<RecordArtifactResult> {
   const parsed = recordArtifactToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   return runTool<{
@@ -107,7 +107,7 @@ export async function attachSessionSubjectToolHandler(
 ): Promise<AttachSubjectResult> {
   const parsed = attachSessionSubjectToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   return runTool<{
@@ -158,7 +158,7 @@ export async function endSessionToolHandler(
 ): Promise<EndSessionResult> {
   const parsed = endSessionToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   return runTool<{ session: EndWorkSessionMutation['endWorkSession'] }>(

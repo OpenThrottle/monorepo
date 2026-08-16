@@ -103,7 +103,7 @@ describe('routing/skills/actions/vocabulary runVocabularyAction', () => {
     const result = await runVocabularyAction(actionArgs(formData));
 
     expect(result).toEqual({
-      error: 'Both the current and new tag are required.',
+      error: 'New tag is required.',
       intent: 'renameTag',
     });
     expect(mockExecuteGraphqlWithAuth).not.toHaveBeenCalled();

@@ -78,6 +78,15 @@ for devtools/profiling/troubleshooting.
   Don't add new `formData.get` + `typeof === 'string'` + `.trim()` + empty-check
   helpers.
 
+- **Surface `parsed.error` directly — don't hard-code per-field copy.**
+  `parseFormData` humanizes messages centrally ("Tag is required.", "Status
+  must be one of: …"), so `return { error: parsed.error }` is the default. Only
+  reach for `options.labels` (swap a field's label, e.g. `{ gitUrl: 'Git
+repository URL' }`) or `options.messages` (replace the whole message) when the
+  humanized default reads poorly; a schema's own `.refine`/`.min(N,'msg')` copy
+  is preserved untouched. Keep genuinely bespoke guidance (route-param guards,
+  the plan-run git-branch hint) as-is.
+
 ## Don't
 
 - Don't hand-edit `app/__generated__/*` — regenerate via codegen.

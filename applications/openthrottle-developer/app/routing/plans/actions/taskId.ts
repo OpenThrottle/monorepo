@@ -89,7 +89,7 @@ export const updateTaskTag = async (
         RemoveTaskTagInputSchema().omit({ taskId: true }),
       );
   if (!parsed.success) {
-    return { taskTagError: 'Tag is required.' };
+    return { taskTagError: parsed.error };
   }
   const tag = parsed.data.tag;
   try {

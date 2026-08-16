@@ -45,7 +45,11 @@ describe('appendPlanOutputToolHandler', () => {
 
       expect(result).toMatchObject({
         content: [
-          { text: expect.stringMatching(/at least 1 character|too_small/) },
+          {
+            text: expect.stringMatching(
+              /Invalid arguments[\s\S]*content is required/i,
+            ),
+          },
         ],
         isError: true,
       });

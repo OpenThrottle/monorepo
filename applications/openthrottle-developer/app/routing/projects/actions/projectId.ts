@@ -40,7 +40,7 @@ export const runProjectDetailAction = async (args: Route.ActionArgs) => {
             RemoveProjectTagInputSchema().omit({ projectId: true }),
           );
     if (!parsed.success) {
-      return { projectTagError: 'Tag is required.' };
+      return { projectTagError: parsed.error };
     }
     const tag = parsed.data.tag;
     try {

@@ -385,7 +385,7 @@ describe('reorderPlanTasksToolHandler', () => {
 
       expect(result).toMatchObject({
         content: [
-          { text: expect.stringMatching(/Invalid arguments[\s\S]*taskIds/i) },
+          { text: expect.stringMatching(/Invalid arguments[\s\S]*task ids/i) },
         ],
         isError: true,
       });

@@ -18,11 +18,88 @@ function errorContent(message: string): {
   };
 }
 
-export function invalidArgsContent(parsedError: string): {
+/**
+ * Structural view of a Zod issue that works for both the `zod/v3` compat
+ * schemas (generated `*InputSchema()`) and the native `zod` schemas the ad-hoc
+ * tool parameters use — we only read fields common to both.
+ */
+interface ZodIssueLike {
+  readonly code: string;
+  readonly message: string;
+  readonly minimum?: number | bigint;
+  /** zod v4 names the too_small subject `origin`; zod v3 names it `type`. */
+  readonly origin?: string;
+  readonly path: ReadonlyArray<PropertyKey>;
+  readonly received?: unknown;
+  readonly type?: string;
+}
+
+/** Structural view of a `ZodError` (v3 or v4) — just its issue list. */
+interface ZodErrorLike {
+  readonly issues: ReadonlyArray<ZodIssueLike>;
+}
+
+const isZodErrorLike = (
+  value: string | ZodErrorLike,
+): value is ZodErrorLike => {
+  return typeof value !== 'string';
+};
+
+/**
+ * Humanize a field path segment to sentence case (camelCase / snake_case →
+ * "Start iso"). Mirrors `humanizeFieldLabel` in
+ * `@openthrottle/react-router-graphql` (which openthrottle-mcp cannot import —
+ * it is a web/source-first package). Kept small and in sync intentionally; a
+ * future follow-up extracts the shared rule into a neutral package.
+ */
+const humanizeLabel = (path: ReadonlyArray<PropertyKey>): string => {
+  const named = path.map(String).filter((segment) => !/^\d+$/.test(segment));
+  const last = (named.length > 0 ? named : path.map(String)).at(-1) ?? '';
+  const words = last
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/[_-]+/g, ' ')
+    .trim()
+    .toLowerCase();
+  return words === '' ? last : words.charAt(0).toUpperCase() + words.slice(1);
+};
+
+/** First humanized message per dot-joined field path, joined with `; `. */
+const formatZodError = (error: ZodErrorLike): string => {
+  const byPath = new Map<string, string>();
+  for (const issue of error.issues) {
+    const key = issue.path.map(String).join('.') || '_';
+    if (byPath.has(key)) {
+      continue;
+    }
+    const label = humanizeLabel(issue.path);
+    if (issue.code === 'invalid_type' && issue.received === 'undefined') {
+      byPath.set(key, `${label} is required.`);
+    } else if (
+      issue.code === 'too_small' &&
+      (issue.type === 'string' || issue.origin === 'string') &&
+      Number(issue.minimum) <= 1
+    ) {
+      byPath.set(key, `${label} is required.`);
+    } else {
+      byPath.set(key, issue.message);
+    }
+  }
+  return [...byPath.values()].join('; ');
+};
+
+/**
+ * @description Build the `Invalid arguments: …` tool error. Accepts a Zod
+ * error (humanized to concise, field-mapped copy — "Content is required." — via
+ * {@link formatZodError}) or a pre-formatted string for bespoke guards.
+ */
+export function invalidArgsContent(parsedError: string | ZodErrorLike): {
   content: { text: string; type: 'text' }[];
   isError: true;
 } {
-  return errorContent(`Invalid arguments: ${parsedError}`);
+  const detail = isZodErrorLike(parsedError)
+    ? formatZodError(parsedError)
+    : parsedError;
+  return errorContent(`Invalid arguments: ${detail}`);
 }
 
 /**

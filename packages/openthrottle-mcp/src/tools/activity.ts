@@ -50,7 +50,7 @@ export async function getActivityByDateToolHandler(
 ): Promise<GetActivityByDateResult> {
   const parsed = getActivityByDateToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   return runTool<{ activity: GetActivityByDateQuery['activityByDate'] }>(
@@ -108,7 +108,7 @@ export async function getLastActivityToolHandler(
 ): Promise<GetLastActivityResult> {
   const parsed = getLastActivityToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   return runTool<{ result: GetLastActivityQuery['lastActivity'] }>(

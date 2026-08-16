@@ -45,7 +45,7 @@ export async function appendPlanOutputToolHandler(
   if (!parsed.success) {
     // The generated schema enforces a non-empty `content` (`.min(1)` via the
     // shared codegen `notAllowEmptyString`), so empty input is rejected here.
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   return runTool<{ chunk: AppendPlanOutputMutation['appendPlanOutput'] }>(
@@ -85,7 +85,7 @@ export async function getPlanOutputToolHandler(
 ): Promise<GetPlanOutputResult> {
   const parsed = getPlanOutputToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   return runTool<{
@@ -118,7 +118,7 @@ export async function deletePlanOutputToolHandler(
 ): Promise<DeletePlanOutputResult> {
   const parsed = deletePlanOutputToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   return runTool<{ deletedCount: number }>('delete_plan_output', async () => {

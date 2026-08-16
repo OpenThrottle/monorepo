@@ -67,7 +67,7 @@ export const addPlanTag = async (
     AddPlanTagInputSchema().omit({ planId: true }),
   );
   if (!parsed.success) {
-    return { planTagError: 'Tag is required.' };
+    return { planTagError: parsed.error };
   }
   try {
     await executeGraphqlWithAuth(args.request, PlanDetailAddPlanTagDocument, {
@@ -90,7 +90,7 @@ export const removePlanTag = async (
     RemovePlanTagInputSchema().omit({ planId: true }),
   );
   if (!parsed.success) {
-    return { planTagError: 'Tag is required.' };
+    return { planTagError: parsed.error };
   }
   try {
     await executeGraphqlWithAuth(

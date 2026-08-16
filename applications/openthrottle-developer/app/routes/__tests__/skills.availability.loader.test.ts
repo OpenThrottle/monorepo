@@ -201,7 +201,10 @@ describe('routes/skills.availability action', () => {
 
     const result = await action(actionArgs(formData));
 
-    expect(result).toEqual({ error: 'Missing rule id.', intent: 'removeRule' });
+    expect(result).toEqual({
+      error: 'Rule id is required.',
+      intent: 'removeRule',
+    });
     expect(mockExecuteGraphqlWithAuth).not.toHaveBeenCalled();
   });
 

@@ -149,7 +149,7 @@ export async function createTaskToolHandler(
 ): Promise<CreateTaskResult> {
   const parsed = createTaskToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   return runTool<{ task: CreateTaskMutation['createTask'] }>(
@@ -175,7 +175,7 @@ export async function createTasksToolHandler(
 ): Promise<CreateTasksResult> {
   const parsed = createTasksToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   const { planId, tasks: items } = parsed.data;
@@ -228,7 +228,7 @@ export async function deleteTaskToolHandler(
 ): Promise<DeleteTaskResult> {
   const parsed = deleteTaskToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   return runTool<{ deleted: boolean }>('delete_task', async () => {
@@ -250,7 +250,7 @@ export async function getTaskToolHandler(
 ): Promise<GetTaskResult> {
   const parsed = getTaskToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   return runTool<{ task: GetTaskQuery['task'] }>('get_task', async () => {
@@ -273,7 +273,7 @@ export async function getTasksByPlanIdToolHandler(
 ): Promise<GetTasksByPlanIdResult> {
   const parsed = getTasksByPlanIdToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   return runTool<{
@@ -301,7 +301,7 @@ export async function getRemainingTasksForPlanToolHandler(
 ): Promise<GetRemainingTasksForPlanResult> {
   const parsed = getRemainingTasksForPlanToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   return runTool<{
@@ -329,7 +329,7 @@ export async function listTasksByCategoryToolHandler(
 ): Promise<ListTasksByCategoryResult> {
   const parsed = listTasksByCategoryToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   const { category, planId, status, limit } = parsed.data;
@@ -366,7 +366,7 @@ export async function reorderPlanTasksToolHandler(
 ): Promise<ReorderPlanTasksResult> {
   const parsed = reorderPlanTasksToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   return runTool<{ tasks: ReorderPlanTasksMutation['reorderPlanTasks'] }>(
@@ -396,7 +396,7 @@ export async function updateTaskToolHandler(
 ): Promise<UpdateTaskResult> {
   const parsed = updateTaskToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   return runTool<{ task: UpdateTaskMutation['updateTask'] }>(
@@ -421,7 +421,7 @@ export async function promoteTaskToolHandler(
 ): Promise<PromoteTaskResult> {
   const parsed = promoteTaskToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   return runTool<{

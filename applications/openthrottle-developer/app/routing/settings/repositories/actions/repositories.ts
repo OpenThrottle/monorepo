@@ -19,10 +19,11 @@ import type { Route } from '@/app/routes/+types/settings.repositories._index';
 
 export const addFolder = async (args: Route.ActionArgs, formData: FormData) => {
   const parsed = parseFormData(formData, AddWorkspaceFolderInputSchema(), {
+    labels: { path: 'Folder path' },
     strict: false,
   });
   if (!parsed.success) {
-    return { error: 'A folder path is required.' };
+    return { error: parsed.error };
   }
 
   try {
@@ -46,10 +47,11 @@ export const addFolder = async (args: Route.ActionArgs, formData: FormData) => {
 
 export const cloneRepo = async (args: Route.ActionArgs, formData: FormData) => {
   const parsed = parseFormData(formData, CloneRepositoryInputSchema(), {
+    labels: { gitUrl: 'Git repository URL' },
     strict: false,
   });
   if (!parsed.success) {
-    return { error: 'A git repository URL is required.' };
+    return { error: parsed.error };
   }
 
   try {
@@ -115,10 +117,11 @@ export const refreshCheckout = async (
   formData: FormData,
 ) => {
   const parsed = parseFormData(formData, z.object({ id: z.string().min(1) }), {
+    labels: { id: 'Checkout id' },
     strict: false,
   });
   if (!parsed.success) {
-    return { error: 'Missing checkout id.' };
+    return { error: parsed.error };
   }
 
   try {
@@ -146,10 +149,11 @@ export const deleteRepo = async (
   formData: FormData,
 ) => {
   const parsed = parseFormData(formData, z.object({ id: z.string().min(1) }), {
+    labels: { id: 'Repository id' },
     strict: false,
   });
   if (!parsed.success) {
-    return { error: 'Missing repository id.' };
+    return { error: parsed.error };
   }
 
   try {
