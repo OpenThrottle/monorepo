@@ -8,6 +8,44 @@ import { FolderGit2Icon } from 'lucide-react';
 import type { GlobalFeatureOnboardingContent } from '@openthrottle/react-router-ui-global';
 
 /**
+ * @description Copy for the repositories index table, toolbar, and per-row
+ * actions menu. Labels that already exist on `WORKSPACE_FOLDERS_COPY` (refresh,
+ * apply editor config, remove, managed badge) are reused from there rather than
+ * duplicated here.
+ */
+export const REPOSITORIES_TABLE_COPY = {
+  actionsColumn: `Actions`,
+  branchColumn: `Branch`,
+  clearSearch: `Clear search`,
+  collapseGroup: `Collapse worktrees`,
+  expandGroup: `Expand worktrees`,
+  noResults: `No repositories match this search.`,
+  pathColumn: `Path`,
+  repositoryColumn: `Repository / checkout`,
+  searchLabel: `Search repositories`,
+  searchPlaceholder: `Search repositories...`,
+  sortLabel: `Sort repositories`,
+  updatedColumn: `Updated`,
+  warningsColumn: `Warnings`,
+  worktreeBadge: `Worktree`,
+} as const;
+
+/**
+ * @description Copy for the per-row actions menu. Item labels themselves come
+ * from `WORKSPACE_FOLDERS_COPY` (refresh / apply editor config / remove) — only
+ * the wrapper affordances the menu introduces live here.
+ */
+export const REPOSITORIES_ROW_ACTIONS_COPY = {
+  cancelButton: `Cancel`,
+  menuAriaLabelPrefix: `Actions for`,
+  refreshingLabel: `Refreshing…`,
+  removeConfirmButton: `Remove checkout`,
+  removeDescriptionPrefix: `This removes the registered checkout`,
+  removeDescriptionSuffix: `from OpenThrottle. The folder on disk is left untouched.`,
+  removeTitle: `Remove this checkout?`,
+} as const;
+
+/**
  * @description New-user "teach-me-fast" onboarding copy for the Repositories
  * settings index, shown only when a user has zero repositories registered.
  * Conforms to {@link GlobalFeatureOnboardingContent} and is rendered through the

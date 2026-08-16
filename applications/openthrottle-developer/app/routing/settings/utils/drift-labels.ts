@@ -1,6 +1,7 @@
 /**
  * @description Checkout drift flags and their user-facing warning labels.
- * Hoisted out of RepositoryCard per component-primitive-shape R4.
+ * Hoisted out of the since-retired RepositoryCard per component-primitive-shape
+ * R4; the repositories table now renders them per row.
  */
 
 import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';

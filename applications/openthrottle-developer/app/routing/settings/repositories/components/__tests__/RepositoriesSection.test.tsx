@@ -5,22 +5,23 @@ import userEvent from '@testing-library/user-event';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { WorkspaceFolderReconciliation } from '~/__generated__/graphql';
-import type { WorkspaceRepositoryFieldsFragment } from '~/__generated__/graphql';
 import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
+import {
+  mockCheckout,
+  mockRepository,
+} from '~/routing/settings/repositories/data/mock.repositories';
 import { REPOSITORIES_ONBOARDING } from '~/routing/settings/repositories/data/data.copy';
+import { buildRepositoryRows } from '~/routing/settings/repositories/utils/rows';
 import { RepositoriesSection } from '../RepositoriesSection';
 import type { RepositoriesSectionProps } from '../RepositoriesSection';
 
-const repository: WorkspaceRepositoryFieldsFragment = {
-  checkouts: [],
-  createdAt: '2026-07-24T00:00:00.000Z',
-  defaultBranch: 'main',
+const repository = mockRepository({
+  checkouts: [mockCheckout({ displayName: 'openthrottle', id: 'checkout-1' })],
   id: 'repo-1',
   name: 'monorepo',
-  normalizedRemoteUrl: 'https://github.com/OpenThrottle/monorepo',
-  projectId: 'project-1',
-  updatedAt: '2026-07-24T00:00:00.000Z',
-};
+});
+
+const rows = buildRepositoryRows([repository]);
 
 describe('RepositoriesSection Component', () => {
   let component: RenderResult;
@@ -40,17 +41,30 @@ describe('RepositoriesSection Component', () => {
 
   beforeEach(() => {
     props = {
+      autoExpandedIds: [],
       discoveredFolders: [],
+      isUnpopulated: true,
+      limit: 10,
+      page: 1,
       pickerCapabilities: {
         canUseNativeDialog: false,
         defaultBrowsePath: '/Users/dev/Development',
         roots: ['/Users/dev/Development'],
       },
-      repositories: [],
+      rows: [],
+      search: '',
+      sortBy: 'name',
+      sortOrder: 'asc',
+      totalCount: 0,
     };
 
     component = renderSection();
   });
+
+  const populate = (): void => {
+    props = { ...props, isUnpopulated: false, rows, totalCount: 1 };
+    component = renderSection();
+  };
 
   test('renders the onboarding block when there are no repositories', () => {
     expect(component.getByTestId('RepositoriesSection')).toBeInTheDocument();
@@ -71,17 +85,17 @@ describe('RepositoriesSection Component', () => {
     ).toBeInTheDocument();
   });
 
-  test('renders a list item per repository when repositories are provided', () => {
-    props = { ...props, repositories: [repository] };
-    component = renderSection();
+  test('renders the toolbar, table and pagination once populated', () => {
+    populate();
 
     expect(component.queryByTestId('GlobalFeatureOnboarding')).toBeNull();
+    expect(component.getByTestId('RepositoriesToolbar')).toBeInTheDocument();
+    expect(component.getByTestId('RepositoriesTable')).toBeInTheDocument();
     expect(component.getByText('monorepo')).toBeInTheDocument();
   });
 
   test('keeps the onboarding trigger reachable once repositories exist', () => {
-    props = { ...props, repositories: [repository] };
-    component = renderSection();
+    populate();
 
     expect(
       component.getByTestId('GlobalFeatureOnboardingTrigger'),
@@ -90,8 +104,7 @@ describe('RepositoriesSection Component', () => {
 
   test('opens the onboarding modal from the trigger when populated', async () => {
     const user = userEvent.setup();
-    props = { ...props, repositories: [repository] };
-    component = renderSection();
+    populate();
 
     // The block is hidden while populated, so the tagline is absent until the
     // modal opens.
@@ -118,6 +131,25 @@ describe('RepositoriesSection Component', () => {
     expect(
       component.getByText(WORKSPACE_FOLDERS_COPY.mergedNotice),
     ).toBeInTheDocument();
+  });
+
+  test('passes refresh drift through to the table row', () => {
+    props = {
+      ...props,
+      isUnpopulated: false,
+      refreshed: {
+        checkoutId: 'checkout-1',
+        drift: { branchMoved: false, pathMissing: true, remoteChanged: false },
+        merged: false,
+      },
+      rows,
+      totalCount: 1,
+    };
+    component = renderSection();
+
+    expect(component.getByRole('alert')).toHaveTextContent(
+      WORKSPACE_FOLDERS_COPY.driftPathMissing,
+    );
   });
 
   test('shows the actionError message when present and no addedFolder', () => {

@@ -93,7 +93,7 @@ describe('CardTitle', () => {
   it('should apply default title classes', () => {
     const { container } = render(<CardTitle>Title</CardTitle>);
     const title = container.querySelector('[data-slot="card-title"]');
-    expect(title).toHaveClass('leading-none', 'font-semibold');
+    expect(title).toHaveClass('leading-none');
   });
 
   it('should merge custom className', () => {

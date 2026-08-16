@@ -7,28 +7,35 @@ import {
   GlobalFeatureOnboardingTrigger,
   GlobalHeading,
 } from '@openthrottle/react-router-ui-global';
+import { OpenThrottlePagination } from '@openthrottle/react-router-ui';
 import type {
   AddWorkspaceFolderMutation,
   DiscoveredFolderObject,
   WorkspacePickerCapabilitiesObject,
-  WorkspaceRepositoryFieldsFragment,
 } from '~/__generated__/graphql';
 import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
 import { AddFolderDialog } from '~/routing/settings/repositories/components/AddFolderDialog';
 import { AddFolderResult } from '~/routing/settings/repositories/components/AddFolderResult';
 import { CloneRepoDialog } from '~/routing/settings/repositories/components/CloneRepoDialog';
 import { REPOSITORIES_ONBOARDING } from '~/routing/settings/repositories/data/data.copy';
-import { RepositoryCard } from '~/routing/settings/repositories/components/RepositoryCard';
-import type { CheckoutDrift } from '~/routing/settings/repositories/components/RepositoryCard';
+import { RepositoriesTable } from '~/routing/settings/repositories/components/RepositoriesTable';
+import { RepositoriesToolbar } from '~/routing/settings/repositories/components/RepositoriesToolbar';
+import type { CheckoutDrift } from '~/routing/settings/utils/drift-labels';
+import type { RepositoryCheckoutRow } from '~/routing/settings/repositories/data/types';
 
 export interface RepositoriesSectionProps {
   actionError?: string | null;
   addedFolder?: AddWorkspaceFolderMutation['addWorkspaceFolder'] | null;
+  autoExpandedIds: string[];
   className?: string;
   discoveredFolders: Pick<
     DiscoveredFolderObject,
     'alreadyRegistered' | 'name' | 'path'
   >[];
+  /** True when no repositories are registered at all, as opposed to none matching a search. */
+  isUnpopulated: boolean;
+  limit: number;
+  page: number;
   pickerCapabilities: Pick<
     WorkspacePickerCapabilitiesObject,
     'canUseNativeDialog' | 'defaultBrowsePath' | 'roots'
@@ -38,7 +45,11 @@ export interface RepositoriesSectionProps {
     drift: CheckoutDrift;
     merged: boolean;
   } | null;
-  repositories: WorkspaceRepositoryFieldsFragment[];
+  rows: RepositoryCheckoutRow[];
+  search: string;
+  sortBy: string;
+  sortOrder: string;
+  totalCount: number;
 }
 
 export const RepositoriesSection = (
@@ -47,11 +58,19 @@ export const RepositoriesSection = (
   const {
     actionError,
     addedFolder,
+    autoExpandedIds,
     className,
     discoveredFolders,
+    isUnpopulated,
+    limit,
+    page,
     pickerCapabilities,
     refreshed,
-    repositories,
+    rows,
+    search,
+    sortBy,
+    sortOrder,
+    totalCount,
   } = props;
 
   // Hooks
@@ -116,19 +135,34 @@ export const RepositoriesSection = (
           </p>
         ) : null}
 
-        {repositories.length === 0 ? (
+        {isUnpopulated ? (
           <GlobalFeatureOnboarding content={REPOSITORIES_ONBOARDING} />
         ) : (
-          <ul className="space-y-4">
-            {repositories.map((repository) => (
-              <li key={repository.id}>
-                <RepositoryCard
-                  driftByCheckoutId={driftByCheckoutId}
-                  repository={repository}
-                />
-              </li>
-            ))}
-          </ul>
+          <div className="flex flex-col gap-4">
+            <RepositoriesToolbar
+              limit={limit}
+              page={page}
+              search={search}
+              sortBy={sortBy}
+              sortOrder={sortOrder}
+            />
+            <RepositoriesTable
+              autoExpandedIds={autoExpandedIds}
+              driftByCheckoutId={driftByCheckoutId}
+              isUnpopulated={isUnpopulated}
+              rows={rows}
+            />
+            <OpenThrottlePagination
+              className="mt-8"
+              limit={limit}
+              page={page}
+              resultLabel="repositories"
+              search={search}
+              sortBy={sortBy}
+              sortOrder={sortOrder}
+              total={totalCount}
+            />
+          </div>
         )}
       </section>
     </>
