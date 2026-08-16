@@ -42,7 +42,6 @@ export const WORKSPACE_FOLDERS_COPY = {
   projectLinkedPrefix: `Linked to project`,
   refreshButton: `Refresh`,
   removeButton: `Remove`,
-  repositoriesEmpty: `No repositories yet. Add a folder to register your first checkout.`,
   sectionDescription: `Repositories are identified by their git remote; each entry below groups your on-disk checkouts on the server host.`,
   upLabel: `Up`,
 } as const;

@@ -1,7 +1,12 @@
 import * as React from 'react';
 import clsx from 'clsx';
 import { FolderGit2Icon } from 'lucide-react';
-import { GlobalHeading } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalFeatureOnboarding,
+  GlobalFeatureOnboardingModal,
+  GlobalFeatureOnboardingTrigger,
+  GlobalHeading,
+} from '@openthrottle/react-router-ui-global';
 import type {
   AddWorkspaceFolderMutation,
   DiscoveredFolderObject,
@@ -12,6 +17,7 @@ import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
 import { AddFolderDialog } from '~/routing/settings/repositories/components/AddFolderDialog';
 import { AddFolderResult } from '~/routing/settings/repositories/components/AddFolderResult';
 import { CloneRepoDialog } from '~/routing/settings/repositories/components/CloneRepoDialog';
+import { REPOSITORIES_ONBOARDING } from '~/routing/settings/repositories/data/data.copy';
 import { RepositoryCard } from '~/routing/settings/repositories/components/RepositoryCard';
 import type { CheckoutDrift } from '~/routing/settings/repositories/components/RepositoryCard';
 
@@ -74,7 +80,8 @@ export const RepositoriesSection = (
             title="Repositories"
           />
 
-          <div className="space-x-2">
+          <div className="flex items-center space-x-2">
+            <GlobalFeatureOnboardingTrigger />
             <CloneRepoDialog actionError={actionError} />
             <AddFolderDialog
               actionError={actionError}
@@ -83,6 +90,8 @@ export const RepositoriesSection = (
             />
           </div>
         </div>
+
+        <GlobalFeatureOnboardingModal content={REPOSITORIES_ONBOARDING} />
 
         <p className="text-muted-foreground text-sm">
           {WORKSPACE_FOLDERS_COPY.sectionDescription}
@@ -108,9 +117,7 @@ export const RepositoriesSection = (
         ) : null}
 
         {repositories.length === 0 ? (
-          <p className="text-muted-foreground text-sm">
-            {WORKSPACE_FOLDERS_COPY.repositoriesEmpty}
-          </p>
+          <GlobalFeatureOnboarding content={REPOSITORIES_ONBOARDING} />
         ) : (
           <ul className="space-y-4">
             {repositories.map((repository) => (

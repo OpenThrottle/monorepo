@@ -1,11 +1,13 @@
 import * as React from 'react';
 import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { WorkspaceFolderReconciliation } from '~/__generated__/graphql';
 import type { WorkspaceRepositoryFieldsFragment } from '~/__generated__/graphql';
 import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
+import { REPOSITORIES_ONBOARDING } from '~/routing/settings/repositories/data/data.copy';
 import { RepositoriesSection } from '../RepositoriesSection';
 import type { RepositoriesSectionProps } from '../RepositoriesSection';
 
@@ -50,13 +52,22 @@ describe('RepositoriesSection Component', () => {
     component = renderSection();
   });
 
-  test('renders the empty state when there are no repositories', () => {
+  test('renders the onboarding block when there are no repositories', () => {
     expect(component.getByTestId('RepositoriesSection')).toBeInTheDocument();
     expect(
-      component.getByText(WORKSPACE_FOLDERS_COPY.repositoriesEmpty),
+      component.getByTestId('GlobalFeatureOnboarding'),
+    ).toBeInTheDocument();
+    expect(
+      component.getByText(REPOSITORIES_ONBOARDING.tagline),
     ).toBeInTheDocument();
     expect(
       component.getByText(WORKSPACE_FOLDERS_COPY.sectionDescription),
+    ).toBeInTheDocument();
+  });
+
+  test('renders the onboarding trigger in the empty state', () => {
+    expect(
+      component.getByTestId('GlobalFeatureOnboardingTrigger'),
     ).toBeInTheDocument();
   });
 
@@ -64,10 +75,33 @@ describe('RepositoriesSection Component', () => {
     props = { ...props, repositories: [repository] };
     component = renderSection();
 
-    expect(
-      component.queryByText(WORKSPACE_FOLDERS_COPY.repositoriesEmpty),
-    ).toBeNull();
+    expect(component.queryByTestId('GlobalFeatureOnboarding')).toBeNull();
     expect(component.getByText('monorepo')).toBeInTheDocument();
+  });
+
+  test('keeps the onboarding trigger reachable once repositories exist', () => {
+    props = { ...props, repositories: [repository] };
+    component = renderSection();
+
+    expect(
+      component.getByTestId('GlobalFeatureOnboardingTrigger'),
+    ).toBeInTheDocument();
+  });
+
+  test('opens the onboarding modal from the trigger when populated', async () => {
+    const user = userEvent.setup();
+    props = { ...props, repositories: [repository] };
+    component = renderSection();
+
+    // The block is hidden while populated, so the tagline is absent until the
+    // modal opens.
+    expect(component.queryByText(REPOSITORIES_ONBOARDING.tagline)).toBeNull();
+
+    await user.click(component.getByTestId('GlobalFeatureOnboardingTrigger'));
+
+    expect(
+      await component.findByText(REPOSITORIES_ONBOARDING.tagline),
+    ).toBeInTheDocument();
   });
 
   test('shows the merged notice when a refresh merged into an existing checkout', () => {
