@@ -51,10 +51,10 @@ export const LandingClose = (props: LandingCloseProps): React.ReactElement => {
           <div className="z-10">
             <div>
               <p className="mb-3 text-xs text-(--brand) uppercase">{kicker}</p>
-              <h2 className="text-[clamp(1.75rem,4vw,2.6rem)]">{title}</h2>
-              <p className="text-muted-foreground mt-3 mb-5">
-                {introduction ?? lede}
-              </p>
+              <h2 className="text-[clamp(1.75rem,4vw,2.6rem)] text-white">
+                {title}
+              </h2>
+              <p className="mt-3 mb-5 text-white/80">{introduction ?? lede}</p>
             </div>
 
             <div className="flex flex-wrap gap-3">
@@ -63,7 +63,11 @@ export const LandingClose = (props: LandingCloseProps): React.ReactElement => {
                   {ctas.primary.label}
                 </a>
               </Button>
-              <Button asChild={true} variant="outline">
+              <Button
+                asChild={true}
+                className="border border-white/35 bg-transparent text-white hover:border-white hover:bg-white/5 hover:text-white"
+                variant="ghost"
+              >
                 <a href={ctas.secondary.href} rel="noreferrer" target="_blank">
                   {ctas.secondary.label}
                 </a>

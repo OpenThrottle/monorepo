@@ -86,7 +86,7 @@ export const LandingHero = (props: LandingHeroProps): React.ReactElement => {
             </span>
           </button>
         </h1>
-        <p className="mb-12">{ledeProp ?? lede}</p>
+        <p className="mb-12 text-white/80">{ledeProp ?? lede}</p>
 
         <div className="flex flex-wrap gap-3">
           <Button asChild={true} variant="brand">
