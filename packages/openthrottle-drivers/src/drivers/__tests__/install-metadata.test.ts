@@ -1,5 +1,5 @@
 /**
- * @description Guards the install/update descriptors that back the in-stack `/settings/setup`
+ * @description Guards the install/update descriptors that back the in-stack `/settings/agents`
  * feature against silent drift from `scripts/setup_software.sh`. Every agent CLI the setup script
  * installs (claude, codex, cursor, grok, opencode) must carry a `curl-shell` install descriptor with
  * the exact URL + installer shell the script uses, and a well-formed update descriptor. Descriptors

@@ -720,7 +720,7 @@ type AgentCliOptionObject {
   chatCapable: Boolean!
 
   """
-  Per-user enablement: true unless the current user has disabled this agent on /settings/setup. A disabled agent is hidden from chat/model pickers and rejected when starting new runs. Defaults to true for an unauthenticated request.
+  Per-user enablement: true unless the current user has disabled this agent on /settings/agents. A disabled agent is hidden from chat/model pickers and rejected when starting new runs. Defaults to true for an unauthenticated request.
   """
   enabled: Boolean!
 
@@ -3350,7 +3350,7 @@ type Query {
   discoverAgentClis: DiscoverAgentClisResult!
 
   """
-  Whether server-side agent-CLI install/update is enabled (env flag) and whether the current user may run it (SETTINGS_WRITE). Drives the /settings/setup control gating.
+  Whether server-side agent-CLI install/update is enabled (env flag) and whether the current user may run it (SETTINGS_WRITE). Drives the /settings/agents control gating.
   """
   agentCliSetupConfig: AgentCliSetupConfigObject!
 

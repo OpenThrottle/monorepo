@@ -108,7 +108,7 @@ export const RunSkillDialog = (
                   onModelChange={setModelId}
                   onOpenSettings={() => {
                     onOpenChange(false);
-                    navigate('/settings/setup');
+                    navigate('/settings/agents');
                   }}
                   selectedModelId={modelId}
                 />

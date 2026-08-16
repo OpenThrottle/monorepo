@@ -246,7 +246,7 @@ export type AgentCliOptionObject = {
   backend: Scalars['String']['output'];
   /** True when this driver has a wired streaming chat backend and can be offered as a chat composer backend (false for plan-run-only drivers like codex/grok). */
   chatCapable: Scalars['Boolean']['output'];
-  /** Per-user enablement: true unless the current user has disabled this agent on /settings/setup. A disabled agent is hidden from chat/model pickers and rejected when starting new runs. Defaults to true for an unauthenticated request. */
+  /** Per-user enablement: true unless the current user has disabled this agent on /settings/agents. A disabled agent is hidden from chat/model pickers and rejected when starting new runs. Defaults to true for an unauthenticated request. */
   enabled: Scalars['Boolean']['output'];
   /** Human-readable label for the selector. */
   label: Scalars['String']['output'];
@@ -2836,7 +2836,7 @@ export type Query = {
   activityByDate: ActivityByDateResultObject;
   /** Activity in a date range: commits, plan output chunks, tasks updated. Optional limit/offset for pagination. */
   activityByDateRange: ActivityByDateResultObject;
-  /** Whether server-side agent-CLI install/update is enabled (env flag) and whether the current user may run it (SETTINGS_WRITE). Drives the /settings/setup control gating. */
+  /** Whether server-side agent-CLI install/update is enabled (env flag) and whether the current user may run it (SETTINGS_WRITE). Drives the /settings/agents control gating. */
   agentCliSetupConfig: AgentCliSetupConfigObject;
   /** Interactive directory listing for the in-app picker: immediate subdirectories (annotated with isGitRepo / alreadyRegistered) plus navigation context (current + parent path, current-is-git-repo). With no path, lists the configured workspace roots as entries. All paths are on the server host. */
   browseDirectory: WorkspaceDirectoryListingObject;
@@ -8439,6 +8439,123 @@ export type GetSearchResultsQuery = {
   };
 };
 
+export type SettingsAgentsAgentClisQueryVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type SettingsAgentsAgentClisQuery = {
+  __typename?: 'Query';
+  discoverAgentClis: {
+    __typename?: 'DiscoverAgentClisResult';
+    scannedAt: string;
+    totalCount: number;
+    agents: Array<{
+      __typename?: 'AgentCliOptionObject';
+      backend: string;
+      enabled: boolean;
+      label: string;
+      version?: string | null;
+      modelOptions: Array<{
+        __typename?: 'AgentCliModelOption';
+        enabled: boolean;
+        favorite: boolean;
+        model: string;
+      }>;
+    }>;
+  };
+};
+
+export type AgentCliSetupConfigQueryVariables = Exact<{ [key: string]: never }>;
+
+export type AgentCliSetupConfigQuery = {
+  __typename?: 'Query';
+  agentCliSetupConfig: {
+    __typename?: 'AgentCliSetupConfigObject';
+    canManage: boolean;
+    installEnabled: boolean;
+  };
+};
+
+export type SetAgentEnabledMutationVariables = Exact<{
+  backend: Scalars['String']['input'];
+  enabled: Scalars['Boolean']['input'];
+}>;
+
+export type SetAgentEnabledMutation = {
+  __typename?: 'Mutation';
+  setAgentEnabled: {
+    __typename?: 'SetAgentEnabledResult';
+    backend: string;
+    enabled: boolean;
+  };
+};
+
+export type SetAgentModelEnabledMutationVariables = Exact<{
+  backend: Scalars['String']['input'];
+  model: Scalars['String']['input'];
+  enabled: Scalars['Boolean']['input'];
+}>;
+
+export type SetAgentModelEnabledMutation = {
+  __typename?: 'Mutation';
+  setAgentModelEnabled: {
+    __typename?: 'SetAgentModelEnabledResult';
+    backend: string;
+    enabled: boolean;
+    model: string;
+  };
+};
+
+export type SetAgentModelsEnabledMutationVariables = Exact<{
+  backend: Scalars['String']['input'];
+  models: Array<Scalars['String']['input']> | Scalars['String']['input'];
+  enabled: Scalars['Boolean']['input'];
+}>;
+
+export type SetAgentModelsEnabledMutation = {
+  __typename?: 'Mutation';
+  setAgentModelsEnabled: {
+    __typename?: 'SetAgentModelsEnabledResult';
+    backend: string;
+    enabled: boolean;
+  };
+};
+
+export type SetAgentModelFavoriteMutationVariables = Exact<{
+  backend: Scalars['String']['input'];
+  model: Scalars['String']['input'];
+  favorite: Scalars['Boolean']['input'];
+}>;
+
+export type SetAgentModelFavoriteMutation = {
+  __typename?: 'Mutation';
+  setAgentModelFavorite: {
+    __typename?: 'SetAgentModelFavoriteResult';
+    backend: string;
+    favorite: boolean;
+    model: string;
+  };
+};
+
+export type AgentSetupChunkAddedSubscriptionVariables = Exact<{
+  runId: Scalars['ID']['input'];
+}>;
+
+export type AgentSetupChunkAddedSubscription = {
+  __typename?: 'Subscription';
+  agentSetupChunkAdded: {
+    __typename?: 'AgentSetupStreamChunkObject';
+    data: string;
+    done: boolean;
+    error?: string | null;
+    exitCode?: number | null;
+    id: string;
+    runId: string;
+    sortOrder: number;
+    stream: string;
+  };
+};
+
 export type ServiceAccountCredentialFieldsFragment = {
   __typename?: 'ServiceAccountCredentialObject';
   createdAt: any;
@@ -9558,123 +9675,6 @@ export type DeleteRolloutFlagMutationVariables = Exact<{
 export type DeleteRolloutFlagMutation = {
   __typename?: 'Mutation';
   deleteRolloutFlag: boolean;
-};
-
-export type SettingsSetupAgentClisQueryVariables = Exact<{
-  [key: string]: never;
-}>;
-
-export type SettingsSetupAgentClisQuery = {
-  __typename?: 'Query';
-  discoverAgentClis: {
-    __typename?: 'DiscoverAgentClisResult';
-    scannedAt: string;
-    totalCount: number;
-    agents: Array<{
-      __typename?: 'AgentCliOptionObject';
-      backend: string;
-      enabled: boolean;
-      label: string;
-      version?: string | null;
-      modelOptions: Array<{
-        __typename?: 'AgentCliModelOption';
-        enabled: boolean;
-        favorite: boolean;
-        model: string;
-      }>;
-    }>;
-  };
-};
-
-export type AgentCliSetupConfigQueryVariables = Exact<{ [key: string]: never }>;
-
-export type AgentCliSetupConfigQuery = {
-  __typename?: 'Query';
-  agentCliSetupConfig: {
-    __typename?: 'AgentCliSetupConfigObject';
-    canManage: boolean;
-    installEnabled: boolean;
-  };
-};
-
-export type SetAgentEnabledMutationVariables = Exact<{
-  backend: Scalars['String']['input'];
-  enabled: Scalars['Boolean']['input'];
-}>;
-
-export type SetAgentEnabledMutation = {
-  __typename?: 'Mutation';
-  setAgentEnabled: {
-    __typename?: 'SetAgentEnabledResult';
-    backend: string;
-    enabled: boolean;
-  };
-};
-
-export type SetAgentModelEnabledMutationVariables = Exact<{
-  backend: Scalars['String']['input'];
-  model: Scalars['String']['input'];
-  enabled: Scalars['Boolean']['input'];
-}>;
-
-export type SetAgentModelEnabledMutation = {
-  __typename?: 'Mutation';
-  setAgentModelEnabled: {
-    __typename?: 'SetAgentModelEnabledResult';
-    backend: string;
-    enabled: boolean;
-    model: string;
-  };
-};
-
-export type SetAgentModelsEnabledMutationVariables = Exact<{
-  backend: Scalars['String']['input'];
-  models: Array<Scalars['String']['input']> | Scalars['String']['input'];
-  enabled: Scalars['Boolean']['input'];
-}>;
-
-export type SetAgentModelsEnabledMutation = {
-  __typename?: 'Mutation';
-  setAgentModelsEnabled: {
-    __typename?: 'SetAgentModelsEnabledResult';
-    backend: string;
-    enabled: boolean;
-  };
-};
-
-export type SetAgentModelFavoriteMutationVariables = Exact<{
-  backend: Scalars['String']['input'];
-  model: Scalars['String']['input'];
-  favorite: Scalars['Boolean']['input'];
-}>;
-
-export type SetAgentModelFavoriteMutation = {
-  __typename?: 'Mutation';
-  setAgentModelFavorite: {
-    __typename?: 'SetAgentModelFavoriteResult';
-    backend: string;
-    favorite: boolean;
-    model: string;
-  };
-};
-
-export type AgentSetupChunkAddedSubscriptionVariables = Exact<{
-  runId: Scalars['ID']['input'];
-}>;
-
-export type AgentSetupChunkAddedSubscription = {
-  __typename?: 'Subscription';
-  agentSetupChunkAdded: {
-    __typename?: 'AgentSetupStreamChunkObject';
-    data: string;
-    done: boolean;
-    error?: string | null;
-    exitCode?: number | null;
-    id: string;
-    runId: string;
-    sortOrder: number;
-    stream: string;
-  };
 };
 
 export type WorkspaceLocalRepositoryFieldsFragment = {
@@ -21317,6 +21317,550 @@ export const GetSearchResultsDocument = {
   GetSearchResultsQuery,
   GetSearchResultsQueryVariables
 >;
+export const SettingsAgentsAgentClisDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'SettingsAgentsAgentClis' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'discoverAgentClis' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'agents' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'backend' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'enabled' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'label' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'modelOptions' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'enabled' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'favorite' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'model' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'version' },
+                      },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  SettingsAgentsAgentClisQuery,
+  SettingsAgentsAgentClisQueryVariables
+>;
+export const AgentCliSetupConfigDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'AgentCliSetupConfig' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'agentCliSetupConfig' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'canManage' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'installEnabled' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  AgentCliSetupConfigQuery,
+  AgentCliSetupConfigQueryVariables
+>;
+export const SetAgentEnabledDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'SetAgentEnabled' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'backend' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'String' },
+            },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'enabled' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'Boolean' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'setAgentEnabled' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'backend' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'backend' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'enabled' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'enabled' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'backend' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  SetAgentEnabledMutation,
+  SetAgentEnabledMutationVariables
+>;
+export const SetAgentModelEnabledDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'SetAgentModelEnabled' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'backend' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'String' },
+            },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'model' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'String' },
+            },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'enabled' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'Boolean' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'setAgentModelEnabled' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'backend' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'backend' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'model' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'model' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'enabled' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'enabled' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'backend' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  SetAgentModelEnabledMutation,
+  SetAgentModelEnabledMutationVariables
+>;
+export const SetAgentModelsEnabledDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'SetAgentModelsEnabled' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'backend' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'String' },
+            },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'models' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'ListType',
+              type: {
+                kind: 'NonNullType',
+                type: {
+                  kind: 'NamedType',
+                  name: { kind: 'Name', value: 'String' },
+                },
+              },
+            },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'enabled' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'Boolean' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'setAgentModelsEnabled' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'backend' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'backend' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'models' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'models' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'enabled' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'enabled' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'backend' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  SetAgentModelsEnabledMutation,
+  SetAgentModelsEnabledMutationVariables
+>;
+export const SetAgentModelFavoriteDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'SetAgentModelFavorite' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'backend' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'String' },
+            },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'model' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'String' },
+            },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'favorite' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'Boolean' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'setAgentModelFavorite' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'backend' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'backend' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'model' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'model' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'favorite' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'favorite' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'backend' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'favorite' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  SetAgentModelFavoriteMutation,
+  SetAgentModelFavoriteMutationVariables
+>;
+export const AgentSetupChunkAddedDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'subscription',
+      name: { kind: 'Name', value: 'AgentSetupChunkAdded' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'runId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'agentSetupChunkAdded' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'runId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'runId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'data' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'done' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'error' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'exitCode' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'runId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'stream' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  AgentSetupChunkAddedSubscription,
+  AgentSetupChunkAddedSubscriptionVariables
+>;
 export const GetSettingsKeysDocument = {
   kind: 'Document',
   definitions: [
@@ -24234,550 +24778,6 @@ export const DeleteRolloutFlagDocument = {
 } as unknown as DocumentNode<
   DeleteRolloutFlagMutation,
   DeleteRolloutFlagMutationVariables
->;
-export const SettingsSetupAgentClisDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'SettingsSetupAgentClis' },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'discoverAgentClis' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'agents' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'backend' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'enabled' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'label' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'modelOptions' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'enabled' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'favorite' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'model' },
-                            },
-                          ],
-                        },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'version' },
-                      },
-                    ],
-                  },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<
-  SettingsSetupAgentClisQuery,
-  SettingsSetupAgentClisQueryVariables
->;
-export const AgentCliSetupConfigDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'AgentCliSetupConfig' },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'agentCliSetupConfig' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'canManage' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'installEnabled' },
-                },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<
-  AgentCliSetupConfigQuery,
-  AgentCliSetupConfigQueryVariables
->;
-export const SetAgentEnabledDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'mutation',
-      name: { kind: 'Name', value: 'SetAgentEnabled' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'backend' },
-          },
-          type: {
-            kind: 'NonNullType',
-            type: {
-              kind: 'NamedType',
-              name: { kind: 'Name', value: 'String' },
-            },
-          },
-        },
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'enabled' },
-          },
-          type: {
-            kind: 'NonNullType',
-            type: {
-              kind: 'NamedType',
-              name: { kind: 'Name', value: 'Boolean' },
-            },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'setAgentEnabled' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'backend' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'backend' },
-                },
-              },
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'enabled' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'enabled' },
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'backend' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<
-  SetAgentEnabledMutation,
-  SetAgentEnabledMutationVariables
->;
-export const SetAgentModelEnabledDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'mutation',
-      name: { kind: 'Name', value: 'SetAgentModelEnabled' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'backend' },
-          },
-          type: {
-            kind: 'NonNullType',
-            type: {
-              kind: 'NamedType',
-              name: { kind: 'Name', value: 'String' },
-            },
-          },
-        },
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'model' },
-          },
-          type: {
-            kind: 'NonNullType',
-            type: {
-              kind: 'NamedType',
-              name: { kind: 'Name', value: 'String' },
-            },
-          },
-        },
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'enabled' },
-          },
-          type: {
-            kind: 'NonNullType',
-            type: {
-              kind: 'NamedType',
-              name: { kind: 'Name', value: 'Boolean' },
-            },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'setAgentModelEnabled' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'backend' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'backend' },
-                },
-              },
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'model' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'model' },
-                },
-              },
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'enabled' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'enabled' },
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'backend' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'model' } },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<
-  SetAgentModelEnabledMutation,
-  SetAgentModelEnabledMutationVariables
->;
-export const SetAgentModelsEnabledDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'mutation',
-      name: { kind: 'Name', value: 'SetAgentModelsEnabled' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'backend' },
-          },
-          type: {
-            kind: 'NonNullType',
-            type: {
-              kind: 'NamedType',
-              name: { kind: 'Name', value: 'String' },
-            },
-          },
-        },
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'models' },
-          },
-          type: {
-            kind: 'NonNullType',
-            type: {
-              kind: 'ListType',
-              type: {
-                kind: 'NonNullType',
-                type: {
-                  kind: 'NamedType',
-                  name: { kind: 'Name', value: 'String' },
-                },
-              },
-            },
-          },
-        },
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'enabled' },
-          },
-          type: {
-            kind: 'NonNullType',
-            type: {
-              kind: 'NamedType',
-              name: { kind: 'Name', value: 'Boolean' },
-            },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'setAgentModelsEnabled' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'backend' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'backend' },
-                },
-              },
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'models' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'models' },
-                },
-              },
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'enabled' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'enabled' },
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'backend' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<
-  SetAgentModelsEnabledMutation,
-  SetAgentModelsEnabledMutationVariables
->;
-export const SetAgentModelFavoriteDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'mutation',
-      name: { kind: 'Name', value: 'SetAgentModelFavorite' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'backend' },
-          },
-          type: {
-            kind: 'NonNullType',
-            type: {
-              kind: 'NamedType',
-              name: { kind: 'Name', value: 'String' },
-            },
-          },
-        },
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'model' },
-          },
-          type: {
-            kind: 'NonNullType',
-            type: {
-              kind: 'NamedType',
-              name: { kind: 'Name', value: 'String' },
-            },
-          },
-        },
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'favorite' },
-          },
-          type: {
-            kind: 'NonNullType',
-            type: {
-              kind: 'NamedType',
-              name: { kind: 'Name', value: 'Boolean' },
-            },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'setAgentModelFavorite' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'backend' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'backend' },
-                },
-              },
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'model' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'model' },
-                },
-              },
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'favorite' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'favorite' },
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'backend' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'favorite' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'model' } },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<
-  SetAgentModelFavoriteMutation,
-  SetAgentModelFavoriteMutationVariables
->;
-export const AgentSetupChunkAddedDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'subscription',
-      name: { kind: 'Name', value: 'AgentSetupChunkAdded' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'runId' },
-          },
-          type: {
-            kind: 'NonNullType',
-            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'agentSetupChunkAdded' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'runId' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'runId' },
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'data' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'done' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'error' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'exitCode' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'runId' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'stream' } },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<
-  AgentSetupChunkAddedSubscription,
-  AgentSetupChunkAddedSubscriptionVariables
 >;
 export const GetWorkspaceSettingsDocument = {
   kind: 'Document',

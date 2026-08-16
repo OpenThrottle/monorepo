@@ -4,15 +4,15 @@ import userEvent from '@testing-library/user-event';
 import { createRoutesStub } from 'react-router';
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { describe, expect, test } from 'vitest';
-import { SettingsSetupModelFavorite } from '../SettingsSetupModelFavorite';
+import { SettingsAgentsModelFavorite } from '../SettingsAgentsModelFavorite';
 
 const renderFavorite = (
-  props: React.ComponentProps<typeof SettingsSetupModelFavorite>,
+  props: React.ComponentProps<typeof SettingsAgentsModelFavorite>,
   action: (formData: FormData) => void = () => {},
 ) => {
   const Component = () => (
     <TooltipProvider>
-      <SettingsSetupModelFavorite {...props} />
+      <SettingsAgentsModelFavorite {...props} />
     </TooltipProvider>
   );
   const RoutesStub = createRoutesStub([
@@ -33,7 +33,7 @@ const renderFavorite = (
   return render(<RoutesStub />);
 };
 
-describe('SettingsSetupModelFavorite', () => {
+describe('SettingsAgentsModelFavorite', () => {
   test('submits the toggled favorite state to the resource action', async () => {
     const user = userEvent.setup();
     const submitted: FormData[] = [];
@@ -43,7 +43,7 @@ describe('SettingsSetupModelFavorite', () => {
     );
 
     await user.click(
-      component.getByTestId('SettingsSetupModelFavorite-cursor-gpt-5.2'),
+      component.getByTestId('SettingsAgentsModelFavorite-cursor-gpt-5.2'),
     );
 
     expect(submitted).toHaveLength(1);
@@ -61,7 +61,7 @@ describe('SettingsSetupModelFavorite', () => {
       model: 'opus',
     });
     expect(
-      component.getByTestId('SettingsSetupModelFavorite-claude-opus'),
+      component.getByTestId('SettingsAgentsModelFavorite-claude-opus'),
     ).toHaveAttribute('aria-pressed', 'true');
   });
 
@@ -74,7 +74,7 @@ describe('SettingsSetupModelFavorite', () => {
     );
 
     const star = component.getByTestId(
-      'SettingsSetupModelFavorite-grok-grok-4',
+      'SettingsAgentsModelFavorite-grok-grok-4',
     );
     expect(star).toBeDisabled();
     await user.click(star);

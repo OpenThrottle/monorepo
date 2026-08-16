@@ -2,14 +2,14 @@ import * as React from 'react';
 import { useFetcher, useRevalidator } from 'react-router';
 import { Button, Spinner } from '@openthrottle/react-router-shadcn';
 import { useAgentSetupStream } from '~/routing/settings/hooks/useAgentSetupStream';
-import { SETTINGS_SETUP_COPY } from '~/routing/settings/data/data.copy';
+import { SETTINGS_AGENTS_COPY } from '~/routing/settings/data/data.copy';
 import type { AgentCliStatus } from '~/routing/settings/data/agent-clis.data';
 import type { action as agentSetupAction } from '~/routes/resources.agent-setup';
 
 /** Resource-route action path backing the install/update controls. */
 const AGENT_SETUP_ACTION = '/resources/agent-setup';
 
-export interface SettingsSetupCliControlsProps {
+export interface SettingsAgentsCliControlsProps {
   /** Server-computed: current user holds SETTINGS_WRITE. */
   canManage: boolean;
   /** Server-computed: OT_AGENT_CLI_INSTALL_ENABLED is on. */
@@ -17,8 +17,8 @@ export interface SettingsSetupCliControlsProps {
   status: AgentCliStatus;
 }
 
-export const SettingsSetupCliControls = (
-  props: SettingsSetupCliControlsProps,
+export const SettingsAgentsCliControls = (
+  props: SettingsAgentsCliControlsProps,
 ): React.ReactElement => {
   const { canManage, installEnabled, status } = props;
 
@@ -34,10 +34,10 @@ export const SettingsSetupCliControls = (
   const running = runId != null && !stream.done;
 
   // The OT_AGENT_CLI_INSTALL_ENABLED explanation lives once at the route level
-  // (SettingsSetupInstallNotice); here we only surface the contextual per-row
+  // (SettingsAgentsInstallNotice); here we only surface the contextual per-row
   // permission reason. The button is still disabled when the env flag is off.
   const permissionReason = !canManage
-    ? SETTINGS_SETUP_COPY.permissionReason
+    ? SETTINGS_AGENTS_COPY.permissionReason
     : null;
   const disabled =
     permissionReason != null || !installEnabled || submitting || running;
@@ -66,7 +66,7 @@ export const SettingsSetupCliControls = (
   // 🔌 Short Circuit
 
   return (
-    <div className="w-full" data-testid="SettingsSetupCliControls">
+    <div className="w-full" data-testid="SettingsAgentsCliControls">
       <fetcher.Form action={AGENT_SETUP_ACTION} method="post">
         <input name="backend" type="hidden" value={status.backend} />
         <input name="intent" type="hidden" value={intent} />
@@ -89,7 +89,7 @@ export const SettingsSetupCliControls = (
       {runId != null && logText !== '' ? (
         <pre
           className="bg-muted/40 mt-2 max-h-48 overflow-auto rounded-md p-2 font-mono text-xs leading-relaxed"
-          data-testid="SettingsSetupCliControlsLog"
+          data-testid="SettingsAgentsCliControlsLog"
         >
           {logText}
         </pre>

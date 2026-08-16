@@ -4,15 +4,15 @@ import userEvent from '@testing-library/user-event';
 import { createRoutesStub } from 'react-router';
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { describe, expect, test } from 'vitest';
-import { SettingsSetupAgentToggle } from '../SettingsSetupAgentToggle';
+import { SettingsAgentsAgentToggle } from '../SettingsAgentsAgentToggle';
 
 const renderToggle = (
-  props: React.ComponentProps<typeof SettingsSetupAgentToggle>,
+  props: React.ComponentProps<typeof SettingsAgentsAgentToggle>,
   action: (formData: FormData) => void = () => {},
 ) => {
   const Component = () => (
     <TooltipProvider>
-      <SettingsSetupAgentToggle {...props} />
+      <SettingsAgentsAgentToggle {...props} />
     </TooltipProvider>
   );
   const RoutesStub = createRoutesStub([
@@ -28,7 +28,7 @@ const renderToggle = (
   return render(<RoutesStub />);
 };
 
-describe('SettingsSetupAgentToggle', () => {
+describe('SettingsAgentsAgentToggle', () => {
   test('submits the toggled state to the resource action', async () => {
     const user = userEvent.setup();
     const submitted: FormData[] = [];
@@ -37,7 +37,7 @@ describe('SettingsSetupAgentToggle', () => {
       (formData) => submitted.push(formData),
     );
 
-    await user.click(component.getByTestId('SettingsSetupAgentToggle-cursor'));
+    await user.click(component.getByTestId('SettingsAgentsAgentToggle-cursor'));
 
     expect(submitted).toHaveLength(1);
     expect(submitted[0]?.get('backend')).toBe('cursor');
@@ -52,7 +52,7 @@ describe('SettingsSetupAgentToggle', () => {
       enabled: false,
     });
     expect(
-      component.getByTestId('SettingsSetupAgentToggle-claude'),
+      component.getByTestId('SettingsAgentsAgentToggle-claude'),
     ).toHaveAttribute('data-state', 'unchecked');
   });
 
@@ -64,7 +64,7 @@ describe('SettingsSetupAgentToggle', () => {
       (formData) => submitted.push(formData),
     );
 
-    const toggle = component.getByTestId('SettingsSetupAgentToggle-grok');
+    const toggle = component.getByTestId('SettingsAgentsAgentToggle-grok');
     expect(toggle).toBeDisabled();
     await user.click(toggle);
     expect(submitted).toHaveLength(0);

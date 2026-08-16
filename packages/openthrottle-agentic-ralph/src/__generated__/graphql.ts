@@ -246,7 +246,7 @@ export type AgentCliOptionObject = {
   backend: Scalars['String']['output'];
   /** True when this driver has a wired streaming chat backend and can be offered as a chat composer backend (false for plan-run-only drivers like codex/grok). */
   chatCapable: Scalars['Boolean']['output'];
-  /** Per-user enablement: true unless the current user has disabled this agent on /settings/setup. A disabled agent is hidden from chat/model pickers and rejected when starting new runs. Defaults to true for an unauthenticated request. */
+  /** Per-user enablement: true unless the current user has disabled this agent on /settings/agents. A disabled agent is hidden from chat/model pickers and rejected when starting new runs. Defaults to true for an unauthenticated request. */
   enabled: Scalars['Boolean']['output'];
   /** Human-readable label for the selector. */
   label: Scalars['String']['output'];
@@ -2836,7 +2836,7 @@ export type Query = {
   activityByDate: ActivityByDateResultObject;
   /** Activity in a date range: commits, plan output chunks, tasks updated. Optional limit/offset for pagination. */
   activityByDateRange: ActivityByDateResultObject;
-  /** Whether server-side agent-CLI install/update is enabled (env flag) and whether the current user may run it (SETTINGS_WRITE). Drives the /settings/setup control gating. */
+  /** Whether server-side agent-CLI install/update is enabled (env flag) and whether the current user may run it (SETTINGS_WRITE). Drives the /settings/agents control gating. */
   agentCliSetupConfig: AgentCliSetupConfigObject;
   /** Interactive directory listing for the in-app picker: immediate subdirectories (annotated with isGitRepo / alreadyRegistered) plus navigation context (current + parent path, current-is-git-repo). With no path, lists the configured workspace roots as entries. All paths are on the server host. */
   browseDirectory: WorkspaceDirectoryListingObject;

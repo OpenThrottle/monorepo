@@ -1,13 +1,13 @@
 import * as React from 'react';
 import { useFetcher, useRevalidator } from 'react-router';
 import { Button } from '@openthrottle/react-router-shadcn';
-import { SETTINGS_SETUP_COPY } from '~/routing/settings/data/data.copy';
+import { SETTINGS_AGENTS_COPY } from '~/routing/settings/data/data.copy';
 import type { action as agentModelsEnabledAction } from '~/routes/resources.agent-models-enabled';
 
 /** Resource-route action path backing the per-agent select-all / deselect-all controls. */
 const AGENT_MODELS_ENABLED_ACTION = '/resources/agent-models-enabled';
 
-export interface SettingsSetupModelBulkToggleProps {
+export interface SettingsAgentsModelBulkToggleProps {
   /** True when the parent agent is disabled (agent-OFF hard-overrides every model). */
   agentDisabled: boolean;
   /** Driver id these models belong to. */
@@ -20,8 +20,8 @@ export interface SettingsSetupModelBulkToggleProps {
   models: readonly string[];
 }
 
-export const SettingsSetupModelBulkToggle = (
-  props: SettingsSetupModelBulkToggleProps,
+export const SettingsAgentsModelBulkToggle = (
+  props: SettingsAgentsModelBulkToggleProps,
 ): React.ReactElement => {
   const { agentDisabled, backend, canManage, enabledCount, models } = props;
 
@@ -71,25 +71,25 @@ export const SettingsSetupModelBulkToggle = (
       <div className="flex items-center gap-1">
         <Button
           className="h-6 px-2 text-xs"
-          data-testid={`SettingsSetupModelBulkToggle-${backend}-enable`}
+          data-testid={`SettingsAgentsModelBulkToggle-${backend}-enable`}
           disabled={locked || allEnabled}
           onClick={handleEnableAll}
           size="sm"
           type="button"
           variant="ghost"
         >
-          {SETTINGS_SETUP_COPY.modelBulkSelect}
+          {SETTINGS_AGENTS_COPY.modelBulkSelect}
         </Button>
         <Button
           className="h-6 px-2 text-xs"
-          data-testid={`SettingsSetupModelBulkToggle-${backend}-disable`}
+          data-testid={`SettingsAgentsModelBulkToggle-${backend}-disable`}
           disabled={locked || allDisabled}
           onClick={handleDisableAll}
           size="sm"
           type="button"
           variant="ghost"
         >
-          {SETTINGS_SETUP_COPY.modelBulkDeselect}
+          {SETTINGS_AGENTS_COPY.modelBulkDeselect}
         </Button>
       </div>
       {errorMessage != null ? (

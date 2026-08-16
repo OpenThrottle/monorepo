@@ -103,7 +103,7 @@ export const HomeComposer = (props: HomeComposerProps): React.ReactElement => {
         }
         onModeChange={setMode}
         onModelChange={setModelId}
-        onOpenSettings={() => navigate('/settings/setup')}
+        onOpenSettings={() => navigate('/settings/agents')}
         onPermissionModeChange={setPermissionMode}
         onPersistChange={setPersist}
         onPersonaChange={FEATURE_BETA_PREVIEW ? setPersonaId : undefined}

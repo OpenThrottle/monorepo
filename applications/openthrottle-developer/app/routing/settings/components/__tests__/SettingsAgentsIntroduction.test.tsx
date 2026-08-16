@@ -3,17 +3,17 @@ import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { SettingsSetupIntroduction } from '../SettingsSetupIntroduction';
-import type { SettingsSetupIntroductionProps } from '../SettingsSetupIntroduction';
+import { SettingsAgentsIntroduction } from '../SettingsAgentsIntroduction';
+import type { SettingsAgentsIntroductionProps } from '../SettingsAgentsIntroduction';
 
-describe('SettingsSetupIntroduction Component', () => {
+describe('SettingsAgentsIntroduction Component', () => {
   let component: RenderResult;
-  let props: SettingsSetupIntroductionProps;
+  let props: SettingsAgentsIntroductionProps;
 
   beforeEach(() => {
     props = {};
 
-    const Component = () => <SettingsSetupIntroduction {...props} />;
+    const Component = () => <SettingsAgentsIntroduction {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);
@@ -21,7 +21,7 @@ describe('SettingsSetupIntroduction Component', () => {
 
   test('should render the component name', () => {
     expect(
-      component.getByTestId('SettingsSetupIntroduction'),
+      component.getByTestId('SettingsAgentsIntroduction'),
     ).toBeInTheDocument();
   });
 });

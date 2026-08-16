@@ -8,13 +8,13 @@ import {
   TooltipTrigger,
   cn,
 } from '@openthrottle/react-router-shadcn';
-import { SETTINGS_SETUP_COPY } from '~/routing/settings/data/data.copy';
+import { SETTINGS_AGENTS_COPY } from '~/routing/settings/data/data.copy';
 import type { action as agentModelFavoriteAction } from '~/routes/resources.agent-model-favorite';
 
 /** Resource-route action path backing the per-model favorite toggle. */
 const AGENT_MODEL_FAVORITE_ACTION = '/resources/agent-model-favorite';
 
-export interface SettingsSetupModelFavoriteProps {
+export interface SettingsAgentsModelFavoriteProps {
   /** Driver id this model belongs to. */
   backend: string;
   /** Server-computed: current user holds SETTINGS_WRITE. */
@@ -25,8 +25,8 @@ export interface SettingsSetupModelFavoriteProps {
   model: string;
 }
 
-export const SettingsSetupModelFavorite = (
-  props: SettingsSetupModelFavoriteProps,
+export const SettingsAgentsModelFavorite = (
+  props: SettingsAgentsModelFavoriteProps,
 ): React.ReactElement => {
   const { backend, canManage, favorite, model } = props;
 
@@ -69,10 +69,10 @@ export const SettingsSetupModelFavorite = (
 
   const control = (
     <Button
-      aria-label={SETTINGS_SETUP_COPY.modelFavoriteLabel}
+      aria-label={SETTINGS_AGENTS_COPY.modelFavoriteLabel}
       aria-pressed={optimisticFavorite}
       className="size-6"
-      data-testid={`SettingsSetupModelFavorite-${backend}-${model}`}
+      data-testid={`SettingsAgentsModelFavorite-${backend}-${model}`}
       disabled={disabled}
       onClick={handleClick}
       size="icon"
@@ -98,7 +98,7 @@ export const SettingsSetupModelFavorite = (
         <span className="inline-flex">{control}</span>
       </TooltipTrigger>
       <TooltipContent>
-        {SETTINGS_SETUP_COPY.toggleDisabledReason}
+        {SETTINGS_AGENTS_COPY.toggleDisabledReason}
       </TooltipContent>
     </Tooltip>
   );

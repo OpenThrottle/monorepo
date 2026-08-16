@@ -1,7 +1,7 @@
 /**
  * @description Tests for ScheduledAgentJobsResolver's per-user agent-enablement guard: a job cannot
  * be scheduled (create) or repointed (update) against an agent backend the owner disabled on
- * /settings/setup. Service-account principals (null owner) skip the guard. The service is mocked.
+ * /settings/agents. Service-account principals (null owner) skip the guard. The service is mocked.
  */
 
 import { createMock } from '@golevelup/ts-vitest';

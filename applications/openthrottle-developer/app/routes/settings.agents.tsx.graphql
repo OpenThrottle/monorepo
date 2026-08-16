@@ -1,4 +1,4 @@
-query SettingsSetupAgentClis {
+query SettingsAgentsAgentClis {
   discoverAgentClis {
     agents {
       backend

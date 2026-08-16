@@ -3,14 +3,14 @@ import { render } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { describe, expect, test } from 'vitest';
-import { SettingsSetupModelRow } from '../SettingsSetupModelRow';
+import { SettingsAgentsModelRow } from '../SettingsAgentsModelRow';
 
 const renderRow = (
-  props: React.ComponentProps<typeof SettingsSetupModelRow>,
+  props: React.ComponentProps<typeof SettingsAgentsModelRow>,
 ) => {
   const Component = () => (
     <TooltipProvider>
-      <SettingsSetupModelRow {...props} />
+      <SettingsAgentsModelRow {...props} />
     </TooltipProvider>
   );
   const RoutesStub = createRoutesStub([
@@ -21,7 +21,7 @@ const renderRow = (
   return render(<RoutesStub />);
 };
 
-describe('SettingsSetupModelRow', () => {
+describe('SettingsAgentsModelRow', () => {
   test('renders the model id with an enable toggle and a favorite star', () => {
     const component = renderRow({
       agentDisabled: false,
@@ -32,10 +32,10 @@ describe('SettingsSetupModelRow', () => {
 
     expect(component.getByText('gpt-5.2')).toBeInTheDocument();
     expect(
-      component.getByTestId('SettingsSetupModelToggle-cursor-gpt-5.2'),
+      component.getByTestId('SettingsAgentsModelToggle-cursor-gpt-5.2'),
     ).toBeInTheDocument();
     expect(
-      component.getByTestId('SettingsSetupModelFavorite-cursor-gpt-5.2'),
+      component.getByTestId('SettingsAgentsModelFavorite-cursor-gpt-5.2'),
     ).toHaveAttribute('aria-pressed', 'true');
   });
 
@@ -48,7 +48,7 @@ describe('SettingsSetupModelRow', () => {
     });
 
     expect(
-      component.getByTestId('SettingsSetupModelToggle-claude-opus'),
+      component.getByTestId('SettingsAgentsModelToggle-claude-opus'),
     ).toBeDisabled();
   });
 });

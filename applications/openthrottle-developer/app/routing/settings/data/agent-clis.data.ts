@@ -1,5 +1,5 @@
 /**
- * @description Display catalog for the finite set of agent CLIs surfaced on /settings/setup, plus a
+ * @description Display catalog for the finite set of agent CLIs surfaced on /settings/agents, plus a
  * pure helper that merges it with the server's `discoverAgentClis` result (which returns only the
  * AVAILABLE CLIs) into a per-CLI installed/not-installed status list.
  *

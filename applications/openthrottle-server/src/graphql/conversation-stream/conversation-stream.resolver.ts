@@ -267,7 +267,7 @@ export class ConversationStreamResolver {
       return failed(`Unsupported backend: ${backend}.`);
     }
 
-    // Per-user gate: a CLI backend the user disabled on /settings/setup cannot be
+    // Per-user gate: a CLI backend the user disabled on /settings/agents cannot be
     // started (the openai HTTP path is not an agent CLI, so it is never gated).
     if (backend !== OPENAI_BACKEND) {
       if (!(await this.agentPreferences.isEnabled(userId, backend))) {
@@ -277,7 +277,7 @@ export class ConversationStreamResolver {
       }
 
       // Per-model gate: when the run targets a specific model of an enabled agent,
-      // a model the user disabled on /settings/setup cannot be started. Only a
+      // a model the user disabled on /settings/agents cannot be started. Only a
       // KNOWN-but-disabled model is blocked — an unlisted model (or a local-endpoint
       // model) is never in the disabled set, so it passes through untouched.
       const model = input.modelId?.trim() ?? '';

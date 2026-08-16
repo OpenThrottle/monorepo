@@ -15,7 +15,7 @@ export interface AgentSetupActionResult {
 }
 
 /**
- * Resource route action backing the /settings/setup install/update controls —
+ * Resource route action backing the /settings/agents install/update controls —
  * `POST /resources/agent-setup`. `intent=update` runs updateAgentCli; anything else runs
  * installAgentCli. Takes only a `backend` id; the server re-validates it against the drivers
  * registry and enforces the SETTINGS_WRITE permission + the OT_AGENT_CLI_INSTALL_ENABLED flag, so a

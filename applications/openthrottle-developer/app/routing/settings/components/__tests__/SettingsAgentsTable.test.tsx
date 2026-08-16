@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { createRoutesStub } from 'react-router';
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { describe, expect, test, vi } from 'vitest';
-import { SettingsSetupTable } from '../SettingsSetupTable';
+import { SettingsAgentsTable } from '../SettingsAgentsTable';
 import type { AgentCliStatus } from '~/routing/settings/data/agent-clis.data';
 
 // The embedded install/update controls open a graphql-ws subscription; stub the
@@ -42,7 +42,7 @@ const disabledAgent: AgentCliStatus = {
 const renderTable = (statuses: readonly AgentCliStatus[]) => {
   const Component = () => (
     <TooltipProvider>
-      <SettingsSetupTable
+      <SettingsAgentsTable
         canManage={true}
         installEnabled={true}
         statuses={statuses}
@@ -57,14 +57,14 @@ const renderTable = (statuses: readonly AgentCliStatus[]) => {
   return render(<RoutesStub />);
 };
 
-describe('SettingsSetupTable', () => {
+describe('SettingsAgentsTable', () => {
   test('renders one row per status', () => {
     const component = renderTable([installed, disabledAgent]);
     expect(
-      component.getByTestId('SettingsSetupTableRow-cursor'),
+      component.getByTestId('SettingsAgentsTableRow-cursor'),
     ).toBeInTheDocument();
     expect(
-      component.getByTestId('SettingsSetupTableRow-claude'),
+      component.getByTestId('SettingsAgentsTableRow-claude'),
     ).toBeInTheDocument();
   });
 

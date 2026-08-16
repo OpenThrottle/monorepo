@@ -271,7 +271,7 @@ export class PlansResolver {
 
   /**
    * @description Rejects starting a plan run against an agent backend — or a specific model of that
-   * backend — the actor disabled on /settings/setup. A null actor (service-account/system principal)
+   * backend — the actor disabled on /settings/agents. A null actor (service-account/system principal)
    * has no per-user preferences, so the guard is skipped. Backends that are not agent-CLI driver ids
    * (unknown strings) are left to the caller's own validation — this only blocks a KNOWN-but-disabled
    * agent, and (when a model is given and non-empty) a KNOWN-but-disabled model.

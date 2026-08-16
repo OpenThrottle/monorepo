@@ -19,6 +19,7 @@ import {
   FoldersIcon,
   GaugeIcon,
   GitPullRequest,
+  HatGlassesIcon,
   KeyRoundIcon,
   ListOrderedIcon,
   LogInIcon,
@@ -31,7 +32,6 @@ import {
   TerminalSquareIcon,
   ToggleRightIcon,
   WandSparklesIcon,
-  WrenchIcon,
 } from 'lucide-react';
 
 const linksLegal = [
@@ -162,6 +162,13 @@ export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
     ],
     Settings: [
       {
+        beta: false,
+        children: 'Agents',
+        disabled: false, // 🔴 🟠 🟡
+        icon: HatGlassesIcon,
+        to: '/settings/agents',
+      },
+      {
         beta: true,
         children: 'Application',
         disabled: false, // 🔴 🟠 🟡 🟢
@@ -213,13 +220,6 @@ export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
         disabled: true, // 🔴
         icon: ToggleRightIcon,
         to: '/settings/rollout',
-      },
-      {
-        beta: false,
-        children: 'Setup',
-        disabled: false, // 🔴 🟠 🟡
-        icon: WrenchIcon,
-        to: '/settings/setup',
       },
       {
         children: 'Workspace',

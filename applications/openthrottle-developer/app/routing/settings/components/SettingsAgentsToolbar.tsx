@@ -5,12 +5,12 @@ import {
   type AgentCliFilter,
 } from '~/routing/settings/data/agent-clis.data';
 import {
-  SETTINGS_SETUP_COPY,
-  SETTINGS_SETUP_FILTER_LABELS,
+  SETTINGS_AGENTS_COPY,
+  SETTINGS_AGENTS_FILTER_LABELS,
 } from '~/routing/settings/data/data.copy';
-// import { SettingsSetupInstallNotice } from '~/routing/settings/components/SettingsSetupInstallNotice';
+// import { SettingsAgentsInstallNotice } from '~/routing/settings/components/SettingsAgentsInstallNotice';
 
-export interface SettingsSetupToolbarProps {
+export interface SettingsAgentsToolbarProps {
   /** Active table filter. */
   filter: AgentCliFilter;
   /** Server-computed: OT_AGENT_CLI_INSTALL_ENABLED is on. */
@@ -19,8 +19,8 @@ export interface SettingsSetupToolbarProps {
   onFilterChange: (filter: AgentCliFilter) => void;
 }
 
-export const SettingsSetupToolbar = (
-  props: SettingsSetupToolbarProps,
+export const SettingsAgentsToolbar = (
+  props: SettingsAgentsToolbarProps,
 ): React.ReactElement => {
   const { filter, onFilterChange } = props;
   // const { filter, installEnabled, onFilterChange } = props;
@@ -40,13 +40,13 @@ export const SettingsSetupToolbar = (
   return (
     <div
       className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
-      data-testid="SettingsSetupToolbar"
+      data-testid="SettingsAgentsToolbar"
     >
       <div className="flex items-center gap-2">
         <span className="text-muted-foreground text-xs">
-          {SETTINGS_SETUP_COPY.filterLabel}
+          {SETTINGS_AGENTS_COPY.filterLabel}
         </span>
-        <ButtonGroup aria-label={SETTINGS_SETUP_COPY.filterLabel}>
+        <ButtonGroup aria-label={SETTINGS_AGENTS_COPY.filterLabel}>
           {AGENT_CLI_FILTERS.map((value) => (
             <Button
               aria-pressed={filter === value}
@@ -55,12 +55,12 @@ export const SettingsSetupToolbar = (
               size="sm"
               variant={filter === value ? 'default' : 'outline'}
             >
-              {SETTINGS_SETUP_FILTER_LABELS[value]}
+              {SETTINGS_AGENTS_FILTER_LABELS[value]}
             </Button>
           ))}
         </ButtonGroup>
       </div>
-      {/* <SettingsSetupInstallNotice installEnabled={installEnabled} /> */}
+      {/* <SettingsAgentsInstallNotice installEnabled={installEnabled} /> */}
     </div>
   );
 };

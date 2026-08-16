@@ -9,29 +9,29 @@ import {
 import { SITE_TITLE } from '~/global/config/settings';
 import {
   AgentCliSetupConfigDocument,
-  SettingsSetupAgentClisDocument,
+  SettingsAgentsAgentClisDocument,
 } from '~/__generated__/graphql';
 import {
   filterAgentCliStatuses,
   mergeAgentCliStatuses,
   type AgentCliFilter,
 } from '~/routing/settings/data/agent-clis.data';
-import { SettingsSetupIntroduction } from '~/routing/settings/components/SettingsSetupIntroduction';
-import { SettingsSetupTable } from '~/routing/settings/components/SettingsSetupTable';
-import { SettingsSetupToolbar } from '~/routing/settings/components/SettingsSetupToolbar';
-import type { Route } from '@/app/routes/+types/settings.setup';
-import { SettingsSetupInstallNotice } from '~/routing/settings/components/SettingsSetupInstallNotice';
+import { SettingsAgentsIntroduction } from '~/routing/settings/components/SettingsAgentsIntroduction';
+import { SettingsAgentsTable } from '~/routing/settings/components/SettingsAgentsTable';
+import { SettingsAgentsToolbar } from '~/routing/settings/components/SettingsAgentsToolbar';
+import type { Route } from '@/app/routes/+types/settings.agents';
+import { SettingsAgentsInstallNotice } from '~/routing/settings/components/SettingsAgentsInstallNotice';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
-  breadcrumb: (_match) => 'Setup',
+  breadcrumb: (_match) => 'Agents',
   links: (_match) => [{ children: 'Settings', to: '/settings' }],
 };
 
 export const loader = async (args: Route.LoaderArgs) => {
   const [discovery, config] = await Promise.all([
-    executeGraphqlWithAuth(args.request, SettingsSetupAgentClisDocument, {}),
+    executeGraphqlWithAuth(args.request, SettingsAgentsAgentClisDocument, {}),
     executeGraphqlWithAuth(args.request, AgentCliSetupConfigDocument, {}),
   ]);
 
@@ -48,7 +48,7 @@ export const links: Route.LinksFunction = () => {
 };
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
-  return [{ title: `Agent CLI setup | ${SITE_TITLE}` }];
+  return [{ title: `Agents | ${SITE_TITLE}` }];
 });
 
 export default function Component(
@@ -74,19 +74,19 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <SettingsSetupIntroduction scannedAt={loaderData.scannedAt} />
+      <SettingsAgentsIntroduction scannedAt={loaderData.scannedAt} />
       <div className="mt-6 flex flex-col gap-4">
-        <SettingsSetupToolbar
+        <SettingsAgentsToolbar
           filter={filter}
           installEnabled={installEnabled}
           onFilterChange={setFilter}
         />
-        <SettingsSetupTable
+        <SettingsAgentsTable
           canManage={loaderData.canManage}
           installEnabled={installEnabled}
           statuses={visibleStatuses}
         />
-        <SettingsSetupInstallNotice installEnabled={installEnabled} />
+        <SettingsAgentsInstallNotice installEnabled={installEnabled} />
       </div>
     </GlobalScreen>
   );

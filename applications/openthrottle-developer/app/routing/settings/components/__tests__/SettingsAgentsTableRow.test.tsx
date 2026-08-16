@@ -8,7 +8,7 @@ import {
   TooltipProvider,
 } from '@openthrottle/react-router-shadcn';
 import { describe, expect, test, vi } from 'vitest';
-import { SettingsSetupTableRow } from '../SettingsSetupTableRow';
+import { SettingsAgentsTableRow } from '../SettingsAgentsTableRow';
 import type { AgentCliStatus } from '~/routing/settings/data/agent-clis.data';
 
 vi.mock('~/services/graphql-ws-client', () => ({
@@ -52,7 +52,7 @@ const renderRow = (status: AgentCliStatus) => {
     <TooltipProvider>
       <Table>
         <TableBody>
-          <SettingsSetupTableRow
+          <SettingsAgentsTableRow
             canManage={true}
             installEnabled={true}
             status={status}
@@ -71,7 +71,7 @@ const renderRow = (status: AgentCliStatus) => {
   return render(<RoutesStub />);
 };
 
-describe('SettingsSetupTableRow', () => {
+describe('SettingsAgentsTableRow', () => {
   test('shows the label, backend code, and a Not installed badge for an absent CLI', () => {
     const component = renderRow(notInstalled);
     expect(component.getByText('Grok')).toBeInTheDocument();
@@ -84,7 +84,7 @@ describe('SettingsSetupTableRow', () => {
   test('renders an install/update control and an enable toggle', () => {
     const component = renderRow(notInstalled);
     expect(
-      component.getByTestId('SettingsSetupAgentToggle-grok'),
+      component.getByTestId('SettingsAgentsAgentToggle-grok'),
     ).toBeInTheDocument();
     expect(
       component.getByRole('button', { name: 'Install' }),
@@ -101,21 +101,21 @@ describe('SettingsSetupTableRow', () => {
 
     // Collapsed by default: no per-model rows yet.
     expect(
-      component.queryByTestId('SettingsSetupModelRow-cursor-auto'),
+      component.queryByTestId('SettingsAgentsModelRow-cursor-auto'),
     ).not.toBeInTheDocument();
 
     await user.click(
-      component.getByTestId('SettingsSetupTableRow-cursor-expand'),
+      component.getByTestId('SettingsAgentsTableRow-cursor-expand'),
     );
 
     expect(
-      component.getByTestId('SettingsSetupModelRow-cursor-auto'),
+      component.getByTestId('SettingsAgentsModelRow-cursor-auto'),
     ).toBeInTheDocument();
     expect(
-      component.getByTestId('SettingsSetupModelToggle-cursor-gpt-5.2'),
+      component.getByTestId('SettingsAgentsModelToggle-cursor-gpt-5.2'),
     ).toBeInTheDocument();
     expect(
-      component.getByTestId('SettingsSetupModelFavorite-cursor-gpt-5.2'),
+      component.getByTestId('SettingsAgentsModelFavorite-cursor-gpt-5.2'),
     ).toBeInTheDocument();
   });
 
@@ -124,11 +124,11 @@ describe('SettingsSetupTableRow', () => {
     const component = renderRow(disabledAgent);
 
     await user.click(
-      component.getByTestId('SettingsSetupTableRow-claude-expand'),
+      component.getByTestId('SettingsAgentsTableRow-claude-expand'),
     );
 
     expect(
-      component.getByTestId('SettingsSetupModelToggle-claude-auto'),
+      component.getByTestId('SettingsAgentsModelToggle-claude-auto'),
     ).toBeDisabled();
   });
 });

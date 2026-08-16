@@ -10,7 +10,7 @@ export interface AgentModelsEnabledActionResult {
 }
 
 /**
- * Resource route action backing the /settings/setup per-agent select-all / deselect-all affordance —
+ * Resource route action backing the /settings/agents per-agent select-all / deselect-all affordance —
  * `POST /resources/agent-models-enabled` with `backend` + `enabled` + a JSON-encoded `models` list.
  * One mutation flips EVERY model of the backend at once (vs. one request per model), so a 200-model
  * agent is a single round trip. The server re-validates the backend against the drivers registry and

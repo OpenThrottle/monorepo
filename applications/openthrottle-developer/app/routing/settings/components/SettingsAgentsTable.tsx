@@ -7,11 +7,11 @@ import {
   TableHeader,
   TableRow,
 } from '@openthrottle/react-router-shadcn';
-import { SETTINGS_SETUP_COPY } from '~/routing/settings/data/data.copy';
-import { SettingsSetupTableRow } from '~/routing/settings/components/SettingsSetupTableRow';
+import { SETTINGS_AGENTS_COPY } from '~/routing/settings/data/data.copy';
+import { SettingsAgentsTableRow } from '~/routing/settings/components/SettingsAgentsTableRow';
 import type { AgentCliStatus } from '~/routing/settings/data/agent-clis.data';
 
-export interface SettingsSetupTableProps {
+export interface SettingsAgentsTableProps {
   /** Server-computed: current user holds SETTINGS_WRITE. */
   canManage: boolean;
   /** Server-computed: OT_AGENT_CLI_INSTALL_ENABLED is on. */
@@ -19,8 +19,8 @@ export interface SettingsSetupTableProps {
   statuses: readonly AgentCliStatus[];
 }
 
-export const SettingsSetupTable = (
-  props: SettingsSetupTableProps,
+export const SettingsAgentsTable = (
+  props: SettingsAgentsTableProps,
 ): React.ReactElement => {
   const { canManage, installEnabled, statuses } = props;
 
@@ -39,28 +39,28 @@ export const SettingsSetupTable = (
   return (
     <div
       className="overflow-x-auto rounded-md border"
-      data-testid="SettingsSetupTable"
+      data-testid="SettingsAgentsTable"
     >
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>{SETTINGS_SETUP_COPY.columnAgent}</TableHead>
-            <TableHead>{SETTINGS_SETUP_COPY.columnStatus}</TableHead>
-            <TableHead>{SETTINGS_SETUP_COPY.columnModels}</TableHead>
-            <TableHead>{SETTINGS_SETUP_COPY.columnEnabled}</TableHead>
-            <TableHead>{SETTINGS_SETUP_COPY.columnActions}</TableHead>
+            <TableHead>{SETTINGS_AGENTS_COPY.columnAgent}</TableHead>
+            <TableHead>{SETTINGS_AGENTS_COPY.columnStatus}</TableHead>
+            <TableHead>{SETTINGS_AGENTS_COPY.columnModels}</TableHead>
+            <TableHead>{SETTINGS_AGENTS_COPY.columnEnabled}</TableHead>
+            <TableHead>{SETTINGS_AGENTS_COPY.columnActions}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {statuses.length === 0 ? (
             <TableRow>
               <TableCell className="text-muted-foreground text-sm" colSpan={5}>
-                {SETTINGS_SETUP_COPY.emptyState}
+                {SETTINGS_AGENTS_COPY.emptyState}
               </TableCell>
             </TableRow>
           ) : (
             statuses.map((status) => (
-              <SettingsSetupTableRow
+              <SettingsAgentsTableRow
                 canManage={canManage}
                 installEnabled={installEnabled}
                 key={status.backend}
