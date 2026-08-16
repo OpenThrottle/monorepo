@@ -22,8 +22,11 @@ export interface OpenThrottlePaginationProps extends ProjectsSearchParamsExtras 
   readonly className?: string;
   readonly limit: number;
   readonly page: number;
-  /** Label for the counted items in the summary line (default &quot;projects&quot;). */
-  readonly resultLabel?: string;
+  /**
+   * Plural noun for the counted items in the summary line, e.g. &quot;plans&quot;.
+   * Required so a forgotten label can never silently render the wrong entity.
+   */
+  readonly resultLabel: string;
   readonly total: number;
 }
 
@@ -37,7 +40,7 @@ export const OpenThrottlePagination = (
     details,
     limit,
     page,
-    resultLabel = 'projects',
+    resultLabel,
     search,
     sortBy,
     sortOrder,

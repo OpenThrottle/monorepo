@@ -163,6 +163,7 @@ export const ProjectDetailTabs = (
                 className="mt-6"
                 limit={limit}
                 page={page}
+                resultLabel="tasks"
                 total={totalTaskCount}
               />
             </>

@@ -266,5 +266,6 @@ describe('routes/plans._index.tsx', () => {
     expect(href).toContain('assignee=visormatt');
     expect(href).toContain('status=IN_PROGRESS');
     expect(href).toContain('status=PENDING');
+    expect(view.getByText('Showing 21-30 of 100 plans')).toBeInTheDocument();
   });
 });
