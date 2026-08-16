@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Form, useNavigation } from 'react-router';
+import { Form } from 'react-router';
 import {
   Button,
   Dialog,
@@ -12,6 +12,7 @@ import {
   Label,
 } from '@openthrottle/react-router-shadcn';
 import { GitBranchPlusIcon } from 'lucide-react';
+import { useCloneRepoDialog } from '~/routing/settings/repositories/hooks/useCloneRepoDialog';
 import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
 
 export interface CloneRepoDialogProps {
@@ -30,13 +31,9 @@ export const CloneRepoDialog = (
   const { actionError } = props;
 
   // Hooks
-  const [open, setOpen] = React.useState(false);
-  const navigation = useNavigation();
+  const { isCloning, open, setOpen } = useCloneRepoDialog({ actionError });
 
   // Setup
-  const isCloning =
-    navigation.state === 'submitting' &&
-    navigation.formData?.get('intent') === 'cloneRepo';
 
   // Handlers
 
