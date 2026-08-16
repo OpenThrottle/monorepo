@@ -150,6 +150,7 @@ describe('routes/projects.$projectId._index.tsx', () => {
     });
     await user.click(await screen.findByRole('tab', { name: 'Tasks' }));
     expect(screen.getByTestId('OpenThrottlePagination')).toBeInTheDocument();
+    expect(screen.getByText('Showing 1-2 of 25 tasks')).toBeInTheDocument();
   });
 
   test('should render empty state when project is not found', async () => {

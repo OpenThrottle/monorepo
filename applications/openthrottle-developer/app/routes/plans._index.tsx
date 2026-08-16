@@ -206,6 +206,7 @@ export default function Component(
             className="mt-8"
             limit={limit}
             page={page}
+            resultLabel="plans"
             statuses={statuses}
             total={totalCount}
           />

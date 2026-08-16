@@ -24,7 +24,12 @@ function pageNumberLinks(view: RenderResult): HTMLAnchorElement[] {
 describe('OpenThrottlePagination Component', () => {
   describe('when pagination is not needed', () => {
     test('returns null when total fits a single page', () => {
-      const view = renderPagination({ limit: 10, page: 1, total: 5 });
+      const view = renderPagination({
+        limit: 10,
+        page: 1,
+        resultLabel: 'projects',
+        total: 5,
+      });
 
       expect(view.container.querySelector('nav')).toBeNull();
       expect(view.container.textContent).toBe('');
@@ -42,6 +47,18 @@ describe('OpenThrottlePagination Component', () => {
 
       expect(view.getByText('Showing 11-20 of 25 plans')).toBeInTheDocument();
     });
+
+    test('uses the supplied label rather than a fixed entity noun', () => {
+      const view = renderPagination({
+        limit: 10,
+        page: 1,
+        resultLabel: 'tasks',
+        total: 25,
+      });
+
+      expect(view.getByText('Showing 1-10 of 25 tasks')).toBeInTheDocument();
+      expect(view.queryByText(/projects/)).toBeNull();
+    });
   });
 
   describe('windowed page links', () => {
@@ -49,6 +66,7 @@ describe('OpenThrottlePagination Component', () => {
       const view = renderPagination({
         limit: 10,
         page: 50,
+        resultLabel: 'projects',
         total: 1000,
       });
 
@@ -71,6 +89,7 @@ describe('OpenThrottlePagination Component', () => {
       const view = renderPagination({
         limit: 10,
         page: 4,
+        resultLabel: 'projects',
         total: totalPages * 10,
       });
 
@@ -89,6 +108,7 @@ describe('OpenThrottlePagination Component', () => {
       const view = renderPagination({
         limit: 10,
         page: 50,
+        resultLabel: 'projects',
         total: 1000,
       });
 
@@ -103,6 +123,7 @@ describe('OpenThrottlePagination Component', () => {
       const view = renderPagination({
         limit: 10,
         page: 1,
+        resultLabel: 'projects',
         total: 100,
       });
 
@@ -118,6 +139,7 @@ describe('OpenThrottlePagination Component', () => {
       const view = renderPagination({
         limit: 10,
         page: 10,
+        resultLabel: 'projects',
         total: 100,
       });
 
@@ -136,6 +158,7 @@ describe('OpenThrottlePagination Component', () => {
         basePath: '/plans',
         limit: 20,
         page: 3,
+        resultLabel: 'projects',
         search: 'auth',
         sortBy: 'title',
         sortOrder: 'asc',
