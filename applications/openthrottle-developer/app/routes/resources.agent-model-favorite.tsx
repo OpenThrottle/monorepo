@@ -11,7 +11,7 @@ export interface AgentModelFavoriteActionResult {
 }
 
 /**
- * Resource route action backing the /settings/setup per-MODEL favorite toggle —
+ * Resource route action backing the /settings/agents per-MODEL favorite toggle —
  * `POST /resources/agent-model-favorite` with `backend` + `model` + `favorite` fields. The server
  * re-validates the backend against the drivers registry and enforces the SETTINGS_WRITE permission,
  * so a forged post from a user without permission is rejected server-side. On failure the caller

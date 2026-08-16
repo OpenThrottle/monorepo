@@ -3,13 +3,13 @@ import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import { SettingsSetupModelBulkToggle } from '../SettingsSetupModelBulkToggle';
+import { SettingsAgentsModelBulkToggle } from '../SettingsAgentsModelBulkToggle';
 
 const renderBulk = (
-  props: React.ComponentProps<typeof SettingsSetupModelBulkToggle>,
+  props: React.ComponentProps<typeof SettingsAgentsModelBulkToggle>,
   action: (formData: FormData) => void = () => {},
 ) => {
-  const Component = () => <SettingsSetupModelBulkToggle {...props} />;
+  const Component = () => <SettingsAgentsModelBulkToggle {...props} />;
   const RoutesStub = createRoutesStub([
     { Component, path: '/' },
     {
@@ -23,7 +23,7 @@ const renderBulk = (
   return render(<RoutesStub />);
 };
 
-describe('SettingsSetupModelBulkToggle', () => {
+describe('SettingsAgentsModelBulkToggle', () => {
   test('enable-all submits enabled=true with the full model list', async () => {
     const user = userEvent.setup();
     const submitted: FormData[] = [];
@@ -39,7 +39,7 @@ describe('SettingsSetupModelBulkToggle', () => {
     );
 
     await user.click(
-      component.getByTestId('SettingsSetupModelBulkToggle-cursor-enable'),
+      component.getByTestId('SettingsAgentsModelBulkToggle-cursor-enable'),
     );
 
     expect(submitted).toHaveLength(1);
@@ -63,7 +63,7 @@ describe('SettingsSetupModelBulkToggle', () => {
     );
 
     await user.click(
-      component.getByTestId('SettingsSetupModelBulkToggle-cursor-disable'),
+      component.getByTestId('SettingsAgentsModelBulkToggle-cursor-disable'),
     );
 
     expect(submitted).toHaveLength(1);
@@ -79,7 +79,7 @@ describe('SettingsSetupModelBulkToggle', () => {
       models: ['a', 'b', 'c'],
     });
     expect(
-      component.getByTestId('SettingsSetupModelBulkToggle-cursor-enable'),
+      component.getByTestId('SettingsAgentsModelBulkToggle-cursor-enable'),
     ).toBeDisabled();
   });
 
@@ -92,10 +92,10 @@ describe('SettingsSetupModelBulkToggle', () => {
       models: ['a', 'b'],
     });
     expect(
-      component.getByTestId('SettingsSetupModelBulkToggle-cursor-enable'),
+      component.getByTestId('SettingsAgentsModelBulkToggle-cursor-enable'),
     ).toBeDisabled();
     expect(
-      component.getByTestId('SettingsSetupModelBulkToggle-cursor-disable'),
+      component.getByTestId('SettingsAgentsModelBulkToggle-cursor-disable'),
     ).toBeDisabled();
   });
 
@@ -108,10 +108,10 @@ describe('SettingsSetupModelBulkToggle', () => {
       models: ['a', 'b'],
     });
     expect(
-      component.getByTestId('SettingsSetupModelBulkToggle-cursor-enable'),
+      component.getByTestId('SettingsAgentsModelBulkToggle-cursor-enable'),
     ).toBeDisabled();
     expect(
-      component.getByTestId('SettingsSetupModelBulkToggle-cursor-disable'),
+      component.getByTestId('SettingsAgentsModelBulkToggle-cursor-disable'),
     ).toBeDisabled();
   });
 });

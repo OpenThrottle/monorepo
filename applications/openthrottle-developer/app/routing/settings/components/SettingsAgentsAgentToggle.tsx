@@ -6,13 +6,13 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
-import { SETTINGS_SETUP_COPY } from '~/routing/settings/data/data.copy';
+import { SETTINGS_AGENTS_COPY } from '~/routing/settings/data/data.copy';
 import type { action as agentEnabledAction } from '~/routes/resources.agent-enabled';
 
 /** Resource-route action path backing the per-agent enable/disable toggle. */
 const AGENT_ENABLED_ACTION = '/resources/agent-enabled';
 
-export interface SettingsSetupAgentToggleProps {
+export interface SettingsAgentsAgentToggleProps {
   /** Driver id this toggle controls. */
   backend: string;
   /** Server-computed: current user holds SETTINGS_WRITE. */
@@ -21,8 +21,8 @@ export interface SettingsSetupAgentToggleProps {
   enabled: boolean;
 }
 
-export const SettingsSetupAgentToggle = (
-  props: SettingsSetupAgentToggleProps,
+export const SettingsAgentsAgentToggle = (
+  props: SettingsAgentsAgentToggleProps,
 ): React.ReactElement => {
   const { backend, canManage, enabled } = props;
 
@@ -71,9 +71,9 @@ export const SettingsSetupAgentToggle = (
 
   const control = (
     <Switch
-      aria-label={SETTINGS_SETUP_COPY.enabledToggleLabel}
+      aria-label={SETTINGS_AGENTS_COPY.enabledToggleLabel}
       checked={optimisticEnabled}
-      data-testid={`SettingsSetupAgentToggle-${backend}`}
+      data-testid={`SettingsAgentsAgentToggle-${backend}`}
       disabled={disabled}
       onCheckedChange={handleCheckedChange}
     />
@@ -90,7 +90,7 @@ export const SettingsSetupAgentToggle = (
             <span className="inline-flex">{control}</span>
           </TooltipTrigger>
           <TooltipContent>
-            {SETTINGS_SETUP_COPY.toggleDisabledReason}
+            {SETTINGS_AGENTS_COPY.toggleDisabledReason}
           </TooltipContent>
         </Tooltip>
       )}

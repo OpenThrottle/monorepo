@@ -3,7 +3,7 @@ import { render, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test, vi } from 'vitest';
-import Component from '../settings.setup';
+import Component from '../settings.agents';
 
 // The table embeds the install/update controls, which open a graphql-ws
 // subscription; stub the singleton so the route never reaches for a real socket.
@@ -29,15 +29,15 @@ const renderRoute = (loaderData: LoaderData) => {
     {
       Component,
       loader: () => loaderData,
-      path: '/settings/setup',
+      path: '/settings/agents',
     },
     { action: () => ({ ok: true }), path: '/resources/agent-setup' },
     { action: () => ({ ok: true }), path: '/resources/agent-enabled' },
   ]);
-  return render(<Stub initialEntries={['/settings/setup']} />);
+  return render(<Stub initialEntries={['/settings/agents']} />);
 };
 
-describe('routes/settings.setup.tsx', () => {
+describe('routes/settings.agents.tsx', () => {
   test('renders one table row per allowlisted CLI, marking installed vs not-installed', async () => {
     const component = renderRoute({
       agents: [
@@ -56,13 +56,13 @@ describe('routes/settings.setup.tsx', () => {
 
     // All five catalog CLIs render as rows, installed or not.
     const claudeRow = await component.findByTestId(
-      'SettingsSetupTableRow-claude',
+      'SettingsAgentsTableRow-claude',
     );
     expect(within(claudeRow).getByText('Installed')).toBeInTheDocument();
     expect(within(claudeRow).getByText('2.1.0')).toBeInTheDocument();
 
     // A CLI absent from discovery renders as Not installed.
-    const grokRow = component.getByTestId('SettingsSetupTableRow-grok');
+    const grokRow = component.getByTestId('SettingsAgentsTableRow-grok');
     expect(within(grokRow).getByText('Not installed')).toBeInTheDocument();
   });
 
@@ -99,14 +99,14 @@ describe('routes/settings.setup.tsx', () => {
 
     // Everything shows under All; only the installed one under Installed.
     expect(
-      await component.findByTestId('SettingsSetupTableRow-grok'),
+      await component.findByTestId('SettingsAgentsTableRow-grok'),
     ).toBeVisible();
     await user.click(component.getByRole('button', { name: 'Installed' }));
     expect(
-      component.queryByTestId('SettingsSetupTableRow-grok'),
+      component.queryByTestId('SettingsAgentsTableRow-grok'),
     ).not.toBeInTheDocument();
     expect(
-      component.getByTestId('SettingsSetupTableRow-claude'),
+      component.getByTestId('SettingsAgentsTableRow-claude'),
     ).toBeInTheDocument();
   });
 

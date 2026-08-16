@@ -2,15 +2,15 @@ import * as React from 'react';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
-import { SettingsSetupToolbar } from '../SettingsSetupToolbar';
+import { SettingsAgentsToolbar } from '../SettingsAgentsToolbar';
 import type { AgentCliFilter } from '~/routing/settings/data/agent-clis.data';
 
-describe('SettingsSetupToolbar', () => {
+describe('SettingsAgentsToolbar', () => {
   test('emits the chosen filter', async () => {
     const user = userEvent.setup();
     const onFilterChange = vi.fn<(filter: AgentCliFilter) => void>();
     const component = render(
-      <SettingsSetupToolbar
+      <SettingsAgentsToolbar
         filter="all"
         installEnabled={true}
         onFilterChange={onFilterChange}
@@ -23,7 +23,7 @@ describe('SettingsSetupToolbar', () => {
 
   test('marks the active filter as pressed', () => {
     const component = render(
-      <SettingsSetupToolbar
+      <SettingsAgentsToolbar
         filter="enabled"
         installEnabled={true}
         onFilterChange={() => {}}

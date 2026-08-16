@@ -4,15 +4,15 @@ import userEvent from '@testing-library/user-event';
 import { createRoutesStub } from 'react-router';
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { describe, expect, test } from 'vitest';
-import { SettingsSetupModelToggle } from '../SettingsSetupModelToggle';
+import { SettingsAgentsModelToggle } from '../SettingsAgentsModelToggle';
 
 const renderToggle = (
-  props: React.ComponentProps<typeof SettingsSetupModelToggle>,
+  props: React.ComponentProps<typeof SettingsAgentsModelToggle>,
   action: (formData: FormData) => void = () => {},
 ) => {
   const Component = () => (
     <TooltipProvider>
-      <SettingsSetupModelToggle {...props} />
+      <SettingsAgentsModelToggle {...props} />
     </TooltipProvider>
   );
   const RoutesStub = createRoutesStub([
@@ -33,7 +33,7 @@ const renderToggle = (
   return render(<RoutesStub />);
 };
 
-describe('SettingsSetupModelToggle', () => {
+describe('SettingsAgentsModelToggle', () => {
   test('submits the toggled model state to the resource action', async () => {
     const user = userEvent.setup();
     const submitted: FormData[] = [];
@@ -49,7 +49,7 @@ describe('SettingsSetupModelToggle', () => {
     );
 
     await user.click(
-      component.getByTestId('SettingsSetupModelToggle-cursor-gpt-5.2'),
+      component.getByTestId('SettingsAgentsModelToggle-cursor-gpt-5.2'),
     );
 
     expect(submitted).toHaveLength(1);
@@ -74,7 +74,7 @@ describe('SettingsSetupModelToggle', () => {
     );
 
     const toggle = component.getByTestId(
-      'SettingsSetupModelToggle-claude-opus',
+      'SettingsAgentsModelToggle-claude-opus',
     );
     expect(toggle).toBeDisabled();
     await user.click(toggle);

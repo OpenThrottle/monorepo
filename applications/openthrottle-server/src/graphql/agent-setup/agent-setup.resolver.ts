@@ -62,7 +62,7 @@ export class AgentSetupResolver {
   ) {}
 
   @Query(() => AgentCliSetupConfigObject, {
-    description: `Whether server-side agent-CLI install/update is enabled (env flag) and whether the current user may run it (SETTINGS_WRITE). Drives the /settings/setup control gating.`,
+    description: `Whether server-side agent-CLI install/update is enabled (env flag) and whether the current user may run it (SETTINGS_WRITE). Drives the /settings/agents control gating.`,
   })
   @UseGuards(GqlPermissionsGuard)
   @Permissions(PERMISSIONS.SETTINGS_READ)

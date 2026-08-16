@@ -79,10 +79,10 @@ export const WORKSPACE_REPOSITORY_DETAIL_COPY = {
 } as const;
 
 /**
- * @description Copy for the /settings/setup agent-CLI table (columns, empty/loading states, the
+ * @description Copy for the /settings/agents agent-CLI table (columns, empty/loading states, the
  * per-agent enable toggle, compact model list, and the single install-enabled disclaimer).
  */
-export const SETTINGS_SETUP_COPY = {
+export const SETTINGS_AGENTS_COPY = {
   columnActions: `Setup`,
   columnAgent: `Agent`,
   columnEnabled: `Enabled`,
@@ -113,20 +113,20 @@ export const SETTINGS_SETUP_COPY = {
 } as const;
 
 /** Pluralize the compact models summary shown in the table cell. */
-export const settingsSetupModelsSummary = (count: number): string =>
+export const settingsAgentsModelsSummary = (count: number): string =>
   count === 1 ? `1 model` : `${count} models`;
 
 /** "N of M enabled" hint shown next to the model-expansion affordance. */
-export const settingsSetupModelsEnabledSummary = (
+export const settingsAgentsModelsEnabledSummary = (
   enabled: number,
   total: number,
 ): string => `${enabled} of ${total} enabled`;
 
 /** Human labels for each setup-table filter value, keyed by the filter id. */
-export const SETTINGS_SETUP_FILTER_LABELS = {
-  all: SETTINGS_SETUP_COPY.filterAllLabel,
-  enabled: SETTINGS_SETUP_COPY.filterEnabledLabel,
-  installed: SETTINGS_SETUP_COPY.filterInstalledLabel,
+export const SETTINGS_AGENTS_FILTER_LABELS = {
+  all: SETTINGS_AGENTS_COPY.filterAllLabel,
+  enabled: SETTINGS_AGENTS_COPY.filterEnabledLabel,
+  installed: SETTINGS_AGENTS_COPY.filterInstalledLabel,
 } as const;
 
 /**

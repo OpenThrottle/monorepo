@@ -186,7 +186,7 @@ export class ScheduledAgentJobsResolver {
 
   /**
    * @description Rejects scheduling a job against an agent backend — or a specific model of that
-   * backend — the owner has disabled on /settings/setup. A null owner (service-account principal) has
+   * backend — the owner has disabled on /settings/agents. A null owner (service-account principal) has
    * no per-user preferences, so the check is skipped — the job's driver id is still validated for
    * existence by the service. When a model is given and non-empty, a KNOWN-but-disabled model is also
    * rejected.

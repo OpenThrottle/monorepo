@@ -2,7 +2,7 @@ import * as React from 'react';
 import { render } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test, vi } from 'vitest';
-import { SettingsSetupCliControls } from '../SettingsSetupCliControls';
+import { SettingsAgentsCliControls } from '../SettingsAgentsCliControls';
 import type { AgentCliStatus } from '~/routing/settings/data/agent-clis.data';
 
 // The stream hook opens a graphql-ws subscription; with no browser client it is
@@ -34,9 +34,9 @@ const installed: AgentCliStatus = {
 };
 
 const renderControls = (
-  props: React.ComponentProps<typeof SettingsSetupCliControls>,
+  props: React.ComponentProps<typeof SettingsAgentsCliControls>,
 ) => {
-  const Component = () => <SettingsSetupCliControls {...props} />;
+  const Component = () => <SettingsAgentsCliControls {...props} />;
   const RoutesStub = createRoutesStub([
     { Component, path: '/' },
     { action: () => ({ ok: true }), path: '/resources/agent-setup' },
@@ -44,7 +44,7 @@ const renderControls = (
   return render(<RoutesStub />);
 };
 
-describe('SettingsSetupCliControls', () => {
+describe('SettingsAgentsCliControls', () => {
   test('install-available: enabled Install button for an absent CLI', () => {
     const component = renderControls({
       canManage: true,
@@ -73,7 +73,7 @@ describe('SettingsSetupCliControls', () => {
     });
     expect(component.getByRole('button', { name: 'Install' })).toBeDisabled();
     // The OT_AGENT_CLI_INSTALL_ENABLED explanation now lives once at the route
-    // level (SettingsSetupInstallNotice), never inside the per-row controls.
+    // level (SettingsAgentsInstallNotice), never inside the per-row controls.
     expect(
       component.queryByText(/OT_AGENT_CLI_INSTALL_ENABLED/),
     ).not.toBeInTheDocument();

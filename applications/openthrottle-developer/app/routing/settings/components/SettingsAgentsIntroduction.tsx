@@ -1,14 +1,14 @@
 import * as React from 'react';
-import { TerminalIcon } from 'lucide-react';
+import { HatGlassesIcon } from 'lucide-react';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 
-export interface SettingsSetupIntroductionProps {
+export interface SettingsAgentsIntroductionProps {
   /** ISO-8601 timestamp of the discovery scan, shown as "last checked". */
   scannedAt?: string | null;
 }
 
-export const SettingsSetupIntroduction = (
-  props: SettingsSetupIntroductionProps,
+export const SettingsAgentsIntroduction = (
+  props: SettingsAgentsIntroductionProps,
 ): React.ReactElement => {
   const { scannedAt } = props;
 
@@ -25,17 +25,18 @@ export const SettingsSetupIntroduction = (
   // 🔌 Short Circuit
 
   return (
-    <div data-testid="SettingsSetupIntroduction">
+    <div data-testid="SettingsAgentsIntroduction">
       <GlobalHeading
         className="mb-2"
         heading="h1"
-        icon={TerminalIcon}
-        title="Agent CLI setup"
+        icon={HatGlassesIcon}
+        title="Agents"
       />
       <p className="text-muted-foreground text-sm">
         Agent CLIs detected on the server host. Each shows whether it is
         installed and, when available, its version and the models it can run.
       </p>
+
       {scannedAt != null && scannedAt !== '' ? (
         <p className="text-muted-foreground mt-1 text-xs">
           Last checked {new Date(scannedAt).toLocaleString()}

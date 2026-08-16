@@ -1,9 +1,9 @@
 import * as React from 'react';
-import { SettingsSetupModelFavorite } from '~/routing/settings/components/SettingsSetupModelFavorite';
-import { SettingsSetupModelToggle } from '~/routing/settings/components/SettingsSetupModelToggle';
+import { SettingsAgentsModelFavorite } from '~/routing/settings/components/SettingsAgentsModelFavorite';
+import { SettingsAgentsModelToggle } from '~/routing/settings/components/SettingsAgentsModelToggle';
 import type { AgentCliModelStatus } from '~/routing/settings/data/agent-clis.data';
 
-export interface SettingsSetupModelRowProps {
+export interface SettingsAgentsModelRowProps {
   /** True when the parent agent is disabled (agent-OFF hard-overrides its models). */
   agentDisabled: boolean;
   /** Driver id this model belongs to. */
@@ -14,8 +14,8 @@ export interface SettingsSetupModelRowProps {
   model: AgentCliModelStatus;
 }
 
-export const SettingsSetupModelRow = (
-  props: SettingsSetupModelRowProps,
+export const SettingsAgentsModelRow = (
+  props: SettingsAgentsModelRowProps,
 ): React.ReactElement => {
   const { agentDisabled, backend, canManage, model } = props;
 
@@ -34,7 +34,7 @@ export const SettingsSetupModelRow = (
   return (
     <div
       className="hover:bg-muted -mx-2 flex items-center justify-between gap-3 rounded-md px-2 py-1 transition-colors"
-      data-testid={`SettingsSetupModelRow-${backend}-${model.model}`}
+      data-testid={`SettingsAgentsModelRow-${backend}-${model.model}`}
     >
       <code
         className={
@@ -46,13 +46,13 @@ export const SettingsSetupModelRow = (
         {model.model}
       </code>
       <div className="flex items-center gap-2">
-        <SettingsSetupModelFavorite
+        <SettingsAgentsModelFavorite
           backend={backend}
           canManage={canManage}
           favorite={model.favorite}
           model={model.model}
         />
-        <SettingsSetupModelToggle
+        <SettingsAgentsModelToggle
           agentDisabled={agentDisabled}
           backend={backend}
           canManage={canManage}

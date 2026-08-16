@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { InfoIcon, TriangleAlertIcon } from 'lucide-react';
-import { SETTINGS_SETUP_COPY } from '~/routing/settings/data/data.copy';
+import { SETTINGS_AGENTS_COPY } from '~/routing/settings/data/data.copy';
 
-export interface SettingsSetupInstallNoticeProps {
+export interface SettingsAgentsInstallNoticeProps {
   /** Server-computed: OT_AGENT_CLI_INSTALL_ENABLED is on. */
   installEnabled: boolean;
 }
@@ -12,8 +12,8 @@ export interface SettingsSetupInstallNoticeProps {
  * once (in the toolbar) instead of repeated inside every row's controls: a warning when install is
  * off (the Install/Update buttons are disabled), an informational note when it is on.
  */
-export const SettingsSetupInstallNotice = (
-  props: SettingsSetupInstallNoticeProps,
+export const SettingsAgentsInstallNotice = (
+  props: SettingsAgentsInstallNoticeProps,
 ): React.ReactElement => {
   const { installEnabled } = props;
 
@@ -22,8 +22,8 @@ export const SettingsSetupInstallNotice = (
   // Setup
   const Icon = installEnabled ? InfoIcon : TriangleAlertIcon;
   const message = installEnabled
-    ? SETTINGS_SETUP_COPY.installDisclaimerOn
-    : SETTINGS_SETUP_COPY.installDisclaimerOff;
+    ? SETTINGS_AGENTS_COPY.installDisclaimerOn
+    : SETTINGS_AGENTS_COPY.installDisclaimerOff;
 
   // Handlers
 
@@ -36,7 +36,7 @@ export const SettingsSetupInstallNotice = (
   return (
     <div
       className="text-muted-foreground flex items-start gap-2 text-xs"
-      data-testid="SettingsSetupInstallNotice"
+      data-testid="SettingsAgentsInstallNotice"
     >
       <Icon aria-hidden={true} className="mt-0.5 size-3.5 shrink-0" />
       <p>{message}</p>

@@ -2,20 +2,20 @@ import * as React from 'react';
 import { ChevronDownIcon, ChevronRightIcon } from 'lucide-react';
 import { Badge, TableCell, TableRow } from '@openthrottle/react-router-shadcn';
 import {
-  SETTINGS_SETUP_COPY,
-  settingsSetupModelsEnabledSummary,
-  settingsSetupModelsSummary,
+  SETTINGS_AGENTS_COPY,
+  settingsAgentsModelsEnabledSummary,
+  settingsAgentsModelsSummary,
 } from '~/routing/settings/data/data.copy';
-import { SettingsSetupAgentToggle } from '~/routing/settings/components/SettingsSetupAgentToggle';
-import { SettingsSetupCliControls } from '~/routing/settings/components/SettingsSetupCliControls';
-import { SettingsSetupModelBulkToggle } from '~/routing/settings/components/SettingsSetupModelBulkToggle';
-import { SettingsSetupModelRow } from '~/routing/settings/components/SettingsSetupModelRow';
+import { SettingsAgentsAgentToggle } from '~/routing/settings/components/SettingsAgentsAgentToggle';
+import { SettingsAgentsCliControls } from '~/routing/settings/components/SettingsAgentsCliControls';
+import { SettingsAgentsModelBulkToggle } from '~/routing/settings/components/SettingsAgentsModelBulkToggle';
+import { SettingsAgentsModelRow } from '~/routing/settings/components/SettingsAgentsModelRow';
 import type { AgentCliStatus } from '~/routing/settings/data/agent-clis.data';
 
 /** Column count of the setup table — the expansion row spans all of it. */
-const SETTINGS_SETUP_COLUMN_COUNT = 5;
+const SETTINGS_AGENTS_COLUMN_COUNT = 5;
 
-export interface SettingsSetupTableRowProps {
+export interface SettingsAgentsTableRowProps {
   /** Server-computed: current user holds SETTINGS_WRITE. */
   canManage: boolean;
   /** Server-computed: OT_AGENT_CLI_INSTALL_ENABLED is on. */
@@ -23,8 +23,8 @@ export interface SettingsSetupTableRowProps {
   status: AgentCliStatus;
 }
 
-export const SettingsSetupTableRow = (
-  props: SettingsSetupTableRowProps,
+export const SettingsAgentsTableRow = (
+  props: SettingsAgentsTableRowProps,
 ): React.ReactElement => {
   const { canManage, installEnabled, status } = props;
 
@@ -43,11 +43,11 @@ export const SettingsSetupTableRow = (
   // Markup
   const modelsCell = !installed ? (
     <span className="text-muted-foreground">
-      {SETTINGS_SETUP_COPY.modelsNotInstalled}
+      {SETTINGS_AGENTS_COPY.modelsNotInstalled}
     </span>
   ) : modelOptions.length === 0 ? (
     <span className="text-muted-foreground text-sm">
-      {SETTINGS_SETUP_COPY.modelsEmpty}
+      {SETTINGS_AGENTS_COPY.modelsEmpty}
     </span>
   ) : (
     // Compact: a count that expands an inline per-model control list (enable +
@@ -55,7 +55,7 @@ export const SettingsSetupTableRow = (
     <button
       aria-expanded={expanded}
       className="flex items-center gap-1.5 text-sm underline-offset-4 hover:underline"
-      data-testid={`SettingsSetupTableRow-${backend}-expand`}
+      data-testid={`SettingsAgentsTableRow-${backend}-expand`}
       onClick={handleToggleExpanded}
       type="button"
     >
@@ -64,9 +64,9 @@ export const SettingsSetupTableRow = (
       ) : (
         <ChevronRightIcon className="size-4" />
       )}
-      {settingsSetupModelsSummary(models.length)}
+      {settingsAgentsModelsSummary(models.length)}
       <span className="text-muted-foreground text-xs">
-        ({settingsSetupModelsEnabledSummary(enabledCount, models.length)})
+        ({settingsAgentsModelsEnabledSummary(enabledCount, models.length)})
       </span>
     </button>
   );
@@ -80,7 +80,7 @@ export const SettingsSetupTableRow = (
       <TableRow
         // A disabled agent is dimmed but still fully actionable (re-enable, install).
         className={enabled ? undefined : 'opacity-60'}
-        data-testid={`SettingsSetupTableRow-${backend}`}
+        data-testid={`SettingsAgentsTableRow-${backend}`}
       >
         <TableCell>
           <div className="font-medium">{label}</div>
@@ -91,7 +91,7 @@ export const SettingsSetupTableRow = (
           {installed ? (
             <div className="flex items-center gap-2">
               <Badge variant="secondary">
-                {SETTINGS_SETUP_COPY.installedBadge}
+                {SETTINGS_AGENTS_COPY.installedBadge}
               </Badge>
               {version != null ? (
                 <span className="text-muted-foreground text-xs">{version}</span>
@@ -99,7 +99,7 @@ export const SettingsSetupTableRow = (
             </div>
           ) : (
             <Badge variant="outline">
-              {SETTINGS_SETUP_COPY.notInstalledBadge}
+              {SETTINGS_AGENTS_COPY.notInstalledBadge}
             </Badge>
           )}
         </TableCell>
@@ -107,7 +107,7 @@ export const SettingsSetupTableRow = (
         <TableCell>{modelsCell}</TableCell>
 
         <TableCell>
-          <SettingsSetupAgentToggle
+          <SettingsAgentsAgentToggle
             backend={backend}
             canManage={canManage}
             enabled={enabled}
@@ -115,7 +115,7 @@ export const SettingsSetupTableRow = (
         </TableCell>
 
         <TableCell>
-          <SettingsSetupCliControls
+          <SettingsAgentsCliControls
             canManage={canManage}
             installEnabled={installEnabled}
             status={status}
@@ -126,18 +126,18 @@ export const SettingsSetupTableRow = (
       {hasModels && expanded ? (
         <TableRow
           className={enabled ? undefined : 'opacity-60'}
-          data-testid={`SettingsSetupTableRow-${backend}-models`}
+          data-testid={`SettingsAgentsTableRow-${backend}-models`}
         >
-          <TableCell colSpan={SETTINGS_SETUP_COLUMN_COUNT}>
+          <TableCell colSpan={SETTINGS_AGENTS_COLUMN_COUNT}>
             <div className="bg-muted/30 rounded-md px-3 py-1">
               <div className="flex items-center justify-between gap-3 border-b py-1">
                 <span className="text-muted-foreground text-xs">
-                  {settingsSetupModelsEnabledSummary(
+                  {settingsAgentsModelsEnabledSummary(
                     enabledCount,
                     models.length,
                   )}
                 </span>
-                <SettingsSetupModelBulkToggle
+                <SettingsAgentsModelBulkToggle
                   agentDisabled={!enabled}
                   backend={backend}
                   canManage={canManage}
@@ -146,7 +146,7 @@ export const SettingsSetupTableRow = (
                 />
               </div>
               {modelOptions.map((model) => (
-                <SettingsSetupModelRow
+                <SettingsAgentsModelRow
                   agentDisabled={!enabled}
                   backend={backend}
                   canManage={canManage}

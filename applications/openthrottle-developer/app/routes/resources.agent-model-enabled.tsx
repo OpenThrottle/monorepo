@@ -11,7 +11,7 @@ export interface AgentModelEnabledActionResult {
 }
 
 /**
- * Resource route action backing the /settings/setup per-MODEL enable/disable toggle —
+ * Resource route action backing the /settings/agents per-MODEL enable/disable toggle —
  * `POST /resources/agent-model-enabled` with `backend` + `model` + `enabled` fields. The server
  * re-validates the backend against the drivers registry and enforces the SETTINGS_WRITE permission,
  * so a forged post from a user without permission is rejected server-side. On failure the caller
