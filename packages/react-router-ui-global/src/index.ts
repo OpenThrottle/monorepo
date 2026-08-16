@@ -1,3 +1,5 @@
+export * from './components/GlobalAnimationMesh';
+export * from './components/GlobalAnimationWaves';
 export * from './components/GlobalCollapsible';
 export * from './components/GlobalErrorBoundary';
 export * from './components/GlobalFeatureOnboarding';

@@ -1,29 +1,90 @@
 import * as React from 'react';
-import { LANDING_SOUND_ARCS } from '~/routing/home/data/data.landing';
-import { buildSoundArcs } from '~/routing/home/utils/build-sound-arcs';
-
-export interface UseSoundArcsOptions {
-  readonly distributionEnd: number | undefined;
-  readonly distributionStart: number | undefined;
-  readonly enabled: boolean | undefined;
-  readonly n: number | undefined;
-}
+import { buildSoundArcs } from '../utils/build-sound-arcs';
 
 /**
- * Velocity-reactive hero "sound wave" arcs — the animated, canvas-based
- * successor to the landing hero's static arc SVG.
+ * Velocity-reactive "sound wave" arcs — an animated, canvas-based backdrop.
  *
- * Stacked flowing arcs sweep across the hero (`LANDING_SOUND_ARCS.n`). A
- * travelling sine wave ripples along each one; its amplitude swells with how
- * fast the pointer is moving (fast = an oscilloscope going loud) and rings
- * back down to a calm idle when the pointer slows. Ends are pinned so the
- * arcs stay anchored.
+ * Stacked flowing arcs sweep across the canvas (`n`). A travelling sine wave
+ * ripples along each one; its amplitude swells with how fast the pointer is
+ * moving (fast = an oscilloscope going loud) and rings back down to a calm
+ * idle when the pointer slows. Ends are pinned so the arcs stay anchored.
  *
  * SSR-safe (all DOM work runs client-side in an effect) and degrades
  * gracefully: `prefers-reduced-motion: reduce` renders a single static frame of
- * the resting arcs, and the animation pauses while the hero is off-screen.
+ * the resting arcs, and the animation pauses while the canvas is off-screen.
  */
 const TWO_PI = Math.PI * 2;
+
+/**
+ * Tunables for the sound-wave arcs. Every field is optional; omitting one
+ * falls back to {@link DEFAULT_GLOBAL_ANIMATION_WAVES}, so passing `{}`
+ * reproduces the default look exactly.
+ */
+export interface GlobalAnimationWavesConfig {
+  /** Attack rate as energy rises toward a faster pointer (snappy). */
+  readonly attack?: number;
+  /** Gradient end stop as an "r, g, b" triple. */
+  readonly colorEnd?: string;
+  /** Gradient mid stop as an "r, g, b" triple. */
+  readonly colorMid?: string;
+  /** Gradient start stop as an "r, g, b" triple. */
+  readonly colorStart?: string;
+  /** Right-side fan, -1..1. 0 packs onto the lead path; ±1 span the edge. */
+  readonly distributionEnd?: number;
+  /** Left-side fan, -1..1. 0 packs onto the lead path; ±1 span the edge. */
+  readonly distributionStart?: number;
+  /** Escape hatch to disable the effect (e.g. in tests). Defaults to on. */
+  readonly enabled?: boolean;
+  /** Extra amplitude (px) at full pointer energy. */
+  readonly gain?: number;
+  /** Resting ripple amplitude (px) so the arcs breathe even when idle. */
+  readonly idleAmplitude?: number;
+  /** Stroke width in px. */
+  readonly lineWidth?: number;
+  /** Stacked wave count. */
+  readonly n?: number;
+  /** Jitter amplitude in normalised space applied to Bézier handles. */
+  readonly noise?: number;
+  /** Release rate as energy decays after the pointer slows (rings out). */
+  readonly release?: number;
+  /** Points sampled along each arc when drawing. */
+  readonly samples?: number;
+  /** PRNG seed so the jitter is stable across reloads. */
+  readonly seed?: number;
+  /** Constant travelling-phase speed (radians per ms) — the wave always moves. */
+  readonly speed?: number;
+  /** How much full pointer energy multiplies the travelling speed. */
+  readonly speedGain?: number;
+  /** Pointer speed (px/ms) that maps to full energy. */
+  readonly velocityRef?: number;
+  /** Number of sine cycles along the arc length. */
+  readonly waveCycles?: number;
+}
+
+/**
+ * Default sound-wave tunables. Colours are the brand → signal → paper gradient
+ * carried over from the original static arc SVG.
+ */
+export const DEFAULT_GLOBAL_ANIMATION_WAVES = {
+  attack: 0.24,
+  colorEnd: '243, 240, 234',
+  colorMid: '30, 120, 104',
+  colorStart: '229, 20, 20',
+  distributionEnd: 0.28,
+  distributionStart: 0.22,
+  gain: 42,
+  idleAmplitude: 4,
+  lineWidth: 1.5,
+  n: 21,
+  noise: 0.022,
+  release: 0.05,
+  samples: 96,
+  seed: 0x51ed,
+  speed: 0.004,
+  speedGain: 6,
+  velocityRef: 2.2,
+  waveCycles: 3.2,
+} as const;
 
 const cubicAt = (
   t: number,
@@ -54,21 +115,41 @@ const cubicDerivativeAt = (
   );
 };
 
-export const useSoundArcs = <T extends HTMLCanvasElement = HTMLCanvasElement>(
-  options: UseSoundArcsOptions = {
-    distributionEnd: undefined,
-    distributionStart: undefined,
-    enabled: undefined,
-    n: undefined,
-  },
+export const useGlobalAnimationWaves = <
+  T extends HTMLCanvasElement = HTMLCanvasElement,
+>(
+  config: GlobalAnimationWavesConfig = {},
 ): React.RefObject<T | null> => {
   const canvasRef = React.useRef<T>(null);
+
+  const attack = config.attack ?? DEFAULT_GLOBAL_ANIMATION_WAVES.attack;
+  const colorEnd = config.colorEnd ?? DEFAULT_GLOBAL_ANIMATION_WAVES.colorEnd;
+  const colorMid = config.colorMid ?? DEFAULT_GLOBAL_ANIMATION_WAVES.colorMid;
+  const colorStart =
+    config.colorStart ?? DEFAULT_GLOBAL_ANIMATION_WAVES.colorStart;
   const distributionEnd =
-    options.distributionEnd ?? LANDING_SOUND_ARCS.distributionEnd;
+    config.distributionEnd ?? DEFAULT_GLOBAL_ANIMATION_WAVES.distributionEnd;
   const distributionStart =
-    options.distributionStart ?? LANDING_SOUND_ARCS.distributionStart;
-  const enabled = options.enabled ?? true;
-  const n = options.n ?? LANDING_SOUND_ARCS.n;
+    config.distributionStart ??
+    DEFAULT_GLOBAL_ANIMATION_WAVES.distributionStart;
+  const enabled = config.enabled ?? true;
+  const gain = config.gain ?? DEFAULT_GLOBAL_ANIMATION_WAVES.gain;
+  const idleAmplitude =
+    config.idleAmplitude ?? DEFAULT_GLOBAL_ANIMATION_WAVES.idleAmplitude;
+  const lineWidth =
+    config.lineWidth ?? DEFAULT_GLOBAL_ANIMATION_WAVES.lineWidth;
+  const n = config.n ?? DEFAULT_GLOBAL_ANIMATION_WAVES.n;
+  const noise = config.noise ?? DEFAULT_GLOBAL_ANIMATION_WAVES.noise;
+  const release = config.release ?? DEFAULT_GLOBAL_ANIMATION_WAVES.release;
+  const samples = config.samples ?? DEFAULT_GLOBAL_ANIMATION_WAVES.samples;
+  const seed = config.seed ?? DEFAULT_GLOBAL_ANIMATION_WAVES.seed;
+  const speed = config.speed ?? DEFAULT_GLOBAL_ANIMATION_WAVES.speed;
+  const speedGain =
+    config.speedGain ?? DEFAULT_GLOBAL_ANIMATION_WAVES.speedGain;
+  const velocityRef =
+    config.velocityRef ?? DEFAULT_GLOBAL_ANIMATION_WAVES.velocityRef;
+  const waveCycles =
+    config.waveCycles ?? DEFAULT_GLOBAL_ANIMATION_WAVES.waveCycles;
 
   React.useEffect(() => {
     const canvas = canvasRef.current;
@@ -84,23 +165,6 @@ export const useSoundArcs = <T extends HTMLCanvasElement = HTMLCanvasElement>(
     }
 
     const ctx = context;
-    const {
-      attack,
-      colorEnd,
-      colorMid,
-      colorStart,
-      gain,
-      idleAmplitude,
-      lineWidth,
-      noise,
-      release,
-      samples,
-      seed,
-      speed,
-      speedGain,
-      velocityRef,
-      waveCycles,
-    } = LANDING_SOUND_ARCS;
     const arcs = buildSoundArcs({
       distributionEnd,
       distributionStart,
@@ -339,7 +403,27 @@ export const useSoundArcs = <T extends HTMLCanvasElement = HTMLCanvasElement>(
       intersectionObserver?.disconnect();
       window.removeEventListener('pointermove', onPointerMove);
     };
-  }, [distributionEnd, distributionStart, enabled, n]);
+  }, [
+    attack,
+    colorEnd,
+    colorMid,
+    colorStart,
+    distributionEnd,
+    distributionStart,
+    enabled,
+    gain,
+    idleAmplitude,
+    lineWidth,
+    n,
+    noise,
+    release,
+    samples,
+    seed,
+    speed,
+    speedGain,
+    velocityRef,
+    waveCycles,
+  ]);
 
   return canvasRef;
 };

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Button } from '@openthrottle/react-router-shadcn';
+import { GlobalAnimationWaves } from '@openthrottle/react-router-ui-global';
 import { LANDING_CLOSE } from '~/routing/home/data/data.landing';
-import { HeroSoundArcs } from './HeroSoundArcs';
 
 export interface LandingCloseProps {
   className?: string;
@@ -40,7 +40,11 @@ export const LandingClose = (props: LandingCloseProps): React.ReactElement => {
         id="start"
       >
         <div className="absolute inset-0 z-0">
-          <HeroSoundArcs distributionEnd={-1} distributionStart={1} n={21} />
+          <GlobalAnimationWaves
+            distributionEnd={-1}
+            distributionStart={1}
+            n={21}
+          />
         </div>
 
         <div className="landing-reveal z-10 mx-auto grid w-[min(68rem,100%)] gap-6 md:grid-cols-[1.4fr_1fr] md:items-center md:gap-12">

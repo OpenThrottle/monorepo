@@ -1,5 +1,8 @@
 import * as React from 'react';
-import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalAnimationMesh,
+  GlobalErrorBoundary,
+} from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
 import {
   APP_URL,
@@ -10,7 +13,6 @@ import {
 import { OpenThrottleProductGetStarted } from '@openthrottle/react-router-ui';
 import { getRandomIntroduction } from '@openthrottle/react-router-ui';
 import { GlobalFooter } from '~/global/components/GlobalFooter';
-import { HeroDotMesh } from '~/routing/home/components/HeroDotMesh';
 import type { Route } from '@/app/routes/+types/download';
 
 export const loader = async (_args: Route.LoaderArgs) => {
@@ -78,7 +80,7 @@ export default function Component(
           <GlobalFooter />
         </div>
       </main>
-      <HeroDotMesh />
+      <GlobalAnimationMesh />
     </>
   );
 }

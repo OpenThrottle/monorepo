@@ -85,14 +85,6 @@
     var(--muted);
 }
 
-/* —— Landing: interactive dot-lattice backdrop (canvas; see useDotGridMesh) —— */
-.landing-dot-mesh {
-  /* Fade the lattice out toward the hero's lower edge so it reads as texture
-     under the copy rather than a hard-edged grid. */
-  mask-image: linear-gradient(to bottom, black 35%, transparent 92%);
-  -webkit-mask-image: linear-gradient(to bottom, black 35%, transparent 92%);
-}
-
 /* —— Landing: reveal-on-scroll (driven by the useRevealOnScroll hook) —— */
 .landing-reveal {
   opacity: 0;

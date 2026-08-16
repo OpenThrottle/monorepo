@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Button } from '@openthrottle/react-router-shadcn';
 import { GithubLogoIcon } from '@phosphor-icons/react/dist/ssr/GithubLogo';
-import { HeroDotMesh } from './HeroDotMesh';
+import { GlobalAnimationMesh } from '@openthrottle/react-router-ui-global';
 import { LANDING_HERO } from '~/routing/home/data/data.landing';
 import { LandingNav } from './LandingNav';
 import { Link } from 'react-router';
@@ -56,7 +56,7 @@ export const LandingHero = (props: LandingHeroProps): React.ReactElement => {
       id="top"
     >
       <LandingNav />
-      <HeroDotMesh />
+      <GlobalAnimationMesh />
 
       <div className="relative mx-auto max-w-3xl items-center justify-center">
         <h1 className="mb-8 text-[clamp(1.75rem,4vw,2.6rem)]">

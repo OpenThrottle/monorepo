@@ -1,19 +1,17 @@
 import * as React from 'react';
-import { LANDING_DOT_MESH } from '~/routing/home/data/data.landing';
 
 /**
- * Interactive hero dot-mesh — the CSP-safe, canvas-based replacement for the
- * landing hero's old static drifting-grid backdrop.
+ * Interactive dot-lattice mesh — a CSP-safe, canvas-based animated backdrop.
  *
- * Attach the returned ref to a `<canvas>` sized to fill the hero. A lattice of
- * dots is pinned at grid intersections and wired to their right/down
- * neighbours; the pointer repels nearby dots (warping the lattice + lighting it
- * up) and they spring back home with damping. A faint idle wobble keeps it
- * breathing at rest.
+ * Attach the returned ref to a `<canvas>` sized to fill its container. A
+ * lattice of dots is pinned at grid intersections and wired to their
+ * right/down neighbours; the pointer repels nearby dots (warping the lattice +
+ * lighting it up) and they spring back home with damping. A faint idle wobble
+ * keeps it breathing at rest.
  *
  * SSR-safe (all DOM work runs client-side in an effect) and degrades
  * gracefully: `prefers-reduced-motion: reduce` renders a single static frame
- * with no pointer reaction, and the animation pauses while the hero is
+ * with no pointer reaction, and the animation pauses while the canvas is
  * scrolled out of view.
  */
 interface MeshPoint {
@@ -33,15 +31,92 @@ interface MeshPoint {
   y: number;
 }
 
+/**
+ * Tunables for the dot-lattice mesh. Every field is optional; omitting one
+ * falls back to {@link DEFAULT_GLOBAL_ANIMATION_MESH}, so passing `{}`
+ * reproduces the default look exactly.
+ */
+export interface GlobalAnimationMeshConfig {
+  /** Dot/line colour as an "r, g, b" triple (canvas cannot read CSS vars). */
+  readonly color?: string;
+  /** Damping applied to velocity each frame (lower = stiffer settle). */
+  readonly damping?: number;
+  /** Base opacity of a resting dot. */
+  readonly dotAlpha?: number;
+  /** Extra dot opacity added at the centre of the pointer's influence. */
+  readonly dotGlow?: number;
+  /** Base dot radius in CSS px. */
+  readonly dotRadius?: number;
+  /** Escape hatch to disable the effect (e.g. in tests). Defaults to on. */
+  readonly enabled?: boolean;
+  /** Subtle idle wobble amplitude in px, so the lattice breathes at rest. */
+  readonly idleAmplitude?: number;
+  /** Base opacity of a resting connection line. */
+  readonly lineAlpha?: number;
+  /** Extra line opacity added within the pointer's influence. */
+  readonly lineGlow?: number;
+  /** Max distance (px) a dot may stray from its home before it is clamped. */
+  readonly maxDisplace?: number;
+  /** Strength of the pointer's outward push. */
+  readonly repelForce?: number;
+  /** Pointer influence radius in px (repulsion + proximity glow). */
+  readonly repelRadius?: number;
+  /** Grid spacing in px between neighbouring dots. */
+  readonly spacing?: number;
+  /** Pull-back-to-home strength each frame (higher = snappier). */
+  readonly spring?: number;
+}
+
+/**
+ * Default dot-mesh tunables. Colour is a fixed light tint because the mesh is
+ * designed to sit on a dark backdrop.
+ */
+export const DEFAULT_GLOBAL_ANIMATION_MESH = {
+  color: '243, 240, 234',
+  damping: 0.82,
+  dotAlpha: 0.26,
+  dotGlow: 0.6,
+  dotRadius: 1.4,
+  idleAmplitude: 2.4,
+  lineAlpha: 0.09,
+  lineGlow: 0.28,
+  maxDisplace: 42,
+  repelForce: 2.4,
+  repelRadius: 140,
+  spacing: 60,
+  spring: 0.08,
+} as const;
+
 const REVEAL_MS = 900;
 const TWO_PI = Math.PI * 2;
 
 const smoothstep = (t: number): number => t * t * (3 - 2 * t);
 
-export const useDotGridMesh = <T extends HTMLCanvasElement = HTMLCanvasElement>(
-  enabled = true,
+export const useGlobalAnimationMesh = <
+  T extends HTMLCanvasElement = HTMLCanvasElement,
+>(
+  config: GlobalAnimationMeshConfig = {},
 ): React.RefObject<T | null> => {
   const canvasRef = React.useRef<T>(null);
+
+  const color = config.color ?? DEFAULT_GLOBAL_ANIMATION_MESH.color;
+  const damping = config.damping ?? DEFAULT_GLOBAL_ANIMATION_MESH.damping;
+  const dotAlpha = config.dotAlpha ?? DEFAULT_GLOBAL_ANIMATION_MESH.dotAlpha;
+  const dotGlow = config.dotGlow ?? DEFAULT_GLOBAL_ANIMATION_MESH.dotGlow;
+  const dotRadius = config.dotRadius ?? DEFAULT_GLOBAL_ANIMATION_MESH.dotRadius;
+  const enabled = config.enabled ?? true;
+  const idleAmplitude =
+    config.idleAmplitude ?? DEFAULT_GLOBAL_ANIMATION_MESH.idleAmplitude;
+  const lineAlpha = config.lineAlpha ?? DEFAULT_GLOBAL_ANIMATION_MESH.lineAlpha;
+  const lineGlow = config.lineGlow ?? DEFAULT_GLOBAL_ANIMATION_MESH.lineGlow;
+  const maxDisplace =
+    config.maxDisplace ?? DEFAULT_GLOBAL_ANIMATION_MESH.maxDisplace;
+  const repelForce =
+    config.repelForce ?? DEFAULT_GLOBAL_ANIMATION_MESH.repelForce;
+  const repelRadius =
+    config.repelRadius ?? DEFAULT_GLOBAL_ANIMATION_MESH.repelRadius;
+  const spacing = config.spacing ?? DEFAULT_GLOBAL_ANIMATION_MESH.spacing;
+  const spring = config.spring ?? DEFAULT_GLOBAL_ANIMATION_MESH.spring;
 
   React.useEffect(() => {
     const canvas = canvasRef.current;
@@ -57,21 +132,6 @@ export const useDotGridMesh = <T extends HTMLCanvasElement = HTMLCanvasElement>(
     }
 
     const ctx = context;
-    const {
-      color,
-      damping,
-      dotAlpha,
-      dotGlow,
-      dotRadius,
-      idleAmplitude,
-      lineAlpha,
-      lineGlow,
-      maxDisplace,
-      repelForce,
-      repelRadius,
-      spacing,
-      spring,
-    } = LANDING_DOT_MESH;
 
     const prefersReducedMotion =
       typeof window.matchMedia === 'function' &&
@@ -370,7 +430,22 @@ export const useDotGridMesh = <T extends HTMLCanvasElement = HTMLCanvasElement>(
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerleave', onPointerLeave);
     };
-  }, [enabled]);
+  }, [
+    color,
+    damping,
+    dotAlpha,
+    dotGlow,
+    dotRadius,
+    enabled,
+    idleAmplitude,
+    lineAlpha,
+    lineGlow,
+    maxDisplace,
+    repelForce,
+    repelRadius,
+    spacing,
+    spring,
+  ]);
 
   return canvasRef;
 };
