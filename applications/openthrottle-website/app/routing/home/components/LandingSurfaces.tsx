@@ -54,7 +54,9 @@ export const LandingSurfaces = (
               key={card.title}
             >
               <h3 className="my-4 text-xl">{card.title}</h3>
-              <p className="landing-ink-muted text-[0.975rem]">{card.body}</p>
+              <p className="text-muted-foreground text-[0.975rem]">
+                {card.body}
+              </p>
             </article>
           ))}
         </div>

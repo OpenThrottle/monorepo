@@ -317,7 +317,8 @@
     },
     "ingest-agent-assets": {
       "cache": false,
-      "description": "Ingest agent assets into the OpenThrottle knowledge base via scripts/openthrottle-ingest-agent-assets.ts.",
+      "dependsOn": ["@openthrottle/openthrottle-skills:build"],
+      "description": "Ingest agent assets into the OpenThrottle knowledge base via scripts/openthrottle-ingest-agent-assets.ts. Depends on the openthrottle-skills build because the script imports the package through its `exports` map (dist).",
       "executor": "nx:run-commands",
       "options": {
         "command": "tsx ./scripts/openthrottle-ingest-agent-assets.ts",
@@ -452,8 +453,16 @@
     },
     "validate-agent-assets-frontmatter": {
       "cache": true,
-      "description": "Validate frontmatter on agent-asset files via scripts/validate-agent-assets-frontmatter.ts.",
+      "dependsOn": ["@openthrottle/openthrottle-skills:build"],
+      "description": "Validate frontmatter on agent-asset files via scripts/validate-agent-assets-frontmatter.ts. Depends on the openthrottle-skills build because the script imports the package through its `exports` map (dist), which does not exist on a clean CI checkout.",
       "executor": "nx:run-commands",
+      "inputs": [
+        "{workspaceRoot}/.agents/personas/**/*",
+        "{workspaceRoot}/.agents/rules/**/*",
+        "{workspaceRoot}/.agents/skills/**/*",
+        "{workspaceRoot}/scripts/validate-agent-assets-frontmatter.ts",
+        "{workspaceRoot}/skills/**/*"
+      ],
       "options": {
         "command": "tsx ./scripts/validate-agent-assets-frontmatter.ts",
         "cwd": "{workspaceRoot}"
