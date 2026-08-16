@@ -10,6 +10,7 @@
   "dependencies": {
     "@openthrottle/graphql-codegen": "workspace:^",
     "@openthrottle/react-router-docs": "workspace:^",
+    "@openthrottle/react-router-ui-global": "workspace:^",
     "clsx": "catalog:"
   },
   "devDependencies": {

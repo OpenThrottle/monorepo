@@ -11,9 +11,12 @@ import {
 } from '@openthrottle/react-router-auth';
 import { data, redirect, useFetcher } from 'react-router';
 import type { ShouldRevalidateFunction } from 'react-router';
-import { GlobalScreen } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalAnimationMesh,
+  GlobalAnimationWaves,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { GradientMesh } from '@openthrottle/react-router-ui-global';
 import { callLoginMutation } from '~/global/utils/utils.auth';
 import {
   FORM_FADE_MS,
@@ -61,15 +64,15 @@ export default function Component(
   const fetcher = useFetcher<AuthFetcherData>();
   const prefersReducedMotion = useReducedMotion();
   const [count, setCount] = React.useState(0);
-  const [grainOverlay, setGrainOverlay] = React.useState(GRAIN_REST);
-  const [grainMixer, setGrainMixer] = React.useState(2.5);
+  const [isChaotic, setIsChaotic] = React.useState(false);
   const [isExiting, setIsExiting] = React.useState(false);
-  const [isMounted, setIsMounted] = React.useState(false);
+  const [_grainOverlay, setGrainOverlay] = React.useState(GRAIN_REST);
+  const [_grainMixer, setGrainMixer] = React.useState(2.5);
+  const [_isMounted, setIsMounted] = React.useState(false);
 
   // Setup
   const isFormEnabled = count >= 0;
   const isSubmitting = fetcher.state !== 'idle';
-  // const isFormEnabled = count >= 5;
 
   // Handlers
   const onIncrementCount = () => {
@@ -84,6 +87,10 @@ export default function Component(
     // intent mirrors root.tsx's login action; the cookie is set there, but here
     // we return data (not a redirect) so the fetcher stays put to animate out.
     fetcher.submit({ ...payload, intent: 'login' }, { method: 'POST' });
+  };
+
+  const onToggleAnimation = () => {
+    setIsChaotic((prev) => !prev);
   };
 
   // Markup
@@ -141,6 +148,21 @@ export default function Component(
       className="relative isolate flex w-full flex-1 flex-col justify-center p-4 md:p-8 lg:p-12"
       onClick={onIncrementCount}
     >
+      {isChaotic ? (
+        <GlobalAnimationWaves
+          attack={0.21}
+          colorEnd="0, 0, 300"
+          colorMid="0, 200, 0"
+          colorStart="0, 0, 300"
+          distributionEnd={-0.6}
+          distributionStart={0.6}
+          n={100}
+        />
+      ) : (
+        <GlobalAnimationMesh />
+      )}
+
+      {/*
       <GradientMesh
         className={clsx('opacity-0 transition-opacity duration-1000', {
           'opacity-100': isMounted,
@@ -151,13 +173,20 @@ export default function Component(
         speed={0.8}
         swirl={1.6}
       />
+      */}
+
       <div
         className={clsx(
           'relative z-10 mx-auto flex h-full w-full max-w-xl flex-1 flex-col items-center justify-center gap-8 transition-opacity duration-700',
           { 'opacity-0': isExiting },
         )}
       >
-        <OpenThrottleLogo className="mx-auto text-2xl" name={SITE_SUBDOMAIN} />
+        <button onClick={onToggleAnimation}>
+          <OpenThrottleLogo
+            className="mx-auto text-2xl"
+            name={SITE_SUBDOMAIN}
+          />
+        </button>
         {isFormEnabled ? (
           <div className="shimmer-border w-full max-w-md">
             <OpenThrottleAuthForm

@@ -1,12 +1,15 @@
 /**
- * Stacked cubic Bézier "sound wave" arcs in normalised hero space.
+ * Stacked cubic Bézier "sound wave" arcs in normalised space.
  *
  * Geometry fans around a front (lead) stroke. `distributionStart` /
  * `distributionEnd` (-1..1) set how far apart the stack is on the left vs
- * right — 0 packs every arc onto the lead path, 1 spans most of the hero,
+ * right — 0 packs every arc onto the lead path, 1 spans most of the box,
  * and -1 fans the same distance the other way (past the opposite bound).
  * A seeded PRNG then nudges the handles so copies never look mechanically
  * identical.
+ *
+ * Internal to `@openthrottle/react-router-ui-global` — consumed by
+ * `useGlobalAnimationWaves`; not part of the package's public API.
  */
 
 export interface SoundArc {
@@ -51,7 +54,7 @@ const BACK: SoundArc = {
     [0.76, 0.4],
     [1.06, 0.2],
   ],
-  weight: 0.64,
+  weight: 4.64,
 };
 
 const DEFAULT_DISTRIBUTION_END = 0.28;
@@ -62,12 +65,15 @@ const DEFAULT_SEED = 0x51ed;
 
 /**
  * Full-span Y coverage at |distribution| = 1, first-to-last. Sized so the
- * ribbon can eat most of the hero when cranked up. Negative values use the
+ * ribbon can eat most of the box when cranked up. Negative values use the
  * same span in the opposite direction.
  */
-const SPAN_START = 1.12;
-const SPAN_END = 1.28;
-/** Slight X drift on the handles so a wide stack still reads as a sweep. */
+const SPAN_START = 1;
+const SPAN_END = 1;
+
+/**
+ * Slight X drift on the handles so a wide stack still reads as a sweep.
+ */
 const HANDLE_DX = 0.16;
 
 /**

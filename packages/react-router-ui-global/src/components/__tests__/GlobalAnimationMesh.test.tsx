@@ -2,15 +2,15 @@ import * as React from 'react';
 import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
-import { HeroDotMesh } from '../HeroDotMesh';
+import { GlobalAnimationMesh } from '../GlobalAnimationMesh';
 
-describe('HeroDotMesh Component', () => {
+describe('GlobalAnimationMesh Component', () => {
   const renderMesh = (element: React.ReactElement): RenderResult =>
     render(element);
 
   test('renders a decorative, non-interactive canvas', () => {
-    const component = renderMesh(<HeroDotMesh />);
-    const canvas = component.getByTestId('HeroDotMesh');
+    const component = renderMesh(<GlobalAnimationMesh />);
+    const canvas = component.getByTestId('GlobalAnimationMesh');
 
     expect(canvas.tagName).toBe('CANVAS');
     expect(canvas).toHaveAttribute('aria-hidden', 'true');
@@ -18,6 +18,14 @@ describe('HeroDotMesh Component', () => {
   });
 
   test('mounts without throwing when disabled', () => {
-    expect(() => renderMesh(<HeroDotMesh enabled={false} />)).not.toThrow();
+    expect(() =>
+      renderMesh(<GlobalAnimationMesh enabled={false} />),
+    ).not.toThrow();
+  });
+
+  test('accepts tunable overrides', () => {
+    expect(() =>
+      renderMesh(<GlobalAnimationMesh dotRadius={2} spacing={40} />),
+    ).not.toThrow();
   });
 });
