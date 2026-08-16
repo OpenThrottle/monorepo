@@ -5,4 +5,11 @@
 import '@testing-library/jest-dom/vitest';
 import { setupReactRouterTest } from '@openthrottle/react-router-testing';
 
-setupReactRouterTest({ env: { APP_NAME: 'openthrottle-website' } });
+// `webgl: true` — the landing deck renders GradientMesh / GlobalAnimationWaves,
+// which mount a @paper-design/shaders WebGL context. jsdom has none, so without
+// the stubs the shader rejects asynchronously after mount and Vitest fails the
+// run on the unhandled rejection even though every assertion passes.
+setupReactRouterTest({
+  env: { APP_NAME: 'openthrottle-website' },
+  webgl: true,
+});

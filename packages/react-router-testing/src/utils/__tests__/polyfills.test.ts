@@ -114,6 +114,45 @@ describe('installPolyfills resizeObserverSize option', () => {
   });
 });
 
+describe('installPolyfills webgl option', () => {
+  afterEach(() => {
+    uninstallPolyfills();
+  });
+
+  test('leaves getContext alone by default', () => {
+    installPolyfills();
+
+    expect(document.createElement('canvas').getContext('webgl2')).toBeNull();
+  });
+
+  test('returns a no-op context for webgl and webgl2 when enabled', () => {
+    installPolyfills({ webgl: true });
+
+    const canvas = document.createElement('canvas');
+    const gl = canvas.getContext('webgl2');
+
+    expect(gl).not.toBeNull();
+    // Every property is a function returning undefined, which is what makes the
+    // shader library's compile guard bail instead of throwing.
+    expect(gl?.createShader(0)).toBeUndefined();
+    expect(canvas.getContext('webgl')).not.toBeNull();
+  });
+
+  test('defines a visualViewport stand-in when enabled', () => {
+    installPolyfills({ webgl: true });
+
+    expect(globalThis.visualViewport?.width).toBe(1024);
+    expect(globalThis.visualViewport?.height).toBe(768);
+  });
+
+  test('uninstall restores the real getContext', () => {
+    installPolyfills({ webgl: true });
+    uninstallPolyfills();
+
+    expect(document.createElement('canvas').getContext('webgl2')).toBeNull();
+  });
+});
+
 describe('uninstallPolyfills', () => {
   // ResizeObserver is the only global this suite can safely round-trip: the
   // others (matchMedia, Element.prototype.*) may already exist from a prior

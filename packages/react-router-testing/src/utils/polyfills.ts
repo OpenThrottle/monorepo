@@ -181,6 +181,86 @@ const installElementShims = (): void => {
   }
 };
 
+/**
+ * Local overload helper: hands a value back typed as `T` at a boundary the DOM
+ * lib types cannot express (a WebGL context stub, the heavily-overloaded
+ * `getContext`) without an `as` cast. The implementation is an identity
+ * function, so runtime behaviour is unchanged.
+ */
+function asDomBoundary<T>(value: unknown): T;
+function asDomBoundary(value: unknown): unknown {
+  return value;
+}
+
+/**
+ * `@paper-design/shaders` (behind `GradientMesh` / `GlobalAnimationWaves`) asks
+ * for a WebGL2 context and reads the global `visualViewport`. jsdom provides
+ * neither: `getContext('webgl2')` returns null, the library throws
+ * "WebGL is not supported in this browser" from an async mount effect, and
+ * Vitest fails the run on the unhandled rejection even though every assertion
+ * passed. Hand back a no-op GL context so the library's shader-compile guard
+ * bails quietly instead.
+ */
+const installWebglStubs = (): void => {
+  if (typeof HTMLCanvasElement !== 'undefined') {
+    const realGetContext = asDomBoundary<
+      (
+        this: HTMLCanvasElement,
+        contextId: string,
+        ...args: unknown[]
+      ) => RenderingContext | null
+    >(HTMLCanvasElement.prototype.getContext);
+    const noopGlContext = new Proxy(
+      {},
+      {
+        get: () => () => undefined,
+      },
+    );
+    const patchedGetContext = function getContext(
+      this: HTMLCanvasElement,
+      contextId: string,
+      ...args: unknown[]
+    ): RenderingContext | null {
+      if (contextId === 'webgl' || contextId === 'webgl2') {
+        return asDomBoundary<RenderingContext>(noopGlContext);
+      }
+
+      return realGetContext.call(this, contextId, ...args);
+    };
+
+    HTMLCanvasElement.prototype.getContext =
+      asDomBoundary<typeof HTMLCanvasElement.prototype.getContext>(
+        patchedGetContext,
+      );
+    teardowns.push(() => {
+      HTMLCanvasElement.prototype.getContext =
+        asDomBoundary<typeof HTMLCanvasElement.prototype.getContext>(
+          realGetContext,
+        );
+    });
+  }
+
+  // A bare reference to an undeclared identifier throws, so optional chaining
+  // cannot guard this one — the stand-in has to exist.
+  if (typeof globalThis.visualViewport === 'undefined') {
+    Object.defineProperty(globalThis, 'visualViewport', {
+      configurable: true,
+      value: {
+        addEventListener: (): void => {},
+        height: 768,
+        removeEventListener: (): void => {},
+        scale: 1,
+        width: 1024,
+      },
+      writable: true,
+    });
+
+    teardowns.push(() => {
+      Reflect.deleteProperty(globalThis, 'visualViewport');
+    });
+  }
+};
+
 /** Options for {@link installPolyfills}. */
 export type InstallPolyfillsOptions = {
   /**
@@ -193,6 +273,13 @@ export type InstallPolyfillsOptions = {
    * explicit `{ width, height }` for a custom viewport.
    */
   resizeObserverSize?: boolean | Readonly<{ height: number; width: number }>;
+  /**
+   * Stub the WebGL context and `visualViewport` so `@paper-design/shaders`
+   * backgrounds (`GradientMesh`, `GlobalAnimationWaves`) mount without throwing
+   * an unhandled rejection. Off by default — only suites that render those
+   * backgrounds need it.
+   */
+  webgl?: boolean;
 };
 
 const resolveResizeObserverSize = (
@@ -216,7 +303,8 @@ const resolveResizeObserverSize = (
  *
  * The `ResizeObserver` shim is a no-op by default; pass
  * {@link InstallPolyfillsOptions.resizeObserverSize} to make it report a
- * non-zero `contentRect` for chart-geometry assertions.
+ * non-zero `contentRect` for chart-geometry assertions. The WebGL stubs are
+ * likewise opt-in via {@link InstallPolyfillsOptions.webgl}.
  *
  * @public
  */
@@ -226,6 +314,10 @@ export const installPolyfills = (
   installMatchMedia();
   installResizeObserver(resolveResizeObserverSize(options.resizeObserverSize));
   installElementShims();
+
+  if (options.webgl === true) {
+    installWebglStubs();
+  }
 };
 
 /**

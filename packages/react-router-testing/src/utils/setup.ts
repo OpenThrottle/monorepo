@@ -21,6 +21,12 @@ export type SetupReactRouterTestOptions = {
    * by default. See {@link InstallPolyfillsOptions.resizeObserverSize}.
    */
   resizeObserverSize?: InstallPolyfillsOptions['resizeObserverSize'];
+  /**
+   * Opt into the WebGL / `visualViewport` stubs for suites that render a
+   * `@paper-design/shaders` background. No-op by default. See
+   * {@link InstallPolyfillsOptions.webgl}.
+   */
+  webgl?: InstallPolyfillsOptions['webgl'];
 };
 
 /**
@@ -45,14 +51,14 @@ export type SetupReactRouterTestOptions = {
 export const setupReactRouterTest = (
   options: SetupReactRouterTestOptions = {},
 ): void => {
-  const { env, polyfills = true, resizeObserverSize } = options;
+  const { env, polyfills = true, resizeObserverSize, webgl } = options;
 
   afterEach(() => {
     cleanup();
   });
 
   if (polyfills) {
-    installPolyfills({ resizeObserverSize });
+    installPolyfills({ resizeObserverSize, webgl });
   }
 
   installTestEnv(env);
