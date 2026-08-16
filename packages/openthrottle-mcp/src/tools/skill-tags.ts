@@ -89,7 +89,7 @@ export async function addSkillTagToolHandler(
 ): Promise<GenericResult<{ tag: SkillTag }>> {
   const parsed = addSkillTagToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   return runTool<{ tag: SkillTag }>('add_skill_tag', async () => {
@@ -124,7 +124,7 @@ export async function renameSkillTagToolHandler(
 ): Promise<GenericResult<{ tag: SkillTag }>> {
   const parsed = renameSkillTagToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   return runTool<{ tag: SkillTag }>('rename_skill_tag', async () => {
@@ -162,7 +162,7 @@ export async function removeSkillTagToolHandler(
 ): Promise<GenericResult<{ removed: boolean }>> {
   const parsed = removeSkillTagToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   return runTool<{ removed: boolean }>('remove_skill_tag', async () => {

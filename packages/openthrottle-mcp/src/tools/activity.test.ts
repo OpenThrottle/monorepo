@@ -123,7 +123,7 @@ describe('getLastActivityToolHandler', () => {
 
       expect(result).toMatchObject({
         content: [
-          { text: expect.stringMatching(/Invalid arguments[\s\S]*planId/i) },
+          { text: expect.stringMatching(/Invalid arguments[\s\S]*plan id/i) },
         ],
         isError: true,
       });

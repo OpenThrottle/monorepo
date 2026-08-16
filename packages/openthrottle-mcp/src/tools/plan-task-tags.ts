@@ -89,7 +89,7 @@ export async function addPlanTagToolHandler(
 ): Promise<GenericResult<{ tag: PlanTag }>> {
   const parsed = addPlanTagToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   return runTool<{ tag: PlanTag }>('add_plan_tag', async () => {
@@ -130,7 +130,7 @@ export async function removePlanTagToolHandler(
 ): Promise<GenericResult<{ removed: boolean }>> {
   const parsed = removePlanTagToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   return runTool<{ removed: boolean }>('remove_plan_tag', async () => {
@@ -157,7 +157,7 @@ export async function addProjectTagToolHandler(
 ): Promise<GenericResult<{ tag: ProjectTag }>> {
   const parsed = addProjectTagToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   return runTool<{ tag: ProjectTag }>('add_project_tag', async () => {
@@ -198,7 +198,7 @@ export async function removeProjectTagToolHandler(
 ): Promise<GenericResult<{ removed: boolean }>> {
   const parsed = removeProjectTagToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   return runTool<{ removed: boolean }>('remove_project_tag', async () => {
@@ -227,7 +227,7 @@ export async function addTaskTagToolHandler(
 ): Promise<GenericResult<{ tag: TaskTag }>> {
   const parsed = addTaskTagToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   return runTool<{ tag: TaskTag }>('add_task_tag', async () => {
@@ -268,7 +268,7 @@ export async function removeTaskTagToolHandler(
 ): Promise<GenericResult<{ removed: boolean }>> {
   const parsed = removeTaskTagToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   return runTool<{ removed: boolean }>('remove_task_tag', async () => {
@@ -295,7 +295,7 @@ export async function addProjectSkillTagToolHandler(
 ): Promise<GenericResult<{ skill: ProjectSkillTagResult }>> {
   const parsed = addProjectSkillTagToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   return runTool<{ skill: ProjectSkillTagResult }>(
@@ -342,7 +342,7 @@ export async function removeProjectSkillTagToolHandler(
 ): Promise<GenericResult<{ removed: boolean }>> {
   const parsed = removeProjectSkillTagToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   return runTool<{ removed: boolean }>('remove_project_skill_tag', async () => {

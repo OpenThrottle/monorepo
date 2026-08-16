@@ -65,7 +65,7 @@ export async function createNoteToolHandler(
 ): Promise<CreateNoteResult> {
   const parsed = createNoteToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   return runTool<{ note: CreateNoteMutation['createNote'] }>(
@@ -91,7 +91,7 @@ export async function deleteNoteToolHandler(
 ): Promise<DeleteNoteResult> {
   const parsed = deleteNoteToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   return runTool<{ deleted: boolean }>('delete_note', async () => {
@@ -113,7 +113,7 @@ export async function getNoteToolHandler(
 ): Promise<GetNoteResult> {
   const parsed = getNoteToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   return runTool<{ note: GetNoteQuery['note'] }>('get_note', async () => {
@@ -154,7 +154,7 @@ export async function updateNoteToolHandler(
 ): Promise<UpdateNoteResult> {
   const parsed = updateNoteToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   return runTool<{ note: UpdateNoteMutation['updateNote'] }>(

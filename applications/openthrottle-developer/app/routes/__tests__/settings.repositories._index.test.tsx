@@ -87,7 +87,7 @@ describe('routes/settings.repositories._index.tsx', () => {
 
       const result = await action(actionArgs(formData));
 
-      expect(result).toEqual({ error: 'A folder path is required.' });
+      expect(result).toEqual({ error: 'Folder path is required.' });
     });
 
     test('addFolder calls addWorkspaceFolder and returns the payload', async () => {
@@ -124,7 +124,7 @@ describe('routes/settings.repositories._index.tsx', () => {
 
       const result = await action(actionArgs(formData));
 
-      expect(result).toEqual({ error: 'A git repository URL is required.' });
+      expect(result).toEqual({ error: 'Git repository URL is required.' });
       expect(mockExecuteGraphqlWithAuth).not.toHaveBeenCalled();
     });
 

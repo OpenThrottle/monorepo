@@ -9,14 +9,30 @@
  * `notAllowEmptyString`), so empty required fields fail here instead of needing
  * a per-field guard. Form-only keys (e.g. the `intent` dispatch field) are
  * dropped via the `allow` list; any other key not on the schema fails strict.
+ *
+ * Error messages are humanized centrally via a Zod `errorMap` ({@link
+ * zodErrorMap}): a missing/blank required field becomes "{Label} is required.",
+ * a bad enum "{Label} must be one of: …", where `{Label}` is the field path
+ * humanized to sentence case ({@link humanizeFieldLabel}). So actions can
+ * surface `parsed.error` / `parsed.fieldErrors` directly instead of hard-coding
+ * per-field copy. Override the copy per call with `options.labels` (swap the
+ * label) or `options.messages` (replace the whole message), keyed by dot-joined
+ * path. A schema-supplied message (`.min(1, 'msg')`, `.refine(fn, 'msg')`) is
+ * never overridden. Direct `safeParse` callers get the same copy via the
+ * exported {@link zodErrorMap} / {@link formatZodError}.
  */
 import { z } from 'zod/v3';
 
 /** Form-only keys stripped from every submission unless a caller overrides. */
 const DEFAULT_ALLOWED_EXTRAS: ReadonlyArray<string> = ['intent'];
 
-/** @description Options for {@link parseFormData}. @public */
-export interface ParseFormDataOptions {
+/**
+ * @description Options for {@link parseFormData}. Extends {@link
+ * ZodMessageOptions} so a caller can pass `labels` / `messages` to override the
+ * humanized default copy per field path (e.g. `{ labels: { startIso: 'start
+ * time' } }`). @public
+ */
+export interface ParseFormDataOptions extends ZodMessageOptions {
   /**
    * Form-only field names to drop before validation (dispatch markers, CSRF
    * fields, …). Defaults to `['intent']`. Any submitted key that is neither on
@@ -103,6 +119,149 @@ const assignPath = (
   }
 };
 
+/** @description Per-call message overrides for the centralized Zod error map. @public */
+export interface ZodMessageOptions {
+  /**
+   * Dot-joined field path → display label, swapped into the humanized default
+   * message template (e.g. `{ 'input.startIso': 'start time' }` yields
+   * "start time is required."). The default humanizer applies to any path not
+   * listed here.
+   */
+  readonly labels?: Readonly<Record<string, string>>;
+  /**
+   * Dot-joined field path → complete replacement message. Wins over `labels`
+   * and the default templates for that path, for domain copy the templates
+   * can't express.
+   */
+  readonly messages?: Readonly<Record<string, string>>;
+}
+
+/**
+ * @description Humanize a field path into a display label: takes the last path
+ * segment and converts camelCase / snake_case / kebab-case to sentence case
+ * (first word capitalized). `startIso` → "Start iso", `project_id` →
+ * "Project id", `tag` → "Tag". Accepts either a dot-joined string or a Zod
+ * `issue.path` array. @public
+ */
+export const humanizeFieldLabel = (
+  path: string | ReadonlyArray<string | number>,
+): string => {
+  const segments = (
+    typeof path === 'string' ? path.split('.') : path.map(String)
+  ).filter((segment) => segment !== '');
+  // Prefer the last *named* segment so an array-element path (`tags.0`) labels
+  // as "Tags", not "0".
+  const named = segments.filter((segment) => !/^\d+$/.test(segment));
+  const chosen = named.length > 0 ? named : segments;
+  const last = String(chosen[chosen.length - 1] ?? '');
+  const words = last
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/[_-]+/g, ' ')
+    .trim()
+    .toLowerCase();
+  if (words === '') {
+    return last;
+  }
+  return words.charAt(0).toUpperCase() + words.slice(1);
+};
+
+/**
+ * Compute the humanized override message for a single Zod issue, or `undefined`
+ * to fall through to Zod's default. Shared by {@link createZodErrorMap} (at
+ * parse time) and {@link formatZodError} (post-parse aggregation) so both
+ * produce identical copy.
+ */
+const humanizeIssue = (
+  issue: z.ZodIssueOptionalMessage,
+  options?: ZodMessageOptions,
+): string | undefined => {
+  const dotted = issue.path.join('.');
+  const fullOverride = options?.messages?.[dotted];
+  if (fullOverride !== undefined) {
+    return fullOverride;
+  }
+  const label = options?.labels?.[dotted] ?? humanizeFieldLabel(issue.path);
+
+  if (issue.code === z.ZodIssueCode.invalid_type) {
+    return issue.received === 'undefined' ? `${label} is required.` : undefined;
+  }
+  if (issue.code === z.ZodIssueCode.too_small && issue.type === 'string') {
+    const minimum = Number(issue.minimum);
+    return minimum <= 1
+      ? `${label} is required.`
+      : `${label} must be at least ${minimum} characters.`;
+  }
+  if (issue.code === z.ZodIssueCode.invalid_enum_value) {
+    return `${label} must be one of: ${issue.options.join(', ')}.`;
+  }
+  return undefined;
+};
+
+/**
+ * @description Build a Zod v3 `errorMap` that humanizes the default messages
+ * `parseFormData` produces — missing/undefined required fields and empty
+ * `.min(1)` strings → "{Label} is required.", short strings → length-aware,
+ * bad enum values → "{Label} must be one of: …" — falling through to
+ * `ctx.defaultError` for everything else. Optional per-call `labels`/`messages`
+ * override the copy per field path.
+ *
+ * A schema-supplied message (`.min(1, 'msg')`, `.refine(fn, 'msg')`) is never
+ * touched: Zod does not invoke a parse-level error map for an issue that
+ * already carries an explicit message, so this map only ever fills defaults.
+ *
+ * @public
+ */
+export const createZodErrorMap = (
+  options?: ZodMessageOptions,
+): z.ZodErrorMap => {
+  return (issue, ctx) => {
+    return { message: humanizeIssue(issue, options) ?? ctx.defaultError };
+  };
+};
+
+/**
+ * @description Ready-to-use centralized Zod v3 error map with the default
+ * humanization and no overrides — pass to `schema.safeParse(data, { errorMap:
+ * zodErrorMap })` for identical messaging outside `parseFormData` (MCP tools,
+ * loaders). Use {@link createZodErrorMap} when you need per-call
+ * `labels`/`messages`. @public
+ */
+export const zodErrorMap: z.ZodErrorMap = createZodErrorMap();
+
+/**
+ * @description Aggregate a `ZodError` into the {@link FormDataParseFailure}
+ * shape (`{ error, fieldErrors, success: false }`) with the same humanized
+ * messages `parseFormData` surfaces — for direct `safeParse` callers that want
+ * consistent copy. Applies the humanizer to each issue (first message per
+ * dot-joined path wins).
+ *
+ * Precedence note: a raw `ZodError` no longer distinguishes an author-supplied
+ * message from a Zod default, so for the handled codes this remaps
+ * unconditionally. To preserve custom `.min(1, 'msg')` / `.refine` copy, parse
+ * with `{ errorMap: zodErrorMap }` (or via `parseFormData`) instead of remapping
+ * a raw error — generated schemas carry no author messages, so remapping is
+ * exactly right for them.
+ *
+ * @public
+ */
+export const formatZodError = (
+  error: z.ZodError,
+  options?: ZodMessageOptions,
+): FormDataParseFailure => {
+  const fieldErrors: Record<string, string> = {};
+  for (const issue of error.issues) {
+    const path = issue.path.join('.') || '_';
+    if (fieldErrors[path] === undefined) {
+      fieldErrors[path] = humanizeIssue(issue, options) ?? issue.message;
+    }
+  }
+  return {
+    error: Object.values(fieldErrors).join('; '),
+    fieldErrors,
+    success: false,
+  };
+};
+
 /**
  * @description Convert `formData` to a plain object and `safeParse` it against
  * `schema`, returning either the typed `data` or a concise, field-mapped error
@@ -160,7 +319,11 @@ export const parseFormData = <Schema extends z.ZodTypeAny>(
     const unknownKeys = Object.keys(raw).filter((key) => !known.has(key));
     if (unknownKeys.length > 0) {
       const fieldErrors = Object.fromEntries(
-        unknownKeys.map((key) => [key, `Unrecognized field "${key}".`]),
+        unknownKeys.map((key) => [
+          key,
+          options?.messages?.[key] ??
+            `Unrecognized field "${options?.labels?.[key] ?? humanizeFieldLabel(key)}".`,
+        ]),
       );
       return {
         error: Object.values(fieldErrors).join('; '),
@@ -170,7 +333,18 @@ export const parseFormData = <Schema extends z.ZodTypeAny>(
     }
   }
 
-  const result = schema.safeParse(raw);
+  // Parse with the centralized error map so `issue.message` is already the
+  // humanized (or author-supplied — the map never overrides those) copy; then
+  // aggregate directly rather than re-running the map (which, on a raw error,
+  // can't tell an author message from a default and would clobber the former).
+  const errorMap =
+    options?.labels === undefined && options?.messages === undefined
+      ? zodErrorMap
+      : createZodErrorMap({
+          labels: options.labels,
+          messages: options.messages,
+        });
+  const result = schema.safeParse(raw, { errorMap });
   if (result.success) {
     return { data: result.data, success: true };
   }

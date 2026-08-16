@@ -77,7 +77,7 @@ export async function getSkillAvailabilityRuleSetToolHandler(
 ): Promise<GenericResult<{ ruleSet: SkillAvailabilityRuleSet | null }>> {
   const parsed = getSkillAvailabilityRuleSetToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   return runTool<{ ruleSet: SkillAvailabilityRuleSet | null }>(
@@ -141,7 +141,7 @@ export async function getSkillAvailabilityToolHandler(
 ): Promise<GenericResult<SkillAvailabilityResolution>> {
   const parsed = getSkillAvailabilityToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   return runTool<SkillAvailabilityResolution>(
@@ -200,7 +200,7 @@ export async function upsertSkillAvailabilityRuleSetToolHandler(
 ): Promise<GenericResult<{ ruleSet: SkillAvailabilityRuleSet }>> {
   const parsed = upsertSkillAvailabilityRuleSetToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   return runTool<{ ruleSet: SkillAvailabilityRuleSet }>(
@@ -242,7 +242,7 @@ export async function deleteSkillAvailabilityRuleSetToolHandler(
 ): Promise<GenericResult<{ deleted: boolean }>> {
   const parsed = deleteSkillAvailabilityRuleSetToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   return runTool<{ deleted: boolean }>(
@@ -277,7 +277,7 @@ export async function addSkillAvailabilityRuleToolHandler(
 ): Promise<GenericResult<{ rule: SkillAvailabilityRule }>> {
   const parsed = addSkillAvailabilityRuleToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   return runTool<{ rule: SkillAvailabilityRule }>(
@@ -314,7 +314,7 @@ export async function updateSkillAvailabilityRuleToolHandler(
 ): Promise<GenericResult<{ rule: SkillAvailabilityRule }>> {
   const parsed = updateSkillAvailabilityRuleToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   return runTool<{ rule: SkillAvailabilityRule }>(
@@ -350,7 +350,7 @@ export async function removeSkillAvailabilityRuleToolHandler(
 ): Promise<GenericResult<{ removed: boolean }>> {
   const parsed = removeSkillAvailabilityRuleToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   return runTool<{ removed: boolean }>(

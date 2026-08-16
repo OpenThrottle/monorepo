@@ -122,7 +122,7 @@ export async function listRuleApplicationsToolHandler(
 > {
   const parsed = listRuleApplicationsToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   return runTool<{ applications: RuleApplication[]; totalCount: number }>(
@@ -178,7 +178,7 @@ export async function upsertTagActionRuleToolHandler(
 ): Promise<GenericResult<{ rule: TagActionRule }>> {
   const parsed = upsertTagActionRuleToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   return runTool<{ rule: TagActionRule }>(
@@ -229,7 +229,7 @@ export async function deleteTagActionRuleToolHandler(
 ): Promise<GenericResult<{ deleted: boolean }>> {
   const parsed = deleteTagActionRuleToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   return runTool<{ deleted: boolean }>('delete_tag_action_rule', async () => {

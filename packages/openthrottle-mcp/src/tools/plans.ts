@@ -89,7 +89,7 @@ export async function listPlansByStatusToolHandler(
 ): Promise<ListPlansByStatusResult> {
   const parsed = listPlansByStatusToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   return runTool<{
@@ -121,7 +121,7 @@ export async function createPlanToolHandler(
 ): Promise<CreatePlanResult> {
   const parsed = createPlanToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   return runTool<{ plan: CreatePlanMutation['createPlan'] }>(
@@ -146,7 +146,7 @@ export async function createPlansToolHandler(
 ): Promise<CreatePlansResult> {
   const parsed = createPlansToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   return runTool<{
@@ -176,7 +176,7 @@ export async function getPlanToolHandler(
 ): Promise<GetPlanResult> {
   const parsed = getPlanToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   return runTool<{ plan: GetPlanQuery['plan'] }>('get_plan', async () => {
@@ -198,7 +198,7 @@ export async function updatePlanToolHandler(
 ): Promise<UpdatePlanResult> {
   const parsed = updatePlanToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   return runTool<{ plan: UpdatePlanMutation['updatePlan'] }>(
@@ -223,7 +223,7 @@ export async function deletePlanToolHandler(
 ): Promise<DeletePlanResult> {
   const parsed = deletePlanToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   return runTool<{ deleted: boolean }>('delete_plan', async () => {

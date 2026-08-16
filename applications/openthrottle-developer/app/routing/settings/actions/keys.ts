@@ -22,10 +22,10 @@ export const createServiceAccountCredential = async (
   const parsed = parseFormData(
     formData,
     CreateServiceAccountCredentialInputSchema().omit({ expiresAt: true }),
-    { strict: false },
+    { labels: { serviceAccountId: 'Service account' }, strict: false },
   );
   if (!parsed.success) {
-    return { error: 'Service account is required.' };
+    return { error: parsed.error };
   }
 
   try {
@@ -67,7 +67,7 @@ export const revokeServiceAccountCredential = async (
     { strict: false },
   );
   if (!parsed.success) {
-    return { error: 'Credential id is required.' };
+    return { error: parsed.error };
   }
 
   try {

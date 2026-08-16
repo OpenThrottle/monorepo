@@ -57,11 +57,23 @@ import {
 import { AddSkillTagInputSchema } from '~/__generated__/schemas';
 
 const parsed = parseFormData(formData, AddSkillTagInputSchema());
-if (!parsed.success) return { error: parsed.error }; // or a friendly per-action message
+if (!parsed.success) return { error: parsed.error }; // already humanized — surface it
 await executeGraphqlWithAuth(request, AddSkillTagDocument, {
   input: parsed.data,
 });
 ```
+
+- **Messages are humanized centrally — surface `parsed.error` directly.** The
+  generated `.min(1)` fields carry no message, so `parseFormData` fills them via
+  a shared Zod `errorMap`: a missing/blank required field → "{Label} is
+  required.", a bad enum → "{Label} must be one of: …", where `{Label}` is the
+  field path in sentence case (`startIso` → "Start iso"). Return `parsed.error`
+  instead of hard-coding per-field copy. Override per call when the default
+  reads poorly — `{ labels: { gitUrl: 'Git repository URL' } }` (swap the label)
+  or `{ messages: { path: '…' } }` (replace the whole message), keyed by
+  dot-joined path. A schema's own `.refine`/`.min(N, 'msg')` message is never
+  overridden. Direct `safeParse` callers (loaders, MCP tools) get the same copy
+  via the exported `zodErrorMap` / `formatZodError`.
 
 - **Flatten vs `input` wrapping:** the util builds a plain object from the form.
   Mutations that take a single `input:` argument wrap the result

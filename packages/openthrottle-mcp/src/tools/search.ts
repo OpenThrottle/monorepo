@@ -52,7 +52,7 @@ export async function getDocumentToolHandler(
 ): Promise<GetDocumentResult> {
   const parsed = getDocumentToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   return runTool<{ chunk: GetDocumentQuery['getDocument'] }>(
@@ -111,7 +111,7 @@ export async function semanticSearchToolHandler(
 ): Promise<SemanticSearchResult> {
   const parsed = semanticSearchToolParameters.safeParse(args);
   if (!parsed.success) {
-    return invalidArgsContent(parsed.error.message);
+    return invalidArgsContent(parsed.error);
   }
 
   const limit = Math.min(
