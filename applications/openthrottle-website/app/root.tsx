@@ -1,6 +1,10 @@
-// import { Analytics } from '@vercel/analytics/react';
+import { Analytics } from '@vercel/analytics/react';
 import * as React from 'react';
-import { APP_URL, getEnvironment } from '@openthrottle/react-router-utils';
+import {
+  APP_URL,
+  getEnvironment,
+  getPublicEnv,
+} from '@openthrottle/react-router-utils';
 import {
   Links,
   Meta,
@@ -23,7 +27,6 @@ import {
   useNonce,
 } from '@openthrottle/react-router-utils';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-// import { GlobalHeader } from '~/global/components/GlobalHeader';
 import { SITE_TITLE } from '#/app/global/config/settings';
 import stylesheet from '~/styles.css?url';
 import type { Route } from '@/app/+types/root';
@@ -55,18 +58,13 @@ export const loader = async (args: Route.LoaderArgs) => {
   const { request } = args;
 
   const _header = request.headers.get('cookie');
-  const env = getEnvironment();
   const repo = `openthrottle/openthrottle`;
 
-  // NOTE: The GitHub stars count is intentionally not fetched here. A blocking,
-  // uncached, untimed `fetch` in the root loader runs on every SSR request and
-  // would mostly fail in production (GitHub's unauthenticated rate limit is
-  // 60/hr/IP) while adding latency/TTFB. The value is only consumed by
-  // `OpenThrottleProductGetStarted`, which is gated behind the beta flag on the
-  // home route. When the beta gate is lifted, refetch this in the home route
-  // loader behind a short-TTL cache + `AbortController` timeout + graceful
-  // fallback rather than reinstating it here.
-  return { env, repo };
+  const isVercel = process.env.VERCEL === '1';
+  const env = getPublicEnv();
+  const _serverEnv = getEnvironment();
+
+  return { env, isVercel, repo };
 };
 
 /**
@@ -182,8 +180,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {children}
         <ScrollRestoration nonce={nonce} />
 
-        {/* FIXME: Uncomment this when we have a production environment */}
-        {/* <Analytics /> */}
+        {/*
+          Vercel Analytics is meaningful only when deployed on Vercel. In a
+          self-hosted (Docker) install it injects an un-nonced inline script
+          that trips the CSP and 404s on /_vercel/insights/script.js, so gate it
+          on the VERCEL marker (serialized into window.env, so server and client
+          agree — no hydration mismatch).
+        */}
+        {data?.isVercel ? <Analytics /> : null}
 
         {/* 🚨 Any env added here is 100% visible to the world 🚨 */}
         <script
