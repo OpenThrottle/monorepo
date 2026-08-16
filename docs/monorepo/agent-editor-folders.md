@@ -30,7 +30,7 @@ repo root
 │   ├── skills/                       # GENERATED merged view: symlinks → skills/*  +  real dirs = external installs
 │   ├── rules/                        # All rule bodies (*.mdc) — SSOT (incl. frontend-design-openthrottle.mdc overlay)
 │   ├── personas/                     # Role prompts (architect, product, …) — SSOT
-│   └── prompts/                      # Ad-hoc prompt fragments — SSOT
+│   └── prompts/                      # Prompt fragments + Job_* scheduled runs — SSOT
 ├── .cursor/
 │   ├── rules/                        # Symlinks → .agents/rules/ (Cursor activation)
 │   ├── agents/                       # Cursor subagent definitions
@@ -68,6 +68,19 @@ bash skills/skill-sync/scripts/sync.sh --check  # validate without writing (CI d
 | Rules              | `.agents/rules/**/*.mdc`                                                                                                  | `.cursor/rules/**/*.mdc`                                   |
 | Personas / prompts | `.agents/personas/`, `.agents/prompts/`                                                                                   | — (loaded via Ralph `--prompt-file`)                       |
 | Skill tags         | `project_skills.tags` (GraphQL / `/skills` UI; ingest does not write tags)                                                | —                                                          |
+
+### Prompt filename conventions (`.agents/prompts/`)
+
+Prompts are flat files in `.agents/prompts/`; the walker derives slug and title from the filename, so **no frontmatter is required**. The filename prefix says how the prompt is invoked:
+
+| Prefix       | Meaning                                                                                                                                                                                                  | Example             |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| `Before_*`   | Lifecycle hook — injected before a run                                                                                                                                                                   | `Before_Joke.md`    |
+| `After_*`    | Lifecycle hook — injected after a run                                                                                                                                                                    | `After_Fact.md`     |
+| `Job_*`      | Standalone **scheduled run**, not a lifecycle hook. Self-contained; invoked via Ralph `--prompt-file` or an OT scheduled job. Read-only on source; its only side effect is filing one OpenThrottle plan. | `Job_TestHealth.md` |
+| `_template*` | Authoring template, skipped by the walker                                                                                                                                                                | `_template.md`      |
+
+`Job_*` prompts deliberately repeat their shared rules rather than referencing a common preamble — they must work standalone when handed to any agent CLI, and a broken cross-file reference in an unattended run costs more than the duplication.
 
 **Editor-native** (not generated, not SSOT-mirrored): `.cursor/hooks.json`, local `.cursor/mcp.json` (from `mcp.json`), `.cursor/worktrees.json`, generated `.cursor/rules/nx-rules.mdc` (gitignored).
 
