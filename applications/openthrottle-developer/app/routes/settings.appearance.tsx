@@ -6,7 +6,6 @@ import {
 import { SITE_TITLE } from '~/global/config/settings';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { AppearancePanel } from '~/routing/settings/components/AppearancePanel';
-import { getSettingsDiagnosticsLoaderData } from '~/routing/settings/utils/settings-diagnostics-loader-data';
 import type { Route } from '@/app/routes/+types/settings.appearance';
 
 type HandleData = Route.ComponentProps['loaderData'];
@@ -14,10 +13,6 @@ type HandleData = Route.ComponentProps['loaderData'];
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (_match) => 'Appearance',
   links: (_match) => [{ children: 'Settings', to: '/settings' }],
-};
-
-export const loader = (_args: Route.LoaderArgs) => {
-  return getSettingsDiagnosticsLoaderData();
 };
 
 export const links: Route.LinksFunction = () => {

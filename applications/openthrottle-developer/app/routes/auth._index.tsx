@@ -17,6 +17,8 @@ import {
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import { useAtom } from 'jotai';
+import { configAtom, REDUCED_MOTION_MODES } from '~/global/data/atom.config';
 import { callLoginMutation } from '~/global/utils/utils.auth';
 import {
   FORM_FADE_MS,
@@ -63,6 +65,7 @@ export default function Component(
   // Hooks
   const fetcher = useFetcher<AuthFetcherData>();
   const prefersReducedMotion = useReducedMotion();
+  const [config] = useAtom(configAtom);
   const [count, setCount] = React.useState(0);
   const [isChaotic, setIsChaotic] = React.useState(false);
   const [isExiting, setIsExiting] = React.useState(false);
@@ -71,6 +74,11 @@ export default function Component(
   const [_isMounted, setIsMounted] = React.useState(false);
 
   // Setup
+  // Decorative background animation runs only when the OS allows it AND the
+  // user has not opted into reduced motion in Settings → Appearance.
+  const isMotionEnabled =
+    !prefersReducedMotion &&
+    config.reducedMotion === REDUCED_MOTION_MODES.system;
   const isFormEnabled = count >= 0;
   const isSubmitting = fetcher.state !== 'idle';
 
@@ -156,10 +164,11 @@ export default function Component(
           colorStart="0, 0, 300"
           distributionEnd={-0.6}
           distributionStart={0.6}
+          enabled={isMotionEnabled}
           n={100}
         />
       ) : (
-        <GlobalAnimationMesh />
+        <GlobalAnimationMesh enabled={isMotionEnabled} />
       )}
 
       {/*

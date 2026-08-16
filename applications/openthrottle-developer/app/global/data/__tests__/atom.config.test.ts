@@ -17,12 +17,44 @@ describe('appearance config constants', () => {
     );
   });
 
-  test('DEFAULT_APPEARANCE_CONFIG defaults theme to system', () => {
+  test('DEFAULT_APPEARANCE_CONFIG defaults theme and motion to system', () => {
     expect(DEFAULT_APPEARANCE_CONFIG).toEqual({
       brand: undefined,
+      reducedMotion: 'system',
       theme: 'system',
       themeId: undefined,
     });
+  });
+});
+
+describe('reducedMotion coercion', () => {
+  test('preserves always', () => {
+    expect(
+      normalizeAppearanceConfig({ reducedMotion: 'always' }).reducedMotion,
+    ).toBe('always');
+  });
+
+  test('round-trips system', () => {
+    expect(
+      normalizeAppearanceConfig({ reducedMotion: 'system' }).reducedMotion,
+    ).toBe('system');
+  });
+
+  test('migrates a payload persisted before the key existed', () => {
+    expect(
+      normalizeAppearanceConfig({ brand: '#ff5500', theme: 'dark' }),
+    ).toEqual({
+      brand: '#ff5500',
+      reducedMotion: 'system',
+      theme: 'dark',
+      themeId: undefined,
+    });
+  });
+
+  test('falls back to the default for an unknown value', () => {
+    expect(
+      normalizeAppearanceConfig({ reducedMotion: 'never' }).reducedMotion,
+    ).toBe('system');
   });
 });
 
@@ -76,6 +108,7 @@ describe('normalizeAppearanceConfig', () => {
         }),
       ).toEqual({
         brand: 'hsl(120 50% 40%)',
+        reducedMotion: 'system',
         theme: 'light',
         themeId: undefined,
       });
@@ -84,7 +117,12 @@ describe('normalizeAppearanceConfig', () => {
     test('migrates legacy accentColor to brand', () => {
       expect(
         normalizeAppearanceConfig({ accentColor: '#ff5500', theme: 'dark' }),
-      ).toEqual({ brand: '#ff5500', theme: 'dark', themeId: undefined });
+      ).toEqual({
+        brand: '#ff5500',
+        reducedMotion: 'system',
+        theme: 'dark',
+        themeId: undefined,
+      });
     });
 
     test('prefers brand over accentColor when both exist', () => {
@@ -149,6 +187,7 @@ describe('configAtom localStorage', () => {
 
     expect(store.get(configAtom)).toEqual({
       brand: '#aabbcc',
+      reducedMotion: 'system',
       theme: 'dark',
       themeId: undefined,
     });
@@ -184,6 +223,7 @@ describe('configAtom localStorage', () => {
 
     store.set(configAtom, {
       brand: '#112233',
+      reducedMotion: 'system',
       theme: 'dark',
       themeId: undefined,
     });

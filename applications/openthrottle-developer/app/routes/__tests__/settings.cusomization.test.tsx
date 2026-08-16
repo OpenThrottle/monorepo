@@ -8,6 +8,7 @@ import SettingsAppearance from '../settings.appearance';
 import {
   APPEARANCE_BRAND_OVERRIDE_KEYS,
   APPEARANCE_THEME_COLOR_TOKEN_KEYS,
+  buildAppearanceRootCssBlock,
   DEFAULT_BRAND_HSL,
 } from '@openthrottle/react-router-utils';
 import {
@@ -15,7 +16,6 @@ import {
   DEFAULT_APPEARANCE_CONFIG,
   type ConfigObject,
 } from '~/global/data/atom.config';
-import { getSettingsDiagnosticsLoaderData } from '~/routing/settings/utils/settings-diagnostics-loader-data';
 import { buildRootMatch } from '~/testing/root-match-fixture';
 import type { Route } from '@/app/routes/+types/settings.appearance';
 
@@ -24,7 +24,7 @@ const matches: Route.ComponentProps['matches'] = [
   {
     handle: undefined,
     id: 'routes/settings.appearance',
-    loaderData: getSettingsDiagnosticsLoaderData(),
+    loaderData: undefined,
     params: {},
     pathname: '/',
   },
@@ -43,7 +43,7 @@ describe('routes/settings.appearance.tsx (customization)', () => {
         <MemoryRouter>
           <SettingsAppearance
             actionData={undefined}
-            loaderData={getSettingsDiagnosticsLoaderData()}
+            loaderData={undefined}
             matches={matches}
             params={{}}
           />
@@ -153,22 +153,25 @@ describe('routes/settings.appearance.tsx (customization)', () => {
     });
   });
 
-  describe('CSS token discoverability', () => {
-    test('lists brand override and @theme tokens when expanded', async () => {
-      const user = userEvent.setup();
+  describe('CSS token plumbing', () => {
+    test('no longer surfaces raw token names in the UI', () => {
       renderAppearance();
 
-      await user.click(
-        screen.getByRole('button', {
+      expect(
+        screen.queryByRole('button', {
           name: 'CSS tokens affected by a custom brand',
         }),
-      );
+      ).not.toBeInTheDocument();
+      for (const token of APPEARANCE_THEME_COLOR_TOKEN_KEYS) {
+        expect(screen.queryByText(token)).not.toBeInTheDocument();
+      }
+    });
+
+    test('a custom brand still writes every brand override key', () => {
+      const css = buildAppearanceRootCssBlock('#ff5500');
 
       for (const token of APPEARANCE_BRAND_OVERRIDE_KEYS) {
-        expect(screen.getByText(token)).toBeInTheDocument();
-      }
-      for (const token of APPEARANCE_THEME_COLOR_TOKEN_KEYS) {
-        expect(screen.getByText(token)).toBeInTheDocument();
+        expect(css).toContain(`${token}: #ff5500;`);
       }
     });
   });
