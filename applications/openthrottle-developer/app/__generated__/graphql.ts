@@ -6558,6 +6558,7 @@ export type PlanDetailUpdatePlanRunConfigMutation = {
 
 export type PlanRunConfigRepositoryFieldsFragment = {
   __typename?: 'RepositoryObject';
+  defaultBranch?: string | null;
   id: string;
   name: string;
   normalizedRemoteUrl?: string | null;
@@ -6574,6 +6575,7 @@ export type PlanRunConfigRepositoryFieldsFragment = {
       git: {
         __typename?: 'RepositoryInspectionGitObject';
         currentBranch?: string | null;
+        defaultBranch?: string | null;
       };
     } | null;
   }>;
@@ -6741,6 +6743,7 @@ export type PlanDetailIndexLoaderQuery = {
   };
   workspaceRepositories: Array<{
     __typename?: 'RepositoryObject';
+    defaultBranch?: string | null;
     id: string;
     name: string;
     normalizedRemoteUrl?: string | null;
@@ -6757,6 +6760,7 @@ export type PlanDetailIndexLoaderQuery = {
         git: {
           __typename?: 'RepositoryInspectionGitObject';
           currentBranch?: string | null;
+          defaultBranch?: string | null;
         };
       } | null;
     }>;
@@ -10900,6 +10904,10 @@ export const PlanRunConfigRepositoryFieldsFragmentDoc = {
                               kind: 'Field',
                               name: { kind: 'Name', value: 'currentBranch' },
                             },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'defaultBranch' },
+                            },
                           ],
                         },
                       },
@@ -10911,6 +10919,7 @@ export const PlanRunConfigRepositoryFieldsFragmentDoc = {
               ],
             },
           },
+          { kind: 'Field', name: { kind: 'Name', value: 'defaultBranch' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'name' } },
           {
@@ -16311,6 +16320,10 @@ export const PlanDetailIndexLoaderDocument = {
                               kind: 'Field',
                               name: { kind: 'Name', value: 'currentBranch' },
                             },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'defaultBranch' },
+                            },
                           ],
                         },
                       },
@@ -16322,6 +16335,7 @@ export const PlanDetailIndexLoaderDocument = {
               ],
             },
           },
+          { kind: 'Field', name: { kind: 'Name', value: 'defaultBranch' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'name' } },
           {

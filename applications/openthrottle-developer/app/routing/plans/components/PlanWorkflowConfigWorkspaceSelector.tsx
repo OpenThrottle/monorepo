@@ -15,6 +15,7 @@ import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
 import type { PlanRunConfigRepositoryFieldsFragment } from '~/__generated__/graphql';
 import { PlanWorkflowConfigWorkspace } from '~/routing/plans/components/PlanWorkflowConfigWorkspace';
 import { usePlanWorkflowConfigWorkspaceSelector } from '~/routing/plans/hooks/usePlanWorkflowConfigWorkspaceSelector';
+import { resolveDefaultRunBranch } from '~/routing/plans/utils/plan-run-branch';
 import {
   basename,
   CHECKOUT_PREFIX,
@@ -76,8 +77,11 @@ export const PlanWorkflowConfigWorkspaceSelector = (
     });
 
   // Setup
-  const selectedCheckoutBranch =
-    selectedCheckout?.inspection?.git?.currentBranch ?? '';
+  const selectedCheckoutBranch = resolveDefaultRunBranch({
+    checkoutId,
+    repositories,
+    repositoryId,
+  });
 
   // Handlers
 

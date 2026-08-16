@@ -1,4 +1,6 @@
 import * as React from 'react';
+import clsx from 'clsx';
+import { GlobalAnimationWaves } from '@openthrottle/react-router-ui-global';
 import { LANDING_FLOW } from '~/routing/home/data/data.landing';
 
 export interface LandingFlowProps {
@@ -23,11 +25,17 @@ export const LandingFlow = (props: LandingFlowProps): React.ReactElement => {
 
   return (
     <section
-      className={`bg-background px-6 py-[clamp(3.5rem,8vw,6rem)] ${className ?? ''}`}
+      className={clsx(
+        'bg-background border-border justify-center border-y px-6 py-[clamp(3.5rem,8vw,6rem)]',
+        'flex min-h-svh items-center',
+        'relative snap-start',
+        className,
+      )}
       data-testid="LandingFlow"
       id="how"
     >
-      <div className="mx-auto w-[min(68rem,100%)]">
+      <GlobalAnimationWaves className="absolute inset-0 z-10" />
+      <div className="z-20 mx-auto w-[min(68rem,100%)]">
         <div>
           <p className="landing-reveal mb-3 text-xs font-semibold tracking-[0.08em] text-(--brand) uppercase">
             {kicker}

@@ -8,9 +8,11 @@
  */
 import * as React from 'react';
 import { createStore, Provider } from 'jotai';
+import type { PlanRunConfigRepositoryFieldsFragment } from '~/__generated__/graphql';
 import {
   getWorkflowRunSeedValues,
   jobRunHookDraftRowsAtom,
+  workflowBranchAtom,
   workflowCheckoutIdAtom,
   workflowRalphRunOptionsAtom,
   workflowRepositoryIdAtom,
@@ -18,16 +20,19 @@ import {
   workflowWorkingDirectoryAtom,
   type WorkflowRunSeedPlan,
 } from '~/routing/plans/data/atom.plan';
+import { resolveDefaultRunBranch } from '~/routing/plans/utils/plan-run-branch';
 
 export interface PlanRunConfigStoreProviderProps {
   readonly children: React.ReactNode;
   readonly plan: WorkflowRunSeedPlan;
+  /** Workspace repositories used to resolve the seeded default branch. */
+  readonly repositories?: readonly PlanRunConfigRepositoryFieldsFragment[];
 }
 
 export const PlanRunConfigStoreProvider = (
   props: PlanRunConfigStoreProviderProps,
 ): React.ReactElement => {
-  const { children, plan } = props;
+  const { children, plan, repositories = [] } = props;
 
   // Hooks
   // Seed a fresh store once per mount (the route keys this component on plan.id,
@@ -42,6 +47,16 @@ export const PlanRunConfigStoreProvider = (
     seeded.set(workflowCheckoutIdAtom, seed.checkoutId);
     seeded.set(workflowRepositoryIdAtom, seed.repositoryId);
     seeded.set(jobRunHookDraftRowsAtom, seed.jobRunHookRows);
+    // The branch is required to enqueue, so seed it here rather than waiting for
+    // the Configuration tab's workspace selector to mount and pre-fill it.
+    seeded.set(
+      workflowBranchAtom,
+      resolveDefaultRunBranch({
+        checkoutId: seed.checkoutId,
+        repositories,
+        repositoryId: seed.repositoryId,
+      }),
+    );
 
     return seeded;
   });

@@ -27,7 +27,7 @@ export const SettingsAgentsIntroduction = (
   return (
     <div data-testid="SettingsAgentsIntroduction">
       <GlobalHeading
-        className="mb-2"
+        className="mb-4"
         heading="h1"
         icon={HatGlassesIcon}
         title="Agents"

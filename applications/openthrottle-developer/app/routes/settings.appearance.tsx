@@ -31,7 +31,7 @@ export const meta = (_args: Route.MetaArgs) => {
 export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
-  const { actionData: _a, loaderData, matches: _m, params: _p } = props;
+  const { actionData: _a, loaderData: _l, matches: _m, params: _p } = props;
 
   // Hooks
 
@@ -44,14 +44,6 @@ export default function Component(
   // Life Cycle
 
   // 🔌 Short Circuit
-
-  if (!loaderData) {
-    return (
-      <GlobalScreen>
-        <p className="text-muted-foreground text-sm">Loading settings…</p>
-      </GlobalScreen>
-    );
-  }
 
   return (
     <GlobalScreen>

@@ -1,3 +1,4 @@
+import clsx from 'clsx';
 import * as React from 'react';
 import { LANDING_PROMISE } from '~/routing/home/data/data.landing';
 
@@ -25,7 +26,12 @@ export const LandingPromise = (
 
   return (
     <section
-      className={`bg-background border-border border-y px-6 py-[clamp(3.5rem,8vw,6rem)] ${className ?? ''}`}
+      className={clsx(
+        'bg-background border-border justify-center border-y px-6 py-[clamp(3.5rem,8vw,6rem)]',
+        'flex min-h-svh items-center',
+        'snap-start',
+        className,
+      )}
       data-testid="LandingPromise"
       id="why"
     >
