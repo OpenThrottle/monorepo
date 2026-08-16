@@ -52,6 +52,8 @@ Create a worktree with the one entrypoint — `pnpm worktree:new <name>` (`scrip
 | **Validate locally**         | `pnpm nx run monorepo:check-agent-assets-ssot` | Wraps skill-sync `sync.sh --check` (skill layout) + `.cursor/rules` symlink integrity. Run `bash skills/skill-sync/scripts/sync.sh` first to fix skill drift.                                                                                                                            |
 | **DB index (read-only)**     | `custom_prompts` via GraphQL                   | Git is write authority; ingest from disk → DB is plan 1.5 — do not edit prompts in the DB.                                                                                                                                                                                               |
 
+**Prompt filename prefixes** (`.agents/prompts/`, no frontmatter — slug derives from the filename): `Before_*` / `After_*` are **lifecycle hooks** injected around a run; `Job_*` are **standalone scheduled runs** (recurring audits invoked via Ralph `--prompt-file` or an OT scheduled job) that are read-only on source and file their findings as a single OpenThrottle plan. Details: [docs/monorepo/agent-editor-folders.md](docs/monorepo/agent-editor-folders.md).
+
 **Editor-native (not symlinked SSOT):** `.cursor/hooks.json`, `.cursor/mcp.json` (from `mcp.json`), `.cursor/worktrees.json`, generated `.cursor/rules/nx-rules.mdc` (gitignored). See [CONTRIBUTING.md](./CONTRIBUTING.md) § Agent assets.
 
 ## OpenThrottle Agent Skills
