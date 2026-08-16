@@ -24,7 +24,7 @@ export const PaginationContent = React.forwardRef<
 
   return (
     <ul
-      className={cn('flex flex-row items-center gap-1', className)}
+      className={cn('flex flex-row items-center gap-2', className)}
       data-slot="pagination-content"
       ref={ref}
       {...rest}

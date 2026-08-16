@@ -22,7 +22,7 @@ export const CardTitle = React.forwardRef<HTMLDivElement, CardTitleProps>(
 
     return (
       <div
-        className={cn('leading-none font-semibold', className)}
+        className={cn('leading-none', className)}
         data-slot="card-title"
         ref={ref}
         {...rest}

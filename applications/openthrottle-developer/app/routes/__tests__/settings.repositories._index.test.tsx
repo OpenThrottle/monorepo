@@ -3,6 +3,10 @@ import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
 import { action, loader } from '../settings.repositories._index';
 import type { Route } from '@/app/routes/+types/settings.repositories._index';
 import { createTestRouterContext } from '@openthrottle/react-router-testing';
+import {
+  mockCheckout,
+  mockRepository,
+} from '~/routing/settings/repositories/data/mock.repositories';
 
 vi.mock('@openthrottle/react-router-graphql', async (importOriginal) => {
   const actual =
@@ -13,6 +17,31 @@ vi.mock('@openthrottle/react-router-graphql', async (importOriginal) => {
 const mockExecuteGraphqlWithAuth = vi.mocked(
   graphqlWithAuth.executeGraphqlWithAuth,
 );
+
+const workspaceRepositories = [
+  mockRepository({
+    checkouts: [
+      mockCheckout({
+        displayName: 'openthrottle',
+        filesystemPath: '/Users/dev/openthrottle',
+        id: 'checkout-1',
+      }),
+      mockCheckout({
+        branch: 'loop-plan',
+        displayName: 'openthrottle-worktree',
+        id: 'worktree-1',
+        kind: 'worktree',
+      }),
+    ],
+    id: 'repo-1',
+    name: 'OpenThrottle',
+  }),
+  mockRepository({
+    checkouts: [mockCheckout({ displayName: 'website', id: 'checkout-2' })],
+    id: 'repo-2',
+    name: 'website',
+  }),
+];
 
 const mockLoaderPayload = {
   discoveredFolders: [
@@ -27,19 +56,19 @@ const mockLoaderPayload = {
     defaultBrowsePath: '/Users/dev',
     roots: ['/Users/dev'],
   },
-  workspaceRepositories: [
-    {
-      checkouts: [],
-      createdAt: '2026-05-18T12:00:00.000Z',
-      defaultBranch: 'main',
-      id: 'repo-1',
-      name: 'OpenThrottle',
-      normalizedRemoteUrl: 'https://github.com/openthrottle/monorepo',
-      project: null,
-      projectId: null,
-      updatedAt: '2026-05-18T12:00:00.000Z',
-    },
-  ],
+  workspaceRepositories,
+};
+
+const loaderArgs = (url: string): Route.LoaderArgs => {
+  const request = new Request(url);
+
+  return {
+    context: createTestRouterContext(),
+    params: {},
+    pattern: '/settings/repositories',
+    request,
+    url: new URL(request.url),
+  };
 };
 
 describe('routes/settings.repositories._index.tsx', () => {
@@ -48,24 +77,113 @@ describe('routes/settings.repositories._index.tsx', () => {
   });
 
   describe('loader', () => {
-    test('returns repositories, discovered folders, and picker capabilities', async () => {
+    test('returns nested rows, discovered folders, and picker capabilities', async () => {
       mockExecuteGraphqlWithAuth.mockResolvedValue(mockLoaderPayload);
 
-      const request = new Request('http://localhost/settings/repositories');
-      const args: Route.LoaderArgs = {
-        context: createTestRouterContext(),
-        params: {},
-        pattern: '/settings/repositories',
-        request,
-        url: new URL(request.url),
-      };
-
-      const result = await loader(args);
+      const result = await loader(
+        loaderArgs('http://localhost/settings/repositories'),
+      );
 
       expect(result.discoveredFolders).toHaveLength(1);
-      expect(result.repositories).toHaveLength(1);
       expect(result.pickerCapabilities.canUseNativeDialog).toBe(false);
       expect(result.pickerCapabilities.roots).toEqual(['/Users/dev']);
+      expect(result.isUnpopulated).toBe(false);
+      expect(result.rows.map((row) => row.checkout.id)).toEqual([
+        'checkout-1',
+        'checkout-2',
+      ]);
+      expect(result.rows[0].children).toHaveLength(1);
+      expect(result.totalCount).toBe(2);
+    });
+
+    test('reports an unpopulated workspace when no repositories exist', async () => {
+      mockExecuteGraphqlWithAuth.mockResolvedValue({
+        ...mockLoaderPayload,
+        workspaceRepositories: [],
+      });
+
+      const result = await loader(
+        loaderArgs('http://localhost/settings/repositories'),
+      );
+
+      expect(result.isUnpopulated).toBe(true);
+      expect(result.rows).toEqual([]);
+      expect(result.totalCount).toBe(0);
+    });
+
+    test('filters by search and auto-expands a group matched only by a worktree', async () => {
+      mockExecuteGraphqlWithAuth.mockResolvedValue(mockLoaderPayload);
+
+      const result = await loader(
+        loaderArgs(
+          'http://localhost/settings/repositories?search=openthrottle-worktree',
+        ),
+      );
+
+      expect(result.rows.map((row) => row.checkout.id)).toEqual(['checkout-1']);
+      expect(result.autoExpandedIds).toEqual(['checkout-1']);
+      expect(result.isUnpopulated).toBe(false);
+      expect(result.totalCount).toBe(1);
+    });
+
+    test('applies sortBy and sortOrder, falling back to the defaults', async () => {
+      mockExecuteGraphqlWithAuth.mockResolvedValue(mockLoaderPayload);
+
+      const sorted = await loader(
+        loaderArgs(
+          'http://localhost/settings/repositories?sortBy=name&sortOrder=desc',
+        ),
+      );
+
+      expect(sorted.rows.map((row) => row.repositoryName)).toEqual([
+        'website',
+        'OpenThrottle',
+      ]);
+
+      mockExecuteGraphqlWithAuth.mockResolvedValue(mockLoaderPayload);
+
+      const fallback = await loader(
+        loaderArgs(
+          'http://localhost/settings/repositories?sortBy=bogus&sortOrder=sideways',
+        ),
+      );
+
+      expect(fallback.sortBy).toBe('name');
+      expect(fallback.sortOrder).toBe('asc');
+    });
+
+    test('pages over parent rows, keeping a group whole', async () => {
+      mockExecuteGraphqlWithAuth.mockResolvedValue(mockLoaderPayload);
+
+      const result = await loader(
+        loaderArgs('http://localhost/settings/repositories?limit=1&page=1'),
+      );
+
+      expect(result.rows).toHaveLength(1);
+      expect(result.rows[0].checkout.id).toBe('checkout-1');
+      expect(result.rows[0].children).toHaveLength(1);
+      expect(result.totalCount).toBe(2);
+
+      mockExecuteGraphqlWithAuth.mockResolvedValue(mockLoaderPayload);
+
+      const pageTwo = await loader(
+        loaderArgs('http://localhost/settings/repositories?limit=1&page=2'),
+      );
+
+      expect(pageTwo.rows.map((row) => row.checkout.id)).toEqual([
+        'checkout-2',
+      ]);
+    });
+
+    test('clamps limit and page to sane values', async () => {
+      mockExecuteGraphqlWithAuth.mockResolvedValue(mockLoaderPayload);
+
+      const result = await loader(
+        loaderArgs('http://localhost/settings/repositories?limit=9999&page=0'),
+      );
+
+      expect(result.limit).toBe(100);
+      expect(result.page).toBe(1);
     });
   });
 
