@@ -7,8 +7,21 @@ import type { SyncStorage } from 'jotai/vanilla/utils/atomWithStorage';
 /** localStorage key for persisted appearance preferences. */
 export const CONFIG_STORAGE_KEY = `${APP_NAME}:settings:appearance`;
 
+/**
+ * Motion preference. `'system'` defers to `prefers-reduced-motion`; `'always'`
+ * suppresses decorative animation regardless of the OS setting.
+ */
+export const REDUCED_MOTION_MODES = {
+  always: 'always',
+  system: 'system',
+} as const;
+
+export type ReducedMotionMode =
+  (typeof REDUCED_MOTION_MODES)[keyof typeof REDUCED_MOTION_MODES];
+
 export interface ConfigObject {
   brand: string | undefined;
+  reducedMotion: ReducedMotionMode;
   theme: ThemeMode;
   /** Selected palette id (`<html data-theme>`); undefined = base theme.css palette. */
   themeId: string | undefined;
@@ -21,12 +34,20 @@ export interface ConfigObject {
  */
 export const DEFAULT_APPEARANCE_CONFIG: ConfigObject = {
   brand: undefined,
+  reducedMotion: REDUCED_MOTION_MODES.system,
   theme: 'system',
   themeId: undefined,
 };
 
 const isThemeMode = (value: unknown): value is ThemeMode =>
   value === 'dark' || value === 'light' || value === 'system';
+
+/** Type guard for persisted / toggle-emitted motion values. */
+export const isReducedMotionMode = (
+  value: unknown,
+): value is ReducedMotionMode =>
+  value === REDUCED_MOTION_MODES.always ||
+  value === REDUCED_MOTION_MODES.system;
 
 /**
  * @description Coerce unknown persisted JSON into a valid {@link ConfigObject}.
@@ -62,7 +83,13 @@ export const normalizeAppearanceConfig = (
       ? record.themeId
       : undefined;
 
-  return { brand, theme, themeId };
+  // Payloads persisted before the motion preference existed have no
+  // `reducedMotion` key; they migrate to the default rather than being discarded.
+  const reducedMotion = isReducedMotionMode(record.reducedMotion)
+    ? record.reducedMotion
+    : DEFAULT_APPEARANCE_CONFIG.reducedMotion;
+
+  return { brand, reducedMotion, theme, themeId };
 };
 
 const createAppearanceConfigStorage = (): SyncStorage<ConfigObject> => {

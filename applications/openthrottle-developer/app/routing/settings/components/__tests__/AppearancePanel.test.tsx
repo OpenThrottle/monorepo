@@ -11,6 +11,7 @@ import {
   DEFAULT_APPEARANCE_CONFIG,
 } from '~/global/data/atom.config';
 import type { ConfigObject } from '~/global/data/atom.config';
+import { APPEARANCE_SECTIONS } from '~/routing/settings/data/data.appearance';
 
 type Store = ReturnType<typeof createStore>;
 
@@ -46,6 +47,26 @@ describe('AppearancePanel Component', () => {
     expect(component.getByText('Theme')).toBeInTheDocument();
     expect(component.getByText('Theme palette')).toBeInTheDocument();
     expect(component.getByText('Brand color')).toBeInTheDocument();
+  });
+
+  test('renders the preview surface above the registry sections', () => {
+    const preview = component.getByTestId('AppearancePreview');
+    const [firstSection] = component.getAllByTestId('AppearanceSection');
+
+    expect(preview).toBeInTheDocument();
+    expect(
+      preview.compareDocumentPosition(firstSection) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  test('renders one section per registry entry, in registry order', () => {
+    const sections = component.getAllByTestId('AppearanceSection');
+
+    expect(sections).toHaveLength(APPEARANCE_SECTIONS.length);
+    expect(
+      sections.map((section) => section.getAttribute('data-section-id')),
+    ).toEqual(APPEARANCE_SECTIONS.map((section) => section.id));
   });
 
   test('shows theme-default copy and hides the reset button when brand is unset', () => {
@@ -99,15 +120,11 @@ describe('AppearancePanel Component', () => {
     expect(store.get(configAtom).brand).toBe('#aabbcc');
   });
 
-  test('expanding the CSS-tokens section lists brand override tokens', async () => {
-    const user = userEvent.setup();
-
-    await user.click(
-      component.getByRole('button', {
+  test('no longer lists raw CSS token names', () => {
+    expect(
+      component.queryByRole('button', {
         name: 'CSS tokens affected by a custom brand',
       }),
-    );
-
-    expect(component.getByText(':root')).toBeInTheDocument();
+    ).not.toBeInTheDocument();
   });
 });

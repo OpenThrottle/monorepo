@@ -2,9 +2,11 @@ import { CURSOR_THEMES } from './cursor-themes';
 import type { Theme } from './theme-contract';
 
 /**
+ * @public
  * Reference theme — the OpenThrottle default palette, derived verbatim from the
  * base `:root` / dark values in `theme.css`. Serves as the porting template for
- * every other theme in the registry.
+ * every other theme in the registry, and as the swatch source for the "no
+ * palette" option, which resolves to exactly these values.
  */
 export const OPENTHROTTLE_THEME: Theme = {
   dark: {
