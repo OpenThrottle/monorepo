@@ -51,7 +51,7 @@ export const LandingHero = (props: LandingHeroProps): React.ReactElement => {
   return (
     <section
       aria-label="OpenThrottle"
-      className="landing-hero-ground relative grid min-h-svh items-center justify-center overflow-hidden p-4 text-white md:p-0"
+      className="landing-hero-ground relative grid min-h-svh snap-start items-center justify-center overflow-hidden p-4 text-white md:p-0"
       data-testid="LandingHero"
       id="top"
     >

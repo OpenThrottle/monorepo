@@ -59,14 +59,25 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <main className="flex flex-1 flex-col scroll-smooth" ref={revealRef}>
+    /*
+      The landing page is a snap deck: `<main>` is its own scroll container
+      (h-svh + overflow-y-auto) so `snap-y` applies here instead of leaking to
+      every route via the document scroller. Each `Landing*` section carries
+      `snap-start`; the footer rides along with the closing section so a
+      mandatory snap never strands it off-screen.
+    */
+    <main
+      className="h-svh snap-y snap-mandatory overflow-y-auto scroll-smooth"
+      ref={revealRef}
+    >
       <LandingHero />
       <LandingPromise />
       <LandingFlow />
       <LandingSurfaces />
-      <LandingClose introduction={introduction} repo={repo} />
-
-      <GlobalFooter />
+      <div className="snap-start">
+        <LandingClose introduction={introduction} repo={repo} />
+        <GlobalFooter />
+      </div>
     </main>
   );
 }

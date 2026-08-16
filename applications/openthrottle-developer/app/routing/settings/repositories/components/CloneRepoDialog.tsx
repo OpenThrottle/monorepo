@@ -56,7 +56,9 @@ export const CloneRepoDialog = (
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg" data-testid="CloneRepoDialog">
         <DialogHeader>
-          <DialogTitle>{WORKSPACE_FOLDERS_COPY.cloneRepoTitle}</DialogTitle>
+          <DialogTitle className="mb-4">
+            {WORKSPACE_FOLDERS_COPY.cloneRepoTitle}
+          </DialogTitle>
           <DialogDescription>
             {WORKSPACE_FOLDERS_COPY.cloneRepoDescription}
           </DialogDescription>

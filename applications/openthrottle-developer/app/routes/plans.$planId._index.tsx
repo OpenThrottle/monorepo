@@ -114,7 +114,11 @@ export default function Component(
   // The body reads those atoms, so it must live inside the Provider (a component
   // cannot consume a Provider it renders in its own JSX).
   return (
-    <PlanRunConfigStoreProvider key={plan.id} plan={plan}>
+    <PlanRunConfigStoreProvider
+      key={plan.id}
+      plan={plan}
+      repositories={loaderData.workspaceRepositories}
+    >
       <PlanDetailRoute loaderData={loaderData} params={params} plan={plan} />
     </PlanRunConfigStoreProvider>
   );

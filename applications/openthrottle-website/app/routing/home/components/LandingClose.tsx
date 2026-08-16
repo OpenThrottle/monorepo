@@ -1,6 +1,7 @@
 import * as React from 'react';
+import clsx from 'clsx';
 import { Button } from '@openthrottle/react-router-shadcn';
-import { GlobalAnimationWaves } from '@openthrottle/react-router-ui-global';
+import { GradientMesh } from '@openthrottle/react-router-ui-global';
 import { LANDING_CLOSE } from '~/routing/home/data/data.landing';
 
 export interface LandingCloseProps {
@@ -35,17 +36,16 @@ export const LandingClose = (props: LandingCloseProps): React.ReactElement => {
   return (
     <>
       <section
-        className={`landing-close-ground relative px-6 py-[clamp(3.5rem,8vw,6rem)] ${className ?? ''}`}
+        className={clsx(
+          'bg-background border-border justify-center border-y px-6 py-[clamp(3.5rem,8vw,6rem)]',
+          'flex min-h-svh items-center',
+          'landing-close-ground relative',
+          className,
+        )}
         data-testid="LandingClose"
         id="start"
       >
-        <div className="absolute inset-0 z-0">
-          <GlobalAnimationWaves
-            distributionEnd={-1}
-            distributionStart={1}
-            n={21}
-          />
-        </div>
+        <GradientMesh className="absolute inset-0 z-0" />
 
         <div className="landing-reveal z-10 mx-auto grid w-[min(68rem,100%)] gap-6 md:grid-cols-[1.4fr_1fr] md:items-center md:gap-12">
           <div className="z-10">

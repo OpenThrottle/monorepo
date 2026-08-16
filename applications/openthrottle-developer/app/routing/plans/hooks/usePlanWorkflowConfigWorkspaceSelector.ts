@@ -65,8 +65,10 @@ export const usePlanWorkflowConfigWorkspaceSelector = (
       const match = repo.checkouts.find(
         (checkout) => checkout.id === checkoutId,
       );
+
       if (match) return match;
     }
+
     return undefined;
   }, [checkoutId, repositories]);
 

@@ -28,8 +28,8 @@ import {
   configAtom,
   DEFAULT_APPEARANCE_CONFIG,
 } from '~/global/data/atom.config';
-import { SettingsOnboardingRestore } from '~/routing/settings/components/SettingsOnboardingRestore';
 import { THEME_DEFAULT_OPTION } from '~/routing/settings/config/appearance';
+// import { SettingsOnboardingRestore } from '~/routing/settings/components/SettingsOnboardingRestore';
 
 export interface AppearancePanelProps {}
 
@@ -197,7 +197,7 @@ export const AppearancePanel = (
           </Collapsible>
         </section>
 
-        <SettingsOnboardingRestore />
+        {/* <SettingsOnboardingRestore /> */}
       </div>
     </div>
   );

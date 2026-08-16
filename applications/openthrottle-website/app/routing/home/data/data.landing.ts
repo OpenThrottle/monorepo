@@ -117,8 +117,16 @@ export const LANDING_SURFACES = {
 
 export const LANDING_CLOSE = {
   code: [
-    { kind: 'comment', text: '# from the monorepo root' },
-    { kind: 'command', text: './scripts/setup.sh' },
+    { kind: 'comment', text: '# Clone OpenThrottle' },
+    {
+      kind: 'command',
+      text: 'git clone https://github.com/openthrottle/monorepo.git',
+    },
+    { kind: 'blank', text: '' },
+    { kind: 'comment', text: '# CD in and get setup' },
+    { kind: 'command', text: 'cd monorepo && ./scripts/setup.sh' },
+    { kind: 'blank', text: '' },
+    { kind: 'comment', text: '# And start moving faster!' },
     { kind: 'command', text: 'pnpm run start' },
     { kind: 'blank', text: '' },
     { kind: 'comment', text: '# developer  → :6020' },
