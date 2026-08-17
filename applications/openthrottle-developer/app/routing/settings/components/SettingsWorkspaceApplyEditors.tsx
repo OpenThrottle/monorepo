@@ -2,10 +2,10 @@ import * as React from 'react';
 import clsx from 'clsx';
 import { Form, useNavigation } from 'react-router';
 import { Button } from '@openthrottle/react-router-shadcn';
+import { WORKSPACE_SETTINGS_COPY } from '~/routing/settings/data/data.copy';
 
 export interface SettingsWorkspaceApplyEditorsProps {
   actionError?: string | null;
-  actionMessage?: string | null;
   className?: string;
   disabled?: boolean;
 }
@@ -16,13 +16,14 @@ export interface SettingsWorkspaceApplyEditorsProps {
 export const SettingsWorkspaceApplyEditors = (
   props: SettingsWorkspaceApplyEditorsProps,
 ): React.ReactElement => {
-  const { actionError, actionMessage, className, disabled } = props;
+  const { actionError, className, disabled } = props;
 
   // Hooks
   const navigation = useNavigation();
   const isSubmitting =
     navigation.state === 'submitting' &&
-    navigation.formData?.get('intent') === 'applyEditorConfig';
+    navigation.formData?.get('intent') === 'applyEditorConfig' &&
+    navigation.formData.get('repositoryId') === null;
 
   // Setup
 
@@ -45,16 +46,24 @@ export const SettingsWorkspaceApplyEditors = (
       <Form method="post">
         <input name="intent" type="hidden" value="applyEditorConfig" />
         <Button
+          aria-describedby={
+            disabled ? 'settings-workspace-apply-disabled-reason' : undefined
+          }
           disabled={disabled || isSubmitting}
           type="submit"
           variant="secondary"
         >
-          {isSubmitting ? 'Applying…' : 'Apply editor configuration'}
+          {isSubmitting
+            ? WORKSPACE_SETTINGS_COPY.applyBusyLabel
+            : WORKSPACE_SETTINGS_COPY.applyAllButton}
         </Button>
       </Form>
-      {actionMessage ? (
-        <p className="text-muted-foreground text-sm" role="status">
-          {actionMessage}
+      {disabled ? (
+        <p
+          className="text-muted-foreground text-sm"
+          id="settings-workspace-apply-disabled-reason"
+        >
+          {WORKSPACE_SETTINGS_COPY.applyDisabledReason}
         </p>
       ) : null}
       {actionError ? (

@@ -62,7 +62,10 @@ export const applyEditorConfig = async (
         input: repositoryId ? { repositoryIds: [repositoryId] } : {},
       },
     );
-    return { message: formatEditorConfigApplyMessage(data) };
+    return {
+      applications: data.applyWorkspaceEditorConfiguration.applications,
+      message: formatEditorConfigApplyMessage(data),
+    };
   } catch (error) {
     const message =
       error instanceof Error

@@ -50,8 +50,8 @@ describe('IdeWorkspaceBody Component', () => {
 
     expect(component.getByTestId('IdeNoRepository')).toBeInTheDocument();
     expect(
-      component.getByRole('link', { name: 'Open workspace settings' }),
-    ).toHaveAttribute('href', '/settings/workspace');
+      component.getByRole('link', { name: 'Add a repository' }),
+    ).toHaveAttribute('href', '/settings/repositories');
   });
 
   test('renders the tabbed workspace when a repository and listing are present', () => {
