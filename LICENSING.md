@@ -48,7 +48,7 @@ Everything first-party in the repository:
   `openthrottle-developer`, `openthrottle-admin`, `openthrottle-email`,
   `openthrottle-website`) and the `applications/openthrottle` local-stack
   Docker/compose assets.
-- **Packages** — all of `packages/*` (`@openthrottle/*`, `vscode-openthrottle`).
+- **Packages** — all of `packages/*` (`@openthrottle/*`).
 - **Tools** — `tools/*` (`@tools/generators`, `@tools/workflows`,
   `@tools/dotfiles`, `@tools/ollama-proxy`, `tools/caddy`).
 - **Infra / root** — `infra/`, root scripts, and the monorepo root itself.
