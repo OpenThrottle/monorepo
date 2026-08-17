@@ -247,3 +247,29 @@ export const APPEARANCE_COPY = {
   themeLabel: `Theme`,
   title: `Appearance`,
 } as const;
+
+/**
+ * @description Copy for Settings → Keys: the header intro that stays on the
+ * page, the help-modal trigger, and the operational help moved into
+ * {@link SettingsKeysHelpModal}. Interpolated values use prefix/suffix pairs so
+ * no string is assembled in JSX; `<code>` tokens are their own entries.
+ */
+export const SETTINGS_KEYS_COPY = {
+  docsLinkLabel: `MCP and worker authentication (AUTH.md)`,
+  docsSuffix: ` for bootstrap and env setup.`,
+  introAuthorizationCode: `Authorization`,
+  introMiddle: ` format in the `,
+  introPrefix: `Long-lived bearer tokens for automation (MCP, Ralph workers, CI). Each credential uses the `,
+  introSuffix: ` header.`,
+  introTokenCode: `ot_sa_<prefix>_<secret>`,
+  jwtPrefix: `Human JWT sessions manage these keys in the developer portal; service account tokens must not call these admin mutations. See `,
+  modalTitle: `Working with keys`,
+  oneTimeSecretBodyPrefix: `When you create a credential, the full token is shown once. Copy it immediately into `,
+  oneTimeSecretBodySuffix: ` or worker env — it cannot be retrieved again.`,
+  oneTimeSecretEnvCode: `OPENTHROTTLE_MCP_AUTH_TOKEN`,
+  oneTimeSecretTitle: `One-time secret`,
+  rotationBody: `Create a new credential, update your env, then revoke the old one from the table below. Revoked or expired credentials stop working at the next request.`,
+  rotationTitle: `Rotation`,
+  title: `Keys`,
+  triggerLabel: `How keys work`,
+} as const;
