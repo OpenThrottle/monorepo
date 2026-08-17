@@ -1,0 +1,74 @@
+{
+  "name": "openthrottle-workbench",
+  "description": "Storybook host for browsing @openthrottle/react-router-shadcn: component variants, prop tables, and the shared theme registry applied across the library.",
+  "version": "1.0.0",
+  "author": {
+    "email": "matthew.scholta@gmail.com",
+    "name": "Matthew Scholta",
+    "url": "https://mattscholta.com"
+  },
+  "dependencies": {
+    "@openthrottle/react-router-shadcn": "workspace:^",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@storybook/addon-docs": "catalog:",
+    "@storybook/react-vite": "catalog:",
+    "@tailwindcss/vite": "catalog:",
+    "storybook": "catalog:",
+    "tw-animate-css": "catalog:",
+    "vite": "catalog:"
+  },
+  "license": "Apache-2.0",
+  "nx": {
+    "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "./",
+    "projectType": "application",
+    "tags": [
+      "name:openthrottle-workbench",
+      "production:false",
+      "technology:react",
+      "type:application"
+    ],
+    "targets": {
+      "build": {
+        "cache": true,
+        "description": "Build the workbench to a static Storybook site in {projectRoot}/storybook-static. Nothing consumes this in v1 — it exists so a later static deploy is a small follow-up rather than a new project.",
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "storybook build",
+          "cwd": "{projectRoot}"
+        },
+        "outputs": [
+          "{projectRoot}/storybook-static"
+        ]
+      },
+      "dev": {
+        "continuous": true,
+        "description": "Run the component workbench locally (Storybook dev server on port 6006).",
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "storybook dev -p 6006 --no-open",
+          "cwd": "{projectRoot}"
+        }
+      },
+      "lint": {},
+      "typecheck": {
+        "cache": true,
+        "description": "Type-check the workbench Storybook host with tsc --noEmit. Source-first: the host emits nothing, and it consumes @openthrottle/react-router-shadcn straight from src through Vite.",
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "tsc --noEmit -p tsconfig.json",
+          "cwd": "{projectRoot}"
+        },
+        "outputs": []
+      }
+    }
+  },
+  "private": true,
+  "repository": "git://github.com/OpenThrottle/monorepo.git",
+  "scripts": {},
+  "sideEffects": false,
+  "type": "module"
+}

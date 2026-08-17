@@ -70,6 +70,14 @@
     {
       "properties": {
         "subGenerator": {
+          "const": "story"
+        }
+      },
+      "required": ["subGenerator", "destination", "name"]
+    },
+    {
+      "properties": {
+        "subGenerator": {
           "const": "util"
         }
       },

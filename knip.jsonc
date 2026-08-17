@@ -24,6 +24,14 @@
     // Packages
     "packages/**/src/index.{ts,tsx,js,jsx}",
     "packages/**/src/bin.{ts,js}",
+    // Storybook: stories are co-located in the package they document and are
+    // loaded by the openthrottle-workbench host's `stories` glob, so they are
+    // unreachable from src/index.ts. Declared as entries rather than ignored,
+    // so package exports a story consumes stay correctly marked as used.
+    // Knip's Storybook plugin also infers these from .storybook/main.ts —
+    // listing them makes the contract explicit rather than implicit.
+    "packages/**/src/**/*.stories.tsx",
+    "applications/openthrottle-workbench/.storybook/{main,preview}.{ts,tsx}",
     // Tools
     "tools/**/*.{ts,tsx,js,jsx}",
   ],

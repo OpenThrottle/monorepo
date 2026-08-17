@@ -1,0 +1,24 @@
+/**
+ * Preview stylesheet for the component workbench.
+ *
+ * Import order is the contract documented in
+ * `packages/react-router-shadcn/src/index.css`: Tailwind first, then the
+ * package theme. Tailwind v4 is CSS-first — there is no config-resolution step
+ * to fall back on, so getting this order wrong silently drops styles.
+ *
+ * Mirrors `applications/openthrottle-developer/app/styles.css` so components
+ * render in the workbench exactly as they do in a consuming app. The one
+ * deliberate difference: no app-level `--brand` override, because the workbench
+ * documents the library's own defaults.
+ */
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@import '@openthrottle/react-router-shadcn/src/index.css';
+
+/**
+ * Tailwind v4 content detection. Utility classes used only inside the shadcn
+ * package are invisible to the default scan (which starts from this app), so
+ * without this the preview builds a half-empty stylesheet.
+ */
+@source '../../../packages/react-router-shadcn/src/**/*.{css,ts,tsx}';

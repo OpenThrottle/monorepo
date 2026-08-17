@@ -1,0 +1,19 @@
+{
+  "extends": "../../tsconfig.react.json",
+  "compilerOptions": {
+    "baseUrl": "./",
+    "noEmit": true,
+    "types": ["node", "vite/client"]
+  },
+  "exclude": ["node_modules", "storybook-static"],
+  "files": [],
+  "include": ["**/*.ts", "**/*.tsx"],
+  "references": [
+    {
+      "path": "../../packages/react-router-shadcn"
+    },
+    {
+      "path": "../../tools/dotfiles"
+    }
+  ]
+}

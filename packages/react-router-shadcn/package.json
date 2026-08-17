@@ -28,6 +28,7 @@
     "vaul": "catalog:"
   },
   "devDependencies": {
+    "@storybook/react-vite": "catalog:",
     "@tailwindcss/vite": "catalog:"
   },
   "imports": {

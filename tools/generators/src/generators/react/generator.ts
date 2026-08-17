@@ -6,15 +6,16 @@ import { throwGeneratorError } from '../../utils/generator-errors';
 import { isInteractiveArgPresent } from '../../utils/nx-cli';
 import { componentGenerator } from './generator.component';
 import { hookGenerator } from './generator.hook';
+import { storyGenerator } from './generator.story';
 import { utilGenerator } from './generator.util';
 
 export interface ReactGeneratorSchema {
   readonly describe?: boolean;
   readonly destination?: string;
-  readonly generator?: 'component' | 'hook' | 'util';
+  readonly generator?: 'component' | 'hook' | 'story' | 'util';
   readonly list?: string;
   readonly name?: string;
-  readonly subGenerator?: 'component' | 'hook' | 'util';
+  readonly subGenerator?: 'component' | 'hook' | 'story' | 'util';
   readonly withPrompts?: boolean;
 }
 
@@ -34,7 +35,7 @@ export async function reactGenerator(
         },
         generators: {
           description: 'Available react generator values.',
-          values: ['component', 'hook', 'util'],
+          values: ['component', 'hook', 'story', 'util'],
         },
       },
       options: {
@@ -45,7 +46,7 @@ export async function reactGenerator(
           type: 'string',
         },
         subGenerator: {
-          enum: ['component', 'hook', 'util'],
+          enum: ['component', 'hook', 'story', 'util'],
           required: true,
           type: 'string',
         },
@@ -58,7 +59,7 @@ export async function reactGenerator(
     const listKey = schema.list;
 
     if (listKey === 'generators') {
-      writeJsonToStdout(['component', 'hook', 'util']);
+      writeJsonToStdout(['component', 'hook', 'story', 'util']);
       return;
     }
 
@@ -82,7 +83,7 @@ export async function reactGenerator(
     (interactive
       ? (
           await prompts({
-            choices: ['component', 'hook', 'util'].map((option) => ({
+            choices: ['component', 'hook', 'story', 'util'].map((option) => ({
               title: option,
               value: option,
             })),
@@ -97,9 +98,9 @@ export async function reactGenerator(
     throwGeneratorError({
       code: 'missing_option',
       field: 'subGenerator',
-      hint: 'Re-run with --withPrompts or pass --subGenerator=component|hook|util.',
+      hint: 'Re-run with --withPrompts or pass --subGenerator=component|hook|story|util.',
       message: 'Missing required option: "subGenerator".',
-      validValues: ['component', 'hook', 'util'],
+      validValues: ['component', 'hook', 'story', 'util'],
     });
   }
 
@@ -114,6 +115,14 @@ export async function reactGenerator(
 
     case 'hook':
       await hookGenerator(tree, {
+        destination: schema.destination,
+        interactive,
+        name: schema.name,
+      });
+      break;
+
+    case 'story':
+      await storyGenerator(tree, {
         destination: schema.destination,
         interactive,
         name: schema.name,

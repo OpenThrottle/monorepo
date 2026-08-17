@@ -487,6 +487,14 @@ Most no-build packages are **`technology:react-router`** workspace libraries und
 
 When you change one of these projects, run its `lint`/`typecheck`/`test`, then run `build` or `dev` on a consumer app (e.g. `openthrottle-developer`) as the integration check — `pnpm nx affected --target=build` will not schedule the no-build projects. Audit the set locally with `pnpm nx show projects --with-target=build` versus `pnpm nx show projects`.
 
+For `@openthrottle/react-router-shadcn` specifically, `applications/openthrottle-workbench` (Storybook) is usually the faster integration check than booting a full app — it consumes the package's `src/` straight through Vite and takes no `build` dependency on it. See [applications/openthrottle-workbench/README.md](./applications/openthrottle-workbench/README.md).
+
+### The component workbench
+
+`applications/openthrottle-workbench` is a Storybook 10 host for the shadcn component library — the place to browse components, exercise `cva` variants, read generated API tables, and view the library under every theme in the registry. It is a local dev tool: `production:false`, not deployed.
+
+It owns **no components and no stories**. Stories are co-located in `packages/react-router-shadcn/src/components/`, beside the component they document — the precedent set by that package's ESLint config, which exempts `**/*.stories.tsx` from the component-shape rule. Scaffold one with `@tools/generators:react --subGenerator=story`.
+
 ## Additional Resources
 
 ### Documentation
