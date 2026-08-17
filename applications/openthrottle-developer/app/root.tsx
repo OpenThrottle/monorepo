@@ -464,7 +464,8 @@ export default function App(): React.ReactElement {
   const revalidator = useRevalidator();
   const fetcher = useFetcher();
   const planRefFetcher = useFetcher<PlanRefResolverData>();
-  const groups = useCommanderOptions();
+  const navigation = data?.user ? dataNavigationV2 : dataNavigationGuest;
+  const groups = useCommanderOptions(navigation);
   const { pathname } = useLocation();
   const [commanderOpen, setCommanderOpen] = React.useState(false);
   const [commanderQuery, setCommanderQuery] = React.useState('');
@@ -602,7 +603,7 @@ export default function App(): React.ReactElement {
             >
               <GlobalLayout
                 authenticated={data?.user !== null}
-                data={data?.user ? dataNavigationV2 : dataNavigationGuest}
+                data={navigation}
                 health={data?.serverHealth}
                 overrides={{
                   footer: isFooterHidden,

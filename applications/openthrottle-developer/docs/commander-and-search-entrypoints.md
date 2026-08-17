@@ -32,21 +32,29 @@ This note traces how the OpenThrottle command palette and workspace search work 
 
 **Commander props wired from the app**
 
-| Prop                                             | Source                  | Role                                                                                        |
-| ------------------------------------------------ | ----------------------- | ------------------------------------------------------------------------------------------- |
-| `groups`                                         | `useCommanderOptions()` | Navigation + Actions items (`useNavigate` per item).                                        |
-| `onEmptyStateSearch`                             | `handleSearch`          | Trims query and calls `submitCommanderSearch({ q })`.                                       |
-| `emptyStateExtras`                               | `commanderEmptyExtras`  | Delegates to `buildCommanderEmptyStateExtras` from `~/global/utils/commander-empty-extras`. |
-| `emptyStateMessage`, `footerHint`, `placeholder` | Inline JSX / strings    | Product copy and hints (reference root `action` for POST behavior).                         |
+| Prop                                             | Source                            | Role                                                                                         |
+| ------------------------------------------------ | --------------------------------- | -------------------------------------------------------------------------------------------- |
+| `groups`                                         | `useCommanderOptions(navigation)` | Navigation groups derived from the same record `GlobalLayout` gets (`useNavigate` per item). |
+| `onEmptyStateSearch`                             | `handleSearch`                    | Trims query and calls `submitCommanderSearch({ q })`.                                        |
+| `emptyStateExtras`                               | `commanderEmptyExtras`            | Delegates to `buildCommanderEmptyStateExtras` from `~/global/utils/commander-empty-extras`.  |
+| `emptyStateMessage`, `footerHint`, `placeholder` | Inline JSX / strings              | Product copy and hints (reference root `action` for POST behavior).                          |
 
 **No controlled `open` / `onOpenChange`** — the single commander instance uses **uncontrolled** internal state (`defaultOpen` false). Any future header trigger must open this same instance (controlled state lifted to `App`, or an imperative/event bridge), not mount a second palette.
 
 ## App-specific data: `useCommanderOptions`
 
-**File:** `app/global/hooks/useCommanderOptions.tsx`
+**Files:** `app/global/hooks/useCommanderOptions.ts`, `app/global/utils/navigation-to-commander-groups.tsx`
 
-- Returns static **Navigation** and **Actions** `CommanderGroup[]` with icons and `onSelect` handlers that call `navigate('/…')`.
-- Entirely developer-app routing knowledge; other apps would supply their own hook or static groups.
+- **Navigation data is the single source of truth.** `root.tsx` picks the record once — `const navigation = data?.user ? dataNavigationV2 : dataNavigationGuest` (`app/global/data/data.navigation.ts`) — and passes the _same_ value to both `GlobalLayout data={…}` and `useCommanderOptions(navigation)`. Adding a sidebar link adds a ⌘K row; there is no second list to update.
+- The hook reads `FEATURE_BETA_PREVIEW` / `FEATURE_CHARLIE_PREVIEW` and delegates to the pure mapper `buildCommanderGroupsFromNavigation(navigation, { isBetaEnabled, isCharlieEnabled, navigate })`, memoized on `[navigate, navigation]`.
+- Mapper rules (mirroring `GlobalSidebarContent` visibility):
+  - Group heading = navigation section key (`Agents` / `Settings` / `Workspace`, `Workspace` / `Legal` for guests); groups left empty after filtering are omitted.
+  - `beta: true` rows are dropped unless beta preview is on; `disabled: true` rows are dropped unless charlie preview is on (cmdk has no good "visible but unclickable" row, so omission stands in for the sidebar's `pointer-events-none`).
+  - `label` from the link's string `children`, same lucide icon at commander size (`h-3! w-3!`), `onSelect` → `navigate(to)`.
+  - `id` is slugified from the path (`/settings/agents` → `nav-settings-agents`); the index route `/` (Chats) maps to `nav-home`.
+  - `value` is `"<label> <path>"` so the cmdk filter matches typed names _and_ paths, not just the id.
+- Guest vs authenticated is decided once in `root.tsx`; the hook never re-branches on auth.
+- **Empty-state extras stay separate** — `emptyStateExtras` / `commander-search` POST rows (below) are commander-only and are not produced by this mapper. Same for the currently commented-out Actions group.
 
 ## App-specific empty rows: `commander-empty-extras`
 
