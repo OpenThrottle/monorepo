@@ -1,9 +1,8 @@
 import * as React from 'react';
 import { RouteMatch, useSearchParams } from 'react-router';
 import {
-  DEFAULT_PAGINATION_LIMIT,
-  DEFAULT_PAGINATION_PAGE,
   mergeRouteModuleMeta,
+  parsePagination,
 } from '@openthrottle/react-router-utils';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
@@ -45,27 +44,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   const searchParams = url?.searchParams ?? new URLSearchParams();
   const statuses = parseStatusesFromSearchParams(searchParams);
   const assignees = parseAssigneesFromSearchParams(searchParams);
-  const pageRaw = url?.searchParams.get('page');
-
-  const page = Math.max(
-    DEFAULT_PAGINATION_PAGE,
-    Number.isFinite(Number(pageRaw))
-      ? Number(pageRaw)
-      : DEFAULT_PAGINATION_PAGE,
-  );
-
-  const limitRaw = url?.searchParams.get('limit');
-  const limitParsed =
-    limitRaw != null && limitRaw !== '' ? Number(limitRaw) : NaN;
-
-  const limit = Math.max(
-    1,
-    Number.isFinite(limitParsed) && limitParsed >= 1
-      ? limitParsed
-      : DEFAULT_PAGINATION_LIMIT,
-  );
-
-  const offset = (page - 1) * limit;
+  const { limit, offset, page } = parsePagination(searchParams);
   const q = readSearchParam(searchParams);
   const titleSubstring = q.length > 0 ? q : null;
 

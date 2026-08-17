@@ -1,6 +1,9 @@
 import * as React from 'react';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import {
+  mergeRouteModuleMeta,
+  parsePagination,
+} from '@openthrottle/react-router-utils';
 import {
   GlobalErrorBoundary,
   GlobalLayoutBreadcrumbsHandle,
@@ -44,14 +47,10 @@ export const loader = async (args: Route.LoaderArgs) => {
   );
 
   const url = args.url;
-  const page = Math.max(1, Number(url.searchParams.get('page')) || 1);
-  const limit = Math.max(
-    1,
-    Math.min(
-      100,
-      Number(url.searchParams.get('limit')) || REPOSITORIES_DEFAULT_LIMIT,
-    ),
-  );
+  const { limit, offset, page } = parsePagination(url.searchParams, {
+    defaultLimit: REPOSITORIES_DEFAULT_LIMIT,
+    maxLimit: 100,
+  });
   const search = readSearchParam(url.searchParams);
 
   const sortByParam = url.searchParams.get('sortBy') ?? '';
@@ -73,8 +72,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   // Paging counts PARENT rows only: a parent always carries its worktree
   // children with it, so a group is never split across a page boundary.
   const totalCount = sorted.length;
-  const start = (page - 1) * limit;
-  const rows = sorted.slice(start, start + limit);
+  const rows = sorted.slice(offset, offset + limit);
 
   return {
     autoExpandedIds,

@@ -1,6 +1,9 @@
 import * as React from 'react';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import {
+  mergeRouteModuleMeta,
+  parsePagination,
+} from '@openthrottle/react-router-utils';
 import {
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
@@ -27,23 +30,11 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
 export const loader = async (args: Route.LoaderArgs) => {
   const projectId = args.params.projectId;
   const url = args.url;
-  const pageRaw = url?.searchParams.get('page');
-  const page = Math.max(
-    1,
-    Number.isFinite(Number(pageRaw))
-      ? Number(pageRaw)
-      : PROJECT_TASKS_DEFAULT_PAGE,
-  );
-  const limitRaw = url?.searchParams.get('limit');
-  const limitParsed =
-    limitRaw != null && limitRaw !== '' ? Number(limitRaw) : NaN;
-  const limit = Math.max(
-    1,
-    Number.isFinite(limitParsed) && limitParsed >= 1
-      ? limitParsed
-      : PROJECT_TASKS_DEFAULT_LIMIT,
-  );
-  const offset = (page - 1) * limit;
+  const searchParams = url?.searchParams ?? new URLSearchParams();
+  const { limit, offset, page } = parsePagination(searchParams, {
+    defaultLimit: PROJECT_TASKS_DEFAULT_LIMIT,
+    defaultPage: PROJECT_TASKS_DEFAULT_PAGE,
+  });
 
   const { project, projectTasksResult, skillTagVocabulary } =
     await executeGraphqlWithAuth(args.request, GetProjectByIdDocument, {

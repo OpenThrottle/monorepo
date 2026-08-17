@@ -1,3 +1,4 @@
+import { parsePagination } from '@openthrottle/react-router-utils';
 import {
   DEFAULT_SEARCH_LIMIT,
   SEARCH_BASE_PATH,
@@ -19,17 +20,10 @@ export function parseSearchParams(
   searchParams: URLSearchParams,
 ): ParsedSearchParams {
   const q = searchParams.get('q') ?? '';
-  const pageRaw = searchParams.get('page');
-  const page = Math.max(1, parseInt(pageRaw ?? '1', 10) || 1);
-  const limitRaw = searchParams.get('limit');
-  const limit = Math.max(
-    1,
-    Math.min(
-      100,
-      parseInt(limitRaw ?? String(DEFAULT_SEARCH_LIMIT), 10) ||
-        DEFAULT_SEARCH_LIMIT,
-    ),
-  );
+  const { limit, page } = parsePagination(searchParams, {
+    defaultLimit: DEFAULT_SEARCH_LIMIT,
+    maxLimit: 100,
+  });
   const details = searchParams.get('details') ?? '';
   const expandRankingDetails = details === 'ranking';
   return { expandRankingDetails, limit, page, q };

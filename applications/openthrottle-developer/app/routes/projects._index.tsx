@@ -9,7 +9,10 @@ import {
   GlobalScreen,
   readSearchParam,
 } from '@openthrottle/react-router-ui-global';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import {
+  mergeRouteModuleMeta,
+  parsePagination,
+} from '@openthrottle/react-router-utils';
 import { OpenThrottlePagination } from '@openthrottle/react-router-ui';
 import { GetProjectsDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
@@ -50,14 +53,10 @@ export const loader = async (args: Route.LoaderArgs) => {
   );
 
   const url = args.url;
-  const page = Math.max(1, Number(url.searchParams.get('page')) || 1);
-  const limit = Math.max(
-    1,
-    Math.min(
-      100,
-      Number(url.searchParams.get('limit')) || PROJECTS_DEFAULT_LIMIT,
-    ),
-  );
+  const { limit, offset, page } = parsePagination(url.searchParams, {
+    defaultLimit: PROJECTS_DEFAULT_LIMIT,
+    maxLimit: 100,
+  });
   const search = readSearchParam(url.searchParams);
 
   const sortByParam = url.searchParams.get('sortBy') ?? '';
@@ -73,8 +72,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   const filtered = parseProjectsBySearch(projectsToShow, search);
   const sorted = sortProjects(filtered, sortBy, sortOrder);
   const totalCount = sorted.length;
-  const start = (page - 1) * limit;
-  const paginatedProjects = sorted.slice(start, start + limit);
+  const paginatedProjects = sorted.slice(offset, offset + limit);
 
   /** Mock total plans linked across projects; when API supports it, replace with real value. */
   const plansLinkedCount = projectsToShow.reduce(
