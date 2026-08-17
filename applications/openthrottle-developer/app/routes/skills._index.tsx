@@ -7,6 +7,8 @@ import {
   parsePaginationPage,
 } from '@openthrottle/react-router-utils';
 import {
+  GlobalFeatureOnboarding,
+  GlobalFeatureOnboardingModal,
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
   readSearchParam,
@@ -20,6 +22,7 @@ import { SkillsIntroduction } from '~/routing/skills/components/SkillsIntroducti
 import { SkillsTable } from '~/routing/skills/components/SkillsTable';
 import { SkillsToolbar } from '~/routing/skills/components/SkillsToolbar';
 import { SKILL_USAGE_RANGE_DAYS } from '~/routing/skills/config/skill-usage';
+import { SKILLS_ONBOARDING } from '~/routing/skills/data/data.copy';
 import {
   loadProjectSkillFlags,
   loadSkillAvailability,
@@ -134,6 +137,13 @@ export default function Component(
     ],
     [entries, search, sourceFilter],
   );
+  // A genuinely-new user has no discovered SKILL.md at all and no active
+  // search/source filter — show the teaching pitch instead of the toolbar,
+  // table, and pager. Gated on the pre-filter `entries` so a zero-result
+  // *filtered* view still falls through to SkillsTable -> SkillsEmpty with its
+  // clear-search affordance.
+  const isFiltered = search.trim().length > 0 || sourceFilter !== 'all';
+  const isNewUser = entries.length === 0 && !isFiltered;
   const pendingSlug =
     tagFetcher.state === 'idle'
       ? undefined
@@ -191,38 +201,49 @@ export default function Component(
   return (
     <>
       <GlobalScreen>
-        <SkillsIntroduction entries={[...entries]} />
+        <SkillsIntroduction />
 
-        <div className="flex flex-col gap-4">
-          <SkillsToolbar
-            onSourceFilterChange={handleSourceFilterChange}
-            sourceFilter={sourceFilter}
-          />
-          <SkillsTable
-            className="bg-card"
-            entries={pageEntries}
-            onAddTag={(slug, tag) =>
-              submitTagIntent(SKILL_RECORD_TAG_INTENTS.ADD_TAG, slug, tag)
-            }
-            onRemoveOrphan={(slug) =>
-              submitTagIntent(SKILL_RECORD_TAG_INTENTS.REMOVE_ORPHAN, slug)
-            }
-            onRemoveTag={(slug, tag) =>
-              submitTagIntent(SKILL_RECORD_TAG_INTENTS.REMOVE_TAG, slug, tag)
-            }
-            pendingSlug={pendingSlug}
-            vocabulary={tagVocabulary}
-          />
-        </div>
+        {isNewUser ? (
+          <GlobalFeatureOnboarding content={SKILLS_ONBOARDING} />
+        ) : (
+          <>
+            <div className="flex flex-col gap-4">
+              <SkillsToolbar
+                onSourceFilterChange={handleSourceFilterChange}
+                sourceFilter={sourceFilter}
+              />
+              <SkillsTable
+                className="bg-card"
+                entries={pageEntries}
+                onAddTag={(slug, tag) =>
+                  submitTagIntent(SKILL_RECORD_TAG_INTENTS.ADD_TAG, slug, tag)
+                }
+                onRemoveOrphan={(slug) =>
+                  submitTagIntent(SKILL_RECORD_TAG_INTENTS.REMOVE_ORPHAN, slug)
+                }
+                onRemoveTag={(slug, tag) =>
+                  submitTagIntent(
+                    SKILL_RECORD_TAG_INTENTS.REMOVE_TAG,
+                    slug,
+                    tag,
+                  )
+                }
+                pendingSlug={pendingSlug}
+                search={search}
+                vocabulary={tagVocabulary}
+              />
+            </div>
 
-        <OpenThrottlePagination
-          basePath="/skills"
-          className="mt-8"
-          limit={limit}
-          page={page}
-          resultLabel="skills"
-          total={totalCount}
-        />
+            <OpenThrottlePagination
+              basePath="/skills"
+              className="mt-8"
+              limit={limit}
+              page={page}
+              resultLabel="skills"
+              total={totalCount}
+            />
+          </>
+        )}
 
         {/* Deferred aggregate usage: RR8 streams the loader promise so the
             skills list above paints first and the chart + leaderboard hydrate
@@ -244,6 +265,7 @@ export default function Component(
           </Await>
         </React.Suspense>
       </GlobalScreen>
+      <GlobalFeatureOnboardingModal content={SKILLS_ONBOARDING} />
     </>
   );
 }

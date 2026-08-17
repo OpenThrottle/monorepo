@@ -1,19 +1,38 @@
 import * as React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import type { RenderResult } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
-import { describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test } from 'vitest';
 import { SkillsIntroduction } from '../SkillsIntroduction';
+import { SKILLS_COPY } from '~/routing/skills/data/data.copy';
 
 describe('SkillsIntroduction Component', () => {
-  test('renders page title and explanatory copy', () => {
+  let component: RenderResult;
+
+  beforeEach(() => {
     const Component = () => <SkillsIntroduction />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    render(<RoutesStub />);
+    component = render(<RoutesStub />);
+  });
 
+  test('renders the page title as the top-level heading', () => {
     expect(
-      screen.getByRole('heading', { level: 3, name: 'Skills' }),
+      component.getByRole('heading', {
+        level: 1,
+        name: SKILLS_COPY.pageTitle,
+      }),
     ).toBeInTheDocument();
-    expect(screen.getByText('SKILL.md')).toBeInTheDocument();
-    expect(screen.getByText(/Discovered/i)).toBeInTheDocument();
+  });
+
+  test('renders the explanatory copy', () => {
+    expect(
+      component.getByText(SKILLS_COPY.pageDescription),
+    ).toBeInTheDocument();
+  });
+
+  test('renders the onboarding trigger so the pitch stays reachable', () => {
+    expect(
+      component.getByTestId('GlobalFeatureOnboardingTrigger'),
+    ).toBeInTheDocument();
   });
 });

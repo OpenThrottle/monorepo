@@ -1,18 +1,16 @@
 import * as React from 'react';
-import { GlobalHeading } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalFeatureOnboardingTrigger,
+  GlobalHeading,
+} from '@openthrottle/react-router-ui-global';
 import { BrainCircuitIcon } from 'lucide-react';
-import { SkillsOverviewDialog } from '~/routing/skills/components/SkillsOverviewDialog';
-import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
+import { SKILLS_COPY } from '~/routing/skills/data/data.copy';
 
-export interface SkillsIntroductionProps {
-  entries?: RepoSkillEntry[];
-}
+export interface SkillsIntroductionProps {}
 
 export const SkillsIntroduction = (
-  props: SkillsIntroductionProps,
+  _props: SkillsIntroductionProps,
 ): React.ReactElement => {
-  const { entries } = props;
-
   // Hooks
 
   // Setup
@@ -26,19 +24,17 @@ export const SkillsIntroduction = (
   // 🔌 Short Circuit
 
   return (
-    <div>
-      <SkillsOverviewDialog entries={entries}>
-        <GlobalHeading
-          className="mb-4"
-          heading="h3"
-          icon={BrainCircuitIcon}
-          title="Skills"
-        />
-      </SkillsOverviewDialog>
+    <div data-testid="SkillsIntroduction">
+      <GlobalHeading
+        className="mb-4"
+        heading="h1"
+        icon={BrainCircuitIcon}
+        title={SKILLS_COPY.pageTitle}
+      >
+        <GlobalFeatureOnboardingTrigger />
+      </GlobalHeading>
       <p className="text-muted-foreground text-sm">
-        Discovered <code className="text-xs">SKILL.md</code> paths in this
-        monorepo — compare with disk and Cursor routing when debugging skill
-        picks.
+        {SKILLS_COPY.pageDescription}
       </p>
     </div>
   );

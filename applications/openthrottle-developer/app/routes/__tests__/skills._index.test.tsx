@@ -6,6 +6,10 @@ import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 import type { SkillsIndexUsageData } from '~/routing/skills/data/skills-index-usage';
+import {
+  SKILLS_EMPTY_COPY,
+  SKILLS_ONBOARDING,
+} from '~/routing/skills/data/data.copy';
 import { buildRootMatch } from '~/testing/root-match-fixture';
 import Component from '../skills._index';
 import type { Route } from '@/app/routes/+types/skills._index';
@@ -33,9 +37,10 @@ const unavailableUsage: SkillsIndexUsageData = { available: false };
 
 const buildLoaderData = (
   usage: SkillsIndexUsageData = unavailableUsage,
+  loaderEntries: RepoSkillEntry[] = entries,
 ): Route.ComponentProps['loaderData'] => ({
-  entries,
-  linkableSlugs: entries.map((entry) => entry.slug),
+  entries: loaderEntries,
+  linkableSlugs: loaderEntries.map((entry) => entry.slug),
   tagVocabulary: [],
   usage: Promise.resolve(usage),
 });
@@ -54,10 +59,11 @@ const matches: Route.ComponentProps['matches'] = [
 const renderRoute = (
   initialPath: string,
   usage: SkillsIndexUsageData = unavailableUsage,
+  loaderEntries: RepoSkillEntry[] = entries,
 ) => {
   // Build loaderData ONCE so the deferred `usage` promise is stable across
   // re-renders — a fresh Promise per render makes <Await> re-suspend forever.
-  const loaderData = buildLoaderData(usage);
+  const loaderData = buildLoaderData(usage, loaderEntries);
   const RoutesStub = createRoutesStub([
     {
       // Hardcode loaderData (no stub loader) so the first synchronous render
@@ -250,6 +256,85 @@ describe('routes/skills._index.tsx usage sections', () => {
       await component.findByTestId('SkillsIndexUsageUnavailable'),
     ).toBeInTheDocument();
     // The skills table still rendered.
+    expect(component.getByTestId('SkillsTable')).toBeInTheDocument();
+  });
+});
+
+describe('routes/skills._index.tsx onboarding', () => {
+  test('shows the pitch when no SKILL.md is discovered and nothing is filtered', () => {
+    const component = renderRoute('/skills', unavailableUsage, []);
+
+    // The teaching block replaces the toolbar, table, and pager entirely.
+    expect(
+      component.getByTestId('GlobalFeatureOnboarding'),
+    ).toBeInTheDocument();
+    expect(component.queryByTestId('SkillsToolbar')).not.toBeInTheDocument();
+    expect(component.queryByTestId('SkillsTable')).not.toBeInTheDocument();
+    expect(
+      component.queryByTestId('OpenThrottlePagination'),
+    ).not.toBeInTheDocument();
+    expect(
+      component.getByRole('link', { name: SKILLS_ONBOARDING.cta.label }),
+    ).toHaveAttribute('href', SKILLS_ONBOARDING.cta.to);
+  });
+
+  test('links the spec CTA out to a new tab', () => {
+    const component = renderRoute('/skills', unavailableUsage, []);
+    const secondary = SKILLS_ONBOARDING.secondary;
+
+    // Narrowing keeps the assertion honest if the copy ever drops the link.
+    expect(secondary).toBeDefined();
+    const link = component.getByRole('link', { name: secondary?.label });
+    expect(link).toHaveAttribute('href', secondary?.to);
+    expect(link).toHaveAttribute('target', '_blank');
+  });
+
+  test('falls through to the table/empty state when a search is active', () => {
+    const component = renderRoute(
+      '/skills?search=nothing-matches',
+      unavailableUsage,
+      [],
+    );
+
+    // Filtered-but-empty is NOT a new user — keep the clear-search affordance.
+    expect(
+      component.queryByTestId('GlobalFeatureOnboarding'),
+    ).not.toBeInTheDocument();
+    expect(component.getByTestId('SkillsToolbar')).toBeInTheDocument();
+    expect(component.getByTestId('SkillsTable')).toBeInTheDocument();
+    // The empty state knows a search is active, so it offers a way back out.
+    expect(
+      component.getByRole('heading', { name: SKILLS_EMPTY_COPY.searchTitle }),
+    ).toBeInTheDocument();
+    expect(
+      component.getByRole('link', { name: 'Clear filters' }),
+    ).toHaveAttribute('href', '/skills');
+  });
+
+  test('a populated list renders the table with the trigger, not the inline pitch', () => {
+    const component = renderRoute('/skills');
+
+    expect(component.getByTestId('SkillsTable')).toBeInTheDocument();
+    expect(
+      component.getByTestId('GlobalFeatureOnboardingTrigger'),
+    ).toBeInTheDocument();
+    expect(
+      component.queryByTestId('GlobalFeatureOnboarding'),
+    ).not.toBeInTheDocument();
+  });
+
+  test('?modal=onboarding opens the same pitch over a populated list', () => {
+    const component = renderRoute('/skills?modal=onboarding');
+
+    expect(
+      component.getByTestId('GlobalFeatureOnboarding'),
+    ).toBeInTheDocument();
+    // Single-sourced copy: the modal shows the same title + tagline.
+    expect(
+      component.getByRole('heading', { name: SKILLS_ONBOARDING.title }),
+    ).toBeInTheDocument();
+    expect(component.getByText(SKILLS_ONBOARDING.tagline)).toBeInTheDocument();
+    // The list stays behind the dialog.
     expect(component.getByTestId('SkillsTable')).toBeInTheDocument();
   });
 });
