@@ -91,26 +91,14 @@ export const RepositoriesSection = (
   return (
     <>
       <div className="w-full">
-        <div className="flex items-center justify-between">
+        <div className="mb-4 flex items-center justify-between">
           <GlobalHeading
-            className="mb-4 flex-1"
             heading="h1"
             icon={FolderGit2Icon}
             title="Repositories"
           />
-
-          <div className="flex items-center space-x-2">
-            <GlobalFeatureOnboardingTrigger />
-            <CloneRepoDialog actionError={actionError} />
-            <AddFolderDialog
-              actionError={actionError}
-              discoveredFolders={discoveredFolders}
-              pickerCapabilities={pickerCapabilities}
-            />
-          </div>
+          <GlobalFeatureOnboardingTrigger />
         </div>
-
-        <GlobalFeatureOnboardingModal content={REPOSITORIES_ONBOARDING} />
 
         <p className="text-muted-foreground text-sm">
           {WORKSPACE_FOLDERS_COPY.sectionDescription}
@@ -145,7 +133,16 @@ export const RepositoriesSection = (
               search={search}
               sortBy={sortBy}
               sortOrder={sortOrder}
-            />
+            >
+              <>
+                <CloneRepoDialog actionError={actionError} />
+                <AddFolderDialog
+                  actionError={actionError}
+                  discoveredFolders={discoveredFolders}
+                  pickerCapabilities={pickerCapabilities}
+                />
+              </>
+            </RepositoriesToolbar>
             <RepositoriesTable
               autoExpandedIds={autoExpandedIds}
               driftByCheckoutId={driftByCheckoutId}
@@ -165,6 +162,8 @@ export const RepositoriesSection = (
           </div>
         )}
       </section>
+
+      <GlobalFeatureOnboardingModal content={REPOSITORIES_ONBOARDING} />
     </>
   );
 };

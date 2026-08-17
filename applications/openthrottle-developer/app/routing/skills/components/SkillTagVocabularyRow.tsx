@@ -69,7 +69,10 @@ export const SkillTagVocabularyRow = (
   // 🔌 Short Circuit
 
   return (
-    <TableRow data-testid={`SkillTagVocabularyRow-${tag.tag}`}>
+    <TableRow
+      className="border-0"
+      data-testid={`SkillTagVocabularyRow-${tag.tag}`}
+    >
       <TableCell>
         <renameFetcher.Form
           className="flex items-center gap-2"

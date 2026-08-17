@@ -61,6 +61,18 @@ export default function Component(
 ): React.ReactElement {
   const { content, persona } = props.loaderData;
 
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
   return (
     <GlobalScreen>
       <div className="mb-4">

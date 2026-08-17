@@ -33,14 +33,14 @@ export const SettingsKeysIntroduction = (
 
   return (
     <div className={className} data-testid="SettingsKeysIntroduction">
-      <GlobalHeading
-        className="mb-4"
-        heading="h1"
-        icon={KeyRoundIcon}
-        title={SETTINGS_KEYS_COPY.title}
-      >
+      <div className="mb-4 flex items-center justify-between">
+        <GlobalHeading
+          heading="h1"
+          icon={KeyRoundIcon}
+          title={SETTINGS_KEYS_COPY.title}
+        />
         <SettingsKeysHelpTrigger />
-      </GlobalHeading>
+      </div>
       <p className="text-muted-foreground text-sm">
         {SETTINGS_KEYS_COPY.introPrefix}
         <code className="text-xs">{SETTINGS_KEYS_COPY.introTokenCode}</code>

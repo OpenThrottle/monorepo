@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { Button } from '@openthrottle/react-router-shadcn';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
   GlobalErrorBoundary,
@@ -17,6 +18,7 @@ import {
   SCHEDULE_ONBOARDING,
 } from '~/routing/schedule/data/data.copy';
 import type { Route } from '@/app/routes/+types/schedule._index';
+import { Link } from 'react-router';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -65,16 +67,24 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <GlobalScreen>
+    <>
+      <GlobalScreen>
+        <ScheduleIntroduction />
+        {isNewUser ? (
+          <GlobalFeatureOnboarding content={SCHEDULE_ONBOARDING} />
+        ) : (
+          <div>
+            <Button asChild={true} size="xs">
+              <Link to="/schedule/create">
+                {SCHEDULE_COPY.newScheduleAction}
+              </Link>
+            </Button>
+            <ScheduleTable className="bg-card" jobs={jobs} />
+          </div>
+        )}
+      </GlobalScreen>
       <GlobalFeatureOnboardingModal content={SCHEDULE_ONBOARDING} />
-      <ScheduleIntroduction />
-
-      {isNewUser ? (
-        <GlobalFeatureOnboarding content={SCHEDULE_ONBOARDING} />
-      ) : (
-        <ScheduleTable className="bg-card" jobs={jobs} />
-      )}
-    </GlobalScreen>
+    </>
   );
 }
 

@@ -21,6 +21,7 @@ import {
 import { REPOSITORIES_TABLE_COPY } from '~/routing/settings/repositories/data/data.copy';
 
 export interface RepositoriesToolbarProps {
+  children: React.ReactNode;
   className?: string;
   limit: number;
   page: number;
@@ -32,13 +33,14 @@ export interface RepositoriesToolbarProps {
 /**
  * @description Search + sort toolbar for the repositories index, mirroring
  * ProjectsToolbar: search commits through `GlobalToolbarSearch` and resets
- * paging, sort is a sibling control that preserves `limit`. The header actions
- * (onboarding trigger, clone, add folder) stay in the page header.
+ * paging, sort is a sibling control that preserves `limit`. The clone and
+ * add-folder dialogs render through `children`; only the onboarding trigger
+ * stays in the page header.
  */
 export const RepositoriesToolbar = (
   props: RepositoriesToolbarProps,
 ): React.ReactElement => {
-  const { className, limit, page, sortBy, sortOrder } = props;
+  const { children, className, limit, page, sortBy, sortOrder } = props;
 
   const resolvedSortBy: RepositoriesSortBy =
     REPOSITORIES_SORT_BY.find((value) => value === sortBy) ??
@@ -116,6 +118,7 @@ export const RepositoriesToolbar = (
         </Select>
 
         <div className="min-w-0 flex-1" />
+        {children}
       </div>
     </div>
   );

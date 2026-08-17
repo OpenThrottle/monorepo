@@ -4,6 +4,10 @@ import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { buildRootMatch } from '~/testing/root-match-fixture';
+import {
+  SKILL_AVAILABILITY_COPY,
+  SKILL_VOCABULARY_COPY,
+} from '~/routing/skills/data/data.copy';
 import Component from '../skills.vocabulary';
 import type { Route } from '@/app/routes/+types/skills.vocabulary';
 
@@ -45,12 +49,23 @@ describe('routes/skills.vocabulary.tsx', () => {
     const view = renderRoute({ vocabulary: [] });
 
     expect(
-      view.getByRole('heading', { name: 'Skill tag vocabulary' }),
+      view.getByRole('heading', { name: SKILL_VOCABULARY_COPY.pageTitle }),
     ).toBeInTheDocument();
-    expect(view.getByRole('link', { name: /Back to skills/i })).toHaveAttribute(
-      'href',
-      '/skills',
-    );
+    expect(
+      view.getByRole('link', { name: SKILL_VOCABULARY_COPY.backLink }),
+    ).toHaveAttribute('href', '/skills');
+  });
+
+  // The rename/remove caveat renders here, appended to the page description,
+  // rather than inside SkillTagVocabularyManager — so this route owns it.
+  test('renders the page description with the rename/remove caveat', () => {
+    const view = renderRoute({ vocabulary: [] });
+
+    expect(
+      view.getByText(
+        `${SKILL_VOCABULARY_COPY.pageDescription} ${SKILL_AVAILABILITY_COPY.vocabulary.caveat}`,
+      ),
+    ).toBeInTheDocument();
   });
 
   test('renders the tag-vocabulary manager from loader data', () => {

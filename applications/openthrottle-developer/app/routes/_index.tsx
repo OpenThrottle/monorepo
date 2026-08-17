@@ -77,20 +77,9 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData: _a, loaderData, matches: _m, params: _p } = props;
-
   const { composerData } = loaderData;
 
-  // The streaming turn lifecycle (thread state, start/cancel to the
-  // conversation-stream resource action, live subscription, pending overlay)
-  // lives in a reusable hook shared with the global header chat. It is client
-  // state — independent of the loader — so the shell renders without waiting.
-  const turn = useAgenticChatTurn();
-
-  // Persisted-conversation list backing the sidebar (list + rename + delete +
-  // refresh); posts to the route-independent resource action.
-  const conversationList = useConversationList();
-
-  const isEmptyThread = turn.messages.length === 0;
+  // Hooks
 
   // Deep-link entry point: `/?conversationId=<id>` (e.g. from the dashboard
   // "Recent chats" card) restores that conversation on mount. `turn` is fresh
@@ -99,10 +88,22 @@ export default function Component(
   // param value (not on every render, nor when in-page navigation changes other
   // search params).
   const [searchParams] = useSearchParams();
-  const conversationIdParam = searchParams.get('conversationId');
+  // The streaming turn lifecycle (thread state, start/cancel to the
+  // conversation-stream resource action, live subscription, pending overlay)
+  // lives in a reusable hook shared with the global header chat. It is client
+  // state — independent of the loader — so the shell renders without waiting.
+  const turn = useAgenticChatTurn();
   const restoredConversationIdRef = useRef<string | null>(null);
   const turnRef = useRef(turn);
   turnRef.current = turn;
+
+  // Persisted-conversation list backing the sidebar (list + rename + delete +
+  // refresh); posts to the route-independent resource action.
+  const conversationList = useConversationList();
+
+  // Setup
+  const isEmptyThread = turn.messages.length === 0;
+  const conversationIdParam = searchParams.get('conversationId');
 
   // Handlers
   const onNewChat = (): void => {

@@ -97,6 +97,16 @@ export default function Component(
   const { loaderData, params } = props;
   const { plan } = loaderData;
 
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
   // 🔌 Short Circuit
   if (!plan) {
     return (

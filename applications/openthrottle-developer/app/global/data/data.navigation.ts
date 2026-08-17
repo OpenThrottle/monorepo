@@ -37,19 +37,19 @@ import {
 const linksLegal = [
   {
     children: 'License',
-    disabled: false, // 🔴 🟠 🟡 🟢
+    disabled: false,
     icon: BookOpenIcon,
     to: '/legal/license',
   },
   {
     children: 'Privacy policy',
-    disabled: false, // 🔴 🟠 🟡 🟢
+    disabled: false,
     icon: BookOpenIcon,
     to: '/legal/privacy-policy',
   },
   {
     children: 'Terms of use',
-    disabled: false, // 🔴 🟠 🟡 🟢
+    disabled: false,
     icon: BookOpenIcon,
     to: '/legal/terms-of-use',
   },
@@ -62,74 +62,74 @@ export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
       {
         beta: true,
         children: 'Calendar',
-        disabled: true, // 🔴
+        disabled: true,
         icon: CalendarDaysIcon,
         to: '/calendar',
       },
       {
         children: 'Chats',
-        disabled: false, // 🔴 🟠 🟡
+        disabled: false,
         end: true,
         icon: MessageCircleCode,
         to: '/',
       },
       {
         children: 'Dashboard',
-        disabled: false, // 🔴 🟠 🟡 🟢
+        disabled: false,
         icon: GaugeIcon,
         to: '/dashboard',
       },
       {
         beta: true,
         children: 'IDE',
-        disabled: true, // 🔴
+        disabled: true,
         icon: CodeIcon,
         to: '/ide',
       },
       {
         beta: true,
         children: 'Personas',
-        disabled: true, // 🔴
+        disabled: true,
         icon: BrainCircuitIcon,
         to: '/personas',
       },
       {
         children: 'Plans',
-        disabled: false, // 🔴 🟠 🟡 🟢
+        disabled: false,
         icon: NotebookTextIcon,
         end: false,
         to: '/plans',
       },
       {
         children: 'Projects',
-        disabled: false, // 🔴 🟠 🟡
+        disabled: false,
         icon: FoldersIcon,
         to: '/projects',
       },
       {
         beta: true,
         children: 'Prompts',
-        disabled: true, // 🔴
+        disabled: true,
         icon: BrainIcon,
         to: '/prompts',
       },
       {
         beta: true,
         children: 'Pull Requests',
-        disabled: true, // 🔴 🟠
+        disabled: true,
         icon: GitPullRequest,
         to: '/pull-requests',
       },
       {
         children: 'Queues',
-        disabled: false, // 🔴 🟠 🟡
+        disabled: false,
         icon: ListOrderedIcon,
         to: '/queues',
       },
       {
         beta: false,
         children: 'Rules',
-        disabled: false, // 🔴
+        disabled: false,
         icon: WandSparklesIcon,
         to: '/rules',
       },
@@ -142,20 +142,20 @@ export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
       {
         beta: false,
         children: 'Skills',
-        disabled: false, // 🔴
+        disabled: false,
         icon: BrainCircuitIcon,
         to: '/skills',
       },
       {
         beta: true,
         children: 'Search',
-        disabled: true, // 🔴
+        disabled: true,
         icon: Search,
         to: '/search',
       },
       {
         children: 'Usage',
-        disabled: false, // 🔴 🟠
+        disabled: false,
         icon: ChartAreaIcon,
         to: '/usage',
       },
@@ -164,66 +164,66 @@ export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
       {
         beta: false,
         children: 'Agents',
-        disabled: false, // 🔴 🟠 🟡
+        disabled: false,
         icon: HatGlassesIcon,
         to: '/settings/agents',
       },
       {
         beta: true,
         children: 'Application',
-        disabled: false, // 🔴 🟠 🟡 🟢
+        disabled: false,
         icon: BinaryIcon,
         to: '/settings/application',
       },
       {
         children: 'Appearance',
-        disabled: false, // 🔴 🟠 🟡 🟢
+        disabled: false,
         icon: SwatchBookIcon,
         to: '/settings/appearance',
       },
       {
         beta: true,
         children: 'Debug',
-        disabled: false, // 🔴 🟠 🟡 🟢
+        disabled: false,
         icon: BugIcon,
         to: '/settings/debug',
       },
       {
         children: 'Keys',
-        disabled: false, // 🔴 🟠 🟡 🟢
+        disabled: false,
         icon: KeyRoundIcon,
         to: '/settings/keys',
       },
       {
         beta: true,
         children: 'Logs',
-        disabled: false, // 🔴 🟠 🟡
+        disabled: false,
         icon: TerminalSquareIcon,
         to: '/settings/logs',
       },
       {
         beta: true,
         children: 'MCP',
-        disabled: true, // 🔴 🟠 🟡 🟢
+        disabled: true,
         icon: BlocksIcon,
         to: '/settings/mcp',
       },
       {
         children: 'Repositories',
-        disabled: false, // 🔴 🟠 🟡 🟢
+        disabled: false,
         icon: FolderGit2Icon,
         to: '/settings/repositories',
       },
       {
         beta: true,
         children: 'Rollout',
-        disabled: true, // 🔴
+        disabled: true,
         icon: ToggleRightIcon,
         to: '/settings/rollout',
       },
       {
         children: 'Workspace',
-        disabled: false, // 🔴 🟠 🟡
+        disabled: false,
         icon: MonitorCogIcon,
         to: '/settings/workspace',
       },
@@ -231,26 +231,26 @@ export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
     Workspace: [
       {
         children: 'Documentation',
-        disabled: false, // 🔴 🟠
+        disabled: false,
         icon: BookOpenIcon,
         to: '/docs',
       },
       {
         children: 'FAQ',
-        disabled: false, // 🔴 🟠
+        disabled: false,
         icon: CircleHelpIcon,
         to: '/faq',
       },
       {
         children: 'Notes',
-        disabled: false, // 🔴 🟠
+        disabled: false,
         icon: StickyNoteIcon,
         to: '/notes',
       },
       {
         beta: true,
         children: 'Notifications',
-        disabled: true, // 🔴 🟠 🟡 🟢
+        disabled: false,
         icon: BellIcon,
         to: '/notifications',
       },

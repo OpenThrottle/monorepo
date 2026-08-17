@@ -54,12 +54,12 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData: _a, loaderData, matches: _m, params: _p } = props;
+  const { queues } = loaderData;
 
   // Hooks
   const [searchParams] = useSearchParams();
 
   // Setup
-  const { queues } = loaderData;
   const query = readSearchParam(searchParams).toLowerCase();
   const filteredQueues =
     query === ''
