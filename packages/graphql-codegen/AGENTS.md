@@ -6,7 +6,7 @@ and exports `defineCodegen()` so per-project `codegen.ts` files declare only the
 documents/output dir. Backs the root `codegen-graphql` / `codegen-react-router` flow.
 
 **Consumed by:** the four React Router apps (`openthrottle-developer`, `-admin`, `-email`,
-`-website`), `vscode-openthrottle`, `openthrottle-mcp`, `openthrottle-workflows`,
+`-website`), `openthrottle-mcp`, `openthrottle-workflows`,
 `openthrottle-agentic-ralph`, `openthrottle-developer-codegen`, and the
 `@tools/generators` react-router template.
 

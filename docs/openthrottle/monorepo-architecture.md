@@ -36,7 +36,6 @@ flowchart TB
     ReactRouterAuth["react-router-auth"]
     ReactRouterGraphQL["react-router-graphql"]
     ReactRouterUI["react-router-ui"]
-    VSCode["vscode-openthrottle"]
   end
 
   subgraph Data["Data & workflows"]
@@ -108,7 +107,6 @@ Shared infra used by the server: **Postgres** (OpenThrottle schema in `databases
 | **@openthrottle/nestjs-repositories**        | TypeORM-based data access for OpenThrottle (plans, tasks, embeddings, commit_links, plan_output_stream, documentation, users, roles, etc.); used only by openthrottle-server. |
 | **@openthrottle/openthrottle-notifications** | Notifications (e.g. used by server/developer).                                                                                                                                |
 | **@openthrottle/react-router-\***            | Shared React Router libs (auth, GraphQL, UI, utils, editor, profiling, chat) for the developer and other OT UIs.                                                              |
-| **@openthrottle/vscode-openthrottle**        | VS Code extension for OpenThrottle.                                                                                                                                           |
 
 ---
 

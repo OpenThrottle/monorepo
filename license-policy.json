@@ -72,12 +72,6 @@
       "reason": "Source-available non-compete (PolyForm Shield 1.0.0); shipped as the MeshGradient auth-screen background in react-router-ui-global. Competing use scoped to paper.design's domain, not OpenThrottle's. Owner-approved waiver 2026-07-27. Requires NOTICE attribution.",
       "scope": "runtime",
       "notice": true
-    },
-    {
-      "package": "@vscode/vsce-sign",
-      "license": "LicenseRef-Microsoft-vsce-sign",
-      "reason": "Microsoft proprietary EULA; build/publish tooling via @vscode/vsce (VS Code extension packaging), not shipped in any product bundle. Its native postinstall build is disabled in pnpm-workspace.yaml. Its per-arch native binaries (@vscode/vsce-sign-<os>-<arch>) need no separate waiver: they declare os/cpu and are excluded from the gate as platform-specific.",
-      "scope": "build-tooling"
     }
   ]
 }

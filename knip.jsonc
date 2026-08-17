@@ -100,8 +100,6 @@
     "prettier",
     "typescript",
     "vitest",
-    // vscode-openthrottle: used by nx `project:build` (`pnpm exec vsce package`)
-    "@vscode/vsce",
   ],
   "project": [
     "applications/**/*.{ts,tsx,js,jsx}",
@@ -265,7 +263,6 @@
         "use-latest-callback",
         "usehooks-ts",
         "uuid",
-        "vscode-openthrottle",
         "waait",
         "webpack-cli",
         "whatwg-url-without-unicode",

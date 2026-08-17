@@ -17,9 +17,6 @@
       "path": "./tools/workflows"
     },
     {
-      "path": "./packages/vscode-openthrottle"
-    },
-    {
       "path": "./applications/openthrottle-developer"
     },
     {
@@ -84,9 +81,6 @@
     },
     {
       "path": "./packages/openthrottle-notifications"
-    },
-    {
-      "path": "./packages/openthrottle-vscode"
     },
     {
       "path": "./packages/nestjs-bullmq-board"
