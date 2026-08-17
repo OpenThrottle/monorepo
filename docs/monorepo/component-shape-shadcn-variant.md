@@ -283,6 +283,17 @@ the permanent artifact exclusions shared with the base standard:
 Utilities under `packages/react-router-shadcn/src/utils/**` (e.g. `cn`) are not
 components and are out of scope for the component shape.
 
+`**/*.stories.tsx` is worth calling out now that stories actually exist. They sit
+next to the component they document — loaded by the `openthrottle-workbench`
+Storybook host, which owns no components of its own — and they are **exempt**
+from this standard. A story is documentation, not a component: it carries no
+section markers, is not held to the `forwardRef` signature, and need not pair a
+`*Props` interface. The exemption is enforced in
+`packages/react-router-shadcn/eslint.config.ts`, which excludes the glob from the
+`openthrottle/component-primitive-shape` rule. See
+[applications/openthrottle-workbench/README.md](../../applications/openthrottle-workbench/README.md)
+for how to add one.
+
 ## Opt-out — last resort
 
 Same single escape hatch as the base standard — a file-top pragma with a written

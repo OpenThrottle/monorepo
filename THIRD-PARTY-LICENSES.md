@@ -13,13 +13,13 @@ Platform-specific prebuilt binaries (packages that declare `os`/`cpu`, e.g.
 `@rollup/rollup-linux-x64-gnu`, `fsevents`) are omitted: which ones install depends on
 the host OS, and each shares the license of the cross-platform toolchain already listed.
 
-**2628** third-party packages.
+**2649** third-party packages.
 
 ## License summary
 
 | License | Packages |
 | --- | --- |
-| MIT | 2204 |
+| MIT | 2225 |
 | Apache-2.0 | 118 |
 | ISC | 92 |
 | MIT-0 | 67 |
@@ -493,6 +493,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@jimp/plugin-threshold` | 1.6.1 | MIT | [Andrew Lisowski](https://github.com/jimp-dev/jimp#readme) |
 | `@jimp/types` | 1.6.1 | MIT | [Andrew Lisowski](https://github.com/jimp-dev/jimp#readme) |
 | `@jimp/utils` | 1.6.1 | MIT | [Andrew Lisowski](https://github.com/jimp-dev/jimp#readme) |
+| `@joshwooding/vite-plugin-react-docgen-typescript` | 0.7.0 | MIT | [Josh Wooding](https://github.com/joshwooding/vite-plugin-react-docgen-typescript#readme) |
 | `@jridgewell/gen-mapping` | 0.3.13 | MIT | [Justin Ridgewell](https://github.com/jridgewell/sourcemaps/tree/main/packages/gen-mapping) |
 | `@jridgewell/remapping` | 2.3.5 | MIT | [Justin Ridgewell](https://github.com/jridgewell/sourcemaps/tree/main/packages/remapping) |
 | `@jridgewell/resolve-uri` | 3.1.2 | MIT | [Justin Ridgewell](https://github.com/jridgewell/resolve-uri#readme) |
@@ -601,7 +602,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@opentelemetry/sdk-trace` | 2.10.0 | Apache-2.0 | [OpenTelemetry Authors](https://github.com/open-telemetry/opentelemetry-js/tree/main/packages/sdk-trace) |
 | `@opentelemetry/sdk-trace-base` | 2.10.0 | Apache-2.0 | [OpenTelemetry Authors](https://github.com/open-telemetry/opentelemetry-js/tree/main/packages/opentelemetry-sdk-trace-base) |
 | `@opentelemetry/semantic-conventions` | 1.43.0 | Apache-2.0 | [OpenTelemetry Authors](https://github.com/open-telemetry/opentelemetry-js/tree/main/semantic-conventions) |
-| `@oxc-project/types` | 0.142.0 | MIT | [Boshen and oxc contributors](https://oxc.rs) |
+| `@oxc-project/types` | 0.127.0, 0.142.0 | MIT | [Boshen and oxc contributors](https://oxc.rs) |
 | `@paper-design/shaders` | 0.0.76 | LicenseRef-PolyForm-Shield-1.0.0 |  |
 | `@paper-design/shaders-react` | 0.0.76 | LicenseRef-PolyForm-Shield-1.0.0 |  |
 | `@parcel/watcher` | 2.6.0 | MIT | [source](https://github.com/parcel-bundler/watcher#readme) |
@@ -794,6 +795,14 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@sqltools/formatter` | 1.2.5 | MIT | [source](https://github.com/mtxr/vscode-sqltools#readme) |
 | `@standard-schema/spec` | 1.1.0 | MIT | [Colin McDonnell](https://standardschema.dev) |
 | `@standard-schema/utils` | 0.3.0 | MIT | [Fabian Hiller](https://github.com/standard-schema/standard-schema#readme) |
+| `@storybook/addon-docs` | 10.5.7 | MIT | [source](https://github.com/storybookjs/storybook/tree/next/code/addons/docs) |
+| `@storybook/builder-vite` | 10.5.7 | MIT | [Eirik Sletteberg](https://github.com/storybookjs/storybook/tree/next/code/builders/builder-vite/#readme) |
+| `@storybook/csf-plugin` | 10.5.7 | MIT | [source](https://github.com/storybookjs/storybook/tree/next/code/lib/csf-plugin) |
+| `@storybook/global` | 5.0.0 | MIT | [Norbert](https://github.com/storybookjs/global) |
+| `@storybook/icons` | 2.1.0 | MIT | [cdedreuille](https://github.com/storybookjs/icons#readme) |
+| `@storybook/react` | 10.5.7 | MIT | [source](https://github.com/storybookjs/storybook/tree/next/code/renderers/react) |
+| `@storybook/react-dom-shim` | 10.5.7 | MIT | [source](https://github.com/storybookjs/storybook/tree/next/code/lib/react-dom-shim) |
+| `@storybook/react-vite` | 10.5.7 | MIT | [source](https://github.com/storybookjs/storybook/tree/next/code/frameworks/react-vite) |
 | `@svgr/babel-plugin-add-jsx-attribute` | 8.0.0 | MIT | [Greg Bergé](https://react-svgr.com) |
 | `@svgr/babel-plugin-remove-jsx-attribute` | 8.0.0 | MIT | [Greg Bergé](https://react-svgr.com) |
 | `@svgr/babel-plugin-remove-jsx-empty-expression` | 8.0.0 | MIT | [Greg Bergé](https://react-svgr.com) |
@@ -884,6 +893,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@types/d3-timer` | 3.0.2 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/d3-timer) |
 | `@types/debug` | 4.1.12, 4.1.13 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/debug) |
 | `@types/deep-eql` | 4.0.2 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/deep-eql) |
+| `@types/doctrine` | 0.0.9 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/doctrine) |
 | `@types/eslint` | 9.6.1 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/eslint) |
 | `@types/eslint-scope` | 3.7.7 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/eslint-scope) |
 | `@types/esquery` | 1.5.4 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/esquery) |
@@ -973,14 +983,14 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@vercel/static-config` | 3.4.0 | Apache-2.0 | [source](https://github.com/vercel/vercel#readme) |
 | `@vitejs/plugin-react` | 6.0.5 | MIT | [Evan You](https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#readme) |
 | `@vitest/coverage-v8` | 4.1.2 | MIT | [Anthony Fu](https://vitest.dev/guide/coverage) |
-| `@vitest/expect` | 4.1.10 | MIT | [source](https://vitest.dev/api/expect) |
+| `@vitest/expect` | 3.2.4, 4.1.10 | MIT | [source](https://vitest.dev/api/expect) |
 | `@vitest/mocker` | 4.1.10 | MIT | [source](https://github.com/vitest-dev/vitest/tree/main/packages/mocker) |
-| `@vitest/pretty-format` | 4.1.10, 4.1.2 | MIT | [source](https://github.com/vitest-dev/vitest/tree/main/packages/pretty-format) |
+| `@vitest/pretty-format` | 3.2.4, 4.1.10, 4.1.2 | MIT | [source](https://github.com/vitest-dev/vitest/tree/main/packages/pretty-format) |
 | `@vitest/runner` | 4.1.10 | MIT | [source](https://vitest.dev/api/advanced/runner) |
 | `@vitest/snapshot` | 4.1.10 | MIT | [source](https://vitest.dev/guide/snapshot) |
-| `@vitest/spy` | 4.1.10 | MIT | [source](https://vitest.dev/api/mock) |
+| `@vitest/spy` | 3.2.4, 4.1.10 | MIT | [source](https://vitest.dev/api/mock) |
 | `@vitest/ui` | 4.1.2 | MIT | [source](https://vitest.dev/guide/ui) |
-| `@vitest/utils` | 4.1.10, 4.1.2 | MIT | [source](https://github.com/vitest-dev/vitest/tree/main/packages/utils) |
+| `@vitest/utils` | 3.2.4, 4.1.10, 4.1.2 | MIT | [source](https://github.com/vitest-dev/vitest/tree/main/packages/utils) |
 | `@volar/language-core` | 2.4.28 | MIT | [source](https://github.com/volarjs/volar.js#readme) |
 | `@volar/source-map` | 2.4.28 | MIT | [source](https://github.com/volarjs/volar.js#readme) |
 | `@volar/typescript` | 2.4.28 | MIT | [source](https://github.com/volarjs/volar.js#readme) |
@@ -1008,6 +1018,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@webassemblyjs/wasm-opt` | 1.14.1 | MIT | [Sven Sauleau](https://github.com/xtuc/webassemblyjs#readme) |
 | `@webassemblyjs/wasm-parser` | 1.14.1 | MIT | [Sven Sauleau](https://github.com/xtuc/webassemblyjs#readme) |
 | `@webassemblyjs/wast-printer` | 1.14.1 | MIT | [Sven Sauleau](https://github.com/xtuc/webassemblyjs#readme) |
+| `@webcontainer/env` | 1.1.1 | MIT | [StackBlitz Inc.](https://github.com/stackblitz/webcontainer-core) |
 | `@whatwg-node/disposablestack` | 0.0.6 | MIT | [Arda TANRIKULU](https://github.com/ardatan/whatwg-node#readme) |
 | `@whatwg-node/fetch` | 0.10.13 | MIT | [Arda TANRIKULU](https://github.com/ardatan/whatwg-node#readme) |
 | `@whatwg-node/node-fetch` | 0.8.6 | MIT | [Arda TANRIKULU](https://github.com/ardatan/whatwg-node#readme) |
@@ -1171,7 +1182,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `capital-case` | 1.0.4 | MIT | [Blake Embrey](https://github.com/blakeembrey/change-case/tree/master/packages/capital-case#readme) |
 | `ccount` | 2.0.1 | MIT | [Titus Wormer](https://github.com/wooorm/ccount#readme) |
 | `cfb` | 1.2.2 | Apache-2.0 | [sheetjs](http://sheetjs.com/) |
-| `chai` | 6.2.2 | MIT | [Jake Luer](http://chaijs.com) |
+| `chai` | 5.3.3, 6.2.2 | MIT | [Jake Luer](http://chaijs.com) |
 | `chain-function` | 1.0.1 | MIT | [jquense](https://github.com/jquense/chain-function#readme) |
 | `chalk` | 4.1.2, 5.6.2 | MIT | [source](https://github.com/chalk/chalk#readme) |
 | `change-case` | 4.1.2 | MIT | [Blake Embrey](https://github.com/blakeembrey/change-case/tree/master/packages/camel-case#readme) |
@@ -1182,6 +1193,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `character-entities-legacy` | 3.0.0 | MIT | [Titus Wormer](https://github.com/wooorm/character-entities-legacy#readme) |
 | `character-reference-invalid` | 2.0.1 | MIT | [Titus Wormer](https://github.com/wooorm/character-reference-invalid#readme) |
 | `chardet` | 2.2.0 | MIT | [Dmitry Shirokov](https://github.com/runk/node-chardet) |
+| `check-error` | 2.1.3 | MIT | [Jake Luer](https://github.com/chaijs/check-error#readme) |
 | `cheerio` | 1.2.0 | MIT | [Matt Mueller](https://cheerio.js.org/) |
 | `cheerio-select` | 2.1.0 | BSD-2-Clause | [Felix Boehm](https://github.com/cheeriojs/cheerio-select#readme) |
 | `cheminfo-types` | 1.15.0 | MIT | [cheminfo developers](https://github.com/cheminfo/cheminfo-types#readme) |
@@ -1324,6 +1336,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `decode-named-character-reference` | 1.3.0 | MIT | [Titus Wormer](https://github.com/wooorm/decode-named-character-reference#readme) |
 | `decompress-response` | 6.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/decompress-response#readme) |
 | `dedent` | 1.7.2 | MIT | [Desmond Brand](https://github.com/dmnd/dedent) |
+| `deep-eql` | 5.0.2 | MIT | [Jake Luer](https://github.com/chaijs/deep-eql#readme) |
 | `deep-extend` | 0.6.0 | MIT | [Viacheslav Lotsmanov](https://github.com/unclechu/node-deep-extend) |
 | `deep-is` | 0.1.4 | MIT | [Thorsten Lorenz](https://github.com/thlorenz/deep-is#readme) |
 | `deepmerge` | 2.2.1, 4.3.1 | MIT | [source](https://github.com/TehShrike/deepmerge) |
@@ -1339,7 +1352,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `depd` | 2.0.0 | MIT | [Douglas Christopher Wilson](https://github.com/dougwilson/nodejs-depd#readme) |
 | `dependency-graph` | 1.0.0 | MIT | [Jim Riecken](https://github.com/jriecken/dependency-graph#readme) |
 | `dequal` | 2.0.3 | MIT | [Luke Edwards](https://github.com/lukeed/dequal#readme) |
-| `deslop-js` | 0.9.9 | MIT | [Aiden Bai](https://github.com/millionco/react-doctor#readme) |
+| `deslop-js` | 0.9.11 | MIT | [Aiden Bai](https://github.com/millionco/react-doctor#readme) |
 | `destroy` | 1.2.0 | MIT | [Jonathan Ong](https://github.com/stream-utils/destroy#readme) |
 | `detect-indent` | 6.1.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/detect-indent#readme) |
 | `detect-libc` | 2.1.2 | Apache-2.0 | [Lovell Fuller](https://github.com/lovell/detect-libc#readme) |
@@ -1351,7 +1364,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `diff` | 4.0.4, 5.2.2, 8.0.4 | BSD-3-Clause | [source](https://github.com/kpdecker/jsdiff#readme) |
 | `dir-glob` | 3.0.1 | MIT | [Kevin Mårtensson](https://github.com/kevva/dir-glob#readme) |
 | `dnd-core` | 16.0.1 | MIT | [source](https://github.com/react-dnd/react-dnd#readme) |
-| `doctrine` | 2.1.0 | Apache-2.0 | [source](https://github.com/eslint/doctrine) |
+| `doctrine` | 2.1.0, 3.0.0 | Apache-2.0 | [source](https://github.com/eslint/doctrine) |
 | `dom-accessibility-api` | 0.5.16, 0.6.3 | MIT | [source](https://github.com/eps1lon/dom-accessibility-api#readme) |
 | `dom-helpers` | 3.4.0 | MIT | [Jason Quense](https://github.com/jquense/dom-helpers#readme) |
 | `dom-serializer` | 2.0.0, 3.1.1 | MIT | [Felix Boehm](https://github.com/cheeriojs/dom-serializer#readme) |
@@ -1374,6 +1387,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `electron-to-chromium` | 1.5.399 | ISC | [Kilian Valkhof](https://github.com/Kilian/electron-to-chromium#readme) |
 | `emittery` | 0.13.1 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/emittery#readme) |
 | `emoji-regex` | 10.6.0, 8.0.0, 9.2.2 | MIT | [Mathias Bynens](https://mths.be/emoji-regex) |
+| `empathic` | 2.0.1 | MIT | [Luke Edwards](https://github.com/lukeed/empathic#readme) |
 | `enabled` | 2.0.0 | MIT | [Arnout Kazemier](https://github.com/3rd-Eden/enabled#readme) |
 | `encodeurl` | 2.0.0 | MIT | [source](https://github.com/pillarjs/encodeurl#readme) |
 | `encoding` | 0.1.13 | MIT | [Andris Reinman](https://github.com/andris9/encoding#readme) |
@@ -1828,6 +1842,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `longest-streak` | 3.1.0 | MIT | [Titus Wormer](https://github.com/wooorm/longest-streak#readme) |
 | `lookup-closest-locale` | 6.2.0 | MIT | [Andy VanWagoner](https://github.com/format-message/format-message/tree/master/packages/lookup-closest-locale) |
 | `loose-envify` | 1.4.0 | MIT | [Andres Suarez](https://github.com/zertosh/loose-envify) |
+| `loupe` | 3.2.1 | MIT | [Veselin Todorov](https://github.com/chaijs/loupe) |
 | `lower-case` | 2.0.2 | MIT | [Blake Embrey](https://github.com/blakeembrey/change-case/tree/master/packages/lower-case#readme) |
 | `lower-case-first` | 2.0.2 | MIT | [Blake Embrey](https://github.com/blakeembrey/change-case/tree/master/packages/lower-case-first#readme) |
 | `lowercase-keys` | 3.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/lowercase-keys#readme) |
@@ -2011,10 +2026,10 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `optionator` | 0.9.4 | MIT | [George Zahariev](https://github.com/gkz/optionator) |
 | `ora` | 5.3.0, 5.4.1, 8.2.0, 9.4.1 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/ora#readme) |
 | `own-keys` | 1.0.2 | MIT | [Jordan Harband](https://github.com/ljharb/own-keys#readme) |
-| `oxc-parser` | 0.142.0 | MIT | [Boshen and oxc contributors](https://oxc.rs/docs/guide/usage/parser) |
+| `oxc-parser` | 0.127.0, 0.142.0 | MIT | [Boshen and oxc contributors](https://oxc.rs/docs/guide/usage/parser) |
 | `oxc-resolver` | 11.24.2 | MIT | [source](https://oxc.rs) |
 | `oxlint` | 1.76.0 | MIT | [Boshen and oxc contributors](https://oxc.rs/docs/guide/usage/linter) |
-| `oxlint-plugin-react-doctor` | 0.9.9 | MIT | [Aiden Bai](https://github.com/millionco/react-doctor#readme) |
+| `oxlint-plugin-react-doctor` | 0.9.11 | MIT | [Aiden Bai](https://github.com/millionco/react-doctor#readme) |
 | `p-cancelable` | 3.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/p-cancelable#readme) |
 | `p-finally` | 1.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/p-finally#readme) |
 | `p-limit` | 2.3.0, 3.1.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/p-limit#readme) |
@@ -2068,6 +2083,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `path-to-regexp` | 0.1.13, 8.4.2 | MIT | [source](https://github.com/pillarjs/path-to-regexp#readme) |
 | `path-type` | 4.0.0, 6.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/path-type#readme) |
 | `pathe` | 2.0.3 | MIT | [source](https://github.com/unjs/pathe#readme) |
+| `pathval` | 2.0.1 | MIT | [Veselin Todorov](https://github.com/chaijs/pathval) |
 | `pause` | 0.0.1 | MIT | TJ Holowaychuk |
 | `pdf-parse` | 2.4.5 | Apache-2.0 | [Mehmet Kozan](https://mehmet-kozan.github.io/pdf-parse/) |
 | `pdfjs-dist` | 5.4.296 | Apache-2.0 | [source](https://mozilla.github.io/pdf.js/) |
@@ -2208,7 +2224,9 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `react-diff-viewer-continued` | 3.4.0 | MIT | [source](https://github.com/aeolun/react-diff-viewer-continued#readme) |
 | `react-dnd` | 16.0.1 | MIT | [source](https://github.com/react-dnd/react-dnd#readme) |
 | `react-dnd-html5-backend` | 16.0.1 | MIT | [source](https://github.com/react-dnd/react-dnd#readme) |
-| `react-doctor` | 0.9.9 | MIT | [Million Software, Inc](https://github.com/millionco/react-doctor#readme) |
+| `react-docgen` | 8.0.3 | MIT | [Felix Kling](https://github.com/reactjs/react-docgen#readme) |
+| `react-docgen-typescript` | 2.4.0 | MIT | [source](https://github.com/styleguidist/react-docgen-typescript/) |
+| `react-doctor` | 0.9.11 | MIT | [Million Software, Inc](https://github.com/millionco/react-doctor#readme) |
 | `react-dom` | 19.2.4 | MIT | [source](https://react.dev/) |
 | `react-fast-compare` | 2.0.4 | MIT | [Chris Bolin](https://github.com/FormidableLabs/react-fast-compare) |
 | `react-grab` | 0.1.50 | MIT | [Aiden Bai](https://react-grab.com) |
@@ -2395,6 +2413,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `std-env` | 4.2.0 | MIT | [source](https://github.com/unjs/std-env#readme) |
 | `stdin-discarder` | 0.2.2, 0.3.2 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/stdin-discarder#readme) |
 | `stop-iteration-iterator` | 1.1.0 | MIT | [Jordan Harband](https://github.com/ljharb/stop-iteration-iterator#readme) |
+| `storybook` | 10.5.7 | MIT | [source](https://storybook.js.org) |
 | `stream-events` | 1.0.5 | MIT | [Stephen Sawchuk](https://github.com/stephenplusplus/stream-events) |
 | `stream-shift` | 1.0.3 | MIT | [Mathias Buus](https://github.com/mafintosh/stream-shift) |
 | `streamsearch` | 1.1.0 | MIT | [Brian White](https://github.com/mscdex/streamsearch#readme) |
@@ -2417,7 +2436,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `strip-comments-strings` | 1.2.0 | MIT | Patrice Thimothee |
 | `strip-dirs` | 3.0.0 | ISC | [Shinnosuke Watanabe](https://github.com/shinnn/node-strip-dirs#readme) |
 | `strip-final-newline` | 2.0.0, 4.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/strip-final-newline#readme) |
-| `strip-indent` | 3.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/strip-indent#readme) |
+| `strip-indent` | 3.0.0, 4.1.1 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/strip-indent#readme) |
 | `strip-json-comments` | 2.0.1, 3.1.1, 5.0.3 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/strip-json-comments#readme) |
 | `stripe` | 20.4.1 | MIT | [Stripe](https://github.com/stripe/stripe-node) |
 | `strnum` | 2.4.1 | MIT | [Amit Gupta](https://github.com/NaturalIntelligence/strnum#readme) |
@@ -2481,7 +2500,8 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `tinycolor2` | 1.6.0 | MIT | [Brian Grinstead](https://github.com/bgrins/TinyColor#readme) |
 | `tinyexec` | 0.3.2, 1.2.4 | MIT | [James Garbutt](https://github.com/tinylibs/tinyexec#readme) |
 | `tinyglobby` | 0.2.17 | MIT | [Superchupu](https://superchupu.dev/tinyglobby) |
-| `tinyrainbow` | 3.1.1 | MIT | [source](https://github.com/tinylibs/tinyrainbow#readme) |
+| `tinyrainbow` | 2.0.0, 3.1.1 | MIT | [source](https://github.com/tinylibs/tinyrainbow#readme) |
+| `tinyspy` | 4.0.4 | MIT | [source](https://github.com/tinylibs/tinyspy#readme) |
 | `title-case` | 3.0.3 | MIT | [Blake Embrey](https://github.com/blakeembrey/change-case/tree/master/packages/title-case#readme) |
 | `tldts` | 7.4.10 | MIT | [Rémi Berson](https://github.com/remusao/tldts#readme) |
 | `tldts-core` | 7.4.10 | MIT | [Rémi Berson](https://github.com/remusao/tldts#readme) |
@@ -2502,6 +2522,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `triple-beam` | 1.4.1 | MIT | [Charlie Robbins](https://github.com/winstonjs/triple-beam#readme) |
 | `trough` | 2.2.0 | MIT | [Titus Wormer](https://github.com/wooorm/trough#readme) |
 | `ts-api-utils` | 2.5.0 | MIT | [JoshuaKGoldberg](https://github.com/JoshuaKGoldberg/ts-api-utils#readme) |
+| `ts-dedent` | 2.3.0 | MIT | [Tamino Martinius](https://github.com/tamino-martinius/node-ts-dedent#readme) |
 | `ts-easing` | 0.2.0 | Unlicense | [@streamich](https://github.com/streamich/ts-easing#readme) |
 | `ts-interface-checker` | 0.1.13 | Apache-2.0 | [Dmitry S, Grist Labs](https://github.com/gristlabs/ts-interface-checker#readme) |
 | `ts-log` | 2.2.7 | MIT | [Stagnation Lab](https://github.com/kallaspriit/ts-log#readme) |

@@ -151,6 +151,15 @@ your first PR.
   CI gates, `typecheck` vs `test`, and the local commands that mirror CI.
 - [docs/monorepo/Knip.md](./docs/monorepo/Knip.md) — dead-code checks and the
   `@public` export convention.
+- [applications/openthrottle-workbench/README.md](./applications/openthrottle-workbench/README.md)
+  — the Storybook host for `@openthrottle/react-router-shadcn`
+  (`pnpm nx run openthrottle-workbench:dev`). Often the quickest check on a
+  component change, and the only place to see the library across every theme in
+  the registry. It consumes the source-first shadcn package's `src/` directly
+  through Vite and takes **no `build` dependency** on it — do not add a `build`
+  target to that package. Stories live beside their components inside the
+  package, never in the workbench; scaffold them with
+  `@tools/generators:react --subGenerator=story`.
 - [docs/monorepo/component-primitive-shape.md](./docs/monorepo/component-primitive-shape.md)
   — the enforced shape every authored React component follows (derived from the
   `@tools/generators` template); scaffold with the generator and run
