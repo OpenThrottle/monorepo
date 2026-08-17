@@ -22,6 +22,11 @@ export type GlobalFeatureOnboardingRenderAs = 'block' | 'dialog';
  * @description A single call-to-action link used inside a
  * {@link GlobalFeatureOnboardingContent} block: a button/link label plus a
  * react-router `to` target.
+ *
+ * External targets are supported: an absolute `http(s)://` `to` renders as a
+ * plain anchor opening in a new tab (`target="_blank" rel="noreferrer"`) rather
+ * than a react-router `Link`, so a feature can point straight at upstream docs
+ * or a spec. Anything else is treated as an in-app route.
  * @public
  */
 export interface GlobalFeatureOnboardingLink {

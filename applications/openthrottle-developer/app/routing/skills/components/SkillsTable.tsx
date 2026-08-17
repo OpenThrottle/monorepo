@@ -17,6 +17,11 @@ export interface SkillsTableProps {
   onRemoveOrphan?: (slug: string) => void;
   onRemoveTag?: (slug: string, tag: string) => void;
   pendingSlug?: string;
+  /**
+   * The active search query, forwarded to the empty state so a zero-result
+   * filtered view offers "clear filters" instead of new-user copy.
+   */
+  search?: string;
   vocabulary?: readonly SkillTagVocabularyOption[];
 }
 
@@ -28,6 +33,7 @@ export const SkillsTable = (props: SkillsTableProps): React.ReactElement => {
     onRemoveOrphan,
     onRemoveTag,
     pendingSlug,
+    search,
     vocabulary,
   } = props;
 
@@ -64,7 +70,7 @@ export const SkillsTable = (props: SkillsTableProps): React.ReactElement => {
       <DataTable<RepoSkillEntry, SkillsTableColumnValue>
         columns={columns}
         data={data}
-        emptyState={<SkillsEmpty />}
+        emptyState={<SkillsEmpty search={search} />}
         getRowId={getRowId}
       />
     </div>

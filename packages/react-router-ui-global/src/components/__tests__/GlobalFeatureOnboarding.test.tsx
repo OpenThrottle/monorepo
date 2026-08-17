@@ -84,6 +84,51 @@ describe('GlobalFeatureOnboarding Component', () => {
     const secondary = withSecondary.getByRole('link', { name: 'Learn more' });
     expect(secondary).toHaveAttribute('href', '/docs/things');
   });
+
+  test('keeps an internal secondary link in-app (no new tab)', () => {
+    const withSecondary = renderComponent({
+      content: {
+        ...CONTENT,
+        secondary: { label: 'Learn more', to: '/docs/things' },
+      },
+    });
+    const secondary = withSecondary.getByRole('link', { name: 'Learn more' });
+    expect(secondary).not.toHaveAttribute('target');
+    expect(secondary).not.toHaveAttribute('rel');
+  });
+
+  test('renders an absolute secondary link as a new-tab anchor', () => {
+    const withSecondary = renderComponent({
+      content: {
+        ...CONTENT,
+        secondary: {
+          label: 'Read the spec',
+          to: 'https://agentskills.io/specification',
+        },
+      },
+    });
+    const secondary = withSecondary.getByRole('link', {
+      name: 'Read the spec',
+    });
+    expect(secondary).toHaveAttribute(
+      'href',
+      'https://agentskills.io/specification',
+    );
+    expect(secondary).toHaveAttribute('target', '_blank');
+    expect(secondary).toHaveAttribute('rel', 'noreferrer');
+  });
+
+  test('renders an absolute primary CTA as a new-tab anchor too', () => {
+    const withExternalCta = renderComponent({
+      content: {
+        ...CONTENT,
+        cta: { label: 'Open the docs', to: 'http://example.com/docs' },
+      },
+    });
+    const cta = withExternalCta.getByRole('link', { name: 'Open the docs' });
+    expect(cta).toHaveAttribute('href', 'http://example.com/docs');
+    expect(cta).toHaveAttribute('target', '_blank');
+  });
 });
 
 const renderDialog = (props: GlobalFeatureOnboardingProps): RenderResult => {

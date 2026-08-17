@@ -4,6 +4,50 @@
  * updates one place and no spec breaks on copy drift. Add new copy here rather than
  * inlining sentence-length literals in components.
  */
+import { BrainCircuitIcon } from 'lucide-react';
+import type { GlobalFeatureOnboardingContent } from '@openthrottle/react-router-ui-global';
+
+/**
+ * @description New-user "teach-me-fast" onboarding copy for the skills index,
+ * shown only when no `SKILL.md` is discovered on disk and no filters are active.
+ * Conforms to {@link GlobalFeatureOnboardingContent} and renders through the
+ * shared `GlobalFeatureOnboarding` layout. Deliberately anchored to the open
+ * Agent Skills format (agentskills.io) our AGENTS.md and `docs/Skills.md` point
+ * at — OpenThrottle manages skills in that format, it does not define its own.
+ */
+export const SKILLS_ONBOARDING: GlobalFeatureOnboardingContent = {
+  cta: { label: `Set up your tag vocabulary`, to: `/skills/vocabulary` },
+  icon: BrainCircuitIcon,
+  internalUsage: `We hand-author our own skills in skills/<slug>/SKILL.md — that folder is the single source of truth — and skill-sync fans them out so Claude Code, Cursor, and Codex all read the same thing. Skills installed from elsewhere stay exactly as upstream shipped them; to change how one behaves here we add a companion OpenThrottle skill or rule rather than editing the vendored copy.`,
+  secondary: {
+    label: `Read the Agent Skills spec`,
+    to: `https://agentskills.io/specification`,
+  },
+  steps: [
+    `Skim the spec's frontmatter contract — name and description are what an agent matches on.`,
+    `Create skills/<slug>/SKILL.md: frontmatter on top, instructions below, and a description that spells out the USE WHEN triggers.`,
+    `Run skills/skill-sync/scripts/sync.sh to fan the new skill out to every agent folder.`,
+    `Reload this list — it reads straight from disk — then tag the skill so availability rules can route it.`,
+  ],
+  tagline: `Write a workflow down once and every agent can pick it up — in the portable Agent Skills format, so each tool reads the same skill.`,
+  title: `Skills`,
+  useCases: [
+    `Capture a workflow you keep re-explaining, then invoke it by name.`,
+    `Keep every agent on the same house rules, whichever CLI someone reaches for.`,
+    `Scope a skill with tags and availability rules so it stays quiet where it doesn't belong.`,
+  ],
+  whatItIs: `A skill is a folder with a SKILL.md in it: YAML frontmatter naming the skill and describing when to use it, then the instructions themselves. That's the open Agent Skills format from agentskills.io — not an OpenThrottle invention — so Claude Code, Cursor, Codex, OpenCode, and Gemini CLI all speak it.`,
+};
+
+/**
+ * Page chrome for the `/skills` index — the heading and the line under it. The
+ * "how it works" pitch lives in {@link SKILLS_ONBOARDING}; this is only the
+ * standing description of what the list below shows.
+ */
+export const SKILLS_COPY = {
+  pageDescription: `Every SKILL.md discovered in this monorepo — compare with disk and Cursor routing when debugging skill picks.`,
+  pageTitle: `Skills`,
+} as const;
 
 export const SKILLS_EMPTY_COPY = {
   searchTitle: `No skills found, try clearing the search to see all skills.`,
