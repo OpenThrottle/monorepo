@@ -1,9 +1,8 @@
 import * as React from 'react';
 import { CustomPromptType, GetPromptsDocument } from '~/__generated__/graphql';
 import {
-  DEFAULT_PAGINATION_LIMIT,
-  DEFAULT_PAGINATION_PAGE,
   mergeRouteModuleMeta,
+  parsePagination,
 } from '@openthrottle/react-router-utils';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
@@ -37,25 +36,7 @@ export const loader = async (args: Route.LoaderArgs) => {
 
   const searchParams = url?.searchParams ?? new URLSearchParams();
   const types = parsePromptsTypesFromSearchParams(searchParams);
-  const pageRaw = url?.searchParams.get('page');
-
-  const page = Math.max(
-    DEFAULT_PAGINATION_PAGE,
-    Number.isFinite(Number(pageRaw))
-      ? Number(pageRaw)
-      : DEFAULT_PAGINATION_PAGE,
-  );
-
-  const limitRaw = url?.searchParams.get('limit');
-  const limitParsed =
-    limitRaw != null && limitRaw !== '' ? Number(limitRaw) : NaN;
-
-  const limit = Math.max(
-    1,
-    Number.isFinite(limitParsed) && limitParsed >= 1
-      ? limitParsed
-      : DEFAULT_PAGINATION_LIMIT,
-  );
+  const { limit, offset, page } = parsePagination(searchParams);
 
   const q = searchParams.get('q')?.trim() ?? null;
   const search = q && q.length > 0 ? q : null;
@@ -82,9 +63,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   const countSkills = prompts.filter(
     (p) => p.promptType === CustomPromptType.Skills,
   ).length;
-  const startIndex = (page - 1) * limit;
-  const endIndex = startIndex + limit;
-  const paginatedPrompts = prompts.slice(startIndex, endIndex);
+  const paginatedPrompts = prompts.slice(offset, offset + limit);
   const totalPages = Math.ceil(total / limit);
 
   return {

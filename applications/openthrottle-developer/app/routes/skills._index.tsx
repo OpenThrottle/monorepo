@@ -1,7 +1,11 @@
 import * as React from 'react';
 import { Await, useFetcher, useSearchParams } from 'react-router';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import {
+  mergeRouteModuleMeta,
+  parsePaginationLimit,
+  parsePaginationPage,
+} from '@openthrottle/react-router-utils';
 import {
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
@@ -28,10 +32,6 @@ import {
   type SkillSourceFilter,
 } from '~/routing/skills/utils/filter-skills-by-source';
 import { mergeRepoSkillsWithSkillAvailability } from '~/routing/skills/utils/merge-skill-availability';
-import {
-  parsePaginationLimit,
-  parsePaginationPage,
-} from '~/routing/skills/utils/parse-skills-pagination';
 import { toSkillsIndexUsageData } from '~/routing/skills/utils/to-skills-index-usage-data';
 import type { SkillsIndexUsageData } from '~/routing/skills/data/skills-index-usage';
 import {
