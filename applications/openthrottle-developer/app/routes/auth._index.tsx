@@ -171,19 +171,6 @@ export default function Component(
         <GlobalAnimationMesh enabled={isMotionEnabled} />
       )}
 
-      {/*
-      <GradientMesh
-        className={clsx('opacity-0 transition-opacity duration-1000', {
-          'opacity-100': isMounted,
-        })}
-        distortion={0.9}
-        grainMixer={grainMixer}
-        grainOverlay={grainOverlay}
-        speed={0.8}
-        swirl={1.6}
-      />
-      */}
-
       <div
         className={clsx(
           'relative z-10 mx-auto flex h-full w-full max-w-xl flex-1 flex-col items-center justify-center gap-8 transition-opacity duration-700',

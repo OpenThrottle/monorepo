@@ -54,11 +54,11 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData: _a, loaderData, matches: _m, params: _p } = props;
+  const { event } = loaderData;
 
   // Hooks
 
   // Setup
-  const { event } = loaderData;
 
   // Handlers
 

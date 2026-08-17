@@ -129,7 +129,7 @@ export default function Component(
         <div className="flex items-start justify-between gap-4">
           <div>
             <GlobalHeading
-              className="mb-2"
+              className="mb-4"
               heading="h1"
               icon={BookOpenIcon}
               title={SKILL_AVAILABILITY_COPY.pageTitle}

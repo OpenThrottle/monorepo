@@ -3,7 +3,6 @@ import clsx from 'clsx';
 import { useFetcher } from 'react-router';
 import {
   Button,
-  Card,
   Input,
   Label,
   Table,
@@ -66,13 +65,10 @@ export const SkillTagVocabularyManager = (
   // 🔌 Short Circuit
 
   return (
-    <Card
-      className={clsx('flex flex-col gap-4 p-6', className)}
+    <div
+      className={clsx('flex flex-col gap-4', className)}
       data-testid="SkillTagVocabularyManager"
     >
-      <h2 className="text-lg font-semibold">{COPY.heading}</h2>
-      <p className="text-muted-foreground text-sm">{COPY.caveat}</p>
-
       <addFetcher.Form
         className="flex flex-col gap-2"
         method="post"
@@ -119,6 +115,6 @@ export const SkillTagVocabularyManager = (
           </TableBody>
         </Table>
       )}
-    </Card>
+    </div>
   );
 };

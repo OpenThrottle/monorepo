@@ -28,14 +28,14 @@ export const PlansIntroduction = (
 
   return (
     <div className={className} data-testid="PlansIntroduction">
-      <GlobalHeading
-        className="mb-4"
-        heading="h1"
-        icon={ListChevronsUpDownIcon}
-        title="Plans"
-      >
+      <div className="mb-4 flex items-center justify-between">
+        <GlobalHeading
+          heading="h1"
+          icon={ListChevronsUpDownIcon}
+          title="Plans"
+        />
         <GlobalFeatureOnboardingTrigger />
-      </GlobalHeading>
+      </div>
       <p className="text-muted-foreground text-sm">
         Plans are OpenThrottle&apos;s record of intended work—what you decided
         to build, broken into tasks with status, assignee, and optional

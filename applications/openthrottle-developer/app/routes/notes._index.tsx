@@ -52,12 +52,12 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData: _a, loaderData, matches: _m, params: _p } = props;
+  const { notes, search } = loaderData;
 
   // Hooks
   const [searchParams] = useSearchParams();
 
   // Setup
-  const { notes, search } = loaderData;
   const isCard = searchParams.get('view') === 'card';
   const view: 'card' | 'table' = isCard ? 'card' : 'table';
 

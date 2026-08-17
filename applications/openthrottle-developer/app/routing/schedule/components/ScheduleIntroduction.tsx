@@ -1,7 +1,5 @@
 import * as React from 'react';
-import { Link } from 'react-router';
 import { CalendarClockIcon } from 'lucide-react';
-import { Button } from '@openthrottle/react-router-shadcn';
 import {
   GlobalFeatureOnboardingTrigger,
   GlobalHeading,
@@ -36,17 +34,14 @@ export const ScheduleIntroduction = (
 
   return (
     <div className={className} data-testid="ScheduleIntroduction">
-      <GlobalHeading
-        className="mb-4"
-        heading="h1"
-        icon={CalendarClockIcon}
-        title={SCHEDULE_COPY.pageTitle}
-      >
+      <div className="mb-4 flex items-center justify-between">
+        <GlobalHeading
+          heading="h1"
+          icon={CalendarClockIcon}
+          title={SCHEDULE_COPY.pageTitle}
+        />
         <GlobalFeatureOnboardingTrigger />
-        <Button asChild={true} size="xs">
-          <Link to="/schedule/create">{SCHEDULE_COPY.newScheduleAction}</Link>
-        </Button>
-      </GlobalHeading>
+      </div>
       <p className="text-muted-foreground text-sm">
         {SCHEDULE_COPY.pageDescription}
       </p>

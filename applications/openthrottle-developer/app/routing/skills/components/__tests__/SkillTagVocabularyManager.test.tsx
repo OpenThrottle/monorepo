@@ -44,7 +44,9 @@ describe('SkillTagVocabularyManager Component', () => {
     cleanup();
   });
 
-  test('renders the honest rename/remove caveat and the tag rows', () => {
+  // The honest rename/remove caveat moved onto the route page description —
+  // see routes/__tests__/skills.vocabulary.test.tsx for its coverage.
+  test('renders the tag rows without duplicating the page caveat', () => {
     const { component } = renderManager({
       tags: [
         { id: 't1', tag: 'github' },
@@ -56,8 +58,8 @@ describe('SkillTagVocabularyManager Component', () => {
       component.getByTestId('SkillTagVocabularyManager'),
     ).toBeInTheDocument();
     expect(
-      component.getByText(/does NOT rewrite skill frontmatter/i),
-    ).toBeInTheDocument();
+      component.queryByText(/does NOT rewrite skill frontmatter/i),
+    ).not.toBeInTheDocument();
     expect(
       component.getByTestId('SkillTagVocabularyRow-github'),
     ).toBeInTheDocument();

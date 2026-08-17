@@ -27,6 +27,7 @@ describe('RepositoriesToolbar Component', () => {
 
   beforeEach(() => {
     props = {
+      children: <h2>RepositoriesToolbar</h2>,
       limit: 10,
       page: 1,
       search: '',

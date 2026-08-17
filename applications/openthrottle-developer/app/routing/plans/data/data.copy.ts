@@ -16,12 +16,12 @@ import type { GlobalFeatureOnboardingContent } from '@openthrottle/react-router-
 export const PLANS_ONBOARDING: GlobalFeatureOnboardingContent = {
   cta: { label: `Create your first plan`, to: `/plans/create` },
   icon: ListChevronsUpDownIcon,
-  internalUsage: `Every feature we ship starts as a plan: we break an idea or PRD into tasks, hand them to Ralph to execute one at a time, and each commit carries its Plan-Id and Task-Id — so shipped work on main traces straight back to the plan that asked for it.`,
+  internalUsage: `Every feature we ship starts as a plan we create from the editor via MCP — "Create a plan. …", whatever detail we have, and @-mentions of the files that matter. Ralph executes the tasks one at a time; each commit carries its Plan-Id and Task-Id so shipped work on main traces straight back to the plan that asked for it.`,
   steps: [
-    `Create a plan and give it a clear title and description.`,
-    `Break it into tasks — or drop in a PRD and let it decompose for you.`,
-    `Queue a run to have Ralph work the tasks one at a time.`,
-    `Follow the output and linked commits as the work lands.`,
+    `In your editor, start with "Create a plan. Xxxx" — replace Xxxx with a short title.`,
+    `Give as little or as much detail as you like after that.`,
+    `@-mention files when they help so the agent reads the real source, not a recap.`,
+    `The plan and tasks land here. Queue a run and follow the output as work ships.`,
   ],
   tagline: `Turn intent into shipped work: break an idea into tasks, run it agentically, and trace every commit back to the plan.`,
   title: `Plans`,

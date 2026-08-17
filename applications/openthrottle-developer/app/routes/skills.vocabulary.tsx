@@ -13,7 +13,10 @@ import { Button } from '@openthrottle/react-router-shadcn';
 import { SkillAvailabilityAuthoringVocabularyDocument } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
 import { SkillTagVocabularyManager } from '~/routing/skills/components/SkillTagVocabularyManager';
-import { SKILL_VOCABULARY_COPY } from '~/routing/skills/data/data.copy';
+import {
+  SKILL_AVAILABILITY_COPY,
+  SKILL_VOCABULARY_COPY,
+} from '~/routing/skills/data/data.copy';
 import type { SkillTagValue } from '~/routing/skills/utils/skill-availability';
 import { runVocabularyAction } from '~/routing/skills/actions/vocabulary';
 import type { Route } from '@/app/routes/+types/skills.vocabulary';
@@ -70,13 +73,14 @@ export default function Component(
         <div className="flex items-start justify-between gap-4">
           <div>
             <GlobalHeading
-              className="mb-2"
+              className="mb-4"
               heading="h1"
               icon={TagsIcon}
               title={SKILL_VOCABULARY_COPY.pageTitle}
             />
             <p className="text-muted-foreground text-sm">
-              {SKILL_VOCABULARY_COPY.pageDescription}
+              {SKILL_VOCABULARY_COPY.pageDescription}{' '}
+              {SKILL_AVAILABILITY_COPY.vocabulary.caveat}
             </p>
           </div>
           <Button asChild={true} variant="outline">

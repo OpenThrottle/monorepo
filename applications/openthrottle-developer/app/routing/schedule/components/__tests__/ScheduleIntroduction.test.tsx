@@ -15,7 +15,7 @@ describe('ScheduleIntroduction Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('renders the title, description and New schedule CTA', () => {
+  test('renders the title and description', () => {
     expect(component.getByTestId('ScheduleIntroduction')).toBeInTheDocument();
     expect(
       component.getByRole('heading', { name: SCHEDULE_COPY.pageTitle }),
@@ -23,9 +23,14 @@ describe('ScheduleIntroduction Component', () => {
     expect(
       component.getByText(SCHEDULE_COPY.pageDescription),
     ).toBeInTheDocument();
+  });
+
+  // The "New schedule" CTA now lives in the schedule list body, not this
+  // header — see routes/__tests__/schedule._index.test.tsx for its coverage.
+  test('does not render the New schedule CTA', () => {
     expect(
-      component.getByRole('link', { name: SCHEDULE_COPY.newScheduleAction }),
-    ).toHaveAttribute('href', '/schedule/create');
+      component.queryByRole('link', { name: SCHEDULE_COPY.newScheduleAction }),
+    ).not.toBeInTheDocument();
   });
 
   test('renders the onboarding trigger', () => {

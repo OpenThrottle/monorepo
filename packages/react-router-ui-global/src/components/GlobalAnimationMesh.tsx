@@ -6,8 +6,7 @@ import { useGlobalAnimationMesh } from '../hooks/useGlobalAnimationMesh';
  * Default lower-edge fade so the lattice reads as texture under content rather
  * than a hard-edged grid. Overridable via the `maskImage` prop.
  */
-const DEFAULT_MASK_IMAGE =
-  'linear-gradient(to bottom, black 35%, transparent 92%)';
+const DEFAULT_MASK_IMAGE = `linear-gradient(to bottom, black 35%, transparent 92%)`;
 
 export interface GlobalAnimationMeshProps extends React.CanvasHTMLAttributes<HTMLCanvasElement> {
   /** Dot/line colour as an "r, g, b" triple (canvas cannot read CSS vars). */

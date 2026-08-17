@@ -9,13 +9,11 @@ import {
 const BETA_ROUTE_PREFIXES = [
   '/generators',
   '/ide',
-  '/notifications',
   '/personas',
   '/profile',
   '/prompts',
   '/pull-requests',
   '/search',
-  // '/skills',
 ];
 
 const PUBLIC_ROUTE_PREFIXES = ['/about', '/auth', '/legal'];

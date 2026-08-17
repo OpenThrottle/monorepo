@@ -38,11 +38,11 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData: _a, loaderData, matches: _m, params: _p } = props;
+  const { events } = loaderData;
 
   // Hooks
 
   // Setup
-  const { events } = loaderData;
 
   // Handlers
 

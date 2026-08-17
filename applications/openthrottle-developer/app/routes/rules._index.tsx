@@ -50,6 +50,89 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta(() => [
   { title: `${RULES_COPY.pageTitle} | ${SITE_TITLE}` },
 ]);
 
+export default function Component(
+  props: Route.ComponentProps,
+): React.ReactElement {
+  const { loaderData } = props;
+  const { rules } = loaderData;
+
+  // Hooks
+  const fetcher = useFetcher<typeof action>();
+  const [searchParams] = useSearchParams();
+
+  // Setup
+  const enabledFilter = parseRulesEnabledFilterFromSearchParams(searchParams);
+  const search = parseRulesSearchFromSearchParams(searchParams);
+  const isFiltered = search.trim().length > 0 || enabledFilter !== 'all';
+  const filteredRules = filterRulesList(rules, { enabledFilter, search });
+  const pending = fetcher.state !== 'idle';
+  const ruleError =
+    fetcher.data != null && 'ruleError' in fetcher.data
+      ? fetcher.data.ruleError
+      : null;
+  const totalCount = rules.length;
+  const enabledCount = rules.filter((rule) => rule.enabled).length;
+  const disabledCount = totalCount - enabledCount;
+  // A genuinely-new user has zero rules and no active filter — show the rich
+  // onboarding pitch instead of the toolbar/table. A zero-result *filtered*
+  // search still falls through to RulesTable -> RulesEmpty (clear-filters CTA).
+  const isNewUser = totalCount === 0 && !isFiltered;
+
+  // Handlers
+  const handleToggleEnabled = (rule: TagActionRuleRowData): void => {
+    fetcher.submit(
+      { intent: 'toggleEnabled', rule: JSON.stringify(rule) },
+      { method: 'post' },
+    );
+  };
+
+  const handleDelete = (id: string): void => {
+    fetcher.submit({ id, intent: 'deleteRule' }, { method: 'post' });
+  };
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
+  return (
+    <>
+      <GlobalScreen>
+        <RulesIntroduction />
+        <RulesStats
+          disabledCount={disabledCount}
+          enabledCount={enabledCount}
+          totalCount={totalCount}
+        />
+
+        {ruleError != null ? (
+          <p className="text-destructive text-sm" role="alert">
+            {ruleError}
+          </p>
+        ) : null}
+
+        {isNewUser ? (
+          <GlobalFeatureOnboarding content={RULES_ONBOARDING} />
+        ) : (
+          <div className="flex flex-col gap-4">
+            <RulesToolbar />
+            <RulesTable
+              isFiltered={isFiltered}
+              onDelete={handleDelete}
+              onToggleEnabled={handleToggleEnabled}
+              pending={pending}
+              rules={filteredRules}
+            />
+          </div>
+        )}
+      </GlobalScreen>
+
+      <GlobalFeatureOnboardingModal content={RULES_ONBOARDING} />
+    </>
+  );
+}
+
 export const action = async (args: Route.ActionArgs) => {
   const formData = await args.request.formData();
   const intent = formData.get('intent');
@@ -99,85 +182,5 @@ export const action = async (args: Route.ActionArgs) => {
 
   return { ruleError: `Unknown intent "${String(intent)}".` };
 };
-
-export default function Component(
-  props: Route.ComponentProps,
-): React.ReactElement {
-  const { loaderData } = props;
-  const { rules } = loaderData;
-
-  // Hooks
-  const fetcher = useFetcher<typeof action>();
-  const [searchParams] = useSearchParams();
-
-  // Setup
-  const enabledFilter = parseRulesEnabledFilterFromSearchParams(searchParams);
-  const search = parseRulesSearchFromSearchParams(searchParams);
-  const isFiltered = search.trim().length > 0 || enabledFilter !== 'all';
-  const filteredRules = filterRulesList(rules, { enabledFilter, search });
-  const pending = fetcher.state !== 'idle';
-  const ruleError =
-    fetcher.data != null && 'ruleError' in fetcher.data
-      ? fetcher.data.ruleError
-      : null;
-  const totalCount = rules.length;
-  const enabledCount = rules.filter((rule) => rule.enabled).length;
-  const disabledCount = totalCount - enabledCount;
-  // A genuinely-new user has zero rules and no active filter — show the rich
-  // onboarding pitch instead of the toolbar/table. A zero-result *filtered*
-  // search still falls through to RulesTable -> RulesEmpty (clear-filters CTA).
-  const isNewUser = totalCount === 0 && !isFiltered;
-
-  // Handlers
-  const handleToggleEnabled = (rule: TagActionRuleRowData): void => {
-    fetcher.submit(
-      { intent: 'toggleEnabled', rule: JSON.stringify(rule) },
-      { method: 'post' },
-    );
-  };
-
-  const handleDelete = (id: string): void => {
-    fetcher.submit({ id, intent: 'deleteRule' }, { method: 'post' });
-  };
-
-  // Markup
-
-  // Life Cycle
-
-  // 🔌 Short Circuit
-
-  return (
-    <GlobalScreen>
-      <GlobalFeatureOnboardingModal content={RULES_ONBOARDING} />
-      <RulesIntroduction />
-      <RulesStats
-        disabledCount={disabledCount}
-        enabledCount={enabledCount}
-        totalCount={totalCount}
-      />
-
-      {ruleError != null ? (
-        <p className="text-destructive text-sm" role="alert">
-          {ruleError}
-        </p>
-      ) : null}
-
-      {isNewUser ? (
-        <GlobalFeatureOnboarding content={RULES_ONBOARDING} />
-      ) : (
-        <div className="flex flex-col gap-4">
-          <RulesToolbar />
-          <RulesTable
-            isFiltered={isFiltered}
-            onDelete={handleDelete}
-            onToggleEnabled={handleToggleEnabled}
-            pending={pending}
-            rules={filteredRules}
-          />
-        </div>
-      )}
-    </GlobalScreen>
-  );
-}
 
 export const ErrorBoundary = GlobalErrorBoundary;

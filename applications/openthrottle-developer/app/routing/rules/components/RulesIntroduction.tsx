@@ -25,14 +25,14 @@ export const RulesIntroduction = (
 
   return (
     <div data-testid="RulesIntroduction">
-      <GlobalHeading
-        className="mb-4"
-        heading="h1"
-        icon={WandSparklesIcon}
-        title={RULES_COPY.pageTitle}
-      >
+      <div className="mb-4 flex items-center justify-between">
+        <GlobalHeading
+          heading="h1"
+          icon={WandSparklesIcon}
+          title={RULES_COPY.pageTitle}
+        />
         <GlobalFeatureOnboardingTrigger />
-      </GlobalHeading>
+      </div>
       <p className="text-muted-foreground text-sm">
         {RULES_COPY.pageDescription}
       </p>

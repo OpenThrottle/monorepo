@@ -223,5 +223,5 @@ export const SKILL_VOCABULARY_COPY = {
   backLink: `Back to skills`,
   manageLink: `Manage vocabulary`,
   pageDescription: `Add, rename, or remove the workspace tag vocabulary. These tags constrain the tag pickers in the availability rules editor.`,
-  pageTitle: `Skill tag vocabulary`,
+  pageTitle: `Skill vocabulary`,
 } as const;
