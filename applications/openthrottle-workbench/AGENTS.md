@@ -41,6 +41,24 @@ document. See [README.md](./README.md).
   `node_modules`. Most of the package is thin Radix wrappers whose props come from
   `ComponentPropsWithoutRef<typeof Primitive.Root>`; the usual `!/node_modules/` recipe throws
   away the entire real API (Tabs documented one prop before this was narrowed).
+- **Recharts charts look empty when inspected through an automated browser — that is the
+  tooling, not a bug.** Recharts animates chart _geometry_ from `t=0` and only advances it from
+  a `requestAnimationFrame` loop (`animation/JavascriptAnimate.js` →
+  `RequestAnimationFrameTimeoutController`). Browsers never fire rAF in a hidden tab, and
+  `document.visibilityState === 'hidden'` is the normal state for headless/background browser
+  tools. Pinned at `t=0`, recharts' `Rectangle` and `Sector` have zero size and return `null`,
+  so `SimpleBarChart` emits `.recharts-bar-rectangle` groups containing an empty
+  `.recharts-inactive-bar` and no `rect`/`path`, and `.recharts-pie` is an empty layer.
+  **Do not "fix" the components for this** — do not add `isAnimationActive={false}` and do not
+  pin recharts. They render correctly in any visible browser.
+  - **Counting DOM nodes is not a valid check here.** Line and Area _do_ emit their paths at
+    `t=0`, but draw nothing: the curve carries `stroke-dasharray="0px <fullLength>px"`, so it
+    is invisible while `querySelectorAll('.recharts-line-curve').length` still reports `1`.
+    Judging by selector counts is what made an earlier investigation conclude Line/Area were
+    unaffected when they were equally starved. **Screenshot instead.**
+  - To inspect charts through automation, shim rAF onto a timer before mount
+    (`window.requestAnimationFrame = (cb) => setTimeout(() => cb(performance.now()), 16)`) or
+    set `isAnimationActive={false}` in a throwaway story. Keep both out of committed code.
 - **`cva()` exposes nothing at runtime.** Its returned function has no `.variants`, so story
   option lists cannot be derived by importing a component — they are parsed from source by the
   generator (`tools/generators/src/utils/cva-variants.ts`) or declared by hand.
