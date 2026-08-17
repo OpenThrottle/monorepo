@@ -81,6 +81,12 @@ Then:
 - If a previous proposal was filed and never acted on, do not re-file it. Note in the plan description that it is still open and still relevant — that is more useful than a duplicate.
 - Only file proposals genuinely not represented anywhere.
 
+Dedupe is not finished when you have checked for a duplicate _plan_. Three rules that apply every run:
+
+- **Compare against the existing plan's tasks, not just its title.** When an open plan from this job exists, call `get_tasks_by_plan_id` on it and check each finding against the tasks already there, matching on the finding's subject (the proposal's subject). File a task only for a subject no existing task covers. A run that re-files a finding the plan already carries has duplicated it, even though it opened no second plan.
+- **Never file a task that contradicts an existing one.** If this sweep reaches a different verdict on a subject an existing task already covers, do not file an opposing task alongside it. Append the disagreement and your evidence to that task's description with `update_task`, so a human resolves one task instead of discovering the conflict halfway through executing the plan.
+- **Say so when dedupe is degraded.** If `semantic_search` returns nothing for every query you try, treat the index as unavailable rather than as proof that no duplicate exists, and state that plainly in the plan description. "No duplicates found" and "I could not check for duplicates" must never look the same to whoever reads the plan.
+
 ## Output
 
 Exactly one `create_plan`, followed by one `create_tasks` batch:
