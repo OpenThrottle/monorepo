@@ -34,9 +34,10 @@ export default (config: ConfigEnv) => {
       include: ['**/*.test.(ts|tsx)'],
       /**
        * @description `maxWorkers` caps concurrent worker processes. CI runs the
-       * `test` target with `nx ... --parallel=1` (see continuous-integration.yml),
-       * so this suite has the shared 4-vCPU box to itself — no cross-suite memory
-       * contention. Keep the cap at the 4-vCPU default: with `vmForks` + a per-worker
+       * `test` target at Nx's default concurrency on a 4-vCPU box shared with up to
+       * two sibling suites from the same shard (see continuous-integration.yml), so
+       * this cap is what bounds this suite's share of it. Keep it at the 4-vCPU
+       * default: with `vmForks` + a per-worker
        * `vmMemoryLimit` (below), peak heap is bounded at ~4 x 512MB regardless of file
        * count, so 4 workers saturate the box safely. Vitest 4 removed the per-pool
        * `poolOptions.*.maxForks` knob; this top-level `maxWorkers` is the cap. Do NOT
@@ -57,10 +58,11 @@ export default (config: ConfigEnv) => {
        * heap error). `test.vmMemoryLimit` is the fix: Vitest recycles a worker once
        * its heap exceeds the limit, so accumulation is bounded to ~512MB/worker while
        * keeping the import amortization. This is the config-only alternative to
-       * sharding the suite across boxes — chosen because CI deliberately stays on ONE
-       * box (jobCount: 1, cost tradeoff documented in continuous-integration.yml), so
-       * a --shard matrix would only help by adding runners we intentionally don't pay
-       * for, whereas a faster pool recovers the wall-clock at zero CI cost.
+       * sharding this suite across boxes, and it stays the right one even now that CI
+       * DOES shard (3 free ubuntu-latest boxes, OT plan b19377d1): project sharding
+       * splits the affected PROJECT list, and this suite is a single Nx project, so
+       * whichever box draws it runs all of it. The matrix cannot lower this suite's
+       * wall-clock — a faster pool can. See docs/reliability/developer-vitest-pool.md.
        *
        * If the `(0 test)` OOM ever reappears, LOWER `vmMemoryLimit` (more frequent
        * recycles) before touching `maxWorkers` or the box size.

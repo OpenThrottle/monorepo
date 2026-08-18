@@ -124,6 +124,62 @@ All estimates assume `ubuntu-latest` (free minutes on this public repo), so **"c
 
 ---
 
+## CI sharding: 3 boxes, decided on measurement
+
+`build` is a 3-leg matrix (`env.jobCount: 3`, `matrix.jobIndex: [1, 2, 3]`, `fail-fast: false`).
+`scripts/parallelize-tasks.ts` deals the affected projects round-robin — applications first, so
+the heavy Vitest suites spread out — and prints each box's Nx `--exclude` selector. Live since OT
+plan `b19377d1`.
+
+**Runner minutes are free on this public repo, so shard count is a wall-clock and queue-contention
+decision, never a spend decision.** That is the only reason this is on at all: it was deferred for
+years as a cost tradeoff, and moving to `ubuntu-latest` (plan `6ced8d0e`) removed the cost.
+
+Baseline measured on four post-migration `build` runs before the matrix was touched:
+
+| segment                                       | typical    | worst observed                                   |
+| --------------------------------------------- | ---------- | ------------------------------------------------ |
+| checkout + `Node Setup` + symlinks + set-shas | ~56s       | ~56s                                             |
+| codegen (+ drift guard)                       | ~27s       | ~31s                                             |
+| affected `lint`/`typecheck`                   | ~4m14s     | —                                                |
+| affected `test`                               | ~10m51s    | —                                                |
+| affected step, combined                       | ~15m08s    | **27m01s** (main, fat graph)                     |
+| once-per-run gates                            | ~20s       | ~21s                                             |
+| **job total**                                 | **17m07s** | **28m24s** — and one run was cancelled at 28m55s |
+
+Per-box fixed overhead is therefore ~1.6 min — 6% of a typical job, 9% of the worst case — against
+88–95% shardable work. The 30-minute job ceiling was already the live risk, not a future one.
+
+Why **3** and not 2, and not a target-split:
+
+- Projected worst case: 2 boxes → ~15 min; 3 boxes → ~10.6 min. Typical at 3 → ~7.6 min.
+- A 4th box would start paying ~1.6 min of setup for shards below the ~5.6 min floor set by the
+  single heaviest project — whose Vitest suite is one Nx project and cannot be split by project
+  sharding at all (that lever is the `vmForks` config in plan `e448a51d`).
+- A target-split (`target: [lint, typecheck, test]`) is the right answer only when shards are
+  **setup-bound**; at 6–9% overhead they are not, and it would leave the ~11-minute `test` graph —
+  the segment that is actually growing — whole on one box.
+- A `target` × `jobIndex` cross product would be 9 boxes for no extra coverage. Don't.
+
+Two things sharding required, both easy to get wrong:
+
+- **Once-per-run gates sit behind `if: matrix.jobIndex == 1`.** Whole-tree checks (circular deps,
+  codegen drift guard, agent-asset SSOT/frontmatter, licenses, notices, prettier, `audit:strict`)
+  return the same answer on every box, so running them three times triples work for zero coverage.
+  They live on shard 1 rather than a sibling job because they total ~20s — less than the
+  checkout+install a fourth runner would cost to reclaim them. Codegen itself stays on every box:
+  it is a prerequisite for typecheck, not a gate.
+- **The Nx cache key needs a per-shard discriminator.** `actions/cache` drops all but the first
+  save of an identical key, so three legs of one commit would discard two shards' task hashes
+  entirely. `node-setup` takes an optional `cache-suffix` (see its header).
+
+`ci-success` remains the single required check. It aggregates the matrix — green only when every
+shard succeeded or the build legitimately skipped — so branch protection must **never** pin a
+matrix-suffixed leg name like `build (1, lint,typecheck,test)`; those names change with the shard
+count.
+
+---
+
 ## Checklist: before you add a workflow or job
 
 - [ ] **`runs-on: ubuntu-latest`** unless you can state, in a comment, why a larger or managed runner is worth real money. Never add a Blacksmith or larger-runner label without pricing it here first.
@@ -145,7 +201,12 @@ All estimates assume `ubuntu-latest` (free minutes on this public repo), so **"c
 - **`NX_KEY` is an unreferenced repo variable** and should be deleted from repo settings. It was also stored as a **variable rather than a secret** — Actions variables are not masked in logs. A licence key belongs in `secrets`.
 - **`gs://openthrottle-staging-nx-cache`** is kept for a soak period after the cache retirement; delete it around **2026-09-01** so the 90-day lifecycle stops paying storage on dead entries.
 - **Nx Powerpack licence type** (paid vs Nx's free-for-OSS grant) is unconfirmed — needs the Nx account. Moot now that `@nx/gcs-cache` is removed.
-- **`nx affected --target=test` is still `--parallel=1`.** The evidence needed to relax it can only be gathered on CI; see the comment above that step in `continuous-integration.yml`.
+- **`nx affected --target=test` still runs at Nx's default concurrency.** The step has no
+  `--parallel` flag (so 3), despite prose here and elsewhere having long called it
+  "`--parallel=1`" — that claim was never true of the live command and has been corrected in
+  place. Sharding (below) does **not** settle this: it changes which projects share a box, not
+  what happens when two heavy jsdom suites land on the same one. The evidence needed can only be
+  gathered on CI; see the comment above that step in `continuous-integration.yml`.
 
 ## See also
 

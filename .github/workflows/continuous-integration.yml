@@ -203,39 +203,58 @@ jobs:
       cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
       group: continuous-integration-${{ github.ref }}-build-${{ matrix.target }}-${{ matrix.jobIndex }}
     env:
-      jobCount: 1 # must be in sync with "jobIndex"
+      # ⚠️ MUST equal the length of `matrix.jobIndex` below. The partitioner exits
+      # non-zero if they disagree, rather than letting projects past the end of
+      # the list fall off every shard while CI still reports green.
+      jobCount: 3
     runs-on: ubuntu-latest
 
-    # ⚠️ SCALING RISK (deferred by design — DO NOT silently "fix"):
-    #   The whole suite (`lint,typecheck,test`) runs on ONE box
-    #   (`jobCount: 1`, `jobIndex: [1]`, single `target` string) with a 15-minute
-    #   `timeout-minutes` ceiling below. `scripts/parallelize-tasks.ts` sharding
-    #   and the `merge_group` trigger are already wired but currently NO-OPs — the
-    #   gate is the single matrix box, not distributed execution / a merge queue.
+    # 🧩 SHARDING — live since OT plan b19377d1. `lint`/`typecheck`/`test` are
+    #   partitioned across 3 `ubuntu-latest` boxes by
+    #   `scripts/parallelize-tasks.ts`, which deals the affected projects
+    #   round-robin (applications first, so the heavy Vitest suites spread out)
+    #   and prints THIS box's Nx `--exclude` selector.
     #
-    #   This is a deliberate cost tradeoff (every 💰 marker below), NOT a bug. As
-    #   the affected graph grows the 15m timeout becomes the hard ceiling and CI
-    #   wall-clock degrades. When that ceiling is hit, re-enable distribution by:
-    #     1. Bumping `jobCount` and `jobIndex` together (they MUST stay in sync).
-    #     2. Splitting `target` into one entry per box, OR uncommenting the
-    #        `parallelize-tasks.ts` shard loop near the bottom of this job.
-    #     3. Optionally enabling the GitHub merge queue so `merge_group` gates merges
-    #        instead of relying on the ready-PR push.
-    #   Re-evaluate cost vs. wall-clock at that point — see AGENTS.md / MONOREPO.md.
-    # 💰 Increase as needed — balance cost against time to completion.
-    # Runner minutes are free on this PUBLIC repo, so the real constraint here is
-    # the 30-minute job ceiling, not spend. See docs/monorepo/ci-cost.md.
+    #   Why 3, from measured runs rather than taste (docs/monorepo/ci-cost.md):
+    #   per-box fixed overhead (checkout + install + codegen) is ~1.6 min, only
+    #   6–9% of the job, while the shardable affected work was 88–95% of it. The
+    #   single-box job hit 28m24s on a fat `main` graph — 95% of the
+    #   `timeout-minutes` ceiling below — and one run was cancelled at 28m55s
+    #   INSIDE the affected step. A 3-way split projects that worst case to
+    #   ~10.6 min; 2 boxes would only reach ~15 min, and a 4th would start paying
+    #   setup for shards below the ~5.6 min floor set by the single heaviest
+    #   project (whose suite sharding cannot split — see the vmForks note below).
+    #
+    #   A target-split (`target: [lint, typecheck, test]`) was measured and
+    #   REJECTED: it is the right answer only when shards are setup-bound, and it
+    #   would leave the ~11-minute `test` graph — the segment that is actually
+    #   growing — whole on one box.
+    #
+    #   Deliberately NOT a `target` × `jobIndex` cross product: that is 9 boxes
+    #   for no extra coverage. Keep `target` a single string.
+    #
+    # 💰 Runner minutes are free on this PUBLIC repo, so the constraint on shard
+    # count is wall-clock and queue contention, never spend. If the canonical repo
+    # ever goes private, every box here starts billing — reprice before widening.
     strategy:
+      # One red shard must not cancel its siblings: a partial matrix tells you
+      # far less about a failing PR than three complete results do.
+      fail-fast: false
       matrix:
-        jobIndex: [1] # must be in sync with "jobCount"
+        jobIndex: [1, 2, 3] # ⚠️ must be in sync with "env.jobCount"
         # 💰 No merge queue on this plan, so the ready PR is the gate: drafts run
         # nothing (see job `if` above); every ready-PR push runs the full suite.
-        target: ['lint,typecheck,test'] # One box per target
+        # Single entry on purpose — this is the box label, not a second axis.
+        target: ['lint,typecheck,test']
 
     # openthrottle-developer:test (264 jsdom files) used to cost ~12 CPU-minutes
     # because forks re-imported the full module graph per file, which forced the
     # 15 -> 30 bump. Switching that suite to Vitest's vmForks pool dropped it to
     # ~3 CPU-minutes (~730s -> ~172s user CPU), so the original 15m budget holds.
+    #
+    # Kept at 30 even though a shard should now finish in ~8 min: this is a
+    # per-shard ceiling, and headroom is what stops an unlucky partition (two
+    # heavy app suites on one box) from turning a slow run into a red one.
     timeout-minutes: 30
 
     steps:
@@ -250,8 +269,13 @@ jobs:
           fetch-depth: 0
           filter: 'blob:none'
 
+      # cache-suffix: all three shards share this commit, so without a
+      # discriminator they would race one exact Nx cache key and two of the three
+      # saves would be dropped — see .github/actions/node-setup/action.yml.
       - name: '🤖 Node Setup'
         uses: ./.github/actions/node-setup
+        with:
+          cache-suffix: shard-${{ matrix.jobIndex }}
 
       # skill-sync's .agents/skills → skills/ symlinks (and the editor fan-out) are
       # generated artifacts, gitignored by design, so a fresh checkout lacks them.
@@ -263,6 +287,14 @@ jobs:
       - name: "🕵️‍♂️ NX Setup SHA's"
         uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
 
+      # Runs on EVERY shard, and over the FULL affected set rather than this
+      # shard's chunk — generated output is a prerequisite for lint/typecheck, and
+      # a shard cannot know which of its projects' generated files a sibling's
+      # projects import. Not gated to jobIndex 1 for the same reason the other
+      # once-per-run gates are: those gates are extra work, this one is work the
+      # box has to do anyway. The `git diff --exit-code` drift assertion is then
+      # free, so it runs on all three boxes — strictly more coverage, zero extra
+      # runner time.
       - name: '🧩 Codegen Tasks'
         run: |
           # pnpm exec nx run @tools/dotfiles:build --parallel ${{ env.OUTPUT_DEBUG }}
@@ -275,41 +307,81 @@ jobs:
       # when package.json / project.json / tsconfig* / nx.json change; editing a
       # function body cannot alter the graph. Fails closed (`graph` is 'true' for
       # non-PR events and whenever the diff could not be computed).
+      # 🧩 Once per run (jobIndex == 1): the project graph is identical on every
+      # shard, so re-deriving it on all three buys nothing.
       - name: '🔍 Check for circular dependencies'
-        if: github.actor != 'dependabot[bot]' && needs.changes.outputs.graph == 'true'
+        if: matrix.jobIndex == 1 && github.actor != 'dependabot[bot]' && needs.changes.outputs.graph == 'true'
         run: |
           pnpm exec tsx ./scripts/nx-circular-dependencies.ts
 
       # lint + typecheck run at full parallelism — they are not the memory hog.
-      # `test` is serialized (`--parallel=1`): every app's Vitest target spawns its
-      # own worker pool, and co-running the heavy jsdom suites (esp.
-      # openthrottle-developer, now ~675 files) on ONE shared box has historically
-      # exceeded its memory ceiling — the OOM-killer then SIGKILLs an in-flight
-      # worker, which surfaces as files reporting `(0 test)`. That failure mode is
-      # SILENT-PASSING (green CI, tests never ran), which is strictly worse than
-      # slow, so the bar for un-serializing is evidence, not reasoning.
+      # `test` is left at Nx's DEFAULT concurrency (no `--parallel` flag, so 3):
+      # every app's Vitest target spawns its own worker pool, and co-running the
+      # heavy jsdom suites (esp. openthrottle-developer, now ~675 files) on ONE
+      # shared box has historically exceeded its memory ceiling — the OOM-killer
+      # then SIGKILLs an in-flight worker, which surfaces as files reporting
+      # `(0 test)`. That failure mode is SILENT-PASSING (green CI, tests never ran),
+      # which is strictly worse than slow, so the bar for widening is evidence, not
+      # reasoning.
       #
-      # 💰 Two things have since changed the memory calculus, and BOTH argue this
-      # could probably be relaxed — but neither has been demonstrated on the CI box:
+      # ⚠️ The commented `--parallel=1` line below is the STRICTER setting, not the
+      # live one. Prose in this repo has repeatedly described this step as
+      # "serialized (`--parallel=1`)"; it is not, and never has been. Do not
+      # "restore" `--parallel=1` on the strength of a doc sentence — decide it on
+      # evidence, in either direction.
+      #
+      # 💰 Three things have since changed the memory calculus, and all argue the
+      # concurrency could probably be widened — but none has been demonstrated on
+      # the CI box:
       #   1. openthrottle-developer moved to Vitest's `vmForks` pool with
       #      `vmMemoryLimit: '512MB'` (PR #267, OT plan e448a51d), so a reused
       #      worker's V8-VM-context accumulation is now bounded and recycled.
-      #   2. `runs-on: ubuntu-latest` (this plan, 6ced8d0e) doubled available RAM
-      #      from Blacksmith's 8 GB at 4 vCPU to 16 GB at 4 vCPU.
+      #   2. `runs-on: ubuntu-latest` (plan 6ced8d0e) doubled available RAM from
+      #      Blacksmith's 8 GB at 4 vCPU to 16 GB at 4 vCPU.
+      #   3. Sharding (plan b19377d1) means a box now holds ~1/3 of the affected
+      #      projects, so there are fewer heavy suites available to co-run at all.
       #
-      # DELIBERATELY LEFT SERIALIZED. The evidence required — repeated full
-      # affected-set runs on a 16 GB Linux runner with zero `(0 test)` files and no
-      # killed workers — can only be gathered ON CI; a developer machine with
-      # different RAM proves nothing about that ceiling. Revisit by flipping this to
-      # `--parallel` on a scratch branch, running it several times, and checking
-      # every suite reported a non-zero test count. If there is ANY doubt, it stays
-      # as it is. Distributing across boxes remains the wired-but-disabled sharding
-      # above.
-      - name: '🧠 NX ${{ matrix.target }} affected'
+      # DELIBERATELY LEFT AS IS. Sharding is NOT the evidence — it changes which
+      # projects share a box, not what happens when two heavy jsdom suites land on
+      # the same one, and an unlucky partition can still put two of them together.
+      # The evidence required is repeated runs on a 16 GB Linux runner with zero
+      # `(0 test)` files and no killed workers; a developer machine with different
+      # RAM proves nothing about that ceiling. Revisit by flipping to `--parallel`
+      # on a scratch branch, running it several times, and checking every suite
+      # reported a non-zero test count. If there is ANY doubt, it stays as it is.
+      - name: '🧠 NX ${{ matrix.target }} affected (shard ${{ matrix.jobIndex }}/${{ env.jobCount }})'
         run: |
-          pnpm exec nx affected --target=lint,typecheck,bundle-hooks-check --parallel ${{ env.OUTPUT_DEBUG }}
-          pnpm exec nx affected --target=test ${{ env.OUTPUT_DEBUG }}
-          # pnpm exec nx affected --target=test --parallel=1 ${{ env.OUTPUT_DEBUG }}
+          set -euo pipefail
+
+          # The partitioner prints THIS box's Nx `--exclude` selector on stdout
+          # (empty when the shard drew no projects) and the whole partition on
+          # stderr, so the log above is the evidence that the split covered every
+          # affected project exactly once. It exits non-zero when
+          # matrix.jobIndex / env.jobCount have drifted apart, or when its own
+          # selector does not resolve back to exactly the chunk it was built from
+          # — the failure that would otherwise be silent-passing.
+          selector="$(pnpm exec tsx ./scripts/parallelize-tasks.ts "${{ matrix.jobIndex }}" "${{ env.jobCount }}")"
+
+          # An empty shard is a legitimate no-op (fewer affected projects than
+          # shards), but it looks identical to skipping real work, so say which
+          # one it is out loud.
+          if [ -z "$selector" ]; then
+            echo "🫙 Empty shard: the affected set is smaller than jobCount, so box ${{ matrix.jobIndex }} was assigned no projects."
+            echo "   This is a no-op, NOT a skip — the partition printed above shows what the other shards took."
+            exit 0
+          fi
+
+          echo "🧠 shard ${{ matrix.jobIndex }}/${{ env.jobCount }} → $selector"
+
+          # Same two invocations, and the same parallelism split, as the
+          # single-box version. Sharding does NOT license un-serializing `test`:
+          # that stays evidence-gated (see the note above), and spreading projects
+          # across boxes changes nothing about co-running two heavy jsdom suites
+          # on ONE box. Which targets run, and how, is the workflow's business —
+          # the partitioner only answers "which projects are mine?".
+          pnpm exec nx affected --exclude="*,$selector" --target=lint,typecheck,bundle-hooks-check --parallel ${{ env.OUTPUT_DEBUG }}
+          pnpm exec nx affected --exclude="*,$selector" --target=test ${{ env.OUTPUT_DEBUG }}
+          # pnpm exec nx affected --exclude="*,$selector" --target=test --parallel=1 ${{ env.OUTPUT_DEBUG }}
 
       # The skill-usage hook core + per-tool adapters now live in the Nx package
       # @openthrottle/agentic-hooks (authored in TS, bundled to committed .cjs),
@@ -328,14 +400,32 @@ jobs:
       #       --verbose \
       #       --nxBail
 
+      # ────────────────────────────────────────────────────────────────────────
+      # 🧩 ONCE-PER-RUN GATES — `if: matrix.jobIndex == 1`.
+      #
+      # These read the whole tree (or the whole installed graph), not this
+      # shard's chunk, so their result is identical on every box. Running them
+      # on all three would triple the work for zero extra coverage — which is
+      # exactly the mistake "just uncomment the shard loop" would have made.
+      # They live on shard 1 rather than in a sibling `gates` job because they
+      # total ~20s: a separate job would pay ~1.6 min of checkout+install to
+      # save ~20s of shard-1 wall-clock, and add a `needs` edge to keep correct.
+      #
+      # ⚠️ Adding a step below this line? Decide which side it belongs on. A
+      # per-chunk check goes ABOVE, without the `if`; a whole-tree check goes
+      # here, WITH it.
+      # ────────────────────────────────────────────────────────────────────────
       - name: '🔒 GraphQL codegen drift guard (agentic-ralph, openthrottle-mcp)'
+        if: matrix.jobIndex == 1
         run: |
           pnpm exec nx run-many --target=verify-graphql-codegen --projects=@openthrottle/openthrottle-agentic-ralph,@openthrottle/openthrottle-mcp
 
       - name: '🔗 Agent assets SSOT (symlink drift guard)'
+        if: matrix.jobIndex == 1
         run: pnpm exec nx run monorepo:check-agent-assets-ssot
 
       - name: '📋 Agent assets frontmatter validation (D5)'
+        if: matrix.jobIndex == 1
         run: pnpm exec nx run monorepo:validate-agent-assets-frontmatter
 
       # Full-tree (not affected): license risk lives in the whole installed graph,
@@ -350,14 +440,14 @@ jobs:
       # change pulling in copyleft" case this gate exists for. Fails closed.
       # Waivers live in license-policy.json (see CONTRIBUTING.md § Dependency licenses).
       - name: '⚖️ Dependency-license compliance gate'
-        if: needs.changes.outputs.deps == 'true'
+        if: matrix.jobIndex == 1 && needs.changes.outputs.deps == 'true'
         run: pnpm exec nx run monorepo:validate-licenses
 
       # Keep THIRD-PARTY-LICENSES.md (Apache-2.0 §4 attribution manifest) fresh:
       # regenerate from the installed graph and fail if the committed copy drifted.
       # Same `deps` gate and same reason — it is generated FROM the installed graph.
       - name: '📜 THIRD-PARTY-LICENSES freshness guard'
-        if: needs.changes.outputs.deps == 'true'
+        if: matrix.jobIndex == 1 && needs.changes.outputs.deps == 'true'
         run: pnpm run validate:notices
 
       # 💰 On PRs, check only the files this PR touched; husky pre-commit already
@@ -369,6 +459,7 @@ jobs:
       # Fails closed: if NX_BASE/NX_HEAD are missing or the diff errors, fall back
       # to the full sweep rather than checking nothing.
       - name: '🎨 Prettier format-check'
+        if: matrix.jobIndex == 1
         run: |
           set -euo pipefail
 
@@ -399,6 +490,7 @@ jobs:
             | xargs -0 pnpm exec prettier --ignore-unknown --check
 
       - name: '🧩 Template compliance audit'
+        if: matrix.jobIndex == 1
         run: pnpm run audit:strict
 
       # 💰 The warn-only test-coverage audit MOVED OUT of the per-PR path to
@@ -414,24 +506,17 @@ jobs:
       #   env:
       #     MIGRATION_COMMENT_LINT_BASE: ${{ github.base_ref || 'main' }}
 
-      # 💰 Sharding across boxes, disabled by design — see the SCALING RISK note
-      # above and docs/monorepo/ci-cost.md.
-      # - name: "🧠 NX ${{ matrix.target }} affected"
-      #   run: |
-      #     # # 🚧 IMPORTANT 🚧 we pass the "matrix.target" as a string to also handle the "test --coverage" case
-      #     # node --experimental-strip-types ./scripts/parallelize-tasks.ts "${{ matrix.target }}" ${{ matrix.jobIndex }} ${{ env.jobCount }} ${{ github.ref }} | while IFS= read -r line;
-      #
-      #     node --experimental-strip-types ./scripts/parallelize-tasks.ts ${{ matrix.target }} ${{ matrix.jobIndex }} ${{ env.jobCount }} ${{ github.ref }} | while IFS= read -r line;
-      #       do
-      #         read -r tags target <<< `echo $line`;
-      #         echo "🧠 Running for $tags | $target";
-      #         pnpm exec nx affected --exclude="*,$tags" --target=$target --parallel --verbose
-      #     done
-
   # Stable required-check target. Branch protection should require THIS job
-  # ("ci-success"), not the matrix-suffixed `build (1, lint,typecheck,test)`.
+  # ("ci-success"), not a matrix-suffixed leg like `build (1, lint,typecheck,test)`
+  # — there are now THREE such legs and their names change with the shard count,
+  # which is precisely why the required check must stay this single job.
   # It reports green when the build succeeded OR was legitimately skipped
   # (docs-only PR / draft), and red only when the build failed or was cancelled.
+  #
+  # `needs.build.result` AGGREGATES the matrix: it is 'success' only when every
+  # shard succeeded, and 'failure' if any one of them failed. With
+  # `fail-fast: false` above, a red shard therefore still turns this job red while
+  # its siblings run to completion.
   ci-success:
     needs: [changes, build]
     if: always()
@@ -478,8 +563,12 @@ jobs:
           fetch-depth: 0
           filter: 'blob:none'
 
+      # cache-suffix: a workflow_dispatch run starts this job alongside the build
+      # shards at the same commit, so it needs its own exact key too.
       - name: '🤖 Node Setup'
         uses: ./.github/actions/node-setup
+        with:
+          cache-suffix: dependency-graph
 
       - name: '📊 Generate dependency graph visualization'
         run: |
