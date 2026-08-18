@@ -164,3 +164,116 @@ describe('terminateChild', () => {
     expect(child.signalCode).toBe('SIGKILL');
   }, 10_000);
 });
+
+describe('terminateChild process-group teardown', () => {
+  it('reaps a grandchild that outlives the direct child when processGroup is set', async () => {
+    // Mirrors cursor-agent: the child spawns a grandchild that would otherwise
+    // survive the run (the observed `worker-server` leak).
+    const child = spawn(
+      process.execPath,
+      [
+        '-e',
+        `const { spawn } = require('node:child_process');
+         const grandchild = spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000000)'], { stdio: 'ignore' });
+         console.log(String(grandchild.pid));
+         setInterval(() => {}, 1000000);`,
+      ],
+      { detached: true, stdio: ['ignore', 'pipe', 'pipe'] },
+    );
+
+    const grandchildPid = await new Promise<number>((resolve) => {
+      child.stdout?.once('data', (data: Buffer) =>
+        resolve(Number.parseInt(data.toString('utf8').trim(), 10)),
+      );
+    });
+
+    expect(() => process.kill(grandchildPid, 0)).not.toThrow();
+
+    terminateChild(child, 50, { processGroup: true });
+    await waitForEvent(child, 'exit');
+    // Let the group signal land on the grandchild.
+    await new Promise((resolve) => setTimeout(resolve, 250));
+
+    expect(() => process.kill(grandchildPid, 0)).toThrow();
+  }, 15_000);
+
+  it('leaves the grandchild alone by default, so shared callers keep the old behavior', async () => {
+    const child = spawn(
+      process.execPath,
+      [
+        '-e',
+        `const { spawn } = require('node:child_process');
+         const grandchild = spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000000)'], { stdio: 'ignore' });
+         console.log(String(grandchild.pid));
+         setInterval(() => {}, 1000000);`,
+      ],
+      { detached: true, stdio: ['ignore', 'pipe', 'pipe'] },
+    );
+
+    const grandchildPid = await new Promise<number>((resolve) => {
+      child.stdout?.once('data', (data: Buffer) =>
+        resolve(Number.parseInt(data.toString('utf8').trim(), 10)),
+      );
+    });
+
+    terminateChild(child, 50);
+    await waitForEvent(child, 'exit');
+    await new Promise((resolve) => setTimeout(resolve, 250));
+
+    try {
+      // Still running: opting out means the group is never signalled.
+      expect(() => process.kill(grandchildPid, 0)).not.toThrow();
+    } finally {
+      process.kill(grandchildPid, 'SIGKILL');
+    }
+  }, 15_000);
+
+  it('sweeps the group even when the direct child already exited cleanly', async () => {
+    // The real shape of the cursor leak: the turn ends normally, the child
+    // exits on its own, and the grandchild is still running. An early
+    // no-op-if-exited return would skip the sweep and leak it every turn.
+    const child = spawn(
+      process.execPath,
+      [
+        '-e',
+        `const { spawn } = require('node:child_process');
+         const grandchild = spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000000)'], { stdio: 'ignore' });
+         // unref so THIS process can exit while the grandchild keeps running —
+         // the shape cursor's worker-server leaves behind.
+         grandchild.unref();
+         console.log(String(grandchild.pid));`,
+      ],
+      { detached: true, stdio: ['ignore', 'pipe', 'pipe'] },
+    );
+
+    // Attach the exit listener BEFORE awaiting stdout: this child exits
+    // immediately after logging, so a listener added later would miss it.
+    const exited = waitForEvent(child, 'exit');
+    const grandchildPid = await new Promise<number>((resolve) => {
+      child.stdout?.once('data', (data: Buffer) =>
+        resolve(Number.parseInt(data.toString('utf8').trim(), 10)),
+      );
+    });
+    // Let the parent exit on its own, as a completed turn does.
+    await exited;
+    expect(() => process.kill(grandchildPid, 0)).not.toThrow();
+
+    terminateChild(child, 50, { processGroup: true });
+    await new Promise((resolve) => setTimeout(resolve, 300));
+
+    expect(() => process.kill(grandchildPid, 0)).toThrow();
+  }, 15_000);
+
+  it('still signals the direct child even when the group call cannot apply', async () => {
+    // Not spawned detached, so there is no own group to signal.
+    const child = spawnNode(
+      `console.log('ready'); setInterval(() => {}, 1000000);`,
+    );
+    await waitForReady(child);
+
+    terminateChild(child, 50, { processGroup: true });
+    await waitForEvent(child, 'exit');
+
+    expect(child.signalCode).not.toBeNull();
+  }, 15_000);
+});

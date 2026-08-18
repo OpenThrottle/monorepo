@@ -137,7 +137,9 @@ describe('ChatThread Component', () => {
 
     test('renders the Retry notice when canRetry and onRetry are set', () => {
       component = renderThread({ canRetry: true, messages, onRetry: vi.fn() });
-      expect(component.getByTestId('ChatRetryNotice')).toBeInTheDocument();
+      expect(
+        within(component.container).getByTestId('ChatRetryNotice'),
+      ).toBeInTheDocument();
     });
 
     test('does not render the Retry notice without canRetry', () => {
@@ -304,6 +306,69 @@ describe('ChatThread Component', () => {
       ]);
       expect(scrollIntoView).toHaveBeenCalledTimes(1);
       expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth' });
+    });
+  });
+
+  describe('when a cursor startup failure arrives as a system message', () => {
+    // The exact text the server composes (conversation-stream.copy.ts). It
+    // reaches the UI as a plain system-message body — there is no typed field
+    // on the terminal chunk to branch on — so this pins that the actionable
+    // copy actually renders, and that the turn stays retryable.
+    const authRequiredCopy =
+      'Your cursor-agent login has expired or is unavailable. Run `cursor-agent login` in a terminal, then send this message again.\n\nDetails: Error: Authentication required.';
+    const notInstalledCopy =
+      'cursor-agent is not installed, or is not on this server’s PATH. Install it with `curl https://cursor.com/install -fsS | bash`, or set OPENTHROTTLE_CURSOR_AGENT_BIN to its full path.';
+    const timeoutCopy =
+      'cursor-agent did not start in time. This is usually a cold start — send the message again and it will normally succeed.';
+
+    test('should render the auth-required copy with its next step', () => {
+      component = renderThread({
+        ...props,
+        messages: [
+          { body: 'hi', id: '1', role: 'user' },
+          { body: authRequiredCopy, id: '2', role: 'system' },
+        ],
+      });
+
+      const thread = within(component.container).getByTestId('ChatThread');
+      // The body renders as markdown, so the backticked command lands in its
+      // own <code> — the next step is visually distinct, not buried in prose.
+      expect(
+        within(thread).getByText('cursor-agent login', { selector: 'code' }),
+      ).toBeInTheDocument();
+      // The raw cursor message is preserved for diagnostics.
+      expect(
+        within(thread).getByText(/Authentication required/),
+      ).toBeInTheDocument();
+    });
+
+    test('should render the not-installed copy naming how to fix it', () => {
+      component = renderThread({
+        ...props,
+        messages: [{ body: notInstalledCopy, id: '1', role: 'system' }],
+      });
+
+      const thread = within(component.container).getByTestId('ChatThread');
+      expect(within(thread).getByText(/not installed/)).toBeInTheDocument();
+      expect(
+        within(thread).getByText(/OPENTHROTTLE_CURSOR_AGENT_BIN/),
+      ).toBeInTheDocument();
+    });
+
+    test('should render the timeout copy as a cold start worth retrying', () => {
+      component = renderThread({
+        ...props,
+        canRetry: true,
+        messages: [{ body: timeoutCopy, id: '1', role: 'system' }],
+        onRetry: vi.fn(),
+      });
+
+      const thread = within(component.container).getByTestId('ChatThread');
+      expect(within(thread).getByText(/cold start/)).toBeInTheDocument();
+      // A dead thread would be the failure mode; the turn stays retryable.
+      expect(
+        within(component.container).getByTestId('ChatRetryNotice'),
+      ).toBeInTheDocument();
     });
   });
 });

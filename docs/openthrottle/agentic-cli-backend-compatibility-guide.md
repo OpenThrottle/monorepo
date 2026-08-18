@@ -182,6 +182,28 @@ grep -i purple t2.ndjson && echo "CONTINUITY OK"
   persist immediately); `--resume <id>` on every turn; continuity verified
   across processes; id echoed in `system/init`. Unknown id → fresh session, no
   hard error (graceful).
+- **"Graceful" here is a trap — treat it as a hard requirement to validate the
+  id at the mint.** cursor accepts _any_ string as a resume id: a never-minted
+  UUID, and even the literal `Update available!  1.2.3` (spaces and all), both
+  exit 0 and produce a full successful turn, echoing the junk back as
+  `session_id`. So a banner byte that lands on stdout does not fail loudly — it
+  silently starts a _disconnected_ chat and costs the conversation every prior
+  turn, while the stream, the exit code, and the UI all report success. When
+  probing a new CLI, deliberately resume a garbage id: if it does **not** error,
+  your adapter must parse and validate the minted id rather than trusting
+  `stdout.trim()` (see `cursor-agent/session-id.ts`).
+- Also probe the _cold_ mint, not just a warm one. Note whether the create
+  command touches the network or auth at all — cursor's does neither (it is
+  `randomUUID()` plus a local SQLite write), which is what ruled out a whole
+  class of suspected cold-start causes.
+- **Bound the mint on the output you need, not on process exit.** This is the
+  single most important lesson from the cursor cold-start bug: `create-chat`
+  prints its id in ~2 s, but cold the process lingers past 30 s finishing
+  startup work (statsig, MCP/OAuth, hooks) and holding its stdout pipe via a
+  grandchild. An adapter that awaited `close` timed out and threw away an id it
+  already had. Time **id-printed → process-exit** on a cold run; if there is a
+  gap, resolve on the parse and tear the child down. A CLI that answers and then
+  lingers is normal, not pathological.
 - If no resume exists: document that v1 must flatten conversation history into
   the prompt (and the size/latency cost).
 
@@ -207,6 +229,21 @@ Cancel must guarantee teardown.
   **no** JSON; success ends with a `result` event (`is_error`, `usage`). So:
   terminal = `result` **or** process exit; on exit-without-result, surface
   buffered stderr.
+- **Capture the exact strings — they are the only basis for actionable copy.**
+  cursor's two auth failures are
+  `Error: Authentication required. Please run 'agent login' first, …` and an
+  **ANSI-wrapped** `⚠ Warning: The provided API key is invalid.`; keychain
+  failures surface osStatus 36 (`errSecInteractionNotAllowed`) / 44
+  (`errSecItemNotFound`). Strip ANSI before this text reaches a UI — escapes on
+  stderr are the norm, not the exception.
+- **Check for grandchildren, and whether the process actually exits.** cursor
+  spawns a long-lived `worker-server` that inherits the parent's stdout pipe and
+  outlives the run (observed alive minutes later). Two consequences for any
+  adapter: a `for await` over `child.stdout` can never end on EOF, and a
+  `child.kill()` that signals only the direct child leaks a process per turn.
+  Spawn `detached: true` and tear down by process group. Verify with `ps` after
+  a turn completes, and time result-event → `close` on a cold run as well as a
+  warm one — cursor's gap is ~3 s warm and has been observed at 4+ minutes cold.
 - Record exact exit codes and whether errors ever appear as stream events.
 
 ## 9. Probe: auth, models, discovery

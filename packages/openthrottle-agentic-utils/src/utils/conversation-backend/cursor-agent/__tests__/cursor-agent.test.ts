@@ -161,6 +161,67 @@ describe('cursorAgentConversationBackend', () => {
     }
   });
 
+  it('passes through the env cursor provably reads, forces NO_COLOR, and still blocks server secrets', async () => {
+    // Reports the child's own view of its environment as the result text, so
+    // the assertions below are about the REAL spawned env, not a mock.
+    process.env[CURSOR_AGENT_BIN_ENV] = writeFakeBin(
+      'cursor-env-allowlist.js',
+      `const keys = ['AGENT_CLI_CREDENTIAL_STORE','CURSOR_AUTH_TOKEN','CURSOR_DATA_DIR','FAKE_SERVER_SECRET','HTTPS_PROXY','NO_COLOR','NO_PROXY','SHELL','XDG_CACHE_HOME','XDG_CONFIG_HOME'];
+      const seen = {};
+      for (const key of keys) { seen[key] = process.env[key] ?? null; }
+      process.stdout.write(JSON.stringify({ type: 'result', subtype: 'success', is_error: false, result: JSON.stringify(seen) }) + '\\n');`,
+    );
+
+    const hostEnv: Readonly<Record<string, string>> = {
+      AGENT_CLI_CREDENTIAL_STORE: 'file',
+      CURSOR_AUTH_TOKEN: 'auth-token',
+      CURSOR_DATA_DIR: '/custom/cursor',
+      FAKE_SERVER_SECRET: 'super-secret-value',
+      HTTPS_PROXY: 'http://proxy.internal:3128',
+      NO_COLOR: 'not-this-value',
+      NO_PROXY: 'localhost',
+      SHELL: '/bin/zsh',
+      XDG_CACHE_HOME: '/custom/cache',
+      XDG_CONFIG_HOME: '/custom/config',
+    };
+    Object.assign(process.env, hostEnv);
+
+    try {
+      const chunks = await collect({
+        cwd: dir,
+        messages: [{ content: 'hi', role: 'user' }],
+        model: 'auto',
+        sessionId: 'sess-1',
+      });
+
+      const raw = chunks.at(-1)?.metadata?.result;
+      const seen: Record<string, string | null> = JSON.parse(String(raw));
+
+      // Everything cursor provably reads reaches the child.
+      expect(seen.AGENT_CLI_CREDENTIAL_STORE).toBe('file');
+      expect(seen.CURSOR_AUTH_TOKEN).toBe('auth-token');
+      expect(seen.HTTPS_PROXY).toBe('http://proxy.internal:3128');
+      expect(seen.NO_PROXY).toBe('localhost');
+      expect(seen.SHELL).toBe('/bin/zsh');
+      expect(seen.XDG_CACHE_HOME).toBe('/custom/cache');
+      expect(seen.XDG_CONFIG_HOME).toBe('/custom/config');
+
+      // CURSOR_* passes through by prefix, so a knob added in a future cursor
+      // release does not need an allowlist edit.
+      expect(seen.CURSOR_DATA_DIR).toBe('/custom/cursor');
+
+      // Forced, and the host cannot override it.
+      expect(seen.NO_COLOR).toBe('1');
+
+      // The posture that must never regress.
+      expect(seen.FAKE_SERVER_SECRET).toBeNull();
+    } finally {
+      for (const key of Object.keys(hostEnv)) {
+        delete process.env[key];
+      }
+    }
+  });
+
   it('kills a hung process on the idle timeout and yields an idle-timeout error', async () => {
     process.env[CURSOR_AGENT_BIN_ENV] = hangBin();
     process.env[AGENT_IDLE_TIMEOUT_MS_ENV] = '200';
@@ -209,12 +270,128 @@ describe('createCursorAgentSession', () => {
     );
   });
 
-  it('throws when create-chat exits non-zero', async () => {
-    process.env[CURSOR_AGENT_BIN_ENV] = errorBin();
-    await expect(createCursorAgentSession({ cwd: dir })).rejects.toThrow(
-      'create-chat failed',
+  it('throws when create-chat exits non-zero, attaching the full evidence', async () => {
+    const bin = errorBin();
+    process.env[CURSOR_AGENT_BIN_ENV] = bin;
+
+    const error = await createCursorAgentSession({ cwd: dir }).catch(
+      (thrown: unknown) => thrown,
+    );
+
+    expect(error).toBeInstanceOf(Error);
+    const message = error instanceof Error ? error.message : '';
+    expect(message).toContain('create-chat failed (exit 1)');
+    // The evidence a mint failure is undiagnosable without.
+    expect(message).toContain(`bin=${bin}`);
+    expect(message).toContain(`cwd=${dir}`);
+    expect(message).toMatch(/elapsedMs=\d+/);
+    expect(message).toContain('Workspace Trust Required');
+    expect(message).toContain('stdout=<empty>');
+  });
+
+  it('throws with the captured stdout when create-chat prints no id', async () => {
+    // A banner on stdout and nothing that could be an id: the old message said
+    // only "returned no session id" and dropped every byte of evidence.
+    process.env[CURSOR_AGENT_BIN_ENV] = writeFakeBin(
+      'cursor-create-banner.js',
+      `process.stdout.write('   \\n');
+      process.stderr.write('update available\\n');`,
+    );
+
+    const error = await createCursorAgentSession({ cwd: dir }).catch(
+      (thrown: unknown) => thrown,
+    );
+
+    const message = error instanceof Error ? error.message : '';
+    expect(message).toContain('returned no recognizable session id');
+    expect(message).toContain('update available');
+  });
+
+  it('rejects a banner-only stdout instead of resuming on it', async () => {
+    // `--resume` accepts any string, so trusting this would silently start a
+    // fresh, disconnected chat rather than failing.
+    process.env[CURSOR_AGENT_BIN_ENV] = writeFakeBin(
+      'cursor-create-noise.js',
+      `process.stdout.write('Update available!  1.2.3\\n');`,
+    );
+
+    const error = await createCursorAgentSession({ cwd: dir }).catch(
+      (thrown: unknown) => thrown,
+    );
+
+    const message = error instanceof Error ? error.message : '';
+    expect(message).toContain('returned no recognizable session id');
+    expect(message).toContain('Update available!');
+  });
+
+  it('parses the id out of a banner-prefixed stdout', async () => {
+    process.env[CURSOR_AGENT_BIN_ENV] = writeFakeBin(
+      'cursor-create-banner-id.js',
+      `process.stdout.write('Update available!  1.2.3\\n');
+      process.stdout.write('05dbda6a-4b19-4862-b4fc-205c78affb66\\n');`,
+    );
+
+    await expect(createCursorAgentSession({ cwd: dir })).resolves.toBe(
+      '05dbda6a-4b19-4862-b4fc-205c78affb66',
     );
   });
+
+  it('redacts a token-shaped value the child echoed before failing', async () => {
+    process.env[CURSOR_AGENT_BIN_ENV] = writeFakeBin(
+      'cursor-create-leak.js',
+      `process.stderr.write('auth failed for key_0123456789abcdefghij\\n');
+      process.exit(1);`,
+    );
+
+    const error = await createCursorAgentSession({ cwd: dir }).catch(
+      (thrown: unknown) => thrown,
+    );
+
+    const message = error instanceof Error ? error.message : '';
+    expect(message).not.toContain('key_0123456789abcdefghij');
+    expect(message).toContain('[REDACTED]');
+  });
+
+  it('resolves on the printed id without waiting for a process that lingers', async () => {
+    // The cold-start failure, reproduced: cursor prints the id promptly but the
+    // process does not exit for far longer than the mint budget. Waiting for
+    // `close` meant timing out and discarding an id we already had.
+    process.env[CURSOR_AGENT_BIN_ENV] = writeFakeBin(
+      'cursor-create-lingering.js',
+      `console.log('05dbda6a-4b19-4862-b4fc-205c78affb66');
+      setInterval(() => {}, 1000000);`,
+    );
+    process.env[AGENT_SESSION_TIMEOUT_MS_ENV] = '3000';
+
+    try {
+      const startedAt = Date.now();
+      await expect(createCursorAgentSession({ cwd: dir })).resolves.toBe(
+        '05dbda6a-4b19-4862-b4fc-205c78affb66',
+      );
+      // Well inside the budget: it returned on the id, not on the timeout.
+      expect(Date.now() - startedAt).toBeLessThan(2500);
+    } finally {
+      delete process.env[AGENT_SESSION_TIMEOUT_MS_ENV];
+    }
+  }, 15_000);
+
+  it('still waits (and fails) when a lingering child prints no id at all', async () => {
+    // The early-return must not weaken the backstop: no id means no shortcut.
+    process.env[CURSOR_AGENT_BIN_ENV] = writeFakeBin(
+      'cursor-create-lingering-silent.js',
+      `console.log('starting up');
+      setInterval(() => {}, 1000000);`,
+    );
+    process.env[AGENT_SESSION_TIMEOUT_MS_ENV] = '400';
+
+    try {
+      await expect(createCursorAgentSession({ cwd: dir })).rejects.toThrow(
+        'timed out',
+      );
+    } finally {
+      delete process.env[AGENT_SESSION_TIMEOUT_MS_ENV];
+    }
+  }, 15_000);
 
   it('times out (killing the child) when create-chat hangs', async () => {
     // A create-chat that never prints and never exits.

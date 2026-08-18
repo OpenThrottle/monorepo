@@ -71,11 +71,127 @@ backend acquires its session id differently, persisted in
 `conversation.metadata.<backend>SessionId`:
 
 - **cursor** — pre-minted via `cursor-agent create-chat`, then resumed each turn.
+  The **only** backend with an out-of-band mint; see [cursor cold start](#cursor-agent-cold-start) for why that matters.
 - **claude** — a UUID **we** mint up front; created with `--session-id` on the
   first turn, resumed with `--resume` after (`resumeSession` flag on the run).
 - **opencode** — **minted by opencode itself** on the first `run` (no create
   command); the adapter surfaces the id in its `kind:'session'` chunk and
   `ConversationStreamService` persists it, so later turns resume via `-s`.
+
+## cursor-agent cold start
+
+cursor is the only backend that mints its session id out of band — a separate
+`cursor-agent create-chat` spawn before the streaming turn. That extra spawn is
+where "the first chat of a session fails, but works after using another agent"
+was assumed to originate. It is not. What `create-chat` actually does, verified
+against the 2026.08.11 binary:
+
+- **Entirely local.** `handleCreateChat` calls `crypto.randomUUID()` and opens a
+  SQLite `store.db` under `<configDir>/chats/<md5(cwd)>/<uuid>/`. No network, no
+  auth, no credential file written.
+- **Fast and concurrency-safe.** 2.0–2.6 s warm _and_ cold; four simultaneous
+  mints return four distinct UUIDs with no contention. That is ~12x headroom
+  against the 30 s `OPENTHROTTLE_AGENT_SESSION_TIMEOUT_MS` budget.
+- **Clean stdout.** The id is the only thing written to stdout; cursor's
+  `console-io` sends every other message to stderr.
+
+The problem is that **the process does not exit when it is done.** On a cold run
+cursor's startup does blocking network work — statsig init, MCP server init and
+OAuth discovery, plus any configured plugin hooks — and that keeps the process
+alive long after it has printed what we needed:
+
+```
+startup.metrics total_ms=4600  mcp_and_model_init_ms=1246  server_config_ms=689
+                auth_ms=33  auth_refresh_ms=-1
+```
+
+Auth is 33 ms. MCP init is 1.2 s and network-bound. In a reproduced cold run
+(with `~/.cursor/statsig-cache.json` moved aside) a turn reported
+`outcome=success duration_ms=15150` and the process had **still not exited four
+minutes later**; the same sequence warm takes 3 s from result to close.
+
+### The root cause of the first-chat failures
+
+`createCursorAgentSession()` used to await the child's `close` event. Cold, that
+never arrived inside the 30 s budget — so the mint timed out and **discarded an
+id it already had**:
+
+```
+cursor-agent create-chat timed out after 30000ms elapsedMs=30019
+  stdout="b17be556-b994-41ba-8a93-a09ce8ab8e08\n" stderr=<empty>
+```
+
+That is the whole bug. Warm, the process exits promptly and the mint succeeds —
+which is exactly what "use another agent, then switch back" buys you: elapsed
+time and a warmed cursor, not anything about the other agent.
+
+**The mint now settles on the first of: a parseable id on stdout, process exit,
+or the timeout.** Stopping at the id is safe — cursor writes `agentId` to its
+store _before_ printing it, and `--resume` works even for an id whose store row
+never existed. Teardown sends SIGTERM first so cursor still finishes its own
+`dispose()`.
+
+Cold end-to-end, measured through the built adapter:
+
+|                  | before                            | after                                     |
+| ---------------- | --------------------------------- | ----------------------------------------- |
+| mint             | **failed**, timed out at 30019 ms | **392 ms**                                |
+| turn             | never reached                     | first chunk 3.7 s, total 10.6 s, no error |
+| leaked processes | 1 `worker-server`                 | none                                      |
+
+If you write another adapter with an out-of-band session mint: **bound it on the
+output you need, not on process exit.** A CLI that prints its answer and then
+lingers is normal, not pathological.
+
+### Failure modes now handled
+
+| What                     | How                                                                                                                                                                                                                                                                                              |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| A polluted session id    | `parseCursorChatId` validates the minted id (UUID first, conservative token fallback) instead of trusting `stdout.trim()`. Critical because **`--resume` accepts any string** — an unvalidated id does not error, it silently starts a _disconnected_ chat and loses the conversation's history. |
+| A mint that never exits  | The mint resolves on the parsed id rather than on `close`, so a lingering cold process no longer costs a 30 s timeout and a discarded id. **This is the fix for the reported bug.**                                                                                                              |
+| A transient mint failure | Bounded retry: 2 attempts, 500 ms apart, retryable failures only. Auth and missing-binary are never retried.                                                                                                                                                                                     |
+| Leaked grandchildren     | cursor spawns a `worker-server` that inherits our stdout pipe, reparents to init, and outlives the run. Both cursor spawns are `detached: true` and swept by process group — including when the child exited cleanly on its own, which is the case that actually leaks.                          |
+| Unactionable errors      | Failures are classified (`authRequired`, `notInstalled`, `timeout`, `unknown`) and rendered as copy with a concrete next step, ANSI-stripped, with the raw message kept as a `Details:` line.                                                                                                    |
+| Undiagnosable mints      | Every mint logs start / ok / failed with `conversationId`, `cwd`, `elapsedMs`, `attempt`, and `kind`; failures carry the full (redacted, 2 KB-bounded, escape-preserving) stdout and stderr.                                                                                                     |
+
+### Not implemented, deliberately
+
+- **A single-flight mint guard.** There is no race: `create-chat` is local and
+  concurrency-clean (measured).
+- **Re-mint on a "chat not found" resume failure.** cursor never emits one.
+  `--resume` with a never-minted UUID, and with the literal string
+  `Update available!  1.2.3`, both exit 0 with a successful turn. Validating the
+  id at the mint is the correct fix; there is no resume-side signal to detect.
+- **A warm-up probe.** The cold cost is MCP init and OAuth discovery, which a
+  non-mutating `--version`/`status` probe does not warm.
+
+### Troubleshooting: first cursor chat fails, then works after using another agent
+
+1. **Confirm from the server log.** Look for
+   `conversation-stream cursor mint start|ok|failed conversationId=… elapsedMs=… attempt=N/2 kind=…`.
+   - `mint failed` with `kind=timeout` **and an id visible in the attached
+     `stdout=`** → you are running a build from before the mint stopped waiting
+     on process exit. That is the original bug; update.
+   - `mint ok` with a small `elapsedMs`, but the turn still failed → the mint is
+     fine; the problem is in the streaming spawn (cold MCP/OAuth startup). Check
+     cursor's own log under `$TMPDIR/cursor-agent-logs-<uid>/` for
+     `mcp_oauth_state_transition` and `startup.metrics`.
+   - `mint failed` with `kind=authRequired` → the host login expired. Run
+     `cursor-agent login` in a terminal as the user the server runs as.
+   - `kind=notInstalled` → `cursor-agent` is not on the server's `PATH`; set
+     `OPENTHROTTLE_CURSOR_AGENT_BIN` to its absolute path.
+   - `kind=timeout` with `elapsedMs` near 30000 → raise
+     `OPENTHROTTLE_AGENT_SESSION_TIMEOUT_MS`.
+2. **If cursor works in your terminal but not from the server**, the two are
+   probably not reading the same config. cursor's config dir is
+   `$XDG_CONFIG_HOME/cursor` when that var is set, else `~/.cursor`, and its
+   credential store is selected by `AGENT_CLI_CREDENTIAL_STORE`
+   (`default` = macOS login keychain, `file`, `memory`). Both now pass through to
+   the child, along with `HTTP_PROXY`/`HTTPS_PROXY`/`NO_PROXY` and all `CURSOR_*`
+   vars — but only if they are set in the **server process's** environment.
+3. **A locked or denying macOS keychain** surfaces as `kind=authRequired` with
+   cursor's `errSecInteractionNotAllowed` (osStatus 36) wording. Unlock the login
+   keychain, or set `AGENT_CLI_CREDENTIAL_STORE=file`.
 
 ## Security model
 
@@ -125,6 +241,25 @@ The gate (see `conversation-stream.resolver.ts` + the cursor-agent adapter):
 | `OPENTHROTTLE_AGENT_WALLCLOCK_TIMEOUT_MS` | Hard run cap                                                   | 900000             |
 | `OPENTHROTTLE_AGENT_KILL_GRACE_MS`        | SIGTERM→SIGKILL grace                                          | 5000               |
 | `OPENTHROTTLE_AGENT_SESSION_TIMEOUT_MS`   | Bound `cursor-agent create-chat` (kill child on timeout)       | 30000              |
+
+The cursor child additionally **inherits** these from the server process when
+set, because cursor provably reads them — dropping one silently diverges the
+child from the user's own terminal:
+
+| Var                                   | Why it matters                                                                                                                                                 |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `XDG_CONFIG_HOME`                     | Selects cursor's config dir (`$XDG_CONFIG_HOME/cursor`, else `~/.cursor`) — and thus its chat store                                                            |
+| `AGENT_CLI_CREDENTIAL_STORE`          | `default` (macOS login keychain) / `file` / `memory`                                                                                                           |
+| `HTTP_PROXY` `HTTPS_PROXY` `NO_PROXY` | Without these cursor has no route to the network behind a corporate proxy                                                                                      |
+| `SHELL`                               | cursor shells out for tool calls                                                                                                                               |
+| `XDG_CACHE_HOME`                      | Sites `NODE_COMPILE_CACHE` in cursor's launcher on non-darwin                                                                                                  |
+| `CURSOR_*`                            | Passed through **by prefix** (`CURSOR_API_KEY`, `CURSOR_AUTH_TOKEN`, `CURSOR_DATA_DIR`, …), so a knob added in a future cursor release needs no allowlist edit |
+
+`NO_COLOR=1` is **forced** on the child (the host cannot override it) to suppress
+decorated output at the source. `CI` is deliberately **not** set: it reads as an
+output knob but also feeds cursor's credential-store selection.
+`NODE_TLS_REJECT_UNAUTHORIZED` is read by cursor but stays omitted — passing it
+through would let the host weaken TLS verification for the child.
 
 Two idle timers guard every chat turn and must measure the **same** signal:
 the per-agent idle (`OPENTHROTTLE_AGENT_IDLE_TIMEOUT_MS`, resets on any child

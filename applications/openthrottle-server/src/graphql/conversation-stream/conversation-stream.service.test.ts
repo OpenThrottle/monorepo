@@ -741,8 +741,103 @@ describe('ConversationStreamService', () => {
     expect(cursorStreamMock).not.toHaveBeenCalled();
     const last = publish.mock.calls.at(-1)?.[1].conversationStreamChunkAdded;
     expect(last).toMatchObject({ done: true });
-    expect(last?.error).toContain('Failed to start a cursor-agent session');
-    expect(last?.error).toContain('auth expired');
+    // Actionable copy for the classified failure, with the raw message kept as
+    // a detail line (see conversation-stream.copy.ts).
+    expect(last?.error).toContain('cursor-agent could not start this chat');
+    expect(last?.error).toContain('Details: auth expired');
+  });
+
+  it('retries a transient mint failure once and completes the turn', async () => {
+    createCursorAgentSessionMock
+      .mockRejectedValueOnce(new Error('cursor-agent exited with code 3'))
+      .mockResolvedValueOnce('cursor-second-try');
+    cursorStreamMock.mockReturnValue(fakeStream(['hi']));
+    const { conversations, publish, service } = buildService();
+
+    await service.runStream({
+      ...baseRun,
+      backend: 'cursor',
+      cwd: '/repo',
+      provider: 'cursor',
+      resumeSession: true,
+      sessionId: null,
+    });
+
+    expect(createCursorAgentSessionMock).toHaveBeenCalledTimes(2);
+    // The turn runs on the second attempt's id and ends clean.
+    expect(cursorStreamMock.mock.calls[0]?.[0]).toMatchObject({
+      sessionId: 'cursor-second-try',
+    });
+    expect(conversations.updateMetadata).toHaveBeenCalledWith('conv-1', {
+      cursorSessionId: 'cursor-second-try',
+    });
+    const last = publish.mock.calls.at(-1)?.[1].conversationStreamChunkAdded;
+    expect(last).toMatchObject({ done: true, error: null });
+  });
+
+  it('stops after the attempt cap and emits exactly one terminal error, with no retry storm', async () => {
+    createCursorAgentSessionMock.mockRejectedValue(
+      new Error('cursor-agent exited with code 3'),
+    );
+    const { publish, service } = buildService();
+
+    await service.runStream({
+      ...baseRun,
+      backend: 'cursor',
+      cwd: '/repo',
+      provider: 'cursor',
+      resumeSession: true,
+      sessionId: null,
+    });
+
+    expect(createCursorAgentSessionMock).toHaveBeenCalledTimes(2);
+    expect(cursorStreamMock).not.toHaveBeenCalled();
+
+    const terminals = publish.mock.calls
+      .map(([, payload]) => payload.conversationStreamChunkAdded)
+      .filter((chunk) => chunk.done === true);
+    expect(terminals).toHaveLength(1);
+  });
+
+  it('never retries an auth failure — the user must fix it, so a second wait is wasted', async () => {
+    createCursorAgentSessionMock.mockRejectedValue(
+      new Error(
+        "Error: Authentication required. Please run 'agent login' first, or set CURSOR_API_KEY environment variable.",
+      ),
+    );
+    const { publish, service } = buildService();
+
+    await service.runStream({
+      ...baseRun,
+      backend: 'cursor',
+      cwd: '/repo',
+      provider: 'cursor',
+      resumeSession: true,
+      sessionId: null,
+    });
+
+    expect(createCursorAgentSessionMock).toHaveBeenCalledTimes(1);
+    const last = publish.mock.calls.at(-1)?.[1].conversationStreamChunkAdded;
+    expect(last).toMatchObject({ done: true });
+    expect(last?.error).toContain('Authentication required');
+  });
+
+  it('never retries a missing binary', async () => {
+    createCursorAgentSessionMock.mockRejectedValue(
+      new Error('spawn cursor-agent ENOENT'),
+    );
+    const { service } = buildService();
+
+    await service.runStream({
+      ...baseRun,
+      backend: 'cursor',
+      cwd: '/repo',
+      provider: 'cursor',
+      resumeSession: true,
+      sessionId: null,
+    });
+
+    expect(createCursorAgentSessionMock).toHaveBeenCalledTimes(1);
   });
 
   it('mints an ephemeral cursor session in Private mode without persisting it', async () => {
