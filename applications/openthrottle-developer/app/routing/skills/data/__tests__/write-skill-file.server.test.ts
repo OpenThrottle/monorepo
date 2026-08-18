@@ -10,6 +10,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
+import { SKILL_WRITE_COPY } from '~/routing/skills/data/data.copy';
 
 vi.mock('~/routing/agents/data/discover-repo-skills.server', () => ({
   discoverRepoSkills: vi.fn(),
@@ -45,12 +46,15 @@ description: Edited description.
 # My skill (edited)
 `;
 
-const entryFor = (repoRelativePath: string): RepoSkillEntry => ({
+const entryFor = (
+  repoRelativePath: string,
+  source: RepoSkillEntry['source'] = 'openthrottle',
+): RepoSkillEntry => ({
   disableModelInvocation: undefined,
   layout: 'agents',
   repoRelativePath,
   slug: 'my-skill',
-  source: 'external',
+  source,
   summary: 'Original description.',
   tags: undefined,
 });
@@ -135,6 +139,20 @@ describe('writeSkillFileBySlug', () => {
     );
 
     expect(result.ok).toBe(false);
+    expect(readFileSync(skillPath, 'utf8')).toBe(ORIGINAL_CONTENT);
+  });
+
+  test('refuses an externally sourced skill without writing', () => {
+    mockDiscoverRepoSkills.mockReturnValue([
+      entryFor('.agents/skills/my-skill/SKILL.md', 'external'),
+    ]);
+
+    const result = writeSkillFileBySlug('my-skill', VALID_EDIT);
+
+    expect(result).toEqual({
+      error: SKILL_WRITE_COPY.externalSkillError,
+      ok: false,
+    });
     expect(readFileSync(skillPath, 'utf8')).toBe(ORIGINAL_CONTENT);
   });
 

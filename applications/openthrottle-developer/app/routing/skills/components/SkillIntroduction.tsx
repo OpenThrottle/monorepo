@@ -1,15 +1,10 @@
 import * as React from 'react';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
-import {
-  Badge,
-  Button,
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@openthrottle/react-router-shadcn';
+import { Badge, Button } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 import { SkillDetailEditControls } from '~/routing/skills/components/SkillDetailEditControls';
+import { SkillIntroductionBadges } from '~/routing/skills/components/SkillIntroductionBadges';
 import { SkillOrphanRemoveButton } from '~/routing/skills/components/SkillOrphanRemoveButton';
 import { SkillRunControl } from '~/routing/skills/components/SkillRunControl';
 import type { RunSkillRunOptions } from '~/routing/skills/components/SkillRunControl';
@@ -21,12 +16,14 @@ import {
 import {
   SKILL_DETAIL_COPY,
   SKILL_RECORD_TAGS_COPY,
-  SKILLS_SOURCE_COPY,
 } from '~/routing/skills/data/data.copy';
 import type { ModelInvocationBadge } from '~/routing/skills/utils/model-invocation-badge';
 
 export interface SkillIntroductionProps {
-  readonly editable: boolean;
+  /** Checkout AND provenance both allow an edit. */
+  readonly canEdit: boolean;
+  /** Why editing is blocked; rendered in the disabled-Edit tooltip. */
+  readonly editDisabledTooltip: string;
   readonly entry: RepoSkillEntry;
   readonly invocationBadge: ModelInvocationBadge;
   readonly isDirty: boolean;
@@ -55,7 +52,8 @@ export const SkillIntroduction = (
   props: SkillIntroductionProps,
 ): React.ReactElement => {
   const {
-    editable,
+    canEdit,
+    editDisabledTooltip,
     entry,
     invocationBadge,
     isDirty,
@@ -88,17 +86,6 @@ export const SkillIntroduction = (
   // Handlers
 
   // Markup
-  const sourceBadge = (
-    <Badge
-      color={isOpenThrottle ? 'violet' : 'slate'}
-      data-testid="skill-source-badge"
-      size="xs"
-    >
-      {isOpenThrottle
-        ? SKILLS_SOURCE_COPY.openthrottleLabel
-        : SKILLS_SOURCE_COPY.externalLabel}
-    </Badge>
-  );
 
   // Life Cycle
 
@@ -109,44 +96,13 @@ export const SkillIntroduction = (
       <div className="flex flex-wrap items-center gap-4">
         <GlobalHeading heading="h1" title={`/${entry.slug}`} />
 
-        <Tooltip>
-          <TooltipTrigger asChild={true}>
-            {!isOpenThrottle && entry.sourceUrl ? (
-              <a
-                data-testid="skill-source-link"
-                href={entry.sourceUrl}
-                rel="noreferrer"
-                target="_blank"
-              >
-                {sourceBadge}
-              </a>
-            ) : (
-              sourceBadge
-            )}
-          </TooltipTrigger>
-          <TooltipContent className="max-w-xs" side="top">
-            {sourceTooltip}
-          </TooltipContent>
-        </Tooltip>
-
-        <Tooltip>
-          <TooltipTrigger asChild={true}>
-            <Badge color={invocationBadge.color} size="xs">
-              {invocationBadge.label}
-            </Badge>
-          </TooltipTrigger>
-          <TooltipContent className="max-w-xs" side="top">
-            {invocationBadge.tooltip}
-          </TooltipContent>
-        </Tooltip>
-
-        {showReadOnlyTags
-          ? (entry.tags ?? []).map((tag) => (
-              <Badge color="blue" key={tag} size="xs">
-                {tag}
-              </Badge>
-            ))
-          : null}
+        <SkillIntroductionBadges
+          entry={entry}
+          invocationBadge={invocationBadge}
+          isOpenThrottle={isOpenThrottle}
+          showReadOnlyTags={showReadOnlyTags}
+          sourceTooltip={sourceTooltip}
+        />
 
         {onAddTag != null && onRemoveTag != null && tagVocabulary != null ? (
           <SkillTagChips
@@ -176,7 +132,8 @@ export const SkillIntroduction = (
         <SkillRunControl entry={entry} onRun={onRun} runOptions={runOptions} />
 
         <SkillDetailEditControls
-          editable={editable}
+          disabledTooltip={editDisabledTooltip}
+          editable={canEdit}
           isDirty={isDirty}
           isEditing={isEditing}
           onCancel={onCancel}

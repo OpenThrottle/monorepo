@@ -1,11 +1,16 @@
 import * as React from 'react';
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
-import { SKILLS_SOURCE_COPY } from '~/routing/skills/data/data.copy';
+import {
+  SKILL_DETAIL_COPY,
+  SKILLS_SOURCE_COPY,
+} from '~/routing/skills/data/data.copy';
 import { getResolvedModelInvocationDisplay } from '~/routing/skills/utils/model-invocation-badge';
 
 export interface SkillDetailOptions {
   /** Raw SKILL.md content; the pristine draft seed. */
   content: string;
+  /** Local checkout with a resolved monorepo root — the route-level precondition. */
+  editable: boolean;
   entry: RepoSkillEntry;
   /** Invoked with the full draft on Save; wired to the route action. */
   onSave?: (draft: string) => void;
@@ -16,7 +21,11 @@ export interface SkillDetailOptions {
 }
 
 export interface UseSkillDetailResult {
+  /** True only when the checkout AND provenance both allow an edit. */
+  canEdit: boolean;
   draft: string;
+  /** Why editing is blocked; meaningless when `canEdit` is true. */
+  editDisabledTooltip: string;
   handleCancel: () => void;
   handleDraftChange: (value: string | undefined) => void;
   handleEdit: () => void;
@@ -38,7 +47,7 @@ export interface UseSkillDetailResult {
 export const useSkillDetail = (
   options: SkillDetailOptions,
 ): UseSkillDetailResult => {
-  const { content, entry, onSave, saveError, saving } = options;
+  const { content, editable, entry, onSave, saveError, saving } = options;
 
   // Hooks
   const [isEditing, setIsEditing] = React.useState(false);
@@ -54,9 +63,22 @@ export const useSkillDetail = (
     : entry.sourceUrl
       ? `${SKILLS_SOURCE_COPY.externalUrlTooltipPrefix} ${entry.sourceUrl}`
       : SKILLS_SOURCE_COPY.externalTooltip;
+  // Editing an external SKILL.md forks it from upstream, so provenance gates
+  // edit mode on top of the checkout precondition. `writeSkillFileBySlug` is
+  // the authoritative gate; this only keeps the user out of a doomed draft.
+  const canEdit = editable && isOpenThrottle;
+  // Provenance is the more specific blocker, so it wins when both apply.
+  const editDisabledTooltip = isOpenThrottle
+    ? SKILL_DETAIL_COPY.editDisabledTooltip
+    : SKILL_DETAIL_COPY.editExternalTooltip;
 
   // Handlers
   const handleEdit = (): void => {
+    // Hardened against a caller threading the wrong prop: edit mode is
+    // unreachable when the gate is closed.
+    if (!canEdit) {
+      return;
+    }
     setDraft(content);
     setIsEditing(true);
   };
@@ -96,7 +118,9 @@ export const useSkillDetail = (
   // 🔌 Short Circuit
 
   return {
+    canEdit,
     draft,
+    editDisabledTooltip,
     handleCancel,
     handleDraftChange,
     handleEdit,

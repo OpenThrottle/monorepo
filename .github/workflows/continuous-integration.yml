@@ -544,10 +544,8 @@ jobs:
           exit 1
 
   nx-dependency-graph:
-    # 💰 Cost-gated: manual-only via workflow_dispatch (was `if: false`) so the job stays
-    # live/lintable and runnable on demand. Restore the actor/ref guard below to automate.
-    # if: ${{ (github.actor != 'dependabot[bot]') && (github.ref_name == 'main') }}
-    if: ${{ github.event_name == 'workflow_dispatch' }}
+    # 💰 Cost-gated: manual-only via workflow_dispatch
+    # if: ${{ github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
 

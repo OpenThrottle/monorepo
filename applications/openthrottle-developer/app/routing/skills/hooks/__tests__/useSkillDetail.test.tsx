@@ -1,7 +1,10 @@
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
-import { SKILLS_SOURCE_COPY } from '~/routing/skills/data/data.copy';
+import {
+  SKILL_DETAIL_COPY,
+  SKILLS_SOURCE_COPY,
+} from '~/routing/skills/data/data.copy';
 import { useSkillDetail, type SkillDetailOptions } from '../useSkillDetail';
 
 const baseEntry = (
@@ -21,6 +24,7 @@ const baseOptions = (
   overrides: Partial<SkillDetailOptions> = {},
 ): SkillDetailOptions => ({
   content: 'original content',
+  editable: true,
   entry: baseEntry(),
   saving: false,
   ...overrides,
@@ -187,6 +191,67 @@ describe('useSkillDetail', () => {
     expect(result.current.sourceTooltip).toBe(
       `${SKILLS_SOURCE_COPY.externalUrlTooltipPrefix} https://example.com/skill`,
     );
+  });
+
+  test('canEdit is true for an editable openthrottle entry', () => {
+    const { result } = renderHook(() => useSkillDetail(baseOptions()));
+
+    expect(result.current.canEdit).toBe(true);
+    expect(result.current.editDisabledTooltip).toBe(
+      SKILL_DETAIL_COPY.editDisabledTooltip,
+    );
+  });
+
+  test('canEdit is false for an external entry even with a local checkout', () => {
+    const { result } = renderHook(() =>
+      useSkillDetail(
+        baseOptions({
+          editable: true,
+          entry: baseEntry({ source: 'external' }),
+        }),
+      ),
+    );
+
+    expect(result.current.canEdit).toBe(false);
+    expect(result.current.editDisabledTooltip).toBe(
+      SKILL_DETAIL_COPY.editExternalTooltip,
+    );
+  });
+
+  test('canEdit is false for an openthrottle entry with no local checkout', () => {
+    const { result } = renderHook(() =>
+      useSkillDetail(baseOptions({ editable: false })),
+    );
+
+    expect(result.current.canEdit).toBe(false);
+    expect(result.current.editDisabledTooltip).toBe(
+      SKILL_DETAIL_COPY.editDisabledTooltip,
+    );
+  });
+
+  test('provenance wins the tooltip when both blockers apply', () => {
+    const { result } = renderHook(() =>
+      useSkillDetail(
+        baseOptions({
+          editable: false,
+          entry: baseEntry({ source: 'external' }),
+        }),
+      ),
+    );
+
+    expect(result.current.editDisabledTooltip).toBe(
+      SKILL_DETAIL_COPY.editExternalTooltip,
+    );
+  });
+
+  test('handleEdit leaves edit mode closed for an external entry', () => {
+    const { result } = renderHook(() =>
+      useSkillDetail(baseOptions({ entry: baseEntry({ source: 'external' }) })),
+    );
+
+    act(() => result.current.handleEdit());
+
+    expect(result.current.isEditing).toBe(false);
   });
 
   test('sourceTooltip falls back to the generic external tooltip with no URL', () => {
