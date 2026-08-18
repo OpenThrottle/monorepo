@@ -1,4 +1,4 @@
-# Cloud SQL for PostgreSQL (OpenThrottle; aligned to gcp-estimate.csv).
+# Cloud SQL for PostgreSQL (OpenThrottle; aligned to infra/estimates/archive/gcp-estimate-2026-03-04-mysql-superseded.csv).
 # Zonal Micro instance with low-cost storage in us-west1.
 
 resource "google_sql_database_instance" "postgres" {

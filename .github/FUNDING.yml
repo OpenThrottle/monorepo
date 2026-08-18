@@ -1,0 +1,22 @@
+# GitHub Sponsors button for this repository.
+# Docs: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository
+#
+# The sponsee is the OpenThrottle ORG, not an individual. Verified against the API:
+# organization(OpenThrottle).hasSponsorsListing is true with a public listing, while
+# user(visormatt).hasSponsorsListing is false. A key pointing at an unenrolled account
+# renders no button AND no error, so this must stay pointed at the org.
+#
+# TWO PLACES STILL NEED ATTENTION, both outside this repository:
+#
+#   1. The public mirror OpenThrottle/OpenThrottle is a filtered export of
+#      applications/openthrottle/ only — its root tree has no .github/ directory, so this
+#      file never reaches it. Add the same FUNDING.yml to OpenThrottle/.github at
+#      .github/FUNDING.yml to supply an org-wide default that covers the mirror and every
+#      future org repo. That repo exists today and has no FUNDING.yml.
+#
+#   2. The org Sponsors listing currently has NO TIERS defined, so the button leads to an
+#      empty page. Create the $100/mo and $200/mo tiers in the org Sponsors dashboard.
+#      See FUNDING.md for what each tier is meant to cover.
+
+github: OpenThrottle
+custom: https://github.com/OpenThrottle/monorepo/blob/main/FUNDING.md

@@ -10,7 +10,7 @@ Terraform IaC for GCP (+ a Cloudflare module) — environment stacks and reusabl
 - `applications/` — reusable app compositions (e.g. `applications/openthrottle/`) shared across environments.
 - `modules/` — building blocks: `cloudflare/`, `gcp_compute_e2/`, `gcp_memorystore_redis/`, `gcp_cloud_sql_postgres/` (OpenThrottle), `gcp_cloud_sql_mysql/` (legacy).
 - `tests/` — static CI gates: `terraform fmt`, `terraform validate` (`-backend=false`), tfsec, and Conftest/OPA policies.
-- `gcp-estimate.csv` — the GCP Pricing Calculator spec the modules are aligned to.
+- `infra/estimates/` — current GCP cost estimates (required $98.52/mo, desired $431.55/mo) plus the superseded 2026-03 Calculator export the module defaults were built against.
 
 ## Invariants & gotchas
 

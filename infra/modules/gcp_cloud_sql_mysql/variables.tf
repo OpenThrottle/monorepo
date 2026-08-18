@@ -1,4 +1,4 @@
-# Variables for Cloud SQL MySQL module (aligned to infra/gcp-estimate.csv).
+# Variables for Cloud SQL MySQL module (aligned to infra/estimates/archive/gcp-estimate-2026-03-04-mysql-superseded.csv).
 # CSV: "Cloud SQL for MySQL: Zonal - Micro instance" + "Zonal - Low cost storage" in us-west1.
 
 variable "name" {

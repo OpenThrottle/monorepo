@@ -16,7 +16,7 @@ Environments do **not** inline the app’s resources; they invoke the applicatio
 Each application under `applications/<name>/` is a Terraform module with:
 
 - **Required variables**: `project_id`, `region`, `zone`, `network`, `env_name` (or similar). These come from the calling environment’s locals.
-- **Optional variables**: Overrides for sizing or behavior (e.g. `disk_size_gb`, `machine_type`, `memory_size_gb`). Defaults are aligned to the app’s spec (e.g. `infra/gcp-estimate.csv` for OpenThrottle).
+- **Optional variables**: Overrides for sizing or behavior (e.g. `disk_size_gb`, `machine_type`, `memory_size_gb`). Defaults are aligned to the app’s spec (e.g. `infra/estimates/archive/gcp-estimate-2026-03-04-mysql-superseded.csv` for OpenThrottle).
 - **Module sources**: Child modules are referenced relative to the application directory, e.g. `source = "../../modules/gcp_cloud_sql_postgres"`.
 - **Outputs**: The application module exposes outputs (e.g. `redis_host`, `postgres_connection_name`, `compute_instance_name`) that the environment may re-export in its own `outputs.tf`.
 

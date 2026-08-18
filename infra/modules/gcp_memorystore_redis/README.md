@@ -1,6 +1,6 @@
 # gcp_memorystore_redis
 
-Terraform module for **Memorystore for Redis** (Basic tier M1), aligned to `infra/gcp-estimate.csv` (Redis Capacity Basic M1 in us-west1).
+Terraform module for **Memorystore for Redis** (Basic tier M1), aligned to `infra/estimates/archive/gcp-estimate-2026-03-04-mysql-superseded.csv` (Redis Capacity Basic M1 in us-west1).
 
 ## Inputs
 
@@ -27,7 +27,7 @@ Terraform module for **Memorystore for Redis** (Basic tier M1), aligned to `infr
 
 ## CSV alignment
 
-- **gcp-estimate.csv:** `Memorystore for Redis (Cloud Memorystore)`, `Redis Capacity Basic M1 Iowa/South Carolina/Oregon`, region `us-west1`.
+- **infra/estimates/archive/gcp-estimate-2026-03-04-mysql-superseded.csv:** `Memorystore for Redis (Cloud Memorystore)`, `Redis Capacity Basic M1 Iowa/South Carolina/Oregon`, region `us-west1`.
 - Defaults: `tier = "BASIC"`, `memory_size_gb = 1` (M1), `region = "us-west1"`.
 
 ## Example

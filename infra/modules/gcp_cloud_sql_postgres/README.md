@@ -1,6 +1,6 @@
 # gcp_cloud_sql_postgres
 
-Terraform module for **Cloud SQL for PostgreSQL** (Zonal Micro instance with low-cost storage), used by OpenThrottle and aligned to `infra/gcp-estimate.csv` (Zonal Micro + low-cost storage in us-west1).
+Terraform module for **Cloud SQL for PostgreSQL** (Zonal Micro instance with low-cost storage), used by OpenThrottle and aligned to `infra/estimates/archive/gcp-estimate-2026-03-04-mysql-superseded.csv` (Zonal Micro + low-cost storage in us-west1).
 
 ## Inputs
 
@@ -34,7 +34,7 @@ Terraform module for **Cloud SQL for PostgreSQL** (Zonal Micro instance with low
 
 ## CSV alignment
 
-- **gcp-estimate.csv:** Cloud SQL Zonal Micro + low-cost storage in us-west1; OpenThrottle uses PostgreSQL (this module) instead of MySQL.
+- **infra/estimates/archive/gcp-estimate-2026-03-04-mysql-superseded.csv:** Cloud SQL Zonal Micro + low-cost storage in us-west1; OpenThrottle uses PostgreSQL (this module) instead of MySQL.
 - Defaults: `tier = "db-f1-micro"`, `disk_size_gb = 10`, `disk_type = "PD_HDD"`, `region = "us-west1"`, `database_version = "POSTGRES_15"`.
 
 ## Example

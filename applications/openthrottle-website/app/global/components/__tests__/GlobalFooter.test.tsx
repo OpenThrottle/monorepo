@@ -3,6 +3,7 @@ import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
+import { GLOBAL_FOOTER_SPONSOR_COPY } from '../../data/data.copy';
 import { GlobalFooter } from '../GlobalFooter';
 import type { GlobalFooterProps } from '../GlobalFooter';
 
@@ -30,5 +31,17 @@ describe('GlobalFooter Component', () => {
       ),
     ).toBeInTheDocument();
     expect(component.getByText('Open source')).toBeInTheDocument();
+  });
+
+  test('links to the public sponsors page', () => {
+    const link = component.getByRole('link', {
+      name: GLOBAL_FOOTER_SPONSOR_COPY.label,
+    });
+
+    expect(link).toHaveAttribute('href', GLOBAL_FOOTER_SPONSOR_COPY.href);
+    expect(link).toHaveAttribute('target', '_blank');
+    expect(
+      component.getByText(GLOBAL_FOOTER_SPONSOR_COPY.prompt),
+    ).toBeInTheDocument();
   });
 });

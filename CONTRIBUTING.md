@@ -12,6 +12,9 @@ mechanics, see [MONOREPO.md](./MONOREPO.md) and [docs/monorepo/](./docs/monorepo
   to smaller, targeted changes (bug fixes, docs, well-scoped improvements).
   Discuss anything larger in an issue before you build it.
 - **Questions** — open an issue for clarification.
+- **Sponsorship** — OpenThrottle's hosting and CI come out of one person's
+  pocket. [FUNDING.md](FUNDING.md) shows the actual bill and what each tier
+  covers.
 
 ## Getting set up
 

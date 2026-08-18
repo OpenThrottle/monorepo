@@ -1,6 +1,6 @@
 # gcp_compute_e2
 
-Terraform module for **Compute Engine E2** instance(s) with **SSD-backed persistent disk**, aligned to `infra/gcp-estimate.csv` (E2 instance + 10 GB SSD PD in us-west1).
+Terraform module for **Compute Engine E2** instance(s) with **SSD-backed persistent disk**, aligned to `infra/estimates/archive/gcp-estimate-2026-03-04-mysql-superseded.csv` (E2 instance + 10 GB SSD PD in us-west1).
 
 ## Inputs
 

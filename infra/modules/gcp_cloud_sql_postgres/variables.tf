@@ -1,4 +1,4 @@
-# Variables for Cloud SQL PostgreSQL module (OpenThrottle; aligned to infra/gcp-estimate.csv).
+# Variables for Cloud SQL PostgreSQL module (OpenThrottle; aligned to infra/estimates/archive/gcp-estimate-2026-03-04-mysql-superseded.csv).
 # CSV: Cloud SQL Zonal Micro + low-cost storage in us-west1; OT uses Postgres, not MySQL.
 variable "backup_enabled" {
   description = "Whether automated backups are enabled."

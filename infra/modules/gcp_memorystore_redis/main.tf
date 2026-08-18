@@ -1,4 +1,4 @@
-# Memorystore for Redis (aligned to gcp-estimate.csv).
+# Memorystore for Redis (aligned to infra/estimates/archive/gcp-estimate-2026-03-04-mysql-superseded.csv).
 # Basic tier M1 in us-west1.
 
 resource "google_redis_instance" "redis" {

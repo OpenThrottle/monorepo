@@ -60,15 +60,17 @@ terraform apply
 - **`environments/`**: Environment-specific configurations (`staging/`, `production/`); add other envs by copying the layout and adjusting locals. See [environments/README.md](environments/README.md) for separate roots vs workspaces.
 - **`modules/`**: Reusable Terraform building-block modules
   - `cloudflare/`: Cloudflare configuration module
-  - **OpenThrottle GCP** (aligned to `infra/gcp-estimate.csv`):
+  - **OpenThrottle GCP** (module defaults still align to the superseded 2026-03 estimate — see [estimates/](estimates/README.md)):
     - `gcp_compute_e2/`: Compute Engine E2 + SSD PD
     - `gcp_memorystore_redis/`: Memorystore for Redis Basic (M1)
     - `gcp_cloud_sql_mysql/`: Cloud SQL MySQL Zonal Micro + low-cost storage (legacy / non-OT)
     - `gcp_cloud_sql_postgres/`: Cloud SQL PostgreSQL Zonal Micro + low-cost storage (OpenThrottle)
 
-## OpenThrottle GCP modules and gcp-estimate.csv
+## OpenThrottle GCP modules and the cost estimates
 
-The OpenThrottle stack is specified in **`infra/gcp-estimate.csv`** (GCP Pricing Calculator export). The following modules implement that spec in `us-west1`. The **application composition** lives in `applications/openthrottle/`; staging (and other environments) call it from `environments/<env>/openthrottle.tf` with env-specific `project_id`, `region`, `zone`, `network`, and `env_name` (config/plan only—no apply in this setup).
+Current cost estimates live in **[`estimates/`](estimates/README.md)** — a **required** tier ($98.52/mo) and a **desired** tier ($431.55/mo) for `us-west1`.
+
+The modules below were built against the earlier [`infra/estimates/archive/gcp-estimate-2026-03-04-mysql-superseded.csv`](estimates/archive/gcp-estimate-2026-03-04-mysql-superseded.csv) export and their **defaults have not caught up**: `gcp_cloud_sql_postgres` still defaults to `db-f1-micro` and `PD_HDD`, and `gcp_memorystore_redis` to Basic M1. `estimates/README.md` explains why those defaults are wrong for pgvector and BullMQ. Re-aligning them is separate work. The **application composition** lives in `applications/openthrottle/`; staging (and other environments) call it from `environments/<env>/openthrottle.tf` with env-specific `project_id`, `region`, `zone`, `network`, and `env_name` (config/plan only—no apply in this setup).
 
 ### Module list and CSV mapping
 
@@ -101,6 +103,6 @@ These are exposed as Terraform outputs in `environments/staging/outputs.tf` (e.g
 
 ## Related Documentation
 
-- **OpenThrottle GCP estimate**: `infra/gcp-estimate.csv` — Pricing Calculator spec; modules above align to this CSV.
+- **OpenThrottle GCP estimates**: [`estimates/README.md`](estimates/README.md) — current required/desired tiers, method, and what the superseded 2026-03 estimate got wrong.
 
 This repo uses **pnpm** at the monorepo root; there are no Nx tasks defined for `infra` in `infra/package.json` — use the Terraform CLI from an environment directory as shown above.

@@ -1,0 +1,17 @@
+# OpenThrottle — DECISION RECORD: do the four React Router apps move from Vercel to GCP?
+# Region: us-west1. Effective: 2026-08-17. USD, monthly (730 h).
+# Verdict: NO — stay on Vercel. This CSV prices the alternative so the decision is documented, not assumed.
+# Apps: openthrottle-admin, openthrottle-developer, openthrottle-email, openthrottle-website
+#   (each carries applications/<app>/vercel.json).
+line_item,category,quantity,unit,unit_price_usd,monthly_usd,tier,notes
+Cloud Run idle vCPU (4 apps x min-instances=1),compute,10512000,vCPU-second,0.0000025,26.28,alternative,"SSR React Router apps need min-instances=1 or every cold visitor eats a container boot. Idle (CPU-always-allocated) rate."
+Cloud Run memory (4 apps x 512 MiB),compute,5256000,GiB-second,0.0000025,13.14,alternative,
+HTTPS Load Balancer + managed certs,network,730,forwarding-rule-hour,0.025,18.25,alternative,"Required for custom domains + CDN across four Cloud Run services."
+,,,,SUBTOTAL (before request-time vCPU),57.67,alternative,"Excludes per-request active vCPU and Cloud CDN egress, so the real figure is higher."
+# Why the answer is no:
+#   1. ~$58/mo floor before any traffic, versus a Vercel Pro seat at $20/mo list.
+#   2. Vercel preview deployments are load-bearing for the PR review workflow; Cloud Run has no equivalent
+#      without building one, and that build is not in scope for this plan.
+#   3. Moving them does NOT retire the Vercel bill cleanly - it trades a known SaaS line for a larger
+#      GCP line plus ongoing operational work.
+# Consequence for the funding table: Vercel is an ONGOING cost, not one that a GCP migration retires.

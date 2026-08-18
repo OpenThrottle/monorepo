@@ -113,6 +113,15 @@ To see what versions of a package are installed we can use `pnpm list`. From the
 
 Open a [GitHub issue](https://github.com/OpenThrottle/monorepo/issues) with what you tried and the error output, and we'll help you get unstuck.
 
+## 💜 Sponsor
+
+OpenThrottle's hosting and CI currently come out of one person's pocket. Deploying it properly
+costs **$98.52/month** at the floor and **$431.55/month** for staging plus production — priced
+line by line in [`infra/estimates/`](infra/estimates/README.md), not guessed.
+
+[FUNDING.md](FUNDING.md) shows the whole bill, what each tier covers, and what sponsorship
+explicitly does not buy. Or use the **Sponsor** button at the top of this repo.
+
 ## 📄 License
 
 OpenThrottle is **open core**: the core is licensed under the **Apache License, Version 2.0** (see [LICENSE.md](./LICENSE.md)), with commercial/enterprise modules reserved under a separate EULA. All current first-party code is Apache-2.0.

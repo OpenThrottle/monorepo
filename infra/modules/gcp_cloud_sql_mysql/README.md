@@ -1,6 +1,6 @@
 # gcp_cloud_sql_mysql
 
-Terraform module for **Cloud SQL for MySQL** (Zonal Micro instance with low-cost storage), aligned to `infra/gcp-estimate.csv` (Zonal Micro + low-cost storage in us-west1).
+Terraform module for **Cloud SQL for MySQL** (Zonal Micro instance with low-cost storage), aligned to `infra/estimates/archive/gcp-estimate-2026-03-04-mysql-superseded.csv` (Zonal Micro + low-cost storage in us-west1).
 
 ## Inputs
 
@@ -34,7 +34,7 @@ Terraform module for **Cloud SQL for MySQL** (Zonal Micro instance with low-cost
 
 ## CSV alignment
 
-- **gcp-estimate.csv:** `MySQL (Cloud SQL)`, `Cloud SQL for MySQL: Zonal - Micro instance in Americas`, `Cloud SQL for MySQL: Zonal - Low cost storage in Americas`, region `us-west1`.
+- **infra/estimates/archive/gcp-estimate-2026-03-04-mysql-superseded.csv:** `MySQL (Cloud SQL)`, `Cloud SQL for MySQL: Zonal - Micro instance in Americas`, `Cloud SQL for MySQL: Zonal - Low cost storage in Americas`, region `us-west1`.
 - Defaults: `tier = "db-f1-micro"`, `disk_size_gb = 10`, `disk_type = "PD_HDD"`, `region = "us-west1"`.
 
 ## Example

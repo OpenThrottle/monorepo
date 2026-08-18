@@ -1,4 +1,4 @@
-# Compute Engine E2 instance with SSD-backed persistent disk (aligned to gcp-estimate.csv).
+# Compute Engine E2 instance with SSD-backed persistent disk (aligned to infra/estimates/archive/gcp-estimate-2026-03-04-mysql-superseded.csv).
 # E2 Instance + SSD PD in us-west1.
 
 locals {

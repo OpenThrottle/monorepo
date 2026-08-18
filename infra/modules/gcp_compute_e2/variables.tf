@@ -1,4 +1,4 @@
-# Variables for Compute Engine E2 + SSD PD module (aligned to infra/gcp-estimate.csv).
+# Variables for Compute Engine E2 + SSD PD module (aligned to infra/estimates/archive/gcp-estimate-2026-03-04-mysql-superseded.csv).
 
 variable "disk_size_gb" {
   description = "Size of the SSD persistent disk in GB."

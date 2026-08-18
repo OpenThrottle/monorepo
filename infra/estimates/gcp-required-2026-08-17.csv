@@ -1,0 +1,22 @@
+# OpenThrottle GCP estimate — REQUIRED tier (the floor that actually runs)
+# Region: us-west1 (Oregon). Effective: 2026-08-17. Currency: USD, monthly (730 h).
+# Method: unit rates for E2 vCPU/RAM, PD SSD, Memorystore Basic, Cloud SQL shared-core and
+#   Cloud SQL HDD are DERIVED from the committed Google Cloud Pricing Calculator export in
+#   archive/gcp-estimate-2026-03-04-mysql-superseded.csv (an authoritative us-west1 export).
+#   Remaining rates are Google published list prices. See README.md for the full derivation.
+#   These are list-price derivations, not a Calculator share URL — re-confirm before committing spend.
+line_item,category,quantity,unit,unit_price_usd,monthly_usd,tier,notes
+Compute Engine e2-medium (1 vCPU / 4 GB),compute,730,instance-hour,0.033503,24.46,required,"Runs server (PROCESS_ROLE=all) + OT MCP + Caddy via docker compose, per infra/applications/openthrottle. Priced as 1 vCPU x $0.021812/h + 4 GB x $0.0029235/h."
+Compute Engine Balanced PD boot disk,compute,20,GB-month,0.10,2.00,required,"Terraform default is 10 GB; ~4 container images plus pnpm layers need 20 GB. Balanced, not SSD."
+Compute Engine external IPv4 (in use),network,730,address-hour,0.005,3.65,required,"Charged on all in-use external IPv4 since 2024-02-01. Easy to miss; not in the 2026-03 estimate."
+Cloud SQL for PostgreSQL db-g1-small (1.7 GB) zonal,database,730,instance-hour,0.035,25.55,required,"PostgreSQL, NOT MySQL. Terraform default db-f1-micro (0.6 GB) cannot build pgvector HNSW indexes. g1-small is the honest floor; see README failure modes."
+Cloud SQL SSD storage,database,20,GB-month,0.17,3.40,required,"SSD not HDD: pgvector similarity scans are latency-sensitive. Terraform default disk_type=PD_HDD is wrong for vector search."
+Cloud SQL automated backups (7-day retention),database,20,GB-month,0.08,1.60,required,"Backups on. Restore-from-backup is the only recovery path at this tier."
+Memorystore for Redis Basic M1 (1 GB),queues,730,GB-hour,0.049,35.77,required,"BullMQ queues + cache. Matches infra/modules/gcp_memorystore_redis defaults (tier=BASIC, 1 GB). The 2026-03 estimate billed only 365 GB-hours — exactly half a month — understating this line by $17.89."
+Artifact Registry storage,build,9.5,GB-month,0.10,0.95,required,"~8 images built by docker-compose.yml plus tag history. First 0.5 GB free."
+Cloud Storage Standard (us-west1),storage,10,GB-month,0.020,0.20,required,"Terraform state bucket (already exists in staging) plus build artifacts."
+Secret Manager active versions + access,security,14,version-month,0.06,0.94,required,"~20 active versions, first 6 free, plus ~$0.10 of access operations."
+Cloud Logging ingestion,observability,0,GiB,0.50,0.00,required,"A single small VM stays under the 50 GiB/project/month free allotment."
+Network egress to internet,network,0,GB,0.12,0.00,required,"Under the 200 GB/month free data-transfer-out allotment at this traffic level."
+HTTPS Load Balancer + managed certs,network,0,forwarding-rule-hour,0.025,0.00,required,"NOT USED. Caddy on the E2 instance terminates TLS with Let's Encrypt (see infra/applications/openthrottle/templates/Caddyfile.tpl). Avoids the ~$18.25/mo GCLB forwarding rule."
+,,,,TOTAL REQUIRED,98.52,required,

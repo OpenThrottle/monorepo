@@ -1,4 +1,4 @@
-# Variables for Memorystore for Redis module (aligned to infra/gcp-estimate.csv).
+# Variables for Memorystore for Redis module (aligned to infra/estimates/archive/gcp-estimate-2026-03-04-mysql-superseded.csv).
 # CSV: "Redis Capacity Basic M1" in us-west1.
 
 variable "name" {

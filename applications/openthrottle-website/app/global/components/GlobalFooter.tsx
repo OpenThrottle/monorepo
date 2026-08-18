@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { OpenThrottleLogo } from '@openthrottle/react-router-ui';
+import { GLOBAL_FOOTER_SPONSOR_COPY } from '../data/data.copy';
 
 export interface GlobalFooterProps {}
 
@@ -35,6 +36,17 @@ export const GlobalFooter = (_props: GlobalFooterProps): React.ReactElement => {
           <p>
             Built by engineers.{' '}
             <b className="text-foreground/80">Open source</b>. No lock-in.
+          </p>
+          <p className="mt-2">
+            {GLOBAL_FOOTER_SPONSOR_COPY.prompt}{' '}
+            <a
+              className="text-foreground/80 hover:text-foreground underline underline-offset-4"
+              href={GLOBAL_FOOTER_SPONSOR_COPY.href}
+              rel="noreferrer"
+              target="_blank"
+            >
+              {GLOBAL_FOOTER_SPONSOR_COPY.label}
+            </a>
           </p>
         </div>
       </div>
