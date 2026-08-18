@@ -13,7 +13,7 @@ export const GlobalFooter = (_props: GlobalFooterProps): React.ReactElement => {
   // Hooks
 
   // Setup
-  const { blogLink, navAriaLabel } = GLOBAL_FOOTER;
+  const { blogLink, navAriaLabel, sponsorLink } = GLOBAL_FOOTER;
   const blogEnabled = isBlogEnabled();
 
   // Handlers
@@ -41,6 +41,17 @@ export const GlobalFooter = (_props: GlobalFooterProps): React.ReactElement => {
           <p>
             Built by engineers.{' '}
             <b className="text-foreground/80">Open source</b>. No lock-in.
+          </p>
+          <p className="mt-2">
+            {sponsorLink.prompt}{' '}
+            <a
+              className="text-foreground/80 hover:text-foreground underline underline-offset-4"
+              href={sponsorLink.href}
+              rel="noreferrer"
+              target="_blank"
+            >
+              {sponsorLink.label}
+            </a>
           </p>
         </div>
 

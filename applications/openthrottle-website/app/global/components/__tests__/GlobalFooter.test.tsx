@@ -3,6 +3,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { GLOBAL_FOOTER } from '../../data/data.copy';
 import type { GlobalFooterProps } from '../GlobalFooter';
 
 const isBlogEnabled = vi.fn();
@@ -63,5 +64,17 @@ describe('GlobalFooter Component', () => {
         '/blog',
       );
     });
+  });
+
+  test('links to the public sponsors page', () => {
+    const { sponsorLink } = GLOBAL_FOOTER;
+    const component = renderFooter();
+    const link = component.getByRole('link', { name: sponsorLink.label });
+
+    expect(link).toHaveAttribute('href', sponsorLink.href);
+    expect(link).toHaveAttribute('target', '_blank');
+    expect(
+      component.getByText(sponsorLink.prompt, { exact: false }),
+    ).toBeInTheDocument();
   });
 });

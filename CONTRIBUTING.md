@@ -13,6 +13,9 @@ mechanics, see [MONOREPO.md](./MONOREPO.md) and [docs/monorepo/](./docs/monorepo
   Discuss anything larger in an issue before you build it.
 - **Questions** — start at [`/issues/new/choose`](https://github.com/OpenThrottle/monorepo/issues/new/choose).
   Anything that fits neither form can still go in a blank issue.
+- **Sponsorship** — OpenThrottle's hosting and CI come out of one person's
+  pocket. [FUNDING.md](FUNDING.md) shows the actual bill and what each tier
+  covers.
 
 ## Getting set up
 

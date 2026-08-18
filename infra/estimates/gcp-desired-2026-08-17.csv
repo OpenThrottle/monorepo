@@ -1,0 +1,25 @@
+# OpenThrottle GCP estimate — DESIRED tier (staging + production, split workloads, HA)
+# Region: us-west1 (Oregon). Effective: 2026-08-17. Currency: USD, monthly (730 h).
+# Method: see gcp-required-2026-08-17.csv header and README.md.
+line_item,category,quantity,unit,unit_price_usd,monthly_usd,tier,notes
+Compute Engine e2-standard-2 (2 vCPU / 8 GB) — prod API,compute,730,instance-hour,0.067006,48.92,desired,"PROCESS_ROLE=api. Split from the worker so a saturated job queue cannot take down GraphQL."
+Compute Engine e2-medium (1 vCPU / 4 GB) — prod worker,compute,730,instance-hour,0.033503,24.46,desired,"PROCESS_ROLE=worker. BullMQ processors only; restart independently of the API."
+Compute Engine e2-medium (1 vCPU / 4 GB) — whisper (voice),compute,730,instance-hour,0.033503,24.46,desired,"docker-compose profile [voice]; opt-in today, so desired-only. CPU-only tiny.en per the voice-input spike."
+Compute Engine e2-medium (1 vCPU / 4 GB) — staging (all-role),compute,730,instance-hour,0.033503,24.46,desired,"infra/environments/staging already exists but is commented out. This is the public demo environment."
+Compute Engine Balanced PD boot disks (4x 20 GB),compute,80,GB-month,0.10,8.00,desired,
+Compute Engine Balanced PD whisper model cache,compute,10,GB-month,0.10,1.00,desired,"faster-whisper model downloads (whisper_model_cache volume)."
+Compute Engine external IPv4 (3x in use),network,2190,address-hour,0.005,10.95,desired,"prod, staging, whisper."
+Cloud SQL for PostgreSQL db-custom-1-3840 + HA — prod,database,730,instance-hour,0.135100,98.62,desired,"1 vCPU / 3.75 GB, the smallest DEDICATED tier that comfortably holds pgvector HNSW. Regional HA doubles compute cost and is what buys automatic failover."
+Cloud SQL SSD storage 50 GB x2 (HA replica) — prod,database,100,GB-month,0.17,17.00,desired,"HA replicates storage, so the SSD line doubles too."
+Cloud SQL backups + PITR 50 GB — prod,database,50,GB-month,0.08,4.00,desired,"Point-in-time recovery, not just nightly snapshots."
+Cloud SQL for PostgreSQL db-g1-small zonal — staging,database,730,instance-hour,0.035,25.55,desired,"Staging does not need HA."
+Cloud SQL SSD storage 20 GB — staging,database,20,GB-month,0.17,3.40,desired,
+Memorystore for Redis Standard M1 (1 GB) — prod,queues,730,GB-hour,0.074,54.02,desired,"Standard, not Basic: Basic has no replica and no automatic failover, so a maintenance event drops in-flight BullMQ state. Confirm the Standard M1 rate in the Calculator before relying on it."
+Memorystore for Redis Basic M1 (1 GB) — staging,queues,730,GB-hour,0.049,35.77,desired,
+Artifact Registry storage,build,24.5,GB-month,0.10,2.45,desired,"Two environments' worth of tag history."
+Cloud Storage Standard (us-west1),storage,50,GB-month,0.020,1.00,desired,
+Secret Manager active versions + access,security,34,version-month,0.06,2.24,desired,"~40 active versions across two environments, first 6 free."
+Cloud Logging ingestion,observability,30,GiB,0.50,15.00,desired,"~80 GiB/month across two environments; 50 GiB free. Real retention rather than the default 30-day _Default bucket."
+Network egress to internet,network,100,GB,0.12,12.00,desired,"~300 GB/month with a public demo environment; 200 GB free."
+HTTPS Load Balancer + managed certs,network,730,forwarding-rule-hour,0.025,18.25,desired,"Optional. Cloudflare in front of Caddy keeps this at $0; priced here because a public demo wants Cloud Armor/WAF."
+,,,,TOTAL DESIRED,431.55,desired,
