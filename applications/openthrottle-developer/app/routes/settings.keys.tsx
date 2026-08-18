@@ -90,7 +90,7 @@ export const links: Route.LinksFunction = () => {
 };
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
-  return [{ title: `Keys | ${SITE_TITLE}` }];
+  return [{ title: `Keys | Settings | ${SITE_TITLE}` }];
 });
 
 export default function Component(

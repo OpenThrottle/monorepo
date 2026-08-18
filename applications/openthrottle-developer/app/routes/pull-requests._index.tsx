@@ -129,7 +129,7 @@ export const links: Route.LinksFunction = () => {
 };
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
-  return [{ title: `Pull Requests | ${SITE_TITLE}` }];
+  return [{ title: `Pull requests | ${SITE_TITLE}` }];
 });
 
 export default function Component(

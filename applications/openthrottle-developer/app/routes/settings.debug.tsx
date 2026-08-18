@@ -56,7 +56,7 @@ export const links: Route.LinksFunction = () => {
 };
 
 export const meta = (_args: Route.MetaArgs) => {
-  return [{ title: `Settings | Debug | ${SITE_TITLE}` }];
+  return [{ title: `Debug | Settings | ${SITE_TITLE}` }];
 };
 
 export default function Component(

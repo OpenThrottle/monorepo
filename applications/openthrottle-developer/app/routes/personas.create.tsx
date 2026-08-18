@@ -12,7 +12,7 @@ import type { Route } from '@/app/routes/+types/personas.create';
 type HandleData = Route.ComponentProps['loaderData'];
 
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
-  breadcrumb: (_match) => 'PersonasCreate',
+  breadcrumb: (_match) => 'Create persona',
   links: (_match) => [],
 };
 
@@ -25,7 +25,7 @@ export const links: Route.LinksFunction = () => {
 };
 
 export const meta = (_args: Route.MetaArgs) => {
-  return [{ title: `PersonasCreate | ${SITE_TITLE}` }];
+  return [{ title: `Create persona | Personas | ${SITE_TITLE}` }];
 };
 
 export default function Component(
@@ -52,7 +52,7 @@ export default function Component(
           className="mb-4"
           heading="h1"
           icon={BookOpenIcon}
-          title="PersonasCreate"
+          title="Create persona"
         />
         <p className="text-muted-foreground text-sm">
           Lorem ipsum, dolor sit amet consectetur adipisicing elit. Facilis,

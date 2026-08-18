@@ -28,7 +28,7 @@ export const links: Route.LinksFunction = () => {
 };
 
 export const meta = (_args: Route.MetaArgs) => {
-  return [{ title: `NotificationsIndex | ${SITE_TITLE}` }];
+  return [{ title: `Notifications | ${SITE_TITLE}` }];
 };
 
 export default function Component(

@@ -56,7 +56,7 @@ export const loader = async (args: Route.LoaderArgs) => {
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) => {
   const name = args.loaderData?.repository.name ?? 'Repository';
-  return [{ title: `Edit ${name} | Repository settings | ${SITE_TITLE}` }];
+  return [{ title: `Edit ${name} | Repositories | ${SITE_TITLE}` }];
 });
 
 export default function Component(

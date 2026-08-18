@@ -87,6 +87,28 @@ repository URL' }`) or `options.messages` (replace the whole message) when the
   is preserved untouched. Keep genuinely bespoke guidance (route-param guards,
   the plan-run git-branch hint) as-is.
 
+## Page titles
+
+- Format: `<Leaf> | <Section> | OpenThrottle`. **Leaf-first** — it matches `handle.breadcrumb`
+  order and keeps the distinguishing word visible in a narrow tab. Top-level pages omit the
+  section (`Plans | OpenThrottle`).
+- **At most one section segment** — the nearest ancestor group that has its own index route.
+  Nested settings detail pages use the sub-group, not `Settings`: `Repositories | Settings`,
+  but `${repo.name} | Repositories` and `${flag.key} | Rollout`.
+- Sections in use: `Settings`, `Skills`, `Queues`, `Generators`, `Personas`, `IDE`, `Calendar`,
+  `Repositories`, `Rollout`. Groups whose leaves already read unambiguously on their own
+  (`/legal/*`, `/notes/*`, `/docs/*`) take no section segment.
+- **Sentence case** (`Create prompt`, not `Create Prompt`). Preserved verbatim: `OpenThrottle`,
+  `MCP`, `IDE`, `FAQ`, `PR`, `API`, and proper nouns coming from data.
+- **Detail routes** prefer the entity name from loader data, guarded (`args.loaderData?.plan?.title`)
+  because loader data is undefined during error renders, and fall back to a generic singular label
+  with **no `Details` suffix** — `Plan | Plans`, never `Plan Details`.
+- Every user-visible route sets a title; **resource routes deliberately do not** (`resources.*`,
+  `robots[.]txt`, `auth.logout`, `auth.ws-token`, `skills.autocomplete`).
+- Where a route builds its title from a `*_COPY.pageTitle` constant, fix the constant in its
+  `data.copy.ts` — the on-page heading shares it, and moving both together is intended.
+- Enforced by `app/routes/__tests__/route-titles.test.ts`.
+
 ## Don't
 
 - Don't hand-edit `app/__generated__/*` — regenerate via codegen.

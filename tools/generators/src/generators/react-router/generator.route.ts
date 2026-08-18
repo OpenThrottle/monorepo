@@ -3,6 +3,7 @@ import prompts from 'prompts';
 import type { Tree } from '@nx/devkit';
 import { formatFiles, generateFiles, logger } from '@nx/devkit';
 import { getCommonVariables } from '../../utils/index';
+import { getRouteTitleVariables } from '../../utils/route-title';
 import {
   getTargetApplication,
   parsePossibleNames,
@@ -53,7 +54,10 @@ export const generatorReactRouterRoute = async (
     const destination = join('applications', application, 'app/routes');
     const template = isApiRoute ? 'route-api' : 'route';
     const templates = join(__dirname, 'files', template);
-    const variables = getCommonVariables(name);
+    const variables = {
+      ...getCommonVariables(name),
+      ...getRouteTitleVariables(name),
+    };
 
     generateFiles(tree, templates, destination, variables);
   });

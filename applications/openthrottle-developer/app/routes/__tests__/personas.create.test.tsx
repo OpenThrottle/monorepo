@@ -31,7 +31,7 @@ describe('routes/personas.create.tsx', () => {
     );
 
     expect(
-      screen.getByRole('heading', { name: 'PersonasCreate' }),
+      screen.getByRole('heading', { name: 'Create persona' }),
     ).toBeInTheDocument();
   });
 });

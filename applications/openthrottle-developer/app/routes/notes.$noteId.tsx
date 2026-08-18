@@ -65,8 +65,11 @@ export const links: Route.LinksFunction = () => {
   return [];
 };
 
+// `NoteObject` has no name/title field — a note is identified by its id (the
+// breadcrumb renders the id itself), so there is nothing better than the
+// generic label to put in the tab.
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
-  return [{ title: `Note Details | ${SITE_TITLE}` }];
+  return [{ title: `Note | Notes | ${SITE_TITLE}` }];
 });
 
 export default function Component(

@@ -48,7 +48,7 @@ export const links: Route.LinksFunction = () => {
 };
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
-  return [{ title: `Agents | ${SITE_TITLE}` }];
+  return [{ title: `Agents | Settings | ${SITE_TITLE}` }];
 });
 
 export default function Component(

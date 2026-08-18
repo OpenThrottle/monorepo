@@ -8,7 +8,7 @@ import type { Route } from '@/app/routes/+types/<%= name %>';
 type HandleData = Route.ComponentProps['loaderData'];
 
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
-  breadcrumb: (_match) => '<%= namePascal %>',
+  breadcrumb: (_match) => '<%= nameTitleLeaf %>',
   links: (_match) => [],
 };
 
@@ -21,7 +21,7 @@ export const links: Route.LinksFunction = () => {
 };
 
 export const meta = (_args: Route.MetaArgs) => {
-  return [{ title: `<%= namePascal %> | ${SITE_TITLE}` }];
+  return [{ title: `<%= nameTitle %> | ${SITE_TITLE}` }];
 };
 
 export default function Component(
@@ -48,7 +48,7 @@ export default function Component(
           className="mb-4"
           heading="h1"
           icon={BookOpenIcon}
-          title="<%= namePascal %>"
+          title="<%= nameTitleLeaf %>"
         />
         <p className="text-sm text-muted-foreground">
           Lorem ipsum, dolor sit amet consectetur adipisicing elit. Facilis,

@@ -28,7 +28,7 @@ export const links: Route.LinksFunction = () => {
 };
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
-  return [{ title: `Settings | ${SITE_TITLE}` }];
+  return [{ title: `Application | Settings | ${SITE_TITLE}` }];
 });
 
 export default function Component(

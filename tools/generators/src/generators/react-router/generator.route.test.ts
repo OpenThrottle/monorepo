@@ -29,4 +29,19 @@ describe('generatorReactRouterRoute', () => {
       'applications/openthrottle/app/routes/__tests__/example.route._index.test.tsx',
     ]);
   });
+
+  test('emits a humanized title, not the PascalCase scaffold identifier', async () => {
+    await generatorReactRouterRoute(tree, {
+      application,
+      name: 'settings.appearance',
+    });
+
+    const route = tree.read(
+      'applications/openthrottle/app/routes/settings.appearance.tsx',
+      'utf-8',
+    );
+
+    expect(route).toContain('title: `Appearance | Settings | ${SITE_TITLE}`');
+    expect(route).not.toContain('SettingsAppearance');
+  });
 });

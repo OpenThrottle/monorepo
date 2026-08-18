@@ -38,7 +38,7 @@ export const links: Route.LinksFunction = () => {
 };
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
-  return [{ title: `Create Prompt | ${SITE_TITLE}` }];
+  return [{ title: `Create prompt | ${SITE_TITLE}` }];
 });
 
 export default function Component(

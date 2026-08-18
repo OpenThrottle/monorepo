@@ -86,7 +86,7 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) => {
   const plan = args.loaderData?.plan;
   const title = plan?.title
     ? `${plan.title} | Plans | ${SITE_TITLE}`
-    : `Plan Details | ${SITE_TITLE}`;
+    : `Plan | Plans | ${SITE_TITLE}`;
 
   return [{ title }];
 });
