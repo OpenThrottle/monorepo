@@ -19,7 +19,7 @@ import {
   ScheduledAgentJobDetailDocument,
   SetScheduledAgentJobEnabledDocument,
 } from '~/__generated__/graphql';
-import { ScheduleRunsTable } from '~/routing/schedule/components/ScheduleRunsTable';
+import { ScheduleDetailTabs } from '~/routing/schedule/components/ScheduleDetailTabs';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/schedule.$jobId._index';
 
@@ -131,28 +131,7 @@ export default function Component(
           </p>
         ) : null}
 
-        <section>
-          <h2 className="mb-1 text-sm font-medium">Prompt</h2>
-          <pre className="bg-muted overflow-x-auto rounded-md p-3 text-sm whitespace-pre-wrap">
-            {job.prompt}
-          </pre>
-        </section>
-
-        <section>
-          <div className="mb-2 flex items-center justify-between">
-            <h2 className="text-sm font-medium">Run history</h2>
-            <span className="text-muted-foreground text-xs">
-              Logs stream to the queue console keyed by each run.
-            </span>
-          </div>
-          {runs.length === 0 ? (
-            <p className="text-muted-foreground rounded-md border border-dashed p-6 text-center text-sm">
-              No runs yet. Use “Run now” to trigger one.
-            </p>
-          ) : (
-            <ScheduleRunsTable className="bg-card" jobId={job.id} runs={runs} />
-          )}
-        </section>
+        <ScheduleDetailTabs jobId={job.id} prompt={job.prompt} runs={runs} />
       </div>
     </GlobalScreen>
   );

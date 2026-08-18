@@ -1,4 +1,5 @@
 import * as React from 'react';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, test } from 'vitest';
 import Component from '../schedule.$jobId._index';
 import { renderRoutesStub } from '~/testing/route-fixtures';
@@ -49,7 +50,7 @@ const run: Route.ComponentProps['loaderData']['runs'][number] = {
 };
 
 describe('routes/schedule.$jobId._index.tsx', () => {
-  test('renders job details and an empty run history state', () => {
+  test('opens on the Prompt tab with the job details above it', () => {
     const view = renderRoutesStub(
       <Component
         actionData={undefined}
@@ -62,13 +63,33 @@ describe('routes/schedule.$jobId._index.tsx', () => {
     expect(view.getByTestId('ScheduleDetail')).toBeInTheDocument();
     expect(view.getByText(job.name)).toBeInTheDocument();
     expect(view.getByText(job.prompt)).toBeInTheDocument();
+    expect(view.getByRole('button', { name: 'Disable' })).toBeInTheDocument();
+    // Run history lives behind the History tab now, so it is not mounted yet.
+    expect(
+      view.queryByText('No runs yet. Use “Run now” to trigger one.'),
+    ).not.toBeInTheDocument();
+  });
+
+  test('shows the empty run history state on the History tab', async () => {
+    const user = userEvent.setup();
+    const view = renderRoutesStub(
+      <Component
+        actionData={undefined}
+        loaderData={{ job, runs: [] }}
+        matches={stubMatches()}
+        params={{ jobId: job.id }}
+      />,
+    );
+
+    await user.click(view.getByRole('tab', { name: /history/i }));
+
     expect(
       view.getByText('No runs yet. Use “Run now” to trigger one.'),
     ).toBeInTheDocument();
-    expect(view.getByRole('button', { name: 'Disable' })).toBeInTheDocument();
   });
 
-  test('renders the runs table when runs exist', () => {
+  test('renders the runs table on the History tab when runs exist', async () => {
+    const user = userEvent.setup();
     const view = renderRoutesStub(
       <Component
         actionData={undefined}
@@ -78,6 +99,9 @@ describe('routes/schedule.$jobId._index.tsx', () => {
       />,
     );
 
+    await user.click(view.getByRole('tab', { name: /history/i }));
+
+    expect(view.getByTestId('ScheduleRunsTable')).toBeInTheDocument();
     expect(
       view.queryByText('No runs yet. Use “Run now” to trigger one.'),
     ).not.toBeInTheDocument();
