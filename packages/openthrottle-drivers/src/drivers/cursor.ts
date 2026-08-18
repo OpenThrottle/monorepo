@@ -30,6 +30,13 @@ import { appendWorktreeShellFlags } from '../utils/worktree.ts';
 const CURSOR_MCP_FLAGS: readonly string[] = ['--approve-mcps', '--trust'];
 
 const capabilities: DriverCapabilities = {
+  /**
+   * Reads the workspace's `.cursor/mcp.json`. Requires {@link CURSOR_MCP_FLAGS} to actually attach,
+   * and requires the run to happen in the checkout root — Cursor discovers the config by walking up
+   * but SPAWNS each server with the process cwd, so relative launchers like
+   * `bash ./scripts/run-openthrottle-mcp.sh` fail from a subdirectory.
+   */
+  attachesWorkspaceMcp: true,
   chatStreaming: true,
   mcpAutoApprove: true,
   permissionMode: false,

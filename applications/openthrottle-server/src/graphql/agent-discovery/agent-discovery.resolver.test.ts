@@ -22,6 +22,7 @@ const human: AuthPrincipal = { kind: AUTH_PRINCIPAL_KIND_USER, sub: 'user-1' };
 const SNAPSHOT: AgentCliDiscoveryResult = {
   agents: [
     {
+      attachesWorkspaceMcp: true,
       available: true,
       backend: 'cursor',
       chatCapable: true,
@@ -31,6 +32,7 @@ const SNAPSHOT: AgentCliDiscoveryResult = {
       version: '2026.06.15',
     },
     {
+      attachesWorkspaceMcp: true,
       available: false,
       backend: 'claude',
       chatCapable: true,
@@ -40,6 +42,7 @@ const SNAPSHOT: AgentCliDiscoveryResult = {
       version: null,
     },
     {
+      attachesWorkspaceMcp: true,
       available: true,
       backend: 'opencode',
       chatCapable: true,
@@ -74,6 +77,7 @@ describe('AgentDiscoveryResolver', () => {
     expect(result.totalCount).toBe(2);
     expect(result.agents).toEqual([
       {
+        attachesWorkspaceMcp: true,
         backend: 'cursor',
         chatCapable: true,
         enabled: true,
@@ -87,6 +91,7 @@ describe('AgentDiscoveryResolver', () => {
         version: '2026.06.15',
       },
       {
+        attachesWorkspaceMcp: true,
         backend: 'opencode',
         chatCapable: true,
         enabled: true,
@@ -152,6 +157,7 @@ describe('AgentDiscoveryResolver', () => {
     vi.mocked(service.discover).mockResolvedValue({
       agents: [
         {
+          attachesWorkspaceMcp: true,
           available: false,
           backend: 'cursor',
           chatCapable: true,

@@ -26,6 +26,7 @@ const discoverAgentClisMock = vi.mocked(discoverAgentClis);
 const SNAPSHOT: AgentCliDiscoveryResult = {
   agents: [
     {
+      attachesWorkspaceMcp: true,
       available: true,
       backend: 'cursor',
       chatCapable: true,
@@ -35,6 +36,7 @@ const SNAPSHOT: AgentCliDiscoveryResult = {
       version: '2026.06.15',
     },
     {
+      attachesWorkspaceMcp: true,
       available: false,
       backend: 'claude',
       chatCapable: true,

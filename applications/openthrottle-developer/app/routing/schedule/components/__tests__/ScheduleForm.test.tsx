@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { ScheduleForm } from '../ScheduleForm';
@@ -111,5 +112,60 @@ describe('ScheduleForm Component', () => {
     component = renderForm({ action: 'create', error: 'Invalid cron.' });
 
     expect(component.getByRole('alert')).toHaveTextContent('Invalid cron.');
+  });
+
+  describe('workspace-MCP advisory', () => {
+    const AGENTS = [
+      { attachesWorkspaceMcp: true, backend: 'cursor' },
+      { attachesWorkspaceMcp: false, backend: 'codex' },
+    ];
+
+    test('reacts to the provider select, so the advisory tracks the real choice', async () => {
+      const user = userEvent.setup();
+      const form = renderForm({ action: 'create', agentClis: AGENTS });
+
+      // Default selection is the first driver id (claude), absent from AGENTS -> unverifiable.
+      expect(form.getByTestId('ScheduleMcpWarning').textContent).toContain(
+        'could not be verified',
+      );
+
+      await user.selectOptions(form.getByLabelText('Provider'), 'cursor');
+      expect(form.queryByTestId('ScheduleMcpWarning')).toBeNull();
+
+      await user.selectOptions(form.getByLabelText('Provider'), 'codex');
+      expect(form.getByTestId('ScheduleMcpWarning').textContent).toContain(
+        'cannot reach',
+      );
+    });
+
+    test('never blocks submission — the submit button stays enabled while warning', () => {
+      const codexJob: NonNullable<ScheduleFormProps['job']> = {
+        __typename: 'ScheduledAgentJobObject',
+        createdAt: '2026-08-01T00:00:00.000Z',
+        cronPattern: '0 9 * * *',
+        cwd: null,
+        driverId: 'codex',
+        enabled: true,
+        id: 'job-codex',
+        lastRunAt: null,
+        model: null,
+        name: 'Codex job',
+        nextRunAt: null,
+        prompt: 'File findings in OpenThrottle.',
+        settingsJson: '{}',
+        timeoutMs: null,
+        timezone: null,
+        updatedAt: '2026-08-01T00:00:00.000Z',
+      };
+
+      const form = renderForm({
+        action: 'update',
+        agentClis: AGENTS,
+        job: codexJob,
+      });
+
+      expect(form.getByTestId('ScheduleMcpWarning')).toBeInTheDocument();
+      expect(form.getByRole('button', { name: /save changes/i })).toBeEnabled();
+    });
   });
 });
