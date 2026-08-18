@@ -336,7 +336,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const favicon = `${OPENTHROTTLE_BUCKET}/branding/icons/blue/favicon.ico`;
   const manifest = `/manifest.json`;
 
-  const viewport = `initial-scale=1, maximum-scale=1, viewport-fit=cover, width=device-width`;
+  // `interactive-widget=resizes-content` shrinks the layout viewport when the
+  // software keyboard opens, instead of letting it overlay the visual viewport.
+  // The home composer is docked with `sticky bottom-0`, so without this the
+  // bar would pin to a bottom edge hidden behind the keyboard.
+  const viewport = `initial-scale=1, interactive-widget=resizes-content, maximum-scale=1, viewport-fit=cover, width=device-width`;
   const _health = data?.serverHealth ?? {};
 
   // Handlers

@@ -1,7 +1,7 @@
 import { Suspense, useEffect, useRef } from 'react';
 import { Await, useSearchParams } from 'react-router';
 import type { ShouldRevalidateFunction } from 'react-router';
-import { ChatConversationSheet } from '@openthrottle/react-router-chat';
+import { ChatThread } from '@openthrottle/react-router-chat';
 import {
   GlobalErrorBoundary,
   GlobalLayoutBreadcrumbsHandle,
@@ -9,6 +9,8 @@ import {
 } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
 import { HomeComposer } from '~/routing/home/components/HomeComposer';
+import { HomeComposerDock } from '~/routing/home/components/HomeComposerDock';
+import { HomeConversationToolbar } from '~/routing/home/components/HomeConversationToolbar';
 import { HomeComposerSkeleton } from '~/routing/home/components/HomeComposerSkeleton';
 import {
   loadComposerModels,
@@ -139,24 +141,12 @@ export default function Component(
 
   return (
     <GlobalScreen className="flex flex-1 flex-col">
-      <div
-        className="flex items-center gap-2 px-4 pt-4 md:px-8 md:pt-6 lg:px-12"
-        data-testid="home-conversation-toolbar"
-      >
-        <ChatConversationSheet
-          activeConversationId={turn.conversationId}
-          conversations={conversationList.conversations}
-          isLoading={conversationList.isLoading}
-          isLoadingMore={conversationList.isLoadingMore}
-          onDelete={conversationList.remove}
-          onLoadMore={conversationList.loadMore}
-          onNewChat={onNewChat}
-          onRename={conversationList.rename}
-          onSelect={onSelectConversation}
-          side="left"
-          totalCount={conversationList.totalCount}
-        />
-      </div>
+      <HomeConversationToolbar
+        activeConversationId={turn.conversationId}
+        conversationList={conversationList}
+        onNewChat={onNewChat}
+        onSelectConversation={onSelectConversation}
+      />
 
       <div className="flex flex-1 flex-col justify-end p-4 pt-2 md:p-8 md:pt-4 lg:p-12 lg:pt-4">
         {isEmptyThread && (
@@ -172,31 +162,44 @@ export default function Component(
         )}
 
         <div className="mx-auto w-full max-w-3xl">
-          {/* Deferred: the composer + toolbar subtree needs the streamed
-              models/personas/repositories. It streams in behind a disabled
-              skeleton so the input frame is visibly present immediately. The
-              home loader helpers catch→[] (the promise resolves), but the
-              errorElement guards defensively against an unexpected reject. */}
-          <Suspense fallback={<HomeComposerSkeleton />}>
-            <Await
-              errorElement={
-                <p className="text-muted-foreground py-4 text-center text-sm">
-                  Couldn&rsquo;t load composer options. Reload to try again.
-                </p>
-              }
-              resolve={composerData}
-            >
-              {(data) => (
-                <HomeComposer
-                  conversationList={conversationList}
-                  models={data.models}
-                  personas={data.personas}
-                  repositories={data.repositories}
-                  turn={turn}
-                />
-              )}
-            </Await>
-          </Suspense>
+          {/* Outside the <Await> on purpose: the thread needs no deferred
+              data, and the fallback→composer swap must not re-mount it. */}
+          <ChatThread
+            canRetry={turn.canRetry}
+            emptyStateLabel=""
+            messages={turn.messages}
+            onRetry={turn.onRetry}
+          />
+
+          {/* Docked so the composer stays reachable however far up you
+              scroll; the skeleton shares the dock, so nothing shifts. */}
+          <HomeComposerDock>
+            {/* Deferred: the composer + toolbar subtree needs the streamed
+                models/personas/repositories. It streams in behind a disabled
+                skeleton so the input frame is visibly present immediately. The
+                home loader helpers catch→[] (the promise resolves), but the
+                errorElement guards defensively against an unexpected reject. */}
+            <Suspense fallback={<HomeComposerSkeleton />}>
+              <Await
+                errorElement={
+                  <p className="text-muted-foreground py-4 text-center text-sm">
+                    Couldn&rsquo;t load composer options. Reload to try again.
+                  </p>
+                }
+                resolve={composerData}
+              >
+                {(data) => (
+                  <HomeComposer
+                    conversationList={conversationList}
+                    models={data.models}
+                    personas={data.personas}
+                    repositories={data.repositories}
+                    turn={turn}
+                  />
+                )}
+              </Await>
+            </Suspense>
+          </HomeComposerDock>
         </div>
       </div>
     </GlobalScreen>
