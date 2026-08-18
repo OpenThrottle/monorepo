@@ -11,6 +11,19 @@ import { appendWorktreeShellFlags } from '../utils/worktree.ts';
 
 const capabilities: DriverCapabilities = {
   chatStreaming: true,
+  /**
+   * No flag needed — verified against Claude Code 2.1.232. In headless `-p` mode the CLI loads the
+   * workspace's project `.mcp.json` automatically and connects its servers with no approval step
+   * and no per-path state written to `~/.claude.json`; `claude mcp list` in a first-seen worktree
+   * reports the project-only servers as connected. `--permission-mode acceptEdits` (already emitted)
+   * is likewise sufficient to CALL an MCP tool — tool permission is not a separate axis here.
+   *
+   * So unlike Cursor, Claude needs nothing: `--mcp-config` / `--strict-mcp-config` exist but are for
+   * overriding discovery, and `--strict-mcp-config` would actively HARM us by suppressing the
+   * project file. Do not add them here. (The chat composer does use them, deliberately, to pin an
+   * explicit server allowlist — a different goal.)
+   */
+  mcpAutoApprove: false,
   permissionMode: true,
   skipWorktreeSetup: false,
   supportsCustomBaseUrl: false,

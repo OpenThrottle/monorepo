@@ -2,7 +2,11 @@ import * as React from 'react';
 import { Badge } from '@openthrottle/react-router-shadcn';
 import type { ScheduledJobRunDetailFragment } from '~/__generated__/graphql';
 import { RUN_DETAIL_COPY } from '~/routing/schedule/data/data.run-detail';
-import { RUN_STATUS_VARIANT } from '~/routing/schedule/data/data.run-status';
+import {
+  RUN_STATUS_COLOR,
+  RUN_STATUS_LABEL,
+  RUN_STATUS_VARIANT,
+} from '~/routing/schedule/data/data.run-status';
 import { formatDuration } from '~/routing/schedule/utils/format-duration';
 import {
   formatRunCost,
@@ -33,8 +37,11 @@ export const RunDetail = (props: RunDetailProps): React.ReactElement => {
     {
       label: fields.status,
       value: (
-        <Badge variant={RUN_STATUS_VARIANT[run.status] ?? 'outline'}>
-          {run.status}
+        <Badge
+          color={RUN_STATUS_COLOR[run.status] ?? 'default'}
+          variant={RUN_STATUS_VARIANT[run.status] ?? 'outline'}
+        >
+          {RUN_STATUS_LABEL[run.status] ?? run.status}
         </Badge>
       ),
     },

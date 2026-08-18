@@ -16,6 +16,18 @@ import {
 
 const capabilities: DriverCapabilities = {
   chatStreaming: true,
+  /**
+   * No flag needed — verified against opencode 1.18.16. OpenCode reads the repo's committed
+   * `opencode.json` `mcp` block automatically, including in headless `run` mode, with no approval
+   * step: `opencode run --auto "…"` in a first-seen worktree reports both `openthrottle-mcp` and
+   * `maestro` as available, and `opencode mcp list` shows them connected.
+   *
+   * Note the interaction with the endpoint path above: pointing `OPENCODE_CONFIG` at a materialized
+   * provider-config file REPLACES the config opencode loads, so a local-endpoint run only keeps the
+   * MCP servers if that generated file also carries the `mcp` block. Out of scope here; relevant if
+   * local-endpoint runs are ever expected to use MCP tools.
+   */
+  mcpAutoApprove: false,
   permissionMode: true,
   skipWorktreeSetup: false,
   supportsCustomBaseUrl: true,

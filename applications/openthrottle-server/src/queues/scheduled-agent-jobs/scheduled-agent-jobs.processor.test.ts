@@ -14,6 +14,7 @@ import { BullMqRunOutputRetentionService } from '../bullmq-run-output-retention.
 import { ScheduledAgentJobCancellationService } from './scheduled-agent-job-cancellation.service';
 import {
   foldRunUsage,
+  parseRunOutcome,
   ScheduledAgentJobsProcessor,
 } from './scheduled-agent-jobs.processor';
 import { ScheduledAgentRunnerService } from './scheduled-agent-runner.service';
@@ -151,6 +152,81 @@ describe('ScheduledAgentJobsProcessor', () => {
       expect.objectContaining({ lastRunAt: expect.any(Date) }),
     );
     expect(cancellation.detach).toHaveBeenCalledWith('run-1');
+  });
+
+  it('records no_op when a clean exit carries an agent no_op verdict', async () => {
+    runner = createMock<ScheduledAgentRunnerService>({
+      run: vi.fn().mockResolvedValue(
+        result({
+          output: 'openthrottle-mcp is unavailable.\nOT_RUN_OUTCOME: no_op',
+        }),
+      ),
+    });
+    processor = new ScheduledAgentJobsProcessor(
+      createMock<LoggerService>(),
+      jobsService,
+      runner,
+      cancellation,
+      retention,
+      writer,
+    );
+
+    await processor.process(makeJob({}));
+
+    expect(jobsService.markRunFinished).toHaveBeenCalledWith(
+      'run-1',
+      expect.objectContaining({ exitCode: 0, status: 'no_op' }),
+    );
+  });
+
+  it('still records succeeded when the agent reports completed', async () => {
+    runner = createMock<ScheduledAgentRunnerService>({
+      run: vi
+        .fn()
+        .mockResolvedValue(result({ output: 'OT_RUN_OUTCOME: completed' })),
+    });
+    processor = new ScheduledAgentJobsProcessor(
+      createMock<LoggerService>(),
+      jobsService,
+      runner,
+      cancellation,
+      retention,
+      writer,
+    );
+
+    await processor.process(makeJob({}));
+
+    expect(jobsService.markRunFinished).toHaveBeenCalledWith(
+      'run-1',
+      expect.objectContaining({ status: 'succeeded' }),
+    );
+  });
+
+  it('does not let a no_op sentinel upgrade a non-zero exit away from failed', async () => {
+    runner = createMock<ScheduledAgentRunnerService>({
+      run: vi.fn().mockResolvedValue(
+        result({
+          exitCode: 1,
+          output: 'OT_RUN_OUTCOME: no_op',
+          status: RUN_AGENT_STATUS.failed,
+        }),
+      ),
+    });
+    processor = new ScheduledAgentJobsProcessor(
+      createMock<LoggerService>(),
+      jobsService,
+      runner,
+      cancellation,
+      retention,
+      writer,
+    );
+
+    await processor.process(makeJob({}));
+
+    expect(jobsService.markRunFinished).toHaveBeenCalledWith(
+      'run-1',
+      expect.objectContaining({ status: 'failed' }),
+    );
   });
 
   it('claims a pre-created run row for run-now instead of creating one', async () => {
@@ -349,5 +425,48 @@ describe('foldRunUsage', () => {
     expect(
       foldRunUsage(JSON.stringify({ result: 'hi', type: 'result' })),
     ).toBeNull();
+  });
+});
+
+describe('parseRunOutcome', () => {
+  it('returns null when the job did not opt into the convention', () => {
+    expect(parseRunOutcome('I did the work and filed a plan.')).toBeNull();
+  });
+
+  it('reads a no_op verdict', () => {
+    expect(parseRunOutcome('Stopped.\nOT_RUN_OUTCOME: no_op')).toBe('no_op');
+  });
+
+  it('reads a completed verdict', () => {
+    expect(
+      parseRunOutcome('Filed 3 findings.\nOT_RUN_OUTCOME: completed'),
+    ).toBe('completed');
+  });
+
+  it('tolerates no space and trailing whitespace after the colon', () => {
+    expect(parseRunOutcome('OT_RUN_OUTCOME:no_op')).toBe('no_op');
+    expect(parseRunOutcome('OT_RUN_OUTCOME: no_op   ')).toBe('no_op');
+  });
+
+  it('lets the last verdict win, so a prompt quoting the protocol cannot outvote the agent', () => {
+    const output = [
+      'Emit OT_RUN_OUTCOME: completed when you finish.',
+      'I could not reach openthrottle-mcp.',
+      'OT_RUN_OUTCOME: no_op',
+    ].join('\n');
+
+    expect(parseRunOutcome(output)).toBe('no_op');
+  });
+
+  it('ignores the token mid-line so prose cannot trip it', () => {
+    expect(
+      parseRunOutcome(
+        'The agent should print OT_RUN_OUTCOME: no_op at the end.',
+      ),
+    ).toBeNull();
+  });
+
+  it('ignores an unknown verdict value', () => {
+    expect(parseRunOutcome('OT_RUN_OUTCOME: maybe')).toBeNull();
   });
 });

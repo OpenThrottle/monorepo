@@ -13,6 +13,23 @@ import { escapeForShellDoubleQuoted, escapeShellArg } from '../utils/shell.ts';
 
 const capabilities: DriverCapabilities = {
   chatStreaming: true,
+  /**
+   * No flag exists, and none would help — verified against codex-cli 0.147.0. Codex resolves MCP
+   * servers exclusively from the `[mcp_servers.*]` tables in the USER-scope `~/.codex/config.toml`.
+   * It has no notion of a project-level config: `codex mcp add` writes to that same user file, and
+   * `codex mcp --help` exposes no project/scope option. The repo's `.mcp.json` / `.cursor/mcp.json`
+   * are simply never read.
+   *
+   * Consequence: whether codex can reach `openthrottle-mcp` is a property of the HOST, not of the
+   * workspace or of this command string. On a host where it is not registered in `config.toml`, a
+   * codex run has no OT tools and an MCP-dependent scheduled job cannot succeed — see plan
+   * a08e7d24 for the run-outcome signal that makes such a run stop reporting as a clean success.
+   *
+   * A `-c mcp_servers.openthrottle-mcp.command=…` override could inject it from here, but that
+   * would hardcode OT-specific server wiring into a leaf driver package whose whole point is to
+   * stay workspace-agnostic. Deliberately not done.
+   */
+  mcpAutoApprove: false,
   permissionMode: true,
   skipWorktreeSetup: false,
   supportsCustomBaseUrl: true,

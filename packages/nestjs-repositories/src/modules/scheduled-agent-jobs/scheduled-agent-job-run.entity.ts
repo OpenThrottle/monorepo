@@ -12,9 +12,15 @@ import {
 } from 'typeorm';
 import type { ScheduledAgentJobDriverId } from './scheduled-agent-job.entity';
 
-/** queued (pre-created by run-now) -> running (claimed) -> succeeded | failed | cancelled. */
+/**
+ * queued (pre-created by run-now) -> running (claimed) -> succeeded | no_op | failed | cancelled.
+ *
+ * `no_op` means the process ran and exited cleanly but the agent reported it did NOT do the work —
+ * it is terminal and is NOT an error. `failed` stays reserved for a non-zero exit, timeout, or spawn
+ * failure. See databases/migrations/095.
+ */
 export type ScheduledAgentJobRunStatus =
-  'cancelled' | 'failed' | 'queued' | 'running' | 'succeeded';
+  'cancelled' | 'failed' | 'no_op' | 'queued' | 'running' | 'succeeded';
 
 /** schedule = cron fire; manual = run-now. */
 export type ScheduledAgentJobRunTrigger = 'manual' | 'schedule';

@@ -93,4 +93,25 @@ describe('ScheduleRunsTable', () => {
     // model + tokens + cost all render an em dash (plus none from other cols here).
     expect(component.getAllByText('—').length).toBeGreaterThanOrEqual(3);
   });
+
+  test('renders a no_op run distinctly from a clean success in the history list', () => {
+    const component = renderRoutesStub(
+      <ScheduleRunsTable
+        jobId="job-1"
+        runs={[run(), run({ id: 'run-2', status: 'no_op' })]}
+      />,
+    );
+
+    // The raw status value is never shown — it reads as prose, not an enum.
+    expect(component.queryByText('no_op')).not.toBeInTheDocument();
+
+    const noOp = component.getByText('no work done');
+    const succeeded = component.getByText('succeeded');
+
+    // Amber for no_op vs green for succeeded: distinguishable at a glance, and
+    // NOT the red reserved for an actual failure.
+    expect(noOp.className).toContain('amber');
+    expect(succeeded.className).toContain('green');
+    expect(noOp.className).not.toContain('red');
+  });
 });

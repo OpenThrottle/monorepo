@@ -92,11 +92,18 @@ describe('opencode driver', () => {
     ).toBe('opencode run --auto "do the thing"');
   });
 
+  it('emits no MCP flags (opencode reads the repo opencode.json on its own)', () => {
+    const command = opencodeDriver.buildShellCommand(config());
+    expect(command).not.toContain('--approve-mcps');
+    expect(command).not.toContain('--mcp');
+  });
+
   it('advertises id, label, and capabilities', () => {
     expect(opencodeDriver.id).toBe('opencode');
     expect(opencodeDriver.label).toBe('opencode');
     expect(opencodeDriver.capabilities).toEqual({
       chatStreaming: true,
+      mcpAutoApprove: false,
       permissionMode: true,
       skipWorktreeSetup: false,
       supportsCustomBaseUrl: true,

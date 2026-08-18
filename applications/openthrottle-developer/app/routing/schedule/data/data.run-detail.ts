@@ -10,10 +10,15 @@ export const SCHEDULED_AGENT_JOBS_QUEUE_NAME = 'Scheduled Agent Jobs';
  * @description Map a scheduled-job run status to the BullMQ job-state vocabulary the log console
  * expects (`QUEUE_JOB_FINISHED_STATES` = completed|failed). Terminal run states read as finished so
  * the console stops expecting live output; queued/running stay active.
+ *
+ * `no_op` maps to `completed`, not `failed`: the process finished cleanly, so the console should stop
+ * tailing rather than present the run as an error. Whether work actually happened is conveyed by the
+ * status badge (see `RUN_STATUS_COLOR`), not by the log-console state.
  */
 export const RUN_STATUS_TO_JOB_STATE: Record<string, string> = {
   cancelled: 'failed',
   failed: 'failed',
+  no_op: 'completed',
   queued: 'waiting',
   running: 'active',
   succeeded: 'completed',
