@@ -79,12 +79,16 @@ export const SKILLS_MODEL_INVOCATION_COPY = {
 
 /**
  * Copy for the /skills/:slug detail route (read view). The empty-content notice
- * covers a discovered entry whose file could not be read back.
+ * covers a discovered entry whose file could not be read back. Two distinct
+ * disabled-edit reasons: `editDisabledTooltip` for a deployed view with no
+ * monorepo root, `editExternalTooltip` for an externally sourced skill (the more
+ * specific reason — it wins when both apply).
  */
 export const SKILL_DETAIL_COPY = {
   backLink: `Back to skills`,
   cancelLabel: `Cancel`,
   editDisabledTooltip: `Editing needs a local checkout — no monorepo root resolved (set WORKSPACE_ROOT), so this deployed view is read-only.`,
+  editExternalTooltip: `This skill is installed from an external source. Editing it here would fork it from upstream — change it upstream and re-sync.`,
   editLabel: `Edit`,
   emptyContentNotice: `The SKILL.md for this skill could not be read from disk.`,
   notFoundStatusText: `Skill not found`,
@@ -173,8 +177,12 @@ export const SKILL_RUN_COPY = {
  * Copy for the skill write-back action. Every refusal names why the save was
  * rejected without writing; the ingest note reminds that server-side rows
  * (`projectSkills`) refresh on the next agent-asset ingest run, not on save.
+ * `externalSkillError` covers the provenance gate: only OpenThrottle-authored
+ * skills are writable here, because editing an external skill in place forks it
+ * from the upstream source the next sync would restore.
  */
 export const SKILL_WRITE_COPY = {
+  externalSkillError: `Save rejected — this skill is installed from an external source. Editing it here would fork it from upstream; change it upstream and re-sync instead.`,
   invalidFrontmatterError: `Save rejected — the edited frontmatter no longer validates:`,
   missingContentError: `Save rejected — no content was submitted.`,
   noRootError: `Saving needs a local checkout — no monorepo root resolved (set WORKSPACE_ROOT).`,

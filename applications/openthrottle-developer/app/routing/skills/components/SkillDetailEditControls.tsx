@@ -9,7 +9,9 @@ import { PencilIcon } from 'lucide-react';
 import { SKILL_DETAIL_COPY } from '~/routing/skills/data/data.copy';
 
 export interface SkillDetailEditControlsProps {
-  /** Local checkout with a resolved monorepo root — edit mode available. */
+  /** Why editing is blocked; rendered in the disabled-Edit tooltip. */
+  disabledTooltip: string;
+  /** Checkout AND provenance both allow an edit — edit mode available. */
   editable: boolean;
   /** Draft differs from the pristine content; enables Save. */
   isDirty: boolean;
@@ -32,6 +34,7 @@ export const SkillDetailEditControls = (
   props: SkillDetailEditControlsProps,
 ): React.ReactElement => {
   const {
+    disabledTooltip,
     editable,
     isDirty,
     isEditing,
@@ -112,7 +115,7 @@ export const SkillDetailEditControls = (
         </span>
       </TooltipTrigger>
       <TooltipContent className="max-w-xs" side="top">
-        {SKILL_DETAIL_COPY.editDisabledTooltip}
+        {disabledTooltip}
       </TooltipContent>
     </Tooltip>
   );

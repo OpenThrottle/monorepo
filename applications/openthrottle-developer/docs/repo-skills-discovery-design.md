@@ -137,6 +137,31 @@ Postgres persists the derived value on `project_skills.source` (+ nullable
 `source_url`, migration 074); the ingest path derives it the same way via the
 walker's `authored` flag + `parseSkillsLockFile`.
 
+## External skills are read-only
+
+Provenance gates writes, not just display. An in-app edit of an **external**
+SKILL.md would silently fork it from upstream: the next `skill-sync` / lockfile
+install either clobbers the edit or leaves the repo permanently diverged. Only
+`openthrottle`-sourced skills — real directories under the authored `skills/`
+tree — are editable here.
+
+- **Enforcement point:** `writeSkillFileBySlug`
+  (`app/routing/skills/data/write-skill-file.server.ts`) refuses when the
+  freshly discovered entry's `source !== 'openthrottle'`. Provenance is read
+  from disk-derived discovery, never from client input, and the check runs
+  before frontmatter validation and before any write.
+- **UI:** `useSkillDetail` derives `canEdit = editable && isOpenThrottle` and
+  the matching disabled reason. The external tooltip wins over the
+  missing-checkout one (it is the more specific blocker), and `handleEdit`
+  no-ops when the gate is closed, so edit mode is unreachable. The UI gate is a
+  courtesy — the server helper refuses regardless of what the client posts.
+- **Still editable for external skills:** record-level tags
+  (`project_skills.tags`), orphan removal, and skill-availability rules. Those
+  are database rows, not SKILL.md content, so they cannot drift from upstream.
+  Running an external skill is likewise unaffected.
+
+To change an external skill, change it upstream and re-sync.
+
 ## Detail route (`/skills/:slug`) — read and update
 
 - **Loader** (`read-skill-file.server.ts`): resolve root → re-run discovery →
@@ -149,12 +174,15 @@ walker's `authored` flag + `parseSkillsLockFile`.
 - **Edit mode:** `Editor` (Monaco, `@openthrottle/react-router-editor`,
   single-document surface) bound to the raw file; dirty tracking gates Save;
   Cancel reverts to the loaded content. `editable === false` (deployed app)
-  shows a disabled Edit affordance with an explanatory tooltip.
+  shows a disabled Edit affordance with an explanatory tooltip — as does an
+  external skill, with its own tooltip (see "External skills are read-only").
 - **Write-back** (`write-skill-file.server.ts`, invoked by the route action):
   - The absolute target derives **only** from the discovered entry's
     `repoRelativePath` under the resolved root — never from client input.
   - A realpath containment guard rejects any resolved path that escapes the
     repository (symlinked `.claude`/`.cursor` layouts resolve in-repo first).
+  - An entry whose provenance is not `openthrottle` is refused outright (see
+    "External skills are read-only").
   - The new content's frontmatter is re-validated with
     `validateAgentAssetFrontmatter` (must parse, keep `name`, match the slug,
     and satisfy the schema) **before** anything

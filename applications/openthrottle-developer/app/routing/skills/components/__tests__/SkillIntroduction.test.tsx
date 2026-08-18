@@ -5,7 +5,10 @@ import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
-import { SKILLS_SOURCE_COPY } from '~/routing/skills/data/data.copy';
+import {
+  SKILL_DETAIL_COPY,
+  SKILLS_SOURCE_COPY,
+} from '~/routing/skills/data/data.copy';
 import { getModelInvocationBadge } from '~/routing/skills/utils/model-invocation-badge';
 import { SkillIntroduction } from '../SkillIntroduction';
 import type { SkillIntroductionProps } from '../SkillIntroduction';
@@ -37,7 +40,8 @@ describe('SkillIntroduction Component', () => {
 
   beforeEach(() => {
     props = {
-      editable: true,
+      canEdit: true,
+      editDisabledTooltip: SKILL_DETAIL_COPY.editDisabledTooltip,
       entry: baseEntry,
       invocationBadge: getModelInvocationBadge(undefined),
       isDirty: false,
@@ -93,6 +97,37 @@ describe('SkillIntroduction Component', () => {
       'href',
       'https://example.com/skills/brag-sheet',
     );
+  });
+
+  test('renders the disabled Edit affordance with the supplied reason', () => {
+    component.unmount();
+    props = {
+      ...props,
+      canEdit: false,
+      editDisabledTooltip: SKILL_DETAIL_COPY.editExternalTooltip,
+    };
+    component = renderIntroduction();
+
+    expect(component.queryByTestId('skill-edit-button')).toBeNull();
+    expect(component.getByTestId('skill-edit-disabled')).toBeInTheDocument();
+  });
+
+  test('keeps the tag chips and run control live when editing is blocked', () => {
+    component.unmount();
+    props = {
+      ...props,
+      canEdit: false,
+      editDisabledTooltip: SKILL_DETAIL_COPY.editExternalTooltip,
+      onAddTag: vi.fn(),
+      onRemoveTag: vi.fn(),
+      tagVocabulary: [{ dimension: 'domain', tag: 'docs' }],
+    };
+    component = renderIntroduction();
+
+    // Record-level tags and running are DB rows / runtime, not SKILL.md content
+    // — the read-only gate must not reach them.
+    expect(component.getByTestId('skill-run-now')).toBeInTheDocument();
+    expect(component.getByTestId('skill-edit-disabled')).toBeInTheDocument();
   });
 
   test('renders an unlinked OpenThrottle badge for owned skills', () => {

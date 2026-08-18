@@ -6,6 +6,7 @@ import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test, vi } from 'vitest';
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
+import { SKILL_DETAIL_COPY } from '~/routing/skills/data/data.copy';
 import type { SkillDetailUsageData } from '~/routing/skills/data/skill-usage-detail';
 import { SkillDetailTabs } from '../SkillDetailTabs';
 import type { SkillDetailTabsProps } from '../SkillDetailTabs';
@@ -35,6 +36,15 @@ const baseEntry: RepoSkillEntry = {
   tags: undefined,
 };
 
+// Editing is gated on provenance, so the default entry for these tests is an
+// OpenThrottle-authored skill; the source-badge tests pass `baseEntry` (external)
+// explicitly.
+const ownedEntry: RepoSkillEntry = {
+  ...baseEntry,
+  repoRelativePath: 'skills/brag-sheet/SKILL.md',
+  source: 'openthrottle',
+};
+
 const emptyUsage: SkillDetailUsageData = {
   available: true,
   byDay: [],
@@ -48,7 +58,7 @@ const renderTabs = (
   const merged: SkillDetailTabsProps = {
     content,
     editable: true,
-    entry: baseEntry,
+    entry: ownedEntry,
     // Default the editor source to the rendered content so tests that pass only
     // `content` still seed the editor from it; override to assert the split.
     rawContent: content,
@@ -244,6 +254,22 @@ describe('SkillDetailTabs Component', () => {
       const disabled = component.getByTestId('skill-edit-disabled');
       expect(disabled).toBeInTheDocument();
       expect(disabled.querySelector('button')).toBeDisabled();
+    });
+
+    test('disables Edit for an external skill even with a local checkout', async () => {
+      const user = userEvent.setup();
+      const component = renderTabs({ editable: true, entry: baseEntry });
+
+      expect(component.queryByTestId('skill-edit-button')).toBeNull();
+      const disabled = component.getByTestId('skill-edit-disabled');
+      expect(disabled.querySelector('button')).toBeDisabled();
+
+      await user.hover(disabled);
+      expect(
+        await component.findByText(SKILL_DETAIL_COPY.editExternalTooltip),
+      ).toBeInTheDocument();
+      // The editor never mounts, so no draft can be typed against upstream.
+      expect(component.queryByTestId('skill-editor')).toBeNull();
     });
   });
 });

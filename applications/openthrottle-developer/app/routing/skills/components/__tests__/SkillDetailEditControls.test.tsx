@@ -21,6 +21,7 @@ describe('SkillDetailEditControls Component', () => {
 
   beforeEach(() => {
     props = {
+      disabledTooltip: SKILL_DETAIL_COPY.editDisabledTooltip,
       editable: true,
       isDirty: false,
       isEditing: false,
@@ -51,6 +52,25 @@ describe('SkillDetailEditControls Component', () => {
 
     expect(component.getByTestId('skill-edit-disabled')).toBeInTheDocument();
     expect(component.getByRole('button')).toBeDisabled();
+  });
+
+  test('renders the external-provenance reason in the disabled tooltip', async () => {
+    component.unmount();
+    props = {
+      ...props,
+      disabledTooltip: SKILL_DETAIL_COPY.editExternalTooltip,
+      editable: false,
+    };
+    component = renderControls();
+
+    expect(
+      component.queryByTestId('skill-edit-button'),
+    ).not.toBeInTheDocument();
+    await userEvent.hover(component.getByTestId('skill-edit-disabled'));
+
+    expect(
+      await component.findByText(SKILL_DETAIL_COPY.editExternalTooltip),
+    ).toBeInTheDocument();
   });
 
   test('renders Save (disabled when not dirty) and Cancel while editing', async () => {

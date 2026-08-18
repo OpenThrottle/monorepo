@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { Await } from 'react-router';
 import {
   TabsContent,
   TabsList,
@@ -10,11 +9,10 @@ import { FileTextIcon, GaugeIcon } from 'lucide-react';
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 import type { RunSkillPayload } from '~/routing/skills/components/RunSkillDialog';
 import { SkillDetail } from '~/routing/skills/components/SkillDetail';
-import { SkillDetailUsage } from '~/routing/skills/components/SkillDetailUsage';
 import { SkillIntroduction } from '~/routing/skills/components/SkillIntroduction';
+import { SkillUsageTabPanel } from '~/routing/skills/components/SkillUsageTabPanel';
 import type { RunSkillRunOptions } from '~/routing/skills/components/SkillRunControl';
 import type { SkillTagVocabularyOption } from '~/routing/skills/components/SkillTagChips';
-import { SKILL_USAGE_RANGE_DAYS } from '~/routing/skills/config/skill-usage';
 import type { SkillDetailUsageData } from '~/routing/skills/data/skill-usage-detail';
 import { useSkillDetail } from '~/routing/skills/hooks/useSkillDetail';
 import {
@@ -25,7 +23,10 @@ import {
 export interface SkillDetailTabsProps {
   /** SKILL.md body (frontmatter stripped) rendered in read mode; empty renders the unreadable-file notice. */
   content: string;
-  /** Local checkout with a resolved monorepo root — edit mode available. */
+  /**
+   * Local checkout with a resolved monorepo root. This is the precondition only
+   * — editing also requires OpenThrottle provenance (see `canEdit` in the hook).
+   */
   editable: boolean;
   entry: RepoSkillEntry;
   /** Adds a tag to this skill record; enables the editable tag chips. */
@@ -88,7 +89,9 @@ export const SkillDetailTabs = (
 
   // Hooks
   const {
+    canEdit,
     draft,
+    editDisabledTooltip,
     handleCancel,
     handleDraftChange,
     handleEdit,
@@ -98,9 +101,18 @@ export const SkillDetailTabs = (
     isEditing,
     isOpenThrottle,
     sourceTooltip,
-    // The editor round-trips the full file (frontmatter included); read mode
-    // still renders the stripped `content` below.
-  } = useSkillDetail({ content: rawContent, entry, onSave, saveError, saving });
+    // `rawContent` seeds the editor with the full file (frontmatter included) so
+    // a save round-trips it; read mode renders the stripped `content` below.
+    // `editable` is only the checkout precondition — the hook ANDs it with
+    // provenance into `canEdit`, so an external SKILL.md is never forked here.
+  } = useSkillDetail({
+    content: rawContent,
+    editable,
+    entry,
+    onSave,
+    saveError,
+    saving,
+  });
 
   // Setup
 
@@ -115,7 +127,8 @@ export const SkillDetailTabs = (
   return (
     <div className="flex flex-col gap-4">
       <SkillIntroduction
-        editable={editable}
+        canEdit={canEdit}
+        editDisabledTooltip={editDisabledTooltip}
         entry={entry}
         invocationBadge={invocationBadge}
         isDirty={isDirty}
@@ -176,24 +189,7 @@ export const SkillDetailTabs = (
         </TabsContent>
 
         <TabsContent value="usage">
-          {/* Deferred per-skill usage: RR8 streams the loader promise, so the tab
-            shell paints first and the stats hydrate in. The loader already
-            caught failures into the unavailable sentinel, so no errorElement is
-            needed here. */}
-          <React.Suspense
-            fallback={
-              <p className="text-muted-foreground text-sm">Loading usage…</p>
-            }
-          >
-            <Await resolve={usage}>
-              {(data) => (
-                <SkillDetailUsage
-                  rangeDays={SKILL_USAGE_RANGE_DAYS}
-                  usage={data}
-                />
-              )}
-            </Await>
-          </React.Suspense>
+          <SkillUsageTabPanel usage={usage} />
         </TabsContent>
       </OpenThrottleTabs>
     </div>

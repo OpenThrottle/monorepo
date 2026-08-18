@@ -4,6 +4,7 @@ import {
   TabsList,
   TabsTrigger,
 } from '@openthrottle/react-router-shadcn';
+import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
 import { OpenThrottleTabs } from '@openthrottle/react-router-ui';
 import { FileTextIcon, HistoryIcon } from 'lucide-react';
 import type { ScheduledJobRunRowFragment } from '~/__generated__/graphql';
@@ -77,9 +78,7 @@ export const ScheduleDetailTabs = (
       </TabsList>
 
       <TabsContent value="prompt">
-        <pre className="bg-muted overflow-x-auto rounded-md p-3 text-sm whitespace-pre-wrap">
-          {prompt}
-        </pre>
+        <MarkdownRenderer source={prompt} />
       </TabsContent>
 
       <TabsContent value="history">
