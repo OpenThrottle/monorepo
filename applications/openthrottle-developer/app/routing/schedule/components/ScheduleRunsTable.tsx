@@ -10,7 +10,11 @@ import {
   TableRow,
 } from '@openthrottle/react-router-shadcn';
 import type { ScheduledJobRunRowFragment } from '~/__generated__/graphql';
-import { RUN_STATUS_VARIANT } from '~/routing/schedule/data/data.run-status';
+import {
+  RUN_STATUS_COLOR,
+  RUN_STATUS_LABEL,
+  RUN_STATUS_VARIANT,
+} from '~/routing/schedule/data/data.run-status';
 import { formatDuration } from '~/routing/schedule/utils/format-duration';
 import {
   formatRunCost,
@@ -65,10 +69,11 @@ export const ScheduleRunsTable = (
           <TableRow key={run.id}>
             <TableCell>
               <Badge
+                color={RUN_STATUS_COLOR[run.status] ?? 'default'}
                 title={run.errorMessage ?? undefined}
                 variant={RUN_STATUS_VARIANT[run.status] ?? 'outline'}
               >
-                {run.status}
+                {RUN_STATUS_LABEL[run.status] ?? run.status}
               </Badge>
             </TableCell>
             <TableCell>{run.trigger}</TableCell>

@@ -1,17 +1,37 @@
 /**
- * @description Cursor CLI driver: non-interactive mode (`cursor-agent --force -p …`). Ported
- * byte-for-byte from tools/workflows' `buildCursorShellCommand`. Unlike Claude, Cursor emits
- * `--model` for any non-empty value (including `auto`), and supports the Cursor-only
- * `--worktree-base` / `--skip-worktree-setup` flags.
+ * @description Cursor CLI driver: non-interactive mode (`cursor-agent --force -p …`). Originally a
+ * byte-for-byte port of tools/workflows' `buildCursorShellCommand`; it has since diverged by adding
+ * the MCP-attachment flags (see {@link CURSOR_MCP_FLAGS}). Unlike Claude, Cursor emits `--model` for
+ * any non-empty value (including `auto`), and supports the Cursor-only `--worktree-base` /
+ * `--skip-worktree-setup` flags.
  */
 
 import { defineDriver } from '../registry/index.ts';
 import type { DriverCapabilities, DriverModelListing } from '../types/index.ts';
+import { appendMcpShellFlags } from '../utils/mcp.ts';
 import { escapeForShellDoubleQuoted, escapeShellArg } from '../utils/shell.ts';
 import { appendWorktreeShellFlags } from '../utils/worktree.ts';
 
+/**
+ * Flags that attach the workspace's configured MCP servers to a headless run, verified against
+ * `cursor-agent` 2026.08.11-e8db854.
+ *
+ * `--approve-mcps` is the one that matters and is both necessary and sufficient: without it every
+ * server in `.cursor/mcp.json` is parsed but held at `not loaded (needs approval)`, so an agent
+ * given an MCP-dependent job silently has no tools. Approval is otherwise granted interactively and
+ * cached per workspace **path** under `~/.cursor/projects/<slug>/`, which is why this never
+ * reproduced in a long-lived checkout but always fails in a fresh worktree, a container, or the
+ * scheduled-job worker's cwd.
+ *
+ * `--trust` is a distinct axis (workspace trust, not MCP approval) and does nothing for attachment
+ * on its own — it is emitted alongside to suppress the other headless prompt a first-seen path
+ * hits. The chat composer's cursor backend emits it unconditionally for the same reason.
+ */
+const CURSOR_MCP_FLAGS: readonly string[] = ['--approve-mcps', '--trust'];
+
 const capabilities: DriverCapabilities = {
   chatStreaming: true,
+  mcpAutoApprove: true,
   permissionMode: false,
   skipWorktreeSetup: true,
   supportsCustomBaseUrl: false,
@@ -49,8 +69,9 @@ export const cursorDriver = defineDriver({
 
     const safePrompt = escapeForShellDoubleQuoted(config.prompt);
     const base = `cursor-agent --force -p "${safePrompt}"${modelFlag}`;
+    const withMcp = appendMcpShellFlags(base, capabilities, CURSOR_MCP_FLAGS);
 
-    return appendWorktreeShellFlags(base, capabilities, config.worktree);
+    return appendWorktreeShellFlags(withMcp, capabilities, config.worktree);
   },
   capabilities,
   discoverModels,

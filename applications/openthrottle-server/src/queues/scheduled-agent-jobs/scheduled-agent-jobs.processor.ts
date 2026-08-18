@@ -37,16 +37,56 @@ import type { ScheduledAgentJobBullJob } from './scheduled-agent-jobs.types';
 const TERMINAL_RUN_STATUSES: ReadonlySet<ScheduledAgentJobRunStatus> = new Set([
   'cancelled',
   'failed',
+  'no_op',
   'succeeded',
 ]);
 
-/** @description Maps a driver {@link RunAgentStatus} to the persisted run status. */
+/**
+ * Machine token a job's prompt can instruct its agent to emit as the last thing it prints, so a run
+ * that did no work stops reporting as a clean success.
+ *
+ * An agent CLI exits 0 whenever the model produced a turn — including a turn that explicitly
+ * declined the task — so the process exit code cannot distinguish "did the work" from "refused".
+ * Nor can the CLI's own structured result event: a decline is still a completed turn as far as the
+ * CLI is concerned. The only party that knows whether the work happened is the agent, so it has to
+ * say so, and it has to say so in a token rather than in prose.
+ *
+ * This is deliberately an OPT-IN convention, not prose sniffing: a job that says nothing about
+ * OT_RUN_OUTCOME keeps exactly its previous mapping, so no existing job or historical row changes
+ * meaning. Matching is anchored to a line and case-sensitive; the LAST occurrence wins, so a prompt
+ * that quotes the protocol while explaining it cannot outvote the agent's real verdict.
+ */
+const RUN_OUTCOME_SENTINEL =
+  /^OT_RUN_OUTCOME:[ \t]*(completed|no_op)[ \t]*$/gmu;
+
+/**
+ * @description Reads the last OT_RUN_OUTCOME sentinel from a run's buffered output. Returns `null`
+ * when the job did not opt into the convention, which means "no claim either way" — callers must
+ * then fall back to the exit-code mapping rather than assume either outcome.
+ */
+export const parseRunOutcome = (
+  output: string,
+): 'completed' | 'no_op' | null => {
+  const matches = [...output.matchAll(RUN_OUTCOME_SENTINEL)];
+  const last = matches[matches.length - 1]?.[1];
+
+  return last === 'completed' || last === 'no_op' ? last : null;
+};
+
+/**
+ * @description Maps a driver {@link RunAgentStatus} to the persisted run status, letting an
+ * agent-emitted {@link parseRunOutcome} verdict override a clean exit.
+ *
+ * The override is only ever applied to `ok`: a run that timed out, was cancelled, or exited non-zero
+ * is already being reported honestly, and a sentinel printed before a crash must not upgrade it.
+ */
 const runStatusForAgentStatus = (
   status: RunAgentStatus,
+  outcome: 'completed' | 'no_op' | null = null,
 ): ScheduledAgentJobRunStatus => {
   switch (status) {
     case RUN_AGENT_STATUS.ok:
-      return 'succeeded';
+      return outcome === 'no_op' ? 'no_op' : 'succeeded';
     case RUN_AGENT_STATUS.cancelled:
       return 'cancelled';
     default:
@@ -216,7 +256,10 @@ export class ScheduledAgentJobsProcessor
           result.exitCode,
         ),
         exitCode: result.exitCode,
-        status: runStatusForAgentStatus(result.status),
+        status: runStatusForAgentStatus(
+          result.status,
+          parseRunOutcome(result.output),
+        ),
         ...usageColumns(foldRunUsage(result.output)),
       });
     } catch (error) {

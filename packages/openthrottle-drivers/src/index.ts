@@ -12,4 +12,5 @@ export * from './run-agent-prompt/index.ts';
 export * from './types/index.ts';
 export * from './utils/child-kill.ts';
 export * from './utils/logger.ts';
+export * from './utils/mcp.ts';
 export * from './utils/shell.ts';

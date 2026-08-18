@@ -19,6 +19,19 @@ import { appendWorktreeShellFlags } from '../utils/worktree.ts';
 
 const capabilities: DriverCapabilities = {
   chatStreaming: true,
+  /**
+   * No flag exists — verified against grok 1.0.0 (3cd0d0cbcebe). Grok resolves MCP servers from its
+   * own TOML config, at either `~/.grok/config.toml` (user scope) or `./.grok/config.toml` (project
+   * scope, via `grok mcp add --scope project`). It does not read `.mcp.json`, so attachment is a
+   * configuration question, not a command-line one — there is nothing for this driver to emit.
+   *
+   * As of this audit the repo ships NO `./.grok/config.toml`, and `grok mcp list` reports "No MCP
+   * servers configured". A grok run therefore has no OT tools today. Unlike codex, the fix is cheap
+   * and lives in the repo rather than on the host: commit a project-scope `.grok/config.toml`
+   * mirroring `.mcp.json`. Tracked as a follow-up to plan a08e7d24, not done here — this task's
+   * scope is the driver contract.
+   */
+  mcpAutoApprove: false,
   permissionMode: true,
   skipWorktreeSetup: false,
   supportsCustomBaseUrl: true,

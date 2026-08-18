@@ -97,6 +97,19 @@ export interface DriverCapabilities {
    * asserts the two agree.
    */
   readonly chatStreaming: boolean;
+  /**
+   * The CLI needs explicit flags to attach the workspace's configured MCP servers in headless
+   * mode, and this driver emits them (Cursor: `--approve-mcps --trust`). `false` means the driver
+   * emits no MCP flags — either because the CLI attaches MCP automatically in headless mode, or
+   * because it has no MCP support at all. Which case applies, and the CLI version it was verified
+   * against, is recorded in each driver module's JSDoc.
+   *
+   * Gates {@link appendMcpShellFlags}. Deliberately NOT caller-settable: the only consumers of
+   * `buildShellCommand` are unattended surfaces (scheduled jobs, Ralph) where auto-approving a
+   * known checkout's servers is the intent. The chat composer builds its own argv and has a
+   * separate, narrower MCP posture — it is unaffected by this capability.
+   */
+  readonly mcpAutoApprove: boolean;
   /** Emits a permission-mode flag (Claude: `--permission-mode acceptEdits`). */
   readonly permissionMode: boolean;
   /** Emits `--skip-worktree-setup` (Cursor-only today). */

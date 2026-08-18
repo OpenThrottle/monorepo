@@ -35,6 +35,7 @@ const testDriver: AgentDriver = defineDriver({
   buildShellCommand: (config) => `echo-driver -p "${config.prompt}"`,
   capabilities: {
     chatStreaming: false,
+    mcpAutoApprove: false,
     permissionMode: false,
     skipWorktreeSetup: false,
     supportsCustomBaseUrl: false,

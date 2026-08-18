@@ -79,11 +79,18 @@ describe('codex driver', () => {
     );
   });
 
+  it('emits no MCP flags (codex reads ~/.codex/config.toml, not the workspace)', () => {
+    const command = codexDriver.buildShellCommand(config());
+    expect(command).not.toContain('--approve-mcps');
+    expect(command).not.toContain('mcp_servers');
+  });
+
   it('advertises id, label, and capabilities', () => {
     expect(codexDriver.id).toBe('codex');
     expect(codexDriver.label).toBe('codex');
     expect(codexDriver.capabilities).toEqual({
       chatStreaming: true,
+      mcpAutoApprove: false,
       permissionMode: true,
       skipWorktreeSetup: false,
       supportsCustomBaseUrl: true,
@@ -168,11 +175,18 @@ describe('grok driver', () => {
     );
   });
 
+  it('emits no MCP flags (grok reads its own TOML config, not the workspace)', () => {
+    const command = grokDriver.buildShellCommand(config());
+    expect(command).not.toContain('--approve-mcps');
+    expect(command).not.toContain('--mcp');
+  });
+
   it('advertises id, label, and capabilities', () => {
     expect(grokDriver.id).toBe('grok');
     expect(grokDriver.label).toBe('grok');
     expect(grokDriver.capabilities).toEqual({
       chatStreaming: true,
+      mcpAutoApprove: false,
       permissionMode: true,
       skipWorktreeSetup: false,
       supportsCustomBaseUrl: true,

@@ -93,4 +93,14 @@ describe('RunDetail Component', () => {
 
     expect(component.getByText('boom: run failed')).toBeTruthy();
   });
+
+  test('renders a no_op run as amber prose, not the raw status or an error red', () => {
+    const noOp = render(<RunDetail run={run({ status: 'no_op' })} />);
+
+    expect(noOp.queryByText('no_op')).not.toBeInTheDocument();
+
+    const badge = noOp.getByText('no work done');
+    expect(badge.className).toContain('amber');
+    expect(badge.className).not.toContain('red');
+  });
 });

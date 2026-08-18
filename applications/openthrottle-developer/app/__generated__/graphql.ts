@@ -4094,7 +4094,7 @@ export type ScheduledAgentJobRunObject = {
   /** Effective run settings at execution time (driver/model/run-config), serialized JSON; null for legacy/pre-snapshot runs. Never contains endpoint.apiKey. */
   settingsSnapshotJson?: Maybe<Scalars['String']['output']>;
   startedAt?: Maybe<Scalars['DateTime']['output']>;
-  /** queued | running | succeeded | failed | cancelled. */
+  /** queued | running | succeeded | no_op | failed | cancelled. no_op is terminal and NOT an error: the process exited cleanly but the agent reported it did not do the work. */
   status: Scalars['String']['output'];
   /** Total tokens for the run; null when nothing reported. */
   totalTokens?: Maybe<Scalars['Float']['output']>;

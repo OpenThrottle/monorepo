@@ -104,7 +104,7 @@ export class ScheduledAgentJobRunObject {
   bullmqJobId!: string | null;
 
   @Field(() => String, {
-    description: `queued | running | succeeded | failed | cancelled.`,
+    description: `queued | running | succeeded | no_op | failed | cancelled. no_op is terminal and NOT an error: the process exited cleanly but the agent reported it did not do the work.`,
   })
   status!: string;
 

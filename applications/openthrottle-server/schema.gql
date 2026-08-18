@@ -2211,7 +2211,9 @@ type ScheduledAgentJobRunObject {
   """
   bullmqJobId: String
 
-  """queued | running | succeeded | failed | cancelled."""
+  """
+  queued | running | succeeded | no_op | failed | cancelled. no_op is terminal and NOT an error: the process exited cleanly but the agent reported it did not do the work.
+  """
   status: String!
   driverId: String!
   model: String

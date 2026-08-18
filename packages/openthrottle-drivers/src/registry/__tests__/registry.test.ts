@@ -16,6 +16,7 @@ const fakeDriver = (id: string): AgentDriver =>
     buildShellCommand: (config) => `${id} ${config.prompt}`,
     capabilities: {
       chatStreaming: false,
+      mcpAutoApprove: false,
       permissionMode: false,
       skipWorktreeSetup: false,
       supportsCustomBaseUrl: false,

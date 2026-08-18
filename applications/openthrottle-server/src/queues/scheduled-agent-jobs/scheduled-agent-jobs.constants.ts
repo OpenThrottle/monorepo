@@ -5,6 +5,7 @@
  */
 
 import type { JobsOptions } from 'bullmq';
+import { getOpenThrottleRoot } from '@openthrottle/openthrottle-agentic-utils';
 import { REPEATABLE_JOB_OPTIONS } from '../repeatable-job.options';
 
 /** Human-readable Bull Board queue name (matches `Database Backup`, `Doc Ingestion`). */
@@ -61,8 +62,31 @@ export const resolveScheduledAgentJobTimeoutMs = (
 };
 
 /**
- * @description Resolves the cwd for the agent CLI: an explicit per-schedule cwd, else `WORKSPACE_ROOT`
- * (required when the server's cwd is not the repo root — Docker/systemd), else `process.cwd()`.
+ * @description Resolves the cwd for the agent CLI: an explicit per-schedule cwd, else `WORKSPACE_ROOT`,
+ * else the detected OpenThrottle root, else `process.cwd()` as a last resort.
+ *
+ * `process.cwd()` must NOT be the effective default. The server's `dev`/`start` targets run with cwd
+ * at the PROJECT root (`applications/openthrottle-server`) so `autoSchemaFile: 'schema.gql'` lands in
+ * the committed location — so inheriting it pointed every scheduled agent run at that subdirectory
+ * instead of the repo. `WORKSPACE_ROOT` was the intended escape hatch but is never set anywhere in
+ * this repo (only ever read), so the fallback was always `process.cwd()`.
+ *
+ * Two things broke as a result, and both looked like something else:
+ *
+ * 1. **MCP servers with relative commands could not launch.** Cursor discovers `.cursor/mcp.json` by
+ *    walking up to the workspace root, so every server was *found*, but it SPAWNS them with the
+ *    process cwd — where `./scripts/run-openthrottle-mcp.sh` does not exist. From
+ *    `applications/openthrottle-server`, `cursor-agent mcp list` reports `openthrottle-mcp`,
+ *    `github`, and `fetch` as `Connection failed` while absolute-command servers (`maestro`,
+ *    `shadcn`) are `ready`. That is the residual half of the "MCP-less agent" bug: the
+ *    `--approve-mcps` flag is necessary but useless if the launcher path cannot resolve.
+ * 2. **The agent saw the wrong repo subtree** — a doc-drift sweep would have walked only
+ *    `applications/openthrottle-server`.
+ *
+ * `getOpenThrottleRoot` is preferred over `process.cwd()` because it is deterministic: it walks up for
+ * the `.openthrottle.mjs` workspace marker (from this module's own location first, so it is correct
+ * regardless of how the process was launched) and is already the shared resolver used by the Ralph
+ * workflow path.
  */
 export const resolveScheduledAgentJobCwd = (
   explicitCwd?: string | null,
@@ -73,7 +97,11 @@ export const resolveScheduledAgentJobCwd = (
   }
 
   const workspaceRoot = process.env.WORKSPACE_ROOT?.trim();
-  return workspaceRoot ? workspaceRoot : process.cwd();
+  if (workspaceRoot) {
+    return workspaceRoot;
+  }
+
+  return getOpenThrottleRoot() ?? process.cwd();
 };
 
 /**
