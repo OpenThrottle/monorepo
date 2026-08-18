@@ -8,6 +8,8 @@ import {
   TextArea,
 } from '@openthrottle/react-router-shadcn';
 import { SCHEDULED_JOB_DRIVER_IDS } from '~/routing/schedule/data/data.drivers';
+import { ScheduleMcpWarning } from '~/routing/schedule/components/ScheduleMcpWarning';
+import type { DriverMcpOption } from '~/routing/schedule/data/data.driver-mcp';
 import type { ScheduledAgentJobDetailQuery } from '~/__generated__/graphql';
 
 type ScheduleDetail = NonNullable<
@@ -16,6 +18,8 @@ type ScheduleDetail = NonNullable<
 
 export interface ScheduleFormProps {
   action: 'create' | 'update';
+  /** Available agent CLIs from discovery; drives the workspace-MCP advisory. */
+  agentClis?: readonly DriverMcpOption[];
   className?: string;
   /** Action-level error to surface inline (validation / not-found). */
   error?: string;
@@ -23,9 +27,11 @@ export interface ScheduleFormProps {
 }
 
 export const ScheduleForm = (props: ScheduleFormProps): React.ReactElement => {
-  const { action, className, error, job } = props;
+  const { action, agentClis, className, error, job } = props;
 
   // Hooks
+  const initialDriverId = job?.driverId ?? SCHEDULED_JOB_DRIVER_IDS[0];
+  const [driverId, setDriverId] = React.useState<string>(initialDriverId);
 
   // Setup
   const isCreate = action === 'create';
@@ -72,9 +78,10 @@ export const ScheduleForm = (props: ScheduleFormProps): React.ReactElement => {
           <Label htmlFor="driverId">Provider</Label>
           <select
             className="border-input bg-background ring-offset-background focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:outline-none"
-            defaultValue={job?.driverId ?? SCHEDULED_JOB_DRIVER_IDS[0]}
+            defaultValue={initialDriverId}
             id="driverId"
             name="driverId"
+            onChange={(event) => setDriverId(event.target.value)}
           >
             {SCHEDULED_JOB_DRIVER_IDS.map((driverId) => (
               <option key={driverId} value={driverId}>
@@ -82,6 +89,7 @@ export const ScheduleForm = (props: ScheduleFormProps): React.ReactElement => {
               </option>
             ))}
           </select>
+          <ScheduleMcpWarning agentClis={agentClis} driverId={driverId} />
         </div>
 
         <div>

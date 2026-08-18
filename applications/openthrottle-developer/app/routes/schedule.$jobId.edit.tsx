@@ -11,6 +11,7 @@ import {
   mergeRouteModuleMeta,
 } from '@openthrottle/react-router-utils';
 import {
+  ScheduleFormAgentClisDocument,
   ScheduledAgentJobDetailDocument,
   UpdateScheduledAgentJobDocument,
   type UpdateScheduledAgentJobInputType,
@@ -46,7 +47,20 @@ export const loader = async (args: Route.LoaderArgs) => {
     throw new Response('Scheduled job not found', { status: 404 });
   }
 
-  return { job: scheduledAgentJob };
+  // Advisory only — see the create route: a discovery failure degrades to "unverifiable".
+  let agentClis;
+  try {
+    const { discoverAgentClis } = await executeGraphqlWithAuth(
+      args.request,
+      ScheduleFormAgentClisDocument,
+      {},
+    );
+    agentClis = discoverAgentClis.agents;
+  } catch {
+    agentClis = undefined;
+  }
+
+  return { agentClis, job: scheduledAgentJob };
 };
 
 export const links: Route.LinksFunction = () => {
@@ -65,7 +79,7 @@ export default function Component(
   // Hooks
 
   // Setup
-  const { job } = loaderData;
+  const { agentClis, job } = loaderData;
   const actionError = getActionError(actionData);
 
   // Handlers
@@ -79,7 +93,12 @@ export default function Component(
   return (
     <GlobalScreen>
       <h1 className="mb-4 text-xl font-semibold">Edit scheduled job</h1>
-      <ScheduleForm action="update" error={actionError} job={job} />
+      <ScheduleForm
+        action="update"
+        agentClis={agentClis}
+        error={actionError}
+        job={job}
+      />
     </GlobalScreen>
   );
 }

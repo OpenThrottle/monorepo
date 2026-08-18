@@ -18,6 +18,11 @@ import {
 import { appendWorktreeShellFlags } from '../utils/worktree.ts';
 
 const capabilities: DriverCapabilities = {
+  /**
+   * Reads `~/.grok/config.toml` (user) or `./.grok/config.toml` (project) — never `.mcp.json`. The
+   * repo ships no project config, so a grok run reaches no OT servers (verified 1.0.0).
+   */
+  attachesWorkspaceMcp: false,
   chatStreaming: true,
   /**
    * No flag exists — verified against grok 1.0.0 (3cd0d0cbcebe). Grok resolves MCP servers from its

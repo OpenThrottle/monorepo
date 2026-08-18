@@ -12,6 +12,7 @@ import {
 } from '@openthrottle/react-router-utils';
 import {
   CreateScheduledAgentJobDocument,
+  ScheduleFormAgentClisDocument,
   type CreateScheduledAgentJobInputType,
 } from '~/__generated__/graphql';
 import { ScheduleForm } from '~/routing/schedule/components/ScheduleForm';
@@ -26,8 +27,19 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   links: (_match) => [{ children: 'Schedule', to: '/schedule' }],
 };
 
-export const loader = async (_args: Route.LoaderArgs) => {
-  return {};
+export const loader = async (args: Route.LoaderArgs) => {
+  // Advisory only: a discovery failure must never block authoring a schedule, so this degrades to
+  // undefined and the form reports MCP access as unverifiable rather than erroring the route.
+  try {
+    const { discoverAgentClis } = await executeGraphqlWithAuth(
+      args.request,
+      ScheduleFormAgentClisDocument,
+      {},
+    );
+    return { agentClis: discoverAgentClis.agents };
+  } catch {
+    return { agentClis: undefined };
+  }
 };
 
 export const links: Route.LinksFunction = () => {
@@ -41,7 +53,7 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
 export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
-  const { actionData, loaderData: _l, matches: _m, params: _p } = props;
+  const { actionData, loaderData, matches: _m, params: _p } = props;
 
   // Hooks
 
@@ -59,7 +71,11 @@ export default function Component(
   return (
     <GlobalScreen>
       <h1 className="mb-4 text-xl font-semibold">New scheduled job</h1>
-      <ScheduleForm action="create" error={actionError} />
+      <ScheduleForm
+        action="create"
+        agentClis={loaderData.agentClis}
+        error={actionError}
+      />
     </GlobalScreen>
   );
 }
