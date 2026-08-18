@@ -10,6 +10,20 @@
 name: '🤖 Node Setup'
 description: 'Setup NodeJS and PNPM.'
 
+inputs:
+  # Discriminator appended to the EXACT Nx cache key. Required whenever two jobs
+  # can run this action concurrently at the same commit — a matrix, or two jobs in
+  # the same workflow. Without it they race one key: actions/cache keeps whichever
+  # save lands first and DROPS the rest, so every task hash the losing jobs
+  # computed is thrown away and their next run recomputes from cold.
+  #
+  # Optional, and empty by default, so single-job callers need no change and keep
+  # their existing key shape.
+  cache-suffix:
+    description: 'Discriminator for the exact Nx cache key (e.g. a matrix shard index). Set this when several jobs run at the same commit; leave unset for single-job callers.'
+    required: false
+    default: ''
+
 runs:
   using: 'composite'
   steps:
@@ -62,11 +76,20 @@ runs:
     # first save is discarded. A per-commit key always saves; the tiered
     # restore-keys below still restore the newest compatible cache (GitHub
     # returns the most recent prefix match), so warm hits are preserved.
+    #
+    # ⚠️ The SHA alone is NOT unique enough once a caller fans out. Every leg of a
+    # matrix shares one commit, so all of them compute the same exact key and race
+    # the save; the first upload wins and the others are discarded as duplicates,
+    # losing their task hashes entirely. `cache-suffix` (empty by default)
+    # disambiguates the exact key per concurrent job. It is appended AFTER the SHA
+    # so both restore-keys below stay prefix-compatible — a shard still warms from
+    # any earlier cache at this hash, including ones written before this input
+    # existed and ones written by a sibling shard.
     - name: '💾 Cache Nx local cache'
       uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
       id: nx-cache
       with:
-        key: cache-nx-${{ runner.os }}-${{ hashFiles('nx.json', 'pnpm-lock.yaml') }}-${{ github.sha }}
+        key: cache-nx-${{ runner.os }}-${{ hashFiles('nx.json', 'pnpm-lock.yaml') }}-${{ github.sha }}${{ inputs.cache-suffix && format('-{0}', inputs.cache-suffix) || '' }}
         path: .nx/cache
         restore-keys: |
           cache-nx-${{ runner.os }}-${{ hashFiles('nx.json', 'pnpm-lock.yaml') }}-

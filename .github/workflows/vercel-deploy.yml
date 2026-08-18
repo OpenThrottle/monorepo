@@ -90,8 +90,13 @@ jobs:
           fetch-depth: 0
           filter: 'blob:none'
 
+      # cache-suffix: this job is a per-app matrix, so every leg shares one commit
+      # and would otherwise race a single exact Nx cache key — all but the first
+      # save gets dropped. See .github/actions/node-setup/action.yml.
       - name: '🤖 Node setup'
         uses: ./.github/actions/node-setup
+        with:
+          cache-suffix: ${{ matrix.app }}
 
       - name: "🕵️ NX Set SHA's"
         uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
@@ -134,8 +139,13 @@ jobs:
           fetch-depth: 0
           filter: 'blob:none'
 
+      # cache-suffix: this job is a per-app matrix, so every leg shares one commit
+      # and would otherwise race a single exact Nx cache key — all but the first
+      # save gets dropped. See .github/actions/node-setup/action.yml.
       - name: '🤖 Node setup'
         uses: ./.github/actions/node-setup
+        with:
+          cache-suffix: ${{ matrix.app }}
 
       - name: "🕵️ NX Set SHA's"
         uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1

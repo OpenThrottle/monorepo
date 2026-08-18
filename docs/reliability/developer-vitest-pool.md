@@ -41,15 +41,25 @@ recycles) before touching `maxWorkers` or the box size. Do not raise
 
 ## Why config-only, not sharding
 
-The plan was titled "shard the suite," but CI deliberately runs the whole suite
-on **one** `blacksmith-4vcpu` box (`jobCount: 1`, `test` serialized
-`--parallel=1`), an explicit cost tradeoff documented in
-`continuous-integration.yml` ("SCALING RISK — deferred by design"). On a single
-box, sharding buys nothing — CPU is already saturated at `maxWorkers: 4` — and a
-`--shard` matrix or Nx atomized target would only help by adding runners the repo
-intentionally doesn't pay for. A faster pool recovers the wall-clock at **zero
-CI cost**, so it wins under the mandated single-box model. Sharding stays
-available as the next lever if the single-box wall-clock ceiling is ever hit.
+The plan was titled "shard the suite," and the config-only route was still the
+right one — but the original reason has since expired, so read the current one.
+
+**Then:** CI ran the whole affected set on one `blacksmith-4vcpu` box
+(`jobCount: 1`), an explicit cost tradeoff. Adding boxes meant paying for
+runners, so a faster pool that recovered wall-clock at zero cost won by default.
+
+**Now:** CI shards the affected projects across 3 free `ubuntu-latest` boxes (OT
+plan `b19377d1`; sizing in [ci-cost.md](../monorepo/ci-cost.md) § CI sharding),
+and runner minutes are free on this public repo. The cost argument is gone.
+
+The conclusion holds anyway, for a reason that does not depend on price:
+**`openthrottle-developer:test` is a single Nx project, and project sharding
+cannot split a single project.** Whichever box draws it runs the whole suite, so
+that suite's wall-clock is a floor the matrix cannot lower — it is in fact the
+floor that caps the useful shard count. On that one box CPU is already saturated
+at `maxWorkers: 4`, so the pool config, not the box count, is the only lever
+here. A Vitest `--shard` matrix or an Nx atomized `test` target remains the next
+lever if this suite's own wall-clock ever becomes the binding constraint.
 
 ## Benchmark (full 364-file suite, `--skip-nx-cache`, `CI=true`)
 
