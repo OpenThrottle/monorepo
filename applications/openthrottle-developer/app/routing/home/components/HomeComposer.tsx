@@ -2,7 +2,6 @@ import * as React from 'react';
 import {
   ChatComposer,
   ChatComposerToolbar,
-  ChatThread,
   type ChatModelOption,
   type ChatPersonaOption,
 } from '@openthrottle/react-router-chat';
@@ -31,8 +30,11 @@ export interface HomeComposerProps {
 /**
  * @description The models/personas/repositories-dependent composer + toolbar
  * subtree of the home route. Rendered inside the home route's `<Await>` once the
- * deferred composer-data bundle resolves, so the route shell (hero + sidebar)
- * paints instantly while model discovery streams in behind a Suspense fallback.
+ * deferred composer-data bundle resolves, so the route shell (hero + thread +
+ * sidebar) paints instantly while model discovery streams in behind a Suspense
+ * fallback. `ChatThread` deliberately lives in the route, not here — it needs no
+ * deferred data, and keeping it outside this boundary lets the route dock only
+ * the composer without the thread being re-mounted by the fallback swap.
  */
 export const HomeComposer = (props: HomeComposerProps): React.ReactElement => {
   const { conversationList, models, personas, repositories, turn } = props;
@@ -131,12 +133,6 @@ export const HomeComposer = (props: HomeComposerProps): React.ReactElement => {
 
   return (
     <>
-      <ChatThread
-        canRetry={turn.canRetry}
-        emptyStateLabel=""
-        messages={turn.messages}
-        onRetry={turn.onRetry}
-      />
       <InlineErrors errors={[turn.error, voice.error]} />
       {!hasModels ? (
         <p className="text-muted-foreground mb-2 text-center text-sm">
