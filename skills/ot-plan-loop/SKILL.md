@@ -33,6 +33,7 @@ Each `/loop` iteration works exactly one task. Resume the lowest-`sortOrder` `IN
 3. **Validate** before completing — at minimum `pnpm nx affected --target=lint,typecheck,test` for the touched projects (run targets **sequentially**, not in parallel — they share the Nx cache). Don't mark a task done on red.
 4. **Complete — do this BEFORE starting any other task:** `update_task(taskId, { status: 'COMPLETED' })`. If the task genuinely can't be finished, set `BLOCKED` or `SKIPPED` instead — but never leave it `IN_PROGRESS` while you move on. Committing the work (step 5) is **not** a substitute for this flip.
 5. **Commit per task** with `/github-commit` — conventional commit, with `Plan-Id:` and `Task-Id:` footers for traceability. Do **not** record a work-ledger artifact for these per-task work commits; the footers carry the traceability.
+   - **💰 Commit per task, but do NOT push per task.** Let the commits accumulate locally and push **once**, when the plan is done (the PR step below does it). Every push to a branch with a ready PR triggers a full CI run, so pushing per task burns N runs validating a branch nobody is reviewing yet. One run at the end validates the whole batch — the same total validation over fewer runs. Push mid-plan only if you must hand off, exit, or the worktree is at risk of being reaped. See [ci-cost.md](../../docs/monorepo/ci-cost.md).
 6. **Add tasks when the work reveals more work** (`create_tasks` appends after the plan max when `sortOrder` is omitted).
 7. **Repeat** — before selecting the next task, confirm the one you just finished is `COMPLETED` (not still `IN_PROGRESS`). Continue until every task is `COMPLETED`.
 
@@ -41,7 +42,7 @@ Each `/loop` iteration works exactly one task. Resume the lowest-`sortOrder` `IN
 ## Finishing
 
 1. **Verify every task is closed, THEN set the plan `COMPLETED`.** First re-fetch `get_tasks_by_plan_id(planId)` (or `get_remaining_tasks_for_plan`) and confirm **zero** tasks are `IN_PROGRESS`, `PENDING`, or `QUEUED`. Flip any stranded task to `COMPLETED` (or `BLOCKED`/`SKIPPED`) before continuing — a committed task left `IN_PROGRESS` is the usual culprit (see the loop invariant). Only once the list is clean, `update_plan(planId, { status: 'COMPLETED' })`. There is no server-side downward reconcile in **either** direction: the plan can read `COMPLETED` while tasks are still `IN_PROGRESS`, so this explicit re-fetch is mandatory — never skip it.
-2. **Open a PR** with `/github-pull-request` (conventional-commit title, the repo PR template, testing steps phrased as things to do). **Capture the PR URL** — a real PR (branch pushed to the remote, PR object created) is the precondition for teardown below.
+2. **Open a Draft PR** with `/github-pull-request` (conventional-commit title, the repo PR template, testing steps phrased as things to do) — this is the single push for the whole plan. Leave it in **draft**: `build` skips on draft PRs, so a draft is what keeps any later push cheap. Mark it ready (`gh pr ready`) only when the work is genuinely up for review. **Capture the PR URL** — a real PR (branch pushed to the remote, PR object created) is the precondition for teardown below.
 3. **Stop the loop** once the PR is open. Do **not** merge.
 
 ## Teardown the worktree (only after a successful PR)

@@ -4,7 +4,7 @@
 #
 #   Owns Vercel build+deploy in-repo instead of Vercel's dashboard Git
 #   integration: `vercel pull` -> Nx build with VERCEL=1 (so vercelPreset()
-#   emits .vercel/output, reusing the Nx remote cache + affected) ->
+#   emits .vercel/output, reusing the Nx cache + affected) ->
 #   `vercel deploy --prebuilt`. Preview on PRs, production on push to main.
 #   See docs/deploy/vercel-github-actions-design.md.
 #
@@ -20,8 +20,12 @@
 #     secrets: VERCEL_TOKEN, VERCEL_ORG_ID,
 #              VERCEL_PROJECT_ID_OPENTHROTTLE_DEVELOPER,
 #              VERCEL_PROJECT_ID_OPENTHROTTLE_WEBSITE
-#              (+ GOOGLE_CREDENTIALS_STAGING for the Nx GCS cache)
-#     vars:    NX_KEY, GOOGLE_PROJECT_ID_STAGING
+#
+#
+#   💰 Both jobs run on `ubuntu-latest` (free, unlimited on this PUBLIC repo).
+#   They are currently `if: false`, but the runner label is kept correct so that
+#   re-enabling the workflow does not silently reintroduce paid runners.
+#   See docs/monorepo/ci-cost.md before changing `runs-on`.
 #
 ################################################################################
 name: '🔼 Vercel Deploy'
@@ -62,6 +66,10 @@ jobs:
   # Which Vercel apps are affected by this change? Emits a job matrix; empty
   # include => the deploy job is skipped (nothing to deploy).
   compute-affected:
+    # 💰 Disabled — deploys currently run through Vercel's own dashboard Git
+    # integration. Re-enable this workflow only as a REPLACEMENT for that, never
+    # alongside it, or every push pays for two builds. Priced (per-app matrix,
+    # Vercel build minutes + bandwidth) in docs/monorepo/ci-cost.md.
     if: false
     # # Dependabot-triggered runs receive no repository secrets, so the deploy
     # # job can never authenticate — skip at the root instead of failing (and
@@ -70,14 +78,17 @@ jobs:
     # if: >-
     #   github.event_name != 'pull_request' ||
     #   (github.event.pull_request.draft == false && github.actor != 'dependabot[bot]')
-    runs-on: blacksmith-4vcpu-ubuntu-2204
+    runs-on: ubuntu-latest
     outputs:
       matrix-json: ${{ steps.affected.outputs.matrix-json }}
     steps:
       - name: '📦 Checkout the code'
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
-          fetch-depth: 0 # full history so `nx affected` can diff against the base
+          # 💰 Partial clone — history and trees for `nx affected` / nx-set-shas,
+          # but not historical blobs (never read). Lazily fetched if ever needed.
+          fetch-depth: 0
+          filter: 'blob:none'
 
       - name: '🤖 Node setup'
         uses: ./.github/actions/node-setup
@@ -98,17 +109,13 @@ jobs:
     if: false
     # # Skip cleanly when nothing is affected (empty matrix include).
     # if: ${{ fromJSON(needs.compute-affected.outputs.matrix-json).include[0] != null }}
-    runs-on: blacksmith-4vcpu-ubuntu-2204
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.compute-affected.outputs.matrix-json) }}
     env:
       # Deploy-only secrets/config, scoped here (not workflow-wide) so the
       # compute-affected job stays secret-free — see the workflow `env` note.
-      GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS_STAGING }}
-      GOOGLE_PROJECT_ID: ${{ vars.GOOGLE_PROJECT_ID_STAGING }}
-      NX_GCS_BUCKET: 'openthrottle-staging-nx-cache'
-      NX_KEY: ${{ vars.NX_KEY }}
       OUTPUT_DEBUG: ${{ vars.DEBUG == 'true' && '--verbose' || '' }}
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
@@ -122,28 +129,16 @@ jobs:
       - name: '📦 Checkout the code'
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
-          fetch-depth: 0 # full history so `nx affected` can diff against the base
+          # 💰 Partial clone — history and trees for `nx affected` / nx-set-shas,
+          # but not historical blobs (never read). Lazily fetched if ever needed.
+          fetch-depth: 0
+          filter: 'blob:none'
 
       - name: '🤖 Node setup'
         uses: ./.github/actions/node-setup
 
       - name: "🕵️ NX Set SHA's"
         uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
-
-      - name: '🌥️ Google Cloud (Nx remote cache)'
-        uses: ./.github/actions/google-cloud
-        with:
-          branch: ${{ github.head_ref || github.ref_name || 'main' }}
-          credentials_json: ${{ env.GOOGLE_CREDENTIALS }}
-          google_cloud_project: ${{ env.GOOGLE_PROJECT_ID }}
-
-      # Deploy builds never write the cache — they set no NX_POWERPACK_CACHE_MODE
-      # override, so they fall back to nx.json's committed `ciMode: read-only` in
-      # CI. Only the main CI build (which sets read-write) populates entries
-      # (CREEP-safe single bucket, CVE-2025-36852). Bucket name only here.
-      - name: '🪣 Point Nx at the cache bucket'
-        run: |
-          sed -i 's/"bucket": ".*"/"bucket": "${{ env.NX_GCS_BUCKET }}"/' nx.json
 
       - name: '🔑 Resolve VERCEL_PROJECT_ID for this app'
         run: |

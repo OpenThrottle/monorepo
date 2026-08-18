@@ -28,6 +28,10 @@ disable-model-invocation: false
 - **One task at a time.** Resume the lowest `sortOrder` `IN_PROGRESS` task first; otherwise pick the lowest `sortOrder` `PENDING` or `QUEUED`. Canonical list order is `sortOrder ASC`, `createdAt ASC` — not `createdAt` alone. Injected plan/task lists follow this order.
 - **Fix task order:** prefer MCP `reorder_plan_tasks` (GraphQL `reorderPlanTasks`) over delete-and-recreate when Ralph should run tasks in a different sequence. Batch `create_tasks` appends after the plan max when `sortOrder` is omitted per item.
 - **Commit frequently.** Run `/github/commit` when a task is completed and whenever the program needs to exit (e.g. before stopping or when handing off). Use conventional commits; include **Plan-Id** and **Task-Id** in the commit body or footer for traceability. Record commit hashes in task/stream as you go.
+- **💰 Commit per task, but PUSH ONCE PER PLAN.** Committing is free; pushing costs a CI run. Every push to a branch with a _ready_ PR triggers the full suite, so an N-task plan used to burn N CI runs validating a branch nobody was reviewing yet — measured at ~78 CI runs/day, the single largest multiplier on CI spend. Keep the per-task commits (the footers are the traceability), and let them accumulate locally; push when the plan is done. One CI run then validates the whole batch — **the same total validation over fewer runs, never less validation**.
+  - **Push mid-plan only when you must:** handing off, exiting, or a worktree at risk of being reaped. Prefer that over losing work — the cost of one extra run is trivial next to a lost plan.
+  - **Do not** reach for `[skip ci]` on intermediate commits to achieve this. If the loop aborts midway it silently skips whichever commit ended up last, leaving unvalidated code on the branch.
+- **💰 Keep the PR in draft until the plan completes.** `/github/pull-request` already opens in draft, and `build` skips on draft PRs — so a draft PR is the gate that makes an early push cheap. Mark it ready (`gh pr ready`) only once the **last** task is `COMPLETED`, which is also when it is actually reviewable.
 
 ### Status updates
 

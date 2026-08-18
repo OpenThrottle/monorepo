@@ -49,14 +49,10 @@
 #     🧩 Fragments | https://docs.docker.com/compose/compose-file/11-extension/
 #
 #############################################################################
-x-build-secrets: &build-secrets
-  - gcs_credentials
-
 x-common: &common
   GITHUB_TOKEN: ${GITHUB_TOKEN}
   NODE_ENV: ${NODE_ENV}
   NODE_VERSION: ${NODE_VERSION}
-  NX_KEY: ${NX_KEY}
   PNPM_VERSION: ${PNPM_VERSION}
 
 x-developer: &developer
@@ -120,7 +116,6 @@ services:
         <<: *developer
       context: ./
       dockerfile: Dockerfile.ReactRouter
-      secrets: *build-secrets
       target: production
     depends_on:
       server:
@@ -153,7 +148,6 @@ services:
         <<: *developer
       context: ./
       dockerfile: Dockerfile.ReactRouter
-      secrets: *build-secrets
       target: development
     depends_on:
       server-dev:
@@ -192,9 +186,6 @@ services:
       # Cap the Vite/dev-server heap — an unbounded Node heap plus the codegen and
       # tsc watchers can trip the Docker VM's OOM killer on cold start.
       NODE_OPTIONS: --max-old-space-size=4096
-      # No GCS credentials at runtime — a present NX_KEY would otherwise make Nx
-      # reach for the remote cache and abort (same guard as the Dockerfile build).
-      NX_DISABLE_REMOTE_CACHE: 'true'
       # Host execution bridge (identity when OPENTHROTTLE_WORKSPACES_DIR is unset):
       # the IDE engine runs in this SSR process and reads registered checkouts.
       OPENTHROTTLE_CONTAINER_WORKSPACES_DIR: /workspaces
@@ -310,7 +301,6 @@ services:
         <<: *server
       context: ./
       dockerfile: Dockerfile.NestJS
-      secrets: *build-secrets
       target: production
     # ENTRYPOINT is node (distroless); override CMD to the bootstrap entry.
     command: ['-r', 'dotenv/config', 'build/src/bootstrap.js']
@@ -364,7 +354,6 @@ services:
         <<: *server
       context: ./
       dockerfile: Dockerfile.NestJS
-      secrets: *build-secrets
     depends_on:
       migrations:
         condition: service_completed_successfully
@@ -412,7 +401,6 @@ services:
         <<: *server
       context: ./
       dockerfile: Dockerfile.NestJS
-      secrets: *build-secrets
       target: development
     # dev-debug = dev with the Node inspector on 0.0.0.0:9229 (see the app's package.json).
     command: ['sh', '-c', 'pnpm nx run openthrottle-server:dev-debug']
@@ -461,9 +449,6 @@ services:
       GIT_CONFIG_COUNT: 1
       GIT_CONFIG_KEY_0: safe.directory
       GIT_CONFIG_VALUE_0: '*'
-      # No GCS credentials at runtime — a present NX_KEY would otherwise make Nx
-      # reach for the remote cache and abort (same guard as the Dockerfile build).
-      NX_DISABLE_REMOTE_CACHE: 'true'
       # Host execution bridge (identity when OPENTHROTTLE_WORKSPACES_DIR is unset):
       # registered checkout paths are validated/searched/executed in this process.
       OPENTHROTTLE_CONTAINER_WORKSPACES_DIR: /workspaces
@@ -515,7 +500,6 @@ services:
         <<: *server
       context: ./
       dockerfile: Dockerfile.NestJS
-      secrets: *build-secrets
       target: mcp
     depends_on:
       migrations:
@@ -550,7 +534,6 @@ services:
         <<: *server
       context: ./
       dockerfile: Dockerfile.NestJS
-      secrets: *build-secrets
       target: mcp-development
     depends_on:
       migrations:
@@ -626,15 +609,6 @@ services:
     restart: 'no'
     volumes:
       - whisper_model_cache:/root/.cache
-
-#############################################################################
-#
-#     🔐 Secrets | Build secrets for Docker builds
-#
-#############################################################################
-secrets:
-  gcs_credentials:
-    file: ${GCS_CREDENTIALS_PATH:-~/.config/gcloud/application_default_credentials.json}
 
 #############################################################################
 #

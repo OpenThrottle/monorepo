@@ -32,12 +32,6 @@ inputs:
     description: >-
       Token passed to docker as --build-arg GITHUB_TOKEN (e.g. secrets.GITHUB_TOKEN).
     required: true
-  nx-key:
-    default: ''
-    description: >-
-      Optional Nx Cloud key passed as --build-arg NX_KEY. Empty disables Nx Cloud
-      caching during the image build (the build still succeeds).
-    required: false
   push:
     default: 'false'
     description: >-
@@ -68,7 +62,6 @@ runs:
         INPUT_APP: ${{ inputs.app }}
         INPUT_DOCKERFILE_PATH: ${{ inputs.dockerfile-path }}
         INPUT_GITHUB_TOKEN: ${{ inputs.github-token }}
-        INPUT_NX_KEY: ${{ inputs.nx-key }}
         INPUT_PUSH: ${{ inputs.push }}
         INPUT_REGISTRY: ${{ inputs.registry }}
         INPUT_TAG: ${{ inputs.tag }}

@@ -149,6 +149,10 @@ your first PR.
   `pnpm nx:validate-tags`.
 - [docs/monorepo/CI-quality-gates.md](./docs/monorepo/CI-quality-gates.md) — the
   CI gates, `typecheck` vs `test`, and the local commands that mirror CI.
+- [docs/monorepo/ci-cost.md](./docs/monorepo/ci-cost.md) — what CI costs and why,
+  what it costs to re-enable a disabled workflow, and the checklist to run
+  through **before** adding a job, changing a `runs-on`, or adding a schedule.
+  Read this first if you are touching `.github/workflows`.
 - [docs/monorepo/Knip.md](./docs/monorepo/Knip.md) — dead-code checks and the
   `@public` export convention.
 - [applications/openthrottle-workbench/README.md](./applications/openthrottle-workbench/README.md)

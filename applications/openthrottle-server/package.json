@@ -92,14 +92,14 @@
       "docker-build": {
         "executor": "nx:run-commands",
         "options": {
-          "command": "docker build -f Dockerfile.NestJS --target production --build-arg APP_NAME=openthrottle-server --build-arg APP_VERSION=$APP_VERSION --build-arg PNPM_VERSION=$PNPM_VERSION --build-arg GITHUB_TOKEN=$GITHUB_TOKEN --build-arg NX_KEY=$NX_KEY -t openthrottle-server:local .",
+          "command": "docker build -f Dockerfile.NestJS --target production --build-arg APP_NAME=openthrottle-server --build-arg APP_VERSION=$APP_VERSION --build-arg PNPM_VERSION=$PNPM_VERSION --build-arg GITHUB_TOKEN=$GITHUB_TOKEN -t openthrottle-server:local .",
           "cwd": "{workspaceRoot}",
           "env": {
             "APP_VERSION": "1.3.0",
             "PNPM_VERSION": "11.6.0"
           }
         },
-        "description": "Build openthrottle-server image from root Dockerfile.NestJS (monorepo context). Set GITHUB_TOKEN and NX_KEY in environment for private deps and Nx cache."
+        "description": "Build openthrottle-server image from root Dockerfile.NestJS (monorepo context). Set GITHUB_TOKEN in environment for private deps."
       },
       "dev": {
         "continuous": true,

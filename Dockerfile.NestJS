@@ -39,7 +39,6 @@ ARG APP_ENV="production"
 ARG APP_NAME="__REQUIRED_ARG__"
 ARG APP_VERSION="__REQUIRED_ARG__"
 ARG GITHUB_TOKEN="__REQUIRED_ARG__"
-ARG NX_KEY="__REQUIRED_ARG__"
 ARG PNPM_VERSION="__REQUIRED_ARG__"
 
 ENV APP_ENV="${APP_ENV}"
@@ -117,13 +116,13 @@ RUN --mount=type=cache,id=pnpm-development,target=/pnpm/store pnpm install --fro
 # Workspace packages/tools resolve from their dist/ outputs, which only the
 # production `build` stage produces — build them once here so the dev server
 # starts clean; the dev target's ^dev watchers keep them fresh afterwards.
-# No GCS credentials in this stage: force the remote cache off. NODE_ENV=production
+# NODE_ENV=production
 # for this command only — the codegen-graphql configs read the committed schema.gql
 # but hard-require API_URL_INTERNAL (a live server) when NODE_ENV=development.
 # --parallel=1: several build targets nest `nx run <proj>:build:tsc`, and with the
 # daemon off each nested invocation recomputes the project graph; run in parallel
 # they race on tmp/**/tsconfig.generated.*.json (ENOENT) and readCachedProjectGraph.
-RUN unset NX_KEY && export NX_DISABLE_REMOTE_CACHE=true NODE_ENV=production && \
+RUN export NODE_ENV=production && \
   pnpm nx run-many --target build --projects tag:type:package,tag:type:tool --parallel=1
 
 CMD ["sh", "-c", "pnpm nx run ${APP_NAME}:dev"]
@@ -202,7 +201,6 @@ FROM builder AS build
 # Set the environment to production for the build
 ENV NODE_ENV="production"
 ENV NX_DAEMON="false"
-ENV NX_KEY=${NX_KEY}
 ENV NX_SWC="true"
 
 # Now we copy over all the source code
@@ -211,19 +209,11 @@ COPY . .
 # Install dependencies
 RUN --mount=type=cache,id=pnpm-development,target=/pnpm/store pnpm install --frozen-lockfile
 
-# Build the application using GCS cache for Nx (secret is not persisted in final image).
-# The @nx/gcs-cache remote cache is best-effort: it needs both a GCS credentials file
-# (the gcs_credentials build secret) and NX_KEY. CI supplies both; local `nx docker-build`,
-# forks, and compose-without-secrets supply neither. Only point GOOGLE_APPLICATION_CREDENTIALS
-# at the secret when it was actually mounted (non-empty file) — otherwise Nx aborts with ENOENT
-# reading a missing credentials file. Likewise unset an empty/placeholder NX_KEY, which Nx would
-# reject with "Failed to decode the Nx key", and disable the remote cache (NX_DISABLE_REMOTE_CACHE)
-# so the build never reaches out to GCS. With neither, the build runs on the local cache only;
-# a real key + credentials (CI) are left intact and the remote cache is used.
-RUN --mount=type=secret,id=gcs_credentials,target=/tmp/gcs-credentials.json \
-  if [ -s /tmp/gcs-credentials.json ]; then export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcs-credentials.json; fi && \
-  if [ -z "${GOOGLE_APPLICATION_CREDENTIALS}" ] || [ -z "${NX_KEY}" ] || [ "${NX_KEY}" = "__REQUIRED_ARG__" ]; then unset NX_KEY; export NX_DISABLE_REMOTE_CACHE=true; fi && \
-  pnpm nx run-many --target build --projects tag:type:package,tag:type:tool --parallel=1 && \
+# Build the application on Nx's local cache. There is no remote cache backend:
+# the paid @nx/gcs-cache plugin was removed in favour of the free GitHub Actions
+# cache, which is a CI-side layer and has no in-image equivalent. Image builds
+# therefore start cold, exactly as forks and local `nx docker-build` always did.
+RUN pnpm nx run-many --target build --projects tag:type:package,tag:type:tool --parallel=1 && \
   pnpm nx run ${APP_NAME}:build && \
   mkdir -p /app/applications/${APP_NAME}/i18n
 

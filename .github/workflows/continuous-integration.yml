@@ -6,6 +6,21 @@
 #     - https://nx.dev/core-features/distribute-task-execution#running-things-in-parallel
 #     - https://nx.dev/recipes/ci/monorepo-ci-github-actions#configuring-ci-using-github-actions-and-nx-
 #
+#
+#   💰 RUNNER COST MODEL — every job here runs on `ubuntu-latest`.
+#
+#   OpenThrottle/monorepo is a PUBLIC repository, and GitHub-hosted standard
+#   runners are free with unlimited minutes on public repos. `ubuntu-latest` is
+#   4 vCPU / 16 GB — the same core count as the `blacksmith-4vcpu-ubuntu-2204`
+#   boxes this workflow used to rent, with double the RAM. Blacksmith bought
+#   wall-clock speed (faster clock, sticky-disk caches); it never bought capacity
+#   we could not get for $0 here.
+#
+#   ⚠️  The free tier is a consequence of the repo being PUBLIC. If the canonical
+#   repo is ever made private, every `runs-on` in this file starts billing
+#   immediately. Do not change `runs-on` to a larger/managed runner without
+#   pricing it first — see docs/monorepo/ci-cost.md.
+#
 ################################################################################
 name: '🤖 Continuous Integration'
 on:
@@ -36,32 +51,22 @@ on:
 # EXCEPTION: never cancel on `main`. Consecutive pushes to main share one constant
 # group, so cancel-in-progress would kill the older run mid-flight — surfacing as a
 # spurious "cancelled" (non-error) result AND leaving that commit only partially
-# validated, which matters because main is the trusted read-write GCS Nx cache writer.
+# validated. It matters because `main` is the branch every PR's Actions cache is
+# restored from, so a half-validated main commit seeds every downstream build.
 concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
   group: continuous-integration-${{ github.ref }}
 
 env:
-  BRANCH_NAME: ${{ github.head_ref || github.ref_name || 'main' }}
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  # FIXME: Currently we're only making use of the staging project and resources
-  GOOGLE_CREDENTIALS: ${{ (github.head_ref || github.ref_name || 'main') == 'main' && secrets.GOOGLE_CREDENTIALS_STAGING || secrets.GOOGLE_CREDENTIALS_STAGING }}
-  GOOGLE_PROJECT_ID: ${{ (github.head_ref || github.ref_name || 'main') == 'main' && vars.GOOGLE_PROJECT_ID_STAGING || vars.GOOGLE_PROJECT_ID_STAGING }}
-  NX_GCS_BUCKET: ${{ (github.head_ref || github.ref_name || 'main') == 'main' && 'openthrottle-staging-nx-cache' || 'openthrottle-staging-nx-cache' }}
-
-  # Only the trusted `main` branch writes to the shared GCS cache; every PR /
-  # merge_group build stays read-only. This is the CREEP-safe (CVE-2025-36852)
-  # model for a single bucket — no untrusted writer can poison entries that main
-  # later reads, while PRs still get warm cache hits from main's last build.
-  #
-  # `NX_POWERPACK_CACHE_MODE` is @nx/gcs-cache's env override: it wins over BOTH
-  # nx.json `localMode` and `ciMode` with no file mutation. It MUST be an env var
-  # (not a `sed` into nx.json) because (a) in CI the plugin reads `ciMode`, not
-  # `localMode`, and (b) mutating nx.json trips the codegen `git diff --exit-code`.
-  NX_POWERPACK_CACHE_MODE: ${{ (github.head_ref || github.ref_name || 'main') == 'main' && 'read-write' || 'read-only' }}
-
-  NX_KEY: ${{ vars.NX_KEY }}
+  # 💾 Nx caching is the FREE GitHub Actions cache (`actions/cache` in
+  # .github/actions/node-setup), not a paid remote backend. The trusted-`main`-
+  # writes / PRs-read-only model that the old GCS bucket implemented with
+  # NX_POWERPACK_CACHE_MODE is enforced here *by construction*: Actions cache
+  # scoping lets a PR branch READ its base branch's caches but never WRITE into
+  # them, and isolates branch caches from each other. Same CREEP-safe guarantee
+  # (CVE-2025-36852), no env override to keep in sync, no GCP credentials.
   NX_SWC: 'true'
   OUTPUT_DEBUG: ${{ vars.DEBUG == 'true' && '--verbose' || '' }}
   OUTPUT_DIR: docs/nx/dependency-graphs
@@ -86,16 +91,28 @@ jobs:
   # `build` below still skips when a PR touches only docs/markdown. Non-PR events
   # (merge_group, push, workflow_dispatch) always run the full build.
   # Native git diff (no third-party action) to match the repo's SHA-pinning posture.
+  #
+  # 💰 This job must stay cheap — it is one `git diff`. It used to clone the FULL
+  # history of a 47 MB repo (`fetch-depth: 0`) to do it. It never needed to: the
+  # diff is a two-dot (tree-to-tree) comparison of two known SHAs, which needs
+  # only those two commits and their trees, not the commit graph between them.
+  # `fetch-depth: 1` plus an explicit depth-1 fetch of both SHAs is sufficient.
   changes:
-    runs-on: blacksmith-4vcpu-ubuntu-2204
+    runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
+      # 💰 Path gates for the full-tree checks in `build`. Computed here because
+      # this job already has the diff and is effectively free — no extra runner.
+      # Every gate DEFAULTS TO TRUE for non-PR events and whenever the diff
+      # cannot be computed: these are correctness gates, so they fail CLOSED.
+      deps: ${{ steps.filter.outputs.deps }}
+      graph: ${{ steps.filter.outputs.graph }}
       run: ${{ steps.filter.outputs.run }}
     steps:
       - name: '📦 Checkout the code'
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
-          fetch-depth: 0
+          fetch-depth: 1
 
       - name: '🔎 Detect non-docs changes'
         id: filter
@@ -103,18 +120,40 @@ jobs:
           set -euo pipefail
 
           # Only PRs need doc-only detection; everything else runs the full build.
+          # Non-PR events (merge_group, push, workflow_dispatch) run EVERYTHING.
           if [ "${{ github.event_name }}" != "pull_request" ]; then
-            echo "run=true" >> "$GITHUB_OUTPUT"
-            echo "event=${{ github.event_name }} → run=true (not a pull_request)"
+            {
+              echo "run=true"
+              echo "deps=true"
+              echo "graph=true"
+            } >> "$GITHUB_OUTPUT"
+            echo "event=${{ github.event_name }} → run/deps/graph=true (not a pull_request)"
             exit 0
           fi
 
           base="${{ github.event.pull_request.base.sha }}"
           head="${{ github.event.pull_request.head.sha }}"
 
-          git fetch --no-tags origin "$base" >/dev/null 2>&1 || true
+          # Fetch just the two endpoints (commit + tree, no history). The shallow
+          # checkout above has neither: on a pull_request event actions/checkout
+          # lands on refs/pull/N/merge, whose parents are absent at depth 1.
+          git fetch --no-tags --depth=1 origin "$base" "$head" >/dev/null 2>&1 || true
 
-          changed="$(git diff --name-only "$base" "$head")"
+          # FAIL CLOSED: if the diff cannot be computed for any reason (fetch
+          # failed, SHA unreachable after a force-push), run the full build rather
+          # than skip it. A skipped build reports GREEN, so guessing wrong in the
+          # other direction would wave untested code through.
+          if ! changed="$(git diff --name-only "$base" "$head" 2>&1)"; then
+            {
+              echo "run=true"
+              echo "deps=true"
+              echo "graph=true"
+            } >> "$GITHUB_OUTPUT"
+            echo "→ run/deps/graph=true (could not compute the diff; failing closed)"
+            echo "$changed"
+            exit 0
+          fi
+
           echo "Changed files:"; echo "$changed"
 
           # Mirror the old paths-ignore (docs/** and **/*.md): if ANY changed file
@@ -127,6 +166,26 @@ jobs:
             echo "→ run=false (docs/markdown only)"
           fi
 
+          # deps: the installed dependency graph can only change through these.
+          # Gates the two uncached full-graph licence scans in `build`.
+          if echo "$changed" | grep -qE '(^|/)package\.json$|^pnpm-lock\.yaml$|^pnpm-workspace\.yaml$|^license-policy\.json$'; then
+            echo "deps=true" >> "$GITHUB_OUTPUT"
+            echo "→ deps=true (dependency graph or licence policy touched)"
+          else
+            echo "deps=false" >> "$GITHUB_OUTPUT"
+            echo "→ deps=false"
+          fi
+
+          # graph: inputs to the Nx project graph, which the circular-dependency
+          # check reads. Nothing else can change its result.
+          if echo "$changed" | grep -qE '(^|/)package\.json$|(^|/)project\.json$|(^|/)tsconfig[^/]*\.json$|^nx\.json$|^pnpm-workspace\.yaml$'; then
+            echo "graph=true" >> "$GITHUB_OUTPUT"
+            echo "→ graph=true (project-graph inputs touched)"
+          else
+            echo "graph=false" >> "$GITHUB_OUTPUT"
+            echo "→ graph=false"
+          fi
+
   build:
     needs: changes
     # 💰 Skip CI on draft PRs — push freely while iterating; CI fires when marked
@@ -136,7 +195,8 @@ jobs:
       needs.changes.outputs.run == 'true' &&
       (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
 
-    # FIXME: 💰 Re-enable when we want to spend more
+    # 💰 Cost/wall-clock tradeoffs in this job are priced in
+    # docs/monorepo/ci-cost.md — read it before widening any of them.
     # Same main-exception as the workflow-level block above: PRs cancel stale runs,
     # main always runs to completion so no push shows a spurious cancellation.
     concurrency:
@@ -144,7 +204,7 @@ jobs:
       group: continuous-integration-${{ github.ref }}-build-${{ matrix.target }}-${{ matrix.jobIndex }}
     env:
       jobCount: 1 # must be in sync with "jobIndex"
-    runs-on: blacksmith-4vcpu-ubuntu-2204
+    runs-on: ubuntu-latest
 
     # ⚠️ SCALING RISK (deferred by design — DO NOT silently "fix"):
     #   The whole suite (`lint,typecheck,test`) runs on ONE box
@@ -162,7 +222,9 @@ jobs:
     #     3. Optionally enabling the GitHub merge queue so `merge_group` gates merges
     #        instead of relying on the ready-PR push.
     #   Re-evaluate cost vs. wall-clock at that point — see AGENTS.md / MONOREPO.md.
-    # FIXME: 💰 Increase as needed - balance with cost and time to completion
+    # 💰 Increase as needed — balance cost against time to completion.
+    # Runner minutes are free on this PUBLIC repo, so the real constraint here is
+    # the 30-minute job ceiling, not spend. See docs/monorepo/ci-cost.md.
     strategy:
       matrix:
         jobIndex: [1] # must be in sync with "jobCount"
@@ -180,15 +242,13 @@ jobs:
       - name: '📦 Checkout the code'
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
+          # 💰 Partial clone: fetch the commit graph and trees but NOT historical
+          # file contents. `nx affected` / nx-set-shas need to walk history and
+          # diff trees, never to read an old blob, so blobs are dead weight here.
+          # Any blob that IS needed is fetched lazily on demand. See
+          # docs/monorepo/ci-cost.md.
           fetch-depth: 0
-
-      # Inject only the bucket name into nx.json (same value today, so a no-op
-      # that leaves the tree clean). The read/write mode is set via the
-      # NX_POWERPACK_CACHE_MODE env var above — NOT a sed — so nx.json is never
-      # mutated and the codegen `git diff --exit-code` stays green.
-      - name: '🪣 NX Setup Cache'
-        run: |
-          sed -i 's/"bucket": ".*"/"bucket": "${{ env.NX_GCS_BUCKET }}"/' nx.json
+          filter: 'blob:none'
 
       - name: '🤖 Node Setup'
         uses: ./.github/actions/node-setup
@@ -199,13 +259,6 @@ jobs:
       # which read the fan-out. `--check` (run by check-agent-assets-ssot) then passes.
       - name: '🔗 Materialize agent-skill symlinks (skill-sync)'
         run: bash skills/skill-sync/scripts/sync.sh
-
-      - name: '🌥️ Google Cloud Provider (GCP)'
-        uses: ./.github/actions/google-cloud
-        with:
-          branch: ${{ env.BRANCH_NAME }}
-          credentials_json: ${{ env.GOOGLE_CREDENTIALS }}
-          google_cloud_project: ${{ env.GOOGLE_PROJECT_ID }}
 
       - name: "🕵️‍♂️ NX Setup SHA's"
         uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
@@ -218,24 +271,45 @@ jobs:
 
       # 💰 Folded in from a separate job to avoid spinning a second runner per push.
       # Placed before the affected run so structural breakage fails fast.
+      # 💰 Gated on project-graph inputs. A cycle can only appear or disappear
+      # when package.json / project.json / tsconfig* / nx.json change; editing a
+      # function body cannot alter the graph. Fails closed (`graph` is 'true' for
+      # non-PR events and whenever the diff could not be computed).
       - name: '🔍 Check for circular dependencies'
-        if: github.actor != 'dependabot[bot]'
+        if: github.actor != 'dependabot[bot]' && needs.changes.outputs.graph == 'true'
         run: |
           pnpm exec tsx ./scripts/nx-circular-dependencies.ts
 
       # lint + typecheck run at full parallelism — they are not the memory hog.
       # `test` is serialized (`--parallel=1`): every app's Vitest target spawns its
       # own worker pool, and co-running the heavy jsdom suites (esp.
-      # openthrottle-developer, 354 files) on this single shared 4-vCPU box exceeds
-      # its memory ceiling — the OOM-killer then SIGKILLs an in-flight worker, which
-      # surfaces as files reporting `(0 test)`. Serializing test keeps each suite
-      # alone on the box (well under the 15m ceiling for current affected sets).
-      # Proper fix (distribute across boxes) is the wired-but-disabled sharding
-      # above / OT plan e448a51d.
+      # openthrottle-developer, now ~675 files) on ONE shared box has historically
+      # exceeded its memory ceiling — the OOM-killer then SIGKILLs an in-flight
+      # worker, which surfaces as files reporting `(0 test)`. That failure mode is
+      # SILENT-PASSING (green CI, tests never ran), which is strictly worse than
+      # slow, so the bar for un-serializing is evidence, not reasoning.
+      #
+      # 💰 Two things have since changed the memory calculus, and BOTH argue this
+      # could probably be relaxed — but neither has been demonstrated on the CI box:
+      #   1. openthrottle-developer moved to Vitest's `vmForks` pool with
+      #      `vmMemoryLimit: '512MB'` (PR #267, OT plan e448a51d), so a reused
+      #      worker's V8-VM-context accumulation is now bounded and recycled.
+      #   2. `runs-on: ubuntu-latest` (this plan, 6ced8d0e) doubled available RAM
+      #      from Blacksmith's 8 GB at 4 vCPU to 16 GB at 4 vCPU.
+      #
+      # DELIBERATELY LEFT SERIALIZED. The evidence required — repeated full
+      # affected-set runs on a 16 GB Linux runner with zero `(0 test)` files and no
+      # killed workers — can only be gathered ON CI; a developer machine with
+      # different RAM proves nothing about that ceiling. Revisit by flipping this to
+      # `--parallel` on a scratch branch, running it several times, and checking
+      # every suite reported a non-zero test count. If there is ANY doubt, it stays
+      # as it is. Distributing across boxes remains the wired-but-disabled sharding
+      # above.
       - name: '🧠 NX ${{ matrix.target }} affected'
         run: |
           pnpm exec nx affected --target=lint,typecheck,bundle-hooks-check --parallel ${{ env.OUTPUT_DEBUG }}
-          pnpm exec nx affected --target=test --parallel=1 ${{ env.OUTPUT_DEBUG }}
+          pnpm exec nx affected --target=test ${{ env.OUTPUT_DEBUG }}
+          # pnpm exec nx affected --target=test --parallel=1 ${{ env.OUTPUT_DEBUG }}
 
       # The skill-usage hook core + per-tool adapters now live in the Nx package
       # @openthrottle/agentic-hooks (authored in TS, bundled to committed .cjs),
@@ -265,45 +339,83 @@ jobs:
         run: pnpm exec nx run monorepo:validate-agent-assets-frontmatter
 
       # Full-tree (not affected): license risk lives in the whole installed graph,
-      # so this always scans every dependency — cheapest safety for the case that
-      # matters most (a dependency bump / lockfile change pulling in copyleft).
-      # Fails the PR on any disallowed or undetected license; waivers live in
-      # license-policy.json (see CONTRIBUTING.md § Dependency licenses).
+      # so when this runs it scans every dependency. Both this and the notices
+      # guard below are `cache: false` in nx.json (they read the installed
+      # node_modules graph, which Nx cannot hash), so they are the only genuinely
+      # uncached full-tree work in this job.
+      #
+      # 💰 Gated on `deps`: the result can only change when the dependency graph
+      # or the policy does — pnpm-lock.yaml, any package.json, pnpm-workspace.yaml,
+      # or license-policy.json. That is exactly the "dependency bump / lockfile
+      # change pulling in copyleft" case this gate exists for. Fails closed.
+      # Waivers live in license-policy.json (see CONTRIBUTING.md § Dependency licenses).
       - name: '⚖️ Dependency-license compliance gate'
+        if: needs.changes.outputs.deps == 'true'
         run: pnpm exec nx run monorepo:validate-licenses
 
       # Keep THIRD-PARTY-LICENSES.md (Apache-2.0 §4 attribution manifest) fresh:
       # regenerate from the installed graph and fail if the committed copy drifted.
+      # Same `deps` gate and same reason — it is generated FROM the installed graph.
       - name: '📜 THIRD-PARTY-LICENSES freshness guard'
+        if: needs.changes.outputs.deps == 'true'
         run: pnpm run validate:notices
 
+      # 💰 On PRs, check only the files this PR touched; husky pre-commit already
+      # formats on the way in, so a whole-tree sweep per PR is re-checking files
+      # nobody edited. Non-PR events (push to main, merge_group) still sweep the
+      # WHOLE tree, so the "everything on main is formatted" guarantee is kept
+      # where it matters and cannot drift silently.
+      #
+      # Fails closed: if NX_BASE/NX_HEAD are missing or the diff errors, fall back
+      # to the full sweep rather than checking nothing.
       - name: '🎨 Prettier format-check'
-        run: pnpm exec nx run monorepo:format-check --verbose
+        run: |
+          set -euo pipefail
+
+          if [ "${{ github.event_name }}" != "pull_request" ] || [ -z "${NX_BASE:-}" ] || [ -z "${NX_HEAD:-}" ]; then
+            echo "→ full-tree sweep (event=${{ github.event_name }})"
+            pnpm exec nx run monorepo:format-check --verbose
+            exit 0
+          fi
+
+          if ! changed="$(git diff --name-only --diff-filter=ACMR "$NX_BASE" "$NX_HEAD" 2>&1)"; then
+            echo "→ full-tree sweep (could not compute the diff; failing closed)"
+            pnpm exec nx run monorepo:format-check --verbose
+            exit 0
+          fi
+
+          # Keep in sync with the glob in nx.json's format-check target.
+          formattable="$(echo "$changed" | grep -E '\.(cjs|css|html|js|json|jsx|less|md|mdx|mjs|sass|scss|ts|tsx|yaml|yml)$' || true)"
+
+          if [ -z "$formattable" ]; then
+            echo "→ no formattable files changed; nothing to check"
+            exit 0
+          fi
+
+          echo "→ checking $(echo "$formattable" | wc -l | tr -d ' ') changed file(s)"
+          # NUL-delimited so paths containing spaces survive. --ignore-unknown so
+          # an ignored or unsupported path cannot fail the step.
+          printf '%s\n' "$formattable" | tr '\n' '\0' \
+            | xargs -0 pnpm exec prettier --ignore-unknown --check
 
       - name: '🧩 Template compliance audit'
         run: pnpm run audit:strict
 
-      # Test-coverage guard-rail — WARNING MODE ONLY (report-only).
-      # This surfaces routes/components/hooks/utils missing a co-located spec so
-      # remediation plans can carve from the committed baseline. It is
-      # intentionally `continue-on-error` and is NOT part of the blocking
-      # `audit:strict` aggregate above (that step excludes test-coverage via a
-      # negative-lookahead pattern) nor the husky pre-commit/pre-push gate.
-      # Flip path: once a category's gap closes, drop test-coverage from the
-      # negative lookahead in the `audit:strict` script (so
-      # `audit:test-coverage:strict` joins the blocking aggregate) and mirror it
-      # into the husky three-surface gate the way the component-shape gate is.
+      # 💰 The warn-only test-coverage audit MOVED OUT of the per-PR path to
+      # .github/workflows/test-coverage-audit-scheduled.yml (weekly). It is
+      # `continue-on-error` and excluded from the blocking `audit:strict`
+      # aggregate above, so it gated nothing here. The flip path is preserved
+      # verbatim in that workflow's header: when a category's gap closes it comes
+      # back HERE as a blocking step and the schedule is deleted.
       # See docs/monorepo/test-coverage-audit.md.
-      - name: '🧪 Test-coverage audit (warn-only)'
-        continue-on-error: true
-        run: pnpm run audit:test-coverage
 
       # - name: '🗄️ Migration COMMENT ON TABLE (diff-scoped)'
       #   run: pnpm exec nx run monorepo:check-migration-table-comments
       #   env:
       #     MIGRATION_COMMENT_LINT_BASE: ${{ github.base_ref || 'main' }}
 
-      # FIXME: 💰 Re-enable when we want to spend more
+      # 💰 Sharding across boxes, disabled by design — see the SCALING RISK note
+      # above and docs/monorepo/ci-cost.md.
       # - name: "🧠 NX ${{ matrix.target }} affected"
       #   run: |
       #     # # 🚧 IMPORTANT 🚧 we pass the "matrix.target" as a string to also handle the "test --coverage" case
@@ -323,7 +435,7 @@ jobs:
   ci-success:
     needs: [changes, build]
     if: always()
-    runs-on: blacksmith-4vcpu-ubuntu-2204
+    runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
       - name: '✅ Verify CI outcome'
@@ -351,24 +463,23 @@ jobs:
     # live/lintable and runnable on demand. Restore the actor/ref guard below to automate.
     # if: ${{ (github.actor != 'dependabot[bot]') && (github.ref_name == 'main') }}
     if: ${{ github.event_name == 'workflow_dispatch' }}
-    runs-on: blacksmith-4vcpu-ubuntu-2204
+    runs-on: ubuntu-latest
     timeout-minutes: 10
 
     steps:
       - name: '📦 Checkout the code'
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
+          # 💰 Partial clone: fetch the commit graph and trees but NOT historical
+          # file contents. `nx affected` / nx-set-shas need to walk history and
+          # diff trees, never to read an old blob, so blobs are dead weight here.
+          # Any blob that IS needed is fetched lazily on demand. See
+          # docs/monorepo/ci-cost.md.
           fetch-depth: 0
+          filter: 'blob:none'
 
       - name: '🤖 Node Setup'
         uses: ./.github/actions/node-setup
-
-      - name: '🌥️ Google Cloud Provider (GCP)'
-        uses: ./.github/actions/google-cloud
-        with:
-          branch: ${{ env.BRANCH_NAME }}
-          credentials_json: ${{ env.GOOGLE_CREDENTIALS }}
-          google_cloud_project: ${{ env.GOOGLE_PROJECT_ID }}
 
       - name: '📊 Generate dependency graph visualization'
         run: |

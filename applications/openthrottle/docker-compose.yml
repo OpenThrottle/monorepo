@@ -6,7 +6,7 @@
 #       - GitHub: https://github.com/OpenThrottle
 #
 #     From a clean machine you need only THIS file + a `.env` (copy
-#     `.env.default`). No repo checkout, no build, no GITHUB_TOKEN/NX_KEY:
+#     `.env.default`). No repo checkout, no build, no GITHUB_TOKEN:
 #
 #         cp .env.default .env                 # then edit OPENTHROTTLE_WORKSPACES_DIR etc.
 #         docker compose up -d                 # postgres, redis, migrations, server, developer

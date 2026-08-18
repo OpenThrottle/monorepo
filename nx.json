@@ -2,11 +2,6 @@
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "analytics": true,
   "defaultBase": "main",
-  "gcs": {
-    "bucket": "openthrottle-staging-nx-cache",
-    "ciMode": "read-only",
-    "localMode": "read-only"
-  },
   "generators": {
     "@nx/react": {
       "library": {
@@ -205,12 +200,20 @@
     },
     "check-agent-assets-ssot": {
       "cache": true,
-      "description": "Verify agent-asset mirrors stay single-sourced via scripts/check-agent-assets-ssot.sh.",
+      "description": "Verify agent-asset mirrors stay single-sourced via scripts/check-agent-assets-ssot.sh. `inputs` MUST be explicit {workspaceRoot} globs \u2014 the root `monorepo` project owns 0 files, so the default {projectRoot} input would hash nothing and cache-hit forever.",
       "executor": "nx:run-commands",
       "options": {
         "command": "bash ./scripts/check-agent-assets-ssot.sh",
         "cwd": "{workspaceRoot}"
-      }
+      },
+      "inputs": [
+        "{workspaceRoot}/.agents/**/*",
+        "{workspaceRoot}/.claude/**/*",
+        "{workspaceRoot}/.cursor/**/*",
+        "{workspaceRoot}/scripts/check-agent-assets-ssot.sh",
+        "{workspaceRoot}/skills/**/*",
+        "{workspaceRoot}/skills-lock.json"
+      ]
     },
     "check-migration-table-comments": {
       "cache": true,
@@ -237,7 +240,7 @@
     },
     "codegen-graphql-watch": {
       "continuous": true,
-      "description": "Watch mode for graphql-codegen — regenerate GraphQL types on change.",
+      "description": "Watch mode for graphql-codegen \u2014 regenerate GraphQL types on change.",
       "executor": "nx:run-commands",
       "options": {
         "command": "graphql-codegen --watch",
@@ -266,7 +269,7 @@
     },
     "codegen-react-router-watch": {
       "continuous": true,
-      "description": "Watch mode for `react-router typegen` — regenerate route types on change.",
+      "description": "Watch mode for `react-router typegen` \u2014 regenerate route types on change.",
       "executor": "nx:run-commands",
       "options": {
         "command": "react-router typegen --watch",
@@ -290,7 +293,7 @@
     },
     "generate-third-party-notices": {
       "cache": false,
-      "description": "Regenerate THIRD-PARTY-LICENSES.md — the aggregated dependency-attribution manifest for Apache-2.0 §4 (scripts/generate-third-party-notices.ts). Pass `--check` (via `pnpm validate:notices`) to fail on a stale file instead of writing. Not cached — reads the installed node_modules graph.",
+      "description": "Regenerate THIRD-PARTY-LICENSES.md \u2014 the aggregated dependency-attribution manifest for Apache-2.0 \u00a74 (scripts/generate-third-party-notices.ts). Pass `--check` (via `pnpm validate:notices`) to fail on a stale file instead of writing. Not cached \u2014 reads the installed node_modules graph.",
       "executor": "nx:run-commands",
       "options": {
         "command": "tsx ./scripts/generate-third-party-notices.ts",
@@ -299,12 +302,20 @@
     },
     "format-check": {
       "cache": true,
-      "description": "Check workspace formatting with Prettier without writing — CI parity for format-write.",
+      "description": "Check workspace formatting with Prettier without writing \u2014 CI parity for format-write. `inputs` MUST enumerate {workspaceRoot} globs: the `monorepo` project's root is `.` but owns 0 files (Nx assigns each file to its most specific project), so the default {projectRoot} input hashes nothing and every run would cache-hit regardless of the files being checked.",
       "executor": "nx:run-commands",
       "options": {
         "command": "prettier --check \"**/*.{cjs,css,html,js,json,jsx,less,md,mdx,mjs,sass,scss,ts,tsx,yaml,yml}\"",
         "cwd": "{workspaceRoot}"
-      }
+      },
+      "inputs": [
+        "{workspaceRoot}/**/*.{cjs,css,html,js,json,jsx,less,md,mdx,mjs,sass,scss,ts,tsx,yaml,yml}",
+        "{workspaceRoot}/.prettierignore",
+        "{workspaceRoot}/.prettierrc",
+        {
+          "externalDependencies": ["prettier"]
+        }
+      ]
     },
     "format-write": {
       "cache": false,
@@ -328,7 +339,7 @@
     "knip": {
       "cache": true,
       "dependsOn": ["^build"],
-      "description": "Dead-code / unused-dependency report via knip (knip.jsonc). Report-only (dry-run) and non-blocking (--no-exit-code) — run on demand with `pnpm nx run monorepo:knip`. DO NOT add `--fix`/`--fix-type`/`--allow-remove-files` here; knip only mutates files with `--fix`. Triage findings piecemeal (`--include`/`--workspace`) — see docs/monorepo/Knip.md.",
+      "description": "Dead-code / unused-dependency report via knip (knip.jsonc). Report-only (dry-run) and non-blocking (--no-exit-code) \u2014 run on demand with `pnpm nx run monorepo:knip`. DO NOT add `--fix`/`--fix-type`/`--allow-remove-files` here; knip only mutates files with `--fix`. Triage findings piecemeal (`--include`/`--workspace`) \u2014 see docs/monorepo/Knip.md.",
       "executor": "nx:run-commands",
       "options": {
         "command": "knip --config knip.jsonc --no-exit-code",
@@ -395,7 +406,7 @@
         "codegen-graphql",
         "codegen-react-router"
       ],
-      "description": "Run the project Vitest suite. Coverage is opt-in: set VITEST_COVERAGE=true to emit it under {workspaceRoot}/coverage/{projectRoot}. Depends on codegen (self + deps) so a fresh checkout generates the gitignored __generated__ output before Vitest collects — mirrors the typecheck/build wiring; without it source-first codegen packages (e.g. @openthrottle/openthrottle-developer-codegen) fail collection on 'Failed to resolve import ./__generated__/graphql'.",
+      "description": "Run the project Vitest suite. Coverage is opt-in: set VITEST_COVERAGE=true to emit it under {workspaceRoot}/coverage/{projectRoot}. Depends on codegen (self + deps) so a fresh checkout generates the gitignored __generated__ output before Vitest collects \u2014 mirrors the typecheck/build wiring; without it source-first codegen packages (e.g. @openthrottle/openthrottle-developer-codegen) fail collection on 'Failed to resolve import ./__generated__/graphql'.",
       "executor": "@nx/vitest:test",
       "inputs": ["default", "^production"],
       "options": {
@@ -444,7 +455,7 @@
     },
     "validate-licenses": {
       "cache": false,
-      "description": "Dependency-license compliance gate: apply license-policy.json to `pnpm licenses list --json` and fail on any disallowed or undetected license (scripts/validate-license-compliance.ts). Not cached — reads the installed node_modules graph, which Nx does not hash.",
+      "description": "Dependency-license compliance gate: apply license-policy.json to `pnpm licenses list --json` and fail on any disallowed or undetected license (scripts/validate-license-compliance.ts). Not cached \u2014 reads the installed node_modules graph, which Nx does not hash.",
       "executor": "nx:run-commands",
       "options": {
         "command": "tsx ./scripts/validate-license-compliance.ts",

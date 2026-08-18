@@ -57,7 +57,11 @@ permissions:
 
 jobs:
   build-and-push:
-    # FIXME: 💰 Re-enable when we want to spend more
+    # 💰 Disabled — the most expensive workflow in the repo. It builds 3 images
+    # with NO remote build cache wired (local BuildKit only, so every run starts
+    # cold) and pushes sha-tagged images that accumulate Artifact Registry storage
+    # forever. Do not re-enable without a build-cache strategy AND a registry
+    # retention policy. Priced in docs/monorepo/ci-cost.md.
     if: false
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -66,7 +70,10 @@ jobs:
       - name: '📦 Checkout'
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
+          # 💰 Partial clone — `nx affected` walks history and diffs trees but
+          # never reads a historical blob. See docs/monorepo/ci-cost.md.
           fetch-depth: 0
+          filter: 'blob:none'
 
       - name: '🤖 Node Setup'
         uses: ./.github/actions/node-setup

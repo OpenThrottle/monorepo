@@ -13,14 +13,14 @@ Platform-specific prebuilt binaries (packages that declare `os`/`cpu`, e.g.
 `@rollup/rollup-linux-x64-gnu`, `fsevents`) are omitted: which ones install depends on
 the host OS, and each shares the license of the cross-platform toolchain already listed.
 
-**2566** third-party packages.
+**2562** third-party packages.
 
 ## License summary
 
 | License | Packages |
 | --- | --- |
-| MIT | 2164 |
-| Apache-2.0 | 115 |
+| MIT | 2163 |
+| Apache-2.0 | 114 |
 | ISC | 89 |
 | MIT-0 | 67 |
 | BSD-3-Clause | 56 |
@@ -28,7 +28,6 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | BlueOak-1.0.0 | 12 |
 | Unlicense | 9 |
 | CC0-1.0 | 3 |
-| Commercial | 2 |
 | LicenseRef-PolyForm-Shield-1.0.0 | 2 |
 | MPL-2.0 | 2 |
 | (AFL-2.1 OR BSD-3-Clause) | 1 |
@@ -533,7 +532,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@monaco-editor/react` | 4.7.0 | MIT | [Suren Atoyan](https://github.com/suren-atoyan/monaco-react#readme) |
 | `@napi-rs/canvas` | 0.1.80 | MIT | [source](https://github.com/Brooooooklyn/canvas#readme) |
 | `@napi-rs/nice` | 1.1.1 | MIT | [source](https://github.com/Brooooooklyn/nice#readme) |
-| `@napi-rs/wasm-runtime` | 0.2.12, 0.2.4, 1.2.1 | MIT | [LongYinan](https://napi.rs/) |
+| `@napi-rs/wasm-runtime` | 0.2.4, 1.2.1 | MIT | [LongYinan](https://napi.rs/) |
 | `@nestjs/apollo` | 13.4.2 | MIT | [Kamil Mysliwiec](https://github.com/nestjs/graphql#readme) |
 | `@nestjs/bull-shared` | 11.0.4 | MIT | [Kamil Mysliwiec](https://github.com/nestjs/bull) |
 | `@nestjs/bullmq` | 11.0.4 | MIT | [Kamil Mysliwiec](https://github.com/nestjs/bull) |
@@ -558,13 +557,11 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@nodelib/fs.scandir` | 2.1.5 | MIT | [source](https://github.com/nodelib/nodelib/tree/master#readme) |
 | `@nodelib/fs.stat` | 2.0.5 | MIT | [source](https://github.com/nodelib/nodelib/tree/master#readme) |
 | `@nodelib/fs.walk` | 1.2.8 | MIT | [source](https://github.com/nodelib/nodelib/tree/master#readme) |
-| `@nx/devkit` | 22.6.5, 22.7.4 | MIT | [Victor Savkin](https://nx.dev) |
+| `@nx/devkit` | 22.7.4 | MIT | [Victor Savkin](https://nx.dev) |
 | `@nx/eslint` | 22.7.4 | MIT | [Victor Savkin](https://nx.dev) |
 | `@nx/eslint-plugin` | 22.7.4 | MIT | [Victor Savkin](https://nx.dev) |
-| `@nx/gcs-cache` | 5.0.7 | Commercial | [source](https://nx.dev/nx-api/gcs-cache) |
 | `@nx/jest` | 22.7.4 | MIT | [Victor Savkin](https://nx.dev) |
 | `@nx/js` | 22.7.4 | MIT | [source](https://nx.dev) |
-| `@nx/key` | 5.0.7 | Commercial | [source](https://nx.dev/powerpack) |
 | `@nx/module-federation` | 22.7.4 | MIT | [Colum Ferry](https://nx.dev) |
 | `@nx/plugin` | 22.7.4 | MIT | [Nrwl](https://nx.dev) |
 | `@nx/react` | 22.7.4 | MIT | [Victor Savkin](https://nx.dev) |
@@ -1065,7 +1062,6 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `await-to-js` | 3.0.0 | MIT | [Dima Grossman](https://github.com/scopsy/await-to-js#readme) |
 | `axe-core` | 4.12.1 | MPL-2.0 | [source](https://www.deque.com/axe/) |
 | `axios` | 1.16.0, 1.18.0, 1.19.0 | MIT | [Matt Zabriskie](https://axios-http.com) |
-| `axios-retry` | 4.5.0 | Apache-2.0 | [Rubén Norte](https://github.com/softonic/axios-retry) |
 | `b4a` | 1.8.1 | Apache-2.0 | [Holepunch](https://github.com/holepunchto/b4a#readme) |
 | `babel-dead-code-elimination` | 1.0.12 | MIT | [pcattori](https://github.com/pcattori/babel-dead-code-elimination#readme) |
 | `babel-jest` | 30.4.1 | MIT | [source](https://github.com/jestjs/jest#readme) |
@@ -1643,7 +1639,6 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `is-regex` | 1.2.1 | MIT | [Jordan Harband](https://github.com/inspect-js/is-regex) |
 | `is-regexp` | 3.1.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/is-regexp#readme) |
 | `is-relative` | 1.0.0 | MIT | [Jon Schlinkert](https://github.com/jonschlinkert/is-relative) |
-| `is-retry-allowed` | 2.2.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/is-retry-allowed#readme) |
 | `is-set` | 2.0.3 | MIT | [Jordan Harband](https://github.com/inspect-js/is-set#readme) |
 | `is-shared-array-buffer` | 1.0.4 | MIT | [Jordan Harband](https://github.com/inspect-js/is-shared-array-buffer#readme) |
 | `is-stream` | 2.0.1, 4.0.1 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/is-stream#readme) |
@@ -1789,7 +1784,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `lower-case` | 2.0.2 | MIT | [Blake Embrey](https://github.com/blakeembrey/change-case/tree/master/packages/lower-case#readme) |
 | `lower-case-first` | 2.0.2 | MIT | [Blake Embrey](https://github.com/blakeembrey/change-case/tree/master/packages/lower-case-first#readme) |
 | `lowercase-keys` | 3.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/lowercase-keys#readme) |
-| `lru-cache` | 10.4.3, 5.1.1, 6.0.0 | ISC | [Isaac Z. Schlueter](https://github.com/isaacs/node-lru-cache#readme) |
+| `lru-cache` | 10.4.3, 5.1.1 | ISC | [Isaac Z. Schlueter](https://github.com/isaacs/node-lru-cache#readme) |
 | `lru-cache` | 11.5.2 | BlueOak-1.0.0 | [Isaac Z. Schlueter](https://github.com/isaacs/node-lru-cache#readme) |
 | `lru-cache` | 2.2.4 | MIT | [Isaac Z. Schlueter](https://github.com/isaacs/node-lru-cache#readme) |
 | `lucide-react` | 1.28.0 | ISC | [Eric Fennis](https://lucide.dev) |
@@ -1879,7 +1874,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `mimic-response` | 3.1.0, 4.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/mimic-response#readme) |
 | `min-indent` | 1.0.1 | MIT | [James Kyle](https://github.com/thejameskyle/min-indent#readme) |
 | `mini-svg-data-uri` | 1.4.4 | MIT | [Taylor “Tigt” Hunt](https://github.com/tigt/mini-svg-data-uri#readme) |
-| `minimatch` | 10.2.3, 10.2.4, 10.2.5, 10.2.6 | BlueOak-1.0.0 | [Isaac Z. Schlueter](https://github.com/isaacs/minimatch#readme) |
+| `minimatch` | 10.2.3, 10.2.5, 10.2.6 | BlueOak-1.0.0 | [Isaac Z. Schlueter](https://github.com/isaacs/minimatch#readme) |
 | `minimatch` | 3.1.5, 5.1.9, 9.0.9 | ISC | [Isaac Z. Schlueter](https://github.com/isaacs/minimatch#readme) |
 | `minimist` | 1.2.8 | MIT | [James Halliday](https://github.com/minimistjs/minimist) |
 | `minimizer-webpack-plugin` | 5.6.1 | MIT | [webpack Contrib Team](https://github.com/webpack/minimizer-webpack-plugin) |
@@ -2270,7 +2265,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `secure-compare` | 3.0.1 | MIT | [Vadim Demedes](https://github.com/vdemedes/secure-compare) |
 | `seek-bzip` | 2.0.0 | MIT | [source](https://github.com/cscott/seek-bzip#readme) |
 | `semifies` | 1.0.0 | Apache-2.0 | [Holepunch Inc](https://github.com/holepunchto/semifies) |
-| `semver` | 6.3.1, 7.5.4, 7.7.4, 7.8.5 | ISC | [GitHub Inc.](https://github.com/npm/node-semver#readme) |
+| `semver` | 6.3.1, 7.7.4, 7.8.5 | ISC | [GitHub Inc.](https://github.com/npm/node-semver#readme) |
 | `semver-regex` | 4.0.5 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/semver-regex#readme) |
 | `semver-truncate` | 3.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/semver-truncate#readme) |
 | `send` | 0.19.2, 1.2.1 | MIT | [TJ Holowaychuk](https://github.com/pillarjs/send#readme) |

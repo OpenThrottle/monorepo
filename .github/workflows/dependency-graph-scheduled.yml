@@ -24,7 +24,10 @@ env:
 
 jobs:
   nx-dependency-graph:
-    if: false # FIXME: 💰 Re-enable when we want to spend more
+    # 💰 Disabled. Cheap to run, but each snapshot is COMMITTED to
+    # docs/nx/dependency-graphs/, which grows the repo and so raises the cost of
+    # every clone in every other workflow. Priced in docs/monorepo/ci-cost.md.
+    if: false
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -32,7 +35,10 @@ jobs:
       - name: '📦 Checkout the code'
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
+          # 💰 Partial clone — needs the commit graph (to commit snapshots) but
+          # not historical file contents. See docs/monorepo/ci-cost.md.
           fetch-depth: 0
+          filter: 'blob:none'
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: '🤖 Node Setup'
