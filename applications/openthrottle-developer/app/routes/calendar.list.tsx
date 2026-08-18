@@ -36,7 +36,7 @@ export const links: Route.LinksFunction = () => {
 };
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
-  return [{ title: `Calendar | ${SITE_TITLE}` }];
+  return [{ title: `List | Calendar | ${SITE_TITLE}` }];
 });
 
 export default function Component(

@@ -169,7 +169,7 @@ describe('routes/prompts.create.tsx', () => {
       });
 
       expect(result).toContainEqual({
-        title: expect.stringContaining('Create Prompt'),
+        title: expect.stringContaining('Create prompt'),
       });
     });
   });

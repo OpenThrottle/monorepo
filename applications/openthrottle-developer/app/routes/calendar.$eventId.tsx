@@ -46,8 +46,13 @@ export const links: Route.LinksFunction = () => {
   return [];
 };
 
-export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
-  return [{ title: `Event Details | ${SITE_TITLE}` }];
+export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) => {
+  const event = args.loaderData?.event;
+  const title = event?.title
+    ? `${event.title} | Calendar | ${SITE_TITLE}`
+    : `Event | Calendar | ${SITE_TITLE}`;
+
+  return [{ title }];
 });
 
 export default function Component(

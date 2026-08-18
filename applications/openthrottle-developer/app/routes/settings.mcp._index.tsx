@@ -37,7 +37,7 @@ export const links: Route.LinksFunction = () => {
 };
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
-  return [{ title: `MCP connectors | ${SITE_TITLE}` }];
+  return [{ title: `MCP connectors | Settings | ${SITE_TITLE}` }];
 });
 
 export default function Component(

@@ -51,7 +51,7 @@ export const loader = async (args: Route.LoaderArgs) => {
 };
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
-  return [{ title: `Rollout | ${SITE_TITLE}` }];
+  return [{ title: `Rollout | Settings | ${SITE_TITLE}` }];
 });
 
 export default function Component(

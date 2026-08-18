@@ -20,7 +20,7 @@ export const links: Route.LinksFunction = () => {
 };
 
 export const meta = (_args: Route.MetaArgs) => {
-  return [{ title: `SettingsAppearance | ${SITE_TITLE}` }];
+  return [{ title: `Appearance | Settings | ${SITE_TITLE}` }];
 };
 
 export default function Component(
