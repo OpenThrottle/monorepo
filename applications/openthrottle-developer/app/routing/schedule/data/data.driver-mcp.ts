@@ -59,7 +59,7 @@ export const DRIVER_MCP_WARNING: Record<
 > = {
   [DRIVER_MCP_REACHABILITY.attaches]: null,
   [DRIVER_MCP_REACHABILITY.cannotAttach]: {
-    body: `This CLI reads MCP servers only from its own user-level config, never from the repo, so nothing in this checkout can give it openthrottle-mcp. A prompt that files plans or tasks will run, exit cleanly, and do nothing. Pick claude, cursor, or opencode for MCP-dependent work — or register the server in that CLI's own config on the server host.`,
+    body: `This CLI reads MCP servers only from its own user-level config, never from the repo, so nothing in this checkout can give it openthrottle-mcp. A prompt that files plans or tasks will run, exit cleanly, and do nothing. Pick claude, cursor, grok, or opencode for MCP-dependent work — or register the server in that CLI's own config on the server host.`,
     title: `This provider cannot reach the workspace's MCP servers`,
   },
   [DRIVER_MCP_REACHABILITY.unknown]: {

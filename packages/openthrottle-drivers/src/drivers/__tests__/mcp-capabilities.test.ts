@@ -22,27 +22,28 @@ describe('MCP capability matrix', () => {
 
     expect(matrix).toEqual({
       claude: true,
+      // codex is the ONLY driver that cannot reach a workspace's MCP servers: it reads solely the
+      // user-scope ~/.codex/config.toml and has no project-config concept (confirmed twice, by
+      // `codex mcp list` and `codex doctor`).
       codex: false,
       cursor: true,
-      grok: false,
+      grok: true,
       opencode: true,
     });
   });
 
   it('keeps attachesWorkspaceMcp independent of mcpAutoApprove', () => {
     // Attaches WITHOUT emitting flags — the case that makes mcpAutoApprove unusable as a proxy.
-    for (const id of ['claude', 'opencode'] as const) {
+    for (const id of ['claude', 'grok', 'opencode'] as const) {
       const { capabilities } = getDriver(id);
       expect(capabilities.mcpAutoApprove).toBe(false);
       expect(capabilities.attachesWorkspaceMcp).toBe(true);
     }
 
     // Emits no flags AND cannot attach — indistinguishable from the above via mcpAutoApprove alone.
-    for (const id of ['codex', 'grok'] as const) {
-      const { capabilities } = getDriver(id);
-      expect(capabilities.mcpAutoApprove).toBe(false);
-      expect(capabilities.attachesWorkspaceMcp).toBe(false);
-    }
+    const codex = getDriver('codex');
+    expect(codex.capabilities.mcpAutoApprove).toBe(false);
+    expect(codex.capabilities.attachesWorkspaceMcp).toBe(false);
 
     // Attaches only BECAUSE it emits flags.
     const cursor = getDriver('cursor');
@@ -56,6 +57,6 @@ describe('MCP capability matrix', () => {
         d.capabilities.mcpAutoApprove !== d.capabilities.attachesWorkspaceMcp,
     ).map((d) => d.id);
 
-    expect(disagree).toEqual(['claude', 'opencode']);
+    expect(disagree).toEqual(['claude', 'grok', 'opencode']);
   });
 });

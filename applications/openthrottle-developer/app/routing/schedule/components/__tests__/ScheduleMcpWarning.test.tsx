@@ -7,13 +7,14 @@ import { ScheduleMcpWarning } from '../ScheduleMcpWarning';
 const AGENTS = [
   { attachesWorkspaceMcp: true, backend: 'claude' },
   { attachesWorkspaceMcp: true, backend: 'cursor' },
+  { attachesWorkspaceMcp: true, backend: 'grok' },
   { attachesWorkspaceMcp: true, backend: 'opencode' },
+  // codex is the only driver that cannot reach a workspace's MCP servers.
   { attachesWorkspaceMcp: false, backend: 'codex' },
-  { attachesWorkspaceMcp: false, backend: 'grok' },
 ];
 
 describe('ScheduleMcpWarning', () => {
-  test.each(['claude', 'cursor', 'opencode'])(
+  test.each(['claude', 'cursor', 'grok', 'opencode'])(
     'renders nothing for %s, which reaches the workspace MCP servers',
     (driverId) => {
       const component = render(
@@ -24,18 +25,15 @@ describe('ScheduleMcpWarning', () => {
     },
   );
 
-  test.each(['codex', 'grok'])(
-    'warns for %s, which cannot reach the workspace MCP servers',
-    (driverId) => {
-      const component = render(
-        <ScheduleMcpWarning agentClis={AGENTS} driverId={driverId} />,
-      );
+  test('warns for codex, which cannot reach the workspace MCP servers', () => {
+    const component = render(
+      <ScheduleMcpWarning agentClis={AGENTS} driverId="codex" />,
+    );
 
-      const warning = component.getByTestId('ScheduleMcpWarning');
-      expect(warning).toBeInTheDocument();
-      expect(warning.textContent).toContain('cannot reach');
-    },
-  );
+    const warning = component.getByTestId('ScheduleMcpWarning');
+    expect(warning).toBeInTheDocument();
+    expect(warning.textContent).toContain('cannot reach');
+  });
 
   test('says access is unverifiable — not missing — for a driver discovery did not report', () => {
     const component = render(

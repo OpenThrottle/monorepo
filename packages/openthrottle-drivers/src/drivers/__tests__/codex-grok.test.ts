@@ -186,7 +186,7 @@ describe('grok driver', () => {
     expect(grokDriver.id).toBe('grok');
     expect(grokDriver.label).toBe('grok');
     expect(grokDriver.capabilities).toEqual({
-      attachesWorkspaceMcp: false,
+      attachesWorkspaceMcp: true,
       chatStreaming: true,
       mcpAutoApprove: false,
       permissionMode: true,
