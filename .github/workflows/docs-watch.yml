@@ -31,7 +31,9 @@ jobs:
       - name: '📦 Checkout'
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
-          fetch-depth: 0
+          # 💰 This job runs a single `git diff-tree` on github.sha — one commit
+          # against its parent. Depth 2 covers that; full history was never used.
+          fetch-depth: 2
 
       - name: '📤 Set SHA and changed paths'
         id: vars

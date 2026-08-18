@@ -50,7 +50,6 @@ docker build \
   --build-arg APP_NAME="${INPUT_APP}" \
   --build-arg APP_VERSION="${APP_VERSION}" \
   --build-arg GITHUB_TOKEN="${INPUT_GITHUB_TOKEN}" \
-  --build-arg NX_KEY="${INPUT_NX_KEY:-}" \
   --build-arg PNPM_VERSION="${PNPM_VERSION}" \
   -t "${IMAGE}" \
   .

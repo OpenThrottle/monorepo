@@ -15,7 +15,7 @@ apps, `packages/openthrottle-mcp`) consumes its schema through the committed
   (what the compose dev profile attaches to).
 - `pnpm nx run openthrottle-server:start` — no-watch start; builds dependency packages first.
 - `pnpm nx run openthrottle-server:docker-build` — builds from root `Dockerfile.NestJS`
-  (monorepo context); expects `GITHUB_TOKEN` and `NX_KEY` in the environment.
+  (monorepo context); expects `GITHUB_TOKEN` in the environment.
 - The single `typecheck` target type-checks source and test files here; `test` is plain Vitest and does not depend on any
   `__generated__` output (the server is code-first, not a codegen consumer).
 

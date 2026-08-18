@@ -1,0 +1,69 @@
+################################################################################
+#
+#   Test-coverage guard-rail — WARNING MODE ONLY (report-only).
+#
+#   Surfaces routes/components/hooks/utils missing a co-located spec so
+#   remediation plans can carve from the committed baseline.
+#
+#   💰 Why this is a schedule and not a step in Continuous Integration:
+#   the audit is `continue-on-error` and is deliberately EXCLUDED from the
+#   blocking `audit:strict` aggregate (that script filters test-coverage out via
+#   a negative lookahead) and from the husky pre-commit/pre-push gate. It
+#   therefore gates nothing, so running it on every PR bought a report nobody
+#   was blocked by. Weekly is often enough to feed remediation planning.
+#
+#   Runs on `ubuntu-latest` — free and unlimited on this PUBLIC repo. See
+#   docs/monorepo/ci-cost.md before changing `runs-on` or adding a schedule.
+#
+#   FLIP PATH (unchanged — this workflow is a staging area, not a demotion):
+#   once a category's gap closes, drop test-coverage from the negative lookahead
+#   in the `audit:strict` script so `audit:test-coverage:strict` joins the
+#   blocking aggregate, and mirror it into the husky three-surface gate the way
+#   the component-shape gate is. At that point the gate lives in
+#   continuous-integration.yml again (as a blocking step) and this scheduled
+#   workflow should be deleted. See docs/monorepo/test-coverage-audit.md.
+#
+################################################################################
+name: '🧪 Scheduled Test-coverage Audit'
+
+on:
+  schedule:
+    # Weekly, Mondays at 08:00 UTC — before the dependency-graph job at 09:00.
+    - cron: '0 8 * * 1'
+  workflow_dispatch: # Allow manual triggering
+
+permissions:
+  contents: read
+  packages: read # node-setup authenticates the @openthrottle GitHub Packages registry
+
+concurrency:
+  cancel-in-progress: true
+  group: test-coverage-audit-${{ github.ref }}
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  NX_SWC: 'true'
+
+jobs:
+  test-coverage-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: '📦 Checkout the code'
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: '🤖 Node Setup'
+        uses: ./.github/actions/node-setup
+
+      # The audit walks the same fan-out the CI build does; a fresh checkout
+      # lacks the gitignored skill symlinks until skill-sync materializes them.
+      - name: '🔗 Materialize agent-skill symlinks (skill-sync)'
+        run: bash skills/skill-sync/scripts/sync.sh
+
+      # Report-only, exactly as it was in Continuous Integration. `continue-on-error`
+      # is retained deliberately: this must not start failing a run while the
+      # baseline is still being burned down.
+      - name: '🧪 Test-coverage audit (warn-only)'
+        continue-on-error: true
+        run: pnpm run audit:test-coverage

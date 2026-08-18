@@ -183,9 +183,6 @@ catalogs:
     '@nx/eslint-plugin':
       specifier: 22.7.4
       version: 22.7.4
-    '@nx/gcs-cache':
-      specifier: ^5.0.0
-      version: 5.0.7
     '@nx/js':
       specifier: 22.7.4
       version: 22.7.4
@@ -1693,9 +1690,6 @@ importers:
       '@nx/eslint-plugin':
         specifier: 'catalog:'
         version: 22.7.4(@babel/traverse@7.29.7)(@swc-node/register@1.11.1(@swc/core@1.15.47(@swc/helpers@0.5.23))(@swc/types@0.1.28)(typescript@6.0.3))(@swc/core@1.15.47(@swc/helpers@0.5.23))(@typescript-eslint/parser@8.65.0(eslint@9.39.5(jiti@2.7.0))(typescript@6.0.3))(eslint@9.39.5(jiti@2.7.0))(nx@22.7.4(@swc-node/register@1.11.1(@swc/core@1.15.47(@swc/helpers@0.5.23))(@swc/types@0.1.28)(typescript@6.0.3))(@swc/core@1.15.47(@swc/helpers@0.5.23)))(typescript@6.0.3)
-      '@nx/gcs-cache':
-        specifier: 'catalog:'
-        version: 5.0.7(encoding@0.1.13)(nx@22.7.4(@swc-node/register@1.11.1(@swc/core@1.15.47(@swc/helpers@0.5.23))(@swc/types@0.1.28)(typescript@6.0.3))(@swc/core@1.15.47(@swc/helpers@0.5.23)))
       '@nx/js':
         specifier: 'catalog:'
         version: 22.7.4(@babel/traverse@7.29.7)(@swc-node/register@1.11.1(@swc/core@1.15.47(@swc/helpers@0.5.23))(@swc/types@0.1.28)(typescript@6.0.3))(@swc/core@1.15.47(@swc/helpers@0.5.23))(nx@22.7.4(@swc-node/register@1.11.1(@swc/core@1.15.47(@swc/helpers@0.5.23))(@swc/types@0.1.28)(typescript@6.0.3))(@swc/core@1.15.47(@swc/helpers@0.5.23)))
@@ -7443,9 +7437,6 @@ packages:
     resolution: {integrity: sha512-xJIPs+bYuc9ASBl+cvGsKbGrJmS6fAKaSZCnT0lhahT5rhA2VVy9/EcIgd2JhtEuFOJNx7UHNn/qiTPTY4nrQw==}
     engines: {node: '>= 10'}
 
-  '@napi-rs/wasm-runtime@0.2.12':
-    resolution: {integrity: sha512-ZVWUcfwY4E/yPitQJl481FjFo3K22D6qF0DuFH6Y/nbnE11GY5uguDxZMGXPQ8WQ0128MXQD7TnfHyK4oWoIJQ==}
-
   '@napi-rs/wasm-runtime@0.2.4':
     resolution: {integrity: sha512-9zESzOO5aDByvhIAsOy9TbpZ0Ur2AJbUI7UT73kcUTS2mxAMHOBaa1st/jAymNoCtvrit99kkzT1FZuXVcgfIQ==}
 
@@ -7690,11 +7681,6 @@ packages:
     resolution: {integrity: sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==}
     engines: {node: '>= 8'}
 
-  '@nx/devkit@22.6.5':
-    resolution: {integrity: sha512-9kvAI+kk2pfEXLqS8OyjI9XvWmp+Gdn7jPfxDAz8BOqxMyPy3p5hYl+jc4TIsLOWunAFl8azqrcYsHzEpaWCIA==}
-    peerDependencies:
-      nx: '>= 21 <= 23 || ^22.0.0-0'
-
   '@nx/devkit@22.7.4':
     resolution: {integrity: sha512-yd01XGPIZYsyheCgqJZgZ3ThdtZha0q6LDQG45OXfI5yBGlS3w53pn/z5tDMwcErdEnOQBOkhb6dwy6DHyrG3w==}
     peerDependencies:
@@ -7721,12 +7707,6 @@ packages:
       '@zkochan/js-yaml':
         optional: true
 
-  '@nx/gcs-cache@5.0.7':
-    resolution: {integrity: sha512-ktIJcCY7hbTWubG1UV22aoYh+HekNEFnE77YWnvvuGHbSy9ufL1ydBK7NpWMgpReTbRg05u61tOhzOIkCv5suw==}
-    deprecated: This package has been deprecated. See https://nx.dev/docs/reference/deprecated/self-hosted-cache-packages for details
-    peerDependencies:
-      nx: '>= 18 < 23'
-
   '@nx/jest@22.7.4':
     resolution: {integrity: sha512-1BHLHy16BABTme/e1hGjD1sd3CSSK142/PTNpt4E88lY/QoXjMVJkNYhkZBNAFqgE4+oFEBmsSajvrFbe/lB4Q==}
 
@@ -7737,68 +7717,6 @@ packages:
     peerDependenciesMeta:
       verdaccio:
         optional: true
-
-  '@nx/key-darwin-arm64@5.0.7':
-    resolution: {integrity: sha512-cFi2nxfcJwoZs/kM5CjcLGV/cvTSmdqTiptwHz1z6qH/oPbcWZJi+SdvsTR3C4p8tO9eLZ9PNb9+6Yi4uiOyQg==}
-    engines: {node: '>= 10'}
-    cpu: [arm64]
-    os: [darwin]
-
-  '@nx/key-darwin-x64@5.0.7':
-    resolution: {integrity: sha512-675Bi6zmI11L8MmDvCrBFAO22iViP3+PUhBVdCZR6MAtpq1zaXPE4qcxQfmEhCg0kqyyNvihdhPinXcGwmimhg==}
-    engines: {node: '>= 10'}
-    cpu: [x64]
-    os: [darwin]
-
-  '@nx/key-linux-arm-gnueabihf@5.0.7':
-    resolution: {integrity: sha512-9fzHYCEjqWxXuYcmqtOh4Z8JKTqtzamPOnClQsCniAY3V+06twZOGb5E2El5gqot63qt4CmsFpqeriSA+FFDzQ==}
-    engines: {node: '>= 10'}
-    cpu: [arm]
-    os: [linux]
-
-  '@nx/key-linux-arm64-gnu@5.0.7':
-    resolution: {integrity: sha512-sxWvCIrOrFSmNPzu15mDTcq4ZdlKnrGrdpJdgFZU0c128Q5hbxivhIFXfU/9BUxYr3wofNQvLKP9ZaHkxW+fsw==}
-    engines: {node: '>= 10'}
-    cpu: [arm64]
-    os: [linux]
-    libc: [glibc]
-
-  '@nx/key-linux-arm64-musl@5.0.7':
-    resolution: {integrity: sha512-63LXj0TFM7FyBG4huUbPTM+qh/DIyp8fxQ5CZj2W5OF8Yqc5jhgi63NV8SJX7X40tLHTPPMg58L9tkjZvAWscg==}
-    engines: {node: '>= 10'}
-    cpu: [arm64]
-    os: [linux]
-    libc: [musl]
-
-  '@nx/key-linux-x64-gnu@5.0.7':
-    resolution: {integrity: sha512-x3gxuN2vMDDMaIe+8UdOODh7+ad7gpZACHuYCzs3+wZPMAEocQ86GZqs3zIbTa+3N0BOQmyNCXnAHAwmiXv1qA==}
-    engines: {node: '>= 10'}
-    cpu: [x64]
-    os: [linux]
-    libc: [glibc]
-
-  '@nx/key-linux-x64-musl@5.0.7':
-    resolution: {integrity: sha512-tBFQHhUcoZn22YaMGp9BIaeH4Biz6D99iXD1cu1ZpcGQOY2jXVoc+Bu2C1K7/lKmlZkaGztmc4OL82hXMsSRVw==}
-    engines: {node: '>= 10'}
-    cpu: [x64]
-    os: [linux]
-    libc: [musl]
-
-  '@nx/key-win32-arm64-msvc@5.0.7':
-    resolution: {integrity: sha512-T1gLmhSquFYYZ/JsqqYbBqkMR1VDgcRBoOdONIZjIzUcMyo97xNk+iKVd5Z4r9gq7A/y0hy+orN8I7DTAeaE7Q==}
-    engines: {node: '>= 10'}
-    cpu: [arm64]
-    os: [win32]
-
-  '@nx/key-win32-x64-msvc@5.0.7':
-    resolution: {integrity: sha512-9aOdAGTPOEQLzNempeWFhlBSGi63apmWHCvlGIOwPvBs/rr+quZOAej6ZNQbahGR8rGg1TGRKoCYMzeud0EpUQ==}
-    engines: {node: '>= 10'}
-    cpu: [x64]
-    os: [win32]
-
-  '@nx/key@5.0.7':
-    resolution: {integrity: sha512-ce3cJe5txdjEzEZm+h3EJj+GcF7GTRGOOD9bv2s+wPHbyTLYrGitL6jpxT6S9DzFt3h/r3943+IsJEAeSjwtPQ==}
-    engines: {node: '>= 10'}
 
   '@nx/module-federation@22.7.4':
     resolution: {integrity: sha512-YnhBfgv028mlnzIg9kaewOwJAvbCWeKESy5JOIEfbC6doPE7Kx7j4jR14hApsrM2B3EhtsNq0EMeFAZygly3YA==}
@@ -12160,11 +12078,6 @@ packages:
     resolution: {integrity: sha512-s7iGf5GaVMxEG0ENN9x+xTr7GFZCb1ZP/1uATUpCEK2X78nDB3RwbtFCo9pGAf9ru+VwoQ464DkaLEeRM08wJA==}
     engines: {node: '>=4'}
 
-  axios-retry@4.5.0:
-    resolution: {integrity: sha512-aR99oXhpEDGo0UuAlYcn2iGRds30k366Zfa05XWScR9QaQD4JYiP3/1Qt1u7YlefUOK+cn0CcwoL1oefavQUlQ==}
-    peerDependencies:
-      axios: 0.x || 1.x
-
   axios@1.16.0:
     resolution: {integrity: sha512-6hp5CwvTPlN2A31g5dxnwAX0orzM7pmCRDLnZSX772mv8WDqICwFjowHuPs04Mc8deIld1+ejhtaMn5vp6b+1w==}
 
@@ -15106,10 +15019,6 @@ packages:
     resolution: {integrity: sha512-Kw/ReK0iqwKeu0MITLFuj0jbPAmEiOsIwyIXvvbfa6QfmN9pkD1M+8pdk7Rl/dTKbH34/XBFMbgD4iMJhLQbGA==}
     engines: {node: '>=0.10.0'}
 
-  is-retry-allowed@2.2.0:
-    resolution: {integrity: sha512-XVm7LOeLpTW4jV19QSH38vkswxoLud8sQ57YwJVTPWdiaI9I8keEhGFpBlslyVsgdQy4Opg8QOLb8YRgsyZiQg==}
-    engines: {node: '>=10'}
-
   is-set@2.0.3:
     resolution: {integrity: sha512-iPAjerrse27/ygGLxw+EBR9agv9Y6uLeYVJMu+QNCoouJ1/1ri0mGrcWpfCqFZuzzx3WjtwxG098X+n4OuRkPg==}
     engines: {node: '>= 0.4'}
@@ -15939,10 +15848,6 @@ packages:
   lru-cache@5.1.1:
     resolution: {integrity: sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w==}
 
-  lru-cache@6.0.0:
-    resolution: {integrity: sha512-Jo6dJ04CmSjuznwJSS3pUeWmd/H0ffTlkXXgwZi+eq1UCmqQwCh+eLsYOYCwY991i2Fah4h1BEMCx4qThGbsiA==}
-    engines: {node: '>=10'}
-
   lucide-react@1.28.0:
     resolution: {integrity: sha512-fARAFJULsGuDDydjp6+6blekG/sBIM29TerzLjc9bQUKAcEfrSc4ZQKb25KRz4OMKd87cZTb5dgq0w/T6KufVg==}
     peerDependencies:
@@ -16286,10 +16191,6 @@ packages:
 
   minimatch@10.2.3:
     resolution: {integrity: sha512-Rwi3pnapEqirPSbWbrZaa6N3nmqq4Xer/2XooiOKyV3q12ML06f7MOuc5DVH8ONZIFhwIYQ3yzPH4nt7iWHaTg==}
-    engines: {node: 18 || 20 || >=22}
-
-  minimatch@10.2.4:
-    resolution: {integrity: sha512-oRjTw/97aTBN0RHbYCdtF1MQfvusSIBQM0IZEgzl6426+8jSC0nF1a/GmnVLpfB9yyr6g6FTqWqiZVbxrtaCIg==}
     engines: {node: 18 || 20 || >=22}
 
   minimatch@10.2.5:
@@ -18399,11 +18300,6 @@ packages:
 
   semver@6.3.1:
     resolution: {integrity: sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==}
-    hasBin: true
-
-  semver@7.5.4:
-    resolution: {integrity: sha512-1bCSESV6Pv+i21Hvpxp3Dx+pSD8lIPt8uVjRrxAUt/nbswYc+tK6Y2btiULjd4+fnq15PX+nqQDC7Oft7WkwcA==}
-    engines: {node: '>=10'}
     hasBin: true
 
   semver@7.7.4:
@@ -22555,10 +22451,13 @@ snapshots:
     dependencies:
       arrify: 2.0.1
       extend: 3.0.2
+    optional: true
 
-  '@google-cloud/projectify@4.0.0': {}
+  '@google-cloud/projectify@4.0.0':
+    optional: true
 
-  '@google-cloud/promisify@4.0.0': {}
+  '@google-cloud/promisify@4.0.0':
+    optional: true
 
   '@google-cloud/storage@7.19.0(encoding@0.1.13)':
     dependencies:
@@ -22580,6 +22479,7 @@ snapshots:
     transitivePeerDependencies:
       - encoding
       - supports-color
+    optional: true
 
   '@graphql-codegen/add@6.0.1(graphql@16.14.2)':
     dependencies:
@@ -24734,12 +24634,6 @@ snapshots:
       '@napi-rs/nice-win32-x64-msvc': 1.1.1
     optional: true
 
-  '@napi-rs/wasm-runtime@0.2.12':
-    dependencies:
-      '@emnapi/core': 1.11.3
-      '@emnapi/runtime': 1.11.3
-      '@tybys/wasm-util': 0.10.3
-
   '@napi-rs/wasm-runtime@0.2.4':
     dependencies:
       '@emnapi/core': 1.11.3
@@ -25031,7 +24925,8 @@ snapshots:
     optionalDependencies:
       '@nestjs/platform-socket.io': 11.1.28(@nestjs/common@11.1.28(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/websockets@11.1.28)(rxjs@7.8.2)
 
-  '@nodable/entities@3.0.0': {}
+  '@nodable/entities@3.0.0':
+    optional: true
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
@@ -25044,17 +24939,6 @@ snapshots:
     dependencies:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.20.1
-
-  '@nx/devkit@22.6.5(nx@22.7.4(@swc-node/register@1.11.1(@swc/core@1.15.47(@swc/helpers@0.5.23))(@swc/types@0.1.28)(typescript@6.0.3))(@swc/core@1.15.47(@swc/helpers@0.5.23)))':
-    dependencies:
-      '@zkochan/js-yaml': 0.0.7
-      ejs: 5.0.1
-      enquirer: 2.3.6
-      minimatch: 10.2.4
-      nx: 22.7.4(@swc-node/register@1.11.1(@swc/core@1.15.47(@swc/helpers@0.5.23))(@swc/types@0.1.28)(typescript@6.0.3))(@swc/core@1.15.47(@swc/helpers@0.5.23))
-      semver: 7.8.5
-      tslib: 2.8.1
-      yargs-parser: 21.1.1
 
   '@nx/devkit@22.7.4(nx@22.7.4(@swc-node/register@1.11.1(@swc/core@1.15.47(@swc/helpers@0.5.23))(@swc/types@0.1.28)(typescript@6.0.3))(@swc/core@1.15.47(@swc/helpers@0.5.23)))':
     dependencies:
@@ -25131,22 +25015,6 @@ snapshots:
       - nx
       - supports-color
       - verdaccio
-
-  '@nx/gcs-cache@5.0.7(encoding@0.1.13)(nx@22.7.4(@swc-node/register@1.11.1(@swc/core@1.15.47(@swc/helpers@0.5.23))(@swc/types@0.1.28)(typescript@6.0.3))(@swc/core@1.15.47(@swc/helpers@0.5.23)))':
-    dependencies:
-      '@google-cloud/storage': 7.19.0(encoding@0.1.13)
-      '@nx/devkit': 22.6.5(nx@22.7.4(@swc-node/register@1.11.1(@swc/core@1.15.47(@swc/helpers@0.5.23))(@swc/types@0.1.28)(typescript@6.0.3))(@swc/core@1.15.47(@swc/helpers@0.5.23)))
-      '@nx/key': 5.0.7
-      nx: 22.7.4(@swc-node/register@1.11.1(@swc/core@1.15.47(@swc/helpers@0.5.23))(@swc/types@0.1.28)(typescript@6.0.3))(@swc/core@1.15.47(@swc/helpers@0.5.23))
-      semver: 7.5.4
-      tar-stream: 3.2.0
-    transitivePeerDependencies:
-      - bare-abort-controller
-      - bare-buffer
-      - debug
-      - encoding
-      - react-native-b4a
-      - supports-color
 
   '@nx/jest@22.7.4(@babel/traverse@7.29.7)(@swc-node/register@1.11.1(@swc/core@1.15.47(@swc/helpers@0.5.23))(@swc/types@0.1.28)(typescript@6.0.3))(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.13.3)(babel-plugin-macros@3.1.0)(nx@22.7.4(@swc-node/register@1.11.1(@swc/core@1.15.47(@swc/helpers@0.5.23))(@swc/types@0.1.28)(typescript@6.0.3))(@swc/core@1.15.47(@swc/helpers@0.5.23)))(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.13.3)(typescript@6.0.3))(typescript@6.0.3)':
     dependencies:
@@ -25248,54 +25116,6 @@ snapshots:
       - debug
       - nx
       - supports-color
-
-  '@nx/key-darwin-arm64@5.0.7':
-    optional: true
-
-  '@nx/key-darwin-x64@5.0.7':
-    optional: true
-
-  '@nx/key-linux-arm-gnueabihf@5.0.7':
-    optional: true
-
-  '@nx/key-linux-arm64-gnu@5.0.7':
-    optional: true
-
-  '@nx/key-linux-arm64-musl@5.0.7':
-    optional: true
-
-  '@nx/key-linux-x64-gnu@5.0.7':
-    optional: true
-
-  '@nx/key-linux-x64-musl@5.0.7':
-    optional: true
-
-  '@nx/key-win32-arm64-msvc@5.0.7':
-    optional: true
-
-  '@nx/key-win32-x64-msvc@5.0.7':
-    optional: true
-
-  '@nx/key@5.0.7':
-    dependencies:
-      '@napi-rs/wasm-runtime': 0.2.12
-      axios: 1.16.0
-      axios-retry: 4.5.0(axios@1.16.0)
-      chalk: 4.1.2
-      enquirer: 2.4.1
-      ora: 5.4.1
-    optionalDependencies:
-      '@nx/key-darwin-arm64': 5.0.7
-      '@nx/key-darwin-x64': 5.0.7
-      '@nx/key-linux-arm-gnueabihf': 5.0.7
-      '@nx/key-linux-arm64-gnu': 5.0.7
-      '@nx/key-linux-arm64-musl': 5.0.7
-      '@nx/key-linux-x64-gnu': 5.0.7
-      '@nx/key-linux-x64-musl': 5.0.7
-      '@nx/key-win32-arm64-msvc': 5.0.7
-      '@nx/key-win32-x64-msvc': 5.0.7
-    transitivePeerDependencies:
-      - debug
 
   '@nx/module-federation@22.7.4(6d87b1edad70c93d1f647d6d43b354db)':
     dependencies:
@@ -28349,7 +28169,8 @@ snapshots:
 
   '@tokenizer/token@0.3.0': {}
 
-  '@tootallnate/once@2.0.1': {}
+  '@tootallnate/once@2.0.1':
+    optional: true
 
   '@ts-morph/common@0.11.1':
     dependencies:
@@ -28383,6 +28204,7 @@ snapshots:
   '@tybys/wasm-util@0.10.3':
     dependencies:
       tslib: 2.8.1
+    optional: true
 
   '@tybys/wasm-util@0.9.0':
     dependencies:
@@ -28422,7 +28244,8 @@ snapshots:
       '@types/connect': 3.4.38
       '@types/node': 26.1.2
 
-  '@types/caseless@0.12.5': {}
+  '@types/caseless@0.12.5':
+    optional: true
 
   '@types/chai@5.2.3':
     dependencies:
@@ -28666,6 +28489,7 @@ snapshots:
       '@types/node': 26.1.2
       '@types/tough-cookie': 4.0.5
       form-data: 2.5.6
+    optional: true
 
   '@types/resolve@1.17.1':
     dependencies:
@@ -28694,7 +28518,8 @@ snapshots:
 
   '@types/tough-cookie@4.0.0': {}
 
-  '@types/tough-cookie@4.0.5': {}
+  '@types/tough-cookie@4.0.5':
+    optional: true
 
   '@types/triple-beam@1.3.5': {}
 
@@ -29557,7 +29382,8 @@ snapshots:
       normalize-path: 3.0.0
       picomatch: 2.3.2
 
-  anynum@1.0.1: {}
+  anynum@1.0.1:
+    optional: true
 
   app-root-path@3.1.0: {}
 
@@ -29666,7 +29492,8 @@ snapshots:
 
   arrify@1.0.1: {}
 
-  arrify@2.0.1: {}
+  arrify@2.0.1:
+    optional: true
 
   assertion-error@2.0.1: {}
 
@@ -29725,11 +29552,6 @@ snapshots:
   await-to-js@3.0.0: {}
 
   axe-core@4.12.1: {}
-
-  axios-retry@4.5.0(axios@1.16.0):
-    dependencies:
-      axios: 1.16.0
-      is-retry-allowed: 2.2.0
 
   axios@1.16.0:
     dependencies:
@@ -31143,6 +30965,7 @@ snapshots:
       inherits: 2.0.4
       readable-stream: 3.6.2
       stream-shift: 1.0.3
+    optional: true
 
   eastasianwidth@0.2.0: {}
 
@@ -31988,6 +31811,7 @@ snapshots:
     dependencies:
       path-expression-matcher: 1.6.2
       xml-naming: 0.3.0
+    optional: true
 
   fast-xml-parser@5.10.1:
     dependencies:
@@ -31997,6 +31821,7 @@ snapshots:
       path-expression-matcher: 1.6.2
       strnum: 2.4.1
       xml-naming: 0.3.0
+    optional: true
 
   fastest-stable-stringify@2.0.2: {}
 
@@ -32202,6 +32027,7 @@ snapshots:
       hasown: 2.0.4
       mime-types: 2.1.35
       safe-buffer: 5.2.1
+    optional: true
 
   form-data@4.0.5:
     dependencies:
@@ -32323,6 +32149,7 @@ snapshots:
     transitivePeerDependencies:
       - encoding
       - supports-color
+    optional: true
 
   gaxios@7.3.0:
     dependencies:
@@ -32340,6 +32167,7 @@ snapshots:
     transitivePeerDependencies:
       - encoding
       - supports-color
+    optional: true
 
   gcp-metadata@8.1.2:
     dependencies:
@@ -32505,8 +32333,10 @@ snapshots:
     transitivePeerDependencies:
       - encoding
       - supports-color
+    optional: true
 
-  google-logging-utils@0.0.2: {}
+  google-logging-utils@0.0.2:
+    optional: true
 
   google-logging-utils@1.1.3: {}
 
@@ -32637,6 +32467,7 @@ snapshots:
     transitivePeerDependencies:
       - encoding
       - supports-color
+    optional: true
 
   handlebars@4.7.9:
     dependencies:
@@ -32764,7 +32595,8 @@ snapshots:
     transitivePeerDependencies:
       - '@noble/hashes'
 
-  html-entities@2.6.0: {}
+  html-entities@2.6.0:
+    optional: true
 
   html-escaper@2.0.2: {}
 
@@ -32807,6 +32639,7 @@ snapshots:
       debug: 4.4.3
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   http-proxy-agent@7.0.2:
     dependencies:
@@ -33212,8 +33045,6 @@ snapshots:
     dependencies:
       is-unc-path: 1.0.0
 
-  is-retry-allowed@2.2.0: {}
-
   is-set@2.0.3: {}
 
   is-shared-array-buffer@1.0.4:
@@ -33249,7 +33080,8 @@ snapshots:
 
   is-unicode-supported@2.1.0: {}
 
-  is-unsafe@2.0.0: {}
+  is-unsafe@2.0.0:
+    optional: true
 
   is-upper-case@2.0.2:
     dependencies:
@@ -34263,10 +34095,6 @@ snapshots:
     dependencies:
       yallist: 3.1.1
 
-  lru-cache@6.0.0:
-    dependencies:
-      yallist: 4.0.0
-
   lucide-react@1.28.0(react@19.2.4):
     dependencies:
       react: 19.2.4
@@ -34833,10 +34661,6 @@ snapshots:
   mini-svg-data-uri@1.4.4: {}
 
   minimatch@10.2.3:
-    dependencies:
-      brace-expansion: 5.0.9
-
-  minimatch@10.2.4:
     dependencies:
       brace-expansion: 5.0.9
 
@@ -35717,7 +35541,8 @@ snapshots:
 
   path-exists@4.0.0: {}
 
-  path-expression-matcher@1.6.2: {}
+  path-expression-matcher@1.6.2:
+    optional: true
 
   path-is-absolute@1.0.1: {}
 
@@ -37232,6 +37057,7 @@ snapshots:
     transitivePeerDependencies:
       - encoding
       - supports-color
+    optional: true
 
   retry@0.13.1: {}
 
@@ -37453,10 +37279,6 @@ snapshots:
       semver: 7.8.5
 
   semver@6.3.1: {}
-
-  semver@7.5.4:
-    dependencies:
-      lru-cache: 6.0.0
 
   semver@7.7.4: {}
 
@@ -37872,8 +37694,10 @@ snapshots:
   stream-events@1.0.5:
     dependencies:
       stubs: 3.0.0
+    optional: true
 
-  stream-shift@1.0.3: {}
+  stream-shift@1.0.3:
+    optional: true
 
   streamsearch@1.1.0: {}
 
@@ -38028,6 +37852,7 @@ snapshots:
   strnum@2.4.1:
     dependencies:
       anynum: 1.0.1
+    optional: true
 
   strtok3@10.3.5:
     dependencies:
@@ -38039,7 +37864,8 @@ snapshots:
 
   stubborn-utils@1.0.2: {}
 
-  stubs@3.0.0: {}
+  stubs@3.0.0:
+    optional: true
 
   style-to-js@1.1.21:
     dependencies:
@@ -38208,6 +38034,7 @@ snapshots:
     transitivePeerDependencies:
       - encoding
       - supports-color
+    optional: true
 
   teex@1.0.1:
     dependencies:
@@ -38902,7 +38729,8 @@ snapshots:
 
   uuid@8.3.2: {}
 
-  uuid@9.0.1: {}
+  uuid@9.0.1:
+    optional: true
 
   v8-compile-cache-lib@3.0.1: {}
 
@@ -39502,7 +39330,8 @@ snapshots:
 
   xml-name-validator@5.0.0: {}
 
-  xml-naming@0.3.0: {}
+  xml-naming@0.3.0:
+    optional: true
 
   xml-parse-from-string@1.0.1: {}
 

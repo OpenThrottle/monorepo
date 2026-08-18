@@ -48,18 +48,6 @@
   },
   "exceptions": [
     {
-      "package": "@nx/gcs-cache",
-      "license": "Commercial",
-      "reason": "Nx Powerpack (paid, proprietary) remote-cache add-on. Build-time only, never shipped in any product bundle. Migration off it is tracked separately in plan aec1b0b2-2ee9-4aa1-9229-1e1bee4191f2 (also clears CVE-2025-36852); waived here so the gate is green until that lands.",
-      "scope": "build-tooling"
-    },
-    {
-      "package": "@nx/key",
-      "license": "Commercial",
-      "reason": "Nx Powerpack license-activation helper, transitive via @nx/gcs-cache. Build-time only, never shipped. See plan aec1b0b2-2ee9-4aa1-9229-1e1bee4191f2. Its per-arch native binaries (@nx/key-<os>-<arch>) need no separate waiver: they declare os/cpu and are excluded from the gate as platform-specific.",
-      "scope": "build-tooling"
-    },
-    {
       "package": "@paper-design/shaders",
       "license": "LicenseRef-PolyForm-Shield-1.0.0",
       "reason": "Source-available non-compete (PolyForm Shield 1.0.0). Competing use is scoped to paper.design's design-tooling domain, not OpenThrottle's task-runner/platform domain. Owner-approved waiver 2026-07-27; see docs/monorepo/dependency-license-audit.md. Requires NOTICE attribution.",

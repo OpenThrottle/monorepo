@@ -49,13 +49,27 @@ runs:
       run: pnpm install --frozen-lockfile
       shell: bash
 
+    # The Nx cache. This is the ONLY Nx cache layer — there is no paid remote
+    # backend (see docs/monorepo/NX.md). GitHub Actions cache is free and its
+    # scoping gives the CREEP-safe model for nothing: a PR branch RESTORES from
+    # its base branch's caches but can never SAVE into them, and branch caches
+    # are isolated from one another.
+    #
+    # The key is suffixed with the commit SHA on purpose. `actions/cache` skips
+    # the save step entirely on an exact key hit, so a key of just
+    # hashFiles(nx.json, pnpm-lock.yaml) is written ONCE and then never refreshed
+    # until one of those files changes — every task hash computed after that
+    # first save is discarded. A per-commit key always saves; the tiered
+    # restore-keys below still restore the newest compatible cache (GitHub
+    # returns the most recent prefix match), so warm hits are preserved.
     - name: '💾 Cache Nx local cache'
       uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
       id: nx-cache
       with:
-        key: cache-nx-${{ runner.os }}-${{ hashFiles('nx.json', 'pnpm-lock.yaml') }}
+        key: cache-nx-${{ runner.os }}-${{ hashFiles('nx.json', 'pnpm-lock.yaml') }}-${{ github.sha }}
         path: .nx/cache
         restore-keys: |
+          cache-nx-${{ runner.os }}-${{ hashFiles('nx.json', 'pnpm-lock.yaml') }}-
           cache-nx-${{ runner.os }}-
 
     # - name: '🔍 Setup Supabase CLI'

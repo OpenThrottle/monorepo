@@ -260,7 +260,6 @@
     "@nx/devkit": "catalog:",
     "@nx/eslint": "catalog:",
     "@nx/eslint-plugin": "catalog:",
-    "@nx/gcs-cache": "catalog:",
     "@nx/js": "catalog:",
     "@nx/plugin": "catalog:",
     "@nx/react": "catalog:",
