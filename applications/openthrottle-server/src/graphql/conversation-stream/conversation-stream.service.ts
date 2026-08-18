@@ -34,10 +34,13 @@ import {
   type ConversationReasoningEffort,
   type ConversationServiceTier,
   type ConversationStreamChunk,
+  classifyCursorFailure,
   createCursorAgentSession,
+  isRetryableCursorFailure,
   openAiConversationBackend,
   resolveChatIdleTimeoutMs,
 } from '@openthrottle/openthrottle-agentic-utils';
+import { composeCursorStartupErrorText } from './conversation-stream.copy';
 import {
   CONVERSATION_STREAM_CHUNK_FIELD,
   type ConversationStreamChunkEnvelope,
@@ -64,6 +67,22 @@ const sessionMetadataKey = (backend: string): string => `${backend}SessionId`;
  * never blocks the start mutation.
  */
 const CURSOR_BACKEND = 'cursor';
+
+/**
+ * Attempts allowed when minting a cursor chat session. A cold cursor start
+ * fails transiently often enough that one stumble should not kill the turn;
+ * bounded at two so a persistently broken cursor cannot become a retry storm.
+ * Only retryable failures consume a second attempt — see
+ * `isRetryableCursorFailure`.
+ */
+const CURSOR_MINT_MAX_ATTEMPTS = 2;
+
+/**
+ * Pause between mint attempts. Short on purpose: the user is watching a
+ * "Waiting for {model}…" keepalive, and the cold-start conditions this retries
+ * resolve on the order of a spawn, not of a backoff schedule.
+ */
+const CURSOR_MINT_RETRY_DELAY_MS = 500;
 
 /**
  * How long a finished turn's chunk buffer is retained after its terminal chunk,
@@ -277,7 +296,10 @@ export class ConversationStreamService {
       });
 
       try {
-        sessionId = await this.mintCursorSession(run, controller.signal);
+        sessionId = await this.mintCursorSessionWithRetry(
+          run,
+          controller.signal,
+        );
       } catch (error: unknown) {
         const message = error instanceof Error ? error.message : String(error);
         this.logger.error(`conversation-stream cursor mint failed: ${message}`);
@@ -288,7 +310,10 @@ export class ConversationStreamService {
           conversationId: run.conversationId,
           delta: '',
           done: true,
-          error: `Failed to start a cursor-agent session: ${message}`,
+          // Actionable, ANSI-stripped copy for the classified failure, with
+          // the raw message kept as a detail line so a misclassification never
+          // costs the user their only diagnostic.
+          error: composeCursorStartupErrorText(message),
           id: randomUUID(),
           kind: CONVERSATION_STREAM_CHUNK_KINDS.text,
           messageId: run.assistantMessageId,
@@ -555,6 +580,70 @@ export class ConversationStreamService {
    * caller surfaces a throw as a terminal stream error. Private mode
    * (persist=false) mints an ephemeral session and skips persistence.
    */
+  /**
+   * Mint with a bounded retry. A cold cursor start fails transiently often
+   * enough that a dead turn on the first stumble is the wrong default, but a
+   * failure the user must fix (expired login, missing binary) must NOT be
+   * retried — that only doubles the wait before they see the message they need.
+   *
+   * Bounded at {@link CURSOR_MINT_MAX_ATTEMPTS} so a persistently broken cursor
+   * cannot turn one turn into a retry storm.
+   */
+  private async mintCursorSessionWithRetry(
+    run: StartConversationStreamRun,
+    signal: AbortSignal,
+  ): Promise<string> {
+    let lastError: unknown;
+
+    /* eslint-disable no-await-in-loop -- retries are sequential by definition:
+       attempt N+1 must not start until attempt N has failed and its backoff has
+       elapsed. Parallelizing them would spawn every attempt at once, which is
+       the retry storm this cap exists to prevent. */
+    for (let attempt = 1; attempt <= CURSOR_MINT_MAX_ATTEMPTS; attempt += 1) {
+      // Cold-vs-warm mint timing is the most useful signal for the first-chat
+      // startup failures, so it is logged on every attempt — not only on failure.
+      const startedAt = Date.now();
+      this.logger.log(
+        `conversation-stream cursor mint start conversationId=${run.conversationId} cwd=${run.cwd} attempt=${attempt}/${CURSOR_MINT_MAX_ATTEMPTS}`,
+      );
+
+      try {
+        const sessionId = await this.mintCursorSession(run, signal);
+        this.logger.log(
+          `conversation-stream cursor mint ok conversationId=${run.conversationId} elapsedMs=${Date.now() - startedAt} attempt=${attempt}`,
+        );
+        return sessionId;
+      } catch (error: unknown) {
+        lastError = error;
+        // The thrown message already carries the redacted stdout/stderr, the
+        // binary, and the cwd; add the conversation, the attempt, and our own
+        // elapsed measurement.
+        const message = error instanceof Error ? error.message : String(error);
+        const kind = classifyCursorFailure(message);
+        this.logger.error(
+          `conversation-stream cursor mint failed conversationId=${run.conversationId} elapsedMs=${Date.now() - startedAt} attempt=${attempt}/${CURSOR_MINT_MAX_ATTEMPTS} kind=${kind} ${message}`,
+        );
+
+        const canRetry =
+          attempt < CURSOR_MINT_MAX_ATTEMPTS &&
+          isRetryableCursorFailure(kind) &&
+          !signal.aborted;
+
+        if (!canRetry) {
+          break;
+        }
+
+        await new Promise((resolve) =>
+          setTimeout(resolve, CURSOR_MINT_RETRY_DELAY_MS),
+        );
+      }
+    }
+
+    /* eslint-enable no-await-in-loop */
+
+    throw lastError;
+  }
+
   private async mintCursorSession(
     run: StartConversationStreamRun,
     signal: AbortSignal,

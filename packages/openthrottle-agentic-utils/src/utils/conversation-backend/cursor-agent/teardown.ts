@@ -121,19 +121,81 @@ function hasExited(child: ChildProcess): boolean {
 }
 
 /**
- * Terminate a child: SIGTERM now, then SIGKILL after `graceMs` if it has not
- * exited. No-op when the child has already exited. The grace timer is unref'd so
- * it never keeps the process alive, and cleared once the child closes.
+ * Options for {@link terminateChild}.
  */
-export function terminateChild(child: ChildProcess, graceMs: number): void {
-  if (hasExited(child)) {
+export interface TerminateChildOptions {
+  /**
+   * Also signal the child's process **group**, reaching grandchildren the
+   * child spawned.
+   *
+   * Opt-in, and only correct when the child was spawned `detached: true` —
+   * that is what makes it a group leader, so that `-pid` names its own group.
+   * Signalling `-pid` for a non-detached child would target whatever unrelated
+   * group happens to carry that id, so this defaults to off and every shared
+   * caller keeps the previous single-process behavior.
+   *
+   * cursor-agent needs it: it spawns a long-lived `worker-server` grandchild
+   * that inherits our stdout pipe and outlives the run (observed alive minutes
+   * after a turn completed), both leaking a process and holding the pipe open
+   * against EOF.
+   */
+  readonly processGroup?: boolean;
+}
+
+/**
+ * Signal the child, and — when `processGroup` is set — its process group too.
+ *
+ * The direct child is ALWAYS signalled first: the group call is extra reach for
+ * grandchildren, never a substitute for it. Both calls are best-effort, since
+ * either target may already be gone.
+ */
+function signalChild(
+  child: ChildProcess,
+  signal: 'SIGKILL' | 'SIGTERM',
+  processGroup: boolean,
+): void {
+  try {
+    child.kill(signal);
+  } catch {
+    // Already gone; nothing to terminate.
+  }
+
+  if (!processGroup || child.pid === undefined) {
     return;
   }
 
-  child.kill('SIGTERM');
+  try {
+    process.kill(-child.pid, signal);
+  } catch {
+    // Not a group leader, or the group is already reaped.
+  }
+}
+
+/**
+ * Terminate a child (and, with `processGroup`, everything it spawned): SIGTERM
+ * now, then SIGKILL after `graceMs` if it has not exited. No-op when the child
+ * has already exited. The grace timer is unref'd so it never keeps the process
+ * alive, and cleared once the child closes.
+ */
+export function terminateChild(
+  child: ChildProcess,
+  graceMs: number,
+  options: TerminateChildOptions = {},
+): void {
+  const processGroup = options.processGroup ?? false;
+
+  // An already-exited child is only a no-op when we are NOT sweeping the group.
+  // cursor's `worker-server` outlives its parent — it reparents to init but
+  // stays in the group — so a turn that ended cleanly is exactly the case where
+  // the grandchild survives and the sweep still has work to do.
+  if (hasExited(child) && !processGroup) {
+    return;
+  }
+
+  signalChild(child, 'SIGTERM', processGroup);
   const killTimer = setTimeout(() => {
-    if (!hasExited(child)) {
-      child.kill('SIGKILL');
+    if (!hasExited(child) || processGroup) {
+      signalChild(child, 'SIGKILL', processGroup);
     }
   }, graceMs);
 

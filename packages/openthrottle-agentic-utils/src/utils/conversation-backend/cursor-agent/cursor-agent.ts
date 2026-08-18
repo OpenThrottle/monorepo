@@ -1,13 +1,27 @@
 /**
  * The cursor-agent CLI backend: spawns `cursor-agent` (arg array, never a
  * shell), parses its NDJSON stdout into {@link ConversationStreamChunk}s, and
- * terminates on the `result` event or process exit. Cancellation flows through
- * the spawn `signal` option (SIGTERM on abort). The child receives a scrubbed
- * environment — its host login but none of the server's secrets.
+ * terminates on the `result` event or process exit. The child receives a
+ * scrubbed environment — its host login and cursor's own configuration, but
+ * none of the server's secrets.
  *
  * Multi-turn context is owned by cursor-agent: one OT conversation ↔ one chat
  * id (minted by {@link createCursorAgentSession}), resumed every turn. We send
  * only the latest user message, never replayed history.
+ *
+ * Two properties of cursor drive the shape of this adapter:
+ *
+ * 1. **`--resume` accepts any string.** An unrecognized id does not error —
+ *    cursor silently starts a fresh, disconnected chat and echoes the junk back
+ *    as its `session_id`. So the minted id is parsed and validated
+ *    (`session-id.ts`) rather than taken verbatim; that is the only place a bad
+ *    id is visible, since every downstream surface reports success.
+ * 2. **cursor spawns a `worker-server` grandchild** that inherits our stdout
+ *    pipe and outlives the run. Both spawns are therefore `detached: true` and
+ *    torn down by process group (`terminateChild(..., { processGroup: true })`),
+ *    otherwise every turn leaks a process and holds the pipe open against EOF.
+ *
+ * See docs/openthrottle/agentic-cli-chat-backends.md § cursor-agent cold start.
  */
 
 import { spawn } from 'node:child_process';
@@ -23,28 +37,90 @@ import {
   CURSOR_AGENT_DEFAULT_BIN,
   buildCursorAgentArgv,
 } from './argv.ts';
+import { formatCursorMintFailure } from './diagnostics.ts';
 import { withFileMentions } from '../file-mentions.ts';
 import { withKeepalive } from '../keepalive.ts';
 import { mapCursorEvent } from './events.ts';
 import { NdjsonBuffer } from './ndjson.ts';
+import { parseCursorChatId } from './session-id.ts';
 import {
   resolveAgentTimeouts,
   resolveSessionCreateTimeoutMs,
   terminateChild,
 } from './teardown.ts';
 
-/** Env vars the child is allowed to inherit (host login + locale), nothing else. */
+/**
+ * Env vars the child inherits. The posture is unchanged — the child gets the
+ * host login and cursor's own configuration, never the server's secrets — but
+ * the list is now driven by what `cursor-agent` provably reads (verified
+ * against the 2026.08.11 bundle and its launcher script), not by guesswork.
+ *
+ * Dropping a var cursor needs is not a no-op: it silently diverges our child
+ * from the user's own terminal, which is exactly the class of bug this plan
+ * chased.
+ */
 const ALLOWED_ENV_KEYS = [
-  'CURSOR_API_KEY',
-  'HOME',
-  'LANG',
+  'CURSOR_AUTH_TOKEN', // Alternate credential source, read alongside CURSOR_API_KEY.
+  'HOME', // Host login (unchanged).
+  'LANG', // Host locale (unchanged).
   'LC_ALL',
   'LOGNAME',
   'PATH',
+  'SHELL', // cursor shells out for tool calls.
   'TERM',
   'TMPDIR',
   'USER',
+
+  /**
+   * Selects keychain (`default`, macOS login keychain) vs `file` vs `memory`.
+   * Dropping it forces the keychain even when the user configured otherwise.
+   */
+  'AGENT_CLI_CREDENTIAL_STORE',
+
+  /**
+   * Standard proxy trio. Dropping these leaves cursor with no route to the
+   * network behind a corporate proxy; dropping NO_PROXY alone would force
+   * proxying of hosts the user deliberately excluded.
+   */
+  'HTTP_PROXY',
+  'HTTPS_PROXY',
+  'NO_PROXY',
+
+  /**
+   * cursor's config dir is `$XDG_CONFIG_HOME/cursor` when set, else `~/.cursor`
+   * — so dropping this points our child at a DIFFERENT chat store than the
+   * user's own shell, while HOME still resolves.
+   */
+  'XDG_CONFIG_HOME',
+
+  /**
+   * Used by the launcher script to site NODE_COMPILE_CACHE on non-darwin.
+   */
+  'XDG_CACHE_HOME',
 ] as const;
+
+/**
+ * Prefixes passed through wholesale. cursor adds `CURSOR_*` knobs between
+ * releases (`CURSOR_API_KEY`, `CURSOR_DATA_DIR`, endpoint overrides, …), so
+ * enumerating them guarantees we fall behind. Everything under this prefix is
+ * cursor's own configuration by construction, never server state.
+ */
+const ALLOWED_ENV_PREFIXES = ['CURSOR_'] as const;
+
+/**
+ * Values forced on the child regardless of the host environment.
+ *
+ * `NO_COLOR` suppresses decorated output at the source — defense in depth for
+ * the stdout parsing, since the cheapest ANSI escape to handle is one that was
+ * never written.
+ *
+ * Deliberately NOT forced: `CI`. It reads as an output knob but also feeds
+ * cursor's credential-store selection (`isCI` suppresses the SSH-session
+ * keychain path), so setting it would quietly change how the child authenticates.
+ */
+const FORCED_ENV: Readonly<Record<string, string>> = {
+  NO_COLOR: '1',
+};
 
 /**
  * Resolve the binary: explicit env override, else `cursor-agent` off PATH.
@@ -63,13 +139,23 @@ function buildScrubbedEnv(
   env: NodeJS.ProcessEnv = process.env,
 ): NodeJS.ProcessEnv {
   const scrubbed: NodeJS.ProcessEnv = {};
-  for (const key of ALLOWED_ENV_KEYS) {
-    const value = env[key];
-    if (value !== undefined) {
+
+  for (const [key, value] of Object.entries(env)) {
+    if (value === undefined) {
+      continue;
+    }
+
+    const allowed =
+      ALLOWED_ENV_KEYS.some((allowedKey) => allowedKey === key) ||
+      ALLOWED_ENV_PREFIXES.some((prefix) => key.startsWith(prefix));
+
+    if (allowed) {
       scrubbed[key] = value;
     }
   }
-  return scrubbed;
+
+  // Forced last so the host can never override them.
+  return { ...scrubbed, ...FORCED_ENV };
 }
 
 /**
@@ -82,6 +168,7 @@ function composePrompt(run: ConversationBackendRun): string {
       latestUser = message.content;
     }
   }
+
   const systemPrompt = run.systemPrompt?.trim();
   return systemPrompt !== undefined && systemPrompt !== ''
     ? `${systemPrompt}\n\n${latestUser}`
@@ -113,13 +200,24 @@ export interface CreateCursorAgentSessionOptions {
  * Mint a new cursor-agent chat and return its id. Run this once per OT
  * conversation, persist the id, then resume it on every turn.
  *
+ * The id is parsed and validated out of stdout (see {@link parseCursorChatId}),
+ * not taken verbatim: `--resume` accepts any string, so an unvalidated id fails
+ * silently by starting a disconnected chat rather than erroring.
+ *
  * @public
  */
 export async function createCursorAgentSession(
   options: CreateCursorAgentSessionOptions,
 ): Promise<string> {
-  const child = spawn(resolveCursorAgentBin(), ['create-chat'], {
+  // Captured so every failure below can name the binary, the workspace, and how
+  // long the spawn actually took — a mint failure is otherwise undiagnosable
+  // from server logs alone.
+  const bin = resolveCursorAgentBin();
+  const startedAt = Date.now();
+  const child = spawn(bin, ['create-chat'], {
     cwd: options.cwd,
+    // Same process-group treatment as the streaming spawn (see below).
+    detached: true,
     env: buildScrubbedEnv(),
     signal: options.signal,
     stdio: ['ignore', 'pipe', 'pipe'],
@@ -128,48 +226,103 @@ export async function createCursorAgentSession(
   let stdout = '';
   let stderr = '';
 
+  // Bound the mint: a blocked create-chat must never hang the caller (the start
+  // mutation awaits this). On timeout, tear the child down (SIGTERM→SIGKILL).
+  const timeoutMs = resolveSessionCreateTimeoutMs();
+  const { graceMs } = resolveAgentTimeouts();
+  let timedOut = false;
+
+  // Settle on the FIRST of: a parseable id on stdout, process exit, or the
+  // timeout. Waiting for exit is what broke the cold path — see below.
+  let settle: (outcome: {
+    code: number | null;
+    id: string | null;
+  }) => void = () => {};
+
+  let fail: (error: Error) => void = () => {};
+  const settled = new Promise<{ code: number | null; id: string | null }>(
+    (resolve, reject) => {
+      settle = resolve;
+      fail = reject;
+    },
+  );
+
   child.stdout?.on('data', (data: Buffer) => {
     stdout += data.toString('utf8');
+
+    // THE cold-start fix. cursor prints the id in ~2s but the process itself
+    // can linger far past the 30s budget on a cold run — statsig init, MCP
+    // init/OAuth discovery, plugin hooks, plus the `worker-server` grandchild
+    // holding this very pipe open. Waiting for `close` meant timing out and
+    // discarding an id we already had, which is exactly the reported
+    // "first chat of a session fails" symptom (a warm run exits promptly, so
+    // any earlier cursor invocation "fixes" it).
+    //
+    // Safe to stop here: cursor writes `agentId` to its store BEFORE printing,
+    // and `--resume` works even for an id whose store row never existed.
+    const parsed = parseCursorChatId(stdout);
+    if (parsed !== null) {
+      settle({ code: null, id: parsed });
+    }
   });
 
   child.stderr?.on('data', (data: Buffer) => {
     stderr += data.toString('utf8');
   });
 
-  // Bound the mint: a blocked create-chat must never hang the caller (the start
-  // mutation awaits this). On timeout, tear the child down (SIGTERM→SIGKILL).
-  const timeoutMs = resolveSessionCreateTimeoutMs();
-  const { graceMs } = resolveAgentTimeouts();
-  let timedOut = false;
   const timer = setTimeout(() => {
     timedOut = true;
-    terminateChild(child, graceMs);
+    terminateChild(child, graceMs, { processGroup: true });
   }, timeoutMs);
   timer.unref();
 
+  child.on('error', fail);
+  child.on('close', (code) => settle({ code, id: null }));
+
   let code: number | null;
+  let earlyId: string | null;
   try {
-    code = await new Promise<number | null>((resolve, reject) => {
-      child.on('error', reject);
-      child.on('close', resolve);
-    });
+    ({ code, id: earlyId } = await settled);
   } finally {
     clearTimeout(timer);
+    // Whether we settled early or on exit, nothing about this child is wanted
+    // any more — reap it and its `worker-server` grandchild. SIGTERM first, so
+    // cursor still gets to finish its own store `dispose()`.
+    terminateChild(child, graceMs, { processGroup: true });
   }
 
+  if (earlyId !== null) {
+    return earlyId;
+  }
+
+  const failure = (reason: string): Error =>
+    new Error(
+      formatCursorMintFailure({
+        bin,
+        cwd: options.cwd,
+        elapsedMs: Date.now() - startedAt,
+        reason,
+        stderr,
+        stdout,
+      }),
+    );
+
   if (timedOut) {
-    throw new Error(`cursor-agent create-chat timed out after ${timeoutMs}ms.`);
+    throw failure(`timed out after ${timeoutMs}ms`);
   }
 
   if (code !== 0) {
-    throw new Error(
-      `cursor-agent create-chat failed (exit ${code}): ${stderr.trim()}`,
-    );
+    throw failure(`failed (exit ${code})`);
   }
 
-  const sessionId = stdout.trim();
-  if (sessionId === '') {
-    throw new Error('cursor-agent create-chat returned no session id.');
+  // Never trust stdout wholesale. `--resume` accepts any string, so a banner
+  // byte that slipped onto stdout would silently start a fresh, disconnected
+  // chat instead of failing — the conversation would lose every prior turn
+  // while all surfaces still reported success. Rejecting here is the only
+  // place that failure is visible.
+  const sessionId = parseCursorChatId(stdout);
+  if (sessionId === null) {
+    throw failure('returned no recognizable session id');
   }
 
   return sessionId;
@@ -199,6 +352,10 @@ async function* streamCursorAgent(
     }),
     {
       cwd: run.cwd,
+      // Own process group, so teardown can reap the `worker-server` grandchild
+      // cursor spawns — it inherits this stdout pipe and otherwise outlives the
+      // run, both leaking a process and holding the pipe open against EOF.
+      detached: true,
       env: buildScrubbedEnv(),
       stdio: ['ignore', 'pipe', 'pipe'],
     },
@@ -210,7 +367,7 @@ async function* streamCursorAgent(
     if (terminationReason === null) {
       terminationReason = reason;
     }
-    terminateChild(child, timeouts.graceMs);
+    terminateChild(child, timeouts.graceMs, { processGroup: true });
   };
 
   let idleTimer: NodeJS.Timeout | null = null;
@@ -300,7 +457,7 @@ async function* streamCursorAgent(
     }
     clearTimeout(wallTimer);
     run.signal?.removeEventListener('abort', onAbort);
-    terminateChild(child, timeouts.graceMs);
+    terminateChild(child, timeouts.graceMs, { processGroup: true });
   }
 }
 
