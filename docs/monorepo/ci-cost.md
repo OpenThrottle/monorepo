@@ -208,6 +208,33 @@ count.
   what happens when two heavy jsdom suites land on the same one. The evidence needed can only be
   gathered on CI; see the comment above that step in `continuous-integration.yml`.
 
+## Vitest time budget
+
+Vitest defaults to a 5000ms `testTimeout`, and until 2026-08 **no project in the
+workspace overrode it**. Every suite therefore ran with zero headroom. That was
+survivable until 3-way sharding raised per-box CPU contention, at which point
+three I/O-heavy suites began tipping over intermittently — `tools/generators`'
+react generator suites, `react-router-editor`'s `Editor.ssr.test.tsx` (measured
+at 6318ms on CI against the 5000ms budget), and `openthrottle-ide`'s
+`watch.test.ts`. Sharding did not make them slow; it removed the slack that had
+been hiding how close they already were.
+
+The budget is now **15000ms** for both `testTimeout` and `hookTimeout`, set in
+`createBaseVitestConfig` (`@tools/dotfiles`, exported as
+`VITEST_TEST_TIMEOUT_MS` / `VITEST_HOOK_TIMEOUT_MS`) and mirrored literally in
+the handful of configs that do not go through that helper — the four React
+Router apps, `openthrottle-server`, three `tools/*` packages, the root
+`scripts/` config, and both generator templates so new projects inherit it.
+
+Chosen from measurement rather than taste: ~2x the worst observed overrun, which
+still fails a genuine hang in 15s rather than letting it consume the box.
+Verified both ways — the three offenders pass, and a deliberately hung test
+fails at 15004ms. The per-shard `timeout-minutes` job ceiling stays as the
+backstop.
+
+Blanket `retry: 1` was considered and rejected: it turns a real timing
+regression into a silent 2x cost and a green check.
+
 ## See also
 
 - [NX.md](./NX.md) — caching model, why there is no remote cache backend

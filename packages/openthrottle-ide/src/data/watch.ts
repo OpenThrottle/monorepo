@@ -44,6 +44,13 @@ export interface WatchHandlers {
 export interface WatchHandle {
   /** Stop watching and fully release the underlying watcher's resources. */
   close: () => Promise<void>;
+  /**
+   * Resolves once the watcher has finished its initial scan and is live.
+   * Until then, writes may land before the watcher is listening and go
+   * unreported, so callers that need to observe a specific change should await
+   * this first rather than guessing with a sleep.
+   */
+  ready: Promise<void>;
 }
 
 /** Default debounce window applied when {@link WatchHandlers.debounceMs} is omitted. */
@@ -99,6 +106,10 @@ export function watchWorkspace(
     ignored: (candidate, stats) => isIgnored(candidate, stats),
   });
 
+  const ready = new Promise<void>((resolveReady) => {
+    watcher.once('ready', () => resolveReady());
+  });
+
   watcher.on('add', (path) => enqueue('add', path));
   watcher.on('change', (path) => enqueue('change', path));
   watcher.on('unlink', (path) => enqueue('unlink', path));
@@ -116,6 +127,7 @@ export function watchWorkspace(
       pending.clear();
       await watcher.close();
     },
+    ready,
   };
 }
 
@@ -253,6 +265,11 @@ export async function createWorkspaceIndex(
       queue = queue.then(() => applyBatch(events));
     },
   });
+
+  // Resolve only once the watcher is actually listening: a caller that awaits
+  // this function then immediately writes a file should see that write, not
+  // race the initial scan.
+  await watcher.ready;
 
   return {
     close: async (): Promise<void> => {

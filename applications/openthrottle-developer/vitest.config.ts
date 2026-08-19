@@ -31,6 +31,10 @@ export default (config: ConfigEnv) => {
       },
       environment: 'jsdom',
       globals: true,
+      // Mirrors VITEST_TEST_TIMEOUT_MS / VITEST_HOOK_TIMEOUT_MS in
+      // @tools/dotfiles, which this config does not go through. Vitest's 5000ms
+      // default left I/O-heavy suites tipping over under CI shard contention.
+      hookTimeout: 15_000,
       include: ['**/*.test.(ts|tsx)'],
       /**
        * @description `maxWorkers` caps concurrent worker processes. CI runs the
@@ -70,6 +74,7 @@ export default (config: ConfigEnv) => {
       pool: 'vmForks',
       reporters: ['default'],
       setupFiles: ['./tests/setup.ts'],
+      testTimeout: 15_000,
       /**
        * @description Recycle a reused vmForks worker once its heap crosses this
        * limit, bounding the V8 VM-context accumulation that OOM-crashed the suite
