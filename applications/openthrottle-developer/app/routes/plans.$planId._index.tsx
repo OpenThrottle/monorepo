@@ -7,6 +7,8 @@ import {
 } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { PlanDetailIndexLoaderDocument } from '~/__generated__/graphql';
+import type { PlanDetailActionData } from '~/routing/plans/actions/planId';
+import type { PlanDetailRouteData } from '~/routing/plans/hooks/usePlanDetailRouteData';
 import {
   addHook,
   addPlanTag,
@@ -42,7 +44,9 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   links: (_match) => [{ children: 'Plans', to: '/plans' }],
 };
 
-export const loader = async (args: Route.LoaderArgs) => {
+export const loader = async (
+  args: Route.LoaderArgs,
+): Promise<PlanDetailRouteData> => {
   const { planId } = args.params;
 
   if (!planId) {
@@ -134,7 +138,9 @@ export default function Component(
   );
 }
 
-export const action = async (args: Route.ActionArgs) => {
+export const action = async (
+  args: Route.ActionArgs,
+): Promise<PlanDetailActionData> => {
   const planId = args.params.planId;
 
   if (!planId) {

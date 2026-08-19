@@ -14,7 +14,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import { StopCircle } from 'lucide-react';
 import { useFetcher, useRevalidator } from 'react-router';
-import { action as planDetailAction } from '~/routes/plans.$planId._index';
+import type { PlanDetailActionData } from '~/routing/plans/actions/planId';
 import {
   cancelPlanRunToastTone,
   describeCancelPlanRunResult,
@@ -38,7 +38,7 @@ export const KillPlanRunButton = (
 
   // Hooks
   const cancelBusyRef = React.useRef(false);
-  const fetcher = useFetcher<typeof planDetailAction>();
+  const fetcher = useFetcher<PlanDetailActionData>();
   const revalidator = useRevalidator();
   const [open, setOpen] = React.useState(false);
 

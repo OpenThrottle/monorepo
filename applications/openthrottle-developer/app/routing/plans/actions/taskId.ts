@@ -18,6 +18,7 @@ import {
   messageOrFallback,
   toErrorMessage,
 } from '~/global/utils/utils.error-message';
+import { detachHook } from '~/routing/plans/actions/planId';
 import type { Route } from '@/app/routes/+types/plans.$planId.tasks.$taskId._index';
 
 export const promoteTask = async (args: Route.ActionArgs, taskId: string) => {
@@ -152,3 +153,16 @@ export const addTaskHook = async (
     return { addHookError: message };
   }
 };
+
+/**
+ * @description The `plans.$planId.tasks.$taskId._index` route action's response contract.
+ * See {@link PlanDetailActionData} in `./planId` for why this lives in the domain.
+ */
+export type PlanTaskDetailActionData =
+  | Awaited<ReturnType<typeof addTaskHook>>
+  | Awaited<ReturnType<typeof detachHook>>
+  | Awaited<ReturnType<typeof promoteTask>>
+  | Awaited<ReturnType<typeof setTaskStatus>>
+  | Awaited<ReturnType<typeof updateTaskTag>>
+  | { taskTagError: string }
+  | Record<string, never>;

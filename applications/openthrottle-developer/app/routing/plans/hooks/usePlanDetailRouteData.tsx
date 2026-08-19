@@ -5,11 +5,14 @@
  * the route shell). Mirrors the useRouteLoaderData<typeof loader> pattern at
  * app/root.tsx:239.
  *
- * The loader is imported type-only, so the route→hook→route reference is erased
- * at build time and introduces no runtime import cycle.
+ * The shape is derived from the generated GraphQL query rather than from the route
+ * module's `loader`, so domain code never imports from `~/routes/*` — that direction
+ * becomes a library→application cycle if `app/routing` is extracted (OT plan 88f747ff
+ * task 8ab97f22). The route module annotates its loader with {@link PlanDetailRouteData},
+ * so the contract and the loader cannot drift.
  */
 import { useRouteLoaderData } from 'react-router';
-import type { loader } from '~/routes/plans.$planId._index';
+import type { PlanDetailIndexLoaderQuery } from '~/__generated__/graphql';
 
 /**
  * Auto-generated React Router v7 (`@react-router/fs-routes` flatRoutes) id for
@@ -18,9 +21,19 @@ import type { loader } from '~/routes/plans.$planId._index';
  */
 export const PLAN_DETAIL_ROUTE_ID = 'routes/plans.$planId._index' as const;
 
-export type PlanDetailRouteData = NonNullable<
-  ReturnType<typeof useRouteLoaderData<typeof loader>>
->;
+export interface PlanDetailRouteData {
+  readonly linkedArtifacts: NonNullable<
+    PlanDetailIndexLoaderQuery['workArtifactsByPlan']['artifacts']
+  >;
+  readonly plan: NonNullable<PlanDetailIndexLoaderQuery['plan']> | null;
+  readonly planOutputChunks: PlanDetailIndexLoaderQuery['planOutputStreamChunks'];
+  readonly planRunAuditRows: PlanDetailIndexLoaderQuery['planRunsByPlanId'];
+  readonly recentPlanRuns: PlanDetailIndexLoaderQuery['metrics']['recentPlanRunsMetrics'];
+  readonly ruleApplications: PlanDetailIndexLoaderQuery['ruleApplications'];
+  readonly tagVocabulary: PlanDetailIndexLoaderQuery['skillTagVocabulary']['tags'];
+  readonly tasks: PlanDetailIndexLoaderQuery['tasksByPlanId'];
+  readonly workspaceRepositories: PlanDetailIndexLoaderQuery['workspaceRepositories'];
+}
 
 /**
  * Returns the plan detail route's loader data. Throws if called outside the
@@ -28,7 +41,7 @@ export type PlanDetailRouteData = NonNullable<
  * return type non-nullable for the PlanTab* consumers.
  */
 export function usePlanDetailRouteData(): PlanDetailRouteData {
-  const data = useRouteLoaderData<typeof loader>(PLAN_DETAIL_ROUTE_ID);
+  const data = useRouteLoaderData<PlanDetailRouteData>(PLAN_DETAIL_ROUTE_ID);
 
   if (data == null) {
     throw new Error(

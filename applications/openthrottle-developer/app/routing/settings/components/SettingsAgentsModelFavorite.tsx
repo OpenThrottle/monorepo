@@ -9,7 +9,7 @@ import {
   cn,
 } from '@openthrottle/react-router-shadcn';
 import { SETTINGS_AGENTS_COPY } from '~/routing/settings/data/data.copy';
-import type { action as agentModelFavoriteAction } from '~/routes/resources.agent-model-favorite';
+import type { AgentModelFavoriteActionResult } from '~/routing/settings/data/agent-action-results';
 
 /** Resource-route action path backing the per-model favorite toggle. */
 const AGENT_MODEL_FAVORITE_ACTION = '/resources/agent-model-favorite';
@@ -31,7 +31,7 @@ export const SettingsAgentsModelFavorite = (
   const { backend, canManage, favorite, model } = props;
 
   // Hooks
-  const fetcher = useFetcher<typeof agentModelFavoriteAction>();
+  const fetcher = useFetcher<AgentModelFavoriteActionResult>();
   const revalidator = useRevalidator();
 
   // Setup

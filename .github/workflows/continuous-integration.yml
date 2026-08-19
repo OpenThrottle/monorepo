@@ -223,7 +223,8 @@ jobs:
     #   INSIDE the affected step. A 3-way split projects that worst case to
     #   ~10.6 min; 2 boxes would only reach ~15 min, and a 4th would start paying
     #   setup for shards below the ~5.6 min floor set by the single heaviest
-    #   project (whose suite sharding cannot split — see the vmForks note below).
+    #   project (which PROJECT sharding cannot split — see the vmForks note below;
+    #   Vitest's own `--shard` can, and would lower that floor: OT plan 9fc16731).
     #
     #   A target-split (`target: [lint, typecheck, test]`) was measured and
     #   REJECTED: it is the right answer only when shards are setup-bound, and it

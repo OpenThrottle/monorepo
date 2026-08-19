@@ -1,20 +1,9 @@
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { GetWorkspaceSettingsDocument } from '~/__generated__/graphql';
 import { MAX_FILE_MENTION_RESULTS } from '~/routing/ide/config/file-mention';
+import type { IdeFilesResponse } from '~/routing/ide/data/ide-files-response';
 import { resolveSelectedRepository } from '~/routing/ide/utils/repositories';
 import type { Route } from '@/app/routes/+types/ide.files';
-
-/** JSON shape returned to the composer's `@`-mention file provider. */
-export interface IdeFilesResponse {
-  /** Workspace-relative POSIX paths (filtered + capped when `q` is present). */
-  readonly paths: readonly string[];
-  /** The `q` echoed back (empty for an unfiltered listing). */
-  readonly query: string;
-  /** The resolved repository id (server-validated, not the raw client value). */
-  readonly repositoryId: string;
-  /** True when matches were dropped by {@link MAX_FILE_MENTION_RESULTS}. */
-  readonly truncated: boolean;
-}
 
 /**
  * Resource route (loader-only) backing the chat composer's `@`-mention file

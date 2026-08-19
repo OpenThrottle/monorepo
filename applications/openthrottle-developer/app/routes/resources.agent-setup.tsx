@@ -4,15 +4,9 @@ import {
   UpdateAgentCliDocument,
 } from '~/__generated__/graphql';
 import type { Route } from '@/app/routes/+types/resources.agent-setup';
+import type { AgentSetupActionResult } from '~/routing/settings/data/agent-action-results';
 
 /** JSON shape returned by the install/update intents (mirrors StartAgentSetupResult). */
-export interface AgentSetupActionResult {
-  readonly backend: string;
-  readonly disabled: boolean;
-  readonly errorMessage: string | null;
-  readonly mode: string;
-  readonly runId: string | null;
-}
 
 /**
  * Resource route action backing the /settings/agents install/update controls —

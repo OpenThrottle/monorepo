@@ -4,8 +4,8 @@ import { useFetcher } from 'react-router';
 import { buildPlansTableColumns } from '../plans-table-columns';
 import type { PlanCardFragment } from '~/__generated__/graphql';
 import { renderRoutesStub } from '~/testing/route-fixtures';
-import type { action as planDetailAction } from '~/routes/plans.$planId._index';
 import type { CellContext, HeaderContext } from '@tanstack/react-table';
+import type { PlanDetailActionData } from '~/routing/plans/actions/planId';
 
 function asMock<T>(value: unknown): T;
 function asMock(value: unknown): unknown {
@@ -69,7 +69,7 @@ interface HarnessProps {
 }
 
 function Harness(props: HarnessProps): React.ReactElement {
-  const fetcher = useFetcher<typeof planDetailAction>();
+  const fetcher = useFetcher<PlanDetailActionData>();
   const columns = buildPlansTableColumns({}, fetcher);
   const context = cellContext(props.plan);
 

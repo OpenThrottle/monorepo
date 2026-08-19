@@ -1,6 +1,6 @@
 import { isRecord } from '@openthrottle/nodejs-utils';
 
-import type { ChatOptionsResponse } from '~/routes/resources.chat-options';
+import type { ChatOptionsResponse } from '@openthrottle/react-router-chat-state';
 
 /**
  * @description Client-side freshness cache for the header chat's discovery

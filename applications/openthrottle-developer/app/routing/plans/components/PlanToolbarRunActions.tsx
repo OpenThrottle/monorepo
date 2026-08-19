@@ -9,17 +9,19 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import { Gauge, PlayCircle } from 'lucide-react';
 import { useFetcher } from 'react-router';
-import { action } from '~/routes/plans.$planId._index';
 import { KillPlanRunButton } from '~/routing/plans/components/KillPlanRunButton';
 import { PLAN_TOOLBAR_COPY } from '~/routing/plans/data/data.copy';
 import { getPlanToolbarRunButtonLabel } from '~/routing/plans/utils/plan-toolbar-run-label';
 import { getPlanIsCancelable } from '~/routing/plans/utils/utils.plans';
+import type { PlanDetailActionData } from '~/routing/plans/actions/planId';
 
 export interface PlanToolbarRunActionsProps {
   readonly branch?: string;
   readonly checkoutId?: string;
-  readonly fetcherEvaluateRules: ReturnType<typeof useFetcher<typeof action>>;
-  readonly fetcherRunPlan: ReturnType<typeof useFetcher<typeof action>>;
+  readonly fetcherEvaluateRules: ReturnType<
+    typeof useFetcher<PlanDetailActionData>
+  >;
+  readonly fetcherRunPlan: ReturnType<typeof useFetcher<PlanDetailActionData>>;
   readonly isRunning: boolean;
   readonly isTerminal: boolean;
   readonly jobRunHooksJson: string;

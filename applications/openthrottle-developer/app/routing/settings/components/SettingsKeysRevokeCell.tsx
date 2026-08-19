@@ -18,7 +18,7 @@ import {
   isActionSuccess,
 } from '@openthrottle/react-router-utils';
 import type { ServiceAccountCredentialFieldsFragment } from '~/__generated__/graphql';
-import { action as settingsKeysAction } from '~/routes/settings.keys';
+import type { SettingsKeysActionData } from '~/routing/settings/utils/settings-keys-action';
 import {
   credentialDisplayName,
   getSettingsKeysCredentialStatus,
@@ -36,7 +36,7 @@ export const SettingsKeysRevokeCell = (
 
   // Hooks
   const revokeBusyRef = React.useRef(false);
-  const fetcher = useFetcher<typeof settingsKeysAction>();
+  const fetcher = useFetcher<SettingsKeysActionData>();
   const revalidator = useRevalidator();
   const [open, setOpen] = React.useState(false);
 

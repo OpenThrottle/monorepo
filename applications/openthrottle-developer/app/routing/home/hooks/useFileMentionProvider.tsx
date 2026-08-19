@@ -1,6 +1,6 @@
 import * as React from 'react';
 import type { ChatMentionProvider } from '@openthrottle/react-router-chat';
-import type { IdeFilesResponse } from '~/routes/ide.files';
+import type { IdeFilesResponse } from '~/routing/ide/data/ide-files-response';
 
 /** Cap on suggestions surfaced in the composer's `@`-mention popover. */
 export const MAX_MENTION_SUGGESTIONS = 50;

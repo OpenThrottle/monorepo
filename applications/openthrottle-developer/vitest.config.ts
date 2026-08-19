@@ -61,8 +61,10 @@ export default (config: ConfigEnv) => {
        * sharding this suite across boxes, and it stays the right one even now that CI
        * DOES shard (3 free ubuntu-latest boxes, OT plan b19377d1): project sharding
        * splits the affected PROJECT list, and this suite is a single Nx project, so
-       * whichever box draws it runs all of it. The matrix cannot lower this suite's
-       * wall-clock — a faster pool can. See docs/reliability/developer-vitest-pool.md.
+       * whichever box draws it runs all of it. The PROJECT matrix cannot lower this
+       * suite's wall-clock — a faster pool can, and so can Vitest's own `--shard`,
+       * which splits WITHIN a project (measured 154.1s -> 60.9s across 3 shards; OT
+       * plan 9fc16731). This pool tuning is orthogonal and stays either way. See docs/reliability/developer-vitest-pool.md.
        *
        * If the `(0 test)` OOM ever reappears, LOWER `vmMemoryLimit` (more frequent
        * recycles) before touching `maxWorkers` or the box size.

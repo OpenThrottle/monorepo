@@ -17,8 +17,8 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import { ArrowUpCircle } from 'lucide-react';
 import { useFetcher, useRevalidator } from 'react-router';
-import { action as taskDetailAction } from '~/routes/plans.$planId.tasks.$taskId._index';
 import { PLAN_TASK_TOOLBAR_COPY } from '~/routing/plans/data/data.copy';
+import type { PlanTaskDetailActionData } from '~/routing/plans/actions/taskId';
 
 export interface PromoteTaskButtonProps {
   /** True when the task has already been promoted (SKIPPED + `promoted` tag). */
@@ -58,7 +58,7 @@ export const PromoteTaskButton = (
 
   // Hooks
   const busyRef = React.useRef(false);
-  const fetcher = useFetcher<typeof taskDetailAction>();
+  const fetcher = useFetcher<PlanTaskDetailActionData>();
   const revalidator = useRevalidator();
   const [open, setOpen] = React.useState(false);
 

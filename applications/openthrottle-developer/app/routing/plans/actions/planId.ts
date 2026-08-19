@@ -481,3 +481,27 @@ export const runPlan = async (
     return { runPlanError: message };
   }
 };
+
+/**
+ * @description The `plans.$planId._index` route action's response contract — the union of
+ * every intent handler above, plus the missing-plan-id guard the route itself returns.
+ *
+ * Declared here rather than inferred from the route module via `typeof action` so domain
+ * components never import from `~/routes/*`; that direction becomes a library→application
+ * cycle if `app/routing` is extracted (OT plan 88f747ff task 8ab97f22). The route module
+ * annotates its `action` with this type, so the union cannot silently drift from the
+ * handlers — adding an intent without extending this union is a compile error there.
+ */
+export type PlanDetailActionData =
+  | Awaited<ReturnType<typeof addHook>>
+  | Awaited<ReturnType<typeof addPlanTag>>
+  | Awaited<ReturnType<typeof cancelPlanRun>>
+  | Awaited<ReturnType<typeof detachHook>>
+  | Awaited<ReturnType<typeof evaluatePlanRules>>
+  | Awaited<ReturnType<typeof removePlanTag>>
+  | Awaited<ReturnType<typeof runPlan>>
+  | Awaited<ReturnType<typeof saveJobRunHooks>>
+  | Awaited<ReturnType<typeof saveRunConfig>>
+  | Awaited<ReturnType<typeof setPlanStatus>>
+  | Awaited<ReturnType<typeof updateTaskStatus>>
+  | { runPlanError: string };

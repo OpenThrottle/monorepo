@@ -61,6 +61,13 @@ at `maxWorkers: 4`, so the pool config, not the box count, is the only lever
 here. A Vitest `--shard` matrix or an Nx atomized `test` target remains the next
 lever if this suite's own wall-clock ever becomes the binding constraint.
 
+**That condition has now been measured as met** (OT plan `88f747ff`, baseline task
+`41133fc7`). On the heaviest unit, `test` is 88.4% of wall-clock (154.1s) against
+9.6s `lint` + 10.6s `typecheck`. A 3-way Vitest `--shard` runs green today with no
+code movement and takes the heaviest slice to **60.9s** (227/226/226 files) — a 60%
+cut. The same measurement rejected splitting the app into libraries for CI speed:
+that buys ~23% for 1,255 moved files. Successor plan: `9fc16731`.
+
 ## Benchmark (full 364-file suite, `--skip-nx-cache`, `CI=true`)
 
 Local 10-core / 64GB box, `maxWorkers: 4`. The CI OOM cannot reproduce locally

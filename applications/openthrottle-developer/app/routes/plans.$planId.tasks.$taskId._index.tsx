@@ -16,6 +16,7 @@ import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import { PlanTaskNotFound } from '~/routing/plans/components/PlanTaskNotFound';
 import { redirect } from 'react-router';
 import { detachHook } from '~/routing/plans/actions/planId';
+import type { PlanTaskDetailActionData } from '~/routing/plans/actions/taskId';
 import {
   addTaskHook,
   promoteTask,
@@ -143,7 +144,9 @@ export default function Component(
   );
 }
 
-export const action = async (args: Route.ActionArgs) => {
+export const action = async (
+  args: Route.ActionArgs,
+): Promise<PlanTaskDetailActionData> => {
   const taskId = args.params.taskId;
   if (taskId == null || taskId === '') {
     return { taskTagError: 'Missing task id.' };

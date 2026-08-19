@@ -15,7 +15,6 @@ import {
 import { formatDate } from 'date-fns';
 import { PlayCircleIcon, SlidersHorizontal } from 'lucide-react';
 import { Link, useFetcher } from 'react-router';
-import { action as planDetailAction } from '~/routes/plans.$planId._index';
 import { KillPlanRunButton } from '~/routing/plans/components/KillPlanRunButton';
 import {
   isPlanStatusKey,
@@ -27,10 +26,11 @@ import type { PlanStatusKey } from '~/routing/plans/types';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { PlanCardFragment } from '~/__generated__/graphql';
 import type { PlansTableProps } from '~/routing/plans/components/PlansTable';
+import type { PlanDetailActionData } from '~/routing/plans/actions/planId';
 
 export const buildPlansTableColumns = (
   _statusFilterUrls: PlansTableProps['statusFilterUrls'],
-  runPlanFetcher: ReturnType<typeof useFetcher<typeof planDetailAction>>,
+  runPlanFetcher: ReturnType<typeof useFetcher<PlanDetailActionData>>,
 ): ColumnDef<PlanCardFragment, string | number | null | undefined>[] => {
   return [
     {

@@ -4,9 +4,9 @@ import type { RenderResult } from '@testing-library/react';
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { useFetcher, createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import type { action } from '~/routes/plans.$planId._index';
 import { PlanToolbarRunActions } from '../PlanToolbarRunActions';
 import type { PlanToolbarRunActionsProps } from '../PlanToolbarRunActions';
+import type { PlanDetailActionData } from '~/routing/plans/actions/planId';
 
 type BaseProps = Omit<
   PlanToolbarRunActionsProps,
@@ -15,8 +15,8 @@ type BaseProps = Omit<
 
 const renderRunActions = (baseProps: BaseProps): RenderResult => {
   const Component = () => {
-    const fetcherRunPlan = useFetcher<typeof action>();
-    const fetcherEvaluateRules = useFetcher<typeof action>();
+    const fetcherRunPlan = useFetcher<PlanDetailActionData>();
+    const fetcherEvaluateRules = useFetcher<PlanDetailActionData>();
 
     return (
       <TooltipProvider>

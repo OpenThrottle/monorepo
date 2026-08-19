@@ -7,7 +7,7 @@ import {
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
 import { SETTINGS_AGENTS_COPY } from '~/routing/settings/data/data.copy';
-import type { action as agentModelEnabledAction } from '~/routes/resources.agent-model-enabled';
+import type { AgentModelEnabledActionResult } from '~/routing/settings/data/agent-action-results';
 
 /** Resource-route action path backing the per-model enable/disable toggle. */
 const AGENT_MODEL_ENABLED_ACTION = '/resources/agent-model-enabled';
@@ -34,7 +34,7 @@ export const SettingsAgentsModelToggle = (
   const { agentDisabled, backend, canManage, enabled, model } = props;
 
   // Hooks
-  const fetcher = useFetcher<typeof agentModelEnabledAction>();
+  const fetcher = useFetcher<AgentModelEnabledActionResult>();
   const revalidator = useRevalidator();
 
   // Setup

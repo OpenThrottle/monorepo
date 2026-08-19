@@ -7,12 +7,12 @@ import { createRoutesStub, useFetcher } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { PlanToolbarStatusAction } from '../PlanToolbarStatusAction';
 import type { PlanToolbarStatusActionProps } from '../PlanToolbarStatusAction';
-import type { action } from '~/routes/plans.$planId._index';
+import type { PlanDetailActionData } from '~/routing/plans/actions/planId';
 
 type OwnProps = Omit<PlanToolbarStatusActionProps, 'fetcherSetPlanStatus'>;
 
 const Harness = (props: OwnProps): React.ReactElement => {
-  const fetcherSetPlanStatus = useFetcher<typeof action>();
+  const fetcherSetPlanStatus = useFetcher<PlanDetailActionData>();
   return (
     <TooltipProvider>
       <PlanToolbarStatusAction

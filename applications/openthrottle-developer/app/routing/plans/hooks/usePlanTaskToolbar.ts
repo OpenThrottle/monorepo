@@ -6,7 +6,7 @@
  */
 import { useFetcher } from 'react-router';
 import { useActionToast } from '~/global/hooks/useActionToast';
-import { action } from '~/routes/plans.$planId.tasks.$taskId._index';
+import type { PlanTaskDetailActionData } from '~/routing/plans/actions/taskId';
 
 export interface UsePlanTaskToolbarOptions {
   /**
@@ -16,7 +16,9 @@ export interface UsePlanTaskToolbarOptions {
 }
 
 export interface UsePlanTaskToolbarResult {
-  readonly fetcherSetStatus: ReturnType<typeof useFetcher<typeof action>>;
+  readonly fetcherSetStatus: ReturnType<
+    typeof useFetcher<PlanTaskDetailActionData>
+  >;
   readonly isCompleted: boolean;
 }
 
@@ -26,7 +28,7 @@ export const usePlanTaskToolbar = (
   const { taskStatus } = options;
 
   // Hooks
-  const fetcherSetStatus = useFetcher<typeof action>();
+  const fetcherSetStatus = useFetcher<PlanTaskDetailActionData>();
 
   // Setup
   const isCompleted = taskStatus === 'COMPLETED';

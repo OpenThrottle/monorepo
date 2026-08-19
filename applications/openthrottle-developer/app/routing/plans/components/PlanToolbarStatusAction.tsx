@@ -8,11 +8,13 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import { CheckCircle } from 'lucide-react';
 import { useFetcher } from 'react-router';
-import { action } from '~/routes/plans.$planId._index';
 import { PLAN_TOOLBAR_COPY } from '~/routing/plans/data/data.copy';
+import type { PlanDetailActionData } from '~/routing/plans/actions/planId';
 
 export interface PlanToolbarStatusActionProps {
-  readonly fetcherSetPlanStatus: ReturnType<typeof useFetcher<typeof action>>;
+  readonly fetcherSetPlanStatus: ReturnType<
+    typeof useFetcher<PlanDetailActionData>
+  >;
   readonly isCompleted: boolean;
   readonly isRunning: boolean;
   readonly planId: string;

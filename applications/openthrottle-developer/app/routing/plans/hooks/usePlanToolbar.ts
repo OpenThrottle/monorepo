@@ -8,7 +8,6 @@ import * as React from 'react';
 import { toast } from '@openthrottle/react-router-shadcn';
 import { useFetcher } from 'react-router';
 import { useActionToast } from '~/global/hooks/useActionToast';
-import { action } from '~/routes/plans.$planId._index';
 import {
   PLAN_RUN_BULLMQ_QUEUE_NAME,
   planRunJobDetailPath,
@@ -18,6 +17,7 @@ import {
   getPlanIsTerminal,
 } from '~/routing/plans/utils/utils.plans';
 import { addRecentWorkspacePath } from '~/routing/plans/utils/workspace-path';
+import type { PlanDetailActionData } from '~/routing/plans/actions/planId';
 
 export interface UsePlanToolbarOptions {
   readonly planStatus?: string;
@@ -29,9 +29,13 @@ export interface UsePlanToolbarOptions {
 }
 
 export interface UsePlanToolbarResult {
-  readonly fetcherEvaluateRules: ReturnType<typeof useFetcher<typeof action>>;
-  readonly fetcherRunPlan: ReturnType<typeof useFetcher<typeof action>>;
-  readonly fetcherSetPlanStatus: ReturnType<typeof useFetcher<typeof action>>;
+  readonly fetcherEvaluateRules: ReturnType<
+    typeof useFetcher<PlanDetailActionData>
+  >;
+  readonly fetcherRunPlan: ReturnType<typeof useFetcher<PlanDetailActionData>>;
+  readonly fetcherSetPlanStatus: ReturnType<
+    typeof useFetcher<PlanDetailActionData>
+  >;
   readonly isCompleted: boolean;
   readonly isRunning: boolean;
   readonly isTerminal: boolean;
@@ -43,9 +47,9 @@ export const usePlanToolbar = (
   const { planStatus, workingDirectory } = options;
 
   // Hooks
-  const fetcherEvaluateRules = useFetcher<typeof action>();
-  const fetcherRunPlan = useFetcher<typeof action>();
-  const fetcherSetPlanStatus = useFetcher<typeof action>();
+  const fetcherEvaluateRules = useFetcher<PlanDetailActionData>();
+  const fetcherRunPlan = useFetcher<PlanDetailActionData>();
+  const fetcherSetPlanStatus = useFetcher<PlanDetailActionData>();
   const runPlanWasBusy = React.useRef(false);
 
   // Setup

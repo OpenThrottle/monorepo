@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useFetcher, useRevalidator } from 'react-router';
 import { Button } from '@openthrottle/react-router-shadcn';
 import { SETTINGS_AGENTS_COPY } from '~/routing/settings/data/data.copy';
-import type { action as agentModelsEnabledAction } from '~/routes/resources.agent-models-enabled';
+import type { AgentModelsEnabledActionResult } from '~/routing/settings/data/agent-action-results';
 
 /** Resource-route action path backing the per-agent select-all / deselect-all controls. */
 const AGENT_MODELS_ENABLED_ACTION = '/resources/agent-models-enabled';
@@ -26,7 +26,7 @@ export const SettingsAgentsModelBulkToggle = (
   const { agentDisabled, backend, canManage, enabledCount, models } = props;
 
   // Hooks
-  const fetcher = useFetcher<typeof agentModelsEnabledAction>();
+  const fetcher = useFetcher<AgentModelsEnabledActionResult>();
   const revalidator = useRevalidator();
 
   // Setup

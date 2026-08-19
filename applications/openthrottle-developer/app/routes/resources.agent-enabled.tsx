@@ -1,13 +1,9 @@
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { SetAgentEnabledDocument } from '~/__generated__/graphql';
 import type { Route } from '@/app/routes/+types/resources.agent-enabled';
+import type { AgentEnabledActionResult } from '~/routing/settings/data/agent-action-results';
 
 /** JSON shape returned by the toggle (mirrors SetAgentEnabledResult + a client error slot). */
-export interface AgentEnabledActionResult {
-  readonly backend: string;
-  readonly enabled: boolean;
-  readonly errorMessage: string | null;
-}
 
 /**
  * Resource route action backing the /settings/agents per-agent enable/disable toggle —
