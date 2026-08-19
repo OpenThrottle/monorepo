@@ -154,8 +154,10 @@ Why **3** and not 2, and not a target-split:
 
 - Projected worst case: 2 boxes → ~15 min; 3 boxes → ~10.6 min. Typical at 3 → ~7.6 min.
 - A 4th box would start paying ~1.6 min of setup for shards below the ~5.6 min floor set by the
-  single heaviest project — whose Vitest suite is one Nx project and cannot be split by project
-  sharding at all (that lever is the `vmForks` config in plan `e448a51d`).
+  single heaviest project — whose Vitest suite is one Nx project and cannot be split by **project**
+  sharding at all (that lever was the `vmForks` config in plan `e448a51d`). **That floor has since
+  moved — see "Suite sharding" below — but the conclusion is unchanged and needs re-measuring, not
+  re-deriving, before anyone adds a 4th box.**
 - A target-split (`target: [lint, typecheck, test]`) is the right answer only when shards are
   **setup-bound**; at 6–9% overhead they are not, and it would leave the ~11-minute `test` graph —
   the segment that is actually growing — whole on one box.
@@ -172,6 +174,49 @@ Two things sharding required, both easy to get wrong:
 - **The Nx cache key needs a per-shard discriminator.** `actions/cache` drops all but the first
   save of an identical key, so three legs of one commit would discard two shards' task hashes
   entirely. `node-setup` takes an optional `cache-suffix` (see its header).
+
+### Suite sharding: splitting one project across all three boxes
+
+The bullet above priced the 4th box against a ~5.6 min floor set by the heaviest single project.
+That framing was right about **project** sharding — dealing whole projects to boxes, which is all
+`parallelize-tasks.ts` used to do — and wrong to treat it as the only kind. Vitest's own `--shard`
+splits a suite **within** a project, and `openthrottle-developer`'s suite was 88% of the heaviest
+box's wall-clock, so that is where the remaining money was. Live since OT plan `9fc16731`.
+
+Measured through Nx with `--skip-nx-cache`, `CI=true`:
+
+| target on the heaviest box           | before             | after                 | change   |
+| ------------------------------------ | ------------------ | --------------------- | -------- |
+| `openthrottle-developer` `lint`      | 9.6s               | 9.6s                  | —        |
+| `openthrottle-developer` `typecheck` | 10.6s              | 10.6s                 | —        |
+| `openthrottle-developer` `test`      | 136.9s (679 files) | **45.9s** (227 files) | **−66%** |
+
+The other two boxes take 226 files each (43.8s / 43.6s); 227 + 226 + 226 = 679, which is the check
+that matters — a silently-ignored `--shard` would run the whole suite on all three boxes and still
+report green. Shard 1's files-collected count is the number to read in the log, never the colour.
+
+How it is wired, and the two traps:
+
+- The partitioner emits **two** selectors. `selector` still deals every affected project to exactly
+  one box and drives `lint`/`typecheck`; `testSelector` is the same chunk with suite-sharded
+  projects removed. So the heavy app is still linted and typechecked by exactly one box, and its
+  `test` is run by all three under a different `--shard`. Both selectors round-trip through Nx
+  before anything runs.
+- **`--shard` must stay on its own `nx run-many` invocation.** Attaching it to the general
+  `nx affected --target=test` line would shard every other project's suite too — running a third of
+  each and reporting green, which is the silent-pass failure this whole partition exists to prevent.
+- **The Nx cache does distinguish the shards** (verified: a different shard is a miss, the same
+  shard is a hit). CLI overrides participate in the task hash. An env-driven shard read inside
+  `vitest.config.ts` would NOT be in the hash, and boxes 2 and 3 would replay box 1's result — two
+  thirds of the suite never running, green. Do not implement it that way.
+
+Coverage is opt-in and off in CI, so the shards' shared `reportsDirectory` never collides today. If
+coverage is ever enabled, each shard needs its own directory plus a merge step first.
+
+The pool tuning (`vmForks` + `vmMemoryLimit: '512MB'` + `maxWorkers: 4`, plan `e448a51d`) is
+orthogonal to this and still load-bearing against the silent `(0 test)` OOM. Sharding lowers how
+many files a box carries; it does nothing about accumulation within the files it does carry. See
+[developer-vitest-pool.md](../reliability/developer-vitest-pool.md).
 
 `ci-success` remains the single required check. It aggregates the matrix — green only when every
 shard succeeded or the build legitimately skipped — so branch protection must **never** pin a

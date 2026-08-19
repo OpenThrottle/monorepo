@@ -1,12 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import {
   distributeEvenly,
+  formatShardOutputs,
   getChunkIndex,
   getExcludeSelector,
   getIsPackage,
+  getShardOutputs,
   getShardSelectionErrors,
   getShardSelector,
+  getSuiteShardedProjects,
+  getTestGrouping,
   splitProjects,
+  SUITE_SHARDED_PROJECTS,
 } from '../parallelize-tasks.ts';
 
 const APPS = [
@@ -14,6 +19,7 @@ const APPS = [
   'openthrottle-developer',
   'openthrottle-server',
 ];
+const [SHARDED_APP] = SUITE_SHARDED_PROJECTS;
 const PACKAGES = [
   '@openthrottle/nestjs-auth',
   '@openthrottle/react-router-chat',
@@ -230,5 +236,218 @@ describe('getShardSelectionErrors', () => {
 
   it('reports nothing for an empty chunk that resolved to nothing', () => {
     expect(getShardSelectionErrors([], [])).toEqual([]);
+  });
+
+  // The suite-shard carve-out must not blunt this: the test grouping is checked
+  // as its OWN grouping, so a project genuinely dropped from it still errors.
+  it('still catches a drop from the carved-out test grouping', () => {
+    const grouping = [SHARDED_APP, 'openthrottle-server'];
+    const errors = getShardSelectionErrors(getTestGrouping(grouping), []);
+
+    expect(errors).toHaveLength(1);
+    expect(errors[0]).toContain('openthrottle-server');
+    expect(errors[0]).not.toContain(SHARDED_APP);
+  });
+});
+
+describe('SUITE_SHARDED_PROJECTS', () => {
+  it('names the heavy developer suite the plan measured', () => {
+    expect(SUITE_SHARDED_PROJECTS).toContain('openthrottle-developer');
+  });
+
+  // Same trap getExcludeSelector() guards: a `tag:name:` value here would build
+  // a selector matching nothing, and the carve-out would silently drop the
+  // suite off every box instead of sharding it across them.
+  it('uses Nx project names, not tag:name: values', () => {
+    SUITE_SHARDED_PROJECTS.forEach((project) => {
+      expect(project).not.toContain('tag:');
+    });
+  });
+});
+
+describe('getSuiteShardedProjects', () => {
+  it('returns the sharded projects present in the affected set', () => {
+    expect(getSuiteShardedProjects([...APPS, ...PACKAGES])).toEqual([
+      SHARDED_APP,
+    ]);
+  });
+
+  it('returns nothing when the sharded app is not affected', () => {
+    const affected = [...APPS, ...PACKAGES].filter(
+      (project) => project !== SHARDED_APP,
+    );
+
+    expect(getSuiteShardedProjects(affected)).toEqual([]);
+  });
+
+  it('returns nothing for an empty affected set', () => {
+    expect(getSuiteShardedProjects([])).toEqual([]);
+  });
+});
+
+describe('getTestGrouping', () => {
+  it('drops the sharded app from the chunk it was dealt to', () => {
+    expect(getTestGrouping([SHARDED_APP, '@tools/workflows'])).toEqual([
+      '@tools/workflows',
+    ]);
+  });
+
+  it('leaves a chunk without the sharded app untouched', () => {
+    const grouping = ['openthrottle-server', '@tools/workflows'];
+
+    expect(getTestGrouping(grouping)).toEqual(grouping);
+  });
+
+  it('empties a chunk that held only the sharded app', () => {
+    expect(getTestGrouping([SHARDED_APP])).toEqual([]);
+  });
+});
+
+describe('getShardOutputs', () => {
+  const projects = [...APPS, ...PACKAGES];
+  const jobCount = 3;
+
+  const outputsFor = (jobIndex: number) =>
+    getShardOutputs(projects, jobIndex, jobCount);
+
+  it('carves the sharded app out of testSelector but keeps it in selector', () => {
+    // APPS deal one-per-shard, so the developer app lands on shard 2.
+    const { selector, testSelector } = outputsFor(2);
+
+    expect(selector).toContain(`!${SHARDED_APP}`);
+    expect(testSelector).not.toContain(`!${SHARDED_APP}`);
+    expect(testSelector).toBe('!@openthrottle/react-router-chat');
+  });
+
+  it('leaves selector and testSelector identical on boxes that did not draw it', () => {
+    [1, 3].forEach((jobIndex) => {
+      const { selector, testSelector } = outputsFor(jobIndex);
+
+      expect(testSelector).toBe(selector);
+    });
+  });
+
+  it('gives every box the same shard argument keyed to its own jobIndex', () => {
+    expect(outputsFor(1).suiteShard).toBe('1/3');
+    expect(outputsFor(2).suiteShard).toBe('2/3');
+    expect(outputsFor(3).suiteShard).toBe('3/3');
+  });
+
+  it('names the sharded projects on every box, not just the one that drew it', () => {
+    [1, 2, 3].forEach((jobIndex) => {
+      expect(outputsFor(jobIndex).suiteShardProjects).toBe(SHARDED_APP);
+    });
+  });
+
+  it('shards nothing when the sharded app is not affected', () => {
+    const unaffected = projects.filter((project) => project !== SHARDED_APP);
+
+    [1, 2, 3].forEach((jobIndex) => {
+      const outputs = getShardOutputs(unaffected, jobIndex, jobCount);
+
+      expect(outputs.suiteShard).toBe('');
+      expect(outputs.suiteShardProjects).toBe('');
+      expect(outputs.testSelector).toBe(outputs.selector);
+    });
+  });
+
+  it('shards nothing for an empty affected set', () => {
+    const outputs = getShardOutputs([], 1, jobCount);
+
+    expect(outputs).toEqual({
+      selector: '',
+      suiteShard: '',
+      suiteShardProjects: '',
+      testSelector: '',
+    });
+  });
+
+  it('still emits a shard argument on a box whose chunk is empty', () => {
+    // Two affected projects, three boxes: box 3 draws nothing of its own, but
+    // the sharded suite still owes it a third of the developer files.
+    const outputs = getShardOutputs(
+      ['openthrottle-server', SHARDED_APP],
+      3,
+      jobCount,
+    );
+
+    expect(outputs.selector).toBe('');
+    expect(outputs.testSelector).toBe('');
+    expect(outputs.suiteShard).toBe('3/3');
+    expect(outputs.suiteShardProjects).toBe(SHARDED_APP);
+  });
+
+  it('covers every affected project exactly once for lint/typecheck', () => {
+    const covered = [1, 2, 3]
+      .map((jobIndex) => outputsFor(jobIndex).selector)
+      .filter(Boolean)
+      .flatMap((selector) =>
+        selector.split(',').map((entry) => entry.replace('!', '')),
+      );
+
+    expect(covered).toHaveLength(projects.length);
+    expect(new Set(covered)).toEqual(new Set(projects));
+  });
+
+  it('covers every affected project exactly once for test, counting the shard', () => {
+    const viaPartition = [1, 2, 3]
+      .map((jobIndex) => outputsFor(jobIndex).testSelector)
+      .filter(Boolean)
+      .flatMap((selector) =>
+        selector.split(',').map((entry) => entry.replace('!', '')),
+      );
+
+    const viaShard = outputsFor(1)
+      .suiteShardProjects.split(',')
+      .filter(Boolean);
+    const covered = [...viaPartition, ...viaShard];
+
+    // The sharded app is absent from every testSelector and accounted for by
+    // the --shard invocation instead. Nothing may fall between the two.
+    expect(viaPartition).not.toContain(SHARDED_APP);
+    expect(covered).toHaveLength(projects.length);
+    expect(new Set(covered)).toEqual(new Set(projects));
+  });
+});
+
+describe('formatShardOutputs', () => {
+  const outputs = {
+    selector: '!openthrottle-developer,!@tools/workflows',
+    suiteShard: '2/3',
+    suiteShardProjects: 'openthrottle-developer',
+    testSelector: '!@tools/workflows',
+  };
+
+  it('emits one key=value per line', () => {
+    expect(formatShardOutputs(outputs).split('\n')).toEqual([
+      'selector=!openthrottle-developer,!@tools/workflows',
+      'suiteShard=2/3',
+      'suiteShardProjects=openthrottle-developer',
+      'testSelector=!@tools/workflows',
+    ]);
+  });
+
+  it('emits every key even when the value is empty', () => {
+    const lines = formatShardOutputs({
+      selector: '',
+      suiteShard: '',
+      suiteShardProjects: '',
+      testSelector: '',
+    }).split('\n');
+
+    expect(lines).toEqual([
+      'selector=',
+      'suiteShard=',
+      'suiteShardProjects=',
+      'testSelector=',
+    ]);
+  });
+
+  // The workflow reads these into shell variables. A space in any value would
+  // word-split on the way in and hand Nx a truncated selector.
+  it('never emits a value containing a space', () => {
+    formatShardOutputs(outputs)
+      .split('\n')
+      .forEach((line) => expect(line).not.toContain(' '));
   });
 });

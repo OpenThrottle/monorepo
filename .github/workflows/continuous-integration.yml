@@ -223,7 +223,18 @@ jobs:
     #   INSIDE the affected step. A 3-way split projects that worst case to
     #   ~10.6 min; 2 boxes would only reach ~15 min, and a 4th would start paying
     #   setup for shards below the ~5.6 min floor set by the single heaviest
-    #   project (whose suite sharding cannot split — see the vmForks note below).
+    #   project.
+    #
+    #   ⚠️ That floor has since MOVED, and the arithmetic above is kept as the
+    #   reasoning of its time rather than as the current state. It read the
+    #   heaviest project as a floor "whose suite sharding cannot split" — true of
+    #   PROJECT sharding, which is all this partitioner does, but not of Vitest's
+    #   own `--shard`, which splits WITHIN a project. openthrottle-developer's
+    #   suite is now split three ways here (OT plan 9fc16731; 679 files / ~137s
+    #   whole -> ~227 files / ~46s per shard), so the ~5.6 min floor is roughly a
+    #   third of what it was. This does NOT automatically argue for a 4th box: the
+    #   4th-box case was always setup-cost vs. remaining shardable work, and a
+    #   lower floor moves BOTH sides of it. Re-measure before widening.
     #
     #   A target-split (`target: [lint, typecheck, test]`) was measured and
     #   REJECTED: it is the right answer only when shards are setup-bound, and it
@@ -353,35 +364,81 @@ jobs:
         run: |
           set -euo pipefail
 
-          # The partitioner prints THIS box's Nx `--exclude` selector on stdout
-          # (empty when the shard drew no projects) and the whole partition on
-          # stderr, so the log above is the evidence that the split covered every
-          # affected project exactly once. It exits non-zero when
-          # matrix.jobIndex / env.jobCount have drifted apart, or when its own
-          # selector does not resolve back to exactly the chunk it was built from
-          # — the failure that would otherwise be silent-passing.
-          selector="$(pnpm exec tsx ./scripts/parallelize-tasks.ts "${{ matrix.jobIndex }}" "${{ env.jobCount }}")"
+          # The partitioner prints THIS box's marching orders on stdout as
+          # `key=value` lines, and the whole partition on stderr, so the log above
+          # is the evidence that the split covered every affected project exactly
+          # once. It exits non-zero when matrix.jobIndex / env.jobCount have
+          # drifted apart, or when either of its selectors does not resolve back
+          # to exactly the chunk it was built from — the failure that would
+          # otherwise be silent-passing.
+          #
+          #   selector            this box's chunk            → lint/typecheck
+          #   testSelector        same chunk, suite-sharded   → test
+          #                       projects removed
+          #   suiteShardProjects  suites split WITHIN the     → test --shard
+          #                       project across every box
+          #   suiteShard          this box's `i/n` for those
+          #
+          # ⚠️ `suiteShard` is emitted BY the partitioner, from the same argv it
+          # partitions with — the Vitest shard count can therefore never drift out
+          # of agreement with the project partition. Do not rebuild it here from
+          # matrix.jobIndex/env.jobCount; that would reintroduce exactly the drift
+          # `env.jobCount`'s ⚠️ note guards against.
+          partition="$(pnpm exec tsx ./scripts/parallelize-tasks.ts "${{ matrix.jobIndex }}" "${{ env.jobCount }}")"
 
-          # An empty shard is a legitimate no-op (fewer affected projects than
-          # shards), but it looks identical to skipping real work, so say which
-          # one it is out loud.
-          if [ -z "$selector" ]; then
+          selector="$(printf '%s\n' "$partition" | sed -n 's/^selector=//p')"
+          suiteShard="$(printf '%s\n' "$partition" | sed -n 's/^suiteShard=//p')"
+          suiteShardProjects="$(printf '%s\n' "$partition" | sed -n 's/^suiteShardProjects=//p')"
+          testSelector="$(printf '%s\n' "$partition" | sed -n 's/^testSelector=//p')"
+
+          # THREE states, not two — each said out loud, because an idle box and a
+          # box that silently skipped real work look identical in a green log.
+          #
+          #   1. no chunk, nothing sharded → genuine no-op
+          #   2. no chunk, but a shard to run → NOT idle: this box owns a slice of
+          #      the sharded suite even though it drew no projects of its own
+          #   3. a chunk (with or without a shard) → the ordinary case
+          if [ -z "$selector" ] && [ -z "$suiteShardProjects" ]; then
             echo "🫙 Empty shard: the affected set is smaller than jobCount, so box ${{ matrix.jobIndex }} was assigned no projects."
             echo "   This is a no-op, NOT a skip — the partition printed above shows what the other shards took."
             exit 0
           fi
 
-          echo "🧠 shard ${{ matrix.jobIndex }}/${{ env.jobCount }} → $selector"
+          if [ -z "$selector" ]; then
+            echo "🫙 Box ${{ matrix.jobIndex }} drew no projects of its own."
+            echo "   NOT idle: it still runs Vitest --shard=$suiteShard of $suiteShardProjects below."
+          else
+            echo "🧠 shard ${{ matrix.jobIndex }}/${{ env.jobCount }} → $selector"
+          fi
 
-          # Same two invocations, and the same parallelism split, as the
-          # single-box version. Sharding does NOT license un-serializing `test`:
-          # that stays evidence-gated (see the note above), and spreading projects
-          # across boxes changes nothing about co-running two heavy jsdom suites
-          # on ONE box. Which targets run, and how, is the workflow's business —
-          # the partitioner only answers "which projects are mine?".
-          pnpm exec nx affected --exclude="*,$selector" --target=lint,typecheck,bundle-hooks-check --parallel ${{ env.OUTPUT_DEBUG }}
-          pnpm exec nx affected --exclude="*,$selector" --target=test ${{ env.OUTPUT_DEBUG }}
-          # pnpm exec nx affected --exclude="*,$selector" --target=test --parallel=1 ${{ env.OUTPUT_DEBUG }}
+          # Same parallelism split as the single-box version. Sharding does NOT
+          # license un-serializing `test`: that stays evidence-gated (see the note
+          # above), and splitting one suite across boxes changes nothing about
+          # co-running two heavy jsdom suites on ONE box. Which targets run, and
+          # how, is the workflow's business — the partitioner only answers which
+          # projects, and which slice of a sharded suite, are mine.
+          if [ -n "$selector" ]; then
+            pnpm exec nx affected --exclude="*,$selector" --target=lint,typecheck,bundle-hooks-check --parallel ${{ env.OUTPUT_DEBUG }}
+          fi
+
+          # `testSelector`, not `selector`: a suite-sharded project is absent from
+          # EVERY box's test partition and covered by the --shard run below
+          # instead. Empty when this box's whole chunk was suite-sharded away.
+          if [ -n "$testSelector" ]; then
+            pnpm exec nx affected --exclude="*,$testSelector" --target=test ${{ env.OUTPUT_DEBUG }}
+            # pnpm exec nx affected --exclude="*,$testSelector" --target=test --parallel=1 ${{ env.OUTPUT_DEBUG }}
+          fi
+
+          # ⚠️ `--shard` MUST stay on its own invocation. Attaching it to the
+          # `nx affected --target=test` line above would shard every OTHER
+          # project's suite too, running a third of each and reporting green —
+          # the same silent-pass disaster this step exists to prevent, wearing a
+          # different hat. Vitest prints the collected file count per shard; three
+          # boxes' counts summing to the full suite is the check that matters.
+          if [ -n "$suiteShardProjects" ]; then
+            echo "✂️  Vitest --shard=$suiteShard of $suiteShardProjects (lint/typecheck for it stayed on the partition above)"
+            pnpm exec nx run-many --projects="$suiteShardProjects" --target=test --shard="$suiteShard" ${{ env.OUTPUT_DEBUG }}
+          fi
 
       # The skill-usage hook core + per-tool adapters now live in the Nx package
       # @openthrottle/agentic-hooks (authored in TS, bundled to committed .cjs),
