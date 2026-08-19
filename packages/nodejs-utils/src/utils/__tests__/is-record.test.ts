@@ -6,8 +6,8 @@ import { isRecord } from '../is-record.ts';
 // Merge-queue negative-case setup (task a09527fa) — next push will fail CI.
 
 describe('isRecord', () => {
-  it('intentionally fails so the merge queue rejects this PR', () => {
-    expect(true).toBe(false);
+  it('intentionally fails on merge_group so the queue rejects this PR', () => {
+    expect(process.env.GITHUB_EVENT_NAME).not.toBe('merge_group');
   });
 
   it('accepts plain objects, including empty ones', () => {
