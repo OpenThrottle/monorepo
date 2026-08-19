@@ -8,9 +8,21 @@ import { CalendarClockIcon } from 'lucide-react';
 import type { GlobalFeatureOnboardingContent } from '@openthrottle/react-router-ui-global';
 
 export const SCHEDULE_COPY = {
+  cwdHelp: `Deprecated. Used only when no repository is selected above.`,
+  cwdLabel: `Working directory`,
+  cwdPlaceholder: `Defaults to the workspace root`,
   newScheduleAction: `New schedule`,
   pageDescription: `Run an agent prompt on a cron schedule.`,
   pageTitle: `Schedule`,
+  repositoryAdvancedSummary: `Advanced: explicit working directory (deprecated)`,
+  repositoryColumnLabel: `Repository`,
+  repositoryEmptyState: `You have no registered repositories yet, so runs will use the workspace root.`,
+  repositoryEmptyStateAction: `Add a repository`,
+  repositoryHelp: `Runs execute in this checkout. The server resolves the directory, so there is no path to type.`,
+  repositoryLabel: `Repository`,
+  repositoryNoneOption: `Workspace root (default)`,
+  runRepositoryHelp: `Where this run actually executed — a snapshot from when it fired, which may differ from the schedule's current target.`,
+  runRepositoryLabel: `Repository`,
 } as const;
 
 /**

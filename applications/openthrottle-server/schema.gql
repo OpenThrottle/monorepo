@@ -2150,6 +2150,19 @@ type TaskTagObject {
 }
 
 """
+Display fields for the repository checkout a schedule or run targeted — enough to label the target without a second round trip.
+"""
+type ScheduledAgentJobRepositoryObject {
+  id: ID!
+
+  """Human-friendly checkout name."""
+  displayName: String!
+
+  """Canonical absolute path on the server host."""
+  filesystemPath: String!
+}
+
+"""
 A user-defined scheduled agent job: a prompt run with a driver/model/settings on a cron schedule via one shared BullMQ queue.
 """
 type ScheduledAgentJobObject {
@@ -2184,8 +2197,20 @@ type ScheduledAgentJobObject {
   """Whether the schedule is active (registered as a BullMQ scheduler)."""
   enabled: Boolean!
 
-  """Process cwd for the agent CLI; null uses WORKSPACE_ROOT."""
-  cwd: String
+  """
+  Legacy explicit process cwd for the agent CLI, used only when repositoryCheckoutId is null; null then uses WORKSPACE_ROOT.
+  """
+  cwd: String @deprecated(reason: "Use repositoryCheckoutId to target a registered repository checkout; cwd is only consulted when no checkout is set.")
+
+  """
+  Registered repository checkout this schedule runs in; the server resolves its cwd from this. Null means the legacy cwd / WORKSPACE_ROOT fallback.
+  """
+  repositoryCheckoutId: ID
+
+  """
+  The targeted checkout resolved for display; null when the schedule targets none or the checkout has been deleted.
+  """
+  repository: ScheduledAgentJobRepositoryObject
 
   """Owning user id; null for system-seeded schedules."""
   ownerUserId: ID
@@ -2263,6 +2288,21 @@ type ScheduledAgentJobRunObject {
   Estimated dollar cost of the run, when the backend prices it; null when unpriced.
   """
   costUsd: Float
+
+  """
+  Repository checkout this run targeted at fire time; null for a legacy run, the WORKSPACE_ROOT fallback, or a checkout since deleted. A snapshot — the schedule's current target may differ.
+  """
+  repositoryCheckoutId: ID
+
+  """
+  The targeted checkout resolved for display; null when the run targeted none or the checkout has been deleted.
+  """
+  repository: ScheduledAgentJobRepositoryObject
+
+  """
+  The exact directory the agent CLI was spawned in for this run, after the checkout -> cwd -> WORKSPACE_ROOT precedence. Authoritative record of where the run happened; null for legacy runs.
+  """
+  resolvedCwd: String
   createdAt: DateTime!
 }
 
@@ -5693,8 +5733,15 @@ input CreateScheduledAgentJobInputType {
   """Per-run timeout override in ms; omit for the queue default."""
   timeoutMs: Int
 
-  """Process cwd for the agent CLI; omit for WORKSPACE_ROOT."""
-  cwd: String
+  """
+  Legacy explicit process cwd for the agent CLI; omit for WORKSPACE_ROOT.
+  """
+  cwd: String @deprecated(reason: "Use repositoryCheckoutId to target a registered repository checkout; cwd is only consulted when no checkout is set.")
+
+  """
+  Registered repository checkout to run in; must belong to the caller. Takes precedence over cwd. Omit for the legacy cwd / WORKSPACE_ROOT fallback.
+  """
+  repositoryCheckoutId: ID
 
   """Whether the schedule starts enabled (default true)."""
   enabled: Boolean
@@ -5713,7 +5760,12 @@ input UpdateScheduledAgentJobInputType {
   cronPattern: String
   timezone: String
   timeoutMs: Int
-  cwd: String
+  cwd: String @deprecated(reason: "Use repositoryCheckoutId to target a registered repository checkout; cwd is only consulted when no checkout is set.")
+
+  """
+  Registered repository checkout to run in; must belong to the caller. Takes precedence over cwd.
+  """
+  repositoryCheckoutId: ID
 }
 
 input SetScheduledAgentJobEnabledInputType {

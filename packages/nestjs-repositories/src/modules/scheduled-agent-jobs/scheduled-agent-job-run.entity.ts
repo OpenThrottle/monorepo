@@ -53,6 +53,8 @@ export type ScheduledAgentJobRunData = Pick<
   | 'outputTokens'
   | 'rawUsage'
   | 'reasoningTokens'
+  | 'repositoryCheckoutId'
+  | 'resolvedCwd'
   | 'scheduledAgentJobId'
   | 'settingsSnapshot'
   | 'startedAt'
@@ -185,6 +187,23 @@ export class ScheduledAgentJobRun {
   /** Un-normalized usage payload retained for audit/debug; null when no usage parsed. */
   @Column({ name: 'raw_usage', nullable: true, type: 'jsonb' })
   rawUsage!: Record<string, unknown> | null;
+
+  /**
+   * The repository checkout this run targeted at fire time, snapshot from the schedule when the run
+   * row is created. Kept independent of the schedule so a later edit does not rewrite this run's
+   * history; set to null if the checkout is subsequently deleted (`resolvedCwd` still records where
+   * the run happened). Null for legacy runs and for the explicit-cwd/WORKSPACE_ROOT fallback.
+   */
+  @Column({ name: 'repository_checkout_id', nullable: true, type: 'uuid' })
+  repositoryCheckoutId!: string | null;
+
+  /**
+   * The exact directory the agent CLI was spawned in, after the checkout -> cwd -> WORKSPACE_ROOT ->
+   * process.cwd() precedence and `toContainerPath`. The authoritative record of where the run
+   * actually executed; null for legacy rows created before this column existed.
+   */
+  @Column({ name: 'resolved_cwd', nullable: true, type: 'text' })
+  resolvedCwd!: string | null;
 
   @Column({ name: 'scheduled_agent_job_id', type: 'uuid' })
   scheduledAgentJobId!: string;

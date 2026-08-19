@@ -1,7 +1,10 @@
 import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable } from '@nestjs/common';
 import type { Queue } from 'bullmq';
-import type { ScheduledAgentJob } from '@openthrottle/nestjs-repositories';
+import {
+  ScheduledAgentJobCheckoutPathService,
+  type ScheduledAgentJob,
+} from '@openthrottle/nestjs-repositories';
 import {
   SCHEDULED_AGENT_JOB_NAME,
   SCHEDULED_AGENT_JOB_OPTIONS,
@@ -14,14 +17,20 @@ import type { ScheduledAgentJobPayload } from './scheduled-agent-jobs.types';
  * @description Builds the self-contained run snapshot embedded in the BullMQ scheduler (and re-used
  * by run-now), so the processor executes without a DB read. No `runId` — a scheduled fire creates its
  * own run row.
+ *
+ * `resolvedCheckoutPath` is the schedule's targeted checkout resolved to a directory at snapshot
+ * time; it becomes the payload's `cwd` so a payload stays independently runnable. The checkout id
+ * travels alongside it so the processor can re-resolve rather than trust a stale path.
  */
 export const buildScheduledAgentJobPayload = (
   job: ScheduledAgentJob,
+  resolvedCheckoutPath?: string | null,
 ): ScheduledAgentJobPayload => ({
-  cwd: job.cwd,
+  cwd: resolvedCheckoutPath ?? job.cwd,
   driverId: job.driverId,
   model: job.model,
   prompt: job.prompt,
+  repositoryCheckoutId: job.repositoryCheckoutId,
   scheduleId: job.id,
   settings: job.settings,
   timeoutMs: job.timeoutMs,
@@ -37,6 +46,7 @@ export const buildScheduledAgentJobPayload = (
 @Injectable()
 export class ScheduledAgentJobSchedulerService {
   constructor(
+    private readonly checkoutPaths: ScheduledAgentJobCheckoutPathService,
     @InjectQueue(SCHEDULED_AGENT_JOBS_QUEUE_NAME)
     private readonly queue: Queue<ScheduledAgentJobPayload, void>,
   ) {}
@@ -52,12 +62,33 @@ export class ScheduledAgentJobSchedulerService {
     };
 
     await this.queue.upsertJobScheduler(job.schedulerKey, repeat, {
-      data: buildScheduledAgentJobPayload(job),
+      data: buildScheduledAgentJobPayload(
+        job,
+        await this.resolveCheckoutPath(job),
+      ),
       name: SCHEDULED_AGENT_JOB_NAME,
       opts: SCHEDULED_AGENT_JOB_OPTIONS,
     });
 
     return this.readNextRunAt(job.schedulerKey);
+  }
+
+  /**
+   * @description The schedule's targeted checkout as a directory, or null when it targets none or the
+   * checkout no longer resolves. A miss is not an error here: the payload falls back to the legacy
+   * `cwd`, and the processor re-resolves the checkout at fire time anyway.
+   */
+  private async resolveCheckoutPath(
+    job: ScheduledAgentJob,
+  ): Promise<string | null> {
+    if (job.repositoryCheckoutId === null) return null;
+
+    const resolved = await this.checkoutPaths.resolve({
+      checkoutId: job.repositoryCheckoutId,
+      ownerUserId: job.ownerUserId,
+    });
+
+    return 'path' in resolved ? resolved.path : null;
   }
 
   /** @description Removes the scheduler for a schedule row (idempotent — no-op when absent). */

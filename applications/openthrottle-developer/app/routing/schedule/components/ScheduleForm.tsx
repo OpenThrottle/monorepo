@@ -8,6 +8,8 @@ import {
   TextArea,
 } from '@openthrottle/react-router-shadcn';
 import { SCHEDULED_JOB_DRIVER_IDS } from '~/routing/schedule/data/data.drivers';
+import type { ScheduleRepositoryOption } from '~/routing/schedule/data/data.repositories';
+import { ScheduleRepositoryField } from '~/routing/schedule/components/ScheduleRepositoryField';
 import type { ScheduledAgentJobDetailQuery } from '~/__generated__/graphql';
 
 type ScheduleDetail = NonNullable<
@@ -20,10 +22,12 @@ export interface ScheduleFormProps {
   /** Action-level error to surface inline (validation / not-found). */
   error?: string;
   job?: ScheduleDetail;
+  /** The caller's registered checkouts, for the repository picker. */
+  repositories?: ScheduleRepositoryOption[];
 }
 
 export const ScheduleForm = (props: ScheduleFormProps): React.ReactElement => {
-  const { action, className, error, job } = props;
+  const { action, className, error, job, repositories } = props;
 
   // Hooks
 
@@ -125,28 +129,22 @@ export const ScheduleForm = (props: ScheduleFormProps): React.ReactElement => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div>
-          <Label htmlFor="timeoutMs">Timeout ms (optional)</Label>
-          <Input
-            defaultValue={job?.timeoutMs ?? ''}
-            id="timeoutMs"
-            name="timeoutMs"
-            placeholder="900000"
-            type="number"
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="cwd">Working directory (optional)</Label>
-          <Input
-            defaultValue={job?.cwd ?? ''}
-            id="cwd"
-            name="cwd"
-            placeholder="Defaults to the workspace root"
-          />
-        </div>
+      <div>
+        <Label htmlFor="timeoutMs">Timeout ms (optional)</Label>
+        <Input
+          defaultValue={job?.timeoutMs ?? ''}
+          id="timeoutMs"
+          name="timeoutMs"
+          placeholder="900000"
+          type="number"
+        />
       </div>
+
+      <ScheduleRepositoryField
+        cwd={job?.cwd ?? null}
+        repositories={repositories ?? []}
+        repositoryCheckoutId={job?.repositoryCheckoutId ?? null}
+      />
 
       <div>
         <Label htmlFor="settingsJson">Settings JSON (optional)</Label>

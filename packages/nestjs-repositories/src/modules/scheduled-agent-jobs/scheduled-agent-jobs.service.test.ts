@@ -119,18 +119,32 @@ describe('ScheduledAgentJobsService', () => {
     );
     const patch = runRepo.save.mock.calls[0]?.[0];
     expect(patch.startedAt).toBeInstanceOf(Date);
-    // No snapshot supplied → the column is left untouched (not set to null).
+    // No snapshot supplied → the columns are left untouched (not set to null).
     expect('settingsSnapshot' in patch).toBe(false);
+    expect('repositoryCheckoutId' in patch).toBe(false);
+    expect('resolvedCwd' in patch).toBe(false);
   });
 
   it('markRunStarted backfills the settings snapshot when supplied', async () => {
     await service.markRunStarted('run-1', 'bull-9', {
-      driverId: 'claude',
-      model: 'opus',
+      settingsSnapshot: { driverId: 'claude', model: 'opus' },
     });
     expect(runRepo.save).toHaveBeenCalledWith(
       expect.objectContaining({
         settingsSnapshot: { driverId: 'claude', model: 'opus' },
+      }),
+    );
+  });
+
+  it('markRunStarted backfills the run cwd provenance when supplied', async () => {
+    await service.markRunStarted('run-1', 'bull-9', {
+      repositoryCheckoutId: 'checkout-1',
+      resolvedCwd: '/repos/monorepo',
+    });
+    expect(runRepo.save).toHaveBeenCalledWith(
+      expect.objectContaining({
+        repositoryCheckoutId: 'checkout-1',
+        resolvedCwd: '/repos/monorepo',
       }),
     );
   });
@@ -183,6 +197,73 @@ describe('ScheduledAgentJobsService', () => {
     expect(runRepo.save).toHaveBeenCalledWith(
       expect.objectContaining({
         settingsSnapshot: { driverId: 'cursor', model: null },
+      }),
+    );
+  });
+
+  it('createJob round-trips the targeted repository checkout, defaulting it to null', async () => {
+    const targeted = await service.createJob({
+      cronPattern: '0 * * * *',
+      driverId: 'claude',
+      name: 'nightly',
+      prompt: 'do the thing',
+      repositoryCheckoutId: 'checkout-1',
+    });
+    expect(targeted.repositoryCheckoutId).toBe('checkout-1');
+
+    const untargeted = await service.createJob({
+      cronPattern: '0 * * * *',
+      driverId: 'claude',
+      name: 'nightly',
+      prompt: 'do the thing',
+    });
+    expect(untargeted.repositoryCheckoutId).toBeNull();
+  });
+
+  it('updateJob can retarget the repository checkout, and clear it back to null', async () => {
+    jobRepo.findOne.mockResolvedValue({
+      id: 'job-1',
+      repositoryCheckoutId: null,
+    });
+    const retargeted = await service.updateJob('job-1', {
+      repositoryCheckoutId: 'checkout-2',
+    });
+    expect(retargeted?.repositoryCheckoutId).toBe('checkout-2');
+
+    jobRepo.findOne.mockResolvedValue({
+      id: 'job-1',
+      repositoryCheckoutId: 'checkout-2',
+    });
+    const cleared = await service.updateJob('job-1', {
+      repositoryCheckoutId: null,
+    });
+    expect(cleared?.repositoryCheckoutId).toBeNull();
+  });
+
+  it('createRun snapshots the checkout and resolved cwd, defaulting both to null', async () => {
+    await service.createRun({
+      driverId: 'cursor',
+      repositoryCheckoutId: 'checkout-1',
+      resolvedCwd: '/repos/monorepo',
+      scheduledAgentJobId: 'job-1',
+      trigger: 'schedule',
+    });
+    expect(runRepo.save).toHaveBeenCalledWith(
+      expect.objectContaining({
+        repositoryCheckoutId: 'checkout-1',
+        resolvedCwd: '/repos/monorepo',
+      }),
+    );
+
+    await service.createRun({
+      driverId: 'cursor',
+      scheduledAgentJobId: 'job-1',
+      trigger: 'schedule',
+    });
+    expect(runRepo.save).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        repositoryCheckoutId: null,
+        resolvedCwd: null,
       }),
     );
   });

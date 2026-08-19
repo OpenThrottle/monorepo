@@ -46,6 +46,7 @@ export const RUN_DETAIL_COPY = {
     exitCode: 'Exit code',
     finishedAt: 'Finished',
     model: 'Model',
+    repository: 'Repository',
     startedAt: 'Started',
     status: 'Status',
     trigger: 'Trigger',
@@ -54,6 +55,10 @@ export const RUN_DETAIL_COPY = {
   logsHeading: 'Logs',
   logsPending: 'Logs available once the run is enqueued.',
   notEnqueued: 'Not enqueued yet',
+  /** Shown under the repository row: these columns are a fire-time snapshot, not a live join. */
+  repositoryNote:
+    'Where this run executed, captured when it fired — the schedule may target somewhere else now.',
+  repositoryWorkspaceRoot: 'Workspace root (default)',
   settings: {
     empty: 'No settings snapshot was captured for this run.',
     heading: 'Settings snapshot',

@@ -10,6 +10,7 @@ import {
   TableRow,
 } from '@openthrottle/react-router-shadcn';
 import type { ScheduledJobCardFragment } from '~/__generated__/graphql';
+import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
 import { formatWhen } from '~/routing/schedule/utils/format-when';
 
 export interface ScheduleTableProps {
@@ -41,6 +42,7 @@ export const ScheduleTable = (
           <TableHead>Name</TableHead>
           <TableHead>Provider</TableHead>
           <TableHead>Schedule</TableHead>
+          <TableHead>{SCHEDULE_COPY.repositoryColumnLabel}</TableHead>
           <TableHead>Status</TableHead>
           <TableHead>Next run</TableHead>
         </TableRow>
@@ -63,6 +65,10 @@ export const ScheduleTable = (
             <TableCell className="font-mono text-xs">
               {job.cronPattern}
               {job.timezone ? ` (${job.timezone})` : ''}
+            </TableCell>
+            <TableCell>
+              {job.repository?.displayName ??
+                SCHEDULE_COPY.repositoryNoneOption}
             </TableCell>
             <TableCell>
               <Badge variant={job.enabled ? 'default' : 'secondary'}>

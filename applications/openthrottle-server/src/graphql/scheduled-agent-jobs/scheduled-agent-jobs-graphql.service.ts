@@ -16,6 +16,7 @@ import {
   UnknownDriverError,
 } from '@openthrottle/openthrottle-drivers';
 import {
+  ScheduledAgentJobCheckoutPathService,
   ScheduledAgentJobsService,
   type ScheduledAgentJob,
   type ScheduledAgentJobDriverId,
@@ -42,6 +43,7 @@ interface CreateArgs {
   readonly name: string;
   readonly ownerUserId: string | null;
   readonly prompt: string;
+  readonly repositoryCheckoutId?: string | null;
   readonly settingsJson?: string | null;
   readonly timeoutMs?: number | null;
   readonly timezone?: string | null;
@@ -54,6 +56,7 @@ interface UpdateArgs {
   readonly model?: string | null;
   readonly name?: string;
   readonly prompt?: string;
+  readonly repositoryCheckoutId?: string | null;
   readonly settingsJson?: string | null;
   readonly timeoutMs?: number | null;
   readonly timezone?: string | null;
@@ -64,6 +67,7 @@ export class ScheduledAgentJobsGraphqlService {
   constructor(
     private readonly logger: LoggerService,
     private readonly jobsService: ScheduledAgentJobsService,
+    private readonly checkoutPaths: ScheduledAgentJobCheckoutPathService,
     private readonly scheduler: ScheduledAgentJobSchedulerService,
     private readonly cancellation: ScheduledAgentJobCancellationService,
     @InjectQueue(SCHEDULED_AGENT_JOBS_QUEUE_NAME)
@@ -96,6 +100,10 @@ export class ScheduledAgentJobsGraphqlService {
     });
     this.assertValidCron(args.cronPattern);
     const settings = this.parseSettings(args.settingsJson);
+    await this.assertResolvableCheckout(
+      args.repositoryCheckoutId,
+      args.ownerUserId,
+    );
 
     const job = await this.jobsService.createJob({
       cronPattern: args.cronPattern,
@@ -106,6 +114,7 @@ export class ScheduledAgentJobsGraphqlService {
       name: args.name,
       ownerUserId: args.ownerUserId,
       prompt: args.prompt,
+      repositoryCheckoutId: args.repositoryCheckoutId ?? null,
       settings,
       timeoutMs: args.timeoutMs ?? null,
       timezone: args.timezone ?? null,
@@ -126,6 +135,11 @@ export class ScheduledAgentJobsGraphqlService {
     if (args.cronPattern !== undefined) {
       this.assertValidCron(args.cronPattern);
     }
+    // Validated against the EXISTING owner: ownerUserId is never client-supplied on update.
+    await this.assertResolvableCheckout(
+      args.repositoryCheckoutId,
+      existing.ownerUserId,
+    );
 
     const updated = await this.jobsService.updateJob(id, {
       cronPattern: args.cronPattern,
@@ -134,6 +148,7 @@ export class ScheduledAgentJobsGraphqlService {
       model: args.model,
       name: args.name,
       prompt: args.prompt,
+      repositoryCheckoutId: args.repositoryCheckoutId,
       settings:
         args.settingsJson === undefined
           ? undefined
@@ -190,6 +205,7 @@ export class ScheduledAgentJobsGraphqlService {
       driverId: job.driverId,
       model: job.model,
       prompt: job.prompt,
+      repositoryCheckoutId: job.repositoryCheckoutId,
       runId: run.id,
       scheduleId: job.id,
       settings: job.settings,
@@ -246,6 +262,33 @@ export class ScheduledAgentJobsGraphqlService {
       throw new BadRequestException(`Scheduled job ${id} vanished after write`);
     }
     return job;
+  }
+
+  /**
+   * @description Rejects a checkout id that does not resolve for the schedule's owner, so a foreign or
+   * unknown id fails at create/update rather than at 3am. Undefined means "not being changed" and null
+   * means "clear the target" — neither is validated. Supplying BOTH a checkout and a `cwd` is accepted:
+   * the precedence ladder is deterministic and the checkout simply wins.
+   */
+  private async assertResolvableCheckout(
+    repositoryCheckoutId: string | null | undefined,
+    ownerUserId: string | null,
+  ): Promise<void> {
+    if (
+      repositoryCheckoutId === undefined ||
+      repositoryCheckoutId === null ||
+      repositoryCheckoutId.trim() === ''
+    ) {
+      return;
+    }
+
+    const resolved = await this.checkoutPaths.resolve({
+      checkoutId: repositoryCheckoutId,
+      ownerUserId,
+    });
+    if ('error' in resolved) {
+      throw new BadRequestException('Repository not found.');
+    }
   }
 
   private assertValidCron(pattern: string): void {

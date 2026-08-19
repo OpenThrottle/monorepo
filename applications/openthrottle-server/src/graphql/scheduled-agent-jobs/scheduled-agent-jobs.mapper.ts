@@ -27,6 +27,7 @@ export const toScheduledAgentJobObject = (
   nextRunAt: job.nextRunAt,
   ownerUserId: job.ownerUserId,
   prompt: job.prompt,
+  repositoryCheckoutId: job.repositoryCheckoutId,
   settingsJson: JSON.stringify(job.settings ?? {}),
   timeoutMs: job.timeoutMs,
   timezone: job.timezone,
@@ -51,6 +52,8 @@ export const toScheduledAgentJobRunObject = (
   model: run.model,
   outputTokens: run.outputTokens,
   reasoningTokens: run.reasoningTokens,
+  repositoryCheckoutId: run.repositoryCheckoutId,
+  resolvedCwd: run.resolvedCwd,
   scheduledAgentJobId: run.scheduledAgentJobId,
   // jsonb → JSON string (repo convention); null stays null for legacy/pre-snapshot runs.
   settingsSnapshotJson:

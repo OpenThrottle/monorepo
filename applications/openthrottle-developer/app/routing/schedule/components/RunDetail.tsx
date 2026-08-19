@@ -21,6 +21,8 @@ export interface RunDetailProps {
 }
 
 interface RunDetailRow {
+  /** Secondary monospace line under the value (e.g. the resolved on-disk path). */
+  hint?: string | null;
   label: string;
   mono?: boolean;
   value: React.ReactNode;
@@ -50,6 +52,13 @@ export const RunDetail = (props: RunDetailProps): React.ReactElement => {
       label: fields.driver,
       mono: true,
       value: run.model ? `${run.driverId} · ${run.model}` : run.driverId,
+    },
+    {
+      // The checkout name reads as the target; the exact directory it resolved to is the proof.
+      hint: run.resolvedCwd,
+      label: fields.repository,
+      value:
+        run.repository?.displayName ?? RUN_DETAIL_COPY.repositoryWorkspaceRoot,
     },
     { label: fields.exitCode, value: run.exitCode ?? '—' },
     {
@@ -87,9 +96,18 @@ export const RunDetail = (props: RunDetailProps): React.ReactElement => {
             <dd className={row.mono ? 'font-mono text-sm' : 'text-sm'}>
               {row.value}
             </dd>
+            {row.hint ? (
+              <dd className="text-muted-foreground font-mono text-xs break-all">
+                {row.hint}
+              </dd>
+            ) : null}
           </div>
         ))}
       </dl>
+
+      <p className="text-muted-foreground mt-2 text-xs">
+        {RUN_DETAIL_COPY.repositoryNote}
+      </p>
 
       <div className="mt-4">
         <p className="text-muted-foreground mb-1 text-xs">

@@ -16,7 +16,16 @@ import {
   ForbiddenException,
   UseGuards,
 } from '@nestjs/common';
-import { Args, ID, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
+import {
+  Args,
+  ID,
+  Int,
+  Mutation,
+  Parent,
+  Query,
+  ResolveField,
+  Resolver,
+} from '@nestjs/graphql';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 import {
@@ -27,8 +36,10 @@ import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
 import { ScheduledAgentJobsGraphqlService } from './scheduled-agent-jobs-graphql.service';
 import {
   ScheduledAgentJobObject,
+  ScheduledAgentJobRepositoryObject,
   ScheduledAgentJobRunObject,
 } from './scheduled-agent-job.object';
+import { ScheduledAgentJobsLoaders } from './scheduled-agent-jobs-loaders';
 import {
   CreateScheduledAgentJobInputType,
   SetScheduledAgentJobEnabledInputType,
@@ -47,6 +58,7 @@ const ownerUserIdFor = (principal: AuthPrincipal): string | null =>
 export class ScheduledAgentJobsResolver {
   constructor(
     private readonly agentPreferences: AgentCliPreferencesService,
+    private readonly loaders: ScheduledAgentJobsLoaders,
     private readonly logger: LoggerService,
     private readonly service: ScheduledAgentJobsGraphqlService,
   ) {}
@@ -184,6 +196,16 @@ export class ScheduledAgentJobsResolver {
     return toScheduledAgentJobRunObject(run);
   }
 
+  @ResolveField(() => ScheduledAgentJobRepositoryObject, {
+    description: `The repository checkout this schedule targets, resolved for display.`,
+    nullable: true,
+  })
+  async repository(
+    @Parent() parent: ScheduledAgentJobObject,
+  ): Promise<ScheduledAgentJobRepositoryObject | null> {
+    return resolveTargetRepository(this.loaders, parent.repositoryCheckoutId);
+  }
+
   /**
    * @description Rejects scheduling a job against an agent backend — or a specific model of that
    * backend — the owner has disabled on /settings/agents. A null owner (service-account principal) has
@@ -241,5 +263,45 @@ export class ScheduledAgentJobsResolver {
     }
 
     return job;
+  }
+}
+
+/**
+ * @description Loads a targeted checkout for display, batched per request. A deleted checkout resolves
+ * to null rather than an error: the run's `resolvedCwd` still records where it happened.
+ */
+const resolveTargetRepository = async (
+  loaders: ScheduledAgentJobsLoaders,
+  repositoryCheckoutId: string | null,
+): Promise<ScheduledAgentJobRepositoryObject | null> => {
+  if (repositoryCheckoutId === null) return null;
+
+  const checkout = await loaders.checkoutLoader.load(repositoryCheckoutId);
+  if (checkout === null) return null;
+
+  return {
+    displayName: checkout.displayName,
+    filesystemPath: checkout.filesystemPath,
+    id: checkout.id,
+  };
+};
+
+/**
+ * @description Resolves the display fields for the checkout a RUN targeted. Separate resolver because
+ * `@ResolveField` is bound to the parent ObjectType.
+ */
+@Resolver(() => ScheduledAgentJobRunObject)
+@UseGuards(GqlPermissionsGuard)
+export class ScheduledAgentJobRunRepositoryResolver {
+  constructor(private readonly loaders: ScheduledAgentJobsLoaders) {}
+
+  @ResolveField(() => ScheduledAgentJobRepositoryObject, {
+    description: `The repository checkout this run targeted at fire time, resolved for display.`,
+    nullable: true,
+  })
+  async repository(
+    @Parent() parent: ScheduledAgentJobRunObject,
+  ): Promise<ScheduledAgentJobRepositoryObject | null> {
+    return resolveTargetRepository(this.loaders, parent.repositoryCheckoutId);
   }
 }

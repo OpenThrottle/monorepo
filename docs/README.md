@@ -36,7 +36,7 @@ bottom, then dip into **Usage & reference** as needed.
 - **CI quality gates:** [monorepo/CI-quality-gates.md](./monorepo/CI-quality-gates.md)
 - **Dead-code (Knip):** [monorepo/Knip.md](./monorepo/Knip.md)
 - **Component shape:** [monorepo/component-primitive-shape.md](./monorepo/component-primitive-shape.md)
-- **URL-first UI state:** [monorepo/url-first-ui-state.md](./monorepo/url-first-ui-state.md)
+- **URL-first UI state:** [monorepo/url-first-ui-state.md](./monorepo/url-first-ui-state.md), [monorepo/url-first-react-router-shadcn-learnings.md](./monorepo/url-first-react-router-shadcn-learnings.md)
 - **Testing:** [testing/snapshot-replacement-patterns.md](./testing/snapshot-replacement-patterns.md)
 - **UI tokens:** [openthrottle/brand-palette.md](./openthrottle/brand-palette.md), [openthrottle/styles.md](./openthrottle/styles.md)
 

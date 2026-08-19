@@ -1,3 +1,4 @@
+import { stat } from 'node:fs/promises';
 import { Processor, WorkerHost, OnWorkerEvent } from '@nestjs/bullmq';
 import { Inject, Optional } from '@nestjs/common';
 import type { OnApplicationShutdown } from '@nestjs/common';
@@ -15,6 +16,7 @@ import {
   type RunAgentStatus,
 } from '@openthrottle/openthrottle-drivers';
 import {
+  ScheduledAgentJobCheckoutPathService,
   ScheduledAgentJobsService,
   type ScheduledAgentJobRunSettingsSnapshot,
   type ScheduledAgentJobRunStatus,
@@ -25,7 +27,7 @@ import { BULLMQ_RUN_OUTPUT_WRITER } from '../bullmq-run-output-writer.token';
 import { ScheduledAgentJobCancellationService } from './scheduled-agent-job-cancellation.service';
 import { ScheduledAgentRunnerService } from './scheduled-agent-runner.service';
 import {
-  resolveScheduledAgentJobCwd,
+  resolveScheduledAgentJobRunCwd,
   resolveScheduledAgentJobTimeoutMs,
   SCHEDULED_AGENT_JOB_OUTPUT_SOURCE,
   SCHEDULED_AGENT_JOBS_CONCURRENCY,
@@ -181,6 +183,7 @@ export class ScheduledAgentJobsProcessor
   constructor(
     private readonly logger: LoggerService,
     private readonly jobsService: ScheduledAgentJobsService,
+    private readonly checkoutPaths: ScheduledAgentJobCheckoutPathService,
     private readonly runner: ScheduledAgentRunnerService,
     private readonly cancellation: ScheduledAgentJobCancellationService,
     private readonly retention: BullMqRunOutputRetentionService,
@@ -205,6 +208,7 @@ export class ScheduledAgentJobsProcessor
       driverId,
       model,
       prompt,
+      repositoryCheckoutId,
       runId,
       scheduleId,
       settings,
@@ -212,6 +216,12 @@ export class ScheduledAgentJobsProcessor
     } = job.data;
     const queueName = SCHEDULED_AGENT_JOBS_QUEUE_NAME;
     const bullmqJobId = String(job.id);
+
+    const target = await this.resolveRunTarget(
+      scheduleId,
+      repositoryCheckoutId,
+      cwd,
+    );
 
     // Snapshot the effective run settings at fire time so later schedule edits don't rewrite this
     // run's history. driver/model/run-config is all a scheduled job carries today (no reasoning
@@ -226,15 +236,32 @@ export class ScheduledAgentJobsProcessor
       bullmqJobId,
       driverId,
       model: model ?? null,
+      repositoryCheckoutId: target.repositoryCheckoutId,
+      resolvedCwd: target.cwd,
       scheduleId,
       settingsSnapshot,
     });
 
+    // A schedule whose targeted checkout no longer resolves keeps running, from the payload's
+    // fallback path — but say so loudly, because that path is not the one the user picked.
+    if (target.checkoutMissing) {
+      this.logger.warn(
+        `Scheduled agent job ${scheduleId} targets checkout ${repositoryCheckoutId ?? 'unknown'} which no longer resolves; falling back to ${target.cwd}`,
+        ScheduledAgentJobsProcessor.name,
+      );
+    }
+
     const signal = this.cancellation.attach(runRowId);
 
     try {
+      // The ladder always yields *a* path (process.cwd() last resort), so the only way to be sure the
+      // run can do anything useful is to check the directory exists. Failing here — rather than
+      // letting the CLI spawn in a missing/renamed directory and report an opaque driver error — is
+      // what makes "the checkout moved" legible in the run's error_message.
+      await this.assertUsableCwd(target, repositoryCheckoutId);
+
       const result = await this.runner.run({
-        cwd: resolveScheduledAgentJobCwd(cwd),
+        cwd: target.cwd,
         driverId,
         model: model ?? undefined,
         onChunk: (chunk) => {
@@ -293,8 +320,91 @@ export class ScheduledAgentJobsProcessor
   }
 
   /**
+   * @description Resolves where this run should execute, and what to record about it.
+   *
+   * A scheduler payload is a snapshot that can be arbitrarily stale — a checkout can be moved,
+   * renamed, or deleted months after the scheduler was upserted — so when the payload names a
+   * checkout we re-resolve it here (one indexed read per run) instead of trusting the path baked into
+   * the payload. The schedule row supplies the `owner_user_id` the resolution is scoped to; it is
+   * never taken from the payload.
+   */
+  private async resolveRunTarget(
+    scheduleId: string,
+    repositoryCheckoutId: string | null | undefined,
+    payloadCwd: string | null | undefined,
+  ): Promise<{
+    readonly checkoutMissing: boolean;
+    readonly cwd: string;
+    readonly repositoryCheckoutId: string | null;
+  }> {
+    const checkoutId =
+      typeof repositoryCheckoutId === 'string' && repositoryCheckoutId !== ''
+        ? repositoryCheckoutId
+        : null;
+
+    if (checkoutId === null) {
+      return {
+        checkoutMissing: false,
+        cwd: resolveScheduledAgentJobRunCwd({ explicitCwd: payloadCwd }),
+        repositoryCheckoutId: null,
+      };
+    }
+
+    const schedule = await this.jobsService.findJobById(scheduleId);
+    const resolved = await this.checkoutPaths.resolve({
+      checkoutId,
+      ownerUserId: schedule?.ownerUserId ?? null,
+    });
+
+    if ('path' in resolved) {
+      return {
+        checkoutMissing: false,
+        cwd: resolveScheduledAgentJobRunCwd({
+          checkoutPath: resolved.path,
+          explicitCwd: payloadCwd,
+        }),
+        repositoryCheckoutId: checkoutId,
+      };
+    }
+
+    // Checkout gone: keep the run alive on the payload's fallback path. The id is still recorded on
+    // the run row so the history says what was *intended*, and the FK is ON DELETE SET NULL so a
+    // truly deleted checkout nulls out there rather than blocking the insert.
+    return {
+      checkoutMissing: true,
+      cwd: resolveScheduledAgentJobRunCwd({ explicitCwd: payloadCwd }),
+      repositoryCheckoutId: null,
+    };
+  }
+
+  /**
+   * @description Fails the run in-band when the resolved directory is not usable, with a message that
+   * names the targeted checkout when there was one. Throws so `process()`'s catch records it.
+   */
+  private async assertUsableCwd(
+    target: {
+      readonly checkoutMissing: boolean;
+      readonly cwd: string;
+      readonly repositoryCheckoutId: string | null;
+    },
+    requestedCheckoutId: string | null | undefined,
+  ): Promise<void> {
+    const usable = await stat(target.cwd)
+      .then((entry) => entry.isDirectory())
+      .catch(() => false);
+    if (usable) return;
+
+    throw new Error(
+      target.checkoutMissing
+        ? `Targeted repository checkout ${requestedCheckoutId ?? 'unknown'} could not be resolved (deleted, or no longer owned by this schedule's owner), and the fallback directory ${target.cwd} does not exist.`
+        : `Working directory ${target.cwd} does not exist.`,
+    );
+  }
+
+  /**
    * @description Claims a pre-created run row (run-now) or creates one (scheduled fire); both end up
-   * `running` with `bullmq_job_id` set. Returns the run row id.
+   * `running` with `bullmq_job_id` set, carrying the fire-time provenance (settings snapshot, targeted
+   * checkout, resolved cwd). Returns the run row id.
    */
   private async claimOrCreateRun(
     runId: string | null | undefined,
@@ -302,6 +412,8 @@ export class ScheduledAgentJobsProcessor
       readonly bullmqJobId: string;
       readonly driverId: ScheduledAgentJobBullJob['data']['driverId'];
       readonly model: string | null;
+      readonly repositoryCheckoutId: string | null;
+      readonly resolvedCwd: string;
       readonly scheduleId: string;
       readonly settingsSnapshot: ScheduledAgentJobRunSettingsSnapshot;
     },
@@ -310,11 +422,11 @@ export class ScheduledAgentJobsProcessor
       const existing = await this.jobsService.findRunById(runId);
       if (existing !== null) {
         // Run-now row was pre-created by the enqueuer; backfill the snapshot as it starts.
-        await this.jobsService.markRunStarted(
-          existing.id,
-          input.bullmqJobId,
-          input.settingsSnapshot,
-        );
+        await this.jobsService.markRunStarted(existing.id, input.bullmqJobId, {
+          repositoryCheckoutId: input.repositoryCheckoutId,
+          resolvedCwd: input.resolvedCwd,
+          settingsSnapshot: input.settingsSnapshot,
+        });
         return existing.id;
       }
     }
@@ -323,6 +435,8 @@ export class ScheduledAgentJobsProcessor
       bullmqJobId: input.bullmqJobId,
       driverId: input.driverId,
       model: input.model,
+      repositoryCheckoutId: input.repositoryCheckoutId,
+      resolvedCwd: input.resolvedCwd,
       scheduledAgentJobId: input.scheduleId,
       settingsSnapshot: input.settingsSnapshot,
       status: 'running',

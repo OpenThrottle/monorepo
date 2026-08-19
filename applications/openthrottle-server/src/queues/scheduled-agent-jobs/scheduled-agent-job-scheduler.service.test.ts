@@ -1,7 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createMock } from '@golevelup/ts-vitest';
 import type { Queue } from 'bullmq';
-import type { ScheduledAgentJob } from '@openthrottle/nestjs-repositories';
+import {
+  ScheduledAgentJobCheckoutPathService,
+  type ScheduledAgentJob,
+} from '@openthrottle/nestjs-repositories';
 import {
   buildScheduledAgentJobPayload,
   ScheduledAgentJobSchedulerService,
@@ -17,7 +20,9 @@ const makeJob = (
     driverId: 'claude',
     id: 'job-1',
     model: 'opus',
+    ownerUserId: 'user-1',
     prompt: 'audit deps',
+    repositoryCheckoutId: null,
     schedulerKey: 'scheduled-job:job-1',
     settings: {},
     timeoutMs: null,
@@ -26,17 +31,21 @@ const makeJob = (
   });
 
 describe('ScheduledAgentJobSchedulerService', () => {
+  let checkoutPaths: ScheduledAgentJobCheckoutPathService;
   let queue: Queue<ScheduledAgentJobPayload, void>;
   let service: ScheduledAgentJobSchedulerService;
 
   beforeEach(() => {
+    checkoutPaths = createMock<ScheduledAgentJobCheckoutPathService>({
+      resolve: vi.fn().mockResolvedValue({ path: '/repos/monorepo' }),
+    });
     queue = createMock<Queue<ScheduledAgentJobPayload, void>>({
       getJobScheduler: vi.fn().mockResolvedValue(undefined),
       getJobSchedulers: vi.fn().mockResolvedValue([]),
       removeJobScheduler: vi.fn().mockResolvedValue(true),
       upsertJobScheduler: vi.fn().mockResolvedValue({}),
     });
-    service = new ScheduledAgentJobSchedulerService(queue);
+    service = new ScheduledAgentJobSchedulerService(checkoutPaths, queue);
   });
 
   it('builds a run snapshot with no runId (scheduled fire creates its own row)', () => {
@@ -46,11 +55,72 @@ describe('ScheduledAgentJobSchedulerService', () => {
       driverId: 'claude',
       model: 'opus',
       prompt: 'audit deps',
+      repositoryCheckoutId: null,
       scheduleId: 'job-1',
       settings: {},
       timeoutMs: null,
     });
     expect('runId' in payload).toBe(false);
+  });
+
+  it('snapshots the resolved checkout path as the payload cwd, keeping the checkout id', () => {
+    const payload = buildScheduledAgentJobPayload(
+      makeJob({ repositoryCheckoutId: 'checkout-1' }),
+      '/repos/monorepo',
+    );
+    expect(payload.cwd).toBe('/repos/monorepo');
+    expect(payload.repositoryCheckoutId).toBe('checkout-1');
+  });
+
+  it('leaves the legacy explicit cwd in place when no checkout is targeted', () => {
+    const payload = buildScheduledAgentJobPayload(
+      makeJob({ cwd: '/legacy/path' }),
+      null,
+    );
+    expect(payload.cwd).toBe('/legacy/path');
+    expect(payload.repositoryCheckoutId).toBeNull();
+  });
+
+  it('resolves the targeted checkout for the schedule owner when upserting', async () => {
+    await service.upsertScheduler(
+      makeJob({ ownerUserId: 'user-1', repositoryCheckoutId: 'checkout-1' }),
+    );
+
+    expect(checkoutPaths.resolve).toHaveBeenCalledWith({
+      checkoutId: 'checkout-1',
+      ownerUserId: 'user-1',
+    });
+    expect(queue.upsertJobScheduler).toHaveBeenCalledWith(
+      'scheduled-job:job-1',
+      expect.anything(),
+      expect.objectContaining({
+        data: expect.objectContaining({
+          cwd: '/repos/monorepo',
+          repositoryCheckoutId: 'checkout-1',
+        }),
+      }),
+    );
+  });
+
+  it('does not resolve a checkout for a schedule that targets none', async () => {
+    await service.upsertScheduler(makeJob({ repositoryCheckoutId: null }));
+    expect(checkoutPaths.resolve).not.toHaveBeenCalled();
+  });
+
+  it('falls back to the legacy cwd when the targeted checkout no longer resolves', async () => {
+    vi.mocked(checkoutPaths.resolve).mockResolvedValue({ error: 'not-found' });
+
+    await service.upsertScheduler(
+      makeJob({ cwd: '/legacy/path', repositoryCheckoutId: 'gone' }),
+    );
+
+    expect(queue.upsertJobScheduler).toHaveBeenCalledWith(
+      'scheduled-job:job-1',
+      expect.anything(),
+      expect.objectContaining({
+        data: expect.objectContaining({ cwd: '/legacy/path' }),
+      }),
+    );
   });
 
   it('upserts a scheduler keyed by schedulerKey with pattern + tz and reads back next run', async () => {

@@ -11,7 +11,7 @@ import {
   getActionError,
   mergeRouteModuleMeta,
 } from '@openthrottle/react-router-utils';
-import { Badge, Button } from '@openthrottle/react-router-shadcn';
+import { Button } from '@openthrottle/react-router-shadcn';
 import { CalendarClockIcon } from 'lucide-react';
 import {
   DeleteScheduledAgentJobDocument,
@@ -19,6 +19,7 @@ import {
   ScheduledAgentJobDetailDocument,
   SetScheduledAgentJobEnabledDocument,
 } from '~/__generated__/graphql';
+import { ScheduleDetailSummary } from '~/routing/schedule/components/ScheduleDetailSummary';
 import { ScheduleDetailTabs } from '~/routing/schedule/components/ScheduleDetailTabs';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/schedule.$jobId._index';
@@ -114,14 +115,7 @@ export default function Component(
           title={job.name}
         />
 
-        <div className="flex items-center gap-4">
-          <Badge>
-            {job.driverId} {job.model ? ` · ${job.model}` : ''}
-          </Badge>
-          <p className="text-muted-foreground text-sm">
-            {job.cronPattern} {job.timezone ? ` (${job.timezone})` : ' (UTC)'}
-          </p>
-        </div>
+        <ScheduleDetailSummary job={job} />
       </div>
 
       <div className="flex flex-col gap-6" data-testid="ScheduleDetail">

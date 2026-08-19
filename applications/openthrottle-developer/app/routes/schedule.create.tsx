@@ -12,6 +12,7 @@ import {
 } from '@openthrottle/react-router-utils';
 import {
   CreateScheduledAgentJobDocument,
+  ScheduleRepositoryOptionsDocument,
   type CreateScheduledAgentJobInputType,
 } from '~/__generated__/graphql';
 import { ScheduleForm } from '~/routing/schedule/components/ScheduleForm';
@@ -26,8 +27,14 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   links: (_match) => [{ children: 'Schedule', to: '/schedule' }],
 };
 
-export const loader = async (_args: Route.LoaderArgs) => {
-  return {};
+export const loader = async (args: Route.LoaderArgs) => {
+  const { workspaceLocalRepositories } = await executeGraphqlWithAuth(
+    args.request,
+    ScheduleRepositoryOptionsDocument,
+    {},
+  );
+
+  return { repositories: workspaceLocalRepositories };
 };
 
 export const links: Route.LinksFunction = () => {
@@ -41,7 +48,7 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
 export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
-  const { actionData, loaderData: _l, matches: _m, params: _p } = props;
+  const { actionData, loaderData, matches: _m, params: _p } = props;
 
   // Hooks
 
@@ -59,7 +66,11 @@ export default function Component(
   return (
     <GlobalScreen>
       <h1 className="mb-4 text-xl font-semibold">New scheduled job</h1>
-      <ScheduleForm action="create" error={actionError} />
+      <ScheduleForm
+        action="create"
+        error={actionError}
+        repositories={loaderData.repositories}
+      />
     </GlobalScreen>
   );
 }
@@ -85,6 +96,7 @@ export const action = async (args: Route.ActionArgs) => {
     model: parsed.model ?? null,
     name: parsed.name,
     prompt: parsed.prompt,
+    repositoryCheckoutId: parsed.repositoryCheckoutId,
     settingsJson: parsed.settingsJson ?? null,
     timeoutMs: parsed.timeoutMs ?? null,
     timezone: parsed.timezone ?? null,

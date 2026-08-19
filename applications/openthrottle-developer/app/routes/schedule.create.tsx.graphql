@@ -1,3 +1,11 @@
+query scheduleRepositoryOptions {
+  workspaceLocalRepositories {
+    displayName
+    filesystemPath
+    id
+  }
+}
+
 mutation createScheduledAgentJob($input: CreateScheduledAgentJobInputType!) {
   createScheduledAgentJob(input: $input) {
     ...ScheduledJobCard

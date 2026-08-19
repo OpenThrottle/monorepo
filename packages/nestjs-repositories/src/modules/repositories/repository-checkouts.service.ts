@@ -45,6 +45,15 @@ export class RepositoryCheckoutsService {
   }
 
   /**
+   * @description TypeORM repository for repository_checkouts. Satisfies the
+   * `RepositoryAccessor` contract so `createEntityByIdLoader` can batch checkout
+   * resolution for GraphQL resolve-fields.
+   */
+  getRepository(): OrmRepository<RepositoryCheckout> {
+    return this.repository;
+  }
+
+  /**
    * @description Lists checkouts for a user, newest first, with the repository
    * relation loaded. Accepts optional clamped `{ limit, offset }` bounds.
    */

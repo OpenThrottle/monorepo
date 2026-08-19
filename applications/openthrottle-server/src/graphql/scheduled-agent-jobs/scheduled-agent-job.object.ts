@@ -8,6 +8,22 @@
 import { Field, Float, ID, Int, ObjectType } from '@nestjs/graphql';
 
 @ObjectType({
+  description: `Display fields for the repository checkout a schedule or run targeted — enough to label the target without a second round trip.`,
+})
+export class ScheduledAgentJobRepositoryObject {
+  @Field(() => ID)
+  id!: string;
+
+  @Field(() => String, { description: `Human-friendly checkout name.` })
+  displayName!: string;
+
+  @Field(() => String, {
+    description: `Canonical absolute path on the server host.`,
+  })
+  filesystemPath!: string;
+}
+
+@ObjectType({
   description: `A user-defined scheduled agent job: a prompt run with a driver/model/settings on a cron schedule via one shared BullMQ queue.`,
 })
 export class ScheduledAgentJobObject {
@@ -57,10 +73,23 @@ export class ScheduledAgentJobObject {
   enabled!: boolean;
 
   @Field(() => String, {
-    description: `Process cwd for the agent CLI; null uses WORKSPACE_ROOT.`,
+    deprecationReason: `Use repositoryCheckoutId to target a registered repository checkout; cwd is only consulted when no checkout is set.`,
+    description: `Legacy explicit process cwd for the agent CLI, used only when repositoryCheckoutId is null; null then uses WORKSPACE_ROOT.`,
     nullable: true,
   })
   cwd!: string | null;
+
+  @Field(() => ID, {
+    description: `Registered repository checkout this schedule runs in; the server resolves its cwd from this. Null means the legacy cwd / WORKSPACE_ROOT fallback.`,
+    nullable: true,
+  })
+  repositoryCheckoutId!: string | null;
+
+  @Field(() => ScheduledAgentJobRepositoryObject, {
+    description: `The targeted checkout resolved for display; null when the schedule targets none or the checkout has been deleted.`,
+    nullable: true,
+  })
+  repository?: ScheduledAgentJobRepositoryObject | null;
 
   @Field(() => ID, {
     description: `Owning user id; null for system-seeded schedules.`,
@@ -188,6 +217,24 @@ export class ScheduledAgentJobRunObject {
     nullable: true,
   })
   costUsd!: number | null;
+
+  @Field(() => ID, {
+    description: `Repository checkout this run targeted at fire time; null for a legacy run, the WORKSPACE_ROOT fallback, or a checkout since deleted. A snapshot — the schedule's current target may differ.`,
+    nullable: true,
+  })
+  repositoryCheckoutId!: string | null;
+
+  @Field(() => ScheduledAgentJobRepositoryObject, {
+    description: `The targeted checkout resolved for display; null when the run targeted none or the checkout has been deleted.`,
+    nullable: true,
+  })
+  repository?: ScheduledAgentJobRepositoryObject | null;
+
+  @Field(() => String, {
+    description: `The exact directory the agent CLI was spawned in for this run, after the checkout -> cwd -> WORKSPACE_ROOT precedence. Authoritative record of where the run happened; null for legacy runs.`,
+    nullable: true,
+  })
+  resolvedCwd!: string | null;
 
   @Field(() => Date)
   createdAt!: Date;

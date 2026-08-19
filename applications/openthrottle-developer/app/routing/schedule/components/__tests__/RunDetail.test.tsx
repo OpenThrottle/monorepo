@@ -26,6 +26,9 @@ const run = (
   model: 'opus',
   outputTokens: 50,
   reasoningTokens: null,
+  repository: null,
+  repositoryCheckoutId: null,
+  resolvedCwd: null,
   scheduledAgentJobId: 'job-1',
   settingsSnapshotJson: JSON.stringify({ driverId: 'claude', model: 'opus' }),
   startedAt: '2026-07-31T09:00:00.000Z',
@@ -102,5 +105,51 @@ describe('RunDetail Component', () => {
     const badge = noOp.getByText('no work done');
     expect(badge.className).toContain('amber');
     expect(badge.className).not.toContain('red');
+  });
+
+  test('names the targeted repository with the resolved path as proof', () => {
+    component.unmount();
+    component = render(
+      <RunDetail
+        run={run({
+          repository: {
+            __typename: 'ScheduledAgentJobRepositoryObject',
+            displayName: 'monorepo',
+            filesystemPath: '/repos/monorepo',
+            id: 'checkout-1',
+          },
+          repositoryCheckoutId: 'checkout-1',
+          resolvedCwd: '/repos/monorepo',
+        })}
+      />,
+    );
+
+    expect(component.getByText(RUN_DETAIL_COPY.fields.repository)).toBeTruthy();
+    expect(component.getByText('monorepo')).toBeTruthy();
+    expect(component.getByText('/repos/monorepo')).toBeTruthy();
+  });
+
+  test('labels an untargeted run as the workspace-root default, still showing where it ran', () => {
+    component.unmount();
+    component = render(
+      <RunDetail run={run({ resolvedCwd: '/srv/workspace' })} />,
+    );
+
+    expect(
+      component.getByText(RUN_DETAIL_COPY.repositoryWorkspaceRoot),
+    ).toBeTruthy();
+    expect(component.getByText('/srv/workspace')).toBeTruthy();
+  });
+
+  test('degrades cleanly for a legacy run with no provenance recorded at all', () => {
+    // Pre-migration rows have neither a checkout nor a resolved path.
+    expect(
+      component.getByText(RUN_DETAIL_COPY.repositoryWorkspaceRoot),
+    ).toBeTruthy();
+    expect(component.queryByText('/repos/monorepo')).toBeNull();
+  });
+
+  test('notes that the provenance is a fire-time snapshot', () => {
+    expect(component.getByText(RUN_DETAIL_COPY.repositoryNote)).toBeTruthy();
   });
 });

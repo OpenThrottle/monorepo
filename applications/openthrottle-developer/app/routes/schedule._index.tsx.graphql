@@ -7,6 +7,12 @@ fragment ScheduledJobCard on ScheduledAgentJobObject {
   model
   name
   nextRunAt
+  repository {
+    displayName
+    filesystemPath
+    id
+  }
+  repositoryCheckoutId
   timezone
   updatedAt
 }

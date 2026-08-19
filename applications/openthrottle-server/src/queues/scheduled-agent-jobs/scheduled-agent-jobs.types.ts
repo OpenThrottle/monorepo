@@ -11,10 +11,21 @@ import type {
  * fire (the processor creates the run row and stamps `bullmq_job_id`).
  */
 export interface ScheduledAgentJobPayload {
+  /**
+   * Best-known directory at snapshot time: the resolved checkout path when the schedule targets one,
+   * else the legacy explicit `cwd`. The processor treats this as a FALLBACK — see
+   * `repositoryCheckoutId`.
+   */
   readonly cwd?: string | null;
   readonly driverId: ScheduledAgentJobDriverId;
   readonly model?: string | null;
   readonly prompt: string;
+  /**
+   * The checkout the schedule targeted at snapshot time. Optional, so scheduler payloads already
+   * sitting in Redis from before repository targeting still decode. When present the processor
+   * re-resolves it per run rather than trusting `cwd`, which can be months stale.
+   */
+  readonly repositoryCheckoutId?: string | null;
   readonly runId?: string | null;
   readonly scheduleId: string;
   readonly settings?: ScheduledAgentJobSettings;

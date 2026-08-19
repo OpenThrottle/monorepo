@@ -11,7 +11,7 @@ const BETA_ROUTE_PREFIXES = [
   '/ide',
   '/personas',
   '/profile',
-  '/prompts',
+  // '/prompts',
   '/pull-requests',
   '/search',
 ];

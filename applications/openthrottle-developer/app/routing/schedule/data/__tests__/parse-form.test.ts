@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { parseScheduleForm } from '../parse-form';
+import { SCHEDULE_REPOSITORY_NONE_VALUE } from '../data.repositories';
 
 const formOf = (entries: Record<string, string>): FormData => {
   const form = new FormData();
@@ -48,5 +49,33 @@ describe('parseScheduleForm', () => {
     expect(
       parseScheduleForm(formOf({ timeoutMs: 'not-a-number' })).timeoutMs,
     ).toBeUndefined();
+  });
+
+  test('maps the workspace-root sentinel to null so no checkout is targeted', () => {
+    const form = new FormData();
+    form.set('repositoryCheckoutId', SCHEDULE_REPOSITORY_NONE_VALUE);
+
+    expect(parseScheduleForm(form).repositoryCheckoutId).toBeNull();
+  });
+
+  test('passes a picked checkout id through unchanged', () => {
+    const form = new FormData();
+    form.set('repositoryCheckoutId', 'checkout-1');
+
+    expect(parseScheduleForm(form).repositoryCheckoutId).toBe('checkout-1');
+  });
+
+  test('nulls the checkout id when the field is absent, so an update can clear it', () => {
+    expect(parseScheduleForm(new FormData()).repositoryCheckoutId).toBeNull();
+  });
+
+  test('keeps parsing the legacy cwd field alongside the picker', () => {
+    const form = new FormData();
+    form.set('cwd', '  /legacy/path  ');
+    form.set('repositoryCheckoutId', 'checkout-1');
+
+    const parsed = parseScheduleForm(form);
+    expect(parsed.cwd).toBe('/legacy/path');
+    expect(parsed.repositoryCheckoutId).toBe('checkout-1');
   });
 });

@@ -61,6 +61,7 @@ export type ScheduledAgentJobData = Pick<
   | 'nextRunAt'
   | 'ownerUserId'
   | 'prompt'
+  | 'repositoryCheckoutId'
   | 'schedulerKey'
   | 'settings'
   | 'timeoutMs'
@@ -77,7 +78,11 @@ export class ScheduledAgentJob {
   @Column({ name: 'cron_pattern', type: 'text' })
   cronPattern!: string;
 
-  /** Process cwd for the agent CLI; null falls back to WORKSPACE_ROOT ?? process.cwd(). */
+  /**
+   * Legacy/explicit process cwd for the agent CLI, used only when `repositoryCheckoutId` is null;
+   * null then falls back to WORKSPACE_ROOT ?? process.cwd(). Deprecated in favour of targeting a
+   * registered checkout — see the precedence ladder on `resolveScheduledAgentJobCwd`.
+   */
   @Column({ name: 'cwd', nullable: true, type: 'text' })
   cwd!: string | null;
 
@@ -119,6 +124,14 @@ export class ScheduledAgentJob {
 
   @Column({ name: 'prompt', type: 'text' })
   prompt!: string;
+
+  /**
+   * The registered repository checkout this schedule runs in; resolved server-side to a cwd from the
+   * checkout's `filesystemPath` (container-path aware) and ownership-checked against `ownerUserId`.
+   * Null means the legacy explicit `cwd` or the WORKSPACE_ROOT fallback applies instead.
+   */
+  @Column({ name: 'repository_checkout_id', nullable: true, type: 'uuid' })
+  repositoryCheckoutId!: string | null;
 
   /** Stable BullMQ upsertJobScheduler id (scheduled-job:<id>); unique. */
   @Column({ name: 'scheduler_key', type: 'text' })
