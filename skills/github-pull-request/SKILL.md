@@ -25,3 +25,5 @@ Your job is to look at all commits on the current branch and summarize them into
 - **ALWAYS** Generate a PR title following conventional commits format based on the primary change type (see rules for guidelines)
 - **ALWAYS** Update the existing `Pull Request` if one exists, otherwise create a new one
 - **ALWAYS** Return a clickable URL to the PR upon completion
+- This skill only **creates or updates** the PR. If the user also wants to merge it, treat that as a separate step.
+- On a merge-queue-protected branch, do **not** describe a PR as merged just because `gh pr merge` accepted the request. That command may only **enqueue** the PR. Only report "merged" after `gh pr view --json mergedAt,mergeCommitSha` shows a landed merge commit.

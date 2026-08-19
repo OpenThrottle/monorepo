@@ -32,16 +32,15 @@ export const ScheduleDetailSummary = (
   // 🔌 Short Circuit
 
   return (
-    <div
-      className="flex items-center gap-4"
-      data-testid="ScheduleDetailSummary"
-    >
-      <Badge>
-        {job.driverId} {job.model ? ` · ${job.model}` : ''}
-      </Badge>
-      <p className="text-muted-foreground text-sm">
-        {job.cronPattern} {job.timezone ? ` (${job.timezone})` : ' (UTC)'}
-      </p>
+    <div className="flex flex-col gap-2" data-testid="ScheduleDetailSummary">
+      <div className="flex items-center gap-4">
+        <Badge>
+          {job.driverId} {job.model ? ` · ${job.model}` : ''}
+        </Badge>
+        <p className="text-muted-foreground text-sm">
+          {job.cronPattern} {job.timezone ? ` (${job.timezone})` : ' (UTC)'}
+        </p>
+      </div>
       <p className="text-muted-foreground text-sm">
         {SCHEDULE_COPY.repositoryColumnLabel}:{' '}
         {job.repository?.displayName ?? SCHEDULE_COPY.repositoryNoneOption}

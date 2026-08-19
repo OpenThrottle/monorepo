@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { screen } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 import ScheduleIndex from '../schedule._index';
 import { buildRootMatch } from '~/testing/root-match-fixture';
@@ -7,7 +6,10 @@ import {
   renderRoutesStub,
   renderWithMemoryRouter,
 } from '~/testing/route-fixtures';
-import { SCHEDULE_ONBOARDING } from '~/routing/schedule/data/data.copy';
+import {
+  SCHEDULE_COPY,
+  SCHEDULE_ONBOARDING,
+} from '~/routing/schedule/data/data.copy';
 import type { ScheduledJobCardFragment } from '~/__generated__/graphql';
 import type { Route } from '@/app/routes/+types/schedule._index';
 
@@ -16,7 +18,7 @@ const matches: Route.ComponentProps['matches'] = [
   {
     handle: undefined,
     id: 'routes/schedule._index',
-    loaderData: { jobs: [] },
+    loaderData: { jobs: [], search: '' },
     params: {},
     pathname: '/',
   },
@@ -41,67 +43,117 @@ const job = (
 
 describe('routes/schedule._index.tsx', () => {
   test('renders the table when schedules exist', () => {
-    renderRoutesStub(
+    const component = renderRoutesStub(
       <ScheduleIndex
         actionData={undefined}
-        loaderData={{ jobs: [job()] }}
+        loaderData={{ jobs: [job()], search: '' }}
         matches={matches}
         params={{}}
       />,
     );
 
-    expect(screen.getByTestId('ScheduleTable')).toBeInTheDocument();
-    expect(screen.getByText('Nightly audit')).toBeInTheDocument();
+    expect(component.getByTestId('ScheduleTable')).toBeInTheDocument();
+    expect(component.getByText('Nightly audit')).toBeInTheDocument();
+  });
+
+  test('renders the toolbar above the list', () => {
+    const component = renderRoutesStub(
+      <ScheduleIndex
+        actionData={undefined}
+        loaderData={{ jobs: [job()], search: '' }}
+        matches={matches}
+        params={{}}
+      />,
+    );
+
+    expect(component.getByTestId('ScheduleToolbar')).toBeInTheDocument();
     expect(
-      screen.getByRole('link', { name: /new schedule/i }),
+      component.getByRole('link', { name: SCHEDULE_COPY.newScheduleAction }),
+    ).toHaveAttribute('href', '/schedule/create');
+  });
+
+  test('renders the toolbar alongside the onboarding pitch', () => {
+    const component = renderRoutesStub(
+      <ScheduleIndex
+        actionData={undefined}
+        loaderData={{ jobs: [], search: '' }}
+        matches={matches}
+        params={{}}
+      />,
+    );
+
+    expect(component.getByTestId('ScheduleToolbar')).toBeInTheDocument();
+    expect(
+      component.getByTestId('GlobalFeatureOnboarding'),
     ).toBeInTheDocument();
   });
 
   test('renders the onboarding pitch when there are no schedules', () => {
-    renderRoutesStub(
+    const component = renderRoutesStub(
       <ScheduleIndex
         actionData={undefined}
-        loaderData={{ jobs: [] }}
+        loaderData={{ jobs: [], search: '' }}
         matches={matches}
         params={{}}
       />,
     );
 
-    expect(screen.getByTestId('GlobalFeatureOnboarding')).toBeInTheDocument();
-    expect(screen.getByTestId('ScheduleIntroduction')).toBeInTheDocument();
-    expect(screen.queryByTestId('ScheduleTable')).not.toBeInTheDocument();
     expect(
-      screen.getByRole('link', { name: /create your first schedule/i }),
+      component.getByTestId('GlobalFeatureOnboarding'),
+    ).toBeInTheDocument();
+    expect(component.getByTestId('ScheduleIntroduction')).toBeInTheDocument();
+    expect(component.queryByTestId('ScheduleTable')).not.toBeInTheDocument();
+    expect(
+      component.getByRole('link', { name: /create your first schedule/i }),
     ).toHaveAttribute('href', '/schedule/create');
   });
 
-  test('renders the onboarding trigger in the header when populated', () => {
-    renderRoutesStub(
+  test('renders the no-results copy when a search matches nothing', () => {
+    const component = renderRoutesStub(
       <ScheduleIndex
         actionData={undefined}
-        loaderData={{ jobs: [job()] }}
+        loaderData={{ jobs: [], search: 'nothing-matches' }}
         matches={matches}
         params={{}}
       />,
     );
 
     expect(
-      screen.getByTestId('GlobalFeatureOnboardingTrigger'),
+      component.getByText(SCHEDULE_COPY.noSearchResults),
+    ).toBeInTheDocument();
+    expect(
+      component.queryByTestId('GlobalFeatureOnboarding'),
+    ).not.toBeInTheDocument();
+    expect(component.queryByTestId('ScheduleTable')).not.toBeInTheDocument();
+  });
+
+  test('renders the onboarding trigger in the header when populated', () => {
+    const component = renderRoutesStub(
+      <ScheduleIndex
+        actionData={undefined}
+        loaderData={{ jobs: [job()], search: '' }}
+        matches={matches}
+        params={{}}
+      />,
+    );
+
+    expect(
+      component.getByTestId('GlobalFeatureOnboardingTrigger'),
     ).toBeInTheDocument();
     // Populated list: the pitch is not inline.
     expect(
-      screen.queryByTestId('GlobalFeatureOnboarding'),
+      component.queryByTestId('GlobalFeatureOnboarding'),
     ).not.toBeInTheDocument();
   });
 
   test('reveals the onboarding modal over a populated list via ?modal=onboarding', () => {
-    renderWithMemoryRouter(
+    const component = renderWithMemoryRouter(
       [
         {
           element: (
             <ScheduleIndex
               actionData={undefined}
-              loaderData={{ jobs: [job()] }}
+              loaderData={{ jobs: [job()], search: '' }}
               matches={matches}
               params={{}}
             />
@@ -112,9 +164,11 @@ describe('routes/schedule._index.tsx', () => {
       { initialEntries: ['/schedule?modal=onboarding'] },
     );
 
-    expect(screen.getByTestId('GlobalFeatureOnboarding')).toBeInTheDocument();
     expect(
-      screen.getByRole('link', { name: SCHEDULE_ONBOARDING.cta.label }),
+      component.getByTestId('GlobalFeatureOnboarding'),
+    ).toBeInTheDocument();
+    expect(
+      component.getByRole('link', { name: SCHEDULE_ONBOARDING.cta.label }),
     ).toHaveAttribute('href', '/schedule/create');
   });
 });

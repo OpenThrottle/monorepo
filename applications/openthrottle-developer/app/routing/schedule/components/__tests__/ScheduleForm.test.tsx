@@ -3,7 +3,12 @@ import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
+import {
+  CRON_EXPRESSION_COPY,
+  CRON_PRESETS,
+} from '@openthrottle/react-router-shadcn';
 import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
+import userEvent from '@testing-library/user-event';
 import { ScheduleForm } from '../ScheduleForm';
 import type { ScheduleFormProps } from '../ScheduleForm';
 
@@ -79,6 +84,37 @@ describe('ScheduleForm Component', () => {
     test('renders no error alert when no error is passed', () => {
       expect(component.queryByRole('alert')).not.toBeInTheDocument();
     });
+
+    test('renders the cron control blank, with a hint rather than an error', () => {
+      expect(component.getByTestId('InputCronExpression')).toBeInTheDocument();
+      expect(component.getByLabelText('Schedule (cron)')).toHaveValue('');
+      expect(
+        component.getByText(CRON_EXPRESSION_COPY.emptyHint),
+      ).toBeInTheDocument();
+    });
+
+    test('submits the cron control under the cronPattern name', () => {
+      expect(component.getByLabelText('Schedule (cron)')).toHaveAttribute(
+        'name',
+        'cronPattern',
+      );
+    });
+
+    test('fills the cron field from a preset', async () => {
+      const user = userEvent.setup();
+      const preset = CRON_PRESETS[0];
+
+      await user.click(
+        component.getByRole('button', {
+          name: CRON_EXPRESSION_COPY.presetsTrigger,
+        }),
+      );
+      await user.click(component.getByRole('menuitem', { name: preset.label }));
+
+      expect(component.getByLabelText('Schedule (cron)')).toHaveValue(
+        preset.value,
+      );
+    });
   });
 
   describe('update mode', () => {
@@ -124,6 +160,16 @@ describe('ScheduleForm Component', () => {
       expect(
         component.getByRole('button', { name: 'Save changes' }),
       ).toBeInTheDocument();
+    });
+
+    test('describes the pre-filled cron pattern in English', () => {
+      expect(component.getByLabelText('Schedule (cron)')).toHaveValue(
+        '0 9 * * *',
+      );
+      expect(component.getByText(/at 09:00/i)).toBeInTheDocument();
+      expect(
+        component.queryByText(CRON_EXPRESSION_COPY.invalid),
+      ).not.toBeInTheDocument();
     });
 
     test('reflects the job disabled state', () => {

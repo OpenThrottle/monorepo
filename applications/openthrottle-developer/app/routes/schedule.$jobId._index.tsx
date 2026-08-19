@@ -60,11 +60,11 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData, loaderData, matches: _m, params: _p } = props;
+  const { job, runs } = loaderData;
 
   // Hooks
 
   // Setup
-  const { job, runs } = loaderData;
   const actionError = getActionError(actionData);
 
   // Handlers

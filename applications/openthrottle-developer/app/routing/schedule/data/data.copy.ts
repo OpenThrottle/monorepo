@@ -12,6 +12,7 @@ export const SCHEDULE_COPY = {
   cwdLabel: `Working directory`,
   cwdPlaceholder: `Defaults to the workspace root`,
   newScheduleAction: `New schedule`,
+  noSearchResults: `No schedules match your search.`,
   pageDescription: `Run an agent prompt on a cron schedule.`,
   pageTitle: `Schedule`,
   repositoryAdvancedSummary: `Advanced: explicit working directory (deprecated)`,
@@ -23,6 +24,8 @@ export const SCHEDULE_COPY = {
   repositoryNoneOption: `Workspace root (default)`,
   runRepositoryHelp: `Where this run actually executed — a snapshot from when it fired, which may differ from the schedule's current target.`,
   runRepositoryLabel: `Repository`,
+  searchLabel: `Search schedules`,
+  searchPlaceholder: `Search schedules`,
 } as const;
 
 /**

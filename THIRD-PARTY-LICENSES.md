@@ -13,13 +13,13 @@ Platform-specific prebuilt binaries (packages that declare `os`/`cpu`, e.g.
 `@rollup/rollup-linux-x64-gnu`, `fsevents`) are omitted: which ones install depends on
 the host OS, and each shares the license of the cross-platform toolchain already listed.
 
-**2562** third-party packages.
+**2563** third-party packages.
 
 ## License summary
 
 | License | Packages |
 | --- | --- |
-| MIT | 2163 |
+| MIT | 2164 |
 | Apache-2.0 | 114 |
 | ISC | 89 |
 | MIT-0 | 67 |
@@ -1225,6 +1225,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `create-langgraph` | 1.1.5 | MIT | [source](https://github.com/langchain-ai/langgraphjs#readme) |
 | `create-require` | 1.1.1 | MIT | [source](https://github.com/nuxt-contrib/create-require#readme) |
 | `cron-parser` | 4.9.0 | MIT | [Harri Siirak](https://github.com/harrisiirak/cron-parser#readme) |
+| `cronstrue` | 3.24.0 | MIT | [Brady Holt](https://github.com/bradymholt/cronstrue) |
 | `cross-inspect` | 1.0.1 | MIT | [Arda TANRIKULU](https://github.com/ardatan/graphql-tools#readme) |
 | `cross-spawn` | 7.0.6 | MIT | [André Cruz](https://github.com/moxystudio/node-cross-spawn) |
 | `csp_evaluator` | 1.1.8 | Apache-2.0 | [Lukas Weichselbaum](https://csp-evaluator.withgoogle.com/) |

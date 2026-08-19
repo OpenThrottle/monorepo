@@ -157,7 +157,7 @@ Do **not** change existing `vector(1536)` columns or remove the OpenAI code path
 
 We use **Option A:** record only the **squash commit after a PR is merged**. The repo keeps 1 PR = 1 commit on main (squash-and-merge); OpenThrottle records that single SHA as a work-ledger `git_commit` artifact so "what landed" matches the repo. (The legacy `link_commit` MCP tool and its `commit_links` table are **retired** — work-ledger epic 3b798682.)
 
-- **When to record:** Only **after** a PR is merged. Use the **squash commit SHA** (the one that appears on the default branch), not pre-merge commits from the branch. Do **not** record commit artifacts during the Ralph loop or while the PR is open.
+- **When to record:** Only **after** a PR is merged. Use the **squash commit SHA** (the one that appears on the default branch), not pre-merge commits from the branch. If the branch uses a merge queue, `gh pr merge --auto` can return while the PR is only **queued**; wait until `gh pr view --json mergedAt,mergeCommitSha` shows the landed commit (or read the SHA from the default branch) before recording the artifact. Do **not** record commit artifacts during the Ralph loop or while the PR is open.
 - **How activity tools use it:** `get_activity_by_date` and `get_last_activity` read the work ledger. The artifact is recorded `unverified` and the git verifier promotes it to `landed`/`verified`, so activity reflects **landed work only** (commits that exist on main). Pre-merge branch history is not in OpenThrottle.
 - **Day-to-day workflow:**
   - **Commit as you complete tasks:** During Ralph (or any plan execution), commit and push after each task or logical chunk. Use conventional commits (e.g. `feat(openthrottle): document commit workflow`). In the commit body or footer, include `Plan-Id: <uuid>` and `Task-Id: <uuid>` for traceability. Do **not** record a commit artifact for these commits—they are normal branch commits. Only after the PR is merged, record the squash commit once (see below).
@@ -165,7 +165,7 @@ We use **Option A:** record only the **squash commit after a PR is merged**. The
   - **After merge:** Either run the one-shot CLI:
     `pnpm exec workflow-link-merge --plan <id> --sha <squash-sha> --repo <owner/repo>`
     (optional: `--message`, `--task`), or call the MCP ledger tools directly — `attach_session_subject(planId, taskId?)` then `record_artifact(type: "git_commit", payloadJson: {repo, sha}, message?)` under an open session.
-    This records the squash on the ledger and powers activity-by-date and last-activity for the plan/task.
+    This records the landed default-branch commit on the ledger and powers activity-by-date and last-activity for the plan/task.
 
 ### Plan and task attributes (PRD mapping)
 

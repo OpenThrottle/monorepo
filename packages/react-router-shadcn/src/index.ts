@@ -24,6 +24,7 @@ export * from './components/Empty';
 export * from './components/HoverCard';
 export * from './components/InlineErrors';
 export * from './components/Input';
+export * from './components/InputCronExpression';
 export * from './components/InputGroup';
 export * from './components/InputGroupAddon';
 export * from './components/InputGroupButton';
@@ -58,6 +59,9 @@ export * from './components/Tabs/index';
 export * from './components/TextArea';
 export * from './components/ToggleGroup/index';
 export * from './components/Tooltip/index';
+
+// Data
+export * from './data/data.cron-presets';
 
 // Themes
 export * from './themes/index';

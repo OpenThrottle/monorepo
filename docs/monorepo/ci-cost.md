@@ -225,6 +225,58 @@ count.
 
 ---
 
+## Merge queue on `main`
+
+`main` now uses GitHub's merge queue through ruleset `main` (`14604876`). The queue is configured
+on the **ruleset** surface, while classic branch protection still owns the one required context
+(`ci-success`). That split is deliberate: the queue flip and the required-check surface move were
+kept separate so a stall would have one candidate cause at a time.
+
+Applied queue settings:
+
+| Setting                             | Value      | Why                                                                                                                                                                                                                               |
+| ----------------------------------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `merge_method`                      | `SQUASH`   | Preserves the repo's one-commit-per-PR history while staying compatible with `required_linear_history`; the landed commit keeps the PR title plus the commits' footer body, which preserves `Plan-Id:` / `Task-Id:` traceability. |
+| `grouping_strategy`                 | `ALLGREEN` | Every entry in a speculative group must go green before anything lands, which is the conservative "no semantic-conflict hole" choice this queue exists to buy.                                                                    |
+| `max_entries_to_build`              | `5`        | Enough speculative depth to keep the queue moving without exploding parallel runner demand.                                                                                                                                       |
+| `min_entries_to_merge`              | `1`        | A ready PR never waits for company before the queue can start validating it.                                                                                                                                                      |
+| `max_entries_to_merge`              | `5`        | Allows grouped landings when the queue is busy, capped to the same scale as speculative builds.                                                                                                                                   |
+| `min_entries_to_merge_wait_minutes` | `5`        | Small batching window: enough to catch a nearby second PR, short enough not to feel stuck.                                                                                                                                        |
+| `check_response_timeout_minutes`    | `45`       | The per-shard CI ceiling is `30` minutes, so the queue timeout must exceed the workflow's own worst case with real headroom rather than dequeuing healthy runs.                                                                   |
+
+What this does to CI volume:
+
+- A ready PR still gets its ordinary `pull_request` run.
+- Enqueuing it now adds a second `merge_group` run on the synthetic
+  `gh-readonly-queue/main/pr-N-<sha>` ref.
+- When that entry lands, the existing `push: main` trigger still fires a third run for the fast-forwarded commit.
+
+That is roughly a **2x increase before merge, and often a 3rd post-merge validation run**. On
+this **public** repo those extra standard-runner minutes remain free, so the trade-off is
+wall-clock queue depth and runner contention, not GitHub billing. The `push: main` run stays on
+purpose: it is redundant re-validation of a queue-validated commit, but it is also the only
+post-merge signal on the actual default-branch ref and the cache-seeding run that downstream PRs
+restore from. If that changes, reprice the wall-clock and re-document it here rather than letting
+the rationale drift.
+
+Required-check rule with a queue on: **a status check may be marked required on `main` only if the
+workflow that reports it also triggers on `merge_group`.** Otherwise the queue waits for a status
+that can never report and eventually dequeues the PR on timeout. `ci-success` is safe because it is
+the stable, non-matrix job in `continuous-integration.yml`, and that workflow already runs on
+`merge_group`.
+
+Rollback:
+
+1. Remove the `merge_queue` rule from ruleset `main` (`14604876`) or restore the captured pre-change
+   ruleset payload with `gh api`.
+2. Re-read the ruleset and classic branch protection to confirm the queue rule is gone and
+   `ci-success` is still the only required status check.
+3. Use this if queue entries start timing out waiting for a non-reporting required check, or if the
+   landed squash commits stop preserving the conventional title / `Plan-Id:` / `Task-Id:` footer
+   shape the OT work ledger depends on.
+
+---
+
 ## Checklist: before you add a workflow or job
 
 - [ ] **`runs-on: ubuntu-latest`** unless you can state, in a comment, why a larger or managed runner is worth real money. Never add a Blacksmith or larger-runner label without pricing it here first.
@@ -236,6 +288,7 @@ count.
 - [ ] **Minimise the checkout.** `fetch-depth: 1` if you need no history; `fetch-depth: 0` + `filter: 'blob:none'` if you need history but not old file contents. Full clones need a written justification (only `secret-scan` has one).
 - [ ] **Never add a schedule without an estimate.** State the cadence, the per-run cost, and who reads the output. A cron nobody reads is pure spend forever.
 - [ ] **Don't add a required check that can fail to report.** A workflow-level `paths-ignore` on a required check hangs the PR as _"Expected — waiting for status"_ forever. This is why `ci-success` exists as a separate always-reporting gate — read the header of `continuous-integration.yml` before restructuring it.
+- [ ] **On merge-queue-protected branches, a required check must trigger on `merge_group`.** A PR-only workflow can never report inside the queue, so GitHub waits until `check_response_timeout_minutes` expires and then dequeues the PR.
 - [ ] **If you disable something, leave a reason and an owner.** `if: false` with no explanation becomes permanent. Link back to this doc.
 
 ---

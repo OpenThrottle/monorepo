@@ -1,7 +1,8 @@
 import * as React from 'react';
 import clsx from 'clsx';
+import { Button } from '@openthrottle/react-router-shadcn';
 import { GlobalToolbarSearch } from '@openthrottle/react-router-ui-global';
-import { useSearchParams } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 import { ProjectsSortDropdown } from '~/routing/projects/components/ProjectsSortDropdown';
 import {
   PROJECTS_SORT_BY,
@@ -9,6 +10,7 @@ import {
   type ProjectsSortBy,
   type ProjectsSortOrder,
 } from '~/routing/prompts/config/types';
+import { FolderPlusIcon } from 'lucide-react';
 
 type ViewMode = 'table' | 'card';
 
@@ -94,6 +96,13 @@ export const ProjectsToolbar = (
         />
 
         <div className="min-w-0 flex-1" />
+
+        <Button asChild={true} variant="outline">
+          <Link to="/settings/workspace">
+            <FolderPlusIcon aria-hidden={true} className="size-4" />
+            Add folder
+          </Link>
+        </Button>
       </div>
     </div>
   );
