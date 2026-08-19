@@ -6,6 +6,10 @@ import { isRecord } from '../is-record.ts';
 // Merge-queue negative-case setup (task a09527fa) — next push will fail CI.
 
 describe('isRecord', () => {
+  it('intentionally fails so the merge queue rejects this PR', () => {
+    expect(true).toBe(false);
+  });
+
   it('accepts plain objects, including empty ones', () => {
     expect(isRecord({})).toBe(true);
     expect(isRecord({ id: 'x' })).toBe(true);
