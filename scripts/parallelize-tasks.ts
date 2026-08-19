@@ -6,25 +6,61 @@ import { fileURLToPath } from 'url';
  * .github/workflows/continuous-integration.yml.
  *
  * Reads the affected project list, splits it into `jobCount` deterministic
- * chunks, and prints the Nx `--exclude` selector for chunk `jobIndex` on stdout
- * — a single line, empty when this shard drew no projects.
+ * chunks, and prints this shard's marching orders on stdout as `key=value`
+ * lines — see OUTPUT below.
  *
  * ARGV (positional, both required):
  *   1. jobIndex  1-based index of THIS shard.
  *   2. jobCount  Total number of shards. Must equal the length of the
  *                workflow's `matrix.jobIndex` list.
  *
- * Deliberately NOT parameterized by target. The workflow issues one Nx command
+ * OUTPUT (stdout, one `key=value` per line, values never contain a space):
+ *   selector            `--exclude` selector for this shard's chunk. Empty when
+ *                       the chunk is empty. Drives lint/typecheck.
+ *   testSelector        Same, minus any suite-sharded project (see below), so
+ *                       the box that drew the heavy app still lints and
+ *                       typechecks it but does not run its whole suite.
+ *   suiteShard          `<jobIndex>/<jobCount>` for the Vitest `--shard`
+ *                       argument. Empty when nothing is suite-sharded.
+ *   suiteShardProjects  Comma-joined projects to run under that `--shard`.
+ *                       Empty when none of them is affected.
+ *
+ * TWO AXES, NOT ONE. "Which projects are mine?" (the partition) and "which
+ * slice of one project's suite is mine?" (Vitest `--shard`) are independent.
+ * Every project is dealt to exactly ONE chunk, as before; a suite-sharded
+ * project is additionally lifted out of the TEST deal and run on EVERY box with
+ * a different `--shard`. That is why there are two selectors: `selector` still
+ * partitions everything, `testSelector` is the same chunk with the sharded
+ * projects removed. Both round-trip through verifyShardSelection().
+ *
+ * Deliberately NOT parameterized by target: the workflow issues one Nx command
  * per parallelism class (lint/typecheck at `--parallel`, `test` left serialized
- * — see the memory note in the workflow), so which targets run, and how, is the
- * workflow's business; this script only answers "which projects are mine?".
- * Keeping target out also removes the quoting hazard entirely: there is no argv
- * slot that can contain a space (`"test --coverage"`) and get split.
+ * — see the memory note in the workflow), so which targets run, and how, stays
+ * the workflow's business. Emitting every selector from ONE invocation rather
+ * than taking a target argument also keeps this script to a single Nx graph
+ * computation per box, which is the expensive part. The quoting hazard the old
+ * single-line contract guarded against is unchanged: no emitted value can ever
+ * contain a space, so nothing gets word-split on the way into a shell variable.
  *
  * Diagnostics go to stderr on purpose — stdout is the machine-read contract.
  */
 
 const PACKAGE_PREFIX = '@';
+
+/**
+ * @description Projects whose Vitest suite is split WITHIN the project by
+ * `vitest --shard`, instead of being dealt to one box like everything else.
+ *
+ * Earn a place here by being large enough that one box running the whole suite
+ * sets the floor for the entire matrix. `openthrottle-developer` is 679 files /
+ * ~137s against ~10s for its own lint and ~11s for its typecheck — 88% of the
+ * heaviest box. Splitting it three ways takes the heaviest slice to ~46s
+ * (227/226/226 files). See OT plan 9fc16731.
+ *
+ * Names are Nx project names, matching getExcludeSelector()'s direct-naming
+ * rule — NOT `tag:name:` values.
+ */
+const SUITE_SHARDED_PROJECTS: readonly string[] = ['openthrottle-developer'];
 
 /**
  * @description Packages are scope-prefixed (`@openthrottle/…`); applications are not.
@@ -70,6 +106,13 @@ const getChunkIndex = (chunks: string[][], chunkCount: number): number => {
  * Not duration-weighted: a chunk holding two heavy app suites is slower than
  * one holding six packages. Dealing applications first bounds that skew without
  * needing timing data. See OT plan b19377d1.
+ *
+ * Suite-sharded projects are still dealt here — they are only lifted out of the
+ * TEST selector, downstream. Pulling them out of the deal entirely would be
+ * wrong: their lint and typecheck still belong to exactly one box. It does mean
+ * the applications-first bias is now balancing a chunk whose heaviest member
+ * contributes only its lint/typecheck weight to `test`. Left alone deliberately:
+ * re-tuning the deal wants timing data this script still does not have.
  */
 const distributeEvenly = (
   projects: string[],
@@ -94,6 +137,31 @@ const distributeEvenly = (
 
   return chunks;
 };
+
+/**
+ * @description The suite-sharded projects present in this affected set, in the
+ * affected list's order.
+ *
+ * Scoped to AFFECTED, not to the chunk: a suite-sharded project runs on every
+ * box, so every box must reach the same answer, and every box sees the same
+ * affected list. A PR that does not touch the app returns [] and no box invents
+ * work for it.
+ */
+const getSuiteShardedProjects = (projects: string[]): string[] =>
+  projects.filter((project) => SUITE_SHARDED_PROJECTS.includes(project));
+
+/**
+ * @description This chunk with the suite-sharded projects removed — the set
+ * whose `test` this box runs the ordinary, whole-suite way.
+ *
+ * A suite-sharded project is absent from EVERY box's testGrouping by design;
+ * its coverage comes from the separate `--shard` invocation instead. That is
+ * the one and only sanctioned gap in "every affected project's test runs
+ * somewhere", and it is why verifyShardSelection() checks this selector
+ * separately rather than letting the difference show up as round-trip noise.
+ */
+const getTestGrouping = (grouping: string[]): string[] =>
+  grouping.filter((project) => !SUITE_SHARDED_PROJECTS.includes(project));
 
 /**
  * @description Build the Nx `--exclude` selector for one chunk.
@@ -138,6 +206,50 @@ const getShardSelector = (
 
   return getExcludeSelector(grouping);
 };
+
+/**
+ * @description Everything this box needs to know, derived from the affected set
+ * alone. Pure, so the whole contract is unit-testable without touching Nx.
+ */
+const getShardOutputs = (
+  projects: string[],
+  jobIndex: number,
+  jobCount: number,
+): {
+  selector: string;
+  suiteShard: string;
+  suiteShardProjects: string;
+  testSelector: string;
+} => {
+  const groups = distributeEvenly(projects, jobCount);
+  const grouping = groups[jobIndex - 1] ?? [];
+  const sharded = getSuiteShardedProjects(projects);
+
+  return {
+    selector: getShardSelector(projects, jobIndex, jobCount),
+    suiteShard: sharded.length > 0 ? `${jobIndex}/${jobCount}` : '',
+    suiteShardProjects: sharded.join(','),
+    testSelector: getExcludeSelector(getTestGrouping(grouping)),
+  };
+};
+
+/**
+ * @description Render the outputs as the `key=value` lines the workflow reads.
+ * Keys are emitted unconditionally so the consumer never has to distinguish
+ * "absent" from "empty" — an empty value always means "nothing to do here".
+ */
+const formatShardOutputs = (outputs: {
+  selector: string;
+  suiteShard: string;
+  suiteShardProjects: string;
+  testSelector: string;
+}): string =>
+  [
+    `selector=${outputs.selector}`,
+    `suiteShard=${outputs.suiteShard}`,
+    `suiteShardProjects=${outputs.suiteShardProjects}`,
+    `testSelector=${outputs.testSelector}`,
+  ].join('\n');
 
 /**
  * @description Compare what the selector ACTUALLY resolves to against the chunk
@@ -186,11 +298,14 @@ const getAffectedProjects = (): string[] => {
 };
 
 /**
- * @description Ask Nx what the shard's selector really selects, then assert it
- * is exactly the chunk. Costs one extra graph computation per shard; the failure
- * it guards against is silent-passing CI, so it is worth the seconds.
+ * @description Ask Nx what a selector really selects, then assert it is exactly
+ * the grouping it was built from. Costs one extra graph computation per call;
+ * the failure it guards against is silent-passing CI, so it is worth the seconds.
+ *
+ * `label` names which selector is under test so a CI failure says whether the
+ * partition or the test carve-out broke.
  */
-const verifyShardSelection = (grouping: string[]): void => {
+const verifySelection = (label: string, grouping: string[]): void => {
   const selector = getExcludeSelector(grouping);
   const verifyCMD = `pnpm nx show projects --affected --exclude="*,${selector}" --json --silent`;
   const resolved: string[] = JSON.parse(
@@ -200,9 +315,29 @@ const verifyShardSelection = (grouping: string[]): void => {
   const errors = getShardSelectionErrors(grouping, resolved);
 
   if (errors.length > 0) {
-    console.error('❌ parallelize-tasks: shard selector does not round-trip.');
+    console.error(
+      `❌ parallelize-tasks: ${label} selector does not round-trip.`,
+    );
     errors.forEach((error) => console.error(`   ${error}`));
     process.exit(1);
+  }
+};
+
+/**
+ * @description Round-trip BOTH selectors. The test carve-out is checked as its
+ * own grouping rather than being allowed to surface as a mismatch against the
+ * partition — an exception that widened `unexpected` would blunt exactly the
+ * signal getShardSelectionErrors() exists to give.
+ */
+const verifyShardSelection = (grouping: string[]): void => {
+  const testGrouping = getTestGrouping(grouping);
+
+  if (grouping.length > 0) {
+    verifySelection('partition', grouping);
+  }
+
+  if (testGrouping.length > 0 && testGrouping.length !== grouping.length) {
+    verifySelection('test', testGrouping);
   }
 };
 
@@ -232,6 +367,7 @@ const main = (): void => {
   const affected = getAffectedProjects();
   const groups = distributeEvenly(affected, jobCount);
   const grouping = groups[jobIndex - 1] ?? [];
+  const outputs = getShardOutputs(affected, jobIndex, jobCount);
 
   // Partition evidence for the CI log. stderr so it cannot pollute the
   // machine-read stdout contract.
@@ -245,15 +381,15 @@ const main = (): void => {
     );
   });
 
-  if (grouping.length > 0) {
-    verifyShardSelection(grouping);
+  if (outputs.suiteShardProjects) {
+    console.error(
+      `  ✂️  suite-sharded: ${outputs.suiteShardProjects} — this box runs --shard=${outputs.suiteShard} (lint/typecheck stay on the partition)`,
+    );
   }
 
-  const selector = getShardSelector(affected, jobIndex, jobCount);
+  verifyShardSelection(grouping);
 
-  if (selector) {
-    console.log(selector);
-  }
+  console.log(formatShardOutputs(outputs));
 };
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
@@ -262,10 +398,15 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
 
 export {
   distributeEvenly,
+  formatShardOutputs,
   getChunkIndex,
   getExcludeSelector,
   getIsPackage,
+  getShardOutputs,
   getShardSelectionErrors,
   getShardSelector,
+  getSuiteShardedProjects,
+  getTestGrouping,
   splitProjects,
+  SUITE_SHARDED_PROJECTS,
 };

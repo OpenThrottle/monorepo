@@ -61,12 +61,23 @@ export default (config: ConfigEnv) => {
        * reporting `(0 test)` with no error stack (a silent container OOM, not a V8
        * heap error). `test.vmMemoryLimit` is the fix: Vitest recycles a worker once
        * its heap exceeds the limit, so accumulation is bounded to ~512MB/worker while
-       * keeping the import amortization. This is the config-only alternative to
-       * sharding this suite across boxes, and it stays the right one even now that CI
-       * DOES shard (3 free ubuntu-latest boxes, OT plan b19377d1): project sharding
-       * splits the affected PROJECT list, and this suite is a single Nx project, so
-       * whichever box draws it runs all of it. The matrix cannot lower this suite's
-       * wall-clock — a faster pool can. See docs/reliability/developer-vitest-pool.md.
+       * keeping the import amortization.
+       *
+       * ⚠️ This JSDoc used to conclude here that "the matrix cannot lower this suite's
+       * wall-clock — a faster pool can", on the premise that PROJECT sharding splits
+       * the affected project list and this suite is one Nx project, so whichever box
+       * draws it runs all of it. The premise is still true. The conclusion was not:
+       * Vitest's own `--shard` splits WITHIN a project, which is a third lever the
+       * either/or framing missed. CI now runs this suite as three shards across the
+       * 3-box matrix — 679 files / 137s whole, ~227 files / ~46s per shard (OT plan
+       * 9fc16731).
+       *
+       * The pool tuning here is ORTHOGONAL to that and still load-bearing: `--shard`
+       * lowers how many files a box carries, and does nothing about V8 VM-context
+       * accumulation within the files it does carry. Its own measured win (forks 253s
+       * -> vmForks 86s, OT plan e448a51d) stands unchanged, and it remains the only
+       * thing standing between this suite and the silent `(0 test)` OOM. Do not treat
+       * sharding as a reason to revisit it. See docs/reliability/developer-vitest-pool.md.
        *
        * If the `(0 test)` OOM ever reappears, LOWER `vmMemoryLimit` (more frequent
        * recycles) before touching `maxWorkers` or the box size.

@@ -39,27 +39,48 @@ If the `(0 test)` OOM ever reappears, **lower `vmMemoryLimit`** (more frequent
 recycles) before touching `maxWorkers` or the box size. Do not raise
 `--max-old-space-size` — it fights the box limit, not the accumulation.
 
-## Why config-only, not sharding
+## Config-only first, then sharding — both, in that order
 
-The plan was titled "shard the suite," and the config-only route was still the
-right one — but the original reason has since expired, so read the current one.
+This page has argued twice about pool-vs-sharding. Both arguments were right when
+made; the second one has since been overtaken by measurement. The history is the
+point, so it is kept rather than rewritten away.
 
-**Then:** CI ran the whole affected set on one `blacksmith-4vcpu` box
-(`jobCount: 1`), an explicit cost tradeoff. Adding boxes meant paying for
-runners, so a faster pool that recovered wall-clock at zero cost won by default.
+**Then (`jobCount: 1`):** CI ran the whole affected set on one `blacksmith-4vcpu`
+box, an explicit cost tradeoff. Adding boxes meant paying for runners, so a faster
+pool that recovered wall-clock at zero cost won by default.
 
-**Now:** CI shards the affected projects across 3 free `ubuntu-latest` boxes (OT
-plan `b19377d1`; sizing in [ci-cost.md](../monorepo/ci-cost.md) § CI sharding),
-and runner minutes are free on this public repo. The cost argument is gone.
+**Next (3 boxes, cost argument gone):** CI began sharding the affected projects
+across 3 free `ubuntu-latest` boxes (OT plan `b19377d1`; sizing in
+[ci-cost.md](../monorepo/ci-cost.md) § CI sharding). The config-only conclusion
+was kept on a reason that did not depend on price: `openthrottle-developer:test`
+is a single Nx project, and **project** sharding cannot split a single project,
+so whichever box drew it ran the whole suite. That page then ended: "A Vitest
+`--shard` matrix or an Nx atomized `test` target remains the next lever if this
+suite's own wall-clock ever becomes the binding constraint."
 
-The conclusion holds anyway, for a reason that does not depend on price:
-**`openthrottle-developer:test` is a single Nx project, and project sharding
-cannot split a single project.** Whichever box draws it runs the whole suite, so
-that suite's wall-clock is a floor the matrix cannot lower — it is in fact the
-floor that caps the useful shard count. On that one box CPU is already saturated
-at `maxWorkers: 4`, so the pool config, not the box count, is the only lever
-here. A Vitest `--shard` matrix or an Nx atomized `test` target remains the next
-lever if this suite's own wall-clock ever becomes the binding constraint.
+**Now — that lever is pulled (OT plan `9fc16731`).** The premise above is still
+exactly true and was never the error; the error was reading it as "the matrix
+cannot lower this suite's wall-clock". Vitest's own `--shard` splits WITHIN a
+project, which the pool-or-move-the-code framing missed entirely. `scripts/parallelize-tasks.ts`
+now lifts the suite out of the per-box `test` partition and runs it on all three
+boxes under a different `--shard`, measured through Nx with `--skip-nx-cache`:
+
+| run        | files | wall-clock |
+| ---------- | ----- | ---------- |
+| full suite | 679   | 136.9s     |
+| shard 1/3  | 227   | **45.9s**  |
+| shard 2/3  | 226   | 43.8s      |
+| shard 3/3  | 226   | 43.6s      |
+
+227 + 226 + 226 = 679: the shards partition the suite exactly, which is the check
+that matters — a silently-ignored `--shard` would have run all 679 three times
+and still been green.
+
+**The pool tuning below is unaffected and still required.** The two levers are
+orthogonal: `--shard` lowers how many files a box carries, `vmForks` +
+`vmMemoryLimit` bounds V8 VM-context accumulation within whatever it does carry.
+Sharding is not a reason to revisit the pool, and if the `(0 test)` OOM ever
+returns the first move is still to lower `vmMemoryLimit`.
 
 ## Benchmark (full 364-file suite, `--skip-nx-cache`, `CI=true`)
 
