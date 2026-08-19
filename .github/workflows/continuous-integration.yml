@@ -435,9 +435,20 @@ jobs:
           # the same silent-pass disaster this step exists to prevent, wearing a
           # different hat. Vitest prints the collected file count per shard; three
           # boxes' counts summing to the full suite is the check that matters.
+          #
+          # `--outputStyle=stream` is load-bearing, not cosmetic. Under Nx's CI
+          # default the task's whole output is buffered and emitted as one block,
+          # and for a suite this size GitHub keeps only part of it: the run that
+          # introduced this sharding lost Vitest's `Test Files N passed (N)`
+          # summary entirely on all three legs, and 257 of 679 per-file lines with
+          # it. That summary is the ONE number that distinguishes "this box ran its
+          # third of the suite" from "this box ran nothing and went green", so
+          # losing it guts the review check this whole step exists to enable.
+          # Streaming pipes Vitest's output through live instead. If you ever see
+          # the count go missing again, fix it here — do not settle for the ✅.
           if [ -n "$suiteShardProjects" ]; then
             echo "✂️  Vitest --shard=$suiteShard of $suiteShardProjects (lint/typecheck for it stayed on the partition above)"
-            pnpm exec nx run-many --projects="$suiteShardProjects" --target=test --shard="$suiteShard" ${{ env.OUTPUT_DEBUG }}
+            pnpm exec nx run-many --projects="$suiteShardProjects" --target=test --shard="$suiteShard" --outputStyle=stream ${{ env.OUTPUT_DEBUG }}
           fi
 
       # The skill-usage hook core + per-tool adapters now live in the Nx package
