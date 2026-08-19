@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import { isRecord } from '../is-record.ts';
 
+// Merge-queue e2e probe (plan 491c0f49). Safe to revert after task a09527fa.
+
 describe('isRecord', () => {
   it('accepts plain objects, including empty ones', () => {
     expect(isRecord({})).toBe(true);
