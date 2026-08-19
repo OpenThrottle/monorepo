@@ -107,9 +107,9 @@ export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
         to: '/projects',
       },
       {
-        beta: true,
+        beta: false,
         children: 'Prompts',
-        disabled: true,
+        disabled: false,
         icon: BrainIcon,
         to: '/prompts',
       },

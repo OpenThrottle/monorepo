@@ -49,10 +49,17 @@ export class CreateScheduledAgentJobInputType {
   timeoutMs?: number;
 
   @Field(() => String, {
-    description: `Process cwd for the agent CLI; omit for WORKSPACE_ROOT.`,
+    deprecationReason: `Use repositoryCheckoutId to target a registered repository checkout; cwd is only consulted when no checkout is set.`,
+    description: `Legacy explicit process cwd for the agent CLI; omit for WORKSPACE_ROOT.`,
     nullable: true,
   })
   cwd?: string;
+
+  @Field(() => ID, {
+    description: `Registered repository checkout to run in; must belong to the caller. Takes precedence over cwd. Omit for the legacy cwd / WORKSPACE_ROOT fallback.`,
+    nullable: true,
+  })
+  repositoryCheckoutId?: string;
 
   @Field(() => Boolean, {
     description: `Whether the schedule starts enabled (default true).`,
@@ -93,8 +100,17 @@ export class UpdateScheduledAgentJobInputType {
   @Field(() => Int, { nullable: true })
   timeoutMs?: number;
 
-  @Field(() => String, { nullable: true })
+  @Field(() => String, {
+    deprecationReason: `Use repositoryCheckoutId to target a registered repository checkout; cwd is only consulted when no checkout is set.`,
+    nullable: true,
+  })
   cwd?: string;
+
+  @Field(() => ID, {
+    description: `Registered repository checkout to run in; must belong to the caller. Takes precedence over cwd.`,
+    nullable: true,
+  })
+  repositoryCheckoutId?: string;
 }
 
 @InputType()

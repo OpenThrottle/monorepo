@@ -29,6 +29,7 @@ export interface CreateScheduledAgentJobInput {
   readonly name: string;
   readonly ownerUserId?: string | null;
   readonly prompt: string;
+  readonly repositoryCheckoutId?: string | null;
   readonly settings?: ScheduledAgentJobSettings;
   readonly timeoutMs?: number | null;
   readonly timezone?: string | null;
@@ -44,10 +45,22 @@ export interface CreateScheduledAgentJobRunInput {
   readonly bullmqJobId?: string | null;
   readonly driverId: ScheduledAgentJobDriverId;
   readonly model?: string | null;
+  readonly repositoryCheckoutId?: string | null;
+  readonly resolvedCwd?: string | null;
   readonly scheduledAgentJobId: string;
   readonly settingsSnapshot?: ScheduledAgentJobRunSettingsSnapshot | null;
   readonly status?: ScheduledAgentJobRunStatus;
   readonly trigger: ScheduledAgentJobRunTrigger;
+}
+
+/**
+ * Fields backfilled onto a run when the processor claims it. Every field is optional: a field left
+ * undefined is not written, so a pre-created run-now row keeps whatever it was opened with.
+ */
+export interface StartScheduledAgentJobRunInput {
+  readonly repositoryCheckoutId?: string | null;
+  readonly resolvedCwd?: string | null;
+  readonly settingsSnapshot?: ScheduledAgentJobRunSettingsSnapshot | null;
 }
 
 /**
@@ -108,6 +121,7 @@ export class ScheduledAgentJobsService {
       name: input.name,
       ownerUserId: input.ownerUserId ?? null,
       prompt: input.prompt,
+      repositoryCheckoutId: input.repositoryCheckoutId ?? null,
       // Temporary placeholder; replaced with the id-derived key after insert.
       schedulerKey: 'pending',
       settings: input.settings ?? {},
@@ -177,6 +191,8 @@ export class ScheduledAgentJobsService {
       bullmqJobId: input.bullmqJobId ?? null,
       driverId: input.driverId,
       model: input.model ?? null,
+      repositoryCheckoutId: input.repositoryCheckoutId ?? null,
+      resolvedCwd: input.resolvedCwd ?? null,
       scheduledAgentJobId: input.scheduledAgentJobId,
       settingsSnapshot: input.settingsSnapshot ?? null,
       status: input.status ?? 'queued',
@@ -204,14 +220,15 @@ export class ScheduledAgentJobsService {
 
   /**
    * @description Mark a run running: stamp startedAt + the BullMQ job id, and (for a pre-created
-   * run-now row) backfill the settings snapshot when the caller supplies one. Uses save (not update)
-   * so the jsonb `settingsSnapshot` goes through TypeORM's DeepPartial path; only the provided
-   * columns are written.
+   * run-now row) backfill the fire-time snapshot the processor resolved — settings, the targeted
+   * repository checkout, and the directory the CLI is actually being spawned in. Uses save (not
+   * update) so the jsonb `settingsSnapshot` goes through TypeORM's DeepPartial path; only the
+   * provided columns are written.
    */
   async markRunStarted(
     id: string,
     bullmqJobId: string,
-    settingsSnapshot?: ScheduledAgentJobRunSettingsSnapshot | null,
+    snapshot?: StartScheduledAgentJobRunInput,
   ): Promise<void> {
     await this.runRepository.save(
       this.runRepository.create({
@@ -219,7 +236,15 @@ export class ScheduledAgentJobsService {
         id,
         startedAt: new Date(),
         status: 'running',
-        ...(settingsSnapshot === undefined ? {} : { settingsSnapshot }),
+        ...(snapshot?.repositoryCheckoutId === undefined
+          ? {}
+          : { repositoryCheckoutId: snapshot.repositoryCheckoutId }),
+        ...(snapshot?.resolvedCwd === undefined
+          ? {}
+          : { resolvedCwd: snapshot.resolvedCwd }),
+        ...(snapshot?.settingsSnapshot === undefined
+          ? {}
+          : { settingsSnapshot: snapshot.settingsSnapshot }),
       }),
     );
   }

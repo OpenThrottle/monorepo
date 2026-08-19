@@ -32,6 +32,12 @@ export const SCHEDULED_AGENT_JOB_OPTIONS: JobsOptions = {
 /**
  * Worker concurrency. Default 1: two agent CLIs in the same default cwd (WORKSPACE_ROOT) would
  * fight over the git index. Raise only for jobs isolated via a per-job worktree.
+ *
+ * Per-repository targeting (`repository_checkout_id`) is what makes >1 *possible* — two schedules
+ * pointing at different checkouts no longer share a git index — but it is not sufficient on its own:
+ * two schedules can still target the SAME checkout, so lifting this needs per-repository keyed
+ * concurrency (a BullMQ group/rate key derived from the resolved cwd) rather than a bigger number.
+ * Deliberately out of scope for OT plan ef4b5c75; left at 1.
  */
 export const SCHEDULED_AGENT_JOBS_CONCURRENCY = 1;
 
@@ -62,8 +68,10 @@ export const resolveScheduledAgentJobTimeoutMs = (
 };
 
 /**
- * @description Resolves the cwd for the agent CLI: an explicit per-schedule cwd, else `WORKSPACE_ROOT`,
- * else the detected OpenThrottle root, else `process.cwd()` as a last resort.
+ * @description Resolves the cwd for the agent CLI from the legacy inputs only: an explicit
+ * per-schedule cwd, else `WORKSPACE_ROOT`, else the detected OpenThrottle root, else `process.cwd()`
+ * as a last resort. Callers that may have a targeted repository checkout should use
+ * {@link resolveScheduledAgentJobRunCwd}, which puts the checkout ahead of all of these.
  *
  * `process.cwd()` must NOT be the effective default. The server's `dev`/`start` targets run with cwd
  * at the PROJECT root (`applications/openthrottle-server`) so `autoSchemaFile: 'schema.gql'` lands in
@@ -102,6 +110,31 @@ export const resolveScheduledAgentJobCwd = (
   }
 
   return getOpenThrottleRoot() ?? process.cwd();
+};
+
+/**
+ * @description THE cwd precedence ladder for a scheduled agent run, documented in one place:
+ *
+ * 1. `checkoutPath` — the schedule's `repository_checkout_id` resolved to a directory
+ *    (ownership-checked + `toContainerPath`-translated by `ScheduledAgentJobCheckoutPathService`).
+ *    Callers pass the already-resolved path so this stays synchronous and side-effect free.
+ * 2. `explicitCwd` — the legacy/deprecated free-text `cwd` column (legacy rows, power users).
+ * 3. `WORKSPACE_ROOT`, else the detected OpenThrottle root, else `process.cwd()` — today's behavior,
+ *    kept verbatim via {@link resolveScheduledAgentJobCwd} so nothing regresses.
+ *
+ * Deterministic by design: when a schedule carries both a checkout and a `cwd`, the checkout wins and
+ * the `cwd` is simply unused — that is why supplying both is accepted rather than rejected on write.
+ */
+export const resolveScheduledAgentJobRunCwd = (input: {
+  readonly checkoutPath?: string | null;
+  readonly explicitCwd?: string | null;
+}): string => {
+  const checkoutPath = input.checkoutPath?.trim();
+  if (checkoutPath) {
+    return checkoutPath;
+  }
+
+  return resolveScheduledAgentJobCwd(input.explicitCwd);
 };
 
 /**

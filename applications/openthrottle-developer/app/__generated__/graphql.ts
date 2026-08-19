@@ -712,7 +712,10 @@ export type CreateRolloutFlagInput = {
 export type CreateScheduledAgentJobInputType = {
   /** 5- or 6-field cron pattern (may not fire every minute or sub-minute). */
   cronPattern: Scalars['String']['input'];
-  /** Process cwd for the agent CLI; omit for WORKSPACE_ROOT. */
+  /**
+   * Legacy explicit process cwd for the agent CLI; omit for WORKSPACE_ROOT.
+   * @deprecated Use repositoryCheckoutId to target a registered repository checkout; cwd is only consulted when no checkout is set.
+   */
   cwd?: InputMaybe<Scalars['String']['input']>;
   /** Agent driver id (claude | codex | cursor | grok | opencode). */
   driverId: Scalars['String']['input'];
@@ -724,6 +727,8 @@ export type CreateScheduledAgentJobInputType = {
   name: Scalars['String']['input'];
   /** Prompt passed to the agent CLI. */
   prompt: Scalars['String']['input'];
+  /** Registered repository checkout to run in; must belong to the caller. Takes precedence over cwd. Omit for the legacy cwd / WORKSPACE_ROOT fallback. */
+  repositoryCheckoutId?: InputMaybe<Scalars['ID']['input']>;
   /** JSON AgentPromptSettings ({ endpoint?, worktree? }); no endpoint.apiKey. Omit for none. */
   settingsJson?: InputMaybe<Scalars['String']['input']>;
   /** Per-run timeout override in ms; omit for the queue default. */
@@ -4034,7 +4039,10 @@ export type ScheduledAgentJobObject = {
   createdAt: Scalars['DateTime']['output'];
   /** 5- or 6-field cron pattern. */
   cronPattern: Scalars['String']['output'];
-  /** Process cwd for the agent CLI; null uses WORKSPACE_ROOT. */
+  /**
+   * Legacy explicit process cwd for the agent CLI, used only when repositoryCheckoutId is null; null then uses WORKSPACE_ROOT.
+   * @deprecated Use repositoryCheckoutId to target a registered repository checkout; cwd is only consulted when no checkout is set.
+   */
   cwd?: Maybe<Scalars['String']['output']>;
   /** Agent driver id (claude | codex | cursor | grok | opencode). */
   driverId: Scalars['String']['output'];
@@ -4053,6 +4061,10 @@ export type ScheduledAgentJobObject = {
   ownerUserId?: Maybe<Scalars['ID']['output']>;
   /** Prompt passed to the agent CLI. */
   prompt: Scalars['String']['output'];
+  /** The targeted checkout resolved for display; null when the schedule targets none or the checkout has been deleted. */
+  repository?: Maybe<ScheduledAgentJobRepositoryObject>;
+  /** Registered repository checkout this schedule runs in; the server resolves its cwd from this. Null means the legacy cwd / WORKSPACE_ROOT fallback. */
+  repositoryCheckoutId?: Maybe<Scalars['ID']['output']>;
   /** JSON-serialized AgentPromptSettings ({ endpoint?, worktree? }); endpoint.apiKey is never present. */
   settingsJson: Scalars['String']['output'];
   /** Per-run timeout override in ms; null uses the queue default. */
@@ -4060,6 +4072,16 @@ export type ScheduledAgentJobObject = {
   /** IANA timezone for the cron pattern; null means UTC. */
   timezone?: Maybe<Scalars['String']['output']>;
   updatedAt: Scalars['DateTime']['output'];
+};
+
+/** Display fields for the repository checkout a schedule or run targeted — enough to label the target without a second round trip. */
+export type ScheduledAgentJobRepositoryObject = {
+  __typename?: 'ScheduledAgentJobRepositoryObject';
+  /** Human-friendly checkout name. */
+  displayName: Scalars['String']['output'];
+  /** Canonical absolute path on the server host. */
+  filesystemPath: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
 };
 
 /** One run of a scheduled agent job. Logs stream to queueJobLogs/queueJobLogTail keyed by bullmqJobId. */
@@ -4090,6 +4112,12 @@ export type ScheduledAgentJobRunObject = {
   outputTokens?: Maybe<Scalars['Float']['output']>;
   /** Reasoning tokens for the run, when accounted separately; null when unreported. */
   reasoningTokens?: Maybe<Scalars['Float']['output']>;
+  /** The targeted checkout resolved for display; null when the run targeted none or the checkout has been deleted. */
+  repository?: Maybe<ScheduledAgentJobRepositoryObject>;
+  /** Repository checkout this run targeted at fire time; null for a legacy run, the WORKSPACE_ROOT fallback, or a checkout since deleted. A snapshot — the schedule's current target may differ. */
+  repositoryCheckoutId?: Maybe<Scalars['ID']['output']>;
+  /** The exact directory the agent CLI was spawned in for this run, after the checkout -> cwd -> WORKSPACE_ROOT precedence. Authoritative record of where the run happened; null for legacy runs. */
+  resolvedCwd?: Maybe<Scalars['String']['output']>;
   scheduledAgentJobId: Scalars['ID']['output'];
   /** Effective run settings at execution time (driver/model/run-config), serialized JSON; null for legacy/pre-snapshot runs. Never contains endpoint.apiKey. */
   settingsSnapshotJson?: Maybe<Scalars['String']['output']>;
@@ -5008,6 +5036,7 @@ export type UpdateRolloutFlagInput = {
 
 export type UpdateScheduledAgentJobInputType = {
   cronPattern?: InputMaybe<Scalars['String']['input']>;
+  /** @deprecated Use repositoryCheckoutId to target a registered repository checkout; cwd is only consulted when no checkout is set. */
   cwd?: InputMaybe<Scalars['String']['input']>;
   driverId?: InputMaybe<Scalars['String']['input']>;
   /** Schedule to update. */
@@ -5015,6 +5044,8 @@ export type UpdateScheduledAgentJobInputType = {
   model?: InputMaybe<Scalars['String']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
   prompt?: InputMaybe<Scalars['String']['input']>;
+  /** Registered repository checkout to run in; must belong to the caller. Takes precedence over cwd. */
+  repositoryCheckoutId?: InputMaybe<Scalars['ID']['input']>;
   /** JSON AgentPromptSettings; no endpoint.apiKey. */
   settingsJson?: InputMaybe<Scalars['String']['input']>;
   timeoutMs?: InputMaybe<Scalars['Int']['input']>;
@@ -8163,8 +8194,15 @@ export type ScheduledAgentJobDetailQuery = {
     model?: string | null;
     name: string;
     nextRunAt?: any | null;
+    repositoryCheckoutId?: string | null;
     timezone?: string | null;
     updatedAt: any;
+    repository?: {
+      __typename?: 'ScheduledAgentJobRepositoryObject';
+      displayName: string;
+      filesystemPath: string;
+      id: string;
+    } | null;
   } | null;
   scheduledAgentJobRuns: Array<{
     __typename?: 'ScheduledAgentJobRunObject';
@@ -8205,8 +8243,15 @@ export type UpdateScheduledAgentJobMutation = {
     model?: string | null;
     name: string;
     nextRunAt?: any | null;
+    repositoryCheckoutId?: string | null;
     timezone?: string | null;
     updatedAt: any;
+    repository?: {
+      __typename?: 'ScheduledAgentJobRepositoryObject';
+      displayName: string;
+      filesystemPath: string;
+      id: string;
+    } | null;
   };
 };
 
@@ -8226,8 +8271,15 @@ export type SetScheduledAgentJobEnabledMutation = {
     model?: string | null;
     name: string;
     nextRunAt?: any | null;
+    repositoryCheckoutId?: string | null;
     timezone?: string | null;
     updatedAt: any;
+    repository?: {
+      __typename?: 'ScheduledAgentJobRepositoryObject';
+      displayName: string;
+      filesystemPath: string;
+      id: string;
+    } | null;
   };
 };
 
@@ -8286,12 +8338,20 @@ export type ScheduledJobRunDetailFragment = {
   model?: string | null;
   outputTokens?: number | null;
   reasoningTokens?: number | null;
+  repositoryCheckoutId?: string | null;
+  resolvedCwd?: string | null;
   scheduledAgentJobId: string;
   settingsSnapshotJson?: string | null;
   startedAt?: any | null;
   status: string;
   totalTokens?: number | null;
   trigger: string;
+  repository?: {
+    __typename?: 'ScheduledAgentJobRepositoryObject';
+    displayName: string;
+    filesystemPath: string;
+    id: string;
+  } | null;
 };
 
 export type ScheduledAgentJobRunDetailQueryVariables = Exact<{
@@ -8323,12 +8383,20 @@ export type ScheduledAgentJobRunDetailQuery = {
     model?: string | null;
     outputTokens?: number | null;
     reasoningTokens?: number | null;
+    repositoryCheckoutId?: string | null;
+    resolvedCwd?: string | null;
     scheduledAgentJobId: string;
     settingsSnapshotJson?: string | null;
     startedAt?: any | null;
     status: string;
     totalTokens?: number | null;
     trigger: string;
+    repository?: {
+      __typename?: 'ScheduledAgentJobRepositoryObject';
+      displayName: string;
+      filesystemPath: string;
+      id: string;
+    } | null;
   } | null;
 };
 
@@ -8355,12 +8423,20 @@ export type CancelScheduledAgentJobRunMutation = {
     model?: string | null;
     outputTokens?: number | null;
     reasoningTokens?: number | null;
+    repositoryCheckoutId?: string | null;
+    resolvedCwd?: string | null;
     scheduledAgentJobId: string;
     settingsSnapshotJson?: string | null;
     startedAt?: any | null;
     status: string;
     totalTokens?: number | null;
     trigger: string;
+    repository?: {
+      __typename?: 'ScheduledAgentJobRepositoryObject';
+      displayName: string;
+      filesystemPath: string;
+      id: string;
+    } | null;
   };
 };
 
@@ -8374,8 +8450,15 @@ export type ScheduledJobCardFragment = {
   model?: string | null;
   name: string;
   nextRunAt?: any | null;
+  repositoryCheckoutId?: string | null;
   timezone?: string | null;
   updatedAt: any;
+  repository?: {
+    __typename?: 'ScheduledAgentJobRepositoryObject';
+    displayName: string;
+    filesystemPath: string;
+    id: string;
+  } | null;
 };
 
 export type ScheduledAgentJobsQueryVariables = Exact<{ [key: string]: never }>;
@@ -8392,8 +8475,29 @@ export type ScheduledAgentJobsQuery = {
     model?: string | null;
     name: string;
     nextRunAt?: any | null;
+    repositoryCheckoutId?: string | null;
     timezone?: string | null;
     updatedAt: any;
+    repository?: {
+      __typename?: 'ScheduledAgentJobRepositoryObject';
+      displayName: string;
+      filesystemPath: string;
+      id: string;
+    } | null;
+  }>;
+};
+
+export type ScheduleRepositoryOptionsQueryVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type ScheduleRepositoryOptionsQuery = {
+  __typename?: 'Query';
+  workspaceLocalRepositories: Array<{
+    __typename?: 'WorkspaceLocalRepositoryObject';
+    displayName: string;
+    filesystemPath: string;
+    id: string;
   }>;
 };
 
@@ -8413,8 +8517,15 @@ export type CreateScheduledAgentJobMutation = {
     model?: string | null;
     name: string;
     nextRunAt?: any | null;
+    repositoryCheckoutId?: string | null;
     timezone?: string | null;
     updatedAt: any;
+    repository?: {
+      __typename?: 'ScheduledAgentJobRepositoryObject';
+      displayName: string;
+      filesystemPath: string;
+      id: string;
+    } | null;
   };
 };
 
@@ -11507,6 +11618,26 @@ export const ScheduledJobRunDetailFragmentDoc = {
           { kind: 'Field', name: { kind: 'Name', value: 'reasoningTokens' } },
           {
             kind: 'Field',
+            name: { kind: 'Name', value: 'repository' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'filesystemPath' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'repositoryCheckoutId' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'resolvedCwd' } },
+          {
+            kind: 'Field',
             name: { kind: 'Name', value: 'scheduledAgentJobId' },
           },
           {
@@ -11543,6 +11674,25 @@ export const ScheduledJobCardFragmentDoc = {
           { kind: 'Field', name: { kind: 'Name', value: 'model' } },
           { kind: 'Field', name: { kind: 'Name', value: 'name' } },
           { kind: 'Field', name: { kind: 'Name', value: 'nextRunAt' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'repository' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'filesystemPath' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'repositoryCheckoutId' },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'timezone' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
         ],
@@ -20546,6 +20696,25 @@ export const ScheduledAgentJobDetailDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'model' } },
           { kind: 'Field', name: { kind: 'Name', value: 'name' } },
           { kind: 'Field', name: { kind: 'Name', value: 'nextRunAt' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'repository' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'filesystemPath' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'repositoryCheckoutId' },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'timezone' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
         ],
@@ -20657,6 +20826,25 @@ export const UpdateScheduledAgentJobDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'model' } },
           { kind: 'Field', name: { kind: 'Name', value: 'name' } },
           { kind: 'Field', name: { kind: 'Name', value: 'nextRunAt' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'repository' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'filesystemPath' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'repositoryCheckoutId' },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'timezone' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
         ],
@@ -20740,6 +20928,25 @@ export const SetScheduledAgentJobEnabledDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'model' } },
           { kind: 'Field', name: { kind: 'Name', value: 'name' } },
           { kind: 'Field', name: { kind: 'Name', value: 'nextRunAt' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'repository' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'filesystemPath' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'repositoryCheckoutId' },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'timezone' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
         ],
@@ -20982,6 +21189,26 @@ export const ScheduledAgentJobRunDetailDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'reasoningTokens' } },
           {
             kind: 'Field',
+            name: { kind: 'Name', value: 'repository' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'filesystemPath' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'repositoryCheckoutId' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'resolvedCwd' } },
+          {
+            kind: 'Field',
             name: { kind: 'Name', value: 'scheduledAgentJobId' },
           },
           {
@@ -21076,6 +21303,26 @@ export const CancelScheduledAgentJobRunDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'reasoningTokens' } },
           {
             kind: 'Field',
+            name: { kind: 'Name', value: 'repository' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'filesystemPath' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'repositoryCheckoutId' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'resolvedCwd' } },
+          {
+            kind: 'Field',
             name: { kind: 'Name', value: 'scheduledAgentJobId' },
           },
           {
@@ -21138,6 +21385,25 @@ export const ScheduledAgentJobsDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'model' } },
           { kind: 'Field', name: { kind: 'Name', value: 'name' } },
           { kind: 'Field', name: { kind: 'Name', value: 'nextRunAt' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'repository' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'filesystemPath' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'repositoryCheckoutId' },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'timezone' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
         ],
@@ -21147,6 +21413,39 @@ export const ScheduledAgentJobsDocument = {
 } as unknown as DocumentNode<
   ScheduledAgentJobsQuery,
   ScheduledAgentJobsQueryVariables
+>;
+export const ScheduleRepositoryOptionsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'scheduleRepositoryOptions' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'workspaceLocalRepositories' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'filesystemPath' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  ScheduleRepositoryOptionsQuery,
+  ScheduleRepositoryOptionsQueryVariables
 >;
 export const CreateScheduledAgentJobDocument = {
   kind: 'Document',
@@ -21218,6 +21517,25 @@ export const CreateScheduledAgentJobDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'model' } },
           { kind: 'Field', name: { kind: 'Name', value: 'name' } },
           { kind: 'Field', name: { kind: 'Name', value: 'nextRunAt' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'repository' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'filesystemPath' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'repositoryCheckoutId' },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'timezone' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
         ],

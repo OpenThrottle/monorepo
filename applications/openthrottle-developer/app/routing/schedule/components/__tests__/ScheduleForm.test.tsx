@@ -3,6 +3,7 @@ import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
+import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
 import { ScheduleForm } from '../ScheduleForm';
 import type { ScheduleFormProps } from '../ScheduleForm';
 
@@ -47,6 +48,34 @@ describe('ScheduleForm Component', () => {
       expect(component.getByLabelText('Enabled')).toBeChecked();
     });
 
+    test('renders the repository field, defaulting to the workspace root', () => {
+      expect(
+        component.getByTestId('ScheduleRepositoryField'),
+      ).toBeInTheDocument();
+      expect(
+        component.getByText(SCHEDULE_COPY.repositoryEmptyState),
+      ).toBeInTheDocument();
+    });
+
+    test('renders the picker when repositories are passed', () => {
+      const withRepos = renderForm({
+        action: 'create',
+        repositories: [
+          {
+            displayName: 'monorepo',
+            filesystemPath: '/repos/monorepo',
+            id: 'checkout-1',
+          },
+        ],
+      });
+
+      expect(
+        withRepos.getByRole('combobox', {
+          name: SCHEDULE_COPY.repositoryLabel,
+        }),
+      ).toHaveTextContent(SCHEDULE_COPY.repositoryNoneOption);
+    });
+
     test('renders no error alert when no error is passed', () => {
       expect(component.queryByRole('alert')).not.toBeInTheDocument();
     });
@@ -88,9 +117,10 @@ describe('ScheduleForm Component', () => {
       expect(component.getByLabelText('Timezone (optional)')).toHaveValue(
         'America/Los_Angeles',
       );
-      expect(
-        component.getByLabelText('Working directory (optional)'),
-      ).toHaveValue('/repo');
+      // The legacy path now lives in the repository field's advanced disclosure.
+      expect(component.getByLabelText(SCHEDULE_COPY.cwdLabel)).toHaveValue(
+        '/repo',
+      );
       expect(
         component.getByRole('button', { name: 'Save changes' }),
       ).toBeInTheDocument();

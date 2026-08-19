@@ -152,6 +152,11 @@ export type {
   ScheduledAgentJobSettings,
   ScheduledAgentJobWorktreeSettings,
 } from './modules/scheduled-agent-jobs/scheduled-agent-job.entity';
+export { ScheduledAgentJobCheckoutPathService } from './modules/scheduled-agent-jobs/scheduled-agent-job-checkout-path.service';
+export type {
+  ResolveScheduledAgentJobCheckoutPathInput,
+  ResolveScheduledAgentJobCheckoutPathResult,
+} from './modules/scheduled-agent-jobs/scheduled-agent-job-checkout-path.service';
 export { ScheduledAgentJobRun } from './modules/scheduled-agent-jobs/scheduled-agent-job-run.entity';
 export type {
   ScheduledAgentJobRunData,
@@ -168,6 +173,7 @@ export type {
   CreateScheduledAgentJobInput,
   CreateScheduledAgentJobRunInput,
   FinishScheduledAgentJobRunInput,
+  StartScheduledAgentJobRunInput,
   UpdateScheduledAgentJobInput,
 } from './modules/scheduled-agent-jobs/scheduled-agent-jobs.service';
 export { ServiceAccount } from './modules/service-accounts/service-account.entity';

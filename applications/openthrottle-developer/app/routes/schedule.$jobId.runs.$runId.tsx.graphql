@@ -14,6 +14,13 @@ fragment ScheduledJobRunDetail on ScheduledAgentJobRunObject {
   model
   outputTokens
   reasoningTokens
+  repository {
+    displayName
+    filesystemPath
+    id
+  }
+  repositoryCheckoutId
+  resolvedCwd
   scheduledAgentJobId
   settingsSnapshotJson
   startedAt

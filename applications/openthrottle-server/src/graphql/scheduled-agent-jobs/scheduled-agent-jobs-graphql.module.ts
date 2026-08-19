@@ -12,7 +12,11 @@ import { ScheduledAgentJobsQueueProducerModule } from '../../queues/scheduled-ag
 import './scheduled-agent-job.object';
 import './scheduled-agent-jobs.input';
 import { ScheduledAgentJobsGraphqlService } from './scheduled-agent-jobs-graphql.service';
-import { ScheduledAgentJobsResolver } from './scheduled-agent-jobs.resolver';
+import { ScheduledAgentJobsLoaders } from './scheduled-agent-jobs-loaders';
+import {
+  ScheduledAgentJobRunRepositoryResolver,
+  ScheduledAgentJobsResolver,
+} from './scheduled-agent-jobs.resolver';
 
 @Module({
   imports: [
@@ -23,6 +27,8 @@ import { ScheduledAgentJobsResolver } from './scheduled-agent-jobs.resolver';
   providers: [
     GqlPermissionsGuard,
     ScheduledAgentJobsGraphqlService,
+    ScheduledAgentJobRunRepositoryResolver,
+    ScheduledAgentJobsLoaders,
     ScheduledAgentJobsResolver,
   ],
 })

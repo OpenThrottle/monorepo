@@ -5,7 +5,10 @@ import {
   parsePagination,
 } from '@openthrottle/react-router-utils';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalErrorBoundary,
+  GlobalFeatureOnboardingModal,
+} from '@openthrottle/react-router-ui-global';
 import {
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
@@ -23,6 +26,7 @@ import { PromptsTable } from '~/routing/prompts/components/PromptsTable';
 import { SITE_TITLE } from '~/global/config/settings';
 import { useSearchParams } from 'react-router';
 import type { Route } from '@/app/routes/+types/prompts._index';
+import { RULES_ONBOARDING } from '~/routing/rules/data/data.copy';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -118,41 +122,44 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <GlobalScreen beta={true}>
-      {showStats && (
-        <PromptsStats
-          countAgents={countAgents}
-          countSkills={countSkills}
-          total={total}
-        />
-      )}
-      <PromptsIntroduction />
-      <div className="flex flex-col gap-4">
-        <PromptToolbar
-          limit={limit}
-          page={page}
-          sortBy={sortBy}
-          sortOrder={sortOrder}
-          types={types}
-        />
-        <PromptsTable
-          className="bg-card"
-          prompts={prompts ?? []}
-          search={search ?? undefined}
-        />
-        <OpenThrottlePagination
-          basePath="/prompts"
-          className="mt-8"
-          limit={limit}
-          page={page}
-          resultLabel="prompts"
-          search={search ?? undefined}
-          sortBy={sortBy}
-          sortOrder={sortOrder}
-          total={total}
-        />
-      </div>
-    </GlobalScreen>
+    <>
+      <GlobalScreen beta={true}>
+        {showStats && (
+          <PromptsStats
+            countAgents={countAgents}
+            countSkills={countSkills}
+            total={total}
+          />
+        )}
+        <PromptsIntroduction />
+        <div className="flex flex-col gap-4">
+          <PromptToolbar
+            limit={limit}
+            page={page}
+            sortBy={sortBy}
+            sortOrder={sortOrder}
+            types={types}
+          />
+          <PromptsTable
+            className="bg-card"
+            prompts={prompts ?? []}
+            search={search ?? undefined}
+          />
+          <OpenThrottlePagination
+            basePath="/prompts"
+            className="mt-8"
+            limit={limit}
+            page={page}
+            resultLabel="prompts"
+            search={search ?? undefined}
+            sortBy={sortBy}
+            sortOrder={sortOrder}
+            total={total}
+          />
+        </div>
+      </GlobalScreen>
+      <GlobalFeatureOnboardingModal content={RULES_ONBOARDING} />
+    </>
   );
 }
 

@@ -6,7 +6,9 @@ import {
   type RunAgentPromptResult,
 } from '@openthrottle/openthrottle-drivers';
 import {
+  ScheduledAgentJobCheckoutPathService,
   ScheduledAgentJobsService,
+  type ScheduledAgentJob,
   type ScheduledAgentJobRun,
 } from '@openthrottle/nestjs-repositories';
 import type { KeyedJsonlWriter } from '@openthrottle/nestjs-logging';
@@ -80,6 +82,7 @@ const makeJob = (
 
 describe('ScheduledAgentJobsProcessor', () => {
   let jobsService: ScheduledAgentJobsService;
+  let checkoutPaths: ScheduledAgentJobCheckoutPathService;
   let runner: ScheduledAgentRunnerService;
   let cancellation: ScheduledAgentJobCancellationService;
   let retention: BullMqRunOutputRetentionService;
@@ -96,11 +99,20 @@ describe('ScheduledAgentJobsProcessor', () => {
       createRun: vi
         .fn()
         .mockResolvedValue(createMock<ScheduledAgentJobRun>({ id: 'run-1' })),
+      findJobById: vi
+        .fn()
+        .mockResolvedValue(
+          createMock<ScheduledAgentJob>({ ownerUserId: 'user-1' }),
+        ),
       findRunById: vi.fn().mockResolvedValue(null),
       getJobRepository: vi.fn().mockReturnValue({ update: jobRepoUpdate }),
       getRunRepository: vi.fn().mockReturnValue({ findOne: runRepoFindOne }),
       markRunFinished: vi.fn().mockResolvedValue(undefined),
       markRunStarted: vi.fn().mockResolvedValue(undefined),
+    });
+
+    checkoutPaths = createMock<ScheduledAgentJobCheckoutPathService>({
+      resolve: vi.fn().mockResolvedValue({ error: 'not-found' }),
     });
 
     runner = createMock<ScheduledAgentRunnerService>({
@@ -117,6 +129,7 @@ describe('ScheduledAgentJobsProcessor', () => {
     processor = new ScheduledAgentJobsProcessor(
       createMock<LoggerService>(),
       jobsService,
+      checkoutPaths,
       runner,
       cancellation,
       retention,
@@ -154,6 +167,103 @@ describe('ScheduledAgentJobsProcessor', () => {
     expect(cancellation.detach).toHaveBeenCalledWith('run-1');
   });
 
+  it('re-resolves the targeted checkout per run and spawns the CLI there', async () => {
+    // The payload path is deliberately stale; the checkout is the source of truth.
+    vi.mocked(checkoutPaths.resolve).mockResolvedValue({ path: process.cwd() });
+
+    await processor.process(
+      makeJob({
+        cwd: '/stale/snapshot/path',
+        repositoryCheckoutId: 'checkout-1',
+      }),
+    );
+
+    // Scoped to the schedule row's owner, never a payload-supplied user.
+    expect(checkoutPaths.resolve).toHaveBeenCalledWith({
+      checkoutId: 'checkout-1',
+      ownerUserId: 'user-1',
+    });
+    expect(vi.mocked(runner.run).mock.calls[0]?.[0]?.cwd).toBe(process.cwd());
+    // Provenance lands on the run row.
+    expect(jobsService.createRun).toHaveBeenCalledWith(
+      expect.objectContaining({
+        repositoryCheckoutId: 'checkout-1',
+        resolvedCwd: process.cwd(),
+      }),
+    );
+  });
+
+  it('backfills checkout provenance onto a pre-created run-now row', async () => {
+    vi.mocked(checkoutPaths.resolve).mockResolvedValue({ path: process.cwd() });
+    vi.mocked(jobsService.findRunById).mockResolvedValue(
+      createMock<ScheduledAgentJobRun>({ id: 'run-now-9' }),
+    );
+
+    await processor.process(
+      makeJob({ repositoryCheckoutId: 'checkout-1', runId: 'run-now-9' }),
+    );
+
+    expect(jobsService.markRunStarted).toHaveBeenCalledWith(
+      'run-now-9',
+      'bull-1',
+      expect.objectContaining({
+        repositoryCheckoutId: 'checkout-1',
+        resolvedCwd: process.cwd(),
+      }),
+    );
+  });
+
+  it('falls back to the payload cwd when the targeted checkout is gone', async () => {
+    vi.mocked(checkoutPaths.resolve).mockResolvedValue({ error: 'not-found' });
+
+    await processor.process(
+      makeJob({ cwd: process.cwd(), repositoryCheckoutId: 'deleted' }),
+    );
+
+    // Still runs — from the fallback path — and does NOT claim the dead checkout on the run row.
+    expect(vi.mocked(runner.run).mock.calls[0]?.[0]?.cwd).toBe(process.cwd());
+    expect(jobsService.createRun).toHaveBeenCalledWith(
+      expect.objectContaining({
+        repositoryCheckoutId: null,
+        resolvedCwd: process.cwd(),
+      }),
+    );
+    expect(jobsService.markRunFinished).toHaveBeenCalledWith(
+      'run-1',
+      expect.objectContaining({ status: 'succeeded' }),
+    );
+  });
+
+  it('fails the run with a legible message when the resolved directory does not exist', async () => {
+    vi.mocked(checkoutPaths.resolve).mockResolvedValue({ error: 'not-found' });
+
+    await processor.process(
+      makeJob({
+        cwd: '/definitely/not/a/real/dir',
+        repositoryCheckoutId: 'gone',
+      }),
+    );
+
+    expect(runner.run).not.toHaveBeenCalled();
+    const finish = vi.mocked(jobsService.markRunFinished).mock.calls[0]?.[1];
+    expect(finish?.status).toBe('failed');
+    expect(finish?.errorMessage).toContain('gone');
+    expect(finish?.errorMessage).toContain('/definitely/not/a/real/dir');
+  });
+
+  it('leaves a legacy cwd-only payload untouched (no checkout resolution)', async () => {
+    await processor.process(makeJob({ cwd: process.cwd() }));
+
+    expect(checkoutPaths.resolve).not.toHaveBeenCalled();
+    expect(vi.mocked(runner.run).mock.calls[0]?.[0]?.cwd).toBe(process.cwd());
+    expect(jobsService.createRun).toHaveBeenCalledWith(
+      expect.objectContaining({
+        repositoryCheckoutId: null,
+        resolvedCwd: process.cwd(),
+      }),
+    );
+  });
+
   it('records no_op when a clean exit carries an agent no_op verdict', async () => {
     runner = createMock<ScheduledAgentRunnerService>({
       run: vi.fn().mockResolvedValue(
@@ -165,6 +275,7 @@ describe('ScheduledAgentJobsProcessor', () => {
     processor = new ScheduledAgentJobsProcessor(
       createMock<LoggerService>(),
       jobsService,
+      checkoutPaths,
       runner,
       cancellation,
       retention,
@@ -188,6 +299,7 @@ describe('ScheduledAgentJobsProcessor', () => {
     processor = new ScheduledAgentJobsProcessor(
       createMock<LoggerService>(),
       jobsService,
+      checkoutPaths,
       runner,
       cancellation,
       retention,
@@ -215,6 +327,7 @@ describe('ScheduledAgentJobsProcessor', () => {
     processor = new ScheduledAgentJobsProcessor(
       createMock<LoggerService>(),
       jobsService,
+      checkoutPaths,
       runner,
       cancellation,
       retention,
@@ -242,7 +355,9 @@ describe('ScheduledAgentJobsProcessor', () => {
     expect(jobsService.markRunStarted).toHaveBeenCalledWith(
       'run-now-9',
       'bull-1',
-      { driverId: 'claude', model: null, settings: null },
+      expect.objectContaining({
+        settingsSnapshot: { driverId: 'claude', model: null, settings: null },
+      }),
     );
   });
 

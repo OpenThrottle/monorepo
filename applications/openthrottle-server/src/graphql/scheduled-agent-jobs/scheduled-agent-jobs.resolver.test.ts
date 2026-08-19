@@ -12,12 +12,21 @@ import {
 } from '@openthrottle/nestjs-auth';
 import {
   AgentCliPreferencesService,
+  type RepositoryCheckout,
   type ScheduledAgentJob,
 } from '@openthrottle/nestjs-repositories';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ScheduledAgentJobsResolver } from './scheduled-agent-jobs.resolver';
+import type {
+  ScheduledAgentJobObject,
+  ScheduledAgentJobRunObject,
+} from './scheduled-agent-job.object';
+import { ScheduledAgentJobsLoaders } from './scheduled-agent-jobs-loaders';
+import {
+  ScheduledAgentJobRunRepositoryResolver,
+  ScheduledAgentJobsResolver,
+} from './scheduled-agent-jobs.resolver';
 import { ScheduledAgentJobsGraphqlService } from './scheduled-agent-jobs-graphql.service';
 
 const human: AuthPrincipal = { kind: AUTH_PRINCIPAL_KIND_USER, sub: 'user-1' };
@@ -54,6 +63,7 @@ function build(
   const service = createMock<ScheduledAgentJobsGraphqlService>({ create });
   const resolver = new ScheduledAgentJobsResolver(
     agentPreferences,
+    createMock<ScheduledAgentJobsLoaders>(),
     createMock<LoggerService>(),
     service,
   );
@@ -95,5 +105,92 @@ describe('ScheduledAgentJobsResolver.createScheduledAgentJob', () => {
     ).rejects.toThrow(/gpt-5.2 model is disabled/);
     expect(isModelEnabled).toHaveBeenCalledWith('user-1', 'cursor', 'gpt-5.2');
     expect(create).not.toHaveBeenCalled();
+  });
+});
+
+describe('repository resolve-fields', () => {
+  const checkout = createMock<RepositoryCheckout>({
+    displayName: 'monorepo',
+    filesystemPath: '/repos/monorepo',
+    id: 'checkout-1',
+  });
+
+  /** Loaders whose request-scoped checkout DataLoader resolves to `found`. */
+  const loadersFor = (
+    found: RepositoryCheckout | null,
+  ): ScheduledAgentJobsLoaders => {
+    const loaders = createMock<ScheduledAgentJobsLoaders>();
+    vi.mocked(loaders.checkoutLoader.load).mockResolvedValue(found);
+    return loaders;
+  };
+
+  it('labels a schedule with its targeted checkout', async () => {
+    const resolver = new ScheduledAgentJobsResolver(
+      createMock<AgentCliPreferencesService>(),
+      loadersFor(checkout),
+      createMock<LoggerService>(),
+      createMock<ScheduledAgentJobsGraphqlService>(),
+    );
+
+    await expect(
+      resolver.repository(
+        createMock<ScheduledAgentJobObject>({
+          repositoryCheckoutId: 'checkout-1',
+        }),
+      ),
+    ).resolves.toEqual({
+      displayName: 'monorepo',
+      filesystemPath: '/repos/monorepo',
+      id: 'checkout-1',
+    });
+  });
+
+  it('resolves null for a schedule that targets no checkout', async () => {
+    const loaders = loadersFor(checkout);
+    const resolver = new ScheduledAgentJobsResolver(
+      createMock<AgentCliPreferencesService>(),
+      loaders,
+      createMock<LoggerService>(),
+      createMock<ScheduledAgentJobsGraphqlService>(),
+    );
+
+    await expect(
+      resolver.repository(
+        createMock<ScheduledAgentJobObject>({ repositoryCheckoutId: null }),
+      ),
+    ).resolves.toBeNull();
+    expect(loaders.checkoutLoader.load).not.toHaveBeenCalled();
+  });
+
+  it('resolves null for a run whose checkout has since been deleted', async () => {
+    const resolver = new ScheduledAgentJobRunRepositoryResolver(
+      loadersFor(null),
+    );
+
+    await expect(
+      resolver.repository(
+        createMock<ScheduledAgentJobRunObject>({
+          repositoryCheckoutId: 'gone',
+        }),
+      ),
+    ).resolves.toBeNull();
+  });
+
+  it('labels a run with the checkout it targeted at fire time', async () => {
+    const resolver = new ScheduledAgentJobRunRepositoryResolver(
+      loadersFor(checkout),
+    );
+
+    await expect(
+      resolver.repository(
+        createMock<ScheduledAgentJobRunObject>({
+          repositoryCheckoutId: 'checkout-1',
+        }),
+      ),
+    ).resolves.toEqual({
+      displayName: 'monorepo',
+      filesystemPath: '/repos/monorepo',
+      id: 'checkout-1',
+    });
   });
 });

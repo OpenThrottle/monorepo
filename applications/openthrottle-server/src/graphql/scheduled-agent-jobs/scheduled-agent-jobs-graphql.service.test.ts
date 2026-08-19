@@ -3,6 +3,7 @@ import { createMock } from '@golevelup/ts-vitest';
 import type { Queue } from 'bullmq';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
+  ScheduledAgentJobCheckoutPathService,
   ScheduledAgentJobsService,
   type ScheduledAgentJob,
   type ScheduledAgentJobRun,
@@ -32,6 +33,7 @@ const jobFixture = (
 
 describe('ScheduledAgentJobsGraphqlService', () => {
   let jobsService: ScheduledAgentJobsService;
+  let checkoutPaths: ScheduledAgentJobCheckoutPathService;
   let scheduler: ScheduledAgentJobSchedulerService;
   let cancellation: ScheduledAgentJobCancellationService;
   let queue: Queue<ScheduledAgentJobPayload, void>;
@@ -51,6 +53,9 @@ describe('ScheduledAgentJobsGraphqlService', () => {
       updateJob: vi.fn().mockResolvedValue(jobFixture()),
       updateNextRunAt: vi.fn().mockResolvedValue(undefined),
     });
+    checkoutPaths = createMock<ScheduledAgentJobCheckoutPathService>({
+      resolve: vi.fn().mockResolvedValue({ path: '/repos/monorepo' }),
+    });
     scheduler = createMock<ScheduledAgentJobSchedulerService>({
       removeScheduler: vi.fn().mockResolvedValue(undefined),
       upsertScheduler: vi
@@ -64,6 +69,7 @@ describe('ScheduledAgentJobsGraphqlService', () => {
     service = new ScheduledAgentJobsGraphqlService(
       createMock<LoggerService>(),
       jobsService,
+      checkoutPaths,
       scheduler,
       cancellation,
       queue,
@@ -88,6 +94,102 @@ describe('ScheduledAgentJobsGraphqlService', () => {
       'j1',
       new Date('2026-07-01T09:00:00Z'),
     );
+  });
+
+  it('persists a validated repository checkout, scoped to the new owner', async () => {
+    await service.create({
+      cronPattern: '0 9 * * *',
+      driverId: 'claude',
+      name: 'nightly',
+      ownerUserId: 'user-1',
+      prompt: 'audit',
+      repositoryCheckoutId: 'checkout-1',
+    });
+
+    expect(checkoutPaths.resolve).toHaveBeenCalledWith({
+      checkoutId: 'checkout-1',
+      ownerUserId: 'user-1',
+    });
+    expect(jobsService.createJob).toHaveBeenCalledWith(
+      expect.objectContaining({ repositoryCheckoutId: 'checkout-1' }),
+    );
+  });
+
+  it('rejects a foreign or unknown checkout at write time', async () => {
+    vi.mocked(checkoutPaths.resolve).mockResolvedValue({ error: 'not-found' });
+
+    await expect(
+      service.create({
+        cronPattern: '0 9 * * *',
+        driverId: 'claude',
+        name: 'nightly',
+        ownerUserId: 'user-1',
+        prompt: 'audit',
+        repositoryCheckoutId: 'someone-elses',
+      }),
+    ).rejects.toThrow('Repository not found.');
+    expect(jobsService.createJob).not.toHaveBeenCalled();
+  });
+
+  it('accepts a checkout alongside a cwd — the ladder makes the checkout win', async () => {
+    await service.create({
+      cronPattern: '0 9 * * *',
+      cwd: '/legacy/path',
+      driverId: 'claude',
+      name: 'nightly',
+      ownerUserId: 'user-1',
+      prompt: 'audit',
+      repositoryCheckoutId: 'checkout-1',
+    });
+
+    expect(jobsService.createJob).toHaveBeenCalledWith(
+      expect.objectContaining({
+        cwd: '/legacy/path',
+        repositoryCheckoutId: 'checkout-1',
+      }),
+    );
+  });
+
+  it('never validates a checkout for a legacy cwd-only write', async () => {
+    await service.create({
+      cronPattern: '0 9 * * *',
+      cwd: '/legacy/path',
+      driverId: 'claude',
+      name: 'nightly',
+      ownerUserId: 'user-1',
+      prompt: 'audit',
+    });
+
+    expect(checkoutPaths.resolve).not.toHaveBeenCalled();
+    expect(jobsService.createJob).toHaveBeenCalledWith(
+      expect.objectContaining({ repositoryCheckoutId: null }),
+    );
+  });
+
+  it('validates an updated checkout against the existing owner, not the caller', async () => {
+    vi.mocked(jobsService.findJobById).mockResolvedValue(
+      jobFixture({ ownerUserId: 'owner-9' }),
+    );
+
+    await service.update('j1', { repositoryCheckoutId: 'checkout-2' });
+
+    expect(checkoutPaths.resolve).toHaveBeenCalledWith({
+      checkoutId: 'checkout-2',
+      ownerUserId: 'owner-9',
+    });
+    expect(jobsService.updateJob).toHaveBeenCalledWith(
+      'j1',
+      expect.objectContaining({ repositoryCheckoutId: 'checkout-2' }),
+    );
+  });
+
+  it('rejects an update to a checkout the owner does not have', async () => {
+    vi.mocked(checkoutPaths.resolve).mockResolvedValue({ error: 'not-found' });
+
+    await expect(
+      service.update('j1', { repositoryCheckoutId: 'nope' }),
+    ).rejects.toThrow('Repository not found.');
+    expect(jobsService.updateJob).not.toHaveBeenCalled();
   });
 
   it('rejects an unknown driver id', async () => {

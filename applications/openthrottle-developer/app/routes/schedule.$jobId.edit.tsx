@@ -12,6 +12,7 @@ import {
 } from '@openthrottle/react-router-utils';
 import {
   ScheduledAgentJobDetailDocument,
+  ScheduleRepositoryOptionsDocument,
   UpdateScheduledAgentJobDocument,
   type UpdateScheduledAgentJobInputType,
 } from '~/__generated__/graphql';
@@ -36,17 +37,23 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
 export const loader = async (args: Route.LoaderArgs) => {
   const { jobId } = args.params;
 
-  const { scheduledAgentJob } = await executeGraphqlWithAuth(
-    args.request,
-    ScheduledAgentJobDetailDocument,
-    { id: jobId },
-  );
+  const [{ scheduledAgentJob }, { workspaceLocalRepositories }] =
+    await Promise.all([
+      executeGraphqlWithAuth(args.request, ScheduledAgentJobDetailDocument, {
+        id: jobId,
+      }),
+      executeGraphqlWithAuth(
+        args.request,
+        ScheduleRepositoryOptionsDocument,
+        {},
+      ),
+    ]);
 
   if (scheduledAgentJob == null) {
     throw new Response('Scheduled job not found', { status: 404 });
   }
 
-  return { job: scheduledAgentJob };
+  return { job: scheduledAgentJob, repositories: workspaceLocalRepositories };
 };
 
 export const links: Route.LinksFunction = () => {
@@ -65,7 +72,7 @@ export default function Component(
   // Hooks
 
   // Setup
-  const { job } = loaderData;
+  const { job, repositories } = loaderData;
   const actionError = getActionError(actionData);
 
   // Handlers
@@ -79,7 +86,12 @@ export default function Component(
   return (
     <GlobalScreen>
       <h1 className="mb-4 text-xl font-semibold">Edit scheduled job</h1>
-      <ScheduleForm action="update" error={actionError} job={job} />
+      <ScheduleForm
+        action="update"
+        error={actionError}
+        job={job}
+        repositories={repositories}
+      />
     </GlobalScreen>
   );
 }

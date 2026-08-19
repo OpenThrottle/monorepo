@@ -47,14 +47,16 @@ export const GlobalFeatureOnboardingTrigger = (
     <button
       aria-label={label}
       className={clsx(
-        'text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm transition-colors',
+        'cursor-pointer transition-colors',
+        'inline-flex items-center gap-3',
+        'text-muted-foreground hover:text-foreground text-sm',
         className,
       )}
       data-testid="GlobalFeatureOnboardingTrigger"
       onClick={handleClick}
       type="button"
     >
-      <SparklesIcon className="size-4" />
+      <SparklesIcon className="text-accent size-4" />
       {label}
     </button>
   );
