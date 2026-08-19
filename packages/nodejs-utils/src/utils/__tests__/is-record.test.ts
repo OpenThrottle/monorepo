@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { isRecord } from '../is-record.ts';
 
 // Merge-queue e2e probe (plan 491c0f49). Safe to revert after task a09527fa.
+// Merge-queue negative-case setup (task a09527fa) — next push will fail CI.
 
 describe('isRecord', () => {
   it('accepts plain objects, including empty ones', () => {
