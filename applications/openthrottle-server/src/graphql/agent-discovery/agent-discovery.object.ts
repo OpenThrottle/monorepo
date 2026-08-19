@@ -33,6 +33,11 @@ export class AgentCliOptionObject {
   backend!: string;
 
   @Field(() => Boolean, {
+    description: `True when this CLI resolves the workspace's committed MCP config (.mcp.json / .cursor/mcp.json / opencode.json), so a run in this checkout can reach openthrottle-mcp. False for codex and grok, which read only their own user-scope config — for those, MCP reachability is a property of the host and cannot be verified from the workspace, so present it as unverifiable rather than as definitely missing. Distinct from emitting MCP flags: claude and opencode emit none yet attach fine.`,
+  })
+  attachesWorkspaceMcp!: boolean;
+
+  @Field(() => Boolean, {
     description: `True when this driver has a wired streaming chat backend and can be offered as a chat composer backend (false for plan-run-only drivers like codex/grok).`,
   })
   chatCapable!: boolean;
