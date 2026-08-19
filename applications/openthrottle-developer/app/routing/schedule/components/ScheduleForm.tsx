@@ -4,6 +4,7 @@ import { Form, Link } from 'react-router';
 import {
   Button,
   Input,
+  InputCronExpression,
   Label,
   TextArea,
 } from '@openthrottle/react-router-shadcn';
@@ -60,6 +61,17 @@ export const ScheduleForm = (props: ScheduleFormProps): React.ReactElement => {
       </div>
 
       <div>
+        <Label htmlFor="cronPattern">Schedule (cron)</Label>
+        <InputCronExpression
+          defaultValue={job?.cronPattern}
+          id="cronPattern"
+          name="cronPattern"
+          placeholder="0 9 * * *"
+          required={true}
+        />
+      </div>
+
+      <div>
         <Label htmlFor="prompt">Prompt</Label>
         <TextArea
           defaultValue={job?.prompt}
@@ -101,21 +113,6 @@ export const ScheduleForm = (props: ScheduleFormProps): React.ReactElement => {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <Label htmlFor="cronPattern">Schedule (cron)</Label>
-          <Input
-            defaultValue={job?.cronPattern}
-            id="cronPattern"
-            name="cronPattern"
-            placeholder="0 9 * * *"
-            required={true}
-          />
-          <p className="text-muted-foreground mt-1 text-xs">
-            5- or 6-field cron. May not run every minute. Example: 0 9 * * *
-            (daily 09:00).
-          </p>
-        </div>
-
-        <div>
           <Label htmlFor="timezone">Timezone (optional)</Label>
           <Input
             defaultValue={job?.timezone ?? ''}
@@ -127,17 +124,16 @@ export const ScheduleForm = (props: ScheduleFormProps): React.ReactElement => {
             IANA timezone; blank means UTC.
           </p>
         </div>
-      </div>
-
-      <div>
-        <Label htmlFor="timeoutMs">Timeout ms (optional)</Label>
-        <Input
-          defaultValue={job?.timeoutMs ?? ''}
-          id="timeoutMs"
-          name="timeoutMs"
-          placeholder="900000"
-          type="number"
-        />
+        <div>
+          <Label htmlFor="timeoutMs">Timeout ms (optional)</Label>
+          <Input
+            defaultValue={job?.timeoutMs ?? ''}
+            id="timeoutMs"
+            name="timeoutMs"
+            placeholder="900000"
+            type="number"
+          />
+        </div>
       </div>
 
       <ScheduleRepositoryField

@@ -63,7 +63,9 @@ Once — and **only** once — the PR is confirmed open, tear down the isolated 
 
 ## After merge (not part of the loop)
 
-Only **after the PR is merged**, record the squash on the work ledger — `attach_session_subject({ planId, taskId? })` then `record_artifact({ type: 'git_commit', payload: { repo, sha } })`, or run `pnpm exec workflow-link-merge --plan <id> --sha <squash-sha> --repo <owner/repo>`. One `git_commit` artifact per merged commit, never per intermediate work commit.
+This loop **does not wait for merge**. It stops once the PR is open, and any later merge-queue enqueue/landing is a separate step.
+
+Only **after the PR is actually merged**, record the squash on the work ledger — `attach_session_subject({ planId, taskId? })` then `record_artifact({ type: 'git_commit', payload: { repo, sha } })`, or run `pnpm exec workflow-link-merge --plan <id> --sha <squash-sha> --repo <owner/repo>`. On a merge-queue-protected branch, `gh pr merge --auto` can return after **queuing** the PR, so do not use the branch head SHA for this step. Wait until `gh pr view --json mergedAt,mergeCommitSha` shows the landed merge commit (or read it back from `main`), then record that SHA. One `git_commit` artifact per merged commit, never per intermediate work commit.
 
 ## Rules
 

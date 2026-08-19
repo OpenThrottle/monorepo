@@ -57,6 +57,14 @@ mechanics, see [MONOREPO.md](./MONOREPO.md) and [docs/monorepo/](./docs/monorepo
 5. **Open a PR** with the
    [pull request template](./.github/pull_request_template.md): a
    conventional-commit title, and testing steps phrased as things to do.
+6. **Merge through the queue.** `main` is protected by GitHub's merge queue, so a
+   successful `gh pr merge --auto` or UI merge action may only **enqueue** your
+   PR; it is not merged until the queue lands it and GitHub reports
+   `mergedAt`/`mergeCommitSha`. If the queue rejects or dequeues the PR, inspect
+   the failing `merge_group` Actions run, fix the branch, and enqueue it again.
+   The landed commit on `main` is the squash commit the queue creates, so any
+   post-merge bookkeeping that needs "the merged SHA" must read it back from the
+   merged PR or from `main`, not from the branch head you pushed.
 
 ## Dependency licenses
 

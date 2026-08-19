@@ -107,3 +107,4 @@ All generator commands require the `NX_ISOLATE_PLUGINS=false` prefix. Generators
 - PRs: use `.github/pull_request_template.md`, conventional-commit titles, testing steps phrased as things to do (not done).
 - **Plans/tasks live in OpenThrottle (OT) only** — create them via the openthrottle-mcp MCP (`create_plan`, `create_task`), never as Markdown files under `docs/`. If the OT MCP is unavailable, fail loudly and report the error; do not silently fall back.
 - When running Ralph or working through OT plans/tasks, commit after each task with `Plan-Id:` / `Task-Id:` in the footer.
+- On merge-queue-protected branches, treat `gh pr merge --auto` as an **enqueue** step until `gh pr view --json mergedAt,mergeCommitSha` shows the landed squash commit. Record OT work-ledger artifacts only from that landed SHA, never from the branch head that was pushed.

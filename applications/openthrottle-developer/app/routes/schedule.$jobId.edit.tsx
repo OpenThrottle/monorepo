@@ -3,6 +3,7 @@ import { redirect } from 'react-router';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
   GlobalErrorBoundary,
+  GlobalHeading,
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
@@ -19,6 +20,7 @@ import {
 import { ScheduleForm } from '~/routing/schedule/components/ScheduleForm';
 import { parseScheduleForm } from '~/routing/schedule/data/parse-form';
 import { SITE_TITLE } from '~/global/config/settings';
+import { ClockIcon } from 'lucide-react';
 import type { Route } from '@/app/routes/+types/schedule.$jobId.edit';
 
 type HandleData = Route.ComponentProps['loaderData'];
@@ -68,11 +70,11 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData, loaderData } = props;
+  const { job, repositories } = loaderData;
 
   // Hooks
 
   // Setup
-  const { job, repositories } = loaderData;
   const actionError = getActionError(actionData);
 
   // Handlers
@@ -85,7 +87,12 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <h1 className="mb-4 text-xl font-semibold">Edit scheduled job</h1>
+      <GlobalHeading
+        className="mb-4"
+        heading="h1"
+        icon={ClockIcon}
+        title={`Edit: ${job.name}`}
+      />
       <ScheduleForm
         action="update"
         error={actionError}

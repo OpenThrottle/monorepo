@@ -199,7 +199,7 @@ Task-Id: 9f8e7d6c-…-…
 - Only conventional footers are allowed (`Plan-Id:`, `Task-Id:`, `BREAKING CHANGE:`, `Closes #123`). **Never** add `Co-authored-by` or any attribution line — this is enforced by repo convention ([CLAUDE.md](../../CLAUDE.md)).
 - **Do not** record a commit artifact for these intermediate work commits.
 
-**2. Record the _landed_ squash commit on the work ledger — after merge.** The legacy `link_commit` tool is retired; record a work-ledger `git_commit` artifact instead. `attach_session_subject(planId, taskId?)` then `record_artifact(type: "git_commit", payloadJson: {repo, sha}, message?)` associates the **squash commit on `main` after the PR merges** with the plan (and optionally a specific task) — **one artifact per task**, to what actually shipped. This is what keeps `get_activity_by_date` / `get_last_activity` aligned with landed work.
+**2. Record the _landed_ squash commit on the work ledger — after merge.** The legacy `link_commit` tool is retired; record a work-ledger `git_commit` artifact instead. `attach_session_subject(planId, taskId?)` then `record_artifact(type: "git_commit", payloadJson: {repo, sha}, message?)` associates the **squash commit on `main` after the PR merges** with the plan (and optionally a specific task) — **one artifact per task**, to what actually shipped. On a merge-queue-protected branch, `gh pr merge --auto` may only enqueue the PR; wait until `gh pr view --json mergedAt,mergeCommitSha` shows the landed commit, then use that SHA rather than the branch head. This is what keeps `get_activity_by_date` / `get_last_activity` aligned with landed work.
 
 ```jsonc
 // AFTER the PR merges to main (under an open session):
@@ -209,7 +209,7 @@ record_artifact({ "type": "git_commit",
                   "message": "feat(server): add rate-limit guard (#123)" })
 ```
 
-Or the one-shot CLI equivalent (orchestrates the same primitives): `pnpm exec workflow-link-merge --plan <plan-uuid> --sha <squash-sha> --repo <owner/repo>`.
+Or the one-shot CLI equivalent (orchestrates the same primitives): `pnpm exec workflow-link-merge --plan <plan-uuid> --sha <squash-sha> --repo <owner/repo>`. The SHA must be the landed default-branch commit, not the PR head SHA.
 
 > **Why the split?** Footers give you cheap, per-commit traceability while work is in flight; the ledger `git_commit` artifact gives OT a clean record of exactly one shipped SHA per task. Recording every branch commit would pollute that record — so footers during, one ledger artifact on merge.
 

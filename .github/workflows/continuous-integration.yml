@@ -46,13 +46,16 @@ on:
       - 'docs/**'
       - '**/*.md'
 
-# Concurrency: Cancel in-progress runs when a new commit is pushed to the same ref.
-# This prevents wasting resources on outdated runs while allowing parallel matrix jobs.
+# Concurrency: cancel in-progress runs when a newer commit arrives on the SAME ref.
+# This prevents wasting resources on outdated PR runs while allowing parallel matrix jobs.
 # EXCEPTION: never cancel on `main`. Consecutive pushes to main share one constant
 # group, so cancel-in-progress would kill the older run mid-flight — surfacing as a
 # spurious "cancelled" (non-error) result AND leaving that commit only partially
 # validated. It matters because `main` is the branch every PR's Actions cache is
 # restored from, so a half-validated main commit seeds every downstream build.
+# Merge-queue refs are `gh-readonly-queue/.../pr-N-<sha>` and therefore unique per
+# entry, so they naturally do NOT cancel each other; each queue candidate keeps its
+# own ref-shaped concurrency group.
 concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
   group: continuous-integration-${{ github.ref }}
@@ -253,9 +256,10 @@ jobs:
       fail-fast: false
       matrix:
         jobIndex: [1, 2, 3] # ⚠️ must be in sync with "env.jobCount"
-        # 💰 No merge queue on this plan, so the ready PR is the gate: drafts run
-        # nothing (see job `if` above); every ready-PR push runs the full suite.
-        # Single entry on purpose — this is the box label, not a second axis.
+        # 💰 Ready PRs are the ordinary contributor gate, and merge-queue entries
+        # are the pre-merge re-validation gate on `main`. Drafts still run nothing
+        # (see job `if` above). Single entry on purpose — this is the box label,
+        # not a second axis.
         target: ['lint,typecheck,test']
 
     # openthrottle-developer:test (264 jsdom files) used to cost ~12 CPU-minutes
