@@ -7,6 +7,27 @@ import type { UserConfig } from 'vite';
 export { getDirname } from './vite-config.ts';
 
 /**
+ * @description Workspace Vitest time budget.
+ *
+ * Vitest defaults to 5000ms, which no project overrode, so I/O-heavy suites ran
+ * with zero headroom and tipped over under CI shard contention rather than
+ * because anything hung (the worst measured overrun was 6318ms). 15000ms gives
+ * roughly 2x the worst observed case while still failing a genuine hang in
+ * seconds; the per-shard `timeout-minutes` job ceiling remains the backstop.
+ *
+ * `hookTimeout` matches, because the expensive tree setup in the generator
+ * suites happens in `beforeAll`.
+ * @public
+ */
+export const VITEST_HOOK_TIMEOUT_MS = 15_000;
+
+/**
+ * @description Per-test time budget; see {@link VITEST_HOOK_TIMEOUT_MS}
+ * @public
+ */
+export const VITEST_TEST_TIMEOUT_MS = 15_000;
+
+/**
  * @description Test environment type
  * @public
  */
@@ -108,10 +129,12 @@ const createBaseVitestConfig = (
       },
       environment,
       globals: true,
+      hookTimeout: VITEST_HOOK_TIMEOUT_MS,
       include: ['**/*.test.(ts|tsx)'],
       reporters: ['default'],
       setupFiles: setupFiles ? [...setupFiles] : undefined,
       silent: process.env.DEBUG !== 'true',
+      testTimeout: VITEST_TEST_TIMEOUT_MS,
     },
     ...overrides,
   });

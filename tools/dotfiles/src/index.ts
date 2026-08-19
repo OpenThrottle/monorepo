@@ -39,6 +39,8 @@ export {
   createVitestConfigJsdom,
   createVitestConfigHappyDom,
   createVitestConfigNode,
+  VITEST_HOOK_TIMEOUT_MS,
+  VITEST_TEST_TIMEOUT_MS,
   type CreateVitestConfigOptions,
   type TestEnvironment,
 } from './vitest-config.ts';

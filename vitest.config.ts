@@ -15,9 +15,11 @@ export default (_config: ConfigEnv) => {
       env,
       environment: 'node',
       globals: true,
+      hookTimeout: 15_000,
       include: ['scripts/**/*.test.ts'],
       reporters: ['default'],
       silent: process.env.DEBUG !== 'true',
+      testTimeout: 15_000,
     },
   });
 

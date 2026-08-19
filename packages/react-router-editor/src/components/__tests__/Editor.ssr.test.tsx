@@ -17,6 +17,19 @@ vi.mock('@monaco-editor/react', () => ({
   default: () => <div data-testid="monaco" />,
 }));
 
+// `Editor` composes these three, and none of them participates in the
+// short-circuit under test — but importing them for real drags in the icon and
+// state graph (`@phosphor-icons/react`, jotai atoms, the sidebar tree), which
+// dominated this file's runtime. Stub them with visible markers so a regression
+// that drops the short-circuit still surfaces as a rendered node.
+const stub = (testId: string) => (): React.ReactElement => (
+  <div data-testid={testId} />
+);
+
+vi.mock('../EditorSidebar', () => ({ EditorSidebar: stub('editor-sidebar') }));
+vi.mock('../EditorTabs', () => ({ EditorTabs: stub('editor-tabs') }));
+vi.mock('../EditorToolbar', () => ({ EditorToolbar: stub('editor-toolbar') }));
+
 describe('components SSR safety', () => {
   test('Editor renders null when IS_BROWSER is false', async () => {
     const { Editor } = await import('../Editor');

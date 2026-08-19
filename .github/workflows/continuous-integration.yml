@@ -428,6 +428,14 @@ jobs:
         if: matrix.jobIndex == 1
         run: pnpm exec nx run monorepo:validate-agent-assets-frontmatter
 
+      # Static and build-free, so one shard is enough. Catches the `exports`
+      # condition pointing into a gitignored build dir on a package whose own
+      # sources import it by name — the mismatch that made shard assignment,
+      # rather than the code, decide whether a suite could collect.
+      - name: '📦 Package entrypoint consistency'
+        if: matrix.jobIndex == 1
+        run: pnpm exec nx run monorepo:check-package-entrypoints
+
       # Full-tree (not affected): license risk lives in the whole installed graph,
       # so when this runs it scans every dependency. Both this and the notices
       # guard below are `cache: false` in nx.json (they read the installed

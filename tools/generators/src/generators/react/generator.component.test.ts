@@ -1,7 +1,30 @@
-import { describe, expect, beforeEach, test } from 'vitest';
+import { describe, expect, beforeEach, test, vi } from 'vitest';
 import type { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { componentGenerator } from './generator.component';
+
+// The generator resolves `destination` through the real Nx project graph, whose
+// first (cold) computation dominated this file's runtime — ~900ms of workspace
+// scanning per test process, paid once per file across the cluster. Nothing here
+// asserts graph construction; it asserts the emitted file set. `generator.test.ts`
+// keeps the un-mocked path as the integration case.
+vi.mock('@nx/devkit', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@nx/devkit')>();
+
+  return {
+    ...actual,
+    createProjectGraphAsync: async () => ({
+      dependencies: {},
+      nodes: {
+        '@openthrottle/react-router-shadcn': {
+          data: { root: 'packages/react-router-shadcn' },
+          name: '@openthrottle/react-router-shadcn',
+          type: 'lib',
+        },
+      },
+    }),
+  };
+});
 
 describe('componentGenerator', () => {
   let tree: Tree;

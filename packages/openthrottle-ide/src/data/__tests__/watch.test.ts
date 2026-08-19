@@ -48,11 +48,14 @@ describe('watchWorkspace', () => {
     await rm(root, { force: true, recursive: true });
   });
 
-  const start = (debounceMs = 10): void => {
+  const start = async (debounceMs = 10): Promise<void> => {
     handle = watchWorkspace(
       { root },
       { debounceMs, onEvents: (batch) => events.push(...batch) },
     );
+    // Wait for the watcher to actually be live rather than sleeping past the
+    // initial scan and hoping it settled.
+    await handle.ready;
   };
 
   const find = (
@@ -62,9 +65,7 @@ describe('watchWorkspace', () => {
     events.find((event) => event.type === type && event.path === path);
 
   it('emits add/change/unlink events with workspace-relative POSIX paths', async () => {
-    start();
-    // Give the watcher a moment to finish its initial (ignored) scan.
-    await new Promise((resolvePromise) => setTimeout(resolvePromise, 200));
+    await start();
 
     await writeFile(join(root, 'src', 'b.ts'), 'export const b = 2;\n');
     await waitFor(() => find('add', 'src/b.ts') !== undefined);
@@ -77,8 +78,7 @@ describe('watchWorkspace', () => {
   });
 
   it('does not emit events for gitignored or excluded files', async () => {
-    start();
-    await new Promise((resolvePromise) => setTimeout(resolvePromise, 200));
+    await start();
 
     await writeFile(join(root, 'dist', 'out.js'), 'compiled');
     await writeFile(join(root, 'ignored.txt'), 'nope');
@@ -91,8 +91,7 @@ describe('watchWorkspace', () => {
   });
 
   it('stops emitting after close()', async () => {
-    start();
-    await new Promise((resolvePromise) => setTimeout(resolvePromise, 200));
+    await start();
 
     await handle?.close();
     handle = undefined;
@@ -127,8 +126,6 @@ describe('createWorkspaceIndex', () => {
   const start = async (): Promise<void> => {
     index = await createWorkspaceIndex({ root }, { debounceMs: 10 });
     index.subscribe((delta) => deltas.push(delta));
-    // Let the watcher's initial (ignored) scan settle before mutating.
-    await new Promise((resolvePromise) => setTimeout(resolvePromise, 200));
   };
 
   const pathsIn = (key: keyof SnapshotDiff): string[] =>

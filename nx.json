@@ -215,6 +215,25 @@
         "{workspaceRoot}/skills-lock.json"
       ]
     },
+    "check-package-entrypoints": {
+      "cache": true,
+      "description": "Verify no workspace package steers Vite into a gitignored build directory while its own sources import it by name, via scripts/check-package-entrypoints.ts. `inputs` MUST be explicit {workspaceRoot} globs \u2014 the root `monorepo` project owns 0 files, so the default {projectRoot} input would hash nothing and cache-hit forever.",
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsx ./scripts/check-package-entrypoints.ts",
+        "cwd": "{workspaceRoot}"
+      },
+      "inputs": [
+        "{workspaceRoot}/.gitignore",
+        "{workspaceRoot}/applications/*/package.json",
+        "{workspaceRoot}/applications/*/src/**/*.{ts,tsx}",
+        "{workspaceRoot}/packages/*/package.json",
+        "{workspaceRoot}/packages/*/src/**/*.{ts,tsx}",
+        "{workspaceRoot}/scripts/check-package-entrypoints.ts",
+        "{workspaceRoot}/tools/*/package.json",
+        "{workspaceRoot}/tools/*/src/**/*.{ts,tsx}"
+      ]
+    },
     "check-migration-table-comments": {
       "cache": true,
       "description": "Verify every migration table/column carries COMMENT ON metadata via scripts/check-migration-table-comments.ts.",
