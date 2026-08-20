@@ -9,6 +9,7 @@ import {
   SKILL_USAGE_COPY,
   type SkillUsageScopeFilter,
 } from '~/routing/usage/data/skill-usage-copy';
+import type { UsageBranchOption } from '~/routing/usage/hooks/useUsageBranchSearch';
 import type {
   UsageSkillUsageByDayFragment,
   UsageSkillUsageByScopeFragment,
@@ -17,10 +18,16 @@ import type {
 } from '~/__generated__/graphql';
 
 export interface UsageSkillUsageProps {
+  /** SSR first page of branches: default branch first, then A–Z. */
+  branchOptions: readonly UsageBranchOption[];
+  /** The SSR branch page was truncated, so the list is not exhaustive. */
+  branchesHaveMore: boolean;
   byDay: readonly UsageSkillUsageByDayFragment[];
   byScope: readonly UsageSkillUsageByScopeFragment[];
   bySkill: readonly UsageSkillUsageBySkillFragment[];
   className?: string;
+  /** Range end (YYYY-MM-DD) the branch search runs over. */
+  end: string;
   filterOptions: UsageSkillUsageFilterOptionsFragment;
   /**
    * Skill names that resolve to an on-disk `/skills/$slug` detail page. A row is
@@ -34,6 +41,8 @@ export interface UsageSkillUsageProps {
   selectedCwd: string | null;
   selectedGitBranch: string | null;
   selectedScope: SkillUsageScopeFilter;
+  /** Range start (YYYY-MM-DD) the branch search runs over. */
+  start: string;
   totalCount: number;
 }
 
@@ -41,10 +50,13 @@ export const UsageSkillUsage = (
   props: UsageSkillUsageProps,
 ): React.ReactElement => {
   const {
+    branchOptions,
+    branchesHaveMore,
     byDay,
     byScope,
     bySkill,
     className,
+    end,
     filterOptions,
     linkableSlugs,
     providerParam,
@@ -52,6 +64,7 @@ export const UsageSkillUsage = (
     selectedCwd,
     selectedGitBranch,
     selectedScope,
+    start,
     totalCount,
   } = props;
 
@@ -88,11 +101,15 @@ export const UsageSkillUsage = (
       </p>
 
       <UsageSkillUsageFilters
+        branchOptions={branchOptions}
+        branchesHaveMore={branchesHaveMore}
+        end={end}
         filterOptions={filterOptions}
         providerParam={providerParam}
         selectedCwd={selectedCwd}
         selectedGitBranch={selectedGitBranch}
         selectedScope={selectedScope}
+        start={start}
       />
 
       <UsageSkillUsageSummary byScope={byScope} totalCount={totalCount} />

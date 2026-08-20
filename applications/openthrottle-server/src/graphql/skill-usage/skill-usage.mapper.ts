@@ -9,6 +9,8 @@ import type {
   SkillUsageBySkillRow,
   SkillUsageEvent,
   SkillUsageFilterOptions,
+  SkillUsageGitBranchRow,
+  SkillUsageGitBranchSearchResult,
   SkillUsageOutcome,
 } from '@openthrottle/nestjs-repositories';
 import {
@@ -17,6 +19,8 @@ import {
   SkillUsageBySkillObject,
   SkillUsageEventObject,
   SkillUsageFilterOptionsObject,
+  SkillUsageGitBranchObject,
+  SkillUsageGitBranchSearchObject,
   SkillUsageOutcomeObject,
   SkillUsageResultObject,
 } from './skill-usage.object';
@@ -116,6 +120,28 @@ export const toSkillUsageFilterOptionsObject = (
 
   object.cwds = [...options.cwds];
   object.gitBranches = [...options.gitBranches];
+
+  return object;
+};
+
+const toSkillUsageGitBranchObject = (
+  row: SkillUsageGitBranchRow,
+): SkillUsageGitBranchObject => {
+  const object = new SkillUsageGitBranchObject();
+
+  object.branch = row.branch;
+  object.count = row.count;
+
+  return object;
+};
+
+export const toSkillUsageGitBranchSearchObject = (
+  result: SkillUsageGitBranchSearchResult,
+): SkillUsageGitBranchSearchObject => {
+  const object = new SkillUsageGitBranchSearchObject();
+
+  object.hasMore = result.hasMore;
+  object.items = result.items.map(toSkillUsageGitBranchObject);
 
   return object;
 };

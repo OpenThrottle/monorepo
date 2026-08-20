@@ -6,7 +6,10 @@ import {
   SKILL_USAGE_SCOPES,
   SkillUsageEvent,
 } from './skill-usage-events.entity';
-import { SkillUsageEventsService } from './skill-usage-events.service';
+import {
+  SKILL_USAGE_DEFAULT_BRANCHES,
+  SkillUsageEventsService,
+} from './skill-usage-events.service';
 import {
   SKILL_USAGE_OUTCOMES,
   SkillUsageOutcome,
@@ -23,6 +26,7 @@ type QueryBuilderMock = {
   limit: ReturnType<typeof vi.fn>;
   orderBy: ReturnType<typeof vi.fn>;
   select: ReturnType<typeof vi.fn>;
+  setParameters: ReturnType<typeof vi.fn>;
   where: ReturnType<typeof vi.fn>;
 };
 
@@ -40,6 +44,7 @@ const createQueryBuilderMock = (
     limit: vi.fn(),
     orderBy: vi.fn(),
     select: vi.fn(),
+    setParameters: vi.fn(),
     where: vi.fn(),
     ...overrides,
   };
@@ -54,6 +59,7 @@ const createQueryBuilderMock = (
     'limit',
     'orderBy',
     'select',
+    'setParameters',
     'where',
   ];
   for (const key of chainKeys) {
@@ -692,6 +698,231 @@ describe('SkillUsageEventsService', () => {
       expect(result.filterOptions).toEqual({
         cwds: ['/repo'],
         gitBranches: ['main'],
+      });
+    });
+  });
+  describe('listFilterOptions', () => {
+    it('caps both option lists so the deprecated field stays bounded', async () => {
+      const branchQb = createQueryBuilderMock({
+        getRawMany: vi.fn().mockResolvedValue([{ value: 'main' }]),
+      });
+      const cwdQb = createQueryBuilderMock({
+        getRawMany: vi.fn().mockResolvedValue([{ value: '/repo' }]),
+      });
+      const service = await buildService({
+        events: {
+          createQueryBuilder: vi
+            .fn()
+            .mockReturnValueOnce(branchQb)
+            .mockReturnValueOnce(cwdQb),
+        },
+      });
+
+      await service.listFilterOptions({
+        end: '2026-07-31',
+        start: '2026-07-01',
+      });
+
+      expect(branchQb.limit).toHaveBeenCalledWith(50);
+      expect(cwdQb.limit).toHaveBeenCalledWith(50);
+    });
+  });
+
+  describe('searchGitBranches', () => {
+    const buildBranchService = async (
+      rows: ReadonlyArray<Record<string, unknown>>,
+    ): Promise<{
+      qb: QueryBuilderMock;
+      service: SkillUsageEventsService;
+    }> => {
+      const qb = createQueryBuilderMock({
+        getRawMany: vi.fn().mockResolvedValue(rows),
+      });
+      const service = await buildService({
+        events: { createQueryBuilder: vi.fn().mockReturnValue(qb) },
+      });
+
+      return { qb, service };
+    };
+
+    it('ranks the default branches in SQL and maps counts to numbers', async () => {
+      const { qb, service } = await buildBranchService([
+        { branch: 'main', count: '12' },
+        { branch: 'alpha', count: '3' },
+      ]);
+
+      const result = await service.searchGitBranches({
+        end: '2026-07-31',
+        start: '2026-07-01',
+      });
+
+      expect(qb.orderBy).toHaveBeenCalledWith(
+        'CASE e.git_branch WHEN :primaryBranch THEN 0 WHEN :secondaryBranch THEN 1 ELSE 2 END',
+        'ASC',
+      );
+      expect(qb.addOrderBy).toHaveBeenCalledWith('e.git_branch', 'ASC');
+      expect(qb.setParameters).toHaveBeenCalledWith({
+        primaryBranch: 'main',
+        secondaryBranch: 'master',
+      });
+      expect(qb.groupBy).toHaveBeenCalledWith('e.git_branch');
+      expect(result).toEqual({
+        hasMore: false,
+        items: [
+          { branch: 'main', count: 12 },
+          { branch: 'alpha', count: 3 },
+        ],
+      });
+    });
+
+    it('pins main ahead of master when both rank', () => {
+      expect(SKILL_USAGE_DEFAULT_BRANCHES).toEqual(['main', 'master']);
+    });
+
+    describe('when a master-only window is returned', () => {
+      it('keeps the SQL rank so master leads the alphabetical tail', async () => {
+        const { service } = await buildBranchService([
+          { branch: 'master', count: '9' },
+          { branch: 'alpha', count: '1' },
+        ]);
+
+        const result = await service.searchGitBranches({
+          end: '2026-07-31',
+          start: '2026-07-01',
+        });
+
+        expect(result.items.map((row) => row.branch)).toEqual([
+          'master',
+          'alpha',
+        ]);
+      });
+    });
+
+    describe('when a query is supplied', () => {
+      it('adds a parameterized ILIKE substring predicate on the trimmed value', async () => {
+        const { qb, service } = await buildBranchService([]);
+
+        await service.searchGitBranches({
+          end: '2026-07-31',
+          query: '  Feat  ',
+          start: '2026-07-01',
+        });
+
+        expect(qb.andWhere).toHaveBeenCalledWith(
+          'e.git_branch ILIKE :branchPattern',
+          { branchPattern: '%Feat%' },
+        );
+      });
+
+      it('escapes LIKE metacharacters instead of honoring them', async () => {
+        const { qb, service } = await buildBranchService([]);
+
+        await service.searchGitBranches({
+          end: '2026-07-31',
+          query: '100%_x',
+          start: '2026-07-01',
+        });
+
+        expect(qb.andWhere).toHaveBeenCalledWith(
+          'e.git_branch ILIKE :branchPattern',
+          { branchPattern: '%100\\%\\_x%' },
+        );
+      });
+    });
+
+    describe('when the query is blank', () => {
+      it('adds no ILIKE predicate', async () => {
+        const { qb, service } = await buildBranchService([]);
+
+        await service.searchGitBranches({
+          end: '2026-07-31',
+          query: '   ',
+          start: '2026-07-01',
+        });
+
+        expect(qb.andWhere).not.toHaveBeenCalledWith(
+          'e.git_branch ILIKE :branchPattern',
+          expect.anything(),
+        );
+      });
+    });
+
+    describe('when limit is omitted, oversized, or nonsense', () => {
+      /** Resolve the LIMIT the builder was handed for one requested limit. */
+      const limitFor = async (limit?: number | null): Promise<unknown> => {
+        const { qb, service } = await buildBranchService([]);
+
+        await service.searchGitBranches({
+          end: '2026-07-31',
+          limit,
+          start: '2026-07-01',
+        });
+
+        const [firstCall] = qb.limit.mock.calls;
+
+        return firstCall?.[0];
+      };
+
+      it('defaults to 20 and clamps to [1, 50], fetching one extra row', async () => {
+        const [omitted, oversized, zero, notFinite] = await Promise.all([
+          limitFor(null),
+          limitFor(500),
+          limitFor(0),
+          limitFor(Number.NaN),
+        ]);
+
+        expect(omitted).toBe(21);
+        expect(oversized).toBe(51);
+        expect(zero).toBe(2);
+        expect(notFinite).toBe(21);
+      });
+    });
+
+    describe('when more rows exist than the limit', () => {
+      it('flips hasMore and slices the extra row off', async () => {
+        const { service } = await buildBranchService([
+          { branch: 'main', count: '3' },
+          { branch: 'alpha', count: '2' },
+          { branch: 'beta', count: '1' },
+        ]);
+
+        const result = await service.searchGitBranches({
+          end: '2026-07-31',
+          limit: 2,
+          start: '2026-07-01',
+        });
+
+        expect(result.hasMore).toBe(true);
+        expect(result.items.map((row) => row.branch)).toEqual([
+          'main',
+          'alpha',
+        ]);
+      });
+    });
+
+    describe('when a skillName is supplied', () => {
+      it('narrows the window to that skill', async () => {
+        const { qb, service } = await buildBranchService([]);
+
+        await service.searchGitBranches({
+          end: '2026-07-31',
+          skillName: 'ot-plans',
+          start: '2026-07-01',
+        });
+
+        expect(qb.andWhere).toHaveBeenCalledWith('e.skill_name = :skillName', {
+          skillName: 'ot-plans',
+        });
+      });
+    });
+
+    describe('when the window has no branches', () => {
+      it('returns an empty, non-paged result', async () => {
+        const { service } = await buildBranchService([]);
+
+        await expect(
+          service.searchGitBranches({ end: '2026-07-31', start: '2026-07-01' }),
+        ).resolves.toEqual({ hasMore: false, items: [] });
       });
     });
   });

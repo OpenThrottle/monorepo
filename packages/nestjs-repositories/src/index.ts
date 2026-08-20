@@ -23,6 +23,10 @@ export {
   type ResolvedListPagination,
 } from './common/list-pagination';
 export {
+  escapeLikePattern,
+  toLikeContainsPattern,
+} from './common/like-pattern';
+export {
   isPlanStatus,
   isTaskStatus,
   PLAN_STATUS,
@@ -263,7 +267,10 @@ export type {
   SkillUsageOutcomeValue,
 } from './modules/skill-usage-events/skill-usage-outcomes.entity';
 export { SkillUsageEventsModule } from './modules/skill-usage-events/skill-usage-events.module';
-export { SkillUsageEventsService } from './modules/skill-usage-events/skill-usage-events.service';
+export {
+  SKILL_USAGE_DEFAULT_BRANCHES,
+  SkillUsageEventsService,
+} from './modules/skill-usage-events/skill-usage-events.service';
 export type {
   RecordSkillUsageInput,
   RecordSkillUsageOutcomeInput,
@@ -272,6 +279,9 @@ export type {
   SkillUsageByScopeRow,
   SkillUsageBySkillRow,
   SkillUsageFilterOptions,
+  SkillUsageGitBranchRow,
+  SkillUsageGitBranchSearchQuery,
+  SkillUsageGitBranchSearchResult,
   SkillUsageRangeQuery,
 } from './modules/skill-usage-events/skill-usage-events.service';
 export { skillUsageEventsFactory } from './modules/skill-usage-events/skill-usage-events.factory';

@@ -83,6 +83,16 @@ const skillUsageResponse = {
   },
 };
 
+const branchSearchResponse = {
+  skillUsageGitBranches: {
+    hasMore: true,
+    items: [
+      { branch: 'main', count: 12 },
+      { branch: 'alpha', count: 3 },
+    ],
+  },
+};
+
 const runLoader = (url: string) => {
   const request = new Request(url);
 
@@ -98,12 +108,14 @@ const runLoader = (url: string) => {
 describe('routes/usage._index.tsx', () => {
   describe('loader', () => {
     beforeEach(() => {
-      // Three parallel calls: daily stats, token usage, skill usage.
+      // Four parallel calls: daily stats, token usage, skill usage, and the
+      // first page of the branch dropdown.
       mockExecuteGraphqlWithAuth
         .mockReset()
         .mockResolvedValueOnce(dailyStatsResponse)
         .mockResolvedValueOnce(tokenUsageResponse)
-        .mockResolvedValueOnce(skillUsageResponse);
+        .mockResolvedValueOnce(skillUsageResponse)
+        .mockResolvedValueOnce(branchSearchResponse);
     });
 
     test('returns daily stats + token usage + skill usage for a 30-day window', async () => {
@@ -124,6 +136,11 @@ describe('routes/usage._index.tsx', () => {
         tokenUsageResponse.tokenUsage.totals,
       );
       expect(result.skillUsage).toEqual(skillUsageResponse.skillUsage);
+      // The dropdown is seeded server-side rather than from filterOptions.
+      expect(result.branchOptions).toEqual(
+        branchSearchResponse.skillUsageGitBranches.items,
+      );
+      expect(result.branchesHaveMore).toBe(true);
       // Disk-discovered slugs the leaderboard may link through to /skills/$slug.
       expect(Array.isArray(result.linkableSkillSlugs)).toBe(true);
 
@@ -149,6 +166,19 @@ describe('routes/usage._index.tsx', () => {
           end: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
           gitBranch: null,
           scope: null,
+          start: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+        }),
+      );
+
+      // The branch dropdown asks for the unfiltered first page.
+      expect(mockExecuteGraphqlWithAuth).toHaveBeenNthCalledWith(
+        4,
+        expect.any(Request),
+        expect.anything(),
+        expect.objectContaining({
+          end: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+          limit: null,
+          query: null,
           start: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
         }),
       );

@@ -64,9 +64,12 @@ const renderComponent = (props: UsageSkillUsageProps): RenderResult => {
 };
 
 const baseProps = (): UsageSkillUsageProps => ({
+  branchOptions: [],
+  branchesHaveMore: false,
   byDay: [],
   byScope: [],
   bySkill: [],
+  end: '2026-07-31',
   filterOptions: buildFilterOptions(),
   linkableSlugs: [],
   providerParam: null,
@@ -74,6 +77,7 @@ const baseProps = (): UsageSkillUsageProps => ({
   selectedCwd: null,
   selectedGitBranch: null,
   selectedScope: null,
+  start: '2026-07-01',
   totalCount: 0,
 });
 
@@ -206,12 +210,12 @@ describe('UsageSkillUsage Component', () => {
     ).toHaveAttribute('href', '/?skillScope=third-party');
   });
 
-  test('branch and cwd filters preserve provider and mark active chips', () => {
+  test('renders the branch dropdown and cwd chips, preserving provider', () => {
     const component = renderComponent({
       ...baseProps(),
+      branchOptions: [{ branch: 'example-usage-tracking', count: 3 }],
       filterOptions: buildFilterOptions({
         cwds: ['/Users/matt/openthrottle'],
-        gitBranches: ['example-usage-tracking'],
       }),
       providerParam: 'claude',
       selectedCwd: '/Users/matt/openthrottle',
@@ -219,19 +223,17 @@ describe('UsageSkillUsage Component', () => {
       selectedScope: SKILL_USAGE_SCOPES.THIRD_PARTY,
     });
 
-    const branchLink = component.getByRole('link', {
-      name: 'example-usage-tracking',
-    });
-    expect(branchLink).toHaveAttribute('aria-current', 'true');
-    expect(branchLink.getAttribute('href')).toContain('provider=claude');
-    expect(branchLink.getAttribute('href')).toContain('skillScope=third-party');
-    expect(branchLink.getAttribute('href')).toContain(
-      'skillBranch=example-usage-tracking',
+    expect(component.getByRole('combobox')).toHaveTextContent(
+      'example-usage-tracking',
     );
 
     const cwdLink = component.getByRole('link', { name: 'openthrottle' });
     expect(cwdLink).toHaveAttribute('aria-current', 'true');
     expect(cwdLink).toHaveAttribute('title', '/Users/matt/openthrottle');
+    expect(cwdLink.getAttribute('href')).toContain('provider=claude');
+    expect(cwdLink.getAttribute('href')).toContain(
+      'skillBranch=example-usage-tracking',
+    );
   });
 
   test('shows filtered empty copy when filters are active and no rows', () => {

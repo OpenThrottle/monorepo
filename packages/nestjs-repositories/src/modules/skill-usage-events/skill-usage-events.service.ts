@@ -9,6 +9,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, type SelectQueryBuilder } from 'typeorm';
+import { toLikeContainsPattern } from '../../common/like-pattern';
 import {
   SKILL_USAGE_PRIVACY_LEVELS,
   SKILL_USAGE_SCOPES,
@@ -108,6 +109,27 @@ export interface SkillUsageFilterOptions {
   readonly gitBranches: readonly string[];
 }
 
+/** One git branch seen in the window, with its invocation count. */
+export interface SkillUsageGitBranchRow {
+  readonly branch: string;
+  readonly count: number;
+}
+
+/** A capped page of branch matches; `hasMore` means "keep typing to narrow". */
+export interface SkillUsageGitBranchSearchResult {
+  readonly hasMore: boolean;
+  readonly items: readonly SkillUsageGitBranchRow[];
+}
+
+/** Lazy branch-search window: date range plus an optional ILIKE needle. */
+export interface SkillUsageGitBranchSearchQuery {
+  readonly end: string;
+  readonly limit?: number | null;
+  readonly query?: string | null;
+  readonly skillName?: string | null;
+  readonly start: string;
+}
+
 /** Full aggregation payload for the skillUsage GraphQL query. */
 export interface SkillUsageAggregation {
   readonly byDay: readonly SkillUsageByDayRow[];
@@ -187,6 +209,31 @@ const toSkillUsageScope = (value: unknown): SkillUsageScope => {
 
 /** Cap the leaderboard so a noisy window stays UI-friendly. */
 const BY_SKILL_LIMIT = 50;
+
+/** Cap the deprecated filterOptions lists so they can never grow unbounded. */
+const FILTER_OPTIONS_LIMIT = 50;
+
+/**
+ * Branches pinned above the alphabetical tail, most-default first. Expressed as
+ * a SQL rank so the pin survives the LIMIT: `main` wins when both are present,
+ * `master` is pinned when it is the only one in the window.
+ */
+export const SKILL_USAGE_DEFAULT_BRANCHES = ['main', 'master'] as const;
+
+/** Default branch-search page size. */
+const BRANCH_SEARCH_DEFAULT_LIMIT = 20;
+
+/** Hard upper bound on a branch-search page, regardless of the request. */
+const BRANCH_SEARCH_MAX_LIMIT = 50;
+
+/** Clamp a requested branch-search limit into `[1, BRANCH_SEARCH_MAX_LIMIT]`. */
+const resolveBranchSearchLimit = (limit?: number | null): number => {
+  if (limit == null || !Number.isFinite(limit)) {
+    return BRANCH_SEARCH_DEFAULT_LIMIT;
+  }
+
+  return Math.min(Math.max(Math.floor(limit), 1), BRANCH_SEARCH_MAX_LIMIT);
+};
 
 @Injectable()
 export class SkillUsageEventsService {
@@ -371,35 +418,74 @@ export class SkillUsageEventsService {
     readonly skillName?: string | null;
     readonly start: string;
   }): Promise<SkillUsageFilterOptions> {
-    const withSkill = (
-      qb: SelectQueryBuilder<SkillUsageEvent>,
-    ): SelectQueryBuilder<SkillUsageEvent> => {
-      if (query.skillName != null && query.skillName !== '') {
-        qb.andWhere('e.skill_name = :skillName', {
-          skillName: query.skillName,
-        });
-      }
-      return qb;
-    };
-
     const [branchRows, cwdRows] = await Promise.all([
-      withSkill(this.dateRangeQuery(query))
+      this.withSkillName(this.dateRangeQuery(query), query.skillName)
         .select('DISTINCT e.git_branch', 'value')
         .andWhere('e.git_branch IS NOT NULL')
         .andWhere(`e.git_branch <> ''`)
         .orderBy('e.git_branch', 'ASC')
+        .limit(FILTER_OPTIONS_LIMIT)
         .getRawMany<{ value: string }>(),
-      withSkill(this.dateRangeQuery(query))
+      this.withSkillName(this.dateRangeQuery(query), query.skillName)
         .select('DISTINCT e.cwd', 'value')
         .andWhere('e.cwd IS NOT NULL')
         .andWhere(`e.cwd <> ''`)
         .orderBy('e.cwd', 'ASC')
+        .limit(FILTER_OPTIONS_LIMIT)
         .getRawMany<{ value: string }>(),
     ]);
 
     return {
       cwds: cwdRows.map((row) => row.value),
       gitBranches: branchRows.map((row) => row.value),
+    };
+  }
+
+  /**
+   * Git branches present in the date window, ranked in SQL so the default
+   * branch (`main`, else `master`) leads and the rest follow A–Z — the pin
+   * therefore survives the LIMIT. An optional `query` narrows by
+   * case-insensitive substring; `limit` defaults to 20 and is capped at 50,
+   * with `hasMore` derived from an n+1 fetch so the UI can prompt for a
+   * narrower search instead of paging.
+   */
+  async searchGitBranches(
+    query: SkillUsageGitBranchSearchQuery,
+  ): Promise<SkillUsageGitBranchSearchResult> {
+    const limit = resolveBranchSearchLimit(query.limit);
+    const needle = query.query?.trim() ?? '';
+
+    const qb = this.withSkillName(this.dateRangeQuery(query), query.skillName)
+      .select('e.git_branch', 'branch')
+      .addSelect('COUNT(*)', 'count')
+      .andWhere('e.git_branch IS NOT NULL')
+      .andWhere(`e.git_branch <> ''`)
+      .groupBy('e.git_branch')
+      .orderBy(
+        `CASE e.git_branch WHEN :primaryBranch THEN 0 WHEN :secondaryBranch THEN 1 ELSE 2 END`,
+        'ASC',
+      )
+      .addOrderBy('e.git_branch', 'ASC')
+      .setParameters({
+        primaryBranch: SKILL_USAGE_DEFAULT_BRANCHES[0],
+        secondaryBranch: SKILL_USAGE_DEFAULT_BRANCHES[1],
+      })
+      .limit(limit + 1);
+
+    if (needle !== '') {
+      qb.andWhere('e.git_branch ILIKE :branchPattern', {
+        branchPattern: toLikeContainsPattern(needle),
+      });
+    }
+
+    const rows = await qb.getRawMany<Record<string, unknown>>();
+
+    return {
+      hasMore: rows.length > limit,
+      items: rows.slice(0, limit).map((row) => ({
+        branch: String(row.branch),
+        count: toNumber(row.count),
+      })),
     };
   }
 
@@ -489,6 +575,18 @@ export class SkillUsageEventsService {
     }
 
     return map;
+  }
+
+  /** Narrow a builder to one skill when a non-empty skillName is supplied. */
+  private withSkillName(
+    qb: SelectQueryBuilder<SkillUsageEvent>,
+    skillName?: string | null,
+  ): SelectQueryBuilder<SkillUsageEvent> {
+    if (skillName != null && skillName !== '') {
+      qb.andWhere('e.skill_name = :skillName', { skillName });
+    }
+
+    return qb;
   }
 
   /** Shared date-window filter (no optional scope/branch/cwd). */
