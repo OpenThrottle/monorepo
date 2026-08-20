@@ -3,9 +3,11 @@
 /**
  * @description Render a script's narration to per-sentence audio plus timings.
  *
- *   pnpm exec tsx narrate/narrate.ts --script 03-first-plan [--voice Samantha]
- *   NARRATION_BACKEND=piper NARRATION_VOICE=en_US-hfc_male-medium \
- *     pnpm exec tsx narrate/narrate.ts --script 01-what-is-openthrottle
+ *   pnpm exec tsx narrate/narrate.ts --script 03-first-plan
+ *   NARRATION_BACKEND=macos-say pnpm exec tsx narrate/narrate.ts --script 03-first-plan
+ *
+ * The default backend is Piper (local, on-box) with the pinned ship voice; macOS
+ * `say` remains selectable for a quick rehearsal pass. See NARRATION.md.
  *
  * Out: `output/<slug>/audio/NNN-<beat>.wav` (48kHz, loudness-normalised) and
  * `output/<slug>/audio/timings.json` for the assembly and caption stages.
@@ -32,7 +34,7 @@ import type { NarrationTimings, SegmentTiming, TtsBackend } from './types';
 
 const execFileAsync = promisify(execFile);
 
-/** The rehearsal default. See NARRATION.md — this is not the ship voice. */
+/** Voice used when `macos-say` is selected. Rehearsal only — not the ship voice. */
 const DEFAULT_SAY_VOICE = 'Samantha';
 
 const BACKENDS: Readonly<Record<string, TtsBackend>> = {
@@ -132,9 +134,8 @@ const main = async (): Promise<void> => {
     process.exit(1);
   }
 
-  const backendId = 'piper';
-  // const backendId =
-  //   argValue('backend') ?? process.env.NARRATION_BACKEND ?? 'macos-say';
+  const backendId =
+    argValue('backend') ?? process.env.NARRATION_BACKEND ?? 'piper';
 
   const backend = BACKENDS[backendId];
 
@@ -145,11 +146,10 @@ const main = async (): Promise<void> => {
     process.exit(1);
   }
 
-  const voice = DEFAULT_PIPER_VOICE ?? DEFAULT_SAY_VOICE;
-  // const voice =
-  //   argValue('voice') ??
-  //   process.env.NARRATION_VOICE ??
-  //   (backend.id === 'piper' ? DEFAULT_PIPER_VOICE : DEFAULT_SAY_VOICE);
+  const voice =
+    argValue('voice') ??
+    process.env.NARRATION_VOICE ??
+    (backend.id === 'piper' ? DEFAULT_PIPER_VOICE : DEFAULT_SAY_VOICE);
 
   const format = loadFormat();
   const script = parseScript(repositoryRoot(), slug);

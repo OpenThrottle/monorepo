@@ -48,10 +48,12 @@ pnpm exec tsx applications/openthrottle-developer/tests/demo/narrate/narrate.ts 
   --script 03-first-plan
 ```
 
-Out: `output/<slug>/audio/*.wav` + `timings.json`. See
-[`NARRATION.md`](../../applications/openthrottle-developer/tests/demo/NARRATION.md) —
-the ship voice is still an open decision, and the current default is a rehearsal
-voice.
+Out: `output/<slug>/audio/*.wav` + `timings.json`. Renders through local Piper
+(`en_US-hfc_male-medium`) by default — the settled ship voice, pinned for the season.
+`NARRATION_BACKEND=macos-say` swaps in the flat rehearsal voice for a quick timing
+pass. Piper must be installed; see
+[`NARRATION.md`](../../applications/openthrottle-developer/tests/demo/NARRATION.md)
+for the install and why this backend won.
 
 ### 4. Assemble
 

@@ -15,47 +15,54 @@ The narration column of `docs/marketing/scripts/<slug>.md` is the literal input.
 Nothing is rewritten for the voice except pronunciation (below), so the script stays
 the single source of truth.
 
-## The ship voice is an OPEN DECISION
+## The ship voice is SETTLED: Piper, `en_US-hfc_male-medium`
 
-**What is implemented and working: macOS** `say`**, as the rehearsal voice.** It is on
-every Mac, costs nothing, sends nothing off the box, and is enough to build and time
-the whole pipeline against. **It is not good enough to publish.**
+Piper renders every take by default. macOS `say` stays in the tree as a rehearsal
+backend, selectable with `--backend macos-say`, and nothing else.
 
-That is a measurement, not a preference. A rendered sample had a loudness range of
-**0.2 LU** — effectively no prosody — and only the base voice set is installed on
-this machine (`say -v '?'` lists no Premium or Enhanced Siri voices). With no
-presenter, the voice _is_ the channel's identity, and a listener recognises this one
-as synthetic inside a sentence.
+The decision was made the way NARRATION.md said to make it: script 01 rendered
+through both backends, played back to back on phone speakers rather than headphones,
+because most viewers are on a phone. Piper won clearly. The measurement agrees with
+the listen — `say` came out at a loudness range of **0.2 LU**, effectively no
+prosody, while the Piper take measured **2.1 LU** on the same script. `say` is
+recognisable as synthetic inside a sentence; Piper is not, on a phone speaker.
 
-The remaining candidates could not be evaluated here, and it would be dishonest to
-pick one on paper:
+**The voice is now pinned and does not change mid-season.** A voice change reads as a
+different channel. Repinning means re-rendering every published episode, so treat
+`DEFAULT_PIPER_VOICE` in `narrate/backends/piper.ts` as frozen for Season 1.
 
-| Backend        | Cost | Off-box? | Status                                                             |
-| -------------- | ---- | -------- | ------------------------------------------------------------------ |
-| macOS `say`    | free | no       | **Implemented.** Rehearsal only — measurably flat                  |
-| Piper (local)  | free | no       | Installed locally (`en_US-hfc_male-medium`). Not the ship default. |
-| Kokoro (local) | free | no       | Not installed. Needs Python plus a model                           |
-| ElevenLabs     | paid | **yes**  | Needs an API key; not available here                               |
-| OpenAI TTS     | paid | **yes**  | Needs an API key; not available here                               |
-| Google TTS     | paid | **yes**  | Needs credentials; not available here                              |
+| Backend        | Cost | Off-box? | Status                                                       |
+| -------------- | ---- | -------- | ------------------------------------------------------------ |
+| Piper (local)  | free | no       | **Ship default.** `en_US-hfc_male-medium`, installed locally |
+| macOS `say`    | free | no       | Implemented. Rehearsal only — measurably flat (0.2 LU)       |
+| Kokoro (local) | free | no       | Not installed, not evaluated. Out of scope                   |
+| ElevenLabs     | paid | **yes**  | Not evaluated — needs an API key                             |
+| OpenAI TTS     | paid | **yes**  | Not evaluated — needs an API key                             |
+| Google TTS     | paid | **yes**  | Not evaluated — needs credentials                            |
 
-Given this project's self-hosting stance, a local option that sounds good is worth a
-real look before a hosted one — and the backend records `sendsDataOffBox` per take,
-because narration is text about unreleased work and "nothing leaves your box" is a
-claim the product makes.
+Nothing in the shipped path sends narration off the box, which matters because
+narration is text about unreleased work and "nothing leaves your box" is a claim the
+product makes. The backend records `sendsDataOffBox` per take so that stays checkable
+rather than assumed.
 
-### How to settle it
+### Selecting a backend and voice
 
-1. Install Piper with a good English voice and add a backend beside
-   `backends/say.ts` (the interface is three fields; nothing else changes).
-2. Render the same script — 01 is the pilot — through each candidate.
-3. Listen to all of them back to back, on phone speakers, not headphones. Most
-   viewers are on a phone.
-4. Pick one and **do not change it mid-season**. A voice change reads as a different
-   channel.
+```bash
+# Default — Piper, pinned ship voice. Nothing to pass.
+pnpm exec tsx applications/openthrottle-developer/tests/demo/narrate/narrate.ts \
+  --script 01-what-is-openthrottle
 
-Then set `NARRATION_BACKEND` / `NARRATION_VOICE`, or change the default in
-`narrate.ts`.
+# Rehearsal pass through macOS say.
+NARRATION_BACKEND=macos-say pnpm exec tsx …/narrate.ts --script 01-what-is-openthrottle
+
+# Flags win over env; both accept a voice.
+pnpm exec tsx …/narrate.ts --script 01-what-is-openthrottle --backend macos-say --voice Samantha
+```
+
+`--backend` / `NARRATION_BACKEND` and `--voice` / `NARRATION_VOICE`, in that
+precedence. An unknown backend lists the available ids and exits non-zero. A missing
+Piper binary or voice model fails loudly with the install command — it never falls
+back to `say`, because a silent fallback would ship a rehearsal voice.
 
 ## Installing Piper (local)
 
@@ -121,6 +128,11 @@ the viewer reads "MCP" while the voice says the letters.
 
 Adding a term is one line. If a new backend pronounces something correctly on its
 own, remove the entry rather than leaving a workaround that now sounds wrong.
+
+Every entry above survived the move to Piper — none was removed, because removing one
+is only safe after hearing Piper read the written form, and Piper mangles this
+vocabulary the same way `say` does. Re-check the list per script as new terms appear,
+not per backend.
 
 ## Why per-sentence files
 

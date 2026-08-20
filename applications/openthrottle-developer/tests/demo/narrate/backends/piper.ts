@@ -16,8 +16,7 @@ import type { RenderRequest, TtsBackend } from '../types';
 
 const execFileAsync = promisify(execFile);
 
-/** Pinned English voice for the ship-voice evaluation. Not the narrate.ts default. */
-// export const DEFAULT_PIPER_VOICE = 'en_US-hfc_male-medium';
+/** The pinned ship voice. Do not change mid-season — see NARRATION.md. */
 export const DEFAULT_PIPER_VOICE = 'en_US-hfc_male-medium';
 
 const INSTALL_HINT = `Install with: uv tool install piper-tts\nDownload the voice: python -m piper.download_voices en_US-hfc_male-medium --data-dir ~/.local/share/piper/voices\nSee applications/openthrottle-developer/tests/demo/NARRATION.md`;
