@@ -219,6 +219,45 @@ export class PlanRunsService {
   }
 
   /**
+   * @description Rewrites `run_config_snapshot.workspace` for a run whose working directory was
+   * resolved after enqueue — a plan run whose worktree OpenThrottle creates at job start only learns
+   * the path then, and the snapshot has to show the directory the agent actually used. Leaves the
+   * rest of the snapshot untouched; no-ops when the run or its snapshot is missing.
+   */
+  async setRunConfigSnapshotWorkspace(
+    planRunId: string,
+    workspace: {
+      readonly checkoutId?: string | null;
+      readonly workingDirectory: string;
+    },
+  ): Promise<PlanRun | null> {
+    const run = await this.findById(planRunId);
+    if (run === null || run.runConfigSnapshot == null) {
+      return run;
+    }
+
+    const current = run.runConfigSnapshot;
+    const checkoutId = workspace.checkoutId ?? current.workspace.checkoutId;
+
+    const next: PlanRunConfigSnapshot = {
+      ...current,
+      workspace: {
+        ...current.workspace,
+        ...(checkoutId != null && checkoutId !== '' ? { checkoutId } : {}),
+        workingDirectory: workspace.workingDirectory,
+      },
+    };
+
+    // Same reason as `recordQueuedRun`: type the jsonb payload as `object` so TypeORM's
+    // QueryDeepPartialEntity does not deep-recurse into the snapshot's readonly members.
+    const runConfigSnapshot: object = next;
+
+    await this.getRepository().update({ id: planRunId }, { runConfigSnapshot });
+
+    return this.findById(planRunId);
+  }
+
+  /**
    * @description Returns recent plan runs newest first for GraphQL/UI audit views.
    */
   async findRecentByPlanId(planId: string, limit: number): Promise<PlanRun[]> {

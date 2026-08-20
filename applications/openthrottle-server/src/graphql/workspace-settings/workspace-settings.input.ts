@@ -15,6 +15,12 @@ export class UpdateWorkspaceProfileInput {
 
   @Field(() => [WorkspaceEditorIdEnum], { nullable: true })
   enabledEditors?: WorkspaceEditorIdEnum[] | null;
+
+  @Field(() => String, {
+    description: `Absolute directory every git worktree is created under; blank clears it back to the default.`,
+    nullable: true,
+  })
+  worktreeRoot?: string | null;
 }
 
 @InputType()

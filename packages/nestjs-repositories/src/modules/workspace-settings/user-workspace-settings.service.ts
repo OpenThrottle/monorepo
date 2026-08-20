@@ -13,6 +13,7 @@ interface UpdateUserWorkspaceProfileData {
   readonly contactDisplayName?: string | null;
   readonly contactEmail?: string | null;
   readonly enabledEditors?: readonly WorkspaceEditorId[];
+  readonly worktreeRoot?: string | null;
 }
 
 @Injectable()
@@ -44,6 +45,7 @@ export class UserWorkspaceSettingsService {
       contactEmail: null,
       enabledEditors: [],
       userId,
+      worktreeRoot: null,
     });
 
     return this.repository.save(created);
@@ -66,6 +68,9 @@ export class UserWorkspaceSettingsService {
     }
     if (data.enabledEditors !== undefined) {
       settings.enabledEditors = [...data.enabledEditors];
+    }
+    if (data.worktreeRoot !== undefined) {
+      settings.worktreeRoot = data.worktreeRoot;
     }
 
     return this.repository.save(settings);

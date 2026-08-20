@@ -118,3 +118,17 @@ export const buildPlanRunSnapshotDiffLabels = (
 
   return labels;
 };
+
+/**
+ * @description The directory a queued run actually worked in, from
+ * `run_config_snapshot.workspace.workingDirectory`. For a default run that is the worktree
+ * OpenThrottle created at job start (the orchestrator re-points the snapshot once it knows the
+ * path); null when the run predates the snapshot or recorded nothing.
+ */
+export const readPlanRunSnapshotWorkspacePath = (
+  runConfigSnapshotJson: string | null | undefined,
+): string | null => {
+  const snapshot = parseSnapshot(runConfigSnapshotJson);
+  const path = snapshot?.workspace?.workingDirectory?.trim();
+  return path === undefined || path === '' ? null : path;
+};

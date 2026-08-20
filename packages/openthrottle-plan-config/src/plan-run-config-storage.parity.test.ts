@@ -20,11 +20,23 @@ describe('plan run config enqueue tuning parity', () => {
     expect(buildRalphPlanRunTuningFromPlanRunConfig(stored)).toBeUndefined();
   });
 
+  it('sends an explicit debug opt-out so the server default cannot override it', () => {
+    const ui = getDefaultPlanWorkflowUiState({ planId });
+    const stored = planRunConfigFromWorkflowUiState({
+      ...ui,
+      workflowInput: { ...ui.workflowInput, debugCli: 'omit' },
+    });
+
+    expect(buildRalphPlanRunTuningFromPlanRunConfig(stored)).toEqual({
+      ralphDebugCli: 'omit',
+    });
+  });
+
   it('emits the same keys as developer enqueue tuning for a full profile', () => {
     const ui: PlanWorkflowUiState = {
       iterationTimeoutText: '45',
       workflowInput: {
-        debugCli: 'verbose',
+        debugCli: 'debug',
         executionBackend: 'claude',
         iterations: 3,
         model: 'sonnet',
@@ -52,7 +64,7 @@ describe('plan run config enqueue tuning parity', () => {
       model: 'sonnet',
       project: 'nestjs-repositories',
       prompt: '/agents/custom',
-      ralphDebugCli: 'verbose',
+      ralphDebugCli: 'debug',
       worktree: 'feature-x',
     });
   });

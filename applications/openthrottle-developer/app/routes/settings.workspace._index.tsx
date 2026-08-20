@@ -17,6 +17,7 @@ import { SettingsWorkspaceEditorTargets } from '~/routing/settings/components/Se
 import { SettingsWorkspaceEditorsForm } from '~/routing/settings/components/SettingsWorkspaceEditorsForm';
 import { SettingsWorkspaceIntro } from '~/routing/settings/components/SettingsWorkspaceIntro';
 import { SettingsWorkspaceProfileForm } from '~/routing/settings/components/SettingsWorkspaceProfileForm';
+import { SettingsWorkspaceWorktreeRootForm } from '~/routing/settings/components/SettingsWorkspaceWorktreeRootForm';
 import {
   applyEditorConfig,
   updateProfile,
@@ -109,6 +110,10 @@ export default function Component(
             summary={actionMessage}
           />
         ) : null}
+        <SettingsWorkspaceWorktreeRootForm
+          actionError={actionError}
+          profile={profile}
+        />
         <SettingsWorkspaceProfileForm
           actionError={actionError}
           profile={profile}

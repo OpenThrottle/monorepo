@@ -12,7 +12,9 @@ import { executeGraphqlV2 } from '@openthrottle/nodejs-graphql';
 import { buildWorkflowExecuteGraphqlV2Options } from '@openthrottle/openthrottle-agentic-ralph';
 import type { WorkflowRalphOrchestratorDeps } from '@openthrottle/openthrottle-agentic-ralph';
 import { ForeignSkillInjectionModule } from '../../services/foreign-skill-injection/foreign-skill-injection.module';
+import { PlanRunWorkspacePreflightModule } from '../../services/plan-run-workspace-preflight/plan-run-workspace-preflight.module';
 import { PlanRunWorktreeCheckoutModule } from '../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.module';
+import { PlanRunWorktreeProvisionModule } from '../../services/plan-run-worktree-provision/plan-run-worktree-provision.module';
 import { createAgenticRalphOrchestratorDeps } from './agentic-ralph-orchestrator-deps.factory';
 import { AgenticRalphOrchestratorService } from './agentic-ralph-orchestrator.service';
 import { resolveAgenticRalphWorkerWorkflowGraphqlConfigFromEnv } from './agentic-ralph-worker-graphql-auth';
@@ -55,7 +57,9 @@ import { resolveAgenticRalphWorkerWorkflowGraphqlConfigFromEnv } from './agentic
     }),
     ForeignSkillInjectionModule,
     NestjsRepositoriesModule,
+    PlanRunWorkspacePreflightModule,
     PlanRunWorktreeCheckoutModule,
+    PlanRunWorktreeProvisionModule,
   ],
   providers: [AgenticRalphOrchestratorService],
 })

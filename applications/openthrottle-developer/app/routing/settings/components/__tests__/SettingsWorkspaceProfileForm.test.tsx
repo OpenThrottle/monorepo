@@ -15,6 +15,7 @@ const profile: UserWorkspaceProfileFieldsFragment = {
   enabledEditors: [WorkspaceEditorId.Cursor],
   updatedAt: '2026-01-02T00:00:00Z',
   userId: 'user-1',
+  worktreeRoot: null,
 };
 
 describe('SettingsWorkspaceProfileForm Component', () => {

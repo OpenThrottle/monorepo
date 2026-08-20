@@ -47,6 +47,7 @@ describe('WorkspaceSettingsResolver', () => {
     enabledEditors: [],
     updatedAt: new Date('2026-05-18T12:00:00.000Z'),
     userId,
+    worktreeRoot: null,
   };
 
   const mockWorkspaceLocalRepositoriesService =
@@ -203,6 +204,40 @@ describe('WorkspaceSettingsResolver', () => {
       ).toHaveBeenLastCalledWith(userId, {
         enabledEditors: [],
       });
+    });
+
+    test('normalizes and persists the worktree root', async () => {
+      vi.mocked(
+        mockUserWorkspaceSettingsService.updateProfile,
+      ).mockResolvedValue(mockProfile);
+
+      await resolver.updateWorkspaceProfile(userId, {
+        worktreeRoot: '  /srv/worktrees/  ',
+      });
+
+      expect(
+        mockUserWorkspaceSettingsService.updateProfile,
+      ).toHaveBeenLastCalledWith(userId, { worktreeRoot: '/srv/worktrees' });
+    });
+
+    test('treats a blank worktree root as a reset to the default', async () => {
+      vi.mocked(
+        mockUserWorkspaceSettingsService.updateProfile,
+      ).mockResolvedValue(mockProfile);
+
+      await resolver.updateWorkspaceProfile(userId, { worktreeRoot: '' });
+
+      expect(
+        mockUserWorkspaceSettingsService.updateProfile,
+      ).toHaveBeenLastCalledWith(userId, { worktreeRoot: null });
+    });
+
+    test('rejects a relative worktree root', async () => {
+      await expect(
+        resolver.updateWorkspaceProfile(userId, {
+          worktreeRoot: 'relative/worktrees',
+        }),
+      ).rejects.toThrow(/absolute path/);
     });
 
     test('rejects invalid contact email', async () => {
