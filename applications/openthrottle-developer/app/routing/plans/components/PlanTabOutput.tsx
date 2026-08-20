@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { PlanDetailIndexLoaderQuery } from '@openthrottle/openthrottle-developer-codegen';
 import { TabsContent } from '@openthrottle/react-router-shadcn';
-import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
 import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
 import { LinkedArtifactsPanel } from '~/routing/plans/components/LinkedArtifactsPanel';
+import { OutputStream } from '~/routing/plans/components/OutputStream';
 import { PlanRuleApplications } from '~/routing/plans/components/PlanRuleApplications';
 import { usePlanDetailRouteData } from '~/routing/plans/hooks/usePlanDetailRouteData';
 import { PLAN_TAB_OUTPUT_COPY } from '~/routing/plans/data/data.copy';
@@ -26,24 +26,6 @@ export const PlanTabOutput = (
   const { linkedArtifacts, ruleApplications } = usePlanDetailRouteData();
 
   // Setup
-  const markdown = React.useMemo(
-    () =>
-      chunks
-        .map((chunk) => {
-          const iter =
-            chunk.iteration != null
-              ? `iteration ${chunk.iteration}`
-              : 'iteration ?';
-          const when =
-            typeof chunk.createdAt === 'string'
-              ? chunk.createdAt
-              : String(chunk.createdAt);
-
-          return `### ${when} (${iter})\n\n${chunk.content}`;
-        })
-        .join('\n\n---\n\n'),
-    [chunks],
-  );
 
   // Handlers
 
@@ -71,10 +53,7 @@ export const PlanTabOutput = (
             workflow-ralph or MCP). Local CLI runs log to your terminal instead.
           </p>
         ) : (
-          <MarkdownRenderer
-            className="text-muted-foreground text-xs"
-            source={markdown}
-          />
+          <OutputStream chunks={chunks} />
         )}
       </OpenThrottleFieldset>
 

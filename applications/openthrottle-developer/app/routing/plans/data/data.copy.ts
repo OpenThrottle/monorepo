@@ -121,6 +121,18 @@ export const PLAN_LIFECYCLE_HOOKS_COPY = {
 } as const;
 
 /**
+ * @description Copy for the shared plan/task output-stream renderer
+ * ({@link OutputStream}). The iteration marker rides on the same line as the
+ * timestamp, so it is a short prefix (`#1`) rather than a sentence; the full
+ * meaning is carried by `iterationTitle` on hover.
+ */
+export const OUTPUT_STREAM_COPY = {
+  iterationPrefix: `#`,
+  iterationTitle: `Iteration`,
+  unknownDay: `Unknown date`,
+} as const;
+
+/**
  * @description Section headings and empty-state hints for the plan detail Output
  * tab, which reads as a history: agent output, then the rule-applications change
  * log, then linked artifacts. Headings mirror the reused panel components

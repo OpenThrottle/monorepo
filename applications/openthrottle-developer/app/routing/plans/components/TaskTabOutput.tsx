@@ -1,16 +1,16 @@
 /**
  * @description Task detail Output tab body. Mirrors {@link PlanTabOutput} but
- * renders only the current task's output chunks (task-scoped), grouped by
- * iteration through {@link MarkdownRenderer}, with a "View full plan output"
+ * renders only the current task's output chunks (task-scoped) through the
+ * shared {@link OutputStream}, with a "View full plan output"
  * affordance pointing at the plan Output tab. Shows an empty state when the task
  * has no attributed chunks yet.
  */
 import * as React from 'react';
 import { TabsContent } from '@openthrottle/react-router-shadcn';
-import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
 import { OpenThrottleEmptyState } from '@openthrottle/react-router-ui';
 import { Link } from 'react-router';
 import type { TaskOutputStreamChunksQuery } from '@openthrottle/openthrottle-developer-codegen';
+import { OutputStream } from '~/routing/plans/components/OutputStream';
 
 type Chunk = TaskOutputStreamChunksQuery['planOutputStreamChunks'][number];
 
@@ -28,24 +28,6 @@ export const TaskTabOutput = (
   // Hooks
 
   // Setup
-  const markdown = React.useMemo(
-    () =>
-      chunks
-        .map((chunk) => {
-          const iter =
-            chunk.iteration != null
-              ? `iteration ${chunk.iteration}`
-              : 'iteration ?';
-          const when =
-            typeof chunk.createdAt === 'string'
-              ? chunk.createdAt
-              : String(chunk.createdAt);
-
-          return `### ${when} (${iter})\n\n${chunk.content}`;
-        })
-        .join('\n\n---\n\n'),
-    [chunks],
-  );
 
   // Handlers
 
@@ -76,10 +58,7 @@ export const TaskTabOutput = (
           title="No task output yet"
         />
       ) : (
-        <MarkdownRenderer
-          className="text-muted-foreground text-xs"
-          source={markdown}
-        />
+        <OutputStream chunks={chunks} />
       )}
     </TabsContent>
   );
