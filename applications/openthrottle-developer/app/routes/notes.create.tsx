@@ -14,7 +14,7 @@ import {
 import { redirect } from 'react-router';
 import { NoteForm } from '~/routing/notes/components/NoteForm';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { CreateNoteDocument } from '~/__generated__/graphql';
+import { CreateNoteDocument, GetMyUserDocument } from '~/__generated__/graphql';
 import { CreateNoteInputSchema } from '~/__generated__/schemas';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/notes.create';
@@ -26,8 +26,22 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   links: (_match) => [{ children: 'Notes', to: '/notes' }],
 };
 
-export const loader = async (_args: Route.LoaderArgs) => {
-  return {};
+export const loader = async (args: Route.LoaderArgs) => {
+  // The server stamps the note's author from the request principal; this only
+  // tells the user who that will be, so a failed `me` degrades to no
+  // attribution rather than blocking the create form.
+  try {
+    const result = await executeGraphqlWithAuth(
+      args.request,
+      GetMyUserDocument,
+    );
+
+    return { authorName: result.me?.githubUsername ?? null };
+  } catch (error) {
+    console.error('notes.create loader: GetMyUser failed', error);
+
+    return { authorName: null };
+  }
 };
 
 export const links: Route.LinksFunction = () => {
@@ -41,7 +55,8 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
 export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
-  const { actionData, loaderData: _l, matches: _m, params: _p } = props;
+  const { actionData, loaderData, matches: _m, params: _p } = props;
+  const { authorName } = loaderData;
 
   // Hooks
 
@@ -58,7 +73,11 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <NoteForm action="create" error={actionError} />
+      <NoteForm
+        action="create"
+        authorName={authorName ?? undefined}
+        error={actionError}
+      />
     </GlobalScreen>
   );
 }
@@ -66,18 +85,21 @@ export default function Component(
 export const action = async (args: Route.ActionArgs) => {
   const formData = await args.request.formData();
 
-  // `content` is required (`min(1)` from codegen); `author` is optional and
-  // omitted when blank.
+  // `content` is required (`min(1)` from codegen). The form posts no `author`,
+  // and the schema keeps it optional, so parsing succeeds on content alone.
   const parsed = parseFormData(formData, CreateNoteInputSchema());
   if (!parsed.success) {
     return { error: 'Content is required.' };
   }
 
   try {
+    // Send only `content`: the server stamps `author` from the request
+    // principal, and forwarding a client value would let the caller override
+    // its own attribution.
     const result = await executeGraphqlWithAuth(
       args.request,
       CreateNoteDocument,
-      { input: parsed.data },
+      { input: { content: parsed.data.content } },
     );
 
     return redirect(`/notes/${result.createNote.id}`);

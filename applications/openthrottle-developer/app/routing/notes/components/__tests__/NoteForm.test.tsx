@@ -14,12 +14,27 @@ describe('NoteForm Component', () => {
       component = renderRoutesStub(<NoteForm {...props} />);
     });
 
-    test('renders form with content and optional author fields', () => {
+    test('renders the content field and no author input', () => {
       expect(component.getByTestId('NoteForm')).toBeInTheDocument();
       expect(component.getByLabelText('Content')).toBeInTheDocument();
-      expect(
-        component.getByLabelText(/author \(optional\)/i),
-      ).toBeInTheDocument();
+      // The server derives the author from the request principal, so there is
+      // nothing for the user to type and nothing to spoof.
+      expect(component.queryByLabelText(/author/i)).toBeNull();
+    });
+
+    test('shows who the note will be attributed to when the name is known', () => {
+      const props: NoteFormProps = {
+        action: 'create',
+        authorName: 'visormatt',
+      };
+      const withAuthor = renderRoutesStub(<NoteForm {...props} />);
+
+      expect(withAuthor.getByText('Author: visormatt')).toBeInTheDocument();
+      expect(withAuthor.queryByLabelText(/author/i)).toBeNull();
+    });
+
+    test('omits the attribution line when the name is unknown', () => {
+      expect(component.queryByText(/^Author:/)).toBeNull();
     });
 
     test('content field is required', () => {

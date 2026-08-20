@@ -28,7 +28,7 @@ describe('routes/notes.create action', () => {
     mockExecuteGraphqlWithAuth.mockReset();
   });
 
-  test('creates a note and redirects', async () => {
+  test('creates a note and redirects, sending no client author', async () => {
     mockExecuteGraphqlWithAuth.mockResolvedValue(
       asMock<
         Awaited<ReturnType<typeof graphqlWithAuth.executeGraphqlWithAuth>>
@@ -37,7 +37,9 @@ describe('routes/notes.create action', () => {
 
     const formData = new FormData();
     formData.set('content', '  # Hello  ');
-    formData.set('author', '  visormatt  ');
+    // The create form no longer posts an author; a hand-crafted one must still
+    // be dropped so the caller cannot override the server's attribution.
+    formData.set('author', '  someone-else  ');
     const req = request(formData, 'http://localhost/notes/create');
 
     const result = await createAction({
@@ -56,7 +58,7 @@ describe('routes/notes.create action', () => {
     expect(mockExecuteGraphqlWithAuth).toHaveBeenCalledWith(
       expect.any(Request),
       expect.anything(),
-      { input: { author: 'visormatt', content: '# Hello' } },
+      { input: { content: '# Hello' } },
     );
   });
 

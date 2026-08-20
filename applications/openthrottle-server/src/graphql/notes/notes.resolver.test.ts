@@ -1,15 +1,53 @@
 import type { Note } from '@openthrottle/nestjs-repositories';
 import { NotesService } from '@openthrottle/nestjs-repositories';
 import { createMock } from '@golevelup/ts-vitest';
+import {
+  AUTH_PRINCIPAL_KIND_USER,
+  type AuthPrincipal,
+} from '@openthrottle/nestjs-auth';
+import {
+  GlobalClsService,
+  type GlobalClsUser,
+} from '@openthrottle/nestjs-modules';
 import { Test } from '@nestjs/testing';
-import { beforeAll, describe, expect, test, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import { NotesResolver } from './notes.resolver';
 
-const notesRepo = { find: vi.fn(), findOne: vi.fn() };
+/** The subset of the persisted draft the author-derivation tests assert on. */
+interface NoteDraft {
+  author: string | null;
+  content: string;
+}
+
+const notesRepo = {
+  create: vi.fn<(draft: NoteDraft) => Note>(),
+  find: vi.fn(),
+  findOne: vi.fn(),
+  save: vi.fn<(entity: Note) => Promise<Note>>(),
+};
+
+/** Stands in for the per-request CLS `user` slot; set per test to steer derivation. */
+const clsGet = vi.fn();
 
 const mockNotesService = createMock<NotesService>({
   getRepository: vi.fn().mockReturnValue(notesRepo),
 });
+
+const mockGlobalCls = createMock<GlobalClsService>({ get: clsGet });
+
+const clsUser: GlobalClsUser = {
+  displayName: 'visormatt',
+  email: 'visormatt@example.com',
+  isDeleted: false,
+  roles: [],
+  uuid: '6f9f4a0c-0d02-4b3f-9e1e-2fbbf2a8f8a1',
+};
+
+const userPrincipal: AuthPrincipal = {
+  email: 'principal@example.com',
+  kind: AUTH_PRINCIPAL_KIND_USER,
+  sub: 'a03cb6cf-1c62-4c1a-9a08-4bb2d9d3d1b1',
+};
 
 describe('NotesResolver', () => {
   let resolver: NotesResolver;
@@ -27,6 +65,7 @@ describe('NotesResolver', () => {
     const app = await Test.createTestingModule({
       providers: [
         NotesResolver,
+        { provide: GlobalClsService, useValue: mockGlobalCls },
         { provide: NotesService, useValue: mockNotesService },
       ],
     }).compile();
@@ -79,6 +118,95 @@ describe('NotesResolver', () => {
       const result = await resolver.notes();
 
       expect(result).toEqual([]);
+    });
+  });
+
+  describe('createNote', () => {
+    /** Returns the `author` handed to repo.create for a createNote call. */
+    const persistedAuthor = async (
+      input: { author: string | null; content: string },
+      principal: AuthPrincipal | undefined,
+    ): Promise<string | null> => {
+      notesRepo.create.mockImplementation((draft) => ({
+        ...mockNote,
+        author: draft.author,
+        content: draft.content,
+      }));
+      notesRepo.save.mockImplementation(async (entity) => entity);
+
+      await resolver.createNote(input, principal);
+
+      return notesRepo.create.mock.calls[0]?.[0].author ?? null;
+    };
+
+    beforeEach(() => {
+      notesRepo.create.mockReset();
+      notesRepo.save.mockReset();
+      clsGet.mockReset();
+      clsGet.mockReturnValue(undefined);
+    });
+
+    test('persists an explicit author verbatim so the MCP pass-through holds', async () => {
+      clsGet.mockReturnValue(clsUser);
+
+      const author = await persistedAuthor(
+        { author: 'someone-else', content: 'note' },
+        userPrincipal,
+      );
+
+      expect(author).toBe('someone-else');
+    });
+
+    test('falls back to the CLS displayName when author is null', async () => {
+      clsGet.mockReturnValue(clsUser);
+
+      const author = await persistedAuthor(
+        { author: null, content: 'note' },
+        userPrincipal,
+      );
+
+      expect(author).toBe(clsUser.displayName);
+    });
+
+    test('treats a whitespace-only author as absent', async () => {
+      clsGet.mockReturnValue(clsUser);
+
+      const author = await persistedAuthor(
+        { author: '   ', content: 'note' },
+        userPrincipal,
+      );
+
+      expect(author).toBe(clsUser.displayName);
+    });
+
+    test('falls back to the principal email when CLS has no user', async () => {
+      const author = await persistedAuthor(
+        { author: null, content: 'note' },
+        userPrincipal,
+      );
+
+      expect(author).toBe(userPrincipal.email);
+    });
+
+    test('falls back to the principal sub when there is no email', async () => {
+      const author = await persistedAuthor(
+        { author: null, content: 'note' },
+        {
+          kind: AUTH_PRINCIPAL_KIND_USER,
+          sub: userPrincipal.sub,
+        },
+      );
+
+      expect(author).toBe(userPrincipal.sub);
+    });
+
+    test('persists null without throwing when there is no identity at all', async () => {
+      const author = await persistedAuthor(
+        { author: null, content: 'note' },
+        undefined,
+      );
+
+      expect(author).toBeNull();
     });
   });
 });
