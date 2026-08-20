@@ -12,6 +12,7 @@ import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
 import type { KeyedJsonlWriter } from '@openthrottle/nestjs-logging';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
+  DRIVER_REGISTRY,
   RUN_AGENT_STATUS,
   type RunAgentStatus,
 } from '@openthrottle/openthrottle-drivers';
@@ -25,12 +26,14 @@ import { closeRunOutputForJob } from '../bullmq-keyed-run-logging';
 import { BullMqRunOutputRetentionService } from '../bullmq-run-output-retention.service';
 import { BULLMQ_RUN_OUTPUT_WRITER } from '../bullmq-run-output-writer.token';
 import { ScheduledAgentJobCancellationService } from './scheduled-agent-job-cancellation.service';
+import { ScheduledAgentJobDirectoryLockService } from './scheduled-agent-job-directory-lock.service';
 import { ScheduledAgentRunnerService } from './scheduled-agent-runner.service';
 import {
+  resolveScheduledAgentJobConcurrencyKey,
   resolveScheduledAgentJobRunCwd,
+  resolveScheduledAgentJobsConcurrency,
   resolveScheduledAgentJobTimeoutMs,
   SCHEDULED_AGENT_JOB_OUTPUT_SOURCE,
-  SCHEDULED_AGENT_JOBS_CONCURRENCY,
   SCHEDULED_AGENT_JOBS_QUEUE_NAME,
 } from './scheduled-agent-jobs.constants';
 import type { ScheduledAgentJobBullJob } from './scheduled-agent-jobs.types';
@@ -174,7 +177,7 @@ const errorMessageForAgentStatus = (
  */
 @Processor(SCHEDULED_AGENT_JOBS_QUEUE_NAME, {
   ...defaultWorkerOptions,
-  concurrency: SCHEDULED_AGENT_JOBS_CONCURRENCY,
+  concurrency: resolveScheduledAgentJobsConcurrency(),
 })
 export class ScheduledAgentJobsProcessor
   extends WorkerHost
@@ -186,6 +189,7 @@ export class ScheduledAgentJobsProcessor
     private readonly checkoutPaths: ScheduledAgentJobCheckoutPathService,
     private readonly runner: ScheduledAgentRunnerService,
     private readonly cancellation: ScheduledAgentJobCancellationService,
+    private readonly directoryLock: ScheduledAgentJobDirectoryLockService,
     private readonly retention: BullMqRunOutputRetentionService,
     @Optional()
     @Inject(BULLMQ_RUN_OUTPUT_WRITER)
@@ -260,35 +264,72 @@ export class ScheduledAgentJobsProcessor
       // what makes "the checkout moved" legible in the run's error_message.
       await this.assertUsableCwd(target, repositoryCheckoutId);
 
-      const result = await this.runner.run({
-        cwd: target.cwd,
+      const runTimeoutMs = resolveScheduledAgentJobTimeoutMs(timeoutMs);
+
+      // Worker concurrency is > 1, so two runs can reach the same directory at once — which is the
+      // git-index race the old concurrency of 1 existed to prevent. Take the directory before the CLI
+      // spawns, keyed so that unrelated checkouts never wait on each other. Acquired AFTER the cwd
+      // check (locking a directory that does not exist buys nothing) and after the cancel signal is
+      // attached, so a user can cancel a run that is queued behind a neighbour.
+      const concurrencyKey = this.concurrencyKeyFor(
+        target.cwd,
         driverId,
-        model: model ?? undefined,
-        onChunk: (chunk) => {
-          this.writer?.appendRunChunk(queueName, bullmqJobId, {
-            data: chunk.data,
-            source: SCHEDULED_AGENT_JOB_OUTPUT_SOURCE,
-            type: chunk.stream,
-          });
+        settings,
+      );
+      const acquisition = await this.directoryLock.acquire(concurrencyKey, {
+        onWait: () => {
+          this.logger.info(
+            `Scheduled agent job ${scheduleId} run ${runRowId} is waiting for ${concurrencyKey ?? target.cwd}; another run holds it`,
+            ScheduledAgentJobsProcessor.name,
+          );
         },
-        prompt,
-        settings: settings ?? undefined,
         signal,
-        timeoutMs: resolveScheduledAgentJobTimeoutMs(timeoutMs),
+        // Bounded by the run's own timeout: a run that spent its whole budget waiting has nothing
+        // left to do with the directory anyway, and an unbounded wait would pin a worker slot.
+        timeoutMs: runTimeoutMs,
       });
 
-      await this.jobsService.markRunFinished(runRowId, {
-        errorMessage: errorMessageForAgentStatus(
-          result.status,
-          result.exitCode,
-        ),
-        exitCode: result.exitCode,
-        status: runStatusForAgentStatus(
-          result.status,
-          parseRunOutcome(result.output),
-        ),
-        ...usageColumns(foldRunUsage(result.output)),
-      });
+      if (acquisition.status === 'timeout') {
+        throw new Error(
+          `Timed out after ${acquisition.waitedMs}ms waiting for ${target.cwd}, which another scheduled run is using.`,
+        );
+      }
+
+      try {
+        const result = await this.runner.run({
+          cwd: target.cwd,
+          driverId,
+          model: model ?? undefined,
+          onChunk: (chunk) => {
+            this.writer?.appendRunChunk(queueName, bullmqJobId, {
+              data: chunk.data,
+              source: SCHEDULED_AGENT_JOB_OUTPUT_SOURCE,
+              type: chunk.stream,
+            });
+          },
+          prompt,
+          settings: settings ?? undefined,
+          signal,
+          timeoutMs: runTimeoutMs,
+        });
+
+        await this.jobsService.markRunFinished(runRowId, {
+          errorMessage: errorMessageForAgentStatus(
+            result.status,
+            result.exitCode,
+          ),
+          exitCode: result.exitCode,
+          status: runStatusForAgentStatus(
+            result.status,
+            parseRunOutcome(result.output),
+          ),
+          ...usageColumns(foldRunUsage(result.output)),
+        });
+      } finally {
+        // Release before the outer bookkeeping so the next run for this directory is not held up by
+        // this run's log flush and retention pass.
+        await acquisition.lock.release();
+      }
     } catch (error) {
       // runAgentPrompt only throws on invalid input (unknown driver / capability mismatch); an
       // unexpected DB error can also land here. Record the run as failed in-band; do NOT rethrow, so
@@ -317,6 +358,25 @@ export class ScheduledAgentJobsProcessor
       });
       this.retention.maybePruneAfterJobClose();
     }
+  }
+
+  /**
+   * @description The directory identity this run must not share, or `null` when it needs no
+   * serialisation. Reads the driver's `worktree` capability from the registry rather than assuming it:
+   * a schedule can ask codex or opencode for a worktree, and those drivers silently drop the flag, so
+   * the run really does land in the cwd.
+   */
+  private concurrencyKeyFor(
+    cwd: string,
+    driverId: ScheduledAgentJobBullJob['data']['driverId'],
+    settings: ScheduledAgentJobBullJob['data']['settings'],
+  ): string | null {
+    return resolveScheduledAgentJobConcurrencyKey({
+      cwd,
+      driverSupportsWorktree:
+        DRIVER_REGISTRY[driverId]?.capabilities.worktree ?? false,
+      worktree: settings?.worktree?.worktree,
+    });
   }
 
   /**
