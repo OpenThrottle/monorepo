@@ -2,9 +2,10 @@
  * @description Narration types and the TTS backend interface.
  *
  * The backend is an interface on purpose. The voice IS the channel's identity when
- * there is no presenter, and that decision has to be changeable without touching
- * parsing, segmentation, loudness or captions — see ../NARRATION.md for the
- * backend comparison and the open decision.
+ * there is no presenter, and that decision had to be changeable without touching
+ * parsing, segmentation, loudness or captions. It has since been made — local Piper
+ * ships, macOS `say` rehearses — and the interface is what kept the switch to two
+ * files. See ../NARRATION.md.
  */
 
 export interface NarrationSentence {

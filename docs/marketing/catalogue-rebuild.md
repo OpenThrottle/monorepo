@@ -60,12 +60,13 @@ change is fresh, rare enough that a false positive is not exhausting.
 
 ## Before enabling it
 
-Four things have to be true, and today none of them are:
+Four things have to be true, and today only the second one is:
 
 1. **A published catalogue to compare against.** Right now zero videos are published,
    so there is nothing to diff. The pilot has to ship first.
-2. **A locked ship voice.** Re-recording with a different voice than the published
-   version makes every video a diff. See
+2. **A locked ship voice.** ✅ Settled: local Piper, `en_US-hfc_male-medium`, pinned
+   for the season. Re-recording with a different voice than the published version
+   makes every video a diff, so repinning it invalidates this whole mechanism. See
    [`NARRATION.md`](../../applications/openthrottle-developer/tests/demo/NARRATION.md).
 3. **Disk budget.** A 20-second capture is ~420 PNG frames at ~60 MB, and every video
    is recorded twice (landscape and portrait). A 24-video catalogue is a few GB per

@@ -83,10 +83,11 @@ reading the script against the app rather than by any automated check. An automa
 uploader would have published it.
 
 So the bar is met once, and the recommendation still stands: **manual until the
-checklist has caught a second one, and until the ship voice is settled.** The reason
-is asymmetry, not caution — an automated pipeline that can publish to the world
-without a human is a larger risk than the fifteen minutes it saves per video, and this
-one currently produces videos in a voice we have already decided not to ship.
+checklist has caught a second one.** The ship voice is no longer part of the gate —
+narration renders through local Piper (`en_US-hfc_male-medium`), the voice the channel
+actually ships. What remains is asymmetry, not caution: an automated pipeline that can
+publish to the world without a human is a larger risk than the fifteen minutes it
+saves per video.
 
 When it is time, automate the _upload_, never the _decision_: the job should stage a
 video as **private** with its metadata and captions attached, and a human flips it
