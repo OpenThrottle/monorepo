@@ -26,8 +26,8 @@ fragment UserWorkspaceProfileFields on UserWorkspaceProfileObject {
 
 # NOTE: `localRepositories` is consumed by the IDE routes, which reuse this
 # GetWorkspaceSettings document (see routing/ide/utils/repositories.ts), and by
-# the workspace settings loader, which pairs them with `profile.enabledEditors`
-# to preview which repo/editor pairs an apply will write to.
+# plans.create for its editor deep-links (which also reads `profile.enabledEditors`).
+# The workspace settings loader itself only reads `profile`.
 query getWorkspaceSettings {
   workspaceSettings {
     localRepositories {
