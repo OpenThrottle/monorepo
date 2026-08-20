@@ -4,7 +4,7 @@
 
 ## Personas vs skills vs Ralph
 
-| Concern    | Personas (this folder)                                    | Skills (`.agents/skills/`, `.cursor/skills/`)     | Default Ralph (`/agents-ralph`)                                   |
+| Concern    | Personas (this folder)                                    | Skills (`skills/` → `.agents/skills/`)            | Default Ralph (`/agents-ralph`)                                   |
 | ---------- | --------------------------------------------------------- | ------------------------------------------------- | ----------------------------------------------------------------- |
 | Purpose    | Domain lens (architect, QA, legal, …)                     | Task-specific procedures and tool routing         | Full OT plan loop: create tasks, one-at-a-time execution, commits |
 | Scope      | Tone, priorities, output shape                            | Step-by-step workflows, MCP/tool choice           | End-to-end agentic loop                                           |
@@ -28,7 +28,7 @@ From the monorepo root:
 ```bash
 pnpm exec workflow-ralph --plan <plan-uuid> \
   --prompt-file .agents/personas/architect.md \
-  --prompt-file .cursor/skills/agents-ralph/SKILL.md \
+  --prompt-file skills/agents-ralph/SKILL.md \
   --prompt-file .agents/skills/shadcn/SKILL.md
 ```
 
@@ -42,7 +42,7 @@ Precedence: **CLI → env → `.workflow-ralph.json` → built-ins**. See [tools
 ### Cursor (interactive)
 
 1. Open or attach the persona file (e.g. `@.agents/personas/architect.md`) for a chat or review.
-2. For Ralph-driven OT work, keep **`/agents-ralph`** (or `.cursor/skills/agents-ralph/SKILL.md` via `--prompt-file`) as the execution prompt unless you intentionally substitute a persona-only profile.
+2. For Ralph-driven OT work, keep **`/agents-ralph`** (or `skills/agents-ralph/SKILL.md` via `--prompt-file`) as the execution prompt unless you intentionally substitute a persona-only profile.
 
 Do **not** duplicate persona bodies into code or shadow copies elsewhere; this folder is canonical.
 
@@ -77,5 +77,5 @@ Copy [`_template.md`](./_template.md) when adding a persona. Fill every section;
 ## Related docs
 
 - [Ralph design](../../docs/workflows/ralph-design.md) — OT-injected plan context
-- [`.cursor/skills/agents-ralph/SKILL.md`](../../.cursor/skills/agents-ralph/SKILL.md) — default Ralph loop
-- [`.agents/skills/workflow-ralph/SKILL.md`](../skills/workflow-ralph/SKILL.md) — CLI and queue summary
+- [`skills/agents-ralph/SKILL.md`](../../skills/agents-ralph/SKILL.md) — default Ralph loop
+- [`tools/workflows/README.md`](../../tools/workflows/README.md) — Ralph CLI and queue summary

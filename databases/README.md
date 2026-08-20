@@ -1,6 +1,6 @@
 # OpenThrottle database
 
-Postgres database for plans ingestion with pgvector for semantic search. Used to store plan JSON and optional output Markdown from the `plans/` directory.
+Postgres database for OpenThrottle plans, tasks, and documentation, with pgvector for semantic search. Plans and tasks are authored through openthrottle-mcp; the ingest scripts here load `docs/` and agent assets for semantic search.
 
 ## Setup
 
@@ -60,15 +60,15 @@ Postgres database for plans ingestion with pgvector for semantic search. Used to
    pnpm run database:reset
    ```
 
-5. **Ingest plans from the filesystem**
+5. **Ingest agent assets into the documentation tables (optional)**
 
-   Reads plan JSON from **all non-template subdirectories** under `plans/` (root, `completed`, `ideas`, and any other directory except `templates`) and inserts into `plans`, `tasks`, and `plan_output_stream`. For each plan file, the script looks for a same-named `*-output.md` and uses it for plan embeddings and, when non-empty, inserts it as one chunk into `plan_output_stream`. With `OPENAI_API_KEY` set, also generates embeddings and fills `plan_embeddings` and `task_embeddings`:
+   Reads the skills, personas, prompts, and rules under `skills/` and `.agents/` and upserts them into the documentation tables. With `OPENAI_API_KEY` (or `OLLAMA_*`) set, also generates embeddings:
 
    ```bash
-   pnpm run database:import
+   pnpm run database:import-agent-assets
    ```
 
-   The script is read-only for the filesystem; it does not delete or modify plan files.
+   > **There is no plans-from-filesystem ingest.** Plans and tasks are authored directly in OpenThrottle via the openthrottle-mcp tools (`create_plan` / `create_tasks`); there is no repo-root `plans/` directory and no `database:import` script. Do not look for one.
 
 6. **Ingest docs/ and NX project READMEs into documentation tables (optional)**
 
@@ -87,7 +87,6 @@ Plan JSON must have a `metadata` object (with `author` (GitHub handle), `categor
 - **tasks** – Tasks for each plan: `id`, `plan_id` (FK), `title`, `description`, `category`, `status`, `requirements` (JSONB), `summary` (optional; per-task wrap-up: actions, usage notes, or why blocked), `assignee` (optional; see [Assignee rule](#assignee-rule) below), `sort_order` (INTEGER NOT NULL; explicit execution/list order within the plan; see [Task sort_order](#task-sort_order)), `completed_at` (TIMESTAMPTZ, nullable; same semantics as `plans.completed_at` — migrations `055`, `056`), `created_at`, `updated_at`.
 - **plan_embeddings** – Vector embeddings for plan content: `id`, `plan_id` (FK), `content`, `embedding` (vector 1536), `metadata` (JSONB), `created_at`.
 - **task_embeddings** – Vector embeddings for task content: `id`, `task_id` (FK), `content`, `embedding` (vector 1536), `metadata` (JSONB), `created_at`.
-- **commit_links** – Git commit linkage to plans/tasks: `id`, `plan_id` (FK), `task_id` (FK, nullable), `repo`, `sha`, `message`, `created_at`. One row per (plan, task, repo, sha); `task_id` null = plan-level link.
 - **plan_output_stream** – Streaming output (e.g. agent iteration log) per plan: `id`, `plan_id` (FK), `iteration` (nullable), `content`, `created_at`. Chunks appended in order; exposed via MCP `append_plan_output` and `get_plan_output`.
 - **notes** – Quick unstructured thoughts: `id`, `content`, `author` (optional, e.g. GitHub username), `created_at`, `updated_at`. Foundation for notes route and planning workflow (e.g. create plan from note); exposed via MCP `create_note`, `get_note`, `list_notes`, `update_note`, `delete_note`.
 - **documentation** – Source-of-truth per doc file landed on main (from `docs/` and NX project READMEs): `id`, `path` (TEXT; path under repo, e.g. `docs/foo.md` or `projects/<project-root>/README.md`), `content` (TEXT; parsed full text or summary for display), `repo` (TEXT), `sha` (TEXT; squash commit SHA), `pr_number` (INTEGER, nullable), `authors` (JSONB; e.g. array of GitHub usernames or `[{ "login", "email" }]`), `message` (TEXT; commit message), `created_at`. One row per (repo, sha, path); unique on (repo, sha, path) for idempotent upsert/replace-by-sha.
@@ -116,6 +115,8 @@ Plan JSON must have a `metadata` object (with `author` (GitHub handle), `categor
 
 Indexes include HNSW vector indexes on embedding columns for similarity search.
 
+**Removed tables.** `commit_links` (git commit ↔ plan/task linkage, migration `006`) was **dropped** by `075_drop_commit_links.sql`. Commit provenance now lives on the work ledger as a `git_commit` artifact — see [Recording merged commits on the work ledger](#recording-merged-commits-on-the-work-ledger-option-a-workflow).
+
 ### Indexes
 
 Indexes are created by migrations in `databases/migrations/`. Main tables and their indexes:
@@ -124,7 +125,6 @@ Indexes are created by migrations in `databases/migrations/`. Main tables and th
 - **tasks** – `idx_tasks_plan_id`, `idx_tasks_status`, `idx_tasks_category`, `idx_tasks_created_at`, `idx_tasks_requirements` (GIN), `idx_tasks_assignee` (partial), `idx_tasks_plan_id_sort_order` (unique on `plan_id`, `sort_order`). See `003_create_tasks_table.sql`, `012_add_assignee_to_plans_and_tasks.sql`, `049_add_sort_order_to_tasks.sql`.
 - **plan_embeddings** – `idx_plan_embeddings_plan_id`, `idx_plan_embeddings_vector` (HNSW cosine), `idx_plan_embeddings_metadata` (GIN). See `004_create_plan_embeddings_table.sql`.
 - **task_embeddings** – `idx_task_embeddings_task_id`, `idx_task_embeddings_vector` (HNSW cosine), `idx_task_embeddings_metadata` (GIN). See `005_create_task_embeddings_table.sql`.
-- **commit_links** – `idx_commit_links_plan_id`, `idx_commit_links_task_id` (partial), `idx_commit_links_repo_sha`, unique on (plan_id, COALESCE(task_id, zero-uuid), repo, sha). See `006_create_commit_links_table.sql`.
 - **projects** – `idx_projects_nx_project_name`, `idx_projects_nx_project_name_unique` (unique partial WHERE nx_project_name IS NOT NULL), `idx_projects_created_at`. See `024_create_projects_table.sql`, `032_projects_unique_nx_project_name.sql`.
 - **plan_output_stream** – `idx_plan_output_stream_plan_id`, `idx_plan_output_stream_created_at` (plan_id, created_at). See `007_create_plan_output_stream_table.sql`.
 - **notes** – `idx_notes_author`, `idx_notes_created_at`. See `009_create_notes_table.sql`.
@@ -146,7 +146,7 @@ Indexes are created by migrations in `databases/migrations/`. Main tables and th
 
 Embedding tables (`plan_embeddings`, `task_embeddings`, `documentation_embeddings`, `custom_prompt_embeddings`, `code_embeddings`) use **vector(1536)**. The default flow uses **OpenAI** (e.g. `text-embedding-3-small`), which outputs 1536 dimensions. This flow is unchanged and remains the default when `OPENAI_API_KEY` is set and Ollama env is not.
 
-**Ollama (optional, additive):** When `OLLAMA_BASE_URL` or `sOLLAMA_EMBEDDING_MODEL` is set, database:import and openthrottle-server can use **Ollama** for local embeddings. When neither is set, the existing OpenAI flow (e.g. `OPENAI_API_KEY`) is used. Env: `OLLAMA_BASE_URL` (default `http://localhost:11434`), `OLLAMA_EMBEDDING_MODEL` (e.g. `nomic-embed-text`). See root `.env.default` and `scripts/ollama.sh`. **When using Caddy** (tools/caddy), set `OLLAMA_BASE_URL` to the Caddy-proxied URL (e.g. `https://ollama.local` or `https://localhost/osllama`) so database:import and other consumers use the same endpoint. For HTTPS with Caddy's local certs, see `docs/monorepo/Ollama.md` and tools/caddy/README.md (TLS/trust store). Ollama models (e.g. `nomic-embed-text`, `mxbai-embed-large`) may output a different dimension. Strategy:
+**Ollama (optional, additive):** When `OLLAMA_BASE_URL` or `OLLAMA_EMBEDDING_MODEL` is set, the ingest scripts and openthrottle-server can use **Ollama** for local embeddings. When neither is set, the existing OpenAI flow (e.g. `OPENAI_API_KEY`) is used. Env: `OLLAMA_BASE_URL` (default `http://localhost:11434`), `OLLAMA_EMBEDDING_MODEL` (e.g. `nomic-embed-text`). See root `.env.default` and `scripts/ollama.sh`. **When using Caddy** (tools/caddy), set `OLLAMA_BASE_URL` to the Caddy-proxied URL (e.g. `https://ollama.local` or `https://localhost/ollama`) so the ingest scripts and other consumers use the same endpoint. For HTTPS with Caddy's local certs, see `docs/monorepo/Ollama.md` and tools/caddy/README.md (TLS/trust store). Ollama models (e.g. `nomic-embed-text`, `mxbai-embed-large`) may output a different dimension. Strategy:
 
 - **Option A — Same dimension (recommended for simplicity):** Use an Ollama model that outputs **1536** dimensions so the existing schema and migrations stay as-is. No migration; same tables and indexes. Re-ingest with Ollama when switching; no mixed-dimension storage. **OpenThrottle ingest and openthrottle-server only insert embeddings when the vector length is 1536;** if the chosen Ollama model returns a different dimension, embeddings are skipped (no error). Known Ollama embedding model dimensions: `nomic-embed-text` 768, `mxbai-embed-large` 1024, `all-minilm` 384. As of the current Ollama library, none of these output 1536; for Option A with OpenThrottle, use **OpenAI** (`OPENAI_API_KEY`) for embeddings, or use an Ollama model that outputs 1536 when one becomes available.
 - **Option B — Different dimension (future):** If we support Ollama models with a different dimension, add an **optional** path only: e.g. configurable dimension from env, or a separate table/column for Ollama-backed embeddings, **without** altering existing `vector(1536)` columns or current OpenAI flow. Document re-ingest and any new migrations if this path is added.
@@ -155,7 +155,7 @@ Do **not** change existing `vector(1536)` columns or remove the OpenAI code path
 
 ### Recording merged commits on the work ledger (Option A workflow)
 
-We use **Option A:** record only the **squash commit after a PR is merged**. The repo keeps 1 PR = 1 commit on main (squash-and-merge); OpenThrottle records that single SHA as a work-ledger `git_commit` artifact so "what landed" matches the repo. (The legacy `link_commit` MCP tool and its `commit_links` table are **retired** — work-ledger epic 3b798682.)
+We use **Option A:** record only the **squash commit after a PR is merged**. The repo keeps 1 PR = 1 commit on main (squash-and-merge); OpenThrottle records that single SHA as a work-ledger `git_commit` artifact so "what landed" matches the repo. (The legacy `link_commit` MCP tool is gone and its `commit_links` table was **dropped** by migration `075_drop_commit_links.sql` — work-ledger epic 3b798682. Migration 069 backfilled every valid row into a `git_commit` ledger artifact first.)
 
 - **When to record:** Only **after** a PR is merged. Use the **squash commit SHA** (the one that appears on the default branch), not pre-merge commits from the branch. If the branch uses a merge queue, `gh pr merge --auto` can return while the PR is only **queued**; wait until `gh pr view --json mergedAt,mergeCommitSha` shows the landed commit (or read the SHA from the default branch) before recording the artifact. Do **not** record commit artifacts during the Ralph loop or while the PR is open.
 - **How activity tools use it:** `get_activity_by_date` and `get_last_activity` read the work ledger. The artifact is recorded `unverified` and the git verifier promotes it to `landed`/`verified`, so activity reflects **landed work only** (commits that exist on main). Pre-merge branch history is not in OpenThrottle.
@@ -265,7 +265,7 @@ The optional **summary** field on plans and tasks supports PRD summarization: ne
 - **What to include:**
   - **Plans:** Next actions for the plan, how to use what was built, or wsrap-up notes (e.g. "Run `pnpm run database:migrate` after pull; summary is optional on create/update.").
   - **Tasks:** Per-task wrap-up: follow-up actions, usage notes, or why the task is blocked (e.g. "Blocked on API key; document env in README when unblocked.").
-- **How:** Use MCP `update_plan` or `update_task` with a `summary` argument, or set `summary` when creating plans/tasks. Ingest reads optional `metadata.summary` (plans) and `summary` from plan JSON so file-based and DB stay in sync.
+- **How:** Use MCP `update_plan` or `update_task` with a `summary` argument, or set `summary` when creating plans/tasks. The database is the source of truth; there is no plan JSON to keep in sync.
 
 ### Agent conversations (web chat persistence)
 
@@ -378,12 +378,15 @@ ORDER BY te.embedding <=> $1::vector
 LIMIT 5;
 ```
 
-## Migration from file-based storage
+## Migration from file-based storage (completed)
 
-- Plan JSON files under `plans/` (in any non-`templates` subdirectory) can remain the source of truth on disk until you switch to DB-as-source.
-- The ingestion script only reads; it does not delete or modify plan files.
-- For a fresh ingest (e.g. after dumping test data or changing source fsiles), run `pnpm run database:reset` then `pnpm run database:import`. Re-running ingest without reset is additive; duplicate plans may be inserted.
-- After backing up and removing the `plans/` folder, the OpenThrottle database is the single source of truth; use MCP tools and Cursor `/openthrottle/*` commands to create and update plans/tasks. There is no re-export (DB → JSON) script yet; track the idea in OpenThrottle (e.g. a placeholder plan) if you want it later.
+The `plans/` folder and its JSON-import script are **gone**. The OpenThrottle
+database is the single source of truth for plans and tasks; create and update
+them with the openthrottle-mcp tools (`create_plan`, `create_tasks`,
+`update_task`) or the `/ot/*` commands. There is no re-export (DB → JSON)
+script, and none is planned.
+
+- For a fresh ingest (e.g. after dumping test data or changing source files), run `pnpm run database:reset` then re-run the ingest scripts you need (`database:import-docs`, `database:import-agent-assets`). Re-running ingest without reset is additive.
 
 ## Local Postgres data volumes & seeding
 
@@ -522,7 +525,7 @@ When using **Option A** (Ollama with a 1536-dim embedding model), no additional 
 3. `003_create_tasks_table.sql` – Tasks table and FK to plans.
 4. `004_create_plan_embeddings_table.sql` – Plan embeddings and vector index.
 5. `005_create_task_embeddings_table.sql` – Task embeddings and vector index.
-6. `006_create_commit_links_table.sql` – Commit links (plan/task ↔ repo/sha).
+6. `006_create_commit_links_table.sql` – Commit links (plan/task ↔ repo/sha). **Table dropped by `075_drop_commit_links.sql`; it is not part of the current schema.**
 7. `007_create_plan_output_stream_table.sql` – Plan output stream (agent/iteration log per plan).
 8. `009_create_notes_table.sql` – Notes table for quick unstructured thoughts; foundation for notes route and planning workflow.
 9. `010_normalize_author_to_visormatt.sql` – Normalize plan/note author to visormatt.

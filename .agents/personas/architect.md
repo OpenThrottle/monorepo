@@ -69,5 +69,5 @@ Keep prose tight; prefer bullets over essays.
 - [docs/monorepo/NX/tags.md](../../docs/monorepo/NX/tags.md) — Nx project tags
 - [`.agents/skills/openthrottle-stack/SKILL.md`](../skills/openthrottle-stack/SKILL.md) — server, data, developer app, MCP slices
 - [`.agents/skills/openthrottle-generators/SKILL.md`](../skills/openthrottle-generators/SKILL.md) — scaffolding discovery
-- [`.agents/skills/workflow-ralph/SKILL.md`](../skills/workflow-ralph/SKILL.md) — Ralph CLI and queue mental model
+- [`tools/workflows/README.md`](../../tools/workflows/README.md) — Ralph CLI and queue mental model
 - [docs/workflows/ralph-design.md](../../docs/workflows/ralph-design.md) — OT-injected plan context

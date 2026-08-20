@@ -64,7 +64,9 @@ OT-owned skills are authored under [`skills/`](./skills/) and surfaced to every 
 - **openthrottle-stack** — openthrottle-server GraphQL, databases/embeddings, openthrottle-developer UI, openthrottle-mcp package: [`skills/openthrottle-stack/SKILL.md`](./skills/openthrottle-stack/SKILL.md)
 - **ot-postgres** — SQL migrations, `COMMENT ON TABLE` / column comments, idempotent DDL in `databases/migrations/`: [`skills/ot-postgres/SKILL.md`](./skills/ot-postgres/SKILL.md)
 - **ot-plans** — openthrottle-mcp, plans/tasks, `Plan-Id` / `Task-Id`, post-merge work-ledger commit recording: [`skills/ot-plans/SKILL.md`](./skills/ot-plans/SKILL.md)
-- **workflow-ralph** — CLI, queue spawn vs orchestrator, commit cadence: [`skills/workflow-ralph/SKILL.md`](./skills/workflow-ralph/SKILL.md)
+- **agents-ralph** — the Ralph loop prompt: one task at a time, status sync, commit cadence: [`skills/agents-ralph/SKILL.md`](./skills/agents-ralph/SKILL.md)
+- **github-commit** — conventional commits, staging, `Plan-Id` / `Task-Id` footers: [`skills/github-commit/SKILL.md`](./skills/github-commit/SKILL.md)
+- For the Ralph **CLI**, queue spawn vs orchestrator, and BullMQ wiring there is no skill — read [`tools/workflows/README.md`](./tools/workflows/README.md).
 
 ## Workflow CLI (@tools/workflows)
 
@@ -90,7 +92,7 @@ OT-owned skills are authored under [`skills/`](./skills/) and surfaced to every 
 - **First-time onboarding (after MCP + server work):** Guided mental model, prerequisites checklist, and a minimal copy-paste prompt sequence — [docs/openthrottle/first-time-onboarding.md](docs/openthrottle/first-time-onboarding.md).
 - **Authoring plans & tasks from your editor/agent:** The mental model (plans/tasks as DB rows, `sortOrder`, status lifecycle) plus a copy-pasteable authoring loop — create → order → queue → commit with `Plan-Id`/`Task-Id` → record the squash on the work ledger on merge — with a full worked example: [docs/openthrottle/authoring-plans-via-mcp.md](docs/openthrottle/authoring-plans-via-mcp.md).
 - **Rules:** [`.agents/rules/commands/openthrottle.mdc`](./.agents/rules/commands/openthrottle.mdc) — when to use which OT MCP tool ("ask OT", status queries, semantic search, list sources).
-- **OT skills:** `ot-*` (authored in `skills/ot-*`, surfaced via the generated `.agents/skills/ot-*`) — `/ot/ask`, `/ot/create-plan`, `/ot/edit-task`, `/ot/list-by-status`, `/ot/list-sources`, `/ot/pending`, `/ot/planning-mode`.
+- **OT skills:** `ot-*` (authored in `skills/ot-*`, surfaced via the generated `.agents/skills/ot-*`). Slash commands, per [`.agents/rules/commands/openthrottle.mdc`](./.agents/rules/commands/openthrottle.mdc): `/ot/ask`, `/ot/create-plan`, `/ot/edit-task`, `/ot/list-by-status`. Other OT-owned slugs are invoked by name rather than a `/ot/` prefix: `ot-onboarding`, `ot-plan-loop`, `ot-plans`, `ot-postgres`, `ot-workflow-orchestration`. (`list_sources` is an MCP tool used _by_ `/ot/ask`, not a command of its own.)
 - For "ask OpenThrottle …" or "ask OT …" or "OT, …", follow the OT rule and use the **openthrottle-mcp** MCP server; answer only from retrieved chunks.
 - **PRD summarization:** Plans and tasks have an optional `summary` field. Fill it at completion or when closing work with next actions, usage guides, or (for tasks) why blocked. See `databases/README.md` § PRD summarization.
 
@@ -101,9 +103,9 @@ OT-owned skills are authored under [`skills/`](./skills/) and surfaced to every 
 
 ## Local embeddings (Ollama)
 
-- For local-only embedding (no OpenAI key): set **`OLLAMA_BASE_URL`** and/or **`OLLAMA_EMBEDDING_MODEL`**; `pnpm run database:import` / `pnpm run database:import-docs` and openthrottle-server then use Ollama when configured. See `databases/README.md` (embedding dimension strategy) and `scripts/ollama.sh`.
+- For local-only embedding (no OpenAI key): set **`OLLAMA_BASE_URL`** and/or **`OLLAMA_EMBEDDING_MODEL`**; `pnpm run database:import-docs` / `pnpm run database:import-agent-assets` and openthrottle-server then use Ollama when configured. See `databases/README.md` (embedding dimension strategy) and `scripts/ollama.sh`.
 - **Cursor with a custom Ollama model:** start the proxy with **`pnpm ollama-proxy`** (requires Ollama and optionally Caddy at `https://ollama.local`). See [docs/monorepo/Ollama.md](docs/monorepo/Ollama.md) § Using Cursor with Ollama via the proxy and [tools/ollama-proxy/README.md](tools/ollama-proxy/README.md).
-- **When using Caddy** (tools/caddy): set **`OLLAMA_BASE_URL`** to the Caddy-proxied URL so `database:import`, `database:import-docs`, and other consumers use one stable endpoint:
+- **When using Caddy** (tools/caddy): set **`OLLAMA_BASE_URL`** to the Caddy-proxied URL so `database:import-docs`, `database:import-agent-assets`, and other consumers use one stable endpoint:
   - **Option B** (local domains): `https://ollama.local`
   - **Option A** (path-based): `https://localhost/ollama`
     See root `.env.default` and `docs/monorepo/Ollama.md`. For HTTPS with Caddy's local certs, trust Caddy's CA (or see tools/caddy/README.md) so Node/fetch and browsers do not hit certificate errors.

@@ -7,7 +7,7 @@ description: >-
   databases/README.md; React Router UI in openthrottle-developer and
   @openthrottle/react-router-shadcn; packages/openthrottle-mcp GraphQL-only
   boundary, auth, verification-environment. USE WHEN changing openthrottle-server,
-  openthrottle-developer, databases or database:import, embeddings (Ollama vs
+  openthrottle-developer, databases or database:import-docs, embeddings (Ollama vs
   hosted), packages/openthrottle-mcp, verify-openthrottle-mcp-env, or OpenThrottle
   schema and semantic ingest—not for routine OT plan CRUD (see ot-plans).
 ---
@@ -21,7 +21,7 @@ description: >-
 - You touch **`applications/openthrottle-developer`** (routes, loaders, GraphQL client).
 - You extend or debug **`packages/openthrottle-mcp`** (tools, env, smoke checks).
 
-Use **openthrottle-generators** for scaffolding, **nx-workspace** / **nx-run-tasks** for graph and targets, **ot-plans** for OpenThrottle plans/tasks and MCP traceability, **workflow-ralph** for Ralph CLI and queues.
+Use **openthrottle-generators** for scaffolding, **nx-workspace** / **nx-run-tasks** for graph and targets, **ot-plans** for OpenThrottle plans/tasks and MCP traceability, and `tools/workflows/README.md` for the Ralph CLI and queues.
 
 ## How this fits other skills
 
@@ -29,7 +29,8 @@ Use **openthrottle-generators** for scaffolding, **nx-workspace** / **nx-run-tas
 | ---------------------------------------------------------- | ------------------------------------------------------------------------------- |
 | `@tools/generators`, `NX_ISOLATE_PLUGINS`                  | **openthrottle-generators** — `.agents/skills/openthrottle-generators/SKILL.md` |
 | Plans, `Plan-Id` / `Task-Id`, work-ledger commit recording | **ot-plans** — `.agents/skills/ot-plans/SKILL.md`                               |
-| `workflow-ralph`, BullMQ mental model                      | **workflow-ralph** — `.agents/skills/workflow-ralph/SKILL.md`                   |
+| Ralph loop prompt (one task at a time)                     | **agents-ralph** — `.agents/skills/agents-ralph/SKILL.md`                       |
+| Ralph CLI, BullMQ mental model                             | `tools/workflows/README.md` (no skill)                                          |
 | Nx graph, `nx show project`, affected                      | **nx-workspace** — `.agents/skills/nx-workspace/SKILL.md`                       |
 | Run `nx` targets                                           | **nx-run-tasks** — `.agents/skills/nx-run-tasks/SKILL.md`                       |
 | **SQL migrations / table comments**                        | **ot-postgres** — `.agents/skills/ot-postgres/SKILL.md`                         |
@@ -66,12 +67,12 @@ Use **openthrottle-generators** for scaffolding, **nx-workspace** / **nx-run-tas
 
 **Typical commands (repo root)**
 
-| Script                          | Role                                                                                 |
-| ------------------------------- | ------------------------------------------------------------------------------------ |
-| `pnpm run database:start`       | Postgres + Redis (Compose)                                                           |
-| `pnpm run database:migrate`     | Apply migrations                                                                     |
-| `pnpm run database:import`      | Ingest plan JSON from `plans/` (non-template dirs); embeddings when keys/model allow |
-| `pnpm run database:import-docs` | Ingest `docs/` + NX READMEs into documentation tables                                |
+| Script                                  | Role                                                           |
+| --------------------------------------- | -------------------------------------------------------------- |
+| `pnpm run database:start`               | Postgres + Redis (Compose)                                     |
+| `pnpm run database:migrate`             | Apply migrations                                               |
+| `pnpm run database:import-docs`         | Ingest `docs/` + NX READMEs into documentation tables          |
+| `pnpm run database:import-agent-assets` | Ingest `skills/` + `.agents/` assets into documentation tables |
 
 **Embeddings:** dimension strategy and **Ollama** / **`OPENAI_API_KEY`** are documented in **`databases/README.md`** (embedding section). For local Ollama and Cursor proxy, see **`docs/monorepo/Ollama.md`** and **`AGENTS.md`** (local embeddings / `OLLAMA_*`).
 
@@ -124,5 +125,5 @@ Use **openthrottle-generators** for scaffolding, **nx-workspace** / **nx-run-tas
 
 - **Run server + UI + ports:** `docs/openthrottle/run-openthrottle-server-developer.md`
 - **Monorepo OT overview:** `AGENTS.md`
-- **Queues and workflows:** `tools/workflows/README.md` (see **workflow-ralph** skill)
+- **Queues and workflows:** `tools/workflows/README.md` (loop prompt: **agents-ralph**)
 - **API + UI coding rules:** `.cursor/rules/personal-general.mdc`

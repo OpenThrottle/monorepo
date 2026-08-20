@@ -8,11 +8,11 @@ The mechanism is the **`skill-sync`** skill — see [`skills/skill-sync/SKILL.md
 
 Two-stage layout with strict ownership:
 
-| Location                                      | Contents                                                                                                                                                                                                                        | Owned by         |
-| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
-| `skills/`                                     | Hand-authored, **OT-owned** skills, committed to git. Edit our own skills here.                                                                                                                                                 | Humans (via PRs) |
-| `.agents/skills/`                             | Generated merged SSOT view most CLIs read in-repo (Claude Code, Cursor 2.4+, Codex, OpenCode). **Real dirs** = external installs (tracked in `skills-lock.json`). **Symlinks** = our own `skills/*`. **Never hand-edit.**       | skill-sync       |
-| `<agent>/skills/` (default `.claude/skills/`) | Per-agent fan-out for CLIs that read a `.claude`-style dir (e.g. Grok Build; Cursor reads both). `.agents/skills/` + `.claude/skills/` are the two near-universal in-repo targets. All symlinks, all generated, all gitignored. | skill-sync       |
+| Location                                      | Contents                                                                                                                                                                                                                                                                                                | Owned by         |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
+| `skills/`                                     | Hand-authored, **OT-owned** skills, committed to git. Edit our own skills here.                                                                                                                                                                                                                         | Humans (via PRs) |
+| `.agents/skills/`                             | Generated merged SSOT view most CLIs read in-repo (Claude Code, Cursor 2.4+, Codex, OpenCode). **Real dirs** = external installs (tracked in `skills-lock.json`). **Symlinks** = our own `skills/*`. **Never hand-edit.**                                                                               | skill-sync       |
+| `<agent>/skills/` (default `.claude/skills/`) | Per-agent fan-out for CLIs that read a `.claude`-style dir (e.g. Grok Build). Cursor 2.4+ reads `.agents/skills/` directly, so there is **no** `.cursor/skills` fan-out. `.agents/skills/` + `.claude/skills/` are the two near-universal in-repo targets. All symlinks, all generated, all gitignored. | skill-sync       |
 
 ```bash
 # Rebuild/refresh the layout (idempotent, safe to re-run)
@@ -46,19 +46,20 @@ Source of truth: `skills-lock.json`. Grouped by upstream:
 
 | Source                     | Skills                                                                                              |
 | -------------------------- | --------------------------------------------------------------------------------------------------- |
-| `github/awesome-copilot`   | brag-sheet, create-readme, git-commit                                                               |
+| `github/awesome-copilot`   | create-readme                                                                                       |
 | `steipete/agent-scripts`   | create-cli, frontend-design, skill-cleaner                                                          |
 | `mattpocock/skills`        | grill-me, grill-with-docs, grilling, handoff, teach, writing-great-skills                           |
 | `shadcn/improve`           | improve                                                                                             |
 | `nrwl/nx-ai-agents-config` | link-workspace-packages, monitor-ci, nx-generate, nx-import, nx-plugins, nx-run-tasks, nx-workspace |
+| `microsoft/SkillOpt`       | skillopt-sleep                                                                                      |
 
 ## OT-owned skills (`skills/`)
 
 Ours to author and edit; fanned out by skill-sync:
 
-- **Agents/workflow:** agents-ralph, workflow-ralph, validate-plan
+- **Agents/workflow:** agents-ralph, ot-plan-loop, ot-workflow-orchestration, validate-plan
 - **GitHub:** github-branch, github-commit, github-create-issue, github-my-pull-requests, github-pull-request, github-squash, github-summarize, github-untracked, github-worktree
-- **OpenThrottle:** openthrottle-folders, openthrottle-generators, openthrottle-stack, ot-ask, ot-create-plan, ot-edit-task, ot-list-by-status, ot-list-sources, ot-pending, ot-planning-mode, ot-plans, ot-postgres
+- **OpenThrottle:** openthrottle-folders, openthrottle-generators, openthrottle-stack, ot-ask, ot-create-plan, ot-edit-task, ot-list-by-status, ot-onboarding, ot-plans, ot-postgres
 - **Infra:** skill-sync
 
 ## Not adopted (skip-list)

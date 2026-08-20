@@ -1,14 +1,18 @@
 # 🔏 Forms
 
-With a little work up-front we can create a really concise and strong pattern to how we handle forms in our Remix applications. EOD we all want something that's; easy to use, and powerful... Works on client, and server... Strong typing throughout, without a LOT of code... For all of these reasons, we've landed on the tools and abstractions laid out below.
+With a little work up-front we can create a really concise and strong pattern to how we handle forms in our React Router applications. EOD we all want something that's; easy to use, and powerful... Works on client, and server... Strong typing throughout, without a LOT of code... For all of these reasons, we've landed on the tools and abstractions laid out below.
 
-- [Remix](https://remix.run) - Our server side calls via [loaders](https://remix.run/docs/en/main/route/loader) and [actions](https://remix.run/docs/en/main/route/action)
+- [React Router](https://reactrouter.com) (v8, framework mode) - Our server side calls via [loaders](https://reactrouter.com/start/framework/data-loading) and [actions](https://reactrouter.com/start/framework/actions)
 - [Formik](https://formik.org) - Our form library for use with React
 - [Yup](https://github.com/jquense/yup) - Schema parsing and validation. Plays well with Formik + GraphQL
 
 ## Overview
 
-Forms will typically consist of **3 parts** in our Remix apps
+Forms will typically consist of **3 parts** in our React Router apps. Scaffold them rather than hand-rolling:
+
+```bash
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router --subGenerator=form --application=<app> --folder=<folder> --name=<PascalCaseName>
+```
 
 1. Form Configuration
    1. A `routes/xxx/config/form.xxxXxxx.ts` file
@@ -16,10 +20,10 @@ Forms will typically consist of **3 parts** in our Remix apps
    3. It also exports a `formSetup` helper and `formDefaults`
 2. Form Component
    1. A `routing/xxxx/components/XxxxYyyyForm.tsx` file
-   2. This component makes use of the [Remix Form](https://remix.run/docs/en/main/components/form).
+   2. This component makes use of the [React Router `Form`](https://reactrouter.com/api/components/Form).
    3. It should also use `<FocusError />` component for better UX
 3. Server Endpoint
-   1. A corresponding Remix `loader` or `action` on a route.
+   1. A corresponding React Router `loader` or `action` on a route.
    2. We use the `schema.cast` for any type coercion needed
 
 ## 1. Form Configuration
@@ -123,7 +127,7 @@ export const formSetup = (
 ```tsx
 import { Button, Input } from '@openthrottle/react-router-shadcn';
 import { FocusError } from 'focus-formik-error';
-import { Form } from '@remix-run/react';
+import { Form } from 'react-router';
 import { useForm } from '@openthrottle/react-router-utils';
 import { formSetup } from '~/routing/xxx/config/form.xxx';
 

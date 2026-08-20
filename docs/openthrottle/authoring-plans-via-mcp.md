@@ -175,7 +175,7 @@ The Ralph tooling walks a plan's tasks in `sortOrder`, taking each `PENDING` tas
 - **CLI:** `pnpm exec workflow-ralph --plan <plan-uuid>` (or `--task <task-uuid>` for a single task). Run `pnpm exec workflow-ralph --help` for options.
 - **Queue:** enqueue a Run-plan job (BullMQ) — the plan flips to `QUEUED` until a worker picks it up, then `IN_PROGRESS`.
 
-For the full run loop, worker-vs-orchestrator modes, and worktree behavior, see the [`workflow-ralph` skill](../../.agents/skills/workflow-ralph/SKILL.md) and [tools/workflows/README.md](../../tools/workflows/README.md). Don't reproduce that here — author good tasks and let the run loop own execution.
+For the full run loop, worker-vs-orchestrator modes, and worktree behavior, see [tools/workflows/README.md](../../tools/workflows/README.md) (there is no `workflow-ralph` skill — the loop prompt is [`agents-ralph`](../../skills/agents-ralph/SKILL.md)). Don't reproduce that here — author good tasks and let the run loop own execution.
 
 ### Narrate progress — `append_plan_output` / `get_plan_output`
 
@@ -185,7 +185,7 @@ A running plan has an **output stream** — an append-only log of what happened,
 
 Every bit of code that ships for a plan is traceable to it through git, in two distinct steps:
 
-**1. Work commits carry `Plan-Id:` / `Task-Id:` footers.** Each per-task commit on your working branch uses a [conventional commit](../../.agents/skills/git-commit/SKILL.md) message with the UUIDs in the footer:
+**1. Work commits carry `Plan-Id:` / `Task-Id:` footers.** Each per-task commit on your working branch uses a [conventional commit](../../skills/github-commit/SKILL.md) message with the UUIDs in the footer:
 
 ```text
 feat(server): add per-IP token-bucket rate-limit guard
@@ -306,18 +306,18 @@ Or simply: `pnpm exec workflow-link-merge --plan 1a2b3c4d-0000-4000-8000-0000000
 
 ## See also
 
-| Topic                                              | Reference                                                                                                                            |
-| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| **Canonical tool + traceability reference**        | [`ot-plans` skill](../../.agents/skills/ot-plans/SKILL.md)                                                                           |
-| **When to use which OT tool** (rules)              | [`.agents/rules/commands/openthrottle.mdc`](../../.agents/rules/commands/openthrottle.mdc)                                           |
-| **Register the MCP server** (config, launcher)     | [mcp-registration.md](./mcp-registration.md)                                                                                         |
-| **Worktree-aware identity / live server URL**      | [mcp-worktrees.md](./mcp-worktrees.md)                                                                                               |
-| **First-time onboarding** (mental model, prompts)  | [first-time-onboarding.md](./first-time-onboarding.md)                                                                               |
-| **Local server + developer app**                   | [run-openthrottle-server-developer.md](./run-openthrottle-server-developer.md)                                                       |
-| **MCP env, smoke checks, secondary workspace**     | [verification-environment.md](../../packages/openthrottle-mcp/docs/verification-environment.md)                                      |
-| **Service-account tokens & rotation**              | [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md)                                                                              |
-| **Project association** (when to set `projectId`)  | See the “When to set `project`/`projectId`” note above.                                                                              |
-| **Run loop / queue** (Ralph)                       | [`workflow-ralph` skill](../../.agents/skills/workflow-ralph/SKILL.md), [tools/workflows/README.md](../../tools/workflows/README.md) |
-| **Conventional commits & staging**                 | [`git-commit` skill](../../.agents/skills/git-commit/SKILL.md)                                                                       |
-| **Schema, migrations, `sort_order`, commit links** | [databases/README.md](../../databases/README.md)                                                                                     |
-| **Monorepo-wide agent conventions**                | [AGENTS.md § OpenThrottle](../../AGENTS.md), [CLAUDE.md](../../CLAUDE.md)                                                            |
+| Topic                                              | Reference                                                                                                                |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| **Canonical tool + traceability reference**        | [`ot-plans` skill](../../.agents/skills/ot-plans/SKILL.md)                                                               |
+| **When to use which OT tool** (rules)              | [`.agents/rules/commands/openthrottle.mdc`](../../.agents/rules/commands/openthrottle.mdc)                               |
+| **Register the MCP server** (config, launcher)     | [mcp-registration.md](./mcp-registration.md)                                                                             |
+| **Worktree-aware identity / live server URL**      | [mcp-worktrees.md](./mcp-worktrees.md)                                                                                   |
+| **First-time onboarding** (mental model, prompts)  | [first-time-onboarding.md](./first-time-onboarding.md)                                                                   |
+| **Local server + developer app**                   | [run-openthrottle-server-developer.md](./run-openthrottle-server-developer.md)                                           |
+| **MCP env, smoke checks, secondary workspace**     | [verification-environment.md](../../packages/openthrottle-mcp/docs/verification-environment.md)                          |
+| **Service-account tokens & rotation**              | [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md)                                                                  |
+| **Project association** (when to set `projectId`)  | See the “When to set `project`/`projectId`” note above.                                                                  |
+| **Run loop / queue** (Ralph)                       | [tools/workflows/README.md](../../tools/workflows/README.md), [`agents-ralph` skill](../../skills/agents-ralph/SKILL.md) |
+| **Conventional commits & staging**                 | [`github-commit` skill](../../skills/github-commit/SKILL.md)                                                             |
+| **Schema, migrations, `sort_order`, commit links** | [databases/README.md](../../databases/README.md)                                                                         |
+| **Monorepo-wide agent conventions**                | [AGENTS.md § OpenThrottle](../../AGENTS.md), [CLAUDE.md](../../CLAUDE.md)                                                |

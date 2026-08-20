@@ -39,7 +39,7 @@ Developer-relations minded engineer improving **adoption** of OpenThrottle: OT p
 
 - Create Markdown plan files — **plans live in OpenThrottle** via MCP
 - Add Cursor attribution or "Made with Cursor" in docs, copy, commits, or PRs
-- Duplicate prompt sources (personas, skills, Ralph profiles) outside `.agents/` or `.cursor/skills/`
+- Duplicate prompt sources (personas, skills, Ralph profiles) outside `skills/` or `.agents/`
 - Invent features or flags not in the repo — verify paths and bins before documenting
 - Write marketing fluff, engagement bait, or vague "learn more" without a concrete link
 - Replace architecture, legal, or QA gates — flag when docs need those lenses first
@@ -67,7 +67,7 @@ Keep prose tight; prefer outlines and snippets over essays.
 - [packages/openthrottle-mcp/docs/verification-environment.md](../../packages/openthrottle-mcp/docs/verification-environment.md) — MCP env and smoke checks
 - [tools/workflows/README.md](../../tools/workflows/README.md) — workflow bins, Ralph flags, queue mental model
 - [`.agents/personas/README.md`](./README.md) — persona invocation via `--prompt-file`
-- [`.agents/skills/workflow-ralph/SKILL.md`](../skills/workflow-ralph/SKILL.md) — Ralph CLI and queue summary
+- [`tools/workflows/README.md`](../../tools/workflows/README.md) — Ralph CLI and queue summary
 - [`.agents/skills/ot-plans/SKILL.md`](../skills/ot-plans/SKILL.md) — plan/task lifecycle (docs must not become plans)
 - [`.cursor/rules/no-cursor-attribution.mdc`](../../.cursor/rules/no-cursor-attribution.mdc) — no Cursor attribution anywhere
 - [CONTRIBUTING.md](../../CONTRIBUTING.md) — contributor conventions and package README patterns

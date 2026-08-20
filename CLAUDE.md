@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 OpenThrottle — an Nx + pnpm workspace monorepo (Node >= 22, pnpm only; `preinstall` blocks npm/yarn). It does both **task running** and **package publishing**. See [AGENTS.md](./AGENTS.md), [MONOREPO.md](./MONOREPO.md), and [CONTRIBUTING.md](./CONTRIBUTING.md) for deeper detail; `.cursor/rules/` is the single source of truth for code style.
 
-**Agent/editor folders:** [docs/monorepo/agent-editor-folders.md](docs/monorepo/agent-editor-folders.md) — folder layout, Cursor vs Claude vs Ralph paths, duplication strategy, and where to edit. Claude-specific config: `.claude/settings.json`, `.claude/skills/` (mirror `.cursor/skills` for shared slugs).
+**Agent/editor folders:** [docs/monorepo/agent-editor-folders.md](docs/monorepo/agent-editor-folders.md) — folder layout, Cursor vs Claude vs Ralph paths, duplication strategy, and where to edit. Claude-specific config: `.claude/settings.json`, `.claude/skills/` — a generated fan-out from `.agents/skills/`; Cursor reads `.agents/skills/` directly, so there is no `.cursor/skills` copy. Never hand-edit either generated dir; edit `skills/` and re-sync.
 
 ## Commands
 
@@ -66,7 +66,7 @@ How to apply:
 
 ### Source-first React Router packages (no `build` target)
 
-The `packages/react-router-*` libraries (and a few others — see CONTRIBUTING.md for the full list of 16) intentionally have **no `build` target**: their `package.json` `main`/`types` point at `./src/index.ts` and consuming apps' Vite transpiles them. Do not add a `build` target to these. Validate them with `lint`/`typecheck`/`test`, then run `dev` or `build` on a consumer app (e.g. `openthrottle-developer`) as the integration check.
+The `packages/react-router-*` libraries (and a few others — see [MONOREPO.md](./MONOREPO.md) § "Projects without a `build` target" for the pattern, and `packages/AGENTS.md` for the `__build` placeholder discriminator) intentionally have **no `build` target**: their `package.json` `main`/`types` point at `./src/index.ts` and consuming apps' Vite transpiles them. Do not add a `build` target to these. Validate them with `lint`/`typecheck`/`test`, then run `dev` or `build` on a consumer app (e.g. `openthrottle-developer`) as the integration check. Audit the current set with `pnpm nx show projects --with-target=build` versus `pnpm nx show projects`.
 
 ### GraphQL schema + codegen flow
 

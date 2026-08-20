@@ -6,11 +6,12 @@ Family-shared notes for everything under `applications/`. Per-project deltas liv
 
 - Four React Router v8 + Vite apps: `openthrottle-developer`, `openthrottle-admin`, `openthrottle-email`, `openthrottle-website`.
 - One NestJS app: `openthrottle-server` — the only backend, owner of the code-first GraphQL schema (`schema.gql`).
+- One Storybook host: `openthrottle-workbench` — Storybook 10 for `@openthrottle/react-router-shadcn`. **Not** a React Router app; `production:false`, local dev tool only, never deployed. See [`openthrottle-workbench/AGENTS.md`](./openthrottle-workbench/AGENTS.md).
 - [`openthrottle/`](./openthrottle/) is **not an Nx project** (no `package.json`): a standalone consumer-install `docker-compose.yml` + Dockerfiles running published images. Local dev Postgres/Redis come from the **root** `docker-compose.yml` via `pnpm run database:start`, not this directory.
 
 ## Ports and env
 
-Every app keeps its own `.env` + `.env.default` in its project root. Local port map (from `.env.default` files): developer 6020, server 6021, admin 6022 (6023 is reserved for a CMS app), email 6024, website 6025; Postgres 6010, Redis 6011.
+Every app keeps its own `.env` + `.env.default` in its project root. Local port map (from `.env.default` files): developer 6020, server 6021, admin 6022 (6023 is reserved for a CMS app), email 6024, website 6025; Postgres 6010, Redis 6011. Workbench (Storybook) runs on 6006, outside the 60xx block — see [`openthrottle-workbench/AGENTS.md`](./openthrottle-workbench/AGENTS.md).
 
 ## React Router app family conventions
 
