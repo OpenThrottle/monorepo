@@ -72,6 +72,13 @@ export interface DriverInvocationConfig {
   readonly model?: string;
   /** Per-chunk stdout/stderr callback (async path only). */
   readonly onChunk?: (chunk: DriverChunk) => void;
+  /**
+   * Out-of-repo plugin directories to load for this invocation; honored only by drivers advertising
+   * `pluginDir`. Already fully resolved by the caller — existence-checked, container-path-mapped,
+   * and gated by the operator's kill switch — because this package never touches the filesystem.
+   * Omitted or empty means no flag, so a failed resolution degrades to a normal run.
+   */
+  readonly pluginDirs?: readonly string[];
   /** Full prompt passed to the CLI's print/headless mode. */
   readonly prompt: string;
   /** AbortSignal to cancel the invocation (async path only). */
@@ -112,6 +119,17 @@ export interface DriverCapabilities {
   readonly mcpAutoApprove: boolean;
   /** Emits a permission-mode flag (Claude: `--permission-mode acceptEdits`). */
   readonly permissionMode: boolean;
+  /**
+   * Can be pointed at an out-of-repo plugin directory via
+   * {@link DriverInvocationConfig.pluginDirs} (Claude: repeatable `--plugin-dir <path>`). This is
+   * what lets an orchestrated run in a foreign checkout carry OT's hooks without writing anything
+   * into that checkout — the asymmetry with skills, which no CLI can load from outside the working
+   * tree. `false` for CLIs with no out-of-repo plugin surface; see the capability matrix in
+   * `docs/monorepo/child-repo-hook-overlay.md`.
+   *
+   * Gates {@link appendPluginDirShellFlags}.
+   */
+  readonly pluginDir: boolean;
   /** Emits `--skip-worktree-setup` (Cursor-only today). */
   readonly skipWorktreeSetup: boolean;
   /**

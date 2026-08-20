@@ -10,6 +10,7 @@ export * from './utils/configuration.ts';
 export * from './utils/foreign-skill-injection/index.ts';
 export * from './utils/foreign-workspace-context.ts';
 export * from './utils/git.ts';
+export * from './utils/hook-plugin-injection.ts';
 export * from './utils/model-discovery/index.ts';
 export * from './utils/postgres.ts';
 export * from './utils/metrics.ts';

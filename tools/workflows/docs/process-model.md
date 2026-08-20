@@ -21,7 +21,7 @@ No HTTP/API server exists yet for orchestrating spawns; the tracker is in-memory
 
 - **What it spawns (one backend per run):** A shell command built from `--backend` (default `cursor`):
   - **`cursor`:** `cursor-agent --force -p "<agentPrompt>" [--model <model>]` (`cursor-agent` on PATH).
-  - **`claude`:** `claude --bare --permission-mode acceptEdits -p "<agentPrompt>"` (optional `--model` unless preset is `auto`). Same injected prompt string as `cursor`; requires `claude` on PATH and Anthropic auth per their docs.
+  - **`claude`:** `claude -p --permission-mode acceptEdits "<agentPrompt>"` (optional `--model` unless preset is `auto`, plus `--plugin-dir` when OT's hook payload resolves). Same injected prompt string as `cursor`; requires `claude` on PATH and Anthropic auth per their docs. **Not `--bare`** — that flag skips hooks, LSP, and plugins, which would silently disable the hook overlay (see [child-repo-hook-overlay.md](../../../docs/monorepo/child-repo-hook-overlay.md)).
 - **How (interactive, TTY):** `spawnSync(command, [], { encoding: 'utf-8', shell: true, stdio: ['inherit', 'pipe', 'pipe'] })`. Blocks until the child exits.
 - **How (non-interactive, no TTY):** `spawn` + Promise; optional `timeoutMs` (per-iteration timeout, e.g. `--iteration-timeout <seconds>`), optional `AbortSignal`, optional `onChunk` for stdout/stderr streaming. On timeout or abort, child is killed (SIGTERM then SIGKILL after grace).
 - **Blocking:** When interactive, the main process blocks for the entire duration of one agent run. When non-interactive, the loop uses async `runIterationAsync` so the process can handle timeouts and streaming; each iteration still runs sequentially.

@@ -1,0 +1,38 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/skill-usage-capture.cjs",
+            "statusMessage": "Skill usage capture (PreToolUse)",
+            "type": "command"
+          }
+        ],
+        "matcher": "Skill"
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/skill-usage-complete.cjs",
+            "statusMessage": "Skill usage complete (Stop)",
+            "type": "command"
+          }
+        ]
+      }
+    ],
+    "UserPromptExpansion": [
+      {
+        "hooks": [
+          {
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/skill-usage-capture.cjs",
+            "statusMessage": "Skill usage capture (UserPromptExpansion)",
+            "type": "command"
+          }
+        ]
+      }
+    ]
+  }
+}

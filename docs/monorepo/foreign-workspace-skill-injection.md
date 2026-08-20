@@ -3,6 +3,7 @@
 **Status:** accepted (visormatt, 2026-08-13). Supersedes the 2026-08-12 run-scoped-ephemeral direction.
 **Plan:** OT `d3a30314-5f91-4213-9ef1-25d21d2f8680`.
 **Related:** [agent-editor-folders.md](./agent-editor-folders.md), `skills/skill-sync/scripts/` (the in-repo SSOT fan-out this extends).
+**Sibling — read alongside:** [child-repo-hook-overlay.md](./child-repo-hook-overlay.md) solves the same problem for **hooks**, and reaches the OPPOSITE conclusion for a concrete reason: §2 below establishes that no CLI exposes an out-of-repo skills directory, which is what forces materialization here. Every CLI we support _does_ expose out-of-repo hook config, so hooks are never written into a target repo. Do not generalize this record's approach to hooks.
 
 ## Problem
 

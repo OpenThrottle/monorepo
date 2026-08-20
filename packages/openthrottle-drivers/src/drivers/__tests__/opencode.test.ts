@@ -105,6 +105,7 @@ describe('opencode driver', () => {
       chatStreaming: true,
       mcpAutoApprove: false,
       permissionMode: true,
+      pluginDir: false,
       skipWorktreeSetup: false,
       supportsCustomBaseUrl: true,
       supportsModelFlag: true,

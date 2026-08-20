@@ -1,0 +1,9 @@
+{
+  "author": {
+    "name": "OpenThrottle",
+    "url": "https://github.com/OpenThrottle"
+  },
+  "description": "Records which agent skills run, so OpenThrottle can report skill usage. Telemetry only — it never modifies your repository and never blocks a tool call.",
+  "name": "openthrottle",
+  "version": "1.0.0"
+}

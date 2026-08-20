@@ -41,39 +41,59 @@
       "__build": {},
       "__build-package": {},
       "bundle-hooks": {
-        "executor": "nx:run-commands",
         "cache": true,
-        "description": "esbuild-bundle each per-tool hook adapter into a self-contained committed .cjs under its tool hook folder (.claude/hooks, .cursor/hooks).",
-        "inputs": [
-          "{projectRoot}/src/**/*",
-          "{projectRoot}/scripts/bundle-hooks.ts"
+        "dependsOn": [
+          "^build"
         ],
+        "description": "esbuild-bundle each per-tool hook adapter into a self-contained committed .cjs under its tool hook folder (.claude/hooks, .cursor/hooks), and generate the distributable Claude Code plugin payload under plugins/openthrottle from the same sources.",
+        "executor": "nx:run-commands",
+        "inputs": [
+          "{projectRoot}/package.json",
+          "{projectRoot}/scripts/bundle-hooks.ts",
+          "{projectRoot}/src/**/*",
+          "^production"
+        ],
+        "options": {
+          "command": "pnpm exec tsx packages/agentic-hooks/scripts/bundle-hooks.ts",
+          "cwd": "{workspaceRoot}"
+        },
         "outputs": [
           "{workspaceRoot}/.claude/hooks/skill-usage-capture.cjs",
           "{workspaceRoot}/.claude/hooks/skill-usage-complete.cjs",
           "{workspaceRoot}/.claude/hooks/skill-usage-drain.cjs",
           "{workspaceRoot}/.claude/hooks/skill-usage-outcome.cjs",
           "{workspaceRoot}/.claude/hooks/skill-usage-scope.cjs",
-          "{workspaceRoot}/.cursor/hooks/skill-usage-capture.cjs"
-        ],
-        "options": {
-          "command": "pnpm exec tsx packages/agentic-hooks/scripts/bundle-hooks.ts",
-          "cwd": "{workspaceRoot}"
-        }
+          "{workspaceRoot}/.cursor/hooks/skill-usage-capture.cjs",
+          "{workspaceRoot}/plugins/openthrottle/.claude-plugin/plugin.json",
+          "{workspaceRoot}/plugins/openthrottle/README.md",
+          "{workspaceRoot}/plugins/openthrottle/hooks/hooks.json",
+          "{workspaceRoot}/plugins/openthrottle/hooks/skill-usage-capture.cjs",
+          "{workspaceRoot}/plugins/openthrottle/hooks/skill-usage-complete.cjs"
+        ]
       },
       "bundle-hooks-check": {
-        "executor": "nx:run-commands",
         "cache": true,
-        "description": "Drift gate: regenerate the hook bundles in-memory and diff against the committed .cjs, failing on drift (codegen-style).",
+        "dependsOn": [
+          "^build"
+        ],
+        "description": "Drift gate: regenerate the hook bundles and the plugin payload in-memory and diff against the committed files, failing on drift (codegen-style).",
+        "executor": "nx:run-commands",
         "inputs": [
-          "{projectRoot}/src/**/*",
+          "^production",
+          "{projectRoot}/package.json",
           "{projectRoot}/scripts/bundle-hooks.ts",
+          "{projectRoot}/src/**/*",
           "{workspaceRoot}/.claude/hooks/skill-usage-capture.cjs",
           "{workspaceRoot}/.claude/hooks/skill-usage-complete.cjs",
           "{workspaceRoot}/.claude/hooks/skill-usage-drain.cjs",
           "{workspaceRoot}/.claude/hooks/skill-usage-outcome.cjs",
           "{workspaceRoot}/.claude/hooks/skill-usage-scope.cjs",
-          "{workspaceRoot}/.cursor/hooks/skill-usage-capture.cjs"
+          "{workspaceRoot}/.cursor/hooks/skill-usage-capture.cjs",
+          "{workspaceRoot}/plugins/openthrottle/.claude-plugin/plugin.json",
+          "{workspaceRoot}/plugins/openthrottle/README.md",
+          "{workspaceRoot}/plugins/openthrottle/hooks/hooks.json",
+          "{workspaceRoot}/plugins/openthrottle/hooks/skill-usage-capture.cjs",
+          "{workspaceRoot}/plugins/openthrottle/hooks/skill-usage-complete.cjs"
         ],
         "options": {
           "command": "pnpm exec tsx packages/agentic-hooks/scripts/bundle-hooks.ts --check",
