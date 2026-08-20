@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
-import { action } from '../plans.create';
+import { action, loader } from '../plans.create';
 import { createTestRouterContext } from '@openthrottle/react-router-testing';
 
 vi.mock('@openthrottle/react-router-graphql');
@@ -18,6 +18,56 @@ function assertResponse(value: unknown): asserts value is Response {
 describe('routes/plans.create.tsx', () => {
   beforeEach(() => {
     mockExecuteGraphqlWithAuth.mockReset();
+  });
+
+  describe('loader', () => {
+    const loaderArgs = () => {
+      const request = new Request('http://localhost/plans/create');
+
+      return {
+        context: createTestRouterContext(),
+        params: {},
+        pattern: '/plans/create' as const,
+        request,
+        url: new URL(request.url),
+      };
+    };
+
+    test('returns the enabled editors and checkout roots from workspace settings', async () => {
+      mockExecuteGraphqlWithAuth.mockResolvedValue({
+        workspaceSettings: {
+          localRepositories: [
+            {
+              displayName: 'openthrottle',
+              filesystemPath: '/srv/checkouts/openthrottle',
+              id: 'repo-1',
+            },
+          ],
+          profile: { enabledEditors: ['CURSOR'] },
+        },
+      });
+
+      const result = await loader(loaderArgs());
+
+      expect(result).toEqual({
+        editors: ['CURSOR'],
+        repositories: [
+          {
+            displayName: 'openthrottle',
+            filesystemPath: '/srv/checkouts/openthrottle',
+            id: 'repo-1',
+          },
+        ],
+      });
+    });
+
+    test('degrades to no editor links when workspace settings fail', async () => {
+      mockExecuteGraphqlWithAuth.mockRejectedValue(new Error('unauthorized'));
+
+      const result = await loader(loaderArgs());
+
+      expect(result).toEqual({ editors: [], repositories: [] });
+    });
   });
 
   describe('action', () => {
