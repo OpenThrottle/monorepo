@@ -4,15 +4,28 @@ import type { RenderResult } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
+import {
+  GLOBAL_FEATURE_ONBOARDING_MODAL,
+  GLOBAL_FEATURE_ONBOARDING_TRIGGER_LABEL,
+  GlobalFeatureOnboardingModal,
+} from '@openthrottle/react-router-ui-global';
 import { SettingsKeysIntroduction } from '../SettingsKeysIntroduction';
 import type { SettingsKeysIntroductionProps } from '../SettingsKeysIntroduction';
-import { SETTINGS_KEYS_COPY } from '~/routing/settings/data/data.copy';
+import {
+  SETTINGS_KEYS_COPY,
+  SETTINGS_KEYS_ONBOARDING,
+} from '~/routing/settings/data/data.copy';
 
 function renderIntroduction(
   props: SettingsKeysIntroductionProps = {},
   initialEntries: readonly string[] = ['/'],
 ): RenderResult {
-  const Component = () => <SettingsKeysIntroduction {...props} />;
+  const Component = () => (
+    <>
+      <SettingsKeysIntroduction {...props} />
+      <GlobalFeatureOnboardingModal content={SETTINGS_KEYS_ONBOARDING} />
+    </>
+  );
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
   return render(<RoutesStub initialEntries={[...initialEntries]} />);
@@ -31,65 +44,58 @@ describe('SettingsKeysIntroduction Component', () => {
       ).toBeInTheDocument();
     });
 
-    test('renders the help trigger', () => {
+    test('renders the shared onboarding trigger', () => {
       const component = renderIntroduction();
 
       expect(
         component.getByRole('button', {
-          name: SETTINGS_KEYS_COPY.triggerLabel,
+          name: GLOBAL_FEATURE_ONBOARDING_TRIGGER_LABEL,
         }),
       ).toBeInTheDocument();
     });
   });
 
-  describe('when the help modal is closed', () => {
-    test('does not render the moved help copy on the page', () => {
+  describe('when the onboarding modal is closed', () => {
+    test('does not render the onboarding copy on the page', () => {
       const component = renderIntroduction();
 
       expect(
-        component.queryByText(SETTINGS_KEYS_COPY.oneTimeSecretTitle),
+        component.queryByText(SETTINGS_KEYS_ONBOARDING.tagline),
       ).not.toBeInTheDocument();
       expect(
-        component.queryByText(SETTINGS_KEYS_COPY.rotationTitle),
-      ).not.toBeInTheDocument();
-      expect(
-        component.queryByText(SETTINGS_KEYS_COPY.jwtPrefix, { exact: false }),
+        component.queryByText(SETTINGS_KEYS_ONBOARDING.whatItIs),
       ).not.toBeInTheDocument();
     });
   });
 
   describe('when the trigger is clicked', () => {
-    test('opens the help modal with the moved copy and docs link', async () => {
+    test('opens the onboarding modal with the keys copy', async () => {
       const user = userEvent.setup();
       const component = renderIntroduction();
 
       await user.click(
         component.getByRole('button', {
-          name: SETTINGS_KEYS_COPY.triggerLabel,
+          name: GLOBAL_FEATURE_ONBOARDING_TRIGGER_LABEL,
         }),
       );
 
       expect(
-        component.getByText(SETTINGS_KEYS_COPY.oneTimeSecretTitle),
+        component.getByText(SETTINGS_KEYS_ONBOARDING.tagline),
       ).toBeInTheDocument();
       expect(
-        component.getByText(SETTINGS_KEYS_COPY.rotationBody),
-      ).toBeInTheDocument();
-      expect(
-        component.getByText(SETTINGS_KEYS_COPY.jwtPrefix, { exact: false }),
-      ).toBeInTheDocument();
-      expect(
-        component.getByTestId('SettingsKeysHelpModal-docs-link'),
+        component.getByText(SETTINGS_KEYS_ONBOARDING.whatItIs),
       ).toBeInTheDocument();
     });
   });
 
-  describe('when the modal search param is set', () => {
-    test('opens the help modal without a click', () => {
-      const component = renderIntroduction({}, ['/?modal=keys-help']);
+  describe('when the onboarding search param is already set', () => {
+    test('renders the onboarding modal on first paint', () => {
+      const component = renderIntroduction({}, [
+        `/?${GLOBAL_FEATURE_ONBOARDING_MODAL.param}=${GLOBAL_FEATURE_ONBOARDING_MODAL.value}`,
+      ]);
 
       expect(
-        component.getByTestId('SettingsKeysHelpModal'),
+        component.getByText(SETTINGS_KEYS_ONBOARDING.tagline),
       ).toBeInTheDocument();
     });
   });

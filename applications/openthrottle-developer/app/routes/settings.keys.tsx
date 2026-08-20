@@ -5,6 +5,7 @@ import {
   mergeRouteModuleMeta,
 } from '@openthrottle/react-router-utils';
 import {
+  GlobalFeatureOnboardingModal,
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
@@ -26,8 +27,8 @@ import {
   SETTINGS_KEYS_PROBE_SERVICE_ACCOUNT_ID,
   type SettingsKeysActionData,
 } from '~/routing/settings/utils/settings-keys-action';
+import { SETTINGS_KEYS_ONBOARDING } from '~/routing/settings/data/data.copy';
 import type { Route } from '@/app/routes/+types/settings.keys';
-// import { SettingsKeysServiceAccountCredentials } from '~/routing/settings/components/SettingsKeysServiceAccountCredentials';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -132,32 +133,36 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <GlobalScreen>
-      <SettingsKeysIntroduction />
+    <>
+      <GlobalScreen>
+        <SettingsKeysIntroduction />
 
-      <div className="flex flex-col gap-4">
-        <SettingsKeysToolbar
-          canCreate={canManageCredentials}
+        <div className="flex flex-col gap-4">
+          <SettingsKeysToolbar
+            canCreate={canManageCredentials}
+            createDialogOpen={createDialogOpen}
+            onCreateDialogOpenChange={setCreateDialogOpen}
+            onServiceAccountChange={handleServiceAccountChange}
+            selectedServiceAccountId={selectedServiceAccountId}
+            serviceAccounts={serviceAccounts}
+          />
+          <SettingsKeysTable
+            actionError={actionError}
+            canRevoke={canManageCredentials}
+            className="bg-card"
+            credentials={credentials}
+          />
+        </div>
+        <SettingsKeysForm
+          actionData={createActionData}
           createDialogOpen={createDialogOpen}
           onCreateDialogOpenChange={setCreateDialogOpen}
-          onServiceAccountChange={handleServiceAccountChange}
-          selectedServiceAccountId={selectedServiceAccountId}
-          serviceAccounts={serviceAccounts}
+          serviceAccountId={selectedServiceAccountId}
         />
-        <SettingsKeysTable
-          actionError={actionError}
-          canRevoke={canManageCredentials}
-          className="bg-card"
-          credentials={credentials}
-        />
-      </div>
-      <SettingsKeysForm
-        actionData={createActionData}
-        createDialogOpen={createDialogOpen}
-        onCreateDialogOpenChange={setCreateDialogOpen}
-        serviceAccountId={selectedServiceAccountId}
-      />
-    </GlobalScreen>
+      </GlobalScreen>
+
+      <GlobalFeatureOnboardingModal content={SETTINGS_KEYS_ONBOARDING} />
+    </>
   );
 }
 
