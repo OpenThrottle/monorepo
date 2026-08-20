@@ -1,0 +1,14 @@
+<!--
+  Channel avatar — 800x800. YouTube renders it circular and as small as 24px, so
+  the mark is the only content: no wordmark, no tagline.
+  Verify at 24px before replacing.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <rect width="800" height="800" fill="#0A0D0F" />
+  <g transform="translate(400 400) scale(8.75) translate(-32 -32)" fill="none">
+    <circle cx="32" cy="32" r="25" stroke="#20262D" stroke-width="5" />
+    <path d="M14.3 49.7A25 25 0 0 1 49.7 14.3" stroke="#FF0000" stroke-width="5" stroke-linecap="round" />
+    <path d="M32 32 46 21" stroke="#F7F9FA" stroke-width="5" stroke-linecap="round" />
+    <circle cx="32" cy="32" r="4.5" fill="#FF0000" />
+  </g>
+</svg>

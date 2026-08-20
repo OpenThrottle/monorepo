@@ -48,3 +48,8 @@ coverage/
 dist/
 infra/**/.terraform/
 tools/generators/src/generators/*/files/**
+
+# Screencast-pipeline capture artifacts (raw frames, manifests, assembled mp4s).
+# Generated per run and gitignored; never format or commit them.
+applications/*/tests/demo/output/
+applications/*/tests/demo/spike/output/

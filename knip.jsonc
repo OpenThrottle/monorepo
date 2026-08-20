@@ -56,6 +56,9 @@
     "**/vitest.setup.ts",
     "**/codegen.{ts,js}",
     "tools/generators/src/generators/*/files/**",
+    // Task-3 recorder spike: committed as evidence for the decision, deliberately not
+    // imported by the pipeline. See tests/demo/spike/README.md.
+    "applications/openthrottle-developer/tests/demo/spike/**",
     // openthrottle-developer: kept for commented JSX / intentional rollback (see @deprecated)
     "applications/openthrottle-developer/app/routing/agents/components/AgentsSectionQuickLinks.tsx",
     "applications/openthrottle-developer/app/routing/dashboard/components/DashboardQueueStats.tsx",
@@ -122,6 +125,26 @@
   // files are ignored by glob below instead. (Revisit if configs become static objects.)
   "vitest": false,
   "workspaces": {
+    // Screencast pipeline (docs/marketing/pipeline.md). Four CLI entrypoints plus the
+    // demo-database scripts: each is invoked by an Nx `video-*` target rather than
+    // imported by anything, so without this every module they pull in reads as unused.
+    // The flows are entries too, because run.ts resolves them by slug through a
+    // dynamic import that knip cannot follow.
+    "applications/openthrottle-developer": {
+      "entry": [
+        "app/entry.client.tsx",
+        "app/entry.server.tsx",
+        "app/root.tsx",
+        "app/routes/**/*.{ts,tsx}",
+        "app/testing/**/*.{ts,tsx}",
+        "tests/demo/assemble/assemble.ts",
+        "tests/demo/flows/*.flow.ts",
+        "tests/demo/narrate/narrate.ts",
+        "tests/demo/runner/run.ts",
+        "tests/demo/scan/leak-scan.ts",
+        "tests/demo/scripts/*.ts",
+      ],
+    },
     ".": {
       "entry": [
         "scripts/pnpm-package.ts",
