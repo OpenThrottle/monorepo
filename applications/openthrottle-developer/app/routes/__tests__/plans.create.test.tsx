@@ -38,7 +38,10 @@ describe('routes/plans.create.tsx', () => {
         url: new URL(request.url),
       });
 
-      expect(result).toEqual({ error: 'Category is required.' });
+      expect(result).toMatchObject({
+        error: 'Category is required.',
+        field: 'category',
+      });
       expect(mockExecuteGraphqlWithAuth).not.toHaveBeenCalled();
     });
 
@@ -59,8 +62,67 @@ describe('routes/plans.create.tsx', () => {
         url: new URL(request.url),
       });
 
-      expect(result).toEqual({ error: 'Title is required.' });
+      expect(result).toMatchObject({
+        error: 'Title is required.',
+        field: 'title',
+      });
       expect(mockExecuteGraphqlWithAuth).not.toHaveBeenCalled();
+    });
+
+    test('echoes submitted values back so the form can repopulate', async () => {
+      const formData = new FormData();
+      formData.set('summary', 'Short summary text');
+      formData.set('title', 'New plan');
+
+      const request = new Request('http://localhost/plans/create', {
+        body: formData,
+        method: 'POST',
+      });
+
+      const result = await action({
+        context: createTestRouterContext(),
+        params: {},
+        pattern: '/plans/create',
+        request,
+        url: new URL(request.url),
+      });
+
+      expect(result).toMatchObject({
+        values: {
+          category: '',
+          summary: 'Short summary text',
+          title: 'New plan',
+        },
+      });
+    });
+
+    test('anchors the server author error to the author field', async () => {
+      mockExecuteGraphqlWithAuth.mockRejectedValue(
+        new Error('author is required when GITHUB_USER is not set.'),
+      );
+
+      const formData = new FormData();
+      formData.set('category', 'feature');
+      formData.set('title', 'New plan');
+
+      const request = new Request('http://localhost/plans/create', {
+        body: formData,
+        method: 'POST',
+      });
+
+      const result = await action({
+        context: createTestRouterContext(),
+        params: {},
+        pattern: '/plans/create',
+        request,
+        url: new URL(request.url),
+      });
+
+      expect(result).toMatchObject({
+        error: 'author is required when GITHUB_USER is not set.',
+        field: 'author',
+        values: { category: 'feature', title: 'New plan' },
+      });
     });
 
     test('creates a plan and redirects', async () => {

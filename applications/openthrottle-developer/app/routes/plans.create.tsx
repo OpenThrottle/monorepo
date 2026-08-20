@@ -10,6 +10,11 @@ import { Link, redirect } from 'react-router';
 import { CreatePlanDocument } from '~/__generated__/graphql';
 import { PlanCreateMcpParityShell } from '~/routing/plans/components/PlanCreateMcpParityShell';
 import { PlanForm } from '~/routing/plans/components/PlanForm';
+import type { PlanFormActionData } from '~/routing/plans/data/plan-form-action-data';
+import {
+  readPlanFormValues,
+  resolvePlanFormErrorField,
+} from '~/routing/plans/utils/plan-form-values';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/plans.create';
 import { Button } from '@openthrottle/react-router-shadcn';
@@ -79,43 +84,38 @@ export default function Component(
 export const action = async (args: Route.ActionArgs) => {
   const formData = await args.request.formData();
 
-  const author = formData.get('author');
-  const category = formData.get('category');
-  const title = formData.get('title');
+  // 🚨 Every failed return below echoes `values` back so the form re-renders
+  // with what the user typed instead of clearing itself.
+  const values = readPlanFormValues(formData);
 
-  if (typeof category !== 'string' || !category.trim()) {
-    return { error: 'Category is required.' };
+  if (!values.category?.trim()) {
+    return {
+      error: 'Category is required.',
+      field: 'category',
+      values,
+    } satisfies PlanFormActionData;
   }
 
-  if (typeof title !== 'string' || !title.trim()) {
-    return { error: 'Title is required.' };
+  if (!values.title?.trim()) {
+    return {
+      error: 'Title is required.',
+      field: 'title',
+      values,
+    } satisfies PlanFormActionData;
   }
-
-  const authorStr = typeof author === 'string' ? author.trim() : '';
-
-  const assignee = formData.get('assignee');
-  const description = formData.get('description');
-  const project = formData.get('project');
-  const projectId = formData.get('projectId');
-  const status = formData.get('status');
-  const summary = formData.get('summary');
 
   const input = {
-    author: authorStr,
-    category: category.trim(),
-    title: title.trim(),
-    ...(typeof assignee === 'string' &&
-      assignee.trim() && { assignee: assignee.trim() }),
-    ...(typeof description === 'string' &&
-      description.trim() && { description: description.trim() }),
-    ...(typeof project === 'string' &&
-      project.trim() && { project: project.trim() }),
-    ...(typeof projectId === 'string' &&
-      projectId.trim() && { projectId: projectId.trim() }),
-    ...(typeof status === 'string' &&
-      status.trim() && { status: status.trim() }),
-    ...(typeof summary === 'string' &&
-      summary.trim() && { summary: summary.trim() }),
+    author: values.author?.trim() ?? '',
+    category: values.category.trim(),
+    title: values.title.trim(),
+    ...(values.assignee?.trim() && { assignee: values.assignee.trim() }),
+    ...(values.description?.trim() && {
+      description: values.description.trim(),
+    }),
+    ...(values.project?.trim() && { project: values.project.trim() }),
+    ...(values.projectId?.trim() && { projectId: values.projectId.trim() }),
+    ...(values.status?.trim() && { status: values.status.trim() }),
+    ...(values.summary?.trim() && { summary: values.summary.trim() }),
   };
 
   try {
@@ -126,7 +126,10 @@ export const action = async (args: Route.ActionArgs) => {
     );
 
     if (!result.createPlan?.id) {
-      return { error: 'Failed to create plan.' };
+      return {
+        error: 'Failed to create plan.',
+        values,
+      } satisfies PlanFormActionData;
     }
 
     return redirect(`/plans/${result.createPlan.id}`);
@@ -134,7 +137,11 @@ export const action = async (args: Route.ActionArgs) => {
     const isError = error instanceof Error;
     const message = isError ? error.message : 'Failed to create plan.';
 
-    return { error: message };
+    return {
+      error: message,
+      field: resolvePlanFormErrorField(message),
+      values,
+    } satisfies PlanFormActionData;
   }
 
   // 🚨 Default to invalid action error when no intent is provided.
