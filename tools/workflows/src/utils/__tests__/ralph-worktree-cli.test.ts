@@ -100,15 +100,11 @@ describe('appendRalphWorktreeShellFlags', () => {
   });
 
   it('omits cursor-only flags for claude', () => {
-    const cmd = appendRalphWorktreeShellFlags(
-      'claude --bare -p "hi"',
-      'claude',
-      {
-        skipWorktreeSetup: true,
-        worktree: 'wt-1',
-        worktreeBase: 'main',
-      },
-    );
+    const cmd = appendRalphWorktreeShellFlags('claude -p "hi"', 'claude', {
+      skipWorktreeSetup: true,
+      worktree: 'wt-1',
+      worktreeBase: 'main',
+    });
     expect(cmd).toContain('-w wt-1');
     expect(cmd).not.toContain('worktree-base');
     expect(cmd).not.toContain('skip-worktree-setup');

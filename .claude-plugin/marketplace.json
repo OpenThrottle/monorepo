@@ -1,0 +1,23 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "openthrottle",
+  "description": "Claude Code plugins from the OpenThrottle project.",
+  "owner": {
+    "name": "OpenThrottle",
+    "url": "https://github.com/OpenThrottle"
+  },
+  "plugins": [
+    {
+      "name": "openthrottle",
+      "description": "Records which agent skills run, so OpenThrottle can report skill usage. Telemetry only — it never modifies your repository and never blocks a tool call.",
+      "author": {
+        "name": "OpenThrottle",
+        "url": "https://github.com/OpenThrottle"
+      },
+      "category": "productivity",
+      "source": "./plugins/openthrottle",
+      "homepage": "https://github.com/OpenThrottle/monorepo/blob/main/docs/monorepo/child-repo-hook-overlay.md",
+      "tags": ["hooks", "openthrottle", "skills", "telemetry"]
+    }
+  ]
+}

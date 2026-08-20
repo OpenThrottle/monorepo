@@ -18,6 +18,7 @@ const fakeDriver = (id: string): AgentDriver =>
       chatStreaming: false,
       mcpAutoApprove: false,
       permissionMode: false,
+      pluginDir: false,
       skipWorktreeSetup: false,
       supportsCustomBaseUrl: false,
       supportsModelFlag: false,

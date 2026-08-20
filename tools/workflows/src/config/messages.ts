@@ -24,7 +24,7 @@ Required (one of):
   ${COLORS.cyan}--task ${COLORS.gray}<uuid>${COLORS.reset}  OpenThrottle task ID (UUID); task-centric mode  ${COLORS.gray}ex: 45a30762-92a9-42f4-90e0-2437c7ef26a8${COLORS.reset}
 
 Options:
-  ${COLORS.cyan}--backend ${COLORS.gray}<cursor|claude>${COLORS.reset}  Execution backend (runner) for the entire plan run  ${COLORS.gray}default: ${COLORS.blue}cursor${COLORS.reset} (${COLORS.gray}cursor-agent${COLORS.reset}); ${COLORS.gray}claude${COLORS.reset} uses Claude Code CLI (${COLORS.gray}claude --bare -p …${COLORS.reset})
+  ${COLORS.cyan}--backend ${COLORS.gray}<cursor|claude>${COLORS.reset}  Execution backend (runner) for the entire plan run  ${COLORS.gray}default: ${COLORS.blue}cursor${COLORS.reset} (${COLORS.gray}cursor-agent${COLORS.reset}); ${COLORS.gray}claude${COLORS.reset} uses Claude Code CLI (${COLORS.gray}claude -p …${COLORS.reset})
   ${COLORS.cyan}--debug ${COLORS.gray}[=verbose]${COLORS.reset}   Shim debug to stderr (lines prefixed ${COLORS.gray}[workflow-ralph:debug]${COLORS.reset}; see Environment below)
   ${COLORS.cyan}--help ${COLORS.reset}              Show this message
   ${COLORS.cyan}--iteration-timeout ${COLORS.gray}<seconds>${COLORS.reset}  Per-iteration timeout (non-interactive only)  ${COLORS.gray}e.g. 1800${COLORS.reset}
