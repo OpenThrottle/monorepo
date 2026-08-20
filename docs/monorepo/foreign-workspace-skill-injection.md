@@ -6,7 +6,7 @@
 
 ## Problem
 
-OpenThrottle's real downstream value is its curated skill set (`create-readme`, `ot-plans`, the `nx-*` / `openthrottle-*` skills, …). When OT drives an agent CLI in a **foreign workspace** — any checkout outside the OT monorepo, e.g. a consumer's `ssm-data-pipeline` — those skills are absent. The only foreign-workspace handling today is a _prompt layer_ (`buildForeignWorkspacePromptLayer`, `packages/openthrottle-agentic-utils/src/utils/foreign-workspace-context.ts`) that does the **opposite** of what we now want: it tells the agent to NOT reference OT `/skills`, generators, or tooling.
+OpenThrottle's real downstream value is its curated skill set (`ot-plans`, `nx-workspace`, the `openthrottle-*` skills, …). When OT drives an agent CLI in a **foreign workspace** — any checkout outside the OT monorepo, e.g. a consumer's `ssm-data-pipeline` — those skills are absent. The only foreign-workspace handling today is a _prompt layer_ (`buildForeignWorkspacePromptLayer`, `packages/openthrottle-agentic-utils/src/utils/foreign-workspace-context.ts`) that does the **opposite** of what we now want: it tells the agent to NOT reference OT `/skills`, generators, or tooling.
 
 ## Goal
 
@@ -30,7 +30,7 @@ OT curated (<OT_ROOT>/skills/)      ← base; always present when the server run
 
 Sources:
 
-- OT curated: `create-readme`, `ot-plans`, `nx-generate`, `frontend-design`
+- OT curated: `create-readme`, `ot-plans`, `nx-workspace`, `frontend-design`
 - personal dir (opt-in, present): `create-readme` (the user's experimental variant), `my-spike`
 - target repo `.agents/skills/`: `create-readme` (the repo's own house-style version), `deploy-prod`
 
@@ -40,7 +40,7 @@ Resolved manifest (ordered, de-duplicated by name):
 | ----------------- | --------------- | ------------- | ------------------------------------------------------------------------------- |
 | `create-readme`   | **target repo** | **no**        | target owns the name → excluded from manifest; the repo's own copy is untouched |
 | `ot-plans`        | OT curated      | yes           | gap-fill                                                                        |
-| `nx-generate`     | OT curated      | yes           | gap-fill                                                                        |
+| `nx-workspace`    | OT curated      | yes           | gap-fill                                                                        |
 | `frontend-design` | OT curated      | yes           | gap-fill                                                                        |
 | `my-spike`        | personal        | yes           | gap-fill; personal-only name                                                    |
 | `deploy-prod`     | target repo     | no            | target-owned; already on disk                                                   |

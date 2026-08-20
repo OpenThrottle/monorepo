@@ -809,7 +809,8 @@ var sweepAbandonedStarts = async ({
       sessionId,
       startsDir: dir
     });
-    const abandonedAt = new Date(mtimeMs).toISOString();
+    const detectedAt = new Date(now).toISOString();
+    const lastSignalMs = mtimeMs;
     const seen = /* @__PURE__ */ new Set();
     for (const start of starts) {
       const key = startCorrelationKey(start);
@@ -817,13 +818,15 @@ var sweepAbandonedStarts = async ({
         continue;
       }
       seen.add(key);
+      const startedMs = Date.parse(String(start.started_at));
+      const observedMs = Number.isFinite(startedMs) ? Math.max(0, lastSignalMs - startedMs) : null;
       const event = buildOutcomeEvent({
-        durationMs: null,
+        durationMs: observedMs,
         outcome: SKILL_USAGE_OUTCOMES.ABANDONED,
         repoRoot,
         sessionId: typeof start.session_id === "string" ? start.session_id : sessionId,
         skillName: typeof start.skill_name === "string" ? start.skill_name : "",
-        timestamp: abandonedAt,
+        timestamp: detectedAt,
         toolUseId: typeof start.tool_use_id === "string" ? start.tool_use_id : null
       });
       if (!event) {

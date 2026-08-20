@@ -1,15 +1,11 @@
 ---
 name: openthrottle-generators
 description: >-
-  OpenThrottle monorepo scaffolding with @tools/generators: mandatory
-  NX_ISOLATE_PLUGINS=false, pnpm nx, list/describe/--list discovery, comma-separated
-  --name batching (confirm via --describe), and registered generator names
-  (react-router, nestjs, react, package, folders). USE WHEN scaffolding new code, fixing Unable to resolve @tools/generators or
-  Cannot find generator, aligning with docs/tools/templates/AGENT_USAGE.md or
-  personal-generators.mdc, or adding apps, packages, React Router UI, or NestJS
-  services. When docs say remix but Nx fails, use react-router generator
-  instead. Defer graph/target exploration to nx-workspace; generic non-OT
-  generator flow to nx-generate; run targets after codegen to nx-run-tasks.
+  Scaffolding OpenThrottle code with @tools/generators. USE WHEN adding an app,
+  package, React Router component or route, or NestJS service — always before
+  hand-writing one — or when hitting "Unable to resolve @tools/generators" or
+  "Cannot find generator". Every command needs NX_ISOLATE_PLUGINS=false. Defer
+  graph, targets and task running to nx-workspace.
 ---
 
 # OpenThrottle generators and Nx conventions
@@ -22,14 +18,13 @@ description: >-
 
 ## How this fits other skills (no duplication)
 
-| Need                                                                                               | Use                                                                             |
-| -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| **Local `@tools/generators` workflow, OT flags, doc paths**                                        | **This skill**                                                                  |
-| **Any Nx generator** (plugin + local), dry-run, reading generator source, library buildable vs not | **nx-generate** — `.agents/skills/nx-generate/SKILL.md`                         |
-| **Read-only** workspace: project list, `nx show project`, graph, affected                          | **nx-workspace** — `.agents/skills/nx-workspace/SKILL.md`                       |
-| **Execute** `nx run`, `affected`, `run-many` after code exists                                     | **nx-run-tasks** — `.agents/skills/nx-run-tasks/SKILL.md`                       |
-| **Plans, Plan-Id / Task-Id, openthrottle-mcp**                                                     | **ot-plans** — `.agents/skills/ot-plans/SKILL.md`                               |
-| **Link workspace packages** after new packages                                                     | **link-workspace-packages** — `.agents/skills/link-workspace-packages/SKILL.md` |
+| Need                                                                      | Use                                                                             |
+| ------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| **Local `@tools/generators` workflow, OT flags, doc paths**               | **This skill**                                                                  |
+| **Read-only** workspace: project list, `nx show project`, graph, affected | **nx-workspace** — `.agents/skills/nx-workspace/SKILL.md`                       |
+| **Execute** `nx run`, `affected`, `run-many` after code exists            | **nx-workspace** — `.agents/skills/nx-workspace/SKILL.md`                       |
+| **Plans, Plan-Id / Task-Id, openthrottle-mcp**                            | **ot-plans** — `.agents/skills/ot-plans/SKILL.md`                               |
+| **Link workspace packages** after new packages                            | **link-workspace-packages** — `.agents/skills/link-workspace-packages/SKILL.md` |
 
 ## Non-negotiable: `NX_ISOLATE_PLUGINS=false`
 
@@ -95,7 +90,7 @@ Aligned with `.cursor/rules/personal-generators.mdc`:
 
 5. **Only then** hand-edit for business logic.
 
-Prefer **`--dry-run`** where supported (see **nx-generate**) before writing files.
+Prefer **`--dry-run`** where supported before writing files.
 
 ## Batch generation (`--name` comma-separated)
 
@@ -143,7 +138,5 @@ Scaffolding is unrelated to **OT** tool calls, but if work is tracked under a pl
 
 ## Cross-links
 
-- **nx-generate:** `.agents/skills/nx-generate/SKILL.md`
 - \*_nx-workspace:^_ `.agents/skills/nx-workspace/SKILL.md`
-- **nx-run-tasks:** `.agents/skills/nx-run-tasks/SKILL.md`
 - **ot-plans:** `.agents/skills/ot-plans/SKILL.md`

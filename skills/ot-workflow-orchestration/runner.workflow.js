@@ -1,7 +1,7 @@
 export const meta = {
   name: 'ot-workflow-orchestration',
   description:
-    'Run the ot-plan-loop / agents-ralph per-task discipline across N OpenThrottle plans. v1 is SEQUENTIAL (concurrency K=1): each plan gets its own worktree+branch, one fresh subagent per task (IN_PROGRESS → implement → validate → commit → COMPLETED), then a NORMAL PR per plan. No auto-merge, never pushes to main, OT-only for plans/tasks.',
+    'Run the ot-claude-loop / agents-ralph per-task discipline across N OpenThrottle plans. v1 is SEQUENTIAL (concurrency K=1): each plan gets its own worktree+branch, one fresh subagent per task (IN_PROGRESS → implement → validate → commit → COMPLETED), then a NORMAL PR per plan. No auto-merge, never pushes to main, OT-only for plans/tasks.',
   phases: [
     {
       title: 'Setup',
@@ -25,10 +25,10 @@ export const meta = {
 // ot-workflow-orchestration runner (v1, sequential multi-plan)
 // ----------------------------------------------------------------------------
 // A Workflow subagent CANNOT invoke the built-in /loop. This runner re-implements
-// the ralph per-task discipline (skills/ot-plan-loop + skills/agents-ralph) inside
+// the ralph per-task discipline (skills/ot-claude-loop + skills/agents-ralph) inside
 // each subagent prompt: one fresh agent() per TASK (context reset per task, like
 // /loop gives), all sharing ONE worktree per plan, then a finalize agent opens
-// the PR. ot-plan-loop / agents-ralph are the SOURCE OF TRUTH for the per-task
+// the PR. ot-claude-loop / agents-ralph are the SOURCE OF TRUTH for the per-task
 // prompt — this workflow does not shell out to them.
 //
 // v1 is SEQUENTIAL. N plans share ONE Postgres/Redis + the Nx cache (local + GCS)
@@ -219,13 +219,13 @@ Return { worktreeReady: true, slug, worktree, branch, tasks: [{ id, title, descr
 // Implement phase — ONE fresh agent() per task (context reset per task, like
 // /loop gives). Serial within a plan (shared worktree + shared Nx cache).
 // The prompt faithfully re-implements the ralph per-task loop from
-// skills/ot-plan-loop/SKILL.md steps 1-7 and skills/agents-ralph.
+// skills/ot-claude-loop/SKILL.md steps 1-7 and skills/agents-ralph.
 async function implementPhase(planId, setup, idx) {
   const results = [];
   for (let ti = 0; ti < setup.tasks.length; ti++) {
     const t = setup.tasks[ti];
     const r = await agent(
-      `You implement exactly ONE OpenThrottle (OT) task in an existing git worktree, following the ralph per-task discipline (skills/ot-plan-loop steps 1-7 + skills/agents-ralph). Your ENTIRE scope is this one task — do not touch unrelated code.
+      `You implement exactly ONE OpenThrottle (OT) task in an existing git worktree, following the ralph per-task discipline (skills/ot-claude-loop steps 1-7 + skills/agents-ralph). Your ENTIRE scope is this one task — do not touch unrelated code.
 
 Worktree (subagents do NOT share cwd — use absolute paths or \`git -C ${setup.worktree}\`): ${setup.worktree}
 Plan-Id: ${planId}

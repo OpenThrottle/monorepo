@@ -24,6 +24,8 @@ bash skills/skill-sync/scripts/sync.sh --check
 
 **Tracking authority is [`skills-lock.json`](../skills-lock.json)** (hash-pinned per external skill). This doc is a summary, not the ledger.
 
+**Usage telemetry** for skills is recorded in `skill_usage_events` / `skill_usage_outcomes`. Before you delete a skill because it shows zero invocations, read [`docs/monorepo/skill-usage-telemetry-scope.md`](monorepo/skill-usage-telemetry-scope.md) — it documents which invocation paths are captured and which are structurally invisible, so a `0` is read correctly.
+
 ## Adoption policy (hard stance)
 
 1. **External skills installed via the `skills` package stay 1:1 with upstream.** Never hand-edit or fork-and-mutate a vendored install — a re-pull/re-sync would blow the edits away, and we don't own that content. Install exactly as documented:
@@ -44,23 +46,60 @@ bash skills/skill-sync/scripts/sync.sh --check
 
 Source of truth: `skills-lock.json`. Grouped by upstream:
 
-| Source                     | Skills                                                                                              |
-| -------------------------- | --------------------------------------------------------------------------------------------------- |
-| `github/awesome-copilot`   | create-readme                                                                                       |
-| `steipete/agent-scripts`   | create-cli, frontend-design, skill-cleaner                                                          |
-| `mattpocock/skills`        | grill-me, grill-with-docs, grilling, handoff, teach, writing-great-skills                           |
-| `shadcn/improve`           | improve                                                                                             |
-| `nrwl/nx-ai-agents-config` | link-workspace-packages, monitor-ci, nx-generate, nx-import, nx-plugins, nx-run-tasks, nx-workspace |
-| `microsoft/SkillOpt`       | skillopt-sleep                                                                                      |
+| Source                     | Skills                                            |
+| -------------------------- | ------------------------------------------------- |
+| `steipete/agent-scripts`   | frontend-design                                   |
+| `mattpocock/skills`        | grilling                                          |
+| `shadcn/improve`           | improve                                           |
+| `nrwl/nx-ai-agents-config` | link-workspace-packages, monitor-ci, nx-workspace |
 
 ## OT-owned skills (`skills/`)
 
 Ours to author and edit; fanned out by skill-sync:
 
-- **Agents/workflow:** agents-ralph, ot-plan-loop, ot-workflow-orchestration, validate-plan
-- **GitHub:** github-branch, github-commit, github-create-issue, github-my-pull-requests, github-pull-request, github-squash, github-summarize, github-untracked, github-worktree
-- **OpenThrottle:** openthrottle-folders, openthrottle-generators, openthrottle-stack, ot-ask, ot-create-plan, ot-edit-task, ot-list-by-status, ot-onboarding, ot-plans, ot-postgres
+- **Agents/workflow:** agents-ralph, ot-claude-loop, ot-workflow-orchestration, validate-plan
+- **GitHub:** github-commit, github-pull-request, github-squash
+- **OpenThrottle:** openthrottle-folders, openthrottle-generators, openthrottle-stack, ot-onboarding, ot-plans, ot-postgres
 - **Infra:** skill-sync
+
+## Always-on description budget
+
+Every skill's frontmatter `description` sits in the context window of every session whether or not
+the skill fires, so it is a standing cost. **Measured 2026-08-20: 20 skills, 6,212 chars,
+~1,553 tokens** — down from 44 skills / 16,918 chars / ~4,229 tokens.
+
+A description answers exactly one question: _should the model open this file right now?_ That means
+trigger conditions plus the explicit not-this-skill disambiguators, and nothing else. Feature
+inventories, flag lists and tool enumerations belong in the body, where they cost nothing until the
+skill is actually opened. See [`skills/README.md`](../skills/README.md) § Writing a skill that earns
+its context.
+
+Keep OT-owned descriptions under ~400 chars. The four still above it
+(`link-workspace-packages`, `improve`, `nx-workspace`, `monitor-ci`) are **vendored** — the adoption
+policy above forbids hand-editing them, so their length is the price of installing them 1:1.
+
+Re-measure after any add or delete:
+
+```bash
+python3 - <<'EOF'
+import re, pathlib
+rows = []
+for d in sorted(pathlib.Path('.agents/skills').iterdir()):
+    f = d / 'SKILL.md'
+    if not f.exists():
+        continue
+    m = re.match(r'^---\n(.*?)\n---\n', f.read_text(), re.S)
+    if not m:
+        continue
+    dm = re.search(r'^description:\s*(?:>-|>|\|)?\s*\n?((?:.|\n)*?)(?=\n[a-zA-Z-]+:|\Z)', m.group(1), re.M)
+    rows.append((len(' '.join(dm.group(1).split())) if dm else 0, d.name))
+rows.sort(reverse=True)
+for n, name in rows:
+    print(f'{n:5}  {name}')
+total = sum(n for n, _ in rows)
+print(f'\n{len(rows)} skills, {total} chars, ~{total // 4} tokens')
+EOF
+```
 
 ## Not adopted (skip-list)
 
@@ -71,6 +110,10 @@ Recorded so these aren't re-litigated.
 - **github-deep-review, github-project-triage** — agent-scripts-origin; carried Peter/RepoBar/OpenClaw content that isn't ours to maintain, and overlapped existing `/code-review`, `/review`, `/security-review` and OT plans/tasks for triage. Dropped 2026-07-19.
 - **markdown-converter** (uvx markitdown) — dropped; not worth the budget vs the current docs-ingest flow.
 - **npm** — dropped; OpenThrottle releases via Nx, not raw npm.
+- **github-branch, github-create-issue, github-my-pull-requests, github-summarize, github-untracked, github-worktree** — the dead tail of the `github-*` family, all zero uses. Several were also broken: `github-branch` told the model to use a slash command it is not allowed to invoke (`disable-model-invocation`), `github-my-pull-requests` called Copilot-only tools (`#githubRepo`, `#list_pull_requests`) that do not exist here, `github-untracked` ended on a literal "TODO: Wrap this up" in front of `git clean -f`, and `github-worktree` hardcoded personal absolute paths and told the agent to open Cursor, against CLAUDE.md's `pnpm run worktree:new` as the one entrypoint. Branch creation now belongs to `worktree:new`. Dropped 2026-08-20.
+- **create-cli, create-readme, handoff, skill-cleaner, skillopt-sleep, teach, writing-great-skills** — vendored grab-bag, zero uses, no place in any OpenThrottle workflow. `handoff`, `teach` and `writing-great-skills` are slash-only, so their zero is a trustworthy zero. `skillopt-sleep` drives an external engine that has never been run here; `skill-cleaner` is Codex/OpenClaw-oriented and this trim did its job by hand; `create-cli` and `create-readme` cover authoring this repo does not do. `writing-great-skills`' guidance was harvested into [`skills/README.md`](../skills/README.md) first. Dropped 2026-08-20.
+- **nx-generate, nx-import, nx-plugins, nx-run-tasks** — nrwl-origin, ~3.4k words, zero uses. `nx-generate` actively contradicted this repo: CLAUDE.md mandates `@tools/generators` with `NX_ISOLATE_PLUGINS=false`, while it taught generic `nx g` and claimed "INVOKE IMMEDIATELY" on the word _scaffold_ — a mis-routing risk, not just dead weight. `nx-import` covers a one-time workspace-adoption scenario long since done. `nx-plugins` was a two-line stub. `nx-run-tasks` restated CLAUDE.md's always-on command table. **`nx-workspace` is kept** — the `nx-mcp` server is not registered in the repo's `.mcp.json`, so it cannot be relied on as the fallback for workspace exploration and debugging failed targets. Dropped 2026-08-20.
+- **grill-me, grill-with-docs** — mattpocock-origin; three skills for one behavior. `grill-me`'s entire body was "Run a `/grilling` session", and `grill-with-docs` delegated to a `/domain-modeling` skill this repo has never installed, so it was a broken pointer. `grilling` survives as the single grill skill. Dropped 2026-08-20.
 
 **agent-scripts categories intentionally skipped** (not relevant to this repo):
 

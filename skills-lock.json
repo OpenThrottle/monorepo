@@ -1,47 +1,17 @@
 {
   "version": 1,
   "skills": {
-    "create-cli": {
-      "source": "steipete/agent-scripts",
-      "sourceType": "github",
-      "skillPath": "skills/create-cli/SKILL.md",
-      "computedHash": "2901b8d252d2e154ceb3b1069e94152a80e8a4f0e700e0cebc9d901dea0e26ae"
-    },
-    "create-readme": {
-      "source": "github/awesome-copilot",
-      "sourceType": "github",
-      "skillPath": "skills/create-readme/SKILL.md",
-      "computedHash": "d0ece1b2164ce1376e4ab6e98d6ac079df3a2a94f5f02224362b6a1ce2516ae9"
-    },
     "frontend-design": {
       "source": "steipete/agent-scripts",
       "sourceType": "github",
       "skillPath": "skills/frontend-design/SKILL.md",
       "computedHash": "ab3a76798c9fae60d475a796c979d2878b769ab4de3aadc5459a0f134eee5158"
     },
-    "grill-me": {
-      "source": "mattpocock/skills",
-      "sourceType": "github",
-      "skillPath": "skills/productivity/grill-me/SKILL.md",
-      "computedHash": "f361db4e15e6bfd562a9282b1dccda513910a50061f9e838ce017be9c69dde3f"
-    },
-    "grill-with-docs": {
-      "source": "mattpocock/skills",
-      "sourceType": "github",
-      "skillPath": "skills/engineering/grill-with-docs/SKILL.md",
-      "computedHash": "9c460cbd94fd3c63cdef967dbdb6e66ca687103cdc380cd37834e4d10b738f78"
-    },
     "grilling": {
       "source": "mattpocock/skills",
       "sourceType": "github",
       "skillPath": "skills/productivity/grilling/SKILL.md",
       "computedHash": "368d3dd7251247c69f3656d93dc83c8f1577792eacac2111f1e7981db2ece49b"
-    },
-    "handoff": {
-      "source": "mattpocock/skills",
-      "sourceType": "github",
-      "skillPath": "skills/productivity/handoff/SKILL.md",
-      "computedHash": "ad03e8d4ea3cbbff66420eb7ba3cc375b5cbe1821a2449b53e863256cf5b5cde"
     },
     "improve": {
       "source": "shadcn/improve",
@@ -61,59 +31,11 @@
       "skillPath": "skills/monitor-ci/SKILL.md",
       "computedHash": "e549eacd3b7175f16cfb933a817481b99b7effc6f10c93de3c98cb8cf082c4ce"
     },
-    "nx-generate": {
-      "source": "nrwl/nx-ai-agents-config",
-      "sourceType": "github",
-      "skillPath": "skills/nx-generate/SKILL.md",
-      "computedHash": "25ec66443e8c7b3bc9da349e7a168e1071351cc14217adafe2dfab31c9860f61"
-    },
-    "nx-import": {
-      "source": "nrwl/nx-ai-agents-config",
-      "sourceType": "github",
-      "skillPath": "skills/nx-import/SKILL.md",
-      "computedHash": "11ada1b25edcf0164a76c310e989119c3e0431cae3b7283a6f10d392df9da200"
-    },
-    "nx-plugins": {
-      "source": "nrwl/nx-ai-agents-config",
-      "sourceType": "github",
-      "skillPath": "skills/nx-plugins/SKILL.md",
-      "computedHash": "e93d10328f589667d6a7cc71d134c96b3c28ab4a1468eaec7bc29420c950e4e2"
-    },
-    "nx-run-tasks": {
-      "source": "nrwl/nx-ai-agents-config",
-      "sourceType": "github",
-      "skillPath": "skills/nx-run-tasks/SKILL.md",
-      "computedHash": "e42dec15f588268887d88d606187b0fab9cbb3f90fd4ce41d66d2faffc9295c4"
-    },
     "nx-workspace": {
       "source": "nrwl/nx-ai-agents-config",
       "sourceType": "github",
       "skillPath": "skills/nx-workspace/SKILL.md",
       "computedHash": "32b7b72c54c6644e97ac8c8491e3cfa936afa6f8a86798214258d631367b4add"
-    },
-    "skill-cleaner": {
-      "source": "steipete/agent-scripts",
-      "sourceType": "github",
-      "skillPath": "skills/skill-cleaner/SKILL.md",
-      "computedHash": "4aaf81611a1b437a02d4fee50d9e3c7908891b5ec5447946c82994271142d189"
-    },
-    "skillopt-sleep": {
-      "source": "microsoft/SkillOpt",
-      "sourceType": "github",
-      "skillPath": "plugins/claude-code/skills/skillopt-sleep/SKILL.md",
-      "computedHash": "a393f0c781ca9e8683e54d3a2216e9eece4ca046a67c4903a2c3d9eb58c78595"
-    },
-    "teach": {
-      "source": "mattpocock/skills",
-      "sourceType": "github",
-      "skillPath": "skills/productivity/teach/SKILL.md",
-      "computedHash": "68999bb1a241384b2f921f3321d779b7d05eb6089077b70d88cee2aee3d75ccc"
-    },
-    "writing-great-skills": {
-      "source": "mattpocock/skills",
-      "sourceType": "github",
-      "skillPath": "skills/productivity/writing-great-skills/SKILL.md",
-      "computedHash": "4deb21855fb4deeeb1b8217b041faff003fd0c915d24a22f636851c520bc9c5c"
     }
   }
 }

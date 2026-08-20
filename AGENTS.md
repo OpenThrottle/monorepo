@@ -12,14 +12,14 @@
 
 ## Scaffolding & Generators
 
-- For scaffolding with **`@tools/generators`** (`react-router`, `nestjs`, `react`, `package`, `folders`), ALWAYS invoke **`openthrottle-generators`** FIRST — before `nx-generate` or MCP tools. See [`skills/openthrottle-generators/SKILL.md`](./skills/openthrottle-generators/SKILL.md) (`NX_ISOLATE_PLUGINS=false`, `pnpm nx`, comma-separated `--name` batching, AGENT_USAGE).
-- For other scaffolding (apps/libs via Nx plugins, project structure, setup not covered by `@tools/generators`), invoke **`nx-generate`** FIRST before exploring or calling MCP tools.
+- For scaffolding with **`@tools/generators`** (`react-router`, `nestjs`, `react`, `package`, `folders`), ALWAYS invoke **`openthrottle-generators`** FIRST — before MCP tools. See [`skills/openthrottle-generators/SKILL.md`](./skills/openthrottle-generators/SKILL.md) (`NX_ISOLATE_PLUGINS=false`, `pnpm nx`, comma-separated `--name` batching, AGENT_USAGE).
+- For other scaffolding (apps/libs via Nx plugins, project structure, setup not covered by `@tools/generators`), read `nx_docs` or the plugin's own docs — there is no generic generator skill.
 
 ## When to use nx_docs
 
 - USE for: advanced config options, unfamiliar flags, migration guides, plugin configuration, edge cases
 - DON'T USE for: basic generator syntax (`nx g @nx/react:app`), standard commands, things you already know
-- **`openthrottle-generators`** covers `@tools/generators` discovery and flags; **`nx-generate`** covers other Nx generators — don't call nx_docs just to look up routine generator syntax
+- **`openthrottle-generators`** covers `@tools/generators` discovery and flags — don't call nx_docs just to look up routine generator syntax
 
 <!-- nx configuration end-->
 
@@ -58,7 +58,7 @@ Create a worktree with the one entrypoint — `pnpm worktree:new <name>` (`scrip
 
 ## OpenThrottle Agent Skills
 
-OT-owned skills are authored under [`skills/`](./skills/) and surfaced to every tool via the generated `.agents/skills/` view ([skill-sync](./skills/skill-sync/SKILL.md)). Each skill’s YAML `description` lists **USE WHEN** triggers; prefer these for OpenThrottle-specific workflows alongside the generic Nx skills (**nx-workspace**, **nx-generate**, **nx-run-tasks**) above. Full policy + installed set: [docs/Skills.md](./docs/Skills.md).
+OT-owned skills are authored under [`skills/`](./skills/) and surfaced to every tool via the generated `.agents/skills/` view ([skill-sync](./skills/skill-sync/SKILL.md)). Each skill’s YAML `description` lists **USE WHEN** triggers; prefer these for OpenThrottle-specific workflows alongside the generic Nx skill (**nx-workspace**) above. Full policy + installed set: [docs/Skills.md](./docs/Skills.md).
 
 - **openthrottle-generators** — `@tools/generators`, `NX_ISOLATE_PLUGINS=false`, `pnpm nx`, AGENT_USAGE alignment: [`skills/openthrottle-generators/SKILL.md`](./skills/openthrottle-generators/SKILL.md)
 - **openthrottle-stack** — openthrottle-server GraphQL, databases/embeddings, openthrottle-developer UI, openthrottle-mcp package: [`skills/openthrottle-stack/SKILL.md`](./skills/openthrottle-stack/SKILL.md)
@@ -92,7 +92,7 @@ OT-owned skills are authored under [`skills/`](./skills/) and surfaced to every 
 - **First-time onboarding (after MCP + server work):** Guided mental model, prerequisites checklist, and a minimal copy-paste prompt sequence — [docs/openthrottle/first-time-onboarding.md](docs/openthrottle/first-time-onboarding.md).
 - **Authoring plans & tasks from your editor/agent:** The mental model (plans/tasks as DB rows, `sortOrder`, status lifecycle) plus a copy-pasteable authoring loop — create → order → queue → commit with `Plan-Id`/`Task-Id` → record the squash on the work ledger on merge — with a full worked example: [docs/openthrottle/authoring-plans-via-mcp.md](docs/openthrottle/authoring-plans-via-mcp.md).
 - **Rules:** [`.agents/rules/commands/openthrottle.mdc`](./.agents/rules/commands/openthrottle.mdc) — when to use which OT MCP tool ("ask OT", status queries, semantic search, list sources).
-- **OT skills:** `ot-*` (authored in `skills/ot-*`, surfaced via the generated `.agents/skills/ot-*`). Slash commands, per [`.agents/rules/commands/openthrottle.mdc`](./.agents/rules/commands/openthrottle.mdc): `/ot/ask`, `/ot/create-plan`, `/ot/edit-task`, `/ot/list-by-status`. Other OT-owned slugs are invoked by name rather than a `/ot/` prefix: `ot-onboarding`, `ot-plan-loop`, `ot-plans`, `ot-postgres`, `ot-workflow-orchestration`. (`list_sources` is an MCP tool used _by_ `/ot/ask`, not a command of its own.)
+- **OT skills:** `ot-*` (authored in `skills/ot-*`, surfaced via the generated `.agents/skills/ot-*`) — `/ot-plans` for plan and task work (create, edit, list by status, ask the knowledge base), `/ot-claude-loop` to drive a plan to completion, `/ot-onboarding` for orientation.
 - For "ask OpenThrottle …" or "ask OT …" or "OT, …", follow the OT rule and use the **openthrottle-mcp** MCP server; answer only from retrieved chunks.
 - **PRD summarization:** Plans and tasks have an optional `summary` field. Fill it at completion or when closing work with next actions, usage guides, or (for tasks) why blocked. See `databases/README.md` § PRD summarization.
 
