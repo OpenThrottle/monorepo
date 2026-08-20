@@ -24,15 +24,26 @@ const mockProfile = {
   userId: '11111111-1111-4111-8111-111111111111',
 };
 
+const mockLocalRepositories = [
+  {
+    displayName: 'monorepo',
+    filesystemPath: '/Users/dev/openthrottle',
+    id: 'repo-1',
+  },
+];
+
 describe('routes/settings.workspace._index.tsx', () => {
   beforeEach(() => {
     mockExecuteGraphqlWithAuth.mockReset();
   });
 
   describe('loader', () => {
-    test('returns the profile from the workspaceSettings query', async () => {
+    test('returns the profile, repositories, and derived apply targets', async () => {
       mockExecuteGraphqlWithAuth.mockResolvedValue({
-        workspaceSettings: { profile: mockProfile },
+        workspaceSettings: {
+          localRepositories: mockLocalRepositories,
+          profile: mockProfile,
+        },
       });
 
       const request = new Request('http://localhost/settings/workspace');
@@ -47,6 +58,16 @@ describe('routes/settings.workspace._index.tsx', () => {
       const result = await loader(args);
 
       expect(result.profile).toEqual(mockProfile);
+      expect(result.localRepositories).toEqual(mockLocalRepositories);
+      expect(result.targets).toEqual([
+        {
+          displayName: 'monorepo',
+          editor: WorkspaceEditorId.Cursor,
+          editorLabel: 'Cursor',
+          filesystemPath: '/Users/dev/openthrottle',
+          id: 'repo-1',
+        },
+      ]);
     });
   });
 
@@ -110,12 +131,33 @@ describe('routes/settings.workspace._index.tsx', () => {
       const result = await action(actionArgs(formData));
 
       expect(result).toMatchObject({
+        applications: [
+          expect.objectContaining({ filesWritten: ['.cursor/mcp.json'] }),
+        ],
         message: expect.stringContaining('1 editor/repo pairing'),
       });
       expect(mockExecuteGraphqlWithAuth).toHaveBeenCalledWith(
         expect.any(Request),
         expect.any(Object),
         { input: {} },
+      );
+    });
+
+    test('applyEditorConfig scopes the mutation to a single repositoryId', async () => {
+      mockExecuteGraphqlWithAuth.mockResolvedValue({
+        applyWorkspaceEditorConfiguration: { applications: [] },
+      });
+
+      const formData = new FormData();
+      formData.set('intent', 'applyEditorConfig');
+      formData.set('repositoryId', 'repo-1');
+
+      await action(actionArgs(formData));
+
+      expect(mockExecuteGraphqlWithAuth).toHaveBeenCalledWith(
+        expect.any(Request),
+        expect.any(Object),
+        { input: { repositoryIds: ['repo-1'] } },
       );
     });
 

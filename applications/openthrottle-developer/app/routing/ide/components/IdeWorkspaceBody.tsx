@@ -74,11 +74,11 @@ export const IdeWorkspaceBody = (
             <EmptyTitle>Select a repository</EmptyTitle>
             <EmptyDescription>
               Choose a registered repository to browse, or add one in Settings →
-              Workspace.
+              Repositories.
             </EmptyDescription>
           </EmptyHeader>
           <Button asChild={true} variant="outline">
-            <Link to="/settings/workspace">Open workspace settings</Link>
+            <Link to="/settings/repositories">Add a repository</Link>
           </Button>
         </Empty>
       ) : (

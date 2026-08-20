@@ -21,7 +21,7 @@ pnpm nx run openthrottle-developer:dev   # or :build then serve
 
 Then:
 
-1. Open **`/settings/workspace`** and register a local repository (a `filesystemPath` on the server host — e.g. this monorepo's absolute path).
+1. Open **`/settings/repositories`** and register a local repository (a `filesystemPath` on the server host — e.g. this monorepo's absolute path).
 2. Open **`/ide`** and pick that repository in the selector (sets `?repositoryId=`).
 3. **Files & Search** — type in the palette to filter files; submit the search box (`?q=`) for ripgrep matches.
 4. **Symbols** — opening the tab lists exports; click a symbol for its definition + references.

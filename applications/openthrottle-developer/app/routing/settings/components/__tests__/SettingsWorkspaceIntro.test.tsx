@@ -14,7 +14,7 @@ describe('SettingsWorkspaceIntro Component', () => {
       screen.getByRole('heading', { name: 'Workspace' }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/Configure your workspace settings/i),
+      screen.getByText(/Choose which editors OpenThrottle configures/i),
     ).toBeInTheDocument();
   });
 });

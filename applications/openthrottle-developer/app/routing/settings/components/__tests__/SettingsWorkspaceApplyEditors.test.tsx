@@ -32,26 +32,21 @@ describe('SettingsWorkspaceApplyEditors Component', () => {
       component.getByTestId('SettingsWorkspaceApplyEditors'),
     ).toBeInTheDocument();
     expect(
-      component.getByRole('button', { name: 'Apply editor configuration' }),
+      component.getByRole('button', { name: 'Apply to all repositories' }),
     ).toBeInTheDocument();
   });
 
-  test('disables the button when disabled is true', () => {
+  test('disables the button when disabled is true and states the reason', () => {
     component.unmount();
     component = renderApplyEditors({ disabled: true });
 
-    expect(
-      component.getByRole('button', { name: 'Apply editor configuration' }),
-    ).toBeDisabled();
-  });
+    const button = component.getByRole('button', {
+      name: 'Apply to all repositories',
+    });
+    const reason = component.getByText(/Enable at least one editor above/i);
 
-  test('renders the action message when provided', () => {
-    component.unmount();
-    component = renderApplyEditors({ actionMessage: 'Applied to 3 repos.' });
-
-    expect(component.getByRole('status')).toHaveTextContent(
-      'Applied to 3 repos.',
-    );
+    expect(button).toBeDisabled();
+    expect(button).toHaveAttribute('aria-describedby', reason.id);
   });
 
   test('renders the action error when provided', () => {
@@ -63,21 +58,20 @@ describe('SettingsWorkspaceApplyEditors Component', () => {
     );
   });
 
-  test('submits the applyEditorConfig intent when clicked', async () => {
+  test('submits the applyEditorConfig intent without a repositoryId', async () => {
     const user = userEvent.setup();
-    let submittedIntent: FormDataEntryValue | null = null;
+    let submitted: Record<string, FormDataEntryValue> = {};
     const action = async ({ request }: { request: Request }) => {
-      const formData = await request.formData();
-      submittedIntent = formData.get('intent');
+      submitted = Object.fromEntries(await request.formData());
       return null;
     };
     component.unmount();
     component = renderApplyEditors({}, action);
 
     await user.click(
-      component.getByRole('button', { name: 'Apply editor configuration' }),
+      component.getByRole('button', { name: 'Apply to all repositories' }),
     );
 
-    expect(submittedIntent).toBe('applyEditorConfig');
+    expect(submitted).toEqual({ intent: 'applyEditorConfig' });
   });
 });

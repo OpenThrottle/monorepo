@@ -1,12 +1,10 @@
 import * as React from 'react';
 import clsx from 'clsx';
 import { Button, Input, Label } from '@openthrottle/react-router-shadcn';
-import { ComputerIcon } from 'lucide-react';
+import { UserRoundIcon } from 'lucide-react';
 import { Form, useNavigation } from 'react-router';
 import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
-import { WorkspaceEditorId } from '~/__generated__/graphql';
-import { WorkspaceEditorAffiliateLinks } from '~/routing/settings/components/WorkspaceEditorAffiliateLinks';
-import { WorkspaceEditorMultiSelect } from '~/routing/settings/components/WorkspaceEditorMultiSelect';
+import { WORKSPACE_SETTINGS_COPY } from '~/routing/settings/data/data.copy';
 import type { UserWorkspaceProfileFieldsFragment } from '~/__generated__/graphql';
 
 export interface SettingsWorkspaceProfileFormProps {
@@ -15,6 +13,10 @@ export interface SettingsWorkspaceProfileFormProps {
   profile: UserWorkspaceProfileFieldsFragment;
 }
 
+/**
+ * @description Secondary contact fieldset. Posts the enabled editors alongside the contact values
+ * so the shared `updateProfile` intent never has to tolerate a partial payload.
+ */
 export const SettingsWorkspaceProfileForm = (
   props: SettingsWorkspaceProfileFormProps,
 ): React.ReactElement => {
@@ -22,78 +24,69 @@ export const SettingsWorkspaceProfileForm = (
 
   // Hooks
   const navigation = useNavigation();
+
+  // Setup
   const isSubmitting =
     navigation.state === 'submitting' &&
     navigation.formData?.get('intent') === 'updateProfile';
-
-  const [enabledEditors, setEnabledEditors] = React.useState<
-    WorkspaceEditorId[]
-  >([...profile.enabledEditors]);
-
-  // Setup
 
   // Handlers
 
   // Markup
 
   // Life Cycle
-  React.useEffect(() => {
-    setEnabledEditors([...profile.enabledEditors]);
-  }, [profile.enabledEditors]);
 
   // 🔌 Short Circuit
 
   return (
     <OpenThrottleFieldset
-      icon={ComputerIcon}
+      icon={UserRoundIcon}
       id="settings-workspace-profile-form"
-      legend="Contact & editors"
+      legend={WORKSPACE_SETTINGS_COPY.contactLegend}
     >
       <div
-        className={clsx('space-y-4 md:space-y-8', className)}
+        className={clsx('space-y-4', className)}
         data-testid="SettingsWorkspaceProfileForm"
       >
         <p className="text-muted-foreground text-sm">
-          OpenThrottle can write MCP, skills, and rules into linked repos for
-          the editors you enable.
+          {WORKSPACE_SETTINGS_COPY.contactExplainer}
         </p>
 
         <Form className="space-y-4" method="post">
           <input name="intent" type="hidden" value="updateProfile" />
+          {profile.enabledEditors.map((editor) => (
+            <input
+              key={editor}
+              name="enabledEditors"
+              type="hidden"
+              value={editor}
+            />
+          ))}
 
           <div className="space-y-2">
-            <Label htmlFor="workspace-contact-display-name">Display name</Label>
+            <Label htmlFor="workspace-contact-display-name">
+              {WORKSPACE_SETTINGS_COPY.displayNameLabel}
+            </Label>
             <Input
               defaultValue={profile.contactDisplayName ?? ''}
               id="workspace-contact-display-name"
               name="contactDisplayName"
-              placeholder="Your name"
+              placeholder={WORKSPACE_SETTINGS_COPY.displayNamePlaceholder}
               type="text"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="workspace-contact-email">Contact email</Label>
+            <Label htmlFor="workspace-contact-email">
+              {WORKSPACE_SETTINGS_COPY.contactEmailLabel}
+            </Label>
             <Input
               defaultValue={profile.contactEmail ?? ''}
               id="workspace-contact-email"
               name="contactEmail"
-              placeholder="you@example.com"
+              placeholder={WORKSPACE_SETTINGS_COPY.contactEmailPlaceholder}
               type="email"
             />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Editors to configure</Label>
-            <p className="text-muted-foreground text-sm">
-              OpenThrottle can write MCP, skills, and rules into linked repos
-              for the editors you enable.
-            </p>
-            <WorkspaceEditorMultiSelect
-              onChange={setEnabledEditors}
-              value={enabledEditors}
-            />
-            <WorkspaceEditorAffiliateLinks />
           </div>
 
           {actionError ? (
@@ -103,7 +96,9 @@ export const SettingsWorkspaceProfileForm = (
           ) : null}
 
           <Button disabled={isSubmitting} type="submit" variant="outline">
-            {isSubmitting ? 'Saving…' : 'Save profile'}
+            {isSubmitting
+              ? WORKSPACE_SETTINGS_COPY.saveBusyLabel
+              : WORKSPACE_SETTINGS_COPY.saveButton}
           </Button>
         </Form>
       </div>

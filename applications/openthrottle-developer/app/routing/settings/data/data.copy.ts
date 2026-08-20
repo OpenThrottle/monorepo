@@ -47,6 +47,46 @@ export const WORKSPACE_FOLDERS_COPY = {
 } as const;
 
 /**
+ * @description Copy for Settings → Workspace, which owns editor integration:
+ * pick the editors OpenThrottle configures, preview the repositories an apply
+ * will write to, run the apply, and read the per-repository result.
+ */
+export const WORKSPACE_SETTINGS_COPY = {
+  applyAllButton: `Apply to all repositories`,
+  applyBusyLabel: `Applying…`,
+  applyDisabledReason: `Enable at least one editor above to apply configuration.`,
+  applyRowButton: `Apply`,
+  contactEmailLabel: `Contact email`,
+  contactEmailPlaceholder: `you@example.com`,
+  contactExplainer: `Used when OpenThrottle writes attribution into generated commits and configuration.`,
+  contactLegend: `Contact`,
+  displayNameLabel: `Display name`,
+  displayNamePlaceholder: `Your name`,
+  editorsExplainer: `OpenThrottle can write MCP, skills, and rules into linked repos for the editors you enable.`,
+  editorsLabel: `Editors to configure`,
+  editorsLegend: `Editor integration`,
+  intro: `Choose which editors OpenThrottle configures, then push that configuration into your linked repositories.`,
+  profileLegend: `Contact & editors`,
+  resultsEmpty: `No linked repositories to update. Add a repository or enable at least one editor.`,
+  resultsFilesHeading: `Files written`,
+  resultsHeading: `Last apply`,
+  resultsNoFiles: `No files written.`,
+  resultsWarningsHeading: `Warnings`,
+  saveBusyLabel: `Saving…`,
+  saveButton: `Save profile`,
+  saveEditorsButton: `Save editors`,
+  targetsAddRepositoryLink: `Add a repository`,
+  targetsColumnActions: `Apply`,
+  targetsColumnEditor: `Editor`,
+  targetsColumnPath: `Filesystem path`,
+  targetsColumnRepository: `Repository`,
+  targetsHeading: `Repositories that will be configured`,
+  targetsNoEditors: `No editors enabled. Enable at least one editor above to see which repositories will be configured.`,
+  targetsNoRepositories: `No linked repositories yet. Add one to configure it for your editors.`,
+  title: `Workspace`,
+} as const;
+
+/**
  * @description Copy for the workspace repository details and edit routes.
  */
 export const WORKSPACE_REPOSITORY_DETAIL_COPY = {
