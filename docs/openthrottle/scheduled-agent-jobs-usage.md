@@ -92,14 +92,43 @@ removes orphans) — the DB is authoritative, BullMQ is a projection.
 
 ## Configuration (env)
 
-| Env                                  | Default               | Purpose                                                                                                                                |
-| ------------------------------------ | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `SCHEDULED_AGENT_JOBS_TIMEOUT_MS`    | `900000` (15m)        | Per-run timeout when a schedule sets none.                                                                                             |
-| `SCHEDULED_AGENT_JOBS_CONCURRENCY`\* | `1`                   | Worker concurrency. Two CLIs in the same cwd fight over the git index; raise only with per-job `worktree`.                             |
-| `WORKSPACE_ROOT`                     | `process.cwd()`       | Default cwd for the agent CLI when a schedule targets no repository and sets no `cwd`.                                                 |
-| `OT_SCHEDULED_JOBS_OWNER`            | non-worktree checkout | Gates **boot** scheduler registration so many dev workers on one Redis don't fight (mutations always apply). `true`/`false` overrides. |
+| Env                                | Default               | Purpose                                                                                                                                |
+| ---------------------------------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `SCHEDULED_AGENT_JOBS_TIMEOUT_MS`  | `900000` (15m)        | Per-run timeout when a schedule sets none.                                                                                             |
+| `SCHEDULED_AGENT_JOBS_CONCURRENCY` | `4`                   | How many **independent directories** may run at once. Runs sharing a directory serialise regardless — see [Concurrency](#concurrency). |
+| `WORKSPACE_ROOT`                   | `process.cwd()`       | Default cwd for the agent CLI when a schedule targets no repository and sets no `cwd`.                                                 |
+| `OT_SCHEDULED_JOBS_OWNER`          | non-worktree checkout | Gates **boot** scheduler registration so many dev workers on one Redis don't fight (mutations always apply). `true`/`false` overrides. |
 
-\* concurrency is a compile-time constant today; the env row documents intent.
+## Concurrency
+
+Scheduled runs used to be strictly serial — one worker slot, system-wide — because two agent CLIs in
+one checkout fight over the git index. What lifted that is a **key**, not a bigger number: the worker
+runs several jobs at once, and an advisory lock keyed on each run's _resolved directory_ keeps any two
+runs out of the same one.
+
+**What serialises**: any two runs whose resolved cwd is the same directory, however each of them named
+it. The key is the path, not the `repository_checkout_id`, precisely so that a schedule targeting a
+checkout and a schedule carrying a legacy free-text `cwd` that resolves to the same place still take
+turns. Trailing separators are normalised, so `/repo` and `/repo/` are one directory.
+
+**What does not**: different checkouts, which is the whole point. Also a run whose `settings.worktree`
+asks for a worktree with no name — the CLI creates a fresh one per invocation, so no two such runs can
+meet and neither waits on anything. A _named_ worktree is a directory two schedules can genuinely
+share, so its name is folded into the key instead: same name serialises, different names overlap. A
+worktree request the driver cannot honor (codex and opencode expose no worktree flags, so they drop it)
+is ignored, because that run really does happen in the cwd.
+
+**When a run waits**, it says so in the server log rather than looking like a slow agent, and it waits
+only up to its own `timeout_ms` — a run that spent its whole budget queued fails with a message naming
+the directory instead of pinning a worker slot indefinitely.
+
+**When a worker is killed mid-run**, the lock's TTL frees the directory shortly afterward; a heartbeat
+is what keeps a live run's lock from expiring under it. A killed worker never blocks a directory
+permanently.
+
+The lock is advisory and lives in Redis, so it fails toward _running the job_: if Redis is erroring the
+run proceeds unlocked rather than failing. That also means a deployment with `REDIS_HOST` unset has no
+lock at all — pin `SCHEDULED_AGENT_JOBS_CONCURRENCY=1` there.
 
 ## Known follow-ups
 
@@ -108,7 +137,4 @@ removes orphans) — the DB is authoritative, BullMQ is a projection.
 - Cross-process run cancellation (a pub/sub channel); today `cancelScheduledAgentJobRun` sets a
   durable marker + best-effort in-process abort.
 - UI polish: a live-tail log console, the chat model-picker rail, and a visual cron builder.
-- Per-repository keyed worker concurrency. Repository targeting makes `SCHEDULED_AGENT_JOBS_CONCURRENCY
-  > 1` conceivable, but not safe on its own: two schedules can still target the same checkout, so it
-  > needs a concurrency key derived from the resolved cwd.
 - Repository targeting for Ralph plan runs, which resolve their working directory separately.
