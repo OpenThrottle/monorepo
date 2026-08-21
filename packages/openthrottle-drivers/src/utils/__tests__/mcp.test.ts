@@ -16,6 +16,7 @@ const capabilities = (mcpAutoApprove: boolean): DriverCapabilities => ({
   chatStreaming: false,
   mcpAutoApprove,
   permissionMode: false,
+  pluginDir: false,
   skipWorktreeSetup: false,
   supportsCustomBaseUrl: false,
   supportsModelFlag: false,

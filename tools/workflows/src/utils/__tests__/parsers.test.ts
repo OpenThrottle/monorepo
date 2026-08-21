@@ -79,7 +79,7 @@ describe('parseRalphCompleteTaskSignals', () => {
 
   /**
    * Claude Code CLI uses the same combined stdout+stderr string as `cursor-agent` in
-   * {@link runShellIterationAsync}. These fixtures approximate headless `claude --bare -p …` noise
+   * {@link runShellIterationAsync}. These fixtures approximate headless `claude -p …` noise
    * (progress / logs on stderr, answer on stdout) without requiring a live CLI in CI.
    */
   it('parses task-complete when embedded in Claude-shaped stdout+stderr (async contract)', () => {

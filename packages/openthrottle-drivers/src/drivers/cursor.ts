@@ -33,6 +33,7 @@ const capabilities: DriverCapabilities = {
   chatStreaming: true,
   mcpAutoApprove: true,
   permissionMode: false,
+  pluginDir: false,
   skipWorktreeSetup: true,
   supportsCustomBaseUrl: false,
   supportsModelFlag: true,
