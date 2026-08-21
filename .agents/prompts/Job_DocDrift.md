@@ -31,7 +31,7 @@ Documentation surfaces in scope:
 
 Facts that change the analysis:
 
-- `.agents/` is the SSOT; `.cursor/skills` and `.claude/skills` mirror it. A discrepancy between a source and its mirror is drift, but the fix is a re-sync, not a hand edit of the mirror — say so in the task.
+- `skills/` is the authored SSOT; `.agents/skills` is the generated SSOT view and `.claude/skills` fans out from it (there is no `.cursor/skills`). A discrepancy between a source and its mirror is drift, but the fix is a re-sync, not a hand edit of the mirror — say so in the task.
 - `.cursor/rules/` is the single source of truth for code style; docs that restate style rules inline can contradict it. Prefer pointing at the rule over duplicating it.
 - Generators are invoked with a mandatory `NX_ISOLATE_PLUGINS=false` prefix. A documented generator command missing that prefix will fail — that is a finding, not a nitpick.
 - Some documented React Router generators are described under an older `remix` name in places; the working generator is `react-router`.

@@ -143,6 +143,6 @@ Summarize how many sources and pending plans you see.
 | MCP server registration (tiers, config, parity) | [mcp-registration.md](./mcp-registration.md)                                                    |
 | MCP config template                             | [`.cursor/mcp.json`](../../.cursor/mcp.json)                                                    |
 | DB schema, migrations, imports, commit links    | [databases/README.md](../../databases/README.md)                                                |
-| OT MCP tool choice and skills                   | [openthrottle.mdc](../../.cursor/rules/commands/openthrottle.mdc), `.cursor/skills/ot-*`        |
+| OT MCP tool choice and skills                   | [openthrottle.mdc](../../.agents/rules/commands/openthrottle.mdc), `skills/ot-*`                |
 | Workflow CLI / Ralph (optional)                 | [tools/workflows/README.md](../../tools/workflows/README.md)                                    |
 | OSS / Ollama path                               | [run-locally-oss.md](./run-locally-oss.md)                                                      |

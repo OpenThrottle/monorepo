@@ -2,7 +2,7 @@
 
 This document specifies **what to provide to agents** so they consistently apply standards and use `@tools/generators` generators. It supports the audit plan **Audit component code for rules compliance and generator template usage** (Plan-Id: `d8ec2e70-8a7a-4717-997f-7c890a70147e`).
 
-**SSOT (Plan-Id `318f9dd8`):** Skill and rule **bodies** live under [`.agents/skills/`](../../../.agents/skills/) and [`.agents/rules/`](../../../.agents/rules/) only. Cursor loads the same content via [`.cursor/skills/`](../../../.cursor/skills/) and [`.cursor/rules/`](../../../.cursor/rules/) **symlinks**. Edit `.agents/` in git PRs; do not duplicate bodies in editor folders.
+**SSOT (Plan-Id `318f9dd8`):** Rule **bodies** live under [`.agents/rules/`](../../../.agents/rules/) only. Skill bodies are authored under [`skills/`](../../../skills/) and generated into `.agents/skills/`; `.claude/skills/` is the per-agent fan-out. Cursor 2.4+ reads `.agents/skills/` directly — there is no `.cursor/skills` fan-out — and loads rules via [`.cursor/rules/`](../../../.cursor/rules/) **symlinks**. Edit `skills/` and `.agents/rules/` in git PRs; never hand-edit a generated skill dir. Layout reference: [docs/monorepo/agent-editor-folders.md](../../monorepo/agent-editor-folders.md).
 
 ---
 
@@ -26,13 +26,13 @@ Agents (e.g. Cursor, Ralph) should receive the following rules. Cursor activates
 
 Invoke skills **before** writing code when the task matches their **USE WHEN** triggers. For `@tools/generators`, use **openthrottle-generators** first (not **nx-generate**).
 
-| Path (SSOT)                                            | Purpose                                                                                                                                    |
-| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `.agents/skills/openthrottle-generators/SKILL.md`      | `@tools/generators`: `NX_ISOLATE_PLUGINS=false`, `pnpm nx`, list/describe/`--list`, react-router/nestjs/react/package/folders; AGENT_USAGE |
-| **AGENTS.md** (repo root) § Cursor Agent Skills        | Index: **openthrottle-stack**, **ot-plans**, **workflow-ralph**; generic Nx: **nx-workspace**, **nx-generate**, **nx-run-tasks**           |
-| **AGENTS.md** § General Guidelines for working with Nx | Nx task execution (`pnpm nx run`, affected), Nx MCP, when to use **nx_docs**                                                               |
+| Path (SSOT)                                            | Purpose                                                                                                                                           |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.agents/skills/openthrottle-generators/SKILL.md`      | `@tools/generators`: `NX_ISOLATE_PLUGINS=false`, `pnpm nx`, list/describe/`--list`, react-router/nestjs/react/package/folders; AGENT_USAGE        |
+| **AGENTS.md** (repo root) § OpenThrottle Agent Skills  | Index: **openthrottle-stack**, **ot-plans**, **agents-ralph**, **github-commit**; generic Nx: **nx-workspace**, **nx-generate**, **nx-run-tasks** |
+| **AGENTS.md** § General Guidelines for working with Nx | Nx task execution (`pnpm nx run`, affected), Nx MCP, when to use **nx_docs**                                                                      |
 
-Cursor slash discovery uses `.cursor/skills/<slug>` symlinks → `.agents/skills/<slug>`.
+Slash discovery reads `.agents/skills/<slug>` (Claude Code, Cursor 2.4+, Codex, OpenCode) and the generated `.claude/skills/<slug>` fan-out; both resolve back to `skills/<slug>` for OT-owned skills.
 
 ### 1.3 Coding rules (apply when editing/generating code)
 

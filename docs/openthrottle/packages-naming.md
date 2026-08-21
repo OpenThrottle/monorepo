@@ -2,8 +2,8 @@
 
 **Plan:** OpenThrottle rebrand: naming exploration (OpenThrottle plan `55515309-02bd-4264-8326-c5b8efd614cb`).
 **Task:** @openthrottle/\* packages: naming scheme and initial set.
-**Criteria:** See [naming-criteria.md](./naming-criteria.md).
-**Context:** Marketing site ([marketing-website-naming.md](./marketing-website-naming.md)): `openthrottle.ai`. Developer Portal ([developer-portal-naming.md](./developer-portal-naming.md)): `developers.openthrottle.ai`. API ([developer-api-naming.md](./developer-api-naming.md)): `api.openthrottle.ai`.
+**Criteria:** The naming criteria and the marketing / portal / API naming write-ups were companion docs of the rebrand plan and are not in the repo; the plan itself (`55515309-02bd-4264-8326-c5b8efd614cb`) is the surviving record.
+**Context:** Marketing site `openthrottle.ai`, Developer Portal `developers.openthrottle.ai`, API `api.openthrottle.ai`.
 
 ---
 
@@ -30,12 +30,12 @@
 
 The following table lists the **initial set** of `@openthrottle/*` packages to reserve (and eventually publish). Reserve by creating the npm org (if not already claimed) and publishing a minimal package or using npm’s “claim scope” flow for each name.
 
-| Package                      | Purpose                                                                                              | Current / source                                                         | Reserve?                 |
-| ---------------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ | ------------------------ |
-| **@openthrottle/core**       | Shared types, config, or utilities used by other OpenThrottle packages. Optional minimal core layer. | New or extract from existing OpenThrottle libs.                          | Yes                      |
-| **@openthrottle/mcp**        | Plans/tasks MCP server (OpenThrottle knowledge base: plans, tasks, semantic search, activity).       | `@openthrottle/openthrottle-mcp` (`packages/openthrottle-mcp`).          | Yes                      |
-| **@openthrottle/api-client** | Official SDK for the OpenThrottle API (api.openthrottle.ai).                                         | New; referenced in [developer-api-naming.md](./developer-api-naming.md). | Yes                      |
-| **@openthrottle/cli**        | CLI tooling (e.g. plan/task workflows, link-merge).                                                  | Potential extraction from tools/workflows or new CLI.                    | Yes (reserve for future) |
+| Package                      | Purpose                                                                                              | Current / source                                                | Reserve?                 |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | ------------------------ |
+| **@openthrottle/core**       | Shared types, config, or utilities used by other OpenThrottle packages. Optional minimal core layer. | New or extract from existing OpenThrottle libs.                 | Yes                      |
+| **@openthrottle/mcp**        | Plans/tasks MCP server (OpenThrottle knowledge base: plans, tasks, semantic search, activity).       | `@openthrottle/openthrottle-mcp` (`packages/openthrottle-mcp`). | Yes                      |
+| **@openthrottle/api-client** | Official SDK for the OpenThrottle API (api.openthrottle.ai).                                         | New; the API surface is `api.openthrottle.ai`.                  | Yes                      |
+| **@openthrottle/cli**        | CLI tooling (e.g. plan/task workflows, link-merge).                                                  | Potential extraction from tools/workflows or new CLI.           | Yes (reserve for future) |
 
 ### Optional / later (do not reserve in initial set unless needed)
 

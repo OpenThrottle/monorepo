@@ -171,7 +171,7 @@ your first PR.
   through Vite and takes **no `build` dependency** on it — do not add a `build`
   target to that package. Stories live beside their components inside the
   package, never in the workbench; scaffold them with
-  `@tools/generators:react --subGenerator=story`.
+  `NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react --subGenerator=story --destination=@openthrottle/react-router-shadcn --name=<Name>`.
 - [docs/monorepo/component-primitive-shape.md](./docs/monorepo/component-primitive-shape.md)
   — the enforced shape every authored React component follows (derived from the
   `@tools/generators` template); scaffold with the generator and run

@@ -392,6 +392,6 @@ executeGenerator(
 
 - [Generators README](../../../tools/generators/README.md) – General guidance and generator policies
 - [Nx Generator Documentation](https://nx.dev/extending-nx/recipes/local-generators)
-- **Find generator source code:** [`tools/generators/src/generators/`](tools/generators/src/generators/)
+- **Find generator source code:** [`tools/generators/src/generators/`](../../../tools/generators/src/generators/)
 
 ---

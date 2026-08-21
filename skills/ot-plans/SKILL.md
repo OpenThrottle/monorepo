@@ -52,7 +52,7 @@ The **`/ot/*`** slash skills are authored under `skills/ot-*` and fanned out by 
 
 When you commit work tied to a plan or task:
 
-1. Use **conventional commits** (see **git-commit** skill and `.cursor/rules/commands/github.mdc`).
+1. Use **conventional commits** (see **github-commit** skill and `.cursor/rules/commands/github.mdc`).
 2. Include traceability in the commit **body or footer**:
 
    ```text
@@ -106,7 +106,7 @@ blocks the skill.
 
 ## Cross-links
 
-- **Conventional commits and staging:** `.agents/skills/git-commit/SKILL.md`
+- **Conventional commits and staging:** `.agents/skills/github-commit/SKILL.md`
 - **OT rule (tool list, commands):** `.cursor/rules/commands/openthrottle.mdc`
 - **Agent behavior (plans in OT only):** `.cursor/rules/commands/agents.mdc`
 - **DB / embeddings / ingest:** `databases/README.md`

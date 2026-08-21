@@ -9,7 +9,7 @@ Nx generators for quickly scaffolding code in this monorepo.
 ### Listing available generators
 
 ```bash
-pnpm nx list @tools/generators
+NX_ISOLATE_PLUGINS=false pnpm nx list @tools/generators
 ```
 
 ### Interactive (human) usage
@@ -18,13 +18,13 @@ All generators support interactive prompting.
 
 ```bash
 # React generator (prompts for sub-generator + inputs)
-pnpm nx g @tools/generators:react --interactive
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react --interactive
 
 # React Router generator
-pnpm nx g @tools/generators:react-router --interactive
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router --interactive
 
 # NestJS generator
-pnpm nx g @tools/generators:nestjs --interactive
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:nestjs --interactive
 ```
 
 ### Non-interactive (AI / programmatic) usage
@@ -37,13 +37,13 @@ All generators can be invoked with flags only (no prompts). Missing/invalid opti
 > `--generator` is reserved by Nx; use `--subGenerator`.
 
 ```bash
-pnpm nx g @tools/generators:react \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react \
   --subGenerator=component \
   --destination=@openthrottle/shared-ui \
   --name=MyComponent
 
 # Batch: comma-separated --name (confirm via --describe)
-pnpm nx g @tools/generators:react \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react \
   --subGenerator=component \
   --destination=@openthrottle/shared-ui \
   --name=Button,Input,Select
@@ -52,7 +52,7 @@ pnpm nx g @tools/generators:react \
 #### React Router
 
 ```bash
-pnpm nx g @tools/generators:react-router \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router \
   --subGenerator=component \
   --application=openthrottle \
   --folder=global/components \
@@ -62,7 +62,7 @@ pnpm nx g @tools/generators:react-router \
 #### NestJS
 
 ```bash
-pnpm nx g @tools/generators:nestjs \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:nestjs \
   --subGenerator=application \
   --name=my-api \
   --port=4010
@@ -71,12 +71,12 @@ pnpm nx g @tools/generators:nestjs \
 #### Package + Folders
 
 ```bash
-pnpm nx g @tools/generators:package \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:package \
   --type=react \
   --organization=@openthrottle \
   --name=my-lib
 
-pnpm nx g @tools/generators:folders \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:folders \
   --application=openthrottle \
   --folder=routing \
   --name=forecasting
@@ -91,9 +91,9 @@ Prints a JSON description of the generator interface and exits (no files written
 The `name` option often includes `"Comma-separated names supported."` — use that to batch related artifacts in one run.
 
 ```bash
-pnpm nx g @tools/generators:react --describe
-pnpm nx g @tools/generators:react-router --describe
-pnpm nx g @tools/generators:nestjs --describe
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react --describe
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router --describe
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:nestjs --describe
 ```
 
 ### List (machine-readable dynamic values)
@@ -102,17 +102,17 @@ Dynamic option sets (project graph / filesystem driven) can be enumerated as JSO
 
 ```bash
 # React destinations (Nx projects with tag technology:react)
-pnpm nx g @tools/generators:react --list=destinations
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react --list=destinations
 
 # React Router applications (Nx projects with tag type:application)
-pnpm nx g @tools/generators:react-router --list=applications
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router --list=applications
 
 # React Router component folders (requires application)
-pnpm nx g @tools/generators:react-router --list=componentFolders --application=openthrottle
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router --list=componentFolders --application=openthrottle
 
 # NestJS applications
-pnpm nx g @tools/generators:nestjs --list=nestjsApplications
-pnpm nx g @tools/generators:nestjs --list=graphqlApplications
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:nestjs --list=nestjsApplications
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:nestjs --list=graphqlApplications
 ```
 
 ## Development

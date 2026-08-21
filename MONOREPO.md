@@ -481,7 +481,7 @@ These remove the named signatures, but `tsc --build`'s autonomous reference rebu
 
 ### Projects without a `build` target
 
-As of the current workspace graph, **16 of 59** Nx projects do **not** expose a `build` target. That is intentional — not missing CI coverage. These projects are validated with **`lint`**, **`typecheck`** (which covers source and test files), and (where present) **`test`**, and their output is produced when a **consumer** runs `build`, `dev`, or Vite production bundling.
+A little under a third of the Nx projects in this workspace do **not** expose a `build` target (audit the exact set with the two `nx show projects` commands at the end of this section — a hardcoded count goes stale every time a package lands). That is intentional — not missing CI coverage. These projects are validated with **`lint`**, **`typecheck`** (which covers source and test files), and (where present) **`test`**, and their output is produced when a **consumer** runs `build`, `dev`, or Vite production bundling.
 
 Most no-build packages are **`technology:react-router`** workspace libraries under `packages/react-router-*` (plus a couple of React-related codegen/MCP helpers). They follow a **source-first** pattern: `package.json` `main`/`module`/`types` point at `./src/index.ts` (not a precompiled `dist/`), and React Router apps (Vite) transpile these workspace dependencies when you run `dev` or `build` on the app. Their `nx.targets` use `__build`/`__build-package` placeholders so the `@nx/js/typescript` plugin does not infer a library `build` target. Do **not** add a standalone `build` target to these libraries unless you are deliberately moving them to a publishable `dist/` workflow.
 
@@ -493,7 +493,7 @@ For `@openthrottle/react-router-shadcn` specifically, `applications/openthrottle
 
 `applications/openthrottle-workbench` is a Storybook 10 host for the shadcn component library — the place to browse components, exercise `cva` variants, read generated API tables, and view the library under every theme in the registry. It is a local dev tool: `production:false`, not deployed.
 
-It owns **no components and no stories**. Stories are co-located in `packages/react-router-shadcn/src/components/`, beside the component they document — the precedent set by that package's ESLint config, which exempts `**/*.stories.tsx` from the component-shape rule. Scaffold one with `@tools/generators:react --subGenerator=story`.
+It owns **no components and no stories**. Stories are co-located in `packages/react-router-shadcn/src/components/`, beside the component they document — the precedent set by that package's ESLint config, which exempts `**/*.stories.tsx` from the component-shape rule. Scaffold one with `NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react --subGenerator=story --destination=@openthrottle/react-router-shadcn --name=<Name>` (`--name` takes a comma-separated list for batches).
 
 ## Additional Resources
 

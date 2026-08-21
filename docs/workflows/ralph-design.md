@@ -1,6 +1,6 @@
 # Ralph design (v4 — source of truth)
 
-**Canonical prompt:** `.cursor/skills/agents-ralph/SKILL.md`. Previous agentic prompt versions (v2, v3) are deprecated; this doc describes the single workflow.
+**Canonical prompt:** [`skills/agents-ralph/SKILL.md`](../../skills/agents-ralph/SKILL.md). Previous agentic prompt versions (v2, v3) are deprecated; this doc describes the single workflow.
 
 > **Which path runs when?** This doc describes the Ralph workflow itself. For the **single canonical
 > decision table** of execution surfaces (Local CLI vs Plans queue spawn vs Plans queue
@@ -72,7 +72,7 @@ Ralph requires OpenThrottle (OT) to be configured and reachable for plan/task mo
 ## References
 
 - **Server-side Ralph (BullMQ):** Local CLI vs nested `workflow-ralph` spawn vs in-process orchestrator (`enqueuePlanRun` vs `enqueuePlanRalphOrchestrator`) — `tools/workflows/README.md` § Worktree + BullMQ workflow. Compose/Docker/path deferrals: investigation plan `677b6849-1912-4fa8-a5f6-d8233f2cdf97`.
-- **Agentic prompt (v4):** `.cursor/skills/agents-ralph/SKILL.md`
+- **Agentic prompt (v4):** [`skills/agents-ralph/SKILL.md`](../../skills/agents-ralph/SKILL.md)
 - **OpenThrottle MCP rules:** `.cursor/rules/commands/openthrottle.mdc`, `databases/README.md`
 - **Cross-repo usage:** `tools/workflows/README.md` § Cross-repo usage and [tools/workflows/docs/cross-repo-usage.md](../../tools/workflows/docs/cross-repo-usage.md)
 - **Ralph technique:** [ghuntley.com/ralph](https://ghuntley.com/ralph)
