@@ -2304,6 +2304,55 @@ type ScheduledAgentJobRunObject {
   """
   resolvedCwd: String
   createdAt: DateTime!
+
+  """
+  The schedule this run belongs to, so a cross-job run list can label itself without a second round trip. Null only if the schedule has since been deleted.
+  """
+  job: ScheduledAgentJobObject
+}
+
+"""
+Aggregate run counts across all scheduled agent jobs: live in-flight totals plus terminal outcomes since a window boundary.
+"""
+type ScheduledAgentJobRunStatsObject {
+  """Runs cancelled inside the window."""
+  cancelledCount: Int!
+
+  """
+  Runs that failed inside the window — non-zero exit, timeout, or spawn failure. Does NOT include no_op.
+  """
+  failedCount: Int!
+
+  """
+  Runs not yet terminal right now — queuedCount + runningCount. Not windowed.
+  """
+  inFlightCount: Int!
+
+  """
+  Runs that exited cleanly but reported they did not do the work, inside the window. Terminal and NOT a failure.
+  """
+  noOpCount: Int!
+
+  """
+  Runs enqueued but not yet claimed by a processor right now. Not windowed.
+  """
+  queuedCount: Int!
+
+  """Runs currently executing right now. Not windowed."""
+  runningCount: Int!
+
+  """
+  Inclusive lower bound of the window the terminal counts cover; defaults to 24h ago.
+  """
+  since: DateTime!
+
+  """Runs that completed successfully inside the window."""
+  succeededCount: Int!
+
+  """
+  Every run created inside the window, whatever its status — the "ran today" total.
+  """
+  windowTotalCount: Int!
 }
 
 type ServiceAccountCredentialObject {
@@ -3688,6 +3737,16 @@ type Query {
 
   """One run of a scheduled agent job by run id, or null."""
   scheduledAgentJobRun(runId: ID!): ScheduledAgentJobRunObject
+
+  """
+  Every run that has not reached a terminal status yet — queued or running — across ALL scheduled agent jobs, oldest-first so the longest-running reads first. Capped; use scheduledAgentJobRuns for one job's history.
+  """
+  scheduledAgentJobRunsInFlight(limit: Int): [ScheduledAgentJobRunObject!]!
+
+  """
+  Aggregate run counts across ALL scheduled agent jobs: live in-flight totals plus terminal outcomes since `since` (default: 24h ago). no_op is counted separately and is NOT a failure.
+  """
+  scheduledAgentJobRunStats(since: DateTime): ScheduledAgentJobRunStatsObject!
 
   """List all service accounts (admin, human only)."""
   serviceAccounts: [ServiceAccountObject!]!

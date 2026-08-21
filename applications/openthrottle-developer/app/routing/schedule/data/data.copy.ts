@@ -8,6 +8,10 @@ import { CalendarClockIcon } from 'lucide-react';
 import type { GlobalFeatureOnboardingContent } from '@openthrottle/react-router-ui-global';
 
 export const SCHEDULE_COPY = {
+  activeRunsCancel: `Cancel`,
+  activeRunsCancelRequested: `Cancelling…`,
+  activeRunsHeading: `In flight`,
+  activeRunsQueued: `Waiting to start`,
   cwdHelp: `Deprecated. Used only when no repository is selected above.`,
   cwdLabel: `Working directory`,
   cwdPlaceholder: `Defaults to the workspace root`,
@@ -26,6 +30,11 @@ export const SCHEDULE_COPY = {
   runRepositoryLabel: `Repository`,
   searchLabel: `Search schedules`,
   searchPlaceholder: `Search schedules`,
+  statEnabledTitle: `Enabled / total schedules`,
+  statFailedTitle: `Failed today`,
+  statInFlightTitle: `Running / queued`,
+  statRanTodayTitle: `Ran today / succeeded`,
+  tableRunningBadge: `Running`,
 } as const;
 
 /**

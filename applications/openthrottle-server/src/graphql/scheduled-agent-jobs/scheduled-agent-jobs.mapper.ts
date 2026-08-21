@@ -6,7 +6,9 @@
 import type {
   ScheduledAgentJob,
   ScheduledAgentJobRun,
+  ScheduledAgentJobRunStatusCount,
 } from '@openthrottle/nestjs-repositories';
+import { ScheduledAgentJobRunStatsObject } from './scheduled-agent-job-run-stats.object';
 import {
   ScheduledAgentJobObject,
   ScheduledAgentJobRunObject,
@@ -63,3 +65,38 @@ export const toScheduledAgentJobRunObject = (
   totalTokens: run.totalTokens,
   trigger: run.trigger,
 });
+
+/**
+ * @description Folds grouped status counts into the aggregate stats object.
+ *
+ * Two inputs, because the two halves cover different spans: `windowCounts` is the terminal-outcome
+ * picture since `since`, while `inFlightCounts` is unwindowed — a run queued days ago and still stuck
+ * is exactly what the caller needs to see, so it must not be cut off by the window.
+ *
+ * `no_op` keeps its own count and is never folded into failures: it is terminal but not an error.
+ */
+export const toScheduledAgentJobRunStatsObject = (
+  windowCounts: ScheduledAgentJobRunStatusCount[],
+  inFlightCounts: ScheduledAgentJobRunStatusCount[],
+  since: Date,
+): ScheduledAgentJobRunStatsObject => {
+  const countIn = (
+    rows: ScheduledAgentJobRunStatusCount[],
+    status: string,
+  ): number => rows.find((row) => row.status === status)?.count ?? 0;
+
+  const queuedCount = countIn(inFlightCounts, 'queued');
+  const runningCount = countIn(inFlightCounts, 'running');
+
+  return {
+    cancelledCount: countIn(windowCounts, 'cancelled'),
+    failedCount: countIn(windowCounts, 'failed'),
+    inFlightCount: queuedCount + runningCount,
+    noOpCount: countIn(windowCounts, 'no_op'),
+    queuedCount,
+    runningCount,
+    since,
+    succeededCount: countIn(windowCounts, 'succeeded'),
+    windowTotalCount: windowCounts.reduce((total, row) => total + row.count, 0),
+  };
+};

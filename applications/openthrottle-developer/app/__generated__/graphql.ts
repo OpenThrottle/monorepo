@@ -2996,8 +2996,12 @@ export type Query = {
   scheduledAgentJob?: Maybe<ScheduledAgentJobObject>;
   /** One run of a scheduled agent job by run id, or null. */
   scheduledAgentJobRun?: Maybe<ScheduledAgentJobRunObject>;
+  /** Aggregate run counts across ALL scheduled agent jobs: live in-flight totals plus terminal outcomes since `since` (default: 24h ago). no_op is counted separately and is NOT a failure. */
+  scheduledAgentJobRunStats: ScheduledAgentJobRunStatsObject;
   /** Run history for a scheduled agent job, newest first. */
   scheduledAgentJobRuns: Array<ScheduledAgentJobRunObject>;
+  /** Every run that has not reached a terminal status yet — queued or running — across ALL scheduled agent jobs, oldest-first so the longest-running reads first. Capped; use scheduledAgentJobRuns for one job's history. */
+  scheduledAgentJobRunsInFlight: Array<ScheduledAgentJobRunObject>;
   /** All scheduled agent jobs, newest first. */
   scheduledAgentJobs: Array<ScheduledAgentJobObject>;
   /** Semantic search over plan and task embeddings. Embeds the query and returns ranked chunks. Requires OpenThrottle Postgres and embedding (OPENAI_API_KEY or Ollama). */
@@ -3281,9 +3285,17 @@ export type QueryScheduledAgentJobRunArgs = {
   runId: Scalars['ID']['input'];
 };
 
+export type QueryScheduledAgentJobRunStatsArgs = {
+  since?: InputMaybe<Scalars['DateTime']['input']>;
+};
+
 export type QueryScheduledAgentJobRunsArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   scheduledAgentJobId: Scalars['ID']['input'];
+};
+
+export type QueryScheduledAgentJobRunsInFlightArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type QuerySearchArgs = {
@@ -4117,6 +4129,8 @@ export type ScheduledAgentJobRunObject = {
   id: Scalars['ID']['output'];
   /** Input/prompt tokens for the run, parsed from the CLI output; null when unreported. Float because GraphQL Int is 32-bit. */
   inputTokens?: Maybe<Scalars['Float']['output']>;
+  /** The schedule this run belongs to, so a cross-job run list can label itself without a second round trip. Null only if the schedule has since been deleted. */
+  job?: Maybe<ScheduledAgentJobObject>;
   model?: Maybe<Scalars['String']['output']>;
   /** Output/completion tokens for the run; null when unreported. */
   outputTokens?: Maybe<Scalars['Float']['output']>;
@@ -4138,6 +4152,29 @@ export type ScheduledAgentJobRunObject = {
   totalTokens?: Maybe<Scalars['Float']['output']>;
   /** schedule | manual (run-now). */
   trigger: Scalars['String']['output'];
+};
+
+/** Aggregate run counts across all scheduled agent jobs: live in-flight totals plus terminal outcomes since a window boundary. */
+export type ScheduledAgentJobRunStatsObject = {
+  __typename?: 'ScheduledAgentJobRunStatsObject';
+  /** Runs cancelled inside the window. */
+  cancelledCount: Scalars['Int']['output'];
+  /** Runs that failed inside the window — non-zero exit, timeout, or spawn failure. Does NOT include no_op. */
+  failedCount: Scalars['Int']['output'];
+  /** Runs not yet terminal right now — queuedCount + runningCount. Not windowed. */
+  inFlightCount: Scalars['Int']['output'];
+  /** Runs that exited cleanly but reported they did not do the work, inside the window. Terminal and NOT a failure. */
+  noOpCount: Scalars['Int']['output'];
+  /** Runs enqueued but not yet claimed by a processor right now. Not windowed. */
+  queuedCount: Scalars['Int']['output'];
+  /** Runs currently executing right now. Not windowed. */
+  runningCount: Scalars['Int']['output'];
+  /** Inclusive lower bound of the window the terminal counts cover; defaults to 24h ago. */
+  since: Scalars['DateTime']['output'];
+  /** Runs that completed successfully inside the window. */
+  succeededCount: Scalars['Int']['output'];
+  /** Every run created inside the window, whatever its status — the "ran today" total. */
+  windowTotalCount: Scalars['Int']['output'];
 };
 
 export type SearchChunk = {
@@ -8519,10 +8556,70 @@ export type ScheduledJobCardFragment = {
   } | null;
 };
 
+export type ScheduleInFlightRunFragment = {
+  __typename?: 'ScheduledAgentJobRunObject';
+  bullmqJobId?: string | null;
+  cancelRequestedAt?: any | null;
+  driverId: string;
+  id: string;
+  model?: string | null;
+  scheduledAgentJobId: string;
+  startedAt?: any | null;
+  status: string;
+  trigger: string;
+  job?: {
+    __typename?: 'ScheduledAgentJobObject';
+    id: string;
+    name: string;
+  } | null;
+};
+
+export type ScheduleRunStatsFragment = {
+  __typename?: 'ScheduledAgentJobRunStatsObject';
+  cancelledCount: number;
+  failedCount: number;
+  inFlightCount: number;
+  noOpCount: number;
+  queuedCount: number;
+  runningCount: number;
+  since: any;
+  succeededCount: number;
+  windowTotalCount: number;
+};
+
 export type ScheduledAgentJobsQueryVariables = Exact<{ [key: string]: never }>;
 
 export type ScheduledAgentJobsQuery = {
   __typename?: 'Query';
+  scheduledAgentJobRunsInFlight: Array<{
+    __typename?: 'ScheduledAgentJobRunObject';
+    bullmqJobId?: string | null;
+    cancelRequestedAt?: any | null;
+    driverId: string;
+    id: string;
+    model?: string | null;
+    scheduledAgentJobId: string;
+    startedAt?: any | null;
+    status: string;
+    trigger: string;
+    job?: {
+      __typename?: 'ScheduledAgentJobObject';
+      id: string;
+      name: string;
+    } | null;
+  }>;
+  scheduledAgentJobRunStats: {
+    __typename?: 'ScheduledAgentJobRunStatsObject';
+    cancelledCount: number;
+    failedCount: number;
+    inFlightCount: number;
+    noOpCount: number;
+    queuedCount: number;
+    runningCount: number;
+    since: any;
+    succeededCount: number;
+    windowTotalCount: number;
+  };
   scheduledAgentJobs: Array<{
     __typename?: 'ScheduledAgentJobObject';
     cronPattern: string;
@@ -8543,6 +8640,31 @@ export type ScheduledAgentJobsQuery = {
       id: string;
     } | null;
   }>;
+};
+
+export type CancelScheduleIndexRunMutationVariables = Exact<{
+  runId: Scalars['ID']['input'];
+}>;
+
+export type CancelScheduleIndexRunMutation = {
+  __typename?: 'Mutation';
+  cancelScheduledAgentJobRun: {
+    __typename?: 'ScheduledAgentJobRunObject';
+    bullmqJobId?: string | null;
+    cancelRequestedAt?: any | null;
+    driverId: string;
+    id: string;
+    model?: string | null;
+    scheduledAgentJobId: string;
+    startedAt?: any | null;
+    status: string;
+    trigger: string;
+    job?: {
+      __typename?: 'ScheduledAgentJobObject';
+      id: string;
+      name: string;
+    } | null;
+  };
 };
 
 export type ScheduleRepositoryOptionsQueryVariables = Exact<{
@@ -11778,6 +11900,74 @@ export const ScheduledJobCardFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<ScheduledJobCardFragment, unknown>;
+export const ScheduleInFlightRunFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ScheduleInFlightRun' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'ScheduledAgentJobRunObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'bullmqJobId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'cancelRequestedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'driverId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'job' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'scheduledAgentJobId' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'startedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'trigger' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<ScheduleInFlightRunFragment, unknown>;
+export const ScheduleRunStatsFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ScheduleRunStats' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'ScheduledAgentJobRunStatsObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'cancelledCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'failedCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'inFlightCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'noOpCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'queuedCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'runningCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'since' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'succeededCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'windowTotalCount' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<ScheduleRunStatsFragment, unknown>;
 export const ServiceAccountCredentialFieldsFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -21564,6 +21754,32 @@ export const ScheduledAgentJobsDocument = {
         selections: [
           {
             kind: 'Field',
+            name: { kind: 'Name', value: 'scheduledAgentJobRunsInFlight' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'ScheduleInFlightRun' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'scheduledAgentJobRunStats' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'ScheduleRunStats' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
             name: { kind: 'Name', value: 'scheduledAgentJobs' },
             selectionSet: {
               kind: 'SelectionSet',
@@ -21575,6 +21791,64 @@ export const ScheduledAgentJobsDocument = {
               ],
             },
           },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ScheduleInFlightRun' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'ScheduledAgentJobRunObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'bullmqJobId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'cancelRequestedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'driverId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'job' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'scheduledAgentJobId' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'startedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'trigger' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ScheduleRunStats' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'ScheduledAgentJobRunStatsObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'cancelledCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'failedCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'inFlightCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'noOpCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'queuedCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'runningCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'since' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'succeededCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'windowTotalCount' } },
         ],
       },
     },
@@ -21624,6 +21898,96 @@ export const ScheduledAgentJobsDocument = {
 } as unknown as DocumentNode<
   ScheduledAgentJobsQuery,
   ScheduledAgentJobsQueryVariables
+>;
+export const CancelScheduleIndexRunDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'cancelScheduleIndexRun' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'runId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'cancelScheduledAgentJobRun' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'runId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'runId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'ScheduleInFlightRun' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ScheduleInFlightRun' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'ScheduledAgentJobRunObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'bullmqJobId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'cancelRequestedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'driverId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'job' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'scheduledAgentJobId' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'startedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'trigger' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  CancelScheduleIndexRunMutation,
+  CancelScheduleIndexRunMutationVariables
 >;
 export const ScheduleRepositoryOptionsDocument = {
   kind: 'Document',

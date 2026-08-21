@@ -14,6 +14,7 @@ import {
   AgentCliPreferencesService,
   type RepositoryCheckout,
   type ScheduledAgentJob,
+  type ScheduledAgentJobRun,
 } from '@openthrottle/nestjs-repositories';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -105,6 +106,132 @@ describe('ScheduledAgentJobsResolver.createScheduledAgentJob', () => {
     ).rejects.toThrow(/gpt-5.2 model is disabled/);
     expect(isModelEnabled).toHaveBeenCalledWith('user-1', 'cursor', 'gpt-5.2');
     expect(create).not.toHaveBeenCalled();
+  });
+});
+
+describe('cross-job run reads', () => {
+  const runsResolver = (
+    service: ScheduledAgentJobsGraphqlService,
+  ): ScheduledAgentJobsResolver =>
+    new ScheduledAgentJobsResolver(
+      createMock<AgentCliPreferencesService>(),
+      createMock<ScheduledAgentJobsLoaders>(),
+      createMock<LoggerService>(),
+      service,
+    );
+
+  it('scheduledAgentJobRunsInFlight passes the limit straight through and maps the rows', async () => {
+    const listInFlightRuns = vi.fn().mockResolvedValue([
+      createMock<ScheduledAgentJobRun>({
+        id: 'run-1',
+        scheduledAgentJobId: 'job-1',
+        settingsSnapshot: null,
+        status: 'running',
+      }),
+    ]);
+    const resolver = runsResolver(
+      createMock<ScheduledAgentJobsGraphqlService>({ listInFlightRuns }),
+    );
+
+    const runs = await resolver.scheduledAgentJobRunsInFlight(10);
+
+    expect(listInFlightRuns).toHaveBeenCalledWith(10);
+    expect(runs).toHaveLength(1);
+    expect(runs[0]?.id).toBe('run-1');
+  });
+
+  it('scheduledAgentJobRunStats defaults the window to the trailing 24h', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-08-21T12:00:00.000Z'));
+
+    const countRunsByStatusSince = vi.fn().mockResolvedValue([]);
+    const countInFlightRunsByStatus = vi.fn().mockResolvedValue([]);
+    const resolver = runsResolver(
+      createMock<ScheduledAgentJobsGraphqlService>({
+        countInFlightRunsByStatus,
+        countRunsByStatusSince,
+      }),
+    );
+
+    const stats = await resolver.scheduledAgentJobRunStats();
+
+    expect(countRunsByStatusSince).toHaveBeenCalledWith(
+      new Date('2026-08-20T12:00:00.000Z'),
+    );
+    expect(stats.since).toEqual(new Date('2026-08-20T12:00:00.000Z'));
+    vi.useRealTimers();
+  });
+
+  it('scheduledAgentJobRunStats honours an explicit window and keeps no_op out of failures', async () => {
+    const since = new Date('2026-08-01T00:00:00.000Z');
+    const countRunsByStatusSince = vi.fn().mockResolvedValue([
+      { count: 4, status: 'succeeded' },
+      { count: 2, status: 'no_op' },
+      { count: 1, status: 'failed' },
+    ]);
+    // In-flight is unwindowed, so a long-stuck run still counts.
+    const countInFlightRunsByStatus = vi
+      .fn()
+      .mockResolvedValue([{ count: 3, status: 'running' }]);
+    const resolver = runsResolver(
+      createMock<ScheduledAgentJobsGraphqlService>({
+        countInFlightRunsByStatus,
+        countRunsByStatusSince,
+      }),
+    );
+
+    const stats = await resolver.scheduledAgentJobRunStats(since);
+
+    expect(countRunsByStatusSince).toHaveBeenCalledWith(since);
+    expect(stats.failedCount).toBe(1);
+    expect(stats.noOpCount).toBe(2);
+    expect(stats.succeededCount).toBe(4);
+    expect(stats.windowTotalCount).toBe(7);
+    expect(stats.inFlightCount).toBe(3);
+    expect(stats.queuedCount).toBe(0);
+    expect(stats.runningCount).toBe(3);
+  });
+});
+
+describe('ScheduledAgentJobRunRepositoryResolver.job', () => {
+  it('labels each run with its owning schedule through the batching DataLoader', async () => {
+    const loaders = createMock<ScheduledAgentJobsLoaders>();
+    vi.mocked(loaders.jobLoader.load).mockImplementation((id) =>
+      Promise.resolve(
+        createMock<ScheduledAgentJob>({ id, name: `schedule ${id}` }),
+      ),
+    );
+    const resolver = new ScheduledAgentJobRunRepositoryResolver(loaders);
+
+    const jobs = await Promise.all(
+      ['job-1', 'job-1', 'job-2'].map((scheduledAgentJobId) =>
+        resolver.job(
+          createMock<ScheduledAgentJobRunObject>({ scheduledAgentJobId }),
+        ),
+      ),
+    );
+
+    // Every run goes through the loader — DataLoader is what batches/dedupes, not the resolver.
+    expect(loaders.jobLoader.load).toHaveBeenCalledTimes(3);
+    expect(jobs.map((job) => job?.name)).toEqual([
+      'schedule job-1',
+      'schedule job-1',
+      'schedule job-2',
+    ]);
+  });
+
+  it('resolves null for a run whose schedule has since been deleted', async () => {
+    const loaders = createMock<ScheduledAgentJobsLoaders>();
+    vi.mocked(loaders.jobLoader.load).mockResolvedValue(null);
+    const resolver = new ScheduledAgentJobRunRepositoryResolver(loaders);
+
+    await expect(
+      resolver.job(
+        createMock<ScheduledAgentJobRunObject>({
+          scheduledAgentJobId: 'gone',
+        }),
+      ),
+    ).resolves.toBeNull();
   });
 });
 

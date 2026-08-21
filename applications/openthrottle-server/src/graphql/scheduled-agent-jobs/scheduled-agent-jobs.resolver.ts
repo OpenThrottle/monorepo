@@ -34,6 +34,7 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
 import { ScheduledAgentJobsGraphqlService } from './scheduled-agent-jobs-graphql.service';
+import { ScheduledAgentJobRunStatsObject } from './scheduled-agent-job-run-stats.object';
 import {
   ScheduledAgentJobObject,
   ScheduledAgentJobRepositoryObject,
@@ -48,7 +49,11 @@ import {
 import {
   toScheduledAgentJobObject,
   toScheduledAgentJobRunObject,
+  toScheduledAgentJobRunStatsObject,
 } from './scheduled-agent-jobs.mapper';
+
+/** Default window for the run-stats query: the trailing 24 hours. */
+const RUN_STATS_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 const ownerUserIdFor = (principal: AuthPrincipal): string | null =>
   principal.kind === AUTH_PRINCIPAL_KIND_USER ? principal.sub : null;
@@ -107,6 +112,36 @@ export class ScheduledAgentJobsResolver {
   ): Promise<ScheduledAgentJobRunObject | null> {
     const run = await this.service.getRun(runId);
     return run === null ? null : toScheduledAgentJobRunObject(run);
+  }
+
+  @Query(() => [ScheduledAgentJobRunObject], {
+    description: `Every run that has not reached a terminal status yet — queued or running — across ALL scheduled agent jobs, oldest-first so the longest-running reads first. Capped; use scheduledAgentJobRuns for one job's history.`,
+  })
+  @Permissions(PERMISSIONS.SETTINGS_READ)
+  async scheduledAgentJobRunsInFlight(
+    @Args('limit', { nullable: true, type: () => Int }) limit?: number,
+  ): Promise<ScheduledAgentJobRunObject[]> {
+    const runs = await this.service.listInFlightRuns(limit);
+    return runs.map(toScheduledAgentJobRunObject);
+  }
+
+  @Query(() => ScheduledAgentJobRunStatsObject, {
+    description: `Aggregate run counts across ALL scheduled agent jobs: live in-flight totals plus terminal outcomes since \`since\` (default: 24h ago). no_op is counted separately and is NOT a failure.`,
+  })
+  @Permissions(PERMISSIONS.SETTINGS_READ)
+  async scheduledAgentJobRunStats(
+    @Args('since', { nullable: true, type: () => Date }) since?: Date,
+  ): Promise<ScheduledAgentJobRunStatsObject> {
+    const windowStart = since ?? new Date(Date.now() - RUN_STATS_WINDOW_MS);
+    const [windowCounts, inFlightCounts] = await Promise.all([
+      this.service.countRunsByStatusSince(windowStart),
+      this.service.countInFlightRunsByStatus(),
+    ]);
+    return toScheduledAgentJobRunStatsObject(
+      windowCounts,
+      inFlightCounts,
+      windowStart,
+    );
   }
 
   @Mutation(() => ScheduledAgentJobObject, {
@@ -294,6 +329,17 @@ const resolveTargetRepository = async (
 @UseGuards(GqlPermissionsGuard)
 export class ScheduledAgentJobRunRepositoryResolver {
   constructor(private readonly loaders: ScheduledAgentJobsLoaders) {}
+
+  @ResolveField(() => ScheduledAgentJobObject, {
+    description: `The schedule this run belongs to, so a cross-job run list can label itself without a second round trip. Null only if the schedule has since been deleted.`,
+    nullable: true,
+  })
+  async job(
+    @Parent() parent: ScheduledAgentJobRunObject,
+  ): Promise<ScheduledAgentJobObject | null> {
+    const job = await this.loaders.jobLoader.load(parent.scheduledAgentJobId);
+    return job === null ? null : toScheduledAgentJobObject(job);
+  }
 
   @ResolveField(() => ScheduledAgentJobRepositoryObject, {
     description: `The repository checkout this run targeted at fire time, resolved for display.`,

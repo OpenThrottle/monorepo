@@ -5,6 +5,7 @@ import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { ScheduleTable } from '../ScheduleTable';
 import type { ScheduleTableProps } from '../ScheduleTable';
+import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
 import type { ScheduledJobCardFragment } from '~/__generated__/graphql';
 
 const job = (
@@ -76,5 +77,51 @@ describe('ScheduleTable Component', () => {
     component = renderTable();
 
     expect(component.getByText('—')).toBeInTheDocument();
+  });
+  test('shows no running badge for a schedule with nothing in flight', () => {
+    props = { inFlightByJob: {}, jobs: [job()] };
+    component = renderTable();
+
+    expect(
+      component.queryByText(SCHEDULE_COPY.tableRunningBadge),
+    ).not.toBeInTheDocument();
+  });
+
+  test('shows a running badge for a schedule with one run in flight', () => {
+    props = { inFlightByJob: { 'job-1': 1 }, jobs: [job()] };
+    component = renderTable();
+
+    expect(
+      component.getByText(SCHEDULE_COPY.tableRunningBadge),
+    ).toBeInTheDocument();
+  });
+
+  test('counts concurrent runs of the same schedule in the badge', () => {
+    props = { inFlightByJob: { 'job-1': 3 }, jobs: [job()] };
+    component = renderTable();
+
+    expect(component.getByText(/×3/)).toBeInTheDocument();
+  });
+
+  test('ignores in-flight counts for schedules not on screen', () => {
+    props = { inFlightByJob: { 'other-job': 2 }, jobs: [job()] };
+    component = renderTable();
+
+    expect(
+      component.queryByText(SCHEDULE_COPY.tableRunningBadge),
+    ).not.toBeInTheDocument();
+  });
+
+  test('shows both signals for a disabled schedule with a manual run in flight', () => {
+    props = {
+      inFlightByJob: { 'job-1': 1 },
+      jobs: [job({ enabled: false })],
+    };
+    component = renderTable();
+
+    expect(component.getByText('Disabled')).toBeInTheDocument();
+    expect(
+      component.getByText(SCHEDULE_COPY.tableRunningBadge),
+    ).toBeInTheDocument();
   });
 });

@@ -10,6 +10,7 @@ import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
 import { ScheduledAgentJobsQueueProducerModule } from '../../queues/scheduled-agent-jobs/scheduled-agent-jobs-queue-producer.module';
 import './scheduled-agent-job.object';
+import './scheduled-agent-job-run-stats.object';
 import './scheduled-agent-jobs.input';
 import { ScheduledAgentJobsGraphqlService } from './scheduled-agent-jobs-graphql.service';
 import { ScheduledAgentJobsLoaders } from './scheduled-agent-jobs-loaders';
