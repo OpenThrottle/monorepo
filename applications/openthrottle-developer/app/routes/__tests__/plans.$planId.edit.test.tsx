@@ -73,7 +73,7 @@ describe('routes/plans.$planId.edit.tsx', () => {
         url: new URL(request.url),
       });
 
-      expect(result).toEqual({ error: 'Plan id does not match.' });
+      expect(result).toMatchObject({ error: 'Plan id does not match.' });
       expect(mockExecuteGraphqlWithAuth).not.toHaveBeenCalled();
     });
 

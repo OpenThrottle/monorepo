@@ -15,10 +15,16 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import { Form, Link } from 'react-router';
 import { PLAN_CATEGORIES } from '~/routing/plans/data/plan-form-categories';
+import { PlanFormFieldError } from '~/routing/plans/components/PlanFormFieldError';
+import { PlanFormOptionalFields } from '~/routing/plans/components/PlanFormOptionalFields';
+import type {
+  PlanFormActionData,
+  PlanFormField,
+} from '~/routing/plans/data/plan-form-action-data';
 import type { PlanDetailsFragment } from '~/__generated__/graphql';
 
 export interface PlanFormProps {
-  actionData?: { error?: string } | null;
+  actionData?: PlanFormActionData | null;
   plan?: PlanDetailsFragment | null;
 }
 
@@ -29,11 +35,46 @@ export const PlanForm = (props: PlanFormProps): React.ReactElement => {
 
   // Setup
   const error = actionData?.error;
+  const errorField = actionData?.field;
   const isEdit = plan != null;
+
+  // 🚨 Prefer the values echoed back by a failed submit so nothing the user
+  // typed is lost; fall back to the loaded plan (edit) or empty (create).
+  const submitted = actionData?.values;
+
+  const initial = {
+    assignee: submitted?.assignee ?? plan?.assignee ?? '',
+    author: submitted?.author ?? plan?.author ?? '',
+    category: submitted?.category ?? plan?.category ?? '',
+    description: submitted?.description ?? plan?.description ?? '',
+    project: submitted?.project ?? '',
+    projectId: submitted?.projectId ?? plan?.projectId ?? '',
+    status: submitted?.status ?? plan?.status ?? '',
+    summary: submitted?.summary ?? plan?.summary ?? '',
+    title: submitted?.title ?? plan?.title ?? '',
+  };
 
   // Handlers
 
   // Markup
+  const markupFieldError = (field: PlanFormField): React.ReactElement | null =>
+    error != null && errorField === field ? (
+      <PlanFormFieldError field={field} message={error} />
+    ) : null;
+
+  const describedBy = (field: PlanFormField): string | undefined =>
+    errorField === field ? `plan-${field}-error` : undefined;
+
+  // 🚨 Form-level fallback: an error we could not attribute to a field must
+  // still be visible, otherwise a failed submit looks like nothing happened.
+  const markupFormError =
+    error != null && errorField == null ? (
+      <PlanFormFieldError message={error} />
+    ) : null;
+
+  const markupOptional = (
+    <span className="text-muted-foreground italic">(optional)</span>
+  );
 
   // Life Cycle
 
@@ -48,27 +89,33 @@ export const PlanForm = (props: PlanFormProps): React.ReactElement => {
             <div>
               <Label htmlFor="plan-title">Title</Label>
               <Input
-                defaultValue={plan?.title ?? ''}
+                aria-describedby={describedBy('title')}
+                aria-invalid={errorField === 'title'}
+                defaultValue={initial.title}
                 id="plan-title"
                 name="title"
                 placeholder="Plan title"
                 required={true}
                 type="text"
               />
+              {markupFieldError('title')}
             </div>
 
             <div>
-              <Label htmlFor="plan-category">Category</Label>
-              <Select
-                defaultValue={plan?.category ?? ''}
-                name="category"
-                required={true}
-              >
-                <SelectTrigger id="plan-category-trigger">
-                  <SelectValue placeholder="Add permission…" />
+              <Label htmlFor="plan-category-trigger">Category</Label>
+              {/* 🚨 Do NOT add `required` here: Radix renders a hidden,
+                  unfocusable native select, so the browser silently refuses to
+                  submit and can never show its validation bubble. The action
+                  validates instead and the error renders below. */}
+              <Select defaultValue={initial.category} name="category">
+                <SelectTrigger
+                  aria-describedby={describedBy('category')}
+                  aria-invalid={errorField === 'category'}
+                  id="plan-category-trigger"
+                >
+                  <SelectValue placeholder="Select a category…" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
                   {PLAN_CATEGORIES.map((cat) => (
                     <SelectItem key={cat} value={cat}>
                       {cat}
@@ -76,12 +123,15 @@ export const PlanForm = (props: PlanFormProps): React.ReactElement => {
                   ))}
                 </SelectContent>
               </Select>
+              {markupFieldError('category')}
             </div>
 
             <div>
               <Label htmlFor="plan-author">Author</Label>
               <Input
-                defaultValue={plan?.author ?? ''}
+                aria-describedby={describedBy('author')}
+                aria-invalid={errorField === 'author'}
+                defaultValue={initial.author}
                 id="plan-author"
                 name="author"
                 placeholder={
@@ -92,6 +142,7 @@ export const PlanForm = (props: PlanFormProps): React.ReactElement => {
                 required={isEdit}
                 type="text"
               />
+              {markupFieldError('author')}
               {isEdit ? null : (
                 <p className="text-muted-foreground mt-1 text-xs">
                   Leave blank only when the API server has GITHUB_USER set;
@@ -100,76 +151,21 @@ export const PlanForm = (props: PlanFormProps): React.ReactElement => {
               )}
             </div>
 
-            <div>
-              <Label htmlFor="plan-assignee">
-                Assignee{' '}
-                <span className="text-muted-foreground italic">(optional)</span>
-              </Label>
-              <Input
-                defaultValue={plan?.assignee ?? ''}
-                id="plan-assignee"
-                name="assignee"
-                placeholder="e.g. visormatt"
-                type="text"
-              />
-            </div>
+            <PlanFormOptionalFields
+              assignee={initial.assignee}
+              project={initial.project}
+              projectId={initial.projectId}
+              status={initial.status}
+            />
 
-            <div>
-              <Label htmlFor="plan-project">
-                Project{' '}
-                <span className="text-muted-foreground italic">(optional)</span>
-              </Label>
-              <Input
-                id="plan-project"
-                name="project"
-                placeholder="Project name"
-                type="text"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="plan-project-id">
-                Project ID{' '}
-                <span className="text-muted-foreground italic">(optional)</span>
-              </Label>
-              <Input
-                defaultValue={plan?.projectId ?? ''}
-                id="plan-project-id"
-                name="projectId"
-                placeholder="Project UUID"
-                type="text"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="plan-status">
-                Status{' '}
-                <span className="text-muted-foreground italic">(optional)</span>
-              </Label>
-              <Input
-                defaultValue={plan?.status ?? ''}
-                id="plan-status"
-                name="status"
-                placeholder="e.g. PENDING"
-                type="text"
-              />
-            </div>
-
-            {error ? (
-              <p className="text-destructive text-sm" role="alert">
-                {error}
-              </p>
-            ) : null}
+            {markupFormError}
           </div>
 
           <div className="flex flex-2 flex-col gap-8">
             <div>
-              <Label htmlFor="plan-summary">
-                Summary{' '}
-                <span className="text-muted-foreground italic">(optional)</span>
-              </Label>
+              <Label htmlFor="plan-summary">Summary {markupOptional}</Label>
               <TextArea
-                defaultValue={plan?.summary ?? ''}
+                defaultValue={initial.summary}
                 id="plan-summary"
                 name="summary"
                 placeholder="Short summary"
@@ -179,12 +175,11 @@ export const PlanForm = (props: PlanFormProps): React.ReactElement => {
 
             <div className="flex-1">
               <Label htmlFor="plan-description">
-                Description{' '}
-                <span className="text-muted-foreground italic">(optional)</span>
+                Description {markupOptional}
               </Label>
               <TextArea
                 className="h-full flex-1"
-                defaultValue={plan?.description ?? ''}
+                defaultValue={initial.description}
                 id="plan-description"
                 name="description"
                 placeholder="Plan description"

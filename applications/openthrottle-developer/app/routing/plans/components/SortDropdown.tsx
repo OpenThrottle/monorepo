@@ -67,7 +67,7 @@ export const SortDropdown = (props: SortDropdownProps): React.ReactElement => {
         className="w-[200px]"
         data-testid="PlansSortDropdown"
       >
-        <SelectValue placeholder="Add permission…" />
+        <SelectValue placeholder="Sort" />
       </SelectTrigger>
       <SelectContent>
         {PLANS_SORT_BY_OPTIONS.map((opt) => (

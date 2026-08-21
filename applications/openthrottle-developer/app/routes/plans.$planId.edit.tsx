@@ -12,6 +12,11 @@ import {
 } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { PlanForm } from '~/routing/plans/components/PlanForm';
+import type { PlanFormActionData } from '~/routing/plans/data/plan-form-action-data';
+import {
+  readPlanFormValues,
+  resolvePlanFormErrorField,
+} from '~/routing/plans/utils/plan-form-values';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/plans.$planId.edit';
 
@@ -90,56 +95,68 @@ export default function Component(
 
 export const action = async (args: Route.ActionArgs) => {
   const { planId } = args.params;
-  if (planId == null || planId === '') {
-    return { error: 'Plan id is required.' };
-  }
-
   const formData = await args.request.formData();
 
-  const author = formData.get('author');
-  const category = formData.get('category');
+  // 🚨 Every failed return below echoes `values` back so the form re-renders
+  // with what the user typed instead of clearing itself.
+  const values = readPlanFormValues(formData);
   const id = formData.get('id');
-  const title = formData.get('title');
 
-  if (typeof author !== 'string' || !author.trim()) {
-    return { error: 'Author is required.' };
+  if (planId == null || planId === '') {
+    return {
+      error: 'Plan id is required.',
+      values,
+    } satisfies PlanFormActionData;
   }
 
-  if (typeof category !== 'string' || !category.trim()) {
-    return { error: 'Category is required.' };
+  if (!values.author?.trim()) {
+    return {
+      error: 'Author is required.',
+      field: 'author',
+      values,
+    } satisfies PlanFormActionData;
+  }
+
+  if (!values.category?.trim()) {
+    return {
+      error: 'Category is required.',
+      field: 'category',
+      values,
+    } satisfies PlanFormActionData;
   }
 
   if (typeof id !== 'string' || id.trim() === '') {
-    return { error: 'Plan id is required.' };
+    return {
+      error: 'Plan id is required.',
+      values,
+    } satisfies PlanFormActionData;
   }
 
   if (id !== planId) {
-    return { error: 'Plan id does not match.' };
+    return {
+      error: 'Plan id does not match.',
+      values,
+    } satisfies PlanFormActionData;
   }
 
-  if (typeof title !== 'string' || !title.trim()) {
-    return { error: 'Title is required.' };
+  if (!values.title?.trim()) {
+    return {
+      error: 'Title is required.',
+      field: 'title',
+      values,
+    } satisfies PlanFormActionData;
   }
-
-  const assignee = formData.get('assignee');
-  const description = formData.get('description');
-  const projectId = formData.get('projectId');
-  const status = formData.get('status');
-  const summary = formData.get('summary');
 
   const input = {
-    author: author.trim(),
-    category: category.trim(),
+    assignee: values.assignee?.trim() ?? '',
+    author: values.author.trim(),
+    category: values.category.trim(),
+    description: values.description?.trim() ?? '',
     id: planId,
-    title: title.trim(),
-    ...(typeof assignee === 'string' && { assignee: assignee.trim() }),
-    ...(typeof description === 'string' && { description: description.trim() }),
-    ...(typeof projectId === 'string' && {
-      projectId: projectId.trim() || null,
-    }),
-    ...(typeof status === 'string' &&
-      status.trim() && { status: status.trim() }),
-    ...(typeof summary === 'string' && { summary: summary.trim() }),
+    projectId: values.projectId?.trim() || null,
+    summary: values.summary?.trim() ?? '',
+    title: values.title.trim(),
+    ...(values.status?.trim() && { status: values.status.trim() }),
   };
 
   try {
@@ -150,7 +167,10 @@ export const action = async (args: Route.ActionArgs) => {
     );
 
     if (!result.updatePlan?.id) {
-      return { error: 'Failed to update plan.' };
+      return {
+        error: 'Failed to update plan.',
+        values,
+      } satisfies PlanFormActionData;
     }
 
     return redirect(`/plans/${result.updatePlan.id}`);
@@ -158,7 +178,11 @@ export const action = async (args: Route.ActionArgs) => {
     const isError = error instanceof Error;
     const message = isError ? error.message : 'Failed to update plan.';
 
-    return { error: message };
+    return {
+      error: message,
+      field: resolvePlanFormErrorField(message),
+      values,
+    } satisfies PlanFormActionData;
   }
 
   // 🚨 Default to invalid action error when no intent is provided.
