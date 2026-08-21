@@ -62,14 +62,6 @@ concurrency:
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  # 💾 Nx caching is the FREE GitHub Actions cache (`actions/cache` in
-  # .github/actions/node-setup), not a paid remote backend. The trusted-`main`-
-  # writes / PRs-read-only model that the old GCS bucket implemented with
-  # NX_POWERPACK_CACHE_MODE is enforced here *by construction*: Actions cache
-  # scoping lets a PR branch READ its base branch's caches but never WRITE into
-  # them, and isolates branch caches from each other. Same CREEP-safe guarantee
-  # (CVE-2025-36852), no env override to keep in sync, no GCP credentials.
   NX_SWC: 'true'
   OUTPUT_DEBUG: ${{ vars.DEBUG == 'true' && '--verbose' || '' }}
   OUTPUT_DIR: docs/nx/dependency-graphs
@@ -102,6 +94,7 @@ jobs:
   # `fetch-depth: 1` plus an explicit depth-1 fetch of both SHAs is sufficient.
   changes:
     runs-on: ubuntu-latest
+    # runs-on: ${{ github.ref == 'refs/heads/main' && 'blacksmith-4vcpu-ubuntu-2204' || 'ubuntu-latest' }}
     timeout-minutes: 5
     outputs:
       # 💰 Path gates for the full-tree checks in `build`. Computed here because

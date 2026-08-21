@@ -11,6 +11,12 @@ import { NoteCardFragment } from '~/__generated__/graphql';
 
 export interface NoteFormProps {
   action: 'create' | 'update';
+  /**
+   * Who a newly created note will be attributed to, for the create action's
+   * read-only attribution line. The server derives the stored author from the
+   * request principal, so this is display only — omit it when unknown.
+   */
+  authorName?: string;
   className?: string;
   /** Action-level error to surface inline (validation / not-found). */
   error?: string;
@@ -18,7 +24,7 @@ export interface NoteFormProps {
 }
 
 export const NoteForm = (props: NoteFormProps): React.ReactElement => {
-  const { action, className, error, note } = props;
+  const { action, authorName, className, error, note } = props;
 
   // Hooks
 
@@ -28,6 +34,12 @@ export const NoteForm = (props: NoteFormProps): React.ReactElement => {
   // Handlers
 
   // Markup
+  // Creating a note takes no author input: the server stamps it from the
+  // authenticated principal, so all we owe the user is who that will be.
+  const attribution =
+    authorName != null && authorName !== '' ? (
+      <p className="text-muted-foreground text-sm">Author: {authorName}</p>
+    ) : null;
 
   // Life Cycle
 
@@ -51,15 +63,19 @@ export const NoteForm = (props: NoteFormProps): React.ReactElement => {
               rows={8}
             />
           </div>
-          <div>
-            <Label htmlFor="author">Author (optional)</Label>
-            <Input
-              defaultValue={note?.author ?? ''}
-              id="author"
-              name="author"
-              type="text"
-            />
-          </div>
+          {isCreate ? (
+            attribution
+          ) : (
+            <div>
+              <Label htmlFor="author">Author (optional)</Label>
+              <Input
+                defaultValue={note?.author ?? ''}
+                id="author"
+                name="author"
+                type="text"
+              />
+            </div>
+          )}
         </div>
 
         {error ? (

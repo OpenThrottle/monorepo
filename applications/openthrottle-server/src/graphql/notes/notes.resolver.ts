@@ -5,13 +5,19 @@
 import type { Note } from '@openthrottle/nestjs-repositories';
 import { NotesService } from '@openthrottle/nestjs-repositories';
 import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { CurrentUser, type AuthPrincipal } from '@openthrottle/nestjs-auth';
+import { GlobalClsService } from '@openthrottle/nestjs-modules';
 import { CreateNoteInput, UpdateNoteInput } from './note.input';
 import { NoteObject } from './note.object';
+import { resolveNoteAuthor } from './resolve-note-author';
 
 // @authz-stance: authenticated-only (Path A — see OT plan 18e16dfc-4f22-43f9-9b77-6fc90309b60a)
 @Resolver(() => NoteObject)
 export class NotesResolver {
-  constructor(private readonly notesService: NotesService) {}
+  constructor(
+    private readonly notesService: NotesService,
+    private readonly globalCls: GlobalClsService,
+  ) {}
 
   @Query(() => NoteObject, {
     description: `Get a note by ID`,
@@ -41,10 +47,17 @@ export class NotesResolver {
   })
   async createNote(
     @Args('input', { type: () => CreateNoteInput }) input: CreateNoteInput,
+    @CurrentUser() principal: AuthPrincipal | undefined,
   ): Promise<Note> {
     const repo = this.notesService.getRepository();
+    // Attribution is derived server-side so every caller (Developer UI, the OT
+    // MCP, raw GraphQL) is stamped identically and cannot spoof it by omission.
     const entity = repo.create({
-      author: input.author ?? null,
+      author: resolveNoteAuthor(
+        input.author,
+        this.globalCls.get('user'),
+        principal,
+      ),
       content: input.content,
     });
     const saved = await repo.save(entity);
