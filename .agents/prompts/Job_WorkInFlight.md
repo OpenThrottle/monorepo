@@ -79,6 +79,12 @@ Then:
 - If a finding from a previous run has since been resolved, say so in your final message; do not close its task yourself.
 - Only open a new plan when no plan from this job is currently open.
 
+Dedupe is not finished when you have checked for a duplicate _plan_. Three rules that apply every run:
+
+- **Compare against the existing plan's tasks, not just its title.** When an open plan from this job exists, call `get_tasks_by_plan_id` on it and check each finding against the tasks already there, matching on the finding's subject (the branch, pull request number, or plan id). File a task only for a subject no existing task covers. A run that re-files a finding the plan already carries has duplicated it, even though it opened no second plan.
+- **Never file a task that contradicts an existing one.** If this sweep reaches a different verdict on a subject an existing task already covers, do not file an opposing task alongside it. Append the disagreement and your evidence to that task's description with `update_task`, so a human resolves one task instead of discovering the conflict halfway through executing the plan.
+- **Say so when dedupe is degraded.** If `semantic_search` returns nothing for every query you try, treat the index as unavailable rather than as proof that no duplicate exists, and state that plainly in the plan description. "No duplicates found" and "I could not check for duplicates" must never look the same to whoever reads the plan.
+
 ## Output
 
 Exactly one `create_plan` (or, per the dedupe rule above, one `create_tasks` batch appended to the open plan from a previous run):
