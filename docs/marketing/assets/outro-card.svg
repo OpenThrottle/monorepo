@@ -1,0 +1,23 @@
+<!--
+  Outro card — 2s, identical on EVERY video. No animation beyond a fade.
+  Authored at 1920x1080; the 9:16 export re-renders at 1080x1920 with the same
+  centred group (see README.md render commands), so the card is never cropped.
+  Do not add a CTA line, a subscribe animation, or an end-screen grid: the whole
+  point is that it is the same two seconds every time.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080">
+  <rect width="1920" height="1080" fill="#0A0D0F" />
+  <g transform="translate(960 540)">
+    <svg x="-70" y="-250" width="140" height="140" viewBox="0 0 64 64" fill="none">
+      <circle cx="32" cy="32" r="25" stroke="#20262D" stroke-width="4" />
+      <path d="M14.3 49.7A25 25 0 0 1 49.7 14.3" stroke="#FF0000" stroke-width="4" stroke-linecap="round" />
+      <path d="M32 32 46 21" stroke="#F7F9FA" stroke-width="4" stroke-linecap="round" />
+      <circle cx="32" cy="32" r="4" fill="#FF0000" />
+    </svg>
+    <text x="0" y="-30" text-anchor="middle" font-family="Inter, -apple-system, Helvetica Neue, sans-serif" font-size="96" font-weight="900" fill="#F7F9FA">Open<tspan fill="#FF0000">Throttle</tspan></text>
+    <text x="0" y="46" text-anchor="middle" font-family="Inter, -apple-system, Helvetica Neue, sans-serif" font-size="40" font-weight="500" fill="#F7F9FA">openthrottle.ai</text>
+    <rect x="-120" y="86" width="240" height="3" fill="#FF0000" />
+    <text x="0" y="152" text-anchor="middle" font-family="JetBrains Mono, SFMono-Regular, Menlo, monospace" font-size="30" fill="#7C8892">github.com/OpenThrottle/monorepo</text>
+    <text x="0" y="206" text-anchor="middle" font-family="Inter, -apple-system, Helvetica Neue, sans-serif" font-size="26" font-weight="500" fill="#7C8892">Apache-2.0 · self-hostable</text>
+  </g>
+</svg>

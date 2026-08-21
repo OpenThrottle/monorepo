@@ -1,0 +1,19 @@
+<!--
+  Title card — LONG-FORM ONLY, 2s. Shorts have no title card by design: the
+  payoff must be on screen at t=0 (see youtube-format.md).
+  Replace TITLE_TEXT and EPISODE_TEXT at render time.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080">
+  <rect width="1920" height="1080" fill="#0A0D0F" />
+  <rect x="0" y="0" width="1920" height="8" fill="#FF0000" />
+  <g transform="translate(160 420)">
+    <svg x="0" y="-96" width="88" height="88" viewBox="0 0 64 64" fill="none">
+      <circle cx="32" cy="32" r="25" stroke="#20262D" stroke-width="4" />
+      <path d="M14.3 49.7A25 25 0 0 1 49.7 14.3" stroke="#FF0000" stroke-width="4" stroke-linecap="round" />
+      <path d="M32 32 46 21" stroke="#F7F9FA" stroke-width="4" stroke-linecap="round" />
+      <circle cx="32" cy="32" r="4" fill="#FF0000" />
+    </svg>
+    <text x="0" y="80" font-family="Inter, -apple-system, Helvetica Neue, sans-serif" font-size="104" font-weight="900" fill="#F7F9FA">TITLE_TEXT</text>
+    <text x="0" y="164" font-family="JetBrains Mono, SFMono-Regular, Menlo, monospace" font-size="34" fill="#7C8892">EPISODE_TEXT</text>
+  </g>
+</svg>

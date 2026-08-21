@@ -1,0 +1,106 @@
+{
+  "_readme": "Machine-readable constants for the @OpenThrottleAI '0-60' video format. This file is the single source of truth consumed by the screencast runner, the narration stage and the ffmpeg assembly stage. Prose rationale lives in docs/marketing/youtube-format.md — change both together.",
+  "audio": {
+    "duckDb": -12,
+    "musicBedDb": -28,
+    "narrationCodec": "aac",
+    "narrationBitrate": "192k",
+    "sampleRate": 48000,
+    "targetLufs": -14,
+    "_truePeakNote": "-1.0 dBTP, not -1.5. At -1.5 the peak ceiling BINDS before the loudness target is reached: a measured narration take normalised to -15.3 LUFS instead of -14 because raising it further would have breached the peak. -1.0 is a standard safe delivery ceiling and lets the take land at -14.3.",
+    "truePeakDb": -1.0
+  },
+  "brand": {
+    "background": "#0A0D0F",
+    "border": "#20262D",
+    "card": "#13171B",
+    "foreground": "#F7F9FA",
+    "mono": "JetBrains Mono, SFMono-Regular, Menlo, monospace",
+    "muted": "#7C8892",
+    "red": "#FF0000",
+    "sans": "Inter, -apple-system, Helvetica Neue, sans-serif"
+  },
+  "cards": {
+    "lowerThird": {
+      "durationSeconds": 3,
+      "insetPx": 96,
+      "startSeconds": 1.5
+    },
+    "outro": {
+      "durationSeconds": 2,
+      "primaryText": "openthrottle.ai",
+      "secondaryText": "github.com/OpenThrottle/monorepo"
+    },
+    "title": {
+      "durationSeconds": 0,
+      "_note": "Shorts have no leading title card — the payoff is on screen at t=0. Long-form uses a 2s title card; see youtube-format.md."
+    }
+  },
+  "encode": {
+    "audioBitrate": "192k",
+    "container": "mp4",
+    "crf": 18,
+    "faststart": true,
+    "pixelFormat": "yuv420p",
+    "profile": "high",
+    "videoCodec": "libx264"
+  },
+  "formats": {
+    "longform": {
+      "aspect": "16:9",
+      "chaptered": true,
+      "fps": 30,
+      "height": 1080,
+      "maxDurationSeconds": 720,
+      "minDurationSeconds": 300,
+      "width": 1920
+    },
+    "short": {
+      "aspect": "9:16",
+      "chaptered": false,
+      "fps": 30,
+      "height": 1920,
+      "maxDurationSeconds": 60,
+      "targetDurationSeconds": 55,
+      "width": 1080
+    }
+  },
+  "recording": {
+    "_note": "Capture is a CDP screencast resampled to a constant fps, not Playwright recordVideo (which is locked to 25fps VP8). See docs/marketing/pipeline.md and the task-3 spike verdict.",
+    "colorScheme": "dark",
+    "deviceScaleFactor": 2,
+    "viewport": {
+      "height": 1080,
+      "width": 1920
+    }
+  },
+  "safeAreas": {
+    "portrait": {
+      "_note": "Fractions of frame height/width kept clear of meaningful content. The Shorts player overlays the bottom band with title, channel and action rail.",
+      "bottom": 0.15,
+      "left": 0.04,
+      "right": 0.14,
+      "top": 0.08
+    },
+    "landscape": {
+      "bottom": 0.05,
+      "left": 0.04,
+      "right": 0.04,
+      "top": 0.05
+    }
+  },
+  "shortBeats": {
+    "hook": {
+      "endSeconds": 3,
+      "startSeconds": 0
+    },
+    "body": {
+      "endSeconds": 50,
+      "startSeconds": 3
+    },
+    "outro": {
+      "endSeconds": 60,
+      "startSeconds": 50
+    }
+  }
+}

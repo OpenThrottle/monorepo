@@ -1,0 +1,36 @@
+<!--
+  Channel banner — 2560x1440 upload size. YouTube crops aggressively: only the
+  centred 1546x423 "safe" box is guaranteed visible on every device, so the
+  wordmark and tagline live inside it (dashed guide below, remove before export).
+  Everything outside is crop-tolerant texture.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2560 1440" width="2560" height="1440">
+  <defs>
+    <linearGradient id="glow" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#13171B" />
+      <stop offset="55%" stop-color="#0A0D0F" />
+      <stop offset="100%" stop-color="#0A0D0F" />
+    </linearGradient>
+  </defs>
+  <rect width="2560" height="1440" fill="url(#glow)" />
+  <!-- Crop-tolerant texture: a throttle sweep bleeding off the right edge. -->
+  <g opacity="0.18" transform="translate(2180 720) scale(26) translate(-32 -32)" fill="none">
+    <circle cx="32" cy="32" r="25" stroke="#20262D" stroke-width="3" />
+    <path d="M14.3 49.7A25 25 0 0 1 49.7 14.3" stroke="#FF0000" stroke-width="3" stroke-linecap="round" />
+  </g>
+  <!-- Safe box: 1546x423 centred → x 507, y 508. -->
+  <g transform="translate(507 508)">
+    <g transform="translate(0 108)">
+      <svg x="0" y="-64" width="104" height="104" viewBox="0 0 64 64" fill="none">
+        <circle cx="32" cy="32" r="25" stroke="#20262D" stroke-width="4" />
+        <path d="M14.3 49.7A25 25 0 0 1 49.7 14.3" stroke="#FF0000" stroke-width="4" stroke-linecap="round" />
+        <path d="M32 32 46 21" stroke="#F7F9FA" stroke-width="4" stroke-linecap="round" />
+        <circle cx="32" cy="32" r="4" fill="#FF0000" />
+      </svg>
+      <text x="136" y="24" font-family="Inter, -apple-system, Helvetica Neue, sans-serif" font-size="112" font-weight="900" fill="#F7F9FA">Open<tspan fill="#FF0000">Throttle</tspan></text>
+      <text x="136" y="104" font-family="Inter, -apple-system, Helvetica Neue, sans-serif" font-size="42" font-weight="500" fill="#7C8892">Ship faster with agents that actually know what they're building.</text>
+      <text x="136" y="180" font-family="JetBrains Mono, SFMono-Regular, Menlo, monospace" font-size="32" fill="#7C8892">60-second screencasts · Apache-2.0 · github.com/OpenThrottle/monorepo</text>
+    </g>
+    <rect width="1546" height="423" fill="none" stroke="#FF0000" stroke-opacity="0.25" stroke-dasharray="12 12" />
+  </g>
+</svg>

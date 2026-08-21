@@ -52,7 +52,8 @@
     "sonner": "catalog:"
   },
   "devDependencies": {
-    "@openthrottle/react-router-testing": "workspace:^"
+    "@openthrottle/react-router-testing": "workspace:^",
+    "playwright": "catalog:"
   },
   "license": "Apache-2.0",
   "nx": {
@@ -97,7 +98,12 @@
         "description": "Serve the production build via react-router-serve after build; also starts openthrottle-server:start so the GraphQL API is up."
       },
       "test": {},
-      "test-e2e": {}
+      "test-e2e": {},
+      "video-assemble": {},
+      "video-narrate": {},
+      "video-record": {},
+      "video-scan": {},
+      "video-seed": {}
     }
   },
   "private": true,

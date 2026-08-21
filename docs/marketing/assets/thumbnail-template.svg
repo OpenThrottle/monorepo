@@ -1,0 +1,29 @@
+<!--
+  Thumbnail template — 1280x720. LONG-FORM ONLY. Shorts use a video frame; a
+  designed thumbnail on a Short reads as an ad.
+  Rules (enforced by review, not by the file): at most FOUR words, >=120px, a
+  real screenshot behind the scrim, no faces, no arrows, no circled UI.
+  Render: swap SCREENSHOT_HREF for a data: URI or local path, then rasterise.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">
+  <defs>
+    <clipPath id="frame"><rect width="1280" height="720" /></clipPath>
+  </defs>
+  <g clip-path="url(#frame)">
+    <rect width="1280" height="720" fill="#0A0D0F" />
+    <image href="SCREENSHOT_HREF" x="0" y="0" width="1280" height="720" preserveAspectRatio="xMidYMid slice" />
+    <rect width="1280" height="720" fill="#0A0D0F" fill-opacity="0.7" />
+    <rect x="72" y="72" width="120" height="8" fill="#FF0000" />
+    <text x="72" y="360" font-family="Inter, -apple-system, Helvetica Neue, sans-serif" font-size="132" font-weight="900" fill="#F7F9FA">FOUR WORDS</text>
+    <text x="72" y="452" font-family="Inter, -apple-system, Helvetica Neue, sans-serif" font-size="132" font-weight="900" fill="#FF0000">MAX</text>
+    <g transform="translate(72 600)">
+      <svg x="0" y="0" width="56" height="56" viewBox="0 0 64 64" fill="none">
+        <circle cx="32" cy="32" r="25" stroke="#20262D" stroke-width="4" />
+        <path d="M14.3 49.7A25 25 0 0 1 49.7 14.3" stroke="#FF0000" stroke-width="4" stroke-linecap="round" />
+        <path d="M32 32 46 21" stroke="#F7F9FA" stroke-width="4" stroke-linecap="round" />
+        <circle cx="32" cy="32" r="4" fill="#FF0000" />
+      </svg>
+      <text x="76" y="40" font-family="Inter, -apple-system, Helvetica Neue, sans-serif" font-size="40" font-weight="800" fill="#F7F9FA">Open<tspan fill="#FF0000">Throttle</tspan></text>
+    </g>
+  </g>
+</svg>
