@@ -4,7 +4,10 @@ import { createMock } from '@golevelup/ts-vitest';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { ScheduledAgentJob } from './scheduled-agent-job.entity';
-import { ScheduledAgentJobRun } from './scheduled-agent-job-run.entity';
+import {
+  SCHEDULED_AGENT_JOB_RUN_IN_FLIGHT_STATUSES,
+  ScheduledAgentJobRun,
+} from './scheduled-agent-job-run.entity';
 import {
   ScheduledAgentJobsService,
   schedulerKeyForJob,
@@ -20,8 +23,17 @@ type JobRepo = {
   update: ReturnType<typeof vi.fn>;
 };
 
+type QueryBuilderMock = {
+  addSelect: ReturnType<typeof vi.fn>;
+  getRawMany: ReturnType<typeof vi.fn>;
+  groupBy: ReturnType<typeof vi.fn>;
+  select: ReturnType<typeof vi.fn>;
+  where: ReturnType<typeof vi.fn>;
+};
+
 type RunRepo = {
   create: ReturnType<typeof vi.fn>;
+  createQueryBuilder: ReturnType<typeof vi.fn>;
   find: ReturnType<typeof vi.fn>;
   findOne: ReturnType<typeof vi.fn>;
   save: ReturnType<typeof vi.fn>;
@@ -31,6 +43,7 @@ type RunRepo = {
 describe('ScheduledAgentJobsService', () => {
   let service: ScheduledAgentJobsService;
   let jobRepo: JobRepo;
+  let queryBuilder: QueryBuilderMock;
   let runRepo: RunRepo;
 
   beforeEach(async () => {
@@ -49,8 +62,17 @@ describe('ScheduledAgentJobsService', () => {
       update: vi.fn().mockResolvedValue({ affected: 1 }),
     };
 
+    queryBuilder = {
+      addSelect: vi.fn(() => queryBuilder),
+      getRawMany: vi.fn().mockResolvedValue([]),
+      groupBy: vi.fn(() => queryBuilder),
+      select: vi.fn(() => queryBuilder),
+      where: vi.fn(() => queryBuilder),
+    };
+
     runRepo = {
       create: vi.fn((input: Partial<ScheduledAgentJobRun>) => ({ ...input })),
+      createQueryBuilder: vi.fn(() => queryBuilder),
       find: vi.fn().mockResolvedValue([]),
       findOne: vi.fn().mockResolvedValue(null),
       save: vi.fn((row: ScheduledAgentJobRun) => Promise.resolve(row)),
@@ -266,6 +288,60 @@ describe('ScheduledAgentJobsService', () => {
         resolvedCwd: null,
       }),
     );
+  });
+
+  it('SCHEDULED_AGENT_JOB_RUN_IN_FLIGHT_STATUSES is the single definition of "in flight"', () => {
+    expect(SCHEDULED_AGENT_JOB_RUN_IN_FLIGHT_STATUSES).toEqual([
+      'queued',
+      'running',
+    ]);
+  });
+
+  it('listInFlightRuns filters to queued + running across all jobs, oldest-first', async () => {
+    await service.listInFlightRuns();
+
+    const options = runRepo.find.mock.calls[0]?.[0];
+    expect(options.order).toEqual({ createdAt: 'ASC' });
+    // The In() operator carries the status set it was built with.
+    expect(options.where.status._value).toEqual(['queued', 'running']);
+    // Terminal statuses are excluded by construction.
+    for (const terminal of ['cancelled', 'failed', 'no_op', 'succeeded']) {
+      expect(options.where.status._value).not.toContain(terminal);
+    }
+  });
+
+  it('listInFlightRuns caps the result set, honouring an explicit limit', async () => {
+    await service.listInFlightRuns();
+    expect(runRepo.find.mock.calls[0]?.[0].take).toBe(50);
+
+    await service.listInFlightRuns(5);
+    expect(runRepo.find.mock.calls[1]?.[0].take).toBe(5);
+  });
+
+  it('countRunsByStatusSince issues one grouped aggregate query', async () => {
+    const since = new Date('2026-08-21T00:00:00.000Z');
+    queryBuilder.getRawMany.mockResolvedValue([
+      { count: '3', status: 'succeeded' },
+      { count: '1', status: 'no_op' },
+    ]);
+
+    const counts = await service.countRunsByStatusSince(since);
+
+    expect(runRepo.createQueryBuilder).toHaveBeenCalledTimes(1);
+    expect(queryBuilder.select).toHaveBeenCalledWith('run.status', 'status');
+    expect(queryBuilder.addSelect).toHaveBeenCalledWith('COUNT(*)', 'count');
+    expect(queryBuilder.where).toHaveBeenCalledWith(
+      'run.created_at >= :since',
+      {
+        since,
+      },
+    );
+    expect(queryBuilder.groupBy).toHaveBeenCalledWith('run.status');
+    // Postgres returns COUNT(*) as a string; it is normalized to a number.
+    expect(counts).toEqual([
+      { count: 3, status: 'succeeded' },
+      { count: 1, status: 'no_op' },
+    ]);
   });
 
   it('deleteJob reports whether a row was removed', async () => {

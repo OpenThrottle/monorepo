@@ -17,8 +17,48 @@ fragment ScheduledJobCard on ScheduledAgentJobObject {
   updatedAt
 }
 
+fragment ScheduleInFlightRun on ScheduledAgentJobRunObject {
+  bullmqJobId
+  cancelRequestedAt
+  driverId
+  id
+  job {
+    id
+    name
+  }
+  model
+  scheduledAgentJobId
+  startedAt
+  status
+  trigger
+}
+
+fragment ScheduleRunStats on ScheduledAgentJobRunStatsObject {
+  cancelledCount
+  failedCount
+  inFlightCount
+  noOpCount
+  queuedCount
+  runningCount
+  since
+  succeededCount
+  windowTotalCount
+}
+
 query scheduledAgentJobs {
+  scheduledAgentJobRunsInFlight {
+    ...ScheduleInFlightRun
+  }
+  scheduledAgentJobRunStats {
+    ...ScheduleRunStats
+  }
   scheduledAgentJobs {
     ...ScheduledJobCard
+  }
+}
+
+mutation cancelScheduleIndexRun($runId: ID!) {
+  cancelScheduledAgentJobRun(runId: $runId) {
+    ...ScheduleInFlightRun
   }
 }

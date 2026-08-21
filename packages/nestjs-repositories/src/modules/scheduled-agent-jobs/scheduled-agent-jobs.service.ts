@@ -6,7 +6,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import type {
   ScheduledAgentJobDriverId,
   ScheduledAgentJobSettings,
@@ -17,7 +17,10 @@ import type {
   ScheduledAgentJobRunStatus,
   ScheduledAgentJobRunTrigger,
 } from './scheduled-agent-job-run.entity';
-import { ScheduledAgentJobRun } from './scheduled-agent-job-run.entity';
+import {
+  SCHEDULED_AGENT_JOB_RUN_IN_FLIGHT_STATUSES,
+  ScheduledAgentJobRun,
+} from './scheduled-agent-job-run.entity';
 
 /** Fields a caller supplies to create a schedule; `schedulerKey` is derived from the new id. */
 export interface CreateScheduledAgentJobInput {
@@ -80,6 +83,12 @@ export interface FinishScheduledAgentJobRunInput {
   readonly reasoningTokens?: number | null;
   readonly status: ScheduledAgentJobRunStatus;
   readonly totalTokens?: number | null;
+}
+
+/** One grouped row of `COUNT(*) ... GROUP BY status` over the run history. */
+export interface ScheduledAgentJobRunStatusCount {
+  readonly count: number;
+  readonly status: ScheduledAgentJobRunStatus;
 }
 
 /** Stable BullMQ scheduler id for a schedule row. */
@@ -216,6 +225,64 @@ export class ScheduledAgentJobsService {
       take: limit,
       where: { scheduledAgentJobId },
     });
+  }
+
+  /**
+   * @description Every run that has not reached a terminal status yet — `queued` or `running` — across
+   * *all* schedules, oldest-first, so the run that has been going longest reads first. Capped so a
+   * stuck queue cannot blow up the response.
+   */
+  async listInFlightRuns(limit = 50): Promise<ScheduledAgentJobRun[]> {
+    return this.runRepository.find({
+      order: { createdAt: 'ASC' },
+      take: limit,
+      where: { status: In([...SCHEDULED_AGENT_JOB_RUN_IN_FLIGHT_STATUSES]) },
+    });
+  }
+
+  /**
+   * @description Live counts of not-yet-terminal runs, grouped by status, across all schedules. Not
+   * windowed on purpose: a run queued days ago and still stuck is exactly what a caller asking "what
+   * is in flight" needs to see. One grouped aggregate, restricted to the in-flight statuses.
+   */
+  async countInFlightRunsByStatus(): Promise<
+    ScheduledAgentJobRunStatusCount[]
+  > {
+    const rows = await this.runRepository
+      .createQueryBuilder('run')
+      .select('run.status', 'status')
+      .addSelect('COUNT(*)', 'count')
+      .where('run.status IN (:...statuses)', {
+        statuses: [...SCHEDULED_AGENT_JOB_RUN_IN_FLIGHT_STATUSES],
+      })
+      .groupBy('run.status')
+      .getRawMany<{ count: string; status: ScheduledAgentJobRunStatus }>();
+
+    return rows.map((row) => ({
+      count: Number(row.count),
+      status: row.status,
+    }));
+  }
+
+  /**
+   * @description Run counts grouped by status for runs created at or after `since` — a single grouped
+   * aggregate, never a full row fetch. Statuses with no runs in the window are simply absent.
+   */
+  async countRunsByStatusSince(
+    since: Date,
+  ): Promise<ScheduledAgentJobRunStatusCount[]> {
+    const rows = await this.runRepository
+      .createQueryBuilder('run')
+      .select('run.status', 'status')
+      .addSelect('COUNT(*)', 'count')
+      .where('run.created_at >= :since', { since })
+      .groupBy('run.status')
+      .getRawMany<{ count: string; status: ScheduledAgentJobRunStatus }>();
+
+    return rows.map((row) => ({
+      count: Number(row.count),
+      status: row.status,
+    }));
   }
 
   /**
