@@ -20,7 +20,11 @@ import type {
   JobRunHookEntry,
   RalphNestedRunTuningInput,
 } from '@tools/workflows';
-import type { PlanJobRunHooksStorage } from '@openthrottle/nestjs-repositories';
+import {
+  DEFAULT_PLAN_RUN_RALPH_RUNNER,
+  type PlanJobRunHooksStorage,
+} from '@openthrottle/nestjs-repositories';
+import { applyPlanRunProgrammaticDefaults } from './enqueue-plan-run-defaults';
 import type { RalphPlanRunTuningInput } from './plan.input';
 import type { RunPlanOrchestratorJobData } from '../../queues/plans/plans.types';
 import type {
@@ -216,6 +220,23 @@ export const ralphTuningForChildJob = (
 };
 
 /**
+ * Normalizes a raw debug level while KEEPING an explicit `'omit'`. Programmatic runs default to
+ * `'verbose'` (see {@link applyPlanRunProgrammaticDefaults}), so a caller's deliberate `'omit'`
+ * has to survive parsing — dropping it would make "no verbose" indistinguishable from "unset"
+ * and hand the run the default back.
+ */
+const normalizeNestedDebugPreservingOmit = (
+  value: string | null | undefined,
+): WorkflowConfigDebug | undefined => {
+  if (value == null) return undefined;
+  const normalized = value.trim().toLowerCase();
+  if (normalized === 'debug') return 'debug';
+  if (normalized === 'verbose') return 'verbose';
+  if (normalized === 'omit') return 'omit';
+  return undefined;
+};
+
+/**
  * Maps GraphQL {@link RalphPlanRunTuningInput} to worker job tuning, or `undefined` when nothing effective was provided.
  * @throws Error when values are out of range or backend is unknown.
  */
@@ -262,7 +283,7 @@ export const parseEnqueueRalphTuning = (
   const worktree = normalizeOptionalString(input.worktree);
   const worktreeBase = normalizeOptionalString(input.worktreeBase);
 
-  const ralphDebugCli = normalizeNestedDebug(input.ralphDebugCli);
+  const ralphDebugCli = normalizeNestedDebugPreservingOmit(input.ralphDebugCli);
 
   const tuning: RalphNestedRunTuningInput = {
     ...(backendRaw !== undefined
@@ -294,7 +315,7 @@ export const parseEnqueueRalphTuning = (
  */
 const resolvePlanRunExecutionBackend = (
   ralph: RalphNestedRunTuningInput | undefined,
-): WorkflowConfigRunner => ralph?.backend ?? 'cursor';
+): WorkflowConfigRunner => ralph?.backend ?? DEFAULT_PLAN_RUN_RALPH_RUNNER;
 
 /**
  * Builds {@link RunPlanOrchestratorJobData} for in-process Ralph (plans queue, `run-plan-orchestrator`).
@@ -338,14 +359,18 @@ export const buildRunPlanOrchestratorJobData = (input: {
     if (!isOpenThrottlePlanTaskUuid(taskRaw)) {
       throw new Error('taskId must be a valid OpenThrottle UUID');
     }
-    const ralph = parseEnqueueRalphTuning(input.ralph);
+    const ralph = applyPlanRunProgrammaticDefaults({
+      disableWorktree: input.ralph?.disableWorktree,
+      planId,
+      ralph: parseEnqueueRalphTuning(input.ralph),
+    });
     const executionBackend = resolvePlanRunExecutionBackend(ralph);
     return {
       executionBackend,
       mode: 'task',
       planId,
       ...jobRunHooksSpread,
-      ...(ralph !== undefined ? { ralph } : {}),
+      ralph,
       runKind: 'orchestrator',
       taskId: taskRaw,
       ...(workingDirectory !== undefined ? { workingDirectory } : {}),
@@ -356,7 +381,11 @@ export const buildRunPlanOrchestratorJobData = (input: {
     throw new Error('taskId is only allowed when mode is task');
   }
 
-  const ralph = parseEnqueueRalphTuning(input.ralph);
+  const ralph = applyPlanRunProgrammaticDefaults({
+    disableWorktree: input.ralph?.disableWorktree,
+    planId,
+    ralph: parseEnqueueRalphTuning(input.ralph),
+  });
   const executionBackend = resolvePlanRunExecutionBackend(ralph);
   const data: RunPlanOrchestratorJobData = {
     executionBackend,
@@ -364,7 +393,7 @@ export const buildRunPlanOrchestratorJobData = (input: {
     runKind: 'orchestrator',
     ...jobRunHooksSpread,
     ...(mode === 'plan' ? { mode: 'plan' } : {}),
-    ...(ralph !== undefined ? { ralph } : {}),
+    ralph,
     ...(workingDirectory !== undefined ? { workingDirectory } : {}),
   };
   return data;

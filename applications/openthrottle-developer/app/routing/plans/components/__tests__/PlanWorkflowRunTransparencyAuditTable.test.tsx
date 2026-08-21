@@ -125,3 +125,46 @@ describe('PlanWorkflowRunTransparencyAuditTable Component', () => {
     expect(component.getAllByText('—').length).toBeGreaterThanOrEqual(2);
   });
 });
+
+describe('PlanWorkflowRunTransparencyAuditTable worktree column', () => {
+  const renderRows = (rows: PlanRunAuditRow[]): RenderResult => {
+    const props: PlanWorkflowRunTransparencyAuditTableProps = {
+      planRunAuditRows: rows,
+      workflowInput,
+      workingDirectory: '',
+    };
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
+    const Component = () => (
+      <PlanWorkflowRunTransparencyAuditTable {...props} />
+    );
+    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    return render(<RoutesStub />);
+  };
+
+  test('shows the directory the run actually worked in', () => {
+    const component = renderRows([
+      auditRow({
+        runConfigSnapshotJson: JSON.stringify({
+          ralph: { executionBackend: 'cursor' },
+          workspace: {
+            workingDirectory:
+              '/Users/matt/Development/openthrottle-worktrees/plan-0c2720a9',
+          },
+        }),
+      }),
+    ]);
+
+    expect(
+      component.getByText(
+        '/Users/matt/Development/openthrottle-worktrees/plan-0c2720a9',
+      ),
+    ).toBeInTheDocument();
+  });
+
+  test('renders a placeholder for a run that recorded no workspace', () => {
+    const component = renderRows([auditRow({ runConfigSnapshotJson: null })]);
+
+    expect(component.getByText('Worktree')).toBeInTheDocument();
+    expect(component.getAllByText('—').length).toBeGreaterThan(0);
+  });
+});

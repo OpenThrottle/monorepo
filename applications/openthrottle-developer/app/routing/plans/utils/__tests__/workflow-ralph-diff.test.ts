@@ -74,13 +74,13 @@ describe('buildWorkflowRalphTuningDiffLabels', () => {
     );
   });
 
-  test('reports a debug CLI change', () => {
+  test('reports a debug CLI change away from the verbose default', () => {
     const input: WorkflowRalphRunOptionsInput = {
       ...baseline,
-      debugCli: 'verbose',
+      debugCli: 'omit',
     };
     const lines = buildWorkflowRalphTuningDiffLabels(input, '');
-    expect(lines).toContain('Debug CLI: omit → verbose (--debug / --verbose)');
+    expect(lines).toContain('Debug CLI: verbose → omit (--debug / --verbose)');
   });
 
   test('reports a worktree CLI mode change', () => {
@@ -89,18 +89,29 @@ describe('buildWorkflowRalphTuningDiffLabels', () => {
       worktreeCli: 'flag-only',
     };
     const lines = buildWorkflowRalphTuningDiffLabels(input, '');
-    expect(lines).toContain('Agent worktree: omit → flag-only (--worktree)');
+    expect(lines).toContain('Agent worktree: named → flag-only (--worktree)');
   });
 
-  test('reports the worktree CLI change (not the name line) when both change together', () => {
+  test('reports turning the worktree off', () => {
+    const input: WorkflowRalphRunOptionsInput = {
+      ...baseline,
+      worktreeCli: 'omit',
+    };
+    const lines = buildWorkflowRalphTuningDiffLabels(input, '');
+    expect(lines).toContain('Agent worktree: named → omit (--worktree)');
+  });
+
+  test('reports only the name line when the mode already matches the default', () => {
     const input: WorkflowRalphRunOptionsInput = {
       ...baseline,
       worktreeCli: 'named',
       worktreeName: 'my-worktree',
     };
     const lines = buildWorkflowRalphTuningDiffLabels(input, '');
-    expect(lines).toContain('Agent worktree: omit → named (--worktree)');
     expect(lines.some((line) => line.startsWith('Agent worktree name:'))).toBe(
+      true,
+    );
+    expect(lines.some((line) => line.startsWith('Agent worktree:'))).toBe(
       false,
     );
   });

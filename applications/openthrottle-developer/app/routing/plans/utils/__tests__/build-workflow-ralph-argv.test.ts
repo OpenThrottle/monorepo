@@ -578,8 +578,22 @@ describe('getWorkflowRalphUiBaselineForDiff', () => {
 });
 
 describe('buildWorkflowRalphTuningDiffLabels', () => {
-  test('returns empty when options match baseline', () => {
-    expect(buildWorkflowRalphTuningDiffLabels(basePlanInput(), '')).toEqual([]);
+  test('returns empty when options match the shared defaults', () => {
+    expect(
+      buildWorkflowRalphTuningDiffLabels(
+        getDefaultWorkflowRalphRunOptionsInput({
+          planId: '0c2720a9-920f-4b16-865a-f803eb444e18',
+        }),
+        '',
+      ),
+    ).toEqual([]);
+  });
+
+  test('flags turning verbose logging and the worktree off as a divergence', () => {
+    const labels = buildWorkflowRalphTuningDiffLabels(basePlanInput(), '');
+
+    expect(labels.some((l) => l.includes('Debug CLI'))).toBe(true);
+    expect(labels.some((l) => l.toLowerCase().includes('worktree'))).toBe(true);
   });
 
   test('lists iterations when they diverge from defaults', () => {
@@ -738,19 +752,13 @@ describe('validateWorkflowRalphRunOptionsState', () => {
     expect(result.issues.some((i) => i.code === 'task_required')).toBe(true);
   });
 
-  test('fails when named worktree has an empty name', () => {
+  test('accepts a named worktree with a blank name — the name is derived', () => {
     const result = validateWorkflowRalphRunOptionsState(
       basePlanInput({ worktreeCli: 'named', worktreeName: '  ' }),
       '',
       { requireCliTargetIds: true },
     );
-    expect(result.ok).toBe(false);
-    if (result.ok) {
-      throw new Error('expected validation failure');
-    }
-    expect(result.issues.some((i) => i.code === 'worktree_name_empty')).toBe(
-      true,
-    );
+    expect(result.ok).toBe(true);
   });
 
   test('fails when cursor-only worktree flags are set with claude backend', () => {
@@ -840,12 +848,12 @@ describe('buildWorkflowRalphOptionArgs additional flag mapping', () => {
     expect(args).not.toContain('--skip-worktree-setup');
   });
 
-  test('treats a named worktree with a blank name as omit', () => {
+  test('derives the worktree name from the plan when the field is blank', () => {
     expect(
       resolveWorkflowRalphWorktreeArgvValue(
         basePlanInput({ worktreeCli: 'named', worktreeName: '   ' }),
       ),
-    ).toBeUndefined();
+    ).toBe('plan-0c2720a9');
   });
 });
 
@@ -894,7 +902,7 @@ describe('buildWorkflowRalphTuningDiffLabels coverage of each field', () => {
         model: 'opus',
         project: 'openthrottle-developer',
         prompt: '/custom-prompt',
-        worktreeCli: 'named',
+        worktreeCli: 'flag-only',
         worktreeName: 'feature',
       }),
       '',

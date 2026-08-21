@@ -1,8 +1,10 @@
 import {
+  DEFAULT_PLAN_RUN_RALPH_DEBUG_CLI,
   DEFAULT_PLAN_RUN_RALPH_ITERATIONS,
   DEFAULT_PLAN_RUN_RALPH_MODEL,
   DEFAULT_PLAN_RUN_RALPH_PROMPT,
   DEFAULT_PLAN_RUN_RALPH_RUNNER,
+  DEFAULT_PLAN_RUN_RALPH_WORKTREE_CLI,
   PLAN_RUN_CONFIG_VERSION,
 } from './plan-run-config-storage.constants.ts';
 import type {
@@ -17,7 +19,7 @@ import type {
  * @description Default Ralph subsection for v1 `run_config` (matches Configuration tab defaults).
  */
 export const getDefaultPlanRunConfigRalphV1 = (): PlanRunConfigRalphV1 => ({
-  debugCli: 'omit',
+  debugCli: DEFAULT_PLAN_RUN_RALPH_DEBUG_CLI,
   executionBackend: DEFAULT_PLAN_RUN_RALPH_RUNNER,
   iterationTimeoutText: '',
   iterations: DEFAULT_PLAN_RUN_RALPH_ITERATIONS,
@@ -28,7 +30,8 @@ export const getDefaultPlanRunConfigRalphV1 = (): PlanRunConfigRalphV1 => ({
   promptLayer: 'named',
   skipWorktreeSetup: false,
   worktreeBase: '',
-  worktreeCli: 'omit',
+  worktreeCli: DEFAULT_PLAN_RUN_RALPH_WORKTREE_CLI,
+  // Blank name means "derive it at enqueue", not "no worktree".
   worktreeName: '',
 });
 
@@ -76,7 +79,7 @@ export const getDefaultPlanWorkflowUiState = (options?: {
   const targetMode = resolveDefaultTargetMode({ planId, taskId });
 
   const workflowInput: PlanWorkflowRalphRunOptions = {
-    debugCli: 'omit',
+    debugCli: DEFAULT_PLAN_RUN_RALPH_DEBUG_CLI,
     executionBackend: DEFAULT_PLAN_RUN_RALPH_RUNNER,
     iterations: DEFAULT_PLAN_RUN_RALPH_ITERATIONS,
     model: DEFAULT_PLAN_RUN_RALPH_MODEL,
@@ -89,7 +92,7 @@ export const getDefaultPlanWorkflowUiState = (options?: {
     targetMode,
     taskId,
     worktreeBase: '',
-    worktreeCli: 'omit',
+    worktreeCli: DEFAULT_PLAN_RUN_RALPH_WORKTREE_CLI,
     worktreeName: '',
   };
 

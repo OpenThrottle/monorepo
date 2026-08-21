@@ -386,6 +386,9 @@ describe('PlanEnqueueService', () => {
         jobData: {
           executionBackend: 'cursor',
           planId: mockPlan.id,
+          // Server-side defaults: a worktree OpenThrottle names itself, plus verbose logging,
+          // even though this caller sent no `ralph` input at all.
+          ralph: { debug: 'verbose', worktree: 'plan-80864bba' },
           runKind: 'orchestrator',
         },
         priority: 10,
@@ -399,6 +402,25 @@ describe('PlanEnqueueService', () => {
         expect.anything(),
       );
       expect(mockAdd).not.toHaveBeenCalled();
+    });
+
+    test('records the injected worktree and verbose on the run config snapshot', async () => {
+      await service.enqueueOrchestrator({
+        branch: 'feature/test',
+        idempotencyKey: null,
+        mode: null,
+        planId: mockPlan.id,
+        priority: null,
+        taskId: null,
+        workingDirectory: null,
+      });
+
+      const recorded = mockRecordQueuedRun.mock.calls[0]?.[0];
+      expect(recorded).toMatchObject({
+        runConfigSnapshot: {
+          ralph: { debug: 'verbose', worktree: 'plan-80864bba' },
+        },
+      });
     });
 
     test('passes resolved task mode and taskId into job data', async () => {

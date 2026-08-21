@@ -1000,6 +1000,7 @@ export function RalphPlanRunTuningInputSchema(): z.ZodObject<
 > {
   return z.object({
     backend: z.string().nullish(),
+    disableWorktree: z.boolean().nullish(),
     iterationTimeoutSeconds: z.number().nullish(),
     iterations: z.number().nullish(),
     model: z.string().nullish(),
@@ -1598,6 +1599,7 @@ export function UpdateWorkspaceProfileInputSchema(): z.ZodObject<
     contactDisplayName: z.string().nullish(),
     contactEmail: z.string().nullish(),
     enabledEditors: z.array(WorkspaceEditorIdSchema).nullish(),
+    worktreeRoot: z.string().nullish(),
   });
 }
 

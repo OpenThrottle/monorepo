@@ -54,6 +54,36 @@ describe('hydratePlanRunConfigUiState', () => {
   });
 });
 
+describe('worktree + verbose defaults', () => {
+  test('a plan with no stored config hydrates worktree-on and verbose', () => {
+    const hydrated = hydratePlanRunConfigUiState(planId, null);
+
+    expect(hydrated.workflowInput.debugCli).toBe('verbose');
+    expect(hydrated.workflowInput.worktreeCli).toBe('named');
+    expect(hydrated.workflowInput.worktreeName).toBe('');
+  });
+
+  test('an explicit opt-out survives a serialize/hydrate round-trip', () => {
+    const workflowInput = getDefaultWorkflowRalphRunOptionsInput({ planId });
+    const json = serializePlanRunConfigUiState({
+      checkoutId: '',
+      iterationTimeoutText: '',
+      repositoryId: '',
+      workflowInput: {
+        ...workflowInput,
+        debugCli: 'omit',
+        worktreeCli: 'omit',
+      },
+      workingDirectory: '',
+    });
+
+    const hydrated = hydratePlanRunConfigUiState(planId, json);
+
+    expect(hydrated.workflowInput.debugCli).toBe('omit');
+    expect(hydrated.workflowInput.worktreeCli).toBe('omit');
+  });
+});
+
 describe('serializePlanRunConfigUiState', () => {
   test('round-trips with hydrate', () => {
     const workflowInput = getDefaultWorkflowRalphRunOptionsInput({ planId });

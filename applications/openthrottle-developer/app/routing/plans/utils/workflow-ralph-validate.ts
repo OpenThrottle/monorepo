@@ -102,13 +102,9 @@ export const validateWorkflowRalphRunOptionsState = (
     }
   }
 
-  if (input.worktreeCli === 'named' && input.worktreeName.trim() === '') {
-    issues.push({
-      code: 'worktree_name_empty',
-      message:
-        'Agent CLI worktree name is required when using named --worktree',
-    });
-  }
+  // A blank worktree name is the DEFAULT and means "derive plan-<short plan id> at enqueue", so it
+  // is never an error. Where there is no plan id to derive from (a task-only CLI preview), the argv
+  // builder simply omits the flag rather than emitting a nameless one.
 
   if (input.executionBackend !== 'cursor') {
     if (input.worktreeBase.trim() !== '') {

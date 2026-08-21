@@ -324,6 +324,94 @@ describe('parsePlanRunIterationTimeoutSeconds', () => {
   });
 });
 
+describe('programmatic run defaults', () => {
+  it('defaults a new plan to a named worktree with verbose logging', () => {
+    const ralph = getDefaultPlanRunConfigStorage({ planId }).ralph;
+
+    expect(ralph.debugCli).toBe('verbose');
+    expect(ralph.worktreeCli).toBe('named');
+    // Blank means "derive the name at enqueue", not "no worktree".
+    expect(ralph.worktreeName).toBe('');
+    expect(ralph.executionBackend).toBe('cursor');
+  });
+
+  it('keeps stored defaults and Configuration tab defaults identical', () => {
+    const ui = getDefaultPlanWorkflowUiState({ planId });
+
+    expect(ui.workflowInput.debugCli).toBe('verbose');
+    expect(ui.workflowInput.worktreeCli).toBe('named');
+    expect(planRunConfigFromWorkflowUiState(ui)).toEqual(
+      getDefaultPlanRunConfigStorage({ planId }),
+    );
+  });
+
+  it('round-trips the new defaults unchanged', () => {
+    const stored = getDefaultPlanRunConfigStorage({ planId });
+    const ui = workflowUiStateFromPlanRunConfig(planId, stored);
+
+    expect(planRunConfigFromWorkflowUiState(ui)).toEqual(stored);
+  });
+
+  it('does not report a freshly-defaulted plan as customized', () => {
+    expect(
+      planHasCustomRunConfig(
+        JSON.stringify(getDefaultPlanRunConfigStorage({ planId })),
+        { planId },
+      ),
+    ).toBe(false);
+  });
+});
+
+describe('back-compat for plans stored under the old defaults', () => {
+  const storedRalph = (
+    overrides: Record<string, unknown> = {},
+  ): Record<string, unknown> => ({
+    executionBackend: 'cursor',
+    iterationTimeoutText: '',
+    iterations: 10,
+    model: 'auto',
+    project: '',
+    prompt: '/agents-ralph',
+    promptFile: '',
+    promptLayer: 'named',
+    skipWorktreeSetup: false,
+    worktreeBase: '',
+    worktreeName: '',
+    ...overrides,
+  });
+
+  it('resolves ABSENT worktree/debug keys to the new defaults', () => {
+    const parsed = parsePlanRunConfigStorage({
+      ralph: storedRalph(),
+      target: { mode: 'plan', taskId: '' },
+      version: 1,
+      workspace: { workingDirectory: '' },
+    });
+
+    expect(parsed.ralph.debugCli).toBe('verbose');
+    expect(parsed.ralph.worktreeCli).toBe('named');
+  });
+
+  it('preserves a persisted explicit opt-out', () => {
+    const parsed = parsePlanRunConfigStorage({
+      ralph: storedRalph({ debugCli: 'omit', worktreeCli: 'omit' }),
+      target: { mode: 'plan', taskId: '' },
+      version: 1,
+      workspace: { workingDirectory: '' },
+    });
+
+    expect(parsed.ralph.debugCli).toBe('omit');
+    expect(parsed.ralph.worktreeCli).toBe('omit');
+  });
+
+  it('resolves a bare {"version":1} shell to the new defaults', () => {
+    const parsed = planRunConfigFromPlanStorage({ version: 1 }, { planId });
+
+    expect(parsed.ralph.debugCli).toBe('verbose');
+    expect(parsed.ralph.worktreeCli).toBe('named');
+  });
+});
+
 describe('buildRalphPlanRunTuningFromPlanRunConfig', () => {
   it('returns undefined for default storage', () => {
     expect(

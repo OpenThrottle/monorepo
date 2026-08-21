@@ -54,6 +54,11 @@ export const SettingsWorkspaceProfileForm = (
 
         <Form className="space-y-4" method="post">
           <input name="intent" type="hidden" value="updateProfile" />
+          <input
+            name="worktreeRoot"
+            type="hidden"
+            value={profile.worktreeRoot ?? ''}
+          />
           {profile.enabledEditors.map((editor) => (
             <input
               key={editor}
