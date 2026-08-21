@@ -10,18 +10,21 @@ import {
   TableRow,
 } from '@openthrottle/react-router-shadcn';
 import type { ScheduledJobCardFragment } from '~/__generated__/graphql';
+import { RUN_STATUS_COLOR } from '~/routing/schedule/data/data.run-status';
 import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
 import { formatWhen } from '~/routing/schedule/utils/format-when';
 
 export interface ScheduleTableProps {
   className?: string;
+  /** In-flight run count per schedule id, from `buildInFlightByJob`. Absent ids are idle. */
+  inFlightByJob?: Record<string, number>;
   jobs: ScheduledJobCardFragment[];
 }
 
 export const ScheduleTable = (
   props: ScheduleTableProps,
 ): React.ReactElement => {
-  const { className, jobs } = props;
+  const { className, inFlightByJob = {}, jobs } = props;
 
   // Hooks
 
@@ -71,9 +74,22 @@ export const ScheduleTable = (
                 SCHEDULE_COPY.repositoryNoneOption}
             </TableCell>
             <TableCell>
-              <Badge variant={job.enabled ? 'default' : 'secondary'}>
-                {job.enabled ? 'Enabled' : 'Disabled'}
-              </Badge>
+              <div className="flex flex-wrap items-center gap-1">
+                <Badge variant={job.enabled ? 'default' : 'secondary'}>
+                  {job.enabled ? 'Enabled' : 'Disabled'}
+                </Badge>
+                {/* Additive, not a replacement: a disabled schedule with a
+                    manual run in flight is a real state, and hiding either half
+                    of it would misreport what the row is doing. */}
+                {inFlightByJob[job.id] ? (
+                  <Badge color={RUN_STATUS_COLOR.running} variant="default">
+                    {SCHEDULE_COPY.tableRunningBadge}
+                    {inFlightByJob[job.id] > 1
+                      ? ` ×${inFlightByJob[job.id]}`
+                      : ''}
+                  </Badge>
+                ) : null}
+              </div>
             </TableCell>
             <TableCell>{formatWhen(job.nextRunAt)}</TableCell>
           </TableRow>

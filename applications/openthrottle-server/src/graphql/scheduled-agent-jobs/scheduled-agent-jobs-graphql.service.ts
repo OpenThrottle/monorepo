@@ -21,6 +21,7 @@ import {
   type ScheduledAgentJob,
   type ScheduledAgentJobDriverId,
   type ScheduledAgentJobRun,
+  type ScheduledAgentJobRunStatusCount,
   type ScheduledAgentJobSettings,
 } from '@openthrottle/nestjs-repositories';
 import { ScheduledAgentJobCancellationService } from '../../queues/scheduled-agent-jobs/scheduled-agent-job-cancellation.service';
@@ -91,6 +92,23 @@ export class ScheduledAgentJobsGraphqlService {
 
   getRun(runId: string): Promise<ScheduledAgentJobRun | null> {
     return this.jobsService.findRunById(runId);
+  }
+
+  /** Every not-yet-terminal run across all schedules, oldest-first. */
+  listInFlightRuns(limit?: number): Promise<ScheduledAgentJobRun[]> {
+    return this.jobsService.listInFlightRuns(limit);
+  }
+
+  /** Run counts grouped by status for runs created at or after `since`. */
+  countRunsByStatusSince(
+    since: Date,
+  ): Promise<ScheduledAgentJobRunStatusCount[]> {
+    return this.jobsService.countRunsByStatusSince(since);
+  }
+
+  /** Live, unwindowed counts of not-yet-terminal runs, grouped by status. */
+  countInFlightRunsByStatus(): Promise<ScheduledAgentJobRunStatusCount[]> {
+    return this.jobsService.countInFlightRunsByStatus();
   }
 
   async create(args: CreateArgs): Promise<ScheduledAgentJob> {

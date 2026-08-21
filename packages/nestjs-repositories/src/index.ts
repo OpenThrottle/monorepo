@@ -161,7 +161,10 @@ export type {
   ResolveScheduledAgentJobCheckoutPathInput,
   ResolveScheduledAgentJobCheckoutPathResult,
 } from './modules/scheduled-agent-jobs/scheduled-agent-job-checkout-path.service';
-export { ScheduledAgentJobRun } from './modules/scheduled-agent-jobs/scheduled-agent-job-run.entity';
+export {
+  SCHEDULED_AGENT_JOB_RUN_IN_FLIGHT_STATUSES,
+  ScheduledAgentJobRun,
+} from './modules/scheduled-agent-jobs/scheduled-agent-job-run.entity';
 export type {
   ScheduledAgentJobRunData,
   ScheduledAgentJobRunSettingsSnapshot,
@@ -177,6 +180,7 @@ export type {
   CreateScheduledAgentJobInput,
   CreateScheduledAgentJobRunInput,
   FinishScheduledAgentJobRunInput,
+  ScheduledAgentJobRunStatusCount,
   StartScheduledAgentJobRunInput,
   UpdateScheduledAgentJobInput,
 } from './modules/scheduled-agent-jobs/scheduled-agent-jobs.service';

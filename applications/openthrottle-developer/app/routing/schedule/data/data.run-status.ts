@@ -46,3 +46,18 @@ export const RUN_STATUS_COLOR: Record<string, BadgeProps['color']> = {
 export const RUN_STATUS_LABEL: Record<string, string> = {
   no_op: 'no work done',
 };
+
+/**
+ * @description Tailwind background class per run status, for the small status dot on the stats tiles.
+ * Kept in the same file as {@link RUN_STATUS_COLOR} so the hue vocabulary has one home: a status that
+ * reads blue on a badge reads blue on a tile. `OpenThrottleStatCard` takes a class rather than a
+ * colour name, which is why this is a second map instead of a reuse of the badge one.
+ */
+export const RUN_STATUS_DOT_CLASS: Record<string, string> = {
+  cancelled: 'bg-slate-300',
+  failed: 'bg-red-300',
+  no_op: 'bg-amber-300',
+  queued: 'bg-slate-300',
+  running: 'bg-blue-300',
+  succeeded: 'bg-green-300',
+};
