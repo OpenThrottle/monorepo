@@ -9,6 +9,9 @@ export { McpTransportType } from '@rekog/mcp-nest';
 /** @public */
 export type { NestjsMcpDeveloperBootstrapOptions } from './nestjs-openthrottle-mcp-bootstrap-options.interface.ts';
 
+/** @public */
 export { McpDeveloperMcpSurface } from './openthrottle-mcp-mcp-surface.ts';
+/** @public */
 export { NestjsMcpDeveloperModule } from './nestjs-openthrottle-mcp.module.ts';
+/** @public */
 export { NestjsMcpDeveloperService } from './nestjs-openthrottle-mcp.service.ts';

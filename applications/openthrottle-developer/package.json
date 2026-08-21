@@ -48,10 +48,8 @@
     "react-dnd": "catalog:",
     "react-dom": "catalog:",
     "react-router": "catalog:",
-    "react-router-dom": "catalog:",
     "recharts": "catalog:",
-    "sonner": "catalog:",
-    "vite-node": "catalog:"
+    "sonner": "catalog:"
   },
   "devDependencies": {
     "@openthrottle/react-router-testing": "workspace:^"

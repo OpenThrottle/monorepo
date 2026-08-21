@@ -30,7 +30,8 @@
   },
   "devDependencies": {
     "@faker-js/faker": "catalog:",
-    "@openthrottle/react-router-testing": "workspace:^"
+    "@openthrottle/react-router-testing": "workspace:^",
+    "sonner": "catalog:"
   },
   "license": "Apache-2.0",
   "nx": {

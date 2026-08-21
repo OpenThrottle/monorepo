@@ -13,7 +13,6 @@
     "@keyv/redis": "catalog:",
     "@openthrottle/nestjs-modules": "workspace:^",
     "ioredis": "catalog:",
-    "joi": "catalog:",
     "keyv": "catalog:"
   },
   "exports": {

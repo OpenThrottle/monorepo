@@ -13,4 +13,8 @@ export const PAGINATION_CONFIG = {
   siblingCount: 1,
 } as const;
 
+/**
+ * @description Shape of the pagination defaults, for consumers that accept an override.
+ * @public
+ */
 export type PaginationConfig = typeof PAGINATION_CONFIG;

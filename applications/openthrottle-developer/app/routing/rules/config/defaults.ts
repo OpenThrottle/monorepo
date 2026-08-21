@@ -1,1 +1,0 @@
-export const DEFAULT_RULES = 'DEFAULT_RULES';

@@ -328,6 +328,17 @@
         "src/run-server.ts",
         "src/nest-tool-handlers.ts",
         "src/nest/bootstrap-openthrottle-mcp-app.ts",
+        // Streamable-HTTP MCP surface. Shell-invoked container entrypoints with
+        // no in-repo importer, so knip cannot reach them via the import graph:
+        // Dockerfile.NestJS `mcp-development` runs `tsx src/bin-http.ts`, and the
+        // distroless `mcp` stage ships the bundle built from it. Declaring
+        // bin-http.ts here also covers run-server-http.ts and
+        // http/mcp-http-auth.middleware.ts, which it imports.
+        "src/bin-http.ts",
+        // Bundler for the above, run as `node esbuild.http.mjs` by the
+        // Dockerfile.NestJS `mcp-build` stage. Keeps the `esbuild` devDependency
+        // accounted for.
+        "esbuild.http.mjs",
       ],
       "project": ["src/**/*.ts"],
     },

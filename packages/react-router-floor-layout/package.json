@@ -7,12 +7,12 @@
   "dependencies": {
     "@openthrottle/react-router-shadcn": "workspace:^",
     "react": "catalog:",
-    "react-dom": "catalog:",
     "zod": "catalog:"
   },
   "description": "Source-first React Router floorplan editor: an engine-agnostic SVG canvas for arranging restaurant tables, stools, zones, and walls with native Pointer Events (touch-first live drag), pan/zoom, real-world units, undo/redo, and a zod-validated serializable layout model.",
   "devDependencies": {
-    "@openthrottle/react-router-testing": "workspace:^"
+    "@openthrottle/react-router-testing": "workspace:^",
+    "react-dom": "catalog:"
   },
   "license": "Apache-2.0",
   "main": "./src/index.ts",

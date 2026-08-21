@@ -176,7 +176,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
         />
       </head>
       <body className="flex min-h-screen flex-col">
-        {/* <GlobalHeader /> */}
         {children}
         <ScrollRestoration nonce={nonce} />
 
