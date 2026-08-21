@@ -1,11 +1,10 @@
 ---
 name: agents-ralph
 description: >-
-  Ralph loop: idea or PRD → OpenThrottle plan and tasks → one task at a time
-  (IN_PROGRESS → work → validate → COMPLETED → /github/commit). Progress in
-  plan_output_stream; record the merged squash on the work ledger (record_artifact / workflow-link-merge) only after merge. USE WHEN running
-  /agents-ralph, Ralph iterations, workflow-ralph injected plan context, or
-  executing OT plan tasks with Plan-Id and Task-Id traceability.
+  The Ralph prompt: turn an idea or PRD into an OpenThrottle plan, then execute
+  it a task at a time. USE WHEN running /agents-ralph, on a Ralph iteration, or
+  when workflow-ralph has injected plan context. Self-contained by design — the
+  CLI feeds this file to an agent as a standalone prompt.
 disable-model-invocation: false
 ---
 
@@ -13,10 +12,15 @@ disable-model-invocation: false
 
 **Ralph** is a technique: run a loop (read prompt → execute one step → repeat). You tune the prompt and docs when the agent goes wrong ([ghuntley.com/ralph](https://ghuntley.com/ralph)). This prompt defines our single workflow: start with an **idea or PRD**, turn it into a **plan and tasks in OpenThrottle** _(a GraphQL service backed by Postgres)_, then **execute one task at a time** (add tasks as the work reveals more work) until every task is done. Progress lives in OpenThrottle (plan, tasks, plan_output_stream); no file-based modes.
 
+> **Why this prompt restates the per-task discipline.** `workflow-ralph` reads this file and feeds
+> it to the agent as a standalone prompt, often in a foreign checkout where no other skill is
+> reachable. It must therefore be self-contained. The canonical statement lives in
+> [`ot-claude-loop`](../ot-claude-loop/SKILL.md) § The loop — when you change one, change both.
+
 ## What Ralph does
 
 1. **Input:** An idea or a PRD (JSON/Markdown or already in OpenThrottle). If it's rough, turn it into a **plan** and **tasks** in OpenThrottle — OpenThrottle MCP `create_plan` / `create_task` per [openthrottle.mdc](../../rules/commands/openthrottle.mdc). For a strict, hyper-detailed PRD, ensure plan/tasks in OpenThrottle match the PRD; required vs optional vs inferred attributes are defined in [Databases README.md](../../../databases/README.md).
-2. **Loop:** Pick one task → set `IN_PROGRESS` → do the work → validate (e.g. `nx affected --targets lint typecheck`) → set `COMPLETED` → **run `/github/commit`**. Do **not** record a commit artifact during the loop. Record only the **squash commit after the PR is actually merged**, as a work-ledger `git_commit` artifact. On a merge-queue-protected branch, `gh pr merge` can succeed by **enqueuing** the PR rather than merging it immediately, so ledger recording must wait until the PR shows `mergedAt` / `mergeCommitSha`. Resolve the landed SHA from the merged PR or from `main` after the merge, never from the branch head that was pushed. After merge, either call the openthrottle-mcp ledger tools (`attach_session_subject` with `planId`/optional `taskId`, then `record_artifact` type `git_commit`, payload `{repo, sha}`, optional PR message) or run `pnpm exec workflow-link-merge --plan <id> --sha <squash-sha> --repo <owner/repo>` (it orchestrates the same primitives). Add new tasks when the work reveals more work. Repeat until every task is `COMPLETED`.
+2. **Loop:** Pick one task → set `IN_PROGRESS` → do the work → validate (e.g. `nx affected --targets lint typecheck`) → set `COMPLETED` → **run `/github-commit`**. Do **not** record a commit artifact during the loop. Record only the **squash commit after the PR is actually merged**, as a work-ledger `git_commit` artifact. On a merge-queue-protected branch, `gh pr merge` can succeed by **enqueuing** the PR rather than merging it immediately, so ledger recording must wait until the PR shows `mergedAt` / `mergeCommitSha`. Resolve the landed SHA from the merged PR or from `main` after the merge, never from the branch head that was pushed. After merge, either call the openthrottle-mcp ledger tools (`attach_session_subject` with `planId`/optional `taskId`, then `record_artifact` type `git_commit`, payload `{repo, sha}`, optional PR message) or run `pnpm exec workflow-link-merge --plan <id> --sha <squash-sha> --repo <owner/repo>` (it orchestrates the same primitives). Add new tasks when the work reveals more work. Repeat until every task is `COMPLETED`.
 3. **Progress:** Plan and tasks live in OpenThrottle; decisions and logs go to **plan_output_stream** via `append_plan_output` / `get_plan_output`. No separate output files. When logging progress, pass `taskId` = the task you are **actively working** (not just the iteration seed) so output is attributed to that task and surfaces on the Task detail Output tab. One iteration can touch several tasks — tag the id of the task the log actually describes; omit `taskId` only for genuinely plan-level notes.
 
 ## Rules
@@ -27,11 +31,11 @@ disable-model-invocation: false
 - Task states: `BACKLOG`, `BLOCKED`, `CANCELED`, `COMPLETED`, `IN_PROGRESS`, `PENDING`, `QUEUED`, `SKIPPED`
 - **One task at a time.** Resume the lowest `sortOrder` `IN_PROGRESS` task first; otherwise pick the lowest `sortOrder` `PENDING` or `QUEUED`. Canonical list order is `sortOrder ASC`, `createdAt ASC` — not `createdAt` alone. Injected plan/task lists follow this order.
 - **Fix task order:** prefer MCP `reorder_plan_tasks` (GraphQL `reorderPlanTasks`) over delete-and-recreate when Ralph should run tasks in a different sequence. Batch `create_tasks` appends after the plan max when `sortOrder` is omitted per item.
-- **Commit frequently.** Run `/github/commit` when a task is completed and whenever the program needs to exit (e.g. before stopping or when handing off). Use conventional commits; include **Plan-Id** and **Task-Id** in the commit body or footer for traceability. Record commit hashes in task/stream as you go.
+- **Commit frequently.** Run `/github-commit` when a task is completed and whenever the program needs to exit (e.g. before stopping or when handing off). Use conventional commits; include **Plan-Id** and **Task-Id** in the commit body or footer for traceability. Record commit hashes in task/stream as you go.
 - **💰 Commit per task, but PUSH ONCE PER PLAN.** Committing is free; pushing costs a CI run. Every push to a branch with a _ready_ PR triggers the full suite, so an N-task plan used to burn N CI runs validating a branch nobody was reviewing yet — measured at ~78 CI runs/day, the single largest multiplier on CI spend. Keep the per-task commits (the footers are the traceability), and let them accumulate locally; push when the plan is done. One CI run then validates the whole batch — **the same total validation over fewer runs, never less validation**.
   - **Push mid-plan only when you must:** handing off, exiting, or a worktree at risk of being reaped. Prefer that over losing work — the cost of one extra run is trivial next to a lost plan.
   - **Do not** reach for `[skip ci]` on intermediate commits to achieve this. If the loop aborts midway it silently skips whichever commit ended up last, leaving unvalidated code on the branch.
-- **💰 Keep the PR in draft until the plan completes.** `/github/pull-request` already opens in draft, and `build` skips on draft PRs — so a draft PR is the gate that makes an early push cheap. Mark it ready (`gh pr ready`) only once the **last** task is `COMPLETED`, which is also when it is actually reviewable.
+- **💰 Keep the PR in draft until the plan completes.** `/github-pull-request` already opens in draft, and `build` skips on draft PRs — so a draft PR is the gate that makes an early push cheap. Mark it ready (`gh pr ready`) only once the **last** task is `COMPLETED`, which is also when it is actually reviewable.
 - **Merge queue behavior is asynchronous.** When `main` is protected by a merge queue, treat `gh pr merge --auto` as an **enqueue** step unless the PR already reports `mergedAt`. Do not say "merged" until the queue lands it; if Ralph or a follow-up session needs the shipped SHA for the OT work ledger, poll `gh pr view --json mergedAt,mergeCommitSha` or inspect `main`, then record only that landed SHA.
 
 ### Status updates
@@ -47,7 +51,7 @@ Always keep plan and task status in OpenThrottle up to date:
 
 - **`<promise>ERROR</promise>`:** Invalid input or critical failure. Log to stream.
 - **`<promise>INPUT_REQUIRED</promise>`:** User input needed (e.g. API key, approval). Leave task `IN_PROGRESS`; log what's needed.
-- **`<promise>COMPLETE</promise>`:** All tasks `COMPLETED`. No `PENDING` or `IN_PROGRESS`. Run `/github/commit` before exiting.
+- **`<promise>COMPLETE</promise>`:** All tasks `COMPLETED`. No `PENDING` or `IN_PROGRESS`. Run `/github-commit` before exiting.
 
 ## References
 

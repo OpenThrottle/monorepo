@@ -3,28 +3,29 @@ argument-hint: <planId1> <planId2> … <planIdN>
 arguments:
   planIds: string
 description: >-
-  Run the ot-plan-loop / agents-ralph per-task discipline across N OpenThrottle
-  plans as a fleet via a Dynamic Workflow. v1 is SEQUENTIAL (concurrency K=1):
-  each plan gets its own worktree+branch, one fresh subagent per task
-  (IN_PROGRESS → implement → validate → commit → COMPLETED), then a NORMAL PR
-  per plan — no auto-merge, never pushes to main, OT-only for plans/tasks.
-  USE WHEN the user runs /ot-workflow-orchestration <planId1> <planId2> …,
-  says "orchestrate these N plans", "run these plans as a fleet", or wants
-  several OpenThrottle plans driven to PRs back-to-back.
+  EXPERIMENTAL, unproven — at concurrency K=1 this is ot-claude-loop in a for
+  loop, and it has never been run. Prefer /ot-claude-loop for one plan. USE WHEN
+  the user explicitly runs /ot-workflow-orchestration with several plan ids.
 disable-model-invocation: true
 name: ot-workflow-orchestration
 ---
 
+> [!WARNING]
+>
+> **Experimental — not a proven path.** This skill has **zero recorded invocations**, and v1 runs at
+> concurrency **K=1**: each plan is executed strictly one after another, so it is
+> [`ot-claude-loop`](../ot-claude-loop/SKILL.md) in a `for` loop with none of the fan-out its name
+> implies. Real concurrency waits on OT plan `69f47e25`. For a single plan, reach for
+> `/ot-claude-loop` — 74 invocations behind it. Use this only when you explicitly want several plans
+> driven back-to-back unattended, and expect to debug the runner.
+
 This skill drives **N OpenThrottle plans to completion as a fleet**. It is the sanctioned entrypoint that **authorizes the `Workflow` tool** (multi-agent orchestration opt-in): when the user invokes `/ot-workflow-orchestration <planId…>`, you call `Workflow` with the checked-in runner below.
 
-## How it maps to ot-plan-loop / agents-ralph
+## How it maps to ot-claude-loop / agents-ralph
 
-A `Workflow` subagent **cannot invoke the built-in `/loop`** — so this skill does not shell out to `/ot-plan-loop`. Instead the runner **re-implements the ralph per-task discipline directly inside each subagent's prompt**: one fresh `agent()` per TASK (a context reset per task, exactly what `/loop` gives), all sharing ONE worktree per plan, then a finalize agent opens the PR.
+A `Workflow` subagent **cannot invoke the built-in `/loop`** — so this skill does not shell out to `/ot-claude-loop`. Instead the runner **re-implements the ralph per-task discipline directly inside each subagent's prompt**: one fresh `agent()` per TASK (a context reset per task, exactly what `/loop` gives), all sharing ONE worktree per plan, then a finalize agent opens the PR.
 
-The per-task prompt is a faithful port of the source-of-truth skills — keep them in sync:
-
-- [`skills/ot-plan-loop/SKILL.md`](../ot-plan-loop/SKILL.md) — the interactive `/loop` driver (steps 1–7 + teardown).
-- [`skills/agents-ralph/SKILL.md`](../agents-ralph/SKILL.md) — the underlying ralph discipline.
+The per-task prompt in the runner is a deliberate self-contained port: a `Workflow` subagent gets a prompt string, not the skill catalog, so it cannot follow a link. [`ot-claude-loop`](../ot-claude-loop/SKILL.md) § The loop is the canonical statement of that discipline — when it changes, update the runner's prompt to match.
 
 ## Invocation
 

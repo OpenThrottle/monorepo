@@ -22,16 +22,8 @@ export const OPENTHROTTLE_REPO_SKILL_PATHS: readonly RepoSkillPathEntry[] = [
     slug: 'brag-sheet',
   },
   {
-    repoRelativePath: '.agents/skills/create-readme/SKILL.md',
-    slug: 'create-readme',
-  },
-  {
     repoRelativePath: '.agents/skills/git-commit/SKILL.md',
     slug: 'git-commit',
-  },
-  {
-    repoRelativePath: '.agents/skills/grill-me/SKILL.md',
-    slug: 'grill-me',
   },
   {
     repoRelativePath: '.agents/skills/link-workspace-packages/SKILL.md',
@@ -40,22 +32,6 @@ export const OPENTHROTTLE_REPO_SKILL_PATHS: readonly RepoSkillPathEntry[] = [
   {
     repoRelativePath: '.agents/skills/monitor-ci/SKILL.md',
     slug: 'monitor-ci',
-  },
-  {
-    repoRelativePath: '.agents/skills/nx-generate/SKILL.md',
-    slug: 'nx-generate',
-  },
-  {
-    repoRelativePath: '.agents/skills/nx-import/SKILL.md',
-    slug: 'nx-import',
-  },
-  {
-    repoRelativePath: '.agents/skills/nx-plugins/SKILL.md',
-    slug: 'nx-plugins',
-  },
-  {
-    repoRelativePath: '.agents/skills/nx-run-tasks/SKILL.md',
-    slug: 'nx-run-tasks',
   },
   {
     repoRelativePath: '.agents/skills/nx-workspace/SKILL.md',
@@ -68,6 +44,10 @@ export const OPENTHROTTLE_REPO_SKILL_PATHS: readonly RepoSkillPathEntry[] = [
   {
     repoRelativePath: '.agents/skills/openthrottle-stack/SKILL.md',
     slug: 'openthrottle-stack',
+  },
+  {
+    repoRelativePath: '.agents/skills/ot-claude-loop/SKILL.md',
+    slug: 'ot-claude-loop',
   },
   {
     repoRelativePath: '.agents/skills/ot-plans/SKILL.md',

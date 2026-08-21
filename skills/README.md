@@ -6,19 +6,17 @@ We follow that standard as far as it goes. Do **not** invent a parallel skill fo
 
 ```bash
 # https://github.com/nrwl/nx-ai-agents-config
-pnpm dlx skills add https://github.com/nrwl/nx-ai-agents-config --skill link-workspace-packages monitor-ci nx-generate nx-import nx-plugins nx-run-tasks nx-workspace --agent universal
+pnpm dlx skills add https://github.com/nrwl/nx-ai-agents-config --skill link-workspace-packages monitor-ci nx-workspace --agent universal
 
 # https://github.com/steipete/agent-scripts#agent-scripts
-pnpm dlx skills add https://github.com/steipete/agent-scripts --skill create-cli frontend-design skill-cleaner --agent universal
+pnpm dlx skills add https://github.com/steipete/agent-scripts --skill frontend-design --agent universal
 
 # https://github.com/shadcn/improve#improve
 pnpm dlx skills add https://github.com/shadcn/improve --skill improve --agent universal
 
 # https://github.com/mattpocock/skills?tab=readme-ov-file
-pnpm dlx skills add https://github.com/mattpocock/skills --skill improve grilling grill-me grill-with-docs handoff teach writing-great-skills --agent universal
+pnpm dlx skills add https://github.com/mattpocock/skills --skill grilling --agent universal
 
-# https://microsoft.github.io/SkillOpt
-pnpm dlx skills add https://github.com/microsoft/SkillOpt --agent universal
 
 - secret-scanning
 - visual-plan
@@ -76,13 +74,12 @@ The layout every tool reads is built by our own [`skill-sync`](./skill-sync/READ
 
 **GitHub workflow skills** (formerly the `.cursor/commands/github/*` Cursor commands — now portable across every agent):
 
-- [`github-branch/`](./github-branch/) — fork a new branch of work
 - [`github-commit/`](./github-commit/) — write a conventional-commits message from the diff
-- [`github-create-issue/`](./github-create-issue/) — turn descriptions into GitHub issues
-- [`github-merge/`](./github-merge/) — prepare the merge commit message for a PR
 - [`github-pull-request/`](./github-pull-request/) — create or update a great Pull Request
 - [`github-squash/`](./github-squash/) — squash the branch to a single commit
-- [`github-summarize/`](./github-summarize/) — bullet-point summary for squash-and-merge
+
+Branches come from `pnpm run worktree:new <name>`, the one entrypoint for a branch plus its
+worktree — not from a skill.
 
 **Infrastructure:**
 
@@ -132,6 +129,54 @@ Then:
 > [!TIP]
 >
 > Run `npx skills --help` to see everything the CLI can do (`add`, `use`, `find`, `update`, `init`, and more).
+
+## 🎯 Writing a skill that earns its context
+
+Harvested from the vendored `writing-great-skills` skill before it was retired (2026-08-20).
+A skill exists to wrangle determinism out of a stochastic system: **predictability** — the agent
+taking the same _process_ every run — is the root virtue, and every rule below serves it.
+
+**Pick the invocation mode deliberately.** A model-invocable skill keeps its `description` in every
+session's context window whether or not it fires. A skill with `disable-model-invocation: true`
+costs zero context — only a human typing its name reaches it — but spends _your_ memory instead,
+since you become the index. Choose model-invocation only when the agent, or another skill, must
+reach it unprompted.
+
+**The description is a routing decision, not a summary.** It answers one question: _should the model
+open this file right now?_ So:
+
+- Front-load the distinctive word — that is where the invocation work happens.
+- One trigger per branch. Synonyms that rename the same branch are duplication paid for twice.
+- Cut identity that the body already carries. Keep triggers plus any "when another skill needs…"
+  clause, and nothing else.
+- Keep the explicit not-this-skill disambiguators. A line pointing away from a neighbouring skill
+  earns its bytes.
+
+**Rank content by how immediately it is needed.** Steps in `SKILL.md` for what the agent does in
+order; reference in `SKILL.md` for what it consults on demand; a linked sibling file for reference
+only some runs reach. Push too little down and the top bloats; push too much and you hide what the
+agent needs. Branching is the cleanest test: inline what every run needs, disclose what only some
+runs reach.
+
+**End each step on a checkable completion criterion.** "Every modified model accounted for" beats
+"produce a change list" — a vague criterion invites the agent to stop early.
+
+**Split only when the cut earns it.** Split off a model-invocable skill when a distinct trigger word
+should fire it on its own. Split a run of steps when the steps still ahead tempt the agent to rush
+the one in front of it.
+
+**Prune on a schedule.** Keep each meaning in exactly one place. Then test each sentence in
+isolation: does it change behaviour versus what the model already does by default? If not, delete
+the whole sentence rather than trimming words from it. Most prose that fails this test should go.
+
+**Prompt the positive.** Steering by prohibition backfires — naming the banned behaviour makes it
+more available, not less. State the target behaviour instead, and keep a prohibition only as a hard
+guardrail you cannot phrase positively, paired with what to do instead.
+
+**Failure modes worth naming:** _sediment_ (stale layers that settle because adding feels safe and
+removing feels risky — the default fate of any skill without a pruning discipline), _sprawl_ (too
+long even when every line is live), _duplication_, and _no-ops_ (lines the model already obeys, so
+you pay context to say nothing).
 
 ## 📚 See also
 

@@ -1,15 +1,11 @@
 ---
 name: openthrottle-stack
 description: >-
-  OpenThrottle platform slices beyond generators and OT plans: NestJS GraphQL
-  in openthrottle-server (Result/ListResult/PaginatedResult, deprecate instead
-  of breaking schema); Postgres/pgvector, migrations, and ingest in
-  databases/README.md; React Router UI in openthrottle-developer and
-  @openthrottle/react-router-shadcn; packages/openthrottle-mcp GraphQL-only
-  boundary, auth, verification-environment. USE WHEN changing openthrottle-server,
-  openthrottle-developer, databases or database:import-docs, embeddings (Ollama vs
-  hosted), packages/openthrottle-mcp, verify-openthrottle-mcp-env, or OpenThrottle
-  schema and semantic ingest—not for routine OT plan CRUD (see ot-plans).
+  Conventions for the OpenThrottle platform itself. USE WHEN changing
+  openthrottle-server, openthrottle-developer, databases or database:import-docs,
+  embeddings, packages/openthrottle-mcp, or the GraphQL schema and semantic
+  ingest. Not for routine OT plan CRUD (see ot-plans), SQL migrations
+  (ot-postgres), or scaffolding (openthrottle-generators).
 ---
 
 # OpenThrottle stack (server, data, developer app, MCP)
@@ -21,7 +17,7 @@ description: >-
 - You touch **`applications/openthrottle-developer`** (routes, loaders, GraphQL client).
 - You extend or debug **`packages/openthrottle-mcp`** (tools, env, smoke checks).
 
-Use **openthrottle-generators** for scaffolding, **nx-workspace** / **nx-run-tasks** for graph and targets, **ot-plans** for OpenThrottle plans/tasks and MCP traceability, and `tools/workflows/README.md` for the Ralph CLI and queues.
+Use **openthrottle-generators** for scaffolding, **nx-workspace** for graph and targets, **ot-plans** for OpenThrottle plans/tasks and MCP traceability, **agents-ralph** for the per-task execution discipline.
 
 ## How this fits other skills
 
@@ -32,7 +28,7 @@ Use **openthrottle-generators** for scaffolding, **nx-workspace** / **nx-run-tas
 | Ralph loop prompt (one task at a time)                     | **agents-ralph** — `.agents/skills/agents-ralph/SKILL.md`                       |
 | Ralph CLI, BullMQ mental model                             | `tools/workflows/README.md` (no skill)                                          |
 | Nx graph, `nx show project`, affected                      | **nx-workspace** — `.agents/skills/nx-workspace/SKILL.md`                       |
-| Run `nx` targets                                           | **nx-run-tasks** — `.agents/skills/nx-run-tasks/SKILL.md`                       |
+| Run `nx` targets                                           | **nx-workspace** — `.agents/skills/nx-workspace/SKILL.md`                       |
 | **SQL migrations / table comments**                        | **ot-postgres** — `.agents/skills/ot-postgres/SKILL.md`                         |
 | **This file**                                              | Server conventions, DB/embeddings, developer UI, openthrottle-mcp package       |
 

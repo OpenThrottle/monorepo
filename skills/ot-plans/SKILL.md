@@ -1,14 +1,12 @@
 ---
 name: ot-plans
 description: >-
-  OpenThrottle (OT) plans and tasks via the openthrottle-mcp MCP server (GraphQL
-  to openthrottle-server). USE WHEN creating or updating plans/tasks, plans in
-  OT only, failing loudly when MCP is unavailable (no Markdown plan fallbacks),
-  Plan-Id and Task-Id in commits, recording a merged squash on the work ledger
-  (record_artifact / workflow-link-merge) after merge, or the user mentions
-  OpenThrottle, OT, openthrottle-mcp, plan UUIDs, task UUIDs, /ot commands,
-  semantic search over plans, or git–OT traceability. Covers when to use OT vs
-  docs-mcp vs databases/README and plan/task lifecycle.
+  OpenThrottle plans and tasks via the openthrottle-mcp server. USE WHEN
+  creating, reading or updating plans/tasks, searching the plans knowledge base,
+  putting Plan-Id/Task-Id in a commit, recording a merged squash on the work
+  ledger, or the user mentions OT, a plan or task UUID, or git–OT traceability.
+  Plans live in OT only — never fall back to Markdown. To execute a plan see
+  ot-claude-loop.
 ---
 
 # OpenThrottle plans and MCP traceability
@@ -46,7 +44,31 @@ GraphQL-only boundary to **openthrottle-server**. Typical tools:
 
 **Author and assignee** on plans must be the **GitHub username** (not display name). When `GITHUB_USER` is set, the MCP uses it for author/assignee.
 
-The **`/ot/*`** slash skills are authored under `skills/ot-*` and fanned out by skill-sync to `.agents/skills/ot-*` (read natively by Cursor) and `.claude/skills/ot-*` (Claude Code); they instruct use of these tools.
+## Executing a plan
+
+The per-task discipline — one task `IN_PROGRESS` at a time, work, validate, flip to `COMPLETED`,
+commit with `Plan-Id:` / `Task-Id:` — is stated canonically in
+[`ot-claude-loop`](../ot-claude-loop/SKILL.md) § The loop. Do not restate it here.
+
+## Common operations
+
+The four thin `/ot/*` slash wrappers (`ot-ask`, `ot-create-plan`, `ot-edit-task`,
+`ot-list-by-status`) were retired into this section — each was a restatement of one MCP call. The
+conventions they carried are worth keeping:
+
+- **Ask the knowledge base.** Prefer `semantic_search` for semantic questions, `list_sources` to
+  enumerate what is indexed, and `get_document` (or `knowledge-base://chunk/{id}`) for full chunk
+  content. For "what did I work on yesterday / in the last 7 days", use
+  `get_activity_by_date` — `date` (`YYYY-MM-DD`) for one day, `daysBack` (1–365) for a window.
+  Answer only from retrieved chunks; if nothing relevant comes back, say so rather than inventing.
+- **Create a plan.** `create_plan` needs `title`; infer `author` (GitHub handle) and `category`
+  from context when absent, and confirm a provided `category` actually fits. Use the atomic
+  `create_plans` / `create_tasks` for batches. Report the created plan and task ids so the user can
+  act on them. **Never start executing a plan or task unless explicitly told to.**
+- **Edit a task.** `get_task` to load it when you need current state, `update_task` with the id and
+  only the changed fields. Report what changed.
+- **List by status.** `list_plans_by_status` with `PENDING`, `IN_PROGRESS`, `COMPLETED`, `BLOCKED`,
+  or `SKIPPED`. "The backlog" means `PENDING` — default to it when the user names no status.
 
 ## Commits while working on OT plans/tasks
 

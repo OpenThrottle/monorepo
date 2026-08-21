@@ -1,12 +1,10 @@
 ---
-name: ot-plan-loop
+name: ot-claude-loop
 description: >-
-  Drive an OpenThrottle plan to completion with the built-in /loop: execute its
-  tasks one at a time (IN_PROGRESS → work → validate → COMPLETED), keep plan/task
-  status synced in OT, narrate to plan_output_stream, commit per task with
-  Plan-Id/Task-Id, open a PR, then tear down the worktree once the PR is
-  confirmed. USE WHEN the user runs /ot-plan-loop <planId>,
-  says "loop over plan <id>", or wants a plan executed autonomously in a worktree.
+  Drive one OpenThrottle plan to a PR with the built-in /loop, a task at a time
+  in an isolated worktree. USE WHEN the user runs /ot-claude-loop <planId>, says
+  "loop over plan <id>", or wants a plan executed autonomously. Canonical source
+  of the per-task discipline.
 argument-hint: <planId>
 arguments:
   planId: string
@@ -17,12 +15,20 @@ Your job is to run the built-in **`/loop`** over OpenThrottle plan **`$planId`**
 
 ## Setup (once, before the loop)
 
-1. **Work in an isolated worktree on a feature branch**, never on the base checkout. Create the branch with `/github-branch` (name it for the plan, e.g. `feat/openthrottle-drivers`, `ot/cli-allow-list`). Runs to date have lived in dedicated `loop-plan-*` worktrees so the main checkout's server + OT MCP stay up.
+1. **Work in an isolated worktree on a feature branch**, never on the base checkout. Create both with `pnpm run worktree:new <name>` — the one entrypoint (name it for the plan, e.g. `feat/openthrottle-drivers`, `ot/cli-allow-list`; rename the generated branch with `git branch -m` if you want a different prefix). Runs to date have lived in dedicated `loop-plan-*` worktrees so the main checkout's server + OT MCP stay up.
 2. **Load the plan and tasks** — `get_plan(planId)` + `get_tasks_by_plan_id(planId)` (or `get_remaining_tasks_for_plan`). Canonical order is `sortOrder ASC, createdAt ASC`. If tasks are out of sequence, fix with `reorder_plan_tasks` (never delete-and-recreate).
 3. **Set the plan `IN_PROGRESS`** via `update_plan(planId, { status: 'IN_PROGRESS' })` if it isn't already.
 4. **A fresh worktree needs codegen before app tests will collect** — run `pnpm nx run-many --target=codegen-graphql --all` if the `__generated__` output is missing.
 
 ## The loop (one task at a time)
+
+> **This section is the canonical statement of the per-task discipline.** Change it here and
+> nowhere else. Two places restate it deliberately, because each is injected as a standalone
+> prompt with no access to this file: [`agents-ralph`](../agents-ralph/SKILL.md) (read by the
+> `workflow-ralph` CLI) and
+> [`ot-workflow-orchestration`'s runner](../ot-workflow-orchestration/runner.workflow.js) (a
+> per-subagent prompt string). Keep those two in sync when you edit this. Everything else links
+> here.
 
 Each `/loop` iteration works exactly one task. Resume the lowest-`sortOrder` `IN_PROGRESS` task first; otherwise pick the lowest `sortOrder` `PENDING`/`QUEUED`.
 
@@ -42,8 +48,11 @@ Each `/loop` iteration works exactly one task. Resume the lowest-`sortOrder` `IN
 ## Finishing
 
 1. **Verify every task is closed, THEN set the plan `COMPLETED`.** First re-fetch `get_tasks_by_plan_id(planId)` (or `get_remaining_tasks_for_plan`) and confirm **zero** tasks are `IN_PROGRESS`, `PENDING`, or `QUEUED`. Flip any stranded task to `COMPLETED` (or `BLOCKED`/`SKIPPED`) before continuing — a committed task left `IN_PROGRESS` is the usual culprit (see the loop invariant). Only once the list is clean, `update_plan(planId, { status: 'COMPLETED' })`. There is no server-side downward reconcile in **either** direction: the plan can read `COMPLETED` while tasks are still `IN_PROGRESS`, so this explicit re-fetch is mandatory — never skip it.
-2. **Open a Draft PR** with `/github-pull-request` (conventional-commit title, the repo PR template, testing steps phrased as things to do) — this is the single push for the whole plan. Leave it in **draft**: `build` skips on draft PRs, so a draft is what keeps any later push cheap. Mark it ready (`gh pr ready`) only when the work is genuinely up for review. **Capture the PR URL** — a real PR (branch pushed to the remote, PR object created) is the precondition for teardown below.
-3. **Stop the loop** once the PR is open. Do **not** merge.
+2. Before continuing ensure `nx run-many -t lint test typecheck format-write check:local` all complete, flagging any errors we encounter
+3. To minimize friction merging with main we will run `/github-squash` to condense our PR to a single commit
+4. Next we will fetch main `git fetch origin main:main` and rebase the branch against `main`
+5. **Open a Draft PR** with `/github-pull-request` (conventional-commit title, the repo PR template, testing steps phrased as things to do) — this is the single push for the whole plan. Leave it in **draft**: `build` skips on draft PRs, so a draft is what keeps any later push cheap. Mark it ready (`gh pr ready`) only when the work is genuinely up for review. **Capture the PR URL** — a real PR (branch pushed to the remote, PR object created) is the precondition for teardown below.
+6. **Stop the loop** once the PR is open. Do **not** merge.
 
 ## Teardown the worktree (only after a successful PR)
 

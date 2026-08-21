@@ -399,7 +399,7 @@ describe('sweepAbandonedStarts', () => {
       repoRoot: tmpRoot,
       sessionId: 'sess-stale',
       skillName: 'ot-plans',
-      startedAt: '2026-08-01T00:00:00.000Z',
+      startedAt: '2026-07-31T00:00:00.000Z',
       startsDir,
       toolUseId: 'tu-stale',
     });
@@ -462,7 +462,13 @@ describe('sweepAbandonedStarts', () => {
     expect(posted.length).toBe(1);
     expect(posted[0].outcome).toBe('abandoned');
     expect(posted[0].skillName).toBe('ot-plans');
-    expect(posted[0].durationMs).toBeUndefined();
+    // Stamped when the abandonment was DETECTED, not with the session file's
+    // mtime — an mtime stamp lands the row next to the start that wrote it and
+    // makes every abandonment look instantaneous.
+    expect(posted[0].occurredAt).toBe(new Date(now).toISOString());
+    // Observed lower bound on how far the run got: last file signal (mtime,
+    // now − 24h) minus started_at (now − 48h) = 24h.
+    expect(posted[0].durationMs).toBe(24 * 60 * 60 * 1000);
 
     expect(fs.existsSync(stalePath)).toBe(false);
     expect(

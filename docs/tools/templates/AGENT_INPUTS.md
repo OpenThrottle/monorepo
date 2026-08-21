@@ -24,13 +24,13 @@ Agents (e.g. Cursor, Ralph) should receive the following rules. Cursor activates
 
 ### 1.2 Agent skills (repo-local)
 
-Invoke skills **before** writing code when the task matches their **USE WHEN** triggers. For `@tools/generators`, use **openthrottle-generators** first (not **nx-generate**).
+Invoke skills **before** writing code when the task matches their **USE WHEN** triggers. For `@tools/generators`, use **openthrottle-generators** first.
 
-| Path (SSOT)                                            | Purpose                                                                                                                                           |
-| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.agents/skills/openthrottle-generators/SKILL.md`      | `@tools/generators`: `NX_ISOLATE_PLUGINS=false`, `pnpm nx`, list/describe/`--list`, react-router/nestjs/react/package/folders; AGENT_USAGE        |
-| **AGENTS.md** (repo root) § OpenThrottle Agent Skills  | Index: **openthrottle-stack**, **ot-plans**, **agents-ralph**, **github-commit**; generic Nx: **nx-workspace**, **nx-generate**, **nx-run-tasks** |
-| **AGENTS.md** § General Guidelines for working with Nx | Nx task execution (`pnpm nx run`, affected), Nx MCP, when to use **nx_docs**                                                                      |
+| Path (SSOT)                                            | Purpose                                                                                                                                    |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `.agents/skills/openthrottle-generators/SKILL.md`      | `@tools/generators`: `NX_ISOLATE_PLUGINS=false`, `pnpm nx`, list/describe/`--list`, react-router/nestjs/react/package/folders; AGENT_USAGE |
+| **AGENTS.md** (repo root) § OpenThrottle Agent Skills  | Index: **openthrottle-stack**, **ot-plans**, **agents-ralph**; generic Nx: **nx-workspace**                                                |
+| **AGENTS.md** § General Guidelines for working with Nx | Nx task execution (`pnpm nx run`, affected), Nx MCP, when to use **nx_docs**                                                               |
 
 Slash discovery reads `.agents/skills/<slug>` (Claude Code, Cursor 2.4+, Codex, OpenCode) and the generated `.claude/skills/<slug>` fan-out; both resolve back to `skills/<slug>` for OT-owned skills.
 
@@ -107,30 +107,30 @@ Agents should encounter "check generators first" in **multiple** places so they 
 
 ### 3.1 Primary entry points (must mention generator-first)
 
-| Location                                    | Content                                                                                                                                                   |
-| ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **AGENTS.md** (repo root)                   | § Scaffolding: **openthrottle-generators** before nx-generate; § Cursor Agent Skills; link to AGENT_USAGE.md and `.agents/rules/personal-generators.mdc`. |
-| **`.agents/rules/README.md`**               | § Agent behavior: "Generators first" + link to personal-generators.mdc and AGENT_USAGE.md.                                                                |
-| **`.agents/rules/personal-generators.mdc`** | MANDATORY rule: check generators first, required workflow, list of generators, link to AGENT_USAGE.md.                                                    |
-| **docs/tools/templates/AGENT_USAGE.md**     | Full generator-first policy, discover → describe → list → execute, NX_ISOLATE_PLUGINS, examples.                                                          |
+| Location                                    | Content                                                                                                                                      |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| **AGENTS.md** (repo root)                   | § Scaffolding: **openthrottle-generators** first; § Cursor Agent Skills; link to AGENT_USAGE.md and `.agents/rules/personal-generators.mdc`. |
+| **`.agents/rules/README.md`**               | § Agent behavior: "Generators first" + link to personal-generators.mdc and AGENT_USAGE.md.                                                   |
+| **`.agents/rules/personal-generators.mdc`** | MANDATORY rule: check generators first, required workflow, list of generators, link to AGENT_USAGE.md.                                       |
+| **docs/tools/templates/AGENT_USAGE.md**     | Full generator-first policy, discover → describe → list → execute, NX_ISOLATE_PLUGINS, examples.                                             |
 
 ### 3.2 Supporting references
 
-| Location                                                              | Content                                                                                                    |
-| --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| **AGENTS.md**                                                         | § Code style: `.agents/rules/` SSOT; § Generators links to AGENT_USAGE.md.                                 |
-| **RULES_TO_GENERATORS_MAP.md**                                        | Maps which rules apply to which generator; use when auditing or applying rules per artifact type.          |
-| **AUDIT_SCOPE.md**                                                    | Defines what’s in scope for component/template audits (apps, packages, artifact types).                    |
-| **AUDIT_CHECKLIST.md**                                                | Per-artifact checklist and quick-flag list; optional script: `pnpm run audit:templates-compliance`.        |
-| **AGENT_INPUTS.md** (this doc)                                        | Single spec for what to provide to agents: rules list, example commands, discoverability.                  |
-| **[agent-editor-folders.md](../../monorepo/agent-editor-folders.md)** | Folder layout, symlink matrix, where to edit — not rule/skill bodies (see §1).                             |
-| **openthrottle-generators** skill                                     | `.agents/skills/openthrottle-generators/SKILL.md` — invoke before **nx-generate** for `@tools/generators`. |
+| Location                                                              | Content                                                                                             |
+| --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| **AGENTS.md**                                                         | § Code style: `.agents/rules/` SSOT; § Generators links to AGENT_USAGE.md.                          |
+| **RULES_TO_GENERATORS_MAP.md**                                        | Maps which rules apply to which generator; use when auditing or applying rules per artifact type.   |
+| **AUDIT_SCOPE.md**                                                    | Defines what’s in scope for component/template audits (apps, packages, artifact types).             |
+| **AUDIT_CHECKLIST.md**                                                | Per-artifact checklist and quick-flag list; optional script: `pnpm run audit:templates-compliance`. |
+| **AGENT_INPUTS.md** (this doc)                                        | Single spec for what to provide to agents: rules list, example commands, discoverability.           |
+| **[agent-editor-folders.md](../../monorepo/agent-editor-folders.md)** | Folder layout, symlink matrix, where to edit — not rule/skill bodies (see §1).                      |
+| **openthrottle-generators** skill                                     | `.agents/skills/openthrottle-generators/SKILL.md` — invoke first for `@tools/generators`.           |
 
 ### 3.3 Recommendations for implementation
 
 - **AGENTS.md:** Keep the Generators section at the top (or immediately after Nx) so agents see it early. Explicitly say: "Before writing new code, components, or services, check generators first (see AGENT_USAGE.md and personal-generators.mdc)."
 - **Cursor rules:** Ensure `personal-generators.mdc` has `alwaysApply: true` (already set) so it’s always in context via the `.cursor/rules/` symlink.
-- **Skills / onboarding:** Direct agents to **openthrottle-generators** (`.agents/skills/openthrottle-generators/SKILL.md`) before scaffolding: `NX_ISOLATE_PLUGINS=false pnpm nx list @tools/generators`, then AGENT_USAGE.md. Nx workspace/tasks: **nx-workspace** / **nx-run-tasks** (see AGENTS.md § Cursor Agent Skills).
+- **Skills / onboarding:** Direct agents to **openthrottle-generators** (`.agents/skills/openthrottle-generators/SKILL.md`) before scaffolding: `NX_ISOLATE_PLUGINS=false pnpm nx list @tools/generators`, then AGENT_USAGE.md. Nx workspace/tasks: **nx-workspace** (see AGENTS.md § Cursor Agent Skills).
 
 ---
 

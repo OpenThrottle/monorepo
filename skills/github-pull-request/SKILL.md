@@ -1,6 +1,6 @@
 ---
 name: github-pull-request
-description: Analyze branch commits and diff, then create or update a Pull Request via gh with template-compliant title and body. USE WHEN the user runs /github/pull-request, wants to open or update a PR, or the branch is ready for review. Returns a clickable PR URL.
+description: Analyze branch commits and diff, then create or update a Pull Request via gh with template-compliant title and body. USE WHEN the user runs /github-pull-request, wants to open or update a PR, or the branch is ready for review. Returns a clickable PR URL.
 disable-model-invocation: false
 ---
 
@@ -8,7 +8,7 @@ Your job is to look at all commits on the current branch and summarize them into
 
 ## Process
 
-1. **Check git status** - Ensure working directory is clean. If there are unstaged changes, run `/github/commit` first
+1. **Check git status** - Ensure working directory is clean. If there are unstaged changes, run `/github-commit` first
 2. **Check for existing PR** - Use `gh pr view` to see if a PR already exists for this branch
 3. **Analyze commits** - Review all commits on this branch compared to the base branch:
    - Use `git log --oneline <base-branch>..HEAD` to see commit messages
@@ -21,7 +21,7 @@ Your job is to look at all commits on the current branch and summarize them into
 
 - **ALWAYS** follow the rules in `.cursor/rules/commands/github.mdc`
 - **ALWAYS** Check for an existing PR using `gh pr view` and incorporate any information already present
-- **ALWAYS** If there are unstaged changes, run `/github/commit` first
+- **ALWAYS** If there are unstaged changes, run `/github-commit` first
 - **ALWAYS** Generate a PR title following conventional commits format based on the primary change type (see rules for guidelines)
 - **ALWAYS** Update the existing `Pull Request` if one exists, otherwise create a new one
 - **ALWAYS** Return a clickable URL to the PR upon completion

@@ -520,8 +520,15 @@ export const completeOpenStartsForSession = async ({
 
 /**
  * Sweep abandoned starts: files whose session is NOT the current one and whose
- * mtime is older than `maxAgeMs`. Emit one `abandoned` outcome (duration null)
- * per open start, then remove the file. Fail-open; returns the count swept.
+ * mtime is older than `maxAgeMs`. Emit one `abandoned` outcome per open start,
+ * stamped at detection time with `duration_ms` set to the observed lower bound
+ * (last file signal − started_at), then remove the file. Fail-open; returns the
+ * count swept.
+ *
+ * `abandoned` means the session ended without a `Stop` that resolved this start
+ * — a killed process, a closed terminal, a reaped worktree. It does NOT mean
+ * the skill errored, and it is NOT a declined confirmation gate: declining one
+ * still ends the turn normally, so that path records `success`.
  *
  * @public
  */
@@ -586,7 +593,14 @@ export const sweepAbandonedStarts = async ({
       sessionId,
       startsDir: dir,
     });
-    const abandonedAt = new Date(mtimeMs).toISOString();
+    // Stamp the row when the abandonment is DETECTED, not with the session
+    // file's mtime — an mtime timestamp lands the row alongside the start that
+    // wrote it, making every abandonment look instantaneous.
+    const detectedAt = new Date(now).toISOString();
+    // The session went silent at mtime, so mtime − started_at is the observed
+    // lower bound on how far the run got. Without it an abandoned row says
+    // nothing about how much work was lost.
+    const lastSignalMs = mtimeMs;
     const seen = new Set<string>();
     for (const start of starts) {
       const key = startCorrelationKey(start);
@@ -594,14 +608,18 @@ export const sweepAbandonedStarts = async ({
         continue;
       }
       seen.add(key);
+      const startedMs = Date.parse(String(start.started_at));
+      const observedMs = Number.isFinite(startedMs)
+        ? Math.max(0, lastSignalMs - startedMs)
+        : null;
       const event = buildOutcomeEvent({
-        durationMs: null,
+        durationMs: observedMs,
         outcome: SKILL_USAGE_OUTCOMES.ABANDONED,
         repoRoot,
         sessionId:
           typeof start.session_id === 'string' ? start.session_id : sessionId,
         skillName: typeof start.skill_name === 'string' ? start.skill_name : '',
-        timestamp: abandonedAt,
+        timestamp: detectedAt,
         toolUseId:
           typeof start.tool_use_id === 'string' ? start.tool_use_id : null,
       });

@@ -1,16 +1,11 @@
 ---
 name: ot-onboarding
 description: >-
-  The front-door orientation skill for OpenThrottle — the "kitchen sink" on-ramp
-  a new person (or a fresh agent session) invokes first. USE WHEN running
-  /ot-onboarding, or the user says "onboard me", "get me set up on OpenThrottle",
-  "I'm new here", "OpenThrottle basics", "where do I start", "what is this repo",
-  "how do plans/tasks work here", or otherwise needs a guided tour of the system.
-  Verifies the openthrottle-mcp server is installed and healthy (fails loudly with
-  the exact fix if not), then teaches the mental model, monorepo shape, dev
-  servers, keyboard shortcuts, everyday workflows (/loop, Workflow, Ralph,
-  /github/*), and how the skill catalog works — orienting and linking, never
-  re-documenting CLAUDE.md / MONOREPO.md.
+  Guided orientation tour of OpenThrottle for a new person or a fresh session.
+  USE WHEN running /ot-onboarding, or the user says "onboard me", "I'm new here",
+  "where do I start", "what is this repo", or "how do plans/tasks work here".
+  Starts with an openthrottle-mcp health gate. Not for a specific subsystem —
+  see openthrottle-stack.
 ---
 
 # 🚪 OpenThrottle onboarding — start here
@@ -114,11 +109,10 @@ These are the levers a newcomer should know exist. You don't need to master them
 | **`/loop`**                              | you want a prompt or slash command to run on a repeating interval (poll a deploy, keep grinding a task list)                                                     | built-in `loop` skill                                                                                                       |
 | **Workflow** (multi-agent orchestration) | one context can't hold the work — fan out many subagents to be comprehensive, or verify adversarially before committing                                          | [`ot-workflow-orchestration`](https://github.com/openthrottle/monorepo/blob/main/skills/ot-workflow-orchestration/SKILL.md) |
 | **Ralph loop** (`/agents-ralph`)         | you have an OT plan and want to execute its tasks one at a time — IN_PROGRESS → work → validate → COMPLETED → commit — with `Plan-Id:` / `Task-Id:` traceability | [`agents-ralph`](https://github.com/openthrottle/monorepo/blob/main/skills/agents-ralph/SKILL.md)                           |
-| **`ot-plan-loop`**                       | drive that same per-task loop over a plan interactively via `/loop`                                                                                              | [`ot-plan-loop`](https://github.com/openthrottle/monorepo/blob/main/skills/ot-plan-loop/SKILL.md)                           |
+| **`ot-claude-loop`**                     | drive that same per-task loop over a plan interactively via `/loop`                                                                                              | [`ot-claude-loop`](https://github.com/openthrottle/monorepo/blob/main/skills/ot-claude-loop/SKILL.md)                       |
 
 **The `/github/*` workflow skills** — the portable git/PR toolkit (one job each):
 
-- [`github-branch`](https://github.com/openthrottle/monorepo/blob/main/skills/github-branch/SKILL.md) — fork a new branch of work
 - [`github-commit`](https://github.com/openthrottle/monorepo/blob/main/skills/github-commit/SKILL.md) — write a conventional-commit message from the diff
 - [`github-pull-request`](https://github.com/openthrottle/monorepo/blob/main/skills/github-pull-request/SKILL.md) — create or update a template-compliant PR
 - [`github-squash`](https://github.com/openthrottle/monorepo/blob/main/skills/github-squash/SKILL.md) — squash the branch to a single commit before merge
@@ -162,6 +156,6 @@ You're oriented. A sensible first lap:
    - Creating/working plans & tasks → [`ot-plans`](https://github.com/openthrottle/monorepo/blob/main/skills/ot-plans/SKILL.md), then execute with [`agents-ralph`](https://github.com/openthrottle/monorepo/blob/main/skills/agents-ralph/SKILL.md).
    - Adding a component/route/service/package → [`openthrottle-generators`](https://github.com/openthrottle/monorepo/blob/main/skills/openthrottle-generators/SKILL.md) (generators before hand-writing).
    - Working in the NestJS/GraphQL server or a React Router app → [`openthrottle-stack`](https://github.com/openthrottle/monorepo/blob/main/skills/openthrottle-stack/SKILL.md).
-   - Shipping the change → [`github-branch`](https://github.com/openthrottle/monorepo/blob/main/skills/github-branch/SKILL.md) → [`github-commit`](https://github.com/openthrottle/monorepo/blob/main/skills/github-commit/SKILL.md) → [`github-pull-request`](https://github.com/openthrottle/monorepo/blob/main/skills/github-pull-request/SKILL.md).
+   - Shipping the change → `pnpm run worktree:new <name>` → [`github-commit`](https://github.com/openthrottle/monorepo/blob/main/skills/github-commit/SKILL.md) → [`github-pull-request`](https://github.com/openthrottle/monorepo/blob/main/skills/github-pull-request/SKILL.md).
 
 When in doubt, ask the agent to pull in the matching skill — that's the OpenThrottle way.
