@@ -30,16 +30,20 @@ export const SCHEDULED_AGENT_JOB_OPTIONS: JobsOptions = {
 };
 
 /**
- * Worker concurrency. Default 1: two agent CLIs in the same default cwd (WORKSPACE_ROOT) would
- * fight over the git index. Raise only for jobs isolated via a per-job worktree.
+ * Default worker concurrency, now that overlap is made safe by a KEY rather than by a number.
  *
- * Per-repository targeting (`repository_checkout_id`) is what makes >1 *possible* — two schedules
- * pointing at different checkouts no longer share a git index — but it is not sufficient on its own:
- * two schedules can still target the SAME checkout, so lifting this needs per-repository keyed
- * concurrency (a BullMQ group/rate key derived from the resolved cwd) rather than a bigger number.
- * Deliberately out of scope for OT plan ef4b5c75; left at 1.
+ * The historical value was 1 for one reason: two agent CLIs in the same cwd fight over the git index.
+ * Per-repository targeting (`repository_checkout_id`) made >1 *conceivable* — two schedules pointing
+ * at different checkouts share no git index — but not sufficient on its own, because two schedules can
+ * still target the SAME checkout. What makes >1 safe is
+ * {@link resolveScheduledAgentJobConcurrencyKey} plus the advisory directory lock the processor takes
+ * on that key: independent directories overlap freely, and any two runs that would land in the same
+ * directory serialise regardless of how each of them named it.
+ *
+ * Read via {@link resolveScheduledAgentJobsConcurrency} so it stays env-tunable. NOTE the lock lives in
+ * Redis: with `REDIS_HOST` unset there is no lock, so such a deployment should pin the env back to 1.
  */
-export const SCHEDULED_AGENT_JOBS_CONCURRENCY = 1;
+export const SCHEDULED_AGENT_JOBS_DEFAULT_CONCURRENCY = 4;
 
 /** Fallback per-run timeout (15m) when a schedule sets no `timeout_ms`. */
 export const SCHEDULED_AGENT_JOBS_DEFAULT_TIMEOUT_MS = 15 * 60_000;
@@ -135,6 +139,89 @@ export const resolveScheduledAgentJobRunCwd = (input: {
   }
 
   return resolveScheduledAgentJobCwd(input.explicitCwd);
+};
+
+/**
+ * @description Reads the effective worker concurrency: `SCHEDULED_AGENT_JOBS_CONCURRENCY`, else
+ * {@link SCHEDULED_AGENT_JOBS_DEFAULT_CONCURRENCY}. Invalid/non-positive values fall back, mirroring
+ * {@link resolveScheduledAgentJobTimeoutMs}.
+ *
+ * A number above 1 is only safe in combination with the directory lock keyed by
+ * {@link resolveScheduledAgentJobConcurrencyKey} — this knob controls how many *independent*
+ * directories can run at once, never how many runs share one.
+ */
+export const resolveScheduledAgentJobsConcurrency = (): number => {
+  const raw = process.env.SCHEDULED_AGENT_JOBS_CONCURRENCY?.trim();
+  const parsed = raw ? Number(raw) : Number.NaN;
+  if (Number.isInteger(parsed) && parsed > 0) {
+    return parsed;
+  }
+
+  return SCHEDULED_AGENT_JOBS_DEFAULT_CONCURRENCY;
+};
+
+/** Namespace prefix of every advisory directory-lock key this feature takes. */
+export const SCHEDULED_AGENT_JOBS_LOCK_KEY_PREFIX = 'scheduled-agent-jobs:dir:';
+
+/**
+ * @description Normalizes a resolved cwd into a stable directory identity. Trailing separators are
+ * stripped (but never the lone root `/`) so `/repo` and `/repo/` cannot take two different locks on
+ * one directory.
+ *
+ * Deliberately NOT `realpath`: this must stay synchronous and side-effect free, and a symlinked second
+ * name for one checkout is a pathological setup that would cost every run a filesystem call to defend
+ * against. The paths being compared are the output of ONE resolver
+ * ({@link resolveScheduledAgentJobRunCwd}) reading from a checkout row or a user-typed `cwd`, so plain
+ * textual normalization catches the case the acceptance criteria name.
+ */
+const normalizeDirectoryIdentity = (cwd: string): string => {
+  const trimmed = cwd.trim();
+  const stripped = trimmed.replace(/[/\\]+$/u, '');
+
+  return stripped === '' ? trimmed : stripped;
+};
+
+/**
+ * @description THE concurrency key for a run: the identity of the directory the run will actually
+ * mutate, or `null` when the run needs no serialisation at all.
+ *
+ * Keyed on the resolved cwd rather than `repository_checkout_id` on purpose. A schedule carrying a
+ * legacy free-text `cwd` and a schedule targeting a checkout can resolve to the SAME directory, and an
+ * id-based key would let those two overlap — exactly the git-index race the concurrency of 1 existed to
+ * prevent. The path is the thing that collides, so the path is the key.
+ *
+ * Worktree runs are the one case that opts out, and only in the narrow form where opting out is sound:
+ *
+ * - **Flag-only** (`worktree: ''`, see `WORKTREE_FLAG_ONLY`) — the CLI picks a fresh worktree per
+ *   invocation, so no two runs can meet. Returns `null`; these runs never wait on anything. Without
+ *   this branch the isolation the user explicitly asked for would buy them nothing.
+ * - **Named** (`worktree: 'nightly'`) — the name is a directory two schedules can genuinely share, so
+ *   it is folded INTO the key rather than escaping it: same checkout + same name serialise, same
+ *   checkout + different names overlap.
+ * - **Unsupported driver** — `worktree` is capability-gated in the drivers package
+ *   (`appendWorktreeShellFlags` drops the flag when `capabilities.worktree` is false), so a schedule
+ *   asking codex/opencode for a worktree gets a plain run in the cwd. Honouring the request here would
+ *   hand out a bypass for isolation that is never actually created, so it is ignored.
+ *
+ * The residual `git worktree add` against the parent repo is accepted as unlocked: it is a
+ * sub-second metadata write to `.git/worktrees`, not the index, and serialising whole multi-minute
+ * agent runs behind it would defeat the point.
+ */
+export const resolveScheduledAgentJobConcurrencyKey = (input: {
+  readonly cwd: string;
+  readonly driverSupportsWorktree: boolean;
+  readonly worktree?: string | null;
+}): string | null => {
+  const directory = normalizeDirectoryIdentity(input.cwd);
+  const requested = input.driverSupportsWorktree ? input.worktree : undefined;
+
+  if (requested === undefined || requested === null) {
+    return directory;
+  }
+
+  const name = requested.trim();
+
+  return name === '' ? null : `${directory}#worktree:${name}`;
 };
 
 /**

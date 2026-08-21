@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 import { createMock } from '@golevelup/ts-vitest';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
@@ -14,6 +14,10 @@ import {
 import type { KeyedJsonlWriter } from '@openthrottle/nestjs-logging';
 import { BullMqRunOutputRetentionService } from '../bullmq-run-output-retention.service';
 import { ScheduledAgentJobCancellationService } from './scheduled-agent-job-cancellation.service';
+import {
+  ScheduledAgentJobDirectoryLockService,
+  type ScheduledAgentJobDirectoryLockResult,
+} from './scheduled-agent-job-directory-lock.service';
 import {
   foldRunUsage,
   parseRunOutcome,
@@ -85,6 +89,8 @@ describe('ScheduledAgentJobsProcessor', () => {
   let checkoutPaths: ScheduledAgentJobCheckoutPathService;
   let runner: ScheduledAgentRunnerService;
   let cancellation: ScheduledAgentJobCancellationService;
+  let directoryLock: ScheduledAgentJobDirectoryLockService;
+  let release: Mock<() => Promise<void>>;
   let retention: BullMqRunOutputRetentionService;
   let writer: KeyedJsonlWriter;
   let jobRepoUpdate: ReturnType<typeof vi.fn>;
@@ -123,6 +129,12 @@ describe('ScheduledAgentJobsProcessor', () => {
       attach: vi.fn().mockReturnValue(new AbortController().signal),
       detach: vi.fn(),
     });
+    release = vi.fn<() => Promise<void>>().mockResolvedValue(undefined);
+    directoryLock = createMock<ScheduledAgentJobDirectoryLockService>({
+      acquire: vi
+        .fn()
+        .mockResolvedValue({ lock: { held: true, release }, status: 'held' }),
+    });
     retention = createMock<BullMqRunOutputRetentionService>();
     writer = createMock<KeyedJsonlWriter>();
 
@@ -132,6 +144,7 @@ describe('ScheduledAgentJobsProcessor', () => {
       checkoutPaths,
       runner,
       cancellation,
+      directoryLock,
       retention,
       writer,
     );
@@ -278,6 +291,7 @@ describe('ScheduledAgentJobsProcessor', () => {
       checkoutPaths,
       runner,
       cancellation,
+      directoryLock,
       retention,
       writer,
     );
@@ -302,6 +316,7 @@ describe('ScheduledAgentJobsProcessor', () => {
       checkoutPaths,
       runner,
       cancellation,
+      directoryLock,
       retention,
       writer,
     );
@@ -330,6 +345,7 @@ describe('ScheduledAgentJobsProcessor', () => {
       checkoutPaths,
       runner,
       cancellation,
+      directoryLock,
       retention,
       writer,
     );
@@ -498,6 +514,113 @@ describe('ScheduledAgentJobsProcessor', () => {
       reasoningTokens: null,
       status: 'succeeded',
       totalTokens: 150,
+    });
+  });
+
+  describe('directory locking', () => {
+    it('holds the resolved directory across the run and releases it afterwards', async () => {
+      vi.mocked(checkoutPaths.resolve).mockResolvedValue({
+        path: process.cwd(),
+      });
+
+      await processor.process(
+        makeJob({ repositoryCheckoutId: 'checkout-1', timeoutMs: 5_000 }),
+      );
+
+      // Bounded by the run's own budget: a run that waited it all out has nothing left to do.
+      expect(directoryLock.acquire).toHaveBeenCalledWith(
+        process.cwd(),
+        expect.objectContaining({ timeoutMs: 5_000 }),
+      );
+      expect(release).toHaveBeenCalledTimes(1);
+    });
+
+    it('keys a legacy explicit cwd on the same directory a checkout would', async () => {
+      // The acceptance criterion an id-based key would have missed: naming one directory two ways
+      // must produce one key. The trailing separator is the cheap way to prove normalization.
+      await processor.process(makeJob({ cwd: `${process.cwd()}/` }));
+
+      expect(directoryLock.acquire).toHaveBeenCalledWith(
+        process.cwd(),
+        expect.anything(),
+      );
+    });
+
+    it('takes no lock for a per-run worktree, so isolated runs never wait', async () => {
+      await processor.process(
+        makeJob({
+          cwd: process.cwd(),
+          // claude advertises the worktree capability; flag-only is fresh per invocation.
+          settings: { worktree: { worktree: '' } },
+        }),
+      );
+
+      expect(directoryLock.acquire).toHaveBeenCalledWith(
+        null,
+        expect.anything(),
+      );
+    });
+
+    it('still locks the cwd when the driver cannot honor the worktree request', async () => {
+      await processor.process(
+        makeJob({
+          cwd: process.cwd(),
+          // codex drops the flag entirely, so the run really does happen in the cwd.
+          driverId: 'codex',
+          settings: { worktree: { worktree: '' } },
+        }),
+      );
+
+      expect(directoryLock.acquire).toHaveBeenCalledWith(
+        process.cwd(),
+        expect.anything(),
+      );
+    });
+
+    it('releases the directory even when the driver throws', async () => {
+      vi.mocked(runner.run).mockRejectedValue(new Error('spawn blew up'));
+
+      await processor.process(makeJob({ cwd: process.cwd() }));
+
+      expect(release).toHaveBeenCalledTimes(1);
+      expect(jobsService.markRunFinished).toHaveBeenCalledWith(
+        'run-1',
+        expect.objectContaining({ status: 'failed' }),
+      );
+    });
+
+    it('fails the run in-band, naming the directory, when the wait times out', async () => {
+      vi.mocked(directoryLock.acquire).mockResolvedValue({
+        status: 'timeout',
+        waitedMs: 900_000,
+      });
+
+      await processor.process(makeJob({ cwd: process.cwd() }));
+
+      expect(runner.run).not.toHaveBeenCalled();
+      expect(jobsService.markRunFinished).toHaveBeenCalledWith('run-1', {
+        errorMessage: expect.stringContaining(process.cwd()),
+        exitCode: null,
+        status: 'failed',
+      });
+    });
+
+    it('narrates contention without stopping the run', async () => {
+      vi.mocked(directoryLock.acquire).mockImplementation(
+        async (
+          _key,
+          options,
+        ): Promise<ScheduledAgentJobDirectoryLockResult> => {
+          options.onWait?.(1_000);
+
+          return { lock: { held: true, release }, status: 'held' };
+        },
+      );
+
+      await processor.process(makeJob({ cwd: process.cwd() }));
+
+      expect(runner.run).toHaveBeenCalledTimes(1);
+      expect(release).toHaveBeenCalledTimes(1);
     });
   });
 });
