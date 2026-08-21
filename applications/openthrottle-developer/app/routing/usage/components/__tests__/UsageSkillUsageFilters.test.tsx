@@ -26,11 +26,15 @@ const renderComponent = (props: UsageSkillUsageFiltersProps): RenderResult => {
 };
 
 const baseProps = (): UsageSkillUsageFiltersProps => ({
+  branchOptions: [],
+  branchesHaveMore: false,
+  end: '2026-07-31',
   filterOptions: buildFilterOptions(),
   providerParam: null,
   selectedCwd: null,
   selectedGitBranch: null,
   selectedScope: null,
+  start: '2026-07-01',
 });
 
 describe('UsageSkillUsageFilters Component', () => {
@@ -53,12 +57,32 @@ describe('UsageSkillUsageFilters Component', () => {
     ).toHaveAttribute('href', '/?skillScope=third-party');
   });
 
-  test('branch and cwd filters preserve provider and mark active chips', () => {
+  test('renders the branch dropdown instead of a chip per branch', () => {
+    const component = renderComponent({
+      ...baseProps(),
+      branchOptions: [
+        { branch: 'main', count: 12 },
+        { branch: 'example-usage-tracking', count: 3 },
+      ],
+      selectedGitBranch: 'example-usage-tracking',
+    });
+
+    expect(component.getByTestId('UsageBranchFilter')).toBeInTheDocument();
+    // The wall of one-link-per-branch is gone: the selection lives on the
+    // combobox trigger, not on a link.
+    expect(
+      component.queryByRole('link', { name: 'example-usage-tracking' }),
+    ).toBeNull();
+    expect(component.getByRole('combobox')).toHaveTextContent(
+      'example-usage-tracking',
+    );
+  });
+
+  test('cwd filters preserve provider and mark active chips', () => {
     const component = renderComponent({
       ...baseProps(),
       filterOptions: buildFilterOptions({
         cwds: ['/Users/matt/openthrottle'],
-        gitBranches: ['example-usage-tracking'],
       }),
       providerParam: 'claude',
       selectedCwd: '/Users/matt/openthrottle',
@@ -66,18 +90,13 @@ describe('UsageSkillUsageFilters Component', () => {
       selectedScope: SKILL_USAGE_SCOPES.THIRD_PARTY,
     });
 
-    const branchLink = component.getByRole('link', {
-      name: 'example-usage-tracking',
-    });
-    expect(branchLink).toHaveAttribute('aria-current', 'true');
-    expect(branchLink.getAttribute('href')).toContain('provider=claude');
-    expect(branchLink.getAttribute('href')).toContain('skillScope=third-party');
-    expect(branchLink.getAttribute('href')).toContain(
-      'skillBranch=example-usage-tracking',
-    );
-
     const cwdLink = component.getByRole('link', { name: 'openthrottle' });
     expect(cwdLink).toHaveAttribute('aria-current', 'true');
     expect(cwdLink).toHaveAttribute('title', '/Users/matt/openthrottle');
+    expect(cwdLink.getAttribute('href')).toContain('provider=claude');
+    expect(cwdLink.getAttribute('href')).toContain('skillScope=third-party');
+    expect(cwdLink.getAttribute('href')).toContain(
+      'skillBranch=example-usage-tracking',
+    );
   });
 });

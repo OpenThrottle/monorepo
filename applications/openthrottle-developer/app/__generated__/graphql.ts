@@ -3024,6 +3024,8 @@ export type Query = {
   skillTagVocabulary: SkillTagVocabularyResult;
   /** Aggregated skill usage over [start, end] (inclusive YYYY-MM-DD, UTC): top skills (with opt-in outcome stats), ours-vs-third-party split, per-day series, and branch/cwd filter options. Optional scope/gitBranch/cwd/skillName narrow the aggregates. */
   skillUsage: SkillUsageResultObject;
+  /** Git branches present in [start, end] (inclusive YYYY-MM-DD, UTC) for the /usage branch filter: the default branch (main, else master) first, then A-Z. Optional query narrows by case-insensitive substring; limit defaults to 20 and is capped at 50, with hasMore signalling that the search should be narrowed rather than paged. */
+  skillUsageGitBranches: SkillUsageGitBranchSearchObject;
   /** A single tag→action rule by id, scoped to the authenticated user; null when absent or owned by someone else. */
   tagActionRule?: Maybe<TagActionRuleObject>;
   /** The authenticated user's tag→action rules, oldest first. */
@@ -3321,6 +3323,14 @@ export type QuerySkillUsageArgs = {
   end: Scalars['String']['input'];
   gitBranch?: InputMaybe<Scalars['String']['input']>;
   scope?: InputMaybe<Scalars['String']['input']>;
+  skillName?: InputMaybe<Scalars['String']['input']>;
+  start: Scalars['String']['input'];
+};
+
+export type QuerySkillUsageGitBranchesArgs = {
+  end: Scalars['String']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  query?: InputMaybe<Scalars['String']['input']>;
   skillName?: InputMaybe<Scalars['String']['input']>;
   start: Scalars['String']['input'];
 };
@@ -4477,10 +4487,32 @@ export type SkillUsageEventObject = {
 
 export type SkillUsageFilterOptionsObject = {
   __typename?: 'SkillUsageFilterOptionsObject';
-  /** Distinct non-null cwd values in the date window (for project/path filter). */
+  /**
+   * Distinct non-null cwd values in the date window (for project/path filter).
+   * @deprecated Grew with every distinct path and is now capped at 50, so it is no longer an exhaustive list. A lazy cwd-search query will replace it; kept for back-compat until then.
+   */
   cwds: Array<Scalars['String']['output']>;
-  /** Distinct non-null git branch values in the date window. */
+  /**
+   * Distinct non-null git branch values in the date window.
+   * @deprecated Unbounded and now capped at 50 — use the skillUsageGitBranches query, which searches lazily and pins the default branch first.
+   */
   gitBranches: Array<Scalars['String']['output']>;
+};
+
+export type SkillUsageGitBranchObject = {
+  __typename?: 'SkillUsageGitBranchObject';
+  /** Git branch value as captured by the harness. */
+  branch: Scalars['String']['output'];
+  /** Invocation count for this branch in the date window. */
+  count: Scalars['Int']['output'];
+};
+
+export type SkillUsageGitBranchSearchObject = {
+  __typename?: 'SkillUsageGitBranchSearchObject';
+  /** True when more branches matched than the returned page — narrow the search instead of paging. */
+  hasMore: Scalars['Boolean']['output'];
+  /** Matching branches: the default branch (main, else master) first, then A–Z. */
+  items: Array<SkillUsageGitBranchObject>;
 };
 
 export type SkillUsageOutcomeObject = {
@@ -8019,6 +8051,32 @@ export type ResolvePlanRefQuery = {
   }>;
 };
 
+export type UsageBranchOptionFragment = {
+  __typename?: 'SkillUsageGitBranchObject';
+  branch: string;
+  count: number;
+};
+
+export type GetUsageBranchSearchQueryVariables = Exact<{
+  start: Scalars['String']['input'];
+  end: Scalars['String']['input'];
+  query?: InputMaybe<Scalars['String']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+export type GetUsageBranchSearchQuery = {
+  __typename?: 'Query';
+  skillUsageGitBranches: {
+    __typename?: 'SkillUsageGitBranchSearchObject';
+    hasMore: boolean;
+    items: Array<{
+      __typename?: 'SkillUsageGitBranchObject';
+      branch: string;
+      count: number;
+    }>;
+  };
+};
+
 export type TagActionRuleRowFragment = {
   __typename?: 'TagActionRuleObject';
   actionPayloadJson: string;
@@ -11522,6 +11580,26 @@ export const QueueCardFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<QueueCardFragment, unknown>;
+export const UsageBranchOptionFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UsageBranchOption' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'SkillUsageGitBranchObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'branch' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'count' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<UsageBranchOptionFragment, unknown>;
 export const TagActionRuleRowFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -20231,6 +20309,139 @@ export const ResolvePlanRefDocument = {
     },
   ],
 } as unknown as DocumentNode<ResolvePlanRefQuery, ResolvePlanRefQueryVariables>;
+export const GetUsageBranchSearchDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getUsageBranchSearch' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'start' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'String' },
+            },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'end' } },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'String' },
+            },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'query' },
+          },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'limit' },
+          },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'Int' } },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'skillUsageGitBranches' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'start' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'start' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'end' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'end' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'query' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'query' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'limit' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'limit' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'hasMore' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'items' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: { kind: 'Name', value: 'UsageBranchOption' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UsageBranchOption' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'SkillUsageGitBranchObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'branch' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'count' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetUsageBranchSearchQuery,
+  GetUsageBranchSearchQueryVariables
+>;
 export const RulesIndexLoaderDocument = {
   kind: 'Document',
   definitions: [

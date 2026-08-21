@@ -8,6 +8,7 @@ import {
   type SkillUsageOutcome,
 } from '@openthrottle/nestjs-repositories';
 import { BadRequestException } from '@nestjs/common';
+import { PERMISSIONS, PERMISSIONS_KEY } from '@openthrottle/nestjs-rbac';
 import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
@@ -19,11 +20,13 @@ describe('SkillUsageResolver', () => {
   const recordSkillUsage = vi.fn();
   const recordSkillUsageOutcome = vi.fn();
   const getUsageAggregation = vi.fn();
+  const searchGitBranches = vi.fn();
 
   const mockService = createMock<SkillUsageEventsService>({
     getUsageAggregation,
     recordSkillUsage,
     recordSkillUsageOutcome,
+    searchGitBranches,
   });
 
   const savedRow: SkillUsageEvent = {
@@ -388,6 +391,93 @@ describe('SkillUsageResolver', () => {
           ),
         ).rejects.toBeInstanceOf(BadRequestException);
       });
+    });
+  });
+  describe('skillUsageGitBranches', () => {
+    test('forwards trimmed args and maps the search envelope', async () => {
+      searchGitBranches.mockResolvedValue({
+        hasMore: true,
+        items: [
+          { branch: 'main', count: 12 },
+          { branch: 'alpha', count: 3 },
+        ],
+      });
+
+      const result = await resolver.skillUsageGitBranches(
+        '2026-07-01',
+        '2026-07-31',
+        '  feat  ',
+        10,
+        '  ot-plans  ',
+      );
+
+      expect(searchGitBranches).toHaveBeenCalledWith({
+        end: '2026-07-31',
+        limit: 10,
+        query: 'feat',
+        skillName: 'ot-plans',
+        start: '2026-07-01',
+      });
+      expect(result.hasMore).toBe(true);
+      expect(result.items).toEqual([
+        { branch: 'main', count: 12 },
+        { branch: 'alpha', count: 3 },
+      ]);
+    });
+
+    describe('when query, limit, and skillName are blank or omitted', () => {
+      test('normalizes them to null so the service applies its defaults', async () => {
+        searchGitBranches.mockResolvedValue({ hasMore: false, items: [] });
+
+        await resolver.skillUsageGitBranches(
+          '2026-07-01',
+          '2026-07-31',
+          '   ',
+          null,
+          '',
+        );
+
+        expect(searchGitBranches).toHaveBeenCalledWith({
+          end: '2026-07-31',
+          limit: null,
+          query: null,
+          skillName: null,
+          start: '2026-07-01',
+        });
+      });
+    });
+
+    describe('when a date is not YYYY-MM-DD', () => {
+      test('rejects with BadRequestException', async () => {
+        await expect(
+          resolver.skillUsageGitBranches('2026-07-01', 'july'),
+        ).rejects.toBeInstanceOf(BadRequestException);
+      });
+    });
+
+    describe('when limit is not a positive finite number', () => {
+      test('rejects with BadRequestException', async () => {
+        await expect(
+          resolver.skillUsageGitBranches('2026-07-01', '2026-07-31', null, 0),
+        ).rejects.toBeInstanceOf(BadRequestException);
+        await expect(
+          resolver.skillUsageGitBranches(
+            '2026-07-01',
+            '2026-07-31',
+            null,
+            Number.NaN,
+          ),
+        ).rejects.toBeInstanceOf(BadRequestException);
+      });
+    });
+
+    test('requires the settings:read permission', () => {
+      expect(
+        Reflect.getMetadata(
+          PERMISSIONS_KEY,
+          SkillUsageResolver.prototype.skillUsageGitBranches,
+        ),
+      ).toEqual([PERMISSIONS.SETTINGS_READ]);
     });
   });
 });

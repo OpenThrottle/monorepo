@@ -2702,10 +2702,30 @@ type SkillUsageFilterOptionsObject {
   """
   Distinct non-null cwd values in the date window (for project/path filter).
   """
-  cwds: [String!]!
+  cwds: [String!]! @deprecated(reason: "Grew with every distinct path and is now capped at 50, so it is no longer an exhaustive list. A lazy cwd-search query will replace it; kept for back-compat until then.")
 
   """Distinct non-null git branch values in the date window."""
-  gitBranches: [String!]!
+  gitBranches: [String!]! @deprecated(reason: "Unbounded and now capped at 50 — use the skillUsageGitBranches query, which searches lazily and pins the default branch first.")
+}
+
+type SkillUsageGitBranchObject {
+  """Git branch value as captured by the harness."""
+  branch: String!
+
+  """Invocation count for this branch in the date window."""
+  count: Int!
+}
+
+type SkillUsageGitBranchSearchObject {
+  """
+  True when more branches matched than the returned page — narrow the search instead of paging.
+  """
+  hasMore: Boolean!
+
+  """
+  Matching branches: the default branch (main, else master) first, then A–Z.
+  """
+  items: [SkillUsageGitBranchObject!]!
 }
 
 type SkillUsageResultObject {
@@ -3756,6 +3776,30 @@ type Query {
     """
     skillName: String
   ): SkillUsageResultObject!
+
+  """
+  Git branches present in [start, end] (inclusive YYYY-MM-DD, UTC) for the /usage branch filter: the default branch (main, else master) first, then A-Z. Optional query narrows by case-insensitive substring; limit defaults to 20 and is capped at 50, with hasMore signalling that the search should be narrowed rather than paged.
+  """
+  skillUsageGitBranches(
+    """Start date (inclusive), YYYY-MM-DD"""
+    start: String!
+
+    """End date (inclusive), YYYY-MM-DD"""
+    end: String!
+
+    """
+    Case-insensitive substring to match against the branch name. Trimmed; empty string is treated as omitted.
+    """
+    query: String
+
+    """Maximum branches to return. Defaults to 20 and is capped at 50."""
+    limit: Int
+
+    """
+    Restrict to branches that used a single skill (detail view); omit for all skills. Trimmed; empty string is treated as omitted.
+    """
+    skillName: String
+  ): SkillUsageGitBranchSearchObject!
 
   """The authenticated user's tag→action rules, oldest first."""
   tagActionRules: [TagActionRuleObject!]!

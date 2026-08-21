@@ -1,0 +1,23 @@
+fragment UsageBranchOption on SkillUsageGitBranchObject {
+  branch
+  count
+}
+
+query getUsageBranchSearch(
+  $start: String!
+  $end: String!
+  $query: String
+  $limit: Int
+) {
+  skillUsageGitBranches(
+    start: $start
+    end: $end
+    query: $query
+    limit: $limit
+  ) {
+    hasMore
+    items {
+      ...UsageBranchOption
+    }
+  }
+}

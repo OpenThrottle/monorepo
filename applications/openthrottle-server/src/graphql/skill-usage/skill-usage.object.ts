@@ -253,14 +253,42 @@ export class SkillUsageByDayObject {
 @ObjectType()
 export class SkillUsageFilterOptionsObject {
   @Field(() => [String], {
+    deprecationReason: `Grew with every distinct path and is now capped at 50, so it is no longer an exhaustive list. A lazy cwd-search query will replace it; kept for back-compat until then.`,
     description: `Distinct non-null cwd values in the date window (for project/path filter).`,
   })
   cwds!: string[];
 
   @Field(() => [String], {
+    deprecationReason: `Unbounded and now capped at 50 — use the skillUsageGitBranches query, which searches lazily and pins the default branch first.`,
     description: `Distinct non-null git branch values in the date window.`,
   })
   gitBranches!: string[];
+}
+
+@ObjectType()
+export class SkillUsageGitBranchObject {
+  @Field(() => String, {
+    description: `Git branch value as captured by the harness.`,
+  })
+  branch!: string;
+
+  @Field(() => Int, {
+    description: `Invocation count for this branch in the date window.`,
+  })
+  count!: number;
+}
+
+@ObjectType()
+export class SkillUsageGitBranchSearchObject {
+  @Field(() => Boolean, {
+    description: `True when more branches matched than the returned page — narrow the search instead of paging.`,
+  })
+  hasMore!: boolean;
+
+  @Field(() => [SkillUsageGitBranchObject], {
+    description: `Matching branches: the default branch (main, else master) first, then A–Z.`,
+  })
+  items!: SkillUsageGitBranchObject[];
 }
 
 @ObjectType()

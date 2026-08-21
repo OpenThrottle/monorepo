@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { DashboardDailyStatsCard } from '~/routing/dashboard/components/DashboardDailyStatsCard';
 import {
+  GetUsageBranchSearchDocument,
   GetUsageDailyStatsDocument,
   GetUsageSkillUsageDocument,
   GetUsageTokenUsageDocument,
@@ -70,33 +71,46 @@ export const loader = async (args: Route.LoaderArgs) => {
   const startDate = startIso.slice(0, 10);
   const endDate = endIso.slice(0, 10);
 
-  const [dailyResult, tokenUsageResult, skillUsageResult] = await Promise.all([
-    executeGraphqlWithAuth(args.request, GetUsageDailyStatsDocument, {
-      end: endIso,
-      start: startIso,
-    }),
-    executeGraphqlWithAuth(args.request, GetUsageTokenUsageDocument, {
-      end: endDate,
-      provider: selectedProvider,
-      start: startDate,
-    }),
-    executeGraphqlWithAuth(args.request, GetUsageSkillUsageDocument, {
-      cwd: selectedSkillCwd,
-      end: endDate,
-      gitBranch: selectedSkillGitBranch,
-      scope: selectedSkillScope,
-      start: startDate,
-    }),
-  ]);
+  const [dailyResult, tokenUsageResult, skillUsageResult, branchResult] =
+    await Promise.all([
+      executeGraphqlWithAuth(args.request, GetUsageDailyStatsDocument, {
+        end: endIso,
+        start: startIso,
+      }),
+      executeGraphqlWithAuth(args.request, GetUsageTokenUsageDocument, {
+        end: endDate,
+        provider: selectedProvider,
+        start: startDate,
+      }),
+      executeGraphqlWithAuth(args.request, GetUsageSkillUsageDocument, {
+        cwd: selectedSkillCwd,
+        end: endDate,
+        gitBranch: selectedSkillGitBranch,
+        scope: selectedSkillScope,
+        start: startDate,
+      }),
+      // First page of the branch dropdown, so SSR renders a populated,
+      // correctly-ordered list without waiting on a client search.
+      executeGraphqlWithAuth(args.request, GetUsageBranchSearchDocument, {
+        end: endDate,
+        limit: null,
+        query: null,
+        start: startDate,
+      }),
+    ]);
 
   const dailyStats: DashboardDailyStatsCardFragment[] =
     dailyResult.dailyStatsRange.items ?? [];
 
   return {
+    branchOptions: branchResult.skillUsageGitBranches.items,
+    branchesHaveMore: branchResult.skillUsageGitBranches.hasMore,
     dailyStats,
     linkableSkillSlugs,
     rangeDays: 30,
+    rangeEndDate: endDate,
     rangeEndIso: endIso,
+    rangeStartDate: startDate,
     rangeStartIso: startIso,
     selectedProvider,
     selectedSkillCwd,
@@ -121,10 +135,14 @@ export default function Component(
 ): React.ReactElement {
   const { loaderData } = props;
   const {
+    branchOptions,
+    branchesHaveMore,
     dailyStats,
     linkableSkillSlugs,
     rangeDays,
+    rangeEndDate,
     rangeEndIso,
+    rangeStartDate,
     rangeStartIso,
     selectedProvider,
     selectedSkillCwd,
@@ -161,9 +179,12 @@ export default function Component(
         totals={tokenUsageTotals}
       />
       <UsageSkillUsage
+        branchOptions={branchOptions}
+        branchesHaveMore={branchesHaveMore}
         byDay={skillUsage.byDay}
         byScope={skillUsage.byScope}
         bySkill={skillUsage.bySkill}
+        end={rangeEndDate}
         filterOptions={skillUsage.filterOptions}
         linkableSlugs={linkableSkillSlugs}
         providerParam={selectedProvider}
@@ -171,6 +192,7 @@ export default function Component(
         selectedCwd={selectedSkillCwd}
         selectedGitBranch={selectedSkillGitBranch}
         selectedScope={selectedSkillScope}
+        start={rangeStartDate}
         totalCount={skillUsage.totalCount}
       />
       <div data-testid="UsageDailyActivity">

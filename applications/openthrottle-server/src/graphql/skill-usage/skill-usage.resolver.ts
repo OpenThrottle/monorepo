@@ -16,7 +16,7 @@ import {
   type SkillUsageScope,
 } from '@openthrottle/nestjs-repositories';
 import { BadRequestException, UseGuards } from '@nestjs/common';
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
 import {
@@ -25,11 +25,13 @@ import {
 } from './skill-usage.input';
 import {
   toSkillUsageEventObject,
+  toSkillUsageGitBranchSearchObject,
   toSkillUsageOutcomeObject,
   toSkillUsageResultObject,
 } from './skill-usage.mapper';
 import {
   SkillUsageEventObject,
+  SkillUsageGitBranchSearchObject,
   SkillUsageOutcomeObject,
   SkillUsageResultObject,
 } from './skill-usage.object';
@@ -55,6 +57,13 @@ const assertYyyyMmDd = (label: string, value: string): void => {
   if (!YYYY_MM_DD.test(value)) {
     throw new BadRequestException(`${label} must be YYYY-MM-DD`);
   }
+};
+
+/** Trimmed value, or null when absent/blank — the arg convention here. */
+const toOptionalTrimmed = (value?: string | null): string | null => {
+  const trimmed = value?.trim() ?? '';
+
+  return trimmed === '' ? null : trimmed;
 };
 
 // @authz-stance: authenticated-only (Path A — see OT plan 18e16dfc)
@@ -244,5 +253,55 @@ export class SkillUsageResolver {
     });
 
     return toSkillUsageResultObject(aggregation);
+  }
+
+  @Query(() => SkillUsageGitBranchSearchObject, {
+    description: `Git branches present in [start, end] (inclusive YYYY-MM-DD, UTC) for the /usage branch filter: the default branch (main, else master) first, then A-Z. Optional query narrows by case-insensitive substring; limit defaults to 20 and is capped at 50, with hasMore signalling that the search should be narrowed rather than paged.`,
+  })
+  @UseGuards(GqlPermissionsGuard)
+  @Permissions(PERMISSIONS.SETTINGS_READ)
+  async skillUsageGitBranches(
+    @Args('start', { description: 'Start date (inclusive), YYYY-MM-DD' })
+    start: string,
+    @Args('end', { description: 'End date (inclusive), YYYY-MM-DD' })
+    end: string,
+    @Args('query', {
+      description:
+        'Case-insensitive substring to match against the branch name. Trimmed; empty string is treated as omitted.',
+      nullable: true,
+      type: () => String,
+    })
+    query?: string | null,
+    @Args('limit', {
+      description:
+        'Maximum branches to return. Defaults to 20 and is capped at 50.',
+      nullable: true,
+      type: () => Int,
+    })
+    limit?: number | null,
+    @Args('skillName', {
+      description:
+        'Restrict to branches that used a single skill (detail view); omit for all skills. Trimmed; empty string is treated as omitted.',
+      nullable: true,
+      type: () => String,
+    })
+    skillName?: string | null,
+  ): Promise<SkillUsageGitBranchSearchObject> {
+    assertYyyyMmDd('start', start);
+    assertYyyyMmDd('end', end);
+
+    if (limit != null && (!Number.isFinite(limit) || limit < 1)) {
+      throw new BadRequestException('limit must be a positive number');
+    }
+
+    const result = await this.skillUsageEventsService.searchGitBranches({
+      end,
+      limit: limit ?? null,
+      query: toOptionalTrimmed(query),
+      skillName: toOptionalTrimmed(skillName),
+      start,
+    });
+
+    return toSkillUsageGitBranchSearchObject(result);
   }
 }
