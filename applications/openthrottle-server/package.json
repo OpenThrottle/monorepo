@@ -49,7 +49,6 @@
     "@openthrottle/openthrottle-skills": "workspace:^",
     "@tools/workflows": "workspace:^",
     "bullmq": "catalog:",
-    "chokidar": "catalog:",
     "dataloader": "catalog:",
     "dotenv": "catalog:",
     "graphql": "catalog:",

@@ -167,6 +167,7 @@ const validationHints = [
  * @description Classifies an unknown thrown value into a stable {@link ErrorCategory}
  * by inspecting its (lower-cased) message. Heuristic only — used to pick a sanitized
  * client message, never to surface the raw text.
+ * @public
  */
 export function classifyError(error: unknown): ErrorCategory {
   const raw = error instanceof Error ? error.message : String(error);
@@ -190,6 +191,7 @@ export function classifyError(error: unknown): ErrorCategory {
 /**
  * @description Returns the stable, sanitized client-facing message for a category.
  * Never contains backend/transport detail.
+ * @public
  */
 export function sanitizedMessageForCategory(category: ErrorCategory): string {
   return sanitizedMessageByCategory[category];
@@ -211,6 +213,7 @@ const MAX_APP_ERROR_DETAIL_LEN = 300;
  * "rejected as invalid". Transport/HTTP 5xx errors (target URL, port, stack-ish
  * text) do NOT match and remain sanitized. Only the first line is returned, length
  * capped, so a dev-mode server that appends a stack trace cannot leak it.
+ * @public
  */
 export function extractApplicationErrorDetail(
   rawMessage: string,

@@ -60,6 +60,7 @@ const defineTool = <Params extends RegisterToolInputSchema>(
 
 /**
  * @description The canonical developer MCP tool list. Add a tool here once; `registerDeveloperMcpTools` exposes it on the stdio server and the parity test forces `McpDeveloperMcpSurface` to mirror it.
+ * @public
  */
 export const developerMcpToolDefinitions: readonly DeveloperMcpToolDefinition[] =
   [

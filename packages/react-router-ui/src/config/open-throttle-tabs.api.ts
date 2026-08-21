@@ -36,12 +36,18 @@ export interface UseUrlSyncedTabValueResult<TTab extends string = string> {
   readonly value: TTab;
 }
 
-/** Approach B — link tab bar list container (not Radix TabsList). */
+/**
+ * Approach B — link tab bar list container (not Radix TabsList).
+ * @public
+ */
 export interface OpenThrottleTabsNavProps extends ComponentPropsWithoutRef<'nav'> {
   readonly variant?: VariantProps<typeof tabsListVariants>['variant'];
 }
 
-/** Approach B — single tab link styled like TabsTrigger. */
+/**
+ * Approach B — single tab link styled like TabsTrigger.
+ * @public
+ */
 export interface OpenThrottleTabLinkProps extends NavLinkProps {
   readonly prefetch?: NavLinkProps['prefetch'];
 }
