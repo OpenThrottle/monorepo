@@ -3,6 +3,10 @@
  * Imported via the settings route components.
  */
 
+import type { GlobalFeatureOnboardingContent } from '@openthrottle/react-router-ui-global';
+import { KeyRoundIcon } from 'lucide-react';
+import { MCP_DEVELOPER_AUTH_DOC_HREF } from '~/routing/settings/utils/settings-docs-links';
+
 export const WORKSPACE_FOLDERS_COPY = {
   addEntryButton: `Add`,
   addFolderButton: `Add folder`,
@@ -290,26 +294,45 @@ export const APPEARANCE_COPY = {
 
 /**
  * @description Copy for Settings → Keys: the header intro that stays on the
- * page, the help-modal trigger, and the operational help moved into
- * {@link SettingsKeysHelpModal}. Interpolated values use prefix/suffix pairs so
- * no string is assembled in JSX; `<code>` tokens are their own entries.
+ * page. Interpolated values use prefix/suffix pairs so no string is assembled
+ * in JSX; `<code>` tokens are their own entries. The operational guidance lives
+ * in {@link SETTINGS_KEYS_ONBOARDING}.
  */
 export const SETTINGS_KEYS_COPY = {
-  docsLinkLabel: `MCP and worker authentication (AUTH.md)`,
-  docsSuffix: ` for bootstrap and env setup.`,
   introAuthorizationCode: `Authorization`,
   introMiddle: ` format in the `,
   introPrefix: `Long-lived bearer tokens for automation (MCP, Ralph workers, CI). Each credential uses the `,
   introSuffix: ` header.`,
   introTokenCode: `ot_sa_<prefix>_<secret>`,
-  jwtPrefix: `Human JWT sessions manage these keys in the developer portal; service account tokens must not call these admin mutations. See `,
-  modalTitle: `Working with keys`,
-  oneTimeSecretBodyPrefix: `When you create a credential, the full token is shown once. Copy it immediately into `,
-  oneTimeSecretBodySuffix: ` or worker env — it cannot be retrieved again.`,
-  oneTimeSecretEnvCode: `OPENTHROTTLE_MCP_AUTH_TOKEN`,
-  oneTimeSecretTitle: `One-time secret`,
-  rotationBody: `Create a new credential, update your env, then revoke the old one from the table below. Revoked or expired credentials stop working at the next request.`,
-  rotationTitle: `Rotation`,
   title: `Keys`,
-  triggerLabel: `How keys work`,
 } as const;
+
+/**
+ * @description Onboarding pitch for Settings → Keys, surfaced through the shared
+ * `GlobalFeatureOnboardingModal` (`?modal=onboarding`) from the header trigger.
+ * Carries the operational guidance — one-time secret, rotation, human JWT
+ * sessions — that used to live in a keys-specific help modal.
+ */
+export const SETTINGS_KEYS_ONBOARDING: GlobalFeatureOnboardingContent = {
+  cta: { label: `Create a credential`, to: `/settings/keys` },
+  icon: KeyRoundIcon,
+  internalUsage: `Every automation we run authenticates this way: the OT MCP server, the Ralph workers, and CI each hold their own credential, so we can revoke one without taking the rest down.`,
+  secondary: {
+    label: `MCP and worker authentication (AUTH.md)`,
+    to: MCP_DEVELOPER_AUTH_DOC_HREF,
+  },
+  steps: [
+    `Pick the service account the token should act as.`,
+    `Create the credential and copy the full token immediately — it is shown once and cannot be retrieved again.`,
+    `Paste it into OPENTHROTTLE_MCP_AUTH_TOKEN or your worker env.`,
+    `To rotate, create a replacement, update the env, then revoke the old credential from the table.`,
+  ],
+  tagline: `Long-lived bearer tokens that let MCP servers, Ralph workers, and CI act as a service account — without borrowing a human session.`,
+  title: `Keys`,
+  useCases: [
+    `Authenticate the OT MCP server so agents can read and write plans.`,
+    `Give each Ralph worker or CI job its own revocable credential.`,
+    `Rotate a leaked or expiring token without downtime.`,
+  ],
+  whatItIs: `A credential is a service-account bearer token in the form ot_sa_<prefix>_<secret>, sent in the Authorization header. The secret is shown once at creation; revoked or expired credentials stop working at the next request. Human JWT sessions manage these keys in the developer portal — service-account tokens must not call those admin mutations.`,
+};

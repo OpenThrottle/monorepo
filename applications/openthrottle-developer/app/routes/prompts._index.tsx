@@ -132,6 +132,7 @@ export default function Component(
           />
         )}
         <PromptsIntroduction />
+
         <div className="flex flex-col gap-4">
           <PromptToolbar
             limit={limit}
@@ -158,6 +159,7 @@ export default function Component(
           />
         </div>
       </GlobalScreen>
+
       <GlobalFeatureOnboardingModal content={RULES_ONBOARDING} />
     </>
   );
