@@ -149,18 +149,25 @@ compromise would inject arbitrary code into the editor).
 This package vendors `monaco-editor` as a direct dependency and exposes
 `configureEditorLoader()`, which points the loader at the local module instead.
 Call it **once on the client** before any editor mounts — for example from a
-root client entry or a top-level `useEffect`:
+root client entry or a top-level `useEffect`. **You** import `monaco-editor` and
+hand the module to it:
 
 ```tsx
 import { configureEditorLoader } from '@openthrottle/react-router-editor';
 
 // e.g. in your app's client entry / root client loader
-void configureEditorLoader();
+void import('monaco-editor').then(configureEditorLoader);
 ```
 
-It is idempotent, resolves once the loader is configured, imports
-`monaco-editor` dynamically (so it stays out of SSR and test collection), and
-is a no-op on the server.
+It is idempotent and a no-op on the server.
+
+> **Why the caller supplies the module.** Vite emits a worker bundle for every
+> `new Worker(new URL('*.worker.js', import.meta.url))` it finds while walking an
+> import, and it does so during transform — _before_ tree-shaking. When this
+> package imported `monaco-editor` itself, Monaco's four language workers
+> (**8.66 MB**) were emitted into the client build of every consuming app, even
+> apps that never render an editor and never called this function. Passing the
+> module in keeps that cost with the app that opts in.
 
 ### Workers (Vite consumers)
 

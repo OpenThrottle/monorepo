@@ -74,38 +74,36 @@ export const loader = async (args: Route.LoaderArgs) => {
     return redirect(`/plans/${task.planId}/tasks/${taskId}`);
   }
 
-  const plan =
-    task?.planId != null
-      ? ((
-          await executeGraphqlWithAuth(args.request, GetPlanByIdDocument, {
+  /*
+    The plan, the linked artifacts and the output chunks each depend only on the
+    task we just fetched — never on each other — so they issue together instead
+    of stacking three more round-trips behind the first. Task-scoped output (v1)
+    fetches the plan's chunks; the Output tab filters client-side by taskId (see
+    useTaskOutputStream).
+  */
+  const [planResult, linkedArtifactsResult, planOutputChunksResult] =
+    await Promise.all([
+      task?.planId != null
+        ? executeGraphqlWithAuth(args.request, GetPlanByIdDocument, {
             id: task.planId,
           })
-        ).plan ?? null)
-      : null;
+        : null,
+      task != null
+        ? executeGraphqlWithAuth(args.request, TaskLinkedArtifactsDocument, {
+            taskId,
+          })
+        : null,
+      task?.planId != null
+        ? executeGraphqlWithAuth(args.request, TaskOutputStreamChunksDocument, {
+            planId: task.planId,
+          })
+        : null,
+    ]);
 
+  const plan = planResult?.plan ?? null;
   const linkedArtifacts =
-    task != null
-      ? ((
-          await executeGraphqlWithAuth(
-            args.request,
-            TaskLinkedArtifactsDocument,
-            { taskId },
-          )
-        ).workArtifactsByTask.artifacts ?? [])
-      : [];
-
-  // Task-scoped output (v1): fetch the plan's chunks; the Output tab filters
-  // client-side by taskId (see useTaskOutputStream).
-  const planOutputChunks =
-    task?.planId != null
-      ? ((
-          await executeGraphqlWithAuth(
-            args.request,
-            TaskOutputStreamChunksDocument,
-            { planId: task.planId },
-          )
-        ).planOutputStreamChunks ?? [])
-      : [];
+    linkedArtifactsResult?.workArtifactsByTask.artifacts ?? [];
+  const planOutputChunks = planOutputChunksResult?.planOutputStreamChunks ?? [];
 
   return { linkedArtifacts, plan, planOutputChunks, tagVocabulary, task };
 };

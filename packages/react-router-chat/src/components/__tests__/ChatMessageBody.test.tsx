@@ -37,7 +37,11 @@ describe('ChatMessageBody Component', () => {
       component = renderBody(props);
     });
 
-    test('should parse the body as Markdown', () => {
+    test('should parse the body as Markdown', async () => {
+      // The renderer is loaded lazily, so wait for it before asserting on its
+      // output — until then the Suspense fallback shows the raw body.
+      await component.findByTestId('MarkdownRenderer');
+
       // The renderer parses Markdown, so `**bold**` becomes a <strong> — not
       // the literal asterisks the old escaped renderer produced.
       const strong = component.container.querySelector('strong');
@@ -54,9 +58,11 @@ describe('ChatMessageBody Component', () => {
       component = renderBody(props);
     });
 
-    test('should render the body through Markdown', () => {
+    test('should render the body through Markdown', async () => {
+      expect(
+        await component.findByTestId('MarkdownRenderer'),
+      ).toBeInTheDocument();
       expect(component.getByText('Notice')).toBeInTheDocument();
-      expect(component.getByTestId('MarkdownRenderer')).toBeInTheDocument();
     });
   });
 
@@ -83,15 +89,21 @@ describe('ChatMessageBody Component', () => {
 
     for (const role of ['assistant', 'system'] as const) {
       describe(`role ${role}`, () => {
-        test('should not inject a live <script> element', () => {
+        test('should not inject a live <script> element', async () => {
           component = renderBody({ body: SCRIPT_PAYLOAD, role });
+          // Await the lazy renderer first: asserting absence before it mounts
+          // would pass no matter what the renderer does with the payload.
+          await component.findByTestId('MarkdownRenderer');
+
           expect(
             component.container.querySelector('script'),
           ).not.toBeInTheDocument();
         });
 
-        test('should not inject a live <img onerror> element', () => {
+        test('should not inject a live <img onerror> element', async () => {
           component = renderBody({ body: IMG_PAYLOAD, role });
+          await component.findByTestId('MarkdownRenderer');
+
           expect(
             component.container.querySelector('img'),
           ).not.toBeInTheDocument();
