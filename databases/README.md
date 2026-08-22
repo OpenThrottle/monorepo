@@ -565,3 +565,156 @@ We keep **SQL files as the single source of truth** for schema. TypeORM is used 
 - **Applying schema changes:** Add a new numbered `.sql` file in `databases/migrations/`, then run `pnpm run database:migrate`. The script `scripts/openthrottle-database-migrations.ts` applies not-yet-recorded `.sql` files in filename order and records each in the `schema_migrations` ledger (see [Run-once / idempotent](#run-once--idempotent-schema_migrations-ledger)).
 - **Keeping runtime in sync:** After adding or changing a migration, update TypeORM entities in `@openthrottle/nestjs-repositories` (and any scripts that use OpenThrottle Postgres) so they match the SQL schema. Entity JSDoc should reference the migration(s), e.g. “Matches databases/migrations (002, 012).”
 - **Why not TypeORM migrations:** We already have a long, ordered history osf SQL migrations and a single command (`database:migrate`) that applies them. Introducing TypeORM migrations would duplicate history or require a one-time conversion and a separate “migrations run” table. Keeping SQL as source of truth avoids two migration systems and keeps one readable, version-controlled history.
+
+## Data retention
+
+Most OpenThrottle tables are bounded by the entities they describe — one row per plan, per task, per repository. A handful are **append-only and grow with agent activity**, with no natural ceiling and, until now, no delete path:
+
+| Table                                                        | Grows with                                 |
+| ------------------------------------------------------------ | ------------------------------------------ |
+| `plan_output_stream`                                         | every `append_plan_output` narration chunk |
+| `work_sessions` / `work_session_subjects` / `work_artifacts` | every work-ledger session                  |
+| `agent_token_usage`                                          | every assistant turn                       |
+| `skill_usage_events` / `skill_usage_outcomes`                | every skill invocation                     |
+| `code_embeddings`                                            | every indexed chunk, per workspace root    |
+
+BullMQ's own JSONL run output is already pruned by `bullmq-run-output-retention.service.ts`; the database side was not. The **Data Retention** queue (`applications/openthrottle-server/src/queues/data-retention/`) closes that gap: one nightly sweep applies a list of declarative per-table policies.
+
+### Dry run by default
+
+**The sweep deletes nothing unless `DATA_RETENTION_ENFORCE=true`.** Retention deletes are irreversible and the rows are real plan history, so enforcement is a deliberate operator decision rather than a deploy side effect. In the default dry-run mode the job still runs on schedule and logs exactly how many rows each policy _would_ remove — which is the signal you want before turning it on.
+
+Only the exact string `true` (case-insensitive, trimmed) enables enforcement. `1`, `yes`, `on` and typos all leave it in dry-run, so a mis-set variable can never quietly start deleting.
+
+| Variable                 | Default        | Meaning                                             |
+| ------------------------ | -------------- | --------------------------------------------------- |
+| `DATA_RETENTION_ENFORCE` | _unset_        | `true` actually deletes; anything else is a dry run |
+| `DATA_RETENTION_CRON`    | `0 30 3 * * *` | 6-field BullMQ cron for the sweep (nightly 03:30)   |
+| `DATA_RETENTION_TZ`      | UTC            | Timezone for the cron pattern                       |
+
+### How the sweep behaves
+
+- **Batched.** Each policy deletes at most `DATA_RETENTION_BATCH_SIZE` (1,000) rows per statement, so locks are taken and released in short transactions instead of being held across the whole backlog while the app is still writing.
+- **Bounded.** A per-policy cap of 50 batches per sweep stops a first enforced run against a large backlog from becoming one unbounded pass; the next sweep continues where it stopped and the log says so.
+- **Idempotent.** A run with nothing past retention counts zero and deletes nothing.
+- **Fault-isolated.** A policy that throws is logged and skipped; the remaining policies still run.
+
+### Policies
+
+Each policy lives in `queues/data-retention/policies/` and is registered in `data-retention.policies.ts`. Adding a table means adding one file and one array entry.
+
+#### `plan_output_stream`
+
+Keep the newest **500 chunks per plan**, and drop any chunk older than **90 days**, whichever is tighter for a given row.
+
+The per-plan cap is the rule that actually protects the table. An age-only policy looks sufficient — the audited table held only ~3.4k chunks / ~4.4MB across nearly seven months — but a single runaway agent loop can write tens of thousands of chunks to one plan well inside the 90-day window, and age alone would not touch them for months. The cap is applied per plan rather than globally so a busy plan cannot evict a quiet plan's recent output.
+
+Old narration is safe to drop: the plan and task records carry the durable outcome, and the chunks are a progress log, not the result.
+
+#### Work ledger (`work_sessions`, `work_session_subjects`, `work_artifacts`)
+
+Delete **closed** sessions after **365 days** when they hold at least one `verified` artifact, and after **180 days** when they do not. Both child tables declare `session_id ... ON DELETE CASCADE`, so deleting the session removes its subjects and artifacts with it — the policy's unit is the session, which is why it cannot leave orphans behind.
+
+Two windows because sessions are not equally valuable. A session holding a verified artifact is provenance — it is how a plan or task is tied to a merged commit — so it earns the year. A session with only unverified/orphaned artifacts, or none at all (most abandoned ones), is process residue.
+
+**Open sessions are never deleted, at any age.** An open row may be an in-flight session, and the hourly abandoned-session sweeper (`work-ledger-sweep`) closes genuinely dead ones within the hour, after which they become eligible here normally. Racing that sweeper for a live session is not worth it.
+
+Dropping a verified artifact after a year does not lose the traceability itself: per-task work commits carry `Plan-Id:` / `Task-Id:` footers in the git history, which outlives any row here.
+
+#### `agent_token_usage`
+
+Delete rows older than **180 days** by `created_at`.
+
+One row per assistant turn, append-only, never purged. Small today (137 rows in ~3 weeks on the audited database) but it scales with chat volume rather than with any bounded entity — the classic fact table that is fine until it suddenly is not.
+
+180 days sits just past the longest window the Usage UI offers, so every view the product can render is still answered from raw rows. If usage reporting later needs a longer horizon, the answer is a monthly rollup table feeding the UI, not a longer raw-row window — that only defers the problem.
+
+This policy and the skill-usage one below are built by the shared `createAgeRetentionPolicy` factory (`policies/create-age-retention-policy.ts`), which covers the common case: an append-only table with a timestamp column and no dependents. Postgres cannot bind identifiers as parameters, so the factory interpolates the table and column names and validates them against a strict snake_case pattern — they must be compile-time literals from the policy files, never request input.
+
+#### `skill_usage_events` and `skill_usage_outcomes`
+
+Delete rows older than **90 days** by `received_at`, as two independent policies.
+
+Both are written by the harness skill hooks, one row per skill invocation, and neither had a delete path. They are pruned separately rather than as a pair because `skill_usage_outcomes.session_id` is a TEXT correlation key, not a foreign key to the events table — there is no parent/child relationship to order deletes around.
+
+90 days is short because these rows are an observability signal, not a record. They answer "which skills are being used, and do they succeed" — a question about recent behaviour. Nothing references them and nothing is reconstructed from them.
+
+**Pruned by `received_at`, not `occurred_at`.** Both columns exist and `occurred_at` is the more natural reading of "90 days of history", but it comes from the reporting harness's own clock: a client with a skewed clock could stamp `occurred_at` years in the past and have its row swept on the very next run, losing data that had just arrived. `received_at` defaults to server-side `now()` on insert, so it is monotonic and cannot be influenced by a reporter. For these tables the two differ by seconds — hooks report immediately — so nothing is given up by choosing the safe column.
+
+#### `code_embeddings`
+
+Delete embeddings for a workspace root only when **both** hold: the root is absent from `repository_checkouts`, **and** its newest embedding is older than **30 days**.
+
+By far the largest table audited — ~5.8k rows and ~120MB for just two roots, because each row carries a 1536-dimension vector plus the source chunk. `@openthrottle/nestjs-vector-search` already deletes per `(workspace_root, path)` when re-indexing a file, so a _live_ root stays correct. What was missing is a sweep for roots that are gone entirely: a deleted clone, a reaped worktree, a checkout the user removed. Those embeddings are unreachable, and at ~20MB per thousand chunks they are the most expensive dead weight in the schema.
+
+**The conjunction is the safety property, and neither half is sufficient alone.** Absence alone is not enough: `/ide` code search can index an ad-hoc root that was never registered as a checkout, so deleting on absence alone would destroy a working index out from under an active session. Coldness alone is not enough either: a registered checkout that simply hasn't changed in a month is perfectly live, and re-embedding 120MB of a large monorepo to recover from a needless delete is expensive.
+
+Two smaller decisions worth knowing:
+
+- Paths are compared with trailing slashes trimmed. The failure mode is asymmetric — a cosmetic `/repo` vs `/repo/` mismatch would make a live root look unregistered and delete it — so matching is deliberately generous in the direction that preserves data.
+- `code_index_snapshots` is **not** used as the liveness signal despite being the obvious candidate. It was empty on the audited database while `code_embeddings` held 5,760 rows, so the absence of a snapshot says nothing about whether a root is real.
+
+Because this policy can free a lot of space at once, it is the one most worth reading a dry-run report for before enabling enforcement.
+
+## Foreign keys in migrations
+
+**Never declare a foreign key inline inside a statement guarded by `IF NOT EXISTS`.** This is enforced by `pnpm nx run monorepo:check-migration-hygiene` (part of `check:local`).
+
+The failure it prevents is silent and was found live. `CREATE TABLE IF NOT EXISTS` and `ADD COLUMN IF NOT EXISTS` are all-or-nothing: if the table or column already exists — an early bootstrap, a seed image predating the migration, a `pg_dump` restore that dropped constraints — the guard skips the **whole statement**. The column is already there, so nothing looks wrong, but its `REFERENCES` clause never runs. The `schema_migrations` ledger then records the migration as applied and nothing ever reconciles.
+
+The 2026-08-21 sweep found **15 foreign keys** missing this way on the live database, and orphan rows behind them that the declared `ON DELETE CASCADE` would have removed: 178 tasks, 68 plan embeddings, 50 output chunks and 6 role memberships pointing at parents that no longer exist.
+
+```sql
+-- ❌ the constraint silently vanishes when the table already exists
+CREATE TABLE IF NOT EXISTS tasks (
+    id      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    plan_id UUID NOT NULL REFERENCES plans (id) ON DELETE CASCADE
+);
+
+-- ✅ create the shape, then add the constraint in its own guarded statement
+CREATE TABLE IF NOT EXISTS tasks (
+    id      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    plan_id UUID NOT NULL
+);
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'tasks_plan_id_fkey'
+  ) THEN
+    ALTER TABLE tasks
+      ADD CONSTRAINT tasks_plan_id_fkey
+      FOREIGN KEY (plan_id) REFERENCES plans (id) ON DELETE CASCADE;
+  END IF;
+END
+$$;
+```
+
+Guarding on `pg_constraint` rather than on a name you chose freely keeps the migration idempotent and makes it a clean no-op on a fresh database, where `CREATE TABLE` already produced the constraint under its default `<table>_<column>_fkey` name. For a repair of existing tables, prefer `ADD CONSTRAINT ... NOT VALID` followed by `VALIDATE CONSTRAINT`: the first takes a brief lock without scanning, and the second scans under `SHARE UPDATE EXCLUSIVE`, which does not block concurrent reads or writes.
+
+### The 2026-08-21 repair (migration 099)
+
+Migration `099_restore_missing_foreign_keys.sql` is the one-time repair of this drift. It restored **15** foreign keys and cleaned the orphans their absence had allowed:
+
+| Rows | Table                | Action                                        |
+| ---- | -------------------- | --------------------------------------------- |
+| 178  | `tasks`              | deleted (parent plan gone, column `NOT NULL`) |
+| 68   | `plan_embeddings`    | deleted                                       |
+| 50   | `plan_output_stream` | deleted                                       |
+| 6    | `user_roles`         | deleted (user gone)                           |
+| 38   | `task_embeddings`    | deleted (hung off those tasks)                |
+| 25   | `task_tags`          | deleted (cascade)                             |
+| 12   | `plans.project_id`   | set to NULL                                   |
+| 91   | `tasks.project_id`   | set to NULL                                   |
+
+Every deleted row would already have been removed by the `ON DELETE CASCADE` its own migration declared, had the constraint existed — they survived only because it did not, and were unreachable (a task whose plan is gone cannot be listed, opened or run). The repair restores the state the schema always intended.
+
+The migration is idempotent in both halves: repairs are predicated on `NOT EXISTS (parent)` and the constraint loop guards on `pg_constraint` by column rather than by name, so a second run is a clean no-op and a fresh database — where `CREATE TABLE` already produced the constraints — is unaffected.
+
+### Auditing drift
+
+To check a live database against what the migrations declare, diff `pg_constraint` against the `REFERENCES` clauses in `databases/migrations/`. Tables dropped later (`commit_links` in 075, `workspace_local_repositories` in 078) will show as "declared but missing" and are expected — their declarations are dead letters, not drift.
+
+### One migration per numeric prefix
+
+A `NNN_` prefix must identify exactly one migration. Application order is filename-lexicographic so duplicates still apply deterministically, but the prefix stops being an identifier, which breaks tooling and humans that assume it is one. `check-migration-hygiene` fails on any **new** collision; the prefixes already duplicated when the check was added (`084` ×3, and `085`, `087`, `090`, `092` ×2) are applied history and are grandfathered.
