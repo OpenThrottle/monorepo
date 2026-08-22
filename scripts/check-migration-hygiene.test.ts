@@ -136,7 +136,7 @@ describe('findGuardedForeignKeyStatements', () => {
 
 describe('migrationPrefix', () => {
   it.each([
-    ['097_restore_missing_foreign_keys.sql', '097'],
+    ['099_restore_missing_foreign_keys.sql', '099'],
     ['084_create_rollout_flags.sql', '084'],
     ['001_enable_pgvector.sql', '001'],
   ])('reads %s as %s', (filename, expected) => {

@@ -23,7 +23,7 @@
  */
 
 import { execFileSync } from 'node:child_process';
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import {
   findGuardedForeignKeyStatements,
@@ -66,16 +66,33 @@ const listChangedMigrationFiles = (baseRef: string): readonly string[] => {
   const mergeBase = resolveMergeBase(baseRef);
   const output = execFileSync(
     'git',
-    ['diff', '--name-only', `${mergeBase}...HEAD`, '--', `${MIGRATIONS_DIR}/`],
+    [
+      'diff',
+      '--name-only',
+      // Exclude deletions. A migration removed or renumbered on this branch has
+      // no file left to read, and reading it would crash the check instead of
+      // reporting anything useful. A rename still surfaces as its added path.
+      '--diff-filter=d',
+      `${mergeBase}...HEAD`,
+      '--',
+      `${MIGRATIONS_DIR}/`,
+    ],
     { cwd: ROOT, encoding: 'utf8' },
   ).trim();
 
   if (!output) return [];
 
-  return output
-    .split('\n')
-    .map((file) => file.trim())
-    .filter((file) => file.endsWith('.sql'));
+  return (
+    output
+      .split('\n')
+      .map((file) => file.trim())
+      .filter((file) => file.endsWith('.sql'))
+      // The path list comes from a COMMIT diff but the rules read the WORKING
+      // TREE, so the two can legitimately disagree — a migration deleted or
+      // renumbered after the last commit is named by the diff but is no longer
+      // on disk. Skip what isn't there rather than crashing on it.
+      .filter((file) => existsSync(path.join(ROOT, file)))
+  );
 };
 
 const checkGuardedForeignKeys = (relativePath: string): readonly string[] => {

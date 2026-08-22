@@ -692,6 +692,25 @@ $$;
 
 Guarding on `pg_constraint` rather than on a name you chose freely keeps the migration idempotent and makes it a clean no-op on a fresh database, where `CREATE TABLE` already produced the constraint under its default `<table>_<column>_fkey` name. For a repair of existing tables, prefer `ADD CONSTRAINT ... NOT VALID` followed by `VALIDATE CONSTRAINT`: the first takes a brief lock without scanning, and the second scans under `SHARE UPDATE EXCLUSIVE`, which does not block concurrent reads or writes.
 
+### The 2026-08-21 repair (migration 099)
+
+Migration `099_restore_missing_foreign_keys.sql` is the one-time repair of this drift. It restored **15** foreign keys and cleaned the orphans their absence had allowed:
+
+| Rows | Table                | Action                                        |
+| ---- | -------------------- | --------------------------------------------- |
+| 178  | `tasks`              | deleted (parent plan gone, column `NOT NULL`) |
+| 68   | `plan_embeddings`    | deleted                                       |
+| 50   | `plan_output_stream` | deleted                                       |
+| 6    | `user_roles`         | deleted (user gone)                           |
+| 38   | `task_embeddings`    | deleted (hung off those tasks)                |
+| 25   | `task_tags`          | deleted (cascade)                             |
+| 12   | `plans.project_id`   | set to NULL                                   |
+| 91   | `tasks.project_id`   | set to NULL                                   |
+
+Every deleted row would already have been removed by the `ON DELETE CASCADE` its own migration declared, had the constraint existed — they survived only because it did not, and were unreachable (a task whose plan is gone cannot be listed, opened or run). The repair restores the state the schema always intended.
+
+The migration is idempotent in both halves: repairs are predicated on `NOT EXISTS (parent)` and the constraint loop guards on `pg_constraint` by column rather than by name, so a second run is a clean no-op and a fresh database — where `CREATE TABLE` already produced the constraints — is unaffected.
+
 ### Auditing drift
 
 To check a live database against what the migrations declare, diff `pg_constraint` against the `REFERENCES` clauses in `databases/migrations/`. Tables dropped later (`commit_links` in 075, `workspace_local_repositories` in 078) will show as "declared but missing" and are expected — their declarations are dead letters, not drift.
