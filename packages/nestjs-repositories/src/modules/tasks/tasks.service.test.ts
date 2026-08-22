@@ -631,6 +631,53 @@ describe('TasksService', () => {
       );
     });
 
+    it('getPlanHooksForPlans fetches many plans in one query, keyed by planId', async () => {
+      const beforeA = tasksFactory.build({
+        hookRole: 'before',
+        parentTaskId: null,
+        planId: 'plan-a',
+      });
+      const afterC = tasksFactory.build({
+        hookRole: 'after',
+        parentTaskId: null,
+        planId: 'plan-c',
+      });
+      vi.mocked(mockTaskRepo.find).mockClear();
+      vi.mocked(mockTaskRepo.find).mockResolvedValueOnce([beforeA, afterC]);
+
+      const byPlanId = await service.getPlanHooksForPlans([
+        'plan-a',
+        'plan-b',
+        'plan-c',
+        'plan-a',
+      ]);
+
+      // One query for the whole batch, with duplicate ids collapsed.
+      expect(mockTaskRepo.find).toHaveBeenCalledTimes(1);
+      expect(mockTaskRepo.find).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            hookRole: Not(IsNull()),
+            parentTaskId: IsNull(),
+            planId: In(['plan-a', 'plan-b', 'plan-c']),
+          },
+        }),
+      );
+      expect(byPlanId.get('plan-a')).toEqual({ after: [], before: [beforeA] });
+      expect(byPlanId.get('plan-c')).toEqual({ after: [afterC], before: [] });
+      // A plan with no hook rows is simply absent.
+      expect(byPlanId.has('plan-b')).toBe(false);
+    });
+
+    it('getPlanHooksForPlans short-circuits on an empty id list', async () => {
+      vi.mocked(mockTaskRepo.find).mockClear();
+
+      const byPlanId = await service.getPlanHooksForPlans([]);
+
+      expect(byPlanId.size).toBe(0);
+      expect(mockTaskRepo.find).not.toHaveBeenCalled();
+    });
+
     it('getTaskHooks groups a task’s before/after hooks', async () => {
       const before = tasksFactory.build({
         hookRole: 'before',

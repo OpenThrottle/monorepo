@@ -2,6 +2,7 @@ import { createMock } from '@golevelup/ts-vitest';
 import {
   type Project,
   ProjectsService,
+  type Task,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -22,7 +23,9 @@ describe('PlansLoaders', () => {
   const projectsService = createMock<ProjectsService>({
     getRepository: vi.fn().mockReturnValue({ find: findProjects }),
   });
+  const getPlanHooksForPlans = vi.fn();
   const tasksService = createMock<TasksService>({
+    getPlanHooksForPlans,
     getRepository: vi.fn().mockReturnValue({ createQueryBuilder }),
   });
 
@@ -76,6 +79,46 @@ describe('PlansLoaders', () => {
       expect(getRawMany).toHaveBeenCalledTimes(1);
       // plan-a => 3, plan-b absent => 0, plan-c => 1
       expect(counts).toEqual([3, 0, 1]);
+    });
+  });
+  describe('planHooksByPlanIdLoader', () => {
+    test('resolves beforeHooks and afterHooks for one plan with a single query', async () => {
+      const before = [createMock<Task>({ hookRole: 'before', id: 'h1' })];
+      const after = [createMock<Task>({ hookRole: 'after', id: 'h2' })];
+      getPlanHooksForPlans.mockResolvedValue(
+        new Map([['plan-a', { after, before }]]),
+      );
+
+      // Exactly what selecting both fields on one plan does.
+      const [forBeforeField, forAfterField] = await Promise.all([
+        loaders.planHooksByPlanIdLoader.load('plan-a'),
+        loaders.planHooksByPlanIdLoader.load('plan-a'),
+      ]);
+
+      expect(getPlanHooksForPlans).toHaveBeenCalledTimes(1);
+      expect(forBeforeField.before).toEqual(before);
+      expect(forAfterField.after).toEqual(after);
+    });
+
+    test('batches N planIds into one call and maps groups back in key order', async () => {
+      getPlanHooksForPlans.mockResolvedValue(
+        new Map([
+          ['plan-a', { after: [], before: [createMock<Task>({ id: 'h1' })] }],
+          ['plan-c', { after: [createMock<Task>({ id: 'h3' })], before: [] }],
+        ]),
+      );
+
+      const grouped = await Promise.all([
+        loaders.planHooksByPlanIdLoader.load('plan-a'),
+        loaders.planHooksByPlanIdLoader.load('plan-b'),
+        loaders.planHooksByPlanIdLoader.load('plan-c'),
+      ]);
+
+      expect(getPlanHooksForPlans).toHaveBeenCalledTimes(1);
+      expect(grouped[0].before).toHaveLength(1);
+      // plan-b has no hooks -> empty groups, not undefined
+      expect(grouped[1]).toEqual({ after: [], before: [] });
+      expect(grouped[2].after).toHaveLength(1);
     });
   });
 });

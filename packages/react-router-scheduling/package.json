@@ -74,6 +74,11 @@
   },
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
+  "sideEffects": [
+    "**/*.css",
+    "**/datetime.ts",
+    "**/temporal-bootstrap.ts"
+  ],
   "type": "module",
   "types": "./src/index.ts",
   "version": "1.0.0"

@@ -375,14 +375,14 @@ export class PlansResolver {
     description: `Plan-level before-hooks (beforeAll, or beforeEach when scope='each'), in execution order.`,
   })
   async beforeHooks(@Parent() parent: PlanObject): Promise<Task[]> {
-    return (await this.tasksService.getPlanHooks(parent.id)).before;
+    return (await this.loaders.planHooksByPlanIdLoader.load(parent.id)).before;
   }
 
   @ResolveField(() => [TaskObject], {
     description: `Plan-level after-hooks (afterAll, or afterEach when scope='each'), in execution order.`,
   })
   async afterHooks(@Parent() parent: PlanObject): Promise<Task[]> {
-    return (await this.tasksService.getPlanHooks(parent.id)).after;
+    return (await this.loaders.planHooksByPlanIdLoader.load(parent.id)).after;
   }
 
   private mapPlanRunObject(planRun: PlanRun): PlanRunObject {

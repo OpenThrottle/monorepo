@@ -1,5 +1,26 @@
+import { availableParallelism } from 'node:os';
 import { ConfigEnv, loadEnv } from 'vite';
 import { defineConfig } from 'vitest/config';
+
+/**
+ * @description Worker cap. CI keeps the hand-tuned 4 (see the `maxWorkers` note
+ * below — it is sized for the shared 4-vCPU box, not for the machine it happens
+ * to be running on). A developer laptop has no such constraint and was leaving
+ * most of its cores idle, so locally this scales with the machine, leaving two
+ * cores for the OS and capping at 8 — past that the workers contend and the
+ * suite gets slower again (measured on a 10-core M1 Max: 4 -> 167s, 8 -> 130s,
+ * 10 -> 136s).
+ *
+ * `vmMemoryLimit` bounds each worker independently, so peak heap stays
+ * ~maxWorkers x 512MB and more workers do not risk the OOM described below.
+ */
+const resolveMaxWorkers = (): number => {
+  if (process.env.CI) {
+    return 4;
+  }
+
+  return Math.max(4, Math.min(8, availableParallelism() - 2));
+};
 
 /**
  * @description Nx may set NODE_ENV=production for the test task; that pulls in
@@ -40,14 +61,15 @@ export default (config: ConfigEnv) => {
        * @description `maxWorkers` caps concurrent worker processes. CI runs the
        * `test` target at Nx's default concurrency on a 4-vCPU box shared with up to
        * two sibling suites from the same shard (see continuous-integration.yml), so
-       * this cap is what bounds this suite's share of it. Keep it at the 4-vCPU
-       * default: with `vmForks` + a per-worker
+       * this cap is what bounds this suite's share of it. Keep the CI value at the
+       * 4-vCPU default (see `resolveMaxWorkers`, which only scales up off CI):
+       * with `vmForks` + a per-worker
        * `vmMemoryLimit` (below), peak heap is bounded at ~4 x 512MB regardless of file
        * count, so 4 workers saturate the box safely. Vitest 4 removed the per-pool
        * `poolOptions.*.maxForks` knob; this top-level `maxWorkers` is the cap. Do NOT
        * raise `--max-old-space-size` — it fights the box limit, not the accumulation.
        */
-      maxWorkers: 4,
+      maxWorkers: resolveMaxWorkers(),
       /**
        * @description `vmForks` runs each test file with an isolated module registry
        * but REUSES the worker process, so the module graph is imported once per worker

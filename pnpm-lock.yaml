@@ -2039,6 +2039,9 @@ importers:
       '@vercel/analytics':
         specifier: 'catalog:'
         version: 2.0.1(@remix-run/react@2.17.5(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@6.0.3))(react@19.2.4)
+      '@vscode/ripgrep':
+        specifier: 'catalog:'
+        version: 1.18.0
       clsx:
         specifier: 'catalog:'
         version: 2.1.1
@@ -2075,6 +2078,9 @@ importers:
       sonner:
         specifier: 'catalog:'
         version: 2.0.7(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      ts-morph:
+        specifier: 'catalog:'
+        version: 28.0.0
     devDependencies:
       '@openthrottle/react-router-testing':
         specifier: workspace:^
