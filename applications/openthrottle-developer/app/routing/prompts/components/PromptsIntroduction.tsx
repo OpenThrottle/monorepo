@@ -4,6 +4,7 @@ import {
   GlobalFeatureOnboardingTrigger,
   GlobalHeading,
 } from '@openthrottle/react-router-ui-global';
+import { PROMPTS_COPY } from '~/routing/prompts/data/data.copy';
 
 export interface PromptsIntroductionProps {}
 
@@ -23,16 +24,18 @@ export const PromptsIntroduction = (
   // 🔌 Short Circuit
 
   return (
-    <div>
+    <div data-testid="PromptsIntroduction">
       <div className="mb-4 flex items-center justify-between">
-        <GlobalHeading heading="h1" icon={BrainIcon} title="Prompts" />
+        <GlobalHeading
+          heading="h1"
+          icon={BrainIcon}
+          title={PROMPTS_COPY.pageTitle}
+        />
         <GlobalFeatureOnboardingTrigger />
       </div>
 
       <p className="text-muted-foreground text-sm">
-        Open a prompt for Prompt versioning and debug: IDs, content
-        fingerprints, repo <code className="text-xs">filePath</code>, and a JSON
-        snapshot for tickets.
+        {PROMPTS_COPY.pageDescription}
       </p>
     </div>
   );
