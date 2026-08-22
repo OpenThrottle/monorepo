@@ -39,6 +39,34 @@ Canonical commands and schema overview: **`databases/README.md`**.
 
 **Enforcement:** Changed migration files that introduce **`CREATE TABLE`** must include matching **`COMMENT ON TABLE`** for each created table in the **same file**. Base ref: `main` (override with `MIGRATION_COMMENT_LINT_BASE`).
 
+## Foreign keys (required)
+
+**Never put an inline `REFERENCES` inside a statement guarded by `IF NOT EXISTS`.** Enforced by `pnpm nx run monorepo:check-migration-hygiene` (in `check:local`).
+
+`CREATE TABLE IF NOT EXISTS` / `ADD COLUMN IF NOT EXISTS` are all-or-nothing: if the table or column already exists the guard skips the **whole statement**, so the column is present but its constraint never lands — and the `schema_migrations` ledger still records the migration as applied. The 2026-08-21 health sweep found 15 foreign keys missing this way on the live database, with orphan rows behind them.
+
+Create the shape first, then add the constraint in its own statement guarded on `pg_constraint`:
+
+```sql
+CREATE TABLE IF NOT EXISTS tasks (
+    id      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    plan_id UUID NOT NULL
+);
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'tasks_plan_id_fkey') THEN
+    ALTER TABLE tasks ADD CONSTRAINT tasks_plan_id_fkey
+      FOREIGN KEY (plan_id) REFERENCES plans (id) ON DELETE CASCADE;
+  END IF;
+END
+$$;
+```
+
+Repairing existing tables: prefer `ADD CONSTRAINT ... NOT VALID` then `VALIDATE CONSTRAINT` — the first takes a brief lock without scanning, the second scans under `SHARE UPDATE EXCLUSIVE` and does not block reads or writes.
+
+**One migration per `NNN_` prefix.** A prefix must identify exactly one file; the check fails on new collisions (existing duplicates are grandfathered). Full detail: `databases/README.md` § Foreign keys in migrations.
+
 ## Patterns appendix (idempotent DDL)
 
 Summarized from existing migrations — see **`databases/README.md`** for workflow; do not duplicate full README here.

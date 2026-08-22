@@ -1,0 +1,31 @@
+-- Support the newest-first, date-ranged scan behind activityByDateRange
+-- (OT plan 70239a50, task c3841c05).
+--
+-- The activity resolver's plan_output_stream leg selects chunks in a date range
+-- ordered by created_at DESC. It now carries a SQL LIMIT, but a limit alone does
+-- not bound the work: without an index on created_at the planner produces
+--
+--     Limit -> Sort -> Hash Join -> Seq Scan on plan_output_stream
+--
+-- and the Sort has to materialise every row in the range before the Limit can
+-- discard almost all of it. The limit bounds what crosses the wire, not what
+-- Postgres reads.
+--
+-- The existing index cannot serve this. Despite its name,
+-- `idx_plan_output_stream_created_at` is on (plan_id, created_at) -- it leads on
+-- plan_id, so it orders chunks WITHIN a plan and is no use for a global
+-- created_at ordering across all plans.
+--
+-- With this index the same query plans as
+--
+--     Limit -> Nested Loop -> Index Scan using idx_plan_output_stream_created_at_desc
+--
+-- so Postgres walks the index backwards and stops after the requested rows: a
+-- true top-N with no sort step.
+--
+-- DESC is specified to match the query's ORDER BY. Postgres can scan a btree in
+-- either direction, so this is not strictly required, but it keeps a forward
+-- scan as the common case and documents the access pattern the index exists for.
+
+CREATE INDEX IF NOT EXISTS idx_plan_output_stream_created_at_desc
+  ON plan_output_stream (created_at DESC);

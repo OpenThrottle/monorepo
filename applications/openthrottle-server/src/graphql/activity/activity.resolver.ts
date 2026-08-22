@@ -36,6 +36,23 @@ function getTimestamp(row: ActivityRow): Date {
   return row.updatedAt;
 }
 
+/**
+ * Items returned when the caller does not paginate. Matches the ceiling already
+ * applied to an explicit `limit`, so an unpaginated request behaves like asking
+ * for the first (largest allowed) page rather than for the entire range.
+ */
+const ACTIVITY_DEFAULT_LIMIT = 500;
+
+/**
+ * Absolute ceiling on rows read from any single leg, whatever offset is asked
+ * for. Deep offset pagination is inherently expensive, and the real callers
+ * never go there — the dashboard does not paginate at all and `limit` is capped
+ * at 500 — so this exists purely so a pathological `offset` cannot turn into an
+ * unbounded scan. `totalCount` stays accurate past this point; only the rows
+ * themselves stop.
+ */
+const ACTIVITY_FETCH_DEPTH_CAP = 2_000;
+
 // @authz-stance: authenticated-only (Path A — see OT plan 18e16dfc-4f22-43f9-9b77-6fc90309b60a)
 @Resolver(() => ActivityCommitRowObject)
 export class ActivityCommitRowResolver {
@@ -352,7 +369,35 @@ export class ActivityResolver {
     const q = <T>(sql: string, params?: unknown[]): Promise<T> =>
       repo.manager.query(sql, params);
 
-    const [commitRows, outputRows, taskRows] = await Promise.all([
+    const usePagination = limit != null && limit > 0;
+    const effectiveLimit = usePagination
+      ? Math.min(limit, ACTIVITY_DEFAULT_LIMIT)
+      : ACTIVITY_DEFAULT_LIMIT;
+    const effectiveOffset = usePagination ? Math.max(0, offset ?? 0) : 0;
+
+    /**
+     * Rows to read from EACH leg.
+     *
+     * The three legs are merged, sorted by timestamp descending, then sliced to
+     * [offset, offset + limit). Any row that survives into that window is among
+     * the newest (offset + limit) rows overall, and therefore also among the
+     * newest (offset + limit) rows of its OWN leg. So capping each leg at that
+     * depth cannot drop a row the unbounded query would have returned — the
+     * result is identical, but Postgres stops after a bounded number of rows
+     * instead of materialising the whole date range.
+     *
+     * This matters most for the plan_output_stream leg, which selects full
+     * `content` for every chunk: a wide `daysBack` window used to pull every
+     * chunk's text into memory just to throw almost all of it away. Both real
+     * callers (the dashboard and the MCP tool) pass no limit at all, so the
+     * unbounded path was the one actually in use.
+     */
+    const fetchDepth = Math.min(
+      effectiveOffset + effectiveLimit,
+      ACTIVITY_FETCH_DEPTH_CAP,
+    );
+
+    const [commitRows, outputRows, taskRows, counts] = await Promise.all([
       q<
         {
           created_at: string;
@@ -370,7 +415,11 @@ export class ActivityResolver {
         // to the most-specific subject of their session (prefer a task subject over plan-level).
         // DISTINCT ON (wa.id) yields exactly one activity row per commit artifact (no fan-out when
         // a session has several subjects). The JS merge below re-sorts by timestamp.
-        `SELECT DISTINCT ON (wa.id)
+        //
+        // DISTINCT ON dictates the inner ORDER BY, so the newest-first ordering the
+        // row cap depends on has to happen in an outer query rather than inline.
+        `SELECT * FROM (
+           SELECT DISTINCT ON (wa.id)
                 wa.id,
                 wss.plan_id,
                 wss.task_id,
@@ -380,14 +429,17 @@ export class ActivityResolver {
                 wa.produced_at AS created_at,
                 p.title AS plan_title,
                 t.title AS task_title
-         FROM work_artifacts wa
-         JOIN work_session_subjects wss ON wss.session_id = wa.session_id
-         JOIN plans p ON p.id = wss.plan_id
-         LEFT JOIN tasks t ON t.id = wss.task_id
-         WHERE wa.type = 'git_commit'
-           AND wa.produced_at >= $1::timestamptz AND wa.produced_at < $2::timestamptz
-         ORDER BY wa.id, (wss.task_id IS NULL)`,
-        [startIso, endIso],
+           FROM work_artifacts wa
+           JOIN work_session_subjects wss ON wss.session_id = wa.session_id
+           JOIN plans p ON p.id = wss.plan_id
+           LEFT JOIN tasks t ON t.id = wss.task_id
+           WHERE wa.type = 'git_commit'
+             AND wa.produced_at >= $1::timestamptz AND wa.produced_at < $2::timestamptz
+           ORDER BY wa.id, (wss.task_id IS NULL)
+         ) deduped
+         ORDER BY deduped.created_at DESC
+         LIMIT $3`,
+        [startIso, endIso, fetchDepth],
       ),
       q<
         {
@@ -403,8 +455,9 @@ export class ActivityResolver {
          FROM plan_output_stream pos
          JOIN plans p ON pos.plan_id = p.id
          WHERE pos.created_at >= $1::timestamptz AND pos.created_at < $2::timestamptz
-         ORDER BY pos.created_at ASC`,
-        [startIso, endIso],
+         ORDER BY pos.created_at DESC
+         LIMIT $3`,
+        [startIso, endIso, fetchDepth],
       ),
       q<
         {
@@ -420,7 +473,36 @@ export class ActivityResolver {
          FROM tasks t
          JOIN plans p ON t.plan_id = p.id
          WHERE t.updated_at >= $1::timestamptz AND t.updated_at < $2::timestamptz
-         ORDER BY t.updated_at DESC`,
+         ORDER BY t.updated_at DESC
+         LIMIT $3`,
+        [startIso, endIso, fetchDepth],
+      ),
+      // Capping the legs means merged.length is no longer the range total, so
+      // totalCount comes from its own aggregate. Counting is far cheaper than
+      // fetching: no wide `content` column and no join for plan/task titles.
+      //
+      // Each leg repeats the SAME joins as its fetch above, including the inner
+      // JOIN to plans. That is load-bearing, not redundant: a row whose parent
+      // plan is missing is dropped by the fetch, so counting without the join
+      // would report a total the rows can never add up to. Such rows exist today
+      // (orphaned tasks and output chunks predating the restored foreign keys).
+      q<{ total: string }[]>(
+        `SELECT (
+           (SELECT count(DISTINCT wa.id)
+              FROM work_artifacts wa
+              JOIN work_session_subjects wss ON wss.session_id = wa.session_id
+              JOIN plans p ON p.id = wss.plan_id
+             WHERE wa.type = 'git_commit'
+               AND wa.produced_at >= $1::timestamptz AND wa.produced_at < $2::timestamptz)
+         + (SELECT count(*)
+              FROM plan_output_stream pos
+              JOIN plans p ON p.id = pos.plan_id
+             WHERE pos.created_at >= $1::timestamptz AND pos.created_at < $2::timestamptz)
+         + (SELECT count(*)
+              FROM tasks t
+              JOIN plans p ON p.id = t.plan_id
+             WHERE t.updated_at >= $1::timestamptz AND t.updated_at < $2::timestamptz)
+         )::text AS total`,
         [startIso, endIso],
       ),
     ]);
@@ -478,16 +560,19 @@ export class ActivityResolver {
       (a, b) => getTimestamp(b.row).getTime() - getTimestamp(a.row).getTime(),
     );
 
-    const totalCount = merged.length;
-    const usePagination = limit != null && limit > 0;
-    const effectiveLimit = usePagination ? Math.min(limit, 500) : totalCount;
-    const effectiveOffset = usePagination ? Math.max(0, offset ?? 0) : 0;
+    // Rows in range, independent of how many were actually read.
+    const totalCount = Number(counts[0]?.total ?? 0);
+
     const slice = merged.slice(
       effectiveOffset,
       effectiveOffset + effectiveLimit,
     );
-    const hasNext =
-      usePagination && effectiveOffset + effectiveLimit < totalCount;
+
+    // Derived from what was returned rather than from the requested limit, so an
+    // unpaginated caller that hit the default page size still learns there is
+    // more, and a caller past ACTIVITY_FETCH_DEPTH_CAP is not told the range is
+    // exhausted when it is not.
+    const hasNext = effectiveOffset + slice.length < totalCount;
 
     const result = new ActivityByDateResultObject();
 
