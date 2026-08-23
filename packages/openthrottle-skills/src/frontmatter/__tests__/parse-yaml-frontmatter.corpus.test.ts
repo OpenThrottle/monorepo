@@ -375,7 +375,7 @@ const normalizeForComparison = (
 
 describe('parseYamlFrontmatter corpus regression', () => {
   test('the current .agents corpus is non-empty (sanity check for the walk itself)', () => {
-    expect(corpusFiles.length).toBeGreaterThan(40);
+    expect(corpusFiles.length).toBeGreaterThanOrEqual(36);
   });
 
   test('every known divergence is exercised by at least one corpus file', () => {

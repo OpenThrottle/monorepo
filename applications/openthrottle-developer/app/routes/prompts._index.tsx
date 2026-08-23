@@ -7,9 +7,8 @@ import {
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
   GlobalErrorBoundary,
+  GlobalFeatureOnboarding,
   GlobalFeatureOnboardingModal,
-} from '@openthrottle/react-router-ui-global';
-import {
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
@@ -23,10 +22,10 @@ import { PromptsIntroduction } from '~/routing/prompts/components/PromptsIntrodu
 import { PromptsStats } from '~/routing/prompts/components/PromptsStats';
 import { PromptToolbar } from '~/routing/prompts/components/PromptToolbar';
 import { PromptsTable } from '~/routing/prompts/components/PromptsTable';
+import { PROMPTS_ONBOARDING } from '~/routing/prompts/data/data.copy';
 import { SITE_TITLE } from '~/global/config/settings';
 import { useSearchParams } from 'react-router';
 import type { Route } from '@/app/routes/+types/prompts._index';
-import { RULES_ONBOARDING } from '~/routing/rules/data/data.copy';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -112,6 +111,11 @@ export default function Component(
   // Setup
   const showStats = false;
   const { sortBy, sortOrder } = parsePromptsSortFromSearchParams(searchParams);
+  const isFiltered = (search != null && search.length > 0) || types.length > 0;
+  // A genuinely-new user has zero prompts and no active filter — show the rich
+  // onboarding pitch instead of the toolbar/table. A zero-result *filtered*
+  // search still falls through to PromptsTable -> PromptsEmpty (clear-filters CTA).
+  const isNewUser = total === 0 && !isFiltered;
 
   // Handlers
 
@@ -133,34 +137,38 @@ export default function Component(
         )}
         <PromptsIntroduction />
 
-        <div className="flex flex-col gap-4">
-          <PromptToolbar
-            limit={limit}
-            page={page}
-            sortBy={sortBy}
-            sortOrder={sortOrder}
-            types={types}
-          />
-          <PromptsTable
-            className="bg-card"
-            prompts={prompts ?? []}
-            search={search ?? undefined}
-          />
-          <OpenThrottlePagination
-            basePath="/prompts"
-            className="mt-8"
-            limit={limit}
-            page={page}
-            resultLabel="prompts"
-            search={search ?? undefined}
-            sortBy={sortBy}
-            sortOrder={sortOrder}
-            total={total}
-          />
-        </div>
+        {isNewUser ? (
+          <GlobalFeatureOnboarding content={PROMPTS_ONBOARDING} />
+        ) : (
+          <div className="flex flex-col gap-4">
+            <PromptToolbar
+              limit={limit}
+              page={page}
+              sortBy={sortBy}
+              sortOrder={sortOrder}
+              types={types}
+            />
+            <PromptsTable
+              className="bg-card"
+              prompts={prompts ?? []}
+              search={search ?? undefined}
+            />
+            <OpenThrottlePagination
+              basePath="/prompts"
+              className="mt-8"
+              limit={limit}
+              page={page}
+              resultLabel="prompts"
+              search={search ?? undefined}
+              sortBy={sortBy}
+              sortOrder={sortOrder}
+              total={total}
+            />
+          </div>
+        )}
       </GlobalScreen>
 
-      <GlobalFeatureOnboardingModal content={RULES_ONBOARDING} />
+      <GlobalFeatureOnboardingModal content={PROMPTS_ONBOARDING} />
     </>
   );
 }

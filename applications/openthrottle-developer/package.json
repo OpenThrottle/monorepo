@@ -38,6 +38,7 @@
     "@react-router/serve": "catalog:",
     "@tanstack/react-table": "catalog:",
     "@vercel/analytics": "catalog:",
+    "@vscode/ripgrep": "catalog:",
     "clsx": "catalog:",
     "date-fns": "catalog:",
     "dotenv": "catalog:",
@@ -49,7 +50,8 @@
     "react-dom": "catalog:",
     "react-router": "catalog:",
     "recharts": "catalog:",
-    "sonner": "catalog:"
+    "sonner": "catalog:",
+    "ts-morph": "catalog:"
   },
   "devDependencies": {
     "@openthrottle/react-router-testing": "workspace:^"

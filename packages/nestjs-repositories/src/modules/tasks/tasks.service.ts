@@ -304,6 +304,44 @@ export class TasksService {
     return this.groupHooks(hooks);
   }
 
+  /**
+   * @description Batched {@link getPlanHooks}: plan-level hooks for many plans in
+   * a single query, keyed by plan id. Plans with no hooks are absent from the
+   * map. Backs the request-scoped `planHooksByPlanIdLoader`, so a query selecting
+   * both `beforeHooks` and `afterHooks` — and one selecting them across a list of
+   * plans — costs one round-trip rather than one per field per plan.
+   */
+  async getPlanHooksForPlans(
+    planIds: readonly string[],
+  ): Promise<Map<string, GroupedHooks>> {
+    const uniqueIds = [...new Set(planIds)];
+
+    if (uniqueIds.length === 0) {
+      return new Map();
+    }
+
+    const hooks = await this.taskRepository.find({
+      order: PLAN_TASK_LIST_ORDER,
+      where: {
+        hookRole: Not(IsNull()),
+        parentTaskId: IsNull(),
+        planId: In(uniqueIds),
+      },
+    });
+
+    const byPlanId = new Map<string, Task[]>();
+    for (const hook of hooks) {
+      if (hook.planId == null) continue;
+      const list = byPlanId.get(hook.planId) ?? [];
+      list.push(hook);
+      byPlanId.set(hook.planId, list);
+    }
+
+    return new Map(
+      [...byPlanId].map(([planId, list]) => [planId, this.groupHooks(list)]),
+    );
+  }
+
   private groupHooks(hooks: Task[]): GroupedHooks {
     return {
       after: hooks.filter((hook) => hook.hookRole === 'after'),

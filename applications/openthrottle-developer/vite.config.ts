@@ -52,6 +52,21 @@ export default (config: ConfigEnv) => {
     },
     ssr: {
       // external: ['@openthrottle/openthrottle-notifications'],
+      /*
+        `ts-morph` carries the whole TypeScript compiler (~11 MB). It is reached
+        only from the IDE engine adapter, which routes already load through a
+        dynamic `import()`, so bundling it bought nothing and made the SSR chunk
+        11.4 MB. Left external, Node resolves it from node_modules on the first
+        request that actually needs symbol analysis. `@openthrottle/openthrottle-ide`
+        itself stays bundled — it is source-first (`main: ./src/index.ts`), so
+        Node could not require it directly.
+
+        `@vscode/ripgrep` is external for a different reason: bundling it moved
+        its runtime lookup for the platform-specific `rg` binary next to the SSR
+        output, where the optional dependency is not reachable, and it threw at
+        module load — taking down every IDE route on a production build.
+      */
+      external: ['@vscode/ripgrep', 'ts-morph'],
       noExternal: ['@phosphor-icons/react'],
     },
   });

@@ -235,7 +235,10 @@ export {
   TASK_SORT_ORDER_GAP,
   TasksService,
 } from './modules/tasks/tasks.service';
-export type { CreateTaskBatchItem } from './modules/tasks/tasks.service';
+export type {
+  CreateTaskBatchItem,
+  GroupedHooks,
+} from './modules/tasks/tasks.service';
 export { SkillAvailabilityRuleSet } from './modules/skill-availability/skill-availability-rule-set.entity';
 export type { SkillAvailabilityRuleSetData } from './modules/skill-availability/skill-availability-rule-set.entity';
 export { SkillAvailabilityRule } from './modules/skill-availability/skill-availability-rule.entity';

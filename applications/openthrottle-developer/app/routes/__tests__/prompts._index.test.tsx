@@ -4,7 +4,14 @@ import { buildRootMatch } from '~/testing/root-match-fixture';
 import Index from '../prompts._index';
 import type { PromptCardFragment } from '~/__generated__/graphql';
 import { CustomPromptType } from '~/__generated__/graphql';
-import { renderRoutesStub } from '~/testing/route-fixtures';
+import {
+  renderRoutesStub,
+  renderWithMemoryRouter,
+} from '~/testing/route-fixtures';
+import {
+  PROMPTS_EMPTY_COPY,
+  PROMPTS_ONBOARDING,
+} from '~/routing/prompts/data/data.copy';
 import type { Route } from '@/app/routes/+types/prompts._index';
 
 type PromptsIndexLoaderData = Route.ComponentProps['loaderData'];
@@ -74,7 +81,7 @@ describe('routes/prompts._index.tsx', () => {
     expect(view.queryByTestId('prompts-grid')).not.toBeInTheDocument();
   });
 
-  test('renders empty state inside table path when no prompts', () => {
+  test('shows the onboarding pitch for a new user (empty + unfiltered)', () => {
     const view = renderRoutesStub(
       <Index
         actionData={undefined}
@@ -84,9 +91,75 @@ describe('routes/prompts._index.tsx', () => {
       />,
     );
 
-    expect(view.getByText('No prompts yet')).toBeInTheDocument();
+    expect(view.getByTestId('GlobalFeatureOnboarding')).toBeInTheDocument();
+    expect(view.getByTestId('PromptsIntroduction')).toBeInTheDocument();
+    expect(view.queryByTestId('PromptsTable')).not.toBeInTheDocument();
+    expect(
+      view.getByRole('link', { name: PROMPTS_ONBOARDING.cta.label }),
+    ).toHaveAttribute('href', PROMPTS_ONBOARDING.cta.to);
+  });
+
+  test('renders empty state inside table path when filters match nothing', () => {
+    const view = renderRoutesStub(
+      <Index
+        actionData={undefined}
+        loaderData={{
+          ...mockLoaderDataEmpty,
+          search: 'zzzz-no-match',
+        }}
+        matches={matches}
+        params={{}}
+      />,
+    );
+
+    expect(view.getByText(PROMPTS_EMPTY_COPY.searchTitle)).toBeInTheDocument();
     expect(view.getByTestId('PromptsTable')).toBeInTheDocument();
+    expect(
+      view.queryByTestId('GlobalFeatureOnboarding'),
+    ).not.toBeInTheDocument();
     expect(view.queryByTestId('PromptCard')).not.toBeInTheDocument();
+  });
+
+  test('renders the onboarding trigger in the header when populated', () => {
+    const view = renderRoutesStub(
+      <Index
+        actionData={undefined}
+        loaderData={mockLoaderDataWithPrompts}
+        matches={matches}
+        params={{}}
+      />,
+    );
+
+    expect(
+      view.getByTestId('GlobalFeatureOnboardingTrigger'),
+    ).toBeInTheDocument();
+    expect(
+      view.queryByTestId('GlobalFeatureOnboarding'),
+    ).not.toBeInTheDocument();
+  });
+
+  test('reveals the onboarding modal over a populated list via ?modal=onboarding', () => {
+    const view = renderWithMemoryRouter(
+      [
+        {
+          element: (
+            <Index
+              actionData={undefined}
+              loaderData={mockLoaderDataWithPrompts}
+              matches={matches}
+              params={{}}
+            />
+          ),
+          path: '/prompts',
+        },
+      ],
+      { initialEntries: ['/prompts?modal=onboarding'] },
+    );
+
+    expect(view.getByTestId('GlobalFeatureOnboarding')).toBeInTheDocument();
+    expect(
+      view.getByRole('link', { name: PROMPTS_ONBOARDING.cta.label }),
+    ).toHaveAttribute('href', PROMPTS_ONBOARDING.cta.to);
   });
 
   test('renders pagination when prompts exist', () => {

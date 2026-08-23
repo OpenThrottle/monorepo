@@ -136,7 +136,11 @@ describe('PlansResolver', () => {
 
   const mockProjectLoad = vi.fn().mockResolvedValue(null);
   const mockTaskCountLoad = vi.fn().mockResolvedValue(0);
+  const mockPlanHooksLoad = vi
+    .fn()
+    .mockResolvedValue({ after: [], before: [] });
   const mockPlansLoaders = createMock<PlansLoaders>({
+    planHooksByPlanIdLoader: { load: mockPlanHooksLoad },
     projectLoader: { load: mockProjectLoad },
     taskCountByPlanIdLoader: { load: mockTaskCountLoad },
   });
@@ -533,28 +537,46 @@ describe('PlansResolver', () => {
       expect(result).toBe(7);
     });
 
-    test('beforeHooks resolves the plan-level before group via getPlanHooks', async () => {
-      vi.mocked(mockTasksService.getPlanHooks).mockResolvedValueOnce({
-        after: [],
-        before: [],
-      });
+    test('beforeHooks resolves the plan-level before group via planHooksByPlanIdLoader', async () => {
+      mockPlanHooksLoad.mockResolvedValueOnce({ after: [], before: [] });
 
       const result = await resolver.beforeHooks(mockPlan);
 
-      expect(mockTasksService.getPlanHooks).toHaveBeenCalledWith(mockPlan.id);
+      expect(mockPlanHooksLoad).toHaveBeenCalledWith(mockPlan.id);
       expect(result).toEqual([]);
     });
 
-    test('afterHooks resolves the plan-level after group via getPlanHooks', async () => {
-      vi.mocked(mockTasksService.getPlanHooks).mockResolvedValueOnce({
-        after: [],
-        before: [],
-      });
+    test('afterHooks resolves the plan-level after group via planHooksByPlanIdLoader', async () => {
+      mockPlanHooksLoad.mockResolvedValueOnce({ after: [], before: [] });
 
       const result = await resolver.afterHooks(mockPlan);
 
-      expect(mockTasksService.getPlanHooks).toHaveBeenCalledWith(mockPlan.id);
+      expect(mockPlanHooksLoad).toHaveBeenCalledWith(mockPlan.id);
       expect(result).toEqual([]);
+    });
+
+    test('selecting both hook fields never calls the service directly', async () => {
+      mockPlanHooksLoad.mockClear();
+      vi.mocked(mockTasksService.getPlanHooks).mockClear();
+
+      const [before, after] = await Promise.all([
+        resolver.beforeHooks(mockPlan),
+        resolver.afterHooks(mockPlan),
+      ]);
+
+      /*
+        Both ResolveFields go through the request-scoped loader under the same
+        key, so the two loads collapse to one service fetch. The collapsing
+        itself is asserted against the real DataLoader in plans-loaders.test.ts;
+        here the loader is mocked, so what matters is that neither field reaches
+        TasksService.getPlanHooks on its own.
+      */
+      expect(mockPlanHooksLoad).toHaveBeenCalledTimes(2);
+      expect(mockPlanHooksLoad).toHaveBeenNthCalledWith(1, mockPlan.id);
+      expect(mockPlanHooksLoad).toHaveBeenNthCalledWith(2, mockPlan.id);
+      expect(mockTasksService.getPlanHooks).not.toHaveBeenCalled();
+      expect(before).toEqual([]);
+      expect(after).toEqual([]);
     });
   });
 

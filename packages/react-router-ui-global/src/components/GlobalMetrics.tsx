@@ -17,10 +17,21 @@ import { GLOBAL_METRICS_POLL_INTERVAL_PRESETS } from '../config';
 import { formatMetricsSummary } from '../utils/utils.global';
 import { useGlobalMetrics } from '../hooks/useGlobalMetrics';
 import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
-import { GlobalMetricsChart } from './GlobalMetricsChart';
 import { GlobalMetricsInfoModal } from './GlobalMetricsInfoModal';
 import { GlobalMetricsInfoTrigger } from './GlobalMetricsInfoTrigger';
 import { GlobalMetricsStatCards } from './GlobalMetricsStatCards';
+
+/**
+ * `recharts` is ~350 KB of client JS and the chart only renders once the panel
+ * is expanded *and* has samples — but a static import put it in the root
+ * shell's graph, so every route paid for it. Deferring it here keeps the
+ * collapsed panel (the default) free of charting code.
+ */
+const GlobalMetricsChartLazy = React.lazy(async () => {
+  const chartModule = await import('./GlobalMetricsChart');
+
+  return { default: chartModule.GlobalMetricsChart };
+});
 
 export interface GlobalMetricsProps {
   readonly className?: string;
@@ -180,7 +191,11 @@ export const GlobalMetrics = (
                 <GlobalMetricsStatCards serverMetrics={serverMetrics} />
               )}
 
-              {showMetricsChart && <GlobalMetricsChart data={chartLineData} />}
+              {showMetricsChart && (
+                <React.Suspense fallback={null}>
+                  <GlobalMetricsChartLazy data={chartLineData} />
+                </React.Suspense>
+              )}
             </div>
           </CollapsibleContent>
         </div>

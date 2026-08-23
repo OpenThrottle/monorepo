@@ -49,7 +49,10 @@ describe('ChatThread Component', () => {
       expect(component.getByText('Clutch Assistant:')).toBeInTheDocument();
     });
 
-    test('should render assistant content in Markdown wrapper', () => {
+    test('should render assistant content in Markdown wrapper', async () => {
+      // The markdown renderer is lazy; wait for it before asserting on its DOM.
+      await component.findByTestId('MarkdownRenderer');
+
       expect(component.getByTestId('ChatThread-message-2')).toBeInTheDocument();
       expect(
         component
@@ -60,11 +63,13 @@ describe('ChatThread Component', () => {
   });
 
   describe('when assistant message has markdown-like body', () => {
-    test('should render assistant body via Markdown', () => {
+    test('should render assistant body via Markdown', async () => {
       const markdownMessages: readonly ChatMessage[] = [
         { body: '# Title', id: 'a1', role: 'assistant' },
       ];
       component = renderThread({ messages: markdownMessages });
+      await component.findByTestId('MarkdownRenderer');
+
       // The renderer parses Markdown, so `# Title` becomes a heading element
       // with the text `Title` — not the literal `# Title` string.
       const heading = component.getByRole('heading', { name: 'Title' });
@@ -321,7 +326,7 @@ describe('ChatThread Component', () => {
     const timeoutCopy =
       'cursor-agent did not start in time. This is usually a cold start — send the message again and it will normally succeed.';
 
-    test('should render the auth-required copy with its next step', () => {
+    test('should render the auth-required copy with its next step', async () => {
       component = renderThread({
         ...props,
         messages: [
@@ -329,6 +334,7 @@ describe('ChatThread Component', () => {
           { body: authRequiredCopy, id: '2', role: 'system' },
         ],
       });
+      await component.findByTestId('MarkdownRenderer');
 
       const thread = within(component.container).getByTestId('ChatThread');
       // The body renders as markdown, so the backticked command lands in its
