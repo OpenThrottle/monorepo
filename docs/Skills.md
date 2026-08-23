@@ -2,24 +2,28 @@
 
 Skills here are **[Agent Skills](https://agentskills.io/)** — the open format (folder + `SKILL.md`) that Claude Code, Cursor, Codex, Grok Build, OpenCode, Copilot, Gemini CLI, and others already speak. OpenThrottle manages them so **every tool sees the same skills from the same starting point**, regardless of who installed them or which tool they used. Author against the [specification](https://agentskills.io/specification); do not invent a parallel format.
 
-The mechanism is the **`skill-sync`** skill — see [`skills/skill-sync/SKILL.md`](../skills/skill-sync/SKILL.md) for the full contract. This page is the human-facing summary of the policy + what's installed.
+The mechanism is the **`ot-skill-sync`** skill — see [`skills/ot-skill-sync/SKILL.md`](../skills/ot-skill-sync/SKILL.md) for the full contract. This page is the human-facing summary of the policy + what's installed.
 
-## Architecture (skill-sync)
+> **Rename (2026-08):** formerly `skill-sync`. Downstream repos that installed via
+> `npx skills add openthrottle/monorepo --skill skill-sync` must remove that install
+> and re-add with `--skill ot-skill-sync`.
+
+## Architecture (ot-skill-sync)
 
 Two-stage layout with strict ownership:
 
 | Location                                      | Contents                                                                                                                                                                                                                                                                                                | Owned by         |
 | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
 | `skills/`                                     | Hand-authored, **OT-owned** skills, committed to git. Edit our own skills here.                                                                                                                                                                                                                         | Humans (via PRs) |
-| `.agents/skills/`                             | Generated merged SSOT view most CLIs read in-repo (Claude Code, Cursor 2.4+, Codex, OpenCode). **Real dirs** = external installs (tracked in `skills-lock.json`). **Symlinks** = our own `skills/*`. **Never hand-edit.**                                                                               | skill-sync       |
-| `<agent>/skills/` (default `.claude/skills/`) | Per-agent fan-out for CLIs that read a `.claude`-style dir (e.g. Grok Build). Cursor 2.4+ reads `.agents/skills/` directly, so there is **no** `.cursor/skills` fan-out. `.agents/skills/` + `.claude/skills/` are the two near-universal in-repo targets. All symlinks, all generated, all gitignored. | skill-sync       |
+| `.agents/skills/`                             | Generated merged SSOT view most CLIs read in-repo (Claude Code, Cursor 2.4+, Codex, OpenCode). **Real dirs** = external installs (tracked in `skills-lock.json`). **Symlinks** = our own `skills/*`. **Never hand-edit.**                                                                               | ot-skill-sync    |
+| `<agent>/skills/` (default `.claude/skills/`) | Per-agent fan-out for CLIs that read a `.claude`-style dir (e.g. Grok Build). Cursor 2.4+ reads `.agents/skills/` directly, so there is **no** `.cursor/skills` fan-out. `.agents/skills/` + `.claude/skills/` are the two near-universal in-repo targets. All symlinks, all generated, all gitignored. | ot-skill-sync    |
 
 ```bash
 # Rebuild/refresh the layout (idempotent, safe to re-run)
-bash skills/skill-sync/scripts/sync.sh
+bash skills/ot-skill-sync/scripts/sync.sh
 
 # Validate without writing; exit 1 on drift — the CI drift gate
-bash skills/skill-sync/scripts/sync.sh --check
+bash skills/ot-skill-sync/scripts/sync.sh --check
 ```
 
 **Tracking authority is [`skills-lock.json`](../skills-lock.json)** (hash-pinned per external skill). This doc is a summary, not the ledger.
@@ -32,7 +36,7 @@ bash skills/skill-sync/scripts/sync.sh --check
 
    ```bash
    npx skills add <owner>/<repo> --skill <name> --agent universal   # lands only in .agents/skills/
-   bash skills/skill-sync/scripts/sync.sh                            # then always sync
+   bash skills/ot-skill-sync/scripts/sync.sh                         # then always sync
    ```
 
 2. **Need OpenThrottle-specific customization?** Do **not** edit the vendored skill. Author a **separate OT-owned skill or rule in `skills/`** that references/connects to the vendored one.
@@ -55,12 +59,12 @@ Source of truth: `skills-lock.json`. Grouped by upstream:
 
 ## OT-owned skills (`skills/`)
 
-Ours to author and edit; fanned out by skill-sync:
+Ours to author and edit; fanned out by ot-skill-sync:
 
 - **Agents/workflow:** agents-ralph, ot-claude-loop, ot-workflow-orchestration, validate-plan
 - **GitHub:** github-commit, github-pull-request, github-squash
 - **OpenThrottle:** openthrottle-folders, openthrottle-generators, openthrottle-stack, ot-onboarding, ot-plans, ot-postgres
-- **Infra:** skill-sync
+- **Infra:** ot-skill-sync
 
 ## Always-on description budget
 

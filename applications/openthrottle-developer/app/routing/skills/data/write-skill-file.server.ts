@@ -7,7 +7,7 @@
  * corrupt the file or break ingest. Provenance also gates the write: only an
  * entry discovered as `source: 'openthrottle'` is writable, because editing an
  * externally installed skill in place forks it from the upstream source the next
- * skill-sync would restore. Local-checkout only — a null monorepo root
+ * ot-skill-sync would restore. Local-checkout only — a null monorepo root
  * (deployed app) always refuses.
  *
  * Re-ingest is deliberately NOT triggered here: `projectSkills` refreshes on

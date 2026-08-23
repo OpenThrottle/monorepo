@@ -73,7 +73,7 @@ export interface RepoSkillEntry {
   /**
    * Derived skill provenance (never frontmatter): `openthrottle` when the
    * skill folder's real path resolves under the repo's authored `skills/`
-   * tree (skill-sync symlinks it into the scanned layouts), `external` for
+   * tree (ot-skill-sync symlinks it into the scanned layouts), `external` for
    * lockfile-installed real directories. Overridden by the ingested
    * `projectSkills` GraphQL value when present.
    */

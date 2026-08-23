@@ -18,7 +18,7 @@ import type { GlobalFeatureOnboardingContent } from '@openthrottle/react-router-
 export const SKILLS_ONBOARDING: GlobalFeatureOnboardingContent = {
   cta: { label: `Set up your tag vocabulary`, to: `/skills/vocabulary` },
   icon: BrainCircuitIcon,
-  internalUsage: `We hand-author our own skills in skills/<slug>/SKILL.md — that folder is the single source of truth — and skill-sync fans them out so Claude Code, Cursor, and Codex all read the same thing. Skills installed from elsewhere stay exactly as upstream shipped them; to change how one behaves here we add a companion OpenThrottle skill or rule rather than editing the vendored copy.`,
+  internalUsage: `We hand-author our own skills in skills/<slug>/SKILL.md — that folder is the single source of truth — and ot-skill-sync fans them out so Claude Code, Cursor, and Codex all read the same thing. Skills installed from elsewhere stay exactly as upstream shipped them; to change how one behaves here we add a companion OpenThrottle skill or rule rather than editing the vendored copy.`,
   secondary: {
     label: `Read the Agent Skills spec`,
     to: `https://agentskills.io/specification`,
@@ -26,7 +26,7 @@ export const SKILLS_ONBOARDING: GlobalFeatureOnboardingContent = {
   steps: [
     `Skim the spec's frontmatter contract — name and description are what an agent matches on.`,
     `Create skills/<slug>/SKILL.md: frontmatter on top, instructions below, and a description that spells out the USE WHEN triggers.`,
-    `Run skills/skill-sync/scripts/sync.sh to fan the new skill out to every agent folder.`,
+    `Run skills/ot-skill-sync/scripts/sync.sh to fan the new skill out to every agent folder.`,
     `Reload this list — it reads straight from disk — then tag the skill so availability rules can route it.`,
   ],
   tagline: `Write a workflow down once and every agent can pick it up — in the portable Agent Skills format, so each tool reads the same skill.`,

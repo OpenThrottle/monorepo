@@ -1,5 +1,5 @@
 #!/bin/bash
-# Shared config and helpers for the skill-sync skill.
+# Shared config and helpers for the ot-skill-sync skill.
 # Sourced by sync.sh and cleanup.sh — not executed directly.
 #
 # Everything is relative to the git repository the caller is inside; these
@@ -35,8 +35,8 @@ AGENT_SKILL_DIRS_DEFAULT=".claude/skills"
 AGENT_SKILL_DIRS="${AGENT_SKILL_DIRS:-$AGENT_SKILL_DIRS_DEFAULT}"
 
 # Markers bracketing our managed .gitignore block
-GITIGNORE_START_MARKER="# Start 🔄 Managed by OpenThrottle skill-sync"
-GITIGNORE_END_MARKER="# End 🔄 Managed by OpenThrottle skill-sync"
+GITIGNORE_START_MARKER="# Start 🔄 Managed by OpenThrottle ot-skill-sync"
+GITIGNORE_END_MARKER="# End 🔄 Managed by OpenThrottle ot-skill-sync"
 
 # Resolve the repo we operate on: the git toplevel of the current directory.
 # Sets REPO_ROOT or returns 1.

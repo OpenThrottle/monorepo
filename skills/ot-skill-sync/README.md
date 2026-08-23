@@ -1,4 +1,4 @@
-# 🔄 skill-sync
+# 🔄 ot-skill-sync
 
 The skill that manages our **agent-skills architecture** — install it in any OpenThrottle repo and every AI tool (Claude Code, Cursor, Codex, Grok Build, OpenCode, VSCode/Copilot, Gemini CLI, …) gets the same skills, laid out the same way, kept out of git.
 
@@ -26,19 +26,19 @@ Skills travel between repos by **install, never by symlink** — each repo runs 
 
 ```bash
 # One-time, in any OpenThrottle repo (note: no --agent flag for THIS skill)
-npx skills add openthrottle/monorepo --skill skill-sync
+npx skills add openthrottle/monorepo --skill ot-skill-sync
 
 # Everything else installs universal-only
 npx skills add <owner>/<repo> --skill <name> --agent universal
 
 # Build the layout (idempotent)
-bash .agents/skills/skill-sync/scripts/sync.sh
+bash .agents/skills/ot-skill-sync/scripts/sync.sh
 
 # Validate it (CI drift gate — exits 1 on violations)
-bash .agents/skills/skill-sync/scripts/sync.sh --check
+bash .agents/skills/ot-skill-sync/scripts/sync.sh --check
 
 # Tear it down
-bash .agents/skills/skill-sync/scripts/cleanup.sh
+bash .agents/skills/ot-skill-sync/scripts/cleanup.sh
 ```
 
 ## Configuration
@@ -46,7 +46,7 @@ bash .agents/skills/skill-sync/scripts/cleanup.sh
 `AGENT_SKILL_DIRS` (space-separated env var) overrides the fan-out targets without editing the installed skill — default is `.claude/skills`:
 
 ```bash
-AGENT_SKILL_DIRS=".claude/skills .windsurf/skills" bash .agents/skills/skill-sync/scripts/sync.sh
+AGENT_SKILL_DIRS=".claude/skills .windsurf/skills" bash .agents/skills/ot-skill-sync/scripts/sync.sh
 ```
 
 ## What it writes
@@ -54,7 +54,7 @@ AGENT_SKILL_DIRS=".claude/skills .windsurf/skills" bash .agents/skills/skill-syn
 Symlinks and a single static `.gitignore` block — nothing else. The block is deterministic and never churns per-skill:
 
 ```gitignore
-# Agent resources - skill-sync
+# Agent resources - ot-skill-sync
 .agents/skills/*
 !.agents/skills/*/
 .claude/skills/
@@ -64,6 +64,6 @@ Symlinks and a single static `.gitignore` block — nothing else. The block is d
 
 ## In the OpenThrottle repo itself
 
-The skill runs from its source location (`bash skills/skill-sync/scripts/sync.sh`), and CI runs sync + `--check` on every PR as the **agent-skills SSOT drift gate**. The `scripts/symlink-*.sh` entry points are thin wrappers that delegate here, kept for service `setup.sh` compatibility.
+The skill runs from its source location (`bash skills/ot-skill-sync/scripts/sync.sh`), and CI runs sync + `--check` on every PR as the **agent-skills SSOT drift gate**. The `scripts/symlink-*.sh` entry points are thin wrappers that delegate here, kept for service `setup.sh` compatibility.
 
 See [`SKILL.md`](./SKILL.md) for the full rules and the invariants `--check` enforces.

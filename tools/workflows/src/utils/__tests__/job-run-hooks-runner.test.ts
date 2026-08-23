@@ -87,7 +87,7 @@ describe('resolveJobRunHookLayer1Prompt', () => {
 
   it('loads repo skill markdown for skill kind', () => {
     // Write the skill under a temp cwd rather than reading the real repo file:
-    // `.agents/skills/*` symlinks are skill-sync artifacts (gitignored, absent in
+    // `.agents/skills/*` symlinks are ot-skill-sync artifacts (gitignored, absent in
     // CI); the canonical source lives at `skills/<slug>/SKILL.md`.
     const dir = mkdtempSync(join(tmpdir(), 'ot-hook-repo-skill-'));
     const skillRel = '.agents/skills/workflow-ralph/SKILL.md';

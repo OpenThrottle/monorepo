@@ -68,7 +68,7 @@ There are two homes for skills, and the distinction matters:
 >
 > Author **custom, codebase-specific** skills here in `skills/`. Leave `.agents/skills/` as the managed home for **external** skills so the lockfile stays the source of truth.
 
-The layout every tool reads is built by our own [`skill-sync`](./skill-sync/README.md) skill: authored skills are symlinked into `.agents/skills/` (the universal directory most AI tools read natively), then fanned out to the agent folders that need their own copy (e.g. `.claude/skills/` for Claude Code). It also ships a `--check` mode that CI runs as the **SSOT drift gate**. Skills travel between repos via the CLI install below, never via cross-repo symlinks.
+The layout every tool reads is built by our own [`ot-skill-sync`](./ot-skill-sync/README.md) skill: authored skills are symlinked into `.agents/skills/` (the universal directory most AI tools read natively), then fanned out to the agent folders that need their own copy (e.g. `.claude/skills/` for Claude Code). It also ships a `--check` mode that CI runs as the **SSOT drift gate**. Skills travel between repos via the CLI install below, never via cross-repo symlinks.
 
 ## 📦 What's here today
 
@@ -83,7 +83,7 @@ worktree — not from a skill.
 
 **Infrastructure:**
 
-- [`skill-sync/`](./skill-sync/) — manages this whole architecture in any repo: consistent installs, deterministic fan-out, and the CI drift check.
+- [`ot-skill-sync/`](./ot-skill-sync/) — manages this whole architecture in any repo: consistent installs, deterministic fan-out, and the CI drift check.
 
 **Repo-specific skills:**
 
@@ -104,7 +104,7 @@ npx skills list
 pnpm dlx skills add <owner>/<repo> --skill <skill_name> --agent universal
 
 # 🏠 Install our shared skills into another openthrottle repo
-pnpm dlx skills add openthrottle/monorepo --skill skill-sync --agent universal
+pnpm dlx skills add openthrottle/monorepo --skill ot-skill-sync --agent universal
 
 # 🏠 Keep them up to date
 npx skills update

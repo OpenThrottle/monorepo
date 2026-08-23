@@ -2,7 +2,7 @@
 
 **Status:** accepted (visormatt, 2026-08-13). Supersedes the 2026-08-12 run-scoped-ephemeral direction.
 **Plan:** OT `d3a30314-5f91-4213-9ef1-25d21d2f8680`.
-**Related:** [agent-editor-folders.md](./agent-editor-folders.md), `skills/skill-sync/scripts/` (the in-repo SSOT fan-out this extends).
+**Related:** [agent-editor-folders.md](./agent-editor-folders.md), `skills/ot-skill-sync/scripts/` (the in-repo SSOT fan-out this extends).
 **Sibling — read alongside:** [child-repo-hook-overlay.md](./child-repo-hook-overlay.md) solves the same problem for **hooks**, and reaches the OPPOSITE conclusion for a concrete reason: §2 below establishes that no CLI exposes an out-of-repo skills directory, which is what forces materialization here. Every CLI we support _does_ expose out-of-repo hook config, so hooks are never written into a target repo. Do not generalize this record's approach to hooks.
 
 ## Problem
@@ -11,7 +11,7 @@ OpenThrottle's real downstream value is its curated skill set (`ot-plans`, `nx-w
 
 ## Goal
 
-Make OT's curated skills a **layered, non-mutating, server-scoped** base that is projected INTO the foreign repo while the OT server runs, reused across runs, and reconciled on shutdown/boot — extending the existing skill-sync SSOT/fan-out (`skills/<name>` → `.agents/skills/<name>` → per-agent dirs) to a third, **external** target. Non-goal: changing how the in-repo skill-sync fan-out works. This adds an external consumer of the same SSOT.
+Make OT's curated skills a **layered, non-mutating, server-scoped** base that is projected INTO the foreign repo while the OT server runs, reused across runs, and reconciled on shutdown/boot — extending the existing ot-skill-sync SSOT/fan-out (`skills/<name>` → `.agents/skills/<name>` → per-agent dirs) to a third, **external** target. Non-goal: changing how the in-repo ot-skill-sync fan-out works. This adds an external consumer of the same SSOT.
 
 ---
 
@@ -62,7 +62,7 @@ All five agent CLIs discover skills **only from directories inside the working t
 | cursor   |           ✅           |           ✅           |
 | grok     |           —            |           ✅           |
 
-`.agents/skills` → claude/codex/opencode/cursor; `.claude/skills` → claude/cursor/grok. Injecting into **both** reaches every CLI with no per-CLI branching. This mirrors skill-sync's own two-stage layout (`.agents/skills` as the universal view, `.claude/skills` as an agent fan-out target).
+`.agents/skills` → claude/codex/opencode/cursor; `.claude/skills` → claude/cursor/grok. Injecting into **both** reaches every CLI with no per-CLI branching. This mirrors ot-skill-sync's own two-stage layout (`.agents/skills` as the universal view, `.claude/skills` as an agent fan-out target).
 
 ### Rejected: global user dirs (`~/.claude/skills`, `~/.grok/skills`, …)
 
@@ -100,13 +100,13 @@ Three mechanisms, all required:
 
 Cleanliness is a property of the **exclude block**, which is written _atomically as part of_ `ensureMaterialized` **before** (or in the same operation as) the links appear to any observer, and lives in an untracked file. So at every observable moment — before, during, and after a run, and even if the process is killed mid-run — the injected paths are excluded and no tracked file has changed. Teardown/reaper are about _removing_ the (already-invisible) links so they don't accumulate; they are not what keeps `git status` clean. This is the key difference from a teardown-dependent design.
 
-### Ledger vs. skill-sync's ownership-by-type
+### Ledger vs. ot-skill-sync's ownership-by-type
 
-skill-sync needs **no side-ledger**: inside `.agents/skills/` a real directory is external (lockfile-owned) and a symlink is skill-sync's own — ownership is read straight off the on-disk type, and a static `.gitignore` block covers all generated links. That works because skill-sync operates _within one repo_ where it authoritatively owns the symlinks.
+ot-skill-sync needs **no side-ledger**: inside `.agents/skills/` a real directory is external (lockfile-owned) and a symlink is ot-skill-sync's own — ownership is read straight off the on-disk type, and a static `.gitignore` block covers all generated links. That works because ot-skill-sync operates _within one repo_ where it authoritatively owns the symlinks.
 
 Our case is different and **needs an explicit ledger** because:
 
-- The source (`<OT_ROOT>/skills/<name>`) is **outside** the target repo, so our symlinks are absolute/out-of-tree — the very kind skill-sync's own walker _skips_ as "not mine." We cannot rely on the target repo's own tooling to recognize or preserve them.
+- The source (`<OT_ROOT>/skills/<name>`) is **outside** the target repo, so our symlinks are absolute/out-of-tree — the very kind ot-skill-sync's own walker _skips_ as "not mine." We cannot rely on the target repo's own tooling to recognize or preserve them.
 - In **container/copy mode** the injected entries are _real directories_, indistinguishable by type from target-owned skills — ownership-by-type breaks down entirely, so we need a recorded fingerprint.
 - Crash recovery across a server boundary must remove _exactly_ what we created and nothing the user has since added; only an explicit per-path record makes that safe.
 
@@ -123,7 +123,7 @@ The **reaper safety rule:** remove a ledgered path only if it is _still_ identif
 - `getOpenThrottleRoot(env)` (`workflow.ts`) to locate `<OT_ROOT>/skills/` (the curated SSOT) and `resolveForeignWorkspaceContext` to detect foreign runs.
 - The stale-sweep lifecycle (`PlanRunsStaleSweepProcessor`, `PlanRunsService.findStaleInProgressRuns` / `settleStaleRun`, `enableShutdownHooks`) as the **host** for the boot reaper and shutdown teardown — we ride it, not build a bespoke marker system.
 
-**Reused as a pattern, re-implemented in TypeScript (not the bash):** skill-sync's _concepts_ — ordered manifest, collision precedence, marker-bracketed managed ignore block, idempotent ensure/cleanup. We do **not** call `skills/skill-sync/scripts/*.sh` because it (a) edits the tracked `.gitignore` (we need `.git/info/exclude`), (b) assumes the SSOT is in the same repo, and (c) has no cross-server teardown/reaper. The materializer is server-side TS.
+**Reused as a pattern, re-implemented in TypeScript (not the bash):** ot-skill-sync's _concepts_ — ordered manifest, collision precedence, marker-bracketed managed ignore block, idempotent ensure/cleanup. We do **not** call `skills/ot-skill-sync/scripts/*.sh` because it (a) edits the tracked `.gitignore` (we need `.git/info/exclude`), (b) assumes the SSOT is in the same repo, and (c) has no cross-server teardown/reaper. The materializer is server-side TS.
 
 **New code:**
 
