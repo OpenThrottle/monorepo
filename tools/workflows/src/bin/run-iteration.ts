@@ -17,7 +17,10 @@ import type {
   DriverWorktreeOptions,
 } from '@openthrottle/openthrottle-drivers';
 import { ARTWORK_LINE, COLORS } from '../config/index';
-import { DEFAULT_WORKFLOW_RUNNER } from '@openthrottle/openthrottle-agentic-utils';
+import {
+  DEFAULT_WORKFLOW_RUNNER,
+  resolveHookPluginDirs,
+} from '@openthrottle/openthrottle-agentic-utils';
 import { ralphDebugLogger } from '../utils/ralph-debug-logger';
 import type { RalphWorktreeCliOptions } from '../utils/ralph-worktree-cli';
 import { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
@@ -86,6 +89,11 @@ const toDriverConfig = (
   iteration: config.iteration,
   model: config.model,
   onChunk: config.onChunk,
+  // Leg B of the child-repo hook overlay: drivers that advertise `pluginDir` load OT's hook
+  // payload out-of-repo, so a run in a foreign checkout is observed without a byte being written
+  // into it. Resolution is fail-open — an empty list emits no flag — and gated by
+  // OPENTHROTTLE_HOOK_PLUGIN_ENABLED. Drivers without the capability ignore this outright.
+  pluginDirs: resolveHookPluginDirs(),
   prompt: config.agentPrompt,
   signal: config.signal,
   timeoutMs: config.timeoutMs,

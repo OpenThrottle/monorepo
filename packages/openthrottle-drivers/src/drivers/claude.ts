@@ -6,6 +6,7 @@
 
 import { defineDriver } from '../registry/index.ts';
 import type { DriverCapabilities, DriverModelListing } from '../types/index.ts';
+import { appendPluginDirShellFlags } from '../utils/plugin-dir.ts';
 import { escapeForShellDoubleQuoted, escapeShellArg } from '../utils/shell.ts';
 import { appendWorktreeShellFlags } from '../utils/worktree.ts';
 
@@ -25,6 +26,14 @@ const capabilities: DriverCapabilities = {
    */
   mcpAutoApprove: false,
   permissionMode: true,
+  /**
+   * Verified against Claude Code 2.1.232: `--plugin-dir <path>` loads a plugin (hooks + skills +
+   * MCP) from an absolute directory outside the working tree, and its hooks fire in headless `-p`
+   * mode ADDITIVELY alongside any hooks the target repo defines in its own `.claude/settings.json`
+   * — the no-clobber guarantee is a property of the CLI's merge, not of anything we do. Note that
+   * `--bare` would skip hooks and plugins outright; this driver must never emit it.
+   */
+  pluginDir: true,
   skipWorktreeSetup: false,
   supportsCustomBaseUrl: false,
   supportsModelFlag: true,
@@ -59,7 +68,15 @@ export const claudeDriver = defineDriver({
     const safePrompt = escapeForShellDoubleQuoted(config.prompt);
     const base = `claude -p --permission-mode acceptEdits "${safePrompt}"${modelFlag}`;
 
-    return appendWorktreeShellFlags(base, capabilities, config.worktree);
+    // `--plugin-dir` sits after `--model` and before the worktree flags, matching where cursor
+    // threads its MCP flags — the position is asserted in the parity tests, not incidental.
+    const withPlugins = appendPluginDirShellFlags(
+      base,
+      capabilities,
+      config.pluginDirs,
+    );
+
+    return appendWorktreeShellFlags(withPlugins, capabilities, config.worktree);
   },
   capabilities,
   discoverModels,
