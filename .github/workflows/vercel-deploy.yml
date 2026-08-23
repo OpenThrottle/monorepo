@@ -83,7 +83,7 @@ jobs:
       matrix-json: ${{ steps.affected.outputs.matrix-json }}
     steps:
       - name: '📦 Checkout the code'
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # 💰 Partial clone — history and trees for `nx affected` / nx-set-shas,
           # but not historical blobs (never read). Lazily fetched if ever needed.
@@ -132,7 +132,7 @@ jobs:
       IS_PRODUCTION: ${{ github.ref_name == 'main' && github.event_name == 'push' }}
     steps:
       - name: '📦 Checkout the code'
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # 💰 Partial clone — history and trees for `nx affected` / nx-set-shas,
           # but not historical blobs (never read). Lazily fetched if ever needed.
