@@ -7,6 +7,7 @@ import { WORKTREE_FLAG_ONLY } from '../shell.ts';
 import { appendWorktreeShellFlags } from '../worktree.ts';
 
 const BASE_CAPABILITIES: DriverCapabilities = {
+  attachesWorkspaceMcp: false,
   chatStreaming: false,
   mcpAutoApprove: false,
   permissionMode: false,

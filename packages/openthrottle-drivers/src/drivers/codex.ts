@@ -12,6 +12,12 @@ import type { DriverCapabilities } from '../types/index.ts';
 import { escapeForShellDoubleQuoted, escapeShellArg } from '../utils/shell.ts';
 
 const capabilities: DriverCapabilities = {
+  /**
+   * Reads ONLY the user-scope `~/.codex/config.toml`; it has no project-config concept at all, so no
+   * workspace file can grant it MCP access (verified codex-cli 0.147.0). Reachability is a property
+   * of the host, not the checkout.
+   */
+  attachesWorkspaceMcp: false,
   chatStreaming: true,
   /**
    * No flag exists, and none would help — verified against codex-cli 0.147.0. Codex resolves MCP

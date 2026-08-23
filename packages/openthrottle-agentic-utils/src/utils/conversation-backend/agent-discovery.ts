@@ -15,6 +15,12 @@ import { spawn } from 'node:child_process';
  * A supported agent CLI in the allowlist, projected from a registry driver.
  */
 export interface AgentCliDescriptor {
+  /**
+   * True when the CLI resolves the workspace's committed MCP config, so a run in this checkout can
+   * reach `openthrottle-mcp`. NOT the same as emitting MCP flags — see
+   * `DriverCapabilities.attachesWorkspaceMcp`.
+   */
+  readonly attachesWorkspaceMcp: boolean;
   /** Backend discriminator — the driver id (also a `DriverId`). */
   readonly backend: string;
   /** Env var holding an absolute path override for the binary, when set. */
@@ -41,6 +47,8 @@ export interface AgentCliDescriptor {
  * Outcome of probing one allowlisted CLI.
  */
 export interface AgentCliAvailability {
+  /** True when the CLI resolves the workspace's committed MCP config (see {@link AgentCliDescriptor}). */
+  readonly attachesWorkspaceMcp: boolean;
   /** True when the binary is present and its version probe exited cleanly. */
   readonly available: boolean;
   /** Backend discriminator (driver id). */
@@ -91,6 +99,7 @@ export interface DiscoverAgentClisOptions {
  */
 export const AGENT_CLI_ALLOWLIST: readonly AgentCliDescriptor[] =
   ALL_DRIVERS.map((driver) => ({
+    attachesWorkspaceMcp: driver.capabilities.attachesWorkspaceMcp,
     backend: driver.id,
     binEnv: driver.binEnv,
     binary: driver.binary,
@@ -182,10 +191,17 @@ function probe(
   modelListTimeoutMs: number,
 ): Promise<AgentCliAvailability> {
   return new Promise((resolve) => {
-    const { backend, chatCapable, label, supportsCustomBaseUrl } = descriptor;
+    const {
+      attachesWorkspaceMcp,
+      backend,
+      chatCapable,
+      label,
+      supportsCustomBaseUrl,
+    } = descriptor;
 
     let stdout = '';
     const unavailable: AgentCliAvailability = {
+      attachesWorkspaceMcp,
       available: false,
       backend,
       chatCapable,
@@ -231,6 +247,7 @@ function probe(
       // Availability is independent of model-listing success.
       listModels(descriptor, env, modelListTimeoutMs).then((models) => {
         resolve({
+          attachesWorkspaceMcp,
           available: true,
           backend,
           chatCapable,

@@ -12,6 +12,7 @@ import {
 } from '@openthrottle/react-router-utils';
 import {
   CreateScheduledAgentJobDocument,
+  ScheduleFormAgentClisDocument,
   ScheduleRepositoryOptionsDocument,
   type CreateScheduledAgentJobInputType,
 } from '~/__generated__/graphql';
@@ -34,7 +35,21 @@ export const loader = async (args: Route.LoaderArgs) => {
     {},
   );
 
-  return { repositories: workspaceLocalRepositories };
+  // Advisory only: a discovery failure must never block authoring a schedule, so this degrades to
+  // undefined and the form reports MCP access as unverifiable rather than erroring the route.
+  let agentClis;
+  try {
+    const { discoverAgentClis } = await executeGraphqlWithAuth(
+      args.request,
+      ScheduleFormAgentClisDocument,
+      {},
+    );
+    agentClis = discoverAgentClis.agents;
+  } catch {
+    agentClis = undefined;
+  }
+
+  return { agentClis, repositories: workspaceLocalRepositories };
 };
 
 export const links: Route.LinksFunction = () => {
@@ -68,6 +83,7 @@ export default function Component(
       <h1 className="mb-4 text-xl font-semibold">New scheduled job</h1>
       <ScheduleForm
         action="create"
+        agentClis={loaderData.agentClis}
         error={actionError}
         repositories={loaderData.repositories}
       />

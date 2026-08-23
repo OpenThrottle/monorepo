@@ -11,6 +11,8 @@ import { escapeForShellDoubleQuoted, escapeShellArg } from '../utils/shell.ts';
 import { appendWorktreeShellFlags } from '../utils/worktree.ts';
 
 const capabilities: DriverCapabilities = {
+  /** Reads the workspace's `.mcp.json` automatically in headless `-p` mode (verified 2.1.232). */
+  attachesWorkspaceMcp: true,
   chatStreaming: true,
   /**
    * No flag needed — verified against Claude Code 2.1.232. In headless `-p` mode the CLI loads the
