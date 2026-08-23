@@ -45,6 +45,7 @@ import { CustomPromptsGraphqlModule } from './graphql/prompts/custom-prompts-gra
 import { DailyStatsGraphqlModule } from './graphql/daily-stats/daily-stats-graphql.module';
 import { DailyStatsQueueModule } from './queues/daily-stats/daily-stats-queue.module';
 import { DatabaseBackupQueueModule } from './queues/database-backup/database-backup-queue.module';
+import { DataRetentionQueueModule } from './queues/data-retention/data-retention-queue.module';
 import { DevelopmentModule } from './modules/development/development.module';
 import { DocIngestionQueueModule } from './queues/doc-ingestion/doc-ingestion-queue.module';
 import { GeneratorsGraphqlModule } from './graphql/generators/generators-graphql.module';
@@ -225,6 +226,7 @@ const buildImports = (role: ProcessRole): AppModuleImports => {
           CspReportsModule,
           DailyStatsQueueModule,
           DatabaseBackupQueueModule,
+          DataRetentionQueueModule,
         ]
       : []),
     ...(isApiLike ? [DevelopmentModule] : []),
