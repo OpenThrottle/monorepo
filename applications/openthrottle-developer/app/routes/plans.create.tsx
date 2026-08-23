@@ -1,23 +1,29 @@
 import * as React from 'react';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { Blockquote } from '@openthrottle/react-router-shadcn';
 import {
+  GlobalHeading,
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import { FolderIcon } from 'lucide-react';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { Link, redirect } from 'react-router';
-import { CreatePlanDocument } from '~/__generated__/graphql';
-import { PlanCreateMcpParityShell } from '~/routing/plans/components/PlanCreateMcpParityShell';
-import { PlanForm } from '~/routing/plans/components/PlanForm';
-import type { PlanFormActionData } from '~/routing/plans/data/plan-form-action-data';
+import { redirect } from 'react-router';
+import {
+  CreatePlanDocument,
+  GetWorkspaceSettingsDocument,
+} from '~/__generated__/graphql';
+import { PlanCreateEditorLinks } from '~/routing/plans/components/PlanCreateEditorLinks';
 import {
   readPlanFormValues,
   resolvePlanFormErrorField,
 } from '~/routing/plans/utils/plan-form-values';
 import { SITE_TITLE } from '~/global/config/settings';
+import type { PlanCreateEditorLinksRepository } from '~/routing/plans/components/PlanCreateEditorLinks';
+import type { PlanFormActionData } from '~/routing/plans/data/plan-form-action-data';
 import type { Route } from '@/app/routes/+types/plans.create';
-import { Button } from '@openthrottle/react-router-shadcn';
+import type { WorkspaceEditorId } from '~/__generated__/graphql';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -26,8 +32,37 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   links: (_match) => [{ children: 'Plans', to: '/plans' }],
 };
 
-export const loader = async (_args: Route.LoaderArgs) => {
-  return {};
+interface PlanCreateLoaderData {
+  /** Editors the user enabled in workspace settings. */
+  editors: readonly WorkspaceEditorId[];
+  /** The user's registered local checkouts, for editor deep-links. */
+  repositories: readonly PlanCreateEditorLinksRepository[];
+}
+
+export const loader = async (
+  args: Route.LoaderArgs,
+): Promise<PlanCreateLoaderData> => {
+  // Editor deep-links are a convenience, so a workspace-settings failure degrades
+  // to no links rather than taking the create form down with it.
+  try {
+    const data = await executeGraphqlWithAuth(
+      args.request,
+      GetWorkspaceSettingsDocument,
+    );
+
+    return {
+      editors: data.workspaceSettings.profile.enabledEditors,
+      repositories: data.workspaceSettings.localRepositories.map(
+        (repository) => ({
+          displayName: repository.displayName,
+          filesystemPath: repository.filesystemPath,
+          id: repository.id,
+        }),
+      ),
+    };
+  } catch {
+    return { editors: [], repositories: [] };
+  }
 };
 
 export const links: Route.LinksFunction = () => {
@@ -41,16 +76,12 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
 export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
-  const { actionData, loaderData: _l, matches: _m, params: _p } = props;
+  const { actionData: _a, loaderData, matches: _m, params: _p } = props;
+  const { editors, repositories } = loaderData;
 
   // Hooks
 
   // Setup
-  const directory = `/Users/matt/Development/openthrottle`;
-
-  const linkCursor = `cursor://file${directory}`;
-  const linkClaude = `claude://file${directory}`;
-  const linkVSCode = `vscode://file${directory}`;
 
   // Handlers
 
@@ -61,22 +92,33 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <GlobalScreen>
-      <div className="flex gap-4">
-        <Link to={linkCursor}>
-          <Button>Cursor</Button>
-        </Link>
-        <Link to={linkClaude}>
-          <Button>Claude</Button>
-        </Link>
-        <Link to={linkVSCode}>
-          <Button>VSCode</Button>
-        </Link>
+    <GlobalScreen beta={true}>
+      <div>
+        <GlobalHeading
+          className="mb-4"
+          heading="h1"
+          icon={FolderIcon}
+          title="Create a new plan"
+        />
+        <p className="text-muted-foreground text-sm">
+          A "form" simply doesn&apos;t cut it for creating plans and tasks. Use
+          the OpenThrottle MCP from wherever you&apos;re most comfortable.
+        </p>
+
+        <Blockquote className="border-yellow-500 text-yellow-500">
+          <p className="py-4">
+            This page will be removed in in the near future.
+          </p>
+        </Blockquote>
       </div>
 
+      <PlanCreateEditorLinks editors={editors} repositories={repositories} />
+
+      {/*
       <PlanCreateMcpParityShell>
         <PlanForm actionData={actionData} />
       </PlanCreateMcpParityShell>
+      */}
     </GlobalScreen>
   );
 }

@@ -101,7 +101,7 @@ export const PlanWorkflowConfigWorkspace = (
               data-testid="workflow-run-workspace-path-input"
               id="workflow-run-workspace-path"
               onChange={(e) => onChange(e.target.value)}
-              placeholder="/Users/matt/Development/my-project"
+              placeholder="/Users/you/Development/my-project"
               spellCheck={false}
               value={value}
             />
