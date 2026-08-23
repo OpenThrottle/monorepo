@@ -17,12 +17,15 @@ Marketing and landing site for [OpenThrottle](https://openthrottle.ai)—documen
 
 ## Setup
 
-From the **monorepo root**:
+First-time setup? run `./scripts/setup.sh` instead — it calls this plus install + database
+
+**From the monorepo root:**
 
 ```bash
-# 🔒 Create or update the environment variables (copies each app’s `.env.default` to `.env`)
-./scripts/environment.sh
+# 🔒 Create or update the environment variables
+./scripts/setup_environment.sh
 
+# Run the application
 pnpm nx run openthrottle-website:dev
 ```
 

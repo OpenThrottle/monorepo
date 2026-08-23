@@ -9,7 +9,7 @@ There is **no** `react-native` generator registered here today, so commands like
 1. List what exists:
 
    ```bash
-   NX_ISOLATE_PLUGINS=false nx list @tools/generators
+   NX_ISOLATE_PLUGINS=false pnpm nx list @tools/generators
    ```
 
 2. Use **`react`** for shared UI in `@openthrottle/*` packages (see [react.md](./react.md)) and **`react-router`** for React Router apps under `applications/` (see [react-router.md](./react-router.md)).

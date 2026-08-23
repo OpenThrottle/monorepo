@@ -9,16 +9,16 @@ Common issues and solutions when using `@tools/generators` generators.
 #### Generator Not Found
 
 ```bash
-nx g @tools/generators:invalid-generator --describe
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:invalid-generator --describe
 # Error: Could not find generator "invalid-generator"
 ```
 
-**Solution:** Use `nx list @tools/generators` to see available generators.
+**Solution:** Use `NX_ISOLATE_PLUGINS=false pnpm nx list @tools/generators` to see available generators.
 
 #### Missing Required Fields
 
 ```bash
-nx g @tools/generators:react --subGenerator=component --name=Button
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react --subGenerator=component --name=Button
 # Error: Missing required field "destination"
 ```
 
@@ -27,7 +27,7 @@ nx g @tools/generators:react --subGenerator=component --name=Button
 #### Invalid Field Values
 
 ```bash
-nx g @tools/generators:nestjs --subGenerator=application --name=MyAPI --port=3000
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:nestjs --subGenerator=application --name=MyAPI --port=3000
 # Error: Port must be between 4000-9999
 ```
 
@@ -36,7 +36,7 @@ nx g @tools/generators:nestjs --subGenerator=application --name=MyAPI --port=300
 #### Invalid List Key
 
 ```bash
-nx g @tools/generators:react --list=invalid
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react --list=invalid
 # Error: Unknown --list value "invalid"
 ```
 
@@ -63,7 +63,7 @@ nx g @tools/generators:react --list=invalid
 
 ```bash
 # Verify available generators
-nx list @tools/generators
+NX_ISOLATE_PLUGINS=false pnpm nx list @tools/generators
 
 # Check generators.json
 cat tools/generators/generators.json
@@ -94,11 +94,11 @@ cat tools/generators/generators.json
 
 ```bash
 # Get available list keys from describe
-nx g @tools/generators:react-router --describe
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router --describe
 # Check the "list" object in the output
 
 # Some list keys require additional params
-nx g @tools/generators:react-router --list=componentFolders --application=openthrottle-developer
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router --list=componentFolders --application=openthrottle-developer
 ```
 
 ### Issue: "Target not found" or "Invalid destination"
@@ -113,8 +113,8 @@ nx g @tools/generators:react-router --list=componentFolders --application=openth
 
 ```bash
 # List valid targets
-nx g @tools/generators:react --list=destinations
-nx g @tools/generators:react-router --list=applications
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react --list=destinations
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router --list=applications
 
 # Verify target exists in workspace
 nx show project <target-name>
@@ -212,12 +212,12 @@ NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router --list=applica
 
 ```bash
 export NX_ISOLATE_PLUGINS=false
-pnpm nx g @tools/generators:react-router --subGenerator=component ...
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router --subGenerator=component ...
 ```
 
 ## Getting Help
 
-1. **Check the generator schema**: `nx g @tools/generators:<generator> --describe`
+1. **Check the generator schema**: `NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:<generator> --describe`
 2. **Review generator-specific docs**: See [Generator References](AGENT_USAGE.md#generator-references)
 3. **Check Nx project graph**: `nx graph`
 4. **Verify workspace structure**: Ensure target applications/packages exist

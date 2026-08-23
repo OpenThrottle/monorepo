@@ -32,10 +32,10 @@ Documentation surfaces in scope:
 Facts that change the analysis:
 
 - `skills/` is the authored SSOT; `.agents/skills` is the generated SSOT view and `.claude/skills` fans out from it (there is no `.cursor/skills`). A discrepancy between a source and its mirror is drift, but the fix is a re-sync, not a hand edit of the mirror — say so in the task.
-- `.cursor/rules/` is the single source of truth for code style; docs that restate style rules inline can contradict it. Prefer pointing at the rule over duplicating it.
+- `.agents/rules/` is the single source of truth for code style — `.cursor/rules/**/*.mdc` are symlinks into it for Cursor to load, never a write target. Docs that restate style rules inline can contradict the rule; prefer pointing at it over duplicating it.
 - Generators are invoked with a mandatory `NX_ISOLATE_PLUGINS=false` prefix. A documented generator command missing that prefix will fail — that is a finding, not a nitpick.
 - Some documented React Router generators are described under an older `remix` name in places; the working generator is `react-router`.
-- Sixteen packages are intentionally **source-first** with no `build` target. Documentation telling a reader to build them is wrong.
+- Roughly twenty projects are intentionally **source-first** with no `build` target. Documentation telling a reader to build them is wrong. Never trust a hardcoded count — audit it live by diffing `pnpm nx show projects` against `pnpm nx show projects --with-target=build`, the way `MONOREPO.md` § "Projects without a `build` target" instructs.
 - Prompts under `.agents/prompts/` need no frontmatter — slug and title derive from the filename. Skills, personas, and rules do have frontmatter requirements enforced by `check:local:agent-assets`.
 
 ## What to inspect

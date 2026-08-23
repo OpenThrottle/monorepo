@@ -3,7 +3,7 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import type { Tree } from '@nx/devkit';
 import { generatorReactRouterTable } from './generator.table';
 
-describe('remix table generator', () => {
+describe('react-router table generator', () => {
   let tree: Tree;
 
   const application = 'openthrottle-developer';

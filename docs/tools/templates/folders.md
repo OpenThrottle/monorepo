@@ -6,13 +6,13 @@ Generate folder structures for project routes or services.
 
 ```bash
 # Get schema
-nx g @tools/generators:folders --describe
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:folders --describe
 
 # List applications
-nx g @tools/generators:folders --list=applications
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:folders --list=applications
 
 # Generate routing folder
-nx g @tools/generators:folders \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:folders \
   --application=openthrottle-developer \
   --folder=routing \
   --name=users
@@ -31,7 +31,7 @@ nx g @tools/generators:folders \
 ### Routing Folder
 
 ```bash
-nx g @tools/generators:folders \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:folders \
   --application=openthrottle-developer \
   --folder=routing \
   --name=users
@@ -40,7 +40,7 @@ nx g @tools/generators:folders \
 ### Services Folder
 
 ```bash
-nx g @tools/generators:folders \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:folders \
   --application=openthrottle-developer \
   --folder=services \
   --name=email-service

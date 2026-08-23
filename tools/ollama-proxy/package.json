@@ -25,14 +25,11 @@
     "targets": {
       "build": {
         "cache": false,
-        "executor": "nx:run-commands",
-        "options": {
-          "cwd": "{projectRoot}",
-          "commands": [
-            "nx run @tools/ollama-proxy:build:tsc"
-          ]
-        },
-        "parallel": false
+        "dependsOn": [
+          "build:tsc"
+        ],
+        "description": "Aggregate build entrypoint for @tools/ollama-proxy: all the work is in `build:tsc`, reached as a graph EDGE rather than by shelling out to a nested `nx run`. See the same fix on @tools/workflows:build — a nested invocation is a second Nx task graph that re-restores shared `^build` outputs (other packages' dist/) with no ordering against the outer graph's in-flight test tasks, which raced Vitest readers of those same dist directories.",
+        "executor": "nx:noop"
       },
       "build:tsc": {
         "cache": false,

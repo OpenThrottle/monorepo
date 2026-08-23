@@ -40,7 +40,7 @@ Generators provided in `@tools/generators` encapsulate best practices, project s
 
 > **As an AI agent:**
 >
-> - **Before building any new code,** you must check if a generator exists (use `nx list @tools/generators` and `--describe`).
+> - **Before building any new code,** you must check if a generator exists (use `NX_ISOLATE_PLUGINS=false pnpm nx list @tools/generators` and `--describe`).
 > - **If a generator exists:** Use it to scaffold your code.
 > - **If a generator does not exist:** Only then, and only after stating this fact, may you write custom code directly.
 
@@ -53,7 +53,7 @@ Generators provided in `@tools/generators` encapsulate best practices, project s
 ### 1. Discover Generators
 
 ```bash
-NX_ISOLATE_PLUGINS=false nx list @tools/generators
+NX_ISOLATE_PLUGINS=false pnpm nx list @tools/generators
 ```
 
 ### 2. Get Generator Schema and Options
@@ -61,8 +61,8 @@ NX_ISOLATE_PLUGINS=false nx list @tools/generators
 Inspect the full schema and required flags for each generator:
 
 ```bash
-NX_ISOLATE_PLUGINS=false nx g @tools/generators:react --describe
-NX_ISOLATE_PLUGINS=false nx g @tools/generators:react-router --describe
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react --describe
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router --describe
 # ...repeat for any relevant generator
 ```
 
@@ -73,10 +73,10 @@ When `--describe` shows `"description": "Comma-separated names supported."` on t
 Discover available values for dynamic options:
 
 ```bash
-NX_ISOLATE_PLUGINS=false nx g @tools/generators:react --list=destinations
-NX_ISOLATE_PLUGINS=false nx g @tools/generators:react-router --list=applications
-NX_ISOLATE_PLUGINS=false nx g @tools/generators:react-router --list=componentFolders --application=openthrottle-developer
-NX_ISOLATE_PLUGINS=false nx g @tools/generators:react-router --list=hookFolders --application=openthrottle-developer
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react --list=destinations
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router --list=applications
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router --list=componentFolders --application=openthrottle-developer
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router --list=hookFolders --application=openthrottle-developer
 ```
 
 ### 4. Create New Code — Always With Generators
@@ -85,29 +85,29 @@ _Only_ generate new files or structures with a generator if one exists:
 
 ```bash
 # React component example
-NX_ISOLATE_PLUGINS=false nx g @tools/generators:react \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react \
   --subGenerator=component \
   --destination=@openthrottle/react-router-ui \
   --name=UserCard
 # React Router app component example
-NX_ISOLATE_PLUGINS=false nx g @tools/generators:react-router \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router \
   --subGenerator=component \
   --application=openthrottle-developer \
   --folder=global/components \
   --name=UserProfile
 # React Router app hook example (area folders via --list=hookFolders; camelCase --name, comma batching OK)
-NX_ISOLATE_PLUGINS=false nx g @tools/generators:react-router \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router \
   --subGenerator=hook \
   --application=openthrottle-developer \
   --folder=routing/plans \
   --name=usePlanOutputStream
 # NestJS GraphQL service
-NX_ISOLATE_PLUGINS=false nx g @tools/generators:nestjs \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:nestjs \
   --subGenerator=graphql-service \
   --application=openthrottle-server \
   --name=users
 # NestJS module into a package (use --list=nestjsPackages for valid destinations)
-NX_ISOLATE_PLUGINS=false nx g @tools/generators:nestjs \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:nestjs \
   --subGenerator=module \
   --destination=@openthrottle/nestjs-repositories \
   --name=plans
@@ -122,7 +122,7 @@ NX_ISOLATE_PLUGINS=false nx g @tools/generators:nestjs \
 #### List all generators available
 
 ```bash
-NX_ISOLATE_PLUGINS=false nx list @tools/generators
+NX_ISOLATE_PLUGINS=false pnpm nx list @tools/generators
 ```
 
 This lists all code scaffolding generators. **If you don’t see what you need, check the docs, or ask for help, before writing custom code!**
@@ -130,7 +130,7 @@ This lists all code scaffolding generators. **If you don’t see what you need, 
 #### Get machine-readable contract/schema
 
 ```bash
-NX_ISOLATE_PLUGINS=false nx g @tools/generators:<generator-name> --describe
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:<generator-name> --describe
 ```
 
 Exposes all options, required fields, and valid values programmatically.
@@ -140,7 +140,7 @@ When the `name` option includes `"Comma-separated names supported."`, pass multi
 #### Enumerate valid dynamic values
 
 ```bash
-NX_ISOLATE_PLUGINS=false nx g @tools/generators:<generator-name> --list=<list-key> [--application=<app>]
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:<generator-name> --list=<list-key> [--application=<app>]
 ```
 
 Use for destinations, folders, and more — ensure you select valid targets!
@@ -152,7 +152,7 @@ Nx project name: **`openthrottle-developer`**. Prefix all generator commands wit
 | Generator                        | Purpose                                          | Key flags                                                                                                                                                                                                                                                                                                                            |
 | -------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `@tools/generators:react-router` | Route files under `app/routes/`                  | `--subGenerator=route --application=openthrottle-developer --name=<segment>` (comma-separated names allowed). No `--folder`; routes always land in `applications/openthrottle-developer/app/routes/`.                                                                                                                                |
-| `@tools/generators:react-router` | Components under `app/`                          | `--subGenerator=component --application=openthrottle-developer --folder=<path> --name=<Name>` (comma-separated names allowed). Valid `--folder` values: `nx g @tools/generators:react-router --list=componentFolders --application=openthrottle-developer`.                                                                          |
+| `@tools/generators:react-router` | Components under `app/`                          | `--subGenerator=component --application=openthrottle-developer --folder=<path> --name=<Name>` (comma-separated names allowed). Valid `--folder` values: `NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router --list=componentFolders --application=openthrottle-developer`.                                            |
 | `@tools/generators:react-router` | Hooks under `app/<area>/hooks/`                  | `--subGenerator=hook --application=openthrottle-developer --folder=<area> --name=<camelCase>` (comma-separated names allowed). Area paths via `--list=hookFolders` (e.g. `global`, `routing/plans` → `app/<folder>/hooks/`). Do **not** use `@tools/generators:react --subGenerator=hook` for app hooks (that lands in `src/hooks`). |
 | `@tools/generators:folders`      | New `routing/<slug>/` or `services/<slug>/` tree | `--application=openthrottle-developer --name=<slug>` with `--folder=routing` or `--folder=services`. Run **before** generating components into a new `routing/<slug>/components` folder so that path appears in `componentFolders`.                                                                                                  |
 | `@tools/generators:react`        | Package or app components                        | `--destination=<project>` (not `--folder`). Shared UI: `--destination=@openthrottle/react-router-shadcn`. App-local: `--destination=openthrottle-developer`. List: `--list=destinations`. `--name` accepts comma-separated component names.                                                                                          |
@@ -162,7 +162,7 @@ Nx project name: **`openthrottle-developer`**. Prefix all generator commands wit
 All new code should go through a generator:
 
 ```bash
-NX_ISOLATE_PLUGINS=false nx g @tools/generators:<generator-name> \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:<generator-name> \
   --subGenerator=<type> \
   --option1=value1 \
   --option2=value2
@@ -189,9 +189,9 @@ NX_ISOLATE_PLUGINS=false nx g @tools/generators:<generator-name> \
 ### 1. **Discover Before You Build**
 
 ```bash
-NX_ISOLATE_PLUGINS=false nx list @tools/generators
-NX_ISOLATE_PLUGINS=false nx g @tools/generators:<generator> --describe
-NX_ISOLATE_PLUGINS=false nx g @tools/generators:<generator> --list=<key>
+NX_ISOLATE_PLUGINS=false pnpm nx list @tools/generators
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:<generator> --describe
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:<generator> --list=<key>
 ```
 
 Always enumerate and fully understand the generator schema first.
@@ -205,7 +205,7 @@ Always check the result of `--describe`!
 Generators support comma-separated names:
 
 ```bash
-NX_ISOLATE_PLUGINS=false nx g @tools/generators:react \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react \
   --subGenerator=component \
   --destination=@openthrottle/react-router-ui \
   --name=Button,Input,Select,Textarea
@@ -225,8 +225,8 @@ NX_ISOLATE_PLUGINS=false nx g @tools/generators:react \
 ### 5. **ALWAYS Confirm Target Exists**
 
 ```bash
-NX_ISOLATE_PLUGINS=false nx g @tools/generators:react --list=destinations
-NX_ISOLATE_PLUGINS=false nx g @tools/generators:react-router --list=applications
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react --list=destinations
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router --list=applications
 ```
 
 Do **NOT** guess or invent targets.
@@ -267,16 +267,16 @@ and [Troubleshooting Guide](./TROUBLESHOOTING.md#issue-plugin-worker-fails)
 
 ```bash
 # 1. Discover all generators
-NX_ISOLATE_PLUGINS=false nx list @tools/generators
+NX_ISOLATE_PLUGINS=false pnpm nx list @tools/generators
 
 # 2. Get schema for what you need
-NX_ISOLATE_PLUGINS=false nx g @tools/generators:<kind> --describe
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:<kind> --describe
 
 # 3. List dynamic values (if needed)
-NX_ISOLATE_PLUGINS=false nx g @tools/generators:<kind> --list=<key>
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:<kind> --list=<key>
 
 # 4. Execute generator with all required options
-NX_ISOLATE_PLUGINS=false nx g @tools/generators:react \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react \
   --subGenerator=component \
   --destination=@openthrottle/react-router-ui \
   --name=UserCard
@@ -308,7 +308,7 @@ function buildNxCommand(
 ): string {
   const isolatePlugins = options.isolatePlugins ?? false;
   const envPrefix = isolatePlugins ? '' : 'NX_ISOLATE_PLUGINS=false ';
-  return `${envPrefix}nx g @tools/generators:${generatorName} ${flags}`;
+  return `${envPrefix}pnpm nx g @tools/generators:${generatorName} ${flags}`;
 }
 function getGeneratorSchema(
   generatorName: string,

@@ -8,7 +8,7 @@ High-level architecture for the web-based email client in **openthrottle-email**
 
 ## 1. Route tree (flat routes)
 
-The app uses **React Router v7** with **flat file-based routes** (`@react-router/fs-routes`). Route files live under `applications/openthrottle-email/app/routes/`.
+The app uses **React Router v8** with **flat file-based routes** (`@react-router/fs-routes`). Route files live under `applications/openthrottle-email/app/routes/`.
 
 | Route file(s)         | Path         | Purpose                                                         |
 | --------------------- | ------------ | --------------------------------------------------------------- |

@@ -55,14 +55,16 @@
     "targets": {
       "build": {
         "cache": false,
+        "dependsOn": [
+          "build:tsc"
+        ],
+        "description": "Post-compile step for @tools/workflows: marks the dist bin entrypoints executable. Depends on `build:tsc` as a graph EDGE rather than shelling out to a nested `nx run`. The nested form spawned a second, separate Nx task graph that re-restored this project's `^build` dependencies (notably @openthrottle/openthrottle-agentic-utils:build) from cache with no coordination against the OUTER graph. Because Nx deletes and recopies a task's declared outputs on a cache hit, that rewrote packages/openthrottle-agentic-utils/dist WHILE this project's Vitest run was importing from it — @tools/workflows resolves that package through its `exports` field, which points at dist, not src. The result was an intermittent ERR_MODULE_NOT_FOUND on a different dist file each time. As a real dependsOn edge, those upstream builds are deduplicated nodes in the one graph and can no longer run concurrently with readers of their output.",
         "executor": "nx:run-commands",
         "options": {
-          "cwd": "{projectRoot}",
           "commands": [
-            "nx run @tools/workflows:build:tsc",
             "chmod +x ./dist/src/bin/*.js"
           ],
-          "parallel": false
+          "cwd": "{projectRoot}"
         }
       },
       "build:tsc": {

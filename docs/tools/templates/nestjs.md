@@ -6,19 +6,19 @@ Generate NestJS applications, services, controllers, modules, queues, and AI age
 
 ```bash
 # Get schema
-nx g @tools/generators:nestjs --describe
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:nestjs --describe
 
 # List NestJS applications
-nx g @tools/generators:nestjs --list=nestjsApplications
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:nestjs --list=nestjsApplications
 
 # List NestJS applications (preferred when choosing --application)
-nx g @tools/generators:nestjs --list=nestjsApplications
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:nestjs --list=nestjsApplications
 
 # Optional: GraphQL-tagged apps (may be empty if no project has technology:graphql)
-nx g @tools/generators:nestjs --list=graphqlApplications
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:nestjs --list=graphqlApplications
 
 # Generate GraphQL service
-nx g @tools/generators:nestjs \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:nestjs \
   --subGenerator=graphql-service \
   --application=openthrottle-server \
   --name=users
@@ -52,7 +52,7 @@ nx g @tools/generators:nestjs \
 ### Application
 
 ```bash
-nx g @tools/generators:nestjs \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:nestjs \
   --subGenerator=application \
   --name=new-api \
   --port=4001
@@ -61,7 +61,7 @@ nx g @tools/generators:nestjs \
 ### GraphQL Service
 
 ```bash
-nx g @tools/generators:nestjs \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:nestjs \
   --subGenerator=graphql-service \
   --application=openthrottle-server \
   --name=users
@@ -70,7 +70,7 @@ nx g @tools/generators:nestjs \
 ### Simple Service
 
 ```bash
-nx g @tools/generators:nestjs \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:nestjs \
   --subGenerator=simple-service \
   --application=openthrottle-server \
   --name=email-service
@@ -79,7 +79,7 @@ nx g @tools/generators:nestjs \
 ### Module
 
 ```bash
-nx g @tools/generators:nestjs \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:nestjs \
   --subGenerator=module \
   --application=openthrottle-server \
   --name=auth
@@ -88,7 +88,7 @@ nx g @tools/generators:nestjs \
 ### Queue
 
 ```bash
-nx g @tools/generators:nestjs \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:nestjs \
   --subGenerator=queue \
   --application=openthrottle-server \
   --name=email-queue
@@ -97,7 +97,7 @@ nx g @tools/generators:nestjs \
 ### AI Agent
 
 ```bash
-nx g @tools/generators:nestjs \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:nestjs \
   --subGenerator=ai-agent \
   --application=openthrottle-server \
   --name=chat-agent

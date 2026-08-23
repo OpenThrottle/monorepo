@@ -35,7 +35,7 @@ export async function reactRouterGenerator(
 
   if (schema.describe === true) {
     writeJsonToStdout({
-      id: '@tools/generators:remix',
+      id: '@tools/generators:react-router',
       list: {
         applications: {
           description: `Monorepo applications (Nx projects tagged type:application).`,
@@ -46,7 +46,7 @@ export async function reactRouterGenerator(
           source: { requires: ['application'], type: 'filesystem' },
         },
         generators: {
-          description: 'Available remix generator values.',
+          description: 'Available React Router generator values.',
           values: [
             'application',
             'component',

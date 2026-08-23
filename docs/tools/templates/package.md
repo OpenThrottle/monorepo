@@ -6,16 +6,16 @@ Generate packages for use across packages and applications.
 
 ```bash
 # Get schema
-nx g @tools/generators:package --describe
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:package --describe
 
 # List organizations
-nx g @tools/generators:package --list=organizations
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:package --list=organizations
 
 # List types
-nx g @tools/generators:package --list=types
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:package --list=types
 
 # Generate React package
-nx g @tools/generators:package \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:package \
   --type=react \
   --organization=@openthrottle \
   --name=ui-components
@@ -56,7 +56,7 @@ scaffolding PR.
 ### React Package
 
 ```bash
-nx g @tools/generators:package \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:package \
   --type=react \
   --name=ui-components \
   --organization=@openthrottle
@@ -65,7 +65,7 @@ nx g @tools/generators:package \
 ### NestJS Package
 
 ```bash
-nx g @tools/generators:package \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:package \
   --type=nestjs \
   --name=auth-module \
   --organization=@tools
@@ -74,7 +74,7 @@ nx g @tools/generators:package \
 ### Node Package
 
 ```bash
-nx g @tools/generators:package \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:package \
   --type=node \
   --name=shared-utils \
   --organization=@openthrottle
@@ -83,7 +83,7 @@ nx g @tools/generators:package \
 ### Tools Package
 
 ```bash
-nx g @tools/generators:package \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:package \
   --type=tools \
   --name=code-generator \
   --organization=@tools

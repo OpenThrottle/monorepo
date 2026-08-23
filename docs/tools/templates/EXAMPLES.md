@@ -10,10 +10,10 @@ Common usage patterns and examples for `@tools/generators` generators.
 
 ```bash
 # 1. Discover available destinations
-nx g @tools/generators:react --list=destinations
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react --list=destinations
 
 # 2. Execute generator
-nx g @tools/generators:react \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react \
   --subGenerator=component \
   --destination=@openthrottle/react-router-ui \
   --name=UserCard
@@ -24,7 +24,7 @@ nx g @tools/generators:react \
 **User Request:** "Create Button, Input, and Select components"
 
 ```bash
-nx g @tools/generators:react \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react \
   --subGenerator=component \
   --destination=@openthrottle/react-router-ui \
   --name=Button,Input,Select
@@ -33,7 +33,7 @@ nx g @tools/generators:react \
 ### Creating a Hook
 
 ```bash
-nx g @tools/generators:react \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react \
   --subGenerator=hook \
   --destination=@openthrottle/react-router-ui \
   --name=useUser
@@ -42,7 +42,7 @@ nx g @tools/generators:react \
 ### Creating a Utility
 
 ```bash
-nx g @tools/generators:react \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react \
   --subGenerator=util \
   --destination=@openthrottle/react-router-ui \
   --name=formatDate
@@ -54,13 +54,13 @@ nx g @tools/generators:react \
 
 ```bash
 # 1. List available applications
-nx g @tools/generators:react-router --list=applications
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router --list=applications
 
 # 2. List available folders
-nx g @tools/generators:react-router --list=componentFolders --application=openthrottle-developer
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router --list=componentFolders --application=openthrottle-developer
 
 # 3. Generate component
-nx g @tools/generators:react-router \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router \
   --subGenerator=component \
   --application=openthrottle-developer \
   --folder=global/components \
@@ -70,7 +70,7 @@ nx g @tools/generators:react-router \
 ### Creating a Form
 
 ```bash
-nx g @tools/generators:react-router \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router \
   --subGenerator=form \
   --application=openthrottle-developer \
   --folder=routing/users/components \
@@ -80,7 +80,7 @@ nx g @tools/generators:react-router \
 ### Creating a Route
 
 ```bash
-nx g @tools/generators:react-router \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router \
   --subGenerator=route \
   --application=openthrottle-developer \
   --name=api.users
@@ -92,10 +92,10 @@ nx g @tools/generators:react-router \
 
 ```bash
 # 1. List available applications
-nx g @tools/generators:nestjs --list=graphqlApplications
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:nestjs --list=graphqlApplications
 
 # 2. Generate service
-nx g @tools/generators:nestjs \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:nestjs \
   --subGenerator=graphql-service \
   --application=openthrottle-server \
   --name=users
@@ -104,7 +104,7 @@ nx g @tools/generators:nestjs \
 ### Creating a New NestJS Application
 
 ```bash
-nx g @tools/generators:nestjs \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:nestjs \
   --subGenerator=application \
   --name=new-api \
   --port=4001
@@ -113,7 +113,7 @@ nx g @tools/generators:nestjs \
 ### Creating a Queue Service
 
 ```bash
-nx g @tools/generators:nestjs \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:nestjs \
   --subGenerator=queue \
   --application=openthrottle-server \
   --name=email-queue
@@ -128,7 +128,7 @@ There is no `@tools/generators:react-native` entry in this workspace (`tools/gen
 ### Creating a React Package
 
 ```bash
-nx g @tools/generators:package \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:package \
   --type=react \
   --name=ui-components \
   --organization=@openthrottle
@@ -137,7 +137,7 @@ nx g @tools/generators:package \
 ### Creating a NestJS Package
 
 ```bash
-nx g @tools/generators:package \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:package \
   --type=nestjs \
   --name=auth-module \
   --organization=@tools
@@ -148,7 +148,7 @@ nx g @tools/generators:package \
 ### Creating a Routing Folder
 
 ```bash
-nx g @tools/generators:folders \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:folders \
   --application=openthrottle-developer \
   --folder=routing \
   --name=users
@@ -157,7 +157,7 @@ nx g @tools/generators:folders \
 ### Creating a Services Folder
 
 ```bash
-nx g @tools/generators:folders \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:folders \
   --application=openthrottle-developer \
   --folder=services \
   --name=email-service
@@ -169,7 +169,7 @@ Many generators support comma-separated names for generating multiple artifacts:
 
 ```bash
 # Generate multiple React components
-nx g @tools/generators:react \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react \
   --subGenerator=component \
   --destination=@openthrottle/react-router-ui \
   --name=Button,Input,Select,Textarea
@@ -181,33 +181,33 @@ Here's a complete workflow for creating a new feature:
 
 ```bash
 # 1. Create routing folder structure
-nx g @tools/generators:folders \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:folders \
   --application=openthrottle-developer \
   --folder=routing \
   --name=users
 
 # 2. Create a route
-nx g @tools/generators:react-router \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router \
   --subGenerator=route \
   --application=openthrottle-developer \
   --name=users
 
 # 3. Create components
-nx g @tools/generators:react-router \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router \
   --subGenerator=component \
   --application=openthrottle-developer \
   --folder=routing/users/components \
   --name=UserList,UserCard
 
 # 4. Create a form
-nx g @tools/generators:react-router \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router \
   --subGenerator=form \
   --application=openthrottle-developer \
   --folder=routing/users/components \
   --name=UserForm
 
 # 5. Create a table
-nx g @tools/generators:react-router \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router \
   --subGenerator=table \
   --application=openthrottle-developer \
   --folder=routing/users/components \
