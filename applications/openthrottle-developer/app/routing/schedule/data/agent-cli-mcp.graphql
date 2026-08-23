@@ -1,0 +1,13 @@
+# Per-driver workspace-MCP reachability for the scheduled-job author form. Shared by
+# schedule.create and schedule.$jobId.edit, so it lives here rather than in either route's
+# document. Only AVAILABLE (installed) CLIs come back — a driver absent from `agents` is
+# unverifiable rather than known-good, which the form states explicitly.
+query ScheduleFormAgentClis {
+  discoverAgentClis {
+    agents {
+      attachesWorkspaceMcp
+      backend
+      label
+    }
+  }
+}

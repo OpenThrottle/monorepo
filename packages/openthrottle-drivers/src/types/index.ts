@@ -96,6 +96,22 @@ export interface DriverInvocationConfig {
  */
 export interface DriverCapabilities {
   /**
+   * The CLI resolves the WORKSPACE's committed MCP config (`.mcp.json`, `.cursor/mcp.json`,
+   * `opencode.json`), so a run in an OpenThrottle checkout can reach `openthrottle-mcp`.
+   *
+   * Deliberately distinct from {@link DriverCapabilities.mcpAutoApprove}, which only says whether
+   * this driver EMITS flags. The two are independent, and conflating them warns on the wrong
+   * drivers: claude and opencode emit nothing yet attach fine, while codex and grok also emit
+   * nothing and cannot attach at all. Consumers deciding whether an MCP-dependent prompt is viable
+   * must read THIS flag.
+   *
+   * `false` does not mean the CLI lacks MCP support — codex and grok both have it, but resolve
+   * servers from their own user-scope config rather than from the repo. For those, reachability is a
+   * property of the HOST, so OT cannot verify it from the workspace; surface that as "cannot be
+   * verified", never as a flat claim that the server is missing.
+   */
+  readonly attachesWorkspaceMcp: boolean;
+  /**
    * Has a wired streaming chat backend (a `ConversationBackend` adapter), so it can be offered as a
    * chat composer backend. `false` for plan-run-only drivers whose headless command works but that
    * have no streaming adapter yet. The plan-run/driver path uses every driver regardless; only this

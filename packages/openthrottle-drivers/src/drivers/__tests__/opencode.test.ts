@@ -102,6 +102,7 @@ describe('opencode driver', () => {
     expect(opencodeDriver.id).toBe('opencode');
     expect(opencodeDriver.label).toBe('opencode');
     expect(opencodeDriver.capabilities).toEqual({
+      attachesWorkspaceMcp: true,
       chatStreaming: true,
       mcpAutoApprove: false,
       permissionMode: true,

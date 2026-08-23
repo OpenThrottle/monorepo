@@ -13,6 +13,7 @@ const BASE = 'some-cli -p "prompt"';
 const FLAGS = ['--approve-mcps', '--trust'] as const;
 
 const capabilities = (mcpAutoApprove: boolean): DriverCapabilities => ({
+  attachesWorkspaceMcp: false,
   chatStreaming: false,
   mcpAutoApprove,
   permissionMode: false,

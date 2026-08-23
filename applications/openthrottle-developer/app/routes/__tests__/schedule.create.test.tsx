@@ -11,7 +11,7 @@ const matches: Route.ComponentProps['matches'] = [
   {
     handle: undefined,
     id: 'routes/schedule.create',
-    loaderData: { repositories: [] },
+    loaderData: { agentClis: undefined, repositories: [] },
     params: {},
     pathname: '/',
   },
@@ -22,7 +22,7 @@ describe('routes/schedule.create.tsx', () => {
     renderRoutesStub(
       <CreateSchedule
         actionData={undefined}
-        loaderData={{ repositories: [] }}
+        loaderData={{ agentClis: undefined, repositories: [] }}
         matches={matches}
         params={{}}
       />,
@@ -42,7 +42,7 @@ describe('routes/schedule.create.tsx', () => {
         actionData={{
           error: 'Name, prompt, provider, and schedule are required.',
         }}
-        loaderData={{ repositories: [] }}
+        loaderData={{ agentClis: undefined, repositories: [] }}
         matches={matches}
         params={{}}
       />,

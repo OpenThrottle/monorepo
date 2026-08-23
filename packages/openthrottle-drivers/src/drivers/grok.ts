@@ -18,18 +18,32 @@ import {
 import { appendWorktreeShellFlags } from '../utils/worktree.ts';
 
 const capabilities: DriverCapabilities = {
+  /**
+   * Reads the workspace's `.mcp.json` — verified against grok 1.0.0 (3cd0d0cbcebe) via
+   * `grok mcp doctor`, which lists `.mcp.json` as a first-class config source and handshakes
+   * `openthrottle-mcp` from it (62 tools discovered).
+   *
+   * Do NOT use `grok mcp list` to check this: it reports only servers in grok's own TOML config, so
+   * with no `.grok/config.toml` present it prints "No MCP servers configured" even though `.mcp.json`
+   * servers are live. That output is what first led this audit to the wrong conclusion. The proof
+   * that the project file (not some user-scope config) is the source: `maestro` exists in NO
+   * user-level config on the audited host, yet grok handshakes it.
+   *
+   * Caveat on evidence grade: `grok mcp doctor` is grok's own account of its MCP configuration, but
+   * the agent-runtime check — spawn the driver's command and ask the model which tools it has, as was
+   * done for cursor, claude and opencode — was blocked by grok's free-tier usage limit. Re-run it
+   * when quota allows to close the gap.
+   */
+  attachesWorkspaceMcp: true,
   chatStreaming: true,
   /**
-   * No flag exists — verified against grok 1.0.0 (3cd0d0cbcebe). Grok resolves MCP servers from its
-   * own TOML config, at either `~/.grok/config.toml` (user scope) or `./.grok/config.toml` (project
-   * scope, via `grok mcp add --scope project`). It does not read `.mcp.json`, so attachment is a
-   * configuration question, not a command-line one — there is nothing for this driver to emit.
+   * No flag needed and none exists — verified against grok 1.0.0 (3cd0d0cbcebe). Grok loads the
+   * workspace's `.mcp.json` with no approval step and no per-server gate, so there is nothing for
+   * this driver to emit; see {@link DriverCapabilities.attachesWorkspaceMcp} above for the evidence.
    *
-   * As of this audit the repo ships NO `./.grok/config.toml`, and `grok mcp list` reports "No MCP
-   * servers configured". A grok run therefore has no OT tools today. Unlike codex, the fix is cheap
-   * and lives in the repo rather than on the host: commit a project-scope `.grok/config.toml`
-   * mirroring `.mcp.json`. Tracked as a follow-up to plan a08e7d24, not done here — this task's
-   * scope is the driver contract.
+   * A project-scope `./.grok/config.toml` (via `grok mcp add --scope project`) would ALSO work, but
+   * it is unnecessary duplication of `.mcp.json` and would add a new committed agent-config directory
+   * for no gain. Deliberately not added.
    */
   mcpAutoApprove: false,
   permissionMode: true,

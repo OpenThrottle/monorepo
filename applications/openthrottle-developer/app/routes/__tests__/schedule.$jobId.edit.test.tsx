@@ -36,7 +36,7 @@ const matches: Route.ComponentProps['matches'] = [
   {
     handle: undefined,
     id: 'routes/schedule.$jobId.edit',
-    loaderData: { job, repositories: [] },
+    loaderData: { agentClis: undefined, job, repositories: [] },
     params: { jobId: 'job-1' },
     pathname: '/schedule/job-1/edit',
   },
@@ -47,7 +47,7 @@ describe('routes/schedule.$jobId.edit.tsx', () => {
     const component = renderRoutesStub(
       <EditSchedule
         actionData={undefined}
-        loaderData={{ job, repositories: [] }}
+        loaderData={{ agentClis: undefined, job, repositories: [] }}
         matches={matches}
         params={{ jobId: 'job-1' }}
       />,
@@ -66,7 +66,7 @@ describe('routes/schedule.$jobId.edit.tsx', () => {
     const component = renderRoutesStub(
       <EditSchedule
         actionData={{ error: 'settings.endpoint.apiKey is not allowed' }}
-        loaderData={{ job, repositories: [] }}
+        loaderData={{ agentClis: undefined, job, repositories: [] }}
         matches={matches}
         params={{ jobId: 'job-1' }}
       />,
@@ -84,7 +84,7 @@ describe('routes/schedule.$jobId.edit.tsx', () => {
         Component: (): React.ReactElement => (
           <EditSchedule
             actionData={undefined}
-            loaderData={{ job, repositories: [] }}
+            loaderData={{ agentClis: undefined, job, repositories: [] }}
             matches={matches}
             params={{ jobId: 'job-1' }}
           />
