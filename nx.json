@@ -234,6 +234,15 @@
         "{workspaceRoot}/tools/*/src/**/*.{ts,tsx}"
       ]
     },
+    "check-migration-hygiene": {
+      "cache": true,
+      "description": "Static lint for databases/migrations/: no inline REFERENCES under an IF NOT EXISTS guard, and no new duplicate numeric prefixes.",
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsx ./scripts/check-migration-hygiene.ts",
+        "cwd": "{workspaceRoot}"
+      }
+    },
     "check-migration-table-comments": {
       "cache": true,
       "description": "Verify every migration table/column carries COMMENT ON metadata via scripts/check-migration-table-comments.ts.",
