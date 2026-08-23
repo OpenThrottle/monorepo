@@ -6,19 +6,19 @@ Generate React Router applications, components, forms, hooks, modals, routes, an
 
 ```bash
 # Get schema
-nx g @tools/generators:react-router --describe
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router --describe
 
 # List applications
-nx g @tools/generators:react-router --list=applications
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router --list=applications
 
 # List folders for an application
-nx g @tools/generators:react-router --list=componentFolders --application=openthrottle-developer
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router --list=componentFolders --application=openthrottle-developer
 
 # List hook area folders for an application
-nx g @tools/generators:react-router --list=hookFolders --application=openthrottle-developer
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router --list=hookFolders --application=openthrottle-developer
 
 # Generate component
-nx g @tools/generators:react-router \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router \
   --subGenerator=component \
   --application=openthrottle-developer \
   --folder=global/components \
@@ -55,7 +55,7 @@ nx g @tools/generators:react-router \
 ### Application
 
 ```bash
-nx g @tools/generators:react-router \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router \
   --subGenerator=application \
   --name=new-app
 ```
@@ -63,7 +63,7 @@ nx g @tools/generators:react-router \
 ### Component
 
 ```bash
-nx g @tools/generators:react-router \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router \
   --subGenerator=component \
   --application=openthrottle-developer \
   --folder=global/components \
@@ -73,7 +73,7 @@ nx g @tools/generators:react-router \
 ### Form (must end with 'Form')
 
 ```bash
-nx g @tools/generators:react-router \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router \
   --subGenerator=form \
   --application=openthrottle-developer \
   --folder=routing/users/components \
@@ -84,14 +84,14 @@ nx g @tools/generators:react-router \
 
 ```bash
 # List area folders first: --list=hookFolders --application=openthrottle-developer
-nx g @tools/generators:react-router \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router \
   --subGenerator=hook \
   --application=openthrottle-developer \
   --folder=global \
   --name=useCommanderOptions
 
 # Routing area example (lands in app/routing/plans/hooks/)
-nx g @tools/generators:react-router \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router \
   --subGenerator=hook \
   --application=openthrottle-developer \
   --folder=routing/plans \
@@ -101,7 +101,7 @@ nx g @tools/generators:react-router \
 ### Modal (must end with 'Modal')
 
 ```bash
-nx g @tools/generators:react-router \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router \
   --subGenerator=modal \
   --application=openthrottle-developer \
   --folder=global/components \
@@ -111,7 +111,7 @@ nx g @tools/generators:react-router \
 ### Route
 
 ```bash
-nx g @tools/generators:react-router \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router \
   --subGenerator=route \
   --application=openthrottle-developer \
   --name=api.users
@@ -120,7 +120,7 @@ nx g @tools/generators:react-router \
 ### Table (must end with 'Table')
 
 ```bash
-nx g @tools/generators:react-router \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router \
   --subGenerator=table \
   --application=openthrottle-developer \
   --folder=routing/users/components \

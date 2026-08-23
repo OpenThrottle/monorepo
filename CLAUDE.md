@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-OpenThrottle — an Nx + pnpm workspace monorepo (Node >= 22, pnpm only; `preinstall` blocks npm/yarn). It does both **task running** and **package publishing**. See [AGENTS.md](./AGENTS.md), [MONOREPO.md](./MONOREPO.md), and [CONTRIBUTING.md](./CONTRIBUTING.md) for deeper detail; `.cursor/rules/` is the single source of truth for code style.
+OpenThrottle — an Nx + pnpm workspace monorepo (Node >= 22, pnpm only; `preinstall` blocks npm/yarn). It does both **task running** and **package publishing**. See [AGENTS.md](./AGENTS.md), [MONOREPO.md](./MONOREPO.md), and [CONTRIBUTING.md](./CONTRIBUTING.md) for deeper detail; `.agents/rules/` is the single source of truth for code style (Cursor loads the same bodies via `.cursor/rules/` symlinks).
 
 **Agent/editor folders:** [docs/monorepo/agent-editor-folders.md](docs/monorepo/agent-editor-folders.md) — folder layout, Cursor vs Claude vs Ralph paths, duplication strategy, and where to edit. Claude-specific config: `.claude/settings.json`, `.claude/skills/` — a generated fan-out from `.agents/skills/`; Cursor reads `.agents/skills/` directly, so there is no `.cursor/skills` copy. Never hand-edit either generated dir; edit `skills/` and re-sync.
 
@@ -80,7 +80,7 @@ Never remove/change types on existing fields without a migration plan — use `@
 
 ## Generators first
 
-Before writing any new component, route, service, or package by hand, check `@tools/generators` and use it (see `.cursor/rules/personal-generators.mdc` and `docs/tools/templates/AGENT_USAGE.md`):
+Before writing any new component, route, service, or package by hand, check `@tools/generators` and use it (see `.agents/rules/personal-generators.mdc` and `docs/tools/templates/AGENT_USAGE.md`):
 
 ```bash
 NX_ISOLATE_PLUGINS=false pnpm nx list @tools/generators
@@ -90,7 +90,7 @@ NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router --subGenerator
 
 All generator commands require the `NX_ISOLATE_PLUGINS=false` prefix. Generators exist for `react`, `react-router`, `nestjs`, `package`, and `folders`. Most sub-generators accept comma-separated `--name` values for batch scaffolding—confirm via `--describe` (`name.description`: `Comma-separated names supported.`). If no generator fits, say so explicitly before writing custom code.
 
-## Code style (from .cursor/rules/)
+## Code style (from .agents/rules/)
 
 - No new TypeScript enums — use `as const` objects (existing enums stay).
 - Avoid `as` casts and `any`; use `import type` for type-only imports; explicit return types.

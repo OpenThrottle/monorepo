@@ -18,9 +18,13 @@ Developer portal for [OpenThrottle](https://developer.openthrottle.ai)—dashboa
 
 ## Setup
 
+First-time setup? run `./scripts/setup.sh` instead — it calls this plus install + database
+
+**From the monorepo root:**
+
 ```bash
 # 🔒 Create or update the environment variables
-./scripts/environment.sh
+./scripts/setup_environment.sh
 
 # Run the application
 pnpm nx run openthrottle-developer:dev

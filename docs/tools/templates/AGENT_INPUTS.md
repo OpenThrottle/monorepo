@@ -73,17 +73,17 @@ Agents must use these **canonical patterns**. Every Nx generator command **must*
 
 ```bash
 # 1. List all generators
-NX_ISOLATE_PLUGINS=false nx list @tools/generators
+NX_ISOLATE_PLUGINS=false pnpm nx list @tools/generators
 
 # 2. Get schema for a generator
-NX_ISOLATE_PLUGINS=false nx g @tools/generators:<name> --describe
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:<name> --describe
 
 # 3. List dynamic values (destinations, applications, folders, etc.)
-NX_ISOLATE_PLUGINS=false nx g @tools/generators:<name> --list=<key>
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:<name> --list=<key>
 # Examples: --list=destinations, --list=applications, --list=componentFolders --application=openthrottle-developer
 
 # 4. Run generator (use --subGenerator for react/react-router/nestjs)
-NX_ISOLATE_PLUGINS=false nx g @tools/generators:<name> --subGenerator=<type> --<option>=<value> --name=<Name>
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:<name> --subGenerator=<type> --<option>=<value> --name=<Name>
 ```
 
 ### 2.2 Per-generator examples

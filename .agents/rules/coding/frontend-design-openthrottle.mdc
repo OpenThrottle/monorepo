@@ -11,7 +11,7 @@ The vendored [`frontend-design`](../../skills/frontend-design/SKILL.md) skill su
 
 Stack:
 
-- Build UI only in the React Router v7 + Vite apps: `openthrottle-developer`, `openthrottle-admin`, `openthrottle-website`, `openthrottle-email`.
+- Build UI only in the React Router v8 + Vite apps: `openthrottle-developer`, `openthrottle-admin`, `openthrottle-website`, `openthrottle-email`.
 - Compose from `@openthrottle/react-router-shadcn` (source in `packages/react-router-shadcn/src/components`). Reach for an existing component before hand-rolling one; if a primitive is missing, add it to that package rather than inlining a bespoke variant in an app.
 - Style with the Tailwind + shadcn tokens already in the design system. Don't hardcode raw colors/spacing that bypass the tokens — distinctive ≠ off-system.
 

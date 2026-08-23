@@ -6,13 +6,13 @@ Generate React components, hooks, and utilities.
 
 ```bash
 # Get schema
-nx g @tools/generators:react --describe
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react --describe
 
 # List destinations
-nx g @tools/generators:react --list=destinations
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react --list=destinations
 
 # Generate component
-nx g @tools/generators:react \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react \
   --subGenerator=component \
   --destination=@openthrottle/react-router-ui \
   --name=UserCard
@@ -37,7 +37,7 @@ nx g @tools/generators:react \
 ### Component
 
 ```bash
-nx g @tools/generators:react \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react \
   --subGenerator=component \
   --destination=@openthrottle/react-router-ui \
   --name=UserCard
@@ -46,7 +46,7 @@ nx g @tools/generators:react \
 ### Multiple Components
 
 ```bash
-nx g @tools/generators:react \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react \
   --subGenerator=component \
   --destination=@openthrottle/react-router-ui \
   --name=Button,Input,Select
@@ -55,7 +55,7 @@ nx g @tools/generators:react \
 ### Hook
 
 ```bash
-nx g @tools/generators:react \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react \
   --subGenerator=hook \
   --destination=@openthrottle/react-router-ui \
   --name=useUser
@@ -64,7 +64,7 @@ nx g @tools/generators:react \
 ### Utility
 
 ```bash
-nx g @tools/generators:react \
+NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react \
   --subGenerator=util \
   --destination=@openthrottle/react-router-ui \
   --name=formatDate

@@ -3,7 +3,7 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import type { Tree } from '@nx/devkit';
 import { generatorReactRouterForm } from './generator.form';
 
-describe('remix form generator', () => {
+describe('react-router form generator', () => {
   let tree: Tree;
 
   const application = 'openthrottle-developer';

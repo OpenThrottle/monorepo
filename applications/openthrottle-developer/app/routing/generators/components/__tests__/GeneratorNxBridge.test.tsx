@@ -9,7 +9,7 @@ import { GeneratorNxBridge } from '../GeneratorNxBridge';
 const baseGenerator: GeneratorDetailCardFragment = {
   __typename: 'GeneratorDetailObject',
   description: 'Desc',
-  name: 'remix',
+  name: 'react-router',
   schemaJson: '{"a":1}',
 };
 

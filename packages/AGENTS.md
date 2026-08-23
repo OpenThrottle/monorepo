@@ -13,7 +13,7 @@ Family-shared notes for everything under `packages/`. Per-project deltas live in
 
 - The reliable discriminator is `nx.targets` in the package's `package.json`: `__build` / `__build-package` **placeholder keys** mean intentionally no build target (consumers' Vite/tsc compiles the source). A real `build` or `build-package` target means it ships `dist/`.
 - `main`/`types` → `./src/index.ts` is **not** sufficient evidence of source-first: built `nestjs-*` packages also point `main` at src while `exports["."]` points at `./dist/src/index.js`.
-- ~18 projects have no `build` target by design — full list in [CONTRIBUTING.md § Nx targets: projects without `build`](../CONTRIBUTING.md). Never add `build` to them; validate with `lint`/`typecheck`/`test`, then run `dev` or `build` on a consumer app (e.g. `openthrottle-developer`) as the integration check. `pnpm nx affected --target=build` will not schedule them.
+- A sizable set of projects has no `build` target by design — see [MONOREPO.md § Projects without a `build` target](../MONOREPO.md#projects-without-a-build-target). Audit the live list rather than trusting a count: diff `pnpm nx show projects` against `pnpm nx show projects --with-target=build`. Never add `build` to them; validate with `lint`/`typecheck`/`test`, then run `dev` or `build` on a consumer app (e.g. `openthrottle-developer`) as the integration check. `pnpm nx affected --target=build` will not schedule them.
 - Packages that `openthrottle-server` imports must keep top-level `exports` → `dist` (not only `publishConfig`), or the Docker runtime fails with `ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING` on `src/*.ts`.
 
 ## Import and export rules

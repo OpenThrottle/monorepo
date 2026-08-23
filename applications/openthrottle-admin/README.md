@@ -14,11 +14,13 @@ OpenThrottle admin UI (React Router, Vite): users, roles, and permissions backed
 
 ## Setup
 
-From the monorepo root:
+First-time setup? run `./scripts/setup.sh` instead — it calls this plus install + database
+
+**From the monorepo root:**
 
 ```bash
 # 🔒 Create or update the environment variables
-./scripts/environment.sh
+./scripts/setup_environment.sh
 
 # Run the application
 pnpm nx run openthrottle-admin:dev
