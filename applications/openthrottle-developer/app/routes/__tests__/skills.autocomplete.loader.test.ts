@@ -42,6 +42,7 @@ const buildArgs = (search = ''): Route.LoaderArgs => {
 const repoSkill = (
   overrides: Partial<RepoSkillEntry> = {},
 ): RepoSkillEntry => ({
+  arguments: undefined,
   disableModelInvocation: undefined,
   layout: 'agents',
   repoRelativePath: '.agents/skills/foo/SKILL.md',

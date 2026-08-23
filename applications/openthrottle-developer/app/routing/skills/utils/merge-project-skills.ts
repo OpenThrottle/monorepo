@@ -88,6 +88,8 @@ export const mergeRepoSkillsWithProjectSkills = (
 };
 
 const toOrphanEntry = (row: ProjectSkillFlagRow): RepoSkillEntry => ({
+  // Orphans have no disk frontmatter to declare arguments.
+  arguments: undefined,
   disableModelInvocation: row.staticDisableModelInvocation ?? undefined,
   layout: 'agents',
   orphanedAt: row.orphanedAt ?? new Date(0),

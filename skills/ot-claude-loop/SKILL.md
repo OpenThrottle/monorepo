@@ -8,7 +8,7 @@ description: >-
 argument-hint: <planId>
 arguments:
   planId: string
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 
 Your job is to run the built-in **`/loop`** over OpenThrottle plan **`$planId`** and its tasks — executing one task at a time, keeping status in OT in sync, appending progress to the plan output stream as you go, and opening a PR when the plan is done. This is **Ralph driven interactively via `/loop`** rather than the workflow CLI: the loop is the outer driver, but the per-task discipline is identical to the [`agents-ralph`](https://github.com/openthrottle/monorepo/blob/main/skills/agents-ralph/SKILL.md) skill.

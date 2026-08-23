@@ -21,6 +21,7 @@ describe('dedupeRepoSkillEntriesBySlug', () => {
   test('prefers agents layout when a slug appears in agents and a fan-out', () => {
     const entries: RepoSkillEntry[] = [
       {
+        arguments: undefined,
         disableModelInvocation: undefined,
         layout: 'claude',
         repoRelativePath: '.claude/skills/shared/SKILL.md',
@@ -30,6 +31,7 @@ describe('dedupeRepoSkillEntriesBySlug', () => {
         tags: undefined,
       },
       {
+        arguments: undefined,
         disableModelInvocation: undefined,
         layout: 'agents',
         repoRelativePath: '.agents/skills/shared/SKILL.md',
@@ -42,6 +44,7 @@ describe('dedupeRepoSkillEntriesBySlug', () => {
 
     expect(dedupeRepoSkillEntriesBySlug(entries)).toEqual([
       {
+        arguments: undefined,
         disableModelInvocation: undefined,
         layout: 'agents',
         repoRelativePath: '.agents/skills/shared/SKILL.md',
@@ -56,6 +59,7 @@ describe('dedupeRepoSkillEntriesBySlug', () => {
   test('prefers agents over a per-CLI layout (cursor) for a shared slug', () => {
     const entries: RepoSkillEntry[] = [
       {
+        arguments: undefined,
         disableModelInvocation: undefined,
         layout: 'cursor',
         repoRelativePath: '.cursor/skills/shared/SKILL.md',
@@ -65,6 +69,7 @@ describe('dedupeRepoSkillEntriesBySlug', () => {
         tags: undefined,
       },
       {
+        arguments: undefined,
         disableModelInvocation: undefined,
         layout: 'agents',
         repoRelativePath: '.agents/skills/shared/SKILL.md',
@@ -91,6 +96,7 @@ describe('dedupeRepoSkillEntriesBySlug', () => {
   test('keeps a grok-only slug that appears in no other layout', () => {
     const entries: RepoSkillEntry[] = [
       {
+        arguments: undefined,
         disableModelInvocation: undefined,
         layout: 'grok',
         repoRelativePath: '.grok/skills/grok-only/SKILL.md',
@@ -107,6 +113,7 @@ describe('dedupeRepoSkillEntriesBySlug', () => {
   test('keeps fan-out-only slugs', () => {
     const entries: RepoSkillEntry[] = [
       {
+        arguments: undefined,
         disableModelInvocation: undefined,
         layout: 'claude',
         repoRelativePath: '.claude/skills/claude-only/SKILL.md',
@@ -129,6 +136,7 @@ describe('getRepoSkillsRegistryCounts', () => {
   test('counts all discovered entries under .agents/skills', () => {
     const entries: RepoSkillEntry[] = [
       {
+        arguments: undefined,
         disableModelInvocation: undefined,
         layout: 'agents',
         repoRelativePath: '.agents/skills/a/SKILL.md',
@@ -138,6 +146,7 @@ describe('getRepoSkillsRegistryCounts', () => {
         tags: undefined,
       },
       {
+        arguments: undefined,
         disableModelInvocation: undefined,
         layout: 'agents',
         repoRelativePath: '.agents/skills/b/SKILL.md',

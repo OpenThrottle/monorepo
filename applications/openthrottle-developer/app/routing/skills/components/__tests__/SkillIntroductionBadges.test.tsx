@@ -11,6 +11,7 @@ import { SkillIntroductionBadges } from '../SkillIntroductionBadges';
 import type { SkillIntroductionBadgesProps } from '../SkillIntroductionBadges';
 
 const baseEntry: RepoSkillEntry = {
+  arguments: undefined,
   disableModelInvocation: undefined,
   layout: 'agents',
   repoRelativePath: '.agents/skills/brag-sheet/SKILL.md',

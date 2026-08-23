@@ -9,6 +9,7 @@ import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry'
 
 const SAMPLE_ENTRIES: readonly RepoSkillEntry[] = [
   {
+    arguments: undefined,
     disableModelInvocation: undefined,
     layout: 'agents',
     repoRelativePath: '.agents/skills/unique-alpha/SKILL.md',
@@ -18,6 +19,7 @@ const SAMPLE_ENTRIES: readonly RepoSkillEntry[] = [
     tags: undefined,
   },
   {
+    arguments: undefined,
     disableModelInvocation: undefined,
     layout: 'agents',
     repoRelativePath: '.agents/skills/unique-beta/SKILL.md',
@@ -128,6 +130,7 @@ describe('AgentsSkillsRegistry', () => {
 
   describe('resolved availability detail', () => {
     const RESOLVED_ENTRY: RepoSkillEntry = {
+      arguments: undefined,
       disableModelInvocation: true,
       effectiveDisableModelInvocation: false,
       layout: 'agents',

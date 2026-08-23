@@ -32,6 +32,7 @@ const mockExecuteGraphqlWithAuth = vi.mocked(executeGraphqlWithAuth);
 
 const SAMPLE_ENTRIES: readonly RepoSkillEntry[] = [
   {
+    arguments: undefined,
     disableModelInvocation: undefined,
     layout: 'agents',
     repoRelativePath: '.agents/skills/nx-workspace/SKILL.md',

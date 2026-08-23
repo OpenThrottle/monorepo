@@ -11,6 +11,7 @@ import { SkillRunControl } from '../SkillRunControl';
 import type { SkillRunControlProps } from '../SkillRunControl';
 
 const mockEntry: RepoSkillEntry = {
+  arguments: undefined,
   disableModelInvocation: false,
   layout: 'agents',
   repoRelativePath: '.agents/skills/example',

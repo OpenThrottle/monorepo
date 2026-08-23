@@ -100,6 +100,7 @@ export const SkillRunControl = (
           <Await resolve={runOptions}>
             {(data) => (
               <RunSkillDialog
+                argumentDeclarations={entry.arguments}
                 models={data.models}
                 onOpenChange={setOpen}
                 onRun={handleRun}
