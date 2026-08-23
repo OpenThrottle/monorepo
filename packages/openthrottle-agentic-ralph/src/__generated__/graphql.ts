@@ -2996,8 +2996,12 @@ export type Query = {
   scheduledAgentJob?: Maybe<ScheduledAgentJobObject>;
   /** One run of a scheduled agent job by run id, or null. */
   scheduledAgentJobRun?: Maybe<ScheduledAgentJobRunObject>;
+  /** Aggregate run counts across ALL scheduled agent jobs: live in-flight totals plus terminal outcomes since `since` (default: 24h ago). no_op is counted separately and is NOT a failure. */
+  scheduledAgentJobRunStats: ScheduledAgentJobRunStatsObject;
   /** Run history for a scheduled agent job, newest first. */
   scheduledAgentJobRuns: Array<ScheduledAgentJobRunObject>;
+  /** Every run that has not reached a terminal status yet — queued or running — across ALL scheduled agent jobs, oldest-first so the longest-running reads first. Capped; use scheduledAgentJobRuns for one job's history. */
+  scheduledAgentJobRunsInFlight: Array<ScheduledAgentJobRunObject>;
   /** All scheduled agent jobs, newest first. */
   scheduledAgentJobs: Array<ScheduledAgentJobObject>;
   /** Semantic search over plan and task embeddings. Embeds the query and returns ranked chunks. Requires OpenThrottle Postgres and embedding (OPENAI_API_KEY or Ollama). */
@@ -3281,9 +3285,17 @@ export type QueryScheduledAgentJobRunArgs = {
   runId: Scalars['ID']['input'];
 };
 
+export type QueryScheduledAgentJobRunStatsArgs = {
+  since?: InputMaybe<Scalars['DateTime']['input']>;
+};
+
 export type QueryScheduledAgentJobRunsArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   scheduledAgentJobId: Scalars['ID']['input'];
+};
+
+export type QueryScheduledAgentJobRunsInFlightArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type QuerySearchArgs = {
@@ -4117,6 +4129,8 @@ export type ScheduledAgentJobRunObject = {
   id: Scalars['ID']['output'];
   /** Input/prompt tokens for the run, parsed from the CLI output; null when unreported. Float because GraphQL Int is 32-bit. */
   inputTokens?: Maybe<Scalars['Float']['output']>;
+  /** The schedule this run belongs to, so a cross-job run list can label itself without a second round trip. Null only if the schedule has since been deleted. */
+  job?: Maybe<ScheduledAgentJobObject>;
   model?: Maybe<Scalars['String']['output']>;
   /** Output/completion tokens for the run; null when unreported. */
   outputTokens?: Maybe<Scalars['Float']['output']>;
@@ -4138,6 +4152,29 @@ export type ScheduledAgentJobRunObject = {
   totalTokens?: Maybe<Scalars['Float']['output']>;
   /** schedule | manual (run-now). */
   trigger: Scalars['String']['output'];
+};
+
+/** Aggregate run counts across all scheduled agent jobs: live in-flight totals plus terminal outcomes since a window boundary. */
+export type ScheduledAgentJobRunStatsObject = {
+  __typename?: 'ScheduledAgentJobRunStatsObject';
+  /** Runs cancelled inside the window. */
+  cancelledCount: Scalars['Int']['output'];
+  /** Runs that failed inside the window — non-zero exit, timeout, or spawn failure. Does NOT include no_op. */
+  failedCount: Scalars['Int']['output'];
+  /** Runs not yet terminal right now — queuedCount + runningCount. Not windowed. */
+  inFlightCount: Scalars['Int']['output'];
+  /** Runs that exited cleanly but reported they did not do the work, inside the window. Terminal and NOT a failure. */
+  noOpCount: Scalars['Int']['output'];
+  /** Runs enqueued but not yet claimed by a processor right now. Not windowed. */
+  queuedCount: Scalars['Int']['output'];
+  /** Runs currently executing right now. Not windowed. */
+  runningCount: Scalars['Int']['output'];
+  /** Inclusive lower bound of the window the terminal counts cover; defaults to 24h ago. */
+  since: Scalars['DateTime']['output'];
+  /** Runs that completed successfully inside the window. */
+  succeededCount: Scalars['Int']['output'];
+  /** Every run created inside the window, whatever its status — the "ran today" total. */
+  windowTotalCount: Scalars['Int']['output'];
 };
 
 export type SearchChunk = {

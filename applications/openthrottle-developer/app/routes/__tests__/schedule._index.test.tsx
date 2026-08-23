@@ -3,6 +3,10 @@ import { describe, expect, test } from 'vitest';
 import ScheduleIndex from '../schedule._index';
 import { buildRootMatch } from '~/testing/root-match-fixture';
 import {
+  scheduleJobFixture,
+  scheduleLoaderDataFixture,
+} from '~/testing/schedule-fixtures';
+import {
   renderRoutesStub,
   renderWithMemoryRouter,
 } from '~/testing/route-fixtures';
@@ -10,7 +14,6 @@ import {
   SCHEDULE_COPY,
   SCHEDULE_ONBOARDING,
 } from '~/routing/schedule/data/data.copy';
-import type { ScheduledJobCardFragment } from '~/__generated__/graphql';
 import type { Route } from '@/app/routes/+types/schedule._index';
 
 const matches: Route.ComponentProps['matches'] = [
@@ -18,35 +21,18 @@ const matches: Route.ComponentProps['matches'] = [
   {
     handle: undefined,
     id: 'routes/schedule._index',
-    loaderData: { jobs: [], search: '' },
+    loaderData: scheduleLoaderDataFixture(),
     params: {},
     pathname: '/',
   },
 ];
-
-const job = (
-  overrides: Partial<ScheduledJobCardFragment> = {},
-): ScheduledJobCardFragment => ({
-  __typename: 'ScheduledAgentJobObject',
-  cronPattern: '0 9 * * *',
-  driverId: 'claude',
-  enabled: true,
-  id: 'job-1',
-  lastRunAt: null,
-  model: 'opus',
-  name: 'Nightly audit',
-  nextRunAt: null,
-  timezone: null,
-  updatedAt: '2026-07-31T00:00:00.000Z',
-  ...overrides,
-});
 
 describe('routes/schedule._index.tsx', () => {
   test('renders the table when schedules exist', () => {
     const component = renderRoutesStub(
       <ScheduleIndex
         actionData={undefined}
-        loaderData={{ jobs: [job()], search: '' }}
+        loaderData={scheduleLoaderDataFixture({ jobs: [scheduleJobFixture()] })}
         matches={matches}
         params={{}}
       />,
@@ -60,7 +46,7 @@ describe('routes/schedule._index.tsx', () => {
     const component = renderRoutesStub(
       <ScheduleIndex
         actionData={undefined}
-        loaderData={{ jobs: [job()], search: '' }}
+        loaderData={scheduleLoaderDataFixture({ jobs: [scheduleJobFixture()] })}
         matches={matches}
         params={{}}
       />,
@@ -72,17 +58,18 @@ describe('routes/schedule._index.tsx', () => {
     ).toHaveAttribute('href', '/schedule/create');
   });
 
-  test('renders the toolbar alongside the onboarding pitch', () => {
+  test('hides the toolbar behind the onboarding pitch', () => {
     const component = renderRoutesStub(
       <ScheduleIndex
         actionData={undefined}
-        loaderData={{ jobs: [], search: '' }}
+        loaderData={scheduleLoaderDataFixture()}
         matches={matches}
         params={{}}
       />,
     );
 
-    expect(component.getByTestId('ScheduleToolbar')).toBeInTheDocument();
+    // Nothing to search or filter yet, so the pitch stands alone.
+    expect(component.queryByTestId('ScheduleToolbar')).not.toBeInTheDocument();
     expect(
       component.getByTestId('GlobalFeatureOnboarding'),
     ).toBeInTheDocument();
@@ -92,7 +79,7 @@ describe('routes/schedule._index.tsx', () => {
     const component = renderRoutesStub(
       <ScheduleIndex
         actionData={undefined}
-        loaderData={{ jobs: [], search: '' }}
+        loaderData={scheduleLoaderDataFixture()}
         matches={matches}
         params={{}}
       />,
@@ -112,7 +99,7 @@ describe('routes/schedule._index.tsx', () => {
     const component = renderRoutesStub(
       <ScheduleIndex
         actionData={undefined}
-        loaderData={{ jobs: [], search: 'nothing-matches' }}
+        loaderData={scheduleLoaderDataFixture({ search: 'nothing-matches' })}
         matches={matches}
         params={{}}
       />,
@@ -125,13 +112,15 @@ describe('routes/schedule._index.tsx', () => {
       component.queryByTestId('GlobalFeatureOnboarding'),
     ).not.toBeInTheDocument();
     expect(component.queryByTestId('ScheduleTable')).not.toBeInTheDocument();
+    // The toolbar stays so the search that matched nothing can be cleared.
+    expect(component.getByTestId('ScheduleToolbar')).toBeInTheDocument();
   });
 
   test('renders the onboarding trigger in the header when populated', () => {
     const component = renderRoutesStub(
       <ScheduleIndex
         actionData={undefined}
-        loaderData={{ jobs: [job()], search: '' }}
+        loaderData={scheduleLoaderDataFixture({ jobs: [scheduleJobFixture()] })}
         matches={matches}
         params={{}}
       />,
@@ -153,7 +142,9 @@ describe('routes/schedule._index.tsx', () => {
           element: (
             <ScheduleIndex
               actionData={undefined}
-              loaderData={{ jobs: [job()], search: '' }}
+              loaderData={scheduleLoaderDataFixture({
+                jobs: [scheduleJobFixture()],
+              })}
               matches={matches}
               params={{}}
             />
