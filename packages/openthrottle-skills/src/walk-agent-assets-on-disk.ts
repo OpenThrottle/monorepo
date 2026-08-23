@@ -10,7 +10,7 @@ import type {
 export interface AgentAssetFileEntry {
   /**
    * Skill-only: whether the skill folder resolves under the repo's authored
-   * `skills/` tree (the skill-sync layout symlinks authored skills into
+   * `skills/` tree (the ot-skill-sync layout symlinks authored skills into
    * `.agents/skills/`; lockfile-installed external skills are real
    * directories there). `undefined` for non-skill assets.
    */
@@ -139,7 +139,7 @@ const readFileSafely = (
 
 /**
  * A skill folder is a real directory OR a symlink resolving to a directory
- * that stays inside the monorepo — the skill-sync layout links the repo's
+ * that stays inside the monorepo — the ot-skill-sync layout links the repo's
  * authored `skills/<slug>` dirs into `.agents/skills/` while external
  * installs stay real directories. Links escaping the repo are skipped, the
  * same out-of-tree guard the rules walk applies. `authored` is true when the

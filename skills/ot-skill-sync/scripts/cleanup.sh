@@ -1,5 +1,5 @@
 #!/bin/bash
-# skill-sync — remove everything sync.sh generated in the current repo.
+# ot-skill-sync — remove everything sync.sh generated in the current repo.
 #
 # Generated links are exactly the symlinks under .agents/skills/ and the agent
 # fan-out dirs; real directories there are external installs and are left alone.

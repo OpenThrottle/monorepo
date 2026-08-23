@@ -92,45 +92,49 @@ with `CLAUDE.md`). Do not cut a reference skill on an untrustworthy 0 alone.
 15 of 44 skills have ever fired. `grilling` (1, 2026-08-19) and `graphify` (1,
 2026-08-17) were 0 in the original plan snapshot and are no longer 0.
 
-| skill                 | invocations | sessions | paths              | last used              |
-| --------------------- | ----------- | -------- | ------------------ | ---------------------- |
-| `ot-claude-loop`      | 74          | 73       | slash              | 2026-08-20             |
-| `github-squash`       | 61          | 59       | skill_tool + slash | 2026-08-20             |
-| `github-pull-request` | 44          | 43       | skill_tool + slash | 2026-08-20             |
-| `ot-plan-loop`        | 27          | 26       | slash              | **2026-08-14 (stale)** |
-| `loop` (built-in)     | 24          | 12       | skill_tool + slash | 2026-08-13             |
-| `github-commit`       | 12          | 12       | slash              | 2026-08-16             |
-| `ot-plans`            | 10          | 10       | skill_tool         | 2026-08-15             |
-| `skill-sync`          | 3           | 3        | skill_tool + slash | 2026-08-14             |
-| `git-commit`          | 2           | 2        | skill_tool         | 2026-08-07             |
-| `grilling`            | 1           | 1        | skill_tool         | 2026-08-19             |
-| `graphify`            | 1           | 1        | skill_tool         | 2026-08-17             |
-| `claude-api`          | 1           | 1        | slash              | 2026-08-13             |
-| `agents-ralph`        | 1           | 1        | skill_tool         | 2026-08-11             |
-| `monitor-ci`          | 1           | 1        | skill_tool         | 2026-08-16             |
-| `ot-onboarding`       | 1           | 1        | slash              | 2026-08-14             |
+> **Historical slug:** rows keyed `skill-sync` below were recorded before the
+> 2026-08 rename to `ot-skill-sync`. Counts are left as measured; do not rewrite
+> them to the new slug.
+
+| skill                     | invocations | sessions | paths              | last used              |
+| ------------------------- | ----------- | -------- | ------------------ | ---------------------- |
+| `ot-claude-loop`          | 74          | 73       | slash              | 2026-08-20             |
+| `github-squash`           | 61          | 59       | skill_tool + slash | 2026-08-20             |
+| `github-pull-request`     | 44          | 43       | skill_tool + slash | 2026-08-20             |
+| `ot-plan-loop`            | 27          | 26       | slash              | **2026-08-14 (stale)** |
+| `loop` (built-in)         | 24          | 12       | skill_tool + slash | 2026-08-13             |
+| `github-commit`           | 12          | 12       | slash              | 2026-08-16             |
+| `ot-plans`                | 10          | 10       | skill_tool         | 2026-08-15             |
+| `skill-sync` (pre-rename) | 3           | 3        | skill_tool + slash | 2026-08-14             |
+| `git-commit`              | 2           | 2        | skill_tool         | 2026-08-07             |
+| `grilling`                | 1           | 1        | skill_tool         | 2026-08-19             |
+| `graphify`                | 1           | 1        | skill_tool         | 2026-08-17             |
+| `claude-api`              | 1           | 1        | slash              | 2026-08-13             |
+| `agents-ralph`            | 1           | 1        | skill_tool         | 2026-08-11             |
+| `monitor-ci`              | 1           | 1        | skill_tool         | 2026-08-16             |
+| `ot-onboarding`           | 1           | 1        | slash              | 2026-08-14             |
 
 By path: 222 slash, 35 `skill_tool` (claude-code), 4 `skill_tool` (legacy null
 source), 1 cursor, 1 unclassified legacy.
 
 ## Corrected baseline — outcomes
 
-| skill                 | success | abandoned | error | avg duration   |
-| --------------------- | ------- | --------- | ----- | -------------- |
-| `ot-claude-loop`      | 65      | **5**     | 0     | 2880s (48 min) |
-| `github-squash`       | 52      | **3**     | 0     | 141s           |
-| `github-pull-request` | 37      | 0         | 0     | 144s           |
-| `loop`                | 18      | 1         | 0     | 899s           |
-| `ot-plan-loop`        | 18      | 0         | 0     | 1849s          |
-| `github-commit`       | 8       | 1         | 0     | 116s           |
-| `ot-plans`            | 3       | 0         | 0     | 223s           |
-| `skill-sync`          | 1       | **1**     | 0     | 34s            |
-| `grilling`            | 1       | 0         | 0     | 312s           |
-| `agents-ralph`        | 1       | 0         | 0     | 617s           |
-| `graphify`            | 1       | 0         | 0     | 92s            |
-| `claude-api`          | 1       | 0         | 0     | 26s            |
-| `monitor-ci`          | 1       | 0         | 0     | 1233s          |
-| `ot-onboarding`       | 1       | 0         | 0     | 24s            |
+| skill                     | success | abandoned | error | avg duration   |
+| ------------------------- | ------- | --------- | ----- | -------------- |
+| `ot-claude-loop`          | 65      | **5**     | 0     | 2880s (48 min) |
+| `github-squash`           | 52      | **3**     | 0     | 141s           |
+| `github-pull-request`     | 37      | 0         | 0     | 144s           |
+| `loop`                    | 18      | 1         | 0     | 899s           |
+| `ot-plan-loop`            | 18      | 0         | 0     | 1849s          |
+| `github-commit`           | 8       | 1         | 0     | 116s           |
+| `ot-plans`                | 3       | 0         | 0     | 223s           |
+| `skill-sync` (pre-rename) | 1       | **1**     | 0     | 34s            |
+| `grilling`                | 1       | 0         | 0     | 312s           |
+| `agents-ralph`            | 1       | 0         | 0     | 617s           |
+| `graphify`                | 1       | 0         | 0     | 92s            |
+| `claude-api`              | 1       | 0         | 0     | 26s            |
+| `monitor-ci`              | 1       | 0         | 0     | 1233s          |
+| `ot-onboarding`           | 1       | 0         | 0     | 24s            |
 
 `abandoned` rows carry no `duration_ms` (the sweep cannot know how far in a run
 died), so `avg duration` is a success-only average.

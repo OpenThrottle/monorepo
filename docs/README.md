@@ -24,7 +24,7 @@ bottom, then dip into **Usage & reference** as needed.
 - **Worktrees:** [monorepo/worktree-port-allocation.md](./monorepo/worktree-port-allocation.md)
 - **Nx:** [monorepo/NX.md](./monorepo/NX.md), [monorepo/nx-graph.md](./monorepo/nx-graph.md), [monorepo/NX/tags.md](./monorepo/NX/tags.md)
 - **Generators:** [tools/templates/](./tools/templates/AGENT_USAGE.md) — scaffold routes, components, packages, services.
-- **Skills:** [Skills.md](./Skills.md) — the agent-skills policy and `skill-sync`.
+- **Skills:** [Skills.md](./Skills.md) — the agent-skills policy and `ot-skill-sync`.
 - **Embeddings / Ollama:** [monorepo/Ollama.md](./monorepo/Ollama.md)
 - **Scheduled agent jobs:** [openthrottle/scheduled-agent-jobs-usage.md](./openthrottle/scheduled-agent-jobs-usage.md)
 - **Agentic CLI chat backends:** [openthrottle/agentic-cli-chat-backends.md](./openthrottle/agentic-cli-chat-backends.md), [openthrottle/agentic-cli-backend-compatibility-guide.md](./openthrottle/agentic-cli-backend-compatibility-guide.md)

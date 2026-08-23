@@ -193,4 +193,4 @@ your first PR.
   app's routes are clean, then fix violations rather than bypassing with
   `--no-verify`.
 - [docs/Skills.md](./docs/Skills.md) — agent skills and rules (`.agents/` is the
-  source of truth; run `skill-sync`, never hand-edit generated trees).
+  source of truth; run `ot-skill-sync`, never hand-edit generated trees).

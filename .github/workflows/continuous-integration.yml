@@ -285,12 +285,12 @@ jobs:
         with:
           cache-suffix: shard-${{ matrix.jobIndex }}
 
-      # skill-sync's .agents/skills → skills/ symlinks (and the editor fan-out) are
+      # ot-skill-sync's .agents/skills → skills/ symlinks (and the editor fan-out) are
       # generated artifacts, gitignored by design, so a fresh checkout lacks them.
       # Materialize them before the affected tests and the SSOT drift guard, both of
       # which read the fan-out. `--check` (run by check-agent-assets-ssot) then passes.
-      - name: '🔗 Materialize agent-skill symlinks (skill-sync)'
-        run: bash skills/skill-sync/scripts/sync.sh
+      - name: '🔗 Materialize agent-skill symlinks (ot-skill-sync)'
+        run: bash skills/ot-skill-sync/scripts/sync.sh
 
       - name: "🕵️‍♂️ NX Setup SHA's"
         uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1

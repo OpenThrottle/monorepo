@@ -44,7 +44,7 @@ export const OutputStream = (props: OutputStreamProps): React.ReactElement => {
         <section
           key={`${group.label ?? OUTPUT_STREAM_COPY.unknownDay}-${group.chunks[0]?.id}`}
         >
-          <p className="text-muted-foreground/80 mb-4 text-sm">
+          <p className="text-foreground/80 mb-8 text-sm">
             {group.label ?? OUTPUT_STREAM_COPY.unknownDay}
           </p>
 

@@ -1,5 +1,5 @@
 #!/bin/bash
-# skill-sync — sync the current repo's skills into the standard layout.
+# ot-skill-sync — sync the current repo's skills into the standard layout.
 #
 # Two-stage pipeline (see common.sh for the architecture):
 #   Stage 1  skills/<name>            →  .agents/skills/<name>   (symlink)

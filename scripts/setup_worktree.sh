@@ -4,7 +4,7 @@ set -e
 # 0. Assume the basics if you're kicking off a worktree
 
 # 0. Setup our skills
-./skills/skill-sync/scripts/sync.sh
+./skills/ot-skill-sync/scripts/sync.sh
 
 # 1. Create the environment file(s) — resets each .env to .env.default (6020-6025).
 ./scripts/setup_environment.sh

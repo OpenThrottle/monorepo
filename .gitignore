@@ -83,8 +83,8 @@ CLAUDE.local.md
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
 
-# Start 🔄 Managed by OpenThrottle skill-sync
+# Start 🔄 Managed by OpenThrottle ot-skill-sync
 .agents/skills/*
 !.agents/skills/*/
 .claude/skills/
-# End 🔄 Managed by OpenThrottle skill-sync
+# End 🔄 Managed by OpenThrottle ot-skill-sync

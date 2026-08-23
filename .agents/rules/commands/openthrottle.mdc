@@ -33,7 +33,7 @@ The **ot-plans** skill is the single source of truth for the full tool catalog a
 - **`/ot/create-plan`** — Create a plan (and optional initial tasks) via `create_plan` / `create_plans` and `create_task` / `create_tasks`. Handles both a structured plan and turning a rough idea/notes into a plan + tasks. Report created plan id and any task ids/titles.
 - **`/ot/edit-task`** — Edit an existing task via `get_task` and `update_task`. Report updated task id and fields.
 
-OT slash skills are authored under `skills/ot-*` (e.g. `ot-ask`, `ot-create-plan`) and fanned out by skill-sync to `.agents/skills/ot-*` (read natively by Cursor) and `.claude/skills/ot-*` (Claude Code). Each skill instructs the agent to follow this rule and use the appropriate tools.
+OT slash skills are authored under `skills/ot-*` (e.g. `ot-ask`, `ot-create-plan`) and fanned out by ot-skill-sync to `.agents/skills/ot-*` (read natively by Cursor) and `.claude/skills/ot-*` (Claude Code). Each skill instructs the agent to follow this rule and use the appropriate tools.
 
 ## Answering from OpenThrottle (OT)
 

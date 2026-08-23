@@ -57,9 +57,9 @@ jobs:
         uses: ./.github/actions/node-setup
 
       # The audit walks the same fan-out the CI build does; a fresh checkout
-      # lacks the gitignored skill symlinks until skill-sync materializes them.
-      - name: '🔗 Materialize agent-skill symlinks (skill-sync)'
-        run: bash skills/skill-sync/scripts/sync.sh
+      # lacks the gitignored skill symlinks until ot-skill-sync materializes them.
+      - name: '🔗 Materialize agent-skill symlinks (ot-skill-sync)'
+        run: bash skills/ot-skill-sync/scripts/sync.sh
 
       # Report-only, exactly as it was in Continuous Integration. `continue-on-error`
       # is retained deliberately: this must not start failing a run while the

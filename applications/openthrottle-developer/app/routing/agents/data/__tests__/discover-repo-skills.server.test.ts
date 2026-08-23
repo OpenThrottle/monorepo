@@ -232,7 +232,7 @@ describe('discoverRepoSkills', () => {
   test('derives openthrottle for an authored skill symlinked from skills/', () => {
     const root = makeTempDir();
 
-    // Authored home: skills/<slug>, linked into .agents/skills by skill-sync.
+    // Authored home: skills/<slug>, linked into .agents/skills by ot-skill-sync.
     writeSkill(
       root,
       'skills',

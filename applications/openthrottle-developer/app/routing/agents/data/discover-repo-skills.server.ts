@@ -74,7 +74,7 @@ interface SkillProvenance {
 }
 
 /**
- * Provenance is derived from the skill-sync layout, never from frontmatter:
+ * Provenance is derived from the ot-skill-sync layout, never from frontmatter:
  * a skill folder whose real path resolves under `<root>/skills/` is authored
  * here (`openthrottle`); anything else is a lockfile install (`external`),
  * with its origin URL looked up from skills-lock.json by folder name.

@@ -3,10 +3,10 @@ description: Manage the OpenThrottle agent-skills architecture in any repo — i
 metadata:
   author: openthrottle
   version: '1.0.0'
-name: skill-sync
+name: ot-skill-sync
 ---
 
-# skill-sync
+# ot-skill-sync
 
 This skill manages the **OpenThrottle agent-skills architecture** in whatever repository you're in. It exists so every AI tool — Claude Code, Cursor 2.4+, Codex, Grok Build, OpenCode, VSCode/Copilot, Gemini CLI, and anything else — sees the **same skills from the same starting point**, no matter which tool a teammate used to install them.
 
@@ -58,7 +58,7 @@ bash <path-to-this-skill>/scripts/sync.sh --check
 bash <path-to-this-skill>/scripts/cleanup.sh
 ```
 
-When installed, `<path-to-this-skill>` is `.agents/skills/skill-sync`; in the OpenThrottle repo itself it's `skills/skill-sync`.
+When installed, `<path-to-this-skill>` is `.agents/skills/ot-skill-sync`; in the OpenThrottle repo itself it's `skills/ot-skill-sync`.
 
 These scripts create symlinks and maintain a single static `.gitignore` block so generated links are never committed. That is their entire write surface. There is no side-ledger: a symlink under `.agents/skills/` or an agent folder _is_ a generated link (a real directory there is an external install), so the sync reconciles renames and removals straight from the filesystem.
 
@@ -82,7 +82,7 @@ AGENT_SKILL_DIRS=".claude/skills .windsurf/skills" bash <path>/scripts/sync.sh
 
 ## Setting up a new repo
 
-1. `npx skills add openthrottle/monorepo --skill skill-sync` (default agents — the bootstrap exception)
+1. `npx skills add openthrottle/monorepo --skill ot-skill-sync` (default agents — the bootstrap exception)
 2. Install any other skills with `--agent universal`
 3. Run `sync.sh`, commit the resulting `.gitignore` changes
 4. Add `sync.sh && sync.sh --check` to CI as the drift gate

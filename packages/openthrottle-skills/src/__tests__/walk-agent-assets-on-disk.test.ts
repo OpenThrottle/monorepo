@@ -147,8 +147,8 @@ describe('walkAgentAssetFiles across all asset kinds', () => {
     expect(warnings).toEqual([]);
   });
 
-  test('walks a symlinked skill directory (skill-sync authored layout)', () => {
-    // skill-sync links the authored skills/<slug> dirs into .agents/skills/.
+  test('walks a symlinked skill directory (ot-skill-sync authored layout)', () => {
+    // ot-skill-sync links the authored skills/<slug> dirs into .agents/skills/.
     mkdirSync(join(monorepoRoot, 'skills/linked-skill'), { recursive: true });
     writeFileSync(
       join(monorepoRoot, 'skills/linked-skill/SKILL.md'),

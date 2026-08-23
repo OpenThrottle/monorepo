@@ -17,11 +17,11 @@ is_symlink() {
   [[ -L "$path" ]]
 }
 
-# --- Skills: skill-sync owns the layout (skills/ = authored SSOT, .agents/skills = merged
+# --- Skills: ot-skill-sync owns the layout (skills/ = authored SSOT, .agents/skills = merged
 # view of skills/ symlinks + lockfile-installed external dirs, <agent>/skills = generated
 # fan-out). Its --check validates the whole two-stage pipeline without writing. ---
-if ! bash skills/skill-sync/scripts/sync.sh --check; then
-  fail "skill layout drift (see skill-sync output above; run: bash skills/skill-sync/scripts/sync.sh)"
+if ! bash skills/ot-skill-sync/scripts/sync.sh --check; then
+  fail "skill layout drift (see ot-skill-sync output above; run: bash skills/ot-skill-sync/scripts/sync.sh)"
 fi
 
 # --- Rules: .cursor/rules/**/*.mdc must symlink into .agents/rules (except gitignored nx-rules.mdc) ---

@@ -28,8 +28,8 @@ const SKILL_LAYOUT_DIRS = [
 
 /**
  * The required slugs are canonical skills that live at `skills/<slug>` and reach
- * the fan-out only as skill-sync symlinks — which are gitignored and absent on a
- * fresh checkout (CI runs no skill-sync). Only assert their presence once the
+ * the fan-out only as ot-skill-sync symlinks — which are gitignored and absent on a
+ * fresh checkout (CI runs no ot-skill-sync). Only assert their presence once the
  * fan-out is actually materialized; otherwise there is nothing to integrate
  * against and the check would false-fail. See repo-skills-discovery-design.md.
  */

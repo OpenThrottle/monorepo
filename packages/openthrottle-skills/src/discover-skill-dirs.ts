@@ -36,7 +36,7 @@ const isErrnoException = (error: unknown): error is NodeJS.ErrnoException =>
 
 /**
  * True when `dirent` is a directory, or a symlink whose target resolves to a
- * directory. Skill folders may be authored symlinks (the skill-sync layout) as
+ * directory. Skill folders may be authored symlinks (the ot-skill-sync layout) as
  * well as real directories, so both are accepted.
  */
 const direntIsSkillFolder = (root: string, dirent: Dirent): boolean => {

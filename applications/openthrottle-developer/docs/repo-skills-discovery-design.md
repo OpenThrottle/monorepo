@@ -2,7 +2,7 @@
 
 Plan: **Dynamic repo skills registry from `.agents/skills`** (`fca6f044-fcb2-48f9-8ff5-1e32a76773c3`).
 
-> **Updated 2026-07-20:** the dedicated `.cursor/skills` _fan-out_ was retired. OpenThrottle standardizes on `.agents/skills` — the SSOT view combining authored `skills/` and lockfile-installed external skills — with `.claude/skills` as generated fan-out (deduped in, preferring `.agents`). See [docs/Skills.md](../../../docs/Skills.md) and [skills/skill-sync/SKILL.md](../../../skills/skill-sync/SKILL.md).
+> **Updated 2026-07-20:** the dedicated `.cursor/skills` _fan-out_ was retired. OpenThrottle standardizes on `.agents/skills` — the SSOT view combining authored `skills/` and lockfile-installed external skills — with `.claude/skills` as generated fan-out (deduped in, preferring `.agents`). See [docs/Skills.md](../../../docs/Skills.md) and [skills/ot-skill-sync/SKILL.md](../../../skills/ot-skill-sync/SKILL.md).
 >
 > **Updated 2026-08-13:** the _scan_ re-added per-CLI read dirs. Because Cursor 2.4+, Codex, and Grok Build read the `SKILL.md` standard, `discoverRepoSkills` now scans `.agents/skills`, `.claude/skills`, `.codex/skills`, `.cursor/skills`, `.grok/skills`, and `.opencode/skills` (all deduped by slug, still preferring `.agents`). This is a read-only discovery change and does **not** reinstate a `.cursor/skills` fan-out. The cursor-specific figures in the tables below are historical illustration, not the current layout set.
 
@@ -108,7 +108,7 @@ Plans: **Skills detail route + source classification**
 (`6c785a74-fd94-474f-8e1b-0e182bd5c0b0`) and **Fully-virtual skill
 provenance** (`9dc16a01-ddff-44d6-984f-41b119938379`).
 
-Provenance is **derived from the skill-sync architecture** — installed skills
+Provenance is **derived from the ot-skill-sync architecture** — installed skills
 are installed, that's it; every layer on top of them is virtual:
 
 | Layout signal (realpath of the skill folder)      | Provenance                                      |
@@ -140,7 +140,7 @@ walker's `authored` flag + `parseSkillsLockFile`.
 ## External skills are read-only
 
 Provenance gates writes, not just display. An in-app edit of an **external**
-SKILL.md would silently fork it from upstream: the next `skill-sync` / lockfile
+SKILL.md would silently fork it from upstream: the next `ot-skill-sync` / lockfile
 install either clobbers the edit or leaves the repo permanently diverged. Only
 `openthrottle`-sourced skills — real directories under the authored `skills/`
 tree — are editable here.
