@@ -10,12 +10,14 @@ const WORKTREE_CHECKOUT_KIND = 'worktree';
 const toRow = (
   repository: WorkspaceRepositoryFieldsFragment,
   checkout: RepositoryCheckout,
+  foreignSkillInjectionEnabled: boolean,
   children: RepositoryCheckoutRow[] = [],
 ): RepositoryCheckoutRow => ({
   branch:
     checkout.inspection?.git.currentBranch ?? repository.defaultBranch ?? null,
   checkout,
   children: children.length > 0 ? children : undefined,
+  foreignSkillInjectionEnabled,
   isWorktree: checkout.kind === WORKTREE_CHECKOUT_KIND,
   remoteUrl: repository.normalizedRemoteUrl ?? null,
   repositoryId: repository.id,
@@ -50,6 +52,12 @@ export function buildRepositoryRows(
       continue;
     }
 
+    // Repository-level rollup, computed once so every row for this repository
+    // agrees: the flag is stored per checkout but flipped for all of them at once.
+    const injectionEnabled = checkouts.some(
+      (checkout) => checkout.foreignSkillInjectionEnabled,
+    );
+
     const primaries = checkouts.filter(
       (checkout) => checkout.kind !== WORKTREE_CHECKOUT_KIND,
     );
@@ -64,7 +72,8 @@ export function buildRepositoryRows(
         toRow(
           repository,
           promoted,
-          rest.map((worktree) => toRow(repository, worktree)),
+          injectionEnabled,
+          rest.map((worktree) => toRow(repository, worktree, injectionEnabled)),
         ),
       );
 
@@ -74,10 +83,12 @@ export function buildRepositoryRows(
     primaries.forEach((primary, index) => {
       const children =
         index === 0
-          ? worktrees.map((worktree) => toRow(repository, worktree))
+          ? worktrees.map((worktree) =>
+              toRow(repository, worktree, injectionEnabled),
+            )
           : [];
 
-      rows.push(toRow(repository, primary, children));
+      rows.push(toRow(repository, primary, injectionEnabled, children));
     });
   }
 

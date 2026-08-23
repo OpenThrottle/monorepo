@@ -5,6 +5,7 @@ export interface MockCheckoutOverrides {
   branch?: string | null;
   displayName?: string;
   filesystemPath?: string;
+  foreignSkillInjectionEnabled?: boolean;
   id: string;
   kind?: string;
   managed?: boolean;
@@ -33,6 +34,7 @@ export const mockCheckout = (
     branch = null,
     displayName = overrides.id,
     filesystemPath = `/Users/dev/Development/${overrides.id}`,
+    foreignSkillInjectionEnabled = false,
     id,
     kind = 'primary',
     managed = false,
@@ -44,7 +46,7 @@ export const mockCheckout = (
     createdAt: '2026-07-24T00:00:00.000Z',
     displayName,
     filesystemPath,
-    foreignSkillInjectionEnabled: false,
+    foreignSkillInjectionEnabled,
     id,
     inspection: branch
       ? {

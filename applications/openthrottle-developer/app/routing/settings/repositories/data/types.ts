@@ -19,6 +19,12 @@ export interface RepositoryCheckoutRow {
   branch: string | null;
   checkout: RepositoryCheckout;
   children?: RepositoryCheckoutRow[];
+  /**
+   * Repository-level rollup of the per-checkout foreign-skill-injection opt-in.
+   * `updateRepository` flips every one of the user's checkouts for a repository
+   * together, so parent and child rows deliberately read the same value.
+   */
+  foreignSkillInjectionEnabled: boolean;
   isWorktree: boolean;
   remoteUrl: string | null;
   repositoryId: string;

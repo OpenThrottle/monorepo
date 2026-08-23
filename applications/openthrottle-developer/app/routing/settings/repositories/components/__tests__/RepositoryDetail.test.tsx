@@ -4,6 +4,7 @@ import type { RenderResult } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
+import { WORKSPACE_REPOSITORY_DETAIL_COPY } from '~/routing/settings/data/data.copy';
 import { RepositoryDetail } from '../RepositoryDetail';
 import type { RepositoryDetailProps } from '../RepositoryDetail';
 
@@ -92,6 +93,40 @@ describe('RepositoryDetail Component', () => {
     expect(
       component.getByTestId('RepositoryDetailCheckout-checkout-1'),
     ).toBeInTheDocument();
+  });
+
+  test('titles the page and the checkouts section with h1 headings', () => {
+    setup();
+
+    expect(
+      component.getByRole('heading', {
+        level: 1,
+        name: props.repository.name,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      component.getByRole('heading', {
+        level: 1,
+        name: WORKSPACE_REPOSITORY_DETAIL_COPY.checkoutsHeading,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      component.getByText(
+        WORKSPACE_REPOSITORY_DETAIL_COPY.checkoutsDescription,
+      ),
+    ).toBeInTheDocument();
+  });
+
+  test('renders the checkouts empty state when the repository has none', () => {
+    props.repository = { ...props.repository, checkouts: [] };
+    setup();
+
+    expect(
+      component.getByText(WORKSPACE_REPOSITORY_DETAIL_COPY.checkoutsEmpty),
+    ).toBeInTheDocument();
+    expect(
+      component.queryByTestId('RepositoryDetailCheckout-checkout-1'),
+    ).toBeNull();
   });
 
   test('renders the detected Stack and Agent config badges per checkout', () => {

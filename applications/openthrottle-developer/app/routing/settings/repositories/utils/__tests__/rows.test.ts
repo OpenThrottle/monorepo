@@ -131,4 +131,40 @@ describe('buildRepositoryRows', () => {
     expect(rows[0].remoteUrl).toBeNull();
     expect(rows[0].children?.[0].remoteUrl).toBeNull();
   });
+
+  test('rolls the injection opt-in up so every row of a repository agrees', () => {
+    const rows = buildRepositoryRows([
+      mockRepository({
+        checkouts: [
+          mockCheckout({ id: 'primary-1' }),
+          mockCheckout({
+            foreignSkillInjectionEnabled: true,
+            id: 'worktree-1',
+            kind: 'worktree',
+          }),
+        ],
+        id: 'repo-1',
+      }),
+    ]);
+
+    // The flag is stored per checkout but flipped for all of them together, so a
+    // single opted-in checkout makes the whole repository read as enabled.
+    expect(rows[0].foreignSkillInjectionEnabled).toBe(true);
+    expect(rows[0].children?.[0].foreignSkillInjectionEnabled).toBe(true);
+  });
+
+  test('reads a repository with no opted-in checkout as disabled', () => {
+    const rows = buildRepositoryRows([
+      mockRepository({
+        checkouts: [
+          mockCheckout({ id: 'primary-1' }),
+          mockCheckout({ id: 'worktree-1', kind: 'worktree' }),
+        ],
+        id: 'repo-1',
+      }),
+    ]);
+
+    expect(rows[0].foreignSkillInjectionEnabled).toBe(false);
+    expect(rows[0].children?.[0].foreignSkillInjectionEnabled).toBe(false);
+  });
 });
