@@ -34,4 +34,10 @@ export class UserWorkspaceProfileObject {
 
   @Field(() => ID)
   userId!: string;
+
+  @Field(() => String, {
+    description: `Directory every git worktree is created under; null uses the default sibling openthrottle-worktrees directory.`,
+    nullable: true,
+  })
+  worktreeRoot!: string | null;
 }

@@ -8,10 +8,16 @@ import {
   resolveWorkflowRalphWorktreeArgvValue,
 } from '../workflow-ralph-argv-builder';
 
+/**
+ * A deliberately bare input: the shared defaults now include verbose logging and a named worktree,
+ * which would add flags to every expectation below. Those two defaults get their own test.
+ */
 const baseInput = (
   overrides: Partial<WorkflowRalphRunOptionsInput> = {},
 ): WorkflowRalphRunOptionsInput => ({
   ...getDefaultWorkflowRalphRunOptionsInput({ planId: 'plan-1' }),
+  debugCli: 'omit',
+  worktreeCli: 'omit',
   ...overrides,
 });
 
@@ -32,9 +38,18 @@ describe('resolveWorkflowRalphWorktreeArgvValue', () => {
     expect(value).toBe('my-worktree');
   });
 
-  test('returns undefined for named mode with a blank name', () => {
+  test('derives the name for named mode with a blank name', () => {
     const value = resolveWorkflowRalphWorktreeArgvValue(
       baseInput({ worktreeCli: 'named', worktreeName: '   ' }),
+    );
+
+    // Blank is the default and means "derive it from the plan", the same as the server does.
+    expect(value).toBe('plan-plan-1');
+  });
+
+  test('returns undefined for named mode with nothing to derive from', () => {
+    const value = resolveWorkflowRalphWorktreeArgvValue(
+      baseInput({ planId: '', worktreeCli: 'named', worktreeName: '   ' }),
     );
 
     expect(value).toBeUndefined();
@@ -50,7 +65,17 @@ describe('resolveWorkflowRalphWorktreeArgvValue', () => {
 });
 
 describe('buildWorkflowRalphOptionArgs', () => {
-  test('builds minimal args for a default plan-target input', () => {
+  test('shows the shared defaults: verbose logging and the derived worktree', () => {
+    const args = buildWorkflowRalphOptionArgs(
+      getDefaultWorkflowRalphRunOptionsInput({ planId: 'plan-1' }),
+    );
+
+    expect(args).toContain('--verbose');
+    expect(args).toContain('--worktree');
+    expect(args).toContain('plan-plan-1');
+  });
+
+  test('builds minimal args for a bare plan-target input', () => {
     const args = buildWorkflowRalphOptionArgs(baseInput());
 
     expect(args).toEqual(['--plan', 'plan-1']);

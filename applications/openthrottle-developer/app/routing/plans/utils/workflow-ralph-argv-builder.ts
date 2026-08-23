@@ -15,6 +15,7 @@ import {
   WORKFLOW_RALPH_WORKTREE_FLAG_ONLY,
   type WorkflowRalphRunOptionsInput,
 } from './workflow-ralph-config';
+import { buildPlanRunWorktreeName } from '@openthrottle/openthrottle-plan-config';
 
 /**
  * @description Resolves agent CLI worktree for argv / GraphQL (flag-only uses {@link WORKFLOW_RALPH_WORKTREE_FLAG_ONLY}).
@@ -28,7 +29,13 @@ export const resolveWorkflowRalphWorktreeArgvValue = (
 
     case 'named': {
       const name = input.worktreeName.trim();
-      return name !== '' ? name : undefined;
+      if (name !== '') {
+        return name;
+      }
+      // Blank means "derive it from the plan", the same way the server does at enqueue, so the
+      // preview shows the worktree the run will actually get instead of dropping the flag.
+      const planId = input.planId.trim();
+      return planId === '' ? undefined : buildPlanRunWorktreeName(planId);
     }
 
     case 'omit':

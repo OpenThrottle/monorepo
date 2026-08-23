@@ -21,6 +21,7 @@ const makeNxWorkspaceDir = (): string => {
 
 const emptyTuningInput = (): RalphPlanRunTuningInput => ({
   backend: null,
+  disableWorktree: null,
   iterationTimeoutSeconds: null,
   iterations: null,
   model: null,
@@ -111,13 +112,16 @@ describe('parseEnqueueRalphTuning', () => {
     ).toEqual({ debug: 'verbose' });
   });
 
-  test('omits debug when ralphDebugCli is omit or unknown', () => {
+  test('keeps an explicit omit so the verbose default cannot override it', () => {
     expect(
       parseEnqueueRalphTuning({
         ...emptyTuningInput(),
         ralphDebugCli: 'omit',
       }),
-    ).toBeUndefined();
+    ).toEqual({ debug: 'omit' });
+  });
+
+  test('omits debug when ralphDebugCli is unknown', () => {
     expect(
       parseEnqueueRalphTuning({
         ...emptyTuningInput(),
@@ -173,8 +177,46 @@ describe('buildRunPlanOrchestratorJobData', () => {
     ).toEqual({
       executionBackend: 'cursor',
       planId: SAMPLE_PLAN_ID,
+      ralph: { debug: 'verbose', worktree: 'plan-80864bba' },
       runKind: 'orchestrator',
     });
+  });
+
+  test('lets an explicit opt-out run without a worktree', () => {
+    expect(
+      buildRunPlanOrchestratorJobData({
+        planId: SAMPLE_PLAN_ID,
+        ralph: { ...emptyTuningInput(), disableWorktree: true },
+      }),
+    ).toEqual({
+      executionBackend: 'cursor',
+      planId: SAMPLE_PLAN_ID,
+      ralph: { debug: 'verbose' },
+      runKind: 'orchestrator',
+    });
+  });
+
+  test('lets an explicit debug opt-out survive the verbose default', () => {
+    expect(
+      buildRunPlanOrchestratorJobData({
+        planId: SAMPLE_PLAN_ID,
+        ralph: { ...emptyTuningInput(), ralphDebugCli: 'omit' },
+      }),
+    ).toEqual({
+      executionBackend: 'cursor',
+      planId: SAMPLE_PLAN_ID,
+      ralph: { debug: 'omit', worktree: 'plan-80864bba' },
+      runKind: 'orchestrator',
+    });
+  });
+
+  test('does not overwrite an explicit backend', () => {
+    expect(
+      buildRunPlanOrchestratorJobData({
+        planId: SAMPLE_PLAN_ID,
+        ralph: { ...emptyTuningInput(), backend: 'claude' },
+      }),
+    ).toMatchObject({ executionBackend: 'claude' });
   });
 
   test('includes explicit plan mode when requested', () => {
@@ -188,6 +230,7 @@ describe('buildRunPlanOrchestratorJobData', () => {
       executionBackend: 'cursor',
       mode: 'plan',
       planId: SAMPLE_PLAN_ID,
+      ralph: { debug: 'verbose', worktree: 'plan-80864bba' },
       runKind: 'orchestrator',
     });
   });
@@ -204,6 +247,7 @@ describe('buildRunPlanOrchestratorJobData', () => {
       executionBackend: 'cursor',
       mode: 'task',
       planId: SAMPLE_PLAN_ID,
+      ralph: { debug: 'verbose', worktree: 'plan-80864bba' },
       runKind: 'orchestrator',
       taskId: SAMPLE_TASK_ID,
     });
@@ -222,7 +266,11 @@ describe('buildRunPlanOrchestratorJobData', () => {
     ).toEqual({
       executionBackend: 'cursor',
       planId: SAMPLE_PLAN_ID,
-      ralph: { worktree: 'target-two', worktreeBase: 'develop' },
+      ralph: {
+        debug: 'verbose',
+        worktree: 'target-two',
+        worktreeBase: 'develop',
+      },
       runKind: 'orchestrator',
     });
   });
@@ -265,6 +313,7 @@ describe('buildRunPlanOrchestratorJobData', () => {
     ).toEqual({
       executionBackend: 'cursor',
       planId: SAMPLE_PLAN_ID,
+      ralph: { debug: 'verbose', worktree: 'plan-80864bba' },
       runKind: 'orchestrator',
       workingDirectory: tempDir,
     });

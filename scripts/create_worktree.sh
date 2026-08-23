@@ -47,6 +47,53 @@ provision() {
   )
 }
 
+# Resolve the root directory every worktree is created under. Precedence:
+#   1. OT_WORKTREE_ROOT in the environment — one-off overrides, and how the
+#      BullMQ provisioner forwards the configured setting.
+#   2. OT_WORKTREE_ROOT in the primary checkout's .env — the workspace-level
+#      setting (/settings/workspace) lands here, so the CLI, the Claude
+#      WorktreeCreate hook, and the worker never disagree.
+#   3. The historical default: a sibling openthrottle-worktrees directory,
+#      deliberately OUTSIDE the repo so worktrees stay clear of the Nx
+#      workspace (daemon watches, Vitest/knip/gitleaks globs, .gitignore).
+# Prints the root on stdout; fails when it is not absolute.
+resolve_worktree_root() {
+  _repo="$1"
+  _root="${OT_WORKTREE_ROOT:-}"
+  _from="OT_WORKTREE_ROOT env"
+
+  if [ -z "$_root" ] && [ -f "$_repo/.env" ]; then
+    _root="$(sed -n 's/^[[:space:]]*OT_WORKTREE_ROOT[[:space:]]*=[[:space:]]*//p' "$_repo/.env" | tail -n 1)"
+    _root="${_root%$'\r'}"
+    _root="${_root%\"}"
+    _root="${_root#\"}"
+    _root="${_root%\'}"
+    _root="${_root#\'}"
+    _from="$_repo/.env"
+  fi
+
+  if [ -z "$_root" ]; then
+    _root="$(dirname "$_repo")/openthrottle-worktrees"
+    _from="default (sibling of the repo)"
+  fi
+
+  case "$_root" in
+    "~") _root="$HOME" ;;
+    "~/"*) _root="$HOME/${_root#\~/}" ;;
+  esac
+
+  case "$_root" in
+    /*) ;;
+    *)
+      log "🔴 worktree root must be an absolute path (got '$_root' from $_from)"
+      return 1
+      ;;
+  esac
+
+  log "    root:   ${_root%/}  ($_from)"
+  printf '%s' "${_root%/}"
+}
+
 # ---------------------------------------------------------------------------
 # 0. Resolve invocation mode.
 # ---------------------------------------------------------------------------
@@ -112,7 +159,7 @@ NAME="${NAME##refs/heads/}"
 NAME="$(printf '%s' "$NAME" | tr -c 'A-Za-z0-9._-' '-' | sed 's/^-*//; s/-*$//')"
 [ -z "$NAME" ] && NAME="wt-$$"
 
-BASE_DIR="$(dirname "$REPO_ROOT")/openthrottle-worktrees"
+BASE_DIR="$(resolve_worktree_root "$REPO_ROOT")"
 WTREE="$BASE_DIR/$NAME"
 BRANCH="openthrottle/$NAME"
 

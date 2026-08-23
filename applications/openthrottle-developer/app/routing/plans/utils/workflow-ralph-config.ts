@@ -10,14 +10,26 @@
  * `pnpm exec workflow-ralph --help`.
  */
 
+import {
+  DEFAULT_PLAN_RUN_RALPH_DEBUG_CLI,
+  DEFAULT_PLAN_RUN_RALPH_ITERATIONS,
+  DEFAULT_PLAN_RUN_RALPH_MODEL,
+  DEFAULT_PLAN_RUN_RALPH_PROMPT,
+  DEFAULT_PLAN_RUN_RALPH_RUNNER,
+  DEFAULT_PLAN_RUN_RALPH_WORKTREE_CLI,
+} from '@openthrottle/openthrottle-plan-config';
+
 /** RFC 4122 UUID v4 — matches `tools/workflows/src/utils/parsers.ts` plan/task validation. */
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-export const DEFAULT_RALPH_RUNNER = 'cursor';
-export const DEFAULT_RALPH_PROMPT = '/agents-ralph';
-export const DEFAULT_RALPH_ITERATIONS = 10;
-export const DEFAULT_RALPH_MODEL = 'auto';
+// One source of truth with the server and `plans.run_config`: these alias the shared
+// `@openthrottle/openthrottle-plan-config` defaults rather than restating them, so the Configuration
+// tab cannot drift from what a queued run actually gets.
+export const DEFAULT_RALPH_RUNNER = DEFAULT_PLAN_RUN_RALPH_RUNNER;
+export const DEFAULT_RALPH_PROMPT = DEFAULT_PLAN_RUN_RALPH_PROMPT;
+export const DEFAULT_RALPH_ITERATIONS = DEFAULT_PLAN_RUN_RALPH_ITERATIONS;
+export const DEFAULT_RALPH_MODEL = DEFAULT_PLAN_RUN_RALPH_MODEL;
 
 /**
  * @description Same ids as the `openthrottle-drivers` `DRIVER_IDS` set (surfaced via
@@ -179,8 +191,8 @@ export const getDefaultWorkflowRalphRunOptionsInput = (options?: {
     taskId !== '' && planId === '' ? 'task' : 'plan';
 
   return {
-    debugCli: 'omit',
-    executionBackend: 'cursor',
+    debugCli: DEFAULT_PLAN_RUN_RALPH_DEBUG_CLI,
+    executionBackend: DEFAULT_RALPH_RUNNER,
     iterationTimeoutSeconds: undefined,
     iterations: DEFAULT_RALPH_ITERATIONS,
     model: DEFAULT_RALPH_MODEL,
@@ -193,7 +205,8 @@ export const getDefaultWorkflowRalphRunOptionsInput = (options?: {
     targetMode,
     taskId,
     worktreeBase: '',
-    worktreeCli: 'omit',
+    worktreeCli: DEFAULT_PLAN_RUN_RALPH_WORKTREE_CLI,
+    // Blank means "derive plan-<short plan id> at enqueue", not "no worktree".
     worktreeName: '',
   };
 };

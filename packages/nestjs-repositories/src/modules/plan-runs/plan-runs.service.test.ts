@@ -461,4 +461,50 @@ describe('PlanRunsService', () => {
       expect(result?.checkoutId).toBe('44444444-4444-4444-8444-444444444444');
     });
   });
+
+  describe('setRunConfigSnapshotWorkspace', () => {
+    const snapshot = {
+      ralph: { executionBackend: 'cursor' as const },
+      target: { mode: 'plan' as const, taskId: '' },
+      version: 1 as const,
+      workspace: { workingDirectory: '/Users/matt/Development/openthrottle' },
+    };
+
+    it('re-points the snapshot workspace at the resolved worktree', async () => {
+      repo.findOne.mockResolvedValueOnce(
+        buildRun({ runConfigSnapshot: snapshot }),
+      );
+      repo.findOne.mockResolvedValueOnce(
+        buildRun({ runConfigSnapshot: snapshot }),
+      );
+
+      await service.setRunConfigSnapshotWorkspace('run-1', {
+        checkoutId: '44444444-4444-4444-8444-444444444444',
+        workingDirectory: '/wt/plan-abcdef12',
+      });
+
+      expect(repo.update).toHaveBeenCalledWith(
+        { id: 'run-1' },
+        {
+          runConfigSnapshot: {
+            ...snapshot,
+            workspace: {
+              checkoutId: '44444444-4444-4444-8444-444444444444',
+              workingDirectory: '/wt/plan-abcdef12',
+            },
+          },
+        },
+      );
+    });
+
+    it('leaves a run without a snapshot alone', async () => {
+      repo.findOne.mockResolvedValueOnce(buildRun({ runConfigSnapshot: null }));
+
+      await service.setRunConfigSnapshotWorkspace('run-1', {
+        workingDirectory: '/wt/plan-abcdef12',
+      });
+
+      expect(repo.update).not.toHaveBeenCalled();
+    });
+  });
 });

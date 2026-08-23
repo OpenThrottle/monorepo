@@ -18,12 +18,60 @@ describe('PlanWorkflowConfigWorktree Component', () => {
     };
   });
 
-  test('renders worktree fieldset and default omit mode', () => {
+  test('renders the worktree fieldset, on by default', () => {
     const Component = () => <PlanWorkflowConfigWorktree {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    const { getByLabelText } = render(<RoutesStub />);
+    const component = render(<RoutesStub />);
 
-    expect(getByLabelText('--worktree')).toBeInTheDocument();
+    expect(component.getByLabelText('Worktree')).toBeInTheDocument();
+    // Default is a named worktree, so the name field is present without any interaction.
+    expect(
+      component.getByLabelText('Agent CLI worktree name for --worktree'),
+    ).toBeInTheDocument();
+  });
+
+  test('offers the derived name for a blank worktree name', () => {
+    props = {
+      heading: '06. Worktree',
+      input: getDefaultWorkflowRalphRunOptionsInput({
+        planId: '5e172b67-a543-4902-8fdf-fb3a38e005b2',
+      }),
+      setInput: vi.fn(),
+    };
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
+    const Component = () => <PlanWorkflowConfigWorktree {...props} />;
+    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    const component = render(<RoutesStub />);
+
+    const nameField = component.getByLabelText(
+      'Agent CLI worktree name for --worktree',
+    );
+
+    expect(nameField).toHaveValue('');
+    expect(nameField).toHaveAttribute('placeholder', 'plan-5e172b67');
+    expect(component.getByText(/plan-5e172b67/)).toBeInTheDocument();
+  });
+
+  test('warns that turning the worktree off works in the base checkout', () => {
+    props = {
+      heading: '06. Worktree',
+      input: {
+        ...getDefaultWorkflowRalphRunOptionsInput({ planId: 'plan-1' }),
+        worktreeCli: 'omit',
+      },
+      setInput: vi.fn(),
+    };
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
+    const Component = () => <PlanWorkflowConfigWorktree {...props} />;
+    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    const component = render(<RoutesStub />);
+
+    expect(
+      component.getByText(/works directly in the base checkout/),
+    ).toBeInTheDocument();
+    expect(
+      component.queryByLabelText('Agent CLI worktree name for --worktree'),
+    ).not.toBeInTheDocument();
   });
 
   test('shows worktree name input when mode is named', async () => {

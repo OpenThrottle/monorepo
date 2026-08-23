@@ -2998,6 +2998,11 @@ type UserWorkspaceProfileObject {
   enabledEditors: [WorkspaceEditorId!]!
   updatedAt: DateTime!
   userId: ID!
+
+  """
+  Directory every git worktree is created under; null uses the default sibling openthrottle-worktrees directory.
+  """
+  worktreeRoot: String
 }
 
 """
@@ -5470,7 +5475,12 @@ input RalphPlanRunTuningInput {
   ralphDebugCli: RalphNestedDebugCli
 
   """
-  Agent CLI worktree name for -w/--worktree on cursor-agent and claude. When omitted in a BullMQ worktree run, defaults to the acquired target id.
+  Opt out of the worktree default and run in the base checkout. Omit to get the worktree OpenThrottle derives for the plan; only an explicit true disables it.
+  """
+  disableWorktree: Boolean
+
+  """
+  Worktree name for this run. When omitted, OpenThrottle derives plan-<short plan id> and creates that worktree itself; pass disableWorktree to run without one.
   """
   worktree: String
 
@@ -6329,6 +6339,11 @@ input UpdateWorkspaceProfileInput {
   contactDisplayName: String
   contactEmail: String
   enabledEditors: [WorkspaceEditorId!]
+
+  """
+  Absolute directory every git worktree is created under; blank clears it back to the default.
+  """
+  worktreeRoot: String
 }
 
 input CreateWorkspaceLocalRepositoryInput {

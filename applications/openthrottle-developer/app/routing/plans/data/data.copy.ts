@@ -183,3 +183,27 @@ export const PLAN_TASK_TOOLBAR_COPY = {
   promoteTooltip: `Create a first-class plan from this task and close the task out.`,
   promotedDisabledTooltip: `This task has already been promoted to a plan.`,
 } as const;
+
+/**
+ * @description Copy for the Configuration tab's worktree fieldset. Queued runs get a worktree that
+ * OpenThrottle creates itself (the agent CLI's own `-w` stays off), so the wording here talks about
+ * the worktree the run works in rather than about a CLI flag.
+ */
+export const PLAN_CONFIG_WORKTREE_COPY = {
+  autoNameHint: (derivedName: string): string =>
+    `Leave blank to use ${derivedName}, derived from the plan id. One worktree per plan, reused across runs, so its branch accumulates the plan's work.`,
+  explainer: `Queued runs execute in a git worktree OpenThrottle creates through \`pnpm run worktree:new\`, so the run has its own branch, ports, and provisioned .env. Turn this off only to run in the base checkout.`,
+  modeLabel: `Worktree`,
+  modeOmitLabel: `Off (run in the base checkout)`,
+  nameLabel: `Worktree name`,
+  offWarning: `With the worktree off, the run works directly in the base checkout — its edits land in whatever branch that checkout has open.`,
+} as const;
+
+/**
+ * @description Column header and empty value for the worktree the queued run actually used, read
+ * from `run_config_snapshot.workspace.workingDirectory`.
+ */
+export const PLAN_RUN_AUDIT_WORKSPACE_COPY = {
+  columnLabel: `Worktree`,
+  emptyLabel: `—`,
+} as const;

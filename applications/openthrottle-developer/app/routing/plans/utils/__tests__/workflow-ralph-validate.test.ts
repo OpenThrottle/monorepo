@@ -151,10 +151,24 @@ describe('validateWorkflowRalphRunOptionsState', () => {
     ).toContain('prompt_file_empty');
   });
 
-  test('flags an empty worktree name when using named --worktree', () => {
+  test('accepts an empty worktree name when the plan id can derive one', () => {
     expect(
       issueCodes(baseInput({ worktreeCli: 'named', worktreeName: '  ' })),
-    ).toContain('worktree_name_empty');
+    ).not.toContain('worktree_name_empty');
+  });
+
+  test('does not flag an empty worktree name even with nothing to derive from', () => {
+    expect(
+      issueCodes(
+        baseInput({
+          planId: '',
+          targetMode: 'task',
+          taskId: '0c2720a9-920f-4b16-865a-f803eb444e18',
+          worktreeCli: 'named',
+          worktreeName: '  ',
+        }),
+      ),
+    ).not.toContain('worktree_name_empty');
   });
 
   test('allows a named --worktree with a non-empty name', () => {

@@ -4,6 +4,8 @@
 
 import { z } from 'zod';
 import {
+  DEFAULT_PLAN_RUN_RALPH_DEBUG_CLI,
+  DEFAULT_PLAN_RUN_RALPH_WORKTREE_CLI,
   MAX_PLAN_RUN_CONFIG_JSON_LEN,
   MAX_PLAN_RUN_ITERATIONS,
   MAX_PLAN_RUN_RALPH_STRING_FIELD_LEN,
@@ -27,7 +29,11 @@ const trimToMax = (max: number) =>
 
 const planRunConfigRalphV1Schema = z
   .object({
-    debugCli: z.enum(PLAN_RUN_DEBUG_CLI),
+    // Absent keys resolve to the CURRENT defaults, so a config written before these fields existed
+    // reads as worktree + verbose. A persisted value — including `'omit'` — is a choice and is kept.
+    debugCli: z
+      .enum(PLAN_RUN_DEBUG_CLI)
+      .default(DEFAULT_PLAN_RUN_RALPH_DEBUG_CLI),
     executionBackend: z.enum(PLAN_RUN_KNOWN_BACKENDS),
     iterationTimeoutText: trimToMax(MAX_PLAN_RUN_RALPH_STRING_FIELD_LEN),
     iterations: z.number().int().min(1).max(MAX_PLAN_RUN_ITERATIONS),
@@ -38,7 +44,9 @@ const planRunConfigRalphV1Schema = z
     promptLayer: z.enum(PLAN_RUN_PROMPT_LAYERS),
     skipWorktreeSetup: z.boolean(),
     worktreeBase: trimToMax(MAX_PLAN_RUN_RALPH_STRING_FIELD_LEN),
-    worktreeCli: z.enum(PLAN_RUN_WORKTREE_CLI),
+    worktreeCli: z
+      .enum(PLAN_RUN_WORKTREE_CLI)
+      .default(DEFAULT_PLAN_RUN_RALPH_WORKTREE_CLI),
     worktreeName: trimToMax(MAX_PLAN_RUN_RALPH_STRING_FIELD_LEN),
   })
   .strict();

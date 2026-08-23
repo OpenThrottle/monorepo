@@ -61,6 +61,11 @@ export const SettingsWorkspaceEditorsForm = (
       >
         <input name="intent" type="hidden" value="updateProfile" />
         <input
+          name="worktreeRoot"
+          type="hidden"
+          value={profile.worktreeRoot ?? ''}
+        />
+        <input
           name="contactDisplayName"
           type="hidden"
           value={profile.contactDisplayName ?? ''}

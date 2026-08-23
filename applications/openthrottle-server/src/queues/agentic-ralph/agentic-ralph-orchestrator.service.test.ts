@@ -6,20 +6,39 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createMock } from '@golevelup/ts-vitest';
+import { asMock } from '@openthrottle/nestjs-testing';
 import type { AgenticWorkflowRegistry } from '@openthrottle/nestjs-agentic-workflow';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import type { Repository } from 'typeorm';
 import {
+  PlanOutputStreamService,
   PlanRunsService,
   RepositoryCheckoutsService,
+  UserWorkspaceSettingsService,
+  type PlanOutputStreamChunk,
   type PlanRun,
   type RepositoryCheckout,
+  type UserWorkspaceSettings,
 } from '@openthrottle/nestjs-repositories';
 import { PlanRunWorktreeCheckoutService } from '../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.service';
+import { PlanRunWorkspacePreflightService } from '../../services/plan-run-workspace-preflight/plan-run-workspace-preflight.service';
+import { PlanRunWorktreeProvisionService } from '../../services/plan-run-worktree-provision/plan-run-worktree-provision.service';
 import { AgenticRalphOrchestratorService } from './agentic-ralph-orchestrator.service';
 
 // Force the run's path to read as foreign and stub the materializer so the gate is
 // exercised deterministically (no filesystem, no env-derived OT-root fragility).
-const { mockEnsureMaterialized, mockResolveForeign } = vi.hoisted(() => ({
+const {
+  mockBuildRalphFlowContext,
+  mockEnsureMaterialized,
+  mockResolveForeign,
+} = vi.hoisted(() => ({
+  mockBuildRalphFlowContext: vi.fn(() => ({
+    debug: false,
+    iterations: 1,
+    mode: 'plan',
+    planId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+    prompt: '/agents-ralph',
+  })),
   mockEnsureMaterialized: vi.fn(),
   mockResolveForeign: vi.fn(),
 }));
@@ -59,13 +78,7 @@ vi.mock('@openthrottle/openthrottle-agentic-ralph', async (importOriginal) => {
 
   return {
     ...actual,
-    buildRalphFlowContextFromPlanRunTuning: vi.fn(() => ({
-      debug: false,
-      iterations: 1,
-      mode: 'plan',
-      planId: PLAN_ID,
-      prompt: '/agents-ralph',
-    })),
+    buildRalphFlowContextFromPlanRunTuning: mockBuildRalphFlowContext,
   };
 });
 
@@ -77,6 +90,31 @@ const QUEUE_NAME = 'Plans';
 const QUEUE_JOB_ID = 'job-orch-1';
 const WORKTREE_PATH =
   '/Users/matt/.cursor/worktrees/openthrottle/auto-register';
+
+const PROVISIONED_WORKTREE_PATH =
+  '/Users/matt/Development/openthrottle-worktrees/plan-aaaaaaaa';
+const CONFIGURED_WORKTREE_ROOT = '/srv/worktrees';
+
+const mockProvision = vi.fn(async () => PROVISIONED_WORKTREE_PATH);
+const mockPreflightCheck = vi.fn((): readonly string[] => []);
+const mockOutputCreate = vi.fn((entity: unknown) => entity);
+const mockOutputSave = vi.fn(async (entity: unknown) => entity);
+
+// Narrow partial repository: the orchestrator only ever calls create + save on it.
+const planOutputStreamServiceMock = (): PlanOutputStreamService =>
+  createMock<PlanOutputStreamService>({
+    getRepository: () =>
+      asMock<Repository<PlanOutputStreamChunk>>({
+        create: mockOutputCreate,
+        save: mockOutputSave,
+      }),
+  });
+const mockGetOrCreateForUser = vi.fn(async () =>
+  createMock<UserWorkspaceSettings>({
+    userId: USER_ID,
+    worktreeRoot: CONFIGURED_WORKTREE_ROOT,
+  }),
+);
 
 const buildRun = (overrides: Partial<PlanRun> = {}): PlanRun =>
   createMock<PlanRun>({
@@ -107,6 +145,19 @@ describe('AgenticRalphOrchestratorService worktree checkout registration', () =>
     mockFindByQueueNameAndBullmqJobId.mockReset();
     mockRegister.mockReset();
     mockRegister.mockResolvedValue(null);
+    mockProvision.mockReset();
+    mockProvision.mockResolvedValue(PROVISIONED_WORKTREE_PATH);
+    mockPreflightCheck.mockReset();
+    mockPreflightCheck.mockReturnValue([]);
+    mockOutputSave.mockClear();
+    mockOutputCreate.mockClear();
+    mockGetOrCreateForUser.mockReset();
+    mockGetOrCreateForUser.mockResolvedValue(
+      createMock<UserWorkspaceSettings>({
+        userId: USER_ID,
+        worktreeRoot: CONFIGURED_WORKTREE_ROOT,
+      }),
+    );
     mockFindByUserAndPath.mockReset();
     mockFindByUserAndPath.mockResolvedValue(null);
     mockEnsureMaterialized.mockReset();
@@ -125,6 +176,7 @@ describe('AgenticRalphOrchestratorService worktree checkout registration', () =>
     service = new AgenticRalphOrchestratorService(
       createMock<AgenticWorkflowRegistry>({ resolve: mockResolve }),
       createMock<LoggerService>({ debug: mockDebug, warn: mockWarn }),
+      planOutputStreamServiceMock(),
       createMock<PlanRunsService>({
         findByQueueNameAndBullmqJobId: mockFindByQueueNameAndBullmqJobId,
         readCancelRequested: mockReadCancelRequested,
@@ -132,8 +184,17 @@ describe('AgenticRalphOrchestratorService worktree checkout registration', () =>
       createMock<PlanRunWorktreeCheckoutService>({
         register: mockRegister,
       }),
+      createMock<PlanRunWorkspacePreflightService>({
+        check: mockPreflightCheck,
+      }),
+      createMock<PlanRunWorktreeProvisionService>({
+        provision: mockProvision,
+      }),
       createMock<RepositoryCheckoutsService>({
         findByUserAndPath: mockFindByUserAndPath,
+      }),
+      createMock<UserWorkspaceSettingsService>({
+        getOrCreateForUser: mockGetOrCreateForUser,
       }),
     );
   });
@@ -254,6 +315,19 @@ describe('AgenticRalphOrchestratorService foreign-skill injection gate', () => {
     mockFindByQueueNameAndBullmqJobId.mockResolvedValue(buildRun());
     mockRegister.mockReset();
     mockRegister.mockResolvedValue(null);
+    mockProvision.mockReset();
+    mockProvision.mockResolvedValue(PROVISIONED_WORKTREE_PATH);
+    mockPreflightCheck.mockReset();
+    mockPreflightCheck.mockReturnValue([]);
+    mockOutputSave.mockClear();
+    mockOutputCreate.mockClear();
+    mockGetOrCreateForUser.mockReset();
+    mockGetOrCreateForUser.mockResolvedValue(
+      createMock<UserWorkspaceSettings>({
+        userId: USER_ID,
+        worktreeRoot: CONFIGURED_WORKTREE_ROOT,
+      }),
+    );
     mockFindByUserAndPath.mockReset();
     mockEnsureMaterialized.mockReset();
     mockEnsureMaterialized.mockReturnValue({
@@ -269,13 +343,23 @@ describe('AgenticRalphOrchestratorService foreign-skill injection gate', () => {
     service = new AgenticRalphOrchestratorService(
       createMock<AgenticWorkflowRegistry>({ resolve: mockResolve }),
       createMock<LoggerService>(),
+      planOutputStreamServiceMock(),
       createMock<PlanRunsService>({
         findByQueueNameAndBullmqJobId: mockFindByQueueNameAndBullmqJobId,
         readCancelRequested: mockReadCancelRequested,
       }),
       createMock<PlanRunWorktreeCheckoutService>({ register: mockRegister }),
+      createMock<PlanRunWorkspacePreflightService>({
+        check: mockPreflightCheck,
+      }),
+      createMock<PlanRunWorktreeProvisionService>({
+        provision: mockProvision,
+      }),
       createMock<RepositoryCheckoutsService>({
         findByUserAndPath: mockFindByUserAndPath,
+      }),
+      createMock<UserWorkspaceSettingsService>({
+        getOrCreateForUser: mockGetOrCreateForUser,
       }),
     );
   });
@@ -352,5 +436,183 @@ describe('AgenticRalphOrchestratorService foreign-skill injection gate', () => {
 
     expect(mockFindByUserAndPath).not.toHaveBeenCalled();
     expect(mockEnsureMaterialized).not.toHaveBeenCalled();
+  });
+});
+
+describe('AgenticRalphOrchestratorService worktree provisioning', () => {
+  const mockFindByQueueNameAndBullmqJobId = vi.fn();
+  const mockReadCancelRequested = vi.fn().mockResolvedValue(null);
+  const mockRegister = vi.fn().mockResolvedValue(null);
+  const mockFindByUserAndPath = vi.fn().mockResolvedValue(null);
+  const mockWarn = vi.fn();
+
+  let service: AgenticRalphOrchestratorService;
+
+  beforeEach(() => {
+    mockExecute.mockReset();
+    mockExecute.mockResolvedValue({ reason: 'done', status: 'finished' });
+    mockFindByQueueNameAndBullmqJobId.mockReset();
+    mockFindByQueueNameAndBullmqJobId.mockResolvedValue(buildRun());
+    mockRegister.mockReset();
+    mockRegister.mockResolvedValue(null);
+    mockFindByUserAndPath.mockReset();
+    mockFindByUserAndPath.mockResolvedValue(null);
+    mockProvision.mockReset();
+    mockProvision.mockResolvedValue(PROVISIONED_WORKTREE_PATH);
+    mockPreflightCheck.mockReset();
+    mockPreflightCheck.mockReturnValue([]);
+    mockOutputSave.mockClear();
+    mockOutputCreate.mockClear();
+    mockGetOrCreateForUser.mockReset();
+    mockGetOrCreateForUser.mockResolvedValue(
+      createMock<UserWorkspaceSettings>({
+        userId: USER_ID,
+        worktreeRoot: CONFIGURED_WORKTREE_ROOT,
+      }),
+    );
+    mockResolveForeign.mockReset();
+    mockResolveForeign.mockReturnValue({
+      isForeign: false,
+      openThrottleRoot: '/ot-root',
+    });
+    mockWarn.mockReset();
+
+    service = new AgenticRalphOrchestratorService(
+      createMock<AgenticWorkflowRegistry>({ resolve: mockResolve }),
+      createMock<LoggerService>({ warn: mockWarn }),
+      planOutputStreamServiceMock(),
+      createMock<PlanRunsService>({
+        findByQueueNameAndBullmqJobId: mockFindByQueueNameAndBullmqJobId,
+        readCancelRequested: mockReadCancelRequested,
+      }),
+      createMock<PlanRunWorktreeCheckoutService>({ register: mockRegister }),
+      createMock<PlanRunWorkspacePreflightService>({
+        check: mockPreflightCheck,
+      }),
+      createMock<PlanRunWorktreeProvisionService>({
+        provision: mockProvision,
+      }),
+      createMock<RepositoryCheckoutsService>({
+        findByUserAndPath: mockFindByUserAndPath,
+      }),
+      createMock<UserWorkspaceSettingsService>({
+        getOrCreateForUser: mockGetOrCreateForUser,
+      }),
+    );
+  });
+
+  const runWithWorktree = async (
+    ralph: Record<string, unknown> = { worktree: 'plan-aaaaaaaa' },
+  ): Promise<unknown> =>
+    service.runPlanOrchestratorJob({
+      correlation: {
+        correlationId: QUEUE_JOB_ID,
+        queueJobId: QUEUE_JOB_ID,
+        queueName: QUEUE_NAME,
+      },
+      jobData: {
+        planId: PLAN_ID,
+        ralph,
+        runKind: 'orchestrator',
+        workingDirectory: WORKTREE_PATH,
+      },
+    });
+
+  it('provisions the named worktree from the base checkout and runs the agent inside it', async () => {
+    await runWithWorktree();
+
+    expect(mockProvision).toHaveBeenCalledWith({
+      baseCheckoutPath: WORKTREE_PATH,
+      worktreeName: 'plan-aaaaaaaa',
+      worktreeRoot: CONFIGURED_WORKTREE_ROOT,
+    });
+    expect(mockExecute).toHaveBeenCalledWith({
+      context: expect.objectContaining({
+        workingDirectory: PROVISIONED_WORKTREE_PATH,
+      }),
+    });
+  });
+
+  it('registers the checkout against the provisioned worktree, not the base checkout', async () => {
+    await runWithWorktree();
+
+    expect(mockRegister).toHaveBeenCalledWith({
+      filesystemPath: PROVISIONED_WORKTREE_PATH,
+      planRunId: PLAN_RUN_ID,
+      userId: USER_ID,
+    });
+  });
+
+  it('keeps the agent CLI -w flag off so the run cannot end up with two worktrees', async () => {
+    await runWithWorktree({ worktree: 'plan-aaaaaaaa', worktreeBase: 'main' });
+
+    expect(mockBuildRalphFlowContext).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ralph: expect.not.objectContaining({ worktree: expect.anything() }),
+      }),
+    );
+    expect(mockBuildRalphFlowContext).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ralph: expect.not.objectContaining({ worktreeBase: expect.anything() }),
+      }),
+    );
+  });
+
+  it('preflights the worktree, not the process cwd, and writes warnings to the plan output stream', async () => {
+    mockPreflightCheck.mockReturnValueOnce([
+      'No .cursor/mcp.json in the worktree',
+    ]);
+
+    await runWithWorktree();
+
+    expect(mockPreflightCheck).toHaveBeenCalledWith({
+      backend: 'cursor',
+      workingDirectory: PROVISIONED_WORKTREE_PATH,
+    });
+    expect(mockOutputCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        content: expect.stringContaining('No .cursor/mcp.json in the worktree'),
+        planId: PLAN_ID,
+      }),
+    );
+    expect(mockOutputSave).toHaveBeenCalledTimes(1);
+  });
+
+  it('writes nothing to the output stream when the preflight is clean', async () => {
+    await runWithWorktree();
+
+    expect(mockPreflightCheck).toHaveBeenCalledTimes(1);
+    expect(mockOutputSave).not.toHaveBeenCalled();
+  });
+
+  it('fails the run when provisioning fails instead of falling back to the base checkout', async () => {
+    mockProvision.mockRejectedValueOnce(new Error('worktree:new exploded'));
+
+    await expect(runWithWorktree()).rejects.toThrow(/worktree:new exploded/);
+    expect(mockExecute).not.toHaveBeenCalled();
+  });
+
+  it('runs in the base checkout when the payload opts out of a worktree', async () => {
+    await runWithWorktree({});
+
+    expect(mockProvision).not.toHaveBeenCalled();
+    expect(mockRegister).toHaveBeenCalledWith(
+      expect.objectContaining({ filesystemPath: WORKTREE_PATH }),
+    );
+  });
+
+  it('lets the script pick the root when the actor has none configured', async () => {
+    mockGetOrCreateForUser.mockResolvedValueOnce(
+      createMock<UserWorkspaceSettings>({
+        userId: USER_ID,
+        worktreeRoot: null,
+      }),
+    );
+
+    await runWithWorktree();
+
+    expect(mockProvision).toHaveBeenCalledWith(
+      expect.objectContaining({ worktreeRoot: null }),
+    );
   });
 });

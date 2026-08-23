@@ -7,14 +7,16 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-  Switch,
 } from '@openthrottle/react-router-shadcn';
+import { buildPlanRunWorktreeName } from '@openthrottle/openthrottle-plan-config';
 import {
   WORKFLOW_RALPH_ENV_VARS,
   type WorkflowRalphRunOptionsInput,
   type WorkflowRalphWorktreeCli,
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
+import { PLAN_CONFIG_WORKTREE_COPY } from '~/routing/plans/data/data.copy';
+import { PlanWorkflowConfigWorktreeCursorFields } from '~/routing/plans/components/PlanWorkflowConfigWorktreeCursorFields';
 
 export interface PlanWorkflowConfigWorktreeProps {
   heading: string;
@@ -32,7 +34,8 @@ export const PlanWorkflowConfigWorktree = (
   // Hooks
 
   // Setup
-  const isCursor = input.executionBackend === 'cursor';
+  const derivedWorktreeName =
+    input.planId.trim() === '' ? '' : buildPlanRunWorktreeName(input.planId);
 
   // Handlers
   const handleWorktreeCliChange = (value: WorkflowRalphWorktreeCli): void => {
@@ -70,14 +73,12 @@ export const PlanWorkflowConfigWorktree = (
       legend={heading}
     >
       <p className="text-muted-foreground text-xs">
-        Forwards <code className="text-xs">--worktree</code> to cursor-agent and
-        claude per iteration. Physical BullMQ git worktrees (
-        <code className="text-xs">WORKTREE_TARGETS</code>) are unchanged; when
-        omitted on enqueue, nested runs default the agent name to the acquired
-        target id.
+        {PLAN_CONFIG_WORKTREE_COPY.explainer}
       </p>
       <div className="space-y-2">
-        <Label htmlFor="workflow-run-worktree-cli">--worktree</Label>
+        <Label htmlFor="workflow-run-worktree-cli">
+          {PLAN_CONFIG_WORKTREE_COPY.modeLabel}
+        </Label>
         <Select
           onValueChange={(v) => {
             if (v === 'omit' || v === 'flag-only' || v === 'named') {
@@ -95,9 +96,9 @@ export const PlanWorkflowConfigWorktree = (
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="omit">
-              Omit (queue may use acquired target id)
+              {PLAN_CONFIG_WORKTREE_COPY.modeOmitLabel}
             </SelectItem>
-            <SelectItem value="named">Named (--worktree with name)</SelectItem>
+            <SelectItem value="named">On (named worktree)</SelectItem>
             <SelectItem value="flag-only">
               Flag only (--worktree, CLI preview only)
             </SelectItem>
@@ -107,15 +108,19 @@ export const PlanWorkflowConfigWorktree = (
           className="text-muted-foreground text-xs"
           id="workflow-run-worktree-cli-hint"
         >
+          {input.worktreeCli === 'omit'
+            ? PLAN_CONFIG_WORKTREE_COPY.offWarning
+            : null}{' '}
           Env:{' '}
           <code className="text-xs">{WORKFLOW_RALPH_ENV_VARS.worktree}</code>.
-          Flag-only is not sent on enqueue (GraphQL requires a name); use local
-          CLI or env for that mode.
+          Flag-only is a local CLI preview mode; it is not sent on enqueue.
         </p>
       </div>
       {input.worktreeCli === 'named' ? (
         <div className="space-y-2">
-          <Label htmlFor="workflow-run-worktree-name">Worktree name</Label>
+          <Label htmlFor="workflow-run-worktree-name">
+            {PLAN_CONFIG_WORKTREE_COPY.nameLabel}
+          </Label>
           <Input
             aria-describedby="workflow-run-worktree-name-hint"
             aria-label="Agent CLI worktree name for --worktree"
@@ -127,7 +132,11 @@ export const PlanWorkflowConfigWorktree = (
                 worktreeName: e.target.value,
               }))
             }
-            placeholder="e.g. target-one"
+            placeholder={
+              derivedWorktreeName === ''
+                ? 'e.g. plan-5e172b67'
+                : derivedWorktreeName
+            }
             spellCheck={false}
             value={input.worktreeName}
           />
@@ -135,74 +144,18 @@ export const PlanWorkflowConfigWorktree = (
             className="text-muted-foreground text-xs"
             id="workflow-run-worktree-name-hint"
           >
-            Passed to nested <code className="text-xs">workflow-ralph</code> and
-            each iteration runner.
+            {derivedWorktreeName === ''
+              ? PLAN_CONFIG_WORKTREE_COPY.autoNameHint(
+                  'a name derived from the plan id',
+                )
+              : PLAN_CONFIG_WORKTREE_COPY.autoNameHint(derivedWorktreeName)}
           </p>
         </div>
       ) : null}
-      {isCursor ? (
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="workflow-run-worktree-base">--worktree-base</Label>
-            <Input
-              aria-describedby="workflow-run-worktree-base-hint"
-              aria-label="Base branch for cursor-agent --worktree-base"
-              autoComplete="off"
-              id="workflow-run-worktree-base"
-              onChange={(e) =>
-                setInput((prev) => ({
-                  ...prev,
-                  worktreeBase: e.target.value,
-                }))
-              }
-              placeholder="e.g. main"
-              spellCheck={false}
-              value={input.worktreeBase}
-            />
-            <p
-              className="text-muted-foreground text-xs"
-              id="workflow-run-worktree-base-hint"
-            >
-              Cursor-only. Env:{' '}
-              <code className="text-xs">
-                {WORKFLOW_RALPH_ENV_VARS.worktreeBase}
-              </code>
-              ; empty omits the flag.
-            </p>
-          </div>
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 pt-2">
-              <Switch
-                aria-label="Enable --skip-worktree-setup for cursor-agent"
-                checked={input.skipWorktreeSetup}
-                id="workflow-run-skip-worktree-setup"
-                onCheckedChange={(checked) =>
-                  setInput((prev) => ({
-                    ...prev,
-                    skipWorktreeSetup: checked === true,
-                  }))
-                }
-              />
-              <Label htmlFor="workflow-run-skip-worktree-setup">
-                --skip-worktree-setup
-              </Label>
-            </div>
-            <p className="text-muted-foreground text-xs">
-              Skip <code className="text-xs">.cursor/worktrees.json</code> setup
-              scripts. Env:{' '}
-              <code className="text-xs">
-                {WORKFLOW_RALPH_ENV_VARS.skipWorktreeSetup}
-              </code>
-            </p>
-          </div>
-        </div>
-      ) : (
-        <p className="text-muted-foreground text-xs">
-          <code className="text-xs">--worktree-base</code> and{' '}
-          <code className="text-xs">--skip-worktree-setup</code> apply only when
-          the execution backend is Cursor.
-        </p>
-      )}
+      <PlanWorkflowConfigWorktreeCursorFields
+        input={input}
+        setInput={setInput}
+      />
     </OpenThrottleFieldset>
   );
 };

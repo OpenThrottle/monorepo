@@ -3547,6 +3547,8 @@ export enum RalphNestedDebugCli {
 export type RalphPlanRunTuningInput = {
   /** Execution backend (e.g. cursor). Omit to use worktree defaults. */
   backend?: InputMaybe<Scalars['String']['input']>;
+  /** Opt out of the worktree default and run in the base checkout. Omit to get the worktree OpenThrottle derives for the plan; only an explicit true disables it. */
+  disableWorktree?: InputMaybe<Scalars['Boolean']['input']>;
   /** Per-iteration timeout in seconds (positive integer). */
   iterationTimeoutSeconds?: InputMaybe<Scalars['Int']['input']>;
   /** Max Ralph iterations for this run (positive integer). */
@@ -3563,7 +3565,7 @@ export type RalphPlanRunTuningInput = {
   ralphDebugCli?: InputMaybe<RalphNestedDebugCli>;
   /** Cursor-only: pass --skip-worktree-setup to cursor-agent. */
   skipWorktreeSetup?: InputMaybe<Scalars['Boolean']['input']>;
-  /** Agent CLI worktree name for -w/--worktree on cursor-agent and claude. When omitted in a BullMQ worktree run, defaults to the acquired target id. */
+  /** Worktree name for this run. When omitted, OpenThrottle derives plan-<short plan id> and creates that worktree itself; pass disableWorktree to run without one. */
   worktree?: InputMaybe<Scalars['String']['input']>;
   /** Cursor-only: branch/ref for --worktree-base. */
   worktreeBase?: InputMaybe<Scalars['String']['input']>;
@@ -5169,6 +5171,8 @@ export type UpdateWorkspaceProfileInput = {
   contactDisplayName?: InputMaybe<Scalars['String']['input']>;
   contactEmail?: InputMaybe<Scalars['String']['input']>;
   enabledEditors?: InputMaybe<Array<WorkspaceEditorId>>;
+  /** Absolute directory every git worktree is created under; blank clears it back to the default. */
+  worktreeRoot?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type UpsertTagActionRuleInput = {
@@ -5215,6 +5219,8 @@ export type UserWorkspaceProfileObject = {
   enabledEditors: Array<WorkspaceEditorId>;
   updatedAt: Scalars['DateTime']['output'];
   userId: Scalars['ID']['output'];
+  /** Directory every git worktree is created under; null uses the default sibling openthrottle-worktrees directory. */
+  worktreeRoot?: Maybe<Scalars['String']['output']>;
 };
 
 /** Interpretation of wall-clock to CPU time ratio. */

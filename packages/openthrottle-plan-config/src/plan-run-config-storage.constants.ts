@@ -11,6 +11,26 @@ export const DEFAULT_PLAN_RUN_RALPH_PROMPT = '/agents-ralph';
 export const DEFAULT_PLAN_RUN_RALPH_ITERATIONS = 10;
 export const DEFAULT_PLAN_RUN_RALPH_MODEL = 'auto';
 
+/**
+ * @description Programmatic plan runs log verbosely by default so the run output stream carries
+ * the agent CLI's reasoning. See docs/openthrottle/plan-run-worktrees.md.
+ */
+export const DEFAULT_PLAN_RUN_RALPH_DEBUG_CLI: 'omit' | 'debug' | 'verbose' =
+  'verbose';
+
+/**
+ * @description Programmatic plan runs get a named worktree by default. `'named'` (rather than
+ * `'flag-only'`) because OpenThrottle derives the name itself, so the path is known up front.
+ */
+export const DEFAULT_PLAN_RUN_RALPH_WORKTREE_CLI:
+  'flag-only' | 'named' | 'omit' = 'named';
+
+/** @description Prefix for a derived plan-run worktree name (`plan-<short plan id>`). */
+export const PLAN_RUN_WORKTREE_NAME_PREFIX = 'plan-';
+
+/** @description Characters of the plan UUID used in a derived worktree name. */
+export const PLAN_RUN_WORKTREE_NAME_ID_LENGTH = 8;
+
 export const PLAN_RUN_KNOWN_BACKENDS = ['claude', 'cursor'] as const;
 export const PLAN_RUN_CONFIG_TARGET_MODES = ['plan', 'task'] as const;
 export const PLAN_RUN_PROMPT_LAYERS = ['named', 'file'] as const;

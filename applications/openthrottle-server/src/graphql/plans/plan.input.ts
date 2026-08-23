@@ -261,8 +261,14 @@ export class RalphPlanRunTuningInput {
   })
   ralphDebugCli?: RalphNestedDebugCliGraphQL | null;
 
+  @Field(() => Boolean, {
+    description: `Opt out of the worktree default and run in the base checkout. Omit to get the worktree OpenThrottle derives for the plan; only an explicit true disables it.`,
+    nullable: true,
+  })
+  disableWorktree?: boolean | null;
+
   @Field(() => String, {
-    description: `Agent CLI worktree name for -w/--worktree on cursor-agent and claude. When omitted in a BullMQ worktree run, defaults to the acquired target id.`,
+    description: `Worktree name for this run. When omitted, OpenThrottle derives plan-<short plan id> and creates that worktree itself; pass disableWorktree to run without one.`,
     nullable: true,
   })
   worktree?: string | null;

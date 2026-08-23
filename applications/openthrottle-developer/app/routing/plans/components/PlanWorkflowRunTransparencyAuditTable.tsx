@@ -3,7 +3,11 @@ import { Link } from 'react-router';
 import type { PlanDetailIndexLoaderQuery } from '~/__generated__/graphql';
 import { planRunJobDetailPath } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
-import { buildPlanRunSnapshotDiffLabels } from '~/routing/plans/utils/plan-run-config-snapshot-ui';
+import {
+  buildPlanRunSnapshotDiffLabels,
+  readPlanRunSnapshotWorkspacePath,
+} from '~/routing/plans/utils/plan-run-config-snapshot-ui';
+import { PLAN_RUN_AUDIT_WORKSPACE_COPY } from '~/routing/plans/data/data.copy';
 import { PlanRunProvenanceCell } from '~/routing/plans/components/PlanRunProvenanceCell';
 
 export type PlanRunAuditRow =
@@ -54,6 +58,9 @@ export const PlanWorkflowRunTransparencyAuditTable = (
             <th className="text-foreground py-1.5 pr-2 font-medium">
               Provenance
             </th>
+            <th className="text-foreground py-1.5 pr-2 font-medium">
+              {PLAN_RUN_AUDIT_WORKSPACE_COPY.columnLabel}
+            </th>
             <th className="text-foreground py-1.5 font-medium">
               vs current config
             </th>
@@ -62,7 +69,7 @@ export const PlanWorkflowRunTransparencyAuditTable = (
         <tbody>
           {planRunAuditRows.length === 0 ? (
             <tr>
-              <td className="py-2 text-[0.7rem]" colSpan={5}>
+              <td className="py-2 text-[0.7rem]" colSpan={6}>
                 No queued run audit rows yet. After you enqueue from the
                 toolbar, each run records its resolved configuration here.
               </td>
@@ -72,6 +79,9 @@ export const PlanWorkflowRunTransparencyAuditTable = (
               const diffLabels = buildPlanRunSnapshotDiffLabels(
                 row.runConfigSnapshotJson,
                 { workflowInput, workingDirectory },
+              );
+              const runWorkspacePath = readPlanRunSnapshotWorkspacePath(
+                row.runConfigSnapshotJson,
               );
 
               return (
@@ -103,6 +113,10 @@ export const PlanWorkflowRunTransparencyAuditTable = (
                       checkout={row.checkout}
                       pullRequest={row.pullRequest}
                     />
+                  </td>
+                  <td className="py-1.5 pr-2 align-top font-mono text-[0.65rem] break-all">
+                    {runWorkspacePath ??
+                      PLAN_RUN_AUDIT_WORKSPACE_COPY.emptyLabel}
                   </td>
                   <td className="py-1.5 align-top text-[0.65rem]">
                     {row.runConfigSnapshotJson == null ? (

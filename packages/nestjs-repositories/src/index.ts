@@ -369,11 +369,14 @@ export type { ServiceAccountData } from './modules/service-accounts/service-acco
 export type { PlanData } from './modules/plans/plan.entity';
 export {
   buildPlanRunConfigSnapshot,
+  buildPlanRunWorktreeName,
   buildRalphPlanRunTuningFromPlanRunConfig,
+  DEFAULT_PLAN_RUN_RALPH_DEBUG_CLI,
   DEFAULT_PLAN_RUN_RALPH_ITERATIONS,
   DEFAULT_PLAN_RUN_RALPH_MODEL,
   DEFAULT_PLAN_RUN_RALPH_PROMPT,
   DEFAULT_PLAN_RUN_RALPH_RUNNER,
+  DEFAULT_PLAN_RUN_RALPH_WORKTREE_CLI,
   getDefaultPlanRunConfigRalphV1,
   getDefaultPlanRunConfigStorage,
   getDefaultPlanWorkflowUiState,

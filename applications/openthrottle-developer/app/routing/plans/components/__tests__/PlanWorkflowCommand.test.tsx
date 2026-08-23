@@ -48,11 +48,19 @@ describe('PlanWorkflowCommand Component', () => {
     expect(getByTestId('workflow-run-cli-preview')).toHaveTextContent(
       `--plan ${planId}`,
     );
+    // The shared defaults put --verbose and the derived worktree in the preview, so match on the
+    // stable prefix rather than the whole line.
     expect(
       getByRole('button', {
-        name: `pnpm exec workflow-ralph --plan ${planId}`,
+        name: new RegExp(`^pnpm exec workflow-ralph --plan ${planId}`),
       }),
     ).toBeInTheDocument();
+    expect(getByTestId('workflow-run-cli-preview')).toHaveTextContent(
+      '--verbose',
+    );
+    expect(getByTestId('workflow-run-cli-preview')).toHaveTextContent(
+      '--worktree plan-0c2720a9',
+    );
   });
 
   test('should use canonicalCommandLineOverride when provided', () => {

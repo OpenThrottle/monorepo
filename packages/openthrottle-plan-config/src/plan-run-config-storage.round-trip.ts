@@ -2,6 +2,7 @@
  * @description Round-trip between Plan Configuration UI state and `plans.run_config`.
  */
 
+import { DEFAULT_PLAN_RUN_RALPH_DEBUG_CLI } from './plan-run-config-storage.constants.ts';
 import { getDefaultPlanRunConfigStorage } from './plan-run-config-storage.defaults.ts';
 import { parsePlanRunConfigStorage } from './plan-run-config-storage.validation.ts';
 import type {
@@ -178,17 +179,12 @@ export const buildRalphPlanRunTuningFromPlanRunConfig = (
     }
   }
 
-  switch (ralph.debugCli) {
-    case 'debug':
-      tuning.ralphDebugCli = 'debug';
-      break;
-
-    case 'verbose':
-      tuning.ralphDebugCli = 'verbose';
-      break;
-
-    case 'omit':
-      break;
+  // Only a choice that differs from the shared default travels in the payload. The server
+  // injects the default when the key is absent, so an explicit `'omit'` has to be sent —
+  // otherwise a deliberate "no verbose" would be indistinguishable from "unset" and get
+  // the default back.
+  if (ralph.debugCli !== DEFAULT_PLAN_RUN_RALPH_DEBUG_CLI) {
+    tuning.ralphDebugCli = ralph.debugCli;
   }
 
   if (Object.keys(tuning).length === 0) {

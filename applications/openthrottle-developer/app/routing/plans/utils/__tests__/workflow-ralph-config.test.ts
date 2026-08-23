@@ -142,7 +142,7 @@ describe('getDefaultWorkflowRalphRunOptionsInput', () => {
   test('fills in the remaining CLI-aligned defaults', () => {
     const input = getDefaultWorkflowRalphRunOptionsInput();
 
-    expect(input.debugCli).toBe('omit');
+    expect(input.debugCli).toBe('verbose');
     expect(input.executionBackend).toBe('cursor');
     expect(input.iterationTimeoutSeconds).toBeUndefined();
     expect(input.iterations).toBe(DEFAULT_RALPH_ITERATIONS);
@@ -150,7 +150,9 @@ describe('getDefaultWorkflowRalphRunOptionsInput', () => {
     expect(input.prompt).toBe(DEFAULT_RALPH_PROMPT);
     expect(input.promptLayer).toBe('named');
     expect(input.skipWorktreeSetup).toBe(false);
-    expect(input.worktreeCli).toBe('omit');
+    // Worktree on by default, with a blank name meaning "derive plan-<short plan id> at enqueue".
+    expect(input.worktreeCli).toBe('named');
+    expect(input.worktreeName).toBe('');
   });
 });
 

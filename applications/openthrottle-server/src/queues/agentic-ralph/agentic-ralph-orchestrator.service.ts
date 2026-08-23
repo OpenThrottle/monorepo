@@ -7,10 +7,13 @@ import {
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { PlanRun } from '@openthrottle/nestjs-repositories';
 import {
+  PlanOutputStreamService,
   PlanRunsService,
   RepositoryCheckoutsService,
+  UserWorkspaceSettingsService,
 } from '@openthrottle/nestjs-repositories';
 import type {
+  WorkflowConfigRunner,
   WorkflowCorrelation,
   WorkflowLifecycleDispatcher,
 } from '@openthrottle/openthrottle-agentic-workflow';
@@ -34,11 +37,31 @@ import type {
   WorkflowRunResult,
 } from '@openthrottle/openthrottle-agentic-ralph';
 import { PlanRunWorktreeCheckoutService } from '../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.service';
+import { PlanRunWorkspacePreflightService } from '../../services/plan-run-workspace-preflight/plan-run-workspace-preflight.service';
+import { PlanRunWorktreeProvisionService } from '../../services/plan-run-worktree-provision/plan-run-worktree-provision.service';
 import type { RunPlanOrchestratorJobData } from './agentic-ralph.types';
 
 type PlanRunTuningInput = NonNullable<
   Parameters<typeof buildRalphFlowContextFromPlanRunTuning>[0]['ralph']
 >;
+
+/**
+ * @description Drops the agent-CLI worktree flags from run tuning. Under option A the server
+ * creates the worktree and runs the agent inside it, so passing `-w`/`--worktree` (or its cursor-only
+ * companions) would make a SECOND worktree whose path nothing downstream knows.
+ */
+const stripAgentCliWorktreeFlags = (
+  tuning: PlanRunTuningInput | undefined,
+): PlanRunTuningInput | undefined => {
+  if (tuning === undefined) return undefined;
+  const {
+    skipWorktreeSetup: _s,
+    worktree: _w,
+    worktreeBase: _b,
+    ...rest
+  } = tuning;
+  return rest;
+};
 
 /**
  * @description In-process Ralph for the `plans` queue. Resolves the Ralph workflow from the
@@ -55,9 +78,13 @@ export class AgenticRalphOrchestratorService {
     @Inject(AGENTIC_WORKFLOW_REGISTRY)
     private readonly workflowRegistry: AgenticWorkflowRegistry,
     private readonly logger: LoggerService,
+    private readonly planOutputStreamService: PlanOutputStreamService,
     private readonly planRunsService: PlanRunsService,
     private readonly planRunWorktreeCheckoutService: PlanRunWorktreeCheckoutService,
+    private readonly planRunWorkspacePreflightService: PlanRunWorkspacePreflightService,
+    private readonly planRunWorktreeProvisionService: PlanRunWorktreeProvisionService,
     private readonly repositoryCheckoutsService: RepositoryCheckoutsService,
+    private readonly userWorkspaceSettingsService: UserWorkspaceSettingsService,
   ) {}
 
   /**
@@ -82,7 +109,7 @@ export class AgenticRalphOrchestratorService {
       .resolve(AGENTIC_WORKFLOW_RALPH_ID)
       .createOrchestrator() as WorkflowOrchestrator;
 
-    const configCwd = getWorkflowConfigCwd(
+    const baseCheckoutCwd = getWorkflowConfigCwd(
       jobData.workingDirectory,
       process.env,
     );
@@ -91,10 +118,35 @@ export class AgenticRalphOrchestratorService {
     // per-user injection gate need the acting user (run.actorUserId). Soft: null when unresolved.
     const run = await this.resolveRunFromCorrelation(correlation);
 
+    // OpenThrottle owns the worktree (option A): create it here, at job start, so the path is known
+    // before the first agent turn — which is what checkout registration, `.env` provisioning, and
+    // per-path agent-CLI MCP approval all need. Everything downstream (config load, foreign-skill
+    // injection, checkout registration, the agent's cwd) targets this path, not the base checkout.
+    const configCwd = await this.resolveRunWorkingDirectory({
+      baseCheckoutCwd,
+      jobData,
+      run,
+    });
+
     // Soft-fail registration: must not abort the agent run when checkout lookup/upsert fails.
     await this.maybeRegisterWorktreeCheckout({
       filesystemPath: configCwd,
       run,
+    });
+
+    // The snapshot was written at enqueue, before the worktree existed. Re-point its workspace at
+    // the directory the agent actually uses so the run record is not misleading. Soft-fail.
+    await this.recordResolvedWorkspaceOnSnapshot({
+      run,
+      workingDirectory: configCwd,
+    });
+
+    // A run that cannot reach openthrottle-mcp does its work and reports success having changed
+    // nothing. Say so in the output stream, loudly, against the directory the agent actually uses.
+    await this.warnOnWorkspacePreflight({
+      backend: jobData.executionBackend ?? 'cursor',
+      planId: jobData.planId,
+      workingDirectory: configCwd,
     });
 
     // Server-scoped foreign-skill injection, gated per user: materialize OT curated skills into the
@@ -117,17 +169,23 @@ export class AgenticRalphOrchestratorService {
       config,
     ) as PlanRunTuningInput | undefined;
 
+    // One worktree per run, not two: the agent CLI's -w/--worktree must stay off now that the
+    // server created the worktree and is running the agent inside it. Strip the worktree keys the
+    // merge may have (re)introduced from `.workflow-ralph.json` as well as from the job payload.
+    const agentRalphTuning = stripAgentCliWorktreeFlags(mergedRalphTuning);
+
     const baseContext = buildRalphFlowContextFromPlanRunTuning({
       executionBackend: jobData.executionBackend,
       mode: jobData.mode ?? 'plan',
       planId: jobData.planId,
-      ralph: mergedRalphTuning,
+      ralph: agentRalphTuning,
       taskId: jobData.taskId,
     });
 
     applyWorkflowRalphDebugCli(baseContext.debug);
 
-    const workingDirectory = jobData.workingDirectory?.trim();
+    // The resolved worktree — not the enqueued base path — is where the agent runs.
+    const workingDirectory = configCwd.trim();
 
     const context: WorkflowContext = {
       ...baseContext,
@@ -149,6 +207,145 @@ export class AgenticRalphOrchestratorService {
     };
 
     return orchestrator.execute({ context });
+  }
+
+  /**
+   * @description Runs the workspace MCP/.env preflight against the run's directory and writes any
+   * warning into the plan output stream, where the run's reader will see it. Warn-only: the run
+   * continues, but a false success is no longer silent. Soft-fails.
+   */
+  private async warnOnWorkspacePreflight(params: {
+    readonly backend: WorkflowConfigRunner;
+    readonly planId: string;
+    readonly workingDirectory: string;
+  }): Promise<void> {
+    const { backend, planId, workingDirectory } = params;
+
+    try {
+      const warnings = this.planRunWorkspacePreflightService.check({
+        backend,
+        workingDirectory,
+      });
+      if (warnings.length === 0) {
+        return;
+      }
+
+      const content = [
+        `⚠️  Workspace preflight found ${warnings.length} problem(s) in ${workingDirectory} (backend: ${backend}). MCP-dependent work may silently do nothing.`,
+        ...warnings.map((warning) => `- ${warning}`),
+      ].join('\n');
+
+      this.logger.warn(content, AgenticRalphOrchestratorService.name);
+
+      const repo = this.planOutputStreamService.getRepository();
+      await repo.save(repo.create({ content, iteration: null, planId }));
+    } catch (error) {
+      this.logger.warn(
+        `Soft-fail running the workspace preflight for plan ${planId}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+        AgenticRalphOrchestratorService.name,
+      );
+    }
+  }
+
+  /**
+   * @description Re-points `run_config_snapshot.workspace` at the resolved directory (and the
+   * checkout id, once registration has back-filled it). Soft-fails: a stale snapshot must never
+   * abort the agent run.
+   */
+  private async recordResolvedWorkspaceOnSnapshot(params: {
+    readonly run: PlanRun | null;
+    readonly workingDirectory: string;
+  }): Promise<void> {
+    const { run, workingDirectory } = params;
+    if (run === null) return;
+    if (
+      run.runConfigSnapshot?.workspace?.workingDirectory === workingDirectory
+    ) {
+      return;
+    }
+
+    try {
+      const latest = await this.planRunsService.findById(run.id);
+      await this.planRunsService.setRunConfigSnapshotWorkspace(run.id, {
+        checkoutId: latest?.checkoutId ?? null,
+        workingDirectory,
+      });
+    } catch (error) {
+      this.logger.warn(
+        `Soft-fail recording the resolved workspace on run ${run.id}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+        AgenticRalphOrchestratorService.name,
+      );
+    }
+  }
+
+  /**
+   * @description Resolves the directory this run executes in. When the job payload names a worktree
+   * (the enqueue default derives `plan-<short plan id>`; absence means the caller explicitly opted
+   * out via `disableWorktree`), provisions it and returns its absolute path. Fails the run when
+   * provisioning fails — falling back to the base checkout is exactly the bug this replaces.
+   */
+  private async resolveRunWorkingDirectory(params: {
+    readonly baseCheckoutCwd: string;
+    readonly jobData: RunPlanOrchestratorJobData;
+    readonly run: PlanRun | null;
+  }): Promise<string> {
+    const { baseCheckoutCwd, jobData, run } = params;
+
+    const worktreeName = jobData.ralph?.worktree?.trim();
+    if (worktreeName === undefined || worktreeName === '') {
+      this.logger.log(
+        `Plan run ${jobData.planId} opted out of a worktree; working in ${baseCheckoutCwd}`,
+        AgenticRalphOrchestratorService.name,
+      );
+      return baseCheckoutCwd;
+    }
+
+    const worktreeRoot = await this.resolveConfiguredWorktreeRoot(run);
+
+    const worktreePath = await this.planRunWorktreeProvisionService.provision({
+      baseCheckoutPath: baseCheckoutCwd,
+      worktreeName,
+      worktreeRoot,
+    });
+
+    this.logger.log(
+      `Plan run ${jobData.planId} working in worktree ${worktreePath}`,
+      AgenticRalphOrchestratorService.name,
+    );
+
+    return worktreePath;
+  }
+
+  /**
+   * @description The acting user's configured worktree root, or null to let
+   * `scripts/create_worktree.sh` resolve its own default. Soft: never blocks a run.
+   */
+  private async resolveConfiguredWorktreeRoot(
+    run: PlanRun | null,
+  ): Promise<string | null> {
+    const actorUserId = run?.actorUserId?.trim();
+    if (actorUserId === undefined || actorUserId === '') {
+      return null;
+    }
+
+    try {
+      const settings =
+        await this.userWorkspaceSettingsService.getOrCreateForUser(actorUserId);
+      const root = settings.worktreeRoot?.trim();
+      return root === undefined || root === '' ? null : root;
+    } catch (error) {
+      this.logger.warn(
+        `Soft-fail resolving the configured worktree root for user ${actorUserId}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+        AgenticRalphOrchestratorService.name,
+      );
+      return null;
+    }
   }
 
   /**

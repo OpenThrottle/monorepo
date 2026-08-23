@@ -88,6 +88,12 @@ export const WORKSPACE_SETTINGS_COPY = {
   targetsNoEditors: `No editors enabled. Enable at least one editor above to see which repositories will be configured.`,
   targetsNoRepositories: `No linked repositories yet. Add one to configure it for your editors.`,
   title: `Workspace`,
+  worktreeRootExplainer: `Where every agent — Claude, Cursor, Ralph, and queued plan runs — creates its git worktrees. Leave blank to use a sibling openthrottle-worktrees directory next to the repository.`,
+  worktreeRootHint: `Absolute path, or one starting with ~. Changing it only affects worktrees created from now on.`,
+  worktreeRootLabel: `Worktree root`,
+  worktreeRootLegend: `Worktrees`,
+  worktreeRootPlaceholder: `/Users/you/Development/openthrottle-worktrees`,
+  worktreeRootSaveButton: `Save worktree root`,
 } as const;
 
 /**
