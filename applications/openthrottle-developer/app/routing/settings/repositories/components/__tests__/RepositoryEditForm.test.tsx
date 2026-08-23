@@ -4,6 +4,7 @@ import type { RenderResult } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createRoutesStub, redirect } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
+import { WORKSPACE_REPOSITORY_DETAIL_COPY } from '~/routing/settings/data/data.copy';
 import { RepositoryEditForm } from '../RepositoryEditForm';
 import type { RepositoryEditFormProps } from '../RepositoryEditForm';
 
@@ -126,12 +127,48 @@ describe('RepositoryEditForm Component', () => {
     expect(component.getByTestId('RepositoryEditForm-injection')).toBeChecked();
   });
 
-  test('surfaces an action error inline', () => {
+  test('surfaces an action error inline as an alert', () => {
     props.actionError = 'Repository name cannot be empty';
     setup();
 
+    expect(component.getByRole('alert')).toHaveTextContent(
+      'Repository name cannot be empty',
+    );
+  });
+
+  test('titles the page with the edit heading and its description', () => {
+    setup();
+
     expect(
-      component.getByText('Repository name cannot be empty'),
+      component.getByRole('heading', {
+        level: 1,
+        name: WORKSPACE_REPOSITORY_DETAIL_COPY.editTitle,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      component.getByText(WORKSPACE_REPOSITORY_DETAIL_COPY.editDescription),
+    ).toBeInTheDocument();
+  });
+
+  test('groups the fields under the identity and integration sections', () => {
+    setup();
+
+    // Identity is the card title (a styled div, not a heading); Integration is
+    // still an in-form h3 below the separator.
+    expect(
+      component.getByText(
+        WORKSPACE_REPOSITORY_DETAIL_COPY.identitySectionTitle,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      component.getByText(
+        WORKSPACE_REPOSITORY_DETAIL_COPY.identitySectionDescription,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      component.getByRole('heading', {
+        name: WORKSPACE_REPOSITORY_DETAIL_COPY.integrationSectionTitle,
+      }),
     ).toBeInTheDocument();
   });
 });

@@ -74,14 +74,23 @@ describe('RepositoriesTable Component', () => {
     expect(component.queryByText('openthrottle-worktree')).toBeNull();
   });
 
-  test('renders the path, branch and managed badges', () => {
-    expect(
-      component.getByTitle('/Users/dev/Development/openthrottle'),
-    ).toBeInTheDocument();
+  test('renders the branch and managed badges', () => {
     expect(component.getAllByText('main').length).toBeGreaterThan(0);
     expect(
       component.getByText(WORKSPACE_FOLDERS_COPY.managedBadge),
     ).toBeInTheDocument();
+  });
+
+  test('renders the checkout display name, not its filesystem path', () => {
+    // The path column was dropped from the table; the path stays on the
+    // repository detail route where there is room for it.
+    expect(component.getByText('openthrottle')).toBeInTheDocument();
+    expect(
+      component.queryByText('/Users/dev/Development/openthrottle'),
+    ).toBeNull();
+    expect(
+      component.queryByTitle('/Users/dev/Development/openthrottle'),
+    ).toBeNull();
   });
 
   test('expands and collapses a group with the chevron toggle', async () => {
@@ -169,5 +178,36 @@ describe('RepositoriesTable Component', () => {
     expect(
       component.getByTestId('RepositoryRowActions-primary-2'),
     ).toBeInTheDocument();
+  });
+
+  test('renders the injection toggle on repository rows only', () => {
+    expect(
+      component.getByTestId('RepositorySkillInjectionToggle-repo-1'),
+    ).toBeInTheDocument();
+    expect(
+      component.getByTestId('RepositorySkillInjectionToggle-repo-2'),
+    ).toBeInTheDocument();
+    expect(
+      component.queryByText(REPOSITORIES_TABLE_COPY.injectionInherited),
+    ).toBeNull();
+  });
+
+  test('marks an expanded worktree child as inheriting the repository flag', async () => {
+    const user = userEvent.setup();
+
+    await user.click(
+      component.getByRole('button', {
+        name: REPOSITORIES_TABLE_COPY.expandGroup,
+      }),
+    );
+
+    // One switch per repository, still — the child gets a marker, not a second
+    // switch that would flip the very same checkouts.
+    expect(
+      component.getByText(REPOSITORIES_TABLE_COPY.injectionInherited),
+    ).toBeInTheDocument();
+    expect(
+      component.getAllByTestId(/^RepositorySkillInjectionToggle-/),
+    ).toHaveLength(2);
   });
 });

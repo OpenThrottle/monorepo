@@ -1,6 +1,6 @@
 import * as React from 'react';
+import clsx from 'clsx';
 import { Link } from 'react-router';
-// import clsx from 'clsx';
 
 export interface GlobalScreenProps extends React.PropsWithChildren<
   React.HTMLAttributes<HTMLDivElement>
@@ -32,7 +32,13 @@ export const GlobalScreen = (props: GlobalScreenProps): React.ReactElement => {
   return (
     <>
       {beta ? (
-        <div className="bg-accent/60 text-foreground px-4 py-4 md:px-8 lg:px-12">
+        <div
+          className={clsx(
+            'bg-accent/60 text-foreground',
+            'px-4 py-4 md:px-8 lg:px-12',
+            'sticky top-[3.3rem] z-10',
+          )}
+        >
           <p className="text-sm">
             <span className="font-semibold">Beta:</span> This route is a beta
             feature and may not function as expected. Please report any issues
@@ -48,6 +54,7 @@ export const GlobalScreen = (props: GlobalScreenProps): React.ReactElement => {
           </p>
         </div>
       ) : null}
+
       <div className={className} {...rest}>
         {children}
       </div>

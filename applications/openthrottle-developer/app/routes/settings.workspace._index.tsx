@@ -88,7 +88,7 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <GlobalScreen>
+    <GlobalScreen beta={true}>
       <SettingsWorkspaceIntro />
 
       <div className="space-y-8">
