@@ -23,12 +23,9 @@ Your job is to run the built-in **`/loop`** over OpenThrottle plan **`$planId`**
 ## The loop (one task at a time)
 
 > **This section is the canonical statement of the per-task discipline.** Change it here and
-> nowhere else. Two places restate it deliberately, because each is injected as a standalone
+> nowhere else. One place restates it deliberately, because it is injected as a standalone
 > prompt with no access to this file: [`agents-ralph`](../agents-ralph/SKILL.md) (read by the
-> `workflow-ralph` CLI) and
-> [`ot-workflow-orchestration`'s runner](../ot-workflow-orchestration/runner.workflow.js) (a
-> per-subagent prompt string). Keep those two in sync when you edit this. Everything else links
-> here.
+> `workflow-ralph` CLI). Keep it in sync when you edit this. Everything else links here.
 
 Each `/loop` iteration works exactly one task. Resume the lowest-`sortOrder` `IN_PROGRESS` task first; otherwise pick the lowest `sortOrder` `PENDING`/`QUEUED`.
 
