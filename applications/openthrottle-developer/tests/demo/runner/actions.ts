@@ -26,6 +26,8 @@ export interface ActionContext {
   readonly baseUrl: string;
   readonly hideSelectors: readonly string[];
   readonly page: Page;
+  /** The flow's typeset surfaces, keyed by the name `stage` names. */
+  readonly surfaces: Readonly<Record<string, string>>;
 }
 
 /**
@@ -82,7 +84,7 @@ export const runStep = async (
   context: ActionContext,
   step: DemoStep,
 ): Promise<void> => {
-  const { baseUrl, hideSelectors, page } = context;
+  const { baseUrl, hideSelectors, page, surfaces } = context;
 
   switch (step.kind) {
     case 'click': {
@@ -148,6 +150,27 @@ export const runStep = async (
       return;
     }
 
+    case 'reveal': {
+      // Drop the attribute rather than setting an inline style, so the surface's own
+      // stylesheet keeps ownership of how a revealed element lays out.
+      await page
+        .locator(step.selector)
+        .first()
+        .evaluate((element) => {
+          element.removeAttribute('data-demo-hidden');
+        });
+      // A revealed block can be taller than the window; keep its top edge in frame
+      // rather than letting the surface scroll to the bottom of a long paste.
+      await page
+        .locator(step.selector)
+        .first()
+        .evaluate((element) => {
+          element.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        });
+      await page.waitForTimeout(240);
+      return;
+    }
+
     case 'scrollTo': {
       await page.locator(step.selector).first().scrollIntoViewIfNeeded();
       await page.waitForTimeout(400);
@@ -173,6 +196,23 @@ export const runStep = async (
       }
 
       await setClickRing(page, false);
+      return;
+    }
+
+    case 'stage': {
+      const html = surfaces[step.surface];
+
+      if (html === undefined) {
+        throw new Error(
+          `stage: no surface '${step.surface}' on this flow — declare it in DemoFlow.surfaces`,
+        );
+      }
+
+      // `load` and not `networkidle`: a surface is self-contained by construction, so
+      // there is no app to hydrate and nothing to wait on beyond its own stylesheet.
+      await page.setContent(html, { waitUntil: 'load' });
+      // setContent replaces the document, so the cursor overlay goes with it.
+      await installCursor(page, hideSelectors);
       return;
     }
 
@@ -253,6 +293,10 @@ export const signIn = async (
 export const stepTarget = (step: DemoStep): string | undefined => {
   if ('selector' in step) {
     return step.selector;
+  }
+
+  if ('surface' in step) {
+    return step.surface;
   }
 
   if ('path' in step) {

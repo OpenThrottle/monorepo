@@ -29,7 +29,9 @@ export type DemoStep = DemoStepBase &
     | { readonly kind: 'moveTo'; readonly selector: string }
     | { readonly kind: 'navigate'; readonly path: string }
     | { readonly key: string; readonly kind: 'press' }
+    | { readonly kind: 'reveal'; readonly selector: string }
     | { readonly kind: 'scrollTo'; readonly selector: string }
+    | { readonly kind: 'stage'; readonly surface: string }
     | {
         readonly kind: 'select';
         readonly selector: string;
@@ -72,6 +74,18 @@ export interface DemoFlow {
    */
   readonly regionOfInterest?: Readonly<Record<string, string>>;
   readonly steps: readonly DemoStep[];
+  /**
+   * Typeset surfaces this flow puts on camera, keyed by the name `stage` uses.
+   *
+   * A surface is a self-contained HTML document rendered in the recording browser,
+   * for a beat whose subject is not the app — a shell, an agent CLI. Same call the
+   * pipeline already makes for captions and cards (`assemble/cards.ts`), and it
+   * means the text on screen is real DOM, so the per-beat dump feeds the leak scan
+   * exactly as an app page does.
+   *
+   * Build them with the helpers in `../surfaces/`; do not hand-write HTML in a flow.
+   */
+  readonly surfaces?: Readonly<Record<string, string>>;
   readonly title: string;
 }
 
@@ -192,3 +206,27 @@ export const select = (
   value: string,
   beat?: string,
 ): DemoStep => ({ beat, kind: 'select', selector, value });
+/**
+ * @public Put a typeset surface on camera.
+ *
+ * Not a `navigate`: `navigate` waits on `#ot-env` for app hydration, which a static
+ * surface has no reason to have. The named surface comes from `DemoFlow.surfaces`.
+ */
+export const stage = (surface: string, beat?: string): DemoStep => ({
+  beat,
+  kind: 'stage',
+  surface,
+});
+/**
+ * @public Un-hide an element a surface staged with `data-demo-hidden`.
+ *
+ * This is how "the printed block appears" and "the agent replies" are single steps
+ * instead of near-duplicate surface variants. Hidden elements are `display:none`, so
+ * they are absent from `innerText` — and therefore from the beat's leak-scan dump —
+ * until the beat that actually puts them on screen.
+ */
+export const reveal = (selector: string, beat?: string): DemoStep => ({
+  beat,
+  kind: 'reveal',
+  selector,
+});

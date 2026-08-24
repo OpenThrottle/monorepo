@@ -118,6 +118,7 @@ const main = async (): Promise<void> => {
     baseUrl,
     hideSelectors: HIDE_FOR_RECORDING,
     page,
+    surfaces: flow.surfaces ?? {},
   };
 
   // Sign in BEFORE capture starts. A screencast must open on the payoff, not on a
@@ -139,7 +140,16 @@ const main = async (): Promise<void> => {
 
   const dumpedBeats = new Set<string>();
 
-  /** Write the beat's visible text once, for the leak scan to read. */
+  /**
+   * Write a beat's visible text for the leak scan to read.
+   *
+   * Called TWICE per beat: once on the beat's first step (`<beat>`) and once as the
+   * beat hands over (`<beat>-end`). One dump is not enough, because a beat's most
+   * revealing frame is usually its last — the text that was typed, the block that
+   * was revealed, the row that finished loading. `leak-scan.ts` globs `*.txt`, so
+   * both dumps are scanned, and a beat whose content never changed just writes the
+   * same text twice. A missed frame costs a disclosure; a duplicate costs a file.
+   */
   const dumpBeatText = async (label: string): Promise<void> => {
     if (dumpedBeats.has(label)) {
       return;
@@ -196,6 +206,12 @@ const main = async (): Promise<void> => {
 
   /* eslint-disable no-await-in-loop -- a flow is a sequence; steps must not overlap */
   for (const step of flow.steps) {
+    // Dump the OUTGOING beat before the incoming step runs: the page is still in the
+    // previous beat's final state at this point, and one step later it is not.
+    if (step.beat !== undefined && step.beat !== beat) {
+      await dumpBeatText(`${beat}-end`);
+    }
+
     beat = step.beat ?? beat;
     const tStart = elapsed();
     await runStep(actionContext, step);
@@ -211,6 +227,8 @@ const main = async (): Promise<void> => {
     await dumpBeatText(beat);
   }
   /* eslint-enable no-await-in-loop */
+
+  await dumpBeatText(`${beat}-end`);
 
   const wallSeconds = elapsed();
   await capture.stop();

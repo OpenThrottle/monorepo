@@ -2,7 +2,7 @@
 
 /**
  * @description Seed the deterministic demo workspace used by the screencast
- * pipeline: one demo user with every role, two fictional projects, ten plans
+ * pipeline: one demo user with every role, two fictional projects, eleven plans
  * across statuses with tasks in mixed lifecycle, four notes, and one pre-baked
  * agent run for the replay videos.
  *

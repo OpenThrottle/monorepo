@@ -28,6 +28,24 @@ export const DEMO_USER = {
   password: 'DemoThrottle2026!',
 } as const;
 
+/**
+ * The fictional machine the shell surfaces render.
+ *
+ * `repositoryRoot` is absolute because the thing 05 asks the viewer to copy is an
+ * absolute launcher path, and the frame has to show one. It is NOT under a home
+ * directory, and that is the whole point: `scan/rules.ts` rule `home-path` fails on
+ * `/Users/<anything>` and `/home/<anything>` — a fictional username does not help,
+ * only a root that is not a home directory does. `/workspace` is the conventional
+ * devcontainer mount, so it reads as a real machine without being one.
+ *
+ * `shellPrompt` is a directory NAME rather than a path. A prompt is the easiest
+ * place in a short to leak a home directory and it never needs to carry one.
+ */
+export const DEMO_MACHINE = {
+  repositoryRoot: '/workspace/openthrottle',
+  shellPrompt: 'openthrottle',
+} as const;
+
 export const DEMO_PROJECTS = [
   {
     description: 'Public HTTP API for the Atlas mapping service.',
@@ -71,11 +89,69 @@ export interface DemoPlan {
 }
 
 /**
- * Ten plans spread across statuses and dates. The spread matters: the dashboard
+ * Eleven plans spread across statuses and dates. The spread matters: the dashboard
  * renders activity over time, and a single-day spike looks like a demo instead of
  * a workspace someone uses.
+ *
+ * Ordered newest first, matching `/plans`' own default (`createdAt DESC`), so the
+ * plan a flow expects at the top of the table is the one at the top of this list.
  */
 export const DEMO_PLANS: readonly DemoPlan[] = [
+  {
+    // Video 05's payoff: the plan the agent wrote over MCP, one minute before the
+    // recording. Its own plan rather than a reuse of the rate-limiting one, because
+    // 03 CREATES that plan on camera — one plan with two different origin stories
+    // across a season is a continuity error a viewer will notice.
+    //
+    // Newest `createdAtOffset` in the fixture, so it lands at the top of /plans:
+    // `listPlansByStatus` orders `createdAt DESC` by default.
+    assignee: 'atlas-ada',
+    author: 'atlas-ada',
+    category: 'feature',
+    createdAtOffset: -1,
+    description:
+      'Requests cross the gateway, the tile service and the cache with no shared correlation id, so a slow request cannot be followed past the first hop. Propagate a trace id end to end and record a span per hop.\n\nOut of scope: sampling policy.',
+    id: id('11'),
+    projectId: id('a1'),
+    status: 'PENDING',
+    summary: 'Follow one request across every hop with a shared trace id.',
+    tasks: [
+      {
+        category: 'implementation',
+        createdAtOffset: -1,
+        description:
+          'Accept an inbound trace id when one is present and mint one when it is not, then attach it to the request context.',
+        id: id('1101'),
+        sortOrder: 1000,
+        status: 'PENDING',
+        summary: 'Mint or adopt a trace id at the edge.',
+        title: 'Propagate a trace id through the gateway',
+      },
+      {
+        category: 'implementation',
+        createdAtOffset: -1,
+        description:
+          'Wrap each outbound call in a span carrying the trace id, so a request that fans out stays one trace.',
+        id: id('1102'),
+        sortOrder: 2000,
+        status: 'PENDING',
+        summary: 'A span per outbound hop.',
+        title: 'Record a span per downstream call',
+      },
+      {
+        category: 'implementation',
+        createdAtOffset: -1,
+        description:
+          'Put the trace id on every log line so a log search and a trace search agree, and document the field.',
+        id: id('1103'),
+        sortOrder: 3000,
+        status: 'PENDING',
+        summary: 'Logs and traces share one id.',
+        title: 'Emit the trace id on every log line',
+      },
+    ],
+    title: 'Add request tracing to the gateway',
+  },
   {
     assignee: 'atlas-ada',
     author: 'atlas-ada',

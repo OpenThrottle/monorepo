@@ -42,7 +42,7 @@ sh applications/openthrottle-developer/tests/demo/scripts/seed-demo.sh --reset
 ```
 
 Creates the database if needed, applies every migration, and seeds: one demo user
-with all roles, two fictional projects, ten plans across statuses, thirteen tasks
+with all roles, two fictional projects, eleven plans across statuses, sixteen tasks
 in mixed lifecycle, four notes, and one pre-baked agent run with nineteen output
 chunks. Idempotent — every write upserts on a fixed id, so re-running is a no-op
 and `--reset` truncates first.
@@ -93,8 +93,34 @@ iterate on a flow.
 
 A flow is a list of steps whose verbs mirror the script's on-screen-action column —
 `navigate`, `click`, `type`, `select`, `hover`, `highlight`, `scrollTo`, `zoomTo`,
-`waitFor`, `dwell`. Porting a script is transcription, not interpretation: if a flow
-needs a step the script does not describe, the script is wrong.
+`waitFor`, `dwell`, `stage`, `reveal`. Porting a script is transcription, not
+interpretation: if a flow needs a step the script does not describe, the script is
+wrong.
+
+### Beats that are not the app: `stage` and `reveal`
+
+Some scripts are about a command line rather than a page — 05 wires up the MCP server
+and six of its eight beats are a shell. Those beats run against a **typeset surface**:
+a self-contained HTML document (`surfaces/shell.ts`) that `stage` puts on camera with
+`page.setContent`, driven by the same `type`, `press` and `highlight` verbs as a real
+page. It is the same call the pipeline already makes for captions and cards, and for
+the same reason — the spike settled Playwright over screen capture, and a screen
+recording of a real terminal would put the operator's whole desktop in frame.
+
+`reveal` un-hides an element the surface marked `data-demo-hidden`, which is how "the
+printed block appears" is one step rather than a second near-identical surface. Hidden
+elements are `display:none`, so they are absent from the beat's text dump until the
+beat that actually shows them.
+
+Two properties this buys that a screen recording does not: the text on screen is real
+DOM, so `scan/leak-scan.ts` gates a shell beat exactly as it gates a page; and every
+path and prompt is a parameter, so the frame shows a fictional machine by construction
+(`DEMO_MACHINE` in the fixture) rather than by remembering to clean one up.
+
+Surface text that comes from a real command is captured, not retyped:
+`surfaces/mcp-instructions.txt` is the verbatim output of
+`scripts/setup_mcp-instructions.ts`, and `scripts/__tests__/setup_mcp-instructions.test.ts`
+fails if the renderer stops producing it.
 
 There is deliberately **no `sleep` verb**. Waits are on app state, so a slow machine
 stretches the recording instead of desynchronising it. `dwell` is the single

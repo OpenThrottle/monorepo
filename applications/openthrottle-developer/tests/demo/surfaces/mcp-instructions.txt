@@ -1,0 +1,33 @@
+Installing the OpenThrottle MCP globally looks a bit different in each client. Take a look at the instructions below for each client that still needs setup.
+
+▶ Claude Code
+
+Install it globally for all your Claude Code instances by running:
+
+claude mcp add-json openthrottle-mcp --scope user '{"args":["/workspace/openthrottle/scripts/run-openthrottle-mcp.sh"],"command":"bash","description":"OpenThrottle (OT) plans knowledge base (Postgres + GraphQL). Plans, tasks, notes, commit links, activity, output stream, semantic search, health.","env":{"ANTHROPIC_API_KEY":"${ANTHROPIC_API_KEY}","API_URL":"${OPENTHROTTLE_DEVELOPER_API_URL_EXTERNAL}","API_URL_INTERNAL":"${OPENTHROTTLE_DEVELOPER_API_URL_INTERNAL}","OPENTHROTTLE_MCP_AUTH_TOKEN":"${OPENTHROTTLE_MCP_AUTH_TOKEN}"}}'
+
+▶ Cursor
+
+Install it globally across all Cursor instances by adding this to ~/.cursor/mcp.json:
+
+{
+  "mcpServers": {
+    "openthrottle-mcp": {
+      "args": [
+        "/workspace/openthrottle/scripts/run-openthrottle-mcp.sh"
+      ],
+      "command": "bash",
+      "env": {
+        "ANTHROPIC_API_KEY": "${ANTHROPIC_API_KEY}",
+        "API_URL": "${API_URL}",
+        "API_URL_INTERNAL": "${API_URL_INTERNAL}",
+        "OPENTHROTTLE_MCP_AUTH_TOKEN": "${OPENTHROTTLE_MCP_AUTH_TOKEN}"
+      }
+    }
+  }
+}
+
+────────────────────────────────────────────────────────────────────────
+
+Launcher resolved to: /workspace/openthrottle/scripts/run-openthrottle-mcp.sh 
+The ${...} entries are placeholders resolved at launch by the MCP tooling —  copy them verbatim .
