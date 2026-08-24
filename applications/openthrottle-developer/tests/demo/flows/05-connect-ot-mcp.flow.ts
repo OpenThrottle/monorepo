@@ -55,10 +55,14 @@ export const flow: DemoFlow = {
     // 0:00 — the terminal, and the command that prints the wiring.
     stage('terminal', 'wiring'),
     waitFor('#setup-command'),
-    dwell(600),
+    // Barely a beat before typing starts. The script's action column does not ask for
+    // a pause here, and the publish checklist wants the opening seconds to carry
+    // something — an empty prompt with a caption over it is the empty state it warns
+    // about. The time it used to take is spent on the printed block instead.
+    dwell(150),
     type_('#setup-command', CONNECT_OT_MCP_COMMANDS.setupCommand, 'wiring'),
     press('Enter'),
-    dwell(300),
+    dwell(750),
 
     // Still 0:00 — the printed block. Long, so it gets the dwell to be read rather
     // than glimpsed; the narration is still on "here is the wiring" while it lands.

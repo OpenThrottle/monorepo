@@ -24,7 +24,7 @@
  * the dev database is a leak.
  */
 
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { chromium } from 'playwright';
 
@@ -99,7 +99,12 @@ const main = async (): Promise<void> => {
   // `scan/leak-scan.ts` can check what was ON SCREEN rather than what we intended to
   // put there. This is the automated half of the publish checklist: no OCR needed,
   // because the DOM already knows.
+  // Cleared per take, the way `record.ts` clears `frames/`. Beat labels change as a
+  // flow is edited, so a dump from an earlier take outlives the beat it belonged to
+  // and the leak scan reads it as part of this recording — a gate that reports on
+  // footage nobody shot is worse than no gate.
   const textDir = join(outputDir, 'text');
+  rmSync(textDir, { force: true, recursive: true });
   mkdirSync(textDir, { recursive: true });
 
   // The portrait pass records at the Short's own dimensions, so the app lays out

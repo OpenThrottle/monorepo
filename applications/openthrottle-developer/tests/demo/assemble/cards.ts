@@ -48,6 +48,18 @@ export const renderCards = async (
       let svg = source;
 
       for (const [placeholder, value] of Object.entries(job.substitutions)) {
+        // A placeholder that is not in the SVG means the card cannot carry the text it
+        // was asked to carry, and a silent no-op ships the LITERAL placeholder on
+        // camera. `lower-third.svg` did exactly that: its text had been converted to
+        // outlines with the placeholder words baked in, so every video rendered
+        // "TITLE_LINE_1" over its own hook, three seconds in. The leak scan reads the
+        // DOM and cannot see text baked into an image, so nothing else catches this.
+        if (!svg.includes(placeholder)) {
+          throw new Error(
+            `renderCards: ${job.svg} has no '${placeholder}' to substitute — the card would ship the placeholder instead of '${value}'. See docs/marketing/assets/README.md; text must stay as <text>, not be converted to outlines.`,
+          );
+        }
+
         svg = svg.replaceAll(placeholder, value);
       }
 
