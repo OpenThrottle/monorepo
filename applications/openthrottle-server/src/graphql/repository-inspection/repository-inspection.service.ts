@@ -20,6 +20,7 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { isRecord } from '@openthrottle/nodejs-utils';
 import { toContainerPath } from '@openthrottle/openthrottle-agentic-utils';
+import { parseLinkedWorktrees } from './parse-linked-worktrees';
 import type {
   RepositoryInspectionAgentConfig,
   RepositoryInspectionGit,
@@ -262,7 +263,7 @@ export class RepositoryInspectionService {
       dirty: status === null ? null : status.trim() !== '',
       isLinkedWorktree,
       isRepo: true,
-      linkedWorktrees: this.parseLinkedWorktrees(worktrees),
+      linkedWorktrees: parseLinkedWorktrees(worktrees),
       normalizedRemoteUrl:
         originUrl === null ? null : normalizeRemoteUrl(originUrl),
       remotes,
@@ -279,19 +280,6 @@ export class RepositoryInspectionService {
       }
     }
     return [...seen.entries()].map(([name, url]) => ({ name, url }));
-  }
-
-  private parseLinkedWorktrees(output: string | null): string[] {
-    if (output === null) return [];
-    return (
-      output
-        .split('\n')
-        .filter((line) => line.startsWith('worktree '))
-        .map((line) => line.slice('worktree '.length).trim())
-        .filter((path) => path !== '')
-        // git lists the main worktree first; only the linked ones matter.
-        .slice(1)
-    );
   }
 
   private async readManifest(

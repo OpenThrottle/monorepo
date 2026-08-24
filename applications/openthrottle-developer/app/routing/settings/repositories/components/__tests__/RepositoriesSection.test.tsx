@@ -8,6 +8,7 @@ import { WorkspaceFolderReconciliation } from '~/__generated__/graphql';
 import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
 import {
   mockCheckout,
+  mockDiscoveredWorktrees,
   mockRepository,
 } from '~/routing/settings/repositories/data/mock.repositories';
 import { REPOSITORIES_ONBOARDING } from '~/routing/settings/repositories/data/data.copy';
@@ -43,6 +44,7 @@ describe('RepositoriesSection Component', () => {
     props = {
       autoExpandedIds: [],
       discoveredFolders: [],
+      discoveredWorktrees: mockDiscoveredWorktrees(),
       isUnpopulated: true,
       limit: 10,
       page: 1,

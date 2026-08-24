@@ -5,6 +5,7 @@ import type { Route } from '@/app/routes/+types/settings.repositories._index';
 import { createTestRouterContext } from '@openthrottle/react-router-testing';
 import {
   mockCheckout,
+  mockDiscoveredWorktree,
   mockRepository,
 } from '~/routing/settings/repositories/data/mock.repositories';
 
@@ -43,6 +44,15 @@ const workspaceRepositories = [
   }),
 ];
 
+const discoveredWorktrees = {
+  droppedCount: 0,
+  rootSource: 'DEFAULT',
+  scannedAt: '2026-08-24T00:00:00.000Z',
+  warnings: [],
+  worktreeRoot: '/Users/dev/Development/openthrottle-worktrees',
+  worktrees: [],
+};
+
 const mockLoaderPayload = {
   discoveredFolders: [
     {
@@ -51,6 +61,7 @@ const mockLoaderPayload = {
       path: '/Users/dev/openthrottle',
     },
   ],
+  discoveredWorktrees,
   workspacePickerCapabilities: {
     canUseNativeDialog: false,
     defaultBrowsePath: '/Users/dev',
@@ -88,12 +99,36 @@ describe('routes/settings.repositories._index.tsx', () => {
       expect(result.pickerCapabilities.canUseNativeDialog).toBe(false);
       expect(result.pickerCapabilities.roots).toEqual(['/Users/dev']);
       expect(result.isUnpopulated).toBe(false);
-      expect(result.rows.map((row) => row.checkout.id)).toEqual([
+      expect(result.rows.map((row) => row.id)).toEqual([
         'checkout-1',
         'checkout-2',
       ]);
       expect(result.rows[0].children).toHaveLength(1);
       expect(result.totalCount).toBe(2);
+    });
+
+    test('nests a worktree found on disk under its repository row', async () => {
+      mockExecuteGraphqlWithAuth.mockResolvedValue({
+        ...mockLoaderPayload,
+        discoveredWorktrees: {
+          ...discoveredWorktrees,
+          worktrees: [
+            mockDiscoveredWorktree({ name: 'wt-a', repositoryId: 'repo-1' }),
+          ],
+        },
+      });
+
+      const result = await loader(
+        loaderArgs('http://localhost/settings/repositories'),
+      );
+
+      // Pagination still counts PARENT rows only, so the extra child does not
+      // change the total.
+      expect(result.totalCount).toBe(2);
+      expect(
+        result.rows[0].children?.map((child) => child.displayName),
+      ).toEqual(['openthrottle-worktree', 'wt-a']);
+      expect(result.discoveredWorktrees.worktrees).toHaveLength(1);
     });
 
     test('reports an unpopulated workspace when no repositories exist', async () => {
@@ -120,7 +155,7 @@ describe('routes/settings.repositories._index.tsx', () => {
         ),
       );
 
-      expect(result.rows.map((row) => row.checkout.id)).toEqual(['checkout-1']);
+      expect(result.rows.map((row) => row.id)).toEqual(['checkout-1']);
       expect(result.autoExpandedIds).toEqual(['checkout-1']);
       expect(result.isUnpopulated).toBe(false);
       expect(result.totalCount).toBe(1);
@@ -160,7 +195,7 @@ describe('routes/settings.repositories._index.tsx', () => {
       );
 
       expect(result.rows).toHaveLength(1);
-      expect(result.rows[0].checkout.id).toBe('checkout-1');
+      expect(result.rows[0].id).toBe('checkout-1');
       expect(result.rows[0].children).toHaveLength(1);
       expect(result.totalCount).toBe(2);
 
@@ -170,9 +205,7 @@ describe('routes/settings.repositories._index.tsx', () => {
         loaderArgs('http://localhost/settings/repositories?limit=1&page=2'),
       );
 
-      expect(pageTwo.rows.map((row) => row.checkout.id)).toEqual([
-        'checkout-2',
-      ]);
+      expect(pageTwo.rows.map((row) => row.id)).toEqual(['checkout-2']);
     });
 
     test('clamps limit and page to sane values', async () => {

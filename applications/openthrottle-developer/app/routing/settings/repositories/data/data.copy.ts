@@ -28,9 +28,19 @@ export const REPOSITORIES_TABLE_COPY = {
   searchLabel: `Search repositories`,
   searchPlaceholder: `Search repositories...`,
   sortLabel: `Sort repositories`,
+  unlinkedGroupName: `Worktrees found on disk`,
+  unregisteredBadge: `Not registered`,
+  unregisteredBadgeTitle: `This worktree exists on disk but OpenThrottle has no record of it. Register it to plan against it or open it in the IDE.`,
   updatedColumn: `Updated`,
   warningsColumn: `Warnings`,
+  worktreeActivityDirty: `Uncommitted work`,
+  worktreeActivityDirtyTitle: `Nothing is running here, but there are uncommitted changes or commits ahead of the upstream.`,
+  worktreeActivityIdle: `Idle`,
+  worktreeActivityIdleTitle: `Clean, with nothing running.`,
+  worktreeActivityRunning: `Running`,
+  worktreeActivityRunningTitle: `A plan run is executing here right now — its heartbeat is live.`,
   worktreeBadge: `Worktree`,
+  worktreeRunLinkLabel: `View run`,
 } as const;
 
 /**
@@ -42,10 +52,29 @@ export const REPOSITORIES_ROW_ACTIONS_COPY = {
   cancelButton: `Cancel`,
   menuAriaLabelPrefix: `Actions for`,
   refreshingLabel: `Refreshing…`,
+  registerWorktreeLabel: `Register this worktree`,
+  registeringWorktreeLabel: `Registering…`,
   removeConfirmButton: `Remove checkout`,
   removeDescriptionPrefix: `This removes the registered checkout`,
   removeDescriptionSuffix: `from OpenThrottle. The folder on disk is left untouched.`,
   removeTitle: `Remove this checkout?`,
+  worktreeMenuAriaLabelPrefix: `Actions for the worktree`,
+} as const;
+
+/**
+ * @description Copy for the on-disk worktree scan banner: the refresh control, the
+ * scanned-root line, the warning list, and the state where no root could be
+ * resolved at all. Plain sentences only — no markdown, since these render as text.
+ */
+export const WORKTREE_DISCOVERY_COPY = {
+  droppedCountSuffix: `more were found on disk and are not listed.`,
+  refreshButton: `Rescan worktrees`,
+  refreshingButton: `Rescanning…`,
+  rootPrefix: `Scanning for worktrees in`,
+  unconfiguredBody: `OpenThrottle could not work out where your worktrees live, so none are listed. Set a worktree root in workspace settings, or register a primary checkout so the default sibling directory can be resolved.`,
+  unconfiguredLinkLabel: `Open workspace settings`,
+  unconfiguredTitle: `No worktree root to scan`,
+  warningsTitle: `Some worktrees may be missing from this list`,
 } as const;
 
 /**

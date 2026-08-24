@@ -5,6 +5,7 @@ import {
   GlobalFeatureOnboarding,
   GlobalPopoverActionsHeader,
 } from '@openthrottle/react-router-ui-global';
+import { Link } from 'react-router';
 import type { ColumnDef, ExpandedState } from '@tanstack/react-table';
 import { formatUpdatedAt } from '~/routing/plans/utils/formatters';
 import {
@@ -16,7 +17,9 @@ import { RepositoriesTableEmpty } from '~/routing/settings/repositories/componen
 import { RepositoryInjectionCell } from '~/routing/settings/repositories/components/RepositoryInjectionCell';
 import { RepositoryNameCell } from '~/routing/settings/repositories/components/RepositoryNameCell';
 import { RepositoryRowActions } from '~/routing/settings/repositories/components/RepositoryRowActions';
+import { deriveWorktreeBadges } from '~/routing/settings/repositories/utils/worktree-badges';
 import { toExpandedState } from '~/routing/settings/repositories/utils/expansion';
+import { planDetailPath } from '~/routing/settings/repositories/utils/paths';
 import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
 import type { CheckoutDrift } from '~/routing/settings/utils/drift-labels';
 import type { RepositoryCheckoutRow } from '~/routing/settings/repositories/data/types';
@@ -77,7 +80,7 @@ export const RepositoriesTable = (
           )
         }
         expanded={expanded}
-        getRowId={(original) => original.checkout.id}
+        getRowId={(original) => original.id}
         getSubRows={(original) => original.children}
         onExpandedChange={setExpanded}
       />
@@ -108,10 +111,29 @@ RepositoriesTable.buildTable = (
           {row.original.branch ? (
             <Badge variant="outline">{row.original.branch}</Badge>
           ) : null}
-          {row.original.checkout.managed ? (
+          {row.original.checkout?.managed ? (
             <Badge variant="secondary">
               {WORKSPACE_FOLDERS_COPY.managedBadge}
             </Badge>
+          ) : null}
+          {deriveWorktreeBadges(row.original).map((badge) => (
+            <Badge
+              color={badge.tone === 'activity' ? 'green' : 'orange'}
+              key={badge.id}
+              size="xs"
+              title={badge.title}
+              variant="secondary"
+            >
+              {badge.label}
+            </Badge>
+          ))}
+          {row.original.planId ? (
+            <Link
+              className="hover:text-primary text-xs underline underline-offset-2"
+              to={planDetailPath(row.original.planId)}
+            >
+              {REPOSITORIES_TABLE_COPY.worktreeRunLinkLabel}
+            </Link>
           ) : null}
         </div>
       ),
@@ -127,7 +149,11 @@ RepositoriesTable.buildTable = (
     },
     {
       cell: ({ row }) => {
-        const drift = driftByCheckoutId?.[row.original.checkout.id];
+        const checkoutId = row.original.checkout?.id;
+        const drift =
+          checkoutId === undefined
+            ? undefined
+            : driftByCheckoutId?.[checkoutId];
         const warnings = drift ? driftLabels(drift) : [];
 
         return warnings.length === 0 ? null : (
@@ -147,9 +173,9 @@ RepositoriesTable.buildTable = (
       cell: ({ row }) => (
         <span
           className="text-muted-foreground text-xs"
-          title={String(row.original.checkout.updatedAt ?? '')}
+          title={String(row.original.updatedAt ?? '')}
         >
-          {formatUpdatedAt(row.original.checkout.updatedAt)}
+          {formatUpdatedAt(row.original.updatedAt)}
         </span>
       ),
       header: () => REPOSITORIES_TABLE_COPY.updatedColumn,

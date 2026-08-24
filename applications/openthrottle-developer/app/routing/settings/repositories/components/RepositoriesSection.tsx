@@ -20,8 +20,12 @@ import { CloneRepoDialog } from '~/routing/settings/repositories/components/Clon
 import { REPOSITORIES_ONBOARDING } from '~/routing/settings/repositories/data/data.copy';
 import { RepositoriesTable } from '~/routing/settings/repositories/components/RepositoriesTable';
 import { RepositoriesToolbar } from '~/routing/settings/repositories/components/RepositoriesToolbar';
+import { WorktreeDiscoveryNotice } from '~/routing/settings/repositories/components/WorktreeDiscoveryNotice';
 import type { CheckoutDrift } from '~/routing/settings/utils/drift-labels';
-import type { RepositoryCheckoutRow } from '~/routing/settings/repositories/data/types';
+import type {
+  DiscoveredWorktreesResult,
+  RepositoryCheckoutRow,
+} from '~/routing/settings/repositories/data/types';
 
 export interface RepositoriesSectionProps {
   actionError?: string | null;
@@ -32,6 +36,7 @@ export interface RepositoriesSectionProps {
     DiscoveredFolderObject,
     'alreadyRegistered' | 'name' | 'path'
   >[];
+  discoveredWorktrees: DiscoveredWorktreesResult;
   /** True when no repositories are registered at all, as opposed to none matching a search. */
   isUnpopulated: boolean;
   limit: number;
@@ -61,6 +66,7 @@ export const RepositoriesSection = (
     autoExpandedIds,
     className,
     discoveredFolders,
+    discoveredWorktrees,
     isUnpopulated,
     limit,
     page,
@@ -143,6 +149,9 @@ export const RepositoriesSection = (
                 />
               </>
             </RepositoriesToolbar>
+            <WorktreeDiscoveryNotice
+              discoveredWorktrees={discoveredWorktrees}
+            />
             <RepositoriesTable
               autoExpandedIds={autoExpandedIds}
               driftByCheckoutId={driftByCheckoutId}

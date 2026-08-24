@@ -62,7 +62,7 @@ export const RepositoryNameCell = (
       )}
 
       <div className="min-w-0">
-        {depth === 0 ? (
+        {depth === 0 && row.repositoryId !== null ? (
           <Link
             className="hover:text-primary text-xs font-medium underline underline-offset-2"
             to={repositoryDetailPath(row.repositoryId)}
@@ -71,10 +71,16 @@ export const RepositoryNameCell = (
           </Link>
         ) : null}
 
+        {/* A discovered worktree whose repository is not registered has nothing to
+            link to, so the group name renders as plain text. */}
+        {depth === 0 && row.repositoryId === null ? (
+          <p className="text-xs font-medium">{row.repositoryName}</p>
+        ) : null}
+
         <div className="mt-2 flex items-center gap-2">
           <FolderIcon className="text-muted-foreground size-4" />
           <p className="text-muted-foreground truncate text-xs">
-            {row.checkout.displayName}
+            {row.displayName}
           </p>
 
           {row.isWorktree ? (

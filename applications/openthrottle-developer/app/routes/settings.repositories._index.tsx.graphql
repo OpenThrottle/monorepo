@@ -38,6 +38,18 @@ fragment RepositoryCheckoutFields on RepositoryCheckoutObject {
   userId
 }
 
+fragment DiscoveredWorktreeFields on DiscoveredWorktreeObject {
+  activity
+  branch
+  checkoutId
+  name
+  path
+  planId
+  planRunId
+  repositoryId
+  unregistered
+}
+
 fragment WorkspaceRepositoryFields on RepositoryObject {
   checkouts {
     ...RepositoryCheckoutFields
@@ -60,6 +72,16 @@ query getSettingsRepositories {
     alreadyRegistered
     name
     path
+  }
+  discoveredWorktrees {
+    droppedCount
+    rootSource
+    scannedAt
+    warnings
+    worktreeRoot
+    worktrees {
+      ...DiscoveredWorktreeFields
+    }
   }
   workspacePickerCapabilities {
     canUseNativeDialog

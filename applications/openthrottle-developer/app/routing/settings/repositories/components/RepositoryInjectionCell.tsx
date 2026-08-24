@@ -27,6 +27,11 @@ export const RepositoryInjectionCell = (
   // 🔌 Short Circuit
   // The flag is repository-level: worktree children read the parent's state and
   // get a marker instead of a second switch that would flip the same checkouts.
+  // An unregistered worktree has no repository to flip the flag on.
+  if (row.repositoryId === null) {
+    return <span aria-hidden={true} />;
+  }
+
   if (depth > 0) {
     return (
       <span

@@ -1,5 +1,10 @@
 import type { WorkspaceRepositoryFieldsFragment } from '~/__generated__/graphql';
-import type { RepositoryCheckout } from '~/routing/settings/repositories/data/types';
+import { WorktreeActivity, WorktreeRootSource } from '~/__generated__/graphql';
+import type {
+  DiscoveredWorktree,
+  DiscoveredWorktreesResult,
+  RepositoryCheckout,
+} from '~/routing/settings/repositories/data/types';
 
 export interface MockCheckoutOverrides {
   branch?: string | null;
@@ -11,6 +16,18 @@ export interface MockCheckoutOverrides {
   managed?: boolean;
   repositoryId?: string;
   updatedAt?: string;
+}
+
+export interface MockDiscoveredWorktreeOverrides {
+  activity?: DiscoveredWorktree['activity'];
+  branch?: string | null;
+  checkoutId?: string | null;
+  name: string;
+  path?: string;
+  planId?: string | null;
+  planRunId?: string | null;
+  repositoryId?: string | null;
+  unregistered?: boolean;
 }
 
 export interface MockRepositoryOverrides {
@@ -109,3 +126,53 @@ export const mockRepository = (
     updatedAt,
   };
 };
+
+/**
+ * @description Minimal on-disk worktree fixture for the row-model and table specs.
+ * Defaults model the common case: an UNREGISTERED idle worktree belonging to
+ * `repo-1`. Pass `checkoutId` to model one OpenThrottle already knows about.
+ */
+export const mockDiscoveredWorktree = (
+  overrides: MockDiscoveredWorktreeOverrides,
+): DiscoveredWorktree => {
+  const {
+    activity = WorktreeActivity.Idle,
+    branch = `openthrottle/${overrides.name}`,
+    checkoutId = null,
+    name,
+    path = `/Users/dev/Development/openthrottle-worktrees/${overrides.name}`,
+    planId = null,
+    planRunId = null,
+    repositoryId = 'repo-1',
+    unregistered = checkoutId == null,
+  } = overrides;
+
+  return {
+    activity,
+    branch,
+    checkoutId,
+    name,
+    path,
+    planId,
+    planRunId,
+    repositoryId,
+    unregistered,
+  };
+};
+
+/**
+ * @description Minimal worktree-scan payload fixture. Defaults model a clean scan of
+ * the sibling default root with nothing found; pass `worktreeRoot: null` to model the
+ * "no root to scan" state and `warnings` to model a partial scan.
+ */
+export const mockDiscoveredWorktrees = (
+  overrides: Partial<DiscoveredWorktreesResult> = {},
+): DiscoveredWorktreesResult => ({
+  droppedCount: 0,
+  rootSource: WorktreeRootSource.Default,
+  scannedAt: '2026-08-24T00:00:00.000Z',
+  warnings: [],
+  worktreeRoot: '/Users/dev/Development/openthrottle-worktrees',
+  worktrees: [],
+  ...overrides,
+});

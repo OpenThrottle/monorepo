@@ -13,16 +13,17 @@ export interface FilterRepositoryRowsResult {
 const matchesRow = (row: RepositoryCheckoutRow, term: string): boolean =>
   [
     row.branch,
-    row.checkout.displayName,
-    row.checkout.filesystemPath,
+    row.displayName,
+    row.path,
     row.remoteUrl,
     row.repositoryName,
   ].some((field) => field?.toLowerCase().includes(term));
 
 /**
  * @description Case-insensitive filter over the nested row model, matching
- * repository name, checkout display name, filesystem path, remote url, and
- * branch. A parent match keeps all of its children; a child match pulls its
+ * repository name, display name (a checkout's label or a worktree's directory
+ * name), on-disk path, remote url, and branch. A parent match keeps all of its
+ * children; a child match pulls its
  * parent back in (narrowed to the matching children) and reports the parent id
  * so the caller can auto-expand that group.
  */
@@ -55,7 +56,7 @@ export function filterRepositoryRows(
       continue;
     }
 
-    autoExpandedIds.push(row.checkout.id);
+    autoExpandedIds.push(row.id);
     filtered.push({ ...row, children: matchingChildren });
   }
 

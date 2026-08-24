@@ -1,8 +1,11 @@
+import { WorktreeActivity } from '~/__generated__/graphql';
 import { describe, expect, test } from 'vitest';
 import {
   mockCheckout,
+  mockDiscoveredWorktree,
   mockRepository,
 } from '~/routing/settings/repositories/data/mock.repositories';
+import { REPOSITORIES_TABLE_COPY } from '~/routing/settings/repositories/data/data.copy';
 import { buildRepositoryRows } from '../rows';
 
 describe('buildRepositoryRows', () => {
@@ -20,10 +23,10 @@ describe('buildRepositoryRows', () => {
     ]);
 
     expect(rows).toHaveLength(1);
-    expect(rows[0].checkout.id).toBe('primary-1');
+    expect(rows[0].id).toBe('primary-1');
     expect(rows[0].isWorktree).toBe(false);
     expect(rows[0].repositoryName).toBe('monorepo');
-    expect(rows[0].children?.map((child) => child.checkout.id)).toEqual([
+    expect(rows[0].children?.map((child) => child.id)).toEqual([
       'worktree-1',
       'worktree-2',
     ]);
@@ -65,13 +68,8 @@ describe('buildRepositoryRows', () => {
       }),
     ]);
 
-    expect(rows.map((row) => row.checkout.id)).toEqual([
-      'primary-1',
-      'primary-2',
-    ]);
-    expect(rows[0].children?.map((child) => child.checkout.id)).toEqual([
-      'worktree-1',
-    ]);
+    expect(rows.map((row) => row.id)).toEqual(['primary-1', 'primary-2']);
+    expect(rows[0].children?.map((child) => child.id)).toEqual(['worktree-1']);
     expect(rows[1].children).toBeUndefined();
   });
 
@@ -87,11 +85,9 @@ describe('buildRepositoryRows', () => {
     ]);
 
     expect(rows).toHaveLength(1);
-    expect(rows[0].checkout.id).toBe('worktree-1');
+    expect(rows[0].id).toBe('worktree-1');
     expect(rows[0].isWorktree).toBe(true);
-    expect(rows[0].children?.map((child) => child.checkout.id)).toEqual([
-      'worktree-2',
-    ]);
+    expect(rows[0].children?.map((child) => child.id)).toEqual(['worktree-2']);
   });
 
   test('resolves the branch from inspection, then the repository default, then null', () => {
@@ -166,5 +162,155 @@ describe('buildRepositoryRows', () => {
 
     expect(rows[0].foreignSkillInjectionEnabled).toBe(false);
     expect(rows[0].children?.[0].foreignSkillInjectionEnabled).toBe(false);
+  });
+});
+
+describe('buildRepositoryRows with discovered worktrees', () => {
+  test('adds an unregistered worktree as a child of the first primary row', () => {
+    const rows = buildRepositoryRows(
+      [
+        mockRepository({
+          checkouts: [mockCheckout({ id: 'primary-1' })],
+          id: 'repo-1',
+          name: 'monorepo',
+        }),
+      ],
+      [
+        mockDiscoveredWorktree({
+          activity: WorktreeActivity.Dirty,
+          name: 'wt-a',
+        }),
+      ],
+    );
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0].children).toHaveLength(1);
+    expect(rows[0].children?.[0]).toMatchObject({
+      activity: WorktreeActivity.Dirty,
+      checkout: null,
+      displayName: 'wt-a',
+      isWorktree: true,
+      repositoryId: 'repo-1',
+      repositoryName: 'monorepo',
+      unregistered: true,
+    });
+  });
+
+  test('collapses a registered checkout and its discovered scan into ONE row', () => {
+    const rows = buildRepositoryRows(
+      [
+        mockRepository({
+          checkouts: [
+            mockCheckout({ id: 'primary-1' }),
+            mockCheckout({
+              filesystemPath: '/Users/dev/wt-a',
+              id: 'worktree-1',
+              kind: 'worktree',
+            }),
+          ],
+          id: 'repo-1',
+        }),
+      ],
+      [
+        mockDiscoveredWorktree({
+          activity: WorktreeActivity.Running,
+          checkoutId: 'worktree-1',
+          name: 'wt-a',
+          planId: 'plan-1',
+          planRunId: 'run-1',
+        }),
+      ],
+    );
+
+    expect(rows[0].children).toHaveLength(1);
+    expect(rows[0].children?.[0]).toMatchObject({
+      activity: WorktreeActivity.Running,
+      id: 'worktree-1',
+      planId: 'plan-1',
+      planRunId: 'run-1',
+      unregistered: false,
+    });
+  });
+
+  test('prefers the live scan branch over the cached inspection branch', () => {
+    const rows = buildRepositoryRows(
+      [
+        mockRepository({
+          checkouts: [
+            mockCheckout({ branch: 'stale-branch', id: 'primary-1' }),
+          ],
+          id: 'repo-1',
+        }),
+      ],
+      [
+        mockDiscoveredWorktree({
+          branch: 'live-branch',
+          checkoutId: 'primary-1',
+          name: 'openthrottle',
+        }),
+      ],
+    );
+
+    expect(rows[0].branch).toBe('live-branch');
+  });
+
+  test('leaves a row without a matching scan unbadged rather than calling it idle', () => {
+    const rows = buildRepositoryRows([
+      mockRepository({
+        checkouts: [mockCheckout({ id: 'primary-1' })],
+        id: 'repo-1',
+      }),
+    ]);
+
+    expect(rows[0].activity).toBeNull();
+    expect(rows[0].unregistered).toBe(false);
+  });
+
+  test('groups worktrees with no registered repository under a promoted parent row', () => {
+    const rows = buildRepositoryRows(
+      [],
+      [
+        mockDiscoveredWorktree({ name: 'wt-a', repositoryId: null }),
+        mockDiscoveredWorktree({ name: 'wt-b', repositoryId: null }),
+      ],
+    );
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({
+      displayName: 'wt-a',
+      repositoryId: null,
+      repositoryName: REPOSITORIES_TABLE_COPY.unlinkedGroupName,
+    });
+    expect(rows[0].children?.map((child) => child.displayName)).toEqual([
+      'wt-b',
+    ]);
+  });
+
+  test('does not drop a worktree whose repository has zero checkouts', () => {
+    const rows = buildRepositoryRows(
+      [mockRepository({ checkouts: [], id: 'repo-1' })],
+      [mockDiscoveredWorktree({ name: 'wt-a', repositoryId: 'repo-1' })],
+    );
+
+    expect(rows.map((row) => row.displayName)).toEqual(['wt-a']);
+  });
+
+  test('keeps the tree exactly two levels deep', () => {
+    const rows = buildRepositoryRows(
+      [
+        mockRepository({
+          checkouts: [
+            mockCheckout({ id: 'primary-1' }),
+            mockCheckout({ id: 'worktree-1', kind: 'worktree' }),
+          ],
+          id: 'repo-1',
+        }),
+      ],
+      [mockDiscoveredWorktree({ name: 'wt-a' })],
+    );
+
+    expect(
+      rows[0].children?.every((child) => child.children === undefined),
+    ).toBe(true);
   });
 });

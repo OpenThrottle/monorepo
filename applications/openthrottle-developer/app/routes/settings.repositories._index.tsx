@@ -62,7 +62,10 @@ export const loader = async (args: Route.LoaderArgs) => {
     ? sortOrderParam
     : REPOSITORIES_DEFAULT_SORT_ORDER;
 
-  const allRows = buildRepositoryRows(data.workspaceRepositories);
+  const allRows = buildRepositoryRows(
+    data.workspaceRepositories,
+    data.discoveredWorktrees.worktrees,
+  );
   const { autoExpandedIds, rows: filtered } = filterRepositoryRows(
     allRows,
     search,
@@ -77,6 +80,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   return {
     autoExpandedIds,
     discoveredFolders: data.discoveredFolders,
+    discoveredWorktrees: data.discoveredWorktrees,
     isUnpopulated: allRows.length === 0,
     limit,
     page,
@@ -100,6 +104,7 @@ export default function Component(
   const {
     autoExpandedIds,
     discoveredFolders,
+    discoveredWorktrees,
     isUnpopulated,
     limit,
     page,
@@ -136,6 +141,7 @@ export default function Component(
         addedFolder={addedFolder}
         autoExpandedIds={autoExpandedIds}
         discoveredFolders={discoveredFolders}
+        discoveredWorktrees={discoveredWorktrees}
         isUnpopulated={isUnpopulated}
         limit={limit}
         page={page}

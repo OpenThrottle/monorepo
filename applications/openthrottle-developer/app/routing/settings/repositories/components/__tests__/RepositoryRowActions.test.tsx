@@ -6,6 +6,7 @@ import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 import {
   mockCheckout,
+  mockDiscoveredWorktree,
   mockRepository,
 } from '~/routing/settings/repositories/data/mock.repositories';
 import { REPOSITORIES_ROW_ACTIONS_COPY } from '~/routing/settings/repositories/data/data.copy';
@@ -24,6 +25,55 @@ const [row] = buildRepositoryRows([
 
 const menuLabel = `${REPOSITORIES_ROW_ACTIONS_COPY.menuAriaLabelPrefix} openthrottle`;
 
+const [worktreeParent] = buildRepositoryRows(
+  [
+    mockRepository({
+      checkouts: [mockCheckout({ id: 'primary-1' })],
+      id: 'repo-1',
+    }),
+  ],
+  [
+    mockDiscoveredWorktree({
+      name: 'wt-a',
+      path: '/Users/dev/Development/openthrottle-worktrees/wt-a',
+    }),
+  ],
+);
+
+const unregisteredRow = worktreeParent.children?.[0];
+if (unregisteredRow === undefined) {
+  throw new Error('expected an unregistered worktree child row');
+}
+
+const worktreeMenuLabel = `${REPOSITORIES_ROW_ACTIONS_COPY.worktreeMenuAriaLabelPrefix} wt-a`;
+
+/**
+ * Single render helper for the whole file — one component declaration, reused by
+ * every suite here. `gate` keeps a submission in flight when a test needs to observe
+ * the pending state.
+ */
+const renderRowActions = (options: {
+  readonly gate?: Promise<void>;
+  readonly props: RepositoryRowActionsProps;
+  readonly submitted: FormData[];
+}): RenderResult => {
+  const Component = () => <RepositoryRowActions {...options.props} />;
+  const RoutesStub = createRoutesStub([
+    {
+      Component,
+      action: async ({ request }) => {
+        options.submitted.push(await request.formData());
+        await options.gate;
+
+        return null;
+      },
+      path: '/',
+    },
+  ]);
+
+  return render(<RoutesStub />);
+};
+
 describe('RepositoryRowActions Component', () => {
   let component: RenderResult;
   let props: RepositoryRowActionsProps;
@@ -33,21 +83,8 @@ describe('RepositoryRowActions Component', () => {
 
   const renderActions = (): RenderResult => {
     component?.unmount();
-    const Component = () => <RepositoryRowActions {...props} />;
-    const RoutesStub = createRoutesStub([
-      {
-        Component,
-        action: async ({ request }) => {
-          submitted.push(await request.formData());
-          await actionGate;
 
-          return null;
-        },
-        path: '/',
-      },
-    ]);
-
-    return render(<RoutesStub />);
+    return renderRowActions({ gate: actionGate, props, submitted });
   };
 
   const openMenu = async (user: ReturnType<typeof userEvent.setup>) => {
@@ -169,5 +206,90 @@ describe('RepositoryRowActions Component', () => {
     ).toBeDisabled();
 
     releaseAction();
+  });
+});
+
+describe('RepositoryRowActions for an unregistered worktree', () => {
+  let component: RenderResult;
+  let submitted: FormData[];
+
+  beforeEach(() => {
+    component?.unmount();
+    submitted = [];
+    component = renderRowActions({
+      props: { row: unregisteredRow },
+      submitted,
+    });
+  });
+
+  test('names the menu after the worktree, keyed by its row id', () => {
+    expect(
+      component.getByTestId(
+        'RepositoryRowActions-worktree:/Users/dev/Development/openthrottle-worktrees/wt-a',
+      ),
+    ).toBeInTheDocument();
+    expect(
+      component.getByRole('button', { name: worktreeMenuLabel }),
+    ).toBeInTheDocument();
+  });
+
+  test('registers the worktree by posting addFolder with its on-disk path', async () => {
+    const user = userEvent.setup();
+
+    await user.click(
+      component.getByRole('button', { name: worktreeMenuLabel }),
+    );
+    await user.click(
+      component.getByRole('menuitem', {
+        name: REPOSITORIES_ROW_ACTIONS_COPY.registerWorktreeLabel,
+      }),
+    );
+
+    await waitFor(() => {
+      expect(submitted).toHaveLength(1);
+    });
+    expect(submitted[0].get('intent')).toBe('addFolder');
+    expect(submitted[0].get('path')).toBe(
+      '/Users/dev/Development/openthrottle-worktrees/wt-a',
+    );
+  });
+
+  test('offers registration ONLY — never a destructive worktree action', async () => {
+    const user = userEvent.setup();
+
+    await user.click(
+      component.getByRole('button', { name: worktreeMenuLabel }),
+    );
+
+    expect(
+      component.getByRole('menuitem', {
+        name: REPOSITORIES_ROW_ACTIONS_COPY.registerWorktreeLabel,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      component.queryByRole('menuitem', {
+        name: WORKSPACE_FOLDERS_COPY.removeButton,
+      }),
+    ).toBeNull();
+    expect(
+      component.queryByRole('menuitem', {
+        name: WORKSPACE_FOLDERS_COPY.refreshButton,
+      }),
+    ).toBeNull();
+  });
+});
+
+describe('RepositoryRowActions on a registered row', () => {
+  test('does not offer the register action', async () => {
+    const user = userEvent.setup();
+    const component = renderRowActions({ props: { row }, submitted: [] });
+
+    await user.click(component.getByRole('button', { name: menuLabel }));
+
+    expect(
+      component.queryByRole('menuitem', {
+        name: REPOSITORIES_ROW_ACTIONS_COPY.registerWorktreeLabel,
+      }),
+    ).toBeNull();
   });
 });

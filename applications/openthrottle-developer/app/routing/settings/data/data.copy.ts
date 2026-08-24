@@ -46,7 +46,7 @@ export const WORKSPACE_FOLDERS_COPY = {
   projectLinkedPrefix: `Linked to project`,
   refreshButton: `Refresh`,
   removeButton: `Remove`,
-  sectionDescription: `Repositories are identified by their git remote; each entry below groups your on-disk checkouts on the server host.`,
+  sectionDescription: `Repositories are identified by their git remote; each entry below groups your on-disk checkouts on the server host, including git worktrees found on disk that OpenThrottle has not registered yet.`,
   upLabel: `Up`,
 } as const;
 
@@ -106,7 +106,7 @@ export const WORKSPACE_REPOSITORY_DETAIL_COPY = {
   branchLabel: `Default branch`,
   branchPlaceholder: `e.g. main`,
   cancelButton: `Cancel`,
-  checkoutsDescription: `Every place this repository is checked out on disk — the primary clone plus any git worktrees. Each card shows its current branch and the stack and agent config OpenThrottle detected there.`,
+  checkoutsDescription: `The checkouts of this repository registered with OpenThrottle — the primary clone plus any git worktrees it knows about. Each card shows its current branch and the stack and agent config OpenThrottle detected there. Worktrees found on disk but not registered are listed on the repositories index.`,
   checkoutsEmpty: `No checkouts registered for this repository.`,
   checkoutsHeading: `Checkouts`,
   editButton: `Edit`,

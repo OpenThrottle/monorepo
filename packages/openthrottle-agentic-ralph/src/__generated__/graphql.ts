@@ -969,6 +969,45 @@ export type DiscoveredFolderObject = {
   path: Scalars['String']['output'];
 };
 
+/** A linked git worktree that exists on disk right now (server-host path). */
+export type DiscoveredWorktreeObject = {
+  __typename?: 'DiscoveredWorktreeObject';
+  /** RUNNING / DIRTY / IDLE. See WorktreeActivity for what does and does not count as running. */
+  activity: WorktreeActivity;
+  /** Checked-out branch, or null when the worktree is on a detached HEAD or the probe failed. */
+  branch?: Maybe<Scalars['String']['output']>;
+  /** The registered repository_checkouts row at this path, or null when the worktree is unregistered. */
+  checkoutId?: Maybe<Scalars['ID']['output']>;
+  /** Directory name, which is also the worktree's name and its branch suffix. */
+  name: Scalars['String']['output'];
+  /** Absolute, symlink-resolved path on the server host. */
+  path: Scalars['String']['output'];
+  /** The plan the live run belongs to; only set when activity is RUNNING. There is no plan-run detail route, so this is what the UI links to. */
+  planId?: Maybe<Scalars['ID']['output']>;
+  /** The live plan run executing here; only set when activity is RUNNING. */
+  planRunId?: Maybe<Scalars['ID']['output']>;
+  /** Owning repository, resolved from the registered checkout or from the worktree's git common dir. Null when the owning repository is not registered for this user. */
+  repositoryId?: Maybe<Scalars['ID']['output']>;
+  /** True when no repository_checkouts row exists at this path for this user. Orthogonal to activity — an unregistered worktree can be DIRTY. */
+  unregistered: Scalars['Boolean']['output'];
+};
+
+/** Result of one on-disk worktree scan: what was found, where it was looked for, and anything that went wrong along the way. */
+export type DiscoveredWorktreesObject = {
+  __typename?: 'DiscoveredWorktreesObject';
+  /** Worktrees found beyond the hard cap and therefore not listed. Always accompanied by a warning — discovery never truncates silently. */
+  droppedCount: Scalars['Int']['output'];
+  /** Which rung of the ladder produced worktreeRoot; null when no root could be resolved. */
+  rootSource?: Maybe<WorktreeRootSource>;
+  /** ISO timestamp of this scan. Discovery runs live on every request; there is no cached snapshot. */
+  scannedAt: Scalars['String']['output'];
+  /** Non-fatal problems (an unreadable root, a failed git probe, the cap). Discovery degrades to warnings rather than failing the page. */
+  warnings: Array<Scalars['String']['output']>;
+  /** The resolved root that was scanned; null when none could be resolved (no registered primary checkout). When several primaries resolve to different roots, this is the first — every root is still scanned. */
+  worktreeRoot?: Maybe<Scalars['String']['output']>;
+  worktrees: Array<DiscoveredWorktreeObject>;
+};
+
 export type DuplicateJobInput = {
   /** BullMQ job id to duplicate. */
   jobId: Scalars['ID']['input'];
@@ -2871,6 +2910,8 @@ export type Query = {
   discoverLocalModels: DiscoverLocalModelsResult;
   /** Git repositories found one level under the configured workspace roots (server-host paths); empty when OPENTHROTTLE_WORKSPACE_ROOTS is unset. */
   discoveredFolders: Array<DiscoveredFolderObject>;
+  /** Git worktrees that exist on disk for the authenticated user's repositories, whether or not OpenThrottle provisioned them, each classified RUNNING / DIRTY / IDLE. Read-only: nothing here creates, prunes or removes a worktree. Runs live on every request and never throws — an unreadable root or a failed git probe becomes a warning on the payload. */
+  discoveredWorktrees: DiscoveredWorktreesObject;
   /** Evaluated rollout flags for client hydration. Public: no flags:read. Authenticated principal enriches targeting/bucketing when present; otherwise anonymousId (or a degraded shared subject) is used for bucketing. applicationKey is accepted for future app scoping (log/stub today). */
   evaluateFeatureFlags: Array<FeatureFlagObject>;
   /** Get a generator by name (includes schema JSON) */
@@ -5409,6 +5450,28 @@ export type WorkspaceSettingsObject = {
   localRepositories: Array<WorkspaceLocalRepositoryObject>;
   profile: UserWorkspaceProfileObject;
 };
+
+/** What a discovered worktree is doing. Never inferred from the directory merely existing. */
+export enum WorktreeActivity {
+  /** No live run, but there is uncommitted work or commits ahead of the upstream. */
+  Dirty = 'DIRTY',
+  /** Clean, with nothing running. */
+  Idle = 'IDLE',
+  /** A live IN_PROGRESS plan run is executing here — live meaning its heartbeat is inside the staleness cutoff. A stale IN_PROGRESS run is dead and does NOT read as running. */
+  Running = 'RUNNING',
+}
+
+/** Which rung of the shared worktree-root ladder resolved the scanned root. The same ladder scripts/create_worktree.sh applies, so the page can never disagree with where the script writes. */
+export enum WorktreeRootSource {
+  /** OT_WORKTREE_ROOT in the base checkout’s .env file. */
+  CheckoutEnv = 'CHECKOUT_ENV',
+  /** The historical default: a sibling openthrottle-worktrees directory next to the base checkout. */
+  Default = 'DEFAULT',
+  /** OT_WORKTREE_ROOT in the server process's environment. */
+  Env = 'ENV',
+  /** The workspace-level worktree root configured on /settings/workspace. */
+  Settings = 'SETTINGS',
+}
 
 export type NoteFragment = {
   __typename?: 'NoteObject';
