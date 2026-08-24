@@ -506,6 +506,54 @@
         "command": "tsx ./scripts/validate-agent-assets-frontmatter.ts",
         "cwd": "{workspaceRoot}"
       }
+    },
+    "video-assemble": {
+      "cache": false,
+      "description": "Compose a recorded flow plus its narration into upload-ready 16:9 and 9:16 masters, an .srt and metadata.json (docs/marketing/pipeline.md). Not cached: the inputs are gitignored capture artifacts Nx cannot hash, and a stale hit would silently publish last week's footage.",
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec tsx ./tests/demo/assemble/assemble.ts",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "video-narrate": {
+      "cache": false,
+      "description": "Render a narration script to per-sentence audio plus segment timings (docs/marketing/pipeline.md). Not cached: it shells out to a TTS backend whose output Nx cannot hash, and the backend is chosen by env.",
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec tsx ./tests/demo/narrate/narrate.ts",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "video-record": {
+      "cache": false,
+      "description": "Drive a demo flow through the app with Playwright and capture frames plus a step-timing manifest (docs/marketing/pipeline.md). Needs a production build serving the DEMO database. Never cached, because it reads live app state.",
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec tsx ./tests/demo/runner/run.ts",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "video-scan": {
+      "cache": false,
+      "description": "Leak-scan a recorded video before publishing: per-beat on-screen text plus the .srt and metadata.json, checked for tokens, JWTs, home paths, real email addresses and denylisted names (docs/marketing/publish-checklist.md). Non-zero exit means do not publish. Not cached, because it reads capture artifacts Nx cannot hash.",
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec tsx ./tests/demo/scan/leak-scan.ts",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "video-seed": {
+      "cache": false,
+      "description": "Create, migrate and seed the deterministic fictional demo database the screencast pipeline records against; pass --reset to truncate first. Never cached, because it mutates an external database. POSTGRES_HOST is pinned to localhost: Nx loads the PROJECT's .env into the task, and the app's .env points Postgres at host.docker.internal, which does not resolve outside a container.",
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "sh ./tests/demo/scripts/seed-demo.sh",
+        "cwd": "{projectRoot}",
+        "env": {
+          "POSTGRES_HOST": "localhost"
+        }
+      }
     }
   },
   "tui": {

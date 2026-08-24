@@ -1,0 +1,36 @@
+# Spike path (A): the same reference demo as a Maestro Web flow — log in, create a
+# plan, see it in the list. Maestro drives; it cannot record (maestro record is
+# Android/iOS only), so a real path-A take would pair this with an external
+# screen capture.
+#
+# Hard-coded host: Maestro Web does not reliably interpolate ${VAR} in `url:`.
+url: http://localhost:7180/auth
+tags:
+  - wip
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: 'auth-submit-button'
+    timeout: 20000
+# The production build does NOT prefill the form (defaults are development-only),
+# so unlike helpers/login.yaml this flow has to type. The fields start empty, so
+# Maestro's inability to CLEAR a controlled input is not hit here.
+- tapOn:
+    id: 'auth-email'
+- inputText: 'developer@openthrottle.ai'
+- tapOn:
+    id: 'auth-password'
+- inputText: 'FullThrottle2026!'
+- tapOn:
+    id: 'auth-submit-button'
+- extendedWaitUntil:
+    visible:
+      id: 'dashboard-content-grid'
+    timeout: 30000
+- tapOn: 'Plans'
+- extendedWaitUntil:
+    visible:
+      id: 'PlansTable'
+    timeout: 20000

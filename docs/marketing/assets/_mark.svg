@@ -1,0 +1,14 @@
+<!--
+  OpenThrottle mark — a speedometer sweep, matching the Phosphor `Speedometer`
+  icon used by `OpenThrottleLogo` (packages/react-router-ui). Drawn on a 64x64
+  grid so it can be dropped into any card at any scale.
+  Colour is inherited: set `color` on the parent, or override the two vars.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" fill="none" role="img" aria-label="OpenThrottle">
+  <circle cx="32" cy="32" r="25" stroke="#20262D" stroke-width="4" />
+  <!-- Sweep: 135deg to 45deg through the top, the "throttle open" arc. -->
+  <path d="M14.3 49.7A25 25 0 0 1 49.7 14.3" stroke="#FF0000" stroke-width="4" stroke-linecap="round" />
+  <!-- Needle at ~2 o'clock: pinned wide open. -->
+  <path d="M32 32 46 21" stroke="#F7F9FA" stroke-width="4" stroke-linecap="round" />
+  <circle cx="32" cy="32" r="4" fill="#FF0000" />
+</svg>
