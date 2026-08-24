@@ -51,6 +51,14 @@ const HIDE_FOR_RECORDING = [
   'a[href^="claude://"]',
 ];
 
+/**
+ * How long to wait for a beat's region of interest to be measurable.
+ *
+ * Deliberately short — see `sampleRegion`. Long enough for a layout to settle, far
+ * too short to hide a bad selector behind a slow take.
+ */
+const REGION_SAMPLE_TIMEOUT_MS = 1_500;
+
 const argValue = (name: string): string | undefined => {
   const index = process.argv.indexOf(`--${name}`);
 
@@ -175,6 +183,13 @@ const main = async (): Promise<void> => {
   /**
    * Sample where the beat's region of interest sits on screen, the first time we
    * see that beat. Measured after the step so the layout has settled.
+   *
+   * The short timeout is load-bearing. `boundingBox()` defaults to 30s, and because a
+   * miss leaves the beat unsampled it is retried on every step of that beat — so one
+   * region-of-interest selector that is not on screen when its beat opens added 150
+   * seconds to a 60-second short, spread across five steps, with nothing in the log
+   * to say so. A region sample is a nice-to-have for the 9:16 crop; it must never be
+   * able to dominate the runtime of a take.
    */
   const sampleRegion = async (label: string): Promise<void> => {
     const selector = flow.regionOfInterest?.[label];
@@ -186,7 +201,7 @@ const main = async (): Promise<void> => {
     const box = await page
       .locator(selector)
       .first()
-      .boundingBox()
+      .boundingBox({ timeout: REGION_SAMPLE_TIMEOUT_MS })
       .catch(() => null);
 
     if (!box) {
@@ -228,10 +243,14 @@ const main = async (): Promise<void> => {
   }
   /* eslint-enable no-await-in-loop */
 
-  await dumpBeatText(`${beat}-end`);
-
+  // Stamped the instant the flow ends, before any teardown, and handed to the
+  // capture so the final frame is held for the flow's closing dwell and not also for
+  // however long the frame writer takes to drain.
+  const endedAt = Date.now() / 1_000;
   const wallSeconds = elapsed();
-  await capture.stop();
+
+  await capture.stop(endedAt);
+  await dumpBeatText(`${beat}-end`);
   await context.close();
   await browser.close();
 

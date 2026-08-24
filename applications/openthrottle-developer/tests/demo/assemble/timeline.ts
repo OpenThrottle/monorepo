@@ -67,8 +67,15 @@ const beatSpans = (manifest: RecordingManifest): readonly BeatPlan[] => {
  * Match narration to beats and work out how much each beat has to be held.
  *
  * Narration beats are the script's `mm:ss` labels; recording beats are the flow's
- * labels. A flow beat with no narration simply gets none — the picture plays at its
- * recorded pace, which is correct for a beat whose job is to show something.
+ * labels, and they are matched POSITIONALLY — the Nth narration beat goes to the Nth
+ * flow beat.
+ *
+ * So a flow beat the script has no narration row for does NOT simply go unnarrated:
+ * it consumes the slot, and every beat after it gets the previous beat's line. That
+ * is silent and it looks like a vague timing problem rather than a structural one —
+ * video 05 shipped a take where "and there it is, in the dashboard" played five
+ * seconds before the dashboard appeared. Hence the warning below: a flow must have
+ * exactly as many beats as its script has narration rows.
  */
 export const planTimeline = (
   manifest: RecordingManifest,
@@ -87,6 +94,14 @@ export const planTimeline = (
   // belongs to the Nth flow beat that has any narration to carry.
   const narrationBeats = [...audioByBeat.keys()];
   const spans = beatSpans(manifest);
+
+  if (narrationBeats.length > 0 && spans.length !== narrationBeats.length) {
+    console.warn(
+      `timeline: ${manifest.flowId} has ${String(spans.length)} flow beat(s) but ${String(narrationBeats.length)} narration beat(s).\n` +
+        `          Narration is matched positionally, so every beat after the first mismatch\n` +
+        `          carries the WRONG line. Flow beats: ${spans.map((span) => span.beat).join(', ')}`,
+    );
+  }
   const planned: BeatPlan[] = [];
   let offset = 0;
 

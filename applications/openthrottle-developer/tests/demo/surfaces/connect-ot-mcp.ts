@@ -164,6 +164,10 @@ export const CONNECT_OT_MCP_SURFACES: Readonly<Record<string, string>> = {
         outputHidden: true,
       },
       {
+        // Pre-filled, not typed. The viewer was just told to COPY this line, so they
+        // paste it — and a 500-character JSON command line typed at 50wpm is both a
+        // lie about how anyone runs it and 41 seconds of a 55-second short.
+        command: registerCommand,
         hidden: true,
         id: 'register',
         output: `Added stdio MCP server openthrottle-mcp with command: bash ${launcher} to user config`,

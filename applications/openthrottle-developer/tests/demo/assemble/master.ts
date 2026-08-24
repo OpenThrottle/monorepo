@@ -302,6 +302,14 @@ export const buildMaster = async (
     'aac',
     '-b:a',
     format.encode.audioBitrate,
+    // `-shortest` alone truncated the PICTURE to the narration. The narration track
+    // ends when its last cue ends, and a flow that holds on its payoff after the last
+    // line — which is what a payoff beat IS — kept none of that hold: video 05 lost
+    // fifteen seconds ending on the plans table, the one shot the short exists for.
+    // `apad` pads the audio with silence instead, so `-shortest` now ends at the
+    // video, which is the stream that should decide the length.
+    '-af',
+    'apad',
     '-shortest',
     bodyPath,
   ]);
