@@ -221,6 +221,12 @@ export const developerMcpToolDefinitions: readonly DeveloperMcpToolDefinition[] 
       Th.healthToolHandler,
     ),
     defineTool(
+      'auth_status',
+      Th.authStatusToolDescription,
+      Th.authStatusToolParameters,
+      Th.authStatusToolHandler,
+    ),
+    defineTool(
       'attach_session_subject',
       Th.attachSessionSubjectToolDescription,
       Th.attachSessionSubjectToolParameters,
