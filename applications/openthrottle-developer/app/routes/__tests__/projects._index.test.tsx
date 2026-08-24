@@ -30,6 +30,7 @@ const mockLoaderDataWithProjects = {
   search: '',
   sortBy: 'name' as const,
   sortOrder: 'asc' as const,
+  tasksLinkedCount: 0,
   totalCount: 1,
   view: 'table' as const,
 };
@@ -42,6 +43,7 @@ const mockLoaderDataEmpty = {
   search: '',
   sortBy: 'name' as const,
   sortOrder: 'asc' as const,
+  tasksLinkedCount: 0,
   totalCount: 0,
   view: 'table' as const,
 };
@@ -110,6 +112,7 @@ describe('routes/projects._index.tsx', () => {
           search: 'alpha',
           sortBy: 'name',
           sortOrder: 'desc',
+          tasksLinkedCount: 0,
           totalCount: 100,
           view: 'card',
         }}

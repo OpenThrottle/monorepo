@@ -180,17 +180,23 @@ const seed = async (dataSource: DataSource, reset: boolean): Promise<void> => {
 
     for (const task of plan.tasks) {
       await dataSource.query(
-        `INSERT INTO tasks (id, plan_id, title, summary, description, category, status, sort_order, assignee, created_at, updated_at, completed_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7::plan_task_status, $8, $9, $10, $10, $11)
+        // project_id is inherited from the plan rather than declared per task:
+        // a task under a plan that points at atlas-api belongs to atlas-api, and
+        // /projects/:id renders `tasksByProjectId`. Without this every demo
+        // project detail page is an empty tasks table on camera.
+        `INSERT INTO tasks (id, plan_id, project_id, title, summary, description, category, status, sort_order, assignee, created_at, updated_at, completed_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8::plan_task_status, $9, $10, $11, $11, $12)
          ON CONFLICT (id) DO UPDATE SET
            category = EXCLUDED.category, completed_at = EXCLUDED.completed_at,
            created_at = EXCLUDED.created_at, description = EXCLUDED.description,
+           project_id = EXCLUDED.project_id,
            sort_order = EXCLUDED.sort_order, status = EXCLUDED.status,
            summary = EXCLUDED.summary, title = EXCLUDED.title,
            updated_at = EXCLUDED.updated_at`,
         [
           task.id,
           plan.id,
+          plan.projectId ?? null,
           task.title,
           task.summary,
           task.description,

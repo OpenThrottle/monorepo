@@ -74,9 +74,17 @@ export const loader = async (args: Route.LoaderArgs) => {
   const totalCount = sorted.length;
   const paginatedProjects = sorted.slice(offset, offset + limit);
 
-  /** Mock total plans linked across projects; when API supports it, replace with real value. */
+  // Linked totals across every project, not just the current page. Both come from
+  // the `plans`/`tasks` collections the query already loads - the same arrays the
+  // table's Plans and Tasks columns count. The previous sum read `planCount`,
+  // which exists on ProjectObject but is NOT selected by this route's query, so it
+  // was always undefined and the card silently showed 0 beside a table reading 7.
   const plansLinkedCount = projectsToShow.reduce(
-    (sum, p) => sum + (p.planCount ?? 0),
+    (sum, project) => sum + (project.plans?.length ?? 0),
+    0,
+  );
+  const tasksLinkedCount = projectsToShow.reduce(
+    (sum, project) => sum + (project.tasks?.length ?? 0),
     0,
   );
 
@@ -88,6 +96,7 @@ export const loader = async (args: Route.LoaderArgs) => {
     search,
     sortBy,
     sortOrder,
+    tasksLinkedCount,
     totalCount,
     view,
   };
@@ -113,6 +122,7 @@ export default function Component(
     search,
     sortBy,
     sortOrder,
+    tasksLinkedCount,
     totalCount,
     view,
   } = loaderData;
@@ -155,6 +165,7 @@ export default function Component(
 
       <ProjectsStats
         plansLinkedCount={plansLinkedCount}
+        tasksLinkedCount={tasksLinkedCount}
         totalProjects={totalCount}
       />
 
