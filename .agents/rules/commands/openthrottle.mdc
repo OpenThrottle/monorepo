@@ -31,7 +31,7 @@ The **ot-plans** skill is the single source of truth for the full tool catalog a
 The four thin `/ot/*` wrappers (`/ot/ask`, `/ot/list-by-status`, `/ot/create-plan`, `/ot/edit-task`) were **retired into the ot-plans skill** — each was a restatement of a single MCP call. There are no `skills/ot-ask` / `skills/ot-create-plan` (etc.) assets; do not reference or invent them.
 
 - Ask the knowledge base, list plans by status, create a plan or tasks, and edit a task by calling the MCP tools directly, following **[ot-plans](../../../skills/ot-plans/SKILL.md) § Common operations** for the conventions each wrapper used to carry.
-- The live OT skills are `ot-plans`, `ot-postgres`, `ot-claude-loop`, `ot-onboarding`, `ot-skill-sync`, and `ot-workflow-orchestration` — authored under `skills/` and fanned out by ot-skill-sync to `.agents/skills/` (read natively by Cursor) and `.claude/skills/` (Claude Code).
+- The live OT skills are `ot-plans`, `ot-postgres`, `ot-claude-loop`, `ot-onboarding`, and `ot-skill-sync` — authored under `skills/` and fanned out by ot-skill-sync to `.agents/skills/` (read natively by Cursor) and `.claude/skills/` (Claude Code).
 
 ## Answering from OpenThrottle (OT)
 

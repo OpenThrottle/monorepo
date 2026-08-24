@@ -61,7 +61,7 @@ Source of truth: `skills-lock.json`. Grouped by upstream:
 
 Ours to author and edit; fanned out by ot-skill-sync:
 
-- **Agents/workflow:** agents-ralph, ot-claude-loop, ot-workflow-orchestration, validate-plan
+- **Agents/workflow:** agents-ralph, ot-claude-loop, validate-plan
 - **GitHub:** github-commit, github-pull-request, github-squash
 - **OpenThrottle:** openthrottle-folders, openthrottle-generators, openthrottle-stack, ot-onboarding, ot-plans, ot-postgres
 - **Infra:** ot-skill-sync
