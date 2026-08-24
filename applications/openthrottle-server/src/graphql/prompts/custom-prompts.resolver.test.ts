@@ -1,11 +1,31 @@
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import type { CustomPrompt } from '@openthrottle/nestjs-repositories';
-import { CustomPromptsService } from '@openthrottle/nestjs-repositories';
+import {
+  CustomPromptsService,
+  RolesService,
+} from '@openthrottle/nestjs-repositories';
 import { createMock } from '@golevelup/ts-vitest';
+import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import {
+  AUTH_PRINCIPAL_KIND_USER,
+  type UserAuthPrincipal,
+} from '@openthrottle/nestjs-auth';
+import { PERMISSIONS } from '@openthrottle/nestjs-rbac';
 import { Test } from '@nestjs/testing';
-import { beforeAll, describe, expect, test, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+import { CUSTOM_PROMPT_WRITE_REFUSAL } from './custom-prompt-write-path';
 import { CustomPromptTypeEnum } from './custom-prompt.object';
 import { CustomPromptsResolver } from './custom-prompts.resolver';
+
+const workspaceRoot = mkdtempSync(join(tmpdir(), 'custom-prompts-resolver-'));
+
+const principal: UserAuthPrincipal = {
+  kind: AUTH_PRINCIPAL_KIND_USER,
+  sub: 'b0d2f1e6-6c3f-4a1e-9c94-8b0f2d0f5a11',
+};
 
 const mockQueryBuilder = {
   andWhere: vi.fn().mockReturnThis(),
@@ -26,7 +46,14 @@ const mockCustomPromptsService = createMock<CustomPromptsService>({
 });
 
 const mockConfigService = createMock<ConfigService>({
-  get: vi.fn().mockReturnValue('/tmp/test-workspace'),
+  get: vi.fn().mockReturnValue(workspaceRoot),
+});
+
+const mockRolesService = createMock<RolesService>({
+  getPermissionsForServiceAccount: vi.fn().mockResolvedValue([]),
+  getPermissionsForUser: vi
+    .fn()
+    .mockResolvedValue([PERMISSIONS.SETTINGS_WRITE]),
 });
 
 describe('CustomPromptsResolver', () => {
@@ -48,12 +75,19 @@ describe('CustomPromptsResolver', () => {
     userId: null,
   } satisfies CustomPrompt;
 
+  beforeEach(() => {
+    vi.mocked(mockRolesService.getPermissionsForUser).mockResolvedValue([
+      PERMISSIONS.SETTINGS_WRITE,
+    ]);
+  });
+
   beforeAll(async () => {
     const app = await Test.createTestingModule({
       providers: [
         CustomPromptsResolver,
         { provide: ConfigService, useValue: mockConfigService },
         { provide: CustomPromptsService, useValue: mockCustomPromptsService },
+        { provide: RolesService, useValue: mockRolesService },
       ],
     }).compile();
 
@@ -137,7 +171,7 @@ describe('CustomPromptsResolver', () => {
       vi.mocked(repo.create).mockReturnValue(mockCustomPrompt);
       vi.mocked(repo.save).mockResolvedValue(mockCustomPrompt);
 
-      const result = await resolver.createCustomPrompt({
+      const result = await resolver.createCustomPrompt(principal, {
         content: mockCustomPrompt.content,
         description: mockCustomPrompt.description,
         filePath: mockCustomPrompt.filePath,
@@ -161,7 +195,7 @@ describe('CustomPromptsResolver', () => {
       vi.mocked(repo.findOne).mockResolvedValue(mockCustomPrompt);
       vi.mocked(repo.save).mockResolvedValue(updatedPrompt);
 
-      const result = await resolver.updateCustomPrompt({
+      const result = await resolver.updateCustomPrompt(principal, {
         content: null,
         description: null,
         filePath: null,
@@ -181,7 +215,7 @@ describe('CustomPromptsResolver', () => {
       const repo = customPromptsService.getRepository();
       vi.mocked(repo.findOne).mockResolvedValue(null);
 
-      const result = await resolver.updateCustomPrompt({
+      const result = await resolver.updateCustomPrompt(principal, {
         content: null,
         description: null,
         filePath: null,
@@ -239,6 +273,124 @@ describe('CustomPromptsResolver', () => {
       const result = await resolver.hardDeleteCustomPrompt('non-existent-id');
 
       expect(result).toBe(false);
+    });
+  });
+
+  describe('filesystem write gate', () => {
+    const writeInput = (filePath: string) => ({
+      content: '# Written\n',
+      description: null,
+      filePath,
+      id: mockCustomPrompt.id,
+      labels: null,
+      projectId: null,
+      promptType: null,
+      title: null,
+      userId: null,
+      writeToFileSystem: true,
+    });
+
+    test('writes an ordinary workspace-relative path', async () => {
+      const repo = customPromptsService.getRepository();
+      vi.mocked(repo.findOne).mockResolvedValue(mockCustomPrompt);
+      vi.mocked(repo.save).mockResolvedValue(mockCustomPrompt);
+
+      await resolver.updateCustomPrompt(
+        principal,
+        writeInput('prompts/written.md'),
+      );
+
+      expect(
+        readFileSync(join(workspaceRoot, 'prompts/written.md'), 'utf8'),
+      ).toBe('# Written\n');
+    });
+
+    test('refuses a traversal escape without saving the row', async () => {
+      const repo = customPromptsService.getRepository();
+      vi.mocked(repo.findOne).mockResolvedValue(mockCustomPrompt);
+      vi.mocked(repo.save).mockClear();
+
+      await expect(
+        resolver.updateCustomPrompt(
+          principal,
+          writeInput('../escaped-prompt.md'),
+        ),
+      ).rejects.toThrow(BadRequestException);
+
+      expect(repo.save).not.toHaveBeenCalled();
+    });
+
+    test('refuses a SKILL.md target, leaving the file untouched', async () => {
+      const skillPath = join(workspaceRoot, 'SKILL.md');
+      writeFileSync(skillPath, 'upstream\n');
+
+      const repo = customPromptsService.getRepository();
+      vi.mocked(repo.findOne).mockResolvedValue(mockCustomPrompt);
+
+      await expect(
+        resolver.updateCustomPrompt(principal, writeInput('SKILL.md')),
+      ).rejects.toThrow(CUSTOM_PROMPT_WRITE_REFUSAL.skillContent);
+
+      expect(readFileSync(skillPath, 'utf8')).toBe('upstream\n');
+    });
+
+    test('refuses the write without the settings:write permission', async () => {
+      vi.mocked(mockRolesService.getPermissionsForUser).mockResolvedValue([]);
+
+      const repo = customPromptsService.getRepository();
+      vi.mocked(repo.findOne).mockResolvedValue(mockCustomPrompt);
+
+      await expect(
+        resolver.updateCustomPrompt(
+          principal,
+          writeInput('prompts/unauthorized.md'),
+        ),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    test('refuses the write for an unauthenticated principal', async () => {
+      const repo = customPromptsService.getRepository();
+      vi.mocked(repo.findOne).mockResolvedValue(mockCustomPrompt);
+
+      await expect(
+        resolver.updateCustomPrompt(
+          undefined,
+          writeInput('prompts/anonymous.md'),
+        ),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    test('createCustomPrompt refuses before persisting the row', async () => {
+      const repo = customPromptsService.getRepository();
+      vi.mocked(repo.save).mockClear();
+
+      await expect(
+        resolver.createCustomPrompt(principal, {
+          content: '# Escape\n',
+          description: null,
+          filePath: '../escaped-create.md',
+          labels: [],
+          projectId: null,
+          promptType: CustomPromptTypeEnum.AGENTS,
+          title: 'Escape',
+          userId: null,
+          writeToFileSystem: true,
+        }),
+      ).rejects.toThrow(BadRequestException);
+
+      expect(repo.save).not.toHaveBeenCalled();
+    });
+
+    test('writeCustomPromptToFileSystem honours the path policy', async () => {
+      const repo = customPromptsService.getRepository();
+      vi.mocked(repo.findOne).mockResolvedValue({
+        ...mockCustomPrompt,
+        filePath: '../escaped-stored.md',
+      });
+
+      await expect(
+        resolver.writeCustomPromptToFileSystem(principal, mockCustomPrompt.id),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 });

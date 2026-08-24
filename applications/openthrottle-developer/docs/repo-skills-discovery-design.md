@@ -160,6 +160,14 @@ tree — are editable here.
   are database rows, not SKILL.md content, so they cannot drift from upstream.
   Running an external skill is likewise unaffected.
 
+- **Exactly one write path for SKILL.md.** The custom-prompt resolver
+  (`applications/openthrottle-server/src/graphql/prompts/custom-prompts.resolver.ts`)
+  can also persist content to a client-supplied `filePath`, which would have
+  been a way around this gate. It now refuses any `SKILL.md` target outright
+  (`resolveCustomPromptWritePath`, alongside its workspace-containment checks),
+  so skill content is only ever written through `writeSkillFileBySlug` — the one
+  path that enforces provenance and re-validates frontmatter.
+
 To change an external skill, change it upstream and re-sync.
 
 ## Detail route (`/skills/:slug`) — read and update
