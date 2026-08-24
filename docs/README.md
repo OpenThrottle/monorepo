@@ -38,6 +38,7 @@ bottom, then dip into **Usage & reference** as needed.
 - **Component shape:** [monorepo/component-primitive-shape.md](./monorepo/component-primitive-shape.md)
 - **URL-first UI state:** [monorepo/url-first-ui-state.md](./monorepo/url-first-ui-state.md), [monorepo/url-first-react-router-shadcn-learnings.md](./monorepo/url-first-react-router-shadcn-learnings.md)
 - **Testing:** [testing/snapshot-replacement-patterns.md](./testing/snapshot-replacement-patterns.md)
+- **Marketing / video:** [marketing/README.md](./marketing/README.md) — the @OpenThrottleAI "0–60" format and the screencast production pipeline.
 - **UI tokens:** [openthrottle/brand-palette.md](./openthrottle/brand-palette.md), [openthrottle/styles.md](./openthrottle/styles.md)
 
 ## See also (repo root)

@@ -693,6 +693,9 @@ catalogs:
     pino:
       specifier: ^10.2.0
       version: 10.3.1
+    playwright:
+      specifier: ^1.62.1
+      version: 1.62.1
     pluralize:
       specifier: ^8.0.0
       version: 8.0.0
@@ -2085,6 +2088,9 @@ importers:
       '@openthrottle/react-router-testing':
         specifier: workspace:^
         version: link:../../packages/react-router-testing
+      playwright:
+        specifier: 'catalog:'
+        version: 1.62.1
 
   applications/openthrottle-email:
     dependencies:
