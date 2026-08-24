@@ -33,9 +33,9 @@ const LAYOUT_PREFERENCE: Readonly<Record<SkillRegistryLayout, number>> = {
  * and in `OPENTHROTTLE_REPO_SKILL_PATHS` (nestjs-repositories).
  */
 export const REQUIRED_AGENTS_SKILL_SLUGS = [
-  'openthrottle-generators',
-  'openthrottle-stack',
+  'ot-generators',
   'ot-plans',
+  'ot-stack',
   'workflow-ralph',
 ] as const;
 

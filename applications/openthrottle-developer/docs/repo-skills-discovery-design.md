@@ -8,7 +8,7 @@ Plan: **Dynamic repo skills registry from `.agents/skills`** (`fca6f044-fcb2-48f
 
 ## Problem
 
-`REPO_SKILLS_REGISTRY` in `app/routing/agents/data/repo-skills-registry.ts` is hand-maintained and drifts from on-disk skills (e.g. missing `openthrottle-generators`, `ot-plans`, `workflow-ralph`, `openthrottle-stack`).
+`REPO_SKILLS_REGISTRY` in `app/routing/agents/data/repo-skills-registry.ts` is hand-maintained and drifts from on-disk skills (e.g. missing `ot-generators`, `ot-plans`, `workflow-ralph`, `ot-stack`).
 
 ## Goals
 
@@ -100,7 +100,7 @@ With monorepo root resolved, on-disk counts should match:
 - `.agents/skills`: **18** `SKILL.md` files
 - `.cursor/skills`: **7** `SKILL.md` files
 
-Includes skills missing from the old static array (e.g. `openthrottle-generators`, `ot-plans`, `workflow-ralph`, `openthrottle-stack`).
+Includes skills missing from the old static array (e.g. `ot-generators`, `ot-plans`, `workflow-ralph`, `ot-stack`).
 
 ## Source (provenance) — derived, never frontmatter
 

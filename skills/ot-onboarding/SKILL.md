@@ -5,7 +5,7 @@ description: >-
   USE WHEN running /ot-onboarding, or the user says "onboard me", "I'm new here",
   "where do I start", "what is this repo", or "how do plans/tasks work here".
   Starts with an openthrottle-mcp health gate. Not for a specific subsystem —
-  see openthrottle-stack.
+  see ot-stack.
 ---
 
 # 🚪 OpenThrottle onboarding — start here
@@ -134,12 +134,12 @@ Skills are packaged, reusable know-how an agent pulls in to do a task "the OpenT
 
 **Know these first** (a newcomer's core four):
 
-| Skill                                                                                                                   | One-liner                                                                                 |
-| ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| [`ot-plans`](https://github.com/openthrottle/monorepo/blob/main/skills/ot-plans/SKILL.md)                               | Plans/tasks in OT via the MCP — the SSOT rules, lifecycle, and git↔OT traceability        |
-| [`openthrottle-generators`](https://github.com/openthrottle/monorepo/blob/main/skills/openthrottle-generators/SKILL.md) | Scaffold new code with `@tools/generators` (generators-first, `NX_ISOLATE_PLUGINS=false`) |
-| [`openthrottle-folders`](https://github.com/openthrottle/monorepo/blob/main/skills/openthrottle-folders/SKILL.md)       | Where new code goes, how to name it, and how to keep it tidy                              |
-| [`ot-skill-sync`](https://github.com/openthrottle/monorepo/blob/main/skills/ot-skill-sync/SKILL.md)                     | Install/fan-out/validate the skills layout in any repo                                    |
+| Skill                                                                                               | One-liner                                                                                 |
+| --------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| [`ot-plans`](https://github.com/openthrottle/monorepo/blob/main/skills/ot-plans/SKILL.md)           | Plans/tasks in OT via the MCP — the SSOT rules, lifecycle, and git↔OT traceability        |
+| [`ot-generators`](https://github.com/openthrottle/monorepo/blob/main/skills/ot-generators/SKILL.md) | Scaffold new code with `@tools/generators` (generators-first, `NX_ISOLATE_PLUGINS=false`) |
+| [`ot-folders`](https://github.com/openthrottle/monorepo/blob/main/skills/ot-folders/SKILL.md)       | Where new code goes, how to name it, and how to keep it tidy                              |
+| [`ot-skill-sync`](https://github.com/openthrottle/monorepo/blob/main/skills/ot-skill-sync/SKILL.md) | Install/fan-out/validate the skills layout in any repo                                    |
 
 Full catalog and the install CLI: [`skills/README.md`](https://github.com/openthrottle/monorepo/blob/main/skills/README.md) · [`skills/AGENTS.md`](https://github.com/openthrottle/monorepo/blob/main/skills/AGENTS.md) · [`docs/Skills.md`](https://github.com/openthrottle/monorepo/blob/main/docs/Skills.md).
 
@@ -154,8 +154,8 @@ You're oriented. A sensible first lap:
 3. **Skim the operating manual** — [`CLAUDE.md`](https://github.com/openthrottle/monorepo/blob/main/CLAUDE.md) for commands, code style, and the generators-first rule.
 4. **Pick the skill for your first task:**
    - Creating/working plans & tasks → [`ot-plans`](https://github.com/openthrottle/monorepo/blob/main/skills/ot-plans/SKILL.md), then execute with [`agents-ralph`](https://github.com/openthrottle/monorepo/blob/main/skills/agents-ralph/SKILL.md).
-   - Adding a component/route/service/package → [`openthrottle-generators`](https://github.com/openthrottle/monorepo/blob/main/skills/openthrottle-generators/SKILL.md) (generators before hand-writing).
-   - Working in the NestJS/GraphQL server or a React Router app → [`openthrottle-stack`](https://github.com/openthrottle/monorepo/blob/main/skills/openthrottle-stack/SKILL.md).
+   - Adding a component/route/service/package → [`ot-generators`](https://github.com/openthrottle/monorepo/blob/main/skills/ot-generators/SKILL.md) (generators before hand-writing).
+   - Working in the NestJS/GraphQL server or a React Router app → [`ot-stack`](https://github.com/openthrottle/monorepo/blob/main/skills/ot-stack/SKILL.md).
    - Shipping the change → `pnpm run worktree:new <name>` → [`github-commit`](https://github.com/openthrottle/monorepo/blob/main/skills/github-commit/SKILL.md) → [`github-pull-request`](https://github.com/openthrottle/monorepo/blob/main/skills/github-pull-request/SKILL.md).
 
 When in doubt, ask the agent to pull in the matching skill — that's the OpenThrottle way.

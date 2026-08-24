@@ -372,4 +372,4 @@ applications/openthrottle-developer/tests/e2e/
 ## See also
 
 For stack context (GraphQL, env verification, server plus developer app), see
-`.agents/skills/openthrottle-stack/SKILL.md`.
+`.agents/skills/ot-stack/SKILL.md`.

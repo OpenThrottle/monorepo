@@ -12,14 +12,14 @@
 
 ## Scaffolding & Generators
 
-- For scaffolding with **`@tools/generators`** (`react-router`, `nestjs`, `react`, `package`, `folders`), ALWAYS invoke **`openthrottle-generators`** FIRST — before MCP tools. See [`skills/openthrottle-generators/SKILL.md`](./skills/openthrottle-generators/SKILL.md) (`NX_ISOLATE_PLUGINS=false`, `pnpm nx`, comma-separated `--name` batching, AGENT_USAGE).
+- For scaffolding with **`@tools/generators`** (`react-router`, `nestjs`, `react`, `package`, `folders`), ALWAYS invoke **`ot-generators`** FIRST — before MCP tools. See [`skills/ot-generators/SKILL.md`](./skills/ot-generators/SKILL.md) (`NX_ISOLATE_PLUGINS=false`, `pnpm nx`, comma-separated `--name` batching, AGENT_USAGE).
 - For other scaffolding (apps/libs via Nx plugins, project structure, setup not covered by `@tools/generators`), read `nx_docs` or the plugin's own docs — there is no generic generator skill.
 
 ## When to use nx_docs
 
 - USE for: advanced config options, unfamiliar flags, migration guides, plugin configuration, edge cases
 - DON'T USE for: basic generator syntax (`nx g @nx/react:app`), standard commands, things you already know
-- **`openthrottle-generators`** covers `@tools/generators` discovery and flags — don't call nx_docs just to look up routine generator syntax
+- **`ot-generators`** covers `@tools/generators` discovery and flags — don't call nx_docs just to look up routine generator syntax
 
 <!-- nx configuration end-->
 
@@ -60,8 +60,8 @@ Create a worktree with the one entrypoint — `pnpm worktree:new <name>` (`scrip
 
 OT-owned skills are authored under [`skills/`](./skills/) and surfaced to every tool via the generated `.agents/skills/` view ([ot-skill-sync](./skills/ot-skill-sync/SKILL.md)). Each skill’s YAML `description` lists **USE WHEN** triggers; prefer these for OpenThrottle-specific workflows alongside the generic Nx skill (**nx-workspace**) above. Full policy + installed set: [docs/Skills.md](./docs/Skills.md).
 
-- **openthrottle-generators** — `@tools/generators`, `NX_ISOLATE_PLUGINS=false`, `pnpm nx`, AGENT_USAGE alignment: [`skills/openthrottle-generators/SKILL.md`](./skills/openthrottle-generators/SKILL.md)
-- **openthrottle-stack** — openthrottle-server GraphQL, databases/embeddings, openthrottle-developer UI, openthrottle-mcp package: [`skills/openthrottle-stack/SKILL.md`](./skills/openthrottle-stack/SKILL.md)
+- **ot-generators** — `@tools/generators`, `NX_ISOLATE_PLUGINS=false`, `pnpm nx`, AGENT_USAGE alignment: [`skills/ot-generators/SKILL.md`](./skills/ot-generators/SKILL.md)
+- **ot-stack** — openthrottle-server GraphQL, databases/embeddings, openthrottle-developer UI, openthrottle-mcp package: [`skills/ot-stack/SKILL.md`](./skills/ot-stack/SKILL.md)
 - **ot-postgres** — SQL migrations, `COMMENT ON TABLE` / column comments, idempotent DDL in `databases/migrations/`: [`skills/ot-postgres/SKILL.md`](./skills/ot-postgres/SKILL.md)
 - **ot-plans** — openthrottle-mcp, plans/tasks, `Plan-Id` / `Task-Id`, post-merge work-ledger commit recording: [`skills/ot-plans/SKILL.md`](./skills/ot-plans/SKILL.md)
 - **agents-ralph** — the Ralph loop prompt: one task at a time, status sync, commit cadence: [`skills/agents-ralph/SKILL.md`](./skills/agents-ralph/SKILL.md)

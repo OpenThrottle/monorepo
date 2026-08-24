@@ -1,11 +1,11 @@
 ---
-name: openthrottle-stack
+name: ot-stack
 description: >-
   Conventions for the OpenThrottle platform itself. USE WHEN changing
   openthrottle-server, openthrottle-developer, databases or database:import-docs,
   embeddings, packages/openthrottle-mcp, or the GraphQL schema and semantic
   ingest. Not for routine OT plan CRUD (see ot-plans), SQL migrations
-  (ot-postgres), or scaffolding (openthrottle-generators).
+  (ot-postgres), or scaffolding (ot-generators).
 ---
 
 # OpenThrottle stack (server, data, developer app, MCP)
@@ -17,20 +17,20 @@ description: >-
 - You touch **`applications/openthrottle-developer`** (routes, loaders, GraphQL client).
 - You extend or debug **`packages/openthrottle-mcp`** (tools, env, smoke checks).
 
-Use **openthrottle-generators** for scaffolding, **nx-workspace** for graph and targets, **ot-plans** for OpenThrottle plans/tasks and MCP traceability, **agents-ralph** for the per-task execution discipline.
+Use **ot-generators** for scaffolding, **nx-workspace** for graph and targets, **ot-plans** for OpenThrottle plans/tasks and MCP traceability, **agents-ralph** for the per-task execution discipline.
 
 ## How this fits other skills
 
-| Need                                                       | Use                                                                             |
-| ---------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| `@tools/generators`, `NX_ISOLATE_PLUGINS`                  | **openthrottle-generators** — `.agents/skills/openthrottle-generators/SKILL.md` |
-| Plans, `Plan-Id` / `Task-Id`, work-ledger commit recording | **ot-plans** — `.agents/skills/ot-plans/SKILL.md`                               |
-| Ralph loop prompt (one task at a time)                     | **agents-ralph** — `.agents/skills/agents-ralph/SKILL.md`                       |
-| Ralph CLI, BullMQ mental model                             | `tools/workflows/README.md` (no skill)                                          |
-| Nx graph, `nx show project`, affected                      | **nx-workspace** — `.agents/skills/nx-workspace/SKILL.md`                       |
-| Run `nx` targets                                           | **nx-workspace** — `.agents/skills/nx-workspace/SKILL.md`                       |
-| **SQL migrations / table comments**                        | **ot-postgres** — `.agents/skills/ot-postgres/SKILL.md`                         |
-| **This file**                                              | Server conventions, DB/embeddings, developer UI, openthrottle-mcp package       |
+| Need                                                       | Use                                                                       |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `@tools/generators`, `NX_ISOLATE_PLUGINS`                  | **ot-generators** — `.agents/skills/ot-generators/SKILL.md`               |
+| Plans, `Plan-Id` / `Task-Id`, work-ledger commit recording | **ot-plans** — `.agents/skills/ot-plans/SKILL.md`                         |
+| Ralph loop prompt (one task at a time)                     | **agents-ralph** — `.agents/skills/agents-ralph/SKILL.md`                 |
+| Ralph CLI, BullMQ mental model                             | `tools/workflows/README.md` (no skill)                                    |
+| Nx graph, `nx show project`, affected                      | **nx-workspace** — `.agents/skills/nx-workspace/SKILL.md`                 |
+| Run `nx` targets                                           | **nx-workspace** — `.agents/skills/nx-workspace/SKILL.md`                 |
+| **SQL migrations / table comments**                        | **ot-postgres** — `.agents/skills/ot-postgres/SKILL.md`                   |
+| **This file**                                              | Server conventions, DB/embeddings, developer UI, openthrottle-mcp package |
 
 ---
 
@@ -49,7 +49,7 @@ Use **openthrottle-generators** for scaffolding, **nx-workspace** for graph and 
 
 - **Backwards-compatible schema:** avoid removing fields or changing types on existing ObjectTypes; **deprecate** unused fields instead. See **Updating Existing Files** under API applications in `.cursor/rules/personal-general.mdc`.
 - **Resolver return types:** prefer ObjectTypes built with **`Result()`**, **`PaginatedResult()`**, **`ListResult()`** (and module-specific `*ResultObject` types) rather than returning raw entities — same section in `.cursor/rules/personal-general.mdc`. New GraphQL services from the **nestjs** generator follow the `Result` / `PaginatedResult` pattern in `tools/generators/src/generators/nestjs/files/graphql-service/`.
-- **New server surface:** use **`NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:nestjs`** (see **openthrottle-generators**); sub-generators include `graphql-service`, `module`, `queue`, etc. — always **`--describe`** first.
+- **New server surface:** use **`NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:nestjs`** (see **ot-generators**); sub-generators include `graphql-service`, `module`, `queue`, etc. — always **`--describe`** first.
 
 **Testing**
 
@@ -89,7 +89,7 @@ Use **openthrottle-generators** for scaffolding, **nx-workspace** for graph and 
 
 **Conventions**
 
-- **New UI:** **react-router** generator (**openthrottle-generators**); application name **`openthrottle-developer`** from `--list=applications`.
+- **New UI:** **react-router** generator (**ot-generators**); application name **`openthrottle-developer`** from `--list=applications`.
 - After **GraphQL schema changes** or fresh clone: **`pnpm nx run openthrottle-developer:codegen-graphql`** (also noted in run doc above).
 - Prefer existing route and **settings** patterns (e.g. `settings.*`, `plans.*`) over one-off structure.
 
