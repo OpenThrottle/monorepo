@@ -96,6 +96,19 @@ designed on the brand near-black. The runner sets `colorScheme: 'dark'` on the
 browser context (`format.json` → `recording.colorScheme`) — this is not a
 preference, it is what keeps the overlays from fighting the footage.
 
+### The portrait pass must be recorded at a phone-width viewport
+
+A 1080×1920 frame is the Short's size, not the layout that should fill it. The
+runner records the portrait pass at a 540×960 CSS viewport (`format.json` →
+`recording.portraitViewport`) and lets `deviceScaleFactor: 2` render it at the full
+1080×1920, so the frame is unchanged and nothing is upscaled.
+
+The 540 is doing the work: it is under the app's 768px mobile breakpoint, so the app
+lays out for a phone. Recording at 1080 CSS pixels put us above the breakpoint and
+captured the desktop layout, sidebar and all — on a content-light route about 60% of
+the frame was empty background. Legible, but visibly a cropped desktop rather than
+something composed for the format.
+
 ## Safe areas
 
 The Shorts player draws its own UI over the frame. Content that lands under it is

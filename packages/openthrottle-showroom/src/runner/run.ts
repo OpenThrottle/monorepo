@@ -15,9 +15,16 @@
  *
  * Portrait: a 9:16 export derived from a 1920-wide capture is a compromise either
  * way — cropping clips a table at both edges, and fitting shrinks the text to
- * unreadable. Recording the same flow again at a 1080x1920 viewport lets the app's
- * own responsive layout do the work, which is what makes a Short legible. Prefer it
- * for any flow whose content is wider than a phone.
+ * unreadable. Recording the same flow again lets the app's own responsive layout do
+ * the work, which is what makes a Short legible. Prefer it for any flow whose
+ * content is wider than a phone.
+ *
+ * The portrait pass lays out at a MOBILE viewport (`recording.portraitViewport`,
+ * 540x960) and captures 1080x1920: with deviceScaleFactor 2 the page renders at
+ * exactly the frame size, so nothing is upscaled, but the app is below its 768px
+ * mobile breakpoint and picks its phone layout. Recording at the Short's own 1080
+ * CSS pixels put us ABOVE that breakpoint — the app rendered its desktop layout,
+ * sidebar and all, and roughly 60% of the frame was empty background.
  *
  * The app must already be serving a PRODUCTION build against the DEMO database —
  * see ../README.md. Recording the dev server is not representative, and recording
@@ -29,6 +36,7 @@ import { join } from 'node:path';
 import { chromium } from 'playwright';
 
 import { loadFormat, outputRoot, repositoryRoot } from './format';
+import { toRegionSample } from './regions';
 import { createCapture } from './record';
 import { runStep, signIn, stepTarget } from './actions';
 import type { ActionContext } from './actions';
@@ -43,21 +51,41 @@ import type {
  * Chrome kept out of frame. The editor deep-link buttons on /plans/create embed a
  * hard-coded absolute path, so they would put a real home directory on camera.
  * This is a recording workaround; the buttons themselves want fixing in the app.
+ *
+ * The server-metrics strip is here for a different reason: it is real, wanted UI
+ * (so the leak scan rightly passes it), but it is developer diagnostics on a
+ * marketing video, and its RSS / heap / CPU numbers differ on every take — which
+ * makes two recordings of the same flow gratuitously non-identical. Hidden at the
+ * recording layer rather than gated in the component, because the panel belongs in
+ * the app.
  */
 const HIDE_FOR_RECORDING = [
   '[data-testid="GlobalDevToolbar"]',
+  '[data-testid="GlobalMetrics"]',
   'a[href^="cursor://"]',
   'a[href^="vscode://"]',
   'a[href^="claude://"]',
 ];
 
 /**
- * How long to wait for a beat's region of interest to be measurable.
+ * Budget for one region-of-interest measurement. A region either exists at the
+ * moment we look or it does not — there is nothing to wait for, because the step
+ * that would create it has already run.
  *
- * Deliberately short — see `sampleRegion`. Long enough for a layout to settle, far
- * too short to hide a bad selector behind a slow take.
+ * Playwright's default is 30s, and `boundingBox()` inherits it. A selector that
+ * never matches therefore burned 30s per attempt and the `.catch()` swallowed it,
+ * so the run still reported success: one wrong selector turned a 54-second
+ * recording into 264 seconds with no error and no warning.
  */
-const REGION_SAMPLE_TIMEOUT_MS = 1_500;
+const REGION_SAMPLE_TIMEOUT_MS = 750;
+
+/**
+ * How many times to look for a beat's region before giving up on it. More than one
+ * because a region can legitimately be missing on the first step of a beat and
+ * present a step later; bounded, because an unmatched selector must cost a fixed
+ * amount of time rather than one timeout per remaining step.
+ */
+const REGION_SAMPLE_ATTEMPTS = 3;
 
 const argValue = (name: string): string | undefined => {
   const index = process.argv.indexOf(`--${name}`);
@@ -107,9 +135,14 @@ const main = async (): Promise<void> => {
   rmSync(textDir, { force: true, recursive: true });
   mkdirSync(textDir, { recursive: true });
 
-  // The portrait pass records at the Short's own dimensions, so the app lays out
-  // for a narrow screen instead of being cropped or shrunk after the fact.
+  // Two sizes, deliberately distinct for the portrait pass: `viewport` is the CSS
+  // layout the app sees, `captureSize` is the frame the screencast emits. They are
+  // equal for landscape; for portrait the app lays out narrow (mobile) while the
+  // frame stays at the Short's full 1080x1920.
   const viewport = isPortrait
+    ? format.recording.portraitViewport
+    : format.recording.viewport;
+  const captureSize = isPortrait
     ? { height: format.formats.short.height, width: format.formats.short.width }
     : format.recording.viewport;
 
@@ -139,7 +172,7 @@ const main = async (): Promise<void> => {
   await signIn(actionContext, { email, password });
 
   const session = await context.newCDPSession(page);
-  const capture = await createCapture(session, outputDir, viewport);
+  const capture = await createCapture(session, outputDir, captureSize);
 
   const steps: ManifestStep[] = [];
   const started = process.hrtime.bigint();
@@ -150,6 +183,9 @@ const main = async (): Promise<void> => {
   let beat = 'open';
   const regions: RegionSample[] = [];
   const sampledBeats = new Set<string>();
+
+  /** Attempts spent per beat, so a bad selector cannot be retried forever. */
+  const regionAttempts = new Map<string, number>();
 
   const dumpedBeats = new Set<string>();
 
@@ -187,14 +223,10 @@ const main = async (): Promise<void> => {
 
   /**
    * Sample where the beat's region of interest sits on screen, the first time we
-   * see that beat. Measured after the step so the layout has settled.
-   *
-   * The short timeout is load-bearing. `boundingBox()` defaults to 30s, and because a
-   * miss leaves the beat unsampled it is retried on every step of that beat — so one
-   * region-of-interest selector that is not on screen when its beat opens added 150
-   * seconds to a 60-second short, spread across five steps, with nothing in the log
-   * to say so. A region sample is a nice-to-have for the 9:16 crop; it must never be
-   * able to dominate the runtime of a take.
+   * see that beat. Measured after the step so the layout has settled, converted to
+   * frame pixels, and bounded: at most `REGION_SAMPLE_ATTEMPTS` looks of
+   * `REGION_SAMPLE_TIMEOUT_MS` each, so a selector that never matches costs a beat
+   * ~2s rather than 30s for every remaining step of the flow.
    */
   const sampleRegion = async (label: string): Promise<void> => {
     const selector = flow.regionOfInterest?.[label];
@@ -202,6 +234,14 @@ const main = async (): Promise<void> => {
     if (!selector || sampledBeats.has(label)) {
       return;
     }
+
+    const attempts = regionAttempts.get(label) ?? 0;
+
+    if (attempts >= REGION_SAMPLE_ATTEMPTS) {
+      return;
+    }
+
+    regionAttempts.set(label, attempts + 1);
 
     const box = await page
       .locator(selector)
@@ -214,14 +254,14 @@ const main = async (): Promise<void> => {
     }
 
     sampledBeats.add(label);
-    regions.push({
-      atSeconds: elapsed(),
-      beat: label,
-      height: box.height,
-      width: box.width,
-      x: box.x,
-      y: box.y,
-    });
+    regions.push(
+      toRegionSample(
+        box,
+        { atSeconds: elapsed(), beat: label },
+        viewport,
+        captureSize,
+      ),
+    );
   };
 
   /* eslint-disable no-await-in-loop -- a flow is a sequence; steps must not overlap */
@@ -253,9 +293,28 @@ const main = async (): Promise<void> => {
   // however long the frame writer takes to drain.
   const endedAt = Date.now() / 1_000;
   const wallSeconds = elapsed();
-
   await capture.stop(endedAt);
   await dumpBeatText(`${beat}-end`);
+
+  // A declared region that never resolved is a broken flow, not a detail: the
+  // assembler falls back to a centred crop, so the Short silently frames the wrong
+  // thing. Name the beat and the selector rather than letting the run look clean.
+  const unresolved = Object.entries(flow.regionOfInterest ?? {}).filter(
+    ([label]) => !sampledBeats.has(label),
+  );
+
+  for (const [label, selector] of unresolved) {
+    console.warn(
+      `run: WARNING regionOfInterest['${label}'] never resolved after ${String(REGION_SAMPLE_ATTEMPTS)} attempt(s) — selector: ${selector}`,
+    );
+  }
+
+  if (unresolved.length > 0) {
+    console.warn(
+      `run: WARNING ${String(unresolved.length)} of ${String(Object.keys(flow.regionOfInterest ?? {}).length)} declared region(s) unresolved; the portrait crop will fall back to centre framing for those beats`,
+    );
+  }
+
   await context.close();
   await browser.close();
 
@@ -263,13 +322,15 @@ const main = async (): Promise<void> => {
     flowId: flow.id,
     fps: format.formats.short.fps,
     frames: capture.frameCount(),
-    height: viewport.height,
+    // Frame dimensions, not the CSS viewport: the assembler crops frames, and
+    // `regions` above are already converted to this space.
+    height: captureSize.height,
     portraitStrategy: flow.portraitStrategy ?? 'crop',
     regionOfInterest: flow.regionOfInterest ?? {},
     regions,
     steps,
     wallSeconds,
-    width: viewport.width,
+    width: captureSize.width,
   };
 
   writeFileSync(
