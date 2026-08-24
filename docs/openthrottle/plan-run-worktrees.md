@@ -65,13 +65,25 @@ and only self-heals on the first `:dev`.
 ## Worktree root
 
 Every agent — Claude, Cursor, Ralph, the BullMQ plans worker — creates worktrees under one
-root, resolved by `scripts/create_worktree.sh` in this order:
+root. There is **one** implementation of that ladder,
+`applications/openthrottle-server/src/services/worktree-root/worktree-root.resolver.ts`,
+mirroring `resolve_worktree_root` in `scripts/create_worktree.sh`. Both the provisioning
+path and the discovery path (below) consume it, so the settings page, the worker, and the
+`/settings/repositories` table can never disagree about where worktrees live. The resolver
+returns the resolved root **and** which rung answered it, as a `source`:
 
-1. **`OT_WORKTREE_ROOT` in the environment.** One-off overrides, and how the server-side
-   provisioner forwards the configured setting to the script.
-2. **`OT_WORKTREE_ROOT` in the primary checkout's `.env`.** The local channel for the
-   workspace setting, so the CLI and the Claude `WorktreeCreate` hook agree with the worker.
-3. **The default:** a sibling `openthrottle-worktrees` directory next to the repository.
+| `source`       | Rung                                                                                           |
+| -------------- | ---------------------------------------------------------------------------------------------- |
+| `settings`     | The workspace-level `user_workspace_settings.worktree_root`.                                   |
+| `env`          | `OT_WORKTREE_ROOT` in the process environment — one-off overrides.                             |
+| `checkout-env` | `OT_WORKTREE_ROOT` in the base checkout's `.env`, the local channel for the workspace setting. |
+| `default`      | A sibling `openthrottle-worktrees` directory next to the repository.                           |
+
+The shell script folds `settings` and `env` into a single rung, because the provisioner
+forwards the configured setting to the script **as** `OT_WORKTREE_ROOT`. They are split in
+the resolver only so a caller can report which of the two supplied the value; the
+provisioner still passes the env var rather than a computed path, keeping the script the one
+entrypoint that actually creates anything.
 
 The setting itself lives on the user's workspace profile
 (`user_workspace_settings.worktree_root`, migration `097`) and is editable at
@@ -89,6 +101,60 @@ Changing the root affects **new** worktrees only: `git worktree` stores absolute
 
 See [worktree-port-allocation.md](../monorepo/worktree-port-allocation.md) for the port
 block each worktree gets.
+
+## Worktrees on /settings/repositories
+
+`/settings/repositories` lists the worktrees that exist **on disk** for the user's
+repositories, whether or not OpenThrottle created them — a worktree made by hand with
+`pnpm run worktree:new`, by a Claude or Cursor session, or by the ot-claude-loop shows up
+alongside the server-provisioned ones. Before this, a child row existed only where a
+`repository_checkouts` row did, so the worktree the user was actually working in was
+routinely invisible.
+
+Discovery unions two sources and dedupes them on the symlink-resolved real path:
+
+1. **`git worktree list --porcelain`, run live** in each registered primary checkout —
+   authoritative for a repository, and it sees worktrees under any root. The cached
+   `inspection.git.linkedWorktrees` snapshot is deliberately **not** used: it is keyed on
+   `scannedAt` and goes stale.
+2. **A depth-1 scan of the resolved root**, keeping children whose `.git` is a _file_
+   pointer. This is what catches a worktree whose base checkout is not registered, or whose
+   primary lives outside the configured workspace roots. `git rev-parse --git-common-dir`
+   walks back to the owning repository so the row still lands under the right parent.
+
+Discovery is read-only with respect to git, bounded (depth-1 only, every probe carries a
+timeout and `maxBuffer`, the result is capped with the overflow counted and reported), and
+non-fatal — every filesystem or git failure becomes a warning on the payload rather than an
+error on the page. It reads only the resolved root; no client-supplied path reaches it.
+
+### Activity: what does and does not count as running
+
+Each worktree carries exactly one activity state. **A directory existing never means a
+worktree is running.**
+
+| State     | Meaning                                                                                                                                                                                                                                             |
+| --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `RUNNING` | A **live** `IN_PROGRESS` `plan_runs` row points at this worktree's registered checkout. Live means `COALESCE(last_heartbeat_at, created_at)` is inside `STALE_CUTOFF_MS` — the same liveness expression the stale sweeper uses from the other side. |
+| `DIRTY`   | No live run, but `git status --porcelain` is non-empty or the branch is ahead of its upstream.                                                                                                                                                      |
+| `IDLE`    | Clean, with nothing running.                                                                                                                                                                                                                        |
+
+A **stale** `IN_PROGRESS` run is a dead run: it reads as `DIRTY` or `IDLE`, never as
+`RUNNING`. A row the last scan did not observe carries no activity at all and gets no badge,
+rather than a misleading "Idle" that would assert a cleanliness nobody checked.
+
+`unregistered` is carried separately and is orthogonal: an unregistered worktree can be
+`DIRTY`. Only a registered worktree can be `RUNNING`, because `plan_runs.checkout_id` is how
+a run records where it executes — and the provisioning path always registers what it creates.
+An unregistered worktree gets a one-click **Register this worktree** row action, which posts
+the same `addFolder` intent the add-folder dialog posts.
+
+### Deliberately out of scope
+
+The page **never** creates, prunes, or deletes a worktree. No "new worktree" button, no
+`git worktree prune`, no directory removal — a worktree may hold uncommitted or unpushed
+work, so destructive removal needs its own design (see the Cleanup row in Decisions above).
+Registering a discovered worktree is the only write this surface performs, and it only adds
+a database row.
 
 ## Run-start preflight
 

@@ -21,19 +21,15 @@ const compareRows = (
         a.repositoryName.localeCompare(b.repositoryName, undefined, {
           sensitivity: 'base',
         }) ||
-        a.checkout.displayName.localeCompare(
-          b.checkout.displayName,
-          undefined,
-          {
-            sensitivity: 'base',
-          },
-        )
+        a.displayName.localeCompare(b.displayName, undefined, {
+          sensitivity: 'base',
+        })
       );
 
     case 'updatedAt':
-      return String(a.checkout.updatedAt ?? '').localeCompare(
-        String(b.checkout.updatedAt ?? ''),
-      );
+      // A discovered-only worktree has no registered row and therefore no
+      // updatedAt; it sorts as the empty string, i.e. oldest.
+      return String(a.updatedAt ?? '').localeCompare(String(b.updatedAt ?? ''));
 
     default:
       return 0;

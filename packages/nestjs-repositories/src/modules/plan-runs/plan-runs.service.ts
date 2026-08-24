@@ -413,6 +413,33 @@ export class PlanRunsService {
   }
 
   /**
+   * @description Finds LIVE IN_PROGRESS runs executing in one of the given checkouts — the
+   * mirror image of {@link findStaleInProgressRuns}: same COALESCE(last_heartbeat_at, created_at)
+   * liveness expression, but on the fresh side of `cutoff`. A stale IN_PROGRESS row is dead, so it
+   * must never be reported as running. Newest first so the most recent run wins per checkout.
+   * Returns [] for an empty id list rather than issuing an unbounded query.
+   * @public
+   */
+  async findLiveRunsByCheckoutIds(
+    checkoutIds: readonly string[],
+    cutoff: Date,
+  ): Promise<PlanRun[]> {
+    if (checkoutIds.length === 0) return [];
+
+    return this.getRepository()
+      .createQueryBuilder('run')
+      .where('run.status = :status', { status: PLAN_RUN_STATUS.IN_PROGRESS })
+      .andWhere('run.checkout_id IN (:...checkoutIds)', {
+        checkoutIds: [...checkoutIds],
+      })
+      .andWhere('COALESCE(run.last_heartbeat_at, run.created_at) >= :cutoff', {
+        cutoff,
+      })
+      .orderBy('run.created_at', 'DESC')
+      .getMany();
+  }
+
+  /**
    * @description Settles a stale run to the terminal STALE status and clears its
    * run-location columns. Guarded on status = IN_PROGRESS so a concurrent settle (a
    * graceful exit landing between the sweep's find and this update) never clobbers a

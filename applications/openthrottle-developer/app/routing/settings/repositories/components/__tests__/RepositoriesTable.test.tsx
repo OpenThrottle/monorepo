@@ -1,3 +1,4 @@
+import { WorktreeActivity } from '~/__generated__/graphql';
 import * as React from 'react';
 import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
@@ -6,6 +7,7 @@ import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 import {
   mockCheckout,
+  mockDiscoveredWorktree,
   mockRepository,
 } from '~/routing/settings/repositories/data/mock.repositories';
 import {
@@ -44,17 +46,20 @@ const rows = buildRepositoryRows([
   }),
 ]);
 
+/**
+ * Single render helper for the whole file: one component declaration, so the new
+ * discovered-worktree suite reuses it instead of declaring a second one.
+ */
+const renderTable = (props: RepositoriesTableProps): RenderResult => {
+  const Component = () => <RepositoriesTable {...props} />;
+  const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+
+  return render(<RoutesStub />);
+};
+
 describe('RepositoriesTable Component', () => {
   let component: RenderResult;
   let props: RepositoriesTableProps;
-
-  const renderTable = (): RenderResult => {
-    component?.unmount();
-    const Component = () => <RepositoriesTable {...props} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-
-    return render(<RoutesStub />);
-  };
 
   beforeEach(() => {
     props = {
@@ -63,7 +68,8 @@ describe('RepositoriesTable Component', () => {
       rows,
     };
 
-    component = renderTable();
+    component?.unmount();
+    component = renderTable(props);
   });
 
   test('renders one parent row per primary checkout, children collapsed', () => {
@@ -126,7 +132,8 @@ describe('RepositoriesTable Component', () => {
 
   test('opens the groups named by autoExpandedIds', () => {
     props = { ...props, autoExpandedIds: ['primary-1'] };
-    component = renderTable();
+    component?.unmount();
+    component = renderTable(props);
 
     expect(component.getByText('openthrottle-worktree')).toBeInTheDocument();
   });
@@ -142,7 +149,8 @@ describe('RepositoriesTable Component', () => {
         },
       },
     };
-    component = renderTable();
+    component?.unmount();
+    component = renderTable(props);
 
     expect(component.getByRole('alert')).toHaveTextContent(
       WORKSPACE_FOLDERS_COPY.driftBranchMoved,
@@ -151,7 +159,8 @@ describe('RepositoriesTable Component', () => {
 
   test('shows the onboarding block when the workspace has no repositories', () => {
     props = { ...props, isUnpopulated: true, rows: [] };
-    component = renderTable();
+    component?.unmount();
+    component = renderTable(props);
 
     expect(
       component.getByTestId('GlobalFeatureOnboarding'),
@@ -163,7 +172,8 @@ describe('RepositoriesTable Component', () => {
 
   test('shows the no-results state, not onboarding, when a search matched nothing', () => {
     props = { ...props, isUnpopulated: false, rows: [] };
-    component = renderTable();
+    component?.unmount();
+    component = renderTable(props);
 
     expect(component.queryByTestId('GlobalFeatureOnboarding')).toBeNull();
     expect(
@@ -209,5 +219,83 @@ describe('RepositoriesTable Component', () => {
     expect(
       component.getAllByTestId(/^RepositorySkillInjectionToggle-/),
     ).toHaveLength(2);
+  });
+});
+
+describe('RepositoriesTable discovered worktrees', () => {
+  const discoveredRows = buildRepositoryRows(
+    [
+      mockRepository({
+        checkouts: [
+          mockCheckout({ displayName: 'openthrottle', id: 'primary-1' }),
+        ],
+        id: 'repo-1',
+        name: 'monorepo',
+      }),
+    ],
+    [
+      mockDiscoveredWorktree({
+        activity: WorktreeActivity.Running,
+        name: 'wt-running',
+        planId: 'plan-1',
+        planRunId: 'run-1',
+      }),
+      mockDiscoveredWorktree({
+        activity: WorktreeActivity.Dirty,
+        name: 'wt-dirty',
+      }),
+    ],
+  );
+
+  const renderExpanded = (): RenderResult =>
+    renderTable({
+      autoExpandedIds: ['primary-1'],
+      isUnpopulated: false,
+      rows: discoveredRows,
+    });
+
+  test('renders unregistered worktrees found on disk as children', () => {
+    const component = renderExpanded();
+
+    expect(component.getByText('wt-running')).toBeInTheDocument();
+    expect(component.getByText('wt-dirty')).toBeInTheDocument();
+  });
+
+  test('badges each worktree with its activity and its unregistered state', () => {
+    const component = renderExpanded();
+
+    expect(
+      component.getByText(REPOSITORIES_TABLE_COPY.worktreeActivityRunning),
+    ).toBeInTheDocument();
+    expect(
+      component.getByText(REPOSITORIES_TABLE_COPY.worktreeActivityDirty),
+    ).toBeInTheDocument();
+    expect(
+      component.getAllByText(REPOSITORIES_TABLE_COPY.unregisteredBadge),
+    ).toHaveLength(2);
+  });
+
+  test('links a running worktree to the plan its run belongs to', () => {
+    const component = renderExpanded();
+
+    const link = component.getByRole('link', {
+      name: REPOSITORIES_TABLE_COPY.worktreeRunLinkLabel,
+    });
+
+    expect(link).toHaveAttribute('href', '/plans/plan-1');
+  });
+
+  test('gives an unregistered worktree its own actions menu, keyed by row id', () => {
+    const component = renderExpanded();
+
+    expect(
+      component.getByTestId('RepositoryRowActions-primary-1'),
+    ).toBeInTheDocument();
+    // Registered rows key off the checkout id; unregistered ones off the path.
+    expect(
+      component.getByTestId(
+        'RepositoryRowActions-worktree:/Users/dev/Development/openthrottle-worktrees/wt-dirty',
+      ),
+    ).toBeInTheDocument();
   });
 });

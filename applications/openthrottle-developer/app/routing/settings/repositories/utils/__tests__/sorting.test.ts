@@ -65,11 +65,11 @@ describe('sortRepositoryRows', () => {
   test('sorts children within their parent only', () => {
     const sorted = sortRepositoryRows(rows, 'name', 'asc');
 
-    expect(sorted[0].children?.map((child) => child.checkout.id)).toEqual([
+    expect(sorted[0].children?.map((child) => child.id)).toEqual([
       'worktree-alpha',
       'worktree-zeta',
     ]);
-    expect(sorted.map((row) => row.checkout.id)).toEqual([
+    expect(sorted.map((row) => row.id)).toEqual([
       'primary-mono',
       'primary-website',
     ]);
@@ -78,11 +78,11 @@ describe('sortRepositoryRows', () => {
   test('sorts by updatedAt', () => {
     const sorted = sortRepositoryRows(rows, 'updatedAt', 'desc');
 
-    expect(sorted.map((row) => row.checkout.id)).toEqual([
+    expect(sorted.map((row) => row.id)).toEqual([
       'primary-mono',
       'primary-website',
     ]);
-    expect(sorted[0].children?.map((child) => child.checkout.id)).toEqual([
+    expect(sorted[0].children?.map((child) => child.id)).toEqual([
       'worktree-alpha',
       'worktree-zeta',
     ]);
@@ -91,16 +91,16 @@ describe('sortRepositoryRows', () => {
   test('sorts by checkout count, counting a parent plus its children', () => {
     const sorted = sortRepositoryRows(rows, 'checkoutCount', 'desc');
 
-    expect(sorted.map((row) => row.checkout.id)).toEqual([
+    expect(sorted.map((row) => row.id)).toEqual([
       'primary-mono',
       'primary-website',
     ]);
   });
 
   test('leaves the input array untouched', () => {
-    const before = rows.map((row) => row.checkout.id);
+    const before = rows.map((row) => row.id);
     sortRepositoryRows(rows, 'name', 'desc');
 
-    expect(rows.map((row) => row.checkout.id)).toEqual(before);
+    expect(rows.map((row) => row.id)).toEqual(before);
   });
 });

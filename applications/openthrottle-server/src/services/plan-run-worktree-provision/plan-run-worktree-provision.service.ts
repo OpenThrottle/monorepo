@@ -12,6 +12,11 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import {
+  WORKTREE_ROOT_ENV_VAR,
+  normalizeWorktreeRootSetting,
+  resolveWorktreeRoot,
+} from '../worktree-root/worktree-root.resolver';
 
 const execFileAsync = promisify(execFile);
 
@@ -125,11 +130,16 @@ export class PlanRunWorktreeProvisionService {
     params: ProvisionPlanRunWorktreeParams,
   ): Promise<string> {
     const { baseCheckoutPath, worktreeName, worktreeRoot } = params;
-    const root = worktreeRoot?.trim();
+
+    // The script owns root resolution, so only a configured setting is forwarded — the lower rungs
+    // (process env, the checkout's .env, the sibling default) are the script's own to apply. The
+    // shared ladder is still consulted so the log names the directory discovery will look in.
+    const override = normalizeWorktreeRootSetting(worktreeRoot);
+    const resolved = this.describeResolvedRoot(baseCheckoutPath, override);
 
     this.logger.log(
       `[${this.name}] creating worktree ${worktreeName} from ${baseCheckoutPath}${
-        root !== undefined && root !== '' ? ` under ${root}` : ''
+        resolved === null ? '' : ` under ${resolved}`
       }`,
     );
 
@@ -141,9 +151,7 @@ export class PlanRunWorktreeProvisionService {
           cwd: baseCheckoutPath,
           env: {
             ...process.env,
-            ...(root !== undefined && root !== ''
-              ? { OT_WORKTREE_ROOT: root }
-              : {}),
+            ...(override === null ? {} : { [WORKTREE_ROOT_ENV_VAR]: override }),
           },
           maxBuffer: PROVISION_MAX_BUFFER_BYTES,
           timeout: PROVISION_TIMEOUT_MS,
@@ -179,6 +187,23 @@ export class PlanRunWorktreeProvisionService {
           stderr === '' ? '' : `\n${stderr}`
         }`,
       );
+    }
+  }
+
+  /**
+   * @description The directory the shared ladder says the worktree will land under, for the log
+   * line only — never forwarded to the script. Soft-fails to null so a misconfigured root surfaces
+   * from the script (the one entrypoint) rather than from a log helper.
+   */
+  private describeResolvedRoot(
+    baseCheckoutPath: string,
+    settingsWorktreeRoot: string | null,
+  ): string | null {
+    try {
+      return resolveWorktreeRoot({ baseCheckoutPath, settingsWorktreeRoot })
+        .resolvedRoot;
+    } catch {
+      return settingsWorktreeRoot;
     }
   }
 }

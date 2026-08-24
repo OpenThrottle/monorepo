@@ -53,8 +53,8 @@ describe('filterRepositoryRows', () => {
   test('matches the repository name case-insensitively and keeps all children', () => {
     const result = filterRepositoryRows(rows, 'MONO');
 
-    expect(result.rows.map((row) => row.checkout.id)).toEqual(['primary-1']);
-    expect(result.rows[0].children?.map((child) => child.checkout.id)).toEqual([
+    expect(result.rows.map((row) => row.id)).toEqual(['primary-1']);
+    expect(result.rows[0].children?.map((child) => child.id)).toEqual([
       'worktree-1',
     ]);
     expect(result.autoExpandedIds).toEqual([]);
@@ -63,13 +63,13 @@ describe('filterRepositoryRows', () => {
   test('matches a checkout display name', () => {
     const result = filterRepositoryRows(rows, 'website');
 
-    expect(result.rows.map((row) => row.checkout.id)).toEqual(['primary-2']);
+    expect(result.rows.map((row) => row.id)).toEqual(['primary-2']);
   });
 
   test('matches a filesystem path', () => {
     const result = filterRepositoryRows(rows, 'development/website');
 
-    expect(result.rows.map((row) => row.checkout.id)).toEqual(['primary-2']);
+    expect(result.rows.map((row) => row.id)).toEqual(['primary-2']);
   });
 
   test('matches a remote url', () => {
@@ -78,14 +78,14 @@ describe('filterRepositoryRows', () => {
       'github.com/openthrottle/website',
     );
 
-    expect(result.rows.map((row) => row.checkout.id)).toEqual(['primary-2']);
+    expect(result.rows.map((row) => row.id)).toEqual(['primary-2']);
   });
 
   test('pulls the parent in when only a child matches, and flags it for auto-expand', () => {
     const result = filterRepositoryRows(rows, 'loop-plan-repositories');
 
-    expect(result.rows.map((row) => row.checkout.id)).toEqual(['primary-1']);
-    expect(result.rows[0].children?.map((child) => child.checkout.id)).toEqual([
+    expect(result.rows.map((row) => row.id)).toEqual(['primary-1']);
+    expect(result.rows[0].children?.map((child) => child.id)).toEqual([
       'worktree-1',
     ]);
     expect(result.autoExpandedIds).toEqual(['primary-1']);
@@ -115,7 +115,7 @@ describe('filterRepositoryRows', () => {
 
     const result = filterRepositoryRows(wide, 'alpha');
 
-    expect(result.rows[0].children?.map((child) => child.checkout.id)).toEqual([
+    expect(result.rows[0].children?.map((child) => child.id)).toEqual([
       'worktree-1',
     ]);
     expect(result.autoExpandedIds).toEqual(['primary-1']);

@@ -75,7 +75,7 @@ export const ScheduleTable = (
             </TableCell>
             <TableCell>
               <div className="flex flex-wrap items-center gap-1">
-                <Badge variant={job.enabled ? 'default' : 'secondary'}>
+                <Badge color={job.enabled ? 'green' : 'yellow'} size="xs">
                   {job.enabled ? 'Enabled' : 'Disabled'}
                 </Badge>
                 {/* Additive, not a replacement: a disabled schedule with a

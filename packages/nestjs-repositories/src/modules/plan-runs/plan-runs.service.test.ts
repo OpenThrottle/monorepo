@@ -415,6 +415,39 @@ describe('PlanRunsService', () => {
       expect(result).toEqual([stale]);
     });
 
+    it('findLiveRunsByCheckoutIds filters IN_PROGRESS + COALESCE(heartbeat, created) >= cutoff, newest first', async () => {
+      const live = buildRun({ id: 'run-live', status: 'IN_PROGRESS' });
+      qbGetMany.mockResolvedValueOnce([live]);
+      const cutoff = new Date('2026-07-21T00:02:00Z');
+
+      const result = await service.findLiveRunsByCheckoutIds(
+        ['checkout-a', 'checkout-b'],
+        cutoff,
+      );
+      const qb = repo.createQueryBuilder.mock.results[0]?.value;
+
+      expect(qb.where).toHaveBeenCalledWith('run.status = :status', {
+        status: 'IN_PROGRESS',
+      });
+      expect(qb.andWhere).toHaveBeenCalledWith(
+        'run.checkout_id IN (:...checkoutIds)',
+        { checkoutIds: ['checkout-a', 'checkout-b'] },
+      );
+      expect(qb.andWhere).toHaveBeenCalledWith(
+        'COALESCE(run.last_heartbeat_at, run.created_at) >= :cutoff',
+        { cutoff },
+      );
+      expect(qb.orderBy).toHaveBeenCalledWith('run.created_at', 'DESC');
+      expect(result).toEqual([live]);
+    });
+
+    it('findLiveRunsByCheckoutIds short-circuits on an empty id list', async () => {
+      const result = await service.findLiveRunsByCheckoutIds([], new Date());
+
+      expect(result).toEqual([]);
+      expect(repo.createQueryBuilder).not.toHaveBeenCalled();
+    });
+
     it('settleStaleRun sets STALE + clears location, guarded on status IN_PROGRESS', async () => {
       repo.findOne.mockResolvedValueOnce(
         buildRun({ id: 'run-stale', status: 'STALE' }),

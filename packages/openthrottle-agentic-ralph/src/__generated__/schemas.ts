@@ -148,6 +148,8 @@ import {
   WorkSessionsByPlanInput,
   WorkspaceEditorId,
   WorkspaceFolderReconciliation,
+  WorktreeActivity,
+  WorktreeRootSource,
 } from './graphql.js';
 
 type Properties<T> = Required<{
@@ -190,6 +192,10 @@ export const WorkspaceEditorIdSchema = z.nativeEnum(WorkspaceEditorId);
 export const WorkspaceFolderReconciliationSchema = z.nativeEnum(
   WorkspaceFolderReconciliation,
 );
+
+export const WorktreeActivitySchema = z.nativeEnum(WorktreeActivity);
+
+export const WorktreeRootSourceSchema = z.nativeEnum(WorktreeRootSource);
 
 export function ActivityByDateInputSchema(): z.ZodObject<
   Properties<ActivityByDateInput>
