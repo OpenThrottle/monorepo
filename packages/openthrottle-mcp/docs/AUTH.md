@@ -58,6 +58,37 @@ Any previously-distributed copy of the rotated token stops working — update `O
 
 Resolution order: per-request store → `OPENTHROTTLE_MCP_AUTH_TOKEN`. If none is set or the value is empty, authenticated tools throw an error that instructs you to set the env var.
 
+The stdio launcher (`scripts/run-openthrottle-mcp.sh`) resolves the token before `exec`: it treats an unexpanded `${…}` placeholder or empty value as unset, then self-loads from this worktree's `.env` and finally the root checkout's `.env`. It records the file it loaded from in `OT_MCP_AUTH_TOKEN_ENV_FILE` so the running process can re-read it (see [Mid-session rotation](#mid-session-rotation)).
+
+## Recovery runbook — stale MCP (authenticated tools 401, `health` OK)
+
+**The trap.** `openthrottle-mcp` is a long-lived stdio child of the MCP client. If its bearer token is missing/invalid/revoked, the client still connects and lists tools, and `health` (unauthenticated) stays green — but **every authenticated tool call 401s** for the rest of the session. It looks connected; it is dead.
+
+**Symptom.** `create_plan`, `list_plans_by_status`, `list_sources`, `semantic_search`, etc. fail with an auth/401 error while `health` returns `ok`.
+
+**Diagnose (in-band, fastest).** Call the **`auth_status`** MCP tool. It runs one authenticated probe and answers unambiguously:
+
+- `AUTHENTICATED` → the token is fine; the failure is elsewhere.
+- `STALE / UNAUTHENTICATED` → the token is missing/revoked/wrong-server/under-permissioned. Recover below.
+- `INCONCLUSIVE` → transient/network/5xx; check the server is up (`health`) and retry before touching the token.
+
+**Diagnose (shell).** From the repo root: `scripts/verify-openthrottle-mcp-env.sh`. It reports server reachability and, when `OPENTHROTTLE_MCP_AUTH_TOKEN` is set, whether the server accepts it. Both `auth_status` and this script **decide on the response body** — the server answers auth failures with **HTTP 200 + an `errors` array** (`"path":["listSources"]`), so status code alone (and a naive `grep listSources`) false-passes.
+
+**Fix.**
+
+1. Provision/verify a token: `pnpm run database:bootstrap-service-accounts` (see [First-time setup](#first-time-setup-local) / [Credential rotation](#credential-rotation)).
+2. Set it in the root `.env`: `OPENTHROTTLE_MCP_AUTH_TOKEN=ot_sa_<prefix>_<secret>`.
+3. Recover the running process:
+   - **Rotated in `.env`** — no action needed: the process re-reads `.env` and picks up the new token within ~5s (see [Mid-session rotation](#mid-session-rotation)).
+   - **Revoked** — reconnect the MCP: `/mcp reconnect`, or restart the client.
+   - **Reconnect control unavailable** (as on 2026-08-05) — last resort: run the stdio-fallback launcher directly, `bash scripts/run-openthrottle-mcp.sh`, and drive it over stdio.
+
+**Launch-time guarantee.** The launcher runs an **auth preflight** before `exec`: if the token is unset or the server rejects it, it prints a loud banner and `exit 1`, so the client surfaces "failed to start" instead of silently connecting broken. Opt out with `OT_MCP_SKIP_PREFLIGHT=1` (e.g. deployments where the server injects the token per request). Revoked/wrong tokens yield **401**; missing `plans:*` permission yields **403**.
+
+### Mid-session rotation
+
+The preflight only runs at launch. A token **rotated in `.env`** after boot is picked up **without a relaunch**: `getAuthToken()` re-reads the file recorded in `OT_MCP_AUTH_TOKEN_ENV_FILE`, throttled to `OT_MCP_TOKEN_REFRESH_MS` (default 5000ms; `0` disables). It never clobbers a valid token with a missing/empty file value. This does **not** cover a token **revoked** with no `.env` change — that needs a fresh token and a reconnect (above). Design rationale: [mid-session-token-staleness.md](./mid-session-token-staleness.md).
+
 ## Cursor MCP config
 
 Register `openthrottle-mcp` by copying the committed template — [`.cursor/mcp.json`](../../../.cursor/mcp.json) → `.cursor/mcp.json` (project) or merged into `~/.cursor/mcp.json` (global / secondary workspace) — rather than pasting the block here. The only **auth-relevant** key is `env.OPENTHROTTLE_MCP_AUTH_TOKEN` (an `ot_sa_…` service-account token); for the full entry shape and launcher behavior see [mcp-registration.md § Template structure](../../../docs/openthrottle/mcp-registration.md#template-structure), the SSOT for the block.

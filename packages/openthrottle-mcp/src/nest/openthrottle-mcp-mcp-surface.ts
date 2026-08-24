@@ -302,6 +302,17 @@ export class McpDeveloperMcpSurface {
   }
 
   @Tool({
+    description: Th.authStatusToolDescription,
+    name: 'auth_status',
+    parameters: asMcpParameters(Th.authStatusToolParameters),
+  })
+  authStatus(
+    args: Parameters<typeof Th.authStatusToolHandler>[0],
+  ): ReturnType<typeof Th.authStatusToolHandler> {
+    return Th.authStatusToolHandler(args);
+  }
+
+  @Tool({
     description: Th.discoverAgentClisToolDescription,
     name: 'discover_agent_clis',
     parameters: asMcpParameters(Th.discoverAgentClisToolParameters),

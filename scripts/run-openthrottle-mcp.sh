@@ -121,12 +121,21 @@ export API_URL_INTERNAL="$API_URL"
 # the literal string through when the var is unset in their launching shell. That literal
 # is non-empty, so a bare `-z` guard would skip the fallback and send the placeholder as a
 # bearer token → server 401. Treat any value containing "${" as unset.
+#
+# When the token is self-loaded FROM a .env file, also record that file's absolute
+# path in OT_MCP_AUTH_TOKEN_ENV_FILE. The Node process re-reads it mid-session
+# (see packages/openthrottle-mcp/src/auth/get-auth-token.ts:refreshEnvAuthTokenFromFile)
+# so a token ROTATED in .env is picked up WITHOUT a relaunch — closing the long-lived
+# stdio staleness gap. It is deliberately NOT set when the token came from an exported
+# shell var: that shell is then the source of truth and .env may hold a stale value.
 case "${OPENTHROTTLE_MCP_AUTH_TOKEN:-}" in *'${'*) unset -v OPENTHROTTLE_MCP_AUTH_TOKEN ;; esac
 if [ -z "${OPENTHROTTLE_MCP_AUTH_TOKEN:-}" ]; then
   if tok=$(read_env_var "./.env" OPENTHROTTLE_MCP_AUTH_TOKEN) && [ -n "$tok" ]; then
     export OPENTHROTTLE_MCP_AUTH_TOKEN="$tok"
+    export OT_MCP_AUTH_TOKEN_ENV_FILE="$(pwd)/.env"
   elif [ -n "${root_repo:-}" ] && tok=$(read_env_var "$root_repo/.env" OPENTHROTTLE_MCP_AUTH_TOKEN) && [ -n "$tok" ]; then
     export OPENTHROTTLE_MCP_AUTH_TOKEN="$tok"
+    export OT_MCP_AUTH_TOKEN_ENV_FILE="$root_repo/.env"
   fi
 fi
 

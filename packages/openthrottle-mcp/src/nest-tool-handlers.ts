@@ -4,6 +4,7 @@
 
 export * from './resources/knowledge-base.ts';
 export * from './tools/activity.ts';
+export * from './tools/auth-status.ts';
 export * from './tools/agent-conversations.ts';
 export * from './tools/agent-discovery.ts';
 export * from './tools/health.ts';
