@@ -16,8 +16,8 @@ describe('persistent-setting-storage', () => {
   });
 
   test('buildPersistentSettingKey namespaces the setting name', () => {
-    expect(buildPersistentSettingKey('plans.tasksView')).toBe(
-      'openthrottle-developer:setting:plans.tasksView',
+    expect(buildPersistentSettingKey('docs.featureFlags')).toBe(
+      'openthrottle-developer:setting:docs.featureFlags',
     );
   });
 

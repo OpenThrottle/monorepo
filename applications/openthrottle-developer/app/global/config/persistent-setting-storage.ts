@@ -2,7 +2,7 @@ import { IS_BROWSER } from '@openthrottle/react-router-utils';
 
 /**
  * @description Namespace prefix for persisted per-user UI settings in the
- * developer app. Keys are dotted feature paths (e.g. `plans.tasksView`,
+ * developer app. Keys are dotted feature paths (e.g. `docs.featureFlags`,
  * `ui.theme`) so features partition cleanly and a future server-backed adapter
  * can sync a subset by prefix.
  */
