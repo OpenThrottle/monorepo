@@ -4,6 +4,7 @@ import type { RenderResult } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { GLOBAL_POPOVER_COPY } from '@openthrottle/react-router-ui-global';
 import { RULES_COPY } from '~/routing/rules/data/data.copy';
 import { RulesTable } from '../RulesTable';
 import type { RulesTableProps } from '../RulesTable';
@@ -15,14 +16,24 @@ describe('RulesTable Component', () => {
   const renderTable = (overrides?: Partial<RulesTableProps>): RenderResult => {
     const merged = { ...props, ...overrides };
     const Component = () => <RulesTable {...merged} />;
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    const RoutesStub = createRoutesStub([
+      { Component, action: () => null, path: '/' },
+    ]);
     return render(<RoutesStub />);
+  };
+
+  const openRowMenu = async (): Promise<void> => {
+    const user = userEvent.setup();
+    await user.click(
+      component.getByRole('button', {
+        name: `${RULES_COPY.menuAriaLabelPrefix} Grill breakdowns`,
+      }),
+    );
   };
 
   beforeEach(() => {
     cleanup();
     props = {
-      onDelete: vi.fn(),
       onToggleEnabled: vi.fn(),
       rules: [
         {
@@ -58,7 +69,7 @@ describe('RulesTable Component', () => {
     ).toBeInTheDocument();
     expect(
       component.getByRole('columnheader', {
-        name: RULES_COPY.tableActionsHeader,
+        name: GLOBAL_POPOVER_COPY.actionsHeader,
       }),
     ).toBeInTheDocument();
     expect(component.getByText('Grill breakdowns')).toBeInTheDocument();
@@ -70,29 +81,34 @@ describe('RulesTable Component', () => {
     ).toBeInTheDocument();
   });
 
-  test('title and edit link to the dedicated edit route', () => {
+  test('title links to the dedicated edit route', () => {
     expect(
       component.getByRole('link', {
         name: `${RULES_COPY.editAction}: Grill breakdowns`,
       }),
     ).toHaveAttribute('href', '/rules/rule-1/edit');
-    expect(
-      component.getByRole('link', { name: RULES_COPY.editAction }),
-    ).toHaveAttribute('href', '/rules/rule-1/edit');
   });
 
-  test('delegates delete and toggle to the callbacks', async () => {
+  test('delegates toggle and exposes edit/delete in the row menu', async () => {
     const user = userEvent.setup();
+    await openRowMenu();
+
+    expect(
+      component.getByRole('menuitem', { name: RULES_COPY.editAction }),
+    ).toHaveAttribute('href', '/rules/rule-1/edit');
 
     await user.click(
-      component.getByRole('button', { name: RULES_COPY.deleteAction }),
+      component.getByRole('menuitem', { name: RULES_COPY.disableAction }),
     );
-    await user.click(
-      component.getByRole('button', { name: RULES_COPY.disableAction }),
-    );
-
-    expect(props.onDelete).toHaveBeenCalledWith('rule-1');
     expect(props.onToggleEnabled).toHaveBeenCalledWith(props.rules[0]);
+
+    await openRowMenu();
+    await user.click(
+      component.getByRole('menuitem', { name: RULES_COPY.deleteAction }),
+    );
+    expect(
+      component.getByRole('heading', { name: RULES_COPY.deleteConfirmTitle }),
+    ).toBeInTheDocument();
   });
 
   test('shows RulesEmpty when there are no rules', () => {
@@ -125,7 +141,6 @@ describe('RulesTable Component', () => {
     beforeEach(() => {
       cleanup();
       props = {
-        onDelete: vi.fn(),
         onToggleEnabled: vi.fn(),
         rules: [
           {
@@ -157,7 +172,12 @@ describe('RulesTable Component', () => {
       ).toBeInTheDocument();
 
       await user.click(
-        component.getByRole('button', { name: RULES_COPY.enableAction }),
+        component.getByRole('button', {
+          name: `${RULES_COPY.menuAriaLabelPrefix} Disabled rule`,
+        }),
+      );
+      await user.click(
+        component.getByRole('menuitem', { name: RULES_COPY.enableAction }),
       );
       expect(props.onToggleEnabled).toHaveBeenCalledWith(props.rules[0]);
     });

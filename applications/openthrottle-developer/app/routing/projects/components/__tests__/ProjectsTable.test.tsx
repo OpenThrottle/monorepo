@@ -70,9 +70,6 @@ describe('ProjectsTable Component', () => {
     expect(
       component.getAllByRole('columnheader', { name: 'Updated' }).length,
     ).toBeGreaterThan(0);
-    expect(
-      component.getAllByRole('columnheader', { name: 'Actions' }).length,
-    ).toBeGreaterThan(0);
   });
 
   test('shows no results when projects is empty', () => {
@@ -84,7 +81,7 @@ describe('ProjectsTable Component', () => {
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => <ProjectsTable {...propsWithProjects} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    const { getAllByRole, getByRole, getByText } = render(<RoutesStub />);
+    const { getByRole, getByText } = render(<RoutesStub />);
 
     const firstProjectLink = getByRole('link', {
       name: 'View project: First Project',
@@ -95,9 +92,6 @@ describe('ProjectsTable Component', () => {
     });
     expect(secondProjectLink).toHaveAttribute('href', '/projects/proj-2');
     expect(getByText('First project description')).toBeDefined();
-    const viewProjectLinks = getAllByRole('link', { name: 'View Project' });
-    expect(viewProjectLinks[0]).toHaveAttribute('href', '/projects/proj-1');
-    expect(viewProjectLinks[1]).toHaveAttribute('href', '/projects/proj-2');
   });
 
   test('renders plan and task counts and updated date', () => {

@@ -1,10 +1,10 @@
 import * as React from 'react';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, test } from 'vitest';
-import { useFetcher } from 'react-router';
 import { buildPlansTableColumns } from '../plans-table-columns';
 import type { PlanCardFragment } from '~/__generated__/graphql';
+import { PLANS_ROW_ACTIONS_COPY } from '~/routing/plans/data/data.copy';
 import { renderRoutesStub } from '~/testing/route-fixtures';
-import type { action as planDetailAction } from '~/routes/plans.$planId._index';
 import type { CellContext, HeaderContext } from '@tanstack/react-table';
 
 function asMock<T>(value: unknown): T;
@@ -69,8 +69,7 @@ interface HarnessProps {
 }
 
 function Harness(props: HarnessProps): React.ReactElement {
-  const fetcher = useFetcher<typeof planDetailAction>();
-  const columns = buildPlansTableColumns({}, fetcher);
+  const columns = buildPlansTableColumns({});
   const context = cellContext(props.plan);
 
   return (
@@ -92,7 +91,7 @@ function Harness(props: HarnessProps): React.ReactElement {
 
 describe('buildPlansTableColumns', () => {
   test('defines status, title, and actions columns', () => {
-    const columns = buildPlansTableColumns({}, asMock({ state: 'idle' }));
+    const columns = buildPlansTableColumns({});
 
     expect(columns).toHaveLength(3);
     expect(asPlainColumn(columns[0]).accessorKey).toBe('status');
@@ -101,7 +100,7 @@ describe('buildPlansTableColumns', () => {
   });
 
   test('renders header labels for each column', () => {
-    const columns = buildPlansTableColumns({}, asMock({ state: 'idle' }));
+    const columns = buildPlansTableColumns({});
     const headers = columns.map((column) => {
       const header = asPlainColumn(column).header;
       return typeof header === 'function' ? header(headerContext()) : header;
@@ -184,30 +183,50 @@ describe('buildPlansTableColumns', () => {
     );
   });
 
-  test('actions cell renders a Queue button that submits runPlan', () => {
+  test('actions cell opens a menu with Queue that posts runPlan', async () => {
     const plan = buildPlan({ status: 'PENDING', title: 'Queueable Plan' });
     const rendered = renderRoutesStub(<Harness plan={plan} />);
+    const user = userEvent.setup();
 
-    const button = rendered.getByRole('button', {
-      name: /Queue plan Queueable Plan/,
-    });
-    expect(button).toHaveTextContent('Queue');
+    await user.click(
+      rendered.getByRole('button', {
+        name: `${PLANS_ROW_ACTIONS_COPY.menuAriaLabelPrefix} Queueable Plan`,
+      }),
+    );
+
+    expect(
+      rendered.getByRole('menuitem', { name: PLANS_ROW_ACTIONS_COPY.queue }),
+    ).toBeInTheDocument();
   });
 
-  test('actions cell shows the kill button only when the plan is cancelable', () => {
+  test('actions menu shows Kill only when the plan is cancelable', async () => {
     const running = buildPlan({ status: 'IN_PROGRESS', title: 'Running Plan' });
     const runningRendered = renderRoutesStub(<Harness plan={running} />);
-    expect(
-      runningRendered.queryByRole('button', {
-        name: 'Kill plan run for Running Plan',
+    const runningUser = userEvent.setup();
+
+    await runningUser.click(
+      runningRendered.getByRole('button', {
+        name: `${PLANS_ROW_ACTIONS_COPY.menuAriaLabelPrefix} Running Plan`,
       }),
-    ).not.toBeNull();
+    );
+    expect(
+      runningRendered.getByRole('menuitem', {
+        name: PLANS_ROW_ACTIONS_COPY.killConfirm,
+      }),
+    ).toBeInTheDocument();
+    runningRendered.unmount();
 
     const pending = buildPlan({ status: 'PENDING', title: 'Idle Plan' });
     const pendingRendered = renderRoutesStub(<Harness plan={pending} />);
+    const pendingUser = userEvent.setup();
+    await pendingUser.click(
+      pendingRendered.getByRole('button', {
+        name: `${PLANS_ROW_ACTIONS_COPY.menuAriaLabelPrefix} Idle Plan`,
+      }),
+    );
     expect(
-      pendingRendered.queryByRole('button', {
-        name: 'Kill plan run for Idle Plan',
+      pendingRendered.queryByRole('menuitem', {
+        name: PLANS_ROW_ACTIONS_COPY.killConfirm,
       }),
     ).toBeNull();
   });

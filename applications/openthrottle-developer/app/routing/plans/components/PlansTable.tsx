@@ -1,9 +1,8 @@
 import * as React from 'react';
 import clsx from 'clsx';
-import { action as planDetailAction } from '~/routes/plans.$planId._index';
 import { DataTable } from '@openthrottle/react-router-shadcn';
 import { readSearchParam } from '@openthrottle/react-router-ui-global';
-import { useFetcher, useSearchParams } from 'react-router';
+import { useSearchParams } from 'react-router';
 import { PlanTasksEmpty } from '~/routing/plans/components/PlanTasksEmpty';
 import { buildPlansTableColumns } from '~/routing/plans/utils/plans-table-columns';
 import type { PlanCardFragment } from '~/__generated__/graphql';
@@ -19,7 +18,6 @@ export const PlansTable = (props: PlansTableProps): React.ReactElement => {
   const { className, plans, statusFilterUrls } = props;
 
   // Hooks
-  const runPlanFetcher = useFetcher<typeof planDetailAction>();
   const [searchParams] = useSearchParams();
 
   // Setup
@@ -32,8 +30,8 @@ export const PlansTable = (props: PlansTableProps): React.ReactElement => {
     searchParams.getAll('assignee').length > 0;
 
   const columns = React.useMemo(
-    () => buildPlansTableColumns(statusFilterUrls, runPlanFetcher),
-    [plans, runPlanFetcher, statusFilterUrls],
+    () => buildPlansTableColumns(statusFilterUrls),
+    [plans, statusFilterUrls],
   );
 
   // Handlers

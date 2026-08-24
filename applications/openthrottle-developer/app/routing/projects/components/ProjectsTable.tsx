@@ -1,6 +1,6 @@
 import * as React from 'react';
 import clsx from 'clsx';
-import { Button, DataTable } from '@openthrottle/react-router-shadcn';
+import { DataTable } from '@openthrottle/react-router-shadcn';
 import { Link } from 'react-router';
 import { ProjectsEmpty } from '~/routing/projects/components/ProjectsEmpty';
 import { formatUpdatedAt } from '~/routing/plans/utils/formatters';
@@ -98,17 +98,6 @@ ProjectsTable.buildTable = (): ColumnDef<
         </span>
       ),
       header: () => 'Updated',
-    },
-    {
-      cell: ({ row }) => (
-        <Button asChild={true} className="text-xs" size="xs" variant="outline">
-          <Link to={`/projects/${row.original.id}`} viewTransition={true}>
-            View Project
-          </Link>
-        </Button>
-      ),
-      header: () => 'Actions',
-      id: 'view',
     },
   ];
 };

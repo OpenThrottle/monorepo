@@ -6,22 +6,19 @@
 import * as React from 'react';
 import {
   Badge,
-  Button,
-  Input,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
+import { GlobalPopoverActionsHeader } from '@openthrottle/react-router-ui-global';
 import { formatDate } from 'date-fns';
-import { PlayCircleIcon, SlidersHorizontal } from 'lucide-react';
-import { Link, useFetcher } from 'react-router';
-import { action as planDetailAction } from '~/routes/plans.$planId._index';
-import { KillPlanRunButton } from '~/routing/plans/components/KillPlanRunButton';
+import { SlidersHorizontal } from 'lucide-react';
+import { Link } from 'react-router';
 import {
   isPlanStatusKey,
   PlanStatusBadge,
 } from '~/routing/plans/components/PlanStatusBadge';
-import { getPlanIsCancelable } from '~/routing/plans/utils/utils.plans';
+import { PlansTableRowActions } from '~/routing/plans/components/PlansTableRowActions';
 import { PLANS_DETAIL_TAB_SEARCH_PARAM } from '~/routing/plans/utils/parsers';
 import type { PlanStatusKey } from '~/routing/plans/types';
 import type { ColumnDef } from '@tanstack/react-table';
@@ -30,7 +27,6 @@ import type { PlansTableProps } from '~/routing/plans/components/PlansTable';
 
 export const buildPlansTableColumns = (
   _statusFilterUrls: PlansTableProps['statusFilterUrls'],
-  runPlanFetcher: ReturnType<typeof useFetcher<typeof planDetailAction>>,
 ): ColumnDef<PlanCardFragment, string | number | null | undefined>[] => {
   return [
     {
@@ -43,11 +39,7 @@ export const buildPlansTableColumns = (
 
         return (
           <div className="p-2">
-            <Link
-              // className="mx-auto"
-              to={`/plans?status=${status}`}
-              viewTransition={true}
-            >
+            <Link to={`/plans?status=${status}`} viewTransition={true}>
               <PlanStatusBadge status={statusKey} />
             </Link>
           </div>
@@ -160,40 +152,8 @@ export const buildPlansTableColumns = (
       header: () => <div className="p-2">Plan</div>,
     },
     {
-      cell: ({ row }) => {
-        const planId = row.original.id;
-        const isQueuing = runPlanFetcher.state !== 'idle';
-        const RunPlanForm = runPlanFetcher.Form;
-
-        return (
-          <div className="flex flex-nowrap items-center gap-2">
-            <KillPlanRunButton
-              planId={planId}
-              planTitle={row.original.title ?? 'Untitled'}
-              show={getPlanIsCancelable(row.original.status)}
-              size="xs"
-            />
-            <RunPlanForm action={`/plans/${planId}`} method="post">
-              <Input name="intent" type="hidden" value="runPlan" />
-              <Button
-                aria-label={`Queue plan ${row.original.title} with default worker tuning (open plan details to set Workflow run options)`}
-                className="text-xs"
-                disabled={isQueuing}
-                size="xs"
-                type="submit"
-                variant="outline"
-              >
-                <PlayCircleIcon
-                  aria-hidden={true}
-                  className="size-3.5 shrink-0"
-                />
-                {isQueuing ? 'Queuing…' : 'Queue'}
-              </Button>
-            </RunPlanForm>
-          </div>
-        );
-      },
-      header: () => 'Actions',
+      cell: ({ row }) => <PlansTableRowActions plan={row.original} />,
+      header: () => <GlobalPopoverActionsHeader />,
       id: 'actions',
     },
   ];

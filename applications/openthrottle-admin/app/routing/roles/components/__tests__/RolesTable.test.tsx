@@ -49,16 +49,11 @@ describe('RolesTable Component', () => {
       expect(link).toBeVisible();
       expect(link).toHaveAttribute('href', '/roles/role-1');
     });
-  });
 
-  describe('View button', () => {
-    test('should render View link with correct href', () => {
-      const viewLinks = component.getAllByRole('link', { name: /view/i });
-      const viewToRole = viewLinks.find(
-        (el) => el.getAttribute('href') === '/roles/role-1',
-      );
-      expect(viewToRole).toBeDefined();
-      expect(viewToRole).toBeInTheDocument();
+    test('should not render a redundant Actions View link', () => {
+      expect(
+        component.queryByRole('link', { name: /^view$/i }),
+      ).not.toBeInTheDocument();
     });
   });
 

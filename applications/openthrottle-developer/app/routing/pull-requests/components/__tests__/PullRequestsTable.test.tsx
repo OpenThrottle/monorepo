@@ -2,8 +2,11 @@ import * as React from 'react';
 import { cleanup, render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
 import type { PullRequestCardFragment } from '@openthrottle/openthrottle-developer-codegen';
+import { GLOBAL_POPOVER_COPY } from '@openthrottle/react-router-ui-global';
+import userEvent from '@testing-library/user-event';
 import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { PULL_REQUESTS_ROW_ACTIONS_COPY } from '~/routing/pull-requests/data/data.copy';
 import { PullRequestsTable } from '../PullRequestsTable';
 import type { PullRequestsTableProps } from '../PullRequestsTable';
 
@@ -61,7 +64,9 @@ describe('PullRequestsTable Component', () => {
       component.getByRole('columnheader', { name: 'Author' }),
     ).toBeInTheDocument();
     expect(
-      component.getByRole('columnheader', { name: 'Actions' }),
+      component.getByRole('columnheader', {
+        name: GLOBAL_POPOVER_COPY.actionsHeader,
+      }),
     ).toBeInTheDocument();
   });
 
@@ -90,27 +95,51 @@ describe('PullRequestsTable Component', () => {
       expect(table).toHaveTextContent('deadbee');
     });
 
-    test('renders preview, full-page, GitHub, and checks targets', () => {
-      const preview = component.getByRole('link', {
-        name: 'Preview in side panel',
+    test('renders preview, full-page, GitHub, and checks targets in the menu', async () => {
+      const user = userEvent.setup();
+      const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+
+      await user.click(
+        component.getByRole('button', {
+          name: `${PULL_REQUESTS_ROW_ACTIONS_COPY.menuAriaLabelPrefix} #42`,
+        }),
+      );
+
+      const preview = component.getByRole('menuitem', {
+        name: PULL_REQUESTS_ROW_ACTIONS_COPY.previewSidePanel,
       });
       expect(preview).toHaveAttribute('href', '/pull-requests?pr=42');
 
-      const portalLink = component.getByRole('link', {
-        name: 'Open full pull request page',
+      const portalLink = component.getByRole('menuitem', {
+        name: PULL_REQUESTS_ROW_ACTIONS_COPY.openFullPage,
       });
       expect(portalLink).toHaveAttribute('href', '/pull-requests/42');
 
-      const githubPr = component.getByRole('link', { name: 'GitHub PR' });
-      expect(githubPr).toHaveAttribute(
-        'href',
+      await user.click(
+        component.getByRole('menuitem', {
+          name: PULL_REQUESTS_ROW_ACTIONS_COPY.githubPr,
+        }),
+      );
+      expect(openSpy).toHaveBeenCalledWith(
         'https://github.com/acme/demo/pull/42',
+        '_blank',
+        'noopener,noreferrer',
       );
 
-      const checks = component.getByRole('link', { name: 'Checks (CI)' });
-      expect(checks).toHaveAttribute(
-        'href',
+      await user.click(
+        component.getByRole('button', {
+          name: `${PULL_REQUESTS_ROW_ACTIONS_COPY.menuAriaLabelPrefix} #42`,
+        }),
+      );
+      await user.click(
+        component.getByRole('menuitem', {
+          name: PULL_REQUESTS_ROW_ACTIONS_COPY.checksCi,
+        }),
+      );
+      expect(openSpy).toHaveBeenCalledWith(
         'https://github.com/acme/demo/pull/42/checks',
+        '_blank',
+        'noopener,noreferrer',
       );
 
       const headCommit = component.getByRole('link', { name: /Head/ });
@@ -118,9 +147,11 @@ describe('PullRequestsTable Component', () => {
         'href',
         'https://github.com/acme/demo/commit/deadbeef1234567890abcdef',
       );
+
+      openSpy.mockRestore();
     });
 
-    test('includes list query in preview and full-page links when listQuery is set', () => {
+    test('includes list query in preview and full-page links when listQuery is set', async () => {
       cleanup();
       props = {
         filters: baseFilters,
@@ -132,16 +163,23 @@ describe('PullRequestsTable Component', () => {
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       component = render(<RoutesStub />);
 
-      const preview = component.getByRole('link', {
-        name: 'Preview in side panel',
+      const user = userEvent.setup();
+      await user.click(
+        component.getByRole('button', {
+          name: `${PULL_REQUESTS_ROW_ACTIONS_COPY.menuAriaLabelPrefix} #42`,
+        }),
+      );
+
+      const preview = component.getByRole('menuitem', {
+        name: PULL_REQUESTS_ROW_ACTIONS_COPY.previewSidePanel,
       });
       expect(preview).toHaveAttribute(
         'href',
         '/pull-requests?state=open&pr=42',
       );
 
-      const portalLink = component.getByRole('link', {
-        name: 'Open full pull request page',
+      const portalLink = component.getByRole('menuitem', {
+        name: PULL_REQUESTS_ROW_ACTIONS_COPY.openFullPage,
       });
       expect(portalLink).toHaveAttribute(
         'href',

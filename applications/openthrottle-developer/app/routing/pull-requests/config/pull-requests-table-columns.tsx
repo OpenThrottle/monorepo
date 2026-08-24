@@ -1,3 +1,7 @@
+/**
+ * @description TanStack Table column definitions for the pull requests list
+ * (badge state, dates like the route cards, compact GlobalPopover actions).
+ */
 import * as React from 'react';
 import {
   ArrowRightIcon,
@@ -5,15 +9,20 @@ import {
   PanelRightIcon,
 } from 'lucide-react';
 import { Button } from '@openthrottle/react-router-shadcn';
+import {
+  GlobalPopover,
+  GlobalPopoverActionsHeader,
+} from '@openthrottle/react-router-ui-global';
+import type { GlobalPopoverAction } from '@openthrottle/react-router-ui-global';
 import { formatDate } from 'date-fns';
 import {
   githubCommitUrl,
   githubPullChecksUrl,
   githubPullConversationUrl,
 } from '~/routing/pull-requests/utils/github-pr-links';
-import { Link } from 'react-router';
 import { PullRequestStatus } from '~/routing/pull-requests/components/PullRequestStatus';
 import { buildPullRequestListSearchWithPreview } from '~/routing/pull-requests/constants/pull-request-list-url';
+import { PULL_REQUESTS_ROW_ACTIONS_COPY } from '~/routing/pull-requests/data/data.copy';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { PullRequestCardFragment } from '@openthrottle/openthrottle-developer-codegen';
 import type { PullRequestsListFilters } from '~/routing/pull-requests/types/pull-requests-list-filters';
@@ -49,8 +58,12 @@ export const getPullRequestsTableRowId = (
   return String(pull.number);
 };
 
+const openExternal = (href: string): void => {
+  window.open(href, '_blank', 'noopener,noreferrer');
+};
+
 /**
- * @description TanStack Table column definitions for the pull requests list (badge state, dates like the route cards, compact actions).
+ * @description TanStack Table column definitions for the pull requests list.
  */
 export const createPullRequestsTableColumns = (
   context: PullRequestsTableColumnsContext,
@@ -106,50 +119,6 @@ export const createPullRequestsTableColumns = (
       },
       header: () => <div className="p-2">Author</div>,
     },
-    // {
-    //   accessorKey: 'updatedAt',
-    //   cell: ({ row }) => {
-    //     const pull = row.original;
-
-    //     return (
-    //       <div className="p-2 text-xs text-muted-foreground">
-    //         Created {formatDate(pull.createdAt, 'MM/dd/yyyy')} — updated{' '}
-    //         {formatDate(pull.updatedAt, 'MM/dd/yyyy')}
-    //         {pull.mergedAt !== null && pull.mergedAt !== undefined ? (
-    //           <>
-    //             <br />
-    //             Merged {formatDate(pull.mergedAt, 'MM/dd/yyyy')}
-    //           </>
-    //         ) : null}
-    //       </div>
-    //     );
-    //   },
-    //   header: () => <div className="p-2">Dates</div>,
-    // },
-    // {
-    //   accessorKey: 'headRef',
-    //   cell: ({ row }) => {
-    //     const pull = row.original;
-
-    //     return (
-    //       <div className="p-2 font-mono text-xs text-muted-foreground">
-    //         {pull.baseRef !== null && pull.baseRef !== undefined
-    //           ? pull.baseRef
-    //           : '—'}{' '}
-    //         ←{' '}
-    //         {pull.headRef !== null && pull.headRef !== undefined
-    //           ? pull.headRef
-    //           : '—'}
-    //         {pull.headSha !== null && pull.headSha !== undefined ? (
-    //           <span className="block pt-1 text-[11px] text-muted-foreground/90">
-    //             {pull.headSha.slice(0, 7)}
-    //           </span>
-    //         ) : null}
-    //       </div>
-    //     );
-    //   },
-    //   header: () => <div className="p-2">Refs</div>,
-    // },
     {
       cell: ({ row }) => {
         const pull = row.original;
@@ -162,52 +131,61 @@ export const createPullRequestsTableColumns = (
           context.listQuery === ''
             ? `/pull-requests/${pull.number}`
             : `/pull-requests/${pull.number}?${context.listQuery}`;
+        const githubHref = githubPullConversationUrl(
+          context.filters.owner,
+          context.filters.repo,
+          pull.number,
+        );
+        const checksHref = githubPullChecksUrl(
+          context.filters.owner,
+          context.filters.repo,
+          pull.number,
+        );
+        const label = `#${pull.number}`;
+
+        const actions: GlobalPopoverAction[] = [
+          {
+            icon: <PanelRightIcon aria-hidden={true} className="size-4" />,
+            id: 'preview',
+            kind: 'link',
+            label: PULL_REQUESTS_ROW_ACTIONS_COPY.previewSidePanel,
+            to: previewPath,
+          },
+          {
+            icon: <ArrowRightIcon aria-hidden={true} className="size-4" />,
+            id: 'portal',
+            kind: 'link',
+            label: PULL_REQUESTS_ROW_ACTIONS_COPY.openFullPage,
+            to: portalPath,
+          },
+          {
+            icon: <GitPullRequestIcon aria-hidden={true} className="size-4" />,
+            id: 'github',
+            kind: 'select',
+            label: PULL_REQUESTS_ROW_ACTIONS_COPY.githubPr,
+            onSelect: () => {
+              openExternal(githubHref);
+            },
+            separatorBefore: true,
+          },
+          {
+            id: 'checks',
+            kind: 'select',
+            label: PULL_REQUESTS_ROW_ACTIONS_COPY.checksCi,
+            onSelect: () => {
+              openExternal(checksHref);
+            },
+          },
+        ];
 
         return (
-          <div className="flex flex-wrap gap-2 p-2">
-            <Button asChild={true} size="xs" variant="outline">
-              <Link to={previewPath} viewTransition={true}>
-                <PanelRightIcon aria-hidden={true} className="h-4 w-4" />
-                <span className="sr-only">Preview in side panel</span>
-              </Link>
-            </Button>
-            <Button asChild={true} size="xs" variant="outline">
-              <Link to={portalPath} viewTransition={true}>
-                <ArrowRightIcon aria-hidden={true} className="h-4 w-4" />
-                <span className="sr-only">Open full pull request page</span>
-              </Link>
-            </Button>
-            <Button asChild={true} size="xs" variant="outline">
-              <a
-                href={githubPullConversationUrl(
-                  context.filters.owner,
-                  context.filters.repo,
-                  pull.number,
-                )}
-                rel="noopener noreferrer"
-                target="_blank"
-              >
-                <GitPullRequestIcon className="h-4 w-4" />
-                <span className="sr-only">GitHub PR</span>
-              </a>
-            </Button>
-            <Button asChild={true} size="xs" variant="default">
-              <a
-                href={githubPullChecksUrl(
-                  context.filters.owner,
-                  context.filters.repo,
-                  pull.number,
-                )}
-                rel="noopener noreferrer"
-                target="_blank"
-              >
-                Checks (CI)
-              </a>
-            </Button>
-          </div>
+          <GlobalPopover
+            actions={actions}
+            ariaLabel={`${PULL_REQUESTS_ROW_ACTIONS_COPY.menuAriaLabelPrefix} ${label}`}
+          />
         );
       },
-      header: () => <div className="text-center">Actions</div>,
+      header: () => <GlobalPopoverActionsHeader />,
       id: 'actions',
     },
   ];

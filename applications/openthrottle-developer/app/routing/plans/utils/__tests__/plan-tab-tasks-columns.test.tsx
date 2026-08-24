@@ -154,11 +154,12 @@ describe('buildPlanTabTasksColumns', () => {
   describe('actions column', () => {
     const actionsColumn = columns[3];
 
-    test('header renders "Actions"', () => {
+    test('header renders Actions via GlobalPopoverActionsHeader', () => {
       const header = actionsColumn?.header;
-      expect(
+      const { getByText } = renderWithRoutes(
         typeof header === 'function' ? header(buildHeaderContext()) : null,
-      ).toBe('Actions');
+      );
+      expect(getByText('Actions')).toBeTruthy();
     });
 
     test('cell renders the inline actions for the row task', () => {

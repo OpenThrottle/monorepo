@@ -1,7 +1,10 @@
 import * as React from 'react';
 import clsx from 'clsx';
 import { Badge, DataTable } from '@openthrottle/react-router-shadcn';
-import { GlobalFeatureOnboarding } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalFeatureOnboarding,
+  GlobalPopoverActionsHeader,
+} from '@openthrottle/react-router-ui-global';
 import type { ColumnDef, ExpandedState } from '@tanstack/react-table';
 import { formatUpdatedAt } from '~/routing/plans/utils/formatters';
 import {
@@ -154,7 +157,7 @@ RepositoriesTable.buildTable = (
     },
     {
       cell: ({ row }) => <RepositoryRowActions row={row.original} />,
-      header: () => REPOSITORIES_TABLE_COPY.actionsColumn,
+      header: () => <GlobalPopoverActionsHeader />,
       id: 'actions',
     },
   ];

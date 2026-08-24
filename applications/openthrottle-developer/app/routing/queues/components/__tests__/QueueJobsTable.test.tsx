@@ -97,9 +97,6 @@ describe('QueueJobsTable Component', () => {
     expect(
       component.getByRole('columnheader', { name: /Failed/i }),
     ).toBeInTheDocument();
-    expect(
-      component.getByRole('columnheader', { name: /Actions/i }),
-    ).toBeInTheDocument();
   });
 
   test('renders state badge, plan link, and detail link for job with parsed payload', () => {
@@ -119,11 +116,6 @@ describe('QueueJobsTable Component', () => {
       'href',
       '/queues/plans/job-with-plan',
     );
-    expect(
-      component.getByRole('link', {
-        name: 'View job details for job-with-plan',
-      }),
-    ).toHaveAttribute('href', '/queues/plans/job-with-plan');
   });
 
   test('renders failed reason and destructive state for failed jobs', () => {
@@ -136,11 +128,10 @@ describe('QueueJobsTable Component', () => {
     expect(
       component.getByTestId('job-failedReason-job-failed-1'),
     ).toHaveTextContent('Connection timeout after 30s');
-    expect(
-      component.getByRole('link', {
-        name: 'View job details for job-failed-1',
-      }),
-    ).toHaveAttribute('href', '/queues/plans/job-failed-1');
+    expect(component.getByTestId('job-id-link-job-failed-1')).toHaveAttribute(
+      'href',
+      '/queues/plans/job-failed-1',
+    );
   });
 
   test('shows em dash for plan/task when payload has no planId', () => {

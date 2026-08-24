@@ -1,6 +1,6 @@
 import * as React from 'react';
 import clsx from 'clsx';
-import { Badge, Button, DataTable } from '@openthrottle/react-router-shadcn';
+import { Badge, DataTable } from '@openthrottle/react-router-shadcn';
 import { formatDate } from 'date-fns';
 import { Link } from 'react-router';
 import type { ColumnDef } from '@tanstack/react-table';
@@ -100,20 +100,6 @@ RolesTable.buildTable = (): ColumnDef<
       accessorKey: 'updatedAt',
       cell: ({ row }) => formatDate(row.original.updatedAt, 'MMM d, yyyy'),
       header: () => 'Updated',
-    },
-    {
-      cell: ({ row }) => {
-        const role = row.original;
-        return (
-          <Button asChild={true} size="xs" variant="outline">
-            <Link to={`/roles/${role.id}`} viewTransition={true}>
-              View
-            </Link>
-          </Button>
-        );
-      },
-      header: () => 'Actions',
-      id: 'actions',
     },
   ];
 };
