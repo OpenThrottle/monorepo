@@ -207,3 +207,18 @@ export const PLAN_RUN_AUDIT_WORKSPACE_COPY = {
   columnLabel: `Worktree`,
   emptyLabel: `—`,
 } as const;
+
+/**
+ * @description Plans index row Actions menu (Queue + optional Kill run).
+ */
+export const PLANS_ROW_ACTIONS_COPY = {
+  killCancel: `Cancel`,
+  killConfirm: `Kill run`,
+  killDescriptionSuffix: `or signals an active run to terminate. Task or plan edits are not deleted.`,
+  killPendingLabel: `Stopping…`,
+  killTitle: `Kill plan run?`,
+  menuAriaLabelPrefix: `Plan actions for`,
+  queue: `Queue`,
+  queueAriaLabelSuffix: `with default worker tuning (open plan details to set Workflow run options)`,
+  queuePendingLabel: `Queuing…`,
+} as const;

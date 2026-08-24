@@ -21,6 +21,17 @@ export const GLOBAL_FEATURE_ONBOARDING_TRIGGER_LABEL = `How it works`;
 
 /**
  * @public
+ * Default copy for {@link GlobalPopover}: shared Actions column header text and
+ * fallback labels for the confirm dialog when a submit action omits them.
+ */
+export const GLOBAL_POPOVER_COPY = {
+  actionsHeader: `Actions`,
+  cancelLabel: `Cancel`,
+  confirmLabel: `Confirm`,
+} as const;
+
+/**
+ * @public
  * Default copy for {@link GlobalToolbarSearch}. Consumers override the
  * placeholder and aria-label per surface; the submit button falls back to this
  * label when no override is supplied.

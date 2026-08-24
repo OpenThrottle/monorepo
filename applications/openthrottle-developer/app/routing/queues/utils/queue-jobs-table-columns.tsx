@@ -5,7 +5,6 @@
  */
 
 import * as React from 'react';
-import { Button } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import type { ColumnDef } from '@tanstack/react-table';
 import { Link } from 'react-router';
@@ -232,38 +231,6 @@ export function buildQueueJobsTableColumns(
         </div>
       ),
       id: 'failedReason',
-    },
-    {
-      cell: ({ row }) => {
-        const job = row.original;
-        const href = queueJobDetailPath(queueName, job.id);
-
-        return (
-          <div className="flex justify-end px-2 py-1">
-            <Button
-              asChild={true}
-              className="text-xs"
-              size="xs"
-              variant="outline"
-            >
-              <Link
-                aria-label={`View job details for ${job.id}`}
-                data-testid={`job-detail-link-${job.id}`}
-                to={href}
-                viewTransition={true}
-              >
-                View
-              </Link>
-            </Button>
-          </div>
-        );
-      },
-      header: () => (
-        <div className="py-2 pr-2 text-right">
-          <span className="text-sm font-medium">Actions</span>
-        </div>
-      ),
-      id: 'actions',
     },
   ];
 }

@@ -59,11 +59,9 @@ describe('UsersTable Component', () => {
     expect(component.getByText('Disabled')).toBeInTheDocument();
   });
 
-  test('renders a View action link per row', () => {
-    const viewLinks = component.getAllByRole('link', { name: /^view$/i });
-    const hrefs = viewLinks.map((el) => el.getAttribute('href'));
-
-    expect(hrefs).toContain('/users/user-1');
-    expect(hrefs).toContain('/users/user-2');
+  test('does not render a redundant Actions View link when the name already links', () => {
+    expect(
+      component.queryByRole('link', { name: /^view$/i }),
+    ).not.toBeInTheDocument();
   });
 });

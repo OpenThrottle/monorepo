@@ -7,7 +7,10 @@ import { describe, expect, test } from 'vitest';
 import { PlansTable } from '../PlansTable';
 import type { PlansTableProps } from '../PlansTable';
 import type { PlanCardFragment } from '~/__generated__/graphql';
-import { PLANS_INDEX_EMPTY_COPY } from '~/routing/plans/data/data.copy';
+import {
+  PLANS_INDEX_EMPTY_COPY,
+  PLANS_ROW_ACTIONS_COPY,
+} from '~/routing/plans/data/data.copy';
 import { renderRoutesStub } from '~/testing/route-fixtures';
 
 const mockPlans: PlanCardFragment[] = [
@@ -104,8 +107,9 @@ describe('PlansTable Component', () => {
   });
 
   test('renders plans from props when provided', () => {
-    const { getAllByRole, getByLabelText, getByRole, getByText } =
-      renderPlansTable({ plans: mockPlans });
+    const { getByLabelText, getByRole, getByText } = renderPlansTable({
+      plans: mockPlans,
+    });
 
     expect(getByText('First Plan')).toBeDefined();
     expect(getByText('Second Plan')).toBeDefined();
@@ -117,15 +121,16 @@ describe('PlansTable Component', () => {
     expect(titleLink2).toHaveAttribute('href', '/plans/plan-2');
     expect(getByLabelText('3 tasks')).toBeDefined();
     expect(getByLabelText('0 tasks')).toBeDefined();
-    const queuePlanButtons = getAllByRole('button', {
-      name: /queue plan first plan/i,
-    });
-    expect(queuePlanButtons.length).toBeGreaterThanOrEqual(1);
-
-    const killButtons = getAllByRole('button', {
-      name: /Kill plan run for First Plan/i,
-    });
-    expect(killButtons).toHaveLength(1);
+    expect(
+      getByRole('button', {
+        name: `${PLANS_ROW_ACTIONS_COPY.menuAriaLabelPrefix} First Plan`,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      getByRole('button', {
+        name: `${PLANS_ROW_ACTIONS_COPY.menuAriaLabelPrefix} Second Plan`,
+      }),
+    ).toBeInTheDocument();
   });
 
   test('shows author, assignee, and updated date when present', () => {

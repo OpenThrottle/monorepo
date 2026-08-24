@@ -86,10 +86,6 @@ export default function Component(
     );
   };
 
-  const handleDelete = (id: string): void => {
-    fetcher.submit({ id, intent: 'deleteRule' }, { method: 'post' });
-  };
-
   // Markup
 
   // Life Cycle
@@ -119,7 +115,6 @@ export default function Component(
             <RulesToolbar />
             <RulesTable
               isFiltered={isFiltered}
-              onDelete={handleDelete}
               onToggleEnabled={handleToggleEnabled}
               pending={pending}
               rules={filteredRules}

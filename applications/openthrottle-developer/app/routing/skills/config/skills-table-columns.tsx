@@ -170,40 +170,6 @@ export const createSkillsTableColumns = (
     },
     header: () => <div className="p-2">Summary</div>,
   },
-  // {
-  //   accessorKey: 'tags',
-  //   cell: ({ row }) => {
-  //     const { onAddTag, onRemoveTag, pendingSlug, vocabulary } = options;
-  //     const tags = row.original.tags ?? [];
-
-  //     if (onAddTag != null && onRemoveTag != null && vocabulary != null) {
-  //       return (
-  //         <div className="p-2">
-  //           <SkillTagChips
-  //             onAddTag={(tag) => onAddTag(row.original.slug, tag)}
-  //             onRemoveTag={(tag) => onRemoveTag(row.original.slug, tag)}
-  //             pending={pendingSlug === row.original.slug}
-  //             tags={tags}
-  //             vocabulary={vocabulary}
-  //           />
-  //         </div>
-  //       );
-  //     }
-
-  //     return (
-  //       <div className="flex flex-wrap gap-1 p-2">
-  //         {tags.map((tag) => (
-  //           <Badge color="blue" key={tag} size="xs">
-  //             {tag}
-  //           </Badge>
-  //         ))}
-  //       </div>
-  //     );
-  //   },
-  //   header: () => (
-  //     <div className="p-2">{SKILL_RECORD_TAGS_COPY.tagsColumnHeader}</div>
-  //   ),
-  // },
   {
     accessorKey: 'modelInvocation',
     cell: ({ row }) => {
@@ -248,44 +214,6 @@ export const createSkillsTableColumns = (
     },
     header: () => <div className="p-2">Invocation</div>,
   },
-  // {
-  //   accessorKey: 'actions',
-  //   cell: ({ row }) => {
-  //     const isOrphan = row.original.orphanedAt != null;
-  //
-  //     return (
-  //       <div className="flex gap-2 p-2">
-  //         {isOrphan ? (
-  //           options.onRemoveOrphan != null ? (
-  //             <SkillOrphanRemoveButton
-  //               disabled={options.pendingSlug === row.original.slug}
-  //               onRemove={() => options.onRemoveOrphan?.(row.original.slug)}
-  //             />
-  //           ) : null
-  //         ) : (
-  //           <>
-  //             <Button size="xs" variant="outline">
-  //               <OpenThrottleClipboard
-  //                 label="Copy path"
-  //                 text={row.original.repoRelativePath}
-  //               />
-  //             </Button>
-  //             <Button asChild={true} size="xs" variant="outline">
-  //               <Link
-  //                 data-testid="skill-view-link"
-  //                 to={`/skills/${row.original.slug}`}
-  //               >
-  //                 <ScanEyeIcon className="size-4" />
-  //                 <span className="sr-only">View Skill</span>
-  //               </Link>
-  //             </Button>
-  //           </>
-  //         )}
-  //       </div>
-  //     );
-  //   },
-  //   header: () => <div className="p-2 text-center">Actions</div>,
-  // },
 ];
 
 export const skillsTableColumns = createSkillsTableColumns();

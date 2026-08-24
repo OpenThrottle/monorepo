@@ -1,7 +1,6 @@
 import * as React from 'react';
 import clsx from 'clsx';
-import { ArrowRightIcon } from 'lucide-react';
-import { Button, DataTable } from '@openthrottle/react-router-shadcn';
+import { DataTable } from '@openthrottle/react-router-shadcn';
 import { readSearchParam } from '@openthrottle/react-router-ui-global';
 import { Link, useSearchParams } from 'react-router';
 import { CalendarEmpty } from '~/routing/calendar/components/CalendarEmpty';
@@ -113,32 +112,6 @@ CalendarTable.buildTable = (): ColumnDef<
         );
       },
       header: () => <div className="p-2">When</div>,
-    },
-    {
-      cell: ({ row }) => {
-        const event = row.original;
-
-        return (
-          <div className="flex flex-wrap items-center gap-2 p-2">
-            <Button
-              asChild={true}
-              className="text-xs"
-              size="xs"
-              variant="outline"
-            >
-              <Link
-                aria-label={`View event: ${event.title}`}
-                to={`/calendar/${event.id}`}
-                viewTransition={true}
-              >
-                <ArrowRightIcon className="size-4" />
-              </Link>
-            </Button>
-          </div>
-        );
-      },
-      header: () => 'Actions',
-      id: 'actions',
     },
   ];
 };

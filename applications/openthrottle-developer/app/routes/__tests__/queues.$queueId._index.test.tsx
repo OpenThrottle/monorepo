@@ -192,8 +192,9 @@ describe('routes/queues.$queueId.tsx', () => {
     expect(
       component.getByTestId('queue-jobs-table-plan-job-1'),
     ).toHaveAttribute('href', '/plans/plan-abc');
-    expect(
-      component.getByRole('link', { name: 'View job details for job-1' }),
-    ).toHaveAttribute('href', '/queues/plans/job-1');
+    expect(component.getByTestId('job-id-link-job-1')).toHaveAttribute(
+      'href',
+      '/queues/plans/job-1',
+    );
   });
 });

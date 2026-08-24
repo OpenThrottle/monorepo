@@ -89,7 +89,7 @@ describe('queueJobRowId', () => {
 });
 
 describe('buildQueueJobsTableColumns', () => {
-  test('defines the state, job, planTask, run, created, finished, failedReason, and actions columns', () => {
+  test('defines the state, job, planTask, run, created, finished, and failedReason columns', () => {
     const columns = buildQueueJobsTableColumns('my-queue');
 
     expect(columns.map((column) => column.id)).toEqual([
@@ -100,7 +100,6 @@ describe('buildQueueJobsTableColumns', () => {
       'created',
       'finished',
       'failedReason',
-      'actions',
     ]);
   });
 
@@ -130,7 +129,6 @@ describe('buildQueueJobsTableColumns', () => {
     expect(rendered.getByText('Finished')).toBeInTheDocument();
     expect(rendered.getByText('Failed')).toBeInTheDocument();
     expect(rendered.getByText('reason')).toBeInTheDocument();
-    expect(rendered.getByText('Actions')).toBeInTheDocument();
   });
 
   test('state cell renders the QueueStateBadge for the job state', () => {
@@ -252,17 +250,5 @@ describe('buildQueueJobsTableColumns', () => {
       <Harness job={withoutReason} queueName="my-queue" />,
     );
     expect(renderedEmpty.getAllByText('—').length).toBeGreaterThan(0);
-  });
-
-  test('actions cell renders a View link to the job detail page', () => {
-    const job = buildJob({ id: 'job-11' });
-    const rendered = renderRoutesStub(
-      <Harness job={job} queueName="my-queue" />,
-    );
-
-    expect(rendered.getByTestId('job-detail-link-job-11')).toHaveAttribute(
-      'href',
-      '/queues/my-queue/job-11',
-    );
   });
 });

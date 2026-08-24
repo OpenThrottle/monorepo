@@ -79,34 +79,27 @@ describe('NotesTable Component', () => {
     expect(
       withNotes.getByRole('columnheader', { name: 'Dates' }),
     ).toBeInTheDocument();
-    expect(
-      withNotes.getByRole('columnheader', { name: 'Actions' }),
-    ).toBeInTheDocument();
   });
 
   test('renders notes from props with preview titles and view links', () => {
-    const { container, getAllByRole, getByText } = renderNotesTable({
+    const { container, getByRole, getByText } = renderNotesTable({
       notes: mockNotes,
     });
 
     expect(getByText('First Note')).toBeInTheDocument();
     expect(container.textContent).toContain('Body text here.');
 
-    const firstNoteLinks = getAllByRole('link', {
-      name: 'View note: First Note',
-    });
-    expect(firstNoteLinks).toHaveLength(2);
-    for (const link of firstNoteLinks) {
-      expect(link).toHaveAttribute('href', '/notes/note-1');
-    }
+    expect(
+      getByRole('link', {
+        name: 'View note: First Note',
+      }),
+    ).toHaveAttribute('href', '/notes/note-1');
 
-    const secondNoteLinks = getAllByRole('link', {
-      name: 'View note: Plain second note without heading',
-    });
-    expect(secondNoteLinks).toHaveLength(2);
-    for (const link of secondNoteLinks) {
-      expect(link).toHaveAttribute('href', '/notes/note-2');
-    }
+    expect(
+      getByRole('link', {
+        name: 'View note: Plain second note without heading',
+      }),
+    ).toHaveAttribute('href', '/notes/note-2');
   });
 
   test('shows author when present and em dash when missing', () => {

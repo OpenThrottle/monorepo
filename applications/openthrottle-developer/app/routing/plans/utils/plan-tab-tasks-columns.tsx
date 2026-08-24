@@ -5,6 +5,7 @@
  * component stays UI-focused.
  */
 import * as React from 'react';
+import { GlobalPopoverActionsHeader } from '@openthrottle/react-router-ui-global';
 import {
   isPlanStatusKey,
   PlanStatusBadge,
@@ -62,7 +63,7 @@ export const buildPlanTabTasksColumns = (
     },
     {
       cell: ({ row }) => <PlanTasksTableCellActions row={row} />,
-      header: () => 'Actions',
+      header: () => <GlobalPopoverActionsHeader />,
       id: 'actions',
     },
   ];

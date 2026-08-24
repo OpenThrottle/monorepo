@@ -7,6 +7,7 @@ import {
   RolloutFlagKind,
   type RolloutFlagFieldsFragment,
 } from '~/__generated__/graphql';
+import { GLOBAL_POPOVER_COPY } from '@openthrottle/react-router-ui-global';
 import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
 import { RolloutFlagsTable } from '../RolloutFlagsTable';
 import type { RolloutFlagsTableProps } from '../RolloutFlagsTable';
@@ -70,6 +71,21 @@ describe('RolloutFlagsTable Component', () => {
     expect(component.getByText('admin')).toBeInTheDocument();
     expect(component.getAllByText('boolean').length).toBeGreaterThan(0);
     expect(component.getAllByText('true 100%').length).toBeGreaterThan(0);
+  });
+
+  test('renders the shared Actions header and a per-row actions trigger', () => {
+    const component = renderTable({ flags });
+
+    expect(
+      component.getByRole('columnheader', {
+        name: GLOBAL_POPOVER_COPY.actionsHeader,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      component.getByRole('button', {
+        name: `${ROLLOUT_COPY.menuAriaLabelPrefix} new-dashboard`,
+      }),
+    ).toBeInTheDocument();
   });
 
   test('shows the empty state with no flags', () => {

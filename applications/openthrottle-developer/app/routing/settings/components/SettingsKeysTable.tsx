@@ -2,6 +2,7 @@ import * as React from 'react';
 import clsx from 'clsx';
 import type { ColumnDef } from '@tanstack/react-table';
 import { DataTable } from '@openthrottle/react-router-shadcn';
+import { GlobalPopoverActionsHeader } from '@openthrottle/react-router-ui-global';
 import type { ServiceAccountCredentialFieldsFragment } from '~/__generated__/graphql';
 import { SettingsKeysCredentialStatusBadge } from '~/routing/settings/components/SettingsKeysCredentialStatusBadge';
 import { SettingsKeysRevokeCell } from '~/routing/settings/components/SettingsKeysRevokeCell';
@@ -174,9 +175,7 @@ SettingsKeysTable.buildTable = (
           credential={row.original}
         />
       ),
-      header: () => (
-        <div className="px-3 py-2 text-sm font-medium">Actions</div>
-      ),
+      header: () => <GlobalPopoverActionsHeader />,
       id: 'actions',
     },
   ];

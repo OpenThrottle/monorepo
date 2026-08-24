@@ -5,21 +5,18 @@
  */
 
 import * as React from 'react';
+import { Badge } from '@openthrottle/react-router-shadcn';
 import {
-  Badge,
-  Button,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@openthrottle/react-router-shadcn';
+  GlobalPopover,
+  GlobalPopoverActionsHeader,
+} from '@openthrottle/react-router-ui-global';
+import type { GlobalPopoverAction } from '@openthrottle/react-router-ui-global';
 import type { ColumnDef } from '@tanstack/react-table';
-import { MoreHorizontalIcon, PauseIcon, PlayIcon } from 'lucide-react';
+import { PauseIcon, PlayIcon } from 'lucide-react';
 import { Link } from 'react-router';
 import type { QueueCardFragment } from '~/__generated__/graphql';
 import { QueueHealthPill } from '~/routing/queues/components/QueueHealthPill';
+import { QUEUES_ROW_ACTIONS_COPY } from '~/routing/queues/data/data.copy';
 import { backlogForQueue } from '~/routing/queues/utils/queue-stats-chart';
 import { queueDetailHref } from '~/routing/queues/utils/queues-table';
 
@@ -203,56 +200,39 @@ export function buildQueuesTableColumns(
         const queue = row.original;
         const href = queueDetailHref(queue.name);
         const displayName = queue.name || 'Unnamed';
+        const actions: GlobalPopoverAction[] = [
+          {
+            id: 'view',
+            kind: 'link',
+            label: QUEUES_ROW_ACTIONS_COPY.view,
+            to: href,
+          },
+          {
+            icon: <PauseIcon aria-hidden={true} className="size-4" />,
+            id: 'pauseQueue',
+            kind: 'select',
+            label: QUEUES_ROW_ACTIONS_COPY.pauseQueue,
+            onSelect: () => onControl(queue.name, 'pauseQueue'),
+            separatorBefore: true,
+          },
+          {
+            icon: <PlayIcon aria-hidden={true} className="size-4" />,
+            id: 'resumeQueue',
+            kind: 'select',
+            label: QUEUES_ROW_ACTIONS_COPY.resumeQueue,
+            onSelect: () => onControl(queue.name, 'resumeQueue'),
+          },
+        ];
 
         return (
-          <div className="flex items-center justify-end gap-1 py-1 pr-2">
-            <Button
-              asChild={true}
-              className="text-xs"
-              size="xs"
-              variant="outline"
-            >
-              <Link
-                aria-label={`View queue details for ${displayName}`}
-                to={href}
-                viewTransition={true}
-              >
-                View
-              </Link>
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild={true}>
-                <Button
-                  aria-label={`Queue controls for ${displayName}`}
-                  size="xs"
-                  variant="ghost"
-                >
-                  <MoreHorizontalIcon className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Queue controls</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onSelect={() => onControl(queue.name, 'pauseQueue')}
-                >
-                  <PauseIcon className="h-4 w-4" /> Pause queue
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onSelect={() => onControl(queue.name, 'resumeQueue')}
-                >
-                  <PlayIcon className="h-4 w-4" /> Resume queue
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+          <GlobalPopover
+            actions={actions}
+            ariaLabel={`${QUEUES_ROW_ACTIONS_COPY.menuAriaLabelPrefix} ${displayName}`}
+            heading={QUEUES_ROW_ACTIONS_COPY.heading}
+          />
         );
       },
-      header: () => (
-        <div className="py-2 text-right">
-          <span className="text-sm font-medium">Actions</span>
-        </div>
-      ),
+      header: () => <GlobalPopoverActionsHeader />,
       id: 'actions',
     },
   ];

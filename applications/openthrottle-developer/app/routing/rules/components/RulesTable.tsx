@@ -1,11 +1,13 @@
 import * as React from 'react';
 import clsx from 'clsx';
-import { Badge, Button, DataTable } from '@openthrottle/react-router-shadcn';
+import { Badge, DataTable } from '@openthrottle/react-router-shadcn';
+import { GlobalPopoverActionsHeader } from '@openthrottle/react-router-ui-global';
 import { Link } from 'react-router';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { TagActionRuleRowFragment } from '~/__generated__/graphql';
 import { RULES_COPY } from '~/routing/rules/data/data.copy';
 import { RulesEmpty } from '~/routing/rules/components/RulesEmpty';
+import { RulesTableRowActions } from '~/routing/rules/components/RulesTableRowActions';
 import { summarizeRuleAction } from '~/routing/rules/utils/formatters';
 
 /** Row shape for the rules table — matches the `TagActionRuleRow` GraphQL fragment. */
@@ -15,14 +17,12 @@ export interface RulesTableProps {
   className?: string;
   /** When true and `rules` is empty, show filtered-empty copy via RulesEmpty. */
   isFiltered?: boolean;
-  onDelete: (id: string) => void;
   onToggleEnabled: (rule: TagActionRuleRowData) => void;
   pending?: boolean;
   rules: TagActionRuleRowData[];
 }
 
 interface RulesTableColumnOptions {
-  onDelete: (id: string) => void;
   onToggleEnabled: (rule: TagActionRuleRowData) => void;
   pending: boolean;
 }
@@ -36,7 +36,6 @@ export const RulesTable = (props: RulesTableProps): React.ReactElement => {
   const {
     className,
     isFiltered = false,
-    onDelete,
     onToggleEnabled,
     pending = false,
     rules,
@@ -44,8 +43,8 @@ export const RulesTable = (props: RulesTableProps): React.ReactElement => {
 
   // Hooks
   const columns = React.useMemo(
-    () => RulesTable.buildTable({ onDelete, onToggleEnabled, pending }),
-    [onDelete, onToggleEnabled, pending],
+    () => RulesTable.buildTable({ onToggleEnabled, pending }),
+    [onToggleEnabled, pending],
   );
   const data = React.useMemo(() => [...rules], [rules]);
   const getRowId = React.useCallback(
@@ -81,7 +80,7 @@ export const RulesTable = (props: RulesTableProps): React.ReactElement => {
 RulesTable.buildTable = (
   options: RulesTableColumnOptions,
 ): ColumnDef<TagActionRuleRowData, string | number | null | undefined>[] => {
-  const { onDelete, onToggleEnabled, pending } = options;
+  const { onToggleEnabled, pending } = options;
 
   return [
     {
@@ -155,40 +154,14 @@ RulesTable.buildTable = (
       header: () => <div className="p-2">{RULES_COPY.tableMatchHeader}</div>,
     },
     {
-      cell: ({ row }) => {
-        const rule = row.original;
-
-        return (
-          <div className="flex flex-wrap items-center gap-2 p-2">
-            <Button
-              disabled={pending}
-              onClick={() => onToggleEnabled(rule)}
-              size="sm"
-              type="button"
-              variant="outline"
-            >
-              {rule.enabled
-                ? RULES_COPY.disableAction
-                : RULES_COPY.enableAction}
-            </Button>
-            <Button asChild={true} size="sm" type="button" variant="outline">
-              <Link to={`/rules/${rule.id}/edit`} viewTransition={true}>
-                {RULES_COPY.editAction}
-              </Link>
-            </Button>
-            <Button
-              disabled={pending}
-              onClick={() => onDelete(rule.id)}
-              size="sm"
-              type="button"
-              variant="destructive"
-            >
-              {RULES_COPY.deleteAction}
-            </Button>
-          </div>
-        );
-      },
-      header: () => <div className="p-2">{RULES_COPY.tableActionsHeader}</div>,
+      cell: ({ row }) => (
+        <RulesTableRowActions
+          onToggleEnabled={onToggleEnabled}
+          pending={pending}
+          rule={row.original}
+        />
+      ),
+      header: () => <GlobalPopoverActionsHeader />,
       id: 'actions',
     },
   ];

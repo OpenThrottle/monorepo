@@ -21,6 +21,14 @@ Structure:
 - Unpack `props` in the pre-Hooks block: the identity `const { … } = props` and any nested identity destructures of those bindings (`const { repository } = loaderData`) sit **before** `// Hooks`; derived/narrowed values (`'x' in y`, maps, formatters) go under `// Setup`; **never** unpack after `// Hooks` or `// 🔌 Short Circuit`. Same rule for authored `FooProps` and route `Route.ComponentProps` — see [component R3](../../../docs/monorepo/component-primitive-shape.md#the-pre-hooks-unpack-block) (route R2 shows the route-shaped example).
 - One component per file, exporting only the component + its props. Hardcoded data, lists, mock data, and user-facing copy go in the nearest `data/` folder — see [`coding-component-data-boundaries`](./component-data-boundaries.mdc) (copy → `data.copy.ts`).
 
+Table row Actions:
+
+- Per-row action columns in `*Table.tsx` / `*-table-columns.tsx` use `GlobalPopover` from `@openthrottle/react-router-ui-global` with `GlobalPopoverActionsHeader` (right-aligned `Actions`). Do not hand-roll a `DropdownMenu` overflow or invent a new Actions header.
+- Collapse inline primary buttons into the menu when the row already links to its detail view elsewhere (one trigger at the end of the row).
+- A single action with no detail link may stay inline — a one-item menu is worse UX than a button.
+- Bulk / toolbar action bars are a different surface; do not route them through `GlobalPopover`.
+- Details and a queues copy-paste example: [`packages/react-router-ui-global/README.md`](../../../packages/react-router-ui-global/README.md).
+
 Verify:
 
 - Component/route specs use `component` (not `screen`) to get elements and `userEvent` (not `fireEvent`). Don't assert against duplicated literals — assert against the imported constant from `data.copy.ts`.

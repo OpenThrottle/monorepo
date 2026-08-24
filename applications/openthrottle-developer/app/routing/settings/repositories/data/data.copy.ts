@@ -14,7 +14,6 @@ import type { GlobalFeatureOnboardingContent } from '@openthrottle/react-router-
  * duplicated here.
  */
 export const REPOSITORIES_TABLE_COPY = {
-  actionsColumn: `Actions`,
   branchColumn: `Branch`,
   clearSearch: `Clear search`,
   collapseGroup: `Collapse worktrees`,

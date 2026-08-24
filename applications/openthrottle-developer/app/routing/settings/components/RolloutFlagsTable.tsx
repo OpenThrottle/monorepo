@@ -1,14 +1,15 @@
 import * as React from 'react';
-import { Form, Link } from 'react-router';
+import { Link } from 'react-router';
 import type { ColumnDef } from '@tanstack/react-table';
-import { Badge, Button, DataTable } from '@openthrottle/react-router-shadcn';
+import { Badge, DataTable } from '@openthrottle/react-router-shadcn';
+import { GlobalPopoverActionsHeader } from '@openthrottle/react-router-ui-global';
 import type { RolloutFlagFieldsFragment } from '~/__generated__/graphql';
 import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
+import { RolloutFlagsTableRowActions } from '~/routing/settings/components/RolloutFlagsTableRowActions';
 import {
   formatRolloutAllocationSummary,
   formatRolloutTimestamp,
   rolloutFlagDetailPath,
-  rolloutFlagEditPath,
 } from '~/routing/settings/utils/rollout-flag-format';
 
 export interface RolloutFlagsTableProps {
@@ -17,7 +18,7 @@ export interface RolloutFlagsTableProps {
 
 /**
  * @description Lists rollout feature flags with key, state, targeting, last-updated,
- * and per-row edit/delete actions.
+ * and per-row edit/delete actions via {@link RolloutFlagsTableRowActions}.
  */
 export const RolloutFlagsTable = (
   props: RolloutFlagsTableProps,
@@ -95,30 +96,8 @@ export const RolloutFlagsTable = (
         header: 'Updated',
       },
       {
-        cell: ({ row }) => (
-          <div className="flex items-center justify-end gap-2">
-            <Button asChild={true} size="sm" type="button" variant="ghost">
-              <Link to={rolloutFlagEditPath(row.original.id)}>
-                {ROLLOUT_COPY.editButton}
-              </Link>
-            </Button>
-            <Form
-              method="post"
-              onSubmit={(event) => {
-                if (!window.confirm(ROLLOUT_COPY.deleteConfirm)) {
-                  event.preventDefault();
-                }
-              }}
-            >
-              <input name="intent" type="hidden" value="deleteRolloutFlag" />
-              <input name="id" type="hidden" value={row.original.id} />
-              <Button size="sm" type="submit" variant="ghost">
-                {ROLLOUT_COPY.deleteButton}
-              </Button>
-            </Form>
-          </div>
-        ),
-        header: '',
+        cell: ({ row }) => <RolloutFlagsTableRowActions flag={row.original} />,
+        header: () => <GlobalPopoverActionsHeader />,
         id: 'actions',
       },
     ],

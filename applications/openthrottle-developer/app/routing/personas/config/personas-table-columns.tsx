@@ -1,10 +1,12 @@
 import * as React from 'react';
 import type { ColumnDef } from '@tanstack/react-table';
-import { Link } from 'react-router';
+import {
+  GlobalPopover,
+  GlobalPopoverActionsHeader,
+} from '@openthrottle/react-router-ui-global';
+import type { GlobalPopoverAction } from '@openthrottle/react-router-ui-global';
 import type { RepoPersonaEntry } from '~/routing/agents/data/repo-personas-registry';
-import { Button } from '@openthrottle/react-router-shadcn';
-import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
-import { ScanEyeIcon } from 'lucide-react';
+import { PERSONAS_ROW_ACTIONS_COPY } from '~/routing/personas/data/data.copy';
 
 export type PersonasTableColumnValue =
   | RepoPersonaEntry['repoRelativePath']
@@ -19,6 +21,20 @@ export const getPersonasTableRowId = (
   index: number,
 ): string => {
   return entry.slug || entry.repoRelativePath || `persona-${index}`;
+};
+
+const copyPersonaPath = (path: string): void => {
+  if (typeof navigator?.clipboard?.writeText === 'function') {
+    void navigator.clipboard.writeText(path);
+    return;
+  }
+
+  const textArea = document.createElement('textarea');
+  textArea.value = path;
+  document.body.appendChild(textArea);
+  textArea.select();
+  document.execCommand('copy');
+  textArea.remove();
 };
 
 export const personasTableColumns: ColumnDef<
@@ -41,20 +57,32 @@ export const personasTableColumns: ColumnDef<
   },
   {
     accessorKey: 'actions',
-    cell: ({ row }) => (
-      <div className="flex gap-2 p-2">
-        <OpenThrottleClipboard
-          label="Copy path"
-          text={row.original.repoRelativePath}
+    cell: ({ row }) => {
+      const entry = row.original;
+      const actions: GlobalPopoverAction[] = [
+        {
+          id: 'copy-path',
+          kind: 'select',
+          label: PERSONAS_ROW_ACTIONS_COPY.copyPath,
+          onSelect: () => {
+            copyPersonaPath(entry.repoRelativePath);
+          },
+        },
+        {
+          id: 'view',
+          kind: 'link',
+          label: PERSONAS_ROW_ACTIONS_COPY.viewPersona,
+          to: `/personas/${encodeURIComponent(entry.slug)}`,
+        },
+      ];
+
+      return (
+        <GlobalPopover
+          actions={actions}
+          ariaLabel={`${PERSONAS_ROW_ACTIONS_COPY.menuAriaLabelPrefix} ${entry.slug}`}
         />
-        <Button asChild={true} size="xs" variant="outline">
-          <Link to={`/personas/${encodeURIComponent(row.original.slug)}`}>
-            <ScanEyeIcon className="size-4" />
-            <span className="sr-only">View persona</span>
-          </Link>
-        </Button>
-      </div>
-    ),
-    header: () => <div className="p-2 text-center">Actions</div>,
+      );
+    },
+    header: () => <GlobalPopoverActionsHeader />,
   },
 ];

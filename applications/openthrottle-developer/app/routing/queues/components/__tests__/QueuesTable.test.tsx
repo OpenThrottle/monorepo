@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, test } from 'vitest';
 import { QueuesTable } from '../QueuesTable';
 import type { QueuesTableProps } from '../QueuesTable';
 import type { QueueCardFragment } from '~/__generated__/graphql';
+import { QUEUES_ROW_ACTIONS_COPY } from '~/routing/queues/data/data.copy';
 
 const mockQueues: QueueCardFragment[] = [
   {
@@ -79,7 +80,7 @@ describe('QueuesTable Component', () => {
     ).toBeInTheDocument();
   });
 
-  test('renders one row per queue with name link and View action', () => {
+  test('renders one row per queue with name link and View in the actions menu', async () => {
     props = { queues: mockQueues };
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const TableComponent = () => <QueuesTable {...props} />;
@@ -97,14 +98,17 @@ describe('QueuesTable Component', () => {
     });
     expect(notificationsLink).toHaveAttribute('href', '/queues/notifications');
 
-    expect(
-      component.getByRole('link', { name: 'View queue details for default' }),
-    ).toHaveAttribute('href', '/queues/default');
-    expect(
-      component.getByRole('link', {
-        name: 'View queue details for notifications',
+    const user = userEvent.setup();
+    await user.click(
+      component.getByRole('button', {
+        name: `${QUEUES_ROW_ACTIONS_COPY.menuAriaLabelPrefix} default`,
       }),
-    ).toHaveAttribute('href', '/queues/notifications');
+    );
+
+    const viewItem = await component.findByRole('menuitem', {
+      name: QUEUES_ROW_ACTIONS_COPY.view,
+    });
+    expect(viewItem).toHaveAttribute('href', '/queues/default');
   });
 
   test('renders queue counts in table cells', () => {
@@ -157,18 +161,27 @@ describe('QueuesTable Component', () => {
 
     const user = userEvent.setup();
     await user.click(
-      component.getByRole('button', { name: 'Queue controls for default' }),
+      component.getByRole('button', {
+        name: `${QUEUES_ROW_ACTIONS_COPY.menuAriaLabelPrefix} default`,
+      }),
     );
 
     expect(
-      await component.findByRole('menuitem', { name: /Pause queue/i }),
+      await component.findByRole('menuitem', {
+        name: QUEUES_ROW_ACTIONS_COPY.pauseQueue,
+      }),
     ).toBeInTheDocument();
     expect(
-      component.getByRole('menuitem', { name: /Resume queue/i }),
+      component.getByRole('menuitem', {
+        name: QUEUES_ROW_ACTIONS_COPY.resumeQueue,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      component.getByRole('menuitem', { name: QUEUES_ROW_ACTIONS_COPY.view }),
     ).toBeInTheDocument();
   });
 
-  test('queue name links and View actions receive keyboard focus in row order', async () => {
+  test('queue name links and actions trigger receive keyboard focus in row order', async () => {
     props = { queues: mockQueues };
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const TableComponent = () => <QueuesTable {...props} />;
@@ -181,17 +194,12 @@ describe('QueuesTable Component', () => {
     const defaultName = component.getByRole('link', {
       name: 'View queue: default',
     });
-    const defaultView = component.getByRole('link', {
-      name: 'View queue details for default',
-    });
     const defaultControls = component.getByRole('button', {
-      name: 'Queue controls for default',
+      name: `${QUEUES_ROW_ACTIONS_COPY.menuAriaLabelPrefix} default`,
     });
 
     await user.tab();
     expect(defaultName).toHaveFocus();
-    await user.tab();
-    expect(defaultView).toHaveFocus();
     await user.tab();
     expect(defaultControls).toHaveFocus();
   });
