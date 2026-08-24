@@ -5,7 +5,7 @@ description: >-
   table design, naming, COMMENT ON TABLE/COLUMN standards, and idempotent DDL
   patterns. USE WHEN adding or editing SQL migrations, schema changes, table
   comments, or Postgres work under databases/ — not for routine OT plan CRUD
-  (see ot-plans) or NestJS entity wiring alone (see openthrottle-stack).
+  (see ot-plans) or NestJS entity wiring alone (see ot-stack).
 ---
 
 # OpenThrottle Postgres (migrations and table comments)
@@ -17,7 +17,7 @@ description: >-
 - You backfill **`COMMENT ON TABLE`** / **`COMMENT ON COLUMN`** for existing tables.
 - You need migration workflow or naming — start here, then read **`databases/README.md`** for full detail.
 
-Use **openthrottle-stack** for embeddings, ingest scripts, and server/entity sync. Use **ot-plans** for plans/tasks MCP — not this skill.
+Use **ot-stack** for embeddings, ingest scripts, and server/entity sync. Use **ot-plans** for plans/tasks MCP — not this skill.
 
 ## Table comment rules (required)
 

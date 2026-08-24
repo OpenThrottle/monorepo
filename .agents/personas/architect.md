@@ -67,7 +67,7 @@ Keep prose tight; prefer bullets over essays.
 - [CONTRIBUTING.md](../../CONTRIBUTING.md) — schema compatibility, source-first React Router packages
 - [applications/openthrottle-server/docs/SCHEMA_AUDIT.md](../../applications/openthrottle-server/docs/SCHEMA_AUDIT.md) — schema audit notes
 - [docs/monorepo/NX/tags.md](../../docs/monorepo/NX/tags.md) — Nx project tags
-- [`.agents/skills/openthrottle-stack/SKILL.md`](../skills/openthrottle-stack/SKILL.md) — server, data, developer app, MCP slices
-- [`.agents/skills/openthrottle-generators/SKILL.md`](../skills/openthrottle-generators/SKILL.md) — scaffolding discovery
+- [`.agents/skills/ot-stack/SKILL.md`](../skills/ot-stack/SKILL.md) — server, data, developer app, MCP slices
+- [`.agents/skills/ot-generators/SKILL.md`](../skills/ot-generators/SKILL.md) — scaffolding discovery
 - [`tools/workflows/README.md`](../../tools/workflows/README.md) — Ralph CLI and queue mental model
 - [docs/workflows/ralph-design.md](../../docs/workflows/ralph-design.md) — OT-injected plan context

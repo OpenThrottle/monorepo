@@ -9,9 +9,9 @@ import {
 describe('REQUIRED_AGENTS_SKILL_SLUGS', () => {
   test('lists OpenThrottle-specific agent skills', () => {
     expect([...REQUIRED_AGENTS_SKILL_SLUGS]).toEqual([
-      'openthrottle-generators',
-      'openthrottle-stack',
+      'ot-generators',
       'ot-plans',
+      'ot-stack',
       'workflow-ralph',
     ]);
   });

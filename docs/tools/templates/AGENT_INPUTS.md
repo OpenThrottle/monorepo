@@ -24,12 +24,12 @@ Agents (e.g. Cursor, Ralph) should receive the following rules. Cursor activates
 
 ### 1.2 Agent skills (repo-local)
 
-Invoke skills **before** writing code when the task matches their **USE WHEN** triggers. For `@tools/generators`, use **openthrottle-generators** first.
+Invoke skills **before** writing code when the task matches their **USE WHEN** triggers. For `@tools/generators`, use **ot-generators** first.
 
 | Path (SSOT)                                            | Purpose                                                                                                                                    |
 | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `.agents/skills/openthrottle-generators/SKILL.md`      | `@tools/generators`: `NX_ISOLATE_PLUGINS=false`, `pnpm nx`, list/describe/`--list`, react-router/nestjs/react/package/folders; AGENT_USAGE |
-| **AGENTS.md** (repo root) § OpenThrottle Agent Skills  | Index: **openthrottle-stack**, **ot-plans**, **agents-ralph**; generic Nx: **nx-workspace**                                                |
+| `.agents/skills/ot-generators/SKILL.md`                | `@tools/generators`: `NX_ISOLATE_PLUGINS=false`, `pnpm nx`, list/describe/`--list`, react-router/nestjs/react/package/folders; AGENT_USAGE |
+| **AGENTS.md** (repo root) § OpenThrottle Agent Skills  | Index: **ot-stack**, **ot-plans**, **agents-ralph**; generic Nx: **nx-workspace**                                                          |
 | **AGENTS.md** § General Guidelines for working with Nx | Nx task execution (`pnpm nx run`, affected), Nx MCP, when to use **nx_docs**                                                               |
 
 Slash discovery reads `.agents/skills/<slug>` (Claude Code, Cursor 2.4+, Codex, OpenCode) and the generated `.claude/skills/<slug>` fan-out; both resolve back to `skills/<slug>` for OT-owned skills.
@@ -107,12 +107,12 @@ Agents should encounter "check generators first" in **multiple** places so they 
 
 ### 3.1 Primary entry points (must mention generator-first)
 
-| Location                                    | Content                                                                                                                                      |
-| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| **AGENTS.md** (repo root)                   | § Scaffolding: **openthrottle-generators** first; § Cursor Agent Skills; link to AGENT_USAGE.md and `.agents/rules/personal-generators.mdc`. |
-| **`.agents/rules/README.md`**               | § Agent behavior: "Generators first" + link to personal-generators.mdc and AGENT_USAGE.md.                                                   |
-| **`.agents/rules/personal-generators.mdc`** | MANDATORY rule: check generators first, required workflow, list of generators, link to AGENT_USAGE.md.                                       |
-| **docs/tools/templates/AGENT_USAGE.md**     | Full generator-first policy, discover → describe → list → execute, NX_ISOLATE_PLUGINS, examples.                                             |
+| Location                                    | Content                                                                                                                            |
+| ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| **AGENTS.md** (repo root)                   | § Scaffolding: **ot-generators** first; § Cursor Agent Skills; link to AGENT_USAGE.md and `.agents/rules/personal-generators.mdc`. |
+| **`.agents/rules/README.md`**               | § Agent behavior: "Generators first" + link to personal-generators.mdc and AGENT_USAGE.md.                                         |
+| **`.agents/rules/personal-generators.mdc`** | MANDATORY rule: check generators first, required workflow, list of generators, link to AGENT_USAGE.md.                             |
+| **docs/tools/templates/AGENT_USAGE.md**     | Full generator-first policy, discover → describe → list → execute, NX_ISOLATE_PLUGINS, examples.                                   |
 
 ### 3.2 Supporting references
 
@@ -124,24 +124,24 @@ Agents should encounter "check generators first" in **multiple** places so they 
 | **AUDIT_CHECKLIST.md**                                                | Per-artifact checklist and quick-flag list; optional script: `pnpm run audit:templates-compliance`. |
 | **AGENT_INPUTS.md** (this doc)                                        | Single spec for what to provide to agents: rules list, example commands, discoverability.           |
 | **[agent-editor-folders.md](../../monorepo/agent-editor-folders.md)** | Folder layout, symlink matrix, where to edit — not rule/skill bodies (see §1).                      |
-| **openthrottle-generators** skill                                     | `.agents/skills/openthrottle-generators/SKILL.md` — invoke first for `@tools/generators`.           |
+| **ot-generators** skill                                               | `.agents/skills/ot-generators/SKILL.md` — invoke first for `@tools/generators`.                     |
 
 ### 3.3 Recommendations for implementation
 
 - **AGENTS.md:** Keep the Generators section at the top (or immediately after Nx) so agents see it early. Explicitly say: "Before writing new code, components, or services, check generators first (see AGENT_USAGE.md and personal-generators.mdc)."
 - **Cursor rules:** Ensure `personal-generators.mdc` has `alwaysApply: true` (already set) so it’s always in context via the `.cursor/rules/` symlink.
-- **Skills / onboarding:** Direct agents to **openthrottle-generators** (`.agents/skills/openthrottle-generators/SKILL.md`) before scaffolding: `NX_ISOLATE_PLUGINS=false pnpm nx list @tools/generators`, then AGENT_USAGE.md. Nx workspace/tasks: **nx-workspace** (see AGENTS.md § Cursor Agent Skills).
+- **Skills / onboarding:** Direct agents to **ot-generators** (`.agents/skills/ot-generators/SKILL.md`) before scaffolding: `NX_ISOLATE_PLUGINS=false pnpm nx list @tools/generators`, then AGENT_USAGE.md. Nx workspace/tasks: **nx-workspace** (see AGENTS.md § Cursor Agent Skills).
 
 ---
 
 ## 4. Summary
 
-| What                           | Where                                                                                                                                                                                                                                                                                                                            |
-| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Rules to load**              | §1: always-applied rules under `.agents/rules/` (Cursor: `.cursor/rules/` symlinks); §1.2 **openthrottle-generators** + AGENTS.md skills for Nx/generators; `coding/*` for code edits. Entry points: `.agents/rules/README.md` (rules layout), [agent-editor-folders.md](../../monorepo/agent-editor-folders.md) (folder paths). |
-| **Example commands**           | §2: discover (list → describe → list=<key> → execute); NX_ISOLATE_PLUGINS=false on every generator command; EXAMPLES.md for per-generator snippets; AGENT_USAGE.md is authoritative.                                                                                                                                             |
-| **Discoverability**            | §3: AGENTS.md, `.agents/rules/README.md`, personal-generators.mdc, AGENT_USAGE.md all state "generator first"; RULES_TO_GENERATORS_MAP, AUDIT_SCOPE, AUDIT_CHECKLIST, AGENT_INPUTS support audits and agent onboarding.                                                                                                          |
-| **Folder layout & write path** | [agent-editor-folders.md](../../monorepo/agent-editor-folders.md) — edit `.agents/skills/` and `.agents/rules/` only; editor trees are symlink views.                                                                                                                                                                            |
-| **Disk vs DB (D2)**            | Git is write SSOT; `custom_prompts` is a read-only index via future ingest (plan 1.5). Do not treat the DB as an edit surface for agent assets in MVP.                                                                                                                                                                           |
+| What                           | Where                                                                                                                                                                                                                                                                                                                  |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Rules to load**              | §1: always-applied rules under `.agents/rules/` (Cursor: `.cursor/rules/` symlinks); §1.2 **ot-generators** + AGENTS.md skills for Nx/generators; `coding/*` for code edits. Entry points: `.agents/rules/README.md` (rules layout), [agent-editor-folders.md](../../monorepo/agent-editor-folders.md) (folder paths). |
+| **Example commands**           | §2: discover (list → describe → list=<key> → execute); NX_ISOLATE_PLUGINS=false on every generator command; EXAMPLES.md for per-generator snippets; AGENT_USAGE.md is authoritative.                                                                                                                                   |
+| **Discoverability**            | §3: AGENTS.md, `.agents/rules/README.md`, personal-generators.mdc, AGENT_USAGE.md all state "generator first"; RULES_TO_GENERATORS_MAP, AUDIT_SCOPE, AUDIT_CHECKLIST, AGENT_INPUTS support audits and agent onboarding.                                                                                                |
+| **Folder layout & write path** | [agent-editor-folders.md](../../monorepo/agent-editor-folders.md) — edit `.agents/skills/` and `.agents/rules/` only; editor trees are symlink views.                                                                                                                                                                  |
+| **Disk vs DB (D2)**            | Git is write SSOT; `custom_prompts` is a read-only index via future ingest (plan 1.5). Do not treat the DB as an edit surface for agent assets in MVP.                                                                                                                                                                 |
 
 This specification is the single reference for **what agents should load** (rules, examples, discoverability). For **where agent/editor files live** and **contributor workflow**, use [agent-editor-folders.md](../../monorepo/agent-editor-folders.md) and [CONTRIBUTING.md](../../../CONTRIBUTING.md) § Agent assets.

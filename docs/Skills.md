@@ -63,7 +63,7 @@ Ours to author and edit; fanned out by ot-skill-sync:
 
 - **Agents/workflow:** agents-ralph, ot-claude-loop, validate-plan
 - **GitHub:** github-commit, github-pull-request, github-squash
-- **OpenThrottle:** openthrottle-folders, openthrottle-generators, openthrottle-stack, ot-onboarding, ot-plans, ot-postgres
+- **OpenThrottle:** ot-folders, ot-generators, ot-onboarding, ot-plans, ot-postgres, ot-stack
 - **Infra:** ot-skill-sync
 
 ## Always-on description budget

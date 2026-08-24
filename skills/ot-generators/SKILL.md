@@ -1,5 +1,5 @@
 ---
-name: openthrottle-generators
+name: ot-generators
 description: >-
   Scaffolding OpenThrottle code with @tools/generators. USE WHEN adding an app,
   package, React Router component or route, or NestJS service — always before

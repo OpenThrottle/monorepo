@@ -117,15 +117,15 @@ tags: github
     expect(result.tags).toBeUndefined();
   });
 
-  test('parses real openthrottle-generators SKILL.md frontmatter', () => {
+  test('parses real ot-generators SKILL.md frontmatter', () => {
     const content = readFileSync(
-      join(monorepoRoot, 'skills/openthrottle-generators/SKILL.md'),
+      join(monorepoRoot, 'skills/ot-generators/SKILL.md'),
       'utf8',
     );
 
     const result = parseSkillFrontmatter(content);
 
-    expect(result.name).toBe('openthrottle-generators');
+    expect(result.name).toBe('ot-generators');
     expect(result.description).toContain('@tools/generators');
   });
 });
