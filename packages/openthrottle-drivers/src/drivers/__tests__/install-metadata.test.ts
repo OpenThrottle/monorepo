@@ -1,17 +1,20 @@
 /**
  * @description Guards the install/update descriptors that back the in-stack `/settings/agents`
- * feature against silent drift from `scripts/setup_software.sh`. Every agent CLI the setup script
- * installs (claude, codex, cursor, grok, opencode) must carry a `curl-shell` install descriptor with
- * the exact URL + installer shell the script uses, and a well-formed update descriptor. Descriptors
- * are pure data here — no subprocess is spawned (the executor lives in agentic-utils).
+ * feature. The driver registry is the single source of truth for how each CLI installs
+ * (`scripts/setup_software.sh` once carried a mirrored `curl | shell` block, but no longer installs
+ * agent CLIs at all — do not point new descriptors at it). claude/codex/cursor/grok/opencode use
+ * their vendors' official curl-shell installers; gemini has no official curl-shell installer
+ * (geminicli.com serves no install script — verified 2026-08-25) and installs via npm instead.
+ * Every driver must also carry a well-formed update descriptor. Descriptors are pure data here — no
+ * subprocess is spawned (the executor lives in agentic-utils).
  */
 
 import { describe, expect, it } from 'vitest';
 
 import { ALL_DRIVERS, getDriver } from '../index.ts';
 
-/** Mirrors the `# 👨‍💻 Agent CLIs` block in scripts/setup_software.sh (name/binary/shell/url). */
-const EXPECTED_INSTALL: Record<
+/** The vendors' official curl-shell installers (researched per CLI; registry is source of truth). */
+const EXPECTED_CURL_INSTALL: Record<
   string,
   { installerShell: 'bash' | 'sh'; url: string }
 > = {
@@ -22,17 +25,31 @@ const EXPECTED_INSTALL: Record<
   opencode: { installerShell: 'bash', url: 'https://opencode.ai/install' },
 };
 
+/** CLIs distributed through npm only (no official curl-shell installer). */
+const EXPECTED_NPM_INSTALL: Record<string, { packageName: string }> = {
+  gemini: { packageName: '@google/gemini-cli' },
+};
+
 describe('driver install/update descriptors', () => {
-  it('every driver carries a curl-shell install descriptor matching setup_software.sh', () => {
+  it('every driver carries an install descriptor matching its official channel', () => {
     for (const driver of ALL_DRIVERS) {
       expect(driver.install, `${driver.id} must be installable`).toBeDefined();
-      expect(driver.install?.method).toBe('curl-shell');
-      const expected = EXPECTED_INSTALL[driver.id];
+
+      const expectedCurl = EXPECTED_CURL_INSTALL[driver.id];
+      const expectedNpm = EXPECTED_NPM_INSTALL[driver.id];
       expect(
-        expected,
+        expectedCurl !== undefined || expectedNpm !== undefined,
         `no expected install mapping for ${driver.id}`,
-      ).toBeDefined();
-      expect(driver.install).toEqual({ method: 'curl-shell', ...expected });
+      ).toBe(true);
+
+      if (expectedCurl !== undefined) {
+        expect(driver.install).toEqual({
+          method: 'curl-shell',
+          ...expectedCurl,
+        });
+      } else {
+        expect(driver.install).toEqual({ method: 'npm', ...expectedNpm });
+      }
     }
   });
 
@@ -45,7 +62,7 @@ describe('driver install/update descriptors', () => {
       if (driver.update?.method === 'command') {
         expect(driver.update.argv.length).toBeGreaterThan(0);
       } else {
-        expect(driver.update?.method).toBe('curl-shell');
+        expect(driver.update?.method).toBe('reinstall');
       }
     }
   });
@@ -68,6 +85,8 @@ describe('driver install/update descriptors', () => {
       method: 'command',
     });
     // cursor-agent auto-updates and has no unambiguous subcommand → re-run the installer.
-    expect(getDriver('cursor').update).toEqual({ method: 'curl-shell' });
+    expect(getDriver('cursor').update).toEqual({ method: 'reinstall' });
+    // gemini has no self-update subcommand (0.25.2) → re-run the npm install.
+    expect(getDriver('gemini').update).toEqual({ method: 'reinstall' });
   });
 });

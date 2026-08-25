@@ -12,6 +12,7 @@ import {
   claudeDriver,
   codexDriver,
   cursorDriver,
+  geminiDriver,
   grokDriver,
   opencodeDriver,
 } from '../index.ts';
@@ -26,7 +27,7 @@ describe('driver discovery metadata', () => {
     }
   });
 
-  it('marks claude/cursor/opencode/codex/grok chat-capable (all have streaming adapters)', () => {
+  it('marks every driver chat-capable (all six have streaming adapters)', () => {
     const chatCapable = ALL_DRIVERS.filter(
       (driver) => driver.capabilities.chatStreaming,
     ).map((driver) => driver.id);
@@ -34,11 +35,13 @@ describe('driver discovery metadata', () => {
       'claude',
       'codex',
       'cursor',
+      'gemini',
       'grok',
       'opencode',
     ]);
 
     expect(codexDriver.capabilities.chatStreaming).toBe(true);
+    expect(geminiDriver.capabilities.chatStreaming).toBe(true);
     expect(grokDriver.capabilities.chatStreaming).toBe(true);
   });
 
@@ -51,6 +54,10 @@ describe('driver discovery metadata', () => {
 
   it('codex has no model-listing descriptor (availability-only)', () => {
     expect(codexDriver.discoverModels).toBeUndefined();
+  });
+
+  it('gemini has no model-listing descriptor (no models subcommand in 0.25.2)', () => {
+    expect(geminiDriver.discoverModels).toBeUndefined();
   });
 
   it('cursor parses `<id> - <Label>` rows, skipping the header and blanks', () => {

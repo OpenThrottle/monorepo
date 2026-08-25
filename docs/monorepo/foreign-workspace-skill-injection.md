@@ -52,7 +52,7 @@ Note the personal `create-readme` also loses — not because personal < OT, but 
 
 ## 2. Placement — `.agents/skills/` + `.claude/skills/`, forced by CLI reality
 
-All five agent CLIs discover skills **only from directories inside the working tree**. None exposes an out-of-repo `--skills-dir` flag or env override. So the layer must live inside the foreign repo. The **union of two dirs** covers all five:
+All six agent CLIs discover skills **only from directories inside the working tree** (plus, for some, a global user dir — rejected below). None exposes an out-of-repo `--skills-dir` flag or env override. So the layer must live inside the foreign repo. The **union of two dirs** covers five of the six:
 
 | CLI      | reads `.agents/skills` | reads `.claude/skills` |
 | -------- | :--------------------: | :--------------------: |
@@ -60,9 +60,12 @@ All five agent CLIs discover skills **only from directories inside the working t
 | codex    |           ✅           |           —            |
 | opencode |           ✅           |           —            |
 | cursor   |           ✅           |           ✅           |
+| gemini   |           —            |           —            |
 | grok     |           —            |           ✅           |
 
-`.agents/skills` → claude/codex/opencode/cursor; `.claude/skills` → claude/cursor/grok. Injecting into **both** reaches every CLI with no per-CLI branching. This mirrors ot-skill-sync's own two-stage layout (`.agents/skills` as the universal view, `.claude/skills` as an agent fan-out target).
+`.agents/skills` → claude/codex/opencode/cursor; `.claude/skills` → claude/cursor/grok. Injecting into **both** reaches every CLI except gemini with no per-CLI branching. This mirrors ot-skill-sync's own two-stage layout (`.agents/skills` as the universal view, `.claude/skills` as an agent fan-out target).
+
+**Known gap — gemini (0.25.2, from the shipped source):** gemini discovers skills only from `.gemini/skills` (project scope) and `~/.gemini/skills` (user scope). Neither injection dir reaches it, and the global dir is rejected for the same reasons as the others below. Extending the materializer with a third target dir (`.gemini/skills`) is the obvious follow-up if gemini-driven foreign runs need OT skills.
 
 ### Rejected: global user dirs (`~/.claude/skills`, `~/.grok/skills`, …)
 

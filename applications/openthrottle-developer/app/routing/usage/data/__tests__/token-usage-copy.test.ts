@@ -14,7 +14,7 @@ describe('tokenUsageProviderLabel', () => {
   });
 
   test('falls back to the raw id for an unknown provider', () => {
-    expect(tokenUsageProviderLabel('gemini')).toBe('gemini');
+    expect(tokenUsageProviderLabel('mistral')).toBe('mistral');
   });
 });
 

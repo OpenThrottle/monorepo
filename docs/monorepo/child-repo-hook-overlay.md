@@ -45,8 +45,9 @@ plugin. They are **additive by construction**, which is why the no-clobber requi
 by _mechanism_ rather than by careful merge logic.
 
 And this is not a Claude-only quirk. The [capability matrix](./agent-cli-hook-capability-matrix.md)
-probed all five CLIs OT drives and found that **every one of them** has an out-of-repo hook config
-path — three via a home-directory config layer, two via a per-invocation directory flag.
+probed all six CLIs OT drives and found that **every one of them** has an out-of-repo hook config
+path — four via a home-directory config layer (gemini's is user-scope `~/.gemini/settings.json`),
+two via a per-invocation directory flag.
 
 > **The rule to remember:** skills had to go _into_ the repo because there was no alternative. Hooks
 > never have to, for any CLI we support. If you are about to write into a child repo to deliver a
@@ -65,10 +66,11 @@ out-of-repo flag for.
 
 **The narrow condition for revisiting it:** some CLI has _no_ out-of-repo hook config **and**
 multi-CLI parity becomes a v1 requirement. The capability matrix has since established that the first
-half is false for all five CLIs, so C is closed rather than merely deferred.
+half is false for all six CLIs, so C is closed rather than merely deferred.
 
 Option **D** (server-side transcript derivation) was not chosen as the mechanism but is retained as
-the fallback for CLIs whose hooks we cannot reach — currently grok and opencode.
+the fallback for CLIs whose hooks we cannot reach — currently grok, opencode, and gemini (whose
+settings-gated hooks system has not yet been exercised end-to-end).
 
 ## 3. The design — one artifact, two delivery paths
 

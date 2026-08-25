@@ -10,12 +10,14 @@ import type { AgentDriver } from '../types/index.ts';
 import { claudeDriver } from './claude.ts';
 import { codexDriver } from './codex.ts';
 import { cursorDriver } from './cursor.ts';
+import { geminiDriver } from './gemini.ts';
 import { grokDriver } from './grok.ts';
 import { opencodeDriver } from './opencode.ts';
 
 export { claudeDriver } from './claude.ts';
 export { codexDriver } from './codex.ts';
 export { cursorDriver } from './cursor.ts';
+export { geminiDriver } from './gemini.ts';
 export { grokDriver } from './grok.ts';
 export { opencodeDriver } from './opencode.ts';
 
@@ -27,6 +29,7 @@ export const ALL_DRIVERS: readonly AgentDriver[] = [
   claudeDriver,
   codexDriver,
   cursorDriver,
+  geminiDriver,
   grokDriver,
   opencodeDriver,
 ];

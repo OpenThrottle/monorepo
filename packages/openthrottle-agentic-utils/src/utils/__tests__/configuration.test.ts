@@ -23,7 +23,7 @@ describe('safeParseRunner', () => {
   });
 
   it('falls back to the default runner for unknown values', () => {
-    expect(safeParseRunner('gemini')).toBe(DEFAULT_WORKFLOW_RUNNER);
+    expect(safeParseRunner('copilot')).toBe(DEFAULT_WORKFLOW_RUNNER);
   });
 
   it('falls back to the default runner for empty/auto values', () => {

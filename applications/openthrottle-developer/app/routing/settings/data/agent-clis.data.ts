@@ -38,6 +38,11 @@ const AGENT_CLI_CATALOG: readonly AgentCliCatalogEntry[] = [
     installUrl: 'https://cursor.com/install',
     label: 'Cursor Agent',
   },
+  {
+    backend: 'gemini',
+    installUrl: 'https://geminicli.com',
+    label: 'Gemini CLI',
+  },
   { backend: 'grok', installUrl: 'https://x.ai/cli/install.sh', label: 'Grok' },
   {
     backend: 'opencode',

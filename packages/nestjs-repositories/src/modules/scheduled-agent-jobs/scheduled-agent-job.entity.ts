@@ -20,7 +20,7 @@ import {
  * app-side via `parseDriverId`, not CHECK-constrained, because the driver set grows.
  */
 export type ScheduledAgentJobDriverId =
-  'claude' | 'codex' | 'cursor' | 'grok' | 'opencode';
+  'claude' | 'codex' | 'cursor' | 'gemini' | 'grok' | 'opencode';
 
 /** Local endpoint targeting persisted in `settings` — mirrors DriverEndpointConfig WITHOUT apiKey (never persisted). */
 export interface ScheduledAgentJobEndpointSettings {

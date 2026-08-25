@@ -1,6 +1,6 @@
 /**
  * @description Common typings for the OpenThrottle agent-CLI driver contract. Every agent CLI
- * (Claude Code, Codex, Cursor, Grok, OpenCode) is described by an {@link AgentDriver} and invoked
+ * (Claude Code, Codex, Cursor, Gemini, Grok, OpenCode) is described by an {@link AgentDriver} and invoked
  * with a {@link DriverInvocationConfig}. Decoupled from Ralph/workflow types on purpose so this
  * package stays a leaf dependency.
  */
@@ -101,12 +101,12 @@ export interface DriverCapabilities {
    *
    * Deliberately distinct from {@link DriverCapabilities.mcpAutoApprove}, which only says whether
    * this driver EMITS flags. The two are independent, and conflating them warns on the wrong
-   * drivers: claude and opencode emit nothing yet attach fine, while codex and grok also emit
-   * nothing and cannot attach at all. Consumers deciding whether an MCP-dependent prompt is viable
+   * drivers: claude, grok, and opencode emit nothing yet attach fine, while codex and gemini also
+   * emit nothing and cannot attach at all. Consumers deciding whether an MCP-dependent prompt is viable
    * must read THIS flag.
    *
-   * `false` does not mean the CLI lacks MCP support — codex and grok both have it, but resolve
-   * servers from their own user-scope config rather than from the repo. For those, reachability is a
+   * `false` does not mean the CLI lacks MCP support — codex and gemini both have it, but resolve
+   * servers from their own config scope rather than from the repo's committed files. For those, reachability is a
    * property of the HOST, so OT cannot verify it from the workspace; surface that as "cannot be
    * verified", never as a flat claim that the server is missing.
    */
@@ -180,26 +180,32 @@ export type DriverModelListing =
 
 /**
  * @description How a driver's CLI is installed on the host. `method: 'curl-shell'` fetches `url` and
- * pipes it to `installerShell` (`curl -fsSL <url> | <installerShell>`), mirroring the `curl | shell`
- * installers in `scripts/setup_software.sh`. Kept as a pure descriptor — the leaf package never
- * spawns; the impure executor (agentic-utils) reads this and is the only place a subprocess runs.
+ * pipes it to `installerShell` (`curl -fsSL <url> | <installerShell>`) — the vendor's official
+ * installer; `method: 'npm'` installs `packageName` globally
+ * (`npm install --global <packageName>`) for CLIs that ship no official curl-shell installer
+ * (gemini — geminicli.com serves no install script, verified 2026-08-25). Kept as a pure
+ * descriptor — the leaf package never spawns; the impure executor (agentic-utils) reads this and is
+ * the only place a subprocess runs.
  * @public
  */
-export type DriverInstallDescriptor = {
-  readonly installerShell: 'bash' | 'sh';
-  readonly method: 'curl-shell';
-  readonly url: string;
-};
+export type DriverInstallDescriptor =
+  | {
+      readonly installerShell: 'bash' | 'sh';
+      readonly method: 'curl-shell';
+      readonly url: string;
+    }
+  | { readonly method: 'npm'; readonly packageName: string };
 
 /**
  * @description How a driver's CLI updates itself. `method: 'command'` runs the CLI's own self-update
- * subcommand (`<binary> <argv...>`, e.g. `claude update`, `opencode upgrade`); `method: 'curl-shell'`
- * re-runs the install descriptor (idempotent latest-version installers). Pure descriptor only.
+ * subcommand (`<binary> <argv...>`, e.g. `claude update`, `opencode upgrade`); `method: 'reinstall'`
+ * re-runs the install descriptor, whatever its method (idempotent latest-version installers). Pure
+ * descriptor only.
  * @public
  */
 export type DriverUpdateDescriptor =
   | { readonly argv: readonly string[]; readonly method: 'command' }
-  | { readonly method: 'curl-shell' };
+  | { readonly method: 'reinstall' };
 
 /**
  * @description A single agent CLI, described once. Contributed via `defineDriver` and looked up
@@ -219,8 +225,8 @@ export interface AgentDriver {
   /** Stable driver id (also a `DriverId`). */
   readonly id: string;
   /**
-   * How this CLI is installed on the host (single source of truth shared with
-   * `scripts/setup_software.sh`). Omitted ⇒ not installable through the in-stack setup feature.
+   * How this CLI is installed on the host (the registry is the single source of truth).
+   * Omitted ⇒ not installable through the in-stack setup feature.
    */
   readonly install?: DriverInstallDescriptor;
   /** Human/iteration label, e.g. `claude-code`, `cursor-agent`. */

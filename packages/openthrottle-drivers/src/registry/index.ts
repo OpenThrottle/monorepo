@@ -16,6 +16,7 @@ export const DRIVER_IDS = [
   'claude',
   'codex',
   'cursor',
+  'gemini',
   'grok',
   'opencode',
 ] as const;

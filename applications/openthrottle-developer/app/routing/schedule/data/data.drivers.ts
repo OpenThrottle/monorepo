@@ -7,6 +7,7 @@ export const SCHEDULED_JOB_DRIVER_IDS = [
   'claude',
   'codex',
   'cursor',
+  'gemini',
   'grok',
   'opencode',
 ] as const;
