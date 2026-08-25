@@ -121,6 +121,7 @@ OpenThrottle -> Open Throttle      MCP  -> M C P        Nx      -> N X
 pgvector     -> P G vector         CLI  -> C L I        pnpm    -> P N P M
 Postgres     -> Postgress          9:16 -> nine by sixteen
 Ollama       -> oh LAH ma          429  -> four twenty nine
+read         -> reed
 ```
 
 Substitution applies to the **spoken** text only. Captions use the written form, so

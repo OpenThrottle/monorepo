@@ -65,7 +65,7 @@ export const flow: DemoFlow = {
     dwell(750),
 
     // Still 0:00 — the printed block. Long, so it gets the dwell to be read rather
-    // than glimpsed; the narration is still on "here is the wiring" while it lands.
+    // than glimpsed; the narration is still on the global-install line while it lands.
     // Deliberately NOT its own beat: narration beats are matched to flow beats
     // POSITIONALLY (assemble/timeline.ts), so an extra flow beat does not merely go
     // unnarrated — it shifts every later beat's narration one beat early.

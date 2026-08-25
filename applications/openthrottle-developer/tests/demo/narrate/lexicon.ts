@@ -43,6 +43,7 @@ export const PRONUNCIATIONS: ReadonlyArray<readonly [string, string]> = [
   ['9:16', 'nine by sixteen'],
   ['16:9', 'sixteen by nine'],
   ['Apache-2.0', 'Apache two'],
+  ['read', 'reed'],
 ];
 
 /** Escape a literal for use inside a RegExp. */
