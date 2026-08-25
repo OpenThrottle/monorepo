@@ -36,6 +36,11 @@ export interface RenderRequest {
 export interface TtsBackend {
   /** Identifier recorded in timings.json, so a take can be traced to its voice. */
   readonly id: string;
+  /**
+   * Hosted-provider model id (e.g. an ElevenLabs or OpenAudio model), recorded
+   * per take because a voice id alone does not reproduce a hosted render.
+   */
+  readonly model?: string;
   /** Render one sentence. Returns the path actually written. */
   readonly render: (request: RenderRequest) => Promise<string>;
   /**
@@ -59,6 +64,8 @@ export interface SegmentTiming {
 export interface NarrationTimings {
   readonly backend: string;
   readonly integratedLufsTarget: number;
+  /** Hosted-provider model id for the take, when the backend has one. */
+  readonly model?: string;
   readonly segments: readonly SegmentTiming[];
   readonly slug: string;
   readonly totalSeconds: number;

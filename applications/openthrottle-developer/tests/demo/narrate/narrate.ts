@@ -27,6 +27,14 @@ import { join } from 'node:path';
 import { promisify } from 'node:util';
 
 import { loadFormat, repositoryRoot } from '../runner/format';
+import {
+  DEFAULT_ELEVENLABS_VOICE,
+  elevenLabsBackend,
+} from './backends/elevenlabs';
+import {
+  DEFAULT_FISH_AUDIO_VOICE,
+  fishAudioBackend,
+} from './backends/fish-audio';
 import { DEFAULT_PIPER_VOICE, piperBackend } from './backends/piper';
 import { sayBackend } from './backends/say';
 import { parseScript } from './parse-script';
@@ -38,8 +46,17 @@ const execFileAsync = promisify(execFile);
 const DEFAULT_SAY_VOICE = 'Samantha';
 
 const BACKENDS: Readonly<Record<string, TtsBackend>> = {
+  elevenlabs: elevenLabsBackend,
+  'fish-audio': fishAudioBackend,
   'macos-say': sayBackend,
   piper: piperBackend,
+};
+
+const DEFAULT_VOICES: Readonly<Record<string, string>> = {
+  elevenlabs: DEFAULT_ELEVENLABS_VOICE,
+  'fish-audio': DEFAULT_FISH_AUDIO_VOICE,
+  'macos-say': DEFAULT_SAY_VOICE,
+  piper: DEFAULT_PIPER_VOICE,
 };
 
 const argValue = (name: string): string | undefined => {
@@ -149,7 +166,12 @@ const main = async (): Promise<void> => {
   const voice =
     argValue('voice') ??
     process.env.NARRATION_VOICE ??
-    (backend.id === 'piper' ? DEFAULT_PIPER_VOICE : DEFAULT_SAY_VOICE);
+    DEFAULT_VOICES[backend.id];
+
+  if (!voice) {
+    console.error(`narrate: no default voice for backend '${backend.id}'`);
+    process.exit(1);
+  }
 
   const format = loadFormat();
   const script = parseScript(repositoryRoot(), slug);
@@ -261,6 +283,7 @@ const main = async (): Promise<void> => {
   const timings: NarrationTimings = {
     backend: backend.id,
     integratedLufsTarget: format.audio.targetLufs,
+    ...(backend.model === undefined ? {} : { model: backend.model }),
     segments,
     slug,
     totalSeconds: cursor,
