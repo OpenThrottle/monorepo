@@ -88,7 +88,7 @@ describe('PlansTable Component', () => {
       withPlans.getByRole('columnheader', { name: 'Status' }),
     ).toBeInTheDocument();
     expect(
-      withPlans.getByRole('columnheader', { name: 'Plan' }),
+      withPlans.getByRole('columnheader', { name: 'Plan Details' }),
     ).toBeInTheDocument();
     expect(
       withPlans.getByRole('columnheader', { name: 'Actions' }),

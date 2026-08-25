@@ -10,7 +10,7 @@ describe('GlobalPopoverActionsHeader Component', () => {
     cleanup();
   });
 
-  test('renders the shared Actions header copy right-aligned', () => {
+  test('renders the shared Actions header copy centered', () => {
     const Component = (): React.ReactElement => <GlobalPopoverActionsHeader />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const component = render(<RoutesStub />);
@@ -22,7 +22,7 @@ describe('GlobalPopoverActionsHeader Component', () => {
       component.getByText(GLOBAL_POPOVER_COPY.actionsHeader),
     ).toBeInTheDocument();
     expect(component.getByTestId('GlobalPopoverActionsHeader')).toHaveClass(
-      'text-right',
+      'text-center',
     );
   });
 });

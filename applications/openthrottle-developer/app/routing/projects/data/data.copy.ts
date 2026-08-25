@@ -9,3 +9,8 @@ export const PROJECT_NOT_FOUND_COPY = {
   description: `The project you're looking for doesn't exist or was removed.`,
   title: `Project not found`,
 } as const;
+
+export const PROJECTS_ROW_ACTIONS_COPY = {
+  menuAriaLabelPrefix: `Project actions for`,
+  view: `View project`,
+} as const;

@@ -1,7 +1,6 @@
 import * as React from 'react';
-import userEvent from '@testing-library/user-event';
 import { Tabs, TooltipProvider } from '@openthrottle/react-router-shadcn';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import { PlanTabTasks } from '../PlanTabTasks';
 import { renderWithPlanDetailRouteData } from '~/routing/plans/testing/plan-detail-route-data';
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
@@ -42,11 +41,6 @@ function renderTabTasks(tasks: PlanTaskRowFragment[]) {
 }
 
 describe('PlanTabTasks Component', () => {
-  beforeEach(() => {
-    // Isolate the persisted plans.tasksView setting between tests.
-    window.localStorage.clear();
-  });
-
   test('renders empty tasks state when there are no tasks', () => {
     const { getByRole } = renderTabTasks([]);
 
@@ -55,64 +49,15 @@ describe('PlanTabTasks Component', () => {
     ).toBeInTheDocument();
   });
 
-  test('renders the list view by default', () => {
-    const { getByText, getByTestId, queryByText } = renderTabTasks([mockTask]);
+  test('renders the tasks table with no view toggle', () => {
+    const { getByText, queryByTestId } = renderTabTasks([mockTask]);
 
-    expect(getByTestId('PlanTabTasks-view-toggle')).toBeInTheDocument();
+    expect(getByText('Task Details')).toBeInTheDocument();
+    expect(getByText('Status')).toBeInTheDocument();
     expect(getByText('First task')).toBeInTheDocument();
 
-    // Not show in table view
-    expect(queryByText('PlanTaskItems')).not.toBeInTheDocument();
-
-    // Table-only column headers are present
-    expect(getByText('Title / Context')).toBeInTheDocument();
-  });
-
-  test('switches to the table view via the toggle', async () => {
-    const user = userEvent.setup();
-    const { getByLabelText, getByText, queryByTestId } = renderTabTasks([
-      mockTask,
-    ]);
-
-    await user.click(getByLabelText('Table view'));
-
-    expect(getByText('Title / Context')).toBeInTheDocument();
-    expect(getByText('Status')).toBeInTheDocument();
+    expect(queryByTestId('PlanTabTasks-view-toggle')).not.toBeInTheDocument();
     expect(queryByTestId('PlanTaskItems')).not.toBeInTheDocument();
-  });
-
-  test('persists the selected view across remounts', async () => {
-    const user = userEvent.setup();
-    const first = renderTabTasks([mockTask]);
-
-    await user.click(first.getByLabelText('Table view'));
-    expect(first.getByText('Title / Context')).toBeInTheDocument();
-    first.unmount();
-
-    // A fresh mount (as after reload/navigation) restores the table view.
-    const second = renderTabTasks([mockTask]);
-    expect(second.getByText('Title / Context')).toBeInTheDocument();
-    expect(second.queryByTestId('PlanTaskItems')).not.toBeInTheDocument();
-  });
-
-  test('shows step index derived from sorted list position', () => {
-    const { getByLabelText } = renderTabTasks([
-      {
-        ...mockTask,
-        id: 'task-second',
-        sortOrder: 2000,
-        title: 'Second task',
-      },
-      {
-        ...mockTask,
-        id: 'task-first',
-        sortOrder: 1000,
-        title: 'First by order',
-      },
-    ]);
-
-    expect(getByLabelText('Step 1')).toHaveTextContent('#1');
-    expect(getByLabelText('Step 2')).toHaveTextContent('#2');
   });
 
   test('orders rows by sortOrder not input array order', () => {

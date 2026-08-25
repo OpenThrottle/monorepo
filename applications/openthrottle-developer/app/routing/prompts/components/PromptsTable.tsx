@@ -1,5 +1,6 @@
 import * as React from 'react';
 import clsx from 'clsx';
+import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
 import { Link } from 'react-router';
 import {
   Badge,
@@ -97,7 +98,7 @@ PromptsTable.buildTable = (): ColumnDef<
       header: () => <div className="p-2">Status</div>,
     },
     {
-      accessorKey: 'title',
+      accessorKey: 'details',
       cell: ({ row }) => {
         const prompt = row.original;
         const promptHref = `/prompts/${prompt.id}`;
@@ -105,8 +106,9 @@ PromptsTable.buildTable = (): ColumnDef<
         const fileBasename = prompt.filePath
           ? prompt.filePath.split('/').pop()
           : null;
-        const visibleLabels = prompt.labels.slice(0, 3);
-        const overflowLabelCount = prompt.labels.length - 3;
+
+        const _visibleLabels = prompt.labels.slice(0, 3);
+        const _overflowLabelCount = prompt.labels.length - 3;
 
         return (
           <div className="p-2">
@@ -121,25 +123,25 @@ PromptsTable.buildTable = (): ColumnDef<
               </Link>
             </h2>
 
+            {/* {prompt.labels.length > 0 ? (
+              <div className="mb-2 flex flex-wrap gap-1">
+                {visibleLabels.map((label) => (
+                  <Badge size="xs">{label}</Badge>
+                ))}
+                {overflowLabelCount > 0 ? (
+                  <Badge size="xs">+{overflowLabelCount}</Badge>
+                ) : null}
+              </div>
+            ) : null} */}
+
             <div className="max-w-3xl">
-              {prompt.description ? (
+              {/* {prompt.description ? (
                 <p className="text-muted-foreground mb-2 line-clamp-2 text-xs">
                   {prompt.description}
                 </p>
-              ) : null}
+              ) : null} */}
 
-              {prompt.labels.length > 0 ? (
-                <div className="mb-2 flex flex-wrap gap-1">
-                  {visibleLabels.map((label) => (
-                    <Badge size="xs">{label}</Badge>
-                  ))}
-                  {overflowLabelCount > 0 ? (
-                    <Badge size="xs">+{overflowLabelCount}</Badge>
-                  ) : null}
-                </div>
-              ) : null}
-
-              <div className="text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+              <div className="text-muted-foreground flex w-full flex-wrap items-center gap-x-4 gap-y-1 text-xs">
                 {fileBasename ? (
                   <span
                     className="flex items-center gap-1"
@@ -158,16 +160,22 @@ PromptsTable.buildTable = (): ColumnDef<
                 </span>
               </div>
 
-              <p className="text-muted-foreground mt-2 line-clamp-2 text-xs">
-                {/* FIXME: can't use this due to server module usage */}
-                {/* {extractContentAfterFrontmatter(prompt.content)} */}
+              {/* FIXME: can't use this due to server module usage */}
+              {/* {extractContentAfterFrontmatter(prompt.content)} */}
+              {/* <p className="text-muted-foreground mt-2 line-clamp-2 text-xs">
                 {prompt.content}
-              </p>
+              </p> */}
+
+              <hr className="my-4" />
+              <MarkdownRenderer
+                className="m-0 mt-2 line-clamp-5 overflow-hidden"
+                source={prompt.content}
+              />
             </div>
           </div>
         );
       },
-      header: () => <div className="p-2">Prompt</div>,
+      header: () => <div className="p-2">Details</div>,
     },
   ];
 };

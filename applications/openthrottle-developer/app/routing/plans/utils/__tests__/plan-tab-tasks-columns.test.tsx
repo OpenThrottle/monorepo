@@ -48,43 +48,17 @@ const renderWithRoutes = (
 describe('buildPlanTabTasksColumns', () => {
   const columns = buildPlanTabTasksColumns(new Set(['managed-task']));
 
-  test('defines the step, status, title, and actions columns in order', () => {
-    expect(columns).toHaveLength(4);
-    expect(columns[0]?.id).toBe('step');
-    expect(columns[1]).toMatchObject({ accessorKey: 'status' });
-    expect(columns[2]).toMatchObject({ accessorKey: 'title' });
-    expect(columns[3]?.id).toBe('actions');
-  });
-
-  describe('step column', () => {
-    const stepColumn = columns[0];
-
-    test('header renders a centered "#" label', () => {
-      const header = stepColumn?.header;
-      expect(typeof header).toBe('function');
-      const { getByText } = renderWithRoutes(
-        typeof header === 'function' ? header(buildHeaderContext()) : null,
-      );
-      expect(getByText('#')).toBeTruthy();
-    });
-
-    test('cell renders a 1-based step index derived from the row index', () => {
-      const cell = stepColumn?.cell;
-      expect(typeof cell).toBe('function');
-      const { getByLabelText, getByText } = renderWithRoutes(
-        typeof cell === 'function'
-          ? cell(buildCellContext(buildTask(), 4))
-          : null,
-      );
-      expect(getByLabelText('Step 5')).toBeTruthy();
-      expect(getByText('#5')).toBeTruthy();
-    });
+  test('defines the status, details, and actions columns in order', () => {
+    expect(columns).toHaveLength(3);
+    expect(columns[0]).toMatchObject({ accessorKey: 'status' });
+    expect(columns[1]).toMatchObject({ accessorKey: 'details' });
+    expect(columns[2]?.id).toBe('actions');
   });
 
   describe('status column', () => {
-    const statusColumn = columns[1];
+    const statusColumn = columns[0];
 
-    test('header renders a centered "Status" label', () => {
+    test('header renders the "Status" label', () => {
       const header = statusColumn?.header;
       const { getByText } = renderWithRoutes(
         typeof header === 'function' ? header(buildHeaderContext()) : null,
@@ -114,14 +88,15 @@ describe('buildPlanTabTasksColumns', () => {
     });
   });
 
-  describe('title column', () => {
-    const titleColumn = columns[2];
+  describe('details column', () => {
+    const titleColumn = columns[1];
 
-    test('header renders "Title / Context"', () => {
+    test('header renders "Task Details"', () => {
       const header = titleColumn?.header;
-      expect(
+      const { getByText } = renderWithRoutes(
         typeof header === 'function' ? header(buildHeaderContext()) : null,
-      ).toBe('Title / Context');
+      );
+      expect(getByText('Task Details')).toBeTruthy();
     });
 
     test('cell marks the task as managed when its id is in managedTaskIds', () => {
@@ -152,7 +127,7 @@ describe('buildPlanTabTasksColumns', () => {
   });
 
   describe('actions column', () => {
-    const actionsColumn = columns[3];
+    const actionsColumn = columns.find((column) => column.id === 'actions');
 
     test('header renders Actions via GlobalPopoverActionsHeader', () => {
       const header = actionsColumn?.header;
@@ -162,13 +137,13 @@ describe('buildPlanTabTasksColumns', () => {
       expect(getByText('Actions')).toBeTruthy();
     });
 
-    test('cell renders the inline actions for the row task', () => {
+    test('cell renders the GlobalPopover actions menu for the row task', () => {
       const cell = actionsColumn?.cell;
       const { getByRole } = renderWithRoutes(
         typeof cell === 'function' ? cell(buildCellContext(buildTask())) : null,
       );
       expect(
-        getByRole('link', { name: /view task: first task/i }),
+        getByRole('button', { name: /task actions for first task/i }),
       ).toBeTruthy();
     });
   });

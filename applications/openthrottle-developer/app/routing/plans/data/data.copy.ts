@@ -218,7 +218,17 @@ export const PLANS_ROW_ACTIONS_COPY = {
   killPendingLabel: `Stopping…`,
   killTitle: `Kill plan run?`,
   menuAriaLabelPrefix: `Plan actions for`,
-  queue: `Queue`,
+  queue: `Queue plan`,
   queueAriaLabelSuffix: `with default worker tuning (open plan details to set Workflow run options)`,
   queuePendingLabel: `Queuing…`,
+  view: `View plan`,
+} as const;
+
+/**
+ * @description Plan tasks table row Actions menu (view + edit the task).
+ */
+export const PLAN_TASK_ROW_ACTIONS_COPY = {
+  edit: `Edit task`,
+  menuAriaLabelPrefix: `Task actions for`,
+  view: `View task`,
 } as const;

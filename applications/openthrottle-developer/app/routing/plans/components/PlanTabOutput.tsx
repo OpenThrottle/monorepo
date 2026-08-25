@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { PlanDetailIndexLoaderQuery } from '@openthrottle/openthrottle-developer-codegen';
-import { Card, TabsContent } from '@openthrottle/react-router-shadcn';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
+import { TabsContent } from '@openthrottle/react-router-shadcn';
 import { OutputStream } from '~/routing/plans/components/OutputStream';
 // import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
 // import { LinkedArtifactsPanel } from '~/routing/plans/components/LinkedArtifactsPanel';
@@ -42,24 +42,20 @@ export const PlanTabOutput = (
       data-testid="PlanLoggerOutput"
       value="output"
     >
-      <Card className="p-4 md:p-8">
-        {chunks.length === 0 ? (
-          <div>
-            <GlobalHeading
-              className="mb-4"
-              title="No plan output chunks yet."
-            />
-            <p className="text-muted-foreground text-sm">
-              Iterations append here when agents call{' '}
-              <code className="text-xs">appendPlanOutput</code> (for example
-              from workflow-ralph or MCP). Local CLI runs log to your terminal
-              instead.
-            </p>
-          </div>
-        ) : (
-          <OutputStream chunks={chunks} />
-        )}
-      </Card>
+      {/* <Card className="p-4 md:p-8"> */}
+      {chunks.length === 0 ? (
+        <div>
+          <GlobalHeading className="mb-4" title="No plan output chunks yet." />
+          <p className="text-muted-foreground text-sm">
+            Iterations append here when agents call{' '}
+            <code className="text-xs">appendPlanOutput</code> (for example from
+            workflow-ralph or MCP). Local CLI runs log to your terminal instead.
+          </p>
+        </div>
+      ) : (
+        <OutputStream chunks={chunks} />
+      )}
+      {/* </Card> */}
 
       {/* Agent output — what our agents write, iteration by iteration. */}
       {/* <OpenThrottleFieldset

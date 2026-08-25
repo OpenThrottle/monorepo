@@ -132,6 +132,7 @@ const main = async (): Promise<void> => {
   const title = (scriptSource.match(/^title:\s*(.*)$/m)?.[1] ?? slug)
     .trim()
     .replace(/^['"]|['"]$/g, '');
+
   const cardLines = (scriptSource.match(/^titleCard:\s*\[(.*)\]$/m)?.[1] ?? '')
     .split(',')
     .map((part) => part.trim().replace(/^['"]|['"]$/g, ''))

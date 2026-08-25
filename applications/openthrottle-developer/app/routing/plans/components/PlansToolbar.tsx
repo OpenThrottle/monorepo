@@ -1,15 +1,12 @@
 import * as React from 'react';
 import clsx from 'clsx';
-import { Button } from '@openthrottle/react-router-shadcn';
-import { GlobalToolbarSearch } from '@openthrottle/react-router-ui-global';
-import { Link } from 'react-router';
-import { PlusIcon } from 'lucide-react';
-import { STATUS_OPTIONS } from '~/routing/plans/config/status-options';
-import { SortDropdown } from '~/routing/plans/components/SortDropdown';
 import { AssigneeMultiSelect } from '~/routing/plans/components/AssigneeMultiSelect';
+import { GlobalToolbarSearch } from '@openthrottle/react-router-ui-global';
+import { PlansSortBy, PlansSortOrder } from '~/routing/plans/config/types';
+import { SortDropdown } from '~/routing/plans/components/SortDropdown';
+import { STATUS_OPTIONS } from '~/routing/plans/config/status-options';
 import { StatusMultiSelect } from '~/routing/plans/components/StatusMultiSelect';
 import { usePlansToolbar } from '~/routing/plans/hooks/usePlansToolbar';
-import { PlansSortBy, PlansSortOrder } from '~/routing/plans/config/types';
 
 export interface PlansToolbarProps {
   assigneeOptions: string[];
@@ -90,12 +87,16 @@ export const PlansToolbar = (props: PlansToolbarProps): React.ReactElement => {
           sortBy={sortBy}
           sortOrder={sortOrder}
         />
+
         <div className="min-w-0 flex-1" />
+
+        {/*
         <Button asChild={true} className="shrink-0" variant="outline">
           <Link to="/plans/create">
             <PlusIcon className="h-4 w-4" /> Create plan
           </Link>
         </Button>
+        */}
       </div>
     </div>
   );

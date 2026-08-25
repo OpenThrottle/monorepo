@@ -132,7 +132,8 @@ describe('routes/plans.$planId.tsx', () => {
       loaderData,
       { initialEntries: ['/?view=table'] },
     );
-    expect(component.getByTestId('GlobalHeading')).toBeInTheDocument();
+    // The plan title header plus the overview tab's "Summary" heading.
+    expect(component.getAllByTestId('GlobalHeading').length).toBeGreaterThan(0);
 
     expect(
       component.getByRole('heading', { name: 'Test Plan' }),
@@ -180,7 +181,8 @@ describe('routes/plans.$planId.tsx', () => {
       loaderData,
       { initialEntries: ['/?view=table'] },
     );
-    expect(component.getByTestId('GlobalHeading')).toBeInTheDocument();
+    // The plan title header plus the overview tab's "Summary" heading.
+    expect(component.getAllByTestId('GlobalHeading').length).toBeGreaterThan(0);
 
     await user.click(screen.getByRole('tab', { name: /Tasks/ }));
 

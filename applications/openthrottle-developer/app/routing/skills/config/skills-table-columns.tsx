@@ -1,24 +1,22 @@
 import * as React from 'react';
-import { Link } from 'react-router';
-import type { ColumnDef } from '@tanstack/react-table';
-import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 import {
   Badge,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
+import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
+import { getResolvedModelInvocationDisplay } from '~/routing/skills/utils/model-invocation-badge';
+import { Link } from 'react-router';
 import {
   SKILL_RECORD_TAGS_COPY,
   SKILLS_MODEL_INVOCATION_COPY,
   SKILLS_SOURCE_COPY,
 } from '~/routing/skills/data/data.copy';
 import { SkillOrphanRemoveButton } from '~/routing/skills/components/SkillOrphanRemoveButton';
-import {
-  SkillTagChips,
-  type SkillTagVocabularyOption,
-} from '~/routing/skills/components/SkillTagChips';
-import { getResolvedModelInvocationDisplay } from '~/routing/skills/utils/model-invocation-badge';
+import type { ColumnDef } from '@tanstack/react-table';
+import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
+import type { SkillTagVocabularyOption } from '~/routing/skills/components/SkillTagChips';
 
 export type SkillsTableColumnValue =
   | RepoSkillEntry['disableModelInvocation']
@@ -104,19 +102,15 @@ export const createSkillsTableColumns = (
   {
     accessorKey: 'summary',
     cell: ({ row }) => {
-      const { onAddTag, onRemoveOrphan, onRemoveTag, pendingSlug, vocabulary } =
-        options;
+      const { onRemoveOrphan, pendingSlug } = options;
 
       const tags = row.original.tags ?? [];
       const isOrphan = row.original.orphanedAt != null;
       const slugLabel = `/${row.original.slug}`;
 
-      const tagActions =
-        onAddTag != null && onRemoveTag != null && vocabulary != null;
-
       return (
-        <div className="p-2">
-          <h3 className="text-foreground mb-2 line-clamp-1 flex flex-wrap items-center gap-2">
+        <div className="space-y-4 p-2">
+          <h3 className="text-foreground line-clamp-1 flex flex-wrap items-center gap-2">
             {isOrphan ? (
               <>
                 <span>{slugLabel}</span>
@@ -143,27 +137,18 @@ export const createSkillsTableColumns = (
               </Link>
             )}
           </h3>
-          <p className="text-muted-foreground line-clamp-2 text-xs">
-            {row.original.summary}
-          </p>
-          <div className="mt-4 py-2">
-            <div>
-              {tagActions ? (
-                <SkillTagChips
-                  onAddTag={(tag) => onAddTag(row.original.slug, tag)}
-                  onRemoveTag={(tag) => onRemoveTag(row.original.slug, tag)}
-                  pending={pendingSlug === row.original.slug}
-                  tags={tags}
-                  vocabulary={vocabulary}
-                />
-              ) : (
-                tags.map((tag) => (
-                  <Badge color="blue" key={tag} size="xs">
-                    {tag}
-                  </Badge>
-                ))
-              )}
-            </div>
+
+          <MarkdownRenderer
+            className="line-clamp-2 overflow-hidden [&_p]:!mb-0"
+            source={row.original.summary}
+          />
+
+          <div className="flex flex-wrap gap-2">
+            {tags.map((tag) => (
+              <Badge color="slate" key={tag} size="xs">
+                {tag}
+              </Badge>
+            ))}
           </div>
         </div>
       );

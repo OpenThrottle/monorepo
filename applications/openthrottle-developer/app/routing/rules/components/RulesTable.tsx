@@ -154,13 +154,17 @@ RulesTable.buildTable = (
       header: () => <div className="p-2">{RULES_COPY.tableMatchHeader}</div>,
     },
     {
-      cell: ({ row }) => (
-        <RulesTableRowActions
-          onToggleEnabled={onToggleEnabled}
-          pending={pending}
-          rule={row.original}
-        />
-      ),
+      cell: ({ row }) => {
+        return (
+          <div className="flex items-center justify-center">
+            <RulesTableRowActions
+              onToggleEnabled={onToggleEnabled}
+              pending={pending}
+              rule={row.original}
+            />
+          </div>
+        );
+      },
       header: () => <GlobalPopoverActionsHeader />,
       id: 'actions',
     },

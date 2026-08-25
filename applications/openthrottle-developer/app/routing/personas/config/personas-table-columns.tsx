@@ -77,10 +77,12 @@ export const personasTableColumns: ColumnDef<
       ];
 
       return (
-        <GlobalPopover
-          actions={actions}
-          ariaLabel={`${PERSONAS_ROW_ACTIONS_COPY.menuAriaLabelPrefix} ${entry.slug}`}
-        />
+        <div className="flex items-center justify-center">
+          <GlobalPopover
+            actions={actions}
+            ariaLabel={`${PERSONAS_ROW_ACTIONS_COPY.menuAriaLabelPrefix} ${entry.slug}`}
+          />
+        </div>
       );
     },
     header: () => <GlobalPopoverActionsHeader />,

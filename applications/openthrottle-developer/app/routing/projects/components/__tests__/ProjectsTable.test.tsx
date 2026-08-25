@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, test } from 'vitest';
 import { ProjectsTable } from '../ProjectsTable';
 import type { ProjectsTableProps } from '../ProjectsTable';
 import type { ProjectCardFragment } from '~/__generated__/graphql';
+import { PROJECTS_ROW_ACTIONS_COPY } from '~/routing/projects/data/data.copy';
 
 const mockProjects: ProjectCardFragment[] = [
   {
@@ -59,16 +60,10 @@ describe('ProjectsTable Component', () => {
 
   test('renders table structure with column headers', () => {
     expect(
-      component.getAllByRole('columnheader', { name: 'Context' }).length,
+      component.getAllByRole('columnheader', { name: 'Details' }).length,
     ).toBeGreaterThan(0);
     expect(
-      component.getAllByRole('columnheader', { name: 'Plans' }).length,
-    ).toBeGreaterThan(0);
-    expect(
-      component.getAllByRole('columnheader', { name: 'Tasks' }).length,
-    ).toBeGreaterThan(0);
-    expect(
-      component.getAllByRole('columnheader', { name: 'Updated' }).length,
+      component.getAllByRole('columnheader', { name: 'Actions' }).length,
     ).toBeGreaterThan(0);
   });
 
@@ -94,27 +89,22 @@ describe('ProjectsTable Component', () => {
     expect(getByText('First project description')).toBeDefined();
   });
 
-  test('renders plan and task counts and updated date', () => {
+  test('renders a row actions menu for each project', () => {
     const propsWithProjects: ProjectsTableProps = { projects: mockProjects };
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
     const Component = () => <ProjectsTable {...propsWithProjects} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    const { getByText, getAllByText, getAllByRole } = render(<RoutesStub />);
+    const { getByRole } = render(<RoutesStub />);
 
-    expect(getByText('2')).toBeInTheDocument();
-    expect(getByText('3')).toBeInTheDocument();
-    expect(getAllByText('0').length).toBeGreaterThanOrEqual(2);
     expect(
-      getAllByRole('columnheader', { name: 'Plans' }).length,
-    ).toBeGreaterThan(0);
+      getByRole('button', {
+        name: `${PROJECTS_ROW_ACTIONS_COPY.menuAriaLabelPrefix} First Project`,
+      }),
+    ).toBeInTheDocument();
     expect(
-      getAllByRole('columnheader', { name: 'Tasks' }).length,
-    ).toBeGreaterThan(0);
-    expect(
-      getAllByRole('columnheader', { name: 'Updated' }).length,
-    ).toBeGreaterThan(0);
-    // Updated column shows relative time (e.g. "over 1 year ago")
-    const updatedCells = getAllByText(/ago$/);
-    expect(updatedCells.length).toBe(2);
+      getByRole('button', {
+        name: `${PROJECTS_ROW_ACTIONS_COPY.menuAriaLabelPrefix} Second Project`,
+      }),
+    ).toBeInTheDocument();
   });
 });

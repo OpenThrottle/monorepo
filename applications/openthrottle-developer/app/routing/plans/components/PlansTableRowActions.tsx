@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { GlobalPopover } from '@openthrottle/react-router-ui-global';
 import type { GlobalPopoverAction } from '@openthrottle/react-router-ui-global';
-import { PlayCircleIcon, StopCircle } from 'lucide-react';
+import { PanelRightIcon, PlayCircleIcon, StopCircle } from 'lucide-react';
 import { useNavigation } from 'react-router';
 import type { PlanCardFragment } from '~/__generated__/graphql';
 import { PLANS_ROW_ACTIONS_COPY } from '~/routing/plans/data/data.copy';
@@ -34,9 +34,16 @@ export const PlansTableRowActions = (
     navigation.state === 'submitting' &&
     navigation.formAction?.endsWith(planAction) === true &&
     navigation.formData?.get('intent') === 'cancelPlanRun';
-  const showKill = getPlanIsCancelable(plan.status);
 
+  const showKill = getPlanIsCancelable(plan.status);
   const actions: GlobalPopoverAction[] = [
+    {
+      icon: <PanelRightIcon aria-hidden={true} className="size-4" />,
+      id: 'preview',
+      kind: 'link',
+      label: PLANS_ROW_ACTIONS_COPY.view,
+      to: `/plans/${planId}`,
+    },
     {
       action: planAction,
       disabled: isQueuing,

@@ -36,8 +36,8 @@ const basePlan: PlanDetailsFragment = {
 };
 
 describe('PlanDetailRouteHeader Component', () => {
-  test('renders title, status, assignee, and tags', () => {
-    const { getByRole, getByText, getByLabelText } = renderRoutesStub(
+  test('renders title, status, and assignee', () => {
+    const { getByRole, getByText, queryByLabelText } = renderRoutesStub(
       <PlanDetailRouteHeader plan={basePlan} status="IN_PROGRESS" />,
     );
 
@@ -46,7 +46,8 @@ describe('PlanDetailRouteHeader Component', () => {
     ).toBeInTheDocument();
     expect(getByText('In Progress')).toBeInTheDocument();
     expect(getByText('author1 → visormatt')).toBeInTheDocument();
-    expect(getByLabelText('Tag: discovery')).toBeInTheDocument();
+    // Tags moved off the detail header and now live on the plans list surface.
+    expect(queryByLabelText('Tag: discovery')).toBeNull();
   });
 
   test('links the status badge to the filtered plans list', () => {

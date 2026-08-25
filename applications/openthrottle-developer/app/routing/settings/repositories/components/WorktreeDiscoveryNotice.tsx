@@ -97,7 +97,7 @@ export const WorktreeDiscoveryNotice = (
           <p className="text-xs font-medium">
             {WORKTREE_DISCOVERY_COPY.warningsTitle}
           </p>
-          <ul className="mt-1 space-y-1">
+          <ul className="mt-1 list-inside list-disc space-y-1">
             {warnings.map((warning) => (
               <li className="text-muted-foreground text-xs" key={warning}>
                 {warning}
