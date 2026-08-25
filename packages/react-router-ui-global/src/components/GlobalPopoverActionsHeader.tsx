@@ -34,7 +34,7 @@ export const GlobalPopoverActionsHeader = (
 
   return (
     <div
-      className={clsx('py-2 text-right', className)}
+      className={clsx('p-2 text-center', className)}
       data-testid="GlobalPopoverActionsHeader"
     >
       <span className="text-sm font-medium">

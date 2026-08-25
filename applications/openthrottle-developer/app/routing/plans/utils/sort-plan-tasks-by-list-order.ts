@@ -20,9 +20,3 @@ export const comparePlanTasksByListOrder = (
 export const sortPlanTasksByListOrder = (
   tasks: readonly PlanTaskRowFragment[],
 ): PlanTaskRowFragment[] => [...tasks].sort(comparePlanTasksByListOrder);
-
-/**
- * @description 1-based step index (#1, #2, …) from position in sorted plan task list.
- */
-export const getPlanTaskStepIndex = (sortedIndex: number): number =>
-  sortedIndex + 1;

@@ -170,10 +170,12 @@ SettingsKeysTable.buildTable = (
     },
     {
       cell: ({ row }) => (
-        <SettingsKeysRevokeCell
-          canRevoke={canRevoke}
-          credential={row.original}
-        />
+        <div className="flex items-center justify-center">
+          <SettingsKeysRevokeCell
+            canRevoke={canRevoke}
+            credential={row.original}
+          />
+        </div>
       ),
       header: () => <GlobalPopoverActionsHeader />,
       id: 'actions',

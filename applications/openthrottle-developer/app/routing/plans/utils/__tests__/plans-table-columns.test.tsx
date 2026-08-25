@@ -90,12 +90,12 @@ function Harness(props: HarnessProps): React.ReactElement {
 }
 
 describe('buildPlansTableColumns', () => {
-  test('defines status, title, and actions columns', () => {
+  test('defines status, details, and actions columns', () => {
     const columns = buildPlansTableColumns({});
 
     expect(columns).toHaveLength(3);
     expect(asPlainColumn(columns[0]).accessorKey).toBe('status');
-    expect(asPlainColumn(columns[1]).accessorKey).toBe('title');
+    expect(asPlainColumn(columns[1]).accessorKey).toBe('details');
     expect(asPlainColumn(columns[2]).id).toBe('actions');
   });
 
@@ -115,7 +115,7 @@ describe('buildPlansTableColumns', () => {
     );
 
     expect(rendered.getByText('Status')).toBeInTheDocument();
-    expect(rendered.getByText('Plan')).toBeInTheDocument();
+    expect(rendered.getByText('Plan Details')).toBeInTheDocument();
     expect(rendered.getByText('Actions')).toBeInTheDocument();
   });
 

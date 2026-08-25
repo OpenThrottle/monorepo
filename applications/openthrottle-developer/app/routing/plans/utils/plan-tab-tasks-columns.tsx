@@ -12,7 +12,6 @@ import {
 } from '~/routing/plans/components/PlanStatusBadge';
 import { PlanTasksTableCellActions } from '~/routing/plans/components/PlanTasksTableCellActions';
 import { PlanTasksTableCellTitle } from '~/routing/plans/components/PlanTasksTableCellTitle';
-import { getPlanTaskStepIndex } from '~/routing/plans/utils/sort-plan-tasks-by-list-order';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
 
@@ -20,18 +19,6 @@ export const buildPlanTabTasksColumns = (
   managedTaskIds: ReadonlySet<string>,
 ): ColumnDef<PlanTaskRowFragment, string | null | undefined>[] => {
   return [
-    {
-      cell: ({ row }) => (
-        <span
-          aria-label={`Step ${getPlanTaskStepIndex(row.index)}`}
-          className="text-muted-foreground tabular-nums"
-        >
-          #{getPlanTaskStepIndex(row.index)}
-        </span>
-      ),
-      header: () => <span className="inline-block w-full text-center">#</span>,
-      id: 'step',
-    },
     {
       accessorKey: 'status',
       cell: ({ row }) => {
@@ -46,23 +33,29 @@ export const buildPlanTabTasksColumns = (
           </div>
         );
       },
-      header: () => <span className="p-2 text-center">Status</span>,
+      header: () => <div className="p-2">Status</div>,
     },
     {
-      accessorKey: 'title',
+      accessorKey: 'details',
       cell: ({ row }) => (
-        <PlanTasksTableCellTitle
-          isManaged={managedTaskIds.has(row.original.id)}
-          row={row}
-        />
+        <div className="p-2">
+          <PlanTasksTableCellTitle
+            isManaged={managedTaskIds.has(row.original.id)}
+            row={row}
+          />
+        </div>
       ),
       // Category and requirements now live inline in the title cell (matching
       // the plans index list language), so they are no longer standalone
       // columns here.
-      header: () => 'Title / Context',
+      header: () => <div className="p-2">Task Details</div>,
     },
     {
-      cell: ({ row }) => <PlanTasksTableCellActions row={row} />,
+      cell: ({ row }) => (
+        <div className="flex items-center justify-center">
+          <PlanTasksTableCellActions row={row} />
+        </div>
+      ),
       header: () => <GlobalPopoverActionsHeader />,
       id: 'actions',
     },

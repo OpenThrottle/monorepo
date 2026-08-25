@@ -2,6 +2,7 @@ import * as React from 'react';
 import clsx from 'clsx';
 import { useAtomValue } from 'jotai';
 import { EditorWindow } from '@openthrottle/react-router-editor';
+import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { TabsContent } from '@openthrottle/react-router-shadcn';
 import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
 import { usePlanDetailRouteData } from '~/routing/plans/hooks/usePlanDetailRouteData';
@@ -74,7 +75,7 @@ export const PlanTabDetails = (
     <TabsContent value="overview">
       <div className="flex flex-col gap-4 md:gap-8">
         <div
-          className={clsx('bg-card', {
+          className={clsx('----bg-card', {
             'absolute inset-0 z-50 h-full w-full': fullscreen,
             'border-transparent hover:border-transparent': fullscreen,
             relative: !fullscreen,
@@ -94,12 +95,15 @@ export const PlanTabDetails = (
               // onChange={handleEditorChange}
             />
           ) : (
-            <div className="bg-card border-card-border space-y-4 rounded-lg border p-4 md:p-8">
+            <div
+            // className="bg-card border-card-border space-y-4 rounded-lg border p-4 md:p-8"
+            >
               {hasSummary && (
-                <div>
-                  <h2 className="mb-4">Summary</h2>
+                <>
+                  <GlobalHeading className="mb-4" title="Summary" />
                   <MarkdownRenderer source={plan.summary ?? ''} />
-                </div>
+                  <hr className="my-8" />
+                </>
               )}
 
               <MarkdownRenderer source={plan.description ?? ''} />

@@ -179,10 +179,12 @@ export const createPullRequestsTableColumns = (
         ];
 
         return (
-          <GlobalPopover
-            actions={actions}
-            ariaLabel={`${PULL_REQUESTS_ROW_ACTIONS_COPY.menuAriaLabelPrefix} ${label}`}
-          />
+          <div className="flex items-center justify-center">
+            <GlobalPopover
+              actions={actions}
+              ariaLabel={`${PULL_REQUESTS_ROW_ACTIONS_COPY.menuAriaLabelPrefix} ${label}`}
+            />
+          </div>
         );
       },
       header: () => <GlobalPopoverActionsHeader />,

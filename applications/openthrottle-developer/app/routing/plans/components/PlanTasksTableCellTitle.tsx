@@ -1,9 +1,10 @@
 import * as React from 'react';
 import { Badge } from '@openthrottle/react-router-shadcn';
-import { Row } from '@tanstack/react-table';
 import { Link } from 'react-router';
-import { PlanManagedTaskBadge } from '~/routing/plans/components/PlanManagedTaskBadge';
+import { Row } from '@tanstack/react-table';
 import { getRequirementsCount } from '~/routing/plans/utils/formatters';
+import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
+import { PlanManagedTaskBadge } from '~/routing/plans/components/PlanManagedTaskBadge';
 import { PlanTaskRowFragment } from '~/__generated__/graphql';
 
 export interface PlanTasksTableCellTitleProps {
@@ -20,8 +21,6 @@ export const PlanTasksTableCellTitle = (
   // Hooks
 
   // Setup
-  const TASK_TITLE_CONTEXT_TRUNCATE = 120;
-
   const task = row.original;
   const anchor = `/plans/${task.planId}/tasks/${task.id}`;
 
@@ -42,9 +41,9 @@ export const PlanTasksTableCellTitle = (
   // 🔌 Short Circuit
 
   return (
-    <div className="space-y-1 overflow-hidden">
+    <div className="space-y-4 overflow-hidden">
       <div className="flex items-center gap-2">
-        <h2 className="line-clamp-1 min-w-0 text-sm font-medium text-ellipsis">
+        <h2 className="line-clamp-2 min-w-0 text-sm font-medium text-ellipsis">
           <Link
             aria-label={`Scroll to task: ${title}`}
             className="hover:text-primary underline underline-offset-2"
@@ -79,31 +78,17 @@ export const PlanTasksTableCellTitle = (
       ) : null}
 
       {description ? (
-        <p
-          className="text-muted-foreground line-clamp-2 text-xs"
-          title={
-            description.length > TASK_TITLE_CONTEXT_TRUNCATE
-              ? description
-              : undefined
-          }
-        >
-          {description.length > TASK_TITLE_CONTEXT_TRUNCATE
-            ? `${description.slice(0, TASK_TITLE_CONTEXT_TRUNCATE)}…`
-            : description}
-        </p>
+        <MarkdownRenderer
+          className="line-clamp-2 overflow-hidden [&_p]:!mb-0"
+          source={description}
+        />
       ) : null}
 
       {summary ? (
-        <p
-          className="text-muted-foreground line-clamp-1 text-xs"
-          title={
-            summary.length > TASK_TITLE_CONTEXT_TRUNCATE ? summary : undefined
-          }
-        >
-          {summary.length > TASK_TITLE_CONTEXT_TRUNCATE
-            ? `${summary.slice(0, TASK_TITLE_CONTEXT_TRUNCATE)}…`
-            : summary}
-        </p>
+        <MarkdownRenderer
+          className="line-clamp-2 overflow-hidden [&_p]:!mb-0"
+          source={summary}
+        />
       ) : null}
     </div>
   );

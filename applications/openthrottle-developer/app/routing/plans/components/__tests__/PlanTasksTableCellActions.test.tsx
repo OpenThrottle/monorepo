@@ -2,6 +2,7 @@ import * as React from 'react';
 import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { PlanTasksTableCellActions } from '../PlanTasksTableCellActions';
 import type { PlanTasksTableCellActionsProps } from '../PlanTasksTableCellActions';
@@ -60,39 +61,24 @@ describe('PlanTasksTableCellActions Component', () => {
     renderComponent();
   });
 
-  test('renders View link with task anchor', () => {
-    const viewLink = component.getByRole('link', {
-      name: /view task: task title/i,
-    });
-
-    expect(viewLink).toHaveTextContent('View');
-    expect(viewLink).toHaveAttribute('href', '/#task-task-1');
-  });
-
-  test('renders Details trigger when details are present', () => {
+  test('renders the actions trigger labelled with the task title', () => {
     expect(
-      component.getByRole('button', {
-        name: /view full details for task: task title/i,
-      }),
+      component.getByRole('button', { name: /task actions for task title/i }),
     ).toBeInTheDocument();
   });
 
-  test('hides Details trigger when description, summary, and requirements are empty', () => {
-    props = {
-      row: createMockRow({
-        description: '   ',
-        requirementsJson: '[]',
-        summary: undefined,
-      }),
-    };
+  test('opens View task and Edit task links for the row task', async () => {
+    const user = userEvent.setup();
 
-    component.unmount();
-    renderComponent();
+    await user.click(
+      component.getByRole('button', { name: /task actions for task title/i }),
+    );
 
     expect(
-      component.queryByRole('button', {
-        name: /view full details for task: task title/i,
-      }),
-    ).not.toBeInTheDocument();
+      component.getByRole('menuitem', { name: /view task/i }),
+    ).toHaveAttribute('href', '/plans/plan-1/tasks/task-1');
+    expect(
+      component.getByRole('menuitem', { name: /edit task/i }),
+    ).toHaveAttribute('href', '/plans/plan-1/tasks/task-1/edit');
   });
 });

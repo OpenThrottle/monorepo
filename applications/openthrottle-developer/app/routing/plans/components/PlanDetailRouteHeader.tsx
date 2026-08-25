@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { Badge } from '@openthrottle/react-router-shadcn';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { NotebookTextIcon } from 'lucide-react';
 import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
@@ -28,7 +27,6 @@ export const PlanDetailRouteHeader = (
   // Hooks
 
   // Setup
-  const tags = plan.tags ?? [];
   const title = plan.title ?? 'Untitled';
 
   // Handlers
@@ -43,39 +41,29 @@ export const PlanDetailRouteHeader = (
     <div>
       <GlobalHeading className="mb-4" icon={NotebookTextIcon} title={title} />
 
-      <div className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
-        <PlanStatusBadge status={status} to={`/plans?status=${status}`} />
-        {plan.author ? (
-          <span aria-label={`Author: ${plan.author}`}>
-            {plan.assignee ? `${plan.author} → ${plan.assignee}` : plan.author}
-          </span>
-        ) : plan.assignee ? (
-          <span aria-label={`Assignee: ${plan.assignee}`}>
-            Assignee: {plan.assignee}
-          </span>
-        ) : null}
+      <div className="flex flex-col gap-2">
+        <div className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+          <PlanStatusBadge status={status} to={`/plans?status=${status}`} />
+          {plan.author ? (
+            <span aria-label={`Author: ${plan.author}`}>
+              {plan.assignee
+                ? `${plan.author} → ${plan.assignee}`
+                : plan.author}
+            </span>
+          ) : plan.assignee ? (
+            <span aria-label={`Assignee: ${plan.assignee}`}>
+              Assignee: {plan.assignee}
+            </span>
+          ) : null}
+        </div>
 
-        {tags.map((tag) => (
-          <Badge
-            aria-label={`Tag: ${tag.tag}`}
-            className={
-              tag.dimension === 'phase'
-                ? 'border-amber-500/60 bg-amber-500/10'
-                : undefined
-            }
-            color="slate"
-            key={`${tag.dimension}:${tag.tag}`}
-            size="xs"
-          >
-            {tag.tag}
-          </Badge>
-        ))}
+        <div className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+          <span aria-hidden={true}>&bull;</span>
+          <span>Created {formatPlanDate(plan.createdAt)}</span>
 
-        <span aria-hidden={true}>&bull;</span>
-        <span>Created {formatPlanDate(plan.createdAt)}</span>
-
-        <span aria-hidden={true}>&bull;</span>
-        <span>Updated {formatPlanDate(plan.updatedAt)}</span>
+          <span aria-hidden={true}>&bull;</span>
+          <span>Updated {formatPlanDate(plan.updatedAt)}</span>
+        </div>
       </div>
     </div>
   );

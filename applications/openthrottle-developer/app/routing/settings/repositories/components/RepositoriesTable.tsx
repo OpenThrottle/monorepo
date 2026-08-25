@@ -182,7 +182,11 @@ RepositoriesTable.buildTable = (
       id: 'updatedAt',
     },
     {
-      cell: ({ row }) => <RepositoryRowActions row={row.original} />,
+      cell: ({ row }) => (
+        <div className="flex items-center justify-center">
+          <RepositoryRowActions row={row.original} />,
+        </div>
+      ),
       header: () => <GlobalPopoverActionsHeader />,
       id: 'actions',
     },

@@ -225,11 +225,13 @@ export function buildQueuesTableColumns(
         ];
 
         return (
-          <GlobalPopover
-            actions={actions}
-            ariaLabel={`${QUEUES_ROW_ACTIONS_COPY.menuAriaLabelPrefix} ${displayName}`}
-            heading={QUEUES_ROW_ACTIONS_COPY.heading}
-          />
+          <div className="flex items-center justify-center">
+            <GlobalPopover
+              actions={actions}
+              ariaLabel={`${QUEUES_ROW_ACTIONS_COPY.menuAriaLabelPrefix} ${displayName}`}
+              heading={QUEUES_ROW_ACTIONS_COPY.heading}
+            />
+          </div>
         );
       },
       header: () => <GlobalPopoverActionsHeader />,

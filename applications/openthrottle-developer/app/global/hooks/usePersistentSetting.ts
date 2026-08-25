@@ -17,7 +17,7 @@ export type PersistentSettingSetter<T> = (next: T | ((prev: T) => T)) => void;
 /**
  * @public
  * @description Typed, SSR-safe persisted UI setting backed by localStorage.
- * `usePersistentSetting('plans.tasksView', 'list')` returns a `[value, setValue]`
+ * `usePersistentSetting('docs.featureFlags', defaults)` returns a `[value, setValue]`
  * tuple whose value survives reloads, navigation, and cross-tab writes.
  *
  * SSR: the value is `defaultValue` on the server and the first client render

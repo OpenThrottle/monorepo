@@ -71,7 +71,7 @@ describe('PromptsTable Component', () => {
       0,
     );
     expect(
-      withPrompts.getAllByRole('columnheader', { name: 'Prompt' }).length,
+      withPrompts.getAllByRole('columnheader', { name: 'Details' }).length,
     ).toBeGreaterThan(0);
   });
 
@@ -93,15 +93,16 @@ describe('PromptsTable Component', () => {
     expect(titleLink2).toHaveAttribute('href', '/prompts/prompt-2');
   });
 
-  test('shows description, labels with overflow, and file basename when present', () => {
-    const { getByText } = renderPromptsTable({ prompts: mockPrompts });
+  test('shows the file basename when present', () => {
+    // The details cell now renders the prompt body as Markdown; the standalone
+    // description paragraph and label badges no longer appear in the row.
+    const { getByText, queryByText } = renderPromptsTable({
+      prompts: mockPrompts,
+    });
 
-    expect(getByText('First prompt description')).toBeInTheDocument();
-    expect(getByText('alpha')).toBeInTheDocument();
-    expect(getByText('beta')).toBeInTheDocument();
-    expect(getByText('gamma')).toBeInTheDocument();
-    expect(getByText('+1')).toBeInTheDocument();
     expect(getByText('first.md')).toBeInTheDocument();
+    expect(queryByText('First prompt description')).toBeNull();
+    expect(queryByText('+1')).toBeNull();
   });
 
   test('renders formatted updated date in table row', () => {

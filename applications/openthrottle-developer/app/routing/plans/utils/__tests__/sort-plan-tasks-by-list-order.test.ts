@@ -2,7 +2,6 @@ import { describe, expect, test } from 'vitest';
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
 import {
   comparePlanTasksByListOrder,
-  getPlanTaskStepIndex,
   sortPlanTasksByListOrder,
 } from '../sort-plan-tasks-by-list-order';
 
@@ -64,12 +63,5 @@ describe('sortPlanTasksByListOrder', () => {
       'b',
       'c',
     ]);
-  });
-});
-
-describe('getPlanTaskStepIndex', () => {
-  test('returns 1-based index from zero-based sorted position', () => {
-    expect(getPlanTaskStepIndex(0)).toBe(1);
-    expect(getPlanTaskStepIndex(2)).toBe(3);
   });
 });

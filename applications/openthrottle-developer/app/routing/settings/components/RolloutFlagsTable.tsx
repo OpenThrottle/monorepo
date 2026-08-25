@@ -96,7 +96,13 @@ export const RolloutFlagsTable = (
         header: 'Updated',
       },
       {
-        cell: ({ row }) => <RolloutFlagsTableRowActions flag={row.original} />,
+        cell: ({ row }) => {
+          return (
+            <div className="flex items-center justify-center">
+              <RolloutFlagsTableRowActions flag={row.original} />
+            </div>
+          );
+        },
         header: () => <GlobalPopoverActionsHeader />,
         id: 'actions',
       },

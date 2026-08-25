@@ -116,7 +116,7 @@ describe('PlanTasksTableCellTitle Component', () => {
     expect(component.queryByText('Short summary')).not.toBeInTheDocument();
   });
 
-  test('truncates long description and summary while keeping full title tooltip', () => {
+  test('renders long description and summary in full, clamped by CSS only', () => {
     const longDescription = 'd'.repeat(130);
     const longSummary = 's'.repeat(130);
 
@@ -130,14 +130,10 @@ describe('PlanTasksTableCellTitle Component', () => {
     component.unmount();
     renderComponent();
 
-    expect(component.getByText(`${'d'.repeat(120)}…`)).toHaveAttribute(
-      'title',
-      longDescription,
-    );
-    expect(component.getByText(`${'s'.repeat(120)}…`)).toHaveAttribute(
-      'title',
-      longSummary,
-    );
+    // Markdown rendering replaced the JS truncation; overflow is now handled by
+    // the `line-clamp-2` class rather than a slice plus a title tooltip.
+    expect(component.getByText(longDescription)).not.toHaveAttribute('title');
+    expect(component.getByText(longSummary)).not.toHaveAttribute('title');
   });
 
   test('renders short description and summary without tooltip attributes', () => {
