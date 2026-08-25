@@ -45,6 +45,36 @@ narration is text about unreleased work and "nothing leaves your box" is a claim
 product makes. The backend records `sendsDataOffBox` per take so that stays checkable
 rather than assumed.
 
+### Hosted providers: cost, privacy, reproducibility (bake-off notes)
+
+Working numbers from the actual scripts: the 24 Season-1 scripts total ~11.3k spoken
+characters (~470 per short, ~1.2–1.5k per longform), all ASCII so bytes ≈ characters.
+
+**Cost.** A full-season render is small for both providers. ElevenLabs bills
+subscription credits (1 credit/character on `eleven_multilingual_v2`): Free 10k/mo
+does not cover one season pass; Starter $6/mo (30k) covers a season plus re-takes,
+Creator $22/mo (121k) covers ~10 full-season passes — the tier minimum, not usage,
+is the real cost while rendering. Fish Audio is pay-as-you-go at $15/M UTF-8 bytes
+on `s1`/`s2-pro`/`s2.1-pro`: one full-season pass ≈ $0.17, so even a worst-case
+repin re-render of everything published is under a dollar. Fish Audio is roughly
+an order of magnitude cheaper for this workload.
+
+**Privacy.** Both send narration text off box, and narration describes unreleased
+work. ElevenLabs may use submitted data for model training with an account-level
+opt-out; zero-retention is enterprise-only. Fish Audio's policy retains content "as
+long as we need it" with no documented training opt-out. Neither is compatible with
+rendering unreleased-work text casually. The gate that keeps "nothing leaves your
+box" honest: hosted backends may only render script text that ships verbatim in a
+published episode (the narration becomes public anyway); rehearsal and drafts stay
+on Piper/`say`. `sendsDataOffBox` per take is the audit trail.
+
+**Reproducibility.** Piper's onnx file is on disk — reproducible forever. ElevenLabs
+premade voices have no pinning guarantee and closed weights: no escape hatch if a
+voice changes or is retired. Fish Audio hosted voices are community-uploaded
+`reference_id`s (they can be delisted), but the OpenAudio S1 family has open-weight
+releases (S1-mini), so a self-hosted escape hatch exists if the reference audio is
+kept locally.
+
 ### Selecting a backend and voice
 
 ```bash
