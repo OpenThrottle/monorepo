@@ -185,8 +185,9 @@
   /* your tailwind utilities */
   /* background-color: color-mix(in srgb, var(--color-gray-5) 20%, transparent); */
   /* background-color: var(--color-card); */
+  /* whitespace-nowrap */
 
-  @apply bg-card border-sidebar-border rounded-md border px-1.5 py-0.5 whitespace-nowrap;
+  @apply bg-card border-sidebar-border rounded-md border px-1.5 py-0.5;
 }
 
 .markdown :is(p, ol, ul) code {

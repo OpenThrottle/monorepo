@@ -43,6 +43,8 @@ export const PRONUNCIATIONS: ReadonlyArray<readonly [string, string]> = [
   ['9:16', 'nine by sixteen'],
   ['16:9', 'sixteen by nine'],
   ['Apache-2.0', 'Apache two'],
+  // Leading-boundary only would turn "ready" into "reedy". applyLexicon special-cases
+  // this key so the verb rewrites and the adjective does not.
   ['read', 'reed'],
 ];
 
@@ -51,14 +53,26 @@ const escape = (value: string): string =>
   value.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 
 /**
- * Apply the lexicon. Word-boundary matched so "APIs" and "MCPs" still work, and
- * so a substring inside another word is left alone.
+ * @description Match for one lexicon key. `read` must not eat `ready`.
+ */
+const lexiconPattern = (written: string): RegExp => {
+  if (written === 'read') {
+    return /\bread(?!y)/g;
+  }
+
+  return new RegExp(`\\b${escape(written)}`, 'g');
+};
+
+/**
+ * Apply the lexicon. Leading word-boundary so "APIs" and "MCPs" still work, and
+ * so a substring inside another word is left alone. `read` is narrower — a
+ * trailing `y` is not rewritten, otherwise "ready" becomes "reedy".
  */
 export const applyLexicon = (text: string): string => {
   let spoken = text;
 
   for (const [written, said] of PRONUNCIATIONS) {
-    spoken = spoken.replaceAll(new RegExp(`\\b${escape(written)}`, 'g'), said);
+    spoken = spoken.replaceAll(lexiconPattern(written), said);
   }
 
   return spoken;
