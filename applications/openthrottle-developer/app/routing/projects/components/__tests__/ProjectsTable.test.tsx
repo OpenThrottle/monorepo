@@ -60,7 +60,8 @@ describe('ProjectsTable Component', () => {
 
   test('renders table structure with column headers', () => {
     expect(
-      component.getAllByRole('columnheader', { name: 'Details' }).length,
+      component.getAllByRole('columnheader', { name: 'Project Details' })
+        .length,
     ).toBeGreaterThan(0);
     expect(
       component.getAllByRole('columnheader', { name: 'Actions' }).length,

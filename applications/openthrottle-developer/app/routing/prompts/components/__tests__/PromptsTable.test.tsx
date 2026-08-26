@@ -94,14 +94,14 @@ describe('PromptsTable Component', () => {
   });
 
   test('shows the file basename when present', () => {
-    // The details cell now renders the prompt body as Markdown; the standalone
-    // description paragraph and label badges no longer appear in the row.
+    // The details cell renders the description (falling back to the prompt
+    // body) as Markdown; label badges no longer appear in the row.
     const { getByText, queryByText } = renderPromptsTable({
       prompts: mockPrompts,
     });
 
     expect(getByText('first.md')).toBeInTheDocument();
-    expect(queryByText('First prompt description')).toBeNull();
+    expect(getByText('First prompt description')).toBeInTheDocument();
     expect(queryByText('+1')).toBeNull();
   });
 

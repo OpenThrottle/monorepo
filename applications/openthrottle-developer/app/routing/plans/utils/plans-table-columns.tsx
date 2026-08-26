@@ -167,7 +167,7 @@ export const buildPlansTableColumns = (
             {plan.summary ? (
               <div className="flex flex-wrap items-center gap-2">
                 <MarkdownRenderer
-                  className="m-0 line-clamp-2 overflow-hidden [&_p]:!mb-0"
+                  className="line-clamp-2 overflow-hidden [&_p]:!mb-0 [&_p]:!text-xs"
                   source={plan.summary}
                 />
               </div>

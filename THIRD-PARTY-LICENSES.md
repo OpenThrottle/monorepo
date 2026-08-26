@@ -686,7 +686,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@react-dnd/asap` | 5.0.2 | MIT | [source](https://github.com/react-dnd/react-dnd#readme) |
 | `@react-dnd/invariant` | 4.0.2 | MIT | [Andres Suarez](https://github.com/react-dnd/react-dnd#readme) |
 | `@react-dnd/shallowequal` | 4.0.2 | MIT | [Alberto Leal](https://github.com/react-dnd/react-dnd#readme) |
-| `@react-grab/cli` | 0.1.50 | MIT | [source](https://github.com/aidenybai/react-grab#readme) |
+| `@react-grab/cli` | 0.2.0 | MIT | [source](https://github.com/aidenybai/react-grab#readme) |
 | `@react-router/dev` | 8.0.1 | MIT | [source](https://reactrouter.com) |
 | `@react-router/express` | 8.0.1 | MIT | [source](https://github.com/remix-run/react-router#readme) |
 | `@react-router/fs-routes` | 8.0.1 | MIT | [source](https://github.com/remix-run/react-router#readme) |
@@ -2146,7 +2146,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `react-doctor` | 0.9.12 | MIT | [Million Software, Inc](https://github.com/millionco/react-doctor#readme) |
 | `react-dom` | 19.2.4 | MIT | [source](https://react.dev/) |
 | `react-fast-compare` | 2.0.4 | MIT | [Chris Bolin](https://github.com/FormidableLabs/react-fast-compare) |
-| `react-grab` | 0.1.50 | MIT | [Aiden Bai](https://react-grab.com) |
+| `react-grab` | 0.2.0 | MIT | [Aiden Bai](https://react-grab.com) |
 | `react-hotkeys-hook` | 4.6.2, 5.3.3 | MIT | [Johannes Klauss](https://react-hotkeys-hook.vercel.app/) |
 | `react-i18next` | 17.0.11 | MIT | [Jan Mühlemann](https://github.com/i18next/react-i18next) |
 | `react-is` | 16.13.1, 17.0.2, 18.3.1, 19.2.8 | MIT | [source](https://react.dev/) |

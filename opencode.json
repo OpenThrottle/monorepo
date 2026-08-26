@@ -24,12 +24,6 @@
     "openthrottle-mcp": {
       "command": ["bash", "./scripts/run-openthrottle-mcp.sh"],
       "enabled": true,
-      "environment": {
-        "ANTHROPIC_API_KEY": "{env:ANTHROPIC_API_KEY}",
-        "API_URL": "{env:OPENTHROTTLE_DEVELOPER_API_URL_EXTERNAL}",
-        "API_URL_INTERNAL": "{env:OPENTHROTTLE_DEVELOPER_API_URL_INTERNAL}",
-        "OPENTHROTTLE_MCP_AUTH_TOKEN": "{env:OPENTHROTTLE_MCP_AUTH_TOKEN}"
-      },
       "type": "local"
     },
     "openthrottle-mcp-docker": {

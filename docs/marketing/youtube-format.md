@@ -142,6 +142,14 @@ of surprise.
 
 ## Titles, descriptions, tags
 
+> Most of this section is **machine-enforced**. `video-validate` checks title
+> style, the tag baseline and count, the playlist, chapter placement and
+> thumbnail word count against
+> [`src/validate/rules.ts`](../../packages/openthrottle-showroom/src/validate/rules.ts).
+> Structural rules fail immediately; these conventions are advisory on a draft and
+> become errors once an episode is marked `ready`. What stays judgement: whether
+> the title is _true_ of the video, and whether the words are worth hearing.
+
 **Titles** — plain, literal, and matching the demo exactly. The video must
 demonstrate the claim in the title; that is a publish-gate item, not a
 preference.
@@ -237,11 +245,12 @@ commands and identifiers. Never set narration text or titles in mono.
 
 Every published video has, in the repo:
 
-1. A committed narration script — [`scripts/<slug>.md`](./scripts/) (the
-   narration column is the literal TTS input).
-2. A committed flow the runner executes.
+1. A committed episode module —
+   [`src/episodes/<id>/episode.ts`](../../packages/openthrottle-showroom/src/episodes/)
+   (the narration is the literal TTS input).
+2. A committed flow beside it, `flow.ts`, which the runner executes.
 3. Generated captions (burned-in for Shorts, `.srt` sidecar for upload).
-4. A `metadata.json` carrying title, description and tags.
+4. A `metadata.json` complete enough to paste into an upload form.
 
 If any of those four is missing, the video is not shippable — see
 [`publish-checklist.md`](./publish-checklist.md).

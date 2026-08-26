@@ -100,12 +100,7 @@
         "description": "Serve the production build via react-router-serve after build; also starts openthrottle-server:start so the GraphQL API is up."
       },
       "test": {},
-      "test-e2e": {},
-      "video-assemble": {},
-      "video-narrate": {},
-      "video-record": {},
-      "video-scan": {},
-      "video-seed": {}
+      "test-e2e": {}
     }
   },
   "private": true,

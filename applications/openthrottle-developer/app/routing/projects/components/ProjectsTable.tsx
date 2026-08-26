@@ -81,7 +81,7 @@ ProjectsTable.buildTable = (): ColumnDef<
           </div>
         );
       },
-      header: () => <div className="p-4 py-2">Details</div>,
+      header: () => <div className="p-4 py-2">Project Details</div>,
     },
     {
       accessorKey: 'actions',

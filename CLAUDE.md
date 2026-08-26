@@ -66,7 +66,7 @@ How to apply:
 
 ### Source-first React Router packages (no `build` target)
 
-The `packages/react-router-*` libraries (and a few others — see [MONOREPO.md](./MONOREPO.md) § "Projects without a `build` target" for the pattern, and `packages/AGENTS.md` for the `__build` placeholder discriminator) intentionally have **no `build` target**: their `package.json` `main`/`types` point at `./src/index.ts` and consuming apps' Vite transpiles them. Do not add a `build` target to these. Validate them with `lint`/`typecheck`/`test`, then run `dev` or `build` on a consumer app (e.g. `openthrottle-developer`) as the integration check. Audit the current set with `pnpm nx show projects --with-target=build` versus `pnpm nx show projects`.
+The `packages/react-router-*` libraries (and a few others — see [MONOREPO.md](./MONOREPO.md) § "Projects without a `build` target" for the pattern, and `packages/AGENTS.md` for the `__build` placeholder discriminator) intentionally have **no `build` target**: their `package.json` `main`/`types` point at `./src/index.ts` and consuming apps' Vite transpiles them. Do not add a `build` target to these. Validate them with `lint`/`typecheck`/`test`, then run `dev` or `build` on a consumer app (e.g. `openthrottle-developer`) as the integration check. Audit the set by grepping `package.json` for the `__build` placeholder: Nx _infers_ a `build` target from a package's `vite.config.ts`, so `pnpm nx show projects --with-target=build` lists source-first packages too and cannot tell you which set is which.
 
 ### GraphQL schema + codegen flow
 

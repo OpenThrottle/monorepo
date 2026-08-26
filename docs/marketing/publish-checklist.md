@@ -52,7 +52,7 @@ transcription errors along with coverage. Those remain human items below.
 ## 2. Automated: the content gates
 
 ```bash
-pnpm exec tsx ./scripts/validate-video-scripts.ts --check   # narration within budget
+pnpm nx run openthrottle-showroom:video-validate            # narration within budget
 pnpm nx run openthrottle-developer:video-assemble --args="--script <slug>"
 ```
 

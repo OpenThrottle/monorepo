@@ -6,14 +6,14 @@ Family-shared notes for everything under `packages/`. Per-project deltas live in
 
 - `nestjs-*` — NestJS server modules (auth, bullmq, graphql, typeorm, redis, repositories, …) consumed by `openthrottle-server`; typically `forRoot`/`forRootAsync`-style modules with a real `build` target shipping `dist/`.
 - `react-router-*` — shared UI/client libraries (shadcn, ui, testing, utils, graphql, chat, ide, …) consumed **source-first** by the React Router apps; no `build` target by design.
-- `openthrottle-*` — agentic/product libraries (agentic-ralph, workflows, mcp, ide, skills, notifications, developer-codegen, …); mixed build story — check each package, don't assume.
+- `openthrottle-*` — agentic/product libraries (agentic-ralph, workflows, mcp, ide, skills, notifications, developer-codegen, showroom, …); mixed build story — check each package, don't assume. `openthrottle-showroom` is the @OpenThrottleAI screencast pipeline: typed episode scripts, demo flows, Playwright capture, narration, ffmpeg assembly and a pre-publish leak scan.
 - A few one-offs sit outside those prefixes: `graphql-codegen`, `node-client`, `nodejs-graphql`.
 
 ## Source-first vs built — how to tell
 
 - The reliable discriminator is `nx.targets` in the package's `package.json`: `__build` / `__build-package` **placeholder keys** mean intentionally no build target (consumers' Vite/tsc compiles the source). A real `build` or `build-package` target means it ships `dist/`.
 - `main`/`types` → `./src/index.ts` is **not** sufficient evidence of source-first: built `nestjs-*` packages also point `main` at src while `exports["."]` points at `./dist/src/index.js`.
-- A sizable set of projects has no `build` target by design — see [MONOREPO.md § Projects without a `build` target](../MONOREPO.md#projects-without-a-build-target). Audit the live list rather than trusting a count: diff `pnpm nx show projects` against `pnpm nx show projects --with-target=build`. Never add `build` to them; validate with `lint`/`typecheck`/`test`, then run `dev` or `build` on a consumer app (e.g. `openthrottle-developer`) as the integration check. `pnpm nx affected --target=build` will not schedule them.
+- A sizable set of projects has no `build` target by design — see [MONOREPO.md § Projects without a `build` target](../MONOREPO.md#projects-without-a-build-target). **Do not audit that set by diffing `pnpm nx show projects` against `--with-target=build`:** Nx _infers_ a `build` target from a package's `vite.config.ts`, so source-first packages like `nodejs-utils` and `openthrottle-showroom` appear in that list too. Grep for the `__build` placeholder in `package.json` instead — that is the discriminator named above. Never add `build` to them; validate with `lint`/`typecheck`/`test`, then run `dev` or `build` on a consumer app (e.g. `openthrottle-developer`) as the integration check. `pnpm nx affected --target=build` will not schedule them.
 - Packages that `openthrottle-server` imports must keep top-level `exports` → `dist` (not only `publishConfig`), or the Docker runtime fails with `ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING` on `src/*.ts`.
 
 ## Import and export rules

@@ -139,7 +139,7 @@ export const createSkillsTableColumns = (
           </h3>
 
           <MarkdownRenderer
-            className="line-clamp-2 overflow-hidden [&_p]:!mb-0"
+            className="line-clamp-2 overflow-hidden [&_p]:!mb-0 [&_p]:!text-xs"
             source={row.original.summary}
           />
 

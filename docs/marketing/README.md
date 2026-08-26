@@ -14,8 +14,11 @@ be produced by something you can run.
    pipeline reads this file; it never hard-codes a resolution or a LUFS target.
 3. **[pipeline.md](./pipeline.md)** — how a script becomes an mp4: seed → record →
    narrate → assemble, and the Nx targets that drive each stage.
-4. **[scripts/](./scripts/)** — one committed narration script per video. The
-   narration column is the literal TTS input.
+4. **[writing.md](./writing.md)** — how to write an episode, including variants.
+   The episodes themselves are typed modules under
+   [`packages/openthrottle-showroom/src/episodes/`](../../packages/openthrottle-showroom/src/episodes/);
+   the narration is the literal TTS input.
+   [episode-format.md](./episode-format.md) explains the shape and why.
 5. **[publish-checklist.md](./publish-checklist.md)** — the gate every video
    clears before upload. Non-negotiable: recording the real app is a live leak
    risk and automation makes that worse, not better.
@@ -34,6 +37,10 @@ be produced by something you can run.
 
 - [../openthrottle/brand-palette.md](../openthrottle/brand-palette.md) — the app's
   palette, which the cards inherit rather than reinvent.
+- [../../packages/openthrottle-showroom/PIPELINE.md](../../packages/openthrottle-showroom/PIPELINE.md)
+  — the pipeline itself: the demo database, seeding, recording a flow, and the
+  typeset surfaces used for beats that are not the app.
 - [../../applications/openthrottle-developer/tests/e2e/README.md](../../applications/openthrottle-developer/tests/e2e/README.md)
   — the Maestro E2E harness. The demo flows share its seeded user pattern and its
-  selectors; the app must not grow two parallel sets of test hooks.
+  selectors; the app must not grow two parallel sets of test hooks, and a test in
+  the showroom package fails if a flow targets a hook the app no longer renders.
