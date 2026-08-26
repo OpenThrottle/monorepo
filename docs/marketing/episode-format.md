@@ -1,149 +1,174 @@
 # The typed episode format
 
-Design note for the move from markdown scripts to typed TypeScript episodes.
-The types live in
+Every video is one typed module. The types live in
 [`packages/openthrottle-showroom/src/episodes/types.ts`](../../packages/openthrottle-showroom/src/episodes/types.ts);
-this file records the decisions and why they went the way they did.
+this file explains the shape and why it is that shape. For how to _write_ an
+episode, see [`writing.md`](./writing.md).
 
-## What it replaces
-
-`docs/marketing/scripts/<id>.md` — YAML front matter plus a markdown beats table
-— read by three independent regex parsers:
-
-| Reader                              | What it took                   | Problem                                                     |
-| ----------------------------------- | ------------------------------ | ----------------------------------------------------------- |
-| `scripts/validate-video-scripts.ts` | front matter, narration column | **Rewrote `spokenWords` back into the file** it just read   |
-| `narrate/parse-script.ts`           | narration column               | Its own front-matter regex, its own error paths             |
-| `assemble/assemble.ts`              | title, titleCard, tags         | Scraped tags with `/^ {2}- (.+)$/gm` — any two-space bullet |
-
-Three parsers, three notions of what a script is, and no compiler.
-
-## The one finding that shaped the design
-
-All five of episode 05's files — `05-connect-ot-mcp.md` and `-v0` through `-v3`
-— have a **byte-identical action column and identical beat times**. Verified by
-hashing the `t` + action pairs out of each; all five hash the same. They differ
-only in narration.
-
-So a beat carries the **picture**, and a variant carries the **words**:
+## The shape
 
 ```ts
-beats:    [{ t: '0:00', action: 'Terminal. Run `pnpm run setup:mcp-instructions`…' }, …]
-variants: [{ id: 'payoff-first', thesis: '…', narration: [['0:00', 'In sixty seconds…'], …] }, …]
+export const episode: VideoEpisode = {
+  beats: [
+    { action: 'Terminal. Run `pnpm run setup:mcp-instructions`…', t: '0:00' },
+  ],
+  format: 'short',
+  id: '05-connect-ot-mcp',
+  production: {
+    blockedOn: [],
+    recording: 'live',
+    titleCard: ['Connect it to', 'Claude Code'],
+  },
+  release: { order: 6, playlist: 'getting-started', status: 'draft' },
+  selectedVariant: 'payoff-first',
+  variants: [
+    {
+      id: 'payoff-first',
+      narration: [['0:00', 'In sixty seconds…']],
+      thesis: 'Promises the outcome up front.',
+    },
+  ],
+  youtube: { summary: '…', tags: [/* 6–10 */], title: '…' },
+};
 ```
 
-This is not a tidier arrangement of the same information — it changes what is
-guaranteed. One recording serves every variant, which is the entire economic case
-for A/B testing a video: you re-narrate, you do not re-record. Had `beats` sat on
-the variant with `action` inside it, nothing would stop two variants from
-disagreeing about what is on screen, and the pipeline would have no way to know
-which take the frames belonged to.
+Metadata is grouped by concern: `production` is how the video gets made,
+`release` is where it sits in the season, `youtube` is what an upload needs.
 
-## Decisions
+## A beat carries the picture; a variant carries the words
 
-### A variant owns its own timings
+This is the load-bearing decision, and it is what makes A/B testing possible at
+all.
 
-`narration: readonly NarrationCue[]`, where a cue is a `['0:09', 'the words']`
-tuple.
+Every variant of an episode shares one `beats` list, so **one recording serves
+every take**. You re-narrate; you do not re-record. Were `action` to sit inside
+a variant, two variants could disagree about what is on screen and the pipeline
+would have no way to know which take a set of frames belonged to.
 
-The first cut of this design keyed narration off the beat labels —
-`Record<string, string>` — on the theory that the shared picture should anchor
-the words. That was wrong, and wrong in a way that would have quietly constrained
-the thing the format exists to enable: **nothing says variant 2 speaks at variant
-1's timings.** A slower, payoff-first read may hold its opening two seconds longer
-than a problem-first one. Keying the words to the picture's beats forces every
-take to breathe identically, which defeats the point of testing a slower delivery
-at all.
+The evidence for the split is that it was already true in practice: when episode
+05 shipped as five separate markdown files, all five had a byte-identical action
+column and identical beat times, and differed only in narration.
 
-So the narration track is its own ordered list of timed cues. A cue does not have
-to start with a beat, and a beat does not have to carry a cue. Silence stays
-normal — most shorts land 25–35 seconds of speech across 55 seconds of picture,
-and the gaps are where the viewer watches instead of being talked at.
+## A variant owns its timings
 
-**Consequence for the assembler, and it is not free.** `assemble/timeline.ts`
-currently matches narration to flow beats **positionally** — the 05 flow carries
-a comment warning that an extra flow beat "does not merely go unnarrated — it
-shifts every later beat's narration one beat early". Independent cue times mean
-that matching has to become time-based rather than positional. The runner's
-manifest remains the authority on when a beat actually happened (script times are
-intent, not gospel), so the reconciliation is cue time → beat span, and the
-rewiring task owns it. Getting this right _removes_ the positional hazard rather
-than repeating it.
+`narration` is an ordered list of `NarrationCue` tuples — `['0:09', 'the words']`
+— and **not** a map keyed off the beats.
 
-### One module per episode, explicit registry
+Nothing says a slower read speaks at a faster one's moments. A payoff-first take
+may hold its opening two seconds longer than a problem-first one; keying the
+words to the picture would force every take to breathe identically, which defeats
+the point of testing a slower delivery. A cue does not have to start with a beat,
+and a beat does not have to carry a cue.
 
-`src/episodes/<id>/episode.ts`, with `src/episodes/index.ts` importing each one
-by name.
+Silence is normal. Most shorts land 25–35 seconds of speech across 55 seconds of
+picture, and the gaps are where the viewer watches instead of being talked at.
 
-No filesystem globbing. A glob registry is not typecheckable, fails at runtime
-rather than at build, and hides a missing episode until something asks for it.
-The index is three lines longer per episode and worth it.
+### How cues reach the picture
 
-### The episode and its flow sit together
+`assemble/timeline.ts` resolves each cue to the beat that had started by the
+cue's time, via `beatIndexForCue`, against the episode's beat times. The runner's
+`manifest.json` remains the authority on when a beat _actually_ happened — script
+and cue times are intent, captured spans are fact. Where a beat's narration
+outruns its on-screen action, the dwell on its last frame is extended rather than
+the picture being sped up.
 
-`src/episodes/<id>/{episode.ts, flow.ts}` — not parallel `episodes/` and
-`flows/` trees.
+A beat with no cue is silent, and a cue landing before the first beat is an error
+that gets named. Captions resolve the same way, so a caption cannot drift against
+the audio it transcribes.
 
-They are transcriptions of each other: the flow's steps are the beats' action
-column, and both sides have to agree on the same beat labels for the manifest to
-mean anything. Co-located, a drift between them is one directory in a diff. Split
-across two trees, it is two files a reviewer has to think to open together.
+## Layout
 
-Episode-**specific** surfaces move in beside them too (`connect-ot-mcp.ts` is
-used by exactly one episode). Shared surface builders — `shell.ts` — stay in
-`src/surfaces/`.
+```text
+src/episodes/
+├── registry.ts              # explicit imports; the only thing that knows what exists
+├── types.ts  derived.ts  description.ts
+└── <id>/
+    ├── episode.ts           # the script
+    ├── flow.ts              # the on-screen actions, as executable steps
+    ├── surface.ts           # typeset surfaces used by this episode only
+    └── __tests__/
+```
 
-Cost: `runner/run.ts` resolves flows with a dynamic import template,
-`../flows/${flowId}.flow.ts`. That becomes `../episodes/${id}/flow.ts`. One line.
+**The registry imports each episode by name.** No filesystem globbing: a glob is
+not typecheckable, resolves at runtime rather than at build, and turns "that
+episode does not exist" into a surprise at record time. It costs one line per
+episode.
 
-### The markdown scripts disappear; nothing regenerates them
+**The episode and its flow sit together** because they are transcriptions of each
+other — the flow's steps are the beats' action column, and both sides must agree
+on the same beat labels for the manifest to mean anything. Co-located, a drift
+between them is one directory in a diff. `runner/run.ts` resolves a flow as
+`../episodes/<id>/flow.ts`.
 
-No generated markdown mirror.
+Episode-specific surfaces sit beside them; shared surface builders such as
+`shell.ts` stay in `src/surfaces/`. Not every episode has a flow yet — only the
+ones that have been recorded.
 
-A generated view is another surface to keep honest, and this plan exists partly
-because a derived value stored as source (`spokenWords`) rotted. A TypeScript
-module with prose in doc comments reads fine in a GitHub diff. Where a
-human-readable overview genuinely helps — word counts, spoken seconds, budget
-headroom, variant comparison — the validator prints it on demand, computed fresh,
-rather than committing a copy that can go stale.
+## Output: the capture is shared, the take is not
 
-### Variant ids name a thesis
+```text
+output/<episode>/                 # frames, frames.concat, manifest.json, portrait/, text/
+output/<episode>/render-cache/    # keyed on backend + model + voice + text
+output/<episode>/<variant>/       # audio, timings.json, masters, .srt, metadata.json
+```
 
-`payoff-first`, not `v3`.
+Only what derives from the **words** is per-variant. Namespacing the capture too
+would mean recording once per variant, which destroys the economics the variant
+array exists for. `video-record` therefore takes no `--variant` at all.
 
-Four variants existed because someone was testing four different openings. The
-ordinal recorded the order they were written in, which is the one fact nobody
-needs. The `thesis` field carries the prose rationale that currently sits under
-each file's front matter — that text is the record of _why_ four exist and must
-not be dropped in migration.
+The **render cache is deliberately not namespaced**: two takes that share a
+sentence share the rendered audio, which is a real saving against hosted TTS
+since variants differ at the open and close far more than in the middle.
 
-### Variant ids namespace the takes
+`timings.json` and `metadata.json` both record the variant alongside the backend,
+voice and model — an unlabelled take of a four-variant episode is an unidentified
+take.
 
-`output/<slug>/<variant>/` for audio, frames, manifests, masters, `.srt` and
-`metadata.json`, and the variant id is recorded in `timings.json` and
-`metadata.json` alongside the backend, voice and model.
+## Variant ids name a thesis
 
-Those provenance fields exist so a take traces to what produced it. The words are
-as much a part of that as the voice is — an unlabelled take of a four-variant
-episode is an unidentified take.
+`payoff-first`, not `v3`. An ordinal records the day a variant was written, which
+is the one fact nobody needs.
 
-The **render cache** is deliberately _not_ namespaced. It keys on backend, model,
-voice and spoken text, so two variants sharing a sentence share the render. That
-is correct and a real saving against hosted TTS: variants differ in their opening
-and closing lines far more than in the middle.
+`thesis` is optional for a lone variant — "why this one rather than the others"
+is not a question a single take can answer — and **required once an episode has
+more than one**, enforced by the validator. It carries the prose rationale for
+why that take exists.
 
-## What stays exactly as it was
+## Computed, never stored
+
+`spokenWords`, estimated spoken seconds (145 wpm) and budget headroom against
+`format.json` are functions over a variant, not fields on it. Nothing derived can
+go stale, and there is no `--check` mode whose only job is to notice that a file
+and its own derived field have diverged.
+
+`youtube.summary` is optional; when absent the description composer opens with
+the title, which is what shipped before summaries existed.
+
+## Validation
+
+`video-validate` runs the rules in
+[`src/validate/rules.ts`](../../packages/openthrottle-showroom/src/validate/rules.ts)
+over every episode and **every variant** — a variant nobody can use is worth
+catching while it is being written.
+
+Findings have two severities:
+
+- **error** — structurally wrong for any episode: over budget, beats or cues out
+  of order, a duplicate release slot, a `selectedVariant` naming nothing, a short
+  carrying chapters or a designed thumbnail.
+- **publish** — a documented YouTube convention. Advisory while an episode is a
+  `draft`; an error once it is `ready` or `published`.
+
+That split is deliberate. Enforcing the conventions strictly today would fail
+every episode in the season, and a gate that is red on arrival gets switched off.
+Instead the conventions bind at exactly the moment they matter: an episode cannot
+be marked `ready` until it satisfies them.
+
+## What the format does not change
 
 - The narration text is the **literal TTS input**. Not a summary, not a caption.
 - A beat's action is the **literal flow step**.
-- `t` is the beat start, `mm:ss`, monotonic, first beat at `0:00`.
-- The writing rules in
-  [`scripts/README.md`](./scripts/README.md) — write for the ear, never read a
-  URL aloud, front-load the payoff. The format changed; the craft did not.
-
-## What is computed, never stored
-
-`spokenWords`, estimated spoken seconds (145 wpm), and budget headroom against
-`format.json`. These were fields; they are functions now. That is what removes
-the validator's file-rewriting step, and with it the `--check` mode that existed
-only to detect that the file and its own derived field had diverged.
+- `t` is the beat start, `mm:ss`, monotonic, first beat at zero (`0:00` and
+  `00:00` are both accepted).
+- The craft in [`writing.md`](./writing.md) — write for the ear, never read a URL
+  aloud, front-load the payoff.

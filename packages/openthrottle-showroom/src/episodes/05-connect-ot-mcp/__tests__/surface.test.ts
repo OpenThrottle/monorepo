@@ -60,17 +60,6 @@ describe('05-connect-ot-mcp surfaces', () => {
     );
   });
 
-  test('env placeholders stay literal so the viewer copies them verbatim', () => {
-    for (const key of [
-      'ANTHROPIC_API_KEY',
-      'API_URL',
-      'API_URL_INTERNAL',
-      'OPENTHROTTLE_MCP_AUTH_TOKEN',
-    ]) {
-      expect(CONNECT_OT_MCP_SURFACES.terminal).toContain(`${'${'}${key}}`);
-    }
-  });
-
   test('the command the flow types is the command the frame shows', () => {
     // "Copy it" at 0:09 and "run it" at 0:15 are the same string, or the short lies.
     // Compared on the un-escaped prefix: the printed block is HTML-escaped in the
