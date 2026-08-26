@@ -8,9 +8,11 @@ import { AGENT_CLI_ALLOWLIST, discoverAgentClis } from '../agent-discovery.ts';
 
 // Bin-env override names (the driver registry owns these; referenced here as
 // literals to keep the scan hermetic without importing per-driver internals).
+const ANTIGRAVITY_BIN_ENV = 'OPENTHROTTLE_ANTIGRAVITY_BIN';
 const CLAUDE_BIN_ENV = 'OPENTHROTTLE_CLAUDE_BIN';
 const CODEX_BIN_ENV = 'OPENTHROTTLE_CODEX_BIN';
 const CURSOR_AGENT_BIN_ENV = 'OPENTHROTTLE_CURSOR_AGENT_BIN';
+const GEMINI_BIN_ENV = 'OPENTHROTTLE_GEMINI_BIN';
 const GROK_BIN_ENV = 'OPENTHROTTLE_GROK_BIN';
 const OPENCODE_BIN_ENV = 'OPENTHROTTLE_OPENCODE_BIN';
 
@@ -39,9 +41,11 @@ function writeFakeBin(
 /** Point every driver's bin-env at a missing path so PATH lookups can't leak. */
 function hermeticEnv(overrides: Record<string, string>): NodeJS.ProcessEnv {
   return {
+    [ANTIGRAVITY_BIN_ENV]: join(dir, 'missing-antigravity'),
     [CLAUDE_BIN_ENV]: join(dir, 'missing-claude'),
     [CODEX_BIN_ENV]: join(dir, 'missing-codex'),
     [CURSOR_AGENT_BIN_ENV]: join(dir, 'missing-cursor'),
+    [GEMINI_BIN_ENV]: join(dir, 'missing-gemini'),
     [GROK_BIN_ENV]: join(dir, 'missing-grok'),
     HOME: process.env.HOME,
     [OPENCODE_BIN_ENV]: join(dir, 'missing-opencode'),
@@ -59,23 +63,27 @@ afterAll(() => {
 });
 
 describe('AGENT_CLI_ALLOWLIST', () => {
-  it('is derived from the drivers registry (all five, incl. codex + grok)', () => {
+  it('is derived from the drivers registry (all seven, incl. antigravity)', () => {
     expect(AGENT_CLI_ALLOWLIST.map((entry) => entry.backend).sort()).toEqual([
+      'antigravity',
       'claude',
       'codex',
       'cursor',
+      'gemini',
       'grok',
       'opencode',
     ]);
   });
 
-  it('marks claude/cursor/opencode/codex/grok chat-capable (all have streaming adapters)', () => {
+  it('marks every backend chat-capable (all seven have streaming adapters)', () => {
     const byId = new Map(AGENT_CLI_ALLOWLIST.map((e) => [e.backend, e]));
+    expect(byId.get('antigravity')?.chatCapable).toBe(true);
     expect(byId.get('claude')?.chatCapable).toBe(true);
     expect(byId.get('cursor')?.chatCapable).toBe(true);
     expect(byId.get('opencode')?.chatCapable).toBe(true);
     expect(byId.get('codex')?.chatCapable).toBe(true);
     expect(byId.get('grok')?.chatCapable).toBe(true);
+    expect(byId.get('gemini')?.chatCapable).toBe(true);
   });
 
   it('projects supportsCustomBaseUrl from the driver capability (opencode/codex/grok yes; claude/cursor no)', () => {
@@ -85,6 +93,7 @@ describe('AGENT_CLI_ALLOWLIST', () => {
     expect(byId.get('grok')?.supportsCustomBaseUrl).toBe(true);
     expect(byId.get('claude')?.supportsCustomBaseUrl).toBe(false);
     expect(byId.get('cursor')?.supportsCustomBaseUrl).toBe(false);
+    expect(byId.get('gemini')?.supportsCustomBaseUrl).toBe(false);
   });
 });
 
@@ -93,9 +102,11 @@ describe('discoverAgentClis', () => {
     const result = await discoverAgentClis({ env: hermeticEnv({}) });
 
     expect(result.agents.map((agent) => agent.backend).sort()).toEqual([
+      'antigravity',
       'claude',
       'codex',
       'cursor',
+      'gemini',
       'grok',
       'opencode',
     ]);

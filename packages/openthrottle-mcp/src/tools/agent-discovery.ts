@@ -1,6 +1,6 @@
 /**
  * @description Agent-CLI discovery tool handler + schema: discover_agent_clis. Lists the agentic
- * CLIs (claude, codex, cursor, grok, opencode, …) detected as available on the server host, with
+ * CLIs (claude, codex, cursor, gemini, grok, opencode, …) detected as available on the server host, with
  * their versions and the models each can run, via the discoverAgentClis GraphQL query only —
  * GraphQL-only boundary, no core import, no Nest bootstrap in this process.
  *
@@ -31,7 +31,7 @@ type DiscoverAgentClisStructured = {
 
 export const discoverAgentClisToolParameters = z.object({});
 
-export const discoverAgentClisToolDescription = `Discover the agentic CLIs (claude, codex, cursor, grok, opencode, …) detected as available on the server host, with each CLI's --version and the models it can run, via the discoverAgentClis GraphQL query. No arguments. Returns a cached snapshot (60s TTL). Each agent reports chatCapable — whether it has a wired streaming chat backend (false for plan-run-only drivers). Caveat: availability reflects the server's host, not this MCP process's host.`;
+export const discoverAgentClisToolDescription = `Discover the agentic CLIs (claude, codex, cursor, gemini, grok, opencode, …) detected as available on the server host, with each CLI's --version and the models it can run, via the discoverAgentClis GraphQL query. No arguments. Returns a cached snapshot (60s TTL). Each agent reports chatCapable — whether it has a wired streaming chat backend (false for plan-run-only drivers). Caveat: availability reflects the server's host, not this MCP process's host.`;
 
 export async function discoverAgentClisToolHandler(
   _args: z.infer<typeof discoverAgentClisToolParameters>,

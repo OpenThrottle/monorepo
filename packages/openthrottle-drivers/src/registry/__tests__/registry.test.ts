@@ -32,11 +32,13 @@ const fakeDriver = (id: string): AgentDriver =>
   });
 
 describe('DRIVER_IDS / DEFAULT_DRIVER_ID', () => {
-  it('contains the five initial driver ids', () => {
+  it('contains the seven driver ids', () => {
     expect([...DRIVER_IDS]).toEqual([
+      'antigravity',
       'claude',
       'codex',
       'cursor',
+      'gemini',
       'grok',
       'opencode',
     ]);
@@ -60,7 +62,7 @@ describe('isDriverId', () => {
   });
 
   it('returns false for unknown ids', () => {
-    expect(isDriverId('gemini')).toBe(false);
+    expect(isDriverId('copilot')).toBe(false);
     expect(isDriverId('')).toBe(false);
   });
 });
@@ -72,15 +74,16 @@ describe('parseDriverId', () => {
     expect(parseDriverId('OPENCODE', 'env')).toBe('opencode');
   });
 
-  it('accepts the widened ids codex and grok', () => {
+  it('accepts the widened ids codex, grok, and gemini', () => {
     expect(parseDriverId('codex')).toBe('codex');
     expect(parseDriverId('grok')).toBe('grok');
+    expect(parseDriverId('gemini')).toBe('gemini');
   });
 
   it('throws UnknownDriverError with a legacy-compatible message for unknown ids', () => {
-    expect(() => parseDriverId('gemini', 'cli')).toThrow(UnknownDriverError);
-    expect(() => parseDriverId('gemini', 'cli')).toThrow(
-      /Unknown execution backend "gemini"\. Supported: claude, codex, cursor, grok, opencode/,
+    expect(() => parseDriverId('copilot', 'cli')).toThrow(UnknownDriverError);
+    expect(() => parseDriverId('copilot', 'cli')).toThrow(
+      /Unknown execution backend "copilot"\. Supported: antigravity, claude, codex, cursor, gemini, grok, opencode/,
     );
   });
 

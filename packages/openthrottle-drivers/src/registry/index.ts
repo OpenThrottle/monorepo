@@ -13,9 +13,11 @@ import type { AgentDriver } from '../types/index.ts';
  * @public
  */
 export const DRIVER_IDS = [
+  'antigravity',
   'claude',
   'codex',
   'cursor',
+  'gemini',
   'grok',
   'opencode',
 ] as const;

@@ -16,9 +16,11 @@
  * accepted-backend allowlist, and server routing all light up from there.
  */
 
+import { antigravityConversationBackend } from './antigravity/index.ts';
 import { claudeConversationBackend } from './claude/index.ts';
 import { codexConversationBackend } from './codex/index.ts';
 import { cursorAgentConversationBackend } from './cursor-agent/index.ts';
+import { geminiConversationBackend } from './gemini/index.ts';
 import { grokConversationBackend } from './grok/index.ts';
 import { opencodeConversationBackend } from './opencode/index.ts';
 import type { ConversationBackend } from './types.ts';
@@ -33,9 +35,11 @@ import type { ConversationBackend } from './types.ts';
 export const CONVERSATION_CLI_BACKENDS: Readonly<
   Record<string, ConversationBackend>
 > = {
+  antigravity: antigravityConversationBackend,
   claude: claudeConversationBackend,
   codex: codexConversationBackend,
   cursor: cursorAgentConversationBackend,
+  gemini: geminiConversationBackend,
   grok: grokConversationBackend,
   opencode: opencodeConversationBackend,
 };

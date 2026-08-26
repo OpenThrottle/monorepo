@@ -157,10 +157,11 @@ export function augmentPathForInstall(env: NodeJS.ProcessEnv): string {
 }
 
 /**
- * Build the fixed command for a run from the driver's registry descriptors. `install` (and `update`
- * that falls back to re-running the installer) becomes `sh -c 'curl -fsSL <url> | <shell>'`; a
- * `command`-method update becomes `<binary> <argv...>`. Returns null when the backend cannot be
- * installed (no `install` descriptor).
+ * Build the fixed command for a run from the driver's registry descriptors. A `curl-shell` install
+ * (and `update` that falls back to re-running the installer) becomes `sh -c 'curl -fsSL <url> |
+ * <shell>'`; an `npm` install becomes `npm install --global <packageName>`; a `command`-method
+ * update becomes `<binary> <argv...>`. Returns null when the backend cannot be installed (no
+ * `install` descriptor).
  */
 export function buildAgentSetupCommand(
   driver: AgentDriver,
@@ -171,10 +172,14 @@ export function buildAgentSetupCommand(
     return { args: [...driver.update.argv], file: resolveBinary(driver, env) };
   }
 
-  // install, or update via curl-shell / no explicit update descriptor → re-run the installer.
+  // install, or update via reinstall / no explicit update descriptor → re-run the installer.
   const install = driver.install;
   if (install === undefined) {
     return null;
+  }
+
+  if (install.method === 'npm') {
+    return { args: ['install', '--global', install.packageName], file: 'npm' };
   }
 
   const shellCommand = `curl -fsSL ${install.url} | ${install.installerShell}`;

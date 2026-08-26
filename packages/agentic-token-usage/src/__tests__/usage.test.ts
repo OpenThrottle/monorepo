@@ -54,6 +54,29 @@ const BACKEND_FIXTURES: Record<
     expected: { outputTokens: 35, totalTokens: 35 },
     metadata: { result: 'hi', usage: { outputTokens: 35 } },
   },
+  // gemini: single terminal `result` chunk — stream-json `stats` forwarded as
+  // `usage` (input/output/total + `cached`), model remembered from `init`.
+  gemini: {
+    expected: {
+      cacheReadTokens: 2048,
+      inputTokens: 5321,
+      model: 'gemini-2.5-pro',
+      outputTokens: 87,
+      totalTokens: 5408,
+    },
+    metadata: {
+      model: 'gemini-2.5-pro',
+      usage: {
+        cached: 2048,
+        duration_ms: 5120,
+        input: 5321,
+        input_tokens: 5321,
+        output_tokens: 87,
+        tool_calls: 1,
+        total_tokens: 5408,
+      },
+    },
+  },
   // grok: single terminal `end` chunk — snake_case usage carrying reasoning_tokens.
   grok: {
     expected: {
@@ -122,12 +145,13 @@ describe('normalizeUsage — per-backend fixtures', () => {
 
   it('has a fixture for every wired CLI backend + the openai HTTP backend', () => {
     // Parity guard: mirrors CONVERSATION_CLI_BACKENDS keys (claude/codex/cursor/
-    // grok/opencode) plus the default openai HTTP backend. A new driver adding a
-    // conversation backend must add its normalizer fixture here.
+    // gemini/grok/opencode) plus the default openai HTTP backend. A new driver
+    // adding a conversation backend must add its normalizer fixture here.
     expect(Object.keys(BACKEND_FIXTURES).sort()).toEqual([
       'claude',
       'codex',
       'cursor',
+      'gemini',
       'grok',
       'openai',
       'opencode',

@@ -57,12 +57,30 @@ describe('buildAgentSetupCommand', () => {
     ).toEqual({ args: ['upgrade'], file: 'opencode' });
   });
 
-  it('re-runs the installer for a curl-shell-method update (cursor)', () => {
+  it('re-runs the installer for a reinstall-method update (cursor)', () => {
     expect(
       buildAgentSetupCommand(getDriver('cursor'), 'update', HERMETIC_ENV),
     ).toEqual({
       args: ['-c', 'curl -fsSL https://cursor.com/install | bash'],
       file: 'sh',
+    });
+  });
+
+  it('builds an npm global install for an npm-method descriptor (gemini)', () => {
+    expect(
+      buildAgentSetupCommand(getDriver('gemini'), 'install', HERMETIC_ENV),
+    ).toEqual({
+      args: ['install', '--global', '@google/gemini-cli'],
+      file: 'npm',
+    });
+  });
+
+  it('re-runs the npm install for a reinstall-method update (gemini)', () => {
+    expect(
+      buildAgentSetupCommand(getDriver('gemini'), 'update', HERMETIC_ENV),
+    ).toEqual({
+      args: ['install', '--global', '@google/gemini-cli'],
+      file: 'npm',
     });
   });
 

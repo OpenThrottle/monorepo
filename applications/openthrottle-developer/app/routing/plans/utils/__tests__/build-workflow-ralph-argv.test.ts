@@ -100,7 +100,7 @@ describe('formatWorkflowRalphExecutionBackendLabel', () => {
   });
 
   test('passes through unknown non-empty strings', () => {
-    expect(formatWorkflowRalphExecutionBackendLabel('gemini')).toBe('gemini');
+    expect(formatWorkflowRalphExecutionBackendLabel('copilot')).toBe('copilot');
   });
 });
 
@@ -635,7 +635,7 @@ describe('validateWorkflowRalphRunOptionsState', () => {
     const result = validateWorkflowRalphRunOptionsState(
       basePlanInput({
         executionBackend:
-          asMock<WorkflowRalphRunOptionsInput['executionBackend']>('gemini'),
+          asMock<WorkflowRalphRunOptionsInput['executionBackend']>('copilot'),
       }),
       '',
       { requireCliTargetIds: true },

@@ -7,15 +7,19 @@
 import { lookupDriver } from '../registry/index.ts';
 import type { DriverId, DriverRegistry } from '../registry/index.ts';
 import type { AgentDriver } from '../types/index.ts';
+import { antigravityDriver } from './antigravity.ts';
 import { claudeDriver } from './claude.ts';
 import { codexDriver } from './codex.ts';
 import { cursorDriver } from './cursor.ts';
+import { geminiDriver } from './gemini.ts';
 import { grokDriver } from './grok.ts';
 import { opencodeDriver } from './opencode.ts';
 
+export { antigravityDriver } from './antigravity.ts';
 export { claudeDriver } from './claude.ts';
 export { codexDriver } from './codex.ts';
 export { cursorDriver } from './cursor.ts';
+export { geminiDriver } from './gemini.ts';
 export { grokDriver } from './grok.ts';
 export { opencodeDriver } from './opencode.ts';
 
@@ -24,9 +28,11 @@ export { opencodeDriver } from './opencode.ts';
  * @public
  */
 export const ALL_DRIVERS: readonly AgentDriver[] = [
+  antigravityDriver,
   claudeDriver,
   codexDriver,
   cursorDriver,
+  geminiDriver,
   grokDriver,
   opencodeDriver,
 ];

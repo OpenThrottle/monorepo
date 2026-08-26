@@ -242,7 +242,7 @@ export type AgentCliModelOption = {
 
 export type AgentCliOptionObject = {
   __typename?: 'AgentCliOptionObject';
-  /** True when this CLI resolves the workspace's committed MCP config (.mcp.json / .cursor/mcp.json / opencode.json), so a run in this checkout can reach openthrottle-mcp. False for codex and grok, which read only their own user-scope config — for those, MCP reachability is a property of the host and cannot be verified from the workspace, so present it as unverifiable rather than as definitely missing. Distinct from emitting MCP flags: claude and opencode emit none yet attach fine. */
+  /** True when this CLI resolves the workspace's committed MCP config (.mcp.json / .cursor/mcp.json / opencode.json), so a run in this checkout can reach openthrottle-mcp. False for codex and gemini, which read only their own config scope (codex: user-scope config.toml; gemini: .gemini/settings.json, never .mcp.json) — for those, MCP reachability is a property of the host and cannot be verified from the workspace, so present it as unverifiable rather than as definitely missing. Distinct from emitting MCP flags: claude, grok, and opencode emit none yet attach fine. */
   attachesWorkspaceMcp: Scalars['Boolean']['output'];
   /** Backend discriminator (e.g. "cursor") used in StartConversationStreamInput. */
   backend: Scalars['String']['output'];
@@ -719,7 +719,7 @@ export type CreateScheduledAgentJobInputType = {
    * @deprecated Use repositoryCheckoutId to target a registered repository checkout; cwd is only consulted when no checkout is set.
    */
   cwd?: InputMaybe<Scalars['String']['input']>;
-  /** Agent driver id (claude | codex | cursor | grok | opencode). */
+  /** Agent driver id (claude | codex | cursor | gemini | grok | opencode). */
   driverId: Scalars['String']['input'];
   /** Whether the schedule starts enabled (default true). */
   enabled?: InputMaybe<Scalars['Boolean']['input']>;
@@ -3705,7 +3705,7 @@ export type RefreshCheckoutPayloadObject = {
 export type RegisterCliPlanRunInput = {
   /** OPTIONAL git branch this detached-CLI run operates on. Captured on plan_runs.branch as run provenance. Omit or null → store null; non-empty strings are stored verbatim (no server-side trim/reject — enqueue remains the REQUIRED branch boundary). */
   branch?: InputMaybe<Scalars['String']['input']>;
-  /** Execution backend for this detached-CLI run: claude, cursor, or opencode. */
+  /** Execution backend for this detached-CLI run: claude, codex, cursor, gemini, grok, or opencode. */
   executionBackend: Scalars['String']['input'];
   /** Host the CLI is running on (diagnostic; cleared on settle). Null when unknown. */
   hostname?: InputMaybe<Scalars['String']['input']>;
@@ -4111,7 +4111,7 @@ export type ScheduledAgentJobObject = {
    * @deprecated Use repositoryCheckoutId to target a registered repository checkout; cwd is only consulted when no checkout is set.
    */
   cwd?: Maybe<Scalars['String']['output']>;
-  /** Agent driver id (claude | codex | cursor | grok | opencode). */
+  /** Agent driver id (claude | codex | cursor | gemini | grok | opencode). */
   driverId: Scalars['String']['output'];
   /** Whether the schedule is active (registered as a BullMQ scheduler). */
   enabled: Scalars['Boolean']['output'];
@@ -5001,7 +5001,7 @@ export type TokenUsageRowObject = {
   model?: Maybe<Scalars['String']['output']>;
   /** Output/completion tokens for the turn, when reported. */
   outputTokens?: Maybe<Scalars['Float']['output']>;
-  /** Provider identity (driver id: claude|codex|cursor|grok|opencode|openai). */
+  /** Provider identity (driver id: claude|codex|cursor|gemini|grok|opencode|openai). */
   provider: Scalars['String']['output'];
   /** Reasoning tokens for the turn, when reported separately. */
   reasoningTokens?: Maybe<Scalars['Float']['output']>;

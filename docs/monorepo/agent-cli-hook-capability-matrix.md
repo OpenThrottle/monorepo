@@ -5,31 +5,34 @@
 table in §2 of [`foreign-workspace-skill-injection.md`](./foreign-workspace-skill-injection.md),
 which answered the same question for skills.
 
-The question: for each of the five CLIs in `packages/openthrottle-drivers/src/drivers/`, can OT put
+The question: for each of the six CLIs in `packages/openthrottle-drivers/src/drivers/`, can OT put
 hooks into a repository **without writing into that repository** — and if so, how?
 
 Everything below was established by running the installed binaries, not read off a docs site.
 Versions probed: `claude` 2.1.232, `codex-cli` 0.147.0, `cursor-agent` 2026.08.11, `opencode` 1.18.16,
-`grok` 1.0.0.
+`grok` 1.0.0, `gemini` 0.25.2 (subcommand surface + shipped source; hook execution not yet exercised
+end-to-end).
 
 ## The matrix
 
-| CLI              | hooks?                                | hook config read from                                                                                          | out-of-repo override                                      | plugin mechanism                                                        | verdict for the overlay                                                     |
-| ---------------- | ------------------------------------- | -------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| **claude**       | yes                                   | user / project / local settings + every installed plugin, merged additively                                    | `--settings`, `--plugin-dir`, `--plugin-url`              | plugins + marketplace (`/plugin install`)                               | **fully covered** — legs A and B both verified end-to-end                   |
-| **cursor-agent** | yes                                   | `.cursor/hooks.json` in-repo                                                                                   | **`--plugin-dir`** (repeatable)                           | plugins + `plugin marketplace`                                          | **viable, not yet built** — the flag exists; needs a cursor payload         |
-| **codex**        | yes                                   | `~/.codex/config.toml` (home, **not** the repo), `$CODEX_HOME/<name>.config.toml`                              | `-c hooks.…`, `--profile`, `CODEX_HOME`                   | plugins + `plugin marketplace` (local or git)                           | **viable, not yet built** — config is already out-of-repo by default        |
-| **grok**         | yes (`PreToolUse`, session lifecycle) | `.grok/hooks/`, plus `[[hooks.<Event>]]` in `~/.grok/config.toml` and other config layers, combined additively | config layers are out-of-repo; **no per-invocation flag** | durable `grok plugin install <git-url\|path>`; **reads Claude plugins** | **partial** — see below                                                     |
-| **opencode**     | via plugins (JS module hook API)      | project `opencode.json` + global config; `--pure` disables                                                     | global config is out-of-repo                              | `opencode plugin <npm-module>` (npm, not a directory)                   | **viable, different shape** — npm-published module, not a payload directory |
+| CLI              | hooks?                                | hook config read from                                                                                                                             | out-of-repo override                                            | plugin mechanism                                                        | verdict for the overlay                                                                     |
+| ---------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| **claude**       | yes                                   | user / project / local settings + every installed plugin, merged additively                                                                       | `--settings`, `--plugin-dir`, `--plugin-url`                    | plugins + marketplace (`/plugin install`)                               | **fully covered** — legs A and B both verified end-to-end                                   |
+| **cursor-agent** | yes                                   | `.cursor/hooks.json` in-repo                                                                                                                      | **`--plugin-dir`** (repeatable)                                 | plugins + `plugin marketplace`                                          | **viable, not yet built** — the flag exists; needs a cursor payload                         |
+| **codex**        | yes                                   | `~/.codex/config.toml` (home, **not** the repo), `$CODEX_HOME/<name>.config.toml`                                                                 | `-c hooks.…`, `--profile`, `CODEX_HOME`                         | plugins + `plugin marketplace` (local or git)                           | **viable, not yet built** — config is already out-of-repo by default                        |
+| **gemini**       | yes (experimental; settings-gated)    | `hooks` block in `.gemini/settings.json` (user `~/.gemini/` or workspace scope); `gemini hooks migrate` imports Claude Code hooks from `.claude/` | user-scope settings are out-of-repo; **no per-invocation flag** | durable `gemini extensions install <git-url\|path>` into `~/.gemini`    | **viable, not yet built** — user-scope settings layer; probe execution before relying on it |
+| **grok**         | yes (`PreToolUse`, session lifecycle) | `.grok/hooks/`, plus `[[hooks.<Event>]]` in `~/.grok/config.toml` and other config layers, combined additively                                    | config layers are out-of-repo; **no per-invocation flag**       | durable `grok plugin install <git-url\|path>`; **reads Claude plugins** | **partial** — see below                                                                     |
+| **opencode**     | via plugins (JS module hook API)      | project `opencode.json` + global config; `--pure` disables                                                                                        | global config is out-of-repo                                    | `opencode plugin <npm-module>` (npm, not a directory)                   | **viable, different shape** — npm-published module, not a payload directory                 |
 
 ## What is worth knowing beyond the table
 
-### Every one of the five has an out-of-repo path
+### Every one of the six has an out-of-repo path
 
 This is the headline, and it is the opposite of the skills result. §2 of the skill-injection record
 found that _no_ CLI exposes an out-of-repo skills directory, which is what forced materialization
-into the target working tree. For hooks, **all five** have somewhere to put config that is not the
-target repo — three via a home-directory config layer, two via a per-invocation directory flag.
+into the target working tree. For hooks, **all six** have somewhere to put config that is not the
+target repo — four via a home-directory config layer (gemini included, via user-scope
+`~/.gemini/settings.json`), two via a per-invocation directory flag.
 
 That closes the door on option C for good. C was only ever rescuable if some CLI had no out-of-repo
 hook config and multi-CLI parity became a v1 requirement. Neither half of that condition holds.

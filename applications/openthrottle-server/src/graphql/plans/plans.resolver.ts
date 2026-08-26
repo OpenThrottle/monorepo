@@ -206,6 +206,7 @@ function isPlanRunExecutionBackend(
     value === 'claude' ||
     value === 'codex' ||
     value === 'cursor' ||
+    value === 'gemini' ||
     value === 'grok' ||
     value === 'opencode'
   );
@@ -443,7 +444,7 @@ export class PlansResolver {
   ): Promise<PlanRunObject> {
     if (!isPlanRunExecutionBackend(input.executionBackend)) {
       throw new BadRequestException(
-        `Invalid executionBackend: ${input.executionBackend} (expected claude, codex, cursor, grok, or opencode)`,
+        `Invalid executionBackend: ${input.executionBackend} (expected claude, codex, cursor, gemini, grok, or opencode)`,
       );
     }
 

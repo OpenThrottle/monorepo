@@ -131,6 +131,16 @@ export const CHAT_BACKEND_CAPABILITIES: Readonly<
     serviceTiers: [],
     supportsModelFlag: true,
   },
+  gemini: {
+    // gemini's --approval-mode maps 1:1 (default / auto_edit / yolo), but the
+    // CLI exposes no reasoning-effort or service-tier flag in 0.25.2, so no
+    // reasoning levels are advertised.
+    permissionModes: ALL_PERMISSION_MODES,
+    reasoningLevels: [],
+    requiresRepository: true,
+    serviceTiers: [],
+    supportsModelFlag: true,
+  },
   grok: {
     permissionModes: ALL_PERMISSION_MODES,
     reasoningLevels: [

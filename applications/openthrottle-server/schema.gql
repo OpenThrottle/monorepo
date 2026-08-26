@@ -715,7 +715,7 @@ type AgentCliOptionObject {
   backend: String!
 
   """
-  True when this CLI resolves the workspace's committed MCP config (.mcp.json / .cursor/mcp.json / opencode.json), so a run in this checkout can reach openthrottle-mcp. False for codex and grok, which read only their own user-scope config — for those, MCP reachability is a property of the host and cannot be verified from the workspace, so present it as unverifiable rather than as definitely missing. Distinct from emitting MCP flags: claude and opencode emit none yet attach fine.
+  True when this CLI resolves the workspace's committed MCP config (.mcp.json / .cursor/mcp.json / opencode.json), so a run in this checkout can reach openthrottle-mcp. False for codex and gemini, which read only their own config scope (codex: user-scope config.toml; gemini: .gemini/settings.json, never .mcp.json) — for those, MCP reachability is a property of the host and cannot be verified from the workspace, so present it as unverifiable rather than as definitely missing. Distinct from emitting MCP flags: claude, grok, and opencode emit none yet attach fine.
   """
   attachesWorkspaceMcp: Boolean!
 
@@ -2179,7 +2179,7 @@ type ScheduledAgentJobObject {
   """Prompt passed to the agent CLI."""
   prompt: String!
 
-  """Agent driver id (claude | codex | cursor | grok | opencode)."""
+  """Agent driver id (claude | codex | cursor | gemini | grok | opencode)."""
   driverId: String!
 
   """Model preset; null uses the driver default."""
@@ -2901,7 +2901,7 @@ type TokenUsageRowObject {
   outputTokens: Float
 
   """
-  Provider identity (driver id: claude|codex|cursor|grok|opencode|openai).
+  Provider identity (driver id: claude|codex|cursor|gemini|grok|opencode|openai).
   """
   provider: String!
 
@@ -5399,7 +5399,7 @@ input RegisterCliPlanRunInput {
   branch: String
 
   """
-  Execution backend for this detached-CLI run: claude, cursor, or opencode.
+  Execution backend for this detached-CLI run: claude, codex, cursor, gemini, grok, or opencode.
   """
   executionBackend: String!
 
@@ -5950,7 +5950,7 @@ input CreateScheduledAgentJobInputType {
   """Prompt passed to the agent CLI."""
   prompt: String!
 
-  """Agent driver id (claude | codex | cursor | grok | opencode)."""
+  """Agent driver id (claude | codex | cursor | gemini | grok | opencode)."""
   driverId: String!
 
   """Model preset; omit for the driver default."""

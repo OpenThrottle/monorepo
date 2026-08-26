@@ -90,6 +90,6 @@ export const cursorDriver = defineDriver({
     url: 'https://cursor.com/install',
   },
   label: 'cursor-agent',
-  update: { method: 'curl-shell' },
+  update: { method: 'reinstall' },
   versionArgs: ['--version'],
 });
