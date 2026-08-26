@@ -67,8 +67,11 @@ const renderedTestIds = (): ReadonlySet<string> => {
 
   for (const root of SOURCE_ROOTS) {
     for (const file of sourceFiles(root)) {
+      // `dataTestId=` too: toolbar components (PlanTaskToolbar, PlanToolbar, …)
+      // set their hook through OpenThrottleToolbar's prop rather than a literal
+      // attribute, and the rendered DOM carries it all the same.
       for (const match of readFileSync(file, 'utf8').matchAll(
-        /data-testid=(?:"([^"]+)"|\{'([^']+)'\})/g,
+        /data(?:-t|T)est(?:id|Id)=(?:"([^"]+)"|\{'([^']+)'\})/g,
       )) {
         const id = match[1] ?? match[2];
 

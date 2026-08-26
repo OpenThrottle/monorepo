@@ -100,8 +100,7 @@ uploader would have published it.
 
 So the bar is met once, and the recommendation still stands: **manual until the
 checklist has caught a second one.** The ship voice is no longer part of the gate —
-narration renders through local Piper (`en_US-hfc_male-medium`), the voice the channel
-actually ships. What remains is asymmetry, not caution: an automated pipeline that can
+narration renders through hosted Fish Audio, the voice the channel actually ships. What remains is asymmetry, not caution: an automated pipeline that can
 publish to the world without a human is a larger risk than the fifteen minutes it
 saves per video.
 

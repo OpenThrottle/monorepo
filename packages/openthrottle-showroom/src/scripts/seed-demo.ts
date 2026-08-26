@@ -30,10 +30,18 @@ import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 import { DataSource } from 'typeorm';
 
 import {
+  DEFAULT_DOMAIN_TAG_VOCABULARY,
+  DEFAULT_PHASE_TAG_VOCABULARY,
+} from '@openthrottle/openthrottle-skills';
+
+import {
+  DEMO_EXTRA_TAG,
   DEMO_NOTES,
   DEMO_PLANS,
   DEMO_PROJECTS,
+  DEMO_RULES,
   DEMO_RUN,
+  DEMO_SKILLS,
   DEMO_USER,
 } from '../fixtures/demo-content';
 
@@ -100,7 +108,7 @@ const seed = async (dataSource: DataSource, reset: boolean): Promise<void> => {
   if (reset) {
     // Order matters only for the tables without ON DELETE CASCADE to plans.
     await dataSource.query(
-      'TRUNCATE plan_output_stream, plan_runs, task_embeddings, plan_embeddings, tasks, plans, notes, projects RESTART IDENTITY CASCADE',
+      'TRUNCATE plan_output_stream, plan_runs, task_embeddings, plan_embeddings, tasks, plans, notes, rule_applications, tag_action_rules, project_skills, user_skill_tags, projects RESTART IDENTITY CASCADE',
     );
     console.log('seed-demo: demo scope truncated.');
   }
@@ -199,6 +207,67 @@ const seed = async (dataSource: DataSource, reset: boolean): Promise<void> => {
     }
   }
 
+  // The tag vocabulary, whole. The server self-seeds it only for a user with
+  // ZERO rows (SkillTagsService.listForUser), so inserting just the demo's extra
+  // tag would suppress every default — insert the defaults plus the extra.
+  const vocabulary = [
+    ...DEFAULT_DOMAIN_TAG_VOCABULARY.map((tag) => ({
+      dimension: 'domain',
+      tag,
+    })),
+    ...DEFAULT_PHASE_TAG_VOCABULARY.map((tag) => ({ dimension: 'phase', tag })),
+    DEMO_EXTRA_TAG,
+  ];
+
+  for (const entry of vocabulary) {
+    await dataSource.query(
+      `INSERT INTO user_skill_tags (user_id, tag, dimension)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (user_id, tag) DO NOTHING`,
+      [user.id, entry.tag, entry.dimension],
+    );
+  }
+
+  // Skills on the dogfood project — what /rules/new's skill dropdown lists.
+  for (const skill of DEMO_SKILLS) {
+    await dataSource.query(
+      `INSERT INTO project_skills (id, project_id, slug, tags, description, source_path, source)
+       VALUES ($1, $2, $3, $4, $5, $6, 'external')
+       ON CONFLICT (id) DO UPDATE SET
+         description = EXCLUDED.description, slug = EXCLUDED.slug,
+         source_path = EXCLUDED.source_path, tags = EXCLUDED.tags`,
+      [
+        skill.id,
+        'd0d0d0d0-0000-4000-8000-0000000000a3',
+        skill.slug,
+        skill.tags,
+        skill.description,
+        skill.sourcePath,
+      ],
+    );
+  }
+
+  // The pre-existing rule video 09 fires on camera.
+  for (const rule of DEMO_RULES) {
+    await dataSource.query(
+      `INSERT INTO tag_action_rules (id, user_id, tag_all, action_type, action_payload, enabled, title, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, TRUE, $6, $7, $7)
+       ON CONFLICT (id) DO UPDATE SET
+         action_payload = EXCLUDED.action_payload, action_type = EXCLUDED.action_type,
+         enabled = EXCLUDED.enabled, tag_all = EXCLUDED.tag_all,
+         title = EXCLUDED.title`,
+      [
+        rule.id,
+        user.id,
+        rule.tagAll,
+        rule.actionType,
+        JSON.stringify(rule.actionPayload),
+        rule.title,
+        at(now, rule.createdAtOffset),
+      ],
+    );
+  }
+
   for (const note of DEMO_NOTES) {
     await dataSource.query(
       `INSERT INTO notes (id, content, author, created_at, updated_at)
@@ -264,7 +333,7 @@ const seed = async (dataSource: DataSource, reset: boolean): Promise<void> => {
     0,
   );
   console.log(
-    `seed-demo: ${planCount} plans, ${taskCount} tasks, ${DEMO_NOTES.length} notes, ${DEMO_PROJECTS.length} projects, ${DEMO_RUN.chunks.length} output chunks.`,
+    `seed-demo: ${planCount} plans, ${taskCount} tasks, ${DEMO_NOTES.length} notes, ${DEMO_PROJECTS.length} projects, ${DEMO_SKILLS.length} skills, ${DEMO_RULES.length} rules, ${DEMO_RUN.chunks.length} output chunks.`,
   );
   console.log(`seed-demo: demo login is ${DEMO_USER.email}`);
 };

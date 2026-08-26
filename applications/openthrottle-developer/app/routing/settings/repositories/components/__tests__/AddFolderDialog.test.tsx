@@ -1,6 +1,6 @@
 /* eslint-disable react/no-multi-comp -- test harness declares small route components inline */
 import * as React from 'react';
-import { render } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createRoutesStub } from 'react-router';
@@ -173,8 +173,12 @@ describe('AddFolderDialog picker interactions', () => {
 
     await user.click(await component.findByText('child'));
 
-    // Breadcrumb reflects the drill-down into /root/child.
-    const breadcrumb = await component.findByLabelText('Folder breadcrumb');
-    expect(breadcrumb).toHaveTextContent('child');
+    // Breadcrumb reflects the drill-down into /root/child. The nav element
+    // already exists at /root, so retry on its content rather than its
+    // presence — otherwise this races the browseDirectory action.
+    const breadcrumb = component.getByLabelText('Folder breadcrumb');
+    await waitFor(() => {
+      expect(breadcrumb).toHaveTextContent('child');
+    });
   });
 });

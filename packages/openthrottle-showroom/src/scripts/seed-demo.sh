@@ -24,9 +24,12 @@
 # docs/marketing/publish-checklist.md.
 set -eu
 
+# SCRIPT_DIR is packages/openthrottle-showroom/src/scripts, so the repo root is
+# three levels above src/ — the old tests/demo/scripts home was one deeper, and
+# keeping its depth pointed ROOT_DIR outside the repo entirely.
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 DEMO_DIR=$(cd "$SCRIPT_DIR/.." && pwd)
-ROOT_DIR=$(cd "$DEMO_DIR/../../../.." && pwd)
+ROOT_DIR=$(cd "$DEMO_DIR/../../.." && pwd)
 
 DEMO_POSTGRES_DB="${DEMO_POSTGRES_DB:-openthrottle_demo}"
 RESET_ARG=""

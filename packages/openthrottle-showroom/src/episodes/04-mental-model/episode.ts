@@ -19,7 +19,12 @@ export const episode: VideoEpisode = {
     { action: 'Highlight one task row.', t: '0:12' },
     { action: 'Navigate to `/notes`, open a seeded note.', t: '0:21' },
     { action: 'Navigate to `/projects`, open a seeded project.', t: '0:31' },
-    { action: 'Back to the plan; show its project badge.', t: '0:41' },
+    {
+      // The plan detail page has no project badge; the one place the app renders
+      // the plan→project relation is the project link on a plan's row in /plans.
+      action: "Back to `/plans`; highlight a plan row's project link.",
+      t: '0:41',
+    },
     { action: 'Hold on the plan.', t: '0:50' },
     { action: 'Outro card.', t: '0:54' },
   ],

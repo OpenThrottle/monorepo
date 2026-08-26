@@ -59,6 +59,78 @@ export const DEMO_PROJECTS = [
     name: 'atlas-web',
     nxProjectName: 'atlas-web',
   },
+  {
+    // The dogfood project. The skill-availability resolver treats the exact
+    // nx name 'OpenThrottle/monorepo' as the workspace's own project, and
+    // `/rules/new`'s skill dropdown lists ITS `project_skills` when no explicit
+    // project is in scope — so video 09's rule form has nothing to pick without
+    // this row. Not a leak: it names the product, not a machine or a person.
+    description: 'OpenThrottle itself — the workspace these demos run in.',
+    id: id('a3'),
+    name: 'openthrottle',
+    nxProjectName: 'OpenThrottle/monorepo',
+  },
+] as const;
+
+/**
+ * Skills on the dogfood project, for video 09's rule form. Fictional slugs with
+ * the shape of real ones; `/rules/new` lists them, and the seeded rule below
+ * injects one. The inject-task executor does not require the slug to exist, but
+ * the on-camera dropdown does.
+ */
+export const DEMO_SKILLS = [
+  {
+    description: 'A structured review checklist for a plan before merge.',
+    id: id('51'),
+    slug: 'code-review-checklist',
+    sourcePath: '.agents/skills/code-review-checklist/SKILL.md',
+    tags: ['pr-review'],
+  },
+  {
+    description: 'Write or extend tests for the work a plan describes.',
+    id: id('52'),
+    slug: 'write-tests',
+    sourcePath: '.agents/skills/write-tests/SKILL.md',
+    tags: ['testing'],
+  },
+  {
+    description: 'Draft release notes from a plan and its commits.',
+    id: id('53'),
+    slug: 'draft-release-notes',
+    sourcePath: '.agents/skills/draft-release-notes/SKILL.md',
+    tags: ['docs'],
+  },
+] as const;
+
+/**
+ * The tag video 09 adds on camera at 0:00. Not in the platform's default
+ * vocabulary, so the seed inserts it (alongside the defaults — the vocabulary
+ * only self-seeds for a user with ZERO rows, so a partial insert would suppress
+ * the rest).
+ */
+export const DEMO_EXTRA_TAG = {
+  dimension: 'domain',
+  tag: 'needs-review',
+} as const;
+
+/**
+ * One pre-existing, enabled tag→action rule — the one that fires at video 09's
+ * 0:00 beat. Adding `needs-review` to any plan injects a review task titled
+ * from the template, so the injected row the camera lands on names the plan.
+ */
+export const DEMO_RULES = [
+  {
+    actionPayload: {
+      placement: 'last',
+      skillSlug: 'code-review-checklist',
+      titleTemplate: 'Review: {{plan.title}}',
+    },
+    actionType: 'inject-task',
+    createdAtOffset: -5000,
+    id: id('61'),
+    tagAll: ['needs-review'],
+    title: 'Review anything tagged needs-review',
+  },
 ] as const;
 
 export interface DemoTask {
@@ -284,6 +356,22 @@ export const DEMO_PLANS: readonly DemoPlan[] = [
         status: 'PENDING',
         summary: 'Define the shape of a saved view.',
         title: 'Model the saved view',
+      },
+      {
+        // Video 08's subject: a task whose description has visibly outgrown one
+        // task. It enumerates five distinct pieces of work on purpose — the short's
+        // opening line is "this started as one task, it is clearly five", and the
+        // viewer should be able to count them on screen. Promotion requires the
+        // parent plan to be neither running nor terminal; this plan is PENDING.
+        category: 'feature',
+        createdAtOffset: -1420,
+        description: `A saved view nobody else can open is half the feature. Making views shareable turns out to be several changes, each with its own tests:\n\n1. A visibility field on the view — private, team or org — with private as the default and a migration for every existing view.\n2. A visibility picker in the save dialog, plus an edit path for views saved before the field existed.\n3. A team-views index so a shared view is discoverable rather than a URL someone pastes in chat.\n4. Permissions: renaming and deleting a shared view should be the owner and admins, not whoever opened it.\n5. Audit events for share and unshare, because support will be asked "who made this visible" within a week of shipping.\n\nEach of these is independently shippable and none of them blocks the others past the first.`,
+        id: id('0402'),
+        sortOrder: 2000,
+        status: 'PENDING',
+        summary:
+          'Sharing, permissions, discovery and audit — scoped as one task.',
+        title: 'Share saved views across the team',
       },
     ],
     title: 'Saved map views',

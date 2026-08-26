@@ -6,8 +6,10 @@
  *   pnpm exec tsx narrate/narrate.ts --script 03-first-plan
  *   NARRATION_BACKEND=macos-say pnpm exec tsx narrate/narrate.ts --script 03-first-plan
  *
- * The default backend is Piper (local, on-box) with the pinned ship voice; macOS
- * `say` remains selectable for a quick rehearsal pass. See NARRATION.md.
+ * The default backend is Fish Audio (hosted, OFF-BOX) with the pinned voice. Piper
+ * renders on box — `--backend piper` — and is required for any text that is not going
+ * into a published episode; macOS `say` remains a quick rehearsal pass. See
+ * NARRATION.md.
  *
  * Out: `output/<slug>/audio/NNN-<beat>.wav` (48kHz, loudness-normalised) and
  * `output/<slug>/audio/timings.json` for the assembly and caption stages.
@@ -157,7 +159,7 @@ const main = async (): Promise<void> => {
   }
 
   const backendId =
-    argValue('backend') ?? process.env.NARRATION_BACKEND ?? 'piper';
+    argValue('backend') ?? process.env.NARRATION_BACKEND ?? 'fish-audio';
 
   const backend = BACKENDS[backendId];
 
