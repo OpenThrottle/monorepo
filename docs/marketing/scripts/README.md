@@ -93,12 +93,20 @@ in the front matter, and fails any short over the budget derived from
 `../format.json` (145 wpm against the 55-second target = 132 words). `--check`
 validates without rewriting, for CI.
 
-**The budget is a ceiling, not a target.** Most shorts land at 25–35 seconds of
-speech across 55 seconds of picture, and that is correct: the gaps are where the
-viewer watches the action instead of listening to someone describe it. A short
-whose narration fills the entire runtime is over-narrated.
+**Fill the runtime — the budget is a target band, not just a ceiling.**
+Superseded deliberately on 2026-08-25 by the Season 1 narration rewrite
+(`SEASON-1-NARRATION.md`): this section previously said the budget was "a
+ceiling, not a target" and that a short filling its runtime was over-narrated.
+That guidance produced takes like `01` at 101 words — roughly 42 seconds of
+speech in a 55-second video with a quiet back third — and the house style is
+now the opposite. Shorts target **115–132 spoken words** (the ceiling is still
+145 wpm × 55 s = 132, from `../format.json`; the floor is 110, below which a
+take is under-narrated). Long-form targets **1,200–1,400 words per narration
+track**. Silence is still allowed where the action is doing the explaining —
+it is no longer the default. The full derivation and the voice charter live in
+`SEASON-1-NARRATION.md`, which is the current word-budget authority.
 
-Long-form is the opposite problem. `L1` and `L2` are currently **beat outlines** —
-one narration line per beat, roughly two minutes of speech across ten minutes of
-picture. The validator warns about that on purpose. Both need their narration
-column fleshed out before recording; neither is close to `ready`.
+Long-form history: `L1` and `L2` were **beat outlines** — one narration line
+per beat, roughly two minutes of speech across ten minutes of picture — and
+the validator warned about that on purpose. Their filled narration tracks
+(three per episode) live in `SEASON-1-NARRATION.md`.
