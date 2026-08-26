@@ -37,9 +37,11 @@ export const DEFAULT_RALPH_MODEL = DEFAULT_PLAN_RUN_RALPH_MODEL;
  * Node-only drivers package; keep it aligned with `workflow-ralph --backend` when a driver is added.
  */
 export const WORKFLOW_RALPH_KNOWN_BACKENDS = [
+  'antigravity',
   'claude',
   'codex',
   'cursor',
+  'gemini',
   'grok',
   'opencode',
 ] as const;
@@ -50,11 +52,17 @@ export const WORKFLOW_RALPH_KNOWN_BACKENDS = [
 export const formatWorkflowRalphExecutionBackendLabel = (
   backend: string | null | undefined,
 ): string => {
+  if (backend === 'antigravity') {
+    return 'Antigravity CLI';
+  }
   if (backend === 'claude') {
     return 'Claude Code CLI';
   }
   if (backend === 'cursor') {
     return 'Cursor (cursor-agent)';
+  }
+  if (backend === 'gemini') {
+    return 'Gemini CLI';
   }
   if (backend == null || backend === '') {
     return '—';

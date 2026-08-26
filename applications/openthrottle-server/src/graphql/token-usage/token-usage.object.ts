@@ -56,7 +56,7 @@ export class TokenUsageRowObject {
   outputTokens!: number | null;
 
   @Field(() => String, {
-    description: `Provider identity (driver id: claude|codex|cursor|grok|opencode|openai).`,
+    description: `Provider identity (driver id: claude|codex|cursor|gemini|grok|opencode|openai).`,
   })
   provider!: string;
 

@@ -1,7 +1,7 @@
 # @openthrottle/openthrottle-drivers — agent notes
 
-The OT-central contract for invoking agent CLIs (Claude Code, Codex, Cursor, Grok,
-OpenCode). Each CLI is one `defineDriver(...)` module; a shared engine
+The OT-central contract for invoking agent CLIs (Claude Code, Codex, Cursor, Gemini,
+Grok, OpenCode). Each CLI is one `defineDriver(...)` module; a shared engine
 (`runDriverSync`/`runDriverAsync`) runs it. Extracted from
 `tools/workflows/src/bin/run-iteration.ts`.
 
@@ -49,8 +49,9 @@ provider. Set `endpoint: { baseUrl, provider?, apiKey?, configFilePath? }` and
 read `capabilities.supportsCustomBaseUrl` to feature-detect.
 
 - **opencode / codex / grok** advertise `supportsCustomBaseUrl: true`; **claude /
-  cursor** advertise `false` and ignore `endpoint` (their wire protocols aren't
-  OpenAI-compatible — Anthropic Messages API / Cursor's proprietary backend).
+  cursor / gemini** advertise `false` and ignore `endpoint` (their wire protocols
+  aren't OpenAI-compatible — Anthropic Messages API / Cursor's proprietary backend /
+  the Gemini API).
 - Injection stays in the **pure** `buildShellCommand` (env prefix via
   `formatShellEnvPrefix`, or CLI flags): grok → `GROK_MODELS_BASE_URL` +
   placeholder `XAI_API_KEY`; codex → `--oss --local-provider <provider|ollama> -c

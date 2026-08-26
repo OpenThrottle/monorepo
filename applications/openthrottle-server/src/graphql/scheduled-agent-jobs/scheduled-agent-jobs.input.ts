@@ -15,7 +15,7 @@ export class CreateScheduledAgentJobInputType {
   prompt!: string;
 
   @Field(() => String, {
-    description: `Agent driver id (claude | codex | cursor | grok | opencode).`,
+    description: `Agent driver id (claude | codex | cursor | gemini | grok | opencode).`,
   })
   driverId!: string;
 

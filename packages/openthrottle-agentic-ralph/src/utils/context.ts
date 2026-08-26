@@ -7,6 +7,7 @@
  * Queue orchestrators merge file + env via {@link mergePlanRunTuningWithWorkflowRalphConfig}
  * in `@tools/workflows` before calling {@link resolveWorkflowRunOptions}.
  */
+import { WORKFLOW_RUNNER_IDS } from '@openthrottle/openthrottle-agentic-utils';
 import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 import type { RalphPlanRunTuningInput } from '../__generated__/graphql.js';
 import type { WorkflowContext } from '../types.ts';
@@ -18,16 +19,9 @@ import {
 } from '../config/index.ts';
 
 /**
- * Known backend ids; aligned with tools/workflows / GraphQL.
- */
-const WORKFLOW_RUNNER_IDS: WorkflowConfigRunner[] = [
-  'claude',
-  'cursor',
-  'opencode',
-];
-
-/**
- * Type guard: narrows an arbitrary string to a known {@link WorkflowConfigRunner}.
+ * Type guard: narrows an arbitrary string to a known {@link WorkflowConfigRunner}. Backed by the
+ * canonical `WORKFLOW_RUNNER_IDS` (= drivers `DRIVER_IDS`) — a local literal here previously
+ * drifted to a three-runner subset, silently downgrading codex/grok runs to the default runner.
  */
 const isWorkflowRunnerId = (value: string): value is WorkflowConfigRunner =>
   WORKFLOW_RUNNER_IDS.some((id) => id === value);

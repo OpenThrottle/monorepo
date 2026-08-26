@@ -3,7 +3,7 @@
 > Plan-Id: a3363c74-09f5-4403-bca2-efc16ab424ed
 >
 > The developer-app chat can stream from a locally-installed **agentic CLI**
-> (`cursor-agent`, `claude`, or `opencode`) as well as from local
+> (`cursor-agent`, `claude`, `codex`, `gemini`, `grok`, or `opencode`) as well as from local
 > OpenAI-compatible model servers. This is the user + operator guide. The
 > playbook for vetting a new CLI is
 > [agentic-cli-backend-compatibility-guide.md](./agentic-cli-backend-compatibility-guide.md).
@@ -22,6 +22,9 @@ startConversationStream(input)            // input.backend selects the source
       | cursorAgentConversationBackend     // spawns cursor-agent, parses NDJSON
       | claudeConversationBackend          // spawns claude, parses stream-json
       | opencodeConversationBackend        // spawns opencode run --format json
+      | codexConversationBackend           // spawns codex exec --json
+      | geminiConversationBackend          // spawns gemini -o stream-json (prompt via stdin)
+      | grokConversationBackend            // spawns grok --output-format streaming-json
         → ConversationStreamChunk { delta, done, error, kind, metadata? }
           → publish → conversationStreamChunkAdded subscription → UI
 ```
@@ -62,12 +65,16 @@ replay buffer and replays on subscribe; the client dedupes by
 (`---`). Every CLI adapter passes `--` before the prompt so that frontmatter is
 not parsed as a CLI option (which previously produced an immediate empty turn).
 cursor and opencode inject the persona as a prompt prefix; **claude** uses its
-first-class `--append-system-prompt` flag instead (nothing is written into the
-checkout).
+first-class `--append-system-prompt` flag, **grok** its `--system-prompt-override`
+(nothing is written into the checkout). **gemini** takes the whole prompt via
+stdin — no argv element exists for the prompt at all, so frontmatter can never
+be flag-parsed.
 
 One OT conversation maps to one CLI session — multi-turn context is owned by the
-CLI, so we send only the latest user message, never replayed history. Each
-backend acquires its session id differently, persisted in
+CLI, so we send only the latest user message, never replayed history (the one
+exception is **gemini**, whose resume is index-based rather than id-based, so
+its adapter flattens prior turns into the prompt instead of resuming). Each
+resuming backend acquires its session id differently, persisted in
 `conversation.metadata.<backend>SessionId`:
 
 - **cursor** — pre-minted via `cursor-agent create-chat`, then resumed each turn.
@@ -217,8 +224,10 @@ The gate (see `conversation-stream.resolver.ts` + the cursor-agent adapter):
   is **hard-disabled in production**.
 - **Scrubbed env.** The child inherits a per-adapter allowlist (`PATH`, `HOME`,
   `TERM`, locale, plus the adapter's own credential var — `CURSOR_API_KEY` for
-  cursor, `ANTHROPIC_API_KEY` for claude; opencode reads its credentials from a
-  file under `HOME`) — never the server's full env (DB/JWT/Redis secrets). Each
+  cursor, `ANTHROPIC_API_KEY` for claude, `XAI_API_KEY` for grok,
+  `GEMINI_API_KEY` + the `GOOGLE_*` Vertex/OAuth vars for gemini; opencode reads
+  its credentials from a file under `HOME`) — never the server's full env
+  (DB/JWT/Redis secrets). Each
   CLI authenticates via the host's own login.
 - **Bounded + torn down.** Idle timeout + wall-clock cap (env-overridable), and
   a guaranteed `SIGTERM → SIGKILL` teardown on cancel/timeout/disconnect (no
@@ -232,8 +241,9 @@ The gate (see `conversation-stream.resolver.ts` + the cursor-agent adapter):
 | `OPENTHROTTLE_AGENT_DEV_CWD`              | Dev-only cwd when no repository is selected (ignored in prod)  | unset              |
 | `OPENTHROTTLE_CURSOR_AGENT_BIN`           | Absolute path to `cursor-agent` (else PATH)                    | `cursor-agent`     |
 | `OPENTHROTTLE_CLAUDE_BIN`                 | Absolute path to `claude` (else PATH)                          | `claude`           |
-| `OPENTHROTTLE_CODEX_BIN`                  | Absolute path to `codex` (else PATH); discovery/plan-run only  | `codex`            |
-| `OPENTHROTTLE_GROK_BIN`                   | Absolute path to `grok` (else PATH); discovery/plan-run only   | `grok`             |
+| `OPENTHROTTLE_CODEX_BIN`                  | Absolute path to `codex` (else PATH)                           | `codex`            |
+| `OPENTHROTTLE_GEMINI_BIN`                 | Absolute path to `gemini` (else PATH)                          | `gemini`           |
+| `OPENTHROTTLE_GROK_BIN`                   | Absolute path to `grok` (else PATH)                            | `grok`             |
 | `OPENTHROTTLE_OPENCODE_BIN`               | Absolute path to `opencode` (else PATH)                        | `opencode`         |
 | `OPENTHROTTLE_CLAUDE_CONFIG_DIR`          | Dedicated plugin-free `CLAUDE_CONFIG_DIR` for headless claude  | unset (uses HOME)  |
 | `OPENTHROTTLE_AGENT_IDLE_TIMEOUT_MS`      | Per-agent idle: kill the child after this much stdout silence  | 120000             |
@@ -304,10 +314,9 @@ to the child (overriding any inherited value). Requirements:
 
 Discovery is **registry-driven**: `AGENT_CLI_ALLOWLIST` projects `ALL_DRIVERS`
 from `@openthrottle/openthrottle-drivers`, so a driver becomes discoverable the
-moment it is registered — there is no separate discovery list to edit. `claude`,
-`cursor`, and `opencode` are wired as chat backends today; `codex` and `grok`
-are registered drivers that are discoverable (and usable for plan runs) but not
-yet chat-capable. To make a driver chat-capable:
+moment it is registered — there is no separate discovery list to edit. All six
+registered drivers (`claude`, `codex`, `cursor`, `gemini`, `grok`, `opencode`)
+are wired as chat backends today. To make a future driver chat-capable:
 
 1. Run the [compatibility guide](./agentic-cli-backend-compatibility-guide.md)
    against the binary; commit a `<cli>-stream-json-schema.md`.

@@ -1,7 +1,7 @@
 # @openthrottle/openthrottle-drivers
 
 The OpenThrottle-central contract for invoking **agent CLIs** (Claude Code, Codex,
-Cursor, Grok, OpenCode). One `defineDriver(...)` call describes a CLI; a shared
+Cursor, Gemini, Grok, OpenCode). One `defineDriver(...)` call describes a CLI; a shared
 execution engine runs it. Adding a new agent is a single module + test, not edits
 scattered across `tools/workflows` and the agentic packages.
 
@@ -56,6 +56,7 @@ const output = await runDriverAsync(
 | Claude   | `claude` / claude-code  | `--model` (omits `auto`) | `--permission-mode acceptEdits` | yes           | no                | no                      |
 | Codex    | `codex` / codex         | `--model` (omits `auto`) | `--sandbox workspace-write`     | no            | no                | no                      |
 | Cursor   | `cursor` / cursor-agent | `--model` (any value)    | `--force`                       | yes           | `--worktree-base` | `--skip-worktree-setup` |
+| Gemini   | `gemini` / gemini       | `--model` (omits `auto`) | `--approval-mode yolo`          | no            | no                | no                      |
 | Grok     | `grok` / grok           | `--model` (omits `auto`) | `--permission-mode acceptEdits` | yes           | no¹               | no                      |
 | OpenCode | `opencode` / opencode   | `--model` (omits `auto`) | `--auto`                        | no            | no                | no                      |
 
@@ -68,6 +69,9 @@ Command shapes (byte-identical to the legacy builders for claude/cursor):
 - `claude -p --permission-mode acceptEdits "<prompt>" [--model M] [-w [name]]`
 - `codex exec --sandbox workspace-write [--model M] "<prompt>"`
 - `cursor-agent --force -p "<prompt>" [--model M] [-w [name] [--worktree-base B] [--skip-worktree-setup]]`
+- `gemini --approval-mode yolo "<prompt>" [--model M] < /dev/null` (the redirect is load-bearing:
+  with a non-TTY stdin the CLI blocks reading it to EOF; the positional prompt is used because
+  `-p` is deprecated in 0.25.2)
 - `grok -p "<prompt>" --permission-mode acceptEdits [--model M] [-w [name]]`
 - `opencode run --auto "<prompt>" [--model M]`
 
@@ -80,9 +84,9 @@ Command shapes (byte-identical to the legacy builders for claude/cursor):
    import { defineDriver } from '../registry/index.ts';
    import { escapeForShellDoubleQuoted } from '../utils/shell.ts';
 
-   export const geminiDriver = defineDriver({
+   export const copilotDriver = defineDriver({
      buildShellCommand: (config) =>
-       `gemini -p "${escapeForShellDoubleQuoted(config.prompt)}"`,
+       `copilot -p "${escapeForShellDoubleQuoted(config.prompt)}"`,
      capabilities: {
        permissionMode: false,
        skipWorktreeSetup: false,
@@ -90,15 +94,16 @@ Command shapes (byte-identical to the legacy builders for claude/cursor):
        worktree: false,
        worktreeBase: false,
      },
-     id: 'gemini',
-     label: 'gemini',
+     id: 'copilot',
+     label: 'copilot',
    });
    ```
 
-3. Add `'gemini'` to `DRIVER_IDS` (registry) and the driver to `ALL_DRIVERS` (drivers barrel).
+3. Add `'copilot'` to `DRIVER_IDS` (registry) and the driver to `ALL_DRIVERS` (drivers barrel).
 4. Add a command-construction test (base command, `--model`, prompt/model escaping).
 5. If the CLI has no viable headless mode, throw `UnsupportedDriverModeError` from
    `buildShellCommand` instead of shipping a broken command.
 
-Suggested follow-ups: **Gemini CLI** (`gemini`), **GitHub Copilot CLI** (`copilot`);
-second tier Amp, Aider, Goose, Qwen Code — each is one `defineDriver` module + test.
+Suggested follow-ups: **GitHub Copilot CLI** (`copilot`); second tier Amp, Aider,
+Goose, Qwen Code — each is one `defineDriver` module + test. (Gemini CLI landed as
+`src/drivers/gemini.ts` — dossier in `docs/openthrottle/gemini-stream-json-schema.md`.)

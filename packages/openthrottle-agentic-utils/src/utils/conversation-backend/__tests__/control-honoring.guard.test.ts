@@ -13,6 +13,7 @@ import { describe, expect, it } from 'vitest';
 import { buildClaudeArgv } from '../claude/argv.ts';
 import { buildCodexArgv } from '../codex/argv.ts';
 import { buildCursorAgentArgv } from '../cursor-agent/argv.ts';
+import { buildGeminiArgv } from '../gemini/argv.ts';
 import { buildGrokArgv } from '../grok/argv.ts';
 import { buildOpencodeArgv } from '../opencode/argv.ts';
 import {
@@ -62,6 +63,9 @@ const reasoningFlagPresent: Record<
 };
 
 describe('control-honoring drift guard', () => {
+  // gemini is deliberately absent from the reasoning map: the CLI has no
+  // reasoning-effort flag (0.25.2), so its capability descriptor advertises
+  // reasoningLevels: [] and there is nothing to honor.
   describe('reasoning: every backend maps every reasoning level to a flag (no drops)', () => {
     for (const backend of Object.keys(reasoningFlagPresent)) {
       it(`${backend} honors all ${ALL_REASONING.length} reasoning levels`, () => {
@@ -95,6 +99,8 @@ describe('control-honoring drift guard', () => {
         JSON.stringify(
           buildCodexArgv({ permissionMode, prompt: 'p', resume: false }),
         ),
+      gemini: (permissionMode) =>
+        JSON.stringify(buildGeminiArgv({ permissionMode })),
       grok: (permissionMode) =>
         JSON.stringify(
           buildGrokArgv({

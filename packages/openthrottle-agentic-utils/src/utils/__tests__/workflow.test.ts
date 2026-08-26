@@ -184,7 +184,7 @@ describe('parseWorkflowRunnerId', () => {
   });
 
   it('rejects unknown backends', () => {
-    expect(() => parseWorkflowRunnerId('gemini', 'cli')).toThrow(
+    expect(() => parseWorkflowRunnerId('copilot', 'cli')).toThrow(
       /Unknown execution backend/,
     );
   });
@@ -196,7 +196,7 @@ describe('parseWorkflowRunnerId', () => {
   });
 
   it('lists known backends in error message', () => {
-    expect(() => parseWorkflowRunnerId('gemini', 'cli')).toThrow(
+    expect(() => parseWorkflowRunnerId('copilot', 'cli')).toThrow(
       /claude.*cursor|cursor.*claude/,
     );
   });
@@ -208,7 +208,7 @@ describe('isWorkflowRunnerId', () => {
   });
 
   it('returns false for unknown ids', () => {
-    expect(isWorkflowRunnerId('gemini')).toBe(false);
+    expect(isWorkflowRunnerId('copilot')).toBe(false);
     expect(isWorkflowRunnerId('')).toBe(false);
   });
 });

@@ -4,9 +4,11 @@
  * drivers package. The server re-validates the id via parseDriverId, so a stale entry fails loud.
  */
 export const SCHEDULED_JOB_DRIVER_IDS = [
+  'antigravity',
   'claude',
   'codex',
   'cursor',
+  'gemini',
   'grok',
   'opencode',
 ] as const;

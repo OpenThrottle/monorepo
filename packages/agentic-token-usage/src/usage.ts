@@ -14,7 +14,9 @@
  * - claude: `{ usage: { input_tokens, output_tokens, cache_read_input_tokens,
  *   cache_creation_input_tokens }, modelUsage, totalCostUsd }` (snake_case)
  * - cursor-agent: `{ usage: { inputTokens, outputTokens, ... } }` (camelCase)
- * - codex / grok: `{ usage: { ... } }` single terminal
+ * - codex / gemini / grok: `{ usage: { ... } }` single terminal (gemini's
+ *   `usage` is the stream-json `result.stats` — `input_tokens`/`output_tokens`/
+ *   `total_tokens`/`cached`)
  * - opencode: `{ tokens: { total, input, output, reasoning, cache: { read, write } }, cost }`
  *   emitted mid-stream per `step_finish` (MULTIPLE per turn → summed via {@link sumUsage})
  * - openai / others: OpenAI-style `{ prompt_tokens, completion_tokens, total_tokens }` or absent
@@ -126,6 +128,7 @@ export const normalizeUsage = (input: unknown): NormalizedTokenUsage => {
     usage.cache_read_input_tokens,
     usage.cacheReadInputTokens,
     usage.cacheReadTokens,
+    usage.cached,
     cache.read,
   );
   const cacheWriteTokens = firstNumber(

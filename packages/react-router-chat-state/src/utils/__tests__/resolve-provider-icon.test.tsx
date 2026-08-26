@@ -5,7 +5,14 @@ import { resolveProviderIcon } from '../resolve-provider-icon';
 
 describe('resolveProviderIcon', () => {
   test('returns a brand glyph for each known agent-CLI backend id', () => {
-    for (const id of ['claude', 'codex', 'cursor', 'grok', 'opencode']) {
+    for (const id of [
+      'claude',
+      'codex',
+      'cursor',
+      'gemini',
+      'grok',
+      'opencode',
+    ]) {
       const node = resolveProviderIcon(id);
       expect(React.isValidElement(node)).toBe(true);
       const component = render(<span>{node}</span>);

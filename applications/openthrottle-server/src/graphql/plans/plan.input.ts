@@ -429,7 +429,7 @@ export class RegisterCliPlanRunInput {
   branch?: string | null;
 
   @Field(() => String, {
-    description: `Execution backend for this detached-CLI run: claude, cursor, or opencode.`,
+    description: `Execution backend for this detached-CLI run: claude, codex, cursor, gemini, grok, or opencode.`,
   })
   executionBackend!: string;
 
