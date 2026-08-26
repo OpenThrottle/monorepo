@@ -87,4 +87,5 @@ CLAUDE.local.md
 .agents/skills/*
 !.agents/skills/*/
 .claude/skills/
+.gemini/skills/
 # End 🔄 Managed by OpenThrottle ot-skill-sync

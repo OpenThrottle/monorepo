@@ -32,7 +32,7 @@ Invoke skills **before** writing code when the task matches their **USE WHEN** t
 | **AGENTS.md** (repo root) § OpenThrottle Agent Skills  | Index: **ot-stack**, **ot-plans**, **agents-ralph**; generic Nx: **nx-workspace**                                                          |
 | **AGENTS.md** § General Guidelines for working with Nx | Nx task execution (`pnpm nx run`, affected), Nx MCP, when to use **nx_docs**                                                               |
 
-Slash discovery reads `.agents/skills/<slug>` (Claude Code, Cursor 2.4+, Codex, OpenCode) and the generated `.claude/skills/<slug>` fan-out; both resolve back to `skills/<slug>` for OT-owned skills.
+Slash discovery reads `.agents/skills/<slug>` (Cursor, Grok Build, Antigravity) and the generated `.claude/skills/<slug>` + `.gemini/skills/<slug>` fan-outs (Claude Code, Gemini CLI); all resolve back to `skills/<slug>` for OT-owned skills.
 
 ### 1.3 Coding rules (apply when editing/generating code)
 

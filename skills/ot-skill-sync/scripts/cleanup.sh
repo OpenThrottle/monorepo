@@ -54,11 +54,16 @@ if [ -f "$REPO_ROOT/.gitignore-symlinks" ]; then
 fi
 
 # Prune the generated skill-directory roots once emptied (agent dirs and the
-# legacy .cursor leftover root). rmdir removes only the exact root and only when
-# it is empty — never a recursive sweep, and never .agents/skills, which may
-# still hold committed external installs.
+# legacy .cursor leftover root), then each root's parent — a fan-out target like
+# .gemini/skills creates a .gemini/ that exists only for us, whereas .claude/ and
+# .cursor/ hold other config and are left alone because they are not empty.
+# rmdir removes only the exact directory and only when it is empty — never a
+# recursive sweep, and never .agents/skills, which may still hold committed
+# external installs.
 for dir in $AGENT_SKILL_DIRS .cursor; do
   rmdir "$REPO_ROOT/$dir" 2>/dev/null || true
+  parent=$(dirname "$dir")
+  [ "$parent" = "." ] || rmdir "$REPO_ROOT/$parent" 2>/dev/null || true
 done
 
 echo ""
