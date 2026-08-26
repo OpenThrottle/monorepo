@@ -46,7 +46,7 @@ repo root
     ├── settings.json.default, extensions.json, launch.json, mcp.json
 ```
 
-> **Skills are two-stage and fully generated.** `ot-skill-sync` builds `skills/*` → `.agents/skills/` (stage 1), then `.agents/skills/*` → each agent fan-out such as `.claude/skills/` (stage 2). The dedicated `.cursor/skills` fan-out was **dropped**: Cursor 2.4+ reads `.agents/skills/` (and `.claude/skills/`) directly, so it needs no separate copy. Every supported CLI (Claude Code, Cursor, Codex, Grok Build, OpenCode) now reads the `SKILL.md` standard — they differ only in which dirs they scan, with `.agents/skills/` + `.claude/skills/` the two near-universal in-repo targets. **Never hand-edit** `.agents/skills/` or `.claude/skills/`.
+> **Skills are two-stage and fully generated.** `ot-skill-sync` builds `skills/*` → `.agents/skills/` (stage 1), then `.agents/skills/*` → each agent fan-out — currently `.claude/skills/` **and `.gemini/skills/`** (stage 2). The dedicated `.cursor/skills` fan-out was **dropped**: Cursor reads `.agents/skills/` (and `.claude/skills/`) directly, so it needs no separate copy. Every supported CLI reads the `SKILL.md` standard and they differ only in which dirs they scan — Cursor, Grok Build, and Antigravity (`agy`) read `.agents/skills/` in-repo; Claude Code reads only `.claude/skills/` and the Gemini CLI only `.gemini/skills/`, which is why both are fan-out targets. The verified per-CLI matrix (including codex, which has no in-repo skills dir, and opencode's `.opencode/skill(s)`) lives in [`skills/ot-skill-sync/SKILL.md`](../../skills/ot-skill-sync/SKILL.md). **Never hand-edit** `.agents/skills/`, `.claude/skills/`, or `.gemini/skills/`.
 
 > **Hooks reach child repositories differently from skills — do not copy the skills pattern.** The
 > per-tool hook bundles under `.claude/hooks/` and `.cursor/hooks/` only fire _inside this repo_.
@@ -72,13 +72,13 @@ bash skills/ot-skill-sync/scripts/sync.sh --check  # validate without writing (C
 
 ## 2. What's authored vs generated
 
-| Concern            | Author here (SSOT)                                                                                                        | Generated (do not edit)                                    |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| OT-owned skills    | `skills/<slug>/SKILL.md`                                                                                                  | `.agents/skills/<slug>` (symlink), `.claude/skills/<slug>` |
-| External skills    | `npx skills add <owner>/<repo> --skill <name> --agent universal` (→ `skills-lock.json` + a real dir in `.agents/skills/`) | `.claude/skills/<slug>`                                    |
-| Rules              | `.agents/rules/**/*.mdc`                                                                                                  | `.cursor/rules/**/*.mdc`                                   |
-| Personas / prompts | `.agents/personas/`, `.agents/prompts/`                                                                                   | — (loaded via Ralph `--prompt-file`)                       |
-| Skill tags         | `project_skills.tags` (GraphQL / `/skills` UI; ingest does not write tags)                                                | —                                                          |
+| Concern            | Author here (SSOT)                                                                                                        | Generated (do not edit)                                                             |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| OT-owned skills    | `skills/<slug>/SKILL.md`                                                                                                  | `.agents/skills/<slug>` (symlink), `.claude/skills/<slug>`, `.gemini/skills/<slug>` |
+| External skills    | `npx skills add <owner>/<repo> --skill <name> --agent universal` (→ `skills-lock.json` + a real dir in `.agents/skills/`) | `.claude/skills/<slug>`, `.gemini/skills/<slug>`                                    |
+| Rules              | `.agents/rules/**/*.mdc`                                                                                                  | `.cursor/rules/**/*.mdc`                                                            |
+| Personas / prompts | `.agents/personas/`, `.agents/prompts/`                                                                                   | — (loaded via Ralph `--prompt-file`)                                                |
+| Skill tags         | `project_skills.tags` (GraphQL / `/skills` UI; ingest does not write tags)                                                | —                                                                                   |
 
 ### Prompt filename conventions (`.agents/prompts/`)
 
@@ -118,16 +118,16 @@ Prompts are flat files in `.agents/prompts/`; the walker derives slug and title 
 
 ## 4. Git tracking (summary)
 
-| Tracked                                                                                  | Ignored / local                                                                                 |
-| ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `skills/**` (OT-owned bodies), `skills-lock.json`                                        | —                                                                                               |
-| `.agents/skills/<external-slug>/**` (real dirs — vendored, pinned by `skills-lock.json`) | `.agents/skills/<own-slug>` (symlinks — generated, regenerated by `sync.sh`)                    |
-| `.agents/rules/**/*.mdc`, `.agents/personas/`, `.agents/prompts/`                        | —                                                                                               |
-| `.cursor/rules/**/*.mdc` (symlinks; except generated `nx-rules.mdc`)                     | `nx-rules.mdc`, `.cursor/mcp.json`, `.cursor/cli-config.json`                                   |
-| `.cursor/hooks.json`, `worktrees.json`, `settings.json`, `.cursor/mcp.json`              | `.claude/skills/` (generated fan-out), Claude `projects/` / `sessions/` / `settings.local.json` |
-| `.vscode/settings.json.default`                                                          | `.vscode/settings.json`, `CLAUDE.local.md`                                                      |
+| Tracked                                                                                  | Ignored / local                                                                                                     |
+| ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `skills/**` (OT-owned bodies), `skills-lock.json`                                        | —                                                                                                                   |
+| `.agents/skills/<external-slug>/**` (real dirs — vendored, pinned by `skills-lock.json`) | `.agents/skills/<own-slug>` (symlinks — generated, regenerated by `sync.sh`)                                        |
+| `.agents/rules/**/*.mdc`, `.agents/personas/`, `.agents/prompts/`                        | —                                                                                                                   |
+| `.cursor/rules/**/*.mdc` (symlinks; except generated `nx-rules.mdc`)                     | `nx-rules.mdc`, `.cursor/mcp.json`, `.cursor/cli-config.json`                                                       |
+| `.cursor/hooks.json`, `worktrees.json`, `settings.json`, `.cursor/mcp.json`              | `.claude/skills/` + `.gemini/skills/` (generated fan-out), Claude `projects/` / `sessions/` / `settings.local.json` |
+| `.vscode/settings.json.default`                                                          | `.vscode/settings.json`, `CLAUDE.local.md`                                                                          |
 
-> The `.gitignore` "Managed by OpenThrottle ot-skill-sync" block ignores `.agents/skills/*` (the own-skill symlinks) and all of `.claude/skills/`, while un-ignoring `.agents/skills/*/` so vendored external-install directories stay tracked. CI regenerates the ignored symlinks with `sync.sh` before running the drift gate.
+> The `.gitignore` "Managed by OpenThrottle ot-skill-sync" block ignores `.agents/skills/*` (the own-skill symlinks) and all of `.claude/skills/` and `.gemini/skills/`, while un-ignoring `.agents/skills/*/` so vendored external-install directories stay tracked. CI regenerates the ignored symlinks with `sync.sh` before running the drift gate.
 
 ---
 

@@ -184,7 +184,7 @@ RepositoriesTable.buildTable = (
     {
       cell: ({ row }) => (
         <div className="flex items-center justify-center">
-          <RepositoryRowActions row={row.original} />,
+          <RepositoryRowActions row={row.original} />
         </div>
       ),
       header: () => <GlobalPopoverActionsHeader />,
