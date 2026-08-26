@@ -7,6 +7,21 @@ Maestro assets live under this directory so the application source under
 Treat this README as the source of truth for **where** Maestro files belong and
 **how** to run the harness locally.
 
+## Test hooks are shared with the screencast pipeline
+
+The demo videos are recorded by
+[`packages/openthrottle-showroom`](../../../../packages/openthrottle-showroom/PIPELINE.md),
+which used to sit next to this directory as `tests/demo/`. A demo flow is
+structurally an E2E flow — a deterministic, seeded, scripted click-path through
+the real app — and **both suites drive the same `data-testid` hooks**. The app
+must never grow a second set of test hooks just for video.
+
+That means a renamed or removed `data-testid` breaks a recording as well as a
+Maestro flow, and now does so from another package where nobody would notice
+until the next take. `src/flows/__tests__/selectors.test.ts` in that package
+fails when a flow targets a hook the app no longer renders — if you rename one
+here, expect that test to tell you which flow to update.
+
 ## Runbook
 
 ### Prerequisites

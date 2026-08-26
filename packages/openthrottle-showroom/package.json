@@ -1,0 +1,83 @@
+{
+  "author": {
+    "email": "matthew.scholta@gmail.com",
+    "name": "Matthew Scholta",
+    "url": "https://mattscholta.com"
+  },
+  "dependencies": {
+    "@openthrottle/nestjs-modules": "workspace:^",
+    "@openthrottle/nestjs-repositories": "workspace:^",
+    "@openthrottle/openthrottle-agentic-utils": "workspace:*",
+    "pg": "catalog:",
+    "typeorm": "catalog:"
+  },
+  "description": "Screencast pipeline for the @OpenThrottleAI '0-60' channel: typed episode scripts, demo flows, Playwright capture, narration, assembly and leak scanning.",
+  "devDependencies": {
+    "playwright": "catalog:"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/src/index.js",
+      "require": "./dist/src/index.js"
+    },
+    "./*": {
+      "types": "./dist/*.d.ts",
+      "import": "./dist/*.js",
+      "require": "./dist/*.js"
+    }
+  },
+  "main": "./src/index.ts",
+  "name": "@openthrottle/openthrottle-showroom",
+  "module": "./src/index.ts",
+  "nx": {
+    "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
+    "projectType": "library",
+    "sourceRoot": "./",
+    "tags": [
+      "name:@openthrottle/openthrottle-showroom",
+      "production:false",
+      "publish:false",
+      "technology:nodejs",
+      "type:package"
+    ],
+    "targets": {
+      "__build": {},
+      "__build-package": {},
+      "lint": {},
+      "test": {},
+      "typecheck": {},
+      "video-assemble": {},
+      "video-narrate": {},
+      "video-record": {},
+      "video-scan": {},
+      "video-seed": {},
+      "video-validate": {}
+    }
+  },
+  "peerDependencies": {},
+  "private": true,
+  "publishConfig": {
+    "access": "restricted",
+    "exports": {
+      ".": {
+        "import": "./src/index.js",
+        "require": "./src/index.js",
+        "types": "./src/index.d.ts"
+      },
+      "./*": {
+        "import": "./*.js",
+        "require": "./*.js",
+        "types": "./*.d.ts"
+      }
+    },
+    "main": "./src/index.js",
+    "module": "./src/index.js",
+    "types": "./src/index.d.ts"
+  },
+  "repository": "git://github.com/OpenThrottle/monorepo.git",
+  "scripts": {},
+  "type": "module",
+  "types": "./src/index.ts",
+  "version": "1.0.0"
+}

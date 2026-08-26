@@ -168,8 +168,9 @@ PromptsTable.buildTable = (): ColumnDef<
 
               <hr className="my-4" />
               <MarkdownRenderer
-                className="m-0 mt-2 line-clamp-5 overflow-hidden"
-                source={prompt.content}
+                // className="m-0 mt-2 line-clamp-5 overflow-hidden"
+                className="line-clamp-2 overflow-hidden [&_p]:!mb-0 [&_p]:!text-xs"
+                source={prompt.description || prompt.content}
               />
             </div>
           </div>

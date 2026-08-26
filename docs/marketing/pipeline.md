@@ -8,7 +8,7 @@ seed  →  record  →  narrate  →  assemble  →  (review)  →  upload
 ```
 
 Everything lives in
-[`applications/openthrottle-developer/tests/demo/`](../../applications/openthrottle-developer/tests/demo/README.md)
+[`packages/openthrottle-showroom/`](../../packages/openthrottle-showroom/PIPELINE.md)
 and reads its constants from [`format.json`](./format.json).
 
 ## Stages
@@ -16,7 +16,7 @@ and reads its constants from [`format.json`](./format.json).
 ### 1. Seed
 
 ```bash
-sh applications/openthrottle-developer/tests/demo/scripts/seed-demo.sh --reset
+sh packages/openthrottle-showroom/src/scripts/seed-demo.sh --reset
 ```
 
 Creates and migrates the **demo database** and fills it with fictional content.
@@ -26,14 +26,19 @@ looks like take 1 only if the workspace is reset in between.
 ### 2. Record
 
 ```bash
-pnpm exec tsx applications/openthrottle-developer/tests/demo/runner/run.ts \
+pnpm exec tsx packages/openthrottle-showroom/src/runner/run.ts \
   --flow 03-first-plan --base http://localhost:7180
 # and, for a Short:
 pnpm exec tsx .../runner/run.ts --flow 03-first-plan --base http://localhost:7180 --portrait
 ```
 
-Out: `output/<flow>/frames/`, `frames.concat` (per-frame durations) and
+Out: `output/<episode>/frames/`, `frames.concat` (per-frame durations) and
 `manifest.json` (per-step `tStart`/`tEnd`, plus where the action was on screen).
+
+**Recording takes no `--variant`, and that is the point.** Every variant of an
+episode shares its beats and its action column, so one capture serves all of them.
+The capture stays at `output/<episode>/`; only the words and what derives from
+them are per-take.
 
 **Record the portrait pass for anything destined to be a Short.** Reframing a
 1920-wide capture into 9:16 is a compromise either way — cropping clips a table at
@@ -44,30 +49,40 @@ the app's own responsive layout do the work.
 ### 3. Narrate
 
 ```bash
-pnpm exec tsx applications/openthrottle-developer/tests/demo/narrate/narrate.ts \
-  --script 03-first-plan
+pnpm exec tsx packages/openthrottle-showroom/src/narrate/narrate.ts \
+  --script 03-first-plan [--variant problem-first]
 ```
 
-Out: `output/<slug>/audio/*.wav` + `timings.json`. Renders through local Piper
+Out: `output/<episode>/<variant>/audio/*.wav` + `timings.json`, which records the
+variant alongside the backend and voice so a take traces to the words that made
+it. `--variant` defaults to the episode's `selectedVariant`; an unknown id fails
+with the list of real ones. The render cache sits beside the capture rather than
+inside a take, so two variants sharing a sentence share the rendered audio. Renders through local Piper
 (`en_US-hfc_male-medium`) by default — the settled ship voice, pinned for the season.
 `NARRATION_BACKEND=macos-say` swaps in the flat rehearsal voice for a quick timing
 pass. Piper must be installed; see
-[`NARRATION.md`](../../applications/openthrottle-developer/tests/demo/NARRATION.md)
+[`NARRATION.md`](../../packages/openthrottle-showroom/NARRATION.md)
 for the install and why this backend won.
 
 ### 4. Assemble
 
 ```bash
-pnpm exec tsx applications/openthrottle-developer/tests/demo/assemble/assemble.ts \
-  --script 03-first-plan [--music bed.mp3]
+pnpm exec tsx packages/openthrottle-showroom/src/assemble/assemble.ts \
+  --script 03-first-plan [--variant problem-first] [--music bed.mp3]
 ```
 
-Out: `<slug>-16x9.mp4`, `<slug>-9x16.mp4` (captions burned in), `<slug>.srt`, and
-`metadata.json` with the title, description and tags for upload.
+Out, under `output/<episode>/<variant>/`: `<slug>-16x9.mp4`, `<slug>-9x16.mp4`
+(captions burned in), `<slug>.srt`, and `metadata.json` — the complete upload
+payload, including the playlist, chapters, thumbnail spec and whether the take is
+publishable at all.
 
 ## What assembly actually does
 
-- **Aligns narration to picture** using the step manifest. Where a beat's narration
+- **Aligns narration to picture** by cue time. Each `['0:09', '…']` cue lands on
+  the beat that had started by then, resolved against the episode's beat times;
+  the manifest remains the authority on when a beat _actually_ happened. This
+  replaced positional matching, under which a beat with no line consumed the slot
+  and every later beat inherited the previous one's words. Where a beat's narration
   runs longer than its action, it **holds the last frame of that beat** rather than
   speeding the picture up.
 - **Burns the lower third** (Shorts have no title card) and appends the shared 2s

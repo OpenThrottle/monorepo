@@ -79,14 +79,14 @@ export const PlanTasksTableCellTitle = (
 
       {description ? (
         <MarkdownRenderer
-          className="line-clamp-2 overflow-hidden [&_p]:!mb-0"
+          className="line-clamp-2 overflow-hidden [&_p]:!mb-0 [&_p]:!text-xs"
           source={description}
         />
       ) : null}
 
       {summary ? (
         <MarkdownRenderer
-          className="line-clamp-2 overflow-hidden [&_p]:!mb-0"
+          className="line-clamp-2 overflow-hidden [&_p]:!mb-0 [&_p]:!text-xs"
           source={summary}
         />
       ) : null}

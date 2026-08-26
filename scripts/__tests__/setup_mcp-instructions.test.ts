@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -149,5 +149,45 @@ describe('renderInstructions', () => {
     expect(parsed).toMatchObject({
       mcpServers: { 'openthrottle-mcp': { env: { API_URL: '${API_URL}' } } },
     });
+  });
+});
+
+/**
+ * The screencast pipeline puts this command's output on camera (video 05,
+ * `packages/openthrottle-showroom/src/episodes/05-connect-ot-mcp/`). It cannot import
+ * this script — that package's tsconfig owns its own file list and a root script is
+ * not in it — so it reads a committed capture of the output instead, and this test is
+ * what stops that capture from drifting away from the renderer.
+ *
+ * The demo root is `/workspace/openthrottle` and not a `/Users/…` path on purpose:
+ * the pipeline's leak scan fails on a home directory, and the one thing this short
+ * asks a viewer to copy is an absolute launcher path.
+ */
+describe('the screencast capture of the printed block', () => {
+  const capturePath = join(
+    import.meta.dirname,
+    '..',
+    '..',
+    'applications',
+    'openthrottle-developer',
+    'tests',
+    'demo',
+    'surfaces',
+    'mcp-instructions.txt',
+  );
+
+  it('still matches what the renderer produces', () => {
+    const expected = `${renderInstructions('/workspace/openthrottle', NEITHER).trimStart()}\n`;
+
+    expect(
+      readFileSync(capturePath, 'utf8'),
+      "the recorded MCP instructions are stale — regenerate the capture at packages/openthrottle-showroom/src/surfaces/mcp-instructions.txt from renderInstructions('/workspace/openthrottle', { claude: false, cursor: false })",
+    ).toBe(expected);
+  });
+
+  it('never carries a home directory on camera', () => {
+    expect(readFileSync(capturePath, 'utf8')).not.toMatch(
+      /\/(?:Users|home)\//i,
+    );
   });
 });

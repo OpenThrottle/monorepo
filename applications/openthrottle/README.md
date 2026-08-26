@@ -22,25 +22,6 @@ Verify the API: `curl http://localhost:9021/health` → `{"api":"ok","database":
 
 1. Set `OPENTHROTTLE_MCP_AUTH_TOKEN` in `.env`, re-run `docker compose run --rm bootstrap` (provisions the matching credential), then `docker compose --profile mcp up -d mcp`.
 2. Register it in your **MCP client** — the AI coding tool you use (Claude Code, Cursor, VS Code…), **not** an OpenThrottle app. The entry nests under that client's own servers map:
-   - **Claude Code** — `.mcp.json` (project) or your user config:
-     ```json
-     {
-       "mcpServers": {
-         "openthrottle-mcp": {
-           "type": "http",
-           "url": "http://localhost:9026/mcp"
-         }
-       }
-     }
-     ```
-   - **Cursor** — `~/.cursor/mcp.json`:
-     ```json
-     {
-       "mcpServers": {
-         "openthrottle-mcp": { "url": "http://localhost:9026/mcp" }
-       }
-     }
-     ```
 
 Machine tools use the container's `ot_sa` token automatically; the `agent_conversation_*` tools additionally need a per-request `Authorization: Bearer <human JWT>` (clients that support per-server headers add a `"headers"` field). Full per-client detail: [`docs/openthrottle/mcp-registration.md` § HTTP transport](../../docs/openthrottle/mcp-registration.md#http-transport-docker-native).
 

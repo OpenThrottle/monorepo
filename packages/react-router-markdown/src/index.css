@@ -38,7 +38,6 @@
 }
 
 .markdown table {
-  /* @apply bg-background my-4 rounded-lg border font-light; */
   @apply bg-card border-sidebar-border my-4 rounded-lg border font-light;
 }
 
@@ -182,11 +181,7 @@
 }
 
 .markdown code:not(pre code) {
-  /* your tailwind utilities */
-  /* background-color: color-mix(in srgb, var(--color-gray-5) 20%, transparent); */
-  /* background-color: var(--color-card); */
-
-  @apply bg-card border-sidebar-border rounded-md border px-1.5 py-0.5 whitespace-nowrap;
+  @apply bg-card border-sidebar-border rounded-md border px-1.5 py-0.5;
 }
 
 .markdown :is(p, ol, ul) code {

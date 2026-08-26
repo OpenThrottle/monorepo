@@ -14,7 +14,8 @@ per new flow. The flow is the bottleneck, not the rendering.
 
 ## Release order
 
-The `release` field in each script's front matter is the authority. In order:
+`release.order` on each episode module is the authority, and `video-validate` fails
+if two episodes claim one slot. In order:
 
 | #    | Video                                             | Why here                                                            |
 | ---- | ------------------------------------------------- | ------------------------------------------------------------------- |
@@ -43,20 +44,35 @@ by topic, not by duration.
 
 ## Metadata
 
-Never retyped. `metadata.json` is produced by the assembly stage from the script's
-own front matter, so the title on YouTube cannot drift from the title the video was
-built to demonstrate:
+Never retyped. `metadata.json` is produced by the assembly stage from the episode
+module, so the title on YouTube cannot drift from the title the video was built to
+demonstrate. The bar is that it could be pasted into an upload form with nothing
+left to fill in by hand:
 
 ```json
 {
   "title": "Your first plan in 60 seconds",
-  "description": "…one paragraph, then the standard block…",
-  "tags": ["openthrottle", "ai agents", "project planning", "…"],
+  "description": "…one paragraph, then the standard block, then chapters…",
+  "tags": ["openthrottle", "ai agents", "coding agents", "…"],
+  "playlist": "getting-started",
+  "chapters": [],
+  "thumbnail": null,
   "captions": "03-first-plan.srt",
   "portrait": "03-first-plan-9x16.mp4",
-  "landscape": "03-first-plan-16x9.mp4"
+  "landscape": "03-first-plan-16x9.mp4",
+  "episode": "03-first-plan",
+  "variant": "only",
+  "spokenWords": 93,
+  "status": "draft",
+  "publishable": false,
+  "publishBlockedBy": ["status is 'draft', not ready"]
 }
 ```
+
+`publishable` is a field rather than a hard failure of the assembly step:
+assembling a draft to watch it back is the normal case, and every episode in
+Season 1 is a draft. What it prevents is a draft being uploaded unnoticed —
+`publishBlockedBy` names the missing feature or the status.
 
 Description and tag conventions live in [`youtube-format.md`](./youtube-format.md).
 Upload the `.srt` with every video — Shorts autoplay silently, and the burned-in

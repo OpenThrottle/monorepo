@@ -67,7 +67,7 @@ Four things have to be true, and today only the second one is:
 2. **A locked ship voice.** ✅ Settled: local Piper, `en_US-hfc_male-medium`, pinned
    for the season. Re-recording with a different voice than the published version
    makes every video a diff, so repinning it invalidates this whole mechanism. See
-   [`NARRATION.md`](../../applications/openthrottle-developer/tests/demo/NARRATION.md).
+   [`NARRATION.md`](../../packages/openthrottle-showroom/NARRATION.md).
 3. **Disk budget.** A 20-second capture is ~420 PNG frames at ~60 MB, and every video
    is recorded twice (landscape and portrait). A 24-video catalogue is a few GB per
    rebuild. Frames are intermediate — delete them after assembly, keep the masters.

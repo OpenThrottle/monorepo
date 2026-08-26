@@ -34,6 +34,18 @@ Two title lines rather than one wrapped line is deliberate: SVG `<text>` does no
 wrap, and letting the renderer decide the break produces a different card per
 video. The script front-matter carries the break.
 
+### Never convert a placeholder to outlines
+
+A placeholder must stay a live `<text>` node. `lower-third.svg` was at one point
+exported with its text converted to paths — with the placeholder words baked into the
+outlines — so the string replace matched nothing and every video rendered a card
+reading **`TITLE_LINE_1` / `TITLE_LINE_2`** over its own hook, three seconds in.
+
+Nothing else catches this. `scan/leak-scan.ts` reads the DOM and is blind to text
+baked into an image, which is why the publish checklist lists it as a human item.
+`assemble/cards.ts` now throws when a substitution's placeholder is absent from the
+SVG, so the same export mistake fails the build instead of shipping.
+
 ## Rasterising
 
 **Primary path — Chromium, via the pipeline.** The assembly stage renders cards
