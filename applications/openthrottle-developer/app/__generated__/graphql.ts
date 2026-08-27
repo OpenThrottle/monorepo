@@ -5983,7 +5983,10 @@ export type WorkspaceLocalRepositoriesQuery = {
     __typename?: 'WorkspaceLocalRepositoryObject';
     displayName: string;
     filesystemPath: string;
+    gitDefaultBranch?: string | null;
+    gitRemoteUrl?: string | null;
     id: string;
+    project?: { __typename?: 'ProjectObject'; name: string } | null;
   }>;
 };
 
@@ -14045,7 +14048,25 @@ export const WorkspaceLocalRepositoriesDocument = {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'filesystemPath' },
                 },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'gitDefaultBranch' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'gitRemoteUrl' },
+                },
                 { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'project' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                    ],
+                  },
+                },
               ],
             },
           },

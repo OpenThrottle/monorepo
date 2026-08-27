@@ -166,12 +166,13 @@ describe('ChatCheckoutSelector Component — multiple mode', () => {
     });
     await user.click(component.getByTestId('ChatCheckoutSelector-trigger'));
 
+    // cmdk always emits `data-disabled`, so assert on the VALUE, not presence.
     expect(
       component.getByTestId('ChatCheckoutSelector-option-repo-c'),
-    ).toHaveAttribute('data-disabled');
+    ).toHaveAttribute('data-disabled', 'true');
     expect(
       component.getByTestId('ChatCheckoutSelector-option-repo-b'),
-    ).not.toHaveAttribute('data-disabled');
+    ).toHaveAttribute('data-disabled', 'false');
   });
 
   test('stays single-select when onCheckoutsChange is absent', async () => {
@@ -192,5 +193,194 @@ describe('ChatCheckoutSelector Component — multiple mode', () => {
     );
 
     expect(onCheckoutChange).toHaveBeenCalledWith('repo-b');
+  });
+});
+
+/**
+ * The reported scenario: two `monorepo` checkouts in different GitHub orgs, one
+ * checkout with no remote at all. Flat display names give the user nothing to
+ * pick on, which is what the grouped, qualified, searchable list fixes.
+ */
+const LOOKALIKES: readonly ChatCheckoutOption[] = [
+  {
+    branch: 'main',
+    filesystemPath: '/Users/matt/Development/openthrottle',
+    id: 'ot',
+    label: 'monorepo',
+    projectName: 'OpenThrottle',
+    remoteUrl: 'git@github.com:openthrottle/monorepo.git',
+  },
+  {
+    branch: 'trunk',
+    filesystemPath: '/Users/matt/Work/monorepo',
+    id: 'ss',
+    label: 'monorepo',
+    remoteUrl: 'git@github.com:shiftsmart/monorepo.git',
+  },
+  {
+    filesystemPath: '/Users/matt/scratch/sandbox',
+    id: 'sb',
+    label: 'sandbox',
+  },
+];
+
+const renderLookalikes = (
+  overrides: Partial<ChatCheckoutSelectorProps> = {},
+): RenderResult =>
+  render(
+    <ChatCheckoutSelector
+      checkouts={LOOKALIKES}
+      onCheckoutChange={vi.fn()}
+      selectedCheckoutId="ot"
+      {...overrides}
+    />,
+  );
+
+describe('ChatCheckoutSelector Component — disambiguation', () => {
+  test('promotes the trigger to owner/name when two checkouts share a name', () => {
+    const component = renderLookalikes();
+
+    expect(
+      component.getByTestId('ChatCheckoutSelector-trigger'),
+    ).toHaveTextContent('openthrottle/monorepo');
+  });
+
+  test('leaves the trigger bare for a name that is already unique', () => {
+    const component = renderLookalikes({ selectedCheckoutId: 'sb' });
+
+    const trigger = component.getByTestId('ChatCheckoutSelector-trigger');
+    expect(trigger).toHaveTextContent('sandbox');
+    expect(trigger).not.toHaveTextContent('scratch');
+  });
+
+  test('gives the two same-named rows distinct qualifiers', async () => {
+    const user = userEvent.setup();
+    const component = renderLookalikes();
+    await user.click(component.getByTestId('ChatCheckoutSelector-trigger'));
+
+    expect(
+      component.getByTestId('ChatCheckoutSelector-qualifier-ot'),
+    ).toHaveTextContent('openthrottle/monorepo');
+    expect(
+      component.getByTestId('ChatCheckoutSelector-qualifier-ss'),
+    ).toHaveTextContent('shiftsmart/monorepo');
+  });
+
+  test('falls back to a shortened path for a checkout with no remote', async () => {
+    const user = userEvent.setup();
+    const component = renderLookalikes();
+    await user.click(component.getByTestId('ChatCheckoutSelector-trigger'));
+
+    expect(
+      component.getByTestId('ChatCheckoutSelector-qualifier-sb'),
+    ).toHaveTextContent('…/scratch/sandbox');
+  });
+
+  test('groups rows under their owner, with the remote-less ones last', async () => {
+    const user = userEvent.setup();
+    const component = renderLookalikes();
+    await user.click(component.getByTestId('ChatCheckoutSelector-trigger'));
+
+    // Owner headings are visible, and the catch-all bucket is pinned last.
+    const openthrottle = component.getByText('openthrottle');
+    const shiftsmart = component.getByText('shiftsmart');
+    const localOnly = component.getByText('Local only');
+    expect(
+      openthrottle.compareDocumentPosition(shiftsmart) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      shiftsmart.compareDocumentPosition(localOnly) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  test('narrows the list by owner, which the display name alone cannot do', async () => {
+    const user = userEvent.setup();
+    const component = renderLookalikes();
+    await user.click(component.getByTestId('ChatCheckoutSelector-trigger'));
+    await user.type(
+      component.getByTestId('ChatCheckoutSelector-search'),
+      'shiftsmart',
+    );
+
+    expect(
+      component.getByTestId('ChatCheckoutSelector-option-ss'),
+    ).toBeInTheDocument();
+    expect(
+      component.queryByTestId('ChatCheckoutSelector-option-ot'),
+    ).not.toBeInTheDocument();
+  });
+
+  test('narrows the list by project name and by filesystem path', async () => {
+    const user = userEvent.setup();
+    const component = renderLookalikes();
+    await user.click(component.getByTestId('ChatCheckoutSelector-trigger'));
+    const search = component.getByTestId('ChatCheckoutSelector-search');
+
+    await user.type(search, 'OpenThrottle');
+    expect(
+      component.getByTestId('ChatCheckoutSelector-option-ot'),
+    ).toBeInTheDocument();
+
+    await user.clear(search);
+    await user.type(search, 'scratch');
+    expect(
+      component.getByTestId('ChatCheckoutSelector-option-sb'),
+    ).toBeInTheDocument();
+    expect(
+      component.queryByTestId('ChatCheckoutSelector-option-ot'),
+    ).not.toBeInTheDocument();
+  });
+
+  test('shows the empty state when nothing matches the search', async () => {
+    const user = userEvent.setup();
+    const component = renderLookalikes();
+    await user.click(component.getByTestId('ChatCheckoutSelector-trigger'));
+    await user.type(
+      component.getByTestId('ChatCheckoutSelector-search'),
+      'nothing-matches-this',
+    );
+
+    expect(component.getByText('No matching checkouts.')).toBeInTheDocument();
+  });
+
+  test('selects a filtered row by keyboard alone', async () => {
+    const onCheckoutChange = vi.fn();
+    const user = userEvent.setup();
+    const component = renderLookalikes({ onCheckoutChange });
+    await user.click(component.getByTestId('ChatCheckoutSelector-trigger'));
+    await user.type(
+      component.getByTestId('ChatCheckoutSelector-search'),
+      'shiftsmart',
+    );
+    await user.keyboard('{Enter}');
+
+    expect(onCheckoutChange).toHaveBeenCalledWith('ss');
+  });
+
+  test('closes the picker after a single-select pick', async () => {
+    const user = userEvent.setup();
+    const component = renderLookalikes();
+    await user.click(component.getByTestId('ChatCheckoutSelector-trigger'));
+    await user.click(component.getByTestId('ChatCheckoutSelector-option-ss'));
+
+    expect(
+      component.queryByTestId('ChatCheckoutSelector-search'),
+    ).not.toBeInTheDocument();
+  });
+
+  test('renders bare labels when the consumer supplies no identity at all', async () => {
+    // The admin app's narrower discovery query — must look exactly like before.
+    const user = userEvent.setup();
+    const component = renderLookalikes({ checkouts: CHECKOUTS });
+    await user.click(component.getByTestId('ChatCheckoutSelector-trigger'));
+
+    expect(
+      component.getByTestId('ChatCheckoutSelector-option-repo-a'),
+    ).toHaveTextContent('openthrottle');
+    expect(
+      component.queryByTestId('ChatCheckoutSelector-qualifier-repo-a'),
+    ).not.toBeInTheDocument();
   });
 });

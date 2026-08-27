@@ -126,8 +126,12 @@ export async function loadRepositories(
     );
 
     return data.workspaceLocalRepositories.map((repository) => ({
+      branch: repository.gitDefaultBranch ?? undefined,
       displayName: repository.displayName,
+      filesystemPath: repository.filesystemPath,
       id: repository.id,
+      projectName: repository.project?.name ?? undefined,
+      remoteUrl: repository.gitRemoteUrl ?? undefined,
     }));
   } catch {
     return [];

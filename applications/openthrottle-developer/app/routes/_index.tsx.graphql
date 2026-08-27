@@ -41,7 +41,12 @@ query WorkspaceLocalRepositories {
   workspaceLocalRepositories {
     displayName
     filesystemPath
+    gitDefaultBranch
+    gitRemoteUrl
     id
+    project {
+      name
+    }
   }
 }
 
