@@ -98,7 +98,7 @@ This section is a task-focused summary of the authoring tools. The [`ot-plans` s
 Records one plan and returns its `id` (UUID).
 
 - **Required:** `title`, `author` (GitHub username), `category`.
-- **Optional:** `description`, `summary`, `status` (defaults to `PENDING`), `assignee` (GitHub username), `project` / `projectId`.
+- **Optional:** `description`, `summary`, `status` (defaults to `PENDING`), `assignee` (GitHub username), `project` / `projectId`, `runConfigJson`, `workspacePath`.
 
 ```jsonc
 create_plan({
@@ -110,6 +110,41 @@ create_plan({
 })
 // → { "plan": { "id": "…uuid…", "status": "PENDING", … } }
 ```
+
+#### The plan remembers the workspace it was created in
+
+You almost always create a plan from inside the checkout the run belongs to — your editor launched
+the MCP server there. OT captures that fact so you don't have to re-supply it: `02. Workspace` on
+the plan-detail Configuration tab opens **pre-selected** on that checkout, with the branch
+pre-filled from its current branch, instead of defaulting to "Monorepo root (default)".
+
+On **stdio** the MCP server captures its own working directory once at startup and sends it as
+`workspacePath`. You do not pass it.
+
+**Precedence — first one that answers wins:**
+
+1. A workspace already named in `runConfigJson` (`checkoutId`, `repositoryId` or `workingDirectory`).
+2. An explicit `workspacePath` argument on the tool call. Pass `""` to opt out entirely.
+3. The workspace captured at stdio startup.
+4. Nothing — the plan opens on the monorepo root, exactly as before.
+
+**It is a hint, never an authority.** Resolution happens server-side against **your own** registered
+checkouts: the path is realpath-normalized, matched on path-segment boundaries (so
+`/Development/openthrottle-worktrees/…` never resolves to the registered `/Development/openthrottle`),
+and the **deepest** containing checkout wins — a registered worktree nested inside a registered
+primary resolves to the worktree. A relative path, an unregistered directory, or a checkout
+belonging to someone else simply seeds nothing.
+
+**It never gates creation.** An unresolvable path is a debug log, not an error — the plan is created
+either way.
+
+Two caveats:
+
+- **Cwd capture is stdio-only.** The Nest/HTTP MCP surface runs _inside_ openthrottle-server, where
+  `process.cwd()` is the server's own directory. That surface sends no `workspacePath` at all.
+- **Set `OPENTHROTTLE_MCP_WORKSPACE_PATH`** when your client launches the MCP server from a fixed
+  directory rather than from the workspace you are actually working in. It overrides the captured
+  cwd.
 
 > **When to set `project`/`projectId`:** only when the plan is clearly scoped to **one** NX project. Leave it unset for cross-cutting, infra, or documentation work. Criteria: [databases/README.md § Project association](../../databases/README.md).
 

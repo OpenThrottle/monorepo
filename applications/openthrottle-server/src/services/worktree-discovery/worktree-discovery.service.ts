@@ -23,7 +23,7 @@
  */
 
 import { execFile } from 'node:child_process';
-import { readdirSync, realpathSync, statSync } from 'node:fs';
+import { readdirSync, statSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import { promisify } from 'node:util';
 import { Injectable } from '@nestjs/common';
@@ -35,6 +35,7 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { parseLinkedWorktrees } from '../../graphql/repository-inspection/parse-linked-worktrees';
 import type { WorktreeRootSource } from '../worktree-root/worktree-root.resolver';
+import { realPath } from '../paths/real-path';
 import { resolveWorktreeRoot } from '../worktree-root/worktree-root.resolver';
 import type {
   DiscoveredWorktree,
@@ -356,18 +357,6 @@ const add = (
     return;
   }
   existing.sources.add(source);
-};
-
-/**
- * Resolves symlinks so a symlinked worktree root and a direct path dedupe to one entry, matching
- * how browseDirectory already resolves roots. Falls back to the raw path when the target is gone.
- */
-const realPath = (value: string): string => {
-  try {
-    return realpathSync(value);
-  } catch {
-    return value;
-  }
 };
 
 /** A linked worktree's `.git` is a FILE (`gitdir:` pointer); a real clone's is a directory. */

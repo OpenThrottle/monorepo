@@ -10,6 +10,7 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { embedQuery } from '@openthrottle/node-client';
 import type { CreatePlanInput } from '../../graphql/plans/plan.input';
+import { CheckoutPathResolutionService } from '../checkout-path-resolution/checkout-path-resolution.service';
 
 /** @description Same GitHub-login rule as assignee normalization in @openthrottle/node-client openthrottle-client. */
 const GITHUB_USERNAME_REGEX =
@@ -50,6 +51,7 @@ export class PlanCreationService {
 
   constructor(
     private readonly logger: LoggerService,
+    private readonly checkoutPathResolutionService: CheckoutPathResolutionService,
     private readonly planEmbeddingsService: PlanEmbeddingsService,
     private readonly plansService: PlansService,
   ) {
@@ -61,7 +63,10 @@ export class PlanCreationService {
    * (OpenThrottle-style assignee normalization, optional `GITHUB_USER` author default, run-config defaulting).
    * Throws {@link BadRequestException} on missing title/category/author. Shared by single and batch create.
    */
-  private resolvePlanCreateFields(input: CreatePlanInput): {
+  private async resolvePlanCreateFields(
+    input: CreatePlanInput,
+    userId?: string,
+  ): Promise<{
     assignee: string | null;
     author: string;
     category: string;
@@ -73,7 +78,7 @@ export class PlanCreationService {
     status: string;
     summary: string | null;
     title: string;
-  } {
+  }> {
     const defaultGh = process.env.GITHUB_USER?.trim();
     const title = input.title?.trim() ?? '';
     const category = input.category?.trim() ?? '';
@@ -106,7 +111,11 @@ export class PlanCreationService {
       description: input.description ?? null,
       project: input.project ?? null,
       projectId: input.projectId ?? null,
-      runConfig: parsedRunConfig ?? getDefaultPlanRunConfigStorage(),
+      runConfig: await this.seedWorkspaceFromPath(
+        parsedRunConfig ?? getDefaultPlanRunConfigStorage(),
+        input.workspacePath,
+        userId,
+      ),
       status,
       summary: input.summary ?? null,
       title,
@@ -114,11 +123,79 @@ export class PlanCreationService {
   }
 
   /**
+   * @description Records the workspace the plan was CREATED in, so the Configuration tab's
+   * `02. Workspace` opens pre-selected instead of asking for a fact the caller already knew.
+   *
+   * `workspacePath` is a hint from the client, never a filesystem path we act on: it is resolved
+   * server-side against the caller's own registered checkouts (see
+   * {@link CheckoutPathResolutionService}), so a path the caller does not own seeds nothing.
+   *
+   * Precedence, highest first: an explicit `runConfigJson` workspace, then the resolved path, then
+   * nothing (today's root default plus the UI's `projectId` prefill).
+   *
+   * This is a convenience, never a gate — an unresolvable path, a missing user or an error inside
+   * resolution all return the run config unchanged rather than failing plan creation.
+   */
+  private async seedWorkspaceFromPath(
+    runConfig: PlanRunConfigStorage,
+    workspacePath: string | null | undefined,
+    userId: string | undefined,
+  ): Promise<PlanRunConfigStorage> {
+    const path = workspacePath?.trim() ?? '';
+    if (path === '' || userId === undefined || userId.trim() === '') {
+      return runConfig;
+    }
+
+    const { checkoutId, repositoryId, workingDirectory } = runConfig.workspace;
+    if (checkoutId !== '' || repositoryId !== '' || workingDirectory !== '') {
+      this.logger.debug(
+        `${this.name}: workspacePath ignored; runConfigJson already names a workspace`,
+      );
+      return runConfig;
+    }
+
+    try {
+      const resolved =
+        await this.checkoutPathResolutionService.resolveCheckoutForPath({
+          path,
+          userId,
+        });
+
+      if (resolved === null) {
+        this.logger.debug(
+          `${this.name}: workspacePath ${path} is not a registered checkout for this user`,
+        );
+        return runConfig;
+      }
+
+      return {
+        ...runConfig,
+        workspace: {
+          ...runConfig.workspace,
+          checkoutId: resolved.checkoutId,
+          repositoryId: resolved.repositoryId,
+        },
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.warn(
+        `${this.name}: workspacePath resolution failed, falling back to defaults: ${message}`,
+      );
+      return runConfig;
+    }
+  }
+
+  /**
    * @description Persists a plan using the same input contract as GraphQL `createPlan` / MCP `create_plan`, with OpenThrottle-style assignee normalization, optional `GITHUB_USER` author default, and best-effort plan embedding for semantic search.
    */
-  async createPlanFromInput(input: CreatePlanInput): Promise<Plan> {
+  async createPlanFromInput(
+    input: CreatePlanInput,
+    userId?: string,
+  ): Promise<Plan> {
     const repo = this.plansService.getRepository();
-    const entity = repo.create(this.resolvePlanCreateFields(input));
+    const entity = repo.create(
+      await this.resolvePlanCreateFields(input, userId),
+    );
 
     const saved = await repo.save(entity);
 
@@ -136,11 +213,12 @@ export class PlanCreationService {
    */
   async createPlansFromInput(
     inputs: readonly CreatePlanInput[],
+    userId?: string,
   ): Promise<Plan[]> {
     if (inputs.length === 0) return [];
 
-    const fieldsList = inputs.map((input) =>
-      this.resolvePlanCreateFields(input),
+    const fieldsList = await Promise.all(
+      inputs.map((input) => this.resolvePlanCreateFields(input, userId)),
     );
 
     const repo = this.plansService.getRepository();

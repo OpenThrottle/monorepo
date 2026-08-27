@@ -36,7 +36,7 @@ Do not answer OT plan content from memory; use MCP tools and answer from retriev
 GraphQL-only boundary to **openthrottle-server**. Typical tools:
 
 - **Read / search:** `semantic_search`, `list_plans_by_status`, `list_sources`, `get_document`
-- **Plans:** `get_plan`, `create_plan`
+- **Plans:** `get_plan`, `create_plan` — on stdio, `create_plan` / `create_plans` automatically send the workspace the MCP server was launched in as `workspacePath`, so the plan records the checkout it was authored from and its Configuration tab opens pre-selected. You do not pass it. Precedence: a workspace already in `runConfigJson` → an explicit `workspacePath` (pass `""` to opt out) → the captured cwd → nothing. It is resolved server-side against your own registered checkouts and never fails plan creation. See [authoring-plans-via-mcp.md](../../docs/openthrottle/authoring-plans-via-mcp.md#the-plan-remembers-the-workspace-it-was-created-in).
 - **Tasks:** `get_tasks_by_plan_id`, `get_remaining_tasks_for_plan`, `get_task`, `create_task`, `create_tasks`, `update_task`, `reorder_plan_tasks` — list tools return tasks in `sortOrder ASC`, `createdAt ASC`. `create_task` / `create_tasks` accept optional `sortOrder` (auto-append `MAX + 1000` when omitted; batch appends preserve array order at end of plan). `update_task` accepts optional `sortOrder` for gap-based mid-list inserts. **`reorder_plan_tasks`** bulk-renumbers `1000, 2000, …` in the given task-id order — **prefer this over delete-and-recreate** when fixing Ralph execution order.
 - **Activity:** `get_activity_by_date`, `get_last_activity`
 - **Output stream (e.g. Ralph):** `append_plan_output`, `get_plan_output`

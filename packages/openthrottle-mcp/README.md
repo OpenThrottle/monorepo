@@ -37,6 +37,27 @@ pnpm nx run @openthrottle/openthrottle-mcp:serve
 
 GraphQL-only — no direct Postgres access. Prerequisite for conversation tools: v1 persistence from plan `4fa6d16c-a1d4-4aba-923c-52e35e3deb66` (`agent_conversations` / `agent_conversation_messages` tables, `agentsRunChatTurn` with `persist: true`).
 
+## The creating workspace (`workspacePath`)
+
+On the **stdio** transport the server captures its own working directory once at startup and sends
+it to `create_plan` / `create_plans` as `workspacePath`, so a plan records the checkout it was
+authored from and the developer UI's `02. Workspace` opens pre-selected instead of on the monorepo
+root. Callers do not pass it.
+
+Precedence, first match wins: a workspace already named in `runConfigJson` → an explicit
+`workspacePath` argument (pass `""` to opt out) → the captured stdio cwd → nothing.
+
+The path is a hint, never an authority. openthrottle-server resolves it against the **authenticated
+caller's own** registered checkouts (realpath-normalized, matched on path-segment boundaries,
+deepest containing checkout wins) and ignores anything it cannot own. It never fails plan creation.
+
+- **`OPENTHROTTLE_MCP_WORKSPACE_PATH`** — overrides the captured cwd. Set it when your client
+  launches the MCP server from a fixed directory rather than from the workspace you are working in.
+- **Stdio only.** The HTTP / Nest-hosted surface runs inside openthrottle-server, where
+  `process.cwd()` is the server's own directory; it sends no `workspacePath` at all. The capture is
+  gated on `runServerLocal` rather than module load precisely so importing the shared tool handlers
+  cannot pick up a bogus path.
+
 ## Agent conversation read tools
 
 Three **read-only** MCP tools expose persisted **web chat** thread history from `agent_conversation_*` tables via GraphQL. They mirror the developer UI chat persistence layer — not Ralph iteration logs.

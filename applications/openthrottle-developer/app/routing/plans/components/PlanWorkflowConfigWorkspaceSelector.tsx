@@ -14,6 +14,7 @@ import { GitBranch } from 'lucide-react';
 import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
 import type { PlanRunConfigRepositoryFieldsFragment } from '~/__generated__/graphql';
 import { PlanWorkflowConfigWorkspace } from '~/routing/plans/components/PlanWorkflowConfigWorkspace';
+import { PLAN_RUN_WORKSPACE_SELECTOR_COPY } from '~/routing/plans/data/data.copy';
 import { usePlanWorkflowConfigWorkspaceSelector } from '~/routing/plans/hooks/usePlanWorkflowConfigWorkspaceSelector';
 import { resolveDefaultRunBranch } from '~/routing/plans/utils/plan-run-branch';
 import {
@@ -71,17 +72,21 @@ export const PlanWorkflowConfigWorkspaceSelector = (
   } = props;
 
   // Hooks
-  const { handleValueChange, selectedCheckout, selectedValue } =
-    usePlanWorkflowConfigWorkspaceSelector({
-      checkoutId,
-      onCheckoutIdChange,
-      onRepositoryIdChange,
-      onWorkingDirectoryChange,
-      planProjectId,
-      repositories,
-      repositoryId,
-      workingDirectory,
-    });
+  const {
+    handleValueChange,
+    selectedCheckout,
+    selectedCheckoutMissing,
+    selectedValue,
+  } = usePlanWorkflowConfigWorkspaceSelector({
+    checkoutId,
+    onCheckoutIdChange,
+    onRepositoryIdChange,
+    onWorkingDirectoryChange,
+    planProjectId,
+    repositories,
+    repositoryId,
+    workingDirectory,
+  });
 
   // Setup
   const selectedCheckoutBranch = resolveDefaultRunBranch({
@@ -118,7 +123,7 @@ export const PlanWorkflowConfigWorkspaceSelector = (
         <strong>checkout</strong>, or a <strong>repository</strong> to use your
         single checkout of it. Use <strong>Custom path</strong> for an
         unregistered directory, or <strong>Monorepo root</strong> for the
-        default.
+        default. {PLAN_RUN_WORKSPACE_SELECTOR_COPY.createdInDefault}
       </p>
 
       <div className="space-y-2">
@@ -162,6 +167,10 @@ export const PlanWorkflowConfigWorkspaceSelector = (
             <span className="truncate font-mono">
               {selectedCheckout.filesystemPath}
             </span>
+          </p>
+        ) : selectedCheckoutMissing ? (
+          <p className="text-destructive text-xs">
+            {PLAN_RUN_WORKSPACE_SELECTOR_COPY.staleCheckout}
           </p>
         ) : repositoryId !== '' ? (
           <p className="text-muted-foreground text-xs">

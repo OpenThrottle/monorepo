@@ -4,6 +4,7 @@
 
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { captureCallerWorkspacePath } from '../config/workspace-path.ts';
 import {
   createPlanToolDescription,
   createPlanToolHandler,
@@ -38,6 +39,110 @@ describe('tool descriptions reflect the canonical status set', () => {
   it('create_plan documents the canonical status set', () => {
     expect(createPlanToolDescription).toContain('IN_PROGRESS');
     expect(createPlanToolDescription).toContain('CANCELED');
+  });
+
+  it('create_plan documents runConfigJson and workspacePath, which its schema already accepts', () => {
+    expect(createPlanToolDescription).toContain('runConfigJson');
+    expect(createPlanToolDescription).toContain('workspacePath');
+  });
+});
+
+describe('the captured workspace reaches create_plan / create_plans', () => {
+  const serviceAccountToken = '***REMOVED-OT-TOKEN***';
+  const WORKSPACE = '/Users/matt/Development/openthrottle';
+
+  /** The `input` variables the handler actually sent to GraphQL. */
+  const sentInput = (): unknown =>
+    vi.mocked(executeGraphqlWithAuth).mock.calls[0]?.[2];
+
+  beforeEach(() => {
+    vi.mocked(executeGraphqlWithAuth).mockReset();
+    vi.mocked(executeGraphqlWithAuth).mockResolvedValue({
+      createPlan: { id: 'plan-1' },
+      createPlans: { plans: [{ id: 'plan-1' }], totalCount: 1 },
+    });
+    process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = serviceAccountToken;
+  });
+
+  afterEach(() => {
+    captureCallerWorkspacePath(null);
+    delete process.env.OPENTHROTTLE_MCP_AUTH_TOKEN;
+  });
+
+  it('stamps the captured workspace on create_plan', async () => {
+    captureCallerWorkspacePath(WORKSPACE);
+
+    await createPlanToolHandler({
+      author: 'visormatt',
+      category: 'feature',
+      title: 'Plan',
+    });
+
+    expect(sentInput()).toMatchObject({
+      input: { workspacePath: WORKSPACE },
+    });
+  });
+
+  it('lets an explicit workspacePath beat the captured one', async () => {
+    captureCallerWorkspacePath(WORKSPACE);
+
+    await createPlanToolHandler({
+      author: 'visormatt',
+      category: 'feature',
+      title: 'Plan',
+      workspacePath: '/somewhere/else',
+    });
+
+    expect(sentInput()).toMatchObject({
+      input: { workspacePath: '/somewhere/else' },
+    });
+  });
+
+  it('omits the field entirely when the caller opts out with an empty string', async () => {
+    captureCallerWorkspacePath(WORKSPACE);
+
+    await createPlanToolHandler({
+      author: 'visormatt',
+      category: 'feature',
+      title: 'Plan',
+      workspacePath: '',
+    });
+
+    expect(sentInput()).not.toMatchObject({
+      input: { workspacePath: expect.anything() },
+    });
+  });
+
+  it('sends nothing on a surface that never captured (Nest/HTTP)', async () => {
+    await createPlanToolHandler({
+      author: 'visormatt',
+      category: 'feature',
+      title: 'Plan',
+    });
+
+    expect(sentInput()).not.toMatchObject({
+      input: { workspacePath: expect.anything() },
+    });
+  });
+
+  it('stamps every plan in a create_plans batch', async () => {
+    captureCallerWorkspacePath(WORKSPACE);
+
+    await createPlansToolHandler({
+      plans: [
+        { author: 'visormatt', category: 'feature', title: 'A' },
+        { author: 'visormatt', category: 'feature', title: 'B' },
+      ],
+    });
+
+    expect(sentInput()).toMatchObject({
+      input: {
+        plans: [
+          { title: 'A', workspacePath: WORKSPACE },
+          { title: 'B', workspacePath: WORKSPACE },
+        ],
+      },
+    });
   });
 });
 

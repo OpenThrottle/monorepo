@@ -6,6 +6,10 @@ import {
   SERVER_INSTRUCTIONS,
   SERVER_VERSION,
 } from './config/index.ts';
+import {
+  captureCallerWorkspacePath,
+  resolveStdioWorkspacePath,
+} from './config/workspace-path.ts';
 import { registerKnowledgeBaseResource } from './nest-tool-handlers.ts';
 import { registerDeveloperMcpTools } from './tool-registry.ts';
 import type { NestjsMcpDeveloperBootstrapOptions } from './nest/index.ts';
@@ -45,6 +49,10 @@ function warnIfAuthTokenMissing(): void {
 
 export async function runServerLocal(): Promise<void> {
   warnIfAuthTokenMissing();
+
+  // Stdio ONLY: on the HTTP surface this process is the server, so its cwd is not a caller's
+  // workspace. Capturing here rather than at module load keeps that path out of the Nest surface.
+  captureCallerWorkspacePath(resolveStdioWorkspacePath());
 
   const server = new McpServer(
     { name: getServerName(), version: SERVER_VERSION },
