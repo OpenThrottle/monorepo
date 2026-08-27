@@ -9,7 +9,8 @@ const { executeGraphqlWithAuth } =
   await import('@openthrottle/react-router-graphql');
 const { DiscoverAgentClisDocument, DiscoverLocalModelsDocument } =
   await import('~/__generated__/graphql');
-const { loadComposerModels } = await import('../models.server');
+const { loadComposerModels, loadRepositories } =
+  await import('../models.server');
 
 const mockExecute = vi.mocked(executeGraphqlWithAuth);
 
@@ -104,5 +105,69 @@ describe('loadComposerModels', () => {
     const models = await loadComposerModels(request());
 
     expect(models).toEqual([]);
+  });
+});
+
+describe('loadRepositories', () => {
+  beforeEach(() => {
+    mockExecute.mockReset();
+  });
+
+  test('carries the identity fields the picker disambiguates on', async () => {
+    mockExecute.mockResolvedValue({
+      workspaceLocalRepositories: [
+        {
+          displayName: 'monorepo',
+          filesystemPath: '/Users/matt/Development/openthrottle',
+          gitDefaultBranch: 'main',
+          gitRemoteUrl: 'git@github.com:openthrottle/monorepo.git',
+          id: 'repo-a',
+          project: { name: 'OpenThrottle' },
+        },
+      ],
+    });
+
+    expect(await loadRepositories(request())).toEqual([
+      {
+        branch: 'main',
+        displayName: 'monorepo',
+        filesystemPath: '/Users/matt/Development/openthrottle',
+        id: 'repo-a',
+        projectName: 'OpenThrottle',
+        remoteUrl: 'git@github.com:openthrottle/monorepo.git',
+      },
+    ]);
+  });
+
+  test('normalizes the nullable fields to undefined for a local-only checkout', async () => {
+    mockExecute.mockResolvedValue({
+      workspaceLocalRepositories: [
+        {
+          displayName: 'scratch',
+          filesystemPath: '/tmp/scratch',
+          gitDefaultBranch: null,
+          gitRemoteUrl: null,
+          id: 'repo-b',
+          project: null,
+        },
+      ],
+    });
+
+    expect(await loadRepositories(request())).toEqual([
+      {
+        branch: undefined,
+        displayName: 'scratch',
+        filesystemPath: '/tmp/scratch',
+        id: 'repo-b',
+        projectName: undefined,
+        remoteUrl: undefined,
+      },
+    ]);
+  });
+
+  test('returns an empty list when the query fails', async () => {
+    mockExecute.mockRejectedValue(new Error('unauthorized'));
+
+    expect(await loadRepositories(request())).toEqual([]);
   });
 });

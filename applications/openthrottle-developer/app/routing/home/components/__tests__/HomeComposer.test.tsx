@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { render } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import type { RenderResult } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type {
@@ -110,6 +111,42 @@ describe('HomeComposer Component', () => {
     expect(
       component.queryByText(/Register a local repository/i),
     ).not.toBeInTheDocument();
+  });
+
+  test('carries loader repository identity through to the checkout picker', async () => {
+    // The end-to-end shape of the fix: the loader's identity fields survive the
+    // RepositoryOption → ChatCheckoutOption hop and reach the rendered rows.
+    const user = userEvent.setup();
+    component.unmount();
+    component = renderComposer({
+      ...props,
+      models: [{ id: 'claude', label: 'Claude Code' }],
+      repositories: [
+        {
+          branch: 'main',
+          displayName: 'monorepo',
+          filesystemPath: '/Users/matt/Development/openthrottle',
+          id: 'repo-1',
+          remoteUrl: 'git@github.com:openthrottle/monorepo.git',
+        },
+        {
+          branch: 'trunk',
+          displayName: 'monorepo',
+          filesystemPath: '/Users/matt/Work/monorepo',
+          id: 'repo-2',
+          remoteUrl: 'git@github.com:shiftsmart/monorepo.git',
+        },
+      ],
+    });
+
+    await user.click(component.getByTestId('ChatCheckoutSelector-trigger'));
+
+    expect(
+      component.getByTestId('ChatCheckoutSelector-qualifier-repo-1'),
+    ).toHaveTextContent('openthrottle/monorepo');
+    expect(
+      component.getByTestId('ChatCheckoutSelector-qualifier-repo-2'),
+    ).toHaveTextContent('shiftsmart/monorepo');
   });
 
   test('hints to register a repository when a CLI backend has none registered', () => {

@@ -235,6 +235,45 @@ describe('ChatComposerToolbar Component', () => {
       ).not.toBeInTheDocument();
     });
 
+    test('disambiguates two same-named checkouts through the toolbar', async () => {
+      const user = userEvent.setup();
+      const component = renderToolbar({
+        capabilities: CLI_CAPS,
+        checkouts: [
+          {
+            id: 'repo-a',
+            label: 'monorepo',
+            remoteUrl: 'git@github.com:openthrottle/monorepo.git',
+          },
+          {
+            id: 'repo-b',
+            label: 'monorepo',
+            remoteUrl: 'git@github.com:shiftsmart/monorepo.git',
+          },
+        ],
+        selectedCheckoutId: 'repo-a',
+      });
+
+      // A bare `monorepo` on the trigger would leave the user guessing which of
+      // the two directories the agent is about to run in.
+      expect(
+        component.getByTestId('ChatCheckoutSelector-trigger'),
+      ).toHaveTextContent('openthrottle/monorepo');
+
+      await user.click(component.getByTestId('ChatCheckoutSelector-trigger'));
+      await user.type(
+        component.getByTestId('ChatCheckoutSelector-search'),
+        'shiftsmart',
+      );
+
+      expect(
+        component.getByTestId('ChatCheckoutSelector-option-repo-b'),
+      ).toBeInTheDocument();
+      expect(
+        component.queryByTestId('ChatCheckoutSelector-option-repo-a'),
+      ).not.toBeInTheDocument();
+    });
+
     test('hides the checkout selector when the backend does not require a repository', () => {
       const component = renderToolbar({
         capabilities: { ...CLI_CAPS, requiresRepository: false },

@@ -1,4 +1,5 @@
 import type {
+  ChatCheckoutOption,
   ChatModelOption,
   ChatPersonaOption,
 } from '@openthrottle/react-router-chat';
@@ -117,8 +118,28 @@ export interface DiscoveredPersonaPrompt {
  * @public
  */
 export interface RepositoryOption {
+  /**
+   * Default branch of the checkout, when the discovery query selected it. Shown
+   * as a chip beside the row so two checkouts of the same repository are
+   * tellable apart.
+   */
+  readonly branch?: string;
   readonly displayName: string;
+  /**
+   * Absolute path on the server host. The disambiguation fallback for a
+   * provisional, local-only checkout that has no remote to derive `owner/name`
+   * from.
+   */
+  readonly filesystemPath?: string;
   readonly id: string;
+  /** Linked OpenThrottle project name, when the checkout has one. Searchable. */
+  readonly projectName?: string;
+  /**
+   * Origin remote URL, in whatever shape git recorded it. Parsed at RENDER time
+   * by `parseRepositoryRemote` into `{ host, owner, name }` — deliberately not
+   * pre-split here, so there is one source of truth for the normalization.
+   */
+  readonly remoteUrl?: string;
 }
 
 /**
@@ -308,6 +329,27 @@ export function toPersonaOptions(
     description: persona.description ?? undefined,
     id: persona.id,
     label: persona.title,
+  }));
+}
+
+/**
+ * Map registered local checkouts into the composer's checkout-selector options,
+ * carrying the identity fields through so the picker can group, search and
+ * disambiguate. Shared because BOTH composer controllers (the developer app's
+ * `useHomeComposer` and this package's `useHeaderChatController`) need the same
+ * mapping — they each carried a copy that only forwarded `id` + `label`.
+ * @public
+ */
+export function toCheckoutOptions(
+  repositories: readonly RepositoryOption[],
+): ChatCheckoutOption[] {
+  return repositories.map((repository) => ({
+    branch: repository.branch,
+    filesystemPath: repository.filesystemPath,
+    id: repository.id,
+    label: repository.displayName,
+    projectName: repository.projectName,
+    remoteUrl: repository.remoteUrl,
   }));
 }
 

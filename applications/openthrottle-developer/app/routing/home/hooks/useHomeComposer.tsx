@@ -16,6 +16,7 @@ import {
   chatToolbarStateAtom,
   decodeChatOption,
   reconcileChatToolbarState,
+  toCheckoutOptions,
 } from '@openthrottle/react-router-chat-state';
 import { useAtom } from 'jotai';
 import type { RepositoryOption } from '~/routing/home/data/models.server';
@@ -126,11 +127,7 @@ export const useHomeComposer = (options: UseHomeComposerOptions) => {
   const capabilities = capabilitiesForChatOption(decodedOption);
   const modelGroups = React.useMemo(() => buildModelGroups(models), [models]);
   const checkouts = React.useMemo(
-    () =>
-      repositories.map((repository) => ({
-        id: repository.id,
-        label: repository.displayName,
-      })),
+    () => toCheckoutOptions(repositories),
     [repositories],
   );
 

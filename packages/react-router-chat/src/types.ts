@@ -286,13 +286,31 @@ export interface ChatModelGroup {
  * supplies the list from its own repository registry; the package resolves
  * nothing.
  *
+ * Everything past `id` + `label` is optional identity used to group, search and
+ * disambiguate rows. A consumer that supplies none of it (the admin app's
+ * narrower discovery query) gets exactly today's bare display-name rendering.
+ *
  * @public
  */
 export interface ChatCheckoutOption {
   /** Current branch shown alongside the checkout (e.g. `main`), when known. */
   readonly branch?: string;
+  /**
+   * Absolute path on the host. The row/trigger qualifier of last resort — used
+   * when there is no remote to derive `owner/name` from, or when `owner/name`
+   * is itself ambiguous.
+   */
+  readonly filesystemPath?: string;
   readonly id: string;
   readonly label: string;
+  /** Linked project name. Searchable, never rendered as the qualifier. */
+  readonly projectName?: string;
+  /**
+   * Origin remote URL as git recorded it. Parsed at render time into
+   * `{ host, owner, name }`; absent or unparseable falls back to
+   * {@link filesystemPath}.
+   */
+  readonly remoteUrl?: string;
 }
 
 /**

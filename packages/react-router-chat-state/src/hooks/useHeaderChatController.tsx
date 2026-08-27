@@ -25,6 +25,7 @@ import { capabilitiesForChatOption } from '../config/chat-capabilities';
 import { decodeChatOption } from '../utils/chat-model-option';
 import { chatToolbarStateAtom } from '../data/atom.chat-toolbar';
 import { reconcileChatToolbarState } from '../utils/chat-toolbar-reconcile';
+import { toCheckoutOptions } from '../utils/chat-discovery-options';
 import { useSessionPermissionDecay } from './useSessionPermissionDecay';
 import type {
   ChatToolbarBackendPrefs,
@@ -199,11 +200,7 @@ export function useHeaderChatController(
 
   const modelGroups = React.useMemo(() => buildModelGroups(models), [models]);
   const checkouts = React.useMemo(
-    () =>
-      repositories.map((repository) => ({
-        id: repository.id,
-        label: repository.displayName,
-      })),
+    () => toCheckoutOptions(repositories),
     [repositories],
   );
 
