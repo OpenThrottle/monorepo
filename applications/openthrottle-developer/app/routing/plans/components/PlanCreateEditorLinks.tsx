@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { editorHref } from '@openthrottle/react-router-ide';
 import { Button } from '@openthrottle/react-router-shadcn';
 import { FolderOpen } from 'lucide-react';
 import { getWorkspaceEditorDeepLink } from '~/global/config/workspace-editor-deep-links';
@@ -25,7 +24,8 @@ export interface PlanCreateEditorLinksProps {
  * registered local checkout. Every path comes from the user's own workspace
  * settings (never a literal), and the row renders nothing when no checkout or no
  * enabled editor resolves — a missing link beats a dead one. Reuses the shared
- * {@link editorHref} builder so scheme handling stays in the IDE package.
+ * {@link getWorkspaceEditorDeepLink} catalog so per-editor URL shapes stay in
+ * one place.
  */
 export const PlanCreateEditorLinks = (
   props: PlanCreateEditorLinksProps,
@@ -63,23 +63,24 @@ export const PlanCreateEditorLinks = (
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {targets.map((target) => (
-              <Button
-                asChild={true}
-                key={target.scheme}
-                size="sm"
-                variant="outline"
-              >
-                <a
-                  href={editorHref({
-                    absolutePath: repository.filesystemPath,
-                    scheme: target.scheme,
-                  })}
+            {targets.map((target) => {
+              const href = target.buildFolderHref(repository.filesystemPath);
+
+              if (href === null) {
+                return null;
+              }
+
+              return (
+                <Button
+                  asChild={true}
+                  key={target.label}
+                  size="sm"
+                  variant="outline"
                 >
-                  Open in {target.label}
-                </a>
-              </Button>
-            ))}
+                  <a href={href}>Open in {target.label}</a>
+                </Button>
+              );
+            })}
           </div>
         </div>
       ))}

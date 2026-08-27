@@ -24,6 +24,11 @@ interface AgentCliCatalogEntry {
 /** The finite allowlist, mirrored from the drivers registry (display only). */
 const AGENT_CLI_CATALOG: readonly AgentCliCatalogEntry[] = [
   {
+    backend: 'antigravity',
+    installUrl: 'https://antigravity.google/cli/install.sh',
+    label: 'Antigravity',
+  },
+  {
     backend: 'claude',
     installUrl: 'https://claude.ai/install.sh',
     label: 'Claude Code',

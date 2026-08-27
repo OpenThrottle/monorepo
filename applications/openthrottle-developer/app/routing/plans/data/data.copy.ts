@@ -155,6 +155,15 @@ export const PLAN_TAB_OUTPUT_COPY = {
  * (COMPLETED / CANCELED / SKIPPED): there is no more work to do here, so the
  * fix is to fall forward and ship a new plan rather than to unblock the action.
  */
+export const PLAN_EDITOR_ACTIONS_COPY = {
+  focusedWindowTooltip: (label: string): string =>
+    `Sends the run prompt to whatever ${label} window is focused — ${label}'s deep link cannot target a folder.`,
+  needsCheckoutTooltip: (label: string): string =>
+    `Select a checkout in Configuration → Workspace to open this plan in ${label}.`,
+  openTooltip: (label: string): string =>
+    `Opens this plan's working directory in ${label} with the run prompt prefilled.`,
+} as const;
+
 export const PLAN_TOOLBAR_COPY = {
   evaluateRulesRunningTooltip: `Unavailable while a run is active — kill the run first.`,
   evaluateRulesTerminalTooltip: `This plan is in a terminal state — nothing to evaluate.`,

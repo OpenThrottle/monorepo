@@ -3011,9 +3011,12 @@ type UserWorkspaceProfileObject {
 }
 
 """
-Editor OpenThrottle may configure in linked local repositories (MCP, skills, rules). Supported values: cursor, vscode.
+Editor OpenThrottle may configure in linked local repositories (MCP, skills, rules). Supported values: claude, cursor, vscode.
 """
 enum WorkspaceEditorId {
+  """Claude Code"""
+  CLAUDE
+
   """Cursor IDE"""
   CURSOR
 

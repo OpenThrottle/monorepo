@@ -5398,8 +5398,10 @@ export type WorkspaceEditorConfigApplicationObject = {
   warnings: Array<Scalars['String']['output']>;
 };
 
-/** Editor OpenThrottle may configure in linked local repositories (MCP, skills, rules). Supported values: cursor, vscode. */
+/** Editor OpenThrottle may configure in linked local repositories (MCP, skills, rules). Supported values: claude, cursor, vscode. */
 export enum WorkspaceEditorId {
+  /** Claude Code */
+  Claude = 'CLAUDE',
   /** Cursor IDE */
   Cursor = 'CURSOR',
   /** Visual Studio Code */
@@ -6750,6 +6752,21 @@ export type PlanRunConfigRepositoryFieldsFragment = {
       };
     } | null;
   }>;
+};
+
+export type PlanDetailWorkspaceEditorsQueryVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type PlanDetailWorkspaceEditorsQuery = {
+  __typename?: 'Query';
+  workspaceSettings: {
+    __typename?: 'WorkspaceSettingsObject';
+    profile: {
+      __typename?: 'UserWorkspaceProfileObject';
+      enabledEditors: Array<WorkspaceEditorId>;
+    };
+  };
 };
 
 export type PlanDetailIndexLoaderQueryVariables = Exact<{
@@ -16287,6 +16304,46 @@ export const PlanDetailUpdatePlanRunConfigDocument = {
 } as unknown as DocumentNode<
   PlanDetailUpdatePlanRunConfigMutation,
   PlanDetailUpdatePlanRunConfigMutationVariables
+>;
+export const PlanDetailWorkspaceEditorsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'PlanDetailWorkspaceEditors' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'workspaceSettings' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'profile' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'enabledEditors' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  PlanDetailWorkspaceEditorsQuery,
+  PlanDetailWorkspaceEditorsQueryVariables
 >;
 export const PlanDetailIndexLoaderDocument = {
   kind: 'Document',

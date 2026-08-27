@@ -20,6 +20,7 @@ import {
   setPlanStatus,
   updateTaskStatus,
 } from '~/routing/plans/actions/planId';
+import { loadEnabledEditors } from '~/routing/plans/utils/load-enabled-editors';
 import { PlanDetailRoute } from '~/routing/plans/components/PlanDetailRoute';
 import { PlanRunConfigStoreProvider } from '~/routing/plans/components/PlanRunConfigStoreProvider';
 import { SITE_TITLE } from '~/global/config/settings';
@@ -47,6 +48,7 @@ export const loader = async (args: Route.LoaderArgs) => {
 
   if (!planId) {
     return {
+      enabledEditors: [],
       linkedArtifacts: [],
       plan: null,
       planOutputChunks: [],
@@ -59,13 +61,15 @@ export const loader = async (args: Route.LoaderArgs) => {
     };
   }
 
-  const page = await executeGraphqlWithAuth(
-    args.request,
-    PlanDetailIndexLoaderDocument,
-    { planId },
-  );
+  const [page, enabledEditors] = await Promise.all([
+    executeGraphqlWithAuth(args.request, PlanDetailIndexLoaderDocument, {
+      planId,
+    }),
+    loadEnabledEditors(args.request),
+  ]);
 
   return {
+    enabledEditors,
     linkedArtifacts: page.workArtifactsByPlan.artifacts ?? [],
     plan: page.plan ?? null,
     planOutputChunks: page.planOutputStreamChunks ?? [],

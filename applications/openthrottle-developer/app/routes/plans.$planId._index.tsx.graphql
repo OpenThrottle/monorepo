@@ -165,6 +165,19 @@ fragment PlanRunConfigRepositoryFields on RepositoryObject {
   projectId
 }
 
+# Separate from PlanDetailIndexLoader on purpose: editor deep links are a
+# convenience, so the plan-detail loader runs this alongside the main query with
+# its own catch. Folding the selection into PlanDetailIndexLoader would let a
+# workspace-settings failure (e.g. a user without the permission) take the whole
+# plan page down for the sake of three buttons.
+query PlanDetailWorkspaceEditors {
+  workspaceSettings {
+    profile {
+      enabledEditors
+    }
+  }
+}
+
 query PlanDetailIndexLoader($planId: ID!) {
   metrics {
     recentPlanRunsMetrics(planId: $planId, limit: 25) {

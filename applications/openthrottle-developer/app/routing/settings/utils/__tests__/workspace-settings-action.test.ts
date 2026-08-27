@@ -5,6 +5,7 @@ import {
   parseEnabledEditorsFromFormData,
   parseProjectIdFromFormData,
 } from '../workspace-settings-action';
+import { WORKSPACE_EDITOR_OPTIONS } from '~/routing/settings/config/workspace-editors';
 
 describe('workspace-settings-action', () => {
   describe('parseEnabledEditorsFromFormData', () => {
@@ -18,6 +19,20 @@ describe('workspace-settings-action', () => {
         WorkspaceEditorId.Cursor,
         WorkspaceEditorId.Vscode,
       ]);
+    });
+
+    test('accepts every editor the picker offers', () => {
+      // Derived from WORKSPACE_EDITOR_OPTIONS on purpose: this parser once kept
+      // its own hardcoded allowlist, so a newly supported editor stayed
+      // selectable in the UI but was silently dropped on save.
+      const formData = new FormData();
+      for (const option of WORKSPACE_EDITOR_OPTIONS) {
+        formData.append('enabledEditors', option.value);
+      }
+
+      expect(parseEnabledEditorsFromFormData(formData)).toEqual(
+        WORKSPACE_EDITOR_OPTIONS.map((option) => option.value),
+      );
     });
 
     test('ignores unknown values', () => {

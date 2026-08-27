@@ -8,6 +8,7 @@ import { WorkspaceEditorIdEnum } from './workspace-editor-id.enum';
 import type { UserWorkspaceProfileObject } from './user-workspace-profile.object';
 
 const EDITOR_ID_TO_ENUM: Record<WorkspaceEditorId, WorkspaceEditorIdEnum> = {
+  claude: WorkspaceEditorIdEnum.CLAUDE,
   cursor: WorkspaceEditorIdEnum.CURSOR,
   vscode: WorkspaceEditorIdEnum.VSCODE,
 };

@@ -114,6 +114,7 @@ const mockPlan = {
 
 function renderPlanDetail(planId: string): ReturnType<typeof render> {
   const loaderData = {
+    enabledEditors: [],
     linkedArtifacts: [],
     plan: mockPlan,
     planOutputChunks: [],

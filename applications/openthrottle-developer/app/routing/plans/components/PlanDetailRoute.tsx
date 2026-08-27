@@ -24,6 +24,7 @@ import { PlanTabConfiguration } from '~/routing/plans/components/PlanTabConfigur
 import { PlanTabDetails } from '~/routing/plans/components/PlanTabDetails';
 import { PlanTabTasks } from '~/routing/plans/components/PlanTabTasks';
 import { PlanToolbar } from '~/routing/plans/components/PlanToolbar';
+import { resolvePlanWorkingDirectory } from '~/routing/plans/utils/resolve-plan-working-directory';
 import { PlanTasksBoard } from '~/routing/plans/components/PlanTasksBoard';
 import { PlanTabOutput } from '~/routing/plans/components/PlanTabOutput';
 import { usePlanDetailRoute } from '~/routing/plans/hooks/usePlanDetailRoute';
@@ -71,6 +72,13 @@ export const PlanDetailRoute = (
   } = usePlanDetailRoute({ loaderData, params, plan });
 
   // Setup
+  // Deep links need an absolute path: run-config atom, else the checkout's.
+  const editorWorkingDirectory = resolvePlanWorkingDirectory({
+    checkoutId,
+    repositories: loaderData.workspaceRepositories,
+    repositoryId,
+    workingDirectory,
+  });
 
   // Handlers
 
@@ -88,6 +96,8 @@ export const PlanDetailRoute = (
           branch={branch}
           checkoutId={checkoutId}
           className="bg-card border-card-border rounded-lg border p-4"
+          editorWorkingDirectory={editorWorkingDirectory}
+          editors={loaderData.enabledEditors}
           jobRunHooksJson={jobRunHooksJson}
           newestRunIsStale={newestRunIsStale}
           onAddTag={(tag) =>

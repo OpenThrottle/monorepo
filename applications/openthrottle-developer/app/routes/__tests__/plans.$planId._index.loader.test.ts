@@ -2,7 +2,11 @@ import { describe, expect, test, vi, beforeEach } from 'vitest';
 import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
 import type { Route } from '@/app/routes/+types/plans.$planId._index';
 import { loader } from '../plans.$planId._index';
-import { PlanDetailIndexLoaderDocument } from '~/__generated__/graphql';
+import {
+  PlanDetailIndexLoaderDocument,
+  PlanDetailWorkspaceEditorsDocument,
+  WorkspaceEditorId,
+} from '~/__generated__/graphql';
 import {
   createLoaderArgs,
   createTestRouterContext,
@@ -14,7 +18,36 @@ const mockExecuteGraphqlWithAuth = vi.mocked(
   graphqlWithAuth.executeGraphqlWithAuth,
 );
 
+function asMock<T>(value: unknown): T;
+function asMock(value: unknown): unknown {
+  return value;
+}
+
 const planId = '80864bba-630a-451d-bfd2-4b25ec202381';
+
+/**
+ * The loader fires two documents in parallel; route each mock response by
+ * document so the workspace-editors query cannot accidentally consume the page
+ * response (which is what a single mockResolvedValue would do).
+ */
+const mockDocuments = (responses: {
+  readonly editors?: unknown;
+  readonly page: unknown;
+}): void => {
+  mockExecuteGraphqlWithAuth.mockImplementation(
+    asMock<typeof graphqlWithAuth.executeGraphqlWithAuth>(
+      (_request: Request, document: unknown): Promise<unknown> => {
+        if (document === PlanDetailWorkspaceEditorsDocument) {
+          return responses.editors === undefined
+            ? Promise.reject(new Error('workspace settings unavailable'))
+            : Promise.resolve(responses.editors);
+        }
+
+        return Promise.resolve(responses.page);
+      },
+    ),
+  );
+};
 
 describe('routes/plans.$planId._index loader', () => {
   beforeEach(() => {
@@ -28,6 +61,7 @@ describe('routes/plans.$planId._index loader', () => {
 
     expect(mockExecuteGraphqlWithAuth).not.toHaveBeenCalled();
     expect(result).toEqual({
+      enabledEditors: [],
       linkedArtifacts: [],
       plan: null,
       planOutputChunks: [],
@@ -54,15 +88,22 @@ describe('routes/plans.$planId._index loader', () => {
     const vocabularyTags = [{ __typename: 'SkillTagObject', id: 'tag-1' }];
     const linkedArtifacts = [{ __typename: 'WorkArtifactObject', id: 'art-1' }];
 
-    mockExecuteGraphqlWithAuth.mockResolvedValue({
-      metrics: { recentPlanRunsMetrics: recentRuns },
-      plan,
-      planOutputStreamChunks: outputChunks,
-      planRunsByPlanId: auditRows,
-      ruleApplications,
-      skillTagVocabulary: { tags: vocabularyTags, totalCount: 1 },
-      tasksByPlanId: tasks,
-      workArtifactsByPlan: { artifacts: linkedArtifacts, totalCount: 1 },
+    mockDocuments({
+      editors: {
+        workspaceSettings: {
+          profile: { enabledEditors: [WorkspaceEditorId.Claude] },
+        },
+      },
+      page: {
+        metrics: { recentPlanRunsMetrics: recentRuns },
+        plan,
+        planOutputStreamChunks: outputChunks,
+        planRunsByPlanId: auditRows,
+        ruleApplications,
+        skillTagVocabulary: { tags: vocabularyTags, totalCount: 1 },
+        tasksByPlanId: tasks,
+        workArtifactsByPlan: { artifacts: linkedArtifacts, totalCount: 1 },
+      },
     });
 
     const request = new Request(`http://localhost/plans/${planId}`);
@@ -79,7 +120,12 @@ describe('routes/plans.$planId._index loader', () => {
       PlanDetailIndexLoaderDocument,
       { planId },
     );
+    expect(mockExecuteGraphqlWithAuth).toHaveBeenCalledWith(
+      request,
+      PlanDetailWorkspaceEditorsDocument,
+    );
     expect(result).toEqual({
+      enabledEditors: [WorkspaceEditorId.Claude],
       linkedArtifacts,
       plan,
       planOutputChunks: outputChunks,
@@ -93,15 +139,20 @@ describe('routes/plans.$planId._index loader', () => {
   });
 
   test('coalesces nullish page collections to empty arrays and a null plan', async () => {
-    mockExecuteGraphqlWithAuth.mockResolvedValue({
-      metrics: { recentPlanRunsMetrics: null },
-      plan: null,
-      planOutputStreamChunks: null,
-      planRunsByPlanId: null,
-      ruleApplications: null,
-      skillTagVocabulary: { tags: null, totalCount: 0 },
-      tasksByPlanId: null,
-      workArtifactsByPlan: { artifacts: null, totalCount: 0 },
+    mockDocuments({
+      editors: {
+        workspaceSettings: { profile: { enabledEditors: [] } },
+      },
+      page: {
+        metrics: { recentPlanRunsMetrics: null },
+        plan: null,
+        planOutputStreamChunks: null,
+        planRunsByPlanId: null,
+        ruleApplications: null,
+        skillTagVocabulary: { tags: null, totalCount: 0 },
+        tasksByPlanId: null,
+        workArtifactsByPlan: { artifacts: null, totalCount: 0 },
+      },
     });
 
     const request = new Request(`http://localhost/plans/${planId}`);
@@ -114,6 +165,7 @@ describe('routes/plans.$planId._index loader', () => {
     } satisfies Route.LoaderArgs);
 
     expect(result).toEqual({
+      enabledEditors: [],
       linkedArtifacts: [],
       plan: null,
       planOutputChunks: [],
@@ -124,5 +176,34 @@ describe('routes/plans.$planId._index loader', () => {
       tasks: [],
       workspaceRepositories: [],
     });
+  });
+
+  test('degrades to no editors when the workspace-settings query fails', async () => {
+    const plan = { __typename: 'PlanObject', id: planId, title: 'Test Plan' };
+
+    mockDocuments({
+      page: {
+        metrics: { recentPlanRunsMetrics: [] },
+        plan,
+        planOutputStreamChunks: [],
+        planRunsByPlanId: [],
+        ruleApplications: [],
+        skillTagVocabulary: { tags: [], totalCount: 0 },
+        tasksByPlanId: [],
+        workArtifactsByPlan: { artifacts: [], totalCount: 0 },
+      },
+    });
+
+    const request = new Request(`http://localhost/plans/${planId}`);
+    const result = await loader({
+      context: createTestRouterContext(),
+      params: { planId },
+      pattern: '/plans/:planId',
+      request,
+      url: new URL(request.url),
+    } satisfies Route.LoaderArgs);
+
+    expect(result.enabledEditors).toEqual([]);
+    expect(result.plan).toEqual(plan);
   });
 });

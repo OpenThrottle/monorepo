@@ -5398,8 +5398,10 @@ export type WorkspaceEditorConfigApplicationObject = {
   warnings: Array<Scalars['String']['output']>;
 };
 
-/** Editor OpenThrottle may configure in linked local repositories (MCP, skills, rules). Supported values: cursor, vscode. */
+/** Editor OpenThrottle may configure in linked local repositories (MCP, skills, rules). Supported values: claude, cursor, vscode. */
 export enum WorkspaceEditorId {
+  /** Claude Code */
+  Claude = 'CLAUDE',
   /** Cursor IDE */
   Cursor = 'CURSOR',
   /** Visual Studio Code */

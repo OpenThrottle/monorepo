@@ -30,6 +30,7 @@ const plan: PlanDetailRouteProps['plan'] = {
 const buildLoaderData = (
   overrides: Partial<PlanDetailRouteProps['loaderData']> = {},
 ): PlanDetailRouteProps['loaderData'] => ({
+  enabledEditors: [],
   linkedArtifacts: [],
   plan,
   planOutputChunks: [],

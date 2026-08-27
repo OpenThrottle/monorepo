@@ -6,6 +6,7 @@ interface WorkspaceEditorOption {
 }
 
 export const WORKSPACE_EDITOR_OPTIONS: readonly WorkspaceEditorOption[] = [
+  { label: 'Claude Code', value: WorkspaceEditorId.Claude },
   { label: 'Cursor', value: WorkspaceEditorId.Cursor },
   { label: 'Visual Studio Code', value: WorkspaceEditorId.Vscode },
 ];

@@ -14,6 +14,13 @@ export interface OpenThrottleToolbarProps {
    */
   dataTestId?: string;
   /**
+   * @description Optional editor deep-link buttons, rendered after
+   * {@link utilityContent} and before the {@link actionsMenu}. Its own slot on
+   * purpose: `utilityContent` already carries the plan CLI-preview link, and
+   * task toolbars sharing this skeleton simply omit this one.
+   */
+  editorActions?: React.ReactNode;
+  /**
    * @description Primary controls rendered in the left status group alongside
    * {@link statusAction} (e.g. Run/Queue, Evaluate rules, Kill run, Promote).
    */
@@ -38,7 +45,8 @@ export interface OpenThrottleToolbarProps {
 /**
  * @description Shared skeleton for plan/task toolbars so they cannot drift: a
  * left status group ({@link statusAction} + {@link primaryActions}), a `flex-1`
- * spacer, optional {@link utilityContent}, a right {@link actionsMenu}, and a
+ * spacer, optional {@link utilityContent} and {@link editorActions}, a right
+ * {@link actionsMenu}, and a
  * full-width {@link tags} row below. Composers supply the slot content and their
  * own {@link dataTestId}; this component owns only the layout contract.
  */
@@ -49,6 +57,7 @@ export const OpenThrottleToolbar = (
     actionsMenu,
     className,
     dataTestId = 'OpenThrottleToolbar',
+    editorActions,
     primaryActions,
     statusAction,
     tags,
@@ -84,8 +93,8 @@ export const OpenThrottleToolbar = (
 
         {actionsMenu}
       </div>
-
       {tags}
+      <div className="flex w-full justify-end">{editorActions}</div>
     </div>
   );
 };

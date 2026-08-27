@@ -1,16 +1,11 @@
+import { isWorkspaceEditorId } from '~/routing/settings/utils/is-workspace-editor-id';
 import type { WorkspaceEditorId } from '~/__generated__/graphql';
-import { WorkspaceEditorId as WorkspaceEditorIdEnum } from '~/__generated__/graphql';
-
-const WORKSPACE_EDITOR_VALUES = new Set<string>([
-  WorkspaceEditorIdEnum.Cursor,
-  WorkspaceEditorIdEnum.Vscode,
-]);
-
-const isWorkspaceEditorId = (value: string): value is WorkspaceEditorId =>
-  WORKSPACE_EDITOR_VALUES.has(value);
 
 /**
  * @description Parses enabled editor ids from form data (repeated `enabledEditors` fields).
+ * Unknown ids are dropped, so the guard must stay derived from
+ * {@link WORKSPACE_EDITOR_OPTIONS} — a hardcoded copy silently discards any
+ * newly supported editor at save time while the picker still offers it.
  */
 export const parseEnabledEditorsFromFormData = (
   formData: FormData,
