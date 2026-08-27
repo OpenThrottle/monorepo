@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Link } from 'react-router';
 import { OpenThrottleToolbar } from '~/routing/plans/components/OpenThrottleToolbar';
+import { PlanEditorActions } from '~/routing/plans/components/PlanEditorActions';
 import { PlanTagChips } from '~/routing/plans/components/PlanTagChips';
 import type {
   PlanTagChipData,
@@ -10,6 +11,7 @@ import { PlanToolbarActionsMenu } from '~/routing/plans/components/PlanToolbarAc
 import { PlanToolbarRunActions } from '~/routing/plans/components/PlanToolbarRunActions';
 import { PlanToolbarStatusAction } from '~/routing/plans/components/PlanToolbarStatusAction';
 import { usePlanToolbar } from '~/routing/plans/hooks/usePlanToolbar';
+import type { WorkspaceEditorId } from '~/__generated__/graphql';
 
 export interface PlanToolbarProps {
   /**
@@ -21,6 +23,14 @@ export interface PlanToolbarProps {
    */
   checkoutId?: string;
   className?: string;
+  /**
+   * @description Absolute path the editor deep links open. Separate from
+   * {@link workingDirectory} (submitted to enqueuePlanRun, so it must stay what
+   * the user configured): this one may fall back to the selected checkout.
+   */
+  editorWorkingDirectory?: string;
+  /** @description Editors enabled in workspace settings; empty renders none. */
+  editors?: readonly WorkspaceEditorId[];
   /**
    * @description JSON `{ hooks: [...] }` for enqueuePlanRun; empty when no hooks or invalid.
    */
@@ -83,12 +93,16 @@ export interface PlanToolbarProps {
 
 /**
  * @description Toolbar for plan actions: Mark Complete, Run/Queue (status group),
- * and Add Task / Edit Plan (actions menu). Uses shadcn Button, Tooltip, and DropdownMenu.
+ * editor deep links, and Add Task / Edit Plan (actions menu). Uses shadcn
+ * Button, Tooltip, and DropdownMenu. The deep links get `OpenThrottleToolbar`'s
+ * dedicated `editorActions` slot rather than sharing `utilityContent`.
  */
 export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
   const {
     branch,
     className,
+    editorWorkingDirectory = '',
+    editors = [],
     newestRunIsStale = false,
     onAddTag,
     onRemoveTag,
@@ -132,6 +146,13 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
       actionsMenu={<PlanToolbarActionsMenu planId={planId} />}
       className={className}
       dataTestId="PlanToolbar"
+      editorActions={
+        <PlanEditorActions
+          editors={editors}
+          planId={planId}
+          workingDirectory={editorWorkingDirectory}
+        />
+      }
       primaryActions={
         <PlanToolbarRunActions
           branch={branch}

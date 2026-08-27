@@ -3,7 +3,7 @@
  * Stored in `user_workspace_settings.enabled_editors` (JSONB string array).
  */
 
-export const WORKSPACE_EDITOR_IDS = ['cursor', 'vscode'] as const;
+export const WORKSPACE_EDITOR_IDS = ['claude', 'cursor', 'vscode'] as const;
 
 export type WorkspaceEditorId = (typeof WORKSPACE_EDITOR_IDS)[number];
 

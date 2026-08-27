@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { PlanToolbar } from '../PlanToolbar';
 import type { PlanToolbarProps } from '../PlanToolbar';
 import { renderRouteHarness, renderRoutesStub } from '~/testing/route-fixtures';
+import { WorkspaceEditorId } from '~/__generated__/graphql';
 
 const renderToolbar = (toolbarProps: PlanToolbarProps): RenderResult =>
   renderRoutesStub(
@@ -313,5 +314,35 @@ describe('PlanToolbar evaluate-rules submit', () => {
       intent: 'evaluatePlanRules',
       planId: PLAN_ID,
     });
+  });
+});
+
+describe('PlanToolbar editor deep links', () => {
+  test('renders PlanEditorActions alongside the CLI preview link', () => {
+    const component = renderToolbar({
+      editorWorkingDirectory: '/Users/matt/Development/openthrottle',
+      editors: [WorkspaceEditorId.Claude],
+      planId: PLAN_ID,
+    });
+
+    expect(component.getByTestId('PlanEditorActions')).toBeInTheDocument();
+    expect(
+      component.getByRole('link', { name: 'Claude Code' }),
+    ).toHaveAttribute(
+      'href',
+      `claude://code/new?folder=%2FUsers%2Fmatt%2FDevelopment%2Fopenthrottle&q=%2Fot-claude-loop%20${PLAN_ID}`,
+    );
+    expect(
+      component.getByRole('link', { name: /cli preview and history/i }),
+    ).toBeInTheDocument();
+  });
+
+  test('renders only the CLI preview link when no editor is enabled', () => {
+    const component = renderToolbar({ planId: PLAN_ID });
+
+    expect(component.queryByTestId('PlanEditorActions')).toBeNull();
+    expect(
+      component.getByRole('link', { name: /cli preview and history/i }),
+    ).toBeInTheDocument();
   });
 });
