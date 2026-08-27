@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useAtom } from 'jotai';
+import { useAtom, useSetAtom } from 'jotai';
 import { Card, TabsContent } from '@openthrottle/react-router-shadcn';
 import { DEFAULT_RALPH_PROMPT } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import { PlanTabConfigurationValidation } from '~/routing/plans/components/PlanTabConfigurationValidation';
@@ -11,10 +11,14 @@ import { PlanWorkflowConfigHooks } from '~/routing/plans/components/PlanWorkflow
 import { PlanWorkflowConfigTuning } from '~/routing/plans/components/PlanWorkflowConfigTuning';
 import { PlanWorkflowConfigWorktree } from '~/routing/plans/components/PlanWorkflowConfigWorktree';
 import { PlanWorkflowConfigWorkspaceSelector } from '~/routing/plans/components/PlanWorkflowConfigWorkspaceSelector';
+import { PlanDeferredSection } from '~/routing/plans/components/PlanDeferredSection';
+import { PlanConfigurationTabSkeleton } from '~/routing/plans/components/PlanConfigurationTabSkeleton';
+import { PLAN_DEFERRED_SECTION_COPY } from '~/routing/plans/data/data.copy';
 import type { PlanRunConfigRepositoryFieldsFragment } from '~/__generated__/graphql';
 import {
   jobRunHookDraftRowsAtom,
   workflowBranchAtom,
+  setWorkflowBranchByUserAtom,
   workflowCheckoutIdAtom,
   workflowRalphRunOptionsAtom,
   workflowRepositoryIdAtom,
@@ -51,9 +55,12 @@ export interface PlanTabConfigurationProps {
 
   /**
    * @description Registered repositories (with the user's checkouts) for the
-   * workspace run-config selector. Defaults to empty (monorepo-root / custom-path only).
+   * workspace run-config selector, as the loader's deferred promise. This is the
+   * slow field the route defers (~1.3s cold), so the tab renders
+   * {@link PlanConfigurationTabSkeleton} until it resolves rather than briefly
+   * offering a selector with no repositories in it.
    */
-  repositories?: readonly PlanRunConfigRepositoryFieldsFragment[];
+  repositories: Promise<readonly PlanRunConfigRepositoryFieldsFragment[]>;
 
   saveJobRunHooksDisabled?: boolean;
   saveJobRunHooksPending?: boolean;
@@ -70,7 +77,7 @@ export const PlanTabConfiguration = (
     onSaveJobRunHooks,
     onSaveRunConfig,
     planProjectId,
-    repositories = [],
+    repositories,
     saveJobRunHooksDisabled,
     saveJobRunHooksPending,
     saveRunConfigDisabled,
@@ -88,6 +95,7 @@ export const PlanTabConfiguration = (
   const [checkoutId, setCheckoutId] = useAtom(workflowCheckoutIdAtom);
   const [repositoryId, setRepositoryId] = useAtom(workflowRepositoryIdAtom);
   const [branch, setBranch] = useAtom(workflowBranchAtom);
+  const setBranchByUser = useSetAtom(setWorkflowBranchByUserAtom);
   const [jobRunHookRows, setJobRunHookRows] = useAtom(jobRunHookDraftRowsAtom);
 
   // Setup
@@ -103,91 +111,100 @@ export const PlanTabConfiguration = (
 
   return (
     <TabsContent value="configuration">
-      <div className="flex flex-col gap-4 md:gap-8">
-        <Card className="p-4">
-          <PlanWorkflowCommand
-            onReset={onResetToDefaults}
-            onSave={onSaveRunConfig}
-            saveDisabled={saveRunConfigDisabled}
-            savePending={saveRunConfigPending}
-          />
-        </Card>
+      <PlanDeferredSection
+        errorText={PLAN_DEFERRED_SECTION_COPY.configurationError}
+        fallback={<PlanConfigurationTabSkeleton />}
+        resolve={repositories}
+      >
+        {(resolvedRepositories) => (
+          <div className="flex flex-col gap-4 md:gap-8">
+            <Card className="p-4">
+              <PlanWorkflowCommand
+                onReset={onResetToDefaults}
+                onSave={onSaveRunConfig}
+                saveDisabled={saveRunConfigDisabled}
+                savePending={saveRunConfigPending}
+              />
+            </Card>
 
-        <PlanTabConfigurationValidation />
+            <PlanTabConfigurationValidation />
 
-        <PlanWorkflowConfigTarget
-          heading="01. Target"
-          input={input}
-          setInput={setInput}
-        />
+            <PlanWorkflowConfigTarget
+              heading="01. Target"
+              input={input}
+              setInput={setInput}
+            />
 
-        <PlanWorkflowConfigWorkspaceSelector
-          branch={branch}
-          checkoutId={checkoutId}
-          heading="02. Workspace"
-          onBranchChange={setBranch}
-          onCheckoutIdChange={setCheckoutId}
-          onRepositoryIdChange={setRepositoryId}
-          onWorkingDirectoryChange={setWorkingDirectory}
-          planProjectId={planProjectId}
-          repositories={repositories}
-          repositoryId={repositoryId}
-          workingDirectory={workingDirectory}
-        />
+            <PlanWorkflowConfigWorkspaceSelector
+              branch={branch}
+              checkoutId={checkoutId}
+              heading="02. Workspace"
+              onBranchChange={setBranch}
+              onBranchUserEdit={setBranchByUser}
+              onCheckoutIdChange={setCheckoutId}
+              onRepositoryIdChange={setRepositoryId}
+              onWorkingDirectoryChange={setWorkingDirectory}
+              planProjectId={planProjectId}
+              repositories={resolvedRepositories}
+              repositoryId={repositoryId}
+              workingDirectory={workingDirectory}
+            />
 
-        <PlanWorkflowConfigHooks
-          heading="03. Lifecycle"
-          hooks={jobRunHookRows}
-          onChange={setJobRunHookRows}
-          onSave={onSaveJobRunHooks}
-          saveDisabled={saveJobRunHooksDisabled}
-          savePending={saveJobRunHooksPending}
-        />
+            <PlanWorkflowConfigHooks
+              heading="03. Lifecycle"
+              hooks={jobRunHookRows}
+              onChange={setJobRunHookRows}
+              onSave={onSaveJobRunHooks}
+              saveDisabled={saveJobRunHooksDisabled}
+              savePending={saveJobRunHooksPending}
+            />
 
-        <PlanWorkflowConfigPrompt
-          heading="04. Prompt"
-          onPromptChange={(next) =>
-            setInput((prev) => ({ ...prev, prompt: next }))
-          }
-          onPromptFileChange={(next) =>
-            setInput((prev) => ({ ...prev, promptFile: next }))
-          }
-          onPromptLayerChange={(next) => {
-            setInput((prev) => {
-              if (next === 'named') {
-                return { ...prev, promptFile: '', promptLayer: 'named' };
+            <PlanWorkflowConfigPrompt
+              heading="04. Prompt"
+              onPromptChange={(next) =>
+                setInput((prev) => ({ ...prev, prompt: next }))
               }
+              onPromptFileChange={(next) =>
+                setInput((prev) => ({ ...prev, promptFile: next }))
+              }
+              onPromptLayerChange={(next) => {
+                setInput((prev) => {
+                  if (next === 'named') {
+                    return { ...prev, promptFile: '', promptLayer: 'named' };
+                  }
 
-              return {
-                ...prev,
-                prompt: DEFAULT_RALPH_PROMPT,
-                promptLayer: 'file',
-              };
-            });
-          }}
-          prompt={input.prompt}
-          promptFile={input.promptFile}
-          promptLayer={input.promptLayer}
-        />
+                  return {
+                    ...prev,
+                    prompt: DEFAULT_RALPH_PROMPT,
+                    promptLayer: 'file',
+                  };
+                });
+              }}
+              prompt={input.prompt}
+              promptFile={input.promptFile}
+              promptLayer={input.promptLayer}
+            />
 
-        <PlanWorkflowConfigExecution
-          heading="05. Agent"
-          input={input}
-          setInput={setInput}
-        />
-        <PlanWorkflowConfigWorktree
-          heading="06. Worktree"
-          input={input}
-          setInput={setInput}
-        />
-        <PlanWorkflowConfigTuning
-          heading="07. Run Tuning"
-          input={input}
-          iterationTimeoutText={iterationTimeoutText}
-          setInput={setInput}
-          setIterationTimeoutText={setIterationTimeoutText}
-        />
-      </div>
+            <PlanWorkflowConfigExecution
+              heading="05. Agent"
+              input={input}
+              setInput={setInput}
+            />
+            <PlanWorkflowConfigWorktree
+              heading="06. Worktree"
+              input={input}
+              setInput={setInput}
+            />
+            <PlanWorkflowConfigTuning
+              heading="07. Run Tuning"
+              input={input}
+              iterationTimeoutText={iterationTimeoutText}
+              setInput={setInput}
+              setIterationTimeoutText={setIterationTimeoutText}
+            />
+          </div>
+        )}
+      </PlanDeferredSection>
     </TabsContent>
   );
 };

@@ -14,6 +14,8 @@ import { DEFAULT_PLAN_TASKS_VIEW_STORAGE_KEY } from '~/routing/plans/config/defa
 import { isPlanStatusKey } from '~/routing/plans/components/PlanStatusBadge';
 import { parsePlanTasksView } from '~/routing/plans/utils/parsers';
 import { getResolvedTaskCount } from '~/routing/plans/utils/utils.plans';
+import { usePlanDeferredValue } from '~/routing/plans/hooks/usePlanDeferredValue';
+import { resolvePlanWorkingDirectory } from '~/routing/plans/utils/resolve-plan-working-directory';
 import { usePlanOutputStream } from '~/routing/plans/hooks/usePlanOutputStream';
 import { usePlanLifecycleRevalidation } from '~/routing/plans/hooks/usePlanLifecycleRevalidation';
 import { usePlanRunConfigEditor } from '~/routing/plans/hooks/usePlanRunConfigEditor';
@@ -27,8 +29,11 @@ import {
   workflowCheckoutIdAtom,
   workflowRepositoryIdAtom,
   workflowWorkingDirectoryAtom,
+  workspaceRepositoriesReadyAtom,
 } from '~/routing/plans/data/atom.plan';
+import { PLAN_RUN_GATING_COPY } from '~/routing/plans/data/data.copy';
 import type { PlanStatusKey } from '~/routing/plans/types';
+
 import type { Route } from '@/app/routes/+types/plans.$planId._index';
 
 export interface UsePlanDetailRouteOptions {
@@ -40,10 +45,16 @@ export interface UsePlanDetailRouteOptions {
 export interface UsePlanDetailRouteResult {
   readonly branch: string;
   readonly checkoutId: string;
+  readonly editorWorkingDirectory: string;
   readonly fullscreen: boolean;
   readonly isBoardView: boolean;
   readonly jobRunHooksJson: string;
-  readonly newestRunIsStale: boolean;
+  /**
+   * `undefined` until the deferred run-history region resolves. The toolbar must
+   * render no badge for `undefined` — "not stale" is a claim we cannot make while
+   * the run history is still loading.
+   */
+  readonly newestRunIsStale: boolean | undefined;
   readonly onResetToDefaults: () => void;
   readonly onSaveJobRunHooks: () => void;
   readonly onSaveRunConfig: () => void;
@@ -69,13 +80,33 @@ export const usePlanDetailRoute = (
   options: UsePlanDetailRouteOptions,
 ): UsePlanDetailRouteResult => {
   const { loaderData, params, plan } = options;
-  const { planRunAuditRows, tasks } = loaderData;
+  const { tasks } = loaderData;
+
+  // Hooks
+  // Run history is deferred, so the stale badge has three states, not two: absent
+  // while loading, then stale or not. `usePlanDeferredValue` also keeps the last
+  // resolved history across lifecycle revalidations so the badge does not blink.
+  const runHistory = usePlanDeferredValue(loaderData.runHistory);
 
   // The newest run is first (planRunsByPlanId is newest-first); a stale newest run means the
   // active run is dead, so the toolbar shows a 'Stale' badge instead of an unusable Kill.
-  const newestRunIsStale = planRunAuditRows[0]?.isStale ?? false;
+  const newestRunIsStale =
+    runHistory === undefined
+      ? undefined
+      : (runHistory.planRunAuditRows[0]?.isStale ?? false);
 
-  // Hooks
+  // The loader snapshot is deferred too, and is passed through as `undefined`
+  // until it resolves. The subscription still starts at mount, so output written
+  // during the load window is not lost; the snapshot is unioned in by chunk id
+  // whenever it arrives (see usePlanOutputStream).
+  const outputChunkSnapshot = usePlanDeferredValue(loaderData.outputChunks);
+
+  // Editor deep links need an absolute path. Repositories are deferred, so until
+  // they land this resolves from the run-config atom alone; the links themselves
+  // sit behind their own boundary anyway.
+  const resolvedRepositories = usePlanDeferredValue(
+    loaderData.workspaceRepositories,
+  );
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const tagFetcher = useFetcher();
@@ -100,6 +131,9 @@ export const usePlanDetailRoute = (
   const checkoutId = useAtomValue(workflowCheckoutIdAtom);
   const repositoryId = useAtomValue(workflowRepositoryIdAtom);
   const branch = useAtomValue(workflowBranchAtom);
+  const workspaceRepositoriesReady = useAtomValue(
+    workspaceRepositoriesReadyAtom,
+  );
 
   // Setup
   const [fullscreen, setFullscreen] = React.useState(false);
@@ -111,10 +145,7 @@ export const usePlanDetailRoute = (
 
   // Pilot: seed from the loader snapshot, then merge live deltas from the
   // planOutputChunkAdded subscription (graphql-ws). Socket.IO keeps running.
-  const planOutputChunks = usePlanOutputStream(
-    planId,
-    loaderData.planOutputChunks,
-  );
+  const planOutputChunks = usePlanOutputStream(planId, outputChunkSnapshot);
   const status: PlanStatusKey = isPlanStatusKey(plan.status)
     ? plan.status
     : 'PENDING';
@@ -128,11 +159,19 @@ export const usePlanDetailRoute = (
   // editor's validation (workflow options + workspace path) and folds in the
   // job-run-hooks draft validity, matching the prior in-tab computation.
   const jobRunHooksBlocked = !jobRunHooksValidation.ok;
-  const workflowRunBlocked = runConfigSaveBlocked || jobRunHooksBlocked;
-  const workflowRunBlockedReason = jobRunHooksBlocked
-    ? (jobRunHooksValidation.issues[0] ??
-      'Fix job run lifecycle hooks in Configuration.')
-    : runConfigSaveBlockedReason;
+  const workflowRunBlocked =
+    !workspaceRepositoriesReady || runConfigSaveBlocked || jobRunHooksBlocked;
+
+  // 🚨 The resolving reason wins over the validation reasons while the workspace
+  // is still loading. The config is not invalid then — it is merely incomplete —
+  // and reporting a validation error on a page that is still loading reads as a
+  // bug rather than as progress.
+  const workflowRunBlockedReason = !workspaceRepositoriesReady
+    ? PLAN_RUN_GATING_COPY.resolvingWorkspace
+    : jobRunHooksBlocked
+      ? (jobRunHooksValidation.issues[0] ??
+        'Fix job run lifecycle hooks in Configuration.')
+      : runConfigSaveBlockedReason;
 
   // Handlers
 
@@ -185,9 +224,17 @@ export const usePlanDetailRoute = (
   });
 
   // 🔌 Short Circuit
+  const editorWorkingDirectory = resolvePlanWorkingDirectory({
+    checkoutId,
+    repositories: resolvedRepositories ?? [],
+    repositoryId,
+    workingDirectory,
+  });
+
   return {
     branch,
     checkoutId,
+    editorWorkingDirectory,
     fullscreen,
     isBoardView,
     jobRunHooksJson,

@@ -290,6 +290,19 @@ describe('plans/actions/planId status + config parsers', () => {
     expect(mockExecute).not.toHaveBeenCalled();
   });
 
+  // 🚨 The toolbar disables Run while workspaceRepositories is still resolving,
+  // but client-side disabling is not the boundary. A fast click in that window
+  // must not be able to enqueue a run with a blank branch.
+  test.each([[''], ['   ']])(
+    'runPlan rejects a blank branch (%j) without calling the server',
+    async (branch) => {
+      const result = await runPlan(actionArgs(), 'plan-1', form({ branch }));
+
+      expect(result.runPlanError).toContain('branch is required');
+      expect(mockExecute).not.toHaveBeenCalled();
+    },
+  );
+
   test('runPlan enqueues with the coerced priority and injected plan id', async () => {
     mockExecute.mockResolvedValue(
       asMock<Awaited<ReturnType<typeof executeGraphqlWithAuth>>>({

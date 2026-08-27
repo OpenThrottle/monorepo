@@ -10,6 +10,9 @@ import { PlanLifecycleHooksSection } from '~/routing/plans/components/PlanLifecy
 import { PLAN_LIFECYCLE_HOOKS_COPY } from '~/routing/plans/data/data.copy';
 import { FEATURE_CHARLIE_PREVIEW } from '@openthrottle/react-router-utils';
 import { PlanWorkflowRunTransparency } from '~/routing/plans/components/PlanWorkflowRunTransparency';
+import { PlanDeferredSection } from '~/routing/plans/components/PlanDeferredSection';
+import { PlanRunTransparencySkeleton } from '~/routing/plans/components/PlanRunTransparencySkeleton';
+import { PLAN_DEFERRED_SECTION_COPY } from '~/routing/plans/data/data.copy';
 import {
   buildWorkflowRalphOptionArgs,
   formatWorkflowRalphCommandLine,
@@ -36,8 +39,7 @@ export const PlanTabDetails = (
   } = props;
 
   // Hooks
-  const { plan, planRunAuditRows, recentPlanRuns, tasks } =
-    usePlanDetailRouteData();
+  const { plan, runHistory, tasks } = usePlanDetailRouteData();
   const workflowInput = useAtomValue(workflowRalphRunOptionsAtom);
   const workflowTimeout = useAtomValue(workflowRunIterationTimeoutTextAtom);
   const workingDirectory = useAtomValue(workflowWorkingDirectoryAtom);
@@ -131,15 +133,26 @@ export const PlanTabDetails = (
                 planId={plan.id}
               />
             </div>
-            <PlanWorkflowRunTransparency
-              canonicalWorkflowCommand={canonicalWorkflowCommand}
-              planId={plan.id}
-              planRunAuditRows={planRunAuditRows}
-              recentPlanRuns={recentPlanRuns}
-              workflowInput={workflowInput}
-              workflowTimeout={workflowTimeout}
-              workingDirectory={workingDirectory ?? ''}
-            />
+            {/* Only the run-transparency block waits on run history. The summary,
+                description and requirements above render straight from critical
+                loader data, so the Details tab is readable immediately. */}
+            <PlanDeferredSection
+              errorText={PLAN_DEFERRED_SECTION_COPY.runHistoryError}
+              fallback={<PlanRunTransparencySkeleton />}
+              resolve={runHistory}
+            >
+              {(history) => (
+                <PlanWorkflowRunTransparency
+                  canonicalWorkflowCommand={canonicalWorkflowCommand}
+                  planId={plan.id}
+                  planRunAuditRows={history.planRunAuditRows}
+                  recentPlanRuns={history.recentPlanRuns}
+                  workflowInput={workflowInput}
+                  workflowTimeout={workflowTimeout}
+                  workingDirectory={workingDirectory ?? ''}
+                />
+              )}
+            </PlanDeferredSection>
           </>
         ) : null}
       </div>

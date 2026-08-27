@@ -36,6 +36,7 @@ function renderEditor(
         plan={
           plan ?? { id: 'unseeded', jobRunHooksJson: null, runConfigJson: null }
         }
+        repositories={Promise.resolve([])}
       >
         <HookProbe />
       </PlanRunConfigStoreProvider>

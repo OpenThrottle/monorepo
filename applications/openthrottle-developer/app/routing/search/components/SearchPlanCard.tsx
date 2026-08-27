@@ -72,6 +72,7 @@ export const SearchPlanCard = (
             <Link
               className="underline-offset-4 hover:underline"
               data-testid="SearchPlanCard-planLink"
+              prefetch="intent"
               to={`/plans/${result.planId}`}
             >
               {result.planTitle ?? 'Plan'}

@@ -234,11 +234,15 @@ describe('PlanToolbar Component', () => {
       onAddTag: vi.fn(),
       onRemoveTag,
       planId: 'p1',
-      tagVocabulary: [{ dimension: 'domain', tag: 'frontend' }],
+      tagVocabulary: Promise.resolve([
+        { dimension: 'domain', tag: 'frontend' },
+      ]),
       tags: [{ dimension: 'domain', source: 'human', tag: 'backend' }],
     });
 
-    expect(r.getByTestId('PlanTagChips')).toBeInTheDocument();
+    // The chips sit behind the deferred tag-vocabulary boundary; the rest of
+    // the toolbar rendered synchronously above.
+    expect(await r.findByTestId('PlanTagChips')).toBeInTheDocument();
     expect(r.getByText('backend')).toBeInTheDocument();
 
     await user.click(r.getByRole('button', { name: /Remove tag backend/i }));
@@ -318,14 +322,17 @@ describe('PlanToolbar evaluate-rules submit', () => {
 });
 
 describe('PlanToolbar editor deep links', () => {
-  test('renders PlanEditorActions alongside the CLI preview link', () => {
+  test('renders PlanEditorActions alongside the CLI preview link', async () => {
     const component = renderToolbar({
       editorWorkingDirectory: '/Users/matt/Development/openthrottle',
-      editors: [WorkspaceEditorId.Claude],
+      editors: Promise.resolve([WorkspaceEditorId.Claude]),
       planId: PLAN_ID,
     });
 
-    expect(component.getByTestId('PlanEditorActions')).toBeInTheDocument();
+    // The deep links sit behind the deferred editors boundary now.
+    expect(
+      await component.findByTestId('PlanEditorActions'),
+    ).toBeInTheDocument();
     expect(
       component.getByRole('link', { name: 'Claude Code' }),
     ).toHaveAttribute(

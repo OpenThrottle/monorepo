@@ -3,7 +3,10 @@ import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { render } from '@testing-library/react';
 import * as React from 'react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { renderWithPlanDetailRouteData } from '~/routing/plans/testing/plan-detail-route-data';
+import {
+  buildPlanDetailLoaderData,
+  renderWithPlanDetailRouteData,
+} from '~/routing/plans/testing/plan-detail-route-data';
 import PlanDetail from '../plans.$planId._index';
 import type { Route } from '@/app/routes/+types/plans.$planId._index';
 
@@ -113,18 +116,10 @@ const mockPlan = {
 };
 
 function renderPlanDetail(planId: string): ReturnType<typeof render> {
-  const loaderData = {
-    enabledEditors: [],
-    linkedArtifacts: [],
+  const loaderData = buildPlanDetailLoaderData({
     plan: mockPlan,
-    planOutputChunks: [],
-    planRunAuditRows: [],
-    recentPlanRuns: [],
-    ruleApplications: [],
-    tagVocabulary: [],
     tasks: [],
-    workspaceRepositories: [],
-  };
+  });
   return renderWithPlanDetailRouteData(
     <TooltipProvider>
       <PlanDetail

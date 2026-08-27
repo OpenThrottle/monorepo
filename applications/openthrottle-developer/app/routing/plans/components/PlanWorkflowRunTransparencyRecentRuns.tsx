@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Link } from 'react-router';
-import type { PlanDetailIndexLoaderQuery } from '~/__generated__/graphql';
+import type { PlanDetailRunHistoryQuery } from '~/__generated__/graphql';
 import {
   formatWorkflowRalphExecutionBackendLabel,
   planRunJobDetailPath,
@@ -8,7 +8,7 @@ import {
 import { formatFinishedOn } from '~/routing/plans/utils/plan-workflow-run-transparency';
 
 export type RecentRun =
-  PlanDetailIndexLoaderQuery['metrics']['recentPlanRunsMetrics'][number];
+  PlanDetailRunHistoryQuery['metrics']['recentPlanRunsMetrics'][number];
 
 export interface PlanWorkflowRunTransparencyRecentRunsProps {
   recentPlanRuns: RecentRun[];

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
 import { useAtomValue } from 'jotai';
 import { beforeEach, describe, expect, test } from 'vitest';
@@ -39,6 +39,7 @@ describe('PlanRunConfigStoreProvider Component', () => {
         jobRunHooksJson: null,
         runConfigJson: null,
       },
+      repositories: Promise.resolve([]),
     };
     component = render(<PlanRunConfigStoreProvider {...props} />);
   });
@@ -49,11 +50,13 @@ describe('PlanRunConfigStoreProvider Component', () => {
     expect(component.getByTestId('hook-row-count')).toHaveTextContent('0');
   });
 
+  // The provider seeds before workspaceRepositories resolves, so it can only
+  // reach the resolver's terminal fallback — which is the point: never blank.
   test('seeds the branch to main without any repositories', () => {
     expect(component.getByTestId('branch')).toHaveTextContent('main');
   });
 
-  test('seeds the branch from the persisted checkout', () => {
+  test('back-fills the branch from the persisted checkout once repositories resolve', async () => {
     component.unmount();
     component = render(
       <PlanRunConfigStoreProvider
@@ -71,7 +74,7 @@ describe('PlanRunConfigStoreProvider Component', () => {
             workingDirectory: '',
           }),
         }}
-        repositories={[
+        repositories={Promise.resolve([
           {
             checkouts: [
               {
@@ -91,10 +94,14 @@ describe('PlanRunConfigStoreProvider Component', () => {
             normalizedRemoteUrl: null,
             projectId: null,
           },
-        ]}
+        ])}
       />,
     );
 
-    expect(component.getByTestId('branch')).toHaveTextContent('feature/x');
+    // Seeded to the fallback first, then hydrated with the real answer.
+    expect(component.getByTestId('branch')).toHaveTextContent('main');
+    await waitFor(() =>
+      expect(component.getByTestId('branch')).toHaveTextContent('feature/x'),
+    );
   });
 });

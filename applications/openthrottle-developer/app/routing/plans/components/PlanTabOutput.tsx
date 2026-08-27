@@ -1,15 +1,19 @@
 import * as React from 'react';
-import { PlanDetailIndexLoaderQuery } from '@openthrottle/openthrottle-developer-codegen';
+import { PlanDetailOutputChunksQuery } from '@openthrottle/openthrottle-developer-codegen';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { TabsContent } from '@openthrottle/react-router-shadcn';
 import { OutputStream } from '~/routing/plans/components/OutputStream';
+import { PlanDeferredSection } from '~/routing/plans/components/PlanDeferredSection';
+import { PlanOutputStreamSkeleton } from '~/routing/plans/components/PlanOutputStreamSkeleton';
+import { PLAN_DEFERRED_SECTION_COPY } from '~/routing/plans/data/data.copy';
+import { usePlanDetailRouteData } from '~/routing/plans/hooks/usePlanDetailRouteData';
 // import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
 // import { LinkedArtifactsPanel } from '~/routing/plans/components/LinkedArtifactsPanel';
 // import { PlanRuleApplications } from '~/routing/plans/components/PlanRuleApplications';
 // import { PLAN_TAB_OUTPUT_COPY } from '~/routing/plans/data/data.copy';
 // import { usePlanDetailRouteData } from '~/routing/plans/hooks/usePlanDetailRouteData';
 
-type Chunk = PlanDetailIndexLoaderQuery['planOutputStreamChunks'][number];
+type Chunk = PlanDetailOutputChunksQuery['planOutputStreamChunks'][number];
 
 export interface PlanTabOutputProps {
   chunks: Chunk[];
@@ -22,6 +26,12 @@ export const PlanTabOutput = (
   const { chunks, className: _className } = props;
 
   // Hooks
+  // The boundary gates on the loader's own snapshot promise, while the rendered
+  // chunks come from `chunks` — the live-merged stream. That split is what keeps
+  // the empty state honest: it can only appear once the snapshot has actually
+  // resolved as empty, never as the pending state.
+  const { outputChunks } = usePlanDetailRouteData();
+
   // Rule applications + linked artifacts come from the route loader
   // (same source as the tab shell) rather than being prop-drilled through tabs.
   // const { linkedArtifacts, ruleApplications } = usePlanDetailRouteData();
@@ -43,18 +53,30 @@ export const PlanTabOutput = (
       value="output"
     >
       {/* <Card className="p-4 md:p-8"> */}
-      {chunks.length === 0 ? (
-        <div>
-          <GlobalHeading className="mb-4" title="No plan output chunks yet." />
-          <p className="text-muted-foreground text-sm">
-            Iterations append here when agents call{' '}
-            <code className="text-xs">appendPlanOutput</code> (for example from
-            workflow-ralph or MCP). Local CLI runs log to your terminal instead.
-          </p>
-        </div>
-      ) : (
-        <OutputStream chunks={chunks} />
-      )}
+      <PlanDeferredSection
+        errorText={PLAN_DEFERRED_SECTION_COPY.outputError}
+        fallback={<PlanOutputStreamSkeleton />}
+        resolve={outputChunks}
+      >
+        {() =>
+          chunks.length === 0 ? (
+            <div>
+              <GlobalHeading
+                className="mb-4"
+                title="No plan output chunks yet."
+              />
+              <p className="text-muted-foreground text-sm">
+                Iterations append here when agents call{' '}
+                <code className="text-xs">appendPlanOutput</code> (for example
+                from workflow-ralph or MCP). Local CLI runs log to your terminal
+                instead.
+              </p>
+            </div>
+          ) : (
+            <OutputStream chunks={chunks} />
+          )
+        }
+      </PlanDeferredSection>
       {/* </Card> */}
 
       {/* Agent output — what our agents write, iteration by iteration. */}

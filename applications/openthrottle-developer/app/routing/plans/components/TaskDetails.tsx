@@ -97,6 +97,7 @@ export const TaskDetails = (props: TaskDetailsProps): React.ReactElement => {
                 <dd>
                   <Link
                     className="hover:text-foreground underline"
+                    prefetch="intent"
                     to={`/plans/${planId}`}
                   >
                     View plan

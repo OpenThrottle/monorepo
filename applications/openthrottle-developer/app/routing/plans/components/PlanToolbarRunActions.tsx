@@ -23,7 +23,13 @@ export interface PlanToolbarRunActionsProps {
   readonly isRunning: boolean;
   readonly isTerminal: boolean;
   readonly jobRunHooksJson: string;
-  readonly newestRunIsStale: boolean;
+  /**
+   * `undefined` while the deferred run history is still loading. The Stale badge
+   * is withheld then — "not stale" is a claim we cannot make yet — but Kill still
+   * renders, because an operator mid-run needs it and hiding a control is worse
+   * than briefly offering one that may turn out to be a no-op.
+   */
+  readonly newestRunIsStale: boolean | undefined;
   readonly planId: string;
   readonly planStatus?: string;
   readonly planTitle: string;
@@ -171,7 +177,10 @@ export const PlanToolbarRunActions = (
         </TooltipContent>
       </Tooltip>
 
-      {getPlanIsCancelable(planStatus) && newestRunIsStale ? (
+      {/* Only the Stale badge depends on run history. While it is undefined we
+          render Kill — the normal control — rather than nothing: an operator
+          mid-run needs Kill, and "not stale" is the claim we cannot yet make. */}
+      {getPlanIsCancelable(planStatus) && newestRunIsStale === true ? (
         <Tooltip delayDuration={1_000}>
           <TooltipTrigger asChild={true}>
             <Badge color="amber" size="xs">

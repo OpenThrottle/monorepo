@@ -21,18 +21,26 @@ import {
   type WorkflowRunSeedPlan,
 } from '~/routing/plans/data/atom.plan';
 import { resolveDefaultRunBranch } from '~/routing/plans/utils/plan-run-branch';
+import { PlanRunConfigRepositoriesHydrator } from '~/routing/plans/components/PlanRunConfigRepositoriesHydrator';
 
 export interface PlanRunConfigStoreProviderProps {
   readonly children: React.ReactNode;
   readonly plan: WorkflowRunSeedPlan;
-  /** Workspace repositories used to resolve the seeded default branch. */
-  readonly repositories?: readonly PlanRunConfigRepositoryFieldsFragment[];
+  /**
+   * Workspace repositories used to resolve the run branch, as the loader's
+   * deferred promise. The store is seeded before this resolves, so the branch
+   * starts at the resolver's fallback and is back-filled by
+   * {@link PlanRunConfigRepositoriesHydrator} once the real data lands.
+   */
+  readonly repositories: Promise<
+    readonly PlanRunConfigRepositoryFieldsFragment[]
+  >;
 }
 
 export const PlanRunConfigStoreProvider = (
   props: PlanRunConfigStoreProviderProps,
 ): React.ReactElement => {
-  const { children, plan, repositories = [] } = props;
+  const { children, plan, repositories } = props;
 
   // Hooks
   // Seed a fresh store once per mount (the route keys this component on plan.id,
@@ -49,11 +57,17 @@ export const PlanRunConfigStoreProvider = (
     seeded.set(jobRunHookDraftRowsAtom, seed.jobRunHookRows);
     // The branch is required to enqueue, so seed it here rather than waiting for
     // the Configuration tab's workspace selector to mount and pre-fill it.
+    //
+    // `workspaceRepositories` is deferred, so there are none to consult yet and
+    // this resolves to the resolver's terminal fallback. That is deliberate: the
+    // resolver never yields an empty string, so an enqueue can never fire with a
+    // blank branch, and the hydrator below replaces this with the real answer as
+    // soon as the promise lands — unless the user has typed one first.
     seeded.set(
       workflowBranchAtom,
       resolveDefaultRunBranch({
         checkoutId: seed.checkoutId,
-        repositories,
+        repositories: [],
         repositoryId: seed.repositoryId,
       }),
     );
@@ -70,5 +84,10 @@ export const PlanRunConfigStoreProvider = (
   // Life Cycle
 
   // 🔌 Short Circuit
-  return <Provider store={store}>{children}</Provider>;
+  return (
+    <Provider store={store}>
+      <PlanRunConfigRepositoriesHydrator repositories={repositories} />
+      {children}
+    </Provider>
+  );
 };

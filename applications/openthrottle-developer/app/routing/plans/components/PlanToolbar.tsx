@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { Link } from 'react-router';
 import { OpenThrottleToolbar } from '~/routing/plans/components/OpenThrottleToolbar';
-import { PlanEditorActions } from '~/routing/plans/components/PlanEditorActions';
-import { PlanTagChips } from '~/routing/plans/components/PlanTagChips';
+import { PlanToolbarEditorLinks } from '~/routing/plans/components/PlanToolbarEditorLinks';
+import { PlanToolbarTags } from '~/routing/plans/components/PlanToolbarTags';
 import type {
   PlanTagChipData,
   PlanTagVocabularyOption,
@@ -29,8 +29,12 @@ export interface PlanToolbarProps {
    * the user configured): this one may fall back to the selected checkout.
    */
   editorWorkingDirectory?: string;
-  /** @description Editors enabled in workspace settings; empty renders none. */
-  editors?: readonly WorkspaceEditorId[];
+  /**
+   * @description Editors enabled in workspace settings, as the loader's deferred
+   * promise; empty renders none. Deep links are a convenience, so they get their
+   * own boundary rather than holding up the toolbar's Run/Queue controls.
+   */
+  editors?: Promise<readonly WorkspaceEditorId[]>;
   /**
    * @description JSON `{ hooks: [...] }` for enqueuePlanRun; empty when no hooks or invalid.
    */
@@ -40,7 +44,11 @@ export interface PlanToolbarProps {
    * heartbeat went quiet past the cutoff. When true the Kill control is replaced by a 'Stale'
    * badge: the run is already dead, so Kill cannot work; a sweeper will settle it.
    */
-  newestRunIsStale?: boolean;
+  /**
+   * `undefined` means the deferred run history has not resolved yet: render no
+   * badge at all rather than asserting "not stale", which we cannot yet know.
+   */
+  newestRunIsStale?: boolean | undefined;
   /**
    * @description Add a plan tag. When provided alongside {@link onRemoveTag},
    * {@link tags}, and {@link tagVocabulary}, the toolbar renders the tag chips.
@@ -64,13 +72,9 @@ export interface PlanToolbarProps {
    * @description Optional registered repository id, submitted to the enqueuePlanRun mutation.
    */
   repositoryId?: string;
-  /**
-   * @description Available tag vocabulary for the add-tag dropdown. See {@link onAddTag}.
-   */
-  tagVocabulary?: PlanTagVocabularyOption[];
-  /**
-   * @description Applied plan tags rendered as chips. See {@link onAddTag}.
-   */
+  /** @description Tag vocabulary for the add-tag dropdown. See {@link onAddTag}. */
+  tagVocabulary?: Promise<PlanTagVocabularyOption[]>;
+  /** @description Applied plan tags rendered as chips. See {@link onAddTag}. */
   tags?: PlanTagChipData[];
   /**
    * @description Whether a tag add/remove is in flight (disables tag controls).
@@ -102,8 +106,8 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
     branch,
     className,
     editorWorkingDirectory = '',
-    editors = [],
-    newestRunIsStale = false,
+    editors,
+    newestRunIsStale,
     onAddTag,
     onRemoveTag,
     planId,
@@ -147,7 +151,7 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
       className={className}
       dataTestId="PlanToolbar"
       editorActions={
-        <PlanEditorActions
+        <PlanToolbarEditorLinks
           editors={editors}
           planId={planId}
           workingDirectory={editorWorkingDirectory}
@@ -182,18 +186,13 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
         />
       }
       tags={
-        onAddTag != null &&
-        onRemoveTag != null &&
-        tags != null &&
-        tagVocabulary != null ? (
-          <PlanTagChips
-            onAddTag={onAddTag}
-            onRemoveTag={onRemoveTag}
-            pending={tagsPending}
-            tags={tags}
-            vocabulary={tagVocabulary}
-          />
-        ) : null
+        <PlanToolbarTags
+          onAddTag={onAddTag}
+          onRemoveTag={onRemoveTag}
+          pending={tagsPending}
+          tags={tags}
+          vocabulary={tagVocabulary}
+        />
       }
       utilityContent={
         <Link

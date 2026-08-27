@@ -3,9 +3,12 @@ import { Tabs, TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { describe, expect, test, vi } from 'vitest';
 import { PlanTabDetails } from '../PlanTabDetails';
 import type { PlanTabDetailsProps } from '../PlanTabDetails';
-import { renderWithPlanDetailRouteData } from '~/routing/plans/testing/plan-detail-route-data';
+import {
+  buildPlanDetailLoaderData,
+  renderWithPlanDetailRouteData,
+} from '~/routing/plans/testing/plan-detail-route-data';
 import type {
-  PlanDetailIndexLoaderQuery,
+  PlanDetailRunHistoryQuery,
   PlanDetailsFragment,
 } from '~/__generated__/graphql';
 
@@ -34,10 +37,10 @@ const mockPlan: PlanDetailsFragment = {
   updatedAt: '2025-01-02T00:00:00Z',
 };
 
-const defaultRecent: PlanDetailIndexLoaderQuery['metrics']['recentPlanRunsMetrics'] =
+const defaultRecent: PlanDetailRunHistoryQuery['metrics']['recentPlanRunsMetrics'] =
   [];
 
-const defaultPlanRunAuditRows: PlanDetailIndexLoaderQuery['planRunsByPlanId'] =
+const defaultPlanRunAuditRows: PlanDetailRunHistoryQuery['planRunsByPlanId'] =
   [];
 
 describe('PlanTabDetails Component', () => {
@@ -54,13 +57,14 @@ describe('PlanTabDetails Component', () => {
           <PlanTabDetails {...props} />
         </Tabs>
       </TooltipProvider>,
-      {
+      buildPlanDetailLoaderData({
         plan: mockPlan,
-        planOutputChunks: [],
-        planRunAuditRows: defaultPlanRunAuditRows,
-        recentPlanRuns: defaultRecent,
+        runHistory: Promise.resolve({
+          planRunAuditRows: defaultPlanRunAuditRows,
+          recentPlanRuns: defaultRecent,
+        }),
         tasks: [],
-      },
+      }),
     );
 
     // Disabled w/ default feature flag

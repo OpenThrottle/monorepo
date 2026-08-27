@@ -4,7 +4,10 @@ import userEvent from '@testing-library/user-event';
 import { getPublicEnv } from '@openthrottle/react-router-utils';
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { describe, expect, test } from 'vitest';
-import { renderWithPlanDetailRouteData } from '~/routing/plans/testing/plan-detail-route-data';
+import {
+  buildPlanDetailLoaderData,
+  renderWithPlanDetailRouteData,
+} from '~/routing/plans/testing/plan-detail-route-data';
 import PlanDetail from '../plans.$planId._index';
 import type { Route } from '@/app/routes/+types/plans.$planId._index';
 
@@ -99,18 +102,10 @@ const mockPlan = {
 describe('routes/plans.$planId._index run config hydration', () => {
   test('hydrates Configuration tab from plan.runConfigJson', async () => {
     const user = userEvent.setup();
-    const loaderData = {
-      enabledEditors: [],
-      linkedArtifacts: [],
+    const loaderData = buildPlanDetailLoaderData({
       plan: mockPlan,
-      planOutputChunks: [],
-      planRunAuditRows: [],
-      recentPlanRuns: [],
-      ruleApplications: [],
-      tagVocabulary: [],
       tasks: [],
-      workspaceRepositories: [],
-    };
+    });
     renderWithPlanDetailRouteData(
       <TooltipProvider>
         <PlanDetail
