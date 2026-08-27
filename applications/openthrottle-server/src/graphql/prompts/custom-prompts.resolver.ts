@@ -1,14 +1,35 @@
 /**
- * @description Resolver for CustomPrompt queries and mutations. Includes file system persistence capability.
+ * @description Resolver for CustomPrompt queries and mutations, including the
+ * opt-in filesystem persistence of a prompt's content to its `filePath`.
+ *
+ * Security posture: `filePath` is client-supplied, so writing it is treated as
+ * privileged. Every write goes through {@link resolveCustomPromptWritePath}
+ * (workspace-relative, no `..`, realpath-contained under the workspace root,
+ * and never a SKILL.md) AND requires the SETTINGS_WRITE permission. The
+ * permission and the path policy are both checked BEFORE the row is saved, so a
+ * refused write never leaves a half-applied mutation or creates a directory.
+ * DB-only create/update (the default, `writeToFileSystem: false`) is unchanged
+ * and stays authenticated-only.
  */
 
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
+import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import type { CustomPrompt } from '@openthrottle/nestjs-repositories';
-import { CustomPromptsService } from '@openthrottle/nestjs-repositories';
+import {
+  CustomPromptsService,
+  RolesService,
+} from '@openthrottle/nestjs-repositories';
 import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { ConfigService } from '@nestjs/config';
+import {
+  AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
+  type AuthPrincipal,
+  CurrentUser,
+} from '@openthrottle/nestjs-auth';
+import { PERMISSIONS } from '@openthrottle/nestjs-rbac';
 import { IsNull } from 'typeorm';
+import { resolveCustomPromptWritePath } from './custom-prompt-write-path';
 import {
   CreateCustomPromptInput,
   ListCustomPromptsInput,
@@ -17,11 +38,15 @@ import {
 import { CustomPromptObject } from './custom-prompt.object';
 
 // @authz-stance: authenticated-only (Path A — see OT plan 18e16dfc-4f22-43f9-9b77-6fc90309b60a)
+// for the queries and DB-only mutations; any filesystem write additionally
+// requires SETTINGS_WRITE, checked in-body because only the opt-in write branch
+// is privileged.
 @Resolver(() => CustomPromptObject)
 export class CustomPromptsResolver {
   constructor(
     private readonly configService: ConfigService,
     private readonly customPromptsService: CustomPromptsService,
+    private readonly rolesService: RolesService,
   ) {}
 
   @Query(() => CustomPromptObject, {
@@ -83,10 +108,17 @@ export class CustomPromptsResolver {
     description: 'Create a new custom prompt',
   })
   async createCustomPrompt(
+    @CurrentUser() principal: AuthPrincipal | undefined,
     @Args('input', { type: () => CreateCustomPromptInput })
     input: CreateCustomPromptInput,
   ): Promise<CustomPrompt> {
     const repo = this.customPromptsService.getRepository();
+
+    // Gate BEFORE the save so a refused write never persists a row.
+    const writeTarget =
+      input.writeToFileSystem && input.filePath
+        ? await this.resolveWriteTarget(principal, input.filePath)
+        : null;
 
     const entity = repo.create({
       content: input.content,
@@ -101,8 +133,8 @@ export class CustomPromptsResolver {
 
     const saved = await repo.save(entity);
 
-    if (input.writeToFileSystem && input.filePath) {
-      await this.writeToFileSystem(input.filePath, input.content);
+    if (writeTarget != null) {
+      await this.writeToFileSystem(writeTarget, input.content);
     }
 
     return saved;
@@ -113,6 +145,7 @@ export class CustomPromptsResolver {
     nullable: true,
   })
   async updateCustomPrompt(
+    @CurrentUser() principal: AuthPrincipal | undefined,
     @Args('input', { type: () => UpdateCustomPromptInput })
     input: UpdateCustomPromptInput,
   ): Promise<CustomPrompt | null> {
@@ -122,6 +155,13 @@ export class CustomPromptsResolver {
     });
 
     if (!entity) return null;
+
+    // Gate BEFORE the save so a refused write never persists the edit.
+    const filePathToWrite = input.filePath ?? entity.filePath;
+    const writeTarget =
+      input.writeToFileSystem && filePathToWrite
+        ? await this.resolveWriteTarget(principal, filePathToWrite)
+        : null;
 
     if (input.title != null) entity.title = input.title;
     if (input.content != null) entity.content = input.content;
@@ -134,11 +174,11 @@ export class CustomPromptsResolver {
 
     const saved = await repo.save(entity);
 
-    const filePathToWrite = input.filePath ?? entity.filePath;
-    const contentToWrite = input.content ?? entity.content;
-
-    if (input.writeToFileSystem && filePathToWrite) {
-      await this.writeToFileSystem(filePathToWrite, contentToWrite);
+    if (writeTarget != null) {
+      await this.writeToFileSystem(
+        writeTarget,
+        input.content ?? entity.content,
+      );
     }
 
     return saved;
@@ -198,6 +238,7 @@ export class CustomPromptsResolver {
       'Write a custom prompt to the file system at its configured filePath',
   })
   async writeCustomPromptToFileSystem(
+    @CurrentUser() principal: AuthPrincipal | undefined,
     @Args('id', { type: () => ID }) id: string,
   ): Promise<boolean> {
     const repo = this.customPromptsService.getRepository();
@@ -207,25 +248,63 @@ export class CustomPromptsResolver {
 
     if (!entity || !entity.filePath) return false;
 
-    await this.writeToFileSystem(entity.filePath, entity.content);
+    const writeTarget = await this.resolveWriteTarget(
+      principal,
+      entity.filePath,
+    );
+    await this.writeToFileSystem(writeTarget, entity.content);
 
     return true;
   }
 
   /**
-   * @description Write content to file system at the specified path relative to workspace root.
+   * @description Authorizes a filesystem write and resolves the client-supplied
+   * `filePath` to a vetted absolute path. Throws `ForbiddenException` without
+   * SETTINGS_WRITE and `BadRequestException` when the path policy refuses.
+   * Nothing touches disk here.
    */
-  private async writeToFileSystem(
+  private async resolveWriteTarget(
+    principal: AuthPrincipal | undefined,
     filePath: string,
-    content: string,
-  ): Promise<void> {
+  ): Promise<string> {
+    if (principal == null) {
+      throw new ForbiddenException(
+        'An authenticated user is required to write a prompt to the file system.',
+      );
+    }
+
+    const permissions =
+      principal.kind === AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT
+        ? await this.rolesService.getPermissionsForServiceAccount(principal.sub)
+        : await this.rolesService.getPermissionsForUser(principal.sub);
+
+    if (!permissions.includes(PERMISSIONS.SETTINGS_WRITE)) {
+      throw new ForbiddenException(
+        `Missing permission: ${PERMISSIONS.SETTINGS_WRITE}. Writing a prompt to the file system requires it.`,
+      );
+    }
+
     const workspaceRoot =
       this.configService.get<string>('WORKSPACE_ROOT') || process.cwd();
-    const absolutePath = path.resolve(workspaceRoot, filePath);
+    const resolved = resolveCustomPromptWritePath(workspaceRoot, filePath);
 
-    const dir = path.dirname(absolutePath);
-    await fs.mkdir(dir, { recursive: true });
+    if (!resolved.ok) {
+      throw new BadRequestException(resolved.reason);
+    }
 
+    return resolved.absolutePath;
+  }
+
+  /**
+   * @description Writes content to an ALREADY vetted absolute path — callers
+   * must pass the output of {@link resolveWriteTarget}, never a raw client
+   * `filePath`, so the containment guard can never be skipped.
+   */
+  private async writeToFileSystem(
+    absolutePath: string,
+    content: string,
+  ): Promise<void> {
+    await fs.mkdir(path.dirname(absolutePath), { recursive: true });
     await fs.writeFile(absolutePath, content, 'utf-8');
   }
 }

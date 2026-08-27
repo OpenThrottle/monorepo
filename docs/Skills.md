@@ -39,6 +39,13 @@ bash skills/ot-skill-sync/scripts/sync.sh --check
    bash skills/ot-skill-sync/scripts/sync.sh                         # then always sync
    ```
 
+   The app enforces this, it is not just convention: `/skills/:slug` disables
+   Edit for an `external` skill and `writeSkillFileBySlug` refuses the write
+   server-side, while record-level tags and availability rules stay editable
+   because they are database rows rather than SKILL.md content. See
+   [repo-skills-discovery-design.md](../applications/openthrottle-developer/docs/repo-skills-discovery-design.md)
+   § "External skills are read-only".
+
 2. **Need OpenThrottle-specific customization?** Do **not** edit the vendored skill. Author a **separate OT-owned skill or rule in `skills/`** that references/connects to the vendored one.
    - **Exemplar:** the vendored `frontend-design` skill stays pristine; OT's stack is layered via the companion rule [`.agents/rules/coding/frontend-design-openthrottle.mdc`](../.agents/rules/coding/frontend-design-openthrottle.mdc).
 
