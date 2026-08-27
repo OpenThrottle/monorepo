@@ -42,7 +42,10 @@ export const loader = async (args: Route.LoaderArgs) => {
   const { getMonorepoRoot } =
     await import('~/routing/agents/data/resolve-monorepo-root.server');
 
-  const linkableSkillSlugs = discoverRepoSkills(getMonorepoRoot()).map(
+  // Slugs actually present in this checkout. Leaderboard rows are classified
+  // against this set: it decides both which rows link through to a detail page
+  // and which ones are only history (mirrors /skills).
+  const presentSkillSlugs = discoverRepoSkills(getMonorepoRoot()).map(
     (entry) => entry.slug,
   );
 
@@ -106,7 +109,7 @@ export const loader = async (args: Route.LoaderArgs) => {
     branchOptions: branchResult.skillUsageGitBranches.items,
     branchesHaveMore: branchResult.skillUsageGitBranches.hasMore,
     dailyStats,
-    linkableSkillSlugs,
+    presentSkillSlugs,
     rangeDays: 30,
     rangeEndDate: endDate,
     rangeEndIso: endIso,
@@ -138,7 +141,7 @@ export default function Component(
     branchOptions,
     branchesHaveMore,
     dailyStats,
-    linkableSkillSlugs,
+    presentSkillSlugs,
     rangeDays,
     rangeEndDate,
     rangeEndIso,
@@ -186,7 +189,7 @@ export default function Component(
         bySkill={skillUsage.bySkill}
         end={rangeEndDate}
         filterOptions={skillUsage.filterOptions}
-        linkableSlugs={linkableSkillSlugs}
+        presentSlugs={presentSkillSlugs}
         providerParam={selectedProvider}
         rangeDays={rangeDays}
         selectedCwd={selectedSkillCwd}

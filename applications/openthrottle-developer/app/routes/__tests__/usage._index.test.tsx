@@ -142,7 +142,7 @@ describe('routes/usage._index.tsx', () => {
       );
       expect(result.branchesHaveMore).toBe(true);
       // Disk-discovered slugs the leaderboard may link through to /skills/$slug.
-      expect(Array.isArray(result.linkableSkillSlugs)).toBe(true);
+      expect(Array.isArray(result.presentSkillSlugs)).toBe(true);
 
       // Token usage is queried on YYYY-MM-DD with no provider filter.
       expect(mockExecuteGraphqlWithAuth).toHaveBeenNthCalledWith(

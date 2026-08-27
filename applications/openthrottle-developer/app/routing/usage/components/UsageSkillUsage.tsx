@@ -5,6 +5,7 @@ import { SkillUsageDailyChart } from '~/global/components/SkillUsageDailyChart';
 import { SkillUsageLeaderboard } from '~/routing/usage/components/SkillUsageLeaderboard';
 import { UsageSkillUsageFilters } from '~/routing/usage/components/UsageSkillUsageFilters';
 import { UsageSkillUsageSummary } from '~/routing/usage/components/UsageSkillUsageSummary';
+import { partitionSkillUsageByPresence } from '~/routing/usage/utils/partition-skill-usage-by-presence';
 import {
   SKILL_USAGE_COPY,
   type SkillUsageScopeFilter,
@@ -30,11 +31,11 @@ export interface UsageSkillUsageProps {
   end: string;
   filterOptions: UsageSkillUsageFilterOptionsFragment;
   /**
-   * Skill names that resolve to an on-disk `/skills/$slug` detail page. A row is
-   * rendered as a link only when its `skillName` is in this set — third-party /
-   * plugin-namespaced ids with no on-disk skill stay plain text (no 404 links).
+   * Slugs discovered on disk by the loader. Rows are classified against this
+   * set, which decides both whether a row links through to its detail page and
+   * which table it lands in.
    */
-  linkableSlugs: readonly string[];
+  presentSlugs: readonly string[];
   /** Current `?provider=` (token usage); preserved when skill filters change. */
   providerParam: string | null;
   rangeDays: number;
@@ -58,7 +59,7 @@ export const UsageSkillUsage = (
     className,
     end,
     filterOptions,
-    linkableSlugs,
+    presentSlugs,
     providerParam,
     rangeDays,
     selectedCwd,
@@ -71,12 +72,16 @@ export const UsageSkillUsage = (
   // Hooks
 
   // Setup
-  const linkableSlugSet = React.useMemo(
-    () => new Set(linkableSlugs),
-    [linkableSlugs],
+  const partitioned = React.useMemo(
+    () => partitionSkillUsageByPresence(bySkill, new Set(presentSlugs)),
+    [bySkill, presentSlugs],
   );
   const hasFilters =
     selectedScope != null || selectedGitBranch != null || selectedCwd != null;
+  // Keyed off the ranked bucket, not the raw row count: a scope/branch/cwd
+  // filter can legitimately narrow the window down to nothing but missing rows,
+  // and that must still explain itself rather than leave a bare heading over an
+  // empty table.
   const emptyMessage = hasFilters
     ? SKILL_USAGE_COPY.emptyFiltered
     : SKILL_USAGE_COPY.empty;
@@ -126,7 +131,7 @@ export const UsageSkillUsage = (
         heading="h3"
         title={SKILL_USAGE_COPY.leaderboardHeading}
       />
-      {bySkill.length === 0 ? (
+      {partitioned.active.length === 0 ? (
         <p
           className="text-muted-foreground text-sm"
           data-testid="UsageSkillUsageEmpty"
@@ -134,11 +139,22 @@ export const UsageSkillUsage = (
           {emptyMessage}
         </p>
       ) : (
-        <SkillUsageLeaderboard
-          bySkill={bySkill}
-          linkableSlugs={linkableSlugSet}
-        />
+        <SkillUsageLeaderboard bySkill={partitioned.active} />
       )}
+
+      {partitioned.missing.length > 0 ? (
+        <div className="mt-8" data-testid="UsageSkillUsageMissing">
+          <GlobalHeading
+            className="text-muted-foreground mb-2"
+            heading="h3"
+            title={SKILL_USAGE_COPY.missingHeading}
+          />
+          <p className="text-muted-foreground mb-3 text-sm">
+            {SKILL_USAGE_COPY.missingIntro}
+          </p>
+          <SkillUsageLeaderboard bySkill={partitioned.missing} />
+        </div>
+      ) : null}
     </div>
   );
 };

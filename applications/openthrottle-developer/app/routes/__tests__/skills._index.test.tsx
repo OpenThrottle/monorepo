@@ -40,7 +40,7 @@ const buildLoaderData = (
   loaderEntries: RepoSkillEntry[] = entries,
 ): Route.ComponentProps['loaderData'] => ({
   entries: loaderEntries,
-  linkableSlugs: loaderEntries.map((entry) => entry.slug),
+  presentSlugs: loaderEntries.map((entry) => entry.slug),
   tagVocabulary: [],
   usage: Promise.resolve(usage),
 });

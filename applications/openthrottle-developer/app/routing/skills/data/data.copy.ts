@@ -144,7 +144,7 @@ export const SKILL_USAGE_DETAIL_COPY = {
  */
 export const SKILLS_INDEX_USAGE_COPY = {
   intro: (rangeDays: number): string =>
-    `Harness-captured Skill invocations across all skills over the last ${rangeDays} days. Full analytics and filters live on the Usage route.`,
+    `Harness-captured Skill invocations across all skills over the last ${rangeDays} days, ranking only skills still present in this checkout. Full analytics and filters live on the Usage route.`,
   sectionHeading: `Skill usage`,
   unavailableNotice: `Usage stats couldn't be loaded — this view needs the settings:read permission, or the server was unreachable. The skills list above is unaffected.`,
 } as const;

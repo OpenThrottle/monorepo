@@ -11,44 +11,51 @@ import {
   TableRow,
 } from '@openthrottle/react-router-shadcn';
 import {
+  SKILL_PRESENCE_BADGED,
+  SKILL_PRESENCE_LABELS,
+  SKILL_PRESENCE_LINKABLE,
+  SKILL_PRESENCE_TOOLTIPS,
+} from '~/routing/usage/data/skill-presence';
+import {
   SKILL_USAGE_COPY,
   SKILL_USAGE_SCOPES,
   skillUsageAvgDurationLabel,
   skillUsageOutcomesLabel,
   skillUsageScopeLabel,
 } from '~/routing/usage/data/skill-usage-copy';
-import type { UsageSkillUsageBySkillFragment } from '~/__generated__/graphql';
+import type { SkillUsageRowWithPresence } from '~/routing/usage/utils/partition-skill-usage-by-presence';
 
 export interface SkillUsageLeaderboardProps {
-  bySkill: readonly UsageSkillUsageBySkillFragment[];
-  className?: string;
   /**
-   * Skill names that resolve to an on-disk `/skills/$slug` detail page. A row is
-   * rendered as a link only when its `skillName` is linkable — third-party /
-   * plugin-namespaced ids with no on-disk skill stay plain text (no 404 links).
+   * Rows to render, each carrying its resolved presence. The caller owns
+   * partitioning (see `partitionSkillUsageByPresence`) and hands this table
+   * exactly the rows it wants in this table — nothing is filtered here.
    */
-  linkableSlugs: ReadonlySet<string> | readonly string[];
+  bySkill: readonly SkillUsageRowWithPresence[];
+  className?: string;
 }
 
 /**
  * @description Shared "Top skills" leaderboard table (Skill / Scope /
  * Invocations / Outcomes / Avg duration). Extracted from `UsageSkillUsage` so
  * both `/usage` and the `/skills` index render the identical table. Callers own
- * the surrounding heading and the empty-state message.
+ * the surrounding heading, the empty-state message, and the partitioning — this
+ * table renders exactly the rows it is given, in the order it is given them.
+ *
+ * A row links to its `/skills/$slug` detail page only when its presence is
+ * linkable, so third-party ids and skills that have left the checkout never
+ * produce a 404 link. Presence and scope are different axes: the Scope badge
+ * column stays, and a presence badge is added alongside the name only for the
+ * states worth calling out.
  */
 export const SkillUsageLeaderboard = (
   props: SkillUsageLeaderboardProps,
 ): React.ReactElement => {
-  const { bySkill, className, linkableSlugs } = props;
+  const { bySkill, className } = props;
 
   // Hooks
 
   // Setup
-  const linkableSlugSet = React.useMemo(
-    () =>
-      linkableSlugs instanceof Set ? linkableSlugs : new Set(linkableSlugs),
-    [linkableSlugs],
-  );
 
   // Handlers
 
@@ -81,16 +88,28 @@ export const SkillUsageLeaderboard = (
           {bySkill.map((row) => (
             <TableRow key={`${row.skillName}:${row.scope}`}>
               <TableCell className="font-medium">
-                {linkableSlugSet.has(row.skillName) ? (
-                  <Link
-                    className="hover:underline"
-                    to={`/skills/${encodeURIComponent(row.skillName)}`}
-                  >
-                    {row.skillName}
-                  </Link>
-                ) : (
-                  row.skillName
-                )}
+                <span className="flex flex-wrap items-center gap-2">
+                  {SKILL_PRESENCE_LINKABLE[row.presence] ? (
+                    <Link
+                      className="hover:underline"
+                      to={`/skills/${encodeURIComponent(row.skillName)}`}
+                    >
+                      {row.skillName}
+                    </Link>
+                  ) : (
+                    <span>{row.skillName}</span>
+                  )}
+                  {SKILL_PRESENCE_BADGED[row.presence] ? (
+                    <Badge
+                      color="yellow"
+                      data-testid="skill-presence-badge"
+                      size="xs"
+                      title={SKILL_PRESENCE_TOOLTIPS[row.presence]}
+                    >
+                      {SKILL_PRESENCE_LABELS[row.presence]}
+                    </Badge>
+                  ) : null}
+                </span>
               </TableCell>
               <TableCell>
                 <Badge
