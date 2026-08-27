@@ -72,6 +72,7 @@ describe('buildStartConversationStreamInput', () => {
       personaId: null,
       reasoning: null,
       repositoryId: 'repo-1',
+      repositoryIds: null,
       serviceTier: null,
     });
   });
@@ -91,5 +92,37 @@ describe('buildStartConversationStreamInput', () => {
         formOf({ fileMentions: JSON.stringify(['a.ts', 'b.ts']) }),
       ).fileMentions,
     ).toEqual(['a.ts', 'b.ts']);
+  });
+
+  it('decodes repositoryIds primary-first, preserving order', () => {
+    expect(
+      buildStartConversationStreamInput(
+        formOf({ repositoryIds: JSON.stringify(['repo-b', 'repo-a']) }),
+      ).repositoryIds,
+    ).toEqual(['repo-b', 'repo-a']);
+  });
+
+  it('nulls a malformed repositoryIds rather than throwing', () => {
+    expect(
+      buildStartConversationStreamInput(formOf({ repositoryIds: '{not json' }))
+        .repositoryIds,
+    ).toBeNull();
+  });
+
+  it('nulls an empty repositoryIds array', () => {
+    expect(
+      buildStartConversationStreamInput(
+        formOf({ repositoryIds: JSON.stringify([]) }),
+      ).repositoryIds,
+    ).toBeNull();
+  });
+
+  it('still carries a legacy single repositoryId for an in-flight client', () => {
+    const input = buildStartConversationStreamInput(
+      formOf({ repositoryId: 'repo-legacy' }),
+    );
+
+    expect(input.repositoryId).toBe('repo-legacy');
+    expect(input.repositoryIds).toBeNull();
   });
 });

@@ -102,4 +102,46 @@ describe('buildAntigravityArgv', () => {
       '--model',
     );
   });
+  it('emits the cwd --add-dir first, then one repeated --add-dir per extra directory', () => {
+    const argv = buildAntigravityArgv({
+      additionalDirectories: ['/abs/second', '/abs/third'],
+      cwd: '/abs/primary',
+      prompt: 'p',
+    });
+
+    const dirs = argv.reduce<string[]>(
+      (paths, entry, index) =>
+        entry === '--add-dir' ? [...paths, argv[index + 1]] : paths,
+      [],
+    );
+
+    // Order is load-bearing: the workspace dir comes first.
+    expect(dirs).toEqual(['/abs/primary', '/abs/second', '/abs/third']);
+  });
+
+  it('drops blank additional directories rather than emitting an empty flag value', () => {
+    const argv = buildAntigravityArgv({
+      additionalDirectories: ['  ', '/abs/real'],
+      cwd: '/abs/primary',
+      prompt: 'p',
+    });
+
+    expect(argv.filter((entry) => entry === '--add-dir')).toHaveLength(2);
+    expect(argv).toContain('/abs/real');
+  });
+
+  it('emits no extra --add-dir when the list is absent or empty', () => {
+    expect(
+      buildAntigravityArgv({ cwd: '/abs/primary', prompt: 'p' }).filter(
+        (entry) => entry === '--add-dir',
+      ),
+    ).toHaveLength(1);
+    expect(
+      buildAntigravityArgv({
+        additionalDirectories: [],
+        cwd: '/abs/primary',
+        prompt: 'p',
+      }).filter((entry) => entry === '--add-dir'),
+    ).toHaveLength(1);
+  });
 });

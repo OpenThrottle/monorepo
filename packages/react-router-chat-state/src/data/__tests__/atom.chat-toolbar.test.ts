@@ -31,7 +31,7 @@ describe('chat toolbar constants', () => {
       persist: true,
       personaId: undefined,
       reasoning: undefined,
-      repositoryId: undefined,
+      repositoryIds: [],
       serviceTier: undefined,
       version: CHAT_TOOLBAR_STATE_VERSION,
     });
@@ -80,7 +80,7 @@ describe('normalizeChatToolbarState', () => {
         persist: false,
         personaId: 'persona-42',
         reasoning: ChatReasoningLevel.high,
-        repositoryId: 'repo-7',
+        repositoryIds: ['repo-7', 'repo-8'],
         serviceTier: ChatServiceTier.fast,
         version: CHAT_TOOLBAR_STATE_VERSION,
       };
@@ -103,9 +103,11 @@ describe('normalizeChatToolbarState', () => {
         version: 2,
       };
 
+      const { repositoryId, ...rest } = v2Blob;
       expect(normalizeChatToolbarState(v2Blob)).toEqual({
-        ...v2Blob,
+        ...rest,
         persist: true,
+        repositoryIds: [repositoryId],
         version: CHAT_TOOLBAR_STATE_VERSION,
       });
     });
@@ -117,8 +119,8 @@ describe('normalizeChatToolbarState', () => {
     });
   });
 
-  describe('v1 → v3 migration', () => {
-    test('migrates a fully-populated v1 blob forward, seeding perBackend + persist and preserving globals', () => {
+  describe('v1 → v4 migration', () => {
+    test('migrates a fully-populated v1 blob forward, seeding perBackend + persist and widening the repository', () => {
       const v1Blob = {
         mode: ChatComposerMode.build,
         modelId: 'http://localhost:11434/v1::llama3',
@@ -130,12 +132,80 @@ describe('normalizeChatToolbarState', () => {
         version: 1,
       };
 
+      const { repositoryId, ...rest } = v1Blob;
       expect(normalizeChatToolbarState(v1Blob)).toEqual({
-        ...v1Blob,
+        ...rest,
         perBackend: {},
         persist: true,
+        repositoryIds: [repositoryId],
         version: CHAT_TOOLBAR_STATE_VERSION,
       });
+    });
+  });
+
+  describe('v3 → v4 migration (repositoryId → repositoryIds)', () => {
+    test('widens a v3 single repositoryId into a one-element array', () => {
+      expect(
+        normalizeChatToolbarState({ repositoryId: 'repo-7', version: 3 })
+          .repositoryIds,
+      ).toEqual(['repo-7']);
+    });
+
+    test('yields an empty array for a v3 blob with no repository chosen', () => {
+      expect(normalizeChatToolbarState({ version: 3 }).repositoryIds).toEqual(
+        [],
+      );
+    });
+
+    test('does not wipe the rest of a v3 blob', () => {
+      expect(
+        normalizeChatToolbarState({
+          modelId: 'claude',
+          persist: false,
+          repositoryId: 'repo-7',
+          version: 3,
+        }),
+      ).toEqual({
+        ...DEFAULT_CHAT_TOOLBAR_STATE,
+        modelId: 'claude',
+        persist: false,
+        repositoryIds: ['repo-7'],
+      });
+    });
+
+    test('drops an empty-string legacy repositoryId', () => {
+      expect(
+        normalizeChatToolbarState({ repositoryId: '', version: 3 })
+          .repositoryIds,
+      ).toEqual([]);
+    });
+
+    test('drops non-string and empty entries from an array, preserving order', () => {
+      expect(
+        normalizeChatToolbarState({
+          repositoryIds: ['repo-b', 42, '', 'repo-a', null],
+          version: CHAT_TOOLBAR_STATE_VERSION,
+        }).repositoryIds,
+      ).toEqual(['repo-b', 'repo-a']);
+    });
+
+    test('drops a non-array repositoryIds to empty', () => {
+      expect(
+        normalizeChatToolbarState({
+          repositoryIds: 'repo-a',
+          version: CHAT_TOOLBAR_STATE_VERSION,
+        }).repositoryIds,
+      ).toEqual([]);
+    });
+
+    test('prefers repositoryIds over a stale sibling repositoryId', () => {
+      expect(
+        normalizeChatToolbarState({
+          repositoryId: 'stale',
+          repositoryIds: ['repo-a'],
+          version: CHAT_TOOLBAR_STATE_VERSION,
+        }).repositoryIds,
+      ).toEqual(['repo-a']);
     });
   });
 
@@ -152,10 +222,12 @@ describe('normalizeChatToolbarState', () => {
         // no version field
       };
 
+      const { repositoryId, ...rest } = legacy;
       expect(normalizeChatToolbarState(legacy)).toEqual({
-        ...legacy,
+        ...rest,
         perBackend: {},
         persist: true,
+        repositoryIds: [repositoryId],
         version: CHAT_TOOLBAR_STATE_VERSION,
       });
     });
@@ -176,7 +248,7 @@ describe('normalizeChatToolbarState', () => {
         normalizeChatToolbarState({
           mode: ChatComposerMode.build,
           modelId: 'cursor',
-          version: 4,
+          version: 99,
         }),
       ).toEqual(DEFAULT_CHAT_TOOLBAR_STATE);
     });
@@ -342,16 +414,19 @@ describe('chatToolbarStateAtom localStorage', () => {
     store.set(chatToolbarStateAtom, {
       ...DEFAULT_CHAT_TOOLBAR_STATE,
       mode: ChatComposerMode.build,
-      repositoryId: 'repo-7',
+      repositoryIds: ['repo-7'],
     });
 
     const raw = localStorage.getItem(CHAT_TOOLBAR_STORAGE_KEY);
     expect(raw).not.toBeNull();
 
-    const parsed: { mode: string; repositoryId: string; version: number } =
-      JSON.parse(raw ?? '{}');
+    const parsed: {
+      mode: string;
+      repositoryIds: string[];
+      version: number;
+    } = JSON.parse(raw ?? '{}');
     expect(parsed.mode).toBe(ChatComposerMode.build);
-    expect(parsed.repositoryId).toBe('repo-7');
+    expect(parsed.repositoryIds).toEqual(['repo-7']);
     expect(parsed.version).toBe(CHAT_TOOLBAR_STATE_VERSION);
   });
 });

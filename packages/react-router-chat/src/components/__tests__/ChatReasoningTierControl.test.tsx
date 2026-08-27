@@ -9,6 +9,7 @@ import { ChatReasoningLevel, ChatServiceTier } from '../../types';
 import type { ChatBackendCapabilities } from '../../types';
 
 const FULL_CAPS: ChatBackendCapabilities = {
+  maxRepositories: 1,
   permissionModes: [],
   reasoningLevels: [
     ChatReasoningLevel.low,

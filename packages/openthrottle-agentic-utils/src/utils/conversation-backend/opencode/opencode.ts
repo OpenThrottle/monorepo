@@ -24,6 +24,7 @@ import {
   type ConversationBackendRun,
   type ConversationStreamChunk,
 } from '../types.ts';
+import { warnUnsupportedAdditionalDirectories } from '../additional-directories.ts';
 import {
   OPENCODE_BIN_ENV,
   OPENCODE_DEFAULT_BIN,
@@ -113,6 +114,8 @@ async function* streamOpencode(
   if (run.cwd === undefined || run.cwd === '') {
     throw new Error('The opencode backend requires a cwd.');
   }
+
+  warnUnsupportedAdditionalDirectories('opencode', run.additionalDirectories);
 
   // MCP (and the scoped permission slice) have no CLI flag on opencode: write a
   // temp config outside the checkout and point opencode at it via OPENCODE_CONFIG

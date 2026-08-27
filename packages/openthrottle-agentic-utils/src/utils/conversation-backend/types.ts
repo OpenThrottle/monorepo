@@ -215,6 +215,13 @@ export interface ConversationStreamChunk {
  * @public
  */
 export interface ConversationBackendRun {
+  /**
+   * Extra directories to grant a CLI beyond {@link cwd}, as absolute paths.
+   * Emitted as repeated `--add-dir` by the backends that support it (claude,
+   * antigravity) and ignored — with a warning — by those that do not. Context
+   * only: the agent still RUNS in `cwd`.
+   */
+  readonly additionalDirectories?: readonly string[];
   /** OpenAI-compatible base URL; required by the openai backend. */
   readonly baseUrl?: string;
   /** Working directory the CLI runs in; required by CLI backends. */

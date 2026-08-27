@@ -24,7 +24,11 @@ export interface ChatTurnFieldsParams {
   readonly persist: boolean;
   readonly personaId: string | null | undefined;
   readonly reasoning: ChatReasoningLevel | null | undefined;
-  readonly repositoryId: string | null | undefined;
+  /**
+   * Selected checkouts, primary first — index 0 becomes the process `cwd` and
+   * the rest become additional granted directories.
+   */
+  readonly repositoryIds: readonly string[];
   readonly serviceTier: ChatServiceTier | null | undefined;
 }
 
@@ -43,7 +47,7 @@ export function buildChatTurnFields(
     persist,
     personaId,
     reasoning,
-    repositoryId,
+    repositoryIds,
     serviceTier,
   } = params;
 
@@ -63,7 +67,9 @@ export function buildChatTurnFields(
         persist: String(persist),
         personaId: personaId ?? '',
         reasoning: reasoning ?? '',
-        repositoryId: repositoryId ?? '',
+        // JSON, mirroring `fileMentions` above: the form stays flat and the
+        // action already has a tested decode pattern to copy.
+        repositoryIds: JSON.stringify(repositoryIds),
         serviceTier: serviceTier ?? '',
       };
 }

@@ -1370,6 +1370,7 @@ export function StartConversationStreamInputSchema(): z.ZodObject<
     personaId: z.string().nullish(),
     reasoning: z.string().nullish(),
     repositoryId: z.string().nullish(),
+    repositoryIds: z.array(z.string().min(1)).nullish(),
     serviceTier: z.string().nullish(),
   });
 }

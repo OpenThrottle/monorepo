@@ -706,6 +706,140 @@ describe('ConversationStreamResolver.startConversationStream', () => {
     expect(result.errorMessage).toBe('Message is required.');
     expect(streamService.start).not.toHaveBeenCalled();
   });
+
+  it('resolves repositoryIds primary-first: index 0 is the cwd, the rest are granted directories', async () => {
+    const { repositories, resolver, streamService } = build();
+    vi.mocked(repositories.findByIdForUser).mockImplementation((id: string) =>
+      Promise.resolve(
+        createMock<WorkspaceLocalRepository>({
+          filesystemPath: `/repo/${id}`,
+        }),
+      ),
+    );
+
+    const result = await resolver.startConversationStream(human, {
+      backend: 'claude',
+      baseUrl: null,
+      conversationId: null,
+      message: 'go',
+      modelId: null,
+      repositoryIds: ['repo-primary', 'repo-second'],
+    });
+
+    expect(result.errorMessage).toBeNull();
+    expect(streamService.start).toHaveBeenCalledWith(
+      expect.objectContaining({
+        additionalDirectories: ['/repo/repo-second'],
+        cwd: '/repo/repo-primary',
+      }),
+    );
+  });
+
+  it("ownership-checks EVERY id, refusing the turn when a secondary is not the caller's", async () => {
+    const { repositories, resolver, streamService } = build();
+    vi.mocked(repositories.findByIdForUser).mockImplementation((id: string) =>
+      Promise.resolve(
+        id === 'repo-primary'
+          ? createMock<WorkspaceLocalRepository>({
+              filesystemPath: '/repo/repo-primary',
+            })
+          : null,
+      ),
+    );
+
+    const result = await resolver.startConversationStream(human, {
+      backend: 'claude',
+      baseUrl: null,
+      conversationId: null,
+      message: 'go',
+      modelId: null,
+      repositoryIds: ['repo-primary', 'someone-elses-repo'],
+    });
+
+    expect(result.errorMessage).toBe('Repository not found.');
+    expect(streamService.start).not.toHaveBeenCalled();
+  });
+
+  it('caps the array server-side for a backend with no --add-dir, ignoring the client', async () => {
+    const { repositories, resolver, streamService } = build();
+    vi.mocked(repositories.findByIdForUser).mockImplementation((id: string) =>
+      Promise.resolve(
+        createMock<WorkspaceLocalRepository>({
+          filesystemPath: `/repo/${id}`,
+        }),
+      ),
+    );
+    createCursorAgentSessionMock.mockResolvedValue('cursor-sess-1');
+
+    await resolver.startConversationStream(human, {
+      backend: 'cursor',
+      baseUrl: null,
+      conversationId: null,
+      message: 'go',
+      modelId: null,
+      repositoryIds: ['repo-primary', 'repo-second', 'repo-third'],
+    });
+
+    // cursor has no additional-directory concept: the extras never reach it,
+    // and the secondaries are not even ownership-resolved.
+    expect(streamService.start).toHaveBeenCalledWith(
+      expect.objectContaining({
+        additionalDirectories: [],
+        cwd: '/repo/repo-primary',
+      }),
+    );
+    expect(repositories.findByIdForUser).toHaveBeenCalledTimes(1);
+  });
+
+  it('honors a legacy single repositoryId as a one-element list', async () => {
+    const { repositories, resolver, streamService } = build();
+    vi.mocked(repositories.findByIdForUser).mockResolvedValue(
+      createMock<WorkspaceLocalRepository>({
+        filesystemPath: '/repo/legacy',
+      }),
+    );
+
+    await resolver.startConversationStream(human, {
+      backend: 'claude',
+      baseUrl: null,
+      conversationId: null,
+      message: 'go',
+      modelId: null,
+      repositoryId: 'repo-legacy',
+    });
+
+    expect(streamService.start).toHaveBeenCalledWith(
+      expect.objectContaining({
+        additionalDirectories: [],
+        cwd: '/repo/legacy',
+      }),
+    );
+  });
+
+  it('prefers repositoryIds over a stale sibling repositoryId', async () => {
+    const { repositories, resolver, streamService } = build();
+    vi.mocked(repositories.findByIdForUser).mockImplementation((id: string) =>
+      Promise.resolve(
+        createMock<WorkspaceLocalRepository>({
+          filesystemPath: `/repo/${id}`,
+        }),
+      ),
+    );
+
+    await resolver.startConversationStream(human, {
+      backend: 'claude',
+      baseUrl: null,
+      conversationId: null,
+      message: 'go',
+      modelId: null,
+      repositoryId: 'stale',
+      repositoryIds: ['repo-chosen'],
+    });
+
+    expect(streamService.start).toHaveBeenCalledWith(
+      expect.objectContaining({ cwd: '/repo/repo-chosen' }),
+    );
+  });
 });
 
 describe('ConversationStreamResolver.cancelConversationStream', () => {

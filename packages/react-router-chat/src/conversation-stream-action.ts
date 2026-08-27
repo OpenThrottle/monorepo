@@ -13,8 +13,8 @@ import type { ChatStartActionResult } from './hooks/use-agentic-chat-turn';
  */
 
 /**
- * Decode the JSON-encoded `fileMentions` form field (workspace-relative paths
- * parsed from the composer draft) into a string array, or null when absent or
+ * Decode a JSON-encoded string-array form field (`fileMentions`,
+ * `repositoryIds`) into a string array, or null when absent, empty or
  * malformed. Defensive: the value is our own JSON.stringify output, but a bad
  * value must never 500 the turn.
  * @public
@@ -57,6 +57,11 @@ export interface ConversationStreamStartInput {
   readonly personaId: string | null;
   readonly reasoning: string | null;
   readonly repositoryId: string | null;
+  /**
+   * Selected checkouts, primary first — index 0 becomes the process `cwd`, the
+   * rest additional granted directories. Supersedes {@link repositoryId}.
+   */
+  readonly repositoryIds: string[] | null;
   readonly serviceTier: string | null;
 }
 
@@ -82,7 +87,10 @@ export function buildStartConversationStreamInput(
     persist: formData.get('persist') === 'false' ? false : null,
     personaId: String(formData.get('personaId') ?? '') || null,
     reasoning: String(formData.get('reasoning') ?? '') || null,
+    // Retained for any in-flight client still posting the single field; the
+    // resolver treats it as a one-element list.
     repositoryId: String(formData.get('repositoryId') ?? '') || null,
+    repositoryIds: parseFileMentionsField(formData.get('repositoryIds')),
     serviceTier: String(formData.get('serviceTier') ?? '') || null,
   };
 }

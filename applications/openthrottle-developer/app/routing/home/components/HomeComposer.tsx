@@ -59,7 +59,7 @@ export const HomeComposer = (props: HomeComposerProps): React.ReactElement => {
     personaId,
     personas: effectivePersonas,
     reasoning,
-    repositoryId,
+    repositoryIds,
     serviceTier,
     setDraft,
     setMode,
@@ -69,6 +69,7 @@ export const HomeComposer = (props: HomeComposerProps): React.ReactElement => {
     setPersonaId,
     setReasoning,
     setRepositoryId,
+    setRepositoryIds,
     setServiceTier,
     slashCommandProvider,
     voice,
@@ -100,6 +101,7 @@ export const HomeComposer = (props: HomeComposerProps): React.ReactElement => {
         models={models}
         onAddContext={FEATURE_BETA_PREVIEW ? () => {} : undefined}
         onCheckoutChange={setRepositoryId}
+        onCheckoutsChange={setRepositoryIds}
         onMicToggle={
           FEATURE_BETA_PREVIEW ? () => void voice.toggle() : undefined
         }
@@ -116,7 +118,8 @@ export const HomeComposer = (props: HomeComposerProps): React.ReactElement => {
         personaId={FEATURE_BETA_PREVIEW ? personaId : undefined}
         personas={FEATURE_BETA_PREVIEW ? effectivePersonas : undefined}
         reasoning={reasoning}
-        selectedCheckoutId={repositoryId}
+        selectedCheckoutId={repositoryIds[0]}
+        selectedCheckoutIds={repositoryIds}
         serviceTier={serviceTier}
       />
       {isCliBackend && !hasRepositories ? (

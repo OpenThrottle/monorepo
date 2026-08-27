@@ -365,6 +365,14 @@ export type ChatPermissionMode =
  * @public
  */
 export interface ChatBackendCapabilities {
+  /**
+   * How many repositories/checkouts the backend can hold in context at once.
+   * `1` means single-select (the historical behavior); a value above `1` lets
+   * the composer offer multi-select, where the FIRST selection is the primary
+   * checkout (the spawn `cwd`) and the remainder are additional granted
+   * directories the CLI receives as repeated `--add-dir` flags.
+   */
+  readonly maxRepositories: number;
   /** Permission modes the backend honors; empty hides the permission control. */
   readonly permissionModes: readonly ChatPermissionMode[];
   /** Reasoning levels the backend honors; empty hides the reasoning section. */

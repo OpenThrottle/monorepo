@@ -163,6 +163,7 @@ async function* streamClaude(
   const child = spawn(
     resolveClaudeBin(),
     buildClaudeArgv({
+      additionalDirectories: run.additionalDirectories,
       mcpServers: run.mcpServers,
       model: run.model,
       permissionMode: run.permissionMode,
