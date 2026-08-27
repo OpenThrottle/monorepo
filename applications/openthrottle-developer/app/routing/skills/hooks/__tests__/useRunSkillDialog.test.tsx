@@ -101,7 +101,7 @@ describe('useRunSkillDialog', () => {
     });
 
     expect(result.current.repositoryId).toBe('repo-2');
-    expect(store.get(chatToolbarStateAtom).repositoryIds).toEqual(['repo-2']);
+    expect(store.get(chatToolbarStateAtom).repositoryId).toBe('repo-2');
   });
 
   test('an openai backend never requires a repository, so submit is enabled without one', () => {
@@ -126,7 +126,7 @@ describe('useRunSkillDialog', () => {
     expect(payload?.message).toBe('/my-skill hello world');
     expect(payload?.fields.backend).toBe('claude');
     expect(payload?.fields.modelId).toBe('');
-    expect(payload?.fields.repositoryIds).toBe(JSON.stringify(['repo-1']));
+    expect(payload?.fields.repositoryId).toBe('repo-1');
   });
 
   test('buildPayload with blank args composes the bare /<slug> command', () => {
@@ -146,7 +146,7 @@ describe('useRunSkillDialog', () => {
     expect(payload?.fields.backend).toBe('openai');
     expect(payload?.fields.baseUrl).toBe('http://localhost:11434/v1');
     expect(payload?.fields.modelId).toBe('llama3');
-    expect(payload?.fields.repositoryIds).toBeUndefined();
+    expect(payload?.fields.repositoryId).toBeUndefined();
   });
 
   test('setModelId writes through the shared toolbar atom', () => {

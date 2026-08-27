@@ -56,6 +56,7 @@ export const WORKSPACE_FOLDERS_COPY = {
  * will write to, run the apply, and read the per-repository result.
  */
 export const WORKSPACE_SETTINGS_COPY = {
+  affiliateDisclosure: `Some editor links are affiliate/referral links. OpenThrottle may earn a commission if you sign up through them, at no extra cost to you.`,
   applyAllButton: `Apply to all repositories`,
   applyBusyLabel: `Applying…`,
   applyDisabledReason: `Enable at least one editor above to apply configuration.`,
@@ -70,9 +71,11 @@ export const WORKSPACE_SETTINGS_COPY = {
   editorsLabel: `Editors to configure`,
   editorsLegend: `Editor integration`,
   intro: `Choose which editors OpenThrottle configures, then push that configuration into your linked repositories.`,
-  presenceHeading: `On this machine`,
-  presenceInstalledSuffix: `detected`,
-  presenceNotFoundSuffix: `not detected — you can still enable it, and its buttons will still appear`,
+  presenceDetectedBadge: `Detected`,
+  presenceNotDetectedBadge: `Not detected`,
+  presenceNotDetectedTooltip: `We did not find this editor on the machine running the server. You can still enable it, and its buttons will still appear.`,
+  presenceScannedAtPrefix: `Editors last scanned `,
+  presenceUntrustedNote: `We could not verify the host filesystem, so detection below is a guess rather than a result.`,
   profileLegend: `Contact & editors`,
   resultsEmpty: `No linked repositories to update. Add a repository or enable at least one editor.`,
   resultsFilesHeading: `Files written`,
@@ -82,6 +85,7 @@ export const WORKSPACE_SETTINGS_COPY = {
   saveBusyLabel: `Saving…`,
   saveButton: `Save profile`,
   saveEditorsButton: `Save editors`,
+  saveNoChangesLabel: `No changes to save.`,
   targetsAddRepositoryLink: `Add a repository`,
   targetsColumnActions: `Apply`,
   targetsColumnEditor: `Editor`,
@@ -98,6 +102,20 @@ export const WORKSPACE_SETTINGS_COPY = {
   worktreeRootPlaceholder: `/Users/you/Development/openthrottle-worktrees`,
   worktreeRootSaveButton: `Save worktree root`,
 } as const;
+
+/** Accessible name for an editor card's enable switch. */
+export const workspaceEditorEnableLabel = (editorLabel: string): string =>
+  `Enable ${editorLabel}`;
+
+/** Visible text for an editor card's affiliate acquisition link. */
+export const workspaceEditorAffiliateLinkLabel = (
+  editorLabel: string,
+): string => `Get ${editorLabel}`;
+
+/** Accessible name for an affiliate link, disclosing what it is up front. */
+export const workspaceEditorAffiliateLinkAriaLabel = (
+  editorLabel: string,
+): string => `Get ${editorLabel} (affiliate link, opens in a new tab)`;
 
 /**
  * @description Copy for the workspace repository details and edit routes.

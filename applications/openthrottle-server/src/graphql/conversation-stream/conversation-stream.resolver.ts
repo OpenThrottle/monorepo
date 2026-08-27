@@ -38,7 +38,6 @@ import {
   type ConversationPermissionMode,
   type ConversationReasoningEffort,
   type ConversationServiceTier,
-  maxDirectoriesForBackend,
   toContainerPath,
   toConversationPermissionMode,
   toConversationReasoningEffort,
@@ -149,11 +148,6 @@ const PERSONA_SYSTEM_PROMPTS: Record<string, string> = {
 
 /** Backend-specific run parameters resolved before the stream starts. */
 interface ResolvedBackendRun {
-  /**
-   * Extra directories granted to a CLI beyond `cwd`, absolute + already
-   * container-translated. Context only — the agent still runs in `cwd`.
-   */
-  readonly additionalDirectories: readonly string[];
   readonly baseUrl: string | null;
   readonly cwd: string | null;
   /** @-mentioned workspace-relative paths for structured context injection; empty when none. */
@@ -365,7 +359,6 @@ export class ConversationStreamResolver {
     const assistantMessageId = randomUUID();
 
     this.streamService.start({
-      additionalDirectories: resolved.additionalDirectories,
       assistantMessageId,
       backend,
       baseUrl: resolved.baseUrl,
@@ -435,7 +428,6 @@ export class ConversationStreamResolver {
       }
 
       return {
-        additionalDirectories: [],
         baseUrl: endpoint.baseUrl,
         cwd: null,
         // openai has no filesystem, but it still benefits from the referenced
@@ -483,45 +475,22 @@ export class ConversationStreamResolver {
     // CLI backend (cursor | claude | opencode): resolve a scoped cwd from a
     // registered repository, or — only in development, behind an env flag — a
     // configured dev directory. Same gate for every CLI backend.
-    // PRIMARY FIRST: index 0 becomes the cwd, the rest are additional granted
-    // context directories. `repositoryIds` supersedes the deprecated single
-    // `repositoryId`, which is still honored as a one-element list. Capped
-    // server-side per driver — the client's cap is UX, this one is the boundary.
-    const requestedRepositoryIds = (
-      input.repositoryIds != null && input.repositoryIds.length > 0
-        ? input.repositoryIds
-        : [input.repositoryId]
-    )
-      .filter((id): id is string => typeof id === 'string' && id !== '')
-      .slice(0, maxDirectoriesForBackend(backend));
-
-    const primaryRepositoryId = requestedRepositoryIds[0] ?? null;
-
     let cwd: string | null = null;
-    const additionalDirectories: string[] = [];
-    if (requestedRepositoryIds.length > 0) {
-      // Every id is ownership-checked independently — the client's array is
-      // untrusted, and a secondary is granted to the agent just as a primary is.
-      const resolvedRepositories = await Promise.all(
-        requestedRepositoryIds.map((repositoryId) =>
-          this.repositories.findByIdForUser(repositoryId, userId),
-        ),
+    if (input.repositoryId != null && input.repositoryId !== '') {
+      const repository = await this.repositories.findByIdForUser(
+        input.repositoryId,
+        userId,
       );
 
-      if (resolvedRepositories.some((repository) => !repository)) {
+      if (!repository) {
         return 'Repository not found.';
       }
-
-      // The DB filesystemPath is host-truthful. Under a containerized server
-      // with the workspace bridge active, translate to the in-container mount so
-      // the spawn cwd (and the relative run-openthrottle-mcp.sh) resolve to a
-      // path that exists. Identity (no-op) on host-run flows. Mirrors the editor
-      // path (workspace-editor-config.service).
-      const [primary, ...secondaries] = resolvedRepositories.map((repository) =>
-        toContainerPath(repository?.filesystemPath ?? ''),
-      );
-      cwd = primary;
-      additionalDirectories.push(...secondaries);
+      // The DB filesystemPath is host-truthful. Under a containerized server with
+      // the workspace bridge active, translate to the in-container mount so the
+      // spawn cwd (and the relative run-openthrottle-mcp.sh) resolve to a path
+      // that exists. Identity (no-op) on host-run flows. Mirrors the editor path
+      // (workspace-editor-config.service).
+      cwd = toContainerPath(repository.filesystemPath);
     } else if (!isProduction()) {
       const devCwd = process.env[DEV_CWD_ENV]?.trim();
       cwd = devCwd === undefined || devCwd === '' ? null : devCwd;
@@ -537,9 +506,7 @@ export class ConversationStreamResolver {
       backend,
       userId,
       conversationId,
-      // The PRIMARY id alone keys the CLI session, so swapping secondaries
-      // mid-conversation does not fork a resumed session.
-      primaryRepositoryId,
+      input.repositoryId ?? null,
       persist,
     );
 
@@ -559,8 +526,6 @@ export class ConversationStreamResolver {
     // as a fallback). Populated only when MCP applies, so a non-OT checkout adds
     // no config or env. Per-backend injection (argv/env) happens in the adapters.
     const apiBaseUrl = resolveApiBaseUrl();
-    // Primary-only by design: an OT MCP server per secondary checkout is a
-    // larger change with unclear value in v1.
     const managedMcp = buildManagedMcpServers({
       apiBaseUrl,
       repositoryRoot: cwd,
@@ -578,7 +543,6 @@ export class ConversationStreamResolver {
       : null;
 
     return {
-      additionalDirectories,
       baseUrl: cliBaseUrl,
       cwd,
       fileMentions,

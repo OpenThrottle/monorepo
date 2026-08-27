@@ -46,11 +46,6 @@ const repositoryA: RepositoryOption = {
   id: 'repo-a-id',
 };
 
-const repositoryB: RepositoryOption = {
-  displayName: 'repo-b',
-  id: 'repo-b-id',
-};
-
 const makeTurn = (
   overrides: Partial<UseAgenticChatTurnResult> = {},
 ): UseAgenticChatTurnResult => ({
@@ -261,28 +256,7 @@ describe('useHomeComposer', () => {
         backend: 'claude',
         fileMentions: JSON.stringify(['src/index.ts']),
         modelId: 'sonnet',
-        repositoryIds: JSON.stringify([repositoryA.id]),
-      }),
-    );
-  });
-
-  test('onSubmit sends every selected checkout, primary first', async () => {
-    const turn = makeTurn();
-    await renderComposer({
-      models: [cliModel],
-      repositories: [repositoryA, repositoryB],
-      turn,
-    });
-
-    act(() =>
-      value.current?.setRepositoryIds([repositoryB.id, repositoryA.id]),
-    );
-    act(() => value.current?.onSubmit('hello'));
-
-    expect(turn.submitTurn).toHaveBeenCalledWith(
-      'hello',
-      expect.objectContaining({
-        repositoryIds: JSON.stringify([repositoryB.id, repositoryA.id]),
+        repositoryId: repositoryA.id,
       }),
     );
   });

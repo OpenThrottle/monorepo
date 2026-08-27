@@ -28,12 +28,6 @@ export const CLAUDE_DEFAULT_BIN = `claude`;
  */
 export interface ClaudeArgvOptions {
   /**
-   * Extra directories to grant this turn beyond the spawn cwd, as ABSOLUTE
-   * paths. Emitted as one repeated `--add-dir` each. Context only — claude
-   * still runs in the cwd.
-   */
-  readonly additionalDirectories?: readonly string[];
-  /**
    * Managed MCP servers (canonical `.mcp.json` schema) to expose to this turn.
    * When non-empty, they are passed inline via `--mcp-config` + a
    * `--strict-mcp-config` so only these load (project `.mcp.json` and the
@@ -118,15 +112,6 @@ export function buildClaudeArgv(options: ClaudeArgvOptions): string[] {
 
   if (options.model !== undefined && options.model !== '') {
     argv.push('--model', options.model);
-  }
-
-  // One repeated `--add-dir` per extra granted directory. Blank entries are
-  // dropped rather than emitted as an empty flag value.
-  for (const directory of options.additionalDirectories ?? []) {
-    const trimmed = directory.trim();
-    if (trimmed !== '') {
-      argv.push('--add-dir', trimmed);
-    }
   }
 
   const systemPrompt = options.systemPrompt?.trim();

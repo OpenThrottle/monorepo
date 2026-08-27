@@ -253,46 +253,4 @@ describe('buildClaudeArgv', () => {
       expect(argv.at(-1)).toBe('do it');
     });
   });
-  it('emits one repeated --add-dir per additional directory', () => {
-    const argv = buildClaudeArgv({
-      additionalDirectories: ['/abs/second', '/abs/third'],
-      prompt: 'p',
-      resume: false,
-      sessionId: 'sess-1',
-    });
-
-    const dirs = argv.reduce<string[]>(
-      (paths, entry, index) =>
-        entry === '--add-dir' ? [...paths, argv[index + 1]] : paths,
-      [],
-    );
-
-    expect(dirs).toEqual(['/abs/second', '/abs/third']);
-  });
-
-  it('drops blank additional directories and emits nothing when the list is empty', () => {
-    expect(
-      buildClaudeArgv({
-        additionalDirectories: ['  '],
-        prompt: 'p',
-        resume: false,
-        sessionId: 'sess-1',
-      }),
-    ).not.toContain('--add-dir');
-    expect(
-      buildClaudeArgv({ prompt: 'p', resume: false, sessionId: 'sess-1' }),
-    ).not.toContain('--add-dir');
-  });
-
-  it('keeps the prompt last, after any --add-dir flags', () => {
-    const argv = buildClaudeArgv({
-      additionalDirectories: ['/abs/second'],
-      prompt: 'the prompt',
-      resume: false,
-      sessionId: 'sess-1',
-    });
-
-    expect(argv[argv.length - 1]).toBe('the prompt');
-    expect(argv[argv.length - 2]).toBe('--');
-  });
 });

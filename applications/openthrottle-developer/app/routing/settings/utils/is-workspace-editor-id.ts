@@ -1,7 +1,7 @@
 /**
- * @description Type guard narrowing an arbitrary MultiSelect value to a known
- * workspace editor id. Hoisted out of WorkspaceEditorMultiSelect per
- * component-primitive-shape R4.
+ * @description Type guard narrowing an arbitrary submitted value to a known
+ * workspace editor id. Used by the workspace settings action to reject editor
+ * ids this client does not recognize.
  */
 
 import type { WorkspaceEditorId } from '~/__generated__/graphql';

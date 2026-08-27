@@ -6,6 +6,7 @@ export * from './components/GrokIcon';
 export * from './components/OpenAiIcon';
 export * from './components/OpenCodeIcon';
 export * from './components/ProviderLetterIcon';
+export * from './components/VscodeIcon';
 export * from './components/svg-base';
 
 // ⚙️ Configuration

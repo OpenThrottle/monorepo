@@ -9,7 +9,6 @@ import { ChatPermissionMode } from '../../types';
 import type { ChatBackendCapabilities } from '../../types';
 
 const ALL_MODES: ChatBackendCapabilities = {
-  maxRepositories: 1,
   permissionModes: [
     ChatPermissionMode.supervised,
     ChatPermissionMode.autoAcceptEdits,

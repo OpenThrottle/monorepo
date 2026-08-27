@@ -32,7 +32,6 @@ import {
   type ConversationBackendRun,
   type ConversationStreamChunk,
 } from '../types.ts';
-import { warnUnsupportedAdditionalDirectories } from '../additional-directories.ts';
 import {
   CURSOR_AGENT_BIN_ENV,
   CURSOR_AGENT_DEFAULT_BIN,
@@ -335,8 +334,6 @@ async function* streamCursorAgent(
   if (run.cwd === undefined || run.cwd === '') {
     throw new Error('The cursor-agent backend requires a cwd.');
   }
-
-  warnUnsupportedAdditionalDirectories('cursor', run.additionalDirectories);
 
   if (run.sessionId === undefined || run.sessionId === '') {
     throw new Error('The cursor-agent backend requires a sessionId.');

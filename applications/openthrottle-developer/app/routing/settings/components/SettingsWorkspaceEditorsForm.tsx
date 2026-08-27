@@ -4,14 +4,20 @@ import { Button, Label } from '@openthrottle/react-router-shadcn';
 import { ComputerIcon } from 'lucide-react';
 import { Form, useNavigation } from 'react-router';
 import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
-import { WorkspaceEditorId } from '~/__generated__/graphql';
-import { WorkspaceEditorAffiliateLinks } from '~/routing/settings/components/WorkspaceEditorAffiliateLinks';
-import { WorkspaceEditorMultiSelect } from '~/routing/settings/components/WorkspaceEditorMultiSelect';
-import { WorkspaceEditorPresenceHints } from '~/routing/settings/components/WorkspaceEditorPresenceHints';
+import { getWorkspaceEditorAffiliateUrl } from '~/routing/settings/config/workspace-editor-affiliate-links';
+import { WorkspaceEditorCard } from '~/routing/settings/components/WorkspaceEditorCard';
+import { WorkspaceEditorPresenceFootnote } from '~/routing/settings/components/WorkspaceEditorPresenceFootnote';
+import { WORKSPACE_EDITOR_OPTIONS } from '~/routing/settings/config/workspace-editors';
 import { WORKSPACE_SETTINGS_COPY } from '~/routing/settings/data/data.copy';
+import { buildWorkspaceEditorPresenceMap } from '~/routing/settings/utils/workspace-editor-presence';
+import {
+  hasWorkspaceEditorSelectionChanged,
+  toggleWorkspaceEditor,
+} from '~/routing/settings/utils/workspace-editor-selection';
 import type {
   GetEditorPresenceQuery,
   UserWorkspaceProfileFieldsFragment,
+  WorkspaceEditorId,
 } from '~/__generated__/graphql';
 
 export interface SettingsWorkspaceEditorsFormProps {
@@ -26,8 +32,10 @@ export interface SettingsWorkspaceEditorsFormProps {
 }
 
 /**
- * @description Chooses which editors OpenThrottle configures. Posts the contact values alongside
- * the selection so the shared `updateProfile` intent never has to tolerate a partial payload.
+ * @description Chooses which editors OpenThrottle configures, one card per editor, so
+ * enablement, detection, and acquisition sit together instead of in three stacked lists.
+ * Posts the contact values alongside the selection so the shared `updateProfile` intent
+ * never has to tolerate a partial payload.
  */
 export const SettingsWorkspaceEditorsForm = (
   props: SettingsWorkspaceEditorsFormProps,
@@ -46,7 +54,19 @@ export const SettingsWorkspaceEditorsForm = (
     navigation.state === 'submitting' &&
     navigation.formData?.get('intent') === 'updateProfile';
 
+  const presenceByEditor = buildWorkspaceEditorPresenceMap(editorPresence);
+
+  // Detection is deliberately absent from this: only a real change gates Save.
+  const isDirty = hasWorkspaceEditorSelectionChanged(
+    enabledEditors,
+    profile.enabledEditors,
+  );
+
   // Handlers
+  const handleToggle = (editor: WorkspaceEditorId, next: boolean): void =>
+    setEnabledEditors((current) =>
+      toggleWorkspaceEditor(current, editor, next),
+    );
 
   // Markup
 
@@ -84,20 +104,44 @@ export const SettingsWorkspaceEditorsForm = (
           type="hidden"
           value={profile.contactEmail ?? ''}
         />
+        {enabledEditors.map((editor) => (
+          <input
+            key={editor}
+            name="enabledEditors"
+            type="hidden"
+            value={editor}
+          />
+        ))}
 
-        <div className="space-y-2">
+        <div className="space-y-3">
           <Label>{WORKSPACE_SETTINGS_COPY.editorsLabel}</Label>
           <p className="text-muted-foreground text-sm">
             {WORKSPACE_SETTINGS_COPY.editorsExplainer}
           </p>
-          <WorkspaceEditorMultiSelect
-            onChange={setEnabledEditors}
-            value={enabledEditors}
+
+          {/* Mapped over the catalog, not the probe: an editor the probe
+              omitted still gets a card, just without a badge. */}
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {WORKSPACE_EDITOR_OPTIONS.map((option) => (
+              <WorkspaceEditorCard
+                affiliateUrl={getWorkspaceEditorAffiliateUrl(option.value)}
+                editor={option.value}
+                enabled={enabledEditors.includes(option.value)}
+                key={option.value}
+                onToggle={handleToggle}
+                presence={presenceByEditor.get(option.value) ?? null}
+              />
+            ))}
+          </div>
+
+          <p className="text-muted-foreground text-xs">
+            {WORKSPACE_SETTINGS_COPY.affiliateDisclosure}
+          </p>
+
+          <WorkspaceEditorPresenceFootnote
+            scannedAt={editorPresence?.scannedAt}
+            trusted={editorPresence?.trusted}
           />
-          <WorkspaceEditorPresenceHints
-            editors={editorPresence?.editors ?? null}
-          />
-          <WorkspaceEditorAffiliateLinks />
         </div>
 
         {actionError ? (
@@ -106,7 +150,14 @@ export const SettingsWorkspaceEditorsForm = (
           </p>
         ) : null}
 
-        <Button disabled={isSubmitting} type="submit" variant="outline">
+        <Button
+          disabled={isSubmitting || !isDirty}
+          title={
+            isDirty ? undefined : WORKSPACE_SETTINGS_COPY.saveNoChangesLabel
+          }
+          type="submit"
+          variant="outline"
+        >
           {isSubmitting
             ? WORKSPACE_SETTINGS_COPY.saveBusyLabel
             : WORKSPACE_SETTINGS_COPY.saveEditorsButton}
