@@ -5,6 +5,7 @@
  * a component cannot consume a Jotai Provider it renders in its own JSX, so the body
  * lives here. Extracted from `routes/plans.$planId._index.tsx`; behavior is unchanged.
  */
+
 import * as React from 'react';
 import { Card, TabsList, TabsTrigger } from '@openthrottle/react-router-shadcn';
 import { GlobalScreen } from '@openthrottle/react-router-ui-global';
@@ -75,6 +76,8 @@ export const PlanDetailRoute = (
   } = usePlanDetailRoute({ loaderData, params, plan });
 
   // Setup
+  const showConfiguration = false;
+  const showToolbar = false;
 
   // Handlers
 
@@ -87,36 +90,40 @@ export const PlanDetailRoute = (
     <>
       <GlobalScreen className="-max-w-5xl flex h-full w-full flex-col gap-4 p-4 md:gap-8 md:p-8 lg:gap-12 lg:p-12">
         <PlanDetailRouteHeader plan={plan} status={status} />
-
-        <PlanToolbar
-          branch={branch}
-          checkoutId={checkoutId}
-          className="bg-card border-card-border rounded-lg border p-4"
-          editorWorkingDirectory={editorWorkingDirectory}
-          editors={loaderData.enabledEditors}
-          jobRunHooksJson={jobRunHooksJson}
-          newestRunIsStale={newestRunIsStale}
-          onAddTag={(tag) =>
-            tagFetcher.submit({ intent: 'addPlanTag', tag }, { method: 'post' })
-          }
-          onRemoveTag={(tag) =>
-            tagFetcher.submit(
-              { intent: 'removePlanTag', tag },
-              { method: 'post' },
-            )
-          }
-          planId={plan.id}
-          planStatus={plan.status}
-          planTitle={plan.title ?? 'Untitled'}
-          ralphTuningJson={ralphTuningJson}
-          repositoryId={repositoryId}
-          tagVocabulary={tagVocabulary}
-          tags={plan.tags}
-          tagsPending={tagFetcher.state !== 'idle'}
-          workflowRunBlocked={workflowRunBlocked}
-          workflowRunBlockedReason={workflowRunBlockedReason}
-          workingDirectory={workingDirectory}
-        />
+        {showToolbar ? (
+          <PlanToolbar
+            branch={branch}
+            checkoutId={checkoutId}
+            className="bg-card border-card-border rounded-lg border p-4"
+            editorWorkingDirectory={editorWorkingDirectory}
+            editors={loaderData.enabledEditors}
+            jobRunHooksJson={jobRunHooksJson}
+            newestRunIsStale={newestRunIsStale}
+            onAddTag={(tag) =>
+              tagFetcher.submit(
+                { intent: 'addPlanTag', tag },
+                { method: 'post' },
+              )
+            }
+            onRemoveTag={(tag) =>
+              tagFetcher.submit(
+                { intent: 'removePlanTag', tag },
+                { method: 'post' },
+              )
+            }
+            planId={plan.id}
+            planStatus={plan.status}
+            planTitle={plan.title ?? 'Untitled'}
+            ralphTuningJson={ralphTuningJson}
+            repositoryId={repositoryId}
+            tagVocabulary={tagVocabulary}
+            tags={plan.tags}
+            tagsPending={tagFetcher.state !== 'idle'}
+            workflowRunBlocked={workflowRunBlocked}
+            workflowRunBlockedReason={workflowRunBlockedReason}
+            workingDirectory={workingDirectory}
+          />
+        ) : null}
 
         <OpenThrottleTabs
           urlSync={{
@@ -153,40 +160,38 @@ export const PlanDetailRoute = (
               <TerminalSquareIcon />
               Output
             </TabsTrigger>
-
             <div className="flex-1" />
-            <TabsTrigger
-              className="flex-0 cursor-pointer"
-              id="plan-tab-configuration"
-              value="configuration"
-            >
-              <CogIcon />
-              Configuration
-            </TabsTrigger>
+            {showConfiguration ? (
+              <TabsTrigger
+                className="flex-0 cursor-pointer"
+                id="plan-tab-configuration"
+                value="configuration"
+              >
+                <CogIcon />
+                Configuration
+              </TabsTrigger>
+            ) : null}
           </TabsList>
-
           <PlanTabDetails
             fullscreen={fullscreen}
             setFullscreen={setFullscreen}
           />
           <PlanTabTasks />
           <PlanTabOutput chunks={planOutputChunks} />
-          <PlanTabConfiguration
-            onCollapse={() => onToggleExpanded(false)}
-            onResetToDefaults={onResetToDefaults}
-            onSaveJobRunHooks={onSaveJobRunHooks}
-            onSaveRunConfig={onSaveRunConfig}
-            planProjectId={plan.projectId}
-            repositories={loaderData.workspaceRepositories}
-            saveJobRunHooksDisabled={saveJobRunHooksDisabled}
-            saveJobRunHooksPending={saveJobRunHooksPending}
-            saveRunConfigDisabled={runConfigSaveBlocked}
-            saveRunConfigPending={saveRunConfigPending}
-          />
-
-          {/* saveJobRunHooks / saveRunConfig outcomes surface as toasts
-                (useActionToast in usePlanRunConfigEditor). */}
-
+          {showConfiguration ? (
+            <PlanTabConfiguration
+              onCollapse={() => onToggleExpanded(false)}
+              onResetToDefaults={onResetToDefaults}
+              onSaveJobRunHooks={onSaveJobRunHooks}
+              onSaveRunConfig={onSaveRunConfig}
+              planProjectId={plan.projectId}
+              repositories={loaderData.workspaceRepositories}
+              saveJobRunHooksDisabled={saveJobRunHooksDisabled}
+              saveJobRunHooksPending={saveJobRunHooksPending}
+              saveRunConfigDisabled={runConfigSaveBlocked}
+              saveRunConfigPending={saveRunConfigPending}
+            />
+          ) : null}
           {runConfigSaveBlocked && runConfigSaveBlockedReason != null ? (
             <p className="text-muted-foreground px-4 text-xs" role="note">
               Save configuration blocked: {runConfigSaveBlockedReason}

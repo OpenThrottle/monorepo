@@ -372,6 +372,13 @@ export class PlansResolver {
     return this.loaders.taskCountByPlanIdLoader.load(parent.id);
   }
 
+  @ResolveField(() => Int, {
+    description: `Number of resolved tasks on this plan (status COMPLETED or SKIPPED). SKIPPED counts as done / won't be worked on (e.g. promoted).`,
+  })
+  async tasksCompletedCount(@Parent() parent: PlanObject): Promise<number> {
+    return this.loaders.tasksCompletedCountByPlanIdLoader.load(parent.id);
+  }
+
   @ResolveField(() => [TaskObject], {
     description: `Plan-level before-hooks (beforeAll, or beforeEach when scope='each'), in execution order.`,
   })

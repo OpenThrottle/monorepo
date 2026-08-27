@@ -63,6 +63,7 @@ export const buildPlansTableColumns = (
         const title = plan.title ?? 'Untitled';
         const taskCount = plan.taskCount ?? 0;
         const tags = plan.tags ?? [];
+        const tasksCompletedCount = plan.tasksCompletedCount ?? 0;
 
         const updatedAt = formatDate(
           plan.updatedAt ?? plan.createdAt,
@@ -89,10 +90,11 @@ export const buildPlansTableColumns = (
 
               <div className="text-muted-foreground mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs">
                 <span
-                  aria-label={`${taskCount} tasks`}
+                  aria-label={`${tasksCompletedCount} of ${taskCount} tasks resolved`}
                   className="tabular-nums"
                 >
-                  {taskCount} {taskCount === 1 ? 'task' : 'tasks'}
+                  {tasksCompletedCount}/{taskCount}{' '}
+                  {taskCount === 1 ? 'task' : 'tasks'}
                 </span>
 
                 {plan.hasCustomRunConfig ? (
@@ -172,14 +174,16 @@ export const buildPlansTableColumns = (
               </div>
             ) : null}
 
-            {plan.summary ? (
-              <div className="flex flex-wrap items-center gap-2">
-                <MarkdownRenderer
-                  className="line-clamp-2 overflow-hidden [&_p]:!mb-0 [&_p]:!text-xs"
-                  source={plan.summary}
-                />
-              </div>
-            ) : null}
+            <div className="flex flex-wrap items-center gap-2">
+              <MarkdownRenderer
+                className="line-clamp-5 overflow-hidden [&_p]:!mb-0 [&_p]:!text-xs"
+                source={
+                  plan.description ||
+                  plan.summary ||
+                  'View plan details for more information'
+                }
+              />
+            </div>
           </div>
         );
       },

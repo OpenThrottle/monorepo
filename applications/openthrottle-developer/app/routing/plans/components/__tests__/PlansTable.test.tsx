@@ -35,6 +35,7 @@ const mockPlans: PlanCardFragment[] = [
       { __typename: 'PlanTagObject', dimension: 'domain', tag: 'frontend' },
     ],
     taskCount: 3,
+    tasksCompletedCount: 1,
     title: 'First Plan',
     updatedAt: '2025-01-03T00:00:00Z',
   },
@@ -56,6 +57,7 @@ const mockPlans: PlanCardFragment[] = [
     summary: null,
     tags: [],
     taskCount: 0,
+    tasksCompletedCount: 0,
     title: 'Second Plan',
     updatedAt: '2025-01-02T00:00:00Z',
   },
@@ -119,8 +121,8 @@ describe('PlansTable Component', () => {
     expect(titleLink1).toHaveAttribute('href', '/plans/plan-1');
     const titleLink2 = getByRole('link', { name: 'View plan: Second Plan' });
     expect(titleLink2).toHaveAttribute('href', '/plans/plan-2');
-    expect(getByLabelText('3 tasks')).toBeDefined();
-    expect(getByLabelText('0 tasks')).toBeDefined();
+    expect(getByLabelText('1 of 3 tasks resolved')).toBeDefined();
+    expect(getByLabelText('0 of 0 tasks resolved')).toBeDefined();
     expect(
       getByRole('button', {
         name: `${PLANS_ROW_ACTIONS_COPY.menuAriaLabelPrefix} First Plan`,

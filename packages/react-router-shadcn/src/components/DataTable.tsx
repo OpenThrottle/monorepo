@@ -19,8 +19,10 @@ import {
   TableHeader,
   TableRow,
 } from './Table';
+import clsx from 'clsx';
 
 export interface DataTableProps<TData, TValue> {
+  readonly className?: string;
   readonly columns: ColumnDef<TData, TValue>[];
   readonly data: TData[];
   readonly emptyState?: string | React.ReactElement;
@@ -56,6 +58,7 @@ export function DataTable<TData, TValue>(
   props: DataTableProps<TData, TValue>,
 ): React.ReactElement {
   const {
+    className,
     columns,
     data,
     emptyState = 'No results.',
@@ -113,7 +116,7 @@ export function DataTable<TData, TValue>(
   // 🔌 Short Circuit
 
   return (
-    <Table className="overflow-hidden rounded-md border">
+    <Table className={clsx('overflow-hidden rounded-md border', className)}>
       <TableHeader>
         {table.getHeaderGroups().map((headerGroup) => (
           <TableRow key={headerGroup.id}>

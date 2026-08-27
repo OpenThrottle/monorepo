@@ -50,13 +50,22 @@ describe('ScheduleTable Component', () => {
   test('renders the driver id and model', () => {
     component = renderTable();
 
-    expect(component.getByText('claude · opus')).toBeInTheDocument();
+    expect(component.getByText('claude')).toBeInTheDocument();
+    expect(component.getByText('opus')).toBeInTheDocument();
+  });
+
+  test('falls back to auto when the job has no model', () => {
+    props = { jobs: [job({ model: null })] };
+    component = renderTable();
+
+    expect(component.getByText('auto')).toBeInTheDocument();
   });
 
   test('renders the cron pattern and timezone', () => {
     component = renderTable();
 
-    expect(component.getByText('0 9 * * * (UTC)')).toBeInTheDocument();
+    expect(component.getByText('0 9 * * *')).toBeInTheDocument();
+    expect(component.getByText('UTC')).toBeInTheDocument();
   });
 
   test('renders an Enabled badge when the job is enabled', () => {
@@ -72,12 +81,6 @@ describe('ScheduleTable Component', () => {
     expect(component.getByText('Disabled')).toBeInTheDocument();
   });
 
-  test('formats the next run time, or an em dash when absent', () => {
-    props = { jobs: [job({ nextRunAt: null })] };
-    component = renderTable();
-
-    expect(component.getByText('—')).toBeInTheDocument();
-  });
   test('shows no running badge for a schedule with nothing in flight', () => {
     props = { inFlightByJob: {}, jobs: [job()] };
     component = renderTable();

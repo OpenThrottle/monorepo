@@ -6,6 +6,7 @@ import {
   type GroupedHooks,
   type Project,
   ProjectsService,
+  TASK_STATUS,
   TasksService,
   createEntityByIdLoader,
   createGroupedCountLoader,
@@ -14,19 +15,39 @@ import { Injectable, Scope } from '@nestjs/common';
 import DataLoader from 'dataloader';
 
 /**
- * @description Holds project and task-count DataLoaders for the current request. Injected into PlansResolver; resolve projectRelation and taskCount via loaders instead of one service call per plan row.
+ * Task statuses that count as "resolved" for {@link PlansLoaders.tasksCompletedCountByPlanIdLoader}
+ * — mirrors client `getResolvedTaskCount` (COMPLETED + SKIPPED).
+ */
+const RESOLVED_TASK_STATUSES = [
+  TASK_STATUS.COMPLETED,
+  TASK_STATUS.SKIPPED,
+] as const;
+
+/**
+ * @description Holds project and task-count DataLoaders for the current request. Injected into PlansResolver; resolve projectRelation, taskCount, and tasksCompletedCount via loaders instead of one service call per plan row.
  */
 @Injectable({ scope: Scope.REQUEST })
 export class PlansLoaders {
   readonly planHooksByPlanIdLoader: DataLoader<string, GroupedHooks>;
   readonly projectLoader: DataLoader<string, Project | null>;
   readonly taskCountByPlanIdLoader: DataLoader<string, number>;
+  readonly tasksCompletedCountByPlanIdLoader: DataLoader<string, number>;
 
   constructor(projectsService: ProjectsService, tasksService: TasksService) {
     this.projectLoader = createEntityByIdLoader(projectsService);
     this.taskCountByPlanIdLoader = createGroupedCountLoader(tasksService, {
       column: 'planId',
     });
+    this.tasksCompletedCountByPlanIdLoader = createGroupedCountLoader(
+      tasksService,
+      {
+        column: 'planId',
+        filter: {
+          column: 'status',
+          values: RESOLVED_TASK_STATUSES,
+        },
+      },
+    );
 
     /*
       beforeHooks and afterHooks are two ResolveFields over the same row set, so

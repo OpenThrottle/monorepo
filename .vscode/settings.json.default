@@ -28,11 +28,11 @@
   "typescript.preferences.importModuleSpecifier": "non-relative",
   "workbench.colorCustomizations": {
     // "tab.activeBackground": "#000000",
-    "tab.activeBorderTop": "#0088ff",
+    "tab.activeBorderTop": "#ff0000",
     // "tab.activeForeground": "#FFFFFF",
-    "titleBar.activeBackground": "#0088ff",
+    "titleBar.activeBackground": "#ff0000",
     "titleBar.activeForeground": "#FFFF",
-    "titleBar.inactiveBackground": "#0088ff",
+    "titleBar.inactiveBackground": "#ff0000",
     "titleBar.inactiveForeground": "#FFFF"
   },
   "window.zoomLevel": 1,

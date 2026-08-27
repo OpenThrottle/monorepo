@@ -1,16 +1,15 @@
 import * as React from 'react';
-import { Link } from 'react-router';
 import { OpenThrottleToolbar } from '~/routing/plans/components/OpenThrottleToolbar';
-import { PlanToolbarEditorLinks } from '~/routing/plans/components/PlanToolbarEditorLinks';
+import { PlanEditorActions } from '~/routing/plans/components/PlanEditorActions';
+import { PlanToolbarActionsMenu } from '~/routing/plans/components/PlanToolbarActionsMenu';
+import { PlanToolbarRunActions } from '~/routing/plans/components/PlanToolbarRunActions';
+import { PlanToolbarStatusAction } from '~/routing/plans/components/PlanToolbarStatusAction';
 import { PlanToolbarTags } from '~/routing/plans/components/PlanToolbarTags';
+import { usePlanToolbar } from '~/routing/plans/hooks/usePlanToolbar';
 import type {
   PlanTagChipData,
   PlanTagVocabularyOption,
 } from '~/routing/plans/components/PlanTagChips';
-import { PlanToolbarActionsMenu } from '~/routing/plans/components/PlanToolbarActionsMenu';
-import { PlanToolbarRunActions } from '~/routing/plans/components/PlanToolbarRunActions';
-import { PlanToolbarStatusAction } from '~/routing/plans/components/PlanToolbarStatusAction';
-import { usePlanToolbar } from '~/routing/plans/hooks/usePlanToolbar';
 import type { WorkspaceEditorId } from '~/__generated__/graphql';
 
 export interface PlanToolbarProps {
@@ -151,7 +150,7 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
       className={className}
       dataTestId="PlanToolbar"
       editorActions={
-        <PlanToolbarEditorLinks
+        <PlanEditorActions
           editors={editors}
           planId={planId}
           workingDirectory={editorWorkingDirectory}
@@ -193,14 +192,6 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
           tags={tags}
           vocabulary={tagVocabulary}
         />
-      }
-      utilityContent={
-        <Link
-          className="text-muted-foreground hover:text-foreground text-xs underline-offset-4 hover:underline"
-          to="#plan-workflow-run-transparency"
-        >
-          CLI preview and history
-        </Link>
       }
     />
   );

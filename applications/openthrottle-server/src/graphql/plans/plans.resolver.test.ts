@@ -136,6 +136,7 @@ describe('PlansResolver', () => {
 
   const mockProjectLoad = vi.fn().mockResolvedValue(null);
   const mockTaskCountLoad = vi.fn().mockResolvedValue(0);
+  const mockTasksCompletedCountLoad = vi.fn().mockResolvedValue(0);
   const mockPlanHooksLoad = vi
     .fn()
     .mockResolvedValue({ after: [], before: [] });
@@ -143,6 +144,7 @@ describe('PlansResolver', () => {
     planHooksByPlanIdLoader: { load: mockPlanHooksLoad },
     projectLoader: { load: mockProjectLoad },
     taskCountByPlanIdLoader: { load: mockTaskCountLoad },
+    tasksCompletedCountByPlanIdLoader: { load: mockTasksCompletedCountLoad },
   });
 
   const mockAdd = vi.fn().mockResolvedValue({ id: 'job-1', name: 'run-plan' });
@@ -535,6 +537,15 @@ describe('PlansResolver', () => {
 
       expect(mockTaskCountLoad).toHaveBeenCalledWith(mockPlan.id);
       expect(result).toBe(7);
+    });
+
+    test('tasksCompletedCount resolves through tasksCompletedCountByPlanIdLoader', async () => {
+      mockTasksCompletedCountLoad.mockResolvedValueOnce(4);
+
+      const result = await resolver.tasksCompletedCount(mockPlan);
+
+      expect(mockTasksCompletedCountLoad).toHaveBeenCalledWith(mockPlan.id);
+      expect(result).toBe(4);
     });
 
     test('beforeHooks resolves the plan-level before group via planHooksByPlanIdLoader', async () => {

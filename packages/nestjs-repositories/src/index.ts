@@ -8,6 +8,7 @@ export {
   createEntityByIdLoader,
   createGroupedCountLoader,
   type CollectionByColumnLoaderOptions,
+  type GroupedCountColumnInFilter,
   type GroupedCountLoaderOptions,
   type RepositoryAccessor,
 } from './common/entity-loaders';

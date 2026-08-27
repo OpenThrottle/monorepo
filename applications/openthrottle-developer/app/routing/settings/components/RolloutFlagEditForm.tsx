@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { Form, Link, useNavigation } from 'react-router';
+import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import {
   Button,
   Card,
@@ -10,6 +11,7 @@ import {
 import type { RolloutFlagFieldsFragment } from '~/__generated__/graphql';
 import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
 import { RolloutFlagFormFields } from '~/routing/settings/components/RolloutFlagFormFields';
+import { ToggleRightIcon } from 'lucide-react';
 
 export interface RolloutFlagEditFormProps {
   actionError?: string | null;
@@ -30,6 +32,7 @@ export const RolloutFlagEditForm = (
   const navigation = useNavigation();
 
   // Setup
+  const title = `${ROLLOUT_COPY.editTitle}: ${flag.key}`;
   const intent = navigation.formData?.get('intent');
   const updating =
     navigation.state === 'submitting' && intent === 'updateRolloutFlag';
@@ -45,47 +48,61 @@ export const RolloutFlagEditForm = (
   // 🔌 Short Circuit
 
   return (
-    <Card data-testid="RolloutFlagEditForm">
-      <CardHeader>
-        <CardTitle className="text-base">{ROLLOUT_COPY.editTitle}</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <Form className="space-y-4" method="post">
-          <input name="intent" type="hidden" value="updateRolloutFlag" />
-          <input name="id" type="hidden" value={flag.id} />
-          <RolloutFlagFormFields flag={flag} idPrefix="edit-rollout-flag" />
+    <>
+      <div>
+        <GlobalHeading
+          className="mb-4"
+          heading="h1"
+          icon={ToggleRightIcon}
+          title={title}
+        />
+        <p className="text-muted-foreground text-sm">
+          {ROLLOUT_COPY.editDescription}
+        </p>
+      </div>
 
-          {actionError ? (
-            <p className="text-destructive text-sm" role="alert">
-              {actionError}
-            </p>
-          ) : null}
+      <Card data-testid="RolloutFlagEditForm">
+        <CardHeader>
+          <CardTitle className="text-base">{ROLLOUT_COPY.editTitle}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <Form className="space-y-4" method="post">
+            <input name="intent" type="hidden" value="updateRolloutFlag" />
+            <input name="id" type="hidden" value={flag.id} />
+            <RolloutFlagFormFields flag={flag} idPrefix="edit-rollout-flag" />
 
-          <div className="flex items-center gap-2">
-            <Button disabled={updating} type="submit">
-              {updating ? 'Saving…' : ROLLOUT_COPY.saveButton}
+            {actionError ? (
+              <p className="text-destructive text-sm" role="alert">
+                {actionError}
+              </p>
+            ) : null}
+
+            <div className="flex items-center gap-2">
+              <Button disabled={updating} type="submit">
+                {updating ? 'Saving…' : ROLLOUT_COPY.saveButton}
+              </Button>
+              <Button asChild={true} type="button" variant="ghost">
+                <Link to={cancelTo}>Cancel</Link>
+              </Button>
+            </div>
+          </Form>
+
+          <Form
+            method="post"
+            onSubmit={(event) => {
+              if (!window.confirm(ROLLOUT_COPY.deleteConfirm)) {
+                event.preventDefault();
+              }
+            }}
+          >
+            <input name="intent" type="hidden" value="deleteRolloutFlag" />
+            <input name="id" type="hidden" value={flag.id} />
+            <Button disabled={deleting} type="submit" variant="destructive">
+              {deleting ? 'Deleting…' : ROLLOUT_COPY.deleteButton}
             </Button>
-            <Button asChild={true} type="button" variant="ghost">
-              <Link to={cancelTo}>Cancel</Link>
-            </Button>
-          </div>
-        </Form>
-
-        <Form
-          method="post"
-          onSubmit={(event) => {
-            if (!window.confirm(ROLLOUT_COPY.deleteConfirm)) {
-              event.preventDefault();
-            }
-          }}
-        >
-          <input name="intent" type="hidden" value="deleteRolloutFlag" />
-          <input name="id" type="hidden" value={flag.id} />
-          <Button disabled={deleting} type="submit" variant="destructive">
-            {deleting ? 'Deleting…' : ROLLOUT_COPY.deleteButton}
-          </Button>
-        </Form>
-      </CardContent>
-    </Card>
+          </Form>
+        </CardContent>
+      </Card>
+    </>
   );
 };

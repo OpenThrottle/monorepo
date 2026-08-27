@@ -322,7 +322,7 @@ describe('PlanToolbar evaluate-rules submit', () => {
 });
 
 describe('PlanToolbar editor deep links', () => {
-  test('renders PlanEditorActions alongside the CLI preview link', async () => {
+  test('renders PlanEditorActions once the deferred editors resolve', async () => {
     const component = renderToolbar({
       editorWorkingDirectory: '/Users/matt/Development/openthrottle',
       editors: Promise.resolve([WorkspaceEditorId.Claude]),
@@ -337,19 +337,13 @@ describe('PlanToolbar editor deep links', () => {
       component.getByRole('link', { name: 'Claude Code' }),
     ).toHaveAttribute(
       'href',
-      `claude://code/new?folder=%2FUsers%2Fmatt%2FDevelopment%2Fopenthrottle&q=%2Fot-claude-loop%20${PLAN_ID}`,
+      `claude://code/new?folder=%2FUsers%2Fmatt%2FDevelopment%2Fopenthrottle%2F&q=%2Fot-claude-loop%20${PLAN_ID}`,
     );
-    expect(
-      component.getByRole('link', { name: /cli preview and history/i }),
-    ).toBeInTheDocument();
   });
 
-  test('renders only the CLI preview link when no editor is enabled', () => {
+  test('renders no editor actions when no editors promise is supplied', () => {
     const component = renderToolbar({ planId: PLAN_ID });
 
     expect(component.queryByTestId('PlanEditorActions')).toBeNull();
-    expect(
-      component.getByRole('link', { name: /cli preview and history/i }),
-    ).toBeInTheDocument();
   });
 });

@@ -8,16 +8,22 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import { SquareArrowOutUpRight } from 'lucide-react';
 import { getWorkspaceEditorDeepLink } from '~/global/config/workspace-editor-deep-links';
-import { PLAN_EDITOR_ACTIONS_COPY } from '~/routing/plans/data/data.copy';
+import { PlanDeferredSection } from '~/routing/plans/components/PlanDeferredSection';
+import { PlanToolbarTagsSkeleton } from '~/routing/plans/components/PlanToolbarTagsSkeleton';
+import {
+  PLAN_DEFERRED_SECTION_COPY,
+  PLAN_EDITOR_ACTIONS_COPY,
+} from '~/routing/plans/data/data.copy';
 import type { WorkspaceEditorId } from '~/__generated__/graphql';
 
 export interface PlanEditorActionsProps {
   className?: string;
   /**
-   * @description Editors the user enabled in workspace settings. One button per
-   * editor whose deep link resolves.
+   * @description Editors enabled in workspace settings, as the loader's deferred
+   * promise; empty renders none. Deep links are a convenience, so they get their
+   * own boundary rather than holding up the toolbar's Run/Queue controls.
    */
-  editors: readonly WorkspaceEditorId[];
+  editors?: Promise<readonly WorkspaceEditorId[]>;
   planId: string;
   /**
    * @description Absolute path; the run-config working directory or the selected
@@ -37,10 +43,11 @@ export interface PlanEditorActionsProps {
  * indistinguishable from a broken feature, so say why the button is inert.
  * Renders nothing only when no enabled editor is recognized at all.
  *
- * Rendered through `OpenThrottleToolbar`'s dedicated `editorActions` slot rather
- * than folded into `utilityContent`, which already holds the CLI-preview link.
- * The slot is optional, so `PlanTaskToolbar` — which shares the skeleton — is
- * untouched.
+ * The enabled-editors list streams in behind {@link PlanDeferredSection}, so
+ * the rest of the toolbar paints from critical data. Rendered through
+ * `OpenThrottleToolbar`'s dedicated `editorActions` slot rather than folded
+ * into `utilityContent`, which already holds the CLI-preview link. The slot is
+ * optional, so `PlanTaskToolbar` — which shares the skeleton — is untouched.
  */
 export const PlanEditorActions = (
   props: PlanEditorActionsProps,
@@ -50,78 +57,98 @@ export const PlanEditorActions = (
   // Hooks
 
   // Setup
-  // A null href means the editor is supported but its precondition is unmet
-  // (it needs a folder and none resolved). Those render disabled with a tooltip
-  // rather than vanishing — silent absence reads as "the feature is broken".
-  const targets = editors
-    .map((editor) => {
-      const target = getWorkspaceEditorDeepLink(editor);
-
-      if (target === null) {
-        return null;
-      }
-
-      return {
-        href: target.buildPlanHref({ planId, workingDirectory }),
-        target,
-      };
-    })
-    .filter((entry) => entry !== null);
 
   // Handlers
 
   // Markup
+  const renderResolved = (
+    resolvedEditors: readonly WorkspaceEditorId[],
+  ): React.ReactNode => {
+    // A null href means the editor is supported but its precondition is unmet
+    // (it needs a folder and none resolved). Those render disabled with a tooltip
+    // rather than vanishing — silent absence reads as "the feature is broken".
+    const targets = resolvedEditors
+      .map((editor) => {
+        const target = getWorkspaceEditorDeepLink(editor);
+
+        if (target === null) {
+          return null;
+        }
+
+        return {
+          href: target.buildPlanHref({ planId, workingDirectory }),
+          target,
+        };
+      })
+      .filter((entry) => entry !== null);
+
+    if (targets.length === 0) {
+      return null;
+    }
+
+    return (
+      <div
+        className={clsx('flex flex-wrap items-center gap-2', className)}
+        data-testid="PlanEditorActions"
+      >
+        {targets.map(({ href, target }) => {
+          const label = (
+            <div className="flex items-center gap-2">
+              <SquareArrowOutUpRight aria-hidden={true} className="size-2.5" />
+              {target.label}
+            </div>
+          );
+
+          return (
+            <Tooltip delayDuration={1_000} key={target.label}>
+              <TooltipTrigger asChild={true}>
+                {href === null ? (
+                  // The span carries the pointer events a disabled button cannot,
+                  // so the tooltip explaining WHY still opens.
+                  <span
+                    className="inline-flex"
+                    data-testid={`PlanEditorActions-disabled-${target.label}`}
+                  >
+                    <Button disabled={true} size="xs" variant="outline">
+                      {label}
+                    </Button>
+                  </span>
+                ) : (
+                  <Button asChild={true} size="xs" variant="outline">
+                    <a href={href}>{label}</a>
+                  </Button>
+                )}
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs" side="top">
+                {href === null
+                  ? PLAN_EDITOR_ACTIONS_COPY.needsCheckoutTooltip(target.label)
+                  : target.promptTargetsFocusedWindow
+                    ? PLAN_EDITOR_ACTIONS_COPY.focusedWindowTooltip(
+                        target.label,
+                      )
+                    : PLAN_EDITOR_ACTIONS_COPY.openTooltip(target.label)}
+              </TooltipContent>
+            </Tooltip>
+          );
+        })}
+      </div>
+    );
+  };
 
   // Life Cycle
 
   // 🔌 Short Circuit
-  if (targets.length === 0) {
+  if (editors == null) {
     return null;
   }
 
   return (
-    <div
-      className={clsx('flex flex-wrap items-center gap-2', className)}
-      data-testid="PlanEditorActions"
+    <PlanDeferredSection
+      errorText={PLAN_DEFERRED_SECTION_COPY.editorsError}
+      fallback={<PlanToolbarTagsSkeleton />}
+      resolve={editors}
     >
-      {targets.map(({ href, target }) => {
-        const label = (
-          <>
-            <SquareArrowOutUpRight aria-hidden={true} className="size-3" />
-            {target.label}
-          </>
-        );
-
-        return (
-          <Tooltip delayDuration={1_000} key={target.label}>
-            <TooltipTrigger asChild={true}>
-              {href === null ? (
-                // The span carries the pointer events a disabled button cannot,
-                // so the tooltip explaining WHY still opens.
-                <span
-                  className="inline-flex"
-                  data-testid={`PlanEditorActions-disabled-${target.label}`}
-                >
-                  <Button disabled={true} size="sm" variant="outline">
-                    {label}
-                  </Button>
-                </span>
-              ) : (
-                <Button asChild={true} size="sm" variant="outline">
-                  <a href={href}>{label}</a>
-                </Button>
-              )}
-            </TooltipTrigger>
-            <TooltipContent className="max-w-xs" side="top">
-              {href === null
-                ? PLAN_EDITOR_ACTIONS_COPY.needsCheckoutTooltip(target.label)
-                : target.promptTargetsFocusedWindow
-                  ? PLAN_EDITOR_ACTIONS_COPY.focusedWindowTooltip(target.label)
-                  : PLAN_EDITOR_ACTIONS_COPY.openTooltip(target.label)}
-            </TooltipContent>
-          </Tooltip>
-        );
-      })}
-    </div>
+      {renderResolved}
+    </PlanDeferredSection>
   );
 };

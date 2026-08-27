@@ -2527,6 +2527,8 @@ export type PlanObject = {
   tags: Array<PlanTagObject>;
   /** Number of tasks belonging to this plan. Resolved from tasks table. */
   taskCount: Scalars['Int']['output'];
+  /** Number of resolved tasks on this plan (status COMPLETED or SKIPPED). Mirrors client getResolvedTaskCount; SKIPPED counts as done / won't be worked on. */
+  tasksCompletedCount: Scalars['Int']['output'];
   title: Scalars['String']['output'];
   updatedAt: Scalars['DateTime']['output'];
 };
@@ -7400,6 +7402,7 @@ export type PlanCardFragment = {
   status: string;
   summary?: string | null;
   taskCount: number;
+  tasksCompletedCount: number;
   title: string;
   updatedAt: any;
   projectRelation?: {
@@ -7458,6 +7461,7 @@ export type GetPlansByStatusQuery = {
       status: string;
       summary?: string | null;
       taskCount: number;
+      tasksCompletedCount: number;
       title: string;
       updatedAt: any;
       projectRelation?: {
@@ -11555,6 +11559,10 @@ export const PlanCardFragmentDoc = {
             },
           },
           { kind: 'Field', name: { kind: 'Name', value: 'taskCount' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'tasksCompletedCount' },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'title' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
         ],
@@ -18628,6 +18636,10 @@ export const GetPlansByStatusDocument = {
             },
           },
           { kind: 'Field', name: { kind: 'Name', value: 'taskCount' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'tasksCompletedCount' },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'title' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
         ],

@@ -23,30 +23,13 @@ export const GlobalLayoutBreadcrumbs = (
 
   // Setup
   const breadcrumbMatches = matches.filter(hasBreadcrumbHandle);
-
   const breadcrumb = breadcrumbMatches
     .filter((match) => match.handle.breadcrumb)
-    .map((match) => match.handle.breadcrumb?.(match));
+    .map((match) => match.handle.breadcrumb?.(match))[0];
 
   const links = breadcrumbMatches
     .filter((match) => match.handle.links)
     .map((match) => match.handle.links?.(match) ?? []);
-
-  // if (links[0]) {
-  //   links[0].unshift({
-  //     children: 'OpenThrottle',
-  //     className: 'hidden lg:block font-semibold!',
-  //     to: '/',
-  //   });
-  // } else {
-  //   links.unshift([
-  //     {
-  //       children: 'OpenThrottle',
-  //       className: 'hidden lg:block font-semibold!',
-  //       to: '/',
-  //     },
-  //   ]);
-  // }
 
   // Handlers
 

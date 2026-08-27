@@ -102,11 +102,24 @@ export function createCollectionByColumnLoader<TEntity extends ObjectLiteral>(
 }
 
 /**
+ * @description Optional IN-filter applied on top of the grouped count query
+ * (e.g. count only tasks whose `status` is in COMPLETED/SKIPPED).
+ */
+export interface GroupedCountColumnInFilter<TEntity extends ObjectLiteral> {
+  /** Column to constrain (e.g. `status`). */
+  readonly column: keyof TEntity & string;
+  /** Allowed values for that column (`IN (...)`). */
+  readonly values: readonly string[];
+}
+
+/**
  * @description Options for {@link createGroupedCountLoader}.
  */
 export interface GroupedCountLoaderOptions<TEntity extends ObjectLiteral> {
   /** Foreign-key column to count rows by (e.g. `planId`). */
   readonly column: keyof TEntity & string;
+  /** Optional additional `column IN (values)` predicate on the count query. */
+  readonly filter?: GroupedCountColumnInFilter<TEntity>;
 }
 
 /**
@@ -116,24 +129,32 @@ export interface GroupedCountLoaderOptions<TEntity extends ObjectLiteral> {
  * to `0`.
  *
  * @param accessor - A service exposing `getRepository()`.
- * @param options - The grouping `column`.
+ * @param options - The grouping `column` and optional {@link GroupedCountColumnInFilter}.
  * @returns A DataLoader keyed by the column value returning a count.
  */
 export function createGroupedCountLoader<TEntity extends ObjectLiteral>(
   accessor: RepositoryAccessor<TEntity>,
-  { column }: GroupedCountLoaderOptions<TEntity>,
+  { column, filter }: GroupedCountLoaderOptions<TEntity>,
 ): DataLoader<string, number> {
   return new DataLoader<string, number>(async (keys) => {
     if (keys.length === 0) return [];
 
     const ids = [...new Set(keys)];
     const alias = 'entity';
-    const rows = await accessor
+    let qb = accessor
       .getRepository()
       .createQueryBuilder(alias)
       .select(`${alias}.${column}`, 'key')
       .addSelect('COUNT(*)', 'count')
-      .where(`${alias}.${column} IN (:...ids)`, { ids })
+      .where(`${alias}.${column} IN (:...ids)`, { ids });
+
+    if (filter != null && filter.values.length > 0) {
+      qb = qb.andWhere(`${alias}.${filter.column} IN (:...filterValues)`, {
+        filterValues: [...filter.values],
+      });
+    }
+
+    const rows = await qb
       .groupBy(`${alias}.${column}`)
       .getRawMany<{ count: string; key: string }>();
 
