@@ -331,6 +331,16 @@ export {
   WORKSPACE_EDITOR_IDS,
   isWorkspaceEditorId,
 } from './modules/workspace-settings/workspace-editor-id';
+export {
+  EDITOR_PRESENCE_STATES,
+  detectEditorPresence,
+} from './modules/workspace-settings/editor-presence';
+export type {
+  DetectEditorPresenceOptions,
+  EditorPresence,
+  EditorPresenceResult,
+  EditorPresenceState,
+} from './modules/workspace-settings/editor-presence';
 export { UserWorkspaceSettings } from './modules/workspace-settings/user-workspace-settings.entity';
 export { UserWorkspaceSettingsService } from './modules/workspace-settings/user-workspace-settings.service';
 export type { WorkspaceLocalRepository } from './modules/workspace-settings/workspace-local-repository.entity';

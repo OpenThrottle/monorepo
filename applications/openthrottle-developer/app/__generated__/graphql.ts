@@ -1025,6 +1025,34 @@ export type DuplicateJobResultObject = {
   success: Scalars['Boolean']['output'];
 };
 
+export type EditorPresenceObject = {
+  __typename?: 'EditorPresenceObject';
+  /** The editor this presence result describes. */
+  editor: WorkspaceEditorId;
+  /** Probed presence. Advisory only: a NOT_FOUND editor can still be enabled and will still get a toolbar button, and UNKNOWN must render no hint at all. */
+  presence: EditorPresenceState;
+};
+
+export type EditorPresenceResultObject = {
+  __typename?: 'EditorPresenceResultObject';
+  /** Every editor OpenThrottle can configure, with its probed presence. Always covers the full editor vocabulary — editors are never omitted, they report UNKNOWN. */
+  editors: Array<EditorPresenceObject>;
+  /** ISO-8601 timestamp of when this snapshot was scanned. Cached, so it may lag the current moment by up to the soft TTL. */
+  scannedAt: Scalars['String']['output'];
+  /** True when the probe ran against the user's own machine. False means every entry is UNKNOWN — typically a containerized server, which can only see its own filesystem and so must not claim anything about the user's editors. Clients can use this to suppress hinting wholesale. */
+  trusted: Scalars['Boolean']['output'];
+};
+
+/** Whether an editor appears to be installed on the machine hosting the OpenThrottle server. Advisory only — never a gate on enabling an editor. Supported values: installed, not_found, unknown. */
+export enum EditorPresenceState {
+  /** The probe found the editor on the host. */
+  Installed = 'INSTALLED',
+  /** The probe ran on the user's own machine and did not find the editor. Safe to show as an advisory; still never a reason to disable the editor. */
+  NotFound = 'NOT_FOUND',
+  /** The probe could not be trusted, so nothing is claimed either way — the server is containerized (its filesystem is not the user's), the platform has no verified probe, or the probe failed. Clients must render no hint for this state. */
+  Unknown = 'UNKNOWN',
+}
+
 export type EndWorkSessionInput = {
   /** Session to close */
   sessionId: Scalars['ID']['input'];
@@ -2912,6 +2940,8 @@ export type Query = {
   discoveredFolders: Array<DiscoveredFolderObject>;
   /** Git worktrees that exist on disk for the authenticated user's repositories, whether or not OpenThrottle provisioned them, each classified RUNNING / DIRTY / IDLE. Read-only: nothing here creates, prunes or removes a worktree. Runs live on every request and never throws — an unreadable root or a failed git probe becomes a warning on the payload. */
   discoveredWorktrees: DiscoveredWorktreesObject;
+  /** Probe which editors are installed on the machine hosting the server. Returns a cached snapshot (60s TTL); does not probe per request. **Advisory only** — this never gates enabling an editor. An editor reporting NOT_FOUND can still be enabled and will still get a working toolbar button, and UNKNOWN (a containerized server, an unsupported platform, or a failed probe) means nothing is claimed either way and clients should render no hint. */
+  editorPresence: EditorPresenceResultObject;
   /** Evaluated rollout flags for client hydration. Public: no flags:read. Authenticated principal enriches targeting/bucketing when present; otherwise anonymousId (or a degraded shared subject) is used for bucketing. applicationKey is accepted for future app scoping (log/stub today). */
   evaluateFeatureFlags: Array<FeatureFlagObject>;
   /** Get a generator by name (includes schema JSON) */
@@ -10189,6 +10219,22 @@ export type ApplyWorkspaceEditorConfigurationMutation = {
       filesystemPath: string;
       repositoryId: string;
       warnings: Array<string>;
+    }>;
+  };
+};
+
+export type GetEditorPresenceQueryVariables = Exact<{ [key: string]: never }>;
+
+export type GetEditorPresenceQuery = {
+  __typename?: 'Query';
+  editorPresence: {
+    __typename?: 'EditorPresenceResultObject';
+    scannedAt: string;
+    trusted: boolean;
+    editors: Array<{
+      __typename?: 'EditorPresenceObject';
+      editor: WorkspaceEditorId;
+      presence: EditorPresenceState;
     }>;
   };
 };
@@ -26229,6 +26275,52 @@ export const ApplyWorkspaceEditorConfigurationDocument = {
 } as unknown as DocumentNode<
   ApplyWorkspaceEditorConfigurationMutation,
   ApplyWorkspaceEditorConfigurationMutationVariables
+>;
+export const GetEditorPresenceDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getEditorPresence' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'editorPresence' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'editors' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'editor' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'presence' },
+                      },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'trusted' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetEditorPresenceQuery,
+  GetEditorPresenceQueryVariables
 >;
 export const GetSkillDetailUsageDocument = {
   kind: 'Document',

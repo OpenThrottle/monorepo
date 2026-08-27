@@ -1145,6 +1145,65 @@ type DailyStatsRangeResultObject {
   items: [DailyStatsObject!]!
 }
 
+type EditorPresenceObject {
+  """The editor this presence result describes."""
+  editor: WorkspaceEditorId!
+
+  """
+  Probed presence. Advisory only: a NOT_FOUND editor can still be enabled and will still get a toolbar button, and UNKNOWN must render no hint at all.
+  """
+  presence: EditorPresenceState!
+}
+
+"""
+Editor OpenThrottle may configure in linked local repositories (MCP, skills, rules). Supported values: claude, cursor, vscode.
+"""
+enum WorkspaceEditorId {
+  """Claude Code"""
+  CLAUDE
+
+  """Cursor IDE"""
+  CURSOR
+
+  """Visual Studio Code"""
+  VSCODE
+}
+
+"""
+Whether an editor appears to be installed on the machine hosting the OpenThrottle server. Advisory only — never a gate on enabling an editor. Supported values: installed, not_found, unknown.
+"""
+enum EditorPresenceState {
+  """The probe found the editor on the host."""
+  INSTALLED
+
+  """
+  The probe ran on the user's own machine and did not find the editor. Safe to show as an advisory; still never a reason to disable the editor.
+  """
+  NOT_FOUND
+
+  """
+  The probe could not be trusted, so nothing is claimed either way — the server is containerized (its filesystem is not the user's), the platform has no verified probe, or the probe failed. Clients must render no hint for this state.
+  """
+  UNKNOWN
+}
+
+type EditorPresenceResultObject {
+  """
+  Every editor OpenThrottle can configure, with its probed presence. Always covers the full editor vocabulary — editors are never omitted, they report UNKNOWN.
+  """
+  editors: [EditorPresenceObject!]!
+
+  """
+  ISO-8601 timestamp of when this snapshot was scanned. Cached, so it may lag the current moment by up to the soft TTL.
+  """
+  scannedAt: String!
+
+  """
+  True when the probe ran against the user's own machine. False means every entry is UNKNOWN — typically a containerized server, which can only see its own filesystem and so must not claim anything about the user's editors. Clients can use this to suppress hinting wholesale.
+  """
+  trusted: Boolean!
+}
+
 type GeneratorObject {
   description: String!
   name: String!
@@ -3011,20 +3070,6 @@ type UserWorkspaceProfileObject {
 }
 
 """
-Editor OpenThrottle may configure in linked local repositories (MCP, skills, rules). Supported values: claude, cursor, vscode.
-"""
-enum WorkspaceEditorId {
-  """Claude Code"""
-  CLAUDE
-
-  """Cursor IDE"""
-  CURSOR
-
-  """Visual Studio Code"""
-  VSCODE
-}
-
-"""
 A local filesystem checkout registered under the user's workspace settings.
 """
 type WorkspaceLocalRepositoryObject {
@@ -3631,6 +3676,11 @@ type Query {
     """End date (inclusive), YYYY-MM-DD"""
     end: String!
   ): DailyStatsRangeResultObject!
+
+  """
+  Probe which editors are installed on the machine hosting the server. Returns a cached snapshot (60s TTL); does not probe per request. **Advisory only** — this never gates enabling an editor. An editor reporting NOT_FOUND can still be enabled and will still get a working toolbar button, and UNKNOWN (a containerized server, an unsupported platform, or a failed probe) means nothing is claimed either way and clients should render no hint.
+  """
+  editorPresence: EditorPresenceResultObject!
 
   """List available NX generators from @tools/generators"""
   generators: [GeneratorObject!]!

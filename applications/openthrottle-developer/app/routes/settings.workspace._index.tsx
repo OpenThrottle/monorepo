@@ -10,7 +10,10 @@ import {
 } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { GetWorkspaceSettingsDocument } from '~/__generated__/graphql';
+import {
+  GetEditorPresenceDocument,
+  GetWorkspaceSettingsDocument,
+} from '~/__generated__/graphql';
 import { SettingsWorkspaceApplyEditors } from '~/routing/settings/components/SettingsWorkspaceApplyEditors';
 import { SettingsWorkspaceApplyResults } from '~/routing/settings/components/SettingsWorkspaceApplyResults';
 import { SettingsWorkspaceEditorTargets } from '~/routing/settings/components/SettingsWorkspaceEditorTargets';
@@ -34,15 +37,21 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
 };
 
 export const loader = async (args: Route.LoaderArgs) => {
-  const data = await executeGraphqlWithAuth(
-    args.request,
-    GetWorkspaceSettingsDocument,
-  );
+  // Two documents, not one. Editor presence is an advisory hint over a host filesystem
+  // probe; fetching it separately and swallowing its failure means a probe problem
+  // degrades to "no hints" instead of taking the whole settings page down.
+  const [data, presence] = await Promise.all([
+    executeGraphqlWithAuth(args.request, GetWorkspaceSettingsDocument),
+    executeGraphqlWithAuth(args.request, GetEditorPresenceDocument).catch(
+      () => null,
+    ),
+  ]);
 
   const profile = data.workspaceSettings.profile;
   const localRepositories = data.workspaceSettings.localRepositories;
 
   return {
+    editorPresence: presence?.editorPresence ?? null,
     localRepositories,
     profile,
     targets: buildWorkspaceEditorTargets(
@@ -64,7 +73,7 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData, loaderData, matches: _m, params: _p } = props;
-  const { localRepositories, profile, targets } = loaderData;
+  const { editorPresence, localRepositories, profile, targets } = loaderData;
 
   // Hooks
 
@@ -94,6 +103,7 @@ export default function Component(
       <div className="space-y-8">
         <SettingsWorkspaceEditorsForm
           actionError={actionError}
+          editorPresence={editorPresence}
           profile={profile}
         />
         <SettingsWorkspaceEditorTargets

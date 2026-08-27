@@ -58,3 +58,17 @@ mutation applyWorkspaceEditorConfiguration(
     }
   }
 }
+
+# Deliberately its OWN query rather than a field on getWorkspaceSettings: presence is
+# an advisory hint, and the loader fetches it with a catch so a probe failure degrades
+# to "no hints" instead of taking the settings page down with it.
+query getEditorPresence {
+  editorPresence {
+    editors {
+      editor
+      presence
+    }
+    scannedAt
+    trusted
+  }
+}
