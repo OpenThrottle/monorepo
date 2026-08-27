@@ -1,6 +1,6 @@
 import * as React from 'react';
 import clsx from 'clsx';
-import { ChatCheckoutSelector } from './ChatCheckoutSelector';
+import { ChatComposerCheckoutControl } from './ChatComposerCheckoutControl';
 import { ChatComposerAttachControl } from './ChatComposerAttachControl';
 import { ChatComposerMicControl } from './ChatComposerMicControl';
 import { ChatComposerModelControl } from './ChatComposerModelControl';
@@ -24,15 +24,11 @@ import type {
 
 export interface ChatComposerToolbarProps {
   /**
-   * Selected backend's capabilities. When supplied, the toolbar gates the new
-   * reasoning/tier, permission, and checkout controls by it. When omitted, none
-   * of those controls render and the toolbar behaves exactly as before.
+   * Selected backend's capabilities. Gates the reasoning/tier, permission and
+   * checkout controls; omitting it renders none of them.
    */
   readonly capabilities?: ChatBackendCapabilities;
-  /**
-   * Repositories/checkouts for {@link ChatCheckoutSelector}. Rendered only when
-   * {@link capabilities} reports `requiresRepository` and this list is supplied.
-   */
+  /** Checkouts for {@link ChatComposerCheckoutControl}, which gates on them. */
   readonly checkouts?: readonly ChatCheckoutOption[];
   readonly className?: string;
   /** Context sources for the attach control; omit to hide the control. */
@@ -55,6 +51,8 @@ export interface ChatComposerToolbarProps {
   readonly models?: readonly ChatModelOption[];
   readonly onAddContext?: (sourceId: string) => void;
   readonly onCheckoutChange?: (checkoutId: string) => void;
+  /** Primary-first multi-select callback; omit to force single-select. */
+  readonly onCheckoutsChange?: (checkoutIds: readonly string[]) => void;
   /** Toggle voice input (click starts / click stops); omit to hide the mic control. */
   readonly onMicToggle?: () => void;
   readonly onModeChange?: (mode: ChatComposerMode) => void;
@@ -85,6 +83,8 @@ export interface ChatComposerToolbarProps {
   readonly reasoning?: ChatReasoningLevel;
   /** Selected checkout id; pair with {@link checkouts}. */
   readonly selectedCheckoutId?: string;
+  /** Primary-first selection (index 0 is the spawn cwd) for multi-select. */
+  readonly selectedCheckoutIds?: readonly string[];
   /** Selected service tier; pair with {@link capabilities}. */
   readonly serviceTier?: ChatServiceTier;
 }
@@ -95,12 +95,11 @@ export interface ChatComposerToolbarProps {
  * control, and a toggle-only voice-input mic. T3-style cluster (all additive
  * and independently optional): a grouped {@link ChatModelPicker} (engaged by
  * supplying `modelGroups`), a {@link ChatReasoningTierControl}, a
- * {@link ChatPermissionModeControl}, and a {@link ChatCheckoutSelector}. The
- * three capability-gated controls render only when `capabilities` is supplied
- * (checkout additionally requires `requiresRepository` + a `checkouts` list);
- * with none of the new props the toolbar renders exactly as before. The
- * package hardcodes no model/persona/capability data; consumers own state and
- * content (including all capture/transcription logic).
+ * {@link ChatPermissionModeControl}, and a
+ * {@link ChatComposerCheckoutControl}. The three capability-gated controls
+ * render only when `capabilities` is supplied; with none of the new props the
+ * toolbar renders exactly as before. The package hardcodes no
+ * model/persona/capability data; consumers own state and content.
  *
  * @public
  */
@@ -119,6 +118,7 @@ export const ChatComposerToolbar = (
     models,
     onAddContext,
     onCheckoutChange,
+    onCheckoutsChange,
     onMicToggle,
     onModelChange,
     onOpenSettings,
@@ -134,14 +134,13 @@ export const ChatComposerToolbar = (
     personas,
     reasoning,
     selectedCheckoutId,
+    selectedCheckoutIds,
     serviceTier,
   } = props;
 
   // Hooks
 
   // Setup
-  const showCheckout =
-    capabilities?.requiresRepository === true && checkouts != null;
   // The Plan/Build mode toggle is intentionally not surfaced today; `mode` /
   // `onModeChange` remain accepted so callers can wire it without an API change.
 
@@ -183,13 +182,14 @@ export const ChatComposerToolbar = (
           permissionMode={permissionMode}
         />
       ) : null}
-      {showCheckout && checkouts != null ? (
-        <ChatCheckoutSelector
-          checkouts={checkouts}
-          onCheckoutChange={onCheckoutChange ?? (() => undefined)}
-          selectedCheckoutId={selectedCheckoutId}
-        />
-      ) : null}
+      <ChatComposerCheckoutControl
+        capabilities={capabilities}
+        checkouts={checkouts}
+        onCheckoutChange={onCheckoutChange}
+        onCheckoutsChange={onCheckoutsChange}
+        selectedCheckoutId={selectedCheckoutId}
+        selectedCheckoutIds={selectedCheckoutIds}
+      />
       <ChatComposerPersonaSelect
         onPersonaChange={onPersonaChange}
         personas={personas}

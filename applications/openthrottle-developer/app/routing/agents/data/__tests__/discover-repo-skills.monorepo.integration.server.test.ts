@@ -52,6 +52,7 @@ const countOnDiskSkillFolders = (root: string, skillsDir: string): number => {
       dirent.isDirectory() ||
       (dirent.isSymbolicLink() &&
         statSync(join(absoluteDir, dirent.name)).isDirectory());
+
     return isFolder && existsSync(join(absoluteDir, dirent.name, 'SKILL.md'));
   }).length;
 };

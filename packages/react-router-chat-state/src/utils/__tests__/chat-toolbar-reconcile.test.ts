@@ -45,6 +45,7 @@ const openaiModel: ChatModelOption = {
 
 const repoA: ReconcileRepositoryOption = { id: 'repo-a' };
 const repoB: ReconcileRepositoryOption = { id: 'repo-b' };
+const repoC: ReconcileRepositoryOption = { id: 'repo-c' };
 const personaA: ChatPersonaOption = { id: 'persona-a', label: 'Persona A' };
 const personaB: ChatPersonaOption = { id: 'persona-b', label: 'Persona B' };
 
@@ -195,29 +196,95 @@ describe('reconcileChatToolbarState', () => {
     });
   });
 
-  describe('repositoryId', () => {
+  describe('repositoryIds', () => {
     test('keeps a persisted repository that still exists (CLI backend)', () => {
       const result = reconcileChatToolbarState(
-        persisted({ modelId: 'cursor', repositoryId: 'repo-b' }),
+        persisted({ modelId: 'cursor', repositoryIds: ['repo-b'] }),
         { models: [cliModel], personas: [], repositories: [repoA, repoB] },
       );
-      expect(result.repositoryId).toBe('repo-b');
+      expect(result.repositoryIds).toEqual(['repo-b']);
     });
 
     test('falls back to the first repository when the persisted id is gone', () => {
       const result = reconcileChatToolbarState(
-        persisted({ modelId: 'cursor', repositoryId: 'gone' }),
+        persisted({ modelId: 'cursor', repositoryIds: ['gone'] }),
         { models: [cliModel], personas: [], repositories: [repoA] },
       );
-      expect(result.repositoryId).toBe('repo-a');
+      expect(result.repositoryIds).toEqual(['repo-a']);
+    });
+
+    test('seeds the first repository when nothing is persisted', () => {
+      const result = reconcileChatToolbarState(
+        persisted({ modelId: 'cursor', repositoryIds: [] }),
+        { models: [cliModel], personas: [], repositories: [repoA, repoB] },
+      );
+      expect(result.repositoryIds).toEqual(['repo-a']);
+    });
+
+    test('yields an empty array when there are no repositories at all', () => {
+      const result = reconcileChatToolbarState(
+        persisted({ modelId: 'cursor', repositoryIds: ['gone'] }),
+        { models: [cliModel], personas: [], repositories: [] },
+      );
+      expect(result.repositoryIds).toEqual([]);
     });
 
     test('is cleared for a backend that does not run in a repository', () => {
       const result = reconcileChatToolbarState(
-        persisted({ modelId: openaiModel.id, repositoryId: 'repo-a' }),
-        { models: [openaiModel], personas: [], repositories: [repoA] },
+        persisted({
+          modelId: openaiModel.id,
+          repositoryIds: ['repo-a', 'repo-b'],
+        }),
+        { models: [openaiModel], personas: [], repositories: [repoA, repoB] },
       );
-      expect(result.repositoryId).toBeUndefined();
+      expect(result.repositoryIds).toEqual([]);
+    });
+
+    test('keeps several repositories for a backend whose cap allows them', () => {
+      const result = reconcileChatToolbarState(
+        persisted({
+          modelId: 'claude',
+          repositoryIds: ['repo-b', 'repo-a'],
+        }),
+        {
+          models: [claudeCliModel],
+          personas: [],
+          repositories: [repoA, repoB],
+        },
+      );
+      // Order is preserved: repo-b stays the primary.
+      expect(result.repositoryIds).toEqual(['repo-b', 'repo-a']);
+    });
+
+    test('drops only the vanished entries, keeping the rest in order', () => {
+      const result = reconcileChatToolbarState(
+        persisted({
+          modelId: 'claude',
+          repositoryIds: ['repo-b', 'gone', 'repo-a'],
+        }),
+        {
+          models: [claudeCliModel],
+          personas: [],
+          repositories: [repoA, repoB],
+        },
+      );
+      expect(result.repositoryIds).toEqual(['repo-b', 'repo-a']);
+    });
+
+    test('silently truncates to the cap when switching to a single-directory backend', () => {
+      const result = reconcileChatToolbarState(
+        persisted({
+          modelId: 'cursor',
+          repositoryIds: ['repo-b', 'repo-a', 'repo-c'],
+        }),
+        {
+          models: [cliModel],
+          personas: [],
+          repositories: [repoA, repoB, repoC],
+        },
+      );
+      // cursor has no --add-dir equivalent: the primary survives, the rest go.
+      expect(result.repositoryIds).toEqual(['repo-b']);
     });
   });
 
@@ -411,7 +478,7 @@ describe('reconcileChatToolbarState', () => {
         permissionMode: ChatPermissionMode.fullAccess,
         personaId: 'gone',
         reasoning: ChatReasoningLevel.high,
-        repositoryId: 'gone',
+        repositoryIds: ['gone'],
         serviceTier: ChatServiceTier.fast,
       });
       const snapshot = { ...input };

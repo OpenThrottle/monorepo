@@ -141,7 +141,12 @@ export function useHeaderChatController(
   const setPersonaId = (personaId: string): void =>
     setToolbarState((previous) => ({ ...previous, personaId }));
   const setRepositoryId = (repositoryId: string): void =>
-    setToolbarState((previous) => ({ ...previous, repositoryId }));
+    setToolbarState((previous) => ({
+      ...previous,
+      repositoryIds: [repositoryId],
+    }));
+  const setRepositoryIds = (repositoryIds: readonly string[]): void =>
+    setToolbarState((previous) => ({ ...previous, repositoryIds }));
 
   const effectiveToolbar = React.useMemo(
     () =>
@@ -159,7 +164,7 @@ export function useHeaderChatController(
   const persist = effectiveToolbar.persist;
   const personaId = effectiveToolbar.personaId;
   const reasoning = effectiveToolbar.reasoning;
-  const repositoryId = effectiveToolbar.repositoryId;
+  const repositoryIds = effectiveToolbar.repositoryIds;
   const serviceTier = effectiveToolbar.serviceTier;
 
   const decodedOption = modelId ? decodeChatOption(modelId) : null;
@@ -210,7 +215,7 @@ export function useHeaderChatController(
       return;
     }
 
-    if (decoded.backend !== 'openai' && !repositoryId) {
+    if (decoded.backend !== 'openai' && repositoryIds.length === 0) {
       turn.setError('Select a repository to run the agent in.');
       return;
     }
@@ -228,7 +233,7 @@ export function useHeaderChatController(
       persist,
       personaId,
       reasoning,
-      repositoryId,
+      repositoryIds,
       serviceTier,
     });
 
@@ -308,6 +313,7 @@ export function useHeaderChatController(
     modelId,
     models,
     onCheckoutChange: setRepositoryId,
+    onCheckoutsChange: setRepositoryIds,
     onModeChange: setMode,
     onModelChange: setModelId,
     onPermissionModeChange: setPermissionMode,
@@ -322,7 +328,8 @@ export function useHeaderChatController(
     personaId,
     personas,
     reasoning,
-    selectedCheckoutId: repositoryId,
+    selectedCheckoutId: repositoryIds[0],
+    selectedCheckoutIds: repositoryIds,
     serviceTier,
     sessionUsage: turn.sessionUsage,
   };
