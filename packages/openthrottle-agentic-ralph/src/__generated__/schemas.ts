@@ -50,6 +50,7 @@ import {
   DeleteTaskInput,
   DetachHookInput,
   DuplicateJobInput,
+  EditorPresenceState,
   EndWorkSessionInput,
   EnqueueDocIngestionInput,
   EnqueuePlanRalphOrchestratorInput,
@@ -166,6 +167,8 @@ export const definedNonNullAnySchema = z
   .refine((v) => isDefinedNonNullAny(v));
 
 export const CustomPromptTypeSchema = z.nativeEnum(CustomPromptType);
+
+export const EditorPresenceStateSchema = z.nativeEnum(EditorPresenceState);
 
 export const PlanRalphWorkflowModeSchema = z.nativeEnum(PlanRalphWorkflowMode);
 

@@ -7,12 +7,21 @@ import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
 import { WorkspaceEditorId } from '~/__generated__/graphql';
 import { WorkspaceEditorAffiliateLinks } from '~/routing/settings/components/WorkspaceEditorAffiliateLinks';
 import { WorkspaceEditorMultiSelect } from '~/routing/settings/components/WorkspaceEditorMultiSelect';
+import { WorkspaceEditorPresenceHints } from '~/routing/settings/components/WorkspaceEditorPresenceHints';
 import { WORKSPACE_SETTINGS_COPY } from '~/routing/settings/data/data.copy';
-import type { UserWorkspaceProfileFieldsFragment } from '~/__generated__/graphql';
+import type {
+  GetEditorPresenceQuery,
+  UserWorkspaceProfileFieldsFragment,
+} from '~/__generated__/graphql';
 
 export interface SettingsWorkspaceEditorsFormProps {
   actionError?: string | null;
   className?: string;
+  /**
+   * Advisory editor-presence hints, or null when the probe query failed. Display-only —
+   * it never feeds the submitted selection.
+   */
+  editorPresence?: GetEditorPresenceQuery['editorPresence'] | null;
   profile: UserWorkspaceProfileFieldsFragment;
 }
 
@@ -23,7 +32,7 @@ export interface SettingsWorkspaceEditorsFormProps {
 export const SettingsWorkspaceEditorsForm = (
   props: SettingsWorkspaceEditorsFormProps,
 ): React.ReactElement => {
-  const { actionError, className, profile } = props;
+  const { actionError, className, editorPresence, profile } = props;
 
   // Hooks
   const navigation = useNavigation();
@@ -84,6 +93,9 @@ export const SettingsWorkspaceEditorsForm = (
           <WorkspaceEditorMultiSelect
             onChange={setEnabledEditors}
             value={enabledEditors}
+          />
+          <WorkspaceEditorPresenceHints
+            editors={editorPresence?.editors ?? null}
           />
           <WorkspaceEditorAffiliateLinks />
         </div>

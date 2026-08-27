@@ -43,6 +43,7 @@ import { ConversationStreamGraphqlModule } from './graphql/conversation-stream/c
 import { CspReportsModule } from './modules/csp-reports/csp-reports.module';
 import { CustomPromptsGraphqlModule } from './graphql/prompts/custom-prompts-graphql.module';
 import { DailyStatsGraphqlModule } from './graphql/daily-stats/daily-stats-graphql.module';
+import { EditorPresenceGraphqlModule } from './graphql/editor-presence/editor-presence-graphql.module';
 import { DailyStatsQueueModule } from './queues/daily-stats/daily-stats-queue.module';
 import { DatabaseBackupQueueModule } from './queues/database-backup/database-backup-queue.module';
 import { DataRetentionQueueModule } from './queues/data-retention/data-retention-queue.module';
@@ -260,6 +261,7 @@ const buildImports = (role: ProcessRole): AppModuleImports => {
           ConversationStreamGraphqlModule,
           CustomPromptsGraphqlModule,
           DailyStatsGraphqlModule,
+          EditorPresenceGraphqlModule,
           GeneratorsGraphqlModule,
           GithubGraphqlModule,
           HealthGraphqlModule,
