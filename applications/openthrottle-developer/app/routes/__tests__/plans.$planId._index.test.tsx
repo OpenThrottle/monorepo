@@ -7,7 +7,10 @@ import { createRoutesStub, useSearchParams } from 'react-router';
 import { describe, expect, test } from 'vitest';
 import { PLAN_TASKS_EMPTY_COPY } from '~/routing/plans/data/data.copy';
 import { PLANS_DETAIL_TAB_SEARCH_PARAM } from '~/routing/plans/utils/parsers';
-import { renderWithPlanDetailRouteData } from '~/routing/plans/testing/plan-detail-route-data';
+import {
+  buildPlanDetailLoaderData,
+  renderWithPlanDetailRouteData,
+} from '~/routing/plans/testing/plan-detail-route-data';
 import PlanDetail from '../plans.$planId._index';
 import type { Route } from '@/app/routes/+types/plans.$planId._index';
 
@@ -108,18 +111,10 @@ function PlanDetailSearchParamsProbe(): React.ReactElement {
 describe('routes/plans.$planId.tsx', () => {
   test('should render plan detail with tasks', async () => {
     const user = userEvent.setup();
-    const loaderData = {
-      enabledEditors: [],
-      linkedArtifacts: [],
+    const loaderData = buildPlanDetailLoaderData({
       plan: mockPlan,
-      planOutputChunks: [],
-      planRunAuditRows: [],
-      recentPlanRuns: [],
-      ruleApplications: [],
-      tagVocabulary: [],
       tasks: [mockTask],
-      workspaceRepositories: [],
-    };
+    });
     const component = renderWithPlanDetailRouteData(
       <TooltipProvider>
         <PlanDetailSearchParamsProbe />
@@ -159,18 +154,10 @@ describe('routes/plans.$planId.tsx', () => {
 
   test('should render plan detail with no tasks', async () => {
     const user = userEvent.setup();
-    const loaderData = {
-      enabledEditors: [],
-      linkedArtifacts: [],
+    const loaderData = buildPlanDetailLoaderData({
       plan: mockPlan,
-      planOutputChunks: [],
-      planRunAuditRows: [],
-      recentPlanRuns: [],
-      ruleApplications: [],
-      tagVocabulary: [],
       tasks: [],
-      workspaceRepositories: [],
-    };
+    });
     const component = renderWithPlanDetailRouteData(
       <TooltipProvider>
         <PlanDetail
@@ -202,30 +189,16 @@ describe('routes/plans.$planId.tsx', () => {
       <TooltipProvider>
         <PlanDetail
           actionData={undefined}
-          loaderData={{
-            enabledEditors: [],
-            linkedArtifacts: [],
+          loaderData={buildPlanDetailLoaderData({
             plan: null,
-            planOutputChunks: [],
-            planRunAuditRows: [],
-            recentPlanRuns: [],
-            ruleApplications: [],
-            tagVocabulary: [],
             tasks: [],
-            workspaceRepositories: [],
-          }}
-          matches={buildPlanDetailMatches({
-            enabledEditors: [],
-            linkedArtifacts: [],
-            plan: null,
-            planOutputChunks: [],
-            planRunAuditRows: [],
-            recentPlanRuns: [],
-            ruleApplications: [],
-            tagVocabulary: [],
-            tasks: [],
-            workspaceRepositories: [],
           })}
+          matches={buildPlanDetailMatches(
+            buildPlanDetailLoaderData({
+              plan: null,
+              tasks: [],
+            }),
+          )}
           params={{ planId: mockPlan.id }}
         />
       </TooltipProvider>
@@ -239,18 +212,10 @@ describe('routes/plans.$planId.tsx', () => {
 
   test('opens Tasks tab from URL and drops param when switching back to Details', async () => {
     const user = userEvent.setup();
-    const loaderData = {
-      enabledEditors: [],
-      linkedArtifacts: [],
+    const loaderData = buildPlanDetailLoaderData({
       plan: mockPlan,
-      planOutputChunks: [],
-      planRunAuditRows: [],
-      recentPlanRuns: [],
-      ruleApplications: [],
-      tagVocabulary: [],
       tasks: [mockTask],
-      workspaceRepositories: [],
-    };
+    });
     renderWithPlanDetailRouteData(
       <TooltipProvider>
         <PlanDetailSearchParamsProbe />
@@ -287,18 +252,10 @@ describe('routes/plans.$planId.tsx', () => {
   });
 
   test('invalid plansDetailTab falls back to Details', () => {
-    const loaderData = {
-      enabledEditors: [],
-      linkedArtifacts: [],
+    const loaderData = buildPlanDetailLoaderData({
       plan: mockPlan,
-      planOutputChunks: [],
-      planRunAuditRows: [],
-      recentPlanRuns: [],
-      ruleApplications: [],
-      tagVocabulary: [],
       tasks: [],
-      workspaceRepositories: [],
-    };
+    });
     renderWithPlanDetailRouteData(
       <TooltipProvider>
         <PlanDetail

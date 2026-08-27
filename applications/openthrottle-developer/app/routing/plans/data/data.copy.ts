@@ -139,6 +139,33 @@ export const OUTPUT_STREAM_COPY = {
  * (PlanRuleApplications, LinkedArtifactsPanel) so populated and empty states read
  * the same.
  */
+/**
+ * @description Region-scoped failure copy for the plan-detail route's deferred
+ * sections. Each string is what `PlanDeferredSection` renders in place of one
+ * region when that region's own promise rejects — the rest of the plan page is
+ * unaffected, which is the point of splitting the loader query. Kept per-region
+ * rather than generic so the reader knows which part of the page is missing.
+ */
+export const PLAN_RUN_GATING_COPY = {
+  /** Server-side refusal when a run is submitted with no branch. */
+  missingBranch: `Cannot start a run without a branch. Wait for the workspace to finish loading, then try again.`,
+  /**
+   * Shown while `workspaceRepositories` is still resolving. Deliberately phrased
+   * as progress, not as a validation failure: the run config is not invalid, it
+   * is merely not fully known yet, and a validation error on a loading page
+   * reads as a bug.
+   */
+  resolvingWorkspace: `Resolving workspace…`,
+} as const;
+
+export const PLAN_DEFERRED_SECTION_COPY = {
+  configurationError: `Could not load your workspace repositories. Reload to try again.`,
+  editorsError: `Could not load your editor deep links.`,
+  outputError: `Could not load this plan's output stream. Reload to try again.`,
+  runHistoryError: `Could not load run history for this plan.`,
+  tagVocabularyError: `Could not load the tag vocabulary.`,
+} as const;
+
 export const PLAN_TAB_OUTPUT_COPY = {
   agentOutputHeading: `Agent output`,
   linkedArtifactsEmpty: `No linked artifacts yet. Artifacts appear here once a run produces and links them.`,

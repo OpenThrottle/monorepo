@@ -178,7 +178,46 @@ query PlanDetailWorkspaceEditors {
   }
 }
 
-query PlanDetailIndexLoader($planId: ID!) {
+# 🚨 The ONLY document the plan-detail route awaits. Time-to-first-paint is this
+# query's latency, so nothing that touches disk, git or the metrics walk may be
+# added here — new fields default to one of the deferred documents below.
+query PlanDetailCritical($planId: ID!) {
+  plan(id: $planId) {
+    ...PlanDetails
+  }
+  tasksByPlanId(input: { planId: $planId }) {
+    ...PlanTaskRow
+  }
+}
+
+# ⬇️ Deferred documents. The loader fires these without awaiting them and streams
+# the promises to per-region Suspense/Await boundaries (RR8 Single Fetch). Each
+# one also owns its own failure: a rejection degrades its region instead of
+# taking the whole plan page down, which the single combined query could not do.
+
+# `workspaceRepositories` refreshes each checkout's inspection snapshot on view
+# past a 15-minute TTL, sequentially per checkout — measured at ~1.3s cold vs
+# ~10ms warm (8 checkouts). This is the field the deferral exists for.
+query PlanDetailWorkspaceRepositories {
+  workspaceRepositories {
+    ...PlanRunConfigRepositoryFields
+  }
+}
+
+# `limit: 200` is a deliberate bounded tail rather than the resolver's default.
+# When the Output tab grows paging, `offset` is already on the input alongside it.
+query PlanDetailOutputChunks($planId: ID!) {
+  planOutputStreamChunks(input: { planId: $planId, limit: 200 }) {
+    content
+    createdAt
+    id
+    iteration
+    planId
+    taskId
+  }
+}
+
+query PlanDetailRunHistory($planId: ID!) {
   metrics {
     recentPlanRunsMetrics(planId: $planId, limit: 25) {
       executionBackend
@@ -190,17 +229,6 @@ query PlanDetailIndexLoader($planId: ID!) {
         }
       }
     }
-  }
-  plan(id: $planId) {
-    ...PlanDetails
-  }
-  planOutputStreamChunks(input: { planId: $planId }) {
-    content
-    createdAt
-    id
-    iteration
-    planId
-    taskId
   }
   planRunsByPlanId(input: { planId: $planId, limit: 10 }) {
     branch
@@ -226,6 +254,9 @@ query PlanDetailIndexLoader($planId: ID!) {
     runKind
     status
   }
+}
+
+query PlanDetailLedger($planId: ID!) {
   ruleApplications(planId: $planId) {
     createdAt
     detailsJson
@@ -235,6 +266,15 @@ query PlanDetailIndexLoader($planId: ID!) {
     state
     taskId
   }
+  workArtifactsByPlan(input: { planId: $planId }) {
+    artifacts {
+      ...LinkedArtifact
+    }
+    totalCount
+  }
+}
+
+query PlanDetailTagVocabulary {
   skillTagVocabulary {
     tags {
       dimension
@@ -242,18 +282,6 @@ query PlanDetailIndexLoader($planId: ID!) {
       tag
     }
     totalCount
-  }
-  tasksByPlanId(input: { planId: $planId }) {
-    ...PlanTaskRow
-  }
-  workArtifactsByPlan(input: { planId: $planId }) {
-    artifacts {
-      ...LinkedArtifact
-    }
-    totalCount
-  }
-  workspaceRepositories {
-    ...PlanRunConfigRepositoryFields
   }
 }
 

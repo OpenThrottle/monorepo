@@ -3,9 +3,13 @@ import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
 import type { Route } from '@/app/routes/+types/plans.$planId._index';
 import { loader } from '../plans.$planId._index';
 import {
-  PlanDetailIndexLoaderDocument,
+  PlanDetailCriticalDocument,
+  PlanDetailLedgerDocument,
+  PlanDetailOutputChunksDocument,
+  PlanDetailRunHistoryDocument,
+  PlanDetailTagVocabularyDocument,
   PlanDetailWorkspaceEditorsDocument,
-  WorkspaceEditorId,
+  PlanDetailWorkspaceRepositoriesDocument,
 } from '~/__generated__/graphql';
 import {
   createLoaderArgs,
@@ -18,36 +22,78 @@ const mockExecuteGraphqlWithAuth = vi.mocked(
   graphqlWithAuth.executeGraphqlWithAuth,
 );
 
-function asMock<T>(value: unknown): T;
-function asMock(value: unknown): unknown {
-  return value;
-}
-
 const planId = '80864bba-630a-451d-bfd2-4b25ec202381';
 
-/**
- * The loader fires two documents in parallel; route each mock response by
- * document so the workspace-editors query cannot accidentally consume the page
- * response (which is what a single mockResolvedValue would do).
- */
-const mockDocuments = (responses: {
-  readonly editors?: unknown;
-  readonly page: unknown;
-}): void => {
-  mockExecuteGraphqlWithAuth.mockImplementation(
-    asMock<typeof graphqlWithAuth.executeGraphqlWithAuth>(
-      (_request: Request, document: unknown): Promise<unknown> => {
-        if (document === PlanDetailWorkspaceEditorsDocument) {
-          return responses.editors === undefined
-            ? Promise.reject(new Error('workspace settings unavailable'))
-            : Promise.resolve(responses.editors);
-        }
+const plan = { __typename: 'PlanObject', id: planId, title: 'Test Plan' };
+const tasks = [{ __typename: 'TaskObject', id: 'task-1' }];
+const outputChunks = [{ __typename: 'PlanOutputStreamChunkObject', id: 'c1' }];
+const auditRows = [{ __typename: 'PlanRunObject', id: 'run-1' }];
+const recentRuns = [{ __typename: 'PlanRunMetricObject', id: 'm-1' }];
+const ruleApplications = [{ __typename: 'RuleApplicationObject', id: 'app-1' }];
+const vocabularyTags = [{ __typename: 'SkillTagObject', id: 'tag-1' }];
+const linkedArtifacts = [{ __typename: 'WorkArtifactObject', id: 'art-1' }];
+const repositories = [{ __typename: 'RepositoryObject', id: 'repo-1' }];
 
-        return Promise.resolve(responses.page);
+/**
+ * Route each of the six documents to its own response, so a test can prove the
+ * loader issued the right query per key rather than one combined round trip.
+ * `overrides` swaps a single document's outcome (a null payload, or a rejection).
+ */
+function mockDocuments(
+  overrides: Map<unknown, unknown> = new Map<unknown, unknown>(),
+): void {
+  const responses = new Map<unknown, unknown>([
+    [PlanDetailCriticalDocument, { plan, tasksByPlanId: tasks }],
+    [
+      PlanDetailLedgerDocument,
+      {
+        ruleApplications,
+        workArtifactsByPlan: { artifacts: linkedArtifacts, totalCount: 1 },
       },
-    ),
-  );
-};
+    ],
+    [PlanDetailOutputChunksDocument, { planOutputStreamChunks: outputChunks }],
+    [
+      PlanDetailRunHistoryDocument,
+      {
+        metrics: { recentPlanRunsMetrics: recentRuns },
+        planRunsByPlanId: auditRows,
+      },
+    ],
+    [
+      PlanDetailTagVocabularyDocument,
+      { skillTagVocabulary: { tags: vocabularyTags, totalCount: 1 } },
+    ],
+    [
+      PlanDetailWorkspaceRepositoriesDocument,
+      { workspaceRepositories: repositories },
+    ],
+    [
+      PlanDetailWorkspaceEditorsDocument,
+      { workspaceSettings: { profile: { enabledEditors: [] } } },
+    ],
+  ]);
+
+  for (const [document, response] of overrides) {
+    responses.set(document, response);
+  }
+
+  mockExecuteGraphqlWithAuth.mockImplementation((_request, document) => {
+    const response = responses.get(document);
+    if (response instanceof Error) return Promise.reject(response);
+    return Promise.resolve(response);
+  });
+}
+
+function callLoader(): ReturnType<typeof loader> {
+  const request = new Request(`http://localhost/plans/${planId}`);
+  return loader({
+    context: createTestRouterContext(),
+    params: { planId },
+    pattern: '/plans/:planId',
+    request,
+    url: new URL(request.url),
+  } satisfies Route.LoaderArgs);
+}
 
 describe('routes/plans.$planId._index loader', () => {
   beforeEach(() => {
@@ -60,150 +106,169 @@ describe('routes/plans.$planId._index loader', () => {
     );
 
     expect(mockExecuteGraphqlWithAuth).not.toHaveBeenCalled();
-    expect(result).toEqual({
-      enabledEditors: [],
+    expect(result.plan).toBeNull();
+    expect(result.tasks).toEqual([]);
+
+    // The deferred keys stay promises so the component's Await boundaries are
+    // type-uniform with the real branch.
+    await expect(result.ledger).resolves.toEqual({
       linkedArtifacts: [],
-      plan: null,
-      planOutputChunks: [],
+      ruleApplications: [],
+    });
+    await expect(result.outputChunks).resolves.toEqual([]);
+    await expect(result.runHistory).resolves.toEqual({
       planRunAuditRows: [],
       recentPlanRuns: [],
-      ruleApplications: [],
-      tagVocabulary: [],
-      tasks: [],
-      workspaceRepositories: [],
     });
+    await expect(result.tagVocabulary).resolves.toEqual([]);
+    await expect(result.workspaceRepositories).resolves.toEqual([]);
   });
 
-  test('queries with the loader document and maps the page response to loaderData', async () => {
-    const plan = { __typename: 'PlanObject', id: planId, title: 'Test Plan' };
-    const outputChunks = [
-      { __typename: 'PlanOutputStreamChunkObject', id: 'c1' },
-    ];
-    const auditRows = [{ __typename: 'PlanRunObject', id: 'run-1' }];
-    const recentRuns = [{ __typename: 'PlanRunMetricObject', id: 'm-1' }];
-    const tasks = [{ __typename: 'TaskObject', id: 'task-1' }];
-    const ruleApplications = [
-      { __typename: 'RuleApplicationObject', id: 'app-1' },
-    ];
-    const vocabularyTags = [{ __typename: 'SkillTagObject', id: 'tag-1' }];
-    const linkedArtifacts = [{ __typename: 'WorkArtifactObject', id: 'art-1' }];
+  test('awaits only the critical query and returns the rest as promises', async () => {
+    mockDocuments();
 
-    mockDocuments({
-      editors: {
-        workspaceSettings: {
-          profile: { enabledEditors: [WorkspaceEditorId.Claude] },
-        },
-      },
-      page: {
-        metrics: { recentPlanRunsMetrics: recentRuns },
-        plan,
-        planOutputStreamChunks: outputChunks,
-        planRunsByPlanId: auditRows,
-        ruleApplications,
-        skillTagVocabulary: { tags: vocabularyTags, totalCount: 1 },
-        tasksByPlanId: tasks,
-        workArtifactsByPlan: { artifacts: linkedArtifacts, totalCount: 1 },
-      },
-    });
+    const result = await callLoader();
 
-    const request = new Request(`http://localhost/plans/${planId}`);
-    const result = await loader({
-      context: createTestRouterContext(),
-      params: { planId },
-      pattern: '/plans/:planId',
-      request,
-      url: new URL(request.url),
-    } satisfies Route.LoaderArgs);
+    // plan + tasks are resolved values by the time the loader returns.
+    expect(result.plan).toEqual(plan);
+    expect(result.tasks).toEqual(tasks);
 
-    expect(mockExecuteGraphqlWithAuth).toHaveBeenCalledWith(
-      request,
-      PlanDetailIndexLoaderDocument,
-      { planId },
+    // Everything else is still in flight.
+    expect(result.ledger).toBeInstanceOf(Promise);
+    expect(result.outputChunks).toBeInstanceOf(Promise);
+    expect(result.runHistory).toBeInstanceOf(Promise);
+    expect(result.tagVocabulary).toBeInstanceOf(Promise);
+    expect(result.workspaceRepositories).toBeInstanceOf(Promise);
+  });
+
+  test('issues one query per document, including the critical one', async () => {
+    mockDocuments();
+
+    await callLoader();
+
+    const documents = mockExecuteGraphqlWithAuth.mock.calls.map(
+      (call) => call[1],
     );
-    expect(mockExecuteGraphqlWithAuth).toHaveBeenCalledWith(
-      request,
-      PlanDetailWorkspaceEditorsDocument,
-    );
-    expect(result).toEqual({
-      enabledEditors: [WorkspaceEditorId.Claude],
+    expect(documents).toContain(PlanDetailCriticalDocument);
+    expect(documents).toContain(PlanDetailLedgerDocument);
+    expect(documents).toContain(PlanDetailOutputChunksDocument);
+    expect(documents).toContain(PlanDetailRunHistoryDocument);
+    expect(documents).toContain(PlanDetailTagVocabularyDocument);
+    expect(documents).toContain(PlanDetailWorkspaceRepositoriesDocument);
+  });
+
+  test('maps each deferred promise to the shape its consumer expects', async () => {
+    mockDocuments();
+
+    const result = await callLoader();
+
+    await expect(result.ledger).resolves.toEqual({
       linkedArtifacts,
-      plan,
-      planOutputChunks: outputChunks,
+      ruleApplications,
+    });
+    await expect(result.outputChunks).resolves.toEqual(outputChunks);
+    await expect(result.runHistory).resolves.toEqual({
       planRunAuditRows: auditRows,
       recentPlanRuns: recentRuns,
-      ruleApplications,
-      tagVocabulary: vocabularyTags,
-      tasks,
-      workspaceRepositories: [],
     });
+    await expect(result.tagVocabulary).resolves.toEqual(vocabularyTags);
+    await expect(result.workspaceRepositories).resolves.toEqual(repositories);
   });
 
-  test('coalesces nullish page collections to empty arrays and a null plan', async () => {
-    mockDocuments({
-      editors: {
-        workspaceSettings: { profile: { enabledEditors: [] } },
-      },
-      page: {
-        metrics: { recentPlanRunsMetrics: null },
-        plan: null,
-        planOutputStreamChunks: null,
-        planRunsByPlanId: null,
-        ruleApplications: null,
-        skillTagVocabulary: { tags: null, totalCount: 0 },
-        tasksByPlanId: null,
-        workArtifactsByPlan: { artifacts: null, totalCount: 0 },
-      },
-    });
+  test('coalesces nullish collections to empty arrays and a null plan', async () => {
+    mockDocuments(
+      new Map<unknown, unknown>([
+        [PlanDetailCriticalDocument, { plan: null, tasksByPlanId: null }],
+        [
+          PlanDetailLedgerDocument,
+          {
+            ruleApplications: null,
+            workArtifactsByPlan: { artifacts: null, totalCount: 0 },
+          },
+        ],
+        [PlanDetailOutputChunksDocument, { planOutputStreamChunks: null }],
+        [
+          PlanDetailRunHistoryDocument,
+          {
+            metrics: { recentPlanRunsMetrics: null },
+            planRunsByPlanId: null,
+          },
+        ],
+        [
+          PlanDetailTagVocabularyDocument,
+          { skillTagVocabulary: { tags: null, totalCount: 0 } },
+        ],
+        [
+          PlanDetailWorkspaceRepositoriesDocument,
+          { workspaceRepositories: null },
+        ],
+      ]),
+    );
 
-    const request = new Request(`http://localhost/plans/${planId}`);
-    const result = await loader({
-      context: createTestRouterContext(),
-      params: { planId },
-      pattern: '/plans/:planId',
-      request,
-      url: new URL(request.url),
-    } satisfies Route.LoaderArgs);
+    const result = await callLoader();
 
-    expect(result).toEqual({
-      enabledEditors: [],
+    expect(result.plan).toBeNull();
+    expect(result.tasks).toEqual([]);
+    await expect(result.ledger).resolves.toEqual({
       linkedArtifacts: [],
-      plan: null,
-      planOutputChunks: [],
+      ruleApplications: [],
+    });
+    await expect(result.outputChunks).resolves.toEqual([]);
+    await expect(result.runHistory).resolves.toEqual({
       planRunAuditRows: [],
       recentPlanRuns: [],
-      ruleApplications: [],
-      tagVocabulary: [],
-      tasks: [],
-      workspaceRepositories: [],
     });
+    await expect(result.tagVocabulary).resolves.toEqual([]);
+    await expect(result.workspaceRepositories).resolves.toEqual([]);
   });
 
+  test('a rejected workspaceRepositories does not make the loader throw', async () => {
+    const failure = new Error('inspection scan failed');
+    mockDocuments(
+      new Map<unknown, unknown>([
+        [PlanDetailWorkspaceRepositoriesDocument, failure],
+      ]),
+    );
+
+    // The whole point of the split: this used to 500 the entire plan page.
+    const result = await callLoader();
+
+    expect(result.plan).toEqual(plan);
+    expect(result.tasks).toEqual(tasks);
+    await expect(result.workspaceRepositories).rejects.toThrow(
+      'inspection scan failed',
+    );
+
+    // The sibling regions are unaffected by their neighbour's failure.
+    await expect(result.outputChunks).resolves.toEqual(outputChunks);
+  });
+
+  test('a rejected critical query still throws, because the shell needs it', async () => {
+    mockDocuments(
+      new Map<unknown, unknown>([
+        [PlanDetailCriticalDocument, new Error('plan read failed')],
+      ]),
+    );
+
+    await expect(callLoader()).rejects.toThrow('plan read failed');
+  });
+
+  // enabledEditors is deferred too, but loadEnabledEditors keeps its own catch,
+  // so a workspace-settings failure degrades that region to no editors instead
+  // of rejecting — the toolbar simply renders no deep links.
   test('degrades to no editors when the workspace-settings query fails', async () => {
-    const plan = { __typename: 'PlanObject', id: planId, title: 'Test Plan' };
+    mockDocuments(
+      new Map<unknown, unknown>([
+        [
+          PlanDetailWorkspaceEditorsDocument,
+          new Error('workspace settings unavailable'),
+        ],
+      ]),
+    );
 
-    mockDocuments({
-      page: {
-        metrics: { recentPlanRunsMetrics: [] },
-        plan,
-        planOutputStreamChunks: [],
-        planRunsByPlanId: [],
-        ruleApplications: [],
-        skillTagVocabulary: { tags: [], totalCount: 0 },
-        tasksByPlanId: [],
-        workArtifactsByPlan: { artifacts: [], totalCount: 0 },
-      },
-    });
+    const result = await callLoader();
 
-    const request = new Request(`http://localhost/plans/${planId}`);
-    const result = await loader({
-      context: createTestRouterContext(),
-      params: { planId },
-      pattern: '/plans/:planId',
-      request,
-      url: new URL(request.url),
-    } satisfies Route.LoaderArgs);
-
-    expect(result.enabledEditors).toEqual([]);
+    await expect(result.enabledEditors).resolves.toEqual([]);
     expect(result.plan).toEqual(plan);
   });
 });

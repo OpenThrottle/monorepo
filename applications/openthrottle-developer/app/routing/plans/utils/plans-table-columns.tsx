@@ -52,6 +52,12 @@ export const buildPlansTableColumns = (
       accessorKey: 'details',
       cell: ({ row }) => {
         const plan = row.original;
+        // `prefetch="intent"` on the plan links below warms PlanDetailCritical
+        // on hover/focus, so the click usually paints without a round trip. It is
+        // affordable only because that query is now small — the slow
+        // workspaceRepositories field is deferred and is NOT prefetched here.
+        // `intent` rather than `render`: `render` would fire one loader per row
+        // on a long plans table.
         const planHref = `/plans/${plan.id}`;
         const configurationHref = `${planHref}?${PLANS_DETAIL_TAB_SEARCH_PARAM}=configuration`;
         const title = plan.title ?? 'Untitled';
@@ -72,6 +78,7 @@ export const buildPlansTableColumns = (
                     aria-label={`View plan: ${title}`}
                     className="hover:text-primary underline underline-offset-2"
                     data-testid="plan-list-title-link"
+                    prefetch="intent"
                     to={planHref}
                     viewTransition={true}
                   >
@@ -94,6 +101,7 @@ export const buildPlansTableColumns = (
                       <Link
                         aria-label="Custom workflow run configuration (differs from defaults)"
                         className="text-muted-foreground hover:text-foreground inline-flex shrink-0"
+                        prefetch="intent"
                         to={configurationHref}
                         viewTransition={true}
                       >

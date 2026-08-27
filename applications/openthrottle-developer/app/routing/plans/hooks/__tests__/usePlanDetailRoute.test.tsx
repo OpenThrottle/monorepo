@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { act, render } from '@testing-library/react';
+import { act, render, waitFor } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test, vi } from 'vitest';
 import type {
@@ -34,9 +34,13 @@ const basePlan = asType<UsePlanDetailRouteOptions['plan']>({
 });
 
 const baseLoaderData = asType<UsePlanDetailRouteOptions['loaderData']>({
-  planOutputChunks: [],
-  planRunAuditRows: [{ isStale: false }],
+  outputChunks: Promise.resolve([]),
+  runHistory: Promise.resolve({
+    planRunAuditRows: [{ isStale: false }],
+    recentPlanRuns: [],
+  }),
   tasks: [{ status: 'COMPLETED' }, { status: 'PENDING' }],
+  workspaceRepositories: Promise.resolve([]),
 });
 
 const baseParams = asType<UsePlanDetailRouteOptions['params']>({
@@ -79,14 +83,20 @@ const renderRoute = (
 };
 
 describe('usePlanDetailRoute', () => {
-  test('derives status, resolved task count, and staleness from the seeds', () => {
+  test('derives status, resolved task count, and staleness from the seeds', async () => {
     const { value } = renderRoute();
 
+    // Status and task count come from critical loader data: available on the
+    // first render, with no await.
     expect(value.current?.status).toBe('IN_PROGRESS');
     expect(value.current?.resolvedTaskCount).toBe(1);
-    expect(value.current?.newestRunIsStale).toBe(false);
     expect(value.current?.fullscreen).toBe(false);
     expect(value.current?.isBoardView).toBe(false);
+
+    // Staleness comes from deferred run history, so it is undefined until that
+    // promise settles — the toolbar renders no badge in the meantime.
+    expect(value.current?.newestRunIsStale).toBeUndefined();
+    await waitFor(() => expect(value.current?.newestRunIsStale).toBe(false));
   });
 
   test('falls back to PENDING for an unrecognized plan status', () => {
@@ -98,17 +108,24 @@ describe('usePlanDetailRoute', () => {
     expect(value.current?.status).toBe('PENDING');
   });
 
-  test('newestRunIsStale defaults to false when there is no run history', () => {
+  test('newestRunIsStale is undefined until run history resolves, then false when empty', async () => {
     const { value } = renderRoute(
       asType<UsePlanDetailRouteOptions['loaderData']>({
-        planOutputChunks: [],
-        planRunAuditRows: [],
+        outputChunks: Promise.resolve([]),
+        runHistory: Promise.resolve({
+          planRunAuditRows: [],
+          recentPlanRuns: [],
+        }),
         tasks: [],
+        workspaceRepositories: Promise.resolve([]),
       }),
     );
 
-    expect(value.current?.newestRunIsStale).toBe(false);
+    // 🚨 Three states, not two: "loading" must not be reported as "not stale".
+    expect(value.current?.newestRunIsStale).toBeUndefined();
     expect(value.current?.resolvedTaskCount).toBe(0);
+
+    await waitFor(() => expect(value.current?.newestRunIsStale).toBe(false));
   });
 
   test('isBoardView reflects the `view` search param', () => {
@@ -117,12 +134,32 @@ describe('usePlanDetailRoute', () => {
     expect(value.current?.isBoardView).toBe(true);
   });
 
-  test('setFullscreen updates the returned fullscreen flag', () => {
+  test('setFullscreen updates the returned fullscreen flag', async () => {
     const { value } = renderRoute();
+
+    // Let the deferred promises settle first, so their state updates do not
+    // land after the act() below and clobber the assertion.
+    await waitFor(() => expect(value.current?.newestRunIsStale).toBe(false));
 
     act(() => value.current?.setFullscreen(true));
 
     expect(value.current?.fullscreen).toBe(true);
+  });
+
+  // 🚨 While workspaceRepositories is still resolving the run config is not
+  // invalid, it is incomplete — so Run reports progress, not a validation error.
+  test('blocks Run with a resolving reason until the workspace is ready', async () => {
+    const { value } = renderRoute();
+
+    expect(value.current?.workflowRunBlocked).toBe(true);
+    expect(value.current?.workflowRunBlockedReason).toBe(
+      'Resolving workspace…',
+    );
+
+    // Nothing flips the ready atom in this harness (no hydrator is mounted), so
+    // the gate correctly stays closed rather than defaulting open.
+    await waitFor(() => expect(value.current?.newestRunIsStale).toBe(false));
+    expect(value.current?.workflowRunBlocked).toBe(true);
   });
 
   test('exposes the run-config editor handlers and toolbar fetcher', () => {

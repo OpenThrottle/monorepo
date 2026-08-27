@@ -30,6 +30,12 @@ export interface PlanWorkflowConfigWorkspaceSelectorProps {
   readonly checkoutId: string;
   readonly heading: string;
   readonly onBranchChange: (branch: string) => void;
+  /**
+   * @description The user typing in the branch field, as distinct from the
+   * automatic pre-fill above. Marks the branch dirty so the deferred-repository
+   * hydrator stops back-filling it. See {@link workflowBranchDirtyAtom}.
+   */
+  readonly onBranchUserEdit: (branch: string) => void;
   readonly onCheckoutIdChange: (checkoutId: string) => void;
   readonly onRepositoryIdChange: (repositoryId: string) => void;
   readonly onWorkingDirectoryChange: (path: string) => void;
@@ -54,6 +60,7 @@ export const PlanWorkflowConfigWorkspaceSelector = (
     checkoutId,
     heading,
     onBranchChange,
+    onBranchUserEdit,
     onCheckoutIdChange,
     onRepositoryIdChange,
     onWorkingDirectoryChange,
@@ -169,7 +176,7 @@ export const PlanWorkflowConfigWorkspaceSelector = (
         <Input
           data-testid="workflow-run-branch"
           id="workflow-run-branch"
-          onChange={(event) => onBranchChange(event.target.value)}
+          onChange={(event) => onBranchUserEdit(event.target.value)}
           placeholder={selectedCheckoutBranch || 'e.g. main'}
           value={branch}
         />

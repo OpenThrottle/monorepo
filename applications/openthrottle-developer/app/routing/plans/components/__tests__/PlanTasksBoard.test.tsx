@@ -18,7 +18,10 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import type { RenderResult } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { PlanTasksBoard } from '../PlanTasksBoard';
-import { renderWithPlanDetailRouteData } from '~/routing/plans/testing/plan-detail-route-data';
+import {
+  buildPlanDetailLoaderData,
+  renderWithPlanDetailRouteData,
+} from '~/routing/plans/testing/plan-detail-route-data';
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
 
 // Spy on the toast boundary so we can assert the move-status effect fires
@@ -96,13 +99,10 @@ const renderBoard = (args: {
     <DndProvider backend={HTML5Backend}>
       <PlanTasksBoard />
     </DndProvider>,
-    {
+    buildPlanDetailLoaderData({
       plan: { id: args.planId },
-      planOutputChunks: [],
-      planRunAuditRows: [],
-      recentPlanRuns: [],
       tasks: args.tasks,
-    },
+    }),
   );
 
 describe('PlanTasksBoard Component', () => {
@@ -239,13 +239,13 @@ describe('PlanTasksBoard move-status toast (busy-edge guard)', () => {
   });
 
   const renderHarness = (): void => {
-    renderWithPlanDetailRouteData(<BoardHarness />, {
-      plan: { id: 'plan-1' },
-      planOutputChunks: [],
-      planRunAuditRows: [],
-      recentPlanRuns: [],
-      tasks: [mockTask({ id: 'a', status: 'PENDING' })],
-    });
+    renderWithPlanDetailRouteData(
+      <BoardHarness />,
+      buildPlanDetailLoaderData({
+        plan: { id: 'plan-1' },
+        tasks: [mockTask({ id: 'a', status: 'PENDING' })],
+      }),
+    );
   };
 
   test('fires the move-failed toast once on the busy->idle edge, never on a stale re-render', () => {

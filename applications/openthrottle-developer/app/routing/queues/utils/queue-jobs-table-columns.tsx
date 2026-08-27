@@ -119,6 +119,7 @@ export function buildQueueJobsTableColumns(
             <Link
               className="text-primary line-clamp-1 font-mono underline-offset-2 hover:underline"
               data-testid={`queue-jobs-table-plan-${job.id}`}
+              prefetch="intent"
               title={parsed.planId}
               to={`/plans/${parsed.planId}`}
               viewTransition={true}

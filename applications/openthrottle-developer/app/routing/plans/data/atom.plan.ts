@@ -84,6 +84,39 @@ export const workflowRepositoryIdAtom = atom<string>('');
 export const workflowBranchAtom = atom<string>('');
 
 /**
+ * @description Whether the user has edited the run branch by hand.
+ *
+ * The provider seeds a branch before `workspaceRepositories` has resolved, and
+ * {@link PlanRunConfigRepositoriesHydrator} re-resolves it once they land. This
+ * flag is what makes back-filling over a branch the user typed *impossible*
+ * rather than merely unlikely: the hydrator writes only while this is false.
+ */
+export const workflowBranchDirtyAtom = atom<boolean>(false);
+
+/**
+ * @description Writes the run branch as a *user edit*: sets the branch and marks
+ * it dirty in one action. Pairing them here means a caller cannot set the branch
+ * on the user's behalf without also pinning it, which is what stops
+ * {@link PlanRunConfigRepositoriesHydrator} from later overwriting it.
+ */
+export const setWorkflowBranchByUserAtom = atom(
+  null,
+  (_get, set, branch: string) => {
+    set(workflowBranchAtom, branch);
+    set(workflowBranchDirtyAtom, true);
+  },
+);
+
+/**
+ * @description Whether the deferred `workspaceRepositories` promise has resolved.
+ *
+ * False means "still loading", not "no repositories". Run/Queue is disabled with
+ * a *resolving* reason while it is false — never a validation error, which on a
+ * page that is still loading reads as a bug rather than as progress.
+ */
+export const workspaceRepositoriesReadyAtom = atom<boolean>(false);
+
+/**
  * @description Job-run lifecycle hook draft rows (editable form state); serialized
  * into `jobRunHooksJson` for save + enqueue via {@link jobRunHooksJsonAtom}.
  */
@@ -257,6 +290,8 @@ export const resetWorkflowRunToDefaultsAtom = atom(
     set(workflowCheckoutIdAtom, '');
     set(workflowRepositoryIdAtom, '');
     set(workflowBranchAtom, '');
+    // Reset makes the branch pristine again, so a later hydration may fill it.
+    set(workflowBranchDirtyAtom, false);
   },
 );
 

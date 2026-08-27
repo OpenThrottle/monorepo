@@ -46,6 +46,7 @@ export const TaskTabOutput = (
       <div className="flex justify-end">
         <Link
           className="text-muted-foreground hover:text-foreground text-xs underline-offset-4 hover:underline"
+          prefetch="intent"
           to={`/plans/${planId}?tab=output`}
         >
           View full plan output

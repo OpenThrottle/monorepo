@@ -118,6 +118,7 @@ ProjectTasksTable.buildTable = (): ColumnDef<
           <Link
             aria-label={`View plan for task: ${task.title ?? 'Untitled'}`}
             className="hover:text-primary text-xs underline underline-offset-2"
+            prefetch="intent"
             to={`/plans/${planId}`}
             viewTransition={true}
           >

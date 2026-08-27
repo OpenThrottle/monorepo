@@ -24,7 +24,6 @@ import { PlanTabConfiguration } from '~/routing/plans/components/PlanTabConfigur
 import { PlanTabDetails } from '~/routing/plans/components/PlanTabDetails';
 import { PlanTabTasks } from '~/routing/plans/components/PlanTabTasks';
 import { PlanToolbar } from '~/routing/plans/components/PlanToolbar';
-import { resolvePlanWorkingDirectory } from '~/routing/plans/utils/resolve-plan-working-directory';
 import { PlanTasksBoard } from '~/routing/plans/components/PlanTasksBoard';
 import { PlanTabOutput } from '~/routing/plans/components/PlanTabOutput';
 import { usePlanDetailRoute } from '~/routing/plans/hooks/usePlanDetailRoute';
@@ -40,12 +39,16 @@ export const PlanDetailRoute = (
   props: PlanDetailRouteProps,
 ): React.ReactElement => {
   const { loaderData, params, plan } = props;
+  // `tagVocabulary` is a deferred promise and is handed to PlanToolbar as-is —
+  // the toolbar wraps only its tag-chip region. `tasks` is critical loader data,
+  // so the Tasks tab counter below never becomes a skeleton.
   const { tagVocabulary, tasks } = loaderData;
 
   // Hooks
   const {
     branch,
     checkoutId,
+    editorWorkingDirectory,
     fullscreen,
     isBoardView,
     jobRunHooksJson,
@@ -72,13 +75,6 @@ export const PlanDetailRoute = (
   } = usePlanDetailRoute({ loaderData, params, plan });
 
   // Setup
-  // Deep links need an absolute path: run-config atom, else the checkout's.
-  const editorWorkingDirectory = resolvePlanWorkingDirectory({
-    checkoutId,
-    repositories: loaderData.workspaceRepositories,
-    repositoryId,
-    workingDirectory,
-  });
 
   // Handlers
 

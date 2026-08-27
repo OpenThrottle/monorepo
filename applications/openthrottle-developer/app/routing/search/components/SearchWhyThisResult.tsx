@@ -103,6 +103,7 @@ export const SearchWhyThisResult = (
         <Link
           className="text-primary font-medium underline-offset-4 hover:underline"
           data-testid="SearchWhyThisResult-planJumpLink"
+          prefetch="intent"
           to={`/plans/${result.planId}`}
         >
           Open plan

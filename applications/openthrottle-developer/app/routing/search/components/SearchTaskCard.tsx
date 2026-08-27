@@ -70,6 +70,7 @@ export const SearchTaskCard = (
                 <Link
                   className="underline-offset-4 hover:underline"
                   data-testid="SearchTaskCard-planLink"
+                  prefetch="intent"
                   to={`/plans/${result.planId}`}
                 >
                   {result.planTitle ?? 'Plan'}
@@ -87,6 +88,7 @@ export const SearchTaskCard = (
               <Link
                 className="underline-offset-4 hover:underline"
                 data-testid="SearchTaskCard-planLink"
+                prefetch="intent"
                 to={`/plans/${result.planId}`}
               >
                 {result.planTitle ?? 'Plan'}

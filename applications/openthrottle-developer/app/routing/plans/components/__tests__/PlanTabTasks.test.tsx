@@ -2,7 +2,10 @@ import * as React from 'react';
 import { Tabs, TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { describe, expect, test } from 'vitest';
 import { PlanTabTasks } from '../PlanTabTasks';
-import { renderWithPlanDetailRouteData } from '~/routing/plans/testing/plan-detail-route-data';
+import {
+  buildPlanDetailLoaderData,
+  renderWithPlanDetailRouteData,
+} from '~/routing/plans/testing/plan-detail-route-data';
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
 import { PLAN_TASKS_EMPTY_COPY } from '~/routing/plans/data/data.copy';
 
@@ -30,13 +33,10 @@ function renderTabTasks(tasks: PlanTaskRowFragment[]) {
         <PlanTabTasks />
       </Tabs>
     </TooltipProvider>,
-    {
+    buildPlanDetailLoaderData({
       plan: null,
-      planOutputChunks: [],
-      planRunAuditRows: [],
-      recentPlanRuns: [],
       tasks,
-    },
+    }),
   );
 }
 

@@ -5,7 +5,10 @@ import { beforeEach, describe, expect, test } from 'vitest';
 import { PlanDetailRoute } from '../PlanDetailRoute';
 import type { PlanDetailRouteProps } from '../PlanDetailRoute';
 import { PlanRunConfigStoreProvider } from '../PlanRunConfigStoreProvider';
-import { renderWithPlanDetailRouteData } from '~/routing/plans/testing/plan-detail-route-data';
+import {
+  buildPlanDetailLoaderData,
+  renderWithPlanDetailRouteData,
+} from '~/routing/plans/testing/plan-detail-route-data';
 
 const plan: PlanDetailRouteProps['plan'] = {
   __typename: 'PlanObject',
@@ -29,26 +32,21 @@ const plan: PlanDetailRouteProps['plan'] = {
 
 const buildLoaderData = (
   overrides: Partial<PlanDetailRouteProps['loaderData']> = {},
-): PlanDetailRouteProps['loaderData'] => ({
-  enabledEditors: [],
-  linkedArtifacts: [],
-  plan,
-  planOutputChunks: [],
-  planRunAuditRows: [],
-  recentPlanRuns: [],
-  ruleApplications: [],
-  tagVocabulary: [],
-  tasks: [],
-  workspaceRepositories: [],
-  ...overrides,
-});
+): PlanDetailRouteProps['loaderData'] =>
+  buildPlanDetailLoaderData({
+    tasks: [],
+    ...overrides,
+  });
 
 const renderRoute = (
   loaderData: PlanDetailRouteProps['loaderData'] = buildLoaderData(),
 ): RenderResult =>
   renderWithPlanDetailRouteData(
     <TooltipProvider>
-      <PlanRunConfigStoreProvider plan={plan}>
+      <PlanRunConfigStoreProvider
+        plan={plan}
+        repositories={Promise.resolve([])}
+      >
         <PlanDetailRoute
           loaderData={loaderData}
           params={{ planId: 'plan-1' }}

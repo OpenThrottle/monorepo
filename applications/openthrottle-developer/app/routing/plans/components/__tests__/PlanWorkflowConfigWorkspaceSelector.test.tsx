@@ -41,6 +41,7 @@ const baseProps: PlanWorkflowConfigWorkspaceSelectorProps = {
   checkoutId: '',
   heading: '02. Workspace',
   onBranchChange: noop,
+  onBranchUserEdit: noop,
   onCheckoutIdChange: noop,
   onRepositoryIdChange: noop,
   onWorkingDirectoryChange: noop,

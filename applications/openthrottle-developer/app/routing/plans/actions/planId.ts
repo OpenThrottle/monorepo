@@ -424,8 +424,13 @@ export const runPlan = async (
   // Branch is a REQUIRED kickoff input (never inferred server-side). The run
   // config form pre-fills it from the selected checkout's current branch, but
   // the value is always sent explicitly; fail loud here when it is blank.
+  //
+  // 🚨 An empty or whitespace-only string is rejected as hard as a missing one.
+  // The toolbar disables Run while `workspaceRepositories` is still resolving,
+  // but client-side disabling is not the boundary: a fast click during that
+  // window must not be able to enqueue a run with no branch.
   const branch = fields.branch ?? undefined;
-  if (branch === undefined) {
+  if (branch === undefined || branch.trim() === '') {
     return {
       runPlanError:
         'A git branch is required to run this plan. Pick or enter the branch this run operates on.',

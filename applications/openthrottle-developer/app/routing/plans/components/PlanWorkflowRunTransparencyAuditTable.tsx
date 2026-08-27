@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Link } from 'react-router';
-import type { PlanDetailIndexLoaderQuery } from '~/__generated__/graphql';
+import type { PlanDetailRunHistoryQuery } from '~/__generated__/graphql';
 import { planRunJobDetailPath } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import {
@@ -11,7 +11,7 @@ import { PLAN_RUN_AUDIT_WORKSPACE_COPY } from '~/routing/plans/data/data.copy';
 import { PlanRunProvenanceCell } from '~/routing/plans/components/PlanRunProvenanceCell';
 
 export type PlanRunAuditRow =
-  PlanDetailIndexLoaderQuery['planRunsByPlanId'][number];
+  PlanDetailRunHistoryQuery['planRunsByPlanId'][number];
 
 export interface PlanWorkflowRunTransparencyAuditTableProps {
   planRunAuditRows: PlanRunAuditRow[];

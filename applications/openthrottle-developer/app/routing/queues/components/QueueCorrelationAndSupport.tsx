@@ -116,6 +116,7 @@ export const QueueCorrelationAndSupport = (
             <span className="text-muted-foreground">Plan</span>{' '}
             <Link
               className="text-primary font-mono text-xs underline-offset-4 hover:underline"
+              prefetch="intent"
               to={`/plans/${parsed.planId}`}
             >
               {parsed.planId}
