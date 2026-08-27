@@ -76,10 +76,11 @@ export const loader = async (args: Route.LoaderArgs) => {
     availability,
   );
 
-  // Leaderboard rows link through only when their `skillName` matches a
-  // discovered on-disk slug — reuse the same disk gate `/skills/$slug` uses to
-  // 404 so links never depend on DB ingest/auth state (mirrors /usage).
-  const linkableSlugs = diskEntries.map((entry) => entry.slug);
+  // Slugs actually present in this checkout. Leaderboard rows are classified
+  // against this set: it decides both which rows link through to a detail page
+  // and which ones are only history. Reuse the same disk gate `/skills/$slug`
+  // uses to 404, so neither depends on DB ingest/auth state (mirrors /usage).
+  const presentSlugs = diskEntries.map((entry) => entry.slug);
 
   // Deferred aggregate usage over a fixed 30-day window (YYYY-MM-DD, matching
   // the /usage contract; all skills, no scope/branch/cwd filter). Streamed as a
@@ -104,7 +105,7 @@ export const loader = async (args: Route.LoaderArgs) => {
     .then(({ skillUsage }) => toSkillsIndexUsageData(skillUsage))
     .catch(() => ({ available: false as const }));
 
-  return { entries, linkableSlugs, tagVocabulary, usage };
+  return { entries, presentSlugs, tagVocabulary, usage };
 };
 
 export const links: Route.LinksFunction = () => {
@@ -118,7 +119,7 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
 export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
-  const { entries, linkableSlugs, tagVocabulary, usage } = props.loaderData;
+  const { entries, presentSlugs, tagVocabulary, usage } = props.loaderData;
 
   // Hooks
   const [searchParams, setSearchParams] = useSearchParams();
@@ -257,7 +258,7 @@ export default function Component(
           <Await resolve={usage}>
             {(data) => (
               <SkillsIndexUsage
-                linkableSlugs={linkableSlugs}
+                presentSlugs={presentSlugs}
                 rangeDays={SKILL_USAGE_RANGE_DAYS}
                 usage={data}
               />

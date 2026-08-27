@@ -3,6 +3,7 @@ import clsx from 'clsx';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { SkillUsageDailyChart } from '~/global/components/SkillUsageDailyChart';
 import { SkillUsageLeaderboard } from '~/routing/usage/components/SkillUsageLeaderboard';
+import { partitionSkillUsageByPresence } from '~/routing/usage/utils/partition-skill-usage-by-presence';
 import { SKILLS_INDEX_USAGE_COPY } from '~/routing/skills/data/data.copy';
 import { SKILL_USAGE_COPY } from '~/routing/usage/data/skill-usage-copy';
 import type { SkillsIndexUsageData } from '~/routing/skills/data/skills-index-usage';
@@ -10,11 +11,11 @@ import type { SkillsIndexUsageData } from '~/routing/skills/data/skills-index-us
 export interface SkillsIndexUsageProps {
   className?: string;
   /**
-   * Skill names that resolve to an on-disk `/skills/$slug` detail page —
-   * derived from the loader's disk entries so leaderboard rows link only when
-   * the row's `skillName` matches a discovered slug.
+   * Slugs discovered on disk by the loader. Rows are classified against this
+   * set, which decides both whether a row links through to its detail page and
+   * which table it lands in.
    */
-  linkableSlugs: readonly string[];
+  presentSlugs: readonly string[];
   rangeDays: number;
   usage: SkillsIndexUsageData;
 }
@@ -25,15 +26,30 @@ export interface SkillsIndexUsageProps {
  * leaderboard. Reuses the same components as /usage. Degrades to an
  * informational notice when the query is unavailable (no settings:read / server
  * error) — never an error boundary.
+ *
+ * "Top skills" ranks only skills still present in this checkout. Rows with
+ * recorded usage but no SKILL.md are real history, so they are kept — but in a
+ * separate, de-emphasized section below, which does not render at all when
+ * there are none. The empty message is keyed off the ranked bucket rather than
+ * the raw row count, so an all-missing window explains itself instead of
+ * rendering an empty table.
  */
 export const SkillsIndexUsage = (
   props: SkillsIndexUsageProps,
 ): React.ReactElement => {
-  const { className, linkableSlugs, rangeDays, usage } = props;
+  const { className, presentSlugs, rangeDays, usage } = props;
 
   // Hooks
 
   // Setup
+  const partitioned = React.useMemo(
+    () =>
+      partitionSkillUsageByPresence(
+        usage.available ? usage.bySkill : [],
+        new Set(presentSlugs),
+      ),
+    [presentSlugs, usage],
+  );
 
   // Handlers
 
@@ -84,7 +100,7 @@ export const SkillsIndexUsage = (
         heading="h3"
         title={SKILL_USAGE_COPY.leaderboardHeading}
       />
-      {usage.bySkill.length === 0 ? (
+      {partitioned.active.length === 0 ? (
         <p
           className="text-muted-foreground text-sm"
           data-testid="SkillsIndexUsageEmpty"
@@ -92,11 +108,22 @@ export const SkillsIndexUsage = (
           {SKILL_USAGE_COPY.empty}
         </p>
       ) : (
-        <SkillUsageLeaderboard
-          bySkill={usage.bySkill}
-          linkableSlugs={linkableSlugs}
-        />
+        <SkillUsageLeaderboard bySkill={partitioned.active} />
       )}
+
+      {partitioned.missing.length > 0 ? (
+        <div className="mt-8" data-testid="SkillsIndexUsageMissing">
+          <GlobalHeading
+            className="text-muted-foreground mb-2"
+            heading="h3"
+            title={SKILL_USAGE_COPY.missingHeading}
+          />
+          <p className="text-muted-foreground mb-3 text-sm">
+            {SKILL_USAGE_COPY.missingIntro}
+          </p>
+          <SkillUsageLeaderboard bySkill={partitioned.missing} />
+        </div>
+      ) : null}
     </div>
   );
 };

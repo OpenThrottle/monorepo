@@ -71,7 +71,7 @@ const baseProps = (): UsageSkillUsageProps => ({
   bySkill: [],
   end: '2026-07-31',
   filterOptions: buildFilterOptions(),
-  linkableSlugs: [],
+  presentSlugs: [],
   providerParam: null,
   rangeDays: 30,
   selectedCwd: null,
@@ -121,6 +121,7 @@ describe('UsageSkillUsage Component', () => {
           skillName: 'vercel:deploy',
         }),
       ],
+      presentSlugs: ['ot-plans'],
       totalCount: 7,
     });
 
@@ -160,7 +161,7 @@ describe('UsageSkillUsage Component', () => {
           skillName: 'vercel:deploy',
         }),
       ],
-      linkableSlugs: ['ot-plans'],
+      presentSlugs: ['ot-plans'],
     });
 
     const link = component.getByRole('link', { name: 'ot-plans' });
@@ -180,16 +181,75 @@ describe('UsageSkillUsage Component', () => {
       ...baseProps(),
       bySkill: [
         buildBySkill({
-          scope: SKILL_USAGE_SCOPES.THIRD_PARTY,
+          scope: SKILL_USAGE_SCOPES.OURS,
           skillName: 'engineering:code-review',
         }),
       ],
-      linkableSlugs: ['engineering:code-review'],
+      presentSlugs: ['engineering:code-review'],
     });
 
     expect(
       component.getByRole('link', { name: 'engineering:code-review' }),
     ).toHaveAttribute('href', '/skills/engineering%3Acode-review');
+  });
+
+  test('splits missing rows out of Top skills into their own section', () => {
+    const component = renderComponent({
+      ...baseProps(),
+      bySkill: [
+        buildBySkill({ count: 90, skillName: 'renamed-away' }),
+        buildBySkill({ count: 10, skillName: 'ot-plans' }),
+      ],
+      presentSlugs: ['ot-plans'],
+    });
+
+    const missingSection = component.getByTestId('UsageSkillUsageMissing');
+
+    expect(missingSection).toHaveTextContent(SKILL_USAGE_COPY.missingHeading);
+    expect(missingSection).toHaveTextContent(SKILL_USAGE_COPY.missingIntro);
+    expect(missingSection).toHaveTextContent('renamed-away');
+
+    const [topSkills] = component.getAllByTestId('SkillUsageLeaderboard');
+    expect(topSkills).toHaveTextContent('ot-plans');
+    expect(topSkills).not.toHaveTextContent('renamed-away');
+  });
+
+  test('omits the missing section when every row is present on disk', () => {
+    const component = renderComponent({
+      ...baseProps(),
+      bySkill: [buildBySkill({ skillName: 'ot-plans' })],
+      presentSlugs: ['ot-plans'],
+    });
+
+    expect(
+      component.queryByTestId('UsageSkillUsageMissing'),
+    ).not.toBeInTheDocument();
+  });
+
+  test('shows the filtered empty copy when filters narrow the ranked bucket to nothing but missing rows', () => {
+    const component = renderComponent({
+      ...baseProps(),
+      bySkill: [buildBySkill({ skillName: 'renamed-away' })],
+      presentSlugs: [],
+      selectedScope: SKILL_USAGE_SCOPES.OURS,
+    });
+
+    expect(component.getByTestId('UsageSkillUsageEmpty')).toHaveTextContent(
+      SKILL_USAGE_COPY.emptyFiltered,
+    );
+    expect(component.getByTestId('UsageSkillUsageMissing')).toBeInTheDocument();
+  });
+
+  test('shows the unfiltered empty copy for an all-missing window with no filters', () => {
+    const component = renderComponent({
+      ...baseProps(),
+      bySkill: [buildBySkill({ skillName: 'renamed-away' })],
+      presentSlugs: [],
+    });
+
+    expect(component.getByTestId('UsageSkillUsageEmpty')).toHaveTextContent(
+      SKILL_USAGE_COPY.empty,
+    );
   });
 
   test('scope filter links target skillScope and mark the active one', () => {

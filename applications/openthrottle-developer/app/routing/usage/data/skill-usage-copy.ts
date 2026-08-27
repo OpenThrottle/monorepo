@@ -54,6 +54,13 @@ export const SKILL_USAGE_COPY = {
   intro: (rangeDays: number): string =>
     `Harness-captured Skill invocations over the last ${rangeDays} days — ours (skills/) and third-party (plugin-namespaced) alike. Args are truncated at capture; this view never expands them. Outcome/duration columns are opt-in enrichment for skills we author; missing outcomes are normal.`,
   leaderboardHeading: 'Top skills',
+  /**
+   * The de-emphasized second table. Shared by /skills and /usage: both routes
+   * render the identical section, so the wording lives here rather than being
+   * duplicated into the skills copy file.
+   */
+  missingHeading: 'No longer on disk',
+  missingIntro: `These skills have recorded history but no SKILL.md in this checkout — they were removed, renamed, or moved. Their counts are kept as history; they are ranked separately because you can no longer invoke them.`,
   outcomesColumn: 'Outcomes',
   outcomesHint: `Outcome and duration stats are opt-in enrichment for skills we author; missing outcomes are normal.`,
   overTimeHeading: 'Usage over time',
