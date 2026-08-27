@@ -100,8 +100,6 @@ const BUFFER_MAX_CHUNKS = 5_000;
 
 /** Everything needed to run one streamed assistant turn. */
 export interface StartConversationStreamRun {
-  /** Extra directories granted to a CLI beyond `cwd`; empty when none. */
-  readonly additionalDirectories: readonly string[];
   /** Pre-allocated assistant message id (returned to the client by the mutation). */
   readonly assistantMessageId: string;
   /** Backend discriminator (`openai` | `cursor`). */
@@ -331,10 +329,6 @@ export class ConversationStreamService {
       CLI_BACKENDS[run.backend] ?? openAiConversationBackend;
 
     const backendRun: ConversationBackendRun = {
-      additionalDirectories:
-        run.additionalDirectories.length > 0
-          ? run.additionalDirectories
-          : undefined,
       baseUrl: run.baseUrl ?? undefined,
       cwd: run.cwd ?? undefined,
       fileMentions: run.fileMentions.length > 0 ? run.fileMentions : undefined,

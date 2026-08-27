@@ -158,7 +158,6 @@ async function* streamAntigravity(
   const child = spawn(
     resolveAntigravityBin(),
     buildAntigravityArgv({
-      additionalDirectories: run.additionalDirectories,
       cwd: run.cwd,
       model: run.model,
       permissionMode: run.permissionMode,

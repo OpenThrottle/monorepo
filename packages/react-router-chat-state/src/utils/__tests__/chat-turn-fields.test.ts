@@ -7,7 +7,7 @@ const base = {
   persist: true,
   personaId: null,
   reasoning: null,
-  repositoryIds: [],
+  repositoryId: null,
   serviceTier: null,
 } as const;
 
@@ -36,7 +36,7 @@ describe('buildChatTurnFields', () => {
       decoded: { backend: 'cursor', model: 'gpt-5.2' },
       permissionMode: 'autoAcceptEdits',
       persist: false,
-      repositoryIds: ['repo-1'],
+      repositoryId: 'repo-1',
     });
 
     expect(fields).toEqual({
@@ -47,7 +47,7 @@ describe('buildChatTurnFields', () => {
       persist: 'false',
       personaId: '',
       reasoning: '',
-      repositoryIds: '["repo-1"]',
+      repositoryId: 'repo-1',
       serviceTier: '',
     });
   });
@@ -61,43 +61,12 @@ describe('buildChatTurnFields', () => {
         model: 'llama3',
       },
       fileMentions: ['src/a.ts'],
-      repositoryIds: ['repo-1'],
+      repositoryId: 'repo-1',
     });
 
     expect(fields.backend).toBe('opencode');
     expect(fields.baseUrl).toBe('http://localhost:11434/v1');
     expect(fields.fileMentions).toBe(JSON.stringify(['src/a.ts']));
-    expect(fields.repositoryIds).toBe(JSON.stringify(['repo-1']));
-  });
-
-  it('encodes an empty selection as an empty JSON array, not an empty string', () => {
-    const fields = buildChatTurnFields({
-      ...base,
-      decoded: { backend: 'claude' },
-    });
-
-    expect(fields.repositoryIds).toBe('[]');
-  });
-
-  it('encodes several ids primary-first, preserving order', () => {
-    const fields = buildChatTurnFields({
-      ...base,
-      decoded: { backend: 'claude' },
-      repositoryIds: ['repo-primary', 'repo-second', 'repo-third'],
-    });
-
-    expect(fields.repositoryIds).toBe(
-      JSON.stringify(['repo-primary', 'repo-second', 'repo-third']),
-    );
-  });
-
-  it('omits repository fields entirely for the openai backend', () => {
-    const fields = buildChatTurnFields({
-      ...base,
-      decoded: { backend: 'openai', baseUrl: 'http://x/v1', model: 'm' },
-      repositoryIds: ['repo-1'],
-    });
-
-    expect(fields.repositoryIds).toBeUndefined();
+    expect(fields.repositoryId).toBe('repo-1');
   });
 });

@@ -31,13 +31,6 @@ export const ANTIGRAVITY_DEFAULT_BIN = `agy`;
  */
 export interface AntigravityArgvOptions {
   /**
-   * Extra directories to grant this turn beyond {@link cwd}, as ABSOLUTE paths
-   * — the same relative-path caveat below applies to every one of them.
-   * Emitted as one repeated `--add-dir` each, after the cwd's. Context only:
-   * agy still runs in {@link cwd}.
-   */
-  readonly additionalDirectories?: readonly string[];
-  /**
    * Absolute path to the run's working directory, emitted as `--add-dir`. LOAD-BEARING: without it
    * agy reports "you do not have an active workspace set" and writes into an invented scratch
    * project under `~/.gemini/antigravity-cli/scratch/<name>/` instead of the cwd. A relative path
@@ -72,15 +65,6 @@ export function buildAntigravityArgv(
   const cwd = options.cwd?.trim();
   if (cwd !== undefined && cwd !== '') {
     argv.push('--add-dir', cwd);
-  }
-
-  // The workspace dir comes FIRST, then one repeated `--add-dir` per extra
-  // granted directory.
-  for (const directory of options.additionalDirectories ?? []) {
-    const trimmed = directory.trim();
-    if (trimmed !== '') {
-      argv.push('--add-dir', trimmed);
-    }
   }
 
   if (options.permissionMode === CONVERSATION_PERMISSION_MODES.fullAccess) {

@@ -62,7 +62,6 @@ async function* fakeStream(
 }
 
 const baseRun: StartConversationStreamRun = {
-  additionalDirectories: [],
   assistantMessageId: 'assistant-msg-1',
   backend: 'openai',
   baseUrl: 'http://localhost:11434/v1',

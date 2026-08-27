@@ -26,22 +26,6 @@ import type { DecodedChatOption } from '../utils/chat-model-option';
  */
 
 /**
- * Cap for a backend with no notion of an additional granted directory: the
- * composer stays single-select. This is the conservative default — a driver
- * only leaves it by demonstrating a repeatable directory flag its adapter
- * actually emits.
- */
-const SINGLE_REPOSITORY_CAP = 1;
-
-/**
- * Cap for a backend whose CLI accepts a repeatable `--add-dir`. Four is a UX
- * ceiling rather than a CLI limit: past a handful of granted directories the
- * trigger's `+N` affordance stops being readable and the agent's context stops
- * being focused.
- */
-const MULTI_REPOSITORY_CAP = 4;
-
-/**
  * Local OpenAI-compatible endpoints: a plain completion against a discovered
  * LOCAL endpoint. No repository, no permission surface, and no service tier
  * (a cloud-only concept). Reasoning IS forwarded best-effort as the OpenAI
@@ -50,7 +34,6 @@ const MULTI_REPOSITORY_CAP = 4;
  * @public
  */
 export const OPENAI_BACKEND_CAPABILITIES: ChatBackendCapabilities = {
-  maxRepositories: SINGLE_REPOSITORY_CAP,
   permissionModes: [],
   reasoningLevels: [
     ChatReasoningLevel.low,
@@ -79,7 +62,6 @@ const ALL_PERMISSION_MODES: readonly ChatPermissionMode[] = [
  * @public
  */
 export const DEFAULT_CLI_BACKEND_CAPABILITIES: ChatBackendCapabilities = {
-  maxRepositories: SINGLE_REPOSITORY_CAP,
   permissionModes: ALL_PERMISSION_MODES,
   reasoningLevels: [
     ChatReasoningLevel.low,
@@ -107,19 +89,7 @@ export const DEFAULT_CLI_BACKEND_CAPABILITIES: ChatBackendCapabilities = {
 export const CHAT_BACKEND_CAPABILITIES: Readonly<
   Record<string, ChatBackendCapabilities>
 > = {
-  antigravity: {
-    // agy already emits `--add-dir <cwd>` for its primary workspace and the
-    // flag is repeatable, so additional context directories cost nothing extra.
-    maxRepositories: MULTI_REPOSITORY_CAP,
-    permissionModes: ALL_PERMISSION_MODES,
-    // agy exposes no reasoning-effort flag; the model id carries it.
-    reasoningLevels: [],
-    requiresRepository: true,
-    serviceTiers: [],
-    supportsModelFlag: true,
-  },
   claude: {
-    maxRepositories: MULTI_REPOSITORY_CAP,
     permissionModes: ALL_PERMISSION_MODES,
     reasoningLevels: [
       ChatReasoningLevel.low,
@@ -133,7 +103,6 @@ export const CHAT_BACKEND_CAPABILITIES: Readonly<
     supportsModelFlag: true,
   },
   codex: {
-    maxRepositories: SINGLE_REPOSITORY_CAP,
     permissionModes: ALL_PERMISSION_MODES,
     reasoningLevels: [
       ChatReasoningLevel.low,
@@ -145,7 +114,6 @@ export const CHAT_BACKEND_CAPABILITIES: Readonly<
     supportsModelFlag: true,
   },
   cursor: {
-    maxRepositories: SINGLE_REPOSITORY_CAP,
     // Headless cursor has two distinct permission postures: trust-only (safe)
     // and `--force` (run everything). autoAcceptEdits has no distinct edits-only
     // flag, so it is not advertised.
@@ -164,7 +132,6 @@ export const CHAT_BACKEND_CAPABILITIES: Readonly<
     supportsModelFlag: true,
   },
   gemini: {
-    maxRepositories: SINGLE_REPOSITORY_CAP,
     // gemini's --approval-mode maps 1:1 (default / auto_edit / yolo), but the
     // CLI exposes no reasoning-effort or service-tier flag in 0.25.2, so no
     // reasoning levels are advertised.
@@ -175,7 +142,6 @@ export const CHAT_BACKEND_CAPABILITIES: Readonly<
     supportsModelFlag: true,
   },
   grok: {
-    maxRepositories: SINGLE_REPOSITORY_CAP,
     permissionModes: ALL_PERMISSION_MODES,
     reasoningLevels: [
       ChatReasoningLevel.low,
@@ -187,7 +153,6 @@ export const CHAT_BACKEND_CAPABILITIES: Readonly<
     supportsModelFlag: true,
   },
   opencode: {
-    maxRepositories: SINGLE_REPOSITORY_CAP,
     permissionModes: ALL_PERMISSION_MODES,
     reasoningLevels: [
       ChatReasoningLevel.low,

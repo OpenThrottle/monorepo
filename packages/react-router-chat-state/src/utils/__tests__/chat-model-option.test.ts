@@ -217,41 +217,6 @@ describe('capabilitiesForChatOption', () => {
     expect(caps.reasoningLevels).toContain(ChatReasoningLevel.high);
   });
 
-  it('caps additional directories per driver: only add-dir-capable CLIs go above one', () => {
-    // antigravity + claude emit a repeatable `--add-dir`, so they may hold
-    // secondary context directories.
-    for (const backend of ['antigravity', 'claude']) {
-      const caps = capabilitiesForChatOption(decodeChatOption(backend));
-      expect(caps.maxRepositories).toBeGreaterThan(1);
-    }
-
-    // The rest have no equivalent flag, so the composer stays single-select.
-    for (const backend of ['codex', 'cursor', 'gemini', 'grok', 'opencode']) {
-      const caps = capabilitiesForChatOption(decodeChatOption(backend));
-      expect(caps.maxRepositories).toBe(1);
-    }
-  });
-
-  it('keeps an uncharacterized driver and the OpenAI endpoint single-select', () => {
-    expect(
-      capabilitiesForChatOption(decodeChatOption('brand-new-cli'))
-        .maxRepositories,
-    ).toBe(1);
-    expect(
-      capabilitiesForChatOption(
-        decodeChatOption('http://localhost:11434/v1::llama3'),
-      ).maxRepositories,
-    ).toBe(1);
-  });
-
-  it('keeps the cap on a CLI backend carrying a model override', () => {
-    expect(
-      capabilitiesForChatOption(
-        decodeChatOption(encodeCliOptionId('claude', 'opus')),
-      ).maxRepositories,
-    ).toBeGreaterThan(1);
-  });
-
   it('keeps the full agent surface for a driver × local-endpoint option', () => {
     const caps = capabilitiesForChatOption(
       decodeChatOption(

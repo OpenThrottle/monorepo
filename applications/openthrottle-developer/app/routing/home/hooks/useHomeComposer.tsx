@@ -89,10 +89,7 @@ export const useHomeComposer = (options: UseHomeComposerOptions) => {
   const persist = effectiveToolbar.persist;
   const personaId = effectiveToolbar.personaId;
   const reasoning = effectiveToolbar.reasoning;
-  const repositoryIds = effectiveToolbar.repositoryIds;
-  // @-mentions stay keyed on the PRIMARY checkout for v1: a multi-repo mention
-  // needs repo-qualified paths or the agent cannot disambiguate them.
-  const repositoryId = repositoryIds[0];
+  const repositoryId = effectiveToolbar.repositoryId;
   const serviceTier = effectiveToolbar.serviceTier;
 
   // Backs the composer's @-mention file picker for the selected checkout;
@@ -148,12 +145,7 @@ export const useHomeComposer = (options: UseHomeComposerOptions) => {
   const setReasoning = (reasoning: ChatReasoningLevel): void =>
     setToolbarState((previous) => ({ ...previous, reasoning }));
   const setRepositoryId = (repositoryId: string): void =>
-    setToolbarState((previous) => ({
-      ...previous,
-      repositoryIds: [repositoryId],
-    }));
-  const setRepositoryIds = (repositoryIds: readonly string[]): void =>
-    setToolbarState((previous) => ({ ...previous, repositoryIds }));
+    setToolbarState((previous) => ({ ...previous, repositoryId }));
   const setServiceTier = (serviceTier: ChatServiceTier): void =>
     setToolbarState((previous) => ({ ...previous, serviceTier }));
 
@@ -164,7 +156,7 @@ export const useHomeComposer = (options: UseHomeComposerOptions) => {
       return;
     }
 
-    if (decoded.backend !== 'openai' && repositoryIds.length === 0) {
+    if (decoded.backend !== 'openai' && !repositoryId) {
       turn.setError('Select a repository to run the agent in.');
       return;
     }
@@ -186,7 +178,7 @@ export const useHomeComposer = (options: UseHomeComposerOptions) => {
       persist,
       personaId,
       reasoning,
-      repositoryIds,
+      repositoryId,
       serviceTier,
     });
 
@@ -235,7 +227,6 @@ export const useHomeComposer = (options: UseHomeComposerOptions) => {
     personas,
     reasoning,
     repositoryId,
-    repositoryIds,
     serviceTier,
     setDraft,
     setMode,
@@ -245,7 +236,6 @@ export const useHomeComposer = (options: UseHomeComposerOptions) => {
     setPersonaId,
     setReasoning,
     setRepositoryId,
-    setRepositoryIds,
     setServiceTier,
     slashCommandProvider,
     voice,

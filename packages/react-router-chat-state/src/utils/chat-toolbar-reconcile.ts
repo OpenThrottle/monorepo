@@ -1,5 +1,4 @@
 import type {
-  ChatBackendCapabilities,
   ChatModelOption,
   ChatPersonaOption,
 } from '@openthrottle/react-router-chat';
@@ -114,42 +113,6 @@ function resolveModelId(
 }
 
 /**
- * Resolve the effective checkout selection, primary first.
- *
- * In order: a backend that does not run in a repository gets nothing; ids that
- * have vanished from the loader list are dropped; the remainder is truncated to
- * the backend's `maxRepositories` cap; and an empty result seeds the first
- * available repository so the composer is never left unselectable.
- *
- * Truncation is SILENT and keeps the leading entries. Switching from a
- * multi-directory backend to a single-directory one is an innocuous action, and
- * a stale three-repo blob must not error or blank the composer — it must
- * quietly become one, with the primary (index 0) preserved, because that entry
- * is the process cwd.
- */
-function resolveRepositoryIds(
-  persisted: readonly string[],
-  repositories: readonly ReconcileRepositoryOption[],
-  capabilities: ChatBackendCapabilities,
-): readonly string[] {
-  if (!capabilities.requiresRepository) {
-    return [];
-  }
-
-  const available = persisted
-    .filter((id) => repositories.some((repository) => repository.id === id))
-    .slice(0, Math.max(capabilities.maxRepositories, 1));
-
-  if (available.length > 0) {
-    return available;
-  }
-
-  const seed = repositories[0]?.id;
-
-  return seed != null ? [seed] : [];
-}
-
-/**
  * @description Derive the *effective* toolbar selections from the persisted
  * blob and the current loader data. PURE and derive-only: it never mutates its
  * input and never writes back to storage — the stored blob only changes when the
@@ -161,17 +124,16 @@ function resolveRepositoryIds(
  * - `modelId`: kept when it exact-matches a current model id; otherwise
  *   re-resolved by {@link resolveModelId} (openai host+name churn, stale CLI
  *   overrides) before falling back to the first model.
- * - `personaId`: kept when still present in the current list, else the first
- *   available (or undefined when the list is empty).
- * - `repositoryIds`: see {@link resolveRepositoryIds}.
+ * - `personaId` / `repositoryId`: kept when still present in the current lists,
+ *   else the first available (or undefined when the list is empty).
  * - `reasoning` / `serviceTier` / `permissionMode`: resolved as the effective
  *   backend's `perBackend` override (keyed by `decodeChatOption(modelId).backend`)
  *   falling back to the top-level global, THEN re-gated against the effective
  *   backend's {@link capabilitiesForChatOption}; a value the backend no longer
  *   permits is cleared. `perBackend` itself passes through unchanged (derive-only).
- * - `repositoryIds` is also emptied when the effective backend does not run in
- *   a repository (`requiresRepository === false`), since the checkout control
- *   is hidden for those backends.
+ * - `repositoryId` is also cleared when the effective backend does not run in a
+ *   repository (`requiresRepository === false`), since the checkout control is
+ *   hidden for those backends.
  * @public
  */
 export function reconcileChatToolbarState(
@@ -194,11 +156,14 @@ export function reconcileChatToolbarState(
   const decoded = modelId != null ? decodeChatOption(modelId) : null;
   const capabilities = capabilitiesForChatOption(decoded);
 
-  const repositoryIds = resolveRepositoryIds(
-    persisted.repositoryIds,
-    repositories,
-    capabilities,
-  );
+  const repositoryId = !capabilities.requiresRepository
+    ? undefined
+    : persisted.repositoryId != null &&
+        repositories.some(
+          (repository) => repository.id === persisted.repositoryId,
+        )
+      ? persisted.repositoryId
+      : repositories[0]?.id;
 
   // Per-backend override (keyed by the effective backend token) layered over the
   // global fallback, then capability-gated against the effective backend.
@@ -238,7 +203,7 @@ export function reconcileChatToolbarState(
     persist: persisted.persist,
     personaId,
     reasoning,
-    repositoryIds,
+    repositoryId,
     serviceTier,
     version: persisted.version,
   };

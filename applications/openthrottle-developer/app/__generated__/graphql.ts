@@ -4702,13 +4702,8 @@ export type StartConversationStreamInput = {
   personaId?: InputMaybe<Scalars['ID']['input']>;
   /** Reasoning-effort level for the turn: "low", "medium", "high", "extraHigh", "max", or "ultra". Nullable + additive. Honored: each backend that exposes a reasoning knob maps it to its own vocabulary (claude --effort, grok --reasoning-effort, codex -c model_reasoning_effort=, opencode --variant, cursor model-string [effort=…], openai reasoning_effort), clamping to its accepted set. */
   reasoning?: InputMaybe<Scalars['String']['input']>;
-  /**
-   * Registered WorkspaceLocalRepository to run a CLI backend in. Required for CLI backends in production (the server resolves + ownership-checks the path).
-   * @deprecated Use repositoryIds, which carries the primary checkout plus any additional context directories. A lone repositoryId is still honored as a one-element list.
-   */
+  /** Registered WorkspaceLocalRepository to run a CLI backend in. Required for CLI backends in production (the server resolves + ownership-checks the path). */
   repositoryId?: InputMaybe<Scalars['ID']['input']>;
-  /** Registered WorkspaceLocalRepositories for a CLI backend, PRIMARY FIRST. Index 0 becomes the process working directory; the remainder are granted to the CLI as additional context directories (repeated --add-dir) by the backends that support them. Every id is ownership-checked independently, and the list is capped server-side per driver. */
-  repositoryIds?: InputMaybe<Array<Scalars['ID']['input']>>;
   /** Service tier for the turn: "standard" or "fast". Nullable + additive. Honored only by backends that can route by tier (cursor-agent, via the model-string [fast=…] suffix); backends without a tier concept ignore it. */
   serviceTier?: InputMaybe<Scalars['String']['input']>;
 };

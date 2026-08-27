@@ -107,10 +107,7 @@ export const useRunSkillDialog = (
   const permissionMode = effectiveToolbar.permissionMode;
   const persist = effectiveToolbar.persist;
   const reasoning = effectiveToolbar.reasoning;
-  // The run-skill dialog is deliberately single-select — a skill runs in ONE
-  // checkout — so it reads the primary and ignores any secondaries the chat
-  // composer may have selected.
-  const repositoryId = effectiveToolbar.repositoryIds[0];
+  const repositoryId = effectiveToolbar.repositoryId;
   const serviceTier = effectiveToolbar.serviceTier;
 
   const decoded = modelId ? decodeChatOption(modelId) : null;
@@ -127,7 +124,7 @@ export const useRunSkillDialog = (
   const setRepositoryId = (nextRepositoryId: string): void =>
     setToolbarState((previous) => ({
       ...previous,
-      repositoryIds: [nextRepositoryId],
+      repositoryId: nextRepositoryId,
     }));
 
   const buildPayload = React.useCallback((): RunSkillPayload | null => {
@@ -164,9 +161,7 @@ export const useRunSkillDialog = (
             permissionMode: permissionMode ?? '',
             persist: String(persist),
             reasoning: reasoning ?? '',
-            repositoryIds: JSON.stringify(
-              repositoryId != null ? [repositoryId] : [],
-            ),
+            repositoryId: repositoryId ?? '',
             serviceTier: serviceTier ?? '',
           };
 

@@ -15,7 +15,7 @@ import type { SyncStorage } from 'jotai/vanilla/utils/atomWithStorage';
  * can migrate old blobs forward instead of wiping the user's saved toolbar.
  * @public
  */
-export const CHAT_TOOLBAR_STATE_VERSION = 4 as const;
+export const CHAT_TOOLBAR_STATE_VERSION = 3 as const;
 
 /**
  * localStorage key for the persisted Chat Toolbar selections. Derived from
@@ -62,13 +62,7 @@ export interface ChatToolbarState {
   readonly persist: boolean;
   readonly personaId: string | undefined;
   readonly reasoning: ChatReasoningLevel | undefined;
-  /**
-   * Selected checkouts, PRIMARY FIRST — index 0 is the repository the agent
-   * process runs in, the rest are additional granted context directories.
-   * Replaced the single `repositoryId` in v4; empty means nothing chosen yet,
-   * which the consumer seeds from loader data.
-   */
-  readonly repositoryIds: readonly string[];
+  readonly repositoryId: string | undefined;
   readonly serviceTier: ChatServiceTier | undefined;
   readonly version: typeof CHAT_TOOLBAR_STATE_VERSION;
 }
@@ -88,7 +82,7 @@ export const DEFAULT_CHAT_TOOLBAR_STATE: ChatToolbarState = {
   persist: true,
   personaId: undefined,
   reasoning: undefined,
-  repositoryIds: [],
+  repositoryId: undefined,
   serviceTier: undefined,
   version: CHAT_TOOLBAR_STATE_VERSION,
 };
@@ -161,36 +155,11 @@ function coercePerBackend(
 }
 
 /**
- * Coerce the persisted checkout selection into a primary-first id array.
- *
- * v4 writes `repositoryIds`; v3 and earlier wrote a single `repositoryId`, so a
- * legacy blob migrates forward as a one-element array rather than losing the
- * user's checkout. Non-string and empty entries are dropped and order is
- * preserved — index 0 is the primary, so reordering here would silently move
- * which repository the agent runs in.
- */
-function coerceRepositoryIds(record: Record<string, unknown>): string[] {
-  if (Array.isArray(record.repositoryIds)) {
-    return record.repositoryIds.filter(
-      (entry): entry is string => typeof entry === 'string' && entry !== '',
-    );
-  }
-
-  // v3 and earlier.
-  if (typeof record.repositoryId === 'string' && record.repositoryId !== '') {
-    return [record.repositoryId];
-  }
-
-  return [];
-}
-
-/**
  * Coerce a persisted record into a valid {@link ChatToolbarState}: unknown enum
  * values and non-string ids drop back to their defaults rather than corrupting
- * the blob. v0-v3 share a forward-compatible field set — `perBackend` is
- * simply absent before v2, `persist` before v3, and v3's single `repositoryId`
- * widens to a one-element `repositoryIds` — so older blobs migrate forward
- * while preserving still-valid picks.
+ * the blob. v0/v1/v2 share a forward-compatible field set — `perBackend` is
+ * simply absent before v2, so it coerces to `{}` and the older blob migrates
+ * forward while preserving still-valid picks.
  */
 function coerceChatToolbarState(
   record: Record<string, unknown>,
@@ -212,7 +181,8 @@ function coerceChatToolbarState(
     reasoning: isChatReasoningLevel(record.reasoning)
       ? record.reasoning
       : undefined,
-    repositoryIds: coerceRepositoryIds(record),
+    repositoryId:
+      typeof record.repositoryId === 'string' ? record.repositoryId : undefined,
     serviceTier: isChatServiceTier(record.serviceTier)
       ? record.serviceTier
       : undefined,
@@ -224,10 +194,10 @@ function coerceChatToolbarState(
  * @description Migration-aware coercion of unknown persisted JSON into a valid
  * {@link ChatToolbarState}. Reads `version`, dispatches to the matching
  * migration, then coerces each field. Unversioned/legacy blobs (`version`
- * absent → treated as v0), v1 blobs (before `perBackend`), v2 blobs (before
- * `persist`) and v3 blobs (single `repositoryId`) all share a forward-compatible
- * field set, so they migrate forward — seeding `perBackend: {}`, `persist: true`
- * and widening `repositoryId` to `[id]` — while preserving still-valid picks (see {@link coerceChatToolbarState}). A newer/unknown version — or
+ * absent → treated as v0), v1 blobs (before `perBackend`), and v2 blobs (before
+ * `persist`) all share a forward-compatible field set, so they migrate forward —
+ * seeding `perBackend: {}` and `persist: true` — while preserving still-valid
+ * picks (see {@link coerceChatToolbarState}). A newer/unknown version — or
  * malformed input — degrades to {@link DEFAULT_CHAT_TOOLBAR_STATE} rather than
  * throwing. The `switch` is the seam where a future reshape slots in as its own
  * case (rewriting `record` before the shared coercion).
@@ -244,7 +214,6 @@ export function normalizeChatToolbarState(raw: unknown): ChatToolbarState {
     case 0:
     case 1:
     case 2:
-    case 3:
     case CHAT_TOOLBAR_STATE_VERSION:
       return coerceChatToolbarState(raw);
     default:

@@ -37,7 +37,6 @@ const MODEL_GROUPS: readonly ChatModelGroup[] = [
 ];
 
 const CLI_CAPS: ChatBackendCapabilities = {
-  maxRepositories: 1,
   permissionModes: [
     ChatPermissionMode.supervised,
     ChatPermissionMode.fullAccess,
@@ -197,42 +196,6 @@ describe('ChatComposerToolbar Component', () => {
       expect(
         component.getByTestId('ChatCheckoutSelector-trigger'),
       ).toHaveTextContent('openthrottle');
-    });
-
-    test('renders the checkout control multi-select only when the cap allows it AND a handler is wired', async () => {
-      const onCheckoutsChange = vi.fn();
-      const user = userEvent.setup();
-      const component = renderToolbar({
-        capabilities: { ...CLI_CAPS, maxRepositories: 3 },
-        checkouts: CHECKOUTS,
-        onCheckoutsChange,
-        selectedCheckoutIds: [CHECKOUTS[0].id],
-      });
-      await user.click(component.getByTestId('ChatCheckoutSelector-trigger'));
-
-      // The Primary badge only renders in multiple mode.
-      expect(
-        component.getByTestId(
-          `ChatCheckoutSelector-primary-${CHECKOUTS[0].id}`,
-        ),
-      ).toBeInTheDocument();
-    });
-
-    test('keeps the checkout control single-select for a cap of one', async () => {
-      const user = userEvent.setup();
-      const component = renderToolbar({
-        capabilities: { ...CLI_CAPS, maxRepositories: 1 },
-        checkouts: CHECKOUTS,
-        onCheckoutsChange: vi.fn(),
-        selectedCheckoutIds: [CHECKOUTS[0].id],
-      });
-      await user.click(component.getByTestId('ChatCheckoutSelector-trigger'));
-
-      expect(
-        component.queryByTestId(
-          `ChatCheckoutSelector-primary-${CHECKOUTS[0].id}`,
-        ),
-      ).not.toBeInTheDocument();
     });
 
     test('hides the checkout selector when the backend does not require a repository', () => {

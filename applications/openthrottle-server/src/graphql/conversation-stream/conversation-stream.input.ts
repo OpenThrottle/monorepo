@@ -71,17 +71,10 @@ export class StartConversationStreamInput {
   reasoning?: string | null;
 
   @Field(() => ID, {
-    deprecationReason: `Use repositoryIds, which carries the primary checkout plus any additional context directories. A lone repositoryId is still honored as a one-element list.`,
     description: `Registered WorkspaceLocalRepository to run a CLI backend in. Required for CLI backends in production (the server resolves + ownership-checks the path).`,
     nullable: true,
   })
   repositoryId?: string | null;
-
-  @Field(() => [ID], {
-    description: `Registered WorkspaceLocalRepositories for a CLI backend, PRIMARY FIRST. Index 0 becomes the process working directory; the remainder are granted to the CLI as additional context directories (repeated --add-dir) by the backends that support them. Every id is ownership-checked independently, and the list is capped server-side per driver.`,
-    nullable: true,
-  })
-  repositoryIds?: string[] | null;
 
   @Field(() => String, {
     description: `Service tier for the turn: "standard" or "fast". Nullable + additive. Honored only by backends that can route by tier (cursor-agent, via the model-string [fast=…] suffix); backends without a tier concept ignore it.`,
