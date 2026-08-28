@@ -2,7 +2,6 @@ import * as React from 'react';
 import clsx from 'clsx';
 import { Form, Link, useNavigation } from 'react-router';
 import {
-  Badge,
   Button,
   Empty,
   EmptyDescription,
@@ -16,6 +15,11 @@ import {
   TableRow,
 } from '@openthrottle/react-router-shadcn';
 import { WORKSPACE_SETTINGS_COPY } from '~/routing/settings/data/data.copy';
+import { WorkspaceEditorTargetEditors } from '~/routing/settings/components/WorkspaceEditorTargetEditors';
+import type {
+  EditorPresenceState,
+  WorkspaceEditorId,
+} from '~/__generated__/graphql';
 import type { WorkspaceEditorTargetGroup } from '~/routing/settings/utils/workspace-editor-targets';
 
 /** How many repositories render before the list collapses behind a show-all toggle. */
@@ -24,6 +28,13 @@ const COLLAPSED_TARGET_COUNT = 6;
 export interface SettingsWorkspaceEditorTargetsProps {
   className?: string;
   hasRepositories: boolean;
+  /**
+   * Advisory presence per editor, or null when the probe failed — the null path is the
+   * loader's `.catch` and must render exactly as this table did before presence existed.
+   * Display-only: a not-detected editor's Apply still runs, because writing editor config
+   * into a repo is useful before the editor is installed.
+   */
+  presence?: ReadonlyMap<WorkspaceEditorId, EditorPresenceState> | null;
   targets: readonly WorkspaceEditorTargetGroup[];
 }
 
@@ -34,7 +45,7 @@ export interface SettingsWorkspaceEditorTargetsProps {
 export const SettingsWorkspaceEditorTargets = (
   props: SettingsWorkspaceEditorTargetsProps,
 ): React.ReactElement => {
-  const { className, hasRepositories, targets } = props;
+  const { className, hasRepositories, presence, targets } = props;
 
   // Hooks
   const navigation = useNavigation();
@@ -122,13 +133,10 @@ export const SettingsWorkspaceEditorTargets = (
                 {target.filesystemPath}
               </TableCell>
               <TableCell>
-                <div className="flex flex-wrap gap-1">
-                  {target.editors.map((editor) => (
-                    <Badge key={editor.id} variant="secondary">
-                      {editor.label}
-                    </Badge>
-                  ))}
-                </div>
+                <WorkspaceEditorTargetEditors
+                  editors={target.editors}
+                  presence={presence}
+                />
               </TableCell>
               <TableCell className="text-right">
                 <Form className="inline-flex" method="post">

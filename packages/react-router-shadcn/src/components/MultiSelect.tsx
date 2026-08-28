@@ -13,6 +13,14 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from './Popover';
 
 export interface MultiSelectOption {
+  /**
+   * Optional leading adornment — a status marker, icon or swatch — rendered before the
+   * label in both the trigger tag and the option row. It is decoration only: it never
+   * affects selectability, ordering, or the cmdk search key.
+   */
+  readonly adornment?: React.ReactNode;
+  /** Optional muted suffix after the label in the option row, e.g. a status word. */
+  readonly hint?: string;
   readonly label: string;
   readonly value: string;
 }
@@ -89,7 +97,12 @@ export const MultiSelect = React.forwardRef<
             <span className="text-muted-foreground">{placeholder}</span>
           ) : (
             selectedOptions.map((opt) => (
-              <Badge className="truncate" key={opt.value} variant="secondary">
+              <Badge
+                className="gap-1 truncate"
+                key={opt.value}
+                variant="secondary"
+              >
+                {opt.adornment}
                 {opt.label}
               </Badge>
             ))
@@ -124,7 +137,18 @@ export const MultiSelect = React.forwardRef<
                     >
                       {selected ? <Check className="h-3 w-3" /> : null}
                     </span>
-                    {opt.label}
+                    {/* `value` above stays the bare label: folding the hint into the
+                        cmdk search key would make a shared status word match every
+                        option at once. */}
+                    <span className="flex items-center gap-1.5">
+                      {opt.adornment}
+                      {opt.label}
+                      {opt.hint ? (
+                        <span className="text-muted-foreground text-xs">
+                          {opt.hint}
+                        </span>
+                      ) : null}
+                    </span>
                   </CommandItem>
                 );
               })}

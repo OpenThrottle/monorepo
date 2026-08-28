@@ -97,6 +97,76 @@ describe('MultiSelect', () => {
     expect(onChange).toHaveBeenCalledWith(['beta']);
   });
 
+  it('renders an option adornment and hint without making them selectable state', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    const { getByRole, findByRole, getByTestId } = render(
+      <MultiSelect
+        onChange={onChange}
+        options={[
+          {
+            adornment: <span data-testid="alpha-adornment">•</span>,
+            hint: 'not detected',
+            label: 'Alpha',
+            value: 'alpha',
+          },
+          { label: 'Beta', value: 'beta' },
+        ]}
+        placeholder="Select"
+        value={[]}
+      />,
+    );
+    await user.click(getByRole('button', { name: 'Select' }));
+
+    expect(getByTestId('alpha-adornment')).toBeInTheDocument();
+
+    // An adorned/hinted option stays as selectable as a bare one.
+    const alphaOption = await findByRole('option', { name: /Alpha/ });
+    await user.click(alphaOption);
+    expect(onChange).toHaveBeenCalledWith(['alpha']);
+  });
+
+  it('keeps the hint out of the search key, so a shared status word cannot match every option', async () => {
+    const user = userEvent.setup();
+    const { getByRole, findAllByRole, getByPlaceholderText } = render(
+      <MultiSelect
+        onChange={() => {}}
+        options={[
+          { hint: 'not detected', label: 'Alpha', value: 'alpha' },
+          { hint: 'not detected', label: 'Beta', value: 'beta' },
+        ]}
+        placeholder="Select"
+        searchPlaceholder="Search…"
+        value={[]}
+      />,
+    );
+    await user.click(getByRole('button', { name: 'Select' }));
+    await user.type(getByPlaceholderText('Search…'), 'Alpha');
+
+    const options = await findAllByRole('option');
+    expect(options).toHaveLength(1);
+    expect(options[0]).toHaveTextContent('Alpha');
+  });
+
+  it('carries the adornment into the trigger tag for a selected option', () => {
+    const { getByTestId } = render(
+      <MultiSelect
+        onChange={() => {}}
+        options={[
+          {
+            adornment: <span data-testid="alpha-adornment">•</span>,
+            label: 'Alpha',
+            value: 'alpha',
+          },
+        ]}
+        placeholder="Select"
+        value={['alpha']}
+      />,
+    );
+
+    expect(getByTestId('alpha-adornment')).toBeInTheDocument();
+  });
+
   it('supports keyboard navigation and selection', async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
