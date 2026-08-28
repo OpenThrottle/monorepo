@@ -42,6 +42,43 @@ describe('ChatToolCallGroup Component', () => {
     expect(trigger).toHaveTextContent('running');
   });
 
+  test('the collapsed header names the active tool beside the count', () => {
+    // The exact spot that regressed to `name · 10 actions`: ten real reads whose
+    // header carried no information at all.
+    const component = renderGroup({
+      tools: Array.from({ length: 10 }, (_unused, index) =>
+        tool({ name: 'view_file', sortOrder: index, status: 'succeeded' }),
+      ),
+    });
+
+    const trigger = component.getByTestId('ChatToolCallGroup-trigger');
+    expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    expect(trigger).toHaveTextContent('view_file');
+    expect(trigger).toHaveTextContent('· 10 actions');
+    expect(trigger).not.toHaveTextContent(/\bname\b/);
+  });
+
+  test('truncates a long active tool name in the header', () => {
+    const component = renderGroup({
+      tools: [
+        tool({
+          name: 'mcp__openthrottle-mcp__get_remaining_tasks_for_plan',
+          sortOrder: 0,
+          status: 'succeeded',
+        }),
+      ],
+    });
+
+    expect(
+      component.getByText(
+        'mcp__openthrottle-mcp__get_remaining_tasks_for_plan',
+      ),
+    ).toHaveClass('truncate');
+    expect(
+      component.getByTestId('ChatToolCallGroup-trigger'),
+    ).toHaveTextContent('· 1 actions');
+  });
+
   test('a completed group shows a succeeded pill and the last step', () => {
     const component = renderGroup({
       tools: [

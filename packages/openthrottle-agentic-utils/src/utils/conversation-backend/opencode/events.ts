@@ -55,9 +55,11 @@ function mapTool(
   const state = isRecord(part.state) ? part.state : undefined;
   const status = asString(state?.status);
   const callId = asString(part.callID) ?? null;
+  const toolName = asString(part.tool) ?? null;
   const metadata = {
     callId,
-    tool: asString(part.tool) ?? null,
+    tool: toolName,
+    toolName,
     toolPart: part,
   };
 

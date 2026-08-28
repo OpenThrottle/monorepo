@@ -37,6 +37,9 @@ export function createGeminiEventMapper(): (
   event: unknown,
 ) => ConversationStreamChunk[] {
   let model: string | undefined;
+  // gemini's `tool_result` events carry only `tool_id` — no name — so the name
+  // introduced by the matching `tool_use` has to be remembered for the result.
+  const toolNameByCallId = new Map<string, string>();
 
   return (event: unknown): ConversationStreamChunk[] => {
     if (!isRecord(event)) {
@@ -64,17 +67,24 @@ export function createGeminiEventMapper(): (
 
       case 'tool_use': {
         const callId = asString(event.tool_id) ?? '';
+        const toolName = asString(event.tool_name) ?? null;
+
+        if (toolName !== null) {
+          toolNameByCallId.set(callId, toolName);
+        }
+
         return [
           {
             delta: '',
             done: false,
             kind: CONVERSATION_STREAM_CHUNK_KINDS.toolCall,
             metadata: {
+              // `parameters` is already the tool's own flat argument record (verified against
+              // gemini-cli-core's shipped `ToolUseEvent`), so it IS the payload — wrapping it
+              // beside the name would just repeat what `toolName` carries.
               callId,
-              toolCall: {
-                name: asString(event.tool_name) ?? null,
-                parameters: event.parameters ?? null,
-              },
+              toolCall: event.parameters ?? null,
+              toolName,
             },
           },
         ];
@@ -94,6 +104,7 @@ export function createGeminiEventMapper(): (
                 output: asString(event.output) ?? null,
                 status: asString(event.status) ?? null,
               },
+              toolName: toolNameByCallId.get(callId) ?? null,
             },
           },
         ];

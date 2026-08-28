@@ -72,7 +72,7 @@ describe('createOpencodeEventMapper', () => {
     });
     expect(running[0]).toMatchObject({
       kind: 'tool_call',
-      metadata: { callId: 'call_1', tool: 'read' },
+      metadata: { callId: 'call_1', tool: 'read', toolName: 'read' },
     });
 
     const done = mapper.map({
@@ -85,7 +85,11 @@ describe('createOpencodeEventMapper', () => {
       sessionID: 'ses_1',
       type: 'tool',
     });
-    expect(done[0]).toMatchObject({ error: null, kind: 'tool_result' });
+    expect(done[0]).toMatchObject({
+      error: null,
+      kind: 'tool_result',
+      metadata: { toolName: 'read' },
+    });
   });
 
   it('maps step_finish to a usage chunk with tokens and cost', () => {

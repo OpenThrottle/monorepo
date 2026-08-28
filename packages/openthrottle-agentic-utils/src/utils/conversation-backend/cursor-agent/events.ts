@@ -81,21 +81,52 @@ function mapThinking(
   };
 }
 
+/** Keys of a `tool_call` payload that are bookkeeping rather than the tool. */
+const TOOL_CALL_RESERVED_KEYS = new Set([
+  'hookAdditionalContexts',
+  'toolCallId',
+]);
+
+/**
+ * cursor names its tool with a KEY, not a value: `{ toolCallId, readToolCall:
+ * {…} }` means `read`. Pick the first record-valued non-reserved key and strip
+ * the `ToolCall` suffix so the client never has to guess.
+ */
+function toolNameOf(toolCall: unknown): string | null {
+  if (!isRecord(toolCall)) {
+    return null;
+  }
+
+  const key = Object.keys(toolCall).find(
+    (candidate) =>
+      !TOOL_CALL_RESERVED_KEYS.has(candidate) && isRecord(toolCall[candidate]),
+  );
+
+  return key === undefined ? null : key.replace(/ToolCall$/, '');
+}
+
 /**
  * `tool_call` → a tool-call chunk on `started`, a tool-result chunk on
  * `completed` (the result is embedded inline in the same event). Correlate the
- * two by `call_id`. The raw `tool_call` payload is passed through as metadata.
+ * two by `call_id`. The raw `tool_call` payload is passed through as metadata,
+ * alongside the canonical `toolName` the client renders.
  */
 function mapToolCall(
   event: Record<string, unknown>,
 ): ConversationStreamChunk | null {
   const callId = asString(event.call_id) ?? null;
+  const metadata = {
+    callId,
+    toolCall: event.tool_call ?? null,
+    toolName: toolNameOf(event.tool_call),
+  };
+
   if (event.subtype === 'started') {
     return {
       delta: '',
       done: false,
       kind: CONVERSATION_STREAM_CHUNK_KINDS.toolCall,
-      metadata: { callId, toolCall: event.tool_call ?? null },
+      metadata,
     };
   }
 
@@ -104,7 +135,7 @@ function mapToolCall(
       delta: '',
       done: false,
       kind: CONVERSATION_STREAM_CHUNK_KINDS.toolResult,
-      metadata: { callId, toolCall: event.tool_call ?? null },
+      metadata,
     };
   }
 

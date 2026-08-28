@@ -48,7 +48,10 @@ describe('mapCodexEvent', () => {
     expect(chunk).toMatchObject({
       done: false,
       kind: 'tool_result',
-      metadata: { itemType: 'command_execution' },
+      metadata: {
+        itemType: 'command_execution',
+        toolName: 'command_execution',
+      },
     });
   });
 

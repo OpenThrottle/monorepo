@@ -94,6 +94,7 @@ function mapStreamEvent(inner: unknown): ConversationStreamChunk | null {
         metadata: {
           index: inner.index ?? null,
           name: asString(block.name) ?? null,
+          toolName: asString(block.name) ?? null,
           toolUseId: asString(block.id) ?? null,
         },
       };

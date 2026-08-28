@@ -65,6 +65,8 @@ describe('mapCursorEvent', () => {
     });
     expect(started).toMatchObject({ done: false, kind: 'tool_call' });
     expect(started?.metadata?.callId).toBe('tool_bf9e');
+    // cursor names the tool with a KEY, so `readToolCall` resolves to `read`.
+    expect(started?.metadata?.toolName).toBe('read');
 
     const completed = mapCursorEvent({
       call_id: 'tool_bf9e',
@@ -74,6 +76,7 @@ describe('mapCursorEvent', () => {
     });
     expect(completed).toMatchObject({ done: false, kind: 'tool_result' });
     expect(completed?.metadata?.callId).toBe('tool_bf9e');
+    expect(completed?.metadata?.toolName).toBe('read');
   });
 
   it('maps a success result to a terminal chunk with no error', () => {

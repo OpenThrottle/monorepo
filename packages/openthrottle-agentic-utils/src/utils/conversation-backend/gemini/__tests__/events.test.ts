@@ -50,7 +50,9 @@ describe('createGeminiEventMapper', () => {
       kind: CONVERSATION_STREAM_CHUNK_KINDS.toolCall,
       metadata: {
         callId: 'call-1',
-        toolCall: { name: 'read_file', parameters: { file_path: 'a.txt' } },
+        // `parameters` IS the payload; the name is carried once, by `toolName`.
+        toolCall: { file_path: 'a.txt' },
+        toolName: 'read_file',
       },
     });
 
@@ -68,6 +70,8 @@ describe('createGeminiEventMapper', () => {
       metadata: {
         callId: 'call-1',
         toolCall: { error: null, output: 'hello', status: 'success' },
+        // The nameless `tool_result` event inherits the name its `tool_use` set.
+        toolName: 'read_file',
       },
     });
   });

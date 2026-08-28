@@ -48,22 +48,74 @@ export const isRetryableTerminalMetadata = (
   return parsed !== null && parsed.retryable === true;
 };
 
-/** Best-effort tool name from a parsed `toolCall` payload; falls back to 'tool'. */
-const extractToolName = (toolCall: unknown): string => {
+/** Placeholder header used when no backend reported a tool name at all. */
+const FALLBACK_TOOL_NAME = 'tool';
+
+/** Keys of a cursor-agent `tool_call` payload that are never the tool itself. */
+const LEGACY_TOOL_CALL_RESERVED_KEYS = new Set([
+  'hookAdditionalContexts',
+  'toolCallId',
+]);
+
+const asNonEmptyString = (value: unknown): string | null =>
+  typeof value === 'string' && value !== '' ? value : null;
+
+/**
+ * Legacy key-sniff for cursor-agent's `{ toolCallId, readToolCall: {…} }`, the
+ * one shape that names its tool with a KEY rather than a value. Only keys whose
+ * value is a record qualify, so a `{ name, parameters }` payload can never
+ * resolve to the literal `name`.
+ */
+const sniffLegacyToolName = (toolCall: unknown): string | null => {
   if (!isRecord(toolCall)) {
-    return 'tool';
+    return null;
   }
 
-  const name = Object.keys(toolCall).find(
-    (key) => key !== 'toolCallId' && key !== 'hookAdditionalContexts',
+  const key = Object.keys(toolCall).find(
+    (candidate) =>
+      !LEGACY_TOOL_CALL_RESERVED_KEYS.has(candidate) &&
+      isRecord(toolCall[candidate]),
   );
 
-  return name === undefined ? 'tool' : name.replace(/ToolCall$/, '');
+  return key === undefined ? null : key.replace(/ToolCall$/, '');
+};
+
+/**
+ * Resolve a chunk's tool name from its whole parsed metadata record, explicit
+ * fields first: the canonical `toolName` every backend now emits, then the
+ * driver-specific `name`/`tool` fields, then a `toolCall.name` payload, and only
+ * as a last resort the legacy cursor-agent key-sniff — which is what keeps
+ * conversations persisted before `toolName` existed rendering correctly.
+ */
+const extractToolName = (
+  parsed: Record<string, unknown> | null,
+): string | null => {
+  if (parsed === null) {
+    return null;
+  }
+
+  const toolCall = parsed.toolCall;
+
+  return (
+    asNonEmptyString(parsed.toolName) ??
+    asNonEmptyString(parsed.name) ??
+    asNonEmptyString(parsed.tool) ??
+    (isRecord(toolCall) ? asNonEmptyString(toolCall.name) : null) ??
+    sniffLegacyToolName(toolCall)
+  );
 };
 
 /** Normalized fields the event folders read out of a chunk's metadata. */
 export interface ParsedChunkMetadata {
   readonly callId: string | null;
+  /**
+   * False when the chunk identifies no tool at all — neither a `callId` nor a
+   * reported name. Such a chunk is a continuation of the call already open
+   * (claude streams its arguments as `input_json_delta` chunks carrying only
+   * `{ index, partialJson }`), not a new call, so the folders must not
+   * synthesize a placeholder event from it.
+   */
+  readonly hasToolIdentity: boolean;
   readonly sessionId: string | null;
   readonly toolCallJson: string | null;
   readonly toolName: string;
@@ -73,9 +125,10 @@ export interface ParsedChunkMetadata {
 
 const EMPTY_METADATA: ParsedChunkMetadata = {
   callId: null,
+  hasToolIdentity: false,
   sessionId: null,
   toolCallJson: null,
-  toolName: 'tool',
+  toolName: FALLBACK_TOOL_NAME,
   usageJson: null,
   usageResult: null,
 };
@@ -88,15 +141,18 @@ const normalizeMetadata = (
   }
 
   const toolCall = parsed.toolCall;
+  const callId = asString(parsed.callId);
+  const toolName = extractToolName(parsed);
 
   return {
-    callId: asString(parsed.callId),
+    callId,
+    hasToolIdentity: toolName !== null || callId !== null,
     sessionId: asString(parsed.sessionId),
     toolCallJson:
       toolCall === undefined || toolCall === null
         ? null
         : JSON.stringify(toolCall),
-    toolName: extractToolName(toolCall),
+    toolName: toolName ?? FALLBACK_TOOL_NAME,
     usageJson:
       parsed.usage === undefined || parsed.usage === null
         ? null
@@ -122,13 +178,7 @@ export const parseChunkMetadata = (
 export const toolLabelFromMetadataJson = (
   metadataJson: string | null | undefined,
 ): string => {
-  const parsed = safeParse(metadataJson);
-
-  if (parsed === null || !isRecord(parsed.toolCall)) {
-    return 'tool';
-  }
-
-  return extractToolName(parsed.toolCall);
+  return extractToolName(safeParse(metadataJson)) ?? FALLBACK_TOOL_NAME;
 };
 
 /**
@@ -173,6 +223,17 @@ export const applyTurnToolCall = (
     return events;
   }
 
+  // An identity-less chunk continues the call already streaming (claude sends
+  // one such chunk per `input_json_delta`); appending would head a card with the
+  // `'tool'` placeholder. With no open call it still becomes one, so a genuinely
+  // nameless one-off is never silently swallowed.
+  if (
+    !meta.hasToolIdentity &&
+    events.some((e) => e.kind === 'tool' && e.status === 'running')
+  ) {
+    return events;
+  }
+
   return [
     ...events,
     {
@@ -188,6 +249,18 @@ export const applyTurnToolCall = (
   ];
 };
 
+/** Index of the newest still-running tool event, or -1 when none is open. */
+const lastRunningToolIndex = (events: readonly ChatTurnEvent[]): number => {
+  for (let index = events.length - 1; index >= 0; index -= 1) {
+    const event = events[index];
+    if (event.kind === 'tool' && event.status === 'running') {
+      return index;
+    }
+  }
+
+  return -1;
+};
+
 /**
  * Resolve a tool event to succeeded, correlating by callId.
  *
@@ -198,9 +271,15 @@ export const applyTurnToolResult = (
   meta: ParsedChunkMetadata,
   sortOrder: number,
 ): readonly ChatTurnEvent[] => {
+  // An identity-less result (claude's `user` event carries only `toolResults`,
+  // with the id on each block rather than the chunk) belongs to the call still
+  // open. Resolving that one both suppresses a placeholder card and unsticks the
+  // real call, which would otherwise stay `running` forever.
   const index =
     meta.callId === null
-      ? -1
+      ? meta.hasToolIdentity
+        ? -1
+        : lastRunningToolIndex(events)
       : events.findIndex((e) => e.kind === 'tool' && e.callId === meta.callId);
 
   if (index >= 0) {

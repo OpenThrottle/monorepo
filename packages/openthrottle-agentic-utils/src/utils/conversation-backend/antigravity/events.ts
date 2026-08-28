@@ -39,6 +39,32 @@ const asString = (value: unknown): string | undefined => {
 };
 
 /**
+ * `tool_info` is itself `{ name, parameters, output? }` (captured verbatim from agy 1.1.22), so
+ * nesting it under a `parameters` key repeats both the tool name and the wrapper. Unwrap to the
+ * tool's own arguments; a shape without an inner `parameters` record passes through untouched so no
+ * argument key is ever dropped.
+ */
+const toolArgumentsOf = (toolInfo: unknown): unknown => {
+  if (isRecord(toolInfo) && isRecord(toolInfo.parameters)) {
+    return toolInfo.parameters;
+  }
+
+  return toolInfo ?? null;
+};
+
+/**
+ * The tool's own output when `tool_info` reports one, else its arguments — an ERROR step often
+ * carries no output, and the arguments are more use there than an empty pane.
+ */
+const toolOutputOf = (toolInfo: unknown): unknown => {
+  if (isRecord(toolInfo) && toolInfo.output !== undefined) {
+    return toolInfo.output;
+  }
+
+  return toolArgumentsOf(toolInfo);
+};
+
+/**
  * Create a stateful mapper for one agy run. It remembers the `init` model so the terminal usage
  * chunk can attribute tokens to it, and the tool name per `step_index` so a terminal tool step can
  * report the name that its `ACTIVE` event introduced.
@@ -96,7 +122,8 @@ export function createAntigravityEventMapper(): (
             kind: CONVERSATION_STREAM_CHUNK_KINDS.toolCall,
             metadata: {
               callId,
-              toolCall: { name, parameters: payload.tool_info ?? null },
+              toolCall: toolArgumentsOf(payload.tool_info),
+              toolName: name,
             },
           },
         ];
@@ -113,10 +140,10 @@ export function createAntigravityEventMapper(): (
               // A step-level ERROR is not a turn failure (see rule 3) — surface it on the tool
               // result and let `result.status` decide the turn.
               error: state === 'ERROR' ? state : null,
-              name,
-              output: payload.tool_info ?? null,
+              output: toolOutputOf(payload.tool_info),
               status: state,
             },
+            toolName: name,
           },
         },
       ];
