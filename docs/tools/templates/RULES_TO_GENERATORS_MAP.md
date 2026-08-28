@@ -62,7 +62,7 @@ Which rules apply to code produced by (or that should be produced by) each gener
 ### 2.3 react-native
 
 - **Workflow:** personal-generators.mdc; use `--type` not `--subGenerator` (see personal-generators.mdc).
-- **Naming:** naming-conventions.mdc + react-native.md: PascalCase components; feature-_ / react-native-_ for packages.
+- **Naming:** naming-conventions.mdc: PascalCase components; feature-\_ prefixes for packages.
 - **Exports:** default-exports.mdc — generated components use **named exports**; route/layout files may use **default export** (framework).
 - **Types:** return-types.mdc, import-type.mdc, interface-extends.mdc, readonly-properties.mdc.
 - **Testing:** personal-general.mdc (component, userEvent, waitFor, describe per branch) where tests exist.
@@ -93,7 +93,7 @@ Which rules apply to code produced by (or that should be produced by) each gener
 ## 3. Template alignment with rules (verified)
 
 - **default-exports:** React/React Router component templates use **named** `export const <%= name %>`. React Router route and React Native route/layout templates use `export default` only where the framework requires it (allowed by rule). **Aligned.**
-- **naming:** Generator docs (react.md, react-router.md, nestjs.md, react-native.md, package.md, folders.md) match naming-conventions.mdc (PascalCase components, kebab-case files/services/packages). **Aligned.**
+- **naming:** Generator docs (react.md, react-router.md, nestjs.md, package.md, folders.md) match naming-conventions.mdc (PascalCase components, kebab-case files/services/packages). **Aligned.**
 - **React import:** Generator source uses `import * as React from 'react'` in component templates. **Aligned** with cursor-commands.mdc.
 
 ---
@@ -108,7 +108,7 @@ Which rules apply to code produced by (or that should be produced by) each gener
 ### 4.2 Generator coverage
 
 - **React Router route-api:** AGENT_USAGE and the react-router generator source mention route-api; the react-router.md doc doesn’t list it in the Sub-Generators table. **Gap:** Doc vs implementation mismatch; clarify in react-router.md if route-api is supported and list params.
-- **React Native:** Only `component` and `package` types documented; route generators exist in source (flat/nested). **Gap:** react-native.md doesn’t list route sub-types; agents may not discover them. **Recommendation:** Document route generation in react-native.md or confirm routes are out of scope for the generator.
+- **React Native:** No `react-native` generator is registered in `tools/generators/generators.json`. Nothing to audit; use **react** / **react-router** instead.
 - **core-repository:** personal-general.mdc mentions “core-repository” for NestJS; nestjs generator has graphql-service, simple-service, module, queue, ai-agent, application but no “core-repository” subGenerator. **Gap:** Rule references an artifact type that may not exist in @tools/generators. **Recommendation:** Either add core-repository to nestjs generator or update personal-general.mdc to match actual subGenerators.
 
 ### 4.3 Rules not enforced by generators
@@ -139,7 +139,7 @@ Which rules apply to code produced by (or that should be produced by) each gener
 ## 6. Recommended next steps (for downstream tasks)
 
 - **Document generator-first workflow for agents (task 8a9832fd):** Use this map and AGENT_USAGE.md; make personal-general.mdc and AGENTS.md point to the same workflow and generator list.
-- **Define agent inputs (task 746ba239):** Provide agents with: (1) personal-generators.mdc + AGENT_USAGE.md, (2) this map, (3) generator docs (react.md, react-router.md, nestjs.md, react-native.md, package.md, folders.md), (4) coding/\* rules.
+- **Define agent inputs (task 746ba239):** Provide agents with: (1) personal-generators.mdc + AGENT_USAGE.md, (2) this map, (3) generator docs (react.md, react-router.md, nestjs.md, package.md, folders.md), (4) coding/\* rules.
 - **Audit checklist (task a5a13afe):** When building a checklist, use §2 (generator → rules) to define per-artifact checks (e.g. “React Router component: named export, PascalCase, Form/Modal/Table suffix if applicable, import \* as React”).
 
 This mapping is the single reference for the “Map coding rules to generator templates” task and for downstream agent workflow and audit checklist work.
