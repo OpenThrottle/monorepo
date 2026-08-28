@@ -74,4 +74,5 @@ export const formatRelativeChatTimestamp = (
 export * from './chat-checkout-selection';
 export * from './checkout-groups';
 export * from './checkout-labels';
+export * from './checkout-search-filter';
 export * from './repository-identity';
