@@ -1,5 +1,6 @@
 import * as React from 'react';
 import clsx from 'clsx';
+import { Badge } from '@openthrottle/react-router-shadcn';
 import { CheckIcon, InfoIcon } from 'lucide-react';
 import { EditorPresenceState } from '~/__generated__/graphql';
 import { WORKSPACE_EDITOR_OPTIONS } from '~/routing/settings/config/workspace-editors';
@@ -17,10 +18,11 @@ export interface WorkspaceEditorPresenceHintsProps {
 
 /**
  * @description Advisory hints about which editors were detected on the machine hosting
- * the server. Strictly display-only: it never disables a control, never changes the
- * submitted selection, and renders nothing at all for UNKNOWN — the state the server
- * returns when it is not entitled to make a claim (a containerized server cannot see
- * the user's filesystem). Silence is the correct output when we do not know.
+ * the server, rendered as a compact badge row. Strictly display-only: it never disables
+ * a control, never changes the submitted selection, and renders nothing at all for
+ * UNKNOWN — the state the server returns when it is not entitled to make a claim (a
+ * containerized server cannot see the user's filesystem). Silence is the correct output
+ * when we do not know.
  */
 export const WorkspaceEditorPresenceHints = (
   props: WorkspaceEditorPresenceHintsProps,
@@ -34,6 +36,9 @@ export const WorkspaceEditorPresenceHints = (
   // rather than being given a muted or placeholder treatment.
   const hints = (editors ?? []).filter(
     (entry) => entry.presence !== EditorPresenceState.Unknown,
+  );
+  const hasNotFound = hints.some(
+    (entry) => entry.presence === EditorPresenceState.NotFound,
   );
 
   const labelFor = (entry: EditorPresenceEntry): string =>
@@ -51,40 +56,44 @@ export const WorkspaceEditorPresenceHints = (
 
   return (
     <div
-      className={clsx('space-y-1', className)}
+      className={clsx('space-y-1.5', className)}
       data-testid="WorkspaceEditorPresenceHints"
     >
-      <p className="text-muted-foreground text-xs font-medium">
-        {WORKSPACE_SETTINGS_COPY.presenceHeading}
-      </p>
-      <ul className="space-y-1">
+      <div className="flex flex-wrap items-center gap-1.5">
+        <span className="text-muted-foreground text-xs font-medium">
+          {WORKSPACE_SETTINGS_COPY.presenceHeading}
+        </span>
         {hints.map((entry) => {
           const installed = entry.presence === EditorPresenceState.Installed;
 
           return (
-            <li
-              className="text-muted-foreground flex items-start gap-1.5 text-xs"
+            <Badge
+              className="text-muted-foreground gap-1 font-normal"
               data-presence={entry.presence}
               data-testid={`WorkspaceEditorPresenceHint-${entry.editor}`}
               key={entry.editor}
+              variant={installed ? 'secondary' : 'outline'}
             >
               {installed ? (
-                <CheckIcon aria-hidden={true} className="mt-0.5 size-3.5" />
+                <CheckIcon aria-hidden={true} className="size-3" />
               ) : (
-                <InfoIcon aria-hidden={true} className="mt-0.5 size-3.5" />
+                <InfoIcon aria-hidden={true} className="size-3" />
               )}
-              <span>
-                <span className="text-foreground font-medium">
-                  {labelFor(entry)}
-                </span>{' '}
-                {installed
-                  ? WORKSPACE_SETTINGS_COPY.presenceInstalledSuffix
-                  : WORKSPACE_SETTINGS_COPY.presenceNotFoundSuffix}
-              </span>
-            </li>
+              <span className="text-foreground font-medium">
+                {labelFor(entry)}
+              </span>{' '}
+              {installed
+                ? WORKSPACE_SETTINGS_COPY.presenceInstalledSuffix
+                : WORKSPACE_SETTINGS_COPY.presenceNotFoundSuffix}
+            </Badge>
           );
         })}
-      </ul>
+      </div>
+      {hasNotFound ? (
+        <p className="text-muted-foreground text-xs">
+          {WORKSPACE_SETTINGS_COPY.presenceNotFoundCaption}
+        </p>
+      ) : null}
     </div>
   );
 };

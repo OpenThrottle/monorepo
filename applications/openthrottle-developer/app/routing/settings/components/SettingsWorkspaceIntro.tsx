@@ -33,7 +33,7 @@ export const SettingsWorkspaceIntro = (
         icon={MonitorCogIcon}
         title={WORKSPACE_SETTINGS_COPY.title}
       />
-      <p className="text-muted-foreground text-sm">
+      <p className="text-muted-foreground max-w-prose text-sm">
         {WORKSPACE_SETTINGS_COPY.intro}
       </p>
     </div>

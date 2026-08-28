@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { WorkspaceEditorId } from '~/__generated__/graphql';
-import { buildWorkspaceEditorTargets } from '../workspace-editor-targets';
+import { buildWorkspaceEditorTargetGroups } from '../workspace-editor-targets';
 
 const repositories = [
   {
@@ -15,35 +15,39 @@ const repositories = [
   },
 ];
 
-describe('buildWorkspaceEditorTargets', () => {
+describe('buildWorkspaceEditorTargetGroups', () => {
   test('returns nothing when there are no repositories', () => {
-    expect(buildWorkspaceEditorTargets([], [WorkspaceEditorId.Cursor])).toEqual(
-      [],
-    );
+    expect(
+      buildWorkspaceEditorTargetGroups([], [WorkspaceEditorId.Cursor]),
+    ).toEqual([]);
   });
 
   test('returns nothing when no editors are enabled', () => {
-    expect(buildWorkspaceEditorTargets(repositories, [])).toEqual([]);
+    expect(buildWorkspaceEditorTargetGroups(repositories, [])).toEqual([]);
   });
 
-  test('pairs every repository with every enabled editor', () => {
-    const targets = buildWorkspaceEditorTargets(repositories, [
+  test('returns one group per repository carrying every enabled editor', () => {
+    const groups = buildWorkspaceEditorTargetGroups(repositories, [
       WorkspaceEditorId.Cursor,
       WorkspaceEditorId.Vscode,
     ]);
 
-    expect(targets).toHaveLength(4);
-    expect(targets[0]).toEqual({
+    expect(groups).toHaveLength(2);
+    expect(groups[0]).toEqual({
       displayName: 'monorepo',
-      editor: WorkspaceEditorId.Cursor,
-      editorLabel: 'Cursor',
+      editors: [
+        { id: WorkspaceEditorId.Cursor, label: 'Cursor' },
+        { id: WorkspaceEditorId.Vscode, label: 'Visual Studio Code' },
+      ],
       filesystemPath: '/Users/dev/openthrottle',
       id: 'repo-1',
     });
-    expect(targets[3]).toEqual({
+    expect(groups[1]).toEqual({
       displayName: 'website',
-      editor: WorkspaceEditorId.Vscode,
-      editorLabel: 'Visual Studio Code',
+      editors: [
+        { id: WorkspaceEditorId.Cursor, label: 'Cursor' },
+        { id: WorkspaceEditorId.Vscode, label: 'Visual Studio Code' },
+      ],
       filesystemPath: '/Users/dev/website',
       id: 'repo-2',
     });
