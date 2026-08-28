@@ -4,7 +4,11 @@ import userEvent from '@testing-library/user-event';
 import type { RenderResult } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { WorkspaceEditorId } from '~/__generated__/graphql';
+import {
+  EditorPresenceState,
+  WorkspaceEditorId,
+} from '~/__generated__/graphql';
+import { buildEditorPresenceIndex } from '~/routing/settings/utils/workspace-editor-presence-status';
 import { SettingsWorkspaceEditorTargets } from '../SettingsWorkspaceEditorTargets';
 import type { SettingsWorkspaceEditorTargetsProps } from '../SettingsWorkspaceEditorTargets';
 
@@ -27,6 +31,11 @@ const targets = [
     id: 'repo-2',
   },
 ];
+
+const mixedPresence = buildEditorPresenceIndex([
+  { editor: WorkspaceEditorId.Cursor, presence: EditorPresenceState.NotFound },
+  { editor: WorkspaceEditorId.Vscode, presence: EditorPresenceState.Installed },
+]);
 
 const manyTargets = Array.from({ length: 8 }, (_value, index) => ({
   displayName: `repo-${index + 1}`,
@@ -113,6 +122,70 @@ describe('SettingsWorkspaceEditorTargets Component', () => {
     expect(
       component.getByRole('link', { name: 'Add a repository' }),
     ).toHaveAttribute('href', '/settings/repositories');
+  });
+
+  test('marks the editor badges with their detection state', () => {
+    component.unmount();
+    component = renderTargets({
+      hasRepositories: true,
+      presence: mixedPresence,
+      targets,
+    });
+
+    const notDetected = component.getAllByTestId(
+      'WorkspaceEditorTargetEditor-CURSOR',
+    );
+
+    expect(notDetected).toHaveLength(2);
+    for (const badge of notDetected) {
+      expect(badge).toHaveAttribute('data-presence', 'NOT_FOUND');
+    }
+  });
+
+  test("a not-detected editor's row still applies configuration", async () => {
+    const user = userEvent.setup();
+    let submitted: Record<string, FormDataEntryValue> = {};
+    const action = async ({ request }: { request: Request }) => {
+      submitted = Object.fromEntries(await request.formData());
+      return null;
+    };
+    component.unmount();
+    component = renderTargets(
+      {
+        hasRepositories: true,
+        presence: buildEditorPresenceIndex([
+          {
+            editor: WorkspaceEditorId.Cursor,
+            presence: EditorPresenceState.NotFound,
+          },
+          {
+            editor: WorkspaceEditorId.Vscode,
+            presence: EditorPresenceState.NotFound,
+          },
+        ]),
+        targets: [targets[0]],
+      },
+      action,
+    );
+
+    const applyButton = component.getByRole('button', { name: 'Apply' });
+
+    // Writing editor config into a repo is useful before the editor is installed —
+    // that is the whole reason the not-detected caption promises the buttons stay.
+    expect(applyButton).toBeEnabled();
+    await user.click(applyButton);
+
+    expect(submitted.intent).toBe('applyEditorConfig');
+    expect(submitted.repositoryId).toBe('repo-1');
+  });
+
+  test('renders unchanged when no presence data was passed', () => {
+    // The loader's `.catch(() => null)` path: no markers, no tooltips, same badges.
+    expect(component.getAllByText('Visual Studio Code')).toHaveLength(2);
+    expect(
+      component.getAllByTestId('WorkspaceEditorTargetEditor-VSCODE')[0],
+    ).not.toHaveAttribute('title');
+    expect(component.queryByText(/detected/i)).not.toBeInTheDocument();
   });
 
   test('asks the user to enable an editor when repositories exist', () => {

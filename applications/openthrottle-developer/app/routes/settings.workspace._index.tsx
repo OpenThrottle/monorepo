@@ -28,6 +28,7 @@ import {
   applyEditorConfig,
   updateProfile,
 } from '~/routing/settings/actions/workspace';
+import { buildEditorPresenceIndex } from '~/routing/settings/utils/workspace-editor-presence-status';
 import { buildWorkspaceApplyResults } from '~/routing/settings/utils/workspace-apply-results';
 import { buildWorkspaceEditorTargetGroups } from '~/routing/settings/utils/workspace-editor-targets';
 import type { Route } from '@/app/routes/+types/settings.workspace._index';
@@ -79,6 +80,12 @@ export default function Component(
   const { editorPresence, localRepositories, profile, targets } = loaderData;
 
   // Hooks
+  // Indexed once here and handed to every surface that shows availability, so the picker,
+  // the hints row and the per-repository chips can never disagree about a state.
+  const editorPresenceIndex = React.useMemo(
+    () => buildEditorPresenceIndex(editorPresence?.editors),
+    [editorPresence],
+  );
 
   // Setup
   const actionError = getActionError(actionData) ?? null;
@@ -109,6 +116,7 @@ export default function Component(
           <SettingsWorkspaceEditorsForm
             actionError={actionError}
             editorPresence={editorPresence}
+            editorPresenceIndex={editorPresenceIndex}
             profile={profile}
           />
           <OpenThrottleFieldset
@@ -118,6 +126,7 @@ export default function Component(
           >
             <SettingsWorkspaceEditorTargets
               hasRepositories={localRepositories.length > 0}
+              presence={editorPresenceIndex}
               targets={targets}
             />
             <SettingsWorkspaceApplyEditors

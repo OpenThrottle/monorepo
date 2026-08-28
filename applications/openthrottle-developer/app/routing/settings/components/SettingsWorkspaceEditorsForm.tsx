@@ -10,8 +10,10 @@ import { WorkspaceEditorMultiSelect } from '~/routing/settings/components/Worksp
 import { WorkspaceEditorPresenceHints } from '~/routing/settings/components/WorkspaceEditorPresenceHints';
 import { WORKSPACE_SETTINGS_COPY } from '~/routing/settings/data/data.copy';
 import type {
+  EditorPresenceState,
   GetEditorPresenceQuery,
   UserWorkspaceProfileFieldsFragment,
+  WorkspaceEditorId as WorkspaceEditorIdType,
 } from '~/__generated__/graphql';
 
 export interface SettingsWorkspaceEditorsFormProps {
@@ -22,6 +24,14 @@ export interface SettingsWorkspaceEditorsFormProps {
    * it never feeds the submitted selection.
    */
   editorPresence?: GetEditorPresenceQuery['editorPresence'] | null;
+  /**
+   * Presence indexed by editor, built once by the route. Display-only — it never feeds
+   * the submitted selection and never gates a control.
+   */
+  editorPresenceIndex?: ReadonlyMap<
+    WorkspaceEditorIdType,
+    EditorPresenceState
+  > | null;
   profile: UserWorkspaceProfileFieldsFragment;
 }
 
@@ -32,7 +42,13 @@ export interface SettingsWorkspaceEditorsFormProps {
 export const SettingsWorkspaceEditorsForm = (
   props: SettingsWorkspaceEditorsFormProps,
 ): React.ReactElement => {
-  const { actionError, className, editorPresence, profile } = props;
+  const {
+    actionError,
+    className,
+    editorPresence,
+    editorPresenceIndex,
+    profile,
+  } = props;
 
   // Hooks
   const navigation = useNavigation();
@@ -93,13 +109,12 @@ export const SettingsWorkspaceEditorsForm = (
           <Label>{WORKSPACE_SETTINGS_COPY.editorsLabel}</Label>
           <WorkspaceEditorMultiSelect
             onChange={setEnabledEditors}
+            presence={editorPresenceIndex}
             value={enabledEditors}
           />
         </div>
 
-        <WorkspaceEditorPresenceHints
-          editors={editorPresence?.editors ?? null}
-        />
+        <WorkspaceEditorPresenceHints presence={editorPresence} />
 
         {actionError ? (
           <p className="text-destructive text-sm" role="alert">
