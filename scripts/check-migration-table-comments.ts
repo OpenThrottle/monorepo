@@ -7,6 +7,10 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
+import { createLogger } from './lib/index.ts';
+
+const logger = createLogger();
+
 const ROOT = process.cwd();
 const MIGRATIONS_DIR = 'databases/migrations';
 
@@ -87,7 +91,7 @@ const run = (): void => {
   const changedFiles = listChangedMigrationFiles(baseRef);
 
   if (changedFiles.length === 0) {
-    console.log(
+    logger.success(
       `check-migration-table-comments: OK (no changed files under ${MIGRATIONS_DIR}/ vs ${baseRef})`,
     );
     return;
@@ -106,15 +110,15 @@ const run = (): void => {
 
   if (violations.length > 0) {
     for (const violation of violations) {
-      console.error(`check-migration-table-comments: error: ${violation}`);
+      logger.fail(`check-migration-table-comments: error: ${violation}`);
     }
-    console.error(
+    logger.fail(
       `check-migration-table-comments: ${violations.length} violation(s); add COMMENT ON TABLE in the same migration as CREATE TABLE`,
     );
     process.exit(1);
   }
 
-  console.log(
+  logger.success(
     `check-migration-table-comments: OK (${changedFiles.length} changed migration file(s) vs ${baseRef})`,
   );
 };

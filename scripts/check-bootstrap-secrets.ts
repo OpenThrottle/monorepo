@@ -14,6 +14,9 @@
 import { fileURLToPath } from 'node:url';
 
 import { LOCAL_SECRETS_FILENAME, readLocalSecrets } from './local-secrets-file';
+import { createLogger } from './lib/index.ts';
+
+const logger = createLogger();
 
 /** The six keys `.bootstrap-secrets.local` must always contain after setup. */
 export const REQUIRED_BOOTSTRAP_KEYS = [
@@ -55,19 +58,19 @@ async function main(): Promise<void> {
   const missing = findMissingBootstrapKeys(entries);
 
   if (missing.length === 0) {
-    console.log(
-      `✅ ${LOCAL_SECRETS_FILENAME}: all ${REQUIRED_BOOTSTRAP_KEYS.length} required keys present.`,
+    logger.success(
+      `${LOCAL_SECRETS_FILENAME}: all ${REQUIRED_BOOTSTRAP_KEYS.length} required keys present.`,
     );
 
     return;
   }
 
-  console.error(
-    `🔴 ${LOCAL_SECRETS_FILENAME} is missing ${missing.length} required key(s):`,
+  logger.fail(
+    `${LOCAL_SECRETS_FILENAME} is missing ${missing.length} required key(s):`,
   );
 
   for (const key of missing) {
-    console.error(`  - ${key}: ${remediationFor(key)}`);
+    logger.detail(`- ${key}: ${remediationFor(key)}`);
   }
 
   process.exit(1);

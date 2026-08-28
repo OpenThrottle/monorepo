@@ -26,6 +26,10 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 
+import { createLogger, hasFlag } from './lib/index.ts';
+
+const logger = createLogger();
+
 const ROOT = process.cwd();
 const WORKSPACE_DIRS = ['applications', 'packages', 'tools'] as const;
 
@@ -207,11 +211,11 @@ const run = (): void => {
         `${describe(entry)} No self-referential import today, so nothing breaks yet.`,
     );
 
-  const verbose = process.argv.includes('--verbose');
+  const verbose = hasFlag('verbose');
 
   if (warnings.length > 0 && verbose) {
     for (const warning of warnings) {
-      console.warn(`check-package-entrypoints: warning: ${warning}`);
+      logger.warn(`check-package-entrypoints: warning: ${warning}`);
     }
   } else if (warnings.length > 0) {
     const latentPackages = new Set(
@@ -220,22 +224,22 @@ const run = (): void => {
         .map((entry) => entry.info.name),
     );
 
-    console.warn(
+    logger.warn(
       `check-package-entrypoints: ${latentPackages.size} package(s) point a Vite-resolved condition at a gitignored build directory with no self-referential import — latent, not failing. Re-run with --verbose to list them.`,
     );
   }
 
   if (errors.length > 0) {
     for (const error of errors) {
-      console.error(`check-package-entrypoints: error: ${error}`);
+      logger.fail(`check-package-entrypoints: error: ${error}`);
     }
-    console.error(
+    logger.fail(
       `check-package-entrypoints: ${errors.length} violation(s) across ${packages.length} workspace package(s)`,
     );
     process.exit(1);
   }
 
-  console.log(
+  logger.success(
     `check-package-entrypoints: OK (${packages.length} workspace package(s), ${warnings.length} warning(s))`,
   );
 };

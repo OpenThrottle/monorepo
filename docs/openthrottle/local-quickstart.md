@@ -141,7 +141,7 @@ Restart Cursor after changing MCP config.
 
 ```bash
 export OPENTHROTTLE_MCP_AUTH_TOKEN="ot_sa_<prefix>_<secret>"
-API_URL_INTERNAL=http://localhost:6021 ./scripts/verify-openthrottle-mcp-env.sh
+API_URL_INTERNAL=http://localhost:6021 pnpm run verify:mcp-env
 ```
 
 Expect `OK: GET …/health`, `OK: embedding provider configured` (or a WARN with link to run-locally-oss), and with the token set `OK: authenticated GraphQL listSources`.

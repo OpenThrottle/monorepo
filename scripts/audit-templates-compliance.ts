@@ -7,6 +7,9 @@
 import { readFileSync } from 'fs';
 import path from 'path';
 import { globSync } from 'glob';
+import { createLogger } from './lib/index.ts';
+
+const logger = createLogger();
 
 const ROOT = process.cwd();
 
@@ -92,22 +95,22 @@ function run(): void {
   }
 
   if (flags.length === 0) {
-    console.log(
+    logger.success(
       'No files flagged. See docs/tools/templates/AUDIT_CHECKLIST.md for full checklist.',
     );
     return;
   }
 
-  console.log('Flagged files (candidates for manual review):');
-  console.log('');
+  logger.warn('Flagged files (candidates for manual review):');
+  logger.blank();
 
   for (const { file, reason } of flags) {
-    console.log(`${file}`);
-    console.log(`  → ${reason}`);
+    logger.info(file);
+    logger.detail(`→ ${reason}`);
   }
 
-  console.log('');
-  console.log(
+  logger.blank();
+  logger.info(
     `Total: ${flags.length} flag(s). See docs/tools/templates/AUDIT_CHECKLIST.md.`,
   );
 }

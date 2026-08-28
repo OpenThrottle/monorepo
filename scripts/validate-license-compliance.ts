@@ -5,6 +5,10 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { createLogger } from './lib/index.ts';
+
+const logger = createLogger();
+
 /**
  * @description Dependency-license compliance gate. Reads the installed dependency graph
  * from `pnpm licenses list --json`, applies the allowlist policy in `license-policy.json`,
@@ -405,11 +409,11 @@ async function main(): Promise<void> {
   const report = formatReport(result);
 
   if (result.violations.length > 0) {
-    console.error(report);
+    logger.info(report);
     process.exit(1);
   }
 
-  console.log(report);
+  logger.info(report);
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

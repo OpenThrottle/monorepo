@@ -10,6 +10,10 @@
 # literal "${GITHUB_TOKEN}" through and every GitHub API call 401s. Reading the token from
 # .env here (the same pattern as run-openthrottle-mcp.sh) makes the server work regardless
 # of the launching shell. See scripts/run-openthrottle-mcp.sh for the sibling OT case.
+#
+# Decision (plan b1cb724d): stays shell. It only self-loads env fallbacks around an
+# `npx` exec — no logic worth typing/testing — and keeping it dependency-free avoids a
+# tsx hop in MCP client startup.
 set -e
 
 log() { echo "$@" > /dev/stderr; }

@@ -2,6 +2,9 @@
 
 import { Client } from 'pg';
 import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
+import { createLogger } from './lib/index.ts';
+
+const logger = createLogger();
 
 /**
  * @description Truncates all openthrottle tables (plans, tasks, embeddings, plan_output_stream).
@@ -20,7 +23,7 @@ async function main(): Promise<void> {
       RESTART IDENTITY CASCADE
     `);
 
-    console.log('OpenThrottle tables truncated.');
+    logger.success('OpenThrottle tables truncated.');
   } finally {
     await client.end();
   }

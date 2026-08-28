@@ -11,6 +11,9 @@ import {
   readInstalledLicenses,
   resolveEffectiveLicense,
 } from './validate-license-compliance.ts';
+import { createLogger, hasFlag } from './lib/index.ts';
+
+const logger = createLogger();
 
 /**
  * @description Generates `THIRD-PARTY-LICENSES.md` — the aggregated dependency-attribution
@@ -320,7 +323,7 @@ const MAX_DIFF_LINES = 40;
 export const logManifestDrift = (
   existing: string,
   rendered: string,
-  log: (message: string) => void = console.error,
+  log: (message: string) => void = logger.detail,
 ): void => {
   const { added, removed } = diffManifestLines(existing, rendered);
   log(
@@ -354,7 +357,7 @@ export const logManifestDrift = (
 
 async function main(): Promise<void> {
   const cwd = process.cwd();
-  const checkMode = process.argv.includes('--check');
+  const checkMode = hasFlag('check');
   const policy: LicensePolicy = JSON.parse(
     await readFile(join(cwd, 'license-policy.json'), 'utf8'),
   );
@@ -370,22 +373,22 @@ async function main(): Promise<void> {
   if (checkMode) {
     const existing = await readFile(outputPath, 'utf8').catch(() => '');
     if (existing !== rendered) {
-      console.error(
-        `❌ ${OUTPUT_FILENAME} is out of date. Run \`pnpm generate:notices\` and commit the result.`,
+      logger.fail(
+        `${OUTPUT_FILENAME} is out of date. Run \`pnpm generate:notices\` and commit the result.`,
       );
       logManifestDrift(existing, rendered);
       process.exit(1);
     }
 
-    console.log(
-      `✅ ${OUTPUT_FILENAME} is up to date (${rows.length} packages).`,
+    logger.success(
+      `${OUTPUT_FILENAME} is up to date (${rows.length} packages).`,
     );
 
     return;
   }
 
   await writeFile(outputPath, rendered, 'utf8');
-  console.log(`✅ Wrote ${OUTPUT_FILENAME} (${rows.length} packages).`);
+  logger.success(`Wrote ${OUTPUT_FILENAME} (${rows.length} packages).`);
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

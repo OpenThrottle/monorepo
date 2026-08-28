@@ -18,7 +18,10 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { DataSource } from 'typeorm';
 
+import { createLogger } from './lib/index.ts';
 import { upsertLocalSecrets } from './local-secrets-file';
+
+const logger = createLogger();
 
 // Overridable for shared / real installs via OPENTHROTTLE_BOOTSTRAP_USER_EMAIL
 // / _PASSWORD (see .env.default); defaults to the known local dev account.
@@ -49,7 +52,7 @@ async function ensureDefaultUser(usersService: UsersService): Promise<User> {
       passwordHash: await usersService.hashPassword(DEFAULT_USER.password),
     });
 
-    console.log(`Created user ${DEFAULT_USER.email} (${created.id}).`);
+    logger.success(`Created user ${DEFAULT_USER.email} (${created.id}).`);
 
     return created;
   }
@@ -59,14 +62,14 @@ async function ensureDefaultUser(usersService: UsersService): Promise<User> {
       passwordHash: await usersService.hashPassword(DEFAULT_USER.password),
     });
 
-    console.log(
+    logger.success(
       `Set default password for existing user ${DEFAULT_USER.email}.`,
     );
 
     return updated ?? existing;
   }
 
-  console.log(
+  logger.step(
     `Skip create: ${DEFAULT_USER.email} already exists (password unchanged).`,
   );
 
@@ -82,16 +85,14 @@ async function ensureAllRoles(
     const role = await rolesService.findByName(roleName);
 
     if (role == null) {
-      console.error(
-        `Missing role "${roleName}". Run: pnpm run database:migrate`,
-      );
+      logger.fail(`Missing role "${roleName}". Run: pnpm run database:migrate`);
 
       process.exit(1);
     }
 
     await rolesService.assignRoleToUser(userId, role.id);
 
-    console.log(`Role ${roleName}: assigned.`);
+    logger.success(`Role ${roleName}: assigned.`);
   }
   /* eslint-enable no-await-in-loop */
 }
@@ -151,7 +152,7 @@ async function main(): Promise<void> {
   await dataSource.initialize();
 
   try {
-    const logger: LoggerService = {
+    const serviceLogger: LoggerService = {
       debug: () => undefined,
       error: () => undefined,
       log: () => undefined,
@@ -161,9 +162,9 @@ async function main(): Promise<void> {
     const userRepository = dataSource.getRepository(User);
     const roleRepository = dataSource.getRepository(Role);
 
-    const usersService = new UsersService(logger, userRepository);
+    const usersService = new UsersService(serviceLogger, userRepository);
     const rolesService = new RolesService(
-      logger,
+      serviceLogger,
       roleRepository,
       userRepository,
       dataSource.getRepository(ServiceAccount),
@@ -183,14 +184,14 @@ async function main(): Promise<void> {
       OPENTHROTTLE_DEVELOPER_URL: DEVELOPER_URL,
     });
 
-    console.log('');
-    console.log(`Default user ready: ${DEFAULT_USER.email}`);
+    logger.blank();
+    logger.success(`Default user ready: ${DEFAULT_USER.email}`);
   } finally {
     await dataSource.destroy();
   }
 }
 
-main().catch((err) => {
-  console.error(err);
+main().catch((err: unknown) => {
+  logger.fail(err instanceof Error ? (err.stack ?? err.message) : String(err));
   process.exit(1);
 });

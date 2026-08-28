@@ -200,17 +200,18 @@
     },
     "check-agent-assets-ssot": {
       "cache": true,
-      "description": "Verify agent-asset mirrors stay single-sourced via scripts/check-agent-assets-ssot.sh. `inputs` MUST be explicit {workspaceRoot} globs \u2014 the root `monorepo` project owns 0 files, so the default {projectRoot} input would hash nothing and cache-hit forever.",
+      "description": "Verify agent-asset mirrors stay single-sourced via scripts/check-agent-assets-ssot.ts. `inputs` MUST be explicit {workspaceRoot} globs \u2014 the root `monorepo` project owns 0 files, so the default {projectRoot} input would hash nothing and cache-hit forever.",
       "executor": "nx:run-commands",
       "options": {
-        "command": "bash ./scripts/check-agent-assets-ssot.sh",
+        "command": "tsx ./scripts/check-agent-assets-ssot.ts",
         "cwd": "{workspaceRoot}"
       },
       "inputs": [
         "{workspaceRoot}/.agents/**/*",
         "{workspaceRoot}/.claude/**/*",
         "{workspaceRoot}/.cursor/**/*",
-        "{workspaceRoot}/scripts/check-agent-assets-ssot.sh",
+        "{workspaceRoot}/scripts/check-agent-assets-ssot.ts",
+        "{workspaceRoot}/scripts/lib/**/*",
         "{workspaceRoot}/skills/**/*",
         "{workspaceRoot}/skills-lock.json"
       ]

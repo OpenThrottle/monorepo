@@ -2,6 +2,9 @@
 
 import { glob, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { createLogger } from './lib/index.ts';
+
+const logger = createLogger();
 
 /**
  * @description Audits (and, with `--check`, enforces) `description` coverage for every
@@ -157,18 +160,19 @@ async function main(): Promise<void> {
   const uncovered = [...defaultsPart.uncovered, ...packagePart.uncovered];
 
   if (!check) {
-    console.log('# Nx target description audit\n');
-    console.log('## nx.json targetDefaults');
-    console.log(
+    logger.heading('Nx target description audit');
+    logger.info('## nx.json targetDefaults');
+    logger.info(
       `  active: ${defaultsPart.active.length}, undescribed: ${defaultsPart.uncovered.length}; disabled markers: ${defaultsPart.disabled.length}`,
     );
 
     for (const r of defaultsPart.uncovered) {
-      console.log(`  ✗ ${r.target}`);
+      logger.detail(`✗ ${r.target}`);
     }
 
-    console.log('\n## package.json nx.targets (cascade-aware)');
-    console.log(
+    logger.blank();
+    logger.info('## package.json nx.targets (cascade-aware)');
+    logger.info(
       `  active: ${packagePart.active.length}, uncovered: ${packagePart.uncovered.length}; disabled markers: ${packagePart.disabled.length}`,
     );
 
@@ -180,11 +184,12 @@ async function main(): Promise<void> {
     }
 
     for (const [project, targets] of [...byProject.entries()].sort()) {
-      console.log(`  ✗ ${project}: ${targets.sort().join(', ')}`);
+      logger.detail(`✗ ${project}: ${targets.sort().join(', ')}`);
     }
 
-    console.log('\n## Totals');
-    console.log(
+    logger.blank();
+    logger.info('## Totals');
+    logger.info(
       `  config-declared active targets: ${defaultsPart.active.length + packagePart.active.length}; uncovered: ${uncovered.length}; disabled markers (skipped): ${defaultsPart.disabled.length + packagePart.disabled.length}`,
     );
 
@@ -192,24 +197,26 @@ async function main(): Promise<void> {
   }
 
   if (uncovered.length > 0) {
-    console.error(
-      '❌ Nx targets missing a `description` (own or inherited from targetDefaults):\n',
+    logger.fail(
+      'Nx targets missing a `description` (own or inherited from targetDefaults):',
     );
+    logger.blank();
 
     for (const r of uncovered) {
       const where =
         r.source === 'targetDefaults' ? 'nx.json targetDefaults' : r.project;
-      console.error(`  ${where} → ${r.target}`);
+      logger.detail(`${where} → ${r.target}`);
     }
 
-    console.error(
-      `\n${uncovered.length} undescribed target(s). Add a description to the target in its package.json, or to the matching nx.json targetDefaults entry so it cascades (see CONTRIBUTING.md § Nx target descriptions).`,
+    logger.blank();
+    logger.fail(
+      `${uncovered.length} undescribed target(s). Add a description to the target in its package.json, or to the matching nx.json targetDefaults entry so it cascades (see CONTRIBUTING.md § Nx target descriptions).`,
     );
 
     process.exit(1);
   }
 
-  console.log('✅ Every config-declared Nx target has a description.');
+  logger.success('Every config-declared Nx target has a description.');
 }
 
 await main();

@@ -21,6 +21,9 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { globSync } from 'glob';
 import ts from 'typescript';
+import { createLogger } from './lib/index.ts';
+
+const logger = createLogger();
 
 const ROOT = process.cwd();
 const LINE_CAP = 210;
@@ -182,50 +185,54 @@ const run = (): void => {
     byProject.set(r.project, (byProject.get(r.project) ?? 0) + 1);
   }
 
-  console.log('Route primitive-shape audit (R1/R3/R4)');
-  console.log(`Scanned ${reports.length} route files.\n`);
+  logger.heading('Route primitive-shape audit (R1/R3/R4)');
+  logger.info(`Scanned ${reports.length} route files.`);
+  logger.blank();
 
-  console.log(
+  logger.info(
     `R1 — disallowed named value exports: ${
       violations.filter((r) => r.disallowedExports.length > 0).length
     } file(s)`,
   );
 
   for (const r of violations.filter((v) => v.disallowedExports.length > 0)) {
-    console.log(`  ${r.file}  (${r.disallowedExports.join(', ')})`);
+    logger.detail(`${r.file}  (${r.disallowedExports.join(', ')})`);
   }
 
-  console.log(
-    `\nR3 — module-scope helpers/config/data to hoist: ${
+  logger.blank();
+  logger.info(
+    `R3 — module-scope helpers/config/data to hoist: ${
       violations.filter((r) => r.moduleScopeDecls.length > 0).length
     } file(s)`,
   );
 
   for (const r of violations.filter((v) => v.moduleScopeDecls.length > 0)) {
-    console.log(`  ${r.file}  (${r.moduleScopeDecls.join(', ')})`);
+    logger.detail(`${r.file}  (${r.moduleScopeDecls.join(', ')})`);
   }
 
-  console.log(
-    `\nR4 — over the ${LINE_CAP}-line cap: ${overCap.length} file(s)`,
-  );
+  logger.blank();
+  logger.info(`R4 — over the ${LINE_CAP}-line cap: ${overCap.length} file(s)`);
 
   for (const r of overCap.sort((a, b) => b.lineCount - a.lineCount)) {
-    console.log(`  ${r.file}  (${r.lineCount})`);
+    logger.detail(`${r.file}  (${r.lineCount})`);
   }
 
-  console.log('\nViolations by project (R1+R3):');
+  logger.blank();
+  logger.info('Violations by project (R1+R3):');
   for (const [project, count] of [...byProject.entries()].sort()) {
-    console.log(`  ${project}: ${count}`);
+    logger.detail(`${project}: ${count}`);
   }
 
   if (optOuts.length > 0) {
-    console.log(`\nOpt-out files (excluded): ${optOuts.length}`);
-    for (const r of optOuts) console.log(`  ${r.file}`);
+    logger.blank();
+    logger.info(`Opt-out files (excluded): ${optOuts.length}`);
+    for (const r of optOuts) logger.detail(r.file);
   }
 
   if (strict && violations.length > 0) {
-    console.log(
-      `\n${violations.length} route(s) with R1/R3 violations — failing (--strict).`,
+    logger.blank();
+    logger.fail(
+      `${violations.length} route(s) with R1/R3 violations — failing (--strict).`,
     );
     process.exit(1);
   }

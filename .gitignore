@@ -30,7 +30,7 @@ videos
 *.cpuprofile
 *.d.ts.map
 *.tsbuildinfo
-# Per-worktree generated artifacts (see scripts/worktree_ports.sh, setup_worktree.sh)
+# Per-worktree generated artifacts (see scripts/lib/worktree-ports.ts, setup_worktree.ts)
 .worktree-ports
 docker-compose.worktree.yml
 **/__generated__/**/*

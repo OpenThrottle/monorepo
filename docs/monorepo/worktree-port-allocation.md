@@ -12,7 +12,7 @@ allocates the block, and `scripts/setup_worktree.sh` rewrites the worktree's
 `.env` files onto it. Creating a worktree any of the three ways —
 `pnpm worktree:new <name>`, the Claude `WorktreeCreate` hook, or Cursor — runs
 the same path, and a plain `git worktree add` self-heals on first `pnpm nx run …:dev`
-via `scripts/ensure_worktree.sh`.
+via `scripts/ensure_worktree.ts`.
 
 ## What gets offset (and what doesn't)
 
@@ -38,7 +38,7 @@ consistently.
 
 ## How the block is chosen
 
-`scripts/worktree_ports.sh` (`resolve_worktree_ports`):
+`scripts/lib/worktree-ports.ts` (`resolveWorktreePorts`):
 
 1. **Deterministic slot** from the worktree name: `7000 + (cksum(name) % 50) * 10`,
    giving blocks `7000, 7010, … 7490`. Same name → same block across re-setups.
@@ -136,9 +136,9 @@ a plan run is decided by the per-checkout BullMQ queue prefix
 
 ## Files
 
-- `scripts/worktree_ports.sh` — allocation helper (sourced, not executed).
+- `scripts/lib/worktree-ports.ts` — allocation helper (imported by the provisioner).
 - `scripts/create_worktree.sh` — the single create+provision entrypoint (`pnpm worktree:new`, Claude hook, Cursor); resolves + exports the block after creating the worktree.
-- `scripts/ensure_worktree.sh` — lazy self-heal guard; provisions a plain `git worktree add` on first `dev`.
+- `scripts/ensure_worktree.ts` — lazy self-heal guard; provisions a plain `git worktree add` on first `dev`.
 - `scripts/setup_worktree.sh` — rewrites `.env`, writes the compose vars, generates the override.
 - `docker-compose.yml` — `container_name` values parametrized with `OT_CONTAINER_PREFIX`.
 

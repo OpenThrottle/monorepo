@@ -1,12 +1,16 @@
 import { execSync } from 'child_process';
 import { existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
+import { createLogger } from './lib/index.ts';
+
+const logger = createLogger();
 
 /**
  * @description Generates a static HTML visualization of the NX dependency graph
  */
 const main = async (): Promise<void> => {
-  console.log('📊 Generating dependency graph visualization...\n');
+  logger.step('Generating dependency graph visualization...');
+  logger.blank();
 
   try {
     // Determine output directory (default to workspace root)
@@ -16,11 +20,11 @@ const main = async (): Promise<void> => {
     // Ensure output directory exists
     if (!existsSync(outputDir)) {
       mkdirSync(outputDir, { recursive: true });
-      console.log(`📁 Created output directory: ${outputDir}`);
+      logger.info(`Created output directory: ${outputDir}`);
     }
 
     // Generate the dependency graph HTML file
-    console.log(`🎨 Generating graph visualization to: ${outputFile}`);
+    logger.info(`Generating graph visualization to: ${outputFile}`);
     execSync(
       `pnpm exec nx graph --file=${outputFile} --watch=false --open=false`,
       {
@@ -29,13 +33,15 @@ const main = async (): Promise<void> => {
       },
     );
 
-    console.log(`\n✅ Dependency graph visualization generated successfully!`);
-    console.log(`📄 Output file: ${outputFile}`);
-    console.log(
-      `\n💡 You can view this file in a browser or upload it as a CI artifact.`,
+    logger.blank();
+    logger.success('Dependency graph visualization generated successfully!');
+    logger.info(`Output file: ${outputFile}`);
+    logger.blank();
+    logger.info(
+      'You can view this file in a browser or upload it as a CI artifact.',
     );
   } catch (error) {
-    console.error('❌ Error generating dependency graph:', error);
+    logger.fail(`Error generating dependency graph: ${String(error)}`);
     process.exit(1);
   }
 

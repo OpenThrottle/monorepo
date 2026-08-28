@@ -10,6 +10,9 @@ import {
   PgMigrationStore,
   runMigrations,
 } from './openthrottle-database-migrations';
+import { createLogger } from './lib/index.ts';
+
+const logger = createLogger();
 
 /**
  * @description Dev/start Nx gate: ensures all pending SQL migrations are applied
@@ -139,9 +142,11 @@ async function main(): Promise<void> {
     });
   } catch (error) {
     if (error instanceof PostgresUnreachableError) {
-      console.error(error.message);
+      logger.fail(error.message);
     } else {
-      console.error(' 🔴  🔴  🔴 Migration gate failed:', error);
+      logger.fail(
+        `Migration gate failed: ${error instanceof Error ? (error.stack ?? error.message) : String(error)}`,
+      );
     }
     process.exit(1);
   }

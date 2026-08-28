@@ -5,6 +5,9 @@ import { createHash } from 'node:crypto';
 import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 import { join } from 'node:path';
 import { readdir, readFile } from 'node:fs/promises';
+import { createLogger } from './lib/index.ts';
+
+const logger = createLogger();
 
 /**
  * @description Runs openthrottle database migrations from databases/migrations/ in order.
@@ -136,8 +139,8 @@ export function shouldBootstrapLedger(
 export async function runMigrations(
   store: MigrationStore,
   source: MigrationSource,
-  log: (message: string) => void = console.log,
-  warn: (message: string) => void = console.warn,
+  log: (message: string) => void = logger.info,
+  warn: (message: string) => void = logger.warn,
 ): Promise<MigrationRunResult> {
   await store.ensureLedger();
 
@@ -215,7 +218,7 @@ async function warnOnChecksumDrift(
     new Map(entries),
   )) {
     warn(
-      `⚠️  Checksum drift: ${filename} was edited after it was applied ` +
+      `Checksum drift: ${filename} was edited after it was applied ` +
         `(recorded ${was.slice(0, 12)}…, current ${current.slice(0, 12)}…). ` +
         `Not re-applied — revert the edit or add a new migration.`,
     );
@@ -285,7 +288,9 @@ async function main(): Promise<void> {
     const store = new PgMigrationStore(client);
     await runMigrations(store, createFsMigrationSource());
   } catch (e) {
-    console.error(' 🔴  🔴  🔴 Migration failed:', e);
+    logger.fail(
+      `Migration failed: ${e instanceof Error ? (e.stack ?? e.message) : String(e)}`,
+    );
     process.exit(1);
   } finally {
     await client.end();
