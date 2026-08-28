@@ -1,34 +1,18 @@
 # First-time onboarding: OpenThrottle MCP after setup
 
+> **Scope:** the **mental model and prompt sequence** — what the pieces are and what to type first, once the stack is already running. Setup itself lives in [local-quickstart.md](./local-quickstart.md) (fresh clone → running, in order); the day-to-day run loop lives in [run-openthrottle-server-developer.md](./run-openthrottle-server-developer.md).
+
 This playbook is for someone who has already configured the **openthrottle-mcp** MCP and can run **openthrottle-server** (and optionally the developer app). It describes what to do next, how the pieces fit together, and gives a copy-paste **prompt sequence** for a minimal end-to-end exercise in your own repo.
 
 **Related:** How to **register** MCP servers (tiers, config locations, template, editor parity) is in [`mcp-registration.md`](./mcp-registration.md). Schema, migrations, embeddings, and commit-link conventions live in [`databases/README.md`](../../databases/README.md). MCP smoke checks and env alignment are in [`packages/openthrottle-mcp/docs/verification-environment.md`](../../packages/openthrottle-mcp/docs/verification-environment.md).
 
 ---
 
-## Quick start
+## Before you start
 
-**New clone?** Follow [local-quickstart.md](./local-quickstart.md) first (env → migrate → [bootstrap tokens](#bootstrap-and-auth) → server → verify MCP), then return here.
+**New clone?** Do the setup in [local-quickstart.md](./local-quickstart.md) first — env files, migrate, [bootstrap service-account tokens](./local-quickstart.md#3-bootstrap-service-account-tokens), start the server, verify MCP — then come back here.
 
-1. Confirm [Prerequisites](#prerequisites-checklist) (server up, MCP pointed at GraphQL, token env).
-2. Read the [Mental model](#mental-model-post-setup) so you know when to use OT MCP vs repo rules.
-3. Run the [Prompt sequence](#prompt-sequence-minimal-e2e) in Cursor to complete one trivial but real workflow (search → plan → task → commit).
-4. If something fails, use [Troubleshooting](#troubleshooting).
-
----
-
-## Bootstrap and auth
-
-Before MCP tools can create or list plans, you need a long-lived **service account** bearer token — not a human JWT from the developer UI.
-
-| Step                                                                           | Command / doc                                                                                                                                 |
-| ------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| Migrate (includes service-account seed **045**)                                | `pnpm run database:migrate` — see [local-quickstart § Database](./local-quickstart.md#2-database-start-and-migrate)                           |
-| Mint tokens (shown once; also saved to git-ignored `.bootstrap-secrets.local`) | `pnpm run database:bootstrap-service-accounts` — see [local-quickstart § Bootstrap](./local-quickstart.md#3-bootstrap-service-account-tokens) |
-| Set env                                                                        | Copy `OPENTHROTTLE_MCP_AUTH_TOKEN` into `applications/openthrottle-server/.env` and Cursor MCP `env` for **openthrottle-mcp**                 |
-| Understand token types, rotation, Cursor `env`                                 | [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md)                                                                                       |
-
-If bootstrap skips an account because a credential already exists, rotate per [AUTH.md § Credential rotation](../../packages/openthrottle-mcp/docs/AUTH.md#credential-rotation) or revoke in admin GraphQL, then re-run the script. If you simply missed the once-only stdout, the values are also in the git-ignored `.bootstrap-secrets.local` at the repo root — no need to re-mint.
+The one thing worth restating: MCP tools need a long-lived **service account** bearer token (`OPENTHROTTLE_MCP_AUTH_TOKEN`), **not** a human JWT from the developer UI. Token types, rotation, and the Cursor `env` block are in [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md).
 
 ---
 
@@ -36,14 +20,13 @@ If bootstrap skips an account because a credential already exists, rotate per [A
 
 Use this before relying on OT tools in the agent.
 
-| Check                                                           | Notes                                                                                                                                                                                                                                                                                             |
-| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Postgres + Redis up; migrations applied                         | See [run-openthrottle-server-developer.md](./run-openthrottle-server-developer.md) (`pnpm run database:start`, `pnpm run database:migrate`).                                                                                                                                                      |
-| **Service account token** minted and in env                     | `pnpm run database:bootstrap-service-accounts` → `OPENTHROTTLE_MCP_AUTH_TOKEN` in server `.env` and MCP config. [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md).                                                                                                                          |
-| **openthrottle-server** running                                 | GraphQL defaults to `http://localhost:6021/graphql` (see server `.env`).                                                                                                                                                                                                                          |
-| MCP **`API_URL` / `API_URL_INTERNAL`** match the server         | See [verification-environment.md](../../packages/openthrottle-mcp/docs/verification-environment.md).                                                                                                                                                                                              |
-| **`OPENTHROTTLE_MCP_AUTH_TOKEN`** (and server embedding config) | Auth: [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md). Embeddings: **`OPENAI_API_KEY`** or **`OLLAMA_*`** on **`applications/openthrottle-server/.env`** — `scripts/run-openthrottle-mcp.sh` does not require a root OpenAI key; Ollama-only: [run-locally-oss.md](./run-locally-oss.md). |
-| Cursor registers **openthrottle-mcp**                           | Register per [mcp-registration.md](./mcp-registration.md) (template, config locations, editor parity); copy [`.cursor/mcp.json`](../../.cursor/mcp.json) → `.cursor/mcp.json` and restart Cursor after changes.                                                                                   |
+| Check                                                    | If it fails                                                                                                                                                                                                  |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Postgres + Redis up; migrations applied                  | [local-quickstart § Database](./local-quickstart.md#2-database-start-and-migrate)                                                                                                                            |
+| **openthrottle-server** running on `:6021`               | [local-quickstart § Start openthrottle-server](./local-quickstart.md#4-start-openthrottle-server)                                                                                                            |
+| **Service account token** minted and in env              | [local-quickstart § Bootstrap](./local-quickstart.md#3-bootstrap-service-account-tokens), [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md)                                                            |
+| Editor registers **openthrottle-mcp**, `API_URL` matches | [mcp-registration.md](./mcp-registration.md), [verification-environment.md](../../packages/openthrottle-mcp/docs/verification-environment.md)                                                                |
+| Embedding provider configured (for `semantic_search`)    | **`OLLAMA_BASE_URL`** or **`OPENAI_API_KEY`** on **`applications/openthrottle-server/.env`** — [Ollama.md § Embeddings for OpenThrottle](../monorepo/Ollama.md#embeddings-for-openthrottle-ollama-or-openai) |
 
 For database layout, imports, and PRD-style fields on plans/tasks, see [`databases/README.md`](../../databases/README.md).
 
@@ -145,4 +128,4 @@ Summarize how many sources and pending plans you see.
 | DB schema, migrations, imports, commit links    | [databases/README.md](../../databases/README.md)                                                |
 | OT MCP tool choice and skills                   | [openthrottle.mdc](../../.agents/rules/commands/openthrottle.mdc), `skills/ot-*`                |
 | Workflow CLI / Ralph (optional)                 | [tools/workflows/README.md](../../tools/workflows/README.md)                                    |
-| OSS / Ollama path                               | [run-locally-oss.md](./run-locally-oss.md)                                                      |
+| Embeddings (Ollama or OpenAI)                   | [monorepo/Ollama.md](../monorepo/Ollama.md)                                                     |

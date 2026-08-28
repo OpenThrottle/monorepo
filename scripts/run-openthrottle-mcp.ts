@@ -266,7 +266,7 @@ const main = async (): Promise<void> => {
 
   // Semantic search embeddings are configured on openthrottle-server
   // (OPENAI_API_KEY or OLLAMA_* in applications/openthrottle-server/.env),
-  // not in this launcher. See docs/openthrottle/run-locally-oss.md.
+  // not in this launcher. See docs/monorepo/Ollama.md § Embeddings for OpenThrottle.
   const outcome = spawnSync('node', ['packages/openthrottle-mcp/dist/src/bin.js'], { cwd: root, env, stdio: 'inherit' }); // prettier-ignore
 
   process.exit(outcome.status ?? 1);

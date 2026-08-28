@@ -1,5 +1,7 @@
 # OpenThrottle local quickstart
 
+> **Scope:** the **canonical fresh-clone path** — do these steps, in this order, once. The mental model and your first agent prompts are in [first-time-onboarding.md](./first-time-onboarding.md); the day-to-day run loop (server + developer app, ports, Nx targets) is in [run-openthrottle-server-developer.md](./run-openthrottle-server-developer.md).
+
 Single path from a fresh clone to a running **openthrottle-server** and a verified **openthrottle-mcp** MCP connection. All commands run from the **monorepo root** unless noted.
 
 **After this:** mental model and agent prompts — [first-time-onboarding.md](./first-time-onboarding.md). Deeper server/UI detail — [run-openthrottle-server-developer.md](./run-openthrottle-server-developer.md). MCP env edge cases — [packages/openthrottle-mcp/docs/verification-environment.md](../../packages/openthrottle-mcp/docs/verification-environment.md).
@@ -32,7 +34,7 @@ Copy defaults into local env files (gitignored):
 
 **Auth (default):** MCP and workers need long-lived **service account** tokens (`ot_sa_…`), not human JWTs. See [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md).
 
-**Embeddings:** Configure `OPENAI_API_KEY` or `OLLAMA_BASE_URL` on `applications/openthrottle-server/.env` (not required in root `.env` for the MCP launcher). [`scripts/run-openthrottle-mcp.sh`](../../scripts/run-openthrottle-mcp.sh) starts the MCP without a root OpenAI key. Ollama-only path: [run-locally-oss.md § Cursor MCP launcher](./run-locally-oss.md#cursor-mcp-launcher-scriptsrun-openthrottle-mcpsh).
+**Embeddings:** Configure `OPENAI_API_KEY` or `OLLAMA_BASE_URL` on `applications/openthrottle-server/.env` (not required in root `.env` for the MCP launcher). [`scripts/run-openthrottle-mcp.sh`](../../scripts/run-openthrottle-mcp.sh) starts the MCP without a root OpenAI key. Ollama-only path: [Ollama.md § MCP launcher and embeddings](../monorepo/Ollama.md#mcp-launcher-and-embeddings).
 
 ---
 
@@ -144,7 +146,7 @@ export OPENTHROTTLE_MCP_AUTH_TOKEN="ot_sa_<prefix>_<secret>"
 API_URL_INTERNAL=http://localhost:6021 pnpm run verify:mcp-env
 ```
 
-Expect `OK: GET …/health`, `OK: embedding provider configured` (or a WARN with link to run-locally-oss), and with the token set `OK: authenticated GraphQL listSources`.
+Expect `OK: GET …/health`, `OK: embedding provider configured` (or a WARN pointing at [Ollama.md](../monorepo/Ollama.md)), and with the token set `OK: authenticated GraphQL listSources`.
 
 ### In Cursor
 
@@ -169,14 +171,14 @@ Full map: [local-services-and-ports.md](../monorepo/local-services-and-ports.md)
 
 ## Troubleshooting
 
-| Symptom                            | What to check                                                                                           |
-| ---------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `database:migrate` fails           | Postgres up? `pnpm run database:start`                                                                  |
-| Bootstrap: missing service account | Run migrate first (migration **045**)                                                                   |
-| `/health` unreachable              | Server running? `PORT` matches `API_URL_INTERNAL`                                                       |
-| `semantic_search` empty or errors  | Set `OLLAMA_BASE_URL` or `OPENAI_API_KEY` on server `.env` — [run-locally-oss.md](./run-locally-oss.md) |
-| Authenticated tools 401/403        | Token in MCP `env` and server `.env`; see [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md)       |
-| MCP script not found in Cursor     | Use absolute path to `run-openthrottle-mcp.sh`                                                          |
+| Symptom                            | What to check                                                                                     |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `database:migrate` fails           | Postgres up? `pnpm run database:start`                                                            |
+| Bootstrap: missing service account | Run migrate first (migration **045**)                                                             |
+| `/health` unreachable              | Server running? `PORT` matches `API_URL_INTERNAL`                                                 |
+| `semantic_search` empty or errors  | Set `OLLAMA_BASE_URL` or `OPENAI_API_KEY` on server `.env` — [Ollama.md](../monorepo/Ollama.md)   |
+| Authenticated tools 401/403        | Token in MCP `env` and server `.env`; see [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md) |
+| MCP script not found in Cursor     | Use absolute path to `run-openthrottle-mcp.sh`                                                    |
 
 ---
 
@@ -189,4 +191,4 @@ Full map: [local-services-and-ports.md](../monorepo/local-services-and-ports.md)
 | MCP verification detail              | [verification-environment.md](../../packages/openthrottle-mcp/docs/verification-environment.md) |
 | Auth and tokens                      | [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md)                                         |
 | DB schema, embeddings, imports       | [databases/README.md](../../databases/README.md)                                                |
-| OSS / Ollama                         | [run-locally-oss.md](./run-locally-oss.md)                                                      |
+| Embeddings (Ollama or OpenAI)        | [monorepo/Ollama.md](../monorepo/Ollama.md)                                                     |

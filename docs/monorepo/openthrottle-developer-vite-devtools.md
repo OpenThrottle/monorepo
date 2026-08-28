@@ -85,7 +85,7 @@ Use this when the dev server runs but navigation, loaders, or GraphQL calls fail
 ## Related docs
 
 - [Local services and ports](./local-services-and-ports.md) — ports, `developer.local`, API URLs.
-- [Run OpenThrottle locally (OSS)](../openthrottle/run-locally-oss.md) — full stack overview.
+- [local-quickstart.md](../openthrottle/local-quickstart.md) — fresh clone → running server + verified MCP.
 
 ## In-app entry points
 
