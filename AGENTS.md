@@ -39,7 +39,7 @@ For **where** agent- and editor-specific config lives (`.cursor/`, `.claude/`, `
 
 ### Git worktrees (tool-agnostic)
 
-Create a worktree with the one entrypoint — `pnpm worktree:new <name>` (`scripts/create_worktree.sh`). The Claude `WorktreeCreate` hook and Cursor's `.cursor/worktrees.json` route through the same script, so setup is **not** tool-specific. A plain `git worktree add` provisions nothing (git has no post-add hook), but self-heals on first `pnpm nx run <app>:dev` via `scripts/ensure_worktree.sh` (or `pnpm worktree:heal`). Details: [docs/monorepo/worktree-port-allocation.md](docs/monorepo/worktree-port-allocation.md).
+Create a worktree with the one entrypoint — `pnpm worktree:new <name>` (`scripts/create_worktree.sh`). The Claude `WorktreeCreate` hook and Cursor's `.cursor/worktrees.json` route through the same script, so setup is **not** tool-specific. A plain `git worktree add` provisions nothing (git has no post-add hook), but self-heals on first `pnpm nx run <app>:dev` via `scripts/ensure_worktree.ts` (or `pnpm worktree:heal`). Details: [docs/monorepo/worktree-port-allocation.md](docs/monorepo/worktree-port-allocation.md).
 
 ### Contributor workflow (skills & rules)
 
@@ -103,7 +103,7 @@ OT-owned skills are authored under [`skills/`](./skills/) and surfaced to every 
 
 ## Local embeddings (Ollama)
 
-- For local-only embedding (no OpenAI key): set **`OLLAMA_BASE_URL`** and/or **`OLLAMA_EMBEDDING_MODEL`**; `pnpm run database:import-docs` / `pnpm run database:import-agent-assets` and openthrottle-server then use Ollama when configured. See `databases/README.md` (embedding dimension strategy) and `scripts/ollama.sh`.
+- For local-only embedding (no OpenAI key): set **`OLLAMA_BASE_URL`** and/or **`OLLAMA_EMBEDDING_MODEL`**; `pnpm run database:import-docs` / `pnpm run database:import-agent-assets` and openthrottle-server then use Ollama when configured. See `databases/README.md` (embedding dimension strategy) and `scripts/ollama.ts (pnpm run ollama:pull)`.
 - **Cursor with a custom Ollama model:** start the proxy with **`pnpm ollama-proxy`** (requires Ollama and optionally Caddy at `https://ollama.local`). See [docs/monorepo/Ollama.md](docs/monorepo/Ollama.md) § Using Cursor with Ollama via the proxy and [tools/ollama-proxy/README.md](tools/ollama-proxy/README.md).
 - **When using Caddy** (tools/caddy): set **`OLLAMA_BASE_URL`** to the Caddy-proxied URL so `database:import-docs`, `database:import-agent-assets`, and other consumers use one stable endpoint:
   - **Option B** (local domains): `https://ollama.local`

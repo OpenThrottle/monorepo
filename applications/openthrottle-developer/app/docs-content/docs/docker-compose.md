@@ -21,5 +21,5 @@ docker images | grep openthrottle
 **Publishing Images (manually):**
 
 ```bash
-OPENTHROTTLE_DRY_RUN=1 ./scripts/gcs-docker-upload.sh
+OPENTHROTTLE_DRY_RUN=1 pnpm run gcs:docker-upload
 ```

@@ -6,6 +6,9 @@ import { closeSync, openSync } from 'node:fs';
 import { mkdir, readdir, unlink } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
+import { createLogger } from './lib/index.ts';
+
+const logger = createLogger();
 
 /**
  * @description Backs up the OpenThrottle Postgres database to a timestamped zip file.
@@ -88,7 +91,7 @@ async function pruneOldBackups(dir: string, keep: number): Promise<void> {
   );
 
   if (toDelete.length > 0) {
-    console.log(
+    logger.info(
       `Pruned ${toDelete.length} old backup(s), keeping the ${keep} most recent.`,
     );
   }
@@ -195,7 +198,7 @@ async function main(): Promise<void> {
 
   await unlink(sqlPath);
 
-  console.log('Backup written to:', zipPath);
+  logger.success(`Backup written to: ${zipPath}`);
 
   await pruneOldBackups(BACKUPS_DIR, resolveBackupRetentionCount());
 }

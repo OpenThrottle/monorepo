@@ -4,6 +4,10 @@ import { readdir, readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { createLogger } from './lib/index.ts';
+
+const logger = createLogger();
+
 /**
  * @description Enforces the RBAC invariant that the `admin` role is the full permission
  * superset in the DB seed, mirroring @openthrottle/nestjs-rbac
@@ -144,21 +148,23 @@ async function main(): Promise<void> {
   const gaps = findAdminPermissionGaps(await readMigrations());
 
   if (gaps.length > 0) {
-    console.error(
-      '❌ Permissions defined by a migration but never granted to the admin role:\n',
+    logger.fail(
+      'Permissions defined by a migration but never granted to the admin role:',
     );
+    logger.blank();
     for (const { filename, name } of gaps) {
-      console.error(`  ${name} (defined in ${filename})`);
+      logger.detail(`${name} (defined in ${filename})`);
     }
-    console.error(
-      `\n${gaps.length} uncovered permission(s). Any migration that INSERTs into ` +
+    logger.blank();
+    logger.fail(
+      `${gaps.length} uncovered permission(s). Any migration that INSERTs into ` +
         `permissions must also grant the new permission to admin (see 085 for the ` +
         `pattern; databases/README.md § RBAC). admin must stay the full superset.`,
     );
     process.exit(1);
   }
 
-  console.log('✅ admin role covers every defined permission.');
+  logger.success('admin role covers every defined permission.');
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

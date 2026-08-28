@@ -1,6 +1,9 @@
 import { execSync } from 'child_process';
 import { readFileSync, existsSync } from 'fs';
 import { join, relative } from 'path';
+import { createLogger } from './lib/index.ts';
+
+const logger = createLogger();
 
 /**
  * @description Gets all registered NX projects
@@ -37,7 +40,7 @@ const getPackageJsonName = (filePath: string): string | null => {
     }
 
     const content = readFileSync(filePath, 'utf-8');
-    const packageJson = JSON.parse(content) as PackageJson;
+    const packageJson: PackageJson = JSON.parse(content);
 
     return packageJson.name || null;
   } catch {
@@ -49,8 +52,8 @@ const getPackageJsonName = (filePath: string): string | null => {
  * @description Finds all package.json files with NX config
  */
 const findPackageJsonFilesWithNx = (): Array<{
-  path: string;
   name: string | null;
+  path: string;
 }> => {
   try {
     const isWindowsPlatform = process.platform === 'win32';
@@ -113,7 +116,7 @@ const findPackageJsonFilesWithNx = (): Array<{
         // Check if it has nx config
         try {
           const content = readFileSync(filePath, 'utf-8');
-          const pkg = JSON.parse(content) as PackageJson;
+          const pkg: PackageJson = JSON.parse(content);
 
           if (pkg.nx) {
             return {
@@ -134,7 +137,7 @@ const findPackageJsonFilesWithNx = (): Array<{
 
     return files;
   } catch (error) {
-    console.error('🚨 Error finding package.json files:', error);
+    logger.fail(`Error finding package.json files: ${String(error)}`);
 
     return [];
   }
@@ -144,18 +147,20 @@ const findPackageJsonFilesWithNx = (): Array<{
  * @description Main function
  */
 const main = async (): Promise<void> => {
-  console.log(
-    '🔍 Comparing package.json files with NX config against registered NX projects...\n',
+  logger.step(
+    'Comparing package.json files with NX config against registered NX projects...',
   );
+  logger.blank();
 
   try {
     const registeredProjects = getRegisteredNxProjects();
     const packageJsonFiles = findPackageJsonFilesWithNx();
 
-    console.log(`Registered NX projects: ${registeredProjects.length}`);
-    console.log(
-      `Package.json files with NX config: ${packageJsonFiles.length}\n`,
+    logger.info(`Registered NX projects: ${registeredProjects.length}`);
+    logger.info(
+      `Package.json files with NX config: ${packageJsonFiles.length}`,
     );
+    logger.blank();
 
     const registeredSet = new Set(registeredProjects);
     const packageJsonNames = packageJsonFiles
@@ -176,43 +181,41 @@ const main = async (): Promise<void> => {
     );
 
     if (missingFromNx.length > 0) {
-      console.log(
-        '❌ Package.json files with NX config but not registered in NX:',
-      );
-      console.log('');
+      logger.fail('Package.json files with NX config but not registered in NX:'); // prettier-ignore
+      logger.blank();
 
       missingFromNx.forEach((file) => {
-        console.log(`  - ${file.path}`);
-        console.log(`    Package name: ${file.name}`);
-        console.log('');
+        logger.detail(file.path);
+        logger.detail(`Package name: ${file.name}`);
+        logger.blank();
       });
     }
 
     if (missingFromPackageJson.length > 0) {
-      console.log(
-        '⚠️  Registered NX projects without corresponding package.json with NX config:',
+      logger.warn(
+        'Registered NX projects without corresponding package.json with NX config:',
       );
-      console.log('');
+      logger.blank();
       missingFromPackageJson.forEach((name) => {
-        console.log(`  - ${name}`);
+        logger.detail(name);
       });
-      console.log('');
+      logger.blank();
     }
 
     if (missingFromNx.length === 0 && missingFromPackageJson.length === 0) {
-      console.log(
-        '✅ All package.json files with NX config are registered in NX!',
+      logger.success(
+        'All package.json files with NX config are registered in NX!',
       );
     }
 
     // Summary
-    console.log('\n📊 Summary:');
-    console.log(`  Registered projects: ${registeredProjects.length}`);
-    console.log(
+    logger.heading('Summary');
+    logger.info(`  Registered projects: ${registeredProjects.length}`);
+    logger.info(
       `  Package.json files with NX config: ${packageJsonFiles.length}`,
     );
-    console.log(`  Missing from NX: ${missingFromNx.length}`);
-    console.log(
+    logger.info(`  Missing from NX: ${missingFromNx.length}`);
+    logger.info(
       `  Missing from package.json: ${missingFromPackageJson.length}`,
     );
 
@@ -220,7 +223,7 @@ const main = async (): Promise<void> => {
       process.exit(1);
     }
   } catch (error) {
-    console.error('❌ Error comparing projects:', error);
+    logger.fail(`Error comparing projects: ${String(error)}`);
     process.exit(1);
   }
 

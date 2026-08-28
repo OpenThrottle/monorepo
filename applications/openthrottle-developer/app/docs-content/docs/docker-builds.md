@@ -124,7 +124,7 @@ Both apps define a `start:docker` script used outside the distroless images (the
 - **Compose file:** the repo-root **`docker-compose.yml`** defines `openthrottle-postgres`, `openthrottle-redis`, `openthrottle-server` (built from `Dockerfile.NestJS`), and `openthrottle-developer` (built from `Dockerfile.ReactRouter`), all with `context: ./`.
 - **Run from repo root:**
   `docker compose up --build`
-- **Dev / consumer workflows:** the root compose also carries a `dev` profile (`docker compose --profile dev watch` — hot reload from source) and `applications/openthrottle/docker-compose.yml` is the published-image consumer install. Smoke them with `scripts/docker-smoke-test.sh [prod|dev|consumer]`.
+- **Dev / consumer workflows:** the root compose also carries a `dev` profile (`docker compose --profile dev watch` — hot reload from source) and `applications/openthrottle/docker-compose.yml` is the published-image consumer install. Smoke them with `pnpm run docker:smoke [prod|dev|consumer]`.
 - **Required env:** populate the repo-root `.env`. For container-to-container access set `POSTGRES_HOST=openthrottle-postgres` and `REDIS_HOST=openthrottle-redis`; the server also needs `POSTGRES_PORT`/`REDIS_PORT`, `OPENTHROTTLE_SERVER_PORT`, `CORS_ORIGINS`/`CORS_CREDENTIALS`, `JWT_SECRET`; the developer needs `API_URL_INTERNAL`/`API_URL_EXTERNAL` (the URL the browser uses to reach the server, e.g. `http://localhost:3000`), the `APP_URL*` family, and `OPENTHROTTLE_DEVELOPER_PORT`.
 
 ### 8.1. Verification

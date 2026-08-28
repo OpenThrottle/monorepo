@@ -30,6 +30,9 @@ import {
   readLocalSecrets,
   upsertLocalSecrets,
 } from './local-secrets-file';
+import { createLogger } from './lib/index.ts';
+
+const logger = createLogger();
 
 export const BOOTSTRAP_ACCOUNTS = [
   {
@@ -77,7 +80,7 @@ async function upsertBootstrapCredentialFromEnv(
     });
 
     if (result == null) {
-      console.error(
+      logger.fail(
         `Failed to provision ${account.name}: service account missing or disabled.`,
       );
       process.exit(1);
@@ -88,7 +91,7 @@ async function upsertBootstrapCredentialFromEnv(
         ? 'credential already matches (no change)'
         : `${result.action} credential`;
 
-    console.log(`${account.name}: ${detail} from ${account.envVar}.`);
+    logger.info(`${account.name}: ${detail} from ${account.envVar}.`);
 
     // The plaintext token is known here (it came from the environment), so
     // persist a durable copy — otherwise a machine that provisions from env
@@ -97,17 +100,17 @@ async function upsertBootstrapCredentialFromEnv(
 
     return result.action;
   } catch (error) {
-    console.error(
+    logger.fail(
       `Failed to provision ${account.name} from ${account.envVar}: ${
         error instanceof Error ? error.message : String(error)
       }`,
     );
 
-    console.error(
+    logger.fail(
       `  ${account.envVar} must be a valid service account token (ot_sa_<prefix>_<secret>). Generate one with:`,
     );
 
-    console.error(`    ${TOKEN_GENERATION_HINT}`);
+    logger.fail(`    ${TOKEN_GENERATION_HINT}`);
 
     process.exit(1);
   }
@@ -130,7 +133,7 @@ async function createAndRecordCredential(
   });
 
   if (created == null) {
-    console.error(`Failed to create credential for ${account.name}.`);
+    logger.fail(`Failed to create credential for ${account.name}.`);
     process.exit(1);
   }
 
@@ -163,7 +166,7 @@ async function rotateBootstrapCredential(
   }
   /* eslint-enable no-await-in-loop */
 
-  console.log(
+  logger.info(
     `Rotate ${account.name}: revoked ${active.length} stale credential(s) and minting a fresh token (${account.envVar} was missing from ${LOCAL_SECRETS_FILENAME}).`,
   );
 
@@ -192,7 +195,7 @@ async function mintBootstrapCredential(
 
     // Complete file + existing credential: nothing to do, stay a clean no-op.
     if (recorded !== '') {
-      console.log(
+      logger.info(
         `Skip ${account.name}: ${activeCount} active credential(s) and a durable token already recorded.`,
       );
 
@@ -228,7 +231,7 @@ export async function provisionAccount(
   });
 
   if (row == null) {
-    console.error(
+    logger.fail(
       `Missing service account "${account.name}". Run: pnpm run database:migrate`,
     );
     process.exit(1);
@@ -277,13 +280,13 @@ async function main(): Promise<void> {
     );
 
     if (outcomes.includes('minted') || outcomes.includes('rotated')) {
-      console.log('Add the minted line(s) above to:');
-      console.log('  - applications/openthrottle-server/.env');
-      console.log(
+      logger.info('Add the minted line(s) above to:');
+      logger.info('  - applications/openthrottle-server/.env');
+      logger.info(
         '  - Cursor ~/.cursor/mcp.json env for openthrottle-mcp (OPENTHROTTLE_MCP_AUTH_TOKEN only)',
       );
 
-      console.log(
+      logger.info(
         `Tokens are shown once; a durable copy was also written to the git-ignored ${LOCAL_SECRETS_FILENAME} at the repo root. Store them securely and rotate via admin GraphQL when needed.`,
       );
     } else if (
@@ -291,7 +294,7 @@ async function main(): Promise<void> {
         (outcome) => outcome === 'created' || outcome === 'updated',
       )
     ) {
-      console.log(
+      logger.info(
         'No credential changes. Env-provided tokens already verify, or set OPENTHROTTLE_MCP_AUTH_TOKEN / OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN from existing tokens.',
       );
     }

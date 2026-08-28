@@ -18,11 +18,14 @@
  * Report-only (exit 0) otherwise.
  */
 
-import { readFileSync } from 'node:fs';
 import path from 'node:path';
+import ts from 'typescript';
+import { createLogger } from './lib/index.ts';
 import { fileURLToPath } from 'node:url';
 import { globSync } from 'glob';
-import ts from 'typescript';
+import { readFileSync } from 'node:fs';
+
+const logger = createLogger();
 
 const ROOT = process.cwd();
 const LINE_CAP = 210;
@@ -355,41 +358,44 @@ const runShadcn = (): void => {
   const overCap = reports.filter((r) => r.overCap);
   const optOuts = reports.filter((r) => r.optOut);
 
-  console.log('shadcn primitive-variant audit (VR1/VR2/VR5/VR6) — report-only');
-  console.log(
-    `Scanned ${reports.length} files, ${totalParts} exported parts (${totalForwardRef} forwardRef).\n`,
+  logger.heading('shadcn primitive-variant audit (VR1/VR2/VR5/VR6) — report-only'); // prettier-ignore
+  logger.info(
+    `Scanned ${reports.length} files, ${totalParts} exported parts (${totalForwardRef} forwardRef).`,
   );
+  logger.blank();
 
-  console.log(
+  logger.info(
     `VR1 — parts missing a <Part>Props: ${missingProps.length} file(s)`,
   );
 
   for (const r of missingProps) {
-    console.log(`  ${r.file}  (${r.missingProps.join(', ')})`);
+    logger.detail(`${r.file}  (${r.missingProps.join(', ')})`);
   }
 
-  console.log(
-    `\nVR2 — forwardRef parts missing displayName: ${missingDisplay.length} file(s)`,
+  logger.blank();
+  logger.info(
+    `VR2 — forwardRef parts missing displayName: ${missingDisplay.length} file(s)`,
   );
   for (const r of missingDisplay) {
-    console.log(`  ${r.file}  (${r.missingDisplayName.join(', ')})`);
+    logger.detail(`${r.file}  (${r.missingDisplayName.join(', ')})`);
   }
 
-  console.log(
-    `\nVR5 — banned trailing \`export { … }\` block: ${reExport.length} file(s)`,
+  logger.blank();
+  logger.info(
+    `VR5 — banned trailing \`export { … }\` block: ${reExport.length} file(s)`,
   );
-  for (const r of reExport) console.log(`  ${r.file}`);
+  for (const r of reExport) logger.detail(r.file);
 
-  console.log(
-    `\nVR6 — over the ${LINE_CAP}-line cap: ${overCap.length} file(s)`,
-  );
+  logger.blank();
+  logger.info(`VR6 — over the ${LINE_CAP}-line cap: ${overCap.length} file(s)`);
   for (const r of overCap.sort((a, b) => b.lineCount - a.lineCount)) {
-    console.log(`  ${r.file}  (${r.lineCount})`);
+    logger.detail(`${r.file}  (${r.lineCount})`);
   }
 
   if (optOuts.length > 0) {
-    console.log(`\nOpt-out files (excluded): ${optOuts.length}`);
-    for (const r of optOuts) console.log(`  ${r.file}`);
+    logger.blank();
+    logger.info(`Opt-out files (excluded): ${optOuts.length}`);
+    for (const r of optOuts) logger.detail(r.file);
   }
 
   // In --strict mode the structural VRs (VR1 props, VR2 displayName, VR5
@@ -399,8 +405,9 @@ const runShadcn = (): void => {
     const structural =
       missingProps.length + missingDisplay.length + reExport.length;
     if (structural > 0) {
-      console.log(
-        `\n${structural} structural VR1/VR2/VR5 violation(s) — failing (--strict).`,
+      logger.blank();
+      logger.fail(
+        `${structural} structural VR1/VR2/VR5 violation(s) — failing (--strict).`,
       );
       process.exit(1);
     }
@@ -457,54 +464,55 @@ const run = (): void => {
     byProject.set(r.project, (byProject.get(r.project) ?? 0) + 1);
   }
 
-  console.log('Component primitive-shape audit (R4/R5/R6/R7)');
-  console.log(`Scanned ${reports.length} in-scope components.\n`);
+  logger.heading('Component primitive-shape audit (R4/R5/R6/R7)');
+  logger.info(`Scanned ${reports.length} in-scope components.`);
+  logger.blank();
 
-  console.log(`R4 — file-scope helpers/data to hoist: ${hoist.length} file(s)`);
+  logger.info(`R4 — file-scope helpers/data to hoist: ${hoist.length} file(s)`);
   for (const r of hoist) {
     const bits = [
       r.helperDecls > 0 ? `${r.helperDecls} helper(s)→utils/` : '',
       r.dataDecls > 0 ? `${r.dataDecls} data/config→data/|config/` : '',
     ].filter(Boolean);
-    console.log(`  ${r.file}  (${bits.join(', ')})`);
+    logger.detail(`${r.file}  (${bits.join(', ')})`);
   }
 
-  console.log(
-    `\nR5 — more than one exported component: ${multi.length} file(s)`,
-  );
-  for (const r of multi) console.log(`  ${r.file}  (${r.exportedComponents})`);
+  logger.blank();
+  logger.info(`R5 — more than one exported component: ${multi.length} file(s)`);
+  for (const r of multi) logger.detail(`${r.file}  (${r.exportedComponents})`);
 
-  console.log(
-    `\nR6 — over the ${LINE_CAP}-line cap: ${overCap.length} file(s)`,
-  );
+  logger.blank();
+  logger.info(`R6 — over the ${LINE_CAP}-line cap: ${overCap.length} file(s)`);
   for (const r of overCap.sort((a, b) => b.lineCount - a.lineCount)) {
-    console.log(`  ${r.file}  (${r.lineCount})`);
+    logger.detail(`${r.file}  (${r.lineCount})`);
   }
 
-  console.log(
-    `\nR7 — advisory: consider extracting a use<Name> hook: ${hookHeavy.length} file(s)`,
+  logger.blank();
+  logger.info(
+    `R7 — advisory: consider extracting a use<Name> hook: ${hookHeavy.length} file(s)`,
   );
   for (const r of hookHeavy) {
-    console.log(
-      `  ${r.file}  (${r.useStateCount} useState, ${r.statements} statements)`,
+    logger.detail(
+      `${r.file}  (${r.useStateCount} useState, ${r.statements} statements)`,
     );
   }
 
-  console.log('\nViolations by project (R4+R5+R6):');
+  logger.blank();
+  logger.info('Violations by project (R4+R5+R6):');
   for (const [project, count] of [...byProject.entries()].sort()) {
-    console.log(`  ${project}: ${count}`);
+    logger.detail(`${project}: ${count}`);
   }
 
   const optOuts = reports.filter((r) => r.optOut);
   if (optOuts.length > 0) {
-    console.log(
-      `\nOpt-out files (excluded from violations): ${optOuts.length}`,
-    );
-    for (const r of optOuts) console.log(`  ${r.file}`);
+    logger.blank();
+    logger.info(`Opt-out files (excluded from violations): ${optOuts.length}`);
+    for (const r of optOuts) logger.detail(r.file);
   }
 
   if (strict && (hoist.length > 0 || multi.length > 0)) {
-    console.log('\nR4/R5 violations present — failing (--strict).');
+    logger.blank();
+    logger.fail('R4/R5 violations present — failing (--strict).');
     process.exit(1);
   }
 };

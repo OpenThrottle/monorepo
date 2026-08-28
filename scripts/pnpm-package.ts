@@ -3,6 +3,9 @@ import { fileURLToPath } from 'url';
 import { readFile, writeFile } from 'fs/promises';
 import { createExportableManifest } from '@pnpm/exportable-manifest';
 import { readProjectManifestOnly } from '@pnpm/read-project-manifest';
+import { createLogger } from './lib/index.ts';
+
+const logger = createLogger();
 
 /**
  * pnpm catalogs, keyed by catalog name. The unnamed `catalog:` protocol
@@ -37,7 +40,7 @@ const distDir = path.join(__dirname, `../${basePath}/${projectName}/dist`); // f
 const workspaceFile = path.join(__dirname, `../pnpm-workspace.yaml`); // catalog source of truth
 
 const _data = { distDir, modulesDir, projectDir, projectName };
-console.log(`📦 Updating "${name}" package.json`);
+logger.step(`Updating "${name}" package.json`);
 
 /**
  * Read the pnpm catalogs from pnpm-workspace.yaml so `catalog:` specs resolve
@@ -144,12 +147,12 @@ const transformPackageJson = async () => {
   try {
     await writeFile(`${distDir}/package.json`, jsonFormatted);
   } catch (error) {
-    console.error('🚨 Error "writing" package.json', { error });
+    logger.fail(`Error "writing" package.json: ${error}`);
 
     process.exit(1);
   }
 
-  console.log('✅ Publishable package.json written');
+  logger.success('Publishable package.json written');
 };
 
 /**
@@ -158,7 +161,7 @@ const transformPackageJson = async () => {
 try {
   transformPackageJson();
 } catch (error) {
-  console.error('🚨 Error "transforming" package.json', { error });
+  logger.fail(`Error "transforming" package.json: ${error}`);
 
   process.exit(1);
 }

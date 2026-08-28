@@ -4,6 +4,10 @@
 
 import { validateAgentAssetsOnDisk } from '@openthrottle/openthrottle-skills';
 
+import { createLogger } from './lib/index.ts';
+
+const logger = createLogger();
+
 const formatIssue = (issue: {
   readonly field: string;
   readonly message: string;
@@ -15,24 +19,24 @@ const run = (): void => {
   const { errors, warnings } = validateAgentAssetsOnDisk({ monorepoRoot });
 
   for (const warning of warnings) {
-    console.warn(
+    logger.warn(
       `validate-agent-assets-frontmatter: warning: ${formatIssue(warning)}`,
     );
   }
 
   if (errors.length > 0) {
     for (const error of errors) {
-      console.error(
+      logger.fail(
         `validate-agent-assets-frontmatter: error: ${formatIssue(error)}`,
       );
     }
-    console.error(
+    logger.fail(
       `validate-agent-assets-frontmatter: ${errors.length} error(s); fix skill/persona frontmatter under .agents/`,
     );
     process.exit(1);
   }
 
-  console.log(
+  logger.success(
     `validate-agent-assets-frontmatter: OK (${warnings.length} rule warning(s))`,
   );
 };

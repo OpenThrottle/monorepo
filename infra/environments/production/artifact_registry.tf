@@ -1,5 +1,5 @@
 # Google Artifact Registry — Docker repository for OpenThrottle container images.
-# Aligns with .github/workflows/openthrottle-docker.yml and scripts/gcs-docker-upload.sh.
+# Aligns with .github/workflows/openthrottle-docker.yml and scripts/gcs-docker-upload.ts.
 #
 # CI: GOOGLE_CREDENTIALS_PRODUCTION should use a key for google_service_account.gcs_workflow (same
 # pattern as staging — see docs/infra/staging-gcs-workflow-service-account.md). E2 pull is handled

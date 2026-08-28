@@ -36,7 +36,7 @@ Using this repo's custom `openthrottle-mcp` MCP across git worktrees can cause C
 
 Worktree setup (`scripts/setup_worktree.sh`, reached through the single
 tool-agnostic entrypoint `scripts/create_worktree.sh` — `pnpm worktree:new`, the
-Claude hook, or Cursor — or lazily via `scripts/ensure_worktree.sh` on first
+Claude hook, or Cursor — or lazily via `scripts/ensure_worktree.ts` on first
 `dev`) rewrites the canonical ports `6020–6025` in `.env` to a per-worktree block (e.g. `OPENTHROTTLE_SERVER_APP_URL=http://localhost:7011`). But **worktrees do not start their own `openthrottle-server`** — they share the main checkout's server, Postgres, and Redis. So the rewritten URL points at a port with nothing listening, and every openthrottle-mcp call returns `fetch failed`. If a worktree's `.env` is missing entirely, the old launcher died at `source ./.env` and registered **zero** tools.
 
 `scripts/run-openthrottle-mcp.sh` resolves a **live** server at launch instead of trusting the configured port. It probes `GET <url>/health` against candidates, in order, and uses the first that responds:

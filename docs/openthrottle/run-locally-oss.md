@@ -56,7 +56,7 @@ The launcher starts **@openthrottle/openthrottle-mcp** on stdio for Cursor. It d
 
 **OpenAI embeddings:** set **`OPENAI_API_KEY`** on the server `.env` instead (or in addition); the launcher still does not read it.
 
-Smoke check: `API_URL_INTERNAL=http://localhost:6021 ./scripts/verify-openthrottle-mcp-env.sh` (reports server embedding config).
+Smoke check: `API_URL_INTERNAL=http://localhost:6021 pnpm run verify:mcp-env` (reports server embedding config).
 
 ---
 
@@ -65,6 +65,6 @@ Smoke check: `API_URL_INTERNAL=http://localhost:6021 ./scripts/verify-openthrott
 - **Run server + developer (minimal native path):** `docs/openthrottle/run-openthrottle-server-developer.md` — env, ports, `pnpm nx` targets, Postgres/Redis via `pnpm run database:start`.
 - **OpenThrottle (plans, embeddings):** `databases/README.md` — schema, migrations, embedding dimension strategy (OpenAI vs Ollama).
 - **openthrottle-mcp (MCP server):** `packages/openthrottle-mcp/README.md` — OpenThrottle via GraphQL; auth token and API URL.
-- **Ollama setup:** `docs/monorepo/Ollama.md`, `scripts/ollama.sh`, root `.env.default`.
+- **Ollama setup:** `docs/monorepo/Ollama.md`, `scripts/ollama.ts (pnpm run ollama:pull)`, root `.env.default`.
 - **Local services and ports:** `docs/monorepo/local-services-and-ports.md`.
 - **Server / DB env:** Root `.env.default` (copy to `.env` for `pnpm run database:*`) and `applications/openthrottle-server/.env.default` (copy to `applications/openthrottle-server/.env` when running the API on the host).

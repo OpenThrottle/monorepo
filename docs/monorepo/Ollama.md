@@ -9,7 +9,7 @@
 ## Running Ollama
 
 - Install from https://ollama.com/download; start the app or run `ollama serve`.
-- Pull models: `scripts/ollama.sh` (chat and embedding models). See `databases/README.md` for embedding dimension strategy.
+- Pull models: `scripts/ollama.ts (pnpm run ollama:pull)` (chat and embedding models). See `databases/README.md` for embedding dimension strategy.
 
 ## Proxying Ollama through Caddy
 
@@ -36,7 +36,7 @@ When Ollama is behind Caddy, the browser or agent sends requests to the Caddy UR
 **Optional (stricter):** comma-separated list, e.g.
 `OLLAMA_ORIGINS=https://ollama.local,https://localhost,http://localhost:11434`
 
-Documented in root `.env.default`; see also `scripts/ollama.sh` and `tools/caddy/README.md`.
+Documented in root `.env.default`; see also `scripts/ollama.ts (pnpm run ollama:pull)` and `tools/caddy/README.md`.
 
 ## Using Cursor with Ollama via the proxy
 

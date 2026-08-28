@@ -12,7 +12,7 @@ This monorepo uses **Nx** for task orchestration and caching, and **pnpm** for w
 - **Caching**: Nx's **local** cache (`.nx/cache`), persisted across CI runs by the free **GitHub Actions cache** (`actions/cache` in `.github/actions/node-setup`). There is **no remote cache backend** — the paid `@nx/gcs-cache` Powerpack plugin and its GCS bucket were retired (see [Operational decisions](#operational-decisions-2026-07-21) and [ci-cost.md](./ci-cost.md)). Nothing to configure in `nx.json`, no `NX_KEY`, no GCP credentials.
 - **CI patterns**: CI uses `nx affected` and distributes work using `scripts/parallelize-tasks.ts`. Gate priorities (P0–P4), owners, and job mapping: [CI-quality-gates.md](./CI-quality-gates.md).
 - **Dependency graph**: `scripts/nx-dependency-graph.ts` generates a static `dependency-graph.html` artifact; a scheduled workflow commits snapshots under `docs/nx/dependency-graphs/`.
-- **`pnpm sync` vs `nx sync`**: despite the shared name, these are unrelated. `pnpm sync` runs the root `sync:openthrottle:*` scripts (`scripts/sync-subtree.sh`), a **git subtree sync** of vendored application content. `nx sync` is Nx's **TypeScript project-reference tsconfig sync** — do **not** run it in this repo; it can inject bogus cross-project tsconfig references and break React Router app typechecks.
+- **`pnpm sync` vs `nx sync`**: despite the shared name, these are unrelated. `pnpm sync` runs the root `sync:openthrottle:*` scripts (`scripts/sync-subtree.ts`), a **git subtree sync** of vendored application content. `nx sync` is Nx's **TypeScript project-reference tsconfig sync** — do **not** run it in this repo; it can inject bogus cross-project tsconfig references and break React Router app typechecks.
 
 ### Operational decisions (2026-07-21)
 

@@ -29,6 +29,9 @@ import {
   findGuardedForeignKeyStatements,
   migrationPrefix,
 } from './check-migration-hygiene.rules';
+import { createLogger } from './lib/index.ts';
+
+const logger = createLogger();
 
 const ROOT = process.cwd();
 const MIGRATIONS_DIR = 'databases/migrations';
@@ -143,7 +146,7 @@ const run = (): void => {
   const changedFiles = listChangedMigrationFiles(baseRef);
 
   if (changedFiles.length === 0) {
-    console.log(
+    logger.success(
       `check-migration-hygiene: OK (no changed files under ${MIGRATIONS_DIR}/ vs ${baseRef})`,
     );
     return;
@@ -156,15 +159,15 @@ const run = (): void => {
 
   if (violations.length > 0) {
     for (const violation of violations) {
-      console.error(`check-migration-hygiene: error: ${violation}`);
+      logger.fail(`check-migration-hygiene: error: ${violation}`);
     }
-    console.error(
+    logger.fail(
       `check-migration-hygiene: ${violations.length} violation(s) across ${changedFiles.length} changed migration file(s)`,
     );
     process.exit(1);
   }
 
-  console.log(
+  logger.success(
     `check-migration-hygiene: OK (${changedFiles.length} changed migration file(s) vs ${baseRef})`,
   );
 };

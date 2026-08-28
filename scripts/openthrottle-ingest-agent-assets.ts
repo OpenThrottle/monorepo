@@ -23,6 +23,9 @@ import {
   embedQuery,
   isOllamaEmbeddingConfigured,
 } from '@openthrottle/node-client';
+import { createLogger } from './lib/index.ts';
+
+const logger = createLogger();
 
 const EMBEDDING_DIM = 1536;
 
@@ -223,18 +226,18 @@ const main = async (): Promise<void> => {
   });
 
   for (const warning of validation.warnings) {
-    console.warn(
+    logger.warn(
       `openthrottle-ingest-agent-assets: warning: ${formatIssue(warning)}`,
     );
   }
 
   if (validation.errors.length > 0) {
     for (const error of validation.errors) {
-      console.error(
+      logger.fail(
         `openthrottle-ingest-agent-assets: error: ${formatIssue(error)}`,
       );
     }
-    console.error(
+    logger.fail(
       `openthrottle-ingest-agent-assets: ${validation.errors.length} validation error(s); aborting ingest`,
     );
     process.exit(1);
@@ -251,7 +254,7 @@ const main = async (): Promise<void> => {
   const embedEnabled = hasEmbeddingProvider();
 
   if (!embedEnabled) {
-    console.log(
+    logger.warn(
       'OPENAI_API_KEY and Ollama embedding env not set; skipping custom_prompt_embeddings.',
     );
   }
@@ -335,11 +338,11 @@ const main = async (): Promise<void> => {
           }
         }
 
-        console.log(`  Ingested: ${record.filePath}`);
+        logger.step(`Ingested: ${record.filePath}`);
       } catch (error) {
         const message = `${record.filePath}: ${String(error)}`;
         errors.push(message);
-        console.error(`  Error: ${message}`);
+        logger.fail(`Error: ${message}`);
       }
     }
 
@@ -371,7 +374,7 @@ const main = async (): Promise<void> => {
            AND file_path = ANY($1::text[])`,
         [stalePaths],
       );
-      console.log(`  Soft-deleted ${stalePaths.length} stale path(s)`);
+      logger.step(`Soft-deleted ${stalePaths.length} stale path(s)`);
     }
 
     try {
@@ -380,8 +383,8 @@ const main = async (): Promise<void> => {
         records,
         skillsLock,
       );
-      console.log(
-        `  project_skills reconciled: ${projectSkills.upserted} upserted` +
+      logger.step(
+        `project_skills reconciled: ${projectSkills.upserted} upserted` +
           (projectSkills.staleSlugs.length > 0
             ? `; orphans (suggest remove): ${projectSkills.staleSlugs.join(', ')}`
             : ''),
@@ -389,18 +392,18 @@ const main = async (): Promise<void> => {
     } catch (error) {
       const message = `project_skills reconcile: ${String(error)}`;
       errors.push(message);
-      console.error(`  Error: ${message}`);
+      logger.fail(`Error: ${message}`);
     }
 
-    console.log('\nDone.');
-    console.log(`  custom_prompts upserted: ${promptsUpserted}`);
+    logger.heading('Done.');
+    logger.detail(`custom_prompts upserted: ${promptsUpserted}`);
     if (embedEnabled) {
-      console.log(`  custom_prompt_embeddings: ${embeddingsInserted}`);
+      logger.detail(`custom_prompt_embeddings: ${embeddingsInserted}`);
     }
     if (errors.length > 0) {
-      console.error(`  Errors: ${errors.length}`);
+      logger.fail(`Errors: ${errors.length}`);
       for (const error of errors) {
-        console.error(`    ${error}`);
+        logger.fail(`  ${error}`);
       }
       process.exitCode = 1;
     }

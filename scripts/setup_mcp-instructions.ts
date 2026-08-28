@@ -39,6 +39,8 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
 import chalk from 'chalk';
 
+import { SYMBOLS } from './lib/index.ts';
+
 const SERVER_NAME = 'openthrottle-mcp';
 const DESCRIPTION = `OpenThrottle (OT) plans knowledge base (Postgres + GraphQL). Plans, tasks, notes, commit links, activity, output stream, semantic search, health.`;
 
@@ -194,7 +196,7 @@ const renderInstructions = (
 
   const heading = (label: string): string => `${chalk.bold.red(`▶ ${label}`)}`;
   const done = (label: string): string =>
-    `${chalk.bold.green(`✓ ${label}`)} ${chalk.dim('— already installed, nothing to do.')}`;
+    `${chalk.bold.green(`${SYMBOLS.success} ${label}`)} ${chalk.dim('— already installed, nothing to do.')}`;
 
   const claudeBlock = status.claude
     ? [done('Claude Code')]

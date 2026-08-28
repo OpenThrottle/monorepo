@@ -1,73 +1,54 @@
 #!/usr/bin/env sh
-set -e
-
-################################################################################
 #
-#   This script is meant to stitch together a few scripts for setup and
-#   maintenance of the monorepo.
-#
-################################################################################
+# Pre-install bootstrap for the primary checkout. This shim stays POSIX
+# because everything in it must work BEFORE node_modules exists: it checks
+# the toolchain, syncs skills, activates pnpm and installs — then hands off
+# to `tsx ./scripts/setup.ts` for the post-install orchestration (build,
+# database, bootstrap, secrets check).
+
+set -eu
 
 echo ""
-echo "🤖 setup.sh"
-echo ""
-echo "This script stitches together various scripts for both setup and day-to-day maintenance of the monorepo."
-echo ""
-echo "- 🛟 setup_troubleshooting.sh"
-echo "- 🔐 setup_environment.sh"
-echo "- 💽 setup_software.sh"
+echo "🤖 setup.sh — pre-install bootstrap, then tsx ./scripts/setup.ts"
 echo ""
 
-# 0. Setup our skills
+# ─── Toolchain preflight (the old setup_troubleshooting.sh checks) ──────────
+# node/pnpm/nx installed via brew fight the per-project versions the monorepo
+# pins; nx and pnpm from brew are known breakers, node/npm are warnings.
+HAS_BLOCKING_ISSUES=false
+
+check_brew_package() {
+  if command -v brew >/dev/null 2>&1 && brew ls --versions "$1" >/dev/null 2>&1; then
+    if [ "${2:-false}" = true ]; then
+      echo "🚨 \"$1\" is installed via brew — this will MOST LIKELY break the monorepo."
+      echo "   Fix: brew uninstall $1  (then re-run this script)"
+      HAS_BLOCKING_ISSUES=true
+    else
+      echo "⚠️  \"$1\" is installed via brew — this MAY cause issues with the monorepo."
+    fi
+  else
+    echo "👌 \"$1\" is not installed via brew"
+  fi
+}
+
+check_brew_package "node"
+check_brew_package "nx" true
+check_brew_package "npm"
+check_brew_package "pnpm" true
+
+if [ "$HAS_BLOCKING_ISSUES" = true ]; then
+  echo ""
+  echo "🔴 Fix the blocking issues above and run ./scripts/setup.sh again."
+  exit 1
+fi
+
+# ─── Skills (pre-install by design — owned by ot-skill-sync) ────────────────
 ./skills/ot-skill-sync/scripts/sync.sh
 
-# 1. Run our troubleshooting script
-./scripts/setup_troubleshooting.sh
+# ─── Package manager + dependencies (the old setup_software.sh) ─────────────
+corepack enable pnpm
+corepack prepare --activate
+pnpm install
 
-# 2. Kick off the install/setup scripts
-./scripts/setup_environment.sh
-# ./scripts/setup_services.sh
-./scripts/setup_software.sh
-
-# 3. Run our build script once
-pnpm run build
-
-# 4. We need to determine if its the first run, if so...
-pnpm run database:build
-pnpm run database:start
-pnpm run database:migrate
-
-# 4a. We build some entries during initialization of the database.
-pnpm run database:bootstrap-service-accounts
-pnpm run database:import-agent-assets
-
-# 4b. Seed the default local login user (FullThrottle2026!) so a freshly set-up
-#     machine can log into the developer/admin apps without a manual out-of-band
-#     step. Idempotent: an existing user keeps their password. This runs on the
-#     primary checkout only (setup.sh is a primary-checkout script); worktrees
-#     share this Postgres, so they inherit the seeded user and must NOT re-seed.
-pnpm run database:bootstrap-default-user
-
-# 4c. Fail loudly if any of the six required .bootstrap-secrets.local keys are
-#     missing. This runs AFTER 4b because the service-account script writes the
-#     2 token keys and the default-user script writes the 4 URL/user keys — only
-#     here is the full set present. Guards against a silently dropped token.
-pnpm run check:bootstrap-secrets
-
-echo ""
-echo ""
-echo "----------------------------------------"
-echo ""
-echo "👀 👀 👀 setup.sh 👀 👀 👀"
-echo ""
-echo "Now copy 'OPENTHROTTLE_MCP_AUTH_TOKEN' and 'OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN'"
-echo "from your local '.bootstrap-secrets.local' and replace the values in:"
-echo ""
-echo " - .env"
-echo " - applications/openthrottle-server/.env"
-echo ""
-echo "And lastly follow run 'pnpm run setup:mcp-instructions' to get the"
-echo "OpenThrottle MCP server installed globally."
-echo ""
-echo "----------------------------------------"
-echo ""
+# ─── Everything else is TypeScript ──────────────────────────────────────────
+exec ./node_modules/.bin/tsx ./scripts/setup.ts "$@"

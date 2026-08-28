@@ -1,5 +1,10 @@
 import { execSync } from 'child_process';
 import { fileURLToPath } from 'url';
+import { createLogger } from './lib/index.ts';
+
+// This script has a stdout contract (the final key=value lines the workflow
+// reads), so all narration is bound to stderr — see the file header.
+const logger = createLogger({ stream: process.stderr });
 
 /**
  * @description Shard partitioner for the `build` matrix in
@@ -315,10 +320,8 @@ const verifySelection = (label: string, grouping: string[]): void => {
   const errors = getShardSelectionErrors(grouping, resolved);
 
   if (errors.length > 0) {
-    console.error(
-      `❌ parallelize-tasks: ${label} selector does not round-trip.`,
-    );
-    errors.forEach((error) => console.error(`   ${error}`));
+    logger.fail(`parallelize-tasks: ${label} selector does not round-trip.`);
+    errors.forEach((error) => logger.detail(error));
     process.exit(1);
   }
 };
@@ -349,16 +352,16 @@ const main = (): void => {
   // workflow's `matrix.jobIndex` list and `env.jobCount` drifted out of sync,
   // and the projects that fell off the end would never be validated by ANY box.
   if (!Number.isInteger(jobCount) || jobCount < 1) {
-    console.error(
-      `❌ parallelize-tasks: jobCount must be >= 1 (got "${process.argv[3]}"). ` +
+    logger.fail(
+      `parallelize-tasks: jobCount must be >= 1 (got "${process.argv[3]}"). ` +
         'Usage: parallelize-tasks.ts <jobIndex> <jobCount>',
     );
     process.exit(1);
   }
 
   if (!Number.isInteger(jobIndex) || jobIndex < 1 || jobIndex > jobCount) {
-    console.error(
-      `❌ parallelize-tasks: jobIndex must be in 1..${jobCount} (got "${process.argv[2]}"). ` +
+    logger.fail(
+      `parallelize-tasks: jobIndex must be in 1..${jobCount} (got "${process.argv[2]}"). ` +
         'matrix.jobIndex and env.jobCount are out of sync.',
     );
     process.exit(1);
@@ -371,8 +374,8 @@ const main = (): void => {
 
   // Partition evidence for the CI log. stderr so it cannot pollute the
   // machine-read stdout contract.
-  console.error(
-    `🧩 shard ${jobIndex}/${jobCount} — ${affected.length} affected project(s)`,
+  logger.heading(
+    `shard ${jobIndex}/${jobCount} — ${affected.length} affected project(s)`,
   );
   groups.forEach((group, index) => {
     const marker = index === jobIndex - 1 ? '→' : ' ';
@@ -382,8 +385,8 @@ const main = (): void => {
   });
 
   if (outputs.suiteShardProjects) {
-    console.error(
-      `  ✂️  suite-sharded: ${outputs.suiteShardProjects} — this box runs --shard=${outputs.suiteShard} (lint/typecheck stay on the partition)`,
+    logger.detail(
+      `suite-sharded: ${outputs.suiteShardProjects} — this box runs --shard=${outputs.suiteShard} (lint/typecheck stay on the partition)`,
     );
   }
 

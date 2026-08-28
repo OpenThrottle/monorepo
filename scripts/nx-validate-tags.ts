@@ -1,5 +1,8 @@
 import { execSync } from 'child_process';
 import { fileURLToPath } from 'node:url';
+import { createLogger } from './lib/index.ts';
+
+const logger = createLogger();
 
 /**
  * @description Valid technology tag values as defined in the reference document
@@ -407,9 +410,10 @@ const getAllProjectNames = (): readonly string[] => {
  * @description Main function to validate project tags across all projects
  */
 const main = async (): Promise<void> => {
-  console.log(
-    '🔍 Validating technology, production, type, and publish tags across all NX projects...\n',
+  logger.step(
+    'Validating technology, production, type, and publish tags across all NX projects...',
   );
+  logger.blank();
 
   try {
     const projectNames = getAllProjectNames();
@@ -425,18 +429,19 @@ const main = async (): Promise<void> => {
     }
 
     const output = formatResults(results);
-    console.log(output);
+    logger.info(output);
 
     if (hasValidationErrors(results)) {
-      console.log('📚 For more information, see: docs/monorepo/NX/tags.md');
-      console.log(
-        "\n💡 To view a project's tags, run: nx show project <project-name>",
+      logger.info('For more information, see: docs/monorepo/NX/tags.md');
+      logger.blank();
+      logger.info(
+        "To view a project's tags, run: nx show project <project-name>",
       );
 
       process.exit(1);
     }
   } catch (error) {
-    console.error('❌ Error validating project tags:', error);
+    logger.fail(`Error validating project tags: ${String(error)}`);
 
     process.exit(1);
   }

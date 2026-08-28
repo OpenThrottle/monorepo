@@ -4,6 +4,10 @@ import { glob, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { createLogger } from './lib/index.ts';
+
+const logger = createLogger();
+
 /**
  * @description Enforces 100% pnpm catalog coverage: every external dependency in every
  * workspace package.json must use the `catalog:` protocol (see MONOREPO.md § Dependency
@@ -80,28 +84,31 @@ async function main(): Promise<void> {
   ).flat();
 
   const manifests = await Promise.all(
-    files.map(async (file) => ({
-      file,
-      manifest: JSON.parse(
+    files.map(async (file) => {
+      const manifest: Manifest = JSON.parse(
         await readFile(join(process.cwd(), file), 'utf8'),
-      ) as Manifest,
-    })),
+      );
+
+      return { file, manifest };
+    }),
   );
 
   const violations = findCatalogViolations(manifests);
 
   if (violations.length > 0) {
-    console.error('❌ Non-catalog external dependency specs found:\n');
+    logger.fail('Non-catalog external dependency specs found:');
+    logger.blank();
     for (const { dependency, file, section, spec } of violations) {
-      console.error(`  ${file} → ${section}.${dependency}: "${spec}"`);
+      logger.detail(`${file} → ${section}.${dependency}: "${spec}"`);
     }
-    console.error(
-      `\n${violations.length} violation(s). Add the version to the catalog in pnpm-workspace.yaml and reference it with "catalog:" (see MONOREPO.md § Dependency Catalog).`,
+    logger.blank();
+    logger.fail(
+      `${violations.length} violation(s). Add the version to the catalog in pnpm-workspace.yaml and reference it with "catalog:" (see MONOREPO.md § Dependency Catalog).`,
     );
     process.exit(1);
   }
 
-  console.log('✅ pnpm catalog coverage is 100%.');
+  logger.success('pnpm catalog coverage is 100%.');
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

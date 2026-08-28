@@ -1,4 +1,7 @@
 import { createProjectGraphAsync } from '@nx/devkit';
+import { createLogger } from './lib/index.ts';
+
+const logger = createLogger();
 
 /**
  * @description Detects circular dependencies in the NX project graph
@@ -74,29 +77,30 @@ const formatCycles = (cycles: string[][]): string => {
  * @description Main function to check for circular dependencies
  */
 const main = async (): Promise<void> => {
-  console.log('🔍 Checking for circular dependencies...\n');
+  logger.step('Checking for circular dependencies...');
+  logger.blank();
 
   try {
     const graph = await createProjectGraphAsync();
     const cycles = findCircularDependencies(graph);
 
     if (cycles.length > 0) {
-      console.error('❌ Circular dependencies detected!\n');
-      console.error('The following circular dependencies were found:\n');
-      console.error(formatCycles(cycles));
-      console.error(
-        '\n📚 For more information, see: docs/monorepo/nx-graph.md',
-      );
-      console.error(
-        '\n💡 To visualize the dependency graph, run: pnpm exec nx graph',
-      );
+      logger.fail('Circular dependencies detected!');
+      logger.blank();
+      logger.info('The following circular dependencies were found:');
+      logger.blank();
+      logger.info(formatCycles(cycles));
+      logger.blank();
+      logger.info('For more information, see: docs/monorepo/nx-graph.md');
+      logger.blank();
+      logger.info('To visualize the dependency graph, run: pnpm exec nx graph'); // prettier-ignore
 
       process.exit(1);
     }
 
-    console.log('✅ No circular dependencies detected!');
+    logger.success('No circular dependencies detected!');
   } catch (error) {
-    console.error('❌ Error checking for circular dependencies:', error);
+    logger.fail(`Error checking for circular dependencies: ${String(error)}`);
 
     process.exit(1);
   }

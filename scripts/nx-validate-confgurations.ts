@@ -1,6 +1,9 @@
 import { execSync } from 'child_process';
 import { readFileSync, existsSync, writeFileSync } from 'fs';
 import { join, relative } from 'path';
+import { createLogger } from './lib/index.ts';
+
+const logger = createLogger();
 
 /**
  * @description Directories to exclude when searching for package.json files
@@ -69,7 +72,7 @@ const shouldExcludePath = (filePath: string): boolean => {
  */
 const shouldHaveNxConfig = (
   filePath: string,
-): { should: boolean; reason?: string } => {
+): { reason?: string; should: boolean } => {
   const normalizedPath = filePath.replace(/\\/g, '/');
   const _relativePath = relative(process.cwd(), filePath).replace(/\\/g, '/');
 
@@ -138,7 +141,7 @@ const findAllPackageJsonFiles = (): readonly string[] => {
 
     return files;
   } catch (error) {
-    console.error('Error finding package.json files:', error);
+    logger.fail(`Error finding package.json files: ${String(error)}`);
     return [];
   }
 };
@@ -152,7 +155,8 @@ const readPackageJson = (filePath: string): PackageJson | null => {
       return null;
     }
     const content = readFileSync(filePath, 'utf-8');
-    return JSON.parse(content) as PackageJson;
+    const parsed: PackageJson = JSON.parse(content);
+    return parsed;
   } catch {
     return null;
   }
@@ -268,11 +272,13 @@ const generateJsonReport = (results: readonly AuditResult[]): string => {
  * @description Main function to audit all package.json files
  */
 const main = async (): Promise<void> => {
-  console.log('🔍 Auditing package.json files for NX configuration...\n');
+  logger.step('Auditing package.json files for NX configuration...');
+  logger.blank();
 
   try {
     const packageJsonFiles = findAllPackageJsonFiles();
-    console.log(`Found ${packageJsonFiles.length} package.json files\n`);
+    logger.info(`Found ${packageJsonFiles.length} package.json files`);
+    logger.blank();
 
     const results: AuditResult[] = [];
 
@@ -284,7 +290,7 @@ const main = async (): Promise<void> => {
     }
 
     const output = formatResults(results);
-    console.log(output);
+    logger.info(output);
 
     // Generate JSON report
     const jsonReport = generateJsonReport(results);
@@ -295,9 +301,8 @@ const main = async (): Promise<void> => {
       'nx-validate-confgurations-report.json',
     );
     writeFileSync(reportPath, jsonReport, 'utf-8');
-    console.log(
-      `\n📄 JSON report saved to: ${relative(process.cwd(), reportPath)}`,
-    );
+    logger.blank();
+    logger.info(`JSON report saved to: ${relative(process.cwd(), reportPath)}`);
 
     const missingCount = results.filter(
       (r) => r.shouldHaveNxConfig && !r.hasNxConfig,
@@ -307,7 +312,7 @@ const main = async (): Promise<void> => {
       process.exit(1);
     }
   } catch (error) {
-    console.error('❌ Error auditing package.json files:', error);
+    logger.fail(`Error auditing package.json files: ${String(error)}`);
     process.exit(1);
   }
 
