@@ -54,6 +54,7 @@
     "ts-morph": "catalog:"
   },
   "devDependencies": {
+    "@openthrottle/openthrottle-drivers": "workspace:*",
     "@openthrottle/react-router-testing": "workspace:^",
     "playwright": "catalog:"
   },

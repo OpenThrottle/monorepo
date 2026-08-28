@@ -239,6 +239,7 @@ export const eslintConfig = tslint.config([
         },
       ],
       'no-undef': 'off',
+
       'no-unused-vars': 'off',
       'react/jsx-boolean-value': ['error', 'always'],
       'react/jsx-curly-brace-presence': ['error', 'never'],

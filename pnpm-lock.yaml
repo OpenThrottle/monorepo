@@ -2088,6 +2088,9 @@ importers:
         specifier: 'catalog:'
         version: 28.0.0
     devDependencies:
+      '@openthrottle/openthrottle-drivers':
+        specifier: workspace:*
+        version: link:../../packages/openthrottle-drivers
       '@openthrottle/react-router-testing':
         specifier: workspace:^
         version: link:../../packages/react-router-testing

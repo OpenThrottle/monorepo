@@ -1,3 +1,4 @@
+import { ALL_DRIVERS } from '@openthrottle/openthrottle-drivers';
 import * as React from 'react';
 import { render, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -54,10 +55,17 @@ describe('routes/settings.agents.tsx', () => {
       scannedAt: '2026-08-12T00:00:00.000Z',
     });
 
-    // All five catalog CLIs render as rows, installed or not.
+    // EVERY registered driver renders as a row, installed or not. Asserted against
+    // ALL_DRIVERS rather than a hardcoded count: Antigravity shipped in the registry and was
+    // missing from this table for exactly as long as nobody re-counted the rows by hand.
     const claudeRow = await component.findByTestId(
       'SettingsAgentsTableRow-claude',
     );
+    for (const driver of ALL_DRIVERS) {
+      expect(
+        component.getByTestId(`SettingsAgentsTableRow-${driver.id}`),
+      ).toBeInTheDocument();
+    }
     expect(within(claudeRow).getByText('Installed')).toBeInTheDocument();
     expect(within(claudeRow).getByText('2.1.0')).toBeInTheDocument();
 

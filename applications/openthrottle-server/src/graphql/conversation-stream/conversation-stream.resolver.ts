@@ -26,6 +26,7 @@ import { NestjsModelDiscoveryService } from '@openthrottle/nestjs-model-discover
 import {
   AGENT_CONVERSATION_MESSAGE_ROLES,
   type AgentConversationMessage,
+  type AgentConversationMessageRole,
   AgentCliPreferencesService,
   AgentConversationsService,
   CustomPromptsService,
@@ -54,12 +55,17 @@ import { type ConversationStreamChunkEnvelope } from './conversation-stream.type
 
 /**
  * Roles the model accepts; persisted `tool` rows are excluded from the prompt.
+ *
+ * A deliberate subset, declared as `Record<AgentConversationMessageRole, boolean>`
+ * so every role gets an explicit yes or no. Adding a role fails typecheck here
+ * until someone decides whether the model should see it.
  */
-const PROMPT_ROLES = new Set<string>([
-  AGENT_CONVERSATION_MESSAGE_ROLES.assistant,
-  AGENT_CONVERSATION_MESSAGE_ROLES.system,
-  AGENT_CONVERSATION_MESSAGE_ROLES.user,
-]);
+const IS_PROMPT_ROLE: Record<AgentConversationMessageRole, boolean> = {
+  [AGENT_CONVERSATION_MESSAGE_ROLES.assistant]: true,
+  [AGENT_CONVERSATION_MESSAGE_ROLES.system]: true,
+  [AGENT_CONVERSATION_MESSAGE_ROLES.tool]: false,
+  [AGENT_CONVERSATION_MESSAGE_ROLES.user]: true,
+};
 
 const toChatMessage = (
   message: AgentConversationMessage,
@@ -356,7 +362,7 @@ export class ConversationStreamResolver {
       );
 
       messages = history
-        .filter((row) => PROMPT_ROLES.has(row.role))
+        .filter((row) => IS_PROMPT_ROLE[row.role])
         .map(toChatMessage);
     } else {
       messages = [{ content: message, role: 'user' }];

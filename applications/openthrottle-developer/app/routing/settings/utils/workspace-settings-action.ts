@@ -1,11 +1,13 @@
-import { isWorkspaceEditorId } from '~/routing/settings/utils/is-workspace-editor-id';
+import { isWorkspaceEditorId } from '~/global/config/workspace-editors';
 import type { WorkspaceEditorId } from '~/__generated__/graphql';
 
 /**
  * @description Parses enabled editor ids from form data (repeated `enabledEditors` fields).
- * Unknown ids are dropped, so the guard must stay derived from
- * {@link WORKSPACE_EDITOR_OPTIONS} — a hardcoded copy silently discards any
- * newly supported editor at save time while the picker still offers it.
+ * Unknown ids are dropped, so the guard must be {@link isWorkspaceEditorId} —
+ * a hardcoded copy silently discards any newly supported editor at save time
+ * while the picker still offers it. That is not hypothetical: this parser once
+ * held its own `new Set<string>([Cursor, Vscode])`, which let Claude Code appear
+ * checked in the picker and vanish on save.
  */
 export const parseEnabledEditorsFromFormData = (
   formData: FormData,
