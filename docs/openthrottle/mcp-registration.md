@@ -2,9 +2,9 @@
 
 Canonical, single-source-of-truth (SSOT) guide for registering Model Context Protocol (MCP) servers when working in the OpenThrottle monorepo. It explains which servers OpenThrottle ships, which are user-provided, where each editor reads its config, and how to register and smoke-test `openthrottle-mcp` at the monorepo root and from a secondary workspace.
 
-This doc **consolidates** registration guidance that previously lived (partly) across [first-time-onboarding.md](./first-time-onboarding.md) (tier table, when-to-use), [mcp-worktrees.md](./mcp-worktrees.md) (worktree-aware launchers, server inventory), and [local-quickstart.md](./local-quickstart.md). Those docs now point here for the registration story and keep only their own concerns (onboarding flow, worktree identity, fresh-clone bootstrap). Where this guide and those overlap, **this file wins**.
+This doc **consolidates** registration guidance that previously lived (partly) across [first-time-onboarding.md](./first-time-onboarding.md) (tier table, when-to-use) and [local-quickstart.md](./local-quickstart.md), and it absorbed the worktree-aware launcher and identity story outright. Those docs now point here for the registration story and keep only their own concerns (onboarding flow, fresh-clone bootstrap). Where this guide and those overlap, **this file wins**.
 
-> **Scope:** registration and configuration only. For tokens and rotation see [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md); for env alignment and smoke fixtures see [verification-environment.md](../../packages/openthrottle-mcp/docs/verification-environment.md); for worktree identity see [mcp-worktrees.md](./mcp-worktrees.md).
+> **Scope:** registration and configuration only. For tokens and rotation see [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md); for env alignment and smoke fixtures see [verification-environment.md](../../packages/openthrottle-mcp/docs/verification-environment.md); for per-worktree port blocks see [worktree-port-allocation.md](../monorepo/worktree-port-allocation.md).
 
 ## Contents
 
@@ -16,7 +16,7 @@ This doc **consolidates** registration guidance that previously lived (partly) a
 - [Editor parity](#editor-parity) — Cursor / VS Code / Claude Code / OpenCode
 - [User-provided servers](#user-provided-servers) — github, shadcn, nx-mcp, maestro, fetch
 - [Secondary workspace](#secondary-workspace) — using OT MCP from another repo
-- [Worktrees](#worktrees) — worktree-aware launcher (see mcp-worktrees.md)
+- [Worktrees](#worktrees) — worktree-aware identity and live-server resolution
 - [Smoke-test checklist](#smoke-test-checklist) — registration gates
 
 ## Current state
@@ -44,7 +44,7 @@ Inventory of MCP config **as actually committed**. This is the ground truth the 
 
 Its former role — semantic search over ingested `docs/` — is now served by `openthrottle-mcp` (`semantic_search`, `list_sources`, `get_document`).
 
-See [mcp-worktrees.md](./mcp-worktrees.md) for worktree identity and [verification-environment.md](../../packages/openthrottle-mcp/docs/verification-environment.md) for env alignment.
+See [Worktrees](#worktrees) for worktree identity and [verification-environment.md](../../packages/openthrottle-mcp/docs/verification-environment.md) for env alignment.
 
 ## MCP tiers
 
@@ -103,7 +103,7 @@ The committed Cursor / Claude configs are [`.cursor/mcp.json`](../../.cursor/mcp
 - **Claude Code (`.mcp.json`) carries no env block** on `openthrottle-mcp`: the launcher derives `API_URL` / `API_URL_INTERNAL` and self-loads the token, so a block would only risk passing an unexpanded `${OPENTHROTTLE_MCP_AUTH_TOKEN}` placeholder as an empty bearer (the silent-401 trap) and tripping the client's "Failed to replace env in config" warning — mirroring the `github` entry. `.cursor/mcp.json` keeps a block for editors that expand `${…}`; both paths work because the launcher self-loads from `.env` regardless. Keep any URLs aligned with the server `PORT` (default `6021`).
 - **Auth:** `OPENTHROTTLE_MCP_AUTH_TOKEN` is an `ot_sa_…` service-account token. Mint it with `pnpm run database:bootstrap-service-accounts` and put it in the repo `.env` (root and/or `applications/openthrottle-server/.env`); for Cursor you may also set it in the MCP `env` block. Never commit a real token — see [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md).
 - **Embeddings** are configured on the server (`OPENAI_API_KEY` or `OLLAMA_*` in `applications/openthrottle-server/.env`), **not** in this launcher.
-- **Worktree-aware:** the launcher sets `WORKTREE_ID` per worktree so each advertises a distinct server name, and resolves the live server URL at launch rather than trusting a per-worktree `.env` port — full detail in [mcp-worktrees.md](./mcp-worktrees.md).
+- **Worktree-aware:** the launcher sets `WORKTREE_ID` per worktree so each advertises a distinct server name, and resolves the live server URL at launch rather than trusting a per-worktree `.env` port — full detail under [Worktrees](#worktrees).
 
 **Docker HTTP (`openthrottle-mcp-docker`):** committed as `http://localhost:6026/mcp` (root `.env.default` `OPENTHROTTLE_MCP_PORT`). In a worktree use the block's `base+6`; for the consumer-install stack under `applications/openthrottle/` the default is `9026` — update the `url` to match. See [HTTP transport](#http-transport-docker-native).
 
@@ -189,9 +189,48 @@ The launcher `cd`s into the monorepo and starts Node from that checkout; GraphQL
 
 ## Worktrees
 
-Cursor keys MCP servers by the `mcpServers` key and the server's advertised name; across git worktrees `scripts/run-openthrottle-mcp.sh` sets `WORKTREE_ID` so each worktree advertises a distinct server name, and resolves a **live** server URL at launch rather than trusting a per-worktree `.env` port. Full detail: [mcp-worktrees.md](./mcp-worktrees.md).
+Two distinct problems: **identity** (one editor, several worktrees, same server name) and **reachability** (a worktree's `.env` names a port with nothing behind it).
+
+### Identity — worktree-aware server names
+
+Cursor reads `.cursor/mcp.json` per workspace, and the **key** in `mcpServers` (e.g. `openthrottle-mcp`) is the server identifier. That key is a static string — Cursor does not fold the workspace path into it — so two worktrees using the same key with a server advertising the same protocol name can be conflated, and one process gets reused across worktrees.
+
+The launcher fixes this from the server side:
+
+- `scripts/run-openthrottle-mcp.sh` (a thin shim over `scripts/run-openthrottle-mcp.ts`) sets `WORKTREE_ID` to the basename of the git worktree root. Outside a git repo it is unset.
+- The package's `getServerName()` then advertises `@openthrottle/openthrottle-mcp-{WORKTREE_ID}` when `WORKTREE_ID` is set, the default name otherwise.
+- `MCP_SERVER_NAME` overrides both — set it to force a name (tests, or a non-worktree checkout).
+
+For full isolation you can additionally use distinct `mcpServers` **keys** per worktree, but the worktree-aware advertised name is normally enough.
+
+### Reachability — the launcher resolves a live server
+
+**Worktrees do not start their own `openthrottle-server`** — they share the main checkout's server, Postgres and Redis. But worktree setup rewrites the canonical `6020–6025` ports in `.env` to a per-worktree block, so a worktree's configured `OPENTHROTTLE_SERVER_APP_URL` points at a port with nothing listening, and every MCP call returns `fetch failed`.
+
+So the launcher probes `GET <url>/health` and uses the first candidate that answers. Default order is **stable-first**:
+
+1. The main/root checkout's `.env` `OPENTHROTTLE_SERVER_APP_URL` (found via `git rev-parse --git-common-dir`) — the shared canonical server.
+2. A running docker `server` container's published host port (from `docker ps`).
+3. This worktree's own `.env` `OPENTHROTTLE_SERVER_APP_URL` — a liveness fallback, in case a genuine per-worktree server is running.
+4. Canonical fallback `http://localhost:6021`.
+
+Set **`OT_MCP_TARGET=worktree`** to invert the first three and prefer this worktree's own server. The chosen URL is exported as `API_URL` / `API_URL_INTERNAL`.
+
+`.env` is parsed rather than `source`d, so a missing or partial worktree `.env` no longer aborts the launcher — an earlier version died at `source ./.env` and registered **zero** tools. If no candidate answers, it exits non-zero naming everything it tried instead of launching into a `fetch failed` loop.
+
+To debug resolution without starting anything, run:
+
+```bash
+OT_MCP_RESOLVE_ONLY=1 bash scripts/run-openthrottle-mcp.sh
+```
+
+> **MCP servers register at session start**, so a launcher fix reaches only _new_ sessions. In a session already holding broken tools, drive GraphQL directly against the live server with `curl` (bearer `OPENTHROTTLE_MCP_AUTH_TOKEN`) as a stopgap.
 
 For `openthrottle-mcp-docker`, update the committed `url` port to this worktree's `OPENTHROTTLE_MCP_PORT` (base+6) after `pnpm run worktree:new`.
+
+### A separate database per worktree
+
+Optional, and off by default — worktrees share the main Postgres. To split them, set `POSTGRES_*` (or `POSTGRES_URL`) in each worktree's `.env` with a different port or database name; openthrottle-server reads those at runtime. `openthrottle-mcp` reaches OT over GraphQL, so point it at the matching API URL too (see `OT_MCP_TARGET` above).
 
 ## Smoke-test checklist
 
@@ -213,15 +252,15 @@ After registering or changing MCP config, confirm `openthrottle-mcp` works. Ther
 
 ## Related documentation
 
-| Topic                                  | Location                                                                                        |
-| -------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| Worktree-aware MCP identity & launcher | [mcp-worktrees.md](./mcp-worktrees.md)                                                          |
-| MCP env, fixtures, smoke checks        | [verification-environment.md](../../packages/openthrottle-mcp/docs/verification-environment.md) |
-| Service account tokens & rotation      | [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md)                                         |
-| First agent workflow after MCP works   | [first-time-onboarding.md](./first-time-onboarding.md)                                          |
-| Author OT plans & tasks via MCP        | [authoring-plans-via-mcp.md](./authoring-plans-via-mcp.md)                                      |
-| Fresh clone → server + MCP             | [local-quickstart.md](./local-quickstart.md)                                                    |
-| Committed Cursor config                | [`.cursor/mcp.json`](../../.cursor/mcp.json)                                                    |
-| Committed Claude Code config           | [`.mcp.json`](../../.mcp.json)                                                                  |
-| Committed VS Code config               | [`.vscode/mcp.json`](../../.vscode/mcp.json)                                                    |
-| Committed OpenCode config              | [`opencode.json`](../../opencode.json)                                                          |
+| Topic                                | Location                                                                                        |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------- |
+| Per-worktree port blocks             | [worktree-port-allocation.md](../monorepo/worktree-port-allocation.md)                          |
+| MCP env, fixtures, smoke checks      | [verification-environment.md](../../packages/openthrottle-mcp/docs/verification-environment.md) |
+| Service account tokens & rotation    | [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md)                                         |
+| First agent workflow after MCP works | [first-time-onboarding.md](./first-time-onboarding.md)                                          |
+| Author OT plans & tasks via MCP      | [authoring-plans-via-mcp.md](./authoring-plans-via-mcp.md)                                      |
+| Fresh clone → server + MCP           | [local-quickstart.md](./local-quickstart.md)                                                    |
+| Committed Cursor config              | [`.cursor/mcp.json`](../../.cursor/mcp.json)                                                    |
+| Committed Claude Code config         | [`.mcp.json`](../../.mcp.json)                                                                  |
+| Committed VS Code config             | [`.vscode/mcp.json`](../../.vscode/mcp.json)                                                    |
+| Committed OpenCode config            | [`opencode.json`](../../opencode.json)                                                          |

@@ -1,13 +1,15 @@
-# Workspace add-folder: native OS picker + in-app fallback (design decision)
+# Workspace add-folder: native OS picker + in-app fallback
 
-Design decision for the `/settings/workspace` "Add a folder" Browse rework
-(OT plan `f0d2ad9d`). Resolves the two open questions before implementation:
-how the server decides it may open a native OS folder dialog, and which
-per-OS commands return an absolute host path with clean cancel/timeout
-semantics. Referenced by the server tasks (`workspacePickerCapabilities`,
-`pickFolderNative`, enriched `browseDirectory`).
+How the `/settings/workspace` "Add a folder" Browse flow works: how the server
+decides it may open a native OS folder dialog, and which per-OS commands return
+an absolute host path with clean cancel/timeout semantics.
 
-## Design-defining constraint
+Implementation:
+`applications/openthrottle-server/src/graphql/workspace-settings/native-folder-picker.ts`,
+surfaced as `workspacePickerCapabilities`, `pickFolderNative`, and the enriched
+`browseDirectory` (the in-app fallback).
+
+## Why the dialog has to be server-side
 
 Workspace folders live on the **openthrottle-server host**, not the browser.
 Browser folder pickers deliberately hide absolute filesystem paths:
@@ -27,7 +29,7 @@ the chosen absolute host path flows straight into `addWorkspaceFolder`.
 `showDirectoryPicker()` picker. It cannot yield an absolute path and is a trap
 for a future contributor. This file exists partly to record that.
 
-## Decision 1 — same-machine / native-availability predicate
+## The same-machine / native-availability predicate
 
 `canUseNativeDialog` is computed **per request**, conservative by default
 (native OFF unless the request is clearly local _and_ a display is present).
@@ -57,7 +59,7 @@ Browse affordance; it does **not** itself grant the pick. The actual
 and short-circuits to "unavailable" before spawning, so a stale client flag
 can never cause a spawn on a remote/headless server.
 
-## Decision 2 — per-OS folder-dialog commands
+## Per-OS folder-dialog commands
 
 All spawned with `execFile` (argv array, **no shell string interpolation**) and
 a bounded timeout (default 2 minutes) that kills the child on expiry so a

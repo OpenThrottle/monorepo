@@ -27,7 +27,7 @@ Along the way:
 
 - **Local services:** [monorepo/local-services-and-ports.md](./monorepo/local-services-and-ports.md), [Docker_Compose.md](./Docker_Compose.md)
 - **Worktrees:** [monorepo/worktree-port-allocation.md](./monorepo/worktree-port-allocation.md)
-- **Nx:** [monorepo/NX.md](./monorepo/NX.md), [monorepo/nx-graph.md](./monorepo/nx-graph.md), [monorepo/NX/tags.md](./monorepo/NX/tags.md)
+- **Nx:** [monorepo/NX.md](./monorepo/NX.md), [monorepo/nx-graph.md](./monorepo/nx-graph.md) — the one graph doc, [monorepo/NX/tags.md](./monorepo/NX/tags.md)
 - **Generators:** [tools/templates/](./tools/templates/AGENT_USAGE.md) — scaffold routes, components, packages, services.
 - **Skills:** [Skills.md](./Skills.md) — the agent-skills policy and `ot-skill-sync`.
 - **Embeddings / Ollama:** [monorepo/Ollama.md](./monorepo/Ollama.md)
@@ -44,7 +44,7 @@ Along the way:
 ## Contributor reference
 
 - **Docs contract:** [../CONTRIBUTING.md#documentation](../CONTRIBUTING.md#documentation) — what a doc in `docs/` is for, and the `audit:docs-index` reachability gate.
-- **Folders & conventions:** [Folders.md](./Folders.md), [openthrottle/packages-naming.md](./openthrottle/packages-naming.md)
+- **Folders & conventions:** [Folders.md](./Folders.md), [MONOREPO.md § Naming Conventions](../MONOREPO.md#naming-conventions)
 - **CI quality gates:** [monorepo/CI-quality-gates.md](./monorepo/CI-quality-gates.md)
 - **Dead-code (Knip):** [monorepo/Knip.md](./monorepo/Knip.md)
 - **Component shape:** [monorepo/component-primitive-shape.md](./monorepo/component-primitive-shape.md)
@@ -53,11 +53,11 @@ Along the way:
 - **Forms:** [monorepo/Forms.md](./monorepo/Forms.md) — the Formik + Yup + loader/action pattern every React Router form follows.
 - **Vitest pool (developer app):** [reliability/developer-vitest-pool.md](./reliability/developer-vitest-pool.md) — why the heaviest jsdom suite in CI is bounded the way it is.
 - **GraphQL-only transport:** [workflows/graphql-only-transport-boundary.md](./workflows/graphql-only-transport-boundary.md) — every workflow request goes through GraphQL, with one documented health-check exception.
-- **URL-first UI state:** [monorepo/url-first-ui-state.md](./monorepo/url-first-ui-state.md), [monorepo/url-first-react-router-shadcn-learnings.md](./monorepo/url-first-react-router-shadcn-learnings.md)
+- **URL-first UI state:** [monorepo/url-first-ui-state.md](./monorepo/url-first-ui-state.md)
 - **Testing:** [testing/snapshot-replacement-patterns.md](./testing/snapshot-replacement-patterns.md)
 - **PWA:** [monorepo/PWA.md](./monorepo/PWA.md) — the manifest + service-worker wiring every React Router app ships.
 - **Marketing / video:** [marketing/README.md](./marketing/README.md) — the @OpenThrottleAI "0–60" format and the screencast production pipeline.
-- **UI tokens:** [openthrottle/brand-palette.md](./openthrottle/brand-palette.md), [openthrottle/styles.md](./openthrottle/styles.md)
+- **UI tokens:** [openthrottle/styles.md](./openthrottle/styles.md) — Tailwind entry, theme tokens, and the brand palette
 
 ## Agents in other repositories
 

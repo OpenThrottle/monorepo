@@ -159,6 +159,14 @@ Before creating a new package, check if similar functionality exists:
 - **Examples**: `openthrottle-admin`, `openthrottle-developer`, `openthrottle-server`
 - **Location**: `applications/<name>/`
 
+### Packages
+
+- **Scope**: `@openthrottle` — one npm scope for everything, matching the GitHub org and `openthrottle.ai`.
+- **Format**: `kebab-case`, and the package name is always `@openthrottle/<directory name>` — no divergence between the two.
+- **Location**: `packages/<name>/`
+- **Prefix by surface**, so the name says where a package can be consumed: `nestjs-*` (server modules), `react-router-*` (app libs), `nodejs-*` (runtime-agnostic Node), `openthrottle-*` (product surfaces such as `openthrottle-mcp`, `openthrottle-drivers`), `agentic-*` (the agent layer).
+- **Do not** re-state the scope in a name for its own sake — `@openthrottle/openthrottle-mcp` earns the repetition because the product surface is itself called "openthrottle-mcp"; a generic library does not.
+
 ### Code-Level Conventions
 
 For code-level naming conventions (variables, functions, classes), see [`.cursor/rules/coding/naming-conventions.mdc`](.cursor/rules/coding/naming-conventions.mdc).

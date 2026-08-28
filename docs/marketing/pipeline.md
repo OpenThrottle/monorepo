@@ -124,11 +124,10 @@ pnpm nx run openthrottle-developer:video-narrate  --args="--script 03-first-plan
 pnpm nx run openthrottle-developer:video-assemble --args="--script 03-first-plan"
 ```
 
-**None of them are cached**, and that is deliberate — see
-[`catalogue-rebuild.md`](./catalogue-rebuild.md) for the reasoning per stage. The
-short version: seed mutates a database, record reads live app state, narrate shells
-out to a TTS backend, and assemble consumes gitignored artifacts Nx cannot hash,
-where a stale hit would silently publish last week's footage.
+**None of them are cached**, and that is deliberate: seed mutates a database, record
+reads live app state, narrate shells out to a TTS backend, and assemble consumes
+gitignored artifacts Nx cannot hash — a stale hit would silently publish last week's
+footage.
 
 `video-seed` pins `POSTGRES_HOST=localhost` in the target, because Nx loads the
 project's `.env` into the task and the app's `.env` points Postgres at
@@ -136,6 +135,7 @@ project's `.env` into the task and the app's `.env` points Postgres at
 
 ## Re-recording the catalogue
 
-When the UI changes, every published video silently goes stale.
-[`catalogue-rebuild.md`](./catalogue-rebuild.md) is the scheduled answer, including
-why it is documented rather than switched on yet.
+When the UI changes, every published video silently goes stale, and re-shooting is
+the stage that will not scale on human effort. There is **no automated rebuild
+today** — re-record by hand, running the four stages above per script. A scheduled
+whole-catalogue rebuild is tracked in OT rather than here.

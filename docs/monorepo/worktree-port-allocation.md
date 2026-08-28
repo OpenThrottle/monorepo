@@ -16,17 +16,19 @@ via `scripts/ensure_worktree.ts`.
 
 ## What gets offset (and what doesn't)
 
-Only the **six app ports** are offset. The canonical layout (`6020`–`6025` in
-`.env.default`) is preserved as relative offsets within the block:
+Only the **six app ports** are offset. The canonical layout (`6020`–`6025` in `.env.default` — see
+[local-services-and-ports.md](./local-services-and-ports.md), the authority for those values) is
+preserved as relative offsets within the block. `6023` has no app; the slot is held so the offsets
+stay stable:
 
-| App       | Canonical | Worktree   |
-| --------- | --------- | ---------- |
-| developer | `6020`    | `base + 0` |
-| server    | `6021`    | `base + 1` |
-| admin     | `6022`    | `base + 2` |
-| cms       | `6023`    | `base + 3` |
-| email     | `6024`    | `base + 4` |
-| website   | `6025`    | `base + 5` |
+| App        | Canonical | Worktree   |
+| ---------- | --------- | ---------- |
+| developer  | `6020`    | `base + 0` |
+| server     | `6021`    | `base + 1` |
+| admin      | `6022`    | `base + 2` |
+| _reserved_ | `6023`    | `base + 3` |
+| email      | `6024`    | `base + 4` |
+| website    | `6025`    | `base + 5` |
 
 **Postgres (`6010`) and Redis (`6011`) are NOT offset.** Worktrees share the main
 checkout's already-running database — see [Shared database](#shared-database).

@@ -1,7 +1,7 @@
 # Child-repo hook telemetry — scoping and privacy contract
 
-**Sibling of** [`child-repo-hook-overlay.md`](./child-repo-hook-overlay.md) (the delivery-mechanism
-decision record) and [`foreign-workspace-skill-injection.md`](./foreign-workspace-skill-injection.md).
+**Sibling of** [`child-repo-hook-overlay.md`](./child-repo-hook-overlay.md) (how the hooks get
+there) and [`foreign-workspace-skill-injection.md`](./foreign-workspace-skill-injection.md).
 
 This document is **delivery-mechanism independent**. It defines what a `@openthrottle/agentic-hooks`
 hook is allowed to do when it runs in a repository that is **not** this monorepo, regardless of whether

@@ -1,18 +1,8 @@
 # OpenThrottle monorepo architecture
 
-This document describes how the OpenThrottle applications and packages in the monorepo fit together. It uses Mermaid diagrams and short narratives; see also `applications/openthrottle/README.md` and `databases/README.md`.
+How the OpenThrottle applications and packages fit together — Mermaid diagrams plus short narratives. See also `applications/openthrottle/README.md` (the Docker Compose stack) and `databases/README.md` (the schema).
 
-## Task breakdown (for this plan)
-
-To complete the plan “Monorepo architecture diagram for OpenThrottle”, the following tasks were identified:
-
-1. **Breakdown the request** — Define the tasks needed to deliver the doc (this task).
-2. **Audit apps and packages** — List OpenThrottle applications and `packages/openthrottle/*` with roles and dependencies.
-3. **Add high-level architecture diagram** — Mermaid: apps, packages, OpenThrottle DB and their connections.
-4. **Add data/request flow diagram** — Mermaid: Developer/MCP → Server → Postgres; Ralph/workflows.
-5. **Write single new markdown file** — This file: narrative + diagrams in `docs/openthrottle/monorepo-architecture.md`.
-
----
+The two summary tables below are **not exhaustive**: `packages/` holds ~60 packages. `pnpm nx show projects` is the authoritative inventory; these tables name the ones you need to understand the request path.
 
 ## High-level architecture
 
@@ -26,6 +16,7 @@ flowchart TB
     Admin["openthrottle-admin"]
     Email["openthrottle-email"]
     Website["openthrottle-website"]
+    Workbench["openthrottle-workbench<br/>(Storybook host)"]
   end
 
   subgraph Packages["Packages (@openthrottle)"]
@@ -90,9 +81,12 @@ sequenceDiagram
 | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **openthrottle-server**    | NestJS GraphQL API; auth, plans, tasks, embeddings, commit links, docs, users, RBAC; BullMQ queues; talks to OpenThrottle via `@openthrottle/nestjs-repositories`. |
 | **openthrottle-developer** | React Router UI for developers; plans, tasks, search, commit links; configurable `API_URL` to the server.                                                          |
-| **openthrottle-admin**     | Admin portal (see `docs/openthrottle/admin-portal-architecture.md`).                                                                                               |
+| **openthrottle-admin**     | Admin portal.                                                                                                                                                      |
 | **openthrottle-email**     | Email-related services.                                                                                                                                            |
 | **openthrottle-website**   | Marketing website.                                                                                                                                                 |
+| **openthrottle-workbench** | Storybook 10 host for `@openthrottle/react-router-shadcn` — component library, `cva` variants, themes. Not deployed with the product.                              |
+
+`applications/openthrottle/` is not an app — it holds the Docker Compose stack and its Dockerfiles.
 
 Shared infra used by the server: **Postgres** (OpenThrottle schema in `databases/`), **Redis** (BullMQ, sessions, etc.). Docker Compose for the core stack: the repo-root `docker-compose.yml` (run `docker compose up --build` from the monorepo root).
 
@@ -100,13 +94,15 @@ Shared infra used by the server: **Postgres** (OpenThrottle schema in `databases
 
 ## Packages (summary)
 
-| Package                                      | Role                                                                                                                                                                          |
-| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **@openthrottle/openthrottle-mcp**           | MCP server exposing OT tools (plans, tasks, search, commit links, plan output, etc.); depends on `@openthrottle/nodejs-graphql` to call openthrottle-server.                  |
-| **@openthrottle/nodejs-graphql**             | Typed GraphQL client for Node (used by openthrottle-mcp); no direct DB.                                                                                                       |
-| **@openthrottle/nestjs-repositories**        | TypeORM-based data access for OpenThrottle (plans, tasks, embeddings, commit_links, plan_output_stream, documentation, users, roles, etc.); used only by openthrottle-server. |
-| **@openthrottle/openthrottle-notifications** | Notifications (e.g. used by server/developer).                                                                                                                                |
-| **@openthrottle/react-router-\***            | Shared React Router libs (auth, GraphQL, UI, utils, editor, profiling, chat) for the developer and other OT UIs.                                                              |
+| Package                                      | Role                                                                                                                                                                                        |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **@openthrottle/openthrottle-mcp**           | MCP server exposing OT tools (plans, tasks, search, commit links, plan output, etc.); depends on `@openthrottle/nodejs-graphql` to call openthrottle-server.                                |
+| **@openthrottle/nodejs-graphql**             | Typed GraphQL client for Node (used by openthrottle-mcp); no direct DB.                                                                                                                     |
+| **@openthrottle/nestjs-repositories**        | TypeORM-based data access for OpenThrottle (plans, tasks, embeddings, commit_links, plan_output_stream, documentation, users, roles, etc.); used only by openthrottle-server.               |
+| **@openthrottle/openthrottle-notifications** | Notifications (e.g. used by server/developer).                                                                                                                                              |
+| **@openthrottle/react-router-\***            | Shared React Router libs (auth, GraphQL, UI, utils, editor, profiling, chat, …) for the developer and other OT UIs. Source-first — no `build` target; see [MONOREPO.md](../../MONOREPO.md). |
+| **@openthrottle/openthrottle-drivers**       | Dep-free descriptors for each agent CLI (`claude`, `cursor-agent`, `gemini`, `antigravity`, …) — argv shapes and capabilities, no filesystem access.                                        |
+| **@openthrottle/openthrottle-agentic-\***    | The agentic layer: `-ralph` (the loop + its codegen GraphQL documents), `-utils` (workspace paths, skill injection), `-workflow`.                                                           |
 
 ---
 
@@ -114,6 +110,6 @@ Shared infra used by the server: **Postgres** (OpenThrottle schema in `databases
 
 - **OpenThrottle schema and usage:** `databases/README.md`
 - **Run locally (OSS/Ollama embeddings):** `docs/monorepo/Ollama.md` § Embeddings for OpenThrottle
-- **Docker image strategy:** `docs/openthrottle/docker-image-build-strategy.md`
+- **Docker Compose stack:** `applications/openthrottle/README.md`
 - **Ralph and workflows:** `tools/workflows/README.md`, `AGENTS.md`
 - **MCP developer setup:** `packages/openthrottle-mcp/README.md`

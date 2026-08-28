@@ -2,7 +2,7 @@
 
 How to turn an idea into structured, executable work in **OpenThrottle (OT)** — from Cursor, Claude Code, or any MCP-capable editor or agent — using the `openthrottle-mcp` server. You author **plans** and **tasks** that land as rows in OT's database, then queue and execute them (Ralph / `workflow-ralph`) with full git traceability.
 
-> **Scope:** the mental model and the authoring loop (idea → plan → tasks → queue → commit → link). This guide does **not** re-document MCP registration mechanics — for that see [mcp-registration.md](./mcp-registration.md) and [mcp-worktrees.md](./mcp-worktrees.md). The [`ot-plans` skill](../../.agents/skills/ot-plans/SKILL.md) is the canonical tool/traceability reference; this guide aligns with it and cross-links rather than diverging.
+> **Scope:** the mental model and the authoring loop (idea → plan → tasks → queue → commit → link). This guide does **not** re-document MCP registration mechanics — for that see [mcp-registration.md](./mcp-registration.md). The [`ot-plans` skill](../../.agents/skills/ot-plans/SKILL.md) is the canonical tool/traceability reference; this guide aligns with it and cross-links rather than diverging.
 
 > **Hard rule — OT only, fail loudly.** Plans and tasks live in OpenThrottle **only**. Never write a plan or task as a Markdown file under `docs/` (or anywhere else). If `openthrottle-mcp` is unavailable, or `create_plan` / `create_task` fails, **report the error** — do not silently fall back to a `.md` file or skip. (Source of truth: [CLAUDE.md](../../CLAUDE.md), [AGENTS.md § OpenThrottle](../../AGENTS.md), and the MCP server's own instructions.)
 
@@ -75,7 +75,7 @@ Any MCP-capable client can drive OT by registering **one** server: `openthrottle
 **The full registration story is not repeated here.** For config locations, the launcher, editor parity, auth tokens, and secondary-workspace setup, read:
 
 - [mcp-registration.md](./mcp-registration.md) — the canonical, single-source-of-truth registration guide (tiers, config locations, template, editor parity, user-provided servers, smoke-test checklist).
-- [mcp-worktrees.md](./mcp-worktrees.md) — worktree-aware identity and how the launcher resolves a **live** server URL (why you can hit "fetch failed" in a worktree, and how it's avoided).
+- [mcp-registration.md § Worktrees](./mcp-registration.md#worktrees) — worktree-aware identity and how the launcher resolves a **live** server URL (why you can hit "fetch failed" in a worktree, and how it's avoided).
 
 ### The one field that trips people up: author/assignee = GitHub username
 
@@ -87,7 +87,7 @@ Before authoring anything, confirm the server is live and reachable with the **`
 
 - **`health`** → expect all checks `ok`. This proves your client reached `openthrottle-mcp` and it reached `openthrottle-server`.
 
-If `health` fails or the OT tools never registered, it's a registration/connectivity problem, not an authoring one — go back to [mcp-registration.md § Smoke-test checklist](./mcp-registration.md#smoke-test-checklist) and [mcp-worktrees.md](./mcp-worktrees.md). Per the hard rule, **do not** work around it by writing a plan to a Markdown file; fix the connection or report the failure.
+If `health` fails or the OT tools never registered, it's a registration/connectivity problem, not an authoring one — go back to [mcp-registration.md § Smoke-test checklist](./mcp-registration.md#smoke-test-checklist) and [mcp-registration.md § Worktrees](./mcp-registration.md#worktrees). Per the hard rule, **do not** work around it by writing a plan to a Markdown file; fix the connection or report the failure.
 
 ## Author plans & tasks via MCP tools
 
@@ -346,7 +346,7 @@ Or simply: `pnpm exec workflow-link-merge --plan 1a2b3c4d-0000-4000-8000-0000000
 | **Canonical tool + traceability reference**        | [`ot-plans` skill](../../.agents/skills/ot-plans/SKILL.md)                                                               |
 | **When to use which OT tool** (rules)              | [`.agents/rules/commands/openthrottle.mdc`](../../.agents/rules/commands/openthrottle.mdc)                               |
 | **Register the MCP server** (config, launcher)     | [mcp-registration.md](./mcp-registration.md)                                                                             |
-| **Worktree-aware identity / live server URL**      | [mcp-worktrees.md](./mcp-worktrees.md)                                                                                   |
+| **Worktree-aware identity / live server URL**      | [mcp-registration.md § Worktrees](./mcp-registration.md#worktrees)                                                       |
 | **First-time onboarding** (mental model, prompts)  | [first-time-onboarding.md](./first-time-onboarding.md)                                                                   |
 | **Local server + developer app**                   | [run-openthrottle-server-developer.md](./run-openthrottle-server-developer.md)                                           |
 | **MCP env, smoke checks, secondary workspace**     | [verification-environment.md](../../packages/openthrottle-mcp/docs/verification-environment.md)                          |

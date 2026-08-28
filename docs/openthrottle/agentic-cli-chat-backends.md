@@ -1,7 +1,5 @@
 # Agentic CLI chat backends
 
-> Plan-Id: a3363c74-09f5-4403-bca2-efc16ab424ed
->
 > The developer-app chat can stream from a locally-installed **agentic CLI**
 > (`cursor-agent`, `claude`, `codex`, `gemini`, `grok`, or `opencode`) as well as from local
 > OpenAI-compatible model servers. This is the user + operator guide. The
