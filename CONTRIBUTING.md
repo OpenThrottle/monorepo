@@ -72,6 +72,29 @@ mechanics, see [MONOREPO.md](./MONOREPO.md) and [docs/monorepo/](./docs/monorepo
    merged PR (`gh pr view --json mergedAt,mergeCommitSha`) or from `main`, not
    from the branch head you pushed.
 
+## Documentation
+
+Everything under [`docs/`](./docs/README.md) is reference material for the system
+as it exists today. Five rules keep it that way:
+
+1. **Describe the current state**, not a proposal and not the history of how the
+   code got here. If a sentence only makes sense to someone who watched the
+   change land, cut it.
+2. **No plans or task breakdowns in `docs/`.** Those live in OpenThrottle only,
+   created through the `openthrottle-mcp` MCP — see
+   [docs/openthrottle/authoring-plans-via-mcp.md](./docs/openthrottle/authoring-plans-via-mcp.md).
+3. **Flatten a decision record once it ships.** Keep the outcome and the
+   reasoning that still constrains the code; drop the option matrix, the
+   alternatives considered, and the deliberation.
+4. **Label a dated measurement.** A benchmark, audit count, or timing gets a
+   `Measured YYYY-MM-DD` marker and a one-line note on how to re-verify it, so a
+   reader can tell a stale number from a current one.
+5. **Every doc is reachable.** A `docs/**/*.md` file must be linked from
+   [docs/README.md](./docs/README.md), from the README of its own directory, or
+   from a hub doc that is itself indexed. `pnpm run audit:docs-index` reports
+   orphans; a doc that is deliberately unindexed goes on the script's allowlist
+   with a reason.
+
 ## Dependency licenses
 
 Dependency licenses are gated in CI so an incompatible license (copyleft such as
