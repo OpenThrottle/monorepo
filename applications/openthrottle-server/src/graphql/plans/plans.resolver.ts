@@ -844,8 +844,12 @@ export class PlansResolver {
   )
   async createPlan(
     @Args('input', { type: () => CreatePlanInput }) input: CreatePlanInput,
+    @CurrentUser('sub') actorSub?: string,
   ): Promise<PlanObject> {
-    const plan = await this.planCreationService.createPlanFromInput(input);
+    const plan = await this.planCreationService.createPlanFromInput(
+      input,
+      actorSub,
+    );
     await this.planRulesEvaluationService.enqueueEvaluation(
       plan.id,
       PLAN_RULES_TRIGGER_KINDS.PLAN_CREATED,
@@ -862,9 +866,11 @@ export class PlansResolver {
   })
   async createPlans(
     @Args('input', { type: () => CreatePlansInput }) input: CreatePlansInput,
+    @CurrentUser('sub') actorSub?: string,
   ): Promise<CreatePlansResultObject> {
     const plans = await this.planCreationService.createPlansFromInput(
       input.plans,
+      actorSub,
     );
     await Promise.all(
       plans.map((plan) =>

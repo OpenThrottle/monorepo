@@ -1549,10 +1549,11 @@ describe('PlansResolver', () => {
       };
       mockPlanCreationService.createPlanFromInput.mockResolvedValue(created);
 
-      const result = await resolver.createPlan(input);
+      const result = await resolver.createPlan(input, 'user-1');
 
       expect(mockPlanCreationService.createPlanFromInput).toHaveBeenCalledWith(
         input,
+        'user-1',
       );
       expect(result).not.toBeNull();
       expect(result?.id).toBe('new-id');
@@ -1578,10 +1579,11 @@ describe('PlansResolver', () => {
       };
       mockPlanCreationService.createPlanFromInput.mockResolvedValue(created);
 
-      const result = await resolver.createPlan(input);
+      const result = await resolver.createPlan(input, 'user-1');
 
       expect(mockPlanCreationService.createPlanFromInput).toHaveBeenCalledWith(
         input,
+        'user-1',
       );
       expect(result?.projectId).toBeNull();
     });

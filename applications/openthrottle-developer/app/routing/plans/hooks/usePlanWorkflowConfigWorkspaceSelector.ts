@@ -29,6 +29,12 @@ export interface UsePlanWorkflowConfigWorkspaceSelectorResult {
   readonly handleValueChange: (value: string) => void;
   readonly selectedCheckout:
     PlanRunConfigRepositoryFieldsFragment['checkouts'][number] | undefined;
+  /**
+   * @description A `checkoutId` is recorded but is not among the loaded repositories — the
+   * checkout has been de-registered since the plan was created. Deliberately false while
+   * `repositories` is still empty, so the deferred load does not flash a false alarm.
+   */
+  readonly selectedCheckoutMissing: boolean;
   readonly selectedValue: string;
 }
 
@@ -71,6 +77,11 @@ export const usePlanWorkflowConfigWorkspaceSelector = (
 
     return undefined;
   }, [checkoutId, repositories]);
+
+  const selectedCheckoutMissing =
+    checkoutId !== '' &&
+    repositories.length > 0 &&
+    selectedCheckout === undefined;
 
   // Handlers
   const handleValueChange = (value: string): void => {
@@ -136,6 +147,7 @@ export const usePlanWorkflowConfigWorkspaceSelector = (
   return {
     handleValueChange,
     selectedCheckout,
+    selectedCheckoutMissing,
     selectedValue,
   };
 };

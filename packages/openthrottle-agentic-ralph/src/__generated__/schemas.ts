@@ -485,6 +485,7 @@ export function CreatePlanInputSchema(): z.ZodObject<
     status: z.string().nullish(),
     summary: z.string().nullish(),
     title: z.string().min(1),
+    workspacePath: z.string().nullish(),
   });
 }
 

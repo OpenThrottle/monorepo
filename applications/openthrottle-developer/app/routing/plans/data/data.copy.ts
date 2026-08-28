@@ -236,6 +236,17 @@ export const PLAN_CONFIG_WORKTREE_COPY = {
 } as const;
 
 /**
+ * @description Supplementary copy for `02. Workspace` on the plan Configuration tab. A plan now
+ * records the workspace it was CREATED in, so the selector opens pre-filled rather than on the
+ * monorepo root — `createdInDefault` says so, and `staleCheckout` covers the case where that
+ * recorded checkout has since been de-registered.
+ */
+export const PLAN_RUN_WORKSPACE_SELECTOR_COPY = {
+  createdInDefault: `Defaults to the workspace this plan was created in. Change it here if the run belongs somewhere else.`,
+  staleCheckout: `The workspace recorded on this plan is no longer registered. Choose another one before queuing a run.`,
+} as const;
+
+/**
  * @description Column header and empty value for the worktree the queued run actually used, read
  * from `run_config_snapshot.workspace.workingDirectory`.
  */

@@ -76,6 +76,12 @@ export class CreatePlanInput {
     nullable: true,
   })
   runConfigJson?: string | null;
+
+  @Field(() => String, {
+    description: `Optional. Absolute path of the caller's workspace (typically the MCP client's cwd). Resolved SERVER-SIDE to one of the caller's own registered checkouts and recorded as the plan's default run workspace, so the Configuration tab opens pre-selected. Treated as a hint, never trusted: a path the caller does not own, an unregistered path or a relative path is ignored. Ignored entirely when runConfigJson already names a workspace, and never fails plan creation.`,
+    nullable: true,
+  })
+  workspacePath?: string | null;
 }
 
 @InputType()

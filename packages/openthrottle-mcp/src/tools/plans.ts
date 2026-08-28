@@ -14,6 +14,7 @@ import {
   UpdatePlanDocument,
 } from '../__generated__/graphql.js';
 import type {
+  CreatePlanInput,
   CreatePlanMutation,
   CreatePlansMutation,
   GetPlanQuery,
@@ -29,6 +30,7 @@ import {
 } from '../__generated__/schemas.ts';
 import type { GenericResult } from '../types/index.ts';
 import { getAuthToken } from '../auth/get-auth-token.ts';
+import { resolveWorkspacePathArgument } from '../config/workspace-path.ts';
 import { invalidArgsContent } from '../utils/errors.ts';
 import { runTool } from '../utils/tool-result.ts';
 
@@ -72,9 +74,12 @@ export const updatePlanToolParameters = UpdatePlanInputSchema();
  */
 const PLAN_TASK_STATUS_VALUES = Object.values(PlanTaskStatus).join(', ');
 
-export const createPlanToolDescription = `Create a plan in OpenThrottle. Required: title, author (e.g. GitHub username), category. Optional: description, status (one of: ${PLAN_TASK_STATUS_VALUES}; uppercase), assignee, project, projectId, summary.`;
+/** Shared tail: the workspace the plan is recorded against. Identical wording on both tools. */
+const WORKSPACE_PATH_GUIDANCE = `On stdio, the workspace the MCP server was launched in is sent automatically as workspacePath and recorded as the plan's default run workspace, so the plan opens pre-selected in its Configuration tab — you do NOT need to pass it. Pass workspacePath to name a different absolute path, or an empty string to opt out. It is only ever a hint: the server resolves it against your own registered checkouts and ignores anything else, and it never overrides a workspace already named in runConfigJson.`;
 
-export const createPlansToolDescription = `Create multiple plans in OpenThrottle atomically in one call. Pass plans (array of objects, each with title, author (e.g. GitHub username), and category; optional description, status (one of: ${PLAN_TASK_STATUS_VALUES}; uppercase), assignee, project, projectId, summary, runConfigJson). Either all plans are created or none (a single invalid input or DB failure rolls back the whole batch). Returns the created plans and totalCount.`;
+export const createPlanToolDescription = `Create a plan in OpenThrottle. Required: title, author (e.g. GitHub username), category. Optional: description, status (one of: ${PLAN_TASK_STATUS_VALUES}; uppercase), assignee, project, projectId, summary, runConfigJson, workspacePath. ${WORKSPACE_PATH_GUIDANCE}`;
+
+export const createPlansToolDescription = `Create multiple plans in OpenThrottle atomically in one call. Pass plans (array of objects, each with title, author (e.g. GitHub username), and category; optional description, status (one of: ${PLAN_TASK_STATUS_VALUES}; uppercase), assignee, project, projectId, summary, runConfigJson, workspacePath). Either all plans are created or none (a single invalid input or DB failure rolls back the whole batch). Returns the created plans and totalCount. ${WORKSPACE_PATH_GUIDANCE}`;
 
 export const deletePlanToolDescription = `Delete a plan by id. Returns whether a row was deleted.`;
 
@@ -116,6 +121,18 @@ export async function listPlansByStatusToolHandler(
   });
 }
 
+/**
+ * @description Stamps the create input with the workspace the server was launched in, unless the
+ * caller named one (or opted out with an empty string). Nothing is sent on the HTTP surface, where
+ * no workspace was ever captured.
+ */
+const withWorkspacePath = (input: CreatePlanInput): CreatePlanInput => {
+  const { workspacePath, ...rest } = input;
+  const resolved = resolveWorkspacePathArgument(workspacePath);
+
+  return resolved === undefined ? rest : { ...rest, workspacePath: resolved };
+};
+
 export async function createPlanToolHandler(
   args: z.infer<typeof createPlanToolParameters>,
 ): Promise<CreatePlanResult> {
@@ -129,7 +146,7 @@ export async function createPlanToolHandler(
     async () => {
       const token = getAuthToken();
       const result = await executeGraphqlWithAuth(token, CreatePlanDocument, {
-        input: parsed.data,
+        input: withWorkspacePath(parsed.data),
       });
 
       const plan = result?.createPlan;
@@ -155,7 +172,7 @@ export async function createPlansToolHandler(
   }>('create_plans', async () => {
     const token = getAuthToken();
     const result = await executeGraphqlWithAuth(token, CreatePlansDocument, {
-      input: parsed.data,
+      input: { plans: parsed.data.plans.map(withWorkspacePath) },
     });
 
     const createResult = result?.createPlans;
