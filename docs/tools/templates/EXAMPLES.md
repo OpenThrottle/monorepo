@@ -121,7 +121,7 @@ NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:nestjs \
 
 ## React Native
 
-There is no `@tools/generators:react-native` entry in this workspace (`tools/generators/generators.json`). See [react-native.md](./react-native.md).
+There is no `@tools/generators:react-native` entry in this workspace (`tools/generators/generators.json`). Use **react** for shared UI packages and **react-router** for apps under `applications/`.
 
 ## Package Generator Examples
 

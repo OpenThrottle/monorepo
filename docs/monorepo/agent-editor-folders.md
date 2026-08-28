@@ -5,6 +5,8 @@ Single entry point for **where agent- and editor-specific config lives** in the 
 - **Skills** are managed by the **`ot-skill-sync`** skill — see [`skills/ot-skill-sync/SKILL.md`](../../skills/ot-skill-sync/SKILL.md) (mechanism) and [docs/Skills.md](../Skills.md) (adoption policy + installed set).
 - **Rules / personas / prompts** use `.agents/` as their source of truth, with `.cursor/rules/` symlink views for the IDE.
 
+> **SSOT in one paragraph.** Rule **bodies** live under [`.agents/rules/`](../../.agents/rules/) only — Cursor loads them through [`.cursor/rules/`](../../.cursor/rules/) **symlinks**, so never edit that view. Skill **bodies** are authored under [`skills/`](../../skills/) and generated into `.agents/skills/`; `.claude/skills/` and `.gemini/skills/` are the per-agent fan-outs. Cursor 2.4+ reads `.agents/skills/` directly — there is no `.cursor/skills` fan-out. Edit `skills/` and `.agents/rules/` in git PRs and re-run `sync.sh`; never hand-edit a generated skill directory.
+
 **Related entry points (link, don't fork):**
 
 | Document                                                             | Scope                                                                              |
@@ -14,7 +16,7 @@ Single entry point for **where agent- and editor-specific config lives** in the 
 | [docs/Skills.md](../Skills.md)                                       | Skill adoption policy, installed set, skip-list                                    |
 | [skills/ot-skill-sync/SKILL.md](../../skills/ot-skill-sync/SKILL.md) | The ot-skill-sync architecture + `sync.sh` / `--check` commands                    |
 | [.agents/rules/README.md](../../.agents/rules/README.md)             | Rules layout, agent behavior (OT-only plans, generators first)                     |
-| [AGENT_INPUTS.md](../tools/templates/AGENT_INPUTS.md)                | What agents should load: rules list, example commands, discoverability             |
+| [AGENT_USAGE.md](../tools/templates/AGENT_USAGE.md)                  | What agents should load: rules list, generator commands, discoverability           |
 
 ---
 
@@ -137,7 +139,7 @@ Generated skill/rule links are symlinks. On Windows, enable symlink support (`gi
 
 ---
 
-## 6. How this doc relates to AGENTS.md and AGENT_INPUTS.md
+## 6. How this doc relates to AGENTS.md and AGENT_USAGE.md
 
 | Document                                                                 | Owns                                                                 | Does not own                                  |
 | ------------------------------------------------------------------------ | -------------------------------------------------------------------- | --------------------------------------------- |
@@ -145,5 +147,6 @@ Generated skill/rule links are symlinks. On Windows, enable symlink support (`gi
 | **[skills/ot-skill-sync/SKILL.md](../../skills/ot-skill-sync/SKILL.md)** | The ot-skill-sync architecture, `sync.sh`/`--check`, ownership rules | Rules/personas/prompts layout                 |
 | **[docs/Skills.md](../Skills.md)**                                       | Skill adoption policy, installed set, skip-list                      | Physical folder tree                          |
 | **[AGENTS.md](../../AGENTS.md)**                                         | Nx guidelines, skills index, workflow-ralph CLI, pointers to rules   | Per-editor folder inventory                   |
+| **[AGENT_USAGE.md](../tools/templates/AGENT_USAGE.md)**                  | What agents load: the rule set, generator commands, discoverability  | Physical folder tree                          |
 
-When onboarding agents: point them at **AGENT_INPUTS.md** for _what to load_ and **this doc** for _where files live_. When changing behavior: author skills in `skills/` (or install external ones with the CLI) and edit rules in `.agents/rules/`, never the generated trees.
+When onboarding agents: point them at **[AGENT_USAGE.md](../tools/templates/AGENT_USAGE.md)** for _what to load_ and **this doc** for _where files live_. When changing behavior: author skills in `skills/` (or install external ones with the CLI) and edit rules in `.agents/rules/`, never the generated trees.

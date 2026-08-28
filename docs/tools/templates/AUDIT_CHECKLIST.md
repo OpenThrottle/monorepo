@@ -6,7 +6,7 @@ This checklist helps auditors and agents **flag** components and artifacts that 
 
 - **[AUDIT_SCOPE.md](./AUDIT_SCOPE.md)** — Which apps, packages, and artifact types are in scope; sample-first vs full audit.
 - **[RULES_TO_GENERATORS_MAP.md](./RULES_TO_GENERATORS_MAP.md)** — Which rules apply to each generator; use §2 for per-artifact checks.
-- **[AGENT_INPUTS.md](./AGENT_INPUTS.md)** — What to provide to agents (rules, commands, discoverability).
+- **[AGENT_USAGE.md](./AGENT_USAGE.md)** — What to provide to agents (rules to load, generator commands, discoverability).
 
 **Optional automation:** A lightweight script can list candidate files for review. See [§ Script: flag candidates](#script-flag-candidates) and `scripts/audit-templates-compliance.ts`.
 
@@ -62,7 +62,7 @@ Use the row that matches the artifact type. If the artifact could have been gene
 
 ### 3.3 React Native (component, route)
 
-There is **no** `react-native` entry in `tools/generators/generators.json`. If React Native code exists in the future, align with **react** / **react-router** rules and [react-native.md](./react-native.md) (status: no generator registered).
+There is **no** `react-native` entry in `tools/generators/generators.json`. If React Native code exists in the future, align with the **react** / **react-router** rules.
 
 ### 3.4 NestJS (graphql-service, simple-service, module)
 
@@ -118,7 +118,6 @@ Use the checklist above to interpret and act on flagged files.
 | ---------------------- | ---------------------------------------------------------------------------------------------------- |
 | **Scope**              | [AUDIT_SCOPE.md](./AUDIT_SCOPE.md) — apps, packages, artifact types; sample-first.                   |
 | **Rules ↔ generators** | [RULES_TO_GENERATORS_MAP.md](./RULES_TO_GENERATORS_MAP.md) §2 — per-generator expectations.          |
-| **Agent inputs**       | [AGENT_INPUTS.md](./AGENT_INPUTS.md) — rules to load, example commands, discoverability.             |
 | **Generator workflow** | [AGENT_USAGE.md](./AGENT_USAGE.md) — discover → describe → list → execute; NX_ISOLATE_PLUGINS=false. |
 | **Flag script**        | `scripts/audit-templates-compliance.ts` — list candidates for alignment.                             |
 
