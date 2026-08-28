@@ -112,7 +112,7 @@ export const getPlanStatusBadgeColor = (
       color = `amber`;
       break;
     case 'SKIPPED':
-      color = `red`;
+      color = `slate`;
 
       break;
   }

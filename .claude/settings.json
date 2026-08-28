@@ -50,16 +50,18 @@
   "permissions": {
     "additionalDirectories": [],
     "allow": [
-      "mcp__openthrottle-mcp__*",
       "Bash(gh issue *)",
       "Bash(gh pr list *)",
       "Bash(gh pr view *)",
+      "Bash(gh repo list *)",
+      "Bash(gh search issues *)",
       "Bash(git branch *)",
       "Bash(git diff *)",
       "Bash(git log *)",
       "Bash(git show *)",
       "Bash(git status *)",
-      "Bash(pnpm nx *)"
+      "Bash(pnpm nx *)",
+      "mcp__openthrottle-mcp__*"
     ],
     "ask": [],
     "deny": []

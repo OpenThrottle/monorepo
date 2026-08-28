@@ -160,7 +160,7 @@ export const PlanDetailRoute = (
             <PlanEditorActions
               editors={loaderData.enabledEditors}
               planId={plan.id}
-              workingDirectory={workingDirectory}
+              workingDirectory={editorWorkingDirectory}
             />
             {showConfiguration ? (
               <TabsTrigger

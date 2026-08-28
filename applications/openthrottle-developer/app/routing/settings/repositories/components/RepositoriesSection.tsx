@@ -130,7 +130,14 @@ export const RepositoriesSection = (
         ) : null}
 
         {isUnpopulated ? (
-          <GlobalFeatureOnboarding content={REPOSITORIES_ONBOARDING} />
+          <>
+            <AddFolderDialog
+              actionError={actionError}
+              discoveredFolders={discoveredFolders}
+              pickerCapabilities={pickerCapabilities}
+            />
+            <GlobalFeatureOnboarding content={REPOSITORIES_ONBOARDING} />
+          </>
         ) : (
           <div className="flex flex-col gap-4">
             <RepositoriesToolbar
@@ -149,14 +156,14 @@ export const RepositoriesSection = (
                 />
               </>
             </RepositoriesToolbar>
-            <WorktreeDiscoveryNotice
-              discoveredWorktrees={discoveredWorktrees}
-            />
             <RepositoriesTable
               autoExpandedIds={autoExpandedIds}
               driftByCheckoutId={driftByCheckoutId}
               isUnpopulated={isUnpopulated}
               rows={rows}
+            />
+            <WorktreeDiscoveryNotice
+              discoveredWorktrees={discoveredWorktrees}
             />
             <OpenThrottlePagination
               className="mt-8"

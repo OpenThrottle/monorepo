@@ -1,7 +1,12 @@
 import * as React from 'react';
 import { GlobalPopover } from '@openthrottle/react-router-ui-global';
 import type { GlobalPopoverAction } from '@openthrottle/react-router-ui-global';
-import { PanelRightIcon, PlayCircleIcon, StopCircle } from 'lucide-react';
+import {
+  CodeXmlIcon,
+  PanelRightIcon,
+  StopCircle,
+  TargetIcon,
+} from 'lucide-react';
 import { useNavigation } from 'react-router';
 import type { PlanCardFragment } from '~/__generated__/graphql';
 import { PLANS_ROW_ACTIONS_COPY } from '~/routing/plans/data/data.copy';
@@ -26,7 +31,7 @@ export const PlansTableRowActions = (
   const navigation = useNavigation();
 
   // Setup
-  const isQueuing =
+  const _isQueuing =
     navigation.state === 'submitting' &&
     navigation.formAction?.endsWith(planAction) === true &&
     navigation.formData?.get('intent') === 'runPlan';
@@ -45,17 +50,47 @@ export const PlansTableRowActions = (
       to: `/plans/${planId}`,
     },
     {
-      action: planAction,
-      disabled: isQueuing,
-      fields: { intent: 'runPlan' },
-      icon: <PlayCircleIcon aria-hidden={true} className="size-3.5 shrink-0" />,
-      id: 'runPlan',
-      kind: 'submit',
-      label: PLANS_ROW_ACTIONS_COPY.queue,
-      navigate: false,
-      pending: isQueuing,
-      pendingLabel: PLANS_ROW_ACTIONS_COPY.queuePendingLabel,
+      icon: <CodeXmlIcon aria-hidden={true} className="size-4" />,
+      id: 'openInClaude',
+      kind: 'link',
+      label: 'Claude',
+      separatorBefore: true,
+      to: `/plans/${planId}`,
     },
+    {
+      icon: <CodeXmlIcon aria-hidden={true} className="size-4" />,
+      id: 'openInCursor',
+      kind: 'link',
+      label: 'Cursor',
+      to: `/plans/${planId}`,
+    },
+    {
+      icon: <CodeXmlIcon aria-hidden={true} className="size-4" />,
+      id: 'openInVSCode',
+      kind: 'link',
+      label: 'VSCode',
+      to: `/plans/${planId}`,
+    },
+    {
+      icon: <TargetIcon aria-hidden={true} className="size-4" />,
+      id: 'openInBullMQ',
+      kind: 'link',
+      label: 'BullMQ',
+      separatorBefore: true,
+      to: `/plans/${planId}`,
+    },
+    // {
+    //   action: planAction,
+    //   disabled: isQueuing,
+    //   fields: { intent: 'runPlan' },
+    //   icon: <PlayCircleIcon aria-hidden={true} className="size-3.5 shrink-0" />,
+    //   id: 'runPlan',
+    //   kind: 'submit',
+    //   label: PLANS_ROW_ACTIONS_COPY.queue,
+    //   navigate: false,
+    //   pending: isQueuing,
+    //   pendingLabel: PLANS_ROW_ACTIONS_COPY.queuePendingLabel,
+    // },
   ];
 
   if (showKill) {

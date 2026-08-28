@@ -193,7 +193,7 @@ describe('buildPlansTableColumns', () => {
     );
   });
 
-  test('actions cell opens a menu with Queue that posts runPlan', async () => {
+  test('actions cell opens a menu with View plan and the open-in links, without Queue', async () => {
     const plan = buildPlan({ status: 'PENDING', title: 'Queueable Plan' });
     const rendered = renderRoutesStub(<Harness plan={plan} />);
     const user = userEvent.setup();
@@ -205,8 +205,17 @@ describe('buildPlansTableColumns', () => {
     );
 
     expect(
-      rendered.getByRole('menuitem', { name: PLANS_ROW_ACTIONS_COPY.queue }),
+      rendered.getByRole('menuitem', { name: PLANS_ROW_ACTIONS_COPY.view }),
     ).toBeInTheDocument();
+    for (const label of ['Claude', 'Cursor', 'VSCode', 'BullMQ']) {
+      expect(
+        rendered.getByRole('menuitem', { name: label }),
+      ).toBeInTheDocument();
+    }
+    // The Queue action is parked while runs are launched from plan details.
+    expect(
+      rendered.queryByRole('menuitem', { name: PLANS_ROW_ACTIONS_COPY.queue }),
+    ).toBeNull();
   });
 
   test('actions menu shows Kill only when the plan is cancelable', async () => {
