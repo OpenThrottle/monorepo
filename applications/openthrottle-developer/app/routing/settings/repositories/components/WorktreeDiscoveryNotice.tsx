@@ -94,7 +94,7 @@ export const WorktreeDiscoveryNotice = (
 
       {warnings.length > 0 ? (
         <div role="alert">
-          <p className="text-xs font-medium">
+          <p className="mb-2 text-xs font-medium">
             {WORKTREE_DISCOVERY_COPY.warningsTitle}
           </p>
           <ul className="mt-1 list-inside list-disc space-y-1">

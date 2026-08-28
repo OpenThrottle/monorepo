@@ -37,6 +37,7 @@ import {
 } from '~/routing/plans/utils/utils.plans';
 import { useTaskOutputStream } from '~/routing/plans/hooks/useTaskOutputStream';
 import type { Route } from '@/app/routes/+types/plans.$planId.tasks.$taskId._index';
+import { PlanTagChipData } from '~/routing/plans/components/PlanTagChips';
 
 export interface TaskDetailRouteProps {
   readonly loaderData: Route.ComponentProps['loaderData'];
@@ -54,10 +55,15 @@ export const TaskDetailRoute = (
   const tagFetcher = useFetcher();
 
   // Setup
+  const showArtifacts = false;
+  const showHooks = false;
+  const showToolbar = false;
+
   const effectivePlanId = task.planId ?? '';
   const isPromoted =
     task.status === 'SKIPPED' &&
-    task.tags.some((tag) => tag.tag === 'promoted');
+    task.tags.some((tag: PlanTagChipData) => tag.tag === 'promoted');
+
   // Gate task mutations while the owning plan's run is active (QUEUED /
   // IN_PROGRESS) so Mark Complete / Promote can't fire under a live worker.
   const planIsRunning = getPlanIsRunning(plan?.status);
@@ -85,27 +91,29 @@ export const TaskDetailRoute = (
     <GlobalScreen className="-max-w-5xl flex h-full w-full flex-col gap-4 p-4 md:gap-8 md:p-8 lg:gap-12 lg:p-12">
       <TaskDetailRouteHeader status={task.status ?? ''} title={task.title} />
 
-      <PlanTaskToolbar
-        className="bg-card border-card-border rounded-lg border p-4"
-        isPromoted={isPromoted}
-        onAddTag={(tag) =>
-          tagFetcher.submit({ intent: 'addTaskTag', tag }, { method: 'post' })
-        }
-        onRemoveTag={(tag) =>
-          tagFetcher.submit(
-            { intent: 'removeTaskTag', tag },
-            { method: 'post' },
-          )
-        }
-        planId={effectivePlanId}
-        planIsRunning={planIsRunning}
-        planIsTerminal={planIsTerminal}
-        tagVocabulary={tagVocabulary}
-        tags={task.tags}
-        tagsPending={tagFetcher.state !== 'idle'}
-        taskId={task.id}
-        taskStatus={task.status}
-      />
+      {showToolbar ? (
+        <PlanTaskToolbar
+          className="bg-card border-card-border rounded-lg border p-4"
+          isPromoted={isPromoted}
+          onAddTag={(tag) =>
+            tagFetcher.submit({ intent: 'addTaskTag', tag }, { method: 'post' })
+          }
+          onRemoveTag={(tag) =>
+            tagFetcher.submit(
+              { intent: 'removeTaskTag', tag },
+              { method: 'post' },
+            )
+          }
+          planId={effectivePlanId}
+          planIsRunning={planIsRunning}
+          planIsTerminal={planIsTerminal}
+          tagVocabulary={tagVocabulary}
+          tags={task.tags}
+          tagsPending={tagFetcher.state !== 'idle'}
+          taskId={task.id}
+          taskStatus={task.status}
+        />
+      ) : null}
 
       <OpenThrottleTabs
         urlSync={{
@@ -134,24 +142,29 @@ export const TaskDetailRoute = (
             <TerminalSquareIcon />
             Output
           </TabsTrigger>
-          <TabsTrigger
-            className="flex-0 cursor-pointer"
-            id="task-tab-artifacts"
-            value="artifacts"
-          >
-            <PackageIcon />
-            Artifacts
-          </TabsTrigger>
+
+          {showArtifacts ? (
+            <TabsTrigger
+              className="flex-0 cursor-pointer"
+              id="task-tab-artifacts"
+              value="artifacts"
+            >
+              <PackageIcon />
+              Artifacts
+            </TabsTrigger>
+          ) : null}
 
           <div className="flex-1" />
-          <TabsTrigger
-            className="flex-0 cursor-pointer"
-            id="task-tab-hooks"
-            value="hooks"
-          >
-            <WebhookIcon />
-            Hooks
-          </TabsTrigger>
+          {showHooks ? (
+            <TabsTrigger
+              className="flex-0 cursor-pointer"
+              id="task-tab-hooks"
+              value="hooks"
+            >
+              <WebhookIcon />
+              Hooks
+            </TabsTrigger>
+          ) : null}
         </TabsList>
 
         <TabsContent value="details">
@@ -160,19 +173,23 @@ export const TaskDetailRoute = (
 
         <TaskTabOutput chunks={taskOutputChunks} planId={effectivePlanId} />
 
-        <TabsContent value="artifacts">
-          <LinkedArtifactsPanel artifacts={linkedArtifacts} />
-        </TabsContent>
+        {showArtifacts ? (
+          <TabsContent value="artifacts">
+            <LinkedArtifactsPanel artifacts={linkedArtifacts} />
+          </TabsContent>
+        ) : null}
 
-        <TabsContent value="hooks">
-          <PlanLifecycleHooksSection
-            afterHooks={task.afterHooks}
-            anchorTaskId={task.id}
-            beforeHooks={task.beforeHooks}
-            heading={PLAN_LIFECYCLE_HOOKS_COPY.taskSectionTitle}
-            planId={effectivePlanId}
-          />
-        </TabsContent>
+        {showHooks ? (
+          <TabsContent value="hooks">
+            <PlanLifecycleHooksSection
+              afterHooks={task.afterHooks}
+              anchorTaskId={task.id}
+              beforeHooks={task.beforeHooks}
+              heading={PLAN_LIFECYCLE_HOOKS_COPY.taskSectionTitle}
+              planId={effectivePlanId}
+            />
+          </TabsContent>
+        ) : null}
       </OpenThrottleTabs>
     </GlobalScreen>
   );
