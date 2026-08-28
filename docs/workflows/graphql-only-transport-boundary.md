@@ -1,11 +1,9 @@
 # GraphQL-only transport boundary (and the single health-check exception)
 
-> **Status:** Target-architecture contract for Phase 2 of plan
-> `a1c55a0a-735c-4f60-965a-7f122acbdc8f`, task `f4bf218a-eaec-4073-8c4d-c3d4ccec09a7`.
-> Specifies that **every** workflow request goes through GraphQL
-> (`executeGraphqlV2` / `executeWorkflowGraphqlV2`) with **exactly one documented exception**: a
-> health check used as a read-before-write preflight. Builds on the canonical decision table in
-> [`tools/workflows/README.md`](../../tools/workflows/README.md).
+> **Every** workflow request goes through GraphQL (`executeGraphqlV2` / `executeWorkflowGraphqlV2`)
+> with **exactly one documented exception**: a health check used as a read-before-write preflight.
+> Builds on the canonical decision table in
+> [`tools/workflows/README.md`](../../tools/workflows/README.md#which-path-runs-when-canonical-decision-table).
 
 ## The rule (one sentence)
 
@@ -15,9 +13,9 @@ workflow wrapper `executeWorkflowGraphqlV2` (`@openthrottle/openthrottle-agentic
 **codegen `TypedDocumentNode`** — never ad-hoc HTTP and never a direct `pg.Client`. The **only**
 exception is the `serverHealth` read-before-write preflight described below.
 
-This is already true for **Surface #3 (orchestrator)** today; this doc makes it the contract that
-**Surfaces #1 (Local CLI)** and **#2 (spawn)** must converge to as `@tools/workflows` is folded under
-the Nest/GraphQL abstraction.
+This holds on all three surfaces — the orchestrator (#3), the local CLI (#1) and spawn (#2). The
+CLI/spawn lineage reaches it through a transport selector rather than by having its Postgres code
+deleted; see [Transport selection](#transport-selection-and-the-postgres-direct-rollback).
 
 ## Why GraphQL-only
 
@@ -27,12 +25,12 @@ the Nest/GraphQL abstraction.
   secure, rotate, or leak into spawned child env.
 - **Multi-project / cross-org.** A single OpenThrottle install must run workflows across many repos
   (work + personal). GraphQL is the network boundary that lets the server enforce identity and
-  project scoping; direct Postgres access bypasses that boundary (see plan task `2bdf0145`).
+  project scoping; direct Postgres access bypasses that boundary.
 - **Schema-checked, versioned contract.** Codegen documents are validated against the server schema;
   the `.entity` deprecate-don't-break policy keeps them backward compatible. `pg` queries embed SQL
   and column names with no such guarantee.
 - **Observability + DI.** GraphQL calls flow through the same executor that can be wrapped for
-  logging, retries, and per-hook BullMQ child jobs (task `c8896177`). `pg.Client` calls are opaque.
+  logging, retries, and per-hook BullMQ child jobs. `pg.Client` calls are opaque.
 
 ## The contract surface
 
@@ -52,8 +50,7 @@ imports `pg`.
 All operations below already exist as codegen documents in
 `packages/openthrottle-agentic-ralph/src/graphql/ralph/{queries,mutations,fragments}.graphql` and are
 generated into `src/__generated__/graphql.js` as `*Document`. **No new documents are required for the
-core Ralph loop**; the gaps are the Postgres-direct paths that must be _re-pointed_ at these existing
-documents (next section).
+core Ralph loop.**
 
 | Concern (Ralph step)                          | GraphQL operation                                          | Generated document                          | Used by orchestrator today                  | Codegen status      |
 | --------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------- | ------------------------------------------- | ------------------- |
@@ -69,8 +66,8 @@ documents (next section).
 | Plan summary / task summary updates           | `mutation updatePlan` / `updateTask`                       | `UpdatePlanDocument` / `UpdateTaskDocument` | n/a to loop                                 | **exists**          |
 | Enqueue plan run (trigger)                    | `mutation enqueuePlanRun` / `enqueuePlanRalphOrchestrator` | server-side schema                          | server resolvers                            | **exists** (server) |
 
-> **Finding:** the codegen documents are complete for the GraphQL-only loop. Phase 2 work is _not_
-> "add documents" — it is "delete the `pg` lineage and call the documents that already exist."
+> The codegen documents cover the whole GraphQL-only loop. A new plan/task concern needs a new
+> document here, not a new transport.
 
 ## The single health-check exception
 
@@ -96,53 +93,41 @@ strict "don't read just to check liveness, just do the write" posture.
 There is **no other** sanctioned bypass. Any future "is the service up?" need must reuse
 `serverHealth`, not introduce a second non-GraphQL probe.
 
-## Postgres-direct access paths to migrate (or flag) to GraphQL
+## Transport selection and the `postgres-direct` rollback
 
-These are the remaining non-GraphQL paths. Each is a Phase 2 migration item with a 1:1 GraphQL
-replacement that already exists. Until migrated, they are **flagged**: they violate the GraphQL-only
-rule and live only in the `@tools/workflows` (Surfaces #1/#2) lineage.
+The CLI/spawn lineage keeps a **Postgres-direct implementation behind a switch** rather than having
+deleted it. Both implementations exist side by side and the caller picks one:
 
-### `tools/workflows/src/utils/openthrottle-ralph.ts` (`pg.Client`)
+| file                                              | role                                                                            |
+| ------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `tools/workflows/src/utils/workflow-transport.ts` | `resolveWorkflowRalphTransportFromEnv` — reads `WORKFLOW_RALPH_TRANSPORT`       |
+| `tools/workflows/src/utils/openthrottle-ralph.ts` | the public client; dispatches each call to one of the two implementations below |
+| `.../openthrottle-ralph-graphql.ts`               | `*Graphql` functions over codegen documents — **the default**                   |
+| `.../openthrottle-ralph-postgres.ts`              | `*Postgres` functions over `pg.Client` — **rollback only**                      |
 
-| Postgres-direct function                                          | Replace with GraphQL document                                          | Notes                                                             |
-| ----------------------------------------------------------------- | ---------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| `ensureDatabaseReachableOrExit` / `ensureOpenThrottleReachable`   | `GetServerHealthDocument` (the exception)                              | TCP `SELECT 1` → `serverHealth` preflight. Delete `pg` connect.   |
-| `getPlanById`                                                     | `GetPlanDocument`                                                      | Same `Plan` fragment fields.                                      |
-| `getTaskById`                                                     | `GetTaskDocument`                                                      |                                                                   |
-| `getTasksByPlanId`                                                | `GetTasksByPlanIdDocument`                                             |                                                                   |
-| `listPlansByStatus`                                               | `ListPlansByStatusDocument`                                            | Document exists in queries.                                       |
-| `promotePlanToInProgressIfNeeded`                                 | `UpdatePlanDocument` (`status: IN_PROGRESS`)                           | Orchestrator already implements this via GraphQL.                 |
-| `updatePlanStatus`                                                | `UpdatePlanDocument`                                                   |                                                                   |
-| `updateTaskStatus`                                                | `UpdateTaskDocument`                                                   |                                                                   |
-| `appendPlanOutput`                                                | `AppendPlanOutputDocument`                                             |                                                                   |
-| `insertCommitLink`                                                | `LinkCommitDocument`                                                   | Already GraphQL via `workflow-link-merge`; CLI insert is the dup. |
-| `listProjects` / `ensureProjectForNxName` / `updatePlanProjectId` | `GetProjectsDocument` / `CreateProjectDocument` / `UpdatePlanDocument` | Project autocompletion (multi-project, task `2bdf0145`).          |
+- **Default is `graphql`.** Anything other than `postgres-direct` / `postgres` resolves to `graphql`,
+  so the GraphQL path is what runs unless someone deliberately opts out.
+- **`WORKFLOW_RALPH_TRANSPORT=postgres-direct` is an operational escape hatch**, not a supported mode.
+  It exists so a broken GraphQL deploy cannot block a run. Anything relying on it — multi-project
+  scoping, server-side auth, schema-checked documents — is bypassed while it is set, so treat a run
+  under it as unscoped and unaudited, and unset it as soon as the server is healthy.
+- **New code must not add a Postgres path.** Add the codegen document and call it through
+  `executeWorkflowGraphqlV2`. The paired `*Postgres` implementation is legacy surface area kept alive
+  only for the rollback switch; growing it re-opens the second credential path this rule exists to
+  close.
 
-### `tools/workflows/src/utils/child-job.ts`
+`pg` therefore still appears in `tools/workflows/package.json`, and in `src/doc-ingestion/*` — the
+docs-ingestion pipeline is not plan/task I/O and is out of this rule's scope.
 
-| Postgres-direct path                                              | Replace with                                                           | Notes                                                              |
-| ----------------------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| `getPostgresConfig()` plan lookup + `ensureOpenThrottleReachable` | `GetPlanDocument` + `GetServerHealthDocument`                          | Pre-spawn validation should be a GraphQL read, not a `pg` connect. |
-| `buildWorkflowRalphSpawnEnv` injecting `POSTGRES_*` into child    | inject `OPENTHROTTLE_WORKFLOWS_*` (GraphQL URL + token) into child env | Eliminates the second credential path entirely.                    |
-
-### `tools/workflows/src/bin/ralph.ts`
-
-| Postgres-direct path                                                        | Replace with                                                     | Notes                                                               |
-| --------------------------------------------------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------- |
-| `getOpenThrottleConfigOrExit()` + `ensureDatabaseReachableOrExit()` startup | `executeWorkflowGraphqlV2(GetServerHealthDocument, …)` preflight | Same parity the orchestrator already has; removes startup `pg` use. |
-
-> **Net of the migration:** delete the `pg` dependency from the workflow lineage. After it, the
-> `serverHealth` preflight is the _only_ read-before-write call, and it is itself a GraphQL query —
-> satisfying "GraphQL-only except one health check."
-
-## Acceptance checks for "GraphQL-only" (per migration stage)
+## Checks that keep the rule true
 
 - No package in `packages/openthrottle-*workflow*` / `packages/openthrottle-agentic-*` imports `pg`.
-- `@tools/workflows` no longer imports `getPostgresConfig` / constructs `pg.Client` (or is removed).
+  (`@tools/workflows` is the one exception, and only in the two files named above plus doc-ingestion.)
 - Every plan/task read/write traces to a generated `*Document` called via `executeGraphqlV2` /
-  `executeWorkflowGraphqlV2`.
-- The only liveness probe in the codebase's workflow paths is `GetServerHealthDocument`.
-- Child-spawn env carries GraphQL auth (`OPENTHROTTLE_WORKFLOWS_*`), not `POSTGRES_*`.
+  `executeWorkflowGraphqlV2` — or, under the rollback flag only, to its paired `*Postgres` twin.
+- The only liveness probe in the workflow paths is `GetServerHealthDocument`.
+- Child-spawn env carries GraphQL auth (`OPENTHROTTLE_WORKFLOWS_*`); `POSTGRES_*` reaches a child only
+  when the rollback flag is deliberately set.
 
 ## Cross-links
 
@@ -153,6 +138,4 @@ rule and live only in the `@tools/workflows` (Surfaces #1/#2) lineage.
   (`@Public()`), object: `server-health.object.ts`.
 - Codegen documents: `packages/openthrottle-agentic-ralph/src/graphql/ralph/*.graphql` →
   `src/__generated__/graphql.js`.
-- Parent plan: `a1c55a0a-735c-4f60-965a-7f122acbdc8f`; this task: `f4bf218a-eaec-4073-8c4d-c3d4ccec09a7`.
-- Migration spin-out: task `978a661f` (creates the `@tools/workflows` → `nestjs-agentic-workflow`
-  cutover plan); multi-project design: task `2bdf0145`.
+- Rollback flag: [`tools/workflows/AGENTS.md`](../../tools/workflows/AGENTS.md) § environment.

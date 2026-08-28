@@ -3,22 +3,22 @@
 The **variant** of the [component primitive shape](./component-primitive-shape.md)
 that applies to `packages/react-router-shadcn`. The base standard scopes this
 package **out** (as vendored primitives); this document is the separate standard
-it is instead held to, tracked in OT plan
-`Bring react-router-shadcn into the component-shape standard` (`01b63487`).
+it is instead held to.
 
 > **Why a variant at all?** The base template (single `export const Foo` +
 > single `export interface FooProps` + the six markers) assumes one authored
-> component per file. shadcn primitives are structurally different: measured on
-> disk (2026-07-31) the package is **153 component files, 66 `React.forwardRef`,
-> 122 multi-export** (compound families such as a `Card` with its `CardHeader` /
+> component per file. shadcn primitives are structurally different:
+> **measured 2026-07-31** on disk the package is **153 component files, 66
+> `React.forwardRef`, 122 multi-export** (compound families such as a `Card` with its `CardHeader` /
 > `CardTitle` / `CardContent` / `CardFooter` parts), **9 `cva`**. A compound cva
 > primitive can't honor "one component per file" or a single `FooProps` — so we
 > keep the parts of the base shape that _do_ apply and define precise rules for
-> the parts that don't.
+> the parts that don't. **Re-count before revisiting the variant's existence** —
+> the justification rests on that distribution, not on the absolute totals.
 
-## Owner decisions (the human gate — resolved 2026-07-31)
+## The three calls that define the variant
 
-This variant was defined under a human gate. The three gated calls:
+Resolved 2026-07-31; change them only with the same deliberation:
 
 1. **Export/typing style → Authored (Style A).** Standardize on
    `React.forwardRef` + a **hand-written, exported `export interface *Props`** +
@@ -359,8 +359,5 @@ those are out of scope. Prefer fixing the source shape over an opt-out.
 
 ## Related
 
-- Base standard: [component-primitive-shape.md](./component-primitive-shape.md)
-  (OT `0f0528ff`).
-- This variant's plan: OT `01b63487` — tasks 2 (extend enforcers) → 3 (pilot
-  Avatar/Badge/Blockquote) → 4 (bulldoze compound/forwardRef families) → 5 (flip
-  enforcement ON + document ownership/re-sync).
+- Base standard: [component-primitive-shape.md](./component-primitive-shape.md).
+- Enforcement: `scripts/audit-component-shape.ts` (`pnpm run audit:component-shape:shadcn`).

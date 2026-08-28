@@ -1,11 +1,8 @@
 # Dependency graph snapshots
 
-This folder is populated by CI.
+**Empty by design.** The scheduled workflow that would commit snapshots here
+(`.github/workflows/dependency-graph-scheduled.yml`) is disabled — each committed snapshot grows the
+repo and raises clone cost for every other workflow.
 
-- The scheduled workflow (`.github/workflows/dependency-graph-scheduled.yml`) commits:
-  - `dependency-graph-latest.html`
-  - `dependency-graph-YYYYMMDD.html`
-  - `static-latest/`
-  - `static-YYYYMMDD/`
-
-To view the graph locally, open `dependency-graph-latest.html` in your browser.
+To generate a graph, see
+[docs/monorepo/nx-graph.md](../../monorepo/nx-graph.md#generated-snapshots--mostly-not-running-today).

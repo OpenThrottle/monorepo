@@ -1,7 +1,9 @@
-# gemini stream-json schema (spike)
+# gemini stream-json schema
 
-> Plan-Id: 99541038-2e03-4a76-b0fa-7844e4801f3d
-> Captured on gemini-cli 0.25.2 (Homebrew `gemini-cli`, binary `gemini`), auth: **none available on the probe host** — see provenance note.
+The headless surface the `gemini` driver (`packages/openthrottle-drivers/src/drivers/gemini.ts`) is
+built against.
+
+> **Measured 2026-08-26** on gemini-cli 0.25.2 (Homebrew `gemini-cli`, binary `gemini`), auth: **none available on the probe host** — see provenance note.
 
 > **Provenance.** The probe host had no Gemini credentials (no `~/.gemini`, no
 > `GEMINI_API_KEY`; OAuth login is interactive-only), so live model turns could
@@ -180,15 +182,16 @@ but verify `ps` after live runs.
 | `result` (or process exit)                   | `done:true`      | always emitted, success **and** fatal-error paths                                       |
 | `result{status:'error'}` / stderr + exit ≠ 0 | `error`          | codes: 41 auth, 42 input, 44 sandbox, 52 config, 53 turns, 54 tool, 130 cancel, 1 other |
 
-## 10. Verdict
+## 10. What the driver gets, and what it gives up
 
-**Compatible (degraded)** — headless NDJSON with assistant deltas, single-event
+Headless NDJSON with assistant deltas, single-event
 tool calls + separate correlated results, deterministic terminal (`result`
 always emitted, even on fatal errors), usage stats, arg-array spawnable, exit
-codes are clean. Degradations: no thinking events; no resume-by-id (flatten
-history); no `--system` flag (prompt-prefix); no model listing
-(availability-only discovery). Blockers: none — pending confirmation against a
-live authenticated capture.
+codes are clean. What is missing: no thinking events; no resume-by-id (the
+driver flattens history); no `--system` flag (prompt-prefix instead); no model
+listing (availability-only discovery). Nothing here blocks the driver, but none
+of it is confirmed against a live authenticated capture — see the provenance
+note above.
 
 ## 11. How to reproduce
 

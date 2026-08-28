@@ -1,12 +1,15 @@
-# antigravity (agy) CLI dossier — headless contract (spike)
+# antigravity (agy) CLI — headless contract
 
-Verification dossier for OT plan `caca71c0-5193-4835-90e9-f1d21f51af3e`, task 1 (GO/NO-GO gate).
-Mirrors the structure of [`gemini-stream-json-schema.md`](./gemini-stream-json-schema.md).
+The headless surface the `antigravity` driver
+(`packages/openthrottle-drivers/src/drivers/antigravity.ts`) is built against. Same structure as
+[`gemini-stream-json-schema.md`](./gemini-stream-json-schema.md).
 
-**Verified against:** Antigravity CLI **1.1.21**, `darwin_arm64`, official release tarball
+**Measured 2026-08-26** against Antigravity CLI **1.1.21**, `darwin_arm64`, official release tarball
 (`cli_mac_arm64.tar.gz`, SHA512 verified against the release manifest). Probed as an extracted
 binary in a scratch dir — the `curl | bash` installer was deliberately NOT run, so no PATH or
-shell-profile mutation. Date: 2026-08-26.
+shell-profile mutation, then re-probed from a properly installed, authenticated binary (§3b).
+**Re-verify on every `agy` release** — it self-updates in the background, so the version this
+describes will not be the version on disk for long.
 
 > **Naming:** the installer places the binary as **`agy`** in `~/.local/bin`, but the artifact
 > inside the tarball is named `antigravity` and its own usage string says `antigravity`. Treat
@@ -83,10 +86,10 @@ but `mcpAutoApprove` may become achievable via `mcp add`.
 PATH + shell aliases. `update` is a self-update subcommand, and the binary self-updates in the
 background during normal runs.
 
-## 3b. Verified against an authenticated install (2026-08-26)
+## 3b. Auth in practice (authenticated install)
 
-`agy` was later installed properly (`~/.local/bin/agy`) and signed in via Google OAuth
-(`~/.gemini/oauth_creds.json`). Two things became verifiable.
+With `agy` installed at `~/.local/bin/agy` and signed in via Google OAuth
+(`~/.gemini/oauth_creds.json`), two things are verifiable.
 
 ### `agy models` output is TAB-SEPARATED, not bare ids
 
@@ -152,9 +155,9 @@ stream-json` — which strongly implies an `init` event and per-message content-
 alongside `result`. That is inference from symbol names, not captured output, so the event mapper
 must NOT be built on it.
 
-## 3c. Captured stream-json event schema (VERIFIED, eligible account)
+## 3c. The stream-json event schema
 
-Captured from real runs with `agy -p "<prompt>" --output-format stream-json
+Captured from real runs on an eligible account with `agy -p "<prompt>" --output-format stream-json
 --dangerously-skip-permissions --add-dir "$PWD" --model gemini-3.5-flash-low`. Exit 0.
 
 ### Envelope
@@ -255,24 +258,21 @@ is `result.status` alone.
 `response`. `usage` totals for the turn; `thinking_tokens` exists as a field but was 0 in every
 captured sample (no thinking-specific event or step_type was observed at these effort levels).
 
-## 4. Verdict — **GO** (gate cleared; see §5b)
+## 4. How this driver differs from `gemini.ts`
 
-Headless one-shot mode exists, is documented, and is _better specified_ than the Gemini CLI's:
-`-p` with `--output-format stream-json`, optional `--json-schema`, non-interactive approvals via
+The headless surface is _better specified_ than the Gemini CLI's: `-p` with `--output-format
+stream-json`, optional `--json-schema`, non-interactive approvals via
 `--dangerously-skip-permissions`, id-based conversation resume, and a `models` subcommand for
-discovery. Building the `antigravity` driver is justified — proceed to tasks 2–4.
+discovery.
 
 The surface is closer to Claude Code's than to Gemini's, which means the driver's
-`DriverCapabilities` will differ substantially from `gemini.ts`: expect `supportsModelFlag: true`
-plus genuine model _listing_, and re-evaluate `mcpAutoApprove` given `mcp add`.
+`DriverCapabilities` differ substantially from `gemini.ts`: `supportsModelFlag: true` plus genuine
+model _listing_, and `mcpAutoApprove` is worth re-evaluating given `mcp add`.
 
-## 5. Residual gaps (event schema RESOLVED)
+## 5. Still unverified
 
-The event-schema gap is **closed** — see §3c, captured against an eligible account. The
-conversation-backend mapper can now be written against real fixtures, and `chatStreaming` can flip
-to `true` in the same change that registers the adapter.
-
-Still unverified, none of them blocking:
+The event schema itself is captured against real fixtures (§3c). These remain open, none of them
+blocking:
 
 - Whether `--json-schema` alters the `result` payload shape.
 - A `thinking`-specific event or step_type. `usage.thinking_tokens` exists but was 0 in every
@@ -283,9 +283,10 @@ Still unverified, none of them blocking:
 - Whether every tool's `tool_info.parameters` keys follow the PascalCase convention `view_file`
   uses (`AbsolutePath`), or whether that is per-tool.
 
-## 5b. Live verification results (2026-08-26, agy 1.1.21)
+## 5b. Quirks that only live runs expose
 
-All three consumer paths exercised against the installed binary with an eligible account.
+All three consumer paths exercised against the installed binary with an eligible account
+(**Measured 2026-08-26**, agy 1.1.21).
 
 | path                                                    | result                                                                                                               |
 | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
@@ -294,8 +295,8 @@ All three consumer paths exercised against the installed binary with an eligible
 | Chat resume (`--conversation <id>`)                     | same conversation id returned; recalled a fact from turn 1 with NO history in the prompt                             |
 | Discovery (`discoverAgentClis`)                         | `available: true`, `version: 1.1.21`, `chatCapable: true`, **14 models** parsed                                      |
 
-Two bugs were found only by these live runs, both invisible to unit tests — the standing argument for
-keeping a live gate in every driver plan:
+**Two argv quirks are invisible to unit tests and will bite anyone editing the spawn path** — the
+standing argument for keeping a live gate in every driver change:
 
 1. **`-p` takes the prompt as its VALUE.** `agy -p --dangerously-skip-permissions "<prompt>"` exits 2
    with `-p took "--dangerously-skip-permissions" as its prompt`. The prompt must immediately follow
@@ -304,13 +305,12 @@ keeping a live gate in every driver plan:
    `~/.gemini/antigravity-cli/scratch/<name>/` rather than the cwd — silently. A relative `.` is not
    honored.
 
-A third was caught by the same pass: `agy models` is tab-separated, so a "bare id per line" parser
-returns zero models (see §3b).
+A third: `agy models` is tab-separated, so a "bare id per line" parser returns zero models (see §3b).
 
 ## 6. How to reproduce
 
 ```bash
-# static probe, no auth and no install (what this dossier is based on)
+# static probe, no auth and no install
 BASE=https://antigravity-cli-auto-updater-974169037036.us-central1.run.app
 curl -fsSL "$BASE/manifests/darwin_arm64.json"          # -> version, url, sha512
 curl -fsSL -o agy.tar.gz "<url from manifest>"

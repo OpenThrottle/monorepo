@@ -237,54 +237,19 @@ nx graph --file=graph.json --print=false --watch=false --open=false
 nx graph --file=dep-graph.html --watch=false --open=false
 ```
 
-## Scheduled Dependency Graph Visualizations
+## Generated snapshots — mostly not running today
 
-The monorepo automatically generates dependency graph visualizations on a regular schedule to help track dependency changes over time.
+Two mechanisms can produce a static graph. **Neither runs automatically**, and that is deliberate —
+both are priced in [ci-cost.md](./ci-cost.md).
 
-### Accessing Scheduled Visualizations
+| mechanism                                                        | state                                                                                                                                                                                                                      |
+| ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `nx-dependency-graph` job in `continuous-integration.yml`        | **`workflow_dispatch` only.** Uploads an artifact; commits nothing. This is the one you can actually run — trigger the CI workflow manually.                                                                               |
+| `.github/workflows/dependency-graph-scheduled.yml` (weekly cron) | **Disabled (`if: false`).** It COMMITS each snapshot into `docs/nx/dependency-graphs/`, and every snapshot grows the repo, raising clone cost for every other workflow. Do not re-enable it without reading the cost note. |
 
-#### From GitHub Actions Artifacts
-
-1. Navigate to the [GitHub Actions page](https://github.com/OpenThrottle/monorepo/actions)
-2. Find the workflow run for "📊 Scheduled Dependency Graph Generation"
-3. Click on the workflow run
-4. Scroll down to the "Artifacts" section
-5. Download the `dependency-graph-<run-number>` artifact
-6. Extract and open `dependency-graph.html` in your browser
-
-**Schedule**: Every Monday at 9:00 AM UTC
-
-**Retention**: Artifacts are kept for 90 days
-
-#### From Repository
-
-Scheduled visualizations are also committed to the repository for easy access:
-
-- **Latest version**: `docs/nx/dependency-graphs/dependency-graph-latest.html`
-- **Historical versions**: `docs/nx/dependency-graphs/dependency-graph-YYYYMMDD.html`
-
-To view a historical graph:
-
-1. Navigate to the `docs/nx/dependency-graphs/` directory in the repository
-2. Open the desired HTML file in your browser
-3. The static assets are in the corresponding `static-YYYYMMDD/` or `static-latest/` directory
-
-### Manual Triggering
-
-You can manually trigger a dependency graph generation:
-
-1. Go to the [GitHub Actions page](https://github.com/OpenThrottle/monorepo/actions)
-2. Select "📊 Scheduled Dependency Graph Generation" workflow
-3. Click "Run workflow"
-4. Select the branch (usually `main`)
-5. Click "Run workflow"
-
-### Benefits of Scheduled Visualizations
-
-- **Historical Tracking**: Compare dependency graphs over time to see how the monorepo evolves
-- **Team Awareness**: Automatically keep the team informed about dependency changes
-- **Documentation**: Provides a snapshot of the dependency structure at regular intervals
-- **Accessibility**: Available both as downloadable artifacts and committed to the repository
+So `docs/nx/dependency-graphs/` holds **no snapshots** — only a pointer README. Historical
+graph-over-time tracking does not exist; if you need it, generate locally
+(`nx graph --file=…`, § Example 3) or dispatch the CI job and download the artifact.
 
 ## Tips and Best Practices
 

@@ -25,8 +25,6 @@ be produced by something you can run.
 6. **[publishing.md](./publishing.md)** — release order, cadence, playlists,
    metadata, the upload-automation decision (deliberately deferred), and what "done"
    means for Season 1.
-7. **[catalogue-rebuild.md](./catalogue-rebuild.md)** — the scheduled re-record that
-   catches UI drift, and the four things that must be true before enabling it.
 
 ## Assets
 
@@ -35,7 +33,7 @@ be produced by something you can run.
 
 ## Related
 
-- [../openthrottle/brand-palette.md](../openthrottle/brand-palette.md) — the app's
+- [../openthrottle/styles.md](../openthrottle/styles.md) — the app's theme tokens and
   palette, which the cards inherit rather than reinvent.
 - [../../packages/openthrottle-showroom/PIPELINE.md](../../packages/openthrottle-showroom/PIPELINE.md)
   — the pipeline itself: the demo database, seeding, recording a flow, and the

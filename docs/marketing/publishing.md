@@ -116,8 +116,9 @@ Season 1 is done when:
 
 - Every script is `published`, `blockedOn` is empty for all of them, and the two
   blocked ones (worktrees, graceful cancel) either shipped or were consciously cut.
-- The catalogue rebuild ([`catalogue-rebuild.md`](./catalogue-rebuild.md)) runs on a
-  schedule and has caught at least one drift.
+- A scheduled catalogue rebuild exists and has caught at least one UI drift. Today
+  re-recording is manual — see [pipeline.md](./pipeline.md) § Re-recording the
+  catalogue.
 - The channel has enough watch data to say which _format_ worked, not which topic —
   60s versus long-form, tour versus single-idea.
 

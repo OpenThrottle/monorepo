@@ -1,6 +1,6 @@
 # CI quality gates — priority and owners
 
-This table is the published outcome of the **Repository health, DX, and correctness audit** (OpenThrottle plan: CI gates investigation) and the **Re-enable CI quality gates** execution plan. It defines how GitHub Actions gates are prioritized, who owns each area, and how they map to `.github/workflows/continuous-integration.yml`.
+How GitHub Actions gates are prioritized, who owns each area, and how they map to `.github/workflows/continuous-integration.yml`.
 
 **Workflow file:** [`.github/workflows/continuous-integration.yml`](../../.github/workflows/continuous-integration.yml)
 

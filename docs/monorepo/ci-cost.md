@@ -4,7 +4,9 @@ How much CI costs, why, and what it costs to turn something back on.
 
 Before this doc existed, the price of re-enabling a workflow was tribal knowledge scattered across `FIXME: 💰` comments — exactly the knowledge an outside contributor does not have. If you are about to add a job, change a `runs-on`, add a schedule, or flip an `if: false`, read the [checklist](#checklist-before-you-add-a-workflow-or-job) first.
 
-Measured 2026-08-18 (OT plan `6ced8d0e`). Numbers cover the trailing 30 days, 2026-07-19 → 2026-08-18.
+**Measured 2026-08-18, trailing 30 days** (2026-07-19 → 2026-08-18). **Re-verify before quoting a
+figure** — run volume moves with development activity, and the whole cost model flips the moment the
+repo's visibility changes (see the next section).
 
 ---
 
@@ -155,7 +157,7 @@ Why **3** and not 2, and not a target-split:
 - Projected worst case: 2 boxes → ~15 min; 3 boxes → ~10.6 min. Typical at 3 → ~7.6 min.
 - A 4th box would start paying ~1.6 min of setup for shards below the ~5.6 min floor set by the
   single heaviest project — whose Vitest suite is one Nx project and cannot be split by **project**
-  sharding at all (that lever was the `vmForks` config in plan `e448a51d`). **That floor has since
+  sharding at all (the lever there was the `vmForks` pool config). **That floor has since
   moved — see "Suite sharding" below — but the conclusion is unchanged and needs re-measuring, not
   re-deriving, before anyone adds a 4th box.**
 - A target-split (`target: [lint, typecheck, test]`) is the right answer only when shards are
@@ -213,7 +215,7 @@ How it is wired, and the two traps:
 Coverage is opt-in and off in CI, so the shards' shared `reportsDirectory` never collides today. If
 coverage is ever enabled, each shard needs its own directory plus a merge step first.
 
-The pool tuning (`vmForks` + `vmMemoryLimit: '512MB'` + `maxWorkers: 4`, plan `e448a51d`) is
+The pool tuning (`vmForks` + `vmMemoryLimit: '512MB'` + `maxWorkers: 4` on CI) is
 orthogonal to this and still load-bearing against the silent `(0 test)` OOM. Sharding lowers how
 many files a box carries; it does nothing about accumulation within the files it does carry. See
 [developer-vitest-pool.md](../reliability/developer-vitest-pool.md).

@@ -1,23 +1,23 @@
-# Child-repo hook overlay — decision record
+# Child-repo hook overlay
 
-**Status:** accepted (visormatt, 2026-08-18), implemented 2026-08-20.
-**Plan:** OT `807323f7-ec61-4f0d-be03-4f275bc57291`.
 **Siblings:** [foreign-workspace-skill-injection.md](./foreign-workspace-skill-injection.md) (the same
 problem, for skills — read the two together), [agent-cli-hook-capability-matrix.md](./agent-cli-hook-capability-matrix.md),
 [child-repo-hook-telemetry-contract.md](./child-repo-hook-telemetry-contract.md).
 
-## Problem
+## What the overlay does
 
 `@openthrottle/agentic-hooks` authors a tool-neutral skill-usage core in TS and esbuild-bundles
-per-tool adapters into committed, self-contained `.cjs` under each tool's hook folder. Those bundles
-are wired up by **this repo's** `.claude/settings.json` and `.cursor/hooks.json`, so they only ever
-fire inside the OpenThrottle monorepo.
+per-tool adapters into committed, self-contained `.cjs` under each tool's hook folder. This repo's
+`.claude/settings.json` and `.cursor/hooks.json` wire those bundles up, so on their own they fire
+only inside the OpenThrottle monorepo.
 
-Roughly all real work happens in **child repositories** — foreign checkouts OT drives agents against,
-plus repos humans open directly. None of them got hooks. Skills solved their half of this in
-`d3a30314`; hooks were the unsolved half.
+The overlay carries the same hooks into **child repositories** — foreign checkouts OT drives agents
+against, plus repos humans open directly — via one committed plugin payload delivered two ways
+(§3): a marketplace plugin for humans, and `--plugin-dir` for orchestrated runs. It **never
+overrides or clobbers a user's own hooks**, and it writes nothing into the target checkout.
 
-Hard constraint from the owner: **never override or clobber a user's own hooks.**
+Skills reach child repos by the opposite mechanism — materialization into the working tree — for the
+reason §1 explains.
 
 ---
 

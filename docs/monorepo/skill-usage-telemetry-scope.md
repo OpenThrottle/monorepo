@@ -1,7 +1,8 @@
 # Skill-usage telemetry: what is captured, what is not
 
-**Status:** authoritative scope note for `skill_usage_events` / `skill_usage_outcomes`.
-**Baseline snapshot:** 2026-08-20 (263 events, 2026-07-31 → 2026-08-20).
+The authoritative scope note for `skill_usage_events` / `skill_usage_outcomes`: what the tables do
+and do not capture. The counts in the [dated snapshot](#invocation-snapshot--measured-2026-08-20) at
+the end are a point-in-time reading, not current numbers — query the tables for those.
 
 This page exists because a "0 invocations" reading is routinely mistaken for
 "nobody uses this skill". It is not the same claim. Read this before deleting a
@@ -87,10 +88,14 @@ A 0 is **untrustworthy** for:
 Cut on a trustworthy 0 or on a structural argument (duplication, contradiction
 with `CLAUDE.md`). Do not cut a reference skill on an untrustworthy 0 alone.
 
-## Corrected baseline — invocations
+## Invocation snapshot — Measured 2026-08-20
 
-15 of 44 skills have ever fired. `grilling` (1, 2026-08-19) and `graphify` (1,
-2026-08-17) were 0 in the original plan snapshot and are no longer 0.
+> **These numbers are frozen at 2026-08-20** (263 events, 2026-07-31 → 2026-08-20) and are wrong by
+> now. They are kept because the shape of the distribution is the point — a long tail of never-fired
+> skills, most of which the caveats above explain. **Re-query `skill_usage_events` before acting on
+> any count here.**
+
+At that snapshot, 15 of 44 skills had ever fired.
 
 > **Historical slug:** rows keyed `skill-sync` below were recorded before the
 > 2026-08 rename to `ot-skill-sync`. Counts are left as measured; do not rewrite
@@ -117,7 +122,7 @@ with `CLAUDE.md`). Do not cut a reference skill on an untrustworthy 0 alone.
 By path: 222 slash, 35 `skill_tool` (claude-code), 4 `skill_tool` (legacy null
 source), 1 cursor, 1 unclassified legacy.
 
-## Corrected baseline — outcomes
+### Outcomes (same snapshot)
 
 | skill                     | success | abandoned | error | avg duration   |
 | ------------------------- | ------- | --------- | ----- | -------------- |

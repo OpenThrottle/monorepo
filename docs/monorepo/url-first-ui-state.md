@@ -1,10 +1,20 @@
 # URL-first UI state (Remix / React Router)
 
-Conventions and **copy-paste examples** for backing **dialogs, sheets, drawers**, **multi-step flows**, and **list/search** UI with the URL in Remix and React Router 7 apps. This doc supports plan `6a062008-7cae-4922-8152-89f9f17ed257` (URL-first UI state) and aligns with research outcomes in [URL-first overlays learnings](./url-first-react-router-shadcn-learnings.md) (research plan `6bb89ac6-630f-4e99-be8b-05122f3ce64c`).
+Conventions and **copy-paste examples** for backing **dialogs, sheets, drawers**, **multi-step flows**, and **list/search** UI with the URL in Remix and React Router 7 apps.
 
-**Default posture:** control overlay roots from **search params** (or real nested routes when the overlay is a first-class route). Keep **Radix/Vaul primitives** controlled via `open` / `onOpenChange`; do not change primitive defaults in `@openthrottle/react-router-shadcn` until shared helpers prove their API (see rollout phasing in the plan).
+**Default posture:** control overlay roots from **search params** (or real nested routes when the overlay is a first-class route). Keep **Radix/Vaul primitives** controlled via `open` / `onOpenChange`; do not change primitive defaults in `@openthrottle/react-router-shadcn` until shared helpers prove their API.
 
-**Reference implementation:** [`GlobalModal`](../../packages/react-router-ui-global/src/components/GlobalModal.tsx) in `@openthrottle/react-router-ui-global` binds a `Dialog` to a single search param and uses `setSearchParams(..., { preventScrollReset: true })`.
+**Reference implementation:** [`GlobalModal`](../../packages/react-router-ui-global/src/components/GlobalModal.tsx) in `@openthrottle/react-router-ui-global` binds a `Dialog` to a single search param and uses `setSearchParams(..., { preventScrollReset: true })`. It is the only search-param-bound overlay in tree; copy it rather than inventing a second pattern.
+
+---
+
+## 0. What the primitives already give you
+
+Nothing here needs replacing to go URL-first — every overlay root is controllable:
+
+- **`Dialog` and `Sheet`** in `@openthrottle/react-router-shadcn` are thin wrappers around **Radix Dialog** (`open` / `onOpenChange` / `defaultOpen`); `Sheet` is Radix Dialog with different positioning. **`AlertDialog`** follows the same controlled/uncontrolled pattern as a separate primitive family. **`Drawer`** wraps **Vaul**.
+- **There is no app-level overlay provider** in the package, and none is planned. The one provider-driven overlay pattern in tree is **Sidebar → mobile Sheet**, where `SidebarProvider` supplies `openMobile` / `setOpenMobile` and the mobile branch renders a controlled `Sheet` — that is a responsive-layout concern, not a template for feature overlays.
+- **URL-first behavior therefore comes from controlled root state** wired to `useSearchParams` / `navigate` / loaders. A shared wrapper or hook (param hygiene, replace-vs-push policy) is worth adding only once two or more similar flows exist; until then it would be an abstraction over one caller.
 
 ---
 
@@ -120,7 +130,7 @@ When a surface genuinely needs **live typing → results** (not submit-only), us
 ## 8. Optional path segments vs query overlays
 
 - **Query overlays:** good for **transient** same-route panels (sheet/dialog) without a dedicated route module.
-- **Optional path segments / nested routes:** use when the overlay needs its **own loader**, shareable URL as a “page”, or distinct error boundaries. Tradeoffs are summarized in the [learnings doc](./url-first-react-router-shadcn-learnings.md) (parallel routes vs `Outlet`).
+- **Optional path segments / nested routes:** use when the overlay needs its **own loader**, shareable URL as a “page”, or distinct error boundaries. Note that React Router 7 has no Next-style parallel routes: use **nested routes + `Outlet`** when the overlay is a real route with its own loader, and search params for transient same-page panels.
 
 ---
 
@@ -381,14 +391,14 @@ export default function IssueDetailPanel(props: Route.ComponentProps) {
 }
 ```
 
-Route filenames and generated `+types` paths depend on your app’s route config; see [learnings: parallel routes vs Outlet](./url-first-react-router-shadcn-learnings.md).
+Route filenames and generated `+types` paths depend on your app’s route config.
 
 ### 9.8 Form-like flow: URL as committed state
 
 For **text fields**, keep **local state** for typing; commit identifiers or filters to the URL on debounce, blur, or submit (section 7). Illustrative split:
 
 - **Loader + action:** read `request.url` in the loader for SSR; use **`useSearchParams`** after navigation for the client.
-- **Do not** mirror every keystroke to the URL (history and loader churn); the canonical debounced hook is tracked as separate task work in plan `6a062008-7cae-4922-8152-89f9f17ed257`.
+- **Do not** mirror every keystroke to the URL (history and loader churn). There is no shared debounced hook yet — debounce at the call site.
 
 ---
 

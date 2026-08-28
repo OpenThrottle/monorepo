@@ -1,17 +1,16 @@
-# Foreign-workspace skill injection — decision record
+# Foreign-workspace skill injection
 
-**Status:** accepted (visormatt, 2026-08-13). Supersedes the 2026-08-12 run-scoped-ephemeral direction. **§2's CLI matrix re-verified and corrected 2026-08-26** (Antigravity added; claude/codex/opencode/grok coverage restated) — the decisions are unchanged, the coverage facts were wrong.
-**Plan:** OT `d3a30314-5f91-4213-9ef1-25d21d2f8680`.
-**Related:** [agent-editor-folders.md](./agent-editor-folders.md), `skills/ot-skill-sync/scripts/` (the in-repo SSOT fan-out this extends — its fan-out default became `.claude/skills .gemini/skills` on 2026-08-26), `packages/openthrottle-drivers/src/drivers/` (the supported CLI set §2 is measured against).
-**Sibling — read alongside:** [child-repo-hook-overlay.md](./child-repo-hook-overlay.md) solves the same problem for **hooks**, and reaches the OPPOSITE conclusion for a concrete reason: §2 below establishes that no CLI exposes an out-of-repo skills directory **as a flag or env override** — the two config-file pointers that do exist (`agy`'s `.agents/skills.json`, opencode's `opencode.json`) live in tracked files inside the target repo, so they fail the non-mutation guarantee rather than supplying an out-of-repo hook-style escape. That is what forces materialization here. Every CLI we support _does_ expose out-of-repo hook config, so hooks are never written into a target repo. Do not generalize this record's approach to hooks.
+**Related:** [agent-editor-folders.md](./agent-editor-folders.md), `skills/ot-skill-sync/scripts/` (the in-repo SSOT fan-out this extends), `packages/openthrottle-drivers/src/drivers/` (the supported CLI set §2 is measured against). Implementation: `packages/openthrottle-agentic-utils/src/utils/foreign-skill-injection/`.
 
-## Problem
+**Sibling — read alongside:** [child-repo-hook-overlay.md](./child-repo-hook-overlay.md) solves the same problem for **hooks**, and reaches the OPPOSITE conclusion for a concrete reason: §2 below establishes that no CLI exposes an out-of-repo skills directory **as a flag or env override** — the two config-file pointers that do exist (`agy`'s `.agents/skills.json`, opencode's `opencode.json`) live in tracked files inside the target repo, so they fail the non-mutation guarantee rather than supplying an out-of-repo hook-style escape. That is what forces materialization here. Every CLI we support _does_ expose out-of-repo hook config, so hooks are never written into a target repo. Do not generalize this doc's approach to hooks.
 
-OpenThrottle's real downstream value is its curated skill set (`ot-plans`, `nx-workspace`, the `openthrottle-*` skills, …). When OT drives an agent CLI in a **foreign workspace** — any checkout outside the OT monorepo, e.g. a consumer's `ssm-data-pipeline` — those skills are absent. The only foreign-workspace handling today is a _prompt layer_ (`buildForeignWorkspacePromptLayer`, `packages/openthrottle-agentic-utils/src/utils/foreign-workspace-context.ts`) that does the **opposite** of what we now want: it tells the agent to NOT reference OT `/skills`, generators, or tooling.
+## What injection does
 
-## Goal
+OpenThrottle's downstream value is its curated skill set (`ot-plans`, `nx-workspace`, the `openthrottle-*` skills, …). When OT drives an agent CLI in a **foreign workspace** — any checkout outside the OT monorepo, e.g. a consumer's `ssm-data-pipeline` — those skills are absent, because every CLI discovers skills only from directories inside the working tree (§2).
 
-Make OT's curated skills a **layered, non-mutating, server-scoped** base that is projected INTO the foreign repo while the OT server runs, reused across runs, and reconciled on shutdown/boot — extending the existing ot-skill-sync SSOT/fan-out (`skills/<name>` → `.agents/skills/<name>` → per-agent dirs) to a third, **external** target. Non-goal: changing how the in-repo ot-skill-sync fan-out works. This adds an external consumer of the same SSOT.
+Injection makes OT's curated skills a **layered, non-mutating, server-scoped** base projected INTO the foreign repo while the OT server runs, reused across runs, and reconciled on shutdown/boot. It extends the ot-skill-sync SSOT/fan-out (`skills/<name>` → `.agents/skills/<name>` → per-agent dirs) to a third, **external** target; the in-repo fan-out itself is unchanged, and gains only another consumer of the same SSOT.
+
+The prompt layer (`buildForeignWorkspacePromptLayer`, `packages/openthrottle-agentic-utils/src/utils/foreign-workspace-context.ts`) is reconciled against the injected manifest rather than telling the agent to avoid OT skills.
 
 ---
 
@@ -52,7 +51,7 @@ Note the personal `create-readme` also loses — not because personal < OT, but 
 
 ## 2. Placement — `.agents/skills/` + `.claude/skills/`, forced by CLI reality
 
-> **Re-verified 2026-08-26** against the installed binaries/bundles, and **corrected**: the original table over-credited `.agents/skills`. The two-dir placement decision stands, but its _coverage_ is narrower than first recorded, and Antigravity — added to the driver set in 2026-08 — turns out to be covered for free. The numbers below are read off each CLI's own path constants and shipped docs; re-verify before changing the target set. The **discovery** facts are shared with ot-skill-sync's in-repo fan-out (`skills/ot-skill-sync/SKILL.md` § "Which CLI reads what") and must stay in sync; the **coverage** facts are per-consumer and deliberately differ — see the two tables below.
+> **Measured 2026-08-26** against the installed binaries/bundles, read off each CLI's own path constants and shipped docs. **Re-verify before changing the target set, and whenever any of these CLIs ships a release** — every one of these facts goes stale silently. The **discovery** facts are shared with ot-skill-sync's in-repo fan-out (`skills/ot-skill-sync/SKILL.md` § "Which CLI reads what") and must stay in sync; the **coverage** facts are per-consumer and deliberately differ — see the two tables below.
 
 Every agent CLI discovers skills **only from directories inside the working tree** (plus, for most, a global user dir — rejected below). None exposes an out-of-repo `--skills-dir` flag or env override, which is what forces materialization into the foreign repo.
 
@@ -96,22 +95,22 @@ So a CLI can be covered in-repo and still uncovered in a foreign repo. `gemini` 
 
 Injecting into **both** dirs reaches four of the seven with no per-CLI branching, and remains the right base: it is the union that covers the most CLIs per directory written, and it mirrors ot-skill-sync's own two-stage layout (`.agents/skills` as the universal view, `.claude/skills` as an agent fan-out target).
 
-### Corrections to the 2026-08-13 table
+### Why the coverage lands where it does
 
 - **claude does NOT read `.agents/skills`.** Verified against 2.1.232: `.claude/skills` is its only in-repo skills dir (`.agents` appears there only in unrelated SDK/plugin symbols). The `.claude/skills` half of the union is therefore load-bearing for Claude Code itself, not merely a Grok/Cursor convenience.
 - **codex does NOT read `.agents/skills`** — nor any in-repo dir. 0.145.0 discovers skills only under `$CODEX_HOME/skills` (`~/.codex/skills`); its `.agents/` handling is plugin-marketplace manifests. **No in-repo injection can reach codex**, so codex-driven foreign runs cannot get OT skills by this mechanism at all. (Cursor's scan of `.codex/skills` is Cursor's compat behavior, not codex's own.)
 - **opencode does NOT read in-repo `.agents/skills`.** 1.18.16 reads project skills from `.opencode/skill(s)/<name>/SKILL.md`; its "external" auto-scans are **home-scoped only** (`~/.claude/skills`, `~/.agents/skills`, disableable via `OPENCODE_DISABLE_EXTERNAL_SKILLS`).
-- **grok DOES read `.agents/skills`** — an upgrade from the original table. Per its own shipped docs it "scans `.agents/skills/` (and `commands/`) at each tier," walking from cwd to repo root, alongside `.grok/`, `.claude/`, and `.cursor/`.
-- **cursor** is unchanged: reads `.cursor/skills`, `.claude/skills`, `.codex/skills`, and `.agents/skills`.
+- **grok DOES read `.agents/skills`.** Per its own shipped docs it "scans `.agents/skills/` (and `commands/`) at each tier," walking from cwd to repo root, alongside `.grok/`, `.claude/`, and `.cursor/`.
+- **cursor** reads `.cursor/skills`, `.claude/skills`, `.codex/skills`, and `.agents/skills`.
 
 ### Antigravity (`agy` 1.1.21) — covered for free, no new dir
 
-The Antigravity CLI (added as a driver in 2026-08; see `packages/openthrottle-drivers/src/drivers/antigravity.ts`) discovers workspace skills from **`<workspace>/.agents/skills/<name>/`**, plus a global `~/.gemini/config/skills/<name>/`. The existing `.agents/skills` injection therefore reaches it with **zero changes to the materializer** — the one piece of good news in this re-verification.
+The Antigravity CLI (see `packages/openthrottle-drivers/src/drivers/antigravity.ts`) discovers workspace skills from **`<workspace>/.agents/skills/<name>/`**, plus a global `~/.gemini/config/skills/<name>/`. The existing `.agents/skills` injection therefore reaches it with **zero changes to the materializer** — the one CLI the two-dir union covers natively.
 
-Two traps worth recording, both following from Antigravity being a ground-up Go rewrite that merely reuses the `~/.gemini` prefix:
+Two traps, both following from Antigravity being a ground-up Go rewrite that merely reuses the `~/.gemini` prefix:
 
 - **`agy` has nothing to do with `.gemini/skills`.** That is the _Gemini CLI's_ project dir. Antigravity's global scope is `~/.gemini/config/skills`, a different layout under the same prefix. Adding `.gemini/skills` for gemini does not serve `agy`, and satisfying `agy` does not serve gemini.
-- **`agy` supports an `.agents/skills.json` manifest** whose entries accept absolute and `~`-prefixed `path` values — the only out-of-repo skills _pointer_ found in any supported CLI. It does not rescue the design: the manifest is a **tracked file in the target repo**, so writing it would break the non-mutation guarantee (§4), and its global twin (`~/.gemini/config/skills.json`) is rejected below as a global. Recorded so a future revisit starts from the facts. (opencode's `opencode.json` `skills.paths` accepts absolute paths and draws the same tracked-file objection.)
+- **`agy` supports an `.agents/skills.json` manifest** whose entries accept absolute and `~`-prefixed `path` values — the only out-of-repo skills _pointer_ found in any supported CLI. It does not rescue the design: the manifest is a **tracked file in the target repo**, so writing it would break the non-mutation guarantee (§4), and its global twin (`~/.gemini/config/skills.json`) is rejected below as a global. Recorded so any future revisit starts from the facts. (opencode's `opencode.json` `skills.paths` accepts absolute paths and draws the same tracked-file objection.)
 
 **Gemini discovery detail (0.25.2, from the shipped source):** gemini reads `.gemini/skills` (project scope — `Storage.getProjectSkillsDir()` returns `<targetDir>/.gemini/skills`) and `~/.gemini/skills` (user scope). The user scope is rejected below with the other globals, so the project dir is the only viable target.
 
@@ -123,7 +122,7 @@ Considered and rejected. They are (a) **non-uniform** across CLIs (each CLI name
 
 ## 3. Lifecycle — server-scoped, per-repo (not run-scoped ephemeral)
 
-Changed from the 2026-08-12 run-scoped design. The reframing: CLIs only discover skills from in-tree dirs (no out-of-repo pointer), and the desired property is "OT skills present and visible **while the server is running**." So the layer's lifetime tracks the **server**, not the run.
+CLIs only discover skills from in-tree dirs (no out-of-repo pointer), and the property we want is "OT skills present and visible **while the server is running**." So the layer's lifetime tracks the **server**, not the run — deliberately not the run, and not run-scoped ephemeral.
 
 - **Materialize (lazy, per-repo):** on the first foreign run that touches a given repo. `ensureMaterialized(repo)` is **idempotent** — a cheap no-op when the layer is already present — so it is safe to call at the start of every run and is **reused across all subsequent runs** at zero per-run setup cost.
   - **Insertion point:** `AgenticRalphOrchestratorService.runPlanOrchestratorJob` (`applications/openthrottle-server/src/queues/agentic-ralph/agentic-ralph-orchestrator.service.ts`), immediately after `getWorkflowConfigCwd(...)` and alongside the existing soft-fail `maybeRegisterWorktreeCheckout({ filesystemPath: configCwd })`. This runs exactly once per server-side run, before `orchestrator.execute`. It is the single foreign-workspace choke point on the server path.
@@ -165,7 +164,7 @@ The **reaper safety rule:** remove a ledgered path only if it is _still_ identif
 
 ---
 
-## 5. Reuse vs. new code
+## 5. Where the code lives
 
 **Reused as-is:**
 
@@ -174,9 +173,9 @@ The **reaper safety rule:** remove a ledgered path only if it is _still_ identif
 - `getOpenThrottleRoot(env)` (`workflow.ts`) to locate `<OT_ROOT>/skills/` (the curated SSOT) and `resolveForeignWorkspaceContext` to detect foreign runs.
 - The stale-sweep lifecycle (`PlanRunsStaleSweepProcessor`, `PlanRunsService.findStaleInProgressRuns` / `settleStaleRun`, `enableShutdownHooks`) as the **host** for the boot reaper and shutdown teardown — we ride it, not build a bespoke marker system.
 
-**Reused as a pattern, re-implemented in TypeScript (not the bash):** ot-skill-sync's _concepts_ — ordered manifest, collision precedence, marker-bracketed managed ignore block, idempotent ensure/cleanup. We do **not** call `skills/ot-skill-sync/scripts/*.sh` because it (a) edits the tracked `.gitignore` (we need `.git/info/exclude`), (b) assumes the SSOT is in the same repo, and (c) has no cross-server teardown/reaper. The materializer is server-side TS.
+**Reused as a pattern, re-implemented in TypeScript rather than shelling out to the bash:** ot-skill-sync's _concepts_ — ordered manifest, collision precedence, marker-bracketed managed ignore block, idempotent ensure/cleanup. We do **not** call `skills/ot-skill-sync/scripts/*.sh` because it (a) edits the tracked `.gitignore` (we need `.git/info/exclude`), (b) assumes the SSOT is in the same repo, and (c) has no cross-server teardown/reaper. The materializer is server-side TS.
 
-**New code:**
+**Written for this layer:**
 
 - **Resolver** (`packages/openthrottle-skills`): pure function `skills/` + personal-dir → ordered, de-duped manifest with source-layer provenance, excluding target-repo-owned names. No filesystem mutation.
 - **Materializer + ledger + exclude manager** (`packages/openthrottle-agentic-utils`): `ensureMaterialized(repo)` / `teardown(repo)`, the per-repo ledger reader/writer, and the `.git/info/exclude` block manager.

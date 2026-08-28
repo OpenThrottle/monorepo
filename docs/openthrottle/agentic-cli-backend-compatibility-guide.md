@@ -1,7 +1,5 @@
 # Agentic CLI backend compatibility guide
 
-> Plan-Id: a3363c74-09f5-4403-bca2-efc16ab424ed
->
 > A repeatable playbook for evaluating whether a locally-installed agentic CLI
 > (e.g. `claude`, `opencode`, future tools) can serve as a **conversation
 > backend** for the OpenThrottle developer chat, and for capturing the concrete
@@ -15,9 +13,10 @@
 3. Record every answer in the [§12 template](#12-per-cli-findings-template), pasting **verbatim** sample payloads (never paraphrased — the adapter parses real bytes).
 4. Score against the [§11 rubric](#11-compatibility-rubric) → **Compatible / Compatible-with-degradation / Blocked**.
 5. Commit the filled template as `docs/openthrottle/<cli>-stream-json-schema.md`.
-   Completed dossiers: [gemini](./gemini-stream-json-schema.md) (0.25.2 —
+   Completed contracts: [gemini](./gemini-stream-json-schema.md) (0.25.2 —
    source-derived event schema; refresh with live NDJSON once an authenticated
-   host runs its §11 commands).
+   host runs its §11 commands) and
+   [antigravity](./antigravity-stream-json-schema.md) (1.1.21 — live capture).
 
 > ⚠️ These probes invoke a **real agent** (network, tokens, and — without
 > read-only flags — file/shell access). Always run in a **throwaway scratch
@@ -303,10 +302,10 @@ Map the findings to the chunk contract before declaring a verdict:
 Copy into `docs/openthrottle/<cli>-stream-json-schema.md` and fill from the probes:
 
 ```markdown
-# <cli> stream-json schema (spike)
+# <cli> stream-json schema
 
-> Plan-Id: <plan>
-> Captured on <cli> version <X>, auth: <login|api-key>.
+> **Measured <YYYY-MM-DD>** on <cli> version <X>, auth: <login|api-key>.
+> Re-verify on every <cli> release.
 
 ## 1. Invocation contract
 

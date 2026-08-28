@@ -9,9 +9,11 @@ The question: for each of the six CLIs in `packages/openthrottle-drivers/src/dri
 hooks into a repository **without writing into that repository** — and if so, how?
 
 Everything below was established by running the installed binaries, not read off a docs site.
-Versions probed: `claude` 2.1.232, `codex-cli` 0.147.0, `cursor-agent` 2026.08.11, `opencode` 1.18.16,
-`grok` 1.0.0, `gemini` 0.25.2 (subcommand surface + shipped source; hook execution not yet exercised
-end-to-end).
+
+> **Measured 2026-08-20** against `claude` 2.1.232, `codex-cli` 0.147.0, `cursor-agent` 2026.08.11,
+> `opencode` 1.18.16, `grok` 1.0.0, and `gemini` 0.25.2 (subcommand surface + shipped source; hook
+> execution not yet exercised end-to-end). **Re-probe whenever any of these CLIs ships a release** —
+> hook and plugin surfaces are moving fast, and this matrix goes stale silently rather than loudly.
 
 ## The matrix
 
