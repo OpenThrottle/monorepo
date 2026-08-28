@@ -42,9 +42,9 @@ export const skillUsageOutcomesFactory =
       scope: SKILL_USAGE_SCOPES.OURS,
       sessionId: faker.string.uuid(),
       skillName: faker.helpers.arrayElement([
+        'github-commit',
+        'ot-claude-loop',
         'ot-plans',
-        'git-commit',
-        'validate-plan',
       ]),
       toolUseId: null,
     };

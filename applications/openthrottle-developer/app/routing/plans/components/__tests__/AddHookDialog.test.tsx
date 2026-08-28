@@ -60,7 +60,7 @@ describe('AddHookDialog', () => {
 
     await userEvent.type(
       scoped.getByLabelText(copy.skillSlugLabel),
-      'validate-plan',
+      'github-commit',
     );
     await userEvent.click(scoped.getByRole('button', { name: copy.scopeEach }));
     await userEvent.click(scoped.getByRole('button', { name: copy.submit }));
@@ -68,7 +68,7 @@ describe('AddHookDialog', () => {
     expect(onSubmit).toHaveBeenCalledWith({
       role: 'after',
       scope: 'each',
-      skillSlug: 'validate-plan',
+      skillSlug: 'github-commit',
       source: 'skill',
     });
   });

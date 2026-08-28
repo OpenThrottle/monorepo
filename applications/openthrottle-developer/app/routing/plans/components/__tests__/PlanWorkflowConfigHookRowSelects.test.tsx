@@ -11,7 +11,7 @@ const row: JobRunHookDraftRow = {
   draftId: 'draft-1',
   kind: 'skill',
   phase: 'before_run',
-  skillPath: '.agents/skills/validate-plan/SKILL.md',
+  skillPath: '.agents/skills/github-commit/SKILL.md',
 };
 
 describe('PlanWorkflowConfigHookRowSelects Component', () => {

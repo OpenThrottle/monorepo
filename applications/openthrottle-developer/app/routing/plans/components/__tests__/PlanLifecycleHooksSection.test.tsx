@@ -59,7 +59,7 @@ describe('PlanLifecycleHooksSection Component', () => {
     );
     await user.type(
       component.getByLabelText(PLAN_LIFECYCLE_HOOKS_COPY.skillSlugLabel),
-      'validate-plan',
+      'github-commit',
     );
     await user.click(
       component.getByRole('button', {

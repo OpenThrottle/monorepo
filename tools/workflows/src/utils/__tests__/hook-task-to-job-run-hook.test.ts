@@ -21,14 +21,14 @@ const hookTask = (
   hookScope: 'once',
   hookSource: 'skill',
   parentTaskId: null,
-  skillSlug: 'validate-plan',
+  skillSlug: 'github-commit',
   ...overrides,
 });
 
 describe('skillSlugToSkillPath', () => {
   it('resolves under the .agents/skills prefix', () => {
-    expect(skillSlugToSkillPath('validate-plan')).toBe(
-      '.agents/skills/validate-plan/SKILL.md',
+    expect(skillSlugToSkillPath('github-commit')).toBe(
+      '.agents/skills/github-commit/SKILL.md',
     );
   });
 });
@@ -68,7 +68,7 @@ describe('projectHookTaskToJobRunHookEntry', () => {
       kind: 'skill',
       onFailure: 'block',
       phase: 'beforeAll',
-      skillPath: '.agents/skills/validate-plan/SKILL.md',
+      skillPath: '.agents/skills/github-commit/SKILL.md',
     });
   });
 
@@ -81,7 +81,7 @@ describe('projectHookTaskToJobRunHookEntry', () => {
       kind: 'skill',
       onFailure: 'warn',
       phase: 'afterAll',
-      skillPath: '.agents/skills/validate-plan/SKILL.md',
+      skillPath: '.agents/skills/github-commit/SKILL.md',
     });
   });
 
