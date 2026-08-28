@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { ChatActivityGroup } from './ChatActivityGroup';
 import { ChatMessageBody } from './ChatMessageBody';
 import { ChatThinkingBlock } from './ChatThinkingBlock';
 import { ChatToolCall } from './ChatToolCall';
@@ -6,7 +7,7 @@ import { ChatToolCallGroup } from './ChatToolCallGroup';
 import { ChatTurnUsageSummary } from './ChatTurnUsageSummary';
 import { RunningIndicator } from './RunningIndicator';
 import { deriveRunPhaseFromEvents } from '../run-phase';
-import { buildTurnTimeline } from '../turn-tool-groups';
+import { buildTurnTimeline, foldTurnActivity } from '../turn-tool-groups';
 import type { ChatTurnEvent } from '../types';
 
 export interface ChatTurnTimelineProps {
@@ -37,9 +38,13 @@ export const ChatTurnTimeline = (
     () => [...events].sort((a, b) => a.sortOrder - b.sortOrder),
     [events],
   );
-  // Fold runs of consecutive tool events into groups so a burst of actions
-  // collapses into one expandable row instead of flooding the timeline.
-  const items = React.useMemo(() => buildTurnTimeline(ordered), [ordered]);
+  // Two-level fold: runs of consecutive tool events become groups, then any
+  // adjacent run of those groups and thinking blocks collapses into one
+  // activity row — so a long agentic turn reads as a line, not a flood.
+  const items = React.useMemo(
+    () => foldTurnActivity(buildTurnTimeline(ordered)),
+    [ordered],
+  );
   // While the turn is still in flight, name what it is currently doing (running
   // a tool, thinking, …) instead of a generic spinner.
   const runPhase = React.useMemo(
@@ -58,6 +63,18 @@ export const ChatTurnTimeline = (
   return (
     <div className="flex flex-col gap-1" data-testid="ChatTurnTimeline">
       {items.map((item) => {
+        if (item.kind === 'activity') {
+          const first = item.items[0];
+          const anchor =
+            first === undefined
+              ? 0
+              : first.kind === 'tools'
+                ? (first.tools[0]?.sortOrder ?? 0)
+                : first.event.sortOrder;
+
+          return <ChatActivityGroup group={item} key={`activity-${anchor}`} />;
+        }
+
         if (item.kind === 'tools') {
           const first = item.tools[0];
           const key = `tools-${first?.sortOrder ?? 0}`;

@@ -2,12 +2,9 @@ import * as React from 'react';
 import clsx from 'clsx';
 import { ChatRetryNotice } from './ChatRetryNotice';
 import { ChatThreadMessage } from './ChatThreadMessage';
+import { usePinnedToBottom } from '../hooks/use-pinned-to-bottom';
 import type { ChatMessage } from '../types';
-import {
-  findLastAssistantMessage,
-  findLastUserMessageId,
-  hasStreamedContent,
-} from '../utils/chat-thread';
+import { findLastUserMessageId } from '../utils/chat-thread';
 
 export interface ChatThreadProps {
   /**
@@ -18,111 +15,77 @@ export interface ChatThreadProps {
   readonly canRetry?: boolean;
   readonly className?: string;
   readonly emptyStateLabel?: string;
+  /**
+   * Resolve the element that actually scrolls. Omit when the thread owns its
+   * own scroll (a dialog); supply the page scroller when the thread rides a
+   * route layout, or the scrolled-away guard listens to the wrong element.
+   */
+  readonly getScrollElement?: () => HTMLElement | null;
   /** Disable the Retry button while a replay is in flight. */
   readonly isRetrying?: boolean;
   readonly messages: readonly ChatMessage[];
+  /** Told when the view stops or resumes following the bottom. */
+  readonly onPinnedChange?: (isPinned: boolean) => void;
   /** Replay the last turn (wired to the Retry affordance). */
   readonly onRetry?: () => void;
+  /**
+   * Receives the "jump to latest" callback, so a control rendered outside the
+   * thread (next to the composer) can re-engage following.
+   */
+  readonly repinRef?: React.RefObject<(() => void) | null>;
 }
-
-/** Distance (px) from the bottom within which auto-scroll stays engaged. */
-const NEAR_BOTTOM_THRESHOLD_PX = 64;
 
 /**
  * @description Scrollable message list for modal chat with role-aware body
  * rendering. Rows are memoized (see {@link ChatThreadMessage}) so appends do
- * not re-render the whole thread. Auto-scroll is event-driven, not
- * change-driven: it fires only when the user sends a message (always jump to
- * the bottom) and when an assistant turn streams its first token (once per
- * turn, and only while the user is reading near the bottom). Subsequent tokens
- * of the same turn do not re-scroll, so streaming no longer jerks the view.
- * The first paint (bulk history hydration) jumps without smooth animation.
+ * not re-render the whole thread. Scrolling is an explicit pinned-to-bottom
+ * mode rather than a set of heuristics (see {@link usePinnedToBottom}): the
+ * view follows the bottom while pinned, sending a message re-pins, and only the
+ * user scrolling away unpins it — a streamed token never does. Because the
+ * scroll owner differs by surface, {@link ChatThreadProps.getScrollElement}
+ * plugs in the real scroller when the thread does not own it.
  */
 export const ChatThread = (props: ChatThreadProps): React.ReactElement => {
   const {
     canRetry = false,
     className,
     emptyStateLabel = 'No messages yet. Send one to start.',
+    getScrollElement,
     isRetrying = false,
     messages,
+    onPinnedChange,
     onRetry,
+    repinRef,
   } = props;
 
   // Hooks
-  const containerRef = React.useRef<HTMLDivElement>(null);
-  const endRef = React.useRef<HTMLDivElement>(null);
-  const isNearBottomRef = React.useRef<boolean>(true);
-  const hasRenderedRef = React.useRef<boolean>(false);
-  // Id of the newest user message we have already reacted to; a change means
-  // the user just sent a new one.
-  const lastUserMessageIdRef = React.useRef<string | null>(null);
-  // Id of the assistant turn whose first-response scroll already fired; guards
-  // against re-scrolling as that same turn keeps streaming tokens.
-  const firstResponseScrolledIdRef = React.useRef<string | null>(null);
+  const contentRef = React.useRef<HTMLDivElement>(null);
+  const { isPinned, repin } = usePinnedToBottom({
+    contentRef,
+    getScrollElement,
+    repinKey: findLastUserMessageId(messages),
+  });
 
   // Setup
 
   // Handlers
-  const handleScroll = React.useCallback((): void => {
-    const container = containerRef.current;
-    if (container == null) {
-      return;
-    }
-    const distanceFromBottom =
-      container.scrollHeight - container.scrollTop - container.clientHeight;
-    isNearBottomRef.current = distanceFromBottom <= NEAR_BOTTOM_THRESHOLD_PX;
-  }, []);
 
   // Markup
 
   // Life Cycle
   React.useEffect(() => {
-    // Nothing to scroll to on an empty thread — skip the no-op scroll that
-    // would otherwise fire on every empty mount (and in jsdom).
-    if (messages.length === 0) {
+    onPinnedChange?.(isPinned);
+  }, [isPinned, onPinnedChange]);
+
+  React.useEffect(() => {
+    if (repinRef === undefined) {
       return;
     }
-    // First paint (bulk history hydration): jump straight to the bottom without
-    // smooth animation, and seed the trackers so pre-existing history is not
-    // mistaken for fresh activity on the next render.
-    if (!hasRenderedRef.current) {
-      hasRenderedRef.current = true;
-      lastUserMessageIdRef.current = findLastUserMessageId(messages);
-      const hydratedAssistant = findLastAssistantMessage(messages);
-      firstResponseScrolledIdRef.current =
-        hydratedAssistant !== undefined && hasStreamedContent(hydratedAssistant)
-          ? hydratedAssistant.id
-          : null;
-      endRef.current?.scrollIntoView({ behavior: 'auto' });
-      return;
-    }
-    // The user just sent a message: always jump to the bottom (we are following
-    // our own message) and re-engage near-bottom follow for the coming reply.
-    const latestUserMessageId = findLastUserMessageId(messages);
-    if (
-      latestUserMessageId !== null &&
-      latestUserMessageId !== lastUserMessageIdRef.current
-    ) {
-      lastUserMessageIdRef.current = latestUserMessageId;
-      isNearBottomRef.current = true;
-      endRef.current?.scrollIntoView({ behavior: 'smooth' });
-      return;
-    }
-    // First token of an assistant turn: scroll once (respecting a user who has
-    // scrolled up), then record the id so the tokens that follow — same id,
-    // growing body — do not re-scroll. This is the core anti-jitter guard.
-    const latestAssistant = findLastAssistantMessage(messages);
-    if (
-      latestAssistant !== undefined &&
-      hasStreamedContent(latestAssistant) &&
-      latestAssistant.id !== firstResponseScrolledIdRef.current
-    ) {
-      firstResponseScrolledIdRef.current = latestAssistant.id;
-      if (isNearBottomRef.current) {
-        endRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }
-    }
-  }, [messages]);
+    repinRef.current = repin;
+    return () => {
+      repinRef.current = null;
+    };
+  }, [repin, repinRef]);
 
   // 🔌 Short Circuit
 
@@ -135,8 +98,7 @@ export const ChatThread = (props: ChatThreadProps): React.ReactElement => {
         className,
       )}
       data-testid="ChatThread"
-      onScroll={handleScroll}
-      ref={containerRef}
+      ref={contentRef}
       role="log"
     >
       {messages.length === 0 ? (
@@ -149,7 +111,6 @@ export const ChatThread = (props: ChatThreadProps): React.ReactElement => {
       {canRetry && onRetry !== undefined ? (
         <ChatRetryNotice isRetrying={isRetrying} onRetry={onRetry} />
       ) : null}
-      <div ref={endRef} />
     </div>
   );
 };

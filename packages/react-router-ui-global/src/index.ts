@@ -34,6 +34,7 @@ export * from './data/data.copy';
 export * from './hooks/usePrefersReducedMotion';
 export * from './hooks/useScrollContainerRestoration';
 export * from './hooks/useUrlSyncedOverlay';
+export * from './utils/global-scroll-container';
 export * from './utils/search-param';
 // export * from './data';
 // export * from './utils';

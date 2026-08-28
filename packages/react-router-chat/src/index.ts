@@ -8,6 +8,8 @@ export * from './components/ChatComposerToolbar';
 export * from './components/ChatConversationSheet';
 export * from './components/ChatConversationSidebar';
 export * from './components/ChatDialog';
+export * from './components/ChatActivityGroup';
+export * from './components/ChatJumpToLatest';
 export * from './components/ChatMessageBody';
 export * from './components/ChatModelPicker';
 export * from './components/ChatPermissionModeControl';

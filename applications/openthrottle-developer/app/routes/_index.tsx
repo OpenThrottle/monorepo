@@ -1,17 +1,14 @@
-import { Suspense, useEffect, useRef } from 'react';
-import { Await, useSearchParams } from 'react-router';
+import { useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router';
 import type { ShouldRevalidateFunction } from 'react-router';
-import { ChatThread } from '@openthrottle/react-router-chat';
 import {
   GlobalErrorBoundary,
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
-import { HomeComposer } from '~/routing/home/components/HomeComposer';
-import { HomeComposerDock } from '~/routing/home/components/HomeComposerDock';
 import { HomeConversationToolbar } from '~/routing/home/components/HomeConversationToolbar';
-import { HomeComposerSkeleton } from '~/routing/home/components/HomeComposerSkeleton';
+import { HomeThreadColumn } from '~/routing/home/components/HomeThreadColumn';
 import {
   loadComposerModels,
   loadPersonas,
@@ -161,46 +158,11 @@ export default function Component(
           </div>
         )}
 
-        <div className="mx-auto w-full max-w-3xl">
-          {/* Outside the <Await> on purpose: the thread needs no deferred
-              data, and the fallback→composer swap must not re-mount it. */}
-          <ChatThread
-            canRetry={turn.canRetry}
-            emptyStateLabel=""
-            messages={turn.messages}
-            onRetry={turn.onRetry}
-          />
-
-          {/* Docked so the composer stays reachable however far up you
-              scroll; the skeleton shares the dock, so nothing shifts. */}
-          <HomeComposerDock>
-            {/* Deferred: the composer + toolbar subtree needs the streamed
-                models/personas/repositories. It streams in behind a disabled
-                skeleton so the input frame is visibly present immediately. The
-                home loader helpers catch→[] (the promise resolves), but the
-                errorElement guards defensively against an unexpected reject. */}
-            <Suspense fallback={<HomeComposerSkeleton />}>
-              <Await
-                errorElement={
-                  <p className="text-muted-foreground py-4 text-center text-sm">
-                    Couldn&rsquo;t load composer options. Reload to try again.
-                  </p>
-                }
-                resolve={composerData}
-              >
-                {(data) => (
-                  <HomeComposer
-                    conversationList={conversationList}
-                    models={data.models}
-                    personas={data.personas}
-                    repositories={data.repositories}
-                    turn={turn}
-                  />
-                )}
-              </Await>
-            </Suspense>
-          </HomeComposerDock>
-        </div>
+        <HomeThreadColumn
+          composerData={composerData}
+          conversationList={conversationList}
+          turn={turn}
+        />
       </div>
     </GlobalScreen>
   );

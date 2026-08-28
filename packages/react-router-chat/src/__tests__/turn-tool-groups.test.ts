@@ -3,6 +3,7 @@ import {
   activeToolOf,
   aggregateToolStatus,
   buildTurnTimeline,
+  foldTurnActivity,
 } from '../turn-tool-groups';
 import type { ChatTurnEvent, ChatTurnToolEvent } from '../types';
 
@@ -24,6 +25,20 @@ const text = (sortOrder: number): ChatTurnEvent => ({
   kind: 'text',
   sortOrder,
   text: 'hi',
+});
+
+const thinking = (sortOrder: number, body = 'hmm'): ChatTurnEvent => ({
+  kind: 'thinking',
+  sortOrder,
+  text: body,
+});
+
+const usage = (sortOrder: number): ChatTurnEvent => ({
+  error: null,
+  kind: 'usage',
+  result: null,
+  sortOrder,
+  usageJson: null,
 });
 
 describe('buildTurnTimeline', () => {
@@ -116,5 +131,126 @@ describe('activeToolOf', () => {
 
   test('null for an empty group', () => {
     expect(activeToolOf([])).toBeNull();
+  });
+});
+
+describe('foldTurnActivity', () => {
+  test('folds an alternating tool/thinking run into one activity group', () => {
+    const slots = foldTurnActivity(
+      buildTurnTimeline([
+        tool({ name: 'a', sortOrder: 0 }),
+        tool({ name: 'b', sortOrder: 1 }),
+        thinking(2),
+        tool({ name: 'c', sortOrder: 3 }),
+        thinking(4),
+      ]),
+    );
+
+    expect(slots).toHaveLength(1);
+    const [group] = slots;
+    expect(group?.kind).toBe('activity');
+    expect(group?.kind === 'activity' && group).toMatchObject({
+      thinkingCount: 2,
+      toolCount: 3,
+    });
+    expect(group?.kind === 'activity' && group.items).toHaveLength(4);
+  });
+
+  test('preserves emission order inside the folded group', () => {
+    const slots = foldTurnActivity(
+      buildTurnTimeline([
+        tool({ name: 'a', sortOrder: 0 }),
+        thinking(1),
+        tool({ name: 'b', sortOrder: 2 }),
+      ]),
+    );
+
+    const [group] = slots;
+    expect(
+      group?.kind === 'activity' &&
+        group.items.map((item) =>
+          item.kind === 'tools' ? item.tools[0]?.name : item.event.kind,
+        ),
+    ).toEqual(['a', 'thinking', 'b']);
+  });
+
+  test('text breaks the fold into separate runs', () => {
+    const slots = foldTurnActivity(
+      buildTurnTimeline([
+        tool({ name: 'a', sortOrder: 0 }),
+        thinking(1),
+        text(2),
+        tool({ name: 'b', sortOrder: 3 }),
+        thinking(4),
+      ]),
+    );
+
+    expect(slots.map((slot) => slot.kind)).toEqual([
+      'activity',
+      'event',
+      'activity',
+    ]);
+  });
+
+  test('usage terminates the run and passes through unchanged', () => {
+    const slots = foldTurnActivity(
+      buildTurnTimeline([
+        tool({ name: 'a', sortOrder: 0 }),
+        thinking(1),
+        usage(2),
+      ]),
+    );
+
+    expect(slots.map((slot) => slot.kind)).toEqual(['activity', 'event']);
+  });
+
+  test('a single tool group is not wrapped', () => {
+    const slots = foldTurnActivity(
+      buildTurnTimeline([
+        tool({ name: 'a', sortOrder: 0 }),
+        tool({ name: 'b', sortOrder: 1 }),
+      ]),
+    );
+
+    expect(slots.map((slot) => slot.kind)).toEqual(['tools']);
+  });
+
+  test('a lone thinking block is not wrapped', () => {
+    const slots = foldTurnActivity(buildTurnTimeline([thinking(0)]));
+    expect(slots.map((slot) => slot.kind)).toEqual(['event']);
+  });
+
+  test('blank thinking neither renders nor pads the run to the threshold', () => {
+    const slots = foldTurnActivity(
+      buildTurnTimeline([tool({ name: 'a', sortOrder: 0 }), thinking(1, '  ')]),
+    );
+
+    expect(slots.map((slot) => slot.kind)).toEqual(['tools']);
+  });
+
+  test('aggregate status spans every nested tool group', () => {
+    const running = foldTurnActivity(
+      buildTurnTimeline([
+        tool({ name: 'a', sortOrder: 0, status: 'failed' }),
+        thinking(1),
+        tool({ name: 'b', sortOrder: 2, status: 'running' }),
+      ]),
+    );
+    expect(running[0]?.kind === 'activity' && running[0].status).toBe(
+      'running',
+    );
+
+    const failed = foldTurnActivity(
+      buildTurnTimeline([
+        tool({ name: 'a', sortOrder: 0, status: 'failed' }),
+        thinking(1),
+        tool({ name: 'b', sortOrder: 2, status: 'succeeded' }),
+      ]),
+    );
+    expect(failed[0]?.kind === 'activity' && failed[0].status).toBe('failed');
+  });
+
+  test('empty input yields no slots', () => {
+    expect(foldTurnActivity([])).toEqual([]);
   });
 });

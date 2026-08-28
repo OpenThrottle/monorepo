@@ -12,6 +12,7 @@ import { GlobalSidebarFooter } from './GlobalSidebarFooter';
 import { GlobalSidebarHeader } from './GlobalSidebarHeader';
 import type { GlobalSidebarContentLinkProps } from './GlobalSidebarContent';
 import { useScrollContainerRestoration } from '../hooks/useScrollContainerRestoration';
+import { GLOBAL_SCROLL_CONTAINER_ATTRIBUTE } from '../utils/global-scroll-container';
 
 export interface GlobalLayoutProps {
   readonly authenticated?: boolean;
@@ -81,6 +82,7 @@ export const GlobalLayout = (props: GlobalLayoutProps): React.ReactElement => {
         {!hideRail ? <SidebarRail /> : null}
       </Sidebar>
       <div
+        {...{ [GLOBAL_SCROLL_CONTAINER_ATTRIBUTE]: true }}
         className="relative flex max-h-screen w-full max-w-full flex-col overflow-auto"
         ref={refScrollableContent}
       >
