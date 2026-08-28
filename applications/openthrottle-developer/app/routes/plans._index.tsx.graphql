@@ -18,6 +18,7 @@ fragment PlanCard on PlanObject {
     tag
   }
   taskCount
+  tasksCompletedCount
   title
   updatedAt
 }
@@ -37,6 +38,16 @@ query getPlansByStatus($input: ListPlansByStatusInput!) {
   allPlansCount: listPlansByStatus(input: { statuses: [] }) {
     totalCount
   }
+
+  # tasks: listPlanTasks(input: {
+  #   planId: $id
+  # }) {
+  #   tasks {
+  #     id
+  #     name
+  #     status
+  #   }
+  # }
 
   listPlansByStatus(input: $input) {
     plans {

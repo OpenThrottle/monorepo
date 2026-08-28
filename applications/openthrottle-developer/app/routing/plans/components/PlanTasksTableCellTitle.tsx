@@ -64,6 +64,7 @@ export const PlanTasksTableCellTitle = (
               {category}
             </Badge>
           ) : null}
+
           {requirementsCount > 0 ? (
             <span
               aria-label={`${requirementsCount} requirements`}
@@ -77,19 +78,14 @@ export const PlanTasksTableCellTitle = (
         </div>
       ) : null}
 
-      {description ? (
+      <div className="pre-wrap flex flex-col gap-2 overflow-hidden">
         <MarkdownRenderer
-          className="line-clamp-2 overflow-hidden [&_p]:!mb-0 [&_p]:!text-xs"
-          source={description}
+          className="line-clamp-5 overflow-hidden [&_p]:!mb-0 [&_p]:!text-xs"
+          source={description || summary}
+          // className="!whitespace-wrap m-0 line-clamp-2 overflow-hidden [&_p]:!mb-0"
+          // source={summary || description}
         />
-      ) : null}
-
-      {summary ? (
-        <MarkdownRenderer
-          className="line-clamp-2 overflow-hidden [&_p]:!mb-0 [&_p]:!text-xs"
-          source={summary}
-        />
-      ) : null}
+      </div>
     </div>
   );
 };

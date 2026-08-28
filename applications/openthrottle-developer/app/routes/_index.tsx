@@ -155,8 +155,8 @@ export default function Component(
               What would you like to build today?
             </h1>
             <p className="text-muted-foreground mt-2 text-sm">
-              OpenThrottle is a platform for building software, fast, and
-              secure.
+              OpenThrottle is a platform for building software, iteratively, and
+              securely.
             </p>
           </div>
         )}

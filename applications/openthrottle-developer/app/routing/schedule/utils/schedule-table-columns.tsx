@@ -8,10 +8,15 @@ import { Badge } from '@openthrottle/react-router-shadcn';
 import { Link } from 'react-router';
 import { RUN_STATUS_COLOR } from '~/routing/schedule/data/data.run-status';
 import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
-import { formatWhen } from '~/routing/schedule/utils/format-when';
+import {
+  GlobalPopover,
+  GlobalPopoverActionsHeader,
+} from '@openthrottle/react-router-ui-global';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { ScheduleTableProps } from '~/routing/schedule/components/ScheduleTable';
 import type { ScheduledJobCardFragment } from '~/__generated__/graphql';
+// import { formatWhen } from '~/routing/schedule/utils/format-when';
+// import { RepositoryRowActions } from '~/routing/settings/repositories/components/RepositoryRowActions';
 
 export const buildScheduleTableColumns = (
   inFlightByJob: NonNullable<ScheduleTableProps['inFlightByJob']>,
@@ -47,57 +52,75 @@ export const buildScheduleTableColumns = (
     },
     {
       accessorKey: 'details',
-      cell: ({ row }) => (
-        <div className="p-2">
-          <Link
-            className="font-medium underline-offset-4 hover:underline"
-            to={`/schedule/${row.original.id}`}
-            viewTransition={true}
-          >
-            {row.original.name}
-          </Link>
-        </div>
-      ),
+      cell: ({ row }) => {
+        const { cronPattern = '', repository, timezone } = row.original;
+        const repo =
+          repository?.displayName ?? SCHEDULE_COPY.repositoryNoneOption;
+
+        return (
+          <div className="space-y-4 p-2">
+            <Link
+              className="block font-medium underline-offset-4 hover:underline"
+              to={`/schedule/${row.original.id}`}
+              viewTransition={true}
+            >
+              {row.original.name}
+            </Link>
+
+            <div className="text-muted-foreground space-y-1">
+              <div>
+                <b>Cron Pattern:</b> {cronPattern}
+              </div>
+              <div>
+                <b>Repository:</b> {repo}
+              </div>
+              <div>
+                <b>Timezone:</b> {timezone ?? 'Pacific Time (US & Canada)'}
+              </div>
+            </div>
+          </div>
+        );
+      },
       header: () => <div className="p-2">Schedule Details</div>,
     },
     {
       accessorKey: 'driverId',
       cell: ({ row }) => (
-        <div className="p-2">
-          {row.original.driverId}
-          {row.original.model ? ` · ${row.original.model}` : ''}
+        <div className="flex items-center gap-2">
+          <Badge color="blue" size="xs">
+            {row.original.driverId}
+          </Badge>
+          <span>·</span>
+          <span>{row.original.model ? `${row.original.model}` : `auto`}</span>
         </div>
       ),
-      header: () => <div className="p-2">Provider</div>,
+      header: () => <div className="p-2">Driver · Model</div>,
     },
+    // {
+    //   accessorKey: 'nextRunAt',
+    //   cell: ({ row }) => (
+    //     <div className="p-2">{formatWhen(row.original.nextRunAt)}</div>
+    //   ),
+    //   header: () => <div className="p-2">Next run</div>,
+    // },
     {
-      accessorKey: 'cronPattern',
       cell: ({ row }) => (
-        <div className="p-2 font-mono text-xs">
-          {row.original.cronPattern}
-          {row.original.timezone ? ` (${row.original.timezone})` : ''}
+        <div className="flex items-center justify-center">
+          <GlobalPopover
+            actions={[
+              {
+                id: `schedule-actions-${row.original.id}`,
+                kind: 'link',
+                label: 'Edit',
+                to: `/schedule/${row.original.id}`,
+              },
+            ]}
+            ariaLabel="Schedule actions"
+          />
         </div>
       ),
-      header: () => <div className="p-2">Schedule</div>,
-    },
-    {
-      accessorKey: 'repository',
-      cell: ({ row }) => (
-        <div className="p-2">
-          {row.original.repository?.displayName ??
-            SCHEDULE_COPY.repositoryNoneOption}
-        </div>
-      ),
-      header: () => (
-        <div className="p-2">{SCHEDULE_COPY.repositoryColumnLabel}</div>
-      ),
-    },
-    {
-      accessorKey: 'nextRunAt',
-      cell: ({ row }) => (
-        <div className="p-2">{formatWhen(row.original.nextRunAt)}</div>
-      ),
-      header: () => <div className="p-2">Next run</div>,
+      header: () => <GlobalPopoverActionsHeader />,
+      id: 'actions',
     },
   ];
 };

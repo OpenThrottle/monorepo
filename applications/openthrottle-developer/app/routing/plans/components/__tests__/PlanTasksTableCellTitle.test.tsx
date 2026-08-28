@@ -70,9 +70,20 @@ describe('PlanTasksTableCellTitle Component', () => {
     expect(titleLink).toHaveAttribute('href', '/plans/plan-1/tasks/task-1');
   });
 
-  test('renders assignee, description, and summary when present', () => {
+  test('renders assignee and prefers the description over the summary', () => {
     expect(component.getByText('Assigned to visormatt')).toBeInTheDocument();
     expect(component.getByText('Short description')).toBeInTheDocument();
+    expect(component.queryByText('Short summary')).not.toBeInTheDocument();
+  });
+
+  test('falls back to the summary when there is no description', () => {
+    props = {
+      row: createMockRow({ description: '   ' }),
+    };
+
+    component.unmount();
+    renderComponent();
+
     expect(component.getByText('Short summary')).toBeInTheDocument();
   });
 
@@ -116,14 +127,13 @@ describe('PlanTasksTableCellTitle Component', () => {
     expect(component.queryByText('Short summary')).not.toBeInTheDocument();
   });
 
-  test('renders long description and summary in full, clamped by CSS only', () => {
+  test('renders a long description in full, clamped by CSS only', () => {
     const longDescription = 'd'.repeat(130);
-    const longSummary = 's'.repeat(130);
 
     props = {
       row: createMockRow({
         description: longDescription,
-        summary: longSummary,
+        summary: 's'.repeat(130),
       }),
     };
 
@@ -131,12 +141,11 @@ describe('PlanTasksTableCellTitle Component', () => {
     renderComponent();
 
     // Markdown rendering replaced the JS truncation; overflow is now handled by
-    // the `line-clamp-2` class rather than a slice plus a title tooltip.
+    // the `line-clamp-5` class rather than a slice plus a title tooltip.
     expect(component.getByText(longDescription)).not.toHaveAttribute('title');
-    expect(component.getByText(longSummary)).not.toHaveAttribute('title');
   });
 
-  test('renders short description and summary without tooltip attributes', () => {
+  test('renders a short description without tooltip attributes', () => {
     props = {
       row: createMockRow({
         description: 'Short details',
@@ -148,7 +157,6 @@ describe('PlanTasksTableCellTitle Component', () => {
     renderComponent();
 
     expect(component.getByText('Short details')).not.toHaveAttribute('title');
-    expect(component.getByText('Short recap')).not.toHaveAttribute('title');
   });
 
   test('trims whitespace-only description and summary content', () => {

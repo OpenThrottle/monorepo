@@ -67,13 +67,17 @@ export const WORKSPACE_EDITOR_DEEP_LINKS: Readonly<
     buildFolderHref: (workingDirectory) =>
       workingDirectory === ''
         ? null
-        : buildClaudeHref(new URLSearchParams({ folder: workingDirectory })),
+        : buildClaudeHref(
+            new URLSearchParams({
+              folder: workingDirectory,
+            }),
+          ),
     buildPlanHref: ({ planId, workingDirectory }) =>
       workingDirectory === ''
         ? null
         : buildClaudeHref(
             new URLSearchParams({
-              folder: workingDirectory,
+              folder: `${workingDirectory}/`,
               q: `/ot-claude-loop ${planId}`,
             }),
           ),

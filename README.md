@@ -1,7 +1,6 @@
 # 🤖 OpenThrottle | AI
 
-[![🤖 Continuous Integration](https://github.com/OpenThrottle/monorepo/actions/workflows/continuous-integration.yml/badge.svg?branch=main)](https://github.com/OpenThrottle/monorepo/actions/workflows/continuous-integration.yml)
-<!-- [![🚀 NX Release](https://github.com/OpenThrottle/monorepo/actions/workflows/nx-release.yml/badge.svg?branch=main)](https://github.com/OpenThrottle/monorepo/actions/workflows/nx-release.yml) -->
+![🤖 Continuous Integration](https://github.com/OpenThrottle/monorepo/actions/workflows/continuous-integration.yml/badge.svg?branch=main)
 
 **OpenThrottle** is an open-core, AI-native platform for planning and shipping software. At its core is a Postgres-backed knowledge base of **plans and tasks** with semantic search, exposed to your editor and agents over **MCP**, plus agentic execution (Ralph) and a developer dashboard that shows what's in progress and what shipped. The repo is an Nx + pnpm monorepo with TypeScript throughout.
 
@@ -10,6 +9,8 @@
 Setup is simple and scripted:
 
 ```bash
+nvm use # or install the correct NodeJS version (see .nvmrc for the version to use)
+
 ./scripts/setup.sh
 ```
 
@@ -21,7 +22,7 @@ pnpm run setup:mcp-instructions
 
 > [!Tip]
 >
-> You can run this setup script **`ANYTIME`** you need to **reset your environment** or resolve **setup-related issues**. See the Troubleshooting section below for common scenarios where running the setup script can help.
+> You can run this setup script `ANYTIME` you need to **reset your environment** or resolve **setup-related issues**. See the Troubleshooting section below for common scenarios where running the setup script can help.
 
 ## 🚀 Get Started
 
@@ -29,18 +30,18 @@ OpenThrottle is a AI Harness built in a NX monorepo using NodeJS, TypeScript, Po
 
 1. Startup from the "openthrottle/monorepo" root
 
-   ```bash
-   pnpm run start
-   ```
+```bash
+ pnpm run start
+```
 
 2. Watch the logs for the two applications to start up
-   1. http://localhost:6021 OpenThrottle Server 🧠
-   2. http://localhost:6020 OpenThrottle Developer 🏍️💨
-3. Turn it off ~ _if you can..._
+1. [http://localhost:6021](http://localhost:6021) OpenThrottle Server 🧠
+1. [http://localhost:6020](http://localhost:6020) OpenThrottle Developer 🏍️💨
+1. Turn it off ~ _if you can..._
 
-   ```bash
-   pnpm run stop
-   ```
+```bash
+ pnpm run stop
+```
 
 ## 🏠 Architecture
 

@@ -67,6 +67,7 @@ describe('createGroupedCountLoader', () => {
     ]);
     const qb = {
       addSelect: vi.fn().mockReturnThis(),
+      andWhere: vi.fn().mockReturnThis(),
       getRawMany,
       groupBy: vi.fn().mockReturnThis(),
       select: vi.fn().mockReturnThis(),
@@ -84,8 +85,36 @@ describe('createGroupedCountLoader', () => {
     ]);
 
     expect(getRawMany).toHaveBeenCalledTimes(1);
+    expect(qb.andWhere).not.toHaveBeenCalled();
     expect(p1).toBe(2);
     expect(p2).toBe(5);
     expect(p3).toBe(0);
+  });
+
+  test('applies optional column IN filter via andWhere', async () => {
+    const getRawMany = vi.fn().mockResolvedValue([{ count: '1', key: 'p1' }]);
+    const qb = {
+      addSelect: vi.fn().mockReturnThis(),
+      andWhere: vi.fn().mockReturnThis(),
+      getRawMany,
+      groupBy: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      where: vi.fn().mockReturnThis(),
+    };
+    const loader = createGroupedCountLoader<Row & { status?: string }>(
+      accessorFor({ createQueryBuilder: () => qb }),
+      {
+        column: 'planId',
+        filter: { column: 'status', values: ['COMPLETED', 'SKIPPED'] },
+      },
+    );
+
+    await loader.load('p1');
+
+    expect(qb.andWhere).toHaveBeenCalledWith(
+      'entity.status IN (:...filterValues)',
+      { filterValues: ['COMPLETED', 'SKIPPED'] },
+    );
+    expect(getRawMany).toHaveBeenCalledTimes(1);
   });
 });

@@ -20,7 +20,7 @@ describe('workspace editor deep links', () => {
         workingDirectory: WORKING_DIRECTORY,
       }),
     ).toBe(
-      `claude://code/new?folder=%2FUsers%2Fmatt%2FDevelopment%2Fopenthrottle&q=%2Fot-claude-loop%20${PLAN_ID}`,
+      `claude://code/new?folder=%2FUsers%2Fmatt%2FDevelopment%2Fopenthrottle%2F&q=%2Fot-claude-loop%20${PLAN_ID}`,
     );
   });
 

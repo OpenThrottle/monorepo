@@ -59,6 +59,7 @@ const buildPlan = (
   summary: null,
   tags: [],
   taskCount: 3,
+  tasksCompletedCount: 0,
   title: 'My Plan',
   updatedAt: '2026-01-02T00:00:00Z',
   ...overrides,
@@ -146,6 +147,7 @@ describe('buildPlansTableColumns', () => {
       },
       tags: [{ __typename: 'PlanTagObject', dimension: 'phase', tag: 'alpha' }],
       taskCount: 5,
+      tasksCompletedCount: 2,
       title: 'Ship the thing',
     });
     const rendered = renderRoutesStub(<Harness plan={plan} />);
@@ -153,7 +155,9 @@ describe('buildPlansTableColumns', () => {
     expect(
       rendered.getByRole('link', { name: 'View plan: Ship the thing' }),
     ).toHaveAttribute('href', '/plans/plan-1');
-    expect(rendered.getByLabelText('5 tasks')).toBeInTheDocument();
+    expect(
+      rendered.getByLabelText('2 of 5 tasks resolved'),
+    ).toBeInTheDocument();
     expect(rendered.getByLabelText('Tag: alpha')).toBeInTheDocument();
     expect(rendered.getByLabelText('Project: Proj One')).toHaveAttribute(
       'href',
@@ -165,13 +169,19 @@ describe('buildPlansTableColumns', () => {
   });
 
   test('title cell renders a plain project string when no projectRelation is set', () => {
-    const plan = buildPlan({ project: 'legacy-project', taskCount: 1 });
+    const plan = buildPlan({
+      project: 'legacy-project',
+      taskCount: 1,
+      tasksCompletedCount: 0,
+    });
     const rendered = renderRoutesStub(<Harness plan={plan} />);
 
     expect(
       rendered.getByLabelText('Project: legacy-project'),
     ).toBeInTheDocument();
-    expect(rendered.getByLabelText('1 tasks')).toBeInTheDocument();
+    expect(
+      rendered.getByLabelText('0 of 1 tasks resolved'),
+    ).toBeInTheDocument();
   });
 
   test('title cell shows assignee-only label when there is no author', () => {

@@ -20,14 +20,10 @@ import type { RenderRequest, TtsBackend } from '../types';
  * bake-off.
  */
 // export const DEFAULT_FISH_AUDIO_VOICE = '536d3a5e000945adb7038665781a4aca';
-export const DEFAULT_FISH_AUDIO_VOICE = 'e35d38e0269f4e8dae73d66e99376b1e';
-
-/**
- * OpenAudio S1 — the model family with open-weight releases, which is the
- * self-hosting escape hatch if the hosted voice ever changes or disappears.
- * Selected via the `model` HTTP header, pinned and recorded per take.
- */
-export const DEFAULT_FISH_AUDIO_MODEL = 's1';
+// export const DEFAULT_FISH_AUDIO_VOICE = '536d3a5e000945adb7038665781a4aca';
+// export const DEFAULT_FISH_AUDIO_VOICE = 'e35d38e0269f4e8dae73d66e99376b1e';
+export const DEFAULT_FISH_AUDIO_VOICE = '6ca04d7a79d645e0986069e663d131d0';
+export const DEFAULT_FISH_AUDIO_MODEL = 's2.1-pro-free';
 
 const KEY_HINT = `Set FISH_AUDIO_API_KEY in the repo root .env and export it before running (set -a; source .env; set +a). See packages/openthrottle-showroom/NARRATION.md`;
 

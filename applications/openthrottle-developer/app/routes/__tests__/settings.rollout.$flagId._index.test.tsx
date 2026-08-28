@@ -4,6 +4,7 @@ import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
 import Component from '../settings.rollout.$flagId._index';
 import { RolloutFlagKind } from '~/__generated__/graphql';
+import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
 import type { RolloutFlagFieldsFragment } from '~/__generated__/graphql';
 
 function stubMatches(): React.ComponentProps<typeof Component>['matches'];
@@ -44,9 +45,8 @@ describe('routes/settings.rollout.$flagId._index.tsx', () => {
 
     expect(view.getByTestId('RolloutFlagDetail')).toBeInTheDocument();
     expect(view.getByText('new-dashboard')).toBeInTheDocument();
-    expect(view.getByRole('link', { name: 'Edit' })).toHaveAttribute(
-      'href',
-      '/settings/rollout/flag-1/edit',
-    );
+    expect(
+      view.getByRole('link', { name: ROLLOUT_COPY.editButton }),
+    ).toHaveAttribute('href', '/settings/rollout/flag-1/edit');
   });
 });

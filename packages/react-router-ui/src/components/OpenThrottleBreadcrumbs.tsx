@@ -60,7 +60,10 @@ export const OpenThrottleBreadcrumbs = (
           );
         })}
         <BreadcrumbItem>
-          <BreadcrumbPage className="text-accent! font-semibold" key="asdf">
+          <BreadcrumbPage
+            className="text-accent! font-semibold"
+            key="current-breadcrumb-page"
+          >
             {Array.isArray(children) ? <>{children}</> : children}
           </BreadcrumbPage>
         </BreadcrumbItem>
