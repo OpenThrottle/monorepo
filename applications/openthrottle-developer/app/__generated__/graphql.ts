@@ -4346,6 +4346,8 @@ export type ServiceAccountCredentialObject = {
 
 export type ServiceAccountObject = {
   __typename?: 'ServiceAccountObject';
+  /** The human user this machine identity acts as for user-scoped conveniences (e.g. plan workspace seeding). A hint, never a permission grant. */
+  actingUserId?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['DateTime']['output'];
   description?: Maybe<Scalars['String']['output']>;
   /** When set, the service account cannot authenticate. */
@@ -5206,6 +5208,8 @@ export type UpdateScheduledAgentJobInputType = {
 };
 
 export type UpdateServiceAccountInput = {
+  /** The human user this account acts as for user-scoped conveniences (e.g. plan workspace seeding). Pass null to clear the link; omit to leave unchanged. Never a permission grant. */
+  actingUserId?: InputMaybe<Scalars['ID']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
   id: Scalars['ID']['input'];
   /** Display name. Pass null to leave unchanged. */

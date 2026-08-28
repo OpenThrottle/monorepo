@@ -2448,6 +2448,10 @@ type CreateServiceAccountCredentialResultObject {
 }
 
 type ServiceAccountObject {
+  """
+  The human user this machine identity acts as for user-scoped conveniences (e.g. plan workspace seeding). A hint, never a permission grant.
+  """
+  actingUserId: String
   createdAt: DateTime!
   description: String
 
@@ -6086,6 +6090,10 @@ input CreateServiceAccountInput {
 }
 
 input UpdateServiceAccountInput {
+  """
+  The human user this account acts as for user-scoped conveniences (e.g. plan workspace seeding). Pass null to clear the link; omit to leave unchanged. Never a permission grant.
+  """
+  actingUserId: ID
   description: String
   id: ID!
 

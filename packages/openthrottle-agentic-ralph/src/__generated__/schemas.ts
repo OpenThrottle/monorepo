@@ -1555,6 +1555,7 @@ export function UpdateServiceAccountInputSchema(): z.ZodObject<
   Properties<UpdateServiceAccountInput>
 > {
   return z.object({
+    actingUserId: z.string().nullish(),
     description: z.string().nullish(),
     id: z.string().min(1),
     name: z.string().nullish(),

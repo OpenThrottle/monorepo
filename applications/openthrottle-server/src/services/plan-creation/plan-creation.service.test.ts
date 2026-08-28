@@ -15,6 +15,7 @@ import type {
 import { embedQuery } from '@openthrottle/node-client';
 import type { CreatePlanInput } from '../../graphql/plans/plan.input';
 import { CheckoutPathResolutionService } from '../checkout-path-resolution/checkout-path-resolution.service';
+import { EffectiveUserResolutionService } from '../effective-user-resolution/effective-user-resolution.service';
 import { PlanCreationService } from './plan-creation.service';
 
 vi.mock('@openthrottle/node-client', async (importOriginal) => {
@@ -29,6 +30,7 @@ vi.mock('@openthrottle/node-client', async (importOriginal) => {
 describe('PlanCreationService', () => {
   let service: PlanCreationService;
   const resolveCheckoutForPath = vi.fn();
+  const resolveEffectiveUserId = vi.fn();
   const planRepo = {
     create: vi.fn(),
     manager: {
@@ -48,6 +50,8 @@ describe('PlanCreationService', () => {
     vi.clearAllMocks();
     vi.mocked(embedQuery).mockResolvedValue(undefined);
     resolveCheckoutForPath.mockResolvedValue(null);
+    // Default: a user sub acts as itself (the human-JWT case).
+    resolveEffectiveUserId.mockImplementation(async (sub: string) => sub);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -55,6 +59,10 @@ describe('PlanCreationService', () => {
         {
           provide: CheckoutPathResolutionService,
           useValue: { resolveCheckoutForPath },
+        },
+        {
+          provide: EffectiveUserResolutionService,
+          useValue: { resolveEffectiveUserId },
         },
         {
           provide: LoggerService,
@@ -433,6 +441,49 @@ describe('PlanCreationService', () => {
       await service.createPlanFromInput(input({ workspacePath: WORKSPACE }));
 
       expect(resolveCheckoutForPath).not.toHaveBeenCalled();
+      expectWorkspace(1, { checkoutId: '' });
+    });
+
+    it('seeds via the acting user when the sub is a linked service account', async () => {
+      const serviceAccountSub = 'sa-1';
+      const actingUserId = 'user-linked';
+      resolveEffectiveUserId.mockResolvedValue(actingUserId);
+      resolveCheckoutForPath.mockResolvedValue(RESOLVED);
+
+      await service.createPlanFromInput(
+        input({ workspacePath: WORKSPACE }),
+        serviceAccountSub,
+      );
+
+      expect(resolveEffectiveUserId).toHaveBeenCalledWith(serviceAccountSub);
+      expect(resolveCheckoutForPath).toHaveBeenCalledWith({
+        path: WORKSPACE,
+        userId: actingUserId,
+      });
+      expectWorkspace(1, RESOLVED);
+    });
+
+    it('leaves the run config untouched when the sub resolves to no user', async () => {
+      resolveEffectiveUserId.mockResolvedValue(null);
+
+      await service.createPlanFromInput(
+        input({ workspacePath: WORKSPACE }),
+        'sa-unlinked',
+      );
+
+      expect(resolveCheckoutForPath).not.toHaveBeenCalled();
+      expectWorkspace(1, { checkoutId: '', repositoryId: '' });
+    });
+
+    it('still creates the plan when effective-user resolution throws', async () => {
+      resolveEffectiveUserId.mockRejectedValue(new Error('boom'));
+
+      const plan = await service.createPlanFromInput(
+        input({ workspacePath: WORKSPACE }),
+        USER,
+      );
+
+      expect(plan).toBeDefined();
       expectWorkspace(1, { checkoutId: '' });
     });
 

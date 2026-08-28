@@ -96,6 +96,56 @@ async function ensureAllRoles(
   /* eslint-enable no-await-in-loop */
 }
 
+/**
+ * Bootstrap service accounts that act as the default user (see
+ * scripts/bootstrap-service-account-credentials.ts for their credentials).
+ */
+const ACTING_SERVICE_ACCOUNT_NAMES = ['openthrottle-mcp', 'workflow-ralph'];
+
+/**
+ * Link each bootstrap service account to the default user via
+ * acting_user_id so user-scoped conveniences (e.g. plan workspace seeding)
+ * resolve for MCP/Ralph callers. Only fills a NULL link — an explicit link to
+ * a different user is respected. Idempotent.
+ */
+async function linkActingUser(
+  dataSource: DataSource,
+  userId: string,
+): Promise<void> {
+  const serviceAccountRepository = dataSource.getRepository(ServiceAccount);
+
+  /* eslint-disable no-await-in-loop -- two fixed accounts; run in order for stable logs */
+  for (const name of ACTING_SERVICE_ACCOUNT_NAMES) {
+    const account = await serviceAccountRepository.findOne({
+      where: { name },
+    });
+
+    if (account == null) {
+      console.log(
+        `Acting user ${name}: service account missing (run: pnpm run database:migrate); skipped.`,
+      );
+      continue;
+    }
+
+    if (account.actingUserId === userId) {
+      console.log(`Acting user ${name}: already linked.`);
+      continue;
+    }
+
+    if (account.actingUserId != null) {
+      console.log(
+        `Acting user ${name}: linked to a different user; left as-is.`,
+      );
+      continue;
+    }
+
+    account.actingUserId = userId;
+    await serviceAccountRepository.save(account);
+    console.log(`Acting user ${name}: linked to ${USER_EMAIL}.`);
+  }
+  /* eslint-enable no-await-in-loop */
+}
+
 async function main(): Promise<void> {
   const dataSource = new DataSource(getOpenThrottleTypeOrmOptions());
   await dataSource.initialize();
@@ -121,6 +171,7 @@ async function main(): Promise<void> {
 
     const user = await ensureDefaultUser(usersService);
     await ensureAllRoles(rolesService, user.id);
+    await linkActingUser(dataSource, user.id);
 
     // Record the login to the git-ignored local file so a fresh machine can
     // sign in without scrolling back through setup output. Upsert semantics

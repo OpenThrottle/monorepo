@@ -5,7 +5,6 @@
  * a component cannot consume a Jotai Provider it renders in its own JSX, so the body
  * lives here. Extracted from `routes/plans.$planId._index.tsx`; behavior is unchanged.
  */
-
 import * as React from 'react';
 import { Card, TabsList, TabsTrigger } from '@openthrottle/react-router-shadcn';
 import { GlobalScreen } from '@openthrottle/react-router-ui-global';
@@ -29,6 +28,7 @@ import { PlanTasksBoard } from '~/routing/plans/components/PlanTasksBoard';
 import { PlanTabOutput } from '~/routing/plans/components/PlanTabOutput';
 import { usePlanDetailRoute } from '~/routing/plans/hooks/usePlanDetailRoute';
 import type { Route } from '@/app/routes/+types/plans.$planId._index';
+import { PlanEditorActions } from '~/routing/plans/components/PlanEditorActions';
 
 export interface PlanDetailRouteProps {
   readonly loaderData: Route.ComponentProps['loaderData'];
@@ -40,9 +40,6 @@ export const PlanDetailRoute = (
   props: PlanDetailRouteProps,
 ): React.ReactElement => {
   const { loaderData, params, plan } = props;
-  // `tagVocabulary` is a deferred promise and is handed to PlanToolbar as-is —
-  // the toolbar wraps only its tag-chip region. `tasks` is critical loader data,
-  // so the Tasks tab counter below never becomes a skeleton.
   const { tagVocabulary, tasks } = loaderData;
 
   // Hooks
@@ -124,7 +121,6 @@ export const PlanDetailRoute = (
             workingDirectory={workingDirectory}
           />
         ) : null}
-
         <OpenThrottleTabs
           urlSync={{
             defaultValue: 'overview',
@@ -161,6 +157,11 @@ export const PlanDetailRoute = (
               Output
             </TabsTrigger>
             <div className="flex-1" />
+            <PlanEditorActions
+              editors={loaderData.enabledEditors}
+              planId={plan.id}
+              workingDirectory={workingDirectory}
+            />
             {showConfiguration ? (
               <TabsTrigger
                 className="flex-0 cursor-pointer"
@@ -199,7 +200,6 @@ export const PlanDetailRoute = (
           ) : null}
         </OpenThrottleTabs>
       </GlobalScreen>
-
       {isBoardView ? (
         <Card className="mx-4 overflow-hidden">
           <PlanTasksBoard />

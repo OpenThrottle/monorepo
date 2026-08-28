@@ -36,6 +36,7 @@ const userRow = (
 const serviceAccountRow = (
   fields: Pick<ServiceAccount, 'disabledAt' | 'description' | 'id' | 'name'>,
 ): ServiceAccount => ({
+  actingUserId: null,
   createdAt: new Date('2019-01-01T00:00:00.000Z'),
   credentials: [],
   roles: [],

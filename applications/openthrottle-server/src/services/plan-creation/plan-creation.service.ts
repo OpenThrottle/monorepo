@@ -11,6 +11,7 @@ import {
 import { embedQuery } from '@openthrottle/node-client';
 import type { CreatePlanInput } from '../../graphql/plans/plan.input';
 import { CheckoutPathResolutionService } from '../checkout-path-resolution/checkout-path-resolution.service';
+import { EffectiveUserResolutionService } from '../effective-user-resolution/effective-user-resolution.service';
 
 /** @description Same GitHub-login rule as assignee normalization in @openthrottle/node-client openthrottle-client. */
 const GITHUB_USERNAME_REGEX =
@@ -52,6 +53,7 @@ export class PlanCreationService {
   constructor(
     private readonly logger: LoggerService,
     private readonly checkoutPathResolutionService: CheckoutPathResolutionService,
+    private readonly effectiveUserResolutionService: EffectiveUserResolutionService,
     private readonly planEmbeddingsService: PlanEmbeddingsService,
     private readonly plansService: PlansService,
   ) {
@@ -155,10 +157,24 @@ export class PlanCreationService {
     }
 
     try {
+      // The sub may be a service account (the MCP's usual caller), which owns
+      // no checkouts itself — resolve the human user it acts as first.
+      const effectiveUserId =
+        await this.effectiveUserResolutionService.resolveEffectiveUserId(
+          userId,
+        );
+
+      if (effectiveUserId === null) {
+        this.logger.debug(
+          `${this.name}: workspacePath ignored; caller resolves to no user (unlinked service account?)`,
+        );
+        return runConfig;
+      }
+
       const resolved =
         await this.checkoutPathResolutionService.resolveCheckoutForPath({
           path,
-          userId,
+          userId: effectiveUserId,
         });
 
       if (resolved === null) {
