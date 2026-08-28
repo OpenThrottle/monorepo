@@ -81,7 +81,9 @@ const renderRoute = (): {
   return { submitted };
 };
 
-describe('routes/plans.$planId.tasks.$taskId._index.tsx — task tags', () => {
+// Skipped while PlanTaskToolbar (the only surface rendering task tags) is
+// parked behind showToolbar=false in TaskDetailRoute — restore when it returns.
+describe.skip('routes/plans.$planId.tasks.$taskId._index.tsx — task tags', () => {
   test('renders existing task tags', async () => {
     renderRoute();
     expect(await screen.findByTestId('PlanTagChips')).toBeInTheDocument();
@@ -111,7 +113,9 @@ describe('routes/plans.$planId.tasks.$taskId._index.tsx — task tags', () => {
   });
 });
 
-describe('routes/plans.$planId.tasks.$taskId._index.tsx — task lifecycle hooks', () => {
+// Skipped while the Hooks tab is parked behind showHooks=false in
+// TaskDetailRoute — restore when it returns.
+describe.skip('routes/plans.$planId.tasks.$taskId._index.tsx — task lifecycle hooks', () => {
   const renderWithHook = (): {
     submitted: Record<string, FormDataEntryValue | null>[];
   } => {

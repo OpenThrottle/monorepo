@@ -82,11 +82,12 @@ describe('TaskDetailRoute Component', () => {
     component = renderRoute(buildProps());
   });
 
-  test('renders heading, toolbar, and the Details tab by default', () => {
+  test('renders heading and the Details tab by default, with the toolbar parked', () => {
     expect(
       component.getByRole('heading', { name: 'Test Task' }),
     ).toBeInTheDocument();
-    expect(component.getByTestId('PlanTaskToolbar')).toBeInTheDocument();
+    // PlanTaskToolbar is parked behind showToolbar=false in TaskDetailRoute.
+    expect(component.queryByTestId('PlanTaskToolbar')).toBeNull();
     expect(component.getByTestId('TaskDetails')).toBeInTheDocument();
   });
 
@@ -104,15 +105,14 @@ describe('TaskDetailRoute Component', () => {
     expect(scoped.getAllByText('Pending').length).toBeGreaterThanOrEqual(1);
   });
 
-  test('exposes the Details, Output, Artifacts, and Hooks tabs', () => {
+  test('exposes the Details and Output tabs, with Artifacts and Hooks parked', () => {
     expect(
       component.getByRole('tab', { name: /details/i }),
     ).toBeInTheDocument();
     expect(component.getByRole('tab', { name: /output/i })).toBeInTheDocument();
-    expect(
-      component.getByRole('tab', { name: /artifacts/i }),
-    ).toBeInTheDocument();
-    expect(component.getByRole('tab', { name: /hooks/i })).toBeInTheDocument();
+    // Artifacts and Hooks are parked behind showArtifacts/showHooks=false.
+    expect(component.queryByRole('tab', { name: /artifacts/i })).toBeNull();
+    expect(component.queryByRole('tab', { name: /hooks/i })).toBeNull();
   });
 
   test('switches to the Output tab and shows the empty state', async () => {
@@ -124,7 +124,9 @@ describe('TaskDetailRoute Component', () => {
     ).toBeInTheDocument();
   });
 
-  test('disables task Mark Complete and Promote when the parent plan run is active', () => {
+  // Skipped while PlanTaskToolbar is parked behind showToolbar=false in
+  // TaskDetailRoute — restore these when the toolbar returns.
+  test.skip('disables task Mark Complete and Promote when the parent plan run is active', () => {
     const running = within(
       renderRoute(buildProps(mockTask, buildPlan('IN_PROGRESS'))).container,
     );
@@ -137,7 +139,7 @@ describe('TaskDetailRoute Component', () => {
     ).toBeDisabled();
   });
 
-  test('leaves task actions enabled when the parent plan is not running', () => {
+  test.skip('leaves task actions enabled when the parent plan is not running', () => {
     const idle = within(
       renderRoute(buildProps(mockTask, buildPlan('PENDING'))).container,
     );
