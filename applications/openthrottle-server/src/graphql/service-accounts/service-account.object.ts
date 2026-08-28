@@ -7,6 +7,12 @@ import { Field, ObjectType } from '@nestjs/graphql';
 
 @ObjectType()
 export class ServiceAccountObject implements ServiceAccountData {
+  @Field(() => String, {
+    description: `The human user this machine identity acts as for user-scoped conveniences (e.g. plan workspace seeding). A hint, never a permission grant.`,
+    nullable: true,
+  })
+  actingUserId!: string | null;
+
   @Field(() => Date)
   createdAt!: Date;
 

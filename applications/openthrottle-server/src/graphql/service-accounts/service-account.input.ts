@@ -17,6 +17,12 @@ export class CreateServiceAccountInput {
 
 @InputType()
 export class UpdateServiceAccountInput {
+  @Field(() => ID, {
+    description: `The human user this account acts as for user-scoped conveniences (e.g. plan workspace seeding). Pass null to clear the link; omit to leave unchanged. Never a permission grant.`,
+    nullable: true,
+  })
+  actingUserId?: string | null;
+
   @Field(() => String, { nullable: true })
   description!: string | null;
 

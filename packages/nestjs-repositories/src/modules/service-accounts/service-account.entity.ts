@@ -16,7 +16,7 @@ import type { ServiceAccountCredential } from './service-account-credential.enti
 /** Scalar/column fields of ServiceAccount (no relations). */
 export type ServiceAccountData = Pick<
   ServiceAccount,
-  'createdAt' | 'description' | 'disabledAt' | 'id' | 'name'
+  'actingUserId' | 'createdAt' | 'description' | 'disabledAt' | 'id' | 'name'
 >;
 
 @Entity('service_accounts')
@@ -29,6 +29,15 @@ export class ServiceAccount {
 
   @Column({ name: 'description', nullable: true, type: 'text' })
   description!: string | null;
+
+  /**
+   * The human user this machine identity acts as for user-scoped conveniences
+   * (e.g. resolving a plan's creating workspace against that user's registered
+   * checkouts). A hint, never a permission grant — authorization still comes
+   * from service_account_roles.
+   */
+  @Column({ name: 'acting_user_id', nullable: true, type: 'uuid' })
+  actingUserId!: string | null;
 
   @Column({
     name: 'disabled_at',

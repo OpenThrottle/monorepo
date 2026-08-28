@@ -141,6 +141,9 @@ export class ServiceAccountsResolver {
   ): Promise<ServiceAccount | null> {
     assertHumanAuthPrincipal(principal);
     return this.serviceAccountsService.update(input.id, {
+      ...(input.actingUserId !== undefined && {
+        actingUserId: input.actingUserId,
+      }),
       ...(input.description !== undefined && {
         description: input.description,
       }),

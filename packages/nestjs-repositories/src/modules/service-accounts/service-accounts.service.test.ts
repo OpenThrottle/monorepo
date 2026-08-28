@@ -15,6 +15,8 @@ const credentialId = '22222222-2222-4222-8222-222222222222';
 describe('ServiceAccountsService', () => {
   type ServiceAccountRepo = {
     findOne: ReturnType<typeof vi.fn>;
+    merge: ReturnType<typeof vi.fn>;
+    save: ReturnType<typeof vi.fn>;
   };
   type CredentialRepo = {
     create: ReturnType<typeof vi.fn>;
@@ -31,6 +33,10 @@ describe('ServiceAccountsService', () => {
   beforeEach(async () => {
     serviceAccountRepository = {
       findOne: vi.fn(),
+      merge: vi.fn((entity: ServiceAccount, patch: Partial<ServiceAccount>) =>
+        Object.assign(entity, patch),
+      ),
+      save: vi.fn(async (entity: ServiceAccount) => entity),
     };
     credentialRepository = {
       create: vi.fn((data: Partial<ServiceAccountCredential>) => data),
@@ -388,6 +394,106 @@ describe('ServiceAccountsService', () => {
       const hash = await service.hashSecret('test-secret');
       expect(await service.validateSecret('test-secret', hash)).toBe(true);
       expect(await service.validateSecret('wrong', hash)).toBe(false);
+    });
+  });
+
+  describe('update', () => {
+    const actingUserId = '33333333-3333-4333-8333-333333333333';
+
+    it('sets actingUserId', async () => {
+      serviceAccountRepository.findOne.mockResolvedValue(
+        asMock<ServiceAccount>({
+          actingUserId: null,
+          disabledAt: null,
+          id: serviceAccountId,
+        }),
+      );
+
+      const updated = await service.update(serviceAccountId, {
+        actingUserId,
+      });
+
+      expect(updated?.actingUserId).toBe(actingUserId);
+    });
+
+    it('clears actingUserId with an explicit null', async () => {
+      serviceAccountRepository.findOne.mockResolvedValue(
+        asMock<ServiceAccount>({
+          actingUserId,
+          disabledAt: null,
+          id: serviceAccountId,
+        }),
+      );
+
+      const updated = await service.update(serviceAccountId, {
+        actingUserId: null,
+      });
+
+      expect(updated?.actingUserId).toBeNull();
+    });
+
+    it('leaves actingUserId unchanged when omitted', async () => {
+      serviceAccountRepository.findOne.mockResolvedValue(
+        asMock<ServiceAccount>({
+          actingUserId,
+          disabledAt: null,
+          id: serviceAccountId,
+        }),
+      );
+
+      const updated = await service.update(serviceAccountId, {
+        description: 'renamed',
+      });
+
+      expect(updated?.actingUserId).toBe(actingUserId);
+    });
+  });
+
+  describe('resolveActingUserId', () => {
+    const actingUserId = '33333333-3333-4333-8333-333333333333';
+
+    it('returns the linked user for an enabled account', async () => {
+      serviceAccountRepository.findOne.mockResolvedValue(
+        asMock<ServiceAccount>({
+          actingUserId,
+          disabledAt: null,
+          id: serviceAccountId,
+        }),
+      );
+
+      expect(await service.resolveActingUserId(serviceAccountId)).toBe(
+        actingUserId,
+      );
+    });
+
+    it('returns null for an unlinked account', async () => {
+      serviceAccountRepository.findOne.mockResolvedValue(
+        asMock<ServiceAccount>({
+          actingUserId: null,
+          disabledAt: null,
+          id: serviceAccountId,
+        }),
+      );
+
+      expect(await service.resolveActingUserId(serviceAccountId)).toBeNull();
+    });
+
+    it('returns null for a disabled account even when linked', async () => {
+      serviceAccountRepository.findOne.mockResolvedValue(
+        asMock<ServiceAccount>({
+          actingUserId,
+          disabledAt: new Date(),
+          id: serviceAccountId,
+        }),
+      );
+
+      expect(await service.resolveActingUserId(serviceAccountId)).toBeNull();
+    });
+
+    it('returns null for a missing account', async () => {
+      serviceAccountRepository.findOne.mockResolvedValue(null);
+
+      expect(await service.resolveActingUserId(serviceAccountId)).toBeNull();
     });
   });
 });

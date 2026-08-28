@@ -111,10 +111,13 @@ export class ServiceAccountsService {
 
   /**
    * @description Updates a service account by id. Returns null when not found.
+   * `actingUserId: null` clears the acting-user link; omitting it leaves the
+   * link unchanged.
    */
   async update(
     id: string,
     data: {
+      actingUserId?: string | null;
       description?: string | null;
       name?: string;
     },
@@ -126,10 +129,29 @@ export class ServiceAccountsService {
       return null;
     }
     this.serviceAccountRepository.merge(existing, {
+      ...(data.actingUserId !== undefined && {
+        actingUserId: data.actingUserId,
+      }),
       ...(data.description !== undefined && { description: data.description }),
       ...(data.name != null && { name: data.name }),
     });
     return this.serviceAccountRepository.save(existing);
+  }
+
+  /**
+   * @description The user a service account acts as for user-scoped
+   * conveniences, or null when the account is missing, disabled, or unlinked.
+   * Never a permission grant — authorization still comes from the account's
+   * roles.
+   */
+  async resolveActingUserId(serviceAccountId: string): Promise<string | null> {
+    const account = await this.serviceAccountRepository.findOne({
+      where: { id: serviceAccountId },
+    });
+    if (account == null || account.disabledAt != null) {
+      return null;
+    }
+    return account.actingUserId;
   }
 
   /**

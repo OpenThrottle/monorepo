@@ -6,7 +6,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
-import { SquareArrowOutUpRight } from 'lucide-react';
+import { CodeXmlIcon } from 'lucide-react';
 import { getWorkspaceEditorDeepLink } from '~/global/config/workspace-editor-deep-links';
 import { PlanDeferredSection } from '~/routing/plans/components/PlanDeferredSection';
 import { PlanToolbarTagsSkeleton } from '~/routing/plans/components/PlanToolbarTagsSkeleton';
@@ -94,7 +94,7 @@ export const PlanEditorActions = (
         {targets.map(({ href, target }) => {
           const label = (
             <div className="flex items-center gap-2">
-              <SquareArrowOutUpRight aria-hidden={true} className="size-2.5" />
+              <CodeXmlIcon aria-hidden={true} className="size-2.5" />
               {target.label}
             </div>
           );

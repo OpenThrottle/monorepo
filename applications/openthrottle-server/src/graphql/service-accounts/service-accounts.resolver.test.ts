@@ -34,6 +34,7 @@ describe('ServiceAccountsResolver', () => {
   };
 
   const mockServiceAccount: ServiceAccount = {
+    actingUserId: null,
     createdAt: new Date('2026-02-02T10:00:00.000Z'),
     credentials: [],
     description: 'MCP automation',
