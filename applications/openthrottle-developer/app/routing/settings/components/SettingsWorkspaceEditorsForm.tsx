@@ -85,20 +85,21 @@ export const SettingsWorkspaceEditorsForm = (
           value={profile.contactEmail ?? ''}
         />
 
+        <p className="text-muted-foreground text-sm">
+          {WORKSPACE_SETTINGS_COPY.editorsExplainer}
+        </p>
+
         <div className="space-y-2">
           <Label>{WORKSPACE_SETTINGS_COPY.editorsLabel}</Label>
-          <p className="text-muted-foreground text-sm">
-            {WORKSPACE_SETTINGS_COPY.editorsExplainer}
-          </p>
           <WorkspaceEditorMultiSelect
             onChange={setEnabledEditors}
             value={enabledEditors}
           />
-          <WorkspaceEditorPresenceHints
-            editors={editorPresence?.editors ?? null}
-          />
-          <WorkspaceEditorAffiliateLinks />
         </div>
+
+        <WorkspaceEditorPresenceHints
+          editors={editorPresence?.editors ?? null}
+        />
 
         {actionError ? (
           <p className="text-destructive text-sm" role="alert">
@@ -111,6 +112,8 @@ export const SettingsWorkspaceEditorsForm = (
             ? WORKSPACE_SETTINGS_COPY.saveBusyLabel
             : WORKSPACE_SETTINGS_COPY.saveEditorsButton}
         </Button>
+
+        <WorkspaceEditorAffiliateLinks className="border-t pt-3" />
       </Form>
     </OpenThrottleFieldset>
   );

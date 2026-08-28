@@ -52,9 +52,9 @@ describe('WorkspaceEditorPresenceHints Component', () => {
 
     expect(hint).toHaveTextContent('Visual Studio Code');
     expect(hint).toHaveTextContent('not detected');
-    // The reassurance is the point: this must not read as an error or a blocker.
-    expect(hint).toHaveTextContent('you can still enable it');
     expect(hint).toHaveAttribute('data-presence', 'NOT_FOUND');
+    // The reassurance is the point: this must not read as an error or a blocker.
+    expect(component.getByText(/You can still enable it/i)).toBeInTheDocument();
   });
 
   test('renders NOTHING for an unknown editor — no badge, no placeholder', () => {

@@ -10,6 +10,9 @@ import {
 } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import { FolderGit2Icon } from 'lucide-react';
+import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
+import { WORKSPACE_SETTINGS_COPY } from '~/routing/settings/data/data.copy';
 import {
   GetEditorPresenceDocument,
   GetWorkspaceSettingsDocument,
@@ -26,7 +29,7 @@ import {
   updateProfile,
 } from '~/routing/settings/actions/workspace';
 import { buildWorkspaceApplyResults } from '~/routing/settings/utils/workspace-apply-results';
-import { buildWorkspaceEditorTargets } from '~/routing/settings/utils/workspace-editor-targets';
+import { buildWorkspaceEditorTargetGroups } from '~/routing/settings/utils/workspace-editor-targets';
 import type { Route } from '@/app/routes/+types/settings.workspace._index';
 
 type HandleData = Route.ComponentProps['loaderData'];
@@ -54,7 +57,7 @@ export const loader = async (args: Route.LoaderArgs) => {
     editorPresence: presence?.editorPresence ?? null,
     localRepositories,
     profile,
-    targets: buildWorkspaceEditorTargets(
+    targets: buildWorkspaceEditorTargetGroups(
       localRepositories,
       profile.enabledEditors,
     ),
@@ -100,34 +103,48 @@ export default function Component(
     <GlobalScreen beta={true}>
       <SettingsWorkspaceIntro />
 
-      <div className="space-y-8">
-        <SettingsWorkspaceEditorsForm
-          actionError={actionError}
-          editorPresence={editorPresence}
-          profile={profile}
-        />
-        <SettingsWorkspaceEditorTargets
-          hasRepositories={localRepositories.length > 0}
-          targets={targets}
-        />
-        <SettingsWorkspaceApplyEditors
-          actionError={actionError}
-          disabled={!canApplyEditors}
-        />
-        {applyResults ? (
-          <SettingsWorkspaceApplyResults
-            results={applyResults}
-            summary={actionMessage}
+      <div className="space-y-10">
+        {/* The editor-configuration flow: choose editors, then apply them to repositories. */}
+        <div className="space-y-4">
+          <SettingsWorkspaceEditorsForm
+            actionError={actionError}
+            editorPresence={editorPresence}
+            profile={profile}
           />
-        ) : null}
-        <SettingsWorkspaceWorktreeRootForm
-          actionError={actionError}
-          profile={profile}
-        />
-        <SettingsWorkspaceProfileForm
-          actionError={actionError}
-          profile={profile}
-        />
+          <OpenThrottleFieldset
+            icon={FolderGit2Icon}
+            id="settings-workspace-editor-targets"
+            legend={WORKSPACE_SETTINGS_COPY.targetsHeading}
+          >
+            <SettingsWorkspaceEditorTargets
+              hasRepositories={localRepositories.length > 0}
+              targets={targets}
+            />
+            <SettingsWorkspaceApplyEditors
+              actionError={actionError}
+              disabled={!canApplyEditors}
+            />
+            {applyResults ? (
+              <SettingsWorkspaceApplyResults
+                className="border-t pt-4"
+                results={applyResults}
+                summary={actionMessage}
+              />
+            ) : null}
+          </OpenThrottleFieldset>
+        </div>
+
+        {/* Workspace preferences, independent of the apply flow above. */}
+        <div className="space-y-4">
+          <SettingsWorkspaceWorktreeRootForm
+            actionError={actionError}
+            profile={profile}
+          />
+          <SettingsWorkspaceProfileForm
+            actionError={actionError}
+            profile={profile}
+          />
+        </div>
       </div>
     </GlobalScreen>
   );

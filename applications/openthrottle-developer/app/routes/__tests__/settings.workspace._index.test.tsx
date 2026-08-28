@@ -63,8 +63,7 @@ describe('routes/settings.workspace._index.tsx', () => {
       expect(result.targets).toEqual([
         {
           displayName: 'monorepo',
-          editor: WorkspaceEditorId.Cursor,
-          editorLabel: 'Cursor',
+          editors: [{ id: WorkspaceEditorId.Cursor, label: 'Cursor' }],
           filesystemPath: '/Users/dev/openthrottle',
           id: 'repo-1',
         },

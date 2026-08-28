@@ -2,6 +2,7 @@ import * as React from 'react';
 import clsx from 'clsx';
 import { Form, Link, useNavigation } from 'react-router';
 import {
+  Badge,
   Button,
   Empty,
   EmptyDescription,
@@ -15,16 +16,20 @@ import {
   TableRow,
 } from '@openthrottle/react-router-shadcn';
 import { WORKSPACE_SETTINGS_COPY } from '~/routing/settings/data/data.copy';
-import type { WorkspaceEditorTarget } from '~/routing/settings/utils/workspace-editor-targets';
+import type { WorkspaceEditorTargetGroup } from '~/routing/settings/utils/workspace-editor-targets';
+
+/** How many repositories render before the list collapses behind a show-all toggle. */
+const COLLAPSED_TARGET_COUNT = 6;
 
 export interface SettingsWorkspaceEditorTargetsProps {
   className?: string;
   hasRepositories: boolean;
-  targets: readonly WorkspaceEditorTarget[];
+  targets: readonly WorkspaceEditorTargetGroup[];
 }
 
 /**
- * @description Previews the repository/editor pairings an apply-editor-configuration run writes to.
+ * @description Previews the repositories an apply-editor-configuration run writes to, one row
+ * per repository with the enabled editors as badges and a single per-repo Apply action.
  */
 export const SettingsWorkspaceEditorTargets = (
   props: SettingsWorkspaceEditorTargetsProps,
@@ -33,6 +38,7 @@ export const SettingsWorkspaceEditorTargets = (
 
   // Hooks
   const navigation = useNavigation();
+  const [showAll, setShowAll] = React.useState(false);
 
   // Setup
   const applyingRepositoryId =
@@ -40,8 +46,16 @@ export const SettingsWorkspaceEditorTargets = (
     navigation.formData?.get('intent') === 'applyEditorConfig'
       ? navigation.formData.get('repositoryId')
       : null;
+  const isCollapsible = targets.length > COLLAPSED_TARGET_COUNT;
+  const visibleTargets =
+    isCollapsible && !showAll
+      ? targets.slice(0, COLLAPSED_TARGET_COUNT)
+      : targets;
 
   // Handlers
+  const handleToggleShowAll = (): void => {
+    setShowAll((previous) => !previous);
+  };
 
   // Markup
 
@@ -55,7 +69,7 @@ export const SettingsWorkspaceEditorTargets = (
         data-testid="SettingsWorkspaceEditorTargets"
       >
         <EmptyHeader>
-          <EmptyTitle>{WORKSPACE_SETTINGS_COPY.targetsHeading}</EmptyTitle>
+          <EmptyTitle>{WORKSPACE_SETTINGS_COPY.targetsEmptyTitle}</EmptyTitle>
           <EmptyDescription>
             {hasRepositories
               ? WORKSPACE_SETTINGS_COPY.targetsNoEditors
@@ -78,9 +92,6 @@ export const SettingsWorkspaceEditorTargets = (
       className={clsx('space-y-2', className)}
       data-testid="SettingsWorkspaceEditorTargets"
     >
-      <p className="text-muted-foreground text-sm">
-        {WORKSPACE_SETTINGS_COPY.targetsHeading}
-      </p>
       <Table>
         <TableHeader>
           <TableRow>
@@ -88,15 +99,17 @@ export const SettingsWorkspaceEditorTargets = (
               {WORKSPACE_SETTINGS_COPY.targetsColumnRepository}
             </TableHead>
             <TableHead>{WORKSPACE_SETTINGS_COPY.targetsColumnPath}</TableHead>
-            <TableHead>{WORKSPACE_SETTINGS_COPY.targetsColumnEditor}</TableHead>
             <TableHead>
+              {WORKSPACE_SETTINGS_COPY.targetsColumnEditors}
+            </TableHead>
+            <TableHead className="text-right">
               {WORKSPACE_SETTINGS_COPY.targetsColumnActions}
             </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {targets.map((target) => (
-            <TableRow key={`${target.id}:${target.editor}`}>
+          {visibleTargets.map((target) => (
+            <TableRow key={target.id}>
               <TableCell>
                 <Link
                   className="underline-offset-4 hover:underline"
@@ -108,9 +121,17 @@ export const SettingsWorkspaceEditorTargets = (
               <TableCell className="text-muted-foreground font-mono text-xs">
                 {target.filesystemPath}
               </TableCell>
-              <TableCell>{target.editorLabel}</TableCell>
               <TableCell>
-                <Form method="post">
+                <div className="flex flex-wrap gap-1">
+                  {target.editors.map((editor) => (
+                    <Badge key={editor.id} variant="secondary">
+                      {editor.label}
+                    </Badge>
+                  ))}
+                </div>
+              </TableCell>
+              <TableCell className="text-right">
+                <Form className="inline-flex" method="post">
                   <input
                     name="intent"
                     type="hidden"
@@ -133,6 +154,24 @@ export const SettingsWorkspaceEditorTargets = (
           ))}
         </TableBody>
       </Table>
+      {isCollapsible ? (
+        <Button
+          onClick={handleToggleShowAll}
+          size="sm"
+          type="button"
+          variant="ghost"
+        >
+          {showAll ? (
+            WORKSPACE_SETTINGS_COPY.targetsShowFewer
+          ) : (
+            <>
+              {WORKSPACE_SETTINGS_COPY.targetsShowAllPrefix}
+              {targets.length}
+              {WORKSPACE_SETTINGS_COPY.targetsShowAllSuffix}
+            </>
+          )}
+        </Button>
+      ) : null}
     </div>
   );
 };

@@ -56,6 +56,9 @@ export const SettingsWorkspaceApplyResults = (
       className={clsx('space-y-3', className)}
       data-testid="SettingsWorkspaceApplyResults"
     >
+      <p className="text-sm font-medium">
+        {WORKSPACE_SETTINGS_COPY.resultsHeading}
+      </p>
       {summary ? (
         <p className="text-muted-foreground text-sm" role="status">
           {summary}

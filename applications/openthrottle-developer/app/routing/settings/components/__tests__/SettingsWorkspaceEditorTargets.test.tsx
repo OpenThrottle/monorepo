@@ -8,36 +8,32 @@ import { WorkspaceEditorId } from '~/__generated__/graphql';
 import { SettingsWorkspaceEditorTargets } from '../SettingsWorkspaceEditorTargets';
 import type { SettingsWorkspaceEditorTargetsProps } from '../SettingsWorkspaceEditorTargets';
 
+const editors = [
+  { id: WorkspaceEditorId.Cursor, label: 'Cursor' },
+  { id: WorkspaceEditorId.Vscode, label: 'Visual Studio Code' },
+];
+
 const targets = [
   {
     displayName: 'monorepo',
-    editor: WorkspaceEditorId.Cursor,
-    editorLabel: 'Cursor',
-    filesystemPath: '/Users/dev/openthrottle',
-    id: 'repo-1',
-  },
-  {
-    displayName: 'monorepo',
-    editor: WorkspaceEditorId.Vscode,
-    editorLabel: 'Visual Studio Code',
+    editors,
     filesystemPath: '/Users/dev/openthrottle',
     id: 'repo-1',
   },
   {
     displayName: 'website',
-    editor: WorkspaceEditorId.Cursor,
-    editorLabel: 'Cursor',
-    filesystemPath: '/Users/dev/website',
-    id: 'repo-2',
-  },
-  {
-    displayName: 'website',
-    editor: WorkspaceEditorId.Vscode,
-    editorLabel: 'Visual Studio Code',
+    editors,
     filesystemPath: '/Users/dev/website',
     id: 'repo-2',
   },
 ];
+
+const manyTargets = Array.from({ length: 8 }, (_value, index) => ({
+  displayName: `repo-${index + 1}`,
+  editors,
+  filesystemPath: `/Users/dev/repo-${index + 1}`,
+  id: `repo-${index + 1}`,
+}));
 
 const renderTargets = (
   props: SettingsWorkspaceEditorTargetsProps,
@@ -60,15 +56,18 @@ describe('SettingsWorkspaceEditorTargets Component', () => {
     component = renderTargets(props);
   });
 
-  test('renders one row per repository/editor pairing', () => {
+  test('renders one row per repository with editor badges', () => {
     expect(
       component.getByTestId('SettingsWorkspaceEditorTargets'),
     ).toBeInTheDocument();
-    expect(component.getAllByRole('row')).toHaveLength(5);
+    // Header row + one row per repository, regardless of enabled-editor count.
+    expect(component.getAllByRole('row')).toHaveLength(3);
     expect(component.getAllByText('Visual Studio Code')).toHaveLength(2);
-    expect(
-      component.getAllByRole('link', { name: 'monorepo' })[0],
-    ).toHaveAttribute('href', '/settings/repositories/repo-1');
+    expect(component.getByRole('link', { name: 'monorepo' })).toHaveAttribute(
+      'href',
+      '/settings/repositories/repo-1',
+    );
+    expect(component.getAllByRole('button', { name: 'Apply' })).toHaveLength(2);
   });
 
   test('posts the intent and a single repositoryId from a row action', async () => {
@@ -87,6 +86,24 @@ describe('SettingsWorkspaceEditorTargets Component', () => {
       intent: 'applyEditorConfig',
       repositoryId: 'repo-1',
     });
+  });
+
+  test('collapses long lists behind a show-all toggle', async () => {
+    const user = userEvent.setup();
+    component.unmount();
+    component = renderTargets({ hasRepositories: true, targets: manyTargets });
+
+    expect(component.getAllByRole('row')).toHaveLength(7);
+    const toggle = component.getByRole('button', {
+      name: 'Show all 8 repositories',
+    });
+
+    await user.click(toggle);
+
+    expect(component.getAllByRole('row')).toHaveLength(9);
+    expect(
+      component.getByRole('button', { name: 'Show fewer' }),
+    ).toBeInTheDocument();
   });
 
   test('points at the repositories route when nothing is linked', () => {
