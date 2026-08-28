@@ -35,5 +35,6 @@ Local Nx plugin holding the five workspace generators (`folders`, `nestjs`, `pac
 ## Pointers
 
 - [README.md](./README.md) — invocation, `--describe` / `--list` catalog.
-- [docs/tools/templates/](../../docs/tools/templates/) — `AGENT_USAGE.md`, `NX_ISOLATE_PLUGINS.md`, `TROUBLESHOOTING.md`, `RULES_TO_GENERATORS_MAP.md`, per-generator docs.
+- [docs/tools/templates/](../../docs/tools/templates/) — `AGENT_USAGE.md`, `NX_ISOLATE_PLUGINS.md`, `TROUBLESHOOTING.md`, per-generator docs.
+- [AGENT_USAGE.md § Rule → Generator Matrix](../../docs/tools/templates/AGENT_USAGE.md#rule--generator-matrix) — which `.agents/rules/` rules apply to each generator's output.
 - `.agents/rules/personal-generators.mdc` — the generators-first policy this package backs.

@@ -1,7 +1,8 @@
 /**
  * Flags .tsx files that may need alignment with generator templates and
- * .cursor/rules (default exports in component paths, missing React import).
- * See docs/tools/templates/AUDIT_CHECKLIST.md. Does not modify files.
+ * `.agents/rules/` (default exports in component paths, missing React import).
+ * See docs/tools/templates/AGENT_USAGE.md § Rule → Generator Matrix for the
+ * full rule-per-generator mapping. Does not modify files.
  */
 
 import { readFileSync } from 'fs';
@@ -17,7 +18,12 @@ const ROOT = process.cwd();
 const ALLOW_DEFAULT_EXPORT_PATH =
   /(?:routes|route\.tsx|root\.tsx|entry\.|_layout|layout\.tsx|app[/\\]routes)/i;
 
-/** In-scope globs for component/UI code (from AUDIT_SCOPE.md). */
+/**
+ * In-scope globs for component/UI code: application route trees and package
+ * sources — the two places generator-produced components land. `.tsx` only, so
+ * non-component `.ts` and any build output outside these trees are skipped;
+ * co-located `__tests__` files under them ARE scanned.
+ */
 const IN_SCOPE_GLOBS = [
   'applications/*/app/**/*.tsx',
   'packages/*/src/**/*.tsx',
@@ -96,7 +102,7 @@ function run(): void {
 
   if (flags.length === 0) {
     logger.success(
-      'No files flagged. See docs/tools/templates/AUDIT_CHECKLIST.md for full checklist.',
+      'No files flagged. See docs/tools/templates/AGENT_USAGE.md for the full rule mapping.',
     );
     return;
   }
@@ -111,7 +117,7 @@ function run(): void {
 
   logger.blank();
   logger.info(
-    `Total: ${flags.length} flag(s). See docs/tools/templates/AUDIT_CHECKLIST.md.`,
+    `Total: ${flags.length} flag(s). See docs/tools/templates/AGENT_USAGE.md.`,
   );
 }
 
