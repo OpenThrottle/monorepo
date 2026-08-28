@@ -20,6 +20,7 @@ This policy is **non-negotiable** and applies to all AI agent, LLM, and programm
 - [API Reference](#api-reference)
 - [Generator References](#generator-references)
 - [Rules to Load](#rules-to-load)
+- [Rule → Generator Matrix](#rule--generator-matrix)
 - [Best Practices](#best-practices)
 - [Plugin Worker Configuration](#plugin-worker-configuration)
 - [Integration with Agent Workflows](#integration-with-agent-workflows)
@@ -263,6 +264,58 @@ hand-edit a generated skill directory.
 | Workflow CLI     | `pnpm exec workflow-ralph --plan <uuid>` (see AGENTS.md § Workflow CLI)             |
 | OpenThrottle     | Use `openthrottle-mcp` tools per `.agents/rules/commands/openthrottle.mdc`          |
 | SSOT drift guard | `pnpm nx run monorepo:check-agent-assets-ssot` (see CONTRIBUTING.md § Agent assets) |
+
+---
+
+## Rule → Generator Matrix
+
+Which of the rules listed in [Rules to Load](#rules-to-load) apply to code produced by (or that
+should be produced by) each registered generator. Only generators registered in
+[`tools/generators/generators.json`](../../../tools/generators/generators.json) are listed.
+
+| Rule / convention                                                                        | react-router | react                          | nestjs | package | folders |
+| ---------------------------------------------------------------------------------------- | ------------ | ------------------------------ | ------ | ------- | ------- |
+| **personal-generators.mdc** (generator-first)                                            | ✓            | ✓                              | ✓      | ✓       | ✓       |
+| **personal-general.mdc** (UI: React Router/React, create via generator)                  | ✓            | ✓                              | ✓      | —       | ✓       |
+| **personal-general.mdc** (API: NestJS, create via generator)                             | —            | —                              | ✓      | —       | —       |
+| **personal-general.mdc** (testing: `component`, `userEvent`, `waitFor`, describe/branch) | ✓            | ✓                              | ✓      | —       | —       |
+| **personal-general.mdc** (shared-ui usage)                                               | ✓            | ✓ (shared-ui is a destination) | —      | —       | —       |
+| **personal-general.mdc** (NestJS: ListResult/Result, deprecate rather than remove)       | —            | —                              | ✓      | —       | —       |
+| **cursor-commands.mdc** (pnpm, Nx, `import * as React`)                                  | ✓            | ✓                              | ✓      | ✓       | —       |
+| **coding/default-exports.mdc** (no default export except framework pages)                | ✓            | ✓                              | ✓      | ✓       | —       |
+| **coding/return-types.mdc** (declare return types; JSX components excepted)              | ✓            | ✓                              | ✓      | ✓       | —       |
+| **coding/naming-conventions.mdc** (kebab files, PascalCase components, …)                | ✓            | ✓                              | ✓      | ✓       | ✓       |
+| **coding/import-type.mdc** (`import type` for type-only imports)                         | ✓            | ✓                              | ✓      | ✓       | —       |
+| **coding/interface-extends.mdc** (prefer `interface extends` over `&`)                   | ✓            | ✓                              | ✓      | ✓       | —       |
+| **coding/readonly-properties.mdc** (readonly by default)                                 | ✓            | ✓                              | ✓      | ✓       | —       |
+| **coding/optional-properties.mdc** (sparing use)                                         | ✓            | ✓                              | ✓      | ✓       | —       |
+| **coding/discriminated-unions.mdc** (model variants with a type field)                   | ✓            | ✓                              | ✓      | ✓       | —       |
+| **coding/enums.mdc** (no new enums; use `as const`)                                      | ✓            | ✓                              | ✓      | ✓       | —       |
+| **coding/jsdoc-comments.mdc** (JSDoc when not self-evident)                              | ✓            | ✓                              | ✓      | ✓       | —       |
+| **coding/throwing.mdc** (prefer result types over `throw`)                               | —            | —                              | ✓      | ✓       | —       |
+| **coding/component-data-boundaries.mdc** (copy/lists/data in the nearest `data/`)        | ✓            | ✓                              | —      | —       | —       |
+
+Sub-generators per generator:
+
+- **react-router**: `application`, `component`, `form`, `hook`, `modal`, `route`, `table`, `util`
+- **react**: `component`, `hook`, `util`
+- **nestjs**: `ai-agent`, `application`, `graphql-service`, `module`, `queue`, `simple-service`
+- **package**: `nestjs`, `node`, `react`, `tools`
+- **folders**: routing and services folder sets
+
+### Per-generator expectations
+
+- **react-router** — PascalCase components; forms end with `Form`, modals with `Modal`, tables
+  with `Table`; routes any valid name. Components/forms/modals/tables use **named** exports; route
+  files may use a **default** export (framework requirement). `import * as React from 'react'`.
+- **react** — PascalCase components and hooks, camelCase utils; kebab-case file names except React
+  components. All generated output uses **named** exports.
+- **nestjs** — **kebab-case** services, modules and applications; named exports. Resolvers return
+  `ListResult` / `PaginatedResult` / `Result`; entity changes stay backwards compatible — deprecate
+  rather than remove. Mock providers in `beforeEach`; model/entity factories for tests.
+- **package** — **kebab-case** package names; `throwing.mdc` applies to `node`, `nestjs` and `tools`
+  package types.
+- **folders** — **kebab-case** folder names; structure only, no code files generated.
 
 ---
 
