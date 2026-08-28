@@ -105,52 +105,82 @@ describe('createAntigravityEventMapper', () => {
     ).toEqual([]);
   });
 
+  // `tool_info` verbatim from an `agy 1.1.22 --output-format stream-json` run: it is itself
+  // `{ name, parameters, output? }`, which is why the payload has to be unwrapped.
+  const TOOL_INFO_ACTIVE = {
+    name: 'view_file',
+    parameters: { AbsolutePath: '/tmp/agycap/sample.txt' },
+  };
+  const TOOL_INFO_DONE = {
+    ...TOOL_INFO_ACTIVE,
+    output: '3 lines, 11 bytes',
+  };
+
   it('maps an ACTIVE tool step to a tool call and its terminal state to a tool result', () => {
     const map = createAntigravityEventMapper();
 
     const active = map(
       step({
         state: 'ACTIVE',
-        step_index: 4,
+        step_index: 2,
         step_type: 'tool',
-        tool_info: { path: 'hello.txt' },
-        tool_name: 'write_to_file',
+        tool_info: TOOL_INFO_ACTIVE,
+        tool_name: 'view_file',
       }),
     );
     const done = map(
       step({
-        duration_seconds: 0.3,
+        duration_seconds: 0.055337,
         state: 'DONE',
-        step_index: 4,
+        step_index: 2,
         step_type: 'tool',
-        tool_info: { path: 'hello.txt' },
-        tool_name: 'write_to_file',
+        tool_info: TOOL_INFO_DONE,
+        tool_name: 'view_file',
       }),
     );
 
+    // The payload is the tool's OWN arguments, not `{ name, parameters: { name, parameters } }` —
+    // the name lives on `toolName` and appears exactly once.
     expect(active).toEqual([
       {
         delta: '',
         done: false,
         kind: CONVERSATION_STREAM_CHUNK_KINDS.toolCall,
         metadata: {
-          callId: '4',
-          toolCall: {
-            name: 'write_to_file',
-            parameters: { path: 'hello.txt' },
-          },
+          callId: '2',
+          toolCall: { AbsolutePath: '/tmp/agycap/sample.txt' },
+          toolName: 'view_file',
         },
       },
     ]);
     expect(done[0]?.kind).toBe(CONVERSATION_STREAM_CHUNK_KINDS.toolResult);
     expect(done[0]?.metadata).toEqual({
-      callId: '4',
+      callId: '2',
       toolCall: {
         error: null,
-        name: 'write_to_file',
-        output: { path: 'hello.txt' },
+        output: '3 lines, 11 bytes',
         status: 'DONE',
       },
+      toolName: 'view_file',
+    });
+  });
+
+  it('passes a tool_info with no inner parameters through without dropping keys', () => {
+    const map = createAntigravityEventMapper();
+
+    const [call] = map(
+      step({
+        state: 'ACTIVE',
+        step_index: 1,
+        step_type: 'tool',
+        tool_info: { Command: 'ls -la', Cwd: '/tmp' },
+        tool_name: 'run_command',
+      }),
+    );
+
+    expect(call?.metadata?.toolCall).toEqual({
+      Command: 'ls -la',
+      Cwd: '/tmp',
     });
   });
 
@@ -173,6 +203,7 @@ describe('createAntigravityEventMapper', () => {
     expect(chunks[0]?.metadata).toMatchObject({
       callId: '2',
       toolCall: { error: 'ERROR', status: 'ERROR' },
+      toolName: 'write_to_file',
     });
   });
 
@@ -189,9 +220,8 @@ describe('createAntigravityEventMapper', () => {
     );
     const done = map(step({ state: 'DONE', step_index: 7, step_type: 'tool' }));
 
-    expect(done[0]?.metadata).toMatchObject({
-      toolCall: { name: 'run_command' },
-    });
+    // The name is no longer repeated inside the payload — `toolName` is where it lives.
+    expect(done[0]?.metadata).toMatchObject({ toolName: 'run_command' });
   });
 
   it('emits the terminal usage chunk from result, attributing the init model', () => {

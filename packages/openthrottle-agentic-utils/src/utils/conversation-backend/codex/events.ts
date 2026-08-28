@@ -75,7 +75,9 @@ function mapItemCompleted(
     delta: '',
     done: false,
     kind: CONVERSATION_STREAM_CHUNK_KINDS.toolResult,
-    metadata: { item, itemType: kind },
+    // codex has no tool name of its own — the item kind (`command_execution`,
+    // `file_change`, …) IS what the activity was, so it doubles as the name.
+    metadata: { item, itemType: kind, toolName: kind },
   };
 }
 

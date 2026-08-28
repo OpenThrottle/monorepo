@@ -30,6 +30,34 @@ describe('ChatToolCall Component', () => {
     expect(component.getByText('read')).toBeInTheDocument();
   });
 
+  test('renders the real tool name, never a metadata placeholder', () => {
+    const component = renderToolCall({
+      event: toolEvent({ name: 'view_file' }),
+    });
+    const trigger = component.getByTestId('ChatToolCall-trigger');
+
+    expect(trigger).toHaveTextContent('view_file');
+    // The regression this guards: the header used to read the literal `name`
+    // (or the generic `tool`) for every driver but cursor-agent.
+    expect(trigger).not.toHaveTextContent(/\bname\b/);
+    expect(trigger).not.toHaveTextContent(/\btool\b/);
+  });
+
+  test('truncates a long tool name rather than pushing the status pill off the row', () => {
+    const component = renderToolCall({
+      event: toolEvent({
+        name: 'mcp__openthrottle-mcp__get_remaining_tasks_for_plan',
+      }),
+    });
+
+    expect(
+      component.getByText(
+        'mcp__openthrottle-mcp__get_remaining_tasks_for_plan',
+      ),
+    ).toHaveClass('truncate');
+    expect(component.getByText('running')).toBeInTheDocument();
+  });
+
   describe('status badge', () => {
     test('running shows a running badge with a spinner', () => {
       const component = renderToolCall({

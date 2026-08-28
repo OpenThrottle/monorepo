@@ -203,6 +203,18 @@ Observed values:
 | `agent_response` only | `text_delta` (optional), `usage` + `duration_seconds` on terminal states |
 | `tool` only           | `tool_name`, `tool_info`; `duration_seconds` on terminal states          |
 
+**`tool_info` IS ITSELF `{ name, parameters, output? }`** — it repeats `tool_name` and wraps the
+tool's real arguments one level deeper, with `output` appearing only on a terminal state (captured
+from agy 1.1.22):
+
+```json
+{"event":"step_update","step_update":{"step_index":2,"state":"ACTIVE","step_type":"tool","tool_name":"view_file","tool_info":{"name":"view_file","parameters":{"AbsolutePath":"/tmp/sample.txt"}}}}
+{"event":"step_update","step_update":{"step_index":2,"state":"DONE","step_type":"tool","tool_name":"view_file","duration_seconds":0.055337,"tool_info":{"name":"view_file","parameters":{"AbsolutePath":"/tmp/sample.txt"},"output":"3 lines, 11 bytes"}}}
+```
+
+A consumer must therefore UNWRAP `tool_info.parameters` before rendering the arguments; nesting
+`tool_info` under a `parameters` key of its own shows the name and the wrapper twice each.
+
 **`text_delta` IS A DELTA, NOT CUMULATIVE.** The same `step_index` emits multiple
 `step_update`s and each carries only the newly produced text; the full assistant message is the
 concatenation of that step's deltas. A `user_input` step emits no text at all.
@@ -268,7 +280,8 @@ Still unverified, none of them blocking:
 - The `--input-format stream-json` multi-turn input framing (`streamInputMessage` /
   `streamInputContentBlock` / `streamInputUserMessage` in the binary). Not needed for one-shot turns,
   and `--conversation <id>` resume covers multi-turn instead.
-- `tool_info`'s internal shape (captured but not enumerated per tool).
+- Whether every tool's `tool_info.parameters` keys follow the PascalCase convention `view_file`
+  uses (`AbsolutePath`), or whether that is per-tool.
 
 ## 5b. Live verification results (2026-08-26, agy 1.1.21)
 

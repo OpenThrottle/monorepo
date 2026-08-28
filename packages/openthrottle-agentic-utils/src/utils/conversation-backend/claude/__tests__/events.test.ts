@@ -65,7 +65,7 @@ describe('mapClaudeEvent', () => {
       }),
     ).toMatchObject({
       kind: 'tool_call',
-      metadata: { name: 'Read', toolUseId: 'toolu_1' },
+      metadata: { name: 'Read', toolName: 'Read', toolUseId: 'toolu_1' },
     });
   });
 

@@ -92,6 +92,59 @@ describe('mapPersistedAgentConversationMessages', () => {
     expect(message?.body).toBe('the final answer');
   });
 
+  /**
+   * The persisted path is what decides whether an OLD thread stays readable: a
+   * conversation stored before drivers emitted `toolName` has only its raw
+   * driver payload, so both the canonical field and every legacy shape must
+   * resolve to the same name a live stream shows.
+   */
+  test.each([
+    [
+      'canonical toolName',
+      { callId: 'c1', toolName: 'view_file' },
+      'view_file',
+    ],
+    [
+      'legacy cursor-agent key payload',
+      {
+        callId: 'c1',
+        toolCall: { readToolCall: { path: 'a.ts' }, toolCallId: 'c1' },
+      },
+      'read',
+    ],
+    [
+      'legacy gemini name/parameters payload',
+      {
+        callId: 'c1',
+        toolCall: { name: 'view_file', parameters: { path: 'a.ts' } },
+      },
+      'view_file',
+    ],
+    ['legacy claude metadata.name', { callId: 'c1', name: 'Read' }, 'Read'],
+    [
+      'legacy opencode metadata.tool',
+      { callId: 'c1', tool: 'edit', toolPart: { tool: 'edit' } },
+      'edit',
+    ],
+  ])(
+    'a reloaded conversation resolves the tool name from a %s',
+    (_label, metadata, expected) => {
+      const [message] = mapPersistedAgentConversationMessages([
+        baseMessage({
+          content: 'done',
+          id: 'msg-persisted',
+          role: 'assistant',
+          toolMetadataJson: JSON.stringify({
+            events: [{ delta: '', kind: 'tool_call', metadata }],
+          }),
+        }),
+      ]);
+
+      const toolEvent = message?.events?.find((event) => event.kind === 'tool');
+      expect(toolEvent).toMatchObject({ name: expected });
+    },
+  );
+
   test('omits events for a plain assistant turn (flat body fallback)', () => {
     const [message] = mapPersistedAgentConversationMessages([
       baseMessage({
