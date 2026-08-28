@@ -85,3 +85,95 @@ export const activeToolOf = (
 
   return lastRunning ?? tools.at(-1) ?? null;
 };
+
+/**
+ * A run of two or more adjacent tool groups / thinking blocks — everything an
+ * agent did between two pieces of visible prose — folded into one row.
+ *
+ * @public
+ */
+export interface TurnTimelineActivityGroup {
+  /** The constituent slots, in emission order. */
+  readonly items: readonly TurnTimelineItem[];
+  readonly kind: 'activity';
+  /** Aggregate status across every nested tool (see {@link aggregateToolStatus}). */
+  readonly status: ChatToolStatus;
+  /** How many thinking segments the run contains. */
+  readonly thinkingCount: number;
+  /** How many tool calls the run contains, across all nested groups. */
+  readonly toolCount: number;
+}
+
+/** One top-level render slot after the second-level activity fold. @public */
+export type TurnTimelineSlot = TurnTimelineActivityGroup | TurnTimelineItem;
+
+/**
+ * Minimum number of adjacent slots before a run is worth wrapping. A lone tool
+ * group or a lone thinking block renders better on its own than nested one
+ * level deeper.
+ *
+ * @public
+ */
+export const ACTIVITY_GROUP_MIN_SLOTS = 2;
+
+const isActivitySlot = (item: TurnTimelineItem): boolean =>
+  item.kind === 'tools' || item.event.kind === 'thinking';
+
+// A thinking event with no reasoning renders nothing (see ChatThinkingBlock),
+// so it must not pad a run toward the fold threshold either.
+const isRenderableSlot = (item: TurnTimelineItem): boolean =>
+  item.kind === 'tools' ||
+  item.event.kind !== 'thinking' ||
+  item.event.text.trim() !== '';
+
+const toolsOf = (items: readonly TurnTimelineItem[]): ChatTurnToolEvent[] =>
+  items.flatMap((item) => (item.kind === 'tools' ? [...item.tools] : []));
+
+/**
+ * Second-level fold over {@link buildTurnTimeline}'s output: any run of adjacent
+ * tool groups and thinking blocks — i.e. everything between two text/usage/
+ * session events — collapses into one {@link TurnTimelineActivityGroup}, so a
+ * long agentic turn reads as a single "activity" row rather than an endless
+ * stack. Text, usage and session slots break the run and pass through
+ * unchanged, as do runs shorter than {@link ACTIVITY_GROUP_MIN_SLOTS}. Pure and
+ * render-time only.
+ *
+ * @public
+ */
+export const foldTurnActivity = (
+  items: readonly TurnTimelineItem[],
+): readonly TurnTimelineSlot[] => {
+  const slots: TurnTimelineSlot[] = [];
+  let run: TurnTimelineItem[] = [];
+
+  const flush = (): void => {
+    if (run.length >= ACTIVITY_GROUP_MIN_SLOTS) {
+      const tools = toolsOf(run);
+      slots.push({
+        items: run,
+        kind: 'activity',
+        status: aggregateToolStatus(tools),
+        thinkingCount: run.filter((item) => item.kind === 'event').length,
+        toolCount: tools.length,
+      });
+    } else {
+      slots.push(...run);
+    }
+    run = [];
+  };
+
+  for (const item of items) {
+    if (!isRenderableSlot(item)) {
+      continue;
+    }
+    if (isActivitySlot(item)) {
+      run.push(item);
+      continue;
+    }
+    flush();
+    slots.push(item);
+  }
+  flush();
+
+  return slots;
+};

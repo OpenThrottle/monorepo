@@ -46,6 +46,14 @@ export type {
   UseChatDialogOptions,
   UseChatDialogResult,
 } from './use-chat-dialog';
+export {
+  NEAR_BOTTOM_THRESHOLD_PX,
+  usePinnedToBottom,
+} from './use-pinned-to-bottom';
+export type {
+  UsePinnedToBottomOptions,
+  UsePinnedToBottomResult,
+} from './use-pinned-to-bottom';
 export { useChatMessages } from './use-chat-messages';
 export type {
   AppendChatMessageInput,

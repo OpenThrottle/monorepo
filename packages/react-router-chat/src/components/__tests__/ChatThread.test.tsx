@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { act, render, within } from '@testing-library/react';
+import { act, render, waitFor, within } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
@@ -155,43 +155,73 @@ describe('ChatThread Component', () => {
     });
   });
 
-  // Auto-scroll behavior. jsdom has no layout engine and no real scrollIntoView,
-  // so we can't assert pixel positions (see Recharts/jsdom caveat). Instead we
-  // spy on scrollIntoView and drive the message prop through a stateful harness
-  // (so the component — and its refs — persist across updates) to assert the
-  // event-driven triggers: user-send, first assistant token, and the guards.
-  describe('auto-scroll behavior', () => {
-    let scrollIntoView: ReturnType<typeof vi.fn<Element['scrollIntoView']>>;
+  // Pin-to-bottom behavior. jsdom has no layout engine, so we stub the
+  // scroller geometry (scrollHeight/clientHeight) and let the component write
+  // scrollTop — that write is the observable signal that the view followed the
+  // bottom. Messages are driven through a stateful harness so a single mounted
+  // instance (and its pin state) survives updates.
+  describe('pin-to-bottom behavior', () => {
+    const SCROLL_HEIGHT = 1000;
+    const CLIENT_HEIGHT = 300;
 
-    beforeEach(() => {
-      scrollIntoView = vi.fn<Element['scrollIntoView']>();
-      Element.prototype.scrollIntoView = scrollIntoView;
-    });
+    /** Give an element the geometry of a scroller that is 700px overscrolled. */
+    const stubGeometry = (element: HTMLElement): void => {
+      Object.defineProperty(element, 'scrollHeight', {
+        configurable: true,
+        value: SCROLL_HEIGHT,
+      });
+      Object.defineProperty(element, 'clientHeight', {
+        configurable: true,
+        value: CLIENT_HEIGHT,
+      });
+      let scrollTop = 0;
+      Object.defineProperty(element, 'scrollTop', {
+        configurable: true,
+        get: () => scrollTop,
+        set: (next: number) => {
+          scrollTop = next;
+        },
+      });
+    };
 
-    afterEach(() => {
-      vi.restoreAllMocks();
-    });
+    const scrollTo = (element: HTMLElement, top: number): void => {
+      act(() => {
+        element.scrollTop = top;
+        element.dispatchEvent(new Event('scroll'));
+      });
+    };
 
     /**
      * Render {@link ChatThread} inside a harness whose `messages` are stateful,
-     * so a single mounted instance survives updates and its scroll-tracking refs
-     * carry over between renders (a fresh render would reset them).
+     * so a single mounted instance survives updates and its pin state carries
+     * over between renders (a fresh render would reset it).
      */
     const renderControllable = (
       initial: readonly ChatMessage[],
+      extra: Partial<ChatThreadProps> = {},
     ): {
+      readonly pinned: { current: boolean };
       readonly result: RenderResult;
       readonly update: (next: readonly ChatMessage[]) => void;
     } => {
       const setter: { current: (next: readonly ChatMessage[]) => void } = {
         current: () => {},
       };
+      const pinned = { current: true };
       // eslint-disable-next-line react/no-multi-comp -- test-local stateful harness
       const Harness = (): React.ReactElement => {
         const [messages, setMessages] =
           React.useState<readonly ChatMessage[]>(initial);
         setter.current = setMessages;
-        return <ChatThread messages={messages} />;
+        return (
+          <ChatThread
+            {...extra}
+            messages={messages}
+            onPinnedChange={(next) => {
+              pinned.current = next;
+            }}
+          />
+        );
       };
       const RoutesStub = createRoutesStub([{ Component: Harness, path: '/' }]);
       const result = render(<RoutesStub />);
@@ -200,117 +230,181 @@ describe('ChatThread Component', () => {
           setter.current(next);
         });
       };
-      return { result, update };
+      return { pinned, result, update };
     };
 
-    test('should not scroll when the thread is empty', () => {
-      renderThread({ messages: [] });
-      expect(scrollIntoView).not.toHaveBeenCalled();
-    });
-
-    test('should jump to the bottom on the first non-empty paint', () => {
-      renderThread({
-        messages: [{ body: 'Hello', id: '1', role: 'user' }],
-      });
-      expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'auto' });
-    });
-
-    test('should scroll when a new user message is appended', () => {
-      const { update } = renderControllable([
-        { body: 'Earlier reply', id: 'a0', role: 'assistant' },
-      ]);
-      // First paint already jumped; only assert the append-driven scroll.
-      scrollIntoView.mockClear();
-
-      update([
-        { body: 'Earlier reply', id: 'a0', role: 'assistant' },
-        { body: 'New question', id: 'u1', role: 'user' },
-      ]);
-
-      expect(scrollIntoView).toHaveBeenCalledTimes(1);
-      expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth' });
-    });
-
-    test('should scroll once when the assistant streams its first token', () => {
-      const { update } = renderControllable([
-        { body: 'Question', id: 'u1', role: 'user' },
-        { body: '', id: 'a1', pending: true, role: 'assistant' },
-      ]);
-      scrollIntoView.mockClear();
-
-      // First token: empty/pending → non-empty body on the same assistant id.
-      update([
-        { body: 'Question', id: 'u1', role: 'user' },
-        { body: 'Hel', id: 'a1', role: 'assistant' },
-      ]);
-
-      expect(scrollIntoView).toHaveBeenCalledTimes(1);
-      expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth' });
-    });
-
-    test('should not scroll again as the same assistant turn keeps streaming', () => {
-      const { update } = renderControllable([
-        { body: 'Question', id: 'u1', role: 'user' },
-        { body: '', id: 'a1', pending: true, role: 'assistant' },
-      ]);
-      scrollIntoView.mockClear();
-
-      update([
-        { body: 'Question', id: 'u1', role: 'user' },
-        { body: 'Hel', id: 'a1', role: 'assistant' },
-      ]);
-      expect(scrollIntoView).toHaveBeenCalledTimes(1);
-
-      // Subsequent tokens grow the body but keep the id → no further scroll.
-      update([
-        { body: 'Question', id: 'u1', role: 'user' },
-        { body: 'Hello world, here is more', id: 'a1', role: 'assistant' },
-      ]);
-      expect(scrollIntoView).toHaveBeenCalledTimes(1);
-    });
-
-    test('should suppress the first-response scroll when scrolled up, but still scroll on user-send', () => {
+    test('follows the bottom as the assistant streams', async () => {
       const { result, update } = renderControllable([
         { body: 'Question', id: 'u1', role: 'user' },
         { body: '', id: 'a1', pending: true, role: 'assistant' },
       ]);
-      scrollIntoView.mockClear();
+      const thread = within(result.container).getByTestId('ChatThread');
+      stubGeometry(thread);
 
-      // Simulate the user scrolling up past the near-bottom threshold. jsdom has
-      // no layout, so stub the container geometry, then fire a scroll event to
-      // update the internal near-bottom ref.
-      const container = within(result.container).getByTestId('ChatThread');
-      Object.defineProperty(container, 'scrollHeight', {
-        configurable: true,
-        value: 1000,
-      });
-      Object.defineProperty(container, 'clientHeight', {
-        configurable: true,
-        value: 300,
-      });
-      Object.defineProperty(container, 'scrollTop', {
-        configurable: true,
-        value: 0,
-      });
-      act(() => {
-        container.dispatchEvent(new Event('scroll'));
-      });
-
-      // First assistant token while scrolled up → suppressed.
       update([
+        { body: 'Question', id: 'u1', role: 'user' },
+        { body: 'Hel', id: 'a1', role: 'assistant' },
+      ]);
+
+      // MutationObserver callbacks are microtask-scheduled.
+      await waitFor(() => {
+        expect(thread.scrollTop).toBe(SCROLL_HEIGHT);
+      });
+    });
+
+    test('a user scroll away from the bottom unpins', () => {
+      const { pinned, result } = renderControllable([
+        { body: 'Question', id: 'u1', role: 'user' },
+      ]);
+      const thread = within(result.container).getByTestId('ChatThread');
+      stubGeometry(thread);
+
+      scrollTo(thread, 0);
+
+      expect(pinned.current).toBe(false);
+    });
+
+    test('a small scroll inside the near-bottom threshold keeps the pin', () => {
+      const { pinned, result } = renderControllable([
+        { body: 'Question', id: 'u1', role: 'user' },
+      ]);
+      const thread = within(result.container).getByTestId('ChatThread');
+      stubGeometry(thread);
+
+      // 40px from the bottom — inside NEAR_BOTTOM_THRESHOLD_PX (64).
+      scrollTo(thread, SCROLL_HEIGHT - CLIENT_HEIGHT - 40);
+
+      expect(pinned.current).toBe(true);
+    });
+
+    test('scrolling back to the bottom re-pins', () => {
+      const { pinned, result } = renderControllable([
+        { body: 'Question', id: 'u1', role: 'user' },
+      ]);
+      const thread = within(result.container).getByTestId('ChatThread');
+      stubGeometry(thread);
+
+      scrollTo(thread, 0);
+      expect(pinned.current).toBe(false);
+
+      scrollTo(thread, SCROLL_HEIGHT - CLIENT_HEIGHT);
+      expect(pinned.current).toBe(true);
+    });
+
+    test('a streaming scroll never unpins the view', async () => {
+      const { pinned, result, update } = renderControllable([
+        { body: 'Question', id: 'u1', role: 'user' },
+        { body: '', id: 'a1', pending: true, role: 'assistant' },
+      ]);
+      const thread = within(result.container).getByTestId('ChatThread');
+      stubGeometry(thread);
+
+      update([
+        { body: 'Question', id: 'u1', role: 'user' },
+        { body: 'Streaming reply', id: 'a1', role: 'assistant' },
+      ]);
+      await waitFor(() => {
+        expect(thread.scrollTop).toBe(SCROLL_HEIGHT);
+      });
+      // The programmatic jump emits its own scroll event; it must be ignored.
+      act(() => {
+        thread.dispatchEvent(new Event('scroll'));
+      });
+
+      expect(pinned.current).toBe(true);
+    });
+
+    test('sending a message re-pins a thread the user had scrolled away from', () => {
+      const { pinned, result, update } = renderControllable([
         { body: 'Question', id: 'u1', role: 'user' },
         { body: 'Reply', id: 'a1', role: 'assistant' },
       ]);
-      expect(scrollIntoView).not.toHaveBeenCalled();
+      const thread = within(result.container).getByTestId('ChatThread');
+      stubGeometry(thread);
 
-      // A new user message still yanks to the bottom regardless of scroll state.
+      scrollTo(thread, 0);
+      expect(pinned.current).toBe(false);
+
       update([
         { body: 'Question', id: 'u1', role: 'user' },
         { body: 'Reply', id: 'a1', role: 'assistant' },
         { body: 'Follow-up', id: 'u2', role: 'user' },
       ]);
-      expect(scrollIntoView).toHaveBeenCalledTimes(1);
-      expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth' });
+
+      expect(pinned.current).toBe(true);
+      expect(thread.scrollTop).toBe(SCROLL_HEIGHT);
+    });
+
+    test('the repin callback jumps to the bottom and re-engages following', () => {
+      const repinRef: React.RefObject<(() => void) | null> = { current: null };
+      const { pinned, result } = renderControllable(
+        [{ body: 'Question', id: 'u1', role: 'user' }],
+        { repinRef },
+      );
+      const thread = within(result.container).getByTestId('ChatThread');
+      stubGeometry(thread);
+
+      scrollTo(thread, 0);
+      expect(pinned.current).toBe(false);
+
+      act(() => {
+        repinRef.current?.();
+      });
+
+      expect(pinned.current).toBe(true);
+      expect(thread.scrollTop).toBe(SCROLL_HEIGHT);
+    });
+
+    describe('when an external element owns the scroll', () => {
+      // The developer home route: the page layout scrolls, not the thread. The
+      // old ref-based guard listened to the thread's own onScroll, which never
+      // fires there — so the scrolled-away check was dead.
+      const renderExternal = (): {
+        readonly pinned: { current: boolean };
+        readonly scroller: HTMLElement;
+      } => {
+        const scroller = document.createElement('div');
+        document.body.appendChild(scroller);
+        stubGeometry(scroller);
+        const { pinned } = renderControllable(
+          [
+            { body: 'Question', id: 'u1', role: 'user' },
+            { body: '', id: 'a1', pending: true, role: 'assistant' },
+          ],
+          { getScrollElement: () => scroller },
+        );
+        return { pinned, scroller };
+      };
+
+      afterEach(() => {
+        document.body.innerHTML = '';
+      });
+
+      test('follows the external scroller on mount', () => {
+        const { scroller } = renderExternal();
+        expect(scroller.scrollTop).toBe(SCROLL_HEIGHT);
+      });
+
+      test('a scroll on the external container unpins', () => {
+        const { pinned, scroller } = renderExternal();
+
+        scrollTo(scroller, 0);
+
+        expect(pinned.current).toBe(false);
+      });
+
+      test("the thread's own element no longer drives the pin state", () => {
+        const { pinned } = renderExternal();
+        const thread = within(document.body).getAllByTestId('ChatThread')[0];
+        if (thread === undefined) {
+          throw new Error('expected a rendered thread');
+        }
+        stubGeometry(thread);
+
+        scrollTo(thread, 0);
+
+        expect(pinned.current).toBe(true);
+      });
     });
   });
 

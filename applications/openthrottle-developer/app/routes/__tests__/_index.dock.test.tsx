@@ -1,9 +1,10 @@
 import * as React from 'react';
-import { render, waitFor } from '@testing-library/react';
+import { act, render, waitFor } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { createRoutesStub } from 'react-router';
-import { describe, expect, test, vi } from 'vitest';
+import userEvent from '@testing-library/user-event';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 import { buildRootMatch } from '~/testing/root-match-fixture';
 import Index from '../_index';
 import type { Route } from '@/app/routes/+types/_index';
@@ -171,5 +172,70 @@ describe('routes/_index.tsx docked composer', () => {
     // than waiting on model discovery.
     expect(component.getByTestId('ChatThread')).toBeInTheDocument();
     expect(component.getByText('message 0')).toBeInTheDocument();
+  });
+
+  describe('jump-to-latest affordance', () => {
+    // The page layout owns the scroll here, so the route hands ChatThread that
+    // element and docks the control with the composer.
+    const mountGlobalScroller = (): HTMLElement => {
+      const scroller = document.createElement('div');
+      scroller.setAttribute('data-global-scroll-container', 'true');
+      Object.defineProperty(scroller, 'scrollHeight', {
+        configurable: true,
+        value: 1000,
+      });
+      Object.defineProperty(scroller, 'clientHeight', {
+        configurable: true,
+        value: 300,
+      });
+      let scrollTop = 0;
+      Object.defineProperty(scroller, 'scrollTop', {
+        configurable: true,
+        get: () => scrollTop,
+        set: (next: number) => {
+          scrollTop = next;
+        },
+      });
+      document.body.appendChild(scroller);
+      return scroller;
+    };
+
+    afterEach(() => {
+      document.body.innerHTML = '';
+    });
+
+    test('stays hidden while the thread follows the bottom', async () => {
+      mountGlobalScroller();
+      const component = renderHome(resolvedComposerData());
+      await component.findByTestId('ChatComposer');
+
+      expect(
+        component.queryByTestId('ChatJumpToLatest'),
+      ).not.toBeInTheDocument();
+    });
+
+    test('appears in the dock once the page is scrolled away, and re-pins on click', async () => {
+      const user = userEvent.setup();
+      const scroller = mountGlobalScroller();
+      const component = renderHome(resolvedComposerData());
+      await component.findByTestId('ChatComposer');
+
+      act(() => {
+        scroller.scrollTop = 0;
+        scroller.dispatchEvent(new Event('scroll'));
+      });
+
+      const jump = await component.findByTestId('ChatJumpToLatest');
+      expect(component.getByTestId('HomeComposerDock').contains(jump)).toBe(
+        true,
+      );
+
+      await user.click(jump);
+
+      expect(scroller.scrollTop).toBe(1000);
+      expect(
+        component.queryByTestId('ChatJumpToLatest'),
+      ).not.toBeInTheDocument();
+    });
   });
 });

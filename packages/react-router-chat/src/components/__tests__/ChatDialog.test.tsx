@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react';
+import { act, render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
@@ -333,6 +333,63 @@ describe('ChatDialog Component', () => {
       );
       expect(
         component!.queryByTestId('ChatComposerToolbar'),
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  describe('jump-to-latest affordance', () => {
+    // The dialog owns its own scroll, so the control lives beside the composer
+    // and drives the thread through the repin ref.
+    const openDialog = async (): Promise<HTMLElement> => {
+      const user = userEvent.setup();
+      mountDialog();
+      await user.click(
+        component!.getByRole('button', { name: 'Open assistant' }),
+      );
+      return component!.getByTestId('ChatThread');
+    };
+
+    test('stays hidden while the thread follows the bottom', async () => {
+      await openDialog();
+
+      expect(
+        component!.queryByTestId('ChatJumpToLatest'),
+      ).not.toBeInTheDocument();
+    });
+
+    test('appears once the reader scrolls away, and re-pins on click', async () => {
+      const user = userEvent.setup();
+      const thread = await openDialog();
+
+      // jsdom has no layout: stub the scroller geometry, then scroll to the top.
+      Object.defineProperty(thread, 'scrollHeight', {
+        configurable: true,
+        value: 1000,
+      });
+      Object.defineProperty(thread, 'clientHeight', {
+        configurable: true,
+        value: 300,
+      });
+      let scrollTop = 0;
+      Object.defineProperty(thread, 'scrollTop', {
+        configurable: true,
+        get: () => scrollTop,
+        set: (next: number) => {
+          scrollTop = next;
+        },
+      });
+      act(() => {
+        thread.dispatchEvent(new Event('scroll'));
+      });
+
+      const jump = component!.getByTestId('ChatJumpToLatest');
+      expect(jump).toBeInTheDocument();
+
+      await user.click(jump);
+
+      expect(thread.scrollTop).toBe(1000);
+      expect(
+        component!.queryByTestId('ChatJumpToLatest'),
       ).not.toBeInTheDocument();
     });
   });

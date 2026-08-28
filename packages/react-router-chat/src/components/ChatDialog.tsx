@@ -17,6 +17,7 @@ import type { ChatComposerControls } from '../context/chat-context';
 import { ChatComposer } from './ChatComposer';
 import { ChatComposerToolbar } from './ChatComposerToolbar';
 import { ChatDialogHeader } from './ChatDialogHeader';
+import { ChatJumpToLatest } from './ChatJumpToLatest';
 import type { ChatConversationSidebarProps } from './ChatConversationSidebar';
 import { ChatThread } from './ChatThread';
 import { useChatDialog } from '../hooks/use-chat-dialog';
@@ -93,6 +94,9 @@ export const ChatDialog = (props: ChatDialogProps): React.ReactElement => {
     open: openProp,
   });
 
+  const repinRef = React.useRef<(() => void) | null>(null);
+  const [isPinned, setIsPinned] = React.useState<boolean>(true);
+
   // Setup
   const triggerNode = trigger ?? (
     <Button size="sm" type="button" variant="secondary">
@@ -105,21 +109,35 @@ export const ChatDialog = (props: ChatDialogProps): React.ReactElement => {
       <ChatThread
         canRetry={composer?.canRetry}
         messages={messages}
+        onPinnedChange={setIsPinned}
         onRetry={composer?.onRetry}
+        repinRef={repinRef}
       />
-      <ChatComposer
-        className="border-t-0"
-        disabled={composerDisabled}
-        isStreaming={composer?.isStreaming}
-        onStop={composer?.onStop}
-        onSubmit={onSendMessage}
-        sessionUsage={composer?.sessionUsage}
-        toolbar={
-          composer !== undefined ? (
-            <ChatComposerToolbar {...composer} />
-          ) : undefined
-        }
-      />
+      {/* Positioned against the composer, not the column: the control belongs
+          just above the input, and floating keeps it from reflowing the thread
+          as it appears and disappears. */}
+      <div className="relative">
+        <ChatJumpToLatest
+          className="absolute inset-x-0 bottom-full z-10 mx-auto mb-2 w-fit"
+          isPinned={isPinned}
+          onJump={() => {
+            repinRef.current?.();
+          }}
+        />
+        <ChatComposer
+          className="border-t-0"
+          disabled={composerDisabled}
+          isStreaming={composer?.isStreaming}
+          onStop={composer?.onStop}
+          onSubmit={onSendMessage}
+          sessionUsage={composer?.sessionUsage}
+          toolbar={
+            composer !== undefined ? (
+              <ChatComposerToolbar {...composer} />
+            ) : undefined
+          }
+        />
+      </div>
     </div>
   );
 

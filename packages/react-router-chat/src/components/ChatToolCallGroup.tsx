@@ -8,12 +8,11 @@ import {
 import { ChevronDown, Layers } from 'lucide-react';
 import { ChatToolCall } from './ChatToolCall';
 import { STATUS_CONFIG } from '../data/chat-tool-call-status-config';
-import { ChatToolStatus } from '../types';
 import type { ChatTurnToolEvent } from '../types';
 import { activeToolOf, aggregateToolStatus } from '../turn-tool-groups';
 
 export interface ChatToolCallGroupProps {
-  /** Whether the group starts expanded. Defaults to open while it is running. */
+  /** Whether the group starts expanded. Collapsed by default, even while running. */
   readonly defaultOpen?: boolean;
   /** The consecutive tool events folded into this group (expected length ≥ 2). */
   readonly tools: readonly ChatTurnToolEvent[];
@@ -25,15 +24,17 @@ export interface ChatToolCallGroupProps {
  * collapsed header surfaces the active step (the running tool, else the last),
  * an "N actions" count, and an aggregate status pill (running / failed /
  * succeeded). Expanding reveals every member as its own {@link ChatToolCall}.
- * Defaults to open while the group is still running and collapsed once done;
- * expand/collapse stays user-controllable.
+ * Always starts collapsed — including while running, since the header's active
+ * step and status pill already carry the progress, and an uncontrolled
+ * Collapsible that mounted open mid-run had no way back to closed.
+ * Expand/collapse stays user-controllable.
  *
  * @public
  */
 export const ChatToolCallGroup = (
   props: ChatToolCallGroupProps,
 ): React.ReactElement => {
-  const { defaultOpen, tools } = props;
+  const { defaultOpen = false, tools } = props;
 
   // Hooks
 
@@ -41,7 +42,6 @@ export const ChatToolCallGroup = (
   const aggregate = aggregateToolStatus(tools);
   const status = STATUS_CONFIG[aggregate];
   const active = activeToolOf(tools);
-  const startOpen = defaultOpen ?? aggregate === ChatToolStatus.running;
   const countLabel = `${tools.length} actions`;
 
   // Handlers
@@ -56,7 +56,7 @@ export const ChatToolCallGroup = (
     <Collapsible
       className="border-border/50 my-1 rounded-md border"
       data-testid="ChatToolCallGroup"
-      defaultOpen={startOpen}
+      defaultOpen={defaultOpen}
     >
       <CollapsibleTrigger
         className="flex w-full items-center justify-between gap-2 px-2 py-1 text-xs [&[data-state=open]>span>svg:first-child]:rotate-180"

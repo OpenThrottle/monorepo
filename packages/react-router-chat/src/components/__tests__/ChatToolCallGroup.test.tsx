@@ -33,8 +33,8 @@ describe('ChatToolCallGroup Component', () => {
       ],
     });
 
-    // The group is expanded while running, so `shell`/`running` also appear in
-    // the member cards — assert against the header (trigger) specifically.
+    // Assert against the header (trigger) specifically — it is the only thing
+    // rendered while the group is collapsed.
     const trigger = component.getByTestId('ChatToolCallGroup-trigger');
     expect(trigger).toHaveTextContent('shell');
     expect(trigger).toHaveTextContent('· 2 actions');
@@ -120,11 +120,29 @@ describe('ChatToolCallGroup Component', () => {
     expect(component.getAllByTestId('ChatToolCall')).toHaveLength(2);
   });
 
-  test('starts expanded while running', () => {
+  test('stays collapsed while running — the header carries the progress', () => {
+    // Regression: an uncontrolled Collapsible that mounted open mid-run had no
+    // way back to closed, so every group from a long turn stayed stuck open.
     const component = renderGroup({
       tools: [
         tool({ name: 'a', sortOrder: 0, status: 'succeeded' }),
         tool({ name: 'b', sortOrder: 1, status: 'running' }),
+      ],
+    });
+
+    expect(component.getByTestId('ChatToolCallGroup-trigger')).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    );
+    expect(component.queryByTestId('ChatToolCall')).not.toBeInTheDocument();
+  });
+
+  test('a caller can still opt a group open', () => {
+    const component = renderGroup({
+      defaultOpen: true,
+      tools: [
+        tool({ name: 'a', sortOrder: 0, status: 'succeeded' }),
+        tool({ name: 'b', sortOrder: 1, status: 'succeeded' }),
       ],
     });
 
