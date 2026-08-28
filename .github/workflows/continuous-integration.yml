@@ -27,6 +27,12 @@ on:
   # workflow_dispatch enables the cost-gated nx-dependency-graph job to be run on demand
   # (it is gated to manual dispatch below) instead of being dead `if: false` code.
   workflow_dispatch:
+  # ⚠️ KEEP this trigger even though the merge queue on `main` is currently
+  # DISABLED (2026-08-28, single contributor — see docs/monorepo/ci-cost.md
+  # § Merge queue on `main`). It is inert while the queue is off, and it is a
+  # hard prerequisite for ever re-enabling it: a required check whose workflow
+  # does not trigger on merge_group can never report inside the queue, so every
+  # PR would sit until check_response_timeout_minutes and then be dequeued.
   merge_group:
     types: [checks_requested]
   pull_request:

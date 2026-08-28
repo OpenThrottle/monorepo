@@ -26,6 +26,12 @@ See [CONTRIBUTING.md](../../CONTRIBUTING.md#testing-typecheck-versus-test) for c
 
 ## Gate table (P0–P4)
 
+> **Note on the "merge queue" trigger:** the merge queue on `main` is currently **disabled**
+> (see [ci-cost.md § Merge queue on `main`](./ci-cost.md#merge-queue-on-main)), so the
+> `merge_group` event never fires and the "merge queue" entries in the **Runs on** column are
+> inert. They are kept — along with the workflow's `merge_group:` trigger — so the rows stay
+> accurate if the queue is re-enabled.
+
 | Priority | Gate                                          | CI job / step                                                                   | Runs on                                                                   | Command / target                                                                                                                 | Owner                                     | Merge blocker   | Status                                                                                                                    |
 | -------- | --------------------------------------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------- |
 | **P0**   | Affected GraphQL + React Router codegen drift | `build` → Codegen Tasks                                                         | Ready PR, merge queue, `push: main`                                       | `nx affected --target=codegen-graphql,codegen-react-router` then `git diff --exit-code`                                          | [visormatt](https://github.com/visormatt) | Yes             | **On**                                                                                                                    |

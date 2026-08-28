@@ -227,12 +227,21 @@ count.
 
 ## Merge queue on `main`
 
-`main` now uses GitHub's merge queue through ruleset `main` (`14604876`). The queue is configured
-on the **ruleset** surface, while classic branch protection still owns the one required context
-(`ci-success`). That split is deliberate: the queue flip and the required-check surface move were
-kept separate so a stall would have one candidate cause at a time.
+> **DISABLED 2026-08-28.** With a single contributor there is no PR concurrency, so the queue's
+> ALLGREEN speculative grouping protected against semantic conflicts that cannot occur — while
+> every enqueued PR still paid a duplicate `merge_group` CI run plus queue wait time. The
+> `merge_queue` rule was removed from ruleset `main` (`14604876`); everything else (the rest of
+> the ruleset, classic branch protection, the `ci-success` required check, and the workflow's
+> `merge_group` trigger) is untouched. Re-enable by restoring the captured pre-change payload:
+> [rulesets/main-ruleset-with-merge-queue.json](./rulesets/main-ruleset-with-merge-queue.json).
 
-Applied queue settings:
+While it was on, `main` used GitHub's merge queue through ruleset `main` (`14604876`). The queue
+was configured on the **ruleset** surface, while classic branch protection still owns the one
+required context (`ci-success`). That split is deliberate: the queue flip and the required-check
+surface move were kept separate so a stall would have one candidate cause at a time.
+
+Applied queue settings (historical record — these are the values in the captured payload, and what
+a re-enable restores):
 
 | Setting                             | Value      | Why                                                                                                                                                                                                                               |
 | ----------------------------------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -246,34 +255,39 @@ Applied queue settings:
 
 What this does to CI volume:
 
-- A ready PR still gets its ordinary `pull_request` run.
-- Enqueuing it now adds a second `merge_group` run on the synthetic
-  `gh-readonly-queue/main/pr-N-<sha>` ref.
-- When that entry lands, the existing `push: main` trigger still fires a third run for the fast-forwarded commit.
+- **Queue off (current):** a PR costs its ordinary `pull_request` run, plus the `push: main` run
+  when the squash lands — **2 runs total**, with no queue latency. The pre-merge `merge_group` run
+  on a synthetic `gh-readonly-queue/main/pr-N-<sha>` ref is gone.
+- **Queue on (historical):** enqueuing added that `merge_group` run between the two — roughly a
+  **2x increase before merge, and often a 3rd post-merge validation run**.
 
-That is roughly a **2x increase before merge, and often a 3rd post-merge validation run**. On
-this **public** repo those extra standard-runner minutes remain free, so the trade-off is
-wall-clock queue depth and runner contention, not GitHub billing. The `push: main` run stays on
-purpose: it is redundant re-validation of a queue-validated commit, but it is also the only
-post-merge signal on the actual default-branch ref and the cache-seeding run that downstream PRs
-restore from. If that changes, reprice the wall-clock and re-document it here rather than letting
-the rationale drift.
+On this **public** repo the runner minutes are free either way, so what the disable buys back is
+wall-clock: no queue wait (`min_entries_to_merge_wait_minutes: 5`, `check_response_timeout_minutes:
+45` worst case) and no duplicate pre-merge validation. The `push: main` run stays on purpose: it is
+the only post-merge signal on the actual default-branch ref and the cache-seeding run that
+downstream PRs restore from. If that changes, reprice the wall-clock and re-document it here rather
+than letting the rationale drift.
 
-Required-check rule with a queue on: **a status check may be marked required on `main` only if the
-workflow that reports it also triggers on `merge_group`.** Otherwise the queue waits for a status
-that can never report and eventually dequeues the PR on timeout. `ci-success` is safe because it is
-the stable, non-matrix job in `continuous-integration.yml`, and that workflow already runs on
-`merge_group`.
+Required-check rule **if the queue is re-enabled**: **a status check may be marked required on
+`main` only if the workflow that reports it also triggers on `merge_group`.** Otherwise the queue
+waits for a status that can never report and eventually dequeues the PR on timeout. `ci-success` is
+safe because it is the stable, non-matrix job in `continuous-integration.yml`, and that workflow
+still runs on `merge_group` — the trigger is deliberately kept (inert while the queue is off)
+precisely so re-enabling cannot recreate this failure mode.
 
-Rollback:
+Re-enable path:
 
-1. Remove the `merge_queue` rule from ruleset `main` (`14604876`) or restore the captured pre-change
-   ruleset payload with `gh api`.
-2. Re-read the ruleset and classic branch protection to confirm the queue rule is gone and
+1. Restore the captured pre-change ruleset payload:
+   `gh api -X PUT repos/OpenThrottle/monorepo/rulesets/14604876 --input docs/monorepo/rulesets/main-ruleset-with-merge-queue.json`
+   (strip the read-only fields — `id`, `node_id`, `source*`, `created_at`, `updated_at`,
+   `current_user_can_bypass`, `_links` — or resend just `name`/`target`/`enforcement`/`conditions`/`bypass_actors`/`rules`).
+2. Re-read the ruleset and classic branch protection to confirm the `merge_queue` rule is back and
    `ci-success` is still the only required status check.
-3. Use this if queue entries start timing out waiting for a non-reporting required check, or if the
-   landed squash commits stop preserving the conventional title / `Plan-Id:` / `Task-Id:` footer
-   shape the OT work ledger depends on.
+3. Before flipping, confirm every required check's workflow triggers on `merge_group` (see the rule
+   above) — a PR-only required check dequeues every PR on timeout.
+
+The reverse procedure (disabling again) is what this section's DISABLED note records: remove the
+`merge_queue` rule from the ruleset via `gh api -X PUT`, touching nothing else.
 
 ---
 
@@ -288,7 +302,7 @@ Rollback:
 - [ ] **Minimise the checkout.** `fetch-depth: 1` if you need no history; `fetch-depth: 0` + `filter: 'blob:none'` if you need history but not old file contents. Full clones need a written justification (only `secret-scan` has one).
 - [ ] **Never add a schedule without an estimate.** State the cadence, the per-run cost, and who reads the output. A cron nobody reads is pure spend forever.
 - [ ] **Don't add a required check that can fail to report.** A workflow-level `paths-ignore` on a required check hangs the PR as _"Expected — waiting for status"_ forever. This is why `ci-success` exists as a separate always-reporting gate — read the header of `continuous-integration.yml` before restructuring it.
-- [ ] **On merge-queue-protected branches, a required check must trigger on `merge_group`.** A PR-only workflow can never report inside the queue, so GitHub waits until `check_response_timeout_minutes` expires and then dequeues the PR.
+- [ ] **If the merge queue is re-enabled, a required check must trigger on `merge_group`.** A PR-only workflow can never report inside the queue, so GitHub waits until `check_response_timeout_minutes` expires and then dequeues the PR. The queue is currently off (see § Merge queue on `main`), but keep new required checks queue-safe anyway.
 - [ ] **If you disable something, leave a reason and an owner.** `if: false` with no explanation becomes permanent. Link back to this doc.
 
 ---
