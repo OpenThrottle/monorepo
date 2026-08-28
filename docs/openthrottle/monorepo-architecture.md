@@ -113,7 +113,7 @@ Shared infra used by the server: **Postgres** (OpenThrottle schema in `databases
 ## Related docs
 
 - **OpenThrottle schema and usage:** `databases/README.md`
-- **Run locally (OSS/Ollama):** `docs/openthrottle/run-locally-oss.md`
+- **Run locally (OSS/Ollama embeddings):** `docs/monorepo/Ollama.md` § Embeddings for OpenThrottle
 - **Docker image strategy:** `docs/openthrottle/docker-image-build-strategy.md`
 - **Ralph and workflows:** `tools/workflows/README.md`, `AGENTS.md`
 - **MCP developer setup:** `packages/openthrottle-mcp/README.md`

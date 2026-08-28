@@ -11,6 +11,26 @@
 - Install from https://ollama.com/download; start the app or run `ollama serve`.
 - Pull models: `scripts/ollama.ts (pnpm run ollama:pull)` (chat and embedding models). See `databases/README.md` for embedding dimension strategy.
 
+## Embeddings for OpenThrottle (Ollama or OpenAI)
+
+Semantic search (`semantic_search`) and doc/plan ingest embed on **openthrottle-server**, so the embedding provider is configured on **`applications/openthrottle-server/.env`** — never in the MCP launcher.
+
+| Path                      | Configure                                                                                                                      | Notes                                                                      |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------- |
+| **Ollama (no cloud API)** | **`OLLAMA_BASE_URL`** (default `http://localhost:11434`) and optionally **`OLLAMA_EMBEDDING_MODEL`** (e.g. `nomic-embed-text`) | No API key needed. Run Ollama locally (or proxy it through Caddy, above).  |
+| **OpenAI**                | **`OPENAI_API_KEY`** (leave the Ollama vars unset), e.g. `text-embedding-3-small`                                              | Cloud embeddings; the rest of the stack still runs locally.                |
+| **Neither**               | —                                                                                                                              | The stack runs; `semantic_search` and ingest embedding are simply skipped. |
+
+**Dimension caveat:** OpenThrottle stores **1536-dim** vectors. If the Ollama model returns a different dimension, embeddings are skipped — see [`databases/README.md`](../../databases/README.md) § Embedding dimension strategy.
+
+### MCP launcher and embeddings
+
+The stdio launcher [`scripts/run-openthrottle-mcp.sh`](../../scripts/run-openthrottle-mcp.sh) (a thin shim; the logic lives in [`scripts/run-openthrottle-mcp.ts`](../../scripts/run-openthrottle-mcp.ts)) starts **@openthrottle/openthrottle-mcp** on stdio. It does **not** require **`OPENAI_API_KEY`** in the monorepo root `.env` — it needs only `API_URL` / **`API_URL_INTERNAL`** and **`OPENTHROTTLE_MCP_AUTH_TOKEN`** (see [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md)). Embedding config lives on the server `.env` per the table above, which is why `semantic_search` can fail while every other MCP tool works.
+
+> **Running the stack fully in Docker (no host Node)?** Use the streamable-HTTP `mcp` container instead of the stdio launcher — `docker compose --profile prod up mcp`, registered by URL. See [mcp-registration.md § HTTP transport (Docker-native)](../openthrottle/mcp-registration.md#http-transport-docker-native).
+
+Smoke check: `API_URL_INTERNAL=http://localhost:6021 pnpm run verify:mcp-env` (reports server embedding config).
+
 ## Proxying Ollama through Caddy
 
 The monorepo uses [Caddy](https://caddyserver.com/) to expose local services with a single entry point and optional HTTPS. When Caddy is running, agents and UIs should use the **Caddy-proxied URL** for Ollama so everything hits one stable endpoint.

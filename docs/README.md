@@ -5,12 +5,17 @@ bottom, then dip into **Usage & reference** as needed.
 
 ## Getting started
 
-- [local-quickstart.md](./openthrottle/local-quickstart.md) — fresh clone → running server + verified MCP, in order.
-- [run-openthrottle-server-developer.md](./openthrottle/run-openthrottle-server-developer.md) — minimal native path for daily dev (server + developer app).
-- [run-locally-oss.md](./openthrottle/run-locally-oss.md) — running the whole stack on open-source models (Ollama) with no cloud APIs.
-- [first-time-onboarding.md](./openthrottle/first-time-onboarding.md) — mental model + a copy-paste prompt sequence for your first end-to-end workflow.
+Three docs, in this order — each has one job, and they do not repeat each other.
+
+1. **[local-quickstart.md](./openthrottle/local-quickstart.md)** — the fresh-clone path: env → migrate → bootstrap tokens → server → verified MCP. Do this once per machine.
+2. **[first-time-onboarding.md](./openthrottle/first-time-onboarding.md)** — the mental model plus a copy-paste prompt sequence for your first end-to-end workflow.
+3. **[run-openthrottle-server-developer.md](./openthrottle/run-openthrottle-server-developer.md)** — the daily native run loop: ports, env files, Nx targets, native vs Compose.
+
+Along the way:
+
 - [mcp-registration.md](./openthrottle/mcp-registration.md) — register `openthrottle-mcp` in Cursor / Claude Code / other MCP hosts.
 - [authoring-plans-via-mcp.md](./openthrottle/authoring-plans-via-mcp.md) — create and manage plans/tasks from your editor via MCP.
+- [monorepo/Ollama.md](./monorepo/Ollama.md) — embeddings for `semantic_search`, on Ollama (no cloud API) or OpenAI.
 
 ## What OpenThrottle is
 

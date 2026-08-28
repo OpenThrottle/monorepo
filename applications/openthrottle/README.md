@@ -37,7 +37,7 @@ OpenThrottle can run **entirely locally** with Open Source models and software�
 - **Embeddings (semantic search, plans knowledge base):** For **local-only** use set **Ollama** (`OLLAMA_BASE_URL`, optional `OLLAMA_EMBEDDING_MODEL`). The MCP and OpenThrottle ingest then use Ollama for embeddings; no API key required. See root `.env.default`, `databases/README.md` (embedding dimension strategy), and `docs/monorepo/Ollama.md`.
 - **Optional — OpenAI:** If you prefer cloud embeddings, set `OPENAI_API_KEY` and leave Ollama unset; the stack uses OpenAI (e.g. `text-embedding-3-small`) for embeddings. Not required for local-only.
 
-Details and copy for website or docs: `docs/openthrottle/run-locally-oss.md`.
+Details and copy for website or docs: `docs/openthrottle/features.md` § Runs entirely locally on Open Source.
 
 ## Work as history
 
@@ -97,7 +97,7 @@ The admin / CMS / email / website apps are not part of this consumer install.
 - **Clone and install:** From the monorepo root run `pnpm install` to install workspace dependencies.
 - **Environment:** Copy `applications/openthrottle/.env.default` to `applications/openthrottle/.env` and set Postgres/Redis (and optional JWT, CORS, Ollama/OpenAI) as needed. For Docker Compose, use the same `.env`; see [Required `.env`](#required-env) above.
 - **Postgres + Redis:** Either run them via Docker Compose (`docker compose up -d openthrottle-postgres openthrottle-redis` from repo root) or use existing instances and point `.env` at them. OpenThrottle schema and migrations: `databases/README.md`.
-- **Optional — embeddings:** For semantic search (plans knowledge base) use Ollama (set `OLLAMA_BASE_URL`) or OpenAI (set `OPENAI_API_KEY`). See root `.env.default` and `docs/openthrottle/run-locally-oss.md`.
+- **Optional — embeddings:** For semantic search (plans knowledge base) use Ollama (set `OLLAMA_BASE_URL`) or OpenAI (set `OPENAI_API_KEY`). See root `.env.default` and `docs/monorepo/Ollama.md` § Embeddings for OpenThrottle.
 
 ## Development
 
@@ -111,7 +111,7 @@ The admin / CMS / email / website apps are not part of this consumer install.
 
 ## Suggestions
 
-- **Run entirely locally:** Prefer Ollama for embeddings when you don’t want to use OpenAI; see `docs/openthrottle/run-locally-oss.md` and `databases/README.md` (embedding dimension strategy).
+- **Run entirely locally:** Prefer Ollama for embeddings when you don’t want to use OpenAI; see `docs/monorepo/Ollama.md` § Embeddings for OpenThrottle and `databases/README.md` (embedding dimension strategy).
 - **Docker Compose:** For a single-command stack (Postgres, Redis, server, developer app), run Compose from the monorepo root as in [Run from monorepo root](#run-from-monorepo-root); ensure `.env` is populated per [Required `.env`](#required-env).
 - **Ralph / workflows:** Use `pnpm exec workflow-ralph --plan <plan-id>` for agentic execution against plans; see `tools/workflows/README.md` and `AGENTS.md`.
-- **Docs:** More copy and architecture: `docs/openthrottle/` (e.g. `run-locally-oss.md`, `work-as-history.md`, `docker-image-build-strategy.md`).
+- **Docs:** More copy and architecture: `docs/openthrottle/` (e.g. `features.md`, `work-as-history.md`, `docker-image-build-strategy.md`).

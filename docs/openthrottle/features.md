@@ -58,6 +58,23 @@ OpenThrottle (OT) is a **plans knowledge base**: a Postgres-backed app (and MCP 
 - Quick **notes** (unstructured thoughts) with optional author; foundation for planning (e.g. create plan from note). Exposed via MCP.
 - **Detailed docs:** [databases/README.md](../../databases/README.md) (notes table, MCP create_note, list_notes, etc.).
 
+### Runs entirely locally on Open Source
+
+**Run entirely locally on Open Source models and software.** The whole stack runs on your machine or your own infrastructure with OSS tooling and OSS models (e.g. Ollama) — no required SaaS or proprietary APIs for core flows, and no vendor lock-in.
+
+| Component                           | Role                                                          | OSS / local                                  |
+| ----------------------------------- | ------------------------------------------------------------- | -------------------------------------------- |
+| **Postgres** (with pgvector)        | OpenThrottle app DB + OpenThrottle (plans, tasks, embeddings) | OSS, runs locally (Docker or native)         |
+| **Redis**                           | Queues, caching                                               | OSS, runs locally                            |
+| **OpenThrottle server**             | API, GraphQL, queues, notifications                           | OSS (NestJS), runs locally                   |
+| **OpenThrottle developer app**      | Dashboard for plans, queues, PRs                              | OSS (React Router), runs locally             |
+| **OpenThrottle / openthrottle-mcp** | Plans knowledge base, semantic search, MCP tools              | OSS, runs locally; connects to same Postgres |
+| **Ollama**                          | Local LLM and embedding models                                | OSS, runs locally; optional for embeddings   |
+
+Postgres and Redis are required; **Ollama** is what makes semantic search work with no cloud API at all. **OpenAI** is optional — set `OPENAI_API_KEY` instead if you prefer cloud embeddings.
+
+- **Detailed docs:** [monorepo/Ollama.md](../monorepo/Ollama.md) § Embeddings for OpenThrottle (provider config, dimension caveat, MCP launcher), [databases/README.md](../../databases/README.md) (embedding dimension strategy), [local-quickstart.md](./local-quickstart.md) (fresh clone → running).
+
 ### Background jobs (optional)
 
 - **Run plan** enqueues a plan in BullMQ (status → queued, then in_progress when the worker runs). **Doc ingestion** (diff-based re-index of `docs/` on main). **Daily stats** for dashboard/analytics.

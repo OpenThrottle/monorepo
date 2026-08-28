@@ -1,6 +1,8 @@
 # Minimal path: openthrottle-server + openthrottle-developer
 
-This document is the **native checkout** quick path: run the NestJS GraphQL API and the React Router developer app against **local Postgres and Redis**, using Nx from the monorepo root. For OSS positioning and optional Ollama/OpenAI embeddings, see [run-locally-oss.md](./run-locally-oss.md). For port reference and Caddy layout, see [local-services-and-ports.md](../monorepo/local-services-and-ports.md).
+> **Scope:** the **daily native run loop** — env files, ports, Nx targets, and native-vs-Compose trade-offs, for a checkout that is already set up. First time on this machine? Do [local-quickstart.md](./local-quickstart.md) instead; for what to type at the agent once it runs, see [first-time-onboarding.md](./first-time-onboarding.md).
+
+This document is the **native checkout** path: run the NestJS GraphQL API and the React Router developer app against **local Postgres and Redis**, using Nx from the monorepo root. For optional Ollama/OpenAI embeddings, see [Ollama.md § Embeddings for OpenThrottle](../monorepo/Ollama.md#embeddings-for-openthrottle-ollama-or-openai). For port reference and Caddy layout, see [local-services-and-ports.md](../monorepo/local-services-and-ports.md).
 
 ---
 
@@ -39,18 +41,17 @@ GraphQL URL for tools and MCP: **`http://localhost:6021/graphql`** when using th
 
 ## Native checkout workflow (recommended daily dev)
 
-1. **`pnpm install`** at the repo root.
-2. **Create env files** (see table above): root `.env`, `applications/openthrottle-server/.env`, `applications/openthrottle-developer/.env`.
-3. **Start Postgres + Redis only:**
+> First run on this machine (install, env files, migrations, service-account tokens) is [local-quickstart.md](./local-quickstart.md) — this loop assumes it is done.
+
+1. **Start Postgres + Redis only:**
    **`pnpm run database:start`**
    This runs `docker compose up -d redis postgres` (see root [`package.json`](../../package.json)) using root [`docker-compose.yml`](../../docker-compose.yml). Compose service names: **`postgres`**, **`redis`**.
-4. **Apply migrations:** **`pnpm run database:migrate`** (requires Postgres up). Details: [`databases/README.md`](../../databases/README.md).
-5. **GraphQL codegen (developer app):** After schema changes or on a fresh clone if generated artifacts are missing:
+2. **GraphQL codegen (developer app):** After schema changes, or on a fresh worktree if generated artifacts are missing:
    **`pnpm nx run openthrottle-developer:codegen-graphql`**
-   The **`dev`** target also depends on codegen/watch pipelines; first successful dev session may take longer while watchers settle.
-6. **Terminal A — API:** **`pnpm nx run openthrottle-server:dev`**
-   (`nest start … --watch`; see Nx project `openthrottle-server`.)
-7. **Terminal B — UI:** **`pnpm nx run openthrottle-developer:dev`**
+   The **`dev`** target also depends on codegen/watch pipelines; the first successful dev session may take longer while watchers settle.
+3. **Terminal A — API:** **`pnpm nx run openthrottle-server:dev`**
+   (`nest start … --watch`; see Nx project `openthrottle-server`.) The target applies any pending migrations first, so a rebased branch needs no separate `database:migrate`.
+4. **Terminal B — UI:** **`pnpm nx run openthrottle-developer:dev`**
    (`react-router dev`; pulls codegen dependencies.)
 
 **Smoke checks:** Open **`http://localhost:6021/health`** (or `/graphql`), **`http://localhost:6020`** for the developer UI. For MCP auth and GraphQL tokens, see [`packages/openthrottle-mcp/README.md`](../../packages/openthrottle-mcp/README.md) and [`packages/openthrottle-mcp/docs/verification-environment.md`](../../packages/openthrottle-mcp/docs/verification-environment.md).

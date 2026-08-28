@@ -87,7 +87,7 @@ const main = async (): Promise<void> => {
     logger.success('embedding provider configured (OPENAI_API_KEY or OLLAMA_BASE_URL in root .env and/or server .env)'); // prettier-ignore
   } else {
     logger.warn('no OPENAI_API_KEY or OLLAMA_BASE_URL in root .env or applications/openthrottle-server/.env'); // prettier-ignore
-    logger.detail('MCP starts without a launcher key; semantic_search needs server-side embeddings — see docs/openthrottle/run-locally-oss.md'); // prettier-ignore
+    logger.detail('MCP starts without a launcher key; semantic_search needs server-side embeddings — see docs/monorepo/Ollama.md'); // prettier-ignore
   }
 
   const token = process.env.OPENTHROTTLE_MCP_AUTH_TOKEN ?? '';
