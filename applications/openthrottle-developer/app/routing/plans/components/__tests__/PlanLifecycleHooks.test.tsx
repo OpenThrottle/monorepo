@@ -18,8 +18,8 @@ const afterHook: PlanLifecycleHook = {
   hookScope: 'each',
   hookSource: 'skill',
   id: 'after-1',
-  skillSlug: 'validate-plan',
-  title: 'after: /validate-plan',
+  skillSlug: 'github-commit',
+  title: 'after: /github-commit',
 };
 
 describe('PlanLifecycleHooks', () => {
@@ -36,7 +36,7 @@ describe('PlanLifecycleHooks', () => {
     expect(component.getByText(HOOK_LIST_COPY.beforeTitle)).toBeTruthy();
     expect(component.getByText(HOOK_LIST_COPY.afterTitle)).toBeTruthy();
     expect(component.getByText('before: /seed-db')).toBeTruthy();
-    expect(component.getByText('after: /validate-plan')).toBeTruthy();
+    expect(component.getByText('after: /github-commit')).toBeTruthy();
   });
 
   test('renders an optional heading', () => {

@@ -117,7 +117,7 @@ describe('resolveJobRunHooksForEnqueue', () => {
         {
           kind: 'skill',
           phase: 'afterAll',
-          skillPath: '.agents/skills/validate-plan/SKILL.md',
+          skillPath: '.agents/skills/github-commit/SKILL.md',
         },
       ],
       planHooks: {
@@ -139,7 +139,7 @@ describe('resolveJobRunHooksForEnqueue', () => {
   });
 
   it('dedupes a skill hook present in both config and materialized (phase+skillPath)', () => {
-    const skillPath = '.agents/skills/validate-plan/SKILL.md';
+    const skillPath = '.agents/skills/github-commit/SKILL.md';
     const resolved = resolveJobRunHooksForEnqueue({
       materializedHookEntries: [
         { kind: 'skill', phase: 'afterAll', skillPath },
@@ -155,7 +155,7 @@ describe('resolveJobRunHooksForEnqueue', () => {
         {
           kind: 'skill',
           phase: 'beforeAll',
-          skillPath: '.agents/skills/validate-plan/SKILL.md',
+          skillPath: '.agents/skills/github-commit/SKILL.md',
         },
       ],
       planHooks: { hooks: [] },

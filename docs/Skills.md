@@ -68,7 +68,7 @@ Source of truth: `skills-lock.json`. Grouped by upstream:
 
 Ours to author and edit; fanned out by ot-skill-sync:
 
-- **Agents/workflow:** agents-ralph, ot-claude-loop, validate-plan
+- **Agents/workflow:** agents-ralph, ot-claude-loop, ot-loop
 - **GitHub:** github-commit, github-pull-request, github-squash
 - **OpenThrottle:** ot-folders, ot-generators, ot-onboarding, ot-plans, ot-postgres, ot-stack
 - **Infra:** ot-skill-sync
@@ -76,8 +76,8 @@ Ours to author and edit; fanned out by ot-skill-sync:
 ## Always-on description budget
 
 Every skill's frontmatter `description` sits in the context window of every session whether or not
-the skill fires, so it is a standing cost. **Measured 2026-08-20: 20 skills, 6,212 chars,
-~1,553 tokens** — down from 44 skills / 16,918 chars / ~4,229 tokens.
+the skill fires, so it is a standing cost. **Measured 2026-08-28: 19 skills, 5,916 chars,
+~1,479 tokens** — down from 44 skills / 16,918 chars / ~4,229 tokens.
 
 A description answers exactly one question: _should the model open this file right now?_ That means
 trigger conditions plus the explicit not-this-skill disambiguators, and nothing else. Feature

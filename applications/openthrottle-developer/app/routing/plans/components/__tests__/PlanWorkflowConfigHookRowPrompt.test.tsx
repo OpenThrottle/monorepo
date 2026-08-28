@@ -27,7 +27,7 @@ const skillRow: JobRunHookDraftRow = {
   draftId: 'row-skill',
   kind: 'skill',
   phase: 'after_run',
-  skillPath: '.agents/skills/validate-plan/SKILL.md',
+  skillPath: '.agents/skills/github-commit/SKILL.md',
 };
 
 describe('PlanWorkflowConfigHookRowPrompt Component', () => {

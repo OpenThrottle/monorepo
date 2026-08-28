@@ -10,8 +10,8 @@ const skillHook: HookTaskListItem = {
   hookScope: 'each',
   hookSource: 'skill',
   id: 'hook-1',
-  skillSlug: 'validate-plan',
-  title: 'after: /validate-plan',
+  skillSlug: 'github-commit',
+  title: 'after: /github-commit',
 };
 
 const templateHook: HookTaskListItem = {
@@ -38,8 +38,8 @@ describe('HookTaskList', () => {
       <HookTaskList hooks={[skillHook]} onDetach={vi.fn()} role="after" />,
     );
 
-    expect(component.getByText('after: /validate-plan')).toBeTruthy();
-    expect(component.getByText('/validate-plan')).toBeTruthy();
+    expect(component.getByText('after: /github-commit')).toBeTruthy();
+    expect(component.getByText('/github-commit')).toBeTruthy();
     expect(component.getByText('each')).toBeTruthy();
   });
 
@@ -49,7 +49,7 @@ describe('HookTaskList', () => {
     );
 
     expect(component.getByText('seed fixtures')).toBeTruthy();
-    expect(component.queryByText('/validate-plan')).toBeNull();
+    expect(component.queryByText('/github-commit')).toBeNull();
     expect(component.getByText('once')).toBeTruthy();
   });
 
@@ -61,7 +61,7 @@ describe('HookTaskList', () => {
 
     await userEvent.click(
       component.getByRole('button', {
-        name: `${HOOK_LIST_COPY.detach}: after: /validate-plan`,
+        name: `${HOOK_LIST_COPY.detach}: after: /github-commit`,
       }),
     );
 

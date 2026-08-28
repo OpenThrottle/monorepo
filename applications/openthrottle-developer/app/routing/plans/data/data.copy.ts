@@ -110,7 +110,7 @@ export const PLAN_LIFECYCLE_HOOKS_COPY = {
   scopeLabel: `Scope`,
   scopeOnce: `Once`,
   skillSlugLabel: `Skill slug`,
-  skillSlugPlaceholder: `e.g. validate-plan`,
+  skillSlugPlaceholder: `e.g. github-commit`,
   sourceLabel: `Source`,
   sourceSkill: `Skill`,
   sourceTemplate: `Template`,
