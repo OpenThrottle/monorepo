@@ -15,6 +15,7 @@ import {
   type ChatCheckoutDescriptor,
 } from '../utils/checkout-labels';
 import { groupCheckoutOptions } from '../utils/checkout-groups';
+import { checkoutSearchFilter } from '../utils/checkout-search-filter';
 import { toggleCheckoutSelection } from '../utils/chat-checkout-selection';
 import { ChatCheckoutSelectorRow } from './ChatCheckoutSelectorRow';
 import { ChatCheckoutSelectorTrigger } from './ChatCheckoutSelectorTrigger';
@@ -50,7 +51,9 @@ export interface ChatCheckoutSelectorProps {
  * orgs — and a bare name gives the user nothing to pick on. Rows group under
  * their remote's owner/org, carry an `owner/repo` (or shortened path)
  * qualifier, and the search matches owner, host, path and project as well as
- * the name. Fully controlled — the package hardcodes no repositories. Meant to
+ * the name — by strict substring, not cmdk's default fuzzy subsequence
+ * scoring, which over that wide a haystack matched every row against nearly
+ * every query. Fully controlled — the package hardcodes no repositories. Meant to
  * be shown by the toolbar only when the selected backend's
  * `requiresRepository` capability is true.
  *
@@ -147,7 +150,7 @@ export const ChatCheckoutSelector = (
       {/* Wide enough that `owner/repo` — the text doing the disambiguating —
           is not the thing that gets truncated. */}
       <PopoverContent align="start" className="w-96 p-0">
-        <Command>
+        <Command filter={checkoutSearchFilter}>
           <CommandInput
             className="border-0 border-b px-3 py-2.5 focus:ring-0"
             data-testid="ChatCheckoutSelector-search"

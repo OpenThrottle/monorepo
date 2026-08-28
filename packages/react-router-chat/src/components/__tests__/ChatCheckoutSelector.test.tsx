@@ -384,3 +384,105 @@ describe('ChatCheckoutSelector Component — disambiguation', () => {
     ).not.toBeInTheDocument();
   });
 });
+
+/**
+ * The reported bug's list: personal and org checkouts side by side, every one
+ * of them under `/Users/matt/…` — the shared path prefix cmdk's fuzzy
+ * subsequence scoring used to match `visormatt` against on every row.
+ */
+const SHARED_PATH_PREFIX: readonly ChatCheckoutOption[] = [
+  {
+    branch: 'main',
+    filesystemPath: '/Users/matt/Development/openthrottle',
+    id: 'mine',
+    label: 'monorepo',
+    projectName: 'OpenThrottle',
+    remoteUrl: 'git@github.com:visormatt/monorepo.git',
+  },
+  {
+    branch: 'main',
+    filesystemPath: '/Users/matt/Development/shiftsmart-monorepo',
+    id: 'work-mono',
+    label: 'monorepo',
+    remoteUrl: 'git@github.com:shiftsmartinc/monorepo.git',
+  },
+  {
+    branch: 'develop',
+    filesystemPath: '/Users/matt/Development/nativeapps',
+    id: 'work-native',
+    label: 'nativeapps',
+    remoteUrl: 'git@github.com:shiftsmartinc/nativeapps.git',
+  },
+];
+
+const renderSharedPathPrefix = (): RenderResult =>
+  render(
+    <ChatCheckoutSelector
+      checkouts={SHARED_PATH_PREFIX}
+      onCheckoutChange={vi.fn()}
+      selectedCheckoutId="mine"
+    />,
+  );
+
+/** Open the picker and type `search` into it. */
+const search = async (
+  component: RenderResult,
+  query: string,
+): Promise<void> => {
+  const user = userEvent.setup();
+  await user.click(component.getByTestId('ChatCheckoutSelector-trigger'));
+  await user.type(component.getByTestId('ChatCheckoutSelector-search'), query);
+};
+
+describe('ChatCheckoutSelector Component — strict search matching', () => {
+  test('keeps only the owner that contains the query, heading included', async () => {
+    const component = renderSharedPathPrefix();
+    await search(component, 'visormatt');
+
+    expect(
+      component.getByTestId('ChatCheckoutSelector-option-mine'),
+    ).toBeInTheDocument();
+    expect(
+      component.queryByTestId('ChatCheckoutSelector-option-work-mono'),
+    ).not.toBeInTheDocument();
+    expect(
+      component.queryByTestId('ChatCheckoutSelector-option-work-native'),
+    ).not.toBeInTheDocument();
+    // cmdk keeps an emptied group mounted but hidden, heading and all.
+    expect(component.getByText('shiftsmartinc')).not.toBeVisible();
+  });
+
+  test('still spans every org for a shared display name', async () => {
+    const component = renderSharedPathPrefix();
+    await search(component, 'monorepo');
+
+    expect(
+      component.getByTestId('ChatCheckoutSelector-option-mine'),
+    ).toBeInTheDocument();
+    expect(
+      component.getByTestId('ChatCheckoutSelector-option-work-mono'),
+    ).toBeInTheDocument();
+    expect(
+      component.queryByTestId('ChatCheckoutSelector-option-work-native'),
+    ).not.toBeInTheDocument();
+  });
+
+  test('narrows to one checkout when every token has to match', async () => {
+    const component = renderSharedPathPrefix();
+    await search(component, 'shiftsmartinc mono');
+
+    expect(
+      component.getByTestId('ChatCheckoutSelector-option-work-mono'),
+    ).toBeInTheDocument();
+    expect(
+      component.queryByTestId('ChatCheckoutSelector-option-mine'),
+    ).not.toBeInTheDocument();
+  });
+
+  test('shows the empty state for a garbage query', async () => {
+    const component = renderSharedPathPrefix();
+    await search(component, 'nothing-matches-this');
+
+    expect(component.getByText('No matching checkouts.')).toBeInTheDocument();
+  });
+});
