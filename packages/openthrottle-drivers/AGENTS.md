@@ -30,7 +30,7 @@ Grok, OpenCode). Each CLI is one `defineDriver(...)` module; a shared engine
 - **Registry ↔ drivers split** avoids a cycle: driver modules import `defineDriver`
   from `registry/`, so the assembled `DRIVER_REGISTRY`/`getDriver` live in
   `drivers/index.ts`, not `registry/`. Keep it that way.
-- **`DRIVER_IDS` and `ALL_DRIVERS` must stay in lockstep** — add a new id to both.
+- **`DRIVER_REGISTRY` is `Record<DriverId, AgentDriver>`** — adding an id to `DRIVERS` fails to compile until a module is registered. `ALL_DRIVERS` derives from that map.
 - **Byte-identical parity** with the legacy builders is a hard contract for
   `claude`/`cursor`: the unchanged `tools/workflows` `run-iteration.test.ts` runs
   against these drivers. Claude emits `claude -p …` (NOT `--bare`). Don't "fix" it.

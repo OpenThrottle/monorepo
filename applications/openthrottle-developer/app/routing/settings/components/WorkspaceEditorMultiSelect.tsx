@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { MultiSelect } from '@openthrottle/react-router-shadcn';
-import type { WorkspaceEditorId } from '~/__generated__/graphql';
+import { isWorkspaceEditorId } from '~/global/config/workspace-editors';
 import { WORKSPACE_EDITOR_OPTIONS } from '~/routing/settings/config/workspace-editors';
-import { isWorkspaceEditorId } from '~/routing/settings/utils/is-workspace-editor-id';
+import type { WorkspaceEditorId } from '~/__generated__/graphql';
 
 export interface WorkspaceEditorMultiSelectProps {
   name?: string;

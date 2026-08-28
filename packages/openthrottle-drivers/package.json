@@ -6,7 +6,6 @@
   },
   "dependencies": {},
   "description": "OT-central contract for invoking agent CLIs (Claude Code, Codex, Cursor, Grok, OpenCode). defineDriver + registry + shared execution engine.",
-  "devDependencies": {},
   "exports": {
     ".": {
       "types": "./dist/src/index.d.ts",
@@ -43,7 +42,6 @@
       "typecheck": {}
     }
   },
-  "peerDependencies": {},
   "private": true,
   "publishConfig": {
     "access": "restricted",

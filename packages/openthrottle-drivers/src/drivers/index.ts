@@ -1,11 +1,12 @@
 /**
  * @description Assembles the concrete driver registry and exposes `getDriver`. Each driver module
- * is added to `ALL_DRIVERS`; the map is derived from it so ids and drivers cannot drift. Kept
- * separate from `../registry` to avoid an import cycle (driver modules import `defineDriver`).
+ * is registered in `DRIVER_REGISTRY`, a `Record<DriverId, AgentDriver>`, and `ALL_DRIVERS` is
+ * derived from it — so ids and drivers cannot drift. Kept separate from `../registry` to avoid
+ * an import cycle (driver modules import `defineDriver`), which is also why the gate lives here.
  */
 
-import { lookupDriver } from '../registry/index.ts';
-import type { DriverId, DriverRegistry } from '../registry/index.ts';
+import { DRIVER_IDS, lookupDriver } from '../registry/index.ts';
+import type { DriverId } from '../registry/index.ts';
 import type { AgentDriver } from '../types/index.ts';
 import { antigravityDriver } from './antigravity.ts';
 import { claudeDriver } from './claude.ts';
@@ -24,25 +25,31 @@ export { grokDriver } from './grok.ts';
 export { opencodeDriver } from './opencode.ts';
 
 /**
- * @description Every registered driver, in `DRIVER_IDS` order. One entry per `defineDriver` module.
+ * @description Registry map from driver id to driver.
+ *
+ * This is the completeness gate for {@link DriverId}, and the reason it lives here rather
+ * than in `../registry`: this module may import the concrete driver modules, that one may not
+ * (they import `defineDriver` from it, so importing them back would close a cycle). Adding an
+ * id to `DRIVERS` fails to compile here until a driver module is registered for it.
  * @public
  */
-export const ALL_DRIVERS: readonly AgentDriver[] = [
-  antigravityDriver,
-  claudeDriver,
-  codexDriver,
-  cursorDriver,
-  geminiDriver,
-  grokDriver,
-  opencodeDriver,
-];
+export const DRIVER_REGISTRY: Record<DriverId, AgentDriver> = {
+  antigravity: antigravityDriver,
+  claude: claudeDriver,
+  codex: codexDriver,
+  cursor: cursorDriver,
+  gemini: geminiDriver,
+  grok: grokDriver,
+  opencode: opencodeDriver,
+};
 
 /**
- * @description Registry map assembled from {@link ALL_DRIVERS}.
+ * @description Every registered driver, in `DRIVER_IDS` order. Derived from
+ * {@link DRIVER_REGISTRY} so the list and the map cannot drift.
  * @public
  */
-export const DRIVER_REGISTRY: DriverRegistry = Object.fromEntries(
-  ALL_DRIVERS.map((driver): [string, AgentDriver] => [driver.id, driver]),
+export const ALL_DRIVERS: readonly AgentDriver[] = DRIVER_IDS.map(
+  (id): AgentDriver => DRIVER_REGISTRY[id],
 );
 
 /**

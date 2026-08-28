@@ -330,6 +330,7 @@ export { TagsService } from './modules/tags/tags.service';
 export type { AddTagOptions, EffectiveTag } from './modules/tags/tags.service';
 export {
   WORKSPACE_EDITOR_IDS,
+  WORKSPACE_EDITORS,
   isWorkspaceEditorId,
 } from './modules/workspace-settings/workspace-editor-id';
 export {

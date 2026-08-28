@@ -10,6 +10,11 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { In, QueryFailedError, Repository } from 'typeorm';
+import {
+  TASK_STATUS,
+  TASK_STATUS_VALUES,
+  type TaskStatus,
+} from '../../common/plan-task-status.constants';
 import { Task } from '../tasks/task.entity';
 import {
   RULE_APPLICATION_STATES,
@@ -25,8 +30,21 @@ import {
  */
 export const SOFT_CLOSED_TASK_STATUS = 'SKIPPED';
 
-/** Terminal task statuses left untouched by the orphan soft-close. */
-const TERMINAL_TASK_STATUSES = ['CANCELED', 'COMPLETED', 'SKIPPED'] as const;
+/**
+ * Terminal task statuses left untouched by the orphan soft-close.
+ *
+ * Exhaustive over {@link TaskStatus}: adding a status fails typecheck here until
+ * someone decides whether it is terminal.
+ */
+const IS_TERMINAL_TASK_STATUS: Record<TaskStatus, boolean> = {
+  [TASK_STATUS.BACKLOG]: false,
+  [TASK_STATUS.BLOCKED]: false,
+  [TASK_STATUS.CANCELED]: true,
+  [TASK_STATUS.COMPLETED]: true,
+  [TASK_STATUS.IN_PROGRESS]: false,
+  [TASK_STATUS.PENDING]: false,
+  [TASK_STATUS.SKIPPED]: true,
+};
 
 const isUniqueViolation = (error: unknown): boolean => {
   if (!(error instanceof QueryFailedError)) return false;
@@ -177,7 +195,9 @@ export class RuleApplicationsService {
           .set({ status: SOFT_CLOSED_TASK_STATUS })
           .where('id IN (:...ids)', { ids: injectedTaskIds })
           .andWhere('status NOT IN (:...terminal)', {
-            terminal: [...TERMINAL_TASK_STATUSES],
+            terminal: TASK_STATUS_VALUES.filter(
+              (status) => IS_TERMINAL_TASK_STATUS[status],
+            ),
           })
           .execute();
       }

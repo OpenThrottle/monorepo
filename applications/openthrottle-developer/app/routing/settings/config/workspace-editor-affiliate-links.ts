@@ -8,8 +8,9 @@ import { WorkspaceEditorId } from '~/__generated__/graphql';
  * Kept as static config rather than env vars: these are public referral codes,
  * not secrets, so there is nothing to protect and static values stay testable.
  */
-export const WORKSPACE_EDITOR_AFFILIATE_LINKS: Readonly<
-  Record<WorkspaceEditorId, string | null>
+export const WORKSPACE_EDITOR_AFFILIATE_LINKS: Record<
+  WorkspaceEditorId,
+  string | null
 > = {
   [WorkspaceEditorId.Claude]: null,
   [WorkspaceEditorId.Cursor]: 'https://cursor.com/referral?code=TATK4GNIDWSM',

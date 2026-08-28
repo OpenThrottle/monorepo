@@ -1,4 +1,5 @@
 import { editorHref } from '@openthrottle/react-router-ide';
+
 import { WorkspaceEditorId } from '~/__generated__/graphql';
 
 export interface WorkspaceEditorLaunchInput {
@@ -60,8 +61,9 @@ const buildClaudeHref = (params: URLSearchParams): string =>
  *   prompt parameter (microsoft/vscode#279701 is still open); do not invent
  *   one.
  */
-export const WORKSPACE_EDITOR_DEEP_LINKS: Readonly<
-  Record<WorkspaceEditorId, WorkspaceEditorDeepLink>
+export const WORKSPACE_EDITOR_DEEP_LINKS: Record<
+  WorkspaceEditorId,
+  WorkspaceEditorDeepLink
 > = {
   [WorkspaceEditorId.Claude]: {
     buildFolderHref: (workingDirectory) =>

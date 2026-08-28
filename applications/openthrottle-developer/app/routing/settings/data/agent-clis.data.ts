@@ -3,58 +3,76 @@
  * pure helper that merges it with the server's `discoverAgentClis` result (which returns only the
  * AVAILABLE CLIs) into a per-CLI installed/not-installed status list.
  *
- * CANONICAL SOURCE: the `@openthrottle/openthrottle-drivers` registry (ALL_DRIVERS) and
- * scripts/setup_software.sh own the real allowlist + install URLs. That package can't be imported
- * into the browser bundle (it pulls node-only modules), so this is a thin cosmetic mirror — labels
- * and doc links only. The install/update ACTIONS send just a backend id the server re-validates
- * against the registry, so nothing security-relevant is duplicated here. Keep this list in sync with
- * the registry (see the drift reconciliation in the plan's setup_software.sh task).
+ * `@openthrottle/openthrottle-drivers` cannot be imported into the browser bundle (node-only
+ * modules), so {@link AGENT_CLI_BACKENDS} is a browser-safe mirror of the driver ids. The catalog
+ * is `Record<AgentCliBackend, …>` so a backend cannot exist without a label and an install link.
+ * `__tests__/agent-cli-registry-parity.test.ts` holds that mirror to `ALL_DRIVERS` at test time
+ * (tests run in node).
  */
+
+export const AGENT_CLI_BACKENDS = {
+  antigravity: 'antigravity',
+  claude: 'claude',
+  codex: 'codex',
+  cursor: 'cursor',
+  gemini: 'gemini',
+  grok: 'grok',
+  opencode: 'opencode',
+} as const;
+
+/** A backend id the setup page can display. */
+export type AgentCliBackend =
+  (typeof AGENT_CLI_BACKENDS)[keyof typeof AGENT_CLI_BACKENDS];
 
 /** One agent CLI the setup page can display, keyed by the driver-id backend discriminator. */
 interface AgentCliCatalogEntry {
-  /** Driver id / backend discriminator (matches discoverAgentClis `backend`). */
-  readonly backend: string;
-  /** Installer URL (shown as a reference link; the actual install runs server-side). */
+  /**
+   * Installer URL (shown as a reference link; the actual install runs server-side). Matches the
+   * driver's own `install.url`, except `gemini`, which installs via npm and has no install script
+   * — geminicli.com is a docs page, and the parity test encodes that exception explicitly.
+   */
   readonly installUrl: string;
-  /** Human-friendly display label. */
+  /**
+   * Human-friendly display label. Genuinely local, NOT a duplicate of the driver's `label`: the
+   * driver's is the binary-ish name (`claude-code`, `cursor-agent`) and this is the product name.
+   */
   readonly label: string;
 }
 
-/** The finite allowlist, mirrored from the drivers registry (display only). */
-const AGENT_CLI_CATALOG: readonly AgentCliCatalogEntry[] = [
-  {
-    backend: 'antigravity',
+/**
+ * Display metadata per backend. Exhaustive over {@link AgentCliBackend}: a backend cannot be
+ * listed without a label and an install link.
+ */
+const AGENT_CLI_CATALOG: Record<AgentCliBackend, AgentCliCatalogEntry> = {
+  antigravity: {
     installUrl: 'https://antigravity.google/cli/install.sh',
     label: 'Antigravity',
   },
-  {
-    backend: 'claude',
+  claude: {
     installUrl: 'https://claude.ai/install.sh',
     label: 'Claude Code',
   },
-  {
-    backend: 'codex',
+  codex: {
     installUrl: 'https://chatgpt.com/codex/install.sh',
     label: 'Codex',
   },
-  {
-    backend: 'cursor',
+  cursor: {
     installUrl: 'https://cursor.com/install',
     label: 'Cursor Agent',
   },
-  {
-    backend: 'gemini',
+  gemini: {
     installUrl: 'https://geminicli.com',
     label: 'Gemini CLI',
   },
-  { backend: 'grok', installUrl: 'https://x.ai/cli/install.sh', label: 'Grok' },
-  {
-    backend: 'opencode',
+  grok: {
+    installUrl: 'https://x.ai/cli/install.sh',
+    label: 'Grok',
+  },
+  opencode: {
     installUrl: 'https://opencode.ai/install',
     label: 'OpenCode',
   },
-];
+};
 
 /** One model of an agent CLI with the current user's per-model preferences. */
 export interface AgentCliModelStatus {
@@ -105,11 +123,13 @@ export const mergeAgentCliStatuses = (
 ): readonly AgentCliStatus[] => {
   const byBackend = new Map(available.map((agent) => [agent.backend, agent]));
 
-  return AGENT_CLI_CATALOG.map((entry) => {
-    const agent = byBackend.get(entry.backend);
+  return Object.values(AGENT_CLI_BACKENDS).map((backend) => {
+    const entry = AGENT_CLI_CATALOG[backend];
+    const agent = byBackend.get(backend);
     const modelOptions = agent?.modelOptions ?? [];
+
     return {
-      backend: entry.backend,
+      backend,
       enabled: agent?.enabled ?? true,
       installUrl: entry.installUrl,
       installed: agent !== undefined,

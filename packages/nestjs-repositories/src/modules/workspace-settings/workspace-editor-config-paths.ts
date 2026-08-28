@@ -26,6 +26,8 @@ const VSCODE_PATHS: WorkspaceEditorConfigPaths = {
   rulesDirectoryRelativePath: '.vscode',
 };
 
+// Exhaustive over WorkspaceEditorId: adding an editor fails to compile here
+// until its config paths are declared, rather than resolving to undefined.
 const EDITOR_CONFIG_PATHS: Record<
   WorkspaceEditorId,
   WorkspaceEditorConfigPaths
