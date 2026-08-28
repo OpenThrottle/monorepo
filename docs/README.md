@@ -34,18 +34,39 @@ Along the way:
 - **Scheduled agent jobs:** [openthrottle/scheduled-agent-jobs-usage.md](./openthrottle/scheduled-agent-jobs-usage.md)
 - **Agentic CLI chat backends:** [openthrottle/agentic-cli-chat-backends.md](./openthrottle/agentic-cli-chat-backends.md), [openthrottle/agentic-cli-backend-compatibility-guide.md](./openthrottle/agentic-cli-backend-compatibility-guide.md)
 - **Server auth:** [openthrottle/openthrottle-server-auth.md](./openthrottle/openthrottle-server-auth.md), [nestjs/wiring-auth-rbac.md](./nestjs/wiring-auth-rbac.md)
+- **Plan-run worktrees:** [openthrottle/plan-run-worktrees.md](./openthrottle/plan-run-worktrees.md) — the git worktree OpenThrottle creates for every programmatic plan run, and how the run binds to it.
+- **Recurring agent jobs:** [monorepo/recurring-agent-jobs.md](./monorepo/recurring-agent-jobs.md) — the ten read-only `Job_*` audit prompts in `.agents/prompts/` and the two ways to invoke them.
+- **Driver stream contracts:** [openthrottle/antigravity-stream-json-schema.md](./openthrottle/antigravity-stream-json-schema.md), [openthrottle/gemini-stream-json-schema.md](./openthrottle/gemini-stream-json-schema.md) — the headless stream-JSON each CLI emits, as probed.
+- **Workspace folder picker:** [openthrottle/workspace-native-folder-picker.md](./openthrottle/workspace-native-folder-picker.md) — when the server may open a native OS folder dialog, and the per-OS commands behind it.
+- **Developer Vite devtools:** [monorepo/openthrottle-developer-vite-devtools.md](./monorepo/openthrottle-developer-vite-devtools.md) — the diagnostics, bundle analyzer, and host/port levers in the developer app's Vite config.
+- **Repo tooling:** [monorepo/Tooling.md](./monorepo/Tooling.md) — SWC TypeScript execution, Python apps, and gcloud CLI auth.
 
 ## Contributor reference
 
+- **Docs contract:** [../CONTRIBUTING.md#documentation](../CONTRIBUTING.md#documentation) — what a doc in `docs/` is for, and the `audit:docs-index` reachability gate.
 - **Folders & conventions:** [Folders.md](./Folders.md), [openthrottle/packages-naming.md](./openthrottle/packages-naming.md)
 - **CI quality gates:** [monorepo/CI-quality-gates.md](./monorepo/CI-quality-gates.md)
 - **Dead-code (Knip):** [monorepo/Knip.md](./monorepo/Knip.md)
 - **Component shape:** [monorepo/component-primitive-shape.md](./monorepo/component-primitive-shape.md)
+- **Route shape:** [monorepo/route-primitive-shape.md](./monorepo/route-primitive-shape.md) — the enforceable standard every `app/routes/*.tsx` module follows.
+- **Test coverage:** [monorepo/test-coverage-audit.md](./monorepo/test-coverage-audit.md) — which source files must ship a co-located spec, and what "tested" means.
+- **Forms:** [monorepo/Forms.md](./monorepo/Forms.md) — the Formik + Yup + loader/action pattern every React Router form follows.
+- **Vitest pool (developer app):** [reliability/developer-vitest-pool.md](./reliability/developer-vitest-pool.md) — why the heaviest jsdom suite in CI is bounded the way it is.
+- **GraphQL-only transport:** [workflows/graphql-only-transport-boundary.md](./workflows/graphql-only-transport-boundary.md) — every workflow request goes through GraphQL, with one documented health-check exception.
 - **URL-first UI state:** [monorepo/url-first-ui-state.md](./monorepo/url-first-ui-state.md), [monorepo/url-first-react-router-shadcn-learnings.md](./monorepo/url-first-react-router-shadcn-learnings.md)
 - **Testing:** [testing/snapshot-replacement-patterns.md](./testing/snapshot-replacement-patterns.md)
 - **PWA:** [monorepo/PWA.md](./monorepo/PWA.md) — the manifest + service-worker wiring every React Router app ships.
 - **Marketing / video:** [marketing/README.md](./marketing/README.md) — the @OpenThrottleAI "0–60" format and the screencast production pipeline.
 - **UI tokens:** [openthrottle/brand-palette.md](./openthrottle/brand-palette.md), [openthrottle/styles.md](./openthrottle/styles.md)
+
+## Agents in other repositories
+
+How OpenThrottle reaches a repository that is not this monorepo — the two halves reach opposite conclusions, so read them together.
+
+- [monorepo/foreign-workspace-skill-injection.md](./monorepo/foreign-workspace-skill-injection.md) — skills must be materialized into the target repo, and the per-CLI matrix that forces it.
+- [monorepo/child-repo-hook-overlay.md](./monorepo/child-repo-hook-overlay.md) — hooks never are: every supported CLI takes out-of-repo hook config.
+- [monorepo/agent-cli-hook-capability-matrix.md](./monorepo/agent-cli-hook-capability-matrix.md) — per-CLI hook and plugin capabilities, measured by running the binaries.
+- [monorepo/child-repo-hook-telemetry-contract.md](./monorepo/child-repo-hook-telemetry-contract.md) — what a hook may do and report when it runs outside this repo.
 
 ## See also (repo root)
 

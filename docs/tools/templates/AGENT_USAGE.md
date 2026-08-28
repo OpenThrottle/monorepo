@@ -182,6 +182,7 @@ NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:<generator-name> \
 - **[NestJS Generator](./nestjs.md)** – Apps, services, modules, agents, etc.
 - **[Package Generator](./package.md)**
 - **[Folders Generator](./folders.md)**
+- **[Examples](./EXAMPLES.md)** – Worked command lines for the generators above, one section each.
 
 > There is **no** `react-native` generator registered in this workspace — only the five above (`tools/generators/generators.json`). Use **react** for shared UI packages and **react-router** for apps under `applications/`.
 

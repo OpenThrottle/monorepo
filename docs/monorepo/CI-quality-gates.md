@@ -43,6 +43,7 @@ See [CONTRIBUTING.md](../../CONTRIBUTING.md#testing-typecheck-versus-test) for c
 | **P1**   | Dependency-license + THIRD-PARTY-LICENSES     | `build` → license gates                                                         | Ready PR when deps inputs change; always on merge queue and `push: main`  | `nx run monorepo:validate-licenses`; `pnpm run validate:notices`                                                                 | [visormatt](https://github.com/visormatt) | Yes             | **On**                                                                                                                    |
 | **P1**   | Prettier format-check                         | `build` → Prettier format-check                                                 | Changed files on ready PR; full tree on merge queue and `push: main`      | `nx run monorepo:format-check`                                                                                                   | [visormatt](https://github.com/visormatt) | Yes             | **On**                                                                                                                    |
 | **P1**   | Component primitive-shape audit (R4–R7)       | `build` → Component primitive-shape audit                                       | Ready PR, merge queue, `push: main`                                       | `pnpm run audit:component-shape:strict`                                                                                          | [visormatt](https://github.com/visormatt) | Yes             | **On**                                                                                                                    |
+| **P2**   | Docs index reachability                       | `build` → Template compliance audit (via `audit:strict`)                        | Ready PR, merge queue, `push: main`                                       | `pnpm run audit:docs-index:strict`                                                                                               | [visormatt](https://github.com/visormatt) | Yes             | **On** — hard failure; see below                                                                                          |
 | **P2**   | Vitest (all affected projects)                | `build` → NX `<target>` affected step (per shard)                               | Ready PR, merge queue, `push: main`                                       | `nx affected --exclude="*,$selector" --target=test`                                                                              | [visormatt](https://github.com/visormatt) | Yes (affected)  | **On** (full affected, split across 3 shards)                                                                             |
 | **P3**   | Knip dead-code baseline                       | — (not wired into CI)                                                           | Not on PRs or merge queue                                                 | `nx run monorepo:knip-ci` — see [Knip.md](./Knip.md)                                                                             | [visormatt](https://github.com/visormatt) | No (local only) | **Off in CI** — runs via `check:local` / on-demand; no `knip-report` job exists in the workflow                           |
 | **P0**   | Sharded affected `lint`/`typecheck`/`test`    | `build` → 3-leg matrix (`jobIndex: [1, 2, 3]`, `fail-fast: false`)              | Ready PR, merge queue, `push: main`                                       | `scripts/parallelize-tasks.ts` → `nx affected --exclude="*,$selector"`                                                           | [visormatt](https://github.com/visormatt) | Yes (affected)  | **On** — OT plan `b19377d1`; sizing rationale in [ci-cost.md](./ci-cost.md) § CI sharding                                 |
@@ -61,6 +62,29 @@ The P2 gate runs Vitest (`test`) for **all affected projects** — there is no p
 The earlier "phased gate" step that excluded everything except `openthrottle-server`, `@openthrottle/openthrottle-mcp`, and `@tools/workflows` is commented out in the workflow.
 
 To mirror this locally, `pnpm run check:local:affected-test` runs `nx affected --target=test --parallel --nxBail` (no exclude), so a green `check:local` exercises the same affected test set CI does — unsharded, since one machine has no boxes to split across.
+
+## Docs index gate
+
+`pnpm run audit:docs-index:strict` fails when a `docs/**/*.md` file is unreachable
+from any index. Reachable means linked from `docs/README.md`, from the README of
+its own directory, or from a doc that is itself linked from one of those — one
+hop, so a section hub like [tools/templates/AGENT_USAGE.md](../tools/templates/AGENT_USAGE.md)
+indexes the docs beside it, but a chain of prose does not. READMEs are seeds, not
+subjects.
+
+The `audit:strict` aggregate picks it up by glob, so it runs in the `build` job's
+audit step and is a **hard failure** on ready PRs, the merge queue, and
+`push: main`. Two ways to clear one:
+
+- **Link it** — add a bullet with a one-line purpose to `docs/README.md` or the
+  nearest directory README. This is the default; an unfindable doc is a doc
+  nobody reads.
+- **Allowlist it** — add the path to `ALLOWLIST` in
+  `scripts/audit-docs-index.rules.ts` with an inline comment giving the reason.
+  An entry without a reason is a convention failure, not a valid entry.
+
+Run `pnpm run audit:docs-index` (warn-mode, always exits 0) to see the orphan
+list while working, or `--json` for the full report.
 
 ## Related OpenThrottle plans (audit unwind)
 
