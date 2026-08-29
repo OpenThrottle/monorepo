@@ -33,6 +33,19 @@ export const episode: VideoEpisode = {
     { action: 'Hold on the run detail.', t: '0:50' },
     { action: 'Outro card.', t: '0:55' },
   ],
+  dataRequirements: [
+    {
+      atLeast: 5,
+      describe: 'scheduled jobs on the schedule surface',
+      sql: `SELECT count(*) AS value FROM scheduled_agent_jobs`,
+    },
+    {
+      atLeast: 3,
+      describe:
+        'scheduled jobs with run history, so a job detail page has a list',
+      sql: `SELECT count(*) AS value FROM (SELECT j.id FROM scheduled_agent_jobs j JOIN scheduled_agent_job_runs r ON r.scheduled_agent_job_id = j.id GROUP BY j.id) x`,
+    },
+  ],
   format: 'short',
   id: '14-scheduled-runs',
   production: {

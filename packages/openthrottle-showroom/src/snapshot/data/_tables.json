@@ -1,0 +1,32 @@
+{
+  "tables": [
+    { "rowCount": 35, "table": "daily_stats" },
+    { "rowCount": 164, "table": "documentation" },
+    { "rowCount": 1, "table": "projects" },
+    { "rowCount": 442, "table": "skill_usage_events" },
+    { "rowCount": 2, "table": "users" },
+    { "rowCount": 105, "table": "custom_prompts" },
+    { "rowCount": 170, "table": "documentation_embeddings" },
+    { "rowCount": 252, "table": "plans" },
+    { "rowCount": 1, "table": "repositories" },
+    { "rowCount": 2, "table": "service_accounts" },
+    { "rowCount": 1, "table": "tag_action_rules" },
+    { "rowCount": 138, "table": "agent_conversations" },
+    { "rowCount": 12, "table": "custom_prompt_embeddings" },
+    { "rowCount": 31, "table": "plan_embeddings" },
+    { "rowCount": 822, "table": "plan_tags" },
+    { "rowCount": 2, "table": "repository_checkouts" },
+    { "rowCount": 1611, "table": "tasks" },
+    { "rowCount": 431, "table": "agent_conversation_messages" },
+    { "rowCount": 1319, "table": "plan_output_stream" },
+    { "rowCount": 23, "table": "plan_runs" },
+    { "rowCount": 5, "table": "rule_applications" },
+    { "rowCount": 12, "table": "scheduled_agent_jobs" },
+    { "rowCount": 4901, "table": "task_tags" },
+    { "rowCount": 168, "table": "agent_token_usage" },
+    { "rowCount": 28, "table": "scheduled_agent_job_runs" },
+    { "rowCount": 2973, "table": "work_sessions" },
+    { "rowCount": 137, "table": "work_artifacts" },
+    { "rowCount": 3069, "table": "work_session_subjects" }
+  ]
+}

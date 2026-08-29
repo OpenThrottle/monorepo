@@ -13,10 +13,16 @@ The recorder decision is in [`spike/README.md`](./spike/README.md).
 
 ```text
 packages/openthrottle-showroom/
-├── src/fixtures/demo-content.ts  # the entire demo workspace, as fictional data
+├── src/fixtures/demo-content.ts  # the hand-authored HERO rows (d0d0d0d0- ids)
+├── src/snapshot/              # export/sanitize/load of the real workspace
+│   ├── manifest.data.ts       # THE classification: every table and column
+│   ├── data/                  # the committed sanitized snapshot (JSONL)
+│   └── verify-episodes.ts     # assert each episode's dataRequirements
 ├── src/episodes/<id>/         # episode.ts, flow.ts, episode-specific surfaces
-├── src/scripts/seed-demo.sh   # create + migrate + seed the DEMO database
-├── src/scripts/seed-demo.ts   # the seeder (upserts on fixed ids; --reset)
+├── src/scripts/seed-demo.sh   # create + migrate + seed + verify the DEMO database
+├── src/scripts/seed-demo.ts   # the seeder (hero rows, then the snapshot)
+├── src/scripts/snapshot-export.ts   # refresh the snapshot from the REAL database
+├── src/scripts/verify-demo-data.ts  # the episode data gate
 ├── src/scripts/ensure-demo-database.ts
 ├── src/scripts/resolve-demo-url.ts
 ├── spike/                     # task-3 recorder comparison + verdict
@@ -42,11 +48,33 @@ leak-prevention control for the whole pipeline, not just a convenience.
 sh packages/openthrottle-showroom/src/scripts/seed-demo.sh --reset
 ```
 
-Creates the database if needed, applies every migration, and seeds: one demo user
-with all roles, two fictional projects, eleven plans across statuses, sixteen tasks
-in mixed lifecycle, four notes, and one pre-baked agent run with nineteen output
-chunks. Idempotent — every write upserts on a fixed id, so re-running is a no-op
-and `--reset` truncates first.
+Creates the database if needed, applies every migration, seeds **two layers**,
+then asserts every episode's data requirements:
+
+1. **The hero fixture** — one demo user with all roles, two fictional projects,
+   eleven plans, sixteen tasks, four notes and one pre-baked agent run with
+   nineteen output chunks. Fixed `d0d0d0d0-` ids, because flows deep-link them.
+2. **The snapshot** — ~15,000 rows across 28 tables, a sanitized 30-day slice of
+   the real workspace (see below). Imported rows keep their real ids; the loader
+   refuses if the two id spaces ever overlap.
+
+Idempotent — every write upserts and is guarded so an unchanged row is not
+written at all, and `--reset` truncates first. Pin `DEMO_NOW` to make a run
+reproducible to the second: without it the timestamp offsets resolve against the
+current clock, so a re-run deliberately re-times the whole workspace (that is
+how a frozen snapshot keeps reading as recently active).
+
+Two seeding details that are load-bearing, both learned the hard way:
+
+- **Most of these tables stamp `updated_at` from a trigger.** An unconditional
+  upsert therefore rewrites the rebased timestamps on every re-seed, and 200+
+  plans read "updated just now" on camera. Every upsert is guarded with
+  `IS DISTINCT FROM` so an unchanged row is skipped entirely.
+- **Imported rows arrive owned by the imported users**, but the recording logs
+  in as the demo user and most surfaces are user-scoped. Ownership is re-pointed
+  at the demo user after the load, off the reflected foreign-key graph. Without
+  it the workspace holds 125 conversations and still renders "no conversations
+  yet".
 
 Then point a server at it:
 
@@ -65,6 +93,100 @@ login fails with "Invalid email or password" against a user that demonstrably
 exists. Both guard scripts check the _resolved_ connection string rather than
 `POSTGRES_DB` for exactly this reason, and refuse to run unless the database name
 contains `demo` (the reset path truncates).
+
+## The snapshot: real workspace data, sanitized and committed
+
+The hand-authored hero fixture above is a few dozen rows; the rest of the demo
+workspace is a **sanitized snapshot of the real dev database**, committed as
+JSONL per table under `src/snapshot/data/`. The exporter walks the FK graph
+mechanically from time-windowed roots (30 days by default), pipes every row
+through the committed column manifest (`src/snapshot/manifest.data.ts` —
+keep/scrub/drop per column, exported/denied/ignored per table), and fails
+loudly on schema drift or anything secret-shaped. Timestamps are stored as
+offsets from a fixed anchor so the loader can render the frozen snapshot as a
+recently-active workspace.
+
+That anchor is `SNAPSHOT_ANCHOR_ISO` in `src/scripts/snapshot-export.ts`, and it
+is **pinned**, not read off the clock. It has to be: every timestamp in the
+snapshot is an offset from it, so a clock-derived anchor made the whole 18MB
+output a function of the calendar — exporting a day later rewrote every line of
+all 29 files with no semantic change. Bump the constant only when you mean to
+move the demo window forward, and review the whole-snapshot diff that follows.
+
+### Refreshing the snapshot is a PR — the diff review IS the leak review
+
+```bash
+pnpm nx run @openthrottle/openthrottle-showroom:snapshot-refresh
+```
+
+The ritual, in order, and none of it optional:
+
+1. Refresh **on a branch**, never straight on main.
+2. **Read the diff.** Output is deterministic (stable row order, sorted JSON
+   keys, pinned anchor), so the diff is exactly what changed in the workspace
+   since the last refresh — a refresh against unchanged data produces no diff at
+   all. This read is the human half of the leak review; the automated half is
+   best-effort by design.
+
+   `src/snapshot/data/*.jsonl` is marked `-diff` in `.gitattributes` so it does
+   not drown PR pages and incidental `git diff` calls in 15k unreadable lines.
+   The leak review opts back in explicitly:
+
+   ```bash
+   git diff --text -- packages/openthrottle-showroom/src/snapshot/data
+   ```
+
+   Start from the row counts in `src/snapshot/data/_tables.json`, which stays
+   diffable and is the snapshot's human-readable summary.
+
+3. Merge, then re-seed the demo database (`video-seed`).
+
+What the automation covers: the export refuses to run against anything
+unclassified (a new migration stops it, naming the table/column to classify),
+denied tables never export, a secret-shaped string stops the export naming the
+row, and the committed files are re-scanned by the test target on every CI run
+(`src/snapshot/__tests__/snapshot-data.test.ts`) — a leak string added to
+`src/snapshot/data/` fails the build. What it deliberately does NOT cover:
+imported free text is kept (that is the point of using real data), so
+recordings made from imported data are **always human-reviewed before
+publishing** — that expectation is part of this pipeline, not a nicety.
+
+### The two things that break first when the schema moves
+
+Both are deliberate, and both name what to do:
+
+1. **The column manifest, at EXPORT time.** `manifest.data.ts` classifies every
+   table (`exported | denied | ignored`) and every exported column
+   (`keep | scrub | drop`). A new migration means an unclassified table or
+   column, and the export stops before writing anything: _"column
+   'plans.foo' is not classified — decide keep/scrub/drop"_. Classify it —
+   conservatively: `scrub` free text, `drop` anything credential-adjacent,
+   `denied` any table that stores secrets — then re-run the refresh. A renamed
+   or dropped column is reported as such rather than as a bare Postgres error,
+   and a changed pgvector dimension fails loudly so a model change cannot
+   silently strand stale embeddings.
+2. **The per-episode data requirements, at SEED time.** Each episode declares
+   what its flow needs; `verify-demo-data` asserts every requirement after
+   seeding and fails naming the episode: _"09-tags-and-rules: expected a tag
+   rule that has actually fired …, got 0"_. Either the seed is wrong (re-seed,
+   or widen the export window) or the episode's expectation is (fix the
+   requirement). Never delete the requirement to make it green.
+
+A third, quieter one: the snapshot comes from the dev database, which can carry
+columns the committed migrations do not create yet. The loader skips those and
+says so — `WARNING 'plans' snapshot has working_directory — absent from the demo
+schema`. A growing list means the dev database has drifted from
+`databases/migrations`.
+
+### Size
+
+Measured 2026-08-27: ~17MB across 28 tables as plain JSONL, largest file 4.2MB
+(`documentation_embeddings.jsonl`). Committed uncompressed on purpose — gzip
+would make the diff unreviewable, which defeats the ritual above. If the
+directory ever exceeds **50MB**, narrow the export scope (shorter window, or
+demote a bulky table to `ignored`) before reaching for compression;
+`code_embeddings` is already denied outright because the code index spans
+private local workspaces.
 
 ## Two things the fixture has to get right
 

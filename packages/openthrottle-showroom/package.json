@@ -46,6 +46,7 @@
       "__build": {},
       "__build-package": {},
       "lint": {},
+      "snapshot-refresh": {},
       "test": {},
       "typecheck": {},
       "video-assemble": {},
@@ -53,6 +54,7 @@
       "video-record": {},
       "video-scan": {},
       "video-seed": {},
+      "video-seed-verify": {},
       "video-validate": {}
     }
   },

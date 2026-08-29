@@ -30,20 +30,24 @@ export interface LeakRule {
 }
 
 /**
- * Real identities and infrastructure that must never appear in a demo FRAME. Add to
- * this as the channel grows; it is cheaper than remembering.
+ * Names that must never appear in a demo FRAME. Add to this as the channel
+ * grows; it is cheaper than remembering.
  *
- * The demo fixture is entirely fictional, so any hit here means the recording ran
- * against the WRONG DATABASE — the single worst thing that can happen to this
- * pipeline. Checked against frames only: the description block is supposed to carry
- * the repository URL.
+ * This list used to read "any hit means the recording ran against the wrong
+ * database", because the demo workspace was entirely fictional. It is not any
+ * more: the workspace is a sanitized snapshot of the real one, and the public
+ * OpenThrottle project's own name, repository and GitHub usernames are kept
+ * DELIBERATELY — the repo is open source and the workspace is expected to
+ * become publicly viewable. Flagging those would have made this gate cry wolf
+ * on every take until someone switched it off.
+ *
+ * What stays here is the narrower thing: PRIVATE third parties. A former
+ * employer or a client identifies people and work that never agreed to be on
+ * camera, and no amount of "the content is not the secret" applies to them.
+ * These are also scrubbed at export (see `snapshot/sanitize.data.ts`); this is
+ * the second line, checking what actually reached the screen.
  */
-export const DENYLIST: readonly string[] = [
-  'OpenThrottle/monorepo',
-  'openthrottle.ai',
-  'shiftsmart',
-  'visormatt',
-];
+export const DENYLIST: readonly string[] = ['shiftsmart'];
 
 /** Hosts a demo frame may legitimately show. */
 export const ALLOWED_HOSTS: readonly string[] = [

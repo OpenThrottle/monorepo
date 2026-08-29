@@ -30,6 +30,41 @@ export const episode: VideoEpisode = {
     { action: 'Click **Settings**; show the models section.', t: '0:47' },
     { action: 'Outro card.', t: '0:54' },
   ],
+  dataRequirements: [
+    {
+      atLeast: 100,
+      describe:
+        'plans across the whole tour, the number the dashboard counter shows',
+      sql: `SELECT count(*) AS value FROM plans`,
+    },
+    {
+      atLeast: 14,
+      describe:
+        'days of activity so the dashboard chart has a shape, not a spike',
+      sql: `SELECT count(*) AS value FROM daily_stats`,
+    },
+    {
+      atLeast: 50,
+      describe:
+        'completed plans, so the status breakdown is dominated by real work',
+      sql: `SELECT count(*) AS value FROM plans WHERE status = 'COMPLETED'`,
+    },
+    {
+      atLeast: 500,
+      describe: 'tasks behind the plans the tour opens',
+      sql: `SELECT count(*) AS value FROM tasks`,
+    },
+    {
+      atLeast: 5,
+      describe: 'scheduled jobs for the Schedule stop on the tour',
+      sql: `SELECT count(*) AS value FROM scheduled_agent_jobs`,
+    },
+    {
+      atLeast: 8,
+      describe: 'skills with usage for the Skills stop on the tour',
+      sql: `SELECT count(DISTINCT skill_name) AS value FROM skill_usage_events`,
+    },
+  ],
   format: 'short',
   id: '21-dashboard-tour',
   production: {

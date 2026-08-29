@@ -66,10 +66,12 @@ describe('scanText', () => {
     ).toBe(true);
   });
 
-  test('fails a denylisted real name in a FRAME — it means the wrong database was recorded', () => {
+  test('fails a PRIVATE third party name in a FRAME', () => {
+    // Caught for real: the 21-dashboard-tour recording put a former employer's
+    // name on the plans page, via imported plan titles.
     const findings = scanText(
       'hook.txt',
-      'Plan: migrate OpenThrottle/monorepo to Nx 22',
+      'Plan: migrate the shiftsmart gateway',
       'frame',
     );
 
@@ -81,17 +83,23 @@ describe('scanText', () => {
     ).toBe(true);
   });
 
-  test('allows the same denylisted name in SHIPPED text, where the description block needs it', () => {
+  test('allows the same private name in SHIPPED text, which the description block may carry', () => {
+    const findings = scanText('metadata.json', 'shiftsmart', 'shipped');
+
+    expect(findings.some((finding) => finding.rule === 'denylist')).toBe(false);
+  });
+
+  test('does NOT flag the public project name, repo or GitHub usernames', () => {
+    // The workspace is a sanitized snapshot of the real one and these are kept
+    // deliberately — the repo is open source. Flagging them would make the gate
+    // cry wolf on every take until someone switched it off.
     const findings = scanText(
-      'metadata.json',
-      'Repo: https://github.com/OpenThrottle/monorepo',
-      'shipped',
+      'hook.txt',
+      'Plan by visormatt: migrate OpenThrottle/monorepo to Nx 22',
+      'frame',
     );
 
     expect(findings.some((finding) => finding.rule === 'denylist')).toBe(false);
-    expect(
-      findings.filter((finding) => finding.severity === 'error'),
-    ).toHaveLength(0);
   });
 
   test('does not report a URL as high entropy, and allows an expected host', () => {
