@@ -340,38 +340,6 @@ CI P0 runs affected `typecheck` on every PR; phased Vitest runs use the `test` t
 - `test` - Run tests
 - `typecheck` - TypeScript type checking
 
-### React Native/Expo Application
-
-**Example**: `applications/openthrottle-developer/`
-
-**Key Files:**
-
-- `package.json` - NX configuration with Expo/React Native tags
-- `app.json` / `app.config.ts` - Expo configuration
-- `src/` - Application source code
-- `assets/` - Images, fonts, etc.
-
-**Tags:**
-
-```json
-{
-  "tags": [
-    "name:openthrottle-developer",
-    "production:true",
-    "technology:expo",
-    "technology:react-native",
-    "type:application"
-  ]
-}
-```
-
-**NX Targets:**
-
-- `dev` - Development server
-- `build` - Build for iOS/Android
-- `test` - Run tests
-- `test-e2e` - End-to-end tests
-
 ### NestJS API Application
 
 **Example**: `applications/nestjs-rest-api/`

@@ -44,7 +44,7 @@ Along the way:
 ## Contributor reference
 
 - **Docs contract:** [../CONTRIBUTING.md#documentation](../CONTRIBUTING.md#documentation) — what a doc in `docs/` is for, and the `audit:docs-index` reachability gate.
-- **Folders & conventions:** [Folders.md](./Folders.md), [MONOREPO.md § Naming Conventions](../MONOREPO.md#naming-conventions)
+- **Folders & conventions:** the `ot-folders` skill (`.agents/skills/ot-folders/SKILL.md`) — where code goes, what it is named, what shape it must have, and how to prove it; [MONOREPO.md § Naming Conventions](../MONOREPO.md#naming-conventions)
 - **CI quality gates:** [monorepo/CI-quality-gates.md](./monorepo/CI-quality-gates.md)
 - **Dead-code (Knip):** [monorepo/Knip.md](./monorepo/Knip.md)
 - **Component shape:** [monorepo/component-primitive-shape.md](./monorepo/component-primitive-shape.md)
