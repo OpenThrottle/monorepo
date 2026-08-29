@@ -103,4 +103,12 @@ export const RULES: readonly LeakRule[] = [
     pattern: /\bhttps?:\/\/[^\s"'<>)]+/g,
     severity: 'warn',
   },
+  {
+    appliesTo: ['frame'],
+    because:
+      'Developer diagnostics are not a disclosure, so this warns rather than fails — but the server-metrics strip sat across the bottom of every shot of the 04-mental-model masters, and its numbers differ on every take. The runner hides it via HIDE_FOR_RECORDING; a hit here means that stopped working.',
+    id: 'dev-diagnostics',
+    pattern: /Server metrics|RSS \d|Heap \d/g,
+    severity: 'warn',
+  },
 ];

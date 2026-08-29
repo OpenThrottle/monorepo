@@ -43,8 +43,28 @@ them are per-take.
 **Record the portrait pass for anything destined to be a Short.** Reframing a
 1920-wide capture into 9:16 is a compromise either way — cropping clips a table at
 both edges, fitting shrinks the text past readable — and it is not a marginal
-difference when you look at the two side by side. A second capture at 1080×1920 lets
-the app's own responsive layout do the work.
+difference when you look at the two side by side. A second capture lets the app's
+own responsive layout do the work.
+
+The portrait pass lays out at a **mobile** viewport and captures the full frame:
+`recording.portraitViewport` in `format.json` is 540×960, and with
+`deviceScaleFactor: 2` the page renders at exactly 1080×1920, so the emitted frame
+is the Short's own size and nothing is upscaled. The 540 is the point — it is below
+the app's 768px mobile breakpoint (`MOBILE_BREAKPOINT` in
+`packages/react-router-shadcn/src/hooks/useIsMobile.tsx`), so the app picks its
+phone layout.
+
+Recording at the Short's own 1080 CSS pixels, as this originally did, put the app
+_above_ that breakpoint: it rendered the desktop layout, sidebar and all, and on a
+content-light route roughly 60% of the frame was empty background. The text was
+legible either way — this is the difference between a Short composed for the format
+and a cropped desktop.
+
+One consequence worth knowing: for the portrait pass the CSS viewport and the frame
+are different sizes, so `manifest.json` records **frame** dimensions and sampled
+`regions` are converted from CSS to frame pixels when measured. `assemble/timeline.ts`
+reads both as one coordinate space, and they previously coincided only because the
+landscape viewport happens to equal its frame size.
 
 ### 3. Narrate
 
@@ -94,6 +114,19 @@ publishable at all.
 - **Mixes an optional music bed** at `musicBedDb` under narration, ducked while
   anyone is speaking. Off by default — see below.
 - **Encodes** H.264 high profile, CRF 18, yuv420p, faststart, AAC 192k, stereo.
+
+### Watch the run's closing warnings
+
+A flow's `regionOfInterest` map tells the `crop` reframe where to look per beat. If a
+declared selector never resolves, the crop falls back to centre framing for that beat
+— the master builds, and it frames the wrong thing.
+
+The runner now says so: it prints `run: WARNING regionOfInterest['<beat>'] never
+resolved` naming the selector. Read those lines before you assemble. They used to be
+silent, and worse than silent — `boundingBox()` inherited Playwright's 30s default
+timeout and the failure was swallowed, so a single wrong selector retried on every
+step of its beat and turned a 54-second recording into 264 seconds while still
+reporting success. Sampling is now bounded to three 750ms attempts per beat.
 
 ## Three environment facts worth knowing
 

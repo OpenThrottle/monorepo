@@ -69,6 +69,11 @@
     "_note": "Capture is a CDP screencast resampled to a constant fps, not Playwright recordVideo (which is locked to 25fps VP8). See docs/marketing/pipeline.md and the task-3 spike verdict.",
     "colorScheme": "dark",
     "deviceScaleFactor": 2,
+    "portraitViewport": {
+      "_note": "CSS viewport for the --portrait pass, NOT the captured frame size. 540 is deliberately below the app's 768px mobile breakpoint (MOBILE_BREAKPOINT in packages/react-router-shadcn/src/hooks/useIsMobile.tsx) so the app lays out for a phone. Recording at the Short's own 1080 CSS px put us ABOVE that breakpoint: the app rendered its desktop layout, sidebar and all, and ~60% of the 9:16 frame was empty background. With deviceScaleFactor 2 the page still renders 1080x1920 physical pixels, so the captured frame is unchanged — only the layout the app chooses changes.",
+      "height": 960,
+      "width": 540
+    },
     "viewport": {
       "height": 1080,
       "width": 1920

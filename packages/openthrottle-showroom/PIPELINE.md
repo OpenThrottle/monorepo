@@ -162,6 +162,17 @@ The runner hides the editor deep-link buttons (`cursor://`, `vscode://`,
 absolute path and would put a real home directory on camera. That is a recording
 workaround; the buttons want fixing in the app.
 
+It also hides the server-metrics strip (`[data-testid="GlobalMetrics"]`), for a
+different reason. That one is real, wanted UI — the leak scan rightly passes it — but
+it is developer diagnostics running across the bottom of a marketing video, and its
+RSS / heap / CPU numbers differ on every take, so two recordings of the same flow are
+never identical. It is hidden at the recording layer rather than gated in the
+component, because the panel belongs in the app. A warn-severity `dev-diagnostics`
+scan rule catches it if this stops working.
+
+Both are `HIDE_FOR_RECORDING` in `src/runner/run.ts`, injected as a `display: none` rule
+after every navigation.
+
 ## Recording
 
 Everything is fictional, so a recording never shows a real repository, branch,

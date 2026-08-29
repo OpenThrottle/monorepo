@@ -46,7 +46,13 @@ export interface FormatSpec {
   readonly recording: {
     readonly colorScheme: 'dark' | 'light';
     readonly deviceScaleFactor: number;
-    readonly viewport: { readonly height: number; readonly width: number };
+    /**
+     * CSS viewport for the `--portrait` pass — deliberately narrower than the
+     * captured frame. See the `_note` in format.json: at the Short's own 1080 CSS
+     * px the app is above its 768px mobile breakpoint and lays out as desktop.
+     */
+    readonly portraitViewport: Viewport;
+    readonly viewport: Viewport;
   };
   readonly safeAreas: {
     readonly landscape: SafeArea;
@@ -71,6 +77,11 @@ export interface FormatVariant {
    * speech is over-narrated.
    */
   readonly targetDurationSeconds?: number;
+  readonly width: number;
+}
+
+export interface Viewport {
+  readonly height: number;
   readonly width: number;
 }
 
@@ -135,6 +146,18 @@ export const takeDir = (slug: string, variant: string): string =>
  * should fail here with the offending path named, rather than surfacing later as a
  * recording at the wrong resolution.
  */
+const isViewport = (value: unknown): value is Viewport => {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+
+  const candidate: Partial<Record<keyof Viewport, unknown>> = value;
+
+  return (
+    typeof candidate.height === 'number' && typeof candidate.width === 'number'
+  );
+};
+
 const isFormatSpec = (value: unknown): value is FormatSpec => {
   if (typeof value !== 'object' || value === null) {
     return false;
@@ -142,14 +165,24 @@ const isFormatSpec = (value: unknown): value is FormatSpec => {
 
   const candidate: Partial<Record<keyof FormatSpec, unknown>> = value;
 
+  if (typeof candidate.recording !== 'object' || candidate.recording === null) {
+    return false;
+  }
+
+  const recording: Partial<Record<string, unknown>> = candidate.recording;
+
+  // Both viewports are checked one level deep: a missing `portraitViewport` would
+  // otherwise surface as a portrait pass recorded at the wrong layout, which only
+  // shows up when you watch the finished master.
   return (
     typeof candidate.audio === 'object' &&
     typeof candidate.brand === 'object' &&
     typeof candidate.cards === 'object' &&
     typeof candidate.encode === 'object' &&
     typeof candidate.formats === 'object' &&
-    typeof candidate.recording === 'object' &&
-    typeof candidate.safeAreas === 'object'
+    typeof candidate.safeAreas === 'object' &&
+    isViewport(recording.portraitViewport) &&
+    isViewport(recording.viewport)
   );
 };
 
