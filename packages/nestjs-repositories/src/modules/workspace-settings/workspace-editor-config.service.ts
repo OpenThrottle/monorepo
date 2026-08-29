@@ -3,12 +3,16 @@
  */
 
 import { access, mkdir, readFile, writeFile } from 'fs/promises';
-import { constants } from 'fs';
+import { constants, existsSync } from 'fs';
 import { dirname, join } from 'path';
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { isRecord } from '@openthrottle/nodejs-utils';
-import { toContainerPath } from '@openthrottle/openthrottle-agentic-utils';
+import {
+  GIT_EXCLUDE_OWNER,
+  toContainerPath,
+  writeManagedExcludeBlock,
+} from '@openthrottle/openthrottle-agentic-utils';
 import { OPENTHROTTLE_REPO_SKILL_PATHS } from './openthrottle-repo-skill-paths';
 import type { WorkspaceEditorId } from './workspace-editor-id';
 import { UserWorkspaceSettingsService } from './user-workspace-settings.service';
@@ -202,6 +206,12 @@ export class WorkspaceEditorConfigService {
     await this.writeJsonFile(manifestAbsolutePath, manifest);
     filesWritten.push(OPENTHROTTLE_MANIFEST_RELATIVE_PATH);
 
+    // The manifest is OT's own bookkeeping, not something the user asked for, so hide it from their
+    // `git status` via the repo-local (untracked) `.git/info/exclude`. Everything else written above
+    // — the MCP config, the rules directory — IS what they asked for and deliberately stays visible:
+    // it is theirs to commit or ignore as their team prefers.
+    this.excludeManifestFromGit(repositoryRoot, warnings);
+
     return {
       editor: params.editor,
       filesWritten,
@@ -209,6 +219,72 @@ export class WorkspaceEditorConfigService {
       repositoryId: params.checkoutId,
       warnings,
     };
+  }
+
+  /**
+   * @description Boot reconcile: back-fills the exclude entry in every registered checkout that
+   * already carries a manifest, and returns how many were reconciled.
+   *
+   * The fix above only runs when editor config is applied. Repos configured before it existed carry
+   * an un-excluded manifest and would stay dirty until the user happened to re-apply — which they
+   * have no reason to do, and no way to know they should. This closes that gap without touching the
+   * manifest itself: it is the identity anchor RepositoryInspectionService reads to reconcile a
+   * moved folder, so healing must never delete or rewrite it.
+   *
+   * Idempotent and per-checkout soft-fail. Writes nothing in a repo that has no manifest.
+   */
+  async reconcileManifestExclusions(): Promise<number> {
+    const checkouts = await this.checkoutsService.findAll();
+    let reconciled = 0;
+
+    for (const checkout of checkouts) {
+      const repositoryRoot = toContainerPath(checkout.filesystemPath);
+      if (
+        !existsSync(join(repositoryRoot, OPENTHROTTLE_MANIFEST_RELATIVE_PATH))
+      ) {
+        continue;
+      }
+
+      const warnings: string[] = [];
+      this.excludeManifestFromGit(repositoryRoot, warnings);
+      for (const warning of warnings) {
+        this.logger.warn(
+          `Workspace-editors manifest reconcile: ${warning}`,
+          WorkspaceEditorConfigService.name,
+        );
+      }
+      reconciled += 1;
+    }
+
+    return reconciled;
+  }
+
+  /**
+   * @description Adds the manifest to the repo's managed exclude block, under the workspace-editors
+   * owner so it cannot disturb the block foreign-skill injection maintains in the same file.
+   *
+   * Never throws. A non-git folder is a legitimate target here (the user may register any directory),
+   * so that case is a silent skip rather than a warning. A genuine write failure degrades to a
+   * warning on the result the UI already surfaces: the editor config itself is valid and applying it
+   * should not fail because one line could not be written to `.git/info/exclude`.
+   */
+  private excludeManifestFromGit(
+    repositoryRoot: string,
+    warnings: string[],
+  ): void {
+    try {
+      writeManagedExcludeBlock(
+        repositoryRoot,
+        [OPENTHROTTLE_MANIFEST_RELATIVE_PATH],
+        GIT_EXCLUDE_OWNER.WORKSPACE_EDITORS,
+      );
+    } catch (error) {
+      warnings.push(
+        `Wrote ${OPENTHROTTLE_MANIFEST_RELATIVE_PATH} but could not hide it from git: ${
+          error instanceof Error ? error.message : String(error)
+        }. It will show as an untracked file.`,
+      );
+    }
   }
 
   private async readOptionalFile(absolutePath: string): Promise<string | null> {

@@ -43,8 +43,9 @@ At CLI / orchestrator **run-start** (once the concrete worktree path is known, b
 the first agent turn), Ralph soft-calls `registerPlanRunWorktreeCheckout` as the run
 actor so a linked worktree can land in `repository_checkouts` and back-fill
 `plan_runs.checkout_id` when still NULL. **Not** done from `pnpm worktree:new` /
-`setup_worktree.sh` (service-account shell callback is deferred); orphan worktrees do
-not show in Workspace Settings until a run touches them.
+`setup_worktree.sh` (service-account shell callback is deferred); a worktree does
+not show in Workspace Settings until a run touches it. To remove one, use
+`pnpm worktree:remove <name>` (the `ot-worktree` destroy action).
 
 ## Pointers
 

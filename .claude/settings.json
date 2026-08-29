@@ -39,7 +39,7 @@
       {
         "hooks": [
           {
-            "command": "./scripts/create_worktree.sh",
+            "command": "sh -c 'd=skills/ot-worktree/scripts; [ -x \"$d/create.sh\" ] || d=.agents/skills/ot-worktree/scripts; exec \"$d/create.sh\" \"$@\"' --",
             "statusMessage": "🌳 OT | Creating worktree...",
             "type": "command"
           }

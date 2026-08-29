@@ -106,12 +106,6 @@ export const WORKSPACE_SETTINGS_COPY = {
   targetsShowAllSuffix: ` repositories`,
   targetsShowFewer: `Show fewer`,
   title: `Workspace`,
-  worktreeRootExplainer: `Where every agent — Claude, Cursor, Ralph, and queued plan runs — creates its git worktrees. Leave blank to use a sibling openthrottle-worktrees directory next to the repository.`,
-  worktreeRootHint: `Absolute path, or one starting with ~. Changing it only affects worktrees created from now on.`,
-  worktreeRootLabel: `Worktree root`,
-  worktreeRootLegend: `Worktrees`,
-  worktreeRootPlaceholder: `/Users/you/Development/openthrottle-worktrees`,
-  worktreeRootSaveButton: `Save worktree root`,
 } as const;
 
 /**

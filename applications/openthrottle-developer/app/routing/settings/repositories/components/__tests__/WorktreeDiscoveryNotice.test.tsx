@@ -29,7 +29,7 @@ describe('WorktreeDiscoveryNotice Component', () => {
       component.getByTestId('WorktreeDiscoveryNotice'),
     ).toBeInTheDocument();
     expect(
-      component.getByText('/Users/dev/Development/openthrottle-worktrees'),
+      component.getByText('/Users/dev/.openthrottle/worktrees/monorepo'),
     ).toBeInTheDocument();
   });
 

@@ -14,7 +14,7 @@ const UNSAFE_NAME_CHARACTERS = /[^A-Za-z0-9._-]/g;
  * @description Worktree name for a plan run: `plan-<first 8 chars of the plan id>`. One worktree
  * per plan, reused across runs, so the branch (`openthrottle/<name>`) accumulates the plan's work
  * and lands as one PR. Deterministic — it survives a plan retitle — and already inside the
- * character set `scripts/create_worktree.sh` sanitizes to.
+ * character set the ot-worktree skill's `sanitize_worktree_name` reduces names to.
  */
 export const buildPlanRunWorktreeName = (planId: string): string => {
   const normalized = planId

@@ -46,6 +46,26 @@ export class ForeignSkillMaterializationService {
     }
   }
 
+  /**
+   * @description Boot reconcile: re-projects the layer into every checkout whose flag says it should
+   * have one, and returns how many were reconciled. Without this the flag and the disk disagree
+   * after every restart — shutdown teardown and the boot reaper clear the layer, and only a later
+   * run or a toggle would restore it, so someone opening their editor in an opted-in repo after a
+   * restart would find OT's skills missing.
+   *
+   * Must run AFTER the boot reaper, which clears stranded ledgers; re-materializing first would
+   * simply be undone. Idempotent (`ensureMaterialized` no-ops when the layer is present) and
+   * per-checkout soft-fail, so one bad path never blocks the rest or boot itself.
+   */
+  async remateralizeEnabledCheckouts(): Promise<number> {
+    const checkouts =
+      await this.checkoutsService.findAllWithForeignSkillInjectionEnabled();
+    for (const checkout of checkouts) {
+      this.applyForPath(checkout.filesystemPath, true);
+    }
+    return checkouts.length;
+  }
+
   private applyForPath(repoPath: string, enabled: boolean): void {
     const foreign = resolveForeignWorkspaceContext(repoPath, process.env);
     if (!foreign.isForeign || foreign.openThrottleRoot === undefined) {

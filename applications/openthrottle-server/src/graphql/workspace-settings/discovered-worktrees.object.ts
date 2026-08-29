@@ -34,29 +34,26 @@ export const WorktreeRootSourceEnum = {
   CHECKOUT_ENV: 'checkout-env',
   DEFAULT: 'default',
   ENV: 'env',
-  SETTINGS: 'settings',
 } as const;
 
 export type WorktreeRootSourceEnum =
   (typeof WorktreeRootSourceEnum)[keyof typeof WorktreeRootSourceEnum];
 
 registerEnumType(WorktreeRootSourceEnum, {
-  description: `Which rung of the shared worktree-root ladder resolved the scanned root. The same ladder scripts/create_worktree.sh applies, so the page can never disagree with where the script writes.`,
+  description: `Which rung of the shared worktree-root ladder resolved the scanned root. The same ladder skills/ot-worktree/scripts/root.sh applies, so the page can never disagree with where the script writes.`,
   name: 'WorktreeRootSource',
   valuesMap: {
     CHECKOUT_ENV: {
-      description: 'OT_WORKTREE_ROOT in the base checkout’s .env file.',
+      description:
+        'OPENTHROTTLE_WORKTREE_ROOT in the target repo’s .env file — how a repo customizes where its worktrees go.',
     },
     DEFAULT: {
       description:
-        'The historical default: a sibling openthrottle-worktrees directory next to the base checkout.',
+        'The default: ~/.openthrottle/worktrees/<repo-name>, the hidden root OpenThrottle owns, namespaced by the base checkout’s directory name.',
     },
     ENV: {
-      description: "OT_WORKTREE_ROOT in the server process's environment.",
-    },
-    SETTINGS: {
       description:
-        'The workspace-level worktree root configured on /settings/workspace.',
+        "OPENTHROTTLE_WORKTREE_ROOT in the server process's environment.",
     },
   },
 });

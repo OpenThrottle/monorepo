@@ -34,5 +34,4 @@ export const toUserWorkspaceProfileObject = (
   ),
   updatedAt: settings.updatedAt,
   userId: settings.userId,
-  worktreeRoot: settings.worktreeRoot,
 });

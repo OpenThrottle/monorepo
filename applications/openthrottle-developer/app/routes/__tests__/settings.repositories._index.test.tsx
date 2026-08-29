@@ -49,7 +49,7 @@ const discoveredWorktrees = {
   rootSource: 'DEFAULT',
   scannedAt: '2026-08-24T00:00:00.000Z',
   warnings: [],
-  worktreeRoot: '/Users/dev/Development/openthrottle-worktrees',
+  worktreeRoot: '/Users/dev/.openthrottle/worktrees/monorepo',
   worktrees: [],
 };
 

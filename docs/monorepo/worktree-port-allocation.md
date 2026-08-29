@@ -6,13 +6,15 @@ otherwise fight the ports the main checkout already binds (`server` on `6021`,
 **10-port block in the 7000 range**, so any number of them can run alongside the
 main checkout.
 
-This is wired into the **tool-agnostic worktree entrypoint**
-`scripts/create_worktree.sh`
-allocates the block, and `scripts/setup_worktree.sh` rewrites the worktree's
-`.env` files onto it. Creating a worktree any of the three ways —
-`pnpm worktree:new <name>`, the Claude `WorktreeCreate` hook, or Cursor — runs
-the same path, and a plain `git worktree add` self-heals on first `pnpm nx run …:dev`
-via `scripts/ensure_worktree.ts`.
+This is wired into **OpenThrottle's worktree provisioner**,
+`scripts/setup_worktree.sh` (a shim for `scripts/setup_worktree.ts`): it
+allocates the block and rewrites the worktree's `.env` files onto it. The
+provisioner is not called directly — the portable
+[`ot-worktree`](../../skills/ot-worktree/SKILL.md) skill discovers and runs it.
+Creating a worktree any of the three ways — `pnpm worktree:new <name>`, the
+Claude `WorktreeCreate` hook, or Cursor — runs the same path, and a plain
+`git worktree add` self-heals on first `pnpm nx run …:dev` via
+`pnpm worktree:heal`.
 
 ## What gets offset (and what doesn't)
 
@@ -111,7 +113,7 @@ return `Unauthorized`.
 So at the end of setup, `setup_worktree.sh` copies the real (non-placeholder)
 `OPENTHROTTLE_MCP_AUTH_TOKEN` and `OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN` from
 the **source checkout** (the repo the worktree was created from — exported as
-`OT_SOURCE_REPO`, or derived via `git --git-common-dir` for a standalone run)
+`OPENTHROTTLE_SOURCE_REPO`, or derived via `git --git-common-dir` for a standalone run)
 into the worktree's root `.env` and `applications/openthrottle-server/.env`.
 Empty/placeholder source values are skipped, and the secret is never echoed.
 
@@ -139,9 +141,10 @@ a plan run is decided by the per-checkout BullMQ queue prefix
 ## Files
 
 - `scripts/lib/worktree-ports.ts` — allocation helper (imported by the provisioner).
-- `scripts/create_worktree.sh` — the single create+provision entrypoint (`pnpm worktree:new`, Claude hook, Cursor); resolves + exports the block after creating the worktree.
-- `scripts/ensure_worktree.ts` — lazy self-heal guard; provisions a plain `git worktree add` on first `dev`.
-- `scripts/setup_worktree.sh` — rewrites `.env`, writes the compose vars, generates the override.
+- `skills/ot-worktree/scripts/create.sh` — the create action (`pnpm worktree:new`, Claude hook, Cursor); creates the worktree, then hands off to the repo provisioner.
+- `skills/ot-worktree/scripts/heal.sh` — the heal action (`pnpm worktree:heal`); provisions a plain `git worktree add` on first `dev`.
+- `skills/ot-worktree/scripts/destroy.sh` — the destroy action (`pnpm worktree:remove`); teardown hook, `git worktree remove`, prune.
+- `scripts/setup_worktree.sh` — **OpenThrottle's provisioner** (a shim for `scripts/setup_worktree.ts`), found by the skill's third discovery rung. Allocates the port block, rewrites `.env`, writes the compose vars, generates the override.
 - `docker-compose.yml` — `container_name` values parametrized with `OT_CONTAINER_PREFIX`.
 
 ## See also

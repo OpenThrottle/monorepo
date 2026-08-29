@@ -1,40 +1,55 @@
 /**
- * @description The ONE implementation of the worktree-root resolution ladder, mirroring
- * `resolve_worktree_root` in `scripts/create_worktree.sh`. Both the provisioning path (which
- * forwards the answer to the script as `OT_WORKTREE_ROOT`) and the discovery path (which has to
- * look in the directory the script actually writes to) consume this, so the settings page, the
- * worker, and the repositories table can never disagree about where worktrees live.
+ * @description The ONE implementation of worktree placement, mirroring `resolve_worktree_root` in
+ * `skills/ot-worktree/scripts/root.sh`. Both the provisioning path and the discovery path (which has
+ * to look where the script actually writes) consume this, so the settings page, the worker and the
+ * repositories table can never disagree about where worktrees live.
  *
- * Ladder, highest rung wins:
- *   1. `settings` — the workspace-level `user_workspace_settings.worktree_root` value.
- *   2. `env` — `OT_WORKTREE_ROOT` in this process's environment (one-off overrides).
- *   3. `checkout-env` — `OT_WORKTREE_ROOT` in the base checkout's `.env`.
- *   4. `default` — the sibling `openthrottle-worktrees` directory next to the base checkout.
+ * Two parts. First the ROOT — one directory holding every repo's worktrees:
+ *   1. `env` — `OPENTHROTTLE_WORKTREE_ROOT` in this process's environment.
+ *   2. `checkout-env` — `OPENTHROTTLE_WORKTREE_ROOT` in the target repo's `.env`, how a repo
+ *      customizes where ITS worktrees go.
+ *   3. `default` — `~/.openthrottle/worktrees`, mirrored in `.env.default`.
  *
- * Rungs 1 and 2 are one rung in the shell script (the provisioner forwards the setting AS the env
- * var), split here only so callers can report which of the two supplied the value.
+ * Then OpenThrottle ALWAYS organizes beneath it as `<org>/<repo>`:
+ *
+ *     ~/.openthrottle/worktrees/acme/monorepo/feature-x
+ *
+ * The root is a root, not a final destination — the same shape `OPENTHROTTLE_CHECKOUT_ROOT` uses for
+ * clones. Organizing unconditionally is what keeps the layout predictable: a configured root behaves
+ * exactly like the default one.
+ *
+ * The org comes from the repo's git remote, not its directory name, so two checkouts of different
+ * orgs' `monorepo` cannot land on one path. A repo with no remote falls back to its directory name.
  */
 
+import { execFileSync } from 'node:child_process';
+
+import { expandHome } from '../paths/expand-home';
 import { readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { dirname, isAbsolute, join } from 'node:path';
+import { basename, isAbsolute, join } from 'node:path';
 
 /** Which rung of the ladder produced the resolved root. */
 export const WORKTREE_ROOT_SOURCE = {
   CHECKOUT_ENV: 'checkout-env',
   DEFAULT: 'default',
   ENV: 'env',
-  SETTINGS: 'settings',
 } as const;
 
 export type WorktreeRootSource =
   (typeof WORKTREE_ROOT_SOURCE)[keyof typeof WORKTREE_ROOT_SOURCE];
 
-/** The directory name the shell script falls back to; kept in one place so the two cannot drift. */
-export const DEFAULT_WORKTREE_ROOT_DIRECTORY_NAME = 'openthrottle-worktrees';
+/**
+ * The default worktree root under `$HOME`, matching `resolve_worktree_root` in
+ * `skills/ot-worktree/scripts/root.sh` and the commented entry in `.env.default` (a test keeps all
+ * three from drifting). A hidden directory OpenThrottle owns, deliberately outside every repo so
+ * worktrees stay clear of the Nx workspace. `homedir()` is read at call time, not module load, so it
+ * stays mockable.
+ */
+export const DEFAULT_WORKTREE_ROOT_RELATIVE_PATH = '.openthrottle/worktrees';
 
 /** The env var name the script reads, and the name the provisioner forwards the setting under. */
-export const WORKTREE_ROOT_ENV_VAR = 'OT_WORKTREE_ROOT';
+export const WORKTREE_ROOT_ENV_VAR = 'OPENTHROTTLE_WORKTREE_ROOT';
 
 export interface ResolveWorktreeRootParams {
   /** Absolute path of the checkout worktrees are created from. */
@@ -44,8 +59,6 @@ export interface ResolveWorktreeRootParams {
    * pure and testable.
    */
   readonly env?: NodeJS.ProcessEnv;
-  /** The configured `user_workspace_settings.worktree_root`, if the user set one. */
-  readonly settingsWorktreeRoot?: string | null;
 }
 
 export interface ResolvedWorktreeRoot {
@@ -55,14 +68,54 @@ export interface ResolvedWorktreeRoot {
 }
 
 /**
- * @description Expands a leading `~` against the current user's home directory, matching the
- * script's `case "$_root" in "~") ... "~/"*) ...` handling. Only a leading `~` or `~/` expands —
- * `~other/path` (another user's home) is not supported by the script either.
+ * @description Reduces one path segment to `[A-Za-z0-9._-]`, returning null for `.`, `..` or nothing
+ * usable. Mirrors `_ot_safe_segment`: a hostile or malformed remote must not be able to walk out of
+ * the root.
  */
-const expandHome = (value: string): string => {
-  if (value === '~') return homedir();
-  if (value.startsWith('~/')) return join(homedir(), value.slice(2));
-  return value;
+const safeSegment = (value: string): string | null => {
+  const replaced = value
+    .replace(/[^A-Za-z0-9._-]/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return replaced === '' || replaced === '.' || replaced === '..'
+    ? null
+    : replaced;
+};
+
+/** The repo's `origin` remote, or null when it has none / is not a git repo. */
+const readOriginRemote = (repoPath: string): string | null => {
+  try {
+    const output = execFileSync(
+      'git',
+      ['-C', repoPath, 'remote', 'get-url', 'origin'],
+      { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 5000 },
+    ).trim();
+    return output === '' ? null : output;
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * @description `<org>/<repo>` for a checkout, or just `<repo>` when it has no usable remote.
+ * Mirrors `_ot_repo_namespace`. Handles `https://host/org/repo.git`, `ssh://host/org/repo` and
+ * `git@host:org/repo.git` by taking the last two `/`- or `:`-delimited segments.
+ */
+export const repositoryNamespace = (repoPath: string): string => {
+  const fallback = safeSegment(basename(repoPath)) ?? 'repo';
+
+  const remote = readOriginRemote(repoPath);
+  if (remote === null) return fallback;
+
+  const trimmed = remote.replace(/\.git$/, '').replace(/\/$/, '');
+  const segments = trimmed.split(/[/:]/).filter((segment) => segment !== '');
+  const repo =
+    segments.length > 0 ? safeSegment(segments[segments.length - 1]) : null;
+  const org =
+    segments.length > 1 ? safeSegment(segments[segments.length - 2]) : null;
+
+  if (org !== null && repo !== null) return `${org}/${repo}`;
+  if (repo !== null) return repo;
+  return fallback;
 };
 
 /** Strips trailing slashes the way the script's `${_root%/}` does, without emptying an absolute `/`. */
@@ -71,19 +124,33 @@ const stripTrailingSlashes = (value: string): string => {
   return stripped === '' ? '/' : stripped;
 };
 
-/** Trims, unquotes and strips a trailing CR from a raw `.env` value, as the script's `sed` chain does. */
+/**
+ * @description Reduces a raw `.env` right-hand side to its value, mirroring `_ot_dotenv_value` in
+ * the script. A quoted value ends at its closing quote and anything after it is a comment; an
+ * unquoted value ends at the first ` #`. Without the comment handling, `"~/wt" # where they go`
+ * resolves to a directory literally named after the comment.
+ */
 const cleanEnvValue = (raw: string): string => {
   const withoutCr = raw.replace(/\r$/, '').trim();
-  const unquoted =
-    (withoutCr.startsWith('"') && withoutCr.endsWith('"')) ||
-    (withoutCr.startsWith("'") && withoutCr.endsWith("'"))
-      ? withoutCr.slice(1, -1)
-      : withoutCr;
-  return unquoted.trim();
+
+  const quote = withoutCr.startsWith('"')
+    ? '"'
+    : withoutCr.startsWith("'")
+      ? "'"
+      : null;
+
+  if (quote !== null) {
+    const closing = withoutCr.indexOf(quote, 1);
+    return closing === -1
+      ? withoutCr.slice(1).trim()
+      : withoutCr.slice(1, closing);
+  }
+
+  return withoutCr.replace(/\s+#.*$/, '').trim();
 };
 
 /**
- * @description Reads the LAST `OT_WORKTREE_ROOT=` assignment from a checkout's `.env`, matching the
+ * @description Reads the LAST `OPENTHROTTLE_WORKTREE_ROOT=` assignment from a checkout's `.env`, matching the
  * script's `sed -n 's/^...//p' | tail -n 1`. Returns null when the file is absent or unreadable —
  * a missing `.env` is the common case, not an error.
  */
@@ -112,7 +179,7 @@ const readCheckoutEnvWorktreeRoot = (
 /**
  * @description Normalizes a configured worktree-root value to the string worth acting on, or null
  * when it is absent or blank ("blank means use the default"). Exported so the provisioning path
- * decides whether to forward `OT_WORKTREE_ROOT` using exactly the test the ladder applies.
+ * decides whether to forward `OPENTHROTTLE_WORKTREE_ROOT` using exactly the test the ladder applies.
  */
 export const normalizeWorktreeRootSetting = (
   value: string | null | undefined,
@@ -123,7 +190,7 @@ export const normalizeWorktreeRootSetting = (
 };
 
 /**
- * @description Resolves the directory `scripts/create_worktree.sh` would create a worktree under
+ * @description Resolves the directory `skills/ot-worktree/scripts/create.sh` would create a worktree under
  * for `baseCheckoutPath`, plus which rung of the ladder answered.
  * @throws Error when a configured value is not an absolute path once `~` is expanded — the script
  * fails the same way rather than creating a worktree somewhere relative to an unknown cwd.
@@ -131,15 +198,11 @@ export const normalizeWorktreeRootSetting = (
 export const resolveWorktreeRoot = (
   params: ResolveWorktreeRootParams,
 ): ResolvedWorktreeRoot => {
-  const { baseCheckoutPath, env = process.env, settingsWorktreeRoot } = params;
+  const { baseCheckoutPath, env = process.env } = params;
 
   const candidates: ReadonlyArray<
     readonly [WorktreeRootSource, string | null]
   > = [
-    [
-      WORKTREE_ROOT_SOURCE.SETTINGS,
-      normalizeWorktreeRootSetting(settingsWorktreeRoot),
-    ],
     [
       WORKTREE_ROOT_SOURCE.ENV,
       normalizeWorktreeRootSetting(env[WORKTREE_ROOT_ENV_VAR]),
@@ -152,6 +215,9 @@ export const resolveWorktreeRoot = (
     ],
   ];
 
+  // OT always organizes beneath the root, whatever supplied it.
+  const namespace = repositoryNamespace(baseCheckoutPath);
+
   for (const [source, value] of candidates) {
     if (value === null) continue;
 
@@ -162,12 +228,17 @@ export const resolveWorktreeRoot = (
       );
     }
 
-    return { resolvedRoot: stripTrailingSlashes(expanded), source };
+    return {
+      resolvedRoot: join(stripTrailingSlashes(expanded), namespace),
+      source,
+    };
   }
 
   return {
-    resolvedRoot: stripTrailingSlashes(
-      join(dirname(baseCheckoutPath), DEFAULT_WORKTREE_ROOT_DIRECTORY_NAME),
+    resolvedRoot: join(
+      homedir(),
+      DEFAULT_WORKTREE_ROOT_RELATIVE_PATH,
+      namespace,
     ),
     source: WORKTREE_ROOT_SOURCE.DEFAULT,
   };

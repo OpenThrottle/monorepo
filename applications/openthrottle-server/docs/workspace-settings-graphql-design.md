@@ -241,7 +241,29 @@ Mutation: `applyWorkspaceEditorConfiguration(input: ApplyWorkspaceEditorConfigur
   - **MCP:** merges `openthrottle-mcp` into `.cursor/mcp.json` or `.vscode/mcp.json` when `scripts/run-openthrottle-mcp.sh` exists (OpenThrottle monorepo checkout). Uses `API_URL_INTERNAL` for `API_URL` / `API_URL_INTERNAL` env vars. Does **not** write auth tokens; set `OPENTHROTTLE_MCP_AUTH_TOKEN` in the editor MCP env separately.
   - **Skills paths:** ensures parent directories exist for skill paths from `OPENTHROTTLE_REPO_SKILL_PATHS` (keep aligned with `repo-skills-registry.ts`).
   - **Rules:** ensures `.cursor/rules` or `.vscode` directory exists.
-  - **Manifest:** writes `.openthrottle/workspace-editors.json` with applied paths and timestamp.
+  - **Manifest:** writes `.openthrottle/workspace-editors.json` with applied paths and timestamp, and adds **that file only** to the repo's managed `.git/info/exclude` block (owner `workspace-editors`).
+
+#### What is hidden from git, and what deliberately is not
+
+This apply writes into repositories OpenThrottle does not own, so it draws a line:
+
+| Written                                               | Hidden from git? | Why                                                                                                                                                       |
+| ----------------------------------------------------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.openthrottle/workspace-editors.json`                | **Yes**          | OT's own bookkeeping — an identity anchor the user never asked for. Residue if left visible.                                                              |
+| `.mcp.json` / `.cursor/mcp.json` / `.vscode/mcp.json` | **No**           | The config the user asked for, merged into whatever is already there. Theirs to commit or ignore as their team prefers; OT does not decide that for them. |
+| Rules and skill directories                           | **No**           | Same — created for the user's editor.                                                                                                                     |
+
+The general rule, which OT `b409da6e` reached independently for skill injection and a third feature will face too:
+
+> **Anything OpenThrottle writes into a foreign repo for its own bookkeeping must be hidden from git. Anything the user asked for is theirs, and must stay visible.**
+
+A test pins both halves (`workspace-editor-config.service.test.ts`): make only the first half pass and the obvious "fix" for a dirty `git status` is to exclude everything the apply writes — hiding the user's own config from them, which is a worse bug and would look green.
+
+Note this means `git status` is **not** empty after a first apply: the new MCP config shows as untracked, correctly.
+
+#### Repos configured before the exclude existed
+
+`WorkspaceEditorConfigService.reconcileManifestExclusions()` back-fills the exclude at server boot for every registered checkout that already carries a manifest. Idempotent, per-checkout soft-fail, and it never touches the manifest itself — that is the identity anchor `RepositoryInspectionService` reads to reconcile a moved or re-added folder. Non-git folders are skipped silently: there is nothing to hide from.
 
 Service: `packages/nestjs-repositories/src/modules/workspace-settings/workspace-editor-config.service.ts`
 

@@ -110,6 +110,29 @@ export class RepositoryCheckoutsService {
   }
 
   /**
+   * @description Every checkout opted into foreign-skill injection, across all users. Used by the
+   * boot reconcile: shutdown teardown and the boot reaper clear the injected layer, so without this
+   * an opted-in repo would sit skill-less until its next run or toggle, even though the flag says
+   * it should be injected.
+   */
+  async findAllWithForeignSkillInjectionEnabled(): Promise<
+    RepositoryCheckout[]
+  > {
+    return this.repository.find({
+      where: { foreignSkillInjectionEnabled: true },
+    });
+  }
+
+  /**
+   * @description Every registered checkout, across all users. Used by the boot reconcile that
+   * back-fills the git-exclude entry for OT's workspace-editors manifest in repos where editor
+   * config was applied before that exclude existed.
+   */
+  async findAll(): Promise<RepositoryCheckout[]> {
+    return this.repository.find();
+  }
+
+  /**
    * @description Counts checkouts pointing at a repository (any user).
    */
   async countByRepositoryId(repositoryId: string): Promise<number> {

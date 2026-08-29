@@ -20,6 +20,7 @@ import {
 } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { isRecord } from '@openthrottle/nodejs-utils';
+import { expandHome } from '../../services/paths/expand-home';
 import type {
   Repository,
   RepositoryCheckout,
@@ -135,14 +136,19 @@ const execFileAsync = promisify(execFile);
 /**
  * @description Configured managed-checkout root in the host view, or null when
  * OPENTHROTTLE_CHECKOUT_ROOT is unset/blank/non-absolute (clone is then disabled).
+ *
+ * A leading `~` is expanded first. This value is written by hand in a `.env` file, where `~` is the
+ * natural way to say "my home" — and `.env.default` documents exactly that. Without expansion
+ * `isAbsolute('~/OpenThrottle/repositories')` is false, so the documented value returned null and
+ * silently disabled cloning. Matches OPENTHROTTLE_WORKTREE_ROOT, which expands the same way.
  */
 export const getCheckoutRoot = (
   env: NodeJS.ProcessEnv = process.env,
 ): string | null => {
   const raw = env[CHECKOUT_ROOT_ENV];
   if (raw == null) return null;
-  const trimmed = raw.trim();
-  return trimmed !== '' && isAbsolute(trimmed) ? trimmed : null;
+  const expanded = expandHome(raw.trim());
+  return expanded !== '' && isAbsolute(expanded) ? expanded : null;
 };
 
 /**

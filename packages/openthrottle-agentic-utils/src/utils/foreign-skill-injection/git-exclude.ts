@@ -1,16 +1,33 @@
 /**
- * @description Manages a marker-bracketed block inside a repo's local
- * `.git/info/exclude` — the untracked exclude file — so injected skill paths
- * are invisible to `git status` WITHOUT modifying any tracked file (never
- * `.gitignore`, never a global `core.excludesFile`). Cleanliness is a property
- * of this block being present, independent of teardown ever running.
+ * @description Manages marker-bracketed blocks inside a repo's local
+ * `.git/info/exclude` — the untracked exclude file — so paths OpenThrottle writes for its own
+ * bookkeeping are invisible to `git status` WITHOUT modifying any tracked file (never
+ * `.gitignore`, never a global `core.excludesFile`). Cleanliness is a property of the block being
+ * present, independent of teardown ever running.
+ *
+ * Blocks are **per owner**. More than one OT feature writes into a foreign repo, and each replaces
+ * its own block wholesale on every write — so a single shared marker would mean whichever feature
+ * wrote last silently deleted the other's block. Each owner gets its own marker pair and touches
+ * only that one.
  */
 
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 
-import { GIT_EXCLUDE_BEGIN_MARKER, GIT_EXCLUDE_END_MARKER } from './types.ts';
+import type { GitExcludeOwner } from './types.ts';
+
+/**
+ * Marker text for an owner's block. The rendering for
+ * {@link GIT_EXCLUDE_OWNER.FOREIGN_SKILL_INJECTION} is byte-identical to the markers shipped before
+ * blocks became per-owner, so exclude files already on disk keep parsing and no repo needs
+ * migrating.
+ */
+const beginMarkerFor = (owner: GitExcludeOwner): string =>
+  `# BEGIN OpenThrottle ${owner} (managed — do not edit)`;
+
+const endMarkerFor = (owner: GitExcludeOwner): string =>
+  `# END OpenThrottle ${owner} (managed)`;
 
 /**
  * @description Resolves the repo's `info/exclude` path via
@@ -51,13 +68,16 @@ const toLines = (content: string): string[] => {
  * blank separator immediately preceding the begin marker. Tolerant of a legacy
  * block missing its end marker (falls back to the next blank line / EOF).
  */
-const stripManagedBlock = (lines: readonly string[]): string[] => {
-  const begin = lines.indexOf(GIT_EXCLUDE_BEGIN_MARKER);
+const stripManagedBlock = (
+  lines: readonly string[],
+  owner: GitExcludeOwner,
+): string[] => {
+  const begin = lines.indexOf(beginMarkerFor(owner));
   if (begin === -1) {
     return [...lines];
   }
 
-  let end = lines.indexOf(GIT_EXCLUDE_END_MARKER, begin + 1);
+  let end = lines.indexOf(endMarkerFor(owner), begin + 1);
   if (end === -1) {
     end = begin;
     for (let i = begin + 1; i < lines.length; i += 1) {
@@ -77,17 +97,19 @@ const stripManagedBlock = (lines: readonly string[]): string[] => {
 };
 
 /**
- * @description Writes (or rewrites) the managed exclude block listing
- * `relativePaths` (repo-relative POSIX). Each is anchored to the repo root with
- * a leading `/`. Idempotent: an identical call produces byte-identical output.
- * An empty `relativePaths` removes the block entirely. No-op (returns `false`)
- * when the path is not a git repo.
+ * @description Writes (or rewrites) `owner`'s managed exclude block listing `relativePaths`
+ * (repo-relative POSIX). Each is anchored to the repo root with a leading `/`. Idempotent: an
+ * identical call produces byte-identical output. An empty `relativePaths` removes that owner's
+ * block entirely. No-op (returns `false`) when the path is not a git repo.
+ *
+ * Only `owner`'s block is touched — every other owner's block is preserved byte for byte.
  *
  * @public
  */
 export const writeManagedExcludeBlock = (
   repoPath: string,
   relativePaths: readonly string[],
+  owner: GitExcludeOwner,
 ): boolean => {
   const excludePath = resolveGitExcludePath(repoPath);
   if (excludePath === undefined) {
@@ -97,18 +119,18 @@ export const writeManagedExcludeBlock = (
   const existing = existsSync(excludePath)
     ? readFileSync(excludePath, 'utf8')
     : '';
-  const withoutBlock = stripManagedBlock(toLines(existing));
+  const withoutBlock = stripManagedBlock(toLines(existing), owner);
 
   const nextLines = [...withoutBlock];
   if (relativePaths.length > 0) {
     if (nextLines.length > 0 && nextLines[nextLines.length - 1] !== '') {
       nextLines.push('');
     }
-    nextLines.push(GIT_EXCLUDE_BEGIN_MARKER);
+    nextLines.push(beginMarkerFor(owner));
     for (const relativePath of [...relativePaths].sort()) {
       nextLines.push(`/${relativePath}`);
     }
-    nextLines.push(GIT_EXCLUDE_END_MARKER);
+    nextLines.push(endMarkerFor(owner));
   }
 
   mkdirSync(dirname(excludePath), { recursive: true });
@@ -118,11 +140,14 @@ export const writeManagedExcludeBlock = (
 };
 
 /**
- * @description Removes the managed exclude block, preserving all user-owned
- * lines. No-op when absent or not a git repo.
+ * @description Removes `owner`'s managed exclude block, preserving all user-owned lines and every
+ * other owner's block. No-op when absent or not a git repo.
  *
  * @public
  */
-export const removeManagedExcludeBlock = (repoPath: string): void => {
-  writeManagedExcludeBlock(repoPath, []);
+export const removeManagedExcludeBlock = (
+  repoPath: string,
+  owner: GitExcludeOwner,
+): void => {
+  writeManagedExcludeBlock(repoPath, [], owner);
 };

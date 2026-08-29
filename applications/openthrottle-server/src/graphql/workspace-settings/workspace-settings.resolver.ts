@@ -44,7 +44,6 @@ import {
   validateContactDisplayName,
   validateContactEmail,
   validateEnabledEditors,
-  validateWorktreeRoot,
 } from './user-workspace-profile.validation';
 import { WorkspaceLocalRepositoryObject } from './workspace-local-repository.object';
 import { WorkspaceSettingsLoaders } from './workspace-settings-loaders';
@@ -98,7 +97,6 @@ export class WorkspaceSettingsResolver {
       contactDisplayName?: string | null;
       contactEmail?: string | null;
       enabledEditors?: UserWorkspaceSettings['enabledEditors'];
-      worktreeRoot?: string | null;
     } = {};
 
     if (input.contactDisplayName !== undefined) {
@@ -113,14 +111,12 @@ export class WorkspaceSettingsResolver {
     if (enabledEditors !== undefined) {
       patch.enabledEditors = enabledEditors;
     }
-    if (input.worktreeRoot !== undefined) {
-      patch.worktreeRoot = validateWorktreeRoot(input.worktreeRoot);
-    }
 
     const updated = await this.userWorkspaceSettingsService.updateProfile(
       userId,
       patch,
     );
+
     return toUserWorkspaceProfileObject(updated);
   }
 

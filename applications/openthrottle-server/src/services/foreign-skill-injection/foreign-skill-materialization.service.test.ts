@@ -43,10 +43,12 @@ const checkoutAt = (filesystemPath: string): RepositoryCheckout =>
 
 describe('ForeignSkillMaterializationService', () => {
   const mockFindByRepositoryIdForUser = vi.fn();
+  const mockFindAllEnabled = vi.fn();
   let service: ForeignSkillMaterializationService;
 
   beforeEach(() => {
     mockFindByRepositoryIdForUser.mockReset();
+    mockFindAllEnabled.mockReset();
     mockEnsureMaterialized.mockReset();
     mockEnsureMaterialized.mockReturnValue({ injectedNames: [], warnings: [] });
     mockTeardown.mockReset();
@@ -59,6 +61,7 @@ describe('ForeignSkillMaterializationService', () => {
     service = new ForeignSkillMaterializationService(
       createMock<LoggerService>(),
       createMock<RepositoryCheckoutsService>({
+        findAllWithForeignSkillInjectionEnabled: mockFindAllEnabled,
         findByRepositoryIdForUser: mockFindByRepositoryIdForUser,
       }),
     );
@@ -131,5 +134,73 @@ describe('ForeignSkillMaterializationService', () => {
 
     expect(mockEnsureMaterialized).not.toHaveBeenCalled();
     expect(mockTeardown).not.toHaveBeenCalled();
+  });
+});
+
+describe('ForeignSkillMaterializationService.remateralizeEnabledCheckouts', () => {
+  const mockFindAllEnabled = vi.fn();
+  let service: ForeignSkillMaterializationService;
+
+  beforeEach(() => {
+    mockFindAllEnabled.mockReset();
+    mockEnsureMaterialized.mockReset();
+    mockEnsureMaterialized.mockReturnValue({ injectedNames: [], warnings: [] });
+    mockTeardown.mockReset();
+    mockResolveForeign.mockReset();
+    mockResolveForeign.mockReturnValue({
+      isForeign: true,
+      openThrottleRoot: '/ot-root',
+    });
+
+    service = new ForeignSkillMaterializationService(
+      createMock<LoggerService>(),
+      createMock<RepositoryCheckoutsService>({
+        findAllWithForeignSkillInjectionEnabled: mockFindAllEnabled,
+      }),
+    );
+  });
+
+  it('re-materializes every opted-in checkout and reports the count', async () => {
+    mockFindAllEnabled.mockResolvedValue([
+      checkoutAt(PATH_A),
+      checkoutAt(PATH_B),
+    ]);
+
+    await expect(service.remateralizeEnabledCheckouts()).resolves.toBe(2);
+
+    expect(mockEnsureMaterialized).toHaveBeenCalledTimes(2);
+    expect(mockEnsureMaterialized).toHaveBeenCalledWith(
+      expect.objectContaining({ repoPath: PATH_A }),
+    );
+    // Reconcile only ever builds up; it must never tear anything down.
+    expect(mockTeardown).not.toHaveBeenCalled();
+  });
+
+  it('is a no-op when nothing is opted in', async () => {
+    mockFindAllEnabled.mockResolvedValue([]);
+
+    await expect(service.remateralizeEnabledCheckouts()).resolves.toBe(0);
+    expect(mockEnsureMaterialized).not.toHaveBeenCalled();
+  });
+
+  it('skips a checkout inside the OT monorepo, which already has its skills', async () => {
+    mockFindAllEnabled.mockResolvedValue([checkoutAt(PATH_A)]);
+    mockResolveForeign.mockReturnValue({ isForeign: false });
+
+    await expect(service.remateralizeEnabledCheckouts()).resolves.toBe(1);
+    expect(mockEnsureMaterialized).not.toHaveBeenCalled();
+  });
+
+  it('keeps going when one checkout fails, so one bad path cannot block boot', async () => {
+    mockFindAllEnabled.mockResolvedValue([
+      checkoutAt(PATH_A),
+      checkoutAt(PATH_B),
+    ]);
+    mockEnsureMaterialized.mockImplementationOnce(() => {
+      throw new Error('ENOENT: the repo moved');
+    });
+
+    await expect(service.remateralizeEnabledCheckouts()).resolves.toBe(2);
+    expect(mockEnsureMaterialized).toHaveBeenCalledTimes(2);
   });
 });

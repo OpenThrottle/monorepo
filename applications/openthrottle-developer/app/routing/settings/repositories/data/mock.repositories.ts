@@ -162,7 +162,7 @@ export const mockDiscoveredWorktree = (
 
 /**
  * @description Minimal worktree-scan payload fixture. Defaults model a clean scan of
- * the sibling default root with nothing found; pass `worktreeRoot: null` to model the
+ * the default root with nothing found; pass `worktreeRoot: null` to model the
  * "no root to scan" state and `warnings` to model a partial scan.
  */
 export const mockDiscoveredWorktrees = (
@@ -172,7 +172,7 @@ export const mockDiscoveredWorktrees = (
   rootSource: WorktreeRootSource.Default,
   scannedAt: '2026-08-24T00:00:00.000Z',
   warnings: [],
-  worktreeRoot: '/Users/dev/Development/openthrottle-worktrees',
+  worktreeRoot: '/Users/dev/.openthrottle/worktrees/monorepo',
   worktrees: [],
   ...overrides,
 });

@@ -28,9 +28,11 @@ export {
   FOREIGN_SKILL_TARGET_DIRS,
   GIT_EXCLUDE_BEGIN_MARKER,
   GIT_EXCLUDE_END_MARKER,
+  GIT_EXCLUDE_OWNER,
 } from './types.ts';
 export type {
   ForeignSkillInjectionMode,
+  GitExcludeOwner,
   ForeignSkillLedger,
   ForeignSkillLedgerEntry,
 } from './types.ts';

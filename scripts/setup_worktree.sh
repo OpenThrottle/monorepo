@@ -5,8 +5,8 @@
 # Kept as .sh because provisioning runs inside a fresh linked worktree BEFORE
 # `pnpm install` has populated its node_modules: tsx is resolved from this
 # checkout first, then from the primary checkout that linked worktrees share.
-# Must be run with cwd = the worktree root (as create_worktree and the
-# self-heal guard do).
+# Must be run with cwd = the worktree root (as the ot-worktree skill's
+# create/heal actions do).
 
 set -eu
 

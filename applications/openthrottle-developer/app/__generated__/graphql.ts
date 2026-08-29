@@ -5257,8 +5257,6 @@ export type UpdateWorkspaceProfileInput = {
   contactDisplayName?: InputMaybe<Scalars['String']['input']>;
   contactEmail?: InputMaybe<Scalars['String']['input']>;
   enabledEditors?: InputMaybe<Array<WorkspaceEditorId>>;
-  /** Absolute directory every git worktree is created under; blank clears it back to the default. */
-  worktreeRoot?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type UpsertTagActionRuleInput = {
@@ -5305,8 +5303,6 @@ export type UserWorkspaceProfileObject = {
   enabledEditors: Array<WorkspaceEditorId>;
   updatedAt: Scalars['DateTime']['output'];
   userId: Scalars['ID']['output'];
-  /** Directory every git worktree is created under; null uses the default sibling openthrottle-worktrees directory. */
-  worktreeRoot?: Maybe<Scalars['String']['output']>;
 };
 
 /** Interpretation of wall-clock to CPU time ratio. */
@@ -5506,16 +5502,14 @@ export enum WorktreeActivity {
   Running = 'RUNNING',
 }
 
-/** Which rung of the shared worktree-root ladder resolved the scanned root. The same ladder scripts/create_worktree.sh applies, so the page can never disagree with where the script writes. */
+/** Which rung of the shared worktree-root ladder resolved the scanned root. The same ladder skills/ot-worktree/scripts/root.sh applies, so the page can never disagree with where the script writes. */
 export enum WorktreeRootSource {
-  /** OT_WORKTREE_ROOT in the base checkout’s .env file. */
+  /** OPENTHROTTLE_WORKTREE_ROOT in the target repo’s .env file — how a repo customizes where its worktrees go. */
   CheckoutEnv = 'CHECKOUT_ENV',
-  /** The historical default: a sibling openthrottle-worktrees directory next to the base checkout. */
+  /** The default: ~/.openthrottle/worktrees/<repo-name>, the hidden root OpenThrottle owns, namespaced by the base checkout’s directory name. */
   Default = 'DEFAULT',
-  /** OT_WORKTREE_ROOT in the server process's environment. */
+  /** OPENTHROTTLE_WORKTREE_ROOT in the server process's environment. */
   Env = 'ENV',
-  /** The workspace-level worktree root configured on /settings/workspace. */
-  Settings = 'SETTINGS',
 }
 
 export type HealthCardFragment = {
@@ -10203,7 +10197,6 @@ export type UserWorkspaceProfileFieldsFragment = {
   enabledEditors: Array<WorkspaceEditorId>;
   updatedAt: any;
   userId: string;
-  worktreeRoot?: string | null;
 };
 
 export type GetWorkspaceSettingsQueryVariables = Exact<{
@@ -10239,7 +10232,6 @@ export type GetWorkspaceSettingsQuery = {
       enabledEditors: Array<WorkspaceEditorId>;
       updatedAt: any;
       userId: string;
-      worktreeRoot?: string | null;
     };
   };
 };
@@ -10258,7 +10250,6 @@ export type UpdateWorkspaceProfileMutation = {
     enabledEditors: Array<WorkspaceEditorId>;
     updatedAt: any;
     userId: string;
-    worktreeRoot?: string | null;
   };
 };
 
@@ -12775,7 +12766,6 @@ export const UserWorkspaceProfileFieldsFragmentDoc = {
           { kind: 'Field', name: { kind: 'Name', value: 'enabledEditors' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'userId' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'worktreeRoot' } },
         ],
       },
     },
@@ -26323,7 +26313,6 @@ export const GetWorkspaceSettingsDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'enabledEditors' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'userId' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'worktreeRoot' } },
         ],
       },
     },
@@ -26403,7 +26392,6 @@ export const UpdateWorkspaceProfileDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'enabledEditors' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'userId' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'worktreeRoot' } },
         ],
       },
     },
