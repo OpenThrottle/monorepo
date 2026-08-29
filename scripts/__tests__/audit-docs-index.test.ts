@@ -37,8 +37,8 @@ describe('resolveDocLink', () => {
   });
 
   it('resolves a parent-relative link', () => {
-    expect(resolveDocLink('docs/monorepo/NX.md', '../Folders.md')).toBe(
-      'docs/Folders.md',
+    expect(resolveDocLink('docs/monorepo/NX.md', '../README.md')).toBe(
+      'docs/README.md',
     );
   });
 
