@@ -175,16 +175,14 @@ export class WorkspaceEditorConfigService {
       recursive: true,
     });
 
+    // Recorded on the manifest below, but deliberately NOT created on disk. Pre-creating an empty
+    // `.agents/skills/<slug>/` made foreign-skill injection read it as a skill the target repo owns,
+    // so its target-wins rule dropped the very curated skill the directory was named after — leaving
+    // an empty directory where the skill should be. Nothing reads these directories; the manifest's
+    // `enabledSkillPaths` is the record of which skills OT offers.
     const skillPaths = OPENTHROTTLE_REPO_SKILL_PATHS.map(
       (entry) => entry.repoRelativePath,
     );
-
-    for (const skillPath of skillPaths) {
-      // eslint-disable-next-line no-await-in-loop
-      await mkdir(join(repositoryRoot, dirname(skillPath)), {
-        recursive: true,
-      });
-    }
 
     // repositoryId + checkoutId make this manifest OT's on-disk identity anchor
     // (design decision 2): RepositoryInspectionService reads them back to

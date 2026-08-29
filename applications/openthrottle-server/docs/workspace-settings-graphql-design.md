@@ -239,7 +239,7 @@ Mutation: `applyWorkspaceEditorConfiguration(input: ApplyWorkspaceEditorConfigur
 - Optional `repositoryIds` limits which repos are updated; omit to apply to all.
 - For each enabled editor and target repo:
   - **MCP:** merges `openthrottle-mcp` into `.cursor/mcp.json` or `.vscode/mcp.json` when `scripts/run-openthrottle-mcp.sh` exists (OpenThrottle monorepo checkout). Uses `API_URL_INTERNAL` for `API_URL` / `API_URL_INTERNAL` env vars. Does **not** write auth tokens; set `OPENTHROTTLE_MCP_AUTH_TOKEN` in the editor MCP env separately.
-  - **Skills paths:** ensures parent directories exist for skill paths from `OPENTHROTTLE_REPO_SKILL_PATHS` (keep aligned with `repo-skills-registry.ts`).
+  - **Skills paths:** records the skill paths from `OPENTHROTTLE_REPO_SKILL_PATHS` on the manifest as `enabledSkillPaths` (keep aligned with `repo-skills-registry.ts`). It deliberately does **not** create the directories — see below.
   - **Rules:** ensures `.cursor/rules` or `.vscode` directory exists.
   - **Manifest:** writes `.openthrottle/workspace-editors.json` with applied paths and timestamp, and adds **that file only** to the repo's managed `.git/info/exclude` block (owner `workspace-editors`).
 
@@ -251,7 +251,7 @@ This apply writes into repositories OpenThrottle does not own, so it draws a lin
 | ----------------------------------------------------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `.openthrottle/workspace-editors.json`                | **Yes**          | OT's own bookkeeping — an identity anchor the user never asked for. Residue if left visible.                                                              |
 | `.mcp.json` / `.cursor/mcp.json` / `.vscode/mcp.json` | **No**           | The config the user asked for, merged into whatever is already there. Theirs to commit or ignore as their team prefers; OT does not decide that for them. |
-| Rules and skill directories                           | **No**           | Same — created for the user's editor.                                                                                                                     |
+| Rules directory                                       | **No**           | Same — created for the user's editor.                                                                                                                     |
 
 The general rule, which OT `b409da6e` reached independently for skill injection and a third feature will face too:
 
@@ -260,6 +260,12 @@ The general rule, which OT `b409da6e` reached independently for skill injection 
 A test pins both halves (`workspace-editor-config.service.test.ts`): make only the first half pass and the obvious "fix" for a dirty `git status` is to exclude everything the apply writes — hiding the user's own config from them, which is a worse bug and would look green.
 
 Note this means `git status` is **not** empty after a first apply: the new MCP config shows as untracked, correctly.
+
+#### Why the skill directories are not created (2026-08-29)
+
+Apply used to `mkdir` every `.agents/skills/<slug>/` in `OPENTHROTTLE_REPO_SKILL_PATHS`. Those empty directories then read as skills the target repo owns, so foreign-skill injection's target-wins rule dropped the curated skill each directory was named after — the directory existed, the skill did not, and nothing looked wrong until an agent could not find it.
+
+Nothing read the directories, so apply simply stopped creating them; `enabledSkillPaths` on the manifest already records which skills OT offers. The injection side was hardened independently — a name is target-owned only with a real `SKILL.md` or symlink — so neither half depends on the other. See `docs/monorepo/foreign-workspace-skill-injection.md` §1a.
 
 #### Repos configured before the exclude existed
 

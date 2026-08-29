@@ -252,3 +252,31 @@ The rule that decides what belongs in a block at all is shared with `5a1ac8d1`:
 > **Anything OpenThrottle writes into a foreign repo for its own bookkeeping must be hidden from git. Anything the user asked for is theirs, and must stay visible.**
 
 Skill injection is entirely the first kind, which is why §4's guarantee is absolute for it. Features that write user-requested files as well (workspace-editors writes MCP config) must exclude only their own half.
+
+---
+
+## 1a. Target-owned means a real skill, not a directory (added 2026-08-29)
+
+§1's target-wins rule is correct, and it was being fed bad input.
+
+`scanTargetOwnedSkillNames` counted **every directory basename** under a target dir as a name the repo owns. `workspace-editors` apply, meanwhile, pre-created an empty `.agents/skills/<slug>/` for each of the ten slugs in `OPENTHROTTLE_REPO_SKILL_PATHS` — `brag-sheet`, `git-commit`, `link-workspace-packages`, `monitor-ci`, `nx-workspace`, `ot-claude-loop`, `ot-generators`, `ot-plans`, `ot-stack`, `workflow-ralph`.
+
+So OT's protection against clobbering the user's skills fired against **OT's own scaffolding**, and dropped precisely OT's most important curated skills. Both orders are reachable — applying editor config and injecting skills are independent user actions — so the outcome depended on which the user happened to do first:
+
+```
+editor-config applied first = false → ot-plans injected and present
+editor-config applied first = true  → ot-plans dropped; empty dir, no SKILL.md
+```
+
+Invisible, too: the directory exists, so nothing looks wrong until an agent cannot find the skill.
+
+**Rule:** a name is target-owned only with evidence of a real skill — a **symlink**, or a **directory carrying a readable `SKILL.md`**. An empty directory is not a skill and never masks one.
+
+Two places enforce it, and both are needed:
+
+1. `scanTargetOwnedSkillNames` keeps the name in the manifest.
+2. The occupancy guard in `ensureMaterialized` reclaims (`rmdir`s) a directory with **no children at all** and proceeds. Without this the name is back in the manifest but the stale directory still blocks the write, and the skill is skipped with a warning. That failure is worse than the original, not better: `injectedNames` reports the skill because the `.claude/skills` copy succeeded, while `.agents/skills` holds an empty directory. **Assert the materialized `SKILL.md`, never just the name.**
+
+A directory with any content is left alone and remains an occupant, so target-wins is unchanged for real skills.
+
+Also fixed at the source: apply no longer creates those directories (`enabledSkillPaths` on the manifest already records which skills OT offers, and nothing reads the directories). The detection rule stays regardless — it fixes the class, and an empty directory should never have masked a real skill.
