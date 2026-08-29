@@ -1,0 +1,76 @@
+name: Bug Report
+description: Something in OpenThrottle isn't working the way it should.
+title: '[Bug]: '
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this — a clear reproduction is the single most useful thing you can give us. See [CONTRIBUTING.md](https://github.com/OpenThrottle/monorepo/blob/main/CONTRIBUTING.md) if you'd like to dig in yourself.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What were you doing, what did you expect, and what did you get instead?
+      placeholder: |
+        I ran `pnpm nx run openthrottle-server:dev` and expected the API to boot.
+        Instead it exited with a migration error before listening on the port.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to reproduce
+      description: The smallest sequence that reliably triggers the problem.
+      placeholder: |
+        1. Fresh clone, `./scripts/setup.sh`
+        2. `pnpm run database:start`
+        3. `pnpm nx run openthrottle-server:dev`
+        4. See the error below
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Where in the workspace did this happen? Pick "Not sure" if you'd rather we route it.
+      multiple: false
+      options:
+        - openthrottle-server
+        - openthrottle-developer
+        - openthrottle-admin
+        - openthrottle-website
+        - openthrottle-email
+        - packages / shared libraries
+        - CLI / agentic tooling
+        - Database / migrations
+        - Build, Nx or CI
+        - Not sure
+    validations:
+      required: false
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Optional, but it helps. OS, Node version, pnpm version, and your browser if this is a UI problem.
+      render: shell
+      placeholder: |
+        OS: macOS 15.5 (arm64)
+        Node: v22.14.0
+        pnpm: 10.4.1
+        Browser: Chrome 137
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: Paste any relevant output. Screenshots can be dragged into this box.
+      render: shell
+    validations:
+      required: false

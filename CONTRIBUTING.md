@@ -11,7 +11,8 @@ mechanics, see [MONOREPO.md](./MONOREPO.md) and [docs/monorepo/](./docs/monorepo
 - **Pull requests** — while the project is early-stage, contributions are scoped
   to smaller, targeted changes (bug fixes, docs, well-scoped improvements).
   Discuss anything larger in an issue before you build it.
-- **Questions** — open an issue for clarification.
+- **Questions** — start at [`/issues/new/choose`](https://github.com/OpenThrottle/monorepo/issues/new/choose).
+  Anything that fits neither form can still go in a blank issue.
 
 ## Getting set up
 
