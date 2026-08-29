@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Contributing guide
+    url: https://github.com/OpenThrottle/monorepo/blob/main/CONTRIBUTING.md
+    about: How to set the workspace up, run the checks, and get a change reviewed.
+  - name: Repo and architecture overview
+    url: https://github.com/OpenThrottle/monorepo/blob/main/MONOREPO.md
+    about: How the monorepo is laid out — applications, packages, tags, and the release flow.
