@@ -94,7 +94,7 @@ export function validateBackupCronPattern(
  * openthrottle-server instances share one Redis; without a single owner each
  * worktree registers its own scheduler (a factor in the 2026-07-05 flood). An
  * explicit `OT_BACKUP_OWNER` wins; otherwise a checkout running from under a
- * `*worktrees/` directory (the skill's `~/worktrees/<repo>` default and the historical sibling
+ * `*worktrees/` directory (the `~/.openthrottle/worktrees` default and the historical sibling
  * `openthrottle-worktrees` alike) is treated as a non-owner.
  */
 export function resolveBackupOwnership(

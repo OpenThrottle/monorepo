@@ -83,7 +83,6 @@ marker files. The scheme:
 | Variable                                    | Used by      | Default                                        |
 | ------------------------------------------- | ------------ | ---------------------------------------------- |
 | `OPENTHROTTLE_WORKTREE_ROOT`                | all          | `~/.openthrottle/worktrees` (+ `<org>/<repo>`) |
-| `OPENTHROTTLE_WORKTREE_ROOT_FILE`           | all          | `~/.openthrottle/worktree-root`                |
 | `OPENTHROTTLE_WORKTREE_BRANCH_PREFIX`       | create       | `openthrottle/`                                |
 | `OPENTHROTTLE_WORKTREE_BASE`                | create       | the remote's default branch                    |
 | `OPENTHROTTLE_WORKTREE_REMOTE`              | create       | `origin`                                       |

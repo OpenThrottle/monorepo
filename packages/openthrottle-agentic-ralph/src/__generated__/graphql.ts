@@ -5506,7 +5506,7 @@ export enum WorktreeActivity {
 export enum WorktreeRootSource {
   /** OPENTHROTTLE_WORKTREE_ROOT in the target repo’s .env file — how a repo customizes where its worktrees go. */
   CheckoutEnv = 'CHECKOUT_ENV',
-  /** The default: ~/.openthrottle/worktrees/<repo-name>, the hidden root OpenThrottle owns, namespaced by the base checkout’s directory name. */
+  /** The default: ~/.openthrottle/worktrees, the hidden root OpenThrottle owns. OT appends <org>/<repo> beneath it, taken from the checkout’s git remote. */
   Default = 'DEFAULT',
   /** OPENTHROTTLE_WORKTREE_ROOT in the server process's environment. */
   Env = 'ENV',

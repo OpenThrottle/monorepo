@@ -26,7 +26,7 @@ Your job is to run the built-in **`/loop`** over OpenThrottle plan **`$planId`**
    Two things to check before you start work:
 
    - **The worktree branches off whatever the base checkout has checked out**, not `main`. Confirm the base checkout is on the branch you intend to build from first, or fix it after with `git reset --hard origin/main`.
-   - **Where it lands is not always `~/worktrees/<repo>`** — the root comes from a ladder (`OPENTHROTTLE_WORKTREE_ROOT` → the checkout's `.env` → the `/settings/workspace` setting → the default). Use the path the command prints; never assume one.
+   - **Where it lands is not fixed** — the root comes from a ladder (`OPENTHROTTLE_WORKTREE_ROOT` in the environment → `OPENTHROTTLE_WORKTREE_ROOT` in the target repo's `.env` → the default `~/.openthrottle/worktrees`), with `<org>/<repo>` appended beneath it. Use the path the command prints; never assume one.
 
    In a repo without the `worktree:*` scripts, call the skill's scripts directly — `<skill>/scripts/create.sh`, `heal.sh`, `destroy.sh`.
 
