@@ -41,13 +41,18 @@ name: personal-generators
 
 ## Available Generators
 
-See `NX_ISOLATE_PLUGINS=false pnpm nx list @tools/generators` (source: `tools/generators/generators.json`). Typically:
+Step 1 above is not a formality — it exists because picking the wrong generator is the
+mistake that actually happens. The full selection matrix lives in one place,
+`docs/tools/templates/AGENT_USAGE.md`; the one distinction worth stating here is the
+one that keeps being missed:
 
-- `react` - For React components
-- `react-router` - For React Router app components, routes, and related UI
-- `nestjs` - For NestJS services/modules
-- `package` - For new packages (auto-wires the root `workspace:^` dependency and runs `pnpm install` + `nx sync` — no manual post-scaffold steps)
-- `folders` - For folder structures
+- A component in a **package** → `react --subGenerator=component --destination=<project>`
+- A component **inside an application** → `react-router --subGenerator=component --application=<app> --folder=<path>`
+
+Both generators scaffold components. Neither is "the component generator", and neither
+is limited to what its name suggests — `react` works for app-local components too.
+Everything else (`nestjs`, `package`, `folders`, and every other sub-generator) is in
+`nx list` and in the SSOT above.
 
 ## Important Notes
 

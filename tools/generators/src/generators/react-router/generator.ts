@@ -8,6 +8,7 @@ import {
 import { writeJsonToStdout } from '../../utils/output';
 import { throwGeneratorError } from '../../utils/generator-errors';
 import { isInteractiveArgPresent } from '../../utils/nx-cli';
+import { assertReactRouterApplication } from '../../utils/target-validation';
 import { generatorReactRouterApplication } from './generator.application';
 import { generatorReactRouterComponent } from './generator.component';
 import { generatorReactRouterForm } from './generator.form';
@@ -241,6 +242,13 @@ export async function reactRouterGenerator(
         'table',
       ],
     });
+  }
+
+  // Every sub-generator below except `application` writes inside
+  // applications/<app>/app. Validating here — before any filesystem read —
+  // turns "wrong generator" into a message that names the right one.
+  if (generator !== 'application' && schema.application) {
+    await assertReactRouterApplication(schema.application);
   }
 
   switch (generator) {

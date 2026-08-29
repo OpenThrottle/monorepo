@@ -1,11 +1,6 @@
 import { join } from 'path';
 import type { Tree } from '@nx/devkit';
-import {
-  createProjectGraphAsync,
-  formatFiles,
-  generateFiles,
-  logger,
-} from '@nx/devkit';
+import { createProjectGraphAsync, formatFiles, logger } from '@nx/devkit';
 import { getCommonVariables, getGeneratorOverview } from '../../utils';
 import { acceptsChildren, extractCvaVariants } from '../../utils/cva-variants';
 import type { CvaVariantGroup } from '../../utils/cva-variants';
@@ -15,6 +10,8 @@ import {
   getReactComponentDestination,
   parsePossibleNames,
 } from '../../utils/questions';
+import { throwInvalidDestinationError } from '../../utils/target-validation';
+import { generateFilesSafely } from '../../utils/generate-files-safely';
 
 export interface ReactStoryGeneratorSchema {
   readonly destination?: string;
@@ -119,10 +116,10 @@ export async function storyGenerator(
       : undefined;
 
   if (!project) {
+    if (destination) await throwInvalidDestinationError(destination);
+
     throw new Error(
-      destination
-        ? `Invalid destination "${destination}". Use --list=destinations to enumerate valid values.`
-        : `Missing required option: "destination". Re-run with --interactive or pass --destination=<nx-project>.`,
+      `Missing required option: "destination". Re-run with --interactive or pass --destination=<nx-project>.`,
     );
   }
 
@@ -172,7 +169,7 @@ export async function storyGenerator(
       await getConfigConfirmation(data);
     }
 
-    generateFiles(tree, templates, directory, data);
+    generateFilesSafely(tree, templates, directory, data);
   }
 
   await formatFiles(tree);

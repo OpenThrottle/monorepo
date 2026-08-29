@@ -56,6 +56,21 @@ As of that list, registered generators are:
 | `react`        | React components/hooks for packages or apps (`--destination`, `--list=destinations`)                        |
 | `react-router` | React Router app artifacts: components, routes, hooks, utils (`--application`, `--list=applications`, etc.) |
 
+### Which one scaffolds a component
+
+This is the one distinction agents get wrong, so it is stated here once and referenced
+everywhere else in this skill:
+
+- **In a package** → `react --subGenerator=component --destination=<project>`. Any project
+  tagged `technology:react` is a valid destination, including `packages/react-router-*`.
+- **Inside an application** → `react-router --subGenerator=component --application=<app> --folder=<path>`,
+  resolved under `applications/<app>/app/routing`.
+
+`react-router` does **not** scaffold into `packages/` — passing a package to `--application`
+is the wrong generator, not an unsupported target. `react` handles app-local components too,
+so when in doubt it is the safer of the two. Full matrix:
+[`docs/tools/templates/AGENT_USAGE.md`](../../docs/tools/templates/AGENT_USAGE.md).
+
 ### Docs vs reality: `remix` vs `react-router`
 
 Some documentation (including sections of `docs/tools/templates/AGENT_USAGE.md`) still shows **`@tools/generators:remix`**. That name is **not** registered; Nx will error:
@@ -98,7 +113,7 @@ Most `@tools/generators` sub-generators accept **multiple names in one invocatio
 
 **Confirm support:** `--describe` JSON includes `"description": "Comma-separated names supported."` on the `name` option when batching works (e.g. `react`, `react-router` component/route/form/modal/table; `react` hook/util). Some generators (e.g. NestJS `application`) use a single slug—always read `--describe` for the generator you chose.
 
-**Example — four package components in one command:**
+**Example — four package components in one command** (note `react` + `--destination`, per [Which one scaffolds a component](#which-one-scaffolds-a-component)):
 
 ```bash
 NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react \
@@ -114,8 +129,8 @@ Prefer batching when scaffolding related siblings; split only when names need di
 
 Exact flags change over time; always use **`--describe`** and **`--list`** for the generator you chose.
 
-- **Shared UI / packages:** often `react` with `--destination` from `--list=destinations`.
-- **Application routes/components (e.g. `openthrottle-developer`):** often `react-router` with `--application` from `--list=applications` and `--list=componentFolders` where applicable.
+- **Components:** see [Which one scaffolds a component](#which-one-scaffolds-a-component) above — the package-vs-application split is the only place this is stated.
+- **Application routes:** `react-router` with `--application` from `--list=applications`, and `--list=componentFolders` where applicable.
 - **GraphQL / NestJS in `openthrottle-server`:** often `nestjs` with `--subGenerator=graphql-service` or other sub-generators from `--describe`.
 - **New libs:** `package` generator, then wire deps via **link-workspace-packages** if needed.
 

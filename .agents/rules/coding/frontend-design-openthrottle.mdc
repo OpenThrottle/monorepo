@@ -17,7 +17,7 @@ Stack:
 
 Structure:
 
-- Scaffold via `@tools/generators` (`react-router --subGenerator=component`) instead of hand-writing files; keep the generated section-comment scaffold (Hooks / Setup / Handlers / Markup / Life Cycle / 🔌 Short Circuit) even when a section is empty.
+- Scaffold via `@tools/generators` instead of hand-writing files — `react --destination=<package>` inside a package, `react-router --application=<app>` inside an application ([selection matrix](../../../docs/tools/templates/AGENT_USAGE.md)); keep the generated section-comment scaffold (Hooks / Setup / Handlers / Markup / Life Cycle / 🔌 Short Circuit) even when a section is empty.
 - Unpack `props` in the pre-Hooks block: the identity `const { … } = props` and any nested identity destructures of those bindings (`const { repository } = loaderData`) sit **before** `// Hooks`; derived/narrowed values (`'x' in y`, maps, formatters) go under `// Setup`; **never** unpack after `// Hooks` or `// 🔌 Short Circuit`. Same rule for authored `FooProps` and route `Route.ComponentProps` — see [component R3](../../../docs/monorepo/component-primitive-shape.md#the-pre-hooks-unpack-block) (route R2 shows the route-shaped example).
 - One component per file, exporting only the component + its props. Hardcoded data, lists, mock data, and user-facing copy go in the nearest `data/` folder — see [`coding-component-data-boundaries`](./component-data-boundaries.mdc) (copy → `data.copy.ts`).
 

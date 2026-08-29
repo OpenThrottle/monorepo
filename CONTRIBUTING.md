@@ -11,8 +11,7 @@ mechanics, see [MONOREPO.md](./MONOREPO.md) and [docs/monorepo/](./docs/monorepo
 - **Pull requests** — while the project is early-stage, contributions are scoped
   to smaller, targeted changes (bug fixes, docs, well-scoped improvements).
   Discuss anything larger in an issue before you build it.
-- **Questions** — start at [`/issues/new/choose`](https://github.com/OpenThrottle/monorepo/issues/new/choose).
-  Anything that fits neither form can still go in a blank issue.
+- **Questions** — open an issue for clarification.
 
 ## Getting set up
 
@@ -76,7 +75,7 @@ mechanics, see [MONOREPO.md](./MONOREPO.md) and [docs/monorepo/](./docs/monorepo
 ## Documentation
 
 Everything under [`docs/`](./docs/README.md) is reference material for the system
-as it exists today. Five rules keep it that way:
+as it exists today. Six rules keep it that way:
 
 1. **Describe the current state**, not a proposal and not the history of how the
    code got here. If a sentence only makes sense to someone who watched the
@@ -95,6 +94,15 @@ as it exists today. Five rules keep it that way:
    from a hub doc that is itself indexed. `pnpm run audit:docs-index` reports
    orphans; a doc that is deliberately unindexed goes on the script's allowlist
    with a reason.
+6. **One surface owns a topic; the rest point at it.** When the same rule is
+   restated in several places, each copy drifts independently and an agent acts
+   on whichever it happened to read. Name the owner, and let every other surface
+   carry a pointer plus at most a one-line summary — never a second copy of the
+   table. The owners fixed so far:
+
+   | Topic                           | Owner (SSOT)                                                                 | Everyone else                                                                                                                                                                                                                                                             |
+   | ------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+   | Which generator to use, and how | [docs/tools/templates/AGENT_USAGE.md](./docs/tools/templates/AGENT_USAGE.md) | Pointer only. `CLAUDE.md`, `AGENTS.md` and `.agents/rules/` carry the generator-first policy and a link — no generator invocations, no selection matrix. `skills/ot-generators/SKILL.md` is the agent entry point and may state the package-vs-application rule **once**. |
 
 ## Dependency licenses
 

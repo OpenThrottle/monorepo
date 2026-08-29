@@ -80,15 +80,9 @@ Never remove/change types on existing fields without a migration plan — use `@
 
 ## Generators first
 
-Before writing any new component, route, service, or package by hand, check `@tools/generators` and use it (see `.agents/rules/personal-generators.mdc` and `docs/tools/templates/AGENT_USAGE.md`):
+Before writing any new component, route, service, or package by hand, check `@tools/generators` and use it. Every invocation needs the `NX_ISOLATE_PLUGINS=false` prefix. If no generator fits, say so explicitly before writing custom code.
 
-```bash
-NX_ISOLATE_PLUGINS=false pnpm nx list @tools/generators
-NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:<name> --describe
-NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router --subGenerator=component --application=<app> --folder=<folder> --name=<PascalCaseName>[,<MoreNames>]
-```
-
-All generator commands require the `NX_ISOLATE_PLUGINS=false` prefix. Generators exist for `react`, `react-router`, `nestjs`, `package`, and `folders`. Most sub-generators accept comma-separated `--name` values for batch scaffolding—confirm via `--describe` (`name.description`: `Comma-separated names supported.`). If no generator fits, say so explicitly before writing custom code.
+**Do not scaffold from memory or from an example copied out of this file — there is none, deliberately.** Which generator scaffolds what (notably `react` for packages vs `react-router` for applications) is decided in one place: `docs/tools/templates/AGENT_USAGE.md`. Load the `ot-generators` skill first; it is the agent entry point and carries the discovery workflow (`list` → `--describe` → `--list=<key>` → execute). See also `.agents/rules/personal-generators.mdc`.
 
 ## Code style (from .agents/rules/)
 

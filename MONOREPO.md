@@ -529,4 +529,4 @@ It owns **no components and no stories**. Stories are co-located in `packages/re
 
 - Review existing projects for examples
 - Check [docs/monorepo/](./docs/monorepo/) for detailed documentation
-- Open an issue at [`/issues/new/choose`](https://github.com/OpenThrottle/monorepo/issues/new/choose) — a blank issue is still available for questions that fit neither form
+- Open an issue for clarification or questions

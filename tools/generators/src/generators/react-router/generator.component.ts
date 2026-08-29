@@ -1,6 +1,6 @@
 import { join } from 'path';
 import type { Tree } from '@nx/devkit';
-import { formatFiles, generateFiles, logger } from '@nx/devkit';
+import { formatFiles, logger } from '@nx/devkit';
 import prompts from 'prompts';
 import {
   getCommonVariables,
@@ -13,6 +13,8 @@ import {
   parsePossibleNames,
 } from '../../utils/questions';
 import { REGEX_PASCAL_CASE_V2 } from '../../utils/regex';
+import { throwInvalidFolderError } from '../../utils/target-validation';
+import { generateFilesSafely } from '../../utils/generate-files-safely';
 
 export interface ReactRouterComponentGeneratorSchema {
   readonly application?: string;
@@ -76,9 +78,11 @@ export const generatorReactRouterComponent = async (
 
   if (!folder) throw new Error('No folder selected');
   if (!allowedFolders.includes(folder)) {
-    throw new Error(
-      `Invalid folder "${folder}". Use --list=componentFolders with --application=${application} to enumerate valid values.`,
-    );
+    throwInvalidFolderError({
+      application,
+      folder,
+      listKey: 'componentFolders',
+    });
   }
 
   const nameString =
@@ -108,7 +112,7 @@ export const generatorReactRouterComponent = async (
     const destination = join('applications', application, 'app', folder);
     const templates = join(__dirname, 'files/component');
 
-    generateFiles(tree, templates, destination, variables);
+    generateFilesSafely(tree, templates, destination, variables);
   });
 
   await formatFiles(tree);

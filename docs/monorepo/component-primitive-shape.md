@@ -10,12 +10,11 @@ implement _this_ document.
   `tools/generators/src/generators/react/files/component/__name__.tsx` and
   `tools/generators/src/generators/react-router/files/component/__name__.tsx`
   (the two are byte-identical).
-- **Scaffold a conforming component instead of hand-writing one:**
-
-  ```bash
-  NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router \
-    --subGenerator=component --application=<app> --folder=<folder> --name=<PascalCaseName>
-  ```
+- **Scaffold a conforming component instead of hand-writing one.** Which generator
+  depends on where it lands — `react --destination=<package>` in a package,
+  `react-router --application=<app>` in an application. The flags live in
+  [AGENT_USAGE.md](../tools/templates/AGENT_USAGE.md), which owns that matrix; both
+  emit this same shape.
 
 > Why a fixed shape at all? A single, predictable skeleton means every
 > component reads the same way, the section order **structurally prevents

@@ -1,6 +1,6 @@
 import { join } from 'path';
 import type { Tree } from '@nx/devkit';
-import { formatFiles, generateFiles, logger } from '@nx/devkit';
+import { formatFiles, logger } from '@nx/devkit';
 import prompts from 'prompts';
 import { camelCase } from 'lodash';
 import {
@@ -13,6 +13,8 @@ import {
   parsePossibleNames,
 } from '../../utils/questions';
 import { MESSAGE_ON_CANCEL } from '../../utils/messages';
+import { throwInvalidFolderError } from '../../utils/target-validation';
+import { generateFilesSafely } from '../../utils/generate-files-safely';
 
 export interface ReactRouterFormGeneratorSchema {
   readonly application?: string;
@@ -76,9 +78,11 @@ export const generatorReactRouterForm = async (
 
   if (!folder) throw new Error('No folder selected');
   if (!allowedFolders.includes(folder)) {
-    throw new Error(
-      `Invalid folder "${folder}". Use --list=formFolders with --application=${application} to enumerate valid values.`,
-    );
+    throwInvalidFolderError({
+      application,
+      folder,
+      listKey: 'formFolders',
+    });
   }
 
   const nameString =
@@ -114,7 +118,7 @@ export const generatorReactRouterForm = async (
       schema: camelCase(name).replace('Form', ''),
     };
 
-    generateFiles(tree, templates, destination, options);
+    generateFilesSafely(tree, templates, destination, options);
   });
 
   await formatFiles(tree);
