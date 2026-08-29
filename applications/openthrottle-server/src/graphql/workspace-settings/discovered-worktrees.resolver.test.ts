@@ -25,7 +25,7 @@ describe('DiscoveredWorktreesResolver', () => {
   it('maps a classified worktree onto the GraphQL object', async () => {
     const resolver = build({
       droppedCount: 0,
-      rootSource: 'settings',
+      rootSource: 'env',
       scannedAt: '2026-08-24T00:00:00.000Z',
       warnings: [],
       worktreeRoot: ROOT,
@@ -52,7 +52,7 @@ describe('DiscoveredWorktreesResolver', () => {
 
     expect(payload).toEqual({
       droppedCount: 0,
-      rootSource: 'settings',
+      rootSource: 'env',
       scannedAt: '2026-08-24T00:00:00.000Z',
       warnings: [],
       worktreeRoot: ROOT,

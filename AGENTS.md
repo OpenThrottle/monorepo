@@ -39,7 +39,19 @@ For **where** agent- and editor-specific config lives (`.cursor/`, `.claude/`, `
 
 ### Git worktrees (tool-agnostic)
 
-Create a worktree with the one entrypoint — `pnpm worktree:new <name>` (`scripts/create_worktree.sh`). The Claude `WorktreeCreate` hook and Cursor's `.cursor/worktrees.json` route through the same script, so setup is **not** tool-specific. A plain `git worktree add` provisions nothing (git has no post-add hook), but self-heals on first `pnpm nx run <app>:dev` via `scripts/ensure_worktree.ts` (or `pnpm worktree:heal`). Details: [docs/monorepo/worktree-port-allocation.md](docs/monorepo/worktree-port-allocation.md).
+Worktrees are handled by the portable [`ot-worktree`](skills/ot-worktree/SKILL.md) skill, which exposes **three composable actions**:
+
+| Action      | Command                       | Job                                                                       |
+| ----------- | ----------------------------- | ------------------------------------------------------------------------- |
+| **create**  | `pnpm worktree:new <name>`    | Create the worktree, then run this repo's provisioner                     |
+| **heal**    | `pnpm worktree:heal`          | Provision a worktree that was made outside the skill (runs before `:dev`) |
+| **destroy** | `pnpm worktree:remove <name>` | Teardown hook, `git worktree remove`, prune                               |
+
+The Claude `WorktreeCreate` hook and Cursor's `.cursor/worktrees.json` route through the same create action, so setup is **not** tool-specific. A plain `git worktree add` provisions nothing (git has no post-add hook) but self-heals on first `pnpm nx run <app>:dev`.
+
+Worktrees live at `<root>/<org>/<repo>/<worktree>`; the root defaults to `~/.openthrottle/worktrees`, a hidden directory OpenThrottle owns outside every repo. Override the root with `OPENTHROTTLE_WORKTREE_ROOT` in the environment or in the target repo's `.env` (documented in `.env.default`) — OT always organizes `<org>/<repo>` beneath whatever root it gets, so a configured root behaves like the default. The org comes from the git remote, not the directory name, so two orgs' `monorepo` cannot collide. Worktrees created before this stay where they are — every action reads `git worktree list`.
+
+`destroy` is deliberately conservative: it refuses the primary checkout, refuses a dirty worktree without `--force`, leaves the branch alone unless you pass `--delete-branch` (merged-only, unless also `--force`), and offers `--dry-run`. Details: [docs/monorepo/worktree-port-allocation.md](docs/monorepo/worktree-port-allocation.md).
 
 ### Contributor workflow (skills & rules)
 
@@ -103,7 +115,7 @@ OT-owned skills are authored under [`skills/`](./skills/) and surfaced to every 
 
 ## Local embeddings (Ollama)
 
-- For local-only embedding (no OpenAI key): set **`OLLAMA_BASE_URL`** and/or **`OLLAMA_EMBEDDING_MODEL`**; `pnpm run database:import-docs` / `pnpm run database:import-agent-assets` and openthrottle-server then use Ollama when configured. See `databases/README.md` (embedding dimension strategy) and `scripts/ollama.ts (pnpm run ollama:pull)`.
+- For local-only embedding (no OpenAI key): set **`OLLAMA_BASE_URL`** and/or **`OLLAMA_EMBEDDING_MODEL`**; `pnpm run database:import-docs` / `pnpm run database:import-agent-assets` and openthrottle-server then use Ollama when configured. See `databases/README.md` (embedding dimension strategy) and `scripts/ollama.sh`.
 - **Cursor with a custom Ollama model:** start the proxy with **`pnpm ollama-proxy`** (requires Ollama and optionally Caddy at `https://ollama.local`). See [docs/monorepo/Ollama.md](docs/monorepo/Ollama.md) § Using Cursor with Ollama via the proxy and [tools/ollama-proxy/README.md](tools/ollama-proxy/README.md).
 - **When using Caddy** (tools/caddy): set **`OLLAMA_BASE_URL`** to the Caddy-proxied URL so `database:import-docs`, `database:import-agent-assets`, and other consumers use one stable endpoint:
   - **Option B** (local domains): `https://ollama.local`

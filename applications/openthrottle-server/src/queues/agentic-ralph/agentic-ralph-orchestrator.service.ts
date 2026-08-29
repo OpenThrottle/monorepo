@@ -125,7 +125,6 @@ export class AgenticRalphOrchestratorService {
     const configCwd = await this.resolveRunWorkingDirectory({
       baseCheckoutCwd,
       jobData,
-      run,
     });
 
     // Soft-fail registration: must not abort the agent run when checkout lookup/upsert fails.
@@ -291,9 +290,8 @@ export class AgenticRalphOrchestratorService {
   private async resolveRunWorkingDirectory(params: {
     readonly baseCheckoutCwd: string;
     readonly jobData: RunPlanOrchestratorJobData;
-    readonly run: PlanRun | null;
   }): Promise<string> {
-    const { baseCheckoutCwd, jobData, run } = params;
+    const { baseCheckoutCwd, jobData } = params;
 
     const worktreeName = jobData.ralph?.worktree?.trim();
     if (worktreeName === undefined || worktreeName === '') {
@@ -304,12 +302,9 @@ export class AgenticRalphOrchestratorService {
       return baseCheckoutCwd;
     }
 
-    const worktreeRoot = await this.resolveConfiguredWorktreeRoot(run);
-
     const worktreePath = await this.planRunWorktreeProvisionService.provision({
       baseCheckoutPath: baseCheckoutCwd,
       worktreeName,
-      worktreeRoot,
     });
 
     this.logger.log(
@@ -318,34 +313,6 @@ export class AgenticRalphOrchestratorService {
     );
 
     return worktreePath;
-  }
-
-  /**
-   * @description The acting user's configured worktree root, or null to let
-   * `scripts/create_worktree.sh` resolve its own default. Soft: never blocks a run.
-   */
-  private async resolveConfiguredWorktreeRoot(
-    run: PlanRun | null,
-  ): Promise<string | null> {
-    const actorUserId = run?.actorUserId?.trim();
-    if (actorUserId === undefined || actorUserId === '') {
-      return null;
-    }
-
-    try {
-      const settings =
-        await this.userWorkspaceSettingsService.getOrCreateForUser(actorUserId);
-      const root = settings.worktreeRoot?.trim();
-      return root === undefined || root === '' ? null : root;
-    } catch (error) {
-      this.logger.warn(
-        `Soft-fail resolving the configured worktree root for user ${actorUserId}: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
-        AgenticRalphOrchestratorService.name,
-      );
-      return null;
-    }
   }
 
   /**

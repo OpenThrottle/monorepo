@@ -8,7 +8,6 @@ import { isWorkspaceEditorId } from '@openthrottle/nestjs-repositories';
 import type { WorkspaceEditorIdEnum } from './workspace-editor-id.enum';
 
 const MAX_CONTACT_DISPLAY_NAME_LEN = 256;
-const MAX_WORKTREE_ROOT_LEN = 4096;
 const MAX_CONTACT_EMAIL_LEN = 320;
 const CONTACT_EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -74,31 +73,4 @@ export const validateEnabledEditors = (
   }
 
   return normalized;
-};
-
-/**
- * @description Validates the optional workspace worktree root; returns null when omitted or
- * blank (blank means "use the default sibling openthrottle-worktrees directory"). Accepts an
- * absolute path or a `~`-relative one — `scripts/create_worktree.sh` expands `~` on the host
- * that actually creates the worktree, so it is not expanded here.
- */
-export const validateWorktreeRoot = (
-  raw: string | null | undefined,
-): string | null => {
-  if (raw === undefined || raw === null) return null;
-  const trimmed = raw.trim();
-  if (trimmed === '') return null;
-  if (trimmed.includes('\0')) {
-    throw new Error('worktreeRoot must not contain NUL');
-  }
-  if (trimmed.length > MAX_WORKTREE_ROOT_LEN) {
-    throw new Error(
-      `worktreeRoot must be at most ${MAX_WORKTREE_ROOT_LEN} characters`,
-    );
-  }
-  if (!trimmed.startsWith('/') && !trimmed.startsWith('~')) {
-    throw new Error('worktreeRoot must be an absolute path (or start with ~)');
-  }
-  const withoutTrailingSlash = trimmed.replace(/\/+$/, '');
-  return withoutTrailingSlash === '' ? '/' : withoutTrailingSlash;
 };

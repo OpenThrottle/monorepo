@@ -1611,7 +1611,6 @@ export function UpdateWorkspaceProfileInputSchema(): z.ZodObject<
     contactDisplayName: z.string().nullish(),
     contactEmail: z.string().nullish(),
     enabledEditors: z.array(WorkspaceEditorIdSchema).nullish(),
-    worktreeRoot: z.string().nullish(),
   });
 }
 

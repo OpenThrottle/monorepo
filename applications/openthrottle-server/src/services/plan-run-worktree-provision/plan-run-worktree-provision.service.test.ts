@@ -87,25 +87,6 @@ describe('PlanRunWorktreeProvisionService', () => {
     expect(createCall?.[1]).toEqual(['run', 'worktree:new', 'plan-5e172b67']);
   });
 
-  it('forwards the configured root as OT_WORKTREE_ROOT', async () => {
-    respond({ list: `worktree ${BASE}\n`, stdout: `/srv/wt/plan-5e172b67\n` });
-
-    await service.provision({
-      baseCheckoutPath: BASE,
-      worktreeName: 'plan-5e172b67',
-      worktreeRoot: '/srv/wt',
-    });
-
-    const createCall = mockExecFile.mock.calls.find(
-      ([file]) => file === 'pnpm',
-    );
-    const options = createCall?.[2];
-    expect(options).toMatchObject({
-      cwd: BASE,
-      env: expect.objectContaining({ OT_WORKTREE_ROOT: '/srv/wt' }),
-    });
-  });
-
   it('throws with the script stderr rather than falling back to the base checkout', async () => {
     const failure: Error & { stderr?: string } = new Error('Command failed');
     failure.stderr = 'fatal: invalid reference';

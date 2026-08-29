@@ -228,7 +228,8 @@ export const resolveScheduledAgentJobConcurrencyKey = (input: {
  * @description Whether THIS checkout owns *boot-time* scheduler registration. Many server instances
  * share one Redis, so only the canonical checkout should register the full schedule set at boot;
  * otherwise dev worktrees would fight over the same scheduler ids. Mirrors `resolveBackupOwnership`:
- * explicit `OT_SCHEDULED_JOBS_OWNER` wins; else a checkout under an `openthrottle-worktrees/` path is
+ * explicit `OT_SCHEDULED_JOBS_OWNER` wins; else a checkout under a `*worktrees/` directory (the
+ * skill's `~/worktrees/<repo>` default and the historical sibling `openthrottle-worktrees` alike) is
  * a non-owner. NOTE: this gates ONLY boot reconciliation — on-mutation upsert/remove always apply, so
  * a user editing a schedule takes effect immediately regardless of which checkout served the request.
  */
@@ -249,7 +250,7 @@ export const resolveScheduledAgentJobsBootOwner = (): {
   }
 
   const workspaceRoot = process.env.WORKSPACE_ROOT?.trim() ?? process.cwd();
-  if (/[/\\]openthrottle-worktrees[/\\]/.test(workspaceRoot)) {
+  if (/[/\\][^/\\]*worktrees[/\\]/.test(workspaceRoot)) {
     return {
       owner: false,
       reason: `workspace root ${workspaceRoot} is a worktree checkout; only the canonical checkout runs boot reconciliation (set OT_SCHEDULED_JOBS_OWNER=true to override)`,

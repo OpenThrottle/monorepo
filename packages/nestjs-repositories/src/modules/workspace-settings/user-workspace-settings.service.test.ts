@@ -17,7 +17,6 @@ describe('UserWorkspaceSettingsService', () => {
     enabledEditors: [],
     updatedAt: new Date('2026-05-18T12:00:00.000Z'),
     userId,
-    worktreeRoot: null,
   });
 
   const mockRepository = {
@@ -72,7 +71,6 @@ describe('UserWorkspaceSettingsService', () => {
         contactEmail: null,
         enabledEditors: [],
         userId,
-        worktreeRoot: null,
       });
       expect(result.userId).toBe(userId);
     });
@@ -91,29 +89,6 @@ describe('UserWorkspaceSettingsService', () => {
       expect(result.contactDisplayName).toBe('Matt');
       expect(result.contactEmail).toBe('matt@example.com');
       expect(mockRepository.save).toHaveBeenCalledWith(existing);
-    });
-
-    it('updates the worktree root on an existing row', async () => {
-      const existing = { ...mockSettings };
-      vi.mocked(mockRepository.findOne).mockResolvedValue(existing);
-
-      const result = await service.updateProfile(userId, {
-        worktreeRoot: '/srv/worktrees',
-      });
-
-      expect(result.worktreeRoot).toBe('/srv/worktrees');
-      expect(mockRepository.save).toHaveBeenCalledWith(existing);
-    });
-
-    it('clears the worktree root back to the default when set to null', async () => {
-      const existing = { ...mockSettings, worktreeRoot: '/srv/worktrees' };
-      vi.mocked(mockRepository.findOne).mockResolvedValue(existing);
-
-      const result = await service.updateProfile(userId, {
-        worktreeRoot: null,
-      });
-
-      expect(result.worktreeRoot).toBeNull();
     });
 
     it('updates enabled editors on an existing row', async () => {

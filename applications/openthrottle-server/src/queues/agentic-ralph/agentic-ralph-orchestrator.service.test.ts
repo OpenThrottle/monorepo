@@ -93,7 +93,6 @@ const WORKTREE_PATH =
 
 const PROVISIONED_WORKTREE_PATH =
   '/Users/matt/Development/openthrottle-worktrees/plan-aaaaaaaa';
-const CONFIGURED_WORKTREE_ROOT = '/srv/worktrees';
 
 const mockProvision = vi.fn(async () => PROVISIONED_WORKTREE_PATH);
 const mockPreflightCheck = vi.fn((): readonly string[] => []);
@@ -112,7 +111,6 @@ const planOutputStreamServiceMock = (): PlanOutputStreamService =>
 const mockGetOrCreateForUser = vi.fn(async () =>
   createMock<UserWorkspaceSettings>({
     userId: USER_ID,
-    worktreeRoot: CONFIGURED_WORKTREE_ROOT,
   }),
 );
 
@@ -155,7 +153,6 @@ describe('AgenticRalphOrchestratorService worktree checkout registration', () =>
     mockGetOrCreateForUser.mockResolvedValue(
       createMock<UserWorkspaceSettings>({
         userId: USER_ID,
-        worktreeRoot: CONFIGURED_WORKTREE_ROOT,
       }),
     );
     mockFindByUserAndPath.mockReset();
@@ -325,7 +322,6 @@ describe('AgenticRalphOrchestratorService foreign-skill injection gate', () => {
     mockGetOrCreateForUser.mockResolvedValue(
       createMock<UserWorkspaceSettings>({
         userId: USER_ID,
-        worktreeRoot: CONFIGURED_WORKTREE_ROOT,
       }),
     );
     mockFindByUserAndPath.mockReset();
@@ -467,7 +463,6 @@ describe('AgenticRalphOrchestratorService worktree provisioning', () => {
     mockGetOrCreateForUser.mockResolvedValue(
       createMock<UserWorkspaceSettings>({
         userId: USER_ID,
-        worktreeRoot: CONFIGURED_WORKTREE_ROOT,
       }),
     );
     mockResolveForeign.mockReset();
@@ -524,7 +519,6 @@ describe('AgenticRalphOrchestratorService worktree provisioning', () => {
     expect(mockProvision).toHaveBeenCalledWith({
       baseCheckoutPath: WORKTREE_PATH,
       worktreeName: 'plan-aaaaaaaa',
-      worktreeRoot: CONFIGURED_WORKTREE_ROOT,
     });
     expect(mockExecute).toHaveBeenCalledWith({
       context: expect.objectContaining({
@@ -601,18 +595,14 @@ describe('AgenticRalphOrchestratorService worktree provisioning', () => {
     );
   });
 
-  it('lets the script pick the root when the actor has none configured', async () => {
-    mockGetOrCreateForUser.mockResolvedValueOnce(
-      createMock<UserWorkspaceSettings>({
-        userId: USER_ID,
-        worktreeRoot: null,
-      }),
-    );
-
+  it('never forwards a root — the script owns resolution end to end', async () => {
     await runWithWorktree();
 
-    expect(mockProvision).toHaveBeenCalledWith(
-      expect.objectContaining({ worktreeRoot: null }),
-    );
+    // Passing a root from here was the second channel that let the server and the CLI disagree
+    // about where worktrees land. The orchestrator now says only which worktree, and from where.
+    expect(mockProvision).toHaveBeenCalledWith({
+      baseCheckoutPath: expect.any(String),
+      worktreeName: expect.any(String),
+    });
   });
 });

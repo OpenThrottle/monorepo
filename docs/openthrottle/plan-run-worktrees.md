@@ -43,7 +43,7 @@ checkout, `RepositoryInspectionService.scan()` reports `isLinkedWorktree: false`
 checkout registration is skipped, and `plan_runs.checkout_id` stays `NULL`.
 
 So the server provisions the worktree up front through the one sanctioned entrypoint,
-`pnpm run worktree:new <name>` (`scripts/create_worktree.sh`), and uses the absolute path
+`pnpm run worktree:new <name>` (`skills/ot-worktree/scripts/create.sh`), and uses the absolute path
 it prints on stdout as the run's working directory. Exactly one worktree per run, and the
 path is known before the agent starts — which is what checkout registration, `.env`
 provisioning, and per-path agent-CLI MCP approval all require.
@@ -53,43 +53,83 @@ and only self-heals on the first `:dev`.
 
 ## Decisions
 
-| Decision           | Choice                                                                                              | Rationale                                                                                                                                                                                                                                                                           |
-| ------------------ | --------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Naming**         | `plan-<first 8 chars of the plan UUID>` — e.g. `plan-5e172b67`, branch `openthrottle/plan-5e172b67` | Deterministic (survives a plan retitle), collision-free within a repo, already inside the `[A-Za-z0-9._-]` set `create_worktree.sh` sanitizes to, and short enough to read in `git branch` and a PR title.                                                                          |
-| **Lifecycle**      | One worktree per **plan**, reused across runs                                                       | Ralph runs are iterations of the same work landing as one branch and one PR; reuse preserves that branch history and keeps disk flat. Per-run worktrees would multiply ~2 GB `node_modules` trees per iteration.                                                                    |
-| **Cleanup**        | No automatic removal. Removal is manual (`git worktree remove`) until a dedicated sweep lands       | A worktree may hold uncommitted or unpushed work — the only safe automatic removal requires a clean tree, no unpushed commits, no active run, and an age floor. That sweep is a follow-up, not this plan. Ceiling: one worktree per plan that has ever run programmatically.        |
-| **Failure policy** | Fail the run fast                                                                                   | A fallback to the process cwd silently drops the agent into the primary checkout — the exact bug this design fixes. The provisioner's stderr goes to the plan output stream so the failure is legible.                                                                              |
-| **Timing**         | At job start, in the orchestrator — not at enqueue                                                  | A run queued for hours should not hold a worktree. It also keeps `validateWorkingDirectory`'s existence check honest: the enqueue payload carries a worktree _name_, and only an explicit caller-supplied `workingDirectory` is existence-checked.                                  |
-| **Concurrency**    | Idempotent provisioning + per-path serialization                                                    | The provisioner reuses an existing linked worktree at the target path instead of recreating it, and serializes concurrent provisioning of the same path in-process. The plans worker is `concurrency: 1`, so this only guards re-runs after a stall and multi-instance deployments. |
+| Decision           | Choice                                                                                              | Rationale                                                                                                                                                                                                                                                                                                                                                                |
+| ------------------ | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Naming**         | `plan-<first 8 chars of the plan UUID>` — e.g. `plan-5e172b67`, branch `openthrottle/plan-5e172b67` | Deterministic (survives a plan retitle), collision-free within a repo, already inside the `[A-Za-z0-9._-]` set the `ot-worktree` skill sanitizes to, and short enough to read in `git branch` and a PR title.                                                                                                                                                            |
+| **Lifecycle**      | One worktree per **plan**, reused across runs                                                       | Ralph runs are iterations of the same work landing as one branch and one PR; reuse preserves that branch history and keeps disk flat. Per-run worktrees would multiply ~2 GB `node_modules` trees per iteration.                                                                                                                                                         |
+| **Cleanup**        | No automatic removal. Removal is explicit: `pnpm worktree:remove <name>`                            | A worktree may hold uncommitted or unpushed work — the only safe automatic removal requires a clean tree, no unpushed commits, no active run, and an age floor. The destroy action gives removal a safe front door (see "Removing a worktree"); an automatic sweep on top of it is still a follow-up. Ceiling: one worktree per plan that has ever run programmatically. |
+| **Failure policy** | Fail the run fast                                                                                   | A fallback to the process cwd silently drops the agent into the primary checkout — the exact bug this design fixes. The provisioner's stderr goes to the plan output stream so the failure is legible.                                                                                                                                                                   |
+| **Timing**         | At job start, in the orchestrator — not at enqueue                                                  | A run queued for hours should not hold a worktree. It also keeps `validateWorkingDirectory`'s existence check honest: the enqueue payload carries a worktree _name_, and only an explicit caller-supplied `workingDirectory` is existence-checked.                                                                                                                       |
+| **Concurrency**    | Idempotent provisioning + per-path serialization                                                    | The provisioner reuses an existing linked worktree at the target path instead of recreating it, and serializes concurrent provisioning of the same path in-process. The plans worker is `concurrency: 1`, so this only guards re-runs after a stall and multi-instance deployments.                                                                                      |
 
 ## Worktree root
 
 Every agent — Claude, Cursor, Ralph, the BullMQ plans worker — creates worktrees under one
 root. There is **one** implementation of that ladder,
 `applications/openthrottle-server/src/services/worktree-root/worktree-root.resolver.ts`,
-mirroring `resolve_worktree_root` in `scripts/create_worktree.sh`. Both the provisioning
+mirroring `resolve_worktree_root` in `skills/ot-worktree/scripts/root.sh`. Both the provisioning
 path and the discovery path (below) consume it, so the settings page, the worker, and the
 `/settings/repositories` table can never disagree about where worktrees live. The resolver
 returns the resolved root **and** which rung answered it, as a `source`:
 
-| `source`       | Rung                                                                                           |
-| -------------- | ---------------------------------------------------------------------------------------------- |
-| `settings`     | The workspace-level `user_workspace_settings.worktree_root`.                                   |
-| `env`          | `OT_WORKTREE_ROOT` in the process environment — one-off overrides.                             |
-| `checkout-env` | `OT_WORKTREE_ROOT` in the base checkout's `.env`, the local channel for the workspace setting. |
-| `default`      | A sibling `openthrottle-worktrees` directory next to the repository.                           |
+| `source`       | Rung                                                                                             |
+| -------------- | ------------------------------------------------------------------------------------------------ |
+| `env`          | `OPENTHROTTLE_WORKTREE_ROOT` in the process environment.                                         |
+| `checkout-env` | `OPENTHROTTLE_WORKTREE_ROOT` in the target repo's `.env` — a repo customizing its own worktrees. |
+| `default`      | `~/.openthrottle/worktrees` — the hidden root OT owns.                                           |
 
-The shell script folds `settings` and `env` into a single rung, because the provisioner
-forwards the configured setting to the script **as** `OT_WORKTREE_ROOT`. They are split in
-the resolver only so a caller can report which of the two supplied the value; the
-provisioner still passes the env var rather than a computed path, keeping the script the one
-entrypoint that actually creates anything.
+### Where worktrees live
 
-The setting itself lives on the user's workspace profile
-(`user_workspace_settings.worktree_root`, migration `097`) and is editable at
-**Settings → Workspace → Worktrees**. A blank value clears it back to the default. The
-value may be absolute or `~`-relative; `~` is expanded by the script, on the host that
-actually creates the worktree.
+Worktrees land at `<root>/<org>/<repo>/<worktree>`. The default root is
+`~/.openthrottle/worktrees`, a hidden directory OpenThrottle owns; it sits outside every repo so
+worktrees stay clear of the Nx workspace (daemon watches, Vitest/knip/gitleaks globs, `.gitignore`).
+
+The `<org>/<repo>` beneath it comes from the checkout's **git remote**, not its directory name — two
+checkouts of different orgs' `monorepo` would otherwise share one path. A repo with no remote falls
+back to its directory name.
+
+An override — `OPENTHROTTLE_WORKTREE_ROOT` in the environment or in the target repo's `.env` —
+replaces the **root**. OT still appends `<org>/<repo>` beneath it, so a configured root behaves
+exactly like the default one: the root is a root, not a final destination, the same shape
+`OPENTHROTTLE_CHECKOUT_ROOT` uses for clones.
+
+### One variable, no second channel
+
+`OPENTHROTTLE_WORKTREE_ROOT` is the only way to change where worktrees land. It is read from the process
+environment, or from the target repository's `.env` when that repo wants its own location, and
+otherwise falls back to a default OpenThrottle ships in code and documents (commented) in
+`.env.default`.
+
+There was briefly a workspace setting for this, stored in `user_workspace_settings.worktree_root`.
+It was removed in migration 109. A database column cannot be read by a shell script, so the setting
+only ever applied to server-driven runs while `pnpm run worktree:new`, the Claude `WorktreeCreate`
+hook and Cursor silently used the default — the settings page displayed a value half the system
+ignored. Anyone who had set one re-expresses it by uncommenting `OPENTHROTTLE_WORKTREE_ROOT` in their `.env`.
+
+Nothing forwards a root to the script any more, either: the provisioner passes its own environment
+through and lets `resolve_worktree_root` answer, so the server and the CLI cannot disagree.
+
+## Removing a worktree
+
+`pnpm worktree:remove <name|path>` (the `ot-worktree` destroy action) runs the repo's
+teardown hook, removes the worktree, and prunes the stale admin dir under `.git/worktrees/`.
+Because this is the one action that can destroy real work, the defaults are conservative:
+
+- **Refuses the primary checkout.** The target must be a linked worktree git lists under this
+  repo's common dir.
+- **Refuses a dirty worktree**, printing the uncommitted paths, unless you pass `--force`.
+- **Branch-preserving.** The branch survives unless you pass `--delete-branch`, which deletes
+  it only if merged; `--delete-branch --force` for the unmerged case.
+- **`--dry-run`** prints exactly what would happen and removes nothing.
+- A teardown hook that exits non-zero **aborts** the removal, so a repo can stop a container
+  or release a port lease without the directory disappearing underneath it.
+
+Run with no argument from inside a linked worktree, it removes itself.
+
+The shell script and this resolver have the same three rungs, in the same order. Nothing is
+forwarded from the server: the provisioner passes its own environment through and lets
+`resolve_worktree_root` answer, so the script stays the one entrypoint that creates anything and the
+two implementations cannot drift apart. A test pins the default against `root.sh` and `.env.default`.
 
 The default deliberately sits **outside** the repository. An in-repo root would put every
 worktree's file tree inside the Nx workspace — watched by the Nx daemon, walked by

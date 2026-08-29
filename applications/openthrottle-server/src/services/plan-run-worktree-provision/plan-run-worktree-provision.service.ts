@@ -1,6 +1,6 @@
 /**
  * @description Provisions the git worktree a programmatic plan run executes in, through the ONE
- * sanctioned entrypoint `pnpm run worktree:new <name>` (`scripts/create_worktree.sh`) — never a bare
+ * sanctioned entrypoint `pnpm run worktree:new <name>` (`skills/ot-worktree/scripts/create.sh`) — never a bare
  * `git worktree add`, which skips port allocation and `.env` provisioning and only self-heals on the
  * first `:dev`. Idempotent: an existing worktree for the run's name is reused, never recreated.
  *
@@ -12,11 +12,7 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import {
-  WORKTREE_ROOT_ENV_VAR,
-  normalizeWorktreeRootSetting,
-  resolveWorktreeRoot,
-} from '../worktree-root/worktree-root.resolver';
+import { resolveWorktreeRoot } from '../worktree-root/worktree-root.resolver';
 
 const execFileAsync = promisify(execFile);
 
@@ -30,8 +26,6 @@ export interface ProvisionPlanRunWorktreeParams {
   readonly baseCheckoutPath: string;
   /** Worktree name (also the branch, as `openthrottle/<name>`). */
   readonly worktreeName: string;
-  /** Configured worktree root, forwarded as `OT_WORKTREE_ROOT`; null uses the script's default. */
-  readonly worktreeRoot?: string | null;
 }
 
 @Injectable()
@@ -129,13 +123,14 @@ export class PlanRunWorktreeProvisionService {
   private async createWorktree(
     params: ProvisionPlanRunWorktreeParams,
   ): Promise<string> {
-    const { baseCheckoutPath, worktreeName, worktreeRoot } = params;
+    const { baseCheckoutPath, worktreeName } = params;
 
-    // The script owns root resolution, so only a configured setting is forwarded — the lower rungs
-    // (process env, the checkout's .env, the sibling default) are the script's own to apply. The
-    // shared ladder is still consulted so the log names the directory discovery will look in.
-    const override = normalizeWorktreeRootSetting(worktreeRoot);
-    const resolved = this.describeResolvedRoot(baseCheckoutPath, override);
+    // The script owns root resolution end to end: it reads OPENTHROTTLE_WORKTREE_ROOT from this process's
+    // environment (which the child inherits), then the target repo's .env, then its default. Nothing
+    // is forwarded here — a second channel is exactly what used to let the server and the CLI
+    // disagree. The shared ladder is still consulted so the log names the directory discovery will
+    // look in.
+    const resolved = this.describeResolvedRoot(baseCheckoutPath);
 
     this.logger.log(
       `[${this.name}] creating worktree ${worktreeName} from ${baseCheckoutPath}${
@@ -149,10 +144,7 @@ export class PlanRunWorktreeProvisionService {
         ['run', 'worktree:new', worktreeName],
         {
           cwd: baseCheckoutPath,
-          env: {
-            ...process.env,
-            ...(override === null ? {} : { [WORKTREE_ROOT_ENV_VAR]: override }),
-          },
+          env: process.env,
           maxBuffer: PROVISION_MAX_BUFFER_BYTES,
           timeout: PROVISION_TIMEOUT_MS,
         },
@@ -195,15 +187,11 @@ export class PlanRunWorktreeProvisionService {
    * line only — never forwarded to the script. Soft-fails to null so a misconfigured root surfaces
    * from the script (the one entrypoint) rather than from a log helper.
    */
-  private describeResolvedRoot(
-    baseCheckoutPath: string,
-    settingsWorktreeRoot: string | null,
-  ): string | null {
+  private describeResolvedRoot(baseCheckoutPath: string): string | null {
     try {
-      return resolveWorktreeRoot({ baseCheckoutPath, settingsWorktreeRoot })
-        .resolvedRoot;
+      return resolveWorktreeRoot({ baseCheckoutPath }).resolvedRoot;
     } catch {
-      return settingsWorktreeRoot;
+      return null;
     }
   }
 }

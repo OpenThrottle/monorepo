@@ -12,7 +12,6 @@ describe('toUserWorkspaceProfileObject', () => {
       enabledEditors: ['cursor', 'vscode'],
       updatedAt: new Date('2026-05-18T12:00:00.000Z'),
       userId: '11111111-1111-4111-8111-111111111111',
-      worktreeRoot: '/Users/matt/Development/openthrottle-worktrees',
     };
 
     const result = toUserWorkspaceProfileObject(settings);
@@ -21,21 +20,5 @@ describe('toUserWorkspaceProfileObject', () => {
       WorkspaceEditorIdEnum.CURSOR,
       WorkspaceEditorIdEnum.VSCODE,
     ]);
-  });
-
-  test('carries the configured worktree root through', () => {
-    const settings: UserWorkspaceSettings = {
-      contactDisplayName: null,
-      contactEmail: null,
-      createdAt: new Date('2026-05-18T12:00:00.000Z'),
-      enabledEditors: [],
-      updatedAt: new Date('2026-05-18T12:00:00.000Z'),
-      userId: '11111111-1111-4111-8111-111111111111',
-      worktreeRoot: '/srv/worktrees',
-    };
-
-    expect(toUserWorkspaceProfileObject(settings).worktreeRoot).toBe(
-      '/srv/worktrees',
-    );
   });
 });

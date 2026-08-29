@@ -1,6 +1,8 @@
 import { execFileSync } from 'node:child_process';
 import {
+  existsSync,
   lstatSync,
+  symlinkSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
@@ -161,6 +163,77 @@ describe('ForeignSkillInjectionLifecycleService reaper', () => {
       lstatSync(join(repo, '.claude/skills/create-readme')),
     ).toThrow();
     expect(readLedger(ledgerPathForRepo(repo, process.env))).toBeUndefined();
+    expect(git(repo, 'status', '--porcelain')).toBe('');
+  });
+});
+
+/**
+ * The reaper on a symlinked-layout repo (`.claude/skills -> ../skills`, OT plan b409da6e). It acts
+ * on the ledger's recorded strings, so it inherits whatever the materializer records — this pins
+ * that the pair actually round-trips on the layout that broke the non-mutation guarantee.
+ */
+describe('ForeignSkillInjectionLifecycleService reaper — symlinked target dir', () => {
+  let base: string;
+  let repo: string;
+  let otSkills: string;
+  let ledgerDir: string;
+  let previousLedgerEnv: string | undefined;
+  let service: ForeignSkillInjectionLifecycleService;
+
+  beforeEach(() => {
+    base = mkdtempSync(join(tmpdir(), 'ot-fsi-reaper-symlink-'));
+    repo = join(base, 'target-repo');
+    otSkills = join(base, 'ot', 'skills');
+    ledgerDir = join(base, 'ledgers');
+    mkdirSync(repo, { recursive: true });
+    mkdirSync(otSkills, { recursive: true });
+    writeSkill(otSkills, 'ot-plans');
+
+    // Legacy layout, committed so the clean baseline is the repo's real state.
+    writeSkill(join(repo, 'skills'), 'house-style');
+    mkdirSync(join(repo, '.claude'), { recursive: true });
+    symlinkSync('../skills', join(repo, '.claude/skills'), 'dir');
+    git(repo, 'init', '-q');
+    git(repo, 'config', 'user.email', 'test@example.com');
+    git(repo, 'config', 'user.name', 'Test');
+    writeFileSync(join(repo, 'README.md'), '# target\n');
+    git(repo, 'add', '.');
+    git(repo, 'commit', '-q', '-m', 'init');
+
+    previousLedgerEnv = process.env[FOREIGN_SKILL_LEDGER_DIR_ENV];
+    process.env[FOREIGN_SKILL_LEDGER_DIR_ENV] = ledgerDir;
+
+    service = new ForeignSkillInjectionLifecycleService(
+      createMock<LoggerService>(),
+    );
+  });
+
+  afterEach(() => {
+    if (previousLedgerEnv === undefined) {
+      delete process.env[FOREIGN_SKILL_LEDGER_DIR_ENV];
+    } else {
+      process.env[FOREIGN_SKILL_LEDGER_DIR_ENV] = previousLedgerEnv;
+    }
+    rmSync(base, { force: true, recursive: true });
+  });
+
+  it('reaps a stranded symlinked-layout layer and leaves the repo clean', () => {
+    ensureMaterialized({
+      env: process.env,
+      otCuratedSkillsDir: otSkills,
+      repoPath: repo,
+    });
+    expect(existsSync(join(repo, 'skills/ot-plans'))).toBe(true);
+    expect(git(repo, 'status', '--porcelain')).toBe('');
+
+    service.reapStrandedLedgers();
+
+    expect(existsSync(join(repo, 'skills/ot-plans'))).toBe(false);
+    expect(readLedger(ledgerPathForRepo(repo, process.env))).toBeUndefined();
+    // The repo's own committed skill survives, and nothing is left dirty.
+    expect(
+      readFileSync(join(repo, 'skills/house-style/SKILL.md'), 'utf8'),
+    ).toContain('The house-style skill');
     expect(git(repo, 'status', '--porcelain')).toBe('');
   });
 });

@@ -22,7 +22,6 @@ const mockProfile = {
   enabledEditors: [WorkspaceEditorId.Cursor],
   updatedAt: '2026-05-18T12:00:00.000Z',
   userId: '11111111-1111-4111-8111-111111111111',
-  worktreeRoot: null,
 };
 
 const mockLocalRepositories = [
@@ -105,33 +104,6 @@ describe('routes/settings.workspace._index.tsx', () => {
             contactDisplayName: 'Matthew',
             contactEmail: 'matthew@example.com',
             enabledEditors: [WorkspaceEditorId.Vscode],
-            worktreeRoot: null,
-          },
-        },
-      );
-    });
-
-    test('updateProfile forwards the worktree root when set', async () => {
-      mockExecuteGraphqlWithAuth.mockResolvedValue({
-        updateWorkspaceProfile: mockProfile,
-      });
-
-      const formData = new FormData();
-      formData.set('intent', 'updateProfile');
-      formData.set('worktreeRoot', '/srv/worktrees');
-
-      const result = await action(actionArgs(formData));
-
-      expect(result).toEqual({ ok: true });
-      expect(mockExecuteGraphqlWithAuth).toHaveBeenLastCalledWith(
-        expect.any(Request),
-        expect.any(Object),
-        {
-          input: {
-            contactDisplayName: null,
-            contactEmail: null,
-            enabledEditors: [],
-            worktreeRoot: '/srv/worktrees',
           },
         },
       );

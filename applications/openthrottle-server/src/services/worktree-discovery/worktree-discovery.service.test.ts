@@ -5,6 +5,8 @@
  * about what it dropped instead of truncating silently.
  */
 
+import { homedir } from 'node:os';
+import { join } from 'node:path';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createMock } from '@golevelup/ts-vitest';
 import { LoggerService } from '@openthrottle/nestjs-modules';
@@ -36,7 +38,8 @@ import {
 import { WORKTREE_DISCOVERY_SOURCE } from './worktree-discovery.types';
 
 const PRIMARY = '/Users/matt/Development/openthrottle';
-const ROOT = '/Users/matt/Development/openthrottle-worktrees';
+/** The default rung of the shared ladder for PRIMARY: `$HOME/worktrees/<repo>`. */
+const ROOT = join(homedir(), '.openthrottle', 'worktrees', 'openthrottle');
 const USER = 'user-1';
 
 /** Only the fields discovery reads; keeps the mock clear of the `repository` relation. */
@@ -134,19 +137,25 @@ const withRoot = (options: {
   });
 };
 
+/**
+ * The root now comes from `OPENTHROTTLE_WORKTREE_ROOT` rather than a settings row, so tests set it the way a
+ * user would. `beforeEach` blanks it first: without that these assertions would depend on whatever
+ * the developer happens to have in their own `.env`.
+ */
 const build = (
   checkouts: readonly RepositoryCheckout[],
   worktreeRoot: string | null = null,
-): WorktreeDiscoveryService =>
-  new WorktreeDiscoveryService(
+): WorktreeDiscoveryService => {
+  vi.stubEnv('OPENTHROTTLE_WORKTREE_ROOT', worktreeRoot ?? '');
+
+  return new WorktreeDiscoveryService(
     createMock<LoggerService>(),
     createMock<RepositoryCheckoutsService>({
       listByUserId: vi.fn().mockResolvedValue([...checkouts]),
     }),
-    createMock<UserWorkspaceSettingsService>({
-      getOrCreateForUser: vi.fn().mockResolvedValue({ worktreeRoot }),
-    }),
+    createMock<UserWorkspaceSettingsService>(),
   );
+};
 
 describe('WorktreeDiscoveryService', () => {
   beforeEach(() => {
@@ -154,6 +163,7 @@ describe('WorktreeDiscoveryService', () => {
     mockReaddirSync.mockReset();
     mockRealpathSync.mockReset();
     mockStatSync.mockReset();
+    vi.stubEnv('OPENTHROTTLE_WORKTREE_ROOT', '');
     withSymlinks();
   });
 
@@ -291,15 +301,15 @@ describe('WorktreeDiscoveryService', () => {
     expect(result.warnings[0]).toMatch(/could not be read/);
   });
 
-  it('prefers the configured worktree root over the sibling default', async () => {
+  it('prefers OPENTHROTTLE_WORKTREE_ROOT over the default', async () => {
     scriptGit({});
     withRoot({ entries: [] });
 
     const result = await build([checkout()], '/srv/worktrees').discover(USER);
 
-    expect(result.worktreeRoot).toBe('/srv/worktrees');
-    expect(result.rootSource).toBe('settings');
-    expect(mockReaddirSync).toHaveBeenCalledWith('/srv/worktrees');
+    expect(result.worktreeRoot).toBe('/srv/worktrees/openthrottle');
+    expect(result.rootSource).toBe('env');
+    expect(mockReaddirSync).toHaveBeenCalledWith('/srv/worktrees/openthrottle');
   });
 
   it('counts and warns about worktrees dropped by the hard cap', async () => {

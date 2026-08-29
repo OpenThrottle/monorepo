@@ -87,14 +87,13 @@ export class WorktreeDiscoveryService {
     const warnings: string[] = [];
     const scannedAt = new Date().toISOString();
 
-    const settingsWorktreeRoot = await this.configuredRoot(userId, warnings);
     const checkouts = await this.listCheckouts(userId, warnings);
     const registered = this.indexCheckouts(checkouts);
     const primaries = checkouts.filter(
       (checkout) => checkout.kind !== WORKTREE_KIND,
     );
 
-    const roots = this.resolveRoots(primaries, settingsWorktreeRoot, warnings);
+    const roots = this.resolveRoots(primaries, warnings);
     const candidates = new Map<string, WorktreeCandidate>();
 
     await this.collectFromGitWorktreeList(primaries, candidates, warnings);
@@ -125,25 +124,6 @@ export class WorktreeDiscoveryService {
       worktreeRoot: firstRoot?.[0] ?? null,
       worktrees,
     };
-  }
-
-  /**
-   * @description The user's configured `user_workspace_settings.worktree_root`. Soft-fails to null
-   * (letting the ladder's lower rungs answer) rather than failing the page.
-   */
-  private async configuredRoot(
-    userId: string,
-    warnings: string[],
-  ): Promise<string | null> {
-    try {
-      const settings = await this.settingsService.getOrCreateForUser(userId);
-      return settings.worktreeRoot ?? null;
-    } catch (error) {
-      warnings.push(
-        `could not read the configured worktree root: ${message(error)}`,
-      );
-      return null;
-    }
   }
 
   private async listCheckouts(
@@ -181,7 +161,6 @@ export class WorktreeDiscoveryService {
    */
   private resolveRoots(
     primaries: readonly RepositoryCheckout[],
-    settingsWorktreeRoot: string | null,
     warnings: string[],
   ): Map<string, WorktreeRootSource> {
     const roots = new Map<string, WorktreeRootSource>();
@@ -190,7 +169,6 @@ export class WorktreeDiscoveryService {
       try {
         const { resolvedRoot, source } = resolveWorktreeRoot({
           baseCheckoutPath: primary.filesystemPath,
-          settingsWorktreeRoot,
         });
         if (!roots.has(resolvedRoot)) {
           roots.set(resolvedRoot, source);

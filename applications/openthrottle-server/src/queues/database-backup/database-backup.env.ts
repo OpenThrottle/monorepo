@@ -93,8 +93,9 @@ export function validateBackupCronPattern(
  * @description Decides whether THIS checkout owns scheduled backups. Multiple
  * openthrottle-server instances share one Redis; without a single owner each
  * worktree registers its own scheduler (a factor in the 2026-07-05 flood). An
- * explicit `OT_BACKUP_OWNER` wins; otherwise a checkout running from an
- * `openthrottle-worktrees/` path is treated as a non-owner.
+ * explicit `OT_BACKUP_OWNER` wins; otherwise a checkout running from under a
+ * `*worktrees/` directory (the skill's `~/worktrees/<repo>` default and the historical sibling
+ * `openthrottle-worktrees` alike) is treated as a non-owner.
  */
 export function resolveBackupOwnership(
   workspaceRoot: string,
@@ -111,7 +112,7 @@ export function resolveBackupOwnership(
         };
   }
 
-  if (/[/\\]openthrottle-worktrees[/\\]/.test(workspaceRoot)) {
+  if (/[/\\][^/\\]*worktrees[/\\]/.test(workspaceRoot)) {
     return {
       owner: false,
       reason: `workspace root ${workspaceRoot} is a worktree checkout; only the canonical checkout schedules backups (set OT_BACKUP_OWNER=true to override).`,

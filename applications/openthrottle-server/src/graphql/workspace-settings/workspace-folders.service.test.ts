@@ -33,6 +33,7 @@ import { RepositoryInspectionService } from '../repository-inspection/repository
 import { NATIVE_PICKER_ENV } from './native-folder-picker';
 import {
   CHECKOUT_ROOT_ENV,
+  getCheckoutRoot,
   repositoryNameFromGitUrl,
   repositoryNameFromRemote,
   WorkspaceFoldersService,
@@ -876,4 +877,28 @@ describe('WorkspaceFoldersService', () => {
       expect(vi.mocked(mockCheckoutsService.create)).not.toHaveBeenCalled();
     }, 30_000);
   });
+});
+
+describe('getCheckoutRoot', () => {
+  it('expands a ~-relative root, as .env.default documents', () => {
+    // Regression: this used isAbsolute() WITHOUT expanding `~`, so the value shipped in
+    // .env.default ("~/OpenThrottle/repositories") resolved to null and silently disabled cloning
+    // — the button did nothing and said nothing.
+    expect(
+      getCheckoutRoot({ [CHECKOUT_ROOT_ENV]: '~/OpenThrottle/repositories' }),
+    ).toBe(join(homedir(), 'OpenThrottle/repositories'));
+  });
+
+  it('still accepts a plain absolute path', () => {
+    expect(getCheckoutRoot({ [CHECKOUT_ROOT_ENV]: '/srv/repos' })).toBe(
+      '/srv/repos',
+    );
+  });
+
+  it.each([undefined, '', '   ', 'relative/repos', '~other/repos'])(
+    'disables cloning for %p',
+    (value) => {
+      expect(getCheckoutRoot({ [CHECKOUT_ROOT_ENV]: value })).toBeNull();
+    },
+  );
 });

@@ -3,7 +3,6 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-import { needsProvisioning } from '../ensure_worktree.ts';
 import { buildSetupSteps } from '../setup.ts';
 import {
   environmentDirectories,
@@ -106,14 +105,5 @@ describe('isPullableBranch', () => {
     expect(isPullableBranch('master')).toBe(true);
     expect(isPullableBranch('feat/x')).toBe(false);
     expect(isPullableBranch(undefined)).toBe(false);
-  });
-});
-
-describe('needsProvisioning', () => {
-  it('requires BOTH markers to consider a worktree provisioned', () => {
-    expect(needsProvisioning(true, true)).toBe(false);
-    expect(needsProvisioning(true, false)).toBe(true);
-    expect(needsProvisioning(false, true)).toBe(true);
-    expect(needsProvisioning(false, false)).toBe(true);
   });
 });

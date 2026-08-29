@@ -409,8 +409,9 @@ export const isWorkflowActorUserJwt = (token: string | undefined): boolean => {
  * `plan_runs.checkout_id`. Soft-fails (debug/ warn + continue) when transport is postgres-direct,
  * actor auth is unavailable / is a service-account token, or the GraphQL call fails — never aborts
  * the agent run. Does not pass `ot_sa_` tokens to this mutation. Does not cover provision-time
- * registration from `worktree:new` / `setup_worktree.sh` (deferred follow-up; orphan worktrees
- * stay out of Workspace Settings until a run starts against them).
+ * registration from `worktree:new` / `setup_worktree.sh` (deferred follow-up; a worktree
+ * stays out of Workspace Settings until a run starts against them). Removal has its own
+ * front door: `pnpm worktree:remove <name>` (the `ot-worktree` destroy action).
  */
 export const maybeRegisterPlanRunWorktreeCheckout = async (
   config: WorkflowRalphConfig,

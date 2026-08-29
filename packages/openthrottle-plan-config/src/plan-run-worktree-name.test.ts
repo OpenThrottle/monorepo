@@ -14,7 +14,7 @@ describe('buildPlanRunWorktreeName', () => {
     ).toBe('plan-5e172b67');
   });
 
-  it('drops characters create_worktree.sh would sanitize away', () => {
+  it('drops characters the ot-worktree skill would sanitize away', () => {
     expect(buildPlanRunWorktreeName('ab/cd ef*12345')).toBe('plan-abcdef12');
   });
 

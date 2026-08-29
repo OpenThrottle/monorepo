@@ -31,7 +31,6 @@ export const updateProfile = async (
         contactDisplayName: parsed.data.contactDisplayName ?? null,
         contactEmail: parsed.data.contactEmail ?? null,
         enabledEditors: parseEnabledEditorsFromFormData(formData),
-        worktreeRoot: parsed.data.worktreeRoot ?? null,
       },
     });
     return { ok: true };

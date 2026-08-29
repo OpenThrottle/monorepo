@@ -21,7 +21,6 @@ fragment UserWorkspaceProfileFields on UserWorkspaceProfileObject {
   enabledEditors
   updatedAt
   userId
-  worktreeRoot
 }
 
 # NOTE: `localRepositories` is consumed by the IDE routes, which reuse this

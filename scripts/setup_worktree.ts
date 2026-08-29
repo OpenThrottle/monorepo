@@ -137,7 +137,7 @@ const generateWorktreeCompose = (): void => {
  * source checkout (a known-good session) into the worktree's .env files.
  */
 const syncSecretsFromSource = (): void => {
-  let source = process.env.OT_SOURCE_REPO ?? '';
+  let source = process.env.OPENTHROTTLE_SOURCE_REPO ?? '';
 
   if (source === '') {
     // Standalone run: the main working tree is the parent of the common git dir.
@@ -205,8 +205,9 @@ const main = async (): Promise<void> => {
 
   // 1b. Offset this worktree's app ports so concurrent worktrees don't fight
   //     the main checkout's dev servers. Postgres/Redis stay shared.
-  //     create_worktree.ts passes OT_PORT_* in the environment; resolve here
-  //     too so a standalone `setup_worktree.sh` run still gets a block.
+  //     The ot-worktree skill does not pre-allocate ports, so this is always
+  //     the path taken: resolve a block here, for skill-driven and standalone
+  //     runs alike (OT_PORT_* in the environment still wins when present).
   let base = Number(process.env.OT_PORT_BASE ?? '') || undefined;
   let ports =
     base === undefined

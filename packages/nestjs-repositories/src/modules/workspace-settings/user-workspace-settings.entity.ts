@@ -19,7 +19,6 @@ export interface UserWorkspaceSettingsData {
   readonly contactEmail: string | null;
   readonly enabledEditors: readonly WorkspaceEditorId[];
   readonly userId: string;
-  readonly worktreeRoot: string | null;
 }
 
 @Entity('user_workspace_settings')
@@ -43,9 +42,6 @@ export class UserWorkspaceSettings {
     type: 'jsonb',
   })
   enabledEditors!: WorkspaceEditorId[];
-
-  @Column({ name: 'worktree_root', nullable: true, type: 'text' })
-  worktreeRoot!: string | null;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone' })
   createdAt!: Date;

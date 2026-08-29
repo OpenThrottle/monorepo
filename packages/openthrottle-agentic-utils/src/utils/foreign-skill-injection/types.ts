@@ -56,6 +56,27 @@ export const GIT_EXCLUDE_END_MARKER =
   '# END OpenThrottle foreign-skill-injection (managed)';
 
 /**
+ * Features that write a managed block into a foreign repo's `.git/info/exclude`. Each owns exactly
+ * one marker-bracketed block and never touches another's — more than one OT feature writes into the
+ * same repo, and every write replaces that owner's block wholesale, so a shared marker would mean
+ * the last writer silently deleted the other's block.
+ *
+ * The value is rendered into the marker text, so **changing one orphans the blocks already on
+ * disk**. `foreign-skill-injection` in particular must keep its exact spelling: it reproduces the
+ * markers shipped before blocks became per-owner.
+ *
+ * @public
+ */
+export const GIT_EXCLUDE_OWNER = {
+  FOREIGN_SKILL_INJECTION: 'foreign-skill-injection',
+  WORKSPACE_EDITORS: 'workspace-editors',
+} as const;
+
+/** @public */
+export type GitExcludeOwner =
+  (typeof GIT_EXCLUDE_OWNER)[keyof typeof GIT_EXCLUDE_OWNER];
+
+/**
  * One injected path recorded in a repo's ledger — the authoritative record for
  * teardown and the crash-recovery reaper.
  *

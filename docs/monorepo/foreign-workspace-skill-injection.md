@@ -124,13 +124,17 @@ Considered and rejected. They are (a) **non-uniform** across CLIs (each CLI name
 
 CLIs only discover skills from in-tree dirs (no out-of-repo pointer), and the property we want is "OT skills present and visible **while the server is running**." So the layer's lifetime tracks the **server**, not the run — deliberately not the run, and not run-scoped ephemeral.
 
-- **Materialize (lazy, per-repo):** on the first foreign run that touches a given repo. `ensureMaterialized(repo)` is **idempotent** — a cheap no-op when the layer is already present — so it is safe to call at the start of every run and is **reused across all subsequent runs** at zero per-run setup cost.
+- **Materialize on toggle (apply now, per-repo):** flipping the per-checkout injection switch on projects the layer into every one of that user's checkouts of the repository **immediately**, without waiting for a run; flipping it off removes it. `ForeignSkillMaterializationService.applyForRepository` (`applications/openthrottle-server/src/services/foreign-skill-injection/foreign-skill-materialization.service.ts`), called from `WorkspaceFoldersService`. This is what makes the layer usable by a **human** — someone who opts a repo in and then opens Claude Code in it themselves gets OT's skills there, with no OT-driven run in the picture. Per-checkout soft-fail; the settings mutation still succeeds.
+- **Materialize on run start (lazy backstop, per-repo):** on any foreign run that touches a given repo. `ensureMaterialized(repo)` is **idempotent** — a cheap no-op when the layer is already present — so it is safe to call at the start of every run and is **reused across all subsequent runs** at zero per-run setup cost. This is the backstop that restores the layer after a server restart cleared it, and covers worktrees created after the toggle was flipped.
   - **Insertion point:** `AgenticRalphOrchestratorService.runPlanOrchestratorJob` (`applications/openthrottle-server/src/queues/agentic-ralph/agentic-ralph-orchestrator.service.ts`), immediately after `getWorkflowConfigCwd(...)` and alongside the existing soft-fail `maybeRegisterWorktreeCheckout({ filesystemPath: configCwd })`. This runs exactly once per server-side run, before `orchestrator.execute`. It is the single foreign-workspace choke point on the server path.
   - The detached-CLI path (`tools/workflows/src/bin/ralph.ts`) runs _inside_ the foreign checkout already; it is out of scope for server-managed injection (the user owns that tree). Server-orchestrated runs are the target.
 - **Teardown (server shutdown):** on `OnApplicationShutdown` (already wired via `app.enableShutdownHooks(['SIGTERM','SIGINT'])` in `applications/openthrottle-server/src/main.ts`). Teardown removes exactly and only the ledger-recorded paths and their `.git/info/exclude` entries. Teardown is **NOT** per-run — a run finishing does not remove the layer, because the next run reuses it.
 - **Boot reaper (missed teardowns):** see §4. A crash means shutdown teardown never ran, so a startup sweep reconciles stranded ledgers.
 
-Materialize triggers: **run start** (idempotent ensure). Teardown triggers: **server shutdown** (graceful) + **boot reaper** (crash recovery). Not: run terminal states.
+Materialize triggers: **toggle on** (apply now) + **run start** (idempotent ensure). Teardown triggers: **toggle off** (apply now) + **server shutdown** (graceful) + **boot reaper** (crash recovery). Not: run terminal states.
+
+- **Boot reconcile (restart recovery):** immediately after the boot reaper, every checkout still flagged for injection has its layer re-projected — `ForeignSkillMaterializationService.remateralizeEnabledCheckouts`, called from `PlanRunsStaleSweepRepeatableService.onModuleInit`. Order is load-bearing: reap clears stranded ledgers, reconcile rebuilds what the flags say should exist; reversed, the reap would delete what reconcile had just built. Without this the flag and the disk disagree after every restart, and a user who opted a repo in would find OT's skills missing until their next run or toggle. Per-checkout soft-fail, and the whole step is wrapped so an unreachable repo cannot block boot.
+  - Inherits the reaper's role gating (`PROCESS_ROLE` worker/all, where `PlanRunsStaleSweepQueueModule` loads) — deliberately, so reap and reconcile always run in the same process.
 
 ---
 
@@ -196,4 +200,55 @@ The copy-vs-symlink decision is made once per `ensureMaterialized` from `getWork
 
 ## Non-mutation guarantee (summary)
 
-> At no observable point does OT's skill injection modify a tracked file in the target repo or leave `git status` dirty. Injected entries live in `.agents/skills/`/`.claude/skills/` and are hidden via the untracked `.git/info/exclude`; a per-repo ledger records exactly what was created (path + mode + fingerprint) so shutdown teardown and the crash-recovery boot reaper remove precisely those entries and nothing else. Target-owned skill names are excluded from the manifest before materialization, so the repo's own skills are never masked or touched.
+> At no observable point does OT's skill injection modify a tracked file in the target repo or leave `git status` dirty. Injected entries live in the **resolved** locations of `.agents/skills/`/`.claude/skills/` and are hidden via the untracked `.git/info/exclude`; a per-repo ledger records exactly what was created (path + mode + fingerprint) so shutdown teardown and the crash-recovery boot reaper remove precisely those entries and nothing else. Target-owned skill names are excluded from the manifest before materialization, so the repo's own skills are never masked or touched.
+
+**The word "resolved" is load-bearing, and this guarantee did not hold before 2026-08-28.** A target dir can itself be a symlink into the repo's own tracked space — `.claude/skills -> ../skills` is a real legacy layout, the one `ot-skill-sync`'s `ensure_agent_skill_dir` exists to undo. `existsSync` follows symlinks, so the injector never noticed: it wrote _through_ the link into tracked space while recording and excluding the **un-followed** path. The exclude patterns then matched nothing and the target repo's `git status` went dirty. See §4a and OT plan `b409da6e`.
+
+The condition under which the guarantee holds is therefore explicit: **every target dir must resolve to a location inside the repo.** One that resolves outside is refused, not injected — `.git/info/exclude` patterns are worktree-relative, so such a path could never be hidden and no amount of bookkeeping would make injecting there clean.
+
+---
+
+## 4a. Target-dir resolution (added 2026-08-28)
+
+**Decision (2026-08-28, OT plan `b409da6e` task 1): resolve the target dir, record and exclude the resolved repo-relative path; refuse only when it escapes the repo.** Recorded here in the same style as the 2026-08-26 CLI-matrix correction — the decision changed, the surrounding design did not.
+
+`resolveTargetDirs` (in `materialize.ts`) resolves each entry of `FOREIGN_SKILL_TARGET_DIRS` before anything is written, so the **recorded** path, the **excluded** path and the **on-disk** path are the same string. Three behaviors:
+
+| Case                          | Behavior                                                                                         |
+| ----------------------------- | ------------------------------------------------------------------------------------------------ |
+| Dir does not exist yet        | Not resolved — created in place, as itself. The common case; unchanged.                          |
+| Dir resolves inside the repo  | Its resolved repo-relative path is used everywhere (inject, ledger, exclude, target-owned scan). |
+| Dir resolves outside the repo | **Refused**, with a warning naming the target. The other target dir is still injected.           |
+
+Two details that are easy to get wrong, both learned the hard way:
+
+- **The repo root must be resolved too.** On macOS a repo under `/var/...` really lives at `/private/var/...`; comparing a resolved target against an unresolved root classifies every dir as "outside" and refuses everything.
+- **`scanTargetOwnedSkillNames` must move with the ledger.** It builds keys from the target dirs and matches them against the ledger's recorded paths. Before this change both were un-resolved, so they agreed by accident. Resolving one without the other makes OT's own entries look target-owned, drops them from the manifest, and **silently uninjects the repo** — a worse failure than the bug. They are changed together, deliberately.
+
+Dirs resolving to the _same_ real directory (e.g. `.claude/skills -> ../.agents/skills`) are de-duplicated. Previously the second pass hit the defense-in-depth `existsSync` guard and reported OT's own first-pass entry as `"a non-OT entry already occupies this path"`.
+
+### Migrating repos injected by the old code
+
+**No migration step is needed.** The boot lifecycle already heals them: the reaper tears down every ledger (teardown reaches the real files even from an old-format ledger, because `join()` + the symlink lands on them regardless), and the boot reconcile re-injects with resolved paths. Verified by re-breaking a real repo to the pre-fix state and letting one unattended boot clean it.
+
+The heal only takes effect once the running server is restarted onto a build containing the fix — an old build still injects the broken way.
+
+---
+
+## 4b. The exclude block has more than one tenant (added 2026-08-28)
+
+`writeManagedExcludeBlock` is no longer exclusive to skill injection. `workspace-editors` uses it too, to hide `.openthrottle/workspace-editors.json` (OT `5a1ac8d1`).
+
+**Each owner has its own marker-bracketed block, and touches only that one.** Every write replaces its owner's block wholesale, so a shared marker would mean whichever feature ran second silently deleted the other's — and if the victim were skill injection, every injected skill would become visible again and §4a's guarantee would regress with nothing failing.
+
+Reusing it from a new feature:
+
+1. Add the feature to `GIT_EXCLUDE_OWNER` (`foreign-skill-injection/types.ts`). The value is rendered into the marker text, so **changing an existing one orphans the blocks already on disk**.
+2. Pass that owner to `writeManagedExcludeBlock` / `removeManagedExcludeBlock`. It is a required argument, deliberately — a default is exactly how a second tenant would inherit the first's block.
+3. Cover the interaction, not just your feature. `workspace-editor-config.service.test.ts` runs both features against one repo in **both orders**; a single-order test passes against an implementation that appends rather than strips and misses the clobber entirely.
+
+The rule that decides what belongs in a block at all is shared with `5a1ac8d1`:
+
+> **Anything OpenThrottle writes into a foreign repo for its own bookkeeping must be hidden from git. Anything the user asked for is theirs, and must stay visible.**
+
+Skill injection is entirely the first kind, which is why §4's guarantee is absolute for it. Features that write user-requested files as well (workspace-editors writes MCP config) must exclude only their own half.
