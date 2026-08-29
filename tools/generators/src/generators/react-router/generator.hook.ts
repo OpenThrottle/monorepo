@@ -1,6 +1,6 @@
 import { join } from 'path';
 import type { Tree } from '@nx/devkit';
-import { formatFiles, generateFiles, logger } from '@nx/devkit';
+import { formatFiles, logger } from '@nx/devkit';
 import prompts from 'prompts';
 import {
   getCommonVariables,
@@ -12,6 +12,8 @@ import {
   parsePossibleNames,
 } from '../../utils/questions';
 import { validateCamelCase } from '../../utils/validation';
+import { throwInvalidFolderError } from '../../utils/target-validation';
+import { generateFilesSafely } from '../../utils/generate-files-safely';
 
 export interface ReactRouterHookGeneratorSchema {
   readonly application?: string;
@@ -82,9 +84,13 @@ export const generatorReactRouterHook = async (
 
   if (!folder) throw new Error('No folder selected');
   if (!allowedFolders.includes(folder)) {
-    throw new Error(
-      `Invalid folder "${folder}". Use --list=hookFolders with --application=${application} to enumerate valid values (e.g. global, routing/<area>, services/<area>).`,
-    );
+    throwInvalidFolderError({
+      application,
+      folder,
+      listKey: 'hookFolders',
+      suffix:
+        'Values are area paths (e.g. global, routing/<area>, services/<area>).',
+    });
   }
 
   const nameString =
@@ -115,7 +121,7 @@ export const generatorReactRouterHook = async (
     );
     const templates = join(__dirname, 'files/hook');
 
-    generateFiles(tree, templates, destination, variables);
+    generateFilesSafely(tree, templates, destination, variables);
   });
 
   await formatFiles(tree);

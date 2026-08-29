@@ -1,13 +1,14 @@
 import { join } from 'path';
 import prompts from 'prompts';
 import type { Tree } from '@nx/devkit';
-import { formatFiles, generateFiles, logger } from '@nx/devkit';
+import { formatFiles, logger } from '@nx/devkit';
 import { getCommonVariables } from '../../utils/index';
 import { getRouteTitleVariables } from '../../utils/route-title';
 import {
   getTargetApplication,
   parsePossibleNames,
 } from '../../utils/questions';
+import { generateFilesSafely } from '../../utils/generate-files-safely';
 
 export interface ReactRouterRouteGeneratorSchema {
   readonly application?: string;
@@ -59,7 +60,7 @@ export const generatorReactRouterRoute = async (
       ...getRouteTitleVariables(name),
     };
 
-    generateFiles(tree, templates, destination, variables);
+    generateFilesSafely(tree, templates, destination, variables);
   });
 
   await formatFiles(tree);

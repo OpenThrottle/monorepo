@@ -9,6 +9,12 @@ If no generator exists for what you are asked to build, note it clearly and proc
 
 This policy is **non-negotiable** and applies to all AI agent, LLM, and programmatic workflows in this monorepo.
 
+**This doc is the single source of truth for generator selection.** Which generator
+scaffolds what — and the package-vs-application distinction in particular — is decided
+here and nowhere else. `CLAUDE.md`, `AGENTS.md` and `.agents/rules/` carry a pointer to
+this doc, not a copy of the matrix; `skills/ot-generators/SKILL.md` is the agent entry
+point and states the selection rule once. See CONTRIBUTING.md § Documentation, rule 6.
+
 **Discoverability:** Agents are directed here from [AGENTS.md](../../../AGENTS.md) (§ Generators) and [.cursor/rules/personal-generators.mdc](../../../.cursor/rules/personal-generators.mdc). Always **check generators first**, then use this doc for the full workflow (list → describe → `--list=<key>` → execute).
 
 ---

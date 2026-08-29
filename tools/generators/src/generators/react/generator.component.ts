@@ -1,11 +1,6 @@
 import { join } from 'path';
 import type { Tree } from '@nx/devkit';
-import {
-  createProjectGraphAsync,
-  formatFiles,
-  generateFiles,
-  logger,
-} from '@nx/devkit';
+import { createProjectGraphAsync, formatFiles, logger } from '@nx/devkit';
 import { getCommonVariables, getGeneratorOverview } from '../../utils';
 import {
   getComponentNames,
@@ -13,6 +8,8 @@ import {
   getReactComponentDestination,
   parsePossibleNames,
 } from '../../utils/questions';
+import { throwInvalidDestinationError } from '../../utils/target-validation';
+import { generateFilesSafely } from '../../utils/generate-files-safely';
 
 export interface ReactComponentGeneratorSchema {
   readonly destination?: string;
@@ -40,10 +37,10 @@ export async function componentGenerator(
       : undefined;
 
   if (!project) {
+    if (destination) await throwInvalidDestinationError(destination);
+
     throw new Error(
-      destination
-        ? `Invalid destination "${destination}". Use --list=destinations to enumerate valid values.`
-        : `Missing required option: "destination". Re-run with --interactive or pass --destination=<nx-project>.`,
+      `Missing required option: "destination". Re-run with --interactive or pass --destination=<nx-project>.`,
     );
   }
 
@@ -68,7 +65,7 @@ export async function componentGenerator(
       await getConfigConfirmation(data);
     }
 
-    generateFiles(tree, templates, destination, data);
+    generateFilesSafely(tree, templates, destination, data);
   }
 
   await formatFiles(tree);

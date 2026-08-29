@@ -25,7 +25,7 @@ Our UI applications use React Router and React.
 
 **Agents:** Use the generator-first workflow: check [personal-generators.mdc](./personal-generators.mdc) and [docs/tools/templates/AGENT_USAGE.md](../../docs/tools/templates/AGENT_USAGE.md). Use Nx `@tools/generators` with `NX_ISOLATE_PLUGINS=false` and **`pnpm nx`**; do not use the legacy `yarn generate:*` commands for new code.
 
-Scaffold React Router app files with the **react-router** generator (`component`, `route`, `form`, `modal`, `table`, etc.). Discover valid values, then generate:
+Scaffold React Router **application** files with the **react-router** generator (`component`, `route`, `form`, `modal`, `table`, etc.). A component in a **package** is a different generator — `react --subGenerator=component --destination=<project>`; see [AGENT_USAGE.md](../../docs/tools/templates/AGENT_USAGE.md), which owns the full selection matrix. Discover valid values, then generate:
 
 ```bash
 NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react-router --list=applications

@@ -1,13 +1,15 @@
 import { join } from 'path';
 import prompts from 'prompts';
 import type { Tree } from '@nx/devkit';
-import { formatFiles, generateFiles, logger } from '@nx/devkit';
+import { formatFiles, logger } from '@nx/devkit';
 import { getCommonVariables, getRemixRoutingFolders } from '../../utils';
 import {
   getTargetApplication,
   parsePossibleNames,
 } from '../../utils/questions';
 import { REGEX_PASCAL_CASE } from '../../utils/regex';
+import { throwInvalidFolderError } from '../../utils/target-validation';
+import { generateFilesSafely } from '../../utils/generate-files-safely';
 
 export interface ReactRouterModalGeneratorSchema {
   readonly application?: string;
@@ -70,9 +72,11 @@ export const generatorReactRouterModal = async (
 
   if (!folder) throw new Error('No folder selected');
   if (!allowedFolders.includes(folder)) {
-    throw new Error(
-      `Invalid folder "${folder}". Use --list=modalFolders with --application=${application} to enumerate valid values.`,
-    );
+    throwInvalidFolderError({
+      application,
+      folder,
+      listKey: 'modalFolders',
+    });
   }
 
   const nameString =
@@ -105,7 +109,7 @@ export const generatorReactRouterModal = async (
     const destination = join('applications', application, 'app', folder);
     const templates = join(__dirname, 'files/modal');
 
-    generateFiles(tree, templates, destination, variables);
+    generateFilesSafely(tree, templates, destination, variables);
   });
 
   await formatFiles(tree);
