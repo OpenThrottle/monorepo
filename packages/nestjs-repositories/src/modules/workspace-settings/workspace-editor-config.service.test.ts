@@ -7,7 +7,7 @@ import {
   rmSync,
   writeFileSync,
 } from 'fs';
-import { join } from 'path';
+import { dirname, join } from 'path';
 import { tmpdir } from 'os';
 import { createMock } from '@golevelup/ts-vitest';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
@@ -21,6 +21,7 @@ import {
   ensureMaterialized,
   teardown,
 } from '@openthrottle/openthrottle-agentic-utils';
+import { OPENTHROTTLE_REPO_SKILL_PATHS } from './openthrottle-repo-skill-paths';
 import type { UserWorkspaceSettings } from './user-workspace-settings.entity';
 import { UserWorkspaceSettingsService } from './user-workspace-settings.service';
 import type { RepositoryCheckout } from '../repositories/repository-checkout.entity';
@@ -426,6 +427,30 @@ describe('WorkspaceEditorConfigService — foreign repo cleanliness', () => {
     expect(isIgnored(mcpRelativePath)).toBe(false);
     expect(porcelain()).toContain('.cursor/');
   });
+
+  test('does NOT pre-create empty skill directories', async () => {
+    await service.applyForUser(userId, { apiBaseUrl: 'http://localhost:6021' });
+
+    // Apply used to mkdir every `.agents/skills/<slug>/` in OPENTHROTTLE_REPO_SKILL_PATHS. Those
+    // empty directories then read as skills the target repo owns, so foreign-skill injection's
+    // target-wins rule dropped the curated skill each one was named after — the directory existed,
+    // the skill did not. Nothing reads them; the manifest records the paths instead.
+    for (const entry of OPENTHROTTLE_REPO_SKILL_PATHS) {
+      expect(
+        existsSync(join(repositoryRoot, dirname(entry.repoRelativePath))),
+      ).toBe(false);
+    }
+
+    const manifest: { enabledSkillPaths: readonly string[] } = JSON.parse(
+      readFileSync(
+        join(repositoryRoot, '.openthrottle', 'workspace-editors.json'),
+        'utf8',
+      ),
+    );
+    expect(manifest.enabledSkillPaths).toContain(
+      '.agents/skills/ot-plans/SKILL.md',
+    );
+  });
 });
 
 /**
@@ -468,13 +493,12 @@ describe('workspace-editors + foreign-skill injection — one repo, two exclude 
     await service.applyForUser(userId, { apiBaseUrl: 'http://localhost:6021' });
   };
 
-  const injectSkills = (): void => {
+  const injectSkills = (): { readonly injectedNames: readonly string[] } =>
     ensureMaterialized({
       env: injectionEnv,
       otCuratedSkillsDir: otSkills,
       repoPath: repositoryRoot,
     });
-  };
 
   beforeEach(() => {
     base = mkdtempSync(join(tmpdir(), 'ot-two-blocks-'));
@@ -482,17 +506,18 @@ describe('workspace-editors + foreign-skill injection — one repo, two exclude 
     otSkills = join(base, 'ot-skills');
     ledgerDir = join(base, 'ledgers');
     mkdirSync(repositoryRoot, { recursive: true });
-    // Deliberately a name that is NOT in OPENTHROTTLE_REPO_SKILL_PATHS. Applying editor config
-    // pre-creates empty `.agents/skills/<slug>/` dirs for every slug in that list, and
-    // foreign-skill injection reads those as skills the TARGET repo owns and refuses to inject
-    // them. That is a real, separate bug (see this plan's output for task 4) — using one of those
-    // slugs here would make this test fail for that reason instead of measuring the clobber
-    // invariant it exists for.
-    mkdirSync(join(otSkills, 'demo-skill'), { recursive: true });
-    writeFileSync(
-      join(otSkills, 'demo-skill', 'SKILL.md'),
-      '---\nname: demo-skill\ndescription: The demo-skill skill\n---\n\n# demo-skill\n',
-    );
+    // `demo-skill` is outside OPENTHROTTLE_REPO_SKILL_PATHS, `ot-plans` is inside it. The second
+    // one used to be unusable here: editor apply pre-created an empty `.agents/skills/ot-plans/`,
+    // foreign-skill injection read that as a skill the TARGET repo owned, and the curated skill was
+    // silently dropped. Both are now seeded so the clobber invariant and that regression are each
+    // measured against the case they care about.
+    for (const skill of ['demo-skill', 'ot-plans']) {
+      mkdirSync(join(otSkills, skill), { recursive: true });
+      writeFileSync(
+        join(otSkills, skill, 'SKILL.md'),
+        `---\nname: ${skill}\ndescription: The ${skill} skill\n---\n\n# ${skill}\n`,
+      );
+    }
 
     // Whole layout committed before anything runs, so a dirty result means something.
     mkdirSync(join(repositoryRoot, 'scripts'), { recursive: true });
@@ -537,6 +562,42 @@ describe('workspace-editors + foreign-skill injection — one repo, two exclude 
     vi.unstubAllEnvs();
     rmSync(base, { force: true, recursive: true });
   });
+
+  /**
+   * The plan's reproduction, as a test. `ot-plans` is in OPENTHROTTLE_REPO_SKILL_PATHS, so with
+   * editors applied first the empty `.agents/skills/ot-plans/` it left behind used to read as
+   * target-owned and the curated skill never arrived — while `injectedNames` still listed it,
+   * because the `.claude/skills` copy succeeded. Asserting the name alone would have passed
+   * through the bug; the SKILL.md read is what actually catches it.
+   */
+  test.each([
+    ['skills first', true],
+    ['editors first', false],
+  ])(
+    'a curated skill in OPENTHROTTLE_REPO_SKILL_PATHS really lands (%s)',
+    async (_label, skillsFirst) => {
+      let injected: readonly string[] = [];
+      if (skillsFirst) {
+        injected = injectSkills().injectedNames;
+        await applyEditors();
+      } else {
+        await applyEditors();
+        injected = injectSkills().injectedNames;
+      }
+
+      expect(injected).toContain('ot-plans');
+
+      // Present, not just named: an empty directory would fail this read.
+      for (const dir of ['.agents/skills', '.claude/skills']) {
+        expect(
+          readFileSync(
+            join(repositoryRoot, dir, 'ot-plans', 'SKILL.md'),
+            'utf-8',
+          ),
+        ).toContain('name: ot-plans');
+      }
+    },
+  );
 
   test.each([
     ['skills first', true],

@@ -206,7 +206,57 @@ const resolveTargetDirs = (
 };
 
 /**
- * Skill names the target repo already owns: basenames present under its two
+ * True when the entry at `absPath` is a real skill rather than a bare directory:
+ * a symlink (someone else's materialization, which we must not clobber), or a
+ * directory that actually carries a readable `SKILL.md`.
+ *
+ * An empty `<name>/` is NOT a skill. This matters because OT itself creates such
+ * directories elsewhere, and counting them as target-owned made OT's target-wins
+ * rule fire against OT's own scaffolding — silently dropping the curated skill
+ * that should have been injected there. See
+ * docs/monorepo/foreign-workspace-skill-injection.md §1.
+ */
+const isRealSkillEntry = (absPath: string): boolean => {
+  try {
+    if (lstatSync(absPath).isSymbolicLink()) {
+      return true;
+    }
+  } catch {
+    return false;
+  }
+  try {
+    return lstatSync(join(absPath, 'SKILL.md')).isFile();
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * Reclaims an EMPTY directory sitting where a skill should go, so injection can
+ * proceed. Returns true when the path is now free.
+ *
+ * Only a directory with no children at all is removed — anything carrying content
+ * is left untouched and stays an occupant. The case this exists for is OT's own
+ * scaffolding: a bare `<slug>/` created by a sibling feature, which would
+ * otherwise permanently block the very skill it was named after.
+ */
+const reclaimEmptyDir = (absPath: string): boolean => {
+  try {
+    if (lstatSync(absPath).isSymbolicLink()) {
+      return false;
+    }
+    if (readdirSync(absPath).length > 0) {
+      return false;
+    }
+    rmdirSync(absPath);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * Skill names the target repo already owns: real skills present under its two
  * skill dirs that are NOT one of our own ledgered injected paths.
  */
 const scanTargetOwnedSkillNames = (
@@ -226,9 +276,13 @@ const scanTargetOwnedSkillNames = (
       continue;
     }
     for (const name of entries) {
-      if (!ledgeredRelPaths.has(`${dir}/${name}`)) {
-        names.add(name);
+      if (ledgeredRelPaths.has(`${dir}/${name}`)) {
+        continue;
       }
+      if (!isRealSkillEntry(join(repoPath, dir, name))) {
+        continue;
+      }
+      names.add(name);
     }
   }
   return names;
@@ -331,8 +385,13 @@ export const ensureMaterialized = (
       }
 
       // Defense in depth: a path that exists but is not one of ours is
-      // target-owned (or user-created) and must never be overwritten.
-      if (existsSync(injectedAbs) || isBrokenSymlink(injectedAbs)) {
+      // target-owned (or user-created) and must never be overwritten — unless it
+      // is an empty directory, which is not a skill and only ever blocks the one
+      // that belongs there.
+      if (
+        (existsSync(injectedAbs) || isBrokenSymlink(injectedAbs)) &&
+        !reclaimEmptyDir(injectedAbs)
+      ) {
         allWarnings.push(
           `Skipping ${relPath}: a non-OT entry already occupies this path`,
         );

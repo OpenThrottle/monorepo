@@ -197,6 +197,53 @@ describe('foreign-skill-injection materializer', () => {
     expect(porcelain(repo)).toBe('');
   });
 
+  test('an empty skill directory does not mask an OT skill', () => {
+    // Exactly the shape OT's own editor-config apply used to leave behind: a bare
+    // `.agents/skills/<slug>/` with no SKILL.md. A directory is not a skill, so it
+    // must not count as target-owned and must not suppress injection.
+    mkdirSync(join(repo, '.agents/skills/ot-plans'), { recursive: true });
+
+    const result = ensureMaterialized({
+      env: hostEnv,
+      otCuratedSkillsDir: otSkills,
+      repoPath: repo,
+    });
+
+    expect(result.injectedNames).toEqual(['create-readme', 'ot-plans']);
+    // Really materialized, not just named: the SKILL.md resolves through.
+    expect(
+      readFileSync(join(repo, '.agents/skills/ot-plans/SKILL.md'), 'utf8'),
+    ).toContain('name: ot-plans');
+  });
+
+  test('a target symlink still counts as owned and is left alone', () => {
+    // Someone else already materialized create-readme here. It is not ledgered as
+    // ours, so target-wins must still apply even though it is a link, not a dir.
+    const foreignSource = join(base, 'their-skills', 'create-readme');
+    mkdirSync(foreignSource, { recursive: true });
+    writeFileSync(
+      join(foreignSource, 'SKILL.md'),
+      '---\nname: create-readme\ndescription: theirs\n---\n\ntheirs\n',
+    );
+    mkdirSync(join(repo, '.agents/skills'), { recursive: true });
+    symlinkSync(
+      foreignSource,
+      join(repo, '.agents/skills/create-readme'),
+      'dir',
+    );
+
+    const result = ensureMaterialized({
+      env: hostEnv,
+      otCuratedSkillsDir: otSkills,
+      repoPath: repo,
+    });
+
+    expect(result.injectedNames).toEqual(['ot-plans']);
+    expect(readlinkSync(join(repo, '.agents/skills/create-readme'))).toBe(
+      foreignSource,
+    );
+  });
+
   test('container mode materializes copies, not symlinks', () => {
     const containerEnv: NodeJS.ProcessEnv = {
       ...hostEnv,
