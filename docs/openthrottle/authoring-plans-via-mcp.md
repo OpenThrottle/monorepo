@@ -118,8 +118,28 @@ the MCP server there. OT captures that fact so you don't have to re-supply it: `
 the plan-detail Configuration tab opens **pre-selected** on that checkout, with the branch
 pre-filled from its current branch, instead of defaulting to "Monorepo root (default)".
 
-On **stdio** the MCP server captures its own working directory once at startup and sends it as
-`workspacePath`. You do not pass it.
+On **stdio** the folder you are working in is sent as `workspacePath` automatically. You do not
+pass it.
+
+**This is not an OpenThrottle-only feature.** The chain is
+_folder you created from_ → _your registered checkouts_ → `runConfigJson.workspace.repositoryId`,
+and every registered checkout is a first-class citizen of it. A plan written in the OpenThrottle
+monorepo links to the OpenThrottle repository; a plan written in some other repo you have registered
+links to **that** repository. Nothing about the rule prefers this checkout — the earlier bug that
+made it look that way is described below.
+
+> **`project` is not the link.** Setting `project: "native-apps"` labels a plan; it does not
+> associate it with a repository. The association lives in `runConfigJson.workspace.repositoryId`
+> (plus `checkoutId`), and `workspacePath` is how you get one without hand-writing run config. The
+> two fields are unrelated — see [§ When to set `project`/`projectId`](#author-plans--tasks-via-mcp-tools).
+
+**Where the path comes from.** The MCP client spawns `scripts/run-openthrottle-mcp.sh` with the open
+workspace as its cwd. That launcher then has to `chdir` into this checkout to resolve `tsx` and the
+built MCP bundle — a **runtime** requirement that has nothing to do with where the plan was written.
+It therefore reads the caller's cwd _before_ the `chdir` and forwards it as
+`OPENTHROTTLE_MCP_WORKSPACE_PATH`. Before that split existed, the server saw only the post-`chdir`
+cwd, so a plan authored in any other repo was silently stamped with this checkout — and from inside
+this checkout the answer was right by coincidence, which is why it went unnoticed.
 
 **Precedence — first one that answers wins:**
 
@@ -144,7 +164,9 @@ Two caveats:
   `process.cwd()` is the server's own directory. That surface sends no `workspacePath` at all.
 - **Set `OPENTHROTTLE_MCP_WORKSPACE_PATH`** when your client launches the MCP server from a fixed
   directory rather than from the workspace you are actually working in. It overrides the captured
-  cwd.
+  cwd. The registration blocks printed by `pnpm run setup:mcp-instructions` declare it for you, and
+  an unexpanded `${...}` placeholder is treated as unset, so a client that does not know the
+  variable falls back to the cwd rather than sending the literal.
 
 > **When to set `project`/`projectId`:** only when the plan is clearly scoped to **one** NX project. Leave it unset for cross-cutting, infra, or documentation work. Criteria: [databases/README.md § Project association](../../databases/README.md).
 

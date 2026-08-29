@@ -21,6 +21,15 @@
  * Set OT_MCP_TARGET=worktree to prefer this worktree's server instead (e.g.
  * when testing server changes through the MCP itself); the stable server
  * remains the fallback when the worktree's is unreachable, and vice versa.
+ *
+ * RUNTIME CWD IS NOT THE AUTHOR'S WORKSPACE. This launcher must run inside the
+ * checkout to resolve tsx and the built MCP bundle, so it chdirs there and
+ * spawns the server with the same cwd. That is a tooling requirement, and it
+ * must not be mistaken for "where the plan was written". The caller's cwd — the
+ * folder the MCP client had open — is captured BEFORE the chdir and forwarded
+ * as OPENTHROTTLE_MCP_WORKSPACE_PATH, which is what the MCP reports as
+ * `workspacePath` on plan creates. Without that capture, a plan authored in any
+ * other repo is stamped with THIS checkout instead (see resolveClientWorkspacePath).
  */
 import { spawnSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
@@ -52,6 +61,35 @@ export const parseDockerServerPort = (psOutput: string): string | undefined => {
     .find((candidate) => candidate.toLowerCase().includes('server'));
 
   return line?.match(/:(\d+)->/)?.[1];
+};
+
+export interface ClientWorkspaceInputs {
+  /** The launcher's cwd, read BEFORE it chdirs into the checkout. */
+  cwd: string;
+  /** OPENTHROTTLE_MCP_WORKSPACE_PATH exactly as the client passed it, if at all. */
+  override?: string;
+}
+
+/**
+ * The workspace path to forward to the MCP server as the plan author's folder.
+ *
+ * An explicit OPENTHROTTLE_MCP_WORKSPACE_PATH wins — that is the escape hatch
+ * for clients that launch the server from a fixed directory rather than the
+ * open workspace. Otherwise the caller's pre-chdir cwd is used, which is what
+ * Claude Code and Cursor both spawn the launcher with.
+ *
+ * It stays a hint: the server resolves it against the caller's own registered
+ * checkouts and ignores anything it cannot own, so an unregistered folder seeds
+ * nothing rather than failing the create.
+ */
+export const resolveClientWorkspacePath = (
+  inputs: ClientWorkspaceInputs,
+): string => {
+  const raw = isUnexpandedPlaceholder(inputs.override)
+    ? ''
+    : (inputs.override?.trim() ?? '');
+
+  return raw !== '' ? raw : inputs.cwd;
 };
 
 export interface CandidateInputs {
@@ -115,6 +153,10 @@ const authFailBanner = (reason: string, apiUrl: string): void => {
 const main = async (): Promise<void> => {
   logger.detail(`🔍 Using Node.js version: ${process.version}`);
 
+  // Read the caller's cwd BEFORE chdir — after it, the folder the MCP client
+  // had open is unrecoverable and every plan looks like it came from here.
+  const callerCwd = process.cwd();
+
   const root = join(dirname(fileURLToPath(import.meta.url)), '..');
   process.chdir(root);
 
@@ -128,6 +170,14 @@ const main = async (): Promise<void> => {
   } else {
     delete env.WORKTREE_ID;
   }
+
+  // The author's workspace, kept distinct from the runtime cwd above.
+  env.OPENTHROTTLE_MCP_WORKSPACE_PATH = resolveClientWorkspacePath({
+    cwd: callerCwd,
+    override: process.env.OPENTHROTTLE_MCP_WORKSPACE_PATH,
+  });
+
+  logger.detail(`📂 openthrottle-mcp -> author workspace ${env.OPENTHROTTLE_MCP_WORKSPACE_PATH}`); // prettier-ignore
 
   // --- Resolve a LIVE OpenThrottle server (reads .env vars WITHOUT sourcing).
   const worktreeUrl = readEnvValue(join(root, '.env'), 'OPENTHROTTLE_SERVER_APP_URL'); // prettier-ignore
