@@ -49,7 +49,7 @@ registerEnumType(WorktreeRootSourceEnum, {
     },
     DEFAULT: {
       description:
-        'The default: ~/.openthrottle/worktrees/<repo-name>, the hidden root OpenThrottle owns, namespaced by the base checkout’s directory name.',
+        'The default: ~/.openthrottle/worktrees, the hidden root OpenThrottle owns. OT appends <org>/<repo> beneath it, taken from the checkout’s git remote.',
     },
     ENV: {
       description:

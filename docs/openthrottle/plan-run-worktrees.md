@@ -100,14 +100,8 @@ environment, or from the target repository's `.env` when that repo wants its own
 otherwise falls back to a default OpenThrottle ships in code and documents (commented) in
 `.env.default`.
 
-There was briefly a workspace setting for this, stored in `user_workspace_settings.worktree_root`.
-It was removed in migration 109. A database column cannot be read by a shell script, so the setting
-only ever applied to server-driven runs while `pnpm run worktree:new`, the Claude `WorktreeCreate`
-hook and Cursor silently used the default — the settings page displayed a value half the system
-ignored. Anyone who had set one re-expresses it by uncommenting `OPENTHROTTLE_WORKTREE_ROOT` in their `.env`.
-
-Nothing forwards a root to the script any more, either: the provisioner passes its own environment
-through and lets `resolve_worktree_root` answer, so the server and the CLI cannot disagree.
+Nothing forwards a root to the script: the provisioner passes its own environment through and lets
+`resolve_worktree_root` answer, so the server and the CLI cannot disagree.
 
 ## Removing a worktree
 

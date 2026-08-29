@@ -167,28 +167,26 @@ from `PATH`". None have `.env.default` entries.
 
 Driven by `skills/ot-worktree/scripts/*` and `scripts/setup_worktree.ts`.
 
-| Variable                                    | Used for                                                                                        | Defaults                                            |
-| ------------------------------------------- | ----------------------------------------------------------------------------------------------- | --------------------------------------------------- |
-| `OPENTHROTTLE_WORKTREE_ROOT`                | The one way to place worktrees — used verbatim                                                  | ✅ root `.env.default` `~/.openthrottle/worktrees/` |
-| `OT_WORKTREE_ROOT`                          | Legacy/alias name still referenced by migrations `097`/`108`/`109` and forwarded to `create.sh` | ❌                                                  |
-| `OPENTHROTTLE_WORKTREE_ROOT_FILE`           | User-global file holding the root                                                               | ❌; default `~/.openthrottle/worktree-root`         |
-| `OPENTHROTTLE_WORKTREE_BRANCH_PREFIX`       | Branch prefix for new worktrees                                                                 | ❌; script default `openthrottle/`                  |
-| `OPENTHROTTLE_SOURCE_REPO`                  | Source repo path, exported by `provision.sh`                                                    | ❌ (derived)                                        |
-| `OPENTHROTTLE_WORKTREE_PATH`                | Worktree path, exported by `provision.sh`; also read by `teardown_worktree.ts`                  | ❌; falls back to `process.cwd()`                   |
-| `OPENTHROTTLE_WORKTREE_NAME`                | Worktree basename, exported by `provision.sh`                                                   | ❌ (derived)                                        |
-| `OPENTHROTTLE_WORKTREE_SETUP`               | `0` skips provisioning (also honours `CLAUDE_WORKTREE_SETUP`)                                   | ❌; default `1`                                     |
-| `OPENTHROTTLE_WORKTREE_PROVISION`           | Path to the provision hook                                                                      | ❌; default `.worktree/provision.sh`                |
-| `OPENTHROTTLE_WORKTREE_TEARDOWN`            | Path to the teardown hook                                                                       | ❌; default `.worktree/teardown.sh`                 |
-| `OPENTHROTTLE_WORKTREE_PROVISIONED_MARKERS` | Space-separated files that mark a worktree as provisioned                                       | ❌; default `.env`                                  |
-| `OPENTHROTTLE_WORKTREE_SCRIPT_DIR`          | Script-local variable inside `create.sh`, not user-facing                                       | n/a                                                 |
-| `OT_PORT_BASE`                              | Base port allocated per worktree (cached in the worktree)                                       | ❌ (allocated)                                      |
-| `OT_PORT_DEVELOPER`                         | Override for the developer port                                                                 | ❌; `base`                                          |
-| `OT_PORT_SERVER`                            | Override                                                                                        | ❌; `base + 1`                                      |
-| `OT_PORT_ADMIN`                             | Override                                                                                        | ❌; `base + 2`                                      |
-| `OT_PORT_CMS`                               | Override                                                                                        | ❌; `base + 3`                                      |
-| `OT_PORT_EMAIL`                             | Override                                                                                        | ❌; `base + 4`                                      |
-| `OT_PORT_WEBSITE`                           | Override                                                                                        | ❌; `base + 5`                                      |
-| `OT_PORT_MCP`                               | Override                                                                                        | ❌; `base + 6`                                      |
+| Variable                                    | Used for                                                                       | Defaults                                           |
+| ------------------------------------------- | ------------------------------------------------------------------------------ | -------------------------------------------------- |
+| `OPENTHROTTLE_WORKTREE_ROOT`                | Root for git worktrees; OT organizes `<org>/<repo>/<worktree>` beneath it      | ✅ root `.env.default` `~/.openthrottle/worktrees` |
+| `OPENTHROTTLE_WORKTREE_BRANCH_PREFIX`       | Branch prefix for new worktrees                                                | ❌; script default `openthrottle/`                 |
+| `OPENTHROTTLE_SOURCE_REPO`                  | Source repo path, exported by `provision.sh`                                   | ❌ (derived)                                       |
+| `OPENTHROTTLE_WORKTREE_PATH`                | Worktree path, exported by `provision.sh`; also read by `teardown_worktree.ts` | ❌; falls back to `process.cwd()`                  |
+| `OPENTHROTTLE_WORKTREE_NAME`                | Worktree basename, exported by `provision.sh`                                  | ❌ (derived)                                       |
+| `OPENTHROTTLE_WORKTREE_SETUP`               | `0` skips provisioning (also honours `CLAUDE_WORKTREE_SETUP`)                  | ❌; default `1`                                    |
+| `OPENTHROTTLE_WORKTREE_PROVISION`           | Path to the provision hook                                                     | ❌; default `.worktree/provision.sh`               |
+| `OPENTHROTTLE_WORKTREE_TEARDOWN`            | Path to the teardown hook                                                      | ❌; default `.worktree/teardown.sh`                |
+| `OPENTHROTTLE_WORKTREE_PROVISIONED_MARKERS` | Space-separated files that mark a worktree as provisioned                      | ❌; default `.env`                                 |
+| `OPENTHROTTLE_WORKTREE_SCRIPT_DIR`          | Script-local variable inside `create.sh`, not user-facing                      | n/a                                                |
+| `OT_PORT_BASE`                              | Base port allocated per worktree (cached in the worktree)                      | ❌ (allocated)                                     |
+| `OT_PORT_DEVELOPER`                         | Override for the developer port                                                | ❌; `base`                                         |
+| `OT_PORT_SERVER`                            | Override                                                                       | ❌; `base + 1`                                     |
+| `OT_PORT_ADMIN`                             | Override                                                                       | ❌; `base + 2`                                     |
+| `OT_PORT_CMS`                               | Override                                                                       | ❌; `base + 3`                                     |
+| `OT_PORT_EMAIL`                             | Override                                                                       | ❌; `base + 4`                                     |
+| `OT_PORT_WEBSITE`                           | Override                                                                       | ❌; `base + 5`                                     |
+| `OT_PORT_MCP`                               | Override                                                                       | ❌; `base + 6`                                     |
 
 ## 8. Logging
 

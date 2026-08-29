@@ -229,7 +229,7 @@ export const resolveScheduledAgentJobConcurrencyKey = (input: {
  * share one Redis, so only the canonical checkout should register the full schedule set at boot;
  * otherwise dev worktrees would fight over the same scheduler ids. Mirrors `resolveBackupOwnership`:
  * explicit `OT_SCHEDULED_JOBS_OWNER` wins; else a checkout under a `*worktrees/` directory (the
- * skill's `~/worktrees/<repo>` default and the historical sibling `openthrottle-worktrees` alike) is
+ * `~/.openthrottle/worktrees` default and the historical sibling `openthrottle-worktrees` alike) is
  * a non-owner. NOTE: this gates ONLY boot reconciliation — on-mutation upsert/remove always apply, so
  * a user editing a schedule takes effect immediately regardless of which checkout served the request.
  */
