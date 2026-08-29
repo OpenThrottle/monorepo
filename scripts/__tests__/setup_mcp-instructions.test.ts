@@ -59,6 +59,22 @@ describe('buildPayloads', () => {
     );
     expect(cursorEnv.API_URL).toBe('${API_URL}');
     expect(cursorEnv.API_URL_INTERNAL).toBe('${API_URL_INTERNAL}');
+
+    // The author's workspace: Cursor resolves its own workspace variable,
+    // Claude Code is spawned in the open project and falls back to that cwd.
+    expect(claudeConfig.env.OPENTHROTTLE_MCP_WORKSPACE_PATH).toBe(
+      '${OPENTHROTTLE_MCP_WORKSPACE_PATH}',
+    );
+    expect(cursorEnv.OPENTHROTTLE_MCP_WORKSPACE_PATH).toBe('${workspaceFolder}'); // prettier-ignore
+  });
+
+  it('offers the workspace override both clients need to link plans to a repo', () => {
+    const { claudeConfig, cursorConfig } = buildPayloads(ROOT);
+
+    expect(Object.keys(claudeConfig.env)).toContain('OPENTHROTTLE_MCP_WORKSPACE_PATH'); // prettier-ignore
+    expect(
+      Object.keys(cursorConfig.mcpServers['openthrottle-mcp'].env),
+    ).toContain('OPENTHROTTLE_MCP_WORKSPACE_PATH');
   });
 
   it('every placeholder value is a literal ${...} token', () => {
@@ -68,7 +84,7 @@ describe('buildPayloads', () => {
       ...Object.values(cursorConfig.mcpServers['openthrottle-mcp'].env),
     ];
     for (const value of values) {
-      expect(value).toMatch(/^\$\{[A-Z_]+\}$/);
+      expect(value).toMatch(/^\$\{[A-Za-z_]+\}$/);
     }
   });
 });

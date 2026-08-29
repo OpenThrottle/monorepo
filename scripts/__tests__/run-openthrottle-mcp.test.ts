@@ -1,9 +1,14 @@
+import { spawnSync } from 'node:child_process';
+import { mkdtempSync, realpathSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import {
   buildCandidateUrls,
   isUnexpandedPlaceholder,
   parseDockerServerPort,
+  resolveClientWorkspacePath,
 } from '../run-openthrottle-mcp.ts';
 
 describe('isUnexpandedPlaceholder', () => {
@@ -57,5 +62,63 @@ describe('buildCandidateUrls', () => {
     expect(buildCandidateUrls({ rootUrl: 'http://localhost:6021' })).toEqual([
       'http://localhost:6021',
     ]);
+  });
+});
+
+describe('resolveClientWorkspacePath', () => {
+  const CHECKOUT = '/Users/dev/openthrottle';
+  const FOREIGN = '/Users/dev/github/acme/native-apps';
+
+  it('reports the caller cwd, so a foreign checkout is not erased by the chdir', () => {
+    expect(resolveClientWorkspacePath({ cwd: FOREIGN })).toBe(FOREIGN);
+  });
+
+  it('still reports the checkout when the caller launched from inside it', () => {
+    expect(resolveClientWorkspacePath({ cwd: CHECKOUT })).toBe(CHECKOUT);
+  });
+
+  it('lets an explicit override beat the cwd, trimmed', () => {
+    expect(
+      resolveClientWorkspacePath({ cwd: CHECKOUT, override: `  ${FOREIGN}  ` }),
+    ).toBe(FOREIGN);
+  });
+
+  it('falls back to the cwd for an empty or unexpanded override', () => {
+    expect(resolveClientWorkspacePath({ cwd: FOREIGN, override: '   ' })).toBe(FOREIGN); // prettier-ignore
+    expect(
+      resolveClientWorkspacePath({
+        cwd: FOREIGN,
+        override: '${OPENTHROTTLE_MCP_WORKSPACE_PATH}',
+      }),
+    ).toBe(FOREIGN);
+  });
+});
+
+/**
+ * The unit tests above cover the resolver in isolation, but the invariant this
+ * plan exists to protect is an ORDERING one — the caller's cwd must be read
+ * BEFORE the launcher chdirs into the checkout — and no pure function can
+ * assert that. So run the real shim from a directory that is deliberately not
+ * the checkout and read back the workspace it reports. Resolve-only mode
+ * narrates the workspace before it probes for a server, so this stays fast and
+ * does not need one running.
+ */
+describe('the launcher reports the caller workspace, not the checkout it runs in', () => {
+  it('survives its own chdir', () => {
+    const callerCwd = realpathSync(mkdtempSync(join(tmpdir(), 'ot-mcp-cwd-')));
+    const shim = join(import.meta.dirname, '..', 'run-openthrottle-mcp.sh');
+
+    try {
+      const result = spawnSync('bash', [shim], {
+        cwd: callerCwd,
+        encoding: 'utf8',
+        env: { ...process.env, OT_MCP_RESOLVE_ONLY: '1' },
+        timeout: 20_000,
+      });
+
+      expect(result.stderr).toContain(`author workspace ${callerCwd}`);
+    } finally {
+      rmSync(callerCwd, { force: true, recursive: true });
+    }
   });
 });

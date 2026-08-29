@@ -8,6 +8,7 @@ import { captureCallerWorkspacePath } from '../config/workspace-path.ts';
 import {
   createPlanToolDescription,
   createPlanToolHandler,
+  createPlansToolDescription,
   createPlansToolHandler,
   listPlansByStatusToolDescription,
   listPlansByStatusToolHandler,
@@ -44,6 +45,16 @@ describe('tool descriptions reflect the canonical status set', () => {
   it('create_plan documents runConfigJson and workspacePath, which its schema already accepts', () => {
     expect(createPlanToolDescription).toContain('runConfigJson');
     expect(createPlanToolDescription).toContain('workspacePath');
+  });
+
+  it('both create tools say where the repository link lives, so project is not mistaken for it', () => {
+    for (const description of [
+      createPlanToolDescription,
+      createPlansToolDescription,
+    ]) {
+      expect(description).toContain('runConfigJson.workspace.repositoryId');
+      expect(description).toContain('does NOT link a plan to a repo');
+    }
   });
 });
 

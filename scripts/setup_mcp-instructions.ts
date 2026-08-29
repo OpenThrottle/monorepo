@@ -108,13 +108,26 @@ type EnvKey =
   | 'ANTHROPIC_API_KEY'
   | 'API_URL'
   | 'API_URL_INTERNAL'
-  | 'OPENTHROTTLE_MCP_AUTH_TOKEN';
+  | 'OPENTHROTTLE_MCP_AUTH_TOKEN'
+  | 'OPENTHROTTLE_MCP_WORKSPACE_PATH';
 
+/**
+ * OPENTHROTTLE_MCP_WORKSPACE_PATH is the folder a plan is recorded as authored
+ * in — the input that links it to a registered checkout. It is declared here
+ * only as a belt-and-braces override for a client that launches the server from
+ * a fixed directory instead of the open workspace: the launcher already
+ * captures the caller's cwd before it chdirs into the checkout, and it treats
+ * an unexpanded `${...}` literal as unset, so an editor that does not know the
+ * variable below simply falls back to that cwd. Cursor's own workspace variable
+ * is used for the Cursor block, since a user-scope registration is shared by
+ * every project.
+ */
 const claudeEnv: Record<EnvKey, string> = {
   ANTHROPIC_API_KEY: '${ANTHROPIC_API_KEY}',
   API_URL: '${OPENTHROTTLE_DEVELOPER_API_URL_EXTERNAL}',
   API_URL_INTERNAL: '${OPENTHROTTLE_DEVELOPER_API_URL_INTERNAL}',
   OPENTHROTTLE_MCP_AUTH_TOKEN: '${OPENTHROTTLE_MCP_AUTH_TOKEN}',
+  OPENTHROTTLE_MCP_WORKSPACE_PATH: '${OPENTHROTTLE_MCP_WORKSPACE_PATH}',
 };
 
 const cursorEnv: Record<EnvKey, string> = {
@@ -122,6 +135,7 @@ const cursorEnv: Record<EnvKey, string> = {
   API_URL: '${API_URL}',
   API_URL_INTERNAL: '${API_URL_INTERNAL}',
   OPENTHROTTLE_MCP_AUTH_TOKEN: '${OPENTHROTTLE_MCP_AUTH_TOKEN}',
+  OPENTHROTTLE_MCP_WORKSPACE_PATH: '${workspaceFolder}',
 };
 
 interface Payloads {
