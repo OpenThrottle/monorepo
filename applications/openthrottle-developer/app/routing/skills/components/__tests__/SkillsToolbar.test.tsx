@@ -3,7 +3,10 @@ import { cleanup, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { GLOBAL_TOOLBAR_SEARCH_COPY } from '@openthrottle/react-router-ui-global';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { SKILLS_SEARCH_COPY } from '~/routing/skills/data/data.copy';
+import {
+  SKILL_CREATE_COPY,
+  SKILLS_SEARCH_COPY,
+} from '~/routing/skills/data/data.copy';
 import { renderRoutesStub } from '../../../../testing/route-fixtures';
 import { SkillsToolbar } from '../SkillsToolbar';
 
@@ -153,6 +156,31 @@ describe('SkillsToolbar Component', () => {
       await user.click(component.getByRole('radio', { name: 'External' }));
 
       expect(onSourceFilterChange).not.toHaveBeenCalled();
+    });
+  });
+
+  // The entry point into the create flow. Unlike the two `Manage …` buttons it
+  // is NOT behind FEATURE_BETA_PREVIEW, so it must be present either way.
+  describe('the create-skill entry point', () => {
+    test('links to /skills/create', () => {
+      renderRoutesStub(<SkillsToolbar />);
+
+      expect(
+        screen.getByRole('link', {
+          name: SKILL_CREATE_COPY.toolbarNewSkillLabel,
+        }),
+      ).toHaveAttribute('href', '/skills/create');
+    });
+
+    test('is present with the beta preview enabled too', () => {
+      betaPreview.enabled = true;
+      renderRoutesStub(<SkillsToolbar />);
+
+      expect(
+        screen.getByRole('link', {
+          name: SKILL_CREATE_COPY.toolbarNewSkillLabel,
+        }),
+      ).toBeInTheDocument();
     });
   });
 });
