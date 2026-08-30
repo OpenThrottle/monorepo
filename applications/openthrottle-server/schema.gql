@@ -1805,6 +1805,41 @@ type DiscoverLocalModelsResult {
   totalCount: Int!
 }
 
+type RemoteModelObject {
+  """Maximum context window in tokens, as advertised by the provider."""
+  contextLength: Int!
+
+  """Provider-scoped model slug, e.g. anthropic/claude-sonnet-5."""
+  id: String!
+
+  """Human-readable label, e.g. "Anthropic: Claude Sonnet 5"."""
+  name: String!
+
+  """Remote catalog that published this model (openrouter)."""
+  provider: String!
+}
+
+type DiscoverRemoteModelsResult {
+  """
+  True when an operator API key is configured, so the provider can serve chat turns. False means the catalog may still list models (OpenRouter serves it unauthenticated) but no turn can be started. The key itself is never exposed.
+  """
+  configured: Boolean!
+
+  """ISO-8601 timestamp of when this catalog snapshot was fetched."""
+  fetchedAt: String!
+
+  """
+  Models sorted by id and de-duplicated. Empty when the gateway is unreachable — never an error.
+  """
+  models: [RemoteModelObject!]!
+
+  """Remote catalog provider id (openrouter)."""
+  provider: String!
+
+  """Number of models in the catalog."""
+  totalCount: Int!
+}
+
 type NoteObject {
   author: String
   content: String!
@@ -3950,6 +3985,11 @@ type Query {
   Historical / catch-up read of a job's keyed BullMQ run transcript, paged by opaque cursor.
   """
   queueJobLogs(input: QueueJobLogsInput!): QueueJobLogPageObject!
+
+  """
+  List the models a remote gateway (OpenRouter) can route to. Returns a cached snapshot (~1h TTL); does not call the gateway per request. Returns an empty list rather than an error when the gateway is unreachable or unconfigured.
+  """
+  discoverRemoteModels: DiscoverRemoteModelsResult!
 
   """List all roles with their permissions"""
   roles: [RoleObject!]!

@@ -6,6 +6,7 @@ import { GrokIcon } from '../components/GrokIcon';
 import { OpenAiIcon } from '../components/OpenAiIcon';
 import { OpenCodeIcon } from '../components/OpenCodeIcon';
 import { ProviderLetterIcon } from '../components/ProviderLetterIcon';
+import { OPENROUTER_GROUP_ID } from './chat-model-option';
 
 /** Prefix the app-side mapper uses for a local OpenAI endpoint group id. */
 const OPENAI_GROUP_PREFIX = 'openai:';
@@ -38,6 +39,11 @@ export function resolveProviderIcon(groupId: string): React.ReactNode {
       return <GrokIcon />;
     case 'opencode':
       return <OpenCodeIcon />;
+    // No bundled OpenRouter brand glyph, so it takes the letter fallback — but
+    // seeded with 'Router' rather than the group id, because "openrouter" would
+    // render an 'O' indistinguishable from the OpenAI and OpenCode rail entries.
+    case OPENROUTER_GROUP_ID:
+      return <ProviderLetterIcon label="Router" />;
     default:
       return <ProviderLetterIcon label={groupId} />;
   }

@@ -63,12 +63,14 @@ async function* fakeStream(
 
 const baseRun: StartConversationStreamRun = {
   additionalDirectories: [],
+  apiKey: null,
   assistantMessageId: 'assistant-msg-1',
   backend: 'openai',
   baseUrl: 'http://localhost:11434/v1',
   conversationId: 'conv-1',
   cwd: null,
   fileMentions: [],
+  headers: null,
   mcpEnv: null,
   mcpServers: null,
   messages: [{ content: 'hi', role: 'user' }],

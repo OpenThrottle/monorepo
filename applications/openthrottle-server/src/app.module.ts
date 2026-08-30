@@ -62,6 +62,7 @@ import { McpDeveloperModule } from './modules/mcp-developer/mcp-developer.module
 import { MetricsGraphqlModule } from './graphql/metrics/metrics-graphql.module';
 import { MetricsModule } from './metrics/metrics.module';
 import { ModelDiscoveryGraphqlModule } from './graphql/model-discovery/model-discovery-graphql.module';
+import { RemoteModelsGraphqlModule } from './graphql/remote-models/remote-models-graphql.module';
 import { NotesGraphqlModule } from './graphql/notes/notes-graphql.module';
 import { NotificationsGraphqlModule } from './graphql/notifications/notifications-graphql.module';
 import { NOTIFICATION_EVENT_TYPES } from './graphql/notifications/notification-event.object';
@@ -277,6 +278,7 @@ const buildImports = (role: ProcessRole): AppModuleImports => {
           ProjectsGraphqlModule,
           QueueJobLogsGraphqlModule,
           QueuesGraphqlModule,
+          RemoteModelsGraphqlModule,
           RepositoryInspectionModule,
           RolesGraphqlModule,
           RolloutGraphqlModule,

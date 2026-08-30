@@ -21,6 +21,7 @@ OpenThrottle plan: `86010c36-a7b6-4b33-805e-6189d6b1d09d` (one function per task
 | `src/utils/workflow.ts`      | `workflow.ts`     | `getOpenThrottleRoot`, `getWorkflowConfigCwd`, `resolveWorkflowTransport`, `readWorkflowDebugLevelFromEnv`, `parseWorkflowRunnerId`                                                                                     |
 | `src/utils/nodejs.ts`        | `nodejs.ts`       | `prependOpenThrottleBinToPath`, `resolveOpenThrottleBinDir`, `pinNxWorkspaceRoot`, subprocess helpers (later)                                                                                                           |
 | `src/utils/metrics.ts`       | `metrics.ts`      | `createWallClockMetrics`, `formatWallClockMetrics`, `createChildProcessMetricsCollector`                                                                                                                                |
+| `src/utils/remote-models/`   | shipped           | `fetchOpenRouterModels`, `OPENROUTER_DEFAULT_BASE_URL`, attribution-header constants — a hosted gateway's published catalog (types in `src/types/remote-models.ts`)                                                     |
 | `src/utils/model-discovery/` | shipped           | `discoverModels`, `resolveHosts`/`resolvePorts`, `probeEndpoint`/`probeAll`/`fingerprintProvider`, `dedupeEndpoints`, `createLimiter` — pure local LLM model-server discovery (types in `src/types/model-discovery.ts`) |
 
 **Barrel:** `src/index.ts` re-exports all public symbols (same pattern as `openthrottle-agentic-workflow`).
@@ -47,6 +48,29 @@ cloud models an agent CLI is configured to use.
 - **Dedup:** one machine reachable via multiple IPs collapses by `(port, sorted
 model ids)` with host preference `localhost > 127.0.0.1 > host.docker.internal >
 others`; results stably sorted by `(host, port)`. The caller stamps `scannedAt`.
+
+### Remote model catalogs (`src/utils/remote-models/`)
+
+The remote sibling of local discovery: instead of port-scanning `localhost`, it reads a
+hosted gateway's published catalog (`GET {baseUrl}/models`). Today that means OpenRouter.
+
+`ModelProvider` / `ModelEndpoint` are deliberately NOT widened to cover it. Their
+`host`/`port` shape describes a server found by scanning this machine and says nothing
+meaningful about a gateway on the public internet, so remote catalogs get their own
+types.
+
+- **Tolerant like the local probe:** a non-2xx, a network failure, an abort, an
+  unparseable body, or a body that is not shaped like a model list all yield an EMPTY
+  catalog rather than throwing, and individual malformed entries are skipped. Callers
+  never need a try/catch to keep a page loading.
+- **`fetchImpl` is injectable**, so no test touches the network.
+- **The key is optional** — OpenRouter serves this catalog unauthenticated (verified
+  2026-08-29). It is sent when supplied and never logged.
+- **Mapping verified against the live response** (396 entries): the envelope carries
+  `total_count` and `links` alongside `data`, and `reasoning` / `benchmarks` /
+  `alias_target` are NOT present on every entry, so only `id` / `name` /
+  `context_length` are required. Suffixed routes (`:free`, `:batch`) are distinct ids
+  and survive de-duplication.
 
 For a cached, ConfigService-wired NestJS service over this core see
 `@openthrottle/nestjs-model-discovery`. **Out of scope:** the odysseus "Cookbook"

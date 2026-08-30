@@ -7,8 +7,11 @@ vi.mock('@openthrottle/react-router-graphql', () => ({
 
 const { executeGraphqlWithAuth } =
   await import('@openthrottle/react-router-graphql');
-const { DiscoverAgentClisDocument, DiscoverLocalModelsDocument } =
-  await import('~/__generated__/graphql');
+const {
+  DiscoverAgentClisDocument,
+  DiscoverLocalModelsDocument,
+  DiscoverRemoteModelsDocument,
+} = await import('~/__generated__/graphql');
 const { loadComposerModels, loadRepositories } =
   await import('../models.server');
 
@@ -49,7 +52,24 @@ const AGENT_PAYLOAD = {
   },
 };
 
-const BOTH_PAYLOAD = { ...AGENT_PAYLOAD, ...LOCAL_PAYLOAD };
+/** One configured gateway catalog entry so the remote group contributes a row. */
+const REMOTE_PAYLOAD = {
+  discoverRemoteModels: {
+    configured: true,
+    models: [
+      {
+        contextLength: 200_000,
+        id: 'anthropic/claude-sonnet-5',
+        name: 'Anthropic: Claude Sonnet 5',
+        provider: 'openrouter',
+      },
+    ],
+    provider: 'openrouter',
+    totalCount: 1,
+  },
+};
+
+const BOTH_PAYLOAD = { ...AGENT_PAYLOAD, ...LOCAL_PAYLOAD, ...REMOTE_PAYLOAD };
 
 const request = (): Request => new Request('http://localhost/');
 
@@ -63,37 +83,56 @@ describe('loadComposerModels', () => {
     mockExecute.mockReset();
   });
 
-  test('issues each discovery query exactly once and derives all three lists', async () => {
+  test('issues each discovery query exactly once and derives all four lists', async () => {
     mockExecute.mockResolvedValue(BOTH_PAYLOAD);
 
     const models = await loadComposerModels(request());
 
-    // The whole point of the dedup: two fetches total, one per query — NOT the
-    // previous four (local ×2, agent ×2).
-    expect(mockExecute).toHaveBeenCalledTimes(2);
+    // The whole point of the dedup: one fetch per query — NOT the pre-dedup
+    // four (local ×2, agent ×2), and the remote catalog rides the SAME
+    // Promise.all rather than adding a round trip elsewhere.
+    expect(mockExecute).toHaveBeenCalledTimes(3);
     const documents = calledDocuments();
     expect(documents).toContain(DiscoverAgentClisDocument);
     expect(documents).toContain(DiscoverLocalModelsDocument);
+    expect(documents).toContain(DiscoverRemoteModelsDocument);
 
-    // local (1) + agent (1) + driver×endpoint (1), in that order.
-    expect(models).toHaveLength(3);
+    // local (1) + agent (1) + driver×endpoint (1) + remote (1), in that order.
+    expect(models).toHaveLength(4);
     expect(models[0].description).toBe('ollama'); // local endpoint model
     expect(models[1].subLabel).toBe('Cursor Agent'); // agent CLI model
     expect(models[1].label).toBe('gpt-5.2');
     expect(models[2].subLabel).toBe('Cursor Agent'); // driver × local endpoint
     expect(models[2].description).toContain('(local)');
     expect(models[2].label).toBe('llama3');
+    expect(models[3].groupId).toBe('openrouter'); // remote gateway catalog
+    expect(models[3].subLabel).toBe('anthropic/claude-sonnet-5');
   });
 
-  test('degrades to just local models when agent discovery fails', async () => {
-    // Promise.all order: agent fetch first, local fetch second.
+  test('degrades the openrouter group away when the catalog query fails', async () => {
+    // Promise.all order: agent, local, remote.
     mockExecute
-      .mockRejectedValueOnce(new Error('agent scan failed'))
-      .mockResolvedValueOnce(LOCAL_PAYLOAD);
+      .mockResolvedValueOnce(AGENT_PAYLOAD)
+      .mockResolvedValueOnce(LOCAL_PAYLOAD)
+      .mockRejectedValueOnce(new Error('gateway unreachable'));
 
     const models = await loadComposerModels(request());
 
-    expect(mockExecute).toHaveBeenCalledTimes(2);
+    // Everything else still renders — a gateway outage must not cost the page.
+    expect(models).toHaveLength(3);
+    expect(models.some((model) => model.groupId === 'openrouter')).toBe(false);
+  });
+
+  test('degrades to just local models when agent discovery fails', async () => {
+    // Promise.all order: agent, local, remote.
+    mockExecute
+      .mockRejectedValueOnce(new Error('agent scan failed'))
+      .mockResolvedValueOnce(LOCAL_PAYLOAD)
+      .mockRejectedValueOnce(new Error('gateway unreachable'));
+
+    const models = await loadComposerModels(request());
+
+    expect(mockExecute).toHaveBeenCalledTimes(3);
     // No agent options and no driver×endpoint join (both need the agent payload).
     expect(models).toHaveLength(1);
     expect(models[0].description).toBe('ollama');

@@ -13,10 +13,12 @@ import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import type {
   DiscoverAgentClisQuery,
   DiscoverLocalModelsQuery,
+  DiscoverRemoteModelsQuery,
 } from '~/__generated__/graphql';
 import {
   DiscoverAgentClisDocument,
   DiscoverLocalModelsDocument,
+  DiscoverRemoteModelsDocument,
   PersonaPromptsDocument,
   WorkspaceLocalRepositoriesDocument,
 } from '~/__generated__/graphql';
@@ -30,6 +32,7 @@ export type { RepositoryOption };
 
 type AgentClisPayload = DiscoverAgentClisQuery['discoverAgentClis'];
 type LocalModelsPayload = DiscoverLocalModelsQuery['discoverLocalModels'];
+type RemoteModelsPayload = DiscoverRemoteModelsQuery['discoverRemoteModels'];
 
 /**
  * Fetch the agent-CLI discovery payload once. Returns `null` on failure so each
@@ -67,6 +70,25 @@ async function fetchLocalModels(
 }
 
 /**
+ * Fetch the remote gateway catalog once. `null` on failure (see above), so an
+ * unreachable server degrades the OpenRouter group away rather than the page.
+ */
+async function fetchRemoteModels(
+  request: Request,
+): Promise<RemoteModelsPayload | null> {
+  try {
+    const data = await executeGraphqlWithAuth(
+      request,
+      DiscoverRemoteModelsDocument,
+    );
+
+    return data.discoverRemoteModels;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * @description Server-only loader helper: discover locally-running models for the
  * home composer dropdown. Returns an empty list when discovery fails or no local
  * model servers are running, so the route renders a clear empty/disabled state
@@ -94,22 +116,23 @@ export async function loadAgentClis(
 }
 
 /**
- * @description Server-only loader helper for the home composer: fetch BOTH
- * discovery queries exactly once and derive all three composer lists — local
- * models, agent CLIs, and the driver×local-endpoint join — from the shared
- * payloads (previously each query ran twice per home load because the
+ * @description Server-only loader helper for the home composer: fetch ALL
+ * discovery queries exactly once, in one `Promise.all`, and derive every
+ * composer list — local models, agent CLIs, the driver×local-endpoint join, and
+ * the remote gateway catalog — from the shared payloads (previously each query ran twice per home load because the
  * driver×endpoint join re-fetched them). The derivation is single-sourced in
  * `@openthrottle/react-router-chat-state`'s {@link composeModelOptions}.
  */
 export async function loadComposerModels(
   request: Request,
 ): Promise<ChatModelOption[]> {
-  const [agents, localModels] = await Promise.all([
+  const [agents, localModels, remoteModels] = await Promise.all([
     fetchAgentClis(request),
     fetchLocalModels(request),
+    fetchRemoteModels(request),
   ]);
 
-  return composeModelOptions(localModels, agents);
+  return composeModelOptions(localModels, agents, remoteModels);
 }
 
 /**

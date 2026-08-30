@@ -12,8 +12,9 @@ discovery.
 ## Layout
 
 - `src/utils/` — one file per domain (postgres, workflow, nodejs, metrics) plus
-  `model-discovery/` (probe/fingerprint/dedupe of local OpenAI-compatible servers).
-- `src/types/` — public type shapes (e.g. `model-discovery.ts`).
+  `model-discovery/` (probe/fingerprint/dedupe of local OpenAI-compatible servers)
+  and its remote sibling `remote-models/` (a hosted gateway's published catalog).
+- `src/types/` — public type shapes (e.g. `model-discovery.ts`, `remote-models.ts`).
 - `src/index.ts` — barrel; every public symbol re-exports from here.
 
 ## Conversation backends (streaming chat)
@@ -46,6 +47,14 @@ Every streaming path is bounded so a wedged backend can't hang a chat turn:
 - **CLI backends** self-terminate via `resolveAgentTimeouts()` — idle (no output
   for `idleMs`, default `120_000`, env `OPENTHROTTLE_AGENT_IDLE_TIMEOUT_MS`) +
   wall-clock (`wallClockMs`, default `900_000`) with a SIGTERM→SIGKILL teardown.
+- **HTTP/openai backend** (`chat-completions/stream.ts`) also serves the
+  `openrouter` gateway: `StreamChatCompletionOptions` (and `ConversationBackendRun`)
+  carry optional `apiKey` / `headers`, passed to the SDK client as `apiKey` /
+  `defaultHeaders`. Both are omitted-by-default — the `LLM_API_KEY` env fallback
+  applies only when `apiKey` is absent and no `defaultHeaders` is set when
+  `headers` is absent, so every local-endpoint caller is unchanged. Never log the
+  key. Terminal `usage` rides the final chunk as `metadata: { usage }`, normalized
+  downstream by `@openthrottle/agentic-token-usage`.
 - **HTTP/openai backend** (`chat-completions/stream.ts`) applies the same
   `resolveAgentTimeouts().idleMs` as a per-part idle timeout: it composes an
   internal `AbortController` with the caller signal (`AbortSignal.any`), resets on

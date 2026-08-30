@@ -79,6 +79,112 @@ describe('codex driver', () => {
     );
   });
 
+  it('targets a REMOTE gateway via its own model_providers table, not --oss', () => {
+    const command = codexDriver.buildShellCommand(
+      config({
+        endpoint: {
+          apiKey: 'sk-or-v1-test',
+          baseUrl: 'https://openrouter.ai/api/v1',
+          kind: 'remote',
+          provider: 'openrouter',
+        },
+        model: 'anthropic/claude-sonnet-5',
+      }),
+    );
+
+    // Each override is shell-quoted because the TOML value itself carries the
+    // double quotes codex needs to parse it as a string literal.
+    expect(command).toBe(
+      'OPENTHROTTLE_REMOTE_API_KEY=sk-or-v1-test codex exec --sandbox workspace-write' +
+        ' -c "model_provider=\\"openthrottle_remote\\""' +
+        ' -c "model_providers.openthrottle_remote.name=\\"openrouter\\""' +
+        ' -c "model_providers.openthrottle_remote.base_url=\\"https://openrouter.ai/api/v1\\""' +
+        ' -c "model_providers.openthrottle_remote.env_key=\\"OPENTHROTTLE_REMOTE_API_KEY\\""' +
+        ' -c "model_providers.openthrottle_remote.wire_api=\\"responses\\""' +
+        ' --model anthropic/claude-sonnet-5 "fix it"',
+    );
+  });
+
+  it('never uses --oss for a remote endpoint (its wire adapter is ollama/lmstudio)', () => {
+    const command = codexDriver.buildShellCommand(
+      config({
+        endpoint: {
+          apiKey: 'sk-or-v1-test',
+          baseUrl: 'https://openrouter.ai/api/v1',
+          kind: 'remote',
+          provider: 'openrouter',
+        },
+      }),
+    );
+
+    expect(command).not.toContain('--oss');
+    expect(command).not.toContain('--local-provider');
+    expect(command).not.toContain('model_providers.oss');
+  });
+
+  it('pins wire_api to responses (codex 0.145.0 rejects "chat" at config load)', () => {
+    const command = codexDriver.buildShellCommand(
+      config({
+        endpoint: {
+          apiKey: 'k',
+          baseUrl: 'https://openrouter.ai/api/v1',
+          kind: 'remote',
+        },
+      }),
+    );
+
+    expect(command).toContain('wire_api=\\"responses\\"');
+    expect(command).not.toContain('wire_api=\\"chat\\"');
+  });
+
+  it('carries the key as an env assignment, not a codex argv token', () => {
+    const command = codexDriver.buildShellCommand(
+      config({
+        endpoint: {
+          apiKey: 'sk-or-v1-secret',
+          baseUrl: 'https://openrouter.ai/api/v1',
+          kind: 'remote',
+        },
+      }),
+    );
+
+    // Exactly once, in the leading env assignment. A `-c` override carrying the
+    // literal key would bake it into codex's own argv and into the generated
+    // provider config it may persist.
+    expect(
+      command.startsWith('OPENTHROTTLE_REMOTE_API_KEY=sk-or-v1-secret '),
+    ).toBe(true);
+    expect(command.indexOf('sk-or-v1-secret')).toBe(
+      command.lastIndexOf('sk-or-v1-secret'),
+    );
+  });
+
+  it('escapes a hostile remote baseUrl and key rather than interpolating them', () => {
+    const command = codexDriver.buildShellCommand(
+      config({
+        endpoint: {
+          apiKey: 'k$(id)',
+          baseUrl: 'https://evil/v1"; rm -rf ~; echo "',
+          kind: 'remote',
+        },
+      }),
+    );
+
+    expect(command).not.toMatch(/[^\\]\$\(id\)/);
+    expect(command).toContain('rm -rf');
+    expect(command).not.toMatch(/[^\\]"; rm -rf ~; echo/);
+  });
+
+  it('omits the env prefix when a remote endpoint carries no key', () => {
+    const command = codexDriver.buildShellCommand(
+      config({
+        endpoint: { baseUrl: 'https://openrouter.ai/api/v1', kind: 'remote' },
+      }),
+    );
+
+    expect(command.startsWith('codex exec')).toBe(true);
+  });
+
   it('emits no MCP flags (codex reads ~/.codex/config.toml, not the workspace)', () => {
     const command = codexDriver.buildShellCommand(config());
     expect(command).not.toContain('--approve-mcps');

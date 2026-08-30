@@ -30,27 +30,61 @@ export interface DriverWorktreeOptions {
 }
 
 /**
- * @description Points a driver at a discovered local OpenAI-compatible model-server endpoint (from
- * `discoverLocalModels`) instead of the driver's own cloud provider. Only drivers whose
- * {@link DriverCapabilities} advertise `supportsCustomBaseUrl` act on this; the rest ignore it.
- * The mechanism differs per driver (env prefix, CLI flag, or config file — see each driver module),
- * but the discovered `baseUrl`/`provider` are the shared inputs. `configFilePath` is materialized by
- * the (impure) consumer for drivers that require a provider-config file (opencode); the leaf-package
- * command builders stay pure and only reference the path.
+ * @description Endpoint kinds a {@link DriverEndpointConfig} can describe.
+ *
+ * `local` is a server found by `discoverLocalModels` on this machine; `remote` is an authenticated
+ * hosted gateway (OpenRouter). The distinction is NOT cosmetic — it selects a different command
+ * shape per driver, because the built-in local-provider paths (codex's `--oss`, which owns its own
+ * ollama/lmstudio wire adapter) cannot describe a gateway at all.
+ * @public
+ */
+export const DRIVER_ENDPOINT_KINDS = {
+  local: `local`,
+  remote: `remote`,
+} as const;
+
+/** @public */
+export type DriverEndpointKind =
+  (typeof DRIVER_ENDPOINT_KINDS)[keyof typeof DRIVER_ENDPOINT_KINDS];
+
+/**
+ * @description Points a driver at an OpenAI-compatible endpoint other than the driver's own cloud
+ * provider: either a discovered LOCAL model server (from `discoverLocalModels`) or an authenticated
+ * REMOTE gateway (OpenRouter). Only drivers whose {@link DriverCapabilities} advertise
+ * `supportsCustomBaseUrl` act on this; the rest ignore it. The mechanism differs per driver (env
+ * prefix, CLI flag, or config file — see each driver module), but `baseUrl`/`provider` are the
+ * shared inputs. `configFilePath` is materialized by the (impure) consumer for drivers that require
+ * a provider-config file (opencode); the leaf-package command builders stay pure and only reference
+ * the path.
+ *
+ * `kind` defaults to `local` when omitted, so every existing caller keeps its exact behavior.
  * @public
  */
 export interface DriverEndpointConfig {
   /**
    * API key sent to the endpoint. Most local servers ignore it, but CLIs/SDKs often require *some*
-   * value; drivers default to a placeholder when omitted.
+   * value; drivers default to a placeholder when omitted. For a `remote` endpoint it is the
+   * gateway credential and is REQUIRED — how it reaches the subprocess is per-driver (an env var
+   * the CLI reads by name, or a consumer-materialized config file), never a command-line argument.
    */
   readonly apiKey?: string;
-  /** OpenAI-compatible `/v1` base URL, e.g. `http://localhost:11434/v1`. Passed verbatim. */
+  /**
+   * OpenAI-compatible base URL, e.g. `http://localhost:11434/v1` or
+   * `https://openrouter.ai/api/v1`. Passed verbatim.
+   */
   readonly baseUrl: string;
   /** Path to a caller-materialized provider-config file (opencode-only); ignored by other drivers. */
   readonly configFilePath?: string;
-  /** Discovery provider fingerprint, or `null` when the server could not be fingerprinted. */
-  readonly provider?: 'lmstudio' | 'ollama' | null;
+  /**
+   * Which kind of endpoint this describes. Omitted ⇒ {@link DRIVER_ENDPOINT_KINDS.local}, so the
+   * existing local callers are unchanged.
+   */
+  readonly kind?: DriverEndpointKind;
+  /**
+   * For a local endpoint, the discovery provider fingerprint (`null` when the server could not be
+   * fingerprinted). For a remote endpoint, the gateway id (`openrouter`).
+   */
+  readonly provider?: 'lmstudio' | 'ollama' | 'openrouter' | null;
 }
 
 /**

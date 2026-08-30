@@ -8,8 +8,58 @@
  */
 
 import { defineDriver } from '../registry/index.ts';
-import type { DriverCapabilities } from '../types/index.ts';
-import { escapeForShellDoubleQuoted, escapeShellArg } from '../utils/shell.ts';
+import { DRIVER_ENDPOINT_KINDS } from '../types/index.ts';
+import type {
+  DriverCapabilities,
+  DriverEndpointConfig,
+} from '../types/index.ts';
+import {
+  escapeForShellDoubleQuoted,
+  escapeShellArg,
+  formatShellEnvPrefix,
+} from '../utils/shell.ts';
+
+/**
+ * Provider id for the generated `[model_providers.*]` table used for a REMOTE gateway. Codex's
+ * built-in `oss` provider cannot be reused: it owns an ollama/lmstudio wire adapter and is selected
+ * by `--oss`, neither of which describes a hosted gateway.
+ */
+const REMOTE_PROVIDER_ID = 'openthrottle_remote';
+
+/**
+ * Env var the generated provider reads its bearer token from (`env_key`). Codex resolves it inside
+ * the child process, so the key travels as an env assignment and never as an argv token.
+ */
+const REMOTE_API_KEY_ENV = 'OPENTHROTTLE_REMOTE_API_KEY';
+
+/**
+ * Wire protocol for the generated provider. `responses` is the ONLY viable value: codex-cli 0.145.0
+ * REJECTS `wire_api = "chat"` at config-load time ("`wire_api = \"chat\"` is no longer supported.
+ * How to fix: set `wire_api = \"responses\"`"), and OpenRouter does serve `POST /api/v1/responses`
+ * — verified 2026-08-29 by an end-to-end run that reached the endpoint and was rejected only on the
+ * key.
+ */
+const REMOTE_WIRE_API = 'responses';
+
+/**
+ * Build the `-c` overrides pointing codex at a remote gateway. JSON.stringify yields a valid
+ * double-quoted TOML string literal for each value.
+ */
+function remoteProviderOverrides(endpoint: DriverEndpointConfig): string {
+  const overrides = [
+    `model_provider=${JSON.stringify(REMOTE_PROVIDER_ID)}`,
+    `model_providers.${REMOTE_PROVIDER_ID}.name=${JSON.stringify(
+      endpoint.provider ?? 'Remote gateway',
+    )}`,
+    `model_providers.${REMOTE_PROVIDER_ID}.base_url=${JSON.stringify(endpoint.baseUrl)}`,
+    `model_providers.${REMOTE_PROVIDER_ID}.env_key=${JSON.stringify(REMOTE_API_KEY_ENV)}`,
+    `model_providers.${REMOTE_PROVIDER_ID}.wire_api=${JSON.stringify(REMOTE_WIRE_API)}`,
+  ];
+
+  return overrides
+    .map((override) => ` -c ${escapeShellArg(override)}`)
+    .join('');
+}
 
 const capabilities: DriverCapabilities = {
   /**
@@ -51,11 +101,25 @@ const capabilities: DriverCapabilities = {
  * against codex-cli 0.145.0: no `codex models` subcommand; `-m` takes an arbitrary MODEL), so
  * `discoverModels` is omitted and discovery reports availability-only (`models: []`).
  *
- * A local endpoint is targeted through Codex's built-in OSS provider (`--oss`), redirected at the
+ * A LOCAL endpoint is targeted through Codex's built-in OSS provider (`--oss`), redirected at the
  * discovered `baseUrl` via a `-c model_providers.oss.base_url` override — this is preferred over a
  * hand-rolled custom provider because Codex owns the OSS wire adapter (0.145.0 is deprecating the
  * raw `wire_api = "chat"` that local servers speak). `--local-provider` selects the wire adapter; an
  * unfingerprinted endpoint (`provider === null`) defaults to `ollama`, the common case.
+ *
+ * A REMOTE endpoint cannot reuse any of that: `--oss` selects a provider that owns an
+ * ollama/lmstudio wire adapter, which does not describe a hosted gateway. So it gets its own
+ * generated `[model_providers.openthrottle_remote]` table via `-c` overrides, carrying `base_url`,
+ * `env_key` and `wire_api = "responses"` (the only value 0.145.0 still accepts — see
+ * {@link REMOTE_WIRE_API}). The key travels as an env assignment codex resolves by name, never as
+ * an argv token.
+ *
+ * ⚠️ Host caveat, verified 2026-08-29: on a machine with a stored ChatGPT login in `~/.codex`, that
+ * auth SHADOWS the provider's `env_key` — the run authenticates through `codex_login::auth::manager`
+ * instead of the supplied key. A consumer that needs a guaranteed gateway identity must run with a
+ * dedicated `CODEX_HOME`. That is a consumer concern (this package never touches the filesystem or
+ * the environment it spawns into), but it is the difference between a working run and one that
+ * silently uses the wrong account.
  * @public
  */
 export const codexDriver = defineDriver({
@@ -69,20 +133,36 @@ export const codexDriver = defineDriver({
         : '';
 
     let endpointFlags = '';
+    let endpointPrefix = '';
     if (config.endpoint) {
-      const localProvider = config.endpoint.provider ?? 'ollama';
-      // JSON.stringify yields a valid double-quoted TOML string literal for the -c value.
-      const baseUrlOverride = `model_providers.oss.base_url=${JSON.stringify(
-        config.endpoint.baseUrl,
-      )}`;
-      endpointFlags = ` --oss --local-provider ${localProvider} -c ${escapeShellArg(
-        baseUrlOverride,
-      )}`;
+      if (config.endpoint.kind === DRIVER_ENDPOINT_KINDS.remote) {
+        endpointFlags = remoteProviderOverrides(config.endpoint);
+        // The key travels as a leading env assignment, which is how codex
+        // resolves `env_key` in the child — the same mechanism grok's local
+        // path already uses for XAI_API_KEY. Note this is an env assignment in
+        // a `shell: true` command STRING, so it is as visible as any other part
+        // of that string; what it buys is that codex reads it by name from the
+        // environment rather than it being a codex argv token.
+        endpointPrefix = config.endpoint.apiKey
+          ? formatShellEnvPrefix({
+              [REMOTE_API_KEY_ENV]: config.endpoint.apiKey,
+            })
+          : '';
+      } else {
+        const localProvider = config.endpoint.provider ?? 'ollama';
+        // JSON.stringify yields a valid double-quoted TOML string literal for the -c value.
+        const baseUrlOverride = `model_providers.oss.base_url=${JSON.stringify(
+          config.endpoint.baseUrl,
+        )}`;
+        endpointFlags = ` --oss --local-provider ${localProvider} -c ${escapeShellArg(
+          baseUrlOverride,
+        )}`;
+      }
     }
 
     const safePrompt = escapeForShellDoubleQuoted(config.prompt);
 
-    return `codex exec --sandbox workspace-write${endpointFlags}${modelFlag} "${safePrompt}"`;
+    return `${endpointPrefix}codex exec --sandbox workspace-write${endpointFlags}${modelFlag} "${safePrompt}"`;
   },
   capabilities,
   id: 'codex',

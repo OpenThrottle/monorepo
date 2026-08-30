@@ -1,14 +1,38 @@
 # @openthrottle/nestjs-model-discovery
 
-A thin NestJS wrapper around the local model-discovery core in
-[`@openthrottle/openthrottle-agentic-utils`](../openthrottle-agentic-utils). It
-provides an **injectable, in-process-cached service** that discovers
-locally-running OpenAI-compatible model servers (Ollama-primary; also vLLM,
-llama.cpp, SGLang, LM Studio) and the models they serve.
+Thin NestJS wrappers around the model-discovery cores in
+[`@openthrottle/openthrottle-agentic-utils`](../openthrottle-agentic-utils). It provides
+**two injectable, in-process-cached services**:
 
-It is **GraphQL-agnostic** — the resolver/ObjectTypes live in `openthrottle-server`
-(`discoverLocalModels`), and the `openthrottle-mcp` `discover_local_models` tool
-reads that query. This package owns only the service, its config, and the cache.
+- `NestjsModelDiscoveryService` — discovers locally-running OpenAI-compatible model
+  servers (Ollama-primary; also vLLM, llama.cpp, SGLang, LM Studio) and their models.
+- `NestjsRemoteModelsService` — fetches a hosted gateway's published catalog
+  (OpenRouter) and reports whether an operator key makes it usable for chat.
+
+Both are **GraphQL-agnostic** — the resolvers/ObjectTypes live in `openthrottle-server`
+(`discoverLocalModels`, `discoverRemoteModels`), and the `openthrottle-mcp`
+`discover_local_models` tool reads that query. This package owns only the services,
+their config, and the caches.
+
+## The remote catalog service
+
+`NestjsRemoteModelsService.catalog()` reuses the same `StaleWhileRevalidateCache` as the
+local service but with far longer TTLs — soft 1h, hard 24h, against local discovery's
+60s/10m. That is deliberate: this is one internet round trip for a few-hundred-entry
+published catalog that changes on the order of days, not a port scan of a machine whose
+servers come and go. A page load must never pay for it.
+
+It never throws: the underlying fetcher degrades every failure mode to an empty catalog.
+
+**The API key never leaves this package.** `catalog()` returns a derived
+`configured: boolean` and nothing more; `chatCredentials()` returns the key for immediate
+use on an outbound request and `null` when unconfigured, so a caller cannot accidentally
+start an unauthenticated turn. The key is never persisted, returned over GraphQL, or
+logged — the catalog debug line carries counts and the provider id only, and
+deliberately not the base URL (an operator could embed credentials in a proxy URL).
+
+`src/config/nestjs-remote-models.config.ts` (`registerAs('remoteModels')`) is the SINGLE
+place `OPENROUTER_*` env vars are read anywhere in the monorepo.
 
 ## What it does
 

@@ -10,6 +10,7 @@ export * from './components/svg-base';
 
 // ⚙️ Configuration
 export * from './config/chat-capabilities';
+export * from './config/openrouter-shortlist';
 
 // 📦 Data / Atoms
 export * from './data/atom.chat-toolbar';

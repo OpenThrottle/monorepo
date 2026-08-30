@@ -169,6 +169,43 @@ describe('capabilitiesForChatOption', () => {
     expect(caps.serviceTiers).toEqual([]);
   });
 
+  it('gives openrouter its own descriptor rather than the CLI default', () => {
+    const caps = capabilitiesForChatOption(
+      decodeChatOption(
+        encodeCliOptionId('openrouter', 'anthropic/claude-sonnet-5'),
+      ),
+    );
+
+    // Falling through to DEFAULT_CLI_BACKEND_CAPABILITIES would wrongly mark
+    // the gateway repository-required and advertise permission postures it has
+    // no way to honor — this asserts the explicit branch is taken.
+    expect(caps.requiresRepository).toBe(false);
+    expect(caps.permissionModes).toEqual([]);
+    expect(caps.serviceTiers).toEqual([]);
+    expect(caps.supportsModelFlag).toBe(true);
+  });
+
+  it('advertises NO reasoning control for openrouter (support is per-model, not per-gateway)', () => {
+    const caps = capabilitiesForChatOption(
+      decodeChatOption(encodeCliOptionId('openrouter', 'z-ai/glm-5.3-flash')),
+    );
+
+    // Only 133 of 396 catalog models accept reasoning_effort, and those that do
+    // accept different subsets — a fixed triple would break advertised==honored.
+    expect(caps.reasoningLevels).toEqual([]);
+  });
+
+  it('round-trips an openrouter slug containing a vendor prefix', () => {
+    expect(
+      decodeChatOption(
+        encodeCliOptionId('openrouter', 'anthropic/claude-opus-5:batch'),
+      ),
+    ).toEqual({
+      backend: 'openrouter',
+      model: 'anthropic/claude-opus-5:batch',
+    });
+  });
+
   it('gives cursor a permission surface but NO separate reasoning/tier controls (baked into the model id)', () => {
     const caps = capabilitiesForChatOption(decodeChatOption('cursor'));
 

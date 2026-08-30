@@ -6,13 +6,37 @@ import type {
 } from '../stream.ts';
 import { streamChatCompletion } from '../stream.ts';
 
-const { createMock } = vi.hoisted(() => ({ createMock: vi.fn() }));
+const { constructMock, createMock } = vi.hoisted(() => ({
+  constructMock: vi.fn(),
+  createMock: vi.fn(),
+}));
 
 vi.mock('openai', () => ({
-  default: vi.fn(function OpenAIMock() {
+  default: vi.fn(function OpenAIMock(clientOptions: unknown) {
+    constructMock(clientOptions);
     return { chat: { completions: { create: createMock } } };
   }),
 }));
+
+/** The options the SDK client was constructed with on the latest call. */
+function clientOptions(): Record<string, unknown> {
+  const call: unknown = constructMock.mock.calls.at(-1)?.[0];
+  if (typeof call !== 'object' || call === null) {
+    throw new Error(
+      'OpenAI client was not constructed with an options object.',
+    );
+  }
+  return { ...call };
+}
+
+/** Drive one turn far enough that the client is constructed. */
+async function startTurn(
+  options: Parameters<typeof streamChatCompletion>[0],
+): Promise<void> {
+  createMock.mockResolvedValue(fakeStream(['ok']));
+  const iterator = streamChatCompletion(options)[Symbol.asyncIterator]();
+  await iterator.next();
+}
 
 /** Build a fake SDK stream that yields one chunk per delta string. */
 async function* fakeStream(
@@ -27,6 +51,7 @@ afterEach(() => {
   vi.clearAllMocks();
   vi.useRealTimers();
   delete process.env.OPENTHROTTLE_AGENT_IDLE_TIMEOUT_MS;
+  delete process.env.LLM_API_KEY;
 });
 
 async function collect(
@@ -239,5 +264,159 @@ describe('streamChatCompletion', () => {
     controller.abort();
 
     await expect(drain).rejects.toThrow('aborted');
+  });
+});
+
+describe('streamChatCompletion authentication', () => {
+  it('falls back to LLM_API_KEY when no apiKey is supplied', async () => {
+    process.env.LLM_API_KEY = 'env-key';
+
+    await startTurn({
+      baseUrl: 'http://localhost:11434/v1',
+      messages: [{ content: 'hi', role: 'user' }],
+      model: 'llama3',
+    });
+
+    expect(clientOptions()).toMatchObject({ apiKey: 'env-key' });
+  });
+
+  it("falls back to 'not-needed' when neither an apiKey nor LLM_API_KEY is set", async () => {
+    delete process.env.LLM_API_KEY;
+
+    await startTurn({
+      baseUrl: 'http://localhost:11434/v1',
+      messages: [{ content: 'hi', role: 'user' }],
+      model: 'llama3',
+    });
+
+    expect(clientOptions()).toMatchObject({ apiKey: 'not-needed' });
+  });
+
+  it('prefers a supplied apiKey over the env fallback', async () => {
+    process.env.LLM_API_KEY = 'env-key';
+
+    await startTurn({
+      apiKey: 'sk-or-v1-supplied',
+      baseUrl: 'https://openrouter.ai/api/v1',
+      messages: [{ content: 'hi', role: 'user' }],
+      model: 'anthropic/claude-sonnet-5',
+    });
+
+    expect(clientOptions()).toMatchObject({
+      apiKey: 'sk-or-v1-supplied',
+      baseURL: 'https://openrouter.ai/api/v1',
+    });
+  });
+
+  it('passes supplied headers to the client as defaultHeaders', async () => {
+    await startTurn({
+      apiKey: 'sk-or-v1-supplied',
+      baseUrl: 'https://openrouter.ai/api/v1',
+      headers: {
+        'HTTP-Referer': 'https://openthrottle.ai',
+        'X-OpenRouter-Title': 'OpenThrottle',
+      },
+      messages: [{ content: 'hi', role: 'user' }],
+      model: 'anthropic/claude-sonnet-5',
+    });
+
+    expect(clientOptions()).toMatchObject({
+      defaultHeaders: {
+        'HTTP-Referer': 'https://openthrottle.ai',
+        'X-OpenRouter-Title': 'OpenThrottle',
+      },
+    });
+  });
+
+  it('sets no defaultHeaders at all when headers are omitted', async () => {
+    await startTurn({
+      baseUrl: 'http://localhost:11434/v1',
+      messages: [{ content: 'hi', role: 'user' }],
+      model: 'llama3',
+    });
+
+    expect(clientOptions()).not.toHaveProperty('defaultHeaders');
+  });
+});
+
+describe('streamChatCompletion usage', () => {
+  /** A fake SDK stream whose LAST part carries the usage block. */
+  async function* streamWithUsage(
+    usage: unknown,
+  ): AsyncGenerator<Record<string, unknown>> {
+    yield { choices: [{ delta: { content: 'hi' } }] };
+    yield { choices: [{ delta: { content: null } }], usage };
+  }
+
+  it('rides the terminal usage payload on the done chunk', async () => {
+    const usage = {
+      completion_tokens: 214,
+      cost: 0.00431,
+      prompt_tokens: 1290,
+      total_tokens: 1504,
+    };
+    createMock.mockResolvedValue(streamWithUsage(usage));
+
+    const chunks = [];
+    for await (const chunk of streamChatCompletion({
+      baseUrl: 'https://openrouter.ai/api/v1',
+      messages: [{ content: 'hi', role: 'user' }],
+      model: 'anthropic/claude-sonnet-5',
+    })) {
+      chunks.push(chunk);
+    }
+
+    expect(chunks).toEqual([
+      { delta: 'hi', done: false },
+      { delta: '', done: true, usage },
+    ]);
+  });
+
+  it('sends no usage/stream_options request param (OpenRouter deprecated both)', async () => {
+    createMock.mockResolvedValue(fakeStream(['ok']));
+
+    const iterator = streamChatCompletion({
+      baseUrl: 'https://openrouter.ai/api/v1',
+      messages: [{ content: 'hi', role: 'user' }],
+      model: 'anthropic/claude-sonnet-5',
+    })[Symbol.asyncIterator]();
+    await iterator.next();
+
+    // Sending an unknown param would also risk rejection from the LOCAL
+    // endpoints that share this exact code path.
+    const body: unknown = createMock.mock.calls[0]?.[0];
+    expect(body).not.toHaveProperty('stream_options');
+    expect(body).not.toHaveProperty('usage');
+  });
+
+  it('omits usage entirely when the provider reports none', async () => {
+    createMock.mockResolvedValue(fakeStream(['ok']));
+
+    const chunks = [];
+    for await (const chunk of streamChatCompletion({
+      baseUrl: 'http://localhost:11434/v1',
+      messages: [{ content: 'hi', role: 'user' }],
+      model: 'llama3',
+    })) {
+      chunks.push(chunk);
+    }
+
+    // Local servers usually report nothing — absence is silent, not an error.
+    expect(chunks.at(-1)).toEqual({ delta: '', done: true });
+  });
+
+  it('ignores a malformed usage payload rather than forwarding it', async () => {
+    createMock.mockResolvedValue(streamWithUsage('not-an-object'));
+
+    const chunks = [];
+    for await (const chunk of streamChatCompletion({
+      baseUrl: 'https://openrouter.ai/api/v1',
+      messages: [{ content: 'hi', role: 'user' }],
+      model: 'anthropic/claude-sonnet-5',
+    })) {
+      chunks.push(chunk);
+    }
+
+    expect(chunks.at(-1)).toEqual({ delta: '', done: true });
   });
 });

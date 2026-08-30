@@ -29,6 +29,20 @@ query DiscoverLocalModels {
   }
 }
 
+query DiscoverRemoteModels {
+  discoverRemoteModels {
+    configured
+    models {
+      contextLength
+      id
+      name
+      provider
+    }
+    provider
+    totalCount
+  }
+}
+
 query PersonaPrompts {
   customPrompts(input: { promptType: PERSONAS }) {
     description

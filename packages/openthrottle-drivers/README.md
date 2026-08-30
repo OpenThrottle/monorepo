@@ -67,13 +67,49 @@ per-driver base-flag name) is a follow-up.
 Command shapes (byte-identical to the legacy builders for claude/cursor):
 
 - `claude -p --permission-mode acceptEdits "<prompt>" [--model M] [-w [name]]`
-- `codex exec --sandbox workspace-write [--model M] "<prompt>"`
+- `codex exec --sandbox workspace-write [--oss … | -c model_providers.…] [--model M] "<prompt>"`
 - `cursor-agent --force -p "<prompt>" [--model M] [-w [name] [--worktree-base B] [--skip-worktree-setup]]`
 - `gemini --approval-mode yolo "<prompt>" [--model M] < /dev/null` (the redirect is load-bearing:
   with a non-TTY stdin the CLI blocks reading it to EOF; the positional prompt is used because
   `-p` is deprecated in 0.25.2)
 - `grok -p "<prompt>" --permission-mode acceptEdits [--model M] [-w [name]]`
 - `opencode run --auto "<prompt>" [--model M]`
+
+## Endpoint targeting (local servers and remote gateways)
+
+`DriverInvocationConfig.endpoint` points a driver at an OpenAI-compatible endpoint other
+than its own cloud provider. `endpoint.kind` selects which — omitted means `local`, so
+existing callers are unchanged.
+
+| Driver   | `supportsCustomBaseUrl` | local endpoint                                                                | remote gateway (OpenRouter)                                                  |
+| -------- | ----------------------- | ----------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| OpenCode | yes                     | `OPENCODE_CONFIG=<file>` defining an `openai-compatible` provider             | same file, native `openrouter` provider; models are `openrouter/<slug>`      |
+| Codex    | yes                     | `--oss --local-provider <ollama\|lmstudio> -c model_providers.oss.base_url=…` | own `[model_providers.openthrottle_remote]` via `-c`, `wire_api="responses"` |
+| Grok     | yes                     | `GROK_MODELS_BASE_URL` + `XAI_API_KEY`                                        | **no** — no base-url flag or env var (verified `grok --help`)                |
+| Claude   | no                      | —                                                                             | **no** — Anthropic Messages API, not OpenAI-compatible                       |
+| Cursor   | no                      | —                                                                             | **no** — proprietary backend, Cursor-hosted models                           |
+| Gemini   | no                      | —                                                                             | **no** — Gemini API                                                          |
+
+Which CLIs can and cannot run through OpenRouter is a permanent property of their wire
+protocols, not a TODO. Claude Code's third-party providers are Bedrock/Vertex/Foundry;
+`cursor-agent --api-key` takes a _Cursor_ key against Cursor-hosted models.
+
+Two things verified against the installed CLIs on 2026-08-29 that a reader would
+otherwise get wrong:
+
+- **codex must use `wire_api = "responses"`.** 0.145.0 rejects `wire_api = "chat"` at
+  config-load time; OpenRouter does serve `POST /api/v1/responses`, so the generated
+  provider routes. The built-in `--oss` provider cannot be reused — it owns an
+  ollama/lmstudio wire adapter.
+- **A stored ChatGPT login in `~/.codex` shadows the provider's `env_key`.** On such a
+  host the run authenticates through codex's own auth manager instead of the supplied
+  key. A consumer needing a guaranteed gateway identity must run with a dedicated
+  `CODEX_HOME`.
+
+The leaf builders stay pure throughout: the key reaches the subprocess through an env
+assignment codex resolves by name (`env_key`) or a consumer-materialized config file
+(opencode), never as a CLI argv token. The env assignment is still part of the
+`shell: true` command string, so treat that string as sensitive.
 
 ## Adding a new agent CLI
 

@@ -12,7 +12,8 @@ export interface TokenUsageProviderOption {
 
 /**
  * The providers the token-usage surface can filter by, mirroring the server's
- * CONVERSATION_CLI_BACKENDS keys plus the openai HTTP backend. Rendered as the
+ * CONVERSATION_CLI_BACKENDS keys plus the two non-CLI HTTP backends (openai,
+ * openrouter). Rendered as the
  * provider selector; a provider with no usage in range shows an empty state.
  */
 export const TOKEN_USAGE_PROVIDERS: readonly TokenUsageProviderOption[] = [
@@ -23,6 +24,7 @@ export const TOKEN_USAGE_PROVIDERS: readonly TokenUsageProviderOption[] = [
   { id: 'grok', label: 'Grok' },
   { id: 'opencode', label: 'opencode' },
   { id: 'openai', label: 'OpenAI' },
+  { id: 'openrouter', label: 'OpenRouter' },
 ];
 
 /** Human label for a provider id, falling back to the raw id. */
