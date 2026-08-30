@@ -56,6 +56,15 @@ export interface RepoSkillEntry {
    * never gated. See docs/monorepo/skill-availability-design.md ("Surfacing").
    */
   readonly effectiveDisableModelInvocation?: boolean;
+  /**
+   * True when the skill folder resolves OUTSIDE the repo — the per-user
+   * personal tier (`~/.openthrottle/skills`), linked in by ot-skill-sync. It is
+   * on disk and invokable, but it is yours alone: nobody else's checkout has
+   * it, and it can never be committed. Separate from {@link RepoSkillEntry.source}
+   * because that value is ingested and served over GraphQL, while the personal
+   * tier is local developer tooling with no server surface.
+   */
+  readonly isPersonal?: boolean;
   readonly layout: SkillRegistryLayout;
   /**
    * Set when this row exists in `project_skills` but is no longer on disk

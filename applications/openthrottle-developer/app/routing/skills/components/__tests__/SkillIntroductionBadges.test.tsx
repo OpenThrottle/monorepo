@@ -111,4 +111,30 @@ describe('SkillIntroductionBadges Component', () => {
 
     expect(component.queryByText('docs')).toBeNull();
   });
+  test('reads Personal for a personal-tier skill, not External', () => {
+    component.unmount();
+    props = { ...props, entry: { ...baseEntry, isPersonal: true } };
+    component = renderBadges();
+
+    expect(component.getByTestId('skill-source-badge')).toHaveTextContent(
+      SKILLS_SOURCE_COPY.personalLabel,
+    );
+  });
+
+  // Its origin is a directory on this machine; no URL describes it, so the
+  // badge must not pretend there is somewhere to go.
+  test('never links a personal-tier badge out, even with a sourceUrl', () => {
+    component.unmount();
+    props = {
+      ...props,
+      entry: {
+        ...baseEntry,
+        isPersonal: true,
+        sourceUrl: 'https://example.com/skill',
+      },
+    };
+    component = renderBadges();
+
+    expect(component.queryByTestId('skill-source-link')).toBeNull();
+  });
 });

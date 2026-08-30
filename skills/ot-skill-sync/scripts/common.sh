@@ -42,6 +42,105 @@ LOCKFILE_NAME="skills-lock.json"
 AGENT_SKILL_DIRS_DEFAULT=".claude/skills .gemini/skills"
 AGENT_SKILL_DIRS="${AGENT_SKILL_DIRS:-$AGENT_SKILL_DIRS_DEFAULT}"
 
+# ── The personal (per-user) tier ─────────────────────────────────────────────
+# A third source root, OUTSIDE the repo: ~/.openthrottle/skills/<name>/SKILL.md.
+# Personal skills ride the exact same pipeline a committed skill does — stage 1
+# links them into .agents/skills/, stage 2 fans them out — but their content
+# never enters the worktree, so the only in-repo artifact is a symlink the
+# managed .gitignore block already covers.
+#
+# Opt-in is PRESENCE: if the root exists and holds at least one directory with a
+# readable SKILL.md, sync uses it. There is deliberately no enable/disable env
+# var for the in-repo tier (OPENTHROTTLE_PERSONAL_SKILLS_ENABLED remains the
+# foreign-injection toggle and nothing else) — creating the directory is already
+# the deliberate act. An absent or empty root is a clean no-op everywhere.
+#
+# The default path and the override variable name are a CONTRACT shared with the
+# TypeScript injection path (resolvePersonalSkillsRoot in
+# packages/openthrottle-agentic-utils). Change one, change both — a test asserts
+# they agree. See docs/monorepo/foreign-workspace-skill-injection.md §7.
+PERSONAL_SKILLS_DIR_ENV="OPENTHROTTLE_PERSONAL_SKILLS_DIR"
+PERSONAL_SKILLS_DIR_DEFAULT="${HOME:-}/.openthrottle/skills"
+
+# Print the personal skills root: the OPENTHROTTLE_PERSONAL_SKILLS_DIR override
+# when non-empty, else the default. Always without a trailing slash. This prints
+# a path whether or not it exists — callers test for existence themselves, since
+# "missing" and "empty" behave identically (no-op).
+resolve_personal_skills_root() {
+  local override="${OPENTHROTTLE_PERSONAL_SKILLS_DIR:-}"
+  if [ -n "$override" ]; then
+    printf '%s\n' "${override%/}"
+    return 0
+  fi
+  printf '%s\n' "${PERSONAL_SKILLS_DIR_DEFAULT%/}"
+}
+
+# True when $1 is $2 or lies beneath it. Pure string comparison on already
+# canonicalized paths — never touches the filesystem, so it is safe on a
+# dangling link's recorded target.
+path_is_under() {
+  local path="${1%/}"
+  local root="${2%/}"
+  [ -n "$root" ] || return 1
+  [ "$path" = "$root" ] || [ "${path#"$root"/}" != "$path" ]
+}
+
+# True when the newline-separated list on stdin ($2) contains the exact name $1.
+name_in_list() {
+  [ -n "$2" ] || return 1
+  printf '%s\n' "$2" | grep -qFx "$1"
+}
+
+# Absolute path a symlink points at, WITHOUT requiring the target to exist.
+# canonical_path cannot answer this: given a dangling link it canonicalizes the
+# link's own path, not the target's. Needed to classify a broken link — the
+# common case being a personal skill deleted or renamed outside the repo, where
+# knowing the tier is the difference between a useful message and a shrug.
+# Returns 1 when the target's parent chain is gone too (nothing to say).
+link_target_absolute() {
+  local link="$1"
+  local raw parent target_parent
+  raw=$(readlink "$link") || return 1
+  case "$raw" in
+    /*) printf '%s\n' "$raw"; return 0 ;;
+  esac
+  parent=$(dirname "$link")
+  target_parent=$(cd "$parent" >/dev/null 2>&1 && cd "$(dirname "$raw")" >/dev/null 2>&1 && pwd -P) || return 1
+  printf '%s/%s\n' "$target_parent" "$(basename "$raw")"
+}
+
+# True when a symlink — live OR dangling — points into the currently-resolved
+# personal root. Classification only; says nothing about whether it is still a
+# skill there.
+link_points_into_personal_root() {
+  local link="$1"
+  local root="$2"
+  local target
+  [ -n "$root" ] || return 1
+  # Canonicalize the root before comparing: link_target_absolute resolves via
+  # `pwd -P`, so on macOS it yields /private/var/... while a configured root
+  # reads /var/... . Two spellings of one directory compare unequal, and the
+  # classification silently degrades to "not personal".
+  [ -d "$root" ] && root="$(canonical_path "$root")"
+  target=$(link_target_absolute "$link") || return 1
+  path_is_under "$target" "$root"
+}
+
+# Personal skill names (one per line): direct children of the personal root that
+# are directories (or links to directories) holding a readable SKILL.md — the
+# same rule discoverSkillDirs applies. Anything else is not a skill and is left
+# for the caller to warn about. Empty output for a missing or empty root.
+personal_skill_names() {
+  local root="$1"
+  [ -d "$root" ] || return 0
+  local entry
+  for entry in "$root"/*; do
+    [ -d "$entry" ] || continue
+    [ -r "$entry/SKILL.md" ] || continue
+    basename "$entry"
+  done
+}
+
 # Markers bracketing our managed .gitignore block
 GITIGNORE_START_MARKER="# Start 🔄 Managed by OpenThrottle ot-skill-sync"
 GITIGNORE_END_MARKER="# End 🔄 Managed by OpenThrottle ot-skill-sync"

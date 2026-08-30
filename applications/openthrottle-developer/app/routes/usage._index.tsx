@@ -45,9 +45,13 @@ export const loader = async (args: Route.LoaderArgs) => {
   // Slugs actually present in this checkout. Leaderboard rows are classified
   // against this set: it decides both which rows link through to a detail page
   // and which ones are only history (mirrors /skills).
-  const presentSkillSlugs = discoverRepoSkills(getMonorepoRoot()).map(
-    (entry) => entry.slug,
-  );
+  const discoveredSkills = discoverRepoSkills(getMonorepoRoot());
+  const presentSkillSlugs = discoveredSkills.map((entry) => entry.slug);
+  // The subset linked in from outside the repo. Same derivation as /skills, so
+  // one skill cannot read as two different things on the two routes.
+  const personalSkillSlugs = discoveredSkills
+    .filter((entry) => entry.isPersonal === true)
+    .map((entry) => entry.slug);
 
   const searchParams = new URL(args.request.url).searchParams;
   const providerParam = searchParams.get('provider');
@@ -109,6 +113,7 @@ export const loader = async (args: Route.LoaderArgs) => {
     branchOptions: branchResult.skillUsageGitBranches.items,
     branchesHaveMore: branchResult.skillUsageGitBranches.hasMore,
     dailyStats,
+    personalSkillSlugs,
     presentSkillSlugs,
     rangeDays: 30,
     rangeEndDate: endDate,
@@ -141,6 +146,7 @@ export default function Component(
     branchOptions,
     branchesHaveMore,
     dailyStats,
+    personalSkillSlugs,
     presentSkillSlugs,
     rangeDays,
     rangeEndDate,
@@ -189,6 +195,7 @@ export default function Component(
         bySkill={skillUsage.bySkill}
         end={rangeEndDate}
         filterOptions={skillUsage.filterOptions}
+        personalSlugs={personalSkillSlugs}
         presentSlugs={presentSkillSlugs}
         providerParam={selectedProvider}
         rangeDays={rangeDays}

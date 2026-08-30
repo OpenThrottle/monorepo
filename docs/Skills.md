@@ -73,6 +73,27 @@ Ours to author and edit; fanned out by ot-skill-sync:
 - **OpenThrottle:** ot-folders, ot-generators, ot-onboarding, ot-plans, ot-postgres, ot-stack
 - **Infra:** ot-skill-sync
 
+## Personal skills (`~/.openthrottle/skills`)
+
+**Both tables above list committed skills only, by design.** A personal skill is yours alone: it
+lives outside the repo at `~/.openthrottle/skills/<name>/SKILL.md` (override with
+`OPENTHROTTLE_PERSONAL_SKILLS_DIR`), and ot-skill-sync links it into `.agents/skills/` and every
+agent fan-out dir exactly like a committed one. Nothing about it is committable — not the content,
+which is never in the worktree, and not the generated links, which the managed `.gitignore` block
+covers and a pre-commit guard refuses to stage. So it can never appear in `skills-lock.json` (that
+file records `npx skills` installs) or in the tables above (those record what the repo ships).
+
+```bash
+bash skills/ot-skill-sync/scripts/personal.sh new <name>       # scaffold + sync
+bash skills/ot-skill-sync/scripts/personal.sh list             # what you have, and where it links
+bash skills/ot-skill-sync/scripts/personal.sh promote <name>   # graduate it into skills/
+```
+
+A personal skill sharing a name with a committed one is a hard sync error, so nobody silently runs a
+private fork of a team skill; `--allow-shadow` is the explicit opt-in when that is what you want.
+Full design: [foreign-workspace-skill-injection.md](monorepo/foreign-workspace-skill-injection.md)
+§7.
+
 ## Always-on description budget
 
 Every skill's frontmatter `description` sits in the context window of every session whether or not
@@ -88,6 +109,12 @@ its context.
 Keep OT-owned descriptions under ~400 chars. The four still above it
 (`link-workspace-packages`, `improve`, `nx-workspace`, `monitor-ci`) are **vendored** — the adoption
 policy above forbids hand-editing them, so their length is the price of installing them 1:1.
+
+**Your personal skills do count — against your own budget, not the team's.** The CLI loads them
+like anything else, and the snippet below walks `.agents/skills/`, so it counts whatever you have
+linked. The measurement quoted above is the committed baseline everyone pays; the difference is what
+your personal tier costs you. Point the snippet at `skills/` instead to re-measure the shared
+baseline.
 
 Re-measure after any add or delete:
 

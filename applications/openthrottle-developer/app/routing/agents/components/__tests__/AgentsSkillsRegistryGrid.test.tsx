@@ -86,4 +86,21 @@ describe('AgentsSkillsRegistryGrid Component', () => {
 
     expect(writeText).toHaveBeenCalledWith('skills/ot-plans/SKILL.md');
   });
+  test('marks a personal-tier entry so it is not mistaken for a shared skill', () => {
+    component = render(
+      <AgentsSkillsRegistryGrid
+        entries={[entry({ isPersonal: true, slug: 'my-draft' })]}
+      />,
+    );
+
+    expect(component.getByTestId('skill-personal-badge')).toHaveTextContent(
+      'Personal',
+    );
+  });
+
+  test('leaves an ordinary entry unmarked', () => {
+    component = render(<AgentsSkillsRegistryGrid {...props} />);
+
+    expect(component.queryByTestId('skill-personal-badge')).toBeNull();
+  });
 });

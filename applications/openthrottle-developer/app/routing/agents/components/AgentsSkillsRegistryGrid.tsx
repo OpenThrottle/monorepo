@@ -11,7 +11,10 @@ import {
 import { ExternalLink } from 'lucide-react';
 import { githubOpenThrottleMainBlob } from '~/routing/agents/constants/github-repo-paths';
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
-import { SKILLS_MODEL_INVOCATION_COPY } from '~/routing/skills/data/data.copy';
+import {
+  SKILLS_MODEL_INVOCATION_COPY,
+  SKILLS_SOURCE_COPY,
+} from '~/routing/skills/data/data.copy';
 import { getModelInvocationBadge } from '~/routing/skills/utils/model-invocation-badge';
 import { describeProvenance } from '~/routing/skills/utils/provenance';
 
@@ -72,6 +75,18 @@ export const AgentsSkillsRegistryGrid = (
                 <p className="text-muted-foreground pt-1 font-mono text-xs break-all">
                   {entry.repoRelativePath}
                 </p>
+                {entry.isPersonal === true ? (
+                  <div className="pt-1">
+                    <Badge
+                      color="amber"
+                      data-testid="skill-personal-badge"
+                      size="xs"
+                      title={SKILLS_SOURCE_COPY.personalTooltip}
+                    >
+                      {SKILLS_SOURCE_COPY.personalLabel}
+                    </Badge>
+                  </div>
+                ) : null}
                 {entry.tags !== undefined && entry.tags.length > 0 ? (
                   <div className="flex flex-wrap gap-1 pt-2">
                     {entry.tags.map((tag) => (

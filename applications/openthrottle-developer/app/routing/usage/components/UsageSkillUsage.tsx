@@ -35,6 +35,7 @@ export interface UsageSkillUsageProps {
    * set, which decides both whether a row links through to its detail page and
    * which table it lands in.
    */
+  personalSlugs?: readonly string[];
   presentSlugs: readonly string[];
   /** Current `?provider=` (token usage); preserved when skill filters change. */
   providerParam: string | null;
@@ -59,6 +60,7 @@ export const UsageSkillUsage = (
     className,
     end,
     filterOptions,
+    personalSlugs,
     presentSlugs,
     providerParam,
     rangeDays,
@@ -73,8 +75,13 @@ export const UsageSkillUsage = (
 
   // Setup
   const partitioned = React.useMemo(
-    () => partitionSkillUsageByPresence(bySkill, new Set(presentSlugs)),
-    [bySkill, presentSlugs],
+    () =>
+      partitionSkillUsageByPresence(
+        bySkill,
+        new Set(presentSlugs),
+        new Set(personalSlugs ?? []),
+      ),
+    [bySkill, personalSlugs, presentSlugs],
   );
   const hasFilters =
     selectedScope != null || selectedGitBranch != null || selectedCwd != null;

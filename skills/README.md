@@ -59,10 +59,11 @@ Need a machine check? The spec’s validator is [`skills-ref`](https://github.co
 
 ## 🗂️ Where skills live
 
-There are two homes for skills, and the distinction matters:
+There are three homes for skills, and the distinction matters:
 
 - **`.agents/skills/*` — the single merged, managed view (single source of truth).** Skills we pull in from elsewhere via the skills CLI are managed here and tracked in [`skills-lock.json`](../skills-lock.json). Install with `pnpm dlx skills add <owner>/<repo> --agent universal` so the CLI writes only here (see [`docs/Skills.md`](../docs/Skills.md)).
 - **`skills/` — repo-specific skills (this folder).** Hand-authored skills that are specific enough to _this_ codebase that they don't belong in a shared set. Any OpenThrottle repo can have its own `skills/` directory for skills relevant to it.
+- **`~/.openthrottle/skills/` — your personal skills, outside the repo.** Private and experimental, linked in by the sync so they reach every agent CLI exactly like a committed skill, and impossible to commit. This is where a half-formed idea belongs while it is still half-formed. See [Adding a skill](#️-adding-a-skill) for how one graduates.
 
 > [!IMPORTANT]
 >
@@ -129,6 +130,18 @@ Then:
 > [!TIP]
 >
 > Run `npx skills --help` to see everything the CLI can do (`add`, `use`, `find`, `update`, `init`, and more).
+
+### Starting private, and graduating
+
+Not every idea is ready for a PR. A **personal skill** lives outside the repo at `~/.openthrottle/skills/<name>/SKILL.md` and is linked in by the sync, so you can use it exactly like a committed skill while you work out whether it earns its place — and it cannot be committed by accident:
+
+```bash
+bash ot-skill-sync/scripts/personal.sh new my-idea      # scaffold + sync
+bash ot-skill-sync/scripts/personal.sh list             # what you have, and where it links
+bash ot-skill-sync/scripts/personal.sh promote my-idea  # move it into skills/, re-sync, stage it
+```
+
+`promote` moves it into `skills/` (never copies), re-validates the layout, stages it, and tells you the remaining touchpoints — the [`docs/Skills.md`](../docs/Skills.md) list and its description-budget re-measure. `demote` is the inverse, for promoting too early. A personal skill may not share a name with a committed one; that is a hard error, so nobody unknowingly runs a private fork of a team skill.
 
 ## 🎯 Writing a skill that earns its context
 

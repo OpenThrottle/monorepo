@@ -206,8 +206,11 @@ export const SKILLS_SOURCE_COPY = {
   filterExternalLabel: `External`,
   filterGroupLabel: `Filter by source`,
   filterOpenThrottleLabel: `OpenThrottle`,
+  filterPersonalLabel: `Personal`,
   openthrottleLabel: `OpenThrottle`,
   openthrottleTooltip: `Authored and managed in this OpenThrottle monorepo.`,
+  personalLabel: `Personal`,
+  personalTooltip: `Yours only. Lives outside the repo in your personal skills directory and is linked in — nobody else's checkout has it, and it cannot be committed. Promote it to share it.`,
 } as const;
 
 /**

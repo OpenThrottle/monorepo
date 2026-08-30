@@ -280,3 +280,78 @@ Two places enforce it, and both are needed:
 A directory with any content is left alone and remains an occupant, so target-wins is unchanged for real skills.
 
 Also fixed at the source: apply no longer creates those directories (`enabledSkillPaths` on the manifest already records which skills OT offers, and nothing reads the directories). The detection rule stays regardless — it fixes the class, and an empty directory should never have masked a real skill.
+
+---
+
+## 7. The in-repo personal tier (added 2026-08-29)
+
+§1's personal layer only ever reached **foreign** repos. This section adds the same tier to the **in-repo** `ot-skill-sync` pipeline, so a private skill fans out into every agent CLI of the repo you are standing in — and can be promoted into the committed catalog with one command.
+
+The mechanism costs almost nothing, because the content never enters the worktree. A personal skill lives at `~/.openthrottle/skills/<name>/SKILL.md`; the only artifact inside the repo is a symlink under `.agents/skills/` and each `AGENT_SKILL_DIRS` entry — paths the existing managed `.gitignore` block already ignores (`!.agents/skills/*/` rescues real directories, and git classes a symlink as a file, not a directory). That is uncommittability twice over, but it is a happy accident of two rules meeting, so §7.4 asserts it explicitly rather than trusting it.
+
+### 7.1 One root, one env var, and only one toggle
+
+|          | in-repo tier (`sync.sh`)                                 | foreign injection                      |
+| -------- | -------------------------------------------------------- | -------------------------------------- |
+| Root     | `~/.openthrottle/skills`                                 | same                                   |
+| Override | `OPENTHROTTLE_PERSONAL_SKILLS_DIR`                       | same                                   |
+| Opt-in   | **presence** — the root exists and holds ≥ 1 valid skill | `OPENTHROTTLE_PERSONAL_SKILLS_ENABLED` |
+
+**`OPENTHROTTLE_PERSONAL_SKILLS_ENABLED` keeps exactly the meaning it has today: the foreign-injection toggle.** It is not extended to the in-repo tier, and the two are not unified.
+
+The reason is that the two tiers carry different risk. Foreign injection **writes into somebody else's repository**, on a machine-wide service, for repos the person never named — an explicit, default-off toggle is the right price for that. The in-repo tier writes gitignored symlinks into the repo you are already running `sync.sh` inside, from a directory only you can create. Creating `~/.openthrottle/skills/my-thing/SKILL.md` is already an unambiguous, deliberate act; requiring a second env var to make it take effect adds no safety and one more way to be baffled about why your skill did not appear. Presence is the opt-in.
+
+What the two tiers **must** share is the root itself. There is one contract with two implementations, because the in-repo pipeline is shell and a shell script that had to boot Node just to find a directory would be the worse trade:
+
+- **TypeScript** — `resolvePersonalSkillsRoot()` in `personal-skills-config.ts` is the ungated definition; `resolvePersonalSkillsDir()` is now nothing but the `ENABLED`-gated foreign-injection wrapper around it.
+- **Bash** — `resolve_personal_skills_root` in `skills/ot-skill-sync/scripts/common.sh`.
+
+The two are **pinned to each other by a test** (`scripts/__tests__/personal-skills-tier.test.ts` § "one personal root, two implementations") covering the default, an explicit override, and an empty override. Change one, change both — the test says so, and fails when you do not. Duplicating the literal `~/.openthrottle/skills` without that pin is exactly how they drift, and a drift here means a person has two "personal" directories and no way to tell which one a given tool read.
+
+**What counts as a skill** is unchanged and shared with `discoverSkillDirs`: a direct child directory containing a readable `SKILL.md`. Anything else under the personal root is skipped with a **warning, never an error** — a personal tier is where half-finished things live, and one broken draft must not stop the other skills from syncing.
+
+### 7.2 Collision with a committed skill is a hard error
+
+Foreign injection locks `ot-curated < personal < target repo`. In-repo, the repo **is** the target, so that ordering has nothing to say: it would resolve to "the repo wins, drop the personal skill silently", which is the worst of the options — your skill vanishes without a word.
+
+The rule for the in-repo tier is therefore neither precedence nor silence:
+
+```
+✗ personal skill 'x' collides with committed skills/x
+  rename the personal skill, or re-run with --allow-shadow to run your private fork
+```
+
+A name owned by `skills/<name>` (or by `skills-lock.json`) is a **hard error** from `sync.sh`, with an explicit `--allow-shadow` escape hatch for the deliberate case of iterating on a private fork of a team skill. This is deliberately louder than the foreign rule, because the failure it prevents is worse: silently running a private variant of a skill your colleagues also invoke, and reporting results as if they came from the shared one. `--allow-shadow` makes personal win over committed for that run, and says so in the output.
+
+### 7.3 Ownership inside `.agents/skills/` — now three cases
+
+Today ownership is read straight off the on-disk type. Personal adds a third case, and the discriminator is **which root the link resolves into**:
+
+| On-disk                              | Owner                         | Sync behaviour                                 |
+| ------------------------------------ | ----------------------------- | ---------------------------------------------- |
+| real directory                       | vendored (`skills-lock.json`) | never touched                                  |
+| symlink → `$REPO_ROOT/skills/<name>` | committed authored            | maintained                                     |
+| symlink → `<personal root>/<name>`   | **personal tier**             | maintained; reported as `personal`             |
+| symlink → anywhere else, or dangling | stale / rogue                 | reaped in sync, reported as drift in `--check` |
+
+The last row is the subtle one, because a link into a personal root that is no longer the _current_ root still resolves fine. **Membership in the currently-resolved personal root is the test, not mere resolvability.** A person who repoints `OPENTHROTTLE_PERSONAL_SKILLS_DIR` gets their old links reaped, which is right — they now point at content the pipeline no longer considers part of the tier.
+
+Sync output states the tier each link came from, so `sync.sh` is self-explaining and nobody has to run `readlink` to find out why a skill is there.
+
+### 7.4 Uncommittability is asserted, not assumed
+
+`--check` runs `git check-ignore -q` on every generated personal link and reports a violation if it is not ignored. **Assert with `git check-ignore`, never `lstatSync`/`test -e`** — those follow parent symlinks and pass vacuously, a trap already hit once in this codebase.
+
+A staging guard on the existing Husky pre-commit chain refuses a commit that stages any path resolving to a personal skill link, naming the file and pointing at `promote`.
+
+### 7.5 CI parity is the hard constraint
+
+CI has no `~/.openthrottle/skills` and must never gain one. **With the root absent, every code path is byte-identical to today** — same output, same exit code, no new warnings. Personal skills never appear in `skills-lock.json` or the `docs/Skills.md` source table, and that is asserted rather than left to chance.
+
+### 7.6 What the later work must not break
+
+- The stage-1/stage-2 shape. Personal skills enter at stage 1 and ride the existing stage 2 unchanged — **no special-casing downstream**, or the fan-out and the reaper drift apart.
+- The ownership-by-type read. Nothing may need a side-ledger; the personal case is still answerable from the filesystem alone (§7.3).
+- Directory pruning uses `rmdir` (empty-only) semantics. The recursive-remove variant throws on a directory and silently leaves it behind — that exact bug was hit in the injection teardown path.
+- The injection resolver drops any name the target repo owns, and `scanTargetOwnedSkillNames` builds its keys from resolved target dirs. Changing one side without the other silently un-injects OT's own skills (§1a).
+- Empty/missing personal root stays a clean no-op on **every** path, including `cleanup.sh` and `--check`.

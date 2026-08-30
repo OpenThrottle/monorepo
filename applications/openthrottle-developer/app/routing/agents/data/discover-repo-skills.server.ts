@@ -69,6 +69,9 @@ const toRepoRelativePath = (skillsDir: string, folderName: string): string =>
   `${skillsDir}/${folderName}/${SKILL_FILE_NAME}`;
 
 interface SkillProvenance {
+  /** `true` only for the personal tier; `undefined` otherwise, matching the
+   * optional field on RepoSkillEntry so an ordinary skill carries no flag. */
+  readonly isPersonal: true | undefined;
   readonly source: SkillSource;
   readonly sourceUrl: string | undefined;
 }
@@ -78,6 +81,18 @@ interface SkillProvenance {
  * a skill folder whose real path resolves under `<root>/skills/` is authored
  * here (`openthrottle`); anything else is a lockfile install (`external`),
  * with its origin URL looked up from skills-lock.json by folder name.
+ *
+ * A third case resolves ENTIRELY OUTSIDE the repo: the personal tier
+ * (`~/.openthrottle/skills`, linked in by ot-skill-sync — see
+ * docs/monorepo/foreign-workspace-skill-injection.md §7). A lockfile install is
+ * always a real directory inside the repo, so "real path escapes the repo root"
+ * is exactly the personal case, and nothing else. Without this it reports as
+ * `external` — i.e. as somebody else's third-party skill, with a sourceUrl
+ * lookup that can never hit — which is the opposite of what it is.
+ *
+ * `isPersonal` is deliberately a separate flag rather than a third
+ * {@link SkillSource}: `source` is ingested and served over GraphQL, and the
+ * personal tier is local developer tooling with no server surface.
  */
 const deriveSkillProvenance = (
   monorepoRoot: string,
@@ -89,13 +104,21 @@ const deriveSkillProvenance = (
     const realRoot = realpathSync(monorepoRoot);
     const realDir = realpathSync(absoluteSkillDir);
     if (realDir.startsWith(`${realRoot}${sep}skills${sep}`)) {
-      return { source: 'openthrottle', sourceUrl: undefined };
+      return {
+        isPersonal: undefined,
+        source: 'openthrottle',
+        sourceUrl: undefined,
+      };
+    }
+    if (!realDir.startsWith(`${realRoot}${sep}`)) {
+      return { isPersonal: true, source: 'external', sourceUrl: undefined };
     }
   } catch {
     // Unresolvable path — treat as external below.
   }
 
   return {
+    isPersonal: undefined,
     source: 'external',
     sourceUrl: deriveSkillSourceUrl(lock[folderName]),
   };
@@ -110,7 +133,7 @@ const readSkillEntry = (
   lock: SkillsLockMap,
 ): RepoSkillEntry => {
   const repoRelativePath = toRepoRelativePath(skillsDir, folderName);
-  const { source, sourceUrl } = deriveSkillProvenance(
+  const { isPersonal, source, sourceUrl } = deriveSkillProvenance(
     monorepoRoot,
     join(monorepoRoot, skillsDir, folderName),
     folderName,
@@ -123,6 +146,7 @@ const readSkillEntry = (
   } catch {
     return {
       disableModelInvocation: undefined,
+      isPersonal,
       layout,
       repoRelativePath,
       slug: folderName,
@@ -143,6 +167,7 @@ const readSkillEntry = (
 
   return {
     disableModelInvocation,
+    isPersonal,
     layout,
     repoRelativePath,
     slug,

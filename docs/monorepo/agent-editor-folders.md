@@ -74,13 +74,14 @@ bash skills/ot-skill-sync/scripts/sync.sh --check  # validate without writing (C
 
 ## 2. What's authored vs generated
 
-| Concern            | Author here (SSOT)                                                                                                        | Generated (do not edit)                                                             |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| OT-owned skills    | `skills/<slug>/SKILL.md`                                                                                                  | `.agents/skills/<slug>` (symlink), `.claude/skills/<slug>`, `.gemini/skills/<slug>` |
-| External skills    | `npx skills add <owner>/<repo> --skill <name> --agent universal` (→ `skills-lock.json` + a real dir in `.agents/skills/`) | `.claude/skills/<slug>`, `.gemini/skills/<slug>`                                    |
-| Rules              | `.agents/rules/**/*.mdc`                                                                                                  | `.cursor/rules/**/*.mdc`                                                            |
-| Personas / prompts | `.agents/personas/`, `.agents/prompts/`                                                                                   | — (loaded via Ralph `--prompt-file`)                                                |
-| Skill tags         | `project_skills.tags` (GraphQL / `/skills` UI; ingest does not write tags)                                                | —                                                                                   |
+| Concern            | Author here (SSOT)                                                                                                                                 | Generated (do not edit)                                                             |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| OT-owned skills    | `skills/<slug>/SKILL.md`                                                                                                                           | `.agents/skills/<slug>` (symlink), `.claude/skills/<slug>`, `.gemini/skills/<slug>` |
+| External skills    | `npx skills add <owner>/<repo> --skill <name> --agent universal` (→ `skills-lock.json` + a real dir in `.agents/skills/`)                          | `.claude/skills/<slug>`, `.gemini/skills/<slug>`                                    |
+| Personal skills    | `~/.openthrottle/skills/<slug>/SKILL.md` — **outside the repo**, per-user, never committed (`OPENTHROTTLE_PERSONAL_SKILLS_DIR` overrides the root) | `.agents/skills/<slug>` (symlink), `.claude/skills/<slug>`, `.gemini/skills/<slug>` |
+| Rules              | `.agents/rules/**/*.mdc`                                                                                                                           | `.cursor/rules/**/*.mdc`                                                            |
+| Personas / prompts | `.agents/personas/`, `.agents/prompts/`                                                                                                            | — (loaded via Ralph `--prompt-file`)                                                |
+| Skill tags         | `project_skills.tags` (GraphQL / `/skills` UI; ingest does not write tags)                                                                         | —                                                                                   |
 
 ### Prompt filename conventions (`.agents/prompts/`)
 
@@ -103,18 +104,19 @@ Prompts are flat files in `.agents/prompts/`; the walker derives slug and title 
 
 ## 3. Where to edit (common tasks)
 
-| I want to…                             | Do this                                                                                                               |
-| -------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| Add an **OT-owned skill**              | Create `skills/<slug>/SKILL.md`, run `sync.sh`. Tag the ingested record in `/skills` (not a JSON overlay)             |
-| Install an **external skill**          | `npx skills add <owner>/<repo> --skill <name> --agent universal`, run `sync.sh` (keep it 1:1)                         |
-| **Customize** an external skill        | Author a companion skill/rule that references it — don't edit the vendored copy (see §2)                              |
-| Change **TypeScript / JS style**       | `.agents/rules/coding/*.mdc` (not the `.cursor/rules/` symlink)                                                       |
-| Change **OT / GitHub / Ralph rules**   | `.agents/rules/commands/*.mdc`                                                                                        |
-| Change **Ralph loop** behavior         | `skills/agents-ralph/SKILL.md`                                                                                        |
-| Change **Ralph CLI** flags / queue     | `skills/workflow-ralph/`, `tools/workflows/`                                                                          |
-| Add a **persona**                      | `.agents/personas/<id>.md` from `_template.md`                                                                        |
-| Configure **openthrottle-mcp** locally | Copy `.cursor/mcp.json` → `.cursor/mcp.json` (full guide: [mcp-registration.md](../openthrottle/mcp-registration.md)) |
-| Recreate generated links after clone   | `bash skills/ot-skill-sync/scripts/sync.sh`                                                                           |
+| I want to…                             | Do this                                                                                                                                          |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Add an **OT-owned skill**              | Create `skills/<slug>/SKILL.md`, run `sync.sh`. Tag the ingested record in `/skills` (not a JSON overlay)                                        |
+| Try a **private skill** of your own    | `bash skills/ot-skill-sync/scripts/personal.sh new <slug>` — lands outside the repo, uncommittable; `promote <slug>` graduates it into `skills/` |
+| Install an **external skill**          | `npx skills add <owner>/<repo> --skill <name> --agent universal`, run `sync.sh` (keep it 1:1)                                                    |
+| **Customize** an external skill        | Author a companion skill/rule that references it — don't edit the vendored copy (see §2)                                                         |
+| Change **TypeScript / JS style**       | `.agents/rules/coding/*.mdc` (not the `.cursor/rules/` symlink)                                                                                  |
+| Change **OT / GitHub / Ralph rules**   | `.agents/rules/commands/*.mdc`                                                                                                                   |
+| Change **Ralph loop** behavior         | `skills/agents-ralph/SKILL.md`                                                                                                                   |
+| Change **Ralph CLI** flags / queue     | `skills/workflow-ralph/`, `tools/workflows/`                                                                                                     |
+| Add a **persona**                      | `.agents/personas/<id>.md` from `_template.md`                                                                                                   |
+| Configure **openthrottle-mcp** locally | Copy `.cursor/mcp.json` → `.cursor/mcp.json` (full guide: [mcp-registration.md](../openthrottle/mcp-registration.md))                            |
+| Recreate generated links after clone   | `bash skills/ot-skill-sync/scripts/sync.sh`                                                                                                      |
 
 ---
 
@@ -130,6 +132,8 @@ Prompts are flat files in `.agents/prompts/`; the walker derives slug and title 
 | `.vscode/settings.json.default`                                                          | `.vscode/settings.json`, `CLAUDE.local.md`                                                                          |
 
 > The `.gitignore` "Managed by OpenThrottle ot-skill-sync" block ignores `.agents/skills/*` (the own-skill symlinks) and all of `.claude/skills/` and `.gemini/skills/`, while un-ignoring `.agents/skills/*/` so vendored external-install directories stay tracked. CI regenerates the ignored symlinks with `sync.sh` before running the drift gate.
+>
+> **Personal skills** (`~/.openthrottle/skills/`) are covered by the same block — their in-repo footprint is only symlinks, and git treats a symlink as a file, so `!.agents/skills/*/` never rescues one. That is asserted rather than assumed: `--check` runs `git check-ignore` on every personal link, and a pre-commit guard refuses to stage one. CI has no personal root and, with it absent, every code path behaves exactly as it did before the tier existed.
 
 ---
 

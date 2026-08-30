@@ -16,6 +16,7 @@ export {
   PERSONAL_SKILLS_DIR_ENV,
   PERSONAL_SKILLS_ENABLED_ENV,
   resolvePersonalSkillsDir,
+  resolvePersonalSkillsRoot,
 } from './personal-skills-config.ts';
 export type {
   EnsureMaterializedOptions,
