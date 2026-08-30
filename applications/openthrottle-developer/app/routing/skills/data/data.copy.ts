@@ -91,6 +91,7 @@ export const SKILL_DETAIL_COPY = {
   editExternalTooltip: `This skill is installed from an external source. Editing it here would fork it from upstream — change it upstream and re-sync.`,
   editLabel: `Edit`,
   emptyContentNotice: `The SKILL.md for this skill could not be read from disk.`,
+  metadataLabel: `Skill metadata`,
   notFoundStatusText: `Skill not found`,
   pathCopyLabel: `Copy path`,
   saveLabel: `Save`,

@@ -85,10 +85,11 @@ describe('routes/skills.$slug.tsx', () => {
       '---\nname: ot-plans\n---\n\n# OT plans heading\n\nBody paragraph.\n',
     );
 
-    expect(component.getByText('/ot-plans')).toBeInTheDocument();
     expect(
-      component.getByText('OpenThrottle plans skill.'),
+      component.getByRole('heading', { level: 1, name: 'ot-plans' }),
     ).toBeInTheDocument();
+    // The summary belongs to the Skill tab's SKILL.md render, not the chrome.
+    expect(component.queryByText('OpenThrottle plans skill.')).toBeNull();
     expect(component.getByText('OpenThrottle')).toBeInTheDocument();
     expect(component.getByText('Manual only')).toBeInTheDocument();
     expect(

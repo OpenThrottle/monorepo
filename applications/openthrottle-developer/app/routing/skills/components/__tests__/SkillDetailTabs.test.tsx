@@ -84,7 +84,9 @@ describe('SkillDetailTabs Component', () => {
 
     expect(component.getByTestId('SkillIntroduction')).toBeInTheDocument();
     expect(component.getByTestId('SkillDetail')).toBeInTheDocument();
-    expect(component.getByText('/brag-sheet')).toBeInTheDocument();
+    expect(
+      component.getByRole('heading', { level: 1, name: 'brag-sheet' }),
+    ).toBeInTheDocument();
     expect(component.getByText('External')).toBeInTheDocument();
     expect(component.getByText('Default (auto)')).toBeInTheDocument();
     expect(component.getByText('docs')).toBeInTheDocument();

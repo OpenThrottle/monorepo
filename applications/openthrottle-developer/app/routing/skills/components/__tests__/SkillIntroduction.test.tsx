@@ -60,26 +60,40 @@ describe('SkillIntroduction Component', () => {
     component = renderIntroduction();
   });
 
-  test('renders title, badges, summary, and path', () => {
+  test('renders the bare slug heading, badges, and path', () => {
     expect(component.getByTestId('SkillIntroduction')).toBeInTheDocument();
-    expect(component.getByText('/brag-sheet')).toBeInTheDocument();
+    expect(
+      component.getByRole('heading', { level: 1, name: baseEntry.slug }),
+    ).toBeInTheDocument();
     expect(
       component.getByText(SKILLS_SOURCE_COPY.externalLabel),
     ).toBeInTheDocument();
     expect(component.getByText('Default (auto)')).toBeInTheDocument();
-    expect(component.getByText('Vendored skill.')).toBeInTheDocument();
-    expect(
-      component.getByText('.agents/skills/brag-sheet/SKILL.md'),
-    ).toBeInTheDocument();
+    expect(component.getByText(baseEntry.repoRelativePath)).toBeInTheDocument();
   });
 
-  test('renders skill tags', () => {
+  test('leaves the summary to the Skill tab', () => {
+    // The Skill tab renders the whole SKILL.md; repeating the summary in the
+    // chrome was the duplication this layout removed.
+    expect(component.queryByText(String(baseEntry.summary))).toBeNull();
+  });
+
+  test('renders skill tags below the heading, not on the title row', () => {
     component.unmount();
     props = { ...props, entry: { ...baseEntry, tags: ['docs', 'git'] } };
     component = renderIntroduction();
 
-    expect(component.getByText('docs')).toBeInTheDocument();
-    expect(component.getByText('git')).toBeInTheDocument();
+    const metadata = component.getByTestId('skill-introduction-metadata');
+
+    expect(metadata).toHaveAttribute(
+      'aria-label',
+      SKILL_DETAIL_COPY.metadataLabel,
+    );
+    expect(metadata).toHaveTextContent('docs');
+    expect(metadata).toHaveTextContent('git');
+    expect(
+      component.getByRole('heading', { level: 1, name: baseEntry.slug }),
+    ).not.toHaveTextContent('docs');
   });
 
   test('links the external source badge to its sourceUrl', () => {
@@ -128,6 +142,38 @@ describe('SkillIntroduction Component', () => {
     // — the read-only gate must not reach them.
     expect(component.getByTestId('skill-run-now')).toBeInTheDocument();
     expect(component.getByTestId('skill-edit-disabled')).toBeInTheDocument();
+  });
+
+  test('renders the path copy control as a single button', () => {
+    // OpenThrottleClipboard is itself a <button>; wrapping it in another one
+    // is invalid HTML and fails hydration on every skill detail page.
+    const copy = component.getByRole('button', {
+      name: SKILL_DETAIL_COPY.pathCopyLabel,
+    });
+
+    expect(copy.querySelector('button')).toBeNull();
+  });
+
+  test('drops the path row for a DB-only orphan', () => {
+    component.unmount();
+    props = {
+      ...props,
+      entry: {
+        ...baseEntry,
+        orphanedAt: new Date(0),
+        repoRelativePath: '',
+      },
+      onRemoveOrphan: vi.fn(),
+    };
+    component = renderIntroduction();
+
+    // An orphan has no path, so a Copy path button would copy an empty string.
+    expect(
+      component.queryByRole('button', {
+        name: SKILL_DETAIL_COPY.pathCopyLabel,
+      }),
+    ).toBeNull();
+    expect(component.getByTestId('skill-orphan-badge')).toBeInTheDocument();
   });
 
   test('renders an unlinked OpenThrottle badge for owned skills', () => {
