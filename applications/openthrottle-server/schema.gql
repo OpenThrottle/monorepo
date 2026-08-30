@@ -3219,6 +3219,97 @@ type RepositoryObject {
   updatedAt: DateTime!
 }
 
+"""One classified, non-fatal thing that happened during a scan."""
+type WorktreeDiscoveryProblemObject {
+  """
+  The raw underlying message (errno text, git stderr). For diagnostics — the sentence shown to a person is derived from kind, never from this.
+  """
+  detail: String!
+
+  """What happened. See WorktreeDiscoveryProblemKind."""
+  kind: WorktreeDiscoveryProblemKind!
+
+  """
+  The directory the problem is about, or null when it is not about one (the cap).
+  """
+  path: String
+
+  """
+  Set only when the problem is attributable to one registered repository, so the UI can report it on that row instead of page-wide.
+  """
+  repositoryId: ID
+}
+
+"""
+What a scan noticed that was less than complete. The server decides WHAT happened; the client decides how loud it is. States that are merely the healthy default — above all a repository that has no worktrees yet — are not problems and are never reported.
+"""
+enum WorktreeDiscoveryProblemKind {
+  """
+  More worktrees exist than the hard cap; the overflow is counted in droppedCount and not listed.
+  """
+  CAP_EXCEEDED
+
+  """
+  The registered checkouts could not be listed, so the scan had nothing to scan from. The whole result is empty.
+  """
+  CHECKOUT_LIST_FAILED
+
+  """
+  A registered folder is not a git checkout at all. Carries repositoryId — belongs on that repository’s row, not on the page.
+  """
+  NOT_A_GIT_REPO
+
+  """
+  A read-only git probe against a directory that does exist failed. The genuinely degraded case: worktrees may be missing from the list.
+  """
+  PROBE_FAILED
+
+  """
+  A worktree root exists but could not be read (EACCES and friends). A root that simply does not exist is NOT this — that is a repository with no worktrees yet, and is silent.
+  """
+  ROOT_UNREADABLE
+
+  """
+  git still reports a worktree whose directory is gone. Actionable exactly once, with `git worktree prune`; the path is never probed.
+  """
+  STALE_WORKTREE_ENTRY
+}
+
+"""One resolved worktree root and what the depth-1 scan of it found."""
+type ScannedWorktreeRootObject {
+  """
+  Whether the directory is there at all. False is the ordinary state of a repository with no worktrees yet — it is data, not a failure.
+  """
+  exists: Boolean!
+
+  """Absolute path on the server host."""
+  path: String!
+
+  """Which rung of the shared ladder resolved this root."""
+  source: WorktreeRootSource!
+
+  """Linked worktrees this root contributed to the result."""
+  worktreeCount: Int!
+}
+
+"""
+Which rung of the shared worktree-root ladder resolved the scanned root. The same ladder skills/ot-worktree/scripts/root.sh applies, so the page can never disagree with where the script writes.
+"""
+enum WorktreeRootSource {
+  """
+  OPENTHROTTLE_WORKTREE_ROOT in the target repo’s .env file — how a repo customizes where its worktrees go.
+  """
+  CHECKOUT_ENV
+
+  """
+  The default: ~/.openthrottle/worktrees, the hidden root OpenThrottle owns. OT appends <org>/<repo> beneath it, taken from the checkout’s git remote.
+  """
+  DEFAULT
+
+  """OPENTHROTTLE_WORKTREE_ROOT in the server process's environment."""
+  ENV
+}
+
 """
 A linked git worktree that exists on disk right now (server-host path).
 """
@@ -3293,6 +3384,11 @@ type DiscoveredWorktreesObject {
   droppedCount: Int!
 
   """
+  Classified non-fatal problems. Empty on a healthy machine — a repository with no worktrees yet reports nothing at all.
+  """
+  problems: [WorktreeDiscoveryProblemObject!]!
+
+  """
   Which rung of the ladder produced worktreeRoot; null when no root could be resolved.
   """
   rootSource: WorktreeRootSource
@@ -3303,33 +3399,18 @@ type DiscoveredWorktreesObject {
   scannedAt: String!
 
   """
-  Non-fatal problems (an unreadable root, a failed git probe, the cap). Discovery degrades to warnings rather than failing the page.
+  Every root the scan looked in. worktreeRoot names only the first, which misrepresents a machine whose primaries resolve to several roots.
   """
-  warnings: [String!]!
+  scannedRoots: [ScannedWorktreeRootObject!]!
+
+  """Non-fatal problems as flat sentences, one per entry in problems."""
+  warnings: [String!]! @deprecated(reason: "Use problems — warnings is unclassified free text and cannot be presented per-kind.")
 
   """
   The resolved root that was scanned; null when none could be resolved (no registered primary checkout). When several primaries resolve to different roots, this is the first — every root is still scanned.
   """
   worktreeRoot: String
   worktrees: [DiscoveredWorktreeObject!]!
-}
-
-"""
-Which rung of the shared worktree-root ladder resolved the scanned root. The same ladder skills/ot-worktree/scripts/root.sh applies, so the page can never disagree with where the script writes.
-"""
-enum WorktreeRootSource {
-  """
-  OPENTHROTTLE_WORKTREE_ROOT in the target repo’s .env file — how a repo customizes where its worktrees go.
-  """
-  CHECKOUT_ENV
-
-  """
-  The default: ~/.openthrottle/worktrees, the hidden root OpenThrottle owns. OT appends <org>/<repo> beneath it, taken from the checkout’s git remote.
-  """
-  DEFAULT
-
-  """OPENTHROTTLE_WORKTREE_ROOT in the server process's environment."""
-  ENV
 }
 
 """

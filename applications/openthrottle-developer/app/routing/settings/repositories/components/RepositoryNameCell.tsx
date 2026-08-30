@@ -83,6 +83,18 @@ export const RepositoryNameCell = (
             {row.displayName}
           </p>
 
+          {row.notAGitRepository ? (
+            <Badge
+              className="shrink-0"
+              color="red"
+              size="xs"
+              title={REPOSITORIES_TABLE_COPY.notAGitRepositoryTitle}
+              variant="secondary"
+            >
+              {REPOSITORIES_TABLE_COPY.notAGitRepositoryBadge}
+            </Badge>
+          ) : null}
+
           {row.isWorktree ? (
             <Badge
               className="shrink-0"

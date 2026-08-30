@@ -999,11 +999,18 @@ export type DiscoveredWorktreesObject = {
   __typename?: 'DiscoveredWorktreesObject';
   /** Worktrees found beyond the hard cap and therefore not listed. Always accompanied by a warning — discovery never truncates silently. */
   droppedCount: Scalars['Int']['output'];
+  /** Classified non-fatal problems. Empty on a healthy machine — a repository with no worktrees yet reports nothing at all. */
+  problems: Array<WorktreeDiscoveryProblemObject>;
   /** Which rung of the ladder produced worktreeRoot; null when no root could be resolved. */
   rootSource?: Maybe<WorktreeRootSource>;
   /** ISO timestamp of this scan. Discovery runs live on every request; there is no cached snapshot. */
   scannedAt: Scalars['String']['output'];
-  /** Non-fatal problems (an unreadable root, a failed git probe, the cap). Discovery degrades to warnings rather than failing the page. */
+  /** Every root the scan looked in. worktreeRoot names only the first, which misrepresents a machine whose primaries resolve to several roots. */
+  scannedRoots: Array<ScannedWorktreeRootObject>;
+  /**
+   * Non-fatal problems as flat sentences, one per entry in problems.
+   * @deprecated Use problems — warnings is unclassified free text and cannot be presented per-kind.
+   */
   warnings: Array<Scalars['String']['output']>;
   /** The resolved root that was scanned; null when none could be resolved (no registered primary checkout). When several primaries resolve to different roots, this is the first — every root is still scanned. */
   worktreeRoot?: Maybe<Scalars['String']['output']>;
@@ -4134,6 +4141,19 @@ export type RuleApplicationObject = {
   updatedAt: Scalars['DateTime']['output'];
 };
 
+/** One resolved worktree root and what the depth-1 scan of it found. */
+export type ScannedWorktreeRootObject = {
+  __typename?: 'ScannedWorktreeRootObject';
+  /** Whether the directory is there at all. False is the ordinary state of a repository with no worktrees yet — it is data, not a failure. */
+  exists: Scalars['Boolean']['output'];
+  /** Absolute path on the server host. */
+  path: Scalars['String']['output'];
+  /** Which rung of the shared ladder resolved this root. */
+  source: WorktreeRootSource;
+  /** Linked worktrees this root contributed to the result. */
+  worktreeCount: Scalars['Int']['output'];
+};
+
 /** A user-defined scheduled agent job: a prompt run with a driver/model/settings on a cron schedule via one shared BullMQ queue. */
 export type ScheduledAgentJobObject = {
   __typename?: 'ScheduledAgentJobObject';
@@ -5501,6 +5521,35 @@ export enum WorktreeActivity {
   /** A live IN_PROGRESS plan run is executing here — live meaning its heartbeat is inside the staleness cutoff. A stale IN_PROGRESS run is dead and does NOT read as running. */
   Running = 'RUNNING',
 }
+
+/** What a scan noticed that was less than complete. The server decides WHAT happened; the client decides how loud it is. States that are merely the healthy default — above all a repository that has no worktrees yet — are not problems and are never reported. */
+export enum WorktreeDiscoveryProblemKind {
+  /** More worktrees exist than the hard cap; the overflow is counted in droppedCount and not listed. */
+  CapExceeded = 'CAP_EXCEEDED',
+  /** The registered checkouts could not be listed, so the scan had nothing to scan from. The whole result is empty. */
+  CheckoutListFailed = 'CHECKOUT_LIST_FAILED',
+  /** A registered folder is not a git checkout at all. Carries repositoryId — belongs on that repository’s row, not on the page. */
+  NotAGitRepo = 'NOT_A_GIT_REPO',
+  /** A read-only git probe against a directory that does exist failed. The genuinely degraded case: worktrees may be missing from the list. */
+  ProbeFailed = 'PROBE_FAILED',
+  /** A worktree root exists but could not be read (EACCES and friends). A root that simply does not exist is NOT this — that is a repository with no worktrees yet, and is silent. */
+  RootUnreadable = 'ROOT_UNREADABLE',
+  /** git still reports a worktree whose directory is gone. Actionable exactly once, with `git worktree prune`; the path is never probed. */
+  StaleWorktreeEntry = 'STALE_WORKTREE_ENTRY',
+}
+
+/** One classified, non-fatal thing that happened during a scan. */
+export type WorktreeDiscoveryProblemObject = {
+  __typename?: 'WorktreeDiscoveryProblemObject';
+  /** The raw underlying message (errno text, git stderr). For diagnostics — the sentence shown to a person is derived from kind, never from this. */
+  detail: Scalars['String']['output'];
+  /** What happened. See WorktreeDiscoveryProblemKind. */
+  kind: WorktreeDiscoveryProblemKind;
+  /** The directory the problem is about, or null when it is not about one (the cap). */
+  path?: Maybe<Scalars['String']['output']>;
+  /** Set only when the problem is attributable to one registered repository, so the UI can report it on that row instead of page-wide. */
+  repositoryId?: Maybe<Scalars['ID']['output']>;
+};
 
 /** Which rung of the shared worktree-root ladder resolved the scanned root. The same ladder skills/ot-worktree/scripts/root.sh applies, so the page can never disagree with where the script writes. */
 export enum WorktreeRootSource {

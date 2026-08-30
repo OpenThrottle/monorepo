@@ -150,6 +150,7 @@ import {
   WorkspaceEditorId,
   WorkspaceFolderReconciliation,
   WorktreeActivity,
+  WorktreeDiscoveryProblemKind,
   WorktreeRootSource,
 } from './graphql.js';
 
@@ -197,6 +198,10 @@ export const WorkspaceFolderReconciliationSchema = z.nativeEnum(
 );
 
 export const WorktreeActivitySchema = z.nativeEnum(WorktreeActivity);
+
+export const WorktreeDiscoveryProblemKindSchema = z.nativeEnum(
+  WorktreeDiscoveryProblemKind,
+);
 
 export const WorktreeRootSourceSchema = z.nativeEnum(WorktreeRootSource);
 

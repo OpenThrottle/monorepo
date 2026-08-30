@@ -65,6 +65,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   const allRows = buildRepositoryRows(
     data.workspaceRepositories,
     data.discoveredWorktrees.worktrees,
+    data.discoveredWorktrees.problems,
   );
   const { autoExpandedIds, rows: filtered } = filterRepositoryRows(
     allRows,

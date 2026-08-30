@@ -35,8 +35,20 @@ export class DiscoveredWorktreesResolver {
 
     return {
       droppedCount: result.droppedCount,
+      problems: result.problems.map((entry) => ({
+        detail: entry.detail,
+        kind: entry.kind,
+        path: entry.path,
+        repositoryId: entry.repositoryId,
+      })),
       rootSource: result.rootSource,
       scannedAt: result.scannedAt,
+      scannedRoots: result.scannedRoots.map((root) => ({
+        exists: root.exists,
+        path: root.path,
+        source: root.source,
+        worktreeCount: root.worktreeCount,
+      })),
       warnings: [...result.warnings],
       worktreeRoot: result.worktreeRoot,
       worktrees: result.worktrees.map((worktree) => ({

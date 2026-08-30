@@ -112,4 +112,27 @@ describe('RepositoryNameCell Component', () => {
 
     expect(component.queryByRole('button')).toBeNull();
   });
+
+  test('says so on the row when the folder is not a git repository', () => {
+    props = { ...props, row: { ...props.row, notAGitRepository: true } };
+    setup();
+
+    const badge = component.getByText(
+      REPOSITORIES_TABLE_COPY.notAGitRepositoryBadge,
+    );
+
+    expect(badge).toBeInTheDocument();
+    expect(badge).toHaveAttribute(
+      'title',
+      REPOSITORIES_TABLE_COPY.notAGitRepositoryTitle,
+    );
+  });
+
+  test('shows no such badge for an ordinary checkout', () => {
+    setup();
+
+    expect(
+      component.queryByText(REPOSITORIES_TABLE_COPY.notAGitRepositoryBadge),
+    ).toBeNull();
+  });
 });

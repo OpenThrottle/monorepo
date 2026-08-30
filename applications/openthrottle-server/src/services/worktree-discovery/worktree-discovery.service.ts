@@ -39,10 +39,16 @@ import { realPath } from '../paths/real-path';
 import { resolveWorktreeRoot } from '../worktree-root/worktree-root.resolver';
 import type {
   DiscoveredWorktree,
+  ScannedWorktreeRoot,
+  WorktreeDiscoveryProblem,
+  WorktreeDiscoveryProblemKind,
   WorktreeDiscoveryResult,
   WorktreeDiscoverySource,
 } from './worktree-discovery.types';
-import { WORKTREE_DISCOVERY_SOURCE } from './worktree-discovery.types';
+import {
+  WORKTREE_DISCOVERY_PROBLEM,
+  WORKTREE_DISCOVERY_SOURCE,
+} from './worktree-discovery.types';
 
 const execFileAsync = promisify(execFile);
 
@@ -59,6 +65,13 @@ export const MAX_DISCOVERED_WORKTREES = 200;
 const CHECKOUT_LIST_LIMIT = 200;
 
 const WORKTREE_KIND = 'worktree';
+
+/**
+ * Errnos that mean "this directory was never created", which for a worktree root is the healthy
+ * state of a repository that has no worktrees yet — not a degraded scan. Anything else (EACCES,
+ * EPERM, …) genuinely may be hiding worktrees and is reported.
+ */
+const ABSENT_DIRECTORY_ERRNOS = new Set(['ENOENT', 'ENOTDIR']);
 
 /** Accumulator for one worktree while the two sources are being merged. */
 interface WorktreeCandidate {
@@ -84,43 +97,77 @@ export class WorktreeDiscoveryService {
    * failing git probe all degrade to a warning and a partial (possibly empty) list.
    */
   async discover(userId: string): Promise<WorktreeDiscoveryResult> {
-    const warnings: string[] = [];
+    const problems: WorktreeDiscoveryProblem[] = [];
     const scannedAt = new Date().toISOString();
 
-    const checkouts = await this.listCheckouts(userId, warnings);
+    const checkouts = await this.listCheckouts(userId, problems);
     const registered = this.indexCheckouts(checkouts);
     const primaries = checkouts.filter(
       (checkout) => checkout.kind !== WORKTREE_KIND,
     );
 
-    const roots = this.resolveRoots(primaries, warnings);
     const candidates = new Map<string, WorktreeCandidate>();
+    const notGitRepos = await this.collectFromGitWorktreeList(
+      primaries,
+      candidates,
+      problems,
+    );
 
-    await this.collectFromGitWorktreeList(primaries, candidates, warnings);
-    this.collectFromRootScan([...roots.keys()], candidates, warnings);
+    // A folder that is not a repository has no worktree root to resolve, and asking would shell out
+    // to `git remote get-url origin` only to fall back to the basename.
+    const roots = this.resolveRoots(
+      primaries.filter(
+        (primary) => !notGitRepos.has(realPath(primary.filesystemPath)),
+      ),
+      problems,
+    );
+    const scannedRoots = this.collectFromRootScan(roots, candidates, problems);
 
     const ordered = [...candidates.values()].sort((a, b) =>
       a.path.localeCompare(b.path),
     );
-    const kept = ordered.slice(0, MAX_DISCOVERED_WORKTREES);
-    const droppedCount = ordered.length - kept.length;
+
+    // `git worktree list` keeps reporting deleted worktrees until someone prunes. Gate on existence
+    // BEFORE describe(), so one dead path costs one problem rather than three failed git probes.
+    const live: WorktreeCandidate[] = [];
+    for (const candidate of ordered) {
+      if (isExistingDirectory(candidate.path)) {
+        live.push(candidate);
+        continue;
+      }
+      problems.push(
+        problem(
+          WORKTREE_DISCOVERY_PROBLEM.STALE_WORKTREE_ENTRY,
+          'reported by `git worktree list` but the directory is gone',
+          candidate.path,
+        ),
+      );
+    }
+
+    const kept = live.slice(0, MAX_DISCOVERED_WORKTREES);
+    const droppedCount = live.length - kept.length;
     if (droppedCount > 0) {
-      warnings.push(
-        `discovery capped at ${MAX_DISCOVERED_WORKTREES} worktrees; ${droppedCount} more were found and not listed`,
+      problems.push(
+        problem(
+          WORKTREE_DISCOVERY_PROBLEM.CAP_EXCEEDED,
+          `${droppedCount} more were found and not listed`,
+        ),
       );
     }
 
     const worktrees = await Promise.all(
-      kept.map((candidate) => this.describe(candidate, registered, warnings)),
+      kept.map((candidate) => this.describe(candidate, registered, problems)),
     );
 
     const [firstRoot] = roots.entries();
 
     return {
       droppedCount,
+      problems,
       rootSource: firstRoot?.[1] ?? null,
       scannedAt,
-      warnings,
+      scannedRoots,
+      warnings: problems.map(formatWarning),
       worktreeRoot: firstRoot?.[0] ?? null,
       worktrees,
     };
@@ -128,14 +175,19 @@ export class WorktreeDiscoveryService {
 
   private async listCheckouts(
     userId: string,
-    warnings: string[],
+    problems: WorktreeDiscoveryProblem[],
   ): Promise<RepositoryCheckout[]> {
     try {
       return await this.checkoutsService.listByUserId(userId, {
         limit: CHECKOUT_LIST_LIMIT,
       });
     } catch (error) {
-      warnings.push(`could not list registered checkouts: ${message(error)}`);
+      problems.push(
+        problem(
+          WORKTREE_DISCOVERY_PROBLEM.CHECKOUT_LIST_FAILED,
+          message(error),
+        ),
+      );
       return [];
     }
   }
@@ -161,7 +213,7 @@ export class WorktreeDiscoveryService {
    */
   private resolveRoots(
     primaries: readonly RepositoryCheckout[],
-    warnings: string[],
+    problems: WorktreeDiscoveryProblem[],
   ): Map<string, WorktreeRootSource> {
     const roots = new Map<string, WorktreeRootSource>();
 
@@ -174,8 +226,12 @@ export class WorktreeDiscoveryService {
           roots.set(resolvedRoot, source);
         }
       } catch (error) {
-        warnings.push(
-          `could not resolve the worktree root for ${primary.filesystemPath}: ${message(error)}`,
+        problems.push(
+          problem(
+            WORKTREE_DISCOVERY_PROBLEM.PROBE_FAILED,
+            `worktree root resolution: ${message(error)}`,
+            primary.filesystemPath,
+          ),
         );
       }
     }
@@ -183,63 +239,124 @@ export class WorktreeDiscoveryService {
     return roots;
   }
 
-  /** Source 1: live `git worktree list --porcelain` from every registered primary checkout. */
+  /**
+   * Source 1: live `git worktree list --porcelain` from every registered primary checkout.
+   *
+   * @returns the real paths of registered folders that turned out not to be git repositories at
+   * all. That is a per-repository condition — reported once, on the row — not a page-wide warning
+   * that reappears on every load.
+   */
   private async collectFromGitWorktreeList(
     primaries: readonly RepositoryCheckout[],
     candidates: Map<string, WorktreeCandidate>,
-    warnings: string[],
-  ): Promise<void> {
+    problems: WorktreeDiscoveryProblem[],
+  ): Promise<Set<string>> {
+    const notGitRepos = new Set<string>();
+
     for (const primary of primaries) {
       // eslint-disable-next-line no-await-in-loop
-      const stdout = await this.git(primary.filesystemPath, warnings, [
+      const { error, stdout } = await this.runGit(primary.filesystemPath, [
         'worktree',
         'list',
         '--porcelain',
       ]);
+
+      if (error !== null) {
+        if (isNotAGitRepositoryError(error)) {
+          notGitRepos.add(realPath(primary.filesystemPath));
+          problems.push(
+            problem(
+              WORKTREE_DISCOVERY_PROBLEM.NOT_A_GIT_REPO,
+              error,
+              primary.filesystemPath,
+              primary.repositoryId,
+            ),
+          );
+        } else {
+          problems.push(
+            problem(
+              WORKTREE_DISCOVERY_PROBLEM.PROBE_FAILED,
+              `git worktree list --porcelain: ${error}`,
+              primary.filesystemPath,
+            ),
+          );
+        }
+        continue;
+      }
+
       for (const path of parseLinkedWorktrees(stdout)) {
         add(candidates, path, WORKTREE_DISCOVERY_SOURCE.GIT_WORKTREE_LIST);
       }
     }
+
+    return notGitRepos;
   }
 
-  /** Source 2: depth-1 scan of each resolved root for children whose `.git` is a file pointer. */
+  /**
+   * Source 2: depth-1 scan of each resolved root for children whose `.git` is a file pointer.
+   *
+   * @returns one record per root, so the page can report what it actually looked at rather than
+   * naming the first root and leaving the rest to be inferred from failures.
+   */
   private collectFromRootScan(
-    roots: readonly string[],
+    roots: ReadonlyMap<string, WorktreeRootSource>,
     candidates: Map<string, WorktreeCandidate>,
-    warnings: string[],
-  ): void {
-    for (const root of roots) {
+    problems: WorktreeDiscoveryProblem[],
+  ): ScannedWorktreeRoot[] {
+    const scanned: ScannedWorktreeRoot[] = [];
+
+    for (const [root, source] of roots) {
       let entries: string[];
       try {
         entries = readdirSync(root);
       } catch (error) {
-        warnings.push(
-          `worktree root ${root} could not be read: ${message(error)}`,
-        );
+        // A root that was never created is a repository with no worktrees yet — say nothing.
+        const absent = isAbsentDirectoryError(error);
+        if (!absent) {
+          problems.push(
+            problem(
+              WORKTREE_DISCOVERY_PROBLEM.ROOT_UNREADABLE,
+              message(error),
+              root,
+            ),
+          );
+        }
+        scanned.push({
+          exists: !absent,
+          path: root,
+          source,
+          worktreeCount: 0,
+        });
         continue;
       }
 
+      let worktreeCount = 0;
       for (const entry of entries) {
         const path = join(root, entry);
         if (!isLinkedWorktreeDirectory(path)) continue;
         add(candidates, path, WORKTREE_DISCOVERY_SOURCE.ROOT_SCAN);
+        worktreeCount += 1;
       }
+
+      scanned.push({ exists: true, path: root, source, worktreeCount });
     }
+
+    return scanned;
   }
 
   /** Runs the per-worktree probes and resolves the owning repository. */
   private async describe(
     candidate: WorktreeCandidate,
     registered: Map<string, RepositoryCheckout>,
-    warnings: string[],
+    problems: WorktreeDiscoveryProblem[],
   ): Promise<DiscoveredWorktree> {
     const { path } = candidate;
     const checkout = registered.get(path) ?? null;
 
     const [branch, status, commonDir] = await Promise.all([
-      this.git(path, warnings, ['branch', '--show-current']),
-      this.git(path, warnings, ['status', '--porcelain']),
-      this.git(path, warnings, [
+      this.git(path, problems, ['branch', '--show-current']),
+      this.git(path, problems, ['status', '--porcelain']),
+      this.git(path, problems, [
         'rev-parse',
         '--path-format=absolute',
         '--git-common-dir',
@@ -301,23 +418,41 @@ export class WorktreeDiscoveryService {
     }
   }
 
-  /** One read-only git probe; failures return null and append a warning instead of throwing. */
+  /** One read-only git probe; failures return null and append a problem instead of throwing. */
   private async git(
     cwd: string,
-    warnings: string[],
+    problems: WorktreeDiscoveryProblem[],
     args: readonly string[],
   ): Promise<string | null> {
+    const { error, stdout } = await this.runGit(cwd, args);
+    if (error === null) return stdout;
+
+    problems.push(
+      problem(
+        WORKTREE_DISCOVERY_PROBLEM.PROBE_FAILED,
+        `git ${args.join(' ')}: ${error}`,
+        cwd,
+      ),
+    );
+    return null;
+  }
+
+  /**
+   * The bounded exec itself, with the failure handed back rather than classified. Callers that need
+   * to tell one kind of git failure from another read `error` themselves.
+   */
+  private async runGit(
+    cwd: string,
+    args: readonly string[],
+  ): Promise<{ error: string | null; stdout: string }> {
     try {
       const { stdout } = await execFileAsync('git', ['-C', cwd, ...args], {
         maxBuffer: GIT_MAX_BUFFER_BYTES,
         timeout: GIT_COMMAND_TIMEOUT_MS,
       });
-      return stdout;
+      return { error: null, stdout };
     } catch (error) {
-      warnings.push(
-        `git ${args.join(' ')} failed in ${cwd}: ${message(error)}`,
-      );
-      return null;
+      return { error: message(error), stdout: '' };
     }
   }
 }
@@ -337,6 +472,15 @@ const add = (
   existing.sources.add(source);
 };
 
+/** Whether the path is a directory that exists right now. Never throws. */
+const isExistingDirectory = (path: string): boolean => {
+  try {
+    return statSync(path).isDirectory();
+  } catch {
+    return false;
+  }
+};
+
 /** A linked worktree's `.git` is a FILE (`gitdir:` pointer); a real clone's is a directory. */
 const isLinkedWorktreeDirectory = (path: string): boolean => {
   try {
@@ -346,6 +490,50 @@ const isLinkedWorktreeDirectory = (path: string): boolean => {
     return false;
   }
 };
+
+/** Builds one classified problem; `path` and `repositoryId` default to "not applicable". */
+const problem = (
+  kind: WorktreeDiscoveryProblemKind,
+  detail: string,
+  path: string | null = null,
+  repositoryId: string | null = null,
+): WorktreeDiscoveryProblem => ({ detail, kind, path, repositoryId });
+
+/**
+ * The deprecated `warnings` projection: one flat sentence per problem, so existing consumers keep
+ * reading the same shape while new ones classify.
+ */
+const formatWarning = ({
+  detail,
+  kind,
+  path,
+}: WorktreeDiscoveryProblem): string => {
+  switch (kind) {
+    case WORKTREE_DISCOVERY_PROBLEM.CAP_EXCEEDED:
+      return `discovery capped at ${MAX_DISCOVERED_WORKTREES} worktrees; ${detail}`;
+    case WORKTREE_DISCOVERY_PROBLEM.CHECKOUT_LIST_FAILED:
+      return `could not list registered checkouts: ${detail}`;
+    case WORKTREE_DISCOVERY_PROBLEM.NOT_A_GIT_REPO:
+      return `${path} is registered but is not a git repository: ${detail}`;
+    case WORKTREE_DISCOVERY_PROBLEM.ROOT_UNREADABLE:
+      return `worktree root ${path} could not be read: ${detail}`;
+    case WORKTREE_DISCOVERY_PROBLEM.STALE_WORKTREE_ENTRY:
+      return `${path} is still registered with git but no longer exists on disk; run \`git worktree prune\``;
+    default:
+      return `probe failed in ${path}: ${detail}`;
+  }
+};
+
+/** git's own wording for "this folder was registered, but it is not a checkout at all". */
+const isNotAGitRepositoryError = (detail: string): boolean =>
+  /not a git repository/i.test(detail);
+
+/** True when an fs error means the directory does not exist, rather than cannot be read. */
+const isAbsentDirectoryError = (error: unknown): boolean =>
+  error instanceof Error &&
+  'code' in error &&
+  typeof error.code === 'string' &&
+  ABSENT_DIRECTORY_ERRNOS.has(error.code);
 
 const message = (error: unknown): string =>
   error instanceof Error ? error.message : String(error);

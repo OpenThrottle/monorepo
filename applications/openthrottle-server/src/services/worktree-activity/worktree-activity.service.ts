@@ -21,7 +21,11 @@ import {
   STALE_CUTOFF_MS,
 } from '@openthrottle/nestjs-repositories';
 import { WorktreeDiscoveryService } from '../worktree-discovery/worktree-discovery.service';
-import type { DiscoveredWorktree } from '../worktree-discovery/worktree-discovery.types';
+import type {
+  DiscoveredWorktree,
+  WorktreeDiscoveryProblem,
+} from '../worktree-discovery/worktree-discovery.types';
+import { WORKTREE_DISCOVERY_PROBLEM } from '../worktree-discovery/worktree-discovery.types';
 import type {
   ClassifiedWorktree,
   WorktreeActivityResult,
@@ -84,17 +88,21 @@ export class WorktreeActivityService {
    */
   async discoverAndClassify(userId: string): Promise<WorktreeActivityResult> {
     const discovery = await this.discoveryService.discover(userId);
+    const problems = [...discovery.problems];
     const warnings = [...discovery.warnings];
 
     const liveRuns = await this.liveRunsByCheckoutId(
       discovery.worktrees,
+      problems,
       warnings,
     );
 
     return {
       droppedCount: discovery.droppedCount,
+      problems,
       rootSource: discovery.rootSource,
       scannedAt: discovery.scannedAt,
+      scannedRoots: discovery.scannedRoots,
       warnings,
       worktreeRoot: discovery.worktreeRoot,
       worktrees: discovery.worktrees.map((worktree) =>
@@ -115,6 +123,7 @@ export class WorktreeActivityService {
    */
   private async liveRunsByCheckoutId(
     worktrees: readonly DiscoveredWorktree[],
+    problems: WorktreeDiscoveryProblem[],
     warnings: string[],
   ): Promise<Map<string, PlanRun>> {
     const byCheckoutId = new Map<string, PlanRun>();
@@ -140,10 +149,15 @@ export class WorktreeActivityService {
         }
       }
     } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      problems.push({
+        detail: `live plan runs could not be read; worktrees are classified from git state only: ${detail}`,
+        kind: WORKTREE_DISCOVERY_PROBLEM.PROBE_FAILED,
+        path: null,
+        repositoryId: null,
+      });
       warnings.push(
-        `could not read live plan runs; worktrees are classified from git state only: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
+        `could not read live plan runs; worktrees are classified from git state only: ${detail}`,
       );
     }
 

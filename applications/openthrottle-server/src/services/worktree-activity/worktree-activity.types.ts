@@ -3,7 +3,11 @@
  * never inferred from a directory existing on disk.
  */
 
-import type { DiscoveredWorktree } from '../worktree-discovery/worktree-discovery.types';
+import type {
+  DiscoveredWorktree,
+  ScannedWorktreeRoot,
+  WorktreeDiscoveryProblem,
+} from '../worktree-discovery/worktree-discovery.types';
 import type { WorktreeRootSource } from '../worktree-root/worktree-root.resolver';
 
 /**
@@ -40,8 +44,13 @@ export interface ClassifiedWorktree extends DiscoveredWorktree {
 
 export interface WorktreeActivityResult {
   readonly droppedCount: number;
+  /** Classified non-fatal problems from discovery, plus anything classification itself hit. */
+  readonly problems: readonly WorktreeDiscoveryProblem[];
   readonly rootSource: WorktreeRootSource | null;
   readonly scannedAt: string;
+  /** Every root the scan looked in; {@link worktreeRoot} is only the first of these. */
+  readonly scannedRoots: readonly ScannedWorktreeRoot[];
+  /** @deprecated Use {@link problems}. */
   readonly warnings: readonly string[];
   readonly worktreeRoot: string | null;
   readonly worktrees: readonly ClassifiedWorktree[];

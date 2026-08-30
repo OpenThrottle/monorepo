@@ -58,6 +58,99 @@ registerEnumType(WorktreeRootSourceEnum, {
   },
 });
 
+export const WorktreeDiscoveryProblemKindEnum = {
+  CAP_EXCEEDED: 'cap-exceeded',
+  CHECKOUT_LIST_FAILED: 'checkout-list-failed',
+  NOT_A_GIT_REPO: 'not-a-git-repo',
+  PROBE_FAILED: 'probe-failed',
+  ROOT_UNREADABLE: 'root-unreadable',
+  STALE_WORKTREE_ENTRY: 'stale-worktree-entry',
+} as const;
+
+export type WorktreeDiscoveryProblemKindEnum =
+  (typeof WorktreeDiscoveryProblemKindEnum)[keyof typeof WorktreeDiscoveryProblemKindEnum];
+
+registerEnumType(WorktreeDiscoveryProblemKindEnum, {
+  description: `What a scan noticed that was less than complete. The server decides WHAT happened; the client decides how loud it is. States that are merely the healthy default — above all a repository that has no worktrees yet — are not problems and are never reported.`,
+  name: 'WorktreeDiscoveryProblemKind',
+  valuesMap: {
+    CAP_EXCEEDED: {
+      description:
+        'More worktrees exist than the hard cap; the overflow is counted in droppedCount and not listed.',
+    },
+    CHECKOUT_LIST_FAILED: {
+      description:
+        'The registered checkouts could not be listed, so the scan had nothing to scan from. The whole result is empty.',
+    },
+    NOT_A_GIT_REPO: {
+      description:
+        'A registered folder is not a git checkout at all. Carries repositoryId — belongs on that repository’s row, not on the page.',
+    },
+    PROBE_FAILED: {
+      description:
+        'A read-only git probe against a directory that does exist failed. The genuinely degraded case: worktrees may be missing from the list.',
+    },
+    ROOT_UNREADABLE: {
+      description:
+        'A worktree root exists but could not be read (EACCES and friends). A root that simply does not exist is NOT this — that is a repository with no worktrees yet, and is silent.',
+    },
+    STALE_WORKTREE_ENTRY: {
+      description:
+        'git still reports a worktree whose directory is gone. Actionable exactly once, with `git worktree prune`; the path is never probed.',
+    },
+  },
+});
+
+@ObjectType({
+  description: `One classified, non-fatal thing that happened during a scan.`,
+})
+export class WorktreeDiscoveryProblemObject {
+  @Field(() => String, {
+    description: `The raw underlying message (errno text, git stderr). For diagnostics — the sentence shown to a person is derived from kind, never from this.`,
+  })
+  detail!: string;
+
+  @Field(() => WorktreeDiscoveryProblemKindEnum, {
+    description: `What happened. See WorktreeDiscoveryProblemKind.`,
+  })
+  kind!: WorktreeDiscoveryProblemKindEnum;
+
+  @Field(() => String, {
+    description: `The directory the problem is about, or null when it is not about one (the cap).`,
+    nullable: true,
+  })
+  path!: string | null;
+
+  @Field(() => ID, {
+    description: `Set only when the problem is attributable to one registered repository, so the UI can report it on that row instead of page-wide.`,
+    nullable: true,
+  })
+  repositoryId!: string | null;
+}
+
+@ObjectType({
+  description: `One resolved worktree root and what the depth-1 scan of it found.`,
+})
+export class ScannedWorktreeRootObject {
+  @Field(() => Boolean, {
+    description: `Whether the directory is there at all. False is the ordinary state of a repository with no worktrees yet — it is data, not a failure.`,
+  })
+  exists!: boolean;
+
+  @Field(() => String, { description: `Absolute path on the server host.` })
+  path!: string;
+
+  @Field(() => WorktreeRootSourceEnum, {
+    description: `Which rung of the shared ladder resolved this root.`,
+  })
+  source!: WorktreeRootSourceEnum;
+
+  @Field(() => Int, {
+    description: `Linked worktrees this root contributed to the result.`,
+  })
+  worktreeCount!: number;
+}
+
 @ObjectType({
   description: `A linked git worktree that exists on disk right now (server-host path).`,
 })
@@ -122,6 +215,11 @@ export class DiscoveredWorktreesObject {
   })
   droppedCount!: number;
 
+  @Field(() => [WorktreeDiscoveryProblemObject], {
+    description: `Classified non-fatal problems. Empty on a healthy machine — a repository with no worktrees yet reports nothing at all.`,
+  })
+  problems!: WorktreeDiscoveryProblemObject[];
+
   @Field(() => WorktreeRootSourceEnum, {
     description: `Which rung of the ladder produced worktreeRoot; null when no root could be resolved.`,
     nullable: true,
@@ -133,8 +231,14 @@ export class DiscoveredWorktreesObject {
   })
   scannedAt!: string;
 
+  @Field(() => [ScannedWorktreeRootObject], {
+    description: `Every root the scan looked in. worktreeRoot names only the first, which misrepresents a machine whose primaries resolve to several roots.`,
+  })
+  scannedRoots!: ScannedWorktreeRootObject[];
+
   @Field(() => [String], {
-    description: `Non-fatal problems (an unreadable root, a failed git probe, the cap). Discovery degrades to warnings rather than failing the page.`,
+    deprecationReason: `Use problems — warnings is unclassified free text and cannot be presented per-kind.`,
+    description: `Non-fatal problems as flat sentences, one per entry in problems.`,
   })
   warnings!: string[];
 
