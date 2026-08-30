@@ -465,4 +465,58 @@ describe('discoverRepoSkills', () => {
       },
     ]);
   });
+  // The personal tier (docs/monorepo/foreign-workspace-skill-injection.md §7):
+  // a link into a directory outside the repo entirely. Before this it read as
+  // `external` — somebody else's third-party install — which is the one thing
+  // it is definitely not.
+  test('flags a skill linked in from outside the repo as personal', () => {
+    const root = makeTempDir();
+    const personalRoot = makeTempDir();
+
+    writeSkill(
+      personalRoot,
+      '.',
+      'my-draft',
+      'name: my-draft\ndescription: A private draft.',
+    );
+    mkdirSync(join(root, '.agents/skills'), { recursive: true });
+    symlinkSync(
+      join(personalRoot, 'my-draft'),
+      join(root, '.agents/skills/my-draft'),
+    );
+
+    const [entry] = discoverRepoSkills(root);
+
+    expect(entry?.slug).toBe('my-draft');
+    expect(entry?.isPersonal).toBe(true);
+  });
+
+  test('does not flag an authored or lockfile-installed skill as personal', () => {
+    const root = makeTempDir();
+
+    writeSkill(
+      root,
+      'skills',
+      'authored',
+      'name: authored\ndescription: Ours.',
+    );
+    mkdirSync(join(root, '.agents/skills'), { recursive: true });
+    symlinkSync(
+      join(root, 'skills/authored'),
+      join(root, '.agents/skills/authored'),
+    );
+    writeSkill(
+      root,
+      '.agents/skills',
+      'vendored',
+      'name: vendored\ndescription: Installed.',
+    );
+
+    const entries = discoverRepoSkills(root);
+
+    expect(entries).toHaveLength(2);
+    for (const entry of entries) {
+      expect(entry.isPersonal).toBeUndefined();
+    }
+  });
 });

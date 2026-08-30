@@ -15,6 +15,7 @@ export interface SkillsIndexUsageProps {
    * set, which decides both whether a row links through to its detail page and
    * which table it lands in.
    */
+  personalSlugs?: readonly string[];
   presentSlugs: readonly string[];
   rangeDays: number;
   usage: SkillsIndexUsageData;
@@ -37,7 +38,7 @@ export interface SkillsIndexUsageProps {
 export const SkillsIndexUsage = (
   props: SkillsIndexUsageProps,
 ): React.ReactElement => {
-  const { className, presentSlugs, rangeDays, usage } = props;
+  const { className, personalSlugs, presentSlugs, rangeDays, usage } = props;
 
   // Hooks
 
@@ -47,8 +48,9 @@ export const SkillsIndexUsage = (
       partitionSkillUsageByPresence(
         usage.available ? usage.bySkill : [],
         new Set(presentSlugs),
+        new Set(personalSlugs ?? []),
       ),
-    [presentSlugs, usage],
+    [personalSlugs, presentSlugs, usage],
   );
 
   // Handlers

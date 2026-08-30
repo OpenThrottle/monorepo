@@ -40,6 +40,9 @@ const buildLoaderData = (
   loaderEntries: RepoSkillEntry[] = entries,
 ): Route.ComponentProps['loaderData'] => ({
   entries: loaderEntries,
+  personalSlugs: loaderEntries
+    .filter((entry) => entry.isPersonal === true)
+    .map((entry) => entry.slug),
   presentSlugs: loaderEntries.map((entry) => entry.slug),
   tagVocabulary: [],
   usage: Promise.resolve(usage),

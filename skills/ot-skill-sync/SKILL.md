@@ -37,15 +37,32 @@ Several CLIs additionally read per-tool **global** dirs (`~/.claude/skills`, `~/
 
 ## The architecture
 
-Every openthrottle repo has (at most) three skill locations with strict ownership:
+Every openthrottle repo has (at most) four skill locations with strict ownership:
 
 | Location                                                 | Contents                                                                                                                                                                                                                                                                                                                      | Owned by                    |
 | -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
 | `skills/`                                                | Hand-authored skills, committed to git                                                                                                                                                                                                                                                                                        | Humans (via PRs)            |
 | `.agents/skills/`                                        | The merged SSOT view read in-repo by Cursor, Grok Build, and Antigravity (`agy`) — see the matrix above; Claude Code and the Gemini CLI reach it only via the fan-out. **Real directories** = external skills installed by `npx skills` (tracked in `skills-lock.json`). **Symlinks** = the repo's own `skills/*`, generated. | The skills CLI / this skill |
 | `<agent>/skills/` (`.claude/skills/`, `.gemini/skills/`) | Per-agent fan-out for the CLIs that do **not** read `.agents/skills/` in-repo — Claude Code (`.claude/skills`) and the Gemini CLI (`.gemini/skills`). All symlinks, all generated, all gitignored.                                                                                                                            | This skill                  |
+| `~/.openthrottle/skills/` (**outside the repo**)         | The per-user **personal tier**: private, half-finished, experimental skills. Linked in by sync and reaching every place a committed skill does, while being structurally impossible to commit. Override with `OPENTHROTTLE_PERSONAL_SKILLS_DIR`.                                                                              | You, and nobody else        |
 
-Sync is a two-stage pipeline: `skills/*` → `.agents/skills/` (stage 1), then `.agents/skills/*` → each agent folder (stage 2). A name collision between `skills/` and `skills-lock.json` is an **error**, never a silent precedence.
+Sync is a three-stage pipeline: `skills/*` → `.agents/skills/` (stage 1), `<personal>/*` → `.agents/skills/` (stage 1b), then `.agents/skills/*` → each agent folder (stage 2). A name collision between `skills/` and `skills-lock.json` is an **error**, never a silent precedence.
+
+### The personal tier
+
+Opt-in is **presence**: create `~/.openthrottle/skills/<name>/SKILL.md` and the next sync picks it up. There is deliberately no enable/disable env var for it — creating the directory is already the deliberate act. (`OPENTHROTTLE_PERSONAL_SKILLS_ENABLED` is a different thing entirely: the foreign-repo injection toggle.) A missing or empty root is a clean no-op on every path, which is what CI sees.
+
+**Uncommittable, twice over.** The content never enters the worktree, and the only in-repo artifact is a symlink the managed `.gitignore` block already covers. Neither is left to luck: `--check` runs `git check-ignore` on every personal link, and a Husky pre-commit guard refuses to stage one.
+
+**Collisions are a hard error**, not a precedence rule:
+
+```
+✗ personal skill 'x' collides with committed skills/x
+```
+
+Rename it, or pass `--allow-shadow` to deliberately run a private fork of a team skill. Silently running your own variant of a skill your colleagues also invoke is the failure this prevents.
+
+**Per-CLI reach is unchanged.** Personal skills ride the same stage 2, so they land wherever a committed skill lands — no special case downstream.
 
 ## Rules to enforce
 
@@ -79,6 +96,12 @@ bash <path-to-this-skill>/scripts/sync.sh --check
 
 # Cleanup: remove everything sync generated (never touches targets)
 bash <path-to-this-skill>/scripts/cleanup.sh
+
+# Personal tier: scaffold, inspect, and graduate your own private skills
+bash <path-to-this-skill>/scripts/personal.sh new <name>       # scaffold + sync + how to invoke it
+bash <path-to-this-skill>/scripts/personal.sh list             # what you have, and where it links
+bash <path-to-this-skill>/scripts/personal.sh promote <name>   # move it into skills/, re-sync, stage it
+bash <path-to-this-skill>/scripts/personal.sh demote <name>    # the inverse, for promoting too early
 ```
 
 When installed, `<path-to-this-skill>` is `.agents/skills/ot-skill-sync`; in the OpenThrottle repo itself it's `skills/ot-skill-sync`.
@@ -94,6 +117,7 @@ These scripts create symlinks and maintain a single static `.gitignore` block so
 5. Agent folders contain exactly the `.agents/skills/` set, and no _generated_ fan-out dir exists outside the configured `AGENT_SKILL_DIRS` list. (This is about keeping the generated layout deterministic — not a judgment on any CLI: Cursor, Grok, and Antigravity all read `.agents/skills/` natively. A `-a cursor`-style install that drops a stray `.cursor/skills` fan-out is drift only because it's an un-configured generated target, so route those tools through `.agents/skills/` / the configured fan-out instead.)
 6. The static `.gitignore` block is present and every generated symlink is gitignored
 7. No dangling generated links, and no legacy `.gitignore-symlinks` ledger remains
+8. Every personal link is git-ignored (asserted with `git check-ignore`, never a `test -e`, which follows parent symlinks and passes vacuously), points into the **currently-resolved** personal root, and is not dangling
 
 ## Configuration
 
@@ -101,6 +125,14 @@ Per-agent fan-out targets default to **`.claude/skills .gemini/skills`** — one
 
 - `.claude/skills` — Claude Code's only in-repo skills dir (also read by Cursor and Grok, so it is doubly useful).
 - `.gemini/skills` — the Gemini CLI's only in-repo skills dir (project scope; `~/.gemini/skills` is its user scope and out of this layout).
+
+The personal root is configured the same way, and defaults to `~/.openthrottle/skills`:
+
+```bash
+OPENTHROTTLE_PERSONAL_SKILLS_DIR=/path/to/my/skills bash <path>/scripts/sync.sh
+```
+
+It must live **outside** the repo — sync refuses a root inside it, since the whole guarantee is that its content is not in the worktree.
 
 CLIs that read `.agents/skills/` natively — Cursor, Grok Build, Antigravity (`agy`) — need no fan-out. codex has no in-repo skills dir to target at all. Override per repo — without editing this skill — via a space-separated env var:
 

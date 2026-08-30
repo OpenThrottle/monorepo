@@ -6,6 +6,12 @@
 # This removes those symlinks (never their targets), strips our .gitignore block,
 # deletes any legacy .gitignore-symlinks ledger, and prunes emptied roots.
 #
+# Personal-tier links (docs/monorepo/foreign-workspace-skill-injection.md §7) are
+# symlinks like any other and are removed by the same pass — no separate personal
+# teardown exists or is needed. `rm` on a symlink unlinks it, so the skill itself,
+# which lives outside the repo, is never touched. The pass is reported by tier so
+# it is obvious that removing links is not removing anybody's work.
+#
 # Usage: cleanup.sh
 
 set -euo pipefail
@@ -15,6 +21,10 @@ source "$SCRIPT_DIR/common.sh"
 
 detect_repo_root || exit 1
 validate_agent_skill_dirs || exit 1
+
+# Classification only — never dereferenced, so a personal root that no longer
+# exists is fine (its links are dangling and get removed either way).
+PERSONAL_ROOT="$(resolve_personal_skills_root)"
 
 echo -e "${YELLOW}Cleaning up generated skill links in: $REPO_ROOT${NC}"
 echo ""
@@ -38,9 +48,11 @@ for dir in "$UNIVERSAL_DIR" $AGENT_SKILL_DIRS; do
   [ -d "$root" ] || continue
   for entry in "$root"/*; do
     [ -L "$entry" ] || continue
+    tier=""
+    link_points_into_personal_root "$entry" "$PERSONAL_ROOT" && tier="  (personal — the skill itself is untouched)"
     rm "$entry"
     removed=$((removed + 1))
-    echo -e "  ${GREEN}🗑️  Removed: $dir/$(basename "$entry")${NC}"
+    echo -e "  ${GREEN}🗑️  Removed: $dir/$(basename "$entry")${tier}${NC}"
   done
 done
 
@@ -59,7 +71,9 @@ fi
 # .cursor/ hold other config and are left alone because they are not empty.
 # rmdir removes only the exact directory and only when it is empty — never a
 # recursive sweep, and never .agents/skills, which may still hold committed
-# external installs.
+# external installs. Empty-only is the point: the recursive-remove variant
+# throws on a directory and silently leaves it behind, which is exactly how the
+# injection teardown path once accumulated orphaned dirs.
 for dir in $AGENT_SKILL_DIRS .cursor; do
   rmdir "$REPO_ROOT/$dir" 2>/dev/null || true
   parent=$(dirname "$dir")

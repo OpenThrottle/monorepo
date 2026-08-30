@@ -2,17 +2,26 @@
 # ot-skill-sync — sync the current repo's skills into the standard layout.
 #
 # Two-stage pipeline (see common.sh for the architecture):
-#   Stage 1  skills/<name>            →  .agents/skills/<name>   (symlink)
-#   Stage 2  .agents/skills/<name>    →  <agent_dir>/<name>      (symlink)
-#            for each agent_dir in AGENT_SKILL_DIRS
+#   Stage 1   skills/<name>           →  .agents/skills/<name>   (symlink)
+#   Stage 1b  <personal>/<name>       →  .agents/skills/<name>   (symlink)
+#   Stage 2   .agents/skills/<name>   →  <agent_dir>/<name>      (symlink)
+#             for each agent_dir in AGENT_SKILL_DIRS
+#
+# Stage 1b is the per-user personal tier (~/.openthrottle/skills by default).
+# It is opt-in by presence and feeds the SAME stage 2, so a personal skill
+# reaches every place a committed one does with no special-casing downstream.
 #
 # Ownership rule inside .agents/skills/: a REAL DIRECTORY is owned by
-# `npx skills` + skills-lock.json and is never touched; a SYMLINK is ours.
-# A name collision between skills/ and the lockfile is an error.
+# `npx skills` + skills-lock.json and is never touched; a SYMLINK is ours —
+# into skills/ for a committed skill, into the personal root for a personal one.
+# A name collision between skills/ and the lockfile is an error, and so is one
+# between the personal root and either (unless --allow-shadow is given).
 #
 # Usage:
-#   sync.sh            # sync the repo you're currently in
-#   sync.sh --check    # validate only (no writes); exit 1 on any drift
+#   sync.sh                  # sync the repo you're currently in
+#   sync.sh --check          # validate only (no writes); exit 1 on any drift
+#   sync.sh --allow-shadow   # let a personal skill deliberately shadow a
+#                            # committed one of the same name
 #
 # There is no side-ledger: generated links are exactly the symlinks under
 # .agents/skills/ and the agent fan-out dirs, and a single static .gitignore
@@ -24,15 +33,37 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "$SCRIPT_DIR/common.sh"
 
 CHECK_MODE=false
-if [ "${1:-}" = "--check" ]; then
-  CHECK_MODE=true
-elif [ $# -gt 0 ]; then
-  echo "Usage: $0 [--check]" >&2
-  exit 1
-fi
+ALLOW_SHADOW=false
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --allow-shadow) ALLOW_SHADOW=true ;;
+    --check) CHECK_MODE=true ;;
+    *)
+      echo "Usage: $0 [--check] [--allow-shadow]" >&2
+      exit 1 ;;
+  esac
+  shift
+done
 
 detect_repo_root || exit 1
 validate_agent_skill_dirs || exit 1
+
+# ── The personal tier, resolved once ─────────────────────────────────────────
+# Presence is the opt-in: an absent or empty root leaves every path below
+# byte-identical to a repo with no personal tier at all.
+PERSONAL_ROOT="$(resolve_personal_skills_root)"
+PERSONAL_ROOT_CANONICAL=""
+PERSONAL_NAMES=""
+if [ -d "$PERSONAL_ROOT" ]; then
+  PERSONAL_ROOT_CANONICAL="$(canonical_path "$PERSONAL_ROOT")"
+  # A personal root inside the repo would be committable, and its links
+  # indistinguishable from authored ones — the whole point is that it is not.
+  if path_is_under "$PERSONAL_ROOT_CANONICAL" "$(canonical_path "$REPO_ROOT")"; then
+    echo -e "${RED}Error: personal skills root '$PERSONAL_ROOT' is inside the repository. It must live outside so its skills cannot be committed — unset or repoint $PERSONAL_SKILLS_DIR_ENV.${NC}" >&2
+    exit 1
+  fi
+  PERSONAL_NAMES="$(personal_skill_names "$PERSONAL_ROOT")"
+fi
 
 VIOLATIONS=0
 violation() {
@@ -95,6 +126,12 @@ ensure_agent_skill_dir() {
 ensure_link() {
   local source_abs="$1"
   local rel="$2"
+  # Optional tier label, appended to the created/relinked message so sync output
+  # says where each link came from. Empty for committed skills, which keeps the
+  # no-personal-tier output byte-identical to before this tier existed.
+  local tier="${3:-}"
+  local tier_suffix=""
+  [ -n "$tier" ] && tier_suffix="  ($tier)"
   local target="$REPO_ROOT/$rel"
   local parent
   parent="$(dirname "$target")"
@@ -137,7 +174,7 @@ ensure_link() {
       echo -e "- ${YELLOW} Skipping $rel (could not recreate symlink)${NC}"
       return 1
     fi
-    echo -e "    ${GREEN}🔗 Relinked: $rel${NC}"
+    echo -e "    ${GREEN}🔗 Relinked: $rel${tier_suffix}${NC}"
     return 0
   elif [ -e "$target" ]; then
     if [ "$CHECK_MODE" = true ]; then
@@ -159,14 +196,29 @@ ensure_link() {
       echo -e "- ${YELLOW} Skipping $rel (could not create symlink)${NC}"
       return 1
     fi
-    echo -e "    ${GREEN}✅ Linked: $rel${NC}"
+    echo -e "    ${GREEN}✅ Linked: $rel${tier_suffix}${NC}"
     return 0
   fi
+}
+
+# True when $1 (an absolute path to a symlink under $UNIVERSAL_DIR named $2)
+# resolves into the CURRENTLY-RESOLVED personal root and still names a live
+# personal skill. Membership in the current root is the test, not mere
+# resolvability: a link into a root the user has since repointed still resolves,
+# but is no longer part of the tier and must be reaped like any stale link.
+is_live_personal_link() {
+  local entry="$1"
+  local name="$2"
+  [ -n "$PERSONAL_ROOT_CANONICAL" ] || return 1
+  [ -e "$entry" ] || return 1
+  name_in_list "$name" "$PERSONAL_NAMES" || return 1
+  path_is_under "$(canonical_path "$entry")" "$PERSONAL_ROOT_CANONICAL"
 }
 
 if [ "$CHECK_MODE" = false ]; then
   echo -e "${GREEN}Syncing skills in: $REPO_ROOT${NC}"
   echo -e "- ${BLUE}Stage 1:${NC} $SKILLS_SRC_DIR/* → $UNIVERSAL_DIR/"
+  [ -n "$PERSONAL_NAMES" ] && echo -e "- ${BLUE}Stage 1b:${NC} $PERSONAL_ROOT/* → $UNIVERSAL_DIR/  (personal, never committed)"
   echo -e "- ${BLUE}Stage 2:${NC} $UNIVERSAL_DIR/* → $AGENT_SKILL_DIRS"
   echo ""
   ensure_gitignore_block
@@ -221,6 +273,14 @@ if [ -d "$REPO_ROOT/$SKILLS_SRC_DIR" ]; then
       continue
     fi
 
+    # A deliberate --allow-shadow personal fork takes the name; stage 1b links
+    # it. Decided here rather than by relinking after the fact so --check agrees
+    # with what sync writes.
+    if [ "$ALLOW_SHADOW" = true ] && name_in_list "$skill_name" "$PERSONAL_NAMES"; then
+      [ "$CHECK_MODE" = false ] && echo -e "- ${YELLOW} Shadowed: $SKILLS_SRC_DIR/$skill_name is overridden by your personal skill (--allow-shadow)${NC}"
+      continue
+    fi
+
     # Invariant: no name collision with a lockfile-managed skill
     if echo "$LOCKED_NAMES" | grep -qFx "$skill_name"; then
       violation "name collision: '$skill_name' exists in both $SKILLS_SRC_DIR/ and $LOCKFILE_NAME — rename the authored skill or remove the installed one"
@@ -231,6 +291,45 @@ if [ -d "$REPO_ROOT/$SKILLS_SRC_DIR" ]; then
   done
 fi
 
+# ── Stage 1b: personal skills → the universal dir ────────────────────────────
+# Same target directory, same ensure_link, so stage 2 and every downstream check
+# treat a personal skill exactly like a committed one. A missing or empty root
+# skips the loop entirely.
+
+if [ -d "$PERSONAL_ROOT" ]; then
+  for personal_source in "$PERSONAL_ROOT"/*; do
+    [ -e "$personal_source" ] || [ -L "$personal_source" ] || continue
+    skill_name=$(basename "$personal_source")
+
+    # Not a skill is not an error — the personal root is where half-finished
+    # things live, and one bad entry must not stop the rest from syncing.
+    if [ ! -d "$personal_source" ]; then
+      echo -e "- ${YELLOW} Skipping personal $skill_name (not a directory)${NC}"
+      continue
+    fi
+    if [ ! -r "$personal_source/SKILL.md" ]; then
+      echo -e "- ${YELLOW} Skipping personal $skill_name (no readable SKILL.md)${NC}"
+      continue
+    fi
+
+    # Collision with the committed catalog is a hard error, not a silent
+    # precedence decision: running a private fork of a team skill without
+    # knowing it is the failure this rule exists to prevent.
+    if [ "$ALLOW_SHADOW" = false ]; then
+      if [ -f "$REPO_ROOT/$SKILLS_SRC_DIR/$skill_name/SKILL.md" ]; then
+        violation "personal skill '$skill_name' collides with committed $SKILLS_SRC_DIR/$skill_name — rename it, or re-run with --allow-shadow to run your private fork"
+        continue
+      fi
+      if echo "$LOCKED_NAMES" | grep -qFx "$skill_name"; then
+        violation "personal skill '$skill_name' collides with installed '$skill_name' in $LOCKFILE_NAME — rename it, or re-run with --allow-shadow to run your private fork"
+        continue
+      fi
+    fi
+
+    ensure_link "$personal_source" "$UNIVERSAL_DIR/$skill_name" personal || true
+  done
+fi
+
 # In check mode, verify every lockfile skill is materialized (invariant 2):
 # a real directory, or our symlink to the same-named $SKILLS_SRC_DIR/ source.
 # A symlink to any other target is a rogue install masquerading as the entry.
@@ -238,6 +337,9 @@ if [ "$CHECK_MODE" = true ] && [ -n "$LOCKED_NAMES" ]; then
   while IFS= read -r locked; do
     [ -z "$locked" ] && continue
     locked_target="$REPO_ROOT/$UNIVERSAL_DIR/$locked"
+    if [ "$ALLOW_SHADOW" = true ] && is_live_personal_link "$locked_target" "$locked"; then
+      continue
+    fi
     if [ -L "$locked_target" ]; then
       resolved=$(canonical_path "$locked_target")
       if [ "$resolved" != "$(canonical_path "$REPO_ROOT")/$SKILLS_SRC_DIR/$locked" ]; then
@@ -256,13 +358,20 @@ if [ "$CHECK_MODE" = true ] && [ -d "$REPO_ROOT/$UNIVERSAL_DIR" ]; then
     name=$(basename "$entry")
     if [ -L "$entry" ]; then
       if [ ! -e "$entry" ]; then
-        violation "$UNIVERSAL_DIR/$name is a dangling generated link (run sync.sh)"
+        if link_points_into_personal_root "$entry" "$PERSONAL_ROOT"; then
+          violation "$UNIVERSAL_DIR/$name is a dangling PERSONAL link — the skill was deleted or renamed under $PERSONAL_ROOT (run sync.sh to reap it, or restore the source)"
+        else
+          violation "$UNIVERSAL_DIR/$name is a dangling generated link (run sync.sh)"
+        fi
         continue
       fi
       resolved=$(canonical_path "$entry")
       case "$resolved" in
         "$(canonical_path "$REPO_ROOT")/$SKILLS_SRC_DIR/"*) : ;;
-        *) violation "$UNIVERSAL_DIR/$name is a symlink pointing outside $SKILLS_SRC_DIR/ ($resolved)" ;;
+        *)
+          if ! is_live_personal_link "$entry" "$name"; then
+            violation "$UNIVERSAL_DIR/$name is a symlink pointing at neither $SKILLS_SRC_DIR/ nor your personal skills root ($resolved) — run sync.sh"
+          fi ;;
       esac
     elif [ -d "$entry" ]; then
       if ! echo "$LOCKED_NAMES" | grep -qFx "$name"; then
@@ -281,8 +390,13 @@ if [ -d "$REPO_ROOT/$UNIVERSAL_DIR" ]; then
     skill_name=$(basename "$skill_entry")
     [ -f "$skill_entry/SKILL.md" ] || continue
 
+    skill_tier=""
+    if is_live_personal_link "$skill_entry" "$skill_name"; then
+      skill_tier="personal"
+    fi
+
     for agent_dir in $AGENT_SKILL_DIRS; do
-      ensure_link "$skill_entry" "$agent_dir/$skill_name" || true
+      ensure_link "$skill_entry" "$agent_dir/$skill_name" "$skill_tier" || true
     done
   done
 fi
@@ -298,9 +412,14 @@ if [ "$CHECK_MODE" = false ]; then
     for entry in "$REPO_ROOT/$UNIVERSAL_DIR"/*; do
       [ -L "$entry" ] || continue
       name=$(basename "$entry")
+      if is_live_personal_link "$entry" "$name"; then
+        continue
+      fi
       if [ ! -e "$entry" ] || [ ! -f "$REPO_ROOT/$SKILLS_SRC_DIR/$name/SKILL.md" ]; then
+        stale_tier=""
+        link_points_into_personal_root "$entry" "$PERSONAL_ROOT" && stale_tier="  (personal skill no longer at $PERSONAL_ROOT/$name)"
         rm "$entry"
-        echo -e "    ${YELLOW}🗑️  Removed stale link: $UNIVERSAL_DIR/$name${NC}"
+        echo -e "    ${YELLOW}🗑️  Removed stale link: $UNIVERSAL_DIR/$name${stale_tier}${NC}"
       fi
     done
   fi
@@ -327,7 +446,11 @@ if [ "$CHECK_MODE" = true ]; then
       [ -e "$entry" ] || [ -L "$entry" ] || continue
       name=$(basename "$entry")
       if [ -L "$entry" ] && [ ! -e "$entry" ]; then
-        violation "$agent_dir/$name is a dangling generated link (run sync.sh)"
+        if link_points_into_personal_root "$entry" "$PERSONAL_ROOT"; then
+          violation "$agent_dir/$name is a dangling PERSONAL link — the skill was deleted or renamed under $PERSONAL_ROOT (run sync.sh to reap it, or restore the source)"
+        else
+          violation "$agent_dir/$name is a dangling generated link (run sync.sh)"
+        fi
       elif [ ! -e "$REPO_ROOT/$UNIVERSAL_DIR/$name" ]; then
         violation "$agent_dir/$name has no counterpart in $UNIVERSAL_DIR/"
       fi
@@ -361,13 +484,20 @@ if [ "$CHECK_MODE" = true ]; then
   elif [ "$current_block" != "$(gitignore_block_expected)" ]; then
     violation "the managed .gitignore block is stale (rules differ from what sync writes — run sync.sh)"
   fi
+  # git check-ignore is the only correct probe here. `test -e`/lstat-style
+  # checks follow parent symlinks and pass vacuously, which is how an
+  # uncommittability assertion silently stops asserting anything.
   for agent_dir in $AGENT_SKILL_DIRS $UNIVERSAL_DIR; do
     [ -d "$REPO_ROOT/$agent_dir" ] || continue
     for entry in "$REPO_ROOT/$agent_dir"/*; do
       [ -L "$entry" ] || continue
       rel="${entry#$REPO_ROOT/}"
       if ! git -C "$REPO_ROOT" check-ignore -q "$rel" 2>/dev/null; then
-        violation "$rel is a generated symlink but not gitignored (run sync.sh)"
+        if is_live_personal_link "$entry" "$(basename "$entry")"; then
+          violation "$rel is a PERSONAL skill link but not gitignored — personal skills must never be committable (run sync.sh to rewrite the managed .gitignore block)"
+        else
+          violation "$rel is a generated symlink but not gitignored (run sync.sh)"
+        fi
       fi
     done
   done

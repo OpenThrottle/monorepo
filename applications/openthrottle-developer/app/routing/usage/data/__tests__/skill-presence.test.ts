@@ -75,20 +75,54 @@ describe('skill-presence', () => {
       );
     });
 
-    it('badges only missing rows', () => {
+    it('badges the two rows that need explaining, and no others', () => {
       expect(SKILL_PRESENCE_BADGED).toEqual({
         external: false,
         installed: false,
         missing: true,
+        personal: true,
       });
     });
 
-    it('links only installed rows, so missing and external never 404', () => {
+    it('links only rows that resolve on disk, so nothing 404s', () => {
       expect(SKILL_PRESENCE_LINKABLE).toEqual({
         external: false,
         installed: true,
         missing: false,
+        personal: true,
       });
+    });
+
+    it('classifies an on-disk personal skill as personal, not installed', () => {
+      const presence = classifySkillUsagePresence(
+        { scope: 'ours', skillName: 'my-draft' },
+        new Set(['my-draft']),
+        new Set(['my-draft']),
+      );
+
+      expect(presence).toBe('personal');
+    });
+
+    // Present-but-not-shared is neither of the two states it could be mistaken
+    // for: it is right there on disk, and it is yours, not a third party's.
+    it('never reads a personal skill as missing or as third-party', () => {
+      const presence = classifySkillUsagePresence(
+        { scope: 'ours', skillName: 'my-draft' },
+        new Set(['my-draft']),
+        new Set(['my-draft']),
+      );
+
+      expect(presence).not.toBe('missing');
+      expect(presence).not.toBe('external');
+    });
+
+    it('falls back to installed when the caller has no personal set', () => {
+      const presence = classifySkillUsagePresence(
+        { scope: 'ours', skillName: 'my-draft' },
+        new Set(['my-draft']),
+      );
+
+      expect(presence).toBe('installed');
     });
   });
 });

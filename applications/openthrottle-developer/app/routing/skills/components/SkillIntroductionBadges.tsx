@@ -21,7 +21,9 @@ export interface SkillIntroductionBadgesProps {
 /**
  * @description Provenance, model-invocation, and read-only tag badges for the
  * skill detail introduction. An external skill's source badge links out to its
- * origin when the entry carries a `sourceUrl`. Split out of SkillIntroduction
+ * origin when the entry carries a `sourceUrl`; a personal-tier skill reads
+ * "Personal" and never links out, because its origin is a directory on this
+ * machine that no URL describes. Split out of SkillIntroduction
  * (component-primitive-shape R6). DISPLAY ONLY — no write affordances live here.
  */
 export const SkillIntroductionBadges = (
@@ -41,16 +43,24 @@ export const SkillIntroductionBadges = (
 
   // Handlers
 
+  // Setup — the personal tier outranks the source label: a skill from your own
+  // directory is not an External install, and saying so is the whole point.
+  const isPersonal = entry.isPersonal === true;
+
+  const sourceLabel = isPersonal
+    ? SKILLS_SOURCE_COPY.personalLabel
+    : isOpenThrottle
+      ? SKILLS_SOURCE_COPY.openthrottleLabel
+      : SKILLS_SOURCE_COPY.externalLabel;
+
   // Markup
   const sourceBadge = (
     <Badge
-      color={isOpenThrottle ? 'violet' : 'slate'}
+      color={isPersonal ? 'amber' : isOpenThrottle ? 'violet' : 'slate'}
       data-testid="skill-source-badge"
       size="xs"
     >
-      {isOpenThrottle
-        ? SKILLS_SOURCE_COPY.openthrottleLabel
-        : SKILLS_SOURCE_COPY.externalLabel}
+      {sourceLabel}
     </Badge>
   );
 
@@ -62,7 +72,7 @@ export const SkillIntroductionBadges = (
     <React.Fragment>
       <Tooltip>
         <TooltipTrigger asChild={true}>
-          {!isOpenThrottle && entry.sourceUrl ? (
+          {!isOpenThrottle && !isPersonal && entry.sourceUrl ? (
             <a
               data-testid="skill-source-link"
               href={entry.sourceUrl}
@@ -76,7 +86,7 @@ export const SkillIntroductionBadges = (
           )}
         </TooltipTrigger>
         <TooltipContent className="max-w-xs" side="top">
-          {sourceTooltip}
+          {isPersonal ? SKILLS_SOURCE_COPY.personalTooltip : sourceTooltip}
         </TooltipContent>
       </Tooltip>
 

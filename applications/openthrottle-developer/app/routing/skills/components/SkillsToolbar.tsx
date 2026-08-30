@@ -77,6 +77,9 @@ export const SkillsToolbar = (
         <ToggleGroupItem value="external">
           {SKILLS_SOURCE_COPY.filterExternalLabel}
         </ToggleGroupItem>
+        <ToggleGroupItem value="personal">
+          {SKILLS_SOURCE_COPY.filterPersonalLabel}
+        </ToggleGroupItem>
       </ToggleGroup>
 
       <div className="flex-1" />

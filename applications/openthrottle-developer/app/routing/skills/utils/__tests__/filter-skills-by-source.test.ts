@@ -8,8 +8,10 @@ import {
 const entry = (
   slug: string,
   source: RepoSkillEntry['source'],
+  isPersonal?: true,
 ): RepoSkillEntry => ({
   disableModelInvocation: undefined,
+  isPersonal,
   layout: 'agents',
   repoRelativePath: `.agents/skills/${slug}/SKILL.md`,
   slug,
@@ -22,6 +24,7 @@ const entries = [
   entry('ot-plans', 'openthrottle'),
   entry('brag-sheet', 'external'),
   entry('workflow-ralph', 'openthrottle'),
+  entry('my-draft', 'external', true),
 ];
 
 describe('filterSkillsBySource', () => {
@@ -35,18 +38,28 @@ describe('filterSkillsBySource', () => {
     ).toEqual(['ot-plans', 'workflow-ralph']);
   });
 
-  test('narrows to external entries', () => {
+  // A personal skill carries source: 'external' because it is not authored in
+  // skills/ — but it is yours, not a third party's, so External must not sweep
+  // it up. Each skill belongs to exactly one segment.
+  test('narrows to external entries without sweeping in personal ones', () => {
     expect(
       filterSkillsBySource(entries, 'external').map((e) => e.slug),
     ).toEqual(['brag-sheet']);
   });
+
+  test('narrows to personal entries', () => {
+    expect(
+      filterSkillsBySource(entries, 'personal').map((e) => e.slug),
+    ).toEqual(['my-draft']);
+  });
 });
 
 describe('isSkillSourceFilter', () => {
-  test('accepts the three known filters', () => {
+  test('accepts the four known filters', () => {
     expect(isSkillSourceFilter('all')).toBe(true);
     expect(isSkillSourceFilter('external')).toBe(true);
     expect(isSkillSourceFilter('openthrottle')).toBe(true);
+    expect(isSkillSourceFilter('personal')).toBe(true);
   });
 
   test('rejects the radix empty-deselect value and unknown strings', () => {
