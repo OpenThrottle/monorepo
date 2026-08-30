@@ -1,11 +1,12 @@
 /**
  * @description Episode 09-tags-and-rules — Tags and rules — automate what happens when work gets labelled
  *
- * Migrated verbatim from `docs/marketing/scripts/09-tags-and-rules.md`. The prose below is
- * that file's own production notes, preserved because it is the only record of
- * why the beats are what they are.
- *
- *
+ * Migrated verbatim from `docs/marketing/scripts/09-tags-and-rules.md`, then
+ * corrected against the app (2026-08): a fired rule produces NO client-side
+ * feedback — no toast, and the rule-applications list is commented out of the
+ * plan page — so the effect is shown by re-opening the plan, where the injected
+ * task now sits. The original "a toast shows" and "rule-applications list" beats
+ * described UI that does not exist. See the audit notes in `./flow.ts`.
  */
 
 import type { VideoEpisode } from '../types';
@@ -14,15 +15,27 @@ export const episode: VideoEpisode = {
   beats: [
     {
       action:
-        'Plan detail; add the tag `needs-review` to the plan; a rule fires and a toast shows.',
+        'Plan detail; add the tag `needs-review`; re-open the plan — the seeded rule has injected a review task.',
       t: '0:00',
     },
     { action: 'Navigate to `/rules`; the rule list is visible.', t: '0:09' },
-    { action: 'Open the rule that just fired.', t: '0:16' },
-    { action: 'Click **New rule**; pick a tag; pick an action.', t: '0:25' },
+    {
+      action:
+        'Open the rule that just fired (its edit form — rules have no detail page).',
+      t: '0:16',
+    },
+    {
+      action:
+        'Click **New rule**; name it, toggle the tag to watch, pick the skill to inject.',
+      t: '0:25',
+    },
     { action: 'Save; the rule appears in the list, enabled.', t: '0:35' },
-    { action: 'Back to a plan; add the tag; the new rule fires.', t: '0:42' },
-    { action: 'Hold on the rule-applications list.', t: '0:50' },
+    {
+      action:
+        'A different plan gets the tag; re-open it — the new rule has injected its task.',
+      t: '0:42',
+    },
+    { action: 'Hold on the injected task.', t: '0:50' },
     { action: 'Outro card.', t: '0:55' },
   ],
   format: 'short',

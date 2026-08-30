@@ -8,6 +8,7 @@
     "@openthrottle/nestjs-modules": "workspace:^",
     "@openthrottle/nestjs-repositories": "workspace:^",
     "@openthrottle/openthrottle-agentic-utils": "workspace:*",
+    "@openthrottle/openthrottle-skills": "workspace:^",
     "pg": "catalog:",
     "typeorm": "catalog:"
   },
@@ -55,7 +56,6 @@
       "video-validate": {}
     }
   },
-  "peerDependencies": {},
   "private": true,
   "publishConfig": {
     "access": "restricted",

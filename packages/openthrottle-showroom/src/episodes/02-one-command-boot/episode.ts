@@ -5,8 +5,11 @@
  * that file's own production notes, preserved because it is the only record of
  * why the beats are what they are.
  *
- * A terminal video, not an app video. The runner drives a terminal pane rather than
- * the browser for the first two thirds; see `pipeline.md` on terminal capture.
+ * A terminal video, not an app video. The script originally asked for a split
+ * frame — terminal left, browser right — but the recorder is one chromium page, so
+ * the flow uses a typeset terminal surface for the first five beats (the 05
+ * pattern; see `./surface.ts`) and cuts to the real dashboard at 0:39. The beat
+ * actions below describe that version.
  */
 
 import type { VideoEpisode } from '../types';
@@ -14,8 +17,7 @@ import type { VideoEpisode } from '../types';
 export const episode: VideoEpisode = {
   beats: [
     {
-      action:
-        'Split frame: empty terminal left, black browser right. Type `./scripts/setup.sh`.',
+      action: 'Empty terminal prompt. Type `./scripts/setup.sh`.',
       t: '0:00',
     },
     {
@@ -30,7 +32,7 @@ export const episode: VideoEpisode = {
     },
     {
       action:
-        'Browser pane loads the dashboard, authenticated, seeded data visible.',
+        'Cut to the dashboard, authenticated, seeded data already visible.',
       t: '0:39',
     },
     { action: 'Hold on the dashboard.', t: '0:48' },

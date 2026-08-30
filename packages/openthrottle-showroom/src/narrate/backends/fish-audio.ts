@@ -13,16 +13,23 @@ import { writeFileSync } from 'node:fs';
 import type { RenderRequest, TtsBackend } from '../types';
 
 /**
- * Candidate voice for the bake-off: "Ethan", a curious-explainer young male
- * narration voice from the public library (fish.audio/app/m/<id>). Won the
- * phone-speaker listen over "Slax" (rejected: announcer feel, slowest read)
- * and "ELITE". Pinned so takes are reproducible — change only via a new
- * bake-off.
+ * The pinned voice for the default backend, from the public library
+ * (fish.audio/app/m/<id>). Pinned so takes are reproducible; recorded per take
+ * alongside the backend and model, because a voice id alone does not reproduce a
+ * hosted render.
+ *
+ * A swap is planned — treat this constant as the only answer to "which voice is
+ * this", and do not encode the current id anywhere else. The bake-off's Fish
+ * winner was a different voice ("Ethan"); that id is recorded in ../../NARRATION.md
+ * rather than kept here as dead code.
  */
-// export const DEFAULT_FISH_AUDIO_VOICE = '536d3a5e000945adb7038665781a4aca';
-// export const DEFAULT_FISH_AUDIO_VOICE = '536d3a5e000945adb7038665781a4aca';
-// export const DEFAULT_FISH_AUDIO_VOICE = 'e35d38e0269f4e8dae73d66e99376b1e';
 export const DEFAULT_FISH_AUDIO_VOICE = '6ca04d7a79d645e0986069e663d131d0';
+
+/**
+ * OpenAudio S1 — the model family with open-weight releases, which is the
+ * self-hosting escape hatch if the hosted voice ever changes or disappears.
+ * Selected via the `model` HTTP header, pinned and recorded per take.
+ */
 export const DEFAULT_FISH_AUDIO_MODEL = 's2.1-pro-free';
 
 const KEY_HINT = `Set FISH_AUDIO_API_KEY in the repo root .env and export it before running (set -a; source .env; set +a). See packages/openthrottle-showroom/NARRATION.md`;

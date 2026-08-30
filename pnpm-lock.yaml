@@ -3146,6 +3146,9 @@ importers:
       '@openthrottle/openthrottle-agentic-utils':
         specifier: workspace:*
         version: link:../openthrottle-agentic-utils
+      '@openthrottle/openthrottle-skills':
+        specifier: workspace:^
+        version: link:../openthrottle-skills
       pg:
         specifier: 'catalog:'
         version: 8.21.0

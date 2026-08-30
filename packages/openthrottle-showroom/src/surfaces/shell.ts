@@ -33,6 +33,13 @@ import { loadFormat } from '../runner/format';
  * point at the wrong thing — and a 9:16 crop of the whole block is unreadable.
  */
 export interface ShellOutputPart {
+  /**
+   * Hide this part until a `reveal` step brings it on screen — for output that
+   * arrives in stages, the way a long-running script prints as it goes. Hiding the
+   * whole output would make it land as one cut; hiding per part lets a beat land
+   * on the run of lines the narration is talking about.
+   */
+  readonly hidden?: boolean;
   readonly id: string;
   readonly text: string;
 }
@@ -142,7 +149,9 @@ const renderOutput = (block: ShellBlock): string => {
       ? [`<pre class="output">${escapeHtml(block.output)}</pre>`]
       : block.output.map(
           (part) =>
-            `<pre class="output" id="${part.id}">${escapeHtml(part.text)}</pre>`,
+            `<pre class="output" id="${part.id}"${
+              part.hidden ? ' data-demo-hidden' : ''
+            }>${escapeHtml(part.text)}</pre>`,
         );
 
   // The wrapper always carries `<id>-output`, so `reveal('#<id>-output')` reads the

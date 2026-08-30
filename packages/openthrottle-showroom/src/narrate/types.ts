@@ -3,9 +3,9 @@
  *
  * The backend is an interface on purpose. The voice IS the channel's identity when
  * there is no presenter, and that decision had to be changeable without touching
- * parsing, segmentation, loudness or captions. It has since been made — local Piper
- * ships, macOS `say` rehearses — and the interface is what kept the switch to two
- * files. See ../NARRATION.md.
+ * parsing, segmentation, loudness or captions. It has since been made — hosted Fish
+ * Audio ships, Piper renders on box, macOS `say` rehearses — and the interface is
+ * what kept each switch to a couple of files. See ../NARRATION.md.
  */
 
 export interface NarrationSentence {

@@ -77,12 +77,13 @@ Out: `output/<episode>/<variant>/audio/*.wav` + `timings.json`, which records th
 variant alongside the backend and voice so a take traces to the words that made
 it. `--variant` defaults to the episode's `selectedVariant`; an unknown id fails
 with the list of real ones. The render cache sits beside the capture rather than
-inside a take, so two variants sharing a sentence share the rendered audio. Renders through local Piper
-(`en_US-hfc_male-medium`) by default — the settled ship voice, pinned for the season.
-`NARRATION_BACKEND=macos-say` swaps in the flat rehearsal voice for a quick timing
-pass. Piper must be installed; see
+inside a take, so two variants sharing a sentence share the rendered audio. Renders through hosted Fish Audio
+by default (`FISH_AUDIO_API_KEY` required), the voice the channel ships.
+`--backend piper` renders on box instead — free, offline, and required for any text
+not going into a published episode; `NARRATION_BACKEND=macos-say` swaps in the flat
+rehearsal voice for a quick timing pass. See
 [`NARRATION.md`](../../packages/openthrottle-showroom/NARRATION.md)
-for the install and why this backend won.
+for the decision, the privacy line, and the Piper install.
 
 ### 4. Assemble
 

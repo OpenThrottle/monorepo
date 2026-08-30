@@ -13,7 +13,7 @@ import { writeFileSync } from 'node:fs';
 import type { RenderRequest, TtsBackend } from '../types';
 
 /**
- * The Season 2+ ship voice: "Will", a friendly young-male premade narration
+ * Won the 2026-08 listen but not adopted: "Will", a friendly young-male premade narration
  * voice. Won the 2026-08 phone-speaker bake-off (over Brian and Liam here,
  * and over the Fish Audio contenders). Pinned so takes are reproducible —
  * change only via a new bake-off. See ../NARRATION.md.
