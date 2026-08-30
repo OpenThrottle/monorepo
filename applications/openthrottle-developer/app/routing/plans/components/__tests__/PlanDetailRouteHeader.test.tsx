@@ -35,6 +35,17 @@ const basePlan: PlanDetailsFragment = {
   updatedAt: '2025-01-03T00:00:00Z',
 };
 
+const planWithProject: PlanDetailsFragment = {
+  ...basePlan,
+  project: 'atlas-api',
+  projectId: 'project-1',
+  projectRelation: {
+    __typename: 'ProjectObject',
+    id: 'project-1',
+    name: 'atlas-api',
+  },
+};
+
 describe('PlanDetailRouteHeader Component', () => {
   test('renders title, status, and assignee', () => {
     const { getByRole, getByText, queryByLabelText } = renderRoutesStub(
@@ -59,5 +70,27 @@ describe('PlanDetailRouteHeader Component', () => {
       'href',
       '/plans?status=IN_PROGRESS',
     );
+  });
+
+  test('links the project chip to the project a plan points at', () => {
+    const { getByLabelText, getByTestId } = renderRoutesStub(
+      <PlanDetailRouteHeader plan={planWithProject} status="IN_PROGRESS" />,
+    );
+
+    expect(getByTestId('PlanProjectBadge')).toBeInTheDocument();
+    expect(getByLabelText('Project: atlas-api')).toHaveAttribute(
+      'href',
+      '/projects/project-1',
+    );
+  });
+
+  // Most plans have no project, so the chip must be absent rather than an
+  // "unassigned" placeholder on every other plan header.
+  test('renders no project chip when the plan points at nothing', () => {
+    const { queryByTestId } = renderRoutesStub(
+      <PlanDetailRouteHeader plan={basePlan} status="IN_PROGRESS" />,
+    );
+
+    expect(queryByTestId('PlanProjectBadge')).not.toBeInTheDocument();
   });
 });

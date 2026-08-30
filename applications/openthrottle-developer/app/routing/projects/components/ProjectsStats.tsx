@@ -5,13 +5,15 @@ import { OpenThrottleStatCard } from '@openthrottle/react-router-ui';
 export interface ProjectsStatsProps {
   className?: string;
   plansLinkedCount?: number | null;
+  tasksLinkedCount?: number | null;
   totalProjects: number;
 }
 
 export const ProjectsStats = (
   props: ProjectsStatsProps,
 ): React.ReactElement => {
-  const { className, plansLinkedCount, totalProjects } = props;
+  const { className, plansLinkedCount, tasksLinkedCount, totalProjects } =
+    props;
 
   // Hooks
 
@@ -37,8 +39,9 @@ export const ProjectsStats = (
       {plansLinkedCount != null && (
         <OpenThrottleStatCard title="Plans linked" value={plansLinkedCount} />
       )}
-      {/* TODO: Get tasks linked count from the API */}
-      <OpenThrottleStatCard title="Tasks linked" value={123} />
+      {tasksLinkedCount != null && (
+        <OpenThrottleStatCard title="Tasks linked" value={tasksLinkedCount} />
+      )}
     </div>
   );
 };

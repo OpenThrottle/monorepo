@@ -1,6 +1,8 @@
 import * as React from 'react';
+import { Badge } from '@openthrottle/react-router-shadcn';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
-import { NotebookTextIcon } from 'lucide-react';
+import { FolderGit2Icon, NotebookTextIcon } from 'lucide-react';
+import { Link } from 'react-router';
 import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
 import { formatPlanDate } from '~/routing/plans/utils/formatters';
 import type { PlanStatusKey } from '~/routing/plans/types';
@@ -13,9 +15,9 @@ export interface PlanDetailRouteHeaderProps {
 
 /**
  * @description Issue-style heading for the plan detail route: the plan title,
- * then a metadata row (status badge linking to the filtered list,
- * author→assignee, tags, created/updated). Navigation breadcrumbs live in the
- * global app header now. Primary run/lifecycle actions stay in the sibling
+ * then a metadata row (status badge linking to the filtered list, the project
+ * the plan points at, author→assignee, created/updated). Navigation breadcrumbs
+ * live in the global app header now. Primary run/lifecycle actions stay in the sibling
  * {@link PlanToolbar}. Extracted from {@link PlanDetailRoute} per
  * component-primitive-shape R6.
  */
@@ -27,6 +29,9 @@ export const PlanDetailRouteHeader = (
   // Hooks
 
   // Setup
+  // Most plans carry no project, so the chip is conditional rather than an
+  // "unassigned" placeholder that would sit on every other plan header.
+  const project = plan.projectRelation;
   const title = plan.title ?? 'Untitled';
 
   // Handlers
@@ -44,6 +49,25 @@ export const PlanDetailRouteHeader = (
       <div className="flex flex-col gap-2">
         <div className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
           <PlanStatusBadge status={status} to={`/plans?status=${status}`} />
+
+          {project ? (
+            <Badge
+              asChild={true}
+              color="sky"
+              data-testid="PlanProjectBadge"
+              size="xs"
+            >
+              <Link
+                aria-label={`Project: ${project.name}`}
+                to={`/projects/${project.id}`}
+                viewTransition={true}
+              >
+                <FolderGit2Icon />
+                {project.name}
+              </Link>
+            </Badge>
+          ) : null}
+
           {plan.author ? (
             <span aria-label={`Author: ${plan.author}`}>
               {plan.assignee

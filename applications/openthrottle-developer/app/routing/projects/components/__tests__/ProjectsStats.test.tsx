@@ -22,13 +22,16 @@ describe('ProjectsStats Component', () => {
       component = render(<RoutesStub />);
     });
 
-    test('should render total projects and optional plans linked cards', () => {
+    // "Tasks linked" used to render unconditionally with a hardcoded 123 behind a
+    // TODO. Both linked counts are now real and both are omitted when absent — a
+    // missing count must show no card rather than an invented number.
+    test('should render only the total projects card', () => {
       expect(component.getByTestId('ProjectsStats')).toBeInTheDocument();
       expect(component.getByText('Total projects')).toBeInTheDocument();
       expect(component.getByText('3')).toBeInTheDocument();
-      expect(component.getByText('Tasks linked')).toBeInTheDocument();
+      expect(component.queryByText('Tasks linked')).not.toBeInTheDocument();
       expect(component.queryByText('Plans linked')).not.toBeInTheDocument();
-      expect(component.getAllByTestId('OpenThrottleStatCard')).toHaveLength(2);
+      expect(component.getAllByTestId('OpenThrottleStatCard')).toHaveLength(1);
     });
   });
 
@@ -46,6 +49,31 @@ describe('ProjectsStats Component', () => {
       expect(getByText('2')).toBeInTheDocument();
       expect(getByText('Plans linked')).toBeInTheDocument();
       expect(getByText('5')).toBeInTheDocument();
+      expect(getAllByTestId('OpenThrottleStatCard')).toHaveLength(2);
+    });
+  });
+
+  describe('when tasksLinkedCount is provided', () => {
+    test('should show the real tasks linked count', () => {
+      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
+      const WithBoth = () => (
+        <ProjectsStats
+          plansLinkedCount={10}
+          tasksLinkedCount={13}
+          totalProjects={2}
+        />
+      );
+      const RoutesStubWithBoth = createRoutesStub([
+        { Component: WithBoth, path: '/' },
+      ]);
+      const { getAllByTestId, getByText, queryByText } = render(
+        <RoutesStubWithBoth />,
+      );
+
+      expect(getByText('Tasks linked')).toBeInTheDocument();
+      expect(getByText('13')).toBeInTheDocument();
+      // The number the card used to hardcode.
+      expect(queryByText('123')).not.toBeInTheDocument();
       expect(getAllByTestId('OpenThrottleStatCard')).toHaveLength(3);
     });
   });
