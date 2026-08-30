@@ -1,7 +1,9 @@
+import { WorktreeDiscoveryProblemKind } from '~/__generated__/graphql';
 import type { WorkspaceRepositoryFieldsFragment } from '~/__generated__/graphql';
 import { REPOSITORIES_TABLE_COPY } from '~/routing/settings/repositories/data/data.copy';
 import type {
   DiscoveredWorktree,
+  DiscoveredWorktreesResult,
   RepositoryCheckout,
   RepositoryCheckoutRow,
 } from '~/routing/settings/repositories/data/types';
@@ -17,6 +19,7 @@ const toRow = (
   checkout: RepositoryCheckout,
   foreignSkillInjectionEnabled: boolean,
   discovered: DiscoveredWorktree | null,
+  notAGitRepository: boolean,
   children: RepositoryCheckoutRow[] = [],
 ): RepositoryCheckoutRow => ({
   activity: discovered?.activity ?? null,
@@ -31,6 +34,7 @@ const toRow = (
   foreignSkillInjectionEnabled,
   id: checkout.id,
   isWorktree: checkout.kind === WORKTREE_CHECKOUT_KIND,
+  notAGitRepository,
   path: checkout.filesystemPath,
   planId: discovered?.planId ?? null,
   planRunId: discovered?.planRunId ?? null,
@@ -59,6 +63,8 @@ const toDiscoveredRow = (
   foreignSkillInjectionEnabled,
   id: `${UNREGISTERED_ROW_ID_PREFIX}${discovered.path}`,
   isWorktree: true,
+  // A worktree found on disk is by definition inside a git repository.
+  notAGitRepository: false,
   path: discovered.path,
   planId: discovered.planId ?? null,
   planRunId: discovered.planRunId ?? null,
@@ -95,7 +101,19 @@ const toDiscoveredRow = (
 export function buildRepositoryRows(
   repositories: WorkspaceRepositoryFieldsFragment[],
   discoveredWorktrees: readonly DiscoveredWorktree[] = [],
+  problems: DiscoveredWorktreesResult['problems'] = [],
 ): RepositoryCheckoutRow[] {
+  // Discovery attributes this one to a repository precisely so it lands on the row.
+  const notGitRepositoryIds = new Set(
+    problems
+      .filter(
+        (problem) =>
+          problem.kind === WorktreeDiscoveryProblemKind.NotAGitRepo &&
+          problem.repositoryId != null,
+      )
+      .map((problem) => problem.repositoryId),
+  );
+
   // Match on checkoutId, not on the path: the server already resolved symlinks when
   // it indexed the user's checkouts, so this is the authoritative pairing.
   const discoveredByCheckoutId = new Map<string, DiscoveredWorktree>();
@@ -145,6 +163,7 @@ export function buildRepositoryRows(
         checkout,
         injectionEnabled,
         discoveredByCheckoutId.get(checkout.id) ?? null,
+        notGitRepositoryIds.has(repository.id),
         children,
       );
 

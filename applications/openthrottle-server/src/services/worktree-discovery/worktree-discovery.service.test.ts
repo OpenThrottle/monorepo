@@ -1,8 +1,12 @@
 /**
  * @description Unit tests for on-disk worktree discovery: both sources feed the union, a path in
  * both appears once, a symlinked root dedupes against the direct path, a real clone sitting in the
- * root is excluded, git failures degrade to warnings plus a partial result, and the hard cap warns
- * about what it dropped instead of truncating silently.
+ * root is excluded, git failures degrade to classified problems plus a partial result, and the hard
+ * cap reports what it dropped instead of truncating silently.
+ *
+ * The classification assertions matter as much as the failure ones: the states that are merely the
+ * healthy default — above all a repository with no worktrees yet — must produce NOTHING, and each
+ * remaining kind must be reported exactly once rather than once per failed probe.
  */
 
 import { homedir } from 'node:os';
@@ -35,7 +39,10 @@ import {
   MAX_DISCOVERED_WORKTREES,
   WorktreeDiscoveryService,
 } from './worktree-discovery.service';
-import { WORKTREE_DISCOVERY_SOURCE } from './worktree-discovery.types';
+import {
+  WORKTREE_DISCOVERY_PROBLEM,
+  WORKTREE_DISCOVERY_SOURCE,
+} from './worktree-discovery.types';
 
 const PRIMARY = '/Users/matt/Development/openthrottle';
 /** The default rung of the shared ladder for PRIMARY: `$HOME/worktrees/<repo>`. */
@@ -62,6 +69,8 @@ interface GitScript {
   readonly branch?: string;
   readonly commonDir?: string;
   readonly fail?: ReadonlySet<string>;
+  /** Checkout paths that are registered folders but not git repositories. */
+  readonly notGitRepos?: readonly string[];
   readonly revList?: string;
   readonly status?: string;
   readonly worktreeList?: string;
@@ -79,8 +88,18 @@ const scriptGit = (script: GitScript): void => {
       ) => void,
     ) => {
       // args are ['-C', cwd, ...probe]
+      const cwd = args[1];
       const probe = args.slice(2);
       const key = probe[0] === 'worktree' ? 'worktree' : probe[0];
+
+      if (script.notGitRepos?.includes(cwd) === true) {
+        callback(
+          new Error(
+            `Command failed: git ${probe.join(' ')}\nfatal: not a git repository (or any of the parent directories): .git\n`,
+          ),
+        );
+        return;
+      }
 
       if (script.fail?.has(key) === true) {
         callback(new Error(`git ${key} exploded`));
@@ -114,22 +133,48 @@ const withSymlinks = (map: Readonly<Record<string, string>> = {}): void => {
   mockRealpathSync.mockImplementation((value: string) => map[value] ?? value);
 };
 
+/** An fs error carrying an errno, the way node throws them — the signal the scan branches on. */
+const errnoError = (code: string, text: string): Error =>
+  Object.assign(new Error(text), { code });
+
 /** `entries` are the root's children; `directories` are real clones (`.git` is a dir). */
 const withRoot = (options: {
+  /** Paths that do not exist on disk — e.g. a worktree git still reports after deletion. */
+  readonly absent?: readonly string[];
   readonly directories?: readonly string[];
   readonly entries: readonly string[];
+  /** The root was never created — the normal state of a repository with no worktrees. */
   readonly missing?: boolean;
+  /** The root exists but cannot be read. */
+  readonly unreadable?: boolean;
 }): void => {
   mockReaddirSync.mockImplementation((path: string) => {
     if (options.missing === true) {
-      throw new Error(`ENOENT: no such file or directory, scandir '${path}'`);
+      throw errnoError(
+        'ENOENT',
+        `ENOENT: no such file or directory, scandir '${path}'`,
+      );
+    }
+    if (options.unreadable === true) {
+      throw errnoError(
+        'EACCES',
+        `EACCES: permission denied, scandir '${path}'`,
+      );
     }
     return [...options.entries];
   });
 
   mockStatSync.mockImplementation((path: string) => {
+    const owner = path.endsWith('/.git')
+      ? path.slice(0, -'/.git'.length)
+      : path;
+    if (options.absent?.includes(owner) === true) {
+      throw errnoError(
+        'ENOENT',
+        `ENOENT: no such file or directory, '${path}'`,
+      );
+    }
     if (path.endsWith('/.git')) {
-      const owner = path.slice(0, -'/.git'.length);
       const isClone = options.directories?.includes(owner) === true;
       return { isDirectory: () => isClone, isFile: () => !isClone };
     }
@@ -287,18 +332,74 @@ describe('WorktreeDiscoveryService', () => {
 
     expect(result.worktrees).toHaveLength(1);
     expect(result.worktrees[0].dirty).toBeNull();
-    expect(result.warnings.join('\n')).toMatch(/git status --porcelain failed/);
+    expect(result.warnings.join('\n')).toMatch(/git status --porcelain/);
+    expect(result.problems.map((entry) => entry.kind)).toContain(
+      WORKTREE_DISCOVERY_PROBLEM.PROBE_FAILED,
+    );
   });
 
-  it('returns an empty list plus one warning when the root is unreadable', async () => {
+  it('says nothing when the root does not exist — a repository with no worktrees is healthy', async () => {
     scriptGit({});
     withRoot({ entries: [], missing: true });
 
     const result = await build([checkout()]).discover(USER);
 
     expect(result.worktrees).toEqual([]);
-    expect(result.warnings).toHaveLength(1);
+    expect(result.problems).toEqual([]);
+    expect(result.warnings).toEqual([]);
+  });
+
+  it('returns an empty list plus one problem when the root exists but cannot be read', async () => {
+    scriptGit({});
+    withRoot({ entries: [], unreadable: true });
+
+    const result = await build([checkout()]).discover(USER);
+
+    expect(result.worktrees).toEqual([]);
+    expect(result.problems).toHaveLength(1);
+    expect(result.problems[0]).toMatchObject({
+      kind: WORKTREE_DISCOVERY_PROBLEM.ROOT_UNREADABLE,
+      path: ROOT,
+    });
     expect(result.warnings[0]).toMatch(/could not be read/);
+  });
+
+  it('reports every resolved root, not just the first', async () => {
+    const other = '/Users/someone/code/other';
+    scriptGit({});
+    mockReaddirSync.mockImplementation((path: string) => {
+      if (path === ROOT) return ['wt-a'];
+      throw errnoError(
+        'ENOENT',
+        `ENOENT: no such file or directory, scandir '${path}'`,
+      );
+    });
+    mockStatSync.mockImplementation(() => ({
+      isDirectory: () => true,
+      isFile: () => true,
+    }));
+
+    const result = await build([
+      checkout(),
+      checkout({
+        filesystemPath: other,
+        id: 'checkout-other',
+        repositoryId: 'repo-other',
+      }),
+    ]).discover(USER);
+
+    expect(result.scannedRoots).toHaveLength(2);
+    expect(result.scannedRoots[0]).toMatchObject({
+      exists: true,
+      path: ROOT,
+      worktreeCount: 1,
+    });
+    expect(result.scannedRoots[1]).toMatchObject({
+      exists: false,
+      worktreeCount: 0,
+    });
+    expect(result.worktreeRoot).toBe(ROOT);
+    expect(result.problems).toEqual([]);
   });
 
   it('prefers OPENTHROTTLE_WORKTREE_ROOT over the default', async () => {
@@ -310,6 +411,88 @@ describe('WorktreeDiscoveryService', () => {
     expect(result.worktreeRoot).toBe('/srv/worktrees/openthrottle');
     expect(result.rootSource).toBe('env');
     expect(mockReaddirSync).toHaveBeenCalledWith('/srv/worktrees/openthrottle');
+  });
+
+  it('reports a deleted worktree git still lists once, and never probes it', async () => {
+    const dead = `${ROOT}/wt-dead`;
+    scriptGit({
+      worktreeList: `worktree ${PRIMARY}\n\nworktree ${dead}\n`,
+    });
+    withRoot({ absent: [dead], entries: [] });
+
+    const result = await build([checkout()]).discover(USER);
+
+    expect(result.worktrees).toEqual([]);
+    expect(result.problems).toEqual([
+      {
+        detail: expect.any(String),
+        kind: WORKTREE_DISCOVERY_PROBLEM.STALE_WORKTREE_ENTRY,
+        path: dead,
+        repositoryId: null,
+      },
+    ]);
+
+    const probed = mockExecFile.mock.calls.map((call) => call[1][1]);
+    expect(probed).not.toContain(dead);
+  });
+
+  it('attributes a registered folder that is not a git repository to its own row', async () => {
+    const folder = '/Users/someone/Desktop/example-folder';
+    scriptGit({
+      notGitRepos: [folder],
+      worktreeList: `worktree ${PRIMARY}\n\nworktree ${ROOT}/wt-a\n`,
+    });
+    withRoot({ entries: [] });
+
+    const result = await build([
+      checkout(),
+      checkout({
+        filesystemPath: folder,
+        id: 'checkout-folder',
+        repositoryId: 'repo-folder',
+      }),
+    ]).discover(USER);
+
+    expect(result.problems).toEqual([
+      {
+        detail: expect.stringContaining('not a git repository'),
+        kind: WORKTREE_DISCOVERY_PROBLEM.NOT_A_GIT_REPO,
+        path: folder,
+        repositoryId: 'repo-folder',
+      },
+    ]);
+    // The other repository's worktrees are unaffected.
+    expect(result.worktrees.map((worktree) => worktree.name)).toEqual(['wt-a']);
+  });
+
+  it('excludes stale entries from the cap, because they are not worktrees', async () => {
+    const dead = `${ROOT}/wt-dead`;
+    const names = Array.from(
+      { length: MAX_DISCOVERED_WORKTREES },
+      (_value, index) => `wt-${String(index).padStart(4, '0')}`,
+    );
+    scriptGit({
+      worktreeList: `worktree ${PRIMARY}\n\nworktree ${dead}\n`,
+    });
+    withRoot({ absent: [dead], entries: names });
+
+    const result = await build([checkout()]).discover(USER);
+
+    expect(result.droppedCount).toBe(0);
+    expect(result.problems.map((entry) => entry.kind)).toEqual([
+      WORKTREE_DISCOVERY_PROBLEM.STALE_WORKTREE_ENTRY,
+    ]);
+  });
+
+  it('derives the deprecated warnings field from the classified problems', async () => {
+    scriptGit({});
+    withRoot({ entries: [], unreadable: true });
+
+    const result = await build([checkout()]).discover(USER);
+
+    expect(result.warnings).toHaveLength(result.problems.length);
+    expect(result.warnings[0]).toContain(ROOT);
+    expect(result.warnings[0]).toContain('EACCES');
   });
 
   it('counts and warns about worktrees dropped by the hard cap', async () => {
@@ -327,6 +510,9 @@ describe('WorktreeDiscoveryService', () => {
     expect(result.droppedCount).toBe(overflow);
     expect(result.warnings.join('\n')).toMatch(
       new RegExp(`capped at ${MAX_DISCOVERED_WORKTREES}.*${overflow} more`),
+    );
+    expect(result.problems.map((entry) => entry.kind)).toContain(
+      WORKTREE_DISCOVERY_PROBLEM.CAP_EXCEEDED,
     );
   });
 });

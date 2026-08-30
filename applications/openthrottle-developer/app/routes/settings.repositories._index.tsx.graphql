@@ -75,9 +75,20 @@ query getSettingsRepositories {
   }
   discoveredWorktrees {
     droppedCount
+    problems {
+      detail
+      kind
+      path
+      repositoryId
+    }
     rootSource
     scannedAt
-    warnings
+    scannedRoots {
+      exists
+      path
+      source
+      worktreeCount
+    }
     worktreeRoot
     worktrees {
       ...DiscoveredWorktreeFields

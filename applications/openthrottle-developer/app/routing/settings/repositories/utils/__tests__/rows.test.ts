@@ -1,4 +1,7 @@
-import { WorktreeActivity } from '~/__generated__/graphql';
+import {
+  WorktreeActivity,
+  WorktreeDiscoveryProblemKind,
+} from '~/__generated__/graphql';
 import { describe, expect, test } from 'vitest';
 import {
   mockCheckout,
@@ -293,6 +296,43 @@ describe('buildRepositoryRows with discovered worktrees', () => {
     );
 
     expect(rows.map((row) => row.displayName)).toEqual(['wt-a']);
+  });
+
+  test('flags only the repository a NOT_A_GIT_REPO problem names', () => {
+    const rows = buildRepositoryRows(
+      [
+        mockRepository({
+          checkouts: [mockCheckout({ id: 'primary-1' })],
+          id: 'repo-1',
+        }),
+        mockRepository({
+          checkouts: [mockCheckout({ id: 'primary-2' })],
+          id: 'repo-2',
+        }),
+      ],
+      [],
+      [
+        {
+          detail: 'fatal: not a git repository',
+          kind: WorktreeDiscoveryProblemKind.NotAGitRepo,
+          path: '/Users/dev/Desktop/example-folder',
+          repositoryId: 'repo-2',
+        },
+      ],
+    );
+
+    expect(rows.map((row) => row.notAGitRepository)).toEqual([false, true]);
+  });
+
+  test('flags nothing when discovery reported no such problem', () => {
+    const rows = buildRepositoryRows([
+      mockRepository({
+        checkouts: [mockCheckout({ id: 'primary-1' })],
+        id: 'repo-1',
+      }),
+    ]);
+
+    expect(rows[0].notAGitRepository).toBe(false);
   });
 
   test('keeps the tree exactly two levels deep', () => {

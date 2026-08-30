@@ -24,6 +24,8 @@ export const REPOSITORIES_TABLE_COPY = {
   injectionToggleLabelPrefix: `Toggle skill injection for`,
   injectionUpdateFailed: `Failed to update skill injection.`,
   noResults: `No repositories match this search.`,
+  notAGitRepositoryBadge: `Not a git repository`,
+  notAGitRepositoryTitle: `This folder is registered but is not a git checkout, so nothing can be planned or run in it. Removing the checkout here leaves the folder on disk untouched.`,
   repositoryColumn: `Repository / checkout`,
   searchLabel: `Search repositories`,
   searchPlaceholder: `Search repositories...`,
@@ -67,14 +69,26 @@ export const REPOSITORIES_ROW_ACTIONS_COPY = {
  * resolved at all. Plain sentences only — no markdown, since these render as text.
  */
 export const WORKTREE_DISCOVERY_COPY = {
+  /** The genuinely degraded case: something we could not read may be hiding worktrees. */
+  degradedSummary: `Some worktrees may be missing from this list.`,
+  detailsHide: `Hide details`,
+  detailsShow: `Show details`,
   droppedCountSuffix: `more were found on disk and are not listed.`,
+  /** A repository that has no worktrees yet — stated as a count, never as an error per repo. */
+  emptyRootsSuffixOne: `repository has no worktrees yet.`,
+  emptyRootsSuffixOther: `repositories have no worktrees yet.`,
+  problemsCountSuffixOne: `note from the last scan`,
+  problemsCountSuffixOther: `notes from the last scan`,
   refreshButton: `Rescan worktrees`,
   refreshingButton: `Rescanning…`,
   rootPrefix: `Scanning for worktrees in`,
+  /** The one actionable line: git is still holding entries for directories that are gone. */
+  staleRemedy: `Run \`git worktree prune\` in the repository to clear them.`,
+  staleSummarySuffixOne: `worktree is still registered with git but no longer on disk.`,
+  staleSummarySuffixOther: `worktrees are still registered with git but no longer on disk.`,
   unconfiguredBody: `OpenThrottle could not work out where your worktrees live, so none are listed. Set a worktree root in workspace settings, or register a primary checkout so the default sibling directory can be resolved.`,
   unconfiguredLinkLabel: `Open workspace settings`,
   unconfiguredTitle: `No worktree root to scan`,
-  warningsTitle: `Some worktrees may be missing from this list`,
 } as const;
 
 /**

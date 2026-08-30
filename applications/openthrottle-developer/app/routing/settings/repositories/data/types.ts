@@ -57,6 +57,11 @@ export interface RepositoryCheckoutRow {
   /** Stable row identity: the checkout id, or `worktree:<path>` when unregistered. */
   id: string;
   isWorktree: boolean;
+  /**
+   * The registered folder is not a git checkout at all. Reported per repository by
+   * discovery, so it belongs on the row rather than in a page-level list.
+   */
+  notAGitRepository: boolean;
   /** Absolute on-disk path (server host). */
   path: string;
   /**

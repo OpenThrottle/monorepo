@@ -25,8 +25,10 @@ describe('DiscoveredWorktreesResolver', () => {
   it('maps a classified worktree onto the GraphQL object', async () => {
     const resolver = build({
       droppedCount: 0,
+      problems: [],
       rootSource: 'env',
       scannedAt: '2026-08-24T00:00:00.000Z',
+      scannedRoots: [],
       warnings: [],
       worktreeRoot: ROOT,
       worktrees: [
@@ -52,8 +54,10 @@ describe('DiscoveredWorktreesResolver', () => {
 
     expect(payload).toEqual({
       droppedCount: 0,
+      problems: [],
       rootSource: 'env',
       scannedAt: '2026-08-24T00:00:00.000Z',
+      scannedRoots: [],
       warnings: [],
       worktreeRoot: ROOT,
       worktrees: [
@@ -75,8 +79,10 @@ describe('DiscoveredWorktreesResolver', () => {
   it('passes warnings and the cap overflow through to the client', async () => {
     const resolver = build({
       droppedCount: 7,
+      problems: [],
       rootSource: 'default',
       scannedAt: '2026-08-24T00:00:00.000Z',
+      scannedRoots: [],
       warnings: ['worktree root /nope could not be read'],
       worktreeRoot: ROOT,
       worktrees: [],
@@ -91,8 +97,10 @@ describe('DiscoveredWorktreesResolver', () => {
   it('renders an empty list when no root could be resolved', async () => {
     const resolver = build({
       droppedCount: 0,
+      problems: [],
       rootSource: null,
       scannedAt: '2026-08-24T00:00:00.000Z',
+      scannedRoots: [],
       warnings: [],
       worktreeRoot: null,
       worktrees: [],

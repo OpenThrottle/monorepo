@@ -4,6 +4,10 @@ import type { RenderResult } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test, vi } from 'vitest';
+import {
+  WorktreeDiscoveryProblemKind,
+  WorktreeRootSource,
+} from '~/__generated__/graphql';
 import { mockDiscoveredWorktrees } from '~/routing/settings/repositories/data/mock.repositories';
 import { WORKTREE_DISCOVERY_COPY } from '~/routing/settings/repositories/data/data.copy';
 import { WorktreeDiscoveryNotice } from '../WorktreeDiscoveryNotice';
@@ -58,19 +62,81 @@ describe('WorktreeDiscoveryNotice Component', () => {
     expect(loader).toHaveBeenCalled();
   });
 
-  test('renders scan warnings as an alert', () => {
+  test('leads with a sentence and keeps the raw git output collapsed', async () => {
+    const user = userEvent.setup();
     const component = renderNotice(
       mockDiscoveredWorktrees({
-        warnings: ['worktree root /srv/wt could not be read: EACCES'],
+        problems: [
+          {
+            detail: 'EACCES: permission denied',
+            kind: WorktreeDiscoveryProblemKind.RootUnreadable,
+            path: '/srv/wt',
+            repositoryId: null,
+          },
+        ],
       }),
     );
 
     expect(component.getByRole('alert')).toHaveTextContent(
-      'worktree root /srv/wt could not be read: EACCES',
+      WORKTREE_DISCOVERY_COPY.degradedSummary,
     );
+    // The raw line is reachable, but only once asked for.
+    expect(component.queryByText(/EACCES: permission denied/)).toBeNull();
+
+    await user.click(
+      component.getByRole('button', {
+        name: WORKTREE_DISCOVERY_COPY.detailsShow,
+      }),
+    );
+
     expect(
-      component.getByText(WORKTREE_DISCOVERY_COPY.warningsTitle),
+      component.getByText(/EACCES: permission denied/),
     ).toBeInTheDocument();
+  });
+
+  test('names the remedy for worktrees git still lists but no longer exist', () => {
+    const component = renderNotice(
+      mockDiscoveredWorktrees({
+        problems: [
+          {
+            detail: 'the directory is gone',
+            kind: WorktreeDiscoveryProblemKind.StaleWorktreeEntry,
+            path: '/srv/wt/dead',
+            repositoryId: null,
+          },
+        ],
+      }),
+    );
+
+    expect(component.getByRole('alert')).toHaveTextContent(
+      WORKTREE_DISCOVERY_COPY.staleRemedy,
+    );
+  });
+
+  test('counts repositories with no worktrees rather than listing a failure each', () => {
+    const component = renderNotice(
+      mockDiscoveredWorktrees({
+        scannedRoots: [
+          {
+            exists: false,
+            path: '/srv/worktrees/org/one',
+            source: WorktreeRootSource.Default,
+            worktreeCount: 0,
+          },
+          {
+            exists: false,
+            path: '/srv/worktrees/org/two',
+            source: WorktreeRootSource.Default,
+            worktreeCount: 0,
+          },
+        ],
+      }),
+    );
+
+    expect(
+      component.getByText(`2 ${WORKTREE_DISCOVERY_COPY.emptyRootsSuffixOther}`),
+    ).toBeInTheDocument();
+    expect(component.queryByRole('alert')).toBeNull();
   });
 
   test('reports what the hard cap dropped rather than truncating silently', () => {
