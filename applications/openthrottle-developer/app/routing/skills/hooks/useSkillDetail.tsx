@@ -50,15 +50,18 @@ export const useSkillDetail = (
   const wasSavingRef = React.useRef(false);
 
   // Setup
-  const isOpenThrottle = entry.source === 'openthrottle';
+  // Authored here, or your own personal tier — either way the file is yours to
+  // edit. Only a lockfile-installed external skill is off limits.
+  const isEditableProvenance =
+    entry.source === 'openthrottle' || entry.isPersonal === true;
   const { badge: invocationBadge } = getResolvedModelInvocationDisplay(entry);
   const isDirty = draft !== content;
-  // Editing an external SKILL.md forks it from upstream, so provenance gates
-  // edit mode on top of the checkout precondition. `writeSkillFileBySlug` is
-  // the authoritative gate; this only keeps the user out of a doomed draft.
-  const canEdit = editable && isOpenThrottle;
+  // Editing a lockfile-installed SKILL.md forks it from upstream, so provenance
+  // gates edit mode on top of the checkout precondition. `writeSkillFileBySlug`
+  // is the authoritative gate; this only keeps the user out of a doomed draft.
+  const canEdit = editable && isEditableProvenance;
   // Provenance is the more specific blocker, so it wins when both apply.
-  const editDisabledTooltip = isOpenThrottle
+  const editDisabledTooltip = isEditableProvenance
     ? SKILL_DETAIL_COPY.editDisabledTooltip
     : SKILL_DETAIL_COPY.editExternalTooltip;
 

@@ -57,8 +57,10 @@ export interface RepoSkillEntry {
    */
   readonly effectiveDisableModelInvocation?: boolean;
   /**
-   * True when the skill folder resolves OUTSIDE the repo — the per-user
-   * personal tier (`~/.openthrottle/skills`), linked in by ot-skill-sync. It is
+   * True when the skill folder resolves under the per-user personal skills root
+   * (`~/.openthrottle/skills`, or `OPENTHROTTLE_PERSONAL_SKILLS_DIR`), linked in
+   * by ot-skill-sync. Membership in that root is the test — a link that merely
+   * escapes the repo is nobody's personal tier and stays plain external. It is
    * on disk and invokable, but it is yours alone: nobody else's checkout has
    * it, and it can never be committed. Separate from {@link RepoSkillEntry.source}
    * because that value is ingested and served over GraphQL, while the personal

@@ -210,6 +210,56 @@ describe('useSkillDetail', () => {
     );
   });
 
+  // The personal tier carries `source: 'external'` but is the author's own —
+  // provenance is not the blocker there, only a missing checkout is.
+  test('canEdit is true for an editable personal entry', () => {
+    const { result } = renderHook(() =>
+      useSkillDetail(
+        baseOptions({
+          editable: true,
+          entry: baseEntry({ isPersonal: true, source: 'external' }),
+        }),
+      ),
+    );
+
+    expect(result.current.canEdit).toBe(true);
+    expect(result.current.editDisabledTooltip).toBe(
+      SKILL_DETAIL_COPY.editDisabledTooltip,
+    );
+  });
+
+  test('handleEdit enters edit mode for a personal entry', () => {
+    const { result } = renderHook(() =>
+      useSkillDetail(
+        baseOptions({
+          content: 'my draft',
+          entry: baseEntry({ isPersonal: true, source: 'external' }),
+        }),
+      ),
+    );
+
+    act(() => result.current.handleEdit());
+
+    expect(result.current.isEditing).toBe(true);
+    expect(result.current.draft).toBe('my draft');
+  });
+
+  test('canEdit is false for a personal entry with no local checkout', () => {
+    const { result } = renderHook(() =>
+      useSkillDetail(
+        baseOptions({
+          editable: false,
+          entry: baseEntry({ isPersonal: true, source: 'external' }),
+        }),
+      ),
+    );
+
+    expect(result.current.canEdit).toBe(false);
+    expect(result.current.editDisabledTooltip).toBe(
+      SKILL_DETAIL_COPY.editDisabledTooltip,
+    );
+  });
+
   test('handleEdit leaves edit mode closed for an external entry', () => {
     const { result } = renderHook(() =>
       useSkillDetail(baseOptions({ entry: baseEntry({ source: 'external' }) })),

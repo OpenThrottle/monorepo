@@ -137,24 +137,33 @@ Postgres persists the derived value on `project_skills.source` (+ nullable
 `source_url`, migration 074); the ingest path derives it the same way via the
 walker's `authored` flag + `parseSkillsLockFile`.
 
-## External skills are read-only
+## External skills are read-only (the personal tier is not)
 
 Provenance gates writes, not just display. An in-app edit of an **external**
 SKILL.md would silently fork it from upstream: the next `ot-skill-sync` / lockfile
-install either clobbers the edit or leaves the repo permanently diverged. Only
-`openthrottle`-sourced skills — real directories under the authored `skills/`
-tree — are editable here.
+install either clobbers the edit or leaves the repo permanently diverged. Two
+kinds of skill are editable here: `openthrottle`-sourced ones — real directories
+under the authored `skills/` tree — and the **personal tier** (`isPersonal`),
+which is the author's own private directory linked into the repo and has no
+upstream to diverge from. Only a lockfile-installed external skill is read-only.
 
 - **Enforcement point:** `writeSkillFileBySlug`
   (`app/routing/skills/data/write-skill-file.server.ts`) refuses when the
-  freshly discovered entry's `source !== 'openthrottle'`. Provenance is read
-  from disk-derived discovery, never from client input, and the check runs
-  before frontmatter validation and before any write.
-- **UI:** `useSkillDetail` derives `canEdit = editable && isOpenThrottle` and
-  the matching disabled reason. The external tooltip wins over the
-  missing-checkout one (it is the more specific blocker), and `handleEdit`
-  no-ops when the gate is closed, so edit mode is unreachable. The UI gate is a
-  courtesy — the server helper refuses regardless of what the client posts.
+  freshly discovered entry is neither `source === 'openthrottle'` nor
+  `isPersonal === true`. Provenance is read from disk-derived discovery, never
+  from client input (and never from a frontmatter `source:` key), and the check
+  runs before frontmatter validation and before any write.
+- **Personal writes go through the symlink.** The target is still
+  `join(monorepoRoot, entry.repoRelativePath)` — the gitignored
+  `.agents/skills/<slug>` link — so `writeFileSync` follows it into the file
+  under the personal root. The link itself is never unlinked or replaced with a
+  real file: that would break `ot-skill-sync` and risk staging a personal skill.
+- **UI:** `useSkillDetail` derives `canEdit = editable && isEditableProvenance`
+  (authored or personal) and the matching disabled reason. The external tooltip
+  wins over the missing-checkout one (it is the more specific blocker), and
+  `handleEdit` no-ops when the gate is closed, so edit mode is unreachable. The
+  UI gate is a courtesy — the server helper refuses regardless of what the
+  client posts.
 - **Still editable for external skills:** record-level tags
   (`project_skills.tags`), orphan removal, and skill-availability rules. Those
   are database rows, not SKILL.md content, so they cannot drift from upstream.
@@ -168,29 +177,40 @@ tree — are editable here.
   so skill content is only ever written through `writeSkillFileBySlug` — the one
   path that enforces provenance and re-validates frontmatter.
 
-To change an external skill, change it upstream and re-sync.
+To change a lockfile-installed external skill, change it upstream and re-sync.
 
 ## Detail route (`/skills/:slug`) — read and update
 
 - **Loader** (`read-skill-file.server.ts`): resolve root → re-run discovery →
   find entry by slug → read the raw SKILL.md. Unknown slug or null root ⇒ 404
   `Response` via the route ErrorBoundary. Returns `{ entry, content, editable }`
-  with `editable = monorepoRoot !== null`.
+  with `editable = monorepoRoot !== null`. A personal skill reads exactly like
+  an authored one — the in-repo symlink is followed to the file under the
+  personal root, with no second lookup by slug.
 - **Read mode:** the whole file renders with `MarkdownRenderer` under a header
   (slug, Source badge with origin link, model-invocation badge, tags,
   repo-relative path + copy).
 - **Edit mode:** `Editor` (Monaco, `@openthrottle/react-router-editor`,
   single-document surface) bound to the raw file; dirty tracking gates Save;
   Cancel reverts to the loaded content. `editable === false` (deployed app)
-  shows a disabled Edit affordance with an explanatory tooltip — as does an
-  external skill, with its own tooltip (see "External skills are read-only").
+  shows a disabled Edit affordance with an explanatory tooltip — as does a
+  lockfile-installed external skill, with its own tooltip (see "External skills
+  are read-only (the personal tier is not)"). A personal skill edits like an
+  authored one.
 - **Write-back** (`write-skill-file.server.ts`, invoked by the route action):
   - The absolute target derives **only** from the discovered entry's
     `repoRelativePath` under the resolved root — never from client input.
-  - A realpath containment guard rejects any resolved path that escapes the
-    repository (symlinked `.claude`/`.cursor` layouts resolve in-repo first).
-  - An entry whose provenance is not `openthrottle` is refused outright (see
-    "External skills are read-only").
+  - A shared realpath allowlist
+    (`app/routing/agents/data/skill-path-allowlist.server.ts`) admits a resolved
+    path only under the monorepo root **or** under
+    `resolvePersonalSkillsRoot()` from `@openthrottle/openthrottle-agentic-utils`
+    (honouring `OPENTHROTTLE_PERSONAL_SKILLS_DIR`). Symlinked `.claude`/`.cursor`
+    layouts resolve in-repo first; a rogue link into any other directory, a
+    dangling link, or an unresolvable path is refused. The same allowlist backs
+    the loader, and the same personal-root membership test decides discovery's
+    `isPersonal` — escaping the repo is not by itself personal.
+  - An entry that is neither `openthrottle` nor `isPersonal` is refused
+    outright (see "External skills are read-only (the personal tier is not)").
   - The new content's frontmatter is re-validated with
     `validateAgentAssetFrontmatter` (must parse, keep `name`, match the slug,
     and satisfy the schema) **before** anything

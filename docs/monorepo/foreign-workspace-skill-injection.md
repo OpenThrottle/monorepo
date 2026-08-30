@@ -338,6 +338,8 @@ The last row is the subtle one, because a link into a personal root that is no l
 
 Sync output states the tier each link came from, so `sync.sh` is self-explaining and nobody has to run `readlink` to find out why a skill is there.
 
+The developer app applies the **same membership test**. `/skills/:slug` reads and writes a personal SKILL.md through the in-repo symlink — one allowlist of "monorepo root ∪ `resolvePersonalSkillsRoot()`", never a second directory to keep in step, and never by unlinking the link. A lockfile-installed external skill stays read-only there. See `applications/openthrottle-developer/docs/repo-skills-discovery-design.md`.
+
 ### 7.4 Uncommittability is asserted, not assumed
 
 `--check` runs `git check-ignore -q` on every generated personal link and reports a violation if it is not ignored. **Assert with `git check-ignore`, never `lstatSync`/`test -e`** — those follow parent symlinks and pass vacuously, a trap already hit once in this codebase.

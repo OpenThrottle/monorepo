@@ -187,7 +187,7 @@ export const SKILL_WRITE_COPY = {
   invalidFrontmatterError: `Save rejected — the edited frontmatter no longer validates:`,
   missingContentError: `Save rejected — no content was submitted.`,
   noRootError: `Saving needs a local checkout — no monorepo root resolved (set WORKSPACE_ROOT).`,
-  pathEscapeError: `Save rejected — the resolved skill path escapes the repository.`,
+  pathEscapeError: `Save rejected — the resolved skill path is outside both the repository and your personal skills directory.`,
   unknownSlugError: `Save rejected — this skill is no longer discoverable on disk.`,
   writeFailedError: `Save failed — the file could not be written to disk.`,
 } as const;

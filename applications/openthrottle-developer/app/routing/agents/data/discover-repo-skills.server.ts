@@ -16,6 +16,7 @@ import {
   type SkillSource,
 } from '@openthrottle/openthrottle-skills';
 import { parseSkillFrontmatter } from '~/routing/agents/data/parse-skill-frontmatter.server';
+import { isPathInsidePersonalSkillsRoot } from '~/routing/agents/data/skill-path-allowlist.server';
 import {
   dedupeRepoSkillEntriesBySlug,
   type RepoSkillEntry,
@@ -82,13 +83,15 @@ interface SkillProvenance {
  * here (`openthrottle`); anything else is a lockfile install (`external`),
  * with its origin URL looked up from skills-lock.json by folder name.
  *
- * A third case resolves ENTIRELY OUTSIDE the repo: the personal tier
- * (`~/.openthrottle/skills`, linked in by ot-skill-sync — see
- * docs/monorepo/foreign-workspace-skill-injection.md §7). A lockfile install is
- * always a real directory inside the repo, so "real path escapes the repo root"
- * is exactly the personal case, and nothing else. Without this it reports as
- * `external` — i.e. as somebody else's third-party skill, with a sourceUrl
- * lookup that can never hit — which is the opposite of what it is.
+ * A third case resolves under the personal skills root: the personal tier
+ * (`~/.openthrottle/skills`, or `OPENTHROTTLE_PERSONAL_SKILLS_DIR`, linked in by
+ * ot-skill-sync — see docs/monorepo/foreign-workspace-skill-injection.md §7.3).
+ * Membership in the currently-resolved personal root is the test, not merely
+ * "escapes the repo root": a rogue link into some other directory is nobody's
+ * personal tier and stays plain `external`, unreadable and unwritable via the
+ * shared allowlist. Without the personal case it would report as `external` —
+ * i.e. as somebody else's third-party skill, with a sourceUrl lookup that can
+ * never hit — which is the opposite of what it is.
  *
  * `isPersonal` is deliberately a separate flag rather than a third
  * {@link SkillSource}: `source` is ingested and served over GraphQL, and the
@@ -110,8 +113,15 @@ const deriveSkillProvenance = (
         sourceUrl: undefined,
       };
     }
-    if (!realDir.startsWith(`${realRoot}${sep}`)) {
+    if (isPathInsidePersonalSkillsRoot(realDir)) {
       return { isPersonal: true, source: 'external', sourceUrl: undefined };
+    }
+    if (!realDir.startsWith(`${realRoot}${sep}`)) {
+      return {
+        isPersonal: undefined,
+        source: 'external',
+        sourceUrl: undefined,
+      };
     }
   } catch {
     // Unresolvable path — treat as external below.
