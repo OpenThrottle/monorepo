@@ -7,7 +7,28 @@ import { SKILLS_SEARCH_COPY } from '~/routing/skills/data/data.copy';
 import { renderRoutesStub } from '../../../../testing/route-fixtures';
 import { SkillsToolbar } from '../SkillsToolbar';
 
+// FEATURE_BETA_PREVIEW resolves from process.env at module load, so the real
+// export is a frozen `false` under test. Mock it as a getter over a hoisted
+// box so a single file can exercise both sides of the gate at render time.
+const betaPreview = vi.hoisted(() => ({ enabled: false }));
+
+vi.mock('@openthrottle/react-router-utils', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('@openthrottle/react-router-utils')>();
+
+  return {
+    ...actual,
+    get FEATURE_BETA_PREVIEW() {
+      return betaPreview.enabled;
+    },
+  };
+});
+
 describe('SkillsToolbar Component', () => {
+  beforeEach(() => {
+    betaPreview.enabled = false;
+  });
+
   test('renders the GlobalToolbarSearch control with skills copy', () => {
     renderRoutesStub(<SkillsToolbar />);
 
@@ -24,18 +45,35 @@ describe('SkillsToolbar Component', () => {
     expect(screen.getByTestId('SkillsToolbar')).toBeInTheDocument();
   });
 
-  test('links to the availability authoring surface', () => {
-    renderRoutesStub(<SkillsToolbar />);
+  describe('beta-gated authoring links', () => {
+    test('hides both links when beta preview is disabled', () => {
+      renderRoutesStub(<SkillsToolbar />);
 
-    const link = screen.getByRole('link', { name: /Manage availability/i });
-    expect(link).toHaveAttribute('href', '/skills/availability');
-  });
+      expect(
+        screen.queryByRole('link', { name: /Manage availability/i }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('link', { name: /Manage vocabulary/i }),
+      ).not.toBeInTheDocument();
+    });
 
-  test('links to the tag-vocabulary manager', () => {
-    renderRoutesStub(<SkillsToolbar />);
+    test('links to the availability authoring surface when beta preview is enabled', () => {
+      betaPreview.enabled = true;
 
-    const link = screen.getByRole('link', { name: /Manage vocabulary/i });
-    expect(link).toHaveAttribute('href', '/skills/vocabulary');
+      renderRoutesStub(<SkillsToolbar />);
+
+      const link = screen.getByRole('link', { name: /Manage availability/i });
+      expect(link).toHaveAttribute('href', '/skills/availability');
+    });
+
+    test('links to the tag-vocabulary manager when beta preview is enabled', () => {
+      betaPreview.enabled = true;
+
+      renderRoutesStub(<SkillsToolbar />);
+
+      const link = screen.getByRole('link', { name: /Manage vocabulary/i });
+      expect(link).toHaveAttribute('href', '/skills/vocabulary');
+    });
   });
 
   test('no longer renders the dead Create-new-skill control', () => {

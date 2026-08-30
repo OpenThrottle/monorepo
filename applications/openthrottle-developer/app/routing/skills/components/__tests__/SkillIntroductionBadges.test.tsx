@@ -39,9 +39,7 @@ describe('SkillIntroductionBadges Component', () => {
     props = {
       entry: baseEntry,
       invocationBadge: getModelInvocationBadge(undefined),
-      isOpenThrottle: false,
       showReadOnlyTags: false,
-      sourceTooltip: SKILLS_SOURCE_COPY.externalTooltip,
     };
 
     component = renderBadges();
@@ -76,8 +74,6 @@ describe('SkillIntroductionBadges Component', () => {
     props = {
       ...props,
       entry: { ...baseEntry, source: 'openthrottle' },
-      isOpenThrottle: true,
-      sourceTooltip: SKILLS_SOURCE_COPY.openthrottleTooltip,
     };
     component = renderBadges();
 

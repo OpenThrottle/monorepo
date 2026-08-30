@@ -88,6 +88,10 @@ export const SkillDetailTabs = (
   } = props;
 
   // Hooks
+  // `rawContent` seeds the editor with the full file (frontmatter included) so
+  // a save round-trips it; read mode renders the stripped `content` below.
+  // `editable` is only the checkout precondition — the hook ANDs it with
+  // provenance into `canEdit`, so an external SKILL.md is never forked here.
   const {
     canEdit,
     draft,
@@ -99,12 +103,6 @@ export const SkillDetailTabs = (
     invocationBadge,
     isDirty,
     isEditing,
-    isOpenThrottle,
-    sourceTooltip,
-    // `rawContent` seeds the editor with the full file (frontmatter included) so
-    // a save round-trips it; read mode renders the stripped `content` below.
-    // `editable` is only the checkout precondition — the hook ANDs it with
-    // provenance into `canEdit`, so an external SKILL.md is never forked here.
   } = useSkillDetail({
     content: rawContent,
     editable,
@@ -133,7 +131,6 @@ export const SkillDetailTabs = (
         invocationBadge={invocationBadge}
         isDirty={isDirty}
         isEditing={isEditing}
-        isOpenThrottle={isOpenThrottle}
         onAddTag={onAddTag}
         onCancel={handleCancel}
         onEdit={handleEdit}
@@ -144,7 +141,6 @@ export const SkillDetailTabs = (
         runOptions={runOptions}
         saveError={saveError}
         saving={saving}
-        sourceTooltip={sourceTooltip}
         tagPending={tagPending}
         tagVocabulary={tagVocabulary}
       />

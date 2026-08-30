@@ -20,15 +20,15 @@ import {
   parsePlanDetailTab,
 } from '~/routing/plans/utils/parsers';
 import { PlanDetailRouteHeader } from '~/routing/plans/components/PlanDetailRouteHeader';
+import { PlanEditorActions } from '~/routing/plans/components/PlanEditorActions';
 import { PlanTabConfiguration } from '~/routing/plans/components/PlanTabConfiguration';
 import { PlanTabDetails } from '~/routing/plans/components/PlanTabDetails';
-import { PlanTabTasks } from '~/routing/plans/components/PlanTabTasks';
-import { PlanToolbar } from '~/routing/plans/components/PlanToolbar';
-import { PlanTasksBoard } from '~/routing/plans/components/PlanTasksBoard';
 import { PlanTabOutput } from '~/routing/plans/components/PlanTabOutput';
+import { PlanTabTasks } from '~/routing/plans/components/PlanTabTasks';
+import { PlanTasksBoard } from '~/routing/plans/components/PlanTasksBoard';
+import { PlanToolbar } from '~/routing/plans/components/PlanToolbar';
 import { usePlanDetailRoute } from '~/routing/plans/hooks/usePlanDetailRoute';
 import type { Route } from '@/app/routes/+types/plans.$planId._index';
-import { PlanEditorActions } from '~/routing/plans/components/PlanEditorActions';
 
 export interface PlanDetailRouteProps {
   readonly loaderData: Route.ComponentProps['loaderData'];
@@ -73,7 +73,6 @@ export const PlanDetailRoute = (
   } = usePlanDetailRoute({ loaderData, params, plan });
 
   // Setup
-  const showConfiguration = false;
   const showToolbar = false;
 
   // Handlers
@@ -162,7 +161,7 @@ export const PlanDetailRoute = (
               planId={plan.id}
               workingDirectory={editorWorkingDirectory}
             />
-            {showConfiguration ? (
+            {showToolbar ? (
               <TabsTrigger
                 className="flex-0 cursor-pointer"
                 id="plan-tab-configuration"
@@ -179,7 +178,7 @@ export const PlanDetailRoute = (
           />
           <PlanTabTasks />
           <PlanTabOutput chunks={planOutputChunks} />
-          {showConfiguration ? (
+          {showToolbar ? (
             <PlanTabConfiguration
               onCollapse={() => onToggleExpanded(false)}
               onResetToDefaults={onResetToDefaults}

@@ -29,7 +29,6 @@ export interface SkillIntroductionProps {
   readonly invocationBadge: ModelInvocationBadge;
   readonly isDirty: boolean;
   readonly isEditing: boolean;
-  readonly isOpenThrottle: boolean;
   readonly onAddTag?: (tag: string) => void;
   readonly onCancel: () => void;
   readonly onEdit: () => void;
@@ -40,7 +39,6 @@ export interface SkillIntroductionProps {
   readonly runOptions: Promise<RunSkillRunOptions> | undefined;
   readonly saveError: string | undefined;
   readonly saving: boolean;
-  readonly sourceTooltip: string;
   readonly tagPending?: boolean;
   readonly tagVocabulary?: readonly SkillTagVocabularyOption[];
 }
@@ -63,7 +61,6 @@ export const SkillIntroduction = (
     invocationBadge,
     isDirty,
     isEditing,
-    isOpenThrottle,
     onAddTag,
     onCancel,
     onEdit,
@@ -74,7 +71,6 @@ export const SkillIntroduction = (
     runOptions,
     saveError,
     saving,
-    sourceTooltip,
     tagPending = false,
     tagVocabulary,
   } = props;
@@ -141,9 +137,7 @@ export const SkillIntroduction = (
         <SkillIntroductionBadges
           entry={entry}
           invocationBadge={invocationBadge}
-          isOpenThrottle={isOpenThrottle}
           showReadOnlyTags={showReadOnlyTags}
-          sourceTooltip={sourceTooltip}
         />
 
         {isOrphaned ? (

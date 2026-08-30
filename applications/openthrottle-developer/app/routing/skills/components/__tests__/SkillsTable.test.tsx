@@ -6,7 +6,10 @@ import { renderRoutesStub } from '../../../../testing/route-fixtures';
 import { SkillsTable } from '../SkillsTable';
 import type { SkillsTableProps } from '../SkillsTable';
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
-import { SKILL_RECORD_TAGS_COPY } from '~/routing/skills/data/data.copy';
+import {
+  SKILL_RECORD_TAGS_COPY,
+  SKILLS_SOURCE_COPY,
+} from '~/routing/skills/data/data.copy';
 
 const mockEntries: readonly RepoSkillEntry[] = [
   {
@@ -174,6 +177,17 @@ describe('SkillsTable Component', () => {
         summary: 'Vendored skill without an origin URL.',
         tags: undefined,
       },
+      {
+        disableModelInvocation: undefined,
+        isPersonal: true,
+        layout: 'agents',
+        repoRelativePath: '.agents/skills/my-draft/SKILL.md',
+        slug: 'my-draft',
+        source: 'external',
+        sourceUrl: 'https://example.com/skills/my-draft',
+        summary: 'Personal-tier skill linked in from this machine.',
+        tags: undefined,
+      },
     ];
 
     let component: RenderResult;
@@ -192,11 +206,21 @@ describe('SkillsTable Component', () => {
     });
 
     test('renders an OpenThrottle badge for source: openthrottle', () => {
-      expect(component.getByText('OpenThrottle')).toBeInTheDocument();
+      expect(
+        component.getByText(SKILLS_SOURCE_COPY.openthrottleLabel),
+      ).toBeInTheDocument();
     });
 
     test('renders an External badge per external entry', () => {
-      expect(component.getAllByText('External')).toHaveLength(2);
+      expect(
+        component.getAllByText(SKILLS_SOURCE_COPY.externalLabel),
+      ).toHaveLength(2);
+    });
+
+    test('renders a Personal badge for an isPersonal entry, not External', () => {
+      expect(
+        component.getByText(SKILLS_SOURCE_COPY.personalLabel),
+      ).toBeInTheDocument();
     });
 
     test('links the external badge to its sourceUrl when present', () => {
@@ -209,8 +233,8 @@ describe('SkillsTable Component', () => {
       expect(link).toHaveAttribute('target', '_blank');
     });
 
-    test('renders exactly one origin link (url-less entries stay plain badges)', () => {
-      expect(component.getAllByTestId('skill-source-badge')).toHaveLength(3);
+    test('renders exactly one origin link (url-less and personal entries stay plain badges)', () => {
+      expect(component.getAllByTestId('skill-source-badge')).toHaveLength(4);
       expect(component.getAllByTestId('skill-source-link')).toHaveLength(1);
     });
   });

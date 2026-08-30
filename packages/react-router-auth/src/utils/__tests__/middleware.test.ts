@@ -136,7 +136,7 @@ describe('authMiddleware', () => {
       it('redirects to /dashboard when beta preview is disabled', () => {
         process.env.FEATURE_BETA_PREVIEW = 'false';
 
-        const result = runMiddleware(buildArgs('/ide', validToken));
+        const result = runMiddleware(buildArgs('/generators', validToken));
 
         assertIsRedirectResponse(result);
         expect(result.status).toBe(302);
@@ -146,7 +146,9 @@ describe('authMiddleware', () => {
       it('redirects a nested beta path (prefix match) when beta preview is disabled', () => {
         process.env.FEATURE_BETA_PREVIEW = 'false';
 
-        const result = runMiddleware(buildArgs('/ide/session-1', validToken));
+        const result = runMiddleware(
+          buildArgs('/generators/react', validToken),
+        );
 
         assertIsRedirectResponse(result);
         expect(result.headers.get('Location')).toBe('/dashboard');
@@ -154,6 +156,14 @@ describe('authMiddleware', () => {
 
       it('passes through when beta preview is enabled', () => {
         process.env.FEATURE_BETA_PREVIEW = 'true';
+
+        const result = runMiddleware(buildArgs('/generators', validToken));
+
+        expect(result).toBeUndefined();
+      });
+
+      it('does not gate /ide, which is no longer beta-only', () => {
+        process.env.FEATURE_BETA_PREVIEW = 'false';
 
         const result = runMiddleware(buildArgs('/ide', validToken));
 

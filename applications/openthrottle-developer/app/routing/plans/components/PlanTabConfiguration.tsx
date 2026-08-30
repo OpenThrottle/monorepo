@@ -45,9 +45,7 @@ export interface PlanTabConfigurationProps {
    * @description When set (e.g. plan detail), shows a control to restore tuning fields and iteration timeout to defaults for this plan/task context.
    */
   onResetToDefaults?: () => void;
-
   onSaveJobRunHooks: () => void;
-
   onSaveRunConfig?: () => void;
 
   /** @description The plan's linked project id; pre-fills the workspace repository. */

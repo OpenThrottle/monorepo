@@ -8,7 +8,7 @@ import {
 
 const BETA_ROUTE_PREFIXES = [
   '/generators',
-  '/ide',
+  // '/ide',
   '/personas',
   '/profile',
   // '/prompts',

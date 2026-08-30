@@ -193,10 +193,10 @@ export const SKILL_WRITE_COPY = {
 } as const;
 
 /**
- * Copy for the "Source" provenance column and the toolbar source filter. A skill
- * is OpenThrottle-managed only when its frontmatter explicitly claims
- * `source: openthrottle`; everything else (including omitted keys) reads as
- * external, optionally with an origin URL.
+ * Copy for the "Source" provenance column and the toolbar source filter.
+ * Backend `SkillSource` is `openthrottle | external`; the UI adds a third
+ * local-only kind (`personal`, from `isPersonal`) so a skill from your own
+ * directory is not labeled External. See `getSkillSourceKind`.
  */
 export const SKILLS_SOURCE_COPY = {
   columnHeader: `Source`,
