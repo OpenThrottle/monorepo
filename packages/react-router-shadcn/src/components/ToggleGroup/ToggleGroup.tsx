@@ -12,13 +12,36 @@ import type { ToggleGroupContextValue } from './toggle-group-context';
 export type ToggleGroupProps = React.ComponentPropsWithoutRef<
   typeof ToggleGroupPrimitive.Root
 > &
-  ToggleGroupContextValue;
+  ToggleGroupContextValue & {
+    /**
+     * Render the items as one segmented control: seams collapse so adjacent
+     * items share a single border and only the outer corners stay rounded.
+     * Opt-in — the spaced default is deliberate for most consumers.
+     */
+    readonly attached?: boolean;
+  };
+
+/**
+ * Seam-collapsing rules for `attached`, mirroring the horizontal orientation of
+ * `ButtonGroup` so the two controls read identically when placed side by side.
+ */
+const attachedClassName =
+  'gap-0 ' +
+  '[&>*:not(:first-child)]:rounded-l-none [&>*:not(:first-child)]:border-l-0 [&>*:not(:last-child)]:rounded-r-none ' +
+  '[&>*]:focus-visible:relative [&>*]:focus-visible:z-10';
 
 export const ToggleGroup = React.forwardRef<
   React.ComponentRef<typeof ToggleGroupPrimitive.Root>,
   ToggleGroupProps
 >((props, ref): React.ReactElement => {
-  const { className, children, size, variant, ...rest } = props;
+  const {
+    attached = false,
+    className,
+    children,
+    size,
+    variant,
+    ...rest
+  } = props;
 
   // Hooks
 
@@ -35,7 +58,11 @@ export const ToggleGroup = React.forwardRef<
   return (
     <ToggleGroupContext.Provider value={{ size, variant }}>
       <ToggleGroupPrimitive.Root
-        className={cn('flex items-center gap-1', className)}
+        className={cn(
+          'flex items-center',
+          attached ? attachedClassName : 'gap-1',
+          className,
+        )}
         ref={ref}
         {...rest}
       >
