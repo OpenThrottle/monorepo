@@ -220,6 +220,14 @@ A flow is a list of steps whose verbs mirror the script's on-screen-action colum
 interpretation: if a flow needs a step the script does not describe, the script is
 wrong.
 
+`--flow <id>` is looked up in `src/episodes/flows.ts`, the flow registry, so an
+id that names no flow fails with a list of the ones that do rather than a module
+resolution error. **[AUTHORING_FLOWS.md](./AUTHORING_FLOWS.md) is the guide** —
+portrait strategy, regions of interest, the `waitFor`-before-`highlight` rule,
+and what the four shipped flows settled. **[RECORDABILITY.md](./RECORDABILITY.md)
+is the per-beat audit** of every episode that has no flow yet; read your
+episode's row before you write a line.
+
 ### Beats that are not the app: `stage` and `reveal`
 
 Some scripts are about a command line rather than a page — 05 wires up the MCP server
@@ -244,6 +252,37 @@ Surface text that comes from a real command is captured, not retyped:
 `surfaces/mcp-instructions.txt` is the verbatim output of
 `scripts/setup_mcp-instructions.ts`, and `scripts/__tests__/setup_mcp-instructions.test.ts`
 fails if the renderer stops producing it.
+
+### Mutating flows and take 2
+
+The seed is idempotent. A flow is not. `03-first-plan` creates a plan on camera,
+and the flows for a rule, a note and a promoted plan will do the same — take 1
+leaves the row behind, so take 2 films a list that already contains the thing the
+video is about to create, and take 5 films four duplicates.
+
+A flow that writes declares `mutates: true`. `run.ts` then refuses to record it
+against a workspace it has already filmed since the last seed, and prints the
+re-seed command:
+
+```text
+run: refusing to record — '03-first-plan' was last recorded at …, after the demo
+     workspace was seeded at …. This flow declares `mutates: true`, so that take
+     left its own rows behind and this one would film them.
+run: re-seed first:
+       sh packages/openthrottle-showroom/src/scripts/seed-demo.sh --reset
+```
+
+`--allow-dirty` records anyway, and exists for the case where you reset the
+workspace by a route the check cannot see — not as the way past a real warning.
+
+The check compares two mtimes under `output/`: a `.demo-seeded-at` marker the
+seeder stamps once the data is actually in place, and the flow's own
+`manifest.json`. It is judged **per flow**, so recording a read-only flow never
+demands a re-seed, and an absent marker resolves to clean rather than to dirty —
+a workspace seeded before this check existed should not fail for a reason with
+nothing to do with its data. The reasoning behind refusing (rather than stamping
+the created row's title, or rolling it back afterwards) is in
+`src/runner/dirty.ts`.
 
 There is deliberately **no `sleep` verb**. Waits are on app state, so a slow machine
 stretches the recording instead of desynchronising it. `dwell` is the single

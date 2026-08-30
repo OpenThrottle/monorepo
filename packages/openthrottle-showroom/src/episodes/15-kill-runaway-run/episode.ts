@@ -44,7 +44,9 @@ export const episode: VideoEpisode = {
   format: 'short',
   id: '15-kill-runaway-run',
   production: {
-    blockedOn: [],
+    blockedOn: [
+      'The plan toolbar is not rendered — PlanDetailRoute hard-codes `const showToolbar = false` (landed in #452, 2026-08-28), so Kill run, the disabled run actions and their tooltips are all absent from the page this episode is about',
+    ],
     recording: 'replay',
     titleCard: ['Kill a runaway', 'agent run'],
   },

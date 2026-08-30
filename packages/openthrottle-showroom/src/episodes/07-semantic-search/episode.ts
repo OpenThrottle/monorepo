@@ -61,7 +61,8 @@ export const episode: VideoEpisode = {
   id: '07-semantic-search',
   production: {
     blockedOn: [
-      'The /search route is unreachable in a production build (it redirects to /dashboard)',
+      '/search is gated behind FEATURE_BETA_PREVIEW (authMiddleware BETA_ROUTE_PREFIXES); with the flag off it redirects to /dashboard, and with it on the route renders the "may not function as expected" beta banner over the whole episode',
+      'Results require a live embedding provider — SearchResolver embeds the query at request time and returns zero chunks without OPENAI_API_KEY or Ollama, so the payoff is both empty by default and a non-deterministic model call when it is not',
     ],
     recording: 'live',
     titleCard: ['Search every plan', 'you ever wrote'],

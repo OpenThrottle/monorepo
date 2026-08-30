@@ -52,6 +52,7 @@ import {
   remapOwnershipToDemoUser,
 } from '../snapshot/load';
 import { reflectSchema } from '../snapshot/schema';
+import { writeSeedMarker } from '../runner/dirty';
 
 const ROLE_NAMES = ['admin', 'user', 'viewer'] as const;
 
@@ -536,6 +537,9 @@ const main = async (): Promise<void> => {
   try {
     console.log(`seed-demo: seeding '${database}'${reset ? ' (reset)' : ''}…`);
     await seed(dataSource, reset);
+    // Stamped AFTER the data is in place: a marker written before a seed that
+    // then throws says the opposite of the truth, and the recorder trusts it.
+    writeSeedMarker(new Date());
   } finally {
     await dataSource.destroy();
   }

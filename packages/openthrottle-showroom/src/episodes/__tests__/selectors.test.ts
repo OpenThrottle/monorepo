@@ -16,12 +16,20 @@
  *
  * `#id` selectors are deliberately out of scope: those address the pipeline's
  * own typeset surfaces (`../surfaces/`), not the app.
+ *
+ * The flows come from `../flows.ts`, not from a walk of this directory. A
+ * directory walk only sees flows that live where the walk looks, so a flow
+ * imported from anywhere else was silently unscanned — and scanning the
+ * registry's step objects is also strictly more accurate than regexing source
+ * text, because it sees the selector a flow actually targets rather than the
+ * literal a file happens to contain.
  */
 
-import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, test } from 'vitest';
 
+import { FLOWS } from '../flows';
 import { repositoryRoot } from '../../runner/format';
 
 /**
@@ -40,9 +48,7 @@ const SOURCE_ROOTS = [
     .map((entry) => join(repositoryRoot(), 'packages', entry)),
 ];
 
-const EPISODES_DIR = join(import.meta.dirname, '..');
-
-const TEST_ID_IN_FLOW = /\[data-testid="([^"]+)"\]/g;
+const TEST_ID_IN_SELECTOR = /\[data-testid="([^"]+)"\]/g;
 
 const sourceFiles = (dir: string): readonly string[] => {
   const entries = readdirSync(dir, { withFileTypes: true });
@@ -85,35 +91,53 @@ const renderedTestIds = (): ReadonlySet<string> => {
   return found;
 };
 
-/** Every episode directory that carries a flow. */
-const flowFiles = readdirSync(EPISODES_DIR, { withFileTypes: true })
-  .filter((entry) => entry.isDirectory() && entry.name !== '__tests__')
-  .map((entry) => join(entry.name, 'flow.ts'))
-  .filter((relative) => existsSync(join(EPISODES_DIR, relative)));
+/** Every selector string a flow puts in front of Playwright. */
+const targetedTestIds = (flowId: string): readonly string[] => {
+  const flow = FLOWS[flowId];
+  const selectors: string[] = Object.values(flow?.regionOfInterest ?? {});
+
+  for (const step of flow?.steps ?? []) {
+    if ('selector' in step) {
+      selectors.push(step.selector);
+    }
+  }
+
+  return selectors.flatMap((selector) =>
+    [...selector.matchAll(TEST_ID_IN_SELECTOR)].map((match) => match[1] ?? ''),
+  );
+};
+
+const flowIds = Object.keys(FLOWS).sort();
 
 describe('flow selectors', () => {
   test('there is at least one flow to check', () => {
-    expect(flowFiles.length).toBeGreaterThan(0);
+    expect(flowIds.length).toBeGreaterThan(0);
   });
 
-  test.each(flowFiles)(
-    '%s targets only test ids the app still renders',
-    (file) => {
-      const source = readFileSync(join(EPISODES_DIR, file), 'utf8');
-      const targeted = [...source.matchAll(TEST_ID_IN_FLOW)].map(
-        (match) => match[1] ?? '',
-      );
-      const rendered = renderedTestIds();
-      const missing = targeted.filter((id) => !rendered.has(id));
+  test('the scan finds targets at all, so a pass is not vacuous', () => {
+    // The first cut of this file passed with an empty target set — a
+    // deliberately broken selector sailed through, because the extraction found
+    // nothing to check rather than nothing wrong. Assert the extraction works
+    // before trusting what it says.
+    const targeted = flowIds.flatMap((id) => targetedTestIds(id));
 
-      expect(
-        missing,
-        `${file} targets data-testid values nothing renders any more: ${missing.join(', ')}. ` +
-          'Either the app renamed a test hook and the flow needs the new one, or the flow is stale. ' +
-          'Do not add a second hook for the demo — the E2E suite and the flows share one set.',
-      ).toEqual([]);
-    },
-  );
+    expect(targeted.length).toBeGreaterThan(0);
+    expect(targeted).toContain('PlansTable');
+  });
+
+  test.each(flowIds)('%s targets only test ids the app still renders', (id) => {
+    const rendered = renderedTestIds();
+    const missing = targetedTestIds(id).filter(
+      (testId) => !rendered.has(testId),
+    );
+
+    expect(
+      missing,
+      `${id} targets data-testid values nothing renders any more: ${missing.join(', ')}. ` +
+        'Either the app renamed a test hook and the flow needs the new one, or the flow is stale. ' +
+        'Do not add a second hook for the demo — the E2E suite and the flows share one set.',
+    ).toEqual([]);
+  });
 });
 
 /** Sanity: `statSync` proves the source roots exist rather than silently empty. */

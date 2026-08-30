@@ -61,7 +61,9 @@ export const episode: VideoEpisode = {
   format: 'short',
   id: '09-tags-and-rules',
   production: {
-    blockedOn: [],
+    blockedOn: [
+      'Adding a tag to a plan has no UI: PlanToolbarTags lives inside the plan toolbar, which PlanDetailRoute hard-codes off (`const showToolbar = false`, #452). The addPlanTag action still exists, so this is a hidden control rather than a missing feature — but the first and sixth beats both click it',
+    ],
     recording: 'live',
     titleCard: ['Tags and rules', 'that act for you'],
   },

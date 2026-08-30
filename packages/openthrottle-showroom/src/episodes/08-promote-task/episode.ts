@@ -45,7 +45,9 @@ export const episode: VideoEpisode = {
   format: 'short',
   id: '08-promote-task',
   production: {
-    blockedOn: [],
+    blockedOn: [
+      'The task toolbar is not rendered — TaskDetailRoute hard-codes `const showToolbar = false`, the same switch PlanDetailRoute carries — so Promote to plan, which is the whole episode, is absent from the page',
+    ],
     recording: 'live',
     titleCard: ['Promote a task', 'into a plan'],
   },

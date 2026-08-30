@@ -35,7 +35,10 @@ export const episode: VideoEpisode = {
   format: 'short',
   id: '20-generators',
   production: {
-    blockedOn: [],
+    blockedOn: [
+      '/generators is gated behind FEATURE_BETA_PREVIEW (authMiddleware BETA_ROUTE_PREFIXES) and renders the "may not function as expected" beta banner when the flag is on',
+      'The generator detail page is documentation, presets and schema tabs — there is no option form and no run control ("Run Nx from your clone of OpenThrottle"), so three of the seven beats have no control behind them',
+    ],
     recording: 'live',
     titleCard: ['Stop hand-writing', 'components'],
   },

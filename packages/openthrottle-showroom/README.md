@@ -44,13 +44,15 @@ POSTGRES_HOST=localhost sh packages/openthrottle-showroom/src/scripts/seed-demo.
 
 # 😂 Trust but verify - are we ready
 POSTGRES_HOST=localhost pnpm nx run @openthrottle/openthrottle-showroom:video-seed-verify
+
+OPENTHROTTLE_POSTGRES_URL='postgresql://openthrottle_user:openthrottle_password@localhost:6010/openthrottle_demo' pnpm nx run openthrottle-server:dev
 ```
 
 ### Recording
 
 ```bash
 # 0. Set the episode
-EPISODE=04-mental-model
+EPISODE=21-dashboard-tour
 
 # 1. Run the application in a E2E manner
 pnpm exec tsx packages/openthrottle-showroom/src/runner/run.ts --flow $EPISODE --headed

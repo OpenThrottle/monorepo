@@ -31,7 +31,9 @@ export const episode: VideoEpisode = {
   format: 'short',
   id: '06-prd-to-plan',
   production: {
-    blockedOn: [],
+    blockedOn: [
+      '/plans/upload-decompose parses nothing: the route says so itself ("After parsing (stubbed here) … commit once the ingest service is wired"), so Decompose, the proposed plan and Save have no implementation behind them',
+    ],
     recording: 'live',
     titleCard: ['Turn a PRD', 'into a plan'],
   },

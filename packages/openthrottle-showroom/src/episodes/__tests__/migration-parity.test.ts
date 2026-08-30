@@ -134,16 +134,39 @@ describe('season shape', () => {
     }
   });
 
-  test('the two blocked episodes are the ones the files actually blocked', () => {
-    // NOT the pair scripts/README.md names — 15-kill-runaway-run was unblocked
-    // at some point and 07-semantic-search became blocked, and the README was
-    // never updated. The front matter is the source of truth.
+  test('the blocked set is the one the recordability audit found', () => {
+    // This started as a migration check: the markdown scripts blocked two
+    // episodes and scripts/README.md named a different pair, so the pin proved
+    // the front matter was the source of truth rather than the prose.
+    //
+    // It now pins the audit instead. RECORDABILITY.md walked every beat of the
+    // twenty flowless episodes against a production build on the seeded
+    // snapshot and found seven more app gaps — a stubbed ingest service, a
+    // beta-gated route with no option form behind it, a create form missing the
+    // field a beat types into, and so on. Widening this list is a deliberate
+    // act: an episode joins it when an audited beat has no control behind it,
+    // and leaves it when the app grows one. It should never be edited to make a
+    // red test green.
     const blocked = Object.values(EPISODES)
       .filter((episode) => episode.production.blockedOn.length > 0)
       .map((episode) => episode.id)
       .sort();
 
-    expect(blocked).toEqual(['07-semantic-search', '16-worktrees']);
+    expect(blocked).toEqual([
+      '06-prd-to-plan',
+      '07-semantic-search',
+      '08-promote-task',
+      '09-tags-and-rules',
+      '10-notes',
+      '14-scheduled-runs',
+      '15-kill-runaway-run',
+      '16-worktrees',
+      '17-chat-any-cli',
+      '18-ollama-local-models',
+      '19-skills',
+      '20-generators',
+      'L1-idea-to-shipped-commit',
+    ]);
   });
 
   test('every variant of a multi-variant episode explains itself', () => {

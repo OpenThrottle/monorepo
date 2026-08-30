@@ -48,7 +48,9 @@ export const episode: VideoEpisode = {
   format: 'short',
   id: '19-skills',
   production: {
-    blockedOn: [],
+    blockedOn: [
+      'The composer beats need an agent response; with no replay seam for a seeded conversation that is a live model call, which two takes cannot agree on',
+    ],
     recording: 'live',
     titleCard: ['Teach agents', 'your house rules'],
   },

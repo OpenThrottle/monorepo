@@ -47,7 +47,9 @@ export const episode: VideoEpisode = {
   format: 'short',
   id: '17-chat-any-cli',
   production: {
-    blockedOn: [],
+    blockedOn: [
+      'There is no seam that replays a seeded conversation at streaming pace, so "send; the response streams in" is a live CLI call — non-deterministic in content and duration, and dependent on which CLIs happen to be installed on the recording host',
+    ],
     recording: 'replay',
     titleCard: ['Any CLI,', 'one composer'],
   },

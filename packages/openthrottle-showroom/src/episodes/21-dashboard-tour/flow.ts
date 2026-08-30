@@ -13,6 +13,7 @@
 import {
   click,
   dwell,
+  highlight,
   navigate,
   press,
   type_,
@@ -26,6 +27,7 @@ export const flow: DemoFlow = {
   // them clips text at both edges. Fit and letterbox instead.
   portraitStrategy: 'fit',
   regionOfInterest: {
+    activity: '[data-testid="DashboardDailyStatsCard"]',
     home: '[data-testid="dashboard-content-grid"]',
     plans: '[data-testid="PlansTable"]',
     schedule: '[data-testid="ScheduleToolbar"]',
@@ -37,7 +39,17 @@ export const flow: DemoFlow = {
     // 0:00 — home, with seeded activity already on screen.
     navigate('/dashboard', 'home'),
     waitFor('[data-testid="dashboard-content-grid"]'),
-    dwell(1_800),
+    dwell(1_200),
+
+    // 0:06 — point at the activity panel. Its own beat, not a longer dwell on
+    // `home`: the episode declares it as a beat, and planTimeline budgets
+    // narration per beat BY INDEX, so folding two declared beats into one flow
+    // beat mis-holds every beat after it. Wait for the card before highlighting —
+    // the daily-stats chart mounts from a skeleton, and at the portrait viewport
+    // the swap briefly reports no box for the target.
+    waitFor('[data-testid="DashboardDailyStatsCard"]', 'activity'),
+    highlight('[data-testid="DashboardDailyStatsCard"]', 1_600),
+    dwell(1_400),
 
     // 0:14 — plans.
     click('a[href="/plans"]', 'plans'),

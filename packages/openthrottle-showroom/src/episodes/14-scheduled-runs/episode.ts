@@ -49,7 +49,10 @@ export const episode: VideoEpisode = {
   format: 'short',
   id: '14-scheduled-runs',
   production: {
-    blockedOn: [],
+    blockedOn: [
+      'A scheduled job takes a prompt, a provider and a repository — there is no plan picker on /schedule/create, so "pick a plan from the picker" describes a product that does not exist',
+      'The /schedule index has no last-run column (Status, Schedule Details, Driver/Model, Actions), so "one showing a last-run time" is not what the surface shows',
+    ],
     recording: 'replay',
     titleCard: ['Put agent work', 'on a cron'],
   },

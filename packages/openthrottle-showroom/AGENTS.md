@@ -10,7 +10,11 @@ pre-publish leak scan. Consumed only by this monorepo — never published.
   API here and tag exported public API with `@public` so Knip keeps it.
 - `src/episodes/` — one typed module per video. The **narration field is the
   literal TTS input** and the **action field is the literal flow step**; the flow
-  transcribes the script rather than interpreting it.
+  transcribes the script rather than interpreting it. `registry.ts` knows what
+  episodes exist and `flows.ts` knows which of them can be recorded; both use
+  explicit imports, because a glob is not typecheckable.
+- `src/episodes/_template/flow.ts` — the skeleton a new flow is copied from. Not
+  registered, so nothing records it.
 - `src/flows/`, `src/surfaces/`, `src/fixtures/` — what goes on camera.
 - `src/runner/`, `src/narrate/`, `src/assemble/`, `src/scan/` — the four stages.
 
@@ -20,8 +24,13 @@ pre-publish leak scan. Consumed only by this monorepo — never published.
   `./src/index.ts`. Do not add one.
 - **Private and repo-scoped.** `private: true`, `publish:false`,
   `production:false`. Do not design its API for consumers outside this repo.
-- **Narration beats match flow beats positionally.** An extra flow beat does not
-  merely go unnarrated — it shifts every later beat's narration one beat early.
+- **A flow declares one beat fewer than its episode**, because the outro card is
+  appended by the assembler rather than recorded. Narration cues find their beat
+  by their own time (`beatIndexForCue`), not by position — that replaced
+  positional matching precisely so a stray beat could not shift the track. What
+  a wrong beat COUNT still breaks is `planTimeline`, which resolves each beat's
+  narration budget by index, so every beat past the divergence is held for the
+  wrong duration. `episodes/__tests__/flows.test.ts` fails on it.
 - **Selectors are shared with the app's E2E suite.** A demo video is structurally
   an E2E flow; both must drive the same test hooks so the app never grows two
   parallel sets.
@@ -31,6 +40,10 @@ pre-publish leak scan. Consumed only by this monorepo — never published.
 
 ## Pointers
 
+- [AUTHORING_FLOWS.md](AUTHORING_FLOWS.md) — the conventions a new flow must
+  follow, each one citing the flow that taught it.
+- [RECORDABILITY.md](RECORDABILITY.md) — per-beat verdicts for every episode
+  without a flow. Read your episode's row before authoring anything.
 - [README.md](README.md) — human-facing overview.
 - [../AGENTS.md](../AGENTS.md) — parent-tier conventions (package layout,
   `@public` tags, source-first pattern).

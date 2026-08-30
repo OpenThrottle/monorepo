@@ -40,7 +40,10 @@ export const episode: VideoEpisode = {
   format: 'short',
   id: '18-ollama-local-models',
   production: {
-    blockedOn: [],
+    blockedOn: [
+      '/settings/agents reflects agent CLIs detected on the SERVER HOST, not the demo database — nothing in the seed can put Ollama in that list, and the page is non-deterministic across takes (versions, "Last checked" timestamp)',
+      'The network-panel beats are browser devtools; Playwright cannot put them in frame, so they need a typeset surface or a rewritten beat',
+    ],
     recording: 'replay',
     titleCard: ['Local models.', 'Nothing leaves.'],
   },
