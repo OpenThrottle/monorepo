@@ -62,6 +62,7 @@ export const SkillsToolbar = (
 
       <ToggleGroup
         aria-label={SKILLS_SOURCE_COPY.filterGroupLabel}
+        attached={true}
         data-testid="skills-source-filter"
         onValueChange={handleSourceFilterChange}
         type="single"
