@@ -8,9 +8,10 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import { FEATURE_BETA_PREVIEW } from '@openthrottle/react-router-utils';
 import { GlobalToolbarSearch } from '@openthrottle/react-router-ui-global';
-import { SlidersHorizontalIcon, TagsIcon } from 'lucide-react';
+import { PlusIcon, SlidersHorizontalIcon, TagsIcon } from 'lucide-react';
 import {
   SKILL_AVAILABILITY_COPY,
+  SKILL_CREATE_COPY,
   SKILL_VOCABULARY_COPY,
   SKILLS_SEARCH_COPY,
   SKILLS_SOURCE_COPY,
@@ -51,7 +52,10 @@ export const SkillsToolbar = (
   // 🔌 Short Circuit
 
   return (
-    <div className={clsx('flex gap-2', className)} data-testid="SkillsToolbar">
+    <div
+      className={clsx('flex items-center gap-2', className)}
+      data-testid="SkillsToolbar"
+    >
       {/* GlobalToolbarSearch owns its own <form role="search">; the source
           filter and CTAs stay siblings outside it so no forms nest. It commits
           to `?search=` and resets `?page` so a new query lands on page 1. */}
@@ -87,7 +91,7 @@ export const SkillsToolbar = (
       <div className="flex-1" />
 
       {FEATURE_BETA_PREVIEW ? (
-        <Button asChild={true} variant="outline">
+        <Button asChild={true} size="sm" variant="outline">
           <Link to="/skills/availability">
             <SlidersHorizontalIcon className="size-4" />
             {SKILL_AVAILABILITY_COPY.manageLink}
@@ -96,13 +100,20 @@ export const SkillsToolbar = (
       ) : null}
 
       {FEATURE_BETA_PREVIEW ? (
-        <Button asChild={true} variant="outline">
+        <Button asChild={true} size="sm" variant="outline">
           <Link to="/skills/vocabulary">
             <TagsIcon className="size-4" />
             {SKILL_VOCABULARY_COPY.manageLink}
           </Link>
         </Button>
       ) : null}
+
+      <Button asChild={true} size="sm" variant="outline">
+        <Link to="/skills/create">
+          <PlusIcon className="size-4" />
+          {SKILL_CREATE_COPY.toolbarNewSkillLabel}
+        </Link>
+      </Button>
     </div>
   );
 };

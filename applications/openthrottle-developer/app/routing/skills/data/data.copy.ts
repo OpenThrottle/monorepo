@@ -193,6 +193,56 @@ export const SKILL_WRITE_COPY = {
 } as const;
 
 /**
+ * Copy for the create-a-skill route and its server action.
+ *
+ * The refusal wording for the three collision cases is deliberately the same
+ * wording `skills/ot-skill-sync/scripts/personal.sh` uses at the command line:
+ * being told the same thing the same way at both moments is what makes the rule
+ * legible rather than arbitrary.
+ *
+ * `syncFailedError` is deliberately distinct from `writeFailedError`. The file
+ * IS on disk in that case but is not linked into the layout discovery scans, so
+ * reporting success would send the author to a `/skills` list their new skill is
+ * missing from.
+ */
+export const SKILL_CREATE_COPY = {
+  cancelLabel: `Cancel`,
+  descriptionFieldDescription: `The only thing a model sees when deciding whether to open this skill. Lead with what it does, then the trigger phrases that should fire it.`,
+  descriptionFieldLabel: `Description`,
+  descriptionRequiredError: `A description is required — it is the whole basis on which a model decides to fire the skill.`,
+  destinationFieldLabel: `Where should this live?`,
+  destinationPersonalDescription: `Yours only. Lives outside the repo in your personal skills directory and is linked in — nobody else's checkout has it, and it cannot be committed.`,
+  destinationPersonalLabel: `Personal`,
+  destinationRepoDescription: `Lands in skills/ as an untracked directory for you to commit and open a PR for. Everyone gets it once that merges.`,
+  destinationRepoLabel: `OpenThrottle repo`,
+  editorLabel: `SKILL.md`,
+  introduction: `Author a new SKILL.md and save it either to your personal tier or to the repo's committed catalog. It is linked into every agent CLI's skills directory as soon as it is created.`,
+  invalidDestinationError: `Create rejected — unrecognized destination.`,
+  invalidFrontmatterError: `Create rejected — the frontmatter does not validate:`,
+  invalidSlugError: `Create rejected — the name must be a kebab-case slug: lowercase letters, digits and single hyphens.`,
+  lockfileCollisionError: `Create rejected — '{slug}' collides with an installed skill of the same name in skills-lock.json. Pick another name.`,
+  missingContentError: `Create rejected — no content was submitted.`,
+  nameFieldDescription: `Kebab-case. Becomes the directory name and must match the frontmatter name.`,
+  nameFieldLabel: `Name`,
+  noRootError: `Creating a skill needs a local checkout — no monorepo root resolved (set WORKSPACE_ROOT).`,
+  pageDescription: `Author a new SKILL.md and save it to your personal tier or the repo.`,
+  pageTitle: `Create skill`,
+  pathEscapeError: `Create rejected — the resolved skill path is outside its expected root.`,
+  personalCollisionError: `Create rejected — a personal skill named '{slug}' already exists. Pick another name, or edit the existing one.`,
+  personalRootInsideRepoError: `Create rejected — your personal skills root is inside the repository. It must live outside so its skills cannot be committed — unset or repoint OPENTHROTTLE_PERSONAL_SKILLS_DIR.`,
+  repoCollisionError: `Create rejected — '{slug}' collides with the committed skills/{slug}. Pick another name, or edit the committed skill directly.`,
+  slugTakenError: `Create rejected — a skill named '{slug}' is already linked into this repo's agent skills directories. Pick another name.`,
+  submitLabel: `Create skill`,
+  submittingLabel: `Creating…`,
+  syncFailedError: `The SKILL.md was written, but linking it into the agent skills directories failed — it will not appear on /skills until that succeeds. Run skills/ot-skill-sync/scripts/sync.sh and check its output.`,
+  syncScriptMissingError: `The SKILL.md was written, but the ot-skill-sync script could not be found in this checkout, so the skill is not linked in yet.`,
+  tagsFieldDescription: `Optional, comma separated. Kebab-case.`,
+  tagsFieldLabel: `Tags`,
+  toolbarNewSkillLabel: `New skill`,
+  writeFailedError: `Create failed — the file could not be written to disk.`,
+} as const;
+
+/**
  * Copy for the "Source" provenance column and the toolbar source filter.
  * Backend `SkillSource` is `openthrottle | external`; the UI adds a third
  * local-only kind (`personal`, from `isPersonal`) so a skill from your own
