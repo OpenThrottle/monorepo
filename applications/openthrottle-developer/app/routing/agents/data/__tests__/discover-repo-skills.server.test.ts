@@ -8,10 +8,14 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { afterEach, describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { discoverRepoSkills } from '~/routing/agents/data/discover-repo-skills.server';
 
+const PERSONAL_DIR_ENV = 'OPENTHROTTLE_PERSONAL_SKILLS_DIR';
+
 const tempDirs: string[] = [];
+
+let originalPersonalDir: string | undefined;
 
 const makeTempDir = (): string => {
   const dir = mkdtempSync(join(tmpdir(), 'ot-discover-skills-'));
@@ -33,7 +37,16 @@ const writeSkill = (
   );
 };
 
+beforeEach(() => {
+  originalPersonalDir = process.env[PERSONAL_DIR_ENV];
+});
+
 afterEach(() => {
+  if (originalPersonalDir === undefined) {
+    delete process.env[PERSONAL_DIR_ENV];
+  } else {
+    process.env[PERSONAL_DIR_ENV] = originalPersonalDir;
+  }
   while (tempDirs.length > 0) {
     const dir = tempDirs.pop();
     if (dir) {
@@ -469,9 +482,10 @@ describe('discoverRepoSkills', () => {
   // a link into a directory outside the repo entirely. Before this it read as
   // `external` — somebody else's third-party install — which is the one thing
   // it is definitely not.
-  test('flags a skill linked in from outside the repo as personal', () => {
+  test('flags a skill linked in from the personal skills root as personal', () => {
     const root = makeTempDir();
     const personalRoot = makeTempDir();
+    process.env[PERSONAL_DIR_ENV] = personalRoot;
 
     writeSkill(
       personalRoot,
@@ -518,5 +532,24 @@ describe('discoverRepoSkills', () => {
     for (const entry of entries) {
       expect(entry.isPersonal).toBeUndefined();
     }
+  });
+
+  // Escaping the repo is not enough to be personal (§7.3): a link into some
+  // other directory is nobody's personal tier and must not wear the badge.
+  test('does not flag an outside link that is not under the personal root', () => {
+    const root = makeTempDir();
+    const personalRoot = makeTempDir();
+    const rogueRoot = makeTempDir();
+    process.env[PERSONAL_DIR_ENV] = personalRoot;
+
+    writeSkill(rogueRoot, '.', 'rogue', 'name: rogue\ndescription: Elsewhere.');
+    mkdirSync(join(root, '.agents/skills'), { recursive: true });
+    symlinkSync(join(rogueRoot, 'rogue'), join(root, '.agents/skills/rogue'));
+
+    const [entry] = discoverRepoSkills(root);
+
+    expect(entry?.slug).toBe('rogue');
+    expect(entry?.source).toBe('external');
+    expect(entry?.isPersonal).toBeUndefined();
   });
 });

@@ -1,9 +1,11 @@
 // @vitest-environment node
 import {
+  lstatSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -49,8 +51,10 @@ description: Edited description.
 const entryFor = (
   repoRelativePath: string,
   source: RepoSkillEntry['source'] = 'openthrottle',
+  isPersonal?: true,
 ): RepoSkillEntry => ({
   disableModelInvocation: undefined,
+  isPersonal,
   layout: 'agents',
   repoRelativePath,
   slug: 'my-skill',
@@ -59,12 +63,16 @@ const entryFor = (
   tags: undefined,
 });
 
+const PERSONAL_DIR_ENV = 'OPENTHROTTLE_PERSONAL_SKILLS_DIR';
+
 describe('writeSkillFileBySlug', () => {
+  let originalPersonalDir: string | undefined;
   let root: string;
   let skillPath: string;
 
   beforeEach(() => {
     vi.clearAllMocks();
+    originalPersonalDir = process.env[PERSONAL_DIR_ENV];
     root = mkdtempSync(join(tmpdir(), 'ot-write-skill-'));
     const skillDir = join(root, '.agents/skills/my-skill');
     mkdirSync(skillDir, { recursive: true });
@@ -78,6 +86,11 @@ describe('writeSkillFileBySlug', () => {
   });
 
   afterEach(() => {
+    if (originalPersonalDir === undefined) {
+      delete process.env[PERSONAL_DIR_ENV];
+    } else {
+      process.env[PERSONAL_DIR_ENV] = originalPersonalDir;
+    }
     rmSync(root, { force: true, recursive: true });
   });
 
@@ -154,6 +167,59 @@ describe('writeSkillFileBySlug', () => {
       ok: false,
     });
     expect(readFileSync(skillPath, 'utf8')).toBe(ORIGINAL_CONTENT);
+  });
+
+  // The personal tier carries `source: 'external'` because it is not authored
+  // under skills/, but it is the author's own — writable, and written THROUGH
+  // the gitignored symlink so ot-skill-sync still owns the link.
+  test('writes a personal skill through the in-repo symlink', () => {
+    const personalRoot = mkdtempSync(join(tmpdir(), 'ot-personal-skills-'));
+    const personalSkillDir = join(personalRoot, 'my-skill');
+    mkdirSync(personalSkillDir, { recursive: true });
+    const personalSkillPath = join(personalSkillDir, 'SKILL.md');
+    writeFileSync(personalSkillPath, ORIGINAL_CONTENT);
+
+    const linkPath = join(root, '.agents/skills/my-personal-skill');
+    symlinkSync(personalSkillDir, linkPath);
+
+    process.env[PERSONAL_DIR_ENV] = personalRoot;
+    mockDiscoverRepoSkills.mockReturnValue([
+      entryFor('.agents/skills/my-personal-skill/SKILL.md', 'external', true),
+    ]);
+
+    const result = writeSkillFileBySlug('my-skill', VALID_EDIT);
+
+    expect(result).toEqual({ ok: true });
+    expect(readFileSync(personalSkillPath, 'utf8')).toBe(VALID_EDIT);
+    expect(lstatSync(linkPath).isSymbolicLink()).toBe(true);
+
+    rmSync(personalRoot, { force: true, recursive: true });
+  });
+
+  test('refuses a personal-flagged entry whose path is not under the personal root', () => {
+    const personalRoot = mkdtempSync(join(tmpdir(), 'ot-personal-skills-'));
+    const rogueRoot = mkdtempSync(join(tmpdir(), 'ot-rogue-skills-'));
+    const rogueSkillDir = join(rogueRoot, 'my-skill');
+    mkdirSync(rogueSkillDir, { recursive: true });
+    const rogueSkillPath = join(rogueSkillDir, 'SKILL.md');
+    writeFileSync(rogueSkillPath, ORIGINAL_CONTENT);
+    symlinkSync(rogueSkillDir, join(root, '.agents/skills/rogue'));
+
+    process.env[PERSONAL_DIR_ENV] = personalRoot;
+    mockDiscoverRepoSkills.mockReturnValue([
+      entryFor('.agents/skills/rogue/SKILL.md', 'external', true),
+    ]);
+
+    const result = writeSkillFileBySlug('my-skill', VALID_EDIT);
+
+    expect(result).toEqual({
+      error: SKILL_WRITE_COPY.pathEscapeError,
+      ok: false,
+    });
+    expect(readFileSync(rogueSkillPath, 'utf8')).toBe(ORIGINAL_CONTENT);
+
+    rmSync(personalRoot, { force: true, recursive: true });
+    rmSync(rogueRoot, { force: true, recursive: true });
   });
 
   test('ignores a frontmatter source key on save (provenance is layout-derived)', () => {
