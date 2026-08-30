@@ -4,20 +4,26 @@
  * Personal) without re-querying — the toolbar drives it over the loader's
  * merged list.
  *
- * Personal is its own segment rather than a slice of External. A personal skill
- * carries `source: 'external'` (it is not authored in `skills/`), but it is not
- * somebody else's install — it is yours, from outside the repo, and showing it
- * under External is how it gets mistaken for a third-party dependency.
+ * Backend `SkillSource` is only `external | openthrottle` (ingested and served
+ * over GraphQL). Personal is a local overlay (`isPersonal`), not a server enum:
+ * a personal skill still carries `source: 'external'` because it is not
+ * authored in `skills/`, but it is yours, from outside the repo, and showing
+ * it under External is how it gets mistaken for a third-party dependency.
+ * {@link getSkillSourceKind} is the three-way classification both the filter
+ * and the source badge switch on.
  */
 
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 
-export const SKILL_SOURCE_FILTERS = [
-  'all',
+export const SKILL_SOURCE_KINDS = [
   'external',
   'openthrottle',
   'personal',
 ] as const;
+
+export type SkillSourceKind = (typeof SKILL_SOURCE_KINDS)[number];
+
+export const SKILL_SOURCE_FILTERS = ['all', ...SKILL_SOURCE_KINDS] as const;
 
 export type SkillSourceFilter = (typeof SKILL_SOURCE_FILTERS)[number];
 
@@ -25,6 +31,20 @@ export const isSkillSourceFilter = (
   value: string,
 ): value is SkillSourceFilter =>
   SKILL_SOURCE_FILTERS.some((filter) => filter === value);
+
+/**
+ * @description Three-way provenance for display and filtering. Personal
+ * outranks `source` because a personal-tier skill is stored as `external`.
+ */
+export const getSkillSourceKind = (
+  entry: Pick<RepoSkillEntry, 'isPersonal' | 'source'>,
+): SkillSourceKind => {
+  if (entry.isPersonal === true) {
+    return 'personal';
+  }
+
+  return entry.source === 'openthrottle' ? 'openthrottle' : 'external';
+};
 
 export const filterSkillsBySource = (
   entries: readonly RepoSkillEntry[],
@@ -34,13 +54,5 @@ export const filterSkillsBySource = (
     return entries;
   }
 
-  if (filter === 'personal') {
-    return entries.filter((entry) => entry.isPersonal === true);
-  }
-
-  // Personal entries are excluded from every other segment, so a skill appears
-  // in exactly one — otherwise External silently doubles as "yours and theirs".
-  return entries.filter(
-    (entry) => entry.isPersonal !== true && entry.source === filter,
-  );
+  return entries.filter((entry) => getSkillSourceKind(entry) === filter);
 };

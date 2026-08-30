@@ -6,16 +6,14 @@ import {
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
-import { SKILLS_SOURCE_COPY } from '~/routing/skills/data/data.copy';
 import type { ModelInvocationBadge } from '~/routing/skills/utils/model-invocation-badge';
+import { getSkillSourceBadge } from '~/routing/skills/utils/source-badge';
 
 export interface SkillIntroductionBadgesProps {
   readonly entry: RepoSkillEntry;
   readonly invocationBadge: ModelInvocationBadge;
-  readonly isOpenThrottle: boolean;
   /** True when the tag chips aren't owning tag display, so tags render read-only. */
   readonly showReadOnlyTags: boolean;
-  readonly sourceTooltip: string;
 }
 
 /**
@@ -29,38 +27,19 @@ export interface SkillIntroductionBadgesProps {
 export const SkillIntroductionBadges = (
   props: SkillIntroductionBadgesProps,
 ): React.ReactElement => {
-  const {
-    entry,
-    invocationBadge,
-    isOpenThrottle,
-    showReadOnlyTags,
-    sourceTooltip,
-  } = props;
+  const { entry, invocationBadge, showReadOnlyTags } = props;
 
   // Hooks
 
   // Setup
+  const source = getSkillSourceBadge(entry);
 
   // Handlers
 
-  // Setup — the personal tier outranks the source label: a skill from your own
-  // directory is not an External install, and saying so is the whole point.
-  const isPersonal = entry.isPersonal === true;
-
-  const sourceLabel = isPersonal
-    ? SKILLS_SOURCE_COPY.personalLabel
-    : isOpenThrottle
-      ? SKILLS_SOURCE_COPY.openthrottleLabel
-      : SKILLS_SOURCE_COPY.externalLabel;
-
   // Markup
   const sourceBadge = (
-    <Badge
-      color={isPersonal ? 'amber' : isOpenThrottle ? 'violet' : 'slate'}
-      data-testid="skill-source-badge"
-      size="xs"
-    >
-      {sourceLabel}
+    <Badge color={source.color} data-testid="skill-source-badge" size="xs">
+      {source.label}
     </Badge>
   );
 
@@ -72,10 +51,10 @@ export const SkillIntroductionBadges = (
     <React.Fragment>
       <Tooltip>
         <TooltipTrigger asChild={true}>
-          {!isOpenThrottle && !isPersonal && entry.sourceUrl ? (
+          {source.href ? (
             <a
               data-testid="skill-source-link"
-              href={entry.sourceUrl}
+              href={source.href}
               rel="noreferrer"
               target="_blank"
             >
@@ -86,7 +65,7 @@ export const SkillIntroductionBadges = (
           )}
         </TooltipTrigger>
         <TooltipContent className="max-w-xs" side="top">
-          {isPersonal ? SKILLS_SOURCE_COPY.personalTooltip : sourceTooltip}
+          {source.tooltip}
         </TooltipContent>
       </Tooltip>
 

@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest';
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 import {
   filterSkillsBySource,
+  getSkillSourceKind,
   isSkillSourceFilter,
 } from '~/routing/skills/utils/filter-skills-by-source';
 
@@ -51,6 +52,26 @@ describe('filterSkillsBySource', () => {
     expect(
       filterSkillsBySource(entries, 'personal').map((e) => e.slug),
     ).toEqual(['my-draft']);
+  });
+});
+
+describe('getSkillSourceKind', () => {
+  test('maps source: openthrottle to openthrottle', () => {
+    expect(getSkillSourceKind(entry('ot-plans', 'openthrottle'))).toBe(
+      'openthrottle',
+    );
+  });
+
+  test('maps source: external to external', () => {
+    expect(getSkillSourceKind(entry('brag-sheet', 'external'))).toBe(
+      'external',
+    );
+  });
+
+  test('personal outranks source: external', () => {
+    expect(getSkillSourceKind(entry('my-draft', 'external', true))).toBe(
+      'personal',
+    );
   });
 });
 

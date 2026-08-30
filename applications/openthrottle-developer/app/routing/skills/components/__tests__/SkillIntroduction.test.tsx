@@ -46,7 +46,6 @@ describe('SkillIntroduction Component', () => {
       invocationBadge: getModelInvocationBadge(undefined),
       isDirty: false,
       isEditing: false,
-      isOpenThrottle: false,
       onCancel: vi.fn(),
       onEdit: vi.fn(),
       onRun: undefined,
@@ -54,7 +53,6 @@ describe('SkillIntroduction Component', () => {
       runOptions: undefined,
       saveError: undefined,
       saving: false,
-      sourceTooltip: SKILLS_SOURCE_COPY.externalTooltip,
     };
 
     component = renderIntroduction();
@@ -181,8 +179,6 @@ describe('SkillIntroduction Component', () => {
     props = {
       ...props,
       entry: { ...baseEntry, slug: 'ot-plans', source: 'openthrottle' },
-      isOpenThrottle: true,
-      sourceTooltip: SKILLS_SOURCE_COPY.openthrottleTooltip,
     };
     component = renderIntroduction();
 

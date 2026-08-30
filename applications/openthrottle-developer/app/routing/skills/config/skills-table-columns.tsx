@@ -7,6 +7,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
 import { getResolvedModelInvocationDisplay } from '~/routing/skills/utils/model-invocation-badge';
+import { getSkillSourceBadge } from '~/routing/skills/utils/source-badge';
 import { Link } from 'react-router';
 import {
   SKILL_RECORD_TAGS_COPY,
@@ -52,35 +53,26 @@ export const createSkillsTableColumns = (
   {
     accessorKey: 'source',
     cell: ({ row }) => {
-      const isOpenThrottle = row.original.source === 'openthrottle';
-      const { sourceUrl } = row.original;
+      const sourceBadge = getSkillSourceBadge(row.original);
 
       const badge = (
         <Badge
-          color={isOpenThrottle ? 'default' : 'yellow'}
+          color={sourceBadge.color}
           data-testid="skill-source-badge"
           size="xs"
         >
-          {isOpenThrottle
-            ? SKILLS_SOURCE_COPY.openthrottleLabel
-            : SKILLS_SOURCE_COPY.externalLabel}
+          {sourceBadge.label}
         </Badge>
       );
-
-      const tooltip = isOpenThrottle
-        ? SKILLS_SOURCE_COPY.openthrottleTooltip
-        : sourceUrl
-          ? `${SKILLS_SOURCE_COPY.externalUrlTooltipPrefix} ${sourceUrl}`
-          : SKILLS_SOURCE_COPY.externalTooltip;
 
       return (
         <div className="p-2">
           <Tooltip>
             <TooltipTrigger asChild={true}>
-              {!isOpenThrottle && sourceUrl ? (
+              {sourceBadge.href ? (
                 <a
                   data-testid="skill-source-link"
-                  href={sourceUrl}
+                  href={sourceBadge.href}
                   rel="noreferrer"
                   target="_blank"
                 >
@@ -91,7 +83,7 @@ export const createSkillsTableColumns = (
               )}
             </TooltipTrigger>
             <TooltipContent className="max-w-xs" side="top">
-              {tooltip}
+              {sourceBadge.tooltip}
             </TooltipContent>
           </Tooltip>
         </div>

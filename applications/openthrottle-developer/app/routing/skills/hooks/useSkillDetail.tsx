@@ -1,9 +1,6 @@
 import * as React from 'react';
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
-import {
-  SKILL_DETAIL_COPY,
-  SKILLS_SOURCE_COPY,
-} from '~/routing/skills/data/data.copy';
+import { SKILL_DETAIL_COPY } from '~/routing/skills/data/data.copy';
 import { getResolvedModelInvocationDisplay } from '~/routing/skills/utils/model-invocation-badge';
 
 export interface SkillDetailOptions {
@@ -35,14 +32,12 @@ export interface UseSkillDetailResult {
   >['badge'];
   isDirty: boolean;
   isEditing: boolean;
-  isOpenThrottle: boolean;
-  sourceTooltip: string;
 }
 
 /**
- * @description Edit-mode/draft state, save lifecycle tracking, and derived
- * badge/tooltip display values for the skill detail view. Extracted from
- * SkillDetail per component-primitive-shape R6/R7.
+ * @description Edit-mode/draft state and save lifecycle tracking for the skill
+ * detail view. Source-badge presentation lives in `getSkillSourceBadge`.
+ * Extracted from SkillDetail per component-primitive-shape R6/R7.
  */
 export const useSkillDetail = (
   options: SkillDetailOptions,
@@ -58,11 +53,6 @@ export const useSkillDetail = (
   const isOpenThrottle = entry.source === 'openthrottle';
   const { badge: invocationBadge } = getResolvedModelInvocationDisplay(entry);
   const isDirty = draft !== content;
-  const sourceTooltip = isOpenThrottle
-    ? SKILLS_SOURCE_COPY.openthrottleTooltip
-    : entry.sourceUrl
-      ? `${SKILLS_SOURCE_COPY.externalUrlTooltipPrefix} ${entry.sourceUrl}`
-      : SKILLS_SOURCE_COPY.externalTooltip;
   // Editing an external SKILL.md forks it from upstream, so provenance gates
   // edit mode on top of the checkout precondition. `writeSkillFileBySlug` is
   // the authoritative gate; this only keeps the user out of a doomed draft.
@@ -128,7 +118,5 @@ export const useSkillDetail = (
     invocationBadge,
     isDirty,
     isEditing,
-    isOpenThrottle,
-    sourceTooltip,
   };
 };

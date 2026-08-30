@@ -6,6 +6,7 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from '@openthrottle/react-router-shadcn';
+import { FEATURE_BETA_PREVIEW } from '@openthrottle/react-router-utils';
 import { GlobalToolbarSearch } from '@openthrottle/react-router-ui-global';
 import { SlidersHorizontalIcon, TagsIcon } from 'lucide-react';
 import {
@@ -85,19 +86,23 @@ export const SkillsToolbar = (
 
       <div className="flex-1" />
 
-      <Button asChild={true} variant="outline">
-        <Link to="/skills/availability">
-          <SlidersHorizontalIcon className="size-4" />
-          {SKILL_AVAILABILITY_COPY.manageLink}
-        </Link>
-      </Button>
+      {FEATURE_BETA_PREVIEW ? (
+        <Button asChild={true} variant="outline">
+          <Link to="/skills/availability">
+            <SlidersHorizontalIcon className="size-4" />
+            {SKILL_AVAILABILITY_COPY.manageLink}
+          </Link>
+        </Button>
+      ) : null}
 
-      <Button asChild={true} variant="outline">
-        <Link to="/skills/vocabulary">
-          <TagsIcon className="size-4" />
-          {SKILL_VOCABULARY_COPY.manageLink}
-        </Link>
-      </Button>
+      {FEATURE_BETA_PREVIEW ? (
+        <Button asChild={true} variant="outline">
+          <Link to="/skills/vocabulary">
+            <TagsIcon className="size-4" />
+            {SKILL_VOCABULARY_COPY.manageLink}
+          </Link>
+        </Button>
+      ) : null}
     </div>
   );
 };

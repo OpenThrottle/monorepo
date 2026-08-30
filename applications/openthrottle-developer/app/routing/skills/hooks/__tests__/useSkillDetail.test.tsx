@@ -1,10 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
-import {
-  SKILL_DETAIL_COPY,
-  SKILLS_SOURCE_COPY,
-} from '~/routing/skills/data/data.copy';
+import { SKILL_DETAIL_COPY } from '~/routing/skills/data/data.copy';
 import { useSkillDetail, type SkillDetailOptions } from '../useSkillDetail';
 
 const baseEntry = (
@@ -162,37 +159,6 @@ describe('useSkillDetail', () => {
     expect(result.current.isDirty).toBe(false);
   });
 
-  test('isOpenThrottle is true for an openthrottle-sourced entry', () => {
-    const { result } = renderHook(() =>
-      useSkillDetail(
-        baseOptions({ entry: baseEntry({ source: 'openthrottle' }) }),
-      ),
-    );
-
-    expect(result.current.isOpenThrottle).toBe(true);
-    expect(result.current.sourceTooltip).toBe(
-      SKILLS_SOURCE_COPY.openthrottleTooltip,
-    );
-  });
-
-  test('sourceTooltip includes the source URL for an external entry with one', () => {
-    const { result } = renderHook(() =>
-      useSkillDetail(
-        baseOptions({
-          entry: baseEntry({
-            source: 'external',
-            sourceUrl: 'https://example.com/skill',
-          }),
-        }),
-      ),
-    );
-
-    expect(result.current.isOpenThrottle).toBe(false);
-    expect(result.current.sourceTooltip).toBe(
-      `${SKILLS_SOURCE_COPY.externalUrlTooltipPrefix} https://example.com/skill`,
-    );
-  });
-
   test('canEdit is true for an editable openthrottle entry', () => {
     const { result } = renderHook(() => useSkillDetail(baseOptions()));
 
@@ -252,15 +218,5 @@ describe('useSkillDetail', () => {
     act(() => result.current.handleEdit());
 
     expect(result.current.isEditing).toBe(false);
-  });
-
-  test('sourceTooltip falls back to the generic external tooltip with no URL', () => {
-    const { result } = renderHook(() =>
-      useSkillDetail(baseOptions({ entry: baseEntry({ source: 'external' }) })),
-    );
-
-    expect(result.current.sourceTooltip).toBe(
-      SKILLS_SOURCE_COPY.externalTooltip,
-    );
   });
 });
