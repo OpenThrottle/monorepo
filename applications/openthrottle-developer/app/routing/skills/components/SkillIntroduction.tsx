@@ -2,6 +2,7 @@ import * as React from 'react';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { Badge, Button } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
+import { BrainCircuitIcon } from 'lucide-react';
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 import { SkillDetailEditControls } from '~/routing/skills/components/SkillDetailEditControls';
 import { SkillIntroductionBadges } from '~/routing/skills/components/SkillIntroductionBadges';
@@ -45,8 +46,12 @@ export interface SkillIntroductionProps {
 }
 
 /**
- * @description Title, source/invocation/tag badges, path copy, and run/edit
- * controls for a skill detail view.
+ * @description Standard detail-route chrome for a skill: a `GlobalHeading`
+ * carrying the slug and the run/edit/orphan actions, then a metadata row of
+ * source, invocation and tag badges, then the repo-relative path with a copy
+ * affordance. Mirrors {@link PlanDetailRouteHeader} rather than packing every
+ * badge onto the title row. The skill's summary is deliberately absent — the
+ * Skill tab already renders the whole SKILL.md.
  */
 export const SkillIntroduction = (
   props: SkillIntroductionProps,
@@ -83,6 +88,12 @@ export const SkillIntroduction = (
     (entry.tags ?? []).length > 0 &&
     (onAddTag == null || tagVocabulary == null);
 
+  const isOrphaned = entry.orphanedAt != null;
+
+  // An orphan carries no repo-relative path, so the copy row would offer an
+  // empty string. Show it only when there is something to copy.
+  const showPath = entry.repoRelativePath !== '';
+
   // Handlers
 
   // Markup
@@ -93,9 +104,40 @@ export const SkillIntroduction = (
 
   return (
     <div className="flex flex-col gap-2" data-testid="SkillIntroduction">
-      <div className="flex flex-wrap items-center gap-4">
-        <GlobalHeading heading="h1" title={`/${entry.slug}`} />
+      <GlobalHeading heading="h1" icon={BrainCircuitIcon} title={entry.slug}>
+        <div className="flex flex-wrap items-center gap-2">
+          {isOrphaned && onRemoveOrphan != null ? (
+            <SkillOrphanRemoveButton
+              disabled={tagPending}
+              onRemove={onRemoveOrphan}
+            />
+          ) : null}
 
+          <SkillRunControl
+            entry={entry}
+            onRun={onRun}
+            runOptions={runOptions}
+          />
+
+          <SkillDetailEditControls
+            disabledTooltip={editDisabledTooltip}
+            editable={canEdit}
+            isDirty={isDirty}
+            isEditing={isEditing}
+            onCancel={onCancel}
+            onEdit={onEdit}
+            onSave={onSave}
+            saveError={saveError}
+            saving={saving}
+          />
+        </div>
+      </GlobalHeading>
+
+      <div
+        aria-label={SKILL_DETAIL_COPY.metadataLabel}
+        className="flex flex-wrap items-center gap-2"
+        data-testid="skill-introduction-metadata"
+      >
         <SkillIntroductionBadges
           entry={entry}
           invocationBadge={invocationBadge}
@@ -103,6 +145,12 @@ export const SkillIntroduction = (
           showReadOnlyTags={showReadOnlyTags}
           sourceTooltip={sourceTooltip}
         />
+
+        {isOrphaned ? (
+          <Badge color="yellow" data-testid="skill-orphan-badge" size="xs">
+            {SKILL_RECORD_TAGS_COPY.orphanBadge}
+          </Badge>
+        ) : null}
 
         {onAddTag != null && onRemoveTag != null && tagVocabulary != null ? (
           <SkillTagChips
@@ -113,50 +161,23 @@ export const SkillIntroduction = (
             vocabulary={tagVocabulary}
           />
         ) : null}
-
-        {entry.orphanedAt != null ? (
-          <Badge color="yellow" data-testid="skill-orphan-badge" size="xs">
-            {SKILL_RECORD_TAGS_COPY.orphanBadge}
-          </Badge>
-        ) : null}
-
-        <div className="flex-1" />
-
-        {entry.orphanedAt != null && onRemoveOrphan != null ? (
-          <SkillOrphanRemoveButton
-            disabled={tagPending}
-            onRemove={onRemoveOrphan}
-          />
-        ) : null}
-
-        <SkillRunControl entry={entry} onRun={onRun} runOptions={runOptions} />
-
-        <SkillDetailEditControls
-          disabledTooltip={editDisabledTooltip}
-          editable={canEdit}
-          isDirty={isDirty}
-          isEditing={isEditing}
-          onCancel={onCancel}
-          onEdit={onEdit}
-          onSave={onSave}
-          saveError={saveError}
-          saving={saving}
-        />
       </div>
 
-      <p className="text-muted-foreground text-sm">{entry.summary}</p>
-
-      <div className="flex items-center gap-2">
-        <code className="text-muted-foreground text-xs">
-          {entry.repoRelativePath}
-        </code>
-        <Button size="xs" variant="outline">
-          <OpenThrottleClipboard
-            label={SKILL_DETAIL_COPY.pathCopyLabel}
-            text={entry.repoRelativePath}
-          />
-        </Button>
-      </div>
+      {showPath ? (
+        <div className="flex items-center gap-2">
+          <code className="text-muted-foreground text-xs">
+            {entry.repoRelativePath}
+          </code>
+          {/* asChild — OpenThrottleClipboard renders its own <button>, so a
+              wrapping Button would nest one inside another and break hydration. */}
+          <Button asChild={true} size="xs" variant="outline">
+            <OpenThrottleClipboard
+              label={SKILL_DETAIL_COPY.pathCopyLabel}
+              text={entry.repoRelativePath}
+            />
+          </Button>
+        </div>
+      ) : null}
     </div>
   );
 };
