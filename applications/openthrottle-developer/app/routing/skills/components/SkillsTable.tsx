@@ -13,15 +13,16 @@ import { SkillsEmpty } from '~/routing/skills/components/SkillsEmpty';
 export interface SkillsTableProps {
   className?: string;
   entries?: RepoSkillEntry[];
+  /**
+   * Whether a search query or source segment is narrowing the list. Forwarded
+   * to the empty state so a zero-result filtered view offers "clear filters"
+   * instead of new-user copy.
+   */
+  isFiltered?: boolean;
   onAddTag?: (slug: string, tag: string) => void;
   onRemoveOrphan?: (slug: string) => void;
   onRemoveTag?: (slug: string, tag: string) => void;
   pendingSlug?: string;
-  /**
-   * The active search query, forwarded to the empty state so a zero-result
-   * filtered view offers "clear filters" instead of new-user copy.
-   */
-  search?: string;
   vocabulary?: readonly SkillTagVocabularyOption[];
 }
 
@@ -29,11 +30,11 @@ export const SkillsTable = (props: SkillsTableProps): React.ReactElement => {
   const {
     className,
     entries = [],
+    isFiltered,
     onAddTag,
     onRemoveOrphan,
     onRemoveTag,
     pendingSlug,
-    search,
     vocabulary,
   } = props;
 
@@ -70,7 +71,7 @@ export const SkillsTable = (props: SkillsTableProps): React.ReactElement => {
       <DataTable<RepoSkillEntry, SkillsTableColumnValue>
         columns={columns}
         data={data}
-        emptyState={<SkillsEmpty search={search} />}
+        emptyState={<SkillsEmpty isFiltered={isFiltered} />}
         getRowId={getRowId}
       />
     </div>

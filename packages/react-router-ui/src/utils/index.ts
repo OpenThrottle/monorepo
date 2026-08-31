@@ -49,3 +49,23 @@ export function buildProjectsSearchParams(
   if (extras?.view) params.set('view', extras.view);
   return params.toString();
 }
+
+/**
+ * @description Page-link params built from the *live* query string: clones the
+ * current params and rewrites only `page`/`limit`, so route-local filters the
+ * extras contract does not model (`?source=`, a route's own `?search=`) survive
+ * a page change instead of being silently dropped.
+ *
+ * @public
+ */
+export function buildPreservedSearchParams(
+  current: URLSearchParams,
+  page: number,
+  limit: number,
+): string {
+  const params = new URLSearchParams(current);
+  params.set('page', String(page));
+  params.set('limit', String(limit));
+
+  return params.toString();
+}

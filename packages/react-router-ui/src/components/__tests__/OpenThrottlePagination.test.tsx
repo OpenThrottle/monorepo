@@ -7,10 +7,13 @@ import { PAGINATION_CONFIG } from '../../config/pagination';
 import { OpenThrottlePagination } from '../OpenThrottlePagination';
 import type { OpenThrottlePaginationProps } from '../OpenThrottlePagination';
 
-function renderPagination(props: OpenThrottlePaginationProps): RenderResult {
+function renderPagination(
+  props: OpenThrottlePaginationProps,
+  initialPath = '/',
+): RenderResult {
   const Component = () => <OpenThrottlePagination {...props} />;
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-  return render(<RoutesStub />);
+  return render(<RoutesStub initialEntries={[initialPath]} />);
 }
 
 function pageNumberLinks(view: RenderResult): HTMLAnchorElement[] {
@@ -177,6 +180,41 @@ describe('OpenThrottlePagination Component', () => {
       expect(page50?.getAttribute('href')).toContain('sortOrder=asc');
       expect(page50?.getAttribute('href')).toContain('status=pending');
       expect(page50?.getAttribute('href')).toContain('status=in_progress');
+    });
+  });
+
+  describe('preserveSearchParams', () => {
+    test('drops unmodelled params by default', () => {
+      const view = renderPagination(
+        { limit: 10, page: 1, resultLabel: 'skills', total: 25 },
+        '/?source=openthrottle&search=abc',
+      );
+
+      const [first] = pageNumberLinks(view);
+      expect(first?.getAttribute('href')).not.toContain('source=');
+      expect(first?.getAttribute('href')).not.toContain('search=abc');
+    });
+
+    // Route-local filters the extras contract knows nothing about must survive
+    // a page change, or paginating silently widens the result set.
+    test('clones the live query string when opted in', () => {
+      const view = renderPagination(
+        {
+          limit: 10,
+          page: 1,
+          preserveSearchParams: true,
+          resultLabel: 'skills',
+          total: 25,
+        },
+        '/?source=openthrottle&search=abc',
+      );
+
+      for (const link of pageNumberLinks(view)) {
+        const href = link.getAttribute('href') ?? '';
+        expect(href).toContain('source=openthrottle');
+        expect(href).toContain('search=abc');
+        expect(href).toContain('limit=10');
+      }
     });
   });
 });

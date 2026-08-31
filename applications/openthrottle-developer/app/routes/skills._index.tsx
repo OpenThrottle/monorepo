@@ -32,6 +32,7 @@ import { mergeRepoSkillsWithProjectSkills } from '~/routing/skills/utils/merge-p
 import { filterSkillsByQuery } from '~/routing/skills/utils/filter-skills-by-query';
 import {
   filterSkillsBySource,
+  parseSkillSourceFilter,
   type SkillSourceFilter,
 } from '~/routing/skills/utils/filter-skills-by-source';
 import { mergeRepoSkillsWithSkillAvailability } from '~/routing/skills/utils/merge-skill-availability';
@@ -129,11 +130,13 @@ export default function Component(
 
   // Hooks
   const [searchParams, setSearchParams] = useSearchParams();
-  const [sourceFilter, setSourceFilter] =
-    React.useState<SkillSourceFilter>('all');
   const tagFetcher = useFetcher<typeof action>();
 
   // Setup
+  // The URL owns the source filter (no useState): refresh, Back/Forward, and a
+  // shared link all restore the same segment. `all` is the default and is
+  // written as an *absent* param, so bare `/skills` is the canonical full list.
+  const sourceFilter = parseSkillSourceFilter(searchParams.get('source'));
   const search = readSearchParam(searchParams);
   const filteredEntries = React.useMemo(
     () => [
@@ -173,12 +176,18 @@ export default function Component(
 
   // Handlers
   const handleSourceFilterChange = (filter: SkillSourceFilter): void => {
-    setSourceFilter(filter);
-    // Reset to page 1 so the user is never stranded on an out-of-range page
-    // after the filtered set shrinks; preserve any other query params.
+    // One mutation: write (or clear) `source` and reset to page 1 so the user
+    // is never stranded on an out-of-range page after the filtered set
+    // shrinks. Sibling params (`search`, `limit`, `modal`) are preserved, and
+    // this is a push so Back undoes the filter change.
     setSearchParams(
       (prev) => {
         const next = new URLSearchParams(prev);
+        if (filter === 'all') {
+          next.delete('source');
+        } else {
+          next.set('source', filter);
+        }
         next.delete('page');
 
         return next;
@@ -222,6 +231,7 @@ export default function Component(
               <SkillsTable
                 className="bg-card"
                 entries={pageEntries}
+                isFiltered={isFiltered}
                 onAddTag={(slug, tag) =>
                   submitTagIntent(SKILL_RECORD_TAG_INTENTS.ADD_TAG, slug, tag)
                 }
@@ -236,7 +246,6 @@ export default function Component(
                   )
                 }
                 pendingSlug={pendingSlug}
-                search={search}
                 vocabulary={tagVocabulary}
               />
             </div>
@@ -246,6 +255,10 @@ export default function Component(
               className="mt-8"
               limit={limit}
               page={page}
+              // The skills list filters client-side on `?search=` and
+              // `?source=`, neither of which the extras contract models — clone
+              // the live query string so a page change keeps the filtered set.
+              preserveSearchParams={true}
               resultLabel="skills"
               total={totalCount}
             />

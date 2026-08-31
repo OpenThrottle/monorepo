@@ -4,6 +4,7 @@ import {
   filterSkillsBySource,
   getSkillSourceKind,
   isSkillSourceFilter,
+  parseSkillSourceFilter,
 } from '~/routing/skills/utils/filter-skills-by-source';
 
 const entry = (
@@ -86,5 +87,22 @@ describe('isSkillSourceFilter', () => {
   test('rejects the radix empty-deselect value and unknown strings', () => {
     expect(isSkillSourceFilter('')).toBe(false);
     expect(isSkillSourceFilter('garbage')).toBe(false);
+  });
+});
+
+describe('parseSkillSourceFilter', () => {
+  test('passes through every known filter token', () => {
+    expect(parseSkillSourceFilter('all')).toBe('all');
+    expect(parseSkillSourceFilter('external')).toBe('external');
+    expect(parseSkillSourceFilter('openthrottle')).toBe('openthrottle');
+    expect(parseSkillSourceFilter('personal')).toBe('personal');
+  });
+
+  // A hand-edited or stale `?source=` must render the full list, never 404.
+  test('falls back to all for missing, empty, and unknown values', () => {
+    expect(parseSkillSourceFilter(null)).toBe('all');
+    expect(parseSkillSourceFilter(undefined)).toBe('all');
+    expect(parseSkillSourceFilter('')).toBe('all');
+    expect(parseSkillSourceFilter('garbage')).toBe('all');
   });
 });

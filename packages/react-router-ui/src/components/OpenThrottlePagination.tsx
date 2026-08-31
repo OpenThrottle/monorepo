@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Link } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 import {
   Button,
   Pagination,
@@ -10,6 +10,7 @@ import {
 import type { ProjectsSearchParamsExtras } from '../utils/index';
 import {
   buildPaginationPageItems,
+  buildPreservedSearchParams,
   buildProjectsSearchParams,
 } from '../utils/index';
 import { ChevronsLeftIcon, ChevronsRightIcon } from 'lucide-react';
@@ -22,6 +23,15 @@ export interface OpenThrottlePaginationProps extends ProjectsSearchParamsExtras 
   readonly className?: string;
   readonly limit: number;
   readonly page: number;
+  /**
+   * Opt in to building page links from the *live* query string instead of the
+   * `extras` contract: the current params are cloned and only `page`/`limit`
+   * are rewritten, so route-local filters the pager knows nothing about
+   * (`?source=`, a route's own `?search=`) survive a page change. Off by
+   * default — routes already modelled by `ProjectsSearchParamsExtras` keep
+   * their canonical, extras-built URLs.
+   */
+  readonly preserveSearchParams?: boolean;
   /**
    * Plural noun for the counted items in the summary line, e.g. &quot;plans&quot;.
    * Required so a forgotten label can never silently render the wrong entity.
@@ -40,6 +50,7 @@ export const OpenThrottlePagination = (
     details,
     limit,
     page,
+    preserveSearchParams = false,
     resultLabel,
     search,
     sortBy,
@@ -72,21 +83,21 @@ export const OpenThrottlePagination = (
       : undefined;
 
   // Hooks
+  const [searchParams] = useSearchParams();
 
   // Setup
   const totalPages = Math.ceil(total / limit) || 1;
+
+  const buildParams = (targetPage: number): string =>
+    preserveSearchParams
+      ? buildPreservedSearchParams(searchParams, targetPage, limit)
+      : buildProjectsSearchParams(targetPage, limit, extras);
+
   const prevPage = page > 1 ? page - 1 : null;
-  const prevParams = prevPage
-    ? buildProjectsSearchParams(prevPage, limit, extras)
-    : undefined;
-
   const nextPage = page < totalPages ? page + 1 : null;
-  const nextParams = nextPage
-    ? buildProjectsSearchParams(nextPage, limit, extras)
-    : undefined;
 
-  const prevUrl = prevPage ? `${basePath}?${prevParams}` : undefined;
-  const nextUrl = nextPage ? `${basePath}?${nextParams}` : undefined;
+  const prevUrl = prevPage ? `${basePath}?${buildParams(prevPage)}` : undefined;
+  const nextUrl = nextPage ? `${basePath}?${buildParams(nextPage)}` : undefined;
 
   const startItem = total === 0 ? 0 : (page - 1) * limit + 1;
   const endItem = Math.min(page * limit, total);
@@ -148,7 +159,7 @@ export const OpenThrottlePagination = (
 
               const pageNumber = item.page;
               const isActive = pageNumber === page;
-              const url = `${basePath}?${buildProjectsSearchParams(pageNumber, limit, extras)}`;
+              const url = `${basePath}?${buildParams(pageNumber)}`;
 
               return (
                 <PaginationItem key={pageNumber}>

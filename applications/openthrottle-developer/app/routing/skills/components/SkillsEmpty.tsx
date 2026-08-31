@@ -7,11 +7,16 @@ import { SKILLS_EMPTY_COPY } from '~/routing/skills/data/data.copy';
 
 export interface SkillsEmptyProps {
   className?: string;
-  search?: string;
+  /**
+   * Whether *any* filter is narrowing the list — a search query or a source
+   * segment. A filtered-but-empty view offers a way back out; only a genuinely
+   * empty, unfiltered list points at creating a first skill.
+   */
+  isFiltered?: boolean;
 }
 
 export const SkillsEmpty = (props: SkillsEmptyProps): React.ReactElement => {
-  const { className, search } = props;
+  const { className, isFiltered = false } = props;
 
   // Hooks
 
@@ -29,18 +34,12 @@ export const SkillsEmpty = (props: SkillsEmptyProps): React.ReactElement => {
     <Empty className={clsx('my-8', className)}>
       <GlobalHeading
         heading="h3"
-        title={search ? SKILLS_EMPTY_COPY.searchTitle : SKILLS_EMPTY_COPY.title}
+        title={
+          isFiltered ? SKILLS_EMPTY_COPY.searchTitle : SKILLS_EMPTY_COPY.title
+        }
       />
-      {/* <EmptyMedia variant="icon">
-        <SearchAlertIcon className="size-6" />
-      </EmptyMedia>
-      <EmptyDescription>
-        {search
-          ? 'Try clearing the search to see all skills.'
-          : 'Create your first skill to get started.'}
-      </EmptyDescription> */}
       <Button asChild={true} variant="secondary">
-        {search ? (
+        {isFiltered ? (
           <Link to="/skills">Clear filters</Link>
         ) : (
           <Link to="/skills/create">New skill</Link>

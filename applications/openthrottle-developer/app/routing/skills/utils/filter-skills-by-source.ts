@@ -33,6 +33,18 @@ export const isSkillSourceFilter = (
   SKILL_SOURCE_FILTERS.some((filter) => filter === value);
 
 /**
+ * @description Coerce a raw `?source=` value into a filter token. Missing,
+ * empty, and unknown values all fall back to `all` — a shared link with a
+ * stale or hand-edited param renders the full list rather than 404ing.
+ *
+ * @public
+ */
+export const parseSkillSourceFilter = (
+  value: null | string | undefined,
+): SkillSourceFilter =>
+  value != null && isSkillSourceFilter(value) ? value : 'all';
+
+/**
  * @description Three-way provenance for display and filtering. Personal
  * outranks `source` because a personal-tier skill is stored as `external`.
  */
