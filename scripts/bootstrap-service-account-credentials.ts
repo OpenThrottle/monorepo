@@ -260,7 +260,9 @@ async function main(): Promise<void> {
   await dataSource.initialize();
 
   try {
-    const logger: LoggerService = {
+    // Silent sink for the Nest service's own logging; script output goes
+    // through the CLI `logger` above, so don't shadow it here.
+    const nestLogger: LoggerService = {
       debug: () => undefined,
       error: () => undefined,
       log: () => undefined,
@@ -268,7 +270,7 @@ async function main(): Promise<void> {
     };
 
     const serviceAccountsService = new ServiceAccountsService(
-      logger,
+      nestLogger,
       dataSource.getRepository(ServiceAccount),
       dataSource.getRepository(ServiceAccountCredential),
     );
