@@ -74,16 +74,16 @@ export const SkillsToolbar = (
         value={sourceFilter}
         variant="outline"
       >
-        <ToggleGroupItem value="all">
+        <ToggleGroupItem size="sm" value="all">
           {SKILLS_SOURCE_COPY.filterAllLabel}
         </ToggleGroupItem>
-        <ToggleGroupItem value="openthrottle">
+        <ToggleGroupItem size="sm" value="openthrottle">
           {SKILLS_SOURCE_COPY.filterOpenThrottleLabel}
         </ToggleGroupItem>
-        <ToggleGroupItem value="external">
+        <ToggleGroupItem size="sm" value="external">
           {SKILLS_SOURCE_COPY.filterExternalLabel}
         </ToggleGroupItem>
-        <ToggleGroupItem value="personal">
+        <ToggleGroupItem size="sm" value="personal">
           {SKILLS_SOURCE_COPY.filterPersonalLabel}
         </ToggleGroupItem>
       </ToggleGroup>

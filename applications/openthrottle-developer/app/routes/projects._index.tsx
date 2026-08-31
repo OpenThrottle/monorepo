@@ -178,7 +178,10 @@ export default function Component(
           sortOrder={sortOrder}
           view={view}
         />
-        <ProjectsTable className="bg-card" projects={projects} />
+        <ProjectsTable
+          // className="bg-card"
+          projects={projects}
+        />
         <OpenThrottlePagination
           className="mt-8"
           limit={limit}

@@ -6,7 +6,7 @@ description: >-
   putting Plan-Id/Task-Id in a commit, recording a merged squash on the work
   ledger, or the user mentions OT, a plan or task UUID, or git–OT traceability.
   Plans live in OT only — never fall back to Markdown. To execute a plan see
-  ot-claude-loop.
+  ot-loop.
 ---
 
 # OpenThrottle plans and MCP traceability
@@ -48,7 +48,7 @@ GraphQL-only boundary to **openthrottle-server**. Typical tools:
 
 The per-task discipline — one task `IN_PROGRESS` at a time, work, validate, flip to `COMPLETED`,
 commit with `Plan-Id:` / `Task-Id:` — is stated canonically in
-[`ot-claude-loop`](../ot-claude-loop/SKILL.md) § The loop. Do not restate it here.
+[`ot-loop`](../ot-loop/SKILL.md) § The loop. Do not restate it here.
 
 ## Common operations
 

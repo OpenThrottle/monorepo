@@ -1778,7 +1778,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `lru-cache` | 10.4.3, 5.1.1 | ISC | [Isaac Z. Schlueter](https://github.com/isaacs/node-lru-cache#readme) |
 | `lru-cache` | 11.5.2 | BlueOak-1.0.0 | [Isaac Z. Schlueter](https://github.com/isaacs/node-lru-cache#readme) |
 | `lru-cache` | 2.2.4 | MIT | [Isaac Z. Schlueter](https://github.com/isaacs/node-lru-cache#readme) |
-| `lucide-react` | 1.28.0 | ISC | [Eric Fennis](https://lucide.dev) |
+| `lucide-react` | 1.29.0 | ISC | [Eric Fennis](https://lucide.dev) |
 | `luxon` | 3.7.2 | MIT | [Isaac Cambron](https://github.com/moment/luxon#readme) |
 | `lz-string` | 1.5.0 | MIT | [pieroxy](http://pieroxy.net/blog/pages/lz-string/index.html) |
 | `magic-string` | 0.25.9, 0.30.17, 0.30.21 | MIT | [Rich Harris](https://github.com/Rich-Harris/magic-string#readme) |

@@ -53,7 +53,7 @@ export const SkillDetail = (props: SkillDetailProps): React.ReactElement => {
           />
         </div>
       ) : (
-        <div className="ui-border bg-card rounded-lg border p-6">
+        <div className="bg-card ui-border rounded-lg border p-6">
           {content.length > 0 ? (
             <MarkdownRenderer source={content} />
           ) : (

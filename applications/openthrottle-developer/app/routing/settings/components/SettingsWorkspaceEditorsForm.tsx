@@ -5,7 +5,7 @@ import { ComputerIcon } from 'lucide-react';
 import { Form, useNavigation } from 'react-router';
 import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
 import { WorkspaceEditorId } from '~/__generated__/graphql';
-import { WorkspaceEditorAffiliateLinks } from '~/routing/settings/components/WorkspaceEditorAffiliateLinks';
+// import { WorkspaceEditorAffiliateLinks } from '~/routing/settings/components/WorkspaceEditorAffiliateLinks';
 import { WorkspaceEditorMultiSelect } from '~/routing/settings/components/WorkspaceEditorMultiSelect';
 import { WorkspaceEditorPresenceHints } from '~/routing/settings/components/WorkspaceEditorPresenceHints';
 import { WORKSPACE_SETTINGS_COPY } from '~/routing/settings/data/data.copy';
@@ -123,7 +123,7 @@ export const SettingsWorkspaceEditorsForm = (
             : WORKSPACE_SETTINGS_COPY.saveEditorsButton}
         </Button>
 
-        <WorkspaceEditorAffiliateLinks className="border-t pt-3" />
+        {/* <WorkspaceEditorAffiliateLinks className="border-t pt-3" /> */}
       </Form>
     </OpenThrottleFieldset>
   );

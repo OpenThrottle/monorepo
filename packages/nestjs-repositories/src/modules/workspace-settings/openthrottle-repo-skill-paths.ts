@@ -38,8 +38,8 @@ export const OPENTHROTTLE_REPO_SKILL_PATHS: readonly RepoSkillPathEntry[] = [
     slug: 'nx-workspace',
   },
   {
-    repoRelativePath: '.agents/skills/ot-claude-loop/SKILL.md',
-    slug: 'ot-claude-loop',
+    repoRelativePath: '.agents/skills/ot-loop/SKILL.md',
+    slug: 'ot-loop',
   },
   {
     repoRelativePath: '.agents/skills/ot-generators/SKILL.md',

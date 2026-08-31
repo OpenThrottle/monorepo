@@ -229,7 +229,7 @@ export default function Component(
                 sourceFilter={sourceFilter}
               />
               <SkillsTable
-                className="bg-card"
+                // className="bg-card"
                 entries={pageEntries}
                 isFiltered={isFiltered}
                 onAddTag={(slug, tag) =>

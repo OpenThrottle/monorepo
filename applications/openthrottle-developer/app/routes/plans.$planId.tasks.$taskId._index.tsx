@@ -127,6 +127,16 @@ export default function Component(
   const { loaderData, params } = props;
   const { task } = loaderData;
 
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
   // 🔌 Short Circuit
   if (task == null) {
     return (

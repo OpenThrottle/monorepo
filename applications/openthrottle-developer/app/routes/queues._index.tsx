@@ -106,7 +106,10 @@ export default function Component(
           searchPlaceholder="Search queues"
         />
 
-        <QueuesTable className="bg-card" queues={filteredQueues} />
+        <QueuesTable
+          // className="bg-card"
+          queues={filteredQueues}
+        />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 md:gap-8">

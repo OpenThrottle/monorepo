@@ -80,7 +80,7 @@ export const WORKSPACE_EDITOR_DEEP_LINKS: Record<
         : buildClaudeHref(
             new URLSearchParams({
               folder: `${workingDirectory}/`,
-              q: `/ot-claude-loop ${planId}`,
+              q: `/ot-loop ${planId}`,
             }),
           ),
     label: 'Claude Code',
@@ -94,7 +94,7 @@ export const WORKSPACE_EDITOR_DEEP_LINKS: Record<
     buildPlanHref: ({ planId }) =>
       `cursor://anysphere.cursor-deeplink/prompt?${toQueryString(
         new URLSearchParams({
-          text: `Run OpenThrottle plan ${planId} following .agents/skills/ot-claude-loop/SKILL.md`,
+          text: `Run OpenThrottle plan ${planId} following .agents/skills/ot-loop/SKILL.md`,
         }),
       )}`,
     label: 'Cursor',

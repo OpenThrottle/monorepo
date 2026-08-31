@@ -165,7 +165,10 @@ export const ChatComposer = (props: ChatComposerProps): React.ReactElement => {
 
   return (
     <form
-      className={clsx('flex shrink-0 flex-col gap-4 border-t pt-4', className)}
+      className={clsx(
+        'mt-4 flex shrink-0 flex-col gap-4 border-t pt-4',
+        className,
+      )}
       data-testid="ChatComposer"
       onSubmit={onFormSubmit}
     >

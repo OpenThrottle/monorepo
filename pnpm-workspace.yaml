@@ -248,7 +248,7 @@ catalog:
   'lint-staged': '^17.0.2'
   'lodash': '^4.17.21'
   'logform': '^2.7.0'
-  'lucide-react': '^1.7.0'
+  'lucide-react': '1.29.0'
   'memoize-one': '^6.0.0'
   'ml-distance': '^4.0.1'
   'monaco-editor': '^0.55.1'

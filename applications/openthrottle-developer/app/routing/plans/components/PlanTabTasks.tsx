@@ -48,7 +48,7 @@ export const PlanTabTasks = (_props: PlanTabTasksProps): React.ReactElement => {
 
   return (
     <TabsContent value="tasks">
-      <div className="bg-card border-card-border rounded-lg border">
+      <div className="border-card-border rounded-lg border">
         <DataTable<PlanTaskRowFragment, string | null | undefined>
           className="table-auto"
           columns={columns}

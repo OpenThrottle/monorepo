@@ -66,7 +66,7 @@ export const RepositoriesTable = (
 
   return (
     <div
-      className={clsx('bg-card ui-border rounded-lg border', className)}
+      className={clsx('ui-border rounded-lg border', className)}
       data-testid="RepositoriesTable"
     >
       <DataTable<RepositoryCheckoutRow, string | null | undefined>

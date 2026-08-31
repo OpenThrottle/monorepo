@@ -174,7 +174,7 @@ export default function Component(
               view={view}
             />
             <PlansTable
-              className="bg-card"
+              // className="bg-card"
               plans={plans}
               statusFilterUrls={statusFilterUrls}
             />

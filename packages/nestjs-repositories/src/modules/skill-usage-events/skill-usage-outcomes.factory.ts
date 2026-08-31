@@ -43,7 +43,7 @@ export const skillUsageOutcomesFactory =
       sessionId: faker.string.uuid(),
       skillName: faker.helpers.arrayElement([
         'github-commit',
-        'ot-claude-loop',
+        'ot-loop',
         'ot-plans',
       ]),
       toolUseId: null,

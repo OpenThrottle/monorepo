@@ -88,7 +88,7 @@ export const SkillDetailUsage = (
   }
 
   return (
-    <div className={clsx('mt-8', className)} data-testid="SkillDetailUsage">
+    <div className={clsx(className)} data-testid="SkillDetailUsage">
       {header}
       <p className="text-muted-foreground mb-4 text-sm">
         {SKILL_USAGE_DETAIL_COPY.intro(rangeDays)}

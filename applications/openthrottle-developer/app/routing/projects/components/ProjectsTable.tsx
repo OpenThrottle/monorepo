@@ -39,7 +39,7 @@ export const ProjectsTable = (
 
   return (
     <div
-      className={clsx('bg-card ui-border rounded-lg border', className)}
+      className={clsx('ui-border rounded-lg border', className)}
       data-testid="ProjectsTable"
     >
       <DataTable<ProjectCardFragment, string | null | undefined>

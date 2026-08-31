@@ -126,7 +126,7 @@ export default function Component(
               <div className="flex flex-col gap-4">
                 <ScheduleToolbar />
                 <ScheduleTable
-                  className="bg-card"
+                  // className="bg-card"
                   inFlightByJob={inFlightByJob}
                   jobs={jobs}
                 />
