@@ -961,6 +961,20 @@ export type DiscoverLocalModelsResult = {
   totalCount: Scalars['Int']['output'];
 };
 
+export type DiscoverRemoteModelsResult = {
+  __typename?: 'DiscoverRemoteModelsResult';
+  /** True when an operator API key is configured, so the provider can serve chat turns. False means the catalog may still list models (OpenRouter serves it unauthenticated) but no turn can be started. The key itself is never exposed. */
+  configured: Scalars['Boolean']['output'];
+  /** ISO-8601 timestamp of when this catalog snapshot was fetched. */
+  fetchedAt: Scalars['String']['output'];
+  /** Models sorted by id and de-duplicated. Empty when the gateway is unreachable — never an error. */
+  models: Array<RemoteModelObject>;
+  /** Remote catalog provider id (openrouter). */
+  provider: Scalars['String']['output'];
+  /** Number of models in the catalog. */
+  totalCount: Scalars['Int']['output'];
+};
+
 /** A folder found under a configured workspace root (server-host path) that looks like a git repository. */
 export type DiscoveredFolderObject = {
   __typename?: 'DiscoveredFolderObject';
@@ -2947,6 +2961,8 @@ export type Query = {
   discoverAgentClis: DiscoverAgentClisResult;
   /** Discover locally-running OpenAI-compatible model servers (Ollama-primary) and the models they serve. Returns a cached snapshot (60s TTL); does not scan per request. */
   discoverLocalModels: DiscoverLocalModelsResult;
+  /** List the models a remote gateway (OpenRouter) can route to. Returns a cached snapshot (~1h TTL); does not call the gateway per request. Returns an empty list rather than an error when the gateway is unreachable or unconfigured. */
+  discoverRemoteModels: DiscoverRemoteModelsResult;
   /** Git repositories found one level under the configured workspace roots (server-host paths); empty when OPENTHROTTLE_WORKSPACE_ROOTS is unset. */
   discoveredFolders: Array<DiscoveredFolderObject>;
   /** Git worktrees that exist on disk for the authenticated user's repositories, whether or not OpenThrottle provisioned them, each classified RUNNING / DIRTY / IDLE. Read-only: nothing here creates, prunes or removes a worktree. Runs live on every request and never throws — an unreadable root or a failed git probe becomes a warning on the payload. */
@@ -3787,6 +3803,18 @@ export type RegisterResultObject = {
 export type RemainingTasksByPlanIdInput = {
   /** Plan id; returns tasks with status in PENDING, IN_PROGRESS, BLOCKED */
   planId: Scalars['ID']['input'];
+};
+
+export type RemoteModelObject = {
+  __typename?: 'RemoteModelObject';
+  /** Maximum context window in tokens, as advertised by the provider. */
+  contextLength: Scalars['Int']['output'];
+  /** Provider-scoped model slug, e.g. anthropic/claude-sonnet-5. */
+  id: Scalars['String']['output'];
+  /** Human-readable label, e.g. "Anthropic: Claude Sonnet 5". */
+  name: Scalars['String']['output'];
+  /** Remote catalog that published this model (openrouter). */
+  provider: Scalars['String']['output'];
 };
 
 export type RemovePermissionFromRoleInput = {

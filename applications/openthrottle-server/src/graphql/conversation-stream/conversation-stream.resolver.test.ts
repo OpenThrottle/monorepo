@@ -4,7 +4,10 @@ import {
   AUTH_PRINCIPAL_KIND_USER,
   type AuthPrincipal,
 } from '@openthrottle/nestjs-auth';
-import { NestjsModelDiscoveryService } from '@openthrottle/nestjs-model-discovery';
+import {
+  NestjsModelDiscoveryService,
+  NestjsRemoteModelsService,
+} from '@openthrottle/nestjs-model-discovery';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   agentConversationMessagesFactory,
@@ -71,6 +74,7 @@ function build(): {
   conversations: AgentConversationsService;
   modelDiscovery: NestjsModelDiscoveryService;
   personaFindOne: ReturnType<typeof vi.fn>;
+  remoteModels: NestjsRemoteModelsService;
   repositories: WorkspaceLocalRepositoriesService;
   resolver: ConversationStreamResolver;
   streamService: ConversationStreamService;
@@ -96,6 +100,19 @@ function build(): {
   const modelDiscovery = createMock<NestjsModelDiscoveryService>({
     discover: vi.fn().mockResolvedValue(discovery),
   });
+  // OpenRouter defaults to UNCONFIGURED so every existing case is unaffected;
+  // the openrouter tests below override both methods.
+  const remoteModels = createMock<NestjsRemoteModelsService>({
+    catalog: vi.fn().mockResolvedValue({
+      catalog: {
+        fetchedAt: '2026-08-29T00:00:00.000Z',
+        models: [],
+        provider: 'openrouter',
+      },
+      configured: false,
+    }),
+    chatCredentials: vi.fn().mockReturnValue(null),
+  });
   const repositories = createMock<WorkspaceLocalRepositoriesService>({
     findByIdForUser: vi.fn().mockResolvedValue(null),
   });
@@ -118,6 +135,7 @@ function build(): {
     customPrompts,
     logger,
     modelDiscovery,
+    remoteModels,
     repositories,
     streamService,
   );
@@ -127,6 +145,7 @@ function build(): {
     conversations,
     modelDiscovery,
     personaFindOne,
+    remoteModels,
     repositories,
     resolver,
     streamService,
@@ -674,6 +693,123 @@ describe('ConversationStreamResolver.startConversationStream', () => {
 
     expect(result.errorMessage).toBe('Repository not found.');
     expect(streamService.start).not.toHaveBeenCalled();
+  });
+
+  it('routes an openrouter backend with server-resolved credentials the client never supplied', async () => {
+    const { remoteModels, resolver, streamService } = build();
+    vi.mocked(remoteModels.chatCredentials).mockReturnValue({
+      apiKey: 'sk-or-v1-server-side',
+      baseUrl: 'https://openrouter.ai/api/v1',
+      headers: { 'X-OpenRouter-Title': 'OpenThrottle' },
+    });
+    vi.mocked(remoteModels.catalog).mockResolvedValue({
+      catalog: {
+        fetchedAt: '2026-08-29T00:00:00.000Z',
+        models: [
+          {
+            contextLength: 200_000,
+            id: 'anthropic/claude-sonnet-5',
+            name: 'Anthropic: Claude Sonnet 5',
+            provider: 'openrouter',
+          },
+        ],
+        provider: 'openrouter',
+      },
+      configured: true,
+    });
+
+    const result = await resolver.startConversationStream(human, {
+      backend: 'openrouter',
+      baseUrl: null,
+      conversationId: null,
+      message: 'hello',
+      modelId: 'anthropic/claude-sonnet-5',
+    });
+
+    expect(result.errorMessage).toBeNull();
+    expect(streamService.start).toHaveBeenCalledWith(
+      expect.objectContaining({
+        apiKey: 'sk-or-v1-server-side',
+        backend: 'openrouter',
+        baseUrl: 'https://openrouter.ai/api/v1',
+        cwd: null,
+        headers: { 'X-OpenRouter-Title': 'OpenThrottle' },
+        model: 'anthropic/claude-sonnet-5',
+        // OpenRouter advertises no reasoning control, so nothing is routed.
+        reasoning: null,
+      }),
+    );
+  });
+
+  it('surfaces a clear, non-throwing error when OpenRouter is unconfigured', async () => {
+    const { resolver, streamService } = build();
+
+    const result = await resolver.startConversationStream(human, {
+      backend: 'openrouter',
+      baseUrl: null,
+      conversationId: null,
+      message: 'hello',
+      modelId: 'anthropic/claude-sonnet-5',
+    });
+
+    expect(result.errorMessage).toMatch(/OPENROUTER_API_KEY/);
+    expect(streamService.start).not.toHaveBeenCalled();
+  });
+
+  it('rejects an openrouter model absent from the catalog', async () => {
+    const { remoteModels, resolver, streamService } = build();
+    vi.mocked(remoteModels.chatCredentials).mockReturnValue({
+      apiKey: 'sk-or-v1-server-side',
+      baseUrl: 'https://openrouter.ai/api/v1',
+      headers: {},
+    });
+
+    const result = await resolver.startConversationStream(human, {
+      backend: 'openrouter',
+      baseUrl: null,
+      conversationId: null,
+      message: 'hello',
+      modelId: 'made/up-model',
+    });
+
+    expect(result.errorMessage).toMatch(/Unknown OpenRouter model/);
+    expect(streamService.start).not.toHaveBeenCalled();
+  });
+
+  it('does not gate the openrouter HTTP path on agent enablement', async () => {
+    const { agentIsEnabled, remoteModels, resolver } = build();
+    agentIsEnabled.mockResolvedValue(false);
+    vi.mocked(remoteModels.chatCredentials).mockReturnValue({
+      apiKey: 'sk-or-v1-server-side',
+      baseUrl: 'https://openrouter.ai/api/v1',
+      headers: {},
+    });
+    vi.mocked(remoteModels.catalog).mockResolvedValue({
+      catalog: {
+        fetchedAt: '2026-08-29T00:00:00.000Z',
+        models: [
+          {
+            contextLength: 200_000,
+            id: 'anthropic/claude-sonnet-5',
+            name: 'Anthropic: Claude Sonnet 5',
+            provider: 'openrouter',
+          },
+        ],
+        provider: 'openrouter',
+      },
+      configured: true,
+    });
+
+    const result = await resolver.startConversationStream(human, {
+      backend: 'openrouter',
+      baseUrl: null,
+      conversationId: null,
+      message: 'hello',
+      modelId: 'anthropic/claude-sonnet-5',
+    });
+
+    expect(result.errorMessage).toBeNull();
+    expect(agentIsEnabled).not.toHaveBeenCalled();
   });
 
   it('rejects an unsupported backend (allowlist enforcement)', async () => {

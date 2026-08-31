@@ -3,11 +3,13 @@ import type {
   ChatModelOption,
   ChatPersonaOption,
 } from '@openthrottle/react-router-chat';
+import { isShortlistedOpenRouterModel } from '../config/openrouter-shortlist';
 import {
   cliGroupId,
   encodeCliEndpointOptionId,
   encodeCliOptionId,
   encodeModelOptionId,
+  OPENROUTER_GROUP_ID,
   openaiGroupId,
 } from './chat-model-option';
 
@@ -98,6 +100,27 @@ export interface DiscoveredAgentCli {
 /** The `discoverAgentClis` payload the mappers read. @public */
 export interface DiscoveredAgentClis {
   readonly agents: readonly DiscoveredAgentCli[];
+}
+
+/**
+ * One model published by a remote gateway catalog. Structural subset of the
+ * app-generated `discoverRemoteModels` model row.
+ * @public
+ */
+export interface DiscoveredRemoteModel {
+  readonly contextLength: number;
+  readonly id: string;
+  readonly name: string;
+}
+
+/** The `discoverRemoteModels` payload the mappers read. @public */
+export interface DiscoveredRemoteModels {
+  /**
+   * Whether an operator key is configured. The catalog is public, so models can
+   * be present with `configured: false` — browsable but unable to serve a turn.
+   */
+  readonly configured: boolean;
+  readonly models: readonly DiscoveredRemoteModel[];
 }
 
 /**
@@ -296,16 +319,66 @@ export function toDriverEndpointChatOptions(
 }
 
 /**
- * Derive all three composer model lists from the two (independently nullable)
- * discovery payloads: local models, agent CLIs, and the driver×local-endpoint
- * join. Each list degrades to `[]` independently on a discovery gap; the
- * driver×endpoint join needs both payloads. Concatenation order is
- * `[...local, ...agents, ...driverEndpoint]`.
+ * Map a remote gateway catalog into composer toolbar options, all under the
+ * gateway's own rail group (id `openrouter`, matching the backend discriminator
+ * so the toolbar reads OpenRouter's capability descriptor).
+ *
+ * When the server reports `configured: false` this returns NOTHING: the key is
+ * an operator setting, so a turn cannot be started and offering unselectable
+ * rows would only invite a failed submit. This matches how the composer already
+ * treats an empty local-endpoint list — the group simply is not there. (The
+ * catalog is public and does load unauthenticated, which is why an explicit
+ * `configured` check is needed rather than relying on an empty list.)
+ *
+ * Each option is flagged `shortlist` per {@link isShortlistedOpenRouterModel},
+ * which is what lets the picker collapse a few-hundred-entry group to a
+ * readable default until the user searches.
+ * @public
+ */
+export function toRemoteChatOptions(
+  discovery: DiscoveredRemoteModels,
+): ChatModelOption[] {
+  if (!discovery.configured) {
+    return [];
+  }
+
+  // One pass, one counter map: the per-vendor caps fill in catalog order.
+  const shortlistCounts = new Map<string, number>();
+
+  return discovery.models.map((model) => ({
+    description: `OpenRouter · ${formatContextLength(model.contextLength)} context`,
+    groupId: OPENROUTER_GROUP_ID,
+    id: encodeCliOptionId(OPENROUTER_GROUP_ID, model.id),
+    label: model.name,
+    shortlist: isShortlistedOpenRouterModel(model.id, shortlistCounts),
+    subLabel: model.id,
+  }));
+}
+
+/** Render a context window compactly (`200K`, `1M`) for the row description. */
+function formatContextLength(tokens: number): string {
+  if (tokens >= 1_000_000) {
+    return `${Math.round(tokens / 100_000) / 10}M`;
+  }
+  if (tokens >= 1_000) {
+    return `${Math.round(tokens / 1_000)}K`;
+  }
+
+  return String(tokens);
+}
+
+/**
+ * Derive every composer model list from the (independently nullable) discovery
+ * payloads: local models, agent CLIs, the driver×local-endpoint join, and the
+ * remote gateway catalog. Each list degrades to `[]` independently on a
+ * discovery gap; the driver×endpoint join needs both of its payloads.
+ * Concatenation order is `[...local, ...agents, ...driverEndpoint, ...remote]`.
  * @public
  */
 export function composeModelOptions(
   localModels: DiscoveredLocalModels | null,
   agents: DiscoveredAgentClis | null,
+  remoteModels: DiscoveredRemoteModels | null = null,
 ): ChatModelOption[] {
   return [
     ...(localModels ? toChatModelOptions(localModels) : []),
@@ -313,6 +386,7 @@ export function composeModelOptions(
     ...(agents && localModels
       ? toDriverEndpointChatOptions(agents, localModels)
       : []),
+    ...(remoteModels ? toRemoteChatOptions(remoteModels) : []),
   ];
 }
 

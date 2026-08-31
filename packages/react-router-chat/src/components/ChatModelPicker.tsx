@@ -60,7 +60,10 @@ export interface ChatModelPickerProps {
  * active state; the right panel is a searchable, scrolling list showing only the
  * active group's models (label, optional muted sub-label, `⌘N` shortcut hint,
  * optional favorite toggle, selected check). Search filters within the active
- * group only. Selection, favoriting, and content are driven entirely by props —
+ * group only. A group whose options flag `shortlist` opens collapsed to just
+ * those (plus the selected model), with a `+N more` hint; typing reveals the
+ * whole group — this is what keeps a several-hundred-model gateway catalog
+ * usable without changing any group that flags nothing. Selection, favoriting, and content are driven entirely by props —
  * the package hardcodes no models. Capability gating (which rows are selectable)
  * is expressed via {@link disabledModelIds}.
  *
@@ -189,6 +192,14 @@ export const ChatModelPicker = (
                   />
                 ))
               : null}
+            {activeGroup != null && activeGroup.hiddenCount > 0 ? (
+              <div
+                className="text-muted-foreground px-2 py-2 text-center text-xs"
+                data-testid="ChatModelPicker-shortlist-hint"
+              >
+                {`+${activeGroup.hiddenCount} more — search to see all`}
+              </div>
+            ) : null}
           </CommandList>
         </Command>
       </PopoverContent>

@@ -47,6 +47,14 @@ export function openaiGroupId(providerOrHost: string): string {
 }
 
 /**
+ * Rail group id for the OpenRouter catalog. It matches the backend
+ * discriminator, exactly like {@link cliGroupId} — OpenRouter is not a CLI, but
+ * it IS its own provider rail entry, so the id scheme is deliberately the same.
+ * @public
+ */
+export const OPENROUTER_GROUP_ID = 'openrouter';
+
+/**
  * Group id for an agent CLI's rail entry: the bare driver backend id (`claude`,
  * `codex`, `cursor`, `grok`, `opencode`). Each CLI is its own picker group so it
  * gets a dedicated rail icon. Kept as a named helper (mirroring
@@ -204,13 +212,19 @@ export function buildModelGroups(
       continue;
     }
 
+    // OpenRouter is named explicitly: its rows carry the model SLUG as their
+    // subLabel (useful per row, meaningless as a group name), so the generic
+    // subLabel fallback below would label the whole group after whichever model
+    // happened to sort first.
     const label = groupId.startsWith(OPENAI_GROUP_PREFIX)
       ? groupId.slice(OPENAI_GROUP_PREFIX.length)
       : groupId === CLI_MODEL_GROUP_ID
         ? 'Agent CLIs'
-        : model.subLabel != null && model.subLabel !== ''
-          ? model.subLabel
-          : groupId;
+        : groupId === OPENROUTER_GROUP_ID
+          ? 'OpenRouter'
+          : model.subLabel != null && model.subLabel !== ''
+            ? model.subLabel
+            : groupId;
 
     groups.set(groupId, {
       icon: resolveProviderIcon(groupId),

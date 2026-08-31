@@ -34,6 +34,8 @@ Copy defaults into local env files (gitignored):
 
 **Auth (default):** MCP and workers need long-lived **service account** tokens (`ot_sa_…`), not human JWTs. See [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md).
 
+**Chat models (optional):** OpenThrottle finds locally-running OpenAI-compatible servers (Ollama, LM Studio, …) with no configuration at all. To also offer hundreds of hosted models through one gateway, set `OPENROUTER_API_KEY` (get one at <https://openrouter.ai/keys>). It is entirely optional: unset, OpenRouter simply cannot serve a chat turn — nothing throws and nothing else is blocked. The key is **server-side only** — it never reaches a browser bundle, the GraphQL schema, or a loader payload. Optional companions: `OPENROUTER_BASE_URL`, and `OPENROUTER_APP_TITLE` / `OPENROUTER_SITE_URL` for attribution on openrouter.ai's rankings.
+
 **Embeddings:** Configure `OPENAI_API_KEY` or `OLLAMA_BASE_URL` on `applications/openthrottle-server/.env` (not required in root `.env` for the MCP launcher). [`scripts/run-openthrottle-mcp.sh`](../../scripts/run-openthrottle-mcp.sh) starts the MCP without a root OpenAI key. Ollama-only path: [Ollama.md § MCP launcher and embeddings](../monorepo/Ollama.md#mcp-launcher-and-embeddings).
 
 ---

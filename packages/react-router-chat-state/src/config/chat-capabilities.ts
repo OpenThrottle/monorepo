@@ -62,6 +62,31 @@ export const OPENAI_BACKEND_CAPABILITIES: ChatBackendCapabilities = {
   supportsModelFlag: true,
 };
 
+/**
+ * OpenRouter: an authenticated REMOTE gateway speaking the OpenAI wire protocol.
+ * Like the local endpoints it has no repository, no permission surface and no
+ * service tier — but unlike them it advertises NO reasoning levels.
+ *
+ * That is deliberate, not an oversight. Reasoning support on OpenRouter is a
+ * property of the routed MODEL, not of the gateway: of the 396 models in the
+ * live catalog (verified 2026-08-29) only 133 advertise `reasoning_effort`, and
+ * those that do accept different subsets of
+ * `minimal | none | low | medium | high | max | xhigh`. Advertising a fixed
+ * triple here would claim a control that silently vanishes on two thirds of the
+ * catalog, breaking the advertised==honored contract this file is one half of.
+ * A per-model reasoning control is a follow-up, driven off the catalog's own
+ * `supported_parameters`.
+ * @public
+ */
+export const OPENROUTER_BACKEND_CAPABILITIES: ChatBackendCapabilities = {
+  maxRepositories: SINGLE_REPOSITORY_CAP,
+  permissionModes: [],
+  reasoningLevels: [],
+  requiresRepository: false,
+  serviceTiers: [],
+  supportsModelFlag: true,
+};
+
 /** All three composer permission postures, in UI order. */
 const ALL_PERMISSION_MODES: readonly ChatPermissionMode[] = [
   ChatPermissionMode.supervised,
@@ -212,6 +237,14 @@ export function capabilitiesForChatOption(
 ): ChatBackendCapabilities {
   if (decoded == null || decoded.backend === 'openai') {
     return OPENAI_BACKEND_CAPABILITIES;
+  }
+
+  // Branch explicitly rather than adding an entry to CHAT_BACKEND_CAPABILITIES:
+  // that map is keyed by DRIVER id and openrouter is a gateway, not a CLI. An
+  // entry there would also let it fall through to DEFAULT_CLI_BACKEND_CAPABILITIES
+  // on a typo, which would wrongly mark it repository-required.
+  if (decoded.backend === 'openrouter') {
+    return OPENROUTER_BACKEND_CAPABILITIES;
   }
 
   return (

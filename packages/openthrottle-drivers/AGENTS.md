@@ -41,12 +41,14 @@ Grok, OpenCode). Each CLI is one `defineDriver(...)` module; a shared engine
 - Built package (real `build`/`build-package`, `exports` → `dist/`) — server consumes
   it at runtime, so relative imports use `.ts` extensions. Tag public API `@public`.
 
-## Local-endpoint targeting (`DriverInvocationConfig.endpoint`)
+## Endpoint targeting (`DriverInvocationConfig.endpoint`)
 
-A driver can be pointed at a discovered local OpenAI-compatible model server
-(Ollama/LM Studio/vLLM, from `discoverLocalModels`) instead of its own cloud
-provider. Set `endpoint: { baseUrl, provider?, apiKey?, configFilePath? }` and
-read `capabilities.supportsCustomBaseUrl` to feature-detect.
+A driver can be pointed at an OpenAI-compatible endpoint other than its own cloud
+provider: a discovered LOCAL model server (Ollama/LM Studio/vLLM, from
+`discoverLocalModels`) or a REMOTE authenticated gateway (OpenRouter). Set
+`endpoint: { baseUrl, kind?, provider?, apiKey?, configFilePath? }` and read
+`capabilities.supportsCustomBaseUrl` to feature-detect. `kind` defaults to
+`local`, so existing callers are unchanged.
 
 - **opencode / codex / grok** advertise `supportsCustomBaseUrl: true`; **claude /
   cursor / gemini** advertise `false` and ignore `endpoint` (their wire protocols
@@ -58,6 +60,14 @@ read `capabilities.supportsCustomBaseUrl` to feature-detect.
 model_providers.oss.base_url="<baseUrl>"`; opencode → `OPENCODE_CONFIG=<path>`
   (the config **file is materialized by the consumer** and passed as
   `endpoint.configFilePath` — the leaf builder never writes files).
+- **Remote gateways** (`kind: 'remote'`) reach only opencode and codex — grok has no
+  base-url flag at all. opencode needs no code branch: OpenCode ships a native
+  `openrouter` provider, so only the materialized file's CONTENTS change and models
+  are addressed as `openrouter/<vendor>/<slug>`. codex needs its own
+  `[model_providers.openthrottle_remote]` table with `wire_api = "responses"` —
+  0.145.0 REJECTS `wire_api = "chat"` at config load, and `--oss` cannot be reused
+  because it owns an ollama/lmstudio wire adapter. See README.md § Endpoint targeting
+  for the verified matrix and the `CODEX_HOME` auth-shadowing caveat.
 - `model` carries the discovered model id (opencode expects `provider/model`).
 - The streaming chat path has a parallel implementation in
   `@openthrottle/openthrottle-agentic-utils` conversation-backend adapters (honoring

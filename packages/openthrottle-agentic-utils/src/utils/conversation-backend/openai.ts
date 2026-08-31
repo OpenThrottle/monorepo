@@ -50,7 +50,9 @@ async function* streamOpenAi(
   }
 
   for await (const chunk of streamChatCompletion({
+    apiKey: run.apiKey,
     baseUrl: run.baseUrl,
+    headers: run.headers,
     // openai has no file tools, so the @-mentioned paths ride as a leading
     // system message rather than a tool-actionable reference list.
     messages: withFileMentionsMessage(run.messages, run.fileMentions),
@@ -58,10 +60,17 @@ async function* streamOpenAi(
     reasoningEffort: reasoningEffort(run.reasoning),
     signal: run.signal,
   })) {
+    // Token accounting rides the TERMINAL chunk as metadata, the same shape
+    // claude and cursor-agent use — the server re-emits any terminal metadata as
+    // a discrete usage chunk, so this flows to both the live stream and the
+    // persisted `agent_token_usage` row with no server-side special-casing.
     yield {
       delta: chunk.delta,
       done: chunk.done,
       kind: CONVERSATION_STREAM_CHUNK_KINDS.text,
+      ...(chunk.usage === undefined
+        ? {}
+        : { metadata: { usage: chunk.usage } }),
     };
   }
 }

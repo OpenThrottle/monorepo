@@ -287,3 +287,65 @@ describe('formatUsageCost', () => {
     expect(formatUsageCost(Number.NaN)).toBeUndefined();
   });
 });
+
+describe('normalizeUsage: OpenRouter', () => {
+  /** The terminal `usage` block OpenRouter documents, verified 2026-08-29. */
+  const OPENROUTER_USAGE = {
+    usage: {
+      completion_tokens: 214,
+      completion_tokens_details: { reasoning_tokens: 96 },
+      cost: 0.00431,
+      cost_details: { upstream_inference_cost: 0.00402 },
+      prompt_tokens: 1290,
+      prompt_tokens_details: { cache_write_tokens: 64, cached_tokens: 1024 },
+      total_tokens: 1504,
+    },
+  };
+
+  it('reads the flat OpenAI-shaped counts', () => {
+    expect(normalizeUsage(OPENROUTER_USAGE)).toMatchObject({
+      inputTokens: 1290,
+      outputTokens: 214,
+      totalTokens: 1504,
+    });
+  });
+
+  it('reads the nested cache and reasoning breakdowns', () => {
+    // These sit one level deeper than the flat fields every other backend uses,
+    // so without explicit handling they would silently normalize to nothing.
+    expect(normalizeUsage(OPENROUTER_USAGE)).toMatchObject({
+      cacheReadTokens: 1024,
+      cacheWriteTokens: 64,
+      reasoningTokens: 96,
+    });
+  });
+
+  it('prefers the charged cost over the upstream figure', () => {
+    expect(normalizeUsage(OPENROUTER_USAGE).costUsd).toBe(0.00431);
+  });
+
+  it('falls back to the upstream cost when the charged cost is absent', () => {
+    expect(
+      normalizeUsage({
+        usage: { cost_details: { upstream_inference_cost: 0.00402 } },
+      }).costUsd,
+    ).toBe(0.00402);
+  });
+
+  it('degrades a usage block with no counts to an empty normalization', () => {
+    expect(normalizeUsage({ usage: {} })).toEqual({});
+    expect(hasUsageCounts(normalizeUsage({ usage: {} }))).toBe(false);
+  });
+
+  it('ignores malformed nested detail objects instead of throwing', () => {
+    expect(
+      normalizeUsage({
+        usage: {
+          completion_tokens_details: 'nope',
+          prompt_tokens: 10,
+          prompt_tokens_details: null,
+        },
+      }),
+    ).toEqual({ inputTokens: 10, totalTokens: 10 });
+  });
+});

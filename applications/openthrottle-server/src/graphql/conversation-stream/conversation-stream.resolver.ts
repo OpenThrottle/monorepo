@@ -22,7 +22,10 @@ import {
   CurrentUser,
   Public,
 } from '@openthrottle/nestjs-auth';
-import { NestjsModelDiscoveryService } from '@openthrottle/nestjs-model-discovery';
+import {
+  NestjsModelDiscoveryService,
+  NestjsRemoteModelsService,
+} from '@openthrottle/nestjs-model-discovery';
 import {
   AGENT_CONVERSATION_MESSAGE_ROLES,
   type AgentConversationMessage,
@@ -106,6 +109,16 @@ const resolveHumanUserId = (
  * in lockstep with the `CONVERSATION_CLI_BACKENDS` routing registry.
  */
 const OPENAI_BACKEND = 'openai';
+/**
+ * The OpenRouter gateway discriminator. Like `openai` it routes to the HTTP
+ * completion path rather than a spawned CLI, so it is NOT in
+ * `CONVERSATION_CLI_BACKENDS` and is never gated by the per-agent CLI
+ * preferences — but unlike `openai` its endpoint and credentials come from
+ * server config, never from the client.
+ */
+const OPENROUTER_BACKEND = 'openrouter';
+/** The two non-CLI HTTP backends, neither of which is an agent CLI. */
+const HTTP_BACKENDS = new Set<string>([OPENAI_BACKEND, OPENROUTER_BACKEND]);
 const CURSOR_BACKEND = 'cursor';
 const CLAUDE_BACKEND = 'claude';
 const CLI_BACKENDS = new Set<string>(
@@ -160,10 +173,17 @@ interface ResolvedBackendRun {
    * container-translated. Context only — the agent still runs in `cwd`.
    */
   readonly additionalDirectories: readonly string[];
+  /**
+   * Bearer token for an authenticated HTTP gateway. Resolved from SERVER config
+   * only — never from client input — and never persisted or echoed back.
+   */
+  readonly apiKey: string | null;
   readonly baseUrl: string | null;
   readonly cwd: string | null;
   /** @-mentioned workspace-relative paths for structured context injection; empty when none. */
   readonly fileMentions: readonly string[];
+  /** Extra request headers for an HTTP gateway (attribution); null when none. */
+  readonly headers: Readonly<Record<string, string>> | null;
   /** Extra env the CLI child must pass through (OT MCP token + API URLs); null when no MCP is configured. */
   readonly mcpEnv: Readonly<Record<string, string>> | null;
   /** Managed MCP servers (canonical `.mcp.json` schema); null when none apply to this checkout. */
@@ -209,6 +229,7 @@ export class ConversationStreamResolver {
     private readonly customPrompts: CustomPromptsService,
     private readonly logger: LoggerService,
     private readonly modelDiscovery: NestjsModelDiscoveryService,
+    private readonly remoteModels: NestjsRemoteModelsService,
     private readonly repositories: WorkspaceLocalRepositoriesService,
     private readonly streamService: ConversationStreamService,
   ) {}
@@ -275,13 +296,13 @@ export class ConversationStreamResolver {
     }
 
     const backend = (input.backend ?? OPENAI_BACKEND).trim() || OPENAI_BACKEND;
-    if (backend !== OPENAI_BACKEND && !CLI_BACKENDS.has(backend)) {
+    if (!HTTP_BACKENDS.has(backend) && !CLI_BACKENDS.has(backend)) {
       return failed(`Unsupported backend: ${backend}.`);
     }
 
     // Per-user gate: a CLI backend the user disabled on /settings/agents cannot be
-    // started (the openai HTTP path is not an agent CLI, so it is never gated).
-    if (backend !== OPENAI_BACKEND) {
+    // started (the HTTP paths are not agent CLIs, so they are never gated).
+    if (!HTTP_BACKENDS.has(backend)) {
       if (!(await this.agentPreferences.isEnabled(userId, backend))) {
         return failed(
           `The ${backend} agent is disabled. Re-enable it on Settings › Setup to use it.`,
@@ -372,12 +393,14 @@ export class ConversationStreamResolver {
 
     this.streamService.start({
       additionalDirectories: resolved.additionalDirectories,
+      apiKey: resolved.apiKey,
       assistantMessageId,
       backend,
       baseUrl: resolved.baseUrl,
       conversationId,
       cwd: resolved.cwd,
       fileMentions: resolved.fileMentions,
+      headers: resolved.headers,
       mcpEnv: resolved.mcpEnv,
       mcpServers: resolved.mcpServers,
       messages,
@@ -442,11 +465,13 @@ export class ConversationStreamResolver {
 
       return {
         additionalDirectories: [],
+        apiKey: null,
         baseUrl: endpoint.baseUrl,
         cwd: null,
         // openai has no filesystem, but it still benefits from the referenced
         // paths as prompt context.
         fileMentions,
+        headers: null,
         mcpEnv: null,
         mcpServers: null,
         model: input.modelId,
@@ -455,6 +480,52 @@ export class ConversationStreamResolver {
         // Local endpoints honor reasoning best-effort; tier is a cloud-only
         // concept, so it is never routed here.
         reasoning,
+        resumeSession: false,
+        serviceTier: null,
+        sessionId: null,
+        systemPrompt: null,
+      };
+    }
+
+    if (backend === OPENROUTER_BACKEND) {
+      if (!input.modelId) {
+        return 'modelId is required for the openrouter backend.';
+      }
+
+      // The endpoint and the key come from SERVER config only — a client can
+      // never supply a baseUrl here, so there is no SSRF surface to guard.
+      const credentials = this.remoteModels.chatCredentials();
+      if (credentials === null) {
+        return 'OpenRouter is not configured on this server. Set OPENROUTER_API_KEY to enable it.';
+      }
+
+      // Same shape of guard as the openai path: only stream a model the server
+      // has actually seen in the catalog, so a typo fails fast and locally
+      // instead of as an opaque gateway error mid-stream.
+      const { catalog } = await this.remoteModels.catalog();
+      const known = catalog.models.some((model) => model.id === input.modelId);
+      if (!known) {
+        return 'Unknown OpenRouter model. Pick a model from the catalog.';
+      }
+
+      return {
+        additionalDirectories: [],
+        apiKey: credentials.apiKey,
+        baseUrl: credentials.baseUrl,
+        cwd: null,
+        // OpenRouter has no filesystem, but it still benefits from the
+        // referenced paths as prompt context.
+        fileMentions,
+        headers: credentials.headers,
+        mcpEnv: null,
+        mcpServers: null,
+        model: input.modelId,
+        permissionMode: null,
+        provider: OPENROUTER_BACKEND,
+        // Reasoning is deliberately NOT forwarded: OpenRouter honors it per
+        // MODEL (133 of 396 catalog entries), so the composer advertises no
+        // reasoning control for this backend and there is nothing to route.
+        reasoning: null,
         resumeSession: false,
         serviceTier: null,
         sessionId: null,
@@ -585,9 +656,13 @@ export class ConversationStreamResolver {
 
     return {
       additionalDirectories,
+      // CLI backends authenticate themselves (stored login / their own env), so
+      // the HTTP-gateway credential fields never apply to them.
+      apiKey: null,
       baseUrl: cliBaseUrl,
       cwd,
       fileMentions,
+      headers: null,
       mcpEnv,
       mcpServers: hasMcp ? managedMcp : null,
       model: input.modelId ?? '',

@@ -84,6 +84,44 @@ describe('opencode driver', () => {
     );
   });
 
+  it('targets a REMOTE gateway through the same OPENCODE_CONFIG mechanism', () => {
+    // OpenCode ships a native `openrouter` provider, so only the file CONTENTS
+    // differ from a local endpoint — the command shape is identical, which is
+    // why this driver needs no remote branch at all.
+    expect(
+      opencodeDriver.buildShellCommand(
+        config({
+          endpoint: {
+            apiKey: 'sk-or-v1-test',
+            baseUrl: 'https://openrouter.ai/api/v1',
+            configFilePath: '/tmp/oc/openrouter.json',
+            kind: 'remote',
+            provider: 'openrouter',
+          },
+          model: 'openrouter/anthropic/claude-sonnet-5',
+        }),
+      ),
+    ).toBe(
+      'OPENCODE_CONFIG=/tmp/oc/openrouter.json opencode run --auto "do the thing" --model openrouter/anthropic/claude-sonnet-5',
+    );
+  });
+
+  it('never puts a remote key on the command line (it lives in the config file)', () => {
+    const command = opencodeDriver.buildShellCommand(
+      config({
+        endpoint: {
+          apiKey: 'sk-or-v1-secret',
+          baseUrl: 'https://openrouter.ai/api/v1',
+          configFilePath: '/tmp/oc/openrouter.json',
+          kind: 'remote',
+        },
+        model: 'openrouter/anthropic/claude-sonnet-5',
+      }),
+    );
+
+    expect(command).not.toContain('sk-or-v1-secret');
+  });
+
   it('ignores an endpoint with no config file path (nothing to point at)', () => {
     expect(
       opencodeDriver.buildShellCommand(

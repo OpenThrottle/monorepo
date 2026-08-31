@@ -20,6 +20,10 @@
  * - opencode: `{ tokens: { total, input, output, reasoning, cache: { read, write } }, cost }`
  *   emitted mid-stream per `step_finish` (MULTIPLE per turn → summed via {@link sumUsage})
  * - openai / others: OpenAI-style `{ prompt_tokens, completion_tokens, total_tokens }` or absent
+ * - openrouter: the OpenAI shape PLUS `cost`, `cost_details.upstream_inference_cost`,
+ *   `prompt_tokens_details.{cached_tokens,cache_write_tokens}` and
+ *   `completion_tokens_details.reasoning_tokens` (nested one level deeper than the
+ *   flat fields every other backend uses)
  */
 
 import { isRecord } from '@openthrottle/nodejs-utils';
@@ -105,6 +109,15 @@ export const normalizeUsage = (input: unknown): NormalizedTokenUsage => {
   const usage = isRecord(meta.usage) ? meta.usage : {};
   const tokens = isRecord(meta.tokens) ? meta.tokens : {};
   const cache = isRecord(tokens.cache) ? tokens.cache : {};
+  // OpenRouter (and OpenAI itself) nest their cache and reasoning breakdowns one
+  // level deeper than the flat `usage.*` fields the other backends use.
+  const promptDetails = isRecord(usage.prompt_tokens_details)
+    ? usage.prompt_tokens_details
+    : {};
+  const completionDetails = isRecord(usage.completion_tokens_details)
+    ? usage.completion_tokens_details
+    : {};
+  const costDetails = isRecord(usage.cost_details) ? usage.cost_details : {};
 
   const inputTokens = firstNumber(
     usage.input_tokens,
@@ -130,17 +143,20 @@ export const normalizeUsage = (input: unknown): NormalizedTokenUsage => {
     usage.cacheReadTokens,
     usage.cached,
     cache.read,
+    promptDetails.cached_tokens,
   );
   const cacheWriteTokens = firstNumber(
     usage.cache_creation_input_tokens,
     usage.cacheCreationInputTokens,
     usage.cacheWriteTokens,
     cache.write,
+    promptDetails.cache_write_tokens,
   );
   const reasoningTokens = firstNumber(
     usage.reasoning_tokens,
     usage.reasoningTokens,
     tokens.reasoning,
+    completionDetails.reasoning_tokens,
   );
   const explicitTotal = firstNumber(
     usage.total_tokens,
@@ -155,7 +171,11 @@ export const normalizeUsage = (input: unknown): NormalizedTokenUsage => {
     meta.cost,
     usage.costUsd,
     usage.costUSD,
+    // OpenRouter's `usage.cost` is what the account was actually charged; the
+    // upstream provider's own figure sits in `cost_details` and is only used as
+    // a fallback, so the two are never conflated.
     usage.cost,
+    costDetails.upstream_inference_cost,
   );
   const model =
     asNonEmptyString(meta.model) ??

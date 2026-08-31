@@ -102,11 +102,17 @@ const BUFFER_MAX_CHUNKS = 5_000;
 export interface StartConversationStreamRun {
   /** Extra directories granted to a CLI beyond `cwd`; empty when none. */
   readonly additionalDirectories: readonly string[];
+  /**
+   * Bearer token for an authenticated HTTP gateway (openrouter). Resolved from
+   * SERVER config by the resolver — never client-supplied. Held only for the
+   * lifetime of the turn: never persisted, published, or logged.
+   */
+  readonly apiKey: string | null;
   /** Pre-allocated assistant message id (returned to the client by the mutation). */
   readonly assistantMessageId: string;
-  /** Backend discriminator (`openai` | `cursor`). */
+  /** Backend discriminator (`openai` | `openrouter` | a driver id). */
   readonly backend: string;
-  /** OpenAI-compatible base URL of the discovered endpoint (openai backend). */
+  /** OpenAI-compatible base URL: a discovered local endpoint, or the gateway root. */
   readonly baseUrl: string | null;
   /** Conversation the turn belongs to. */
   readonly conversationId: string;
@@ -114,6 +120,8 @@ export interface StartConversationStreamRun {
   readonly cwd: string | null;
   /** @-mentioned workspace-relative paths for structured context injection; empty when none. */
   readonly fileMentions: readonly string[];
+  /** Extra request headers for an HTTP gateway (attribution); null when none. */
+  readonly headers: Readonly<Record<string, string>> | null;
   /** Extra env a CLI child passes through (OT MCP token + API URLs); null when no MCP is configured. */
   readonly mcpEnv: Readonly<Record<string, string>> | null;
   /** Managed MCP servers (canonical `.mcp.json` schema) for a CLI backend; null when none apply. */
@@ -335,9 +343,11 @@ export class ConversationStreamService {
         run.additionalDirectories.length > 0
           ? run.additionalDirectories
           : undefined,
+      apiKey: run.apiKey ?? undefined,
       baseUrl: run.baseUrl ?? undefined,
       cwd: run.cwd ?? undefined,
       fileMentions: run.fileMentions.length > 0 ? run.fileMentions : undefined,
+      headers: run.headers ?? undefined,
       mcpEnv: run.mcpEnv ?? undefined,
       mcpServers: run.mcpServers ?? undefined,
       messages: run.messages,

@@ -112,6 +112,87 @@ describe('openAiConversationBackend', () => {
     expect(forwarded[1]).toEqual({ content: 'check it', role: 'user' });
   });
 
+  it('forwards an authenticated gateway apiKey and headers to streamChatCompletion', async () => {
+    streamChatCompletionMock.mockReturnValue(fakeStream(['ok']));
+
+    const stream = openAiConversationBackend.stream({
+      apiKey: 'sk-or-v1-test',
+      baseUrl: 'https://openrouter.ai/api/v1',
+      headers: { 'X-OpenRouter-Title': 'OpenThrottle' },
+      messages: [{ content: 'ping', role: 'user' }],
+      model: 'anthropic/claude-sonnet-5',
+    });
+    await stream[Symbol.asyncIterator]().next();
+
+    expect(streamChatCompletionMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        apiKey: 'sk-or-v1-test',
+        headers: { 'X-OpenRouter-Title': 'OpenThrottle' },
+      }),
+    );
+  });
+
+  it('leaves apiKey and headers undefined for an unauthenticated local endpoint', async () => {
+    streamChatCompletionMock.mockReturnValue(fakeStream(['ok']));
+
+    const stream = openAiConversationBackend.stream({
+      baseUrl: 'http://localhost:11434/v1',
+      messages: [{ content: 'ping', role: 'user' }],
+      model: 'llama3',
+    });
+    await stream[Symbol.asyncIterator]().next();
+
+    const forwarded = streamChatCompletionMock.mock.calls[0]?.[0];
+    expect(forwarded.apiKey).toBe(undefined);
+    expect(forwarded.headers).toBe(undefined);
+  });
+
+  it('maps terminal usage onto the chunk metadata the server persists', async () => {
+    const usage = { completion_tokens: 8, cost: 0.0001, prompt_tokens: 4 };
+    async function* withUsage(): AsyncGenerator<{
+      delta: string;
+      done: boolean;
+      usage?: Record<string, unknown>;
+    }> {
+      yield { delta: 'ok', done: false };
+      yield { delta: '', done: true, usage };
+    }
+    streamChatCompletionMock.mockReturnValue(withUsage());
+
+    const chunks = [];
+    for await (const chunk of openAiConversationBackend.stream({
+      baseUrl: 'https://openrouter.ai/api/v1',
+      messages: [{ content: 'hi', role: 'user' }],
+      model: 'anthropic/claude-sonnet-5',
+    })) {
+      chunks.push(chunk);
+    }
+
+    // Same terminal-metadata shape claude and cursor-agent use, so the server
+    // re-emits it as a discrete usage chunk with no special-casing.
+    expect(chunks.at(-1)).toEqual({
+      delta: '',
+      done: true,
+      kind: 'text',
+      metadata: { usage },
+    });
+  });
+
+  it('attaches no metadata when the provider reported no usage', async () => {
+    streamChatCompletionMock.mockReturnValue(fakeStream(['ok']));
+
+    const chunks = [];
+    for await (const chunk of openAiConversationBackend.stream({
+      baseUrl: 'http://localhost:11434/v1',
+      messages: [{ content: 'hi', role: 'user' }],
+      model: 'llama3',
+    })) {
+      chunks.push(chunk);
+    }
+
+    expect(chunks.at(-1)).toEqual({ delta: '', done: true, kind: 'text' });
+  });
+
   it('throws when baseUrl is missing rather than calling the SDK', async () => {
     await expect(async () => {
       for await (const _chunk of openAiConversationBackend.stream({

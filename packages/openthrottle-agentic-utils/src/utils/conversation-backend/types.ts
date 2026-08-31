@@ -222,6 +222,12 @@ export interface ConversationBackendRun {
    * only: the agent still RUNS in `cwd`.
    */
   readonly additionalDirectories?: readonly string[];
+  /**
+   * Bearer token for an authenticated OpenAI-compatible endpoint (e.g. an
+   * OpenRouter gateway key). Resolved server-side and never surfaced to a
+   * client. Ignored by the CLI backends, which authenticate their own way.
+   */
+  readonly apiKey?: string;
   /** OpenAI-compatible base URL; required by the openai backend. */
   readonly baseUrl?: string;
   /** Working directory the CLI runs in; required by CLI backends. */
@@ -234,6 +240,11 @@ export interface ConversationBackendRun {
    * ⇒ no injection. Honored by every backend that composes a prompt.
    */
   readonly fileMentions?: readonly string[];
+  /**
+   * Extra request headers for an OpenAI-compatible endpoint, e.g. a gateway's
+   * attribution headers. Ignored by the CLI backends.
+   */
+  readonly headers?: Readonly<Record<string, string>>;
   /**
    * Extra environment variables a CLI backend must pass through to the spawned
    * child (and, transitively, to its MCP servers) — the OT MCP auth token + API

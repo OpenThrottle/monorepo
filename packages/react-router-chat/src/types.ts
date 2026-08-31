@@ -260,6 +260,17 @@ export interface ChatModelOption {
    */
   readonly shortcut?: string;
   /**
+   * True when this model belongs to its group's collapsed shortlist. A group in
+   * which SOME model is flagged renders only the flagged ones until the user
+   * types in the search box; a group where none is flagged renders in full, so
+   * this is purely additive for every existing caller.
+   *
+   * Exists for catalogs far too large to scan — OpenRouter publishes several
+   * hundred routable models — where a flat list is worse than a curated opening
+   * few with the rest one keystroke away.
+   */
+  readonly shortlist?: boolean;
+  /**
    * Short muted sub-label rendered under {@link label} (e.g. `Codex`), used to
    * disambiguate same-named models across CLIs.
    */

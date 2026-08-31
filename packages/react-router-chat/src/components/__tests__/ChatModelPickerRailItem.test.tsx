@@ -12,6 +12,7 @@ import {
 } from '../../hooks/use-chat-model-picker';
 
 const GROUP: ResolvedGroup = {
+  hiddenCount: 0,
   id: 'claude',
   label: 'Claude Code',
   models: [],
