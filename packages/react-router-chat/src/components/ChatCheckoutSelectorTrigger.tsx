@@ -18,6 +18,12 @@ export interface ChatCheckoutSelectorTriggerProps extends Omit<
    * it. The trigger deliberately does no disambiguation of its own.
    */
   readonly label: string;
+  /**
+   * Icon-only presentation for dense host rows such as the plan-detail tabs
+   * row, where the full `owner/repo · branch` face would dominate. Defaults to
+   * false; the label moves into the accessible name rather than disappearing.
+   */
+  readonly minimal?: boolean;
   /** Count of context-only directories beyond the primary, rendered as `+N`. */
   readonly secondaryCount: number;
 }
@@ -39,7 +45,15 @@ export const ChatCheckoutSelectorTrigger = React.forwardRef<
   HTMLButtonElement,
   ChatCheckoutSelectorTriggerProps
 >((props, ref): React.ReactElement => {
-  const { branch, className, enabled, label, secondaryCount, ...rest } = props;
+  const {
+    branch,
+    className,
+    enabled,
+    label,
+    minimal = false,
+    secondaryCount,
+    ...rest
+  } = props;
 
   // Hooks
 
@@ -56,8 +70,14 @@ export const ChatCheckoutSelectorTrigger = React.forwardRef<
 
   return (
     <Button
-      aria-label="Checkout"
-      className={clsx('h-8 w-auto max-w-56 gap-1.5', className)}
+      // Icon-only drops every visible word, so the name the label was carrying
+      // has to move here or a screen reader hears "Checkout" and nothing else.
+      aria-label={minimal ? `Checkout: ${label}` : 'Checkout'}
+      className={clsx(
+        'h-8',
+        minimal ? 'w-8 p-0' : 'w-auto max-w-56 gap-1.5',
+        className,
+      )}
       data-testid="ChatCheckoutSelector-trigger"
       disabled={!enabled}
       ref={ref}
@@ -66,8 +86,8 @@ export const ChatCheckoutSelectorTrigger = React.forwardRef<
       {...rest}
     >
       <FolderGit2 className="size-4 shrink-0 opacity-70" />
-      <span className="truncate">{label}</span>
-      {secondaryCount > 0 ? (
+      {minimal ? null : <span className="truncate">{label}</span>}
+      {!minimal && secondaryCount > 0 ? (
         <span
           className="text-muted-foreground shrink-0 text-xs"
           data-testid="ChatCheckoutSelector-overflow"
@@ -75,7 +95,7 @@ export const ChatCheckoutSelectorTrigger = React.forwardRef<
           {`+${secondaryCount}`}
         </span>
       ) : null}
-      {hasBranch ? (
+      {!minimal && hasBranch ? (
         <span
           className="text-muted-foreground flex shrink-0 items-center gap-1 text-xs"
           data-testid="ChatCheckoutSelector-branch"
