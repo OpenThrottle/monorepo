@@ -158,6 +158,7 @@ export const RepositoriesSection = (
             </RepositoriesToolbar>
             <RepositoriesTable
               autoExpandedIds={autoExpandedIds}
+              // className="bg-card"
               driftByCheckoutId={driftByCheckoutId}
               isUnpopulated={isUnpopulated}
               rows={rows}

@@ -35,6 +35,7 @@ export const ScheduleTable = (
   return (
     <div
       className={clsx('ui-border rounded-lg border', className)}
+      // className={clsx('ui-border rounded-lg border [&_tbody_tr_td]:hover:py-4 [&_tbody_tr_td]:transition-all [&_tbody_tr_td]:duration-500', className)}
       data-testid="ScheduleTable"
     >
       <DataTable<ScheduledJobCardFragment, string | number | null | undefined>

@@ -104,11 +104,11 @@ These are the levers a newcomer should know exist. You don't need to master them
 
 **Everyday workflows** — one line each on when you'd reach for it, with the deeper skill to read:
 
-| Lever                            | Reach for it when…                                                                                                                                               | Deeper skill                                                                                          |
-| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| **`/loop`**                      | you want a prompt or slash command to run on a repeating interval (poll a deploy, keep grinding a task list)                                                     | built-in `loop` skill                                                                                 |
-| **Ralph loop** (`/agents-ralph`) | you have an OT plan and want to execute its tasks one at a time — IN_PROGRESS → work → validate → COMPLETED → commit — with `Plan-Id:` / `Task-Id:` traceability | [`agents-ralph`](https://github.com/openthrottle/monorepo/blob/main/skills/agents-ralph/SKILL.md)     |
-| **`ot-claude-loop`**             | drive that same per-task loop over a plan interactively via `/loop`                                                                                              | [`ot-claude-loop`](https://github.com/openthrottle/monorepo/blob/main/skills/ot-claude-loop/SKILL.md) |
+| Lever                            | Reach for it when…                                                                                                                                               | Deeper skill                                                                                      |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| **`/loop`**                      | you want a prompt or slash command to run on a repeating interval (poll a deploy, keep grinding a task list)                                                     | built-in `loop` skill                                                                             |
+| **Ralph loop** (`/agents-ralph`) | you have an OT plan and want to execute its tasks one at a time — IN_PROGRESS → work → validate → COMPLETED → commit — with `Plan-Id:` / `Task-Id:` traceability | [`agents-ralph`](https://github.com/openthrottle/monorepo/blob/main/skills/agents-ralph/SKILL.md) |
+| **`ot-loop`**                    | drive that same per-task loop over a plan interactively via `/loop`                                                                                              | [`ot-loop`](https://github.com/openthrottle/monorepo/blob/main/skills/ot-loop/SKILL.md)           |
 
 **The `/github/*` workflow skills** — the portable git/PR toolkit (one job each):
 

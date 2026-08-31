@@ -634,8 +634,8 @@ catalogs:
       specifier: ^2.7.0
       version: 2.7.0
     lucide-react:
-      specifier: ^1.7.0
-      version: 1.28.0
+      specifier: 1.29.0
+      version: 1.29.0
     memoize-one:
       specifier: ^6.0.0
       version: 6.0.0
@@ -1436,7 +1436,7 @@ importers:
         version: 2.7.0
       lucide-react:
         specifier: 'catalog:'
-        version: 1.28.0(react@19.2.4)
+        version: 1.29.0(react@19.2.4)
       memoize-one:
         specifier: 'catalog:'
         version: 6.0.0
@@ -2065,7 +2065,7 @@ importers:
         version: 2.20.2(@babel/core@7.29.7)(@babel/template@7.29.7)(@types/react@19.2.7)(react@19.2.4)
       lucide-react:
         specifier: 'catalog:'
-        version: 1.28.0(react@19.2.4)
+        version: 1.29.0(react@19.2.4)
       react:
         specifier: 19.2.4
         version: 19.2.4
@@ -3410,7 +3410,7 @@ importers:
         version: 2.1.1
       lucide-react:
         specifier: 'catalog:'
-        version: 1.28.0(react@19.2.4)
+        version: 1.29.0(react@19.2.4)
       react-router:
         specifier: 'catalog:'
         version: 8.0.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -3536,7 +3536,7 @@ importers:
         version: 4.4.0
       lucide-react:
         specifier: 'catalog:'
-        version: 1.28.0(react@19.2.4)
+        version: 1.29.0(react@19.2.4)
       next-themes:
         specifier: 'catalog:'
         version: 0.4.6(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -3632,7 +3632,7 @@ importers:
         version: 2.1.1
       lucide-react:
         specifier: 'catalog:'
-        version: 1.28.0(react@19.2.4)
+        version: 1.29.0(react@19.2.4)
       rollbar:
         specifier: 'catalog:'
         version: 3.1.0
@@ -15804,8 +15804,8 @@ packages:
   lru-cache@5.1.1:
     resolution: {integrity: sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w==}
 
-  lucide-react@1.28.0:
-    resolution: {integrity: sha512-fARAFJULsGuDDydjp6+6blekG/sBIM29TerzLjc9bQUKAcEfrSc4ZQKb25KRz4OMKd87cZTb5dgq0w/T6KufVg==}
+  lucide-react@1.29.0:
+    resolution: {integrity: sha512-Xs9QFG5+9sNX04MdKVT4++umA+hJ2qsJVlRlRWHQ7qZobXgMiNHSpZ5eZm8JUoGCdNyoEdXoEwa8HVr0DNjOQg==}
     peerDependencies:
       react: 19.2.4
 
@@ -33989,7 +33989,7 @@ snapshots:
     dependencies:
       yallist: 3.1.1
 
-  lucide-react@1.28.0(react@19.2.4):
+  lucide-react@1.29.0(react@19.2.4):
     dependencies:
       react: 19.2.4
 

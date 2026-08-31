@@ -97,9 +97,10 @@ with `CLAUDE.md`). Do not cut a reference skill on an untrustworthy 0 alone.
 
 At that snapshot, 15 of 44 skills had ever fired.
 
-> **Historical slug:** rows keyed `skill-sync` below were recorded before the
-> 2026-08 rename to `ot-skill-sync`. Counts are left as measured; do not rewrite
-> them to the new slug.
+> **Historical slugs:** rows keyed `skill-sync` below were recorded before the
+> 2026-08 rename to `ot-skill-sync`, and rows keyed `ot-claude-loop` before the
+> 2026-08 rename to `ot-loop`. Counts are left as measured; do not rewrite them
+> to the new slugs.
 
 | skill                     | invocations | sessions | paths              | last used              |
 | ------------------------- | ----------- | -------- | ------------------ | ---------------------- |

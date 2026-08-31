@@ -193,7 +193,7 @@ describe('buildPlansTableColumns', () => {
     );
   });
 
-  test('actions cell opens a menu with View plan and the open-in links, without Queue', async () => {
+  test('actions cell opens a menu with View plan, without Queue or the open-in links', async () => {
     const plan = buildPlan({ status: 'PENDING', title: 'Queueable Plan' });
     const rendered = renderRoutesStub(<Harness plan={plan} />);
     const user = userEvent.setup();
@@ -207,15 +207,14 @@ describe('buildPlansTableColumns', () => {
     expect(
       rendered.getByRole('menuitem', { name: PLANS_ROW_ACTIONS_COPY.view }),
     ).toBeInTheDocument();
-    for (const label of ['Claude', 'Cursor', 'VSCode', 'BullMQ']) {
-      expect(
-        rendered.getByRole('menuitem', { name: label }),
-      ).toBeInTheDocument();
-    }
     // The Queue action is parked while runs are launched from plan details.
     expect(
       rendered.queryByRole('menuitem', { name: PLANS_ROW_ACTIONS_COPY.queue }),
     ).toBeNull();
+    // The editor/BullMQ affiliate links are parked while that surface is reworked.
+    for (const label of ['BullMQ', 'Claude', 'Cursor', 'VSCode']) {
+      expect(rendered.queryByRole('menuitem', { name: label })).toBeNull();
+    }
   });
 
   test('actions menu shows Kill only when the plan is cancelable', async () => {

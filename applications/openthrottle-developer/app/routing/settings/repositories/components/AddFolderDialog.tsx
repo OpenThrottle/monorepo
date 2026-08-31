@@ -60,7 +60,7 @@ export const AddFolderDialog = (
   return (
     <Dialog onOpenChange={picker.setOpen} open={picker.open}>
       <DialogTrigger asChild={true}>
-        <Button data-testid="AddFolderDialogTrigger">
+        <Button data-testid="AddFolderDialogTrigger" variant="outline">
           <FolderPlusIcon aria-hidden={true} className="size-4" />
           {WORKSPACE_FOLDERS_COPY.addFolderButton}
         </Button>
@@ -85,33 +85,33 @@ export const AddFolderDialog = (
             pickError={picker.pickError}
             pickedPath={picker.pickedPath}
           />
-        ) : null}
-
-        <div className="space-y-2">
-          <div>
-            <p className="text-sm font-medium">
-              {WORKSPACE_FOLDERS_COPY.browseTitle}
-            </p>
-            <p className="text-muted-foreground text-xs">
-              {WORKSPACE_FOLDERS_COPY.browseInAppHint}
-            </p>
+        ) : (
+          <div className="space-y-2">
+            <div>
+              <p className="text-sm font-medium">
+                {WORKSPACE_FOLDERS_COPY.browseTitle}
+              </p>
+              <p className="text-muted-foreground text-xs">
+                {WORKSPACE_FOLDERS_COPY.browseInAppHint}
+              </p>
+            </div>
+            <DirectoryPicker
+              breadcrumbs={picker.breadcrumbs}
+              browseError={picker.browseError}
+              currentIsGitRepo={picker.currentIsGitRepo}
+              currentPath={picker.currentPath}
+              entries={picker.entries}
+              isAdding={picker.isAdding}
+              isBrowsing={picker.isBrowsing}
+              onAddCurrent={picker.handleAddCurrent}
+              onBrowseRoots={() => picker.handleBrowse('')}
+              onNavigateTo={picker.handleNavigateTo}
+              onOpen={picker.handleOpen}
+              onUp={picker.handleUp}
+              parentPath={picker.parentPath}
+            />
           </div>
-          <DirectoryPicker
-            breadcrumbs={picker.breadcrumbs}
-            browseError={picker.browseError}
-            currentIsGitRepo={picker.currentIsGitRepo}
-            currentPath={picker.currentPath}
-            entries={picker.entries}
-            isAdding={picker.isAdding}
-            isBrowsing={picker.isBrowsing}
-            onAddCurrent={picker.handleAddCurrent}
-            onBrowseRoots={() => picker.handleBrowse('')}
-            onNavigateTo={picker.handleNavigateTo}
-            onOpen={picker.handleOpen}
-            onUp={picker.handleUp}
-            parentPath={picker.parentPath}
-          />
-        </div>
+        )}
 
         {discoveredFolders.length > 0 ? (
           <div className="space-y-2 border-t pt-4">

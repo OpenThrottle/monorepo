@@ -86,7 +86,10 @@ export default function Component(
             </div>
           )
         ) : (
-          <NotesTable className="bg-card" notes={notes} />
+          <NotesTable
+            // className="bg-card"
+            notes={notes}
+          />
         )}
       </div>
     </GlobalScreen>

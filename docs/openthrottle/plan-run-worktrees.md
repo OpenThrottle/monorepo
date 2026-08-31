@@ -140,7 +140,7 @@ block each worktree gets.
 
 `/settings/repositories` lists the worktrees that exist **on disk** for the user's
 repositories, whether or not OpenThrottle created them — a worktree made by hand with
-`pnpm run worktree:new`, by a Claude or Cursor session, or by the ot-claude-loop shows up
+`pnpm run worktree:new`, by a Claude or Cursor session, or by ot-loop shows up
 alongside the server-provisioned ones. Before this, a child row existed only where a
 `repository_checkouts` row did, so the worktree the user was actually working in was
 routinely invisible.

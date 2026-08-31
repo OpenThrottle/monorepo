@@ -15,7 +15,7 @@ disable-model-invocation: false
 > **Why this prompt restates the per-task discipline.** `workflow-ralph` reads this file and feeds
 > it to the agent as a standalone prompt, often in a foreign checkout where no other skill is
 > reachable. It must therefore be self-contained. The canonical statement lives in
-> [`ot-claude-loop`](../ot-claude-loop/SKILL.md) § The loop — when you change one, change both.
+> [`ot-loop`](../ot-loop/SKILL.md) § The loop — when you change one, change both.
 
 ## What Ralph does
 

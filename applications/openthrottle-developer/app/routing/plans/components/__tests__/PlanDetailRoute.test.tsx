@@ -244,7 +244,7 @@ describe('PlanDetailRoute editor deep links', () => {
 
     expect(link).toHaveAttribute(
       'href',
-      `claude://code/new?folder=${encodeURIComponent(`${FILESYSTEM_PATH}/`)}&q=%2Fot-claude-loop%20plan-1`,
+      `claude://code/new?folder=${encodeURIComponent(`${FILESYSTEM_PATH}/`)}&q=%2Fot-loop%20plan-1`,
     );
   });
 });

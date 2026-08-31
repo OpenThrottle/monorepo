@@ -259,7 +259,7 @@ Skill injection is entirely the first kind, which is why §4's guarantee is abso
 
 §1's target-wins rule is correct, and it was being fed bad input.
 
-`scanTargetOwnedSkillNames` counted **every directory basename** under a target dir as a name the repo owns. `workspace-editors` apply, meanwhile, pre-created an empty `.agents/skills/<slug>/` for each of the ten slugs in `OPENTHROTTLE_REPO_SKILL_PATHS` — `brag-sheet`, `git-commit`, `link-workspace-packages`, `monitor-ci`, `nx-workspace`, `ot-claude-loop`, `ot-generators`, `ot-plans`, `ot-stack`, `workflow-ralph`.
+`scanTargetOwnedSkillNames` counted **every directory basename** under a target dir as a name the repo owns. `workspace-editors` apply, meanwhile, pre-created an empty `.agents/skills/<slug>/` for each of the ten slugs in `OPENTHROTTLE_REPO_SKILL_PATHS` — `brag-sheet`, `git-commit`, `link-workspace-packages`, `monitor-ci`, `nx-workspace`, `ot-loop`, `ot-generators`, `ot-plans`, `ot-stack`, `workflow-ralph`.
 
 So OT's protection against clobbering the user's skills fired against **OT's own scaffolding**, and dropped precisely OT's most important curated skills. Both orders are reachable — applying editor config and injecting skills are independent user actions — so the outcome depended on which the user happened to do first:
 

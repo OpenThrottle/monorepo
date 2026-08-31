@@ -44,6 +44,7 @@ export const PlanTasksTableCellTitle = (
     <div className="space-y-4 overflow-hidden">
       <div className="flex items-center gap-2">
         <h2 className="line-clamp-2 min-w-0 text-sm font-medium text-ellipsis">
+          {row.index + 1}.{' '}
           <Link
             aria-label={`Scroll to task: ${title}`}
             className="hover:text-primary underline underline-offset-2"

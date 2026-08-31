@@ -10,16 +10,10 @@ import {
 } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { FolderGit2Icon } from 'lucide-react';
-import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
-import { WORKSPACE_SETTINGS_COPY } from '~/routing/settings/data/data.copy';
 import {
   GetEditorPresenceDocument,
   GetWorkspaceSettingsDocument,
 } from '~/__generated__/graphql';
-import { SettingsWorkspaceApplyEditors } from '~/routing/settings/components/SettingsWorkspaceApplyEditors';
-import { SettingsWorkspaceApplyResults } from '~/routing/settings/components/SettingsWorkspaceApplyResults';
-import { SettingsWorkspaceEditorTargets } from '~/routing/settings/components/SettingsWorkspaceEditorTargets';
 import { SettingsWorkspaceEditorsForm } from '~/routing/settings/components/SettingsWorkspaceEditorsForm';
 import { SettingsWorkspaceIntro } from '~/routing/settings/components/SettingsWorkspaceIntro';
 import { SettingsWorkspaceProfileForm } from '~/routing/settings/components/SettingsWorkspaceProfileForm';
@@ -31,6 +25,12 @@ import { buildEditorPresenceIndex } from '~/routing/settings/utils/workspace-edi
 import { buildWorkspaceApplyResults } from '~/routing/settings/utils/workspace-apply-results';
 import { buildWorkspaceEditorTargetGroups } from '~/routing/settings/utils/workspace-editor-targets';
 import type { Route } from '@/app/routes/+types/settings.workspace._index';
+// import { FolderGit2Icon } from 'lucide-react';
+// import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
+// import { WORKSPACE_SETTINGS_COPY } from '~/routing/settings/data/data.copy';
+// import { SettingsWorkspaceApplyEditors } from '~/routing/settings/components/SettingsWorkspaceApplyEditors';
+// import { SettingsWorkspaceApplyResults } from '~/routing/settings/components/SettingsWorkspaceApplyResults';
+// import { SettingsWorkspaceEditorTargets } from '~/routing/settings/components/SettingsWorkspaceEditorTargets';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -76,7 +76,12 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData, loaderData, matches: _m, params: _p } = props;
-  const { editorPresence, localRepositories, profile, targets } = loaderData;
+  const {
+    editorPresence,
+    localRepositories,
+    profile,
+    targets: _targets,
+  } = loaderData;
 
   // Hooks
   // Indexed once here and handed to every surface that shows availability, so the picker,
@@ -88,12 +93,12 @@ export default function Component(
 
   // Setup
   const actionError = getActionError(actionData) ?? null;
-  const actionMessage =
+  const _actionMessage =
     actionData && 'message' in actionData ? actionData.message : null;
-  const canApplyEditors = profile.enabledEditors.length > 0;
+  const _canApplyEditors = profile.enabledEditors.length > 0;
   const applications =
     actionData && 'applications' in actionData ? actionData.applications : null;
-  const applyResults = applications
+  const _applyResults = applications
     ? buildWorkspaceApplyResults(applications, localRepositories)
     : null;
 
@@ -110,7 +115,6 @@ export default function Component(
       <SettingsWorkspaceIntro />
 
       <div className="space-y-10">
-        {/* The editor-configuration flow: choose editors, then apply them to repositories. */}
         <div className="space-y-4">
           <SettingsWorkspaceEditorsForm
             actionError={actionError}
@@ -118,6 +122,7 @@ export default function Component(
             editorPresenceIndex={editorPresenceIndex}
             profile={profile}
           />
+          {/*
           <OpenThrottleFieldset
             icon={FolderGit2Icon}
             id="settings-workspace-editor-targets"
@@ -140,6 +145,7 @@ export default function Component(
               />
             ) : null}
           </OpenThrottleFieldset>
+          */}
         </div>
 
         {/* Workspace preferences, independent of the apply flow above. */}

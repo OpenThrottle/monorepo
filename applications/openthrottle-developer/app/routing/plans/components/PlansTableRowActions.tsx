@@ -49,6 +49,16 @@ export const PlansTableRowActions = (
       label: PLANS_ROW_ACTIONS_COPY.view,
       to: `/plans/${planId}`,
     },
+  ];
+
+  const _actions: GlobalPopoverAction[] = [
+    {
+      icon: <PanelRightIcon aria-hidden={true} className="size-4" />,
+      id: 'preview',
+      kind: 'link',
+      label: PLANS_ROW_ACTIONS_COPY.view,
+      to: `/plans/${planId}`,
+    },
     {
       icon: <CodeXmlIcon aria-hidden={true} className="size-4" />,
       id: 'openInClaude',

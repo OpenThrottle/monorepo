@@ -60,14 +60,17 @@ export const NativeBrowse = (props: NativeBrowseProps): React.ReactElement => {
       ) : null}
 
       {pickedPath ? (
-        <div className="flex items-center justify-between gap-2 rounded-md border p-3">
-          <div className="min-w-0">
-            <p className="text-muted-foreground text-xs">
-              {WORKSPACE_FOLDERS_COPY.nativePickedPrefix}
-            </p>
-            <p className="truncate font-mono text-sm">{pickedPath}</p>
+        <>
+          <div className="flex flex-col gap-2 rounded-md border p-3">
+            <div className="min-w-0">
+              <p className="text-muted-foreground text-xs">
+                {WORKSPACE_FOLDERS_COPY.nativePickedPrefix}
+              </p>
+              <p className="truncate font-mono text-sm">{pickedPath}</p>
+            </div>
           </div>
-          <div className="flex shrink-0 items-center gap-2">
+
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
             <Button
               onClick={onClearPicked}
               size="sm"
@@ -84,7 +87,7 @@ export const NativeBrowse = (props: NativeBrowseProps): React.ReactElement => {
               </Button>
             </Form>
           </div>
-        </div>
+        </>
       ) : null}
     </div>
   );

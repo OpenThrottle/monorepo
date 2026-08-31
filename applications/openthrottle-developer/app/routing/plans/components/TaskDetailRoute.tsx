@@ -7,6 +7,7 @@
  */
 import * as React from 'react';
 import {
+  Button,
   TabsContent,
   TabsList,
   TabsTrigger,
@@ -15,11 +16,12 @@ import { GlobalScreen } from '@openthrottle/react-router-ui-global';
 import { OpenThrottleTabs } from '@openthrottle/react-router-ui';
 import {
   BoltIcon,
+  ChevronLeftIcon,
   PackageIcon,
   TerminalSquareIcon,
   WebhookIcon,
 } from 'lucide-react';
-import { useFetcher } from 'react-router';
+import { Link, useFetcher } from 'react-router';
 import { LinkedArtifactsPanel } from '~/routing/plans/components/LinkedArtifactsPanel';
 import { PlanLifecycleHooksSection } from '~/routing/plans/components/PlanLifecycleHooksSection';
 import { PLAN_LIFECYCLE_HOOKS_COPY } from '~/routing/plans/data/data.copy';
@@ -126,13 +128,19 @@ export const TaskDetailRoute = (
           className="mb-8 w-full max-w-full justify-start gap-4 overflow-x-auto overflow-y-hidden"
           variant="line"
         >
+          <Button asChild={true} variant="outline">
+            <Link to={`/plans/${effectivePlanId}?tab=tasks`}>
+              <ChevronLeftIcon />
+            </Link>
+          </Button>
+
           <TabsTrigger
             className="flex-0 cursor-pointer"
             id="task-tab-details"
             value="details"
           >
             <BoltIcon />
-            Details
+            Task Details
           </TabsTrigger>
           <TabsTrigger
             className="flex-0 cursor-pointer"
@@ -140,7 +148,7 @@ export const TaskDetailRoute = (
             value="output"
           >
             <TerminalSquareIcon />
-            Output
+            Task Output
           </TabsTrigger>
 
           {showArtifacts ? (

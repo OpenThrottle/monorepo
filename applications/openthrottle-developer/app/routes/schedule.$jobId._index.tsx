@@ -19,6 +19,7 @@ import {
   ScheduledAgentJobDetailDocument,
   SetScheduledAgentJobEnabledDocument,
 } from '~/__generated__/graphql';
+import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import { ScheduleDetailSummary } from '~/routing/schedule/components/ScheduleDetailSummary';
 import { ScheduleDetailTabs } from '~/routing/schedule/components/ScheduleDetailTabs';
 import { SITE_TITLE } from '~/global/config/settings';
@@ -27,7 +28,13 @@ import type { Route } from '@/app/routes/+types/schedule.$jobId._index';
 type HandleData = Route.ComponentProps['loaderData'];
 
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
-  breadcrumb: (match) => match.loaderData?.job?.name ?? 'Schedule',
+  breadcrumb: (match) => (
+    <OpenThrottleClipboard
+      className="cursor-pointer whitespace-nowrap"
+      label={match.loaderData?.job?.name ?? 'Schedule'}
+      text={match.params.jobId ?? 'not-found'}
+    />
+  ),
   links: (_match) => [{ children: 'Schedule', to: '/schedule' }],
 };
 

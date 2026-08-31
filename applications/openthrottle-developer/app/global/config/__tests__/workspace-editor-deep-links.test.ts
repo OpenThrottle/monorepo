@@ -20,7 +20,7 @@ describe('workspace editor deep links', () => {
         workingDirectory: WORKING_DIRECTORY,
       }),
     ).toBe(
-      `claude://code/new?folder=%2FUsers%2Fmatt%2FDevelopment%2Fopenthrottle%2F&q=%2Fot-claude-loop%20${PLAN_ID}`,
+      `claude://code/new?folder=%2FUsers%2Fmatt%2FDevelopment%2Fopenthrottle%2F&q=%2Fot-loop%20${PLAN_ID}`,
     );
   });
 
@@ -37,7 +37,7 @@ describe('workspace editor deep links', () => {
     });
 
     expect(href).toBe(
-      `cursor://anysphere.cursor-deeplink/prompt?text=Run%20OpenThrottle%20plan%20${PLAN_ID}%20following%20.agents%2Fskills%2Fot-claude-loop%2FSKILL.md`,
+      `cursor://anysphere.cursor-deeplink/prompt?text=Run%20OpenThrottle%20plan%20${PLAN_ID}%20following%20.agents%2Fskills%2Fot-loop%2FSKILL.md`,
     );
     expect(href).not.toContain('folder');
   });
