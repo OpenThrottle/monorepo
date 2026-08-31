@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   parseRepositoryRemote,
+  shortenBranchName,
   shortenFilesystemPath,
 } from '../repository-identity';
 
@@ -82,5 +83,54 @@ describe('shortenFilesystemPath', () => {
   it('returns the path unchanged when it is already short enough', () => {
     expect(shortenFilesystemPath('/srv/monorepo')).toBe('/srv/monorepo');
     expect(shortenFilesystemPath('monorepo')).toBe('monorepo');
+  });
+});
+
+describe('shortenBranchName', () => {
+  it('returns a short branch verbatim', () => {
+    expect(shortenBranchName('main')).toBe('main');
+    // 17 characters — one under the default cap, so it must pass through.
+    expect(shortenBranchName('claude/nx-upgrade')).toBe('claude/nx-upgrade');
+    // The exact string the live pass reads on the plan-detail popover row.
+    expect(shortenBranchName('claude/nx-upgrade-plan-ce8b01')).toBe(
+      'claude…plan-ce8b01',
+    );
+  });
+
+  it('drops the middle and keeps the distinguishing tail', () => {
+    const shortened = shortenBranchName('visormatt/bootstrap-service-accounts');
+
+    expect(shortened).toBe('visorm…ce-accounts');
+    expect(shortened.length).toBeLessThanOrEqual(18);
+    expect(shortened.endsWith('ce-accounts')).toBe(true);
+  });
+
+  it('keeps two same-prefixed branches tellable apart', () => {
+    expect(shortenBranchName('claude/nx-upgrade-plan-aaaaaaaa', 20)).not.toBe(
+      shortenBranchName('claude/nx-upgrade-plan-bbbbbbbb', 20),
+    );
+  });
+
+  it('uses a single ellipsis character, not three dots', () => {
+    const shortened = shortenBranchName('visormatt/bootstrap-service-accounts');
+
+    expect(shortened).toContain('…');
+    expect(shortened).not.toContain('...');
+  });
+
+  it('truncates a branch with no slash', () => {
+    expect(
+      shortenBranchName('averyveryverylongbranchnamewithnoslashesatall', 20),
+    ).toBe('averyve…slashesatall');
+  });
+
+  it('honours an explicit max length', () => {
+    expect(
+      shortenBranchName('visormatt/bootstrap-service-accounts', 12).length,
+    ).toBe(12);
+  });
+
+  it('is a no-op on an empty string', () => {
+    expect(shortenBranchName('')).toBe('');
   });
 });

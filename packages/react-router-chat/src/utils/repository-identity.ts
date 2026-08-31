@@ -20,6 +20,30 @@ const DEFAULT_PATH_SEGMENTS = 2;
 const ELLIPSIS = '…';
 
 /**
+ * Characters {@link shortenBranchName} keeps by default, ellipsis included.
+ * Sized so the shortened string FITS the row's `max-w-44` branch column at
+ * `text-xs` (~7.2px/char measured in the app, so ~130px of the ~154px the
+ * column leaves after the git icon and its gap).
+ *
+ * The relationship between this cap and that column is load-bearing, not
+ * cosmetic: a cap WIDER than its column gets end-clipped by `truncate`, which
+ * eats the tail this helper exists to preserve — you get the cost of both
+ * truncations and the benefit of neither. Measured live in the developer app:
+ * 24 clipped, 20 still clipped by 7px, 18 fits with ~24px to spare. Change one
+ * of the two and re-measure the other. The trigger's face is narrower still and
+ * passes its own, smaller value.
+ */
+const DEFAULT_BRANCH_LENGTH = 18;
+
+/**
+ * Share of a shortened branch's budget spent on the head. The tail gets the
+ * rest, because the tail is the half that distinguishes two branches sharing an
+ * author/tool prefix — see the branch-truncation contract on
+ * `ChatCheckoutSelectorRow`.
+ */
+const BRANCH_HEAD_RATIO = 0.4;
+
+/**
  * The split identity of a git remote: the lowercased host, the owner (an
  * organization/user, or a slash-joined nested GitLab group path) and the
  * repository name.
@@ -106,4 +130,34 @@ export function shortenFilesystemPath(
 
   const kept = parts.slice(parts.length - segments).join(PATH_SEPARATOR);
   return `${ELLIPSIS}${PATH_SEPARATOR}${kept}`;
+}
+
+/**
+ * Shorten a git branch name to at most `maxLength` characters by dropping its
+ * middle, keeping both the head and — deliberately the larger share — the tail
+ * (e.g. `visormatt/bootstrap-service-accounts` →
+ * `visormatt/…-service-accounts`). The sibling of
+ * {@link shortenFilesystemPath}, and character-count based for the same reason:
+ * measuring rendered text would need a `ResizeObserver`, which is a no-op in
+ * jsdom.
+ *
+ * End-ellipsis would be the wrong half here. Branches in a real workspace share
+ * a short author/tool prefix (`visormatt/`, `claude/`) and differ in their tail,
+ * so cutting the tail renders unrelated branches identically.
+ *
+ * @public
+ */
+export function shortenBranchName(
+  branch: string,
+  maxLength: number = DEFAULT_BRANCH_LENGTH,
+): string {
+  if (branch.length <= maxLength) return branch;
+  // Nothing legible survives a budget this small, so spend it all on the tail.
+  if (maxLength <= 2) return branch.slice(branch.length - maxLength);
+
+  const budget = maxLength - ELLIPSIS.length;
+  const head = Math.floor(budget * BRANCH_HEAD_RATIO);
+  const tail = budget - head;
+
+  return `${branch.slice(0, head)}${ELLIPSIS}${branch.slice(branch.length - tail)}`;
 }

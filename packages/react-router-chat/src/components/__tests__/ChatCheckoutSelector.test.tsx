@@ -524,3 +524,101 @@ describe('ChatCheckoutSelector Component — minimal mode', () => {
     expect(trigger).toHaveAttribute('aria-label', 'Checkout: No checkouts');
   });
 });
+
+/**
+ * What these can and cannot prove. jsdom has no layout engine — every
+ * `offsetWidth` is 0 — so NO test here shows that a long branch stays inside the
+ * `w-96` popover. These assert the markup contract only: the shortened string is
+ * what renders, the full value is reachable on `title`, and the shrink/cap
+ * classes are present. Actual containment is verified live in the developer app
+ * against a genuinely long branch (see the plan's final task), not here.
+ */
+const LONG_BRANCH = 'visormatt/bootstrap-service-accounts';
+
+const CHECKOUTS_LONG_BRANCH: readonly ChatCheckoutOption[] = [
+  { branch: LONG_BRANCH, id: 'repo-a', label: 'openthrottle' },
+  { branch: 'main', id: 'repo-b', label: 'playground' },
+];
+
+describe('ChatCheckoutSelector Component — branch containment contract', () => {
+  test('shortens a long branch on the row and keeps the full value on title', async () => {
+    const user = userEvent.setup();
+    const component = renderSelector({ checkouts: CHECKOUTS_LONG_BRANCH });
+    await user.click(component.getByTestId('ChatCheckoutSelector-trigger'));
+
+    const branch = component.getByTestId('ChatCheckoutSelector-branch-repo-a');
+    expect(branch).toHaveAttribute('title', LONG_BRANCH);
+    expect(branch).not.toHaveTextContent(LONG_BRANCH);
+    expect(branch).toHaveTextContent('…');
+    // The tail is the half that distinguishes two same-prefixed branches, so
+    // losing it would defeat the reason the branch is on the row at all.
+    expect(branch.textContent).toContain('ce-accounts');
+  });
+
+  test('carries the shrink budget and cap that keep the row contained', async () => {
+    const user = userEvent.setup();
+    const component = renderSelector({ checkouts: CHECKOUTS_LONG_BRANCH });
+    await user.click(component.getByTestId('ChatCheckoutSelector-trigger'));
+
+    const branch = component.getByTestId('ChatCheckoutSelector-branch-repo-a');
+    expect(branch.className).toContain('min-w-0');
+    expect(branch.className).toContain('max-w-44');
+    expect(branch.className).not.toContain('shrink-0');
+    // The character cap must FIT `max-w-44`, or `truncate` end-clips the
+    // shortened string and eats the tail the middle-ellipsis exists to keep.
+    // jsdom cannot measure that, so pin the length the live pass validated.
+    expect(branch.textContent?.length).toBeLessThanOrEqual(18);
+  });
+
+  test('renders a short branch verbatim with no ellipsis', async () => {
+    const user = userEvent.setup();
+    const component = renderSelector({ checkouts: CHECKOUTS_LONG_BRANCH });
+    await user.click(component.getByTestId('ChatCheckoutSelector-trigger'));
+
+    const branch = component.getByTestId('ChatCheckoutSelector-branch-repo-b');
+    expect(branch).toHaveTextContent('main');
+    expect(branch).not.toHaveTextContent('…');
+    expect(branch).toHaveAttribute('title', 'main');
+  });
+
+  test('still labels Primary and Context only beside a long branch', async () => {
+    const user = userEvent.setup();
+    const component = renderMulti({
+      checkouts: [
+        { branch: LONG_BRANCH, id: 'repo-a', label: 'openthrottle' },
+        {
+          branch: 'claude/nx-upgrade-plan-ce8b01',
+          id: 'repo-b',
+          label: 'playground',
+        },
+      ],
+      selectedCheckoutIds: ['repo-a', 'repo-b'],
+    });
+    await user.click(component.getByTestId('ChatCheckoutSelector-trigger'));
+
+    expect(
+      component.getByTestId('ChatCheckoutSelector-primary-repo-a'),
+    ).toHaveTextContent('Primary');
+    expect(
+      component.getByTestId('ChatCheckoutSelector-context-repo-b'),
+    ).toHaveTextContent('Context only');
+    expect(
+      component.getByTestId('ChatCheckoutSelector-branch-repo-a'),
+    ).toHaveAttribute('title', LONG_BRANCH);
+    expect(
+      component.getByTestId('ChatCheckoutSelector-branch-repo-b'),
+    ).toHaveAttribute('title', 'claude/nx-upgrade-plan-ce8b01');
+  });
+
+  test('renders no branch element on a row that has no branch', async () => {
+    const user = userEvent.setup();
+    const component = renderSelector({
+      checkouts: [{ id: 'repo-a', label: 'openthrottle' }],
+    });
+    await user.click(component.getByTestId('ChatCheckoutSelector-trigger'));
+
+    expect(
+      component.queryByTestId('ChatCheckoutSelector-branch-repo-a'),
+    ).not.toBeInTheDocument();
+  });
+});

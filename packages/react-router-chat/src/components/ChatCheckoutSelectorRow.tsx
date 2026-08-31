@@ -5,6 +5,7 @@ import clsx from 'clsx';
 import type { ChatCheckoutOption } from '../types';
 import { checkoutSearchTerms } from '../utils/checkout-groups';
 import type { ChatCheckoutDescriptor } from '../utils/checkout-labels';
+import { shortenBranchName } from '../utils/repository-identity';
 
 export interface ChatCheckoutSelectorRowProps {
   /** True when a {@link multiple} selection is at its cap, so unselected rows go inert. */
@@ -34,6 +35,25 @@ export interface ChatCheckoutSelectorRowProps {
  * agent is granted the directory, but the row deliberately stops short of
  * implying that concurrent runs against that checkout are safe.
  *
+ * ## Branch-truncation contract
+ *
+ * Shared verbatim with {@link ChatCheckoutSelectorTrigger} — change it in both
+ * or in neither, or the two faces of the same picker drift apart.
+ *
+ * 1. **Direction — middle-ellipsis, tail preserved.** Every branch in a real
+ *    workspace shares a short author/tool prefix (`visormatt/`, `claude/`,
+ *    `openthrottle/`) and differs in its tail, so an end-`truncate` would
+ *    render two unrelated branches identically. `shortenBranchName` keeps the
+ *    head and the tail and drops the middle.
+ * 2. **Shrink priority — the display name yields last.** The name is what the
+ *    user picks on, so it keeps `min-w-0 flex-1`. The branch is capped
+ *    (`max-w-*`), allowed to shrink, and carries `truncate` as the CSS
+ *    backstop behind the character-count shortening. The short fixed-width
+ *    `Primary` / `Context only` labels stay `shrink-0`.
+ * 3. **Full value — `title` on the branch element.** A `Tooltip` here would
+ *    nest a third portal inside Popover → Command for what is a hover string;
+ *    `title` is native, works inside the popover, and holds no state.
+ *
  * @public
  */
 export const ChatCheckoutSelectorRow = (
@@ -54,7 +74,9 @@ export const ChatCheckoutSelectorRow = (
   // Hooks
 
   // Setup
-  const hasBranch = checkout.branch != null && checkout.branch !== '';
+  // Narrowed to a local so the JSX below can render it without a non-null cast.
+  const branch =
+    checkout.branch != null && checkout.branch !== '' ? checkout.branch : null;
   // At the cap, unselected rows are inert but selected ones stay toggleable —
   // otherwise the list traps the user with no way back under the cap.
   const disabled = multiple && atCap && !isSelected;
@@ -69,7 +91,10 @@ export const ChatCheckoutSelectorRow = (
 
   return (
     <CommandItem
-      className="gap-2"
+      // CommandItem is `relative flex items-center` with no clipping of its own,
+      // so a child that refuses to shrink would spill past the popover edge
+      // rather than being cut — the backstop behind the branch cap below.
+      className="gap-2 overflow-hidden"
       data-testid={`ChatCheckoutSelector-option-${checkout.id}`}
       disabled={disabled}
       keywords={[...checkoutSearchTerms(checkout)]}
@@ -109,10 +134,14 @@ export const ChatCheckoutSelectorRow = (
           Context only
         </span>
       ) : null}
-      {hasBranch ? (
-        <span className="text-muted-foreground flex shrink-0 items-center gap-1 text-xs">
-          <GitBranch className="size-3" />
-          {checkout.branch}
+      {branch != null ? (
+        <span
+          className="text-muted-foreground flex max-w-44 min-w-0 items-center gap-1 text-xs"
+          data-testid={`ChatCheckoutSelector-branch-${checkout.id}`}
+          title={branch}
+        >
+          <GitBranch className="size-3 shrink-0" />
+          <span className="truncate">{shortenBranchName(branch)}</span>
         </span>
       ) : null}
     </CommandItem>
