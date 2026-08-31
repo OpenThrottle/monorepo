@@ -420,8 +420,14 @@ jobs:
           # co-running two heavy jsdom suites on ONE box. Which targets run, and
           # how, is the workflow's business — the partitioner only answers which
           # projects, and which slice of a sharded suite, are mine.
+          #
+          # `check-client-boundary` exists only on the four React Router apps and
+          # pulls in their `build` via dependsOn. It is the ONLY gate that runs an
+          # app build in CI, and the only place a Node builtin reaching the client
+          # bundle is observable at all — lint, typecheck and build itself all pass
+          # when that happens (OT plan a69a8b4c).
           if [ -n "$selector" ]; then
-            pnpm exec nx affected --exclude="*,$selector" --target=lint,typecheck,bundle-hooks-check --parallel ${{ env.OUTPUT_DEBUG }}
+            pnpm exec nx affected --exclude="*,$selector" --target=lint,typecheck,bundle-hooks-check,check-client-boundary --parallel ${{ env.OUTPUT_DEBUG }}
           fi
 
           # `testSelector`, not `selector`: a suite-sharded project is absent from

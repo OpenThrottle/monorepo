@@ -216,6 +216,22 @@
         "{workspaceRoot}/skills-lock.json"
       ]
     },
+    "check-client-boundary": {
+      "cache": true,
+      "dependsOn": ["build"],
+      "description": "Fail when a Node builtin is reachable from the app's CLIENT bundle. Vite externalizes `node:*` for the browser and stubs it with a Proxy that throws on first property access, so lint, typecheck AND build all pass and the break only surfaces on page load. Reads {projectRoot}/build/client, so it depends on `build` rather than on sources.",
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec tsx ./scripts/check-client-node-boundary.ts {projectRoot}",
+        "cwd": "{workspaceRoot}"
+      },
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/scripts/check-client-node-boundary.ts",
+        "{workspaceRoot}/scripts/lib/**/*"
+      ]
+    },
     "check-migration-hygiene": {
       "cache": true,
       "description": "Static lint for databases/migrations/: no inline REFERENCES under an IF NOT EXISTS guard, and no new duplicate numeric prefixes.",

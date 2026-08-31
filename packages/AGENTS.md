@@ -19,7 +19,9 @@ Family-shared notes for everything under `packages/`. Per-project deltas live in
 ## Import and export rules
 
 - No deep imports between workspace packages: consume via the main entry (`import { X } from '@openthrottle/foo'`) and re-export new symbols from the package's `index.ts`. Do not add subpath exports just to expose one symbol.
-- Server/client boundary: Node-only engines (e.g. `openthrottle-ide`) are consumed by UI packages via type-only imports plus `*.server.ts` dynamic imports; never import Node-only packages into browser code.
+- **Server/client boundary — nothing but `check-client-boundary` catches a violation.** A `node:*` import anywhere on a client module's import graph ships a Vite stub that throws on page load; `typecheck`, `lint` and `build` all pass regardless. The `check-client-boundary` Nx target on the four React Router apps reads their `build/client` output and is the only gate that sees it. Escape hatches, all three already used here: move the code server-side (how `expandHome` was fixed — it now lives in `applications/openthrottle-server/src/services/paths/`), `import type` (erased at compile time), or a `*.server.ts` module (never bundled for the browser).
+  - **A package's name is not a signal.** `nodejs-utils` sounds server-only and is imported by browser code — one `node:os` import in its barrel reached all eight client modules importing `isRecord` from it. Barrels amplify: anything behind `index.ts` reaches every client consumer of that package.
+  - Node-only engines (e.g. `openthrottle-ide`, `openthrottle-agentic-utils`, `openthrottle-skills`) stay fine as-is — they are reached only through type-only imports and `*.server.ts` dynamic imports. Full rule: [.agents/rules/coding/client-node-boundary.mdc](../.agents/rules/coding/client-node-boundary.mdc).
 
 ## Gotchas
 

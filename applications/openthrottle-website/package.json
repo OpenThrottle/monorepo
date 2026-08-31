@@ -29,6 +29,7 @@
       "type:application"
     ],
     "targets": {
+      "check-client-boundary": {},
       "____codegen-graphql____": {},
       "____codegen-graphql-watch____": {},
       "codegen-react-router": {},

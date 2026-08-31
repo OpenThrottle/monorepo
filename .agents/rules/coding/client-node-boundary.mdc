@@ -1,0 +1,57 @@
+---
+alwaysApply: true
+description: Keep Node builtins out of browser bundles; typecheck, lint and build all pass when this is violated.
+globs:
+name: coding-client-node-boundary
+---
+
+Never let a Node builtin become reachable from browser code.
+
+A `node:*` import anywhere on a client module's import graph ships a Vite stub to the
+browser — a Proxy that throws on first property access:
+
+```
+Uncaught Error: Module "node:os" has been externalized for browser compatibility.
+Cannot access "node:os.homedir" in client code.
+```
+
+## Why this needs a written rule
+
+**`typecheck`, `lint` and `build` all pass when you violate it.** Vite externalizes Node
+builtins for the browser rather than erroring, so nothing fails until a user loads a page.
+The `check-client-boundary` Nx target (`scripts/check-client-node-boundary.ts`) is the only
+thing standing between a bad import and a user-facing runtime error. It runs in CI on the
+four React Router apps and reads their `build/client` output, so it catches transitive
+reachability, not just direct imports.
+
+## A package's name is not a signal
+
+`@openthrottle/nodejs-utils` sounds server-only and is imported by browser code — which is
+exactly how this broke. Adding `expandHome` (one `node:os` import) to that package's barrel
+reached all eight client modules that import `isRecord` from it.
+
+**Barrels are the amplifier.** One `node:*` import anywhere behind a package's `index.ts`
+reaches every client module importing anything from that package.
+
+## The three escape hatches
+
+```ts
+// GOOD — the code belongs on the server. This is how the original break was fixed:
+// expandHome moved to applications/openthrottle-server/src/services/paths/.
+
+// GOOD — type-only, erased at compile time.
+import type { WorkspaceConfig } from '@openthrottle/openthrottle-ide';
+
+// GOOD — behind a *.server.ts module, which never enters the client bundle.
+const { runIdeEngine } = await import('./ide-engine.server.ts');
+```
+
+```ts
+// BAD — in a package that browser code imports, however indirectly.
+import { homedir } from 'node:os';
+```
+
+Node-heavy packages (`openthrottle-agentic-utils`, `openthrottle-ide`,
+`openthrottle-skills`, `openthrottle-drivers`) are fine as they are: they are reached only
+through `*.server.ts` and `import type`. The rule is not about which package the code lives
+in — it is about what a client module can transitively reach.
