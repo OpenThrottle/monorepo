@@ -8,6 +8,7 @@ import type { SkillsTableProps } from '../SkillsTable';
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 import {
   SKILL_RECORD_TAGS_COPY,
+  SKILLS_EMPTY_COPY,
   SKILLS_SOURCE_COPY,
 } from '~/routing/skills/data/data.copy';
 
@@ -74,11 +75,17 @@ describe('SkillsTable Component', () => {
   test('when entries is empty renders SkillsEmpty inside the table', () => {
     renderRoutesStub(<SkillsTable {...props} />);
 
-    expect(
-      screen.getByText(
-        'No skills found, create your first skill to get started.',
-      ),
-    ).toBeInTheDocument();
+    expect(screen.getByText(SKILLS_EMPTY_COPY.title)).toBeInTheDocument();
+  });
+
+  test('forwards isFiltered so an empty filtered view offers a way out', () => {
+    renderRoutesStub(<SkillsTable {...props} isFiltered={true} />);
+
+    expect(screen.getByText(SKILLS_EMPTY_COPY.searchTitle)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Clear filters' })).toHaveAttribute(
+      'href',
+      '/skills',
+    );
   });
 
   describe('when entries are provided', () => {

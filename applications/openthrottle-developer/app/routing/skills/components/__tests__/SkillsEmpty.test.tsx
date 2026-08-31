@@ -13,7 +13,7 @@ describe('SkillsEmpty Component', () => {
     props = {};
   });
 
-  test('when there is no search shows empty list copy and link to create', () => {
+  test('when nothing is filtered shows empty list copy and link to create', () => {
     const component = renderRoutesStub(<SkillsEmpty {...props} />);
 
     expect(component.getByText(SKILLS_EMPTY_COPY.title)).toBeInTheDocument();
@@ -21,10 +21,12 @@ describe('SkillsEmpty Component', () => {
     expect(link).toHaveAttribute('href', '/skills/create');
   });
 
-  describe('when search is active', () => {
+  // One flag covers both narrowing affordances: a search query and a `?source=`
+  // segment. Either way the way out is the same — back to the unfiltered list.
+  describe('when a filter is active', () => {
     beforeEach(() => {
       cleanup();
-      props = { search: 'alpha' };
+      props = { isFiltered: true };
     });
 
     test('shows filtered-empty copy and link to clear filters', () => {

@@ -2,7 +2,7 @@ import * as React from 'react';
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { createRoutesStub } from 'react-router';
+import { createRoutesStub, useLocation } from 'react-router';
 import { describe, expect, test } from 'vitest';
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 import type { SkillsIndexUsageData } from '~/routing/skills/data/skills-index-usage';
@@ -71,16 +71,23 @@ const renderRoute = (
     {
       // Hardcode loaderData (no stub loader) so the first synchronous render
       // paints; the pager drives navigation via ?page, read from useSearchParams.
-      Component: (): React.ReactElement => (
-        <TooltipProvider>
-          <Component
-            actionData={undefined}
-            loaderData={loaderData}
-            matches={matches}
-            params={{}}
-          />
-        </TooltipProvider>
-      ),
+      Component: (): React.ReactElement => {
+        // Surfaces the committed query string so URL-ownership assertions read
+        // the real location rather than inferring it from the rendered slice.
+        const location = useLocation();
+
+        return (
+          <TooltipProvider>
+            <span data-testid="location-search">{location.search}</span>
+            <Component
+              actionData={undefined}
+              loaderData={loaderData}
+              matches={matches}
+              params={{}}
+            />
+          </TooltipProvider>
+        );
+      },
       path: '/skills',
     },
   ]);
@@ -155,6 +162,154 @@ describe('routes/skills._index.tsx pagination', () => {
     expect(
       component.getByRole('link', { name: '/skill-000' }),
     ).toBeInTheDocument();
+  });
+});
+
+describe('routes/skills._index.tsx ?source filtering', () => {
+  test('bare /skills carries no source param and shows every entry', () => {
+    const component = renderRoute('/skills');
+
+    expect(component.getByTestId('location-search')).toHaveTextContent('');
+    expect(
+      component.getByText('Showing 1-25 of 40 skills'),
+    ).toBeInTheDocument();
+    expect(component.getByRole('radio', { name: 'All' })).toBeChecked();
+  });
+
+  test('?source=openthrottle filters on first paint and marks the segment', () => {
+    const component = renderRoute('/skills?source=openthrottle');
+
+    // 30 of the 40 fixtures are OpenThrottle-sourced.
+    expect(
+      component.getByText('Showing 1-25 of 30 skills'),
+    ).toBeInTheDocument();
+    expect(
+      component.getByRole('radio', { name: 'OpenThrottle' }),
+    ).toBeChecked();
+  });
+
+  // A hand-edited or stale link must degrade to the full list, not 404.
+  test('an unknown ?source value behaves as All', () => {
+    const component = renderRoute('/skills?source=garbage');
+
+    expect(
+      component.getByText('Showing 1-25 of 40 skills'),
+    ).toBeInTheDocument();
+    expect(component.getByRole('radio', { name: 'All' })).toBeChecked();
+  });
+
+  test('selecting a segment writes ?source= and drops ?page', async () => {
+    const user = userEvent.setup();
+    const component = renderRoute('/skills?page=2');
+
+    await user.click(component.getByRole('radio', { name: 'External' }));
+
+    await waitFor(() => {
+      expect(component.getByTestId('location-search')).toHaveTextContent(
+        'source=external',
+      );
+    });
+    expect(component.getByTestId('location-search')).not.toHaveTextContent(
+      'page=',
+    );
+  });
+
+  test('selecting All removes ?source= rather than writing source=all', async () => {
+    const user = userEvent.setup();
+    const component = renderRoute('/skills?source=external');
+
+    await user.click(component.getByRole('radio', { name: 'All' }));
+
+    await waitFor(() => {
+      expect(component.getByTestId('location-search')).not.toHaveTextContent(
+        'source=',
+      );
+    });
+    expect(
+      component.getByText('Showing 1-25 of 40 skills'),
+    ).toBeInTheDocument();
+  });
+
+  test('a source change preserves sibling params', async () => {
+    const user = userEvent.setup();
+    const component = renderRoute('/skills?search=skill-03&limit=10&page=2');
+
+    await user.click(component.getByRole('radio', { name: 'External' }));
+
+    await waitFor(() => {
+      expect(component.getByTestId('location-search')).toHaveTextContent(
+        'source=external',
+      );
+    });
+    const probe = component.getByTestId('location-search');
+    expect(probe).toHaveTextContent('search=skill-03');
+    expect(probe).toHaveTextContent('limit=10');
+  });
+});
+
+describe('routes/skills._index.tsx pagination preserves filters', () => {
+  test('a page change keeps ?source=', async () => {
+    const user = userEvent.setup();
+    const component = renderRoute('/skills?source=openthrottle');
+
+    // 30 OpenThrottle fixtures span two pages at the default limit of 25.
+    expect(
+      component.getByText('Showing 1-25 of 30 skills'),
+    ).toBeInTheDocument();
+
+    await user.click(component.getByRole('link', { name: '2' }));
+
+    await waitFor(() => {
+      expect(
+        component.getByText('Showing 26-30 of 30 skills'),
+      ).toBeInTheDocument();
+    });
+    expect(component.getByTestId('location-search')).toHaveTextContent(
+      'source=openthrottle',
+    );
+  });
+
+  test('a page change keeps ?search=', async () => {
+    const user = userEvent.setup();
+    // Every fixture slug contains `skill-0`; limit=10 spans the 40 matches.
+    const component = renderRoute('/skills?search=skill-0&limit=10');
+
+    expect(
+      component.getByText('Showing 1-10 of 40 skills'),
+    ).toBeInTheDocument();
+
+    await user.click(component.getByRole('link', { name: '2' }));
+
+    await waitFor(() => {
+      expect(
+        component.getByText('Showing 11-20 of 40 skills'),
+      ).toBeInTheDocument();
+    });
+    expect(component.getByTestId('location-search')).toHaveTextContent(
+      'search=skill-0',
+    );
+  });
+
+  test('a page change keeps a combined ?search= and ?source=', async () => {
+    const user = userEvent.setup();
+    const component = renderRoute(
+      '/skills?search=skill-0&source=openthrottle&limit=10',
+    );
+
+    expect(
+      component.getByText('Showing 1-10 of 30 skills'),
+    ).toBeInTheDocument();
+
+    await user.click(component.getByRole('link', { name: '3' }));
+
+    await waitFor(() => {
+      expect(
+        component.getByText('Showing 21-30 of 30 skills'),
+      ).toBeInTheDocument();
+    });
+    const probe = component.getByTestId('location-search');
+    expect(probe).toHaveTextContent('search=skill-0');
+    expect(probe).toHaveTextContent('source=openthrottle');
   });
 });
 
@@ -312,6 +467,46 @@ describe('routes/skills._index.tsx onboarding', () => {
     expect(
       component.getByRole('link', { name: 'Clear filters' }),
     ).toHaveAttribute('href', '/skills');
+  });
+
+  test('falls through to the filtered empty state when only ?source= is active', () => {
+    const component = renderRoute('/skills?source=personal', unavailableUsage, [
+      ...entries,
+    ]);
+
+    // None of the fixtures are personal-tier, so the filtered set is empty —
+    // but the list itself is not, so this is a filter, not a new user.
+    expect(
+      component.queryByTestId('GlobalFeatureOnboarding'),
+    ).not.toBeInTheDocument();
+    expect(component.getByTestId('SkillsTable')).toBeInTheDocument();
+    expect(
+      component.getByRole('heading', { name: SKILLS_EMPTY_COPY.searchTitle }),
+    ).toBeInTheDocument();
+    expect(
+      component.getByRole('link', { name: 'Clear filters' }),
+    ).toHaveAttribute('href', '/skills');
+    // The create-a-first-skill empty CTA is gone; the toolbar's own New skill
+    // button is a different affordance and stays.
+    expect(
+      component.queryByRole('heading', { name: SKILLS_EMPTY_COPY.title }),
+    ).not.toBeInTheDocument();
+  });
+
+  test('an empty checkout plus ?source= is filtered, not a new user', () => {
+    const component = renderRoute(
+      '/skills?source=personal',
+      unavailableUsage,
+      [],
+    );
+
+    expect(
+      component.queryByTestId('GlobalFeatureOnboarding'),
+    ).not.toBeInTheDocument();
+    expect(component.getByTestId('SkillsToolbar')).toBeInTheDocument();
+    expect(
+      component.getByRole('heading', { name: SKILLS_EMPTY_COPY.searchTitle }),
+    ).toBeInTheDocument();
   });
 
   test('a populated list renders the table with the trigger, not the inline pitch', () => {
