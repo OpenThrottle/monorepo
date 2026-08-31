@@ -486,3 +486,41 @@ describe('ChatCheckoutSelector Component — strict search matching', () => {
     expect(component.getByText('No matching checkouts.')).toBeInTheDocument();
   });
 });
+
+describe('ChatCheckoutSelector Component — minimal mode', () => {
+  test('renders an icon-only trigger that still names the selection', () => {
+    const component = renderSelector({ minimal: true });
+
+    const trigger = component.getByTestId('ChatCheckoutSelector-trigger');
+    expect(trigger).not.toHaveTextContent('openthrottle');
+    expect(trigger).toHaveAttribute('aria-label', 'Checkout: openthrottle');
+    expect(
+      component.queryByTestId('ChatCheckoutSelector-branch'),
+    ).not.toBeInTheDocument();
+  });
+
+  test('still opens the picker and reports the chosen checkout', async () => {
+    const onCheckoutChange = vi.fn();
+    const user = userEvent.setup();
+    const component = renderSelector({ minimal: true, onCheckoutChange });
+    await user.click(component.getByTestId('ChatCheckoutSelector-trigger'));
+
+    expect(
+      component.getByTestId('ChatCheckoutSelector-search'),
+    ).toBeInTheDocument();
+
+    await user.click(
+      component.getByTestId('ChatCheckoutSelector-option-repo-b'),
+    );
+
+    expect(onCheckoutChange).toHaveBeenCalledWith('repo-b');
+  });
+
+  test('renders a disabled icon-only trigger when there is nothing to pick', () => {
+    const component = renderSelector({ checkouts: [], minimal: true });
+
+    const trigger = component.getByTestId('ChatCheckoutSelector-trigger');
+    expect(trigger).toBeDisabled();
+    expect(trigger).toHaveAttribute('aria-label', 'Checkout: No checkouts');
+  });
+});

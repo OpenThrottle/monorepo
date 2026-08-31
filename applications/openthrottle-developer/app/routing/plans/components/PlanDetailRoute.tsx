@@ -6,21 +6,15 @@
  * lives here. Extracted from `routes/plans.$planId._index.tsx`; behavior is unchanged.
  */
 import * as React from 'react';
-import { Card, TabsList, TabsTrigger } from '@openthrottle/react-router-shadcn';
+import { Card } from '@openthrottle/react-router-shadcn';
 import { GlobalScreen } from '@openthrottle/react-router-ui-global';
-import {
-  BoltIcon,
-  CogIcon,
-  LayoutListIcon,
-  TerminalSquareIcon,
-} from 'lucide-react';
 import { OpenThrottleTabs } from '@openthrottle/react-router-ui';
 import {
   PLANS_DETAIL_TAB_SEARCH_PARAM,
   parsePlanDetailTab,
 } from '~/routing/plans/utils/parsers';
 import { PlanDetailRouteHeader } from '~/routing/plans/components/PlanDetailRouteHeader';
-import { PlanEditorActions } from '~/routing/plans/components/PlanEditorActions';
+import { PlanDetailTabsList } from '~/routing/plans/components/PlanDetailTabsList';
 import { PlanTabConfiguration } from '~/routing/plans/components/PlanTabConfiguration';
 import { PlanTabDetails } from '~/routing/plans/components/PlanTabDetails';
 import { PlanTabOutput } from '~/routing/plans/components/PlanTabOutput';
@@ -29,6 +23,7 @@ import { PlanTasksBoard } from '~/routing/plans/components/PlanTasksBoard';
 import { PlanToolbar } from '~/routing/plans/components/PlanToolbar';
 import { usePlanDetailRoute } from '~/routing/plans/hooks/usePlanDetailRoute';
 import type { Route } from '@/app/routes/+types/plans.$planId._index';
+import { usePlanCheckoutSelection } from '~/routing/plans/hooks/usePlanCheckoutSelection';
 
 export interface PlanDetailRouteProps {
   readonly loaderData: Route.ComponentProps['loaderData'];
@@ -71,6 +66,10 @@ export const PlanDetailRoute = (
     workflowRunBlockedReason,
     workingDirectory,
   } = usePlanDetailRoute({ loaderData, params, plan });
+  const { onCheckoutChange } = usePlanCheckoutSelection({
+    onSaveRunConfig,
+    repositories: loaderData.workspaceRepositories,
+  });
 
   // Setup
   const showToolbar = false;
@@ -127,51 +126,17 @@ export const PlanDetailRoute = (
             parse: (raw) => parsePlanDetailTab(raw) ?? undefined,
           }}
         >
-          <TabsList
-            className="mb-8 w-full max-w-full justify-start gap-4 overflow-x-auto overflow-y-hidden"
-            variant="line"
-          >
-            <TabsTrigger
-              className="flex-0 cursor-pointer"
-              id="plan-tab-overview"
-              value="overview"
-            >
-              <BoltIcon />
-              Details
-            </TabsTrigger>
-            <TabsTrigger
-              className="flex-0 cursor-pointer"
-              id="plan-tab-tasks"
-              value="tasks"
-            >
-              <LayoutListIcon />
-              Tasks ({resolvedTaskCount}/{tasks.length})
-            </TabsTrigger>
-            <TabsTrigger
-              className="flex-0 cursor-pointer"
-              id="plan-tab-output"
-              value="output"
-            >
-              <TerminalSquareIcon />
-              Output
-            </TabsTrigger>
-            <div className="flex-1" />
-            <PlanEditorActions
-              editors={loaderData.enabledEditors}
-              planId={plan.id}
-              workingDirectory={editorWorkingDirectory}
-            />
-            {showToolbar ? (
-              <TabsTrigger
-                className="flex-0 cursor-pointer"
-                id="plan-tab-configuration"
-                value="configuration"
-              >
-                <CogIcon />
-                Configuration
-              </TabsTrigger>
-            ) : null}
-          </TabsList>
+          <PlanDetailTabsList
+            checkoutId={checkoutId}
+            editorWorkingDirectory={editorWorkingDirectory}
+            editors={loaderData.enabledEditors}
+            onCheckoutChange={onCheckoutChange}
+            planId={plan.id}
+            repositories={loaderData.workspaceRepositories}
+            resolvedTaskCount={resolvedTaskCount}
+            showConfiguration={showToolbar}
+            taskCount={tasks.length}
+          />
           <PlanTabDetails
             fullscreen={fullscreen}
             setFullscreen={setFullscreen}

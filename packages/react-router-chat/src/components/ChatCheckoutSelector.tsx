@@ -29,6 +29,11 @@ export interface ChatCheckoutSelectorProps {
   /** Ceiling on {@link multiple} selections; ignored in single-select mode. */
   readonly maxCheckouts?: number;
   /**
+   * Icon-only trigger face for dense host rows (the plan-detail tabs row).
+   * Affects the button only — selection, search and grouping are untouched.
+   */
+  readonly minimal?: boolean;
+  /**
    * Opt into multi-select: one primary checkout plus additional context
    * directories. Requires {@link onCheckoutsChange}; absent or false keeps the
    * historical single-select behavior.
@@ -63,6 +68,10 @@ export interface ChatCheckoutSelectorProps {
  * loud: the agent is granted read access to them, not a promise that
  * concurrent runs there are safe.
  *
+ * `minimal` is presentation only: it shrinks the trigger to its folder icon for
+ * hosts whose row cannot afford `owner/repo · branch`, and changes nothing about
+ * selection semantics, the search, the grouping, or the popover itself.
+ *
  * @public
  */
 export const ChatCheckoutSelector = (
@@ -73,6 +82,7 @@ export const ChatCheckoutSelector = (
     className,
     emptyLabel = 'No checkouts',
     maxCheckouts = 1,
+    minimal = false,
     multiple = false,
     onCheckoutChange,
     onCheckoutsChange,
@@ -133,6 +143,7 @@ export const ChatCheckoutSelector = (
       className={className}
       enabled={hasCheckouts}
       label={triggerLabel}
+      minimal={minimal}
       secondaryCount={secondaryCount}
     />
   );

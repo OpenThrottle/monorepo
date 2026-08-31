@@ -1,7 +1,9 @@
 import * as React from 'react';
 import type { RenderResult } from '@testing-library/react';
+import { cleanup } from '@testing-library/react';
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { beforeEach, describe, expect, test } from 'vitest';
+import { PLAN_CHECKOUT_SELECTOR_COPY } from '~/routing/plans/data/data.copy';
 import { PlanDetailRoute } from '../PlanDetailRoute';
 import type { PlanDetailRouteProps } from '../PlanDetailRoute';
 import { PlanRunConfigStoreProvider } from '../PlanRunConfigStoreProvider';
@@ -39,12 +41,40 @@ const buildLoaderData = (
     ...overrides,
   });
 
+const CHECKOUT_ID = '11111111-1111-4111-8111-111111111111';
+
+/** Overloaded identity helper to launder a loose seed as the generated type. */
+function asRepositories(value: unknown): [];
+function asRepositories(value: unknown): unknown {
+  return value;
+}
+
+const repositories = asRepositories([
+  {
+    checkouts: [
+      {
+        displayName: 'monorepo',
+        filesystemPath: '/Users/me/monorepo',
+        id: CHECKOUT_ID,
+        inspection: { git: { currentBranch: 'main', defaultBranch: 'main' } },
+        kind: 'primary',
+        managed: false,
+      },
+    ],
+    defaultBranch: null,
+    id: 'repo-1',
+    name: 'monorepo',
+    normalizedRemoteUrl: null,
+    projectId: null,
+  },
+]);
+
 const renderRoute = (
   loaderData: PlanDetailRouteProps['loaderData'] = buildLoaderData(),
   planOverrides: Partial<PlanDetailRouteProps['plan']> = {},
   repositories: React.ComponentProps<
     typeof PlanRunConfigStoreProvider
-  >['repositories'] = Promise.resolve([]),
+  >['repositories'] = loaderData.workspaceRepositories,
 ): RenderResult => {
   const routePlan = { ...plan, ...planOverrides };
 
@@ -94,6 +124,42 @@ describe('PlanDetailRoute Component', () => {
     expect(
       component.getByRole('tab', { name: /tasks \(0\/0\)/i }),
     ).toBeInTheDocument();
+  });
+
+  test('mounts the checkout picker once repositories resolve', async () => {
+    // The suite's beforeEach already rendered a route into this document.
+    cleanup();
+    const component = renderRoute(
+      buildLoaderData({ workspaceRepositories: Promise.resolve(repositories) }),
+    );
+
+    expect(
+      await component.findByTestId('PlanCheckoutSelector'),
+    ).toBeInTheDocument();
+    // This plan's runConfigJson carries no workspace, which is exactly the
+    // case the picker exists for: enabled, unselected, waiting for a choice.
+    const trigger = component.getByTestId('ChatCheckoutSelector-trigger');
+    expect(trigger).toBeEnabled();
+    // Icon-only in this row, so the unselected state is announced rather than
+    // printed — the placeholder rides the accessible name instead of the face.
+    expect(trigger).toHaveAccessibleName(
+      `Checkout: ${PLAN_CHECKOUT_SELECTOR_COPY.placeholder}`,
+    );
+  });
+
+  // A plan with no workspace cannot be queued and its editor links stay inert,
+  // so the row has to say why rather than render an unexplained dead control.
+  test('disables the picker and names the fix when nothing is registered', async () => {
+    cleanup();
+    const component = renderRoute(
+      buildLoaderData({ workspaceRepositories: Promise.resolve([]) }),
+    );
+
+    expect(
+      await component.findByTestId('ChatCheckoutSelector-trigger'),
+    ).toBeDisabled();
+    expect(component.getByTestId('PlanCheckoutSelector')).toBeInTheDocument();
+    expect(PLAN_CHECKOUT_SELECTOR_COPY.emptyRegistryHint).toContain('Settings');
   });
 });
 

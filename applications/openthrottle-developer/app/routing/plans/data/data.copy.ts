@@ -191,6 +191,24 @@ export const PLAN_EDITOR_ACTIONS_COPY = {
     `Opens this plan's working directory in ${label} with the run prompt prefilled.`,
 } as const;
 
+/**
+ * @description Copy for {@link PlanCheckoutSelector} — the compact checkout
+ * picker in the plan-detail tabs row. The two hints are the whole point of the
+ * control: a plan with no (or a de-registered) checkout cannot run or open in an
+ * editor, and the row must say so rather than sit there inertly.
+ *
+ * `minimalHint` covers the third, healthy state, which only exists in the
+ * icon-only presentation: with the label gone from the button face, the hover
+ * has to say what the icon is for. The two failure hints still outrank it.
+ */
+export const PLAN_CHECKOUT_SELECTOR_COPY = {
+  emptyLabel: `No checkouts`,
+  emptyRegistryHint: `No repository checkouts are registered yet. Register one in Settings → Workspace, then pick it here to make this plan runnable.`,
+  minimalHint: `The repository checkout this plan runs in. Click to pick a different one.`,
+  placeholder: `Select checkout`,
+  staleCheckoutHint: `The checkout recorded on this plan is no longer registered. Pick another one to make this plan runnable again.`,
+} as const;
+
 export const PLAN_TOOLBAR_COPY = {
   evaluateRulesRunningTooltip: `Unavailable while a run is active — kill the run first.`,
   evaluateRulesTerminalTooltip: `This plan is in a terminal state — nothing to evaluate.`,
