@@ -61,7 +61,7 @@ export const loader = (args: Route.LoaderArgs) => {
     queues: result.queues,
   }));
 
-  const githubStats = executeGraphqlWithAuth(
+  const githubStatsResult = executeGraphqlWithAuth(
     args.request,
     GetDashboardGithubStatsDocument,
     { owner, repo },
@@ -76,6 +76,25 @@ export const loader = (args: Route.LoaderArgs) => {
     GetDashboardOnboardingDocument,
     {},
   );
+
+  // githubTokenConfigured is deliberately NOT selected by getDashboardGithubStats:
+  // it is the one GithubResolver query without a cache hint, and Apollo takes an
+  // operation's cache policy from its most restrictive field, so including it
+  // collapsed the whole ~4s stats query to maxAge 0 and it never cached. It is
+  // read off the cheap onboarding query instead and joined back on here.
+  //
+  // Promise.all, not a nested Await: both calls are already in flight, so this
+  // joins two concurrent streams rather than adding a waterfall. A failing
+  // onboarding call falls back to true so a Get Started outage can't tell the
+  // user to configure a token they already have — if the token really were
+  // missing, githubStats itself would surface that through its error boundary.
+  const githubStats = Promise.all([
+    githubStatsResult,
+    onboarding.then((result) => result.githubTokenConfigured).catch(() => true),
+  ]).then(([stats, githubTokenConfigured]) => ({
+    ...stats,
+    githubTokenConfigured,
+  }));
 
   // Deferred (recentChats): the 3 most-recent agent conversations, streamed in
   // its own Await boundary (mirroring githubStats) so it never blocks the

@@ -14,17 +14,28 @@ vi.mock('@openthrottle/react-router-graphql', () => ({
 
 const mockExecute = vi.mocked(executeGraphqlWithAuth);
 
+// Raw GraphQL shape returned by the 2nd executeGraphqlWithAuth call
+// (getDashboardGithubStats). It deliberately does NOT select
+// githubTokenConfigured — that field is hinted at only 30s and would drag this
+// ~4s operation's cache policy down with it. The loader joins the flag on from
+// the onboarding query instead.
 const mockGithubStats = {
   closedPrCountByAuthor: [
     { author: 'visormatt', openCount: 1 },
     { author: 'other-user', openCount: 3 },
   ],
-  githubTokenConfigured: true,
   openPrCountByAuthor: [
     { author: 'visormatt', openCount: 5 },
     { author: 'other-user', openCount: 2 },
   ],
   prTimeInStateSummary: [{ avgDaysInState: 2.5, count: 4, state: 'open' }],
+};
+
+// Loader-facing shape: the raw stats response after the loader joins the token
+// flag on from onboarding. This is what the components actually receive.
+const mockGithubStatsLoaded = {
+  ...mockGithubStats,
+  githubTokenConfigured: true,
 };
 
 const mockDashboardQuery = {
@@ -69,7 +80,7 @@ const mockConversationsQuery = {
 // ListAgentConversationsResult.
 const mockLoaderData = {
   core: Promise.resolve(mockDashboardQuery),
-  githubStats: Promise.resolve(mockGithubStats),
+  githubStats: Promise.resolve(mockGithubStatsLoaded),
   onboarding: Promise.resolve(mockOnboardingQuery),
   recentChats: Promise.resolve({
     conversations: mockConversationsQuery.listAgentConversations.conversations,
@@ -119,14 +130,48 @@ describe('routes/dashboard._index.tsx', () => {
       // githubStats, onboarding, and recentChats are each invoked by the time
       // the loader returns.
       expect(mockExecute).toHaveBeenCalledTimes(4);
-      // githubStats is now a deferred promise — await it to assert its value.
-      expect(await result.githubStats).toEqual(mockGithubStats);
+      // githubStats is a deferred promise — await it to assert its value. The
+      // token flag is joined on from the onboarding query (false here), NOT
+      // selected by getDashboardGithubStats, which is the whole point: the
+      // stats operation must contain only cache-hinted fields.
+      expect(await result.githubStats).toEqual({
+        ...mockGithubStats,
+        githubTokenConfigured: false,
+      });
       expect(mockExecute).toHaveBeenNthCalledWith(
         2,
         request,
         expect.any(Object),
         { owner: 'openthrottle', repo: 'openthrottle' },
       );
+    });
+
+    test('should fall back to a configured token when onboarding rejects', async () => {
+      // The token flag now rides on the onboarding query. If that call fails we
+      // render the stats rather than telling the user to configure a token they
+      // may already have — githubStats has its own error boundary for the case
+      // where the token really is missing.
+      mockExecute
+        .mockResolvedValueOnce(mockDashboardQuery)
+        .mockResolvedValueOnce(mockGithubStats)
+        .mockRejectedValueOnce(new Error('onboarding unavailable'))
+        .mockResolvedValueOnce(mockConversationsQuery);
+
+      const request = new Request('http://localhost/dashboard');
+      const args: Route.LoaderArgs = {
+        context: createTestRouterContext(),
+        params: {},
+        pattern: '/dashboard',
+        request,
+        url: new URL(request.url),
+      };
+
+      const result = await loader(args);
+
+      expect(await result.githubStats).toEqual({
+        ...mockGithubStats,
+        githubTokenConfigured: true,
+      });
     });
 
     test('should default owner and repo when search params are missing or invalid', async () => {
@@ -218,7 +263,7 @@ describe('routes/dashboard._index.tsx', () => {
         loaderData={{
           ...mockLoaderData,
           githubStats: Promise.resolve({
-            ...mockGithubStats,
+            ...mockGithubStatsLoaded,
             closedPrCountByAuthor: [],
             openPrCountByAuthor: [],
           }),
