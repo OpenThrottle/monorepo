@@ -171,7 +171,9 @@ describe('useSkillCreateForm', () => {
       act(() => form.current.setSlug('my-real-skill'));
       expect(form.current.editorPath).toBe('my-real-skill/SKILL.md');
 
-      act(() => form.current.setDestination(SKILL_CREATE_DESTINATIONS.repo));
+      act(() =>
+        form.current.setDestination(SKILL_CREATE_DESTINATIONS.openthrottle),
+      );
       expect(form.current.editorPath).toBe('skills/my-real-skill/SKILL.md');
     });
   });
@@ -248,13 +250,15 @@ describe('useSkillCreateForm', () => {
 
       act(() => form.current.setSlug('my-real-skill'));
       act(() => form.current.setDescription('Does a thing.'));
-      act(() => form.current.setDestination(SKILL_CREATE_DESTINATIONS.repo));
+      act(() =>
+        form.current.setDestination(SKILL_CREATE_DESTINATIONS.openthrottle),
+      );
 
       pressSaveShortcut();
 
       await waitFor(() => expect(form.submissions).toHaveLength(1));
       expect(form.submissions[0]?.get('destination')).toBe(
-        SKILL_CREATE_DESTINATIONS.repo,
+        SKILL_CREATE_DESTINATIONS.openthrottle,
       );
     });
 

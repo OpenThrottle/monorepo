@@ -158,7 +158,7 @@ describe.runIf(IS_ENABLED)('live create flow', () => {
   test('creates a REPO skill as exactly one untracked directory', () => {
     const result = createSkillFile({
       content: contentFor(REPO_SLUG),
-      destination: 'repo',
+      destination: 'openthrottle',
       slug: REPO_SLUG,
     });
 
@@ -195,7 +195,7 @@ describe.runIf(IS_ENABLED)('live create flow', () => {
     test('a non-kebab slug is refused', () => {
       const result = createSkillFile({
         content: contentFor('Not_Kebab'),
-        destination: 'repo',
+        destination: 'openthrottle',
         slug: 'Not_Kebab',
       });
 
@@ -207,7 +207,7 @@ describe.runIf(IS_ENABLED)('live create flow', () => {
       const slug = 'live-verify-no-description';
       const result = createSkillFile({
         content: `---\nname: ${slug}\ndescription: \n---\n\n# ${slug}\n`,
-        destination: 'repo',
+        destination: 'openthrottle',
         slug,
       });
 
@@ -219,7 +219,7 @@ describe.runIf(IS_ENABLED)('live create flow', () => {
       const slug = 'live-verify-broken-frontmatter';
       const result = createSkillFile({
         content: `---\nthis is not: [valid: yaml\n---\n\n# ${slug}\n`,
-        destination: 'repo',
+        destination: 'openthrottle',
         slug,
       });
 

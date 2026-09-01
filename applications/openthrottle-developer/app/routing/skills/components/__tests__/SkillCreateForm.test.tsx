@@ -31,28 +31,27 @@ vi.mock('@openthrottle/react-router-editor', () => ({
 
 const buildForm = (
   overrides: Partial<UseSkillCreateFormResult> = {},
-): UseSkillCreateFormResult => {
-  return {
-    canSubmit: true,
-    content: '---\nname: my-new-skill\n---\n',
-    description: 'Does a thing.',
-    destination: SKILL_CREATE_DESTINATIONS.personal,
-    editorPath: 'my-new-skill/SKILL.md',
-    error: undefined,
-    handleEditorChange: vi.fn(),
-    handleSubmit: vi.fn(),
-    isDocumentDirty: false,
-    isSubmitting: false,
-    setDescription: vi.fn(),
-    setDestination: vi.fn(),
-    setSlug: vi.fn(),
-    setTags: vi.fn(),
-    slug: 'my-new-skill',
-    slugError: undefined,
-    tags: '',
-    ...overrides,
-  };
-};
+): UseSkillCreateFormResult => { return {
+  betaPreviewEnabled: true,
+  canSubmit: true,
+  content: '---\nname: my-new-skill\n---\n',
+  description: 'Does a thing.',
+  destination: SKILL_CREATE_DESTINATIONS.personal,
+  editorPath: 'my-new-skill/SKILL.md',
+  error: undefined,
+  handleEditorChange: vi.fn(),
+  handleSubmit: vi.fn(),
+  isDocumentDirty: false,
+  isSubmitting: false,
+  setDescription: vi.fn(),
+  setDestination: vi.fn(),
+  setSlug: vi.fn(),
+  setTags: vi.fn(),
+  slug: 'my-new-skill',
+  slugError: undefined,
+  tags: '',
+  ...overrides,
+}; };
 
 const renderForm = (
   form: UseSkillCreateFormResult = buildForm(),
@@ -150,7 +149,7 @@ describe('SkillCreateForm Component', () => {
       ).toBeInTheDocument();
       expect(
         component.getByRole('radio', {
-          name: SKILL_CREATE_COPY.destinationRepoLabel,
+          name: SKILL_CREATE_COPY.destinationOpenThrottleLabel,
         }),
       ).toBeInTheDocument();
     });
@@ -162,12 +161,12 @@ describe('SkillCreateForm Component', () => {
 
       await user.click(
         component.getByRole('radio', {
-          name: SKILL_CREATE_COPY.destinationRepoLabel,
+          name: SKILL_CREATE_COPY.destinationOpenThrottleLabel,
         }),
       );
 
       expect(form.setDestination).toHaveBeenCalledWith(
-        SKILL_CREATE_DESTINATIONS.repo,
+        SKILL_CREATE_DESTINATIONS.openthrottle,
       );
     });
 
@@ -177,8 +176,8 @@ describe('SkillCreateForm Component', () => {
         SKILL_CREATE_COPY.destinationPersonalDescription,
       ],
       [
-        SKILL_CREATE_DESTINATIONS.repo,
-        SKILL_CREATE_COPY.destinationRepoDescription,
+        SKILL_CREATE_DESTINATIONS.openthrottle,
+        SKILL_CREATE_COPY.destinationOpenThrottleDescription,
       ],
     ])('states the consequence of choosing %s', (destination, consequence) => {
       const component = renderForm(buildForm({ destination }));

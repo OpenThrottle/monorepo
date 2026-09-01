@@ -131,6 +131,7 @@ export const SkillCreateForm = (
         </div>
 
         <SkillCreateDestinationField
+          betaPreviewEnabled={form.betaPreviewEnabled}
           className="md:col-span-2"
           onChange={form.setDestination}
           value={form.destination}

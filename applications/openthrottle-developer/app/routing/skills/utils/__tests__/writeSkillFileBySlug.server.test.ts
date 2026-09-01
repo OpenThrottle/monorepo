@@ -53,19 +53,18 @@ description: Edited description.
 const entryFor = (
   repoRelativePath: string,
   source: RepoSkillEntry['source'] = 'openthrottle',
-  isPersonal?: true,
-): RepoSkillEntry => {
-  return {
-    disableModelInvocation: undefined,
-    isPersonal,
-    layout: 'agents',
-    repoRelativePath,
-    slug: 'my-skill',
-    source,
-    summary: 'Original description.',
-    tags: undefined,
-  };
-};
+  overlay?: 'custom' | 'personal',
+): RepoSkillEntry => { return {
+  disableModelInvocation: undefined,
+  isCustom: overlay === 'custom' ? true : undefined,
+  isPersonal: overlay === 'personal' ? true : undefined,
+  layout: 'agents',
+  repoRelativePath,
+  slug: 'my-skill',
+  source,
+  summary: 'Original description.',
+  tags: undefined,
+}; };
 
 const PERSONAL_DIR_ENV = 'OPENTHROTTLE_PERSONAL_SKILLS_DIR';
 
@@ -159,6 +158,21 @@ describe('writeSkillFileBySlug', () => {
     expect(readFileSync(skillPath, 'utf8')).toBe(ORIGINAL_CONTENT);
   });
 
+  // The custom tier also carries `source: 'external'` — it is a real directory
+  // the lockfile does not claim — but it is the repo's own file, so it is
+  // writable in place, unlike a lockfile install.
+  test('writes a custom (repo-authored) skill in place', () => {
+    mockDiscoverRepoSkills.mockReturnValue([
+      entryFor('.agents/skills/my-skill/SKILL.md', 'external', 'custom'),
+    ]);
+
+    const result = writeSkillFileBySlug('my-skill', VALID_EDIT);
+
+    expect(result).toEqual({ ok: true });
+    expect(readFileSync(skillPath, 'utf8')).toBe(VALID_EDIT);
+    expect(lstatSync(skillPath).isSymbolicLink()).toBe(false);
+  });
+
   test('refuses an externally sourced skill without writing', () => {
     mockDiscoverRepoSkills.mockReturnValue([
       entryFor('.agents/skills/my-skill/SKILL.md', 'external'),
@@ -188,7 +202,11 @@ describe('writeSkillFileBySlug', () => {
 
     process.env[PERSONAL_DIR_ENV] = personalRoot;
     mockDiscoverRepoSkills.mockReturnValue([
-      entryFor('.agents/skills/my-personal-skill/SKILL.md', 'external', true),
+      entryFor(
+        '.agents/skills/my-personal-skill/SKILL.md',
+        'external',
+        'personal',
+      ),
     ]);
 
     const result = writeSkillFileBySlug('my-skill', VALID_EDIT);
@@ -211,7 +229,7 @@ describe('writeSkillFileBySlug', () => {
 
     process.env[PERSONAL_DIR_ENV] = personalRoot;
     mockDiscoverRepoSkills.mockReturnValue([
-      entryFor('.agents/skills/rogue/SKILL.md', 'external', true),
+      entryFor('.agents/skills/rogue/SKILL.md', 'external', 'personal'),
     ]);
 
     const result = writeSkillFileBySlug('my-skill', VALID_EDIT);

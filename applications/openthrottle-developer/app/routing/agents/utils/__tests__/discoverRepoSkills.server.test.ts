@@ -91,6 +91,7 @@ describe('discoverRepoSkills', () => {
 
     expect(discoverRepoSkills(root)).toEqual([
       {
+        isCustom: true,
         layout: 'agents',
         repoRelativePath: '.agents/skills/alpha-skill/SKILL.md',
         slug: 'alpha-skill',
@@ -98,6 +99,7 @@ describe('discoverRepoSkills', () => {
         summary: 'Alpha agents skill.',
       },
       {
+        isCustom: true,
         layout: 'agents',
         repoRelativePath: '.agents/skills/zebra-skill/SKILL.md',
         slug: 'zebra-skill',
@@ -105,6 +107,7 @@ describe('discoverRepoSkills', () => {
         summary: 'Zebra agents skill.',
       },
       {
+        isCustom: true,
         layout: 'claude',
         repoRelativePath: '.claude/skills/monitor-ci/SKILL.md',
         slug: 'monitor-ci',
@@ -162,6 +165,7 @@ describe('discoverRepoSkills', () => {
 
     expect(discoverRepoSkills(root)).toEqual([
       {
+        isCustom: true,
         layout: 'cursor',
         repoRelativePath: '.cursor/skills/only-cursor/SKILL.md',
         slug: 'only-cursor',
@@ -196,6 +200,7 @@ describe('discoverRepoSkills', () => {
 
     expect(discoverRepoSkills(root)).toEqual([
       {
+        isCustom: true,
         layout: 'agents',
         repoRelativePath: '.agents/skills/shared/SKILL.md',
         slug: 'shared',
@@ -294,22 +299,7 @@ describe('discoverRepoSkills', () => {
 
     expect(entry?.source).toBe('external');
     expect(entry?.sourceUrl).toBe('https://github.com/github/awesome-copilot');
-  });
-
-  test('derives external with no URL when the lockfile is absent', () => {
-    const root = makeTempDir();
-
-    writeSkill(
-      root,
-      '.agents/skills',
-      'orphan-skill',
-      'name: orphan-skill\ndescription: Real dir, no lockfile.',
-    );
-
-    const [entry] = discoverRepoSkills(root);
-
-    expect(entry?.source).toBe('external');
-    expect(entry?.sourceUrl).toBeUndefined();
+    expect(entry?.isCustom).toBeUndefined();
   });
 
   test('ignores a source frontmatter key — provenance is layout-derived', () => {
@@ -328,7 +318,7 @@ describe('discoverRepoSkills', () => {
 
     const [entry] = discoverRepoSkills(root);
 
-    // A real (installed) directory reads external regardless of frontmatter.
+    // A real directory reads external on the wire regardless of frontmatter.
     expect(entry?.source).toBe('external');
   });
 
@@ -344,6 +334,7 @@ describe('discoverRepoSkills', () => {
 
     expect(discoverRepoSkills(root)).toEqual([
       {
+        isCustom: true,
         layout: 'agents',
         repoRelativePath: '.agents/skills/folder-only/SKILL.md',
         slug: 'folder-only',
@@ -381,6 +372,7 @@ describe('discoverRepoSkills', () => {
 
     expect(discoverRepoSkills(root)).toEqual([
       {
+        isCustom: true,
         layout: 'agents',
         repoRelativePath: '.agents/skills/no-summary/SKILL.md',
         slug: 'no-summary',
@@ -401,6 +393,7 @@ describe('discoverRepoSkills', () => {
 
     expect(discoverRepoSkills(root)).toEqual([
       {
+        isCustom: true,
         layout: 'agents',
         repoRelativePath: '.agents/skills/markdown-only/SKILL.md',
         slug: 'markdown-only',
@@ -423,6 +416,7 @@ describe('discoverRepoSkills', () => {
 
     expect(discoverRepoSkills(root)).toEqual([
       {
+        isCustom: true,
         layout: 'agents',
         repoRelativePath: '.agents/skills/has-skill/SKILL.md',
         slug: 'has-skill',
@@ -449,6 +443,7 @@ describe('discoverRepoSkills', () => {
 
     expect(discoverRepoSkills(root)).toEqual([
       {
+        isCustom: true,
         layout: 'agents',
         repoRelativePath: '.agents/skills/shared-skill/SKILL.md',
         slug: 'shared-skill',
@@ -472,6 +467,7 @@ describe('discoverRepoSkills', () => {
 
     expect(discoverRepoSkills(root)).toEqual([
       {
+        isCustom: true,
         layout: 'claude',
         repoRelativePath: '.claude/skills/real-skill/SKILL.md',
         slug: 'real-skill',
@@ -527,6 +523,13 @@ describe('discoverRepoSkills', () => {
       'vendored',
       'name: vendored\ndescription: Installed.',
     );
+    writeFileSync(
+      join(root, 'skills-lock.json'),
+      JSON.stringify({
+        skills: { vendored: { source: 'acme/skills', sourceType: 'github' } },
+        version: 1,
+      }),
+    );
 
     const entries = discoverRepoSkills(root);
 
@@ -553,5 +556,87 @@ describe('discoverRepoSkills', () => {
     expect(entry?.slug).toBe('rogue');
     expect(entry?.source).toBe('external');
     expect(entry?.isPersonal).toBeUndefined();
+    expect(entry?.isCustom).toBeUndefined();
+  });
+
+  // The custom tier: a real directory the target repo authored and commits.
+  // Lockfile absence is the whole discriminator — a real directory is a
+  // vendored install only if skills-lock.json claims it. See
+  // docs/monorepo/foreign-workspace-skill-injection.md §7.3.
+  describe('the custom tier', () => {
+    test('flags a real directory absent from the lockfile as custom', () => {
+      const root = makeTempDir();
+
+      writeSkill(
+        root,
+        '.agents/skills',
+        'team-skill',
+        'name: team-skill\ndescription: Authored in this repository.',
+      );
+
+      const [entry] = discoverRepoSkills(root);
+
+      expect(entry?.slug).toBe('team-skill');
+      expect(entry?.isCustom).toBe(true);
+      expect(entry?.source).toBe('external');
+      expect(entry?.sourceUrl).toBeUndefined();
+    });
+
+    test('the same slug present in the lockfile is external, not custom', () => {
+      const root = makeTempDir();
+
+      writeSkill(
+        root,
+        '.agents/skills',
+        'team-skill',
+        'name: team-skill\ndescription: Same folder, now claimed.',
+      );
+      writeFileSync(
+        join(root, 'skills-lock.json'),
+        JSON.stringify({
+          skills: {
+            'team-skill': { source: 'acme/skills', sourceType: 'github' },
+          },
+          version: 1,
+        }),
+      );
+
+      const [entry] = discoverRepoSkills(root);
+
+      expect(entry?.isCustom).toBeUndefined();
+      expect(entry?.source).toBe('external');
+      expect(entry?.sourceUrl).toBe('https://github.com/acme/skills');
+    });
+
+    test('an authored skills/ symlink is openthrottle, not custom', () => {
+      const root = makeTempDir();
+
+      writeSkill(root, 'skills', 'ours', 'name: ours\ndescription: Authored.');
+      mkdirSync(join(root, '.agents/skills'), { recursive: true });
+      symlinkSync(join(root, 'skills/ours'), join(root, '.agents/skills/ours'));
+
+      const [entry] = discoverRepoSkills(root);
+
+      expect(entry?.source).toBe('openthrottle');
+      expect(entry?.isCustom).toBeUndefined();
+    });
+
+    test('a personal-root symlink is personal, not custom', () => {
+      const root = makeTempDir();
+      const personalRoot = makeTempDir();
+      process.env[PERSONAL_DIR_ENV] = personalRoot;
+
+      writeSkill(personalRoot, '.', 'mine', 'name: mine\ndescription: Mine.');
+      mkdirSync(join(root, '.agents/skills'), { recursive: true });
+      symlinkSync(
+        join(personalRoot, 'mine'),
+        join(root, '.agents/skills/mine'),
+      );
+
+      const [entry] = discoverRepoSkills(root);
+
+      expect(entry?.isPersonal).toBe(true);
+      expect(entry?.isCustom).toBeUndefined();
+    });
   });
 });
