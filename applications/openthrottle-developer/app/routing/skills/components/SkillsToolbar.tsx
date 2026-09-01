@@ -83,6 +83,9 @@ export const SkillsToolbar = (
         <ToggleGroupItem size="sm" value="external">
           {SKILLS_SOURCE_COPY.filterExternalLabel}
         </ToggleGroupItem>
+        <ToggleGroupItem size="sm" value="custom">
+          {SKILLS_SOURCE_COPY.filterCustomLabel}
+        </ToggleGroupItem>
         <ToggleGroupItem size="sm" value="personal">
           {SKILLS_SOURCE_COPY.filterPersonalLabel}
         </ToggleGroupItem>

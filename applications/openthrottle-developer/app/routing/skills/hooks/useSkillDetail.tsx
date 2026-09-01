@@ -50,10 +50,13 @@ export const useSkillDetail = (
   const wasSavingRef = React.useRef(false);
 
   // Setup
-  // Authored here, or your own personal tier — either way the file is yours to
-  // edit. Only a lockfile-installed external skill is off limits.
+  // Authored here, authored in this repository (custom), or your own personal
+  // tier — either way the file is yours to edit. Only a lockfile-installed
+  // external skill is off limits.
   const isEditableProvenance =
-    entry.source === 'openthrottle' || entry.isPersonal === true;
+    entry.source === 'openthrottle' ||
+    entry.isCustom === true ||
+    entry.isPersonal === true;
   const { badge: invocationBadge } = getResolvedModelInvocationDisplay(entry);
   const isDirty = draft !== content;
   // Editing a lockfile-installed SKILL.md forks it from upstream, so provenance

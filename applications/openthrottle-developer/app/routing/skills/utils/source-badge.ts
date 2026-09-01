@@ -1,8 +1,9 @@
 /**
- * @description Maps a skill's three-way provenance to a display badge (color +
+ * @description Maps a skill's four-way provenance to a display badge (color +
  * label + tooltip + optional origin href). DISPLAY ONLY — filtering lives in
  * `filter-skills-by-source`. Backend `SkillSource` is only
- * `external | openthrottle`; personal is a local `isPersonal` overlay.
+ * `external | openthrottle`; personal and custom are local `isPersonal` /
+ * `isCustom` overlays.
  */
 
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
@@ -11,7 +12,7 @@ import type { SkillSourceKind } from '~/routing/skills/utils/filter-skills-by-so
 import { getSkillSourceKind } from '~/routing/skills/utils/filter-skills-by-source';
 
 export interface SkillSourceBadge {
-  readonly color: 'accent' | 'green' | 'yellow';
+  readonly color: 'accent' | 'green' | 'violet' | 'yellow';
   readonly href: string | undefined;
   readonly kind: SkillSourceKind;
   readonly label: string;
@@ -20,15 +21,28 @@ export interface SkillSourceBadge {
 
 /**
  * @description Combined source-badge presentation. Personal never links out
- * (origin is a directory on this machine); OpenThrottle never links out
- * (authored here); External links when the lockfile supplied a `sourceUrl`.
+ * (origin is a directory on this machine); Custom never links out (authored in
+ * this repository, so there is no origin to link); OpenThrottle never links
+ * out (authored here); External links when the lockfile supplied a `sourceUrl`.
  */
 export const getSkillSourceBadge = (
-  entry: Pick<RepoSkillEntry, 'isPersonal' | 'source' | 'sourceUrl'>,
+  entry: Pick<
+    RepoSkillEntry,
+    'isCustom' | 'isPersonal' | 'source' | 'sourceUrl'
+  >,
 ): SkillSourceBadge => {
   const kind = getSkillSourceKind(entry);
 
   switch (kind) {
+    case 'custom':
+      return {
+        color: 'violet',
+        href: undefined,
+        kind,
+        label: SKILLS_SOURCE_COPY.customLabel,
+        tooltip: SKILLS_SOURCE_COPY.customTooltip,
+      };
+
     case 'external':
       return {
         color: 'yellow',

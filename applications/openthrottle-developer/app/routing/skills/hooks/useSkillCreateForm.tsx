@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useFetcher } from 'react-router';
+import { FEATURE_BETA_PREVIEW } from '@openthrottle/react-router-utils';
 import type { SkillCreateDestination } from '~/routing/skills/config/skill-create';
 import {
   DEFAULT_SKILL_CREATE_DESTINATION,
@@ -13,6 +14,19 @@ import { buildSkillScaffold } from '~/routing/skills/utils/build-skill-scaffold'
 /** Stands in for the slug in the scaffold and the editor path until one is typed. */
 const SLUG_PLACEHOLDER = 'my-new-skill';
 
+/**
+ * Repo-relative prefix the editor's path label shows per destination. Personal
+ * has none — its root lives outside the checkout, so a repo-rooted path would
+ * be a lie.
+ */
+const DESTINATION_PATH_PREFIX: Readonly<
+  Record<SkillCreateDestination, string>
+> = {
+  [SKILL_CREATE_DESTINATIONS.custom]: '.agents/skills/',
+  [SKILL_CREATE_DESTINATIONS.openthrottle]: 'skills/',
+  [SKILL_CREATE_DESTINATIONS.personal]: '',
+};
+
 const splitTags = (raw: string): readonly string[] =>
   raw
     .split(',')
@@ -25,6 +39,11 @@ interface SkillCreateActionData {
 }
 
 export interface UseSkillCreateFormResult {
+  /**
+   * `FEATURE_BETA_PREVIEW`. Read once here so the presentational field takes it
+   * as a prop and stays renderable in both states without stubbing modules.
+   */
+  betaPreviewEnabled: boolean;
   canSubmit: boolean;
   content: string;
   description: string;
@@ -103,10 +122,7 @@ export const useSkillCreateForm = (): UseSkillCreateFormResult => {
 
   const content = isDocumentDirty ? draft : seededContent;
 
-  const livePath =
-    destination === SKILL_CREATE_DESTINATIONS.repo
-      ? `skills/${scaffoldName}/SKILL.md`
-      : `${scaffoldName}/SKILL.md`;
+  const livePath = `${DESTINATION_PATH_PREFIX[destination]}${scaffoldName}/SKILL.md`;
   const editorPath = frozenPathRef.current ?? livePath;
 
   // A slug is only wrong once something has been typed — an untouched field
@@ -166,6 +182,7 @@ export const useSkillCreateForm = (): UseSkillCreateFormResult => {
   // 🔌 Short Circuit
 
   return {
+    betaPreviewEnabled: FEATURE_BETA_PREVIEW,
     canSubmit,
     content,
     description,

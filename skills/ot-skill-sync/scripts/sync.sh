@@ -164,7 +164,8 @@ ensure_link() {
       violation "$rel is a symlink to the wrong target ($resolved)"
       return 1
     fi
-    # A symlink here is always ours (external installs are real directories), so
+    # A symlink here is always ours (installed and custom skills are both real
+    # directories), so
     # a wrong target is a repairable generated link — replace it, don't skip.
     if ! rm "$target"; then
       echo -e "- ${YELLOW} Skipping $rel (could not remove mismatched symlink)${NC}"
@@ -374,8 +375,15 @@ if [ "$CHECK_MODE" = true ] && [ -d "$REPO_ROOT/$UNIVERSAL_DIR" ]; then
           fi ;;
       esac
     elif [ -d "$entry" ]; then
-      if ! echo "$LOCKED_NAMES" | grep -qFx "$name"; then
-        violation "$UNIVERSAL_DIR/$name is a real directory but not in $LOCKFILE_NAME (hand-authored skills belong in $SKILLS_SRC_DIR/)"
+      # A real directory is owned by this repo either way, and sync never
+      # touches it either way. The lockfile only says WHICH kind: claimed = a
+      # vendored install, unclaimed = repo-authored (custom), the tier an end
+      # user writes their own skills into. Neither is drift, so neither is a
+      # violation — reported so the output stays self-explaining.
+      if echo "$LOCKED_NAMES" | grep -qFx "$name"; then
+        echo -e "- ${YELLOW} $UNIVERSAL_DIR/$name is a real directory  (vendored)${NC}"
+      else
+        echo -e "- ${YELLOW} $UNIVERSAL_DIR/$name is a real directory  (repo-authored)${NC}"
       fi
     fi
   done

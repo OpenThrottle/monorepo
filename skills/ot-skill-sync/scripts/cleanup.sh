@@ -2,7 +2,8 @@
 # ot-skill-sync — remove everything sync.sh generated in the current repo.
 #
 # Generated links are exactly the symlinks under .agents/skills/ and the agent
-# fan-out dirs; real directories there are external installs and are left alone.
+# fan-out dirs; real directories there are owned by the repo (a vendored
+# install or a repo-authored custom skill) and are left alone.
 # This removes those symlinks (never their targets), strips our .gitignore block,
 # deletes any legacy .gitignore-symlinks ledger, and prunes emptied roots.
 #
@@ -32,7 +33,8 @@ echo ""
 removed=0
 
 # Remove every generated symlink under the universal dir and each agent dir.
-# Symlinks only — real directories (external installs) are never touched.
+# Symlinks only — real directories (vendored installs and repo-authored custom
+# skills alike) are never touched.
 for dir in "$UNIVERSAL_DIR" $AGENT_SKILL_DIRS; do
   root="$REPO_ROOT/$dir"
   # A symlinked root is the legacy `.claude/skills → skills` layout that sync.sh

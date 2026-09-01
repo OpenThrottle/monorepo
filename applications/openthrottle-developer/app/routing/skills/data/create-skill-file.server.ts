@@ -1,6 +1,6 @@
 /**
  * @description Server-only create side of the skills feature: writes a brand-new
- * SKILL.md to one of two destinations and then links it into the agent skills
+ * SKILL.md to one of three destinations and then links it into the agent skills
  * layout so it is actually discoverable.
  *
  * The sibling `write-skill-file.server.ts` derives its target from an
@@ -9,7 +9,12 @@
  * else, and every root and containment check is done here rather than inherited
  * from discovery:
  *
- * - `repo`     → `<monorepoRoot>/skills/<slug>/SKILL.md`
+ * - `openthrottle` → `<monorepoRoot>/skills/<slug>/SKILL.md`
+ * - `custom`   → `<monorepoRoot>/.agents/skills/<slug>/SKILL.md`, written as a
+ *   REAL directory rather than a symlink. It is committable by construction:
+ *   the managed `.gitignore` block ignores everything under `.agents/skills`
+ *   but re-includes nested directories, and git classes the generated symlinks
+ *   as files — so the real directory survives while the links stay ignored.
  * - `personal` → `<personalRoot>/<slug>/SKILL.md`, where `personalRoot` comes
  *   from `resolvePersonalSkillsRoot` — the same `OPENTHROTTLE_PERSONAL_SKILLS_DIR`
  *   → `~/.openthrottle/skills` precedence `ot-skill-sync`'s `common.sh` uses, so
@@ -26,8 +31,12 @@
  *
  * Writing is only half of it: `discoverRepoSkills` scans the agent layout dirs
  * and never `skills/` nor the personal root, so the file is invisible on
- * `/skills` until `syncSkillLinks` runs. A sync failure is surfaced as its own
- * error and never as success — see `sync-skill-links.server.ts`.
+ * `/skills` until `syncSkillLinks` runs. A custom create is the exception — it
+ * writes straight into `.agents/skills/`, the SSOT view, so it is discoverable
+ * at once — but the per-CLI fan-out dirs (`.claude/skills`, `.codex/skills`, …)
+ * still need the links, so sync runs for every destination alike. A sync failure
+ * is surfaced as its own error and never as success — see
+ * `sync-skill-links.server.ts`.
  *
  * Content is normalized to LF before anything else touches it: form encoding
  * turns every newline into CRLF on the wire, and a CRLF SKILL.md in a repo of
@@ -62,8 +71,15 @@ import { SKILL_CREATE_DESTINATIONS } from '~/routing/skills/config/skill-create'
 import { SKILL_CREATE_COPY } from '~/routing/skills/data/data.copy';
 import { syncSkillLinks } from '~/routing/skills/data/sync-skill-links.server';
 
-/** The committed catalog, relative to the monorepo root. */
+/** OpenThrottle's committed catalog, relative to the monorepo root. */
 const SKILLS_SRC_DIR = 'skills';
+
+/**
+ * The canonical SSOT skills view, relative to the monorepo root. A custom skill
+ * is written here as a real directory — the same shape a lockfile install has,
+ * distinguished from one only by the lockfile not claiming its slug.
+ */
+const AGENTS_SKILLS_DIR = '.agents/skills';
 
 const SKILL_FILENAME = 'SKILL.md';
 
@@ -147,6 +163,51 @@ const lockfileSkillSlugs = (monorepoRoot: string): readonly string[] => {
 };
 
 /**
+ * The absolute root each destination writes beneath. Derived from the
+ * destination alone — client input contributes only the slug.
+ */
+const destinationRoot = (
+  destination: SkillCreateDestination,
+  monorepoRoot: string,
+  personalRoot: string,
+): string => {
+  switch (destination) {
+    case SKILL_CREATE_DESTINATIONS.custom:
+      return join(monorepoRoot, AGENTS_SKILLS_DIR);
+    case SKILL_CREATE_DESTINATIONS.openthrottle:
+      return join(monorepoRoot, SKILLS_SRC_DIR);
+    case SKILL_CREATE_DESTINATIONS.personal:
+      return personalRoot;
+    default: {
+      const exhaustive: never = destination;
+      throw new Error(`Unhandled create destination: ${String(exhaustive)}`);
+    }
+  }
+};
+
+/**
+ * The path reported to frontmatter validation. Repo-rooted for the two in-repo
+ * destinations; slug-relative for personal, whose root is outside the checkout.
+ */
+const validationPath = (
+  destination: SkillCreateDestination,
+  slug: string,
+): string => {
+  switch (destination) {
+    case SKILL_CREATE_DESTINATIONS.custom:
+      return `${AGENTS_SKILLS_DIR}/${slug}/${SKILL_FILENAME}`;
+    case SKILL_CREATE_DESTINATIONS.openthrottle:
+      return `${SKILLS_SRC_DIR}/${slug}/${SKILL_FILENAME}`;
+    case SKILL_CREATE_DESTINATIONS.personal:
+      return `${slug}/${SKILL_FILENAME}`;
+    default: {
+      const exhaustive: never = destination;
+      throw new Error(`Unhandled create destination: ${String(exhaustive)}`);
+    }
+  }
+};
+
+/**
  * @description Validates and creates a new SKILL.md, then links it in.
  *
  * Every refusal (no monorepo root, unsafe slug, unknown destination, a personal
@@ -191,10 +252,7 @@ export const createSkillFile = (
 
   // The expected root the target must resolve inside, per destination. Derived
   // from the destination alone — client input contributes only the slug.
-  const expectedRoot =
-    destination === SKILL_CREATE_DESTINATIONS.repo
-      ? join(monorepoRoot, SKILLS_SRC_DIR)
-      : personalRoot;
+  const expectedRoot = destinationRoot(destination, monorepoRoot, personalRoot);
 
   const skillDirectory = join(expectedRoot, slug);
   const absolutePath = join(skillDirectory, SKILL_FILENAME);
@@ -232,14 +290,26 @@ export const createSkillFile = (
     };
   }
 
+  // Discovery only sees a folder that HOLDS a SKILL.md, so a bare
+  // `.agents/skills/<slug>/` directory slips past the check above — and a custom
+  // create targets that directory directly, where the other two destinations
+  // never do. Refuse it explicitly rather than quietly filling someone else's
+  // directory (or throwing EEXIST out of the write).
+  if (
+    destination === SKILL_CREATE_DESTINATIONS.custom &&
+    existsSync(skillDirectory)
+  ) {
+    return {
+      error: withSlug(SKILL_CREATE_COPY.slugTakenAgentsDirError, slug),
+      ok: false,
+    };
+  }
+
   const { errors } = validateAgentAssetFrontmatter({
     content,
     expectedSlug: slug,
     kind: 'skill',
-    path:
-      destination === SKILL_CREATE_DESTINATIONS.repo
-        ? `${SKILLS_SRC_DIR}/${slug}/${SKILL_FILENAME}`
-        : `${slug}/${SKILL_FILENAME}`,
+    path: validationPath(destination, slug),
   });
 
   if (errors.length > 0) {

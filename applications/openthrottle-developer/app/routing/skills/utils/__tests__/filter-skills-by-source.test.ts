@@ -10,10 +10,11 @@ import {
 const entry = (
   slug: string,
   source: RepoSkillEntry['source'],
-  isPersonal?: true,
+  overlay?: 'custom' | 'personal',
 ): RepoSkillEntry => ({
   disableModelInvocation: undefined,
-  isPersonal,
+  isCustom: overlay === 'custom' ? true : undefined,
+  isPersonal: overlay === 'personal' ? true : undefined,
   layout: 'agents',
   repoRelativePath: `.agents/skills/${slug}/SKILL.md`,
   slug,
@@ -26,7 +27,8 @@ const entries = [
   entry('ot-plans', 'openthrottle'),
   entry('brag-sheet', 'external'),
   entry('workflow-ralph', 'openthrottle'),
-  entry('my-draft', 'external', true),
+  entry('my-draft', 'external', 'personal'),
+  entry('team-skill', 'external', 'custom'),
 ];
 
 describe('filterSkillsBySource', () => {
@@ -54,6 +56,14 @@ describe('filterSkillsBySource', () => {
       filterSkillsBySource(entries, 'personal').map((e) => e.slug),
     ).toEqual(['my-draft']);
   });
+
+  // A custom skill also carries source: 'external' — it is authored in this
+  // repo, not installed into it — so External must not sweep it up either.
+  test('narrows to custom entries', () => {
+    expect(filterSkillsBySource(entries, 'custom').map((e) => e.slug)).toEqual([
+      'team-skill',
+    ]);
+  });
 });
 
 describe('getSkillSourceKind', () => {
@@ -70,15 +80,34 @@ describe('getSkillSourceKind', () => {
   });
 
   test('personal outranks source: external', () => {
-    expect(getSkillSourceKind(entry('my-draft', 'external', true))).toBe(
+    expect(getSkillSourceKind(entry('my-draft', 'external', 'personal'))).toBe(
       'personal',
     );
+  });
+
+  test('custom outranks source: external', () => {
+    expect(getSkillSourceKind(entry('team-skill', 'external', 'custom'))).toBe(
+      'custom',
+    );
+  });
+
+  // Personal is checked first, so a nonsensical both-flags entry resolves to
+  // personal rather than depending on object key order.
+  test('personal wins over custom when both flags are set', () => {
+    expect(
+      getSkillSourceKind({
+        isCustom: true,
+        isPersonal: true,
+        source: 'external',
+      }),
+    ).toBe('personal');
   });
 });
 
 describe('isSkillSourceFilter', () => {
-  test('accepts the four known filters', () => {
+  test('accepts the five known filters', () => {
     expect(isSkillSourceFilter('all')).toBe(true);
+    expect(isSkillSourceFilter('custom')).toBe(true);
     expect(isSkillSourceFilter('external')).toBe(true);
     expect(isSkillSourceFilter('openthrottle')).toBe(true);
     expect(isSkillSourceFilter('personal')).toBe(true);
@@ -93,6 +122,7 @@ describe('isSkillSourceFilter', () => {
 describe('parseSkillSourceFilter', () => {
   test('passes through every known filter token', () => {
     expect(parseSkillSourceFilter('all')).toBe('all');
+    expect(parseSkillSourceFilter('custom')).toBe('custom');
     expect(parseSkillSourceFilter('external')).toBe('external');
     expect(parseSkillSourceFilter('openthrottle')).toBe('openthrottle');
     expect(parseSkillSourceFilter('personal')).toBe('personal');

@@ -5,10 +5,14 @@
  * input) and re-checked with the shared realpath allowlist; the new content's
  * frontmatter is re-validated before anything touches disk so a save can never
  * corrupt the file or break ingest. Provenance also gates the write: an entry is
- * writable when it is authored here (`source: 'openthrottle'`) or is the
- * author's own personal tier (`isPersonal`). A lockfile-installed external skill
- * stays read-only, because editing it in place forks it from the upstream source
- * the next ot-skill-sync would restore. A personal write goes THROUGH the
+ * writable when it is authored here (`source: 'openthrottle'`), authored in this
+ * repository by its owner (`isCustom` — a real directory the lockfile does not
+ * claim), or is the author's own personal tier (`isPersonal`). Only a
+ * lockfile-installed external skill stays read-only, because editing it in place
+ * forks it from the upstream source the next ot-skill-sync would restore. A
+ * custom write lands on a real file inside the checkout, so it shows up in
+ * `git status` and is committed like any other source change. A personal write
+ * goes THROUGH the
  * gitignored `.agents/skills/<slug>` symlink into the file under the personal
  * root — the symlink is never unlinked or replaced with a real file, which would
  * break ot-skill-sync and risk staging a personal skill. Local-checkout only — a
@@ -34,7 +38,7 @@ export type WriteSkillFileResult =
 
 /**
  * @description Validates and writes the full SKILL.md for a discovered slug.
- * Refusals (no root, unknown slug, disallowed path, non-personal external
+ * Refusals (no root, unknown slug, disallowed path, lockfile-installed external
  * provenance, invalid frontmatter) return a structured error WITHOUT writing.
  */
 export const writeSkillFileBySlug = (
@@ -59,9 +63,15 @@ export const writeSkillFileBySlug = (
 
   // Provenance comes from the freshly discovered entry (disk realpath), never
   // from client input — a lockfile-installed external skill never reaches
-  // validation or disk. The personal tier is the author's own, so it is writable
-  // even though it carries `source: 'external'`.
-  if (entry.source !== 'openthrottle' && entry.isPersonal !== true) {
+  // validation or disk. Both overlay tiers are the author's own, so both are
+  // writable even though they carry `source: 'external'`: personal lives under
+  // the personal root, custom is a real directory in this repo that the
+  // lockfile does not claim.
+  if (
+    entry.source !== 'openthrottle' &&
+    entry.isCustom !== true &&
+    entry.isPersonal !== true
+  ) {
     return { error: SKILL_WRITE_COPY.externalSkillError, ok: false };
   }
 

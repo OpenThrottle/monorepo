@@ -51,4 +51,31 @@ describe('getSkillSourceBadge', () => {
     expect(badge.label).toBe(SKILLS_SOURCE_COPY.personalLabel);
     expect(badge.tooltip).toBe(SKILLS_SOURCE_COPY.personalTooltip);
   });
+
+  test('custom outranks source and never links, even with a sourceUrl', () => {
+    const badge = getSkillSourceBadge({
+      isCustom: true,
+      source: 'external',
+      sourceUrl: 'https://example.com/skill',
+    });
+
+    expect(badge.color).toBe('violet');
+    expect(badge.href).toBeUndefined();
+    expect(badge.kind).toBe('custom');
+    expect(badge.label).toBe(SKILLS_SOURCE_COPY.customLabel);
+    expect(badge.tooltip).toBe(SKILLS_SOURCE_COPY.customTooltip);
+  });
+
+  // The four tiers must not collide on color — the badge is the only thing
+  // distinguishing them at a glance in the list.
+  test('each tier gets its own color', () => {
+    const colors = [
+      getSkillSourceBadge({ isCustom: true, source: 'external' }).color,
+      getSkillSourceBadge({ isPersonal: true, source: 'external' }).color,
+      getSkillSourceBadge({ source: 'external' }).color,
+      getSkillSourceBadge({ source: 'openthrottle' }).color,
+    ];
+
+    expect(new Set(colors).size).toBe(colors.length);
+  });
 });

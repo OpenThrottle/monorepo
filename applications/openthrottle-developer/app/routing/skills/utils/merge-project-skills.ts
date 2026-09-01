@@ -62,6 +62,12 @@ export const mergeRepoSkillsWithProjectSkills = (
     // The ingested row wins for provenance when it carries a recognized
     // value; the disk-parsed source stays otherwise. The `row.source` checks
     // stay inline so TypeScript narrows the string to the `SkillSource` union.
+    //
+    // Two values is still the whole enum, custom tier notwithstanding: `custom`
+    // is a local overlay (`isCustom`), never a `SkillSource`, so a repo-authored
+    // skill arrives here as `external` on the wire exactly like a personal one.
+    // Do not "fix" this narrowing by adding a third arm — widening the enum is
+    // a schema change, a migration and an ingest change, not a client edit.
     return {
       ...entry,
       disableModelInvocation: row.staticDisableModelInvocation ?? undefined,

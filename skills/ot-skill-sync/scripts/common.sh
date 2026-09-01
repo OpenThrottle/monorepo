@@ -16,16 +16,21 @@ YELLOW='\033[1;33m'
 # ── The architecture ─────────────────────────────────────────────────────────
 # skills/           hand-authored skills, committed (SKILLS_SRC_DIR)
 # .agents/skills/   the merged SSOT view every universal tool reads:
-#                   real directories = installed by `npx skills` (lockfile-owned,
-#                   never touched here); symlinks = our authored skills, generated
+#                   real directories = installed by `npx skills` when the slug is
+#                   in the lockfile, otherwise repo-authored (custom) — either
+#                   way never touched here; symlinks = our authored skills,
+#                   generated
 # <agent>/skills/   per-agent fan-out for tools that don't read .agents/skills
 #                   natively (AGENT_SKILL_DIRS) — fully generated. Currently
 #                   .claude/skills (Claude Code) + .gemini/skills (Gemini CLI).
 #
 # Ownership is encoded by on-disk type, so no side-ledger is needed: inside
-# .agents/skills/ a REAL DIRECTORY is external (lockfile-owned) and a SYMLINK is
-# ours; every entry in an agent fan-out dir is a generated symlink. The sync and
-# cleanup passes read that distinction straight off the filesystem.
+# .agents/skills/ a REAL DIRECTORY is owned by the repo it sits in — a vendored
+# install when the lockfile claims its slug, repo-authored (custom) when it does
+# not — and a SYMLINK is ours, generated; every entry in an agent fan-out dir is
+# a generated symlink. Sync treats both kinds of real directory identically:
+# never touched. The sync and cleanup passes read that distinction straight off
+# the filesystem.
 SKILLS_SRC_DIR="skills"
 UNIVERSAL_DIR=".agents/skills"
 LOCKFILE_NAME="skills-lock.json"
@@ -245,10 +250,11 @@ lockfile_skill_names() {
 # one block, no per-skill churn:
 #
 #     .agents/skills/*        ignore everything directly under .agents/skills/…
-#     !.agents/skills/*/      …except real directories (external, lockfile-owned).
-#                             Git treats a symlink as a file, not a directory, so
-#                             our authored symlinks stay ignored while installed
-#                             skills remain committed.
+#     !.agents/skills/*/      …except real directories (vendored installs and
+#                             repo-authored custom skills alike). Git treats a
+#                             symlink as a file, not a directory, so our authored
+#                             symlinks stay ignored while real directories remain
+#                             committable.
 #     <agent_dir>/            each fan-out dir is 100% generated → ignore wholesale
 #
 # The block is derived from AGENT_SKILL_DIRS, so an override just changes which
