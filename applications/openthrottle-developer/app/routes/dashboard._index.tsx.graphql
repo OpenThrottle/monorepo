@@ -97,6 +97,12 @@ query getDashboardOnboarding {
   }
 }
 
+# Apollo derives an operation's cache policy from its MOST RESTRICTIVE field, so
+# every field here must carry a resolver-side setCacheHint AND a long one. This
+# query costs ~4s of live GitHub API; anything short-lived selected alongside it
+# drags the whole operation down to its own maxAge. githubTokenConfigured
+# (hinted at only 30s, since it tracks server env) therefore lives on
+# getDashboardOnboarding instead — the loader joins the two.
 query getDashboardGithubStats($owner: String!, $repo: String!) {
 
   closedPrCountByAuthor: openPrCountByAuthor(
@@ -105,8 +111,6 @@ query getDashboardGithubStats($owner: String!, $repo: String!) {
     author
     openCount
   }
-
-  githubTokenConfigured
 
   openPrCountByAuthor: openPrCountByAuthor(
     input: { owner: $owner, repo: $repo, state: "open" }

@@ -6327,7 +6327,6 @@ export type GetDashboardGithubStatsQueryVariables = Exact<{
 
 export type GetDashboardGithubStatsQuery = {
   __typename?: 'Query';
-  githubTokenConfigured: boolean;
   closedPrCountByAuthor: Array<{
     __typename?: 'OpenPrCountByAuthorObject';
     author: string;
@@ -15058,10 +15057,6 @@ export const GetDashboardGithubStatsDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'openCount' } },
               ],
             },
-          },
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'githubTokenConfigured' },
           },
           {
             kind: 'Field',

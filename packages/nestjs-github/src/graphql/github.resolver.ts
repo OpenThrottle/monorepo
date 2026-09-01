@@ -43,6 +43,13 @@ function setCacheHint(
 export class GithubResolver {
   private readonly CACHE_MAX_AGE = 60 * 60; // 1 hour
 
+  // Deliberately far shorter than CACHE_MAX_AGE. This value derives from server
+  // env rather than the GitHub API, and the Apollo response cache is
+  // Redis-backed, so it outlives a restart: at 1 hour a user who sets
+  // GITHUB_TOKEN and restarts could keep being told the token is missing. 30s is
+  // long enough to be explicit — the point is that it is never an accidental 0.
+  private readonly TOKEN_CONFIGURED_CACHE_MAX_AGE = 30; // 30 seconds
+
   constructor(
     private readonly githubService: GitHubService,
     private readonly githubStatsService: GitHubStatsService,
@@ -75,7 +82,9 @@ export class GithubResolver {
   @Query(() => Boolean, {
     description: `Whether GITHUB_TOKEN is configured on the server. Boolean only — the token value is never exposed. Used to prompt the user to set GITHUB_TOKEN instead of rendering empty/unauthenticated GitHub stats.`,
   })
-  githubTokenConfigured(): boolean {
+  githubTokenConfigured(@Info() info: GraphQLResolveInfo): boolean {
+    setCacheHint(info, this.TOKEN_CONFIGURED_CACHE_MAX_AGE);
+
     return this.githubService.isGithubTokenConfigured();
   }
 

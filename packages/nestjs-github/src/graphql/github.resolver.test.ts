@@ -4,11 +4,26 @@ import { Test } from '@nestjs/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
 import type { GraphQLResolveInfo } from 'graphql';
 import type { PullListItemDto } from '../github/dto/pull-list-item.dto';
+import type {
+  CommitsPerPrInput,
+  GetPullInput,
+  GitHubRepoInput,
+  LinesAddedDeletedInput,
+  ListPullsInput,
+  OpenToMergedCycleTimeInput,
+  PrCountByLabelInput,
+  PrsMergedPerPeriodInput,
+  ReviewCycleTimeInput,
+} from './github.input';
 import { GitHubService } from '../github/github.service';
 import { GithubResolver } from './github.resolver';
 import { GitHubStatsService } from './github-stats.service';
 
 const gqlInfo = asMock<GraphQLResolveInfo>({});
+
+// Every resolver input in this file is a superset of { owner, repo }; the rest
+// of each shape is irrelevant because the services underneath are all mocked.
+const repoInput = { owner: 'o', repo: 'r' };
 
 describe('GithubResolver', () => {
   let resolver: GithubResolver;
@@ -659,14 +674,88 @@ describe('GithubResolver', () => {
     test('returns true when GitHubService reports the token configured', () => {
       vi.mocked(githubService.isGithubTokenConfigured).mockReturnValue(true);
 
-      expect(resolver.githubTokenConfigured()).toBe(true);
+      expect(resolver.githubTokenConfigured(gqlInfo)).toBe(true);
       expect(githubService.isGithubTokenConfigured).toHaveBeenCalled();
     });
 
     test('returns false when GitHubService reports the token unset', () => {
       vi.mocked(githubService.isGithubTokenConfigured).mockReturnValue(false);
 
-      expect(resolver.githubTokenConfigured()).toBe(false);
+      expect(resolver.githubTokenConfigured(gqlInfo)).toBe(false);
     });
+  });
+  // A query that forgets setCacheHint fails silently: Apollo derives an
+  // operation's cache policy from its MOST RESTRICTIVE field and cacheControl's
+  // defaultMaxAge is 0, so one un-hinted field makes every document that selects
+  // it uncacheable — with no error and no warning. That is exactly how the ~4s
+  // getDashboardGithubStats query went uncached. This suite is the guard.
+  describe('cache hints', () => {
+    // Keyed by resolver method name. The test below asserts these keys match the
+    // resolver's real @Query set, so adding a query without adding it here fails.
+    const invokeQuery: Record<string, (info: GraphQLResolveInfo) => unknown> = {
+      commitsPerPr: (info) =>
+        resolver.commitsPerPr(asMock<CommitsPerPrInput>(repoInput), info),
+      githubTokenConfigured: (info) => resolver.githubTokenConfigured(info),
+      linesAddedDeleted: (info) =>
+        resolver.linesAddedDeleted(
+          asMock<LinesAddedDeletedInput>(repoInput),
+          info,
+        ),
+      openPrCountByAuthor: (info) =>
+        resolver.openPrCountByAuthor(asMock<GitHubRepoInput>(repoInput), info),
+      openToMergedCycleTime: (info) =>
+        resolver.openToMergedCycleTime(
+          asMock<OpenToMergedCycleTimeInput>(repoInput),
+          info,
+        ),
+      prCountByLabel: (info) =>
+        resolver.prCountByLabel(asMock<PrCountByLabelInput>(repoInput), info),
+      prTimeInStateSummary: (info) =>
+        resolver.prTimeInStateSummary(asMock<GitHubRepoInput>(repoInput), info),
+      prsMergedPerPeriod: (info) =>
+        resolver.prsMergedPerPeriod(
+          asMock<PrsMergedPerPeriodInput>(repoInput),
+          info,
+        ),
+      pull: (info) => resolver.pull(asMock<GetPullInput>(repoInput), info),
+      pulls: (info) => resolver.pulls(asMock<ListPullsInput>(repoInput), info),
+      reviewCycleTime: (info) =>
+        resolver.reviewCycleTime(asMock<ReviewCycleTimeInput>(repoInput), info),
+    };
+
+    test('covers every method declared on the resolver', () => {
+      // Enumerate the prototype rather than keeping a second hand-written list
+      // that can silently drift. Every method on GithubResolver is a @Query, so
+      // a new one shows up here and fails until it is exercised above. (Nest's
+      // @Query metadata is registered lazily and is not readable without the
+      // schema build, so the prototype is the reliable source.) If a genuine
+      // non-query helper is ever added, exclude it here deliberately.
+      const declared = Object.getOwnPropertyNames(
+        GithubResolver.prototype,
+      ).filter((name) => name !== 'constructor');
+
+      expect(declared.sort()).toEqual(Object.keys(invokeQuery).sort());
+      expect(declared.length).toBeGreaterThan(0);
+    });
+
+    test.each(Object.keys(invokeQuery))(
+      '%s sets a positive cache hint',
+      async (methodName) => {
+        const setCacheHint = vi.fn();
+        // cacheControlFromInfo() rejects an info whose cacheControl lacks
+        // cacheHint.restrict, so the mock has to look like a real Apollo one.
+        const info = asMock<GraphQLResolveInfo>({
+          cacheControl: {
+            cacheHint: { restrict: vi.fn() },
+            setCacheHint,
+          },
+        });
+
+        await invokeQuery[methodName](info);
+
+        expect(setCacheHint).toHaveBeenCalledTimes(1);
+        expect(setCacheHint.mock.calls[0][0].maxAge).toBeGreaterThan(0);
+      },
+    );
   });
 });
