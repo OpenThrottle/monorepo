@@ -22,6 +22,7 @@ import {
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import { ScheduleDetailSummary } from '~/routing/schedule/components/ScheduleDetailSummary';
 import { ScheduleDetailTabs } from '~/routing/schedule/components/ScheduleDetailTabs';
+import { ScheduleRunNowButton } from '~/routing/schedule/components/ScheduleRunNowButton';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/schedule.$jobId._index';
 
@@ -91,12 +92,7 @@ export default function Component(
               <Button asChild={true} size="xs" variant="outline">
                 <Link to="./edit">Edit</Link>
               </Button>
-              <Form method="post">
-                <input name="intent" type="hidden" value="run-now" />
-                <Button size="xs" type="submit" variant="outline">
-                  Run now
-                </Button>
-              </Form>
+              <ScheduleRunNowButton jobId={job.id} />
               <Form method="post">
                 <input name="intent" type="hidden" value="toggle-enabled" />
                 <input
@@ -145,14 +141,14 @@ export const action = async (args: Route.ActionArgs) => {
 
   try {
     if (intent === 'run-now') {
-      await executeGraphqlWithAuth(
+      const { runScheduledAgentJobNow } = await executeGraphqlWithAuth(
         args.request,
         RunScheduledAgentJobNowDocument,
         {
           id: jobId,
         },
       );
-      return { ok: true };
+      return { ok: true, runId: runScheduledAgentJobNow.id };
     }
 
     if (intent === 'toggle-enabled') {
