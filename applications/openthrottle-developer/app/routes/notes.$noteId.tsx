@@ -45,7 +45,7 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
     />
   ),
   links: (_match) => [
-    { children: 'User', to: '/profile' },
+    { children: 'Settings', to: '/settings' },
     { children: 'Notes', to: '/notes' },
   ],
 };

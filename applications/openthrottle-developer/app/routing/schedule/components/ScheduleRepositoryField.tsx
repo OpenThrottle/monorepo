@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { Link } from 'react-router';
 import {
-  Input,
   Label,
   Select,
   SelectContent,
@@ -32,15 +31,12 @@ export interface ScheduleRepositoryFieldProps {
 export const ScheduleRepositoryField = (
   props: ScheduleRepositoryFieldProps,
 ): React.ReactElement => {
-  const { cwd, repositories, repositoryCheckoutId } = props;
+  const { repositories, repositoryCheckoutId } = props;
 
   // Hooks
 
   // Setup
   const hasRepositories = repositories.length > 0;
-  // A legacy schedule that only ever had a typed path should show the advanced field opened, or its
-  // value would be invisible until the user thought to look for it.
-  const advancedOpen = (cwd ?? '') !== '';
 
   // Handlers
 
@@ -99,24 +95,6 @@ export const ScheduleRepositoryField = (
           {SCHEDULE_COPY.repositoryHelp}
         </p>
       </div>
-
-      <details open={advancedOpen}>
-        <summary className="text-muted-foreground cursor-pointer text-xs">
-          {SCHEDULE_COPY.repositoryAdvancedSummary}
-        </summary>
-        <div className="mt-2">
-          <Label htmlFor="cwd">{SCHEDULE_COPY.cwdLabel}</Label>
-          <Input
-            defaultValue={cwd ?? ''}
-            id="cwd"
-            name="cwd"
-            placeholder={SCHEDULE_COPY.cwdPlaceholder}
-          />
-          <p className="text-muted-foreground mt-1 text-xs">
-            {SCHEDULE_COPY.cwdHelp}
-          </p>
-        </div>
-      </details>
     </div>
   );
 };

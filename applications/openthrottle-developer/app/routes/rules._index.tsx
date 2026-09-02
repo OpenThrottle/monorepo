@@ -96,30 +96,33 @@ export default function Component(
     <>
       <GlobalScreen>
         <RulesIntroduction />
-        <RulesStats
-          disabledCount={disabledCount}
-          enabledCount={enabledCount}
-          totalCount={totalCount}
-        />
-
-        {ruleError != null ? (
-          <p className="text-destructive text-sm" role="alert">
-            {ruleError}
-          </p>
-        ) : null}
 
         {isNewUser ? (
           <GlobalFeatureOnboarding content={RULES_ONBOARDING} />
         ) : (
-          <div className="flex flex-col gap-4">
-            <RulesToolbar />
-            <RulesTable
-              isFiltered={isFiltered}
-              onToggleEnabled={handleToggleEnabled}
-              pending={pending}
-              rules={filteredRules}
+          <>
+            <RulesStats
+              disabledCount={disabledCount}
+              enabledCount={enabledCount}
+              totalCount={totalCount}
             />
-          </div>
+
+            {ruleError != null ? (
+              <p className="text-destructive text-sm" role="alert">
+                {ruleError}
+              </p>
+            ) : null}
+
+            <div className="flex flex-col gap-4">
+              <RulesToolbar />
+              <RulesTable
+                isFiltered={isFiltered}
+                onToggleEnabled={handleToggleEnabled}
+                pending={pending}
+                rules={filteredRules}
+              />
+            </div>
+          </>
         )}
       </GlobalScreen>
 

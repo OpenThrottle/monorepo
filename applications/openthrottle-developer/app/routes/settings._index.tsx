@@ -15,8 +15,8 @@ import type { Route } from '@/app/routes/+types/settings._index';
 type HandleData = Route.ComponentProps['loaderData'];
 
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
-  breadcrumb: (_match) => 'General',
-  links: (_match) => [{ children: 'Settings', to: '/settings' }],
+  breadcrumb: (_match) => 'Settings',
+  // links: (_match) => [{ children: 'Settings', to: '/settings' }],
 };
 
 export const loader = (_args: Route.LoaderArgs) => {

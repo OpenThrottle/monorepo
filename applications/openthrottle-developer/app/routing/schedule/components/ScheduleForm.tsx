@@ -105,7 +105,6 @@ export const ScheduleForm = (props: ScheduleFormProps): React.ReactElement => {
               </option>
             ))}
           </select>
-          <ScheduleMcpWarning agentClis={agentClis} driverId={driverId} />
         </div>
 
         <div>
@@ -118,6 +117,8 @@ export const ScheduleForm = (props: ScheduleFormProps): React.ReactElement => {
           />
         </div>
       </div>
+
+      <ScheduleMcpWarning agentClis={agentClis} driverId={driverId} />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
@@ -184,12 +185,13 @@ export const ScheduleForm = (props: ScheduleFormProps): React.ReactElement => {
         </p>
       ) : null}
 
-      <div className="flex gap-3 pt-2">
-        <Button type="submit">
-          {isCreate ? 'Create schedule' : 'Save changes'}
-        </Button>
+      <div className="flex justify-end gap-3 pt-2">
         <Button asChild={true} variant="outline">
           <Link to="/schedule">Cancel</Link>
+        </Button>
+
+        <Button type="submit">
+          {isCreate ? 'Create schedule' : 'Save changes'}
         </Button>
       </div>
     </Form>

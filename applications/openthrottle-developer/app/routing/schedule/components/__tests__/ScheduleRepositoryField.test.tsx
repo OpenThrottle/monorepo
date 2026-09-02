@@ -120,27 +120,4 @@ describe('ScheduleRepositoryField Component', () => {
       }),
     ).toHaveAttribute('href', '/settings/repositories');
   });
-
-  test('round-trips a legacy cwd in the advanced field, opened so it is not hidden', () => {
-    component = renderField({ ...props, cwd: '/legacy/path' });
-
-    expect(component.getByLabelText(SCHEDULE_COPY.cwdLabel)).toHaveValue(
-      '/legacy/path',
-    );
-    expect(
-      component
-        .getByText(SCHEDULE_COPY.repositoryAdvancedSummary)
-        .closest('details'),
-    ).toHaveAttribute('open');
-  });
-
-  test('keeps the advanced field collapsed when there is no legacy cwd', () => {
-    component = renderField(props);
-
-    expect(
-      component
-        .getByText(SCHEDULE_COPY.repositoryAdvancedSummary)
-        .closest('details'),
-    ).not.toHaveAttribute('open');
-  });
 });
