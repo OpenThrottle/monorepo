@@ -97,6 +97,15 @@ Every beat is a terminal except beats 5–6, which are the dashboard. Runs again
 `pnpm run start` output rather than retyping it, per the
 `surfaces/mcp-instructions.txt` precedent.
 
+### 03-first-plan — **app-gap, blocked**
+
+Every beat drives a web form that no longer exists: **New plan**, the title and
+description fields, **Create plan**, then **Add task** twice. The plan and task
+create/edit routes were removed — plans and tasks are authored through the
+OpenThrottle MCP from the editor, and the plans index deliberately offers no
+create CTA. The flow that recorded these beats is retired with them. Re-script
+the episode around an editor + MCP demo before recording.
+
 ### 04-mental-model — `recordable`
 
 | beat                                 | verdict    | note                                                                                                                             |

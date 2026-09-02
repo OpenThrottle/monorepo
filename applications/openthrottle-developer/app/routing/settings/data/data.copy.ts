@@ -343,7 +343,7 @@ export const SETTINGS_KEYS_COPY = {
  * Carries the operational guidance — one-time secret, rotation, human JWT
  * sessions — that used to live in a keys-specific help modal.
  */
-export const SETTINGS_KEYS_ONBOARDING: GlobalFeatureOnboardingContent = {
+export const SETTINGS_KEYS_ONBOARDING = {
   cta: { label: `Create a credential`, to: `/settings/keys` },
   icon: KeyRoundIcon,
   internalUsage: `Every automation we run authenticates this way: the OT MCP server, the Ralph workers, and CI each hold their own credential, so we can revoke one without taking the rest down.`,
@@ -365,4 +365,4 @@ export const SETTINGS_KEYS_ONBOARDING: GlobalFeatureOnboardingContent = {
     `Rotate a leaked or expiring token without downtime.`,
   ],
   whatItIs: `A credential is a service-account bearer token in the form ot_sa_<prefix>_<secret>, sent in the Authorization header. The secret is shown once at creation; revoked or expired credentials stop working at the next request. Human JWT sessions manage these keys in the developer portal — service-account tokens must not call those admin mutations.`,
-};
+} satisfies GlobalFeatureOnboardingContent;

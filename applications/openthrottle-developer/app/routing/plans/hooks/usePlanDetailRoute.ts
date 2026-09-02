@@ -7,9 +7,8 @@
  * route body stays UI-focused.
  */
 import * as React from 'react';
-import { useKeyboardShortcut } from '@openthrottle/react-router-utils';
 import { useAtomValue } from 'jotai';
-import { useFetcher, useNavigate, useSearchParams } from 'react-router';
+import { useFetcher, useSearchParams } from 'react-router';
 import { DEFAULT_PLAN_TASKS_VIEW_STORAGE_KEY } from '~/routing/plans/config/defaults';
 import { isPlanStatusKey } from '~/routing/plans/components/PlanStatusBadge';
 import { parsePlanTasksView } from '~/routing/plans/utils/parsers';
@@ -107,7 +106,6 @@ export const usePlanDetailRoute = (
   const resolvedRepositories = usePlanDeferredValue(
     loaderData.workspaceRepositories,
   );
-  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const tagFetcher = useFetcher();
   const {
@@ -214,14 +212,6 @@ export const usePlanDetailRoute = (
   // Revalidate plan detail when a plan/task lifecycle notification arrives over
   // the GraphQL subscription (server-side topic routing by planId).
   usePlanLifecycleRevalidation(planId);
-
-  // Cmd/Ctrl+E jumps to the plan edit route.
-  useKeyboardShortcut({
-    enabled: true,
-    key: 'e',
-    meta: true,
-    onPress: () => navigate(`/plans/${planId}/edit`),
-  });
 
   // 🔌 Short Circuit
   const editorWorkingDirectory = resolvePlanWorkingDirectory({

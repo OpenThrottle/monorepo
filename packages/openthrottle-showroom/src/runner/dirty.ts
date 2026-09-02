@@ -2,12 +2,14 @@
  * @description Whether the demo database is still clean enough to film a
  * mutating flow against.
  *
- * The seed is idempotent. A **flow** is not. `03-first-plan` creates a plan on
- * camera, and the flows for a rule, a note and a promoted plan will do the same:
- * take 1 leaves the row behind, so take 2 films a list that already contains it
- * and take 5 films four duplicates. Nobody had been bitten badly by this because
- * only one flow mutated and re-seeding between takes was a habit rather than a
- * rule. Four more mutating flows is where a habit stops being enough.
+ * The seed is idempotent. A **flow** is not. A flow that creates a plan, a rule,
+ * a note or a promoted plan on camera leaves the row behind: take 1 leaves it,
+ * so take 2 films a list that already contains it and take 5 films four
+ * duplicates. Nobody had been bitten badly by this because only one flow
+ * mutated — `03-first-plan`, since retired with the web create forms it drove —
+ * and re-seeding between takes was a habit rather than a rule. The mutating
+ * flows still to be written are where a habit stops being enough, so the guard
+ * lands before them rather than after.
  *
  * Of the three options on the table, this implements the first:
  *

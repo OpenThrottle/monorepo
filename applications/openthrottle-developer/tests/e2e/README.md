@@ -374,7 +374,7 @@ applications/openthrottle-developer/tests/e2e/
 ## Conventions
 
 - **One flow per file.** Name flows `kebab-case.yaml` and place them under
-  `flows/` (or a feature subdirectory like `flows/plans/`).
+  `flows/` (or a feature subdirectory like `flows/auth/`).
 - **`appId` per flow.** Each YAML must declare its `appId` (mobile bundle id) or
   set `url` for browser/WebView flows. Keep selectors generic until stable
   testIDs / accessibility labels are in place.

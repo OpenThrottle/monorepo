@@ -67,7 +67,7 @@ describe('PlanTasksTableCellActions Component', () => {
     ).toBeInTheDocument();
   });
 
-  test('opens View task and Edit task links for the row task', async () => {
+  test('opens the View task link for the row task, and nothing else', async () => {
     const user = userEvent.setup();
 
     await user.click(
@@ -77,8 +77,9 @@ describe('PlanTasksTableCellActions Component', () => {
     expect(
       component.getByRole('menuitem', { name: /view task/i }),
     ).toHaveAttribute('href', '/plans/plan-1/tasks/task-1');
+    // Edit task is gone: tasks are edited through the OpenThrottle MCP.
     expect(
-      component.getByRole('menuitem', { name: /edit task/i }),
-    ).toHaveAttribute('href', '/plans/plan-1/tasks/task-1/edit');
+      component.queryByRole('menuitem', { name: /edit task/i }),
+    ).not.toBeInTheDocument();
   });
 });

@@ -90,29 +90,33 @@ export const GlobalFeatureOnboardingBody = (
 
       {/* CTAs — an absolute http(s) target renders as a plain new-tab anchor,
           anything else as a react-router `Link`. Both keep the Button styling
-          via `asChild`. */}
-      <div className="flex flex-wrap items-center gap-3">
-        <Button asChild={true}>
-          {isExternalHref(cta.to) ? (
-            <a href={cta.to} rel="noreferrer" target="_blank">
-              {cta.label}
-            </a>
-          ) : (
-            <Link to={cta.to}>{cta.label}</Link>
-          )}
-        </Button>
-        {secondary != null ? (
-          <Button asChild={true} variant="ghost">
-            {isExternalHref(secondary.to) ? (
-              <a href={secondary.to} rel="noreferrer" target="_blank">
-                {secondary.label}
-              </a>
-            ) : (
-              <Link to={secondary.to}>{secondary.label}</Link>
-            )}
-          </Button>
-        ) : null}
-      </div>
+          via `asChild`. A feature with neither link emits no row at all. */}
+      {cta != null || secondary != null ? (
+        <div className="flex flex-wrap items-center gap-3">
+          {cta != null ? (
+            <Button asChild={true}>
+              {isExternalHref(cta.to) ? (
+                <a href={cta.to} rel="noreferrer" target="_blank">
+                  {cta.label}
+                </a>
+              ) : (
+                <Link to={cta.to}>{cta.label}</Link>
+              )}
+            </Button>
+          ) : null}
+          {secondary != null ? (
+            <Button asChild={true} variant="ghost">
+              {isExternalHref(secondary.to) ? (
+                <a href={secondary.to} rel="noreferrer" target="_blank">
+                  {secondary.label}
+                </a>
+              ) : (
+                <Link to={secondary.to}>{secondary.label}</Link>
+              )}
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
     </>
   );
 };

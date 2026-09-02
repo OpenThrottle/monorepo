@@ -7,8 +7,10 @@ import { afterEach, describe, expect, test } from 'vitest';
 import { GlobalFeatureOnboardingModal } from '../GlobalFeatureOnboardingModal';
 import type { GlobalFeatureOnboardingContent } from '../GlobalFeatureOnboarding';
 
+const CTA = { label: 'Create your first thing', to: '/things/new' } as const;
+
 const CONTENT: GlobalFeatureOnboardingContent = {
-  cta: { label: 'Create your first thing', to: '/things/new' },
+  cta: CTA,
   icon: RocketIcon,
   internalUsage: 'We use things every day to ship faster.',
   steps: ['Step one', 'Step two', 'Step three'],
@@ -45,9 +47,10 @@ describe('GlobalFeatureOnboardingModal Component', () => {
       component.getByTestId('GlobalFeatureOnboarding'),
     ).toBeInTheDocument();
     expect(component.getByRole('dialog')).toHaveAccessibleName(CONTENT.title);
-    expect(
-      component.getByRole('link', { name: CONTENT.cta.label }),
-    ).toHaveAttribute('href', CONTENT.cta.to);
+    expect(component.getByRole('link', { name: CTA.label })).toHaveAttribute(
+      'href',
+      CTA.to,
+    );
   });
 
   test('does not open for a different modal value', () => {

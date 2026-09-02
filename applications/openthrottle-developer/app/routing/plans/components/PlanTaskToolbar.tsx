@@ -1,17 +1,12 @@
 import * as React from 'react';
 import {
   Button,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
   Input,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
-import { CheckCircle, ChevronDown, PencilIcon } from 'lucide-react';
-import { Link } from 'react-router';
+import { CheckCircle } from 'lucide-react';
 import { usePlanTaskToolbar } from '~/routing/plans/hooks/usePlanTaskToolbar';
 import { PLAN_TASK_TOOLBAR_COPY } from '~/routing/plans/data/data.copy';
 import { OpenThrottleToolbar } from '~/routing/plans/components/OpenThrottleToolbar';
@@ -38,14 +33,10 @@ export interface PlanTaskToolbarProps {
    */
   onRemoveTag: (tag: string) => void;
   /**
-   * @description Plan the task belongs to; used for the Edit Task link target.
-   */
-  planId: string;
-  /**
    * @description Whether the owning plan's run is active (QUEUED / IN_PROGRESS).
    * When true, Mark Complete and Promote to Plan are disabled with explanatory
-   * tooltips so they can't fire out from under a live worker. Edit Task stays
-   * enabled. Computed via `getPlanIsRunning` from the plan status.
+   * tooltips so they can't fire out from under a live worker. Computed via
+   * `getPlanIsRunning` from the plan status.
    */
   planIsRunning: boolean;
   /**
@@ -53,8 +44,7 @@ export interface PlanTaskToolbarProps {
    * CANCELED / SKIPPED). When true, Mark Complete and Promote to Plan are
    * disabled with explanatory tooltips — there is no more work to do on a
    * finished/abandoned plan, so close-out/promote by shipping a new plan
-   * instead. Edit Task stays enabled. Computed via `getPlanIsTerminal` from the
-   * plan status.
+   * instead. Computed via `getPlanIsTerminal` from the plan status.
    */
   planIsTerminal: boolean;
   /**
@@ -70,10 +60,6 @@ export interface PlanTaskToolbarProps {
    */
   tagsPending?: boolean;
   /**
-   * @description The task being acted on.
-   */
-  taskId: string;
-  /**
    * @description Current task status; gates the Mark Complete control.
    */
   taskStatus?: string;
@@ -81,9 +67,10 @@ export interface PlanTaskToolbarProps {
 
 /**
  * @description Toolbar for the task detail route, modeled on the plan-level
- * {@link PlanToolbar}: a primary status group (Mark Complete) on the left, an
- * Actions dropdown (Edit Task) on the right, and the embedded task tag chips
- * below. Status transitions submit the route's `setTaskStatus` intent.
+ * {@link PlanToolbar}: a primary status group (Mark Complete) on the left,
+ * Promote to Plan on the right, and the embedded task tag chips below. Status
+ * transitions submit the route's `setTaskStatus` intent. There is no actions
+ * menu — tasks are edited through the OpenThrottle MCP, not from here.
  */
 export const PlanTaskToolbar = (
   props: PlanTaskToolbarProps,
@@ -93,10 +80,8 @@ export const PlanTaskToolbar = (
     isPromoted,
     onAddTag,
     onRemoveTag,
-    planId,
     planIsRunning,
     planIsTerminal,
-    taskId,
     taskStatus,
     tags,
     tagsPending = false,
@@ -118,34 +103,6 @@ export const PlanTaskToolbar = (
 
   return (
     <OpenThrottleToolbar
-      actionsMenu={
-        <DropdownMenu>
-          <Tooltip delayDuration={1_000}>
-            <TooltipTrigger asChild={true}>
-              <DropdownMenuTrigger asChild={true}>
-                <Button id="task-actions-trigger" size="xs" variant="ghost">
-                  {PLAN_TASK_TOOLBAR_COPY.actionsLabel}
-                  <ChevronDown />
-                </Button>
-              </DropdownMenuTrigger>
-            </TooltipTrigger>
-            <TooltipContent side="top">
-              {PLAN_TASK_TOOLBAR_COPY.actionsTooltip}
-            </TooltipContent>
-          </Tooltip>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem asChild={true}>
-              <Link
-                className="flex items-center gap-2"
-                to={`/plans/${planId}/tasks/${taskId}/edit`}
-              >
-                <PencilIcon size={14} />
-                {PLAN_TASK_TOOLBAR_COPY.editTaskLabel}
-              </Link>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      }
       className={className}
       dataTestId="PlanTaskToolbar"
       primaryActions={

@@ -13,7 +13,7 @@ import type { GlobalFeatureOnboardingContent } from '@openthrottle/react-router-
  * {@link GlobalFeatureOnboardingContent} and is rendered through the shared
  * `GlobalFeatureOnboarding` layout.
  */
-export const PROMPTS_ONBOARDING: GlobalFeatureOnboardingContent = {
+export const PROMPTS_ONBOARDING = {
   cta: { label: `Create your first prompt`, to: `/prompts/create` },
   icon: BrainIcon,
   internalUsage: `We hand-author Job_*, Before_*, and After_* prompts in .agents/prompts/, ingest them with database:import-agent-assets, and schedule the Job_* ones as recurring Ralph runs — nightly work-in-flight, weekly audits — so the document the agent executes is the same one we inspect here.`,
@@ -31,7 +31,7 @@ export const PROMPTS_ONBOARDING: GlobalFeatureOnboardingContent = {
     `Debug a prompt that's already on disk: fingerprint, filePath, JSON snapshot for a ticket.`,
   ],
   whatItIs: `A prompt is a versioned AI workflow document — markdown instructions plus a type (agents, skills, commands, personas, …) and an optional repo path. Ingested from .agents/prompts/ (and related folders) or created here, then available to agents, scheduled jobs, and semantic search.`,
-};
+} satisfies GlobalFeatureOnboardingContent;
 
 /**
  * Page chrome for the `/prompts` index — the heading and the line under it. The

@@ -13,7 +13,7 @@ import type { GlobalFeatureOnboardingContent } from '@openthrottle/react-router-
  * {@link GlobalFeatureOnboardingContent} and is rendered through the shared
  * `GlobalFeatureOnboarding` layout.
  */
-export const RULES_ONBOARDING: GlobalFeatureOnboardingContent = {
+export const RULES_ONBOARDING = {
   cta: { label: `Create your first rule`, to: `/rules/new` },
   icon: WandSparklesIcon,
   internalUsage: `We tag every plan by intent, then let rules do the wiring: a breakdown-tagged plan auto-gets a /grilling task, noisy skills stay off where they don't belong, and each project keeps its own defaults — so nobody hand-attaches the same skill twice.`,
@@ -31,7 +31,7 @@ export const RULES_ONBOARDING: GlobalFeatureOnboardingContent = {
     `Give each project its own defaults with per-project rules.`,
   ],
   whatItIs: `Rules map a tag combination on a plan to an action — for example, injecting a /grilling task into every breakdown-tagged plan. A plan matches when all of a rule's tags are present, and the action fires automatically.`,
-};
+} satisfies GlobalFeatureOnboardingContent;
 
 export const RULES_NOT_FOUND_COPY = {
   description: `The rule you're looking for doesn't exist or was removed.`,

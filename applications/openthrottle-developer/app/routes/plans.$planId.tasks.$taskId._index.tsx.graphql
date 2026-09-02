@@ -72,3 +72,22 @@ query TaskOutputStreamChunks($planId: ID!) {
     taskId
   }
 }
+
+# Backs the task-detail toolbar's Mark Complete action (`setTaskStatus` in
+# app/routing/plans/actions/taskId.ts). Relocated here when the task edit form
+# route was removed; the operation name is load-bearing — it generates
+# `UpdateTaskDocument`.
+mutation updateTask($input: UpdateTaskInput!) {
+  updateTask(input: $input) {
+    assignee
+    category
+    createdAt
+    description
+    id
+    planId
+    status
+    summary
+    title
+    updatedAt
+  }
+}

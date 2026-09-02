@@ -26,14 +26,15 @@ describe('PlanToolbar Component', () => {
     component = renderToolbar(props);
   });
 
-  test('should render actions and links scoped to planId', () => {
+  test('should render the status action, and no actions menu', () => {
     expect(component.getByTestId('PlanToolbar')).toBeInTheDocument();
     expect(
       component.getByRole('button', { name: /mark complete/i }),
     ).toBeInTheDocument();
+    // Add Task / Edit Plan are gone: both live in the OpenThrottle MCP now.
     expect(
-      component.getByRole('button', { name: /^actions$/i }),
-    ).toBeInTheDocument();
+      component.queryByRole('button', { name: /^actions$/i }),
+    ).not.toBeInTheDocument();
   });
 
   test('submits empty ralphTuning when ralphTuningJson is omitted', () => {

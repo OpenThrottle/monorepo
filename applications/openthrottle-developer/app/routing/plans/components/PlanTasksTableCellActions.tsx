@@ -2,7 +2,7 @@ import * as React from 'react';
 import { GlobalPopover } from '@openthrottle/react-router-ui-global';
 import type { GlobalPopoverAction } from '@openthrottle/react-router-ui-global';
 import { Row } from '@tanstack/react-table';
-import { PanelRightIcon, PencilIcon } from 'lucide-react';
+import { PanelRightIcon } from 'lucide-react';
 import { PlanTaskRowFragment } from '~/__generated__/graphql';
 import { PLAN_TASK_ROW_ACTIONS_COPY } from '~/routing/plans/data/data.copy';
 
@@ -36,13 +36,6 @@ export const PlanTasksTableCellActions = (
       kind: 'link',
       label: PLAN_TASK_ROW_ACTIONS_COPY.view,
       to: taskPath,
-    },
-    {
-      icon: <PencilIcon aria-hidden={true} className="size-3.5 shrink-0" />,
-      id: 'editTask',
-      kind: 'link',
-      label: PLAN_TASK_ROW_ACTIONS_COPY.edit,
-      to: `${taskPath}/edit`,
     },
   ];
 

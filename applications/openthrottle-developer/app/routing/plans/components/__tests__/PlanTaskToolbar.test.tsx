@@ -29,7 +29,6 @@ describe('PlanTaskToolbar Component', () => {
       isPromoted: false,
       onAddTag,
       onRemoveTag,
-      planId: 'plan-1',
       planIsRunning: false,
       planIsTerminal: false,
       tagVocabulary: [
@@ -44,14 +43,13 @@ describe('PlanTaskToolbar Component', () => {
           tag: 'backend',
         },
       ],
-      taskId: 'task-1',
       taskStatus: 'PENDING',
     };
 
     component = renderToolbar(props);
   });
 
-  test('renders the status group, Promote, actions, and tag chips', () => {
+  test('renders the status group, Promote, and tag chips', () => {
     expect(component.getByTestId('PlanTaskToolbar')).toBeInTheDocument();
     expect(
       component.getByRole('button', { name: /mark complete/i }),
@@ -59,9 +57,10 @@ describe('PlanTaskToolbar Component', () => {
     expect(
       component.getByRole('button', { name: /promote to plan/i }),
     ).toBeInTheDocument();
+    // No actions menu: tasks are edited through the OpenThrottle MCP.
     expect(
-      component.getByRole('button', { name: /^actions$/i }),
-    ).toBeInTheDocument();
+      component.queryByRole('button', { name: /^actions$/i }),
+    ).not.toBeInTheDocument();
     expect(component.getByText('backend')).toBeInTheDocument();
   });
 
@@ -127,7 +126,7 @@ describe('PlanTaskToolbar Component', () => {
     ).not.toBeDisabled();
   });
 
-  test('disables Mark Complete and Promote while the plan is terminal, keeping Edit Task', () => {
+  test('disables Mark Complete and Promote while the plan is terminal', () => {
     const terminal = within(
       renderToolbar({ ...props, planIsTerminal: true }).container,
     );
@@ -137,8 +136,5 @@ describe('PlanTaskToolbar Component', () => {
     expect(
       terminal.getByRole('button', { name: /promote to plan/i }),
     ).toBeDisabled();
-    expect(
-      terminal.getByRole('button', { name: /^actions$/i }),
-    ).toBeInTheDocument();
   });
 });

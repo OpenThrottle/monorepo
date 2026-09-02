@@ -52,9 +52,11 @@ import type {
 } from './types';
 
 /**
- * Chrome kept out of frame. The editor deep-link buttons on /plans/create embed a
- * hard-coded absolute path, so they would put a real home directory on camera.
- * This is a recording workaround; the buttons themselves want fixing in the app.
+ * Chrome kept out of frame. The editor deep-link buttons on the plan detail
+ * toolbar (`PlanEditorActions`) embed a hard-coded absolute path in their
+ * `cursor://` / `vscode://` / `claude://` targets, so they would put a real home
+ * directory on camera. This is a recording workaround; the buttons themselves
+ * want fixing in the app.
  *
  * The server-metrics strip is here for a different reason: it is real, wanted UI
  * (so the leak scan rightly passes it), but it is developer diagnostics on a

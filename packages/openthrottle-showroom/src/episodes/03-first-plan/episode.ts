@@ -41,7 +41,9 @@ export const episode: VideoEpisode = {
   format: 'short',
   id: '03-first-plan',
   production: {
-    blockedOn: [],
+    blockedOn: [
+      'every beat drives the web create forms (New plan, the title/description fields, Create plan, Add task), and those routes were removed — plans and tasks are authored through the OpenThrottle MCP now, so the episode needs re-scripting around an editor + MCP demo before it can be recorded',
+    ],
     recording: 'live',
     titleCard: ['Your first plan', 'in 60 seconds'],
   },

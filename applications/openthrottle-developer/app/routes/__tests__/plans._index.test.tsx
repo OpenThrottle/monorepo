@@ -4,10 +4,7 @@ import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 import Index from '../plans._index';
 import { buildRootMatch } from '~/testing/root-match-fixture';
-import {
-  PLANS_INDEX_EMPTY_COPY,
-  PLANS_ONBOARDING,
-} from '~/routing/plans/data/data.copy';
+import { PLANS_INDEX_EMPTY_COPY } from '~/routing/plans/data/data.copy';
 import type { PlanCardFragment } from '~/__generated__/graphql';
 import type { Route } from '@/app/routes/+types/plans._index';
 
@@ -162,8 +159,8 @@ describe('routes/plans._index.tsx', () => {
       component.queryByTestId('OpenThrottlePagination'),
     ).not.toBeInTheDocument();
     expect(
-      component.getByRole('link', { name: PLANS_ONBOARDING.cta.label }),
-    ).toHaveAttribute('href', '/plans/create');
+      component.queryByRole('link', { name: /create your first plan/i }),
+    ).not.toBeInTheDocument();
   });
 
   test('renders the onboarding trigger in the header when populated', () => {
@@ -207,8 +204,8 @@ describe('routes/plans._index.tsx', () => {
       component.getByTestId('GlobalFeatureOnboarding'),
     ).toBeInTheDocument();
     expect(
-      component.getByRole('link', { name: PLANS_ONBOARDING.cta.label }),
-    ).toHaveAttribute('href', '/plans/create');
+      component.queryByRole('link', { name: /create your first plan/i }),
+    ).not.toBeInTheDocument();
   });
 
   test('shows PlanTasksEmpty (not onboarding) for a filtered no-results view', () => {

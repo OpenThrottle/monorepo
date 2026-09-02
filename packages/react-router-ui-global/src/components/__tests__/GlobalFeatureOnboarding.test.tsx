@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { render } from '@testing-library/react';
+import { cleanup, render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
 import { Dialog, DialogContent } from '@openthrottle/react-router-shadcn';
 import { createRoutesStub } from 'react-router';
@@ -9,11 +9,17 @@ import { GLOBAL_FEATURE_ONBOARDING_MODAL } from '../../config';
 import { GlobalFeatureOnboarding } from '../GlobalFeatureOnboarding';
 import type {
   GlobalFeatureOnboardingContent,
+  GlobalFeatureOnboardingLink,
   GlobalFeatureOnboardingProps,
 } from '../GlobalFeatureOnboarding';
 
+const CTA: GlobalFeatureOnboardingLink = {
+  label: 'Create your first thing',
+  to: '/things/new',
+};
+
 const CONTENT: GlobalFeatureOnboardingContent = {
-  cta: { label: 'Create your first thing', to: '/things/new' },
+  cta: CTA,
   icon: RocketIcon,
   internalUsage: 'We use things every day to ship faster.',
   steps: ['Step one', 'Step two', 'Step three'],
@@ -64,8 +70,8 @@ describe('GlobalFeatureOnboarding Component', () => {
   });
 
   test('renders the primary CTA link with the correct href', () => {
-    const cta = component.getByRole('link', { name: CONTENT.cta.label });
-    expect(cta).toHaveAttribute('href', CONTENT.cta.to);
+    const cta = component.getByRole('link', { name: CTA.label });
+    expect(cta).toHaveAttribute('href', CTA.to);
   });
 
   test('does not render a secondary link when none is provided', () => {
@@ -129,6 +135,24 @@ describe('GlobalFeatureOnboarding Component', () => {
     expect(cta).toHaveAttribute('href', 'http://example.com/docs');
     expect(cta).toHaveAttribute('target', '_blank');
   });
+
+  test('renders no CTA at all when the feature omits one', () => {
+    // Drop the `beforeEach` render first: queries resolve against the whole
+    // document, so a second tree alongside it would match the CTA-ful one.
+    cleanup();
+    const withoutCta = renderComponent({
+      content: { ...CONTENT, cta: undefined },
+    });
+    expect(
+      withoutCta.queryByRole('link', { name: CTA.label }),
+    ).not.toBeInTheDocument();
+    expect(withoutCta.queryByRole('link')).not.toBeInTheDocument();
+    expect(withoutCta.getByText(CONTENT.title)).toBeInTheDocument();
+    expect(withoutCta.getByText(CONTENT.tagline)).toBeInTheDocument();
+    for (const step of CONTENT.steps) {
+      expect(withoutCta.getByText(step)).toBeInTheDocument();
+    }
+  });
 });
 
 const renderDialog = (props: GlobalFeatureOnboardingProps): RenderResult => {
@@ -174,8 +198,23 @@ describe('GlobalFeatureOnboarding renderAs="dialog"', () => {
   });
 
   test('still renders the primary CTA link with the correct href', () => {
-    const cta = component.getByRole('link', { name: CONTENT.cta.label });
-    expect(cta).toHaveAttribute('href', CONTENT.cta.to);
+    const cta = component.getByRole('link', { name: CTA.label });
+    expect(cta).toHaveAttribute('href', CTA.to);
+  });
+
+  test('renders no CTA in dialog mode when the feature omits one', () => {
+    cleanup();
+    const withoutCta = renderDialog({
+      content: { ...CONTENT, cta: undefined },
+      renderAs: 'dialog',
+    });
+    expect(
+      withoutCta.queryByRole('link', { name: CTA.label }),
+    ).not.toBeInTheDocument();
+    expect(withoutCta.getByRole('dialog')).toHaveAccessibleName(CONTENT.title);
+    for (const step of CONTENT.steps) {
+      expect(withoutCta.getByText(step)).toBeInTheDocument();
+    }
   });
 });
 
