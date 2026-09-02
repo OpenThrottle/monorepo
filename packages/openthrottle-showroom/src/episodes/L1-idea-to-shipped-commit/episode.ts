@@ -77,7 +77,10 @@ export const episode: VideoEpisode = {
   format: 'longform',
   id: 'L1-idea-to-shipped-commit',
   production: {
-    blockedOn: [],
+    blockedOn: [
+      'Starting a run from the plan needs the plan toolbar, which PlanDetailRoute hard-codes off (`const showToolbar = false`, #452)',
+      'Composites 03, 06, 11, 12, 13 and 18 — it cannot be filmed while the episodes it summarises are blocked',
+    ],
     recording: 'replay',
     titleCard: ['OpenThrottle in 10 minutes', 'Season 1 · Episode 1'],
   },

@@ -22,6 +22,9 @@ import type { DemoFlow } from '../../runner/types';
 
 export const flow: DemoFlow = {
   id: '03-first-plan',
+  // Creates a plan on camera, so take 1 leaves it in the list take 2 opens on.
+  // The recorder refuses a second take without a re-seed; see runner/dirty.ts.
+  mutates: true,
   // Tables and full-page forms are wider than the portrait crop window; cropping
   // them clips text at both edges. Fit and letterbox instead.
   portraitStrategy: 'fit',
@@ -29,7 +32,6 @@ export const flow: DemoFlow = {
     // Typing beats crop to the field, not the page: a 1080-wide portrait frame of
     // a full-width form is unreadable text at 20% scale.
     'create-plan': '[data-testid="PlanForm"]',
-    'first-task': '[data-testid="PlanForm"]',
     hook: '[data-testid="PlansTable"]',
     payoff: '[data-testid="PlansTable"]',
     'pick-category': '[data-testid="PlanForm"]',

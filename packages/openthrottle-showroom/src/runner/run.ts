@@ -7,7 +7,8 @@
  *   pnpm exec tsx runner/run.ts --flow 03-first-plan
  *
  * Options:
- *   --flow <id>     flow to record (required); resolves ../episodes/<id>/flow.ts
+ *   --flow <id>     flow to record (required); looked up in ../episodes/flows.ts
+ *   --allow-dirty   record a mutating flow without a fresh seed (see ./dirty.ts)
  *   --headed        run with a visible browser, for debugging a flow
  *   --base <url>    app under test (default http://localhost:6020)
  *   --portrait      record a SECOND pass at the portrait viewport, into
@@ -33,8 +34,11 @@
 
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { spawn } from 'node:child_process';
 import { chromium } from 'playwright';
 
+import { getFlow } from '../episodes/flows';
+import { isDemoDataDirty } from './dirty';
 import { loadFormat, outputRoot, repositoryRoot } from './format';
 import { toRegionSample } from './regions';
 import { createCapture } from './record';
@@ -107,14 +111,75 @@ const main = async (): Promise<void> => {
   const email = process.env.DEMO_USER_EMAIL ?? 'ada@atlasworks.example';
   const password = process.env.DEMO_USER_PASSWORD ?? 'DemoThrottle2026!';
 
-  const flowModule: { readonly flow?: DemoFlow } = await import(
-    `../episodes/${flowId}/flow.ts`
-  );
-  const flow = flowModule.flow;
+  // Registry lookup, not a dynamic import of a path built from the argument.
+  // The old form turned a typo into a module-resolution stack trace and a
+  // genuinely unwritten flow into the same stack trace, with nothing to tell
+  // them apart and no list of what you COULD have asked for. `getFlow` throws
+  // one message naming every recordable episode, and it is typechecked.
+  let flow: DemoFlow;
 
-  if (!flow) {
-    console.error(`run: ../episodes/${flowId}/flow.ts does not export 'flow'`);
+  try {
+    flow = getFlow(flowId);
+  } catch (error) {
+    console.error(
+      `run: ${error instanceof Error ? error.message : String(error)}`,
+    );
     process.exit(1);
+  }
+
+  // A mutating flow filmed against a database it has already dirtied records the
+  // duplicate its last take left behind. Refuse, and say exactly how to fix it —
+  // `--allow-dirty` is there for the case where you have re-seeded by some route
+  // this check cannot see, not as the way past a real warning.
+  if (flow.mutates === true && !process.argv.includes('--allow-dirty')) {
+    const verdict = isDemoDataDirty(flowId);
+
+    if (verdict.dirty) {
+      console.error(`run: refusing to record — ${verdict.reason}`);
+      console.error(
+        'run: re-seed first:\n' +
+          '       sh packages/openthrottle-showroom/src/scripts/seed-demo.sh --reset\n' +
+          '     or pass --allow-dirty if you have already reset the demo workspace another way.',
+      );
+      process.exit(1);
+    }
+  }
+
+  // A flow that films a run in progress needs one that STAYS in progress, and
+  // the seed deliberately gives it the opposite. `demo-live-run.ts` stamps a
+  // real heartbeat for exactly the length of the take and settles the run back
+  // afterwards — a child process rather than a database dependency in the
+  // recorder, and rather than a demo-only branch in the server's stale sweep.
+  const heartbeat =
+    flow.liveRun === undefined
+      ? null
+      : spawn(
+          'pnpm',
+          [
+            'exec',
+            'tsx',
+            join(
+              repositoryRoot(),
+              'packages',
+              'openthrottle-showroom',
+              'src',
+              'scripts',
+              'demo-live-run.ts',
+            ),
+            '--run',
+            flow.liveRun.runId,
+            ...(flow.liveRun.taskId === undefined
+              ? []
+              : ['--task', flow.liveRun.taskId]),
+          ],
+          { cwd: repositoryRoot(), stdio: 'inherit' },
+        );
+
+  // Give it the one round trip it needs to flip the run before frame 1 — the
+  // opening beat is the run in progress, and a badge that changes two seconds in
+  // is a badge the viewer watches change.
+  if (heartbeat !== null) {
+    await new Promise((resolve) => setTimeout(resolve, 2_000));
   }
 
   const isPortrait = process.argv.includes('--portrait');
@@ -343,6 +408,11 @@ const main = async (): Promise<void> => {
     `run: ${flow.id}${isPortrait ? ' (portrait)' : ''} — ${wallSeconds.toFixed(2)}s, ${String(steps.length)} steps, ${String(capture.frameCount())} frames`,
   );
   console.log(`run: ${outputDir.replace(repositoryRoot(), '.')}`);
+
+  // SIGINT rather than SIGKILL: the heartbeat settles the run back to COMPLETED
+  // on the way out, which is what returns the workspace to the seeded rule. A
+  // run the flow itself killed keeps the terminal status the take just showed.
+  heartbeat?.kill('SIGINT');
 };
 
 main().catch((error: unknown) => {

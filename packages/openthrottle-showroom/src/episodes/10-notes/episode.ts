@@ -30,7 +30,10 @@ export const episode: VideoEpisode = {
   format: 'short',
   id: '10-notes',
   production: {
-    blockedOn: [],
+    blockedOn: [
+      'Notes are absent from the search corpus — it is plan_embeddings, task_embeddings and documentation_embeddings only — so the payoff beat (find the note back by its symptom) cannot be true however search is configured',
+      'The note create form has one field, a Content textarea; there is no title input, so "type a title" and "type the body" are two beats over one control',
+    ],
     recording: 'live',
     titleCard: ['Notes your agents', 'can find'],
   },

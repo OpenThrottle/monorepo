@@ -55,6 +55,39 @@ export interface DemoFlow {
   /** Matches the episode id in `../episodes`, so one slug drives everything. */
   readonly id: string;
   /**
+   * A plan run this flow needs to read as live on camera, held open for the
+   * length of the take.
+   *
+   * The seed coerces every run to `COMPLETED` on purpose — an `IN_PROGRESS` run
+   * with no heartbeat is swept stale within two minutes and the plan reconciles
+   * to `PENDING`, so take 1 and take 7 disagree on the badge. A flow that needs
+   * the opposite declares it here and `run.ts` starts
+   * `scripts/demo-live-run.ts` alongside the recording, which stamps a real
+   * heartbeat and settles the run back afterwards. Nothing in the app changes
+   * and nothing on camera is faked.
+   */
+  readonly liveRun?: {
+    /** Run id; defaults to the hero run when omitted. */
+    readonly runId: string;
+    /** A task to show `IN_PROGRESS` under it, for the "one task at a time" shots. */
+    readonly taskId?: string;
+  };
+  /**
+   * True when the flow writes to the demo database — types into a form and
+   * saves.
+   *
+   * The seed is idempotent; a flow is not. Take 1 leaves its row behind, so take
+   * 2 films a list that already contains the thing the video is about to create.
+   * Declaring it lets `run.ts` refuse rather than letting the duplicate reach a
+   * frame — see `./dirty.ts` for why refusing beat stamping the title or rolling
+   * back afterwards.
+   *
+   * Absent means read-only, which is the common case and the safe default: a
+   * read-only flow wrongly marked mutating costs a re-seed, while a mutating one
+   * left unmarked costs a take.
+   */
+  readonly mutates?: boolean;
+  /**
    * How the 9:16 export handles a 1920-wide capture.
    *
    * `crop` (default) follows the per-beat region of interest — right when the action
