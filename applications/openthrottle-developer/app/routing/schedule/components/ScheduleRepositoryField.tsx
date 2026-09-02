@@ -15,8 +15,6 @@ import {
 } from '~/routing/schedule/data/data.repositories';
 
 export interface ScheduleRepositoryFieldProps {
-  /** Legacy explicit working directory currently on the schedule, if any. */
-  cwd?: string | null;
   /** The caller's registered checkouts; empty renders the settings-link empty state. */
   repositories: ScheduleRepositoryOption[];
   /** Checkout the schedule currently targets, if any. */
@@ -24,9 +22,8 @@ export interface ScheduleRepositoryFieldProps {
 }
 
 /**
- * @description Repository target for a schedule: a picker over the user's registered checkouts, with
- * the deprecated free-text working directory kept behind a disclosure so legacy schedules stay
- * editable. The server resolves the checkout to a cwd, so nothing here types a path.
+ * @description Repository target for a schedule: a picker over the user's registered checkouts. The
+ * server resolves the checkout to a working directory, so nothing here types a path.
  */
 export const ScheduleRepositoryField = (
   props: ScheduleRepositoryFieldProps,

@@ -71,7 +71,8 @@ describe('PromptsTable Component', () => {
       0,
     );
     expect(
-      withPrompts.getAllByRole('columnheader', { name: 'Details' }).length,
+      withPrompts.getAllByRole('columnheader', { name: 'Prompt Details' })
+        .length,
     ).toBeGreaterThan(0);
   });
 
@@ -94,14 +95,14 @@ describe('PromptsTable Component', () => {
   });
 
   test('shows the file basename when present', () => {
-    // The details cell renders the description (falling back to the prompt
-    // body) as Markdown; label badges no longer appear in the row.
+    // The details cell renders only the title, file basename and updated date;
+    // neither the description nor label badges appear in the row.
     const { getByText, queryByText } = renderPromptsTable({
       prompts: mockPrompts,
     });
 
     expect(getByText('first.md')).toBeInTheDocument();
-    expect(getByText('First prompt description')).toBeInTheDocument();
+    expect(queryByText('First prompt description')).toBeNull();
     expect(queryByText('+1')).toBeNull();
   });
 

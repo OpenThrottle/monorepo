@@ -146,7 +146,6 @@ export const ScheduleForm = (props: ScheduleFormProps): React.ReactElement => {
       </div>
 
       <ScheduleRepositoryField
-        cwd={job?.cwd ?? null}
         repositories={repositories ?? []}
         repositoryCheckoutId={job?.repositoryCheckoutId ?? null}
       />

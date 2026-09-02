@@ -47,7 +47,7 @@ describe('ScheduleRepositoryField Component', () => {
   let props: ScheduleRepositoryFieldProps;
 
   beforeEach(() => {
-    props = { cwd: null, repositories, repositoryCheckoutId: null };
+    props = { repositories, repositoryCheckoutId: null };
   });
 
   test('defaults to the workspace-root option when no checkout is targeted', () => {
