@@ -38,6 +38,26 @@ export const episode: VideoEpisode = {
     { action: 'Hold on the injected task.', t: '0:50' },
     { action: 'Outro card.', t: '0:55' },
   ],
+  dataRequirements: [
+    {
+      atLeast: 10,
+      describe:
+        'distinct plan tags, so the tag filter has something to filter by',
+      sql: `SELECT count(DISTINCT tag) AS value FROM plan_tags`,
+    },
+    {
+      atLeast: 1,
+      describe:
+        'a tag rule that has actually fired, so the applications list is not empty',
+      sql: `SELECT count(*) AS value FROM tag_action_rules r JOIN rule_applications a ON a.rule_id = r.id`,
+    },
+    {
+      atLeast: 5,
+      describe:
+        'plans carrying at least three tags, so a chip row looks lived-in',
+      sql: `SELECT count(*) AS value FROM (SELECT p.id FROM plans p JOIN plan_tags pt ON pt.plan_id = p.id GROUP BY p.id HAVING count(DISTINCT pt.tag) >= 3) x`,
+    },
+  ],
   format: 'short',
   id: '09-tags-and-rules',
   production: {

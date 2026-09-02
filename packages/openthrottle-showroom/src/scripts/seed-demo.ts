@@ -29,6 +29,8 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 import { DataSource } from 'typeorm';
 
+import { fileURLToPath } from 'node:url';
+
 import {
   DEFAULT_DOMAIN_TAG_VOCABULARY,
   DEFAULT_PHASE_TAG_VOCABULARY,
@@ -44,8 +46,18 @@ import {
   DEMO_SKILLS,
   DEMO_USER,
 } from '../fixtures/demo-content';
+import {
+  loadSnapshot,
+  readSnapshotTables,
+  remapOwnershipToDemoUser,
+} from '../snapshot/load';
+import { reflectSchema } from '../snapshot/schema';
 
 const ROLE_NAMES = ['admin', 'user', 'viewer'] as const;
+
+const SNAPSHOT_DATA_DIR = fileURLToPath(
+  new URL('../snapshot/data', import.meta.url),
+);
 
 /**
  * The reset path truncates. Refuse to run against a database whose name does not
@@ -106,11 +118,41 @@ const seed = async (dataSource: DataSource, reset: boolean): Promise<void> => {
   );
 
   if (reset) {
-    // Order matters only for the tables without ON DELETE CASCADE to plans.
+    // The snapshot widened the demo scope well past the hand-authored tables,
+    // so the reset list is derived from the snapshot's own table manifest
+    // rather than hand-maintained — a new exported table would otherwise keep
+    // stale rows across a --reset and quietly diverge take 7 from take 1.
+    // CASCADE covers dependents, so order does not matter here.
+    const snapshotTables = await readSnapshotTables(SNAPSHOT_DATA_DIR);
+    const heroTables = [
+      'notes',
+      'plan_embeddings',
+      'plan_output_stream',
+      'plan_runs',
+      'plans',
+      'project_skills',
+      'projects',
+      'rule_applications',
+      'tag_action_rules',
+      'task_embeddings',
+      'tasks',
+      'user_skill_tags',
+    ];
+    const targets = [
+      ...new Set([
+        ...snapshotTables.map((entry) => entry.table),
+        ...heroTables,
+      ]),
+    ]
+      // users is deliberately NOT truncated: the demo login user is created by
+      // the seeder above and re-created here would orphan its role grants.
+      .filter((table) => table !== 'users')
+      .sort();
+
     await dataSource.query(
-      'TRUNCATE plan_output_stream, plan_runs, task_embeddings, plan_embeddings, tasks, plans, notes, rule_applications, tag_action_rules, project_skills, user_skill_tags, projects RESTART IDENTITY CASCADE',
+      `TRUNCATE ${targets.join(', ')} RESTART IDENTITY CASCADE`,
     );
-    console.log('seed-demo: demo scope truncated.');
+    console.log(`seed-demo: truncated ${targets.length} tables.`);
   }
 
   const existing = await usersService.findByEmail(DEMO_USER.email);
@@ -121,6 +163,27 @@ const seed = async (dataSource: DataSource, reset: boolean): Promise<void> => {
       githubUsername: DEMO_USER.githubUsername,
       passwordHash: await usersService.hashPassword(DEMO_USER.password),
     }));
+
+  // `--reset` deliberately does not truncate `users` (that would cascade to
+  // half the workspace), so a demo user created by an OLDER seed keeps its old
+  // password hash forever and the documented demo login silently stops working
+  // with "Invalid email or password" against a user that demonstrably exists.
+  // Re-stamp it — but only when it does not already validate: bcrypt salts
+  // every hash differently, so an unconditional write would churn the row (and
+  // its updated_at trigger) on every run and break seed idempotency.
+  if (
+    existing != null &&
+    !(await usersService.validatePassword(
+      DEMO_USER.password,
+      existing.passwordHash,
+    ))
+  ) {
+    await dataSource.query(
+      'UPDATE users SET password_hash = $2 WHERE id = $1',
+      [user.id, await usersService.hashPassword(DEMO_USER.password)],
+    );
+    console.log('seed-demo: demo user password re-stamped from the fixture.');
+  }
 
   /* eslint-disable no-await-in-loop -- sequential writes against one connection */
   for (const roleName of ROLE_NAMES) {
@@ -140,7 +203,9 @@ const seed = async (dataSource: DataSource, reset: boolean): Promise<void> => {
     await dataSource.query(
       `INSERT INTO projects (id, name, description, nx_project_name, created_at, updated_at)
        VALUES ($1, $2, $3, $4, $5, $5)
-       ON CONFLICT (id) DO UPDATE SET description = EXCLUDED.description, name = EXCLUDED.name`,
+       ON CONFLICT (id) DO UPDATE SET description = EXCLUDED.description, name = EXCLUDED.name
+       WHERE (projects.description, projects.name)
+         IS DISTINCT FROM (EXCLUDED.description, EXCLUDED.name)`,
       [
         project.id,
         project.name,
@@ -160,7 +225,12 @@ const seed = async (dataSource: DataSource, reset: boolean): Promise<void> => {
          completed_at = EXCLUDED.completed_at, created_at = EXCLUDED.created_at,
          description = EXCLUDED.description, project_id = EXCLUDED.project_id,
          status = EXCLUDED.status, summary = EXCLUDED.summary,
-         title = EXCLUDED.title, updated_at = EXCLUDED.updated_at`,
+         title = EXCLUDED.title, updated_at = EXCLUDED.updated_at
+       WHERE (plans.assignee, plans.category, plans.completed_at, plans.created_at,
+              plans.description, plans.project_id, plans.status, plans.summary, plans.title)
+         IS DISTINCT FROM (EXCLUDED.assignee, EXCLUDED.category, EXCLUDED.completed_at,
+              EXCLUDED.created_at, EXCLUDED.description, EXCLUDED.project_id,
+              EXCLUDED.status, EXCLUDED.summary, EXCLUDED.title)`,
       [
         plan.id,
         plan.title,
@@ -192,7 +262,12 @@ const seed = async (dataSource: DataSource, reset: boolean): Promise<void> => {
            project_id = EXCLUDED.project_id,
            sort_order = EXCLUDED.sort_order, status = EXCLUDED.status,
            summary = EXCLUDED.summary, title = EXCLUDED.title,
-           updated_at = EXCLUDED.updated_at`,
+           updated_at = EXCLUDED.updated_at
+         WHERE (tasks.category, tasks.completed_at, tasks.created_at, tasks.description,
+                tasks.sort_order, tasks.status, tasks.summary, tasks.title)
+           IS DISTINCT FROM (EXCLUDED.category, EXCLUDED.completed_at, EXCLUDED.created_at,
+                EXCLUDED.description, EXCLUDED.sort_order, EXCLUDED.status,
+                EXCLUDED.summary, EXCLUDED.title)`,
         [
           task.id,
           plan.id,
@@ -278,7 +353,9 @@ const seed = async (dataSource: DataSource, reset: boolean): Promise<void> => {
     await dataSource.query(
       `INSERT INTO notes (id, content, author, created_at, updated_at)
        VALUES ($1, $2, $3, $4, $4)
-       ON CONFLICT (id) DO UPDATE SET content = EXCLUDED.content, created_at = EXCLUDED.created_at`,
+       ON CONFLICT (id) DO UPDATE SET content = EXCLUDED.content, created_at = EXCLUDED.created_at
+       WHERE (notes.content, notes.created_at)
+         IS DISTINCT FROM (EXCLUDED.content, EXCLUDED.created_at)`,
       [
         note.id,
         note.content,
@@ -303,7 +380,10 @@ const seed = async (dataSource: DataSource, reset: boolean): Promise<void> => {
      VALUES ($1, $2, 'COMPLETED', 'spawn', 'claude', $3, $4, $5, $6, $7, $7)
      ON CONFLICT (id) DO UPDATE SET
        branch = EXCLUDED.branch, last_heartbeat_at = EXCLUDED.last_heartbeat_at,
-       model = EXCLUDED.model, status = EXCLUDED.status, updated_at = EXCLUDED.updated_at`,
+       model = EXCLUDED.model, status = EXCLUDED.status, updated_at = EXCLUDED.updated_at
+     WHERE (plan_runs.branch, plan_runs.last_heartbeat_at, plan_runs.model, plan_runs.status)
+       IS DISTINCT FROM (EXCLUDED.branch, EXCLUDED.last_heartbeat_at, EXCLUDED.model,
+            EXCLUDED.status)`,
     [
       runId,
       DEMO_RUN.planId,
@@ -315,19 +395,34 @@ const seed = async (dataSource: DataSource, reset: boolean): Promise<void> => {
     ],
   );
 
-  await dataSource.query('DELETE FROM plan_output_stream WHERE plan_id = $1', [
-    DEMO_RUN.planId,
-  ]);
+  // Each chunk gets a DETERMINISTIC id derived from its index. The column
+  // defaults to gen_random_uuid(), so the previous delete-and-reinsert minted
+  // fresh ids on every run — the rows were identical but the table never was,
+  // which is exactly the kind of drift `--reset` exists to remove.
+  const chunkId = (index: number): string =>
+    `d0d0d0d0-0000-4000-8000-0000000${String(index).padStart(5, '0')}`;
+
+  await dataSource.query(
+    'DELETE FROM plan_output_stream WHERE plan_id = $1 AND id <> ALL($2::uuid[])',
+    [DEMO_RUN.planId, DEMO_RUN.chunks.map((_, index) => chunkId(index))],
+  );
 
   for (const [index, chunk] of DEMO_RUN.chunks.entries()) {
     await dataSource.query(
-      `INSERT INTO plan_output_stream (plan_id, task_id, iteration, content, created_at)
-       VALUES ($1, $2, 1, $3, $4)`,
+      `INSERT INTO plan_output_stream (id, plan_id, task_id, iteration, content, created_at)
+       VALUES ($5, $1, $2, 1, $3, $4)
+       ON CONFLICT (id) DO UPDATE SET
+         content = EXCLUDED.content, created_at = EXCLUDED.created_at,
+         task_id = EXCLUDED.task_id
+       WHERE (plan_output_stream.content, plan_output_stream.created_at,
+              plan_output_stream.task_id)
+         IS DISTINCT FROM (EXCLUDED.content, EXCLUDED.created_at, EXCLUDED.task_id)`,
       [
         DEMO_RUN.planId,
         index < 13 ? DEMO_RUN.taskId : null,
         chunk.content,
         at(now, chunk.offset),
+        chunkId(index),
       ],
     );
   }
@@ -339,15 +434,103 @@ const seed = async (dataSource: DataSource, reset: boolean): Promise<void> => {
     0,
   );
   console.log(
-    `seed-demo: ${planCount} plans, ${taskCount} tasks, ${DEMO_NOTES.length} notes, ${DEMO_PROJECTS.length} projects, ${DEMO_SKILLS.length} skills, ${DEMO_RULES.length} rules, ${DEMO_RUN.chunks.length} output chunks.`,
+    `seed-demo: hero fixture — ${planCount} plans, ${taskCount} tasks, ${DEMO_NOTES.length} notes, ${DEMO_PROJECTS.length} projects, ${DEMO_SKILLS.length} skills, ${DEMO_RULES.length} rules, ${DEMO_RUN.chunks.length} output chunks.`,
   );
+
+  // The imported background, loaded after the hero rows so the two id spaces
+  // are visibly separate: hero ids stay d0d0d0d0-, imported rows keep the real
+  // ids they carry, and the loader refuses if the two ever overlap.
+  const runner = {
+    query: async (
+      sql: string,
+      params?: unknown[],
+    ): Promise<{ rows: Record<string, unknown>[] }> => ({
+      rows: await dataSource.query(sql, params),
+    }),
+  };
+
+  const schema = await reflectSchema(runner);
+
+  const loaded = await loadSnapshot({
+    dataDir: SNAPSHOT_DATA_DIR,
+    // Every FK into `users` is rewritten by the ownership remap below, so the
+    // loader must not treat the imported owner as the value to restore.
+    ownedColumns: new Set(
+      schema.foreignKeys
+        .filter(
+          (edge) => edge.parentTable === 'users' && edge.childTable !== 'users',
+        )
+        .map((edge) => `${edge.childTable}.${edge.childColumn}`),
+    ),
+    runner,
+    schema,
+    seedTime: now,
+  });
+
+  const importedRows = loaded.reduce(
+    (total, entry) => total + entry.rowCount,
+    0,
+  );
+  console.log(
+    `seed-demo: snapshot — ${importedRows} rows across ${loaded.length} tables.`,
+  );
+
+  // A dropped duplicate is expected (the hero project and the exported one are
+  // the same project), but it is never silent: a NEW one means either the hero
+  // fixture has grown into the snapshot's natural keys, or the source database
+  // is missing a unique index the demo database has.
+  for (const entry of loaded.filter((table) => table.reconciled.length > 0)) {
+    const first = entry.reconciled[0];
+
+    console.warn(
+      `seed-demo: NOTE '${entry.table}' — ${entry.reconciled.length} snapshot row(s) dropped onto an existing row with the same natural key (${first.key}), starting with ${first.droppedId} → ${first.keptId}. References follow the row that was kept.`,
+    );
+  }
+
+  // Imported rows arrive owned by the imported users, but the recording logs
+  // in as the demo user — and most workspace surfaces are scoped to the
+  // signed-in user. Without this the demo would hold 125 conversations and
+  // still render "no conversations yet".
+  const remapped = await remapOwnershipToDemoUser({
+    demoUserId: user.id,
+    runner,
+    schema,
+  });
+
+  const remappedRows = remapped.reduce(
+    (total, entry) => total + entry.rowCount,
+    0,
+  );
+  console.log(
+    `seed-demo: ownership — ${remappedRows} rows across ${remapped.length} columns re-pointed at the demo user.`,
+  );
+
+  // A column the demo schema cannot represent means the dev database the
+  // snapshot came from has drifted ahead of the committed migrations. Not
+  // fatal for a recording, but it should never grow silently.
+  const drifted = loaded.filter((entry) => entry.skippedColumns.length > 0);
+
+  for (const entry of drifted) {
+    console.warn(
+      `seed-demo: WARNING '${entry.table}' snapshot has ${entry.skippedColumns.join(', ')} — absent from the demo schema, so skipped. The dev database is ahead of databases/migrations.`,
+    );
+  }
   console.log(`seed-demo: demo login is ${DEMO_USER.email}`);
 };
 
 const main = async (): Promise<void> => {
   const database = assertDemoDatabase();
   const reset = process.argv.includes('--reset');
-  const dataSource = new DataSource(getOpenThrottleTypeOrmOptions());
+  // TypeORM logs every failed statement itself, before it throws. The loader
+  // expects and handles unique violations (see `upsertRow`), so that logging
+  // prints a full SQL error block for a collision it then resolves — the exact
+  // "errors around dups" a re-seed looked like it was drowning in. Everything
+  // that actually stops the seed is still reported: `QueryFailedError` carries
+  // the query and its parameters, and `main` prints the error whole.
+  const dataSource = new DataSource({
+    ...getOpenThrottleTypeOrmOptions(),
+    logging: ['warn'],
+  });
   await dataSource.initialize();
 
   try {

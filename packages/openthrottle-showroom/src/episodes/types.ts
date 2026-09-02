@@ -196,8 +196,38 @@ export interface ReleaseMetadata {
  * The `id` is the slug and the single source of identity: it names the module
  * directory, the flow beside it, and the output directory the stages write to.
  */
+/**
+ * One thing an episode's flow needs to exist in the demo database before it can
+ * be filmed honestly. A schema that loads is not the same as a workspace worth
+ * recording: an episode that pans across the plans table needs plans in it, and
+ * finding that out mid-take is the expensive way to learn it.
+ *
+ * `sql` must return exactly one row with one column named `value`; the
+ * requirement passes when that value is at least `atLeast`. Keep the SQL
+ * boring — this is a gate, not a query language.
+ *
+ * Prefer SHAPE assertions ("some plan with at least 3 tags and a completed
+ * run") over pinning imported ids: an imported id couples the episode to one
+ * snapshot refresh, and the next refresh silently breaks it. Pin ids for the
+ * hand-authored hero rows, which are stable by construction, and for the rare
+ * case where an episode genuinely depends on one specific row.
+ */
+export interface DataRequirement {
+  /** Minimum acceptable value, inclusive. Booleans count as 0 or 1. */
+  readonly atLeast: number;
+  /** What must hold, in the words you would use to explain the failure. */
+  readonly describe: string;
+  /** Returns exactly one row with one column named `value`. */
+  readonly sql: string;
+}
+
 export interface VideoEpisode {
   readonly beats: readonly Beat[];
+  /**
+   * What the demo database must contain for this episode's flow to render.
+   * Asserted after seeding, so a missing row names the video it breaks.
+   */
+  readonly dataRequirements?: readonly DataRequirement[];
   readonly format: EpisodeFormat;
   readonly id: string;
   readonly production: ProductionMetadata;

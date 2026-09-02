@@ -19,9 +19,20 @@ and reads its constants from [`format.json`](./format.json).
 sh packages/openthrottle-showroom/src/scripts/seed-demo.sh --reset
 ```
 
-Creates and migrates the **demo database** and fills it with fictional content.
+Creates and migrates the **demo database**, fills it with the hand-authored hero
+rows plus a sanitized snapshot of the real workspace (~15,000 rows), then asserts
+every episode's declared data requirements and fails naming any episode whose
+flow would hit an empty state.
+
 `--reset` first, always: flow 03 creates a real plan every time it runs, so take 7
 looks like take 1 only if the workspace is reset in between.
+
+The snapshot is real workspace content, sanitized best-effort — credentials,
+identities and machine details are removed or fail the export, but free text is
+kept deliberately. **Recordings made against it are human-reviewed before
+publishing, always.** See
+[PIPELINE.md](../../packages/openthrottle-showroom/PIPELINE.md) for the refresh
+ritual and what breaks first when the schema moves.
 
 ### 2. Record
 

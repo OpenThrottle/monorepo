@@ -1,0 +1,6 @@
+# The sanitized database snapshot is exporter output, not authored source. It is
+# ~18MB across 29 files and no line of it is meaningfully reviewable by eye, so
+# suppress the diff and keep it out of language stats. Review the row counts in
+# src/snapshot/data/_tables.json instead — that is the snapshot's human-readable
+# summary and stays diffable on purpose.
+src/snapshot/data/*.jsonl -diff linguist-generated=true

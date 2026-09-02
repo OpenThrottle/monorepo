@@ -32,6 +32,18 @@ export const episode: VideoEpisode = {
     },
     { action: 'Outro card.', t: '0:52' },
   ],
+  dataRequirements: [
+    {
+      atLeast: 20,
+      describe: 'conversations in the chat sidebar',
+      sql: `SELECT count(*) AS value FROM agent_conversations`,
+    },
+    {
+      atLeast: 10,
+      describe: 'conversations long enough to scroll as a real exchange',
+      sql: `SELECT count(*) AS value FROM (SELECT c.id FROM agent_conversations c JOIN agent_conversation_messages m ON m.conversation_id = c.id GROUP BY c.id HAVING count(*) >= 4) x`,
+    },
+  ],
   format: 'short',
   id: '17-chat-any-cli',
   production: {

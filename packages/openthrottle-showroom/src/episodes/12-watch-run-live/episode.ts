@@ -30,6 +30,19 @@ export const episode: VideoEpisode = {
     { action: 'Hold on the streaming output.', t: '0:46' },
     { action: 'Outro card.', t: '0:54' },
   ],
+  dataRequirements: [
+    {
+      atLeast: 15,
+      describe: 'the hero run output chunks, which the replay flow scrolls',
+      sql: `SELECT count(*) AS value FROM plan_output_stream WHERE plan_id = (SELECT plan_id FROM plan_runs WHERE id = 'd0d0d0d0-0000-4000-8000-00000000ff01')`,
+    },
+    {
+      atLeast: 1,
+      describe:
+        'the hero run itself, still COMPLETED so the badge cannot change between takes',
+      sql: `SELECT count(*) AS value FROM plan_runs WHERE id = 'd0d0d0d0-0000-4000-8000-00000000ff01' AND status = 'COMPLETED'`,
+    },
+  ],
   format: 'short',
   id: '12-watch-run-live',
   production: {

@@ -508,6 +508,17 @@
         "cwd": "{workspaceRoot}"
       }
     },
+    "snapshot-refresh": {
+      "cache": false,
+      "description": "Re-export the sanitized snapshot of the REAL workspace database into packages/openthrottle-showroom/src/snapshot/data (docs in PIPELINE.md). Refresh on a branch and READ THE DIFF before merging — the diff review is the leak review. Never cached: it reads a live external database. POSTGRES_HOST pinned to localhost for the same reason as video-seed.",
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec tsx --env-file .env packages/openthrottle-showroom/src/scripts/snapshot-export.ts",
+        "env": {
+          "POSTGRES_HOST": "localhost"
+        }
+      }
+    },
     "video-assemble": {
       "cache": false,
       "description": "Compose a recorded flow plus one variant's narration into upload-ready 16:9 and 9:16 masters, an .srt and metadata.json (docs/marketing/pipeline.md). Pass --script <episode> and optionally --variant <id>; the capture under output/<episode>/ is shared by every variant, and the take is written to output/<episode>/<variant>/. Not cached: the inputs are gitignored capture artifacts Nx cannot hash, and a stale hit would silently publish last week's footage.",
@@ -541,6 +552,15 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "pnpm exec tsx ./src/scan/leak-scan.ts",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "video-seed-verify": {
+      "cache": false,
+      "description": "Assert every episode's declared dataRequirements against the seeded DEMO database and fail naming the episode a missing row breaks. Runs at the end of video-seed; run standalone to re-check without re-seeding. Never cached: it reads an external database.",
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "sh ./src/scripts/verify-demo-data.sh",
         "cwd": "{projectRoot}"
       }
     },

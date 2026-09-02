@@ -70,6 +70,9 @@ pnpm exec tsx --env-file .env ./scripts/openthrottle-database-migrations.ts
 echo "▶ Seeding demo content…"
 pnpm exec tsx --env-file .env "$SCRIPT_DIR/seed-demo.ts" $RESET_ARG
 
+echo "▶ Verifying episode data requirements…"
+pnpm exec tsx --env-file .env "$SCRIPT_DIR/verify-demo-data.ts"
+
 echo "✓ Demo workspace ready in '$DEMO_POSTGRES_DB'."
 echo "  Point a server at it with the SAME override, not POSTGRES_DB:"
 echo "    OPENTHROTTLE_POSTGRES_URL='$DEMO_URL' pnpm nx run openthrottle-server:dev"

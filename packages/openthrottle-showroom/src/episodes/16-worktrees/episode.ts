@@ -33,6 +33,18 @@ export const episode: VideoEpisode = {
     { action: 'Hold on the two panes.', t: '0:47' },
     { action: 'Outro card.', t: '0:54' },
   ],
+  dataRequirements: [
+    {
+      atLeast: 1,
+      describe: 'a repository the workspace knows about',
+      sql: `SELECT count(*) AS value FROM repositories`,
+    },
+    {
+      atLeast: 1,
+      describe: 'a checkout to render on the repository detail page',
+      sql: `SELECT count(*) AS value FROM repository_checkouts`,
+    },
+  ],
   format: 'short',
   id: '16-worktrees',
   production: {

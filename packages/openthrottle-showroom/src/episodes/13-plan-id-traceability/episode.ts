@@ -29,6 +29,25 @@ export const episode: VideoEpisode = {
     { action: 'Hold on the plan description.', t: '0:46' },
     { action: 'Outro card.', t: '0:53' },
   ],
+  dataRequirements: [
+    {
+      atLeast: 100,
+      describe:
+        'tasks whose parent plan resolves, so the task-to-plan walk works',
+      sql: `SELECT count(*) AS value FROM tasks t JOIN plans p ON p.id = t.plan_id`,
+    },
+    {
+      atLeast: 50,
+      describe: 'work-ledger sessions attached to a plan or task subject',
+      sql: `SELECT count(*) AS value FROM work_sessions s JOIN work_session_subjects j ON j.session_id = s.id`,
+    },
+    {
+      atLeast: 20,
+      describe:
+        'recorded work artifacts, the ledger rows the traceability story ends on',
+      sql: `SELECT count(*) AS value FROM work_artifacts`,
+    },
+  ],
   format: 'short',
   id: '13-plan-id-traceability',
   production: {

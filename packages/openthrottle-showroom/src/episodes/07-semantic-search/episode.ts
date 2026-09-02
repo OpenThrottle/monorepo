@@ -39,6 +39,24 @@ export const episode: VideoEpisode = {
     { action: 'Hold on the plan description.', t: '0:46' },
     { action: 'Outro card.', t: '0:54' },
   ],
+  dataRequirements: [
+    {
+      atLeast: 25,
+      describe:
+        'plan embeddings so semantic search has a corpus to match against',
+      sql: `SELECT count(*) AS value FROM plan_embeddings`,
+    },
+    {
+      atLeast: 100,
+      describe: 'documentation embeddings, the other half of the search corpus',
+      sql: `SELECT count(*) AS value FROM documentation_embeddings`,
+    },
+    {
+      atLeast: 20,
+      describe: 'plans old enough that a hit reads as months old on screen',
+      sql: `SELECT count(*) AS value FROM plans WHERE created_at < now() - interval '14 days'`,
+    },
+  ],
   format: 'short',
   id: '07-semantic-search',
   production: {

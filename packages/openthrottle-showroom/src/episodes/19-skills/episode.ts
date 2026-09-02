@@ -32,6 +32,19 @@ export const episode: VideoEpisode = {
     },
     { action: 'Outro card.', t: '0:53' },
   ],
+  dataRequirements: [
+    {
+      atLeast: 8,
+      describe:
+        'distinct skills with recorded usage, so the catalogue is not empty',
+      sql: `SELECT count(DISTINCT skill_name) AS value FROM skill_usage_events`,
+    },
+    {
+      atLeast: 100,
+      describe: 'skill usage events behind the usage counts',
+      sql: `SELECT count(*) AS value FROM skill_usage_events`,
+    },
+  ],
   format: 'short',
   id: '19-skills',
   production: {
