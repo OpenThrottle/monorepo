@@ -7192,28 +7192,6 @@ export type PlanDetailDetachHookMutation = {
   detachHook: boolean;
 };
 
-export type UpdatePlanMutationVariables = Exact<{
-  input: UpdatePlanInput;
-}>;
-
-export type UpdatePlanMutation = {
-  __typename?: 'Mutation';
-  updatePlan?: {
-    __typename?: 'PlanObject';
-    assignee?: string | null;
-    author: string;
-    category: string;
-    createdAt: any;
-    description?: string | null;
-    id: string;
-    projectId?: string | null;
-    status: string;
-    summary?: string | null;
-    title: string;
-    updatedAt: any;
-  } | null;
-};
-
 export type GetTaskByIdQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
@@ -7368,33 +7346,6 @@ export type TaskOutputStreamChunksQuery = {
   }>;
 };
 
-export type GetTaskForEditByIdQueryVariables = Exact<{
-  id: Scalars['ID']['input'];
-}>;
-
-export type GetTaskForEditByIdQuery = {
-  __typename?: 'Query';
-  task?: {
-    __typename?: 'TaskObject';
-    assignee?: string | null;
-    category?: string | null;
-    createdAt: any;
-    description?: string | null;
-    id: string;
-    planId: string;
-    requirementsJson: string;
-    status: string;
-    summary?: string | null;
-    title: string;
-    updatedAt: any;
-    projectRelation?: {
-      __typename?: 'ProjectObject';
-      id: string;
-      name: string;
-    } | null;
-  } | null;
-};
-
 export type UpdateTaskMutationVariables = Exact<{
   input: UpdateTaskInput;
 }>;
@@ -7414,27 +7365,6 @@ export type UpdateTaskMutation = {
     title: string;
     updatedAt: any;
   } | null;
-};
-
-export type CreateTaskMutationVariables = Exact<{
-  input: CreateTaskInput;
-}>;
-
-export type CreateTaskMutation = {
-  __typename?: 'Mutation';
-  createTask: {
-    __typename?: 'TaskObject';
-    assignee?: string | null;
-    category?: string | null;
-    createdAt: any;
-    description?: string | null;
-    id: string;
-    planId: string;
-    status: string;
-    summary?: string | null;
-    title: string;
-    updatedAt: any;
-  };
 };
 
 export type PlanCardFragment = {
@@ -7527,29 +7457,6 @@ export type GetPlansByStatusQuery = {
   queuedPlansCount: {
     __typename?: 'ListPlansByStatusResultObject';
     totalCount: number;
-  };
-};
-
-export type CreatePlanMutationVariables = Exact<{
-  input: CreatePlanInput;
-}>;
-
-export type CreatePlanMutation = {
-  __typename?: 'Mutation';
-  createPlan: {
-    __typename?: 'PlanObject';
-    assignee?: string | null;
-    author: string;
-    category: string;
-    createdAt: any;
-    description?: string | null;
-    id: string;
-    project?: string | null;
-    projectId?: string | null;
-    status: string;
-    summary?: string | null;
-    title: string;
-    updatedAt: any;
   };
 };
 
@@ -17690,67 +17597,6 @@ export const PlanDetailDetachHookDocument = {
   PlanDetailDetachHookMutation,
   PlanDetailDetachHookMutationVariables
 >;
-export const UpdatePlanDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'mutation',
-      name: { kind: 'Name', value: 'updatePlan' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'input' },
-          },
-          type: {
-            kind: 'NonNullType',
-            type: {
-              kind: 'NamedType',
-              name: { kind: 'Name', value: 'UpdatePlanInput' },
-            },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'updatePlan' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'input' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'input' },
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'author' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'category' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<UpdatePlanMutation, UpdatePlanMutationVariables>;
 export const GetTaskByIdDocument = {
   kind: 'Document',
   definitions: [
@@ -18275,78 +18121,6 @@ export const TaskOutputStreamChunksDocument = {
   TaskOutputStreamChunksQuery,
   TaskOutputStreamChunksQueryVariables
 >;
-export const GetTaskForEditByIdDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'getTaskForEditById' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
-          type: {
-            kind: 'NonNullType',
-            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'task' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'id' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'id' },
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'category' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'projectRelation' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'requirementsJson' },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<
-  GetTaskForEditByIdQuery,
-  GetTaskForEditByIdQueryVariables
->;
 export const UpdateTaskDocument = {
   kind: 'Document',
   definitions: [
@@ -18407,66 +18181,6 @@ export const UpdateTaskDocument = {
     },
   ],
 } as unknown as DocumentNode<UpdateTaskMutation, UpdateTaskMutationVariables>;
-export const CreateTaskDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'mutation',
-      name: { kind: 'Name', value: 'createTask' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'input' },
-          },
-          type: {
-            kind: 'NonNullType',
-            type: {
-              kind: 'NamedType',
-              name: { kind: 'Name', value: 'CreateTaskInput' },
-            },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'createTask' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'input' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'input' },
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'category' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<CreateTaskMutation, CreateTaskMutationVariables>;
 export const GetPlanAssigneeOptionsDocument = {
   kind: 'Document',
   definitions: [
@@ -18703,68 +18417,6 @@ export const GetPlansByStatusDocument = {
   GetPlansByStatusQuery,
   GetPlansByStatusQueryVariables
 >;
-export const CreatePlanDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'mutation',
-      name: { kind: 'Name', value: 'createPlan' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'input' },
-          },
-          type: {
-            kind: 'NonNullType',
-            type: {
-              kind: 'NamedType',
-              name: { kind: 'Name', value: 'CreatePlanInput' },
-            },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'createPlan' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'input' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'input' },
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'author' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'category' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'project' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<CreatePlanMutation, CreatePlanMutationVariables>;
 export const TestWorkflowDocument = {
   kind: 'Document',
   definitions: [

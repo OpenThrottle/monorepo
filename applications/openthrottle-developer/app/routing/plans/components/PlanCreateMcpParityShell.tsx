@@ -2,7 +2,7 @@ import * as React from 'react';
 import clsx from 'clsx';
 
 /**
- * @description Layout wrapper for the developer-app plan create flow aligned with the MCP `create_plan` contract (server-side defaults and embeddings).
+ * @description Layout wrapper for the plan upload-decompose route, aligned with the MCP `create_plan` contract (server-side defaults and embeddings). It outlived the plan create form, which was removed in favour of authoring plans through the MCP.
  */
 export interface PlanCreateMcpParityShellProps {
   children?: React.ReactNode;

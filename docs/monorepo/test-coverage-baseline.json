@@ -758,38 +758,10 @@
     },
     {
       "category": "routes",
-      "file": "applications/openthrottle-developer/app/routes/plans.$planId.edit.tsx",
-      "project": "applications/openthrottle-developer",
-      "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routes/__tests__/plans.$planId.edit.test.tsx"
-    },
-    {
-      "category": "routes",
       "file": "applications/openthrottle-developer/app/routes/plans.$planId.tasks.$taskId._index.tsx",
       "project": "applications/openthrottle-developer",
       "status": "tested",
       "testFile": "applications/openthrottle-developer/app/routes/__tests__/plans.$planId.tasks.$taskId._index.test.tsx"
-    },
-    {
-      "category": "routes",
-      "file": "applications/openthrottle-developer/app/routes/plans.$planId.tasks.$taskId.edit.tsx",
-      "project": "applications/openthrottle-developer",
-      "status": "missing",
-      "testFile": null
-    },
-    {
-      "category": "routes",
-      "file": "applications/openthrottle-developer/app/routes/plans.$planId.tasks.create.tsx",
-      "project": "applications/openthrottle-developer",
-      "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routes/__tests__/plans.$planId.tasks.create.test.tsx"
-    },
-    {
-      "category": "routes",
-      "file": "applications/openthrottle-developer/app/routes/plans.create.tsx",
-      "project": "applications/openthrottle-developer",
-      "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routes/__tests__/plans.create.test.tsx"
     },
     {
       "category": "routes",
@@ -2032,13 +2004,6 @@
     },
     {
       "category": "components",
-      "file": "applications/openthrottle-developer/app/routing/plans/components/PlanForm.tsx",
-      "project": "applications/openthrottle-developer",
-      "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/plans/components/__tests__/PlanForm.test.tsx"
-    },
-    {
-      "category": "components",
       "file": "applications/openthrottle-developer/app/routing/plans/components/PlanLifecycleHooks.tsx",
       "project": "applications/openthrottle-developer",
       "status": "tested",
@@ -2256,13 +2221,6 @@
     },
     {
       "category": "components",
-      "file": "applications/openthrottle-developer/app/routing/plans/components/PlanToolbarActionsMenu.tsx",
-      "project": "applications/openthrottle-developer",
-      "status": "missing",
-      "testFile": null
-    },
-    {
-      "category": "components",
       "file": "applications/openthrottle-developer/app/routing/plans/components/PlanToolbarRunActions.tsx",
       "project": "applications/openthrottle-developer",
       "status": "missing",
@@ -2438,13 +2396,6 @@
     },
     {
       "category": "components",
-      "file": "applications/openthrottle-developer/app/routing/plans/components/TaskForm.tsx",
-      "project": "applications/openthrottle-developer",
-      "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/plans/components/__tests__/TaskForm.test.tsx"
-    },
-    {
-      "category": "components",
       "file": "applications/openthrottle-developer/app/routing/plans/components/TaskTabOutput.tsx",
       "project": "applications/openthrottle-developer",
       "status": "tested",
@@ -2495,13 +2446,6 @@
     {
       "category": "data",
       "file": "applications/openthrottle-developer/app/routing/plans/data/linked-artifacts-panel-verification-styles.ts",
-      "project": "applications/openthrottle-developer",
-      "status": "missing",
-      "testFile": null
-    },
-    {
-      "category": "data",
-      "file": "applications/openthrottle-developer/app/routing/plans/data/plan-form-categories.ts",
       "project": "applications/openthrottle-developer",
       "status": "missing",
       "testFile": null

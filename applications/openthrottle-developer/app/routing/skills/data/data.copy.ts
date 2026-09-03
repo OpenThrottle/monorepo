@@ -15,7 +15,7 @@ import type { GlobalFeatureOnboardingContent } from '@openthrottle/react-router-
  * Agent Skills format (agentskills.io) our AGENTS.md and `docs/Skills.md` point
  * at — OpenThrottle manages skills in that format, it does not define its own.
  */
-export const SKILLS_ONBOARDING: GlobalFeatureOnboardingContent = {
+export const SKILLS_ONBOARDING = {
   cta: { label: `Set up your tag vocabulary`, to: `/skills/vocabulary` },
   icon: BrainCircuitIcon,
   internalUsage: `We hand-author our own skills in skills/<slug>/SKILL.md — that folder is the single source of truth — and ot-skill-sync fans them out so Claude Code, Cursor, and Codex all read the same thing. Skills installed from elsewhere stay exactly as upstream shipped them; to change how one behaves here we add a companion OpenThrottle skill or rule rather than editing the vendored copy.`,
@@ -37,7 +37,7 @@ export const SKILLS_ONBOARDING: GlobalFeatureOnboardingContent = {
     `Scope a skill with tags and availability rules so it stays quiet where it doesn't belong.`,
   ],
   whatItIs: `A skill is a folder with a SKILL.md in it: YAML frontmatter naming the skill and describing when to use it, then the instructions themselves. That's the open Agent Skills format from agentskills.io — not an OpenThrottle invention — so Claude Code, Cursor, Codex, OpenCode, and Gemini CLI all speak it.`,
-};
+} satisfies GlobalFeatureOnboardingContent;
 
 /**
  * Page chrome for the `/skills` index — the heading and the line under it. The

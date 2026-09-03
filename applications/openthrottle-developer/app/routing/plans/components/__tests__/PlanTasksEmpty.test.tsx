@@ -19,17 +19,16 @@ describe('PlanTasksEmpty Component', () => {
       component = renderRoutesStub(<PlanTasksEmpty {...props} />);
     });
 
-    test('renders onboarding empty state and link to create', () => {
+    test('renders the empty state without a create action', () => {
       expect(
         component.getByRole('heading', {
           name: PLANS_INDEX_EMPTY_COPY.emptyTitle,
         }),
       ).toBeInTheDocument();
       expect(
-        component.getByRole('link', {
-          name: PLANS_INDEX_EMPTY_COPY.emptyAction,
-        }),
-      ).toHaveAttribute('href', '/plans/create');
+        component.getByText(PLANS_INDEX_EMPTY_COPY.emptyDescription),
+      ).toBeInTheDocument();
+      expect(component.queryByRole('link')).not.toBeInTheDocument();
     });
   });
 
@@ -62,12 +61,8 @@ describe('PlanTasksEmpty Component', () => {
       expect(
         component.getByText(PLAN_TASKS_EMPTY_COPY.description),
       ).toBeInTheDocument();
-      // The plans onboarding action must not leak into the tasks empty state.
-      expect(
-        component.queryByRole('link', {
-          name: PLANS_INDEX_EMPTY_COPY.emptyAction,
-        }),
-      ).not.toBeInTheDocument();
+      // Neither empty state offers an action any more.
+      expect(component.queryByRole('link')).not.toBeInTheDocument();
     });
   });
 });

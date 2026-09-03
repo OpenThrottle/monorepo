@@ -11,10 +11,11 @@ import type { GlobalFeatureOnboardingContent } from '@openthrottle/react-router-
  * @description New-user "teach-me-fast" onboarding copy for the plans index,
  * shown only when a workspace has zero plans and no filters are active. Conforms
  * to {@link GlobalFeatureOnboardingContent} and is rendered through the shared
- * `GlobalFeatureOnboarding` layout.
+ * `GlobalFeatureOnboarding` layout. It deliberately carries no `cta`: plans are
+ * authored through the OpenThrottle MCP from your editor, never from a web form,
+ * so the `steps` are the call to action.
  */
-export const PLANS_ONBOARDING: GlobalFeatureOnboardingContent = {
-  cta: { label: `Create your first plan`, to: `/plans/create` },
+export const PLANS_ONBOARDING = {
   icon: ListChevronsUpDownIcon,
   internalUsage: `Every feature we ship starts as a plan we create from the editor via MCP — "Create a plan. …", whatever detail we have, and @-mentions of the files that matter. Ralph executes the tasks one at a time; each commit carries its Plan-Id and Task-Id so shipped work on main traces straight back to the plan that asked for it.`,
   steps: [
@@ -31,7 +32,7 @@ export const PLANS_ONBOARDING: GlobalFeatureOnboardingContent = {
     `Trace shipped commits on main back to the plan and task that drove them.`,
   ],
   whatItIs: `A plan is OpenThrottle's record of intended work — what you decided to build, broken into tasks with status, assignee, and summaries. Plans can be worked by hand or executed agentically, with commits linked back for traceability.`,
-};
+} satisfies GlobalFeatureOnboardingContent;
 
 export const PLAN_TASK_NOT_FOUND_COPY = {
   description: `The task you are looking for does not exist.`,
@@ -50,12 +51,12 @@ export const TASK_DETAIL_COPY = {
 /**
  * @description Empty-state copy for the plans index list. Two cases: a truly
  * empty workspace (no plans at all) vs an active filter/search with no matches.
- * The filtered case links back to the unfiltered list; the empty case links to
- * plan creation. Single-sourced so {@link PlanTasksEmpty} and its specs agree.
+ * The filtered case links back to the unfiltered list; the empty case offers no
+ * action at all, because plans are authored through the OpenThrottle MCP rather
+ * than a web form. Single-sourced so {@link PlanTasksEmpty} and its specs agree.
  */
 export const PLANS_INDEX_EMPTY_COPY = {
-  emptyAction: `New plan`,
-  emptyDescription: `Create your first plan to get started.`,
+  emptyDescription: `No plans have been created in this workspace yet.`,
   emptyTitle: `No plans yet`,
   filteredAction: `Clear filters`,
   filteredDescription: `No plans match the current filters. Clear them to see every plan.`,
@@ -68,7 +69,7 @@ export const PLANS_INDEX_EMPTY_COPY = {
  * task-less plan never borrows the plans-index "No plans yet" wording.
  */
 export const PLAN_TASKS_EMPTY_COPY = {
-  description: `Add a task to break this plan into executable work.`,
+  description: `This plan has no tasks yet.`,
   title: `No tasks yet`,
 } as const;
 
@@ -219,13 +220,10 @@ export const PLAN_TOOLBAR_COPY = {
 
 /**
  * @description Labels for the task-detail toolbar (PlanTaskToolbar): the tag
- * section heading and the secondary actions. Mirrors the plan-level toolbar so
- * task and plan surfaces read the same.
+ * section heading, the Mark Complete gating tooltips and the Promote to Plan
+ * flow. Mirrors the plan-level toolbar so task and plan surfaces read the same.
  */
 export const PLAN_TASK_TOOLBAR_COPY = {
-  actionsLabel: `Actions`,
-  actionsTooltip: `Task actions`,
-  editTaskLabel: `Edit Task`,
   markCompleteRunningTooltip: `Unavailable while the plan run is active — kill the run first.`,
   markCompleteTerminalTooltip: `The plan is in a terminal state — create a new plan to change tasks.`,
   promoteConfirmLabel: `Promote`,
@@ -293,7 +291,6 @@ export const PLANS_ROW_ACTIONS_COPY = {
  * @description Plan tasks table row Actions menu (view + edit the task).
  */
 export const PLAN_TASK_ROW_ACTIONS_COPY = {
-  edit: `Edit task`,
   menuAriaLabelPrefix: `Task actions for`,
   view: `View task`,
 } as const;

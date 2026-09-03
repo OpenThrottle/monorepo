@@ -77,9 +77,8 @@ describe('PlansTable Component', () => {
     expect(
       component.getByText(PLANS_INDEX_EMPTY_COPY.emptyTitle),
     ).toBeInTheDocument();
-    expect(
-      component.getByRole('link', { name: PLANS_INDEX_EMPTY_COPY.emptyAction }),
-    ).toHaveAttribute('href', '/plans/create');
+    // No create action: plans are authored through the OpenThrottle MCP.
+    expect(component.queryByRole('link')).not.toBeInTheDocument();
   });
 
   test('renders table structure with column headers when plans exist', () => {

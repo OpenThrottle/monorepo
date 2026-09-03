@@ -72,13 +72,14 @@ export const PlanTasksEmpty = (
           ? PLANS_INDEX_EMPTY_COPY.filteredDescription
           : PLANS_INDEX_EMPTY_COPY.emptyDescription}
       </EmptyDescription>
-      <Button asChild={true} variant="secondary">
-        {filtered ? (
+      {/* Only the filtered variant offers an action. A genuinely empty
+          workspace gets none: plans are authored through the OpenThrottle
+          MCP, so there is nothing here to link to. */}
+      {filtered ? (
+        <Button asChild={true} variant="secondary">
           <Link to="/plans">{PLANS_INDEX_EMPTY_COPY.filteredAction}</Link>
-        ) : (
-          <Link to="/plans/create">{PLANS_INDEX_EMPTY_COPY.emptyAction}</Link>
-        )}
-      </Button>
+        </Button>
+      ) : null}
     </Empty>
   );
 };

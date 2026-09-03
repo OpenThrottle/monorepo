@@ -153,6 +153,9 @@ describe('season shape', () => {
       .sort();
 
     expect(blocked).toEqual([
+      // 03 joined when the plan/task create + edit web forms were removed:
+      // every one of its beats drove a control that no longer exists.
+      '03-first-plan',
       '06-prd-to-plan',
       '07-semantic-search',
       '08-promote-task',

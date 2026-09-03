@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { OpenThrottleToolbar } from '~/routing/plans/components/OpenThrottleToolbar';
 import { PlanEditorActions } from '~/routing/plans/components/PlanEditorActions';
-import { PlanToolbarActionsMenu } from '~/routing/plans/components/PlanToolbarActionsMenu';
 import { PlanToolbarRunActions } from '~/routing/plans/components/PlanToolbarRunActions';
 import { PlanToolbarStatusAction } from '~/routing/plans/components/PlanToolbarStatusAction';
 import { PlanToolbarTags } from '~/routing/plans/components/PlanToolbarTags';
@@ -95,10 +94,11 @@ export interface PlanToolbarProps {
 }
 
 /**
- * @description Toolbar for plan actions: Mark Complete, Run/Queue (status group),
- * editor deep links, and Add Task / Edit Plan (actions menu). Uses shadcn
- * Button, Tooltip, and DropdownMenu. The deep links get `OpenThrottleToolbar`'s
- * dedicated `editorActions` slot rather than sharing `utilityContent`.
+ * @description Toolbar for plan actions: Mark Complete, Run/Queue (status group)
+ * and editor deep links. Uses shadcn Button and Tooltip. There is no actions
+ * menu — plans and tasks are authored through the OpenThrottle MCP, not from
+ * here. The deep links get `OpenThrottleToolbar`'s dedicated `editorActions`
+ * slot rather than sharing `utilityContent`.
  */
 export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
   const {
@@ -146,7 +146,6 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
 
   return (
     <OpenThrottleToolbar
-      actionsMenu={<PlanToolbarActionsMenu planId={planId} />}
       className={className}
       dataTestId="PlanToolbar"
       editorActions={

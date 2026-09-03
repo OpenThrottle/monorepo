@@ -42,7 +42,7 @@ export const SCHEDULE_COPY = {
  * shown when there are no scheduled jobs. Conforms to {@link GlobalFeatureOnboardingContent}
  * and is rendered through the shared `GlobalFeatureOnboarding` layout.
  */
-export const SCHEDULE_ONBOARDING: GlobalFeatureOnboardingContent = {
+export const SCHEDULE_ONBOARDING = {
   cta: { label: `Create your first schedule`, to: `/schedule/create` },
   icon: CalendarClockIcon,
   internalUsage: `We run our own housekeeping on schedules: nightly repo audits that open plans for what they find, recurring dependency and license sweeps, and morning digests — so the work is waiting for us instead of us remembering to kick it off.`,
@@ -60,4 +60,4 @@ export const SCHEDULE_ONBOARDING: GlobalFeatureOnboardingContent = {
     `Automate routine maintenance like audits and cleanup sweeps.`,
   ],
   whatItIs: `A scheduled job runs an agent prompt automatically on a cron pattern — pick a driver, model, and cadence, and it fires on its own. Every run is recorded so you can review what happened.`,
-};
+} satisfies GlobalFeatureOnboardingContent;

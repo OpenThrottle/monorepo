@@ -7,7 +7,7 @@
  * `../episodes/<id>/flow.ts` and exits when it is absent, which is exactly the
  * discovery-by-failure this file removes.
  *
- * Twenty of the twenty-four episodes have no flow. That is not a bug to be
+ * Twenty-one of the twenty-four episodes have no flow. That is not a bug to be
  * hidden — it is the state of the season, and `flows.test.ts` holds it to the
  * rule that an episode without a flow must say in `production.blockedOn` what
  * stops it. See `../../RECORDABILITY.md` for the per-beat evidence behind each
@@ -15,7 +15,6 @@
  */
 
 import { flow as flow01WhatIsOpenthrottle } from './01-what-is-openthrottle/flow';
-import { flow as flow03FirstPlan } from './03-first-plan/flow';
 import { flow as flow05ConnectOtMcp } from './05-connect-ot-mcp/flow';
 import { flow as flow21DashboardTour } from './21-dashboard-tour/flow';
 import type { DemoFlow } from '../runner/types';
@@ -25,7 +24,6 @@ import type { DemoFlow } from '../runner/types';
  */
 export const FLOWS: Readonly<Record<string, DemoFlow>> = {
   [flow01WhatIsOpenthrottle.id]: flow01WhatIsOpenthrottle,
-  [flow03FirstPlan.id]: flow03FirstPlan,
   [flow05ConnectOtMcp.id]: flow05ConnectOtMcp,
   [flow21DashboardTour.id]: flow21DashboardTour,
 };

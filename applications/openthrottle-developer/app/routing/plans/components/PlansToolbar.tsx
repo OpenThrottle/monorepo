@@ -21,7 +21,7 @@ export interface PlansToolbarProps {
 }
 
 /**
- * @description Single-row compact toolbar: URL-driven search (q), semantic switch, status toggle group, assignee dropdown, sort dropdown, Create plan. Preserves role=search, data-testid, and URL-driven state.
+ * @description Single-row compact toolbar: URL-driven search (q), semantic switch, status toggle group, assignee dropdown, sort dropdown. Preserves role=search, data-testid, and URL-driven state. There is no create action — plans are authored through the OpenThrottle MCP.
  */
 export const PlansToolbar = (props: PlansToolbarProps): React.ReactElement => {
   const {
@@ -52,9 +52,9 @@ export const PlansToolbar = (props: PlansToolbarProps): React.ReactElement => {
   return (
     <div className={clsx('w-full', className)} data-testid="PlansToolbar">
       {/* GlobalToolbarSearch owns the only <form role="search"> here; the
-          status/assignee/sort filters and Create CTA are siblings outside it
-          so no forms nest. Search commits ?search= and resets ?page (dropping
-          the legacy ?q, and ?semantic when the query is cleared). */}
+          status/assignee/sort filters are siblings outside it so no forms
+          nest. Search commits ?search= and resets ?page (dropping the legacy
+          ?q, and ?semantic when the query is cleared). */}
       <div className={clsx('flex w-full flex-wrap items-center', 'gap-2')}>
         <GlobalToolbarSearch
           aria-label="Search plans"
@@ -89,14 +89,6 @@ export const PlansToolbar = (props: PlansToolbarProps): React.ReactElement => {
         />
 
         <div className="min-w-0 flex-1" />
-
-        {/*
-        <Button asChild={true} className="shrink-0" variant="outline">
-          <Link to="/plans/create">
-            <PlusIcon className="h-4 w-4" /> Create plan
-          </Link>
-        </Button>
-        */}
       </div>
     </div>
   );

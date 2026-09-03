@@ -43,8 +43,12 @@ export interface GlobalFeatureOnboardingLink {
  * @public
  */
 export interface GlobalFeatureOnboardingContent {
-  /** Primary CTA — "Create your first ___". */
-  cta: GlobalFeatureOnboardingLink;
+  /**
+   * Optional primary CTA — "Create your first ___". Features omit it when the
+   * thing cannot be created from the web UI at all (e.g. plans and tasks, which
+   * are authored through the OpenThrottle MCP); the `steps` then carry the path.
+   */
+  cta?: GlobalFeatureOnboardingLink;
   /** Lucide icon rendered in the eyebrow/title row. */
   icon: LucideIcon;
   /** "How we use it internally" — an authentic line on how the team uses it. */

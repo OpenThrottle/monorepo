@@ -106,13 +106,11 @@ export const TaskDetailRoute = (
               { method: 'post' },
             )
           }
-          planId={effectivePlanId}
           planIsRunning={planIsRunning}
           planIsTerminal={planIsTerminal}
           tagVocabulary={tagVocabulary}
           tags={task.tags}
           tagsPending={tagFetcher.state !== 'idle'}
-          taskId={task.id}
           taskStatus={task.status}
         />
       ) : null}
