@@ -28,7 +28,7 @@ export const OpenThrottleLogo = (
   const logoText = (
     <>
       <span className="font-black text-current">
-        Open<span className="-text-accent pl-0.5">Throttle</span>
+        Open<span className="-text-accent">Throttle</span>
       </span>
       {name ? (
         <>

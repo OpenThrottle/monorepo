@@ -171,22 +171,24 @@ export const ChatCheckoutSelector = (
             <CommandEmpty>No matching checkouts.</CommandEmpty>
             {groups.map((group) => (
               <CommandGroup heading={group.heading} key={group.heading}>
-                {group.options.map((checkout) => (
-                  <ChatCheckoutSelectorRow
-                    atCap={atCap}
-                    checkout={checkout}
-                    descriptor={descriptorFor(checkout.id)}
-                    isPrimary={checkout.id === primaryId}
-                    isSelected={
-                      isMultiple
-                        ? selectedIds.includes(checkout.id)
-                        : checkout.id === selectedCheckoutId
-                    }
-                    key={checkout.id}
-                    multiple={isMultiple}
-                    onSelect={onSelectRow}
-                  />
-                ))}
+                {group.options.map((checkout, _index) => {
+                  return (
+                    <ChatCheckoutSelectorRow
+                      atCap={atCap}
+                      checkout={checkout}
+                      descriptor={descriptorFor(checkout.id)}
+                      isPrimary={checkout.id === primaryId}
+                      isSelected={
+                        isMultiple
+                          ? selectedIds.includes(checkout.id)
+                          : checkout.id === selectedCheckoutId
+                      }
+                      key={checkout.id}
+                      multiple={isMultiple}
+                      onSelect={onSelectRow}
+                    />
+                  );
+                })}
               </CommandGroup>
             ))}
           </CommandList>

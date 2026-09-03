@@ -3,7 +3,7 @@ import { render } from '@testing-library/react';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import Index, { loader } from '../dashboard._index';
+import Index, { loader, shouldRevalidate } from '../dashboard._index';
 import type { Route } from '@/app/routes/+types/dashboard._index';
 import { buildRootMatch } from '~/testing/root-match-fixture';
 import { createTestRouterContext } from '@openthrottle/react-router-testing';
@@ -329,5 +329,69 @@ describe('routes/dashboard._index.tsx', () => {
     expect(
       await component.findByTestId('DashboardDailyStatsCard'),
     ).toBeInTheDocument();
+  });
+});
+
+describe('routes/dashboard._index shouldRevalidate', () => {
+  const call = (current: string, next: string, formMethod?: 'POST'): boolean =>
+    shouldRevalidate({
+      currentParams: {},
+      currentUrl: new URL(current),
+      defaultShouldRevalidate: true,
+      formMethod,
+      nextParams: {},
+      nextUrl: new URL(next),
+    });
+
+  const DASHBOARD = 'http://localhost/dashboard';
+
+  test('skips revalidation when opening the daily-stats modal', () => {
+    expect(
+      call(DASHBOARD, `${DASHBOARD}?modal=daily-stats&date=2026-08-30`),
+    ).toBe(false);
+  });
+
+  test('skips revalidation when closing the daily-stats modal', () => {
+    expect(
+      call(`${DASHBOARD}?modal=daily-stats&date=2026-08-30`, DASHBOARD),
+    ).toBe(false);
+  });
+
+  test('skips revalidation when arrow-key stepping the selected date', () => {
+    expect(
+      call(
+        `${DASHBOARD}?modal=daily-stats&date=2026-08-30`,
+        `${DASHBOARD}?modal=daily-stats&date=2026-08-29`,
+      ),
+    ).toBe(false);
+  });
+
+  test('revalidates when the GitHub repo changes', () => {
+    expect(
+      call(DASHBOARD, `${DASHBOARD}?owner=openthrottle&repo=openthrottle`),
+    ).toBe(true);
+  });
+
+  test('revalidates when the GitHub owner changes', () => {
+    expect(
+      call(
+        `${DASHBOARD}?owner=openthrottle`,
+        `${DASHBOARD}?owner=shiftsmartinc`,
+      ),
+    ).toBe(true);
+  });
+
+  test('does not revalidate when an invalid repo param resolves to the same default', () => {
+    expect(call(DASHBOARD, `${DASHBOARD}?repo=not-a-real-repo`)).toBe(false);
+  });
+
+  test('revalidates when navigating in from another path', () => {
+    expect(call('http://localhost/plans', DASHBOARD)).toBe(true);
+  });
+
+  test('revalidates on a same-path form submission', () => {
+    expect(call(DASHBOARD, `${DASHBOARD}?modal=daily-stats`, 'POST')).toBe(
+      true,
+    );
   });
 });

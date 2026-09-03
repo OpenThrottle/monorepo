@@ -149,7 +149,7 @@ export default function Component(
               types={types}
             />
             <PromptsTable
-              className="bg-card"
+              // className="bg-card"
               prompts={prompts ?? []}
               search={search ?? undefined}
             />

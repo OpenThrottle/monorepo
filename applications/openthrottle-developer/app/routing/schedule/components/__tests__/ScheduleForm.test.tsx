@@ -153,10 +153,6 @@ describe('ScheduleForm Component', () => {
       expect(component.getByLabelText('Timezone (optional)')).toHaveValue(
         'America/Los_Angeles',
       );
-      // The legacy path now lives in the repository field's advanced disclosure.
-      expect(component.getByLabelText(SCHEDULE_COPY.cwdLabel)).toHaveValue(
-        '/repo',
-      );
       expect(
         component.getByRole('button', { name: 'Save changes' }),
       ).toBeInTheDocument();

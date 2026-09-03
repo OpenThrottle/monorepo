@@ -69,52 +69,61 @@ export const ChatCheckoutSelectorRow = (
 
   return (
     <CommandItem
-      className="gap-2"
+      className="flex flex-col items-start justify-start gap-2"
       data-testid={`ChatCheckoutSelector-option-${checkout.id}`}
       disabled={disabled}
       keywords={[...checkoutSearchTerms(checkout)]}
       onSelect={() => onSelect(checkout.id)}
       value={checkout.id}
     >
-      <Check
-        className={clsx(
-          'size-4 shrink-0',
-          isSelected ? 'opacity-100' : 'opacity-0',
-        )}
-      />
-      <span className="flex min-w-0 flex-1 flex-col">
-        <span className="truncate">{label}</span>
-        {qualifier != null ? (
-          <span
-            className="text-muted-foreground truncate text-xs"
-            data-testid={`ChatCheckoutSelector-qualifier-${checkout.id}`}
-          >
-            {qualifier}
+      <div className="w-full space-y-2 py-2">
+        <div className="flex w-full items-center gap-2">
+          <span className="flex flex-1 flex-col">
+            <span className="truncate">{label}</span>
+            {qualifier != null ? (
+              <span
+                className="text-muted-foreground truncate text-xs"
+                data-testid={`ChatCheckoutSelector-qualifier-${checkout.id}`}
+              >
+                {qualifier}
+              </span>
+            ) : null}
           </span>
-        ) : null}
-      </span>
-      {multiple && isPrimary ? (
-        <span
-          className="text-muted-foreground shrink-0 text-xs"
-          data-testid={`ChatCheckoutSelector-primary-${checkout.id}`}
-        >
-          Primary
-        </span>
-      ) : null}
-      {multiple && isSelected && !isPrimary ? (
-        <span
-          className="text-muted-foreground shrink-0 text-xs"
-          data-testid={`ChatCheckoutSelector-context-${checkout.id}`}
-        >
-          Context only
-        </span>
-      ) : null}
-      {hasBranch ? (
-        <span className="text-muted-foreground flex shrink-0 items-center gap-1 text-xs">
-          <GitBranch className="size-3" />
-          {checkout.branch}
-        </span>
-      ) : null}
+          <Check
+            className={clsx(
+              'size-5 shrink-0',
+              isSelected ? 'opacity-100' : 'opacity-0',
+            )}
+          />
+        </div>
+
+        <div className="text-muted-foreground/60 flex items-center gap-2 text-xs italic">
+          {hasBranch ? (
+            <div className="flex flex-1 items-center gap-2">
+              <GitBranch className="size-3" />
+              {checkout.branch}
+            </div>
+          ) : null}
+
+          {multiple && isPrimary ? (
+            <span
+              className="shrink-0"
+              data-testid={`ChatCheckoutSelector-primary-${checkout.id}`}
+            >
+              Primary
+            </span>
+          ) : null}
+
+          {multiple && isSelected && !isPrimary ? (
+            <span
+              className="shrink-0"
+              data-testid={`ChatCheckoutSelector-context-${checkout.id}`}
+            >
+              Context only
+            </span>
+          ) : null}
+        </div>
+      </div>
     </CommandItem>
   );
 };

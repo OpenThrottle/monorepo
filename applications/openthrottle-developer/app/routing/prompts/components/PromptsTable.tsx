@@ -1,21 +1,21 @@
 import * as React from 'react';
 import clsx from 'clsx';
-import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
-import { Link } from 'react-router';
 import {
   Badge,
   BadgeProps,
   DataTable,
 } from '@openthrottle/react-router-shadcn';
 import { Clock, FileText } from 'lucide-react';
-import type { ColumnDef } from '@tanstack/react-table';
-import type { PromptCardFragment } from '~/__generated__/graphql';
-import { PromptsEmpty } from '~/routing/prompts/components/PromptsEmpty';
+import { CustomPromptType } from '@openthrottle/openthrottle-developer-codegen';
 import {
   formatPromptDate,
   formatPromptType,
 } from '~/routing/prompts/utils/formatters';
-import { CustomPromptType } from '@openthrottle/openthrottle-developer-codegen';
+import { GlobalPopoverActionsHeader } from '@openthrottle/react-router-ui-global';
+import { Link } from 'react-router';
+import { PromptsEmpty } from '~/routing/prompts/components/PromptsEmpty';
+import type { ColumnDef } from '@tanstack/react-table';
+import type { PromptCardFragment } from '~/__generated__/graphql';
 
 export interface PromptsTableProps {
   className?: string;
@@ -134,48 +134,38 @@ PromptsTable.buildTable = (): ColumnDef<
               </div>
             ) : null} */}
 
-            <div className="max-w-3xl">
-              {/* {prompt.description ? (
-                <p className="text-muted-foreground mb-2 line-clamp-2 text-xs">
-                  {prompt.description}
-                </p>
-              ) : null} */}
-
-              <div className="text-muted-foreground flex w-full flex-wrap items-center gap-x-4 gap-y-1 text-xs">
-                {fileBasename ? (
-                  <span
-                    className="flex items-center gap-1"
-                    title={prompt.filePath ?? undefined}
-                  >
-                    <FileText className="h-3 w-3 shrink-0" />
-                    <span className="max-w-[160px] truncate">
-                      {fileBasename}
-                    </span>
-                  </span>
-                ) : null}
-
-                <span className="flex items-center gap-1">
-                  <Clock className="h-3 w-3 shrink-0" />
-                  {formatPromptDate(prompt.updatedAt)}
+            <div className="text-muted-foreground flex w-full flex-wrap gap-x-4 gap-y-1 text-xs">
+              {fileBasename ? (
+                <span
+                  className="flex items-center gap-1"
+                  title={prompt.filePath ?? undefined}
+                >
+                  <FileText className="h-3 w-3 shrink-0" />
+                  <span className="truncate">{fileBasename}</span>
                 </span>
-              </div>
+              ) : null}
 
-              {/* FIXME: can't use this due to server module usage */}
-              {/* {extractContentAfterFrontmatter(prompt.content)} */}
-              {/* <p className="text-muted-foreground mt-2 line-clamp-2 text-xs">
-                {prompt.content}
-              </p> */}
-
-              <hr className="my-4" />
-              <MarkdownRenderer
-                className="line-clamp-2 overflow-hidden [&_p]:!mb-0 [&_p]:!text-xs"
-                source={prompt.description || prompt.content}
-              />
+              <span className="flex items-center gap-1">
+                <Clock className="h-3 w-3 shrink-0" />
+                {formatPromptDate(prompt.updatedAt)}
+              </span>
             </div>
           </div>
         );
       },
-      header: () => <div className="p-2">Details</div>,
+      header: () => <div className="p-2">Prompt Details</div>,
+    },
+    {
+      cell: (_data) => {
+        return (
+          <div className="flex items-center justify-center">
+            {/* <PlansTableRowActions plan={row.original} /> */}
+            ...
+          </div>
+        );
+      },
+      header: () => <GlobalPopoverActionsHeader />,
+      id: 'actions',
     },
   ];
 };

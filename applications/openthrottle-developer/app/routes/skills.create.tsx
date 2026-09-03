@@ -1,27 +1,27 @@
 import * as React from 'react';
-import { redirect } from 'react-router';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import { BookPlusIcon } from 'lucide-react';
 import {
   GlobalErrorBoundary,
   GlobalHeading,
   GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import { BookPlusIcon } from 'lucide-react';
+import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import { redirect } from 'react-router';
 import { SITE_TITLE } from '~/global/config/settings';
-import { SkillCreateForm } from '~/routing/skills/components/SkillCreateForm';
+import { SKILL_CREATE_COPY } from '~/routing/skills/data/data.copy';
 import {
   SKILL_CREATE_FIELDS,
   isSkillCreateDestination,
 } from '~/routing/skills/config/skill-create';
-import { SKILL_CREATE_COPY } from '~/routing/skills/data/data.copy';
+import { SkillCreateForm } from '~/routing/skills/components/SkillCreateForm';
 import { useSkillCreateForm } from '~/routing/skills/hooks/useSkillCreateForm';
 import type { Route } from '@/app/routes/+types/skills.create';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
-  breadcrumb: (_match) => 'Create Skill',
+  breadcrumb: (_match) => 'Create',
   links: (_match) => [{ children: 'Skills', to: '/skills' }],
 };
 

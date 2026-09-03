@@ -47,7 +47,7 @@ describe('ScheduleRepositoryField Component', () => {
   let props: ScheduleRepositoryFieldProps;
 
   beforeEach(() => {
-    props = { cwd: null, repositories, repositoryCheckoutId: null };
+    props = { repositories, repositoryCheckoutId: null };
   });
 
   test('defaults to the workspace-root option when no checkout is targeted', () => {
@@ -119,28 +119,5 @@ describe('ScheduleRepositoryField Component', () => {
         name: SCHEDULE_COPY.repositoryEmptyStateAction,
       }),
     ).toHaveAttribute('href', '/settings/repositories');
-  });
-
-  test('round-trips a legacy cwd in the advanced field, opened so it is not hidden', () => {
-    component = renderField({ ...props, cwd: '/legacy/path' });
-
-    expect(component.getByLabelText(SCHEDULE_COPY.cwdLabel)).toHaveValue(
-      '/legacy/path',
-    );
-    expect(
-      component
-        .getByText(SCHEDULE_COPY.repositoryAdvancedSummary)
-        .closest('details'),
-    ).toHaveAttribute('open');
-  });
-
-  test('keeps the advanced field collapsed when there is no legacy cwd', () => {
-    component = renderField(props);
-
-    expect(
-      component
-        .getByText(SCHEDULE_COPY.repositoryAdvancedSummary)
-        .closest('details'),
-    ).not.toHaveAttribute('open');
   });
 });

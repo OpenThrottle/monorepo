@@ -119,7 +119,7 @@ export const SettingsKeysToolbar = (
         disabled={createDisabled}
         onClick={handleCreateClick}
         type="button"
-        variant="default"
+        variant="outline"
       >
         <PlusIcon aria-hidden={true} className="size-4" />
         Create credential

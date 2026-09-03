@@ -21,6 +21,7 @@ import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { parseDashboardGithubParams } from '~/routing/dashboard/utils/parsers';
 import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/routes/+types/dashboard._index';
+import type { ShouldRevalidateFunction } from 'react-router';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -107,6 +108,33 @@ export const loader = (args: Route.LoaderArgs) => {
 
 export const links: Route.LinksFunction = () => {
   return [];
+};
+
+/**
+ * @description The only search params this loader reads are `owner` and `repo`
+ * (via `parseDashboardGithubParams`). Every other param — `modal`, `date` — is
+ * pure client-side view state, so revalidating on those is wasted work: the
+ * loader re-fires `getDashboardGithubStats`, which costs ~4s of live GitHub API
+ * round-trips, plus ~460KB of streamed payload, on every modal open, close and
+ * arrow-key date step. Worse, the fresh naked promises re-suspend every `Await`
+ * boundary, so the whole grid (and the modal itself) flashes back to skeletons
+ * while that resolves. Skip revalidation unless the GitHub params actually moved.
+ */
+export const shouldRevalidate: ShouldRevalidateFunction = (args) => {
+  const { currentUrl, defaultShouldRevalidate, formMethod, nextUrl } = args;
+
+  if (formMethod !== undefined || currentUrl.pathname !== nextUrl.pathname) {
+    return defaultShouldRevalidate;
+  }
+
+  const current = parseDashboardGithubParams(currentUrl.searchParams);
+  const next = parseDashboardGithubParams(nextUrl.searchParams);
+
+  if (current.owner === next.owner && current.repo === next.repo) {
+    return false;
+  }
+
+  return defaultShouldRevalidate;
 };
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {

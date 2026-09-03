@@ -79,6 +79,12 @@ pnpm exec tsx packages/openthrottle-showroom/src/runner/run.ts \
   --headed
 ```
 
+## Demo Database + User
+
+- email: `ada@atlasworks.example`
+- githubUsername: `atlas-ada`
+- password: `DemoThrottle2026!`
+
 ## Episodes
 
 - [ ] 🚧 `01-what-is-openthrottle`

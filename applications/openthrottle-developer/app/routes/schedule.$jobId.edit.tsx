@@ -23,6 +23,7 @@ import { parseScheduleForm } from '~/routing/schedule/data/parse-form';
 import { SITE_TITLE } from '~/global/config/settings';
 import { ClockIcon } from 'lucide-react';
 import type { Route } from '@/app/routes/+types/schedule.$jobId.edit';
+import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -105,12 +106,17 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <GlobalHeading
-        className="mb-4"
-        heading="h1"
-        icon={ClockIcon}
-        title={`Edit: ${job.name}`}
-      />
+      <div>
+        <GlobalHeading
+          className="mb-4"
+          heading="h1"
+          icon={ClockIcon}
+          title="Edit"
+        />
+        <p className="text-muted-foreground text-sm">
+          {SCHEDULE_COPY.editPageDescription}
+        </p>
+      </div>
       <ScheduleForm
         action="update"
         agentClis={agentClis}

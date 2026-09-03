@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { Link } from 'react-router';
 import {
-  Input,
   Label,
   Select,
   SelectContent,
@@ -16,8 +15,6 @@ import {
 } from '~/routing/schedule/data/data.repositories';
 
 export interface ScheduleRepositoryFieldProps {
-  /** Legacy explicit working directory currently on the schedule, if any. */
-  cwd?: string | null;
   /** The caller's registered checkouts; empty renders the settings-link empty state. */
   repositories: ScheduleRepositoryOption[];
   /** Checkout the schedule currently targets, if any. */
@@ -25,22 +22,18 @@ export interface ScheduleRepositoryFieldProps {
 }
 
 /**
- * @description Repository target for a schedule: a picker over the user's registered checkouts, with
- * the deprecated free-text working directory kept behind a disclosure so legacy schedules stay
- * editable. The server resolves the checkout to a cwd, so nothing here types a path.
+ * @description Repository target for a schedule: a picker over the user's registered checkouts. The
+ * server resolves the checkout to a working directory, so nothing here types a path.
  */
 export const ScheduleRepositoryField = (
   props: ScheduleRepositoryFieldProps,
 ): React.ReactElement => {
-  const { cwd, repositories, repositoryCheckoutId } = props;
+  const { repositories, repositoryCheckoutId } = props;
 
   // Hooks
 
   // Setup
   const hasRepositories = repositories.length > 0;
-  // A legacy schedule that only ever had a typed path should show the advanced field opened, or its
-  // value would be invisible until the user thought to look for it.
-  const advancedOpen = (cwd ?? '') !== '';
 
   // Handlers
 
@@ -99,24 +92,6 @@ export const ScheduleRepositoryField = (
           {SCHEDULE_COPY.repositoryHelp}
         </p>
       </div>
-
-      <details open={advancedOpen}>
-        <summary className="text-muted-foreground cursor-pointer text-xs">
-          {SCHEDULE_COPY.repositoryAdvancedSummary}
-        </summary>
-        <div className="mt-2">
-          <Label htmlFor="cwd">{SCHEDULE_COPY.cwdLabel}</Label>
-          <Input
-            defaultValue={cwd ?? ''}
-            id="cwd"
-            name="cwd"
-            placeholder={SCHEDULE_COPY.cwdPlaceholder}
-          />
-          <p className="text-muted-foreground mt-1 text-xs">
-            {SCHEDULE_COPY.cwdHelp}
-          </p>
-        </div>
-      </details>
     </div>
   );
 };

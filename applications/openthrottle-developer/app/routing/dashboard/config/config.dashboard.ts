@@ -25,4 +25,4 @@ export const GITHUB_REPOSITORIES: Record<GithubOrg, string[]> = {
 // heatmap by bumping CONTRIBUTIONS_DAYS_BACK — no schema/codegen change, the
 // start/end are query variables on the existing dailyStatsRange field.
 export const CONTRIBUTIONS_DAYS_BACK = 26 * 7 + 7; // 26-week grid + week-alignment slack
-export const WEEKLY_ACTIVITY_DAYS = 14;
+export const WEEKLY_ACTIVITY_DAYS = 7;
