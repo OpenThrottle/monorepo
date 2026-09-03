@@ -57,6 +57,21 @@ export interface RepoSkillEntry {
    */
   readonly effectiveDisableModelInvocation?: boolean;
   /**
+   * True when the skill folder is a real directory under a scanned skills dir
+   * whose slug is ABSENT from `skills-lock.json` — a skill authored in this
+   * repository rather than installed into it. Lockfile absence is the whole
+   * discriminator: a real directory is a vendored install only if the lockfile
+   * claims it. Unlike the personal tier it IS committable — the managed
+   * `.gitignore` block ignores everything under `.agents/skills` but re-includes
+   * nested directories, and git classes the generated symlinks as files, so a
+   * real directory survives and everyone on the team gets it. Separate from
+   * {@link RepoSkillEntry.source}
+   * for the same reason as {@link RepoSkillEntry.isPersonal}: that value is
+   * ingested and served over GraphQL, and a custom skill still arrives as
+   * `external` on the wire.
+   */
+  readonly isCustom?: boolean;
+  /**
    * True when the skill folder resolves under the per-user personal skills root
    * (`~/.openthrottle/skills`, or `OPENTHROTTLE_PERSONAL_SKILLS_DIR`), linked in
    * by ot-skill-sync. Membership in that root is the test — a link that merely
@@ -86,7 +101,9 @@ export interface RepoSkillEntry {
    * skill folder's real path resolves under the repo's authored `skills/`
    * tree (ot-skill-sync symlinks it into the scanned layouts), `external` for
    * lockfile-installed real directories. Overridden by the ingested
-   * `projectSkills` GraphQL value when present.
+   * `projectSkills` GraphQL value when present. The personal and custom tiers
+   * are overlay flags on top of this two-value enum, not members of it — see
+   * {@link RepoSkillEntry.isPersonal} and {@link RepoSkillEntry.isCustom}.
    */
   readonly source: SkillSource;
   /**

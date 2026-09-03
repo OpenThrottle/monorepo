@@ -25,7 +25,9 @@ export interface SkillDetailTabsProps {
   content: string;
   /**
    * Local checkout with a resolved monorepo root. This is the precondition only
-   * — editing also requires OpenThrottle provenance (see `canEdit` in the hook).
+   * — editing also requires writable provenance: OpenThrottle-authored, custom
+   * (repo-authored) or personal. A lockfile-installed external skill is the one
+   * read-only case (see `canEdit` in the hook).
    */
   editable: boolean;
   entry: RepoSkillEntry;

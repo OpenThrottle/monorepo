@@ -111,13 +111,31 @@ provenance** (`9dc16a01-ddff-44d6-984f-41b119938379`).
 Provenance is **derived from the ot-skill-sync architecture** — installed skills
 are installed, that's it; every layer on top of them is virtual:
 
-| Layout signal (realpath of the skill folder)      | Provenance                                      |
-| ------------------------------------------------- | ----------------------------------------------- |
-| Resolves under `<root>/skills/` (authored SSOT)   | `openthrottle` — written and PR-reviewed here   |
-| Anything else (lockfile-installed real directory) | `external`, `sourceUrl` from `skills-lock.json` |
+| Layout signal (realpath of the skill folder)         | Provenance                                               |
+| ---------------------------------------------------- | -------------------------------------------------------- |
+| Resolves under `<root>/skills/` (authored SSOT)      | `openthrottle` — written and PR-reviewed here            |
+| Resolves under the personal skills root              | `external` + `isPersonal` — the **personal** tier        |
+| In-repo real directory, slug **in** the lockfile     | `external`, `sourceUrl` from `skills-lock.json`          |
+| In-repo real directory, slug **not in** the lockfile | `external` + `isCustom` — the **custom** tier, no origin |
 
 **Rules:**
 
+- There are **four display tiers** — OpenThrottle, External, Custom, Personal —
+  over a **two-value enum**. `isPersonal` and `isCustom` are local overlays, not
+  `SkillSource` values, because `source` is ingested and served over GraphQL:
+  widening it means a schema change, a migration, an ingest change and codegen
+  across consumers. A personal and a custom skill both carry `source: 'external'`
+  on the wire, and the tier is derived locally.
+- **Custom is discriminated by lockfile absence alone.** A real directory under a
+  scanned skills dir is a vendored install only if `skills-lock.json` claims its
+  slug; absent, it was authored by whoever owns the repository. No new directory,
+  no new frontmatter key and no side-ledger — ownership stays answerable from the
+  filesystem alone. The injection resolver has always read these as target-owned
+  (`scanTargetOwnedSkillNames`); this is the vocabulary catching up. See
+  `docs/monorepo/foreign-workspace-skill-injection.md` §7.3.
+- Order matters in `deriveSkillProvenance`: the `skills/` check and the
+  personal-root membership check both run BEFORE the lockfile split, so an
+  authored symlink and a personal symlink can never be misread as custom.
 - The enum is `openthrottle | external` (`SKILL_SOURCES` in
   `@openthrottle/openthrottle-skills`), but it is **not a frontmatter key** —
   `parseSkillFrontmatter` and `skillFrontmatterSchema` know nothing about it,
@@ -132,20 +150,23 @@ are installed, that's it; every layer on top of them is virtual:
 **Flow:** layout + lockfile derivation → `RepoSkillEntry.source`/`sourceUrl` →
 merged with the ingested `projectSkills` GraphQL row (a recognized ingested
 value overlays the disk value; the empty-GraphQL silent fallback is unchanged)
-→ Source badge column + All/OpenThrottle/External toolbar filter on the index.
+→ Source badge column + All/OpenThrottle/External/Custom/Personal toolbar filter
+on the index.
 Postgres persists the derived value on `project_skills.source` (+ nullable
 `source_url`, migration 074); the ingest path derives it the same way via the
 walker's `authored` flag + `parseSkillsLockFile`.
 
-## External skills are read-only (the personal tier is not)
+## External skills are read-only (the personal and custom tiers are not)
 
 Provenance gates writes, not just display. An in-app edit of an **external**
 SKILL.md would silently fork it from upstream: the next `ot-skill-sync` / lockfile
-install either clobbers the edit or leaves the repo permanently diverged. Two
+install either clobbers the edit or leaves the repo permanently diverged. Three
 kinds of skill are editable here: `openthrottle`-sourced ones — real directories
-under the authored `skills/` tree — and the **personal tier** (`isPersonal`),
-which is the author's own private directory linked into the repo and has no
-upstream to diverge from. Only a lockfile-installed external skill is read-only.
+under the authored `skills/` tree — the **personal tier** (`isPersonal`), which
+is the author's own private directory linked into the repo, and the **custom
+tier** (`isCustom`), a real file the owner authored in this very repository and
+commits with it. None of the three has an upstream to diverge from. Only a
+lockfile-installed external skill is read-only.
 
 - **Enforcement point:** `writeSkillFileBySlug`
   (`app/routing/skills/data/write-skill-file.server.ts`) refuses when the
@@ -195,7 +216,7 @@ To change a lockfile-installed external skill, change it upstream and re-sync.
   Cancel reverts to the loaded content. `editable === false` (deployed app)
   shows a disabled Edit affordance with an explanatory tooltip — as does a
   lockfile-installed external skill, with its own tooltip (see "External skills
-  are read-only (the personal tier is not)"). A personal skill edits like an
+  are read-only (the personal and custom tiers are not)"). A personal skill edits like an
   authored one.
 - **Write-back** (`write-skill-file.server.ts`, invoked by the route action):
   - The absolute target derives **only** from the discovered entry's
@@ -210,7 +231,7 @@ To change a lockfile-installed external skill, change it upstream and re-sync.
     the loader, and the same personal-root membership test decides discovery's
     `isPersonal` — escaping the repo is not by itself personal.
   - An entry that is neither `openthrottle` nor `isPersonal` is refused
-    outright (see "External skills are read-only (the personal tier is not)").
+    outright (see "External skills are read-only (the personal and custom tiers are not)").
   - The new content's frontmatter is re-validated with
     `validateAgentAssetFrontmatter` (must parse, keep `name`, match the slug,
     and satisfy the schema) **before** anything

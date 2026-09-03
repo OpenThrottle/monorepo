@@ -53,6 +53,37 @@ describe('routes/skills.create.tsx action', () => {
     vi.clearAllMocks();
   });
 
+  // FEATURE_BETA_PREVIEW is unset in this node-environment suite, so it
+  // resolves to its `false` default — the gated state. The flag-on case lives
+  // in skills.create.action.beta.test.ts, which mocks the flag module.
+  describe('the FEATURE_BETA_PREVIEW gate (flag off)', () => {
+    test('refuses an openthrottle destination without reaching the server module', async () => {
+      const result = await submit({
+        ...validFields,
+        destination: SKILL_CREATE_DESTINATIONS.openthrottle,
+      });
+
+      expect(result).toEqual({
+        error: SKILL_CREATE_COPY.gatedDestinationError,
+      });
+      // The guard runs before the dynamic import, so nothing could touch disk.
+      expect(mockCreateSkillFile).not.toHaveBeenCalled();
+    });
+
+    test.each([
+      [SKILL_CREATE_DESTINATIONS.custom],
+      [SKILL_CREATE_DESTINATIONS.personal],
+    ])('still accepts the %s destination', async (destination) => {
+      mockCreateSkillFile.mockReturnValue({ ok: true, slug: 'my-new-skill' });
+
+      await submit({ ...validFields, destination });
+
+      expect(mockCreateSkillFile).toHaveBeenCalledWith(
+        expect.objectContaining({ destination }),
+      );
+    });
+  });
+
   test('redirects to the new skill on success', async () => {
     mockCreateSkillFile.mockReturnValue({ ok: true, slug: 'my-new-skill' });
 
@@ -65,18 +96,21 @@ describe('routes/skills.create.tsx action', () => {
     }
   });
 
+  // Uses `custom` rather than `openthrottle`: this suite runs with
+  // FEATURE_BETA_PREVIEW off, where the catalog destination is refused before
+  // the server module is reached. Pass-through is the point here, not the gate.
   test('passes the parsed fields straight through', async () => {
     mockCreateSkillFile.mockReturnValue({ ok: true, slug: 'my-new-skill' });
 
     await submit({
       ...validFields,
-      destination: SKILL_CREATE_DESTINATIONS.repo,
+      destination: SKILL_CREATE_DESTINATIONS.custom,
     });
 
     expect(mockCreateSkillFile).toHaveBeenCalledOnce();
     expect(mockCreateSkillFile).toHaveBeenCalledWith(
       expect.objectContaining({
-        destination: SKILL_CREATE_DESTINATIONS.repo,
+        destination: SKILL_CREATE_DESTINATIONS.custom,
         slug: 'my-new-skill',
       }),
     );

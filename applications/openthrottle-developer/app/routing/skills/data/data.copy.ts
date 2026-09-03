@@ -6,6 +6,8 @@
  */
 import { BrainCircuitIcon } from 'lucide-react';
 import type { GlobalFeatureOnboardingContent } from '@openthrottle/react-router-ui-global';
+import type { SkillCreateDestination } from '~/routing/skills/config/skill-create';
+import { SKILL_CREATE_DESTINATIONS } from '~/routing/skills/config/skill-create';
 
 /**
  * @description New-user "teach-me-fast" onboarding copy for the skills index,
@@ -178,9 +180,10 @@ export const SKILL_RUN_COPY = {
  * Copy for the skill write-back action. Every refusal names why the save was
  * rejected without writing; the ingest note reminds that server-side rows
  * (`projectSkills`) refresh on the next agent-asset ingest run, not on save.
- * `externalSkillError` covers the provenance gate: only OpenThrottle-authored
- * skills are writable here, because editing an external skill in place forks it
- * from the upstream source the next sync would restore.
+ * `externalSkillError` covers the provenance gate: OpenThrottle-authored,
+ * repo-authored (custom) and personal skills are writable here; only a
+ * lockfile-installed external skill is refused, because editing it in place
+ * forks it from the upstream source the next sync would restore.
  */
 export const SKILL_WRITE_COPY = {
   externalSkillError: `Save rejected — this skill is installed from an external source. Editing it here would fork it from upstream; change it upstream and re-sync instead.`,
@@ -210,13 +213,16 @@ export const SKILL_CREATE_COPY = {
   descriptionFieldDescription: `The only thing a model sees when deciding whether to open this skill. Lead with what it does, then the trigger phrases that should fire it.`,
   descriptionFieldLabel: `Description`,
   descriptionRequiredError: `A description is required — it is the whole basis on which a model decides to fire the skill.`,
+  destinationCustomDescription: `Lands in .agents/skills/ as an untracked directory in this repository for you to commit. Everyone on your team gets it once you push.`,
+  destinationCustomLabel: `This repository`,
   destinationFieldLabel: `Where should this live?`,
+  destinationOpenThrottleDescription: `Lands in skills/ as an untracked directory for you to commit and open a PR against OpenThrottle for. Everyone gets it once that merges.`,
+  destinationOpenThrottleLabel: `OpenThrottle catalog`,
   destinationPersonalDescription: `Yours only. Lives outside the repo in your personal skills directory and is linked in — nobody else's checkout has it, and it cannot be committed.`,
   destinationPersonalLabel: `Personal`,
-  destinationRepoDescription: `Lands in skills/ as an untracked directory for you to commit and open a PR for. Everyone gets it once that merges.`,
-  destinationRepoLabel: `OpenThrottle repo`,
   editorLabel: `SKILL.md`,
-  introduction: `Author a new SKILL.md and save it either to your personal tier or to the repo's committed catalog. It is linked into every agent CLI's skills directory as soon as it is created.`,
+  gatedDestinationError: `Create rejected — the OpenThrottle catalog destination is not available in this workspace. Create the skill in this repository instead.`,
+  introduction: `Author a new SKILL.md and save it to your personal tier or commit it to this repository. It is linked into every agent CLI's skills directory as soon as it is created.`,
   invalidDestinationError: `Create rejected — unrecognized destination.`,
   invalidFrontmatterError: `Create rejected — the frontmatter does not validate:`,
   invalidSlugError: `Create rejected — the name must be a kebab-case slug: lowercase letters, digits and single hyphens.`,
@@ -225,12 +231,13 @@ export const SKILL_CREATE_COPY = {
   nameFieldDescription: `Kebab-case. Becomes the directory name and must match the frontmatter name.`,
   nameFieldLabel: `Name`,
   noRootError: `Creating a skill needs a local checkout — no monorepo root resolved (set WORKSPACE_ROOT).`,
-  pageDescription: `Author a new SKILL.md and save it to your personal tier or the repo.`,
+  pageDescription: `Author a new SKILL.md and save it to your personal tier or this repository.`,
   pageTitle: `Create skill`,
   pathEscapeError: `Create rejected — the resolved skill path is outside its expected root.`,
   personalCollisionError: `Create rejected — a personal skill named '{slug}' already exists. Pick another name, or edit the existing one.`,
   personalRootInsideRepoError: `Create rejected — your personal skills root is inside the repository. It must live outside so its skills cannot be committed — unset or repoint OPENTHROTTLE_PERSONAL_SKILLS_DIR.`,
   repoCollisionError: `Create rejected — '{slug}' collides with the committed skills/{slug}. Pick another name, or edit the committed skill directly.`,
+  slugTakenAgentsDirError: `Create rejected — '.agents/skills/{slug}' already exists in this repository. Pick another name, or edit the existing skill.`,
   slugTakenError: `Create rejected — a skill named '{slug}' is already linked into this repo's agent skills directories. Pick another name.`,
   submitLabel: `Create skill`,
   submittingLabel: `Creating…`,
@@ -243,6 +250,22 @@ export const SKILL_CREATE_COPY = {
 } as const;
 
 /**
+ * The consequence line the create form shows beneath the destination buttons —
+ * one per destination, so the control explains what the choice DOES rather than
+ * only naming it.
+ */
+export const SKILL_CREATE_DESTINATION_CONSEQUENCE: Readonly<
+  Record<SkillCreateDestination, string>
+> = {
+  [SKILL_CREATE_DESTINATIONS.custom]:
+    SKILL_CREATE_COPY.destinationCustomDescription,
+  [SKILL_CREATE_DESTINATIONS.openthrottle]:
+    SKILL_CREATE_COPY.destinationOpenThrottleDescription,
+  [SKILL_CREATE_DESTINATIONS.personal]:
+    SKILL_CREATE_COPY.destinationPersonalDescription,
+};
+
+/**
  * Copy for the "Source" provenance column and the toolbar source filter.
  * Backend `SkillSource` is `openthrottle | external`; the UI adds a third
  * local-only kind (`personal`, from `isPersonal`) so a skill from your own
@@ -250,10 +273,13 @@ export const SKILL_CREATE_COPY = {
  */
 export const SKILLS_SOURCE_COPY = {
   columnHeader: `Source`,
+  customLabel: `Custom`,
+  customTooltip: `Yours and your team's. Authored in this repository and committed with it — not an install, and not OpenThrottle's. Edit it here and the change lands in your working tree.`,
   externalLabel: `External`,
   externalTooltip: `Installed from an external source.`,
   externalUrlTooltipPrefix: `Installed from`,
   filterAllLabel: `All`,
+  filterCustomLabel: `Custom`,
   filterExternalLabel: `External`,
   filterGroupLabel: `Filter by source`,
   filterOpenThrottleLabel: `OpenThrottle`,

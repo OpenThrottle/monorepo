@@ -10,10 +10,15 @@ import { SkillCreateDestinationField } from '../SkillCreateDestinationField';
 
 const renderField = (
   destination: SkillCreateDestination = SKILL_CREATE_DESTINATIONS.personal,
+  betaPreviewEnabled = true,
 ): { component: RenderResult; onChange: ReturnType<typeof vi.fn> } => {
   const onChange = vi.fn();
   const component = render(
-    <SkillCreateDestinationField onChange={onChange} value={destination} />,
+    <SkillCreateDestinationField
+      betaPreviewEnabled={betaPreviewEnabled}
+      onChange={onChange}
+      value={destination}
+    />,
   );
 
   return { component, onChange };
@@ -29,10 +34,10 @@ describe('SkillCreateDestinationField Component', () => {
   });
 
   test('swaps the consequence copy with the selection', () => {
-    const { component } = renderField(SKILL_CREATE_DESTINATIONS.repo);
+    const { component } = renderField(SKILL_CREATE_DESTINATIONS.openthrottle);
 
     expect(
-      component.getByText(SKILL_CREATE_COPY.destinationRepoDescription),
+      component.getByText(SKILL_CREATE_COPY.destinationOpenThrottleDescription),
     ).toBeInTheDocument();
   });
 
@@ -42,11 +47,62 @@ describe('SkillCreateDestinationField Component', () => {
 
     await user.click(
       component.getByRole('radio', {
-        name: SKILL_CREATE_COPY.destinationRepoLabel,
+        name: SKILL_CREATE_COPY.destinationOpenThrottleLabel,
       }),
     );
 
-    expect(onChange).toHaveBeenCalledWith(SKILL_CREATE_DESTINATIONS.repo);
+    expect(onChange).toHaveBeenCalledWith(
+      SKILL_CREATE_DESTINATIONS.openthrottle,
+    );
+  });
+
+  // The OpenThrottle catalog is only meaningful when working ON OpenThrottle,
+  // so it is gated. Personal and this-repository are always offered; Personal
+  // stays the default either way, so the initial render is unchanged.
+  describe('the FEATURE_BETA_PREVIEW gate', () => {
+    test('offers all three destinations when the flag is on', () => {
+      const { component } = renderField();
+
+      expect(
+        component.getByRole('radio', {
+          name: SKILL_CREATE_COPY.destinationPersonalLabel,
+        }),
+      ).toBeInTheDocument();
+      expect(
+        component.getByRole('radio', {
+          name: SKILL_CREATE_COPY.destinationCustomLabel,
+        }),
+      ).toBeInTheDocument();
+      expect(
+        component.getByRole('radio', {
+          name: SKILL_CREATE_COPY.destinationOpenThrottleLabel,
+        }),
+      ).toBeInTheDocument();
+    });
+
+    test('hides the OpenThrottle catalog when the flag is off', () => {
+      const { component } = renderField(
+        SKILL_CREATE_DESTINATIONS.personal,
+        false,
+      );
+
+      expect(
+        component.queryByRole('radio', {
+          name: SKILL_CREATE_COPY.destinationOpenThrottleLabel,
+        }),
+      ).not.toBeInTheDocument();
+      // The other two are untouched.
+      expect(
+        component.getByRole('radio', {
+          name: SKILL_CREATE_COPY.destinationPersonalLabel,
+        }),
+      ).toBeInTheDocument();
+      expect(
+        component.getByRole('radio', {
+          name: SKILL_CREATE_COPY.destinationCustomLabel,
+        }),
+      ).toBeInTheDocument();
+    });
   });
 
   // Radix emits '' when the active item is clicked again; clearing the

@@ -260,6 +260,56 @@ describe('useSkillDetail', () => {
     );
   });
 
+  // The custom tier likewise carries `source: 'external'`, but it is authored
+  // in this repository and committed with it — nothing to fork from upstream.
+  test('canEdit is true for an editable custom entry', () => {
+    const { result } = renderHook(() =>
+      useSkillDetail(
+        baseOptions({
+          editable: true,
+          entry: baseEntry({ isCustom: true, source: 'external' }),
+        }),
+      ),
+    );
+
+    expect(result.current.canEdit).toBe(true);
+    expect(result.current.editDisabledTooltip).toBe(
+      SKILL_DETAIL_COPY.editDisabledTooltip,
+    );
+  });
+
+  test('handleEdit enters edit mode for a custom entry', () => {
+    const { result } = renderHook(() =>
+      useSkillDetail(
+        baseOptions({
+          content: 'team draft',
+          entry: baseEntry({ isCustom: true, source: 'external' }),
+        }),
+      ),
+    );
+
+    act(() => result.current.handleEdit());
+
+    expect(result.current.isEditing).toBe(true);
+    expect(result.current.draft).toBe('team draft');
+  });
+
+  test('canEdit is false for a custom entry with no local checkout', () => {
+    const { result } = renderHook(() =>
+      useSkillDetail(
+        baseOptions({
+          editable: false,
+          entry: baseEntry({ isCustom: true, source: 'external' }),
+        }),
+      ),
+    );
+
+    expect(result.current.canEdit).toBe(false);
+    expect(result.current.editDisabledTooltip).toBe(
+      SKILL_DETAIL_COPY.editDisabledTooltip,
+    );
+  });
+
   test('handleEdit leaves edit mode closed for an external entry', () => {
     const { result } = renderHook(() =>
       useSkillDetail(baseOptions({ entry: baseEntry({ source: 'external' }) })),

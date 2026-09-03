@@ -56,6 +56,19 @@ describe('skill path allowlist', () => {
     expect(isAllowedSkillPath(root, skillPath)).toBe(true);
   });
 
+  // The custom tier: a real directory under `.agents/skills/` the lockfile does
+  // not claim. Its real path is inside the checkout, so the existing in-repo arm
+  // already admits it — asserted rather than assumed, because the write guard
+  // now depends on it.
+  test('allows a custom skill real path under .agents/skills', () => {
+    const root = makeTempDir();
+    const skillPath = makeSkillFile(join(root, '.agents/skills'), 'team-skill');
+
+    expect(isPathInsideRoot(root, skillPath)).toBe(true);
+    expect(isPathInsidePersonalSkillsRoot(skillPath)).toBe(false);
+    expect(isAllowedSkillPath(root, skillPath)).toBe(true);
+  });
+
   test('allows a path under the configured personal skills root', () => {
     const root = makeTempDir();
     const personalRoot = makeTempDir();

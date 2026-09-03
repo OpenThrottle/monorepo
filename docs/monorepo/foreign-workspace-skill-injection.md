@@ -323,22 +323,31 @@ The rule for the in-repo tier is therefore neither precedence nor silence:
 
 A name owned by `skills/<name>` (or by `skills-lock.json`) is a **hard error** from `sync.sh`, with an explicit `--allow-shadow` escape hatch for the deliberate case of iterating on a private fork of a team skill. This is deliberately louder than the foreign rule, because the failure it prevents is worse: silently running a private variant of a skill your colleagues also invoke, and reporting results as if they came from the shared one. `--allow-shadow` makes personal win over committed for that run, and says so in the output.
 
-### 7.3 Ownership inside `.agents/skills/` — now three cases
+### 7.3 Ownership inside `.agents/skills/` — now four cases
 
-Today ownership is read straight off the on-disk type. Personal adds a third case, and the discriminator is **which root the link resolves into**:
+Ownership is read straight off the on-disk type. For links the discriminator is **which root the link resolves into**; for real directories it is **whether `skills-lock.json` claims the slug**:
 
-| On-disk                              | Owner                         | Sync behaviour                                 |
-| ------------------------------------ | ----------------------------- | ---------------------------------------------- |
-| real directory                       | vendored (`skills-lock.json`) | never touched                                  |
-| symlink → `$REPO_ROOT/skills/<name>` | committed authored            | maintained                                     |
-| symlink → `<personal root>/<name>`   | **personal tier**             | maintained; reported as `personal`             |
-| symlink → anywhere else, or dangling | stale / rogue                 | reaped in sync, reported as drift in `--check` |
+| On-disk                                            | Owner                      | Sync behaviour                                 |
+| -------------------------------------------------- | -------------------------- | ---------------------------------------------- |
+| real directory, slug **in** `skills-lock.json`     | vendored install           | never touched                                  |
+| real directory, slug **not in** `skills-lock.json` | **repo-authored (custom)** | never touched                                  |
+| symlink → `$REPO_ROOT/skills/<name>`               | committed authored         | maintained                                     |
+| symlink → `<personal root>/<name>`                 | **personal tier**          | maintained; reported as `personal`             |
+| symlink → anywhere else, or dangling               | stale / rogue              | reaped in sync, reported as drift in `--check` |
+
+**The first two rows are one behaviour, not two.** Sync never touches a real directory, before or after this split — the only thing that changed is what it is called. Splitting the row is a vocabulary fix, not a behaviour change, and `--check` must not begin reporting a repo-authored directory as drift.
 
 The last row is the subtle one, because a link into a personal root that is no longer the _current_ root still resolves fine. **Membership in the currently-resolved personal root is the test, not mere resolvability.** A person who repoints `OPENTHROTTLE_PERSONAL_SKILLS_DIR` gets their old links reaped, which is right — they now point at content the pipeline no longer considers part of the tier.
 
 Sync output states the tier each link came from, so `sync.sh` is self-explaining and nobody has to run `readlink` to find out why a skill is there.
 
-The developer app applies the **same membership test**. `/skills/:slug` reads and writes a personal SKILL.md through the in-repo symlink — one allowlist of "monorepo root ∪ `resolvePersonalSkillsRoot()`", never a second directory to keep in step, and never by unlinking the link. A lockfile-installed external skill stays read-only there. See `applications/openthrottle-developer/docs/repo-skills-discovery-design.md`.
+#### The custom tier: lockfile absence is the whole discriminator
+
+A real directory under `.agents/skills/` is a vendored install **only if the lockfile claims its slug**. One whose slug is absent was authored by whoever owns this repository, and §1a's resolver has always read it that way: `scanTargetOwnedSkillNames` drops any name the target repo owns, so an injected skill never shadows one the target wrote. What is new here is only that the developer app now has a word for it — **Custom** — instead of reporting it as `external`, i.e. as somebody else's third-party dependency, with an origin-URL lookup that can never hit.
+
+This costs nothing structurally. **No new directory, no new frontmatter key, and no side-ledger** — §7.6 holds unchanged: ownership stays answerable from the filesystem alone, by reading a directory type and one lockfile that already exists. It also makes the tier committable for free: the managed `.gitignore` block ignores everything under `.agents/skills` but re-includes nested directories, and git classes the generated symlinks as files — so a real directory survives into the commit while the links stay ignored.
+
+The developer app applies the **same membership test**. `/skills/:slug` reads and writes a personal SKILL.md through the in-repo symlink — one allowlist of "monorepo root ∪ `resolvePersonalSkillsRoot()`", never a second directory to keep in step, and never by unlinking the link. A custom skill is writable too, in place: it is a real file inside the checkout, and there is no upstream to fork it from. Only a lockfile-installed external skill stays read-only. See `applications/openthrottle-developer/docs/repo-skills-discovery-design.md`.
 
 ### 7.4 Uncommittability is asserted, not assumed
 

@@ -70,6 +70,9 @@ const toRepoRelativePath = (skillsDir: string, folderName: string): string =>
   `${skillsDir}/${folderName}/${SKILL_FILE_NAME}`;
 
 interface SkillProvenance {
+  /** `true` only for the custom tier; `undefined` otherwise, matching the
+   * optional field on RepoSkillEntry so an ordinary skill carries no flag. */
+  readonly isCustom: true | undefined;
   /** `true` only for the personal tier; `undefined` otherwise, matching the
    * optional field on RepoSkillEntry so an ordinary skill carries no flag. */
   readonly isPersonal: true | undefined;
@@ -93,9 +96,23 @@ interface SkillProvenance {
  * i.e. as somebody else's third-party skill, with a sourceUrl lookup that can
  * never hit — which is the opposite of what it is.
  *
- * `isPersonal` is deliberately a separate flag rather than a third
- * {@link SkillSource}: `source` is ingested and served over GraphQL, and the
- * personal tier is local developer tooling with no server surface.
+ * A fourth case is a real directory under a scanned skills dir whose slug is
+ * ABSENT from skills-lock.json: the custom tier — a skill the end user authored
+ * in their own repository and commits with it. Lockfile absence is the whole
+ * discriminator; a real directory is a vendored install only if the lockfile
+ * claims it. That keeps §7.6 of the injection design intact: no new directory,
+ * no new frontmatter key and no side-ledger — ownership stays answerable from
+ * the filesystem alone. The injection resolver has always read these as
+ * target-owned (`scanTargetOwnedSkillNames`, §1a); this is the developer app
+ * catching up to that vocabulary. Without the custom case such a skill reports
+ * as `external` — somebody else's third-party dependency, with a sourceUrl
+ * lookup that can never hit — and is wrongly read-only in a repo the person owns.
+ *
+ * Neither `isPersonal` nor `isCustom` is a {@link SkillSource} value, and for
+ * the same reason: `source` is ingested and served over GraphQL, so widening
+ * the enum means a schema change, a migration, an ingest change and codegen
+ * across consumers. Both are local overlays; a custom skill still carries
+ * `source: 'external'` on the wire.
  */
 const deriveSkillProvenance = (
   monorepoRoot: string,
@@ -108,16 +125,23 @@ const deriveSkillProvenance = (
     const realDir = realpathSync(absoluteSkillDir);
     if (realDir.startsWith(`${realRoot}${sep}skills${sep}`)) {
       return {
+        isCustom: undefined,
         isPersonal: undefined,
         source: 'openthrottle',
         sourceUrl: undefined,
       };
     }
     if (isPathInsidePersonalSkillsRoot(realDir)) {
-      return { isPersonal: true, source: 'external', sourceUrl: undefined };
+      return {
+        isCustom: undefined,
+        isPersonal: true,
+        source: 'external',
+        sourceUrl: undefined,
+      };
     }
     if (!realDir.startsWith(`${realRoot}${sep}`)) {
       return {
+        isCustom: undefined,
         isPersonal: undefined,
         source: 'external',
         sourceUrl: undefined,
@@ -127,10 +151,24 @@ const deriveSkillProvenance = (
     // Unresolvable path — treat as external below.
   }
 
+  // In-repo, and neither authored under `skills/` nor personal. Lockfile
+  // membership is the split: claimed by the lockfile = vendored external;
+  // absent = repo-authored custom.
+  const lockEntry = lock[folderName];
+  if (!lockEntry) {
+    return {
+      isCustom: true,
+      isPersonal: undefined,
+      source: 'external',
+      sourceUrl: undefined,
+    };
+  }
+
   return {
+    isCustom: undefined,
     isPersonal: undefined,
     source: 'external',
-    sourceUrl: deriveSkillSourceUrl(lock[folderName]),
+    sourceUrl: deriveSkillSourceUrl(lockEntry),
   };
 };
 
@@ -143,7 +181,7 @@ const readSkillEntry = (
   lock: SkillsLockMap,
 ): RepoSkillEntry => {
   const repoRelativePath = toRepoRelativePath(skillsDir, folderName);
-  const { isPersonal, source, sourceUrl } = deriveSkillProvenance(
+  const { isCustom, isPersonal, source, sourceUrl } = deriveSkillProvenance(
     monorepoRoot,
     join(monorepoRoot, skillsDir, folderName),
     folderName,
@@ -156,6 +194,7 @@ const readSkillEntry = (
   } catch {
     return {
       disableModelInvocation: undefined,
+      isCustom,
       isPersonal,
       layout,
       repoRelativePath,
@@ -177,6 +216,7 @@ const readSkillEntry = (
 
   return {
     disableModelInvocation,
+    isCustom,
     isPersonal,
     layout,
     repoRelativePath,

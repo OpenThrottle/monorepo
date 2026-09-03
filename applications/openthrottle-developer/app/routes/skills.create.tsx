@@ -1,6 +1,9 @@
 import * as React from 'react';
 import { redirect } from 'react-router';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import {
+  FEATURE_BETA_PREVIEW,
+  mergeRouteModuleMeta,
+} from '@openthrottle/react-router-utils';
 import {
   GlobalErrorBoundary,
   GlobalHeading,
@@ -13,6 +16,7 @@ import { SkillCreateForm } from '~/routing/skills/components/SkillCreateForm';
 import {
   SKILL_CREATE_FIELDS,
   isSkillCreateDestination,
+  isSkillCreateDestinationAvailable,
 } from '~/routing/skills/config/skill-create';
 import { SKILL_CREATE_COPY } from '~/routing/skills/data/data.copy';
 import { useSkillCreateForm } from '~/routing/skills/hooks/useSkillCreateForm';
@@ -95,6 +99,14 @@ export const action = async (args: Route.ActionArgs) => {
   // destination — least of all the committed one.
   if (!isSkillCreateDestination(destination)) {
     return { error: SKILL_CREATE_COPY.invalidDestinationError };
+  }
+
+  // The UI hides the OpenThrottle catalog when the flag is off, but a hidden
+  // toggle button is not a guard — the destination travels in a form body and a
+  // hand-crafted POST never renders the UI at all. Refused here, before the
+  // server module is even imported, so nothing resolves a path or touches disk.
+  if (!isSkillCreateDestinationAvailable(destination, FEATURE_BETA_PREVIEW)) {
+    return { error: SKILL_CREATE_COPY.gatedDestinationError };
   }
 
   // Dynamic import keeps the server-only module (and its `node:child_process`
