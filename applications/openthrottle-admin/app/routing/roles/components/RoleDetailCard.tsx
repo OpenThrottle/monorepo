@@ -9,16 +9,14 @@ import { formatDate } from 'date-fns';
 import { RoleDeleteDialog } from '~/routing/roles/components/RoleDeleteDialog';
 import { RoleEditSheet } from '~/routing/roles/components/RoleEditSheet';
 import { action as roleDetailAction } from '~/routes/roles.$roleId';
-import type { Route } from '@/app/routes/+types/roles.$roleId';
 import type { useFetcher } from 'react-router';
-
-type RoleDetail = NonNullable<Route.ComponentProps['loaderData']['role']>;
+import type { RoleDetailsFragment } from '~/__generated__/graphql';
 
 export interface RoleDetailCardProps {
   editOpen: boolean;
   fetcher: ReturnType<typeof useFetcher<typeof roleDetailAction>>;
   onEditOpenChange: (open: boolean) => void;
-  role: RoleDetail;
+  role: RoleDetailsFragment;
 }
 
 export const RoleDetailCard = (

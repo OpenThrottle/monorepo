@@ -4,12 +4,12 @@ import {
 } from '@openthrottle/react-router-ui';
 import { HeartHandshakeIcon } from 'lucide-react';
 import * as React from 'react';
-import { QueueJobDetailJob } from '~/routing/queues/components/QueueJobDetail';
+import type { JobDetailsCardFragment } from '~/__generated__/graphql';
 import { parseQueueJobDataString } from '~/routing/queues/utils/parse-queue-job-data';
 // import clsx from 'clsx';
 
 export interface QueueJobPayloadProps {
-  job: QueueJobDetailJob;
+  job: JobDetailsCardFragment;
 }
 
 export const QueueJobPayload = (

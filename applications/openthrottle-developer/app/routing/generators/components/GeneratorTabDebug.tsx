@@ -9,7 +9,7 @@ import {
   TabsContent,
   TextArea,
 } from '@openthrottle/react-router-shadcn';
-import { type GeneratorDetailCardFragment } from '@openthrottle/openthrottle-developer-codegen';
+import type { GeneratorDetailCardFragment } from '@openthrottle/openthrottle-developer-codegen';
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import {
   buildGeneratorSupportBundle,

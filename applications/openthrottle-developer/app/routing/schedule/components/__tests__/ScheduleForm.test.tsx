@@ -11,6 +11,7 @@ import {
 import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
 import { ScheduleForm } from '../ScheduleForm';
 import type { ScheduleFormProps } from '../ScheduleForm';
+import type { ScheduledJobDetailFragment } from '~/__generated__/graphql';
 
 const ScheduleListStub = (): React.ReactElement => <p>Schedule list</p>;
 
@@ -118,7 +119,7 @@ describe('ScheduleForm Component', () => {
   });
 
   describe('update mode', () => {
-    const job: NonNullable<ScheduleFormProps['job']> = {
+    const job: ScheduledJobDetailFragment = {
       __typename: 'ScheduledAgentJobObject',
       createdAt: '2026-08-01T00:00:00.000Z',
       cronPattern: '0 9 * * *',
@@ -210,7 +211,7 @@ describe('ScheduleForm Component', () => {
     });
 
     test('never blocks submission — the submit button stays enabled while warning', () => {
-      const codexJob: NonNullable<ScheduleFormProps['job']> = {
+      const codexJob: ScheduledJobDetailFragment = {
         __typename: 'ScheduledAgentJobObject',
         createdAt: '2026-08-01T00:00:00.000Z',
         cronPattern: '0 9 * * *',

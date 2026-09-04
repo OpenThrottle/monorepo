@@ -34,11 +34,12 @@ import { PLAN_RUN_GATING_COPY } from '~/routing/plans/data/data.copy';
 import type { PlanStatusKey } from '~/routing/plans/types';
 
 import type { Route } from '@/app/routes/+types/plans.$planId._index';
+import type { PlanDetailsFragment } from '~/__generated__/graphql';
 
 export interface UsePlanDetailRouteOptions {
   readonly loaderData: Route.ComponentProps['loaderData'];
   readonly params: Route.ComponentProps['params'];
-  readonly plan: NonNullable<Route.ComponentProps['loaderData']['plan']>;
+  readonly plan: PlanDetailsFragment;
 }
 
 export interface UsePlanDetailRouteResult {

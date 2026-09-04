@@ -1,10 +1,10 @@
 import * as React from 'react';
 import { HeartHandshakeIcon } from 'lucide-react';
 import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
-import { QueueJobDetailJob } from '~/routing/queues/components/QueueJobDetail';
+import type { JobDetailsCardFragment } from '~/__generated__/graphql';
 
 export interface QueueJobMetricsProps {
-  job: QueueJobDetailJob;
+  job: JobDetailsCardFragment;
 }
 
 export const QueueJobMetrics = (

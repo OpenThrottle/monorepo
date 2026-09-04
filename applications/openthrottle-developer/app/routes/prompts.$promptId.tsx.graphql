@@ -1,30 +1,32 @@
+# The prompt-detail entity shape. `customPrompt` and `updateCustomPrompt` both
+# return `CustomPromptObject` and both surfaces want the same fields, so the
+# query and the update mutation spread this rather than each inlining their own
+# near-identical list. Components, hooks and fixtures take
+# `PromptDetailsFragment` rather than unwrapping `GetPromptQuery['customPrompt']`
+# — see packages/graphql-codegen/README.md.
+fragment PromptDetails on CustomPromptObject {
+  content
+  createdAt
+  description
+  filePath
+  id
+  labels
+  projectId
+  promptType
+  title
+  updatedAt
+  userId
+}
+
 query getPrompt($id: ID!) {
   customPrompt(id: $id) {
-    content
-    createdAt
-    description
-    filePath
-    id
-    labels
-    projectId
-    promptType
-    title
-    updatedAt
-    userId
+    ...PromptDetails
   }
 }
 
 mutation updatePrompt($input: UpdateCustomPromptInput!) {
   updateCustomPrompt(input: $input) {
-    content
-    createdAt
-    description
-    filePath
-    id
-    labels
-    promptType
-    title
-    updatedAt
+    ...PromptDetails
   }
 }
 

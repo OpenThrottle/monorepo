@@ -25,13 +25,14 @@ import { type ProjectTabValue } from '~/routing/projects/data/tabs';
 import { PlanTagChips } from '~/routing/plans/components/PlanTagChips';
 import { ProjectTasksTable } from '~/routing/projects/components/ProjectTasksTable';
 import type { Route } from '@/app/routes/+types/projects.$projectId._index';
+import type { ProjectPageDetailsFragment } from '~/__generated__/graphql';
 
 type ProjectDetailLoaderData = Route.ComponentProps['loaderData'];
 
 export interface ProjectDetailTabsProps {
   limit: number;
   page: number;
-  project: NonNullable<ProjectDetailLoaderData['project']>;
+  project: ProjectPageDetailsFragment;
   tagVocabulary: ProjectDetailLoaderData['tagVocabulary'];
   tasks: ProjectDetailLoaderData['projectTasks'];
   totalTaskCount: number;

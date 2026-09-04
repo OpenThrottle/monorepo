@@ -2,10 +2,10 @@ import * as React from 'react';
 import { render, screen } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import type { QueueJobDetailJob } from '../QueueJobDetail';
+import type { JobDetailsCardFragment } from '~/__generated__/graphql';
 import { QueueJobPayload } from '../QueueJobPayload';
 
-const baseJob = (): QueueJobDetailJob => ({
+const baseJob = (): JobDetailsCardFragment => ({
   data: null,
   executionBackend: null,
   failedReason: null,
@@ -20,7 +20,9 @@ const baseJob = (): QueueJobDetailJob => ({
   timestamp: 1_700_000_000_000,
 });
 
-const renderPayload = (job: QueueJobDetailJob): ReturnType<typeof render> => {
+const renderPayload = (
+  job: JobDetailsCardFragment,
+): ReturnType<typeof render> => {
   const Component = () => <QueueJobPayload job={job} />;
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
   return render(<RoutesStub />);

@@ -4,11 +4,11 @@ import type { RenderResult } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { CustomPromptType } from '~/__generated__/graphql';
-import type { GetPromptQuery } from '~/__generated__/graphql';
+import type { PromptDetailsFragment } from '~/__generated__/graphql';
 import { PromptDetailMetadataPanel } from '../PromptDetailMetadataPanel';
 import type { PromptDetailMetadataPanelProps } from '../PromptDetailMetadataPanel';
 
-const prompt: NonNullable<GetPromptQuery['customPrompt']> = {
+const prompt: PromptDetailsFragment = {
   content: '# Test Prompt',
   createdAt: '2026-01-01T00:00:00.000Z',
   description: 'A test prompt',

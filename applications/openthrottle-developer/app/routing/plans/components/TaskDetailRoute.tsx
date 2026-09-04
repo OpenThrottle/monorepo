@@ -39,12 +39,13 @@ import {
 } from '~/routing/plans/utils/utils.plans';
 import { useTaskOutputStream } from '~/routing/plans/hooks/useTaskOutputStream';
 import type { Route } from '@/app/routes/+types/plans.$planId.tasks.$taskId._index';
+import type { TaskDetailsFragment } from '~/__generated__/graphql';
 import { PlanTagChipData } from '~/routing/plans/components/PlanTagChips';
 
 export interface TaskDetailRouteProps {
   readonly loaderData: Route.ComponentProps['loaderData'];
   readonly params: Route.ComponentProps['params'];
-  readonly task: NonNullable<Route.ComponentProps['loaderData']['task']>;
+  readonly task: TaskDetailsFragment;
 }
 
 export const TaskDetailRoute = (

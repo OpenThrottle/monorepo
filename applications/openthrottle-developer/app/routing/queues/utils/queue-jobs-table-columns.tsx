@@ -8,17 +8,13 @@ import * as React from 'react';
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import type { ColumnDef } from '@tanstack/react-table';
 import { Link } from 'react-router';
-import type { GetQueueQuery } from '~/__generated__/graphql';
+import type { QueueJobDetailsFragment } from '~/__generated__/graphql';
 import { QueueStateBadge } from '~/routing/queues/components/QueueStateBadge';
 import { parseQueueJobDataString } from '~/routing/queues/utils/parse-queue-job-data';
 import { queueJobDetailPath } from '~/routing/queues/utils/queue-job-detail-path';
 
 const JOB_ID_DISPLAY_MAX = 24;
 const FAILED_REASON_MAX = 72;
-
-export type QueueJobsTableJob = NonNullable<
-  NonNullable<GetQueueQuery['queue']>['jobs']
->['jobs'][number];
 
 const truncateText = (text: string, max: number): string =>
   text.length <= max ? text : `${text.slice(0, max)}…`;
@@ -28,11 +24,11 @@ const formatTs = (unix?: number | null): string => {
   return new Date(unix).toISOString();
 };
 
-export const queueJobRowId = (job: QueueJobsTableJob): string => job.id;
+export const queueJobRowId = (job: QueueJobDetailsFragment): string => job.id;
 
 export function buildQueueJobsTableColumns(
   queueName: string,
-): ColumnDef<QueueJobsTableJob, string | number | null | undefined>[] {
+): ColumnDef<QueueJobDetailsFragment, string | number | null | undefined>[] {
   return [
     {
       accessorKey: 'state',

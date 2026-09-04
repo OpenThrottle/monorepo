@@ -19,14 +19,24 @@ fragment ScheduledJobRunRow on ScheduledAgentJobRunObject {
   trigger
 }
 
+# The schedule-detail entity shape: everything the list card shows plus the
+# fields only the detail route and its edit form need. `ScheduledJobCard` stays
+# the list/update/enable shape. Components, hooks and fixtures take
+# `ScheduledJobDetailFragment` rather than unwrapping
+# `ScheduledAgentJobDetailQuery['scheduledAgentJob']` — see
+# packages/graphql-codegen/README.md.
+fragment ScheduledJobDetail on ScheduledAgentJobObject {
+  createdAt
+  cwd
+  prompt
+  ...ScheduledJobCard
+  settingsJson
+  timeoutMs
+}
+
 query scheduledAgentJobDetail($id: ID!) {
   scheduledAgentJob(id: $id) {
-    createdAt
-    cwd
-    prompt
-    ...ScheduledJobCard
-    settingsJson
-    timeoutMs
+    ...ScheduledJobDetail
   }
   scheduledAgentJobRuns(scheduledAgentJobId: $id, limit: 50) {
     ...ScheduledJobRunRow

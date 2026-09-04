@@ -24,6 +24,67 @@ Run codegen from a project that defines `codegen.ts`:
 pnpm nx run <project>:codegen-graphql
 ```
 
+## Convention: type UI entity props from generated fragment types
+
+A named fragment is the source of truth for an entity's shape. Components, hooks,
+utils and test fixtures take that entity as the generated `XxxFragment` type —
+always via `import type` from `~/__generated__/graphql`, never a value import.
+
+```graphql
+# applications/openthrottle-admin/app/routes/roles.$roleId.tsx.graphql
+fragment RoleDetails on RoleObject { … }
+
+query getRole($id: ID!) {
+  role(id: $id) {
+    ...RoleDetails
+  }
+}
+```
+
+```ts
+// ✅ typed from the document
+import type { RoleDetailsFragment } from '~/__generated__/graphql';
+
+export interface RoleDetailCardProps {
+  role: RoleDetailsFragment;
+}
+```
+
+```ts
+// ❌ do not unwrap a route module's loader data
+type RoleDetail = NonNullable<Route.ComponentProps['loaderData']['role']>;
+
+// ❌ and do not unwrap the query result either
+type RoleDetail = NonNullable<GetRoleQuery['role']>;
+```
+
+Unwrapping couples a reusable card/sheet/hook to one route's `+types`, and
+duplicates a type codegen already emitted. Both `NonNullable` forms exist only
+because the query root field is nullable — and that nullability belongs at the
+**route boundary**, not on every child prop.
+
+### Where each type still applies
+
+- **Route modules** may `NonNullable` (or throw a 404) to assert the entity
+  exists, then pass the narrowed value into children typed as the fragment.
+- **Whole-loader bags** (`loaderData.permissions`, pagination cursors, tag
+  vocabularies) legitimately keep `Route.ComponentProps['loaderData']` — that is
+  route composition, not an entity shape.
+- **`NonNullable<ReturnType<typeof useRouteLoaderData<typeof loader>>>`**
+  asserts the _route_ has run. Leave it alone.
+- Non-GraphQL unwraps (`BadgeProps['color']`, `DynamicModule['imports']`) are
+  unrelated to this convention.
+
+### No fragment yet?
+
+Extract one first, spread it from the query (and from any mutation selecting the
+same field set), re-run `pnpm nx run <app>:codegen-graphql`, then consume the
+generated type. Queries and mutations should spread `...RoleDetails` rather than
+inlining the same fields twice.
+
+Nothing to configure: `defineCodegen` already sets **`fragmentMasking: false`**,
+so fragment types are emitted unmasked and are directly usable as props.
+
 ## Zod validation schemas
 
 `defineCodegen` emits a Zod block (`typescript-validation-schema`) alongside the

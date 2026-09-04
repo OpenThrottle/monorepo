@@ -2,7 +2,7 @@ import * as React from 'react';
 import { render } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import type { QueueJobDetailJob } from '../QueueJobDetail';
+import type { JobDetailsCardFragment } from '~/__generated__/graphql';
 import { QueueJobDetail } from '../QueueJobDetail';
 
 vi.mock('sonner', () => ({
@@ -18,7 +18,7 @@ vi.mock('~/routing/queues/components/QueueJobLogConsole', () => ({
   QueueJobLogConsole: () => null,
 }));
 
-const baseJob = (): QueueJobDetailJob => ({
+const baseJob = (): JobDetailsCardFragment => ({
   data: null,
   executionBackend: null,
   failedReason: null,
@@ -34,7 +34,7 @@ const baseJob = (): QueueJobDetailJob => ({
 });
 
 function renderDetail(
-  job: QueueJobDetailJob,
+  job: JobDetailsCardFragment,
   queueName = 'Plans',
 ): ReturnType<typeof render> {
   const Component = () => <QueueJobDetail job={job} queueName={queueName} />;
@@ -61,7 +61,7 @@ describe('QueueJobDetail Component', () => {
 
   describe('when job failed', () => {
     test('shows retry action', () => {
-      const job: QueueJobDetailJob = {
+      const job: JobDetailsCardFragment = {
         ...baseJob(),
         state: 'failed',
       };
@@ -76,7 +76,7 @@ describe('QueueJobDetail Component', () => {
   describe('when job is waiting with plan id in payload', () => {
     test('shows cancel plan run action', () => {
       const planId = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
-      const job: QueueJobDetailJob = {
+      const job: JobDetailsCardFragment = {
         ...baseJob(),
         data: JSON.stringify({ planId }),
         id: 'waiting-plan',
@@ -92,7 +92,7 @@ describe('QueueJobDetail Component', () => {
 
   describe('when task run metrics exist', () => {
     test('renders RSS summary lines', () => {
-      const job: QueueJobDetailJob = {
+      const job: JobDetailsCardFragment = {
         ...baseJob(),
         taskRunMetrics: {
           __typename: 'TaskRunMetrics',
@@ -117,7 +117,7 @@ describe('QueueJobDetail Component', () => {
 
   describe('when returnvalue is JSON', () => {
     test('renders formatted return value block', () => {
-      const job: QueueJobDetailJob = {
+      const job: JobDetailsCardFragment = {
         ...baseJob(),
         failedReason: 'boom',
         returnvalue: JSON.stringify({ ok: true }),

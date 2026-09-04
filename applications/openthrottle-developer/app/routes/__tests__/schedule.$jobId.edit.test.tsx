@@ -5,14 +5,10 @@ import { describe, expect, test, vi } from 'vitest';
 import EditSchedule from '../schedule.$jobId.edit';
 import { buildRootMatch } from '~/testing/root-match-fixture';
 import { renderRouteHarness, renderRoutesStub } from '~/testing/route-fixtures';
-import type { ScheduledAgentJobDetailQuery } from '~/__generated__/graphql';
+import type { ScheduledJobDetailFragment } from '~/__generated__/graphql';
 import type { Route } from '@/app/routes/+types/schedule.$jobId.edit';
 
-type ScheduleJob = NonNullable<
-  ScheduledAgentJobDetailQuery['scheduledAgentJob']
->;
-
-const job: ScheduleJob = {
+const job: ScheduledJobDetailFragment = {
   __typename: 'ScheduledAgentJobObject',
   createdAt: '2026-07-31T00:00:00.000Z',
   cronPattern: '0 9 * * *',

@@ -1,11 +1,11 @@
 import { describe, expect, test } from 'vitest';
 import { CustomPromptType } from '~/__generated__/graphql';
-import type { GetPromptQuery } from '~/__generated__/graphql';
+import type { PromptDetailsFragment } from '~/__generated__/graphql';
 import { buildPromptDebugSnapshotJson } from '../prompt-debug-snapshot';
 
-type CustomPrompt = NonNullable<GetPromptQuery['customPrompt']>;
-
-const customPrompt = (overrides: Partial<CustomPrompt> = {}): CustomPrompt => ({
+const customPrompt = (
+  overrides: Partial<PromptDetailsFragment> = {},
+): PromptDetailsFragment => ({
   __typename: 'CustomPromptObject',
   content: 'hello world',
   createdAt: '2025-01-01T00:00:00Z',

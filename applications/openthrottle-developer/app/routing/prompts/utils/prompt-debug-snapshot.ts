@@ -1,5 +1,5 @@
 import { fnv1a32Hex } from '~/routing/prompts/utils/utils.prompts';
-import type { GetPromptQuery } from '~/__generated__/graphql';
+import type { PromptDetailsFragment } from '~/__generated__/graphql';
 
 /**
  * @description JSON snapshot for support / diff tools; keys are alphabetized
@@ -7,7 +7,7 @@ import type { GetPromptQuery } from '~/__generated__/graphql';
  * component-primitive-shape R4.
  */
 export function buildPromptDebugSnapshotJson(
-  prompt: NonNullable<GetPromptQuery['customPrompt']>,
+  prompt: PromptDetailsFragment,
   debugContent: string,
 ): string {
   const bufferFp = fnv1a32Hex(debugContent);

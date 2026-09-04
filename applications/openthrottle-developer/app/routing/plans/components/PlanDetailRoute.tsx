@@ -23,12 +23,13 @@ import { PlanTasksBoard } from '~/routing/plans/components/PlanTasksBoard';
 import { PlanToolbar } from '~/routing/plans/components/PlanToolbar';
 import { usePlanDetailRoute } from '~/routing/plans/hooks/usePlanDetailRoute';
 import type { Route } from '@/app/routes/+types/plans.$planId._index';
+import type { PlanDetailsFragment } from '~/__generated__/graphql';
 import { usePlanCheckoutSelection } from '~/routing/plans/hooks/usePlanCheckoutSelection';
 
 export interface PlanDetailRouteProps {
   readonly loaderData: Route.ComponentProps['loaderData'];
   readonly params: Route.ComponentProps['params'];
-  readonly plan: NonNullable<Route.ComponentProps['loaderData']['plan']>;
+  readonly plan: PlanDetailsFragment;
 }
 
 export const PlanDetailRoute = (
