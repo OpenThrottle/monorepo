@@ -3,12 +3,12 @@ import { Link } from 'react-router';
 import { Button } from '@openthrottle/react-router-shadcn';
 import { PullRequestDetailHeader } from '~/routing/pull-requests/components/PullRequestDetailHeader';
 import { PullRequestGithubCard } from '~/routing/pull-requests/components/PullRequestGithubCard';
-import type { GetPullRequestDetailQuery } from '~/__generated__/graphql';
+import type { PullRequestDetailFragment } from '~/__generated__/graphql';
 
 export interface PullRequestDetailProps {
   listQuery: string;
   owner: string;
-  pull: NonNullable<GetPullRequestDetailQuery['pull']>;
+  pull: PullRequestDetailFragment;
   repo: string;
 }
 

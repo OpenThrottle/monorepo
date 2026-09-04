@@ -6,12 +6,12 @@ import { beforeEach, describe, expect, test } from 'vitest';
 import { TaskDetailRoute } from '../TaskDetailRoute';
 import type { TaskDetailRouteProps } from '../TaskDetailRoute';
 import type {
-  GetPlanByIdQuery,
-  GetTaskByIdQuery,
+  PlanDetailsFragment,
+  TaskDetailsFragment,
 } from '~/__generated__/graphql';
 import { renderRoutesStub } from '~/testing/route-fixtures';
 
-const mockTask: NonNullable<GetTaskByIdQuery['task']> = {
+const mockTask: TaskDetailsFragment = {
   __typename: 'TaskObject',
   afterHooks: [],
   assignee: 'visormatt',
@@ -36,7 +36,7 @@ const mockTask: NonNullable<GetTaskByIdQuery['task']> = {
   updatedAt: '2025-01-02T00:00:00Z',
 };
 
-const buildPlan = (status: string): NonNullable<GetPlanByIdQuery['plan']> => ({
+const buildPlan = (status: string): PlanDetailsFragment => ({
   __typename: 'PlanObject',
   afterHooks: [],
   assignee: null,
@@ -58,8 +58,8 @@ const buildPlan = (status: string): NonNullable<GetPlanByIdQuery['plan']> => ({
 });
 
 const buildProps = (
-  task: NonNullable<GetTaskByIdQuery['task']> = mockTask,
-  plan: GetPlanByIdQuery['plan'] = null,
+  task: TaskDetailsFragment = mockTask,
+  plan: PlanDetailsFragment | null = null,
 ): TaskDetailRouteProps => ({
   loaderData: {
     linkedArtifacts: [],

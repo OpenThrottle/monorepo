@@ -1,15 +1,15 @@
+# The pull-request detail entity shape. `pull` and `pulls` both return
+# `PullListItemObject`, so rather than restating the same twelve fields this
+# composes the list's `PullRequestCard`. Detail-only fields get added here, and
+# the list keeps fetching only what it renders. Components, hooks and fixtures
+# take `PullRequestDetailFragment` rather than unwrapping
+# `GetPullRequestDetailQuery['pull']` — see packages/graphql-codegen/README.md.
+fragment PullRequestDetail on PullListItemObject {
+  ...PullRequestCard
+}
+
 query getPullRequestDetail($input: GetPullInput!) {
   pull(input: $input) {
-    author
-    baseRef
-    createdAt
-    headRef
-    headSha
-    htmlUrl
-    mergedAt
-    number
-    state
-    title
-    updatedAt
+    ...PullRequestDetail
   }
 }

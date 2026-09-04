@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { formatDate } from 'date-fns';
-import type { GetPullRequestDetailQuery } from '~/__generated__/graphql';
+import type { PullRequestDetailFragment } from '~/__generated__/graphql';
 
 export interface PullRequestDetailHeaderProps {
-  pull: NonNullable<GetPullRequestDetailQuery['pull']>;
+  pull: PullRequestDetailFragment;
 }
 
 export const PullRequestDetailHeader = (

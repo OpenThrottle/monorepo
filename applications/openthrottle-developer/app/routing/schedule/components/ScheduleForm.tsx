@@ -13,11 +13,7 @@ import { ScheduleMcpWarning } from '~/routing/schedule/components/ScheduleMcpWar
 import { ScheduleRepositoryField } from '~/routing/schedule/components/ScheduleRepositoryField';
 import type { DriverMcpOption } from '~/routing/schedule/data/data.driver-mcp';
 import type { ScheduleRepositoryOption } from '~/routing/schedule/data/data.repositories';
-import type { ScheduledAgentJobDetailQuery } from '~/__generated__/graphql';
-
-type ScheduleDetail = NonNullable<
-  ScheduledAgentJobDetailQuery['scheduledAgentJob']
->;
+import type { ScheduledJobDetailFragment } from '~/__generated__/graphql';
 
 export interface ScheduleFormProps {
   action: 'create' | 'update';
@@ -26,7 +22,7 @@ export interface ScheduleFormProps {
   className?: string;
   /** Action-level error to surface inline (validation / not-found). */
   error?: string;
-  job?: ScheduleDetail;
+  job?: ScheduledJobDetailFragment;
   /** The caller's registered checkouts, for the repository picker. */
   repositories?: ScheduleRepositoryOption[];
 }

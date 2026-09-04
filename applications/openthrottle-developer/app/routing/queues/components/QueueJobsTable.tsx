@@ -6,11 +6,11 @@ import {
   buildQueueJobsTableColumns,
   queueJobRowId,
 } from '~/routing/queues/utils/queue-jobs-table-columns';
-import type { QueueJobsTableJob } from '~/routing/queues/utils/queue-jobs-table-columns';
+import type { QueueJobDetailsFragment } from '~/__generated__/graphql';
 
 export interface QueueJobsTableProps {
   className?: string;
-  jobs: readonly QueueJobsTableJob[];
+  jobs: readonly QueueJobDetailsFragment[];
   queueName: string;
 }
 
@@ -43,7 +43,7 @@ export const QueueJobsTable = (
       className={clsx('ui-border rounded-lg border', className)}
       data-testid="QueueJobsTable"
     >
-      <DataTable<QueueJobsTableJob, string | number | null | undefined>
+      <DataTable<QueueJobDetailsFragment, string | number | null | undefined>
         columns={columns}
         data={[...jobs]}
         emptyState={

@@ -4,7 +4,7 @@ import {
   buildQueueJobsTableColumns,
   queueJobRowId,
 } from '../queue-jobs-table-columns';
-import type { QueueJobsTableJob } from '../queue-jobs-table-columns';
+import type { QueueJobDetailsFragment } from '~/__generated__/graphql';
 import { renderRoutesStub } from '~/testing/route-fixtures';
 import type { CellContext, HeaderContext } from '@tanstack/react-table';
 
@@ -14,24 +14,27 @@ function asMock(value: unknown): unknown {
 }
 
 const cellContext = (
-  job: QueueJobsTableJob,
-): CellContext<QueueJobsTableJob, string | number | null | undefined> =>
+  job: QueueJobDetailsFragment,
+): CellContext<QueueJobDetailsFragment, string | number | null | undefined> =>
   asMock({ row: { original: job } });
 
 const headerContext = (): HeaderContext<
-  QueueJobsTableJob,
+  QueueJobDetailsFragment,
   string | number | null | undefined
 > => asMock({});
 
 interface PlainJobColumn {
   readonly cell?: (
-    ctx: CellContext<QueueJobsTableJob, string | number | null | undefined>,
+    ctx: CellContext<
+      QueueJobDetailsFragment,
+      string | number | null | undefined
+    >,
   ) => React.ReactNode;
   readonly header?:
     | string
     | ((
         ctx: HeaderContext<
-          QueueJobsTableJob,
+          QueueJobDetailsFragment,
           string | number | null | undefined
         >,
       ) => React.ReactNode);
@@ -43,8 +46,8 @@ const asPlainColumn = (
 ): PlainJobColumn => asMock(column);
 
 const buildJob = (
-  overrides: Partial<QueueJobsTableJob> = {},
-): QueueJobsTableJob => ({
+  overrides: Partial<QueueJobDetailsFragment> = {},
+): QueueJobDetailsFragment => ({
   __typename: 'JobObject',
   data: null,
   failedReason: null,
@@ -60,7 +63,7 @@ const buildJob = (
 });
 
 interface HarnessProps {
-  readonly job: QueueJobsTableJob;
+  readonly job: QueueJobDetailsFragment;
   readonly queueName: string;
 }
 

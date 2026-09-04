@@ -5,11 +5,11 @@ import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { PullRequestDetail } from '../PullRequestDetail';
 import type { PullRequestDetailProps } from '../PullRequestDetail';
-import type { GetPullRequestDetailQuery } from '~/__generated__/graphql';
+import type { PullRequestDetailFragment } from '~/__generated__/graphql';
 
 const pull = (
-  overrides: Partial<NonNullable<GetPullRequestDetailQuery['pull']>> = {},
-): NonNullable<GetPullRequestDetailQuery['pull']> => ({
+  overrides: Partial<PullRequestDetailFragment> = {},
+): PullRequestDetailFragment => ({
   __typename: 'PullListItemObject',
   author: 'visormatt',
   baseRef: 'main',

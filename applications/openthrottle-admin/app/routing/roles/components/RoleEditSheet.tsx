@@ -10,16 +10,14 @@ import {
   SheetTrigger,
 } from '@openthrottle/react-router-shadcn';
 import { action as roleDetailAction } from '~/routes/roles.$roleId';
-import type { Route } from '@/app/routes/+types/roles.$roleId';
 import type { useFetcher } from 'react-router';
-
-type RoleDetail = NonNullable<Route.ComponentProps['loaderData']['role']>;
+import type { RoleDetailsFragment } from '~/__generated__/graphql';
 
 export interface RoleEditSheetProps {
   fetcher: ReturnType<typeof useFetcher<typeof roleDetailAction>>;
   onOpenChange: (open: boolean) => void;
   open: boolean;
-  role: RoleDetail;
+  role: RoleDetailsFragment;
 }
 
 export const RoleEditSheet = (

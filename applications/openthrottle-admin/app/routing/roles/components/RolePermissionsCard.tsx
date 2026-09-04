@@ -11,14 +11,14 @@ import { AddPermissionSelectForm } from '~/routing/roles/components/AddPermissio
 import { action as roleDetailAction } from '~/routes/roles.$roleId';
 import type { Route } from '@/app/routes/+types/roles.$roleId';
 import type { useFetcher } from 'react-router';
+import type { RoleDetailsFragment } from '~/__generated__/graphql';
 
 type LoaderData = Route.ComponentProps['loaderData'];
-type RoleDetail = NonNullable<LoaderData['role']>;
 
 export interface RolePermissionsCardProps {
   availablePermissions: LoaderData['permissions'];
   fetcher: ReturnType<typeof useFetcher<typeof roleDetailAction>>;
-  permissions: RoleDetail['permissions'];
+  permissions: RoleDetailsFragment['permissions'];
 }
 
 export const RolePermissionsCard = (

@@ -6,10 +6,10 @@ import { Link } from 'react-router';
 import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
 import { formatPlanDate } from '~/routing/plans/utils/formatters';
 import type { PlanStatusKey } from '~/routing/plans/types';
-import type { Route } from '@/app/routes/+types/plans.$planId._index';
+import type { PlanDetailsFragment } from '~/__generated__/graphql';
 
 export interface PlanDetailRouteHeaderProps {
-  readonly plan: NonNullable<Route.ComponentProps['loaderData']['plan']>;
+  readonly plan: PlanDetailsFragment;
   readonly status: PlanStatusKey;
 }
 

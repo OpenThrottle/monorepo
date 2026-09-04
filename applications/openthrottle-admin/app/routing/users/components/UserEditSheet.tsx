@@ -10,16 +10,14 @@ import {
   SheetTrigger,
 } from '@openthrottle/react-router-shadcn';
 import { action as userDetailAction } from '~/routes/users.$userId';
-import type { Route } from '@/app/routes/+types/users.$userId';
 import type { useFetcher } from 'react-router';
-
-type UserDetail = NonNullable<Route.ComponentProps['loaderData']['user']>;
+import type { UserDetailsFragment } from '~/__generated__/graphql';
 
 export interface UserEditSheetProps {
   fetcher: ReturnType<typeof useFetcher<typeof userDetailAction>>;
   onOpenChange: (open: boolean) => void;
   open: boolean;
-  user: UserDetail;
+  user: UserDetailsFragment;
 }
 
 export const UserEditSheet = (

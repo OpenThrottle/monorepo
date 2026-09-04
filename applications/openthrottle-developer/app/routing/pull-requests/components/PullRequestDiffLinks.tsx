@@ -6,11 +6,11 @@ import {
   githubPullFilesUrl,
   githubRepoWorkflowsDirUrl,
 } from '~/routing/pull-requests/utils/github-pr-links';
-import type { GetPullRequestDetailQuery } from '~/__generated__/graphql';
+import type { PullRequestDetailFragment } from '~/__generated__/graphql';
 
 export interface PullRequestDiffLinksProps {
   owner: string;
-  pull: NonNullable<GetPullRequestDetailQuery['pull']>;
+  pull: PullRequestDetailFragment;
   repo: string;
 }
 

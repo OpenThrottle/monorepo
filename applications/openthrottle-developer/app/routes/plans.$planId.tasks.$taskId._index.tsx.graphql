@@ -10,16 +10,23 @@ query getTaskById($id: ID!) {
     totalCount
   }
   task(id: $id) {
-    afterHooks {
-      ...HookTask
-    }
-    beforeHooks {
-      ...HookTask
-    }
-    ...PlanTaskRow
-    tags {
-      ...TaskTagChip
-    }
+    ...TaskDetails
+  }
+}
+
+# The task-detail entity shape. Components, hooks and fixtures take
+# `TaskDetailsFragment` rather than unwrapping `GetTaskByIdQuery['task']` — see
+# packages/graphql-codegen/README.md.
+fragment TaskDetails on TaskObject {
+  afterHooks {
+    ...HookTask
+  }
+  beforeHooks {
+    ...HookTask
+  }
+  ...PlanTaskRow
+  tags {
+    ...TaskTagChip
   }
 }
 

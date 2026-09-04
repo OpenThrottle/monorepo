@@ -4,11 +4,11 @@ import {
   OpenThrottleClipboard,
   OpenThrottleFieldset,
 } from '@openthrottle/react-router-ui';
-import { QueueJobDetailJob } from '~/routing/queues/components/QueueJobDetail';
+import type { JobDetailsCardFragment } from '~/__generated__/graphql';
 // import clsx from 'clsx';
 
 export interface QueueJobResultsProps {
-  job: QueueJobDetailJob;
+  job: JobDetailsCardFragment;
 }
 
 export const QueueJobResults = (

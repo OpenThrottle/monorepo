@@ -14,14 +14,12 @@ import { QueueJobTimestamps } from '~/routing/queues/components/QueueJobTimestam
 import { QueueStateBadge } from '~/routing/queues/components/QueueStateBadge';
 import { useFetcher, useRevalidator } from 'react-router';
 import type {
-  GetQueueJobDetailsQuery,
+  JobDetailsCardFragment,
   QueueJobDetailCancelPlanRunMutation,
   QueueJobDetailRetryMutation,
 } from '~/__generated__/graphql';
 
 const CANCELLABLE_STATES = new Set(['active', 'delayed', 'waiting']);
-
-export type QueueJobDetailJob = NonNullable<GetQueueJobDetailsQuery['job']>;
 
 /** Action payload from `queues.$queueId.$jobId` route for mutation feedback. */
 type QueueJobDetailActionData =
@@ -31,7 +29,7 @@ type QueueJobDetailActionData =
   | { retryJob: QueueJobDetailRetryMutation['retryJob'] };
 
 export interface QueueJobDetailProps {
-  job: QueueJobDetailJob;
+  job: JobDetailsCardFragment;
   queueName: string;
 }
 

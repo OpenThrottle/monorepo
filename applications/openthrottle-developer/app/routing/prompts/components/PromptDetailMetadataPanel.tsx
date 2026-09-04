@@ -15,13 +15,13 @@ import {
 } from '~/routing/prompts/utils/utils.prompts';
 import { buildPromptDebugSnapshotJson } from '~/routing/prompts/utils/prompt-debug-snapshot';
 import { githubOpenThrottleMainBlob } from '~/routing/agents/constants/github-repo-paths';
-import type { GetPromptQuery } from '~/__generated__/graphql';
+import type { PromptDetailsFragment } from '~/__generated__/graphql';
 
 export interface PromptDetailMetadataPanelProps {
   contentLength: number;
   /** Current editor buffer (use for fingerprint; may differ from API until save). */
   debugContent: string;
-  prompt: NonNullable<GetPromptQuery['customPrompt']>;
+  prompt: PromptDetailsFragment;
 }
 
 /**

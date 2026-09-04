@@ -7259,6 +7259,56 @@ export type GetTaskByIdQuery = {
   } | null;
 };
 
+export type TaskDetailsFragment = {
+  __typename?: 'TaskObject';
+  assignee?: string | null;
+  category?: string | null;
+  createdAt: any;
+  description?: string | null;
+  hookRole?: string | null;
+  id: string;
+  planId: string;
+  requirementsJson: string;
+  sortOrder: number;
+  status: string;
+  summary?: string | null;
+  title: string;
+  updatedAt: any;
+  afterHooks: Array<{
+    __typename?: 'TaskObject';
+    hookRole?: string | null;
+    hookScope?: string | null;
+    hookSource?: string | null;
+    id: string;
+    skillSlug?: string | null;
+    status: string;
+    title: string;
+  }>;
+  beforeHooks: Array<{
+    __typename?: 'TaskObject';
+    hookRole?: string | null;
+    hookScope?: string | null;
+    hookSource?: string | null;
+    id: string;
+    skillSlug?: string | null;
+    status: string;
+    title: string;
+  }>;
+  tags: Array<{
+    __typename?: 'TaskTagObject';
+    confidence?: number | null;
+    dimension: string;
+    id: string;
+    source: string;
+    tag: string;
+  }>;
+  projectRelation?: {
+    __typename?: 'ProjectObject';
+    id: string;
+    name: string;
+  } | null;
+};
+
 export type TaskTagChipFragment = {
   __typename?: 'TaskTagObject';
   confidence?: number | null;
@@ -7658,6 +7708,21 @@ export type CreateProjectMutation = {
   };
 };
 
+export type PromptDetailsFragment = {
+  __typename?: 'CustomPromptObject';
+  content: string;
+  createdAt: any;
+  description?: string | null;
+  filePath?: string | null;
+  id: string;
+  labels: Array<string>;
+  projectId?: string | null;
+  promptType: CustomPromptType;
+  title: string;
+  updatedAt: any;
+  userId?: string | null;
+};
+
 export type GetPromptQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
@@ -7694,9 +7759,11 @@ export type UpdatePromptMutation = {
     filePath?: string | null;
     id: string;
     labels: Array<string>;
+    projectId?: string | null;
     promptType: CustomPromptType;
     title: string;
     updatedAt: any;
+    userId?: string | null;
   } | null;
 };
 
@@ -7769,6 +7836,21 @@ export type CreatePromptMutation = {
     title: string;
     updatedAt: any;
   };
+};
+
+export type PullRequestDetailFragment = {
+  __typename?: 'PullListItemObject';
+  author: string;
+  baseRef?: string | null;
+  createdAt: string;
+  headRef?: string | null;
+  headSha?: string | null;
+  htmlUrl: string;
+  mergedAt?: string | null;
+  number: number;
+  state: string;
+  title: string;
+  updatedAt: string;
 };
 
 export type GetPullRequestDetailQueryVariables = Exact<{
@@ -8391,6 +8473,32 @@ export type ScheduledJobRunRowFragment = {
   status: string;
   totalTokens?: number | null;
   trigger: string;
+};
+
+export type ScheduledJobDetailFragment = {
+  __typename?: 'ScheduledAgentJobObject';
+  createdAt: any;
+  cwd?: string | null;
+  prompt: string;
+  settingsJson: string;
+  timeoutMs?: number | null;
+  cronPattern: string;
+  driverId: string;
+  enabled: boolean;
+  id: string;
+  lastRunAt?: any | null;
+  model?: string | null;
+  name: string;
+  nextRunAt?: any | null;
+  repositoryCheckoutId?: string | null;
+  timezone?: string | null;
+  updatedAt: any;
+  repository?: {
+    __typename?: 'ScheduledAgentJobRepositoryObject';
+    displayName: string;
+    filesystemPath: string;
+    id: string;
+  } | null;
 };
 
 export type ScheduledAgentJobDetailQueryVariables = Exact<{
@@ -11111,48 +11219,6 @@ export const NoteCardFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<NoteCardFragment, unknown>;
-export const PlanTaskRowFragmentDoc = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'PlanTaskRow' },
-      typeCondition: {
-        kind: 'NamedType',
-        name: { kind: 'Name', value: 'TaskObject' },
-      },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'category' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'description' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'hookRole' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'projectRelation' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-              ],
-            },
-          },
-          { kind: 'Field', name: { kind: 'Name', value: 'requirementsJson' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<PlanTaskRowFragment, unknown>;
 export const HookTaskFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -11452,6 +11518,48 @@ export const LinkedArtifactFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<LinkedArtifactFragment, unknown>;
+export const PlanTaskRowFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanTaskRow' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TaskObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'hookRole' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'projectRelation' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'requirementsJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<PlanTaskRowFragment, unknown>;
 export const TaskTagChipFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -11475,6 +11583,142 @@ export const TaskTagChipFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<TaskTagChipFragment, unknown>;
+export const TaskDetailsFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'TaskDetails' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TaskObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'afterHooks' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'HookTask' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'beforeHooks' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'HookTask' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'FragmentSpread',
+            name: { kind: 'Name', value: 'PlanTaskRow' },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'tags' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'TaskTagChip' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'HookTask' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TaskObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'hookRole' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'hookScope' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'hookSource' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'skillSlug' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanTaskRow' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TaskObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'hookRole' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'projectRelation' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'requirementsJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'TaskTagChip' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TaskTagObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'confidence' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'dimension' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'source' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<TaskDetailsFragment, unknown>;
 export const PlanCardFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -11640,6 +11884,35 @@ export const ProjectCardFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<ProjectCardFragment, unknown>;
+export const PromptDetailsFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PromptDetails' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'CustomPromptObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'filePath' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'labels' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'promptType' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'userId' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<PromptDetailsFragment, unknown>;
 export const PromptCardFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -11696,6 +11969,52 @@ export const PullRequestCardFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<PullRequestCardFragment, unknown>;
+export const PullRequestDetailFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PullRequestDetail' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PullListItemObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'FragmentSpread',
+            name: { kind: 'Name', value: 'PullRequestCard' },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PullRequestCard' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PullListItemObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'author' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'baseRef' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'headRef' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'headSha' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'htmlUrl' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'mergedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'number' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'state' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<PullRequestDetailFragment, unknown>;
 export const JobDetailsCardFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -11996,6 +12315,122 @@ export const ScheduledJobRunRowFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<ScheduledJobRunRowFragment, unknown>;
+export const ScheduledJobCardFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ScheduledJobCard' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'ScheduledAgentJobObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'cronPattern' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'driverId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'lastRunAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'nextRunAt' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'repository' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'filesystemPath' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'repositoryCheckoutId' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'timezone' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<ScheduledJobCardFragment, unknown>;
+export const ScheduledJobDetailFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ScheduledJobDetail' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'ScheduledAgentJobObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'cwd' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'prompt' } },
+          {
+            kind: 'FragmentSpread',
+            name: { kind: 'Name', value: 'ScheduledJobCard' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'settingsJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'timeoutMs' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ScheduledJobCard' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'ScheduledAgentJobObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'cronPattern' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'driverId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'lastRunAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'nextRunAt' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'repository' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'filesystemPath' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'repositoryCheckoutId' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'timezone' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<ScheduledJobDetailFragment, unknown>;
 export const ScheduledJobRunDetailFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -12061,53 +12496,6 @@ export const ScheduledJobRunDetailFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<ScheduledJobRunDetailFragment, unknown>;
-export const ScheduledJobCardFragmentDoc = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'ScheduledJobCard' },
-      typeCondition: {
-        kind: 'NamedType',
-        name: { kind: 'Name', value: 'ScheduledAgentJobObject' },
-      },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'cronPattern' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'driverId' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'lastRunAt' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'model' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'nextRunAt' } },
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'repository' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'filesystemPath' },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-              ],
-            },
-          },
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'repositoryCheckoutId' },
-          },
-          { kind: 'Field', name: { kind: 'Name', value: 'timezone' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<ScheduledJobCardFragment, unknown>;
 export const ScheduleInFlightRunFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -17659,47 +18047,8 @@ export const GetTaskByIdDocument = {
               kind: 'SelectionSet',
               selections: [
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'afterHooks' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'FragmentSpread',
-                        name: { kind: 'Name', value: 'HookTask' },
-                      },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'beforeHooks' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'FragmentSpread',
-                        name: { kind: 'Name', value: 'HookTask' },
-                      },
-                    ],
-                  },
-                },
-                {
                   kind: 'FragmentSpread',
-                  name: { kind: 'Name', value: 'PlanTaskRow' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'tags' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'FragmentSpread',
-                        name: { kind: 'Name', value: 'TaskTagChip' },
-                      },
-                    ],
-                  },
+                  name: { kind: 'Name', value: 'TaskDetails' },
                 },
               ],
             },
@@ -17779,6 +18128,62 @@ export const GetTaskByIdDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'source' } },
           { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'TaskDetails' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TaskObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'afterHooks' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'HookTask' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'beforeHooks' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'HookTask' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'FragmentSpread',
+            name: { kind: 'Name', value: 'PlanTaskRow' },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'tags' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'TaskTagChip' },
+                },
+              ],
+            },
+          },
         ],
       },
     },
@@ -19091,20 +19496,37 @@ export const GetPromptDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'content' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'filePath' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'labels' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'promptType' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'userId' } },
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'PromptDetails' },
+                },
               ],
             },
           },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PromptDetails' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'CustomPromptObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'filePath' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'labels' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'promptType' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'userId' } },
         ],
       },
     },
@@ -19152,18 +19574,37 @@ export const UpdatePromptDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'content' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'filePath' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'labels' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'promptType' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'PromptDetails' },
+                },
               ],
             },
           },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PromptDetails' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'CustomPromptObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'filePath' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'labels' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'promptType' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'userId' } },
         ],
       },
     },
@@ -19433,19 +19874,53 @@ export const GetPullRequestDetailDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'author' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'baseRef' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'headRef' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'headSha' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'htmlUrl' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'mergedAt' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'number' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'state' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'PullRequestDetail' },
+                },
               ],
             },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PullRequestCard' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PullListItemObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'author' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'baseRef' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'headRef' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'headSha' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'htmlUrl' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'mergedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'number' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'state' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PullRequestDetail' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PullListItemObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'FragmentSpread',
+            name: { kind: 'Name', value: 'PullRequestCard' },
           },
         ],
       },
@@ -21205,18 +21680,10 @@ export const ScheduledAgentJobDetailDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'cwd' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'prompt' } },
                 {
                   kind: 'FragmentSpread',
-                  name: { kind: 'Name', value: 'ScheduledJobCard' },
+                  name: { kind: 'Name', value: 'ScheduledJobDetail' },
                 },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'settingsJson' },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'timeoutMs' } },
               ],
             },
           },
@@ -21290,6 +21757,28 @@ export const ScheduledAgentJobDetailDocument = {
           },
           { kind: 'Field', name: { kind: 'Name', value: 'timezone' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ScheduledJobDetail' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'ScheduledAgentJobObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'cwd' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'prompt' } },
+          {
+            kind: 'FragmentSpread',
+            name: { kind: 'Name', value: 'ScheduledJobCard' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'settingsJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'timeoutMs' } },
         ],
       },
     },

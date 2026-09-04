@@ -3,11 +3,11 @@ import { Card } from '@openthrottle/react-router-shadcn';
 import { PullRequestActionsLinks } from '~/routing/pull-requests/components/PullRequestActionsLinks';
 import { PullRequestChecksLinks } from '~/routing/pull-requests/components/PullRequestChecksLinks';
 import { PullRequestDiffLinks } from '~/routing/pull-requests/components/PullRequestDiffLinks';
-import type { GetPullRequestDetailQuery } from '~/__generated__/graphql';
+import type { PullRequestDetailFragment } from '~/__generated__/graphql';
 
 export interface PullRequestGithubCardProps {
   owner: string;
-  pull: NonNullable<GetPullRequestDetailQuery['pull']>;
+  pull: PullRequestDetailFragment;
   repo: string;
 }
 

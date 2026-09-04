@@ -5,9 +5,9 @@ import { beforeEach, describe, expect, test } from 'vitest';
 import { PullRequestActionsLinks } from '../PullRequestActionsLinks';
 import type { PullRequestActionsLinksProps } from '../PullRequestActionsLinks';
 import { githubRepoActionsForBranchUrl } from '~/routing/pull-requests/utils/github-pr-links';
-import type { GetPullRequestDetailQuery } from '~/__generated__/graphql';
+import type { PullRequestDetailFragment } from '~/__generated__/graphql';
 
-const pull: NonNullable<GetPullRequestDetailQuery['pull']> = {
+const pull: PullRequestDetailFragment = {
   __typename: 'PullListItemObject',
   author: 'visormatt',
   baseRef: 'main',

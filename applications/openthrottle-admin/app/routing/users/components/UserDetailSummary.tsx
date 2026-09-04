@@ -1,13 +1,11 @@
 import * as React from 'react';
 import { Badge } from '@openthrottle/react-router-shadcn';
 import { formatDate } from 'date-fns';
-import type { Route } from '@/app/routes/+types/users.$userId';
-
-type UserDetail = NonNullable<Route.ComponentProps['loaderData']['user']>;
+import type { UserDetailsFragment } from '~/__generated__/graphql';
 
 export interface UserDetailSummaryProps {
   isDisabled: boolean;
-  user: UserDetail;
+  user: UserDetailsFragment;
 }
 
 export const UserDetailSummary = (

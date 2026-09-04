@@ -17,6 +17,7 @@ Every app keeps its own `.env` + `.env.default` in its project root. Local port 
 
 - `dev`/`build`/`start` targets are inferred by `@nx/react/router-plugin` (see root `nx.json`), so they do not appear in an app's `package.json` `nx.targets`. The real `typecheck` target is explicit per app; the plugin's inferred one is renamed `__NOT_USED__typecheck`.
 - Layout: `app/routes/` route modules (registered in `app/routes.ts`) stay thin and delegate to `app/routing/<area>/` feature folders (`components/`, `data/`, `hooks/`, `utils/`), imported via the `~/*` → `app/*` tsconfig alias. Component vs data file boundaries: [`.agents/rules/coding/component-data-boundaries.mdc`](../.agents/rules/coding/component-data-boundaries.mdc).
+- GraphQL entity props on components/hooks/fixtures are typed from generated `XxxFragment` types, not `NonNullable<Route.ComponentProps['loaderData']['x']>` or `NonNullable<GetXQuery['field']>`: [`packages/graphql-codegen/README.md`](../packages/graphql-codegen/README.md#convention-type-ui-entity-props-from-generated-fragment-types).
 - `app/__generated__/` is codegen output from the per-app `codegen-graphql` / `codegen-react-router` targets — regenerate, never hand-edit. Fresh worktrees need codegen to run before Vitest suites can even collect.
 - `tests/setup.ts` is the single shared `setupReactRouterTest` call (root CLAUDE.md); **app-specific** jsdom shims stay local in that file rather than moving into `@openthrottle/react-router-testing` (see the developer app's WebGL/`visualViewport` shims).
 
