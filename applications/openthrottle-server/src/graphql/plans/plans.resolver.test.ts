@@ -9,7 +9,7 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import type { Plan } from '@openthrottle/nestjs-repositories';
 import { Task } from '@openthrottle/nestjs-repositories';
-import { BadRequestException, ForbiddenException } from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common';
 import { getQueueToken } from '@nestjs/bullmq';
 import { Test } from '@nestjs/testing';
 import { describe, expect, beforeAll, test, vi, beforeEach } from 'vitest';
@@ -21,6 +21,7 @@ import { PLANS_QUEUE_NAME } from '../../queues/plans/plans.constants';
 import { PlanCancelChannelService } from '../../queues/plans/plan-cancel-channel.service';
 import { PlanRunCancellationService } from '../../queues/plans/plan-run-cancellation.service';
 import type { RunPlanJobData } from '../../queues/plans/plans.types';
+import { EffectiveUserResolutionService } from '../../services/effective-user-resolution/effective-user-resolution.service';
 import { PlanCreationService } from '../../services/plan-creation/plan-creation.service';
 import { PlanRunWorktreeCheckoutService } from '../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.service';
 import { PlanEnqueueService } from './plan-enqueue.service';
@@ -212,6 +213,12 @@ describe('PlansResolver', () => {
     isModelEnabled: mockAgentIsModelEnabled,
   });
 
+  const mockResolveEffectiveUserId = vi.fn().mockResolvedValue(null);
+  const mockEffectiveUserResolution =
+    createMock<EffectiveUserResolutionService>({
+      resolveEffectiveUserId: mockResolveEffectiveUserId,
+    });
+
   const mockRegisterWorktreeCheckout = vi.fn().mockResolvedValue(null);
   const mockPlanRunWorktreeCheckoutService =
     createMock<PlanRunWorktreeCheckoutService>({
@@ -250,6 +257,10 @@ describe('PlansResolver', () => {
         {
           provide: AgentCliPreferencesService,
           useValue: mockAgentPreferences,
+        },
+        {
+          provide: EffectiveUserResolutionService,
+          useValue: mockEffectiveUserResolution,
         },
         { provide: PlansLoaders, useValue: mockPlansLoaders },
         {
@@ -1172,11 +1183,14 @@ describe('PlansResolver', () => {
       ]);
     });
 
-    test('derives isStale: fresh IN_PROGRESS false, stale IN_PROGRESS true, terminal false', async () => {
+    test('derives isStale: fresh IN_PROGRESS false, stale IN_PROGRESS true, terminal false, non-heartbeating never', async () => {
       const now = Date.now();
       const baseRow = {
         bullmqJobId: null,
         executionBackend: 'claude',
+        // The column's DEFAULT TRUE is the safety property: every pre-existing row
+        // behaves exactly as it did before migration 110. These cases prove it.
+        heartbeatExpected: true,
         planId: mockPlan.id,
         queueName: PLANS_QUEUE_NAME,
         runConfigSnapshot: null,
@@ -1216,6 +1230,17 @@ describe('PlansResolver', () => {
           lastHeartbeatAt: new Date(now - 600_000),
           status: 'COMPLETED',
         },
+        // an owner with no timer: an ancient heartbeat says nothing, so never stale.
+        // Its liveness is unknown, and heartbeatExpected is what says so — isStale
+        // is deliberately NOT overloaded to carry that third meaning.
+        {
+          ...baseRow,
+          createdAt: new Date(now - 600_000),
+          heartbeatExpected: false,
+          id: 'run-unsupervised',
+          lastHeartbeatAt: new Date(now - 600_000),
+          status: 'IN_PROGRESS',
+        },
       ]);
 
       const result = await resolver.planRunsByPlanId({
@@ -1228,6 +1253,14 @@ describe('PlansResolver', () => {
         ['run-stale', true],
         ['run-nohb', true],
         ['run-done', false],
+        ['run-unsupervised', false],
+      ]);
+      expect(result.map((r) => [r.id, r.heartbeatExpected])).toEqual([
+        ['run-fresh', true],
+        ['run-stale', true],
+        ['run-nohb', true],
+        ['run-done', true],
+        ['run-unsupervised', false],
       ]);
     });
   });
@@ -1264,7 +1297,10 @@ describe('PlansResolver', () => {
         expect.objectContaining({
           branch: null,
           executionBackend: 'claude',
+          // Both default so the detached CLI, which supplies neither, is untouched.
+          heartbeatExpected: true,
           hostname: 'laptop-1',
+          model: null,
           pid: 9999,
           planId: mockPlan.id,
           workerId: 'cli-abc',
@@ -1330,6 +1366,72 @@ describe('PlansResolver', () => {
       );
     });
 
+    test('forwards a present model verbatim, and null when omitted', async () => {
+      mockRegisterCliRun.mockResolvedValueOnce(cliRunRow);
+      await resolver.registerCliPlanRun({
+        executionBackend: 'claude',
+        hostname: null,
+        model: 'claude-opus-5',
+        pid: null,
+        planId: mockPlan.id,
+        workerId: null,
+      });
+      expect(mockRegisterCliRun).toHaveBeenCalledWith(
+        expect.objectContaining({ model: 'claude-opus-5' }),
+      );
+
+      // Omitted stores null, never an empty string: null is a legible "unknown",
+      // an empty string is a value that reads as an answer.
+      mockRegisterCliRun.mockClear();
+      mockRegisterCliRun.mockResolvedValueOnce(cliRunRow);
+      await resolver.registerCliPlanRun({
+        executionBackend: 'claude',
+        hostname: null,
+        pid: null,
+        planId: mockPlan.id,
+        workerId: null,
+      });
+      expect(mockRegisterCliRun).toHaveBeenCalledWith(
+        expect.objectContaining({ model: null }),
+      );
+    });
+
+    test('forwards an explicit heartbeatExpected false', async () => {
+      mockRegisterCliRun.mockResolvedValueOnce(cliRunRow);
+
+      await resolver.registerCliPlanRun({
+        executionBackend: 'claude',
+        heartbeatExpected: false,
+        hostname: null,
+        pid: null,
+        planId: mockPlan.id,
+        workerId: null,
+      });
+
+      expect(mockRegisterCliRun).toHaveBeenCalledWith(
+        expect.objectContaining({ heartbeatExpected: false }),
+      );
+    });
+
+    test('accepts antigravity, which migration 106 made a valid backend', async () => {
+      // The guard used to reject it and its error message did not mention it, so a
+      // valid backend read as invalid. The list is now derived from the union.
+      mockRegisterCliRun.mockResolvedValueOnce({
+        ...cliRunRow,
+        executionBackend: 'antigravity',
+      });
+
+      const result = await resolver.registerCliPlanRun({
+        executionBackend: 'antigravity',
+        hostname: null,
+        pid: null,
+        planId: mockPlan.id,
+        workerId: null,
+      });
+
+      expect(result.executionBackend).toBe('antigravity');
+    });
+
     test('rejects an invalid executionBackend without touching the service', async () => {
       mockRegisterCliRun.mockClear();
       await expect(
@@ -1342,6 +1444,18 @@ describe('PlansResolver', () => {
         }),
       ).rejects.toThrow(/Invalid executionBackend/);
       expect(mockRegisterCliRun).not.toHaveBeenCalled();
+    });
+
+    test('names antigravity in the invalid-backend message', async () => {
+      await expect(
+        resolver.registerCliPlanRun({
+          executionBackend: 'gpt',
+          hostname: null,
+          pid: null,
+          planId: mockPlan.id,
+          workerId: null,
+        }),
+      ).rejects.toThrow(/antigravity/);
     });
 
     test('rejects a backend the actor disabled, without touching the service', async () => {
@@ -1464,6 +1578,14 @@ describe('PlansResolver', () => {
     const filesystemPath =
       '/Users/matt/.cursor/worktrees/openthrottle/auto-register';
 
+    beforeEach(() => {
+      mockResolveEffectiveUserId.mockReset();
+      mockResolveEffectiveUserId.mockResolvedValue(userId);
+      mockRegisterWorktreeCheckout.mockClear();
+      mockFindById.mockReset();
+      mockFindById.mockResolvedValue(null);
+    });
+
     test('delegates to the service with the actor user id and maps the run', async () => {
       mockRegisterWorktreeCheckout.mockResolvedValueOnce({
         bullmqJobId: null,
@@ -1485,9 +1607,9 @@ describe('PlansResolver', () => {
       const result = await resolver.registerPlanRunWorktreeCheckout(
         { filesystemPath, planRunId: 'cli-run-1' },
         userId,
-        AUTH_PRINCIPAL_KIND_USER,
       );
 
+      expect(mockResolveEffectiveUserId).toHaveBeenCalledWith(userId);
       expect(mockRegisterWorktreeCheckout).toHaveBeenCalledWith({
         filesystemPath,
         planRunId: 'cli-run-1',
@@ -1501,18 +1623,69 @@ describe('PlansResolver', () => {
       );
     });
 
-    test('rejects service-account principals without calling the service', async () => {
-      mockRegisterWorktreeCheckout.mockClear();
+    test('accepts a service-account principal linked to an acting user', async () => {
+      // The MCP authenticates as a service account. Before acting-user resolution
+      // this threw ForbiddenException, which made the mutation permanently
+      // unreachable from there — and plan_runs.checkout_id never resolved for an
+      // interactive run. Attribution changes; authorization still comes from roles.
+      mockResolveEffectiveUserId.mockResolvedValue(userId);
+      mockRegisterWorktreeCheckout.mockResolvedValueOnce(null);
 
-      await expect(
-        resolver.registerPlanRunWorktreeCheckout(
-          { filesystemPath, planRunId: 'cli-run-1' },
-          'sa-1',
-          'service_account',
-        ),
-      ).rejects.toBeInstanceOf(ForbiddenException);
+      await resolver.registerPlanRunWorktreeCheckout(
+        { filesystemPath, planRunId: 'cli-run-1' },
+        'sa-1',
+      );
+
+      expect(mockResolveEffectiveUserId).toHaveBeenCalledWith('sa-1');
+      expect(mockRegisterWorktreeCheckout).toHaveBeenCalledWith(
+        expect.objectContaining({ userId }),
+      );
+    });
+
+    test('soft-fails, returning the run unchanged, for an unresolvable actor', async () => {
+      // An unlinked service account resolves to null. Consistent with every other
+      // soft-fail path on this best-effort mutation, that returns the run untouched
+      // rather than throwing.
+      mockResolveEffectiveUserId.mockResolvedValue(null);
+      mockFindById.mockResolvedValueOnce({
+        bullmqJobId: null,
+        checkoutId: null,
+        createdAt: new Date('2026-08-02T00:00:00.000Z'),
+        executionBackend: 'claude',
+        heartbeatExpected: false,
+        hostname: null,
+        id: 'cli-run-1',
+        pid: null,
+        planId: mockPlan.id,
+        queueName: PLANS_QUEUE_NAME,
+        runConfigSnapshot: null,
+        runKind: 'orchestrator',
+        status: 'IN_PROGRESS',
+        updatedAt: new Date('2026-08-02T00:00:00.000Z'),
+        workerId: null,
+      });
+
+      const result = await resolver.registerPlanRunWorktreeCheckout(
+        { filesystemPath, planRunId: 'cli-run-1' },
+        'sa-unlinked',
+      );
 
       expect(mockRegisterWorktreeCheckout).not.toHaveBeenCalled();
+      expect(result).toEqual(
+        expect.objectContaining({ checkoutId: null, id: 'cli-run-1' }),
+      );
+    });
+
+    test('returns null for an unresolvable actor when the run does not exist', async () => {
+      mockResolveEffectiveUserId.mockResolvedValue(null);
+      mockFindById.mockResolvedValueOnce(null);
+
+      const result = await resolver.registerPlanRunWorktreeCheckout(
+        { filesystemPath, planRunId: 'missing' },
+        'sa-unlinked',
+      );
+
+      expect(result).toBeNull();
     });
 
     test('returns null when the service soft-fails with a missing run', async () => {
@@ -1521,7 +1694,6 @@ describe('PlansResolver', () => {
       const result = await resolver.registerPlanRunWorktreeCheckout(
         { filesystemPath, planRunId: 'missing' },
         userId,
-        AUTH_PRINCIPAL_KIND_USER,
       );
 
       expect(result).toBeNull();

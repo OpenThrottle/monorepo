@@ -199,6 +199,10 @@ export class PlanStatusService {
 
     let signaledActiveRunToStop = false;
     let cancelRequested = false;
+    // Whether the run we stamped is one that polls the marker. A run whose owner has
+    // no timer (heartbeat_expected = false — an interactive /ot-loop turn) also has no
+    // iteration-boundary loop the server can rely on, so a stamp is a request, not a stop.
+    let markedRunPollsForCancel = false;
 
     if (cancelable) {
       // Reach the process that owns this run's AbortController via three layers:
@@ -213,13 +217,26 @@ export class PlanStatusService {
       );
       await this.planCancelChannel.publishCancel(planId);
       cancelRequested = markedRunId !== null;
+
+      if (markedRunId !== null) {
+        const markedRun = await this.planRunsService.findById(markedRunId);
+        markedRunPollsForCancel = markedRun?.heartbeatExpected ?? true;
+      }
     }
 
     const removedQueuedJob = queueResult.removedJobIds.length > 0;
     // An actively-executing run is being stopped when we aborted it locally, or when we
     // published/stamped a cancel against a plan that is currently IN_PROGRESS.
+    //
+    // The stamp only counts as a stop when the marked run actually polls the marker. An
+    // unsupervised run does not, so claiming RUN_STOPPING for it would reset the plan and
+    // its QUEUED tasks to PENDING underneath an agent that is still working and will later
+    // write COMPLETED over the reset. It gets the truthful CANCELLATION_REQUESTED instead:
+    // the request is recorded, and nothing guarantees anyone is listening. A local abort
+    // (Channel 0) still earns RUN_STOPPING — that one is a proven stop, not a request.
     const activeRunStopping =
-      signaledActiveRunToStop || (cancelRequested && runIsExecuting);
+      signaledActiveRunToStop ||
+      (cancelRequested && runIsExecuting && markedRunPollsForCancel);
 
     const outcome: CancelPlanRunOutcome = activeRunStopping
       ? CANCEL_PLAN_RUN_OUTCOME.RUN_STOPPING

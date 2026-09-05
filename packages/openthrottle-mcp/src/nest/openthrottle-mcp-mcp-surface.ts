@@ -379,6 +379,52 @@ export class McpDeveloperMcpSurface {
   }
 
   @Tool({
+    description: Th.registerPlanRunToolDescription,
+    name: 'register_plan_run',
+    parameters: asMcpParameters(Th.registerPlanRunToolParameters),
+  })
+  registerPlanRun(
+    args: Parameters<typeof Th.registerPlanRunToolHandler>[0],
+  ): ReturnType<typeof Th.registerPlanRunToolHandler> {
+    return Th.registerPlanRunToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.settlePlanRunToolDescription,
+    name: 'settle_plan_run',
+    parameters: asMcpParameters(Th.settlePlanRunToolParameters),
+  })
+  settlePlanRun(
+    args: Parameters<typeof Th.settlePlanRunToolHandler>[0],
+  ): ReturnType<typeof Th.settlePlanRunToolHandler> {
+    return Th.settlePlanRunToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.registerPlanRunWorktreeCheckoutToolDescription,
+    name: 'register_plan_run_worktree_checkout',
+    parameters: asMcpParameters(
+      Th.registerPlanRunWorktreeCheckoutToolParameters,
+    ),
+  })
+  registerPlanRunWorktreeCheckout(
+    args: Parameters<typeof Th.registerPlanRunWorktreeCheckoutToolHandler>[0],
+  ): ReturnType<typeof Th.registerPlanRunWorktreeCheckoutToolHandler> {
+    return Th.registerPlanRunWorktreeCheckoutToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.getPlanRunsToolDescription,
+    name: 'get_plan_runs',
+    parameters: asMcpParameters(Th.getPlanRunsToolParameters),
+  })
+  getPlanRuns(
+    args: Parameters<typeof Th.getPlanRunsToolHandler>[0],
+  ): ReturnType<typeof Th.getPlanRunsToolHandler> {
+    return Th.getPlanRunsToolHandler(args);
+  }
+
+  @Tool({
     description: Th.listNotesToolDescription,
     name: 'list_notes',
     parameters: asMcpParameters(Th.listNotesToolParameters),

@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for OpenThrottle plan_runs table. Matches databases/migrations/038 (+ 047, 053, 076, 080, 087).
+ * @description TypeORM entity for OpenThrottle plan_runs table. Matches databases/migrations/038 (+ 047, 053, 076, 080, 087, 110).
  */
 
 import type { PlanRunConfigSnapshot } from '@openthrottle/openthrottle-plan-config';
@@ -34,6 +34,7 @@ export type PlanRunData = Pick<
   | 'cancelRequestedAt'
   | 'createdAt'
   | 'executionBackend'
+  | 'heartbeatExpected'
   | 'hostname'
   | 'id'
   | 'lastHeartbeatAt'
@@ -100,6 +101,18 @@ export class PlanRun {
 
   @Column({ default: 'cursor', name: 'execution_backend', type: 'text' })
   executionBackend!: PlanRunExecutionBackend;
+
+  /**
+   * Whether this run's owner bumps {@link PlanRun.lastHeartbeatAt} on a timer
+   * (see migration 110). True for every queued and detached-CLI run, so their
+   * behaviour is unchanged. False marks an owner with no timer — an interactive
+   * /ot-loop agent turn, where a single test run outlives the staleness cutoff —
+   * and such rows are exempt from the stale sweep, always report isStale false,
+   * and count as live-by-status for worktree liveness. A statement about the
+   * owner, never a liveness claim: an unsupervised run's liveness is unknown.
+   */
+  @Column({ default: true, name: 'heartbeat_expected', type: 'boolean' })
+  heartbeatExpected!: boolean;
 
   /** Host the executing worker is on; populated at job start, cleared at finish. Null when not actively executing. */
   @Column({ name: 'hostname', nullable: true, type: 'text' })

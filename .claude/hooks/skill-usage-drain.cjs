@@ -512,6 +512,11 @@ var drainBufferedUsage = async ({
   return { events, outcomes };
 };
 
+// packages/agentic-hooks/src/data/plan-runs.ts
+var import_node_path3 = __toESM(require("node:path"), 1);
+var PLAN_RUNS_DIR_REL = import_node_path3.default.join(".cache", "plan-runs");
+var PLAN_RUN_ABANDONED_MS = 6 * 60 * 60 * 1e3;
+
 // packages/agentic-hooks/src/adapters/claude/drain.ts
 var parseArg = (flag) => {
   const idx = process.argv.indexOf(flag);

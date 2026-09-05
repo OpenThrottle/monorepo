@@ -139,12 +139,18 @@ export class PlanRunObject implements PlanRunData {
   })
   hostname!: string | null;
 
+  @Field(() => Boolean, {
+    description:
+      'Whether this run’s owner bumps its heartbeat on a timer. True for every queued and detached-CLI run — heartbeat-based liveness applies as before. False marks an owner with no timer (an interactive /ot-loop agent turn), so heartbeat says nothing about it: such runs are exempt from the stale sweep and always report isStale false. Read it alongside isStale — isStale false on such a run means "unknown", not "verified live".',
+  })
+  heartbeatExpected!: boolean;
+
   @Field(() => String)
   id!: string;
 
   @Field(() => Boolean, {
     description:
-      'Derived: true when this run is IN_PROGRESS but its heartbeat is older than the staleness cutoff — i.e. the owning process crashed hard (SIGKILL/power-loss) and the row is stranded. The UI hides Kill for a stale run; a sweeper settles it to STALE. False for healthy or already-terminal runs.',
+      'Derived: true when this run is IN_PROGRESS but its heartbeat is older than the staleness cutoff — i.e. the owning process crashed hard (SIGKILL/power-loss) and the row is stranded. The UI hides Kill for a stale run; a sweeper settles it to STALE. False for healthy or already-terminal runs — and always false when heartbeatExpected is false, where liveness is unknown rather than verified.',
   })
   isStale!: boolean;
 
