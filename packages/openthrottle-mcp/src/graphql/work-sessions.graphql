@@ -1,3 +1,27 @@
+fragment WorkSession on WorkSessionObject {
+  actorServiceAccountId
+  actorUserId
+  closedBy
+  endedAt
+  externalRef
+  id
+  model
+  onBehalfOfUserId
+  onBehalfOfVerified
+  planRunId
+  startedAt
+  summary
+  toolName
+  toolVersion
+}
+
+fragment WorkSessions on WorkSessionListResult {
+  sessions {
+    ...WorkSession
+  }
+  totalCount
+}
+
 mutation startWorkSession($input: StartWorkSessionInput!) {
   startWorkSession(input: $input) {
     id
@@ -32,5 +56,11 @@ mutation endWorkSession($input: EndWorkSessionInput!) {
     closedBy
     endedAt
     id
+  }
+}
+
+query workSessionsByPlan($input: WorkSessionsByPlanInput!) {
+  workSessionsByPlan(input: $input) {
+    ...WorkSessions
   }
 }

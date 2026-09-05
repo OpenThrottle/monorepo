@@ -368,6 +368,17 @@ export class McpDeveloperMcpSurface {
   }
 
   @Tool({
+    description: Th.getWorkSessionsToolDescription,
+    name: 'get_work_sessions',
+    parameters: asMcpParameters(Th.getWorkSessionsToolParameters),
+  })
+  getWorkSessions(
+    args: Parameters<typeof Th.getWorkSessionsToolHandler>[0],
+  ): ReturnType<typeof Th.getWorkSessionsToolHandler> {
+    return Th.getWorkSessionsToolHandler(args);
+  }
+
+  @Tool({
     description: Th.listNotesToolDescription,
     name: 'list_notes',
     parameters: asMcpParameters(Th.listNotesToolParameters),

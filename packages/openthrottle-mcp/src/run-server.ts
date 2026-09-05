@@ -10,6 +10,7 @@ import {
   captureCallerWorkspacePath,
   resolveStdioWorkspacePath,
 } from './config/workspace-path.ts';
+import { captureClientIdentityProvider } from './config/client-identity.ts';
 import { registerKnowledgeBaseResource } from './nest-tool-handlers.ts';
 import { registerDeveloperMcpTools } from './tool-registry.ts';
 import type { NestjsMcpDeveloperBootstrapOptions } from './nest/index.ts';
@@ -61,6 +62,15 @@ export async function runServerLocal(): Promise<void> {
       instructions: SERVER_INSTRUCTIONS,
     },
   );
+
+  // Read through a callback, not eagerly: the client's Implementation only exists once the
+  // initialize handshake completes, which is after connect() below returns.
+  captureClientIdentityProvider(() => {
+    const client = server.server.getClientVersion();
+    return client == null
+      ? null
+      : { name: client.name, version: client.version };
+  });
 
   registerDeveloperMcpTools(server);
   registerKnowledgeBaseResource(server);

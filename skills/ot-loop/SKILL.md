@@ -17,20 +17,14 @@ Your job is to run the built-in **`/loop`** over OpenThrottle plan **`$planId`**
 
 ## Setup (once, before the loop)
 
-1. **Work in an isolated worktree on a feature branch**, never on the base checkout. Creating, healing and removing worktrees is the [`ot-worktree`](../ot-worktree/SKILL.md) skill's job — use it for **every** worktree interaction in this loop, never a bare `git worktree` command. It creates the worktree _and_ runs the repo's provisioner (ports, `.env`, compose isolation); a bare `git worktree add` skips all of that, and a bare `git worktree remove` skips the teardown hook and the safety checks.
-
-   ```bash
-   pnpm run worktree:new <name>     # ot-worktree create — prints the worktree path on stdout
-   ```
+1. **Work in an isolated worktree on a feature branch**, never on the base checkout. Creating, healing and removing worktrees is the [`ot-worktree`](../ot-worktree/SKILL.md) skill's job — use it for **every** worktree interaction in this loop, never a bare `git worktree` command. Follow that skill for how to invoke create / heal / destroy; a bare `git worktree add` skips the repo's provisioner (ports, `.env`, compose isolation), and a bare `git worktree remove` skips the teardown hook and the safety checks.
 
    Name it for the plan (e.g. `feat/openthrottle-drivers`, `ot/cli-allow-list`); rename the generated branch with `git branch -m` if you want a different prefix. Runs to date have lived in dedicated `loop-plan-*` worktrees so the main checkout's server + OT MCP stay up.
 
    Two things to check before you start work:
 
    - **The worktree branches off whatever the base checkout has checked out**, not `main`. Confirm the base checkout is on the branch you intend to build from first, or fix it after with `git reset --hard origin/main`.
-   - **Where it lands is not fixed** — the root comes from a ladder (`OPENTHROTTLE_WORKTREE_ROOT` in the environment → `OPENTHROTTLE_WORKTREE_ROOT` in the target repo's `.env` → the default `~/.openthrottle/worktrees`), with `<org>/<repo>` appended beneath it. Use the path the command prints; never assume one.
-
-   In a repo without the `worktree:*` scripts, call the skill's scripts directly — `<skill>/scripts/create.sh`, `heal.sh`, `destroy.sh`.
+   - **Where it lands is not fixed** — the root comes from a ladder (`OPENTHROTTLE_WORKTREE_ROOT` in the environment → `OPENTHROTTLE_WORKTREE_ROOT` in the target repo's `.env` → the default `~/.openthrottle/worktrees`), with `<org>/<repo>` appended beneath it. Use the path create prints; never assume one.
 
 2. **Load the plan and tasks** — `get_plan(planId)` + `get_tasks_by_plan_id(planId)` (or `get_remaining_tasks_for_plan`). Canonical order is `sortOrder ASC, createdAt ASC`. If tasks are out of sequence, fix with `reorder_plan_tasks` (never delete-and-recreate).
 3. **Set the plan `IN_PROGRESS`** via `update_plan(planId, { status: 'IN_PROGRESS' })` if it isn't already.
@@ -73,15 +67,19 @@ Once — and **only** once — the PR is confirmed open, tear down the isolated 
 
 1. **Confirm the PR is real first.** You must have the PR URL from the step above, and `git status` in the worktree must show the branch up to date with its remote and nothing uncommitted. If PR creation failed or anything is unpushed, **do not tear down** — leave the worktree intact and report the failure so no work is lost.
 2. **Stop anything running in the worktree** — kill dev servers/watchers scoped to _this worktree's path only_. Never use a bare process-name pattern; that also kills the main checkout's server + OT MCP. You do **not** need to stop the worktree's containers by hand — OpenThrottle's `.worktree/teardown.sh` does that in step 3, scoped to this worktree's own compose project.
-3. **Remove the worktree with [`ot-worktree`](../ot-worktree/SKILL.md) destroy**, never a bare `git worktree remove` — destroy runs `.worktree/teardown.sh` first, which stops this worktree's docker compose project (a bare removal leaves those containers running, detached from any checkout), and it refuses removals that would eat work.
-
-   ```bash
-   pnpm run worktree:remove <worktree-path>   # or run it from inside the worktree with no argument
-   ```
+3. **Remove the worktree with [`ot-worktree`](../ot-worktree/SKILL.md) destroy**, never a bare `git worktree remove` — destroy runs `.worktree/teardown.sh` first, which stops this worktree's docker compose project (a bare removal leaves those containers running, detached from any checkout), and it refuses removals that would eat work. Run it from inside the worktree (no argument) or pass the worktree path.
 
    It refuses the primary checkout, refuses a dirty tree, prunes admin dirs afterward, and preserves the branch by default — which is what you want here, since both the open PR and the end-user's verification checkout depend on it. Never pass `--delete-branch`. Add `--force` only if it reports a dirty tree _after_ you have already confirmed everything is committed and pushed; `--dry-run` first if you want to see exactly what it will do.
 
-4. **Report** the PR link and note that the branch is now free to check out in the primary instance for manual verification — via `pnpm run worktree:new` or a plain `git checkout <branch>`.
+4. **Report** the PR link and note that the branch is now free to check out in the primary instance for manual verification (`git checkout <branch>`), or in a fresh isolated worktree via [`ot-worktree`](../ot-worktree/SKILL.md) create.
+
+## After the run — review it
+
+Once the PR is open and the worktree is gone, the run itself is worth a look. [`ot-loop-review`](https://github.com/openthrottle/monorepo/blob/main/skills/ot-loop-review/SKILL.md) is the reflection stage: fire it manually with the same plan id and it audits how this run actually went — setup, the per-task invariant, validation, commit and CI hygiene, finishing, teardown, model attribution — separating friction from defects and filing the follow-ups that deserve to exist. It is read-only on code and never edits this skill; it only proposes.
+
+```bash
+/ot-loop-review <planId>
+```
 
 ## After merge (not part of the loop)
 

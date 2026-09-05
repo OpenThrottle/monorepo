@@ -82,6 +82,11 @@ The layout every tool reads is built by our own [`ot-skill-sync`](./ot-skill-syn
 Branches come from `pnpm run worktree:new <name>`, the one entrypoint for a branch plus its
 worktree — not from a skill.
 
+**Agents/workflow:**
+
+- [`ot-loop/`](./ot-loop/) — drive one OT plan to a PR with the built-in `/loop`, a task at a time in an isolated worktree. Canonical source of the per-task discipline.
+- [`ot-loop-review/`](./ot-loop-review/) — the reflection stage after `ot-loop`: audits an executed run against a fixed rubric, separates friction from defects, and files the follow-ups. Read-only on code.
+
 **Infrastructure:**
 
 - [`ot-skill-sync/`](./ot-skill-sync/) — manages this whole architecture in any repo: consistent installs, deterministic fan-out, and the CI drift check.
