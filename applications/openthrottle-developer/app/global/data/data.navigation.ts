@@ -31,6 +31,7 @@ import {
   StickyNoteIcon,
   SwatchBookIcon,
   TerminalSquareIcon,
+  TimelineIcon,
   ToggleRightIcon,
   WandSparklesIcon,
   WrenchIcon,
@@ -171,6 +172,12 @@ export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
               children: 'Search',
               icon: Search,
               to: '/search',
+            },
+            {
+              beta: true,
+              children: 'Timeline',
+              icon: TimelineIcon,
+              to: '/timeline',
             },
           ],
         }

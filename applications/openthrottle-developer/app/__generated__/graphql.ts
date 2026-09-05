@@ -3156,6 +3156,8 @@ export type Query = {
   workspaceRepository?: Maybe<RepositoryObject>;
   /** Workspace settings for the authenticated user (profile and local repositories). */
   workspaceSettings: WorkspaceSettingsObject;
+  /** The workstream over a time window: run/session spans plus instant markers (task added, task updated, grilling, commit, PR, status change). Window is required and capped at 90 days. Rows are capped per kind; read `truncation` before presenting a lane as complete. */
+  workstreamTimeline: WorkstreamTimelineResultObject;
 };
 
 export type QueryActivityByDateArgs = {
@@ -3499,6 +3501,10 @@ export type QueryWorkspaceLocalRepositoryArgs = {
 
 export type QueryWorkspaceRepositoryArgs = {
   id: Scalars['ID']['input'];
+};
+
+export type QueryWorkstreamTimelineArgs = {
+  input: WorkstreamTimelineInput;
 };
 
 export type QueueControlInput = {
@@ -5034,6 +5040,108 @@ export type TasksByProjectIdResultObject = {
   totalCount: Scalars['Int']['output'];
 };
 
+export type TimelineKindTruncationObject = {
+  __typename?: 'TimelineKindTruncationObject';
+  /** The span or marker kind this entry describes. */
+  kind: Scalars['String']['output'];
+  /** Rows actually returned for this kind. */
+  returned: Scalars['Int']['output'];
+  /** TRUE when the per-kind cap was hit and rows in range were withheld. Say "showing first N" rather than implying completeness. */
+  truncated: Scalars['Boolean']['output'];
+};
+
+/** How timeline rows are grouped into lanes. */
+export enum TimelineLaneGrouping {
+  /** One lane per execution backend / tool / driver. */
+  ByBackend = 'BY_BACKEND',
+  /** One lane per repository checkout (falling back to branch). */
+  ByCheckout = 'BY_CHECKOUT',
+  /** One lane per plan. The default. */
+  ByPlan = 'BY_PLAN',
+}
+
+/** Kinds of timeline marker (work recorded at an instant). */
+export enum TimelineMarkerKind {
+  /** A git_commit work artifact, keyed on produced_at. */
+  GitCommit = 'GIT_COMMIT',
+  /** A grilling skill invocation (skill_usage_events where skill_name = 'grilling'), keyed on occurred_at. Not user-scoped — the table has no user_id. */
+  Grilling = 'GRILLING',
+  /** A pull_request work artifact, keyed on produced_at. */
+  PullRequest = 'PULL_REQUEST',
+  /** A status_change work artifact, keyed on produced_at. Recorded inconsistently — expect a sparse lane. */
+  StatusChange = 'STATUS_CHANGE',
+  /** A task was created (tasks.created_at). */
+  TaskAdded = 'TASK_ADDED',
+  /** A task was last written (tasks.updated_at). Last write only — tasks carry no status history. */
+  TaskUpdated = 'TASK_UPDATED',
+}
+
+export type TimelineMarkerObject = {
+  __typename?: 'TimelineMarkerObject';
+  /** When the marker happened. */
+  at: Scalars['DateTime']['output'];
+  /** Git branch attributed to this marker, when known. */
+  branch?: Maybe<Scalars['String']['output']>;
+  /** Stable row id. */
+  id: Scalars['String']['output'];
+  kind: TimelineMarkerKind;
+  /** Lane this marker belongs to under the requested grouping. */
+  laneKey: Scalars['String']['output'];
+  /** Human-legible lane label for `laneKey`. */
+  laneLabel: Scalars['String']['output'];
+  /** Plan (UUID) this marker is attributed to, when it has one. */
+  planId?: Maybe<Scalars['String']['output']>;
+  /** Task (UUID) this marker is attributed to, when it has one. */
+  taskId?: Maybe<Scalars['String']['output']>;
+  /** One-line summary for the tooltip. */
+  title: Scalars['String']['output'];
+  /** External deep-link target (commit or pull request URL), when the payload carries one. */
+  url?: Maybe<Scalars['String']['output']>;
+};
+
+/** Kinds of timeline span (work with a duration). */
+export enum TimelineSpanKind {
+  /** A queued Ralph plan run (plan_runs). Its end is always derived — the table records no finish timestamp. */
+  PlanRun = 'PLAN_RUN',
+  /** A scheduled agent job run (scheduled_agent_job_runs). Carries measured started_at/finished_at. */
+  ScheduledRun = 'SCHEDULED_RUN',
+  /** A work-ledger session (work_sessions). Measured unless still open (ended_at IS NULL). */
+  WorkSession = 'WORK_SESSION',
+}
+
+export type TimelineSpanObject = {
+  __typename?: 'TimelineSpanObject';
+  /** Execution backend / tool name / driver id, when the source carries one. */
+  backend?: Maybe<Scalars['String']['output']>;
+  /** Git branch the work ran on, when known. */
+  branch?: Maybe<Scalars['String']['output']>;
+  /** Repository checkout (UUID) the work ran in, when known. */
+  checkoutId?: Maybe<Scalars['String']['output']>;
+  /** Agent conversation (UUID) behind this span, when known. */
+  conversationId?: Maybe<Scalars['String']['output']>;
+  /** TRUE when `endsAt` was inferred rather than recorded — always for PLAN_RUN (plan_runs has no finish column), and for any still-open session or run. Render it distinctly; a derived end must never read as a measured one. */
+  derivedEnd: Scalars['Boolean']['output'];
+  /** End of the span. See `derivedEnd` before treating it as a measured finish. */
+  endsAt: Scalars['DateTime']['output'];
+  /** Stable row id. */
+  id: Scalars['String']['output'];
+  kind: TimelineSpanKind;
+  /** Lane this span belongs to under the requested grouping. */
+  laneKey: Scalars['String']['output'];
+  /** Human-legible lane label for `laneKey`. */
+  laneLabel: Scalars['String']['output'];
+  /** Model that did the work, when known. */
+  model?: Maybe<Scalars['String']['output']>;
+  /** Plan (UUID) this span is attributed to, when it has one. */
+  planId?: Maybe<Scalars['String']['output']>;
+  /** Start of the span. */
+  startsAt: Scalars['DateTime']['output'];
+  /** Source-specific status (plan run status, scheduled run status). */
+  status?: Maybe<Scalars['String']['output']>;
+  /** One-line summary for the tooltip. */
+  title: Scalars['String']['output'];
+};
+
 export type TokenUsageResultObject = {
   __typename?: 'TokenUsageResultObject';
   /** Per-turn usage rows in the range, newest first. */
@@ -5510,6 +5618,41 @@ export type WorkspaceSettingsObject = {
   __typename?: 'WorkspaceSettingsObject';
   localRepositories: Array<WorkspaceLocalRepositoryObject>;
   profile: UserWorkspaceProfileObject;
+};
+
+export type WorkstreamTimelineInput = {
+  /** Filter spans to a single execution backend / tool / driver. */
+  backend?: InputMaybe<Scalars['String']['input']>;
+  /** Filter to a single repository checkout (UUID). */
+  checkoutId?: InputMaybe<Scalars['String']['input']>;
+  /** Start of the window (inclusive). */
+  from: Scalars['DateTime']['input'];
+  /** Filter to a single git branch. Also scopes the grilling lane, which has no user_id to scope by. */
+  gitBranch?: InputMaybe<Scalars['String']['input']>;
+  /** How rows are grouped into lanes. Defaults to BY_PLAN. */
+  grouping?: InputMaybe<TimelineLaneGrouping>;
+  /** Marker kinds to include. Omit or pass null for all kinds; an empty list returns no markers. */
+  markerKinds?: InputMaybe<Array<TimelineMarkerKind>>;
+  /** Filter to a single plan (UUID). */
+  planId?: InputMaybe<Scalars['String']['input']>;
+  /** Span kinds to include. Omit or pass null for all kinds; an empty list returns no spans. */
+  spanKinds?: InputMaybe<Array<TimelineSpanKind>>;
+  /** End of the window (exclusive). Must be after `from`, and no more than 90 days later. */
+  to: Scalars['DateTime']['input'];
+};
+
+export type WorkstreamTimelineResultObject = {
+  __typename?: 'WorkstreamTimelineResultObject';
+  /** Echo of the requested window start. */
+  from: Scalars['DateTime']['output'];
+  /** Instant markers in the window, oldest first. */
+  markers: Array<TimelineMarkerObject>;
+  /** Duration spans overlapping the window, oldest first. */
+  spans: Array<TimelineSpanObject>;
+  /** Echo of the requested window end. */
+  to: Scalars['DateTime']['output'];
+  /** Per-kind row counts and truncation flags, one entry per requested kind. */
+  truncation: Array<TimelineKindTruncationObject>;
 };
 
 /** What a discovered worktree is doing. Never inferred from the directory merely existing. */
@@ -10593,6 +10736,89 @@ export type RemoveSkillTagMutation = {
   removeSkillTag: boolean;
 };
 
+export type TimelineSpanRowFragment = {
+  __typename?: 'TimelineSpanObject';
+  backend?: string | null;
+  branch?: string | null;
+  checkoutId?: string | null;
+  conversationId?: string | null;
+  derivedEnd: boolean;
+  endsAt: any;
+  id: string;
+  kind: TimelineSpanKind;
+  laneKey: string;
+  laneLabel: string;
+  model?: string | null;
+  planId?: string | null;
+  startsAt: any;
+  status?: string | null;
+  title: string;
+};
+
+export type TimelineMarkerRowFragment = {
+  __typename?: 'TimelineMarkerObject';
+  at: any;
+  branch?: string | null;
+  id: string;
+  kind: TimelineMarkerKind;
+  laneKey: string;
+  laneLabel: string;
+  planId?: string | null;
+  taskId?: string | null;
+  title: string;
+  url?: string | null;
+};
+
+export type GetWorkstreamTimelineQueryVariables = Exact<{
+  input: WorkstreamTimelineInput;
+}>;
+
+export type GetWorkstreamTimelineQuery = {
+  __typename?: 'Query';
+  workstreamTimeline: {
+    __typename?: 'WorkstreamTimelineResultObject';
+    from: any;
+    to: any;
+    markers: Array<{
+      __typename?: 'TimelineMarkerObject';
+      at: any;
+      branch?: string | null;
+      id: string;
+      kind: TimelineMarkerKind;
+      laneKey: string;
+      laneLabel: string;
+      planId?: string | null;
+      taskId?: string | null;
+      title: string;
+      url?: string | null;
+    }>;
+    spans: Array<{
+      __typename?: 'TimelineSpanObject';
+      backend?: string | null;
+      branch?: string | null;
+      checkoutId?: string | null;
+      conversationId?: string | null;
+      derivedEnd: boolean;
+      endsAt: any;
+      id: string;
+      kind: TimelineSpanKind;
+      laneKey: string;
+      laneLabel: string;
+      model?: string | null;
+      planId?: string | null;
+      startsAt: any;
+      status?: string | null;
+      title: string;
+    }>;
+    truncation: Array<{
+      __typename?: 'TimelineKindTruncationObject';
+      kind: string;
+      returned: number;
+      truncated: boolean;
+    }>;
+  };
+};
+
 export type UsageDailyStatsRowFragment = {
   __typename?: 'DailyStatsObject';
   date: string;
@@ -13176,6 +13402,67 @@ export const SkillDetailUsageByDayFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<SkillDetailUsageByDayFragment, unknown>;
+export const TimelineSpanRowFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'TimelineSpanRow' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TimelineSpanObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'backend' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'branch' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'checkoutId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'conversationId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'derivedEnd' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'endsAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'laneKey' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'laneLabel' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'startsAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<TimelineSpanRowFragment, unknown>;
+export const TimelineMarkerRowFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'TimelineMarkerRow' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TimelineMarkerObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'at' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'branch' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'laneKey' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'laneLabel' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'url' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<TimelineMarkerRowFragment, unknown>;
 export const UsageDailyStatsRowFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -27717,6 +28004,156 @@ export const RemoveSkillTagDocument = {
 } as unknown as DocumentNode<
   RemoveSkillTagMutation,
   RemoveSkillTagMutationVariables
+>;
+export const GetWorkstreamTimelineDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getWorkstreamTimeline' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'WorkstreamTimelineInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'workstreamTimeline' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'from' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'markers' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: { kind: 'Name', value: 'TimelineMarkerRow' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'spans' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: { kind: 'Name', value: 'TimelineSpanRow' },
+                      },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'to' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'truncation' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'returned' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'truncated' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'TimelineMarkerRow' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TimelineMarkerObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'at' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'branch' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'laneKey' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'laneLabel' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'url' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'TimelineSpanRow' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TimelineSpanObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'backend' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'branch' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'checkoutId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'conversationId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'derivedEnd' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'endsAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'laneKey' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'laneLabel' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'startsAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetWorkstreamTimelineQuery,
+  GetWorkstreamTimelineQueryVariables
 >;
 export const GetUsageDailyStatsDocument = {
   kind: 'Document',
