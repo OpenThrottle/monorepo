@@ -6,13 +6,13 @@ import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { createMock } from '@golevelup/ts-vitest';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
-import { LoggerService } from '@openthrottle/nestjs-modules';
+import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
   Project,
   Repository,
   RepositoryCheckout,
 } from '@openthrottle/nestjs-repositories';
-import {
+import type {
   ProjectsService,
   RepositoriesService,
   RepositoryCheckoutsService,
@@ -28,7 +28,7 @@ import {
   it,
   vi,
 } from 'vitest';
-import { ForeignSkillMaterializationService } from '../../services/foreign-skill-injection/foreign-skill-materialization.service';
+import type { ForeignSkillMaterializationService } from '../../services/foreign-skill-injection/foreign-skill-materialization.service';
 import { RepositoryInspectionService } from '../repository-inspection/repository-inspection.service';
 import { NATIVE_PICKER_ENV } from './native-folder-picker';
 import {

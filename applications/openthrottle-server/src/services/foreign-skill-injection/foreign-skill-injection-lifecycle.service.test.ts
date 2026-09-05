@@ -12,7 +12,7 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createMock } from '@golevelup/ts-vitest';
-import { LoggerService } from '@openthrottle/nestjs-modules';
+import type { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   ensureMaterialized,
   FOREIGN_SKILL_LEDGER_DIR_ENV,

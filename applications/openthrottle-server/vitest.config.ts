@@ -1,5 +1,6 @@
 import swc from 'unplugin-swc';
-import { ConfigEnv, loadEnv } from 'vite';
+import type { ConfigEnv } from 'vite';
+import { loadEnv } from 'vite';
 import { defineConfig } from 'vitest/config';
 
 export default (config: ConfigEnv) => {

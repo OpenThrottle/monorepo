@@ -5,7 +5,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@openthrottle/react-router-shadcn';
-import { action as roleDetailAction } from '~/routes/roles.$roleId';
+import type { action as roleDetailAction } from '~/routes/roles.$roleId';
 import { formatDate } from 'date-fns';
 import { RoleDeleteDialog } from '~/routing/roles/components/RoleDeleteDialog';
 import { RoleEditSheet } from '~/routing/roles/components/RoleEditSheet';

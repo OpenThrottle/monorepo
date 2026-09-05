@@ -1,5 +1,5 @@
 import { createMock } from '@golevelup/ts-vitest';
-import { LoggerService } from '@openthrottle/nestjs-modules';
+import type { LoggerService } from '@openthrottle/nestjs-modules';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { TranscriptionStreamService } from './transcription-stream.service';

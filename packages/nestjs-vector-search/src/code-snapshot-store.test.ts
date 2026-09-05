@@ -1,6 +1,6 @@
 import { createMock } from '@golevelup/ts-vitest';
 import type { WorkspaceFileHash } from '@openthrottle/openthrottle-ide';
-import { DataSource } from 'typeorm';
+import type { DataSource } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CodeSnapshotStore } from './code-snapshot-store';

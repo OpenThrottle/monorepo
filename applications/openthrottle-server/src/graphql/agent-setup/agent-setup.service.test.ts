@@ -7,7 +7,7 @@ import type {
 } from '@openthrottle/openthrottle-agentic-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { AgentDiscoveryService } from '../agent-discovery/agent-discovery.service';
+import type { AgentDiscoveryService } from '../agent-discovery/agent-discovery.service';
 import { AgentSetupService } from './agent-setup.service';
 import { AGENT_SETUP_CHUNK_FIELD } from './agent-setup.types';
 

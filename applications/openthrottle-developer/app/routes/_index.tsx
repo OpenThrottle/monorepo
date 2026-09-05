@@ -1,9 +1,9 @@
 import { useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router';
 import type { ShouldRevalidateFunction } from 'react-router';
+import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalErrorBoundary,
-  GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';

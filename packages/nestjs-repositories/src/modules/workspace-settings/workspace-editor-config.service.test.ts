@@ -11,7 +11,7 @@ import { dirname, join } from 'path';
 import { tmpdir } from 'os';
 import { createMock } from '@golevelup/ts-vitest';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { LoggerService } from '@openthrottle/nestjs-modules';
+import type { LoggerService } from '@openthrottle/nestjs-modules';
 import { asMock } from '@openthrottle/nestjs-testing';
 import {
   CONTAINER_WORKSPACES_DIR_ENV,
@@ -23,9 +23,9 @@ import {
 } from '@openthrottle/openthrottle-agentic-utils';
 import { OPENTHROTTLE_REPO_SKILL_PATHS } from './openthrottle-repo-skill-paths';
 import type { UserWorkspaceSettings } from './user-workspace-settings.entity';
-import { UserWorkspaceSettingsService } from './user-workspace-settings.service';
+import type { UserWorkspaceSettingsService } from './user-workspace-settings.service';
 import type { RepositoryCheckout } from '../repositories/repository-checkout.entity';
-import { RepositoryCheckoutsService } from '../repositories/repository-checkouts.service';
+import type { RepositoryCheckoutsService } from '../repositories/repository-checkouts.service';
 import { WorkspaceEditorConfigService } from './workspace-editor-config.service';
 
 describe('WorkspaceEditorConfigService', () => {

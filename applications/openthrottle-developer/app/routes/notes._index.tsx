@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { useSearchParams } from 'react-router';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
-  GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
   readSearchParam,
 } from '@openthrottle/react-router-ui-global';

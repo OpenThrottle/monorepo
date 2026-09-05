@@ -1,5 +1,5 @@
-import { WorkflowConfigLegacy } from './config.ts';
-import { WORKFLOW_EVENT } from '../config/index.ts';
+import type { WorkflowConfigLegacy } from './config.ts';
+import type { WORKFLOW_EVENT } from '../config/index.ts';
 
 /**
  * Align structured logs using `correlationId` (and optionally `queueJobId`,
@@ -71,17 +71,17 @@ export interface WorkflowError {
  * discriminated reason types for finished vs failed branches.
  */
 export type WorkflowRunResult<
-  WorkflowFinishedReason extends string,
-  WorkflowFailedReason extends string,
+  TWorkflowFinishedReason extends string,
+  TWorkflowFailedReason extends string,
 > =
   | {
       readonly exitCode: 0;
-      readonly reason: WorkflowFinishedReason;
+      readonly reason: TWorkflowFinishedReason;
       readonly status: 'finished';
     }
   | {
       readonly exitCode: 1;
-      readonly reason: WorkflowFailedReason;
+      readonly reason: TWorkflowFailedReason;
       readonly status: 'failed';
     };
 
@@ -113,13 +113,13 @@ export type WorkflowStepSuccess<
  * fields stay outside this package.
  */
 export interface WorkflowOrchestrator<
-  WorkflowFinishedReason extends string,
-  WorkflowFailedReason extends string,
+  TWorkflowFinishedReason extends string,
+  TWorkflowFailedReason extends string,
   TContext extends WorkflowRunContext = WorkflowRunContext,
 > {
   readonly execute: (params: {
     readonly context: TContext;
   }) => Promise<
-    WorkflowRunResult<WorkflowFinishedReason, WorkflowFailedReason>
+    WorkflowRunResult<TWorkflowFinishedReason, TWorkflowFailedReason>
   >;
 }

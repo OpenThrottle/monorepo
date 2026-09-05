@@ -1,10 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createMock } from '@golevelup/ts-vitest';
 import type { Queue } from 'bullmq';
-import {
-  ScheduledAgentJobCheckoutPathService,
-  type ScheduledAgentJob,
-} from '@openthrottle/nestjs-repositories';
+import type { ScheduledAgentJobCheckoutPathService } from '@openthrottle/nestjs-repositories';
+import { type ScheduledAgentJob } from '@openthrottle/nestjs-repositories';
 import {
   buildScheduledAgentJobPayload,
   ScheduledAgentJobSchedulerService,

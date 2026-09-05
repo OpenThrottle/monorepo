@@ -31,9 +31,9 @@ export type RolloutFlagValueByKind = {
  *
  * @public
  */
-export type RolloutFlagDefinitionForKind<K extends RolloutFlagKind> = {
-  readonly defaultValue: RolloutFlagValueByKind[K];
-  readonly kind: K;
+export type RolloutFlagDefinitionForKind<TKey extends RolloutFlagKind> = {
+  readonly defaultValue: RolloutFlagValueByKind[TKey];
+  readonly kind: TKey;
 };
 
 /**
@@ -71,8 +71,8 @@ export type RolloutFlagKey<TCatalog extends RolloutFlagCatalog> =
  */
 export type RolloutFlagValue<
   TCatalog extends RolloutFlagCatalog,
-  K extends RolloutFlagKey<TCatalog>,
-> = RolloutFlagValueByKind[TCatalog[K]['kind']];
+  TKey extends RolloutFlagKey<TCatalog>,
+> = RolloutFlagValueByKind[TCatalog[TKey]['kind']];
 
 /**
  * Catalog keys whose kind is `boolean` (for `useIsRolloutEnabled`).
@@ -80,8 +80,8 @@ export type RolloutFlagValue<
  * @public
  */
 export type RolloutBooleanFlagKey<TCatalog extends RolloutFlagCatalog> = {
-  [K in RolloutFlagKey<TCatalog>]: TCatalog[K]['kind'] extends 'boolean'
-    ? K
+  [TKey in RolloutFlagKey<TCatalog>]: TCatalog[TKey]['kind'] extends 'boolean'
+    ? TKey
     : never;
 }[RolloutFlagKey<TCatalog>];
 

@@ -23,7 +23,7 @@ import {
 } from '@openthrottle/openthrottle-agentic-utils';
 import { ralphDebugLogger } from '../utils/ralph-debug-logger';
 import type { RalphWorktreeCliOptions } from '../utils/ralph-worktree-cli';
-import { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
+import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 
 /**
  * @description Chunk from runner stdout or stderr when using async spawn.

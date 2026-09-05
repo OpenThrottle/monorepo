@@ -4,26 +4,26 @@ import {
   AUTH_PRINCIPAL_KIND_USER,
   type AuthPrincipal,
 } from '@openthrottle/nestjs-auth';
-import { NestjsModelDiscoveryService } from '@openthrottle/nestjs-model-discovery';
+import type { NestjsModelDiscoveryService } from '@openthrottle/nestjs-model-discovery';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   agentConversationMessagesFactory,
   agentConversationsFactory,
-  AgentCliPreferencesService,
-  AgentConversationsService,
-  CustomPromptsService,
-  WorkspaceLocalRepositoriesService,
 } from '@openthrottle/nestjs-repositories';
 import type {
   CustomPrompt,
   WorkspaceLocalRepository,
+  AgentCliPreferencesService,
+  AgentConversationsService,
+  CustomPromptsService,
+  WorkspaceLocalRepositoriesService,
 } from '@openthrottle/nestjs-repositories';
 import type { DiscoveryResult } from '@openthrottle/openthrottle-agentic-utils';
 import type { Repository } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ConversationStreamResolver } from './conversation-stream.resolver';
-import { ConversationStreamService } from './conversation-stream.service';
+import type { ConversationStreamService } from './conversation-stream.service';
 
 const { createCursorAgentSessionMock } = vi.hoisted(() => ({
   createCursorAgentSessionMock: vi.fn(),

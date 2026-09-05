@@ -1,4 +1,4 @@
-import {
+import type {
   ProjectsSortBy,
   ProjectsSortOrder,
 } from '~/routing/prompts/config/types';

@@ -1,5 +1,5 @@
 import { createMock } from '@golevelup/ts-vitest';
-import { ConfigService } from '@nestjs/config';
+import type { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import type { UsersService } from '@openthrottle/nestjs-repositories';
 import { describe, expect, it, vi } from 'vitest';

@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { GlobalPopover } from '@openthrottle/react-router-ui-global';
 import type { GlobalPopoverAction } from '@openthrottle/react-router-ui-global';
-import { Row } from '@tanstack/react-table';
+import type { Row } from '@tanstack/react-table';
 import { PanelRightIcon } from 'lucide-react';
-import { PlanTaskRowFragment } from '~/__generated__/graphql';
+import type { PlanTaskRowFragment } from '~/__generated__/graphql';
 import { PLAN_TASK_ROW_ACTIONS_COPY } from '~/routing/plans/data/data.copy';
 
 export interface PlanTasksTableCellActionsProps {

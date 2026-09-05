@@ -1,4 +1,5 @@
-import { ClsService, ClsStore } from 'nestjs-cls';
+import type { ClsStore } from 'nestjs-cls';
+import { ClsService } from 'nestjs-cls';
 import type { GlobalClsUser } from './global-cls-user';
 
 /**

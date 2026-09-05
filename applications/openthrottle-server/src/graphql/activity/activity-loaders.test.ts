@@ -1,5 +1,8 @@
 import { createMock } from '@golevelup/ts-vitest';
-import { PlansService, TasksService } from '@openthrottle/nestjs-repositories';
+import type {
+  PlansService,
+  TasksService,
+} from '@openthrottle/nestjs-repositories';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { ActivityLoaders } from './activity-loaders';
 

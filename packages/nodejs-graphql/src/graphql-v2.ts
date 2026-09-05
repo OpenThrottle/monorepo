@@ -520,6 +520,7 @@ const executeGraphqlV2Once = async <
  * backoff. Retry is off by default and is not safe for non-idempotent mutations (see module docs).
  * @public
  */
+// eslint-disable-next-line @typescript-eslint/naming-convention -- `_v2` is deliberate public API versioning; renaming this export is a breaking change, not a lint fix
 export const executeGraphql_v2: ExecuteGraphqlV2 = async <
   TData,
   TVariables extends Record<string, unknown>,

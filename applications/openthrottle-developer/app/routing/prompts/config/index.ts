@@ -3,7 +3,7 @@
  * Aligns with CustomPromptType enum from GraphQL schema.
  */
 import { CustomPromptType } from '~/__generated__/graphql';
-import {
+import type {
   PromptsSortBy,
   PromptsSortOrder,
 } from '~/routing/prompts/config/types';

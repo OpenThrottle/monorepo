@@ -4,7 +4,7 @@
 // import { LockIcon } from '@phosphor-icons/react/dist/ssr/Lock';
 // import { ADMIN_PATHS, dataNavigation } from '~/global/data/data.navigation';
 
-import { LinkProps } from 'react-router';
+import type { LinkProps } from 'react-router';
 import type {
   GetRootMetricsQuery,
   ServerHealthObject,

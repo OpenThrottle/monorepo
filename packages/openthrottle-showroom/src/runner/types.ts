@@ -169,6 +169,7 @@ export const click = (selector: string, beat?: string): DemoStep => ({
   kind: 'click',
   selector,
 });
+// eslint-disable-next-line @typescript-eslint/naming-convention -- `type` is a reserved word; the trailing underscore is what makes this callable name possible
 export const type_ = (
   selector: string,
   text: string,

@@ -1,5 +1,5 @@
 import { createMock } from '@golevelup/ts-vitest';
-import { ConfigService } from '@nestjs/config';
+import type { ConfigService } from '@nestjs/config';
 import { describe, expect, test } from 'vitest';
 import {
   isAgentsChatMutationRoutedTool,

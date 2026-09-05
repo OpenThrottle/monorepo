@@ -1,10 +1,8 @@
 import * as React from 'react';
 import { DocPageView } from '@openthrottle/react-router-docs';
 import { SITE_TITLE } from '~/global/config/settings';
-import {
-  GlobalErrorBoundary,
-  GlobalLayoutBreadcrumbsHandle,
-} from '@openthrottle/react-router-ui-global';
+import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { docsBySlug, docsSequence } from '~/routing/docs/data/docs-navigation';
 import { useDocsFeatureFlags } from '~/global/hooks/useDocsFeatureFlags';
 import type { Route } from '@/app/routes/+types/docs.$';

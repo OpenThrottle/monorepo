@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { JobRunHooksUiValidation } from '~/routing/plans/utils/job-run-hooks-ui';
+import type { JobRunHooksUiValidation } from '~/routing/plans/utils/job-run-hooks-ui';
 
 export interface PlanWorkflowConfigHooksValidationProps {
   validation: JobRunHooksUiValidation;

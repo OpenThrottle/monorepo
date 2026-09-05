@@ -5,7 +5,7 @@ globs:
 name: coding-naming-conventions
 ---
 
-Naming conventions:
+**Mostly enforced** by `@typescript-eslint/naming-convention: 'error'` in `tools/dotfiles/src/index.ts`. Naming conventions:
 
 - Use kebab-case for file names (e.g., `my-component.ts`)
   - Exception being react components, which should be `PascalCase`
@@ -17,3 +17,35 @@ Naming conventions:
 ```ts
 type RecordOfArrays<TItem> = Record<string, TItem[]>;
 ```
+
+## What the linter checks, and what it cannot
+
+Enforced at `error`, one selector per clause above:
+
+| clause | selector |
+| --- | --- |
+| PascalCase classes / types / interfaces | `typeLike` |
+| `T`-prefixed type parameters | `typeParameter`, `prefix: ['T']` |
+| ALL_CAPS enum values | `enumMember` |
+| camelCase functions (PascalCase for components) | `function` |
+| camelCase variables (PascalCase components, UPPER_CASE constants) | `variable` |
+
+**The file-name clause is not enforced.** `naming-convention` operates on identifiers and cannot see file names; kebab-case files with PascalCase components stay honor-system (`@tools/generators` scaffolds them correctly, which is the practical safeguard).
+
+`leadingUnderscore: 'allowSingleOrDouble'` on the function and variable selectors. Without it the rule rejects `__dirname`/`__filename` — the standard Node ESM idiom, present in every `codegen.ts` and `apollo.config.mjs` — and the `^_` prefix that `no-unused-vars` is separately configured to bless.
+
+## Measurement
+
+Tuned config: **31 violations** (28 type parameters, 2 variables, 1 function), all resolved in the change that landed the rule, which is why this is `error` and not the `warn` the plan assumed.
+
+The plan's **30,220** came from the plugin's *default* options over a tree that still included `applications/openthrottle-workbench/storybook-static/` — 2,800 of them are single-letter identifiers inside minified Storybook bundles. Any ad-hoc `pnpm exec eslint applications packages tools scripts` count in this repo is an upper bound, not the number the CI gate sees; `pnpm nx run-many --target=lint --all` is the gate.
+
+## The three names that are deliberately exempt
+
+Each carries an inline disable with a reason, rather than being renamed:
+
+- `executeGraphql_v2` (`packages/nodejs-graphql`) — `_v2` is public API versioning; renaming an exported symbol is a breaking change, not a lint fix.
+- `buildWorkflowExecuteGraphql_v2Options` (`packages/openthrottle-agentic-ralph`) — sits next to a throw-based sibling named `buildWorkflowExecuteGraphqlV2Options`; the suffix is what distinguishes the Result-API variant. Renaming it collides the two.
+- `type_` (`packages/openthrottle-showroom`) — `type` is a reserved word.
+
+`_v2` in this codebase consistently marks the Result-returning variant of a throw-based `V2` function. That is a convention, not drift.

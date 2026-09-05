@@ -8,10 +8,10 @@ import {
   CardTitle,
 } from '@openthrottle/react-router-shadcn';
 import { GaugeCircleIcon } from 'lucide-react';
+import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalErrorBoundary,
   GlobalHeading,
-  GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { ADMIN_PATHS } from '~/global/data/data.navigation';

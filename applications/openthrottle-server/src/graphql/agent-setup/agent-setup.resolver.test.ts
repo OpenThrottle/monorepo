@@ -5,7 +5,7 @@ import {
   type AuthPrincipal,
 } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS } from '@openthrottle/nestjs-rbac';
-import {
+import type {
   AgentCliPreferencesService,
   RolesService,
 } from '@openthrottle/nestjs-repositories';
@@ -13,7 +13,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AGENT_CLI_INSTALL_ENABLED_ENV } from './agent-setup.config';
 import { AgentSetupResolver } from './agent-setup.resolver';
-import { AgentSetupService } from './agent-setup.service';
+import type { AgentSetupService } from './agent-setup.service';
 
 const human: AuthPrincipal = { kind: AUTH_PRINCIPAL_KIND_USER, sub: 'user-1' };
 

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Tabs } from '@openthrottle/react-router-shadcn';
-import { render } from '@testing-library/react';
+import type { render } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 import {
   buildPlanDetailLoaderData,

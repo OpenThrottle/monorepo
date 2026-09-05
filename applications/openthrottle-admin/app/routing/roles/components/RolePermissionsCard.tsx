@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from '@openthrottle/react-router-shadcn';
 import { AddPermissionSelectForm } from '~/routing/roles/components/AddPermissionSelectForm';
-import { action as roleDetailAction } from '~/routes/roles.$roleId';
+import type { action as roleDetailAction } from '~/routes/roles.$roleId';
 import type { Route } from '@/app/routes/+types/roles.$roleId';
 import type { useFetcher } from 'react-router';
 import type { RoleDetailsFragment } from '~/__generated__/graphql';

@@ -9,7 +9,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@openthrottle/react-router-shadcn';
-import { action as userDetailAction } from '~/routes/users.$userId';
+import type { action as userDetailAction } from '~/routes/users.$userId';
 import type { useFetcher } from 'react-router';
 import type { UserDetailsFragment } from '~/__generated__/graphql';
 

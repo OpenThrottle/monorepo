@@ -9,7 +9,7 @@ import {
 import { Check, Lock } from 'lucide-react';
 import clsx from 'clsx';
 import { PERMISSION_MODE_META } from '../data/chat-permission-mode-meta';
-import { ChatPermissionMode } from '../types';
+import type { ChatPermissionMode } from '../types';
 import type { ChatBackendCapabilities } from '../types';
 
 export interface ChatPermissionModeControlProps {

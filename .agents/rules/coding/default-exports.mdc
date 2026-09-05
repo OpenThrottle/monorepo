@@ -5,7 +5,7 @@ globs:
 name: coding-default-exports
 ---
 
-Unless explicitly required by the framework, do not use default exports.
+**Enforced** by `import/no-default-export: 'error'` in `tools/dotfiles/src/index.ts`. Unless explicitly required by the framework, do not use default exports.
 
 ```ts
 // BAD
@@ -41,3 +41,13 @@ export default function Component(props: Route.ComponentProps) {
   return <div>Hello</div>;
 }
 ```
+
+Those cases are carved out in the ESLint config rather than left to judgement. The exempt set is exactly the files whose *consumer* reads the default:
+
+- tooling configs — `*.config.{cjs,cts,js,mjs,mts,ts}`
+- graphql-codegen — `codegen.ts`
+- React Router — `app/routes.ts`, `app/root.tsx`, `app/entry.*.tsx`, `app/routes/**`
+- Storybook — `.storybook/**` and `*.stories.{ts,tsx}` (the CSF `meta` default)
+- Nx generators — `src/generators/*/generator.ts`, resolved via `generators.json` `factory`
+
+Everywhere else the rule is an error. If you hit it in a new framework file, add the glob to the carve-out block with a note saying which consumer requires the default — do not disable the rule inline.

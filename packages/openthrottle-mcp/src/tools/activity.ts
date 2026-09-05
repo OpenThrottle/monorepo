@@ -3,7 +3,7 @@
  * Uses GraphQL only (activityByDate, activityByDateRange, lastActivity).
  */
 
-import { z } from 'zod';
+import type { z } from 'zod';
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import {
   type GetActivityByDateQuery,

@@ -7,13 +7,13 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createMock } from '@golevelup/ts-vitest';
-import { LoggerService } from '@openthrottle/nestjs-modules';
-import type { PlanRun } from '@openthrottle/nestjs-repositories';
-import {
+import type { LoggerService } from '@openthrottle/nestjs-modules';
+import type {
+  PlanRun,
   PlanRunsService,
-  STALE_CUTOFF_MS,
 } from '@openthrottle/nestjs-repositories';
-import { WorktreeDiscoveryService } from '../worktree-discovery/worktree-discovery.service';
+import { STALE_CUTOFF_MS } from '@openthrottle/nestjs-repositories';
+import type { WorktreeDiscoveryService } from '../worktree-discovery/worktree-discovery.service';
 import type {
   DiscoveredWorktree,
   WorktreeDiscoveryResult,

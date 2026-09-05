@@ -69,9 +69,9 @@ export type EventSubscriptionId =
  * @description Strongly-typed {@link Object.fromEntries} that preserves the key
  * union, so a total {@link Record} can be built without a type assertion.
  */
-function fromEntriesRecord<K extends string, V>(
-  entries: ReadonlyArray<readonly [K, V]>,
-): Record<K, V>;
+function fromEntriesRecord<TKey extends string, TValue>(
+  entries: ReadonlyArray<readonly [TKey, TValue]>,
+): Record<TKey, TValue>;
 function fromEntriesRecord(
   entries: ReadonlyArray<readonly [string, unknown]>,
 ): unknown {

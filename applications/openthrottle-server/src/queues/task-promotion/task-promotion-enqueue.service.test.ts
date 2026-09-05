@@ -5,11 +5,10 @@
  */
 
 import { createMock } from '@golevelup/ts-vitest';
+import type { Task, TaskTag } from '@openthrottle/nestjs-repositories';
 import {
   type TagsService,
-  Task,
   type TasksService,
-  TaskTag,
 } from '@openthrottle/nestjs-repositories';
 import { asMock } from '@openthrottle/nestjs-testing';
 import type { Queue } from 'bullmq';

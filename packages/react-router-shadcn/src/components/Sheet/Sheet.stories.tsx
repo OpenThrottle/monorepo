@@ -12,7 +12,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from './index';
-import { sheetVariants } from './sheets';
+import type { sheetVariants } from './sheets';
 
 const SIDES: readonly NonNullable<
   VariantProps<typeof sheetVariants>['side']

@@ -5,7 +5,7 @@
  */
 
 import * as os from 'os';
-import {
+import type {
   LoadAverageMetrics,
   PsiCpuMetrics,
   SystemCpuMetrics,

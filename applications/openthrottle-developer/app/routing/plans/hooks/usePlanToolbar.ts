@@ -8,7 +8,7 @@ import * as React from 'react';
 import { toast } from '@openthrottle/react-router-shadcn';
 import { useFetcher } from 'react-router';
 import { useActionToast } from '~/global/hooks/useActionToast';
-import { action } from '~/routes/plans.$planId._index';
+import type { action } from '~/routes/plans.$planId._index';
 import {
   PLAN_RUN_BULLMQ_QUEUE_NAME,
   planRunJobDetailPath,

@@ -40,7 +40,7 @@ import {
 import { useTaskOutputStream } from '~/routing/plans/hooks/useTaskOutputStream';
 import type { Route } from '@/app/routes/+types/plans.$planId.tasks.$taskId._index';
 import type { TaskDetailsFragment } from '~/__generated__/graphql';
-import { PlanTagChipData } from '~/routing/plans/components/PlanTagChips';
+import type { PlanTagChipData } from '~/routing/plans/components/PlanTagChips';
 
 export interface TaskDetailRouteProps {
   readonly loaderData: Route.ComponentProps['loaderData'];

@@ -6,7 +6,8 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@openthrottle/react-router-shadcn';
-import { ChevronDownIcon, ChevronUpIcon, LucideIcon } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import { ChevronDownIcon, ChevronUpIcon } from 'lucide-react';
 import { GlobalHeading } from './GlobalHeading';
 
 export interface GlobalCollapsibleProps extends React.PropsWithChildren {

@@ -12,7 +12,7 @@ import { Link, useSearchParams } from 'react-router';
 import { FilePlusIcon } from 'lucide-react';
 import { TypeMultiSelect } from './TypeMultiSelect';
 import { PromptSortDropdown } from './PromptSortDropdown';
-import {
+import type {
   PromptsSortBy,
   PromptsSortOrder,
 } from '~/routing/prompts/config/types';

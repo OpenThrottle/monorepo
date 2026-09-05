@@ -8,8 +8,8 @@ import type {
   ScheduledAgentJobRun,
   ScheduledAgentJobRunStatusCount,
 } from '@openthrottle/nestjs-repositories';
-import { ScheduledAgentJobRunStatsObject } from './scheduled-agent-job-run-stats.object';
-import {
+import type { ScheduledAgentJobRunStatsObject } from './scheduled-agent-job-run-stats.object';
+import type {
   ScheduledAgentJobObject,
   ScheduledAgentJobRunObject,
 } from './scheduled-agent-job.object';

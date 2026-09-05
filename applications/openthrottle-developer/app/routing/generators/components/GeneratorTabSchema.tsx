@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { GeneratorDetailCardFragment } from '~/__generated__/graphql';
+import type { GeneratorDetailCardFragment } from '~/__generated__/graphql';
 import {
   Card,
   CardContent,

@@ -6,7 +6,7 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import { asMock } from '@openthrottle/nestjs-testing';
 import { ServiceAccount } from '../service-accounts/service-account.entity';
 import { User } from '../users/user.entity';
-import { Permission } from './permission.entity';
+import type { Permission } from './permission.entity';
 import { Role } from './role.entity';
 import { RolesService } from './roles.service';
 

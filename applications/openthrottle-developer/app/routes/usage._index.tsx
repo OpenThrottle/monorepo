@@ -6,9 +6,9 @@ import {
   GetUsageSkillUsageDocument,
   GetUsageTokenUsageDocument,
 } from '~/__generated__/graphql';
+import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalErrorBoundary,
-  GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';

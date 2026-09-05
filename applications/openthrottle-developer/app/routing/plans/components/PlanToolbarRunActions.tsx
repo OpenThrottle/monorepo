@@ -8,8 +8,8 @@ import {
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
 import { Gauge, PlayCircle } from 'lucide-react';
-import { useFetcher } from 'react-router';
-import { action } from '~/routes/plans.$planId._index';
+import type { useFetcher } from 'react-router';
+import type { action } from '~/routes/plans.$planId._index';
 import { KillPlanRunButton } from '~/routing/plans/components/KillPlanRunButton';
 import { PLAN_TOOLBAR_COPY } from '~/routing/plans/data/data.copy';
 import { getPlanToolbarRunButtonLabel } from '~/routing/plans/utils/plan-toolbar-run-label';

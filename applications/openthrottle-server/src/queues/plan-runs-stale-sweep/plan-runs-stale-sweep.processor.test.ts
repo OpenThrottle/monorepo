@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createMock } from '@golevelup/ts-vitest';
-import { LoggerService } from '@openthrottle/nestjs-modules';
-import {
+import type { LoggerService } from '@openthrottle/nestjs-modules';
+import type {
   PlanRunsService,
   PlansService,
   TasksService,

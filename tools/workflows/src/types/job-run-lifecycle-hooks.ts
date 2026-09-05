@@ -6,7 +6,7 @@
  * in `ralph-prompt-resolution.ts` and `PlanWorkflowConfigPrompt` / `WorkflowRalphPromptLayer`.
  */
 
-import { WorkflowRunnerId } from '@openthrottle/openthrottle-agentic-utils';
+import type { WorkflowRunnerId } from '@openthrottle/openthrottle-agentic-utils';
 
 /**
  * Canonical Jest-style lifecycle phases (normalized after parse).

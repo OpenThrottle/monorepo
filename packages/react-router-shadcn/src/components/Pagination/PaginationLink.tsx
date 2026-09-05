@@ -1,7 +1,8 @@
 import * as React from 'react';
 
 import { cn } from '../../utils/cn';
-import { Button, buttonVariants } from '../Button';
+import type { Button } from '../Button';
+import { buttonVariants } from '../Button';
 
 export type PaginationLinkProps = {
   isActive?: boolean;

@@ -1,8 +1,5 @@
-import {
-  PLANS_SORT_ORDER,
-  PlansSortBy,
-  PlansSortOrder,
-} from '~/routing/plans/config/types';
+import type { PlansSortBy, PlansSortOrder } from '~/routing/plans/config/types';
+import { PLANS_SORT_ORDER } from '~/routing/plans/config/types';
 
 const PLANS_SORT_BY_VALUES: readonly PlansSortBy[] = [
   'createdAt',

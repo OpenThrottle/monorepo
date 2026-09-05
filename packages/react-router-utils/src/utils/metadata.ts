@@ -57,14 +57,14 @@ type MetaDescriptors = MetaDescriptor[];
  * The resulting meta will contain both `title: 'My Leaf Route'` and `description: 'This is the parent route'`.
  */
 export function mergeMeta<
-  Loader extends LoaderFunction | ClientLoaderFunction | unknown = unknown,
-  ParentsLoaders extends Record<
+  TLoader extends LoaderFunction | ClientLoaderFunction | unknown = unknown,
+  TParentsLoaders extends Record<
     string,
     LoaderFunction | ClientLoaderFunction | unknown
   > = Record<string, unknown>,
 >(
-  leafMetaFn: MetaFunction<Loader, ParentsLoaders>,
-): MetaFunction<Loader, ParentsLoaders> {
+  leafMetaFn: MetaFunction<TLoader, TParentsLoaders>,
+): MetaFunction<TLoader, TParentsLoaders> {
   return (args) => {
     const leafMeta = leafMetaFn(args);
 

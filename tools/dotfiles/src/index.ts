@@ -212,8 +212,29 @@ export const eslintConfig = tslint.config([
         'error',
         { assertionStyle: 'never' },
       ],
+      // `return-types.mdc` asks for return types on functions declared "on the
+      // top-level of a module" — that is the module boundary, not every
+      // function. `explicit-module-boundary-types` says exactly that;
+      // `explicit-function-return-type` says something much broader, and
+      // measuring both makes the difference concrete: 1,341 violations vs
+      // 14,973 for the same convention, over the same tree. The narrower rule
+      // is the one that matches the doc, so it is the one that is on. Under the
+      // real `nx lint` targets — which ignore the generated and build output an
+      // ad-hoc sweep picks up — it is **362** warnings.
+      //
+      // `warn`, not `error`: 362 sites cannot be fixed in one change, and the
+      // lint target passes no `--max-warnings`, so this never blocks CI. The
+      // consumer is the weekly `.agents/prompts/Job_RulesConformance.md` sweep,
+      // which triages them — without that reader this would just be 1,341
+      // messages nobody sees.
       '@typescript-eslint/explicit-function-return-type': 'off',
-      '@typescript-eslint/explicit-module-boundary-types': 'off',
+      '@typescript-eslint/explicit-module-boundary-types': [
+        'warn',
+        {
+          allowHigherOrderFunctions: true,
+          allowTypedFunctionExpressions: true,
+        },
+      ],
       '@typescript-eslint/interface-name-prefix': 'off',
       '@typescript-eslint/no-empty-interface': 'off',
       '@typescript-eslint/no-empty-object-type': 'off',
@@ -226,6 +247,10 @@ export const eslintConfig = tslint.config([
         },
       ],
       curly: ['error', 'multi-line'],
+      // Named exports only — a default export costs the importer the shared,
+      // greppable name. Framework entry points that *require* a default are
+      // carved out below; everything else is an error.
+      'import/no-default-export': 'error',
       'import/no-named-as-default-member': 'off',
       'no-await-in-loop': 'error',
       'no-console': 'off',
@@ -289,6 +314,106 @@ export const eslintConfig = tslint.config([
           selector: `CallExpression[callee.type="MemberExpression"][callee.property.name="toThrowErrorMatchingInlineSnapshot"]`,
         },
       ],
+    },
+  },
+
+  /**
+   * `import type` for type-only imports, and the naming conventions — both
+   * enforced here rather than in the shared base block for the same reason.
+   *
+   * Scoped to `.ts`/`.tsx` deliberately: the rule needs parser services, and
+   * the `@graphql-eslint/parser` virtual documents (`*.tsx.graphql`) do not
+   * provide them — putting the rule in the shared base block crashes a
+   * full-repo lint run with "You have used a rule which requires type
+   * information".
+   *
+   * `emitDecoratorMetadata` is declared here rather than read from
+   * `tsconfig.base.json`, which sets it to `false`. That is a lie for the
+   * decorated surface: `applications/openthrottle-server/.swcrc` compiles with
+   * `decoratorMetadata: true`, so NestJS constructor injection *does* rely on
+   * `design:paramtypes` at runtime. Without this flag the rule would happily
+   * rewrite an injected class import to `import type`, SWC would emit no
+   * runtime binding, and DI would fail at boot — with lint, typecheck and build
+   * all green. Telling the rule the truth makes it skip imports used in
+   * decorated constructor parameters.
+   */
+  {
+    files: ['**/*.ts', '**/*.tsx'],
+    languageOptions: {
+      parserOptions: {
+        emitDecoratorMetadata: true,
+        experimentalDecorators: true,
+      },
+    },
+    rules: {
+      // `disallowTypeAnnotations` (on by default) also bans inline `import()`
+      // types. That is a different convention from `import-type.mdc`, which is
+      // about import *statements*, and the 97 sites it flags are all load
+      // bearing: `vi.importActual<typeof import('../x')>()` is Vitest's own
+      // documented idiom (and a top-level import of the module you are mocking
+      // is exactly what those files avoid), and `typeof import('monaco-editor')`
+      // exists so the editor bundle stays lazily loaded.
+      '@typescript-eslint/consistent-type-imports': [
+        'error',
+        { disallowTypeAnnotations: false },
+      ],
+      // `naming-conventions.mdc`, translated selector by selector. Only the
+      // clauses the rule can actually express are here — the doc's file-name
+      // clause (kebab-case, PascalCase for components) is not something
+      // `naming-convention` can see, so it stays honor-system.
+      //
+      // Measured 2026-09-05, after excluding build output: 31 violations, all
+      // fixed in the same change, so this is `error` rather than the `warn` the
+      // plan assumed. The plan's 30,220 came from the plugin's defaults over a
+      // tree that still included `storybook-static/` — minified bundles account
+      // for the bulk of it. `leadingUnderscore: 'allowSingleOrDouble'` is what
+      // keeps `__dirname`/`__filename` and the `^_` unused-var convention legal.
+      '@typescript-eslint/naming-convention': [
+        'error',
+        { format: ['PascalCase'], selector: 'typeLike' },
+        { format: ['PascalCase'], prefix: ['T'], selector: 'typeParameter' },
+        { format: ['UPPER_CASE'], selector: 'enumMember' },
+        {
+          format: ['camelCase', 'PascalCase'],
+          leadingUnderscore: 'allowSingleOrDouble',
+          selector: 'function',
+        },
+        {
+          format: ['camelCase', 'PascalCase', 'UPPER_CASE'],
+          leadingUnderscore: 'allowSingleOrDouble',
+          selector: 'variable',
+        },
+      ],
+    },
+  },
+
+  /**
+   * Default-export carve-outs. Every one of these is a file whose *consumer*
+   * reads the default export, so a named export would simply not work:
+   *
+   * - tooling configs (Vite, Vitest, ESLint, Tailwind, PostCSS, graphql-codegen)
+   * - React Router framework files: `app/routes.ts`, `app/root.tsx`,
+   *   `app/entry.*.tsx`, and every route module under `app/routes/`
+   * - Storybook: `.storybook/*` and CSF story files (the `meta` default export)
+   * - Nx generators, resolved by `generators.json` `factory` via the default export
+   *
+   * Measured 2026-09-05: 405 default exports repo-wide, all of them in these
+   * buckets. There is no residue of hand-written default exports to convert.
+   */
+  {
+    files: [
+      '**/*.config.{cjs,cts,js,mjs,mts,ts}',
+      '**/.storybook/**/*.{ts,tsx}',
+      '**/*.stories.{ts,tsx}',
+      '**/app/entry.*.{ts,tsx}',
+      '**/app/root.tsx',
+      '**/app/routes.ts',
+      '**/app/routes/**/*.{ts,tsx}',
+      '**/codegen.ts',
+      '**/src/generators/*/generator.ts',
+    ],
+    rules: {
+      'import/no-default-export': 'off',
     },
   },
 

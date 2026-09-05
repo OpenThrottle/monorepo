@@ -14,7 +14,7 @@ import {
   DEFAULT_REASONING_LABELS,
   DEFAULT_SERVICE_TIER_LABELS,
 } from '../data/chat-reasoning-tier-labels';
-import { ChatReasoningLevel, ChatServiceTier } from '../types';
+import type { ChatReasoningLevel, ChatServiceTier } from '../types';
 import type { ChatBackendCapabilities } from '../types';
 
 export interface ChatReasoningTierControlProps {

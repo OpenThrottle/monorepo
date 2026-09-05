@@ -1,11 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { createMock } from '@golevelup/ts-vitest';
-import { LoggerService } from '@openthrottle/nestjs-modules';
-import {
-  ScheduledAgentJobsService,
-  type ScheduledAgentJob,
-} from '@openthrottle/nestjs-repositories';
-import { ScheduledAgentJobSchedulerService } from './scheduled-agent-job-scheduler.service';
+import type { LoggerService } from '@openthrottle/nestjs-modules';
+import type { ScheduledAgentJobsService } from '@openthrottle/nestjs-repositories';
+import { type ScheduledAgentJob } from '@openthrottle/nestjs-repositories';
+import type { ScheduledAgentJobSchedulerService } from './scheduled-agent-job-scheduler.service';
 import { ScheduledAgentJobsReconcileService } from './scheduled-agent-jobs-reconcile.service';
 
 const job = (id: string): ScheduledAgentJob =>

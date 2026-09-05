@@ -1,6 +1,6 @@
 import * as React from 'react';
+import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
-  GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
   readSearchParam,
 } from '@openthrottle/react-router-ui-global';

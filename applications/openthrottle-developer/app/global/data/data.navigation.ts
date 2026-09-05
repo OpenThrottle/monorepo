@@ -1,4 +1,4 @@
-import {
+import type {
   GlobalSidebarContentLinkProps,
   GlobalSidebarLinkProps,
 } from '@openthrottle/react-router-ui-global';

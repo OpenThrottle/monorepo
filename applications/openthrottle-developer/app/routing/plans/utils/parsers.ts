@@ -1,9 +1,6 @@
-import { BadgeProps } from '@openthrottle/react-router-shadcn';
-import {
-  PLANS_SORT_ORDER,
-  PlansSortBy,
-  PlansSortOrder,
-} from '~/routing/plans/config/types';
+import type { BadgeProps } from '@openthrottle/react-router-shadcn';
+import type { PlansSortBy, PlansSortOrder } from '~/routing/plans/config/types';
+import { PLANS_SORT_ORDER } from '~/routing/plans/config/types';
 import { PLAN_STATUS_FILTER_OPTIONS } from '~/routing/plans/config/status-options';
 
 /** Parse multiple assignee values from URL (repeated params or comma-separated). */

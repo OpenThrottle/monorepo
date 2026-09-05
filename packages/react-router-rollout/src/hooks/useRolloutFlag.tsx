@@ -20,10 +20,10 @@ import { useRequiredRolloutContext } from './useRolloutContext';
  */
 export const useRolloutFlag = <
   TCatalog extends RolloutFlagCatalog,
-  K extends RolloutFlagKey<TCatalog>,
+  TKey extends RolloutFlagKey<TCatalog>,
 >(
-  key: K,
-): RolloutFlagValue<TCatalog, K> => {
+  key: TKey,
+): RolloutFlagValue<TCatalog, TKey> => {
   // Hooks
   const { values } = useRequiredRolloutContext<TCatalog>('useRolloutFlag');
 

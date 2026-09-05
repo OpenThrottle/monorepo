@@ -7,7 +7,7 @@ import {
   SelectValue,
 } from '@openthrottle/react-router-shadcn';
 import { PROMPTS_SORT_OPTIONS } from '~/routing/prompts/config';
-import {
+import type {
   PromptsSortBy,
   PromptsSortOrder,
 } from '~/routing/prompts/config/types';

@@ -1,5 +1,5 @@
 import { createMock } from '@golevelup/ts-vitest';
-import { LoggerService } from '@openthrottle/nestjs-modules';
+import type { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   createEmbeddingsProvider,
   diffSnapshots,
@@ -13,10 +13,10 @@ import type {
 } from '@openthrottle/openthrottle-ide';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { AppConfigService } from './app-config.service';
+import type { AppConfigService } from './app-config.service';
 import { CodeSearchService } from './code-search.service';
-import { CodeSnapshotStore } from './code-snapshot-store';
-import { CodeVectorStore } from './code-vector-store';
+import type { CodeSnapshotStore } from './code-snapshot-store';
+import type { CodeVectorStore } from './code-vector-store';
 
 vi.mock('@openthrottle/openthrottle-ide', async (importActual) => {
   const actual =

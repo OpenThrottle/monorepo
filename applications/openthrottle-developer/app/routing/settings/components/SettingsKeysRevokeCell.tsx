@@ -18,7 +18,7 @@ import {
   isActionSuccess,
 } from '@openthrottle/react-router-utils';
 import type { ServiceAccountCredentialFieldsFragment } from '~/__generated__/graphql';
-import { action as settingsKeysAction } from '~/routes/settings.keys';
+import type { action as settingsKeysAction } from '~/routes/settings.keys';
 import {
   credentialDisplayName,
   getSettingsKeysCredentialStatus,

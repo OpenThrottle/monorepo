@@ -2,7 +2,7 @@ import { UnauthorizedException } from '@nestjs/common';
 import { createMock } from '@golevelup/ts-vitest';
 import { authPrincipalFromServiceAccountId } from '@openthrottle/nestjs-auth';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { ServiceAccountsService } from '@openthrottle/nestjs-repositories';
+import type { ServiceAccountsService } from '@openthrottle/nestjs-repositories';
 import { ServiceAccountAuthService } from './service-account-auth.service';
 
 describe('ServiceAccountAuthService', () => {

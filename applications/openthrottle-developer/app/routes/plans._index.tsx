@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { RouteMatch, useSearchParams } from 'react-router';
+import type { RouteMatch } from 'react-router';
+import { useSearchParams } from 'react-router';
 import {
   mergeRouteModuleMeta,
   parsePagination,

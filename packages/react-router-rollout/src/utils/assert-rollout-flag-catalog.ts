@@ -11,10 +11,10 @@ import {
  *
  * @public
  */
-export const isRolloutFlagValueForKind = <K extends RolloutFlagKind>(
-  kind: K,
+export const isRolloutFlagValueForKind = <TKey extends RolloutFlagKind>(
+  kind: TKey,
   value: unknown,
-): value is RolloutFlagValueByKind[K] => {
+): value is RolloutFlagValueByKind[TKey] => {
   switch (kind) {
     case ROLLOUT_FLAG_KIND.BOOLEAN:
       return typeof value === 'boolean';

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { DataTable, TabsContent } from '@openthrottle/react-router-shadcn';
-import { PlanTaskRowFragment } from '~/__generated__/graphql';
+import type { PlanTaskRowFragment } from '~/__generated__/graphql';
 import { filterOutHookTasks } from '~/routing/plans/utils/hook-tasks';
 import { usePlanDetailRouteData } from '~/routing/plans/hooks/usePlanDetailRouteData';
 import { usePlanManagedTaskIds } from '~/routing/plans/hooks/usePlanManagedTaskIds';

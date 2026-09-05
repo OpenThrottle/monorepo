@@ -4,7 +4,7 @@ import { Button, Label } from '@openthrottle/react-router-shadcn';
 import { ComputerIcon } from 'lucide-react';
 import { Form, useNavigation } from 'react-router';
 import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
-import { WorkspaceEditorId } from '~/__generated__/graphql';
+import type { WorkspaceEditorId } from '~/__generated__/graphql';
 // import { WorkspaceEditorAffiliateLinks } from '~/routing/settings/components/WorkspaceEditorAffiliateLinks';
 import { WorkspaceEditorMultiSelect } from '~/routing/settings/components/WorkspaceEditorMultiSelect';
 import { WorkspaceEditorPresenceHints } from '~/routing/settings/components/WorkspaceEditorPresenceHints';

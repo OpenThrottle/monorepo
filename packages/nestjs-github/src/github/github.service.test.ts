@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
-import { ConfigService } from '@nestjs/config';
+import type { ConfigService } from '@nestjs/config';
 import { BadGatewayException, GatewayTimeoutException } from '@nestjs/common';
 import { createMock } from '@golevelup/ts-vitest';
 import { asMock } from '@openthrottle/nestjs-testing';

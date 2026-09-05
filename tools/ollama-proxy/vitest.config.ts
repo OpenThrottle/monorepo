@@ -1,4 +1,5 @@
-import { ConfigEnv, defineConfig } from 'vitest/config';
+import type { ConfigEnv } from 'vitest/config';
+import { defineConfig } from 'vitest/config';
 
 export default (_config: ConfigEnv) => {
   const env = {

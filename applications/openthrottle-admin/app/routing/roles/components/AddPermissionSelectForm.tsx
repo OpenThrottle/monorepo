@@ -7,7 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@openthrottle/react-router-shadcn';
-import { action as roleDetailAction } from '~/routes/roles.$roleId';
+import type { action as roleDetailAction } from '~/routes/roles.$roleId';
 import type { useFetcher } from 'react-router';
 
 export interface AddPermissionSelectFormProps {

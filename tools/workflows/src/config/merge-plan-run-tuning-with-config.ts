@@ -4,7 +4,7 @@
  */
 
 import type { WorkflowRalphResolvedDefaults } from './workflow-ralph-defaults.types.ts';
-import { WorkflowConfigDebug } from '@openthrottle/openthrottle-agentic-workflow';
+import type { WorkflowConfigDebug } from '@openthrottle/openthrottle-agentic-workflow';
 
 /** @description Subset of GraphQL `RalphPlanRunTuningInput` / nested job tuning fields. */
 export interface PlanRunTuningMergeInput {

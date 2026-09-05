@@ -1,4 +1,4 @@
-import {
+import type {
   WorkflowConfigModel,
   WorkflowConfigRunner,
 } from '@openthrottle/openthrottle-agentic-workflow';

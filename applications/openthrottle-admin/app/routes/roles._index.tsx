@@ -16,9 +16,9 @@ import {
   isAuthError,
   parseFormData,
 } from '@openthrottle/react-router-graphql';
+import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalHeading,
-  GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { CreateRoleDocument, GetRolesDocument } from '~/__generated__/graphql';

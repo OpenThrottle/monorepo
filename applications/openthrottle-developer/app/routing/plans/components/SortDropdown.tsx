@@ -6,11 +6,8 @@ import {
   SelectValue,
 } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
-import {
-  PLANS_SORT_BY_OPTIONS,
-  PlansSortBy,
-  PlansSortOrder,
-} from '~/routing/plans/config/types';
+import type { PlansSortBy, PlansSortOrder } from '~/routing/plans/config/types';
+import { PLANS_SORT_BY_OPTIONS } from '~/routing/plans/config/types';
 import {
   isPlansSortBy,
   isPlansSortOrder,

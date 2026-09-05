@@ -1,29 +1,29 @@
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 import { createMock } from '@golevelup/ts-vitest';
-import { LoggerService } from '@openthrottle/nestjs-modules';
+import type { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   RUN_AGENT_STATUS,
   type RunAgentPromptResult,
 } from '@openthrottle/openthrottle-drivers';
-import {
+import type {
   ScheduledAgentJobCheckoutPathService,
   ScheduledAgentJobsService,
+} from '@openthrottle/nestjs-repositories';
+import {
   type ScheduledAgentJob,
   type ScheduledAgentJobRun,
 } from '@openthrottle/nestjs-repositories';
 import type { KeyedJsonlWriter } from '@openthrottle/nestjs-logging';
-import { BullMqRunOutputRetentionService } from '../bullmq-run-output-retention.service';
-import { ScheduledAgentJobCancellationService } from './scheduled-agent-job-cancellation.service';
-import {
-  ScheduledAgentJobDirectoryLockService,
-  type ScheduledAgentJobDirectoryLockResult,
-} from './scheduled-agent-job-directory-lock.service';
+import type { BullMqRunOutputRetentionService } from '../bullmq-run-output-retention.service';
+import type { ScheduledAgentJobCancellationService } from './scheduled-agent-job-cancellation.service';
+import type { ScheduledAgentJobDirectoryLockService } from './scheduled-agent-job-directory-lock.service';
+import { type ScheduledAgentJobDirectoryLockResult } from './scheduled-agent-job-directory-lock.service';
 import {
   foldRunUsage,
   parseRunOutcome,
   ScheduledAgentJobsProcessor,
 } from './scheduled-agent-jobs.processor';
-import { ScheduledAgentRunnerService } from './scheduled-agent-runner.service';
+import type { ScheduledAgentRunnerService } from './scheduled-agent-runner.service';
 import type { ScheduledAgentJobBullJob } from './scheduled-agent-jobs.types';
 
 const result = (

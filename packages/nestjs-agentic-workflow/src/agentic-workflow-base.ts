@@ -20,8 +20,8 @@ import type {
  * no default export, explicit return types.
  */
 export abstract class AgenticWorkflowBase<
-  WorkflowFinishedReason extends string,
-  WorkflowFailedReason extends string,
+  TWorkflowFinishedReason extends string,
+  TWorkflowFailedReason extends string,
   TContext extends WorkflowRunContext = WorkflowRunContext,
 > {
   /**
@@ -36,8 +36,8 @@ export abstract class AgenticWorkflowBase<
    * (for example `createWorkflowRalphOrchestrator`) and keep all workflow-specific knowledge here.
    */
   abstract createOrchestrator(): WorkflowOrchestrator<
-    WorkflowFinishedReason,
-    WorkflowFailedReason,
+    TWorkflowFinishedReason,
+    TWorkflowFailedReason,
     TContext
   >;
 }

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { MultiSelect } from '@openthrottle/react-router-shadcn';
-import { EditorPresenceState } from '~/__generated__/graphql';
+import type { EditorPresenceState } from '~/__generated__/graphql';
 import { isWorkspaceEditorId } from '~/global/config/workspace-editors';
 import { WORKSPACE_EDITOR_OPTIONS } from '~/routing/settings/config/workspace-editors';
 import { WorkspaceEditorPresenceMarker } from '~/routing/settings/components/WorkspaceEditorPresenceMarker';

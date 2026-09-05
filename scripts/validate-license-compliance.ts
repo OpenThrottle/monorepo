@@ -325,12 +325,12 @@ export const hasPlatformConstraints = (manifest: unknown): boolean =>
  * @description Map over items with a fixed-size worker pool so reading thousands of
  * package.json files never exhausts the file-descriptor limit. Results preserve input order.
  */
-const mapWithConcurrency = async <T, R>(
+const mapWithConcurrency = async <T, TResult>(
   items: readonly T[],
   limit: number,
-  fn: (item: T) => Promise<R>,
-): Promise<R[]> => {
-  const results: R[] = [];
+  fn: (item: T) => Promise<TResult>,
+): Promise<TResult[]> => {
+  const results: TResult[] = [];
   let cursor = 0;
   const worker = async (): Promise<void> => {
     const current = cursor;

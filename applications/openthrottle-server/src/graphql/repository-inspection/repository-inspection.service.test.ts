@@ -4,8 +4,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { createMock } from '@golevelup/ts-vitest';
-import { LoggerService } from '@openthrottle/nestjs-modules';
-import { RepositoryCheckoutsService } from '@openthrottle/nestjs-repositories';
+import type { LoggerService } from '@openthrottle/nestjs-modules';
+import type { RepositoryCheckoutsService } from '@openthrottle/nestjs-repositories';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { RepositoryInspectionService } from './repository-inspection.service';
 

@@ -1,5 +1,5 @@
 import { format } from 'winston';
-import { TransformableInfo } from 'logform';
+import type { TransformableInfo } from 'logform';
 
 const formatColors = format.colorize({
   all: true,

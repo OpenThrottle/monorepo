@@ -1,6 +1,6 @@
 import * as React from 'react';
 import clsx from 'clsx';
-import { EditorPresenceState } from '~/__generated__/graphql';
+import type { EditorPresenceState } from '~/__generated__/graphql';
 import { getEditorPresenceStatus } from '~/routing/settings/utils/workspace-editor-presence-status';
 
 export interface WorkspaceEditorPresenceMarkerProps {

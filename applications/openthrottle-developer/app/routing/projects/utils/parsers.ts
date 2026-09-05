@@ -1,10 +1,12 @@
-import { GetProjectsQuery } from '~/__generated__/graphql';
-import { ProjectWithStats } from '~/routing/projects/data/types';
+import type { GetProjectsQuery } from '~/__generated__/graphql';
+import type { ProjectWithStats } from '~/routing/projects/data/types';
+import type {
+  ProjectsSortBy,
+  ProjectsSortOrder,
+} from '~/routing/prompts/config/types';
 import {
   PROJECTS_SORT_BY,
   PROJECTS_SORT_ORDER,
-  ProjectsSortBy,
-  ProjectsSortOrder,
 } from '~/routing/prompts/config/types';
 
 /**

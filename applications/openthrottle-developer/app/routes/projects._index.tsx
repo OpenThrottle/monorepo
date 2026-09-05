@@ -3,9 +3,9 @@ import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { Button } from '@openthrottle/react-router-shadcn';
 import { Link } from 'react-router';
 import { FolderPlusIcon, FoldersIcon } from 'lucide-react';
+import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalHeading,
-  GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
   readSearchParam,
 } from '@openthrottle/react-router-ui-global';
@@ -30,7 +30,7 @@ import { ProjectsStats } from '~/routing/projects/components/ProjectsStats';
 import { ProjectsTable } from '~/routing/projects/components/ProjectsTable';
 import { ProjectsToolbar } from '~/routing/projects/components/ProjectsToolbar';
 import { SITE_TITLE } from '~/global/config/settings';
-import { SortBy, SortOrder, View } from '~/routing/projects/config';
+import type { SortBy, SortOrder, View } from '~/routing/projects/config';
 import { sortProjects } from '~/routing/projects/utils/sorting';
 import type { ProjectWithStats } from '~/routing/projects/data/types';
 import type { Route } from '@/app/routes/+types/projects._index';

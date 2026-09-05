@@ -8,7 +8,8 @@ import {
   BreadcrumbSeparator,
   cn,
 } from '@openthrottle/react-router-shadcn';
-import { Link, LinkProps } from 'react-router';
+import type { LinkProps } from 'react-router';
+import { Link } from 'react-router';
 
 export interface OpenThrottleBreadcrumbsProps {
   children: React.ReactNode;

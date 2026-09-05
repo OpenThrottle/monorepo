@@ -61,10 +61,10 @@ import { NotificationsStoreProvider } from '@openthrottle/react-router-notificat
 import { DeveloperRolloutProvider } from '~/global/components/DeveloperRolloutProvider';
 import { NotificationsSubscriptionBridge } from '~/global/components/NotificationsSubscriptionBridge';
 import { useAtom } from 'jotai';
+import type { UserObject } from '~/__generated__/graphql';
 import {
   GetMyUserDocument,
   GetRootHealthDocument,
-  UserObject,
 } from '~/__generated__/graphql';
 import { GlobalRootLoaderFailureBanner } from '~/global/components/GlobalRootLoaderFailureBanner';
 import { GlobalServerHealthBanner } from '~/global/components/GlobalServerHealthBanner';
@@ -106,7 +106,7 @@ import {
 } from '~/global/utils/utils.agents-chat';
 import { PROTECTED_PATH_PREFIXES } from '~/global/config/config.app';
 import { useHeaderChatController } from '~/routing/home/hooks/useHeaderChatController';
-import { ServerHealthObject } from '@openthrottle/openthrottle-developer-codegen';
+import type { ServerHealthObject } from '@openthrottle/openthrottle-developer-codegen';
 import stylesheet from '~/styles.css?url';
 import type { Route } from '@/app/+types/root';
 

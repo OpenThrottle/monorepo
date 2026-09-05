@@ -1,6 +1,6 @@
-import { FormikConfig } from 'formik';
-import type { ObjectSchema } from 'yup';
-import { InferType, object, string } from 'yup';
+import type { FormikConfig } from 'formik';
+import type { ObjectSchema, InferType } from 'yup';
+import { object, string } from 'yup';
 
 /**
  * @link https://github.com/visormatt/monorepo/blob/main/docs/Forms.md

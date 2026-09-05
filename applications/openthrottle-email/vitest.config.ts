@@ -1,4 +1,5 @@
-import { ConfigEnv, defineConfig, loadEnv } from 'vite';
+import type { ConfigEnv } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 
 export default (config: ConfigEnv) => {
   const { mode } = config;

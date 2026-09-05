@@ -2,7 +2,7 @@
  * @description Project tool handler + schema: delete_project. Wired up via the shared `developerMcpToolDefinitions` registry and the Nest surface.
  */
 
-import { z } from 'zod';
+import type { z } from 'zod';
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import { DeleteProjectDocument } from '../__generated__/graphql.js';
 import { DeleteProjectInputSchema } from '../__generated__/schemas.ts';

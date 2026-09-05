@@ -18,7 +18,7 @@ Commands this job uses:
 pnpm run audit:component-shape             # component primitive-shape audit (R4/R5/R6/R7)
 pnpm run audit:component-shape:shadcn      # same, for the shadcn package
 pnpm run audit:route-shape                 # route-shape audit
-pnpm nx run <project>:lint                 # for context only — this job hunts what lint misses
+pnpm nx run <project>:lint                 # errors are already blocked in CI; the WARNINGS are this job's input
 grep -rn --include='*.ts' --include='*.tsx' <pattern> applications packages tools
 ```
 
@@ -26,7 +26,7 @@ The rules most often violated, and what they actually say:
 
 - **No new TypeScript `enum`s** — use `as const` objects. Pre-existing enums are grandfathered; only new declarations are findings.
 - **Avoid `as` casts and `any`.** There is a known trap here: the root ESLint config forces `consistent-type-assertions` to `off`, and running `--fix` strips existing disable comments. Consequence: **these violations must be found by reading the code, not by running lint.** A clean lint run proves nothing about this rule.
-- **`import type` for type-only imports**, explicit return types on exported functions, `const` over `let`, `async/await` over `.then()` chains.
+- **`const` over `let`, `async/await` over `.then()` chains.** (`import type` is now enforced by `consistent-type-imports` at `error`; explicit return types on exported functions now surface as `explicit-module-boundary-types` **warnings** — see step 2.)
 - **Alphabetize** array entries and object keys when order does not matter.
 - **Component/data boundaries:** a component file exports only the component and its props. Lists, copy, and other data live in the nearest `data/` folder (copy in `data.copy.ts`). Generated section comments (`Hooks` / `Setup` / `Handlers` / `Markup` / `Life Cycle` / `🔌 Short Circuit`) are kept even when empty.
 - **Component shape:** one exported component per file, no file-scope helpers or data that belong hoisted, and a 210-line cap. This is what `audit:component-shape` measures.
@@ -39,11 +39,20 @@ The rules most often violated, and what they actually say:
 ## What to inspect
 
 1. **Run the shape audits.** `audit:component-shape`, `audit:component-shape:shadcn`, and `audit:route-shape`. Everything they report is a finding, already grouped by rule.
-2. **Read for the lint-invisible rules.** Grep plus read for: new `enum` declarations, `as` casts, `any` annotations, `.then()` chains, `let` that is never reassigned, missing `import type`, missing explicit return types on exported functions. Confirm each hit by reading the surrounding code — a cast inside a genuinely untypeable boundary may be justified; say so rather than filing it.
-3. **Component/data boundaries.** Component files exporting non-component values; list or copy data defined inline instead of in the nearest `data/` folder; missing generated section comments.
-4. **Test conventions.** `screen` instead of `component`; `fireEvent` instead of `userEvent`; React Router apps re-adding shims that the shared `setupReactRouterTest` setup already provides.
-5. **Import hygiene.** Deep package imports (`@openthrottle/x/src/y`) instead of the main entry; missing `@public` tags on public API exports.
-6. **Scope the sweep to recent code first.** Prioritize files changed in the last 60 days (`git log --since='60 days ago' --name-only`). Old violations matter less than new ones — new ones are the precedent problem.
+2. **Triage the lint warnings.** Run lint across the workspace and collect the **warnings** — the lint target passes no `--max-warnings`, so CI is green with thousands of them outstanding and this job is the only thing that reads them. The one that matters most here is `@typescript-eslint/explicit-module-boundary-types` (362 warnings at last count, 2026-09-05), the machine form of `return-types.mdc`. Group them by project and file them as mechanical cleanup tasks; do not try to clear them all in one plan.
+
+   ```bash
+   pnpm nx run-many --target=lint --all --output-style=static 2>&1 | grep -E 'warning' | sort | uniq -c | sort -rn
+   ```
+
+3. **Read for the lint-invisible rules.** Grep plus read for: new `enum` declarations, `as` casts, `any` annotations, `.then()` chains, `let` that is never reassigned. Confirm each hit by reading the surrounding code — a cast inside a genuinely untypeable boundary may be justified; say so rather than filing it.
+
+   Two rules that used to belong on this list no longer do — they are enforced by ESLint at `error` now, so a clean lint run _is_ proof for them and hand-hunting is wasted effort: `import type` (`consistent-type-imports`) and named exports (`import/no-default-export`).
+
+4. **Component/data boundaries.** Component files exporting non-component values; list or copy data defined inline instead of in the nearest `data/` folder; missing generated section comments.
+5. **Test conventions.** `screen` instead of `component`; `fireEvent` instead of `userEvent`; React Router apps re-adding shims that the shared `setupReactRouterTest` setup already provides.
+6. **Import hygiene.** Deep package imports (`@openthrottle/x/src/y`) instead of the main entry; missing `@public` tags on public API exports.
+7. **Scope the sweep to recent code first.** Prioritize files changed in the last 60 days (`git log --since='60 days ago' --name-only`). Old violations matter less than new ones — new ones are the precedent problem.
 
 ## Ranking
 
