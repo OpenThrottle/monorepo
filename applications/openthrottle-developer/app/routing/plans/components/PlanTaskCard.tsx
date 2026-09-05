@@ -9,10 +9,8 @@ import {
 import { Link } from 'react-router';
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
 import { PlanManagedTaskBadge } from '~/routing/plans/components/PlanManagedTaskBadge';
-import {
-  isPlanStatusKey,
-  PlanStatusBadge,
-} from '~/routing/plans/components/PlanStatusBadge';
+import { isPlanStatusKey } from '~/routing/plans/utils/utils.plans';
+import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
 import { PlanTaskInlineActions } from '~/routing/plans/components/PlanTaskInlineActions';
 import { formatPlanTaskStatus } from '~/routing/plans/utils/format-status';
 

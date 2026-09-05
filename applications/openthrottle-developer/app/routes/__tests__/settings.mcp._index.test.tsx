@@ -73,8 +73,17 @@ describe('routes/settings.mcp._index.tsx', () => {
       await component.findByText('Anthropic connector directory'),
     ).toBeInTheDocument();
     expect(component.getByText('Official MCP registry')).toBeInTheDocument();
-    expect(component.getByText('GitHub')).toBeInTheDocument();
-    expect(component.getByText('Postgres')).toBeInTheDocument();
+
+    // The route renders inside a beta GlobalScreen, whose banner carries its own
+    // "GitHub" link, so scope connector-name lookups to the connector cards.
+    const cards = component.getAllByTestId('SettingsMcpConnectorCard');
+
+    expect(
+      cards.some((card) => within(card).queryByText('GitHub') !== null),
+    ).toBe(true);
+    expect(
+      cards.some((card) => within(card).queryByText('Postgres') !== null),
+    ).toBe(true);
   });
 
   test('shows connected/not-connected status and a manage link per connector', async () => {

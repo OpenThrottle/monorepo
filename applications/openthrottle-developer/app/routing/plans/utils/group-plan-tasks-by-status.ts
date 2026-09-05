@@ -1,5 +1,5 @@
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
-import { isPlanStatusKey } from '~/routing/plans/components/PlanStatusBadge';
+import { isPlanStatusKey } from '~/routing/plans/utils/utils.plans';
 import { PlanStatusKey, planStatusValues } from '~/routing/plans/types';
 
 /**

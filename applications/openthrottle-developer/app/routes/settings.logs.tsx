@@ -43,7 +43,7 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <GlobalScreen>
+    <GlobalScreen beta={true}>
       <SettingsLogsPanel />
     </GlobalScreen>
   );

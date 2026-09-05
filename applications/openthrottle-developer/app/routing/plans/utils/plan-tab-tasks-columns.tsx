@@ -6,10 +6,8 @@
  */
 import * as React from 'react';
 import { GlobalPopoverActionsHeader } from '@openthrottle/react-router-ui-global';
-import {
-  isPlanStatusKey,
-  PlanStatusBadge,
-} from '~/routing/plans/components/PlanStatusBadge';
+import { isPlanStatusKey } from '~/routing/plans/utils/utils.plans';
+import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
 import { PlanTasksTableCellActions } from '~/routing/plans/components/PlanTasksTableCellActions';
 import { PlanTasksTableCellTitle } from '~/routing/plans/components/PlanTasksTableCellTitle';
 import type { ColumnDef } from '@tanstack/react-table';

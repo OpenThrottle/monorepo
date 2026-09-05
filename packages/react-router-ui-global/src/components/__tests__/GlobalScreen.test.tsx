@@ -30,7 +30,7 @@ describe('GlobalScreen Component', () => {
     expect(component.getByText(/Beta:/i)).toBeInTheDocument();
     expect(component.getByRole('link', { name: /GitHub/i })).toHaveAttribute(
       'href',
-      'https://github.com/openthrottle/openthrottle/issues',
+      'https://github.com/OpenThrottle/monorepo/issues/new/choose',
     );
   });
 

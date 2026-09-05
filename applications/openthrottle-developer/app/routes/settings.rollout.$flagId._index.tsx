@@ -47,8 +47,20 @@ export default function Component(
   const { loaderData } = props;
   const { flag } = loaderData;
 
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
   return (
-    <GlobalScreen>
+    <GlobalScreen beta={true}>
       <RolloutFlagDetail
         editTo={`/settings/rollout/${flag.id}/edit`}
         flag={flag}

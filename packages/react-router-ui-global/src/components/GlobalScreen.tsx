@@ -1,6 +1,7 @@
 import * as React from 'react';
 import clsx from 'clsx';
 import { Link } from 'react-router';
+import { OPENTHROTTLE_GITHUB_URL } from '@openthrottle/react-router-utils';
 
 export interface GlobalScreenProps extends React.PropsWithChildren<
   React.HTMLAttributes<HTMLDivElement>
@@ -47,7 +48,7 @@ export const GlobalScreen = (props: GlobalScreenProps): React.ReactElement => {
             <Link
               className="hover:text-background underline underline-offset-4 transition-colors"
               target="_blank"
-              to="https://github.com/openthrottle/openthrottle/issues"
+              to={`${OPENTHROTTLE_GITHUB_URL}/monorepo/issues/new/choose`}
             >
               GitHub
             </Link>

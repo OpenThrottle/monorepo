@@ -10,7 +10,7 @@ import * as React from 'react';
 import { useAtomValue } from 'jotai';
 import { useFetcher, useSearchParams } from 'react-router';
 import { DEFAULT_PLAN_TASKS_VIEW_STORAGE_KEY } from '~/routing/plans/config/defaults';
-import { isPlanStatusKey } from '~/routing/plans/components/PlanStatusBadge';
+import { isPlanStatusKey } from '~/routing/plans/utils/utils.plans';
 import { parsePlanTasksView } from '~/routing/plans/utils/parsers';
 import { getResolvedTaskCount } from '~/routing/plans/utils/utils.plans';
 import { usePlanDeferredValue } from '~/routing/plans/hooks/usePlanDeferredValue';

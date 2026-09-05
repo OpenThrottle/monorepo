@@ -39,11 +39,12 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   links: (match) => {
     const title = match.loaderData?.plan?.title;
     const id = match.loaderData?.plan?.id ?? 'not-found';
-    const planTitle = title ? `${title.slice(0, 30)} …` : 'Not Found';
+    const planId = `${id.split('-').shift()} …`;
+    const _planTitle = title ? `${title.slice(0, 30)} …` : 'Not Found';
 
     return [
       { children: 'Plans', to: '/plans' },
-      { children: planTitle, to: `/plans/${id}` },
+      { children: planId, to: `/plans/${id}` },
     ];
   },
 };

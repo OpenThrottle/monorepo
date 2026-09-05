@@ -4,10 +4,6 @@ import { Link } from 'react-router';
 import { getPlanStatusBadgeColor } from '~/routing/plans/utils/utils.plans';
 import { planStatusValues, type PlanStatusKey } from '~/routing/plans/types';
 
-// Re-exported from utils so existing importers keep a stable path; the predicate
-// itself lives with the other plan-status helpers (component-primitive-shape R4).
-export { isPlanStatusKey } from '~/routing/plans/utils/utils.plans';
-
 export interface PlanStatusBadgeProps {
   className?: string;
   status: PlanStatusKey;
@@ -27,6 +23,7 @@ export const PlanStatusBadge = (
 
   // Setup
   const color = getPlanStatusBadgeColor(status);
+  const label = planStatusValues[status];
 
   // Handlers
 
@@ -45,11 +42,15 @@ export const PlanStatusBadge = (
       size="xs"
     >
       {to != null ? (
-        <Link to={to} viewTransition={true}>
-          {planStatusValues[status]}
+        <Link
+          title={`View plans filtered by status: ${label}`}
+          to={to}
+          viewTransition={true}
+        >
+          {label}
         </Link>
       ) : (
-        planStatusValues[status]
+        label
       )}
     </Badge>
   );

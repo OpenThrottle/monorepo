@@ -9,7 +9,7 @@ import { DraggablePlanTaskCard } from '~/routing/plans/components/DraggablePlanT
 import { filterOutHookTasks } from '~/routing/plans/utils/hook-tasks';
 import { usePlanDetailRouteData } from '~/routing/plans/hooks/usePlanDetailRouteData';
 import { usePlanManagedTaskIds } from '~/routing/plans/hooks/usePlanManagedTaskIds';
-import { isPlanStatusKey } from '~/routing/plans/components/PlanStatusBadge';
+import { isPlanStatusKey } from '~/routing/plans/utils/utils.plans';
 import { PlanTasksColumnDrop } from '~/routing/plans/components/PlanTasksColumnDrop';
 import {
   getPlanTaskBoardColumnId,

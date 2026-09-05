@@ -1,11 +1,9 @@
 import * as React from 'react';
 import { Badge } from '@openthrottle/react-router-shadcn';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
+import { isPlanStatusKey } from '~/routing/plans/utils/utils.plans';
 import { ListOrderedIcon } from 'lucide-react';
-import {
-  isPlanStatusKey,
-  PlanStatusBadge,
-} from '~/routing/plans/components/PlanStatusBadge';
+import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
 import { parseTaskStatusColor } from '~/routing/plans/utils/parsers';
 
 export interface TaskDetailRouteHeaderProps {

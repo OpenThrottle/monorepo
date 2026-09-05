@@ -14,10 +14,8 @@ import { GlobalPopoverActionsHeader } from '@openthrottle/react-router-ui-global
 import { formatDate } from 'date-fns';
 import { SlidersHorizontal } from 'lucide-react';
 import { Link } from 'react-router';
-import {
-  isPlanStatusKey,
-  PlanStatusBadge,
-} from '~/routing/plans/components/PlanStatusBadge';
+import { isPlanStatusKey } from '~/routing/plans/utils/utils.plans';
+import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
 import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
 import { PlansTableRowActions } from '~/routing/plans/components/PlansTableRowActions';
 import { PLANS_DETAIL_TAB_SEARCH_PARAM } from '~/routing/plans/utils/parsers';

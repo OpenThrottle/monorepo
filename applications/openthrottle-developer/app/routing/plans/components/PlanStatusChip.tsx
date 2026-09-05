@@ -1,6 +1,6 @@
 import * as React from 'react';
 import clsx from 'clsx';
-import { isPlanStatusKey } from '~/routing/plans/components/PlanStatusBadge';
+import { isPlanStatusKey } from '~/routing/plans/utils/utils.plans';
 import { PLAN_STATUS_DOT_COLOR } from '~/routing/plans/data/plan-status-dot-color';
 import { planStatusValues } from '~/routing/plans/types';
 

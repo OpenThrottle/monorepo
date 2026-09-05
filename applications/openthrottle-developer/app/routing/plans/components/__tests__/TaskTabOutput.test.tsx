@@ -30,13 +30,9 @@ const renderTab = (props: TaskTabOutputProps): RenderResult =>
 
 describe('TaskTabOutput Component', () => {
   test('renders the empty state and plan-output link when there are no chunks', () => {
-    const component = renderTab({ chunks: [], planId: 'plan-1' });
+    const component = renderTab({ chunks: [] });
 
     expect(component.getByText('No task output yet')).toBeInTheDocument();
-    const link = component.getByRole('link', {
-      name: /view full plan output/i,
-    });
-    expect(link).toHaveAttribute('href', '/plans/plan-1?tab=output');
   });
 
   describe('with chunks', () => {
@@ -48,7 +44,6 @@ describe('TaskTabOutput Component', () => {
           chunk({ content: 'First task log', id: 'c1', iteration: 1 }),
           chunk({ content: 'Second task log', id: 'c2', iteration: 2 }),
         ],
-        planId: 'plan-1',
       });
     });
 
@@ -58,12 +53,6 @@ describe('TaskTabOutput Component', () => {
       expect(
         component.queryByText('No task output yet'),
       ).not.toBeInTheDocument();
-    });
-
-    test('keeps the "View full plan output" affordance', () => {
-      expect(
-        component.getByRole('link', { name: /view full plan output/i }),
-      ).toBeInTheDocument();
     });
   });
 });

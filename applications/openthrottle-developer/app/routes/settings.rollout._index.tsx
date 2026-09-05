@@ -74,7 +74,7 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <GlobalScreen>
+    <GlobalScreen beta={true}>
       <div className="flex flex-col gap-4">
         <GlobalHeading
           heading="h1"

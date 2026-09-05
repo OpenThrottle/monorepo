@@ -7,6 +7,7 @@ import {
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
 import { CodeXmlIcon } from 'lucide-react';
+import { FEATURE_BETA_PREVIEW } from '@openthrottle/react-router-utils';
 import { getWorkspaceEditorDeepLink } from '~/global/config/workspace-editor-deep-links';
 import { PlanDeferredSection } from '~/routing/plans/components/PlanDeferredSection';
 import { PlanToolbarTagsSkeleton } from '~/routing/plans/components/PlanToolbarTagsSkeleton';
@@ -91,6 +92,17 @@ export const PlanEditorActions = (
         className={clsx('flex flex-wrap items-center gap-2', className)}
         data-testid="PlanEditorActions"
       >
+        {FEATURE_BETA_PREVIEW ? (
+          <>
+            <Button size="xs" variant="outline">
+              Add to Queue
+            </Button>
+            <Button size="xs" variant="outline">
+              Schedule
+            </Button>
+          </>
+        ) : null}
+
         {targets.map(({ href, target }) => {
           const label = (
             <div className="flex items-center gap-2">

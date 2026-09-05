@@ -331,6 +331,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const isDarkTheme = useResolvedThemeMode(config.theme) === 'dark';
 
   // Setup
+  const appearanceRootCss = buildAppearanceRootCssBlock(config.brand);
   const env = data?.env ?? {};
   const envHtml = `window.env = ${JSON.stringify(env)}`;
   const favicon = `${OPENTHROTTLE_BUCKET}/branding/icons/blue/favicon.ico`;
@@ -356,8 +357,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
       setUser(data.user);
     }
   }, [data?.user, data?.userLoadOk, setUser]);
-
-  const appearanceRootCss = buildAppearanceRootCssBlock(config.brand);
 
   // 🔌 Short Circuit
 
