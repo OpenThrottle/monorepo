@@ -33,7 +33,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 
 // packages/agentic-hooks/src/adapters/claude/outcome.ts
-var import_node_path4 = __toESM(require("node:path"), 1);
+var import_node_path5 = __toESM(require("node:path"), 1);
 
 // packages/agentic-hooks/src/config/env.ts
 var import_node_child_process = require("node:child_process");
@@ -403,6 +403,11 @@ var persistOutcomeEvent = async ({
   }
 };
 
+// packages/agentic-hooks/src/data/plan-runs.ts
+var import_node_path4 = __toESM(require("node:path"), 1);
+var PLAN_RUNS_DIR_REL = import_node_path4.default.join(".cache", "plan-runs");
+var PLAN_RUN_ABANDONED_MS = 6 * 60 * 60 * 1e3;
+
 // packages/agentic-hooks/src/adapters/claude/outcome.ts
 var parseArgs = (argv) => {
   const out = {};
@@ -453,7 +458,7 @@ var main = async () => {
     const outPath = process.env.SKILL_USAGE_OUTCOMES_JSONL_PATH || defaultOutcomesJsonlPath(repoRoot);
     await persistOutcomeEvent({
       event,
-      jsonlPath: import_node_path4.default.resolve(outPath),
+      jsonlPath: import_node_path5.default.resolve(outPath),
       repoRoot
     });
   } catch (err) {

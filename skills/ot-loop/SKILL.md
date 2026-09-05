@@ -28,7 +28,18 @@ Your job is to run the built-in **`/loop`** over OpenThrottle plan **`$planId`**
 
 2. **Load the plan and tasks** — `get_plan(planId)` + `get_tasks_by_plan_id(planId)` (or `get_remaining_tasks_for_plan`). Canonical order is `sortOrder ASC, createdAt ASC`. If tasks are out of sequence, fix with `reorder_plan_tasks` (never delete-and-recreate).
 3. **Set the plan `IN_PROGRESS`** via `update_plan(planId, { status: 'IN_PROGRESS' })` if it isn't already.
-4. **A fresh worktree needs codegen before app tests will collect** — run `pnpm nx run-many --target=codegen-graphql --all` if the `__generated__` output is missing.
+4. **Open a run row so this run is attributable** — `register_plan_run({ planId, model, branch })`.
+
+   Without this an interactive loop is invisible: nothing records which agent ran it, on which model, on which branch, or when. A queued Ralph run has always had this row.
+
+   - **Declare the `model` you are actually running as.** If you cannot determine it, pass null rather than a plausible guess — a wrong value in a provenance column is worse than a missing one, because nothing downstream can tell it is wrong. Null is a legible answer.
+   - **Do not declare `executionBackend`.** The MCP detects it from the harness that launched it. Pass one only if the tool tells you detection found nothing.
+   - **Capture the returned run id** and carry it as loop state for the rest of the run. You need it to settle.
+   - **Best-effort**: if register fails, say so and keep working. A run with no row is today's status quo, not a regression — never block real work on telemetry.
+
+   Then, once the worktree exists, `register_plan_run_worktree_checkout({ planRunId, filesystemPath })` with the path create printed, so `checkout_id` resolves. That is what makes "open in editor" work for this run and what lets the worktree read as busy while you are in it. It soft-fails harmlessly if the path is not a linked worktree.
+
+5. **A fresh worktree needs codegen before app tests will collect** — run `pnpm nx run-many --target=codegen-graphql --all` if the `__generated__` output is missing.
 
 ## The loop (one task at a time)
 
@@ -52,6 +63,34 @@ Each `/loop` iteration works exactly one task. Resume the lowest-`sortOrder` `IN
 
 **Narrate as you go.** Use `append_plan_output(planId, ...)` for decisions and progress, passing `taskId` = the task the log actually describes (omit only for genuinely plan-level notes). One iteration can touch several tasks — tag the right id.
 
+## Your run row
+
+Everything here is specific to running interactively. It is deliberately outside the canonical
+block above, because the detached `workflow-ralph` CLI already does all of it — it heartbeats on
+a timer and polls the cancel marker itself. Only an agent turn has to do it by hand.
+
+**Poll for a cancel at each task boundary.** Call `get_plan_runs(planId)` and check your run's
+`cancelRequestedAt`. If it is set, stop where you are and settle `CANCELLED`.
+
+> **This is the only way a Kill reaches you.** The server deliberately cannot stop an interactive
+> run: it has no iteration loop to interrupt, so cancelling one returns `CANCELLATION_REQUESTED`
+> and leaves the plan alone rather than resetting it underneath you. That safety floor is exactly
+> what makes the poll your responsibility. An unpolled cancel is a cancel that silently does
+> nothing — the user pressed the button and nothing happened.
+
+Missing a poll only delays a cancel; it corrupts nothing. Best-effort is fine, silence is not.
+
+> **Invariant — every exit path settles the run.** `settle_plan_run(planRunId, status)` with
+> `COMPLETED` when the PR opens, `CANCELLED` on a deliberate stop, `FAILED` when you give up or
+> hit something you cannot finish. A row opened and never settled sits `IN_PROGRESS` forever,
+> reads as live, and holds its worktree marked busy — and because these rows are **exempt from
+> the stale sweep, no server-side process will ever clean one up**. This is the same class of bug
+> as leaving a task `IN_PROGRESS` (the loop's most common failure), one level up, with no reconcile
+> at all. Settling twice is a safe no-op, so settle when in doubt.
+
+Under Claude Code a `Stop` hook settles runs whose session is provably gone — a backstop for hard
+crashes only. Under any other harness this discipline is the only thing there is.
+
 ## Finishing
 
 1. **Verify every task is closed, THEN set the plan `COMPLETED`.** First re-fetch `get_tasks_by_plan_id(planId)` (or `get_remaining_tasks_for_plan`) and confirm **zero** tasks are `IN_PROGRESS`, `PENDING`, or `QUEUED`. Flip any stranded task to `COMPLETED` (or `BLOCKED`/`SKIPPED`) before continuing — a committed task left `IN_PROGRESS` is the usual culprit (see the loop invariant). Only once the list is clean, `update_plan(planId, { status: 'COMPLETED' })`. There is no server-side downward reconcile in **either** direction: the plan can read `COMPLETED` while tasks are still `IN_PROGRESS`, so this explicit re-fetch is mandatory — never skip it.
@@ -59,13 +98,14 @@ Each `/loop` iteration works exactly one task. Resume the lowest-`sortOrder` `IN
 3. To minimize friction merging with main we will run `/github-squash` to condense our PR to a single commit
 4. Next we will fetch main `git fetch origin main:main` and rebase the branch against `main`
 5. **Open a Draft PR** with `/github-pull-request` (conventional-commit title, the repo PR template, testing steps phrased as things to do) — this is the single push for the whole plan. Leave it in **draft**: `build` skips on draft PRs, so a draft is what keeps any later push cheap. Mark it ready (`gh pr ready`) only when the work is genuinely up for review. **Capture the PR URL** — a real PR (branch pushed to the remote, PR object created) is the precondition for teardown below.
-6. **Stop the loop** once the PR is open. Do **not** merge.
+6. **Settle your run row** — `settle_plan_run(planRunId, 'COMPLETED')`. The PR is open, so the run is genuinely done. Nothing else will ever close this row.
+7. **Stop the loop** once the PR is open. Do **not** merge.
 
 ## Teardown the worktree (only after a successful PR)
 
 Once — and **only** once — the PR is confirmed open, tear down the isolated worktree. The branch now lives on the remote (via the PR), so removing the local worktree frees it to be checked out in the primary instance, letting the end-user easily pull the work for manual verification against a primary server.
 
-1. **Confirm the PR is real first.** You must have the PR URL from the step above, and `git status` in the worktree must show the branch up to date with its remote and nothing uncommitted. If PR creation failed or anything is unpushed, **do not tear down** — leave the worktree intact and report the failure so no work is lost.
+1. **Confirm the PR is real first.** You must have the PR URL from the step above, and `git status` in the worktree must show the branch up to date with its remote and nothing uncommitted. If PR creation failed or anything is unpushed, **do not tear down** — leave the worktree intact and report the failure so no work is lost. Settle your run row `FAILED` in that case: the work is preserved but this run is over, and an unsettled row keeps the worktree marked busy for as long as it lives.
 2. **Stop anything running in the worktree** — kill dev servers/watchers scoped to _this worktree's path only_. Never use a bare process-name pattern; that also kills the main checkout's server + OT MCP. You do **not** need to stop the worktree's containers by hand — OpenThrottle's `.worktree/teardown.sh` does that in step 3, scoped to this worktree's own compose project.
 3. **Remove the worktree with [`ot-worktree`](../ot-worktree/SKILL.md) destroy**, never a bare `git worktree remove` — destroy runs `.worktree/teardown.sh` first, which stops this worktree's docker compose project (a bare removal leaves those containers running, detached from any checkout), and it refuses removals that would eat work. Run it from inside the worktree (no argument) or pass the worktree path.
 

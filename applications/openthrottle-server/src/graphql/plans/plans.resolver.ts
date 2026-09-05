@@ -8,11 +8,7 @@ import {
 } from '@openthrottle/node-client';
 import type { PlanStatusCount } from '@openthrottle/node-client';
 import { isRecord } from '@openthrottle/nodejs-utils';
-import {
-  BadRequestException,
-  ForbiddenException,
-  UseGuards,
-} from '@nestjs/common';
+import { BadRequestException, UseGuards } from '@nestjs/common';
 import {
   Args,
   ID,
@@ -59,6 +55,7 @@ import type {
 } from '@openthrottle/nestjs-repositories';
 import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
 import type { Project, Task } from '@openthrottle/nestjs-repositories';
+import { EffectiveUserResolutionService } from '../../services/effective-user-resolution/effective-user-resolution.service';
 import { PlanCreationService } from '../../services/plan-creation/plan-creation.service';
 import { PlanRunWorktreeCheckoutService } from '../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.service';
 import { ProjectObject } from '../projects/project.object';
@@ -198,17 +195,38 @@ function isCancelPlanRunResult(
   );
 }
 
+/**
+ * @description Every backend `plan_runs.execution_backend` accepts, kept in lockstep with
+ * the {@link PlanRunExecutionBackend} union and the `plan_runs_execution_backend_check`
+ * constraint. Written as an exhaustive Record rather than a chain of `===` comparisons so
+ * a new member of the union is a COMPILE error here, not a runtime rejection discovered in
+ * production — which is exactly how `antigravity` (migration 106) came to be a valid backend
+ * that this guard rejected and its error message did not mention.
+ */
+const PLAN_RUN_EXECUTION_BACKENDS: Readonly<
+  Record<PlanRunExecutionBackend, true>
+> = {
+  antigravity: true,
+  claude: true,
+  codex: true,
+  cursor: true,
+  gemini: true,
+  grok: true,
+  opencode: true,
+};
+
+/** Human-readable backend list for error messages; derived so it can never drift. */
+const PLAN_RUN_EXECUTION_BACKEND_LIST = Object.keys(
+  PLAN_RUN_EXECUTION_BACKENDS,
+).join(', ');
+
 /** @description Narrows a client-supplied backend string to a {@link PlanRunExecutionBackend}. */
 function isPlanRunExecutionBackend(
   value: string,
 ): value is PlanRunExecutionBackend {
-  return (
-    value === 'claude' ||
-    value === 'codex' ||
-    value === 'cursor' ||
-    value === 'gemini' ||
-    value === 'grok' ||
-    value === 'opencode'
+  return Object.prototype.hasOwnProperty.call(
+    PLAN_RUN_EXECUTION_BACKENDS,
+    value,
   );
 }
 
@@ -241,9 +259,14 @@ function assertValidPlanStatuses(statuses: readonly string[]): void {
  * row (COMPLETED/CANCELLED/FAILED/STALE) conveys its state through `status`. Falls back to
  * `createdAt` when the run never heartbeated (legacy/pre-first-tick), matching the sweeper's
  * COALESCE(last_heartbeat_at, created_at) predicate.
+ *
+ * A run that does not heartbeat (migration 110) is never stale: with no timer to read,
+ * its liveness is unknown, not expired. This deliberately does NOT overload `isStale` to
+ * mean "unmonitored" — that is a distinct third state. Readers tell the two apart via
+ * `heartbeatExpected`, which sits beside `isStale` on PlanRunObject for exactly this reason.
  */
 function isPlanRunStale(planRun: PlanRun): boolean {
-  if (planRun.status !== 'IN_PROGRESS') {
+  if (planRun.status !== 'IN_PROGRESS' || !planRun.heartbeatExpected) {
     return false;
   }
 
@@ -257,6 +280,7 @@ function isPlanRunStale(planRun: PlanRun): boolean {
 export class PlansResolver {
   constructor(
     private readonly agentPreferences: AgentCliPreferencesService,
+    private readonly effectiveUserResolution: EffectiveUserResolutionService,
     private readonly loaders: PlansLoaders,
     private readonly planCreationService: PlanCreationService,
     private readonly planEnqueueService: PlanEnqueueService,
@@ -402,6 +426,7 @@ export class PlansResolver {
     out.checkoutId = planRun.checkoutId;
     out.createdAt = planRun.createdAt;
     out.executionBackend = planRun.executionBackend;
+    out.heartbeatExpected = planRun.heartbeatExpected;
     out.hostname = planRun.hostname;
     out.id = planRun.id;
     out.model = planRun.model;
@@ -451,7 +476,7 @@ export class PlansResolver {
   ): Promise<PlanRunObject> {
     if (!isPlanRunExecutionBackend(input.executionBackend)) {
       throw new BadRequestException(
-        `Invalid executionBackend: ${input.executionBackend} (expected claude, codex, cursor, gemini, grok, or opencode)`,
+        `Invalid executionBackend: ${input.executionBackend} (expected one of: ${PLAN_RUN_EXECUTION_BACKEND_LIST})`,
       );
     }
 
@@ -462,7 +487,12 @@ export class PlansResolver {
       actorUserId,
       branch: input.branch ?? null,
       executionBackend: input.executionBackend,
+      // Defaults to true so every existing caller — the detached CLI above all, which
+      // does heartbeat on a ~15s timer — keeps today's behaviour untouched. Only an
+      // explicit false opts a run out of heartbeat-based liveness.
+      heartbeatExpected: input.heartbeatExpected ?? true,
       hostname: input.hostname ?? null,
+      model: input.model ?? null,
       pid: input.pid ?? null,
       planId: input.planId,
       workerId: input.workerId ?? null,
@@ -511,20 +541,31 @@ export class PlansResolver {
   }
 
   @Mutation(() => PlanRunObject, {
-    description: `Best-effort register of a linked git worktree as a repository_checkout for the run actor, then back-fill plan_runs.checkout_id when still NULL. Soft-fails (returns the run unchanged) when the path is not a linked worktree, repository resolution fails, or upsert errors. Requires a user JWT (not a service-account token). Returns null when the plan-run row does not exist.`,
+    description: `Best-effort register of a linked git worktree as a repository_checkout for the run actor, then back-fill plan_runs.checkout_id when still NULL. Soft-fails (returns the run unchanged) when the path is not a linked worktree, repository resolution fails, or upsert errors. The actor resolves through its acting user, so a service-account token (the MCP) works when the account is linked to one; an unlinked account resolves to null and soft-fails like any other unresolvable actor. Returns null when the plan-run row does not exist.`,
     nullable: true,
   })
   async registerPlanRunWorktreeCheckout(
     @Args('input', { type: () => RegisterPlanRunWorktreeCheckoutInput })
     input: RegisterPlanRunWorktreeCheckoutInput,
     @CurrentUser('sub') actorSub?: string,
-    @CurrentUser('kind') actorKind?: string,
   ): Promise<PlanRunObject | null> {
-    const actorUserId = resolveActorUserId(actorSub, actorKind);
+    // Resolved through the acting user rather than the naive resolveActorUserId,
+    // which returns null for any non-user principal. A checkout belongs to a human,
+    // and the MCP authenticates as a service account — without this the mutation is
+    // permanently unreachable from there, and plan_runs.checkout_id never resolves
+    // for an interactive run (which in turn makes its worktree-liveness dead code).
+    //
+    // This changes WHOM a permitted action is attributed to, never WHAT the account
+    // is authorized to do: authorization still comes from service_account_roles.
+    // An unlinked account resolves to null and soft-fails like any other
+    // unresolvable actor, rather than throwing — consistent with every other
+    // soft-fail path on this best-effort mutation.
+    const actorUserId =
+      await this.effectiveUserResolution.resolveEffectiveUserId(actorSub);
     if (actorUserId === null) {
-      throw new ForbiddenException(
-        'registerPlanRunWorktreeCheckout requires a user JWT (service-account tokens are not allowed)',
-      );
+      const unchanged = await this.planRunsService.findById(input.planRunId);
+
+      return unchanged ? this.mapPlanRunObject(unchanged) : null;
     }
 
     const run = await this.planRunWorktreeCheckoutService.register({

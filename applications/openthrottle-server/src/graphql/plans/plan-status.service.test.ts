@@ -58,6 +58,10 @@ describe('PlanStatusService', () => {
   const mockPlanRunCancellationAbort = vi.fn().mockReturnValue(false);
   const mockPublishCancel = vi.fn().mockResolvedValue(undefined);
   const mockStampCancelRequested = vi.fn().mockResolvedValue(null);
+  // The stamped run, read back so cancelRun can tell a run that polls the cancel
+  // marker from one that has no loop to poll it. Defaults to a supervised run so
+  // every pre-existing case keeps asserting today's behaviour.
+  const mockFindById = vi.fn().mockResolvedValue({ heartbeatExpected: true });
   const mockPlansService = createMock<PlansService>({
     getRepository: vi.fn().mockReturnValue(repo),
   });
@@ -74,6 +78,7 @@ describe('PlanStatusService', () => {
       abort: mockPlanRunCancellationAbort,
     }),
     createMock<PlanRunsService>({
+      findById: mockFindById,
       stampCancelRequested: mockStampCancelRequested,
     }),
     mockPlansService,
@@ -93,6 +98,8 @@ describe('PlanStatusService', () => {
     mockPublishCancel.mockResolvedValue(undefined);
     mockStampCancelRequested.mockClear();
     mockStampCancelRequested.mockResolvedValue(null);
+    mockFindById.mockClear();
+    mockFindById.mockResolvedValue({ heartbeatExpected: true });
     mockEmitTaskStatusChanged.mockClear();
     mockTaskUpdateExecute.mockResolvedValue({
       affected: 0,
@@ -334,6 +341,49 @@ describe('PlanStatusService', () => {
       const result = await service.cancelRun(mockPlan.id);
 
       expect(result.signaledActiveRunToStop).toBe(true);
+      expect(result.outcome).toBe('RUN_STOPPING');
+    });
+
+    test('an unsupervised run yields CANCELLATION_REQUESTED and never resets the plan', async () => {
+      // The regression guard. A run whose owner has no timer also has no iteration
+      // boundary at which to poll the marker, so RUN_STOPPING would be a claim the
+      // server cannot back: it resets the plan and its QUEUED tasks to PENDING while
+      // the agent keeps working and later writes COMPLETED over the reset. The stamp
+      // is still made and still published — it is a request, not a stop.
+      repo.findOne.mockResolvedValue({ ...mockPlan, status: 'IN_PROGRESS' });
+      mockGetJobs.mockResolvedValue([]);
+      mockPlanRunCancellationAbort.mockReturnValue(false);
+      mockStampCancelRequested.mockResolvedValue('run-interactive');
+      mockFindById.mockResolvedValue({ heartbeatExpected: false });
+
+      const result = await service.cancelRun(mockPlan.id, 'user-42');
+
+      expect(mockStampCancelRequested).toHaveBeenCalledWith(
+        mockPlan.id,
+        'user-42',
+      );
+      expect(mockPublishCancel).toHaveBeenCalledWith(mockPlan.id);
+      expect(result.cancelRequested).toBe(true);
+      expect(result.outcome).toBe('CANCELLATION_REQUESTED');
+      // The point of the guard: the plan is left exactly as it was.
+      expect(result.planStatusAfter).toBeNull();
+      expect(repo.update).not.toHaveBeenCalled();
+      expect(mockEmitTaskStatusChanged).not.toHaveBeenCalled();
+    });
+
+    test('a local abort still reports RUN_STOPPING even for an unsupervised run', async () => {
+      // Channel 0 aborting a controller this process owns is a proven stop, not a
+      // request — so it earns RUN_STOPPING regardless of what the stamped row says.
+      repo.findOne
+        .mockResolvedValueOnce({ ...mockPlan, status: 'IN_PROGRESS' })
+        .mockResolvedValueOnce({ ...mockPlan, status: 'PENDING' });
+      mockGetJobs.mockResolvedValue([]);
+      mockPlanRunCancellationAbort.mockReturnValue(true);
+      mockStampCancelRequested.mockResolvedValue('run-interactive');
+      mockFindById.mockResolvedValue({ heartbeatExpected: false });
+
+      const result = await service.cancelRun(mockPlan.id);
+
       expect(result.outcome).toBe('RUN_STOPPING');
     });
 

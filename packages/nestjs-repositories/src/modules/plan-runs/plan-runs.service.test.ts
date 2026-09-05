@@ -16,6 +16,7 @@ const buildRun = (overrides: Partial<PlanRun> = {}): PlanRun => {
     checkoutId: null,
     createdAt: new Date('2026-07-21T00:00:00Z'),
     executionBackend: 'claude',
+    heartbeatExpected: true,
     hostname: null,
     id: 'run-1',
     lastHeartbeatAt: null,
@@ -434,7 +435,7 @@ describe('PlanRunsService', () => {
         { checkoutIds: ['checkout-a', 'checkout-b'] },
       );
       expect(qb.andWhere).toHaveBeenCalledWith(
-        'COALESCE(run.last_heartbeat_at, run.created_at) >= :cutoff',
+        '(NOT run.heartbeat_expected OR COALESCE(run.last_heartbeat_at, run.created_at) >= :cutoff)',
         { cutoff },
       );
       expect(qb.orderBy).toHaveBeenCalledWith('run.created_at', 'DESC');
@@ -446,6 +447,95 @@ describe('PlanRunsService', () => {
 
       expect(result).toEqual([]);
       expect(repo.createQueryBuilder).not.toHaveBeenCalled();
+    });
+
+    it('findStaleInProgressRuns excludes runs that do not heartbeat', async () => {
+      // The sweeper this feeds does not merely settle the run — reconcileStrandedPlan
+      // resets the plan and its IN_PROGRESS tasks to PENDING. A run with no timer must
+      // never be a candidate, so the exclusion is a WHERE clause, not a post-filter.
+      await service.findStaleInProgressRuns(new Date(), 200);
+      const qb = repo.createQueryBuilder.mock.results[0]?.value;
+
+      expect(qb.andWhere).toHaveBeenCalledWith('run.heartbeat_expected');
+    });
+
+    it('findLiveRunsByCheckoutIds treats a non-heartbeating IN_PROGRESS run as live', async () => {
+      // No timer means IN_PROGRESS is the only liveness signal there is; applying the
+      // cutoff would report a healthy interactive loop's worktree idle two minutes in.
+      const unsupervised = buildRun({
+        heartbeatExpected: false,
+        id: 'run-unsupervised',
+        lastHeartbeatAt: new Date('2026-07-21T00:00:00Z'),
+        status: 'IN_PROGRESS',
+      });
+      qbGetMany.mockResolvedValueOnce([unsupervised]);
+
+      const result = await service.findLiveRunsByCheckoutIds(
+        ['checkout-a'],
+        new Date('2026-07-21T09:00:00Z'),
+      );
+      const qb = repo.createQueryBuilder.mock.results[0]?.value;
+
+      expect(qb.andWhere).toHaveBeenCalledWith(
+        expect.stringContaining('NOT run.heartbeat_expected OR'),
+        expect.anything(),
+      );
+      expect(result).toEqual([unsupervised]);
+    });
+
+    it('registerCliRun defaults heartbeatExpected to true so the CLI is untouched', async () => {
+      await service.registerCliRun({
+        executionBackend: 'claude',
+        hostname: null,
+        pid: null,
+        planId: 'plan-1',
+        workerId: null,
+      });
+
+      expect(repo.create).toHaveBeenCalledWith(
+        expect.objectContaining({ heartbeatExpected: true }),
+      );
+    });
+
+    it('registerCliRun persists an explicit heartbeatExpected false', async () => {
+      await service.registerCliRun({
+        executionBackend: 'claude',
+        heartbeatExpected: false,
+        hostname: null,
+        pid: null,
+        planId: 'plan-1',
+        workerId: null,
+      });
+
+      expect(repo.create).toHaveBeenCalledWith(
+        expect.objectContaining({ heartbeatExpected: false }),
+      );
+    });
+
+    it('registerCliRun persists model, defaulting to null when omitted', async () => {
+      await service.registerCliRun({
+        executionBackend: 'claude',
+        hostname: null,
+        model: 'claude-opus-5',
+        pid: null,
+        planId: 'plan-1',
+        workerId: null,
+      });
+      expect(repo.create).toHaveBeenCalledWith(
+        expect.objectContaining({ model: 'claude-opus-5' }),
+      );
+
+      repo.create.mockClear();
+      await service.registerCliRun({
+        executionBackend: 'claude',
+        hostname: null,
+        pid: null,
+        planId: 'plan-1',
+        workerId: null,
+      });
+      expect(repo.create).toHaveBeenCalledWith(
+        expect.objectContaining({ model: null }),
+      );
     });
 
     it('settleStaleRun sets STALE + clears location, guarded on status IN_PROGRESS', async () => {

@@ -67,6 +67,10 @@ const BUNDLES: readonly BundleSpec[] = [
     outFile: '.claude/hooks/skill-usage-drain.cjs',
   },
   {
+    entry: 'adapters/claude/plan-run-janitor.ts',
+    outFile: '.claude/hooks/plan-run-janitor.cjs',
+  },
+  {
     entry: 'adapters/claude/outcome.ts',
     outFile: '.claude/hooks/skill-usage-outcome.cjs',
   },

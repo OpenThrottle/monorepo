@@ -8,6 +8,7 @@ import { NotificationsModule } from '../../notifications/notifications.module';
 import { PlanRulesQueueProducerModule } from '../../queues/plan-rules/plan-rules-queue-producer.module';
 import { PlansQueueProducerModule } from '../../queues/plans/plans-queue-producer.module';
 import { TaggingQueueProducerModule } from '../../queues/tagging/tagging-queue-producer.module';
+import { EffectiveUserResolutionModule } from '../../services/effective-user-resolution/effective-user-resolution.module';
 import { PlanCreationModule } from '../../services/plan-creation/plan-creation.module';
 import { PlanRunWorktreeCheckoutModule } from '../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.module';
 import { QueuesGraphqlModule } from '../queues/queues-graphql.module';
@@ -20,6 +21,7 @@ import { PlansResolver } from './plans.resolver';
 
 @Module({
   imports: [
+    EffectiveUserResolutionModule,
     NestjsRepositoriesModule,
     NotificationsModule,
     PlanCreationModule,
