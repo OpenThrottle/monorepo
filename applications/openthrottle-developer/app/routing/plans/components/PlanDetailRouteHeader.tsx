@@ -1,10 +1,7 @@
 import * as React from 'react';
-import { Badge } from '@openthrottle/react-router-shadcn';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
-import { FolderGit2Icon, NotebookTextIcon } from 'lucide-react';
-import { Link } from 'react-router';
+import { NotebookTextIcon } from 'lucide-react';
 import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
-import { formatPlanDate } from '~/routing/plans/utils/formatters';
 import type { PlanStatusKey } from '~/routing/plans/types';
 import type { PlanDetailsFragment } from '~/__generated__/graphql';
 
@@ -29,10 +26,11 @@ export const PlanDetailRouteHeader = (
   // Hooks
 
   // Setup
+
   // Most plans carry no project, so the chip is conditional rather than an
   // "unassigned" placeholder that would sit on every other plan header.
-  const project = plan.projectRelation;
   const title = plan.title ?? 'Untitled';
+  const _project = plan.projectRelation;
 
   // Handlers
 
@@ -50,7 +48,7 @@ export const PlanDetailRouteHeader = (
         <div className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
           <PlanStatusBadge status={status} to={`/plans?status=${status}`} />
 
-          {project ? (
+          {/* {project ? (
             <Badge
               asChild={true}
               color="sky"
@@ -66,7 +64,7 @@ export const PlanDetailRouteHeader = (
                 {project.name}
               </Link>
             </Badge>
-          ) : null}
+          ) : null} */}
 
           {plan.author ? (
             <span aria-label={`Author: ${plan.author}`}>
@@ -80,15 +78,13 @@ export const PlanDetailRouteHeader = (
             </span>
           ) : null}
         </div>
-
-        <div className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
-          <span aria-hidden={true}>&bull;</span>
-          <span>Created {formatPlanDate(plan.createdAt)}</span>
-
-          <span aria-hidden={true}>&bull;</span>
-          <span>Updated {formatPlanDate(plan.updatedAt)}</span>
-        </div>
       </div>
+
+      {/* <div className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+        <span>Created {formatPlanDate(plan.createdAt)}</span>
+        <span aria-hidden={true}>&bull;</span>
+        <span>Updated {formatPlanDate(plan.updatedAt)}</span>
+      </div> */}
     </div>
   );
 };

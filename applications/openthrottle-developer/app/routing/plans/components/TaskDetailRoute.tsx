@@ -178,7 +178,7 @@ export const TaskDetailRoute = (
           <TaskDetails planId={effectivePlanId} task={task} />
         </TabsContent>
 
-        <TaskTabOutput chunks={taskOutputChunks} planId={effectivePlanId} />
+        <TaskTabOutput chunks={taskOutputChunks} />
 
         {showArtifacts ? (
           <TabsContent value="artifacts">

@@ -57,7 +57,7 @@ export default function Component(
   }
 
   return (
-    <GlobalScreen>
+    <GlobalScreen beta={true}>
       <div>
         <GlobalHeading
           className="mb-4"

@@ -77,14 +77,14 @@ export default function Component(
   // 🔌 Short Circuit
   if (!loaderData) {
     return (
-      <GlobalScreen>
+      <GlobalScreen beta={true}>
         <p className="text-muted-foreground text-sm">Loading diagnostics…</p>
       </GlobalScreen>
     );
   }
 
   return (
-    <GlobalScreen>
+    <GlobalScreen beta={true}>
       <SettingsDebugPanel
         envSnapshot={loaderData.envSnapshot}
         graphQL={loaderData.graphQL}

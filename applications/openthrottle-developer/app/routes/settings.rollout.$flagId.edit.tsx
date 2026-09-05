@@ -70,9 +70,13 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) => {
 export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
+  const { actionData, loaderData, params } = props;
+  const { flag } = loaderData;
+
   // Hooks
 
   // Setup
+  const actionError = getActionError(actionData) ?? null;
 
   // Handlers
 
@@ -82,12 +86,8 @@ export default function Component(
 
   // 🔌 Short Circuit
 
-  const { actionData, loaderData, params } = props;
-  const { flag } = loaderData;
-  const actionError = getActionError(actionData) ?? null;
-
   return (
-    <GlobalScreen>
+    <GlobalScreen beta={true}>
       <RolloutFlagEditForm
         actionError={actionError}
         cancelTo={rolloutFlagDetailPath(params.flagId)}
@@ -109,6 +109,7 @@ export const action = async (args: Route.ActionArgs) => {
         .extend({ enabled: coerceBoolean(z.boolean().default(false)) }),
       { strict: false },
     );
+
     if (!parsed.success) {
       return { error: 'A flag key is required.' };
     }

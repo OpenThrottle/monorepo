@@ -73,13 +73,21 @@ export default function Component(
   const { actionData, loaderData } = props;
   const { connection, connector } = loaderData;
 
+  // Hooks
+
   // Setup
   const actionError = getActionError(actionData) ?? null;
 
+  // Handlers
+
   // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
   if (!connector) {
     return (
-      <GlobalScreen>
+      <GlobalScreen beta={true}>
         <div className="flex flex-col gap-4">
           <p className="text-muted-foreground text-sm">Unknown connector.</p>
           <Link className="text-sm underline" to="/settings/mcp">
@@ -91,7 +99,7 @@ export default function Component(
   }
 
   return (
-    <GlobalScreen>
+    <GlobalScreen beta={true}>
       <div className="flex flex-col gap-6">
         <div>
           <h1 className="text-2xl font-semibold">{connector.name}</h1>

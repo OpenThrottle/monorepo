@@ -46,9 +46,20 @@ export default function Component(
   const { loaderData } = props;
   const { connections, connectors } = loaderData;
 
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
   // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
   return (
-    <GlobalScreen>
+    <GlobalScreen beta={true}>
       <SettingsMcpIntroduction />
       <SettingsMcpCatalog connections={connections} connectors={connectors} />
     </GlobalScreen>

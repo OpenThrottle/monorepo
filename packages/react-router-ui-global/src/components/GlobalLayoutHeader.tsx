@@ -19,6 +19,7 @@ import { GlobalLayoutBreadcrumbs } from './GlobalLayoutBreadcrumbs';
 import { ChatDialog } from '@openthrottle/react-router-chat';
 import { NotificationBell } from '@openthrottle/react-router-notifications';
 import { OPENTHROTTLE_GITHUB_URL } from '@openthrottle/react-router-utils';
+import { BugIcon } from 'lucide-react';
 
 /**
  * @description Discriminated events from the header chrome search control; the app decides navigation vs commander.
@@ -52,10 +53,15 @@ export const GlobalLayoutHeader = (
     searchValue,
   } = props;
 
+  // Hooks
   const [draftQuery, setDraftQuery] = React.useState('');
+
+  // Setup
   const isSearchControlled = searchValue !== undefined;
   const resolvedSearchValue = isSearchControlled ? searchValue : draftQuery;
+  const showProfile = false;
 
+  // Handlers
   const handleSearchDraftChange = (
     event: React.ChangeEvent<HTMLInputElement>,
   ): void => {
@@ -83,13 +89,6 @@ export const GlobalLayoutHeader = (
       onSearchChromeEvent({ query: trimmed, type: 'submit' });
     }
   };
-
-  // Hooks
-
-  // Setup
-  const showProfile = false;
-
-  // Handlers
 
   // Markup
 
@@ -157,13 +156,7 @@ export const GlobalLayoutHeader = (
         <GlobalLayoutBreadcrumbs />
       </div>
 
-      <ChatDialog
-        title="Clutch Assistant"
-        triggerLabel="Chat"
-        // variant="sheet"
-        // variant="dialog"
-      />
-
+      <ChatDialog title="Clutch Assistant" triggerLabel="Chat" />
       {searchField}
       {showProfile ? (
         <>
@@ -178,9 +171,7 @@ export const GlobalLayoutHeader = (
           </Link>
         </>
       ) : null}
-
       <NotificationBell />
-
       <Link
         className="text-foreground"
         target="_blank"
@@ -191,6 +182,18 @@ export const GlobalLayoutHeader = (
           variant="ghost"
         >
           <GithubLogoIcon />
+        </Button>
+      </Link>
+      <Link
+        className="text-foreground"
+        target="_blank"
+        to={`${OPENTHROTTLE_GITHUB_URL}/monorepo`}
+      >
+        <Button
+          className="relative size-6 shrink-0 rounded-full"
+          variant="ghost"
+        >
+          <BugIcon />
         </Button>
       </Link>
       <Link className="text-foreground" reloadDocument={true} to="/auth/logout">

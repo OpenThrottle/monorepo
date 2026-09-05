@@ -140,7 +140,7 @@ export default function Component(
   // 🔌 Short Circuit
 
   return (
-    <GlobalScreen>
+    <GlobalScreen beta={true}>
       <div>
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <GlobalHeading heading="h1" icon={FoldersIcon} title="Projects" />

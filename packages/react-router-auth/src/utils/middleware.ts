@@ -1,20 +1,23 @@
 import { redirect } from 'react-router';
 import type { MiddlewareFunction } from 'react-router';
+import { FEATURE_BETA_PREVIEW } from '@openthrottle/react-router-utils';
 import {
   getAuthTokenFromCookie,
   getClearAuthCookieHeader,
   isJwtExpired,
 } from '../utils/index';
 
-const BETA_ROUTE_PREFIXES = [
-  '/generators',
-  // '/ide',
-  '/personas',
-  '/profile',
-  // '/prompts',
-  '/pull-requests',
-  '/search',
-];
+const BETA_ROUTE_PREFIXES = FEATURE_BETA_PREVIEW
+  ? []
+  : [
+      '/generators',
+      '/ide',
+      '/personas',
+      '/profile',
+      '/prompts',
+      '/pull-requests',
+      '/search',
+    ];
 
 const PUBLIC_ROUTE_PREFIXES = ['/about', '/auth', '/legal'];
 

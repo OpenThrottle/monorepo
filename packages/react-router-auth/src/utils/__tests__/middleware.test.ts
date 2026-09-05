@@ -162,10 +162,10 @@ describe('authMiddleware', () => {
         expect(result).toBeUndefined();
       });
 
-      it('does not gate /ide, which is no longer beta-only', () => {
+      it('does not gate /dashboard, which is no longer beta-only', () => {
         process.env.FEATURE_BETA_PREVIEW = 'false';
 
-        const result = runMiddleware(buildArgs('/ide', validToken));
+        const result = runMiddleware(buildArgs('/dashboard', validToken));
 
         expect(result).toBeUndefined();
       });
