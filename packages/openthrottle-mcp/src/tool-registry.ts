@@ -251,6 +251,30 @@ export const developerMcpToolDefinitions: readonly DeveloperMcpToolDefinition[] 
       Th.getWorkSessionsToolHandler,
     ),
     defineTool(
+      'register_plan_run',
+      Th.registerPlanRunToolDescription,
+      Th.registerPlanRunToolParameters,
+      Th.registerPlanRunToolHandler,
+    ),
+    defineTool(
+      'settle_plan_run',
+      Th.settlePlanRunToolDescription,
+      Th.settlePlanRunToolParameters,
+      Th.settlePlanRunToolHandler,
+    ),
+    defineTool(
+      'register_plan_run_worktree_checkout',
+      Th.registerPlanRunWorktreeCheckoutToolDescription,
+      Th.registerPlanRunWorktreeCheckoutToolParameters,
+      Th.registerPlanRunWorktreeCheckoutToolHandler,
+    ),
+    defineTool(
+      'get_plan_runs',
+      Th.getPlanRunsToolDescription,
+      Th.getPlanRunsToolParameters,
+      Th.getPlanRunsToolHandler,
+    ),
+    defineTool(
       'list_notes',
       Th.listNotesToolDescription,
       Th.listNotesToolParameters,

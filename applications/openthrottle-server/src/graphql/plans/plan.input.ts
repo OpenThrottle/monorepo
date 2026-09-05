@@ -435,15 +435,27 @@ export class RegisterCliPlanRunInput {
   branch?: string | null;
 
   @Field(() => String, {
-    description: `Execution backend for this detached-CLI run: claude, codex, cursor, gemini, grok, or opencode.`,
+    description: `Execution backend for this run: antigravity, claude, codex, cursor, gemini, grok, or opencode.`,
   })
   executionBackend!: string;
+
+  @Field(() => Boolean, {
+    description: `Whether this run's owner bumps its heartbeat on a ~15s timer. Omit or null → true, so the detached workflow-ralph CLI (which does) is unaffected. Pass false for an owner with no timer — an interactive /ot-loop agent turn, where a single test run outlives the staleness cutoff. A false run is exempt from the stale sweep, always reports isStale false, and can never yield RUN_STOPPING on cancel; nothing server-side will ever settle it, so its owner must.`,
+    nullable: true,
+  })
+  heartbeatExpected?: boolean | null;
 
   @Field(() => String, {
     description: `Host the CLI is running on (diagnostic; cleared on settle). Null when unknown.`,
     nullable: true,
   })
   hostname?: string | null;
+
+  @Field(() => String, {
+    description: `OPTIONAL resolved agent model id for this run (e.g. claude-opus-5). Captured on plan_runs.model as run provenance. Omit or null → store null; non-empty strings are stored verbatim. Prefer null over a guess: a wrong value here is worse than a missing one, because nothing downstream can tell it is wrong.`,
+    nullable: true,
+  })
+  model?: string | null;
 
   @Field(() => Int, {
     description: `OS process id of the CLI process (cleared on settle). Null when unknown.`,

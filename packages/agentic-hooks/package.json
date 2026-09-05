@@ -58,6 +58,7 @@
           "cwd": "{workspaceRoot}"
         },
         "outputs": [
+          "{workspaceRoot}/.claude/hooks/plan-run-janitor.cjs",
           "{workspaceRoot}/.claude/hooks/skill-usage-capture.cjs",
           "{workspaceRoot}/.claude/hooks/skill-usage-complete.cjs",
           "{workspaceRoot}/.claude/hooks/skill-usage-drain.cjs",
@@ -83,6 +84,7 @@
           "{projectRoot}/package.json",
           "{projectRoot}/scripts/bundle-hooks.ts",
           "{projectRoot}/src/**/*",
+          "{workspaceRoot}/.claude/hooks/plan-run-janitor.cjs",
           "{workspaceRoot}/.claude/hooks/skill-usage-capture.cjs",
           "{workspaceRoot}/.claude/hooks/skill-usage-complete.cjs",
           "{workspaceRoot}/.claude/hooks/skill-usage-drain.cjs",

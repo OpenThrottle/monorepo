@@ -34,7 +34,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 
 // packages/agentic-hooks/src/adapters/claude/scope.ts
 var import_node_fs2 = __toESM(require("node:fs"), 1);
-var import_node_path3 = __toESM(require("node:path"), 1);
+var import_node_path4 = __toESM(require("node:path"), 1);
 
 // packages/nodejs-utils/dist/src/utils/is-record.js
 var isRecord = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
@@ -92,6 +92,11 @@ var DEFAULT_STARTS_DIR_REL = import_node_path2.default.join(
 // packages/agentic-hooks/src/data/persist.ts
 var DEFAULT_ABANDONED_MS = 6 * 60 * 60 * 1e3;
 
+// packages/agentic-hooks/src/data/plan-runs.ts
+var import_node_path3 = __toESM(require("node:path"), 1);
+var PLAN_RUNS_DIR_REL = import_node_path3.default.join(".cache", "plan-runs");
+var PLAN_RUN_ABANDONED_MS = 6 * 60 * 60 * 1e3;
+
 // packages/agentic-hooks/src/adapters/claude/scope.ts
 var skillName = process.argv[2];
 var repoRoot = process.argv[3] || process.cwd();
@@ -108,9 +113,9 @@ if (skillName.includes(":")) {
   reason = "plugin-namespaced (contains :)";
 } else if (scope === "ours") {
   reason = "directory under skills/";
-  registryHit = import_node_path3.default.join(repoRoot, "skills", skillName);
+  registryHit = import_node_path4.default.join(repoRoot, "skills", skillName);
 } else {
-  const lockPath = import_node_path3.default.join(repoRoot, "skills-lock.json");
+  const lockPath = import_node_path4.default.join(repoRoot, "skills-lock.json");
   try {
     if (import_node_fs2.default.existsSync(lockPath)) {
       const lock = JSON.parse(import_node_fs2.default.readFileSync(lockPath, "utf8"));

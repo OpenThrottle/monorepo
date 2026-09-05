@@ -1100,7 +1100,9 @@ export function RegisterCliPlanRunInputSchema(): z.ZodObject<
   return z.object({
     branch: z.string().nullish(),
     executionBackend: z.string().min(1),
+    heartbeatExpected: z.boolean().nullish(),
     hostname: z.string().nullish(),
+    model: z.string().nullish(),
     pid: z.number().nullish(),
     planId: z.string().min(1),
     workerId: z.string().nullish(),

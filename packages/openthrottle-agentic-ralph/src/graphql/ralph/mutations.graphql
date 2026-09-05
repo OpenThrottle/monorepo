@@ -124,16 +124,9 @@ mutation ralphEndWorkSession($input: EndWorkSessionInput!) {
 
 mutation registerCliPlanRun($input: RegisterCliPlanRunInput!) {
   registerCliPlanRun(input: $input) {
-    bullmqJobId
-    cancelRequestedAt
-    createdAt
-    executionBackend
     hostname
-    id
     pid
-    planId
-    runKind
-    status
+    ...PlanRun
     workerId
   }
 }
@@ -141,10 +134,8 @@ mutation registerCliPlanRun($input: RegisterCliPlanRunInput!) {
 mutation settleCliPlanRun($input: SettleCliPlanRunInput!) {
   settleCliPlanRun(input: $input) {
     hostname
-    id
     pid
-    planId
-    status
+    ...PlanRun
     workerId
   }
 }
@@ -166,9 +157,7 @@ mutation registerPlanRunWorktreeCheckout(
       filesystemPath
       kind
     }
-    id
-    planId
-    status
+    ...PlanRun
   }
 }
 

@@ -2606,10 +2606,12 @@ export type PlanRunObject = {
   createdAt: Scalars['DateTime']['output'];
   /** Execution backend selected once for the whole run: cursor or claude. */
   executionBackend: Scalars['String']['output'];
+  /** Whether this run’s owner bumps its heartbeat on a timer. True for every queued and detached-CLI run — heartbeat-based liveness applies as before. False marks an owner with no timer (an interactive /ot-loop agent turn), so heartbeat says nothing about it: such runs are exempt from the stale sweep and always report isStale false. Read it alongside isStale — isStale false on such a run means "unknown", not "verified live". */
+  heartbeatExpected: Scalars['Boolean']['output'];
   /** Host the worker executing this run is on. Null when the run is not actively executing. Diagnostic only — cross-host OS kill is out of scope. */
   hostname?: Maybe<Scalars['String']['output']>;
   id: Scalars['String']['output'];
-  /** Derived: true when this run is IN_PROGRESS but its heartbeat is older than the staleness cutoff — i.e. the owning process crashed hard (SIGKILL/power-loss) and the row is stranded. The UI hides Kill for a stale run; a sweeper settles it to STALE. False for healthy or already-terminal runs. */
+  /** Derived: true when this run is IN_PROGRESS but its heartbeat is older than the staleness cutoff — i.e. the owning process crashed hard (SIGKILL/power-loss) and the row is stranded. The UI hides Kill for a stale run; a sweeper settles it to STALE. False for healthy or already-terminal runs — and always false when heartbeatExpected is false, where liveness is unknown rather than verified. */
   isStale: Scalars['Boolean']['output'];
   /** Liveness heartbeat: last time the owning run process reported it is alive (bumped ~every 15s, stamped at start). Null for legacy rows / rows that never started heartbeating. Drives isStale. */
   lastHeartbeatAt?: Maybe<Scalars['DateTime']['output']>;
@@ -3746,10 +3748,14 @@ export type RefreshCheckoutPayloadObject = {
 export type RegisterCliPlanRunInput = {
   /** OPTIONAL git branch this detached-CLI run operates on. Captured on plan_runs.branch as run provenance. Omit or null → store null; non-empty strings are stored verbatim (no server-side trim/reject — enqueue remains the REQUIRED branch boundary). */
   branch?: InputMaybe<Scalars['String']['input']>;
-  /** Execution backend for this detached-CLI run: claude, codex, cursor, gemini, grok, or opencode. */
+  /** Execution backend for this run: antigravity, claude, codex, cursor, gemini, grok, or opencode. */
   executionBackend: Scalars['String']['input'];
+  /** Whether this run's owner bumps its heartbeat on a ~15s timer. Omit or null → true, so the detached workflow-ralph CLI (which does) is unaffected. Pass false for an owner with no timer — an interactive /ot-loop agent turn, where a single test run outlives the staleness cutoff. A false run is exempt from the stale sweep, always reports isStale false, and can never yield RUN_STOPPING on cancel; nothing server-side will ever settle it, so its owner must. */
+  heartbeatExpected?: InputMaybe<Scalars['Boolean']['input']>;
   /** Host the CLI is running on (diagnostic; cleared on settle). Null when unknown. */
   hostname?: InputMaybe<Scalars['String']['input']>;
+  /** OPTIONAL resolved agent model id for this run (e.g. claude-opus-5). Captured on plan_runs.model as run provenance. Omit or null → store null; non-empty strings are stored verbatim. Prefer null over a guess: a wrong value here is worse than a missing one, because nothing downstream can tell it is wrong. */
+  model?: InputMaybe<Scalars['String']['input']>;
   /** OS process id of the CLI process (cleared on settle). Null when unknown. */
   pid?: InputMaybe<Scalars['Int']['input']>;
   /** Plan id this detached-CLI run executes. */
@@ -5618,6 +5624,25 @@ export type ProjectFragment = {
   updatedAt: any;
 };
 
+export type PlanRunFragment = {
+  __typename?: 'PlanRunObject';
+  branch?: string | null;
+  bullmqJobId?: string | null;
+  cancelRequestedAt?: any | null;
+  createdAt: any;
+  executionBackend: string;
+  heartbeatExpected: boolean;
+  id: string;
+  isStale: boolean;
+  lastHeartbeatAt?: any | null;
+  model?: string | null;
+  planId: string;
+  queueName: string;
+  runKind: string;
+  status: string;
+  updatedAt: any;
+};
+
 export type CreateNoteMutationVariables = Exact<{
   input: CreateNoteInput;
 }>;
@@ -5965,17 +5990,24 @@ export type RegisterCliPlanRunMutation = {
   __typename?: 'Mutation';
   registerCliPlanRun: {
     __typename?: 'PlanRunObject';
+    hostname?: string | null;
+    pid?: number | null;
+    workerId?: string | null;
+    branch?: string | null;
     bullmqJobId?: string | null;
     cancelRequestedAt?: any | null;
     createdAt: any;
     executionBackend: string;
-    hostname?: string | null;
+    heartbeatExpected: boolean;
     id: string;
-    pid?: number | null;
+    isStale: boolean;
+    lastHeartbeatAt?: any | null;
+    model?: string | null;
     planId: string;
+    queueName: string;
     runKind: string;
     status: string;
-    workerId?: string | null;
+    updatedAt: any;
   };
 };
 
@@ -5988,11 +6020,23 @@ export type SettleCliPlanRunMutation = {
   settleCliPlanRun?: {
     __typename?: 'PlanRunObject';
     hostname?: string | null;
-    id: string;
     pid?: number | null;
-    planId: string;
-    status: string;
     workerId?: string | null;
+    branch?: string | null;
+    bullmqJobId?: string | null;
+    cancelRequestedAt?: any | null;
+    createdAt: any;
+    executionBackend: string;
+    heartbeatExpected: boolean;
+    id: string;
+    isStale: boolean;
+    lastHeartbeatAt?: any | null;
+    model?: string | null;
+    planId: string;
+    queueName: string;
+    runKind: string;
+    status: string;
+    updatedAt: any;
   } | null;
 };
 
@@ -6018,9 +6062,21 @@ export type RegisterPlanRunWorktreeCheckoutMutation = {
   __typename?: 'Mutation';
   registerPlanRunWorktreeCheckout?: {
     __typename?: 'PlanRunObject';
+    branch?: string | null;
+    bullmqJobId?: string | null;
+    cancelRequestedAt?: any | null;
+    createdAt: any;
+    executionBackend: string;
+    heartbeatExpected: boolean;
     id: string;
+    isStale: boolean;
+    lastHeartbeatAt?: any | null;
+    model?: string | null;
     planId: string;
+    queueName: string;
+    runKind: string;
     status: string;
+    updatedAt: any;
     checkout?: {
       __typename?: 'PlanRunCheckoutObject';
       displayName: string;
@@ -6504,6 +6560,38 @@ export type ReadPlanRunCancelMarkerQuery = {
   }>;
 };
 
+export type GetPlanRunsQueryVariables = Exact<{
+  input: PlanRunsByPlanIdInput;
+}>;
+
+export type GetPlanRunsQuery = {
+  __typename?: 'Query';
+  planRunsByPlanId: Array<{
+    __typename?: 'PlanRunObject';
+    branch?: string | null;
+    bullmqJobId?: string | null;
+    cancelRequestedAt?: any | null;
+    createdAt: any;
+    executionBackend: string;
+    heartbeatExpected: boolean;
+    id: string;
+    isStale: boolean;
+    lastHeartbeatAt?: any | null;
+    model?: string | null;
+    planId: string;
+    queueName: string;
+    runKind: string;
+    status: string;
+    updatedAt: any;
+    checkout?: {
+      __typename?: 'PlanRunCheckoutObject';
+      displayName: string;
+      filesystemPath: string;
+      kind: string;
+    } | null;
+  }>;
+};
+
 export type GetProjectsQueryVariables = Exact<{ [key: string]: never }>;
 
 export type GetProjectsQuery = {
@@ -6649,6 +6737,39 @@ export const ProjectFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<ProjectFragment, unknown>;
+export const PlanRunFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanRun' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PlanRunObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'branch' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'bullmqJobId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'cancelRequestedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'executionBackend' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'heartbeatExpected' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'isStale' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'lastHeartbeatAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'queueName' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'runKind' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<PlanRunFragment, unknown>;
 export const CreateNoteDocument = {
   kind: 'Document',
   definitions: [
@@ -7948,26 +8069,44 @@ export const RegisterCliPlanRunDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'bullmqJobId' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'cancelRequestedAt' },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'executionBackend' },
-                },
                 { kind: 'Field', name: { kind: 'Name', value: 'hostname' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'pid' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'runKind' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'PlanRun' },
+                },
                 { kind: 'Field', name: { kind: 'Name', value: 'workerId' } },
               ],
             },
           },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanRun' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PlanRunObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'branch' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'bullmqJobId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'cancelRequestedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'executionBackend' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'heartbeatExpected' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'isStale' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'lastHeartbeatAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'queueName' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'runKind' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
         ],
       },
     },
@@ -8019,14 +8158,43 @@ export const SettleCliPlanRunDocument = {
               kind: 'SelectionSet',
               selections: [
                 { kind: 'Field', name: { kind: 'Name', value: 'hostname' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'pid' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'PlanRun' },
+                },
                 { kind: 'Field', name: { kind: 'Name', value: 'workerId' } },
               ],
             },
           },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanRun' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PlanRunObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'branch' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'bullmqJobId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'cancelRequestedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'executionBackend' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'heartbeatExpected' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'isStale' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'lastHeartbeatAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'queueName' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'runKind' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
         ],
       },
     },
@@ -8157,12 +8325,41 @@ export const RegisterPlanRunWorktreeCheckoutDocument = {
                     ],
                   },
                 },
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'PlanRun' },
+                },
               ],
             },
           },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanRun' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PlanRunObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'branch' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'bullmqJobId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'cancelRequestedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'executionBackend' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'heartbeatExpected' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'isStale' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'lastHeartbeatAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'queueName' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'runKind' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
         ],
       },
     },
@@ -9764,6 +9961,106 @@ export const ReadPlanRunCancelMarkerDocument = {
   ReadPlanRunCancelMarkerQuery,
   ReadPlanRunCancelMarkerQueryVariables
 >;
+export const GetPlanRunsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getPlanRuns' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'PlanRunsByPlanIdInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'planRunsByPlanId' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'checkout' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'displayName' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'filesystemPath' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'PlanRun' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanRun' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PlanRunObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'branch' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'bullmqJobId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'cancelRequestedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'executionBackend' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'heartbeatExpected' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'isStale' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'lastHeartbeatAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'queueName' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'runKind' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<GetPlanRunsQuery, GetPlanRunsQueryVariables>;
 export const GetProjectsDocument = {
   kind: 'Document',
   definitions: [
