@@ -1,4 +1,4 @@
-import { LifecycleHooksChildJobsOptions } from '../types/lifecycle.ts';
+import type { LifecycleHooksChildJobsOptions } from '../types/lifecycle.ts';
 
 /**
  * When false, plan-run hooks run in-process (rollback for child-job orchestration).

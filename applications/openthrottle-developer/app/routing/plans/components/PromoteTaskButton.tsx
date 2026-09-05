@@ -17,7 +17,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import { ArrowUpCircle } from 'lucide-react';
 import { useFetcher, useRevalidator } from 'react-router';
-import { action as taskDetailAction } from '~/routes/plans.$planId.tasks.$taskId._index';
+import type { action as taskDetailAction } from '~/routes/plans.$planId.tasks.$taskId._index';
 import { PLAN_TASK_TOOLBAR_COPY } from '~/routing/plans/data/data.copy';
 
 export interface PromoteTaskButtonProps {

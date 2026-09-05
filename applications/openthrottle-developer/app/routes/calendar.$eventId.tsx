@@ -1,9 +1,7 @@
 import * as React from 'react';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import {
-  GlobalLayoutBreadcrumbsHandle,
-  GlobalScreen,
-} from '@openthrottle/react-router-ui-global';
+import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
+import { GlobalScreen } from '@openthrottle/react-router-ui-global';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import {
   Button,

@@ -1,6 +1,6 @@
 import { createMock } from '@golevelup/ts-vitest';
-import { LoggerService } from '@openthrottle/nestjs-modules';
-import {
+import type { LoggerService } from '@openthrottle/nestjs-modules';
+import type {
   AgentConversationsService,
   AgentTokenUsageService,
 } from '@openthrottle/nestjs-repositories';

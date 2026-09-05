@@ -1,4 +1,5 @@
-import { Dirent, readdirSync } from 'fs';
+import type { Dirent } from 'fs';
+import { readdirSync } from 'fs';
 import { execSync } from 'child_process';
 import { join } from 'path';
 import pluralize from 'pluralize';

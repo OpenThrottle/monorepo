@@ -1,9 +1,7 @@
 import * as React from 'react';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import {
-  GlobalLayoutBreadcrumbsHandle,
-  GlobalScreen,
-} from '@openthrottle/react-router-ui-global';
+import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
+import { GlobalScreen } from '@openthrottle/react-router-ui-global';
 import {
   GetPlanByIdDocument,
   GetTaskByIdDocument,

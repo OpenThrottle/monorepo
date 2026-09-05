@@ -9,13 +9,13 @@
 
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
+import type { WorkArtifact } from '@openthrottle/nestjs-repositories';
 import {
   Plan,
   PlanTag,
   type PlansService,
   Task,
   TaskTag,
-  WorkArtifact,
   WorkSession,
   WorkSessionSubject,
   plansFactory,

@@ -8,15 +8,15 @@ import DataLoader from 'dataloader';
  * Batch load function that returns one value per key; use null for missing keys.
  * Result array must match the order and length of the keys array.
  */
-export type BatchLoadFn<K, V> = (
-  keys: ReadonlyArray<K>,
-) => Promise<Array<V | null>>;
+export type BatchLoadFn<TKey, TValue> = (
+  keys: ReadonlyArray<TKey>,
+) => Promise<Array<TValue | null>>;
 
 /**
  * Options for {@link createDataLoader}. Pass-through to DataLoader constructor; cache is enabled by default for per-request deduplication.
  */
-export type CreateDataLoaderOptions<K, V, C = K> = Omit<
-  DataLoader.Options<K, V | null, C>,
+export type CreateDataLoaderOptions<TKey, TValue, TCacheKey = TKey> = Omit<
+  DataLoader.Options<TKey, TValue | null, TCacheKey>,
   'batchLoadFn'
 >;
 
@@ -29,11 +29,12 @@ export type CreateDataLoaderOptions<K, V, C = K> = Omit<
  * @param options - Optional DataLoader options (e.g. maxBatchSize, cacheKeyFn).
  * @returns A DataLoader instance.
  */
-export function createDataLoader<K, V>(
-  batchLoadFn: BatchLoadFn<K, V>,
-  options?: CreateDataLoaderOptions<K, V>,
-): DataLoader<K, V | null> {
-  const fn: DataLoader.BatchLoadFn<K, V | null> = (keys) => batchLoadFn(keys);
+export function createDataLoader<TKey, TValue>(
+  batchLoadFn: BatchLoadFn<TKey, TValue>,
+  options?: CreateDataLoaderOptions<TKey, TValue>,
+): DataLoader<TKey, TValue | null> {
+  const fn: DataLoader.BatchLoadFn<TKey, TValue | null> = (keys) =>
+    batchLoadFn(keys);
   return new DataLoader(fn, options);
 }
 

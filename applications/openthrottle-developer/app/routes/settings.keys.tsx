@@ -4,9 +4,9 @@ import {
   getActionError,
   mergeRouteModuleMeta,
 } from '@openthrottle/react-router-utils';
+import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalFeatureOnboardingModal,
-  GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { useSearchParams } from 'react-router';

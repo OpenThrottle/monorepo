@@ -7,7 +7,7 @@ import {
   Label,
   TextArea,
 } from '@openthrottle/react-router-shadcn';
-import { NoteCardFragment } from '~/__generated__/graphql';
+import type { NoteCardFragment } from '~/__generated__/graphql';
 
 export interface NoteFormProps {
   action: 'create' | 'update';

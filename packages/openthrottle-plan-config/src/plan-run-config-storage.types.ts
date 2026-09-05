@@ -3,7 +3,7 @@
  * `planId` is implicit (`plans.id`); omit from stored JSON.
  */
 
-import { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
+import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 import type { PLAN_RUN_CONFIG_VERSION } from './plan-run-config-storage.constants.ts';
 
 export type PlanRunConfigTargetMode = 'plan' | 'task';

@@ -15,7 +15,7 @@ import {
 } from '../config/defaults';
 import { useCalendar } from '../hooks/useCalendar';
 import { useSchedule } from '../hooks/useSchedule';
-import { CalendarView } from '../types';
+import type { CalendarView } from '../types';
 import type { CalendarEvent } from '../types';
 import { Calendar } from './Calendar';
 import type { CalendarSlots } from './slots';

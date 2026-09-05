@@ -6,10 +6,8 @@ import {
 } from '@openthrottle/react-router-graphql';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { redirect } from 'react-router';
-import {
-  GlobalLayoutBreadcrumbsHandle,
-  GlobalScreen,
-} from '@openthrottle/react-router-ui-global';
+import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
+import { GlobalScreen } from '@openthrottle/react-router-ui-global';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import {
   GetProjectForEditDocument,

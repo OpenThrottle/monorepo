@@ -11,11 +11,11 @@ import {
   type AuthPrincipal,
 } from '@openthrottle/nestjs-auth';
 import type { AgentCliDiscoveryResult } from '@openthrottle/openthrottle-agentic-utils';
-import { AgentCliPreferencesService } from '@openthrottle/nestjs-repositories';
+import type { AgentCliPreferencesService } from '@openthrottle/nestjs-repositories';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AgentDiscoveryResolver } from './agent-discovery.resolver';
-import { AgentDiscoveryService } from './agent-discovery.service';
+import type { AgentDiscoveryService } from './agent-discovery.service';
 
 const human: AuthPrincipal = { kind: AUTH_PRINCIPAL_KIND_USER, sub: 'user-1' };
 

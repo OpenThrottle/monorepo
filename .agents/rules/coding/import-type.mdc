@@ -5,7 +5,7 @@ globs:
 name: coding-import-types
 ---
 
-Use import type whenever you are importing a type.
+**Enforced** by `@typescript-eslint/consistent-type-imports: 'error'` in `tools/dotfiles/src/index.ts`, and auto-fixable. Use `import type` whenever you are importing a type.
 
 Prefer top-level `import type` over inline `import { type ... }`.
 
@@ -28,3 +28,15 @@ import { type User } from './user';
 // After transpilation
 import './user';
 ```
+
+## What the rule does and does not cover
+
+The rule is scoped to `**/*.ts` and `**/*.tsx`. It cannot live in the shared base block: it needs parser services, and the `@graphql-eslint/parser` virtual documents (`*.tsx.graphql`) do not provide them, so a full-repo lint run aborts with "You have used a rule which requires type information".
+
+`disallowTypeAnnotations` is turned **off**. Inline `import('...')` *type annotations* are a separate thing from import statements and remain allowed — `vi.importActual<typeof import('../module')>()` is Vitest's own idiom for mock factories (a top-level import of the module under mock is precisely what those files are avoiding), and `typeof import('monaco-editor')` is what keeps the editor bundle lazily loaded.
+
+## Decorator metadata
+
+The rule's `parserOptions` declare `emitDecoratorMetadata: true` even though `tsconfig.base.json` sets it to `false`. That tsconfig value is not true of the decorated surface: `applications/openthrottle-server/.swcrc` compiles with `decoratorMetadata: true`, so NestJS constructor injection depends on `design:paramtypes` existing at runtime.
+
+Without that parser option the rule rewrites injected class imports to `import type`, SWC then emits no runtime binding, and DI fails at boot — while lint, typecheck, build and the unit tests all stay green. Declaring it made the rule skip 420 of 884 candidate fixes (291 NestJS files down to 93). **Do not "simplify" the parser options to match `tsconfig.base.json`.**

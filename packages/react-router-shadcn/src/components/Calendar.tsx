@@ -9,7 +9,8 @@ import {
 import { DayPicker, getDefaultClassNames } from 'react-day-picker';
 
 import { cn } from '../utils/cn';
-import { Button, buttonVariants } from './Button';
+import type { Button } from './Button';
+import { buttonVariants } from './Button';
 import { CalendarDayButton } from './CalendarDayButton';
 
 // DayPicker (react-day-picker) is a plain function component with no ref

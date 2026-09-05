@@ -5,9 +5,9 @@ import { Link } from 'react-router';
 import { ProjectsEmpty } from '~/routing/projects/components/ProjectsEmpty';
 import { PROJECTS_ROW_ACTIONS_COPY } from '~/routing/projects/data/data.copy';
 // import { formatUpdatedAt } from '~/routing/plans/utils/formatters';
+import type { GlobalPopoverAction } from '@openthrottle/react-router-ui-global';
 import {
   GlobalPopover,
-  GlobalPopoverAction,
   GlobalPopoverActionsHeader,
 } from '@openthrottle/react-router-ui-global';
 import type { ColumnDef } from '@tanstack/react-table';

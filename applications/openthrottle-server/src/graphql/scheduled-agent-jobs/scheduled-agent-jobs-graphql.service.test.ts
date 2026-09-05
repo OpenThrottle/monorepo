@@ -1,15 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createMock } from '@golevelup/ts-vitest';
 import type { Queue } from 'bullmq';
-import { LoggerService } from '@openthrottle/nestjs-modules';
-import {
+import type { LoggerService } from '@openthrottle/nestjs-modules';
+import type {
   ScheduledAgentJobCheckoutPathService,
   ScheduledAgentJobsService,
+} from '@openthrottle/nestjs-repositories';
+import {
   type ScheduledAgentJob,
   type ScheduledAgentJobRun,
 } from '@openthrottle/nestjs-repositories';
-import { ScheduledAgentJobCancellationService } from '../../queues/scheduled-agent-jobs/scheduled-agent-job-cancellation.service';
-import { ScheduledAgentJobSchedulerService } from '../../queues/scheduled-agent-jobs/scheduled-agent-job-scheduler.service';
+import type { ScheduledAgentJobCancellationService } from '../../queues/scheduled-agent-jobs/scheduled-agent-job-cancellation.service';
+import type { ScheduledAgentJobSchedulerService } from '../../queues/scheduled-agent-jobs/scheduled-agent-job-scheduler.service';
 import type { ScheduledAgentJobPayload } from '../../queues/scheduled-agent-jobs/scheduled-agent-jobs.types';
 import { ScheduledAgentJobsGraphqlService } from './scheduled-agent-jobs-graphql.service';
 

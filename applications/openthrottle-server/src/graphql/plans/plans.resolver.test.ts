@@ -7,7 +7,8 @@ import {
   ProjectsService,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
-import { Plan, Task } from '@openthrottle/nestjs-repositories';
+import type { Plan } from '@openthrottle/nestjs-repositories';
+import { Task } from '@openthrottle/nestjs-repositories';
 import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import { getQueueToken } from '@nestjs/bullmq';
 import { Test } from '@nestjs/testing';
@@ -24,12 +25,12 @@ import { PlanCreationService } from '../../services/plan-creation/plan-creation.
 import { PlanRunWorktreeCheckoutService } from '../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.service';
 import { PlanEnqueueService } from './plan-enqueue.service';
 import { PlanStatusService } from './plan-status.service';
-import {
+import type {
   CreatePlanInput,
   ListPlansByStatusInput,
-  PlanRalphWorkflowModeGraphQL,
   UpdatePlanInput,
 } from './plan.input';
+import { PlanRalphWorkflowModeGraphQL } from './plan.input';
 import { PlansLoaders } from './plans-loaders';
 import { PlanRulesEvaluationService } from '../../queues/plan-rules/plan-rules-evaluation.service';
 import { PLAN_RULES_TRIGGER_KINDS } from '../../queues/plan-rules/plan-rules.types';

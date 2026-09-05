@@ -5,7 +5,7 @@
  */
 
 import { createMock } from '@golevelup/ts-vitest';
-import { NestjsModelDiscoveryService } from '@openthrottle/nestjs-model-discovery';
+import type { NestjsModelDiscoveryService } from '@openthrottle/nestjs-model-discovery';
 import type { DiscoveryResult } from '@openthrottle/openthrottle-agentic-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 

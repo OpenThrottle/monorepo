@@ -6,10 +6,10 @@ import {
   parsePaginationLimit,
   parsePaginationPage,
 } from '@openthrottle/react-router-utils';
+import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalFeatureOnboarding,
   GlobalFeatureOnboardingModal,
-  GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
   readSearchParam,
 } from '@openthrottle/react-router-ui-global';

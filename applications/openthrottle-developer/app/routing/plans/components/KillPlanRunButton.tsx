@@ -14,7 +14,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import { StopCircle } from 'lucide-react';
 import { useFetcher, useRevalidator } from 'react-router';
-import { action as planDetailAction } from '~/routes/plans.$planId._index';
+import type { action as planDetailAction } from '~/routes/plans.$planId._index';
 import {
   cancelPlanRunToastTone,
   describeCancelPlanRunResult,

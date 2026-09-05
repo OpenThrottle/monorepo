@@ -6,14 +6,14 @@
  */
 
 import { createMock } from '@golevelup/ts-vitest';
-import { LoggerService } from '@openthrottle/nestjs-modules';
+import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type { Job, Queue } from 'bullmq';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { WorkspaceEditorConfigService } from '@openthrottle/nestjs-repositories';
+import type { WorkspaceEditorConfigService } from '@openthrottle/nestjs-repositories';
 
-import { ForeignSkillInjectionLifecycleService } from '../../services/foreign-skill-injection/foreign-skill-injection-lifecycle.service';
-import { ForeignSkillMaterializationService } from '../../services/foreign-skill-injection/foreign-skill-materialization.service';
+import type { ForeignSkillInjectionLifecycleService } from '../../services/foreign-skill-injection/foreign-skill-injection-lifecycle.service';
+import type { ForeignSkillMaterializationService } from '../../services/foreign-skill-injection/foreign-skill-materialization.service';
 import { PlanRunsStaleSweepRepeatableService } from './plan-runs-stale-sweep-repeatable.service';
 
 describe('PlanRunsStaleSweepRepeatableService.onModuleInit', () => {

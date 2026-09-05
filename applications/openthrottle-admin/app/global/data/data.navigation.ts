@@ -1,4 +1,4 @@
-import { GlobalLayoutProps } from '@openthrottle/react-router-ui-global';
+import type { GlobalLayoutProps } from '@openthrottle/react-router-ui-global';
 import {
   GaugeIcon,
   KeyRoundIcon,

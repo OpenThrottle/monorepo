@@ -39,13 +39,13 @@ export type DeveloperMcpToolDefinition = {
 };
 
 /**
- * @description Captures a tool's name, description, parameter schema, and matching handler as one canonical entry. `Params` is inferred from the positional `parameters` argument, then flows into the `handler` type (`ToolCallback<Params>`) and `server.registerTool`, so a parameter/handler mismatch fails to type-check — no `as` casts required. Positional (not a single object literal) so inference resolves `Params` from the schema before checking the handler.
+ * @description Captures a tool's name, description, parameter schema, and matching handler as one canonical entry. `TParams` is inferred from the positional `parameters` argument, then flows into the `handler` type (`ToolCallback<TParams>`) and `server.registerTool`, so a parameter/handler mismatch fails to type-check — no `as` casts required. Positional (not a single object literal) so inference resolves `TParams` from the schema before checking the handler.
  */
-const defineTool = <Params extends RegisterToolInputSchema>(
+const defineTool = <TParams extends RegisterToolInputSchema>(
   name: string,
   description: string,
-  parameters: Params,
-  handler: ToolCallback<Params>,
+  parameters: TParams,
+  handler: ToolCallback<TParams>,
 ): DeveloperMcpToolDefinition => ({
   description,
   name,

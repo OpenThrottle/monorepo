@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { cn } from '@openthrottle/react-router-shadcn';
-import { LucideIcon } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 
 export interface OpenThrottleFieldsetProps extends React.PropsWithChildren {
   className?: string;

@@ -6,7 +6,7 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createMock } from '@golevelup/ts-vitest';
-import { LoggerService } from '@openthrottle/nestjs-modules';
+import type { LoggerService } from '@openthrottle/nestjs-modules';
 
 const { mockExecFile } = vi.hoisted(() => ({ mockExecFile: vi.fn() }));
 

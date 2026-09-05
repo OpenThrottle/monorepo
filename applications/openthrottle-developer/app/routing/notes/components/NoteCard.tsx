@@ -8,7 +8,7 @@ import {
   Markdown,
 } from '@openthrottle/react-router-shadcn';
 import { Link } from 'react-router';
-import { NoteCardFragment } from '~/__generated__/graphql';
+import type { NoteCardFragment } from '~/__generated__/graphql';
 
 export interface NoteCardProps {
   className?: string;

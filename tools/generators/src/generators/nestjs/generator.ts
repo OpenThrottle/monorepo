@@ -1,4 +1,5 @@
-import prompts, { Choice } from 'prompts';
+import type { Choice } from 'prompts';
+import prompts from 'prompts';
 import type { Tree } from '@nx/devkit';
 import { getProjectsByTags } from '../../utils/projects';
 import { writeJsonToStdout } from '../../utils/output';

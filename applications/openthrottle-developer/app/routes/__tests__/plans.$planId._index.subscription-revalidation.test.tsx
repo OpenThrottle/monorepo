@@ -1,6 +1,6 @@
 import { getPublicEnv } from '@openthrottle/react-router-utils';
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
-import { render } from '@testing-library/react';
+import type { render } from '@testing-library/react';
 import * as React from 'react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import {

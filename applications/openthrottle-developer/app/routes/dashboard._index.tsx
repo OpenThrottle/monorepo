@@ -1,15 +1,13 @@
 import * as React from 'react';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import {
-  GlobalLayoutBreadcrumbsHandle,
-  GlobalScreen,
-} from '@openthrottle/react-router-ui-global';
+import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
+import { GlobalScreen } from '@openthrottle/react-router-ui-global';
+import type { GetDashboardQueryVariables } from '~/__generated__/graphql';
 import {
   GetDashboardDocument,
   GetDashboardGithubStatsDocument,
   GetDashboardOnboardingDocument,
-  GetDashboardQueryVariables,
   TriggerNotificationDocument,
 } from '~/__generated__/graphql';
 import { callListAgentConversations } from '~/global/utils/utils.agents-chat';

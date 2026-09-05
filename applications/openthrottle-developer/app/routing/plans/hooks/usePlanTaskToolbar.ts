@@ -6,7 +6,7 @@
  */
 import { useFetcher } from 'react-router';
 import { useActionToast } from '~/global/hooks/useActionToast';
-import { action } from '~/routes/plans.$planId.tasks.$taskId._index';
+import type { action } from '~/routes/plans.$planId.tasks.$taskId._index';
 
 export interface UsePlanTaskToolbarOptions {
   /**

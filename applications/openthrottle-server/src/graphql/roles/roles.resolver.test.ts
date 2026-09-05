@@ -11,7 +11,7 @@ import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import {
+import type {
   // AddPermissionToRoleInput,
   AssignRoleToUserInput,
   CreateRoleInput,

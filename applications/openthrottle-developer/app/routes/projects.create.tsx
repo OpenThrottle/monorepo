@@ -2,10 +2,8 @@ import * as React from 'react';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { redirect } from 'react-router';
-import {
-  GlobalLayoutBreadcrumbsHandle,
-  GlobalScreen,
-} from '@openthrottle/react-router-ui-global';
+import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
+import { GlobalScreen } from '@openthrottle/react-router-ui-global';
 import { ProjectForm } from '~/routing/projects/components/ProjectForm';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { CreateProjectDocument } from '~/__generated__/graphql';

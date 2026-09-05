@@ -1,9 +1,11 @@
 import { CustomPromptType } from '~/__generated__/graphql';
+import type {
+  PromptsSortBy,
+  PromptsSortOrder,
+} from '~/routing/prompts/config/types';
 import {
   PROMPTS_SORT_BY,
   PROMPTS_SORT_ORDER,
-  PromptsSortBy,
-  PromptsSortOrder,
 } from '~/routing/prompts/config/types';
 
 const isPromptsSortBy = (value: string): value is PromptsSortBy =>

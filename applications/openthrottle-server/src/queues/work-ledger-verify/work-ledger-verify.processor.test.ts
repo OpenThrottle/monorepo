@@ -1,14 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createMock } from '@golevelup/ts-vitest';
-import { GitHubService } from '@openthrottle/nestjs-github';
-import { LoggerService } from '@openthrottle/nestjs-modules';
-import { WorkLedgerService } from '@openthrottle/nestjs-repositories';
+import type { GitHubService } from '@openthrottle/nestjs-github';
+import type { LoggerService } from '@openthrottle/nestjs-modules';
+import type { WorkLedgerService } from '@openthrottle/nestjs-repositories';
 import type {
   WorkArtifact,
   WorkSessionSubject,
 } from '@openthrottle/nestjs-repositories';
 import type { Repository } from 'typeorm';
-import { TaggingEnqueueService } from '../tagging/tagging-enqueue.service';
+import type { TaggingEnqueueService } from '../tagging/tagging-enqueue.service';
 import { WorkLedgerVerifyProcessor } from './work-ledger-verify.processor';
 import type { WorkLedgerVerifyJob } from './work-ledger-verify.types';
 

@@ -277,11 +277,11 @@ export const formatZodError = (
  *
  * @public
  */
-export const parseFormData = <Schema extends z.ZodTypeAny>(
+export const parseFormData = <TSchema extends z.ZodTypeAny>(
   formData: FormData,
-  schema: Schema,
+  schema: TSchema,
   options?: ParseFormDataOptions,
-): FormDataParseResult<z.infer<Schema>> => {
+): FormDataParseResult<z.infer<TSchema>> => {
   const allow = new Set(options?.allow ?? DEFAULT_ALLOWED_EXTRAS);
   const lists = new Set(options?.lists ?? []);
   const strict = options?.strict ?? true;
@@ -384,9 +384,9 @@ const FALSE_TOKENS: ReadonlySet<string> = new Set(['0', 'false', 'no', 'off']);
  *
  * @public
  */
-export const coerceBoolean = <Schema extends z.ZodTypeAny>(
-  schema: Schema,
-): z.ZodEffects<Schema, z.infer<Schema>, unknown> => {
+export const coerceBoolean = <TSchema extends z.ZodTypeAny>(
+  schema: TSchema,
+): z.ZodEffects<TSchema, z.infer<TSchema>, unknown> => {
   return z.preprocess((value) => {
     if (typeof value !== 'string') {
       return value;
@@ -414,9 +414,9 @@ export const coerceBoolean = <Schema extends z.ZodTypeAny>(
  *
  * @public
  */
-export const coerceNumber = <Schema extends z.ZodTypeAny>(
-  schema: Schema,
-): z.ZodEffects<Schema, z.infer<Schema>, unknown> => {
+export const coerceNumber = <TSchema extends z.ZodTypeAny>(
+  schema: TSchema,
+): z.ZodEffects<TSchema, z.infer<TSchema>, unknown> => {
   return z.preprocess((value) => {
     if (typeof value !== 'string') {
       return value;
@@ -445,9 +445,9 @@ export const coerceNumber = <Schema extends z.ZodTypeAny>(
  *
  * @public
  */
-export const coerceJson = <Schema extends z.ZodTypeAny>(
-  schema: Schema,
-): z.ZodEffects<Schema, z.infer<Schema>, unknown> => {
+export const coerceJson = <TSchema extends z.ZodTypeAny>(
+  schema: TSchema,
+): z.ZodEffects<TSchema, z.infer<TSchema>, unknown> => {
   return z.preprocess((value) => {
     if (typeof value !== 'string') {
       return value;

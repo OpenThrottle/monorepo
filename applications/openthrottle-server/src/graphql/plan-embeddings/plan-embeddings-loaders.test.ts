@@ -1,5 +1,5 @@
 import { createMock } from '@golevelup/ts-vitest';
-import { PlansService } from '@openthrottle/nestjs-repositories';
+import type { PlansService } from '@openthrottle/nestjs-repositories';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { PlanEmbeddingsLoaders } from './plan-embeddings-loaders';
 

@@ -1,5 +1,6 @@
-import * as Transport from 'winston-transport';
-import { createLogger, format, Logger, transports } from 'winston';
+import type * as Transport from 'winston-transport';
+import type { format, Logger } from 'winston';
+import { createLogger, transports } from 'winston';
 import { formatters, isFormatterName } from './logger.formatters';
 
 const isProduction = process.env.NODE_ENV === 'production';

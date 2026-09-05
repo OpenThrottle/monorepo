@@ -1,7 +1,7 @@
 import * as React from 'react';
 import clsx from 'clsx';
 import { APP_NAME_SHORT } from '@openthrottle/react-router-utils';
-import { ServerHealthObject } from '@openthrottle/openthrottle-developer-codegen';
+import type { ServerHealthObject } from '@openthrottle/openthrottle-developer-codegen';
 import {
   Sidebar,
   SidebarInset,

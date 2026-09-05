@@ -1,5 +1,5 @@
 import { createMock } from '@golevelup/ts-vitest';
-import {
+import type {
   WorkArtifact,
   WorkLedgerService,
 } from '@openthrottle/nestjs-repositories';

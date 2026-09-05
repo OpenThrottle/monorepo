@@ -1,7 +1,5 @@
-import {
-  NOTIFICATION_PREFERENCE_ROWS,
-  NotificationPreferenceId,
-} from '~/routing/settings/config/notification-preferences';
+import type { NotificationPreferenceId } from '~/routing/settings/config/notification-preferences';
+import { NOTIFICATION_PREFERENCE_ROWS } from '~/routing/settings/config/notification-preferences';
 
 export const getDefaultNotificationSettings = (): Record<
   NotificationPreferenceId,

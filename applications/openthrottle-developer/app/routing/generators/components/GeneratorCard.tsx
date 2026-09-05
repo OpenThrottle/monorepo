@@ -7,7 +7,7 @@ import {
   CardFooter,
 } from '@openthrottle/react-router-shadcn';
 import { Link } from 'react-router';
-import { GeneratorCardFragment } from '~/__generated__/graphql';
+import type { GeneratorCardFragment } from '~/__generated__/graphql';
 
 export interface GeneratorCardProps {
   className?: string;

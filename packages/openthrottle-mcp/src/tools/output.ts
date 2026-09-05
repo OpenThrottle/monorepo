@@ -2,7 +2,7 @@
  * @description Plan output tool handlers + schemas: append_plan_output, get_plan_output. Wired up via the shared `developerMcpToolDefinitions` registry and the Nest surface.
  */
 
-import { z } from 'zod';
+import type { z } from 'zod';
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import {
   type AppendPlanOutputMutation,

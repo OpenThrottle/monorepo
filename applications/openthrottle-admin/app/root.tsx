@@ -34,13 +34,12 @@ import {
   GlobalMetrics,
   GlobalProviders,
 } from '@openthrottle/react-router-ui-global';
+import type { ServerHealthObject, UserObject } from '~/__generated__/graphql';
 import {
   GetMeDocument,
   GetRootHealthDocument,
   LoginDocument,
-  ServerHealthObject,
   SignoutDocument,
-  UserObject,
 } from '~/__generated__/graphql';
 import { SITE_TITLE } from '#/app/global/config/settings';
 import type { Route } from '@/app/+types/root';

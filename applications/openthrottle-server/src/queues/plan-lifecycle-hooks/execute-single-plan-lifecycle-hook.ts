@@ -3,12 +3,12 @@
  */
 
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import {
-  PLAN_TASK_LIST_ORDER,
+import type {
   PlanOutputStreamService,
   PlansService,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
+import { PLAN_TASK_LIST_ORDER } from '@openthrottle/nestjs-repositories';
 import { formatPlanAndTasksForPrompt } from '@openthrottle/openthrottle-agentic-ralph';
 import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 import {

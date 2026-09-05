@@ -1,7 +1,7 @@
 import * as React from 'react';
+import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalHeading,
-  GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { BookOpenIcon } from 'lucide-react';

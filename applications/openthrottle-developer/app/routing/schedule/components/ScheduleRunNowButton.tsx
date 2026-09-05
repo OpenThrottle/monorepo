@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useFetcher, useNavigate, useRevalidator } from 'react-router';
 import { Button, toast } from '@openthrottle/react-router-shadcn';
 import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
-import { action as scheduleDetailAction } from '~/routes/schedule.$jobId._index';
+import type { action as scheduleDetailAction } from '~/routes/schedule.$jobId._index';
 
 export interface ScheduleRunNowButtonProps {
   readonly jobId: string;

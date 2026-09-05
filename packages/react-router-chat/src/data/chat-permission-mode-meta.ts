@@ -1,4 +1,4 @@
-import * as React from 'react';
+import type * as React from 'react';
 import { Lock, Pencil, Unlock } from 'lucide-react';
 import { ChatPermissionMode } from '../types';
 

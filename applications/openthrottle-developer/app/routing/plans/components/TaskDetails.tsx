@@ -6,7 +6,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import { Link } from 'react-router';
 import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
-import { PlanTaskRowFragment } from '~/__generated__/graphql';
+import type { PlanTaskRowFragment } from '~/__generated__/graphql';
 import { TASK_DETAIL_COPY } from '~/routing/plans/data/data.copy';
 import { formatTaskDate } from '~/routing/plans/utils/task-details';
 

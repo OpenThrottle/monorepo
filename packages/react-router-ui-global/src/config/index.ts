@@ -1,4 +1,4 @@
-import { ChartConfig } from '@openthrottle/react-router-shadcn';
+import type { ChartConfig } from '@openthrottle/react-router-shadcn';
 
 /**
  * @description The one source of truth for the URL search param / value that opens

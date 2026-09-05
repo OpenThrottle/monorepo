@@ -1,9 +1,7 @@
+import type { SortBy, SortOrder, View } from '~/routing/projects/config';
 import {
   SORT_BY_VALUES,
   SORT_ORDER_VALUES,
-  SortBy,
-  SortOrder,
-  View,
   VIEW_VALUES,
 } from '~/routing/projects/config';
 

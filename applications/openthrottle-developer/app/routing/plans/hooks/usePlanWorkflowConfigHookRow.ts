@@ -5,7 +5,7 @@
  * skill path, prompt fields, and prompt-delivery toggles). All updates go
  * through the parent `onChange` with a full next-rows array.
  */
-import * as React from 'react';
+import type * as React from 'react';
 import { DEFAULT_RALPH_PROMPT } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import {
   moveRowWithinPhase,

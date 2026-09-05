@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from '@openthrottle/react-router-shadcn';
 import { AssignRoleSelectForm } from '~/routing/users/components/AssignRoleSelectForm';
-import { action as userDetailAction } from '~/routes/users.$userId';
+import type { action as userDetailAction } from '~/routes/users.$userId';
 import type { Route } from '@/app/routes/+types/users.$userId';
 import type { useFetcher } from 'react-router';
 

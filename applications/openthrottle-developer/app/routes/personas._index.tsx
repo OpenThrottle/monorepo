@@ -1,8 +1,6 @@
 import * as React from 'react';
-import {
-  GlobalLayoutBreadcrumbsHandle,
-  GlobalScreen,
-} from '@openthrottle/react-router-ui-global';
+import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
+import { GlobalScreen } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { PersonasStats } from '~/routing/personas/components/PersonasStats';
@@ -41,6 +39,18 @@ export const meta = (_args: Route.MetaArgs) => {
 export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
   const entries = [...props.loaderData.entries];
 
   return (

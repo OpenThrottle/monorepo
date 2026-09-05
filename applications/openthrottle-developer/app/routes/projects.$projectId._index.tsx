@@ -4,10 +4,8 @@ import {
   mergeRouteModuleMeta,
   parsePagination,
 } from '@openthrottle/react-router-utils';
-import {
-  GlobalLayoutBreadcrumbsHandle,
-  GlobalScreen,
-} from '@openthrottle/react-router-ui-global';
+import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
+import { GlobalScreen } from '@openthrottle/react-router-ui-global';
 import { GetProjectByIdDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { ProjectDetailTabs } from '~/routing/projects/components/ProjectDetailTabs';

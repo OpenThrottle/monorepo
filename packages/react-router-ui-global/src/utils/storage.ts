@@ -1,4 +1,4 @@
-import { GetRootMetricsQuery } from '@openthrottle/openthrottle-developer-codegen';
+import type { GetRootMetricsQuery } from '@openthrottle/openthrottle-developer-codegen';
 import { isRecord } from '@openthrottle/nodejs-utils';
 import {
   GLOBAL_METRICS_COLLAPSED_KEY,

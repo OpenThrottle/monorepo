@@ -1,10 +1,9 @@
 import { createMock } from '@golevelup/ts-vitest';
-import {
-  type Project,
+import type {
   ProjectsService,
-  type Task,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
+import { type Project, type Task } from '@openthrottle/nestjs-repositories';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { PlansLoaders } from './plans-loaders';
 

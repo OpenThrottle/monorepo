@@ -5,7 +5,7 @@ globs:
 name: coding-return-types
 ---
 
-When declaring functions on the top-level of a module,
+**Advisory — lint warns.** When declaring functions on the top-level of a module,
 declare their return types. This will help future AI
 assistants understand the function's purpose.
 
@@ -24,3 +24,13 @@ const MyComponent = () => {
   return <div>Hello</div>;
 };
 ```
+
+## How this is enforced
+
+`@typescript-eslint/explicit-module-boundary-types` at **`warn`** (`allowHigherOrderFunctions`, `allowTypedFunctionExpressions`), in `tools/dotfiles/src/index.ts`.
+
+That rule, not `explicit-function-return-type`, is the machine form of what this doc says. "Top-level of a module" *is* the module boundary; `explicit-function-return-type` covers every function anywhere. Measured against the same tree, the difference is **1,341** sites versus **14,973** — one is a backlog, the other is noise. Under `pnpm nx run-many --target=lint --all`, which ignores the generated and build output an ad-hoc `eslint` sweep picks up, it is **362** warnings. `explicit-function-return-type` stays `off`.
+
+`warn` rather than `error` because 362 sites cannot be cleared in one change, and the lint target passes no `--max-warnings`, so nothing here blocks CI. The warnings are read by the weekly `.agents/prompts/Job_RulesConformance.md` sweep, which files them as mechanical cleanup tasks. **If that sweep stops consuming them, this rule should be turned off rather than left as decoration.**
+
+The JSX exception above is not machine-expressible, so components are warned about too. Typing them (`: React.ReactElement`, as the generators already scaffold) satisfies both.

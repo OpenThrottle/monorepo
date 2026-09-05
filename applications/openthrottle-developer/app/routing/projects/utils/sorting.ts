@@ -1,5 +1,5 @@
-import { SortBy, SortOrder } from '~/routing/projects/config';
-import { ProjectWithStats } from '~/routing/projects/data/types';
+import type { SortBy, SortOrder } from '~/routing/projects/config';
+import type { ProjectWithStats } from '~/routing/projects/data/types';
 
 export function sortProjects(
   projects: ProjectWithStats[],

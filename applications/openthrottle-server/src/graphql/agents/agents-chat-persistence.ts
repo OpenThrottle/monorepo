@@ -7,10 +7,8 @@ import {
   type AuthPrincipal,
   type UserAuthPrincipal,
 } from '@openthrottle/nestjs-auth';
-import {
-  AgentConversationsService,
-  deriveConversationTitleFromMessage,
-} from '@openthrottle/nestjs-repositories';
+import type { AgentConversationsService } from '@openthrottle/nestjs-repositories';
+import { deriveConversationTitleFromMessage } from '@openthrottle/nestjs-repositories';
 import { isRecord } from '@openthrottle/nodejs-utils';
 import { NotFoundException } from '@nestjs/common';
 import type { AgentsRouterModelSnapshot } from './agents-mcp-router-llm.service';

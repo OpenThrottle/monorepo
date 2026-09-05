@@ -1,6 +1,6 @@
 import type { ExecutionContext } from '@nestjs/common';
 import { UnauthorizedException } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
+import type { Reflector } from '@nestjs/core';
 import { createMock } from '@golevelup/ts-vitest';
 import {
   AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
@@ -8,10 +8,10 @@ import {
   authPrincipalFromServiceAccountId,
 } from '@openthrottle/nestjs-auth';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { GlobalClsAuthHook } from '../auth/global-cls-auth-hook.service';
-import { ServiceAccountAuthService } from '../auth/service-account-auth.service';
+import type { GlobalClsAuthHook } from '../auth/global-cls-auth-hook.service';
+import type { ServiceAccountAuthService } from '../auth/service-account-auth.service';
 import { GlobalAuthGuard } from './global-auth.guard';
-import { GqlJwtAuthGuard } from './gql-jwt-auth.guard';
+import type { GqlJwtAuthGuard } from './gql-jwt-auth.guard';
 
 const createHttpExecutionContext = (req: object): ExecutionContext =>
   createMock<ExecutionContext>({

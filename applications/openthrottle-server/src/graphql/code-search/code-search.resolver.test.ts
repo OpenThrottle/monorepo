@@ -6,9 +6,9 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createMock } from '@golevelup/ts-vitest';
-import { WorkspaceLocalRepositoriesService } from '@openthrottle/nestjs-repositories';
+import type { WorkspaceLocalRepositoriesService } from '@openthrottle/nestjs-repositories';
 import type { WorkspaceLocalRepository } from '@openthrottle/nestjs-repositories';
-import { CodeSearchService } from '@openthrottle/nestjs-vector-search';
+import type { CodeSearchService } from '@openthrottle/nestjs-vector-search';
 import type { Queue } from 'bullmq';
 import { CodeSearchResolver } from './code-search.resolver';
 

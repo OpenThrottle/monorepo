@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { BellIcon, BellRingIcon } from 'lucide-react';
+import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalHeading,
-  GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { Separator } from '@openthrottle/react-router-shadcn';

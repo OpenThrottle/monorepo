@@ -5,11 +5,11 @@ import {
   parsePagination,
 } from '@openthrottle/react-router-utils';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalErrorBoundary,
   GlobalFeatureOnboarding,
   GlobalFeatureOnboardingModal,
-  GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { OpenThrottlePagination } from '@openthrottle/react-router-ui';

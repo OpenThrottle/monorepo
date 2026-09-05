@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createMock } from '@golevelup/ts-vitest';
 import { BadRequestException } from '@nestjs/common';
-import { GlobalClsService } from '@openthrottle/nestjs-modules';
+import type { GlobalClsService } from '@openthrottle/nestjs-modules';
+import type { WorkArtifact } from '@openthrottle/nestjs-repositories';
 import {
-  WorkArtifact,
   workArtifactsFactory,
   WorkSession,
   WorkSessionSubject,

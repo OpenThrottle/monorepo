@@ -11,10 +11,10 @@ import { isRolloutFlagValueForKind } from './assert-rollout-flag-catalog';
  *
  * @public
  */
-export const parseRolloutValueJson = <K extends RolloutFlagKind>(
-  kind: K,
+export const parseRolloutValueJson = <TKey extends RolloutFlagKind>(
+  kind: TKey,
   valueJson: string,
-): RolloutFlagValueByKind[K] | undefined => {
+): RolloutFlagValueByKind[TKey] | undefined => {
   if (!isRolloutFlagKind(kind)) {
     return undefined;
   }

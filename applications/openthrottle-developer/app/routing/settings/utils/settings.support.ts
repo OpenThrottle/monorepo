@@ -3,10 +3,8 @@ import {
   getEnvironment,
   IS_BROWSER,
 } from '@openthrottle/react-router-utils';
-import {
-  ClientLogEntry,
-  getClientLogEntries,
-} from '~/routing/settings/client-log-sink';
+import type { ClientLogEntry } from '~/routing/settings/client-log-sink';
+import { getClientLogEntries } from '~/routing/settings/client-log-sink';
 import { sanitizeEnvForDiagnostics } from '~/routing/settings/utils/sanitize-client-env';
 
 export interface ClientLog {

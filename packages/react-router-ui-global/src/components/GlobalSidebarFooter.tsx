@@ -2,7 +2,7 @@ import * as React from 'react';
 import clsx from 'clsx';
 import { Link } from 'react-router';
 import { ENV_SOURCE } from '@openthrottle/react-router-utils';
-import { ServerHealthObject } from '@openthrottle/openthrottle-developer-codegen';
+import type { ServerHealthObject } from '@openthrottle/openthrottle-developer-codegen';
 import {
   SidebarFooter,
   SidebarGroupLabel,

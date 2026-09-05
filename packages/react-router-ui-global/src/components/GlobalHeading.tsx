@@ -1,6 +1,6 @@
 import * as React from 'react';
 import clsx from 'clsx';
-import { LucideIcon } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 
 export interface GlobalHeadingProps extends React.PropsWithChildren {
   className?: string;

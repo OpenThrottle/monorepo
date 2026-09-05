@@ -1,6 +1,7 @@
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
 import { isPlanStatusKey } from '~/routing/plans/utils/utils.plans';
-import { PlanStatusKey, planStatusValues } from '~/routing/plans/types';
+import type { PlanStatusKey } from '~/routing/plans/types';
+import { planStatusValues } from '~/routing/plans/types';
 
 /**
  * @description Left-to-right Kanban order for plan task board columns

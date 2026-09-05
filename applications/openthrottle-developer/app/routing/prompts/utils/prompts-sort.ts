@@ -1,8 +1,10 @@
+import type {
+  PromptsSortBy,
+  PromptsSortOrder,
+} from '~/routing/prompts/config/types';
 import {
   PROMPTS_SORT_BY,
   PROMPTS_SORT_ORDER,
-  PromptsSortBy,
-  PromptsSortOrder,
 } from '~/routing/prompts/config/types';
 
 export const isPromptsSortBy = (value: string): value is PromptsSortBy =>

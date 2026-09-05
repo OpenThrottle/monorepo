@@ -5,7 +5,8 @@
  */
 
 import { beforeEach, describe, expect, it } from 'vitest';
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { createMock } from '@golevelup/ts-vitest';
 import { DocIngestionProcessor } from './doc-ingestion.processor';

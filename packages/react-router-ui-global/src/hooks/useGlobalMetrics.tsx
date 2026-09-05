@@ -2,10 +2,8 @@ import * as React from 'react';
 import { print } from 'graphql';
 import { usePollServerMetrics } from '@openthrottle/react-router-ui';
 import { ENV_SOURCE } from '@openthrottle/react-router-utils';
-import {
-  GetRootMetricsDocument,
-  GetRootMetricsQuery,
-} from '@openthrottle/openthrottle-developer-codegen';
+import type { GetRootMetricsQuery } from '@openthrottle/openthrottle-developer-codegen';
+import { GetRootMetricsDocument } from '@openthrottle/openthrottle-developer-codegen';
 import {
   getStoredMetricsCollapsed,
   getStoredPollIntervalMs,

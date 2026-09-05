@@ -6,7 +6,7 @@
 
 import { describe, expect, it, vi } from 'vitest';
 import { createMock } from '@golevelup/ts-vitest';
-import { WorktreeActivityService } from '../../services/worktree-activity/worktree-activity.service';
+import type { WorktreeActivityService } from '../../services/worktree-activity/worktree-activity.service';
 import type { WorktreeActivityResult } from '../../services/worktree-activity/worktree-activity.types';
 import { WORKTREE_ACTIVITY } from '../../services/worktree-activity/worktree-activity.types';
 import { WORKTREE_DISCOVERY_SOURCE } from '../../services/worktree-discovery/worktree-discovery.types';

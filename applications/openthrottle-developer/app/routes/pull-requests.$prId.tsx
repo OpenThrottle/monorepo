@@ -1,12 +1,10 @@
 import * as React from 'react';
-import { MiddlewareFunction } from 'react-router';
+import type { MiddlewareFunction } from 'react-router';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { authMiddleware } from '@openthrottle/react-router-auth';
-import {
-  GlobalLayoutBreadcrumbsHandle,
-  GlobalScreen,
-} from '@openthrottle/react-router-ui-global';
+import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
+import { GlobalScreen } from '@openthrottle/react-router-ui-global';
 import { GetPullRequestDetailDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { getDefaultGithubRepo } from '~/global/config/github-default-repo';

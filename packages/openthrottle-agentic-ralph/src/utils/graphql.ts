@@ -85,6 +85,7 @@ export function buildWorkflowExecuteGraphqlV2Options(
  * timeout via `AbortSignal.timeout` — the Result API has no `timeoutMs`, only `signal`. A timeout aborts
  * `fetch`, surfacing as a `network` {@link GraphqlV2Failure}. Throws if the URL cannot be resolved.
  */
+// eslint-disable-next-line @typescript-eslint/naming-convention -- `_v2` marks the Result-API variant, distinct from the throw-based `buildWorkflowExecuteGraphqlV2Options` above; the two coexist deliberately
 function buildWorkflowExecuteGraphql_v2Options(
   config: WorkflowGraphqlConfig,
 ): GraphqlV2ExecuteOptions {

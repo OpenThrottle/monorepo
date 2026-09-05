@@ -1,4 +1,4 @@
-import { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
+import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 import type {
   JobRunHooksConfig,
   RalphNestedRunTuningInput,

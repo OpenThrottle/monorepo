@@ -1,4 +1,5 @@
-import { ESLintUtils, TSESTree } from '@typescript-eslint/utils';
+import type { TSESTree } from '@typescript-eslint/utils';
+import { ESLintUtils } from '@typescript-eslint/utils';
 
 /**
  * The pre-Hooks unpack checker — the shared, surface-agnostic implementation of

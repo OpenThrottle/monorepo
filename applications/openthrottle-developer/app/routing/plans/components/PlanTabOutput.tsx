@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { PlanDetailOutputChunksQuery } from '@openthrottle/openthrottle-developer-codegen';
+import type { PlanDetailOutputChunksQuery } from '@openthrottle/openthrottle-developer-codegen';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { TabsContent } from '@openthrottle/react-router-shadcn';
 import { OutputStream } from '~/routing/plans/components/OutputStream';

@@ -2,11 +2,11 @@ import * as React from 'react';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { buildInFlightByJob } from '~/routing/schedule/utils/build-in-flight-by-job';
 import { filterJobsBySearch } from '~/routing/schedule/utils/filter-jobs-by-search';
+import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalErrorBoundary,
   GlobalFeatureOnboarding,
   GlobalFeatureOnboardingModal,
-  GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
   readSearchParam,
 } from '@openthrottle/react-router-ui-global';

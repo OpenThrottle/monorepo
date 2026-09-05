@@ -2,7 +2,7 @@ import * as React from 'react';
 import clsx from 'clsx';
 import { AssigneeMultiSelect } from '~/routing/plans/components/AssigneeMultiSelect';
 import { GlobalToolbarSearch } from '@openthrottle/react-router-ui-global';
-import { PlansSortBy, PlansSortOrder } from '~/routing/plans/config/types';
+import type { PlansSortBy, PlansSortOrder } from '~/routing/plans/config/types';
 import { SortDropdown } from '~/routing/plans/components/SortDropdown';
 import { STATUS_OPTIONS } from '~/routing/plans/config/status-options';
 import { StatusMultiSelect } from '~/routing/plans/components/StatusMultiSelect';

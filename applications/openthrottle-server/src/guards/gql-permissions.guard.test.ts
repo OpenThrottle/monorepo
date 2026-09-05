@@ -1,13 +1,13 @@
 import type { ExecutionContext } from '@nestjs/common';
 import { ForbiddenException } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
+import type { Reflector } from '@nestjs/core';
 import { createMock } from '@golevelup/ts-vitest';
 import {
   AUTH_PRINCIPAL_KIND_USER,
   authPrincipalFromServiceAccountId,
 } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS } from '@openthrottle/nestjs-rbac';
-import { RolesService } from '@openthrottle/nestjs-repositories';
+import type { RolesService } from '@openthrottle/nestjs-repositories';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { GqlPermissionsGuard } from './gql-permissions.guard';
 

@@ -1,5 +1,5 @@
 import { createMock } from '@golevelup/ts-vitest';
-import {
+import type {
   Plan,
   PlanRunsService,
   PlansService,
@@ -8,9 +8,9 @@ import {
 import { NotFoundException } from '@nestjs/common';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { Queue } from 'bullmq';
-import { NotificationsService } from '../../notifications/notifications.service';
-import { PlanCancelChannelService } from '../../queues/plans/plan-cancel-channel.service';
-import { PlanRunCancellationService } from '../../queues/plans/plan-run-cancellation.service';
+import type { NotificationsService } from '../../notifications/notifications.service';
+import type { PlanCancelChannelService } from '../../queues/plans/plan-cancel-channel.service';
+import type { PlanRunCancellationService } from '../../queues/plans/plan-run-cancellation.service';
 import type { RunPlanJobData } from '../../queues/plans/plans.types';
 import { PlanStatusService } from './plan-status.service';
 

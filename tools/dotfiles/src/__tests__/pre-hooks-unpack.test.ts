@@ -1,6 +1,6 @@
 import { parseForESLint } from '@typescript-eslint/parser';
 import { RuleTester } from '@typescript-eslint/rule-tester';
-import { TSESTree } from '@typescript-eslint/utils';
+import type { TSESTree } from '@typescript-eslint/utils';
 import { afterAll, describe, expect, it } from 'vitest';
 import {
   findPropsUnpacksAfterHooks,

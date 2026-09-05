@@ -5,10 +5,10 @@ import {
   executeGraphqlWithAuth,
   isAuthError,
 } from '@openthrottle/react-router-graphql';
+import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalErrorBoundary,
   GlobalHeading,
-  GlobalLayoutBreadcrumbsHandle,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { GetPermissionsDocument } from '~/__generated__/graphql';

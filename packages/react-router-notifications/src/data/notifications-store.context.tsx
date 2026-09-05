@@ -15,7 +15,7 @@ import {
   NOTIFICATIONS_MAX_STORED,
   NOTIFICATIONS_MAX_PERSISTED,
 } from '../config/index';
-import { NotificationInstance } from '../types';
+import type { NotificationInstance } from '../types';
 import { APP_NAME } from '@openthrottle/react-router-utils';
 
 /**

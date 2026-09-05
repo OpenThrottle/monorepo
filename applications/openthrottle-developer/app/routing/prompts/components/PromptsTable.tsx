@@ -1,10 +1,7 @@
 import * as React from 'react';
 import clsx from 'clsx';
-import {
-  Badge,
-  BadgeProps,
-  DataTable,
-} from '@openthrottle/react-router-shadcn';
+import type { BadgeProps } from '@openthrottle/react-router-shadcn';
+import { Badge, DataTable } from '@openthrottle/react-router-shadcn';
 import { Clock, FileText } from 'lucide-react';
 import { CustomPromptType } from '@openthrottle/openthrottle-developer-codegen';
 import {
