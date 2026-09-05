@@ -6,6 +6,19 @@ import { beforeEach, describe, expect, test } from 'vitest';
 import { ChatMessageBody } from '../ChatMessageBody';
 import type { ChatMessageBodyProps } from '../ChatMessageBody';
 
+/**
+ * `ChatMessageBody` loads `MarkdownRenderer` through `React.lazy`, so the first
+ * test to await it pays for loading AND MDX-compiling the ~505 KB acorn stack:
+ * ~600ms on a warm dev machine, over a second on a contended CI shard. That
+ * overran Testing Library's 1000ms `asyncUtilTimeout` default and failed only
+ * the first awaiting test on CI, while every later one passed off the hot
+ * compiler. The wait is legitimately compiler-bound rather than a hang, so give
+ * it a budget — passed per call rather than via `configure`, which is
+ * process-global and would leak into sibling suites sharing a worker. Vitest's
+ * 15s `testTimeout` still bounds a genuine failure.
+ */
+const LAZY_RENDERER_TIMEOUT_MS = 10_000;
+
 describe('ChatMessageBody Component', () => {
   let component: RenderResult;
   let props: ChatMessageBodyProps;
@@ -40,7 +53,9 @@ describe('ChatMessageBody Component', () => {
     test('should parse the body as Markdown', async () => {
       // The renderer is loaded lazily, so wait for it before asserting on its
       // output — until then the Suspense fallback shows the raw body.
-      await component.findByTestId('MarkdownRenderer');
+      await component.findByTestId('MarkdownRenderer', undefined, {
+        timeout: LAZY_RENDERER_TIMEOUT_MS,
+      });
 
       // The renderer parses Markdown, so `**bold**` becomes a <strong> — not
       // the literal asterisks the old escaped renderer produced.
@@ -60,7 +75,9 @@ describe('ChatMessageBody Component', () => {
 
     test('should render the body through Markdown', async () => {
       expect(
-        await component.findByTestId('MarkdownRenderer'),
+        await component.findByTestId('MarkdownRenderer', undefined, {
+          timeout: LAZY_RENDERER_TIMEOUT_MS,
+        }),
       ).toBeInTheDocument();
       expect(component.getByText('Notice')).toBeInTheDocument();
     });
@@ -93,7 +110,9 @@ describe('ChatMessageBody Component', () => {
           component = renderBody({ body: SCRIPT_PAYLOAD, role });
           // Await the lazy renderer first: asserting absence before it mounts
           // would pass no matter what the renderer does with the payload.
-          await component.findByTestId('MarkdownRenderer');
+          await component.findByTestId('MarkdownRenderer', undefined, {
+            timeout: LAZY_RENDERER_TIMEOUT_MS,
+          });
 
           expect(
             component.container.querySelector('script'),
@@ -102,7 +121,9 @@ describe('ChatMessageBody Component', () => {
 
         test('should not inject a live <img onerror> element', async () => {
           component = renderBody({ body: IMG_PAYLOAD, role });
-          await component.findByTestId('MarkdownRenderer');
+          await component.findByTestId('MarkdownRenderer', undefined, {
+            timeout: LAZY_RENDERER_TIMEOUT_MS,
+          });
 
           expect(
             component.container.querySelector('img'),

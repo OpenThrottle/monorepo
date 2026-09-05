@@ -80,12 +80,13 @@ The layout every tool reads is built by our own [`ot-skill-sync`](./ot-skill-syn
 - [`github-squash/`](./github-squash/) — squash the branch to a single commit
 
 Branches come from `pnpm run worktree:new <name>`, the one entrypoint for a branch plus its
-worktree — not from a skill.
+worktree. The machinery behind that script is [`ot-worktree/`](./ot-worktree/) below.
 
 **Agents/workflow:**
 
 - [`ot-loop/`](./ot-loop/) — drive one OT plan to a PR with the built-in `/loop`, a task at a time in an isolated worktree. Canonical source of the per-task discipline.
 - [`ot-loop-review/`](./ot-loop-review/) — the reflection stage after `ot-loop`: audits an executed run against a fixed rubric, separates friction from defects, and files the follow-ups. Read-only on code.
+- [`agents-ralph/`](./agents-ralph/) — the Ralph prompt: turn an idea or PRD into an OT plan, then execute it a task at a time. Self-contained, so the `workflow-ralph` CLI can feed it to an agent as a standalone prompt.
 
 **Infrastructure:**
 
@@ -94,7 +95,12 @@ worktree — not from a skill.
 **Repo-specific skills:**
 
 - [`ot-onboarding/`](./ot-onboarding/) — the front-door orientation skill new users invoke first: verifies the OT MCP is healthy, then tours the mental model, monorepo, shortcuts/workflows, and the skill catalog.
-- [`pubsub-local-setup/`](./pubsub-local-setup/) — spinning up the local GCP Pub/Sub emulator (pairs with [`docs/PubSub-Setup.md`](../docs/PubSub-Setup.md)).
+- [`ot-folders/`](./ot-folders/) — where code goes, what it is named, what shape it must have, and how to prove it — the placement rules behind the `openthrottle/*` lint rules and module boundaries.
+- [`ot-generators/`](./ot-generators/) — scaffolding with `@tools/generators`: which generator makes an app, package, component, route or NestJS service, and how to run one.
+- [`ot-plans/`](./ot-plans/) — plans and tasks via the `openthrottle-mcp` server, plus the `Plan-Id`/`Task-Id` and work-ledger traceability rules.
+- [`ot-postgres/`](./ot-postgres/) — SQL authoring under `databases/`: migrations, table design and naming, `COMMENT ON` standards, idempotent DDL.
+- [`ot-stack/`](./ot-stack/) — conventions for the platform itself: `openthrottle-server`, the developer app, the GraphQL schema, embeddings and semantic ingest.
+- [`ot-worktree/`](./ot-worktree/) — the portable machinery behind `worktree:new`, `worktree:heal` and `worktree:remove`: creating, provisioning and tearing down a worktree.
 
 Each skill is its own directory with a `SKILL.md` at its root, per the [specification](https://agentskills.io/specification).
 
@@ -130,7 +136,7 @@ Then:
 
 1. Flesh out the generated `SKILL.md` — required `name` + `description` frontmatter, then instructions. Keep it focused and self-contained. Prefer the spec's optional dirs (`scripts/`, `references/`, `assets/`) over ad-hoc layouts.
 2. Only link relatively **within** the skill's own directory — anything outside it (repo docs, other skills) must be an **absolute URL** (e.g. `https://github.com/openthrottle/monorepo/blob/main/docs/...`). Skills are copied into other repos on install, so relative links that escape the skill directory break there.
-3. If it overlaps with existing docs (like the Pub/Sub setup), cross-link the two so folks can find either entry point.
+3. If it overlaps with existing docs (as `ot-onboarding` does with [`docs/openthrottle/first-time-onboarding.md`](../docs/openthrottle/first-time-onboarding.md)), cross-link the two so folks can find either entry point.
 
 > [!TIP]
 >

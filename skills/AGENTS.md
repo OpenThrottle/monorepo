@@ -47,8 +47,8 @@ npx skills update
 - **Follow [the spec](https://agentskills.io/specification) first.** `name` matches the directory; `description` states what the skill does and when to use it; keep `SKILL.md` under 500 lines; prefer `scripts/` / `references/` / `assets/` over ad-hoc extra files.
 - Author repo-specific skills **here** in `skills/`; let `.agents/skills/` be the managed home for external skills.
 - Each skill is its own directory containing a `SKILL.md`. Keep it focused and self-contained.
-- **Never use relative links that point outside the skill's directory.** Skills are copied into other repos on install, so a `../../docs/...` link dangles there. Link within the skill relatively; link everything else by absolute URL (e.g. `https://github.com/openthrottle/monorepo/blob/main/docs/PubSub-Setup.md`) — anyone who installed the skill has repo access already.
-- When a skill overlaps with docs (e.g. the Pub/Sub setup), cross-link the two so agents can find either entry point.
+- **Never use relative links that point outside the skill's directory.** Skills are copied into other repos on install, so a `../../docs/...` link dangles there. Link within the skill relatively; link everything else by absolute URL (e.g. `https://github.com/openthrottle/monorepo/blob/main/docs/openthrottle/first-time-onboarding.md`) — anyone who installed the skill has repo access already.
+- When a skill overlaps with docs (e.g. `ot-onboarding` and `docs/openthrottle/first-time-onboarding.md`), cross-link the two so agents can find either entry point.
 
 ## See also
 
