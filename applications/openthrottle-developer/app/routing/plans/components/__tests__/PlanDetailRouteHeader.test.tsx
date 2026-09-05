@@ -72,16 +72,15 @@ describe('PlanDetailRouteHeader Component', () => {
     );
   });
 
-  test('links the project chip to the project a plan points at', () => {
-    const { getByLabelText, getByTestId } = renderRoutesStub(
+  // The project chip is currently commented out in the header. Until it comes
+  // back, assert it stays absent even for a plan that does point at a project,
+  // so re-enabling it fails here rather than silently changing the header.
+  test('renders no project chip even when the plan points at a project', () => {
+    const { queryByTestId } = renderRoutesStub(
       <PlanDetailRouteHeader plan={planWithProject} status="IN_PROGRESS" />,
     );
 
-    expect(getByTestId('PlanProjectBadge')).toBeInTheDocument();
-    expect(getByLabelText('Project: atlas-api')).toHaveAttribute(
-      'href',
-      '/projects/project-1',
-    );
+    expect(queryByTestId('PlanProjectBadge')).not.toBeInTheDocument();
   });
 
   // Most plans have no project, so the chip must be absent rather than an
