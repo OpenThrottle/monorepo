@@ -126,6 +126,9 @@ import {
   TaskEmbeddingsByTaskInput,
   TasksByPlanIdInput,
   TasksByProjectIdInput,
+  TimelineLaneGrouping,
+  TimelineMarkerKind,
+  TimelineSpanKind,
   UnverifiedWorkArtifactsInput,
   UpdateAgentConversationTitleInput,
   UpdateCustomPromptInput,
@@ -149,6 +152,7 @@ import {
   WorkSessionsByPlanInput,
   WorkspaceEditorId,
   WorkspaceFolderReconciliation,
+  WorkstreamTimelineInput,
   WorktreeActivity,
   WorktreeDiscoveryProblemKind,
   WorktreeRootSource,
@@ -186,6 +190,12 @@ export const RolloutEvaluationReasonSchema = z.nativeEnum(
 );
 
 export const RolloutFlagKindSchema = z.nativeEnum(RolloutFlagKind);
+
+export const TimelineLaneGroupingSchema = z.nativeEnum(TimelineLaneGrouping);
+
+export const TimelineMarkerKindSchema = z.nativeEnum(TimelineMarkerKind);
+
+export const TimelineSpanKindSchema = z.nativeEnum(TimelineSpanKind);
 
 export const WallClockInterpretationSchema = z.nativeEnum(
   WallClockInterpretation,
@@ -1664,5 +1674,21 @@ export function WorkSessionsByPlanInputSchema(): z.ZodObject<
 > {
   return z.object({
     planId: z.string().min(1),
+  });
+}
+
+export function WorkstreamTimelineInputSchema(): z.ZodObject<
+  Properties<WorkstreamTimelineInput>
+> {
+  return z.object({
+    backend: z.string().nullish(),
+    checkoutId: z.string().nullish(),
+    from: definedNonNullAnySchema,
+    gitBranch: z.string().nullish(),
+    grouping: TimelineLaneGroupingSchema.nullish(),
+    markerKinds: z.array(TimelineMarkerKindSchema).nullish(),
+    planId: z.string().nullish(),
+    spanKinds: z.array(TimelineSpanKindSchema).nullish(),
+    to: definedNonNullAnySchema,
   });
 }

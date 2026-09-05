@@ -2940,6 +2940,166 @@ type TaskEmbeddingObject {
   taskId: String!
 }
 
+type TimelineSpanObject {
+  """
+  Execution backend / tool name / driver id, when the source carries one.
+  """
+  backend: String
+
+  """Git branch the work ran on, when known."""
+  branch: String
+
+  """Repository checkout (UUID) the work ran in, when known."""
+  checkoutId: String
+
+  """Agent conversation (UUID) behind this span, when known."""
+  conversationId: String
+
+  """
+  TRUE when `endsAt` was inferred rather than recorded — always for PLAN_RUN (plan_runs has no finish column), and for any still-open session or run. Render it distinctly; a derived end must never read as a measured one.
+  """
+  derivedEnd: Boolean!
+
+  """
+  End of the span. See `derivedEnd` before treating it as a measured finish.
+  """
+  endsAt: DateTime!
+
+  """Stable row id."""
+  id: String!
+  kind: TimelineSpanKind!
+
+  """Lane this span belongs to under the requested grouping."""
+  laneKey: String!
+
+  """Human-legible lane label for `laneKey`."""
+  laneLabel: String!
+
+  """Model that did the work, when known."""
+  model: String
+
+  """Plan (UUID) this span is attributed to, when it has one."""
+  planId: String
+
+  """Start of the span."""
+  startsAt: DateTime!
+
+  """Source-specific status (plan run status, scheduled run status)."""
+  status: String
+
+  """One-line summary for the tooltip."""
+  title: String!
+}
+
+"""Kinds of timeline span (work with a duration)."""
+enum TimelineSpanKind {
+  """
+  A queued Ralph plan run (plan_runs). Its end is always derived — the table records no finish timestamp.
+  """
+  PLAN_RUN
+
+  """
+  A scheduled agent job run (scheduled_agent_job_runs). Carries measured started_at/finished_at.
+  """
+  SCHEDULED_RUN
+
+  """
+  A work-ledger session (work_sessions). Measured unless still open (ended_at IS NULL).
+  """
+  WORK_SESSION
+}
+
+type TimelineMarkerObject {
+  """When the marker happened."""
+  at: DateTime!
+
+  """Git branch attributed to this marker, when known."""
+  branch: String
+
+  """Stable row id."""
+  id: String!
+  kind: TimelineMarkerKind!
+
+  """Lane this marker belongs to under the requested grouping."""
+  laneKey: String!
+
+  """Human-legible lane label for `laneKey`."""
+  laneLabel: String!
+
+  """Plan (UUID) this marker is attributed to, when it has one."""
+  planId: String
+
+  """Task (UUID) this marker is attributed to, when it has one."""
+  taskId: String
+
+  """One-line summary for the tooltip."""
+  title: String!
+
+  """
+  External deep-link target (commit or pull request URL), when the payload carries one.
+  """
+  url: String
+}
+
+"""Kinds of timeline marker (work recorded at an instant)."""
+enum TimelineMarkerKind {
+  """A git_commit work artifact, keyed on produced_at."""
+  GIT_COMMIT
+
+  """
+  A grilling skill invocation (skill_usage_events where skill_name = 'grilling'), keyed on occurred_at. Not user-scoped — the table has no user_id.
+  """
+  GRILLING
+
+  """A pull_request work artifact, keyed on produced_at."""
+  PULL_REQUEST
+
+  """
+  A status_change work artifact, keyed on produced_at. Recorded inconsistently — expect a sparse lane.
+  """
+  STATUS_CHANGE
+
+  """A task was created (tasks.created_at)."""
+  TASK_ADDED
+
+  """
+  A task was last written (tasks.updated_at). Last write only — tasks carry no status history.
+  """
+  TASK_UPDATED
+}
+
+type TimelineKindTruncationObject {
+  """Rows actually returned for this kind."""
+  returned: Int!
+
+  """
+  TRUE when the per-kind cap was hit and rows in range were withheld. Say "showing first N" rather than implying completeness.
+  """
+  truncated: Boolean!
+
+  """The span or marker kind this entry describes."""
+  kind: String!
+}
+
+type WorkstreamTimelineResultObject {
+  """Echo of the requested window start."""
+  from: DateTime!
+
+  """Instant markers in the window, oldest first."""
+  markers: [TimelineMarkerObject!]!
+
+  """Duration spans overlapping the window, oldest first."""
+  spans: [TimelineSpanObject!]!
+
+  """Echo of the requested window end."""
+  to: DateTime!
+
+  """
+  Per-kind row counts and truncation flags, one entry per requested kind.
+  """
+  truncation: [TimelineKindTruncationObject!]!
+}
+
 type TokenUsageRowObject {
   """Cache-read tokens for the turn, when reported."""
   cacheReadTokens: Float
@@ -4164,6 +4324,11 @@ type Query {
   remainingTasksByPlanId(input: RemainingTasksByPlanIdInput!): [TaskObject!]!
 
   """
+  The workstream over a time window: run/session spans plus instant markers (task added, task updated, grilling, commit, PR, status change). Window is required and capped at 90 days. Rows are capped per kind; read `truncation` before presenting a lane as complete.
+  """
+  workstreamTimeline(input: WorkstreamTimelineInput!): WorkstreamTimelineResultObject!
+
+  """
   Per-turn token/cost usage for the authenticated user over [start, end] (inclusive, YYYY-MM-DD), optionally narrowed to one provider. Returns rows (newest first) + summed totals.
   """
   tokenUsage(
@@ -4666,6 +4831,55 @@ input TasksByProjectIdInput {
 input RemainingTasksByPlanIdInput {
   """Plan id; returns tasks with status in PENDING, IN_PROGRESS, BLOCKED"""
   planId: ID!
+}
+
+input WorkstreamTimelineInput {
+  """Filter spans to a single execution backend / tool / driver."""
+  backend: String
+
+  """Filter to a single repository checkout (UUID)."""
+  checkoutId: String
+
+  """Start of the window (inclusive)."""
+  from: DateTime!
+
+  """
+  Filter to a single git branch. Also scopes the grilling lane, which has no user_id to scope by.
+  """
+  gitBranch: String
+
+  """How rows are grouped into lanes. Defaults to BY_PLAN."""
+  grouping: TimelineLaneGrouping
+
+  """
+  Marker kinds to include. Omit or pass null for all kinds; an empty list returns no markers.
+  """
+  markerKinds: [TimelineMarkerKind!]
+
+  """Filter to a single plan (UUID)."""
+  planId: String
+
+  """
+  Span kinds to include. Omit or pass null for all kinds; an empty list returns no spans.
+  """
+  spanKinds: [TimelineSpanKind!]
+
+  """
+  End of the window (exclusive). Must be after `from`, and no more than 90 days later.
+  """
+  to: DateTime!
+}
+
+"""How timeline rows are grouped into lanes."""
+enum TimelineLaneGrouping {
+  """One lane per execution backend / tool / driver."""
+  BY_BACKEND
+
+  """One lane per repository checkout (falling back to branch)."""
+  BY_CHECKOUT
+
+  """One lane per plan. The default."""
+  BY_PLAN
 }
 
 type Mutation {

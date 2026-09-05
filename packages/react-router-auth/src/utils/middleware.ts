@@ -17,6 +17,7 @@ const BETA_ROUTE_PREFIXES = FEATURE_BETA_PREVIEW
       '/prompts',
       '/pull-requests',
       '/search',
+      '/timeline',
     ];
 
 const PUBLIC_ROUTE_PREFIXES = ['/about', '/auth', '/legal'];
