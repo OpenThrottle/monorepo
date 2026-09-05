@@ -245,6 +245,12 @@ export const developerMcpToolDefinitions: readonly DeveloperMcpToolDefinition[] 
       Th.recordArtifactToolHandler,
     ),
     defineTool(
+      'get_work_sessions',
+      Th.getWorkSessionsToolDescription,
+      Th.getWorkSessionsToolParameters,
+      Th.getWorkSessionsToolHandler,
+    ),
+    defineTool(
       'list_notes',
       Th.listNotesToolDescription,
       Th.listNotesToolParameters,

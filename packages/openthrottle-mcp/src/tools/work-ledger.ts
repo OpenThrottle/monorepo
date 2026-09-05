@@ -1,5 +1,6 @@
 /**
- * @description Work-ledger tools: record_artifact, attach_session_subject, end_session.
+ * @description Work-ledger tools: record_artifact, attach_session_subject, end_session,
+ * get_work_sessions.
  * These let an agent self-report the outputs it produced (git commits, PRs, documents)
  * and tie its work to a plan/task, under a session opened lazily on first use (design §4.2).
  * The session id is process-managed (see ../session/current-session.ts), never a tool arg.
@@ -12,11 +13,13 @@ import type {
   AttachWorkSessionSubjectMutation,
   EndWorkSessionMutation,
   RecordWorkArtifactMutation,
+  WorkSessionsByPlanQuery,
 } from '../__generated__/graphql.js';
 import {
   AttachWorkSessionSubjectDocument,
   EndWorkSessionDocument,
   RecordWorkArtifactDocument,
+  WorkSessionsByPlanDocument,
 } from '../__generated__/graphql.js';
 import type { GenericResult } from '../types/index.ts';
 import { getAuthToken } from '../auth/get-auth-token.ts';
@@ -184,6 +187,71 @@ export async function endSessionToolHandler(
       const session = result?.endWorkSession ?? null;
       const text = `Closed work session ${sessionId}.`;
       return { structuredContent: { session }, text };
+    },
+  );
+}
+
+// ── get_work_sessions ────────────────────────────────────────────────────────
+
+type WorkSession =
+  WorkSessionsByPlanQuery['workSessionsByPlan']['sessions'][number];
+
+type GetWorkSessionsResult = GenericResult<{
+  sessions: WorkSession[];
+  totalCount: number;
+}>;
+
+/**
+ * @description Server-side cap on how many sessions a single read returns. A long-lived plan
+ * accumulates one session per connection; a review only ever needs the recent end of that.
+ */
+const WORK_SESSION_LIMIT_DEFAULT = 25;
+const WORK_SESSION_LIMIT_MAX = 100;
+
+export const getWorkSessionsToolParameters = z.object({
+  limit: z.number().int().positive().nullable().optional(),
+  planId: z.string().uuid(),
+});
+
+export const getWorkSessionsToolDescription =
+  'List the work sessions attached to a plan, newest first: which tool and version connected, which model (when the launcher reported one), the actor, and when the session started and ended. Use it to attribute an executed plan to the agent that ran it — especially for interactive runs, which record no plan_run. Bounded; pass limit to widen or narrow (default 25, max 100).';
+
+export async function getWorkSessionsToolHandler(
+  args: z.infer<typeof getWorkSessionsToolParameters>,
+): Promise<GetWorkSessionsResult> {
+  const parsed = getWorkSessionsToolParameters.safeParse(args);
+  if (!parsed.success) {
+    return invalidArgsContent(parsed.error);
+  }
+
+  return runTool<{ sessions: WorkSession[]; totalCount: number }>(
+    'get_work_sessions',
+    async () => {
+      const token = getAuthToken();
+      const result = await executeGraphqlWithAuth(
+        token,
+        WorkSessionsByPlanDocument,
+        { input: { planId: parsed.data.planId } },
+      );
+
+      const list = result?.workSessionsByPlan ?? null;
+      if (!list) return null;
+
+      // The query already orders newest-first; the cap is applied here so the tool result stays
+      // bounded regardless of how many sessions a long-lived plan accumulated.
+      const limit = Math.min(
+        parsed.data.limit ?? WORK_SESSION_LIMIT_DEFAULT,
+        WORK_SESSION_LIMIT_MAX,
+      );
+      const sessions = list.sessions.slice(0, limit);
+      const { totalCount } = list;
+
+      const shown =
+        sessions.length < totalCount
+          ? ` (showing ${sessions.length} most recent)`
+          : '';
+      const text = `${totalCount} work session(s) on plan ${parsed.data.planId}${shown}.\n${JSON.stringify(sessions, null, 2)}`;
+      return { structuredContent: { sessions, totalCount }, text };
     },
   );
 }

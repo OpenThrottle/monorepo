@@ -8,14 +8,23 @@
  * embedded/multiplexed Nest path this would over-share — tracked in the propagation
  * follow-up (per-connection scoping there should use AsyncLocalStorage).
  *
- * clientInfo-derived tool_name and a GITHUB_USER→users.id on_behalf_of hint are not
- * wired in the MCP yet (clientInfo isn't captured; on_behalf_of expects a user id, not
- * a GitHub handle) — deferred to the propagation follow-up. tool_name is static for now.
+ * tool_name/tool_version are the connected client's own (see ../config/client-identity.ts),
+ * falling back to this server's identity when the handshake gave none — a session that says
+ * `claude-code` is worth far more to a reviewer than one that says `openthrottle-mcp`. The model
+ * comes from OPENTHROTTLE_MCP_MODEL when the launcher set one, else null; it is never inferred.
+ *
+ * A GITHUB_USER→users.id on_behalf_of hint is still not wired in (on_behalf_of expects a user id,
+ * not a GitHub handle) — deferred to the propagation follow-up.
  */
 
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import { StartWorkSessionDocument } from '../__generated__/graphql.js';
 import { SERVER_VERSION } from '../config/index.ts';
+import {
+  resolveSessionModel,
+  resolveSessionToolName,
+  resolveSessionToolVersion,
+} from '../config/client-identity.ts';
 
 const MCP_TOOL_NAME = 'openthrottle-mcp';
 
@@ -41,8 +50,9 @@ export async function ensureWorkSession(token: string): Promise<string | null> {
   openingPromise = executeGraphqlWithAuth(token, StartWorkSessionDocument, {
     input: {
       externalRef: resolveExternalRef(),
-      toolName: MCP_TOOL_NAME,
-      toolVersion: SERVER_VERSION,
+      model: resolveSessionModel(),
+      toolName: resolveSessionToolName(),
+      toolVersion: resolveSessionToolVersion(SERVER_VERSION),
     },
   })
     .then((result) => {
