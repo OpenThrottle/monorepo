@@ -94,10 +94,20 @@ describe('buildPlansTableColumns', () => {
   test('defines status, details, and actions columns', () => {
     const columns = buildPlansTableColumns({});
 
+    const [statusColumn, detailsColumn, actionsColumn] = columns;
+
     expect(columns).toHaveLength(3);
-    expect(asPlainColumn(columns[0]).accessorKey).toBe('status');
-    expect(asPlainColumn(columns[1]).accessorKey).toBe('details');
-    expect(asPlainColumn(columns[2]).id).toBe('actions');
+    if (
+      statusColumn === undefined ||
+      detailsColumn === undefined ||
+      actionsColumn === undefined
+    ) {
+      throw new Error('expected three plan table columns');
+    }
+
+    expect(asPlainColumn(statusColumn).accessorKey).toBe('status');
+    expect(asPlainColumn(detailsColumn).accessorKey).toBe('details');
+    expect(asPlainColumn(actionsColumn).id).toBe('actions');
   });
 
   test('renders header labels for each column', () => {

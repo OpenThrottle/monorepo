@@ -54,6 +54,7 @@ describe('updateElement', () => {
   it('patches seats on a table while preserving type', () => {
     const next = updateElement(addElement(base, table), 't1', { seats: 6 });
     const updated = next.elements[0];
+    if (updated === undefined) throw new Error('expected a patched element');
     expect(updated.type).toBe(FloorElementType.TABLE_SQUARE);
     expect('seats' in updated && updated.seats).toBe(6);
     expect(floorLayoutSchema.safeParse(next).success).toBe(true);
@@ -65,6 +66,7 @@ describe('updateElement', () => {
       seats: 4,
     });
     const updated = next.elements[0];
+    if (updated === undefined) throw new Error('expected a patched element');
     expect(updated.type).toBe(FloorElementType.WALL);
     expect(updated.rotation).toBe(45);
     expect('seats' in updated).toBe(false);

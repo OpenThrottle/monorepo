@@ -69,8 +69,8 @@ export function validateBackupCronPattern(
     /^\d{1,2}$/.test(value) && Number(value) >= 0 && Number(value) <= 59;
 
   const hasSeconds = fields.length === 6;
-  const secondsField = hasSeconds ? fields[0] : '0';
-  const minutesField = hasSeconds ? fields[1] : fields[0];
+  const secondsField = (hasSeconds ? fields[0] : '0') ?? '';
+  const minutesField = (hasSeconds ? fields[1] : fields[0]) ?? '';
 
   if (!isFixedValue(secondsField)) {
     return {

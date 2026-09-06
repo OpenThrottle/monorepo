@@ -47,6 +47,9 @@ describe('runTool', () => {
 
       expect(result).toMatchObject({ isError: true });
       const [content] = result.content;
+      if (content === undefined) {
+        throw new Error('expected tool result content');
+      }
       expect(content.text).toBe(
         'demo failed: Could not reach the OpenThrottle (OT) server. Confirm the server is running and reachable, then retry.',
       );

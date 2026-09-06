@@ -22,7 +22,7 @@ const rowFor = (
     [mockDiscoveredWorktree(worktree)],
   );
 
-  const child = rows[0].children?.[0];
+  const child = rows[0]?.children?.[0];
   if (child === undefined) throw new Error('expected a worktree child row');
   return child;
 };
@@ -43,13 +43,13 @@ describe('deriveWorktreeBadges', () => {
     expect(
       deriveWorktreeBadges(
         rowFor({ activity: WorktreeActivity.Dirty, name: 'wt-a' }),
-      )[0].label,
+      )[0]?.label,
     ).toBe(REPOSITORIES_TABLE_COPY.worktreeActivityDirty);
 
     expect(
       deriveWorktreeBadges(
         rowFor({ activity: WorktreeActivity.Idle, name: 'wt-a' }),
-      )[0].label,
+      )[0]?.label,
     ).toBe(REPOSITORIES_TABLE_COPY.worktreeActivityIdle);
   });
 
@@ -73,7 +73,12 @@ describe('deriveWorktreeBadges', () => {
       ],
     );
 
-    const badges = deriveWorktreeBadges(rows[0].children![0]);
+    const childRow = rows[0]?.children?.[0];
+    if (childRow === undefined) {
+      throw new Error('expected a worktree child row');
+    }
+
+    const badges = deriveWorktreeBadges(childRow);
 
     expect(badges.map((badge) => badge.label)).toEqual([
       REPOSITORIES_TABLE_COPY.worktreeActivityIdle,
@@ -89,7 +94,12 @@ describe('deriveWorktreeBadges', () => {
     ]);
 
     // No activity means "not observed on disk", which must NOT render as Idle.
-    expect(deriveWorktreeBadges(rows[0])).toEqual([]);
+    const parentRow = rows[0];
+    if (parentRow === undefined) {
+      throw new Error('expected a parent row');
+    }
+
+    expect(deriveWorktreeBadges(parentRow)).toEqual([]);
   });
 
   test('every badge carries explanatory hover text', () => {

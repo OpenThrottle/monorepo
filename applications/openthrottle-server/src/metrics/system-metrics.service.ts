@@ -30,10 +30,12 @@ function parsePsiLine(
   const match = line.match(/avg10=([\d.]+)\s+avg60=([\d.]+)\s+avg300=([\d.]+)/);
   if (!match) return null;
 
+  const [, avg10 = '', avg60 = '', avg300 = ''] = match;
+
   return {
-    avg10: parseFloat(match[1]),
-    avg300: parseFloat(match[3]),
-    avg60: parseFloat(match[2]),
+    avg10: parseFloat(avg10),
+    avg300: parseFloat(avg300),
+    avg60: parseFloat(avg60),
   };
 }
 

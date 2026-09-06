@@ -138,7 +138,7 @@ export function parsePlanIdFromCancelTopic(channel: string): string | null {
   if (parts.length !== 3 || parts[0] !== 'plan' || parts[2] !== 'cancel') {
     return null;
   }
-  const planId = parts[1];
+  const planId = parts[1] ?? '';
   return planId.length > 0 ? planId : null;
 }
 

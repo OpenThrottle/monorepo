@@ -64,7 +64,7 @@ describe('searchDocEntries', () => {
   test('matches FAQ content across sections', () => {
     const results = searchDocEntries(manifest, 'publishing');
     expect(results).toHaveLength(1);
-    expect(results[0].section).toBe('faq');
+    expect(results[0]?.section).toBe('faq');
   });
 
   test('matches on body content only', () => {

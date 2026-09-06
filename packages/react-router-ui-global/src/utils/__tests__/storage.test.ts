@@ -101,10 +101,10 @@ describe('trimMetricsChartData', () => {
     const trimmed = trimMetricsChartData(rows);
 
     expect(trimmed).toHaveLength(25);
-    expect(trimmed[0].rssMb).toBe(5);
-    expect(trimmed[trimmed.length - 1].rssMb).toBe(29);
-    expect(trimmed[0].i).toBe(0);
-    expect(trimmed[trimmed.length - 1].i).toBe(24);
+    expect(trimmed[0]?.rssMb).toBe(5);
+    expect(trimmed[trimmed.length - 1]?.rssMb).toBe(29);
+    expect(trimmed[0]?.i).toBe(0);
+    expect(trimmed[trimmed.length - 1]?.i).toBe(24);
   });
 });
 

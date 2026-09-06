@@ -43,8 +43,8 @@ export const validateScheduledAgentJobCron = (
   }
 
   const hasSeconds = fields.length === 6;
-  const secondsField = hasSeconds ? fields[0] : '0';
-  const minutesField = hasSeconds ? fields[1] : fields[0];
+  const secondsField = (hasSeconds ? fields[0] : '0') ?? '';
+  const minutesField = (hasSeconds ? fields[1] : fields[0]) ?? '';
 
   if (!isFixedSecondsMinutes(secondsField)) {
     return {

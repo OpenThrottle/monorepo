@@ -55,8 +55,14 @@ const renderDialog = (
   return { component: render(<RoutesStub />), onRun };
 };
 
-const lastPayload = (onRun: RunHandler): RunSkillPayload =>
-  onRun.mock.calls[0][0];
+const lastPayload = (onRun: RunHandler): RunSkillPayload => {
+  const payload = onRun.mock.calls[0]?.[0];
+  if (payload === undefined) {
+    throw new Error('onRun was not called');
+  }
+
+  return payload;
+};
 
 describe('RunSkillDialog Component', () => {
   // The picker selection persists in a localStorage-backed atom; reset it so

@@ -69,7 +69,7 @@ describe('managed exclude blocks — per owner', () => {
       [SKILLS]: ['.agents/skills/ot-plans'],
     };
     for (const owner of order) {
-      writeManagedExcludeBlock(repo, paths[owner], owner);
+      writeManagedExcludeBlock(repo, paths[owner] ?? [], owner);
     }
 
     const contents = excludeContents();

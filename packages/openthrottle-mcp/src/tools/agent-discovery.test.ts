@@ -60,6 +60,9 @@ describe('discoverAgentClisToolHandler', () => {
     });
     // Plan-run-only drivers are annotated in the text summary.
     const [content] = result.content;
+    if (content === undefined) {
+      throw new Error('expected tool result content');
+    }
     expect(content.text).toContain('plan-run only');
   });
 

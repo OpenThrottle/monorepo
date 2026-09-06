@@ -7,7 +7,11 @@ import type { ChatCheckoutOption } from '../../types';
  * The reported bug's list: personal checkouts alongside an org's, every one of
  * them under `/Users/matt/…` so the old fuzzy scoring matched them all.
  */
-const CHECKOUTS: readonly ChatCheckoutOption[] = [
+const CHECKOUTS: readonly [
+  ChatCheckoutOption,
+  ChatCheckoutOption,
+  ChatCheckoutOption,
+] = [
   {
     branch: 'main',
     filesystemPath: '/Users/matt/Development/openthrottle',

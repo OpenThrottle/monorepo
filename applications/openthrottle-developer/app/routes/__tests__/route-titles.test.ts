@@ -75,7 +75,12 @@ const routeNames = Object.keys(modules)
 const META_ARGS = { loaderData: undefined, matches: [], params: {} };
 
 const readTitle = async (name: string): Promise<string> => {
-  const module = await modules[`../${name}.tsx`]();
+  const loadModule = modules[`../${name}.tsx`];
+  if (loadModule === undefined) {
+    throw new Error(`no route module for ${name}`);
+  }
+
+  const module = await loadModule();
 
   expect(module.meta, `${name} exports no meta`).toBeTypeOf('function');
 
@@ -118,7 +123,7 @@ describe('route titles', () => {
     });
 
     test('leads with human copy, not a PascalCase identifier', () => {
-      const [leaf] = (titles.get(name) ?? '').split(' | ');
+      const [leaf = ''] = (titles.get(name) ?? '').split(' | ');
 
       if (RESERVED_WORDS.includes(leaf)) return;
 
@@ -166,7 +171,12 @@ describe('detail route titles with loader data', () => {
   ])(
     '%s uses the entity name',
     async (name, loaderData, expected) => {
-      const module = await modules[`../${name}.tsx`]();
+      const loadModule = modules[`../${name}.tsx`];
+      if (loadModule === undefined) {
+        throw new Error(`no route module for ${name}`);
+      }
+
+      const module = await loadModule();
       const descriptors = module.meta?.({ ...META_ARGS, loaderData }) ?? [];
       const title = descriptors.find(
         (descriptor) => descriptor.title !== undefined,

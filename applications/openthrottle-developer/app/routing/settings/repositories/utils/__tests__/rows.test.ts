@@ -26,14 +26,14 @@ describe('buildRepositoryRows', () => {
     ]);
 
     expect(rows).toHaveLength(1);
-    expect(rows[0].id).toBe('primary-1');
-    expect(rows[0].isWorktree).toBe(false);
-    expect(rows[0].repositoryName).toBe('monorepo');
-    expect(rows[0].children?.map((child) => child.id)).toEqual([
+    expect(rows[0]?.id).toBe('primary-1');
+    expect(rows[0]?.isWorktree).toBe(false);
+    expect(rows[0]?.repositoryName).toBe('monorepo');
+    expect(rows[0]?.children?.map((child) => child.id)).toEqual([
       'worktree-1',
       'worktree-2',
     ]);
-    expect(rows[0].children?.every((child) => child.isWorktree)).toBe(true);
+    expect(rows[0]?.children?.every((child) => child.isWorktree)).toBe(true);
   });
 
   test('leaves children undefined when a repository has no worktrees', () => {
@@ -44,7 +44,7 @@ describe('buildRepositoryRows', () => {
       }),
     ]);
 
-    expect(rows[0].children).toBeUndefined();
+    expect(rows[0]?.children).toBeUndefined();
   });
 
   test('skips a repository with zero checkouts', () => {
@@ -72,8 +72,8 @@ describe('buildRepositoryRows', () => {
     ]);
 
     expect(rows.map((row) => row.id)).toEqual(['primary-1', 'primary-2']);
-    expect(rows[0].children?.map((child) => child.id)).toEqual(['worktree-1']);
-    expect(rows[1].children).toBeUndefined();
+    expect(rows[0]?.children?.map((child) => child.id)).toEqual(['worktree-1']);
+    expect(rows[1]?.children).toBeUndefined();
   });
 
   test('promotes the first worktree when a repository has no primary checkout', () => {
@@ -88,9 +88,9 @@ describe('buildRepositoryRows', () => {
     ]);
 
     expect(rows).toHaveLength(1);
-    expect(rows[0].id).toBe('worktree-1');
-    expect(rows[0].isWorktree).toBe(true);
-    expect(rows[0].children?.map((child) => child.id)).toEqual(['worktree-2']);
+    expect(rows[0]?.id).toBe('worktree-1');
+    expect(rows[0]?.isWorktree).toBe(true);
+    expect(rows[0]?.children?.map((child) => child.id)).toEqual(['worktree-2']);
   });
 
   test('resolves the branch from inspection, then the repository default, then null', () => {
@@ -127,8 +127,8 @@ describe('buildRepositoryRows', () => {
       }),
     ]);
 
-    expect(rows[0].remoteUrl).toBeNull();
-    expect(rows[0].children?.[0].remoteUrl).toBeNull();
+    expect(rows[0]?.remoteUrl).toBeNull();
+    expect(rows[0]?.children?.[0]?.remoteUrl).toBeNull();
   });
 
   test('rolls the injection opt-in up so every row of a repository agrees', () => {
@@ -148,8 +148,8 @@ describe('buildRepositoryRows', () => {
 
     // The flag is stored per checkout but flipped for all of them together, so a
     // single opted-in checkout makes the whole repository read as enabled.
-    expect(rows[0].foreignSkillInjectionEnabled).toBe(true);
-    expect(rows[0].children?.[0].foreignSkillInjectionEnabled).toBe(true);
+    expect(rows[0]?.foreignSkillInjectionEnabled).toBe(true);
+    expect(rows[0]?.children?.[0]?.foreignSkillInjectionEnabled).toBe(true);
   });
 
   test('reads a repository with no opted-in checkout as disabled', () => {
@@ -163,8 +163,8 @@ describe('buildRepositoryRows', () => {
       }),
     ]);
 
-    expect(rows[0].foreignSkillInjectionEnabled).toBe(false);
-    expect(rows[0].children?.[0].foreignSkillInjectionEnabled).toBe(false);
+    expect(rows[0]?.foreignSkillInjectionEnabled).toBe(false);
+    expect(rows[0]?.children?.[0]?.foreignSkillInjectionEnabled).toBe(false);
   });
 });
 
@@ -187,8 +187,8 @@ describe('buildRepositoryRows with discovered worktrees', () => {
     );
 
     expect(rows).toHaveLength(1);
-    expect(rows[0].children).toHaveLength(1);
-    expect(rows[0].children?.[0]).toMatchObject({
+    expect(rows[0]?.children).toHaveLength(1);
+    expect(rows[0]?.children?.[0]).toMatchObject({
       activity: WorktreeActivity.Dirty,
       checkout: null,
       displayName: 'wt-a',
@@ -225,8 +225,8 @@ describe('buildRepositoryRows with discovered worktrees', () => {
       ],
     );
 
-    expect(rows[0].children).toHaveLength(1);
-    expect(rows[0].children?.[0]).toMatchObject({
+    expect(rows[0]?.children).toHaveLength(1);
+    expect(rows[0]?.children?.[0]).toMatchObject({
       activity: WorktreeActivity.Running,
       id: 'worktree-1',
       planId: 'plan-1',
@@ -254,7 +254,7 @@ describe('buildRepositoryRows with discovered worktrees', () => {
       ],
     );
 
-    expect(rows[0].branch).toBe('live-branch');
+    expect(rows[0]?.branch).toBe('live-branch');
   });
 
   test('leaves a row without a matching scan unbadged rather than calling it idle', () => {
@@ -265,8 +265,8 @@ describe('buildRepositoryRows with discovered worktrees', () => {
       }),
     ]);
 
-    expect(rows[0].activity).toBeNull();
-    expect(rows[0].unregistered).toBe(false);
+    expect(rows[0]?.activity).toBeNull();
+    expect(rows[0]?.unregistered).toBe(false);
   });
 
   test('groups worktrees with no registered repository under a promoted parent row', () => {
@@ -284,7 +284,7 @@ describe('buildRepositoryRows with discovered worktrees', () => {
       repositoryId: null,
       repositoryName: REPOSITORIES_TABLE_COPY.unlinkedGroupName,
     });
-    expect(rows[0].children?.map((child) => child.displayName)).toEqual([
+    expect(rows[0]?.children?.map((child) => child.displayName)).toEqual([
       'wt-b',
     ]);
   });
@@ -332,7 +332,7 @@ describe('buildRepositoryRows with discovered worktrees', () => {
       }),
     ]);
 
-    expect(rows[0].notAGitRepository).toBe(false);
+    expect(rows[0]?.notAGitRepository).toBe(false);
   });
 
   test('keeps the tree exactly two levels deep', () => {
@@ -350,7 +350,7 @@ describe('buildRepositoryRows with discovered worktrees', () => {
     );
 
     expect(
-      rows[0].children?.every((child) => child.children === undefined),
+      rows[0]?.children?.every((child) => child.children === undefined),
     ).toBe(true);
   });
 });

@@ -14,7 +14,14 @@ const TTLS = { hardTtlMs: 600, softTtlMs: 60 } as const;
 function build(values: string[] = ['v0', 'v1', 'v2']) {
   let clock = 1_000;
   const cache = new StaleWhileRevalidateCache<string>(() => clock);
-  const load = vi.fn(() => Promise.resolve(values[load.mock.calls.length - 1]));
+  const load = vi.fn(() => {
+    const value = values[load.mock.calls.length - 1];
+    if (value === undefined) {
+      throw new Error('loader called more times than the fixture has values');
+    }
+
+    return Promise.resolve(value);
+  });
   return {
     advance: (ms: number): void => {
       clock += ms;

@@ -103,7 +103,9 @@ describe('ToggleGroup Component — attached', () => {
     component = renderGroup({ ...props, onValueChange });
 
     const buttons = component.container.querySelectorAll('button');
-    await user.click(buttons[1]);
+    const secondButton = buttons[1];
+    if (secondButton === undefined) throw new Error('expected two buttons');
+    await user.click(secondButton);
 
     expect(onValueChange).toHaveBeenCalledWith('b');
     expect(buttons[1]).toHaveAttribute('data-state', 'on');
@@ -132,6 +134,6 @@ describe('ToggleGroup Component — attached', () => {
 
     expect(root).toHaveClass('gap-4', 'w-full');
     expect(root).not.toHaveClass('gap-0');
-    expect(root).toHaveClass(COLLAPSING_CLASSES[0]);
+    expect(root).toHaveClass(COLLAPSING_CLASSES[0] ?? '');
   });
 });

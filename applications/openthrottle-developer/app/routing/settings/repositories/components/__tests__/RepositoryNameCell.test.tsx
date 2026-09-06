@@ -27,7 +27,15 @@ const [parentRow] = buildRepositoryRows([
     name: 'monorepo',
   }),
 ]);
+if (parentRow === undefined) {
+  throw new Error('expected a parent repository row');
+}
+
 const [childRow] = parentRow.children ?? [];
+
+if (childRow === undefined) {
+  throw new Error('expected a child checkout row');
+}
 
 describe('RepositoryNameCell Component', () => {
   let component: RenderResult;

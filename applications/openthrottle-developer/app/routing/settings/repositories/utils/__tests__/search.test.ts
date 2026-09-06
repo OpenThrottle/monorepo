@@ -54,7 +54,7 @@ describe('filterRepositoryRows', () => {
     const result = filterRepositoryRows(rows, 'MONO');
 
     expect(result.rows.map((row) => row.id)).toEqual(['primary-1']);
-    expect(result.rows[0].children?.map((child) => child.id)).toEqual([
+    expect(result.rows[0]?.children?.map((child) => child.id)).toEqual([
       'worktree-1',
     ]);
     expect(result.autoExpandedIds).toEqual([]);
@@ -85,7 +85,7 @@ describe('filterRepositoryRows', () => {
     const result = filterRepositoryRows(rows, 'loop-plan-repositories');
 
     expect(result.rows.map((row) => row.id)).toEqual(['primary-1']);
-    expect(result.rows[0].children?.map((child) => child.id)).toEqual([
+    expect(result.rows[0]?.children?.map((child) => child.id)).toEqual([
       'worktree-1',
     ]);
     expect(result.autoExpandedIds).toEqual(['primary-1']);
@@ -115,7 +115,7 @@ describe('filterRepositoryRows', () => {
 
     const result = filterRepositoryRows(wide, 'alpha');
 
-    expect(result.rows[0].children?.map((child) => child.id)).toEqual([
+    expect(result.rows[0]?.children?.map((child) => child.id)).toEqual([
       'worktree-1',
     ]);
     expect(result.autoExpandedIds).toEqual(['primary-1']);

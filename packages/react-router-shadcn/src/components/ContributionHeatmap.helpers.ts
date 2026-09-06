@@ -60,7 +60,7 @@ export interface HeatmapColumn {
 
 // UTC-based date helpers keep the grid stable regardless of the viewer's TZ/DST.
 function parseYmd(value: string): Date {
-  const [year, month, day] = value.split('-').map(Number);
+  const [year = NaN, month = NaN, day = NaN] = value.split('-').map(Number);
   return new Date(Date.UTC(year, month - 1, day));
 }
 
@@ -125,7 +125,9 @@ export function buildHeatmapColumns(
     // Label the column when its first row crosses into a new month.
     const columnMonth = addDays(gridStart, week * 7).getUTCMonth();
     const monthLabel =
-      columnMonth !== previousMonth ? MONTH_LABELS[columnMonth] : null;
+      columnMonth !== previousMonth
+        ? (MONTH_LABELS[columnMonth] ?? null)
+        : null;
     previousMonth = columnMonth;
 
     result.push({ cells, monthLabel });

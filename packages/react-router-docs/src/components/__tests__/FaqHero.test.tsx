@@ -42,6 +42,7 @@ describe('FaqHero', () => {
     };
 
     const [category] = buildFaqCategories([entry]);
+    if (category === undefined) throw new Error('expected an FAQ category');
     const component = render(<FaqView entries={[entry]} />);
 
     // Attribute selector (not `#id`) because ids can start with a digit.

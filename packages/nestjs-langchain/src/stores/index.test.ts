@@ -48,7 +48,11 @@ describe('getVectorStore', () => {
       expect.objectContaining({ model: 'all-minilm', provider: 'Ollama' }),
     );
 
-    const [embeddings, options] = initialize.mock.calls[0];
+    const firstCall = initialize.mock.calls[0];
+    if (firstCall === undefined) {
+      throw new Error('initialize was not called');
+    }
+    const [embeddings, options] = firstCall;
     expect(embeddings).toBe(fakeEmbeddings);
     expect(options.dimensions).toBe(384);
     expect(options.tableName).toBe('docs_vector_384');
@@ -68,7 +72,11 @@ describe('getVectorStore', () => {
       }),
     );
 
-    const [, options] = initialize.mock.calls[0];
+    const secondCall = initialize.mock.calls[0];
+    if (secondCall === undefined) {
+      throw new Error('initialize was not called');
+    }
+    const [, options] = secondCall;
     expect(options.dimensions).toBe(768);
     expect(options.tableName).toBe('docs_vector_768');
   });

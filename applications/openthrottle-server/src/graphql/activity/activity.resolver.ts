@@ -152,8 +152,9 @@ export class ActivityResolver {
     if (hasDate && date) {
       const ymd = date.split('-').map(Number);
       if (ymd.length !== 3) throw new Error('date must be YYYY-MM-DD');
+      const [year = NaN, month = NaN, day = NaN] = ymd;
       startIso = `${date}T00:00:00.000Z`;
-      const next = new Date(Date.UTC(ymd[0], ymd[1] - 1, ymd[2] + 1));
+      const next = new Date(Date.UTC(year, month - 1, day + 1));
       endIso = next.toISOString();
     } else if (hasDaysBack && daysBack != null) {
       const endDate = new Date();

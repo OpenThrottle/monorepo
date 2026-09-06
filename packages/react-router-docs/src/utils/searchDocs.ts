@@ -57,7 +57,9 @@ export const searchDocEntries = (
 
       let rank: number = SEARCH_FIELDS.length;
       for (let field = 0; field < SEARCH_FIELDS.length; field += 1) {
-        if (tokens.every((token) => haystacks[field].includes(token))) {
+        if (
+          tokens.every((token) => haystacks[field]?.includes(token) === true)
+        ) {
           rank = field;
           break;
         }

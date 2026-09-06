@@ -64,7 +64,7 @@ const parseArgs = (argv: string[]): { days: number; outDir: string } => {
       days = Number(argv[i + 1]);
       i += 1;
     } else if (argv[i] === '--out') {
-      outDir = argv[i + 1];
+      outDir = argv[i + 1] ?? outDir;
       i += 1;
     } else {
       console.error(`snapshot-export: unknown argument '${argv[i]}'`);

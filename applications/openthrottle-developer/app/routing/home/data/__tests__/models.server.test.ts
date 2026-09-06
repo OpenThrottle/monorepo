@@ -77,12 +77,12 @@ describe('loadComposerModels', () => {
 
     // local (1) + agent (1) + driver×endpoint (1), in that order.
     expect(models).toHaveLength(3);
-    expect(models[0].description).toBe('ollama'); // local endpoint model
-    expect(models[1].subLabel).toBe('Cursor Agent'); // agent CLI model
-    expect(models[1].label).toBe('gpt-5.2');
-    expect(models[2].subLabel).toBe('Cursor Agent'); // driver × local endpoint
-    expect(models[2].description).toContain('(local)');
-    expect(models[2].label).toBe('llama3');
+    expect(models[0]?.description).toBe('ollama'); // local endpoint model
+    expect(models[1]?.subLabel).toBe('Cursor Agent'); // agent CLI model
+    expect(models[1]?.label).toBe('gpt-5.2');
+    expect(models[2]?.subLabel).toBe('Cursor Agent'); // driver × local endpoint
+    expect(models[2]?.description).toContain('(local)');
+    expect(models[2]?.label).toBe('llama3');
   });
 
   test('degrades to just local models when agent discovery fails', async () => {
@@ -96,7 +96,7 @@ describe('loadComposerModels', () => {
     expect(mockExecute).toHaveBeenCalledTimes(2);
     // No agent options and no driver×endpoint join (both need the agent payload).
     expect(models).toHaveLength(1);
-    expect(models[0].description).toBe('ollama');
+    expect(models[0]?.description).toBe('ollama');
   });
 
   test('returns an empty list when both discovery queries fail', async () => {

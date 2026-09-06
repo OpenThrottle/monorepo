@@ -47,9 +47,9 @@ const LOCAL_HOSTNAME_PATTERN = /\b[A-Za-z0-9][A-Za-z0-9-]*\.local\b/g;
  * two distinct real addresses distinct after scrubbing — users.email is unique.
  */
 export const scrubEmail = (email: string): string => {
-  const localpart = email
-    .split('@')[0]
-    .split('+')[0]
+  const [beforeAt = ''] = email.split('@');
+  const [beforePlus = ''] = beforeAt.split('+');
+  const localpart = beforePlus
     .toLowerCase()
     .replaceAll(/[^a-z0-9]+/g, '-')
     .replaceAll(/^-|-$/g, '');
@@ -65,7 +65,7 @@ const ORGANISATION_PATTERNS = Object.entries(ORGANISATION_ALIASES).map(
 /** Copy the case of the matched text onto the replacement's first letter. */
 const matchCase = (matched: string, replacement: string): string =>
   matched[0] === matched[0]?.toUpperCase()
-    ? replacement[0].toUpperCase() + replacement.slice(1)
+    ? replacement[0]?.toUpperCase() + replacement.slice(1)
     : replacement;
 
 /** The identity scrub applied to every `scrub`-classified string. */
@@ -158,7 +158,7 @@ export const detectSecret = (text: string): string | null => {
   }
 
   for (const match of text.matchAll(CONNECTION_STRING_PATTERN)) {
-    if (!isPlaceholderPassword(match[1])) {
+    if (!isPlaceholderPassword(match[1] ?? '')) {
       return `connection-string-password: '${match[0].slice(0, 24)}…'`;
     }
   }
@@ -265,8 +265,8 @@ export const createSanitizer = (context: SanitizeContext): RowTransform => {
     const sanitized: Record<string, unknown> = {};
 
     for (const column of tableSchema.columns) {
-      const action = entry.columns[column].action;
-      const columnType = tableSchema.columnTypes[column];
+      const action = entry.columns[column]?.action;
+      const columnType = tableSchema.columnTypes[column] ?? '';
       const value = row[column];
 
       if (action === 'drop' || value === null || value === undefined) {

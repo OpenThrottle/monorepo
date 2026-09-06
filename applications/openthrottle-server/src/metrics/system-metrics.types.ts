@@ -63,7 +63,7 @@ export interface SystemMetricsSnapshot {
  * @description Captures a LoadAverageSnapshot from os.loadavg().
  */
 export function captureLoadAverage(): LoadAverageSnapshot {
-  const [load1m, load5m, load15m] = os.loadavg();
+  const [load1m = 0, load5m = 0, load15m = 0] = os.loadavg();
   const cpuCount = os.cpus().length;
   const perCoreLoad1m =
     cpuCount > 0 ? Math.round((load1m / cpuCount) * 100) / 100 : load1m;

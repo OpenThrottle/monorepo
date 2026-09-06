@@ -26,7 +26,7 @@ export const describeProvenance = (provenance: string): string => {
   }
 
   const [category, detail] = provenance.split(':', 2);
-  const tag = detail === undefined ? '' : detail.split('@', 1)[0];
+  const tag = detail === undefined ? '' : (detail.split('@', 1)[0] ?? '');
 
   switch (category) {
     case 'slug-allow':

@@ -97,7 +97,10 @@ describe('NotificationsSubscriptionBridge', () => {
   test('feeds subscription payloads into the notifications store', async () => {
     renderBridge();
 
-    const [, , , handlers] = vi.mocked(useSubscription).mock.calls[0];
+    const [, , , handlers] = vi.mocked(useSubscription).mock.calls[0] ?? [];
+    if (handlers === undefined) {
+      throw new Error('useSubscription was not called');
+    }
 
     act(() => {
       handlers.onData({

@@ -13,7 +13,7 @@ import {
 } from '~/routing/plans/data/data.copy';
 import { renderRoutesStub } from '~/testing/route-fixtures';
 
-const mockPlans: PlanCardFragment[] = [
+const mockPlans: [PlanCardFragment, PlanCardFragment] = [
   {
     __typename: 'PlanObject',
     assignee: 'assignee1',

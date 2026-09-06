@@ -31,12 +31,15 @@ describe('theme registry', () => {
 
 describe('buildThemeStylesheet', () => {
   it('emits light and dark scoped blocks per theme', () => {
+    const [sampleTheme] = THEMES;
+    if (sampleTheme === undefined) throw new Error('expected a bundled theme');
+
     const css = buildThemeStylesheet([
       {
-        dark: THEMES[0].dark,
+        dark: sampleTheme.dark,
         id: 'sample',
         label: 'Sample',
-        light: THEMES[0].light,
+        light: sampleTheme.light,
       },
     ]);
 

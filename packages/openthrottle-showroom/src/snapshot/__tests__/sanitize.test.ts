@@ -233,8 +233,10 @@ describe('createSanitizer', () => {
 
     for (let i = 0; i < inputs.length; i += 1) {
       for (let j = 0; j < inputs.length; j += 1) {
-        const inputOrder = Math.sign(inputs[i].minute - inputs[j].minute);
-        const outputOrder = Math.sign(offsets[i] - offsets[j]);
+        const inputOrder = Math.sign(
+          (inputs[i]?.minute ?? 0) - (inputs[j]?.minute ?? 0),
+        );
+        const outputOrder = Math.sign((offsets[i] ?? 0) - (offsets[j] ?? 0));
 
         expect(outputOrder).toBe(inputOrder);
       }
@@ -281,10 +283,10 @@ describe('createSanitizer', () => {
 
     const p1 = offsets.filter((entry) => entry.planId === 'p1');
 
-    expect(p1[1].offset).toBeGreaterThan(p1[0].offset);
-    expect(p1[2].offset).toBeGreaterThan(p1[1].offset);
+    expect(p1[1]?.offset).toBeGreaterThan(p1[0]?.offset ?? 0);
+    expect(p1[2]?.offset).toBeGreaterThan(p1[1]?.offset ?? 0);
     // p2 is untouched by p1's bumping.
-    expect(offsets[2].offset).toBe(offsets[0].offset);
+    expect(offsets[2]?.offset).toBe(offsets[0]?.offset);
   });
 });
 

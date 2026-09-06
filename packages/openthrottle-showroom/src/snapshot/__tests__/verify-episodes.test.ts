@@ -31,7 +31,7 @@ describe('verifyEpisodeData', () => {
     );
 
     expect(results).toHaveLength(1);
-    expect(results[0].satisfied).toBe(true);
+    expect(results[0]?.satisfied).toBe(true);
   });
 
   test('fails when the value is below the floor', async () => {
@@ -40,8 +40,8 @@ describe('verifyEpisodeData', () => {
       [episode('21-dashboard-tour', [requirement])],
     );
 
-    expect(results[0].satisfied).toBe(false);
-    expect(results[0].actual).toBe(2);
+    expect(results[0]?.satisfied).toBe(false);
+    expect(results[0]?.actual).toBe(2);
   });
 
   test('the failure names the episode, the requirement and the actual value', () => {

@@ -33,10 +33,9 @@ export const maskSensitiveEnvValue = (key: string, value: string): string => {
 export const sanitizeEnvForDiagnostics = (
   env: OpenThrottleEnv,
 ): Record<string, string> => {
-  const entries = Object.entries(env).map(([key, value]) => [
-    key,
-    maskSensitiveEnvValue(key, String(value)),
-  ]);
+  const entries: [string, string][] = Object.entries(env).map(
+    ([key, value]) => [key, maskSensitiveEnvValue(key, String(value))],
+  );
   entries.sort(([a], [b]) => a.localeCompare(b));
   return Object.fromEntries(entries);
 };

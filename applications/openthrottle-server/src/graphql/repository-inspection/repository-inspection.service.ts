@@ -275,8 +275,9 @@ export class RepositoryInspectionService {
     const seen = new Map<string, string>();
     for (const line of output.split('\n')) {
       const match = /^(\S+)\t(\S+)\s+\(fetch\)$/.exec(line.trim());
-      if (match && !seen.has(match[1])) {
-        seen.set(match[1], match[2]);
+      const [, name, url] = match ?? [];
+      if (name !== undefined && url !== undefined && !seen.has(name)) {
+        seen.set(name, url);
       }
     }
     return [...seen.entries()].map(([name, url]) => ({ name, url }));

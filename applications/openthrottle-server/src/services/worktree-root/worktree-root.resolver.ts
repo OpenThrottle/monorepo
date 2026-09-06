@@ -108,10 +108,10 @@ export const repositoryNamespace = (repoPath: string): string => {
 
   const trimmed = remote.replace(/\.git$/, '').replace(/\/$/, '');
   const segments = trimmed.split(/[/:]/).filter((segment) => segment !== '');
-  const repo =
-    segments.length > 0 ? safeSegment(segments[segments.length - 1]) : null;
-  const org =
-    segments.length > 1 ? safeSegment(segments[segments.length - 2]) : null;
+  const repoSegment = segments[segments.length - 1];
+  const orgSegment = segments[segments.length - 2];
+  const repo = repoSegment === undefined ? null : safeSegment(repoSegment);
+  const org = orgSegment === undefined ? null : safeSegment(orgSegment);
 
   if (org !== null && repo !== null) return `${org}/${repo}`;
   if (repo !== null) return repo;
@@ -169,7 +169,7 @@ const readCheckoutEnvWorktreeRoot = (
   for (const line of contents.split(/\r?\n/)) {
     const match = pattern.exec(line);
     if (match !== null) {
-      last = cleanEnvValue(match[1]);
+      last = cleanEnvValue(match[1] ?? '');
     }
   }
 

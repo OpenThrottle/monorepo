@@ -44,7 +44,7 @@ export const QueueStatsChartTooltip = (
       <div className="flex flex-col gap-1.5">
         {QUEUE_STATS_CHART_SERIES.map((seriesKey) => {
           const seriesConfig = QUEUE_STATS_CHART_CONFIG[seriesKey];
-          const name = seriesConfig.label ?? seriesKey;
+          const name = seriesConfig?.label ?? seriesKey;
 
           return (
             <div className="flex items-center gap-2" key={seriesKey}>

@@ -225,8 +225,9 @@ describe('MutexWorktreeTargetsTracker', () => {
       expect(successes).toHaveLength(2);
       expect(failures).toHaveLength(1);
 
-      if (!failures[0]?.ok) {
-        expect(failures[0].reason).toBe('all_locked');
+      const firstFailure = failures[0];
+      if (firstFailure && !firstFailure.ok) {
+        expect(firstFailure.reason).toBe('all_locked');
       }
 
       const lockedTargetIds = successes

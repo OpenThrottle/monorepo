@@ -35,12 +35,11 @@ mutation RecordSkillUsageOutcome($input: RecordSkillUsageOutcomeInput!) {
 `;
 
 /** @public */
-export const SKILL_USAGE_OUTCOMES: Readonly<Record<string, SkillUsageOutcome>> =
-  Object.freeze({
-    ABANDONED: 'abandoned',
-    ERROR: 'error',
-    SUCCESS: 'success',
-  });
+export const SKILL_USAGE_OUTCOMES = Object.freeze({
+  ABANDONED: 'abandoned',
+  ERROR: 'error',
+  SUCCESS: 'success',
+} as const) satisfies Readonly<Record<string, SkillUsageOutcome>>;
 
 /**
  * Build a tool-neutral usage event from an adapter's NormalizedInvocation.

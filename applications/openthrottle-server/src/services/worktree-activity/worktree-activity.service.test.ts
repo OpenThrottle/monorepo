@@ -146,7 +146,7 @@ describe('WorktreeActivityService', () => {
 
     const result = await service.discoverAndClassify(USER);
 
-    expect(result.worktrees[0].activity).toBe(WORKTREE_ACTIVITY.DIRTY);
+    expect(result.worktrees[0]?.activity).toBe(WORKTREE_ACTIVITY.DIRTY);
   });
 
   it('reads DIRTY for a clean tree that is ahead of its upstream', async () => {
@@ -156,7 +156,7 @@ describe('WorktreeActivityService', () => {
 
     const result = await service.discoverAndClassify(USER);
 
-    expect(result.worktrees[0].activity).toBe(WORKTREE_ACTIVITY.DIRTY);
+    expect(result.worktrees[0]?.activity).toBe(WORKTREE_ACTIVITY.DIRTY);
   });
 
   it('reads IDLE for a clean worktree with nothing running', async () => {
@@ -164,7 +164,7 @@ describe('WorktreeActivityService', () => {
 
     const result = await service.discoverAndClassify(USER);
 
-    expect(result.worktrees[0].activity).toBe(WORKTREE_ACTIVITY.IDLE);
+    expect(result.worktrees[0]?.activity).toBe(WORKTREE_ACTIVITY.IDLE);
   });
 
   it('tolerates a branch with no upstream (aheadCount null)', async () => {
@@ -174,7 +174,7 @@ describe('WorktreeActivityService', () => {
 
     const result = await service.discoverAndClassify(USER);
 
-    expect(result.worktrees[0].activity).toBe(WORKTREE_ACTIVITY.IDLE);
+    expect(result.worktrees[0]?.activity).toBe(WORKTREE_ACTIVITY.IDLE);
   });
 
   it('flags an unregistered worktree, and never calls it RUNNING', async () => {
@@ -204,7 +204,7 @@ describe('WorktreeActivityService', () => {
 
     const result = await service.discoverAndClassify(USER);
 
-    expect(result.worktrees[0].activity).toBe(WORKTREE_ACTIVITY.DIRTY);
+    expect(result.worktrees[0]?.activity).toBe(WORKTREE_ACTIVITY.DIRTY);
     expect(result.warnings.join('\n')).toMatch(
       /could not read live plan runs.*connection terminated/,
     );

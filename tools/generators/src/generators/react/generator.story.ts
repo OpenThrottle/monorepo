@@ -80,7 +80,7 @@ const resolveComponentSource = (
 const buildMatrixAttributes = (
   groups: readonly TemplateVariantGroup[],
 ): string => {
-  const keyed = groups.length > 1 ? groups[1].propName : groups[0]?.propName;
+  const keyed = groups.length > 1 ? groups[1]?.propName : groups[0]?.propName;
 
   if (!keyed) {
     return '';

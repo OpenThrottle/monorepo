@@ -49,13 +49,13 @@ export const extractDocHeadings = (content: string): readonly DocHeading[] => {
       continue;
     }
 
-    const text = stripInlineMarkdown(match[2]);
+    const text = stripInlineMarkdown(match[2] ?? '');
     if (text.length === 0) {
       continue;
     }
 
     headings.push({
-      depth: match[1].length === 2 ? 2 : 3,
+      depth: match[1]?.length === 2 ? 2 : 3,
       id: slugify(text),
       text,
     });

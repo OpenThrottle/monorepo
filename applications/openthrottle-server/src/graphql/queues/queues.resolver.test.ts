@@ -104,11 +104,11 @@ describe('QueuesResolver', () => {
       expect(result).not.toBeNull();
       expect(result?.jobs).not.toBeNull();
       expect(result?.jobs?.jobs).toHaveLength(1);
-      expect(result?.jobs?.jobs[0].id).toBe('job-1');
-      expect(result?.jobs?.jobs[0].state).toBe('waiting');
+      expect(result?.jobs?.jobs[0]?.id).toBe('job-1');
+      expect(result?.jobs?.jobs[0]?.state).toBe('waiting');
       expect(result?.jobs?.hasNext).toBe(true);
       expect(result?.jobs?.total).toBe(42);
-      expect(result?.jobs?.jobs[0].taskRunMetrics).toBeNull();
+      expect(result?.jobs?.jobs[0]?.taskRunMetrics).toBeNull();
       expect(mockQueuesService.getJobs).toHaveBeenCalledWith(
         PLANS_QUEUE_NAME,
         ['waiting', 'active'],
@@ -168,9 +168,9 @@ describe('QueuesResolver', () => {
       });
 
       expect(result?.jobs?.jobs).toHaveLength(1);
-      expect(result?.jobs?.jobs[0].taskRunMetrics).not.toBeNull();
-      expect(result?.jobs?.jobs[0].taskRunMetrics?.atStart.rssMb).toBe(50);
-      expect(result?.jobs?.jobs[0].taskRunMetrics?.atEnd.rssMb).toBe(55);
+      expect(result?.jobs?.jobs[0]?.taskRunMetrics).not.toBeNull();
+      expect(result?.jobs?.jobs[0]?.taskRunMetrics?.atStart.rssMb).toBe(50);
+      expect(result?.jobs?.jobs[0]?.taskRunMetrics?.atEnd.rssMb).toBe(55);
     });
   });
 
@@ -399,10 +399,10 @@ describe('QueuesResolver', () => {
       });
 
       expect(result).toHaveLength(1);
-      expect(result[0].key).toBe('repeat:plans::job-id');
-      expect(result[0].name).toBe('run-plan');
-      expect(result[0].pattern).toBe('0 9 * * 1-5');
-      expect(result[0].next).toBe(1739012400000);
+      expect(result[0]?.key).toBe('repeat:plans::job-id');
+      expect(result[0]?.name).toBe('run-plan');
+      expect(result[0]?.pattern).toBe('0 9 * * 1-5');
+      expect(result[0]?.next).toBe(1739012400000);
       expect(mockQueuesService.getRepeatableJobs).toHaveBeenCalledWith(
         PLANS_QUEUE_NAME,
         undefined,

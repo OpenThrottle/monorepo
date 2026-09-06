@@ -150,7 +150,7 @@ export const SettingsDebugPanel = (
                   return (
                     <li key={key}>
                       <span className="text-foreground font-medium">
-                        {chartEntry.label}
+                        {chartEntry?.label}
                       </span>
                       {' — '}
                       {hint}

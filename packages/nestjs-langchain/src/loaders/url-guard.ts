@@ -109,6 +109,12 @@ function isPrivateIPv4(hostname: string): boolean {
 
   const [first, second] = parsed;
 
+  // Unreachable given the length check above. If it ever were reachable, an
+  // unclassifiable address must count as private so the guard fails closed.
+  if (first === undefined || second === undefined) {
+    return true;
+  }
+
   // 0.0.0.0/8 — "this" network
   if (first === 0) {
     return true;
@@ -177,16 +183,27 @@ function isPrivateIPv6(hostname: string): boolean {
     /::ffff:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/,
   );
 
+  const dottedOctets = dottedMatch?.[1];
+
   if (dottedMatch !== null) {
-    return isPrivateIPv4(dottedMatch[1]);
+    // A matched pattern with no capture cannot be classified; fail closed.
+    return dottedOctets === undefined ? true : isPrivateIPv4(dottedOctets);
   }
 
   // IPv4-mapped IPv6 that the URL parser compressed to hex (::ffff:a00:1 etc).
   const hexMatch = normalized.match(/^::ffff:([0-9a-f]{1,4}):([0-9a-f]{1,4})$/);
 
   if (hexMatch !== null) {
-    const high = Number.parseInt(hexMatch[1], 16);
-    const low = Number.parseInt(hexMatch[2], 16);
+    const highHex = hexMatch[1];
+    const lowHex = hexMatch[2];
+
+    // As above: a match we cannot decompose is treated as private.
+    if (highHex === undefined || lowHex === undefined) {
+      return true;
+    }
+
+    const high = Number.parseInt(highHex, 16);
+    const low = Number.parseInt(lowHex, 16);
     const dotted = `${(high >> 8) & 0xff}.${high & 0xff}.${(low >> 8) & 0xff}.${low & 0xff}`;
 
     return isPrivateIPv4(dotted);

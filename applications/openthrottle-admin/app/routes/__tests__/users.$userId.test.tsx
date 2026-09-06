@@ -115,6 +115,9 @@ describe('routes/users.$userId.tsx', () => {
 
       expect(result).toEqual({ ok: true });
       const callArgs = executeGraphqlWithAuth.mock.calls[0];
+      if (callArgs === undefined) {
+        throw new Error('executeGraphqlWithAuth was not called');
+      }
       expect(callArgs[2]).toEqual({
         input: {
           email: 'new@example.com',
@@ -136,6 +139,9 @@ describe('routes/users.$userId.tsx', () => {
 
       expect(result).toEqual({ ok: true });
       const callArgs = executeGraphqlWithAuth.mock.calls[0];
+      if (callArgs === undefined) {
+        throw new Error('executeGraphqlWithAuth was not called');
+      }
       expect(callArgs[2]).toEqual({
         input: { roleId: 'role-1', userId: 'user-1' },
       });

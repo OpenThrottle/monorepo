@@ -14,6 +14,9 @@ function stubMatches(): unknown {
 describe('routes/calendar.$eventId.tsx', () => {
   test('renders the event details when the event exists', () => {
     const event = CALENDAR_EVENTS[0];
+    if (event === undefined) {
+      throw new Error('expected a calendar event fixture');
+    }
 
     const view = render(
       <MemoryRouter>

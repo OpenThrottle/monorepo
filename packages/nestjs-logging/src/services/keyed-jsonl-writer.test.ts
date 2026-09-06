@@ -264,9 +264,9 @@ describe('KeyedJsonlWriter', () => {
     await w.closeAll();
 
     expect(calls).toHaveLength(3);
-    expect(calls[0].lineIndex).toBe(0);
-    expect(calls[0].record.data).toBe('first');
-    expect(calls[0].record.timestamp).toBe('2026-05-02T12:00:00.000Z');
+    expect(calls[0]?.lineIndex).toBe(0);
+    expect(calls[0]?.record.data).toBe('first');
+    expect(calls[0]?.record.timestamp).toBe('2026-05-02T12:00:00.000Z');
     // Per-key monotonic increment.
     expect(calls[1]).toMatchObject({
       jobId: '1',
@@ -279,7 +279,8 @@ describe('KeyedJsonlWriter', () => {
       queueName: 'q',
     });
     // The record handed to the observer is frozen.
-    expect(Object.isFrozen(calls[0].record)).toBe(true);
+    expect(calls[0]).toBeDefined();
+    expect(Object.isFrozen(calls[0]?.record)).toBe(true);
   });
 
   it('never invokes onAppend in raw mode (no structured record)', async () => {

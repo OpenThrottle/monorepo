@@ -104,6 +104,9 @@ describe('ScheduleForm Component', () => {
     test('fills the cron field from a preset', async () => {
       const user = userEvent.setup();
       const preset = CRON_PRESETS[0];
+      if (preset === undefined) {
+        throw new Error('expected a cron preset');
+      }
 
       await user.click(
         component.getByRole('button', {

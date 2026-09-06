@@ -58,7 +58,7 @@ describe('PlanCancelChannelService', () => {
     const service = build();
     await service.onApplicationBootstrap();
 
-    pmessageHandlers[0]('plan:*:cancel', `plan:${PLAN_ID}:cancel`, '1');
+    pmessageHandlers[0]?.('plan:*:cancel', `plan:${PLAN_ID}:cancel`, '1');
 
     expect(mockAbort).toHaveBeenCalledWith(PLAN_ID);
   });
@@ -67,7 +67,7 @@ describe('PlanCancelChannelService', () => {
     const service = build();
     await service.onApplicationBootstrap();
 
-    pmessageHandlers[0]('plan:*:cancel', 'not-a-cancel-channel', '1');
+    pmessageHandlers[0]?.('plan:*:cancel', 'not-a-cancel-channel', '1');
 
     expect(mockAbort).not.toHaveBeenCalled();
   });

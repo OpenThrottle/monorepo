@@ -59,7 +59,7 @@ describe('createQueueJobLogTailPublisher', () => {
       0,
     );
 
-    const payload = publish.mock.calls[0][1];
+    const payload = publish.mock.calls[0]?.[1];
     expect(JSON.stringify(payload)).not.toContain('sk-LIVE-secret-123');
     expect(payload.queueJobLogTail.message).toContain('[REDACTED]');
   });

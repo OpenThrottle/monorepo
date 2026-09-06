@@ -7,7 +7,11 @@ import {
 import type { ChatCheckoutOption } from '../../types';
 
 /** The reported bug: three checkouts, two of them named `monorepo`. */
-const CHECKOUTS: readonly ChatCheckoutOption[] = [
+const CHECKOUTS: readonly [
+  ChatCheckoutOption,
+  ChatCheckoutOption,
+  ChatCheckoutOption,
+] = [
   {
     branch: 'main',
     filesystemPath: '/Users/matt/Development/openthrottle',
@@ -70,7 +74,7 @@ describe('groupCheckoutOptions', () => {
     ]);
 
     expect(groups).toHaveLength(1);
-    expect(groups[0].options.map((option) => option.id)).toEqual(['b', 'a']);
+    expect(groups[0]?.options.map((option) => option.id)).toEqual(['b', 'a']);
   });
 
   it('returns no groups for an empty list', () => {

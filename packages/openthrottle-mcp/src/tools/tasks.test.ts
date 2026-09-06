@@ -415,7 +415,7 @@ describe('reorderPlanTasksToolHandler', () => {
 
       const result = await reorderPlanTasksToolHandler({
         planId,
-        taskIds: [tasks[0].id, tasks[1].id],
+        taskIds: [tasks[0]?.id, tasks[1]?.id],
       });
 
       expect(result).toMatchObject({
@@ -427,7 +427,7 @@ describe('reorderPlanTasksToolHandler', () => {
         {
           input: {
             planId,
-            taskIds: [tasks[0].id, tasks[1].id],
+            taskIds: [tasks[0]?.id, tasks[1]?.id],
           },
         },
       );

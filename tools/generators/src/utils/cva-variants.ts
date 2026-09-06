@@ -57,7 +57,7 @@ const stripComments = (source: string): string => {
   let index = 0;
 
   while (index < source.length) {
-    const character = source[index];
+    const character = source[index] ?? '';
 
     if (QUOTES.has(character)) {
       const end = skipStringLiteral(source, index);
@@ -96,7 +96,7 @@ const findMatchingBrace = (source: string, open: number): number => {
   let index = open;
 
   while (index < source.length) {
-    const character = source[index];
+    const character = source[index] ?? '';
 
     if (QUOTES.has(character)) {
       index = skipStringLiteral(source, index);
@@ -130,7 +130,7 @@ const readTopLevelKeys = (body: string): string[] => {
   let index = 0;
 
   while (index < body.length) {
-    const character = body[index];
+    const character = body[index] ?? '';
 
     if (QUOTES.has(character)) {
       const end = skipStringLiteral(body, index);
@@ -163,8 +163,10 @@ const readTopLevelKeys = (body: string): string[] => {
     if (depth === 0) {
       const identifier = body.slice(index).match(/^([A-Za-z_$][\w$]*)\s*:/);
 
-      if (identifier) {
-        keys.push(identifier[1]);
+      const identifierName = identifier?.[1];
+
+      if (identifier && identifierName !== undefined) {
+        keys.push(identifierName);
         index += identifier[0].length;
         continue;
       }

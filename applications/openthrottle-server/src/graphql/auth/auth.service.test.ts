@@ -154,7 +154,10 @@ describe('AuthService', () => {
 
       expect(usersService.hashPassword).toHaveBeenCalledWith('secret');
       expect(usersService.create).toHaveBeenCalledTimes(1);
-      const createArg = vi.mocked(usersService.create).mock.calls[0][0];
+      const createArg = vi.mocked(usersService.create).mock.calls[0]?.[0];
+      if (createArg === undefined) {
+        throw new Error('usersService.create was not called');
+      }
       expect(createArg.email).toBe(mockUser.email);
       expect(createArg.passwordHash).toBe('hashed');
       expect(createArg.githubUsername).toMatch(/^visormatt-[0-9a-f]{8}$/);
@@ -175,7 +178,10 @@ describe('AuthService', () => {
 
       await service.register({ email: 'jane.doe@example.com', password: 'pw' });
 
-      const createArg = vi.mocked(usersService.create).mock.calls[0][0];
+      const createArg = vi.mocked(usersService.create).mock.calls[0]?.[0];
+      if (createArg === undefined) {
+        throw new Error('usersService.create was not called');
+      }
       expect(createArg.githubUsername).toMatch(/^jane\.doe-[0-9a-f]{8}$/);
     });
 
@@ -188,7 +194,10 @@ describe('AuthService', () => {
 
       await service.register({ email: '@example.com', password: 'pw' });
 
-      const createArg = vi.mocked(usersService.create).mock.calls[0][0];
+      const createArg = vi.mocked(usersService.create).mock.calls[0]?.[0];
+      if (createArg === undefined) {
+        throw new Error('usersService.create was not called');
+      }
       expect(createArg.githubUsername).toMatch(/^user-[0-9a-f]{8}$/);
     });
 

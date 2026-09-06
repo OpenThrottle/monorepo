@@ -67,7 +67,7 @@ describe('auth cookie header builders', () => {
 
   it('round-trips a token through set then read', () => {
     const header = buildAuthCookie('abc.def.ghi', { insecureCookies: true });
-    const cookieHeader = header.split(';')[0];
+    const cookieHeader = header.split(';')[0] ?? '';
 
     expect(getAuthTokenFromCookie(cookieHeader)).toBe('abc.def.ghi');
   });

@@ -34,6 +34,7 @@ describe('extractDocHeadings', () => {
 
   test('strips inline Markdown from the label but keeps a plain-text slug', () => {
     const [heading] = extractDocHeadings('## Run `pnpm install`');
+    if (heading === undefined) throw new Error('expected a heading');
     expect(heading.text).toBe('Run pnpm install');
     expect(heading.id).toBe('run-pnpm-install');
   });

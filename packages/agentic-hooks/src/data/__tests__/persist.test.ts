@@ -299,11 +299,11 @@ describe('completeOpenStartsForSession', () => {
     const bySkill = Object.fromEntries(
       posted.map((p) => [String(p.skillName), p]),
     );
-    expect(bySkill['ot-plans'].outcome).toBe('success');
-    expect(bySkill['ot-plans'].durationMs).toBe(5000);
-    expect(bySkill['ot-plans'].sessionId).toBe(sessionId);
-    expect(bySkill['ot-plans'].toolUseId).toBe('tu-a');
-    expect(bySkill['create-readme'].durationMs).toBe(2000);
+    expect(bySkill['ot-plans']?.outcome).toBe('success');
+    expect(bySkill['ot-plans']?.durationMs).toBe(5000);
+    expect(bySkill['ot-plans']?.sessionId).toBe(sessionId);
+    expect(bySkill['ot-plans']?.toolUseId).toBe('tu-a');
+    expect(bySkill['create-readme']?.durationMs).toBe(2000);
 
     expect(
       listStartsForSession({ repoRoot: tmpRoot, sessionId, startsDir }),
@@ -369,7 +369,7 @@ describe('completeOpenStartsForSession', () => {
       timeoutMs: 50,
     });
     expect(res.resolved).toBe(1);
-    expect(res.results[0].sink).toBe('jsonl');
+    expect(res.results[0]?.sink).toBe('jsonl');
     const line = JSON.parse(fs.readFileSync(jsonlPath, 'utf8').trim());
     expect(line.outcome).toBe('success');
     expect(line.duration_ms).toBe(2000);
@@ -460,15 +460,15 @@ describe('sweepAbandonedStarts', () => {
 
     expect(res.swept).toBe(1);
     expect(posted.length).toBe(1);
-    expect(posted[0].outcome).toBe('abandoned');
-    expect(posted[0].skillName).toBe('ot-plans');
+    expect(posted[0]?.outcome).toBe('abandoned');
+    expect(posted[0]?.skillName).toBe('ot-plans');
     // Stamped when the abandonment was DETECTED, not with the session file's
     // mtime — an mtime stamp lands the row next to the start that wrote it and
     // makes every abandonment look instantaneous.
-    expect(posted[0].occurredAt).toBe(new Date(now).toISOString());
+    expect(posted[0]?.occurredAt).toBe(new Date(now).toISOString());
     // Observed lower bound on how far the run got: last file signal (mtime,
     // now − 24h) minus started_at (now − 48h) = 24h.
-    expect(posted[0].durationMs).toBe(24 * 60 * 60 * 1000);
+    expect(posted[0]?.durationMs).toBe(24 * 60 * 60 * 1000);
 
     expect(fs.existsSync(stalePath)).toBe(false);
     expect(

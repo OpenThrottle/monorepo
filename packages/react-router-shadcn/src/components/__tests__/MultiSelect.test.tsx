@@ -182,6 +182,6 @@ describe('MultiSelect', () => {
     // Focus lands on the search input inside the Command; arrow + Enter select.
     await user.keyboard('{ArrowDown}{Enter}');
     expect(onChange).toHaveBeenCalledTimes(1);
-    expect(onChange.mock.calls[0][0]).toEqual(['beta']);
+    expect(onChange.mock.calls[0]?.[0]).toEqual(['beta']);
   });
 });

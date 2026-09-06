@@ -45,9 +45,7 @@ export const NotificationsStoreProvider = (
   // Setup
   // Tracks the newest notification id already announced so hydration / read /
   // dismiss reducer passes (which keep the head id stable) never re-announce.
-  const lastAnnouncedIdRef = React.useRef<string | null>(
-    state.length > 0 ? state[0].id : null,
-  );
+  const lastAnnouncedIdRef = React.useRef<string | null>(state[0]?.id ?? null);
 
   // Handlers
   const addNotification = React.useCallback(

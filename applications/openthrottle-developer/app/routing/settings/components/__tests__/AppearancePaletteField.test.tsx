@@ -51,6 +51,9 @@ describe('AppearancePaletteField Component', () => {
     const user = userEvent.setup();
     const { component: field, store } = renderField(props);
     const [firstTheme] = THEMES;
+    if (firstTheme === undefined) {
+      throw new Error('expected a bundled theme');
+    }
 
     await user.click(
       field.getByRole('button', { name: new RegExp(firstTheme.label) }),
@@ -63,6 +66,9 @@ describe('AppearancePaletteField Component', () => {
     component.unmount();
     const user = userEvent.setup();
     const [firstTheme] = THEMES;
+    if (firstTheme === undefined) {
+      throw new Error('expected a bundled theme');
+    }
     const { component: field, store } = renderField(props, {
       themeId: firstTheme.id,
     });
@@ -75,6 +81,9 @@ describe('AppearancePaletteField Component', () => {
   test('marks the persisted palette as pressed', () => {
     component.unmount();
     const [firstTheme] = THEMES;
+    if (firstTheme === undefined) {
+      throw new Error('expected a bundled theme');
+    }
     const { component: field } = renderField(props, {
       themeId: firstTheme.id,
     });

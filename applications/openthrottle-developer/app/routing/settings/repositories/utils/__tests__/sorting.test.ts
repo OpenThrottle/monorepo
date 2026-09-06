@@ -65,7 +65,7 @@ describe('sortRepositoryRows', () => {
   test('sorts children within their parent only', () => {
     const sorted = sortRepositoryRows(rows, 'name', 'asc');
 
-    expect(sorted[0].children?.map((child) => child.id)).toEqual([
+    expect(sorted[0]?.children?.map((child) => child.id)).toEqual([
       'worktree-alpha',
       'worktree-zeta',
     ]);
@@ -82,7 +82,7 @@ describe('sortRepositoryRows', () => {
       'primary-mono',
       'primary-website',
     ]);
-    expect(sorted[0].children?.map((child) => child.id)).toEqual([
+    expect(sorted[0]?.children?.map((child) => child.id)).toEqual([
       'worktree-alpha',
       'worktree-zeta',
     ]);

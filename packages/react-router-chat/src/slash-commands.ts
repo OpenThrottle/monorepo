@@ -116,5 +116,5 @@ export const parseSlashCommand = (
   if (!match) {
     return null;
   }
-  return { args: match[2]?.trim() ?? '', slug: match[1] };
+  return { args: match[2]?.trim() ?? '', slug: match[1] ?? '' };
 };

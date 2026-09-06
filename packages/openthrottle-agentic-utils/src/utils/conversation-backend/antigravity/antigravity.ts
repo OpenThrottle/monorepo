@@ -109,7 +109,7 @@ export function buildAntigravityPrompt(run: ConversationBackendRun): string {
       lastUserIndex = index;
     }
   }
-  const latest = lastUserIndex >= 0 ? run.messages[lastUserIndex].content : '';
+  const latest = run.messages[lastUserIndex]?.content ?? '';
 
   const resuming =
     run.resumeSession === true &&

@@ -136,7 +136,7 @@ describe('reconcileChatToolbarState', () => {
         persisted({ modelId: 'http://host-a:11434/v1::llama3' }),
         { models, personas: [], repositories: [] },
       );
-      expect(result.modelId).toBe(models[0].id);
+      expect(result.modelId).toBe(models[0]?.id);
     });
 
     test('degrades a stale CLI model override to the bare backend option', () => {

@@ -193,17 +193,17 @@ describe('SNAPSHOT_MANIFEST (the committed classification)', () => {
       'service_account_credentials',
       'subscriptions',
     ]) {
-      expect(SNAPSHOT_MANIFEST[table].classification).toBe('denied');
+      expect(SNAPSHOT_MANIFEST[table]?.classification).toBe('denied');
     }
   });
 
   test('password hashes never export', () => {
     const users = SNAPSHOT_MANIFEST.users;
 
-    if (users.classification !== 'exported') {
+    if (users === undefined || users.classification !== 'exported') {
       throw new Error('users must be exported');
     }
 
-    expect(users.columns.password_hash.action).toBe('drop');
+    expect(users.columns.password_hash?.action).toBe('drop');
   });
 });

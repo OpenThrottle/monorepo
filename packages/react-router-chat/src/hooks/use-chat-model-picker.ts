@@ -140,7 +140,7 @@ export const useChatModelPicker = (
         return owning.id;
       }
     }
-    return resolvedGroups[0].id;
+    return resolvedGroups[0]?.id ?? null;
   }, [resolvedGroups, selectedModel]);
 
   // The active group falls back to the default (and then the first group) so a

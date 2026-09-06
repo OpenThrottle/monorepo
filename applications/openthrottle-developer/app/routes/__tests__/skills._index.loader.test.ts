@@ -229,7 +229,7 @@ describe('routes/skills._index loader', () => {
       slug: 'nx-workspace',
       tags: ['nx'],
     });
-    expect(result.entries[0].effectiveDisableModelInvocation).toBeUndefined();
-    expect(result.entries[0].provenance).toBeUndefined();
+    expect(result.entries[0]?.effectiveDisableModelInvocation).toBeUndefined();
+    expect(result.entries[0]?.provenance).toBeUndefined();
   });
 });

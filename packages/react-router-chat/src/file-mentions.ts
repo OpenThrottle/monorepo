@@ -53,12 +53,12 @@ export const detectActiveMention = (
   caret: number,
 ): ActiveFileMention | null => {
   for (let i = caret - 1; i >= 0; i -= 1) {
-    const ch = value[i];
+    const ch = value[i] ?? '';
     if (/\s/.test(ch)) {
       return null;
     }
     if (ch === FILE_MENTION_TRIGGER) {
-      const before = i === 0 ? '' : value[i - 1];
+      const before = i === 0 ? '' : (value[i - 1] ?? '');
       if (before === '' || MENTION_BOUNDARY_BEFORE.test(before)) {
         return { anchor: i, query: value.slice(i + 1, caret) };
       }
@@ -106,7 +106,7 @@ export const parseFileMentions = (
   const mentions: ChatFileMention[] = [];
 
   for (const match of message.matchAll(FILE_MENTION_PATTERN)) {
-    const path = match[1].replace(TRAILING_PUNCTUATION, '');
+    const path = (match[1] ?? '').replace(TRAILING_PUNCTUATION, '');
     if (path === '' || seen.has(path)) {
       continue;
     }

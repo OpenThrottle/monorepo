@@ -58,8 +58,13 @@ export function formatShellEnvPrefix(
 ): string {
   const parts = Object.keys(env)
     .sort()
-    .filter((key) => env[key] !== '')
-    .map((key) => `${key}=${escapeShellArg(env[key])}`);
+    .flatMap((key) => {
+      const value = env[key];
+
+      return value === undefined || value === ''
+        ? []
+        : [`${key}=${escapeShellArg(value)}`];
+    });
 
   return parts.length > 0 ? `${parts.join(' ')} ` : '';
 }

@@ -89,7 +89,7 @@ describe('AgentDiscoveryService', () => {
     const result = await service.discover();
     expect(result).toBe(SNAPSHOT);
     expect(discoverAgentClisMock).toHaveBeenCalledTimes(1);
-    expect(discoverAgentClisMock.mock.calls[0][0]).toEqual({
+    expect(discoverAgentClisMock.mock.calls[0]?.[0]).toEqual({
       scannedAt: expect.any(String),
     });
   });

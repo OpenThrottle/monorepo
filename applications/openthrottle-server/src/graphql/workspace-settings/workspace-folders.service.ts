@@ -824,8 +824,8 @@ export class WorkspaceFoldersService {
     if (checkouts.length === 0) return null;
 
     const repository =
-      checkouts[0].repository ?? (await this.repositoriesService.findById(id));
-    if (repository === null) return null;
+      checkouts[0]?.repository ?? (await this.repositoriesService.findById(id));
+    if (repository == null) return null;
 
     return this.buildRepositoryObject(repository, checkouts);
   }
@@ -899,9 +899,9 @@ export class WorkspaceFoldersService {
     const repository =
       Object.keys(data).length > 0
         ? await this.repositoriesService.update(input.id, data)
-        : (owned[0].repository ??
+        : (owned[0]?.repository ??
           (await this.repositoriesService.findById(input.id)));
-    if (repository === null) {
+    if (repository == null) {
       throw new NotFoundException('Repository not found');
     }
 

@@ -27,8 +27,8 @@ describe('warnUnsupportedAdditionalDirectories', () => {
     warnUnsupportedAdditionalDirectories('cursor', ['/a', '/b'], warn);
 
     expect(warn).toHaveBeenCalledTimes(1);
-    expect(warn.mock.calls[0][0]).toContain('cursor');
-    expect(warn.mock.calls[0][0]).toContain('2');
+    expect(warn.mock.calls[0]?.[0]).toContain('cursor');
+    expect(warn.mock.calls[0]?.[0]).toContain('2');
   });
 
   it('stays silent for an absent or empty list', () => {

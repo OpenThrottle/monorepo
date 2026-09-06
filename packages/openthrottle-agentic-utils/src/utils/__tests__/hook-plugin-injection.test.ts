@@ -92,7 +92,7 @@ describe('resolveHookPluginDirs', () => {
     fs.rmSync(payloadDir, { force: true, recursive: true });
     expect(resolveHookPluginDirs({ env: {}, warn })).toEqual([]);
     expect(warn).toHaveBeenCalledTimes(1);
-    expect(warn.mock.calls[0][0]).toContain('bundle-hooks');
+    expect(warn.mock.calls[0]?.[0]).toContain('bundle-hooks');
   });
 
   it('rejects a directory that carries no plugin manifest', () => {
@@ -107,7 +107,7 @@ describe('resolveHookPluginDirs', () => {
     getOpenThrottleRootMock.mockReturnValue(undefined);
     expect(resolveHookPluginDirs({ env: {}, warn })).toEqual([]);
     expect(warn).toHaveBeenCalledTimes(1);
-    expect(warn.mock.calls[0][0]).toContain(HOOK_PLUGIN_DIR_ENV);
+    expect(warn.mock.calls[0]?.[0]).toContain(HOOK_PLUGIN_DIR_ENV);
   });
 
   it('warns once per process, not once per iteration', () => {

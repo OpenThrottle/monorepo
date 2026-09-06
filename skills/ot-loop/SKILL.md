@@ -73,14 +73,6 @@ Once — and **only** once — the PR is confirmed open, tear down the isolated 
 
 4. **Report** the PR link and note that the branch is now free to check out in the primary instance for manual verification (`git checkout <branch>`), or in a fresh isolated worktree via [`ot-worktree`](../ot-worktree/SKILL.md) create.
 
-## After the run — review it
-
-Once the PR is open and the worktree is gone, the run itself is worth a look. [`ot-loop-review`](https://github.com/openthrottle/monorepo/blob/main/skills/ot-loop-review/SKILL.md) is the reflection stage: fire it manually with the same plan id and it audits how this run actually went — setup, the per-task invariant, validation, commit and CI hygiene, finishing, teardown, model attribution — separating friction from defects and filing the follow-ups that deserve to exist. It is read-only on code and never edits this skill; it only proposes.
-
-```bash
-/ot-loop-review <planId>
-```
-
 ## After merge (not part of the loop)
 
 This loop **does not wait for merge**. It stops once the PR is open, and any later merge-queue enqueue/landing is a separate step.

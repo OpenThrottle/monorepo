@@ -68,6 +68,9 @@ describe('ToggleGroup', () => {
       </ToggleGroup>,
     );
     const [btnA, btnB] = container.querySelectorAll('button');
+    if (btnA === undefined || btnB === undefined) {
+      throw new Error('expected two toggle buttons');
+    }
     expect(btnA).toHaveAttribute('data-state', 'off');
     expect(btnB).toHaveAttribute('data-state', 'off');
     await user.click(btnA);
@@ -87,6 +90,9 @@ describe('ToggleGroup', () => {
       </ToggleGroup>,
     );
     const [btnA, btnB] = container.querySelectorAll('button');
+    if (btnA === undefined || btnB === undefined) {
+      throw new Error('expected two toggle buttons');
+    }
     await user.click(btnA);
     await user.click(btnB);
     expect(btnA).toHaveAttribute('data-state', 'on');

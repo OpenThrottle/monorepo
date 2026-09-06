@@ -25,6 +25,7 @@ describe('useFloorLayout', () => {
 
     act(() => result.current.updateElement('t1', { seats: 8 }));
     const updated = result.current.layout.elements[0];
+    if (updated === undefined) throw new Error('expected a patched element');
     expect('seats' in updated && updated.seats).toBe(8);
 
     act(() => result.current.removeElement('t1'));

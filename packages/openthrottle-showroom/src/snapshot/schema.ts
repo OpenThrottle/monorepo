@@ -171,11 +171,20 @@ export const reflectSchema = async (
       );
     }
 
+    const [childColumn] = childColumns;
+    const [parentColumn] = parentColumns;
+
+    if (childColumn === undefined || parentColumn === undefined) {
+      throw new Error(
+        `foreign key '${String(row.name)}' on '${String(row.child_table)}' has no usable column`,
+      );
+    }
+
     foreignKeys.push({
-      childColumn: childColumns[0],
+      childColumn,
       childTable: String(row.child_table),
       name: String(row.name),
-      parentColumn: parentColumns[0],
+      parentColumn,
       parentTable: String(row.parent_table),
     });
   }

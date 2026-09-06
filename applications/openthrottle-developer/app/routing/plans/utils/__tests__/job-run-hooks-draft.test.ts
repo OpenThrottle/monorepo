@@ -31,9 +31,9 @@ describe('updateRow', () => {
 
     expect(next).toHaveLength(2);
     expect(next[0]).toEqual(rows[0]);
-    expect(next[1].timeoutSeconds).toBe(30);
+    expect(next[1]?.timeoutSeconds).toBe(30);
     // original rows are not mutated
-    expect(rows[1].timeoutSeconds).toBeUndefined();
+    expect(rows[1]?.timeoutSeconds).toBeUndefined();
   });
 
   test('returns an equivalent list when draftId is not found', () => {

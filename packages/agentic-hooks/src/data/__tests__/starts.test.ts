@@ -51,7 +51,7 @@ describe('start-correlation store', () => {
       started_at: '2026-08-01T00:00:00.000Z',
       tool_use_id: 'toolu_1',
     });
-    expect('args' in entries[0]).toBe(false);
+    expect(entries[0] !== undefined && 'args' in entries[0]).toBe(false);
   });
 
   it('skips (does not error) when session_id is missing', () => {
@@ -89,7 +89,7 @@ describe('start-correlation store', () => {
       startsDir,
     });
     expect(entries.length).toBe(1);
-    expect(entries[0].skill_name).toBe('a');
+    expect(entries[0]?.skill_name).toBe('a');
   });
 
   it('startCorrelationKey prefers tool_use_id, falls back to started_at', () => {
@@ -144,7 +144,7 @@ describe('start-correlation store', () => {
       startsDir,
     });
     expect(remaining.length).toBe(1);
-    expect(remaining[0].skill_name).toBe('beta');
+    expect(remaining[0]?.skill_name).toBe('beta');
 
     const drainedAll = drainStartsForSession({
       repoRoot: startsDir,

@@ -64,7 +64,7 @@ describe('loadProjectSkillFlags', () => {
       ProjectSkillsDocument,
     );
     expect(result).toHaveLength(1);
-    expect(result[0].slug).toBe('example');
+    expect(result[0]?.slug).toBe('example');
   });
 
   test('returns an empty array when the query throws', async () => {
@@ -105,7 +105,7 @@ describe('loadSkillAvailability', () => {
       { environment: 'interactive' },
     );
     expect(result).toHaveLength(1);
-    expect(result[0].provenance).toBe('frontmatter:true');
+    expect(result[0]?.provenance).toBe('frontmatter:true');
   });
 
   test('returns an empty array when the query throws', async () => {
@@ -205,8 +205,8 @@ describe('fromProjectSkills', () => {
       [],
     );
 
-    expect(result[0].disabledForModel).toBe(true);
-    expect(result[0].description).toBe('');
+    expect(result[0]?.disabledForModel).toBe(true);
+    expect(result[0]?.description).toBe('');
   });
 
   test('defaults description to empty string and disabledForModel to false when unset', () => {

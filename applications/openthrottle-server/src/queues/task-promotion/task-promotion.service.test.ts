@@ -163,7 +163,10 @@ describe('TaskPromotionService.promote', () => {
         title: 'Do the important thing',
       }),
     );
-    const planDto = vi.mocked(planRepo.create).mock.calls[0][0];
+    const planDto = vi.mocked(planRepo.create).mock.calls[0]?.[0];
+    if (planDto === undefined) {
+      throw new Error('planRepo.create was not called');
+    }
     expect(planDto.description).toContain(`Promoted from task ${TASK_ID}`);
 
     // Step 3: one seeded task on the new plan.

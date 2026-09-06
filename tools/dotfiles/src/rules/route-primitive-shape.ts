@@ -88,8 +88,8 @@ const unwrapFunction = (node: TSESTree.Node): RenderFn | null => {
   if (node.type === 'CallExpression' && node.arguments.length > 0) {
     const first = node.arguments[0];
     if (
-      first.type === 'ArrowFunctionExpression' ||
-      first.type === 'FunctionExpression'
+      first?.type === 'ArrowFunctionExpression' ||
+      first?.type === 'FunctionExpression'
     ) {
       return first;
     }
@@ -159,7 +159,7 @@ export const routePrimitiveShape = createRule<[], MessageIds>({
       for (const comment of markerComments) {
         const line = comment.loc.start.line;
         if (line === braceLine + 1) continue;
-        const above = line >= 2 ? lines[line - 2] : '';
+        const above = (line >= 2 ? lines[line - 2] : '') ?? '';
         if (above.trim() !== '') {
           context.report({
             data: { marker: comment.value.trim() },

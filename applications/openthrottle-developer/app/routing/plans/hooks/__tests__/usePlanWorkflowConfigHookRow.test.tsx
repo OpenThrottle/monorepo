@@ -209,9 +209,9 @@ describe('usePlanWorkflowConfigHookRow', () => {
 
     act(() => result.current.handleKindChange('prompt_profile'));
 
-    const [nextRows] = onChange.mock.calls[0];
-    expect(nextRows[0].kind).toBe('prompt_profile');
-    expect(nextRows[0].draftId).toBe(row.draftId);
+    const [nextRows = []] = onChange.mock.calls[0] ?? [];
+    expect(nextRows[0]?.kind).toBe('prompt_profile');
+    expect(nextRows[0]?.draftId).toBe(row.draftId);
   });
 
   test('handleKindChange switches a prompt_profile row to a skill row', () => {
@@ -229,8 +229,8 @@ describe('usePlanWorkflowConfigHookRow', () => {
 
     act(() => result.current.handleKindChange('skill'));
 
-    const [nextRows] = onChange.mock.calls[0];
-    expect(nextRows[0].kind).toBe('skill');
+    const [nextRows = []] = onChange.mock.calls[0] ?? [];
+    expect(nextRows[0]?.kind).toBe('skill');
   });
 
   test('handleOnFailureChange maps "default" to undefined and other values through', () => {
@@ -352,16 +352,24 @@ describe('usePlanWorkflowConfigHookRow', () => {
     );
 
     act(() => result.current.handleUseFileDelivery());
-    const [fileRows] = onChange.mock.calls[0];
+    const [fileRows = []] = onChange.mock.calls[0] ?? [];
     const fileRow = fileRows[0];
+    if (fileRow === undefined) {
+      throw new Error('expected a hook row');
+    }
+
     expect(fileRow.kind).toBe('prompt_profile');
     expect(fileRow.kind === 'prompt_profile' && fileRow.promptDelivery).toBe(
       'file',
     );
 
     act(() => result.current.handleUseNamedProfile());
-    const [namedRows] = onChange.mock.calls[1];
+    const [namedRows = []] = onChange.mock.calls[1] ?? [];
     const namedRow = namedRows[0];
+    if (namedRow === undefined) {
+      throw new Error('expected a hook row');
+    }
+
     expect(namedRow.kind).toBe('prompt_profile');
     expect(namedRow.kind === 'prompt_profile' && namedRow.promptDelivery).toBe(
       'named',

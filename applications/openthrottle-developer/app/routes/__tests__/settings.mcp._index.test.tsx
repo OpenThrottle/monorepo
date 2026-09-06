@@ -98,6 +98,9 @@ describe('routes/settings.mcp._index.tsx', () => {
     // Groups sort by provider order: anthropic-directory (GitHub) then
     // mcp-registry (Postgres).
     const [githubCard, postgresCard] = cards;
+    if (githubCard === undefined || postgresCard === undefined) {
+      throw new Error('expected both connector cards');
+    }
 
     expect(within(githubCard).getByText('GitHub')).toBeInTheDocument();
     expect(within(githubCard).getByText('Connected')).toBeInTheDocument();

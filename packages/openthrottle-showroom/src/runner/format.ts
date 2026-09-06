@@ -17,7 +17,22 @@ export interface FormatSpec {
     readonly targetLufs: number;
     readonly truePeakDb: number;
   };
-  readonly brand: Readonly<Record<string, string>>;
+  /**
+   * The brand palette and type stack from `format.json`. Spelled out key by key
+   * rather than as an open record: every other field of this spec is precise,
+   * and an open record makes `brand.forground` type-check while widening every
+   * real read to `string | undefined`.
+   */
+  readonly brand: {
+    readonly background: string;
+    readonly border: string;
+    readonly card: string;
+    readonly foreground: string;
+    readonly mono: string;
+    readonly muted: string;
+    readonly red: string;
+    readonly sans: string;
+  };
   readonly cards: {
     readonly lowerThird: {
       readonly durationSeconds: number;

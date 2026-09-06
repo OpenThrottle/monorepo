@@ -6,12 +6,11 @@
 import type { PrivacyLevel } from '../types';
 
 /** @public */
-export const PRIVACY_LEVELS: Readonly<Record<string, PrivacyLevel>> =
-  Object.freeze({
-    FULL: 'full',
-    NAME_ONLY: 'name-only',
-    TRUNCATED: 'truncated',
-  });
+export const PRIVACY_LEVELS = Object.freeze({
+  FULL: 'full',
+  NAME_ONLY: 'name-only',
+  TRUNCATED: 'truncated',
+} as const) satisfies Readonly<Record<string, PrivacyLevel>>;
 
 /** @public */
 export const DEFAULT_PRIVACY_LEVEL: PrivacyLevel = PRIVACY_LEVELS.TRUNCATED;

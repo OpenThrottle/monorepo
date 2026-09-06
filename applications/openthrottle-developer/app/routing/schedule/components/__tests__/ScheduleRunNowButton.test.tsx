@@ -114,7 +114,7 @@ describe('ScheduleRunNowButton', () => {
       expect(toastMock.success).toHaveBeenCalledTimes(1);
     });
 
-    const options = toastMock.success.mock.calls[0][1];
+    const options = toastMock.success.mock.calls[0]?.[1];
 
     expect(options?.action).toBeDefined();
     options?.action?.onClick();

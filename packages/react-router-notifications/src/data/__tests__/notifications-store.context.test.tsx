@@ -56,14 +56,14 @@ function TestConsumer(): React.ReactElement {
         <>
           <button
             data-testid="mark-read"
-            onClick={() => store.markAsRead(store.notifications[0].id)}
+            onClick={() => store.markAsRead(store.notifications[0]?.id ?? '')}
             type="button"
           >
             Mark read
           </button>
           <button
             data-testid="dismiss"
-            onClick={() => store.dismiss(store.notifications[0].id)}
+            onClick={() => store.dismiss(store.notifications[0]?.id ?? '')}
             type="button"
           >
             Dismiss
@@ -218,7 +218,7 @@ describe('reducer add coalescing', () => {
 
     const second = reducer(first, addAction());
     expect(second).toHaveLength(1);
-    expect(second[0].id).toBe(first[0].id);
+    expect(second[0]?.id).toBe(first[0]?.id);
   });
 
   test('adds again once the newest matching entry is older than the window', () => {
@@ -235,7 +235,7 @@ describe('reducer add coalescing', () => {
 
     const next = reducer([stale], addAction());
     expect(next).toHaveLength(2);
-    expect(next[0].id).not.toBe('stale-id');
+    expect(next[0]?.id).not.toBe('stale-id');
   });
 
   test('does not coalesce when the link differs', () => {
@@ -282,12 +282,12 @@ describe('reducer add renderability guard', () => {
 
     const afterBlank = reducer(withOne, addAction('  '));
     expect(afterBlank).toHaveLength(1);
-    expect(afterBlank[0].id).toBe(withOne[0].id);
+    expect(afterBlank[0]?.id).toBe(withOne[0]?.id);
   });
 
   test('still adds a genuine message', () => {
     const next = reducer([], addAction('Genuine alert'));
     expect(next).toHaveLength(1);
-    expect(next[0].payload.message).toBe('Genuine alert');
+    expect(next[0]?.payload.message).toBe('Genuine alert');
   });
 });

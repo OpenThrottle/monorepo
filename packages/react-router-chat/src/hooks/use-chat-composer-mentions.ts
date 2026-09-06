@@ -199,9 +199,10 @@ export const useChatComposerMentions = (
       return true;
     }
     if ((event.key === 'Enter' && !event.shiftKey) || event.key === 'Tab') {
-      if (results.length > 0) {
+      const activeOption = results[activeIndex];
+      if (activeOption !== undefined) {
         event.preventDefault();
-        selectOption(results[activeIndex]);
+        selectOption(activeOption);
         return true;
       }
       if (event.key === 'Enter') {
