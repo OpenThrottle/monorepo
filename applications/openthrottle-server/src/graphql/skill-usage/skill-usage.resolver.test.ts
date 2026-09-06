@@ -13,6 +13,7 @@ import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
+import { EffectiveUserResolutionService } from '../../services/effective-user-resolution/effective-user-resolution.service';
 import { SkillUsageResolver } from './skill-usage.resolver';
 
 describe('SkillUsageResolver', () => {
@@ -21,6 +22,7 @@ describe('SkillUsageResolver', () => {
   const recordSkillUsageOutcome = vi.fn();
   const getUsageAggregation = vi.fn();
   const searchGitBranches = vi.fn();
+  const resolveEffectiveUserId = vi.fn();
 
   const mockService = createMock<SkillUsageEventsService>({
     getUsageAggregation,
@@ -47,6 +49,7 @@ describe('SkillUsageResolver', () => {
     skillName: 'ot-plans',
     source: 'claude-code',
     toolUseId: null,
+    userId: null,
   };
 
   beforeAll(async () => {
@@ -55,6 +58,10 @@ describe('SkillUsageResolver', () => {
         SkillUsageResolver,
         { provide: SkillUsageEventsService, useValue: mockService },
         { provide: RolesService, useValue: createMock<RolesService>() },
+        {
+          provide: EffectiveUserResolutionService,
+          useValue: { resolveEffectiveUserId },
+        },
         GqlPermissionsGuard,
       ],
     }).compile();
@@ -65,6 +72,7 @@ describe('SkillUsageResolver', () => {
   describe('recordSkillUsage', () => {
     test('persists a valid event and returns the mapped object', async () => {
       recordSkillUsage.mockResolvedValue(savedRow);
+      resolveEffectiveUserId.mockResolvedValue(null);
 
       const result = await resolver.recordSkillUsage({
         args: 'truncated args…',
@@ -95,11 +103,73 @@ describe('SkillUsageResolver', () => {
         skillName: 'ot-plans',
         source: 'claude-code',
         toolUseId: null,
+        userId: null,
       });
       expect(result.id).toBe('event-1');
       expect(result.skillName).toBe('ot-plans');
       expect(result.scope).toBe(SKILL_USAGE_SCOPES.OURS);
       expect(result.args).toBe('truncated args…');
+    });
+
+    describe('attribution', () => {
+      test('stamps the user the authenticated principal resolves to', async () => {
+        recordSkillUsage.mockResolvedValue(savedRow);
+        resolveEffectiveUserId.mockResolvedValue('user-1');
+
+        await resolver.recordSkillUsage(
+          {
+            occurredAt: new Date('2026-07-31T12:00:00.000Z'),
+            scope: SKILL_USAGE_SCOPES.OURS,
+            skillName: 'ot-plans',
+          },
+          'user-1',
+        );
+
+        expect(resolveEffectiveUserId).toHaveBeenCalledWith('user-1');
+        expect(recordSkillUsage).toHaveBeenLastCalledWith(
+          expect.objectContaining({ userId: 'user-1' }),
+        );
+      });
+
+      test('stamps the acting user when the principal is a service account', async () => {
+        recordSkillUsage.mockResolvedValue(savedRow);
+        resolveEffectiveUserId.mockResolvedValue('acting-user-1');
+
+        await resolver.recordSkillUsage(
+          {
+            occurredAt: new Date('2026-07-31T12:00:00.000Z'),
+            scope: SKILL_USAGE_SCOPES.OURS,
+            skillName: 'ot-plans',
+          },
+          'service-account-1',
+        );
+
+        expect(resolveEffectiveUserId).toHaveBeenCalledWith(
+          'service-account-1',
+        );
+        expect(recordSkillUsage).toHaveBeenLastCalledWith(
+          expect.objectContaining({ userId: 'acting-user-1' }),
+        );
+      });
+
+      test('records the event with a null userId when the principal resolves to no one', async () => {
+        recordSkillUsage.mockResolvedValue(savedRow);
+        resolveEffectiveUserId.mockResolvedValue(null);
+
+        const result = await resolver.recordSkillUsage(
+          {
+            occurredAt: new Date('2026-07-31T12:00:00.000Z'),
+            scope: SKILL_USAGE_SCOPES.OURS,
+            skillName: 'ot-plans',
+          },
+          'unlinked-service-account',
+        );
+
+        expect(recordSkillUsage).toHaveBeenLastCalledWith(
+          expect.objectContaining({ userId: null }),
+        );
+        expect(result.id).toBe('event-1');
+      });
     });
 
     describe('when skillName is blank', () => {

@@ -30,7 +30,7 @@ export class WorkstreamTimelineInput {
   from!: Date;
 
   @Field(() => String, {
-    description: `Filter to a single git branch. Also scopes the grilling lane, which has no user_id to scope by.`,
+    description: `Filter to a single git branch. Also scopes the grilling lane, which is how unattributed grilling events (no \`userId\`) are narrowed.`,
     nullable: true,
   })
   gitBranch!: string | null;

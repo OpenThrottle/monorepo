@@ -354,6 +354,7 @@ describe('TimelineResolver.workstreamTimeline', () => {
           task_id: null,
           title: 'feat/x',
           url: null,
+          user_id: null,
         },
       ]);
 
@@ -362,6 +363,64 @@ describe('TimelineResolver.workstreamTimeline', () => {
       );
 
       expect(result.markers[0]?.laneKey).toBe('skills');
+    });
+  });
+
+  describe('grilling attribution', () => {
+    const grillingRow = (userId: string | null) => ({
+      at: '2026-09-02T00:00:00Z',
+      branch: 'feat/x',
+      id: 'skill-1',
+      plan_id: null,
+      plan_title: null,
+      task_id: null,
+      title: 'feat/x',
+      url: null,
+      user_id: userId,
+    });
+
+    it('selects user_id so an attributed event can be told from an unattributed one', async () => {
+      await resolver.workstreamTimeline(
+        baseInput({ markerKinds: [TimelineMarkerKind.GRILLING] }),
+      );
+
+      const sql = query.mock.calls.map(([text]) => text).join('\n');
+      expect(sql).toContain('sue.user_id');
+    });
+
+    it('surfaces the resolved user on the marker', async () => {
+      query.mockResolvedValue([grillingRow('user-1')]);
+
+      const result = await resolver.workstreamTimeline(
+        baseInput({ markerKinds: [TimelineMarkerKind.GRILLING] }),
+      );
+
+      expect(result.markers[0]?.userId).toBe('user-1');
+    });
+
+    it('keeps an unattributed event rather than filtering it out', async () => {
+      query.mockResolvedValue([grillingRow(null)]);
+
+      const result = await resolver.workstreamTimeline(
+        baseInput({ markerKinds: [TimelineMarkerKind.GRILLING] }),
+      );
+
+      expect(result.markers).toHaveLength(1);
+      expect(result.markers[0]?.userId).toBeNull();
+      expect(result.markers[0]?.branch).toBe('feat/x');
+    });
+
+    it('never narrows the query by user_id — branch stays the only fallback filter', async () => {
+      await resolver.workstreamTimeline(
+        baseInput({
+          gitBranch: 'feat/x',
+          markerKinds: [TimelineMarkerKind.GRILLING],
+        }),
+      );
+
+      const [sql] = query.mock.calls[0] ?? [];
+      expect(sql).toContain('sue.git_branch = $3::text');
+      expect(sql).not.toContain('sue.user_id =');
     });
   });
 

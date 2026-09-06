@@ -137,6 +137,7 @@ describe('SkillUsageEventsService', () => {
         skillName: 'ot-plans',
         source: 'claude-code',
         toolUseId: 'tool-1',
+        userId: 'user-1',
       });
 
       expect(create).toHaveBeenCalledWith({
@@ -155,6 +156,7 @@ describe('SkillUsageEventsService', () => {
         skillName: 'ot-plans',
         source: 'claude-code',
         toolUseId: 'tool-1',
+        userId: 'user-1',
       });
       expect(saved.id).toBe('event-1');
     });
@@ -190,6 +192,7 @@ describe('SkillUsageEventsService', () => {
           skillName: 'vercel:deploy',
           source: null,
           toolUseId: null,
+          userId: null,
         });
       });
     });

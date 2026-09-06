@@ -36,12 +36,17 @@ export const TIMELINE_GROUPING_LABELS = {
 } as const;
 
 /**
- * Disclosures for the three data gaps this view sits on. Rendering the view
- * without these would present derived numbers as measured ones.
+ * Disclosures for the data gaps this view sits on. Rendering the view without
+ * these would present derived numbers as measured ones.
+ *
+ * `grillingScope` is conditional, not permanent: skill events carry a real
+ * `userId` since migration 110, but it is never backfilled, so a window can
+ * hold a mix of attributed and unattributed rows. Show it only when the window
+ * actually contains an unattributed one — see `hasUnattributedGrilling`.
  */
 export const TIMELINE_DISCLOSURE_COPY = {
   derivedEnd: `Hatched ends are derived. Plan runs record no finish timestamp, so the bar runs to the last known activity — it can overstate execution time.`,
-  grillingScope: `Skill events carry no user, so this lane is scoped by working directory and branch rather than by who ran it.`,
+  grillingScope: `Some grilling events in this window predate user attribution, so they are placed by branch rather than by who ran it.`,
   statusChange: `Status transitions are only recorded when an agent writes a status_change artifact, which happens inconsistently. Expect gaps.`,
   taskUpdated: `Only the most recent write to a task is stored, so a task shows one update marker however many times it changed.`,
 } as const;

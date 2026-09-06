@@ -15,15 +15,25 @@ import {
 } from '~/routing/timeline/data/data.copy';
 import { markerKindPath } from '~/routing/timeline/utils/marker-glyph-path';
 import { TimelineLegend } from '../TimelineLegend';
+import type { TimelineLegendProps } from '../TimelineLegend';
 
 describe('TimelineLegend Component', () => {
   let component: RenderResult;
 
-  beforeEach(() => {
-    const Component = () => <TimelineLegend />;
+  // One component declaration for the whole file (react/no-multi-comp). The
+  // disclosure cases vary this instead of declaring a second component.
+  let legendProps: TimelineLegendProps = {};
+  const Component = () => <TimelineLegend {...legendProps} />;
+
+  const renderLegend = (props: TimelineLegendProps = {}): RenderResult => {
+    legendProps = props;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
-    component = render(<RoutesStub />);
+    return render(<RoutesStub />);
+  };
+
+  beforeEach(() => {
+    component = renderLegend();
   });
 
   test('should render the legend', () => {
@@ -70,10 +80,28 @@ describe('TimelineLegend Component', () => {
     ).toBeVisible();
   });
 
-  test('should disclose that the grilling lane is not user-scoped', () => {
-    expect(component.getByTestId('TimelineLegend')).toHaveTextContent(
-      TIMELINE_DISCLOSURE_COPY.grillingScope,
-    );
+  describe('grilling scope disclosure', () => {
+    test('should stay silent when every grilling event is attributed', () => {
+      const attributed = renderLegend({ hasUnattributedGrilling: false });
+
+      expect(
+        attributed.queryByTestId('TimelineLegendGrillingScope'),
+      ).not.toBeInTheDocument();
+    });
+
+    test('should disclose the branch fallback when an event carries no user', () => {
+      const unattributed = renderLegend({ hasUnattributedGrilling: true });
+
+      expect(
+        unattributed.getByTestId('TimelineLegendGrillingScope'),
+      ).toHaveTextContent(TIMELINE_DISCLOSURE_COPY.grillingScope);
+    });
+
+    test('should default to silent rather than claiming a gap that is not there', () => {
+      expect(
+        component.queryByTestId('TimelineLegendGrillingScope'),
+      ).not.toBeInTheDocument();
+    });
   });
 
   test('should disclose that task updates are last-write-only', () => {

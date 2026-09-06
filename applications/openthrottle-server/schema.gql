@@ -3044,6 +3044,11 @@ type TimelineMarkerObject {
   External deep-link target (commit or pull request URL), when the payload carries one.
   """
   url: String
+
+  """
+  The user (UUID) this marker is attributed to. Only GRILLING carries one, and only when ingest could resolve a principal — it is never backfilled, so a null means the actor is unknown, not that the row is unowned. Read it before presenting the lane as user-scoped; null rows fall back to the branch heuristic.
+  """
+  userId: String
 }
 
 """Kinds of timeline marker (work recorded at an instant)."""
@@ -3052,7 +3057,7 @@ enum TimelineMarkerKind {
   GIT_COMMIT
 
   """
-  A grilling skill invocation (skill_usage_events where skill_name = 'grilling'), keyed on occurred_at. Not user-scoped — the table has no user_id.
+  A grilling skill invocation (skill_usage_events where skill_name = 'grilling'), keyed on occurred_at. Attributed via `userId` when ingest resolved a principal; older rows carry none and fall back to the branch heuristic.
   """
   GRILLING
 
@@ -4849,7 +4854,7 @@ input WorkstreamTimelineInput {
   from: DateTime!
 
   """
-  Filter to a single git branch. Also scopes the grilling lane, which has no user_id to scope by.
+  Filter to a single git branch. Also scopes the grilling lane, which is how unattributed grilling events (no `userId`) are narrowed.
   """
   gitBranch: String
 
@@ -5289,7 +5294,7 @@ type Mutation {
   removeSkillTag(input: RemoveSkillTagInput!): Boolean!
 
   """
-  Record one harness-captured skill invocation. Args must already be privacy-processed by the client; the server stores them as-sent.
+  Record one harness-captured skill invocation. Args must already be privacy-processed by the client; the server stores them as-sent. The event is attributed to the human user the authenticated principal acts as, resolved server-side — a userId is never accepted from the client, and stays null when the principal resolves to no one.
   """
   recordSkillUsage(input: RecordSkillUsageInput!): SkillUsageEventObject!
 

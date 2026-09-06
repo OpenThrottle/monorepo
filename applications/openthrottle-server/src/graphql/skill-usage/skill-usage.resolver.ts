@@ -17,8 +17,10 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { BadRequestException, UseGuards } from '@nestjs/common';
 import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { CurrentUser } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
+import { EffectiveUserResolutionService } from '../../services/effective-user-resolution/effective-user-resolution.service';
 import {
   RecordSkillUsageInput,
   RecordSkillUsageOutcomeInput,
@@ -73,15 +75,17 @@ const toOptionalTrimmed = (value?: string | null): string | null => {
 @Resolver(() => SkillUsageEventObject)
 export class SkillUsageResolver {
   constructor(
+    private readonly effectiveUserResolutionService: EffectiveUserResolutionService,
     private readonly skillUsageEventsService: SkillUsageEventsService,
   ) {}
 
   @Mutation(() => SkillUsageEventObject, {
-    description: `Record one harness-captured skill invocation. Args must already be privacy-processed by the client; the server stores them as-sent.`,
+    description: `Record one harness-captured skill invocation. Args must already be privacy-processed by the client; the server stores them as-sent. The event is attributed to the human user the authenticated principal acts as, resolved server-side — a userId is never accepted from the client, and stays null when the principal resolves to no one.`,
   })
   async recordSkillUsage(
     @Args('input', { type: () => RecordSkillUsageInput })
     input: RecordSkillUsageInput,
+    @CurrentUser('sub') sub?: string,
   ): Promise<SkillUsageEventObject> {
     const skillName = input.skillName?.trim();
     if (!skillName) {
@@ -110,6 +114,13 @@ export class SkillUsageResolver {
       throw new BadRequestException('occurredAt must be a valid date');
     }
 
+    // Attribution is resolved here, never accepted from the client: a
+    // hook-posted userId would be indistinguishable from a recorded fact.
+    // A human sub passes through; a service-account sub resolves via its
+    // acting_user_id; anything unresolvable is null, and a null is honest.
+    const userId =
+      await this.effectiveUserResolutionService.resolveEffectiveUserId(sub);
+
     const saved = await this.skillUsageEventsService.recordSkillUsage({
       agentId: input.agentId ?? null,
       agentType: input.agentType ?? null,
@@ -126,6 +137,7 @@ export class SkillUsageResolver {
       skillName,
       source: input.source?.trim() || null,
       toolUseId: input.toolUseId ?? null,
+      userId,
     });
 
     return toSkillUsageEventObject(saved);
