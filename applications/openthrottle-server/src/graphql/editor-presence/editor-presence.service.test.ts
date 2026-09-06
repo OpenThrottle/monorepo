@@ -82,7 +82,7 @@ describe('EditorPresenceService', () => {
 
     expect(result).toBe(SNAPSHOT);
     expect(detectEditorPresenceMock).toHaveBeenCalledTimes(1);
-    expect(detectEditorPresenceMock.mock.calls[0][0]).toEqual({
+    expect(detectEditorPresenceMock.mock.calls[0]?.[0]).toEqual({
       scannedAt: expect.any(String),
     });
   });

@@ -59,7 +59,7 @@ describe('groupFaqEntries', () => {
 
     const groups = groupFaqEntries(entries);
 
-    expect(groups[0].entries.map((entry) => entry.title)).toEqual([
+    expect(groups[0]?.entries.map((entry) => entry.title)).toEqual([
       'Third',
       'First',
       'Second',

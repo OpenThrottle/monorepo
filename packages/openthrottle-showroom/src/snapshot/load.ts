@@ -357,6 +357,12 @@ const upsertRow = async (
       throw error;
     }
 
+    const [primaryKeyColumn] = options.primaryKey;
+
+    if (primaryKeyColumn === undefined) {
+      throw error;
+    }
+
     const indexes = unique.columns.map((column) =>
       options.columns.indexOf(column),
     );
@@ -366,7 +372,7 @@ const upsertRow = async (
     }
 
     const owner = await options.runner.query(
-      `SELECT ${quoteIdentifier(options.primaryKey[0])} AS owner
+      `SELECT ${quoteIdentifier(primaryKeyColumn)} AS owner
          FROM ${quoteIdentifier(options.table)}
         WHERE ${unique.columns
           .map(
@@ -379,7 +385,7 @@ const upsertRow = async (
     );
 
     const keptId = owner.rows[0]?.owner;
-    const droppedId = options.row[options.primaryKey[0]];
+    const droppedId = options.row[primaryKeyColumn];
 
     // No owner found means the violation came from somewhere the natural key
     // cannot explain (a partial index whose predicate we did not evaluate, a

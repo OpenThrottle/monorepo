@@ -50,9 +50,13 @@ function readDbEnumLabels(): Set<string> {
     const createMatch = sql.match(
       /CREATE\s+TYPE\s+plan_task_status\s+AS\s+ENUM\s*\(([\s\S]*?)\)/i,
     );
-    if (createMatch) {
-      for (const label of createMatch[1].matchAll(/'([A-Z_]+)'/g)) {
-        labels.add(label[1]);
+    const createBody = createMatch?.[1];
+    if (createBody !== undefined) {
+      for (const label of createBody.matchAll(/'([A-Z_]+)'/g)) {
+        const value = label[1];
+        if (value !== undefined) {
+          labels.add(value);
+        }
       }
     }
 
@@ -60,7 +64,10 @@ function readDbEnumLabels(): Set<string> {
     for (const alter of sql.matchAll(
       /ALTER\s+TYPE\s+plan_task_status\s+ADD\s+VALUE\s+(?:IF\s+NOT\s+EXISTS\s+)?'([A-Z_]+)'/gi,
     )) {
-      labels.add(alter[1]);
+      const value = alter[1];
+      if (value !== undefined) {
+        labels.add(value);
+      }
     }
   }
 

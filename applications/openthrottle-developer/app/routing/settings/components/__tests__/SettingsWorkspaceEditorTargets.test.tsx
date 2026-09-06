@@ -89,7 +89,12 @@ describe('SettingsWorkspaceEditorTargets Component', () => {
     component.unmount();
     component = renderTargets(props, action);
 
-    await user.click(component.getAllByRole('button', { name: 'Apply' })[0]);
+    const [applyButton] = component.getAllByRole('button', { name: 'Apply' });
+    if (applyButton === undefined) {
+      throw new Error('expected an Apply button');
+    }
+
+    await user.click(applyButton);
 
     expect(submitted).toEqual({
       intent: 'applyEditorConfig',
@@ -163,7 +168,7 @@ describe('SettingsWorkspaceEditorTargets Component', () => {
             presence: EditorPresenceState.NotFound,
           },
         ]),
-        targets: [targets[0]],
+        targets: targets.slice(0, 1),
       },
       action,
     );

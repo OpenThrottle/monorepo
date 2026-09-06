@@ -216,7 +216,7 @@ describe('DailyStatsProcessor', () => {
     await processor.process(mockJob);
 
     expect(mockUpsertForDate).toHaveBeenCalledTimes(1);
-    const [dateArg, payload] = mockUpsertForDate.mock.calls[0];
+    const [dateArg, payload] = mockUpsertForDate.mock.calls[0] ?? [];
 
     expect(dateArg).toBe(yesterday);
     expect(payload).toMatchObject({

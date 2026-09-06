@@ -206,9 +206,10 @@ export const useChatComposerSlashCommands = (
       return true;
     }
     if ((event.key === 'Enter' && !event.shiftKey) || event.key === 'Tab') {
-      if (results.length > 0) {
+      const activeOption = results[activeIndex];
+      if (activeOption !== undefined) {
         event.preventDefault();
-        selectOption(results[activeIndex].slug);
+        selectOption(activeOption.slug);
         return true;
       }
       if (event.key === 'Enter') {

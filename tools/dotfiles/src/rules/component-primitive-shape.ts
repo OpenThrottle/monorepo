@@ -50,8 +50,10 @@ const createRule = ESLintUtils.RuleCreator(
  */
 const expectedName = (filename: string): string => {
   const parts = filename.split('/');
-  const base = parts[parts.length - 1].replace(/\.tsx?$/, '');
-  if (base === 'index' && parts.length >= 2) return parts[parts.length - 2];
+  const base = (parts[parts.length - 1] ?? '').replace(/\.tsx?$/, '');
+  if (base === 'index' && parts.length >= 2) {
+    return parts[parts.length - 2] ?? base;
+  }
   return base;
 };
 
@@ -68,8 +70,8 @@ const unwrapComponent = (
   if (node.type === 'CallExpression' && node.arguments.length > 0) {
     const first = node.arguments[0];
     if (
-      first.type === 'ArrowFunctionExpression' ||
-      first.type === 'FunctionExpression'
+      first?.type === 'ArrowFunctionExpression' ||
+      first?.type === 'FunctionExpression'
     ) {
       return first;
     }
@@ -210,7 +212,7 @@ export const componentPrimitiveShape = createRule<
       for (const comment of markerComments) {
         const line = comment.loc.start.line;
         if (line === braceLine + 1) continue;
-        const above = line >= 2 ? lines[line - 2] : '';
+        const above = (line >= 2 ? lines[line - 2] : '') ?? '';
         if (above.trim() !== '') {
           context.report({
             data: { marker: comment.value.trim() },

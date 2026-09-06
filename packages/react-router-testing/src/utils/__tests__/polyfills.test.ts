@@ -77,7 +77,7 @@ describe('installPolyfills resizeObserverSize option', () => {
     await Promise.resolve();
 
     expect(callback).toHaveBeenCalledTimes(1);
-    const [entries] = callback.mock.calls[0];
+    const [entries] = callback.mock.calls[0] ?? [];
     expect(entries[0].target).toBe(target);
     expect(entries[0].contentRect.width).toBe(1024);
     expect(entries[0].contentRect.height).toBe(768);
@@ -93,7 +93,7 @@ describe('installPolyfills resizeObserverSize option', () => {
 
     await Promise.resolve();
 
-    const [entries] = callback.mock.calls[0];
+    const [entries] = callback.mock.calls[0] ?? [];
     expect(entries[0].contentRect.width).toBe(640);
     expect(entries[0].contentRect.height).toBe(200);
   });

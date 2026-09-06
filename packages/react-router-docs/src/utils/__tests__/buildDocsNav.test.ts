@@ -24,11 +24,11 @@ describe('buildDocsNav', () => {
     const nav = buildDocsNav(buildDocsManifest({ modules: MODULES }), 'docs');
 
     expect(nav.map((g) => g.label)).toEqual(['General', 'Guides']); // alphabetical
-    expect(nav[0].items.map((i) => i.title)).toEqual([
+    expect(nav[0]?.items.map((i) => i.title)).toEqual([
       'Overview', // order 1
       'Getting Started', // order 2
     ]);
-    expect(nav[1].items).toEqual([
+    expect(nav[1]?.items).toEqual([
       { path: '/docs/guides/deploy', title: 'Deploy' },
     ]);
   });

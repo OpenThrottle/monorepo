@@ -95,7 +95,7 @@ export const assertManifestMatchesSchema = (
 
     for (const column of table.columns) {
       const columnEntry = entry.columns[column];
-      const columnType = table.columnTypes[column];
+      const columnType = table.columnTypes[column] ?? '';
       const vectorMatch = VECTOR_TYPE_PATTERN.exec(columnType);
 
       if (columnEntry === undefined) {

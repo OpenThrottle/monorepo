@@ -48,7 +48,7 @@ const CLI_CAPS: ChatBackendCapabilities = {
   supportsModelFlag: true,
 };
 
-const CHECKOUTS: readonly ChatCheckoutOption[] = [
+const CHECKOUTS: readonly [ChatCheckoutOption] = [
   { branch: 'main', id: 'repo-a', label: 'openthrottle' },
 ];
 

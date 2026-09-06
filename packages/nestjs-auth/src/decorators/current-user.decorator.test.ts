@@ -35,6 +35,10 @@ const getCurrentUserFactory = (): ParamFactory => {
   );
   const [first] = Object.values(args);
 
+  if (first === undefined) {
+    throw new Error('Probe handler has no registered param decorator metadata');
+  }
+
   return first.factory;
 };
 

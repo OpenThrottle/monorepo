@@ -222,8 +222,15 @@ export const useGlobalAnimationMesh = <
       ctx.lineWidth = 1;
 
       for (let k = 0; k < links.length; k += 2) {
-        const a = points[links[k]];
-        const b = points[links[k + 1]];
+        const aIndex = links[k];
+        const bIndex = links[k + 1];
+        const a = aIndex === undefined ? undefined : points[aIndex];
+        const b = bIndex === undefined ? undefined : points[bIndex];
+
+        if (a === undefined || b === undefined) {
+          continue;
+        }
+
         const glow = (a.glow + b.glow) * 0.5;
         const alpha = (lineAlpha + glow * lineGlow) * reveal;
 

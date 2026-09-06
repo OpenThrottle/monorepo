@@ -223,7 +223,7 @@ describe('POST /v1/chat/completions', () => {
     });
 
     expect(fetchSpy).toHaveBeenCalledTimes(1);
-    const [url, init] = fetchSpy.mock.calls[0];
+    const [url, init] = fetchSpy.mock.calls[0] ?? [];
     expect(url).toBe(`${OLLAMA_BASE_URL}/v1/chat/completions`);
     const forwardedValue: unknown = JSON.parse(String(init?.body));
     if (!isRecord(forwardedValue)) {
@@ -277,7 +277,7 @@ describe('GET /v1/models', () => {
     expect(json['object']).toBe('list');
     const data = readDataArray(json);
     expect(data.map((m) => m['id'])).toEqual(['foo', 'bar']);
-    expect(data[0]['object']).toBe('model');
+    expect(data[0]?.['object']).toBe('model');
   });
 
   it('falls back to TARGET_MODEL when upstream lists no models', async () => {
@@ -288,7 +288,7 @@ describe('GET /v1/models', () => {
     const data = readDataArray(json);
 
     expect(data).toHaveLength(1);
-    expect(data[0]['id']).toBe(TARGET_MODEL);
+    expect(data[0]?.['id']).toBe(TARGET_MODEL);
   });
 
   it('returns 502 when the upstream payload is malformed', async () => {

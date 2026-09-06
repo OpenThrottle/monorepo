@@ -28,12 +28,18 @@ describe('MessageListSkeleton Component', () => {
   test('omits the selection column when selectionEnabled is false', () => {
     const component = renderComponent({ selectionEnabled: false });
     const headerRow = component.getAllByRole('row')[0];
+    if (headerRow === undefined) {
+      throw new Error('expected a header row');
+    }
     expect(headerRow.children).toHaveLength(4);
   });
 
   test('adds a leading checkbox column when selectionEnabled is true', () => {
     const component = renderComponent({ selectionEnabled: true });
     const headerRow = component.getAllByRole('row')[0];
+    if (headerRow === undefined) {
+      throw new Error('expected a header row');
+    }
     expect(headerRow.children).toHaveLength(5);
   });
 });

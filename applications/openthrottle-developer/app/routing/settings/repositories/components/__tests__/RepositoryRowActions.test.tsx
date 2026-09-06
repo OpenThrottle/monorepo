@@ -23,6 +23,10 @@ const [row] = buildRepositoryRows([
   }),
 ]);
 
+if (row === undefined) {
+  throw new Error('expected a repository row');
+}
+
 const menuLabel = `${REPOSITORIES_ROW_ACTIONS_COPY.menuAriaLabelPrefix} openthrottle`;
 
 const [worktreeParent] = buildRepositoryRows(
@@ -39,6 +43,10 @@ const [worktreeParent] = buildRepositoryRows(
     }),
   ],
 );
+
+if (worktreeParent === undefined) {
+  throw new Error('expected a worktree parent row');
+}
 
 const unregisteredRow = worktreeParent.children?.[0];
 if (unregisteredRow === undefined) {
@@ -119,8 +127,8 @@ describe('RepositoryRowActions Component', () => {
     );
 
     await waitFor(() => expect(submitted).toHaveLength(1));
-    expect(submitted[0].get('intent')).toBe('refreshCheckout');
-    expect(submitted[0].get('id')).toBe('primary-1');
+    expect(submitted[0]?.get('intent')).toBe('refreshCheckout');
+    expect(submitted[0]?.get('id')).toBe('primary-1');
   });
 
   test('submits applyEditorConfig with the checkout id under repositoryId', async () => {
@@ -134,8 +142,8 @@ describe('RepositoryRowActions Component', () => {
     );
 
     await waitFor(() => expect(submitted).toHaveLength(1));
-    expect(submitted[0].get('intent')).toBe('applyEditorConfig');
-    expect(submitted[0].get('repositoryId')).toBe('primary-1');
+    expect(submitted[0]?.get('intent')).toBe('applyEditorConfig');
+    expect(submitted[0]?.get('repositoryId')).toBe('primary-1');
   });
 
   test('asks for confirmation before removing, then submits deleteRepo', async () => {
@@ -160,8 +168,8 @@ describe('RepositoryRowActions Component', () => {
     );
 
     await waitFor(() => expect(submitted).toHaveLength(1));
-    expect(submitted[0].get('intent')).toBe('deleteRepo');
-    expect(submitted[0].get('id')).toBe('primary-1');
+    expect(submitted[0]?.get('intent')).toBe('deleteRepo');
+    expect(submitted[0]?.get('id')).toBe('primary-1');
   });
 
   test('cancelling the confirmation submits nothing', async () => {
@@ -248,8 +256,8 @@ describe('RepositoryRowActions for an unregistered worktree', () => {
     await waitFor(() => {
       expect(submitted).toHaveLength(1);
     });
-    expect(submitted[0].get('intent')).toBe('addFolder');
-    expect(submitted[0].get('path')).toBe(
+    expect(submitted[0]?.get('intent')).toBe('addFolder');
+    expect(submitted[0]?.get('path')).toBe(
       '/Users/dev/Development/openthrottle-worktrees/wt-a',
     );
   });

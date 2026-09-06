@@ -109,11 +109,13 @@ describe('buildAntigravityArgv', () => {
       prompt: 'p',
     });
 
-    const dirs = argv.reduce<string[]>(
-      (paths, entry, index) =>
-        entry === '--add-dir' ? [...paths, argv[index + 1]] : paths,
-      [],
-    );
+    const dirs = argv.reduce<string[]>((paths, entry, index) => {
+      const next = argv[index + 1];
+
+      return entry === '--add-dir' && next !== undefined
+        ? [...paths, next]
+        : paths;
+    }, []);
 
     // Order is load-bearing: the workspace dir comes first.
     expect(dirs).toEqual(['/abs/primary', '/abs/second', '/abs/third']);

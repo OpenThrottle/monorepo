@@ -182,12 +182,14 @@ export function buildRepositoryRows(
     if (primaries.length === 0) {
       const [promoted, ...rest] = worktrees;
 
-      rows.push(
-        row(promoted, [
-          ...rest.map((worktree) => row(worktree)),
-          ...discoveredOnly,
-        ]),
-      );
+      if (promoted !== undefined) {
+        rows.push(
+          row(promoted, [
+            ...rest.map((worktree) => row(worktree)),
+            ...discoveredOnly,
+          ]),
+        );
+      }
 
       continue;
     }
@@ -214,14 +216,17 @@ export function buildRepositoryRows(
 
   if (orphans.length > 0) {
     const [promoted, ...rest] = orphans;
-    rows.push(
-      toDiscoveredRow(
-        promoted,
-        null,
-        false,
-        rest.map((worktree) => toDiscoveredRow(worktree, null, false)),
-      ),
-    );
+
+    if (promoted !== undefined) {
+      rows.push(
+        toDiscoveredRow(
+          promoted,
+          null,
+          false,
+          rest.map((worktree) => toDiscoveredRow(worktree, null, false)),
+        ),
+      );
+    }
   }
 
   return rows;

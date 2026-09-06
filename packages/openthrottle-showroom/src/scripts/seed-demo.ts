@@ -482,6 +482,9 @@ const seed = async (dataSource: DataSource, reset: boolean): Promise<void> => {
   // is missing a unique index the demo database has.
   for (const entry of loaded.filter((table) => table.reconciled.length > 0)) {
     const first = entry.reconciled[0];
+    if (first === undefined) {
+      continue;
+    }
 
     console.warn(
       `seed-demo: NOTE '${entry.table}' — ${entry.reconciled.length} snapshot row(s) dropped onto an existing row with the same natural key (${first.key}), starting with ${first.droppedId} → ${first.keptId}. References follow the row that was kept.`,

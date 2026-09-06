@@ -77,7 +77,7 @@ if (commandIndex === -1) {
 
 // Trimmed at the boundaries because HTML strips a pre's trailing newline: the blank
 // lines that separated these runs in the text come back as CSS leading instead.
-const registerCommand = lines[commandIndex];
+const registerCommand = lines[commandIndex] ?? '';
 const printedBefore = lines.slice(0, commandIndex).join('\n').trim();
 const printedAfter = lines
   .slice(commandIndex + 1)

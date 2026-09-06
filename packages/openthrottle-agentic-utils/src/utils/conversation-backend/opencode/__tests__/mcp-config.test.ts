@@ -80,7 +80,7 @@ describe('translateManagedMcpToOpencode — local endpoint provider', () => {
       model: 'm',
     });
 
-    expect(config.provider?.['local'].options.apiKey).toBe('sk-x');
+    expect(config.provider?.['local']?.options.apiKey).toBe('sk-x');
   });
 
   it('omits the provider key when no endpoint is targeted', () => {

@@ -53,6 +53,9 @@ describe('DashboardToolbar Component', () => {
     const component = renderToolbar('/?owner=openthrottle&repo=monorepo');
 
     const [orgSelect] = component.getAllByRole('combobox');
+    if (orgSelect === undefined) {
+      throw new Error('expected an org combobox');
+    }
     await user.click(orgSelect);
     await user.click(component.getByRole('option', { name: 'visormatt' }));
 
@@ -70,6 +73,10 @@ describe('DashboardToolbar Component', () => {
     const component = renderToolbar('/?owner=openthrottle&repo=monorepo');
 
     const [, repoSelect] = component.getAllByRole('combobox');
+    if (repoSelect === undefined) {
+      throw new Error('expected a repo combobox');
+    }
+
     await user.click(repoSelect);
     await user.click(component.getByRole('option', { name: 'openthrottle' }));
 
@@ -89,6 +96,9 @@ describe('DashboardToolbar Component', () => {
     );
 
     const [orgSelect] = component.getAllByRole('combobox');
+    if (orgSelect === undefined) {
+      throw new Error('expected an org combobox');
+    }
     await user.click(orgSelect);
     await user.click(component.getByRole('option', { name: 'shiftsmartinc' }));
 

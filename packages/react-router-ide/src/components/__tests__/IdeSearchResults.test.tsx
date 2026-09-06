@@ -76,10 +76,11 @@ describe('IdeSearchResults Component', () => {
       <IdeSearchResults onSelectMatch={onSelectMatch} result={matchResult} />,
     );
 
-    const rows = component.getAllByTestId('IdeSearchResultRow');
-    expect(rows).toHaveLength(2);
+    const [firstRow] = component.getAllByTestId('IdeSearchResultRow');
+    expect(component.getAllByTestId('IdeSearchResultRow')).toHaveLength(2);
+    if (firstRow === undefined) throw new Error('expected a result row');
 
-    await user.click(rows[0]);
+    await user.click(firstRow);
     expect(onSelectMatch).toHaveBeenCalledWith(matchResult.matches[0]);
   });
 

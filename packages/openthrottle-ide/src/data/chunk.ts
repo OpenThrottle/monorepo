@@ -152,6 +152,9 @@ function chunkScript(path: string, content: string): CodeChunk[] {
       }
       const first = glue[0];
       const last = glue[glue.length - 1];
+      if (first === undefined || last === undefined) {
+        return;
+      }
       pushChunk(
         chunks,
         path,

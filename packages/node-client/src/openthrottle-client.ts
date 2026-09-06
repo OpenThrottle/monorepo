@@ -333,6 +333,9 @@ export async function getChunkById(
     normalizeQueryResult<PlanEmbeddingGetRow>(planRaw);
   if (planRowRows.length > 0) {
     const r = planRowRows[0];
+    if (r === undefined) {
+      return null;
+    }
     return {
       content: r.content,
       id: r.id,
@@ -369,6 +372,9 @@ export async function getChunkById(
     normalizeQueryResult<TaskEmbeddingGetRow>(taskRaw);
   if (taskRowRows.length > 0) {
     const r = taskRowRows[0];
+    if (r === undefined) {
+      return null;
+    }
     return {
       content: r.content,
       id: r.id,
@@ -405,6 +411,9 @@ export async function getChunkById(
   const { rows: docRowRows } = normalizeQueryResult<DocEmbeddingGetRow>(docRaw);
   if (docRowRows.length > 0) {
     const r = docRowRows[0];
+    if (r === undefined) {
+      return null;
+    }
     return {
       authors: Array.isArray(r.authors) ? r.authors : [],
       content: r.content,

@@ -24,5 +24,5 @@ export const getRandomIntroduction = (): string => {
   const index = Math.floor(Math.random() * INTRODUCTIONS.length);
   const introduction = INTRODUCTIONS[index];
 
-  return introduction?.text ?? INTRODUCTIONS[0].text;
+  return introduction?.text ?? INTRODUCTIONS[0]?.text ?? '';
 };

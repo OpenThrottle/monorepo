@@ -100,6 +100,9 @@ describe('discoverLocalModelsToolHandler', () => {
 
     expect(result).toMatchObject({ isError: true });
     const [content] = result.content;
+    if (content === undefined) {
+      throw new Error('expected tool result content');
+    }
     expect(content.text).toBe(
       'discover_local_models failed: Could not reach the OpenThrottle (OT) server. Confirm the server is running and reachable, then retry.',
     );

@@ -120,6 +120,8 @@ describe('docs rendering pipeline (fixture)', () => {
       },
     })[0];
 
+    if (xssEntry === undefined) throw new Error('expected a built doc entry');
+
     const html = renderToStaticMarkup(<DocPageView entry={xssEntry} />);
 
     expect(html).not.toContain('<script');

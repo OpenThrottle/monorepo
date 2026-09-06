@@ -32,12 +32,11 @@ export function parseDashboardGithubParams(
   const owner = isGithubOrg(ownerRaw) ? ownerRaw : DEFAULT_OWNER;
 
   const repoRaw = searchParams.get('repo') ?? '';
-  const reposForOwner = GITHUB_REPOSITORIES[owner];
   const repo = isRepoForOrg(owner, repoRaw)
     ? repoRaw
     : owner === DEFAULT_OWNER
       ? DEFAULT_REPO
-      : reposForOwner[0];
+      : GITHUB_REPOSITORIES[owner][0];
 
   return { owner, repo };
 }

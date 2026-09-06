@@ -13,7 +13,7 @@ describe('OpenThrottleProductGetStarted Component', () => {
 
   beforeEach(() => {
     props = {
-      introduction: INTRODUCTIONS[0].text,
+      introduction: INTRODUCTIONS[0]?.text,
       repo: 'openthrottle/monorepo',
       stars: '100',
     };
@@ -25,7 +25,9 @@ describe('OpenThrottleProductGetStarted Component', () => {
   });
 
   test('renders intro copy, clone command, and GitHub CTA', () => {
-    expect(component.getByText(INTRODUCTIONS[0].text)).toBeInTheDocument();
+    expect(
+      component.getByText(INTRODUCTIONS[0]?.text ?? ''),
+    ).toBeInTheDocument();
     expect(
       component.getByRole('button', {
         name: 'git clone https://github.com/openthrottle/monorepo.git',

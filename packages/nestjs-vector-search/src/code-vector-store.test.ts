@@ -46,7 +46,9 @@ describe('CodeVectorStore', () => {
     it('deletes every chunk scoped to the workspace', async () => {
       await store.clear(WORKSPACE);
 
-      const [sql, params] = queryMock().mock.calls[0];
+      const call = queryMock().mock.calls[0];
+      const sql = call?.[0] ?? '';
+      const params = call?.[1] ?? [];
       expect(sql).toContain(
         'DELETE FROM code_embeddings WHERE workspace_root = $1',
       );
@@ -59,7 +61,9 @@ describe('CodeVectorStore', () => {
       queryMock().mockResolvedValueOnce([{ count: '12' }]);
       const total = await store.count(WORKSPACE);
 
-      const [sql, params] = queryMock().mock.calls[0];
+      const call = queryMock().mock.calls[0];
+      const sql = call?.[0] ?? '';
+      const params = call?.[1] ?? [];
       expect(sql).toContain('COUNT(*)');
       expect(sql).toContain('WHERE workspace_root = $1');
       expect(params).toEqual([WORKSPACE]);
@@ -76,7 +80,9 @@ describe('CodeVectorStore', () => {
     it('deletes only the given paths via ANY()', async () => {
       await store.deleteByPaths(WORKSPACE, ['src/a.ts', 'src/b.ts']);
 
-      const [sql, params] = queryMock().mock.calls[0];
+      const call = queryMock().mock.calls[0];
+      const sql = call?.[0] ?? '';
+      const params = call?.[1] ?? [];
       expect(sql).toContain('path = ANY($2)');
       expect(params).toEqual([WORKSPACE, ['src/a.ts', 'src/b.ts']]);
     });
@@ -103,7 +109,9 @@ describe('CodeVectorStore', () => {
       const embedding = buildEmbedding();
       const matches = await store.query(WORKSPACE, embedding, 5);
 
-      const [sql, params] = queryMock().mock.calls[0];
+      const call = queryMock().mock.calls[0];
+      const sql = call?.[0] ?? '';
+      const params = call?.[1] ?? [];
       expect(sql).toContain('1 - (embedding <=> $1::vector) AS similarity');
       expect(sql).toContain('ORDER BY embedding <=> $1::vector');
       expect(params).toEqual([`[${embedding.join(',')}]`, WORKSPACE, 5]);
@@ -200,8 +208,8 @@ describe('CodeVectorStore', () => {
 
       // 250 records with a 200-row batch size => 2 INSERT statements.
       expect(queryMock()).toHaveBeenCalledTimes(2);
-      expect(queryMock().mock.calls[0][1]).toHaveLength(200 * 8);
-      expect(queryMock().mock.calls[1][1]).toHaveLength(50 * 8);
+      expect(queryMock().mock.calls[0]?.[1]).toHaveLength(200 * 8);
+      expect(queryMock().mock.calls[1]?.[1]).toHaveLength(50 * 8);
     });
   });
 });

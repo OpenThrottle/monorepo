@@ -44,6 +44,9 @@ describe('mergeRepoSkillsWithProjectSkills', () => {
     ];
 
     const [merged] = mergeRepoSkillsWithProjectSkills(entries, rows);
+    if (merged === undefined) {
+      throw new Error('expected a merged skill row');
+    }
 
     expect(merged.disableModelInvocation).toBe(true);
     expect(merged.tags).toEqual(['git', 'github']);
@@ -59,6 +62,9 @@ describe('mergeRepoSkillsWithProjectSkills', () => {
     ];
 
     const [merged] = mergeRepoSkillsWithProjectSkills(entries, rows);
+    if (merged === undefined) {
+      throw new Error('expected a merged skill row');
+    }
 
     expect(merged.disableModelInvocation).toBeUndefined();
     expect(merged.tags).toEqual([]);
@@ -77,6 +83,9 @@ describe('mergeRepoSkillsWithProjectSkills', () => {
     ];
 
     const [merged] = mergeRepoSkillsWithProjectSkills(entries, rows);
+    if (merged === undefined) {
+      throw new Error('expected a merged skill row');
+    }
 
     expect(merged.source).toBe('openthrottle');
     expect(merged.sourceUrl).toBeUndefined();
@@ -95,6 +104,9 @@ describe('mergeRepoSkillsWithProjectSkills', () => {
     ];
 
     const [merged] = mergeRepoSkillsWithProjectSkills(entries, rows);
+    if (merged === undefined) {
+      throw new Error('expected a merged skill row');
+    }
 
     expect(merged.source).toBe('external');
     expect(merged.sourceUrl).toBe('https://example.com/skills/vendored');
@@ -117,6 +129,9 @@ describe('mergeRepoSkillsWithProjectSkills', () => {
     ];
 
     const [merged] = mergeRepoSkillsWithProjectSkills(entries, rows);
+    if (merged === undefined) {
+      throw new Error('expected a merged skill row');
+    }
 
     expect(merged.source).toBe('openthrottle');
   });
@@ -131,6 +146,9 @@ describe('mergeRepoSkillsWithProjectSkills', () => {
     ];
 
     const [merged] = mergeRepoSkillsWithProjectSkills([untouched], rows);
+    if (merged === undefined) {
+      throw new Error('expected a merged skill row');
+    }
 
     expect(merged).toBe(untouched);
   });

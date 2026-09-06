@@ -193,7 +193,7 @@ describe('useGlobalMetrics', () => {
     expect(result.current.chartLineData.length).toBeGreaterThanOrEqual(1);
     expect(
       result.current.chartLineData[result.current.chartLineData.length - 1]
-        .rssMb,
+        ?.rssMb,
     ).toBe(42);
   });
 });

@@ -425,7 +425,7 @@ describe('reduceStreamChunk — structured events', () => {
       sortOrder: 1,
       usageJson: null,
     });
-    expect('usage' in usage).toBe(false);
+    expect(usage !== undefined && 'usage' in usage).toBe(false);
   });
 
   it('marks an outstanding tool failed when the turn errors', () => {

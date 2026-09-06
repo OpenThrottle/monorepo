@@ -90,7 +90,7 @@ export const getDocPager = (
   }
 
   return {
-    next: index < sequence.length - 1 ? sequence[index + 1] : null,
-    prev: index > 0 ? sequence[index - 1] : null,
+    next: index < sequence.length - 1 ? (sequence[index + 1] ?? null) : null,
+    prev: index > 0 ? (sequence[index - 1] ?? null) : null,
   };
 };

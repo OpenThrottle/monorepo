@@ -51,7 +51,7 @@ describe('buildTurnTimeline', () => {
 
     expect(items).toHaveLength(1);
     expect(items[0]).toMatchObject({ kind: 'tools' });
-    expect(items[0].kind === 'tools' && items[0].tools).toHaveLength(3);
+    expect(items[0]?.kind === 'tools' && items[0]?.tools).toHaveLength(3);
   });
 
   test('a non-tool event breaks the run into separate groups', () => {
@@ -63,8 +63,8 @@ describe('buildTurnTimeline', () => {
     ]);
 
     expect(items.map((item) => item.kind)).toEqual(['tools', 'event', 'tools']);
-    expect(items[0].kind === 'tools' && items[0].tools).toHaveLength(2);
-    expect(items[2].kind === 'tools' && items[2].tools).toHaveLength(1);
+    expect(items[0]?.kind === 'tools' && items[0]?.tools).toHaveLength(2);
+    expect(items[2]?.kind === 'tools' && items[2]?.tools).toHaveLength(1);
   });
 
   test('a lone tool is still a tools slot (renderer decides card vs group)', () => {

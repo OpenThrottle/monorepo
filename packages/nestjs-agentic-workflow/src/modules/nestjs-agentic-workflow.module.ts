@@ -82,15 +82,22 @@ export class NestjsAgenticWorkflowModule {
       workflows,
     } = options;
 
-    const workflowTokens = workflows.map((_, index) =>
-      Symbol(`AGENTIC_WORKFLOW_ENTRY_${index}`),
-    );
-
-    const workflowProviders: Provider[] = workflows.map((entry, index) => ({
-      inject: entry.inject ?? [],
-      provide: workflowTokens[index],
-      useFactory: entry.useFactory,
+    // Mint each workflow's token alongside its entry so the provider list never
+    // has to look a token back up by index.
+    const workflowEntries = workflows.map((entry, index) => ({
+      entry,
+      token: Symbol(`AGENTIC_WORKFLOW_ENTRY_${index}`),
     }));
+
+    const workflowTokens = workflowEntries.map(({ token }) => token);
+
+    const workflowProviders: Provider[] = workflowEntries.map(
+      ({ entry, token }) => ({
+        inject: entry.inject ?? [],
+        provide: token,
+        useFactory: entry.useFactory,
+      }),
+    );
 
     return {
       exports: [...moduleExports, AGENTIC_WORKFLOW_REGISTRY],

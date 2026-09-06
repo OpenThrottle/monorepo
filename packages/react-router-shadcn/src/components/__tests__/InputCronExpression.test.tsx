@@ -70,6 +70,7 @@ describe('InputCronExpression Component', () => {
     const user = userEvent.setup();
     const changes: string[] = [];
     const preset = CRON_PRESETS[0];
+    if (preset === undefined) throw new Error('expected a cron preset');
     const component = renderInput({
       onChange: (event) => changes.push(event.target.value),
     });

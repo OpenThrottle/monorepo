@@ -89,6 +89,9 @@ describe('routes/roles._index.tsx', () => {
 
       expect(result).toEqual({ ok: true });
       const callArgs = executeGraphqlWithAuth.mock.calls[0];
+      if (callArgs === undefined) {
+        throw new Error('executeGraphqlWithAuth was not called');
+      }
       expect(callArgs[2]).toEqual({
         input: { description: 'an admin', name: 'admin' },
       });

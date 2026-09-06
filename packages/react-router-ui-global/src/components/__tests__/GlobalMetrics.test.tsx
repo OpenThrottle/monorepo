@@ -158,11 +158,12 @@ describe('GlobalMetrics Component', () => {
   });
 
   test('should render stat cards and chart when metrics load', () => {
-    const roots = component.getAllByTestId('GlobalMetrics');
-    const dataEl = within(roots[0]).getByTestId('GlobalMetrics-data');
+    const [root] = component.getAllByTestId('GlobalMetrics');
+    if (root === undefined) throw new Error('expected a GlobalMetrics root');
+    const dataEl = within(root).getByTestId('GlobalMetrics-data');
     expect(within(dataEl).getByText('RSS / External (MB)')).toBeInTheDocument();
     expect(
-      within(roots[0]).getByTestId('GlobalMetrics-chart-card'),
+      within(root).getByTestId('GlobalMetrics-chart-card'),
     ).toBeInTheDocument();
   });
 

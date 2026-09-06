@@ -751,10 +751,10 @@ describe('GithubResolver', () => {
           },
         });
 
-        await invokeQuery[methodName](info);
+        await invokeQuery[methodName]?.(info);
 
         expect(setCacheHint).toHaveBeenCalledTimes(1);
-        expect(setCacheHint.mock.calls[0][0].maxAge).toBeGreaterThan(0);
+        expect(setCacheHint.mock.calls[0]?.[0].maxAge).toBeGreaterThan(0);
       },
     );
   });

@@ -226,8 +226,14 @@ export function extractApplicationErrorDetail(
 
   if (match == null) return null;
 
-  const detail = match[1].trim();
-  if (detail === '' || detail.toLowerCase() === 'unknown') return null;
+  const detail = match[1]?.trim();
+  if (
+    detail === undefined ||
+    detail === '' ||
+    detail.toLowerCase() === 'unknown'
+  ) {
+    return null;
+  }
 
   const firstLine = detail.split('\n', 1)[0]?.trim() ?? '';
   if (firstLine === '') return null;

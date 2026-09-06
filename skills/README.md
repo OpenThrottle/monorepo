@@ -85,7 +85,6 @@ worktree. The machinery behind that script is [`ot-worktree/`](./ot-worktree/) b
 **Agents/workflow:**
 
 - [`ot-loop/`](./ot-loop/) — drive one OT plan to a PR with the built-in `/loop`, a task at a time in an isolated worktree. Canonical source of the per-task discipline.
-- [`ot-loop-review/`](./ot-loop-review/) — the reflection stage after `ot-loop`: audits an executed run against a fixed rubric, separates friction from defects, and files the follow-ups. Read-only on code.
 - [`agents-ralph/`](./agents-ralph/) — the Ralph prompt: turn an idea or PRD into an OT plan, then execute it a task at a time. Self-contained, so the `workflow-ralph` CLI can feed it to an agent as a standalone prompt.
 
 **Infrastructure:**

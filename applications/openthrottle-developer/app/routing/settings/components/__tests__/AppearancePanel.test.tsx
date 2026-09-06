@@ -52,6 +52,9 @@ describe('AppearancePanel Component', () => {
   test('renders the preview surface above the registry sections', () => {
     const preview = component.getByTestId('AppearancePreview');
     const [firstSection] = component.getAllByTestId('AppearanceSection');
+    if (firstSection === undefined) {
+      throw new Error('expected an appearance section');
+    }
 
     expect(preview).toBeInTheDocument();
     expect(

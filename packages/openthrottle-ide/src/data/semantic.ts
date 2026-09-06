@@ -193,10 +193,23 @@ async function embedAndUpsert(
     const embeddings = await provider.embed(
       batch.map((chunk) => chunk.content),
     );
-    const records = batch.map((chunk, index) => ({
-      chunk,
-      embedding: embeddings[index],
-    }));
+    // A provider returning fewer vectors than chunks would otherwise store
+    // `undefined` as an embedding — a row that matches nothing and is
+    // indistinguishable from a real one. Refuse the batch rather than fall back.
+    if (embeddings.length !== batch.length) {
+      throw new Error(
+        `Embeddings provider returned ${embeddings.length} vectors for a batch of ${batch.length} chunks`,
+      );
+    }
+    const records = batch.map((chunk, index) => {
+      const embedding = embeddings[index];
+      if (embedding === undefined) {
+        throw new Error(
+          `Embeddings provider returned no vector at index ${index}`,
+        );
+      }
+      return { chunk, embedding };
+    });
     await store.upsert(workspaceRoot, records);
   }, Promise.resolve());
 

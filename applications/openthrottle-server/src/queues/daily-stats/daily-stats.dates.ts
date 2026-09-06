@@ -30,7 +30,7 @@ export function getUtcDayBounds(dateYmd: string): {
   dayEnd: Date;
   dayStart: Date;
 } {
-  const [y, m, d] = dateYmd.split('-').map(Number);
+  const [y = NaN, m = NaN, d = NaN] = dateYmd.split('-').map(Number);
   const dayStart = new Date(Date.UTC(y, m - 1, d, 0, 0, 0, 0));
   const dayEnd = new Date(dayStart);
   dayEnd.setUTCDate(dayEnd.getUTCDate() + 1);

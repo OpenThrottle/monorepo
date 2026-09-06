@@ -82,7 +82,12 @@ describe('SkillAvailabilityRuleRemoveButton Component', () => {
     const confirmButtons = component.getAllByRole('button', {
       name: 'Remove rule',
     });
-    await user.click(confirmButtons[confirmButtons.length - 1]);
+    const lastConfirm = confirmButtons[confirmButtons.length - 1];
+    if (lastConfirm === undefined) {
+      throw new Error('expected a confirm button');
+    }
+
+    await user.click(lastConfirm);
 
     await waitFor(() => {
       expect(calls.count).toBe(1);

@@ -526,7 +526,7 @@ export class ConversationStreamResolver {
       const [primary, ...secondaries] = resolvedRepositories.map((repository) =>
         toContainerPath(repository?.filesystemPath ?? ''),
       );
-      cwd = primary;
+      cwd = primary ?? null;
       additionalDirectories.push(...secondaries);
     } else if (!isProduction()) {
       const devCwd = process.env[DEV_CWD_ENV]?.trim();

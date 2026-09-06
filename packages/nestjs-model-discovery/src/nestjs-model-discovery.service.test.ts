@@ -194,7 +194,10 @@ describe('NestjsModelDiscoveryService', () => {
     await service.discover();
 
     expect(discoverModelsMock).toHaveBeenCalledTimes(1);
-    const forwarded = discoverModelsMock.mock.calls[0][0];
+    const forwarded = discoverModelsMock.mock.calls[0]?.[0];
+    if (forwarded === undefined) {
+      throw new Error('discoverModels was not called');
+    }
     expect(forwarded.fingerprintTimeoutMs).toBe(config.fingerprintTimeoutMs);
     expect(forwarded.hosts).toEqual(config.hosts);
     expect(forwarded.maxConcurrency).toBe(config.maxConcurrency);
@@ -232,9 +235,9 @@ describe('NestjsModelDiscoveryService', () => {
 
     const result = await service.discover();
     expect(result.endpoints).toHaveLength(1);
-    expect(result.endpoints[0].models).toEqual(['llama3']);
+    expect(result.endpoints[0]?.models).toEqual(['llama3']);
     expect(logger.debug).toHaveBeenCalledTimes(1);
-    const summary = vi.mocked(logger.debug).mock.calls[0][0];
+    const summary = vi.mocked(logger.debug).mock.calls[0]?.[0];
     expect(summary).toContain('1 endpoint(s)');
     expect(summary).toContain('2 host(s)');
   });

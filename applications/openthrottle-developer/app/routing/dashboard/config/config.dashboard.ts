@@ -7,7 +7,12 @@ export const GITHUB_ORGS = [
 export type GithubOrg = (typeof GITHUB_ORGS)[number];
 export type GithubRepo = (typeof GITHUB_REPOSITORIES)[GithubOrg][number];
 
-export const GITHUB_REPOSITORIES: Record<GithubOrg, string[]> = {
+/**
+ * Repositories per org. Typed as a non-empty list because every org has at
+ * least one — which is what makes `GITHUB_REPOSITORIES[org][0]` a safe default
+ * rather than a possibly-undefined lookup.
+ */
+export const GITHUB_REPOSITORIES: Record<GithubOrg, [string, ...string[]]> = {
   openthrottle: ['monorepo', 'openthrottle'],
   shiftsmartinc: [
     'monorepo',

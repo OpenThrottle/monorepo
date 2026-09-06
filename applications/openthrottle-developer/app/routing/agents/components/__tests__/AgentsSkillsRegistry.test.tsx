@@ -103,11 +103,11 @@ describe('AgentsSkillsRegistry', () => {
 
     expect(githubLinks[0]).toHaveAttribute(
       'href',
-      githubOpenThrottleMainBlob(SAMPLE_ENTRIES[0].repoRelativePath),
+      githubOpenThrottleMainBlob(SAMPLE_ENTRIES[0]?.repoRelativePath ?? ''),
     );
     expect(githubLinks[1]).toHaveAttribute(
       'href',
-      githubOpenThrottleMainBlob(SAMPLE_ENTRIES[1].repoRelativePath),
+      githubOpenThrottleMainBlob(SAMPLE_ENTRIES[1]?.repoRelativePath ?? ''),
     );
   });
 

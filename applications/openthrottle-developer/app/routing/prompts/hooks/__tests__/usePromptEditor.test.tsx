@@ -153,7 +153,7 @@ describe('usePromptEditor', () => {
     act(() => result().handleWriteToFileSystem());
 
     await waitFor(() => expect(submitted).toHaveLength(1));
-    expect(submitted[0].intent).toBe('writeToFileSystem');
+    expect(submitted[0]?.intent).toBe('writeToFileSystem');
   });
 
   test('handleDelete asks for confirmation before submitting a delete intent', async () => {
@@ -164,7 +164,7 @@ describe('usePromptEditor', () => {
 
     expect(confirmSpy).toHaveBeenCalled();
     await waitFor(() => expect(submitted).toHaveLength(1));
-    expect(submitted[0].intent).toBe('delete');
+    expect(submitted[0]?.intent).toBe('delete');
   });
 
   test('handleDelete does not submit when confirmation is declined', () => {

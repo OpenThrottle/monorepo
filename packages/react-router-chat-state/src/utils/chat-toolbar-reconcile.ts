@@ -85,7 +85,7 @@ function resolveModelId(
 
     // Unambiguous: exactly one same-name candidate anywhere.
     if (sameModel.length === 1) {
-      return sameModel[0].id;
+      return sameModel[0]?.id;
     }
 
     return models[0]?.id;
@@ -106,7 +106,7 @@ function resolveModelId(
       return bare.id;
     }
     if (sameBackend.length > 0) {
-      return sameBackend[0].id;
+      return sameBackend[0]?.id;
     }
   }
 

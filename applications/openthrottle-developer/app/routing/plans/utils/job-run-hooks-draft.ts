@@ -27,7 +27,7 @@ export const moveRowWithinPhase = (
   const index = rows.findIndex((r) => r.draftId === draftId);
   if (index < 0) return [...rows];
 
-  const phase = rows[index].phase;
+  const phase = rows[index]?.phase;
   const phaseIndices = rows
     .map((r, i) => (r.phase === phase ? i : -1))
     .filter((i) => i >= 0);
@@ -40,8 +40,17 @@ export const moveRowWithinPhase = (
   const swapIndex = phaseIndices[swapPos];
   const next = [...rows];
   const current = next[index];
+  const swapped = swapIndex === undefined ? undefined : next[swapIndex];
 
-  next[index] = next[swapIndex];
+  if (
+    swapIndex === undefined ||
+    current === undefined ||
+    swapped === undefined
+  ) {
+    return next;
+  }
+
+  next[index] = swapped;
   next[swapIndex] = current;
 
   return next;

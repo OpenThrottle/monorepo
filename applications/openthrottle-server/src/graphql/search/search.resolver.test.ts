@@ -163,8 +163,8 @@ describe('SearchResolver', () => {
         sourceRepo: 'openthrottle/monorepo',
         sourceSha: 'abc123def',
       });
-      expect(result.chunks[0].planId).toBeNull();
-      expect(result.chunks[0].taskId).toBeNull();
+      expect(result.chunks[0]?.planId).toBeNull();
+      expect(result.chunks[0]?.taskId).toBeNull();
     });
 
     test('sets sourcePath/sourceRepo/sourceSha to null for non-documentation chunks', async () => {
@@ -186,9 +186,9 @@ describe('SearchResolver', () => {
         query: 'plan',
       });
 
-      expect(result.chunks[0].sourcePath).toBeNull();
-      expect(result.chunks[0].sourceRepo).toBeNull();
-      expect(result.chunks[0].sourceSha).toBeNull();
+      expect(result.chunks[0]?.sourcePath).toBeNull();
+      expect(result.chunks[0]?.sourceRepo).toBeNull();
+      expect(result.chunks[0]?.sourceSha).toBeNull();
     });
   });
 

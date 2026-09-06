@@ -124,7 +124,7 @@ describe('routes/agent-search._index loader', () => {
 
     expect(result.tab).toBe('rules');
     expect(result.results).toHaveLength(1);
-    expect(result.results[0].promptType).toBe('rules');
+    expect(result.results[0]?.promptType).toBe('rules');
     // counts still reflect all types for tab labels
     expect(result.counts.all).toBe(2);
   });

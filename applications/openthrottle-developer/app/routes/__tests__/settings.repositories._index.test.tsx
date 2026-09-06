@@ -103,7 +103,7 @@ describe('routes/settings.repositories._index.tsx', () => {
         'checkout-1',
         'checkout-2',
       ]);
-      expect(result.rows[0].children).toHaveLength(1);
+      expect(result.rows[0]?.children).toHaveLength(1);
       expect(result.totalCount).toBe(2);
     });
 
@@ -126,7 +126,7 @@ describe('routes/settings.repositories._index.tsx', () => {
       // change the total.
       expect(result.totalCount).toBe(2);
       expect(
-        result.rows[0].children?.map((child) => child.displayName),
+        result.rows[0]?.children?.map((child) => child.displayName),
       ).toEqual(['openthrottle-worktree', 'wt-a']);
       expect(result.discoveredWorktrees.worktrees).toHaveLength(1);
     });
@@ -195,8 +195,8 @@ describe('routes/settings.repositories._index.tsx', () => {
       );
 
       expect(result.rows).toHaveLength(1);
-      expect(result.rows[0].id).toBe('checkout-1');
-      expect(result.rows[0].children).toHaveLength(1);
+      expect(result.rows[0]?.id).toBe('checkout-1');
+      expect(result.rows[0]?.children).toHaveLength(1);
       expect(result.totalCount).toBe(2);
 
       mockExecuteGraphqlWithAuth.mockResolvedValue(mockLoaderPayload);

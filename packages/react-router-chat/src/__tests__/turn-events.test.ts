@@ -184,7 +184,7 @@ describe('foldPersistedTurnEvents', () => {
       sortOrder: 2,
       usageJson: null,
     });
-    expect('usage' in usage).toBe(false);
+    expect(usage !== undefined && 'usage' in usage).toBe(false);
   });
 
   it('tolerates malformed toolMetadataJson', () => {

@@ -83,7 +83,7 @@ const parseFrontmatter = (
   const match = FRONTMATTER_RE.exec(raw);
   if (!match) return { content: raw, data: {} };
 
-  const parsed: unknown = parseYaml(match[1]);
+  const parsed: unknown = parseYaml(match[1] ?? '');
   const data: Record<string, unknown> =
     typeof parsed === 'object' && parsed !== null ? { ...parsed } : {};
 
@@ -117,7 +117,7 @@ export const buildDocsManifest = (
     const segments = afterRoot.replace(/\.md$/, '').split('/');
     const [sectionSegment, ...rest] = segments;
 
-    if (!isDocsSection(sectionSegment)) {
+    if (sectionSegment === undefined || !isDocsSection(sectionSegment)) {
       throw new Error(
         `react-router-docs: content file "${key}" is not under a "docs/" or "faq/" section.`,
       );

@@ -56,7 +56,7 @@ describe('ModelDiscoveryResolver', () => {
       port: 11434,
       provider: 'ollama',
     });
-    expect(result.endpoints[1].provider).toBeNull();
+    expect(result.endpoints[1]?.provider).toBeNull();
   });
 
   it('returns an empty payload when nothing is discovered', async () => {

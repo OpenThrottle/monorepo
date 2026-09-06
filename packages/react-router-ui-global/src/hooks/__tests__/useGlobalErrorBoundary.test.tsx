@@ -210,7 +210,7 @@ describe('useGlobalErrorBoundary', () => {
     await vi.waitFor(() => {
       expect(clipboardWriteText).toHaveBeenCalled();
     });
-    const payload = JSON.parse(clipboardWriteText.mock.calls[0][0]);
+    const payload = JSON.parse(clipboardWriteText.mock.calls[0]?.[0]);
     expect(payload.errorKind).toBe('javascript');
     expect(payload.message).toBe('boom');
     expect(toast.success).toHaveBeenCalledWith(

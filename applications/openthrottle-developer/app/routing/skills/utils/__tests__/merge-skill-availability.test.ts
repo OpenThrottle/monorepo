@@ -26,8 +26,8 @@ describe('mergeRepoSkillsWithSkillAvailability', () => {
     const merged = mergeRepoSkillsWithSkillAvailability(entries, []);
 
     expect(merged).toBe(entries);
-    expect(merged[0].effectiveDisableModelInvocation).toBeUndefined();
-    expect(merged[0].provenance).toBeUndefined();
+    expect(merged[0]?.effectiveDisableModelInvocation).toBeUndefined();
+    expect(merged[0]?.provenance).toBeUndefined();
   });
 
   test('overlays effective flag and provenance from a matching row, keyed by slug', () => {
@@ -43,6 +43,9 @@ describe('mergeRepoSkillsWithSkillAvailability', () => {
     ];
 
     const [merged] = mergeRepoSkillsWithSkillAvailability(entries, rows);
+    if (merged === undefined) {
+      throw new Error('expected a merged skill row');
+    }
 
     expect(merged.effectiveDisableModelInvocation).toBe(false);
     expect(merged.provenance).toBe('tag-allow:github@rule-1');
@@ -64,6 +67,9 @@ describe('mergeRepoSkillsWithSkillAvailability', () => {
     ];
 
     const [merged] = mergeRepoSkillsWithSkillAvailability([untouched], rows);
+    if (merged === undefined) {
+      throw new Error('expected a merged skill row');
+    }
 
     expect(merged).toBe(untouched);
   });
@@ -86,7 +92,7 @@ describe('mergeRepoSkillsWithSkillAvailability', () => {
     const merged = mergeRepoSkillsWithSkillAvailability(entries, rows);
 
     expect(merged).toHaveLength(1);
-    expect(merged[0].slug).toBe('alpha');
+    expect(merged[0]?.slug).toBe('alpha');
   });
 
   test('no-config invariant: frontmatter provenance keeps effective === static ?? false', () => {

@@ -104,7 +104,7 @@ export function buildGeminiPrompt(run: ConversationBackendRun): string {
       lastUserIndex = index;
     }
   }
-  const latest = lastUserIndex >= 0 ? run.messages[lastUserIndex].content : '';
+  const latest = run.messages[lastUserIndex]?.content ?? '';
 
   const history: string[] = [];
   for (let index = 0; index < lastUserIndex; index += 1) {

@@ -32,7 +32,7 @@ describe('buildWorkspaceApplyResults', () => {
   test('falls back to the filesystem path for unlinked repositories', () => {
     const [result] = buildWorkspaceApplyResults([application], []);
 
-    expect(result.displayName).toBe('/Users/dev/openthrottle');
+    expect(result?.displayName).toBe('/Users/dev/openthrottle');
   });
 
   test('returns nothing when no applications ran', () => {

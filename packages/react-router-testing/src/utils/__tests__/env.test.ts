@@ -94,7 +94,7 @@ describe('installTestEnv', () => {
     installTestEnv();
 
     expect(warn).toHaveBeenCalledOnce();
-    expect(warn.mock.calls[0][0]).toContain("test.environment='jsdom'");
+    expect(warn.mock.calls[0]?.[0]).toContain("test.environment='jsdom'");
   });
 });
 

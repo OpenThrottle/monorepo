@@ -46,7 +46,7 @@ describe('authStatusToolHandler', () => {
         },
       },
     });
-    expect(result.content[0].text).toMatch(
+    expect(result.content[0]?.text).toMatch(
       /reconnect|\.env|bootstrap-service-accounts/i,
     );
     expect(executeGraphqlWithAuth).not.toHaveBeenCalled();
@@ -70,7 +70,7 @@ describe('authStatusToolHandler', () => {
       },
     });
     // The secret must never appear anywhere in the output.
-    expect(result.content[0].text).not.toContain('supersecretvalue');
+    expect(result.content[0]?.text).not.toContain('supersecretvalue');
   });
 
   it('reports STALE / UNAUTHENTICATED when the server rejects the token', async () => {
@@ -89,7 +89,7 @@ describe('authStatusToolHandler', () => {
         },
       },
     });
-    expect(result.content[0].text).toMatch(/STALE|silent-401/i);
+    expect(result.content[0]?.text).toMatch(/STALE|silent-401/i);
   });
 
   it('reports INCONCLUSIVE (not stale) on a transient server/network error', async () => {
@@ -108,6 +108,6 @@ describe('authStatusToolHandler', () => {
         },
       },
     });
-    expect(result.content[0].text).toMatch(/INCONCLUSIVE/);
+    expect(result.content[0]?.text).toMatch(/INCONCLUSIVE/);
   });
 });

@@ -253,7 +253,7 @@ export const applyTurnToolCall = (
 const lastRunningToolIndex = (events: readonly ChatTurnEvent[]): number => {
   for (let index = events.length - 1; index >= 0; index -= 1) {
     const event = events[index];
-    if (event.kind === 'tool' && event.status === 'running') {
+    if (event?.kind === 'tool' && event.status === 'running') {
       return index;
     }
   }
@@ -282,9 +282,9 @@ export const applyTurnToolResult = (
         : lastRunningToolIndex(events)
       : events.findIndex((e) => e.kind === 'tool' && e.callId === meta.callId);
 
-  if (index >= 0) {
-    const existing = events[index];
+  const existing = index >= 0 ? events[index] : undefined;
 
+  if (existing !== undefined) {
     return events.map((event, i) =>
       i === index
         ? { ...existing, resultJson: meta.toolCallJson, status: 'succeeded' }

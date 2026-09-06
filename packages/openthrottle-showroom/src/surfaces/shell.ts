@@ -22,6 +22,7 @@
  * the product's own renderers, and neither should be able to put markup in the frame.
  */
 
+import type { FormatSpec } from '../runner/format';
 import { loadFormat } from '../runner/format';
 
 /**
@@ -104,7 +105,7 @@ const escapeHtml = (value: string): string =>
  * than a real terminal's default: a 9:16 crop of this is the constraint, and text
  * that is comfortable on a desktop is unreadable on a phone.
  */
-const stylesheet = (brand: Readonly<Record<string, string>>): string => `
+const stylesheet = (brand: FormatSpec['brand']): string => `
   *{box-sizing:border-box}
   html,body{margin:0;padding:0;height:100%;background:${brand.background};
     color:${brand.foreground};font-family:${brand.sans}}

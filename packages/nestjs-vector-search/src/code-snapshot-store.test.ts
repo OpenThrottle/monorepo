@@ -30,7 +30,7 @@ describe('CodeSnapshotStore', () => {
 
       const out = await store.load(WORKSPACE);
 
-      const [sql, params] = queryMock().mock.calls[0];
+      const [sql, params] = queryMock().mock.calls[0] ?? [];
       expect(sql).toContain('FROM code_index_snapshots');
       expect(sql).toContain('workspace_root = $1');
       expect(params).toEqual([WORKSPACE]);
@@ -49,7 +49,7 @@ describe('CodeSnapshotStore', () => {
 
       await store.save(WORKSPACE, SNAPSHOT);
 
-      const [sql, params] = queryMock().mock.calls[0];
+      const [sql, params] = queryMock().mock.calls[0] ?? [];
       expect(sql).toContain('INSERT INTO code_index_snapshots');
       expect(sql).toContain('ON CONFLICT (workspace_root) DO UPDATE');
       expect(params).toEqual([WORKSPACE, JSON.stringify(SNAPSHOT)]);

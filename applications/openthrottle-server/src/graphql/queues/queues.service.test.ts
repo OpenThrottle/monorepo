@@ -361,7 +361,7 @@ describe('QueuesService', () => {
         name: 'run-plan',
         state: 'completed',
       });
-      expect(result.jobs[0].data).toBe(
+      expect(result.jobs[0]?.data).toBe(
         JSON.stringify({ planId: 'plan-1', runKind: 'orchestrator' }),
       );
     });
@@ -381,7 +381,7 @@ describe('QueuesService', () => {
 
       expect(result.hasNext).toBe(true);
       expect(result.jobs).toHaveLength(1);
-      expect(result.jobs[0].id).toBe('j1');
+      expect(result.jobs[0]?.id).toBe('j1');
     });
 
     test('returns state-filtered total from getJobCountByTypes', async () => {
@@ -527,10 +527,10 @@ describe('QueuesService', () => {
 
       expect(mockGetJobs).toHaveBeenCalledWith(['completed'], 0, 500, false);
       expect(result).toHaveLength(2);
-      expect(result[0].id).toBe('j1');
-      expect(result[1].id).toBe('j3');
-      expect(result[0].executionBackend).toBe('cursor');
-      expect(result[0].data).toBe(
+      expect(result[0]?.id).toBe('j1');
+      expect(result[1]?.id).toBe('j3');
+      expect(result[0]?.executionBackend).toBe('cursor');
+      expect(result[0]?.data).toBe(
         JSON.stringify({ planId: 'plan-a', runKind: 'orchestrator' }),
       );
     });
@@ -549,7 +549,7 @@ describe('QueuesService', () => {
       const result = await service.getCompletedJobsByPlanId('plan-a', 10);
 
       expect(result).toHaveLength(1);
-      expect(result[0].executionBackend).toBe('claude');
+      expect(result[0]?.executionBackend).toBe('claude');
     });
 
     test('caps limit at 500', async () => {

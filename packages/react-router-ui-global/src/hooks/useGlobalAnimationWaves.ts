@@ -1,4 +1,5 @@
 import * as React from 'react';
+import type { CubicPoints } from '../utils/build-sound-arcs';
 import { buildSoundArcs } from '../utils/build-sound-arcs';
 
 /**
@@ -86,11 +87,7 @@ export const DEFAULT_GLOBAL_ANIMATION_WAVES = {
   waveCycles: 3.2,
 } as const;
 
-const cubicAt = (
-  t: number,
-  p: ReadonlyArray<ReadonlyArray<number>>,
-  axis: 0 | 1,
-): number => {
+const cubicAt = (t: number, p: CubicPoints, axis: 0 | 1): number => {
   const mt = 1 - t;
 
   return (
@@ -101,11 +98,7 @@ const cubicAt = (
   );
 };
 
-const cubicDerivativeAt = (
-  t: number,
-  p: ReadonlyArray<ReadonlyArray<number>>,
-  axis: 0 | 1,
-): number => {
+const cubicDerivativeAt = (t: number, p: CubicPoints, axis: 0 | 1): number => {
   const mt = 1 - t;
 
   return (

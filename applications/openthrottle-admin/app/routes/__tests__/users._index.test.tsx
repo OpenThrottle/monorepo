@@ -89,6 +89,9 @@ describe('routes/users._index.tsx', () => {
 
       expect(result).toEqual({ ok: true });
       const callArgs = executeGraphqlWithAuth.mock.calls[0];
+      if (callArgs === undefined) {
+        throw new Error('executeGraphqlWithAuth was not called');
+      }
       expect(callArgs[2]).toEqual({
         input: { email: 'user@example.com', githubUsername: 'visormatt' },
       });

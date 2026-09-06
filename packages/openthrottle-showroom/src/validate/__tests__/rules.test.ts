@@ -337,6 +337,10 @@ describe('isBlocking', () => {
     youtube: { ...base.youtube, tags: ['openthrottle'] },
   })[0];
 
+  if (convention === undefined) {
+    throw new Error('expected validateEpisode to report a convention finding');
+  }
+
   test('a convention finding is advisory on a draft', () => {
     expect(convention).toBeDefined();
     expect(isBlocking({ ...convention, severity: 'publish' }, draft)).toBe(

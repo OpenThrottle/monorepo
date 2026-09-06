@@ -128,7 +128,7 @@ describe('MessageList Component', () => {
       await user.click(c.getByRole('checkbox', { name: 'Select all' }));
 
       expect(onSelectionChange).toHaveBeenCalledOnce();
-      expect(Array.from(onSelectionChange.mock.calls[0][0])).toEqual([
+      expect(Array.from(onSelectionChange.mock.calls[0]?.[0])).toEqual([
         '1',
         '2',
       ]);
@@ -154,7 +154,7 @@ describe('MessageList Component', () => {
       );
 
       expect(onSelectionChange).toHaveBeenCalledOnce();
-      expect(Array.from(onSelectionChange.mock.calls[0][0])).toEqual(['1']);
+      expect(Array.from(onSelectionChange.mock.calls[0]?.[0])).toEqual(['1']);
     });
 
     test('shows bulk actions for selected rows and clears selection', async () => {

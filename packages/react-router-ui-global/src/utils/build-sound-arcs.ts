@@ -29,7 +29,8 @@ export interface BuildSoundArcsOptions {
 
 type Point = readonly [number, number];
 
-type CubicPoints = readonly [Point, Point, Point, Point];
+/** The four control points of one cubic bezier arc. */
+export type CubicPoints = readonly [Point, Point, Point, Point];
 
 /** Lead stroke — lower-left off-screen to upper-right. */
 const FRONT: SoundArc = {

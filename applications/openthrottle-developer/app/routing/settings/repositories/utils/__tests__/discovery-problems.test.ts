@@ -67,10 +67,10 @@ describe('summarizeDiscovery', () => {
     );
 
     expect(summary.groups).toHaveLength(1);
-    expect(summary.groups[0].id).toBe(WORKTREE_PROBLEM_GROUP.STALE);
-    expect(summary.groups[0].details).toHaveLength(2);
-    expect(summary.groups[0].remedy).toContain('git worktree prune');
-    expect(summary.groups[0].summary).toMatch(/^2 worktrees/);
+    expect(summary.groups[0]?.id).toBe(WORKTREE_PROBLEM_GROUP.STALE);
+    expect(summary.groups[0]?.details).toHaveLength(2);
+    expect(summary.groups[0]?.remedy).toContain('git worktree prune');
+    expect(summary.groups[0]?.summary).toMatch(/^2 worktrees/);
   });
 
   test('merges every unreadable kind into one degraded group', () => {
@@ -89,8 +89,8 @@ describe('summarizeDiscovery', () => {
     );
 
     expect(summary.groups).toHaveLength(1);
-    expect(summary.groups[0].id).toBe(WORKTREE_PROBLEM_GROUP.DEGRADED);
-    expect(summary.groups[0].details).toHaveLength(3);
+    expect(summary.groups[0]?.id).toBe(WORKTREE_PROBLEM_GROUP.DEGRADED);
+    expect(summary.groups[0]?.details).toHaveLength(3);
     expect(summary.problemCount).toBe(3);
   });
 

@@ -62,11 +62,14 @@ export const getRouteTitleVariables = (name: string) => {
     .filter(Boolean)
     .filter((segment) => !IGNORED_SEGMENTS.includes(segment));
 
-  if (segments.length === 0) {
+  const leafSegment = segments[segments.length - 1];
+
+  // No leaf segment means no segments at all — this replaces the separate
+  // `segments.length === 0` guard with one that also narrows the type.
+  if (leafSegment === undefined) {
     return { nameTitle: 'Untitled', nameTitleLeaf: 'Untitled' } as const;
   }
 
-  const [leafSegment] = segments.slice(-1);
   const ancestors = segments.slice(0, -1);
   // Only a real (non-param) ancestor works as a section label.
   const sectionCandidates = ancestors.filter(

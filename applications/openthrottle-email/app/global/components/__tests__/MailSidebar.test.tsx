@@ -28,6 +28,9 @@ describe('MailSidebar Component', () => {
     const sidebars = component.getAllByTestId('MailSidebar');
     expect(sidebars.length).toBeGreaterThanOrEqual(1);
     const sidebar = sidebars[0];
+    if (sidebar === undefined) {
+      throw new Error('expected a MailSidebar');
+    }
     expect(sidebar.closest('[data-state]')).toHaveAttribute(
       'data-state',
       'expanded',

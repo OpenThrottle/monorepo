@@ -49,7 +49,9 @@ const isUnsafeUrl = (value: string): boolean => {
     return false;
   }
 
-  return !SAFE_URL_SCHEMES.includes(schemeMatch[1]);
+  const scheme = schemeMatch[1];
+
+  return scheme === undefined || !SAFE_URL_SCHEMES.includes(scheme);
 };
 
 /**

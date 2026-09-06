@@ -15,7 +15,7 @@ const BYTES_PER_SLICE = 8192;
 export function encodeFloat32ToInt16Base64(chunk: Float32Array): string {
   const pcm = new Int16Array(chunk.length);
   for (let index = 0; index < chunk.length; index += 1) {
-    const clamped = Math.max(-1, Math.min(1, chunk[index]));
+    const clamped = Math.max(-1, Math.min(1, chunk[index] ?? 0));
     pcm[index] = Math.round(clamped * 32767);
   }
 

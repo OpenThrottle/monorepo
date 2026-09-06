@@ -88,9 +88,9 @@ const scriptGit = (script: GitScript): void => {
       ) => void,
     ) => {
       // args are ['-C', cwd, ...probe]
-      const cwd = args[1];
+      const cwd = args[1] ?? '';
       const probe = args.slice(2);
-      const key = probe[0] === 'worktree' ? 'worktree' : probe[0];
+      const key = (probe[0] === 'worktree' ? 'worktree' : probe[0]) ?? '';
 
       if (script.notGitRepos?.includes(cwd) === true) {
         callback(
@@ -224,10 +224,10 @@ describe('WorktreeDiscoveryService', () => {
       `${ROOT}/wt-a`,
       `${ROOT}/wt-b`,
     ]);
-    expect(result.worktrees[0].sources).toEqual([
+    expect(result.worktrees[0]?.sources).toEqual([
       WORKTREE_DISCOVERY_SOURCE.GIT_WORKTREE_LIST,
     ]);
-    expect(result.worktrees[1].sources).toEqual([
+    expect(result.worktrees[1]?.sources).toEqual([
       WORKTREE_DISCOVERY_SOURCE.ROOT_SCAN,
     ]);
     expect(result.worktreeRoot).toBe(ROOT);
@@ -244,7 +244,7 @@ describe('WorktreeDiscoveryService', () => {
     const result = await build([checkout()]).discover(USER);
 
     expect(result.worktrees).toHaveLength(1);
-    expect(result.worktrees[0].sources).toEqual([
+    expect(result.worktrees[0]?.sources).toEqual([
       WORKTREE_DISCOVERY_SOURCE.GIT_WORKTREE_LIST,
       WORKTREE_DISCOVERY_SOURCE.ROOT_SCAN,
     ]);
@@ -260,7 +260,7 @@ describe('WorktreeDiscoveryService', () => {
     const result = await build([checkout()]).discover(USER);
 
     expect(result.worktrees).toHaveLength(1);
-    expect(result.worktrees[0].path).toBe(`${ROOT}/wt-a`);
+    expect(result.worktrees[0]?.path).toBe(`${ROOT}/wt-a`);
   });
 
   it('excludes a real clone sitting in the worktree root', async () => {
@@ -305,7 +305,7 @@ describe('WorktreeDiscoveryService', () => {
 
     const result = await build([checkout(), registered]).discover(USER);
 
-    expect(result.worktrees[0].checkoutId).toBe('checkout-wt-a');
+    expect(result.worktrees[0]?.checkoutId).toBe('checkout-wt-a');
   });
 
   it('reports dirty and ahead signals for classification', async () => {
@@ -331,7 +331,7 @@ describe('WorktreeDiscoveryService', () => {
     const result = await build([checkout()]).discover(USER);
 
     expect(result.worktrees).toHaveLength(1);
-    expect(result.worktrees[0].dirty).toBeNull();
+    expect(result.worktrees[0]?.dirty).toBeNull();
     expect(result.warnings.join('\n')).toMatch(/git status --porcelain/);
     expect(result.problems.map((entry) => entry.kind)).toContain(
       WORKTREE_DISCOVERY_PROBLEM.PROBE_FAILED,

@@ -22,7 +22,7 @@ describe('repositories.defaults', () => {
 
   test('every dropdown option is a valid sortBy-sortOrder pair', () => {
     for (const option of REPOSITORIES_SORT_OPTIONS) {
-      const [sortBy, sortOrder] = option.value.split('-');
+      const [sortBy = '', sortOrder = ''] = option.value.split('-');
 
       expect(isRepositoriesSortBy(sortBy)).toBe(true);
       expect(isRepositoriesSortOrder(sortOrder)).toBe(true);

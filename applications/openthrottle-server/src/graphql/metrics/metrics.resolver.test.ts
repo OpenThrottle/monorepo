@@ -124,11 +124,11 @@ describe('MetricsResolver', () => {
       const result = await resolver.recentPlanRunsMetrics('plan-1', 10);
 
       expect(result).toHaveLength(1);
-      expect(result[0].jobId).toBe('job-123');
-      expect(result[0].finishedOn).toBe(1700000000000);
-      expect(result[0].taskRunMetrics).not.toBeNull();
-      expect(result[0].taskRunMetrics?.atStart.rssMb).toBe(50);
-      expect(result[0].taskRunMetrics?.atEnd.rssMb).toBe(55);
+      expect(result[0]?.jobId).toBe('job-123');
+      expect(result[0]?.finishedOn).toBe(1700000000000);
+      expect(result[0]?.taskRunMetrics).not.toBeNull();
+      expect(result[0]?.taskRunMetrics?.atStart.rssMb).toBe(50);
+      expect(result[0]?.taskRunMetrics?.atEnd.rssMb).toBe(55);
     });
 
     test('uses default limit when limit is null', async () => {

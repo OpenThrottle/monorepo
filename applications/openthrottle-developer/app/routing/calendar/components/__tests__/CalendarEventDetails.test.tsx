@@ -12,7 +12,12 @@ describe('CalendarEventDetails Component', () => {
   let props: CalendarEventDetailsProps;
 
   beforeEach(() => {
-    props = { event: CALENDAR_EVENTS[0] };
+    const [event] = CALENDAR_EVENTS;
+    if (event === undefined) {
+      throw new Error('expected a calendar event fixture');
+    }
+
+    props = { event };
 
     const Component = () => <CalendarEventDetails {...props} />;
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);

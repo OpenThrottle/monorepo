@@ -188,7 +188,7 @@ export const parseRalphArgs = (): RalphArgs => {
   let cliSkipWorktreeSetup: boolean | undefined;
 
   for (let i = 0; i < args.length; i++) {
-    const arg = args[i];
+    const arg = args[i] ?? '';
 
     // 🔍 If the user has requested help show the usage info and exit
     if (arg === '--help') {

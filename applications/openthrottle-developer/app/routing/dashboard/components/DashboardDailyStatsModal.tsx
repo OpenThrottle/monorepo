@@ -42,12 +42,19 @@ export const DashboardDailyStatsModal = (
       return null;
     }
 
-    let max = dailyStats[0].date;
-    let min = dailyStats[0].date;
+    const dates = dailyStats.map((item) => item.date);
+    const [first] = dates;
 
-    for (const item of dailyStats) {
-      if (item.date > max) max = item.date;
-      if (item.date < min) min = item.date;
+    if (first === undefined) {
+      return null;
+    }
+
+    let max = first;
+    let min = first;
+
+    for (const date of dates) {
+      if (date > max) max = date;
+      if (date < min) min = date;
     }
 
     return { max, min };

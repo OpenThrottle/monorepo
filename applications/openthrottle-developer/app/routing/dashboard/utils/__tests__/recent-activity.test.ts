@@ -83,7 +83,7 @@ describe('toActivityRows', () => {
     const rows = toActivityRows(baseData({ commits }));
 
     expect(rows).toHaveLength(20);
-    expect(rows[0].id).toBe('commit-24');
+    expect(rows[0]?.id).toBe('commit-24');
   });
 
   test('defaults message and taskId/taskTitle to null/empty as needed', () => {

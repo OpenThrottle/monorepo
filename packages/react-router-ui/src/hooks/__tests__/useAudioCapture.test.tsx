@@ -123,11 +123,13 @@ describe('useAudioCapture', () => {
       expect(getByTestId('status')).toHaveTextContent('recording');
       expect(getUserMedia).toHaveBeenCalledWith({ audio: true });
       const [context] = MockAudioContext.instances;
+      if (context === undefined) throw new Error('expected an AudioContext');
       expect(context.options).toEqual({ sampleRate: 16000 });
       expect(context.audioWorklet.addModule).toHaveBeenCalledWith(
         'blob:worklet',
       );
       const [worklet] = MockAudioWorkletNode.instances;
+      if (worklet === undefined) throw new Error('expected a worklet node');
       expect(worklet.processorName).toBe('openthrottle-pcm-chunk');
     });
 
@@ -139,6 +141,7 @@ describe('useAudioCapture', () => {
       await user.click(getByTestId('start'));
 
       const [worklet] = MockAudioWorkletNode.instances;
+      if (worklet === undefined) throw new Error('expected a worklet node');
       const chunk = new Float32Array(4000);
       act(() => {
         worklet.port.onmessage?.(
@@ -187,8 +190,10 @@ describe('useAudioCapture', () => {
       expect(getByTestId('status')).toHaveTextContent('idle');
       expect(mockStream.track.stop).toHaveBeenCalled();
       const [context] = MockAudioContext.instances;
+      if (context === undefined) throw new Error('expected an AudioContext');
       expect(context.close).toHaveBeenCalled();
       const [worklet] = MockAudioWorkletNode.instances;
+      if (worklet === undefined) throw new Error('expected a worklet node');
       expect(worklet.disconnect).toHaveBeenCalled();
     });
   });
@@ -203,6 +208,7 @@ describe('useAudioCapture', () => {
 
       expect(mockStream.track.stop).toHaveBeenCalled();
       const [context] = MockAudioContext.instances;
+      if (context === undefined) throw new Error('expected an AudioContext');
       expect(context.close).toHaveBeenCalled();
     });
   });
