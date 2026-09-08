@@ -7,8 +7,9 @@ import {
   StopCircle,
   TargetIcon,
 } from 'lucide-react';
-import { useNavigation } from 'react-router';
+import { useFetcher, useNavigation } from 'react-router';
 import type { PlanCardFragment } from '~/__generated__/graphql';
+import type { action as planDetailAction } from '~/routes/plans.$planId._index';
 import { PLANS_ROW_ACTIONS_COPY } from '~/routing/plans/data/data.copy';
 import { getPlanIsCancelable } from '~/routing/plans/utils/utils.plans';
 
@@ -29,16 +30,20 @@ export const PlansTableRowActions = (
 
   // Hooks
   const navigation = useNavigation();
+  // Keyed so this row can observe its own cancel submission. The action posts
+  // with `navigate: false`, and a non-navigating submission never appears in
+  // `useNavigation()` — deriving pending state from there produced a value that
+  // was always false and a pendingLabel that never rendered.
+  const killFetcher = useFetcher<typeof planDetailAction>({
+    key: `cancelPlanRun:${planId}`,
+  });
 
   // Setup
   const _isQueuing =
     navigation.state === 'submitting' &&
     navigation.formAction?.endsWith(planAction) === true &&
     navigation.formData?.get('intent') === 'runPlan';
-  const isKilling =
-    navigation.state === 'submitting' &&
-    navigation.formAction?.endsWith(planAction) === true &&
-    navigation.formData?.get('intent') === 'cancelPlanRun';
+  const isKilling = killFetcher.state !== 'idle';
 
   const showKill = getPlanIsCancelable(plan.status);
   const actions: GlobalPopoverAction[] = [
@@ -118,6 +123,7 @@ export const PlansTableRowActions = (
         title: PLANS_ROW_ACTIONS_COPY.killTitle,
       },
       destructive: true,
+      fetcherKey: `cancelPlanRun:${planId}`,
       fields: { intent: 'cancelPlanRun' },
       icon: <StopCircle aria-hidden={true} className="size-3.5 shrink-0" />,
       id: 'cancelPlanRun',

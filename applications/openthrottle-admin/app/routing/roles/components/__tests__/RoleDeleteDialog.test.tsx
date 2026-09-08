@@ -35,4 +35,19 @@ describe('RoleDeleteDialog Component', () => {
       component.getByRole('button', { name: 'Delete' }),
     ).toBeInTheDocument();
   });
+
+  // Regression guard (OT b68853fb). `AlertDialogAction` is a `Dialog.Close`, so
+  // confirming unmounts `AlertDialogContent` within the same click. A form
+  // rendered inside it is detached before the browser submits, and the delete
+  // silently never happens — so the confirm must not depend on one.
+  test('confirming does not depend on a form inside the dialog', async () => {
+    const user = userEvent.setup();
+    const component = renderDialog();
+
+    await user.click(component.getByRole('button', { name: 'Delete role' }));
+
+    const dialog = await component.findByRole('alertdialog');
+
+    expect(dialog.querySelector('form')).toBeNull();
+  });
 });

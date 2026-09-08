@@ -47,4 +47,20 @@ describe('UserStatusActions Component', () => {
       component.getByText(/will disable the user account/i),
     ).toBeInTheDocument();
   });
+
+  // Regression guard (OT b68853fb). `AlertDialogAction` is a `Dialog.Close`, so
+  // confirming unmounts `AlertDialogContent` within the same click. A form
+  // rendered inside it is detached before the browser submits, and the disable
+  // silently never happens — so the confirm must not depend on one. The
+  // no-dialog Enable path still uses a real form, which is fine.
+  test('confirming does not depend on a form inside the dialog', async () => {
+    const user = userEvent.setup();
+    const component = renderActions(false);
+
+    await user.click(component.getByRole('button', { name: 'Disable user' }));
+
+    const dialog = await component.findByRole('alertdialog');
+
+    expect(dialog.querySelector('form')).toBeNull();
+  });
 });
