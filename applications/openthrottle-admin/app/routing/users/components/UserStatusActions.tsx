@@ -30,6 +30,13 @@ export const UserStatusActions = (
   const ActionForm = fetcher.Form;
 
   // Handlers
+  // Submit through the fetcher rather than a rendered form. `AlertDialogAction`
+  // is a `Dialog.Close`, so confirming unmounts `AlertDialogContent` — and any
+  // form inside it — within the same click, and the browser then cancels the
+  // submit of a detached form without sending anything. See OT b68853fb.
+  const handleDisable = React.useCallback((): void => {
+    void fetcher.submit({ intent: 'disableUser' }, { method: 'post' });
+  }, [fetcher]);
 
   // Markup
 
@@ -72,14 +79,13 @@ export const UserStatusActions = (
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <ActionForm method="post">
-            <input name="intent" type="hidden" value="disableUser" />
-            <AlertDialogAction asChild={true}>
-              <button disabled={fetcher.state !== 'idle'} type="submit">
-                {fetcher.state !== 'idle' ? 'Disabling…' : 'Disable'}
-              </button>
-            </AlertDialogAction>
-          </ActionForm>
+          <AlertDialogAction
+            disabled={fetcher.state !== 'idle'}
+            onClick={handleDisable}
+            type="button"
+          >
+            {fetcher.state !== 'idle' ? 'Disabling…' : 'Disable'}
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

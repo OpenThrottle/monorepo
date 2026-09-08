@@ -41,6 +41,12 @@ export type GlobalPopoverAction =
       readonly confirm?: GlobalPopoverConfirm;
       readonly destructive?: boolean;
       readonly disabled?: boolean;
+      /**
+       * Opt in to observing this submission from the call site: pass the same
+       * key to `useFetcher({ key })` there to read `state` and `data` (pending
+       * labels, result toasts). Without it the submission is fire-and-forget.
+       */
+      readonly fetcherKey?: string;
       readonly fields: Record<string, string>;
       readonly icon?: React.ReactNode;
       readonly id: string;
@@ -171,6 +177,7 @@ export const GlobalPopover = (
           cancelLabel={confirmSubmit.confirm.cancelLabel}
           confirmLabel={confirmSubmit.confirm.confirmLabel}
           description={confirmSubmit.confirm.description}
+          fetcherKey={confirmSubmit.fetcherKey}
           fields={confirmSubmit.fields}
           method={confirmSubmit.method}
           navigate={confirmSubmit.navigate}

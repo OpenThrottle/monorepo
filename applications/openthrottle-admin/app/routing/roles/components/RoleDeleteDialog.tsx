@@ -26,9 +26,15 @@ export const RoleDeleteDialog = (
   // Hooks
 
   // Setup
-  const DeleteForm = fetcher.Form;
 
   // Handlers
+  // Submit through the fetcher rather than a rendered form. `AlertDialogAction`
+  // is a `Dialog.Close`, so confirming unmounts `AlertDialogContent` — and any
+  // form inside it — within the same click, and the browser then cancels the
+  // submit of a detached form without sending anything. See OT b68853fb.
+  const handleDelete = React.useCallback((): void => {
+    void fetcher.submit({ intent: 'deleteRole' }, { method: 'post' });
+  }, [fetcher]);
 
   // Markup
 
@@ -57,14 +63,13 @@ export const RoleDeleteDialog = (
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <DeleteForm method="post">
-            <input name="intent" type="hidden" value="deleteRole" />
-            <AlertDialogAction asChild={true}>
-              <button disabled={fetcher.state !== 'idle'} type="submit">
-                {fetcher.state !== 'idle' ? 'Deleting…' : 'Delete'}
-              </button>
-            </AlertDialogAction>
-          </DeleteForm>
+          <AlertDialogAction
+            disabled={fetcher.state !== 'idle'}
+            onClick={handleDelete}
+            type="button"
+          >
+            {fetcher.state !== 'idle' ? 'Deleting…' : 'Delete'}
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

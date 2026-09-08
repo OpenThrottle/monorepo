@@ -264,6 +264,53 @@ describe('GlobalPopover Component', () => {
     expect(state.submitted?.get('id')).toBe('row-1');
   });
 
+  // Regression guard for the dead Kill button (OT b68853fb).
+  //
+  // The confirm control is Radix's `AlertDialogAction`, i.e. a `Dialog.Close`:
+  // clicking it fires `onOpenChange(false)`, and GlobalPopover responds by
+  // clearing the pending action id, which unmounts the dialog inside the same
+  // discrete click event. While the submission went through a rendered
+  // `<Form>`, the browser found that form detached by the time it would have
+  // submitted and silently cancelled the request ("Form submission canceled
+  // because the form is not connected") — the destructive action looked taken
+  // and never happened.
+  //
+  // This is asserted structurally, on purpose. The behavioural test above
+  // ("opens confirm and only submits after confirming") passes even with the
+  // broken `<Form>` in place, because jsdom dispatches the submit event during
+  // the click rather than deferring it the way a real browser does — verified
+  // against the reverted code. So no jsdom assertion about the submission can
+  // fail on this defect, while this one fails the moment a form is reintroduced
+  // into the closing dialog.
+  test('confirm submission does not depend on a form inside the dialog', async () => {
+    const user = userEvent.setup();
+    const component = renderPopover({
+      actions: [
+        {
+          confirm: {
+            confirmLabel: 'Remove now',
+            description: 'Remove acme?',
+            title: 'Remove checkout',
+          },
+          destructive: true,
+          fields: { id: 'row-1', intent: 'deleteRepo' },
+          id: 'delete',
+          kind: 'submit',
+          label: 'Remove',
+        },
+      ],
+    });
+
+    await openMenu(component);
+    await user.click(component.getByRole('menuitem', { name: 'Remove' }));
+
+    const dialog = component.getByRole('alertdialog', {
+      name: 'Remove checkout',
+    });
+
+    expect(dialog.querySelector('form')).toBeNull();
+  });
+
   test('does not submit when confirm is cancelled', async () => {
     const user = userEvent.setup();
     const state = { submitted: false };

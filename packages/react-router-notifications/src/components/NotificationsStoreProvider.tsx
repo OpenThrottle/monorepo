@@ -34,9 +34,13 @@ export const NotificationsStoreProvider = (
   const resolvedStorageKey = storageKey ?? DEFAULT_NOTIFICATIONS_STORAGE_KEY;
 
   // Hooks
-  const [state, dispatch] = React.useReducer(reducer, [], (initial) =>
-    persist ? loadFromStorage(resolvedStorageKey) : initial,
-  );
+  // Always start empty so the first client render matches the server-rendered
+  // HTML. Reading localStorage in the lazy initializer made SSR render no unread
+  // badge while the hydration render rendered one, which React reports as
+  // "Hydration failed" and which detaches event handlers in the affected
+  // subtree. Persisted notifications are restored in a mount effect below.
+  const [state, dispatch] = React.useReducer(reducer, []);
+  const [hydrated, setHydrated] = React.useState(false);
   const [announcement, setAnnouncement] = React.useState<{
     message: string;
     severity: NotificationPayload['severity'];
@@ -45,7 +49,7 @@ export const NotificationsStoreProvider = (
   // Setup
   // Tracks the newest notification id already announced so hydration / read /
   // dismiss reducer passes (which keep the head id stable) never re-announce.
-  const lastAnnouncedIdRef = React.useRef<string | null>(state[0]?.id ?? null);
+  const lastAnnouncedIdRef = React.useRef<string | null>(null);
 
   // Handlers
   const addNotification = React.useCallback(
@@ -84,9 +88,26 @@ export const NotificationsStoreProvider = (
   // Markup
 
   // Life Cycle
+  // Restore persisted notifications after mount, never during the first render.
+  // `lastAnnouncedIdRef` is primed before dispatching so the restored head is
+  // not re-announced to screen readers on every page load.
   React.useEffect(() => {
-    if (persist) saveToStorage(resolvedStorageKey, state);
-  }, [persist, resolvedStorageKey, state]);
+    if (!persist) {
+      setHydrated(true);
+      return;
+    }
+
+    const restored = loadFromStorage(resolvedStorageKey);
+    lastAnnouncedIdRef.current = restored[0]?.id ?? null;
+    dispatch({ notifications: restored, type: 'hydrate' });
+    setHydrated(true);
+  }, [persist, resolvedStorageKey]);
+
+  // Gated on `hydrated` so the empty initial state is never written back over
+  // the persisted list before it has been restored.
+  React.useEffect(() => {
+    if (persist && hydrated) saveToStorage(resolvedStorageKey, state);
+  }, [hydrated, persist, resolvedStorageKey, state]);
 
   React.useEffect(() => {
     const newest = state[0];
