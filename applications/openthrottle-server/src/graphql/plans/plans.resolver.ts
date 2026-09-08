@@ -85,6 +85,7 @@ import {
   ListPlansByStatusInput,
   PlanRalphWorkflowModeGraphQL,
   PlanRunsByPlanIdInput,
+  ForceSettlePlanRunInput,
   RecordPlanRunHeartbeatInput,
   RegisterCliPlanRunInput,
   RegisterPlanRunWorktreeCheckoutInput,
@@ -520,6 +521,21 @@ export class PlansResolver {
     const run = await this.planRunsService.settleCliRun(
       input.planRunId,
       status,
+    );
+
+    return run ? this.mapPlanRunObject(run) : null;
+  }
+
+  @Mutation(() => PlanRunObject, {
+    description: `Force-settle an UNSUPERVISED plan run to STALE — the human escape hatch for a run whose agent is gone. Kill does not help here: cancelling an interactive run only stamps the cancel marker and waits for the agent to poll it, so a dead agent leaves the row IN_PROGRESS forever, reading as live and holding its worktree busy. Refused for a run that heartbeats (it has a sweeper of its own and may be genuinely live) and for one already terminal. Always writes STALE — 'contact lost' is what a human clicking this actually knows. Never touches plan or task status. Returns null when the run did not match.`,
+    nullable: true,
+  })
+  async forceSettlePlanRun(
+    @Args('input', { type: () => ForceSettlePlanRunInput })
+    input: ForceSettlePlanRunInput,
+  ): Promise<PlanRunObject | null> {
+    const run = await this.planRunsService.forceSettleUnsupervisedRun(
+      input.planRunId,
     );
 
     return run ? this.mapPlanRunObject(run) : null;

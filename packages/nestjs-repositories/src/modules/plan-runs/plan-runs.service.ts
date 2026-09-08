@@ -149,6 +149,16 @@ export class PlanRunsService {
   async registerCliRun(input: RegisterCliPlanRunInput): Promise<PlanRun> {
     const repo = this.getRepository();
 
+    // Settle-on-next-register: an unsupervised run has no timer, so nothing settles it
+    // promptly when its agent simply goes away. Registering a NEW unsupervised run for the
+    // same plan is direct evidence the previous one is over — you do not start a second
+    // interactive loop on a plan you are still driving. Settling here (before the insert, so
+    // the new row is never a candidate) makes the common case — abandon a loop, re-run it —
+    // clean up instantly, leaving the age sweep as the floor rather than the only path.
+    if (input.heartbeatExpected === false) {
+      await this.settleSupersededUnsupervisedRuns(input.planId);
+    }
+
     return repo.save(
       repo.create({
         actorUserId: input.actorUserId ?? null,
@@ -400,6 +410,66 @@ export class PlanRunsService {
   }
 
   /**
+   * @description Settles every OTHER unsupervised (`heartbeat_expected = false`) IN_PROGRESS run
+   * on a plan to STALE — the fast path of the unsupervised janitor, called from
+   * {@link PlanRunsService.registerCliRun} just before a new unsupervised row is inserted.
+   *
+   * Two concurrent interactive loops on one plan is not a supported state, and an older row is
+   * already functionally dead: {@link PlanRunsService.stampCancelRequested} and
+   * {@link PlanRunsService.readCancelRequested} both key on the plan's NEWEST run, so once a newer
+   * row exists the older one can no longer even receive a cancel. Leaving it IN_PROGRESS only makes
+   * it read as live and hold its worktree busy forever.
+   *
+   * Deliberately does NOT touch plan or task status — same invariant as the age sweep. Scoped to
+   * `heartbeat_expected = false` so a queued or detached-CLI run, which has a timer and a sweeper of
+   * its own, is never collateral. Returns the number of rows settled.
+   */
+  async settleSupersededUnsupervisedRuns(planId: string): Promise<number> {
+    const result = await this.getRepository()
+      .createQueryBuilder()
+      .update(PlanRun)
+      .set({
+        hostname: null,
+        pid: null,
+        status: PLAN_RUN_STATUS.STALE,
+        workerId: null,
+      })
+      .where('plan_id = :planId', { planId })
+      .andWhere('status = :status', { status: PLAN_RUN_STATUS.IN_PROGRESS })
+      .andWhere('NOT heartbeat_expected')
+      .execute();
+
+    return result.affected ?? 0;
+  }
+
+  /**
+   * @description Finds UNSUPERVISED (`heartbeat_expected = false`) IN_PROGRESS runs older than
+   * `cutoff` — the exact complement of {@link PlanRunsService.findStaleInProgressRuns}, which
+   * excludes them. Together the two cover every IN_PROGRESS row, so no run is left with no janitor.
+   *
+   * The predicate is age, not silence. These rows have no timer, so `last_heartbeat_at` is stamped
+   * once at creation and never bumped; COALESCE with `created_at` therefore reads as "when this run
+   * started" rather than "when it was last alive". That is the honest signal to use, and it is why
+   * the caller must pass {@link UNSUPERVISED_STALE_CUTOFF_MS} rather than the 120s
+   * {@link STALE_CUTOFF_MS}. Oldest-first, capped at `limit`.
+   */
+  async findStaleUnsupervisedRuns(
+    cutoff: Date,
+    limit: number,
+  ): Promise<PlanRun[]> {
+    return this.getRepository()
+      .createQueryBuilder('run')
+      .where('run.status = :status', { status: PLAN_RUN_STATUS.IN_PROGRESS })
+      .andWhere('NOT run.heartbeat_expected')
+      .andWhere('COALESCE(run.last_heartbeat_at, run.created_at) < :cutoff', {
+        cutoff,
+      })
+      .orderBy('run.created_at', 'ASC')
+      .take(limit)
+      .getMany();
+  }
+
+  /**
    * @description Finds IN_PROGRESS runs whose liveness is older than `cutoff` — i.e.
    * stranded by a hard crash (SIGKILL/power-loss) that skipped the graceful settle path.
    * Uses COALESCE(last_heartbeat_at, created_at) so rows that never heartbeated (legacy,
@@ -459,6 +529,48 @@ export class PlanRunsService {
       )
       .orderBy('run.created_at', 'DESC')
       .getMany();
+  }
+
+  /**
+   * @description Force-settles ONE unsupervised run to STALE — the human escape hatch behind the
+   * UI's "settle this run" affordance, and the answer for every case the age sweep and
+   * settle-on-next-register do not catch soon enough.
+   *
+   * This exists because Kill does not help here. Cancelling an interactive run only stamps the
+   * durable cancel marker and waits for the agent to poll it; if that agent is gone, nothing ever
+   * reads the marker and the row stays IN_PROGRESS — reading as live and holding its worktree busy
+   * — forever. Force-settling writes the terminal status directly.
+   *
+   * Guarded on BOTH `status = IN_PROGRESS` and `NOT heartbeat_expected`, so it can never touch a
+   * heartbeating run (which has a sweeper of its own and may be genuinely live) nor re-settle a
+   * terminal row. STALE, not COMPLETED/CANCELLED/FAILED: a human clicking this knows contact was
+   * lost, not how the work ended, and `settleCliPlanRun`'s honest-report statuses must stay the
+   * agent's to claim. Deliberately does NOT touch plan or task status — same invariant as the sweep.
+   *
+   * Returns the updated run, or null when the row did not match the guard (already terminal, or
+   * heartbeating) — the caller distinguishes the two by reading the row back.
+   */
+  async forceSettleUnsupervisedRun(planRunId: string): Promise<PlanRun | null> {
+    const repo = this.getRepository();
+    const result = await repo
+      .createQueryBuilder()
+      .update(PlanRun)
+      .set({
+        hostname: null,
+        pid: null,
+        status: PLAN_RUN_STATUS.STALE,
+        workerId: null,
+      })
+      .where('id = :planRunId', { planRunId })
+      .andWhere('status = :status', { status: PLAN_RUN_STATUS.IN_PROGRESS })
+      .andWhere('NOT heartbeat_expected')
+      .execute();
+
+    if ((result.affected ?? 0) === 0) {
+      return null;
+    }
+
+    return repo.findOne({ where: { id: planRunId } });
   }
 
   /**

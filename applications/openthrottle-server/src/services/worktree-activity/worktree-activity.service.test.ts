@@ -107,6 +107,48 @@ describe('WorktreeActivityService', () => {
     });
   });
 
+  it('reports runMonitored true for a heartbeating run — RUNNING is a verified fact', async () => {
+    const { service } = build({
+      discovered: discovery([worktree()]),
+      liveRuns: [run({ heartbeatExpected: true })],
+    });
+
+    const result = await service.discoverAndClassify(USER);
+
+    expect(result.worktrees[0]).toMatchObject({
+      activity: WORKTREE_ACTIVITY.RUNNING,
+      runMonitored: true,
+    });
+  });
+
+  it('reports runMonitored false for an unsupervised run — RUNNING is only a claim', async () => {
+    // The worktree is still held busy, so the activity stays RUNNING; what changes is how
+    // much the claim is worth. Without this the UI cannot tell a healthy loop from an agent
+    // that died hours ago, and shows both as running.
+    const { service } = build({
+      discovered: discovery([worktree()]),
+      liveRuns: [run({ heartbeatExpected: false })],
+    });
+
+    const result = await service.discoverAndClassify(USER);
+
+    expect(result.worktrees[0]).toMatchObject({
+      activity: WORKTREE_ACTIVITY.RUNNING,
+      runMonitored: false,
+    });
+  });
+
+  it('reports runMonitored null when nothing is running', async () => {
+    const { service } = build({ discovered: discovery([worktree()]) });
+
+    const result = await service.discoverAndClassify(USER);
+
+    expect(result.worktrees[0]).toMatchObject({
+      activity: WORKTREE_ACTIVITY.IDLE,
+      runMonitored: null,
+    });
+  });
+
   it('asks for liveness with the shared staleness cutoff, not a new number', async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-08-24T12:00:00.000Z'));

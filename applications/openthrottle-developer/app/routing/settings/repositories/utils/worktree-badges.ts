@@ -26,6 +26,16 @@ const ACTIVITY_BADGES = {
 } as const;
 
 /**
+ * The third state, distinct from both RUNNING and IDLE: something claims this worktree, but
+ * nothing verifies the claim. Kept beside {@link ACTIVITY_BADGES} rather than inside it because
+ * it is not a fourth activity value — it is how much to trust the RUNNING one.
+ */
+const UNVERIFIED_RUNNING_BADGE = {
+  label: REPOSITORIES_TABLE_COPY.worktreeActivityUnverified,
+  title: REPOSITORIES_TABLE_COPY.worktreeActivityUnverifiedTitle,
+} as const;
+
+/**
  * @description Derive the worktree badges for a row: its activity (only when the
  * server actually classified this path — a row with no `activity` was not found on
  * disk by the last scan and gets no badge rather than a misleading "Idle"), plus a
@@ -40,9 +50,18 @@ export const deriveWorktreeBadges = (
   const badges: WorktreeBadge[] = [];
 
   if (row.activity != null) {
-    const activity = ACTIVITY_BADGES[row.activity];
+    // RUNNING splits in two. An unsupervised run (`runMonitored === false`) holds the worktree
+    // on nothing but its own unverified IN_PROGRESS claim, so it must not read identically to a
+    // heartbeating run — a worktree stuck "Running" behind a dead agent is exactly the symptom
+    // most likely to be reported as a bug against something else entirely.
+    const unverified = row.activity === 'RUNNING' && row.runMonitored === false;
+    const activity = unverified
+      ? UNVERIFIED_RUNNING_BADGE
+      : ACTIVITY_BADGES[row.activity];
     badges.push({
-      id: `activity-${row.activity}`,
+      id: unverified
+        ? 'activity-RUNNING-unverified'
+        : `activity-${row.activity}`,
       label: activity.label,
       title: activity.title,
       tone: 'activity',

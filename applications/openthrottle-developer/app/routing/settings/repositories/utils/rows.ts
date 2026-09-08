@@ -41,6 +41,7 @@ const toRow = (
   remoteUrl: repository.normalizedRemoteUrl ?? null,
   repositoryId: repository.id,
   repositoryName: repository.name,
+  runMonitored: discovered?.runMonitored ?? null,
   unregistered: false,
   updatedAt: checkout.updatedAt ?? null,
 });
@@ -71,6 +72,7 @@ const toDiscoveredRow = (
   remoteUrl: repository?.normalizedRemoteUrl ?? null,
   repositoryId: repository?.id ?? null,
   repositoryName: repository?.name ?? REPOSITORIES_TABLE_COPY.unlinkedGroupName,
+  runMonitored: discovered.runMonitored ?? null,
   unregistered: true,
   updatedAt: null,
 });

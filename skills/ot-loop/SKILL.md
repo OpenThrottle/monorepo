@@ -83,13 +83,26 @@ Missing a poll only delays a cancel; it corrupts nothing. Best-effort is fine, s
 > **Invariant — every exit path settles the run.** `settle_plan_run(planRunId, status)` with
 > `COMPLETED` when the PR opens, `CANCELLED` on a deliberate stop, `FAILED` when you give up or
 > hit something you cannot finish. A row opened and never settled sits `IN_PROGRESS` forever,
-> reads as live, and holds its worktree marked busy — and because these rows are **exempt from
-> the stale sweep, no server-side process will ever clean one up**. This is the same class of bug
-> as leaving a task `IN_PROGRESS` (the loop's most common failure), one level up, with no reconcile
-> at all. Settling twice is a safe no-op, so settle when in doubt.
+> reads as live, and holds its worktree marked busy. This is the same class of bug as leaving a task
+> `IN_PROGRESS` (the loop's most common failure), one level up. Settling twice is a safe no-op, so
+> settle when in doubt.
 
-Under Claude Code a `Stop` hook settles runs whose session is provably gone — a backstop for hard
-crashes only. Under any other harness this discipline is the only thing there is.
+### What catches you if you don't
+
+Three backstops exist. **None of them can pick the right terminal status** — only you know whether
+this run completed, was cancelled or failed — so every one of them settles to `STALE`, which reads
+as "lost contact". Treat them as damage control for a hard crash, never as a substitute for step 6.
+
+| Backstop                        | Harness | Fires                                        |
+| ------------------------------- | ------- | -------------------------------------------- |
+| Settle-on-next-register         | any     | instantly, when a new run opens on this plan |
+| Claude Code `Stop` hook         | Claude  | ~6h after the session is provably gone       |
+| Unsupervised age sweep (server) | any     | ~12h after the run started                   |
+
+The floor is harness-agnostic: a run left open under cursor-agent, codex, gemini or antigravity is
+settled by the age sweep just as surely as one under Claude Code — the difference is latency, not
+coverage. What you lose by not settling is the accurate status and the hours in between, during
+which the run reads as live and its worktree stays marked busy.
 
 ## Finishing
 

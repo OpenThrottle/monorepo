@@ -8,6 +8,11 @@
  * liveness expression the stale sweeper uses from the other side. A stale IN_PROGRESS row is a dead
  * run and falls through to DIRTY or IDLE.
  *
+ * One exception, and it is why `runMonitored` exists: a run that does not heartbeat (migration 110)
+ * counts as live on its status alone, because there is no timer to read. RUNNING is then a CLAIM
+ * rather than a verified fact — the agent may have died hours ago — so classification reports how
+ * much the claim is worth instead of quietly presenting the two cases identically.
+ *
  * Paths are matched through registered checkout ids rather than string comparison, and discovery
  * indexes those checkouts by symlink-resolved real path — so a symlinked worktree root cannot make
  * a running worktree look idle.
@@ -48,6 +53,7 @@ export const classifyWorktree = (
       activity: WORKTREE_ACTIVITY.RUNNING,
       planId: liveRun.planId,
       planRunId: liveRun.id,
+      runMonitored: liveRun.heartbeatExpected,
       unregistered,
     };
   }
@@ -65,6 +71,7 @@ export const classifyWorktree = (
         : WORKTREE_ACTIVITY.IDLE,
     planId: null,
     planRunId: null,
+    runMonitored: null,
     unregistered,
   };
 };

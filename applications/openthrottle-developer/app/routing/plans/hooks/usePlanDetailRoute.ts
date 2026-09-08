@@ -55,6 +55,15 @@ export interface UsePlanDetailRouteResult {
    * the run history is still loading.
    */
   readonly newestRunIsStale: boolean | undefined;
+  /**
+   * Id of the newest run when it is interactive (no heartbeat expected) and still
+   * `IN_PROGRESS` — the one run the Settle escape hatch can act on. Three states,
+   * like {@link newestRunIsStale}: `undefined` until the deferred run history
+   * resolves (the toolbar must render no control then — "nothing to settle" is
+   * a claim we cannot make yet), `null` once it has resolved and the newest run
+   * is not one of these, else the run id to submit.
+   */
+  readonly newestUnsupervisedUnsettledRunId: string | null | undefined;
   readonly onResetToDefaults: () => void;
   readonly onSaveJobRunHooks: () => void;
   readonly onSaveRunConfig: () => void;
@@ -94,6 +103,20 @@ export const usePlanDetailRoute = (
     runHistory === undefined
       ? undefined
       : (runHistory.planRunAuditRows[0]?.isStale ?? false);
+
+  // An interactive run (heartbeatExpected false) can never read as stale — there
+  // is no heartbeat to expire — and Kill only stamps a marker its agent must
+  // poll. Once that agent is gone the row sits IN_PROGRESS forever, so the
+  // toolbar offers Settle for it. Same three states as the stale badge.
+  const newestRun = runHistory?.planRunAuditRows[0];
+  const newestUnsupervisedUnsettledRunId =
+    runHistory === undefined
+      ? undefined
+      : newestRun !== undefined &&
+          newestRun.heartbeatExpected === false &&
+          newestRun.status === 'IN_PROGRESS'
+        ? newestRun.id
+        : null;
 
   // The loader snapshot is deferred too, and is passed through as `undefined`
   // until it resolves. The subscription still starts at mount, so output written
@@ -230,6 +253,7 @@ export const usePlanDetailRoute = (
     isBoardView,
     jobRunHooksJson,
     newestRunIsStale,
+    newestUnsupervisedUnsettledRunId,
     onResetToDefaults,
     onSaveJobRunHooks,
     onSaveRunConfig,

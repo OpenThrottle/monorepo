@@ -210,12 +210,33 @@ export const PLAN_CHECKOUT_SELECTOR_COPY = {
   staleCheckoutHint: `The checkout recorded on this plan is no longer registered. Pick another one to make this plan runnable again.`,
 } as const;
 
+/**
+ * @description Plan toolbar copy. The `settleRun*` entries belong to
+ * {@link SettlePlanRunButton}, the escape hatch for an interactive run whose
+ * agent is gone. The tone is deliberate: Kill says "stop this run"; Settle says
+ * "this run is gone, close the books on it". It is an admission that contact
+ * was lost, not a normal stop, and the dialog has to explain why the user is
+ * here at all — an interactive run has no heartbeat, so nothing can verify it
+ * or settle it on its own, and until it is settled its worktree stays held.
+ */
 export const PLAN_TOOLBAR_COPY = {
   evaluateRulesRunningTooltip: `Unavailable while a run is active — kill the run first.`,
   evaluateRulesTerminalTooltip: `This plan is in a terminal state — nothing to evaluate.`,
   markCompleteRunningTooltip: `Unavailable while a run is active — kill the run first.`,
   runRunningTooltip: `A run is already active for this plan — kill it before starting another.`,
   runTerminalTooltip: `This plan is in a terminal state — create a new plan to do more work.`,
+  settleRunAriaLabel: (planTitle: string): string =>
+    `Settle interactive run for ${planTitle}`,
+  settleRunCancelLabel: `Keep waiting`,
+  settleRunConfirmLabel: `Settle run`,
+  settleRunDialogBody: (planTitle: string): string =>
+    `The newest run for "${planTitle}" was started from an interactive agent session, so it sends no heartbeat. Nothing can verify whether it is still alive, Kill cannot reach it once the agent is gone, and it will not be settled automatically for hours. Until it is settled, its worktree stays marked busy.`,
+  settleRunDialogConsequence: `Settling records the run as STALE — contact lost — not completed and not cancelled. Plan and task status are left exactly as they are. Do this only when you know the agent session is gone.`,
+  settleRunDialogTitle: `Settle this interactive run?`,
+  settleRunLabel: `Settle run`,
+  settleRunPendingLabel: `Settling…`,
+  settleRunSuccessToast: `Run recorded as STALE — contact lost. Its worktree is released; plan and task status are unchanged.`,
+  settleRunTriggerTitle: `Close the books on an interactive run that has lost contact: it cannot be verified or stopped, and until it is settled its worktree stays held.`,
 } as const;
 
 /**

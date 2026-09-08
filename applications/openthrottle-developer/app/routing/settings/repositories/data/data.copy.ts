@@ -41,6 +41,8 @@ export const REPOSITORIES_TABLE_COPY = {
   worktreeActivityIdleTitle: `Clean, with nothing running.`,
   worktreeActivityRunning: `Running`,
   worktreeActivityRunningTitle: `A plan run is executing here right now — its heartbeat is live.`,
+  worktreeActivityUnverified: `Running (unverified)`,
+  worktreeActivityUnverifiedTitle: `A plan run claims this worktree, but it is an interactive run with no heartbeat — nothing confirms the agent is still alive. If it crashed, this worktree stays held until the run is settled.`,
   worktreeBadge: `Worktree`,
   worktreeRunLinkLabel: `View run`,
 } as const;

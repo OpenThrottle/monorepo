@@ -14,6 +14,15 @@ import type { PlanRunsStaleSweepJob } from './plan-runs-stale-sweep.types';
 const staleRun = (id: string, planId: string): PlanRun =>
   createMock<PlanRun>({ id, planId, status: 'IN_PROGRESS' });
 
+/** An unsupervised run: no timer, so it is judged on age rather than silence. */
+const unsupervisedRun = (id: string, planId: string): PlanRun =>
+  createMock<PlanRun>({
+    heartbeatExpected: false,
+    id,
+    planId,
+    status: 'IN_PROGRESS',
+  });
+
 describe('PlanRunsStaleSweepProcessor', () => {
   let planRunsService: PlanRunsService;
   let plansService: PlansService;
@@ -21,6 +30,7 @@ describe('PlanRunsStaleSweepProcessor', () => {
   let processor: PlanRunsStaleSweepProcessor;
 
   const findStaleInProgressRuns = vi.fn();
+  const findStaleUnsupervisedRuns = vi.fn();
   const settleStaleRun = vi.fn();
   const findRecentByPlanId = vi.fn();
   // Bare (untyped) fns for the repo mocks so loose fixtures round-trip without casts.
@@ -31,6 +41,7 @@ describe('PlanRunsStaleSweepProcessor', () => {
 
   beforeEach(() => {
     findStaleInProgressRuns.mockReset().mockResolvedValue([]);
+    findStaleUnsupervisedRuns.mockReset().mockResolvedValue([]);
     // settleStaleRun echoes a STALE row by default (successful settle).
     settleStaleRun
       .mockReset()
@@ -47,6 +58,7 @@ describe('PlanRunsStaleSweepProcessor', () => {
     planRunsService = createMock<PlanRunsService>({
       findRecentByPlanId,
       findStaleInProgressRuns,
+      findStaleUnsupervisedRuns,
       settleStaleRun,
     });
     plansService = createMock<PlansService>({
@@ -135,6 +147,70 @@ describe('PlanRunsStaleSweepProcessor', () => {
     expect(settleStaleRun).toHaveBeenCalledTimes(2);
     // Both runs share plan-1 → reconcile runs once.
     expect(planUpdate).toHaveBeenCalledTimes(1);
+  });
+
+  it('settles an over-age unsupervised run and NEVER touches plan or task status', async () => {
+    // This is the load-bearing invariant of migration 110: nothing may reset a plan or its
+    // tasks to PENDING on the strength of a missing heartbeat. An unsupervised run has no
+    // heartbeat by construction, so sweeping one must settle the RUN ROW and stop there —
+    // even though the plan is IN_PROGRESS and has no other live run, which is exactly the
+    // shape that WOULD trigger a reset on the heartbeating path.
+    findStaleUnsupervisedRuns.mockResolvedValue([
+      unsupervisedRun('run-abandoned', 'plan-1'),
+    ]);
+    findRecentByPlanId.mockResolvedValue([]);
+    planFindOne.mockResolvedValue({ id: 'plan-1', status: 'IN_PROGRESS' });
+
+    await processor.process(job);
+
+    expect(settleStaleRun).toHaveBeenCalledWith('run-abandoned');
+    expect(planUpdate).not.toHaveBeenCalled();
+    expect(taskUpdate).not.toHaveBeenCalled();
+  });
+
+  it('sweeps unsupervised runs on the 12h cutoff, not the 120s one', async () => {
+    // Passing STALE_CUTOFF_MS here would sweep every healthy interactive loop two minutes in.
+    let unsupervisedCutoff: Date | undefined;
+    let heartbeatCutoff: Date | undefined;
+    findStaleUnsupervisedRuns.mockImplementation((cutoff: Date) => {
+      unsupervisedCutoff = cutoff;
+
+      return Promise.resolve([]);
+    });
+    findStaleInProgressRuns.mockImplementation((cutoff: Date) => {
+      heartbeatCutoff = cutoff;
+
+      return Promise.resolve([]);
+    });
+
+    await processor.process(job);
+
+    expect(unsupervisedCutoff).toBeInstanceOf(Date);
+    expect(heartbeatCutoff).toBeInstanceOf(Date);
+    const unsupervisedAgeMs = Date.now() - (unsupervisedCutoff?.getTime() ?? 0);
+    expect(unsupervisedAgeMs).toBeGreaterThan(11 * 60 * 60 * 1_000);
+    // Strictly further back than the heartbeating pass's cutoff.
+    expect(unsupervisedCutoff?.getTime() ?? 0).toBeLessThan(
+      heartbeatCutoff?.getTime() ?? 0,
+    );
+  });
+
+  it('reconciles a heartbeating stale run even when an unsupervised run is swept alongside it', async () => {
+    // The two passes are independent: the unsupervised pass must neither suppress the
+    // heartbeating pass's reconcile nor contribute a plan id to it.
+    findStaleInProgressRuns.mockResolvedValue([staleRun('run-1', 'plan-1')]);
+    findStaleUnsupervisedRuns.mockResolvedValue([
+      unsupervisedRun('run-abandoned', 'plan-2'),
+    ]);
+    findRecentByPlanId.mockResolvedValue([]);
+
+    await processor.process(job);
+
+    expect(planUpdate).toHaveBeenCalledTimes(1);
+    expect(planUpdate).toHaveBeenCalledWith(
+      { id: 'plan-1' },
+      { status: 'PENDING' },
+    );
   });
 
   it('skips reconcile for a run whose status-guarded settle was a no-op (already terminal)', async () => {

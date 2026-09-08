@@ -47,6 +47,7 @@ fragment DiscoveredWorktreeFields on DiscoveredWorktreeObject {
   planId
   planRunId
   repositoryId
+  runMonitored
   unregistered
 }
 

@@ -45,16 +45,26 @@ describe('PlanRunsService', () => {
     update: ReturnType<typeof vi.fn>;
   };
   let qbGetMany: ReturnType<typeof vi.fn>;
+  let qbExecute: ReturnType<typeof vi.fn>;
 
   beforeEach(async () => {
     qbGetMany = vi.fn().mockResolvedValue([]);
     // Chainable QueryBuilder stub: every builder method returns the same object
     // so .where().andWhere().orderBy().take().getMany() resolves through.
     const qb: Record<string, ReturnType<typeof vi.fn>> = {};
-    for (const method of ['where', 'andWhere', 'orderBy', 'take']) {
+    for (const method of [
+      'andWhere',
+      'orderBy',
+      'set',
+      'take',
+      'update',
+      'where',
+    ]) {
       qb[method] = vi.fn(() => qb);
     }
     qb.getMany = qbGetMany;
+    qbExecute = vi.fn().mockResolvedValue({ affected: 0 });
+    qb.execute = qbExecute;
 
     repo = {
       create: vi.fn((input: Partial<PlanRun>) => buildRun(input)),
@@ -481,6 +491,139 @@ describe('PlanRunsService', () => {
         expect.anything(),
       );
       expect(result).toEqual([unsupervised]);
+    });
+
+    it('findStaleUnsupervisedRuns is the exact complement of findStaleInProgressRuns', async () => {
+      // Between them the two finders must cover every IN_PROGRESS row: heartbeat_expected
+      // rows go to the 120s sweep, NOT heartbeat_expected rows go here. A row matching
+      // neither would have no janitor at all, which is the debt this closes.
+      const abandoned = buildRun({
+        heartbeatExpected: false,
+        id: 'run-abandoned',
+        status: 'IN_PROGRESS',
+      });
+      qbGetMany.mockResolvedValueOnce([abandoned]);
+      const cutoff = new Date('2026-07-21T12:00:00Z');
+
+      const result = await service.findStaleUnsupervisedRuns(cutoff, 200);
+      const qb = repo.createQueryBuilder.mock.results[0]?.value;
+
+      expect(qb.where).toHaveBeenCalledWith('run.status = :status', {
+        status: 'IN_PROGRESS',
+      });
+      expect(qb.andWhere).toHaveBeenCalledWith('NOT run.heartbeat_expected');
+      expect(qb.andWhere).toHaveBeenCalledWith(
+        'COALESCE(run.last_heartbeat_at, run.created_at) < :cutoff',
+        { cutoff },
+      );
+      expect(qb.orderBy).toHaveBeenCalledWith('run.created_at', 'ASC');
+      expect(qb.take).toHaveBeenCalledWith(200);
+      expect(result).toEqual([abandoned]);
+    });
+
+    it('settleSupersededUnsupervisedRuns settles only unsupervised IN_PROGRESS rows on the plan', async () => {
+      qbExecute.mockResolvedValueOnce({ affected: 2 });
+
+      const affected = await service.settleSupersededUnsupervisedRuns('plan-1');
+      const qb = repo.createQueryBuilder.mock.results[0]?.value;
+
+      expect(qb.set).toHaveBeenCalledWith({
+        hostname: null,
+        pid: null,
+        status: 'STALE',
+        workerId: null,
+      });
+      expect(qb.where).toHaveBeenCalledWith('plan_id = :planId', {
+        planId: 'plan-1',
+      });
+      expect(qb.andWhere).toHaveBeenCalledWith('status = :status', {
+        status: 'IN_PROGRESS',
+      });
+      // A queued or detached-CLI run has a timer and a sweeper of its own — never collateral.
+      expect(qb.andWhere).toHaveBeenCalledWith('NOT heartbeat_expected');
+      expect(affected).toBe(2);
+    });
+
+    it('registerCliRun settles a superseded unsupervised run before inserting the new one', async () => {
+      // Ordering matters: settle first, then insert, so the brand-new row can never be
+      // caught by its own supersede pass.
+      const calls: string[] = [];
+      repo.createQueryBuilder.mockImplementation(() => {
+        calls.push('supersede');
+        const qb: Record<string, ReturnType<typeof vi.fn>> = {};
+        for (const method of ['andWhere', 'set', 'update', 'where']) {
+          qb[method] = vi.fn(() => qb);
+        }
+        qb.execute = vi.fn().mockResolvedValue({ affected: 1 });
+
+        return qb;
+      });
+      repo.save.mockImplementation(async (run: PlanRun) => {
+        calls.push('save');
+
+        return run;
+      });
+
+      await service.registerCliRun({
+        executionBackend: 'claude',
+        heartbeatExpected: false,
+        hostname: null,
+        pid: null,
+        planId: 'plan-1',
+        workerId: null,
+      });
+
+      expect(calls).toEqual(['supersede', 'save']);
+    });
+
+    it('registerCliRun does NOT supersede when the new run heartbeats', async () => {
+      // A heartbeating run is the 120s sweep's business; registering one says nothing
+      // about an unrelated unsupervised row.
+      await service.registerCliRun({
+        executionBackend: 'claude',
+        hostname: null,
+        pid: null,
+        planId: 'plan-1',
+        workerId: null,
+      });
+
+      expect(repo.createQueryBuilder).not.toHaveBeenCalled();
+    });
+
+    it('forceSettleUnsupervisedRun guards on IN_PROGRESS AND not-heartbeating', async () => {
+      // Both guards matter. Without the status guard a human could re-settle a COMPLETED run;
+      // without the heartbeat guard they could kill a genuinely live heartbeating run that has
+      // a sweeper of its own.
+      qbExecute.mockResolvedValueOnce({ affected: 1 });
+      repo.findOne.mockResolvedValueOnce(
+        buildRun({ heartbeatExpected: false, id: 'run-1', status: 'STALE' }),
+      );
+
+      const result = await service.forceSettleUnsupervisedRun('run-1');
+      const qb = repo.createQueryBuilder.mock.results[0]?.value;
+
+      expect(qb.where).toHaveBeenCalledWith('id = :planRunId', {
+        planRunId: 'run-1',
+      });
+      expect(qb.andWhere).toHaveBeenCalledWith('status = :status', {
+        status: 'IN_PROGRESS',
+      });
+      expect(qb.andWhere).toHaveBeenCalledWith('NOT heartbeat_expected');
+      // STALE, never COMPLETED/CANCELLED/FAILED: a human knows contact was lost, not
+      // how the work ended.
+      expect(qb.set).toHaveBeenCalledWith(
+        expect.objectContaining({ status: 'STALE' }),
+      );
+      expect(result?.status).toBe('STALE');
+    });
+
+    it('forceSettleUnsupervisedRun returns null without reading the row back when nothing matched', async () => {
+      qbExecute.mockResolvedValueOnce({ affected: 0 });
+
+      const result = await service.forceSettleUnsupervisedRun('run-live');
+
+      expect(result).toBeNull();
+      expect(repo.findOne).not.toHaveBeenCalled();
     });
 
     it('registerCliRun defaults heartbeatExpected to true so the CLI is untouched', async () => {

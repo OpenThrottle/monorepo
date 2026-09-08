@@ -3,10 +3,14 @@
  * `Stop` hook can settle it if this session dies before settling it itself.
  *
  * This exists because a run registered here declares `heartbeatExpected: false` and is
- * therefore exempt from the server's stale sweep — deliberately, since sweeping one
- * would reset the plan and its IN_PROGRESS tasks to PENDING under live work. The cost
- * of that exemption is that NOTHING server-side will ever settle such a row, so an
- * abandoned one is permanent and holds its worktree marked busy forever.
+ * therefore exempt from the server's 120s stale sweep — deliberately, since sweeping one
+ * would reset the plan and its IN_PROGRESS tasks to PENDING under live work.
+ *
+ * The server does now settle such rows eventually: an unsupervised age sweep at
+ * UNSUPERVISED_STALE_CUTOFF_MS (12h), plus settle-on-next-register. This hook remains
+ * worth having because it is far faster than either — it fires on evidence that the
+ * session is gone rather than on elapsed time, so a crashed Claude session's worktree
+ * is freed in hours rather than half a day.
  *
  * The reader is `@openthrottle/agentic-hooks` (`src/data/plan-runs.ts`, bundled to
  * `.claude/hooks/plan-run-janitor.cjs`). The two are NOT coupled through an import:

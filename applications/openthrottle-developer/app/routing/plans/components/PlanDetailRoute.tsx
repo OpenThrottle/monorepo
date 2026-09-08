@@ -47,6 +47,7 @@ export const PlanDetailRoute = (
     isBoardView,
     jobRunHooksJson,
     newestRunIsStale,
+    newestUnsupervisedUnsettledRunId,
     onResetToDefaults,
     onSaveJobRunHooks,
     onSaveRunConfig,
@@ -95,6 +96,7 @@ export const PlanDetailRoute = (
             editors={loaderData.enabledEditors}
             jobRunHooksJson={jobRunHooksJson}
             newestRunIsStale={newestRunIsStale}
+            newestUnsupervisedUnsettledRunId={newestUnsupervisedUnsettledRunId}
             onAddTag={(tag) =>
               tagFetcher.submit(
                 { intent: 'addPlanTag', tag },

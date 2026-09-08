@@ -12,6 +12,7 @@ import {
   CancelPlanRunInputSchema,
   DetachHookInputSchema,
   EnqueuePlanRunInputSchema,
+  ForceSettlePlanRunInputSchema,
   RalphPlanRunTuningInputSchema,
   RemovePlanTagInputSchema,
   SetPlanStatusInputSchema,
@@ -23,6 +24,7 @@ import {
   PlanDetailDetachHookDocument,
   PlanDetailEnqueuePlanRunDocument,
   PlanDetailEvaluatePlanRulesDocument,
+  PlanDetailForceSettlePlanRunDocument,
   PlanDetailRemovePlanTagDocument,
   PlanDetailSetPlanStatusDocument,
   PlanDetailUpdatePlanJobRunHooksDocument,
@@ -31,7 +33,10 @@ import {
 } from '~/__generated__/graphql';
 import { parseJobRunHooksJsonFromPlan } from '~/routing/plans/utils/job-run-hooks-ui';
 import { toErrorMessage } from '~/global/utils/utils.error-message';
-import type { RalphPlanRunTuningInput } from '~/__generated__/graphql';
+import type {
+  PlanDetailForceSettlePlanRunMutation,
+  RalphPlanRunTuningInput,
+} from '~/__generated__/graphql';
 import type { Route } from '@/app/routes/+types/plans.$planId._index';
 
 export const cancelPlanRun = async (args: Route.ActionArgs, planId: string) => {
@@ -51,6 +56,57 @@ export const cancelPlanRun = async (args: Route.ActionArgs, planId: string) => {
   } catch (error) {
     return {
       cancelPlanRunError: toErrorMessage(error, 'Failed to cancel plan run.'),
+    };
+  }
+};
+
+/**
+ * Settles the newest interactive (non-heartbeating) run to STALE. Unlike
+ * `cancelPlanRun` this is keyed by the plan_runs row id, not the plan: the form
+ * posts `planRunId` because the plan may already have moved on while the dead
+ * row still reads IN_PROGRESS and holds its worktree.
+ */
+export const forceSettlePlanRun = async (
+  args: Route.ActionArgs,
+  formData: FormData,
+): Promise<
+  | {
+      forceSettlePlanRun: NonNullable<
+        PlanDetailForceSettlePlanRunMutation['forceSettlePlanRun']
+      >;
+    }
+  | { forceSettlePlanRunError: string }
+> => {
+  const parsed = parseFormData(formData, ForceSettlePlanRunInputSchema(), {
+    strict: false,
+  });
+  if (!parsed.success) {
+    return { forceSettlePlanRunError: parsed.error };
+  }
+
+  try {
+    const result = await executeGraphqlWithAuth(
+      args.request,
+      PlanDetailForceSettlePlanRunDocument,
+      { input: parsed.data },
+    );
+
+    // Null means the guard did not match: the run is no longer IN_PROGRESS, or
+    // it heartbeats (a supervised run the sweeper owns). Nothing was changed.
+    if (!result.forceSettlePlanRun) {
+      return {
+        forceSettlePlanRunError:
+          'Nothing to settle — this run is no longer an unsettled interactive run.',
+      };
+    }
+
+    return { forceSettlePlanRun: result.forceSettlePlanRun };
+  } catch (error) {
+    return {
+      forceSettlePlanRunError: toErrorMessage(
+        error,
+        'Failed to settle plan run.',
+      ),
     };
   }
 };

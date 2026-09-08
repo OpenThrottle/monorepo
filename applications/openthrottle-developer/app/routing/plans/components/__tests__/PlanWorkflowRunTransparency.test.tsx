@@ -87,6 +87,7 @@ describe('PlanWorkflowRunTransparency', () => {
           bullmqJobId: 'job-snap-1',
           createdAt: '2024-01-02T03:04:05.000Z',
           executionBackend: 'cursor',
+          heartbeatExpected: true,
           id: 'run-1',
           isStale: false,
           runConfigSnapshotJson: JSON.stringify({
@@ -117,6 +118,7 @@ describe('PlanWorkflowRunTransparency', () => {
           bullmqJobId: 'job-snap-2',
           createdAt: '2024-01-02T03:04:05.000Z',
           executionBackend: 'claude',
+          heartbeatExpected: true,
           id: 'run-2',
           isStale: false,
           runConfigSnapshotJson: JSON.stringify({

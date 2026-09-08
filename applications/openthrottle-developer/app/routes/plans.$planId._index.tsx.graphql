@@ -113,6 +113,19 @@ mutation PlanDetailCancelPlanRun($input: CancelPlanRunInput!) {
   }
 }
 
+# Settles an IN_PROGRESS run that does not heartbeat (an interactive /ot-loop
+# turn) to STALE. Kill cannot reach such a run once its agent is gone — nothing
+# polls the cancel marker — so this is the operator's escape hatch. Null when
+# the run no longer matched the guard (already settled, or a supervised run).
+mutation PlanDetailForceSettlePlanRun($input: ForceSettlePlanRunInput!) {
+  forceSettlePlanRun(input: $input) {
+    heartbeatExpected
+    id
+    isStale
+    status
+  }
+}
+
 mutation PlanDetailSetPlanStatus($input: SetPlanStatusInput!) {
   setPlanStatus(input: $input) {
     id
@@ -240,6 +253,7 @@ query PlanDetailRunHistory($planId: ID!) {
     }
     createdAt
     executionBackend
+    heartbeatExpected
     id
     isStale
     lastHeartbeatAt

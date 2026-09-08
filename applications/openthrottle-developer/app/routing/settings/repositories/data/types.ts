@@ -75,6 +75,12 @@ export interface RepositoryCheckoutRow {
   /** Null for a discovered worktree whose owning repository is not registered. */
   repositoryId: string | null;
   repositoryName: string;
+  /**
+   * Whether the live run's liveness is verified. True when it heartbeats, false when it is an
+   * unsupervised interactive run whose IN_PROGRESS is only a claim, null when nothing runs here.
+   * A worktree can be held "Running" by an agent that died hours ago; this is what tells them apart.
+   */
+  runMonitored: boolean | null;
   /** True when there is no `repository_checkouts` row at this path. */
   unregistered: boolean;
   updatedAt: string | null;

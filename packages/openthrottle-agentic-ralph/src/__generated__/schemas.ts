@@ -55,6 +55,7 @@ import {
   EnqueueDocIngestionInput,
   EnqueuePlanRalphOrchestratorInput,
   EnqueuePlanRunInput,
+  ForceSettlePlanRunInput,
   GetAgentConversationMessagesInput,
   GetGeneratorInput,
   GetPlanEmbeddingInput,
@@ -777,6 +778,14 @@ export function EnqueuePlanRunInputSchema(): z.ZodObject<
     ralph: z.lazy(() => RalphPlanRunTuningInputSchema().nullish()),
     repositoryId: z.string().nullish(),
     workingDirectory: z.string().nullish(),
+  });
+}
+
+export function ForceSettlePlanRunInputSchema(): z.ZodObject<
+  Properties<ForceSettlePlanRunInput>
+> {
+  return z.object({
+    planRunId: z.string().min(1),
   });
 }
 

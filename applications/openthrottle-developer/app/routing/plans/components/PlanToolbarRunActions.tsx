@@ -1,6 +1,5 @@
 import * as React from 'react';
 import {
-  Badge,
   Button,
   Input,
   Tooltip,
@@ -10,10 +9,9 @@ import {
 import { Gauge, PlayCircle } from 'lucide-react';
 import type { useFetcher } from 'react-router';
 import type { action } from '~/routes/plans.$planId._index';
-import { KillPlanRunButton } from '~/routing/plans/components/KillPlanRunButton';
+import { PlanToolbarActiveRunControl } from '~/routing/plans/components/PlanToolbarActiveRunControl';
 import { PLAN_TOOLBAR_COPY } from '~/routing/plans/data/data.copy';
 import { getPlanToolbarRunButtonLabel } from '~/routing/plans/utils/plan-toolbar-run-label';
-import { getPlanIsCancelable } from '~/routing/plans/utils/utils.plans';
 
 export interface PlanToolbarRunActionsProps {
   readonly branch?: string;
@@ -30,6 +28,12 @@ export interface PlanToolbarRunActionsProps {
    * than briefly offering one that may turn out to be a no-op.
    */
   readonly newestRunIsStale: boolean | undefined;
+  /**
+   * Id of the newest run when it is an interactive (non-heartbeating) run still
+   * IN_PROGRESS; the Settle escape hatch renders for it. `undefined` while run
+   * history is loading, `null` when the newest run is not one of these.
+   */
+  readonly newestUnsupervisedUnsettledRunId: string | null | undefined;
   readonly planId: string;
   readonly planStatus?: string;
   readonly planTitle: string;
@@ -42,8 +46,8 @@ export interface PlanToolbarRunActionsProps {
 
 /**
  * @description The {@link PlanToolbar} primary action group: the Run/Queue
- * enqueue form, the Evaluate rules form, and the Kill-run / Stale control for
- * an active run. Extracted from the toolbar per component-primitive-shape R6.
+ * enqueue form, the Evaluate rules form, and the active-run control (Kill /
+ * Stale / Settle). Extracted from the toolbar per component-primitive-shape R6.
  */
 export const PlanToolbarRunActions = (
   props: PlanToolbarRunActionsProps,
@@ -57,6 +61,7 @@ export const PlanToolbarRunActions = (
     isTerminal,
     jobRunHooksJson,
     newestRunIsStale,
+    newestUnsupervisedUnsettledRunId,
     planId,
     planStatus,
     planTitle,
@@ -177,30 +182,13 @@ export const PlanToolbarRunActions = (
         </TooltipContent>
       </Tooltip>
 
-      {/* Only the Stale badge depends on run history. While it is undefined we
-          render Kill — the normal control — rather than nothing: an operator
-          mid-run needs Kill, and "not stale" is the claim we cannot yet make. */}
-      {getPlanIsCancelable(planStatus) && newestRunIsStale === true ? (
-        <Tooltip delayDuration={1_000}>
-          <TooltipTrigger asChild={true}>
-            <Badge color="amber" size="xs">
-              Stale
-            </Badge>
-          </TooltipTrigger>
-          <TooltipContent className="max-w-xs" side="top">
-            This run lost contact (its heartbeat went quiet) — the owning
-            process likely crashed. Kill is unavailable because there is nothing
-            live to stop; a background sweeper will settle it.
-          </TooltipContent>
-        </Tooltip>
-      ) : (
-        <KillPlanRunButton
-          planId={planId}
-          planTitle={planTitle}
-          show={getPlanIsCancelable(planStatus)}
-          size="xs"
-        />
-      )}
+      <PlanToolbarActiveRunControl
+        newestRunIsStale={newestRunIsStale}
+        newestUnsupervisedUnsettledRunId={newestUnsupervisedUnsettledRunId}
+        planId={planId}
+        planStatus={planStatus}
+        planTitle={planTitle}
+      />
     </>
   );
 };

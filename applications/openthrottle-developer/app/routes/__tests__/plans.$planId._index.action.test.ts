@@ -4,8 +4,10 @@ import { action } from '../plans.$planId._index';
 import {
   PlanDetailCancelPlanRunDocument,
   PlanDetailEnqueuePlanRunDocument,
+  PlanDetailForceSettlePlanRunDocument,
   PlanDetailUpdatePlanRunConfigDocument,
   type PlanDetailCancelPlanRunMutation,
+  type PlanDetailForceSettlePlanRunMutation,
 } from '~/__generated__/graphql';
 import { createTestRouterContext } from '@openthrottle/react-router-testing';
 
@@ -473,6 +475,94 @@ describe('routes/plans.$planId._index action (cancelPlanRun)', () => {
 
     expect(result).toEqual({
       cancelPlanRunError: 'Failed to cancel plan run.',
+    });
+  });
+});
+
+describe('routes/plans.$planId._index action (forceSettlePlanRun)', () => {
+  const planId = '80864bba-630a-451d-bfd2-4b25ec202381';
+  const planRunId = 'c1b3a2d4-0000-4000-8000-000000000001';
+
+  const post = async (formData: FormData) => {
+    const request = new Request(`http://localhost/plans/${planId}`, {
+      body: formData,
+      method: 'POST',
+    });
+    const result = await action({
+      context: createTestRouterContext(),
+      params: { planId },
+      pattern: '/plans/:planId',
+      request,
+      url: new URL(request.url),
+    });
+    return { request, result };
+  };
+
+  beforeEach(() => {
+    mockExecuteGraphqlWithAuth.mockReset();
+  });
+
+  test('calls forceSettlePlanRun with the submitted planRunId, not the plan id', async () => {
+    const settled: PlanDetailForceSettlePlanRunMutation['forceSettlePlanRun'] =
+      {
+        __typename: 'PlanRunObject',
+        heartbeatExpected: false,
+        id: planRunId,
+        isStale: false,
+        status: 'STALE',
+      };
+    mockExecuteGraphqlWithAuth.mockResolvedValue({
+      forceSettlePlanRun: settled,
+    });
+
+    const formData = new FormData();
+    formData.set('intent', 'forceSettlePlanRun');
+    formData.set('planRunId', planRunId);
+
+    const { request, result } = await post(formData);
+
+    expect(mockExecuteGraphqlWithAuth).toHaveBeenCalledWith(
+      request,
+      PlanDetailForceSettlePlanRunDocument,
+      { input: { planRunId } },
+    );
+    expect(result).toEqual({ forceSettlePlanRun: settled });
+  });
+
+  test('returns forceSettlePlanRunError without calling GraphQL when planRunId is missing', async () => {
+    const formData = new FormData();
+    formData.set('intent', 'forceSettlePlanRun');
+
+    const { result } = await post(formData);
+
+    expect(mockExecuteGraphqlWithAuth).not.toHaveBeenCalled();
+    expect(result).toHaveProperty('forceSettlePlanRunError');
+  });
+
+  test('returns forceSettlePlanRunError when GraphQL throws', async () => {
+    mockExecuteGraphqlWithAuth.mockRejectedValue(new Error('network down'));
+
+    const formData = new FormData();
+    formData.set('intent', 'forceSettlePlanRun');
+    formData.set('planRunId', planRunId);
+
+    const { result } = await post(formData);
+
+    expect(result).toEqual({ forceSettlePlanRunError: 'network down' });
+  });
+
+  test('returns forceSettlePlanRunError when the run did not match the guard (null response)', async () => {
+    mockExecuteGraphqlWithAuth.mockResolvedValue({ forceSettlePlanRun: null });
+
+    const formData = new FormData();
+    formData.set('intent', 'forceSettlePlanRun');
+    formData.set('planRunId', planRunId);
+
+    const { result } = await post(formData);
+
+    expect(result).toEqual({
+      forceSettlePlanRunError:
+        'Nothing to settle — this run is no longer an unsettled interactive run.',
     });
   });
 });

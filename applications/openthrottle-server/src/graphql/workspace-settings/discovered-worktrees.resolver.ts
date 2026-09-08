@@ -60,6 +60,7 @@ export class DiscoveredWorktreesResolver {
         planId: worktree.planId,
         planRunId: worktree.planRunId,
         repositoryId: worktree.repositoryId,
+        runMonitored: worktree.runMonitored,
         unregistered: worktree.unregistered,
       })),
     };

@@ -20,6 +20,7 @@ const auditRow = (
   bullmqJobId: 'job-1',
   createdAt: '2024-01-02T03:04:05.000Z',
   executionBackend: 'cursor',
+  heartbeatExpected: true,
   id: 'run-1',
   isStale: false,
   runConfigSnapshotJson: null,
