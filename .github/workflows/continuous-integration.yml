@@ -188,6 +188,103 @@ jobs:
             echo "→ graph=false"
           fi
 
+  # Server-side attribution backstop.
+  #
+  # `.husky/commit-msg` strips attribution from a commit message as it is
+  # written, but there are two channels no local hook can ever see:
+  #   - the PR title and body, which live only on GitHub, and
+  #   - the squash-merge commit, whose message GitHub composes server-side from
+  #     the branch commits (0e009e5f/#499 and 463616df/#497 both landed on main
+  #     carrying `Co-authored-by:` for exactly this reason).
+  # This job is the check on the other side of that boundary.
+  #
+  # The pattern set is NOT restated here — it is sourced from
+  # .husky/lib/attribution-patterns.sh, the same file the hook sources, so the
+  # two cannot drift. Same arrangement as .husky/lib/component-shape-gate.sh.
+  #
+  # 💰 No Nx, no install, no cache, no full clone: a sparse depth-1 checkout of
+  # one shell file plus one paginated API call. Runs on draft PRs too, unlike
+  # `build` — catching this before review costs nothing and catching it after
+  # the squash costs an immutable commit on main.
+  attribution-guard:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # Job-scoped addition to the workflow's least-privilege default: reading
+    # `pulls/{n}/commits` needs pull-requests:read.
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: '📦 Checkout the shared pattern set'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          sparse-checkout: .husky/lib/attribution-patterns.sh
+          sparse-checkout-cone-mode: false
+
+      - name: '🚫 No tool or model attribution'
+        env:
+          # Via env, never `${{ }}` inside the script: a PR title or body is
+          # attacker-controlled text and would otherwise be shell-injected.
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          . .husky/lib/attribution-patterns.sh
+
+          work="$(mktemp -d)"
+          failed=0
+
+          # Report every offending line with its source and line number, so the
+          # author sees what to delete rather than just a red X.
+          check () {
+            label="$1"
+            file="$2"
+            pattern="${3:-$OT_ATTRIBUTION_PATTERN}"
+
+            if hits="$(grep -inE "$pattern" "$file")"; then
+              failed=1
+              echo "❌ $label"
+              echo "$hits" | sed 's/^/     line /'
+            fi
+          }
+
+          printf '%s' "$PR_TITLE" > "$work/title"
+          printf '%s' "$PR_BODY" > "$work/body"
+
+          # A title is one line, so attribution lands at its end rather than on a
+          # line of its own — it needs the unanchored pattern. The body is prose
+          # and keeps the anchored one.
+          check "PR title" "$work/title" "$OT_ATTRIBUTION_PATTERN_INLINE"
+          check "PR body" "$work/body"
+
+          # One paginated call; the message is base64'd so multi-line bodies
+          # survive being paired with their SHA on a single line.
+          gh api "repos/$REPO/pulls/$PR_NUMBER/commits" --paginate \
+            --jq '.[] | .sha[0:8] + " " + (.commit.message | @base64)' > "$work/commits"
+
+          while read -r sha encoded; do
+            printf '%s' "$encoded" | base64 -d > "$work/message"
+            check "commit $sha" "$work/message"
+          done < "$work/commits"
+
+          if [ "$failed" -ne 0 ]; then
+            echo ""
+            echo "🚫 Attribution to a tool, model or assistant is not allowed in a PR"
+            echo "   title, a PR body, or any commit in the range. Remove the lines"
+            echo "   above and push again."
+            echo ""
+            echo "   Rule:  AGENTS.md § No agent attribution"
+            echo "   Guard: .husky/lib/attribution-patterns.sh (shared with the commit-msg hook)"
+            exit 1
+          fi
+
+          echo "✅ No attribution found in the PR title, body, or commits"
+
   build:
     needs: changes
     # 💰 Skip CI on draft PRs — push freely while iterating; CI fires when marked
@@ -597,20 +694,28 @@ jobs:
   # `fail-fast: false` above, a red shard therefore still turns this job red while
   # its siblings run to completion.
   ci-success:
-    needs: [changes, build]
+    needs: [attribution-guard, changes, build]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
       - name: '✅ Verify CI outcome'
         run: |
+          attribution_result="${{ needs.attribution-guard.result }}"
           changes_result="${{ needs.changes.result }}"
           build_result="${{ needs.build.result }}"
 
-          echo "changes: $changes_result | build: $build_result"
+          echo "attribution-guard: $attribution_result | changes: $changes_result | build: $build_result"
 
           if [ "$changes_result" != "success" ]; then
             echo "❌ changes gate did not succeed ($changes_result)"
+            exit 1
+          fi
+
+          # 'skipped' is the correct outcome on merge_group/push/workflow_dispatch,
+          # where there is no PR payload to inspect. Anything else is a real failure.
+          if [ "$attribution_result" != "success" ] && [ "$attribution_result" != "skipped" ]; then
+            echo "❌ attribution guard did not succeed ($attribution_result)"
             exit 1
           fi
 

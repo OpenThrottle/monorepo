@@ -1,14 +1,19 @@
 #!/usr/bin/env sh
 
 #
-# Strip Co-authored-by and Made-with lines (e.g. from Cursor) so only conventional footers remain.
+# Strip agent-attribution lines so only conventional footers remain.
 #
+# Emitter-agnostic on purpose — the pattern set is shared with CI in
+# .husky/lib/attribution-patterns.sh, and the match is case-insensitive because
+# the exact spelling varies by tool (`Co-Authored-By:` vs `Co-authored-by:`).
+#
+. "$(dirname "$0")/lib/attribution-patterns.sh"
+
 if [ -n "$1" ] && [ -f "$1" ]; then
-  sed -i.bak \
-    -e '/^[[:space:]]*Co-authored-by:/d' \
-    -e '/^[[:space:]]*Made-with:/d' \
-    "$1"
-  rm -f "$1.bak"
+  if grep -qiE "$OT_ATTRIBUTION_PATTERN" "$1"; then
+    grep -viE "$OT_ATTRIBUTION_PATTERN" "$1" > "$1.stripped" || true
+    mv "$1.stripped" "$1"
+  fi
 fi
 
 #
