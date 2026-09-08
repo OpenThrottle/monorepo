@@ -45,5 +45,9 @@ run**. Regenerate with:
 pnpm nx run @openthrottle/openthrottle-developer-codegen:codegen-graphql
 ```
 
-`verify-graphql-codegen` regenerates and fails if the committed
-`src/__generated__/` output drifts; CI runs it to catch stale output.
+`verify-graphql-codegen` regenerates and fails if the on-disk
+`src/__generated__/` output drifts from the `.graphql` documents. Nothing here is
+committed, so the guard snapshots and byte-compares instead of using `git diff`
+(which, over gitignored paths, always exits 0). It is a **local** staleness gate:
+on a fresh clone there is no baseline to compare against, and the guard reports
+that rather than passing silently.

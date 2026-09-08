@@ -3025,6 +3025,10 @@ importers:
       '@openthrottle/openthrottle-agentic-workflow':
         specifier: workspace:^
         version: link:../openthrottle-agentic-workflow
+    devDependencies:
+      graphql:
+        specifier: 'catalog:'
+        version: 16.14.2
 
   packages/openthrottle-agentic-utils:
     dependencies:

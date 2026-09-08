@@ -12,6 +12,9 @@
     "@openthrottle/openthrottle-agentic-workflow": "workspace:^"
   },
   "description": "Ralph agentic workflow: codegen GraphQL client for OpenThrottle plans/tasks, injected iteration runner, and GraphQL-only orchestrator (no NestJS or Postgres).",
+  "devDependencies": {
+    "graphql": "catalog:"
+  },
   "exports": {
     ".": {
       "types": "./dist/src/index.d.ts",
@@ -50,14 +53,21 @@
       "build-package": {},
       "codegen-graphql": {},
       "lint": {},
-      "test": {},
+      "test": {
+        "description": "Run the Vitest suite. Adds the committed openthrottle-server schema.gql as an explicit input: src/graphql/__tests__/fragment-coverage.test.ts reads it, so a server-side field addition must invalidate this cache entry or the tripwire would pass from cache.",
+        "inputs": [
+          "default",
+          "^production",
+          "{workspaceRoot}/applications/openthrottle-server/schema.gql"
+        ]
+      },
       "typecheck": {},
       "verify-graphql-codegen": {
         "cache": false,
-        "description": "Regenerate agentic-ralph GraphQL types and fail if the committed src/__generated__ output drifts.",
+        "description": "Regenerate agentic-ralph GraphQL types and fail if the generated src/__generated__ output drifts from the .graphql documents. Output is committed here (see this project's .gitignore negation), so this is the workspace's live gate on the SHARED plan/task documents.",
         "executor": "nx:run-commands",
         "options": {
-          "command": "(cd packages/openthrottle-agentic-ralph && pnpm exec graphql-codegen) && git diff --exit-code -- packages/openthrottle-agentic-ralph/src/__generated__",
+          "command": "tsx ./scripts/verify-graphql-codegen.ts --project=packages/openthrottle-agentic-ralph",
           "cwd": "{workspaceRoot}"
         }
       }

@@ -11,7 +11,11 @@ enum objects** that the app's own `enumsAsTypes: true` codegen cannot provide.
 - `pnpm nx run @openthrottle/openthrottle-developer-codegen:codegen-graphql` — regenerate
   `src/__generated__/` (schema read from `applications/openthrottle-server/schema.gql`; no running
   server needed). `codegen-graphql-watch` exists for dev.
-- `verify-graphql-codegen` — regenerates and fails on drift (CI gate).
+- `verify-graphql-codegen` — regenerates and fails if `src/__generated__/` drifts from the
+  `.graphql` documents. Because this output is gitignored, the guard snapshots the on-disk output
+  and byte-compares a fresh regeneration against it; with nothing on disk to compare (fresh clone)
+  it reports a vacuous pass rather than a false green. Run it locally after a document change; it
+  is not in the CI project list, where it would have no baseline.
 
 ## Invariants & gotchas
 
