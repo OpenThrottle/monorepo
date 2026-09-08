@@ -234,6 +234,19 @@ query readPlanRunCancelMarker($input: PlanRunsByPlanIdInput!) {
   }
 }
 
+# The full provenance read, distinct from readPlanRunCancelMarker above: that one
+# is the CLI's hot iteration-boundary poll and stays deliberately minimal.
+query getPlanRuns($input: PlanRunsByPlanIdInput!) {
+  planRunsByPlanId(input: $input) {
+    checkout {
+      displayName
+      filesystemPath
+      kind
+    }
+    ...PlanRun
+  }
+}
+
 query getProjects {
   projects {
     ...Project

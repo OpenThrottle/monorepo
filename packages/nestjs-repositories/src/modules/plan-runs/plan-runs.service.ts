@@ -40,7 +40,16 @@ interface RegisterCliPlanRunInput {
    */
   readonly branch?: string | null;
   readonly executionBackend: PlanRunExecutionBackend;
+  /**
+   * Whether this run's owner bumps its heartbeat on a timer. Defaults to true so
+   * the detached workflow-ralph CLI (which does, on a ~15s timer) is untouched;
+   * an owner with no timer — an interactive /ot-loop agent turn — passes false to
+   * opt out of every heartbeat-based liveness judgement (migration 110).
+   */
+  readonly heartbeatExpected?: boolean;
   readonly hostname: string | null;
+  /** Resolved agent model id for this run; null when the caller cannot determine one. */
+  readonly model?: string | null;
   readonly pid: number | null;
   readonly planId: string;
   readonly workerId: string | null;
@@ -146,10 +155,12 @@ export class PlanRunsService {
         branch: input.branch ?? null,
         bullmqJobId: null,
         executionBackend: input.executionBackend,
+        heartbeatExpected: input.heartbeatExpected ?? true,
         hostname: input.hostname,
         // Stamp the initial heartbeat at creation so the run is immediately alive
         // (avoids a false-stale window before the CLI's first heartbeat tick).
         lastHeartbeatAt: new Date(),
+        model: input.model ?? null,
         pid: input.pid,
         planId: input.planId,
         queueName: 'plans',
@@ -394,6 +405,11 @@ export class PlanRunsService {
    * Uses COALESCE(last_heartbeat_at, created_at) so rows that never heartbeated (legacy,
    * or crashed before their first tick) are also caught once old enough. Newest-relevant
    * ordering is irrelevant to a sweep, so returns oldest-first, capped at `limit`.
+   *
+   * Runs with `heartbeat_expected = false` are excluded outright (migration 110): their
+   * owner has no timer, so a quiet gap is normal rather than fatal, and sweeping one is
+   * not a tidy-up — the sweeper's reconcileStrandedPlan resets the plan and every
+   * IN_PROGRESS task to PENDING, destroying live work.
    */
   async findStaleInProgressRuns(
     cutoff: Date,
@@ -404,6 +420,7 @@ export class PlanRunsService {
       .where('run.status = :status', {
         status: PLAN_RUN_STATUS.IN_PROGRESS,
       })
+      .andWhere('run.heartbeat_expected')
       .andWhere('COALESCE(run.last_heartbeat_at, run.created_at) < :cutoff', {
         cutoff,
       })
@@ -418,6 +435,10 @@ export class PlanRunsService {
    * liveness expression, but on the fresh side of `cutoff`. A stale IN_PROGRESS row is dead, so it
    * must never be reported as running. Newest first so the most recent run wins per checkout.
    * Returns [] for an empty id list rather than issuing an unbounded query.
+   *
+   * The cutoff test applies only to runs that heartbeat. For a `heartbeat_expected = false`
+   * run (migration 110) there is no timer to read, so IN_PROGRESS *is* the liveness signal —
+   * without this a healthy interactive loop's worktree would report idle two minutes in.
    * @public
    */
   async findLiveRunsByCheckoutIds(
@@ -432,9 +453,10 @@ export class PlanRunsService {
       .andWhere('run.checkout_id IN (:...checkoutIds)', {
         checkoutIds: [...checkoutIds],
       })
-      .andWhere('COALESCE(run.last_heartbeat_at, run.created_at) >= :cutoff', {
-        cutoff,
-      })
+      .andWhere(
+        '(NOT run.heartbeat_expected OR COALESCE(run.last_heartbeat_at, run.created_at) >= :cutoff)',
+        { cutoff },
+      )
       .orderBy('run.created_at', 'DESC')
       .getMany();
   }

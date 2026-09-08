@@ -20,6 +20,11 @@
             "command": "./.claude/hooks/skill-usage-complete.cjs",
             "statusMessage": "Skill usage complete (Stop)",
             "type": "command"
+          },
+          {
+            "command": "./.claude/hooks/plan-run-janitor.cjs",
+            "statusMessage": "Settle abandoned plan runs (Stop)",
+            "type": "command"
           }
         ]
       }

@@ -11,6 +11,7 @@ import {
   resolveStdioWorkspacePath,
 } from './config/workspace-path.ts';
 import { captureClientIdentityProvider } from './config/client-identity.ts';
+import { captureStdioExecutionBackend } from './config/execution-backend.ts';
 import { registerKnowledgeBaseResource } from './nest-tool-handlers.ts';
 import { registerDeveloperMcpTools } from './tool-registry.ts';
 import type { NestjsMcpDeveloperBootstrapOptions } from './nest/index.ts';
@@ -54,6 +55,11 @@ export async function runServerLocal(): Promise<void> {
   // Stdio ONLY: on the HTTP surface this process is the server, so its cwd is not a caller's
   // workspace. Capturing here rather than at module load keeps that path out of the Nest surface.
   captureCallerWorkspacePath(resolveStdioWorkspacePath());
+
+  // Stdio ONLY, for the same reason: on the HTTP surface the environment describes the
+  // SERVER, not the caller, so detecting there would report the same wrong backend for
+  // every request — worse than an agent's declared guess, because it cannot be overridden.
+  captureStdioExecutionBackend();
 
   const server = new McpServer(
     { name: getServerName(), version: SERVER_VERSION },

@@ -50,3 +50,29 @@ fragment Project on ProjectObject {
   nxProjectName
   updatedAt
 }
+
+# The run-provenance projection: what a run was, on what, and whether anyone can
+# say it is alive. Deliberately omits runConfigSnapshotJson, which is large and
+# is not what a provenance reader wants.
+#
+# heartbeatExpected sits beside isStale on purpose. An unsupervised run always
+# reports isStale false BY DESIGN, so a reader that sees only isStale reads that
+# as a positive liveness claim it cannot back up. Together they distinguish
+# "verified live" from "nobody knows".
+fragment PlanRun on PlanRunObject {
+  branch
+  bullmqJobId
+  cancelRequestedAt
+  createdAt
+  executionBackend
+  heartbeatExpected
+  id
+  isStale
+  lastHeartbeatAt
+  model
+  planId
+  queueName
+  runKind
+  status
+  updatedAt
+}

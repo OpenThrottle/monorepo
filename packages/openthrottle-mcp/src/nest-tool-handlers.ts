@@ -11,6 +11,7 @@ export * from './tools/health.ts';
 export * from './tools/model-discovery.ts';
 export * from './tools/notes.ts';
 export * from './tools/output.ts';
+export * from './tools/plan-runs.ts';
 export * from './tools/plans.ts';
 export * from './tools/projects.ts';
 export * from './tools/search.ts';

@@ -1754,7 +1754,7 @@ export type Mutation = {
   register: RegisterResultObject;
   /** Register a detached workflow-ralph CLI run as a first-class plan_runs row (bullmqJobId NULL, runKind 'orchestrator', status IN_PROGRESS) so cancelPlanRun has a row to stamp the durable cancel marker on. Creates NO BullMQ job. The CLI calls this on start, polls the marker each iteration boundary, and settles the row via settleCliPlanRun on exit. */
   registerCliPlanRun: PlanRunObject;
-  /** Best-effort register of a linked git worktree as a repository_checkout for the run actor, then back-fill plan_runs.checkout_id when still NULL. Soft-fails (returns the run unchanged) when the path is not a linked worktree, repository resolution fails, or upsert errors. Requires a user JWT (not a service-account token). Returns null when the plan-run row does not exist. */
+  /** Best-effort register of a linked git worktree as a repository_checkout for the run actor, then back-fill plan_runs.checkout_id when still NULL. Soft-fails (returns the run unchanged) when the path is not a linked worktree, repository resolution fails, or upsert errors. The actor resolves through its acting user, so a service-account token (the MCP) works when the account is linked to one; an unlinked account resolves to null and soft-fails like any other unresolvable actor. Returns null when the plan-run row does not exist. */
   registerPlanRunWorktreeCheckout?: Maybe<PlanRunObject>;
   /** Remove a permission from a role */
   removePermissionFromRole: Scalars['Boolean']['output'];
@@ -2606,10 +2606,12 @@ export type PlanRunObject = {
   createdAt: Scalars['DateTime']['output'];
   /** Execution backend selected once for the whole run: cursor or claude. */
   executionBackend: Scalars['String']['output'];
+  /** Whether this run’s owner bumps its heartbeat on a timer. True for every queued and detached-CLI run — heartbeat-based liveness applies as before. False marks an owner with no timer (an interactive /ot-loop agent turn), so heartbeat says nothing about it: such runs are exempt from the stale sweep and always report isStale false. Read it alongside isStale — isStale false on such a run means "unknown", not "verified live". */
+  heartbeatExpected: Scalars['Boolean']['output'];
   /** Host the worker executing this run is on. Null when the run is not actively executing. Diagnostic only — cross-host OS kill is out of scope. */
   hostname?: Maybe<Scalars['String']['output']>;
   id: Scalars['String']['output'];
-  /** Derived: true when this run is IN_PROGRESS but its heartbeat is older than the staleness cutoff — i.e. the owning process crashed hard (SIGKILL/power-loss) and the row is stranded. The UI hides Kill for a stale run; a sweeper settles it to STALE. False for healthy or already-terminal runs. */
+  /** Derived: true when this run is IN_PROGRESS but its heartbeat is older than the staleness cutoff — i.e. the owning process crashed hard (SIGKILL/power-loss) and the row is stranded. The UI hides Kill for a stale run; a sweeper settles it to STALE. False for healthy or already-terminal runs — and always false when heartbeatExpected is false, where liveness is unknown rather than verified. */
   isStale: Scalars['Boolean']['output'];
   /** Liveness heartbeat: last time the owning run process reported it is alive (bumped ~every 15s, stamped at start). Null for legacy rows / rows that never started heartbeating. Drives isStale. */
   lastHeartbeatAt?: Maybe<Scalars['DateTime']['output']>;
@@ -3752,10 +3754,14 @@ export type RefreshCheckoutPayloadObject = {
 export type RegisterCliPlanRunInput = {
   /** OPTIONAL git branch this detached-CLI run operates on. Captured on plan_runs.branch as run provenance. Omit or null → store null; non-empty strings are stored verbatim (no server-side trim/reject — enqueue remains the REQUIRED branch boundary). */
   branch?: InputMaybe<Scalars['String']['input']>;
-  /** Execution backend for this detached-CLI run: claude, codex, cursor, gemini, grok, or opencode. */
+  /** Execution backend for this run: antigravity, claude, codex, cursor, gemini, grok, or opencode. */
   executionBackend: Scalars['String']['input'];
+  /** Whether this run's owner bumps its heartbeat on a ~15s timer. Omit or null → true, so the detached workflow-ralph CLI (which does) is unaffected. Pass false for an owner with no timer — an interactive /ot-loop agent turn, where a single test run outlives the staleness cutoff. A false run is exempt from the stale sweep, always reports isStale false, and can never yield RUN_STOPPING on cancel; nothing server-side will ever settle it, so its owner must. */
+  heartbeatExpected?: InputMaybe<Scalars['Boolean']['input']>;
   /** Host the CLI is running on (diagnostic; cleared on settle). Null when unknown. */
   hostname?: InputMaybe<Scalars['String']['input']>;
+  /** OPTIONAL resolved agent model id for this run (e.g. claude-opus-5). Captured on plan_runs.model as run provenance. Omit or null → store null; non-empty strings are stored verbatim. Prefer null over a guess: a wrong value here is worse than a missing one, because nothing downstream can tell it is wrong. */
+  model?: InputMaybe<Scalars['String']['input']>;
   /** OS process id of the CLI process (cleared on settle). Null when unknown. */
   pid?: InputMaybe<Scalars['Int']['input']>;
   /** Plan id this detached-CLI run executes. */
