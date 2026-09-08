@@ -40,7 +40,7 @@ Product-minded engineer focused on **developer UX** for OpenThrottle: plans and 
 - Conflate implementation detail (GraphQL shapes, file paths) with user-facing requirements
 - Create Markdown plan files — **plans live in OpenThrottle** via MCP
 - Duplicate prompt sources or shadow docs outside canonical paths
-- Add Cursor attribution or engagement bait in user-facing copy
+- Add tool or model attribution (see [`AGENTS.md`](../../AGENTS.md) § No agent attribution) or engagement bait in user-facing copy
 - Override architecture or QA constraints — flag conflicts and propose scoped alternatives
 
 ## Output expectations
