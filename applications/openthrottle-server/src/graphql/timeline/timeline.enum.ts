@@ -61,7 +61,7 @@ registerEnumType(TimelineMarkerKind, {
     },
     GRILLING: {
       description:
-        "A grilling skill invocation (skill_usage_events where skill_name = 'grilling'), keyed on occurred_at. Not user-scoped — the table has no user_id.",
+        "A grilling skill invocation (skill_usage_events where skill_name = 'grilling'), keyed on occurred_at. Attributed via `userId` when ingest resolved a principal; older rows carry none and fall back to the branch heuristic.",
     },
     PULL_REQUEST: {
       description: 'A pull_request work artifact, keyed on produced_at.',

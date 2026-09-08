@@ -29,6 +29,7 @@ export type SkillUsageEventFactoryData = Pick<
   | 'skillName'
   | 'source'
   | 'toolUseId'
+  | 'userId'
 >;
 
 export const skillUsageEventsFactory =
@@ -61,5 +62,6 @@ export const skillUsageEventsFactory =
       ]),
       source: faker.helpers.arrayElement(['claude-code', 'cursor']),
       toolUseId: null,
+      userId: null,
     };
   });

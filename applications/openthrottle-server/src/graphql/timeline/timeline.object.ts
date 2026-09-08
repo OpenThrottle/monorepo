@@ -130,6 +130,12 @@ export class TimelineMarkerObject {
     nullable: true,
   })
   url!: string | null;
+
+  @Field(() => String, {
+    description: `The user (UUID) this marker is attributed to. Only GRILLING carries one, and only when ingest could resolve a principal — it is never backfilled, so a null means the actor is unknown, not that the row is unowned. Read it before presenting the lane as user-scoped; null rows fall back to the branch heuristic.`,
+    nullable: true,
+  })
+  userId!: string | null;
 }
 
 @ObjectType()

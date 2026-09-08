@@ -27,6 +27,7 @@ fragment TimelineMarkerRow on TimelineMarkerObject {
   taskId
   title
   url
+  userId
 }
 
 query getWorkstreamTimeline($input: WorkstreamTimelineInput!) {

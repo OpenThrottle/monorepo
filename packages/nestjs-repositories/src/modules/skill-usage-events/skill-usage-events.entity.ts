@@ -46,6 +46,7 @@ export interface SkillUsageEventData {
   readonly skillName: string;
   readonly source: string | null;
   readonly toolUseId: string | null;
+  readonly userId: string | null;
 }
 
 @Entity('skill_usage_events')
@@ -104,4 +105,14 @@ export class SkillUsageEvent {
 
   @CreateDateColumn({ name: 'received_at', type: 'timestamp with time zone' })
   receivedAt!: Date;
+
+  /**
+   * The human user this invocation is attributed to, resolved server-side at
+   * ingest from the authenticated principal. Null means no principal
+   * resolved (or the row predates migration 110) — never that no one ran it.
+   * Never populated from a client-supplied value, and never backfilled by
+   * heuristic. Consumers fall back to the cwd/git_branch heuristic when null.
+   */
+  @Column({ name: 'user_id', nullable: true, type: 'uuid' })
+  userId!: string | null;
 }

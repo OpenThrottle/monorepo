@@ -10,6 +10,7 @@ import {
 import { TimelineChart } from './TimelineChart';
 import { TimelineControls } from './TimelineControls';
 import { TimelineDetailPopover } from './TimelineDetailPopover';
+import { hasUnattributedGrilling } from '~/routing/timeline/utils/attribution';
 import { TimelineLegend } from './TimelineLegend';
 import type {
   TimelineMarker,
@@ -143,7 +144,10 @@ export const TimelineScreen = (
         </p>
       ) : null}
 
-      <TimelineLegend className="mt-6" />
+      <TimelineLegend
+        className="mt-6"
+        hasUnattributedGrilling={hasUnattributedGrilling(markers)}
+      />
 
       <TimelineDetailPopover
         cluster={selectedCluster}

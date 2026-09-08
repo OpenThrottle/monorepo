@@ -43,6 +43,11 @@ export interface RecordSkillUsageInput {
   readonly skillName: string;
   readonly source?: string | null;
   readonly toolUseId?: string | null;
+  /**
+   * Resolved server-side from the authenticated principal — never accepted
+   * from the client. Null when no principal resolves.
+   */
+  readonly userId?: string | null;
 }
 
 /**
@@ -272,6 +277,7 @@ export class SkillUsageEventsService {
       skillName: input.skillName,
       source: input.source ?? null,
       toolUseId: input.toolUseId ?? null,
+      userId: input.userId ?? null,
     });
 
     return this.eventsRepository.save(row);

@@ -66,6 +66,11 @@ type MarkerRow = {
   task_id: string | null;
   title: string;
   url: string | null;
+  /**
+   * Only GRILLING carries one today (skill_usage_events.user_id, migration
+   * 110); every other leg selects NULL so the shared row shape holds.
+   */
+  user_id: string | null;
 };
 
 type QueryFn = <T>(sql: string, params?: unknown[]) => Promise<T>;
@@ -171,7 +176,8 @@ export class TimelineResolver {
     if (kind === TimelineMarkerKind.TASK_ADDED) {
       return q<MarkerRow[]>(
         `SELECT t.id, t.created_at AS at, t.plan_id, p.title AS plan_title,
-                t.id AS task_id, t.title, NULL::text AS branch, NULL::text AS url
+                t.id AS task_id, t.title, NULL::text AS branch, NULL::text AS url,
+                NULL::uuid AS user_id
            FROM tasks t
            JOIN plans p ON p.id = t.plan_id
           WHERE t.created_at >= $1::timestamptz AND t.created_at < $2::timestamptz
@@ -188,7 +194,8 @@ export class TimelineResolver {
       // TASK_ADDED marker and read as activity that never happened.
       return q<MarkerRow[]>(
         `SELECT t.id, t.updated_at AS at, t.plan_id, p.title AS plan_title,
-                t.id AS task_id, t.title, NULL::text AS branch, NULL::text AS url
+                t.id AS task_id, t.title, NULL::text AS branch, NULL::text AS url,
+                NULL::uuid AS user_id
            FROM tasks t
            JOIN plans p ON p.id = t.plan_id
           WHERE t.updated_at >= $1::timestamptz AND t.updated_at < $2::timestamptz
@@ -201,13 +208,16 @@ export class TimelineResolver {
     }
 
     if (kind === TimelineMarkerKind.GRILLING) {
-      // No user_id on this table (migration 084). `git_branch` / `cwd` is the
-      // only scoping available, matching what /usage already does — the UI
-      // discloses that the lane is heuristic rather than user-scoped.
+      // `user_id` (migration 110) is the real actor when ingest could resolve
+      // one. It is never backfilled, so older rows stay null and fall back to
+      // the git_branch/cwd heuristic — hence both are selected and neither is
+      // used to exclude a row. The UI discloses the fallback only for the rows
+      // that actually need it.
       return q<MarkerRow[]>(
         `SELECT sue.id, sue.occurred_at AS at, NULL::uuid AS plan_id,
                 NULL::text AS plan_title, NULL::uuid AS task_id,
                 sue.git_branch AS branch, NULL::text AS url,
+                sue.user_id,
                 COALESCE(sue.git_branch, sue.cwd, 'grilling') AS title
            FROM skill_usage_events sue
           WHERE sue.skill_name = 'grilling'
@@ -251,7 +261,8 @@ export class TimelineResolver {
                   wa.external_key
                 ) AS title,
                 wa.payload->>'url' AS url,
-                NULL::text AS branch
+                NULL::text AS branch,
+                NULL::uuid AS user_id
            FROM work_artifacts wa
            JOIN work_session_subjects wss ON wss.session_id = wa.session_id
            JOIN plans p ON p.id = wss.plan_id
@@ -393,6 +404,7 @@ export class TimelineResolver {
     marker.taskId = row.task_id;
     marker.title = row.title;
     marker.url = row.url;
+    marker.userId = row.user_id;
 
     return marker;
   }

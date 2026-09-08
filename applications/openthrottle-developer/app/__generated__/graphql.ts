@@ -1743,7 +1743,7 @@ export type Mutation = {
   promoteTaskToPlan: PromoteTaskToPlanResultObject;
   /** Bump the liveness heartbeat on a detached-CLI run row (from registerCliPlanRun). The CLI calls this on a ~15s timer so a hard crash (SIGKILL/power-loss) leaves a stale heartbeat the reader/sweeper can detect. Keyed on the run id. Returns null when the row no longer exists. */
   recordPlanRunHeartbeat?: Maybe<PlanRunObject>;
-  /** Record one harness-captured skill invocation. Args must already be privacy-processed by the client; the server stores them as-sent. */
+  /** Record one harness-captured skill invocation. Args must already be privacy-processed by the client; the server stores them as-sent. The event is attributed to the human user the authenticated principal acts as, resolved server-side — a userId is never accepted from the client, and stays null when the principal resolves to no one. */
   recordSkillUsage: SkillUsageEventObject;
   /** Record one opt-in outcome/duration enrichment for a skill we author. Correlates to a harness start by sessionId + skillName. Additive to PreToolUse capture — never a replacement. Missing outcomes are a valid state. */
   recordSkillUsageOutcome: SkillUsageOutcomeObject;
@@ -5070,7 +5070,7 @@ export enum TimelineLaneGrouping {
 export enum TimelineMarkerKind {
   /** A git_commit work artifact, keyed on produced_at. */
   GitCommit = 'GIT_COMMIT',
-  /** A grilling skill invocation (skill_usage_events where skill_name = 'grilling'), keyed on occurred_at. Not user-scoped — the table has no user_id. */
+  /** A grilling skill invocation (skill_usage_events where skill_name = 'grilling'), keyed on occurred_at. Attributed via `userId` when ingest resolved a principal; older rows carry none and fall back to the branch heuristic. */
   Grilling = 'GRILLING',
   /** A pull_request work artifact, keyed on produced_at. */
   PullRequest = 'PULL_REQUEST',
@@ -5103,6 +5103,8 @@ export type TimelineMarkerObject = {
   title: Scalars['String']['output'];
   /** External deep-link target (commit or pull request URL), when the payload carries one. */
   url?: Maybe<Scalars['String']['output']>;
+  /** The user (UUID) this marker is attributed to. Only GRILLING carries one, and only when ingest could resolve a principal — it is never backfilled, so a null means the actor is unknown, not that the row is unowned. Read it before presenting the lane as user-scoped; null rows fall back to the branch heuristic. */
+  userId?: Maybe<Scalars['String']['output']>;
 };
 
 /** Kinds of timeline span (work with a duration). */
@@ -5633,7 +5635,7 @@ export type WorkstreamTimelineInput = {
   checkoutId?: InputMaybe<Scalars['String']['input']>;
   /** Start of the window (inclusive). */
   from: Scalars['DateTime']['input'];
-  /** Filter to a single git branch. Also scopes the grilling lane, which has no user_id to scope by. */
+  /** Filter to a single git branch. Also scopes the grilling lane, which is how unattributed grilling events (no `userId`) are narrowed. */
   gitBranch?: InputMaybe<Scalars['String']['input']>;
   /** How rows are grouped into lanes. Defaults to BY_PLAN. */
   grouping?: InputMaybe<TimelineLaneGrouping>;
@@ -10773,6 +10775,7 @@ export type TimelineMarkerRowFragment = {
   taskId?: string | null;
   title: string;
   url?: string | null;
+  userId?: string | null;
 };
 
 export type GetWorkstreamTimelineQueryVariables = Exact<{
@@ -10797,6 +10800,7 @@ export type GetWorkstreamTimelineQuery = {
       taskId?: string | null;
       title: string;
       url?: string | null;
+      userId?: string | null;
     }>;
     spans: Array<{
       __typename?: 'TimelineSpanObject';
@@ -13464,6 +13468,7 @@ export const TimelineMarkerRowFragmentDoc = {
           { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'title' } },
           { kind: 'Field', name: { kind: 'Name', value: 'url' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'userId' } },
         ],
       },
     },
@@ -28125,6 +28130,7 @@ export const GetWorkstreamTimelineDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'title' } },
           { kind: 'Field', name: { kind: 'Name', value: 'url' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'userId' } },
         ],
       },
     },

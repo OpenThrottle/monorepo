@@ -15,12 +15,18 @@ import { TIMELINE_DERIVED_PATTERN_ID } from './TimelineSpanBar';
 
 export interface TimelineLegendProps {
   readonly className?: string;
+  /**
+   * TRUE when the window holds a grilling event with no resolved user, which
+   * is the only case the scope disclosure is honest in. Defaults to FALSE:
+   * claiming a gap that is not there is as wrong as hiding one that is.
+   */
+  readonly hasUnattributedGrilling?: boolean;
 }
 
 export const TimelineLegend = (
   props: TimelineLegendProps,
 ): React.ReactElement => {
-  const { className } = props;
+  const { className, hasUnattributedGrilling = false } = props;
 
   // Hooks
 
@@ -119,9 +125,14 @@ export const TimelineLegend = (
       <p className="text-muted-foreground mt-3 text-xs">
         {TIMELINE_DISCLOSURE_COPY.derivedEnd}
       </p>
-      <p className="text-muted-foreground text-xs">
-        {TIMELINE_DISCLOSURE_COPY.grillingScope}
-      </p>
+      {hasUnattributedGrilling ? (
+        <p
+          className="text-muted-foreground text-xs"
+          data-testid="TimelineLegendGrillingScope"
+        >
+          {TIMELINE_DISCLOSURE_COPY.grillingScope}
+        </p>
+      ) : null}
       <p className="text-muted-foreground text-xs">
         {TIMELINE_DISCLOSURE_COPY.taskUpdated}
       </p>
