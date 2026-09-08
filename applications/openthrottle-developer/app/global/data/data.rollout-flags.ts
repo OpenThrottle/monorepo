@@ -15,6 +15,7 @@ export const developerRolloutFlags = defineRolloutFlags({
   beta: { defaultValue: false, kind: 'boolean' },
   'example-string-one': { defaultValue: 'default-value', kind: 'string' },
   navigation: { defaultValue: false, kind: 'boolean' },
+  timeline: { defaultValue: false, kind: 'boolean' },
 });
 
 /** Catalog type for typed hooks under {@link developerRolloutFlags}. */

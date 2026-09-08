@@ -1,0 +1,48 @@
+fragment TimelineSpanRow on TimelineSpanObject {
+  backend
+  branch
+  checkoutId
+  conversationId
+  derivedEnd
+  endsAt
+  id
+  kind
+  laneKey
+  laneLabel
+  model
+  planId
+  startsAt
+  status
+  title
+}
+
+fragment TimelineMarkerRow on TimelineMarkerObject {
+  at
+  branch
+  id
+  kind
+  laneKey
+  laneLabel
+  planId
+  taskId
+  title
+  url
+}
+
+query getWorkstreamTimeline($input: WorkstreamTimelineInput!) {
+  workstreamTimeline(input: $input) {
+    from
+    markers {
+      ...TimelineMarkerRow
+    }
+    spans {
+      ...TimelineSpanRow
+    }
+    to
+    truncation {
+      kind
+      returned
+      truncated
+    }
+  }
+}
