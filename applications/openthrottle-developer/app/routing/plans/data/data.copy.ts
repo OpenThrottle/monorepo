@@ -167,6 +167,15 @@ export const PLAN_DEFERRED_SECTION_COPY = {
   tagVocabularyError: `Could not load the tag vocabulary.`,
 } as const;
 
+export const LINKED_ARTIFACTS_PANEL_COPY = {
+  allTypesLabel: `All types`,
+  allVerificationsLabel: `All`,
+  collapsedMoreSuffix: `more — expand to see all`,
+  filteredEmpty: `No artifacts match the current filters.`,
+  orphanedHint: `A claim git could not confirm.`,
+  totalSuffix: `artifacts`,
+} as const;
+
 export const PLAN_TAB_OUTPUT_COPY = {
   agentOutputHeading: `Agent output`,
   linkedArtifactsEmpty: `No linked artifacts yet. Artifacts appear here once a run produces and links them.`,

@@ -1,17 +1,18 @@
 import * as React from 'react';
 import type { PlanDetailOutputChunksQuery } from '@openthrottle/openthrottle-developer-codegen';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
+import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
 import { TabsContent } from '@openthrottle/react-router-shadcn';
+import { LinkedArtifactsPanel } from '~/routing/plans/components/LinkedArtifactsPanel';
+import { LinkedArtifactsPanelSkeleton } from '~/routing/plans/components/LinkedArtifactsPanelSkeleton';
 import { OutputStream } from '~/routing/plans/components/OutputStream';
 import { PlanDeferredSection } from '~/routing/plans/components/PlanDeferredSection';
 import { PlanOutputStreamSkeleton } from '~/routing/plans/components/PlanOutputStreamSkeleton';
-import { PLAN_DEFERRED_SECTION_COPY } from '~/routing/plans/data/data.copy';
+import {
+  PLAN_DEFERRED_SECTION_COPY,
+  PLAN_TAB_OUTPUT_COPY,
+} from '~/routing/plans/data/data.copy';
 import { usePlanDetailRouteData } from '~/routing/plans/hooks/usePlanDetailRouteData';
-// import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
-// import { LinkedArtifactsPanel } from '~/routing/plans/components/LinkedArtifactsPanel';
-// import { PlanRuleApplications } from '~/routing/plans/components/PlanRuleApplications';
-// import { PLAN_TAB_OUTPUT_COPY } from '~/routing/plans/data/data.copy';
-// import { usePlanDetailRouteData } from '~/routing/plans/hooks/usePlanDetailRouteData';
 
 type Chunk = PlanDetailOutputChunksQuery['planOutputStreamChunks'][number];
 
@@ -30,11 +31,9 @@ export const PlanTabOutput = (
   // chunks come from `chunks` — the live-merged stream. That split is what keeps
   // the empty state honest: it can only appear once the snapshot has actually
   // resolved as empty, never as the pending state.
-  const { outputChunks } = usePlanDetailRouteData();
-
-  // Rule applications + linked artifacts come from the route loader
-  // (same source as the tab shell) rather than being prop-drilled through tabs.
-  // const { linkedArtifacts, ruleApplications } = usePlanDetailRouteData();
+  // Linked artifacts come from the same loader, deferred on their own promise
+  // so a slow ledger query never blocks the output stream.
+  const { ledger, outputChunks } = usePlanDetailRouteData();
 
   // Setup
 
@@ -52,7 +51,6 @@ export const PlanTabOutput = (
       data-testid="PlanLoggerOutput"
       value="output"
     >
-      {/* <Card className="p-4 md:p-8"> */}
       <PlanDeferredSection
         errorText={PLAN_DEFERRED_SECTION_COPY.outputError}
         fallback={<PlanOutputStreamSkeleton />}
@@ -77,51 +75,26 @@ export const PlanTabOutput = (
           )
         }
       </PlanDeferredSection>
-      {/* </Card> */}
-
-      {/* Agent output — what our agents write, iteration by iteration. */}
-      {/* <OpenThrottleFieldset
-        id="output-agent-output"
-        legend={PLAN_TAB_OUTPUT_COPY.agentOutputHeading}
-      >
-        {chunks.length === 0 ? (
-          <p className="text-muted-foreground text-sm">
-            No plan output chunks yet. Iterations append here when agents call{' '}
-            <code className="text-xs">appendPlanOutput</code> (for example from
-            workflow-ralph or MCP). Local CLI runs log to your terminal instead.
-          </p>
-        ) : (
-          <OutputStream chunks={chunks} />
-        )}
-      </OpenThrottleFieldset> */}
-
-      {/* Rule change log — the rule-applications ledger for this plan. */}
-      {/* <OpenThrottleFieldset
-        id="output-rule-change-log"
-        legend={PLAN_TAB_OUTPUT_COPY.ruleChangeLogHeading}
-      >
-        {ruleApplications.length === 0 ? (
-          <p className="text-muted-foreground text-xs">
-            {PLAN_TAB_OUTPUT_COPY.ruleChangeLogEmpty}
-          </p>
-        ) : (
-          <PlanRuleApplications applications={ruleApplications} />
-        )}
-      </OpenThrottleFieldset> */}
-
-      {/* Linked artifacts — what runs produced and linked to this plan. */}
-      {/* <OpenThrottleFieldset
+      <OpenThrottleFieldset
         id="output-artifacts"
         legend={PLAN_TAB_OUTPUT_COPY.linkedArtifactsHeading}
       >
-        {linkedArtifacts.length === 0 ? (
-          <p className="text-muted-foreground text-xs">
-            {PLAN_TAB_OUTPUT_COPY.linkedArtifactsEmpty}
-          </p>
-        ) : (
-          <LinkedArtifactsPanel artifacts={linkedArtifacts} />
-        )}
-      </OpenThrottleFieldset> */}
+        <PlanDeferredSection
+          errorText={PLAN_DEFERRED_SECTION_COPY.outputError}
+          fallback={<LinkedArtifactsPanelSkeleton />}
+          resolve={ledger}
+        >
+          {(data) =>
+            data.linkedArtifacts.length === 0 ? (
+              <p className="text-muted-foreground text-xs">
+                {PLAN_TAB_OUTPUT_COPY.linkedArtifactsEmpty}
+              </p>
+            ) : (
+              <LinkedArtifactsPanel artifacts={data.linkedArtifacts} />
+            )
+          }
+        </PlanDeferredSection>
+      </OpenThrottleFieldset>
     </TabsContent>
   );
 };

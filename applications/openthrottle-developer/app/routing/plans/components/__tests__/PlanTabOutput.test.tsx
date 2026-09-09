@@ -18,8 +18,8 @@ const chunk: PlanTabOutputProps['chunks'][number] = {
   planId: 'plan-1',
 };
 
-// The rule-change-log and linked-artifacts sections are commented out in the
-// component, so this covers only the agent-output stream that still renders.
+// This file covers the agent-output stream; the linked-artifacts fieldset has
+// its own boundary and is covered by LinkedArtifactsPanel's own tests.
 //
 // The tab reads the deferred `outputChunks` promise from the route to gate its
 // boundary, so it must render inside the real plan-detail route context. The
