@@ -45,6 +45,7 @@ describe('PlanToolbarRunActions Component', () => {
       isTerminal: false,
       jobRunHooksJson: '',
       newestRunIsStale: false,
+      newestUnsupervisedUnsettledRunId: null,
       planId: 'plan-1',
       planTitle: 'My Plan',
       ralphTuningJson: '',
@@ -86,6 +87,35 @@ describe('PlanToolbarRunActions Component', () => {
       component.queryByRole('button', { name: /kill plan run/i }),
     ).not.toBeInTheDocument();
     expect(component.getByText('Stale')).toBeInTheDocument();
+  });
+
+  test('renders Settle run alongside Kill run when the newest run is an unsettled interactive run', () => {
+    component.unmount();
+    component = renderRunActions({
+      ...props,
+      newestUnsupervisedUnsettledRunId: 'run-1',
+      planStatus: 'IN_PROGRESS',
+    });
+
+    expect(
+      component.getByRole('button', { name: /kill plan run/i }),
+    ).toBeInTheDocument();
+    expect(
+      component.getByRole('button', { name: /settle interactive run/i }),
+    ).toBeInTheDocument();
+  });
+
+  test('withholds Settle run while run history is loading or the newest run heartbeats', () => {
+    component.unmount();
+    component = renderRunActions({
+      ...props,
+      newestUnsupervisedUnsettledRunId: undefined,
+      planStatus: 'IN_PROGRESS',
+    });
+
+    expect(
+      component.queryByRole('button', { name: /settle interactive run/i }),
+    ).not.toBeInTheDocument();
   });
 
   test('disables the Run button when the branch is missing', () => {

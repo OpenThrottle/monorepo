@@ -990,6 +990,8 @@ export type DiscoveredWorktreeObject = {
   planRunId?: Maybe<Scalars['ID']['output']>;
   /** Owning repository, resolved from the registered checkout or from the worktree's git common dir. Null when the owning repository is not registered for this user. */
   repositoryId?: Maybe<Scalars['ID']['output']>;
+  /** Whether the live run's liveness is VERIFIED rather than merely claimed. True when the run heartbeats on a timer, so RUNNING is a checked fact. False when it does not (an interactive /ot-loop run): the row says IN_PROGRESS and nothing confirms it, so this worktree may be held busy by an agent that died hours ago — surface that distinctly rather than showing it as healthily running. Null when nothing is running. */
+  runMonitored?: Maybe<Scalars['Boolean']['output']>;
   /** True when no repository_checkouts row exists at this path for this user. Orthogonal to activity — an unregistered worktree can be DIRTY. */
   unregistered: Scalars['Boolean']['output'];
 };
@@ -1201,6 +1203,11 @@ export type FeatureFlagObject = {
   valueJson: Scalars['String']['output'];
   /** Index into the flag's variations array for the resolved value. */
   variationIndex: Scalars['Int']['output'];
+};
+
+export type ForceSettlePlanRunInput = {
+  /** Plan-run row id to force-settle to STALE. Must be an IN_PROGRESS run that does not heartbeat; anything else is refused. */
+  planRunId: Scalars['ID']['input'];
 };
 
 export type GeneratorDetailObject = {
@@ -1725,6 +1732,8 @@ export type Mutation = {
   enqueuePlanRun: EnqueuePlanRunResultObject;
   /** Manually enqueue a full tag→action rules evaluation pass for a plan. Fire-and-forget: the pass runs async on the plan-rules:evaluate queue and results land in the rule_applications ledger (read via planRuleApplications). The ack only confirms the pass was enqueued. */
   evaluatePlanRules: EvaluatePlanRulesResultObject;
+  /** Force-settle an UNSUPERVISED plan run to STALE — the human escape hatch for a run whose agent is gone. Kill does not help here: cancelling an interactive run only stamps the cancel marker and waits for the agent to poll it, so a dead agent leaves the row IN_PROGRESS forever, reading as live and holding its worktree busy. Refused for a run that heartbeats (it has a sweeper of its own and may be genuinely live) and for one already terminal. Always writes STALE — 'contact lost' is what a human clicking this actually knows. Never touches plan or task status. Returns null when the run did not match. */
+  forceSettlePlanRun?: Maybe<PlanRunObject>;
   /** Permanently delete a custom prompt by ID */
   hardDeleteCustomPrompt: Scalars['Boolean']['output'];
   /** Enqueue a full re-index of a registered repository's code. Returns indexing, or unavailable when no embeddings provider is configured. */
@@ -2127,6 +2136,10 @@ export type MutationEnqueuePlanRunArgs = {
 
 export type MutationEvaluatePlanRulesArgs = {
   planId: Scalars['ID']['input'];
+};
+
+export type MutationForceSettlePlanRunArgs = {
+  input: ForceSettlePlanRunInput;
 };
 
 export type MutationHardDeleteCustomPromptArgs = {
@@ -6896,6 +6909,21 @@ export type PlanDetailCancelPlanRunMutation = {
   };
 };
 
+export type PlanDetailForceSettlePlanRunMutationVariables = Exact<{
+  input: ForceSettlePlanRunInput;
+}>;
+
+export type PlanDetailForceSettlePlanRunMutation = {
+  __typename?: 'Mutation';
+  forceSettlePlanRun?: {
+    __typename?: 'PlanRunObject';
+    heartbeatExpected: boolean;
+    id: string;
+    isStale: boolean;
+    status: string;
+  } | null;
+};
+
 export type PlanDetailSetPlanStatusMutationVariables = Exact<{
   input: SetPlanStatusInput;
 }>;
@@ -7161,6 +7189,7 @@ export type PlanDetailRunHistoryQuery = {
     bullmqJobId?: string | null;
     createdAt: any;
     executionBackend: string;
+    heartbeatExpected: boolean;
     id: string;
     isStale: boolean;
     lastHeartbeatAt?: any | null;
@@ -9669,6 +9698,7 @@ export type DiscoveredWorktreeFieldsFragment = {
   planId?: string | null;
   planRunId?: string | null;
   repositoryId?: string | null;
+  runMonitored?: boolean | null;
   unregistered: boolean;
 };
 
@@ -9770,6 +9800,7 @@ export type GetSettingsRepositoriesQuery = {
       planId?: string | null;
       planRunId?: string | null;
       repositoryId?: string | null;
+      runMonitored?: boolean | null;
       unregistered: boolean;
     }>;
   };
@@ -12924,6 +12955,7 @@ export const DiscoveredWorktreeFieldsFragmentDoc = {
           { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'planRunId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'repositoryId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'runMonitored' } },
           { kind: 'Field', name: { kind: 'Name', value: 'unregistered' } },
         ],
       },
@@ -16802,6 +16834,66 @@ export const PlanDetailCancelPlanRunDocument = {
   PlanDetailCancelPlanRunMutation,
   PlanDetailCancelPlanRunMutationVariables
 >;
+export const PlanDetailForceSettlePlanRunDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'PlanDetailForceSettlePlanRun' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'ForceSettlePlanRunInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'forceSettlePlanRun' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'heartbeatExpected' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'isStale' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  PlanDetailForceSettlePlanRunMutation,
+  PlanDetailForceSettlePlanRunMutationVariables
+>;
 export const PlanDetailSetPlanStatusDocument = {
   kind: 'Document',
   definitions: [
@@ -17675,6 +17767,10 @@ export const PlanDetailRunHistoryDocument = {
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'executionBackend' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'heartbeatExpected' },
                 },
                 { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'isStale' } },
@@ -25247,6 +25343,7 @@ export const GetSettingsRepositoriesDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'planRunId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'repositoryId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'runMonitored' } },
           { kind: 'Field', name: { kind: 'Name', value: 'unregistered' } },
         ],
       },

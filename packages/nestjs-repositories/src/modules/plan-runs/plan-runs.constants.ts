@@ -36,3 +36,18 @@ export const PLAN_RUN_STATUS = {
 
 export type PlanRunStatus =
   (typeof PLAN_RUN_STATUS)[keyof typeof PLAN_RUN_STATUS];
+
+/**
+ * The cutoff for an UNSUPERVISED run — one with `heartbeat_expected = false`, whose owner
+ * carries no timer (migration 110). Such a run cannot be judged by {@link STALE_CUTOFF_MS}:
+ * silence is its normal state, so a 120s verdict would be a false positive on live work.
+ *
+ * Staleness here is not inferred from quiet but from sheer age. Twelve hours is far longer
+ * than any interactive agent turn — a laptop that has been asleep, closed or rebooted has
+ * long since taken its loop with it — so a row this old is dead by any reasonable measure.
+ *
+ * Crucially, a run swept on THIS cutoff is settled WITHOUT the plan reconcile step: plan and
+ * task status are never rewritten on the strength of a missing heartbeat. That is the exact
+ * hazard migration 110 exists to avoid, and it is what makes a false positive here harmless.
+ */
+export const UNSUPERVISED_STALE_CUTOFF_MS = 12 * 60 * 60 * 1_000;

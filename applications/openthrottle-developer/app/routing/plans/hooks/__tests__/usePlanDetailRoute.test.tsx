@@ -128,6 +128,87 @@ describe('usePlanDetailRoute', () => {
     await waitFor(() => expect(value.current?.newestRunIsStale).toBe(false));
   });
 
+  test('newestUnsupervisedUnsettledRunId resolves to the newest run id only for an IN_PROGRESS run with no heartbeat', async () => {
+    const { value } = renderRoute(
+      asType<UsePlanDetailRouteOptions['loaderData']>({
+        outputChunks: Promise.resolve([]),
+        runHistory: Promise.resolve({
+          planRunAuditRows: [
+            {
+              heartbeatExpected: false,
+              id: 'run-newest',
+              isStale: false,
+              status: 'IN_PROGRESS',
+            },
+            {
+              heartbeatExpected: false,
+              id: 'run-older',
+              isStale: false,
+              status: 'IN_PROGRESS',
+            },
+          ],
+          recentPlanRuns: [],
+        }),
+        tasks: [],
+        workspaceRepositories: Promise.resolve([]),
+      }),
+    );
+
+    // 🚨 Three states: "loading" must not read as "nothing to settle".
+    expect(value.current?.newestUnsupervisedUnsettledRunId).toBeUndefined();
+
+    await waitFor(() =>
+      expect(value.current?.newestUnsupervisedUnsettledRunId).toBe(
+        'run-newest',
+      ),
+    );
+    // An interactive run never reads as stale — there is no heartbeat to expire.
+    expect(value.current?.newestRunIsStale).toBe(false);
+  });
+
+  test.each([
+    ['a supervised run', { heartbeatExpected: true, status: 'IN_PROGRESS' }],
+    [
+      'an already-settled interactive run',
+      { heartbeatExpected: false, status: 'STALE' },
+    ],
+  ])('newestUnsupervisedUnsettledRunId is null for %s', async (_label, row) => {
+    const { value } = renderRoute(
+      asType<UsePlanDetailRouteOptions['loaderData']>({
+        outputChunks: Promise.resolve([]),
+        runHistory: Promise.resolve({
+          planRunAuditRows: [{ id: 'run-1', isStale: false, ...row }],
+          recentPlanRuns: [],
+        }),
+        tasks: [],
+        workspaceRepositories: Promise.resolve([]),
+      }),
+    );
+
+    await waitFor(() =>
+      expect(value.current?.newestUnsupervisedUnsettledRunId).toBeNull(),
+    );
+  });
+
+  test('newestUnsupervisedUnsettledRunId is null once an empty run history resolves', async () => {
+    const { value } = renderRoute(
+      asType<UsePlanDetailRouteOptions['loaderData']>({
+        outputChunks: Promise.resolve([]),
+        runHistory: Promise.resolve({
+          planRunAuditRows: [],
+          recentPlanRuns: [],
+        }),
+        tasks: [],
+        workspaceRepositories: Promise.resolve([]),
+      }),
+    );
+
+    expect(value.current?.newestUnsupervisedUnsettledRunId).toBeUndefined();
+    await waitFor(() =>
+      expect(value.current?.newestUnsupervisedUnsettledRunId).toBeNull(),
+    );
+  });
+
   test('isBoardView reflects the `view` search param', () => {
     const { value } = renderRoute(undefined, ['/?view=board']);
 

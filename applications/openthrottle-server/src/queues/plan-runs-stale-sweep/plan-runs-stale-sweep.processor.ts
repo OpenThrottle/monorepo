@@ -8,6 +8,7 @@ import {
   PlansService,
   STALE_CUTOFF_MS,
   TasksService,
+  UNSUPERVISED_STALE_CUTOFF_MS,
 } from '@openthrottle/nestjs-repositories';
 import {
   PLAN_RUNS_STALE_SWEEP_BATCH_SIZE,
@@ -31,6 +32,14 @@ const RECONCILE_RUN_LOOKBACK = 20;
  * is reset to PENDING so it is re-runnable, since there is no server-side downward reconcile
  * (plan-completion-no-downward-reconcile). Idempotent + batch-capped; only IN_PROGRESS rows past the
  * cutoff match, and settleStaleRun is status-guarded so a graceful settle racing the sweep wins.
+ *
+ * A SECOND, separate pass covers unsupervised runs (`heartbeat_expected = false`, migration 110),
+ * which the first pass excludes because they carry no timer and would all read as stale within two
+ * minutes. That pass judges them on sheer AGE against UNSUPERVISED_STALE_CUTOFF_MS (12h) and
+ * deliberately does NOT reconcile the plan afterwards: nothing may reset a plan or its tasks to
+ * PENDING on the strength of a missing heartbeat, which is the hazard migration 110 exists to
+ * avoid. Settling only the run row is what keeps a false positive here harmless — the worst case is
+ * a run row marked STALE while its plan and tasks are left exactly as the agent left them.
  */
 @Processor(PLAN_RUNS_STALE_SWEEP_QUEUE_NAME, {
   ...defaultWorkerOptions,
@@ -73,7 +82,7 @@ export class PlanRunsStaleSweepProcessor
     const summary = await this.sweepStalePlanRuns();
 
     this.logger.info(
-      `Plan-runs stale sweep done: examined=${summary.examined}, swept=${summary.swept}, reconciledPlans=${summary.reconciledPlans}`,
+      `Plan-runs stale sweep done: examined=${summary.examined}, swept=${summary.swept}, reconciledPlans=${summary.reconciledPlans}, unsupervisedExamined=${summary.unsupervisedExamined}, unsupervisedSwept=${summary.unsupervisedSwept}`,
       PlanRunsStaleSweepProcessor.name,
     );
   }
@@ -106,7 +115,53 @@ export class PlanRunsStaleSweepProcessor
       }
     }
 
-    return { examined: staleRuns.length, reconciledPlans, swept };
+    const { unsupervisedExamined, unsupervisedSwept } =
+      await this.sweepUnsupervisedPlanRuns();
+
+    return {
+      examined: staleRuns.length,
+      reconciledPlans,
+      swept,
+      unsupervisedExamined,
+      unsupervisedSwept,
+    };
+  }
+
+  /**
+   * @description Sweeps unsupervised runs (`heartbeat_expected = false`) that are simply too OLD to
+   * still be running, settling each to STALE with its run-location columns cleared.
+   *
+   * There is no reconcile step here, and that omission is the point rather than an oversight. The
+   * first pass resets a stranded plan because a heartbeat going quiet is strong evidence its owner
+   * died mid-flight. For an unsupervised run there is no such evidence — only age — so rewriting
+   * plan and task status on it could undo real work a human is still holding. Settling the run row
+   * alone gives the UI an accurate picture and frees the worktree, while leaving every plan/task
+   * decision to the agent or the human.
+   */
+  private async sweepUnsupervisedPlanRuns(): Promise<{
+    readonly unsupervisedExamined: number;
+    readonly unsupervisedSwept: number;
+  }> {
+    const cutoff = new Date(Date.now() - UNSUPERVISED_STALE_CUTOFF_MS);
+    const runs = await this.planRunsService.findStaleUnsupervisedRuns(
+      cutoff,
+      PLAN_RUNS_STALE_SWEEP_BATCH_SIZE,
+    );
+
+    let unsupervisedSwept = 0;
+    for (const run of runs) {
+      // eslint-disable-next-line no-await-in-loop -- sequential DB writes, one stale run at a time
+      const settled = await this.planRunsService.settleStaleRun(run.id);
+      if (settled?.status === PLAN_RUN_STATUS.STALE) {
+        unsupervisedSwept += 1;
+        this.logger.info(
+          `Settled unsupervised run ${run.id} (plan ${run.planId}) to STALE on age; plan/task status untouched`,
+          PlanRunsStaleSweepProcessor.name,
+        );
+      }
+    }
+
+    return { unsupervisedExamined: runs.length, unsupervisedSwept };
   }
 
   /**

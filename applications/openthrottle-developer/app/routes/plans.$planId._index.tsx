@@ -20,6 +20,7 @@ import {
   cancelPlanRun,
   detachHook,
   evaluatePlanRules,
+  forceSettlePlanRun,
   removePlanTag,
   runPlan,
   saveJobRunHooks,
@@ -228,6 +229,8 @@ export const action = async (args: Route.ActionArgs) => {
       return detachHook(args.request, formData);
     case 'evaluatePlanRules':
       return evaluatePlanRules(args, planId);
+    case 'forceSettlePlanRun':
+      return forceSettlePlanRun(args, formData);
     case 'removePlanTag':
       return removePlanTag(args, planId, formData);
     case 'runPlan':

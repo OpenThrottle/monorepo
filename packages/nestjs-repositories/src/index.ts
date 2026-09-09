@@ -139,6 +139,7 @@ export {
   HEARTBEAT_INTERVAL_MS,
   PLAN_RUN_STATUS,
   STALE_CUTOFF_MS,
+  UNSUPERVISED_STALE_CUTOFF_MS,
 } from './modules/plan-runs/plan-runs.constants';
 export type { PlanRunStatus } from './modules/plan-runs/plan-runs.constants';
 export { PlanRun } from './modules/plan-runs/plan-run.entity';

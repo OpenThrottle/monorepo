@@ -44,6 +44,7 @@ describe('DiscoveredWorktreesResolver', () => {
           planId: 'plan-1',
           planRunId: 'run-1',
           repositoryId: 'repo-1',
+          runMonitored: false,
           sources: [WORKTREE_DISCOVERY_SOURCE.GIT_WORKTREE_LIST],
           unregistered: false,
         },
@@ -70,6 +71,9 @@ describe('DiscoveredWorktreesResolver', () => {
           planId: 'plan-1',
           planRunId: 'run-1',
           repositoryId: 'repo-1',
+          // Carried through to the client so "Running" can be shown as a claim rather
+          // than a verified fact when the run does not heartbeat.
+          runMonitored: false,
           unregistered: false,
         },
       ],

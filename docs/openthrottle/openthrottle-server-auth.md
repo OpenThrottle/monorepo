@@ -83,6 +83,52 @@ CORS and related env are driven by `getCorsOptions()` from `@openthrottle/nestjs
 
 **Roles and permissions (DB-backed):** Roles and permissions are stored in OpenThrottle (`permissions`, `roles`, `role_permissions`, `user_roles`, `service_account_roles`). Migration `034_create_roles_and_permissions_tables.sql` seeds default permissions (`settings:read`, `settings:write`, `users:read`, `users:write`) and roles (`admin`, `user`, `viewer`) with the same mapping as `@openthrottle/nestjs-rbac`. Migration `045_seed_service_accounts_bootstrap.sql` adds `plans:read` / `plans:write`, automation roles `mcp` and `workflow-ralph`, and service accounts `openthrottle-mcp` and `workflow-ralph`. Resolvers using `@Permissions()` are protected by `GqlPermissionsGuard`, which resolves the authenticated `AuthPrincipal` on `request.user` and loads permissions via `RolesService.getPermissionsForUser` (human JWT) or `RolesService.getPermissionsForServiceAccount` (Bearer `ot_sa_…`). **Human bootstrap:** After migrations, no user has any role. Assign `admin` via SQL or admin GraphQL once a first admin exists. **Service account bootstrap:** Run `pnpm run database:bootstrap-service-accounts` to mint `ot_sa_…` tokens for `OPENTHROTTLE_MCP_AUTH_TOKEN` and `OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN` (see `databases/README.md` and `packages/openthrottle-mcp/docs/AUTH.md`).
 
+### Service accounts and the acting user: which helper to reach for
+
+A resolver that receives a `sub` has to answer one question before anything else: **what is this
+user id actually for?** Getting that wrong is what produced the one real defect in this area (see
+below), so the three mechanisms are named here rather than inferred from whichever precedent you
+happen to find first.
+
+| You need...                                              | Use                                                          | Non-user principal                                                    |
+| -------------------------------------------------------- | ------------------------------------------------------------ | --------------------------------------------------------------------- |
+| To **attribute** an action (nullable FK, "who did this") | `resolveActorUserId(sub, kind)`                              | resolves `null`, action proceeds unattributed                         |
+| A user to **own or scope** a row the action must create  | `EffectiveUserResolutionService.resolveEffectiveUserId(sub)` | resolves the service account's `acting_user_id`; `null` when unlinked |
+| The human to **be the subject**, not merely the actor    | `assertHumanAuthPrincipal(principal)`                        | throws `ForbiddenException`                                           |
+
+**The rule that governs all three: acting-user resolution changes WHOM a permitted action is
+attributed to — never WHAT the caller is authorized to do.** Authorization comes from
+`service_account_roles` and `user_roles`, evaluated by `GqlPermissionsGuard`, and nothing here
+touches that. Migration 107's `COMMENT` on `service_accounts.acting_user_id` says the same thing in
+the schema: "a hint, never a permission grant". If you find yourself using a resolved user id to
+decide _whether_ an action may proceed, you have reached for the wrong tool.
+
+`assertHumanAuthPrincipal` is the deliberate hard floor, and its current users share one property:
+the human is the **subject** of the operation, so acting-as would be either an escalation or a
+privacy breach. `service-accounts.resolver` (an account must not mint or re-role its own
+credentials), `agent-conversations.resolver` (a person's own chats), `token-usage.resolver` (a
+person's own usage). Keep it that way; do not swap it for acting-user resolution to make an
+automation path work.
+
+**Audited 2026-09-08 (OT plan `79e8c132`).** Every `resolveActorUserId` call site was reviewed after
+`registerPlanRunWorktreeCheckout` was changed to resolve through the acting user. Two findings worth
+keeping:
+
+- **There was no inconsistent line to redraw.** No other mutation hard-rejects a non-user principal
+  through `resolveActorUserId`; the remaining call sites (`registerCliPlanRun`, both enqueue paths,
+  `cancelPlanRun`) all treat `null` as "unattributed" and carry on. `registerPlanRunWorktreeCheckout`
+  was the sole outlier.
+- **That rejection was never an authorization control.** `PlansResolver` is
+  `@authz-stance: authenticated-only`, so a service account could already call every other mutation
+  on it. Reaching for the attribution helper where an _owner_ was needed simply produced a
+  `ForbiddenException` as a side effect. The fix removed an accident, not a safeguard — which is
+  precisely why the table above exists.
+
+All three current `resolveEffectiveUserId` consumers (`registerPlanRunWorktreeCheckout`,
+`recordSkillUsage`, `PlanCreationService`'s workspace resolution) use the result only to own, scope
+or attribute a row, and each degrades to doing _less_ on `null` — never more. No call site depends
+on it for authorization.
+
 **Optional auth features (not implemented):**
 
 - **Refresh tokens** — Not implemented. To add: issue a long-lived refresh token (stored server-side or signed opaquely), expose a refresh mutation that accepts it and returns a new access token, and have the frontend use it when the access token expires or returns 401.

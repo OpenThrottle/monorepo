@@ -3521,6 +3521,11 @@ type DiscoveredWorktreeObject {
   repositoryId: ID
 
   """
+  Whether the live run's liveness is VERIFIED rather than merely claimed. True when the run heartbeats on a timer, so RUNNING is a checked fact. False when it does not (an interactive /ot-loop run): the row says IN_PROGRESS and nothing confirms it, so this worktree may be held busy by an agent that died hours ago — surface that distinctly rather than showing it as healthily running. Null when nothing is running.
+  """
+  runMonitored: Boolean
+
+  """
   True when no repository_checkouts row exists at this path for this user. Orthogonal to activity — an unregistered worktree can be DIRTY.
   """
   unregistered: Boolean!
@@ -5092,6 +5097,11 @@ type Mutation {
   settleCliPlanRun(input: SettleCliPlanRunInput!): PlanRunObject
 
   """
+  Force-settle an UNSUPERVISED plan run to STALE — the human escape hatch for a run whose agent is gone. Kill does not help here: cancelling an interactive run only stamps the cancel marker and waits for the agent to poll it, so a dead agent leaves the row IN_PROGRESS forever, reading as live and holding its worktree busy. Refused for a run that heartbeats (it has a sweeper of its own and may be genuinely live) and for one already terminal. Always writes STALE — 'contact lost' is what a human clicking this actually knows. Never touches plan or task status. Returns null when the run did not match.
+  """
+  forceSettlePlanRun(input: ForceSettlePlanRunInput!): PlanRunObject
+
+  """
   Bump the liveness heartbeat on a detached-CLI run row (from registerCliPlanRun). The CLI calls this on a ~15s timer so a hard crash (SIGKILL/power-loss) leaves a stale heartbeat the reader/sweeper can detect. Keyed on the run id. Returns null when the row no longer exists.
   """
   recordPlanRunHeartbeat(input: RecordPlanRunHeartbeatInput!): PlanRunObject
@@ -5806,6 +5816,13 @@ input SettleCliPlanRunInput {
   Terminal status to set: COMPLETED, CANCELLED, or FAILED. Normalized to uppercase.
   """
   status: String!
+}
+
+input ForceSettlePlanRunInput {
+  """
+  Plan-run row id to force-settle to STALE. Must be an IN_PROGRESS run that does not heartbeat; anything else is refused.
+  """
+  planRunId: ID!
 }
 
 input RecordPlanRunHeartbeatInput {

@@ -201,6 +201,12 @@ export class DiscoveredWorktreeObject {
   repositoryId!: string | null;
 
   @Field(() => Boolean, {
+    description: `Whether the live run's liveness is VERIFIED rather than merely claimed. True when the run heartbeats on a timer, so RUNNING is a checked fact. False when it does not (an interactive /ot-loop run): the row says IN_PROGRESS and nothing confirms it, so this worktree may be held busy by an agent that died hours ago — surface that distinctly rather than showing it as healthily running. Null when nothing is running.`,
+    nullable: true,
+  })
+  runMonitored!: boolean | null;
+
+  @Field(() => Boolean, {
     description: `True when no repository_checkouts row exists at this path for this user. Orthogonal to activity — an unregistered worktree can be DIRTY.`,
   })
   unregistered!: boolean;

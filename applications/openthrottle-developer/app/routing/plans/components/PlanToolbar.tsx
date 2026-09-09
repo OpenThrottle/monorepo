@@ -48,6 +48,13 @@ export interface PlanToolbarProps {
    */
   newestRunIsStale?: boolean | undefined;
   /**
+   * @description Id of the newest run when it is an interactive (non-heartbeating)
+   * run still IN_PROGRESS — the toolbar then offers Settle, the escape hatch for
+   * a run whose agent is gone. `undefined` while run history is loading, `null`
+   * when the newest run is not one of these.
+   */
+  newestUnsupervisedUnsettledRunId?: string | null | undefined;
+  /**
    * @description Add a plan tag. When provided alongside {@link onRemoveTag},
    * {@link tags}, and {@link tagVocabulary}, the toolbar renders the tag chips.
    */
@@ -107,6 +114,7 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
     editorWorkingDirectory = '',
     editors,
     newestRunIsStale,
+    newestUnsupervisedUnsettledRunId,
     onAddTag,
     onRemoveTag,
     planId,
@@ -165,6 +173,7 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
           isTerminal={isTerminal}
           jobRunHooksJson={jobRunHooksJson}
           newestRunIsStale={newestRunIsStale}
+          newestUnsupervisedUnsettledRunId={newestUnsupervisedUnsettledRunId}
           planId={planId}
           planStatus={planStatus}
           planTitle={planTitle}

@@ -3,11 +3,15 @@
  *
  * Why this exists at all: a run registered by an interactive loop carries
  * `heartbeat_expected = false`, which deliberately removes it from the server's
- * stale sweep. That exemption is load-bearing — the sweep does not merely settle a
+ * 120s stale sweep. That exemption is load-bearing — the sweep does not merely settle a
  * run, it resets the plan and every IN_PROGRESS task to PENDING, and an agent turn
- * routinely goes quiet for longer than the 120s cutoff. But it also means NOTHING
- * server-side will ever settle such a row. One that is opened and never closed sits
- * IN_PROGRESS forever, reads as live, and holds its worktree marked busy.
+ * routinely goes quiet for longer than the 120s cutoff.
+ *
+ * The server's own floor for these rows is an unsupervised age sweep at 12h (plus
+ * settle-on-next-register). This hook is the fast path under Claude Code: PLAN_RUN_ABANDONED_MS
+ * is deliberately shorter, because "this session is provably gone" is far stronger evidence
+ * than elapsed time and justifies acting on it sooner. A run opened and never closed reads
+ * as live and holds its worktree marked busy for as long as it takes one of them to fire.
  *
  * The loop's own settle discipline stays primary, because only the loop knows the
  * CORRECT terminal status. This is the janitor for the cases where that discipline

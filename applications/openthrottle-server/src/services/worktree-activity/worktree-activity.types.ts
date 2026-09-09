@@ -36,6 +36,17 @@ export interface ClassifiedWorktree extends DiscoveredWorktree {
   /** The live run's id when {@link activity} is RUNNING; else null. */
   readonly planRunId: string | null;
   /**
+   * Whether the live run's liveness is actually VERIFIED, or merely claimed. True when the run
+   * heartbeats on a timer, so RUNNING is a checked fact. False when it does not (an interactive
+   * /ot-loop turn, `heartbeat_expected = false`): the row says IN_PROGRESS and nothing confirms it,
+   * so the worktree may be held busy by an agent that died hours ago. Null when nothing is running.
+   *
+   * A distinct field rather than a fourth {@link WorktreeActivity} value on purpose: the worktree
+   * genuinely IS claimed either way, and folding "unverified" into the activity enum would force
+   * every reader to handle a new state just to learn how much to trust the old one.
+   */
+  readonly runMonitored: boolean | null;
+  /**
    * No `repository_checkouts` row at this path for this user. Orthogonal to {@link activity} — an
    * unregistered worktree can perfectly well be DIRTY.
    */

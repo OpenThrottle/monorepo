@@ -487,6 +487,19 @@ export class SettleCliPlanRunInput {
   status!: string;
 }
 
+/**
+ * Input for {@link PlansResolver.forceSettlePlanRun}: a human's escape hatch for an unsupervised
+ * run whose agent is gone. Deliberately carries NO status field — the mutation always writes
+ * STALE, because a human clicking "settle" knows contact was lost, not how the work ended.
+ */
+@InputType()
+export class ForceSettlePlanRunInput {
+  @Field(() => ID, {
+    description: `Plan-run row id to force-settle to STALE. Must be an IN_PROGRESS run that does not heartbeat; anything else is refused.`,
+  })
+  planRunId!: string;
+}
+
 /** Input for {@link PlansResolver.recordPlanRunHeartbeat}: bump a detached-CLI run's liveness. */
 @InputType()
 export class RecordPlanRunHeartbeatInput {

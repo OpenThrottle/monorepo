@@ -9,10 +9,14 @@ export type PlanRunsStaleSweepJob = Job<PlanRunsStaleSweepJobData, void>;
 
 /** @description Outcome of a sweep over stale (IN_PROGRESS, heartbeat past cutoff) plan runs. */
 export interface PlanRunsStaleSweepSummary {
-  /** Stale runs examined this sweep. */
+  /** Stale heartbeating runs examined this sweep. */
   readonly examined: number;
   /** Plans reset to PENDING because a stale run stranded them (no other live run). */
   readonly reconciledPlans: number;
   /** Runs settled to STALE (location cleared). */
   readonly swept: number;
+  /** Unsupervised runs examined this sweep (age past the unsupervised cutoff). */
+  readonly unsupervisedExamined: number;
+  /** Unsupervised runs settled to STALE. Never contributes to `reconciledPlans`. */
+  readonly unsupervisedSwept: number;
 }
