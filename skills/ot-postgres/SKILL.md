@@ -33,7 +33,7 @@ Canonical commands and schema overview: **`databases/README.md`**.
 | Step             | Command / path                                                                                      |
 | ---------------- | --------------------------------------------------------------------------------------------------- |
 | Apply migrations | `pnpm run database:migrate`                                                                         |
-| New migration    | Next `NNN_snake_case.sql` in `databases/migrations/`                                                |
+| New migration    | Next `NNN_snake_case.sql` in `databases/migrations/` — check the tip of `main`, not your branch     |
 | Entity sync      | Update `@openthrottle/nestjs-repositories` entities to match SQL                                    |
 | Local CI gate    | `pnpm nx run monorepo:check-migration-table-comments` (diff-scoped; also in `pnpm run check:local`) |
 
@@ -41,7 +41,7 @@ Canonical commands and schema overview: **`databases/README.md`**.
 
 ## Foreign keys (required)
 
-**Never put an inline `REFERENCES` inside a statement guarded by `IF NOT EXISTS`.** Enforced by `pnpm nx run monorepo:check-migration-hygiene` (in `check:local`).
+**Never put an inline `REFERENCES` inside a statement guarded by `IF NOT EXISTS`.** Enforced by `pnpm nx run monorepo:check-migration-hygiene` (in `check:local` **and** in CI since 2026-09-10).
 
 `CREATE TABLE IF NOT EXISTS` / `ADD COLUMN IF NOT EXISTS` are all-or-nothing: if the table or column already exists the guard skips the **whole statement**, so the column is present but its constraint never lands — and the `schema_migrations` ledger still records the migration as applied. The 2026-08-21 health sweep found 15 foreign keys missing this way on the live database, with orphan rows behind them.
 
@@ -65,7 +65,17 @@ $$;
 
 Repairing existing tables: prefer `ADD CONSTRAINT ... NOT VALID` then `VALIDATE CONSTRAINT` — the first takes a brief lock without scanning, the second scans under `SHARE UPDATE EXCLUSIVE` and does not block reads or writes.
 
-**One migration per `NNN_` prefix.** A prefix must identify exactly one file; the check fails on new collisions (existing duplicates are grandfathered). Full detail: `databases/README.md` § Foreign keys in migrations.
+### One migration per `NNN_` prefix
+
+A prefix must identify exactly one file. `check-migration-hygiene` fails on any collision **your branch is adding**, judged against the **tip of the base ref** rather than your merge-base — so pick your number by looking at `main`, not at your own branch. Two branches that each grab the next free number without rebasing are the exact case this catches, and it will fail you even when your diff touches no migration at all.
+
+`pnpm exec tsx ./scripts/check-migration-hygiene.ts --all` judges the whole tree with no base comparison. CI runs that form on `push: main`, as the post-merge pass.
+
+**Never renumber a migration that has been applied anywhere.** `schema_migrations` declares `filename TEXT PRIMARY KEY`, so a rename makes the runner treat the file as unapplied and re-run it, while the original row survives forever naming a file that no longer exists. Applied duplicates are grandfathered instead — seven prefixes are, in two cohorts. Editing an applied migration in place fails too: the runner checksums them.
+
+The numeric scheme was weighed against timestamp prefixes on 2026-09-10 and deliberately kept; the reasoning and the conditions that would reopen it are in `databases/README.md`. Do not switch schemes on your own initiative.
+
+Full detail: `databases/README.md` § One migration per numeric prefix.
 
 ## Patterns appendix (idempotent DDL)
 

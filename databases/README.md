@@ -717,4 +717,52 @@ To check a live database against what the migrations declare, diff `pg_constrain
 
 ### One migration per numeric prefix
 
-A `NNN_` prefix must identify exactly one migration. Application order is filename-lexicographic so duplicates still apply deterministically, but the prefix stops being an identifier, which breaks tooling and humans that assume it is one. `check-migration-hygiene` fails on any **new** collision; the prefixes already duplicated when the check was added (`084` ×3, and `085`, `087`, `090`, `092` ×2) are applied history and are grandfathered.
+A `NNN_` prefix must identify exactly one migration. Application order is filename-lexicographic so duplicates still apply deterministically, but the prefix stops being an identifier, which breaks tooling and humans that assume it is one.
+
+`check-migration-hygiene` fails on any collision that this branch is **adding**. Seven prefixes are grandfathered, in two cohorts:
+
+| prefix                               | cohort                                             |
+| ------------------------------------ | -------------------------------------------------- |
+| `084` ×3, `085`, `087`, `090`, `092` | predate the rule (shipped 2026-08-23, #421)        |
+| `110`, `111`                         | landed 2026-09-07..09, **while the rule was live** |
+
+Grandfathering rather than renumbering is not laziness — see [Never renumber an applied migration](#never-renumber-an-applied-migration).
+
+#### What the check compares against, and why
+
+The duplicate-prefix rule judges the **union of your working tree and the tip of the base ref**, because that union is the tree the merge will produce: migrations are only ever added, never renamed and never deleted. It reports a prefix when at least one of the colliding files is absent from the base — the half you are adding.
+
+It deliberately does **not** use the merge-base, and it deliberately does not require your branch to have touched a migration at all. Until 2026-09-10 it did both, and the result was the 110/111 cohort above: branch A adds `110_a`, branch B adds `110_b`, neither has rebased so neither merge-base contains the other's file, each sees the prefix used exactly once, both pass, main collides. Nothing re-checked after the merge, so nothing ever reported it.
+
+A collision that already exists wholly on main is **not** reported on a branch — otherwise one bookkeeping error would fail every unrelated PR. That case belongs to the trunk pass:
+
+```bash
+pnpm exec tsx ./scripts/check-migration-hygiene.ts --all
+```
+
+`--all` drops the base comparison and judges the whole tree. CI infers it automatically on `push: main`, where the base tip _is_ HEAD. That is the only post-merge alarm there is — the `merge_group` trigger exists but the merge queue on `main` is currently disabled, so no queue-time run happens.
+
+#### Never renumber an applied migration
+
+`schema_migrations` declares `filename TEXT PRIMARY KEY`. The filename **is** the ledger key.
+
+Renaming `110_add_user_id_to_skill_usage_events.sql` to `112_…` therefore does two things at once: the runner stops recognizing the file as applied and re-runs it, and the original ledger row survives forever naming a file that no longer exists. Migrations here are written idempotent so the re-run is probably survivable — but "probably survivable" is not a migration strategy, and the orphan row is permanent. The runner also checksums applied migrations and fails on drift, so editing one in place is not an escape either.
+
+Renumber **before** the migration is applied anywhere. After that, grandfather it and record why.
+
+#### Numeric prefix vs timestamp prefix — decided 2026-09-10: keep numeric
+
+A timestamp prefix (`20260909T1200_…`) is the only scheme that makes a collision structurally impossible rather than merely detected, so it was evaluated properly (OT plan `21841c4f`). The decision is **keep `NNN_`**, for four reasons:
+
+1. **A duplicate prefix has never been a correctness bug.** Application order stays well-defined under lexicographic sort either way. It is an identity and tooling problem, and identity problems are exactly what a cheap static check is good at.
+2. **The failure is now detected on both sides of the merge** — pre-merge against the base tip, post-merge on the trunk. The residual cost of the numeric scheme is "rename your file before it merges", which is seconds.
+3. **Adoption would be permanent and mixed.** Nothing existing can be renamed (see above), so the directory would carry both schemes forever. That sort is correct only by accident: every current prefix is `0xx` or `1xx`, which sorts before `2026…`. It breaks at **`202_`** — the first numeric prefix that sorts _after_ a 2026 timestamp, because `_` (0x5F) is greater than `6` (0x36). Today's high-water mark is `111`, so that is roughly 90 migrations of headroom, not infinite.
+4. **Concurrency pressure is low.** The collisions came from one contributor running parallel agent branches, not from a team racing.
+
+**Revisit when any of these becomes true** — do not re-litigate before then:
+
+- Two or more people are routinely landing migrations in the same week.
+- The duplicate-prefix rule fires more than about three times in a quarter, i.e. the renumbering tax is real rather than theoretical.
+- The numeric sequence approaches **`190`**, which is the point at which the mixed-scheme sort break at `202_` stops being comfortably far away.
+
+If it is revisited, the migration is new-files-only by construction, and the runner (`scripts/openthrottle-database-migrations.ts`) needs an explicit comparator rather than a bare `.sort()` before the first timestamped file lands.
