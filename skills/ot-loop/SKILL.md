@@ -52,8 +52,8 @@ Each `/loop` iteration works exactly one task. Resume the lowest-`sortOrder` `IN
 
 > **Invariant — at most ONE task `IN_PROGRESS` at a time.** Steps 1→5 are one atomic unit: never run step 1 (`IN_PROGRESS`) for a task while another task is still `IN_PROGRESS`. Even when you power through several tasks in a single turn, fully close the current one — through **step 4 (`COMPLETED`)** — _before_ you start the next. Dropping the step-4 flip strands the task `IN_PROGRESS` even though its work shipped and was committed; there is no server-side reconcile, so it just sits there. **This is the single most common failure of this loop** — if you ever have two tasks `IN_PROGRESS`, you skipped a step 4.
 
-1. **Start:** `update_task(taskId, { status: 'IN_PROGRESS' })`. (Precondition: no other task is `IN_PROGRESS` — see the invariant above.)
-2. **Do the work** for that task, following the repo's rules (generators first, code style, no deep imports, etc.).
+1. **Start:** `update_task(taskId, { status: 'IN_PROGRESS' })`, then `begin_task_session({ planId, taskId, model })` to open a work session scoped to this task carrying the model that will do its work. (Precondition: no other task is `IN_PROGRESS` — see the invariant above.) Where `model` comes from is [§ Model routing](#model-routing); declare what will actually do the work, and omit it rather than guess — a session's model is fixed when it opens and cannot be corrected later.
+2. **Do the work** for that task, following the repo's rules (generators first, code style, no deep imports, etc.). Do it yourself, or hand it to a subagent on the routed model — [§ Model routing](#model-routing). **This is the only step that may be delegated.**
 3. **Validate** before completing — at minimum `pnpm nx affected --target=lint,typecheck,test` for the touched projects (run targets **sequentially**, not in parallel — they share the Nx cache). Don't mark a task done on red.
 4. **Complete — do this BEFORE starting any other task:** `update_task(taskId, { status: 'COMPLETED' })`. If the task genuinely can't be finished, set `BLOCKED` or `SKIPPED` instead — but never leave it `IN_PROGRESS` while you move on. Committing the work (step 5) is **not** a substitute for this flip.
 5. **Commit per task** with `/github-commit` — conventional commit, with `Plan-Id:` and `Task-Id:` footers for traceability. Do **not** record a work-ledger artifact for these per-task work commits; the footers carry the traceability.
@@ -62,6 +62,124 @@ Each `/loop` iteration works exactly one task. Resume the lowest-`sortOrder` `IN
 7. **Repeat** — before selecting the next task, confirm the one you just finished is `COMPLETED` (not still `IN_PROGRESS`). Continue until every task is `COMPLETED`.
 
 **Narrate as you go.** Use `append_plan_output(planId, ...)` for decisions and progress, passing `taskId` = the task the log actually describes (omit only for genuinely plan-level notes). One iteration can touch several tasks — tag the right id.
+
+## Model routing
+
+Nothing in this loop used to select a model. Every task ran on whatever the interactive session
+happened to be — a slug rename and an architecture decision alike — and `register_plan_run({ model })`
+only recorded that after the fact. This section is what makes step 2 pick one, and step 1 record it.
+
+The policy is data, not prose: [`references/model-routing.json`](./references/model-routing.json).
+Read it rather than reasoning from memory about which model suits what. Rationale and the measured
+reach: [per-task-model-routing.md](../../docs/openthrottle/per-task-model-routing.md).
+
+**The lookup, in full:** take the task's `category`, lower-case it, find it in `categories`. A hit
+names a tier; a miss — or a null/blank category — is `default`. The tier gives `agentModel` (pass it
+as the Agent tool's `model`) and `recordAs` (declare it to `begin_task_session`). Those two must
+agree: routing and attribution disagreeing about what ran is worse than not routing at all.
+
+Most tasks land on `default`, by design — the policy only maps categories that actually signal
+difficulty, and `default` is the cheap tier. **Never escalate a task just because its category is
+unfamiliar.**
+
+> **Read the cost column the right way round.** In CLAUDE.md's model table every axis is a ranking
+> where higher = better for the owner, so for cost **higher = cheaper**. `sonnet-5` (cost 5) is the
+> cheapest; `fable-5` (cost 2) is the **most expensive**. Reading this backwards once put ~10 fable
+> subagents on ~60 mechanical tasks and exhausted the org's monthly spend cap mid-run (OT
+> `0f0528ff`). If you are about to pick something other than the default tier, re-read this.
+
+### What delegates, and what never does
+
+Step 2 is the only delegatable step, because the loop's most common failure is stranding a task
+`IN_PROGRESS` and every guard against that lives in the parent turn.
+
+| Stays in the parent turn, always    | Goes to the subagent |
+| ----------------------------------- | -------------------- |
+| Task selection and ordering         | The work of step 2   |
+| The status flips (steps 1 and 4)    | — and nothing else   |
+| Session open / `begin_task_session` |                      |
+| Validation (step 3)                 |                      |
+| The commit (step 5)                 |                      |
+| `append_plan_output` narration      |                      |
+| The cancel poll                     |                      |
+| Settling the run row                |                      |
+
+A subagent must not touch OT status or git history. It reports back; the parent decides. If a
+subagent fails or returns something unusable, the parent still owns step 4 — set `BLOCKED` rather
+than leaving the task `IN_PROGRESS`.
+
+### The delegation prompt must stand alone
+
+A subagent inherits none of your context. Build the prompt from the task row alone:
+
+```
+<task title>
+
+<task description — verbatim; real rows carry file paths and line numbers>
+
+Acceptance criteria (from the task's requirements):
+- <requirementsJson[0]>
+- <requirementsJson[1]>
+...
+
+Repo rules that apply: generators before hand-writing, no `as` casts or `any`, no deep package
+imports, `import type` at the top level. Validate with the project's own nx targets, run
+sequentially. Report what you changed and what you could not.
+
+Do NOT change any OpenThrottle plan or task status, and do NOT commit — the caller owns both.
+```
+
+That is sufficient because a well-formed OT task already carries the two things a worker needs:
+`description` says what and where, `requirementsJson` is the acceptance criteria. Worked example —
+this plan's own task 6 row yields a prompt naming the deliverable ("per-task table of category,
+routed model, and recorded model"), the method ("run it twice in a throwaway worktree, or compare
+against a comparable already-executed plan"), and the honesty requirement ("this task is allowed to
+conclude that a mapping was wrong") with no reference to anything outside the row.
+
+**If a task's row is too thin to delegate from, that is a signal about the row, not a reason to
+paste your own context in.** Do the task in the parent turn and say so.
+
+### Cost guardrails
+
+The `guardrails` block in [`model-routing.json`](./references/model-routing.json) is the normative
+copy. The two that bound the damage:
+
+- **At most 1 non-default-tier agent at a time.** This is **structurally enforced**, not an
+  honour-system number: this loop runs exactly one task at a time and delegates at most one
+  subagent per task, so 1 is the shape of the loop rather than a limit bolted onto it. Anything
+  that adds intra-task fan-out or parallel lanes must re-decide the number for non-default tiers
+  explicitly, not inherit the cheap tier's concurrency.
+- **Automatic routing can never select the most expensive model.** No category maps to the `review`
+  tier, so the fable path simply does not exist in the lookup. This is the load-bearing guardrail:
+  even a reader who inverts the cost axis cannot produce a fable fleet through routing.
+
+The remaining rules are prose, and therefore advisory:
+
+- **Escalation is per task, never per fleet.** Escalate one task because that task needs it. There
+  is no "this plan is hard, run it all on opus".
+- **Split mixed batches by difficulty.** Never route a whole batch at its hardest item's tier —
+  that is exactly how one hard task drags 59 mechanical ones up with it.
+- **Finish a finite mechanical tail in the main loop** rather than re-spawning for it. Spawning
+  costs something per agent and mechanical work gains nothing from a stronger model.
+
+**Why advisory is acceptable here, given prose already failed once.** The `0f0528ff` failure was a
+_judgment_ call made from a human-readable table, and the judgment inverted. The common path is no
+longer a judgment call at all — it is a lookup in a data file, and the expensive tier is not
+reachable from it. Prose now governs only the deliberate-escalation path, which already requires
+someone to consciously override the default. That is a much smaller blast radius than last time,
+and it is why the cap that matters is the structural one rather than the written one.
+
+### Harnesses without subagents
+
+Routing is an **interactive-only enhancement, not a requirement of the loop.** A driver with no
+Agent tool — the headless `workflow-ralph` path and every CLI backend it drives — runs the whole
+plan on the single `PlanRunConfigRalphV1.model` fixed at enqueue, exactly as it does today. That is
+correct behaviour, not a degraded mode, and it must not be reported as routing having happened.
+
+Attribution is the part that is **not** interactive-only: a headless driver knows the one model it
+was configured with, so it should still call `begin_task_session` per task and declare it. That
+gives the same per-task read-back with a constant value, which is the honest answer for a run that
+genuinely used one model.
 
 ## Your run row
 
