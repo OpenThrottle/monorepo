@@ -2,6 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import {
   attachSessionSubjectToolHandler,
+  beginTaskSessionToolHandler,
+  beginTaskSessionToolParameters,
   endSessionToolHandler,
   getWorkSessionsToolHandler,
   recordArtifactToolHandler,
@@ -189,6 +191,263 @@ describe('work-ledger tools', () => {
   it('get_work_sessions rejects a non-uuid planId without calling GraphQL', async () => {
     const result = await getWorkSessionsToolHandler({ planId: 'not-a-uuid' });
 
+    expect(result).toMatchObject({ isError: true });
+    expect(mockExecute).not.toHaveBeenCalled();
+  });
+});
+
+describe('begin_task_session', () => {
+  beforeEach(() => {
+    process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = 'test-token';
+    delete process.env.OPENTHROTTLE_MCP_MODEL;
+    clearCurrentSession();
+    mockExecute.mockReset();
+  });
+
+  afterEach(() => {
+    delete process.env.OPENTHROTTLE_MCP_AUTH_TOKEN;
+    delete process.env.OPENTHROTTLE_MCP_MODEL;
+    clearCurrentSession();
+  });
+
+  it('opens a session carrying the declared model and attaches it to the task', async () => {
+    mockExecute
+      .mockResolvedValueOnce({ startWorkSession: { id: 'sess-a' } })
+      .mockResolvedValueOnce({
+        attachWorkSessionSubject: {
+          id: 'subj-a',
+          taskId: '22222222-2222-4222-8222-222222222222',
+        },
+      });
+
+    const result = await beginTaskSessionToolHandler({
+      model: 'claude-sonnet-5',
+      planId: '11111111-1111-4111-8111-111111111111',
+      taskId: '22222222-2222-4222-8222-222222222222',
+    });
+
+    expect(expectStructured(result)).toMatchObject({
+      model: 'claude-sonnet-5',
+      sessionId: 'sess-a',
+    });
+
+    // The model must reach startWorkSession — that is the only moment it can be recorded.
+    expect(mockExecute).toHaveBeenNthCalledWith(
+      1,
+      'test-token',
+      expect.anything(),
+      {
+        input: expect.objectContaining({ model: 'claude-sonnet-5' }),
+      },
+    );
+    // ...and the subject must name the task, which is what makes the model per-task readable.
+    expect(mockExecute).toHaveBeenNthCalledWith(
+      2,
+      'test-token',
+      expect.anything(),
+      {
+        input: {
+          planId: '11111111-1111-4111-8111-111111111111',
+          sessionId: 'sess-a',
+          taskId: '22222222-2222-4222-8222-222222222222',
+        },
+      },
+      { headers: { 'X-OT-Session-Id': 'sess-a' } },
+    );
+  });
+
+  it('rotates the session so two tasks record two different models', async () => {
+    mockExecute
+      .mockResolvedValueOnce({ startWorkSession: { id: 'sess-a' } })
+      .mockResolvedValueOnce({ attachWorkSessionSubject: { id: 'subj-a' } })
+      .mockResolvedValueOnce({ endWorkSession: { id: 'sess-a' } })
+      .mockResolvedValueOnce({ startWorkSession: { id: 'sess-b' } })
+      .mockResolvedValueOnce({ attachWorkSessionSubject: { id: 'subj-b' } });
+
+    await beginTaskSessionToolHandler({
+      model: 'claude-sonnet-5',
+      planId: '11111111-1111-4111-8111-111111111111',
+      taskId: '22222222-2222-4222-8222-222222222222',
+    });
+    const second = await beginTaskSessionToolHandler({
+      model: 'claude-opus-5',
+      planId: '11111111-1111-4111-8111-111111111111',
+      taskId: '33333333-3333-4333-8333-333333333333',
+    });
+
+    expect(expectStructured(second)).toMatchObject({
+      model: 'claude-opus-5',
+      sessionId: 'sess-b',
+    });
+
+    // The previous session was closed before the new one opened — without that, the second
+    // task's work would land on the first task's session and inherit its model.
+    const [, , third, fourth] = mockExecute.mock.calls;
+    expect(third?.[2]).toEqual({
+      input: { sessionId: 'sess-a', summary: null },
+    });
+    expect(fourth?.[2]).toEqual({
+      input: expect.objectContaining({ model: 'claude-opus-5' }),
+    });
+  });
+
+  it('degrades a malformed model to no model instead of failing the call', () => {
+    // Attribution must never be able to fail a tool call, so a non-string model is dropped
+    // rather than rejected. Null is a legible answer; a failed task-start is not.
+    //
+    // Asserted on the schema rather than through the handler, because the schema IS the gate
+    // that would otherwise reject the call: both dispatch paths (the MCP SDK's
+    // validateToolInput and @rekog/mcp-nest's McpToolsHandler) safeParse against this exact
+    // object before the handler runs. safeParse takes unknown, so a malformed value is
+    // expressible here without a cast.
+    const parsed = beginTaskSessionToolParameters.safeParse({
+      model: 12345,
+      planId: '11111111-1111-4111-8111-111111111111',
+      taskId: '22222222-2222-4222-8222-222222222222',
+    });
+
+    expect(parsed.success).toBe(true);
+    expect(parsed.data?.model).toBeNull();
+    // Identity is NOT lenient in the same object — only attribution is.
+    expect(parsed.data?.taskId).toBe('22222222-2222-4222-8222-222222222222');
+  });
+
+  it('records an explicitly null model as no model', async () => {
+    mockExecute
+      .mockResolvedValueOnce({ startWorkSession: { id: 'sess-a' } })
+      .mockResolvedValueOnce({ attachWorkSessionSubject: { id: 'subj-a' } });
+
+    const result = await beginTaskSessionToolHandler({
+      model: null,
+      planId: '11111111-1111-4111-8111-111111111111',
+      taskId: '22222222-2222-4222-8222-222222222222',
+    });
+
+    expect(expectStructured(result)).toMatchObject({ model: null });
+    expect(mockExecute).toHaveBeenNthCalledWith(
+      1,
+      'test-token',
+      expect.anything(),
+      { input: expect.objectContaining({ model: null }) },
+    );
+  });
+
+  it('records no model when none is declared and the launcher set none', async () => {
+    mockExecute
+      .mockResolvedValueOnce({ startWorkSession: { id: 'sess-a' } })
+      .mockResolvedValueOnce({ attachWorkSessionSubject: { id: 'subj-a' } });
+
+    const result = await beginTaskSessionToolHandler({
+      planId: '11111111-1111-4111-8111-111111111111',
+      taskId: '22222222-2222-4222-8222-222222222222',
+    });
+
+    expect(expectStructured(result)).toMatchObject({ model: null });
+    expect(result.content[0]?.text).toContain('not observable');
+  });
+
+  it('falls back to the launcher model when the caller declares none', async () => {
+    process.env.OPENTHROTTLE_MCP_MODEL = 'claude-opus-5';
+    mockExecute
+      .mockResolvedValueOnce({ startWorkSession: { id: 'sess-a' } })
+      .mockResolvedValueOnce({ attachWorkSessionSubject: { id: 'subj-a' } });
+
+    const result = await beginTaskSessionToolHandler({
+      planId: '11111111-1111-4111-8111-111111111111',
+      taskId: '22222222-2222-4222-8222-222222222222',
+    });
+
+    expect(expectStructured(result)).toMatchObject({ model: 'claude-opus-5' });
+  });
+
+  it("still opens this task's session when closing the previous one fails", async () => {
+    mockExecute
+      .mockResolvedValueOnce({ startWorkSession: { id: 'sess-a' } })
+      .mockResolvedValueOnce({ attachWorkSessionSubject: { id: 'subj-a' } })
+      .mockRejectedValueOnce(new Error('end failed'))
+      .mockResolvedValueOnce({ startWorkSession: { id: 'sess-b' } })
+      .mockResolvedValueOnce({ attachWorkSessionSubject: { id: 'subj-b' } });
+
+    await beginTaskSessionToolHandler({
+      planId: '11111111-1111-4111-8111-111111111111',
+      taskId: '22222222-2222-4222-8222-222222222222',
+    });
+    const second = await beginTaskSessionToolHandler({
+      model: 'claude-sonnet-5',
+      planId: '11111111-1111-4111-8111-111111111111',
+      taskId: '33333333-3333-4333-8333-333333333333',
+    });
+
+    // A stale row the sweeper will close is strictly better than refusing to start the task,
+    // and better than reusing sess-a and misattributing task B to task A's model.
+    expect(expectStructured(second)).toMatchObject({ sessionId: 'sess-b' });
+  });
+
+  it('gives concurrent rotations distinct sessions, not one shared model', async () => {
+    // Regression: dispatched concurrently (which MCP permits — the stdio server processes
+    // queued requests in parallel), both calls previously observed "nothing open yet", adopted
+    // the SAME in-flight lazy open, and landed on one session carrying one model — while each
+    // caller was told its own model had been recorded. Reporting a provenance value that is not
+    // the stored one is worse than recording none, so rotation must serialize.
+    let started = 0;
+    mockExecute.mockImplementation((_token, document) => {
+      const operation = JSON.stringify(document);
+      if (operation.includes('StartWorkSession')) {
+        started += 1;
+        return Promise.resolve({ startWorkSession: { id: `sess-${started}` } });
+      }
+      if (operation.includes('EndWorkSession')) {
+        return Promise.resolve({ endWorkSession: { id: 'ended' } });
+      }
+      return Promise.resolve({ attachWorkSessionSubject: { id: 'subj' } });
+    });
+
+    const [first, second] = await Promise.all([
+      beginTaskSessionToolHandler({
+        model: 'claude-sonnet-5',
+        planId: '11111111-1111-4111-8111-111111111111',
+        taskId: '22222222-2222-4222-8222-222222222222',
+      }),
+      beginTaskSessionToolHandler({
+        model: 'claude-opus-5',
+        planId: '11111111-1111-4111-8111-111111111111',
+        taskId: '33333333-3333-4333-8333-333333333333',
+      }),
+    ]);
+
+    const firstSession = expectStructured(first).sessionId;
+    const secondSession = expectStructured(second).sessionId;
+
+    expect(firstSession).not.toBe(secondSession);
+    expect(started).toBe(2);
+
+    // Each session must carry the model its own caller declared.
+    const models = new Map(
+      mockExecute.mock.calls
+        .filter(([, document]) =>
+          JSON.stringify(document).includes('StartWorkSession'),
+        )
+        .map(([, , variables], index) => [
+          `sess-${index + 1}`,
+          JSON.stringify(variables),
+        ]),
+    );
+    expect(models.get(firstSession)).toContain(
+      expectStructured(first).model ?? '',
+    );
+    expect(models.get(secondSession)).toContain(
+      expectStructured(second).model ?? '',
+    );
+  });
+
+  it('rejects a non-uuid taskId without opening a session', async () => {
+    const result = await beginTaskSessionToolHandler({
+      planId: '11111111-1111-4111-8111-111111111111',
+      taskId: 'not-a-uuid',
+    });
+
+    // Identity is strict where attribution is lenient: attaching work to the wrong task is
+    // worse than recording no model.
     expect(result).toMatchObject({ isError: true });
     expect(mockExecute).not.toHaveBeenCalled();
   });

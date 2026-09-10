@@ -335,6 +335,17 @@ export class McpDeveloperMcpSurface {
   }
 
   @Tool({
+    description: Th.beginTaskSessionToolDescription,
+    name: 'begin_task_session',
+    parameters: asMcpParameters(Th.beginTaskSessionToolParameters),
+  })
+  beginTaskSession(
+    args: Parameters<typeof Th.beginTaskSessionToolHandler>[0],
+  ): ReturnType<typeof Th.beginTaskSessionToolHandler> {
+    return Th.beginTaskSessionToolHandler(args);
+  }
+
+  @Tool({
     description: Th.attachSessionSubjectToolDescription,
     name: 'attach_session_subject',
     parameters: asMcpParameters(Th.attachSessionSubjectToolParameters),

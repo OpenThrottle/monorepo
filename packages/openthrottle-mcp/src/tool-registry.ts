@@ -227,6 +227,12 @@ export const developerMcpToolDefinitions: readonly DeveloperMcpToolDefinition[] 
       Th.authStatusToolHandler,
     ),
     defineTool(
+      'begin_task_session',
+      Th.beginTaskSessionToolDescription,
+      Th.beginTaskSessionToolParameters,
+      Th.beginTaskSessionToolHandler,
+    ),
+    defineTool(
       'attach_session_subject',
       Th.attachSessionSubjectToolDescription,
       Th.attachSessionSubjectToolParameters,

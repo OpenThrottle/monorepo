@@ -2,7 +2,7 @@
  * @description Unit tests for work-session client attribution: the connected client's name and
  * version win over this server's own, a surface that never captured (Nest/HTTP) or a handshake
  * that has not completed falls back cleanly, a throwing provider can never fail a tool call, and
- * the model comes only from an explicit env var — never inferred.
+ * the model comes only from a caller's declaration or an explicit env var — never inferred.
  */
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -85,6 +85,67 @@ describe('resolveSessionModel', () => {
     expect(resolveSessionModel()).toBe('claude-fable-5');
 
     process.env.OPENTHROTTLE_MCP_MODEL = '   ';
+    expect(resolveSessionModel()).toBeNull();
+  });
+
+  it("reports the caller's declared model when the launcher set none", () => {
+    expect(resolveSessionModel('claude-sonnet-5')).toBe('claude-sonnet-5');
+  });
+
+  it('prefers the declared model over the launcher env var', () => {
+    // The whole point of the declared rung: one process serves a whole loop, so the env var
+    // cannot express a per-task decision and must not win over one.
+    process.env.OPENTHROTTLE_MCP_MODEL = 'claude-opus-5';
+
+    expect(resolveSessionModel('claude-sonnet-5')).toBe('claude-sonnet-5');
+  });
+
+  it('falls back to the env var when the declaration is absent or blank', () => {
+    process.env.OPENTHROTTLE_MCP_MODEL = 'claude-opus-5';
+
+    expect(resolveSessionModel()).toBe('claude-opus-5');
+    expect(resolveSessionModel(null)).toBe('claude-opus-5');
+    expect(resolveSessionModel(undefined)).toBe('claude-opus-5');
+    expect(resolveSessionModel('   ')).toBe('claude-opus-5');
+  });
+
+  it('trims a declared model', () => {
+    expect(resolveSessionModel('  claude-fable-5  ')).toBe('claude-fable-5');
+  });
+
+  it('reports null when neither rung supplies one, rather than guessing', () => {
+    expect(resolveSessionModel(null)).toBeNull();
+    expect(resolveSessionModel('  ')).toBeNull();
+  });
+});
+
+describe('the HTTP/Nest surface reports no client and no model', () => {
+  /**
+   * The Nest surface multiplexes many callers over one process, so it never captures a client
+   * identity and the launcher sets no per-caller model. It must resolve to nothing rather than
+   * to another caller's value — the same surface split workspace-path.ts uses. Adding the
+   * declared rung must not create an ambient channel that leaks across callers.
+   */
+  beforeEach(() => {
+    captureClientIdentityProvider(null);
+    delete process.env.OPENTHROTTLE_MCP_MODEL;
+  });
+
+  afterEach(() => {
+    delete process.env.OPENTHROTTLE_MCP_MODEL;
+  });
+
+  it('resolves to no client and no model with nothing captured and nothing declared', () => {
+    expect(getClientIdentity()).toBeNull();
+    expect(resolveSessionToolName()).toBe('openthrottle-mcp');
+    expect(resolveSessionToolVersion(FALLBACK_VERSION)).toBe(FALLBACK_VERSION);
+    expect(resolveSessionModel()).toBeNull();
+  });
+
+  it('keeps a declared model per-call, never stored for the next caller', () => {
+    expect(resolveSessionModel('claude-sonnet-5')).toBe('claude-sonnet-5');
+
+    // The next caller declares nothing and must not inherit the previous one's model.
     expect(resolveSessionModel()).toBeNull();
   });
 });
