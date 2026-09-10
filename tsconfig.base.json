@@ -26,6 +26,7 @@
     "noImplicitOverride": true,
     "noImplicitReturns": true,
     "noUncheckedIndexedAccess": true,
+    "noUncheckedSideEffectImports": false,
     "noUnusedLocals": false,
     "noUnusedParameters": true,
     "pretty": true,

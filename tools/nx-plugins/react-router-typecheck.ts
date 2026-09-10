@@ -1,8 +1,8 @@
 import { dirname } from 'node:path';
 import {
   createNodesFromFiles,
-  type CreateNodesResultV2,
-  type CreateNodesV2,
+  type CreateNodes,
+  type CreateNodesResultArray,
 } from '@nx/devkit';
 
 /**
@@ -28,9 +28,9 @@ import {
  */
 const REACT_ROUTER_CONFIG_GLOB = `applications/*/react-router.config.ts`;
 
-export const createNodesV2: CreateNodesV2 = [
+export const createNodesV2: CreateNodes = [
   REACT_ROUTER_CONFIG_GLOB,
-  async (configFiles, options, context): Promise<CreateNodesResultV2> =>
+  async (configFiles, options, context): Promise<CreateNodesResultArray> =>
     await createNodesFromFiles(
       (configFile) => {
         const projectRoot = dirname(configFile);

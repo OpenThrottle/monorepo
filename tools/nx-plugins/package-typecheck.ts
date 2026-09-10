@@ -2,8 +2,8 @@ import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import {
   createNodesFromFiles,
-  type CreateNodesResultV2,
-  type CreateNodesV2,
+  type CreateNodes,
+  type CreateNodesResultArray,
 } from '@nx/devkit';
 
 /**
@@ -47,9 +47,9 @@ import {
  */
 const SOURCE_CONFIG_GLOB = `{applications,packages,tools}/*/tsconfig.{lib,app}.json`;
 
-export const createNodesV2: CreateNodesV2 = [
+export const createNodesV2: CreateNodes = [
   SOURCE_CONFIG_GLOB,
-  async (configFiles, options, context): Promise<CreateNodesResultV2> =>
+  async (configFiles, options, context): Promise<CreateNodesResultArray> =>
     await createNodesFromFiles(
       (configFile) => {
         const projectRoot = dirname(configFile);
