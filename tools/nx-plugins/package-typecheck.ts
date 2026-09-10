@@ -35,9 +35,15 @@ import {
  *   tsc --build tsconfig.json --emitDeclarationOnly   (source; emits dist .d.ts)
  *   && tsc --noEmit -p tsconfig.test.json             (tests; only when present)
  *
- * `syncGenerators: ['@nx/js:typescript-sync']` is re-attached so tsconfig
- * project-reference sync keeps running (it was previously attached by
- * `@nx/js`).
+ * `syncGenerators: ['@nx/js:typescript-sync']` is re-attached because `@nx/js`
+ * used to attach it and this plugin replaces that inference. It is INERT today:
+ * `nx.json` lists the generator in `sync.disabledTaskSyncGenerators`, and Nx
+ * filters disabled generators out of the task graph, so no target ever syncs.
+ * The generator itself is NOT disabled — `sync.globalGenerators` registers it so
+ * `nx sync` / `nx sync:check` work. Only the task-pipeline attachment is
+ * suppressed, because attaching it hard-fails every non-TTY shell (details in
+ * docs/monorepo/NX.md). The entry is kept rather than deleted so that attaching
+ * it again is a one-line change instead of a two-place hunt.
  *
  * NOTE: `nx.json` targetDefaults.typecheck still layers `cache`/`dependsOn` on
  * top of what is inferred here (target defaults override inferred fields) — keep
@@ -123,6 +129,7 @@ export const createNodesV2: CreateNodes = [
                     '{projectRoot}/dist/**/*.tsbuildinfo',
                     '{projectRoot}/tsconfig.test.tsbuildinfo',
                   ],
+                  // Inert: disabledTaskSyncGenerators filters it. See the note above.
                   syncGenerators: ['@nx/js:typescript-sync'],
                 },
               },

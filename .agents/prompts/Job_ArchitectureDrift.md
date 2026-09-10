@@ -35,7 +35,7 @@ Facts that change the analysis:
 - **No deep package imports.** Consume a package through its main entry and re-export from `index.ts`; do not add a subpath export for a single symbol.
 - The IDE engine has a hard **server/client boundary**: `openthrottle-ide` is Node-only, `react-router-ide` imports types only, and the crossing is done with `*.server.ts` files plus dynamic import. Breaking this puts Node built-ins into a browser bundle.
 - Components have a **210-line cap** and one exported component per file, enforced by `audit:component-shape`.
-- `nx sync` is **disabled deliberately** in this repo — it has injected bogus tsconfig references and circular deps. Never run it, and never file a finding that recommends it; use `check:tsconfig-refs` instead.
+- **tsconfig project references** are maintained with `pnpm nx sync` (fix) and `pnpm nx sync:check` (report; also a `check:local` gate). The generator is deliberately not attached to the task pipeline, so `nx run`/`affected` never sync and never fail on drift — do not file that as a finding. An `applications/*` → `applications/*` reference is always wrong. See [docs/monorepo/NX.md](../../docs/monorepo/NX.md#nx-sync--the-typescript-project-reference-sync).
 - Generated `__generated__` output is invisible to Nx hashing; do not treat it as a source-of-truth dependency edge.
 
 ## What to inspect
@@ -65,7 +65,7 @@ Cap the run at **12 findings**. If you find more, keep the top 12 and say in the
 ## Hard rules
 
 - **Read-only on source code.** Never edit, fix, or refactor anything — no moved files, no changed tags, no adjusted imports. Filing the finding is the job.
-- **Never run `nx sync`.** It is disabled in this repo on purpose; it injects bogus tsconfig references and circular dependencies. Do not recommend it in a finding either.
+- **To report reference drift, run `pnpm nx sync:check`** — it is read-only and writes nothing. Do not run `pnpm nx sync` during an audit; it edits tsconfigs, and this job is read-only on source.
 - Never open a pull request, never commit, never push.
 - Never write a plan or task as a Markdown file anywhere — plans and tasks live in OpenThrottle only.
 - If the `openthrottle-mcp` MCP server is unavailable, **fail loudly**: report the error and stop. Do not fall back to any other medium.

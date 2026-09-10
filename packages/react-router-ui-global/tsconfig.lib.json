@@ -15,22 +15,25 @@
   ],
   "references": [
     {
-      "path": "../openthrottle-developer-codegen/tsconfig.lib.json"
+      "path": "../react-router-utils/tsconfig.lib.json"
     },
     {
       "path": "../react-router-ui/tsconfig.lib.json"
     },
     {
-      "path": "../react-router-notifications/tsconfig.lib.json"
-    },
-    {
-      "path": "../react-router-utils/tsconfig.lib.json"
-    },
-    {
       "path": "../react-router-shadcn/tsconfig.lib.json"
     },
     {
+      "path": "../react-router-notifications/tsconfig.lib.json"
+    },
+    {
       "path": "../react-router-chat/tsconfig.lib.json"
+    },
+    {
+      "path": "../openthrottle-developer-codegen/tsconfig.lib.json"
+    },
+    {
+      "path": "../nodejs-utils/tsconfig.lib.json"
     },
     {
       "path": "../react-router-testing/tsconfig.lib.json"

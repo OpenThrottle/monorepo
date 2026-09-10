@@ -15,9 +15,6 @@
   ],
   "references": [
     {
-      "path": "../agentic-token-usage/tsconfig.lib.json"
-    },
-    {
       "path": "../react-router-ui/tsconfig.lib.json"
     },
     {
@@ -25,6 +22,15 @@
     },
     {
       "path": "../react-router-markdown/tsconfig.lib.json"
+    },
+    {
+      "path": "../react-router-graphql/tsconfig.lib.json"
+    },
+    {
+      "path": "../nodejs-utils/tsconfig.lib.json"
+    },
+    {
+      "path": "../agentic-token-usage/tsconfig.lib.json"
     },
     {
       "path": "../../tools/dotfiles/tsconfig.lib.json"

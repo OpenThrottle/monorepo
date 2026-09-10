@@ -32,9 +32,12 @@ pnpm nx affected --target=lint --parallel           # affected projects only
 pnpm run check:local                                # full local CI parity (lint, typecheck, tests, codegen, knip)
 pnpm nx:validate-tags                               # validate project tags
 pnpm nx run monorepo:knip                           # dead-code report ONLY — never `knip --fix` on app UI
+pnpm nx sync:check                                  # report tsconfig project-reference drift (`pnpm nx sync` fixes it)
 ```
 
 `typecheck` and `test` are not interchangeable: `typecheck` type-checks source and test files (`tsc`, no execution); only `test` executes Vitest assertions.
+
+**`nx sync` maintains tsconfig project references — use it.** `pnpm nx sync:check` reports drift (and gates `check:local`); `pnpm nx sync` fixes it, and you inspect the diff before committing. The generator is deliberately **not** attached to the task pipeline, so `nx run`/`affected` never sync for you and never fail on drift — attaching it would hard-fail every non-TTY shell while protecting nothing in CI. An `applications/*` → `applications/*` reference is always wrong. Full reasoning and measurements: [docs/monorepo/NX.md](docs/monorepo/NX.md#nx-sync--the-typescript-project-reference-sync).
 
 ## Picking the right models for workflows and subagents
 

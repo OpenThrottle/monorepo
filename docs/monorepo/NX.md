@@ -12,7 +12,7 @@ This monorepo uses **Nx** for task orchestration and caching, and **pnpm** for w
 - **Caching**: Nx's **local** cache (`.nx/cache`), persisted across CI runs by the free **GitHub Actions cache** (`actions/cache` in `.github/actions/node-setup`). There is **no remote cache backend** — the paid `@nx/gcs-cache` Powerpack plugin and its GCS bucket were retired (see [Operational decisions](#operational-decisions-2026-07-21) and [ci-cost.md](./ci-cost.md)). Nothing to configure in `nx.json`, no `NX_KEY`, no GCP credentials.
 - **CI patterns**: CI uses `nx affected` and distributes work using `scripts/parallelize-tasks.ts`. Gate priorities (P0–P4), owners, and job mapping: [CI-quality-gates.md](./CI-quality-gates.md).
 - **Dependency graph**: `scripts/nx-dependency-graph.ts` generates a static `dependency-graph.html` artifact; a scheduled workflow commits snapshots under `docs/nx/dependency-graphs/`.
-- **`pnpm sync` vs `nx sync`**: despite the shared name, these are unrelated. `pnpm sync` runs the root `sync:openthrottle:*` scripts (`scripts/sync-subtree.ts`), a **git subtree sync** of vendored application content. `nx sync` is Nx's **TypeScript project-reference tsconfig sync** — do **not** run it in this repo; it can inject bogus cross-project tsconfig references and break React Router app typechecks.
+- **`pnpm sync` vs `nx sync`**: despite the shared name, these are unrelated. `pnpm sync` runs the root `sync:openthrottle:*` scripts (`scripts/sync-subtree.ts`), a **git subtree sync** of vendored application content. `nx sync` is Nx's **TypeScript project-reference tsconfig sync**. Use it: `pnpm nx sync:check` reports drift (and gates `check:local`), `pnpm nx sync` fixes it. It is deliberately **not** wired into the task pipeline, so `nx run`/`affected` never sync for you and never fail on drift. See [`nx sync` — the TypeScript project-reference sync](#nx-sync--the-typescript-project-reference-sync).
 
 ### Operational decisions (2026-07-21)
 
@@ -45,6 +45,110 @@ Recorded from the Nx implementation audit:
 - [ ] https://nx.dev/concepts/task-pipeline-configuration
 - [ ] https://nx.dev/concepts/types-of-configuration
 - [ ] https://nx.dev/concepts/executors-and-configurations
+
+## `nx sync` — the TypeScript project-reference sync
+
+`nx sync` is Nx's **TypeScript project-reference tsconfig sync**, driven by the
+`@nx/js:typescript-sync` generator. (Despite the shared name it is unrelated to `pnpm sync`, which
+runs the root `sync:openthrottle:*` scripts — a git subtree sync of vendored application content.)
+
+**This section is the single authoritative statement on `nx sync` in this repo.** Every other
+surface either restates the one-line rule and links here, or says nothing.
+
+### The rule
+
+```bash
+pnpm nx sync:check   # report project-reference drift; changes nothing
+pnpm nx sync         # fix it — then inspect the diff before committing
+```
+
+- **Both commands work.** Use them.
+- **`sync:check` is a gate**, and runs inside `pnpm run check:local`. It exits 0 in sync, 1 on
+  drift; it never writes to the tree.
+- **Inspect the diff before committing a sync.** `nx sync` edits tsconfigs across the workspace;
+  the changes are almost always right, but they are still changes you own.
+- **The generator is deliberately NOT attached to the task pipeline.** `nx run` / `run-many` /
+  `affected` will never sync for you, and never fail because the tree is out of sync. That is
+  intentional — see below.
+
+### Why the generator stays out of the task pipeline
+
+Wired into the pipeline, an out-of-sync tree **hard-fails every non-interactive `pnpm nx`
+invocation**. In `nx/dist/src/tasks-runner/run-command.js`,
+`ensureWorkspaceIsInSyncAndGetGraphs` returns early on `isCI()`, then `process.exit(1)`s when
+`!process.stdout.isTTY` — **before** the `applyChanges` branch is ever reached. Measured on
+23.1.3 with the generator temporarily attached as a task generator and the tree out of sync:
+
+| Environment                                                                                      | Result                                 | Tree synced? |
+| ------------------------------------------------------------------------------------------------ | -------------------------------------- | ------------ |
+| non-TTY, not CI (agent shells, script `execSync`, the worktree provisioner, any piped `pnpm nx`) | **exit 1** on every target             | no           |
+| non-TTY, `CI=true`                                                                               | exit 0 — the check is skipped entirely | no           |
+| non-TTY, not CI, `--skip-sync`                                                                   | exit 0                                 | no           |
+| TTY, not CI                                                                                      | auto-applies and proceeds              | yes          |
+
+So attaching it would fail every agent and script in the repo **while protecting nothing in CI**,
+where the check never runs at all. Nx's own source comment at `run-command.js:55-58` acknowledges
+the ordering and warns against suggesting `applyChanges` as a fix for "CI/agent contexts".
+
+### How both facts hold at once
+
+`nx.json` uses two independent registration channels:
+
+```jsonc
+"sync": {
+  // keeps it OUT of the task pipeline -> no non-TTY hard-fail
+  "disabledTaskSyncGenerators": ["@nx/js:typescript-sync"],
+  // registers it for the `nx sync` / `nx sync:check` COMMANDS -> they work
+  "globalGenerators": ["@nx/js:typescript-sync"]
+}
+```
+
+The gate path (`collectEnabledTaskSyncGeneratorsFromTaskGraph`) reads only **target**
+`syncGenerators`, filtered by `disabledTaskSyncGenerators`; it never consults `globalGenerators`.
+The `nx sync` / `sync:check` commands call `collectAllRegisteredSyncGenerators`, which **unions**
+both. Hence: working commands, ungated pipeline.
+
+`sync.applyChanges` is deliberately absent. It only governs the pipeline path, which is disabled,
+and it cannot help a non-TTY shell in any case.
+
+The `syncGenerators` entry on the inferred `typecheck` targets
+(`tools/nx-plugins/package-typecheck.ts`) is kept but **inert** — `disabledTaskSyncGenerators`
+filters it out. It is retained so that attaching the generator again would be a one-line change
+rather than a two-place hunt.
+
+### Upstream nrwl/nx#36297 — measured, and no longer the reason
+
+The ban this section replaces was adopted on **Nx 22.7.4** against
+[nrwl/nx#36297](https://github.com/nrwl/nx/issues/36297): `@nx/js` inferring spurious, unstable
+`static` edges between sibling React Router apps, which sync then wrote into app tsconfigs and
+broke their typechecks.
+
+Re-measured **2026-09-10 on Nx 23.1.3** — 18 trials across 6 cells (warm and purged `.nx` ×
+daemon off and on, a fresh worktree, and a fresh worktree immediately after generating a new
+package):
+
+- **zero** app→app tsconfig references and **zero** app→app project-graph edges, in every trial
+- **byte-identical** diffs within and across cells — not the "unstable across runs" behaviour the
+  issue describes
+- a fully synced tree passes `typecheck --all` (72 projects), `build --all` (51) and `test --all`
+  (71) plus all of `check:local`, with no `circular dependency` anywhere
+
+The issue is still open and picked up a report from another user _after_ ours, so treat this as
+**cannot reproduce on 23.1.3**, not _fixed_.
+
+**An `applications/*` → `applications/*` reference is still always wrong** — apps do not import
+each other. Two existing gates cover it without bespoke tooling: `@nx/enforce-module-boundaries`
+constrains `type:application` to depend only on `type:package`, so a real cross-app import is an
+ESLint error; and a phantom reference with no backing import breaks `typecheck` loudly, which was
+the original 22.7.4 symptom.
+
+### One trap, if you script this
+
+`nx g @nx/js:typescript-sync` — invoking the generator _directly_ rather than through
+`nx sync` — has an **inverted exit code**. A sync generator returns `{ outOfSyncMessage }` rather
+than a task callback, so `nx g` throws `TypeError: task is not a function` **after** writing every
+change: **exit 1 means "synced", exit 0 means "nothing to do"**. Prefer `pnpm nx sync`, which has
+sane exit semantics. `sync:check` is likewise normal: 0 in sync, 1 on drift.
 
 ## 🏋️‍♂️ Updating
 
