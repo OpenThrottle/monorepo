@@ -1,5 +1,5 @@
 /**
- * @description CI entrypoint: validate `.agents/` skill/persona/rule frontmatter (D5).
+ * @description CI entrypoint: validate `.agents/` skill and persona frontmatter (D5).
  */
 
 import { validateAgentAssetsOnDisk } from '@openthrottle/openthrottle-skills';
@@ -37,7 +37,7 @@ const run = (): void => {
   }
 
   logger.success(
-    `validate-agent-assets-frontmatter: OK (${warnings.length} rule warning(s))`,
+    `validate-agent-assets-frontmatter: OK (${warnings.length} warning(s))`,
   );
 };
 

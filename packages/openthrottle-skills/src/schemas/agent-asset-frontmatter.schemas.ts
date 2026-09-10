@@ -63,22 +63,8 @@ export const personaFrontmatterSchema = z
 
 export type PersonaFrontmatter = z.infer<typeof personaFrontmatterSchema>;
 
-/**
- * @description Rules (.agents/rules mdc files) — D5 warn-only in phase 1.
- * @public
- */
-export const ruleFrontmatterSchema = z
-  .object({
-    alwaysApply: z.boolean().optional(),
-    description: z.string().optional(),
-    globs: z.union([z.string(), z.array(z.string())]).optional(),
-  })
-  .passthrough();
-
-export type RuleFrontmatter = z.infer<typeof ruleFrontmatterSchema>;
-
 /** @public */
-export type AgentAssetKind = 'persona' | 'prompt' | 'rule' | 'skill';
+export type AgentAssetKind = 'persona' | 'prompt' | 'skill';
 
 /** @public */
 export interface AgentAssetValidationIssue {

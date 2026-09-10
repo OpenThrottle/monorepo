@@ -73,7 +73,7 @@ describe('routes/agent-search._index loader', () => {
 
     expect(mockExecute).not.toHaveBeenCalled();
     expect(result.results).toEqual([]);
-    expect(result.counts).toEqual({ all: 0, personas: 0, rules: 0, skills: 0 });
+    expect(result.counts).toEqual({ all: 0, personas: 0, skills: 0 });
     expect(result.usedDiskFallback).toBe(false);
   });
 
@@ -85,7 +85,7 @@ describe('routes/agent-search._index loader', () => {
           dbChunk({
             customPromptId: 'cp-2',
             id: 'c2',
-            promptType: CustomPromptType.Rules,
+            promptType: CustomPromptType.Personas,
             title: 'bar',
           }),
         ],
@@ -97,7 +97,7 @@ describe('routes/agent-search._index loader', () => {
     expect(mockExecute).toHaveBeenCalledTimes(1);
     expect(mockDiskFallback).not.toHaveBeenCalled();
     expect(result.usedDiskFallback).toBe(false);
-    expect(result.counts).toEqual({ all: 2, personas: 0, rules: 1, skills: 1 });
+    expect(result.counts).toEqual({ all: 2, personas: 1, skills: 1 });
     expect(result.results).toHaveLength(2);
     expect(result.results[0]).toMatchObject({
       promptType: 'skills',
@@ -114,17 +114,19 @@ describe('routes/agent-search._index loader', () => {
           dbChunk({
             customPromptId: 'cp-2',
             id: 'c2',
-            promptType: CustomPromptType.Rules,
+            promptType: CustomPromptType.Personas,
           }),
         ],
       },
     });
 
-    const result = await loader(buildArgs('/agent-search?q=commit&type=rules'));
+    const result = await loader(
+      buildArgs('/agent-search?q=commit&type=personas'),
+    );
 
-    expect(result.tab).toBe('rules');
+    expect(result.tab).toBe('personas');
     expect(result.results).toHaveLength(1);
-    expect(result.results[0]?.promptType).toBe('rules');
+    expect(result.results[0]?.promptType).toBe('personas');
     // counts still reflect all types for tab labels
     expect(result.counts.all).toBe(2);
   });
@@ -136,14 +138,14 @@ describe('routes/agent-search._index loader', () => {
       {
         content: 'on-disk match',
         customPromptId: null,
-        description: 'a rule',
-        filePath: '.agents/rules/foo.mdc',
-        id: 'disk:rules:.agents/rules/foo.mdc',
+        description: 'a persona',
+        filePath: '.agents/personas/foo.md',
+        id: 'disk:personas:.agents/personas/foo.md',
         labels: [],
-        promptType: 'rules',
+        promptType: 'personas',
         similarity: null,
         source: 'disk',
-        title: 'foo-rule',
+        title: 'foo-persona',
       },
     ];
     mockDiskFallback.mockReturnValue(diskResults);
@@ -152,15 +154,15 @@ describe('routes/agent-search._index loader', () => {
 
     expect(mockDiskFallback).toHaveBeenCalledWith(
       'foo',
-      ['skills', 'rules', 'personas'],
+      ['skills', 'personas'],
       50,
       '/workspace/openthrottle',
     );
     expect(result.usedDiskFallback).toBe(true);
     expect(result.results[0]).toMatchObject({
       source: 'disk',
-      title: 'foo-rule',
+      title: 'foo-persona',
     });
-    expect(result.counts).toEqual({ all: 1, personas: 0, rules: 1, skills: 0 });
+    expect(result.counts).toEqual({ all: 1, personas: 1, skills: 0 });
   });
 });

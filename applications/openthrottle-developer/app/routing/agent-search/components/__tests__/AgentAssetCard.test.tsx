@@ -18,17 +18,17 @@ const dbSkill: AgentAssetResult = {
   title: 'git-commit',
 };
 
-const diskRule: AgentAssetResult = {
-  content: 'No cursor attribution in commits.',
+const diskPersona: AgentAssetResult = {
+  content: 'Domain lens for architecture and schema-compatibility review.',
   customPromptId: null,
   description: null,
-  filePath: '.agents/rules/no-cursor-attribution.mdc',
-  id: 'disk:rules:.agents/rules/no-cursor-attribution.mdc',
+  filePath: '.agents/personas/architect.md',
+  id: 'disk:personas:.agents/personas/architect.md',
   labels: [],
-  promptType: 'rules',
+  promptType: 'personas',
   similarity: null,
   source: 'disk',
-  title: 'no-cursor-attribution',
+  title: 'architect',
 };
 
 const renderCard = (result: AgentAssetResult) =>
@@ -57,16 +57,23 @@ describe('AgentAssetCard', () => {
     );
   });
 
-  test('renders an on-disk rule with file path and no detail link', () => {
-    const component = renderCard(diskRule);
+  test('renders an on-disk persona with its file path and no similarity', () => {
+    const component = renderCard(diskPersona);
 
+    expect(component.getByTestId('AgentAssetCard-typeBadge')).toHaveTextContent(
+      'Persona',
+    );
     expect(
       component.getByTestId('AgentAssetCard-sourceBadge'),
     ).toHaveTextContent('on disk');
     expect(component.getByTestId('AgentAssetCard-filePath')).toHaveTextContent(
-      '.agents/rules/no-cursor-attribution.mdc',
+      '.agents/personas/architect.md',
     );
-    expect(component.queryByTestId('AgentAssetCard-link')).toBeNull();
+    // Disk rows carry no embedding, so there is no relevance score to show.
     expect(component.queryByTestId('AgentAssetCard-similarity')).toBeNull();
+    expect(component.getByTestId('AgentAssetCard-link')).toHaveAttribute(
+      'href',
+      '/personas',
+    );
   });
 });

@@ -35,7 +35,7 @@ For database layout, imports, and PRD-style fields on plans/tasks, see [`databas
 ## Mental model (post-setup)
 
 - **OpenThrottle (OT)** stores plans, tasks, ingested **repository documentation** (`docs/`), embeddings for semantic search over all of it, and plan output streams. Agents reach it only via **GraphQL** through **openthrottle-mcp** — not by writing ad hoc Markdown plans in the repo. Use it for both “what plans/tasks exist?” and “what does this repo’s docs say about X?” via `semantic_search`, `list_sources`, `get_document`, `create_plan`, …. (The former standalone `docs-mcp` server is retired — see [mcp-registration.md § Current state](./mcp-registration.md#current-state).)
-- **Workspace rules** (e.g. [.cursor/rules/commands/openthrottle.mdc](../../.cursor/rules/commands/openthrottle.mdc)) define when to use which OT tool and that **plans/tasks belong in OT**, not in new Markdown plan files under `docs/`.
+- **Workspace rules** — [`AGENTS.md`](../../AGENTS.md) § Plans in OT only and the [`ot-plans`](../../skills/ot-plans/SKILL.md) skill — define when to use which OT tool and that **plans/tasks belong in OT**, not in new Markdown plan files under `docs/`.
 - **Optional automation:** [workflow-ralph](../../tools/workflows/README.md) and worktrees are advanced paths; you can ignore them until after your first successful manual flow.
 
 ### When to use which tool
@@ -111,7 +111,7 @@ Summarize how many sources and pending plans you see.
 | GraphQL errors / 401 / 403           | Token: `OPENTHROTTLE_MCP_AUTH_TOKEN`; server. [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md). Re-run [bootstrap](./local-quickstart.md#3-bootstrap-service-account-tokens) if needed. |
 | Bootstrap script skips account       | Active credential already exists — rotate per [AUTH.md § Credential rotation](../../packages/openthrottle-mcp/docs/AUTH.md#credential-rotation).                                               |
 | Empty search / no embeddings         | Data imported? Embedding keys and dimension strategy in [`databases/README.md`](../../databases/README.md).                                                                                    |
-| Agent writes a plan to a `.md` file  | Redirect it: plans belong in OT via MCP; see [.cursor/rules/commands/openthrottle.mdc](../../.cursor/rules/commands/openthrottle.mdc).                                                         |
+| Agent writes a plan to a `.md` file  | Redirect it: plans belong in OT via MCP; see [`ot-plans`](../../skills/ot-plans/SKILL.md).                                                                                                     |
 
 ---
 
@@ -126,6 +126,6 @@ Summarize how many sources and pending plans you see.
 | MCP server registration (tiers, config, parity) | [mcp-registration.md](./mcp-registration.md)                                                    |
 | MCP config template                             | [`.cursor/mcp.json`](../../.cursor/mcp.json)                                                    |
 | DB schema, migrations, imports, commit links    | [databases/README.md](../../databases/README.md)                                                |
-| OT MCP tool choice and skills                   | [openthrottle.mdc](../../.agents/rules/commands/openthrottle.mdc), `skills/ot-*`                |
+| OT MCP tool choice and skills                   | [`ot-plans`](../../skills/ot-plans/SKILL.md), `skills/ot-*`                                     |
 | Workflow CLI / Ralph (optional)                 | [tools/workflows/README.md](../../tools/workflows/README.md)                                    |
 | Embeddings (Ollama or OpenAI)                   | [monorepo/Ollama.md](../monorepo/Ollama.md)                                                     |

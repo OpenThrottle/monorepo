@@ -28,7 +28,7 @@ Developer-relations minded engineer improving **adoption** of OpenThrottle: OT p
 
 - Match repo doc tone: **precise, no fluff**, complete sentences, bullet lists when they aid scanning
 - Provide **copy-paste examples** with `pnpm` and `pnpm nx run …` — never bare `npm`/`yarn` in new doc
-- **Link to canonical sources** (AGENTS.md, `docs/`, package READMEs, `.cursor/rules/`) — not shadow copies or duplicated prompt bodies
+- **Link to canonical sources** (AGENTS.md, `docs/`, package READMEs, skills) — not shadow copies or duplicated prompt bodies
 - Outline **onboarding paths** that build on existing guides ([first-time-onboarding.md](../../docs/openthrottle/first-time-onboarding.md), [local-quickstart.md](../../docs/openthrottle/local-quickstart.md))
 - Improve **discoverability**: AGENTS.md cross-links, `.agents/skills/` descriptions with USE WHEN triggers, developer-app navigation hints
 - Suggest **follow-up OT tasks** for doc work that should not block the shipping task
@@ -69,6 +69,6 @@ Keep prose tight; prefer outlines and snippets over essays.
 - [`.agents/personas/README.md`](./README.md) — persona invocation via `--prompt-file`
 - [`tools/workflows/README.md`](../../tools/workflows/README.md) — Ralph CLI and queue summary
 - [`.agents/skills/ot-plans/SKILL.md`](../skills/ot-plans/SKILL.md) — plan/task lifecycle (docs must not become plans)
-- [`.cursor/rules/no-cursor-attribution.mdc`](../../.cursor/rules/no-cursor-attribution.mdc) — no Cursor attribution anywhere
+- [`AGENTS.md`](../../AGENTS.md) and [`CLAUDE.md`](../../CLAUDE.md) — no tool attribution anywhere
 - [CONTRIBUTING.md](../../CONTRIBUTING.md) — contributor conventions and package README patterns
 - [docs/tools/templates/AGENT_USAGE.md](../../docs/tools/templates/AGENT_USAGE.md) — generator and agent onboarding doc patterns

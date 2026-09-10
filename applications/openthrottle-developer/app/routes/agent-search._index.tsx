@@ -105,7 +105,6 @@ export const loader = async (args: Route.LoaderArgs) => {
   const counts: AgentSearchCounts = {
     all: results.length,
     personas: results.filter((r) => r.promptType === 'personas').length,
-    rules: results.filter((r) => r.promptType === 'rules').length,
     skills: results.filter((r) => r.promptType === 'skills').length,
   };
 

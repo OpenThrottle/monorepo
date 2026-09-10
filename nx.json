@@ -200,18 +200,16 @@
     },
     "check-agent-assets-ssot": {
       "cache": true,
-      "description": "Verify agent-asset mirrors stay single-sourced via scripts/check-agent-assets-ssot.ts. `inputs` MUST be explicit {workspaceRoot} globs — the root `monorepo` project owns 0 files, so the default {projectRoot} input would hash nothing and cache-hit forever.",
+      "description": "Verify the skill layout stays single-sourced, via ot-skill-sync's own `sync.sh --check`. `inputs` MUST be explicit {workspaceRoot} globs - the root `monorepo` project owns 0 files, so the default {projectRoot} input would hash nothing and cache-hit forever.",
       "executor": "nx:run-commands",
       "options": {
-        "command": "tsx ./scripts/check-agent-assets-ssot.ts",
+        "command": "bash skills/ot-skill-sync/scripts/sync.sh --check",
         "cwd": "{workspaceRoot}"
       },
       "inputs": [
         "{workspaceRoot}/.agents/**/*",
         "{workspaceRoot}/.claude/**/*",
-        "{workspaceRoot}/.cursor/**/*",
-        "{workspaceRoot}/scripts/check-agent-assets-ssot.ts",
-        "{workspaceRoot}/scripts/lib/**/*",
+        "{workspaceRoot}/.gemini/**/*",
         "{workspaceRoot}/skills/**/*",
         "{workspaceRoot}/skills-lock.json"
       ]
@@ -489,7 +487,7 @@
       "executor": "nx:run-commands",
       "inputs": [
         "{workspaceRoot}/.agents/personas/**/*",
-        "{workspaceRoot}/.agents/rules/**/*",
+        "{workspaceRoot}/.agents/prompts/**/*",
         "{workspaceRoot}/.agents/skills/**/*",
         "{workspaceRoot}/scripts/validate-agent-assets-frontmatter.ts",
         "{workspaceRoot}/skills/**/*"

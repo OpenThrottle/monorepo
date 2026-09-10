@@ -1,6 +1,6 @@
 /**
  * Flags .tsx files that may need alignment with generator templates and
- * `.agents/rules/` (default exports in component paths, missing React import).
+ * docs/monorepo/code-style.md (default exports in component paths, missing React import).
  * See docs/tools/templates/AGENT_USAGE.md § Rule → Generator Matrix for the
  * full rule-per-generator mapping. Does not modify files.
  */
@@ -86,7 +86,7 @@ function run(): void {
         flags.push({
           file: relativePath,
           reason:
-            'default export in component-like path (use named export per coding/default-exports.mdc)',
+            'default export in component-like path (use a named export — code-style.md#no-default-exports)',
         });
       }
 
@@ -94,7 +94,7 @@ function run(): void {
         flags.push({
           file: relativePath,
           reason:
-            "JSX present but missing `import * as React from 'react'` (cursor-commands.mdc)",
+            "JSX present but missing `import * as React from 'react'` (code-style.md#general)",
         });
       }
     }

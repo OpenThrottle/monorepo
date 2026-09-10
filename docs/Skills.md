@@ -47,7 +47,7 @@ bash skills/ot-skill-sync/scripts/sync.sh --check
    § "External skills are read-only".
 
 2. **Need OpenThrottle-specific customization?** Do **not** edit the vendored skill. Author a **separate OT-owned skill or rule in `skills/`** that references/connects to the vendored one.
-   - **Exemplar:** the vendored `frontend-design` skill stays pristine; OT's stack is layered via the companion rule [`.agents/rules/coding/frontend-design-openthrottle.mdc`](../.agents/rules/coding/frontend-design-openthrottle.mdc).
+   - **Exemplar:** the vendored `frontend-design` skill stays pristine; OT's stack is layered on top of it in [`docs/monorepo/code-style.md`](./monorepo/code-style.md#frontend-design).
 
 3. **Author our own capabilities as OT-owned skills in `skills/`** (see the list below). These are ours to edit freely.
 

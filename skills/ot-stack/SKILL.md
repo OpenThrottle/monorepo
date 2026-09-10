@@ -47,13 +47,24 @@ Use **ot-generators** for scaffolding, **nx-workspace** for graph and targets, *
 
 **Conventions (align with workspace rules)**
 
-- **Backwards-compatible schema:** avoid removing fields or changing types on existing ObjectTypes; **deprecate** unused fields instead. See **Updating Existing Files** under API applications in `.cursor/rules/personal-general.mdc`.
-- **Resolver return types:** prefer ObjectTypes built with **`Result()`**, **`PaginatedResult()`**, **`ListResult()`** (and module-specific `*ResultObject` types) rather than returning raw entities — same section in `.cursor/rules/personal-general.mdc`. New GraphQL services from the **nestjs** generator follow the `Result` / `PaginatedResult` pattern in `tools/generators/src/generators/nestjs/files/graphql-service/`.
-- **New server surface:** use **`NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:nestjs`** (see **ot-generators**); sub-generators include `graphql-service`, `module`, `queue`, etc. — always **`--describe`** first.
+- **Backwards-compatible schema:** when updating `.entity` files the GraphQL schema must stay backwards compatible. Avoid removing fields or changing types on existing ObjectTypes; if a field is no longer needed, mark it **`@deprecated(reason: "...")`** instead of deleting it.
+- **Resolver return types:** resolver methods should return an ObjectType built with **`Result()`**, **`PaginatedResult()`** or **`ListResult()`** (or a module-specific `*ResultObject`), never a raw entity:
+
+  ```typescript
+  @ObjectType()
+  export class PlatformShiftListResult extends ListResult(PlatformShift) {}
+  ```
+
+  New GraphQL services from the **nestjs** generator already follow the `Result` / `PaginatedResult` pattern — see `tools/generators/src/generators/nestjs/files/graphql-service/`.
+
+- **New server surface:** use **`NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:nestjs`** (see **ot-generators**); sub-generators include `graphql-service`, `simple-service`, `module`, `queue`, `ai-agent` and `application` — always **`--describe`** first for the required flags per sub-generator. `<SERVICE_NAME>` is kebab-case, often plural for services.
 
 **Testing**
 
-- Co-located tests (e.g. `*.test.ts` next to resolvers) with providers mocked in **`beforeEach`**; cover branches per **personal-general.mdc** (NestJS testing bullets).
+- Test **all** new methods added to resolvers, services and repositories.
+- Co-located tests (e.g. `*.test.ts` next to resolvers), with every NestJS provider mocked in the **`beforeEach`** block.
+- Use **model factories** from the repository and **entity factories** from the service where they exist.
+- Each `if` statement in the logic gets its own **`describe`** block, and always include edge cases.
 
 ---
 
@@ -93,7 +104,7 @@ Use **ot-generators** for scaffolding, **nx-workspace** for graph and targets, *
 - After **GraphQL schema changes** or fresh clone: **`pnpm nx run openthrottle-developer:codegen-graphql`** (also noted in run doc above).
 - Prefer existing route and **settings** patterns (e.g. `settings.*`, `plans.*`) over one-off structure.
 
-**Testing:** component tests colocated under `app/routes/__tests__/` and route-adjacent `*.test.tsx`; mocks from GraphQL types per **`personal-general.mdc`** UI testing bullets.
+**Testing:** component tests colocated under `app/routes/__tests__/` and route-adjacent `*.test.tsx`; generate mock data from the GraphQL types in the application's `mocks.ts`. UI testing conventions (`component` not `screen`, `userEvent` not `fireEvent`, asserting behavior over copy) live in [`docs/monorepo/code-style.md`](../../docs/monorepo/code-style.md#testing).
 
 ---
 
@@ -122,4 +133,5 @@ Use **ot-generators** for scaffolding, **nx-workspace** for graph and targets, *
 - **Run server + UI + ports:** `docs/openthrottle/run-openthrottle-server-developer.md`
 - **Monorepo OT overview:** `AGENTS.md`
 - **Queues and workflows:** `tools/workflows/README.md` (loop prompt: **agents-ralph**)
-- **API + UI coding rules:** `.cursor/rules/personal-general.mdc`
+- **Code style (TypeScript, components, testing):** `docs/monorepo/code-style.md`, normative in `AGENTS.md` § Code style
+- **Where files go and what they are named:** [`ot-folders`](../ot-folders/SKILL.md)

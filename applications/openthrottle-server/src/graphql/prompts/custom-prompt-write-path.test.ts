@@ -35,12 +35,12 @@ describe('resolveCustomPromptWritePath', () => {
   test('accepts an ordinary workspace-relative path', () => {
     const result = resolveCustomPromptWritePath(
       workspaceRoot,
-      '.cursor/rules/agents.mdc',
+      '.agents/prompts/agents.md',
     );
 
     expect(result.ok).toBe(true);
     expect(result.ok && result.absolutePath).toContain(
-      join('.cursor', 'rules', 'agents.mdc'),
+      join('.agents', 'prompts', 'agents.md'),
     );
   });
 

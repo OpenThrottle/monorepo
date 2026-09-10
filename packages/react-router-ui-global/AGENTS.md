@@ -25,7 +25,7 @@ shared per-row table Actions menu (`GlobalPopover`).
 - **Leave inline** when the row has exactly one action and no detail link.
 - **Out of scope:** bulk/toolbar action bars.
 - **Canonical call sites:** queues column (`kind: 'link' | 'select'`) and `RepositoryRowActions` (`kind: 'submit'` + confirm). Full API + copy-paste example: [README.md](README.md).
-- **Convention rule:** [`.agents/rules/coding/frontend-design-openthrottle.mdc`](../../.agents/rules/coding/frontend-design-openthrottle.mdc) (table row Actions section).
+- **Convention rule:** [`docs/monorepo/code-style.md`](../../docs/monorepo/code-style.md#frontend-design) (table row Actions).
 - **Workbench / lint:** stories are shadcn-only; do not add a `GlobalPopover` story without expanding `openthrottle-workbench`. Do **not** add a DropdownMenu-in-tables ESLint ban yet (high false positives) — see README § Guarding against regression.
 
 ## Invariants & gotchas

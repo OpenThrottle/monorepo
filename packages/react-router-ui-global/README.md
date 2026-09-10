@@ -128,7 +128,7 @@ For `kind: 'submit'` (intents, pending labels, confirm before remove), see
 (`Form` / `Link`), so it is **not** in the workbench today. Discoverability is
 this README, `AGENTS.md`, Vitest under
 `src/components/__tests__/GlobalPopover*.test.tsx`, and the coding rule in
-[`.agents/rules/coding/frontend-design-openthrottle.mdc`](../../.agents/rules/coding/frontend-design-openthrottle.mdc).
+[`docs/monorepo/code-style.md`](../../docs/monorepo/code-style.md#frontend-design).
 Expanding the workbench to `react-router-ui-global` (router decorator + story
 glob) is a follow-up if visual browsing becomes worth the wiring cost.
 

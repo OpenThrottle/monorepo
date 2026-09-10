@@ -33,7 +33,7 @@ describe('parseAgentSearchParams', () => {
   });
 
   test('accepts each known tab value', () => {
-    for (const tab of ['all', 'skills', 'rules', 'personas']) {
+    for (const tab of ['all', 'skills', 'personas']) {
       const params = new URLSearchParams({ type: tab });
       expect(parseAgentSearchParams(params).tab).toBe(tab);
     }

@@ -149,6 +149,24 @@ is a package, and that is the whole test.
   `PlanCard`, and `plans/components/PlanCard/index.tsx` must too.
 - The component's props type is its name plus `Props` (`PlanCardProps`).
 
+### What a component file may export, and what belongs in `data/`
+
+A file under `components/` exports **only** its component and the props generated with it
+(`Foo` + `FooProps`). Infrequently it may export one extra closely-related type — but
+**never** constants, hardcoded data, lists, mock data, or user-facing copy. Those go to the
+nearest `data/` folder, named so one file can carry many related values:
+
+| Kind                       | File                                           |
+| -------------------------- | ---------------------------------------------- |
+| User-facing copy           | `data.copy.ts`                                 |
+| Mock fixtures              | `mock.<name>.ts`                               |
+| Other static data or lists | `data.<name>.ts` (`.tsx` only if it needs JSX) |
+
+The component imports them via the `~/routing/<area>/data/…` alias. Because that is a real
+cross-module use reachable from a route entry, Knip treats the export as used — no `@public`
+tag needed. Rationale, and when a data file does or does not warrant its own spec:
+[`docs/monorepo/code-style.md`](../../docs/monorepo/code-style.md#component-and-data-boundaries).
+
 ## Tags decide what may import what
 
 Placement is no longer only a directory decision. A new project is unusable until

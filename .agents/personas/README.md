@@ -4,12 +4,12 @@
 
 ## Personas vs skills vs Ralph
 
-| Concern    | Personas (this folder)                                    | Skills (`skills/` → `.agents/skills/`)            | Default Ralph (`/agents-ralph`)                                   |
-| ---------- | --------------------------------------------------------- | ------------------------------------------------- | ----------------------------------------------------------------- |
-| Purpose    | Domain lens (architect, QA, legal, …)                     | Task-specific procedures and tool routing         | Full OT plan loop: create tasks, one-at-a-time execution, commits |
-| Scope      | Tone, priorities, output shape                            | Step-by-step workflows, MCP/tool choice           | End-to-end agentic loop                                           |
-| Invocation | `--prompt-file` (see below)                               | Cursor skill attach or discovery in developer app | `--prompt /agents-ralph` (default)                                |
-| Authority  | Steers _how_ to think; `.cursor/rules/` wins on conflicts | Instructs _what_ to do for a workflow             | Owns OT status, task picking, `<ralph:task-complete>` signals     |
+| Concern    | Personas (this folder)                                            | Skills (`skills/` → `.agents/skills/`)            | Default Ralph (`/agents-ralph`)                                   |
+| ---------- | ----------------------------------------------------------------- | ------------------------------------------------- | ----------------------------------------------------------------- |
+| Purpose    | Domain lens (architect, QA, legal, …)                             | Task-specific procedures and tool routing         | Full OT plan loop: create tasks, one-at-a-time execution, commits |
+| Scope      | Tone, priorities, output shape                                    | Step-by-step workflows, MCP/tool choice           | End-to-end agentic loop                                           |
+| Invocation | `--prompt-file` (see below)                                       | Cursor skill attach or discovery in developer app | `--prompt /agents-ralph` (default)                                |
+| Authority  | Steers _how_ to think; `AGENTS.md` § Code style wins on conflicts | Instructs _what_ to do for a workflow             | Owns OT status, task picking, `<ralph:task-complete>` signals     |
 
 **Layer model**:
 
@@ -68,7 +68,7 @@ Each persona is Markdown with YAML frontmatter (aligned with `.agents/skills/*/S
 5. **Output expectations** — What to deliver (checklists, decision records, etc.).
 6. **OpenThrottle context** — Pointers to repo docs/skills/rules (not copies of them).
 
-Keep files **short**. Personas adjust emphasis; they do not restate full generator, OT, or GitHub rules — link to [AGENTS.md](../../AGENTS.md), [`.cursor/rules/`](../../.cursor/rules/), and relevant skills instead.
+Keep files **short**. Personas adjust emphasis; they do not restate full generator, OT, or GitHub rules — link to [AGENTS.md](../../AGENTS.md), [`docs/monorepo/code-style.md`](../../docs/monorepo/code-style.md), and relevant skills instead.
 
 ## Template
 

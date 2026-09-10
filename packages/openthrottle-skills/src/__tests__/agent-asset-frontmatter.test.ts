@@ -5,7 +5,6 @@ import { describe, expect, test } from 'vitest';
 
 import {
   parsePersonaFrontmatter,
-  parseRuleFrontmatter,
   parseSkillFrontmatter,
   parseSkillFrontmatterForValidation,
   validateAgentAssetFrontmatter,
@@ -164,23 +163,6 @@ tags: github
   });
 });
 
-describe('parseRuleFrontmatter', () => {
-  test('parses alwaysApply and empty description/globs', () => {
-    expect(
-      parseRuleFrontmatter(`---
-description:
-globs:
-alwaysApply: true
----
-`),
-    ).toEqual({
-      alwaysApply: true,
-      description: undefined,
-      globs: undefined,
-    });
-  });
-});
-
 describe('parsePersonaFrontmatter', () => {
   test('parses architect persona frontmatter', () => {
     const content = readFileSync(
@@ -209,22 +191,6 @@ name: bad-skill
 
     expect(result.errors.length).toBeGreaterThan(0);
     expect(result.warnings).toHaveLength(0);
-  });
-
-  test('warn-only for rule with empty description', () => {
-    const result = validateAgentAssetFrontmatter({
-      content: `---
-description:
-globs:
-alwaysApply: true
----
-`,
-      kind: 'rule',
-      path: '.agents/rules/coding/example.mdc',
-    });
-
-    expect(result.errors).toHaveLength(0);
-    expect(result.warnings.some((w) => w.field === 'description')).toBe(true);
   });
 
   test('warns when skill disable-model-invocation is a non-boolean value', () => {

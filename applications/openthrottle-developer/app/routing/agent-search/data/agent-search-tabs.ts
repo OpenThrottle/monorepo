@@ -5,6 +5,5 @@ export const AGENT_SEARCH_TAB_LABEL: Readonly<Record<AgentSearchTab, string>> =
   {
     all: 'All',
     personas: 'Personas',
-    rules: 'Rules',
     skills: 'Skills',
   };

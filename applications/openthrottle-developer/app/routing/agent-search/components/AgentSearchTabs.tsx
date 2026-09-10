@@ -14,7 +14,7 @@ export interface AgentSearchTabsProps {
 }
 
 /**
- * @description Prompt-type tabs (all | skills | rules | personas) wired to the `type` URL param.
+ * @description Prompt-type tabs (all | skills | personas) wired to the `type` URL param.
  * Selecting a tab updates the URL (re-running the loader); labels show per-tab result counts.
  */
 export const AgentSearchTabs = (

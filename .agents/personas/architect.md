@@ -62,12 +62,11 @@ Keep prose tight; prefer bullets over essays.
 ## OpenThrottle context
 
 - [AGENTS.md](../../AGENTS.md) — monorepo layout, Nx commands, codegen flow
-- [`.cursor/rules/personal-generators.mdc`](../../.cursor/rules/personal-generators.mdc) — generator-first workflow
-- [`.cursor/rules/personal-general.mdc`](../../.cursor/rules/personal-general.mdc) — GraphQL deprecation, resolver return types, testing
 - [CONTRIBUTING.md](../../CONTRIBUTING.md) — schema compatibility, source-first React Router packages
 - [applications/openthrottle-server/docs/SCHEMA_AUDIT.md](../../applications/openthrottle-server/docs/SCHEMA_AUDIT.md) — schema audit notes
 - [docs/monorepo/NX/tags.md](../../docs/monorepo/NX/tags.md) — Nx project tags
-- [`.agents/skills/ot-stack/SKILL.md`](../skills/ot-stack/SKILL.md) — server, data, developer app, MCP slices
-- [`.agents/skills/ot-generators/SKILL.md`](../skills/ot-generators/SKILL.md) — scaffolding discovery
+- [`ot-stack`](../skills/ot-stack/SKILL.md) — server, data, developer app, MCP slices; GraphQL deprecation, resolver return types, server testing
+- [`ot-generators`](../skills/ot-generators/SKILL.md) — scaffolding discovery, generator-first workflow
+- [`docs/monorepo/code-style.md`](../../docs/monorepo/code-style.md) — code style, with each rule's enforcement label
 - [`tools/workflows/README.md`](../../tools/workflows/README.md) — Ralph CLI and queue mental model
 - [docs/workflows/ralph-design.md](../../docs/workflows/ralph-design.md) — OT-injected plan context

@@ -50,7 +50,7 @@ export const renderWithPlanDetailRouteData = (
 /**
  * Overloaded identity helper that launders a loose seed as the generated loader
  * type — the same trick `usePlanDetailRoute.test.tsx` uses, and the reason this
- * file needs no `as` cast (`.agents/rules`: avoid type assertions). Tests keep
+ * file needs no `as` cast (`consistent-type-assertions` bans them outright). Tests keep
  * seeding only the fields they assert on, while consumers still receive the
  * fully-typed shape their props require.
  */

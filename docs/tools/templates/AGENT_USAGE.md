@@ -11,11 +11,11 @@ This policy is **non-negotiable** and applies to all AI agent, LLM, and programm
 
 **This doc is the single source of truth for generator selection.** Which generator
 scaffolds what — and the package-vs-application distinction in particular — is decided
-here and nowhere else. `CLAUDE.md`, `AGENTS.md` and `.agents/rules/` carry a pointer to
+here and nowhere else. `CLAUDE.md` and `AGENTS.md` carry a pointer to
 this doc, not a copy of the matrix; `skills/ot-generators/SKILL.md` is the agent entry
 point and states the selection rule once. See CONTRIBUTING.md § Documentation, rule 6.
 
-**Discoverability:** Agents are directed here from [AGENTS.md](../../../AGENTS.md) (§ Generators) and [.cursor/rules/personal-generators.mdc](../../../.cursor/rules/personal-generators.mdc). Always **check generators first**, then use this doc for the full workflow (list → describe → `--list=<key>` → execute).
+**Discoverability:** Agents are directed here from [AGENTS.md](../../../AGENTS.md) (§ Generators and § Code style) and from the [`ot-generators`](../../../skills/ot-generators/SKILL.md) skill. Always **check generators first**, then use this doc for the full workflow (list → describe → `--list=<key>` → execute).
 
 ---
 
@@ -197,23 +197,20 @@ NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:<generator-name> \
 ## Rules to Load
 
 Beyond the generator-first policy above, agents working in this repo should load the
-rule set below. Rule **bodies** live under `.agents/rules/` — the single source of
-truth. Cursor activates them through `.cursor/rules/**/*.mdc` **symlinks**; other
-agents read `.agents/rules/` directly. Never edit the symlink view. Full layout:
+code-style rules. They live in **two** places, and neither is a per-editor `.mdc` tree
+any more:
+
+| Path                                                          | Role                                                                                               |
+| ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| [`AGENTS.md`](../../../AGENTS.md) § Code style                | **Normative, always-on.** One line per rule, grouped by whether ESLint or the compiler catches it. |
+| [`docs/monorepo/code-style.md`](../../monorepo/code-style.md) | **Reference.** Rationale, code examples, and an explicit enforcement label per rule.               |
+
+`CLAUDE.md` carries the same list in short form and is auto-loaded by Claude Code.
+Procedural rules live in the skills that own them — `ot-plans` (OT tool selection,
+plans-in-OT-only), `github-commit` / `github-pull-request` / `github-squash` (commits,
+PRs, attribution), `ot-stack` (server and GraphQL conventions), `ot-folders` (placement),
+and this doc plus `ot-generators` (scaffolding). Full layout:
 [agent-editor-folders.md](../../monorepo/agent-editor-folders.md).
-
-### Always-applied (workspace-wide)
-
-| Path (SSOT)                               | Purpose                                                                                      |
-| ----------------------------------------- | -------------------------------------------------------------------------------------------- |
-| `.agents/rules/personal-generators.mdc`   | Generator-first workflow; **check generators before writing new code**; this doc             |
-| `.agents/rules/personal-general.mdc`      | UI/API creation (React Router, React, NestJS), testing (`component`, `userEvent`), shared UI |
-| `.agents/rules/commands/agents.mdc`       | Ralph/agent behavior: plans in OpenThrottle only, commit per task, no attribution lines      |
-| `.agents/rules/commands/openthrottle.mdc` | When to use `openthrottle-mcp` tools (plans, tasks, semantic search, activity)               |
-| `.agents/rules/commands/github.mdc`       | Conventional commits, PR template, no `Co-authored-by`, no editor attribution                |
-| `.agents/rules/cursor-commands.mdc`       | pnpm, Nx, `import * as React`                                                                |
-| `.agents/rules/no-cursor-attribution.mdc` | No "Made with Cursor" anywhere                                                               |
-| `.agents/rules/nx-rules.mdc`              | Nx guidance (Cursor's `.cursor/rules/nx-rules.mdc` view is generated and gitignored)         |
 
 ### Agent skills (repo-local)
 
@@ -234,34 +231,13 @@ directory a CLI scans differs: Cursor, Grok Build, and Antigravity (`agy`) read
 so edit `skills/`, then run `bash skills/ot-skill-sync/scripts/sync.sh`. Never
 hand-edit a generated skill directory.
 
-### Coding rules (apply when editing or generating code)
-
-| Path (SSOT)                                             | Purpose                                                |
-| ------------------------------------------------------- | ------------------------------------------------------ |
-| `.agents/rules/coding/any-inside-generic-functions.mdc` | When `any` is acceptable inside generics               |
-| `.agents/rules/coding/component-data-boundaries.mdc`    | Lists, copy, and fixtures live in the nearest `data/`  |
-| `.agents/rules/coding/default-exports.mdc`              | Named exports; default only for framework pages        |
-| `.agents/rules/coding/discriminated-unions.mdc`         | Model variants with a discriminating `type` field      |
-| `.agents/rules/coding/enums.mdc`                        | No new enums; use `as const` objects                   |
-| `.agents/rules/coding/frontend-design-openthrottle.mdc` | OT overlay on the vendored `frontend-design` skill     |
-| `.agents/rules/coding/import-type.mdc`                  | Use `import type` for type-only imports                |
-| `.agents/rules/coding/installing-libraries.mdc`         | `pnpm -w`, latest versions                             |
-| `.agents/rules/coding/interface-extends.mdc`            | Prefer `interface extends` over `&`                    |
-| `.agents/rules/coding/jsdoc-comments.mdc`               | JSDoc when behavior is not self-evident                |
-| `.agents/rules/coding/naming-conventions.mdc`           | kebab files, PascalCase components, ALL_CAPS constants |
-| `.agents/rules/coding/no-unchecked-indexed-access.mdc`  | Index access may be `T \| undefined`                   |
-| `.agents/rules/coding/optional-properties.mdc`          | Use optional properties sparingly                      |
-| `.agents/rules/coding/readonly-properties.mdc`          | Readonly by default                                    |
-| `.agents/rules/coding/return-types.mdc`                 | Declare return types; components excepted              |
-| `.agents/rules/coding/throwing.mdc`                     | Prefer result types over `throw` where applicable      |
-
 ### Where to look for what
 
 | Doc                                                                   | Owns                                                                    |
 | --------------------------------------------------------------------- | ----------------------------------------------------------------------- |
 | **This doc**                                                          | What to load and how to run generators: rules list, commands, discovery |
 | **[agent-editor-folders.md](../../monorepo/agent-editor-folders.md)** | Where files live: folder tree, authored vs generated, where to edit     |
-| **[.agents/rules/README.md](../../../.agents/rules/README.md)**       | How rules are organized (`coding/` vs `commands/`) and agent behavior   |
+| **[code-style.md](../../monorepo/code-style.md)**                     | The coding rules themselves, with rationale and enforcement labels      |
 
 ### Other agent-relevant commands
 
@@ -269,7 +245,7 @@ hand-edit a generated skill directory.
 | ---------------- | ----------------------------------------------------------------------------------- |
 | Run tasks        | `pnpm nx run <project>:<target>`, `nx run-many`, `nx affected` (see AGENTS.md)      |
 | Workflow CLI     | `pnpm exec workflow-ralph --plan <uuid>` (see AGENTS.md § Workflow CLI)             |
-| OpenThrottle     | Use `openthrottle-mcp` tools per `.agents/rules/commands/openthrottle.mdc`          |
+| OpenThrottle     | Use `openthrottle-mcp` tools per the `ot-plans` skill                               |
 | SSOT drift guard | `pnpm nx run monorepo:check-agent-assets-ssot` (see CONTRIBUTING.md § Agent assets) |
 
 ---

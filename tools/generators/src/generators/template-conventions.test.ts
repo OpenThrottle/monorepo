@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
  * Guards the React/React-Router *template* test output against the conventions
  * the audit flagged as drift-prone. The per-sub-generator `.test.ts` files only
  * assert that a generator runs; nothing previously asserted the *emitted* test
- * files match repo testing rules (`.cursor/rules`):
+ * files match repo testing rules (docs/monorepo/code-style.md#testing):
  *
  *   - use `component` (the RenderResult), never the global `screen`
  *   - use `userEvent`, never `fireEvent`

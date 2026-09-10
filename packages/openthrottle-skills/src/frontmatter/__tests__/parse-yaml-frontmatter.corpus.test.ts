@@ -174,8 +174,8 @@ const oldParseYamlFrontmatter = (
 };
 
 // ---------------------------------------------------------------------------
-// Corpus walk: the real `.agents/skills/*/SKILL.md`, `.agents/rules/**/*.mdc`,
-// and `.agents/personas/*.md` files, per the design doc's stated scope.
+// Corpus walk: the real `.agents/skills/*/SKILL.md` and `.agents/personas/*.md`
+// files, per the design doc's stated scope.
 // ---------------------------------------------------------------------------
 
 const listSkillFiles = (): string[] => {
@@ -196,23 +196,6 @@ const listSkillFiles = (): string[] => {
   return files;
 };
 
-const listRuleFiles = (): string[] => {
-  const rulesRoot = join(monorepoRoot, '.agents/rules');
-  const files: string[] = [];
-  const walk = (dir: string): void => {
-    for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      const full = join(dir, entry.name);
-      if (entry.isDirectory()) {
-        walk(full);
-      } else if (entry.isFile() && entry.name.endsWith('.mdc')) {
-        files.push(full);
-      }
-    }
-  };
-  walk(rulesRoot);
-  return files;
-};
-
 const listPersonaFiles = (): string[] => {
   const personasRoot = join(monorepoRoot, '.agents/personas');
   const files: string[] = [];
@@ -224,11 +207,7 @@ const listPersonaFiles = (): string[] => {
   return files;
 };
 
-const corpusFiles = [
-  ...listSkillFiles(),
-  ...listRuleFiles(),
-  ...listPersonaFiles(),
-];
+const corpusFiles = [...listSkillFiles(), ...listPersonaFiles()];
 
 const toRepoRelativePath = (absolutePath: string): string =>
   absolutePath
@@ -375,7 +354,20 @@ const normalizeForComparison = (
 
 describe('parseYamlFrontmatter corpus regression', () => {
   test('the current .agents corpus is non-empty (sanity check for the walk itself)', () => {
-    expect(corpusFiles.length).toBeGreaterThanOrEqual(36);
+    // Floor, not an exact count: assets get added over time, and this only
+    // guards against the walk silently collecting nothing. It was 36 while the
+    // retired `.agents/rules/**/*.mdc` tree contributed 24 bodies; those are
+    // gone, leaving skills + personas.
+    //
+    // Known blind spot (pre-existing, not introduced by dropping the rules
+    // walk): `listSkillFiles` skips any entry where `isDirectory()` is false,
+    // and ot-skill-sync links the repo's authored `skills/<slug>` dirs into
+    // `.agents/skills/` as symlinks — which report `isSymbolicLink()`, not
+    // `isDirectory()`. So this corpus only ever covered the *externally
+    // installed* real skill dirs, never the authored OT ones. Widening it is a
+    // behavior change (it would newly parse ~16 more files and may surface
+    // fresh divergences), so it is deliberately left alone here.
+    expect(corpusFiles.length).toBeGreaterThanOrEqual(10);
   });
 
   test('every known divergence is exercised by at least one corpus file', () => {

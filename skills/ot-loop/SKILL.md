@@ -134,7 +134,7 @@ Only **after the PR is actually merged**, record the squash on the work ledger â
 
 ## Rules
 
-- **ALWAYS** follow [openthrottle.mdc](https://github.com/openthrottle/monorepo/blob/main/.agents/rules/commands/openthrottle.mdc) and [github.mdc](https://github.com/openthrottle/monorepo/blob/main/.agents/rules/commands/github.mdc).
+- **ALWAYS** follow [`ot-plans`](../ot-plans/SKILL.md) for OT tool selection and plan/task conventions, and [`github-commit`](../github-commit/SKILL.md) / [`github-pull-request`](../github-pull-request/SKILL.md) for commit and PR rules.
 - Plans/tasks live in **OT only** â€” if the openthrottle-mcp MCP is unavailable, fail loudly; never fall back to Markdown plan files.
 - Author/assignee fields expect the **GitHub username**, not a display name.
 - Never push to `main`, never `--no-verify`; require confirmation before rebase/force-push.

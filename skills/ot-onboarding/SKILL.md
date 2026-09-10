@@ -92,7 +92,7 @@ agent you are, so pick your row:
 
 Two hard constraints on where it goes:
 
-- **Prefer a user-global surface.** A repo-tracked file (`CLAUDE.md`, `AGENTS.md`, `.agents/rules/*`)
+- **Prefer a user-global surface.** A repo-tracked file (`CLAUDE.md`, `AGENTS.md`, a doc under `docs/`)
   is a **code change** — it belongs in a PR, never as a silent side effect of onboarding.
 - **If your host has no writable memory surface** — or you are unsure it has one — do **not** invent
   a file. State the rule back to the user verbatim and tell them where to paste it by hand (their
@@ -131,7 +131,7 @@ like: the vendored `improve` skill instructs writing plans to `plans/NNN-short-s
 **Ask.** Get explicit confirmation before changing anything outside your own memory store.
 
 - Your own memory/rules store — fix it yourself, then say what you changed.
-- **Repo-tracked files** (`CLAUDE.md`, `AGENTS.md`, `.agents/rules/*`, another skill) — a **code
+- **Repo-tracked files** (`CLAUDE.md`, `AGENTS.md`, a doc under `docs/`, another skill) — a **code
   change**. It belongs in a commit and a PR, not a silent side effect of onboarding. Say that to the
   user rather than just editing.
 - **Generated skill dirs are never edited directly.** A fix to an authored skill goes in `skills/`

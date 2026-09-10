@@ -112,7 +112,7 @@ export const PromptCreateForm = (
             <Input
               id="filePath"
               onChange={(e) => form.setFilePath(e.target.value)}
-              placeholder=".cursor/rules/my-prompt.mdc"
+              placeholder=".agents/prompts/my-prompt.md"
               type="text"
               value={form.filePath}
             />

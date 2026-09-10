@@ -12,89 +12,6 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { walkAgentAssetFiles } from '../walk-agent-assets-on-disk.js';
 
-const RULE_BODY = `---
-description: A rule
----
-
-Rule body
-`;
-
-describe('walkAgentAssetFiles rule walk', () => {
-  let monorepoRoot: string;
-  let rulesRoot: string;
-
-  beforeEach(() => {
-    monorepoRoot = mkdtempSync(join(tmpdir(), 'ot-skills-walk-'));
-    rulesRoot = join(monorepoRoot, '.agents/rules');
-    mkdirSync(rulesRoot, { recursive: true });
-  });
-
-  afterEach(() => {
-    rmSync(monorepoRoot, { force: true, recursive: true });
-  });
-
-  test('collects nested .mdc rule files', () => {
-    mkdirSync(join(rulesRoot, 'coding'), { recursive: true });
-    writeFileSync(join(rulesRoot, 'coding/default-exports.mdc'), RULE_BODY);
-
-    const result = walkAgentAssetFiles({ monorepoRoot });
-    const rulePaths = result.files
-      .filter((file) => file.kind === 'rule')
-      .map((file) => file.path);
-
-    expect(rulePaths).toEqual(['.agents/rules/coding/default-exports.mdc']);
-  });
-
-  test('does not recurse infinitely on a symlinked directory cycle', () => {
-    const nested = join(rulesRoot, 'nested');
-    mkdirSync(nested, { recursive: true });
-    writeFileSync(join(nested, 'real.mdc'), RULE_BODY);
-    // nested/loop -> rulesRoot, which would recurse forever without a guard.
-    symlinkSync(rulesRoot, join(nested, 'loop'), 'dir');
-
-    const result = walkAgentAssetFiles({ monorepoRoot });
-    const rulePaths = result.files
-      .filter((file) => file.kind === 'rule')
-      .map((file) => file.path);
-
-    // The real file is collected exactly once; the cycle is not followed.
-    expect(rulePaths).toEqual(['.agents/rules/nested/real.mdc']);
-  });
-
-  test('does not ingest content from a symlink pointing outside .agents', () => {
-    const outside = join(monorepoRoot, 'outside');
-    mkdirSync(outside, { recursive: true });
-    writeFileSync(join(outside, 'leaked.mdc'), RULE_BODY);
-    // .agents/rules/escape -> ../../outside (out-of-tree content).
-    symlinkSync(outside, join(rulesRoot, 'escape'), 'dir');
-
-    const result = walkAgentAssetFiles({ monorepoRoot });
-    const rulePaths = result.files
-      .filter((file) => file.kind === 'rule')
-      .map((file) => file.path);
-
-    expect(rulePaths).toEqual([]);
-  });
-
-  test('does not ingest a symlinked .mdc file pointing outside .agents', () => {
-    const outside = join(monorepoRoot, 'outside');
-    mkdirSync(outside, { recursive: true });
-    writeFileSync(join(outside, 'leaked.mdc'), RULE_BODY);
-    symlinkSync(
-      join(outside, 'leaked.mdc'),
-      join(rulesRoot, 'leaked.mdc'),
-      'file',
-    );
-
-    const result = walkAgentAssetFiles({ monorepoRoot });
-    const rulePaths = result.files
-      .filter((file) => file.kind === 'rule')
-      .map((file) => file.path);
-
-    expect(rulePaths).toEqual([]);
-  });
-});
-
 const SKILL_BODY = `---
 name: alpha-skill
 description: A skill.
@@ -139,7 +56,6 @@ describe('walkAgentAssetFiles across all asset kinds', () => {
     mkdirSync(join(monorepoRoot, '.agents/skills'), { recursive: true });
     mkdirSync(join(monorepoRoot, '.agents/personas'), { recursive: true });
     mkdirSync(join(monorepoRoot, '.agents/prompts'), { recursive: true });
-    mkdirSync(join(monorepoRoot, '.agents/rules'), { recursive: true });
 
     const { files, warnings } = walkAgentAssetFiles({ monorepoRoot });
 
@@ -214,7 +130,7 @@ describe('walkAgentAssetFiles across all asset kinds', () => {
     expect(warnings).toEqual([]);
   });
 
-  test('collects skills, personas, prompts, and rules from a synthetic tree', () => {
+  test('collects skills, personas, and prompts from a synthetic tree', () => {
     mkdirSync(join(monorepoRoot, '.agents/skills/alpha-skill'), {
       recursive: true,
     });
@@ -232,12 +148,6 @@ describe('walkAgentAssetFiles across all asset kinds', () => {
       join(monorepoRoot, '.agents/prompts/Before_Joke.md'),
       PROMPT_BODY,
     );
-    mkdirSync(join(monorepoRoot, '.agents/rules/coding'), { recursive: true });
-    writeFileSync(
-      join(monorepoRoot, '.agents/rules/coding/default-exports.mdc'),
-      RULE_BODY,
-    );
-
     const { files, warnings } = walkAgentAssetFiles({ monorepoRoot });
 
     expect(warnings).toEqual([]);
@@ -257,11 +167,6 @@ describe('walkAgentAssetFiles across all asset kinds', () => {
         kind: 'persona',
         path: '.agents/personas/architect.md',
         slug: 'architect',
-      },
-      {
-        kind: 'rule',
-        path: '.agents/rules/coding/default-exports.mdc',
-        slug: undefined,
       },
       {
         kind: 'prompt',
@@ -309,19 +214,6 @@ describe('walkAgentAssetFiles across all asset kinds', () => {
           warning.severity === 'warning',
       ),
     ).toBe(true);
-  });
-
-  test('skips the nx-rules.mdc rule file', () => {
-    mkdirSync(join(monorepoRoot, '.agents/rules'), { recursive: true });
-    writeFileSync(join(monorepoRoot, '.agents/rules/nx-rules.mdc'), RULE_BODY);
-    writeFileSync(join(monorepoRoot, '.agents/rules/keep.mdc'), RULE_BODY);
-
-    const { files } = walkAgentAssetFiles({ monorepoRoot });
-    const rulePaths = files
-      .filter((file) => file.kind === 'rule')
-      .map((file) => file.path);
-
-    expect(rulePaths).toEqual(['.agents/rules/keep.mdc']);
   });
 
   test('surfaces an unreadable skill file as a warning rather than throwing', () => {

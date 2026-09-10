@@ -1,7 +1,6 @@
 import type { ZodError } from 'zod';
 
 import { parsePersonaFrontmatterForValidation } from './parse-persona-frontmatter.ts';
-import { parseRuleFrontmatterForValidation } from './parse-rule-frontmatter.ts';
 import { parseSkillFrontmatterForValidation } from './parse-skill-frontmatter.ts';
 import type {
   AgentAssetKind,
@@ -9,7 +8,6 @@ import type {
 } from './schemas/agent-asset-frontmatter.schemas.ts';
 import {
   personaFrontmatterSchema,
-  ruleFrontmatterSchema,
   skillFrontmatterSchema,
 } from './schemas/agent-asset-frontmatter.schemas.ts';
 
@@ -40,54 +38,6 @@ const validateSkillFrontmatterWarnings = (
       field: 'disable-model-invocation',
       message:
         'disable-model-invocation must be true or false; a non-boolean value is ignored and the intent is lost',
-      path,
-      severity: 'warning',
-    });
-  }
-
-  return warnings;
-};
-
-const validateRuleFrontmatterWarnings = (
-  path: string,
-  parsed: Record<string, unknown>,
-): AgentAssetValidationIssue[] => {
-  const warnings: AgentAssetValidationIssue[] = [];
-
-  const description = parsed.description;
-  if (
-    description === undefined ||
-    (typeof description === 'string' && description.trim().length === 0)
-  ) {
-    warnings.push({
-      field: 'description',
-      message:
-        'Rule frontmatter description is empty (recommended for discoverability)',
-      path,
-      severity: 'warning',
-    });
-  }
-
-  const globs = parsed.globs;
-  const alwaysApply = parsed.alwaysApply;
-  if (
-    alwaysApply !== true &&
-    (globs === undefined ||
-      (typeof globs === 'string' && globs.trim().length === 0))
-  ) {
-    warnings.push({
-      field: 'globs',
-      message:
-        'Rule has no globs and alwaysApply is not true (may not attach to files)',
-      path,
-      severity: 'warning',
-    });
-  }
-
-  if (alwaysApply !== undefined && typeof alwaysApply !== 'boolean') {
-    warnings.push({
-      field: 'alwaysApply',
-      message: 'alwaysApply must be a boolean when present',
       path,
       severity: 'warning',
     });
@@ -145,44 +95,28 @@ export const validateAgentAssetFrontmatter = (
     return { errors, warnings };
   }
 
-  if (kind === 'persona') {
-    const parsed = parsePersonaFrontmatterForValidation(content);
-    const result = personaFrontmatterSchema.safeParse(parsed);
-    if (!result.success) {
-      return {
-        errors: zodIssuesToValidationIssues(path, 'error', result.error),
-        warnings: [],
-      };
-    }
-
-    const errors: AgentAssetValidationIssue[] = [];
-    if (expectedSlug !== undefined && result.data.name !== expectedSlug) {
-      errors.push({
-        field: 'name',
-        message: `Frontmatter name "${result.data.name}" must match filename id "${expectedSlug}"`,
-        path,
-        severity: 'error',
-      });
-    }
-
-    return { errors, warnings: [] };
-  }
-
-  const parsed = parseRuleFrontmatterForValidation(content);
-  const result = ruleFrontmatterSchema.safeParse(parsed);
-  const warnings = validateRuleFrontmatterWarnings(path, parsed);
-
+  // Personas are the remaining kind, so this is the fall-through rather than a
+  // fourth branch — `AgentAssetKind` has exactly three members.
+  const parsed = parsePersonaFrontmatterForValidation(content);
+  const result = personaFrontmatterSchema.safeParse(parsed);
   if (!result.success) {
     return {
-      errors: [],
-      warnings: [
-        ...warnings,
-        ...zodIssuesToValidationIssues(path, 'warning', result.error),
-      ],
+      errors: zodIssuesToValidationIssues(path, 'error', result.error),
+      warnings: [],
     };
   }
 
-  return { errors: [], warnings };
+  const errors: AgentAssetValidationIssue[] = [];
+  if (expectedSlug !== undefined && result.data.name !== expectedSlug) {
+    errors.push({
+      field: 'name',
+      message: `Frontmatter name "${result.data.name}" must match filename id "${expectedSlug}"`,
+      path,
+      severity: 'error',
+    });
+  }
+
+  return { errors, warnings: [] };
 };
 
 export interface ValidateAgentAssetsResult {

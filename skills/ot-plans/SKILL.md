@@ -13,7 +13,14 @@ description: >-
 
 ## When to read this skill
 
-Use alongside repository rules (`.cursor/rules/commands/openthrottle.mdc`, `.cursor/rules/commands/agents.mdc`) when work touches **plans, tasks, OT knowledge base, or Ralph-injected plan context**.
+Read this whenever work touches **plans, tasks, the OT knowledge base, or Ralph-injected plan
+context** — and always when the user says **"ask OpenThrottle …"**, **"ask OT …"**, **"OT, …"**,
+or invokes one of the OT skills (`/ot-plans`, `/ot-loop`, `/ot-onboarding`).
+
+**OpenThrottle (OT)** is the plans/tasks knowledge base (Postgres + pgvector) and the MCP server
+that talks to it. **`@openthrottle/openthrottle-mcp`** is that MCP: GraphQL-only to
+openthrottle-server, storing plans, tasks, embeddings for semantic search, and the plan output
+stream. Schema, migrations and setup: [`databases/README.md`](../../databases/README.md).
 
 ## OT vs documentation
 
@@ -74,7 +81,7 @@ conventions they carried are worth keeping:
 
 When you commit work tied to a plan or task:
 
-1. Use **conventional commits** (see **github-commit** skill and `.cursor/rules/commands/github.mdc`).
+1. Use **conventional commits** (see the [`github-commit`](../github-commit/SKILL.md) skill).
 2. Include traceability in the commit **body or footer**:
 
    ```text
@@ -128,8 +135,8 @@ blocks the skill.
 
 ## Cross-links
 
-- **Conventional commits and staging:** `.agents/skills/github-commit/SKILL.md`
-- **OT rule (tool list, commands):** `.cursor/rules/commands/openthrottle.mdc`
-- **Agent behavior (plans in OT only):** `.cursor/rules/commands/agents.mdc`
+- **Conventional commits and staging:** [`github-commit`](../github-commit/SKILL.md)
+- **Driving a plan to completion, one task at a time:** [`ot-loop`](../ot-loop/SKILL.md), and [`agents-ralph`](../agents-ralph/SKILL.md) for the detached CLI
+- **Code style:** [`docs/monorepo/code-style.md`](../../docs/monorepo/code-style.md), normative in `AGENTS.md` § Code style
 - **DB / embeddings / ingest:** `databases/README.md`
 - **Repo OT overview:** `AGENTS.md` (OpenThrottle section)

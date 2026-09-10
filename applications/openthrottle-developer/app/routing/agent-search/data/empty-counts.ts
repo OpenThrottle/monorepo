@@ -4,6 +4,5 @@ import type { AgentSearchCounts } from '~/routing/agent-search/types';
 export const EMPTY_COUNTS: AgentSearchCounts = {
   all: 0,
   personas: 0,
-  rules: 0,
   skills: 0,
 };

@@ -3,7 +3,7 @@ import {
   GENERATOR_DOCS_AGENT_USAGE,
   GENERATOR_DOCS_AGENTS,
   GENERATOR_DOCS_NX_LOCAL_GENERATORS,
-  GENERATOR_DOCS_PERSONAL_GENERATORS,
+  GENERATOR_DOCS_OT_GENERATORS_SKILL,
   GENERATOR_DOCS_TOOLS_PACKAGE_README,
 } from '~/routing/generators/constants/generator-nx-docs';
 
@@ -17,8 +17,8 @@ export const generators: LinkProps[] = [
     to: GENERATOR_DOCS_TOOLS_PACKAGE_README,
   },
   {
-    children: 'Generator-first rule (.cursor/rules/personal-generators.mdc)',
-    to: GENERATOR_DOCS_PERSONAL_GENERATORS,
+    children: 'Generator-first policy (ot-generators skill)',
+    to: GENERATOR_DOCS_OT_GENERATORS_SKILL,
   },
   {
     children: 'AGENTS.md — Nx and workflow conventions',

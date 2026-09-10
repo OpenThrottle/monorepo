@@ -1,55 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { collectRuleViolations } from '../check-agent-assets-ssot.ts';
-import type { AssetEntry } from '../check-agent-assets-ssot.ts';
 import { parseMode } from '../docker-smoke-test.ts';
 import { resolveProjectId } from '../gcs-docker-upload.ts';
 import { OLLAMA_MODELS } from '../ollama.ts';
 import { snapshotMessage } from '../sync-subtree.ts';
 import { classifyAuthSmoke, hasEmbeddingConfig } from '../verify-openthrottle-mcp-env.ts'; // prettier-ignore
-
-const entry = (path: string, overrides: Partial<AssetEntry> = {}): AssetEntry => ({ isSymlink: true, path, targetExists: true, ...overrides }); // prettier-ignore
-
-describe('collectRuleViolations', () => {
-  it('passes a clean layout', () => {
-    expect(
-      collectRuleViolations(
-        [entry('.cursor/rules/a.mdc')],
-        [entry('.agents/rules/a.mdc', { isSymlink: false })],
-      ),
-    ).toEqual([]);
-  });
-
-  it('flags a regular file in .cursor/rules', () => {
-    const violations = collectRuleViolations(
-      [entry('.cursor/rules/a.mdc', { isSymlink: false })],
-      [],
-    );
-
-    expect(violations).toHaveLength(1);
-    expect(violations[0]).toMatch(/regular file/);
-  });
-
-  it('flags a broken .cursor symlink and a symlinked SSOT body', () => {
-    const violations = collectRuleViolations(
-      [entry('.cursor/rules/a.mdc', { targetExists: false })],
-      [entry('.agents/rules/b.mdc', { isSymlink: true })],
-    );
-
-    expect(violations).toHaveLength(2);
-    expect(violations[0]).toMatch(/broken symlink/);
-    expect(violations[1]).toMatch(/SSOT body/);
-  });
-
-  it('exempts the gitignored nx-rules.mdc', () => {
-    expect(
-      collectRuleViolations(
-        [entry('.cursor/rules/nx-rules.mdc', { isSymlink: false })],
-        [],
-      ),
-    ).toEqual([]);
-  });
-});
 
 describe('classifyAuthSmoke', () => {
   it('rejects any body carrying an errors array (the HTTP-200 trap)', () => {

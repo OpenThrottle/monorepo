@@ -4,21 +4,12 @@
  */
 
 /** Agent-asset prompt types surfaced by this search (subset of CustomPromptType). */
-export const AGENT_ASSET_PROMPT_TYPES = [
-  'skills',
-  'rules',
-  'personas',
-] as const;
+export const AGENT_ASSET_PROMPT_TYPES = ['skills', 'personas'] as const;
 
 export type AgentAssetPromptType = (typeof AGENT_ASSET_PROMPT_TYPES)[number];
 
 /** Tab values: an "all" tab plus one per prompt type. */
-export const AGENT_SEARCH_TABS = [
-  'all',
-  'skills',
-  'rules',
-  'personas',
-] as const;
+export const AGENT_SEARCH_TABS = ['all', 'skills', 'personas'] as const;
 
 export type AgentSearchTab = (typeof AGENT_SEARCH_TABS)[number];
 
@@ -45,6 +36,5 @@ export interface AgentAssetResult {
 export interface AgentSearchCounts {
   readonly all: number;
   readonly personas: number;
-  readonly rules: number;
   readonly skills: number;
 }

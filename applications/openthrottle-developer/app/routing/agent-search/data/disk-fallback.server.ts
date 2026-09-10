@@ -1,20 +1,17 @@
 /**
  * @description Live disk-scan fallback for agent-assets search, used when the semantic index
- * (custom_prompt_embeddings) is empty or unavailable. Discovers on-disk skills, rules, and
- * personas and keyword-ranks them against the query. Server-only (uses node:fs).
+ * (custom_prompt_embeddings) is empty or unavailable. Discovers on-disk skills and personas
+ * and keyword-ranks them against the query. Server-only (uses node:fs).
  */
 
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
-import { basename, join } from 'node:path';
-import { parseSkillFrontmatter } from '@openthrottle/openthrottle-skills';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { discoverRepoPersonas } from '~/routing/agents/data/discover-repo-personas.server';
 import { discoverRepoSkills } from '~/routing/agents/data/discover-repo-skills.server';
 import type {
   AgentAssetPromptType,
   AgentAssetResult,
 } from '~/routing/agent-search/types';
-
-const RULES_DIR = '.agents/rules';
 
 const SNIPPET_LENGTH = 240;
 
@@ -53,39 +50,10 @@ const collectPersonaCandidates = (monorepoRoot: string): DiskCandidate[] =>
     title: entry.slug,
   }));
 
-const collectRuleCandidates = (monorepoRoot: string): DiskCandidate[] => {
-  const absoluteRulesDir = join(monorepoRoot, RULES_DIR);
-  if (!existsSync(absoluteRulesDir)) {
-    return [];
-  }
-
-  let fileNames: string[];
-  try {
-    fileNames = readdirSync(absoluteRulesDir).filter((name) =>
-      name.endsWith('.mdc'),
-    );
-  } catch {
-    return [];
-  }
-
-  return fileNames.map((fileName) => {
-    const repoRelativePath = `${RULES_DIR}/${fileName}`;
-    const content = readFileSafe(monorepoRoot, repoRelativePath);
-    const { description, name } = parseSkillFrontmatter(content);
-    const title =
-      name && name.trim().length > 0 ? name.trim() : basename(fileName, '.mdc');
-    const summary =
-      description && description.trim().length > 0 ? description.trim() : '';
-
-    return { filePath: repoRelativePath, promptType: 'rules', summary, title };
-  });
-};
-
 const COLLECTORS: Readonly<
   Record<AgentAssetPromptType, (monorepoRoot: string) => DiskCandidate[]>
 > = {
   personas: collectPersonaCandidates,
-  rules: collectRuleCandidates,
   skills: collectSkillCandidates,
 };
 

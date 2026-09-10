@@ -81,7 +81,9 @@ Use **`@tools/generators:react-router`** and the same `--subGenerator` / flags d
 
 ## Discovery workflow (mandatory order)
 
-Aligned with `.cursor/rules/personal-generators.mdc`:
+**Non-negotiable: check for a generator before writing ANY new code, component, hook, service
+or file by hand.** Step 1 is not a formality — picking the wrong generator is the mistake that
+actually happens, which is why discovery precedes generation.
 
 1. **List generators**
 
@@ -106,6 +108,10 @@ Aligned with `.cursor/rules/personal-generators.mdc`:
 5. **Only then** hand-edit for business logic.
 
 Prefer **`--dry-run`** where supported before writing files.
+
+**If no generator fits, say so explicitly before writing custom code.** Silently hand-writing
+what a generator would have scaffolded is how files drift out of the primitive shape the
+[`ot-folders`](../ot-folders/SKILL.md) rules and the component ESLint rule then reject.
 
 ## Batch generation (`--name` comma-separated)
 
@@ -144,7 +150,7 @@ Per-generator markdown deep-dives live under `docs/tools/templates/` (e.g. `reac
 | **Nx isolate-plugins troubleshooting**                     | `docs/tools/templates/NX_ISOLATE_PLUGINS.md` (referenced from AGENT_USAGE) |
 | **Generators package overview**                            | `tools/generators/README.md`                                               |
 | **Generator source**                                       | `tools/generators/src/generators/`                                         |
-| **Cursor rule (short form)**                               | `.cursor/rules/personal-generators.mdc`                                    |
+| **Code style (component/data boundaries, shape)**          | `docs/monorepo/code-style.md`                                              |
 | **Monorepo entry**                                         | `AGENTS.md` (Generators / Nx sections)                                     |
 
 ## OpenThrottle and commits
