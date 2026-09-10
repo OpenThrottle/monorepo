@@ -200,7 +200,7 @@
     },
     "check-agent-assets-ssot": {
       "cache": true,
-      "description": "Verify agent-asset mirrors stay single-sourced via scripts/check-agent-assets-ssot.ts. `inputs` MUST be explicit {workspaceRoot} globs \u2014 the root `monorepo` project owns 0 files, so the default {projectRoot} input would hash nothing and cache-hit forever.",
+      "description": "Verify agent-asset mirrors stay single-sourced via scripts/check-agent-assets-ssot.ts. `inputs` MUST be explicit {workspaceRoot} globs — the root `monorepo` project owns 0 files, so the default {projectRoot} input would hash nothing and cache-hit forever.",
       "executor": "nx:run-commands",
       "options": {
         "command": "tsx ./scripts/check-agent-assets-ssot.ts",
@@ -236,7 +236,7 @@
     },
     "check-package-entrypoints": {
       "cache": true,
-      "description": "Verify no workspace package steers Vite into a gitignored build directory while its own sources import it by name, via scripts/check-package-entrypoints.ts. `inputs` MUST be explicit {workspaceRoot} globs \u2014 the root `monorepo` project owns 0 files, so the default {projectRoot} input would hash nothing and cache-hit forever.",
+      "description": "Verify no workspace package steers Vite into a gitignored build directory while its own sources import it by name, via scripts/check-package-entrypoints.ts. `inputs` MUST be explicit {workspaceRoot} globs — the root `monorepo` project owns 0 files, so the default {projectRoot} input would hash nothing and cache-hit forever.",
       "executor": "nx:run-commands",
       "options": {
         "command": "tsx ./scripts/check-package-entrypoints.ts",
@@ -269,7 +269,7 @@
     },
     "codegen-graphql-watch": {
       "continuous": true,
-      "description": "Watch mode for graphql-codegen \u2014 regenerate GraphQL types on change.",
+      "description": "Watch mode for graphql-codegen — regenerate GraphQL types on change.",
       "executor": "nx:run-commands",
       "options": {
         "command": "graphql-codegen --watch",
@@ -298,7 +298,7 @@
     },
     "codegen-react-router-watch": {
       "continuous": true,
-      "description": "Watch mode for `react-router typegen` \u2014 regenerate route types on change.",
+      "description": "Watch mode for `react-router typegen` — regenerate route types on change.",
       "executor": "nx:run-commands",
       "options": {
         "command": "react-router typegen --watch",
@@ -322,7 +322,7 @@
     },
     "format-check": {
       "cache": true,
-      "description": "Check workspace formatting with Prettier without writing \u2014 CI parity for format-write. `inputs` MUST enumerate {workspaceRoot} globs: the `monorepo` project's root is `.` but owns 0 files (Nx assigns each file to its most specific project), so the default {projectRoot} input hashes nothing and every run would cache-hit regardless of the files being checked.",
+      "description": "Check workspace formatting with Prettier without writing — CI parity for format-write. `inputs` MUST enumerate {workspaceRoot} globs: the `monorepo` project's root is `.` but owns 0 files (Nx assigns each file to its most specific project), so the default {projectRoot} input hashes nothing and every run would cache-hit regardless of the files being checked.",
       "executor": "nx:run-commands",
       "options": {
         "command": "prettier --check \"**/*.{cjs,css,html,js,json,jsx,less,md,mdx,mjs,sass,scss,ts,tsx,yaml,yml}\"",
@@ -348,7 +348,7 @@
     },
     "generate-third-party-notices": {
       "cache": false,
-      "description": "Regenerate THIRD-PARTY-LICENSES.md \u2014 the aggregated dependency-attribution manifest for Apache-2.0 \u00a74 (scripts/generate-third-party-notices.ts). Pass `--check` (via `pnpm validate:notices`) to fail on a stale file instead of writing. Not cached \u2014 reads the installed node_modules graph.",
+      "description": "Regenerate THIRD-PARTY-LICENSES.md — the aggregated dependency-attribution manifest for Apache-2.0 §4 (scripts/generate-third-party-notices.ts). Pass `--check` (via `pnpm validate:notices`) to fail on a stale file instead of writing. Not cached — reads the installed node_modules graph.",
       "executor": "nx:run-commands",
       "options": {
         "command": "tsx ./scripts/generate-third-party-notices.ts",
@@ -368,7 +368,7 @@
     "knip": {
       "cache": true,
       "dependsOn": ["^build"],
-      "description": "Dead-code / unused-dependency report via knip (knip.jsonc). Report-only (dry-run) and non-blocking (--no-exit-code) \u2014 run on demand with `pnpm nx run monorepo:knip`. DO NOT add `--fix`/`--fix-type`/`--allow-remove-files` here; knip only mutates files with `--fix`. Triage findings piecemeal (`--include`/`--workspace`) \u2014 see docs/monorepo/Knip.md.",
+      "description": "Dead-code / unused-dependency report via knip (knip.jsonc). Report-only (dry-run) and non-blocking (--no-exit-code) — run on demand with `pnpm nx run monorepo:knip`. DO NOT add `--fix`/`--fix-type`/`--allow-remove-files` here; knip only mutates files with `--fix`. Triage findings piecemeal (`--include`/`--workspace`) — see docs/monorepo/Knip.md.",
       "executor": "nx:run-commands",
       "options": {
         "command": "knip --config knip.jsonc --no-exit-code",
@@ -435,7 +435,7 @@
         "codegen-graphql",
         "codegen-react-router"
       ],
-      "description": "Run the project Vitest suite. Coverage is opt-in: set VITEST_COVERAGE=true to emit it under {workspaceRoot}/coverage/{projectRoot}. Depends on codegen (self + deps) so a fresh checkout generates the gitignored __generated__ output before Vitest collects \u2014 mirrors the typecheck/build wiring; without it source-first codegen packages (e.g. @openthrottle/openthrottle-developer-codegen) fail collection on 'Failed to resolve import ./__generated__/graphql'.",
+      "description": "Run the project Vitest suite. Coverage is opt-in: set VITEST_COVERAGE=true to emit it under {workspaceRoot}/coverage/{projectRoot}. Depends on codegen (self + deps) so a fresh checkout generates the gitignored __generated__ output before Vitest collects — mirrors the typecheck/build wiring; without it source-first codegen packages (e.g. @openthrottle/openthrottle-developer-codegen) fail collection on 'Failed to resolve import ./__generated__/graphql'.",
       "executor": "@nx/vitest:test",
       "inputs": ["default", "^production"],
       "options": {
@@ -501,7 +501,7 @@
     },
     "validate-licenses": {
       "cache": false,
-      "description": "Dependency-license compliance gate: apply license-policy.json to `pnpm licenses list --json` and fail on any disallowed or undetected license (scripts/validate-license-compliance.ts). Not cached \u2014 reads the installed node_modules graph, which Nx does not hash.",
+      "description": "Dependency-license compliance gate: apply license-policy.json to `pnpm licenses list --json` and fail on any disallowed or undetected license (scripts/validate-license-compliance.ts). Not cached — reads the installed node_modules graph, which Nx does not hash.",
       "executor": "nx:run-commands",
       "options": {
         "command": "tsx ./scripts/validate-license-compliance.ts",
@@ -539,7 +539,7 @@
     },
     "video-record": {
       "cache": false,
-      "description": "Drive a demo flow through the app with Playwright and capture frames plus a step-timing manifest (docs/marketing/pipeline.md). Takes no --variant: every variant of an episode shares one recording, which is the point \u2014 you re-narrate rather than re-record. Needs a production build serving the DEMO database. Never cached, because it reads live app state.",
+      "description": "Drive a demo flow through the app with Playwright and capture frames plus a step-timing manifest (docs/marketing/pipeline.md). Takes no --variant: every variant of an episode shares one recording, which is the point — you re-narrate rather than re-record. Needs a production build serving the DEMO database. Never cached, because it reads live app state.",
       "executor": "nx:run-commands",
       "options": {
         "command": "pnpm exec tsx ./src/runner/run.ts",
@@ -578,7 +578,7 @@
     },
     "video-validate": {
       "cache": true,
-      "description": "Validate every episode against the format spec: spoken-word budget, beat and cue ordering, release slots, and the YouTube conventions from docs/marketing/youtube-format.md (tag baseline, title style, chapters, thumbnails). Structural problems fail immediately; documented conventions are advisory on a draft and become errors once an episode is marked ready or published, so the gate stays enforceable while Season 1's tag drift is still being worked through. Unlike the script it replaces, it never rewrites source \u2014 word counts are computed.",
+      "description": "Validate every episode against the format spec: spoken-word budget, beat and cue ordering, release slots, and the YouTube conventions from docs/marketing/youtube-format.md (tag baseline, title style, chapters, thumbnails). Structural problems fail immediately; documented conventions are advisory on a draft and become errors once an episode is marked ready or published, so the gate stays enforceable while Season 1's tag drift is still being worked through. Unlike the script it replaces, it never rewrites source — word counts are computed.",
       "executor": "nx:run-commands",
       "inputs": [
         "{projectRoot}/src/episodes/**/*",
