@@ -14,7 +14,17 @@ see [tools/AGENTS.md](../../tools/AGENTS.md)).
 - `pnpm nx run @openthrottle/openthrottle-agentic-ralph:codegen-graphql` — regenerate
   `src/__generated__/` from `src/graphql/ralph/*.graphql` (schema read from
   `applications/openthrottle-server/schema.gql`; no running server needed).
-- `verify-graphql-codegen` — regenerates and fails on drift (CI gate).
+- `verify-graphql-codegen` — regenerates and fails on drift (CI gate). This package **commits**
+  `src/__generated__/` (the `!src/__generated__/**/*` negation in its own `.gitignore`), and it owns
+  the plan/task/note documents every other consumer spreads — which makes this the workspace's live
+  CI gate on shared-document drift, including for consumers whose own output is gitignored.
+- `test` — includes `src/graphql/__tests__/fragment-coverage.test.ts`, the tripwire on the SHARED
+  fragments: every scalar/enum field on a covered schema type (`PlanObject`, `TaskObject`) must be
+  selected by its fragment or named in that file's `EXCLUSIONS` with a reason. `openthrottle-mcp`
+  tool output is that selection set verbatim, so an unselected field is invisible to every MCP
+  caller with nothing going red — which is how `runConfigJson` went missing. This project's `test`
+  target lists `applications/openthrottle-server/schema.gql` as an explicit input so a server-side
+  field addition invalidates the cache instead of the tripwire passing from it.
 - `build` (real target) `dependsOn` `codegen-graphql`, so a plain build self-heals; bare
   `typecheck`/`test` on a fresh checkout do not — run codegen first.
 

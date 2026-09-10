@@ -309,6 +309,13 @@ jobs:
       # box has to do anyway. The `git diff --exit-code` drift assertion is then
       # free, so it runs on all three boxes — strictly more coverage, zero extra
       # runner time.
+      #
+      # ⚠️ Scope: this assertion only sees TRACKED output — openthrottle-developer's
+      # app/__generated__ and openthrottle-agentic-ralph's src/__generated__, both of
+      # which negate the root .gitignore. Projects that leave __generated__ ignored
+      # (openthrottle-mcp, openthrottle-developer-codegen) contribute nothing here,
+      # because git diff over an ignored untracked path always exits 0. Their guard is
+      # scripts/verify-graphql-codegen.ts, which compares the filesystem instead.
       - name: '🧩 Codegen Tasks'
         run: |
           # pnpm exec nx run @tools/dotfiles:build --parallel ${{ env.OUTPUT_DEBUG }}

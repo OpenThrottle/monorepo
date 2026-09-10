@@ -13,7 +13,28 @@ Nx project name is the full `@openthrottle/openthrottle-mcp` (not the bare direc
 - `pnpm nx run @openthrottle/openthrottle-mcp:build` — required before `serve`; `serve` runs
   `node dist/src/bin.js` (no dev server — the `__dev` target is tsc `--watch`, not a runnable MCP).
 - `pnpm nx run @openthrottle/openthrottle-mcp:verify-graphql-codegen` — regenerates GraphQL types
-  and fails if committed `src/__generated__` drifts. Run after any `.graphql` document change.
+  and fails if `src/__generated__` drifts from the `.graphql` documents. Run after any `.graphql`
+  document change. This output is **gitignored** (only `.gitkeep` is tracked), so the guard
+  byte-compares a snapshot of the on-disk output against a fresh regeneration rather than using
+  `git diff` — which over ignored paths always exits 0, and is why the pre-2026-09 version of this
+  guard could never fail. With no output on disk (fresh clone, CI) there is no baseline, and the
+  guard says so instead of passing silently; drift on the SHARED plan/task documents is caught in
+  CI by `openthrottle-agentic-ralph`, which commits its generated output.
+
+## Fragment coverage (why a tool result can be missing a field)
+
+Plan/task/note/project operations are consumed cross-package from
+`packages/openthrottle-agentic-ralph/src/graphql/ralph/*.graphql`, and a tool result **is** the
+fragment's selection set passed through verbatim (`runTool<{ plan: GetPlanQuery['plan'] }>` →
+`src/utils/tool-result.ts`). A scalar the shared fragment does not select is therefore invisible to
+every MCP caller, while codegen, typecheck and the drift guard all stay green — the field is simply
+absent. `get_plan` hid `runConfigJson` this way for months.
+
+So: **adding a scalar field to `PlanObject`/`TaskObject` server-side is not done until the shared
+fragment selects it.** `packages/openthrottle-agentic-ralph/src/graphql/__tests__/fragment-coverage.test.ts`
+enforces this — every scalar/enum field on a covered type must be selected by the fragment or named
+in that file's `EXCLUSIONS` with a reason. Object and list-of-object fields are exempt (a selection
+set is a real choice). After changing a shared fragment, regenerate **both** consumers.
 
 ## Layout
 

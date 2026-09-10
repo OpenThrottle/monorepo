@@ -6,28 +6,39 @@ fragment Note on NoteObject {
   updatedAt
 }
 
+# Every plan-shaped operation spreads this fragment, so a field missing here is a
+# field missing from every MCP plan tool result. A new PlanObject scalar must be
+# selected here or consciously excluded in ../__tests__/fragment-coverage.test.ts,
+# which fails otherwise.
 fragment Plan on PlanObject {
   assignee
   author
   category
+  completedAt
   createdAt
   description
   id
   jobRunHooksJson
   project
   projectId
+  runConfigJson
   status
   summary
   title
   updatedAt
 }
 
+# Spread by every task-shaped operation, with the same reach as the Plan
+# fragment above. Coverage of both is enforced by
+# ../__tests__/fragment-coverage.test.ts.
 fragment Task on TaskObject {
   assignee
   category
+  completedAt
   createdAt
   description
   hookRole
+  hookScope
   hookSource
   id
   parentTaskId
@@ -35,6 +46,7 @@ fragment Task on TaskObject {
   project
   projectId
   requirementsJson
+  skillSlug
   sortOrder
   status
   summary

@@ -447,7 +447,7 @@
     "check:local:migration-hygiene": "pnpm nx run monorepo:check-migration-hygiene",
     "check:local:package-entrypoints": "pnpm nx run monorepo:check-package-entrypoints",
     "check:local:validate-tags": "pnpm nx:validate-tags",
-    "check:local:verify": "pnpm nx run-many --target=verify-graphql-codegen --projects=@openthrottle/openthrottle-agentic-ralph,@openthrottle/openthrottle-mcp",
+    "check:local:verify": "pnpm nx run-many --target=verify-graphql-codegen --projects=@openthrottle/openthrottle-agentic-ralph,@openthrottle/openthrottle-developer-codegen,@openthrottle/openthrottle-mcp",
     "check:local:video-scripts": "pnpm nx run openthrottle-showroom:video-validate",
     "check:rbac-admin-coverage": "tsx ./scripts/check-admin-permission-coverage.ts",
     "check:target-descriptions": "tsx ./scripts/audit-target-descriptions.ts --check",

@@ -41,10 +41,10 @@
       "typecheck": {},
       "verify-graphql-codegen": {
         "cache": false,
-        "description": "Regenerate openthrottle-developer-codegen GraphQL types and fail if the committed src/__generated__ output drifts.",
+        "description": "Regenerate openthrottle-developer-codegen GraphQL types and fail if the generated src/__generated__ output drifts from the .graphql documents. Output is gitignored here, so the guard byte-compares against whatever is on disk rather than against git, and reports a vacuous pass when there is no baseline.",
         "executor": "nx:run-commands",
         "options": {
-          "command": "(cd packages/openthrottle-developer-codegen && pnpm exec graphql-codegen) && git diff --exit-code -- packages/openthrottle-developer-codegen/src/__generated__",
+          "command": "tsx ./scripts/verify-graphql-codegen.ts --project=packages/openthrottle-developer-codegen",
           "cwd": "{workspaceRoot}"
         }
       }

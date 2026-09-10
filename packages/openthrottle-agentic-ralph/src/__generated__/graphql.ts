@@ -5739,12 +5739,14 @@ export type PlanFragment = {
   assignee?: string | null;
   author: string;
   category: string;
+  completedAt?: any | null;
   createdAt: any;
   description?: string | null;
   id: string;
   jobRunHooksJson: string;
   project?: string | null;
   projectId?: string | null;
+  runConfigJson: string;
   status: string;
   summary?: string | null;
   title: string;
@@ -5755,9 +5757,11 @@ export type TaskFragment = {
   __typename?: 'TaskObject';
   assignee?: string | null;
   category?: string | null;
+  completedAt?: any | null;
   createdAt: any;
   description?: string | null;
   hookRole?: string | null;
+  hookScope?: string | null;
   hookSource?: string | null;
   id: string;
   parentTaskId?: string | null;
@@ -5765,6 +5769,7 @@ export type TaskFragment = {
   project?: string | null;
   projectId?: string | null;
   requirementsJson: string;
+  skillSlug?: string | null;
   sortOrder: number;
   status: string;
   summary?: string | null;
@@ -5867,12 +5872,14 @@ export type CreatePlanMutation = {
     assignee?: string | null;
     author: string;
     category: string;
+    completedAt?: any | null;
     createdAt: any;
     description?: string | null;
     id: string;
     jobRunHooksJson: string;
     project?: string | null;
     projectId?: string | null;
+    runConfigJson: string;
     status: string;
     summary?: string | null;
     title: string;
@@ -5891,12 +5898,14 @@ export type UpdatePlanMutation = {
     assignee?: string | null;
     author: string;
     category: string;
+    completedAt?: any | null;
     createdAt: any;
     description?: string | null;
     id: string;
     jobRunHooksJson: string;
     project?: string | null;
     projectId?: string | null;
+    runConfigJson: string;
     status: string;
     summary?: string | null;
     title: string;
@@ -5923,9 +5932,11 @@ export type CreateTaskMutation = {
     __typename?: 'TaskObject';
     assignee?: string | null;
     category?: string | null;
+    completedAt?: any | null;
     createdAt: any;
     description?: string | null;
     hookRole?: string | null;
+    hookScope?: string | null;
     hookSource?: string | null;
     id: string;
     parentTaskId?: string | null;
@@ -5933,6 +5944,7 @@ export type CreateTaskMutation = {
     project?: string | null;
     projectId?: string | null;
     requirementsJson: string;
+    skillSlug?: string | null;
     sortOrder: number;
     status: string;
     summary?: string | null;
@@ -5954,9 +5966,11 @@ export type CreateTasksMutation = {
       __typename?: 'TaskObject';
       assignee?: string | null;
       category?: string | null;
+      completedAt?: any | null;
       createdAt: any;
       description?: string | null;
       hookRole?: string | null;
+      hookScope?: string | null;
       hookSource?: string | null;
       id: string;
       parentTaskId?: string | null;
@@ -5964,6 +5978,7 @@ export type CreateTasksMutation = {
       project?: string | null;
       projectId?: string | null;
       requirementsJson: string;
+      skillSlug?: string | null;
       sortOrder: number;
       status: string;
       summary?: string | null;
@@ -5987,12 +6002,14 @@ export type CreatePlansMutation = {
       assignee?: string | null;
       author: string;
       category: string;
+      completedAt?: any | null;
       createdAt: any;
       description?: string | null;
       id: string;
       jobRunHooksJson: string;
       project?: string | null;
       projectId?: string | null;
+      runConfigJson: string;
       status: string;
       summary?: string | null;
       title: string;
@@ -6011,9 +6028,11 @@ export type UpdateTaskMutation = {
     __typename?: 'TaskObject';
     assignee?: string | null;
     category?: string | null;
+    completedAt?: any | null;
     createdAt: any;
     description?: string | null;
     hookRole?: string | null;
+    hookScope?: string | null;
     hookSource?: string | null;
     id: string;
     parentTaskId?: string | null;
@@ -6021,6 +6040,7 @@ export type UpdateTaskMutation = {
     project?: string | null;
     projectId?: string | null;
     requirementsJson: string;
+    skillSlug?: string | null;
     sortOrder: number;
     status: string;
     summary?: string | null;
@@ -6062,9 +6082,11 @@ export type ReorderPlanTasksMutation = {
     __typename?: 'TaskObject';
     assignee?: string | null;
     category?: string | null;
+    completedAt?: any | null;
     createdAt: any;
     description?: string | null;
     hookRole?: string | null;
+    hookScope?: string | null;
     hookSource?: string | null;
     id: string;
     parentTaskId?: string | null;
@@ -6072,6 +6094,7 @@ export type ReorderPlanTasksMutation = {
     project?: string | null;
     projectId?: string | null;
     requirementsJson: string;
+    skillSlug?: string | null;
     sortOrder: number;
     status: string;
     summary?: string | null;
@@ -6324,12 +6347,14 @@ export type GetPlanQuery = {
     assignee?: string | null;
     author: string;
     category: string;
+    completedAt?: any | null;
     createdAt: any;
     description?: string | null;
     id: string;
     jobRunHooksJson: string;
     project?: string | null;
     projectId?: string | null;
+    runConfigJson: string;
     status: string;
     summary?: string | null;
     title: string;
@@ -6351,12 +6376,14 @@ export type ListPlansByStatusQuery = {
       assignee?: string | null;
       author: string;
       category: string;
+      completedAt?: any | null;
       createdAt: any;
       description?: string | null;
       id: string;
       jobRunHooksJson: string;
       project?: string | null;
       projectId?: string | null;
+      runConfigJson: string;
       status: string;
       summary?: string | null;
       title: string;
@@ -6375,9 +6402,11 @@ export type GetTaskQuery = {
     __typename?: 'TaskObject';
     assignee?: string | null;
     category?: string | null;
+    completedAt?: any | null;
     createdAt: any;
     description?: string | null;
     hookRole?: string | null;
+    hookScope?: string | null;
     hookSource?: string | null;
     id: string;
     parentTaskId?: string | null;
@@ -6385,6 +6414,7 @@ export type GetTaskQuery = {
     project?: string | null;
     projectId?: string | null;
     requirementsJson: string;
+    skillSlug?: string | null;
     sortOrder: number;
     status: string;
     summary?: string | null;
@@ -6403,9 +6433,11 @@ export type GetTasksByPlanIdQuery = {
     __typename?: 'TaskObject';
     assignee?: string | null;
     category?: string | null;
+    completedAt?: any | null;
     createdAt: any;
     description?: string | null;
     hookRole?: string | null;
+    hookScope?: string | null;
     hookSource?: string | null;
     id: string;
     parentTaskId?: string | null;
@@ -6413,6 +6445,7 @@ export type GetTasksByPlanIdQuery = {
     project?: string | null;
     projectId?: string | null;
     requirementsJson: string;
+    skillSlug?: string | null;
     sortOrder: number;
     status: string;
     summary?: string | null;
@@ -6431,9 +6464,11 @@ export type GetRemainingTasksByPlanIdQuery = {
     __typename?: 'TaskObject';
     assignee?: string | null;
     category?: string | null;
+    completedAt?: any | null;
     createdAt: any;
     description?: string | null;
     hookRole?: string | null;
+    hookScope?: string | null;
     hookSource?: string | null;
     id: string;
     parentTaskId?: string | null;
@@ -6441,6 +6476,7 @@ export type GetRemainingTasksByPlanIdQuery = {
     project?: string | null;
     projectId?: string | null;
     requirementsJson: string;
+    skillSlug?: string | null;
     sortOrder: number;
     status: string;
     summary?: string | null;
@@ -6459,9 +6495,11 @@ export type GetTasksQuery = {
     __typename?: 'TaskObject';
     assignee?: string | null;
     category?: string | null;
+    completedAt?: any | null;
     createdAt: any;
     description?: string | null;
     hookRole?: string | null;
+    hookScope?: string | null;
     hookSource?: string | null;
     id: string;
     parentTaskId?: string | null;
@@ -6469,6 +6507,7 @@ export type GetTasksQuery = {
     project?: string | null;
     projectId?: string | null;
     requirementsJson: string;
+    skillSlug?: string | null;
     sortOrder: number;
     status: string;
     summary?: string | null;
@@ -6821,12 +6860,14 @@ export const PlanFragmentDoc = {
           { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
           { kind: 'Field', name: { kind: 'Name', value: 'author' } },
           { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'completedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'description' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'jobRunHooksJson' } },
           { kind: 'Field', name: { kind: 'Name', value: 'project' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'runConfigJson' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
           { kind: 'Field', name: { kind: 'Name', value: 'title' } },
@@ -6851,9 +6892,11 @@ export const TaskFragmentDoc = {
         selections: [
           { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
           { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'completedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'description' } },
           { kind: 'Field', name: { kind: 'Name', value: 'hookRole' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'hookScope' } },
           { kind: 'Field', name: { kind: 'Name', value: 'hookSource' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'parentTaskId' } },
@@ -6861,6 +6904,7 @@ export const TaskFragmentDoc = {
           { kind: 'Field', name: { kind: 'Name', value: 'project' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'requirementsJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'skillSlug' } },
           { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
@@ -7229,12 +7273,14 @@ export const CreatePlanDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
           { kind: 'Field', name: { kind: 'Name', value: 'author' } },
           { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'completedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'description' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'jobRunHooksJson' } },
           { kind: 'Field', name: { kind: 'Name', value: 'project' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'runConfigJson' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
           { kind: 'Field', name: { kind: 'Name', value: 'title' } },
@@ -7309,12 +7355,14 @@ export const UpdatePlanDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
           { kind: 'Field', name: { kind: 'Name', value: 'author' } },
           { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'completedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'description' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'jobRunHooksJson' } },
           { kind: 'Field', name: { kind: 'Name', value: 'project' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'runConfigJson' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
           { kind: 'Field', name: { kind: 'Name', value: 'title' } },
@@ -7433,9 +7481,11 @@ export const CreateTaskDocument = {
         selections: [
           { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
           { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'completedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'description' } },
           { kind: 'Field', name: { kind: 'Name', value: 'hookRole' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'hookScope' } },
           { kind: 'Field', name: { kind: 'Name', value: 'hookSource' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'parentTaskId' } },
@@ -7443,6 +7493,7 @@ export const CreateTaskDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'project' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'requirementsJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'skillSlug' } },
           { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
@@ -7527,9 +7578,11 @@ export const CreateTasksDocument = {
         selections: [
           { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
           { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'completedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'description' } },
           { kind: 'Field', name: { kind: 'Name', value: 'hookRole' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'hookScope' } },
           { kind: 'Field', name: { kind: 'Name', value: 'hookSource' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'parentTaskId' } },
@@ -7537,6 +7590,7 @@ export const CreateTasksDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'project' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'requirementsJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'skillSlug' } },
           { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
@@ -7622,12 +7676,14 @@ export const CreatePlansDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
           { kind: 'Field', name: { kind: 'Name', value: 'author' } },
           { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'completedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'description' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'jobRunHooksJson' } },
           { kind: 'Field', name: { kind: 'Name', value: 'project' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'runConfigJson' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
           { kind: 'Field', name: { kind: 'Name', value: 'title' } },
@@ -7701,9 +7757,11 @@ export const UpdateTaskDocument = {
         selections: [
           { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
           { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'completedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'description' } },
           { kind: 'Field', name: { kind: 'Name', value: 'hookRole' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'hookScope' } },
           { kind: 'Field', name: { kind: 'Name', value: 'hookSource' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'parentTaskId' } },
@@ -7711,6 +7769,7 @@ export const UpdateTaskDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'project' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'requirementsJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'skillSlug' } },
           { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
@@ -7886,9 +7945,11 @@ export const ReorderPlanTasksDocument = {
         selections: [
           { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
           { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'completedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'description' } },
           { kind: 'Field', name: { kind: 'Name', value: 'hookRole' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'hookScope' } },
           { kind: 'Field', name: { kind: 'Name', value: 'hookSource' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'parentTaskId' } },
@@ -7896,6 +7957,7 @@ export const ReorderPlanTasksDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'project' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'requirementsJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'skillSlug' } },
           { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
@@ -8852,12 +8914,14 @@ export const GetPlanDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
           { kind: 'Field', name: { kind: 'Name', value: 'author' } },
           { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'completedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'description' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'jobRunHooksJson' } },
           { kind: 'Field', name: { kind: 'Name', value: 'project' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'runConfigJson' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
           { kind: 'Field', name: { kind: 'Name', value: 'title' } },
@@ -8942,12 +9006,14 @@ export const ListPlansByStatusDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
           { kind: 'Field', name: { kind: 'Name', value: 'author' } },
           { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'completedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'description' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'jobRunHooksJson' } },
           { kind: 'Field', name: { kind: 'Name', value: 'project' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'runConfigJson' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
           { kind: 'Field', name: { kind: 'Name', value: 'title' } },
@@ -9018,9 +9084,11 @@ export const GetTaskDocument = {
         selections: [
           { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
           { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'completedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'description' } },
           { kind: 'Field', name: { kind: 'Name', value: 'hookRole' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'hookScope' } },
           { kind: 'Field', name: { kind: 'Name', value: 'hookSource' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'parentTaskId' } },
@@ -9028,6 +9096,7 @@ export const GetTaskDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'project' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'requirementsJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'skillSlug' } },
           { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
@@ -9102,9 +9171,11 @@ export const GetTasksByPlanIdDocument = {
         selections: [
           { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
           { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'completedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'description' } },
           { kind: 'Field', name: { kind: 'Name', value: 'hookRole' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'hookScope' } },
           { kind: 'Field', name: { kind: 'Name', value: 'hookSource' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'parentTaskId' } },
@@ -9112,6 +9183,7 @@ export const GetTasksByPlanIdDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'project' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'requirementsJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'skillSlug' } },
           { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
@@ -9189,9 +9261,11 @@ export const GetRemainingTasksByPlanIdDocument = {
         selections: [
           { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
           { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'completedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'description' } },
           { kind: 'Field', name: { kind: 'Name', value: 'hookRole' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'hookScope' } },
           { kind: 'Field', name: { kind: 'Name', value: 'hookSource' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'parentTaskId' } },
@@ -9199,6 +9273,7 @@ export const GetRemainingTasksByPlanIdDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'project' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'requirementsJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'skillSlug' } },
           { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
@@ -9270,9 +9345,11 @@ export const GetTasksDocument = {
         selections: [
           { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
           { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'completedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'description' } },
           { kind: 'Field', name: { kind: 'Name', value: 'hookRole' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'hookScope' } },
           { kind: 'Field', name: { kind: 'Name', value: 'hookSource' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'parentTaskId' } },
@@ -9280,6 +9357,7 @@ export const GetTasksDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'project' } },
           { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'requirementsJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'skillSlug' } },
           { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },

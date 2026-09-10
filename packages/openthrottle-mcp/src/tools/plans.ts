@@ -87,7 +87,7 @@ export const getPlanToolDescription = `Fetch a plan by id (UUID). Returns the pl
 
 export const listPlansByStatusToolDescription = `List plans in OpenThrottle by status. Valid statuses (uppercase): ${PLAN_TASK_STATUS_VALUES}. Pass statuses (e.g. ["IN_PROGRESS","PENDING"]); an empty array or "all" means no status filter. Unknown values are rejected with the valid set. Optional: limit/offset, project, assignees, titleSubstring. Use for /openthrottle/pending or list by status.`;
 
-export const updatePlanToolDescription = `Update a plan by id. Pass id and any of: title, description, status (one of: ${PLAN_TASK_STATUS_VALUES}; uppercase), author, assignee, category, project, projectId, summary.`;
+export const updatePlanToolDescription = `Update a plan by id. Pass id and any of: title, description, status (one of: ${PLAN_TASK_STATUS_VALUES}; uppercase), author, assignee, category, project, projectId, summary, jobRunHooksJson, runConfigJson. jobRunHooksJson and runConfigJson replace the whole stored value, so read the current one back from get_plan first and merge — a partial object silently drops the keys you omitted. Pass null to reset either to its default shell; omit to leave unchanged. The plan-to-repository link lives in runConfigJson.workspace.repositoryId — the free-text project field is an unrelated label and does NOT link a plan to a repo.`;
 
 export async function listPlansByStatusToolHandler(
   args: z.infer<typeof listPlansByStatusToolParameters>,
