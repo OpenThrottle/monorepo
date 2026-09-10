@@ -169,23 +169,22 @@ between changing configuration and porting an application.
    invalidated.
 5. **The `mcp` service.** Absent from the GCP compose template. Swapping loses it.
 
-### Blockers, filed rather than described as working
+### Blockers: cleared
 
-Rung 4 is **not executable today**, for reasons that are defects on the GCP path rather than gaps in
-this plan:
+Rung 4 was **not executable** when this runbook was first written, for five reasons — all defects on
+the GCP path rather than gaps in the ladder. **All five are now fixed**, along with three more found
+in the same audit: the rendered `.env` now carries `JWT_SECRET`, `NODE_ENV` and `POSTGRES_SSL`; the
+Postgres password comes from Secret Manager instead of instance metadata; and the compose template
+gained the `migrations`, `mcp` and `bootstrap` services it was missing. See
+[provider-contract.md](./provider-contract.md) § "Defects fixed on the GCP path".
 
-- **A GCP box would not boot.** `applications/openthrottle/templates/startup.sh.tpl` writes no
-  `JWT_SECRET`, and `jwt.strategy.ts` throws at boot without it.
-- **`postgres_password` lands in plaintext** in `metadata_startup_script`, readable by anyone with
-  instance-get on the project.
-- **No `mcp` service** in the GCP compose template.
-- **No SSH firewall rule**, by that module's own admission.
-- **No `sslmode` in the rendered `.env`**, which also blocks the Cloud SQL variant of rung 2b.
+What that changes, precisely: a GCP box built from this module should now **boot**, apply migrations,
+and serve. What it does not change is the list above — state, data, DNS and the box-generated JWT
+secret still do not follow a provider swap, and those are inherent, not defects.
 
-All five are recorded in [provider-contract.md](./provider-contract.md) § "Known defects on the GCP
-path". Until at least the first is fixed, rung 4 is a documented path with a known first step, not a
-supported operation.
+**The remaining caveat is exercise, not correctness.** Every fix was made by reading the code against
+the working Hetzner path; the GCP composition has still never been applied. Treat the first real
+apply as the first genuine test, and expect to find something.
 
-The honest summary: **the contract makes the application portable; it does not yet make the
-deployment portable.** The remaining distance is five specific defects, all on the GCP side, all
-enumerated.
+The honest summary is therefore one step better than before: **the contract makes the application
+portable, and the deployment is now plausibly portable — but unproven.**

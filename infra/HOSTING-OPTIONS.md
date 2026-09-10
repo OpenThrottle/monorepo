@@ -13,7 +13,7 @@ calls.
 | **Images from**       | Artifact Registry                                                    | GHCR                                                                               |
 | **TLS**               | Caddy + ACME                                                         | Caddy + ACME (identical)                                                           |
 | **Backups**           | Cloud SQL automated                                                  | `backups_enabled` snapshots + an offsite `pg_dump` you own                         |
-| **`mcp` service**     | ✗ absent (known gap)                                                 | ✓                                                                                  |
+| **`mcp` service**     | ✓                                                                    | ✓                                                                                  |
 | **Est. cost**         | ~52 USD/mo ([gcp-estimate.csv](./gcp-estimate.csv))                  | ~5.39 EUR/mo ([hetzner-estimate.csv](./hetzner-estimate.csv))                      |
 | **Applied anywhere?** | **No** — never instantiated                                          | **No** — root exists, commented out                                                |
 | **Deploy**            | manual                                                               | automated ([hetzner-deploy.yml](../.github/workflows/hetzner-deploy.yml))          |

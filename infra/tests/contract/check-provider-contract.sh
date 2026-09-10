@@ -43,10 +43,15 @@ deploy_enabled
 developer_domain
 developer_image
 env_name
+jwt_secret
+mcp_domain
+mcp_image
+migrations_image
 postgres_db_name
 postgres_password
 postgres_user
 server_image
+ssh_allowed_cidrs
 EOF
 )
 

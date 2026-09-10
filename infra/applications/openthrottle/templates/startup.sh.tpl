@@ -23,21 +23,102 @@ fi
 install -d -m 0755 /opt/openthrottle
 cd /opt/openthrottle
 
-# Env file for server and developer (Compose env_file).
-cat > .env << 'ENVEOF'
+################################################################################
+# Secrets
+#
+# JWT_SECRET is generated HERE and persisted, rather than interpolated into this
+# script, because metadata_startup_script is readable by anyone holding
+# compute.instances.get on the project.
+#
+# Generation is idempotent BY NECESSITY, not tidiness: regenerating JWT_SECRET
+# would invalidate every issued session on any re-run or rebuild.
+################################################################################
+readonly SECRETS_FILE=/opt/openthrottle/.secrets
+
+if [ ! -f "$${SECRETS_FILE}" ]; then
+  echo "[openthrottle-startup] generating secrets"
+  umask 077
+
+  # -hex 32 yields 64 characters, comfortably over the 32-BYTE minimum that
+  # jwt.strategy.ts enforces for HS256.
+  jwt_secret='${jwt_secret}'
+  if [ -z "$${jwt_secret}" ]; then
+    jwt_secret="$(openssl rand -hex 32)"
+  fi
+
+  # Fetched from Secret Manager rather than interpolated. The instance's default
+  # compute service account holds roles/secretmanager.secretAccessor on it.
+  postgres_password="$(gcloud secrets versions access latest \
+    --secret='${postgres_password_secret}' --project='${project_id}')"
+
+  if [ -z "$${postgres_password}" ]; then
+    echo "[openthrottle-startup] FATAL: could not read the Postgres password from Secret Manager."
+    echo "[openthrottle-startup] Check that the Secret Manager API is enabled and that the"
+    echo "[openthrottle-startup] instance service account has roles/secretmanager.secretAccessor."
+    exit 1
+  fi
+
+  cat > "$${SECRETS_FILE}" << SECRETSEOF
+JWT_SECRET=$${jwt_secret}
+POSTGRES_PASSWORD=$${postgres_password}
+SECRETSEOF
+  chmod 0600 "$${SECRETS_FILE}"
+else
+  echo "[openthrottle-startup] reusing existing secrets from $${SECRETS_FILE}"
+fi
+
+# shellcheck source=/dev/null  # generated at runtime
+. "$${SECRETS_FILE}"
+
+################################################################################
+# Env file for the compose stack.
+#
+# NODE_ENV=production is load-bearing beyond performance: isBullBoardEnabled()
+# is `NODE_ENV !== "production"`, so without it the Bull Board dashboard tries
+# to mount and hard-requires BULLMQ_BOARD_ADMIN_USERNAME/_PASSWORD — which are
+# not set here, so the server would throw at boot. Setting it keeps the
+# dashboard off, which is what its own module comment says production requires.
+#
+# JWT_SECRET is written under THAT EXACT NAME. .env.default defines only
+# OPENTHROTTLE_DEVELOPER_JWT_SECRET and the root docker-compose.yml bridges the
+# two; this file uses a plain `env_file`, so the unprefixed name is required.
+#
+# POSTGRES_SSL=true because Cloud SQL terminates TLS and the module defaults to
+# ssl_mode = ENCRYPTED_ONLY. Without it the server connects in cleartext and
+# Cloud SQL refuses the connection — the two settings were contradictory before.
+################################################################################
+umask 077
+# shellcheck disable=SC2153  # JWT_SECRET/POSTGRES_PASSWORD come from SECRETS_FILE
+cat > .env << ENVEOF
+APP_ENV=production
+NODE_ENV=production
+PORT=3000
+
 POSTGRES_HOST=${postgres_host}
 POSTGRES_PORT=${postgres_port}
 POSTGRES_DB=${postgres_db}
 POSTGRES_USER=${postgres_user}
-POSTGRES_PASSWORD=${postgres_password}
+POSTGRES_PASSWORD=$${POSTGRES_PASSWORD}
+POSTGRES_SSL=true
+POSTGRES_SSL_REJECT_UNAUTHORIZED=${postgres_ssl_reject_unauthorized}
+
 REDIS_HOST=${redis_host}
 REDIS_PORT=${redis_port}
+
+JWT_SECRET=$${JWT_SECRET}
+
 APP_URL=https://${api_domain}
 CORS_ORIGINS=https://${developer_domain}
 API_URI=https://${api_domain}
 API_URL=https://${api_domain}
-PORT=3000
+API_URL_EXTERNAL=https://${api_domain}
+API_URL_INTERNAL=http://openthrottle-server:3000
+APP_URL_DEVELOPER=https://${developer_domain}
+
+OT_MCP_HTTP_PORT=3000
 ENVEOF
+chmod 0600 /opt/openthrottle/.env
+umask 022
 
 # Caddy reverse-proxy config (api + developer hostnames).
 cat > Caddyfile << 'CADDYEOF'
@@ -54,3 +135,26 @@ gcloud auth configure-docker ${registry_domain} --quiet
 
 docker compose pull
 docker compose up -d
+
+################################################################################
+# First-time provisioning — MANUAL, and deliberately never automatic
+#
+# `up` must NEVER silently provision a database: POSTGRES_HOST may point at a
+# shared or pre-existing Cloud SQL instance, and seeding a default login user
+# into someone else's database is not a recoverable mistake.
+#
+# After the first successful boot, SSH in and run:
+#
+#     cd /opt/openthrottle
+#     OPENTHROTTLE_MCP_AUTH_TOKEN='ot_sa_...' \
+#     OPENTHROTTLE_BOOTSTRAP_USER_PASSWORD='...' \
+#       docker compose run --rm bootstrap
+#
+# Idempotent, and safe to run before every token is decided — bootstrap logs
+# "Skip <account>: <VAR> not set" rather than failing. Passing tokens in that
+# one invocation's environment keeps them out of instance metadata entirely.
+#
+# Until it runs there is no login user and no MCP token, so the mcp container
+# will not serve. That is expected, not a failure.
+################################################################################
+echo "[openthrottle-startup] NEXT STEP (manual): docker compose run --rm bootstrap"

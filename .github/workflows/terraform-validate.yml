@@ -116,7 +116,8 @@ jobs:
         run: |
           set -euo pipefail
           # shellcheck cannot lint a .tpl directly (it is Terraform syntax), so
-          # the template is RENDERED first and the output checked. Rendering is
+          # each provider's template is RENDERED first and the output checked.
+          # BOTH paths are covered: both generate secrets in shell. Rendering is
           # the only way to catch escaping bugs: `$$(` is NOT a Terraform escape
           # (only `$${` and `%%{` are), so it renders as a literal `$$` that bash
           # reads as the PID — valid template, broken script.
@@ -127,7 +128,30 @@ jobs:
           # -chdir target, not this repository.
           cat > "${scratch}/main.tf" <<'RENDEREOF'
           locals {
-            tpl = "__REPO__/infra/applications/openthrottle_hcloud/templates/startup.sh.tpl"
+            tpl      = "__REPO__/infra/applications/openthrottle_hcloud/templates/startup.sh.tpl"
+            tpl_gcp  = "__REPO__/infra/applications/openthrottle/templates/startup.sh.tpl"
+
+            # The GCP template generates a JWT secret and fetches the Postgres
+            # password from Secret Manager, so it is real shell and needs the
+            # same treatment as the Hetzner one.
+            vars_gcp = {
+              api_domain                       = "api.example.com"
+              artifact_registry_region         = "us-west2"
+              caddyfile_content                = "example.com {}"
+              compose_content                  = "services: {}"
+              developer_domain                 = "dev.example.com"
+              jwt_secret                       = ""
+              postgres_db                      = "openthrottle"
+              postgres_host                    = "10.1.2.3"
+              postgres_password_secret         = "openthrottle-production-postgres-password"
+              postgres_port                    = "5432"
+              postgres_ssl_reject_unauthorized = "false"
+              postgres_user                    = "openthrottle"
+              project_id                       = "openthrottle-production"
+              redis_host                       = "10.4.5.6"
+              redis_port                       = "6379"
+              registry_domain                  = "us-west2-docker.pkg.dev"
+            }
 
             vars = {
               api_domain             = "api.example.com"
@@ -162,6 +186,11 @@ jobs:
             content  = templatefile(local.tpl, merge(local.vars, { data_volume_device = "" }))
             filename = "rendered-without-volume.sh"
           }
+
+          resource "local_file" "gcp" {
+            content  = templatefile(local.tpl_gcp, local.vars_gcp)
+            filename = "rendered-gcp.sh"
+          }
           RENDEREOF
 
           # Portable in-place edit: GNU sed takes `-i expr`, BSD/macOS sed
@@ -173,7 +202,7 @@ jobs:
           terraform -chdir="${scratch}" init -backend=false -input=false -no-color
           terraform -chdir="${scratch}" apply -auto-approve -no-color
 
-          for name in rendered-with-volume.sh rendered-without-volume.sh; do
+          for name in rendered-with-volume.sh rendered-without-volume.sh rendered-gcp.sh; do
             echo "::group::shellcheck ${name}"
             bash -n "${scratch}/${name}"
             shellcheck --shell=bash "${scratch}/${name}"

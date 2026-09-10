@@ -55,6 +55,17 @@ These must match exactly across both modules. Changing one without the other bre
 | `postgres_user`     | `string`         | `"openthrottle"`   | `POSTGRES_USER`.                                              |
 | `postgres_password` | `string` (sens.) | `""`               | `POSTGRES_PASSWORD`.                                          |
 | `deploy_enabled`    | `bool`           | `false`            | Gates the rendered compose + startup script and the firewall. |
+| `migrations_image`  | `string`         | `""`               | The server's schema gate. Same SHA as `server_image`.         |
+| `mcp_image`         | `string`         | `""`               | `openthrottle-mcp` streamable-HTTP transport.                 |
+| `mcp_domain`        | `string`         | `""`               | Empty keeps `mcp` on the compose network only.                |
+| `jwt_secret`        | `string` (sens.) | `""`               | Empty = **generate on the instance** at first boot.           |
+| `ssh_allowed_cidrs` | `list(string)`   | `[]`               | `0.0.0.0/0` rejected by validation on both paths.             |
+
+These last five **converged** rather than being shared from the start. They began as Hetzner-only
+because the GCP path simply lacked the corresponding capability — no `mcp` service, no migrations
+runner, no `JWT_SECRET`, no SSH rule. Fixing those defects moved them into this table, which is the
+outcome this contract exists to produce: the gate refused to pass until the shared set and this
+document agreed.
 
 `server_image` and `developer_image` being registry-agnostic strings is what makes the dual-push
 decision work: the same `sha-<GITHUB_SHA>` tag resolves on Artifact Registry or GHCR, and only the
@@ -191,22 +202,23 @@ instantiated at the same time, **they must not both serve the same hostnames** �
 
 ### GCP only
 
-| Variable                       | Why it cannot cross                               | Hetzner analogue             |
-| ------------------------------ | ------------------------------------------------- | ---------------------------- |
-| `project_id`                   | GCP project is a GCP concept.                     | none                         |
-| `network`                      | VPC self-link; also carries Redis peering.        | none (Compose network)       |
-| `region`, `zone`               | GCP placement vocabulary.                         | `location`                   |
-| `compute_machine_type`         | `e2-micro` is not a Hetzner word.                 | `server_type`                |
-| `compute_disk_size_gb`         | Boot disk is sized by the server type on Hetzner. | `data_volume_size_gb`        |
-| `postgres_tier`                | Cloud SQL instance sizing.                        | none — it is a container     |
-| `postgres_disk_size_gb`        | Cloud SQL storage.                                | `data_volume_size_gb`        |
-| `postgres_disk_type`           | `PD_SSD` / `PD_HDD`.                              | none                         |
-| `postgres_public_ip_enabled`   | Cloud SQL networking.                             | none                         |
-| `postgres_ssl_mode`            | Cloud SQL TLS enforcement.                        | none — never leaves the host |
-| `postgres_authorized_networks` | Cloud SQL IP allowlist.                           | none                         |
-| `redis_memory_size_gb`         | Memorystore sizing.                               | none — `mem_limit`           |
-| `redis_tier`                   | `BASIC` / `STANDARD_HA`.                          | none                         |
-| `artifact_registry_region`     | Builds the `*-docker.pkg.dev` host.               | none — GHCR has one host     |
+| Variable                           | Why it cannot cross                                                                                                                  | Hetzner analogue                                             |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------ |
+| `project_id`                       | GCP project is a GCP concept.                                                                                                        | none                                                         |
+| `network`                          | VPC self-link; also carries Redis peering.                                                                                           | none (Compose network)                                       |
+| `region`, `zone`                   | GCP placement vocabulary.                                                                                                            | `location`                                                   |
+| `compute_machine_type`             | `e2-micro` is not a Hetzner word.                                                                                                    | `server_type`                                                |
+| `compute_disk_size_gb`             | Boot disk is sized by the server type on Hetzner.                                                                                    | `data_volume_size_gb`                                        |
+| `postgres_tier`                    | Cloud SQL instance sizing.                                                                                                           | none — it is a container                                     |
+| `postgres_disk_size_gb`            | Cloud SQL storage.                                                                                                                   | `data_volume_size_gb`                                        |
+| `postgres_disk_type`               | `PD_SSD` / `PD_HDD`.                                                                                                                 | none                                                         |
+| `postgres_public_ip_enabled`       | Cloud SQL networking.                                                                                                                | none                                                         |
+| `postgres_ssl_mode`                | Cloud SQL TLS enforcement.                                                                                                           | none — never leaves the host                                 |
+| `postgres_authorized_networks`     | Cloud SQL IP allowlist.                                                                                                              | none                                                         |
+| `redis_memory_size_gb`             | Memorystore sizing.                                                                                                                  | none — `mem_limit`                                           |
+| `redis_tier`                       | `BASIC` / `STANDARD_HA`.                                                                                                             | none                                                         |
+| `artifact_registry_region`         | Builds the `*-docker.pkg.dev` host.                                                                                                  | none — GHCR has one host                                     |
+| `postgres_ssl_reject_unauthorized` | Cloud SQL presents a per-instance CA that is not in the public trust store, so chain verification fails unless that CA is installed. | none — Postgres is reached over the compose network, not TLS |
 
 The Cloud SQL and Memorystore rows collapsing to "it is a container" is the substance of the cost
 difference. It is also the substance of the operational difference: those knobs bought managed
@@ -258,8 +270,7 @@ dashboard must stay off in production because it is internet-reachable behind a 
 credential. The plan listed these as boot-required; the code says otherwise, and provisioning them
 would mean enabling something deliberately kept off.
 
-The four on-box service images are likewise Hetzner-only, because the GCP template renders no
-`postgres`, `redis`, `migrations` or `mcp` service at all:
+Two on-box service images stay Hetzner-only, because the GCP path uses managed services for both:
 
 | Variable           | Type     | Default                                 | Note                                                                  |
 | ------------------ | -------- | --------------------------------------- | --------------------------------------------------------------------- |
@@ -268,8 +279,8 @@ The four on-box service images are likewise Hetzner-only, because the GCP templa
 | `postgres_image`   | `string` | `"pgvector/pgvector:0.8.2-pg18-trixie"` | Upstream prebuilt; a deployed box cannot build `Dockerfile.Postgres`. |
 | `redis_image`      | `string` | `"redis:8.8-alpine"`                    | Tracks `REDIS_VERSION` in `.env.default`.                             |
 
-`migrations_image` sharing `server_image`'s SHA is not cosmetic: a migrations image built from a
-different commit than the server is exactly how a schema/code mismatch reaches production.
+`migrations_image` and `mcp_image` are now in the **shared** table above — the GCP compose renders
+those services too.
 
 Plus the four rung-2 seam variables, which have no GCP counterpart **yet** (see the follow-up in the
 `postgres_host` section above): `postgres_host` (`"postgres"`), `postgres_port` (`5432`),
@@ -303,26 +314,42 @@ safe.
 | Firewall / SSH    | 80/443 rule only; SSH inherited from VPC defaults                                                             | 80/443 **and** SSH must both be explicit; `ssh_allowed_cidrs`                                                                   | **No.** Hetzner has no default rules to inherit.                                                                                                                                                                                                                                    |
 | `mcp` service     | **Absent** from the rendered compose                                                                          | Present, no published port; Caddy routes it only when `mcp_domain` is set                                                       | **No.** A known gap on the GCP path, not a Hetzner addition. Follow-up.                                                                                                                                                                                                             |
 
-## Known defects on the GCP path
+## Defects fixed on the GCP path
 
-Found while establishing this contract. Recorded here so "both providers are supported" stays an
-honest claim rather than an aspiration. None are fixed by this plan.
+The first pass at this contract found six defects on `applications/openthrottle`, all consequences of
+that path never having been applied. Auditing it against the Hetzner path surfaced three more. Eight
+are now fixed; the two that remain do not block a deploy.
 
-1. **The rendered `.env` is incomplete on both paths.** `startup.sh.tpl` writes only Postgres, Redis
-   and URL variables, and omits `JWT_SECRET` — which `jwt.strategy.ts` throws on at boot. A box built
-   from either template today would not start. Note that `.env.default` defines only
-   `OPENTHROTTLE_DEVELOPER_JWT_SECRET`; the root compose bridges it to `JWT_SECRET`, so a template
-   using a plain `env_file: .env` must write the unprefixed name itself.
-2. **Secrets land in plaintext.** `postgres_password` is interpolated into
-   `metadata_startup_script`, readable by anyone with instance-get on the project.
-3. **`mcp` is missing** from the GCP compose template.
-4. **No SSH firewall rule**, by the module's own admission.
-5. **`gcp-estimate.csv` prices Cloud SQL for MySQL** while the stack runs Postgres.
-6. **The composition has never been applied.** It is commented out in
-   `environments/staging/openthrottle.tf` (`STATUS: NOT ACTIVE`) and absent from `production` and
-   `development`. So the GCP path is _supported in code_ but unexercised — nothing above has ever
-   been caught by a real deploy, which is why this list is as long as it is.
+**Fixed:**
 
-Point 6 is the honest caveat on this whole contract: it is a contract between one path that has never
-run and one path that is about to. Treat the first successful Hetzner deploy as the first real test of
-any of it.
+1. **No `JWT_SECRET`** in the rendered `.env` — `jwt.strategy.ts` throws at boot without it. Now
+   generated on the instance and persisted, so it never enters metadata or Terraform state.
+2. **No `NODE_ENV=production`.** This chained into a second boot failure: `isBullBoardEnabled()` is
+   `NODE_ENV !== "production"`, so the Bull Board dashboard tried to mount and hard-required
+   `BULLMQ_BOARD_ADMIN_*`, which were never set. It would also have exposed the queue dashboard had
+   they been supplied.
+3. **`postgres_password` in plaintext** in `metadata_startup_script`, readable by anyone with
+   `compute.instances.get`. Now stored in Secret Manager and fetched at boot by the instance's
+   service account. It remains in Terraform state, which is unavoidable rather than an oversight —
+   Cloud SQL needs the password at instance-create time — but state is access-controlled and
+   metadata is not.
+4. **No `migrations` service**, so the server could start against whatever schema Cloud SQL happened
+   to have. Now present, with the server gated on `service_completed_successfully`.
+5. **No `bootstrap` service**, so there was no way to provision the login user or the MCP token. Now
+   present and profile-gated, exactly as on the Hetzner path.
+6. **No `mcp` service.** Now present, with an optional Caddy route behind `mcp_domain`.
+7. **No SSH firewall rule.** The module defined none and relied on the VPC's default rules. Now an
+   opt-in, scoped `google_compute_firewall` rejecting `0.0.0.0/0`; leaving `ssh_allowed_cidrs` empty
+   preserves the old inherited behaviour rather than silently changing it.
+8. **No `POSTGRES_SSL`.** The module defaults Cloud SQL to `ssl_mode = "ENCRYPTED_ONLY"` and then
+   connected in cleartext — internally contradictory, and a guaranteed connection failure. Now
+   `POSTGRES_SSL=true`, with `postgres_ssl_reject_unauthorized` exposed because Cloud SQL's
+   per-instance CA is not publicly trusted.
+
+**Still open, neither blocking:**
+
+- **`gcp-estimate.csv` prices Cloud SQL for MySQL** while the stack runs Postgres. Cosmetic but
+  misleading; the total is wrong in kind, not just degree.
+- **The composition has still never been applied.** Everything above was fixed by reading the code
+  against the Hetzner path, not by deploying. The first real GCP apply remains the first genuine test
+  of any of it, and that caveat has not gone away.
