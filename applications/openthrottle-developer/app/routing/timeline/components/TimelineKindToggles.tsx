@@ -32,7 +32,7 @@ export const TimelineKindToggles = (
   const activeMarkers = selectedMarkerKinds ?? TIMELINE_MARKER_KINDS;
 
   // Handlers
-  //
+
   // ToggleGroup hands back the full next selection, so the allowlist is written
   // straight through rather than diffed. `withTimelineKinds` is what preserves
   // the three distinct states — every kind, some kinds, and none.

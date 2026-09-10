@@ -131,18 +131,6 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { loaderData } = props;
-  const {
-    grouping,
-    markers,
-    selectedBranch,
-    selectedMarkerKinds,
-    selectedSpanKinds,
-    spans,
-    truncation,
-    windowFromIso,
-    windowPreset,
-    windowToIso,
-  } = loaderData;
 
   // Hooks
 
@@ -159,16 +147,16 @@ export default function Component(
   return (
     <GlobalScreen>
       <TimelineScreen
-        grouping={grouping}
-        markers={markers}
-        selectedBranch={selectedBranch}
-        selectedMarkerKinds={selectedMarkerKinds}
-        selectedSpanKinds={selectedSpanKinds}
-        spans={spans}
-        truncation={truncation}
-        windowFromIso={windowFromIso}
-        windowPreset={windowPreset}
-        windowToIso={windowToIso}
+        grouping={loaderData.grouping}
+        markers={loaderData.markers}
+        selectedBranch={loaderData.selectedBranch}
+        selectedMarkerKinds={loaderData.selectedMarkerKinds}
+        selectedSpanKinds={loaderData.selectedSpanKinds}
+        spans={loaderData.spans}
+        truncation={loaderData.truncation}
+        windowFromIso={loaderData.windowFromIso}
+        windowPreset={loaderData.windowPreset}
+        windowToIso={loaderData.windowToIso}
       />
     </GlobalScreen>
   );

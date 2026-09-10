@@ -4,16 +4,24 @@
  * label that drifts from its lane by even a few pixels reads as a bug.
  */
 
-/** Height of one lane sub-row. A lane is this times its sub-row count. */
+/**
+ * Height of one lane sub-row. A lane is this times its sub-row count.
+ */
 export const TIMELINE_LANE_ROW_HEIGHT = 28;
 
-/** Height of a span bar inside its sub-row, leaving a little breathing room. */
+/**
+ * Height of a span bar inside its sub-row, leaving a little breathing room.
+ */
 export const TIMELINE_SPAN_HEIGHT = 16;
 
-/** Minimum rendered width of a span, so a one-second run is still clickable. */
+/**
+ * Minimum rendered width of a span, so a one-second run is still clickable.
+ */
 export const TIMELINE_MIN_SPAN_WIDTH = 3;
 
-/** Marker glyph size, in px. */
+/**
+ * Marker glyph size, in px.
+ */
 export const TIMELINE_MARKER_SIZE = 9;
 
 /**
