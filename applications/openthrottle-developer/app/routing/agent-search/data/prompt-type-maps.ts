@@ -6,7 +6,6 @@ export const PROMPT_TYPE_TO_GQL: Readonly<
   Record<AgentAssetPromptType, CustomPromptType>
 > = {
   personas: CustomPromptType.Personas,
-  rules: CustomPromptType.Rules,
   skills: CustomPromptType.Skills,
 };
 
@@ -15,6 +14,5 @@ export const GQL_TO_PROMPT_TYPE: Readonly<
   Partial<Record<CustomPromptType, AgentAssetPromptType>>
 > = {
   [CustomPromptType.Personas]: 'personas',
-  [CustomPromptType.Rules]: 'rules',
   [CustomPromptType.Skills]: 'skills',
 };

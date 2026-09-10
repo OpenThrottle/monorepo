@@ -9,9 +9,9 @@ export const GENERATOR_DOCS_AGENTS = `https://github.com/OpenThrottle/monorepo/b
 export const GENERATOR_DOCS_AGENT_USAGE = `https://github.com/OpenThrottle/monorepo/blob/main/docs/tools/templates/AGENT_USAGE.md`;
 
 /**
- * @description Workspace generator rule (nx list / describe workflow).
+ * @description ot-generators skill — the generator-first policy and discovery workflow (nx list / describe / --list).
  */
-export const GENERATOR_DOCS_PERSONAL_GENERATORS = `https://github.com/OpenThrottle/monorepo/blob/main/.cursor/rules/personal-generators.mdc`;
+export const GENERATOR_DOCS_OT_GENERATORS_SKILL = `https://github.com/OpenThrottle/monorepo/blob/main/skills/ot-generators/SKILL.md`;
 
 /**
  * @description @tools/generators package README (interactive vs non-interactive, listing commands).

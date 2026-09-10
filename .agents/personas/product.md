@@ -61,9 +61,8 @@ Keep prose tight; prefer bullets and checklists over essays.
 - [AGENTS.md](../../AGENTS.md) — monorepo overview, OT plans-in-Postgres, Ralph CLI entry points
 - [docs/openthrottle/first-time-onboarding.md](../../docs/openthrottle/first-time-onboarding.md) — guided onboarding mental model
 - [docs/openthrottle/run-openthrottle-server-developer.md](../../docs/openthrottle/run-openthrottle-server-developer.md) — local server + developer app flow
-- [`.cursor/rules/commands/openthrottle.mdc`](../../.cursor/rules/commands/openthrottle.mdc) — OT MCP tools and `/ot/*` commands
 - [`skills/agents-ralph/SKILL.md`](../../skills/agents-ralph/SKILL.md) — default Ralph loop and task signals
-- [`.agents/skills/ot-plans/SKILL.md`](../skills/ot-plans/SKILL.md) — plan/task lifecycle, Plan-Id / Task-Id traceability
+- [`ot-plans`](../skills/ot-plans/SKILL.md) — OT MCP tool selection, plan/task lifecycle, Plan-Id / Task-Id traceability
 - [`tools/workflows/README.md`](../../tools/workflows/README.md) — CLI, queue, and runtime config
 - [tools/workflows/README.md](../../tools/workflows/README.md) — workflow bins and Ralph flags
 - [databases/README.md](../../databases/README.md) — plan/task schema, PRD attributes, summarization

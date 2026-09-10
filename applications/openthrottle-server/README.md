@@ -103,5 +103,5 @@ deactivate
 ## Related
 
 - **OpenThrottle DB** – [databases/README.md](../../databases/README.md) (schema, migrations, ingest, embeddings)
-- **MCP (openthrottle-mcp)** – Talks to this server via GraphQL only; see `packages/openthrottle-mcp` and `.cursor/rules/commands/openthrottle.mdc`
+- **MCP (openthrottle-mcp)** – Talks to this server via GraphQL only; see `packages/openthrottle-mcp` and `skills/ot-plans/SKILL.md`
 - **OpenThrottle docs** – `docs/openthrottle/`

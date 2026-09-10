@@ -23,7 +23,7 @@ Local Nx plugin holding the five workspace generators (`folders`, `nestjs`, `pac
 - File/dir name substitution uses `__name__` (e.g. `files/component/__name__.tsx`, `__tests__/__name__.test.tsx`); file contents use EJS `<%= name %>`. There is no `.template` suffix convention in this repo.
 - Templates are never compiled or executed: `vitest.config.ts` adds `exclude: ['**/files/**']`. Type errors in templates surface only in generated output.
 - `src/generators/template-conventions.test.ts` is the guard for that gap — it reads React/React Router test templates off disk and asserts repo testing rules (no `fireEvent`, no global `screen`, queries via the returned `component`, `userEvent` for interaction). Adding or changing an emitted `__tests__` template means updating its template lists.
-- The React/React Router component templates carry the section-comment scaffold (`// Hooks`, `// Setup`, `// Handlers`, `// Markup`, `// Life Cycle`, `// 🔌 Short Circuit`). It is owned by `.agents/rules/coding/frontend-design-openthrottle.mdc` — keep it in templates even when sections are empty.
+- The React/React Router component templates carry the section-comment scaffold (`// Hooks`, `// Setup`, `// Handlers`, `// Markup`, `// Life Cycle`, `// 🔌 Short Circuit`). It is owned by [`docs/monorepo/component-primitive-shape.md`](../../docs/monorepo/component-primitive-shape.md) — keep it in templates even when sections are empty.
 
 ## Invariants & gotchas
 
@@ -36,5 +36,5 @@ Local Nx plugin holding the five workspace generators (`folders`, `nestjs`, `pac
 
 - [README.md](./README.md) — invocation, `--describe` / `--list` catalog.
 - [docs/tools/templates/](../../docs/tools/templates/) — `AGENT_USAGE.md`, `NX_ISOLATE_PLUGINS.md`, `TROUBLESHOOTING.md`, per-generator docs.
-- [AGENT_USAGE.md § Rule → Generator Matrix](../../docs/tools/templates/AGENT_USAGE.md#rule--generator-matrix) — which `.agents/rules/` rules apply to each generator's output.
-- `.agents/rules/personal-generators.mdc` — the generators-first policy this package backs.
+- [AGENT_USAGE.md § Rule → Generator Matrix](../../docs/tools/templates/AGENT_USAGE.md#rule--generator-matrix) — which coding rules apply to each generator's output.
+- [`skills/ot-generators/SKILL.md`](../../skills/ot-generators/SKILL.md) — the generators-first policy this package backs.

@@ -8,7 +8,7 @@ import {
   GENERATOR_DOCS_AGENT_USAGE,
   GENERATOR_DOCS_AGENTS,
   GENERATOR_DOCS_NX_LOCAL_GENERATORS,
-  GENERATOR_DOCS_PERSONAL_GENERATORS,
+  GENERATOR_DOCS_OT_GENERATORS_SKILL,
   GENERATOR_DOCS_TOOLS_PACKAGE_README,
 } from '~/routing/generators/constants/generator-nx-docs';
 import { GeneratorTabDocumentation } from '../GeneratorTabDocumentation';
@@ -36,8 +36,8 @@ describe('GeneratorTabDocumentation', () => {
     ).toHaveAttribute('href', GENERATOR_DOCS_TOOLS_PACKAGE_README);
 
     expect(
-      view.getByRole('link', { name: /Generator-first rule/ }),
-    ).toHaveAttribute('href', GENERATOR_DOCS_PERSONAL_GENERATORS);
+      view.getByRole('link', { name: /Generator-first policy/ }),
+    ).toHaveAttribute('href', GENERATOR_DOCS_OT_GENERATORS_SKILL);
 
     expect(view.getByRole('link', { name: /AGENTS\.md/ })).toHaveAttribute(
       'href',

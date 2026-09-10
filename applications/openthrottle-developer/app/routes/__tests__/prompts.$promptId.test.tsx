@@ -28,7 +28,7 @@ describe('routes/prompts.$promptId.tsx', () => {
     content: '# Test Prompt',
     createdAt: '2024-01-01T00:00:00Z',
     description: 'A test prompt',
-    filePath: '.cursor/rules/test.mdc',
+    filePath: '.agents/prompts/test.md',
     id: 'test-id',
     labels: ['test'],
     projectId: null,

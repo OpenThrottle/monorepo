@@ -65,7 +65,7 @@ describe('CustomPromptsResolver', () => {
     createdAt: new Date('2026-02-22T10:00:00.000Z'),
     deletedAt: null,
     description: 'Instructions for AI agents',
-    filePath: '.cursor/rules/agents.mdc',
+    filePath: '.agents/prompts/agents.md',
     id: 'f8739915-f5b5-42eb-b49a-424ec69e81d0',
     labels: ['ai', 'cursor'],
     projectId: null,

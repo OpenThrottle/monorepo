@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-OpenThrottle — an Nx + pnpm workspace monorepo (Node >= 22, pnpm only; `preinstall` blocks npm/yarn). It does both **task running** and **package publishing**. See [AGENTS.md](./AGENTS.md), [MONOREPO.md](./MONOREPO.md), and [CONTRIBUTING.md](./CONTRIBUTING.md) for deeper detail; `.agents/rules/` is the single source of truth for code style (Cursor loads the same bodies via `.cursor/rules/` symlinks).
+OpenThrottle — an Nx + pnpm workspace monorepo (Node >= 22, pnpm only; `preinstall` blocks npm/yarn). It does both **task running** and **package publishing**. See [AGENTS.md](./AGENTS.md), [MONOREPO.md](./MONOREPO.md), and [CONTRIBUTING.md](./CONTRIBUTING.md) for deeper detail. Code style is normative in [AGENTS.md](./AGENTS.md) § Code style, with rationale and examples in [docs/monorepo/code-style.md](docs/monorepo/code-style.md).
 
 **Agent/editor folders:** [docs/monorepo/agent-editor-folders.md](docs/monorepo/agent-editor-folders.md) — folder layout, Cursor vs Claude vs Ralph paths, duplication strategy, and where to edit. Claude-specific config: `.claude/settings.json`, `.claude/skills/` — a generated fan-out from `.agents/skills/`; Cursor reads `.agents/skills/` directly, so there is no `.cursor/skills` copy. Never hand-edit either generated dir; edit `skills/` and re-sync.
 
@@ -82,17 +82,39 @@ Never remove/change types on existing fields without a migration plan — use `@
 
 Before writing any new component, route, service, or package by hand, check `@tools/generators` and use it. Every invocation needs the `NX_ISOLATE_PLUGINS=false` prefix. If no generator fits, say so explicitly before writing custom code.
 
-**Do not scaffold from memory or from an example copied out of this file — there is none, deliberately.** Which generator scaffolds what (notably `react` for packages vs `react-router` for applications) is decided in one place: `docs/tools/templates/AGENT_USAGE.md`. Load the `ot-generators` skill first; it is the agent entry point and carries the discovery workflow (`list` → `--describe` → `--list=<key>` → execute). See also `.agents/rules/personal-generators.mdc`.
+**Do not scaffold from memory or from an example copied out of this file — there is none, deliberately.** Which generator scaffolds what (notably `react` for packages vs `react-router` for applications) is decided in one place: `docs/tools/templates/AGENT_USAGE.md`. Load the `ot-generators` skill first; it is the agent entry point and carries the discovery workflow (`list` → `--describe` → `--list=<key>` → execute).
 
-## Code style (from .agents/rules/)
+## Code style
+
+[AGENTS.md](./AGENTS.md) § Code style is the full normative list, grouped by whether a machine
+catches you; [docs/monorepo/code-style.md](docs/monorepo/code-style.md) has the rationale and
+examples. The subset that bites most often:
+
+**Enforced — CI fails.**
 
 - No new TypeScript enums — use `as const` objects (existing enums stay).
-- Avoid `as` casts and `any`; use `import type` for type-only imports; explicit return types.
-- `const` over `let`; `async/await` over `.then()`.
-- Alphabetize arrays and object keys when order doesn't matter.
+- No `as` casts in any form, and no `any` anywhere (generic function bodies included). Narrow, write a type predicate, or use an overload signature.
+- `import type` at the top level for type-only imports.
+- No default exports outside the framework carve-outs already in the ESLint config.
+- Alphabetize object keys and interface members, and GraphQL selection sets in `*.graphql` documents.
+- Indexed access yields `T | undefined` — `noUncheckedIndexedAccess` is on.
+- No `await` inside a loop; collect and `Promise.all`.
+- Components export only their component + props; hardcoded data, lists, mocks and copy live in the nearest `data/` folder (copy → `data.copy.ts`). Keep the six ordered section markers and the 210-line cap.
+
+**Honor system — nothing will stop you.**
+
+- Return types on module-boundary functions (`explicit-module-boundary-types` only _warns_; the broader `explicit-function-return-type` is deliberately `off`).
+- `readonly` properties by default; optional properties extremely sparingly (`x: T | undefined` over `x?: T`).
+- `interface extends`, never `&`. Model variant shapes as discriminated unions, not a bag of optionals.
+- Prefer a result type over throwing where the caller would need a manual `try`/`catch`.
+- `const` over `let`; `async/await` over `.then()`; `import * as React from 'react'`.
+- kebab-case file names, except PascalCase React components.
 - UI: use components from `@openthrottle/react-router-shadcn` (source in `packages/react-router-shadcn/src/components`).
 - Tests: use `component`, not `screen`, to get elements; `userEvent` instead of `fireEvent`. React Router apps share one Vitest setup — `tests/setup.ts` is a single `setupReactRouterTest({ env: { APP_NAME: '<app>' } })` call from `@openthrottle/react-router-testing` (jsdom polyfills + `window.env` fixture + baked-in `afterEach(cleanup)`); don't re-add those shared shims per app.
 - Exports that are package public API need a JSDoc `@public` tag so Knip keeps them.
+
+Server/GraphQL conventions (resolver `Result()` / `ListResult()` return types, deprecate-don't-remove)
+live in the `ot-stack` skill; file placement and naming in `ot-folders`.
 
 ## Git and agent behavior
 

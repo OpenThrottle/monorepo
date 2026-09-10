@@ -55,7 +55,7 @@ UI (can consume `discoverLocalModels` later).
 
 ### File naming convention
 
-- **Repo rule:** kebab-case file names ([`.cursor/rules/coding/naming-conventions.mdc`](../../.cursor/rules/coding/naming-conventions.mdc)).
+- **Repo rule:** kebab-case file names ([`docs/monorepo/code-style.md`](../../docs/monorepo/code-style.md#naming-conventions)).
 - **Current scaffold** uses `utils.<domain>.ts` (dots, not kebab). **Recommendation:** rename to `src/utils/<domain>.ts` (`postgres.ts`, `workflow.ts`, `nodejs.ts`, `metrics.ts`) before the first real move (task 2). Avoid the `utils.` filename prefix; the directory already signals “utilities”.
 - **Function names:** prefer clear names over legacy `workflow*` / `ralph*` prefixes in the **public** API where semantics are general (e.g. `sanitizePostgresUrlForLogs` not `sanitizePostgresConnectionForLogs`). Keep **env var names** unchanged for compatibility (`POSTGRES_URL`, `WORKFLOW_RALPH_OT_ROOT`, `OPENTHROTTLE_POSTGRES_URL`, etc.).
 

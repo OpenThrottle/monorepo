@@ -3,7 +3,7 @@ import {
   GENERATOR_DOCS_AGENT_USAGE,
   GENERATOR_DOCS_AGENTS,
   GENERATOR_DOCS_NX_LOCAL_GENERATORS,
-  GENERATOR_DOCS_PERSONAL_GENERATORS,
+  GENERATOR_DOCS_OT_GENERATORS_SKILL,
   GENERATOR_DOCS_TOOLS_PACKAGE_README,
 } from '~/routing/generators/constants/generator-nx-docs';
 import { generators } from '../data.generators';
@@ -20,7 +20,7 @@ describe('generators data', () => {
 
     expect(hrefs[0]).toBe(GENERATOR_DOCS_NX_LOCAL_GENERATORS);
     expect(hrefs[1]).toBe(GENERATOR_DOCS_TOOLS_PACKAGE_README);
-    expect(hrefs[2]).toBe(GENERATOR_DOCS_PERSONAL_GENERATORS);
+    expect(hrefs[2]).toBe(GENERATOR_DOCS_OT_GENERATORS_SKILL);
     expect(hrefs[3]).toBe(GENERATOR_DOCS_AGENTS);
     expect(hrefs[4]).toBe(GENERATOR_DOCS_AGENT_USAGE);
   });

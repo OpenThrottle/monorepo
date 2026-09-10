@@ -2,7 +2,6 @@
 export {
   AGENT_ASSET_SLUG_PATTERN,
   personaFrontmatterSchema,
-  ruleFrontmatterSchema,
   SKILL_SOURCES,
   skillFrontmatterSchema,
 } from './schemas/agent-asset-frontmatter.schemas.ts';
@@ -10,7 +9,6 @@ export type {
   AgentAssetKind,
   AgentAssetValidationIssue,
   PersonaFrontmatter,
-  RuleFrontmatter,
   SkillFrontmatter,
   SkillSource,
 } from './schemas/agent-asset-frontmatter.schemas.ts';
@@ -109,13 +107,6 @@ export {
   parseSkillFrontmatterForValidation,
 } from './parse-skill-frontmatter.ts';
 export type { ParsedSkillFrontmatter } from './parse-skill-frontmatter.ts';
-
-/** @public */
-export {
-  parseRuleFrontmatter,
-  parseRuleFrontmatterForValidation,
-} from './parse-rule-frontmatter.ts';
-export type { ParsedRuleFrontmatter } from './parse-rule-frontmatter.ts';
 
 /** @public */
 export {

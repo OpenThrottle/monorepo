@@ -35,5 +35,5 @@ description: >-
 <!-- Links to canonical repo sources — do not duplicate full rules here. -->
 
 - [AGENTS.md](../../AGENTS.md)
-- [`.cursor/rules/`](../../.cursor/rules/)
+- [`docs/monorepo/code-style.md`](../../docs/monorepo/code-style.md) — code style (normative one-liners in `AGENTS.md` § Code style)
 - <!-- Relevant `.agents/skills/*/SKILL.md` paths -->

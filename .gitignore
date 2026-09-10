@@ -22,7 +22,6 @@ videos
 #############################################################################
 # Files
 #############################################################################
-.cursor/rules/nx-rules.mdc
 .DS_Store
 .env*
 .github/instructions/nx.instructions.md
@@ -75,12 +74,10 @@ CLAUDE.local.md
 # Includes
 #############################################################################
 !.cursor/commands
-!.cursor/rules/cursor-commands-github.mdc
 !.env.default
 !.gitkeep
 
 # Tracking these in here as we flush the workflows out
-.cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
 
 # Start 🔄 Managed by OpenThrottle ot-skill-sync

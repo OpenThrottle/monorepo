@@ -46,7 +46,8 @@ export type WorktreeDiscoverySource =
 
 /**
  * Why a discovery scan is less than complete, or what it noticed on the way. Deliberately NOT a TS
- * enum (`.agents/rules/`): an `as const` object keeps the values inlineable and the union derivable.
+ * enum (docs/monorepo/code-style.md): an `as const` object keeps the values inlineable and the
+ * union derivable.
  *
  * The kind is the contract: the server decides WHAT happened, the UI decides how loud it is. A
  * state that is merely the healthy default — a repository that has no worktrees yet — is not a

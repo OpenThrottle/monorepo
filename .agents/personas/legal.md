@@ -71,7 +71,7 @@ Keep prose conservative and actionable; prefer bullets over legal essays.
 - [packages/openthrottle-mcp/docs/AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md) — service account tokens, rotation, MCP env
 - [docs/openthrottle/openthrottle-server-auth.md](../../docs/openthrottle/openthrottle-server-auth.md) — global auth guard, Bearer token order
 - [`.agents/skills/secret-scanning/SKILL.md`](../skills/secret-scanning/SKILL.md) — when and how to run secret scans
-- [`.cursor/rules/no-cursor-attribution.mdc`](../../.cursor/rules/no-cursor-attribution.mdc) — no Cursor attribution in any output
-- [`.cursor/rules/commands/github.mdc`](../../.cursor/rules/commands/github.mdc) — no co-author footers; conventional commit footers only
+- [`AGENTS.md`](../../AGENTS.md) and [`CLAUDE.md`](../../CLAUDE.md) — no tool attribution in any output
+- [`github-commit`](../skills/github-commit/SKILL.md) — no co-author footers; conventional commit footers only
 - [databases/README.md](../../databases/README.md) — service account credential storage (hashed secrets)
 - [CONTRIBUTING.md](../../CONTRIBUTING.md) — contributor expectations and monorepo conventions

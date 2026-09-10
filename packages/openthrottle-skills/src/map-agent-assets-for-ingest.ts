@@ -1,11 +1,10 @@
 import { basename } from 'node:path';
 
 import { parsePersonaFrontmatter } from './parse-persona-frontmatter.ts';
-import { parseRuleFrontmatter } from './parse-rule-frontmatter.ts';
 import { parseSkillFrontmatter } from './parse-skill-frontmatter.ts';
 import type { AgentAssetFileEntry } from './walk-agent-assets-on-disk.ts';
 
-export type AgentAssetPromptType = 'personas' | 'prompts' | 'rules' | 'skills';
+export type AgentAssetPromptType = 'personas' | 'prompts' | 'skills';
 
 export interface AgentAssetIngestRecord {
   /**
@@ -33,19 +32,6 @@ export interface AgentAssetIngestRecord {
   readonly tags: readonly string[] | undefined;
   readonly title: string;
 }
-
-const ruleLabelsFromPath = (filePath: string): readonly string[] => {
-  const labels: string[] = [];
-
-  if (filePath.includes('/coding/')) {
-    labels.push('coding');
-  }
-  if (filePath.includes('/commands/')) {
-    labels.push('commands');
-  }
-
-  return labels;
-};
 
 /**
  * @description Maps a walked agent asset file to a `custom_prompts` ingest row (D2 natural key: file_path + prompt_type).
@@ -86,32 +72,18 @@ export const mapAgentAssetFileToIngestRecord = (
     };
   }
 
-  if (kind === 'prompt') {
-    const title = slug ?? basename(path, '.md');
-    return {
-      authored: undefined,
-      content,
-      description: null,
-      disableModelInvocation: undefined,
-      filePath: path,
-      labels: slug ? [slug] : [],
-      promptType: 'prompts',
-      tags: undefined,
-      title,
-    };
-  }
-
-  const frontmatter = parseRuleFrontmatter(content);
-  const title = basename(path, '.mdc');
+  // Prompts are the remaining kind, so this is the fall-through rather than a
+  // fourth branch — `AgentAssetKind` has exactly three members.
+  const title = slug ?? basename(path, '.md');
 
   return {
     authored: undefined,
     content,
-    description: frontmatter.description ?? null,
+    description: null,
     disableModelInvocation: undefined,
     filePath: path,
-    labels: ruleLabelsFromPath(path),
-    promptType: 'rules',
+    labels: slug ? [slug] : [],
+    promptType: 'prompts',
     tags: undefined,
     title,
   };
@@ -126,10 +98,19 @@ export const mapAgentAssetFilesToIngestRecords = (
 ): readonly AgentAssetIngestRecord[] =>
   entries.map((entry) => mapAgentAssetFileToIngestRecord(entry));
 
-/** @description Repo-relative path prefixes ingested into `custom_prompts`. */
+/**
+ * @description Repo-relative path prefixes ingested into `custom_prompts`.
+ *
+ * This array also drives the ingest's **stale sweep**: a row is soft-deleted
+ * only when its `file_path` matches one of these prefixes *and* is absent from
+ * the current walk. Dropping a prefix therefore strands every row beneath it —
+ * `deleted_at` stays null forever, with live embeddings, surfacing in
+ * `semantic_search` as a ghost asset. The retired `rule` kind's prefix was
+ * removed here, and its orphaned rows are reaped by an explicit migration
+ * rather than by the sweep. Do the same for any future removal.
+ */
 export const AGENT_ASSET_INGEST_PATH_PREFIXES = [
   '.agents/personas/',
   '.agents/prompts/',
-  '.agents/rules/',
   '.agents/skills/',
 ] as const;

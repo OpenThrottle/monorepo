@@ -40,7 +40,7 @@ mechanics, see [MONOREPO.md](./MONOREPO.md) and [docs/monorepo/](./docs/monorepo
 2. **Make your change.** New projects, components, routes, and services come from
    the generators, not hand-scaffolding — see
    [Creating new projects](./MONOREPO.md#creating-new-projects). Follow the code
-   style in [`.agents/rules/`](./.agents/rules/README.md). New repo scripts are
+   style in [`docs/monorepo/code-style.md`](./docs/monorepo/code-style.md). New repo scripts are
    TypeScript run via `tsx`, use the shared `scripts/lib/` toolkit, and ship a
    Vitest spec in `scripts/__tests__/` — see the `scripts/` convention in
    [MONOREPO.md](./MONOREPO.md#key-directories-explained) (the pre-install
@@ -101,9 +101,9 @@ as it exists today. Six rules keep it that way:
    carry a pointer plus at most a one-line summary — never a second copy of the
    table. The owners fixed so far:
 
-   | Topic                           | Owner (SSOT)                                                                 | Everyone else                                                                                                                                                                                                                                                             |
-   | ------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-   | Which generator to use, and how | [docs/tools/templates/AGENT_USAGE.md](./docs/tools/templates/AGENT_USAGE.md) | Pointer only. `CLAUDE.md`, `AGENTS.md` and `.agents/rules/` carry the generator-first policy and a link — no generator invocations, no selection matrix. `skills/ot-generators/SKILL.md` is the agent entry point and may state the package-vs-application rule **once**. |
+   | Topic                           | Owner (SSOT)                                                                 | Everyone else                                                                                                                                                                                                                                           |
+   | ------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+   | Which generator to use, and how | [docs/tools/templates/AGENT_USAGE.md](./docs/tools/templates/AGENT_USAGE.md) | Pointer only. `CLAUDE.md` and `AGENTS.md` carry the generator-first policy and a link — no generator invocations, no selection matrix. `skills/ot-generators/SKILL.md` is the agent entry point and may state the package-vs-application rule **once**. |
 
 ## Dependency licenses
 

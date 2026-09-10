@@ -26,13 +26,13 @@ Documentation surfaces in scope:
 - Root: `CLAUDE.md`, `AGENTS.md`, `MONOREPO.md`, `CONTRIBUTING.md`, `README.md`.
 - The three-tier `AGENTS.md` hierarchy: root, mid-level, and per-project files under `applications/*`, `packages/*`, `tools/*`.
 - `docs/**` — including `docs/monorepo/agent-editor-folders.md` (folder layout and agent/editor paths) and `docs/tools/templates/AGENT_USAGE.md` (generator usage).
-- Agent assets: `.agents/skills/**/SKILL.md`, `.agents/personas/**`, `.agents/prompts/**`, `.agents/rules/**` — plus their mirrors under `.cursor/` and `.claude/`.
+- Agent assets: `skills/**/SKILL.md` (authored SSOT), `.agents/personas/**`, `.agents/prompts/**` — plus the generated skill mirrors under `.agents/`, `.claude/` and `.gemini/`.
 - Per-package `README.md` files and `databases/README.md`.
 
 Facts that change the analysis:
 
 - `skills/` is the authored SSOT; `.agents/skills` is the generated SSOT view and `.claude/skills` fans out from it (there is no `.cursor/skills`). A discrepancy between a source and its mirror is drift, but the fix is a re-sync, not a hand edit of the mirror — say so in the task.
-- `.agents/rules/` is the single source of truth for code style — `.cursor/rules/**/*.mdc` are symlinks into it for Cursor to load, never a write target. Docs that restate style rules inline can contradict the rule; prefer pointing at it over duplicating it.
+- Code style is normative in `AGENTS.md` § Code style, with rationale and examples in `docs/monorepo/code-style.md`. The per-editor `.mdc` rules tree that used to hold it is retired. Docs that restate style rules inline can contradict them; prefer pointing at the section over duplicating it. Watch specifically for **enforcement claims** — a doc asserting a rule is lint-enforced when it is honor-system (or the reverse) is drift, and `code-style.md` labels every section so the claim is checkable.
 - Generators are invoked with a mandatory `NX_ISOLATE_PLUGINS=false` prefix. A documented generator command missing that prefix will fail — that is a finding, not a nitpick.
 - Some documented React Router generators are described under an older `remix` name in places; the working generator is `react-router`.
 - Roughly twenty projects are intentionally **source-first** with no `build` target. Documentation telling a reader to build them is wrong. Never trust a hardcoded count — audit it live by diffing `pnpm nx show projects` against `pnpm nx show projects --with-target=build`, the way `MONOREPO.md` § "Projects without a `build` target" instructs.

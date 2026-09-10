@@ -21,7 +21,7 @@ export interface AgentAssetCardProps {
 const TITLE_CLASS = 'text-lg leading-tight tracking-tight';
 
 /**
- * @description Read-only result card for an agent asset (skill, rule, or persona). Shows the
+ * @description Read-only result card for an agent asset (skill or persona). Shows the
  * source (db/disk), prompt type, similarity (DB only), labels, a content snippet, and a link to
  * the disk-backed surface when one exists.
  */

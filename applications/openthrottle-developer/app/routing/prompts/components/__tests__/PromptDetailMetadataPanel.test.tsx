@@ -12,7 +12,7 @@ const prompt: PromptDetailsFragment = {
   content: '# Test Prompt',
   createdAt: '2026-01-01T00:00:00.000Z',
   description: 'A test prompt',
-  filePath: '.cursor/rules/test.mdc',
+  filePath: '.agents/prompts/test.md',
   id: 'prompt-1',
   labels: ['test'],
   projectId: 'project-1',

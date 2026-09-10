@@ -151,66 +151,6 @@ description: Architecture lens. USE WHEN designing modules.
     });
   });
 
-  describe('when kind is rule', () => {
-    test('adds coding label from rule path', () => {
-      const entry: AgentAssetFileEntry = {
-        content: `---
-description: No default exports
-globs: **/*.ts
----
-
-Rule body
-`,
-        kind: 'rule',
-        path: '.agents/rules/coding/default-exports.mdc',
-        slug: undefined,
-      };
-
-      const record = mapAgentAssetFileToIngestRecord(entry);
-
-      expect(record.promptType).toBe('rules');
-      expect(record.title).toBe('default-exports');
-      expect(record.labels).toEqual(['coding']);
-    });
-
-    test('adds commands label from rule path', () => {
-      const entry: AgentAssetFileEntry = {
-        content: `---
-description: A command rule
-globs: **/*.ts
----
-
-Rule body
-`,
-        kind: 'rule',
-        path: '.agents/rules/commands/release.mdc',
-        slug: undefined,
-      };
-
-      const record = mapAgentAssetFileToIngestRecord(entry);
-
-      expect(record.labels).toEqual(['commands']);
-    });
-
-    test('emits no labels for a rule outside coding/ and commands/', () => {
-      const entry: AgentAssetFileEntry = {
-        content: `---
-description: A general rule
----
-
-Rule body
-`,
-        kind: 'rule',
-        path: '.agents/rules/general.mdc',
-        slug: undefined,
-      };
-
-      const record = mapAgentAssetFileToIngestRecord(entry);
-
-      expect(record.labels).toEqual([]);
-    });
-  });
-
   describe('when kind is prompt', () => {
     test('maps prompt fragment by filename', () => {
       const entry: AgentAssetFileEntry = {

@@ -366,7 +366,7 @@ Or simply: `pnpm exec workflow-link-merge --plan 1a2b3c4d-0000-4000-8000-0000000
 | Topic                                              | Reference                                                                                                                |
 | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
 | **Canonical tool + traceability reference**        | [`ot-plans` skill](../../.agents/skills/ot-plans/SKILL.md)                                                               |
-| **When to use which OT tool** (rules)              | [`.agents/rules/commands/openthrottle.mdc`](../../.agents/rules/commands/openthrottle.mdc)                               |
+| **When to use which OT tool**                      | [`skills/ot-plans/SKILL.md`](../../skills/ot-plans/SKILL.md)                                                             |
 | **Register the MCP server** (config, launcher)     | [mcp-registration.md](./mcp-registration.md)                                                                             |
 | **Worktree-aware identity / live server URL**      | [mcp-registration.md § Worktrees](./mcp-registration.md#worktrees)                                                       |
 | **First-time onboarding** (mental model, prompts)  | [first-time-onboarding.md](./first-time-onboarding.md)                                                                   |

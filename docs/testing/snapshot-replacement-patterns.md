@@ -169,7 +169,7 @@ Notes:
   change-detector, and the consuming component/route spec already covers usage. Spec
   a data file only when it has logic or an invariant worth guarding (derivation,
   parsing, filtering, uniqueness, "every entry is a valid URL") — and assert the rule,
-  not the values. See [coding/component-data-boundaries.mdc](mdc:.agents/rules/coding/component-data-boundaries.mdc).
+  not the values. See [code-style.md § Component and data boundaries](../monorepo/code-style.md#component-and-data-boundaries).
 
 ## Optional follow-up (task 4 in plan)
 

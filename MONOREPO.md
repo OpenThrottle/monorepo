@@ -169,7 +169,7 @@ Before creating a new package, check if similar functionality exists:
 
 ### Code-Level Conventions
 
-For code-level naming conventions (variables, functions, classes), see [`.cursor/rules/coding/naming-conventions.mdc`](.cursor/rules/coding/naming-conventions.mdc).
+For code-level naming conventions (variables, functions, classes), see [`docs/monorepo/code-style.md`](docs/monorepo/code-style.md#naming-conventions).
 
 ## Creating New Projects
 
@@ -303,7 +303,7 @@ CI P0 runs affected `typecheck` on every PR; phased Vitest runs use the `test` t
 - All new code should have corresponding tests
 - Test edge cases and error conditions
 - Use model factories and entity factories when available
-- Follow testing conventions from [`.cursor/rules/`](.cursor/rules/)
+- Follow testing conventions from [`docs/monorepo/code-style.md`](docs/monorepo/code-style.md#testing)
 
 ## Project Setup Examples
 

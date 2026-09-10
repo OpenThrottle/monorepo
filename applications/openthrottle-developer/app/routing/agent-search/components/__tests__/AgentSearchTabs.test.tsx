@@ -36,7 +36,7 @@ describe('AgentSearchTabs Component', () => {
 
   beforeEach(() => {
     props = {
-      counts: { all: 10, personas: 2, rules: 3, skills: 5 },
+      counts: { all: 10, personas: 2, skills: 5 },
       tab: 'all',
     };
 
@@ -50,9 +50,6 @@ describe('AgentSearchTabs Component', () => {
     ).toBeInTheDocument();
     expect(
       component.getByRole('tab', { name: 'Skills (5)' }),
-    ).toBeInTheDocument();
-    expect(
-      component.getByRole('tab', { name: 'Rules (3)' }),
     ).toBeInTheDocument();
     expect(
       component.getByRole('tab', { name: 'Personas (2)' }),
