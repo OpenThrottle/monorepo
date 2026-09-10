@@ -300,13 +300,18 @@ query PlanDetailTagVocabulary {
 }
 
 fragment LinkedArtifact on WorkArtifactObject {
+  createdAt
   externalKey
   id
   lifecycle
+  message
+  payloadJson
   producedAt
+  sessionId
   source
   type
   verification
+  verifiedAt
 }
 
 subscription PlanOutputChunkAdded($planId: ID!) {

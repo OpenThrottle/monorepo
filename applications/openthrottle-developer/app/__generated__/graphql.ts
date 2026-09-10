@@ -7234,13 +7234,18 @@ export type PlanDetailLedgerQuery = {
     totalCount: number;
     artifacts: Array<{
       __typename?: 'WorkArtifactObject';
+      createdAt: any;
       externalKey: string;
       id: string;
       lifecycle?: string | null;
+      message?: string | null;
+      payloadJson: string;
       producedAt: any;
+      sessionId: string;
       source: string;
       type: string;
       verification: string;
+      verifiedAt?: any | null;
     }>;
   };
 };
@@ -7265,13 +7270,18 @@ export type PlanDetailTagVocabularyQuery = {
 
 export type LinkedArtifactFragment = {
   __typename?: 'WorkArtifactObject';
+  createdAt: any;
   externalKey: string;
   id: string;
   lifecycle?: string | null;
+  message?: string | null;
+  payloadJson: string;
   producedAt: any;
+  sessionId: string;
   source: string;
   type: string;
   verification: string;
+  verifiedAt?: any | null;
 };
 
 export type PlanOutputChunkAddedSubscriptionVariables = Exact<{
@@ -7548,13 +7558,18 @@ export type TaskLinkedArtifactsQuery = {
     totalCount: number;
     artifacts: Array<{
       __typename?: 'WorkArtifactObject';
+      createdAt: any;
       externalKey: string;
       id: string;
       lifecycle?: string | null;
+      message?: string | null;
+      payloadJson: string;
       producedAt: any;
+      sessionId: string;
       source: string;
       type: string;
       verification: string;
+      verifiedAt?: any | null;
     }>;
   };
 };
@@ -11773,13 +11788,18 @@ export const LinkedArtifactFragmentDoc = {
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'externalKey' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'lifecycle' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'payloadJson' } },
           { kind: 'Field', name: { kind: 'Name', value: 'producedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sessionId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'source' } },
           { kind: 'Field', name: { kind: 'Name', value: 'type' } },
           { kind: 'Field', name: { kind: 'Name', value: 'verification' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'verifiedAt' } },
         ],
       },
     },
@@ -17916,13 +17936,18 @@ export const PlanDetailLedgerDocument = {
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'externalKey' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'lifecycle' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'payloadJson' } },
           { kind: 'Field', name: { kind: 'Name', value: 'producedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sessionId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'source' } },
           { kind: 'Field', name: { kind: 'Name', value: 'type' } },
           { kind: 'Field', name: { kind: 'Name', value: 'verification' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'verifiedAt' } },
         ],
       },
     },
@@ -18840,13 +18865,18 @@ export const TaskLinkedArtifactsDocument = {
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'externalKey' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'lifecycle' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'payloadJson' } },
           { kind: 'Field', name: { kind: 'Name', value: 'producedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sessionId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'source' } },
           { kind: 'Field', name: { kind: 'Name', value: 'type' } },
           { kind: 'Field', name: { kind: 'Name', value: 'verification' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'verifiedAt' } },
         ],
       },
     },

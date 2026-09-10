@@ -5,6 +5,8 @@
  * component-primitive-shape R4.
  */
 
+import { formatRelativeFromIso } from '~/routing/prompts/utils/utils.prompts';
+
 /** Coerce the Date scalar (number epoch millis | string) to a Date; matches the TaskDetails pattern. */
 export const toDate = (value: number | string): Date =>
   typeof value === 'number' ? new Date(value) : new Date(String(value));
@@ -19,4 +21,18 @@ export const toMillis = (value: number | string): number => {
 export const formatProducedAt = (value: number | string): string => {
   const date = toDate(value);
   return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString();
+};
+
+/**
+ * Relative label ("3 hours ago") for a Date-scalar value. Delegates to the
+ * app's existing `formatRelativeFromIso` rather than adding a third relative
+ * formatter to the codebase; this only adapts the number|string scalar to the
+ * ISO string that helper expects.
+ */
+export const formatProducedAtRelative = (value: number | string): string => {
+  const date = toDate(value);
+
+  return Number.isNaN(date.getTime())
+    ? String(value)
+    : formatRelativeFromIso(date.toISOString());
 };
