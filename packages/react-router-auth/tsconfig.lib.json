@@ -15,6 +15,12 @@
   ],
   "references": [
     {
+      "path": "../react-router-utils/tsconfig.lib.json"
+    },
+    {
+      "path": "../nodejs-utils/tsconfig.lib.json"
+    },
+    {
       "path": "../../tools/dotfiles/tsconfig.lib.json"
     }
   ]

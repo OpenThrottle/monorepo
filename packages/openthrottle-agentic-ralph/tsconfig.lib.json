@@ -15,10 +15,13 @@
   ],
   "references": [
     {
+      "path": "../openthrottle-agentic-workflow/tsconfig.lib.json"
+    },
+    {
       "path": "../openthrottle-agentic-utils/tsconfig.lib.json"
     },
     {
-      "path": "../openthrottle-agentic-workflow/tsconfig.lib.json"
+      "path": "../nodejs-utils/tsconfig.lib.json"
     },
     {
       "path": "../nodejs-graphql/tsconfig.lib.json"

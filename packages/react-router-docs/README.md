@@ -20,8 +20,8 @@ inside this package could only see the package — not your app's content. The
 "dependencies": { "@openthrottle/react-router-docs": "workspace:^" }
 ```
 
-Then `pnpm install` and `pnpm nx sync` (if Nx reports stale project references
-after a sync, purge `.nx/workspace-data` and `.nx/cache`, then sync again).
+Then `pnpm install` and `pnpm nx sync` to wire the TypeScript project reference,
+inspecting the diff before you commit it.
 
 **2. Add content** under `app/docs-content/` (see the convention for frontmatter):
 

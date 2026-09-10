@@ -23,6 +23,9 @@
       "path": "../../packages/graphql-codegen"
     },
     {
+      "path": "../../packages/react-router-shadcn"
+    },
+    {
       "path": "../../packages/react-router-testing"
     },
     {

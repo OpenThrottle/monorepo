@@ -38,8 +38,8 @@ workspace:
 }
 ```
 
-Then `pnpm install` and run `pnpm nx sync` to wire the TypeScript project
-reference.
+Then `pnpm install` and `pnpm nx sync` to wire the TypeScript project reference,
+inspecting the diff before you commit it.
 
 ## Quick start
 

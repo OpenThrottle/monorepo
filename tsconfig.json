@@ -213,6 +213,15 @@
     },
     {
       "path": "./packages/agentic-hooks"
+    },
+    {
+      "path": "./applications/openthrottle-workbench"
+    },
+    {
+      "path": "./packages/openthrottle-showroom"
+    },
+    {
+      "path": "./packages/nodejs-utils"
     }
   ]
 }

@@ -1,5 +1,6 @@
 import * as path from 'path';
 import { execSync } from 'child_process';
+import { readFileSync } from 'fs';
 import prompts from 'prompts';
 import type { GeneratorCallback, Tree } from '@nx/devkit';
 import {
@@ -148,17 +149,76 @@ export async function packageGenerator(
   logger.info(`\n✅ Package generated!\n`);
 
   // Returned callbacks run AFTER Nx flushes the Tree to disk: install so the new
-  // workspace dependency resolves, then `nx sync` so tsconfig.base.json project
-  // references include the new package without a deferred build.
+  // workspace dependency resolves, then `nx sync` the package into the root
+  // solution tsconfig's project references (and assert it actually landed).
   return runTasksInSerial(
     () => {
       installPackagesTask(tree);
     },
     () => {
-      execSync('pnpm nx sync', { stdio: 'inherit' });
+      syncProjectReferences(tree.root, destination);
     },
   );
 }
+
+/**
+ * Wire a freshly generated package into the root solution tsconfig's project
+ * references, then PROVE it landed.
+ *
+ * `pnpm nx sync` works here because `@nx/js:typescript-sync` is registered as a
+ * `sync.globalGenerators` entry in `nx.json`. It is still disabled as a *task*
+ * sync generator, which is what keeps it from hard-failing non-TTY shells — see
+ * docs/monorepo/NX.md.
+ *
+ * The post-condition assertion below is kept deliberately: a scaffold that
+ * silently fails to register its own project reference is the exact regression
+ * this function exists to prevent, whatever the mechanism.
+ *
+ * Exported for `generator.reference-sync.test.ts`, which covers both the wired
+ * and the not-wired paths.
+ */
+export const syncProjectReferences = (
+  root: string,
+  destination: string,
+): void => {
+  execSync('pnpm nx sync', { cwd: root, stdio: 'inherit' });
+
+  const expected = `./${destination}`;
+  const tsconfigPath = path.join(root, 'tsconfig.json');
+  const references: unknown = JSON.parse(
+    readFileSync(tsconfigPath, 'utf8'),
+  )?.references;
+
+  const paths = Array.isArray(references)
+    ? references.flatMap((reference) =>
+        typeof reference === 'object' &&
+        reference !== null &&
+        'path' in reference &&
+        typeof reference.path === 'string'
+          ? [reference.path]
+          : [],
+      )
+    : [];
+
+  if (!paths.includes(expected)) {
+    throwGeneratorError({
+      code: 'PROJECT_REFERENCE_NOT_WIRED',
+      field: 'destination',
+      hint:
+        `Run \`pnpm nx sync\` and inspect the diff, then add "${expected}" to the ` +
+        `root tsconfig.json "references" by hand if it is still absent. ` +
+        `\`pnpm nx sync:check\` reports project-reference drift without changing files.`,
+      message:
+        `The package was generated at ${destination}, but the root tsconfig.json ` +
+        `still has no project reference to "${expected}". TypeScript will not ` +
+        `build it as part of the solution.`,
+    });
+  }
+
+  logger.info(
+    `\n\u2705 Wired "${expected}" into the root tsconfig project references.\n`,
+  );
+};
 
 type PackageType = 'nestjs' | 'node' | 'react' | 'tools';
 const PACKAGE_TYPES: PackageType[] = ['nestjs', 'node', 'react', 'tools'];

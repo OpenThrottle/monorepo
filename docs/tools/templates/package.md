@@ -29,12 +29,19 @@ post-scaffold steps**. After templating the files it:
 1. Adds `"<organization>/<name>": "workspace:^"` to the root `package.json`
    `dependencies`.
 2. Runs `pnpm install` so the new workspace package resolves.
-3. Runs `nx sync` so `tsconfig.base.json` project references include the new
-   package.
+3. Runs `pnpm nx sync` so the root solution `tsconfig.json` project references
+   include the new package, then **asserts the reference actually landed** and
+   fails loudly if it did not.
 
-You do **not** need to edit the root `package.json`, run `pnpm install`, run
-`nx sync`, or delete any `TODO.md` by hand. Just generate and open the
+You do **not** need to edit the root `package.json`, run `pnpm install`, wire the
+project reference, or delete any `TODO.md` by hand. Just generate and open the
 scaffolding PR.
+
+> [!NOTE]
+> `nx sync` works here because `@nx/js:typescript-sync` is registered under
+> `sync.globalGenerators` in `nx.json`. It is still kept out of the _task_
+> pipeline, so `nx run`/`affected` never sync for you. See
+> [docs/monorepo/NX.md](../../monorepo/NX.md#nx-sync--the-typescript-project-reference-sync).
 
 ## Package Types
 

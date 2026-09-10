@@ -57,9 +57,12 @@ describe('package generator', () => {
       expect(files.some((file) => file.endsWith('TODO.md'))).toBe(false);
     });
 
-    test('should return a callback to run install + sync after flush', async () => {
+    test('should return a callback to run install + reference sync after flush', async () => {
       // The callback is returned (not invoked here) so the test never runs a
-      // real pnpm install or `nx sync`. Nx invokes it after flushing the Tree.
+      // real pnpm install, nor the `@nx/js:typescript-sync` generator that
+      // wires the new package into the root solution tsconfig. Nx invokes it
+      // after flushing the Tree; when invoked it asserts the reference landed
+      // and throws PROJECT_REFERENCE_NOT_WIRED if it did not.
       const callback = await packageGenerator(tree, {
         name,
         organization: org,

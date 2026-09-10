@@ -138,8 +138,8 @@
     }
   },
   "sync": {
-    "applyChanges": true,
-    "disabledTaskSyncGenerators": ["@nx/js:typescript-sync"]
+    "disabledTaskSyncGenerators": ["@nx/js:typescript-sync"],
+    "globalGenerators": ["@nx/js:typescript-sync"]
   },
   "targetDefaults": {
     "@nx/js:tsc": {
