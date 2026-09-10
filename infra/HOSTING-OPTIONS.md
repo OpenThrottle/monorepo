@@ -50,6 +50,20 @@ and its restore drill are work that Cloud SQL would have absorbed.
 **Not the cheaper option for everything.** At rung 2b Postgres moves off the box and the gap
 narrows.
 
+## Deploying this yourself
+
+If you are outside OpenThrottle, start at
+[`environments/example-hcloud`](./environments/example-hcloud/README.md). It is a complete, copyable
+root — `cp -r`, fill in `terraform.tfvars`, choose a state backend, apply.
+
+Our own roots (`staging/`, `production/`, `production-hcloud/`) sit alongside it and are **not**
+templates: they carry our project IDs, buckets and hostnames.
+
+Everything a deployment needs is public: the modules, the application compositions, the rendered
+compose and cloud-init templates, and the runbooks. What is deliberately _not_ in git is **values** —
+`*.tfvars` is ignored repo-wide, because the structure of a deployment is safe to publish and your
+administrative IPs are not.
+
 ## How an environment selects one
 
 ```hcl

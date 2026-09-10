@@ -35,8 +35,7 @@ Both target the same application. Pick one per environment.
   [`SECRETS.md`](./openthrottle_hcloud/SECRETS.md),
   [`CUTOVER.md`](./openthrottle_hcloud/CUTOVER.md).
 
-**Neither has ever been applied.** Every `module "openthrottle"` block in `environments/` is
-commented out.
+**Neither has ever been applied** to our own environments — the `module "openthrottle"` blocks in `environments/staging` and `environments/production-hcloud` are commented out. The exception is [`environments/example-hcloud`](../environments/example-hcloud/README.md), whose call is **live** so that `terraform validate` type-checks the Hetzner module's interface in CI on every change.
 
 ### The shared contract
 
