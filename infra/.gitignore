@@ -22,5 +22,16 @@ tfplan
 *.tfstate.*
 
 #############################################################################
+# Provider lock files
+#############################################################################
+# A lock file belongs to an ENVIRONMENT root, where it pins provider versions
+# for an actual apply. Module and application directories get initialized
+# standalone — by local validation and by terraform-validate.yml, which runs
+# `terraform init` in every directory containing *.tf — so without this rule a
+# `git add -A` after validating quietly commits a lock file into every module.
+**/.terraform.lock.hcl
+!environments/*/.terraform.lock.hcl
+
+#############################################################################
 # Includes
 #############################################################################

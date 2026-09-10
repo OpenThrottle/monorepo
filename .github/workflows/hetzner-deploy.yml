@@ -1,0 +1,180 @@
+################################################################################
+#
+#   Roll the Hetzner box to a new image SHA.
+#
+#   The compose file is already rendered ON the instance by cloud-init, so a
+#   deploy is just: rewrite the image tags, pull, and `up -d`. No Terraform
+#   apply, and no rebuild.
+#
+#   🔀 PROVIDER ASYMMETRY, stated rather than implied: Hetzner is the provider
+#   with an automated deploy. The GCP path (infra/applications/openthrottle)
+#   stays fully supported but is deployed MANUALLY — nothing here touches it, and
+#   nothing here should. If GCP ever needs automation it gets its own workflow;
+#   teaching this one to do both is how a deploy path becomes unreviewable.
+#   See infra/provider-contract.md.
+#
+#   🚦 OPT-IN. This does nothing until `vars.HETZNER_DEPLOY_ENABLED` is 'true'.
+#   That is a repository variable rather than an `if: false` code edit, so
+#   enabling it does not require a commit — and so the workflow is inert by
+#   default while no box exists.
+#
+#   ⚠️ PREREQUISITE that is NOT satisfied today: this pulls image tags from GHCR,
+#   and .github/workflows/openthrottle-docker.yml — which publishes them — is
+#   currently DISABLED (`if: false`) as the most expensive workflow in the repo.
+#   So a tag may simply not exist. See docs/monorepo/ci-cost.md.
+#
+################################################################################
+name: '🚀 Hetzner Deploy'
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Image tag to deploy (e.g. sha-abc123). Defaults to this run's SHA."
+        required: false
+        type: string
+  push:
+    branches:
+      - main
+    paths:
+      - 'applications/openthrottle-developer/**'
+      - 'applications/openthrottle-server/**'
+      - 'databases/**'
+      - 'packages/**'
+
+concurrency:
+  # Never let two deploys race on one box. Do NOT cancel in progress: a deploy
+  # killed midway can leave the stack half-rolled, whereas queueing is harmless.
+  cancel-in-progress: false
+  group: hetzner-deploy
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    if: vars.HETZNER_DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    env:
+      IMAGE_TAG: ${{ inputs.image_tag || format('sha-{0}', github.sha) }}
+
+    steps:
+      # Needed for infra/tests/exposure/verify-exposure.sh in the last step.
+      - name: '📦 Checkout'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Only the scripts are needed, never history.
+          fetch-depth: 1
+
+      # Set up SSH inline rather than via a third-party action: one fewer
+      # supply-chain dependency on a job that holds a deploy key.
+      - name: '🔐 SSH key'
+        env:
+          KNOWN_HOSTS: ${{ secrets.HETZNER_KNOWN_HOSTS }}
+          SSH_PRIVATE_KEY: ${{ secrets.HETZNER_SSH_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${SSH_PRIVATE_KEY}" ]]; then
+            echo "::error::HETZNER_SSH_PRIVATE_KEY is not set"
+            exit 1
+          fi
+          if [[ -z "${KNOWN_HOSTS}" ]]; then
+            echo "::error::HETZNER_KNOWN_HOSTS is not set. Refusing to accept an unverified host key: without it this deploy would trust whatever answers on that address."
+            exit 1
+          fi
+          mkdir -m 0700 -p ~/.ssh
+          printf '%s\n' "${SSH_PRIVATE_KEY}" > ~/.ssh/id_deploy
+          chmod 0600 ~/.ssh/id_deploy
+          printf '%s\n' "${KNOWN_HOSTS}" > ~/.ssh/known_hosts
+          chmod 0644 ~/.ssh/known_hosts
+
+      - name: '🚀 Roll the stack'
+        env:
+          DEPLOY_HOST: ${{ secrets.HETZNER_DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.HETZNER_DEPLOY_USER }}
+        run: |
+          set -euo pipefail
+
+          if [[ -z "${DEPLOY_HOST}" || -z "${DEPLOY_USER}" ]]; then
+            echo "::error::HETZNER_DEPLOY_HOST and HETZNER_DEPLOY_USER must be set"
+            exit 1
+          fi
+
+          # The remote script is fed over stdin so it lives in this repository
+          # and is reviewed like any other code, rather than drifting on the box.
+          # StrictHostKeyChecking=yes with the known_hosts written above means a
+          # DNS change cannot silently redirect this deploy.
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -i ~/.ssh/id_deploy \
+            "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "IMAGE_TAG='${IMAGE_TAG}' bash -s" <<'REMOTEEOF'
+          set -euo pipefail
+          cd /opt/openthrottle
+
+          echo "::group::retag to ${IMAGE_TAG}"
+          # Rewrite only the tag on openthrottle images, leaving caddy, postgres
+          # and redis (which are pinned upstream images) untouched.
+          cp docker-compose.yml docker-compose.yml.prev
+          sed -E -i "s|(image: ghcr\.io/[^:]+):[^\"'[:space:]]+|\1:${IMAGE_TAG}|g" docker-compose.yml
+          grep -E '^\s+image:' docker-compose.yml
+          echo "::endgroup::"
+
+          echo "::group::pull"
+          docker compose pull --quiet
+          echo "::endgroup::"
+
+          # ── The migrations gate ──────────────────────────────────────────
+          # This is the whole point of the deploy being scripted rather than a
+          # bare `up -d`. The server depends on migrations with
+          # service_completed_successfully, so a failed migration ALREADY blocks
+          # the server from starting — but `up -d --wait` would then simply time
+          # out with a generic error, and an operator could easily read that as
+          # "slow" and re-run it.
+          #
+          # Running migrations explicitly first makes the schema step's exit
+          # status the thing that fails, loudly and by name, and guarantees the
+          # server is never left serving against a stale schema.
+          echo "::group::migrations"
+          if ! docker compose run --rm migrations; then
+            echo "::error::migrations FAILED — aborting the deploy. The stack is left on the PREVIOUS images; nothing was rolled."
+            cp docker-compose.yml.prev docker-compose.yml
+            docker compose logs --no-color --tail=200 migrations || true
+            exit 1
+          fi
+          echo "::endgroup::"
+
+          echo "::group::up"
+          if ! docker compose up -d --wait; then
+            echo "::error::stack did not come up healthy after migrations succeeded"
+            docker compose ps
+            for svc in openthrottle-server openthrottle-developer caddy mcp; do
+              echo "--- ${svc} ---"
+              docker compose logs --no-color --tail=100 "${svc}" || true
+            done
+            exit 1
+          fi
+          echo "::endgroup::"
+
+          docker compose ps
+          rm -f docker-compose.yml.prev
+
+          # Reclaim disk: a 40 GB boot disk fills up with superseded sha-tagged
+          # images surprisingly fast, and a full disk takes Postgres down.
+          docker image prune -af --filter 'until=168h' || true
+          REMOTEEOF
+
+      - name: '🩺 Verify the public surface'
+        env:
+          API_DOMAIN: ${{ vars.HETZNER_API_DOMAIN }}
+          DEVELOPER_DOMAIN: ${{ vars.HETZNER_DEVELOPER_DOMAIN }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${API_DOMAIN}" || -z "${DEVELOPER_DOMAIN}" ]]; then
+            echo "::warning::HETZNER_API_DOMAIN / HETZNER_DEVELOPER_DOMAIN unset; skipping post-deploy verification."
+            exit 0
+          fi
+          # Same script the cutover runbook uses, so a deploy is held to the
+          # identical standard as the initial launch.
+          curl -fsSL -o /dev/null "https://${API_DOMAIN}/health"
+          API_DOMAIN="${API_DOMAIN}" DEVELOPER_DOMAIN="${DEVELOPER_DOMAIN}" \
+            ./infra/tests/exposure/verify-exposure.sh
