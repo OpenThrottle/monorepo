@@ -80,6 +80,12 @@ jobs:
           working_directory: infra
           soft_fail: false
 
+      - name: '🐚 Install shellcheck'
+        run: |
+          sudo apt-get -qq update
+          sudo apt-get -qq install -y shellcheck
+          shellcheck --version
+
       - name: '📜 Install Conftest'
         env:
           CONFTEST_VERSION: 0.68.2
@@ -102,3 +108,110 @@ jobs:
         run: |
           conftest test --policy infra/tests/policy \
             infra/environments infra/modules infra/applications infra/tests/fixtures
+
+      - name: '🤝 Provider contract (GCP <-> Hetzner interchangeability)'
+        run: infra/tests/contract/check-provider-contract.sh
+
+      - name: '🐚 Shellcheck the rendered cloud-init template'
+        run: |
+          set -euo pipefail
+          # shellcheck cannot lint a .tpl directly (it is Terraform syntax), so
+          # each provider's template is RENDERED first and the output checked.
+          # BOTH paths are covered: both generate secrets in shell. Rendering is
+          # the only way to catch escaping bugs: `$$(` is NOT a Terraform escape
+          # (only `$${` and `%%{` are), so it renders as a literal `$$` that bash
+          # reads as the PID — valid template, broken script.
+          repo="$(pwd)"
+          scratch="$(mktemp -d)"
+
+          # __REPO__ is substituted below: `path.cwd` would resolve to the
+          # -chdir target, not this repository.
+          cat > "${scratch}/main.tf" <<'RENDEREOF'
+          locals {
+            tpl      = "__REPO__/infra/applications/openthrottle_hcloud/templates/startup.sh.tpl"
+            tpl_gcp  = "__REPO__/infra/applications/openthrottle/templates/startup.sh.tpl"
+
+            # The GCP template generates a JWT secret and fetches the Postgres
+            # password from Secret Manager, so it is real shell and needs the
+            # same treatment as the Hetzner one.
+            vars_gcp = {
+              api_domain                       = "api.example.com"
+              artifact_registry_region         = "us-west2"
+              caddyfile_content                = "example.com {}"
+              compose_content                  = "services: {}"
+              developer_domain                 = "dev.example.com"
+              jwt_secret                       = ""
+              postgres_db                      = "openthrottle"
+              postgres_host                    = "10.1.2.3"
+              postgres_password_secret         = "openthrottle-production-postgres-password"
+              postgres_port                    = "5432"
+              postgres_ssl_reject_unauthorized = "false"
+              postgres_user                    = "openthrottle"
+              project_id                       = "openthrottle-production"
+              redis_host                       = "10.4.5.6"
+              redis_port                       = "6379"
+              registry_domain                  = "us-west2-docker.pkg.dev"
+            }
+
+            vars = {
+              api_domain             = "api.example.com"
+              backup_remote          = "remote:bucket"
+              backup_retention_count = "14"
+              backup_script          = file("__REPO__/databases/backup-offsite.sh")
+              caddyfile_content      = "example.com {}"
+              compose_content        = "services: {}"
+              developer_domain       = "dev.example.com"
+              ghcr_token             = ""
+              ghcr_username          = ""
+              jwt_secret             = ""
+              postgres_data_dir      = "/mnt/openthrottle-data/postgres"
+              postgres_db            = "openthrottle"
+              postgres_host          = "postgres"
+              postgres_password      = ""
+              postgres_port          = "5432"
+              postgres_user          = "openthrottle"
+              redis_host             = "redis"
+              redis_port             = "6379"
+            }
+          }
+
+          # Both branches of the data-volume conditional: they are different
+          # scripts as far as shellcheck is concerned.
+          resource "local_file" "with_volume" {
+            content  = templatefile(local.tpl, merge(local.vars, { data_volume_device = "/dev/disk/by-id/scsi-0HC_Volume_1" }))
+            filename = "rendered-with-volume.sh"
+          }
+
+          resource "local_file" "without_volume" {
+            content  = templatefile(local.tpl, merge(local.vars, { data_volume_device = "" }))
+            filename = "rendered-without-volume.sh"
+          }
+
+          resource "local_file" "gcp" {
+            content  = templatefile(local.tpl_gcp, local.vars_gcp)
+            filename = "rendered-gcp.sh"
+          }
+          RENDEREOF
+
+          # Portable in-place edit: GNU sed takes `-i expr`, BSD/macOS sed
+          # requires `-i ''`, so neither form works everywhere. Write and move
+          # instead, so this gate is runnable locally as well as in CI.
+          sed "s|__REPO__|${repo}|g" "${scratch}/main.tf" > "${scratch}/main.tf.tmp"
+          mv "${scratch}/main.tf.tmp" "${scratch}/main.tf"
+
+          terraform -chdir="${scratch}" init -backend=false -input=false -no-color
+          terraform -chdir="${scratch}" apply -auto-approve -no-color
+
+          for name in rendered-with-volume.sh rendered-without-volume.sh rendered-gcp.sh; do
+            echo "::group::shellcheck ${name}"
+            bash -n "${scratch}/${name}"
+            shellcheck --shell=bash "${scratch}/${name}"
+            echo "::endgroup::"
+          done
+
+          # The standalone scripts are plain bash and check directly.
+          shellcheck --shell=bash \
+            databases/backup-offsite.sh \
+            databases/verify-restore.sh \
+            infra/tests/contract/check-provider-contract.sh \
+            infra/tests/exposure/verify-exposure.sh
