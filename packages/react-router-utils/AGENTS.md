@@ -5,7 +5,7 @@ OpenThrottle React Router apps boot with. No runtime `dependencies`, but `react`
 are declared `peerDependencies` (already imported by `useForm` and the fetcher helpers) — the
 consuming app provides them. Public API is re-exported from `src/index.ts`.
 
-**Consumed by:** `openthrottle-developer`, `openthrottle-email`, and the `react-router-graphql`,
+**Consumed by:** `openthrottle-developer` and the `react-router-graphql`,
 `react-router-notifications`, `react-router-editor`, and `react-router-testing` packages.
 
 ## Layout

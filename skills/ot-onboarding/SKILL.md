@@ -158,12 +158,12 @@ Deep dive on the lifecycle this rule protects: [`ot-plans`](https://github.com/o
 
 **The monorepo shape** (Nx + pnpm, Node ≥ 22, pnpm only):
 
-| Folder          | What lives there                                                                                                                                                                               |
-| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `applications/` | Deployable apps — `openthrottle-server` (NestJS code-first GraphQL API) and the React Router apps `openthrottle-developer`, `openthrottle-admin`, `openthrottle-email`, `openthrottle-website` |
-| `packages/`     | Shared libs — `@openthrottle/nestjs-*` server modules, `@openthrottle/react-router-*` UI/client libs, `openthrottle-agentic-*` Ralph tooling, `openthrottle-mcp`                               |
-| `tools/`        | Nx plugins, `@tools/generators` (scaffolding), `@tools/workflows` (Ralph CLI)                                                                                                                  |
-| `databases/`    | Postgres schema, migrations, local DB scripts                                                                                                                                                  |
+| Folder          | What lives there                                                                                                                                                         |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `applications/` | Deployable apps — `openthrottle-server` (NestJS code-first GraphQL API) and the React Router apps `openthrottle-developer`, `openthrottle-admin`, `openthrottle-website` |
+| `packages/`     | Shared libs — `@openthrottle/nestjs-*` server modules, `@openthrottle/react-router-*` UI/client libs, `openthrottle-agentic-*` Ralph tooling, `openthrottle-mcp`         |
+| `tools/`        | Nx plugins, `@tools/generators` (scaffolding), `@tools/workflows` (Ralph CLI)                                                                                            |
+| `databases/`    | Postgres schema, migrations, local DB scripts                                                                                                                            |
 
 Everything runs **through Nx, prefixed with pnpm** (`pnpm nx …`) — never the underlying tooling directly.
 

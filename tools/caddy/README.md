@@ -14,7 +14,7 @@
 Add to `/etc/hosts` (or equivalent) so the hostnames resolve to this machine:
 
 ```bash
-127.0.0.1 api.local developer.local email.local website.local ollama.local
+127.0.0.1 api.local developer.local website.local ollama.local
 ```
 
 ## Running Caddy

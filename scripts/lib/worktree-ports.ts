@@ -28,8 +28,15 @@ import { run } from './exec.ts';
  */
 export const CANONICAL_APP_PORTS = {
   admin: 6022,
+  // Reserved slot: the CMS app was never built. Kept so the offsets below
+  // stay put — see the reservation note under `email`.
   cms: 6023,
   developer: 6020,
+  // Reserved slot: openthrottle-email was retired, but its offset MUST stay.
+  // Every worktree's port block is derived from the *relative* offsets in this
+  // map, so dropping a key shifts every later one — removing `email` would move
+  // `mcp` from base+6 to base+5 and silently re-point the MCP port of every
+  // worktree already provisioned on disk. Do not "clean this up".
   email: 6024,
   mcp: 6026,
   server: 6021,

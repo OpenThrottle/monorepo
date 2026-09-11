@@ -702,7 +702,7 @@ introducing a parallel UI system.
 **Stack.**
 
 - Build UI only in the React Router v8 + Vite apps: `openthrottle-developer`,
-  `openthrottle-admin`, `openthrottle-website`, `openthrottle-email`.
+  `openthrottle-admin`, `openthrottle-website`.
 - Compose from `@openthrottle/react-router-shadcn` (source in
   `packages/react-router-shadcn/src/components`). Reach for an existing component before
   hand-rolling one; if a primitive is missing, add it to that package rather than inlining a

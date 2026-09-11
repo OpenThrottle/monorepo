@@ -4,7 +4,7 @@ Family-shared notes for everything under `applications/`. Per-project deltas liv
 
 ## What lives here
 
-- Four React Router v8 + Vite apps: `openthrottle-developer`, `openthrottle-admin`, `openthrottle-email`, `openthrottle-website`.
+- Three React Router v8 + Vite apps: `openthrottle-developer`, `openthrottle-admin`, `openthrottle-website`.
 - One NestJS app: `openthrottle-server` — the only backend, owner of the code-first GraphQL schema (`schema.gql`).
 - One Storybook host: `openthrottle-workbench` — Storybook 10 for `@openthrottle/react-router-shadcn`. **Not** a React Router app; `production:false`, local dev tool only, never deployed. See [`openthrottle-workbench/AGENTS.md`](./openthrottle-workbench/AGENTS.md).
 - [`openthrottle/`](./openthrottle/) is **not an Nx project** (no `package.json`): a standalone consumer-install `docker-compose.yml` + Dockerfiles running published images. Local dev Postgres/Redis come from the **root** `docker-compose.yml` via `pnpm run database:start`, not this directory.

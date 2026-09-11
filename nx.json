@@ -53,7 +53,6 @@
       "exclude": [
         "applications/openthrottle-admin/**",
         "applications/openthrottle-developer/**",
-        "applications/openthrottle-email/**",
         "applications/openthrottle-website/**"
       ]
     },

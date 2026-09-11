@@ -210,6 +210,16 @@ catalog:
   'eslint-plugin-typescript-sort-keys': '^3.3.0'
   'express-basic-auth': '^1.2.1'
   'fishery': '^2.4.0'
+  # focus-formik-error / formik / yup: DO NOT REMOVE as "unused".
+  # tools/generators/src/generators/react-router/files/form/ emits templates
+  # importing all three — components/__name__.tsx imports FocusError from
+  # focus-formik-error, and config/form.__schema__.ts imports FormikConfig from
+  # formik plus ObjectSchema/InferType/object/string from yup. Those are .ts
+  # template files, not compiled source, so knip and every other static
+  # analysis in this repo is blind to the reference and nothing in CI fails if
+  # they go — the `form` generator would just start emitting unresolvable
+  # imports on whoever scaffolds a form next. formik is additionally a real
+  # dependency of @openthrottle/react-router-utils (src/hooks/useForm.ts).
   'focus-formik-error': '^1.1.0'
   'formik': '^2.4.9'
   'framer-motion': '^12.26.2'
@@ -344,6 +354,7 @@ catalog:
   'yaml': '^2.7.1'
   'yargs': '^18.0.0'
   'youtubei.js': '^17.0.1'
+  # yup: see the retention note on 'formik' above — generator template only.
   'yup': '^1.7.1'
   'zod': '^4.4.3'
   'zod-to-json-schema': '^3.25.2'

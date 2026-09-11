@@ -4,7 +4,7 @@ The `Global*` app-shell layer shared by React Router apps: layout/sidebar/header
 theme, error boundary + Rollbar client logging, metrics panel, WebGL `GradientMesh`, and the
 shared per-row table Actions menu (`GlobalPopover`).
 
-**Consumed by:** `openthrottle-developer`, `openthrottle-admin`, `openthrottle-email`,
+**Consumed by:** `openthrottle-developer`, `openthrottle-admin`,
 `openthrottle-website`.
 
 ## Layout

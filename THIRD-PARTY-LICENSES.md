@@ -1164,7 +1164,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `conventional-commits-parser` | 7.1.1 | MIT | [Steve Mao](https://conventional-changelog.js.org/commits-parser/) |
 | `convert-hrtime` | 5.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/convert-hrtime#readme) |
 | `convert-source-map` | 1.9.0, 2.0.0 | MIT | [Thorsten Lorenz](https://github.com/thlorenz/convert-source-map) |
-| `cookie` | 0.7.2, 1.1.1 | MIT | [Roman Shtylman](https://github.com/jshttp/cookie#readme) |
+| `cookie` | 0.7.2 | MIT | [Roman Shtylman](https://github.com/jshttp/cookie#readme) |
 | `cookie-es` | 3.1.1 | MIT | [source](https://github.com/unjs/cookie-es#readme) |
 | `cookie-parser` | 1.4.7 | MIT | [TJ Holowaychuk](https://github.com/expressjs/cookie-parser#readme) |
 | `cookie-signature` | 1.0.6, 1.2.2 | MIT | [TJ Holowaychuk](https://github.com/visionmedia/node-cookie-signature#readme) |
@@ -2114,9 +2114,9 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `react-refresh` | 0.18.0 | MIT | [source](https://react.dev/) |
 | `react-remove-scroll` | 2.5.5, 2.7.2 | MIT | [Anton Korzunov](https://github.com/theKashey/react-remove-scroll#readme) |
 | `react-remove-scroll-bar` | 2.3.8 | MIT | [Anton Korzunov](https://github.com/theKashey/react-remove-scroll-bar#readme) |
-| `react-router` | 6.30.4, 7.18.0, 8.0.1 | MIT | [Remix Software](https://github.com/remix-run/react-router#readme) |
+| `react-router` | 6.30.4, 8.0.1 | MIT | [Remix Software](https://github.com/remix-run/react-router#readme) |
 | `react-router-devtools` | 6.2.3 | MIT | [Alem Tuzlak](https://react-router-devtools.forge42.dev/) |
-| `react-router-dom` | 6.30.4, 7.18.0 | MIT | [Remix Software](https://github.com/remix-run/react-router#readme) |
+| `react-router-dom` | 6.30.4 | MIT | [Remix Software](https://github.com/remix-run/react-router#readme) |
 | `react-scan` | 0.5.7 | MIT | [Aiden Bai](https://react-scan.million.dev) |
 | `react-stately` | 3.48.0 | Apache-2.0 | [source](https://github.com/adobe/react-spectrum#readme) |
 | `react-style-singleton` | 2.2.3 | MIT | [Anton Korzunov](https://github.com/theKashey/react-style-singleton#readme) |

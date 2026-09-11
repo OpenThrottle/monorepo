@@ -13,7 +13,6 @@ const testWindowEnv = {
   APP_URL_ADMIN: 'http://localhost/admin',
   APP_URL_CMS: 'http://localhost/cms',
   APP_URL_DEVELOPER: 'http://localhost/developer',
-  APP_URL_EMAIL: 'http://localhost/email',
   APP_URL_SERVER: 'http://localhost/server',
   APP_URL_WEBSITE: 'http://localhost/website',
   APP_VERSION: '0.0.0-test',

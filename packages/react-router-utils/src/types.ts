@@ -41,7 +41,6 @@ export type OpenThrottlePublicEnv = {
 
   APP_URL_CMS: string;
   APP_URL_DEVELOPER: string;
-  APP_URL_EMAIL: string;
   APP_URL_SERVER: string;
   APP_URL_WEBSITE: string;
   APP_VERSION: string;

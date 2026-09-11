@@ -77,9 +77,6 @@
     "applications/openthrottle-server/src/modules/payments/**",
     // Golden prompts consumed by agents-mcp-router.golden-prompts.test.ts (knip excludes *.test.ts)
     "applications/openthrottle-server/src/graphql/agents/agents-mcp-router.golden-prompts.ts",
-    // openthrottle-email: commented layout chrome (intentional rollback; see @deprecated)
-    "applications/openthrottle-email/app/global/components/GlobalFooter.tsx",
-    "applications/openthrottle-email/app/global/components/GlobalHeader.tsx",
     // @openthrottle/react-router-shadcn: CSS entrypoints (app @import)
     "packages/react-router-shadcn/src/theme.css",
     "packages/react-router-shadcn/src/commander.css",
@@ -103,6 +100,19 @@
     "prettier",
     "typescript",
     "vitest",
+
+    // Consumed ONLY by the react-router `form` generator templates under
+    // tools/generators/src/generators/react-router/files/form/, which are
+    // .ts/.tsx template files rather than compiled source — so knip cannot
+    // see the imports and reports all three as unused. They are declared at
+    // the root so scaffolded forms resolve them in any app. Removing them
+    // breaks the `form` generator silently, with the failure landing on
+    // whoever scaffolds a form next. See the matching note in
+    // pnpm-workspace.yaml. (formik is additionally a real dependency of
+    // @openthrottle/react-router-utils, which declares it directly.)
+    "focus-formik-error",
+    "formik",
+    "yup",
   ],
   "project": [
     "applications/**/*.{ts,tsx,js,jsx}",

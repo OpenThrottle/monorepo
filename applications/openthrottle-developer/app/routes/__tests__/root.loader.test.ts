@@ -37,7 +37,6 @@ const PUBLIC_ENV = {
   APP_URL_ADMIN: 'http://localhost:6010',
   APP_URL_CMS: 'http://localhost:6030',
   APP_URL_DEVELOPER: 'http://localhost:6020',
-  APP_URL_EMAIL: 'http://localhost:6040',
   APP_URL_SERVER: 'http://localhost:6021',
   APP_URL_WEBSITE: 'http://localhost:6050',
   APP_VERSION: '0.0.0',
