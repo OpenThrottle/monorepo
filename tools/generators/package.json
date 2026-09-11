@@ -1,34 +1,39 @@
 {
-  "name": "@tools/generators",
-  "description": "Nx plugin with generators for scaffolding React, React Router, NestJS, packages, and folder layouts in this monorepo.",
-  "version": "3.2.25",
+  "__exports": {
+    ".": {
+      "import": "./dist/src/index.js",
+      "require": "./dist/src/index.js"
+    },
+    "./*": {
+      "import": "./dist/*.js",
+      "require": "./dist/*.js"
+    },
+    "./package.json": {
+      "import": "./package.json",
+      "require": "./package.json"
+    }
+  },
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
     "url": "https://mattscholta.com"
   },
   "dependencies": {
-    "@nx/devkit": "catalog:"
+    "@nx/devkit": "catalog:",
+    "vitest": "catalog:",
+    "prompts": "catalog:",
+    "lodash": "catalog:",
+    "pluralize": "catalog:",
+    "tslib": "catalog:"
   },
+  "description": "Nx plugin with generators for scaffolding React, React Router, NestJS, packages, and folder layouts in this monorepo.",
   "devDependencies": {},
-  "__exports": {
-    ".": {
-      "import": "./dist/src/index.js",
-      "require": "./dist/src/index.js"
-    },
-    "./package.json": {
-      "import": "./package.json",
-      "require": "./package.json"
-    },
-    "./*": {
-      "import": "./dist/*.js",
-      "require": "./dist/*.js"
-    }
-  },
   "generators": "./generators.json",
   "license": "Apache-2.0",
+  "__type": "module",
   "main": "./src/index.ts",
   "module": "./src/index.ts",
+  "name": "@tools/generators",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "projectType": "library",
@@ -59,12 +64,12 @@
       "typecheck": {}
     }
   },
+  "version": "3.2.25",
   "peerDependencies": {},
   "private": true,
   "publishConfig": {
     "access": "restricted"
   },
   "repository": "git://github.com/OpenThrottle/monorepo.git",
-  "__type": "module",
   "types": "./src/index.ts"
 }

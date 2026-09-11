@@ -1,44 +1,21 @@
 {
-  "name": "openthrottle-developer",
-  "description": "OpenThrottle | Developer: dashboard for plans, projects, notes, generators, and pull requests.",
-  "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
     "url": "https://developer.openthrottle.ai"
   },
   "dependencies": {
-    "@openthrottle/graphql-codegen": "workspace:^",
     "@openthrottle/nodejs-utils": "workspace:*",
     "@openthrottle/openthrottle-agentic-utils": "workspace:*",
-    "@openthrottle/openthrottle-developer-codegen": "workspace:^",
     "@openthrottle/openthrottle-ide": "workspace:^",
     "@openthrottle/openthrottle-notifications": "workspace:^",
     "@openthrottle/openthrottle-plan-config": "workspace:^",
     "@openthrottle/openthrottle-skills": "workspace:^",
-    "@openthrottle/react-router-auth": "workspace:^",
-    "@openthrottle/react-router-chat": "workspace:^",
-    "@openthrottle/react-router-chat-state": "workspace:^",
-    "@openthrottle/react-router-docs": "workspace:^",
-    "@openthrottle/react-router-editor": "workspace:^",
-    "@openthrottle/react-router-graphql": "workspace:^",
-    "@openthrottle/react-router-ide": "workspace:^",
-    "@openthrottle/react-router-markdown": "workspace:^",
-    "@openthrottle/react-router-notifications": "workspace:^",
-    "@openthrottle/react-router-rollout": "workspace:^",
-    "@openthrottle/react-router-scheduling": "workspace:^",
-    "@openthrottle/react-router-shadcn": "workspace:^",
-    "@openthrottle/react-router-ui": "workspace:^",
-    "@openthrottle/react-router-ui-global": "workspace:^",
-    "@openthrottle/react-router-utils": "workspace:^",
     "@phosphor-icons/react": "catalog:",
-    "@react-router/express": "catalog:",
     "@react-router/fs-routes": "catalog:",
     "@react-router/node": "catalog:",
-    "@react-router/serve": "catalog:",
     "@tanstack/react-table": "catalog:",
     "@vercel/analytics": "catalog:",
-    "@vscode/ripgrep": "catalog:",
     "clsx": "catalog:",
     "date-fns": "catalog:",
     "dotenv": "catalog:",
@@ -50,19 +27,33 @@
     "react-dom": "catalog:",
     "react-router": "catalog:",
     "recharts": "catalog:",
-    "sonner": "catalog:",
-    "ts-morph": "catalog:"
+    "@graphql-typed-document-node/core": "catalog:",
+    "zod": "catalog:",
+    "@react-router/dev": "catalog:",
+    "framer-motion": "catalog:",
+    "@testing-library/react": "catalog:",
+    "@faker-js/faker": "catalog:",
+    "@vercel/react-router": "catalog:",
+    "@testing-library/jest-dom": "catalog:",
+    "vitest": "catalog:",
+    "vite-bundle-analyzer": "catalog:",
+    "vite": "catalog:",
+    "react-router-devtools": "catalog:",
+    "vite-plugin-devtools-json": "catalog:",
+    "@tailwindcss/vite": "catalog:"
   },
+  "description": "OpenThrottle | Developer: dashboard for plans, projects, notes, generators, and pull requests.",
   "devDependencies": {
     "@openthrottle/openthrottle-drivers": "workspace:*",
     "@openthrottle/react-router-testing": "workspace:^",
     "playwright": "catalog:"
   },
   "license": "Apache-2.0",
+  "name": "openthrottle-developer",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
-    "sourceRoot": "./",
     "projectType": "application",
+    "sourceRoot": "./",
     "tags": [
       "name:openthrottle-developer",
       "production:true",
@@ -76,6 +67,7 @@
       "codegen-react-router": {},
       "codegen-react-router-watch": {},
       "docker-build": {
+        "description": "Build openthrottle-developer image from root Dockerfile.ReactRouter (monorepo context). Set GITHUB_TOKEN in environment for private deps.",
         "executor": "nx:run-commands",
         "options": {
           "command": "docker build -f Dockerfile.ReactRouter --target production --build-arg APP_NAME=openthrottle-developer --build-arg APP_VERSION=$APP_VERSION --build-arg PNPM_VERSION=$PNPM_VERSION --build-arg GITHUB_TOKEN=$GITHUB_TOKEN -t openthrottle-developer:local .",
@@ -84,8 +76,7 @@
             "APP_VERSION": "1.0.0",
             "PNPM_VERSION": "11.6.0"
           }
-        },
-        "description": "Build openthrottle-developer image from root Dockerfile.ReactRouter (monorepo context). Set GITHUB_TOKEN in environment for private deps."
+        }
       },
       "lint": {},
       "start": {
@@ -106,9 +97,10 @@
   },
   "private": true,
   "repository": "git://github.com/OpenThrottle/developer.git",
-  "sideEffects": false,
   "scripts": {
     "start:docker": "react-router-serve ./build/server/index.js"
   },
-  "type": "module"
+  "sideEffects": false,
+  "type": "module",
+  "version": "1.0.0"
 }

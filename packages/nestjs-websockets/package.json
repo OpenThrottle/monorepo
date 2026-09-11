@@ -1,7 +1,4 @@
 {
-  "name": "@openthrottle/nestjs-websockets",
-  "description": "Transport-agnostic NestJS @EmitNotification decorator/interceptor for emitting real-time events after resolver or controller methods complete. Bind a provider to EMIT_NOTIFICATION_EMITTER to deliver over any transport (e.g. graphql-ws PubSub).",
-  "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
@@ -10,26 +7,32 @@
   "dependencies": {
     "@nestjs/common": "catalog:",
     "@nestjs/core": "catalog:",
-    "rxjs": "catalog:"
+    "rxjs": "catalog:",
+    "reflect-metadata": "catalog:",
+    "@openthrottle/nestjs-testing": "workspace:^",
+    "vitest": "catalog:",
+    "tslib": "catalog:"
   },
+  "description": "Transport-agnostic NestJS @EmitNotification decorator/interceptor for emitting real-time events after resolver or controller methods complete. Bind a provider to EMIT_NOTIFICATION_EMITTER to deliver over any transport (e.g. graphql-ws PubSub).",
   "devDependencies": {
     "@openthrottle/nestjs-testing": "workspace:^"
   },
   "exports": {
     ".": {
-      "types": "./dist/src/index.d.ts",
       "import": "./dist/src/index.js",
-      "require": "./dist/src/index.js"
+      "require": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
     },
     "./*": {
-      "types": "./dist/*.d.ts",
       "import": "./dist/*.js",
-      "require": "./dist/*.js"
+      "require": "./dist/*.js",
+      "types": "./dist/*.d.ts"
     }
   },
   "license": "Apache-2.0",
   "main": "./src/index.ts",
   "module": "./src/index.ts",
+  "name": "@openthrottle/nestjs-websockets",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "projectType": "library",
@@ -62,6 +65,7 @@
   "publishConfig": {
     "access": "restricted"
   },
+  "version": "1.0.0",
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
   "type": "commonjs",

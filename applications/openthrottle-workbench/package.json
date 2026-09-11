@@ -1,17 +1,15 @@
 {
-  "name": "openthrottle-workbench",
-  "description": "Storybook host for browsing @openthrottle/react-router-shadcn: component variants, prop tables, and the shared theme registry applied across the library.",
-  "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
     "url": "https://mattscholta.com"
   },
   "dependencies": {
-    "@openthrottle/react-router-shadcn": "workspace:^",
     "react": "catalog:",
-    "react-dom": "catalog:"
+    "@tailwindcss/vite": "catalog:",
+    "@storybook/react-vite": "catalog:"
   },
+  "description": "Storybook host for browsing @openthrottle/react-router-shadcn: component variants, prop tables, and the shared theme registry applied across the library.",
   "devDependencies": {
     "@storybook/addon-docs": "catalog:",
     "@storybook/react-vite": "catalog:",
@@ -21,10 +19,11 @@
     "vite": "catalog:"
   },
   "license": "Apache-2.0",
+  "name": "openthrottle-workbench",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
-    "sourceRoot": "./",
     "projectType": "application",
+    "sourceRoot": "./",
     "tags": [
       "name:openthrottle-workbench",
       "production:false",
@@ -70,5 +69,6 @@
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
   "sideEffects": false,
-  "type": "module"
+  "type": "module",
+  "version": "1.0.0"
 }

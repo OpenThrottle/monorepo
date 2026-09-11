@@ -5,26 +5,27 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
-    "@openthrottle/nodejs-utils": "workspace:^"
+    "@openthrottle/nodejs-utils": "workspace:^",
+    "tslib": "catalog:"
   },
   "description": "Isomorphic (Node + browser safe) canonical token-usage normalization: folds every agent-CLI backend's heterogeneous usage metadata into one NormalizedTokenUsage shape. Shared by the server persistence path and the chat UI so the SAME normalization runs everywhere.",
   "devDependencies": {},
   "exports": {
     ".": {
-      "types": "./dist/src/index.d.ts",
       "import": "./dist/src/index.js",
-      "require": "./dist/src/index.js"
+      "require": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
     },
     "./*": {
-      "types": "./dist/*.d.ts",
       "import": "./dist/*.js",
-      "require": "./dist/*.js"
+      "require": "./dist/*.js",
+      "types": "./dist/*.d.ts"
     }
   },
   "license": "Apache-2.0",
   "main": "./src/index.ts",
-  "name": "@openthrottle/agentic-token-usage",
   "module": "./src/index.ts",
+  "name": "@openthrottle/agentic-token-usage",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "projectType": "library",

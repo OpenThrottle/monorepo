@@ -1,31 +1,35 @@
 {
-  "name": "@openthrottle/nestjs-slack",
-  "description": "NestJS module for Slack incoming webhooks via native fetch—validates webhook URL at bootstrap and exposes NestjsSlackService (no Slack SDK).",
-  "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
     "url": "https://mattscholta.com"
   },
   "dependencies": {
-    "@openthrottle/nestjs-modules": "workspace:^"
+    "@openthrottle/nestjs-modules": "workspace:^",
+    "vitest": "catalog:",
+    "@nestjs/common": "catalog:",
+    "@nestjs/testing": "catalog:",
+    "@golevelup/ts-vitest": "catalog:",
+    "tslib": "catalog:"
   },
+  "description": "NestJS module for Slack incoming webhooks via native fetch—validates webhook URL at bootstrap and exposes NestjsSlackService (no Slack SDK).",
   "devDependencies": {},
   "exports": {
     ".": {
-      "types": "./dist/src/index.d.ts",
       "import": "./dist/src/index.js",
-      "require": "./dist/src/index.js"
+      "require": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
     },
     "./*": {
-      "types": "./dist/*.d.ts",
       "import": "./dist/*.js",
-      "require": "./dist/*.js"
+      "require": "./dist/*.js",
+      "types": "./dist/*.d.ts"
     }
   },
   "license": "Apache-2.0",
   "main": "./src/index.ts",
   "module": "./src/index.ts",
+  "name": "@openthrottle/nestjs-slack",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "projectType": "library",
@@ -56,6 +60,7 @@
   },
   "peerDependencies": {},
   "private": true,
+  "version": "1.0.0",
   "publishConfig": {
     "access": "restricted"
   },

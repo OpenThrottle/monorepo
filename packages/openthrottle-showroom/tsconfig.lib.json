@@ -1,12 +1,10 @@
 {
-  "extends": "./tsconfig.json",
   "compilerOptions": {
     "baseUrl": "./",
+    "lib": ["DOM", "ESNext"],
     "outDir": "./dist",
-    "rootDirs": ["./src"],
-    "lib": ["DOM", "ESNext"]
+    "rootDirs": ["./src"]
   },
-  "include": ["src/**/*"],
   "exclude": [
     "**/*.spec.ts",
     "**/*.spec.tsx",
@@ -15,6 +13,8 @@
     "dist",
     "tests/**"
   ],
+  "extends": "./tsconfig.json",
+  "include": ["src/**/*"],
   "references": [
     {
       "path": "../openthrottle-skills/tsconfig.lib.json"

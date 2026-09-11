@@ -1,7 +1,4 @@
 {
-  "name": "@openthrottle/nestjs-langchain",
-  "description": "LangChain and LangGraph integration for NestJS APIs—embeddings, checkpoints, document loaders (PDF, URL, YouTube), models, and vector stores.",
-  "version": "2.2.25",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
@@ -13,32 +10,32 @@
     "@langchain/core": "catalog:",
     "@langchain/google-vertexai": "catalog:",
     "@langchain/ollama": "catalog:",
-    "cheerio": "catalog:",
     "glob": "catalog:",
     "ignore": "catalog:",
-    "pdf-parse": "catalog:",
-    "pg": "catalog:",
-    "youtubei.js": "catalog:"
+    "vitest": "catalog:",
+    "tslib": "catalog:"
   },
+  "description": "LangChain and LangGraph integration for NestJS APIs—embeddings, checkpoints, document loaders (PDF, URL, YouTube), models, and vector stores.",
   "devDependencies": {
     "@types/pg": "catalog:",
     "typescript": "catalog:"
   },
   "exports": {
     ".": {
-      "types": "./dist/src/index.d.ts",
       "import": "./dist/src/index.js",
-      "require": "./dist/src/index.js"
+      "require": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
     },
     "./*": {
-      "types": "./dist/*.d.ts",
       "import": "./dist/*.js",
-      "require": "./dist/*.js"
+      "require": "./dist/*.js",
+      "types": "./dist/*.d.ts"
     }
   },
   "license": "Apache-2.0",
   "main": "./src/index.ts",
   "module": "./src/index.ts",
+  "name": "@openthrottle/nestjs-langchain",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "projectType": "library",
@@ -71,6 +68,7 @@
   "publishConfig": {
     "access": "restricted"
   },
+  "version": "2.2.25",
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
   "type": "commonjs",

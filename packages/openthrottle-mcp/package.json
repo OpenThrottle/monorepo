@@ -11,12 +11,16 @@
     "@modelcontextprotocol/sdk": "catalog:",
     "@nestjs/common": "catalog:",
     "@nestjs/core": "catalog:",
-    "@openthrottle/graphql-codegen": "workspace:^",
     "@openthrottle/nestjs-modules": "workspace:^",
     "@openthrottle/nodejs-graphql": "workspace:^",
     "@rekog/mcp-nest": "catalog:",
     "zod": "catalog:",
-    "@nestjs/platform-express": "catalog:"
+    "dotenv": "catalog:",
+    "esbuild": "catalog:",
+    "vitest": "catalog:",
+    "@nestjs/testing": "catalog:",
+    "reflect-metadata": "catalog:",
+    "tslib": "catalog:"
   },
   "description": "Model Context Protocol server for OpenThrottle: plans, tasks, and GraphQL-backed tools (no direct database access).",
   "devDependencies": {
@@ -24,9 +28,14 @@
   },
   "exports": {
     ".": {
-      "types": "./dist/src/index.d.ts",
       "import": "./dist/src/index.js",
-      "require": "./dist/src/index.js"
+      "require": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
+    },
+    "./*": {
+      "import": "./dist/*.js",
+      "require": "./dist/*.js",
+      "types": "./dist/*.d.ts"
     },
     "./auth": {
       "import": "./dist/src/auth/index.js",
@@ -42,11 +51,6 @@
       "import": "./dist/src/nest-tool-handlers.js",
       "require": "./dist/src/nest-tool-handlers.js",
       "types": "./dist/src/nest-tool-handlers.d.ts"
-    },
-    "./*": {
-      "types": "./dist/*.d.ts",
-      "import": "./dist/*.js",
-      "require": "./dist/*.js"
     }
   },
   "license": "Apache-2.0",

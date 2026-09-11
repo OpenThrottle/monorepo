@@ -1,7 +1,4 @@
 {
-  "name": "@openthrottle/nestjs-agentic-workflow",
-  "description": "NestJS module that registers agentic workflows (Ralph and future side-by-side workflows) into an id-keyed registry, wiring worker GraphQL auth and an executeGraphqlV2 executor for the openthrottle-server orchestrator.",
-  "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
@@ -12,28 +9,39 @@
     "@openthrottle/nestjs-modules": "workspace:^",
     "@openthrottle/nodejs-graphql": "workspace:^",
     "@openthrottle/openthrottle-agentic-ralph": "workspace:^",
-    "@openthrottle/openthrottle-agentic-workflow": "workspace:^"
+    "@openthrottle/openthrottle-agentic-workflow": "workspace:^",
+    "vitest": "catalog:",
+    "@nestjs/testing": "catalog:",
+    "@golevelup/ts-vitest": "catalog:",
+    "tslib": "catalog:"
   },
+  "description": "NestJS module that registers agentic workflows (Ralph and future side-by-side workflows) into an id-keyed registry, wiring worker GraphQL auth and an executeGraphqlV2 executor for the openthrottle-server orchestrator.",
   "exports": {
     ".": {
       "import": "./src/index.ts",
       "require": "./dist/src/index.js",
       "types": "./dist/src/index.d.ts"
     },
-    "./testing": {
-      "import": "./src/testing/index.ts",
-      "require": "./dist/src/testing/index.js",
-      "types": "./dist/src/testing/index.d.ts"
-    },
     "./*": {
       "import": "./*.ts",
       "require": "./dist/*.js",
       "types": "./dist/*.d.ts"
+    },
+    "./testing": {
+      "import": "./src/testing/index.ts",
+      "require": "./dist/src/testing/index.js",
+      "types": "./dist/src/testing/index.d.ts"
     }
   },
   "license": "Apache-2.0",
   "main": "./src/index.ts",
   "module": "./src/index.ts",
+  "devDependencies": {
+    "@golevelup/ts-vitest": "catalog:",
+    "@nestjs/testing": "catalog:",
+    "@openthrottle/nestjs-modules": "workspace:^"
+  },
+  "name": "@openthrottle/nestjs-agentic-workflow",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "projectType": "library",
@@ -69,6 +77,7 @@
     "@nestjs/common": "catalog:"
   },
   "private": true,
+  "version": "1.0.0",
   "publishConfig": {
     "access": "restricted",
     "exports": {
@@ -77,15 +86,15 @@
         "require": "./src/index.js",
         "types": "./src/index.d.ts"
       },
-      "./testing": {
-        "import": "./src/testing/index.js",
-        "require": "./src/testing/index.js",
-        "types": "./src/testing/index.d.ts"
-      },
       "./*": {
         "import": "./*.js",
         "require": "./*.js",
         "types": "./*.d.ts"
+      },
+      "./testing": {
+        "import": "./src/testing/index.js",
+        "require": "./src/testing/index.js",
+        "types": "./src/testing/index.d.ts"
       }
     },
     "main": "./src/index.js",
@@ -95,10 +104,5 @@
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
   "type": "commonjs",
-  "types": "./src/index.ts",
-  "devDependencies": {
-    "@golevelup/ts-vitest": "catalog:",
-    "@nestjs/testing": "catalog:",
-    "@openthrottle/nestjs-modules": "workspace:^"
-  }
+  "types": "./src/index.ts"
 }

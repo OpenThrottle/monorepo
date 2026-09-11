@@ -1,7 +1,4 @@
 {
-  "name": "@openthrottle/nestjs-bullmq-board",
-  "description": "NestJS module for Bull Board (Express): HTTP dashboard to monitor BullMQ queues, jobs, and workers with basic-auth.",
-  "version": "2.2.25",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
@@ -12,23 +9,30 @@
     "@bull-board/express": "catalog:",
     "@bull-board/nestjs": "catalog:",
     "@openthrottle/nestjs-modules": "workspace:^",
-    "express-basic-auth": "catalog:"
+    "express-basic-auth": "catalog:",
+    "vitest": "catalog:",
+    "@nestjs/config": "catalog:",
+    "joi": "catalog:",
+    "@nestjs/common": "catalog:",
+    "tslib": "catalog:"
   },
+  "description": "NestJS module for Bull Board (Express): HTTP dashboard to monitor BullMQ queues, jobs, and workers with basic-auth.",
   "exports": {
     ".": {
-      "types": "./dist/src/index.d.ts",
       "import": "./dist/src/index.js",
-      "require": "./dist/src/index.js"
+      "require": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
     },
     "./*": {
-      "types": "./dist/*.d.ts",
       "import": "./dist/*.js",
-      "require": "./dist/*.js"
+      "require": "./dist/*.js",
+      "types": "./dist/*.d.ts"
     }
   },
   "license": "Apache-2.0",
   "main": "./src/index.ts",
   "module": "./src/index.ts",
+  "name": "@openthrottle/nestjs-bullmq-board",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "projectType": "library",
@@ -63,6 +67,7 @@
   "publishConfig": {
     "access": "restricted"
   },
+  "version": "2.2.25",
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
   "type": "commonjs",

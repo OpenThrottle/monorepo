@@ -5,20 +5,22 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
-    "@openthrottle/nodejs-utils": "workspace:^"
+    "@openthrottle/nodejs-utils": "workspace:^",
+    "vitest": "catalog:",
+    "tslib": "catalog:"
   },
   "description": "TODO: Add a description",
   "devDependencies": {},
   "exports": {
     ".": {
-      "types": "./dist/src/index.d.ts",
       "import": "./dist/src/index.js",
-      "require": "./dist/src/index.js"
+      "require": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
     },
     "./*": {
-      "types": "./dist/*.d.ts",
       "import": "./dist/*.js",
-      "require": "./dist/*.js"
+      "require": "./dist/*.js",
+      "types": "./dist/*.d.ts"
     }
   },
   "license": "Apache-2.0",
@@ -37,10 +39,10 @@
       "type:package"
     ],
     "targets": {
-      "build": {
+      "__build-package": {
         "executor": "@nx/js:tsc"
       },
-      "__build-package": {
+      "build": {
         "executor": "@nx/js:tsc"
       },
       "dev": {

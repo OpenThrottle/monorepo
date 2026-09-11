@@ -1,31 +1,40 @@
 {
-  "name": "openthrottle-admin",
-  "description": "OpenThrottle admin web app (React Router, Vite): dashboard, users, roles, and permissions backed by openthrottle-server.",
-  "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
     "url": "https://admin.openthrottle.com"
   },
   "dependencies": {
-    "@openthrottle/graphql-codegen": "workspace:^",
-    "@openthrottle/react-router-chat": "workspace:^",
-    "@openthrottle/react-router-chat-state": "workspace:^",
-    "@openthrottle/react-router-docs": "workspace:^",
-    "@openthrottle/react-router-graphql": "workspace:^",
-    "@openthrottle/react-router-ui-global": "workspace:^",
-    "@openthrottle/react-router-utils": "workspace:^",
     "clsx": "catalog:",
-    "jotai": "catalog:"
+    "dotenv": "catalog:",
+    "react": "catalog:",
+    "react-router": "catalog:",
+    "react-dom": "catalog:",
+    "@react-router/node": "catalog:",
+    "isbot": "catalog:",
+    "lucide-react": "catalog:",
+    "@react-router/dev": "catalog:",
+    "@react-router/fs-routes": "catalog:",
+    "@tanstack/react-table": "catalog:",
+    "date-fns": "catalog:",
+    "@vercel/react-router": "catalog:",
+    "@testing-library/jest-dom": "catalog:",
+    "vite-bundle-analyzer": "catalog:",
+    "vite": "catalog:",
+    "react-router-devtools": "catalog:",
+    "vite-plugin-devtools-json": "catalog:",
+    "@tailwindcss/vite": "catalog:"
   },
+  "description": "OpenThrottle admin web app (React Router, Vite): dashboard, users, roles, and permissions backed by openthrottle-server.",
   "devDependencies": {
     "@openthrottle/react-router-testing": "workspace:^"
   },
   "license": "Apache-2.0",
+  "name": "openthrottle-admin",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
-    "sourceRoot": "./",
     "projectType": "application",
+    "sourceRoot": "./",
     "tags": [
       "name:openthrottle-admin",
       "production:true",
@@ -46,7 +55,8 @@
   },
   "private": true,
   "repository": "git://github.com/OpenThrottle/monorepo.git",
-  "sideEffects": false,
   "scripts": {},
-  "type": "module"
+  "sideEffects": false,
+  "type": "module",
+  "version": "1.0.0"
 }

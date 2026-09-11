@@ -1,12 +1,10 @@
 {
-  "extends": "./tsconfig.json",
   "compilerOptions": {
     "baseUrl": "./",
     "outDir": "./dist",
     "rootDir": "./",
     "types": ["node"]
   },
-  "include": ["src/**/*.ts"],
   "exclude": [
     "**/*.spec.ts",
     "**/*.spec.tsx",
@@ -14,6 +12,8 @@
     "**/*.test.tsx",
     "dist"
   ],
+  "extends": "./tsconfig.json",
+  "include": ["src/**/*.ts"],
   "references": [
     {
       "path": "../generators/tsconfig.lib.json"

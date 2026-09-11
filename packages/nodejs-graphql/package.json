@@ -6,20 +6,23 @@
   },
   "dependencies": {
     "@openthrottle/nodejs-utils": "workspace:^",
-    "graphql": "catalog:"
+    "graphql": "catalog:",
+    "@graphql-typed-document-node/core": "catalog:",
+    "vitest": "catalog:",
+    "tslib": "catalog:"
   },
   "description": "Fetch-based GraphQL client for React Router loaders and actions against openthrottle-server, using TypedDocumentNode from codegen.",
   "devDependencies": {},
   "exports": {
     ".": {
-      "types": "./dist/src/index.d.ts",
       "import": "./dist/src/index.js",
-      "require": "./dist/src/index.js"
+      "require": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
     },
     "./*": {
-      "types": "./dist/*.d.ts",
       "import": "./dist/*.js",
-      "require": "./dist/*.js"
+      "require": "./dist/*.js",
+      "types": "./dist/*.d.ts"
     }
   },
   "license": "Apache-2.0",

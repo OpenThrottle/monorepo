@@ -1,7 +1,4 @@
 {
-  "name": "@openthrottle/react-router-graphql",
-  "description": "GraphQL execution helpers for React Router loaders and actions: typed documents and optional bearer auth from session cookies.",
-  "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
@@ -17,12 +14,14 @@
     "react": "catalog:",
     "zod": "catalog:"
   },
+  "description": "GraphQL execution helpers for React Router loaders and actions: typed documents and optional bearer auth from session cookies.",
   "devDependencies": {
     "@testing-library/react": "catalog:"
   },
   "license": "Apache-2.0",
   "main": "./src/index.ts",
   "module": "./src/index.ts",
+  "name": "@openthrottle/react-router-graphql",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "projectType": "library",
@@ -48,6 +47,7 @@
   "publishConfig": {
     "access": "restricted"
   },
+  "version": "1.0.0",
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
   "sideEffects": false,

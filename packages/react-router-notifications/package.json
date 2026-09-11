@@ -1,7 +1,4 @@
 {
-  "name": "@openthrottle/react-router-notifications",
-  "description": "React Router providers, hooks, and UI for OpenThrottle in-app notifications: store context, bell and list components, and browser permission flows fed by the graphql-ws subscription transport.",
-  "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
@@ -10,17 +7,23 @@
   "dependencies": {
     "@graphql-typed-document-node/core": "catalog:",
     "@openthrottle/nodejs-utils": "workspace:^",
+    "@openthrottle/openthrottle-notifications": "workspace:^",
     "@openthrottle/react-router-graphql": "workspace:^",
     "@openthrottle/react-router-shadcn": "workspace:^",
-    "@openthrottle/openthrottle-notifications": "workspace:^",
     "@openthrottle/react-router-utils": "workspace:^",
     "clsx": "catalog:",
     "lucide-react": "catalog:",
     "react-router": "catalog:"
   },
+  "description": "React Router providers, hooks, and UI for OpenThrottle in-app notifications: store context, bell and list components, and browser permission flows fed by the graphql-ws subscription transport.",
   "license": "Apache-2.0",
   "main": "./src/index.ts",
   "module": "./src/index.ts",
+  "name": "@openthrottle/react-router-notifications",
+  "devDependencies": {
+    "@testing-library/jest-dom": "catalog:",
+    "graphql": "catalog:"
+  },
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "projectType": "library",
@@ -61,12 +64,9 @@
     "types": "./src/index.d.ts"
   },
   "repository": "git://github.com/OpenThrottle/monorepo.git",
+  "version": "1.0.0",
   "scripts": {},
   "sideEffects": false,
   "type": "module",
-  "types": "./src/index.ts",
-  "devDependencies": {
-    "@testing-library/jest-dom": "catalog:",
-    "graphql": "catalog:"
-  }
+  "types": "./src/index.ts"
 }

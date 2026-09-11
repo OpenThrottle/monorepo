@@ -1,29 +1,31 @@
 {
-  "name": "@openthrottle/openthrottle-notifications",
-  "description": "Shared notification event names, severity, and payload types (graphql-ws subscription contract) for OpenThrottle server and openthrottle-developer.",
-  "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
     "url": "https://mattscholta.com"
   },
-  "dependencies": {},
+  "dependencies": {
+    "vitest": "catalog:",
+    "tslib": "catalog:"
+  },
+  "description": "Shared notification event names, severity, and payload types (graphql-ws subscription contract) for OpenThrottle server and openthrottle-developer.",
   "devDependencies": {},
   "exports": {
     ".": {
-      "types": "./dist/src/index.d.ts",
       "import": "./dist/src/index.js",
-      "require": "./dist/src/index.js"
+      "require": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
     },
     "./*": {
-      "types": "./dist/*.d.ts",
       "import": "./dist/*.js",
-      "require": "./dist/*.js"
+      "require": "./dist/*.js",
+      "types": "./dist/*.d.ts"
     }
   },
   "license": "Apache-2.0",
   "main": "./src/index.ts",
   "module": "./src/index.ts",
+  "name": "@openthrottle/openthrottle-notifications",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "projectType": "library",
@@ -48,6 +50,7 @@
   },
   "peerDependencies": {},
   "private": true,
+  "version": "1.0.0",
   "publishConfig": {
     "access": "restricted",
     "exports": {

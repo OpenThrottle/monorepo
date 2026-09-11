@@ -1,7 +1,4 @@
 {
-  "name": "@openthrottle/nestjs-typeorm",
-  "description": "NestJS module with Joi-validated Postgres env config (POSTGRES_*), TypeORM DataSource async providers, NestjsTypeormService, and package scripts for migrations.",
-  "version": "2.2.25",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
@@ -12,24 +9,27 @@
     "@nestjs/config": "catalog:",
     "@openthrottle/nestjs-modules": "workspace:^",
     "joi": "catalog:",
-    "pg": "catalog:",
-    "typeorm": "catalog:"
+    "typeorm": "catalog:",
+    "vitest": "catalog:",
+    "tslib": "catalog:"
   },
+  "description": "NestJS module with Joi-validated Postgres env config (POSTGRES_*), TypeORM DataSource async providers, NestjsTypeormService, and package scripts for migrations.",
   "exports": {
     ".": {
-      "types": "./dist/src/index.d.ts",
       "import": "./dist/src/index.js",
-      "require": "./dist/src/index.js"
+      "require": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
     },
     "./*": {
-      "types": "./dist/*.d.ts",
       "import": "./dist/*.js",
-      "require": "./dist/*.js"
+      "require": "./dist/*.js",
+      "types": "./dist/*.d.ts"
     }
   },
   "license": "Apache-2.0",
   "main": "./src/index.ts",
   "module": "./src/index.ts",
+  "name": "@openthrottle/nestjs-typeorm",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "projectType": "library",
@@ -63,6 +63,7 @@
     "access": "restricted"
   },
   "repository": "git://github.com/OpenThrottle/monorepo.git",
+  "version": "2.2.25",
   "type": "commonjs",
   "types": "./src/index.ts"
 }

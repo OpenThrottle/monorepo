@@ -1,7 +1,4 @@
 {
-  "name": "@openthrottle/react-router-auth",
-  "description": "HTTP-only auth cookie helpers for React Router apps: Set-Cookie builders, reading the auth token from a Cookie header, and a session-clear header.",
-  "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
@@ -10,10 +7,12 @@
   "dependencies": {
     "@openthrottle/nodejs-utils": "workspace:^"
   },
+  "description": "HTTP-only auth cookie helpers for React Router apps: Set-Cookie builders, reading the auth token from a Cookie header, and a session-clear header.",
   "devDependencies": {},
   "license": "Apache-2.0",
   "main": "./src/index.ts",
   "module": "./src/index.ts",
+  "name": "@openthrottle/react-router-auth",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "projectType": "library",
@@ -39,6 +38,7 @@
   "publishConfig": {
     "access": "restricted"
   },
+  "version": "1.0.0",
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
   "sideEffects": false,

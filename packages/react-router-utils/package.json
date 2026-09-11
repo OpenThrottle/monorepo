@@ -1,17 +1,16 @@
 {
-  "name": "@openthrottle/react-router-utils",
-  "description": "Shared config, environment, logging, and metadata utilities for OpenThrottle React Router applications.",
-  "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
     "url": "https://mattscholta.com"
   },
   "dependencies": {},
+  "description": "Shared config, environment, logging, and metadata utilities for OpenThrottle React Router applications.",
   "devDependencies": {},
   "license": "Apache-2.0",
   "main": "./src/index.ts",
   "module": "./src/index.ts",
+  "name": "@openthrottle/react-router-utils",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "projectType": "library",
@@ -40,6 +39,7 @@
   "publishConfig": {
     "access": "restricted"
   },
+  "version": "1.0.0",
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
   "sideEffects": false,

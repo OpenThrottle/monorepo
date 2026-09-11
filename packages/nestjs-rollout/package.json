@@ -9,7 +9,13 @@
     "@openthrottle/nestjs-auth": "workspace:^",
     "@openthrottle/nestjs-modules": "workspace:^",
     "@openthrottle/nestjs-repositories": "workspace:^",
-    "typeorm": "catalog:"
+    "typeorm": "catalog:",
+    "@nestjs/common": "catalog:",
+    "@nestjs/testing": "catalog:",
+    "@golevelup/ts-vitest": "catalog:",
+    "@openthrottle/nestjs-testing": "workspace:^",
+    "vitest": "catalog:",
+    "tslib": "catalog:"
   },
   "description": "OpenThrottle rollout: RBAC-aware feature-flagging domain (entity, module, and RolloutService with role-targeted evaluation).",
   "devDependencies": {
@@ -17,14 +23,14 @@
   },
   "exports": {
     ".": {
-      "types": "./dist/src/index.d.ts",
       "import": "./dist/src/index.js",
-      "require": "./dist/src/index.js"
+      "require": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
     },
     "./*": {
-      "types": "./dist/*.d.ts",
       "import": "./dist/*.js",
-      "require": "./dist/*.js"
+      "require": "./dist/*.js",
+      "types": "./dist/*.d.ts"
     }
   },
   "main": "./src/index.ts",
@@ -42,10 +48,10 @@
       "type:package"
     ],
     "targets": {
-      "build": {
+      "__build-package": {
         "executor": "@nx/js:tsc"
       },
-      "__build-package": {
+      "build": {
         "executor": "@nx/js:tsc"
       },
       "dev": {

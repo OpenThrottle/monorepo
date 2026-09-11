@@ -1,12 +1,12 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
-  "extends": ["./tsconfig.json"],
   "compilerOptions": {
     "composite": false,
     "declaration": false,
     "declarationMap": false,
     "noEmit": true
   },
+  "extends": ["./tsconfig.json"],
   "include": [
     "src/**/*.spec.ts",
     "src/**/*.spec.tsx",

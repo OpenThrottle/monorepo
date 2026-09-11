@@ -1,33 +1,35 @@
 {
-  "name": "@openthrottle/nestjs-stripe",
-  "description": "NestJS Stripe module for OpenThrottle: config, checkout sessions, product GraphQL, REST and GraphQL webhook handling, and injection ports for user and subscription persistence.",
-  "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
     "url": "https://mattscholta.com"
   },
   "dependencies": {
-    "@openthrottle/nestjs-auth": "workspace:^",
     "@nestjs/graphql": "catalog:",
-    "graphql": "catalog:",
-    "stripe": "catalog:"
+    "@openthrottle/nestjs-auth": "workspace:^",
+    "stripe": "catalog:",
+    "vitest": "catalog:",
+    "@nestjs/testing": "catalog:",
+    "tslib": "catalog:"
   },
+  "description": "NestJS Stripe module for OpenThrottle: config, checkout sessions, product GraphQL, REST and GraphQL webhook handling, and injection ports for user and subscription persistence.",
+  "devDependencies": {},
   "exports": {
     ".": {
-      "types": "./dist/src/index.d.ts",
       "import": "./dist/src/index.js",
-      "require": "./dist/src/index.js"
+      "require": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
     },
     "./*": {
-      "types": "./dist/src/*.d.ts",
       "import": "./dist/src/*.js",
-      "require": "./dist/src/*.js"
+      "require": "./dist/src/*.js",
+      "types": "./dist/src/*.d.ts"
     }
   },
   "license": "Apache-2.0",
   "main": "./src/index.ts",
   "module": "./src/index.ts",
+  "name": "@openthrottle/nestjs-stripe",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "projectType": "library",
@@ -56,15 +58,12 @@
       "typecheck": {}
     }
   },
-  "devDependencies": {},
   "peerDependencies": {
     "@nestjs/common": "catalog:",
-    "@nestjs/config": "catalog:",
-    "@nestjs/core": "catalog:",
-    "@nestjs/graphql": "catalog:",
-    "graphql": "catalog:"
+    "@nestjs/graphql": "catalog:"
   },
   "private": true,
+  "version": "1.0.0",
   "publishConfig": {
     "access": "restricted"
   },

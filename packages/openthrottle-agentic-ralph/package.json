@@ -5,11 +5,12 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
-    "@openthrottle/graphql-codegen": "workspace:^",
     "@openthrottle/nodejs-graphql": "workspace:^",
-    "@openthrottle/nodejs-utils": "workspace:^",
     "@openthrottle/openthrottle-agentic-utils": "workspace:^",
-    "@openthrottle/openthrottle-agentic-workflow": "workspace:^"
+    "@openthrottle/openthrottle-agentic-workflow": "workspace:^",
+    "@graphql-typed-document-node/core": "catalog:",
+    "zod": "catalog:",
+    "tslib": "catalog:"
   },
   "description": "Ralph agentic workflow: codegen GraphQL client for OpenThrottle plans/tasks, injected iteration runner, and GraphQL-only orchestrator (no NestJS or Postgres).",
   "devDependencies": {
@@ -17,14 +18,14 @@
   },
   "exports": {
     ".": {
-      "types": "./dist/src/index.d.ts",
       "import": "./dist/src/index.js",
-      "require": "./dist/src/index.js"
+      "require": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
     },
     "./*": {
-      "types": "./dist/*.d.ts",
       "import": "./dist/*.js",
-      "require": "./dist/*.js"
+      "require": "./dist/*.js",
+      "types": "./dist/*.d.ts"
     }
   },
   "license": "Apache-2.0",

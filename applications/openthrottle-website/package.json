@@ -1,26 +1,39 @@
 {
-  "name": "openthrottle-website",
-  "description": "Marketing and landing site for OpenThrottle—documentation, legal pages, and product information.",
-  "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
     "url": "https://developer.openthrottle.ai"
   },
   "dependencies": {
-    "@openthrottle/graphql-codegen": "workspace:^",
-    "@openthrottle/react-router-docs": "workspace:^",
-    "@openthrottle/react-router-ui-global": "workspace:^",
-    "clsx": "catalog:"
+    "clsx": "catalog:",
+    "dotenv": "catalog:",
+    "react": "catalog:",
+    "react-router": "catalog:",
+    "react-dom": "catalog:",
+    "@react-router/node": "catalog:",
+    "isbot": "catalog:",
+    "@vercel/analytics": "catalog:",
+    "@react-router/dev": "catalog:",
+    "@react-router/fs-routes": "catalog:",
+    "@phosphor-icons/react": "catalog:",
+    "@vercel/react-router": "catalog:",
+    "@testing-library/jest-dom": "catalog:",
+    "vite-bundle-analyzer": "catalog:",
+    "vite": "catalog:",
+    "react-router-devtools": "catalog:",
+    "vite-plugin-devtools-json": "catalog:",
+    "@tailwindcss/vite": "catalog:"
   },
+  "description": "Marketing and landing site for OpenThrottle—documentation, legal pages, and product information.",
   "devDependencies": {
     "@openthrottle/react-router-testing": "workspace:^"
   },
   "license": "Apache-2.0",
+  "name": "openthrottle-website",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
-    "sourceRoot": "./",
     "projectType": "application",
+    "sourceRoot": "./",
     "tags": [
       "name:openthrottle-website",
       "production:true",
@@ -29,8 +42,8 @@
       "type:application"
     ],
     "targets": {
-      "____codegen-graphql____": {},
       "____codegen-graphql-watch____": {},
+      "____codegen-graphql____": {},
       "codegen-react-router": {},
       "codegen-react-router-watch": {},
       "lint": {},
@@ -41,7 +54,8 @@
   },
   "private": true,
   "repository": "git://github.com/OpenThrottle/website.git",
-  "sideEffects": false,
   "scripts": {},
-  "type": "module"
+  "sideEffects": false,
+  "type": "module",
+  "version": "1.0.0"
 }
