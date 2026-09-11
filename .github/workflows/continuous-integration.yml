@@ -603,7 +603,13 @@ jobs:
           printf '%s\n' "$formattable" | tr '\n' '\0' \
             | xargs -0 pnpm exec prettier --ignore-unknown --check
 
-      - name: '🧩 Template compliance audit'
+      # Runs every `audit:*:strict` script except test-coverage, via the glob in
+      # the root `audit:strict`. Today that is component-shape (x2), route-shape
+      # and workspace-deps. A new strict audit is gated here the moment it is
+      # named `audit:<thing>:strict` — which is why `audit:workspace-deps:strict`
+      # needs no step of its own. Note `audit:templates-compliance` has no
+      # `:strict` variant and so is NOT in this glob, despite the old step name.
+      - name: '🧩 Strict audits (audit:strict)'
         if: matrix.jobIndex == 1
         run: pnpm run audit:strict
 

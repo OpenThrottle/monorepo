@@ -129,7 +129,17 @@ export const eslintConfig = tslint.config([
       '**/*.test.tsx',
     ],
     rules: {
-      '@nx/dependency-checks': 'error',
+      // `@nx/dependency-checks` deliberately does NOT live here. It only does
+      // anything when applied to `**/package.json` with `jsonc-eslint-parser`,
+      // so declaring it in this source-file block was inert — a rule set to
+      // `error` that never once fired. Scoping it correctly was spiked and
+      // rejected: with `buildTargets: ['typecheck']` it does find every
+      // undeclared sibling, but it cannot be narrowed to workspace packages
+      // (`ignoredDependencies` is an exact-match string list, no globs, no
+      // negation), so repo-wide it reports 442 missing declarations and 59
+      // obsolete ones across all 71 projects — the entire root-hoisting
+      // surface, not the sibling-import drift we want gated. That gate is
+      // `scripts/audit-workspace-deps.ts` instead.
       '@nx/enforce-module-boundaries': [
         'error',
         {
@@ -140,7 +150,7 @@ export const eslintConfig = tslint.config([
           // lazy-loaded libraries are forbidden"). The repo does no intentional
           // code-splitting this check would protect, so waive the static/dynamic
           // consistency check for all imports (`.*` is a regex matching any
-          // import). Tag depConstraints + dependency-checks remain fully enforced.
+          // import). Tag depConstraints remain fully enforced.
           checkDynamicDependenciesExceptions: ['.*'],
           depConstraints: [
             {
