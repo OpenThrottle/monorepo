@@ -1,5 +1,4 @@
 {
-  "extends": "./tsconfig.json",
   "compilerOptions": {
     "baseUrl": "./",
     "emitDecoratorMetadata": true,
@@ -7,7 +6,6 @@
     "outDir": "./dist",
     "rootDirs": ["./src", "./tests"]
   },
-  "include": ["src/**/*", "tests/**/*"],
   "exclude": [
     "**/*.spec.ts",
     "**/*.spec.tsx",
@@ -15,6 +13,8 @@
     "**/*.test.tsx",
     "dist"
   ],
+  "extends": "./tsconfig.json",
+  "include": ["src/**/*", "tests/**/*"],
   "references": [
     {
       "path": "../nestjs-modules/tsconfig.lib.json"

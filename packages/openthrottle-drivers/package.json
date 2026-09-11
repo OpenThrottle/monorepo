@@ -4,24 +4,26 @@
     "name": "Matthew Scholta",
     "url": "https://mattscholta.com"
   },
-  "dependencies": {},
+  "dependencies": {
+    "tslib": "catalog:"
+  },
   "description": "OT-central contract for invoking agent CLIs (Claude Code, Codex, Cursor, Grok, OpenCode). defineDriver + registry + shared execution engine.",
   "exports": {
     ".": {
-      "types": "./dist/src/index.d.ts",
       "import": "./dist/src/index.js",
-      "require": "./dist/src/index.js"
+      "require": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
     },
     "./*": {
-      "types": "./dist/*.d.ts",
       "import": "./dist/*.js",
-      "require": "./dist/*.js"
+      "require": "./dist/*.js",
+      "types": "./dist/*.d.ts"
     }
   },
   "license": "Apache-2.0",
   "main": "./src/index.ts",
-  "name": "@openthrottle/openthrottle-drivers",
   "module": "./src/index.ts",
+  "name": "@openthrottle/openthrottle-drivers",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "projectType": "library",

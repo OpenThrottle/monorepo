@@ -9,27 +9,27 @@
     "@openthrottle/nodejs-utils": "workspace:^",
     "@openthrottle/openthrottle-agentic-utils": "workspace:^",
     "openai": "catalog:",
-    "pg": "catalog:",
-    "typeorm": "catalog:"
+    "typeorm": "catalog:",
+    "tslib": "catalog:"
   },
   "description": "Node-only OpenThrottle data client: Postgres vector search, plan/task/note CRUD, and embeddings (OpenAI/Ollama).",
   "devDependencies": {},
   "exports": {
     ".": {
-      "types": "./dist/src/index.d.ts",
       "import": "./dist/src/index.js",
-      "require": "./dist/src/index.js"
+      "require": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
     },
     "./*": {
-      "types": "./dist/*.d.ts",
       "import": "./dist/*.js",
-      "require": "./dist/*.js"
+      "require": "./dist/*.js",
+      "types": "./dist/*.d.ts"
     }
   },
   "license": "Apache-2.0",
   "main": "./src/index.ts",
-  "name": "@openthrottle/node-client",
   "module": "./src/index.ts",
+  "name": "@openthrottle/node-client",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "projectType": "library",

@@ -1,5 +1,4 @@
 {
-  "extends": "./tsconfig.json",
   "compilerOptions": {
     "baseUrl": "./",
     "module": "NodeNext",
@@ -7,6 +6,15 @@
     "outDir": "./dist",
     "rootDirs": ["./src"]
   },
+  "exclude": [
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "dist",
+    "tests/**"
+  ],
+  "extends": "./tsconfig.json",
   "include": ["src/**/*.json", "src/**/*"],
   "references": [
     {
@@ -18,13 +26,5 @@
     {
       "path": "../../tools/dotfiles/tsconfig.lib.json"
     }
-  ],
-  "exclude": [
-    "**/*.spec.ts",
-    "**/*.spec.tsx",
-    "**/*.test.ts",
-    "**/*.test.tsx",
-    "dist",
-    "tests/**"
   ]
 }

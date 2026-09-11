@@ -1,7 +1,4 @@
 {
-  "name": "@openthrottle/nestjs-throttler",
-  "description": "NestJS API rate limiting via @nestjs/throttler: NestjsThrottlerModule configures ThrottlerModule defaults (10 requests / 60s) and binds a GraphQL-aware ThrottlerGuard as a global APP_GUARD.",
-  "version": "2.2.25",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
@@ -12,8 +9,14 @@
     "@nestjs/core": "catalog:",
     "@nestjs/graphql": "catalog:",
     "@nestjs/throttler": "catalog:",
-    "@openthrottle/nodejs-utils": "workspace:^"
+    "@openthrottle/nodejs-utils": "workspace:^",
+    "@openthrottle/nestjs-testing": "workspace:^",
+    "vitest": "catalog:",
+    "@nestjs/apollo": "catalog:",
+    "@nestjs/testing": "catalog:",
+    "tslib": "catalog:"
   },
+  "description": "NestJS API rate limiting via @nestjs/throttler: NestjsThrottlerModule configures ThrottlerModule defaults (10 requests / 60s) and binds a GraphQL-aware ThrottlerGuard as a global APP_GUARD.",
   "devDependencies": {
     "@apollo/server": "catalog:",
     "@nestjs/apollo": "catalog:",
@@ -22,19 +25,20 @@
   },
   "exports": {
     ".": {
-      "types": "./dist/src/index.d.ts",
       "import": "./dist/src/index.js",
-      "require": "./dist/src/index.js"
+      "require": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
     },
     "./*": {
-      "types": "./dist/*.d.ts",
       "import": "./dist/*.js",
-      "require": "./dist/*.js"
+      "require": "./dist/*.js",
+      "types": "./dist/*.d.ts"
     }
   },
   "license": "Apache-2.0",
   "main": "./src/index.ts",
   "module": "./src/index.ts",
+  "name": "@openthrottle/nestjs-throttler",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "projectType": "library",
@@ -67,6 +71,7 @@
   "publishConfig": {
     "access": "restricted"
   },
+  "version": "2.2.25",
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
   "type": "commonjs",

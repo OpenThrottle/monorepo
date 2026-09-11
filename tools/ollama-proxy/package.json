@@ -46,27 +46,27 @@
         "description": "Run the @tools/ollama-proxy end-to-end check via scripts/e2e.mjs.",
         "executor": "nx:run-commands",
         "options": {
-          "cwd": "{projectRoot}",
           "commands": [
             "node scripts/e2e.mjs"
-          ]
+          ],
+          "cwd": "{projectRoot}"
         }
       },
       "lint": {},
-      "test": {},
       "serve": {
         "cache": false,
         "description": "Build then run the ollama-proxy server (dist/server.js) with .env.default/.env loaded.",
         "executor": "nx:run-commands",
         "options": {
-          "cwd": "{projectRoot}",
           "commands": [
             "nx run @tools/ollama-proxy:build:tsc",
             "node --env-file=.env.default --env-file=.env ./dist/server.js"
           ],
+          "cwd": "{projectRoot}",
           "parallel": false
         }
       },
+      "test": {},
       "typecheck": {}
     }
   },
@@ -76,10 +76,13 @@
   },
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {
-    "start": "node ./dist/server.js",
     "build": "nx run @tools/ollama-proxy:build:tsc",
-    "e2e": "node scripts/e2e.mjs"
+    "e2e": "node scripts/e2e.mjs",
+    "start": "node ./dist/server.js"
   },
   "type": "module",
-  "version": "1.0.0"
+  "version": "1.0.0",
+  "dependencies": {
+    "vitest": "catalog:"
+  }
 }

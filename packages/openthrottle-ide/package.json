@@ -1,7 +1,4 @@
 {
-  "name": "@openthrottle/openthrottle-ide",
-  "description": "Headless code-intelligence engine for agent-driven IDE experiences: gitignore-aware enumeration, ripgrep text search, ts-morph symbols, incremental sync, and pgvector semantic search over arbitrary workspaces.",
-  "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
@@ -11,23 +8,26 @@
     "@vscode/ripgrep": "catalog:",
     "chokidar": "catalog:",
     "ignore": "catalog:",
-    "ts-morph": "catalog:"
+    "ts-morph": "catalog:",
+    "tslib": "catalog:"
   },
+  "description": "Headless code-intelligence engine for agent-driven IDE experiences: gitignore-aware enumeration, ripgrep text search, ts-morph symbols, incremental sync, and pgvector semantic search over arbitrary workspaces.",
   "exports": {
     ".": {
-      "types": "./dist/src/index.d.ts",
       "import": "./dist/src/index.js",
-      "require": "./dist/src/index.js"
+      "require": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
     },
     "./*": {
-      "types": "./dist/*.d.ts",
       "import": "./dist/*.js",
-      "require": "./dist/*.js"
+      "require": "./dist/*.js",
+      "types": "./dist/*.d.ts"
     }
   },
   "license": "Apache-2.0",
   "main": "./src/index.ts",
   "module": "./src/index.ts",
+  "name": "@openthrottle/openthrottle-ide",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "projectType": "library",
@@ -67,6 +67,7 @@
     "types": "./src/index.d.ts"
   },
   "repository": "git://github.com/OpenThrottle/monorepo.git",
+  "version": "1.0.0",
   "scripts": {},
   "type": "module",
   "types": "./src/index.ts"

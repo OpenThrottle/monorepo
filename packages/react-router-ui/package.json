@@ -1,7 +1,4 @@
 {
-  "name": "@openthrottle/react-router-ui",
-  "description": "React Router UI components and primitives for forms, layout, and navigation.",
-  "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
@@ -14,9 +11,11 @@
     "class-variance-authority": "catalog:",
     "framer-motion": "catalog:"
   },
+  "description": "React Router UI components and primitives for forms, layout, and navigation.",
   "license": "Apache-2.0",
   "main": "./src/index.ts",
   "module": "./src/index.ts",
+  "name": "@openthrottle/react-router-ui",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "projectType": "library",
@@ -43,6 +42,7 @@
   },
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
+  "version": "1.0.0",
   "sideEffects": false,
   "type": "module",
   "types": "./src/index.ts"

@@ -1,12 +1,12 @@
 {
-  "extends": "./tsconfig.json",
   "compilerOptions": {
     "baseUrl": "./",
     "outDir": "./build",
     "rootDir": "./"
   },
-  "include": ["src/**/*.json", "src/**/*.ts"],
   "exclude": ["build", "src/**/*.test.ts"],
+  "extends": "./tsconfig.json",
+  "include": ["src/**/*.json", "src/**/*.ts"],
   "references": [
     {
       "path": "../../tools/generators/tsconfig.lib.json"

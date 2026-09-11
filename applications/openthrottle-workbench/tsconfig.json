@@ -1,11 +1,11 @@
 {
-  "extends": "../../tsconfig.react.json",
   "compilerOptions": {
     "baseUrl": "./",
     "noEmit": true,
     "types": ["node", "vite/client"]
   },
   "exclude": ["node_modules", "storybook-static"],
+  "extends": "../../tsconfig.react.json",
   "files": [],
   "include": ["**/*.ts", "**/*.tsx"],
   "references": [

@@ -1,7 +1,4 @@
 {
-  "name": "@openthrottle/react-router-rollout",
-  "description": "React Router client SDK for OpenThrottle rollout: typed flag catalog, root provider, and hooks that hydrate evaluations from the GraphQL API.",
-  "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
@@ -10,12 +7,14 @@
   "dependencies": {
     "@openthrottle/nodejs-utils": "workspace:^"
   },
+  "description": "React Router client SDK for OpenThrottle rollout: typed flag catalog, root provider, and hooks that hydrate evaluations from the GraphQL API.",
   "devDependencies": {
     "@testing-library/jest-dom": "catalog:"
   },
   "license": "Apache-2.0",
   "main": "./src/index.ts",
   "module": "./src/index.ts",
+  "name": "@openthrottle/react-router-rollout",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "projectType": "library",
@@ -60,6 +59,7 @@
     "module": "./src/index.js",
     "types": "./src/index.d.ts"
   },
+  "version": "1.0.0",
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
   "sideEffects": false,

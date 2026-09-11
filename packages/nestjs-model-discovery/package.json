@@ -1,7 +1,4 @@
 {
-  "name": "@openthrottle/nestjs-model-discovery",
-  "description": "Thin NestJS wrapper around the openthrottle-agentic-utils model-discovery core: an injectable, 60s-TTL-cached service for discovering local OpenAI-compatible model servers. GraphQL-agnostic.",
-  "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
@@ -11,24 +8,30 @@
     "@nestjs/config": "catalog:",
     "@openthrottle/nestjs-modules": "workspace:^",
     "@openthrottle/openthrottle-agentic-utils": "workspace:^",
-    "joi": "catalog:"
+    "joi": "catalog:",
+    "vitest": "catalog:",
+    "@golevelup/ts-vitest": "catalog:",
+    "@nestjs/testing": "catalog:",
+    "tslib": "catalog:"
   },
+  "description": "Thin NestJS wrapper around the openthrottle-agentic-utils model-discovery core: an injectable, 60s-TTL-cached service for discovering local OpenAI-compatible model servers. GraphQL-agnostic.",
   "devDependencies": {},
   "exports": {
     ".": {
-      "types": "./dist/src/index.d.ts",
       "import": "./dist/src/index.js",
-      "require": "./dist/src/index.js"
+      "require": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
     },
     "./*": {
-      "types": "./dist/*.d.ts",
       "import": "./dist/*.js",
-      "require": "./dist/*.js"
+      "require": "./dist/*.js",
+      "types": "./dist/*.d.ts"
     }
   },
   "license": "Apache-2.0",
   "main": "./src/index.ts",
   "module": "./src/index.ts",
+  "name": "@openthrottle/nestjs-model-discovery",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "projectType": "library",
@@ -41,10 +44,10 @@
       "type:package"
     ],
     "targets": {
-      "build": {
+      "__build-package": {
         "executor": "@nx/js:tsc"
       },
-      "__build-package": {
+      "build": {
         "executor": "@nx/js:tsc"
       },
       "dev": {
@@ -64,6 +67,7 @@
     "@nestjs/common": ">=10.0.0"
   },
   "private": true,
+  "version": "1.0.0",
   "publishConfig": {
     "access": "restricted",
     "exports": {

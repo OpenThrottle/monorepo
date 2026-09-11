@@ -1,7 +1,4 @@
 {
-  "name": "@openthrottle/graphql-codegen",
-  "description": "GraphQL code generation presets and utilities for TypeScript projects.",
-  "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
@@ -12,10 +9,12 @@
     "@graphql-codegen/client-preset": "catalog:",
     "graphql-codegen-typescript-validation-schema": "catalog:"
   },
+  "description": "GraphQL code generation presets and utilities for TypeScript projects.",
   "devDependencies": {},
   "license": "Apache-2.0",
   "main": "./src/index.ts",
   "module": "./src/index.ts",
+  "name": "@openthrottle/graphql-codegen",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "projectType": "library",
@@ -41,6 +40,7 @@
   "publishConfig": {
     "access": "restricted"
   },
+  "version": "1.0.0",
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
   "type": "module",

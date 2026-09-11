@@ -1,19 +1,19 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
-  "extends": "./tsconfig.json",
   "compilerOptions": {
     "baseUrl": "./",
-    "outDir": "./build",
-    "rootDir": "./",
     "composite": false,
     "declaration": false,
     "declarationMap": false,
-    "noEmit": true,
     "lib": ["ES2022"],
+    "noEmit": true,
+    "outDir": "./build",
+    "rootDir": "./",
     "types": ["node", "vitest/globals"]
   },
-  "include": ["src/**/*.json", "src/**/*.ts", "src/**/*.tsx", "tests/**/*.ts"],
   "exclude": ["build", "src/graphql/resolver-authorization-stance.test.ts"],
+  "extends": "./tsconfig.json",
+  "include": ["src/**/*.json", "src/**/*.ts", "src/**/*.tsx", "tests/**/*.ts"],
   "references": [
     {
       "path": "../../tools/generators/tsconfig.lib.json"

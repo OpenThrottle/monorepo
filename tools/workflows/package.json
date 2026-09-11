@@ -1,7 +1,7 @@
 {
   "bin": {
-    "workflow-link-merge": "./dist/src/bin/link-merge.js",
     "workflow-lighthouse": "./dist/src/bin/lighthouse.js",
+    "workflow-link-merge": "./dist/src/bin/link-merge.js",
     "workflow-ralph": "./dist/src/bin/ralph.js"
   },
   "dependencies": {
@@ -11,10 +11,16 @@
     "@openthrottle/openthrottle-agentic-utils": "workspace:^",
     "@openthrottle/openthrottle-agentic-workflow": "workspace:^",
     "@openthrottle/openthrottle-drivers": "workspace:^",
-    "@tools/generators": "workspace:^",
     "commander": "catalog:",
     "pg": "catalog:",
-    "pidusage": "catalog:"
+    "pidusage": "catalog:",
+    "vitest": "catalog:",
+    "chrome-launcher": "catalog:",
+    "lighthouse": "catalog:",
+    "async-mutex": "catalog:",
+    "vite": "catalog:",
+    "@nx/vite": "catalog:",
+    "vite-plugin-dts": "catalog:"
   },
   "deprecated": "Use @openthrottle/nestjs-agentic-workflow for BullMQ agentic workflows. See tools/workflows/README.md.",
   "description": "[DEPRECATED] Legacy workflow CLIs and re-exports. New code should use @openthrottle/nestjs-agentic-workflow (queued runs), @openthrottle/nestjs-worktrees (worktrees), and @openthrottle/openthrottle-agentic-workflow (contracts). workflow-ralph remains a thin local CLI shim; workflow-link-merge and workflow-lighthouse stay here until relocated.",
@@ -26,14 +32,14 @@
       "import": "./dist/src/index.js",
       "require": "./dist/src/index.js"
     },
-    "./doc-ingestion": {
-      "types": "./dist/src/doc-ingestion/index.d.ts",
-      "import": "./dist/src/doc-ingestion/index.js",
-      "require": "./dist/src/doc-ingestion/index.js"
-    },
     "./*": {
       "import": "./dist/*.js",
       "require": "./dist/*.js"
+    },
+    "./doc-ingestion": {
+      "import": "./dist/src/doc-ingestion/index.js",
+      "require": "./dist/src/doc-ingestion/index.js",
+      "types": "./dist/src/doc-ingestion/index.d.ts"
     }
   },
   "license": "Apache-2.0",

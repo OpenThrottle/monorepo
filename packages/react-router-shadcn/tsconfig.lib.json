@@ -1,5 +1,4 @@
 {
-  "extends": "./tsconfig.json",
   "compilerOptions": {
     "baseUrl": "./",
     "moduleResolution": "bundler",
@@ -10,7 +9,6 @@
     "resolvePackageJsonImports": true,
     "rootDirs": ["./src", "./tests"]
   },
-  "include": ["**/*.json", "src/**/*", "tests/**/*"],
   "exclude": [
     "**/*.spec.ts",
     "**/*.spec.tsx",
@@ -19,6 +17,8 @@
     "**/*.test.tsx",
     "dist"
   ],
+  "extends": "./tsconfig.json",
+  "include": ["**/*.json", "src/**/*", "tests/**/*"],
   "references": [
     {
       "path": "../../tools/dotfiles/tsconfig.lib.json"

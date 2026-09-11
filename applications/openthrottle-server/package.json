@@ -33,9 +33,7 @@
     "@openthrottle/nestjs-redis": "workspace:^",
     "@openthrottle/nestjs-repositories": "workspace:^",
     "@openthrottle/nestjs-rollout": "workspace:^",
-    "@openthrottle/nestjs-stripe": "workspace:^",
     "@openthrottle/nestjs-throttler": "workspace:^",
-    "@openthrottle/nestjs-utils": "workspace:^",
     "@openthrottle/nestjs-vector-search": "workspace:^",
     "@openthrottle/nestjs-websockets": "workspace:^",
     "@openthrottle/nestjs-worktrees": "workspace:^",
@@ -51,18 +49,29 @@
     "bullmq": "catalog:",
     "dataloader": "catalog:",
     "dotenv": "catalog:",
-    "graphql": "catalog:",
-    "ignore": "catalog:",
     "ioredis": "catalog:",
     "passport-local": "catalog:",
-    "pg": "catalog:",
     "reflect-metadata": "catalog:",
-    "rxjs": "catalog:",
     "typeorm": "catalog:",
-    "zod": "catalog:"
+    "zod": "catalog:",
+    "@nestjs/testing": "catalog:",
+    "nestjs-cls": "catalog:",
+    "vitest": "catalog:",
+    "@golevelup/ts-vitest": "catalog:",
+    "@openthrottle/openthrottle-drivers": "workspace:^",
+    "@openthrottle/nestjs-testing": "workspace:^",
+    "@nestjs/throttler": "catalog:",
+    "@nestjs/typeorm": "catalog:",
+    "@tools/generators": "workspace:^",
+    "@testing-library/jest-dom": "catalog:",
+    "unplugin-swc": "catalog:",
+    "vite": "catalog:"
   },
   "description": "NestJS GraphQL API for OpenThrottle plans, tasks, embeddings, and related platform services (Redis, BullMQ, Stripe).",
   "license": "Apache-2.0",
+  "devDependencies": {
+    "@openthrottle/nestjs-testing": "workspace:^"
+  },
   "main": "./src/main.ts",
   "module": "./src/main.ts",
   "name": "openthrottle-server",
@@ -88,28 +97,16 @@
           "cwd": "{projectRoot}"
         }
       },
-      "docker-build": {
-        "executor": "nx:run-commands",
-        "options": {
-          "command": "docker build -f Dockerfile.NestJS --target production --build-arg APP_NAME=openthrottle-server --build-arg APP_VERSION=$APP_VERSION --build-arg PNPM_VERSION=$PNPM_VERSION --build-arg GITHUB_TOKEN=$GITHUB_TOKEN -t openthrottle-server:local .",
-          "cwd": "{workspaceRoot}",
-          "env": {
-            "APP_VERSION": "1.3.0",
-            "PNPM_VERSION": "11.6.0"
-          }
-        },
-        "description": "Build openthrottle-server image from root Dockerfile.NestJS (monorepo context). Set GITHUB_TOKEN in environment for private deps."
-      },
       "dev": {
         "continuous": true,
         "dependsOn": [
           {
-            "target": "ensure-worktree",
-            "projects": "monorepo"
+            "projects": "monorepo",
+            "target": "ensure-worktree"
           },
           {
-            "target": "ensure-migrations",
-            "projects": "monorepo"
+            "projects": "monorepo",
+            "target": "ensure-migrations"
           },
           "^dev"
         ],
@@ -126,8 +123,8 @@
         "continuous": true,
         "dependsOn": [
           {
-            "target": "ensure-migrations",
-            "projects": "monorepo"
+            "projects": "monorepo",
+            "target": "ensure-migrations"
           },
           "^dev"
         ],
@@ -153,6 +150,18 @@
           "cwd": "{projectRoot}"
         }
       },
+      "docker-build": {
+        "description": "Build openthrottle-server image from root Dockerfile.NestJS (monorepo context). Set GITHUB_TOKEN in environment for private deps.",
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "docker build -f Dockerfile.NestJS --target production --build-arg APP_NAME=openthrottle-server --build-arg APP_VERSION=$APP_VERSION --build-arg PNPM_VERSION=$PNPM_VERSION --build-arg GITHUB_TOKEN=$GITHUB_TOKEN -t openthrottle-server:local .",
+          "cwd": "{workspaceRoot}",
+          "env": {
+            "APP_VERSION": "1.3.0",
+            "PNPM_VERSION": "11.6.0"
+          }
+        }
+      },
       "lint": {
         "options": {
           "command": "pnpm exec eslint -c ./eslint.config.mts .",
@@ -163,8 +172,8 @@
         "continuous": true,
         "dependsOn": [
           {
-            "target": "ensure-migrations",
-            "projects": "monorepo"
+            "projects": "monorepo",
+            "target": "ensure-migrations"
           },
           "^build"
         ],
@@ -181,8 +190,8 @@
         "continuous": true,
         "dependsOn": [
           {
-            "target": "ensure-migrations",
-            "projects": "monorepo"
+            "projects": "monorepo",
+            "target": "ensure-migrations"
           },
           "^build"
         ],
@@ -206,8 +215,5 @@
   },
   "sideEffects": false,
   "type": "commonjs",
-  "version": "1.3.0",
-  "devDependencies": {
-    "@openthrottle/nestjs-testing": "workspace:^"
-  }
+  "version": "1.3.0"
 }

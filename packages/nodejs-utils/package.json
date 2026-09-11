@@ -4,24 +4,26 @@
     "name": "Matthew Scholta",
     "url": "https://mattscholta.com"
   },
-  "dependencies": {},
+  "dependencies": {
+    "tslib": "catalog:"
+  },
   "description": "Zero-dependency, runtime-agnostic TypeScript utilities (shared type guards) for OpenThrottle server and client code.",
   "devDependencies": {},
   "exports": {
     ".": {
-      "types": "./dist/src/index.d.ts",
       "import": "./dist/src/index.js",
-      "require": "./dist/src/index.js"
+      "require": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
     },
     "./*": {
-      "types": "./dist/*.d.ts",
       "import": "./dist/*.js",
-      "require": "./dist/*.js"
+      "require": "./dist/*.js",
+      "types": "./dist/*.d.ts"
     }
   },
   "main": "./src/index.ts",
-  "name": "@openthrottle/nodejs-utils",
   "module": "./src/index.ts",
+  "name": "@openthrottle/nodejs-utils",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "projectType": "library",

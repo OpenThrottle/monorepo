@@ -1,7 +1,4 @@
 {
-  "name": "@openthrottle/nestjs-redis",
-  "description": "NestJS Redis integration: a fault-tolerant Apollo Server Redis cache backend (getRedisCache) and a module that closes those connections on shutdown.",
-  "version": "2.2.25",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
@@ -13,23 +10,30 @@
     "@keyv/redis": "catalog:",
     "@openthrottle/nestjs-modules": "workspace:^",
     "ioredis": "catalog:",
-    "keyv": "catalog:"
+    "keyv": "catalog:",
+    "vitest": "catalog:",
+    "@nestjs/config": "catalog:",
+    "@golevelup/ts-vitest": "catalog:",
+    "@nestjs/common": "catalog:",
+    "tslib": "catalog:"
   },
+  "description": "NestJS Redis integration: a fault-tolerant Apollo Server Redis cache backend (getRedisCache) and a module that closes those connections on shutdown.",
   "exports": {
     ".": {
-      "types": "./dist/src/index.d.ts",
       "import": "./dist/src/index.js",
-      "require": "./dist/src/index.js"
+      "require": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
     },
     "./*": {
-      "types": "./dist/*.d.ts",
       "import": "./dist/*.js",
-      "require": "./dist/*.js"
+      "require": "./dist/*.js",
+      "types": "./dist/*.d.ts"
     }
   },
   "license": "Apache-2.0",
   "main": "./src/index.ts",
   "module": "./src/index.ts",
+  "name": "@openthrottle/nestjs-redis",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "projectType": "library",
@@ -63,6 +67,7 @@
     "access": "restricted"
   },
   "repository": "git://github.com/OpenThrottle/monorepo.git",
+  "version": "2.2.25",
   "scripts": {},
   "type": "commonjs",
   "types": "./src/index.ts"

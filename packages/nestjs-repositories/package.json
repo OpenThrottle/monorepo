@@ -1,7 +1,4 @@
 {
-  "name": "@openthrottle/nestjs-repositories",
-  "description": "NestJS TypeORM data access for OpenThrottle (OpenThrottle): plans, tasks, embeddings, roles, and related entities.",
-  "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
@@ -19,10 +16,17 @@
     "bcrypt": "catalog:",
     "dataloader": "catalog:",
     "fishery": "catalog:",
-    "pg": "catalog:",
     "typeorm": "catalog:",
-    "zod": "catalog:"
+    "zod": "catalog:",
+    "vitest": "catalog:",
+    "@openthrottle/nestjs-testing": "workspace:^",
+    "@nestjs/common": "catalog:",
+    "@nestjs/testing": "catalog:",
+    "@golevelup/ts-vitest": "catalog:",
+    "@faker-js/faker": "catalog:",
+    "tslib": "catalog:"
   },
+  "description": "NestJS TypeORM data access for OpenThrottle (OpenThrottle): plans, tasks, embeddings, roles, and related entities.",
   "devDependencies": {
     "@faker-js/faker": "catalog:",
     "@openthrottle/nestjs-testing": "workspace:^",
@@ -30,19 +34,20 @@
   },
   "exports": {
     ".": {
-      "types": "./dist/src/index.d.ts",
       "import": "./dist/src/index.js",
-      "require": "./dist/src/index.js"
+      "require": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
     },
     "./*": {
-      "types": "./dist/*.d.ts",
       "import": "./dist/*.js",
-      "require": "./dist/*.js"
+      "require": "./dist/*.js",
+      "types": "./dist/*.d.ts"
     }
   },
   "license": "Apache-2.0",
   "main": "./src/index.ts",
   "module": "./src/index.ts",
+  "name": "@openthrottle/nestjs-repositories",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "projectType": "library",
@@ -75,6 +80,7 @@
   "publishConfig": {
     "access": "restricted"
   },
+  "version": "1.0.0",
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
   "type": "commonjs",

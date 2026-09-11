@@ -6,7 +6,8 @@
   },
   "dependencies": {
     "@openthrottle/openthrottle-agentic-workflow": "workspace:^",
-    "zod": "catalog:"
+    "zod": "catalog:",
+    "tslib": "catalog:"
   },
   "description": "Isomorphic plan-run-config helpers shared by the OpenThrottle server (via nestjs-repositories) and the developer app: storage defaults, plan/workflow-UI conversion, and GraphQL serialization.",
   "devDependencies": {
@@ -14,20 +15,20 @@
   },
   "exports": {
     ".": {
-      "types": "./dist/src/index.d.ts",
       "import": "./dist/src/index.js",
-      "require": "./dist/src/index.js"
+      "require": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
     },
     "./*": {
-      "types": "./dist/*.d.ts",
       "import": "./dist/*.js",
-      "require": "./dist/*.js"
+      "require": "./dist/*.js",
+      "types": "./dist/*.d.ts"
     }
   },
   "license": "Apache-2.0",
   "main": "./src/index.ts",
-  "name": "@openthrottle/openthrottle-plan-config",
   "module": "./src/index.ts",
+  "name": "@openthrottle/openthrottle-plan-config",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "projectType": "library",

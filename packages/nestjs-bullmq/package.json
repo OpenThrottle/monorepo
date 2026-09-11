@@ -1,7 +1,4 @@
 {
-  "name": "@openthrottle/nestjs-bullmq",
-  "description": "NestJS BullMQ module: Redis-backed queues with config-driven connection, shared default job options (retries/backoff), and registerQueue for feature queues.",
-  "version": "2.2.25",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
@@ -12,24 +9,28 @@
     "@nestjs/common": "catalog:",
     "@nestjs/config": "catalog:",
     "@openthrottle/nestjs-modules": "workspace:^",
-    "bullmq": "catalog:",
-    "joi": "catalog:"
+    "joi": "catalog:",
+    "reflect-metadata": "catalog:",
+    "vitest": "catalog:",
+    "tslib": "catalog:"
   },
+  "description": "NestJS BullMQ module: Redis-backed queues with config-driven connection, shared default job options (retries/backoff), and registerQueue for feature queues.",
   "exports": {
     ".": {
-      "types": "./dist/src/index.d.ts",
       "import": "./dist/src/index.js",
-      "require": "./dist/src/index.js"
+      "require": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
     },
     "./*": {
-      "types": "./dist/*.d.ts",
       "import": "./dist/*.js",
-      "require": "./dist/*.js"
+      "require": "./dist/*.js",
+      "types": "./dist/*.d.ts"
     }
   },
   "license": "Apache-2.0",
   "main": "./src/index.ts",
   "module": "./src/index.ts",
+  "name": "@openthrottle/nestjs-bullmq",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "projectType": "library",
@@ -63,6 +64,7 @@
     "access": "restricted"
   },
   "repository": "git://github.com/OpenThrottle/monorepo.git",
+  "version": "2.2.25",
   "scripts": {},
   "type": "commonjs",
   "types": "./src/index.ts"

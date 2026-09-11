@@ -1,7 +1,4 @@
 {
-  "name": "@openthrottle/nestjs-vector-search",
-  "description": "Server-side code semantic search: pgvector VectorStore + index/search orchestration over the @openthrottle/openthrottle-ide engine, backing the /ide Semantic tab.",
-  "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
@@ -11,24 +8,30 @@
     "@nestjs/typeorm": "catalog:",
     "@openthrottle/nestjs-modules": "workspace:^",
     "@openthrottle/openthrottle-ide": "workspace:^",
-    "typeorm": "catalog:"
+    "typeorm": "catalog:",
+    "vitest": "catalog:",
+    "@nestjs/common": "catalog:",
+    "@golevelup/ts-vitest": "catalog:",
+    "tslib": "catalog:"
   },
+  "description": "Server-side code semantic search: pgvector VectorStore + index/search orchestration over the @openthrottle/openthrottle-ide engine, backing the /ide Semantic tab.",
   "devDependencies": {},
   "exports": {
     ".": {
-      "types": "./dist/src/index.d.ts",
       "import": "./dist/src/index.js",
-      "require": "./dist/src/index.js"
+      "require": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
     },
     "./*": {
-      "types": "./dist/*.d.ts",
       "import": "./dist/*.js",
-      "require": "./dist/*.js"
+      "require": "./dist/*.js",
+      "types": "./dist/*.d.ts"
     }
   },
   "license": "Apache-2.0",
   "main": "./src/index.ts",
   "module": "./src/index.ts",
+  "name": "@openthrottle/nestjs-vector-search",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "projectType": "library",
@@ -41,10 +44,10 @@
       "type:package"
     ],
     "targets": {
-      "build": {
+      "__build-package": {
         "executor": "@nx/js:tsc"
       },
-      "__build-package": {
+      "build": {
         "executor": "@nx/js:tsc"
       },
       "dev": {
@@ -62,6 +65,7 @@
   },
   "peerDependencies": {},
   "private": true,
+  "version": "1.0.0",
   "publishConfig": {
     "access": "restricted",
     "exports": {

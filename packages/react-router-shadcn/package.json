@@ -1,7 +1,4 @@
 {
-  "name": "@openthrottle/react-router-shadcn",
-  "description": "Shadcn-style UI components and shared Tailwind v4 theme for React Router apps, built on Radix primitives with TypeScript.",
-  "version": "2.2.25",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
@@ -28,6 +25,7 @@
     "tw-animate-css": "catalog:",
     "vaul": "catalog:"
   },
+  "description": "Shadcn-style UI components and shared Tailwind v4 theme for React Router apps, built on Radix primitives with TypeScript.",
   "devDependencies": {
     "@storybook/react-vite": "catalog:",
     "@tailwindcss/vite": "catalog:"
@@ -40,6 +38,7 @@
   "license": "Apache-2.0",
   "main": "./src/index.ts",
   "module": "./src/index.ts",
+  "name": "@openthrottle/react-router-shadcn",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "projectType": "library",
@@ -64,6 +63,7 @@
   "publishConfig": {
     "access": "restricted"
   },
+  "version": "2.2.25",
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
   "sideEffects": false,

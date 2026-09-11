@@ -1,15 +1,15 @@
 {
-  "extends": "../../tsconfig.react-router.json",
   "compilerOptions": {
     "baseUrl": "./",
     "paths": {
-      "~/*": ["app/*"],
+      "#/*": ["*"],
       "@/*": [".react-router/types/*"],
-      "#/*": ["*"]
+      "~/*": ["app/*"]
     },
     "rootDirs": ["./", ".react-router/types"]
   },
   "exclude": ["build", "dist", "node_modules"],
+  "extends": "../../tsconfig.react-router.json",
   "files": [],
   "include": ["**/*", "**/*.json", ".react-router/types"],
   "references": [

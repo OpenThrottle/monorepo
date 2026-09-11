@@ -1,11 +1,9 @@
 {
-  "extends": "./tsconfig.json",
   "compilerOptions": {
     "baseUrl": "./",
     "outDir": "./dist",
     "rootDirs": ["./src", "./tests"]
   },
-  "include": ["src/**/*", "tests/**/*"],
   "exclude": [
     "**/*.spec.ts",
     "**/*.spec.tsx",
@@ -13,6 +11,8 @@
     "**/*.test.tsx",
     "dist"
   ],
+  "extends": "./tsconfig.json",
+  "include": ["src/**/*", "tests/**/*"],
   "references": [
     {
       "path": "../react-router-utils/tsconfig.lib.json"

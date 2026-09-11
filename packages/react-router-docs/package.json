@@ -1,7 +1,4 @@
 {
-  "name": "@openthrottle/react-router-docs",
-  "description": "Source-first docs/FAQ rendering layer: turns a per-app Markdown content folder into routes with consistent nav and styling.",
-  "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
@@ -14,10 +11,12 @@
     "react-router": "catalog:",
     "yaml": "catalog:"
   },
+  "description": "Source-first docs/FAQ rendering layer: turns a per-app Markdown content folder into routes with consistent nav and styling.",
   "devDependencies": {},
   "license": "Apache-2.0",
   "main": "./src/index.ts",
   "module": "./src/index.ts",
+  "name": "@openthrottle/react-router-docs",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "projectType": "library",
@@ -60,6 +59,7 @@
     "module": "./src/index.js",
     "types": "./src/index.d.ts"
   },
+  "version": "1.0.0",
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
   "sideEffects": false,

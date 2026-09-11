@@ -1,7 +1,4 @@
 {
-  "name": "@openthrottle/react-router-profiling",
-  "description": "React Router components and hooks for openthrottle-server process metrics and plans-queue task-run profiling (RSS, heap, CPU).",
-  "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
@@ -11,10 +8,12 @@
     "@openthrottle/nodejs-utils": "workspace:^",
     "@openthrottle/react-router-shadcn": "workspace:^"
   },
+  "description": "React Router components and hooks for openthrottle-server process metrics and plans-queue task-run profiling (RSS, heap, CPU).",
   "devDependencies": {},
   "license": "Apache-2.0",
   "main": "./src/index.ts",
   "module": "./src/index.ts",
+  "name": "@openthrottle/react-router-profiling",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "projectType": "library",
@@ -42,6 +41,7 @@
   "publishConfig": {
     "access": "restricted"
   },
+  "version": "1.0.0",
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
   "sideEffects": false,

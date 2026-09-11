@@ -1,7 +1,4 @@
 {
-  "name": "@openthrottle/react-router-markdown",
-  "description": "SSR-capable Markdown renderer for OpenThrottle React Router apps — compiles trusted CommonMark + GFM to React components via MDX (literal text, no raw HTML).",
-  "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
@@ -13,9 +10,11 @@
     "clsx": "catalog:",
     "remark-gfm": "catalog:"
   },
+  "description": "SSR-capable Markdown renderer for OpenThrottle React Router apps — compiles trusted CommonMark + GFM to React components via MDX (literal text, no raw HTML).",
   "license": "Apache-2.0",
   "main": "./src/index.ts",
   "module": "./src/index.ts",
+  "name": "@openthrottle/react-router-markdown",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "projectType": "library",
@@ -59,6 +58,7 @@
     "types": "./src/index.d.ts"
   },
   "repository": "git://github.com/OpenThrottle/monorepo.git",
+  "version": "1.0.0",
   "scripts": {},
   "sideEffects": false,
   "type": "module",

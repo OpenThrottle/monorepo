@@ -1,30 +1,37 @@
 {
-  "name": "@openthrottle/nestjs-openthrottle-mcp",
-  "description": "Nest-facing entry for the OpenThrottle developer MCP surface; implementation lives in `@openthrottle/openthrottle-mcp/nest`.",
-  "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
     "url": "https://mattscholta.com"
   },
   "dependencies": {
-    "@openthrottle/openthrottle-mcp": "workspace:^"
+    "@openthrottle/openthrottle-mcp": "workspace:^",
+    "@nestjs/testing": "catalog:",
+    "@golevelup/ts-vitest": "catalog:",
+    "@openthrottle/nestjs-modules": "workspace:^",
+    "vitest": "catalog:",
+    "tslib": "catalog:"
   },
+  "description": "Nest-facing entry for the OpenThrottle developer MCP surface; implementation lives in `@openthrottle/openthrottle-mcp/nest`.",
   "exports": {
     ".": {
-      "types": "./dist/src/index.d.ts",
       "import": "./src/index.ts",
-      "require": "./dist/src/index.js"
+      "require": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
     },
     "./*": {
-      "types": "./dist/*.d.ts",
       "import": "./*.ts",
-      "require": "./dist/*.js"
+      "require": "./dist/*.js",
+      "types": "./dist/*.d.ts"
     }
   },
   "license": "Apache-2.0",
   "main": "./src/index.ts",
   "module": "./src/index.ts",
+  "devDependencies": {
+    "@openthrottle/nestjs-modules": "workspace:^"
+  },
+  "name": "@openthrottle/nestjs-openthrottle-mcp",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "projectType": "library",
@@ -56,11 +63,9 @@
       "typecheck": {}
     }
   },
-  "peerDependencies": {
-    "@nestjs/common": "catalog:",
-    "@nestjs/core": "catalog:"
-  },
+  "peerDependencies": {},
   "private": true,
+  "version": "1.0.0",
   "publishConfig": {
     "access": "restricted",
     "exports": {
@@ -82,8 +87,5 @@
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
   "type": "module",
-  "types": "./src/index.ts",
-  "devDependencies": {
-    "@openthrottle/nestjs-modules": "workspace:^"
-  }
+  "types": "./src/index.ts"
 }

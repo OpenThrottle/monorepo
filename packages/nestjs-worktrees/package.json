@@ -1,7 +1,4 @@
 {
-  "name": "@openthrottle/nestjs-worktrees",
-  "description": "NestJS module for git worktree workflows: WorktreeTargetsTracker from WORKTREE_TARGETS, plus runWorktreeWorkflow and runChildJob (argv aligned with @tools/workflows) for queue processors.",
-  "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
@@ -10,24 +7,27 @@
   "dependencies": {
     "@openthrottle/openthrottle-agentic-utils": "workspace:^",
     "@openthrottle/openthrottle-agentic-workflow": "workspace:^",
-    "@openthrottle/openthrottle-mcp": "workspace:^",
-    "@tools/workflows": "workspace:^"
+    "async-mutex": "catalog:",
+    "vitest": "catalog:",
+    "tslib": "catalog:"
   },
+  "description": "NestJS module for git worktree workflows: WorktreeTargetsTracker from WORKTREE_TARGETS, plus runWorktreeWorkflow and runChildJob (argv aligned with @tools/workflows) for queue processors.",
   "exports": {
     ".": {
-      "types": "./dist/src/index.d.ts",
       "import": "./dist/src/index.js",
-      "require": "./dist/src/index.js"
+      "require": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
     },
     "./*": {
-      "types": "./dist/*.d.ts",
       "import": "./dist/*.js",
-      "require": "./dist/*.js"
+      "require": "./dist/*.js",
+      "types": "./dist/*.d.ts"
     }
   },
   "license": "Apache-2.0",
   "main": "./src/index.ts",
   "module": "./src/index.ts",
+  "name": "@openthrottle/nestjs-worktrees",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "projectType": "library",
@@ -63,6 +63,7 @@
   "publishConfig": {
     "access": "restricted"
   },
+  "version": "1.0.0",
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
   "type": "commonjs",

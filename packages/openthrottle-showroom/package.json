@@ -10,7 +10,9 @@
     "@openthrottle/openthrottle-agentic-utils": "workspace:*",
     "@openthrottle/openthrottle-skills": "workspace:^",
     "pg": "catalog:",
-    "typeorm": "catalog:"
+    "typeorm": "catalog:",
+    "playwright": "catalog:",
+    "tslib": "catalog:"
   },
   "description": "Screencast pipeline for the @OpenThrottleAI '0-60' channel: typed episode scripts, demo flows, Playwright capture, narration, assembly and leak scanning.",
   "devDependencies": {
@@ -18,19 +20,19 @@
   },
   "exports": {
     ".": {
-      "types": "./dist/src/index.d.ts",
       "import": "./dist/src/index.js",
-      "require": "./dist/src/index.js"
+      "require": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
     },
     "./*": {
-      "types": "./dist/*.d.ts",
       "import": "./dist/*.js",
-      "require": "./dist/*.js"
+      "require": "./dist/*.js",
+      "types": "./dist/*.d.ts"
     }
   },
   "main": "./src/index.ts",
-  "name": "@openthrottle/openthrottle-showroom",
   "module": "./src/index.ts",
+  "name": "@openthrottle/openthrottle-showroom",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "projectType": "library",

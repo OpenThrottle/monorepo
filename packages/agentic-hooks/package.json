@@ -5,7 +5,8 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
-    "@openthrottle/nodejs-utils": "workspace:^"
+    "@openthrottle/nodejs-utils": "workspace:^",
+    "tslib": "catalog:"
   },
   "description": "Tool-neutral skill-usage hook core (scope, privacy, buildUsageEvent, GraphQL/JSONL persistence, outcome/duration correlation, drain) authored in TS. Per-tool adapters are esbuild entrypoints bundled to self-contained committed .cjs under each tool's hook folder (.claude/hooks, .cursor/hooks, ...) — zero runtime node_modules dependency, fail-open. A drift check keeps committed bundles from rotting.",
   "devDependencies": {
@@ -13,19 +14,19 @@
   },
   "exports": {
     ".": {
-      "types": "./dist/src/index.d.ts",
       "import": "./dist/src/index.js",
-      "require": "./dist/src/index.js"
+      "require": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
     },
     "./*": {
-      "types": "./dist/*.d.ts",
       "import": "./dist/*.js",
-      "require": "./dist/*.js"
+      "require": "./dist/*.js",
+      "types": "./dist/*.d.ts"
     }
   },
   "main": "./src/index.ts",
-  "name": "@openthrottle/agentic-hooks",
   "module": "./src/index.ts",
+  "name": "@openthrottle/agentic-hooks",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "projectType": "library",

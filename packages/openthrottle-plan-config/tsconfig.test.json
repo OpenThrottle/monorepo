@@ -1,12 +1,12 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
-  "extends": ["./tsconfig.json", "../../tsconfig.vitest-node.json"],
   "compilerOptions": {
     "composite": false,
     "declaration": false,
     "declarationMap": false,
     "noEmit": true
   },
+  "extends": ["./tsconfig.json", "../../tsconfig.vitest-node.json"],
   "include": [
     "src/**/*.spec.ts",
     "src/**/*.spec.tsx",

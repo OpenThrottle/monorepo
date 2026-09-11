@@ -1,3 +1,4 @@
+import * as parserJsonc from 'jsonc-eslint-parser';
 import { componentPrimitiveShape } from './rules/component-primitive-shape.ts';
 import { preHooksUnpack } from './rules/pre-hooks-unpack.ts';
 import { routePrimitiveShape } from './rules/route-primitive-shape.ts';
@@ -560,6 +561,21 @@ export const eslintConfig = tslint.config([
           selections: ['OperationDefinition', 'FragmentDefinition'],
         },
       ],
+    },
+  },
+
+  /**
+   * `@nx/dependency-checks` validates a project's package.json against the
+   * dependencies its source actually uses, so it must run on JSON files with
+   * the jsonc parser — not on JS/TS sources where it is a no-op.
+   * @link https://nx.dev/nx-api/eslint-plugin/documents/dependency-checks
+   */
+  {
+    files: ['*.json'],
+    languageOptions: { parser: parserJsonc },
+    plugins: { '@nx': pluginNx },
+    rules: {
+      '@nx/dependency-checks': ['error', {}],
     },
   },
 ]);

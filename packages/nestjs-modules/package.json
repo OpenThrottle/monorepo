@@ -1,7 +1,4 @@
 {
-  "name": "@openthrottle/nestjs-modules",
-  "description": "NestJS shared modules: global CLS (request-scoped context via nestjs-cls) and Winston-based structured logging.",
-  "version": "2.2.25",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
@@ -12,23 +9,29 @@
     "logform": "catalog:",
     "nestjs-cls": "catalog:",
     "winston": "catalog:",
-    "winston-transport": "catalog:"
+    "winston-transport": "catalog:",
+    "vitest": "catalog:",
+    "@nestjs/common": "catalog:",
+    "@nestjs/testing": "catalog:",
+    "tslib": "catalog:"
   },
+  "description": "NestJS shared modules: global CLS (request-scoped context via nestjs-cls) and Winston-based structured logging.",
   "exports": {
     ".": {
-      "types": "./dist/src/index.d.ts",
       "import": "./dist/src/index.js",
-      "require": "./dist/src/index.js"
+      "require": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
     },
     "./*": {
-      "types": "./dist/*.d.ts",
       "import": "./dist/*.js",
-      "require": "./dist/*.js"
+      "require": "./dist/*.js",
+      "types": "./dist/*.d.ts"
     }
   },
   "license": "Apache-2.0",
   "main": "./src/index.ts",
   "module": "./src/index.ts",
+  "name": "@openthrottle/nestjs-modules",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "projectType": "library",
@@ -62,6 +65,7 @@
     "access": "restricted"
   },
   "repository": "git://github.com/OpenThrottle/monorepo.git",
+  "version": "2.2.25",
   "scripts": {},
   "type": "commonjs",
   "types": "./src/index.ts"
