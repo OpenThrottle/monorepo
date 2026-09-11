@@ -34,7 +34,7 @@ describe('createBranchInWorktree — git option-injection hardening', () => {
   });
 
   it('creates the branch and never adds a shell when args are safe', async () => {
-    const { createBranchInWorktree } = await import('./parent-job');
+    const { createBranchInWorktree } = await import('./parent-job.ts');
 
     const result = createBranchInWorktree(
       '/tmp/worktree-1',
@@ -58,7 +58,7 @@ describe('createBranchInWorktree — git option-injection hardening', () => {
   });
 
   it('rejects an option-like explicit branch name before spawning git', async () => {
-    const { createBranchInWorktree } = await import('./parent-job');
+    const { createBranchInWorktree } = await import('./parent-job.ts');
 
     const result = createBranchInWorktree('/tmp/worktree-1', '--track', 'main');
 
@@ -67,7 +67,7 @@ describe('createBranchInWorktree — git option-injection hardening', () => {
   });
 
   it('rejects an option-like base branch before spawning git', async () => {
-    const { createBranchInWorktree } = await import('./parent-job');
+    const { createBranchInWorktree } = await import('./parent-job.ts');
 
     const result = createBranchInWorktree(
       '/tmp/worktree-1',
@@ -80,7 +80,7 @@ describe('createBranchInWorktree — git option-injection hardening', () => {
   });
 
   it('rejects an option-like worktree path before spawning git', async () => {
-    const { createBranchInWorktree } = await import('./parent-job');
+    const { createBranchInWorktree } = await import('./parent-job.ts');
 
     const result = createBranchInWorktree(
       '--upload-pack=touch /tmp/pwned',
@@ -93,7 +93,7 @@ describe('createBranchInWorktree — git option-injection hardening', () => {
   });
 
   it('rejects empty branch / base / path args before spawning git', async () => {
-    const { createBranchInWorktree } = await import('./parent-job');
+    const { createBranchInWorktree } = await import('./parent-job.ts');
 
     expect(createBranchInWorktree('/tmp/wt', '', 'main').ok).toBe(false);
     expect(createBranchInWorktree('/tmp/wt', 'ralph/feature', '').ok).toBe(

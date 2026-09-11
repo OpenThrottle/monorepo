@@ -1,11 +1,9 @@
 {
   "extends": "../../tsconfig.react-router.json",
   "compilerOptions": {
-    "baseUrl": "./",
     "paths": {
-      "~/*": ["app/*"],
-      "@/*": [".react-router/types/*"],
-      "#/*": ["*"]
+      "~/*": ["./app/*"],
+      "@/*": ["./.react-router/types/*"]
     },
     "rootDirs": ["./", ".react-router/types"]
   },
@@ -24,9 +22,6 @@
     },
     {
       "path": "../../packages/nestjs-throttler"
-    },
-    {
-      "path": "../../packages/nestjs-devtools"
     },
     {
       "path": "../../packages/nestjs-bullmq-board"

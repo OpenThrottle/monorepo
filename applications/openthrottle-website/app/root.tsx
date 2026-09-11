@@ -27,7 +27,7 @@ import {
   useNonce,
 } from '@openthrottle/react-router-utils';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { SITE_TITLE } from '#/app/global/config/settings';
+import { SITE_TITLE } from '~/global/config/settings';
 import stylesheet from '~/styles.css?url';
 import type { Route } from '@/app/+types/root';
 

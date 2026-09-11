@@ -39,7 +39,7 @@ describe('parseRalphArgs (prompt file / stdin)', () => {
         '--prompt-file',
         'body.md',
       ];
-      const { parseRalphArgs } = await import('../parsers');
+      const { parseRalphArgs } = await import('../parsers.ts');
       const args = parseRalphArgs();
       expect(args.prompt).toBe('File prompt body');
       expect(args.promptProfileKind).toBe('file');
@@ -75,7 +75,7 @@ describe('parseRalphArgs (prompt file / stdin)', () => {
         '--prompt-file',
         'skill.md',
       ];
-      const { parseRalphArgs } = await import('../parsers');
+      const { parseRalphArgs } = await import('../parsers.ts');
       const args = parseRalphArgs();
       expect(args.prompt).toBe('# Architect\n\n# Skill body');
       expect(args.promptProfileKind).toBe('file');
@@ -95,7 +95,7 @@ describe('parseRalphArgs (prompt file / stdin)', () => {
       '--prompt-file',
       '   ',
     ];
-    const { parseRalphArgs } = await import('../parsers');
+    const { parseRalphArgs } = await import('../parsers.ts');
     expect(() => parseRalphArgs()).toThrow(/non-empty path/);
   });
 
@@ -115,7 +115,7 @@ describe('parseRalphArgs (prompt file / stdin)', () => {
         '--prompt-file',
         'b.md',
       ];
-      const { parseRalphArgs } = await import('../parsers');
+      const { parseRalphArgs } = await import('../parsers.ts');
       expect(() => parseRalphArgs()).toThrow(/cannot be combined/);
     } finally {
       process.chdir(origCwd);
@@ -126,7 +126,7 @@ describe('parseRalphArgs (prompt file / stdin)', () => {
   it('throws when --prompt-stdin is used with a TTY', async () => {
     process.stdin.isTTY = true;
     process.argv = ['node', 'ralph.js', '--plan', PLAN_UUID, '--prompt-stdin'];
-    const { parseRalphArgs } = await import('../parsers');
+    const { parseRalphArgs } = await import('../parsers.ts');
     expect(() => parseRalphArgs()).toThrow(/piped stdin \(not a TTY\)/);
   });
 });

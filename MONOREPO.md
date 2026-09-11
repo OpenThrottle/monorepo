@@ -248,6 +248,104 @@ To add or upgrade a dependency, edit (or add) its entry in the `catalog:` sectio
 
 Coverage is enforced by `scripts/check-catalog-coverage.ts` (run as part of `pnpm run check:local`).
 
+### TypeScript toolchain: two compilers, one workspace
+
+The workspace installs **two** TypeScript packages on purpose. `typecheck` tasks run the **TypeScript 7**
+native compiler; everything that needs TypeScript's **programmatic API** stays on **6.x**, because
+`typescript@7` exposes no API on its main export (`"."` resolves to `./lib/version.cjs`; the API lives
+behind `./unstable/*`).
+
+| Consumer                                                           | Gets                 | How it resolves               |
+| ------------------------------------------------------------------ | -------------------- | ----------------------------- |
+| `typecheck` targets (both Nx plugins)                              | **TypeScript 7.0.2** | the `tsc` binary              |
+| typescript-eslint (`lint`)                                         | 6.0.3                | `import ts from 'typescript'` |
+| Vite / Vitest (`test`)                                             | 6.0.3                | same                          |
+| ts-morph (`packages/openthrottle-ide`)                             | 6.0.3                | same                          |
+| typescript-json-schema                                             | 6.0.3                | same                          |
+| `@nx/js/typescript` config analysis + project graph                | 6.0.3                | same                          |
+| `react-router typegen`                                             | 6.0.3                | same                          |
+| knip                                                               | 6.0.3                | same                          |
+| `scripts/audit-component-shape.ts`, `scripts/audit-route-shape.ts` | 6.0.3                | same                          |
+
+Catalog entries (`pnpm-workspace.yaml`) — note these are the only catalog values that use an aliased
+`npm:` spec; the consuming manifest still references them as `catalog:`, so `check:catalog` stays at 100%:
+
+```yaml
+'typescript': 'npm:@typescript/typescript6@^6.0.2'
+'typescript7': 'npm:typescript@^7.0.2'
+```
+
+Three things about that shape which are easy to get wrong:
+
+- **The bin names are disjoint by construction**, which is why both can be installed at once:
+  `typescript@7` provides only `tsc`, and `@typescript/typescript6` provides only `tsc6`. Leaving
+  `typescript` at a plain `~6.0.3` and adding a second alias would have **two** packages claiming `tsc`,
+  which pnpm resolves by picking one — unacceptable when the compiler identity is the thing being
+  selected.
+- **`@typescript/typescript6` is a ~50-byte shim, not a republished compiler.** It re-exports
+  `@typescript/old` (itself `npm:typescript@^6`), so the wrapper version reads `6.0.2` while the compiler
+  actually delivered is **6.0.3** — `require('typescript').version` confirms it. There is no downgrade.
+- **`@typescript/native` is not a published package** (the registry returns 404). It is only the alias
+  name the Nx knowledge-base recipe happens to use. Do not go looking for it.
+
+#### Editors and the language service
+
+**TypeScript 7 ships no `tsserver` at all** — the package contains zero `tsserver` files, not merely no
+bin entry — so **no editor can use TypeScript 7 as its language service today.**
+
+- This repo sets **no `typescript.tsdk`**, so VS Code / Cursor use their own **bundled** TypeScript. That
+  is the supported configuration and it is **unchanged** by the TypeScript 7 migration.
+- **"Use Workspace Version" is unsupported.** `node_modules/typescript/lib` is the shim described above
+  and contains no `tsserver.js`.
+- **Consequence:** in-editor diagnostics come from the editor's bundled TypeScript, which is not 7.0.2, so
+  **in-editor errors can differ from CI.** `pnpm nx run <project>:typecheck` is the source of truth.
+- If you want the workspace's 6.x language service anyway, point `typescript.tsdk` at
+  `node_modules/.pnpm/typescript@6.0.3/node_modules/typescript/lib` — and note that path is
+  **version-pinned and breaks on every TypeScript patch bump**, which is why it is not committed.
+
+#### Changing the compiler
+
+The binary is a knob, defined once in [`tools/nx-plugins/typecheck-compiler.ts`](tools/nx-plugins/typecheck-compiler.ts)
+and shared by both typecheck plugins. Highest precedence first:
+
+| Scope                    | How                                                                                                                                                                         |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| one project, permanently | `compilerOverrides: { "packages/foo": "tsc6" }` in the plugin's `nx.json` options — **ignores the env var**, so a workspace-wide sweep cannot drag a pinned project forward |
+| one run / one sweep      | `OPENTHROTTLE_TSC_BIN=tsc6 pnpm nx run <project>:typecheck`                                                                                                                 |
+| the whole workspace      | the plugins' `"options": { "compiler": "tsc" }` in `nx.json` — **delete it to revert to TypeScript 6**, since the built-in default stays `tsc6`                             |
+
+**Any compiler change must be accompanied by a purge**, and by a step `pnpm install` does not do for you:
+
+1. `pnpm nx reset` — clears `.nx/cache` and stops the daemon.
+2. Delete every `*.tsbuildinfo` outside `node_modules`, so the first run is a true cold build.
+3. **Delete stale per-package `node_modules/.bin/tsc` shims.** `pnpm install` — and even
+   `pnpm install --force` — leaves them in place, and a stale shim hard-points at the old compiler's
+   store path, silently pinning that project to TypeScript 6. This is the one that bites when updating an
+   existing checkout rather than cloning fresh.
+4. CI: `gh cache list` then `gh cache delete <id>`. There is **no remote cache backend** — the paid
+   `@nx/gcs-cache` plugin and its bucket were retired (see [docs/monorepo/NX.md](docs/monorepo/NX.md)), so
+   any `gcloud storage rm` instruction is stale.
+
+The compiler identity **is** part of the task hash (an `env` input plus `externalDependencies` on both
+packages), so Nx will not serve one compiler's cached result for the other's run. Before that was fixed,
+it did exactly that.
+
+#### What TypeScript 7 removed, and what it cost here
+
+- **`baseUrl` is removed (TS5102).** It lived in `tsconfig.base.json`, so every project inherited the
+  error. Removing it is **not** sufficient on its own: TypeScript then rejects non-relative `paths`
+  targets with **TS5090**, so every mapping must be explicitly relative (`["./app/*"]`, not `["app/*"]`).
+- **`moduleResolution: "node"` (node10) is removed (TS5108).** The two NestJS presets used it deliberately
+  to opt out of nodenext; they are now `nodenext`. CommonJS emit is preserved because those packages
+  declare `"type": "commonjs"`, which also keeps their files exempt from TS2835 — so no import-extension
+  migration was needed.
+- **`ignoreDeprecations: "6.0"` is gone** from `tsconfig.base.json`. It existed to suppress the node10
+  deprecation warning; with node10 gone it suppressed nothing, and removing it leaves the workspace green
+  under both compilers.
+- **Avoid a `paths` alias that can name `node_modules`.** A `"#/*": ["./*"]` alias made
+  `#/node_modules/@openthrottle/<pkg>/dist/src` a legal specifier, so TypeScript 7 named inferred types
+  through it and refused them as non-portable (**TS2883**). The alias was removed.
+
 ### Internal Package References
 
 Applications and packages can reference each other directly:
@@ -293,7 +391,7 @@ pnpm nx run <project-name>:test --watch
 
 Do not confuse these Nx targets:
 
-- **`typecheck`** — TypeScript only. Type-checks **source and test files** (`tsc --build … --emitDeclarationOnly` plus `tsc --noEmit -p tsconfig.test.json` when a test config exists); **does not execute test bodies** (no Vitest, no assertions run). It is a single target — it replaced the former `typecheck` + `typecheck-tests` split.
+- **`typecheck`** — TypeScript only. Type-checks **source and test files** (`tsc --build … --emitDeclarationOnly` plus `tsc --noEmit -p tsconfig.test.json` when a test config exists); **does not execute test bodies** (no Vitest, no assertions run). It is a single target — it replaced the former `typecheck` + `typecheck-tests` split. The compiler binary is **selectable, not hardcoded**: `tsc` is TypeScript 7 (the default) and `tsc6` is TypeScript 6 — see [TypeScript toolchain](#typescript-toolchain-two-compilers-one-workspace).
 - **`test`** — Vitest (`@nx/vitest:test`). **Executes** unit and integration tests.
 
 CI P0 runs affected `typecheck` on every PR; phased Vitest runs use the `test` target (see [docs/monorepo/CI-quality-gates.md](docs/monorepo/CI-quality-gates.md)). Contributor summary: [CONTRIBUTING.md](./CONTRIBUTING.md#testing-typecheck-versus-test).

@@ -5,6 +5,11 @@ import {
   type CreateNodes,
   type CreateNodesResultArray,
 } from '@nx/devkit';
+import {
+  resolveTypecheckCompiler,
+  TYPECHECK_COMPILER_INPUTS,
+  type TypecheckCompilerOptions,
+} from './typecheck-compiler.ts';
 
 /**
  * @description Local Nx inference plugin: gives every buildable project — the
@@ -53,7 +58,7 @@ import {
  */
 const SOURCE_CONFIG_GLOB = `{applications,packages,tools}/*/tsconfig.{lib,app}.json`;
 
-export const createNodesV2: CreateNodes = [
+export const createNodesV2: CreateNodes<TypecheckCompilerOptions> = [
   SOURCE_CONFIG_GLOB,
   async (configFiles, options, context): Promise<CreateNodesResultArray> =>
     await createNodesFromFiles(
@@ -63,8 +68,13 @@ export const createNodesV2: CreateNodes = [
           join(context.workspaceRoot, projectRoot, 'tsconfig.test.json'),
         );
 
-        const sourcePass = `tsc --build tsconfig.json --emitDeclarationOnly`;
-        const testPass = `tsc --noEmit -p tsconfig.test.json`;
+        // Which compiler binary runs is a knob, not a hardcode — see
+        // ./typecheck-compiler.ts. Defaults to `tsc6` (TypeScript 6), because
+        // TypeScript 7 owns the bare `tsc` bin once both are installed.
+        const tsc = resolveTypecheckCompiler(projectRoot, options);
+
+        const sourcePass = `${tsc} --build tsconfig.json --emitDeclarationOnly`;
+        const testPass = `${tsc} --noEmit -p tsconfig.test.json`;
         const command = hasTests ? `${sourcePass} && ${testPass}` : sourcePass;
 
         return {
@@ -101,6 +111,10 @@ export const createNodesV2: CreateNodes = [
                       dependentTasksOutputFiles:
                         '**/__generated__/**/*.{ts,tsx}',
                     },
+                    // Compiler identity. Without these the knob is invisible to
+                    // the hash and Nx serves one compiler's cached .d.ts for the
+                    // other's run. See ./typecheck-compiler.ts.
+                    ...TYPECHECK_COMPILER_INPUTS,
                   ],
                   metadata: {
                     description: `Static type-check of source + tests: tsc --build (emits dist .d.ts) then tsc --noEmit on tsconfig.test.json.`,

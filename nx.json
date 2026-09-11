@@ -68,9 +68,11 @@
       }
     },
     {
+      "options": { "compiler": "tsc" },
       "plugin": "./tools/nx-plugins/react-router-typecheck.ts"
     },
     {
+      "options": { "compiler": "tsc" },
       "plugin": "./tools/nx-plugins/package-typecheck.ts"
     }
   ],
@@ -477,7 +479,7 @@
         "codegen-graphql",
         "codegen-react-router"
       ],
-      "description": "Type-check the project with tsc; runs after build and codegen. Outputs are declared per-plugin: dist .d.ts for buildable packages (tools/nx-plugins/package-typecheck.ts), none for source-first RR apps' noEmit pass (tools/nx-plugins/react-router-typecheck.ts)."
+      "description": "Type-check the project; runs after build and codegen. The compiler binary is a knob, not a hardcode - `tsc` is TypeScript 7 and `tsc6` is TypeScript 6, selected per plugin options or $OPENTHROTTLE_TSC_BIN (see tools/nx-plugins/typecheck-compiler.ts). Outputs are declared per-plugin: dist .d.ts for buildable packages (tools/nx-plugins/package-typecheck.ts), none for source-first RR apps' noEmit pass (tools/nx-plugins/react-router-typecheck.ts)."
     },
     "validate-agent-assets-frontmatter": {
       "cache": true,

@@ -9,7 +9,7 @@ const resolveWorkflowAuthTokenFromEnvMock = vi.hoisted(() => vi.fn());
 
 vi.mock('../openthrottle-ralph-graphql', async (importOriginal) => {
   const actual =
-    await importOriginal<typeof import('../openthrottle-ralph-graphql')>();
+    await importOriginal<typeof import('../openthrottle-ralph-graphql.ts')>();
   return {
     ...actual,
     registerPlanRunWorktreeCheckoutGraphql:

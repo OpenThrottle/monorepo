@@ -41,7 +41,7 @@ import {
   LoginDocument,
   SignoutDocument,
 } from '~/__generated__/graphql';
-import { SITE_TITLE } from '#/app/global/config/settings';
+import { SITE_TITLE } from '~/global/config/settings';
 import type { Route } from '@/app/+types/root';
 import stylesheet from '~/styles.css?url';
 import { dataNavigation } from '~/global/data/data.navigation';

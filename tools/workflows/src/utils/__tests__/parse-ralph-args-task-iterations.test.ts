@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../ralph-runtime-config', async (importOriginal) => {
   const actual =
-    await importOriginal<typeof import('../ralph-runtime-config')>();
+    await importOriginal<typeof import('../ralph-runtime-config.ts')>();
   return {
     ...actual,
     mergeRalphRuntimeSeed: vi.fn(() => ({
@@ -43,7 +43,7 @@ describe('parseRalphArgs (--task-iterations)', () => {
 
   it('defaults taskIterations to undefined when the flag is absent', async () => {
     process.argv = ['node', 'ralph.js', '--task', TASK_UUID];
-    const { parseRalphArgs } = await import('../parsers');
+    const { parseRalphArgs } = await import('../parsers.ts');
     expect(parseRalphArgs().taskIterations).toBeUndefined();
   });
 
@@ -56,7 +56,7 @@ describe('parseRalphArgs (--task-iterations)', () => {
       '--task-iterations',
       '5',
     ];
-    const { parseRalphArgs } = await import('../parsers');
+    const { parseRalphArgs } = await import('../parsers.ts');
     expect(parseRalphArgs().taskIterations).toBe(5);
   });
 
@@ -69,7 +69,7 @@ describe('parseRalphArgs (--task-iterations)', () => {
       '--task-iterations',
       '0',
     ];
-    const { parseRalphArgs } = await import('../parsers');
+    const { parseRalphArgs } = await import('../parsers.ts');
     expect(() => parseRalphArgs()).toThrow(/--task-iterations/);
   });
 });

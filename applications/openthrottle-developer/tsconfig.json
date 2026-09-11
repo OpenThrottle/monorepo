@@ -1,11 +1,9 @@
 {
   "extends": "../../tsconfig.react-router.json",
   "compilerOptions": {
-    "baseUrl": "./",
     "paths": {
-      "~/*": ["app/*"],
-      "@/*": [".react-router/types/*"],
-      "#/*": ["*"]
+      "~/*": ["./app/*"],
+      "@/*": ["./.react-router/types/*"]
     },
     "rootDirs": ["./", ".react-router/types"],
     // This app never emits (Vite transpiles; `noEmit: true` from

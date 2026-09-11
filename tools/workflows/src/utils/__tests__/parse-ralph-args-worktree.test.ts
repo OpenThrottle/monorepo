@@ -7,7 +7,7 @@ import { RALPH_WORKTREE_FLAG_ONLY } from '../ralph-worktree-cli';
 
 vi.mock('../ralph-runtime-config', async (importOriginal) => {
   const actual =
-    await importOriginal<typeof import('../ralph-runtime-config')>();
+    await importOriginal<typeof import('../ralph-runtime-config.ts')>();
   return {
     ...actual,
     mergeRalphRuntimeSeed: vi.fn(() => ({
@@ -43,7 +43,7 @@ describe('parseRalphArgs (worktree)', () => {
 
   it('uses seed worktree when CLI omits --worktree', async () => {
     process.argv = ['node', 'ralph.js', '--plan', PLAN_UUID];
-    const { parseRalphArgs } = await import('../parsers');
+    const { parseRalphArgs } = await import('../parsers.ts');
     const args = parseRalphArgs();
     expect(args.worktree).toBe('from-seed');
   });
@@ -57,14 +57,14 @@ describe('parseRalphArgs (worktree)', () => {
       '--worktree',
       'cli-wt',
     ];
-    const { parseRalphArgs } = await import('../parsers');
+    const { parseRalphArgs } = await import('../parsers.ts');
     const args = parseRalphArgs();
     expect(args.worktree).toBe('cli-wt');
   });
 
   it('parses flag-only --worktree when name omitted', async () => {
     process.argv = ['node', 'ralph.js', '--plan', PLAN_UUID, '--worktree'];
-    const { parseRalphArgs } = await import('../parsers');
+    const { parseRalphArgs } = await import('../parsers.ts');
     const args = parseRalphArgs();
     expect(args.worktree).toBe(RALPH_WORKTREE_FLAG_ONLY);
   });
@@ -81,7 +81,7 @@ describe('parseRalphArgs (worktree)', () => {
       'main',
       '--skip-worktree-setup',
     ];
-    const { parseRalphArgs } = await import('../parsers');
+    const { parseRalphArgs } = await import('../parsers.ts');
     const args = parseRalphArgs();
     expect(args.worktree).toBe('wt');
     expect(args.worktreeBase).toBe('main');
