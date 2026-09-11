@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../ralph-runtime-config', async (importOriginal) => {
   const actual =
-    await importOriginal<typeof import('../ralph-runtime-config')>();
+    await importOriginal<typeof import('../ralph-runtime-config.ts')>();
   return {
     ...actual,
     mergeRalphRuntimeSeed: vi.fn(() => ({
@@ -49,7 +49,7 @@ describe('parseRalphArgs (execution backend)', () => {
       '--backend',
       'cursor',
     ];
-    const { parseRalphArgs } = await import('../parsers');
+    const { parseRalphArgs } = await import('../parsers.ts');
     const args = parseRalphArgs();
     expect(args.backend).toBe('cursor');
   });
@@ -63,7 +63,7 @@ describe('parseRalphArgs (execution backend)', () => {
       '--backend',
       'Claude',
     ];
-    const { parseRalphArgs } = await import('../parsers');
+    const { parseRalphArgs } = await import('../parsers.ts');
     const args = parseRalphArgs();
     expect(args.backend).toBe('claude');
   });
@@ -77,7 +77,7 @@ describe('parseRalphArgs (execution backend)', () => {
       '--backend',
       'not-a-runner',
     ];
-    const { parseRalphArgs } = await import('../parsers');
+    const { parseRalphArgs } = await import('../parsers.ts');
     expect(() => parseRalphArgs()).toThrow(/Unknown execution backend/);
   });
 });

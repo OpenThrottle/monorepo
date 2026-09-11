@@ -78,7 +78,7 @@ import {
   httpStatusFromRootLoaderError,
   rootLoaderErrorMessage,
 } from '~/global/utils/root-loader-diagnostics';
-import { SITE_TITLE } from '#/app/global/config/settings';
+import { SITE_TITLE } from '~/global/config/settings';
 import { useCommanderOptions } from '~/global/hooks/useCommanderOptions';
 import { userAtom } from '~/global/data/atom.user';
 import {

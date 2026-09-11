@@ -99,7 +99,7 @@ vi.mock('@openthrottle/openthrottle-agentic-utils', async (importOriginal) => {
 
 vi.mock('../../utils/openthrottle-ralph', async (importOriginal) => {
   const actual =
-    await importOriginal<typeof import('../../utils/openthrottle-ralph')>();
+    await importOriginal<typeof import('../../utils/openthrottle-ralph.ts')>();
   return {
     ...actual,
     bumpCliPlanRunHeartbeat: bumpCliPlanRunHeartbeatMock,
@@ -120,7 +120,8 @@ vi.mock('../../utils/openthrottle-ralph', async (importOriginal) => {
 });
 
 vi.mock('../../utils/parsers', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../../utils/parsers')>();
+  const actual =
+    await importOriginal<typeof import('../../utils/parsers.ts')>();
   return {
     ...actual,
     parseRalphArgs: vi.fn(() => ({

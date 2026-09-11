@@ -102,7 +102,7 @@ describe('runWorktreeWorkflow', () => {
     const runLoop = vi.fn(async (): Promise<WorkflowLoopResult> => ({
       ok: true,
     }));
-    const { runWorktreeWorkflow } = await import('../workflow');
+    const { runWorktreeWorkflow } = await import('../workflow.ts');
     const options: WorktreeWorkflowOptions = {
       acquire: { lockedBy: 'job-1' },
       runLoop,
@@ -127,7 +127,7 @@ describe('runWorktreeWorkflow', () => {
         return { ok: true };
       },
     );
-    const { runWorktreeWorkflow } = await import('../workflow');
+    const { runWorktreeWorkflow } = await import('../workflow.ts');
     const options: WorktreeWorkflowOptions = {
       acquire: { lockedBy: 'job-1' },
       runLoop,
@@ -151,7 +151,7 @@ describe('runWorktreeWorkflow', () => {
       ok: false,
       reason: 'ralph iteration failed',
     }));
-    const { runWorktreeWorkflow } = await import('../workflow');
+    const { runWorktreeWorkflow } = await import('../workflow.ts');
     const options: WorktreeWorkflowOptions = {
       acquire: { lockedBy: 'job-1' },
       runLoop,
@@ -175,7 +175,7 @@ describe('runWorktreeWorkflow', () => {
     const runLoop = vi.fn(async (): Promise<WorkflowLoopResult> => {
       throw new Error('boom');
     });
-    const { runWorktreeWorkflow } = await import('../workflow');
+    const { runWorktreeWorkflow } = await import('../workflow.ts');
     const options: WorktreeWorkflowOptions = {
       acquire: { lockedBy: 'job-1' },
       runLoop,
@@ -195,7 +195,7 @@ describe('runWorktreeWorkflow', () => {
     const runLoop = vi.fn(async (): Promise<WorkflowLoopResult> => {
       throw 'raw string failure';
     });
-    const { runWorktreeWorkflow } = await import('../workflow');
+    const { runWorktreeWorkflow } = await import('../workflow.ts');
     const options: WorktreeWorkflowOptions = {
       acquire: { lockedBy: 'job-1' },
       runLoop,
@@ -212,7 +212,7 @@ describe('runWorktreeWorkflow', () => {
     const runLoop = vi.fn(async (): Promise<WorkflowLoopResult> => ({
       ok: true,
     }));
-    const { runWorktreeWorkflow } = await import('../workflow');
+    const { runWorktreeWorkflow } = await import('../workflow.ts');
     const options: WorktreeWorkflowOptions = {
       acquire: { lockedBy: 'job-1' },
       runLoop,
@@ -235,7 +235,7 @@ describe('runWorktreeWorkflow', () => {
     const runLoop = vi.fn(async (): Promise<WorkflowLoopResult> => ({
       ok: true,
     }));
-    const { runWorktreeWorkflow } = await import('../workflow');
+    const { runWorktreeWorkflow } = await import('../workflow.ts');
     const options: WorktreeWorkflowOptions = {
       acquire: { lockedBy: 'job-1' },
       runLoop,
@@ -258,7 +258,7 @@ describe('runWorktreeWorkflow', () => {
     const runLoop = vi.fn(async (): Promise<WorkflowLoopResult> => ({
       ok: true,
     }));
-    const { runWorktreeWorkflow } = await import('../workflow');
+    const { runWorktreeWorkflow } = await import('../workflow.ts');
     const options: WorktreeWorkflowOptions = {
       acquire: { lockedBy: 'job-1' },
       runLoop,

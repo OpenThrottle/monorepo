@@ -177,7 +177,7 @@ describe('introspection default — env gating (evaluated at module load)', () =
     process.env.NODE_ENV = 'development';
     delete process.env.GRAPHQL_INTROSPECTION;
 
-    const mod = await import('./nestjs-graphql.module');
+    const mod = await import('./nestjs-graphql.module.ts');
     const config = mod.buildDriverConfig({});
 
     expect(config.introspection).toBe(true);
@@ -187,7 +187,7 @@ describe('introspection default — env gating (evaluated at module load)', () =
     process.env.NODE_ENV = 'production';
     delete process.env.GRAPHQL_INTROSPECTION;
 
-    const mod = await import('./nestjs-graphql.module');
+    const mod = await import('./nestjs-graphql.module.ts');
     const config = mod.buildDriverConfig({});
 
     expect(config.introspection).toBe(false);
@@ -197,7 +197,7 @@ describe('introspection default — env gating (evaluated at module load)', () =
     process.env.NODE_ENV = 'production';
     process.env.GRAPHQL_INTROSPECTION = 'true';
 
-    const mod = await import('./nestjs-graphql.module');
+    const mod = await import('./nestjs-graphql.module.ts');
     const config = mod.buildDriverConfig({});
 
     expect(config.introspection).toBe(true);

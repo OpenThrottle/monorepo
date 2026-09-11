@@ -4,8 +4,8 @@
   "compilerOptions": {
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "module": "commonjs",
-    "moduleResolution": "node", // instead of "nodenext"
+    "module": "nodenext",
+    "moduleResolution": "nodenext", // node10 was REMOVED in TS7 (TS5108)
     "target": "es2020", // More compatible than "esnext"
     "lib": ["ES2020"], // Match target
     "types": ["node"]

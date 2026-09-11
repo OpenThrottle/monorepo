@@ -14,7 +14,7 @@ vi.mock('@langchain/community/vectorstores/pgvector', () => ({
 vi.mock('../embeddings/index', async () => {
   // Keep the real dimension table so the store wiring is verified against the
   // actual model->dimension mapping rather than a stubbed value.
-  const actual = await vi.importActual<typeof import('../embeddings/index')>(
+  const actual = await vi.importActual<typeof import('../embeddings/index.ts')>(
     '../embeddings/index',
   );
 

@@ -26,7 +26,7 @@ describe('createCursorWorkflowRalphIterationRunner', () => {
 
   it('maps iteration params onto runIterationAsync', async () => {
     const { createCursorWorkflowRalphIterationRunner } =
-      await import('../cursor-workflow-ralph-iteration-runner');
+      await import('../cursor-workflow-ralph-iteration-runner.ts');
 
     const runner = createCursorWorkflowRalphIterationRunner();
     const signal = new AbortController().signal;
@@ -54,7 +54,7 @@ describe('createCursorWorkflowRalphIterationRunner', () => {
 
   it('maps runner claude to runIterationAsync backend claude', async () => {
     const { createCursorWorkflowRalphIterationRunner } =
-      await import('../cursor-workflow-ralph-iteration-runner');
+      await import('../cursor-workflow-ralph-iteration-runner.ts');
 
     const runner = createCursorWorkflowRalphIterationRunner();
 
@@ -80,7 +80,7 @@ describe('createCursorWorkflowRalphIterationRunner', () => {
 
   it('merges onChunk and appendPlanOutput into a single runIterationAsync onChunk', async () => {
     const { createCursorWorkflowRalphIterationRunner } =
-      await import('../cursor-workflow-ralph-iteration-runner');
+      await import('../cursor-workflow-ralph-iteration-runner.ts');
 
     const onChunk = vi.fn();
     const appendPlanOutput = vi.fn();
@@ -122,7 +122,7 @@ describe('createCursorWorkflowRalphIterationRunner', () => {
 
   it('merges params.onChunk from run() without factory onChunk', async () => {
     const { createCursorWorkflowRalphIterationRunner } =
-      await import('../cursor-workflow-ralph-iteration-runner');
+      await import('../cursor-workflow-ralph-iteration-runner.ts');
 
     const paramsOnChunk = vi.fn();
 

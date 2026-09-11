@@ -13,14 +13,14 @@ Platform-specific prebuilt binaries (packages that declare `os`/`cpu`, e.g.
 `@rollup/rollup-linux-x64-gnu`, `fsevents`) are omitted: which ones install depends on
 the host OS, and each shares the license of the cross-platform toolchain already listed.
 
-**2502** third-party packages.
+**2503** third-party packages.
 
 ## License summary
 
 | License | Packages |
 | --- | --- |
 | MIT | 2116 |
-| Apache-2.0 | 102 |
+| Apache-2.0 | 103 |
 | ISC | 88 |
 | MIT-0 | 67 |
 | BSD-3-Clause | 56 |
@@ -898,6 +898,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@typescript-eslint/typescript-estree` | 8.65.0 | MIT | [source](https://typescript-eslint.io/packages/typescript-estree) |
 | `@typescript-eslint/utils` | 5.62.0, 8.65.0 | MIT | [source](https://typescript-eslint.io/packages/utils) |
 | `@typescript-eslint/visitor-keys` | 5.62.0, 8.65.0 | MIT | [source](https://typescript-eslint.io) |
+| `@typescript/typescript6` | 6.0.2 | Apache-2.0 | [Microsoft Corp.](https://www.typescriptlang.org/) |
 | `@typescript/vfs` | 1.6.4 | MIT | [TypeScript team](https://github.com/microsoft/TypeScript-Website) |
 | `@ungap/structured-clone` | 1.3.3 | ISC | [Andrea Giammarchi](https://github.com/ungap/structured-clone#readme) |
 | `@vercel/analytics` | 2.0.1 | MIT | [source](https://github.com/vercel/analytics#readme) |
@@ -2408,7 +2409,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `typed-query-selector` | 2.12.2 | MIT | [Pig Fang](https://github.com/g-plane/typed-query-selector#readme) |
 | `typedarray` | 0.0.6 | MIT | [James Halliday](https://github.com/substack/typedarray) |
 | `typeorm` | 0.3.31 | MIT | [TypeORM](https://typeorm.io) |
-| `typescript` | 5.9.3, 6.0.3 | Apache-2.0 | [Microsoft Corp.](https://www.typescriptlang.org/) |
+| `typescript` | 5.9.3, 6.0.3, 7.0.2 | Apache-2.0 | [Microsoft Corp.](https://www.typescriptlang.org/) |
 | `typescript-eslint` | 8.65.0 | MIT | [source](https://typescript-eslint.io/packages/typescript-eslint) |
 | `typescript-json-schema` | 0.67.4 | BSD-3-Clause | [Yousef El-Dardiry and Dominik Moritz](https://github.com/YousefED/typescript-json-schema#readme) |
 | `ufo` | 1.6.4 | MIT | [source](https://github.com/unjs/ufo#readme) |
