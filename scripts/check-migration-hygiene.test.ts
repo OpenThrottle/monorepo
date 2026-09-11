@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  findDuplicatePrefixCollisions,
   findGuardedForeignKeyStatements,
   hasGuardedForeignKey,
   migrationPrefix,
@@ -141,5 +142,125 @@ describe('migrationPrefix', () => {
     ['001_enable_pgvector.sql', '001'],
   ])('reads %s as %s', (filename, expected) => {
     expect(migrationPrefix(filename)).toBe(expected);
+  });
+});
+
+describe('findDuplicatePrefixCollisions', () => {
+  const NONE: ReadonlySet<string> = new Set();
+
+  // The regression this whole rule exists for. Branch A landed `110_a` while
+  // branch B was open; B never rebased, so its merge-base has neither file and a
+  // diff-scoped check sees the prefix used exactly once. Comparing against the
+  // TIP of main is what makes B's half visible as incoming.
+  it('fails the second of two concurrent branches, unrebased', () => {
+    const collisions = findDuplicatePrefixCollisions(
+      ['109_x.sql', '110_b.sql'],
+      { baseFiles: ['109_x.sql', '110_a.sql'], kind: 'branch' },
+      NONE,
+    );
+
+    expect(collisions).toHaveLength(1);
+    expect(collisions[0]?.prefix).toBe('110');
+    expect(collisions[0]?.files).toStrictEqual(['110_a.sql', '110_b.sql']);
+    // Only the branch's own file is renumberable — `110_a.sql` is applied history.
+    expect(collisions[0]?.incoming).toStrictEqual(['110_b.sql']);
+  });
+
+  it('fails a branch that adds both halves itself', () => {
+    const collisions = findDuplicatePrefixCollisions(
+      ['110_a.sql', '110_b.sql'],
+      { baseFiles: [], kind: 'branch' },
+      NONE,
+    );
+
+    expect(collisions[0]?.incoming).toStrictEqual(['110_a.sql', '110_b.sql']);
+  });
+
+  // A pile that already exists wholly on main must not turn every unrelated PR
+  // red. The trunk pass and the grandfather list own that case.
+  it('stays silent on a collision that is entirely pre-existing on the base', () => {
+    expect(
+      findDuplicatePrefixCollisions(
+        ['110_a.sql', '110_b.sql'],
+        { baseFiles: ['110_a.sql', '110_b.sql'], kind: 'branch' },
+        NONE,
+      ),
+    ).toStrictEqual([]);
+  });
+
+  // ...but the trunk pass DOES report it, which is the post-merge alarm that was
+  // missing entirely: nothing re-checked main after a merge.
+  it('reports a pre-existing collision in trunk mode', () => {
+    const collisions = findDuplicatePrefixCollisions(
+      ['110_a.sql', '110_b.sql'],
+      { kind: 'trunk' },
+      NONE,
+    );
+
+    expect(collisions).toHaveLength(1);
+    expect(collisions[0]?.incoming).toStrictEqual(['110_a.sql', '110_b.sql']);
+  });
+
+  it('stays silent on a grandfathered prefix in both scopes', () => {
+    const grandfathered = new Set(['084']);
+
+    expect(
+      findDuplicatePrefixCollisions(
+        ['084_a.sql', '084_b.sql'],
+        { baseFiles: [], kind: 'branch' },
+        grandfathered,
+      ),
+    ).toStrictEqual([]);
+    expect(
+      findDuplicatePrefixCollisions(
+        ['084_a.sql', '084_b.sql'],
+        { kind: 'trunk' },
+        grandfathered,
+      ),
+    ).toStrictEqual([]);
+  });
+
+  it('passes a branch that touches no migration at all', () => {
+    expect(
+      findDuplicatePrefixCollisions(
+        ['109_x.sql', '110_a.sql'],
+        { baseFiles: ['109_x.sql', '110_a.sql'], kind: 'branch' },
+        NONE,
+      ),
+    ).toStrictEqual([]);
+  });
+
+  // The union models the post-merge tree, so a file only main has still counts.
+  it('counts a base-only file the working tree has never seen', () => {
+    const collisions = findDuplicatePrefixCollisions(
+      ['110_b.sql'],
+      { baseFiles: ['110_a.sql'], kind: 'branch' },
+      NONE,
+    );
+
+    expect(collisions[0]?.files).toStrictEqual(['110_a.sql', '110_b.sql']);
+  });
+
+  it('ignores non-.sql entries', () => {
+    expect(
+      findDuplicatePrefixCollisions(
+        ['110_a.sql', '110_notes.md'],
+        { kind: 'trunk' },
+        NONE,
+      ),
+    ).toStrictEqual([]);
+  });
+
+  it('reports every colliding prefix, ordered', () => {
+    const collisions = findDuplicatePrefixCollisions(
+      ['111_a.sql', '111_b.sql', '110_a.sql', '110_b.sql'],
+      { kind: 'trunk' },
+      NONE,
+    );
+
+    expect(collisions.map(({ prefix }) => prefix)).toStrictEqual([
+      '110',
+      '111',
+    ]);
   });
 });

@@ -514,6 +514,34 @@ jobs:
         if: matrix.jobIndex == 1
         run: pnpm exec nx run monorepo:check-package-entrypoints
 
+      # 🗄️ Static, whole-tree, no database — so one shard is enough.
+      #
+      # ⚠️ This gate did not exist until 2026-09-10, and its absence is why four
+      # duplicate migration prefixes (110 x2, 111 x2) landed on main between
+      # 2026-09-07 and 2026-09-09 while the rule that forbids them had been in
+      # the tree since 2026-08-23 (#421). It ran ONLY from `check:local`, which
+      # is a developer convenience, not a gate. A rule nothing invokes in CI is
+      # documentation.
+      #
+      # Runs UNGATED by a path filter, deliberately. A duplicate prefix is a
+      # property of the MERGED tree, not of the diff: the branch that completes
+      # a collision may be the one that touched no migration at all, and the
+      # second of two concurrent branches only becomes wrong once the first
+      # lands. The check resolves against the base ref TIP for exactly that
+      # reason, so it must be free to run even when this PR's diff is empty
+      # under databases/migrations/. It costs ~1s.
+      #
+      # On `push: main` there is no base_ref, HEAD IS the trunk, and the script
+      # switches to trunk mode — reporting any non-grandfathered duplicate in
+      # the tree. That is the post-merge pass; nothing else re-checks after a
+      # merge, and with the merge queue on `main` disabled (see the `on:` block)
+      # there is no merge_group run to do it either.
+      - name: '🗄️ Migration hygiene (foreign keys + duplicate prefixes)'
+        if: matrix.jobIndex == 1
+        run: pnpm exec nx run monorepo:check-migration-hygiene
+        env:
+          MIGRATION_COMMENT_LINT_BASE: ${{ github.base_ref || 'main' }}
+
       # Full-tree (not affected): license risk lives in the whole installed graph,
       # so when this runs it scans every dependency. Both this and the notices
       # guard below are `cache: false` in nx.json (they read the installed
