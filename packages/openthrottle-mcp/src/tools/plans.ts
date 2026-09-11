@@ -60,12 +60,15 @@ type UpdatePlanResult = GenericResult<{
   plan: UpdatePlanMutation['updatePlan'];
 }>;
 
-export const createPlanToolParameters = CreatePlanInputSchema();
-export const createPlansToolParameters = CreatePlansInputSchema();
-export const deletePlanToolParameters = DeletePlanInputSchema();
-export const getPlanToolParameters = z.object({ id: z.string().min(1) });
-export const listPlansByStatusToolParameters = ListPlansByStatusInputSchema();
-export const updatePlanToolParameters = UpdatePlanInputSchema();
+export const createPlanToolParameters = CreatePlanInputSchema().strict();
+export const createPlansToolParameters = CreatePlansInputSchema().strict();
+export const deletePlanToolParameters = DeletePlanInputSchema().strict();
+export const getPlanToolParameters = z
+  .object({ id: z.string().min(1) })
+  .strict();
+export const listPlansByStatusToolParameters =
+  ListPlansByStatusInputSchema().strict();
+export const updatePlanToolParameters = UpdatePlanInputSchema().strict();
 
 /**
  * Canonical plan/task status labels, derived from the generated PlanTaskStatus

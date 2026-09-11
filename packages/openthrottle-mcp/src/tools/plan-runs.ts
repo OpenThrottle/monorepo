@@ -45,12 +45,14 @@ type PlanRun = NonNullable<RegisterCliPlanRunMutation['registerCliPlanRun']>;
 
 type RegisterPlanRunResult = GenericResult<{ run: PlanRun | null }>;
 
-export const registerPlanRunToolParameters = z.object({
-  branch: z.string().nullable().optional(),
-  executionBackend: z.string().nullable().optional(),
-  model: z.string().nullable().optional(),
-  planId: z.string().uuid(),
-});
+export const registerPlanRunToolParameters = z
+  .object({
+    branch: z.string().nullable().optional(),
+    executionBackend: z.string().nullable().optional(),
+    model: z.string().nullable().optional(),
+    planId: z.string().uuid(),
+  })
+  .strict();
 
 export const registerPlanRunToolDescription =
   'Open a plan_runs row for the interactive loop you are about to drive, so the run is attributable: which agent, which model, which branch, when it started. Call it once at loop setup and carry the returned run id for the rest of the run. Pass the model you are actually running as — or omit it if you cannot determine one, since null is a legible answer and a plausible-looking guess is not. executionBackend is detected from the launching harness and only used if detection finds nothing; do not declare it otherwise. Best-effort: if this fails, say so and keep working. IMPORTANT: nothing server-side will ever settle this row, so you must call settle_plan_run on every exit path — COMPLETED when the PR opens, CANCELLED on a deliberate stop, FAILED when you give up.';
@@ -124,10 +126,12 @@ type SettledRun = NonNullable<SettleCliPlanRunMutation['settleCliPlanRun']>;
 
 type SettlePlanRunResult = GenericResult<{ run: SettledRun | null }>;
 
-export const settlePlanRunToolParameters = z.object({
-  planRunId: z.string().uuid(),
-  status: z.string().min(1),
-});
+export const settlePlanRunToolParameters = z
+  .object({
+    planRunId: z.string().uuid(),
+    status: z.string().min(1),
+  })
+  .strict();
 
 export const settlePlanRunToolDescription =
   "Close the plan_runs row opened by register_plan_run. status is COMPLETED (the work shipped), CANCELLED (a deliberate stop) or FAILED (you gave up or crashed out). Call this on EVERY exit path: these rows are exempt from the server's stale sweep, so an unsettled one sits IN_PROGRESS forever, reads as live, and holds its worktree marked busy. Settling an already-settled or unknown run is a safe no-op.";
@@ -186,10 +190,12 @@ type RegisterWorktreeCheckoutResult = GenericResult<{
   run: CheckoutRun | null;
 }>;
 
-export const registerPlanRunWorktreeCheckoutToolParameters = z.object({
-  filesystemPath: z.string().min(1),
-  planRunId: z.string().uuid(),
-});
+export const registerPlanRunWorktreeCheckoutToolParameters = z
+  .object({
+    filesystemPath: z.string().min(1),
+    planRunId: z.string().uuid(),
+  })
+  .strict();
 
 export const registerPlanRunWorktreeCheckoutToolDescription =
   'Tell a registered plan run which worktree it is running in, by absolute path, so its checkout_id resolves. That is what makes "open in editor" deep-links work for the run and what lets the worktree read as busy while the loop is live. Call it once, after the worktree exists. Best-effort by design: it quietly returns the run unchanged when the path is not a linked worktree or the repository cannot be resolved.';
@@ -243,10 +249,12 @@ type PlanRunRow = GetPlanRunsQuery['planRunsByPlanId'][number];
 
 type GetPlanRunsResult = GenericResult<{ runs: PlanRunRow[] }>;
 
-export const getPlanRunsToolParameters = z.object({
-  limit: z.number().int().positive().nullable().optional(),
-  planId: z.string().uuid(),
-});
+export const getPlanRunsToolParameters = z
+  .object({
+    limit: z.number().int().positive().nullable().optional(),
+    planId: z.string().uuid(),
+  })
+  .strict();
 
 export const getPlanRunsToolDescription =
   'List the plan runs recorded for a plan, newest first: status, agent backend, model, branch, run kind, timings, and the worktree it ran in. Use it to attribute an executed plan to the agent and model that ran it, and — during a loop — to poll cancelRequestedAt at task boundaries, which is the ONLY way a Kill reaches an interactive run. Read heartbeatExpected next to isStale: on a run that does not heartbeat, isStale false means "nobody knows", not "verified live".';

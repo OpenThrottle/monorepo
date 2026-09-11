@@ -89,15 +89,20 @@ type PromoteTaskResult = GenericResult<{
   promotion: PromoteTaskToPlanMutation['promoteTaskToPlan'];
 }>;
 
-export const createTaskToolParameters = CreateTaskInputSchema();
-export const deleteTaskToolParameters = DeleteTaskInputSchema();
+export const createTaskToolParameters = CreateTaskInputSchema().strict();
+export const deleteTaskToolParameters = DeleteTaskInputSchema().strict();
 export const getRemainingTasksForPlanToolParameters =
-  RemainingTasksByPlanIdInputSchema();
-export const getTasksByPlanIdToolParameters = TasksByPlanIdInputSchema();
-export const getTaskToolParameters = z.object({ id: z.string().min(1) });
-export const promoteTaskToolParameters = PromoteTaskToPlanInputSchema();
-export const reorderPlanTasksToolParameters = ReorderPlanTasksInputSchema();
-export const updateTaskToolParameters = UpdateTaskInputSchema();
+  RemainingTasksByPlanIdInputSchema().strict();
+export const getTasksByPlanIdToolParameters =
+  TasksByPlanIdInputSchema().strict();
+export const getTaskToolParameters = z
+  .object({ id: z.string().min(1) })
+  .strict();
+export const promoteTaskToolParameters =
+  PromoteTaskToPlanInputSchema().strict();
+export const reorderPlanTasksToolParameters =
+  ReorderPlanTasksInputSchema().strict();
+export const updateTaskToolParameters = UpdateTaskInputSchema().strict();
 
 const createTasksItemSchema = z.object({
   assignee: z.string().nullish(),
@@ -112,17 +117,21 @@ const createTasksItemSchema = z.object({
   title: z.string().min(1),
 });
 
-export const createTasksToolParameters = z.object({
-  planId: z.string().uuid(),
-  tasks: z.array(createTasksItemSchema).min(1),
-});
+export const createTasksToolParameters = z
+  .object({
+    planId: z.string().uuid(),
+    tasks: z.array(createTasksItemSchema).min(1),
+  })
+  .strict();
 
-export const listTasksByCategoryToolParameters = z.object({
-  category: z.string().min(1),
-  limit: z.number().int().min(1).max(200).optional(),
-  planId: z.string().uuid().optional(),
-  status: z.string().min(1).optional(),
-});
+export const listTasksByCategoryToolParameters = z
+  .object({
+    category: z.string().min(1),
+    limit: z.number().int().min(1).max(200).optional(),
+    planId: z.string().uuid().optional(),
+    status: z.string().min(1).optional(),
+  })
+  .strict();
 
 export const createTaskToolDescription = `Create a new task in OpenThrottle. Requires planId and title; optional description, category, status (default: PENDING), requirements (JSON string), summary, assignee (e.g. GitHub username), project, projectId, sortOrder (execution order within plan; auto-assigned when omitted).`;
 

@@ -15,7 +15,7 @@ type DeleteProjectResult = GenericResult<{
   deleted: boolean;
 }>;
 
-export const deleteProjectToolParameters = DeleteProjectInputSchema();
+export const deleteProjectToolParameters = DeleteProjectInputSchema().strict();
 
 export const deleteProjectToolDescription = `Delete a OpenThrottle project by id. Returns whether a row was deleted. Plans and tasks that referenced this project have project_id cleared.`;
 
