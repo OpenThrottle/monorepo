@@ -30,6 +30,7 @@ mutation RecordSkillUsageOutcome($input: RecordSkillUsageOutcomeInput!) {
     id
     skillName
     outcome
+    source
   }
 }
 `;
@@ -121,6 +122,7 @@ export const buildOutcomeEvent = ({
   timestamp = new Date().toISOString(),
   gitBranch,
   cwd,
+  source,
 }: {
   cwd?: string | null;
   durationMs?: number | null;
@@ -131,6 +133,7 @@ export const buildOutcomeEvent = ({
   repoRoot: string;
   sessionId?: string | null;
   skillName: string;
+  source?: string;
   timestamp?: string;
   toolUseId?: string | null;
 }): OutcomeEvent | null => {
@@ -149,7 +152,7 @@ export const buildOutcomeEvent = ({
       ? null
       : Math.max(0, Math.round(Number(durationMs)));
 
-  return {
+  const event: OutcomeEvent = {
     cwd: resolvedCwd,
     duration_ms: resolvedDuration,
     event_kind: 'outcome',
@@ -161,6 +164,15 @@ export const buildOutcomeEvent = ({
     timestamp,
     tool_use_id: toolUseId,
   };
+
+  // Conditional assign rather than `source: source ?? undefined` because
+  // `exactOptionalPropertyTypes` rejects an explicit undefined here. Mirrors
+  // how `UsageEvent.source` is handled in buildUsageEvent.
+  if (source != null) {
+    event.source = source;
+  }
+
+  return event;
 };
 
 /**
@@ -231,6 +243,9 @@ export const toRecordSkillUsageOutcomeInput = (
     skillName: event.skill_name,
   };
 
+  if (event.source != null) {
+    input.source = event.source;
+  }
   if (event.scope != null) {
     input.scope = event.scope;
   }

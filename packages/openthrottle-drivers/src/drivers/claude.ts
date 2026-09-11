@@ -6,7 +6,10 @@
 
 import { defineDriver } from '../registry/index.ts';
 import type { DriverCapabilities, DriverModelListing } from '../types/index.ts';
-import { appendPluginDirShellFlags } from '../utils/plugin-dir.ts';
+import {
+  appendPluginDirShellFlags,
+  OPENTHROTTLE_PLUGIN_DIR_REL,
+} from '../utils/plugin-dir.ts';
 import { escapeForShellDoubleQuoted, escapeShellArg } from '../utils/shell.ts';
 import { appendWorktreeShellFlags } from '../utils/worktree.ts';
 
@@ -89,6 +92,7 @@ export const claudeDriver = defineDriver({
     url: 'https://claude.ai/install.sh',
   },
   label: 'claude-code',
+  pluginDirRel: OPENTHROTTLE_PLUGIN_DIR_REL,
   update: { argv: ['update'], method: 'command' },
   versionArgs: ['--version'],
 });

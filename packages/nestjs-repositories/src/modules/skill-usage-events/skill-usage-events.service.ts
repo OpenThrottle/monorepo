@@ -64,6 +64,7 @@ export interface RecordSkillUsageOutcomeInput {
   readonly scope?: SkillUsageScope;
   readonly sessionId?: string | null;
   readonly skillName: string;
+  readonly source?: string | null;
   readonly toolUseId?: string | null;
 }
 
@@ -301,6 +302,7 @@ export class SkillUsageEventsService {
       scope: input.scope ?? SKILL_USAGE_SCOPES.OURS,
       sessionId: input.sessionId ?? null,
       skillName: input.skillName,
+      source: input.source ?? null,
       toolUseId: input.toolUseId ?? null,
     });
 

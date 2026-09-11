@@ -211,7 +211,7 @@ describe('cursor driver parity', () => {
       chatStreaming: true,
       mcpAutoApprove: true,
       permissionMode: false,
-      pluginDir: false,
+      pluginDir: true,
       skipWorktreeSetup: true,
       supportsCustomBaseUrl: false,
       supportsModelFlag: true,

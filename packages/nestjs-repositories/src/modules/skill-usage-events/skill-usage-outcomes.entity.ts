@@ -37,6 +37,7 @@ export interface SkillUsageOutcomeData {
   readonly scope: SkillUsageScope;
   readonly sessionId: string | null;
   readonly skillName: string;
+  readonly source: string | null;
   readonly toolUseId: string | null;
 }
 
@@ -72,6 +73,9 @@ export class SkillUsageOutcome {
     type: 'text',
   })
   scope!: SkillUsageScope;
+
+  @Column({ name: 'source', nullable: true, type: 'text' })
+  source!: string | null;
 
   @Column({ name: 'occurred_at', type: 'timestamp with time zone' })
   occurredAt!: Date;

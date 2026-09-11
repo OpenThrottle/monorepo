@@ -144,6 +144,12 @@ export class RecordSkillUsageOutcomeInput {
   skillName!: string;
 
   @Field(() => String, {
+    description: `Producer id of the tool/adapter that recorded this outcome (e.g. claude-code, cursor). Stamped by the per-tool skill-usage adapter; matches the start event's source.`,
+    nullable: true,
+  })
+  source?: string | null;
+
+  @Field(() => String, {
     description: `Optional tool_use_id for tighter start↔outcome correlation.`,
     nullable: true,
   })

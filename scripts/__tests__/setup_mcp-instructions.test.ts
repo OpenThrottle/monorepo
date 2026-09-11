@@ -1,7 +1,9 @@
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+
 import {
   buildPayloads,
   isServerInstalled,
@@ -34,58 +36,23 @@ describe('buildPayloads', () => {
     expect(JSON.parse(embedded)).toEqual(claudeConfig);
   });
 
-  it('keeps the two clients at env-key parity', () => {
+  it('carries no env block for either client', () => {
     const { claudeConfig, cursorConfig } = buildPayloads(ROOT);
-    const cursorEnv = cursorConfig.mcpServers['openthrottle-mcp'].env;
-    expect(Object.keys(claudeConfig.env).sort()).toEqual(
-      Object.keys(cursorEnv).sort(),
+
+    // The launcher resolves its own environment; neither client config ships
+    // placeholders for it to expand.
+    expect(claudeConfig).not.toHaveProperty('env');
+    expect(cursorConfig.mcpServers['openthrottle-mcp']).not.toHaveProperty(
+      'env',
     );
   });
 
-  it('preserves each client’s distinct placeholder values verbatim', () => {
-    const { claudeConfig, cursorConfig } = buildPayloads(ROOT);
-    const cursorEnv = cursorConfig.mcpServers['openthrottle-mcp'].env;
-
-    // Shared placeholders.
-    expect(claudeConfig.env.ANTHROPIC_API_KEY).toBe('${ANTHROPIC_API_KEY}');
-    expect(cursorEnv.ANTHROPIC_API_KEY).toBe('${ANTHROPIC_API_KEY}');
-
-    // Intentionally divergent API_URL placeholders.
-    expect(claudeConfig.env.API_URL).toBe(
-      '${OPENTHROTTLE_DEVELOPER_API_URL_EXTERNAL}',
-    );
-    expect(claudeConfig.env.API_URL_INTERNAL).toBe(
-      '${OPENTHROTTLE_DEVELOPER_API_URL_INTERNAL}',
-    );
-    expect(cursorEnv.API_URL).toBe('${API_URL}');
-    expect(cursorEnv.API_URL_INTERNAL).toBe('${API_URL_INTERNAL}');
-
-    // The author's workspace: Cursor resolves its own workspace variable,
-    // Claude Code is spawned in the open project and falls back to that cwd.
-    expect(claudeConfig.env.OPENTHROTTLE_MCP_WORKSPACE_PATH).toBe(
-      '${OPENTHROTTLE_MCP_WORKSPACE_PATH}',
-    );
-    expect(cursorEnv.OPENTHROTTLE_MCP_WORKSPACE_PATH).toBe('${workspaceFolder}'); // prettier-ignore
-  });
-
-  it('offers the workspace override both clients need to link plans to a repo', () => {
+  it('describes the server for Claude Code only', () => {
     const { claudeConfig, cursorConfig } = buildPayloads(ROOT);
 
-    expect(Object.keys(claudeConfig.env)).toContain('OPENTHROTTLE_MCP_WORKSPACE_PATH'); // prettier-ignore
-    expect(
-      Object.keys(cursorConfig.mcpServers['openthrottle-mcp'].env),
-    ).toContain('OPENTHROTTLE_MCP_WORKSPACE_PATH');
-  });
-
-  it('every placeholder value is a literal ${...} token', () => {
-    const { claudeConfig, cursorConfig } = buildPayloads(ROOT);
-    const values = [
-      ...Object.values(claudeConfig.env),
-      ...Object.values(cursorConfig.mcpServers['openthrottle-mcp'].env),
-    ];
-    for (const value of values) {
-      expect(value).toMatch(/^\$\{[A-Za-z_]+\}$/);
-    }
+    expect(claudeConfig.description).toMatch(/^OpenThrottle \(OT\)/);
+    expect(claudeConfig.command).toBe('bash');
+    expect(cursorConfig.mcpServers['openthrottle-mcp'].command).toBe('bash');
   });
 });
 
@@ -163,7 +130,7 @@ describe('renderInstructions', () => {
     const end = block.indexOf('\n}') + 2;
     const parsed: unknown = JSON.parse(block.slice(0, end));
     expect(parsed).toMatchObject({
-      mcpServers: { 'openthrottle-mcp': { env: { API_URL: '${API_URL}' } } },
+      mcpServers: { 'openthrottle-mcp': { args: [LAUNCHER], command: 'bash' } },
     });
   });
 });
