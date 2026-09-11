@@ -242,6 +242,7 @@ describe('SkillUsageEventsService', () => {
         outcome: SKILL_USAGE_OUTCOMES.SUCCESS,
         sessionId: 'session-1',
         skillName: 'ot-plans',
+        source: 'claude-code',
         toolUseId: 'tool-1',
       });
 
@@ -254,6 +255,7 @@ describe('SkillUsageEventsService', () => {
         scope: SKILL_USAGE_SCOPES.OURS,
         sessionId: 'session-1',
         skillName: 'ot-plans',
+        source: 'claude-code',
         toolUseId: 'tool-1',
       });
       expect(saved.id).toBe('outcome-1');
@@ -283,6 +285,7 @@ describe('SkillUsageEventsService', () => {
           scope: SKILL_USAGE_SCOPES.OURS,
           sessionId: null,
           skillName: 'ot-plans',
+          source: null,
           toolUseId: null,
         });
       });

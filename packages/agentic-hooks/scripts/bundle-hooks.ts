@@ -82,32 +82,196 @@ const BUNDLES: readonly BundleSpec[] = [
     entry: 'adapters/cursor/capture.ts',
     outFile: '.cursor/hooks/skill-usage-capture.cjs',
   },
+  {
+    entry: 'adapters/cursor/complete.ts',
+    outFile: '.cursor/hooks/skill-usage-complete.cjs',
+  },
+  // Codex reads hooks from ~/.codex/config.toml — the operator's home, never a
+  // repo — so there is no in-repo hook folder to write into. The bundles still
+  // have to live somewhere committed for an operator to point that config at,
+  // and `.codex/hooks/` keeps them beside the other tools' rather than
+  // inventing a second convention.
+  {
+    entry: 'adapters/codex/capture.ts',
+    outFile: '.codex/hooks/skill-usage-capture.cjs',
+  },
+  {
+    entry: 'adapters/codex/complete.ts',
+    outFile: '.codex/hooks/skill-usage-complete.cjs',
+  },
 ];
 
 /**
- * Root of the distributable Claude Code plugin payload, relative to the
- * workspace root. A REAL committed directory, not gitignored build output: leg
- * B points a running server's `--plugin-dir` at this path in place, so it has
- * to exist in a plain checkout with nothing built.
+ * One distributable plugin payload: a committed directory a tool can be pointed
+ * at with its own `--plugin-dir` flag, or that a human installs once from a
+ * marketplace. Both delivery routes read the same directory.
+ *
+ * There is one payload PER TOOL rather than one shared payload, because the
+ * only part that differs is the part that cannot be shared: a tool's hook
+ * config names that tool's events. Cursor will happily read
+ * `.claude-plugin/plugin.json` and `hooks/hooks.json` (its manifest lookup
+ * tries `.cursor-plugin/`, then `.claude-plugin/`, then a bare `plugin.json`),
+ * and it even translates Claude's event names — but the translation drops
+ * exactly what we need: `PreToolUse` with `matcher: "Skill"` has no Cursor tool
+ * to match, `UserPromptExpansion` has no Cursor equivalent at all, and `Stop`
+ * maps to an event that never fires in a headless run. A shared payload would
+ * therefore load, report no error, and record nothing.
  */
-const PLUGIN_ROOT = 'plugins/openthrottle';
+interface PluginPayload {
+  /** Adapter entrypoints shipped in this payload. */
+  readonly bundles: readonly PluginEntry[];
+  /** Closing note explaining the capture wiring, or null when there is none. */
+  readonly captureNote: string | null;
+  /** Extra "turning it off" README rows beyond the tool-neutral one. */
+  readonly disableRows: readonly (readonly [string, string])[];
+  /** README table rows: [event, handler file]. */
+  readonly hookTableRows: readonly (readonly [string, string])[];
+  /** README lines for the install section, verbatim. */
+  readonly installLines: readonly string[];
+  /** Human label for this tool in prose. */
+  readonly label: string;
+  /**
+   * The tool's own hook config object, built from a helper that resolves a
+   * payload-relative handler to the command spelling that tool expands.
+   */
+  readonly renderHooks: (command: (file: string) => string) => unknown;
+  /** Workspace-relative root of the committed payload directory. */
+  readonly root: string;
+  /** Env var expanded to the payload root in a hook command. */
+  readonly rootVar: string;
+}
+
+/** One adapter entrypoint inside a payload's `hooks/` directory. */
+interface PluginEntry {
+  /** Entry TS file, relative to the package `src/` folder. */
+  readonly entry: string;
+  /** File name under `<root>/hooks/`. */
+  readonly file: string;
+}
 
 /**
- * The adapters that are genuine hook handlers, bundled into the plugin payload.
+ * The adapters that are genuine hook handlers, bundled into a payload.
  *
- * Deliberately NOT all five claude adapters: `drain`, `outcome`, and `scope` are
- * manual CLIs (`node …drain.cjs --budget-ms 500`), wired to no event. Shipping
- * them would be dead weight in someone else's repo. The buffer still flushes —
- * `complete` drains opportunistically on `Stop`.
+ * Deliberately NOT every adapter: `drain`, `outcome`, `scope` and
+ * `plan-run-janitor` are manual CLIs (`node …drain.cjs --budget-ms 500`), wired
+ * to no event. Shipping them would be dead weight in someone else's repo. The
+ * buffer still flushes — the completion handler drains opportunistically.
  */
-const PLUGIN_BUNDLES: readonly BundleSpec[] = [
+const CLAUDE_PLUGIN_ENTRIES: readonly PluginEntry[] = [
+  { entry: 'adapters/claude/capture.ts', file: 'skill-usage-capture.cjs' },
+  { entry: 'adapters/claude/complete.ts', file: 'skill-usage-complete.cjs' },
+];
+
+const CURSOR_PLUGIN_ENTRIES: readonly PluginEntry[] = [
+  { entry: 'adapters/cursor/capture.ts', file: 'skill-usage-capture.cjs' },
+  { entry: 'adapters/cursor/complete.ts', file: 'skill-usage-complete.cjs' },
+];
+
+/**
+ * Every payload this script owns. Adding a tool is a row here plus its outputs
+ * in BOTH `bundle-hooks` and `bundle-hooks-check` in `package.json`.
+ *
+ * A payload root is a REAL committed directory, not gitignored build output:
+ * leg B points a running server's `--plugin-dir` at the path in place, so it
+ * has to exist in a plain checkout with nothing built.
+ */
+const PLUGIN_PAYLOADS: readonly PluginPayload[] = [
   {
-    entry: 'adapters/claude/capture.ts',
-    outFile: `${PLUGIN_ROOT}/hooks/skill-usage-capture.cjs`,
+    bundles: CLAUDE_PLUGIN_ENTRIES,
+    captureNote: [
+      'The two capture events are complementary, not redundant: a skill invoked as a tool',
+      'raises `PreToolUse`, a skill invoked as a slash command raises `UserPromptExpansion`.',
+    ].join('\n'),
+    disableRows: [['`/plugin uninstall openthrottle`', 'removes it entirely']],
+    hookTableRows: [
+      ['`PreToolUse` (matcher `Skill`)', '`hooks/skill-usage-capture.cjs`'],
+      ['`UserPromptExpansion`', '`hooks/skill-usage-capture.cjs`'],
+      ['`Stop`', '`hooks/skill-usage-complete.cjs`'],
+    ],
+    installLines: [
+      '```bash',
+      '/plugin marketplace add OpenThrottle/monorepo',
+      '/plugin install openthrottle@openthrottle',
+      '```',
+    ],
+    label: 'Claude Code',
+    renderHooks: (command) => ({
+      hooks: {
+        PreToolUse: [
+          {
+            hooks: [
+              {
+                command: command('skill-usage-capture.cjs'),
+                statusMessage: 'Skill usage capture (PreToolUse)',
+                type: 'command',
+              },
+            ],
+            matcher: 'Skill',
+          },
+        ],
+        Stop: [
+          {
+            hooks: [
+              {
+                command: command('skill-usage-complete.cjs'),
+                statusMessage: 'Skill usage complete (Stop)',
+                type: 'command',
+              },
+            ],
+          },
+        ],
+        UserPromptExpansion: [
+          {
+            hooks: [
+              {
+                command: command('skill-usage-capture.cjs'),
+                statusMessage: 'Skill usage capture (UserPromptExpansion)',
+                type: 'command',
+              },
+            ],
+          },
+        ],
+      },
+    }),
+    root: 'plugins/openthrottle',
+    rootVar: 'CLAUDE_PLUGIN_ROOT',
   },
   {
-    entry: 'adapters/claude/complete.ts',
-    outFile: `${PLUGIN_ROOT}/hooks/skill-usage-complete.cjs`,
+    bundles: CURSOR_PLUGIN_ENTRIES,
+    captureNote: [
+      "Cursor has no `Skill` tool: a skill invocation is a `Read` of the skill's `SKILL.md`,",
+      'which is why capture listens on `preToolUse`. Completion listens on `sessionEnd`, not',
+      '`stop` — `stop` is the per-turn event and does not fire in headless runs at all.',
+    ].join('\n'),
+    disableRows: [
+      [
+        '`cursor-agent plugin marketplace`',
+        'manage or remove the installed plugin',
+      ],
+    ],
+    hookTableRows: [
+      ['`preToolUse`', '`hooks/skill-usage-capture.cjs`'],
+      ['`beforeSubmitPrompt`', '`hooks/skill-usage-capture.cjs`'],
+      ['`sessionEnd`', '`hooks/skill-usage-complete.cjs`'],
+    ],
+    installLines: [
+      'Pass the payload directory directly:',
+      '',
+      '```bash',
+      'cursor-agent --plugin-dir /path/to/plugins/openthrottle-cursor -p "…"',
+      '```',
+    ],
+    label: 'Cursor',
+    renderHooks: (command) => ({
+      hooks: {
+        beforeSubmitPrompt: [{ command: command('skill-usage-capture.cjs') }],
+        preToolUse: [{ command: command('skill-usage-capture.cjs') }],
+        sessionEnd: [{ command: command('skill-usage-complete.cjs') }],
+      },
+      version: 1,
+    }),
+    root: 'plugins/openthrottle-cursor',
+    rootVar: 'CURSOR_PLUGIN_ROOT',
   },
 ];
 
@@ -135,89 +299,75 @@ const readPluginVersion = (): string => {
 const renderJson = (value: unknown): string =>
   `${JSON.stringify(value, null, 2)}\n`;
 
-const renderPluginManifest = (): string =>
-  renderJson({
-    author: { name: 'OpenThrottle', url: 'https://github.com/OpenThrottle' },
-    description:
-      'Records which agent skills run, so OpenThrottle can report skill usage. Telemetry only — it never modifies your repository and never blocks a tool call.',
-    name: 'openthrottle',
-    version: readPluginVersion(),
-  });
+/**
+ * The canonical Agent Plugins 1.0.0 identifier. The spec requires this exact
+ * string: "For Agent Plugins 1.0.0, its value MUST be the canonical identifier
+ * `https://agent-plugins.org/schemas/1.0.0/plugin.schema.json`." Clients use it
+ * to select validation rules, so it is a version pin, not a docs link.
+ */
+const AGENT_PLUGINS_SCHEMA =
+  'https://agent-plugins.org/schemas/1.0.0/plugin.schema.json';
+
+const pluginManifest = (payload: PluginPayload): Record<string, unknown> => ({
+  author: { name: 'OpenThrottle', url: 'https://github.com/OpenThrottle' },
+  description: `Records which agent skills run under ${payload.label}, so OpenThrottle can report skill usage. Telemetry only — it never modifies your repository and never blocks a tool call.`,
+  name: 'openthrottle',
+  version: readPluginVersion(),
+});
 
 /**
- * Hook wiring for the payload. Mirrors this repo's `.claude/settings.json`
- * `hooks` block, with `${CLAUDE_PLUGIN_ROOT}`-relative commands instead of
- * `./.claude/hooks/` ones.
- *
- * Every event here was proved to fire under headless `claude -p` (spike, task
- * 01bfe79c). `PreToolUse` and `UserPromptExpansion` are complementary rather
- * than redundant: a skill reached as a tool raises the former, a skill reached
- * as a slash command raises the latter, and a session hits one or the other.
+ * Agent Plugins 1.0.0 §5.1: "Clients MUST check for a manifest at
+ * `plugin.json` in the plugin root." `$schema` and `name` are the only
+ * required fields.
  */
-const renderPluginHooks = (): string => {
-  const capture = '${CLAUDE_PLUGIN_ROOT}/hooks/skill-usage-capture.cjs';
-  const complete = '${CLAUDE_PLUGIN_ROOT}/hooks/skill-usage-complete.cjs';
-  return renderJson({
-    hooks: {
-      PreToolUse: [
-        {
-          hooks: [
-            {
-              command: capture,
-              statusMessage: 'Skill usage capture (PreToolUse)',
-              type: 'command',
-            },
-          ],
-          matcher: 'Skill',
-        },
-      ],
-      Stop: [
-        {
-          hooks: [
-            {
-              command: complete,
-              statusMessage: 'Skill usage complete (Stop)',
-              type: 'command',
-            },
-          ],
-        },
-      ],
-      UserPromptExpansion: [
-        {
-          hooks: [
-            {
-              command: capture,
-              statusMessage: 'Skill usage capture (UserPromptExpansion)',
-              type: 'command',
-            },
-          ],
-        },
-      ],
-    },
-  });
-};
+const renderRootManifest = (payload: PluginPayload): string =>
+  renderJson({ $schema: AGENT_PLUGINS_SCHEMA, ...pluginManifest(payload) });
 
-const renderPluginReadme = (): string =>
+/**
+ * The same manifest at `.claude-plugin/plugin.json`, which is a Claude Code
+ * convention rather than anything in the spec — but one both shipping clients
+ * read (Cursor's lookup order is `.cursor-plugin/`, then `.claude-plugin/`,
+ * then the root). Duplicated deliberately, generated from one source so the
+ * two can never disagree. See `docs/monorepo/agentic-hooks-standards-adr.md`.
+ */
+const renderClientManifest = (payload: PluginPayload): string =>
+  renderJson(pluginManifest(payload));
+
+const renderPluginHooks = (payload: PluginPayload): string =>
+  renderJson(
+    payload.renderHooks((file) => `\${${payload.rootVar}}/hooks/${file}`),
+  );
+
+const renderTable = (
+  header: readonly [string, string],
+  rows: readonly (readonly [string, string])[],
+): readonly string[] => [
+  `| ${header[0]} | ${header[1]} |`,
+  '| --- | --- |',
+  ...rows.map(([left, right]) => `| ${left} | ${right} |`),
+];
+
+const renderPluginReadme = (payload: PluginPayload): string =>
   [
     '<!-- GENERATED — DO NOT EDIT. Source: packages/agentic-hooks/scripts/bundle-hooks.ts -->',
     '',
-    '# OpenThrottle skill-usage plugin',
+    `# OpenThrottle skill-usage plugin (${payload.label})`,
     '',
-    'Records **which** agent skills run, so OpenThrottle can report skill usage.',
+    `Records **which** agent skills run under ${payload.label}, so OpenThrottle can report skill usage.`,
+    '',
+    "This payload is per-tool because a hook config names its own tool's events. See",
+    '`packages/agentic-hooks/README.md` for the producer matrix.',
     '',
     '## Install',
     '',
-    '```bash',
-    '/plugin marketplace add OpenThrottle/monorepo',
-    '/plugin install openthrottle@openthrottle',
-    '```',
+    ...payload.installLines,
     '',
     'Installing once applies it in every repository you open — nothing is written into any of',
     'them. OT-orchestrated runs do not need this: the driver passes `--plugin-dir` at spawn time,',
     'so an orchestrated run carries the same hooks whether or not you have installed anything.',
     '',
-    'To update, re-run `/plugin marketplace update openthrottle`. The plugin version tracks',
-    '`@openthrottle/agentic-hooks`, so a version bump there is what users see.',
+    'The plugin version tracks `@openthrottle/agentic-hooks`, so a version bump there is what',
+    'users see.',
     '',
     '## What it collects',
     '',
@@ -234,28 +384,26 @@ const renderPluginReadme = (): string =>
     '- It never blocks or fails a tool call. Every hook is fail-open and exits 0.',
     '- It never reads your `.env`. Outside the OpenThrottle monorepo the endpoint comes',
     '  only from the environment or from your own `~/.openthrottle/hooks.json`.',
+    '- It never forwards your email address, even where the tool puts one in every payload.',
     '- With no OpenThrottle server configured it sends nothing, silently.',
     '',
     'See `docs/monorepo/child-repo-hook-telemetry-contract.md` for the full contract.',
     '',
     '## Turning it off',
     '',
-    '| how | effect |',
-    '| --- | --- |',
-    '| `SKILL_USAGE_DISABLE_SERVER=1` | buffers locally, never sends |',
-    '| `/plugin uninstall openthrottle` | removes it entirely |',
+    ...renderTable(
+      ['how', 'effect'],
+      [
+        ['`SKILL_USAGE_DISABLE_SERVER=1`', 'buffers locally, never sends'],
+        ...payload.disableRows,
+      ],
+    ),
     '',
     '## Hooks',
     '',
-    '| event | handler |',
-    '| --- | --- |',
-    '| `PreToolUse` (matcher `Skill`) | `hooks/skill-usage-capture.cjs` |',
-    '| `UserPromptExpansion` | `hooks/skill-usage-capture.cjs` |',
-    '| `Stop` | `hooks/skill-usage-complete.cjs` |',
+    ...renderTable(['event', 'handler'], payload.hookTableRows),
     '',
-    'The two capture events are complementary, not redundant: a skill invoked as a tool',
-    'raises `PreToolUse`, a skill invoked as a slash command raises `UserPromptExpansion`.',
-    '',
+    ...(payload.captureNote === null ? [] : [payload.captureNote, '']),
     '## Authoring',
     '',
     'This directory is generated from `@openthrottle/agentic-hooks` and drift-checked in',
@@ -275,13 +423,28 @@ const renderPluginReadme = (): string =>
     '',
   ].join('\n');
 
-/** Generated non-bundle files in the payload, keyed by workspace-relative path. */
+/** Generated non-bundle files across every payload, keyed by workspace path. */
 const pluginFiles = (): ReadonlyMap<string, string> =>
-  new Map([
-    [`${PLUGIN_ROOT}/.claude-plugin/plugin.json`, renderPluginManifest()],
-    [`${PLUGIN_ROOT}/hooks/hooks.json`, renderPluginHooks()],
-    [`${PLUGIN_ROOT}/README.md`, renderPluginReadme()],
-  ]);
+  new Map(
+    PLUGIN_PAYLOADS.flatMap((payload): readonly [string, string][] => [
+      [`${payload.root}/plugin.json`, renderRootManifest(payload)],
+      [
+        `${payload.root}/.claude-plugin/plugin.json`,
+        renderClientManifest(payload),
+      ],
+      [`${payload.root}/hooks/hooks.json`, renderPluginHooks(payload)],
+      [`${payload.root}/README.md`, renderPluginReadme(payload)],
+    ]),
+  );
+
+/** Every payload's adapter bundles, as ordinary BundleSpec rows. */
+const pluginBundleSpecs = (): readonly BundleSpec[] =>
+  PLUGIN_PAYLOADS.flatMap((payload) =>
+    payload.bundles.map((bundle): BundleSpec => ({
+      entry: bundle.entry,
+      outFile: `${payload.root}/hooks/${bundle.file}`,
+    })),
+  );
 
 const bannerFor = (spec: BundleSpec): string =>
   [
@@ -325,7 +488,7 @@ const renderBundle = async (spec: BundleSpec): Promise<string> => {
  * Write and check both walk this one list so neither can miss an output.
  */
 const renderAllArtifacts = async (): Promise<ReadonlyMap<string, string>> => {
-  const allBundles = [...BUNDLES, ...PLUGIN_BUNDLES];
+  const allBundles = [...BUNDLES, ...pluginBundleSpecs()];
   const bundled = await Promise.all(
     allBundles.map(async (spec): Promise<readonly [string, string]> => [
       spec.outFile,

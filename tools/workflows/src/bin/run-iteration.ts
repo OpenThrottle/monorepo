@@ -12,6 +12,7 @@ import {
   runDriverSync,
 } from '@openthrottle/openthrottle-drivers';
 import type {
+  AgentDriver,
   DriverChunk,
   DriverInvocationConfig,
   DriverWorktreeOptions,
@@ -84,6 +85,7 @@ const toWorktreeOptions = (
  */
 const toDriverConfig = (
   config: RunIterationConfig,
+  driver: AgentDriver,
 ): DriverInvocationConfig => ({
   cwd: config.cwd,
   iteration: config.iteration,
@@ -93,7 +95,13 @@ const toDriverConfig = (
   // payload out-of-repo, so a run in a foreign checkout is observed without a byte being written
   // into it. Resolution is fail-open — an empty list emits no flag — and gated by
   // OPENTHROTTLE_HOOK_PLUGIN_ENABLED. Drivers without the capability ignore this outright.
-  pluginDirs: resolveHookPluginDirs(),
+  // The payload is per-driver: a plugin's hook config names one tool's events, so pointing a
+  // CLI at another tool's payload loads cleanly and records nothing.
+  pluginDirs: resolveHookPluginDirs(
+    driver.pluginDirRel === undefined
+      ? {}
+      : { payloadRel: driver.pluginDirRel },
+  ),
   prompt: config.agentPrompt,
   signal: config.signal,
   timeoutMs: config.timeoutMs,
@@ -116,7 +124,7 @@ export const runIteration = (config: RunIterationConfig): string => {
 
   const driver = getDriver(backend);
 
-  return runDriverSync(driver, toDriverConfig(config), {
+  return runDriverSync(driver, toDriverConfig(config, driver), {
     logger: ralphDebugLogger,
   });
 };
@@ -132,7 +140,7 @@ export const runIterationAsync = (
 
   const driver = getDriver(backend);
 
-  return runDriverAsync(driver, toDriverConfig(config), {
+  return runDriverAsync(driver, toDriverConfig(config, driver), {
     logger: ralphDebugLogger,
   });
 };

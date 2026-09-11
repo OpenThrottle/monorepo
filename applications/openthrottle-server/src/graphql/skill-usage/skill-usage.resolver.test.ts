@@ -249,6 +249,7 @@ describe('SkillUsageResolver', () => {
       scope: SKILL_USAGE_SCOPES.OURS,
       sessionId: 'session-1',
       skillName: 'ot-plans',
+      source: 'claude-code',
       toolUseId: 'tool-1',
     };
 
@@ -263,6 +264,7 @@ describe('SkillUsageResolver', () => {
         outcome: SKILL_USAGE_OUTCOMES.SUCCESS,
         sessionId: 'session-1',
         skillName: 'ot-plans',
+        source: 'claude-code',
         toolUseId: 'tool-1',
       });
 
@@ -275,11 +277,13 @@ describe('SkillUsageResolver', () => {
         scope: SKILL_USAGE_SCOPES.OURS,
         sessionId: 'session-1',
         skillName: 'ot-plans',
+        source: 'claude-code',
         toolUseId: 'tool-1',
       });
       expect(result.id).toBe('outcome-1');
       expect(result.outcome).toBe(SKILL_USAGE_OUTCOMES.SUCCESS);
       expect(result.durationMs).toBe(4200);
+      expect(result.source).toBe('claude-code');
     });
 
     describe('when outcome is invalid', () => {

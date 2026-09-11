@@ -16,6 +16,7 @@ import {
   persistOutcomeEvent,
   SKILL_USAGE_OUTCOMES,
 } from '../../index';
+import { CLAUDE_SOURCE } from './payload';
 
 const parseArgs = (argv: string[]): Record<string, string> => {
   const out: Record<string, string> = {};
@@ -74,6 +75,7 @@ const main = async (): Promise<void> => {
       repoRoot,
       sessionId,
       skillName,
+      source: CLAUDE_SOURCE,
       toolUseId,
     });
     if (!event) {

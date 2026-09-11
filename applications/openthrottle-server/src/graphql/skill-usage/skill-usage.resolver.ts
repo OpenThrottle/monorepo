@@ -196,6 +196,7 @@ export class SkillUsageResolver {
       scope: resolvedScope,
       sessionId: input.sessionId ?? null,
       skillName,
+      source: input.source?.trim() || null,
       toolUseId: input.toolUseId ?? null,
     });
 

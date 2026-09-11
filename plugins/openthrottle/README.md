@@ -1,8 +1,11 @@
 <!-- GENERATED — DO NOT EDIT. Source: packages/agentic-hooks/scripts/bundle-hooks.ts -->
 
-# OpenThrottle skill-usage plugin
+# OpenThrottle skill-usage plugin (Claude Code)
 
-Records **which** agent skills run, so OpenThrottle can report skill usage.
+Records **which** agent skills run under Claude Code, so OpenThrottle can report skill usage.
+
+This payload is per-tool because a hook config names its own tool's events. See
+`packages/agentic-hooks/README.md` for the producer matrix.
 
 ## Install
 
@@ -15,8 +18,8 @@ Installing once applies it in every repository you open — nothing is written i
 them. OT-orchestrated runs do not need this: the driver passes `--plugin-dir` at spawn time,
 so an orchestrated run carries the same hooks whether or not you have installed anything.
 
-To update, re-run `/plugin marketplace update openthrottle`. The plugin version tracks
-`@openthrottle/agentic-hooks`, so a version bump there is what users see.
+The plugin version tracks `@openthrottle/agentic-hooks`, so a version bump there is what
+users see.
 
 ## What it collects
 
@@ -33,6 +36,7 @@ Outside the OpenThrottle monorepo the default privacy level is `name-only`: skil
 - It never blocks or fails a tool call. Every hook is fail-open and exits 0.
 - It never reads your `.env`. Outside the OpenThrottle monorepo the endpoint comes
   only from the environment or from your own `~/.openthrottle/hooks.json`.
+- It never forwards your email address, even where the tool puts one in every payload.
 - With no OpenThrottle server configured it sends nothing, silently.
 
 See `docs/monorepo/child-repo-hook-telemetry-contract.md` for the full contract.

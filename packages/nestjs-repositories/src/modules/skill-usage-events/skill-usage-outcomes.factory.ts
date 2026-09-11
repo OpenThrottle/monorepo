@@ -20,6 +20,7 @@ export type SkillUsageOutcomeFactoryData = Pick<
   | 'scope'
   | 'sessionId'
   | 'skillName'
+  | 'source'
   | 'toolUseId'
 >;
 
@@ -46,6 +47,7 @@ export const skillUsageOutcomesFactory =
         'ot-loop',
         'ot-plans',
       ]),
+      source: 'claude-code',
       toolUseId: null,
     };
   });

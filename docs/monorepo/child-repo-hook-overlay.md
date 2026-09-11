@@ -72,19 +72,35 @@ Option **D** (server-side transcript derivation) was not chosen as the mechanism
 the fallback for CLIs whose hooks we cannot reach — currently grok, opencode, and gemini (whose
 settings-gated hooks system has not yet been exercised end-to-end).
 
-## 3. The design — one artifact, two delivery paths
+## 3. The design — one payload per tool, two delivery paths
 
-The payload is built **once**, by the existing `bundle-hooks` target in
-`@openthrottle/agentic-hooks`, and committed to `plugins/openthrottle/`:
+Payloads are built by the `bundle-hooks` target in `@openthrottle/agentic-hooks` and committed,
+**one directory per tool**:
 
 ```
-plugins/openthrottle/
-  .claude-plugin/plugin.json     # name, version (derived), description, author
-  hooks/hooks.json               # event → matcher → ${CLAUDE_PLUGIN_ROOT}/hooks/*.cjs
-  hooks/skill-usage-capture.cjs  # bundled, zero runtime deps
+plugins/openthrottle/                # Claude Code
+plugins/openthrottle-cursor/         # Cursor
+  .claude-plugin/plugin.json         # name, version (derived), description, author
+  hooks/hooks.json                   # event → handler, in THAT tool's event names
+  hooks/skill-usage-capture.cjs      # bundled, zero runtime deps
   hooks/skill-usage-complete.cjs
-  README.md                      # what it collects, and how to turn it off
+  README.md                          # what it collects, and how to turn it off
 ```
+
+**Why one per tool rather than one shared payload.** Everything except `hooks/hooks.json` is
+already portable — Cursor's manifest lookup is `.cursor-plugin/plugin.json`, then
+`.claude-plugin/plugin.json`, then `plugin.json`, so the Claude-shaped manifest satisfies both, and
+Cursor even translates Claude's event names (`PreToolUse` → `preToolUse`, `Stop` → `stop`,
+`UserPromptSubmit` → `beforeSubmitPrompt`). But a payload has exactly one `hooks/hooks.json`, and
+the translation drops precisely what this telemetry needs: `PreToolUse` with `matcher: "Skill"` has
+no Cursor tool to match, `UserPromptExpansion` has no Cursor equivalent at all, and `Stop` maps to
+an event that never fires in a headless run. A shared payload would load under Cursor, report no
+error, and record nothing — the worst of the three outcomes. Measurements:
+[cursor-agent-hook-probe.md](./cursor-agent-hook-probe.md).
+
+Each driver names its own payload through `AgentDriver.pluginDirRel`, and
+`resolveHookPluginDirs({ payloadRel })` resolves that one. A driver that names none falls back to
+the Claude payload.
 
 - **Leg A — plugin + marketplace.** `.claude-plugin/marketplace.json` at the repo root lists the
   payload with `source: "./plugins/openthrottle"`. A user runs `/plugin marketplace add
@@ -92,9 +108,11 @@ OpenThrottle/monorepo` then `/plugin install openthrottle@openthrottle` **once**
   every repo they open. This repo is public, so it hosts the marketplace itself — no second repo, no
   sync, no drift gate between repos, and no separate LICENSE.
 - **Leg B — spawn-time.** `resolveHookPluginDirs`
-  (`packages/openthrottle-agentic-utils/src/utils/hook-plugin-injection.ts`) locates the payload and
-  hands it to the driver, which appends `--plugin-dir <path>` via `appendPluginDirShellFlags`. OT
-  runs never depend on the user having installed anything.
+  (`packages/openthrottle-agentic-utils/src/utils/hook-plugin-injection.ts`) locates the payload for
+  the driver being spawned and hands it over, and the driver appends `--plugin-dir <path>` via
+  `appendPluginDirShellFlags`. OT runs never depend on the user having installed anything.
+  **Claude and Cursor both support this leg** — `cursor-agent --plugin-dir <path>` is repeatable in
+  exactly the same way, verified against 2026.09.10-fd3934a.
 
 The payload is a **real committed directory, not gitignored build output**, because leg B points a
 running server at it in a plain checkout with nothing built. It is drift-gated by

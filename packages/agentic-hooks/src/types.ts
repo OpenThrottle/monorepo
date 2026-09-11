@@ -70,6 +70,7 @@ export interface OutcomeEvent {
   scope: Scope;
   session_id: string | null;
   skill_name: string;
+  source?: string;
   timestamp: string;
   tool_use_id: string | null;
 }

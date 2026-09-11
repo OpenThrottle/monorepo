@@ -4,6 +4,8 @@
     "afterFileEdit": [{ "command": ".cursor/hooks/format.sh" }],
     "beforeSubmitPrompt": [
       { "command": ".cursor/hooks/skill-usage-capture.cjs" }
-    ]
+    ],
+    "preToolUse": [{ "command": ".cursor/hooks/skill-usage-capture.cjs" }],
+    "sessionEnd": [{ "command": ".cursor/hooks/skill-usage-complete.cjs" }]
   }
 }

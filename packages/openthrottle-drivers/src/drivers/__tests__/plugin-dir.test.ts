@@ -1,8 +1,12 @@
 /**
- * @description Leg B of the child-repo hook overlay: the Claude driver's `--plugin-dir` emission.
- * Covers presence, absence when the caller resolves nothing (the fail-open path), flag ORDER
- * relative to `--model` and the worktree flags, escaping of paths with spaces and shell
- * metacharacters, and the fact that no other driver emits the flag.
+ * @description Leg B of the child-repo hook overlay: `--plugin-dir` emission. Covers presence,
+ * absence when the caller resolves nothing (the fail-open path), flag ORDER relative to `--model`
+ * and the worktree flags, escaping of paths with spaces and shell metacharacters, and which
+ * drivers emit the flag at all.
+ *
+ * Claude and Cursor both emit it and each names its OWN payload via `pluginDirRel` — a payload's
+ * hook config names one tool's events, so pointing a CLI at the other's payload loads cleanly and
+ * records nothing.
  */
 
 import { describe, expect, it } from 'vitest';
@@ -17,6 +21,7 @@ import {
 import type { DriverInvocationConfig } from '../../types/index.ts';
 import {
   appendPluginDirShellFlags,
+  OPENTHROTTLE_CURSOR_PLUGIN_DIR_REL,
   OPENTHROTTLE_PLUGIN_DIR_REL,
 } from '../../utils/plugin-dir.ts';
 
@@ -103,10 +108,70 @@ describe('claude driver --plugin-dir', () => {
   });
 });
 
+const CURSOR_BASE = `cursor-agent --force -p "${PROMPT}" --approve-mcps --trust`;
+const CURSOR_PAYLOAD = '/srv/openthrottle/plugins/openthrottle-cursor';
+
+describe('cursor driver --plugin-dir', () => {
+  it('advertises the capability', () => {
+    expect(cursorDriver.capabilities.pluginDir).toBe(true);
+  });
+
+  it('emits the flag for a resolved payload directory', () => {
+    expect(
+      cursorDriver.buildShellCommand(config({ pluginDirs: [CURSOR_PAYLOAD] })),
+    ).toBe(`${CURSOR_BASE} --plugin-dir ${CURSOR_PAYLOAD}`);
+  });
+
+  it('emits nothing when the caller resolved no payload', () => {
+    expect(cursorDriver.buildShellCommand(config({}))).toBe(CURSOR_BASE);
+    expect(cursorDriver.buildShellCommand(config({ pluginDirs: [] }))).toBe(
+      CURSOR_BASE,
+    );
+  });
+
+  it('quotes a payload path containing spaces', () => {
+    expect(
+      cursorDriver.buildShellCommand(
+        config({ pluginDirs: ['/Users/a b/plugins/openthrottle-cursor'] }),
+      ),
+    ).toBe(
+      `${CURSOR_BASE} --plugin-dir "/Users/a b/plugins/openthrottle-cursor"`,
+    );
+  });
+
+  it('places the flag after the MCP flags and before the worktree flags', () => {
+    expect(
+      cursorDriver.buildShellCommand(
+        config({
+          model: 'sonnet-4.5',
+          pluginDirs: [CURSOR_PAYLOAD],
+          worktree: { worktree: 'wt' },
+        }),
+      ),
+    ).toBe(
+      `cursor-agent --force -p "${PROMPT}" --model sonnet-4.5 --approve-mcps --trust --plugin-dir ${CURSOR_PAYLOAD} -w wt`,
+    );
+  });
+});
+
+describe('per-driver payload paths', () => {
+  it('points each plugin-capable driver at its own payload', () => {
+    expect(claudeDriver.pluginDirRel).toBe(OPENTHROTTLE_PLUGIN_DIR_REL);
+    expect(cursorDriver.pluginDirRel).toBe(OPENTHROTTLE_CURSOR_PLUGIN_DIR_REL);
+    expect(claudeDriver.pluginDirRel).not.toBe(cursorDriver.pluginDirRel);
+  });
+
+  it('exports the payload paths the agentic-utils resolver joins against', () => {
+    expect(OPENTHROTTLE_PLUGIN_DIR_REL).toBe('plugins/openthrottle');
+    expect(OPENTHROTTLE_CURSOR_PLUGIN_DIR_REL).toBe(
+      'plugins/openthrottle-cursor',
+    );
+  });
+});
+
 describe('drivers without the pluginDir capability', () => {
   it.each([
     ['codex', codexDriver],
-    ['cursor', cursorDriver],
     ['grok', grokDriver],
     ['opencode', opencodeDriver],
   ])('%s ignores pluginDirs entirely', (_id, driver) => {
@@ -120,7 +185,7 @@ describe('drivers without the pluginDir capability', () => {
 describe('appendPluginDirShellFlags', () => {
   it('is inert for a driver lacking the capability', () => {
     expect(
-      appendPluginDirShellFlags('cmd', cursorDriver.capabilities, [PAYLOAD]),
+      appendPluginDirShellFlags('cmd', codexDriver.capabilities, [PAYLOAD]),
     ).toBe('cmd');
   });
 
@@ -128,9 +193,5 @@ describe('appendPluginDirShellFlags', () => {
     expect(
       appendPluginDirShellFlags('cmd', claudeDriver.capabilities, undefined),
     ).toBe('cmd');
-  });
-
-  it('exports the payload path the agentic-utils resolver joins against', () => {
-    expect(OPENTHROTTLE_PLUGIN_DIR_REL).toBe('plugins/openthrottle');
   });
 });

@@ -13,7 +13,7 @@ import {
   logHookError,
   sweepAbandonedStarts,
 } from '../../index';
-import { normalizeClaudeStopPayload } from './payload';
+import { CLAUDE_SOURCE, normalizeClaudeStopPayload } from './payload';
 
 const main = async (): Promise<void> => {
   try {
@@ -38,19 +38,23 @@ const main = async (): Promise<void> => {
     const normalized = normalizeClaudeStopPayload(raw);
     if (!normalized) {
       // No session id → nothing to correlate; still try the abandoned sweep.
-      await sweepAbandonedStarts({ repoRoot }).catch(() => {});
+      await sweepAbandonedStarts({ repoRoot, source: CLAUDE_SOURCE }).catch(
+        () => {},
+      );
       return;
     }
 
     await completeOpenStartsForSession({
       repoRoot,
       sessionId: normalized.session_id,
+      source: CLAUDE_SOURCE,
     });
 
     // Best-effort: reap starts stranded by earlier sessions that never Stopped.
     await sweepAbandonedStarts({
       currentSessionId: normalized.session_id,
       repoRoot,
+      source: CLAUDE_SOURCE,
     });
 
     // Opportunistic, time-boxed: flush any JSONL buffered while the server was

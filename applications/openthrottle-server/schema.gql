@@ -2799,6 +2799,11 @@ type SkillUsageOutcomeObject {
   """Skill identifier matching the start event."""
   skillName: String!
 
+  """
+  Producer id of the tool/adapter that recorded this outcome (e.g. claude-code, cursor). Null for rows ingested before source tracking.
+  """
+  source: String
+
   """Optional tool_use_id for tighter correlation."""
   toolUseId: String
 }
@@ -6558,6 +6563,11 @@ input RecordSkillUsageOutcomeInput {
 
   """Skill identifier matching the start event."""
   skillName: String!
+
+  """
+  Producer id of the tool/adapter that recorded this outcome (e.g. claude-code, cursor). Stamped by the per-tool skill-usage adapter; matches the start event's source.
+  """
+  source: String
 
   """Optional tool_use_id for tighter start↔outcome correlation."""
   toolUseId: String

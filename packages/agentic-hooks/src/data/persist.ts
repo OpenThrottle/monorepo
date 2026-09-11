@@ -435,6 +435,7 @@ export const completeOpenStartsForSession = async ({
   graphqlUrl,
   authToken,
   timeoutMs,
+  source,
 }: {
   authToken?: string;
   fetchImpl?: HookFetch;
@@ -444,6 +445,8 @@ export const completeOpenStartsForSession = async ({
   outcome?: SkillUsageOutcome;
   repoRoot: string;
   sessionId: string | null | undefined;
+  /** Producer id of the adapter driving this completion. */
+  source?: string;
   startsDir?: string;
   timeoutMs?: number;
 }): Promise<{ resolved: number; results: CompletionResult[] }> => {
@@ -483,6 +486,7 @@ export const completeOpenStartsForSession = async ({
         sessionId:
           typeof start.session_id === 'string' ? start.session_id : sessionId,
         skillName: typeof start.skill_name === 'string' ? start.skill_name : '',
+        source,
         timestamp: finishedAt,
         toolUseId:
           typeof start.tool_use_id === 'string' ? start.tool_use_id : null,
@@ -543,6 +547,7 @@ export const sweepAbandonedStarts = async ({
   authToken,
   timeoutMs,
   jsonlPath,
+  source,
 }: {
   authToken?: string;
   currentSessionId?: string | null;
@@ -552,6 +557,8 @@ export const sweepAbandonedStarts = async ({
   maxAgeMs?: number;
   now?: number;
   repoRoot: string;
+  /** Producer id of the adapter driving this sweep. */
+  source?: string;
   startsDir?: string;
   timeoutMs?: number;
 }): Promise<{ swept: number }> => {
@@ -619,6 +626,7 @@ export const sweepAbandonedStarts = async ({
         sessionId:
           typeof start.session_id === 'string' ? start.session_id : sessionId,
         skillName: typeof start.skill_name === 'string' ? start.skill_name : '',
+        source,
         timestamp: detectedAt,
         toolUseId:
           typeof start.tool_use_id === 'string' ? start.tool_use_id : null,
