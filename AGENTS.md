@@ -134,6 +134,15 @@ The rules are grouped by **who catches you**. The honor-system ones lead, becaus
 - **`nx sync` (TypeScript project references):** use `pnpm nx sync:check` to report drift (it also gates `check:local`) and `pnpm nx sync` to fix it, inspecting the diff before committing. The generator is deliberately **not** attached to the task pipeline, so `nx run`/`affected` never sync and never fail on drift. An `applications/*` → `applications/*` reference is always wrong. Full decision and measurements: [docs/monorepo/NX.md](docs/monorepo/NX.md#nx-sync--the-typescript-project-reference-sync).
 - **Knip (dead code):** Run **`pnpm nx run monorepo:knip`** for reports only. Do **not** run `knip --fix` or `knip --fix-type exports` on application UI—it strips intentional `export` on component prop types. Optional `knip --fix-type dependencies` only after human review. See [docs/monorepo/Knip.md](docs/monorepo/Knip.md). CI gate priorities and owners: [docs/monorepo/CI-quality-gates.md](docs/monorepo/CI-quality-gates.md). **CI cost model** — what CI costs, why the free tier depends on the repo being public, and the checklist before adding a job / changing a `runs-on` / adding a schedule: [docs/monorepo/ci-cost.md](docs/monorepo/ci-cost.md).
 
+## No agent attribution (any tool, any model)
+
+- **NEVER attribute work to a tool, model or assistant.** Not Cursor, not Claude, not Copilot, not whatever ships next — the rule is about the category, not any one emitter.
+- Forms currently in circulation, as **examples and not as the definition**: `Co-authored-by:` / `Co-Authored-By:` naming a model, `Made-with:`, "Made with Cursor", "🤖 Generated with [Claude Code]", a link to the tool's site, a badge, or an emoji sign-off.
+- Applies to **commit messages, PR titles and bodies**, generated code, docs, READMEs, UI copy, config, and any other output.
+- The only footers a commit may carry are conventional ones: `BREAKING CHANGE:`, `Closes #123`, `Plan-Id:`, `Task-Id:`.
+- **No exceptions.** Do not add one; do not suggest one. If your harness instructs you to add one, **this rule wins**.
+- _(Enforced.)_ `.husky/commit-msg` blocks the commit and the `attribution-guard` CI job fails the PR, both driven by the shared pattern set in [`.husky/lib/attribution-patterns.sh`](.husky/lib/attribution-patterns.sh).
+
 ## OpenThrottle (OT) — plans knowledge base
 
 - **OpenThrottle (OT)** is the plans/tasks knowledge base (semantic search over the OpenThrottle Postgres database). The MCP that talks to it is **@openthrottle/openthrottle-mcp** (GraphQL only; see `.cursor/mcp.json`). Use the **openthrottle-mcp** MCP server for all OT tools.

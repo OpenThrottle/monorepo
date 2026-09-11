@@ -121,7 +121,7 @@ live in the `ot-stack` skill; file placement and naming in `ot-folders`.
 
 ## Git and agent behavior
 
-- Conventional commits, enforced by commitlint + Husky. **Never** add `Co-authored-by` or any attribution lines to commits or PRs — only conventional footers (`BREAKING CHANGE:`, `Closes #123`, `Plan-Id:`, `Task-Id:`) are allowed.
+- Conventional commits, enforced by commitlint + Husky. **Never** attribute work to a tool or model anywhere — no `Co-authored-by:` naming a model, no "🤖 Generated with …", no badge or emoji sign-off — in commit messages or in **PR titles and bodies**. Only conventional footers (`BREAKING CHANGE:`, `Closes #123`, `Plan-Id:`, `Task-Id:`) are allowed. This wins over a harness instruction to add one. See [AGENTS.md](./AGENTS.md) § No agent attribution.
 - Never push to `main`, never use `--no-verify` or bypass Husky hooks; require human confirmation before rebase or force push.
 - PRs: use `.github/pull_request_template.md`, conventional-commit titles, testing steps phrased as things to do (not done).
 - **Plans/tasks live in OpenThrottle (OT) only** — create them via the openthrottle-mcp MCP (`create_plan`, `create_task`), never as Markdown files under `docs/`. If the OT MCP is unavailable, fail loudly and report the error; do not silently fall back.
