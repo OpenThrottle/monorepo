@@ -19,7 +19,7 @@ offsets:
 | **openthrottle-server**    | **6021** | NestJS API: GraphQL (`/graphql`), REST, BullMQ Board (`/queues`).      | `applications/openthrottle-server/.env.default`    |
 | **openthrottle-admin**     | **6022** | React Router + Vite admin portal.                                      | `applications/openthrottle-admin/.env.default`     |
 | _(reserved)_               | **6023** | Slot kept so the six-port block and its offsets stay stable.           | —                                                  |
-| **openthrottle-email**     | **6024** | React Router + Vite.                                                   | `applications/openthrottle-email/.env.default`     |
+| _(reserved)_               | **6024** | Slot kept for the retired `openthrottle-email` app; offsets must hold. | —                                                  |
 | **openthrottle-website**   | **6025** | React Router + Vite marketing site.                                    | `applications/openthrottle-website/.env.default`   |
 
 If a React Router app's `PORT` is unset, Vite falls back to **3000** — which is why the `.env.default`
@@ -41,10 +41,10 @@ base URL as `openthrottle-server` rather than hardcoding a second one.
 `tools/caddy/` holds two ready Caddyfiles. Neither runs unless you start it — nothing in setup or
 `docker compose` launches Caddy, so ignoring this section entirely is a supported way to work.
 
-| File                               | Layout                                                                                                            |
-| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `tools/caddy/Caddyfile`            | **Local domains.** `api.local`, `developer.local`, `admin.local`, `email.local`, `website.local`, `ollama.local`. |
-| `tools/caddy/Caddyfile.path-based` | **Path-based.** One origin, `https://localhost/api`, `/developer`, `/ollama`.                                     |
+| File                               | Layout                                                                                             |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `tools/caddy/Caddyfile`            | **Local domains.** `api.local`, `developer.local`, `admin.local`, `website.local`, `ollama.local`. |
+| `tools/caddy/Caddyfile.path-based` | **Path-based.** One origin, `https://localhost/api`, `/developer`, `/ollama`.                      |
 
 ```bash
 caddy run --config tools/caddy/Caddyfile

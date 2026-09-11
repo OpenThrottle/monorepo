@@ -44,9 +44,6 @@
       "path": "./packages/react-router-chat-state"
     },
     {
-      "path": "./applications/openthrottle-email"
-    },
-    {
       "path": "./packages/react-router-auth"
     },
     {

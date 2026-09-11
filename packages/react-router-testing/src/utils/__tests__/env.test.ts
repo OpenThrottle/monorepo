@@ -18,7 +18,6 @@ const EXPECTED_ENV_KEYS = {
   APP_URL_ADMIN: true,
   APP_URL_CMS: true,
   APP_URL_DEVELOPER: true,
-  APP_URL_EMAIL: true,
   APP_URL_SERVER: true,
   APP_URL_WEBSITE: true,
   APP_VERSION: true,

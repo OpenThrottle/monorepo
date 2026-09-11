@@ -20,7 +20,6 @@ export const getPublicEnv = (): OpenThrottlePublicEnv => {
   const appUrlAdmin = ENV_SOURCE['APP_URL_ADMIN'];
   const appUrlCms = ENV_SOURCE['APP_URL_CMS'];
   const appUrlDeveloper = ENV_SOURCE['APP_URL_DEVELOPER'];
-  const appUrlEmail = ENV_SOURCE['APP_URL_EMAIL'];
   const appUrlServer = ENV_SOURCE['APP_URL_SERVER'];
   const appUrlWebsite = ENV_SOURCE['APP_URL_WEBSITE'];
   const appVersion = ENV_SOURCE['APP_VERSION'];
@@ -35,7 +34,6 @@ export const getPublicEnv = (): OpenThrottlePublicEnv => {
   if (!appUrlAdmin) throw new Error('APP_URL_ADMIN is not set');
   if (!appUrlCms) throw new Error('APP_URL_CMS is not set');
   if (!appUrlDeveloper) throw new Error('APP_URL_DEVELOPER is not set');
-  if (!appUrlEmail) throw new Error('APP_URL_EMAIL is not set');
   if (!appUrlServer) throw new Error('APP_URL_SERVER is not set');
   if (!appUrlWebsite) throw new Error('APP_URL_WEBSITE is not set');
   if (!appVersion) throw new Error('APP_VERSION is not set');
@@ -51,7 +49,6 @@ export const getPublicEnv = (): OpenThrottlePublicEnv => {
     APP_URL_ADMIN: appUrlAdmin,
     APP_URL_CMS: appUrlCms,
     APP_URL_DEVELOPER: appUrlDeveloper,
-    APP_URL_EMAIL: appUrlEmail,
     APP_URL_SERVER: appUrlServer,
     APP_URL_WEBSITE: appUrlWebsite,
     APP_VERSION: appVersion.toString(),

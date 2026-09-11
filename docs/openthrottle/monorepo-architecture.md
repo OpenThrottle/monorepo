@@ -14,7 +14,6 @@ flowchart TB
     Server["openthrottle-server<br/>(NestJS, GraphQL)"]
     Developer["openthrottle-developer<br/>(React Router)"]
     Admin["openthrottle-admin"]
-    Email["openthrottle-email"]
     Website["openthrottle-website"]
     Workbench["openthrottle-workbench<br/>(Storybook host)"]
   end
@@ -82,7 +81,6 @@ sequenceDiagram
 | **openthrottle-server**    | NestJS GraphQL API; auth, plans, tasks, embeddings, commit links, docs, users, RBAC; BullMQ queues; talks to OpenThrottle via `@openthrottle/nestjs-repositories`. |
 | **openthrottle-developer** | React Router UI for developers; plans, tasks, search, commit links; configurable `API_URL` to the server.                                                          |
 | **openthrottle-admin**     | Admin portal.                                                                                                                                                      |
-| **openthrottle-email**     | Email-related services.                                                                                                                                            |
 | **openthrottle-website**   | Marketing website.                                                                                                                                                 |
 | **openthrottle-workbench** | Storybook 10 host for `@openthrottle/react-router-shadcn` — component library, `cva` variants, themes. Not deployed with the product.                              |
 

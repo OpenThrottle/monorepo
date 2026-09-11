@@ -33,7 +33,6 @@ const DEFAULT_TEST_ENV: Required<OpenThrottleEnv> = {
   APP_URL_ADMIN: 'http://localhost:6022',
   APP_URL_CMS: 'http://localhost:6023',
   APP_URL_DEVELOPER: 'http://localhost:6024',
-  APP_URL_EMAIL: 'http://localhost:6025',
   APP_URL_SERVER: 'http://localhost:6026',
   APP_URL_WEBSITE: 'http://localhost:6027',
   APP_VERSION: '1.0.0',

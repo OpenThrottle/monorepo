@@ -4,7 +4,7 @@ OpenThrottle-branded composite components and hooks (`OpenThrottle*` prefix) bui
 `@openthrottle/react-router-shadcn` primitives: forms, layout, navigation, tabs, pagination,
 tables, server-metrics hooks.
 
-**Consumed by:** `openthrottle-developer`, `openthrottle-email`, `@openthrottle/react-router-chat`.
+**Consumed by:** `openthrottle-developer`, `@openthrottle/react-router-chat`.
 
 ## Layout
 
