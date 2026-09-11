@@ -1,6 +1,18 @@
 {
   "enabledMcpjsonServers": [],
   "hooks": {
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "command": "./.claude/hooks/memory-index-guard.cjs",
+            "statusMessage": "Memory index budget guard (PostToolUse)",
+            "type": "command"
+          }
+        ],
+        "matcher": "Write|Edit|MultiEdit"
+      }
+    ],
     "PreToolUse": [
       {
         "hooks": [

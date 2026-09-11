@@ -45,15 +45,17 @@ type BeginTaskSessionResult = GenericResult<{
   subject: AttachWorkSessionSubjectMutation['attachWorkSessionSubject'];
 }>;
 
-export const beginTaskSessionToolParameters = z.object({
-  // `.catch(null)` rather than a hard reject: attribution must never be able to fail a tool
-  // call, so a malformed model degrades to "not observable". planId/taskId stay strict — they
-  // are identity, not attribution, and attaching work to the wrong task is worse than silence.
-  model: z.string().nullable().optional().catch(null),
-  planId: z.string().uuid(),
-  summary: z.string().nullable().optional(),
-  taskId: z.string().uuid(),
-});
+export const beginTaskSessionToolParameters = z
+  .object({
+    // `.catch(null)` rather than a hard reject: attribution must never be able to fail a tool
+    // call, so a malformed model degrades to "not observable". planId/taskId stay strict — they
+    // are identity, not attribution, and attaching work to the wrong task is worse than silence.
+    model: z.string().nullable().optional().catch(null),
+    planId: z.string().uuid(),
+    summary: z.string().nullable().optional(),
+    taskId: z.string().uuid(),
+  })
+  .strict();
 
 export const beginTaskSessionToolDescription =
   "Start a work session for ONE task, declaring the model that does its work, and attach it to (planId, taskId). Closes the previous session first so each task gets its own — a session's model is fixed when it opens and cannot be changed later, so this is the only way different tasks in one run can record different models. Call it as you start each task. `model` is whatever actually did the work (the subagent's model when you delegated, your own otherwise); it is a declaration you own, never a guess — omit it and the session honestly records no model. Read it back with get_work_sessions.";
@@ -120,11 +122,13 @@ type RecordArtifactResult = GenericResult<{
   artifact: RecordWorkArtifactMutation['recordWorkArtifact'];
 }>;
 
-export const recordArtifactToolParameters = z.object({
-  message: z.string().nullable().optional(),
-  payloadJson: z.string().min(1),
-  type: z.string().min(1),
-});
+export const recordArtifactToolParameters = z
+  .object({
+    message: z.string().nullable().optional(),
+    payloadJson: z.string().min(1),
+    type: z.string().min(1),
+  })
+  .strict();
 
 export const recordArtifactToolDescription =
   'Record an output you produced in the current work session (opened automatically): a git_commit, pull_request, document, or deployment. payloadJson is the JSON payload for the type, e.g. git_commit {"repo":"owner/repo","sha":"<sha>"}, pull_request {"repo":"owner/repo","number":123}, document {"url":"..."}. Self-report artifacts as you create them.';
@@ -174,10 +178,12 @@ type AttachSubjectResult = GenericResult<{
   subject: AttachWorkSessionSubjectMutation['attachWorkSessionSubject'];
 }>;
 
-export const attachSessionSubjectToolParameters = z.object({
-  planId: z.string().uuid(),
-  taskId: z.string().uuid().nullable().optional(),
-});
+export const attachSessionSubjectToolParameters = z
+  .object({
+    planId: z.string().uuid(),
+    taskId: z.string().uuid().nullable().optional(),
+  })
+  .strict();
 
 export const attachSessionSubjectToolDescription =
   'Attach the current work session to a plan (and optionally a task), so the artifacts you record are tied to that work. Opens a session automatically if none is active.';
@@ -226,9 +232,11 @@ type EndSessionResult = GenericResult<{
   session: EndWorkSessionMutation['endWorkSession'];
 }>;
 
-export const endSessionToolParameters = z.object({
-  summary: z.string().nullable().optional(),
-});
+export const endSessionToolParameters = z
+  .object({
+    summary: z.string().nullable().optional(),
+  })
+  .strict();
 
 export const endSessionToolDescription =
   'Close the current work session, optionally with a summary of what was done. No-op if no session is active.';
@@ -281,10 +289,12 @@ type GetWorkSessionsResult = GenericResult<{
 const WORK_SESSION_LIMIT_DEFAULT = 25;
 const WORK_SESSION_LIMIT_MAX = 100;
 
-export const getWorkSessionsToolParameters = z.object({
-  limit: z.number().int().positive().nullable().optional(),
-  planId: z.string().uuid(),
-});
+export const getWorkSessionsToolParameters = z
+  .object({
+    limit: z.number().int().positive().nullable().optional(),
+    planId: z.string().uuid(),
+  })
+  .strict();
 
 export const getWorkSessionsToolDescription =
   'List the work sessions attached to a plan, newest first: which tool and version connected, which model (when the launcher reported one), the actor, and when the session started and ended. Use it to attribute an executed plan to the agent that ran it — especially for interactive runs, which record no plan_run. Bounded; pass limit to widen or narrow (default 25, max 100).';

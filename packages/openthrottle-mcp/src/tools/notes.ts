@@ -45,11 +45,15 @@ type UpdateNoteResult = GenericResult<{
   note: UpdateNoteMutation['updateNote'];
 }>;
 
-export const createNoteToolParameters = CreateNoteInputSchema();
-export const deleteNoteToolParameters = z.object({ id: z.string().min(1) });
-export const getNoteToolParameters = z.object({ id: z.string().min(1) });
-export const listNotesToolParameters = z.object({});
-export const updateNoteToolParameters = UpdateNoteInputSchema();
+export const createNoteToolParameters = CreateNoteInputSchema().strict();
+export const deleteNoteToolParameters = z
+  .object({ id: z.string().min(1) })
+  .strict();
+export const getNoteToolParameters = z
+  .object({ id: z.string().min(1) })
+  .strict();
+export const listNotesToolParameters = z.object({}).strict();
+export const updateNoteToolParameters = UpdateNoteInputSchema().strict();
 
 export const createNoteToolDescription = `Create a note in OpenThrottle. Requires content; optional author (e.g. GitHub username). For quick unstructured thoughts; foundation for notes route and planning workflow.`;
 

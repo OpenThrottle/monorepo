@@ -174,6 +174,32 @@ export async function listPlansByStatusGraphql(
   }));
 }
 
+/**
+ * Every plan, regardless of status, for callers that need to resolve ids rather
+ * than triage by status.
+ *
+ * Passes `statuses: []` — the documented "no status filter" — NOT a misspelled
+ * singular `status`. That distinction is load-bearing: until the tool schemas
+ * were made strict, a misnamed filter key was silently stripped and the call ran
+ * unfiltered while looking like a correct filtered one.
+ */
+export async function listAllPlansGraphql(
+  limit = 2000,
+): Promise<ListPlansByStatusRow[]> {
+  const result = unwrapWorkflowGraphqlResult(
+    await executeWorkflowGraphqlV2(ListPlansByStatusDocument, {
+      input: { limit, statuses: [] },
+    }),
+  );
+
+  return result.listPlansByStatus.plans.map((plan) => ({
+    createdAt: toIsoString(plan.createdAt),
+    id: plan.id,
+    status: plan.status,
+    title: plan.title,
+  }));
+}
+
 export async function getPlanByIdGraphql(id: string): Promise<PlanRow | null> {
   const result = unwrapWorkflowGraphqlResult(
     await executeWorkflowGraphqlV2(GetPlanDocument, { id }),
