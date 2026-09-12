@@ -1,23 +1,25 @@
-import { WorktreeActivity } from '~/__generated__/graphql';
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
+
+import { WorktreeActivity } from '~/__generated__/graphql';
+import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
+import {
+  REPOSITORIES_ONBOARDING,
+  REPOSITORIES_TABLE_COPY,
+} from '~/routing/settings/repositories/data/data.copy';
 import {
   mockCheckout,
   mockDiscoveredWorktree,
   mockRepository,
 } from '~/routing/settings/repositories/data/mock.repositories';
-import {
-  REPOSITORIES_ONBOARDING,
-  REPOSITORIES_TABLE_COPY,
-} from '~/routing/settings/repositories/data/data.copy';
-import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
 import { buildRepositoryRows } from '~/routing/settings/repositories/utils/rows';
-import { RepositoriesTable } from '../RepositoriesTable';
+
 import type { RepositoriesTableProps } from '../RepositoriesTable';
+import { RepositoriesTable } from '../RepositoriesTable';
 
 const rows = buildRepositoryRows([
   mockRepository({

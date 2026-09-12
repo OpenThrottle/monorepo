@@ -1,14 +1,15 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { Form, Link } from 'react-router';
 import {
   Button,
   Input,
   Label,
   TextArea,
 } from '@openthrottle/react-router-shadcn';
-import { toDatetimeLocalValue } from '~/routing/calendar/utils/formatters';
+import clsx from 'clsx';
+import * as React from 'react';
+import { Form, Link } from 'react-router';
+
 import type { CalendarListEvent } from '~/routing/calendar/types';
+import { toDatetimeLocalValue } from '~/routing/calendar/utils/formatters';
 
 export interface CalendarFormProps {
   action: 'create' | 'update';

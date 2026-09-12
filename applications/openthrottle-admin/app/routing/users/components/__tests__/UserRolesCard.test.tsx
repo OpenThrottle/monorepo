@@ -1,11 +1,13 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub, useFetcher } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import { UserRolesCard } from '../UserRolesCard';
-import type { UserRolesCardProps } from '../UserRolesCard';
+
 import type { action as userDetailAction } from '~/routes/users.$userId';
+
+import type { UserRolesCardProps } from '../UserRolesCard';
+import { UserRolesCard } from '../UserRolesCard';
 
 const renderCard = (
   props: Pick<UserRolesCardProps, 'availableRoles' | 'rolesForUser'>,

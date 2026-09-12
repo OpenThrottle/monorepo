@@ -1,10 +1,12 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { SkillsIntroduction } from '../SkillsIntroduction';
+
 import { SKILLS_COPY } from '~/routing/skills/data/data.copy';
+
+import { SkillsIntroduction } from '../SkillsIntroduction';
 
 describe('SkillsIntroduction Component', () => {
   let component: RenderResult;

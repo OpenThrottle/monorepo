@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
+
 import { RepositoriesModule } from '../repositories/repositories.module';
 import { ScheduledAgentJob } from './scheduled-agent-job.entity';
 import { ScheduledAgentJobCheckoutPathService } from './scheduled-agent-job-checkout-path.service';

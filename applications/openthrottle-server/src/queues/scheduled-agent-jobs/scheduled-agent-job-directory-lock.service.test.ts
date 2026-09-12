@@ -5,14 +5,15 @@
  * hostage past the TTL.
  */
 
-import type { Redis } from 'ioredis';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import { asMock } from '@openthrottle/nestjs-testing';
+import type { Redis } from 'ioredis';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import {
-  ScheduledAgentJobDirectoryLockService,
   SCHEDULED_AGENT_JOB_LOCK_RENEW_MS,
   SCHEDULED_AGENT_JOB_LOCK_TTL_MS,
+  ScheduledAgentJobDirectoryLockService,
 } from './scheduled-agent-job-directory-lock.service';
 import { SCHEDULED_AGENT_JOBS_LOCK_KEY_PREFIX } from './scheduled-agent-jobs.constants';
 

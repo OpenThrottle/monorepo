@@ -4,12 +4,9 @@
  * and the per-user foreign-skill injection gate (opt-in via the actor's checkout).
  */
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createMock } from '@golevelup/ts-vitest';
-import { asMock } from '@openthrottle/nestjs-testing';
 import type { AgenticWorkflowRegistry } from '@openthrottle/nestjs-agentic-workflow';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import type { Repository } from 'typeorm';
 import type {
   PlanOutputStreamService,
   PlanRunsService,
@@ -22,8 +19,12 @@ import {
   type RepositoryCheckout,
   type UserWorkspaceSettings,
 } from '@openthrottle/nestjs-repositories';
-import type { PlanRunWorktreeCheckoutService } from '../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.service';
+import { asMock } from '@openthrottle/nestjs-testing';
+import type { Repository } from 'typeorm';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import type { PlanRunWorkspacePreflightService } from '../../services/plan-run-workspace-preflight/plan-run-workspace-preflight.service';
+import type { PlanRunWorktreeCheckoutService } from '../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.service';
 import type { PlanRunWorktreeProvisionService } from '../../services/plan-run-worktree-provision/plan-run-worktree-provision.service';
 import { AgenticRalphOrchestratorService } from './agentic-ralph-orchestrator.service';
 

@@ -1,11 +1,13 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { RunDetail } from '../RunDetail';
-import type { RunDetailProps } from '../RunDetail';
+
 import type { ScheduledJobRunDetailFragment } from '~/__generated__/graphql';
 import { RUN_DETAIL_COPY } from '~/routing/schedule/data/data.run-detail';
+
+import type { RunDetailProps } from '../RunDetail';
+import { RunDetail } from '../RunDetail';
 
 const run = (
   overrides: Partial<ScheduledJobRunDetailFragment> = {},

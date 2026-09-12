@@ -1,10 +1,11 @@
-import * as React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test, vi } from 'vitest';
-import { GlobalLayoutHeader } from '../GlobalLayoutHeader';
+
 import type { GlobalLayoutHeaderProps } from '../GlobalLayoutHeader';
+import { GlobalLayoutHeader } from '../GlobalLayoutHeader';
 import { GlobalProviders } from '../GlobalProviders';
 
 /**

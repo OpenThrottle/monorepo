@@ -5,15 +5,16 @@
  */
 
 import { EventEmitter } from 'node:events';
+
+import { getDriver } from '@openthrottle/openthrottle-drivers';
 import { describe, expect, it, vi } from 'vitest';
 
+import type { AgentSetupSpawn } from '../agent-setup-executor.ts';
 import {
   augmentPathForInstall,
   buildAgentSetupCommand,
   runAgentSetup,
 } from '../agent-setup-executor.ts';
-import type { AgentSetupSpawn } from '../agent-setup-executor.ts';
-import { getDriver } from '@openthrottle/openthrottle-drivers';
 
 /** A minimal ChildProcess stand-in: stdout/stderr emitters + kill spy. */
 class FakeChild extends EventEmitter {

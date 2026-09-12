@@ -6,6 +6,7 @@
  */
 
 import { Field, ObjectType } from '@nestjs/graphql';
+
 import { ChildProcessMetricsObject } from './child-process-metrics.object';
 import { ProcessMetricsSnapshotObject } from './process-metrics-snapshot.object';
 import { SystemCpuMetricsObject } from './system-cpu-metrics.object';

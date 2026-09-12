@@ -1,8 +1,9 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import { CardAction } from '../CardAction';
+
 import type { CardActionProps } from '../CardAction';
+import { CardAction } from '../CardAction';
 
 describe('CardAction', () => {
   test('renders the primitive with its data-slot and merges className', () => {

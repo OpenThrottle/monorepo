@@ -1,9 +1,11 @@
-import { mkdtemp, readFile, readdir } from 'node:fs/promises';
+import { mkdtemp, readdir, readFile } from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
+
 import { describe, expect, it } from 'vitest';
-import { KeyedJsonlWriter } from './keyed-jsonl-writer';
+
 import type { KeyedJsonlRunRecord } from './keyed-jsonl-writer';
+import { KeyedJsonlWriter } from './keyed-jsonl-writer';
 import { KeyedJsonlWriterError } from './keyed-jsonl-writer.error';
 
 describe('KeyedJsonlWriter', () => {

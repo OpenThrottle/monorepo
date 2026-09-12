@@ -26,6 +26,7 @@ import { execFile } from 'node:child_process';
 import { readdirSync, statSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import { promisify } from 'node:util';
+
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { RepositoryCheckout } from '@openthrottle/nestjs-repositories';
@@ -33,9 +34,10 @@ import {
   RepositoryCheckoutsService,
   UserWorkspaceSettingsService,
 } from '@openthrottle/nestjs-repositories';
+
 import { parseLinkedWorktrees } from '../../graphql/repository-inspection/parse-linked-worktrees';
-import type { WorktreeRootSource } from '../worktree-root/worktree-root.resolver';
 import { realPath } from '../paths/real-path';
+import type { WorktreeRootSource } from '../worktree-root/worktree-root.resolver';
 import { resolveWorktreeRoot } from '../worktree-root/worktree-root.resolver';
 import type {
   DiscoveredWorktree,

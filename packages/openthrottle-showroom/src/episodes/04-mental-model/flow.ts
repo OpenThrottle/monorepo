@@ -17,8 +17,8 @@
  * matched to flow beats POSITIONALLY (assemble/timeline.ts).
  */
 
-import { click, dwell, highlight, navigate, waitFor } from '../../runner/types';
 import type { DemoFlow } from '../../runner/types';
+import { click, dwell, highlight, navigate, waitFor } from '../../runner/types';
 
 /** The rate-limiting plan from src/fixtures/demo-content.ts — same anchor as 01. */
 const PLAN_ID = 'd0d0d0d0-0000-4000-8000-000000000001';

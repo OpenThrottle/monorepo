@@ -1,6 +1,7 @@
-import * as React from 'react';
-import { ContextMenu as ContextMenuPrimitive } from 'radix-ui';
 import { ChevronRight } from 'lucide-react';
+import { ContextMenu as ContextMenuPrimitive } from 'radix-ui';
+import * as React from 'react';
+
 import { cn } from '../../utils/cn';
 
 export interface ContextMenuSubTriggerProps extends React.ComponentPropsWithoutRef<

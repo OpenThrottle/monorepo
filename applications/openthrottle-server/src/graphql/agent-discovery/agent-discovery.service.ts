@@ -17,8 +17,8 @@
 
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { discoverAgentClis } from '@openthrottle/openthrottle-agentic-utils';
 import type { AgentCliDiscoveryResult } from '@openthrottle/openthrottle-agentic-utils';
+import { discoverAgentClis } from '@openthrottle/openthrottle-agentic-utils';
 import { StaleWhileRevalidateCache } from '@openthrottle/openthrottle-agentic-utils';
 
 const DEFAULT_CACHE_TTL_MS = 60_000;

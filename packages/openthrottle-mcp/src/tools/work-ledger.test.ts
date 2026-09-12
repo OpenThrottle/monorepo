@@ -1,12 +1,13 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { clearCurrentSession } from '../session/current-session.ts';
 import {
   attachSessionSubjectToolHandler,
   endSessionToolHandler,
   getWorkSessionsToolHandler,
   recordArtifactToolHandler,
 } from './work-ledger.ts';
-import { clearCurrentSession } from '../session/current-session.ts';
 
 vi.mock('@openthrottle/nodejs-graphql', () => ({
   executeGraphqlWithAuth: vi.fn(),

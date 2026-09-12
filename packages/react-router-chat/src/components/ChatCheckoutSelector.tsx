@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Command,
   CommandEmpty,
@@ -9,14 +8,16 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+
 import type { ChatCheckoutOption } from '../types';
-import {
-  describeCheckouts,
-  type ChatCheckoutDescriptor,
-} from '../utils/checkout-labels';
-import { groupCheckoutOptions } from '../utils/checkout-groups';
-import { checkoutSearchFilter } from '../utils/checkout-search-filter';
 import { toggleCheckoutSelection } from '../utils/chat-checkout-selection';
+import { groupCheckoutOptions } from '../utils/checkout-groups';
+import {
+  type ChatCheckoutDescriptor,
+  describeCheckouts,
+} from '../utils/checkout-labels';
+import { checkoutSearchFilter } from '../utils/checkout-search-filter';
 import { ChatCheckoutSelectorRow } from './ChatCheckoutSelectorRow';
 import { ChatCheckoutSelectorTrigger } from './ChatCheckoutSelectorTrigger';
 

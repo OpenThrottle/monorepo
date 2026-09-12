@@ -1,4 +1,3 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
@@ -7,6 +6,8 @@ import type {
   TasksService,
 } from '@openthrottle/nestjs-repositories';
 import type { PlanRun } from '@openthrottle/nestjs-repositories';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { PlanRunsStaleSweepProcessor } from './plan-runs-stale-sweep.processor';
 import type { PlanRunsStaleSweepJob } from './plan-runs-stale-sweep.types';
 

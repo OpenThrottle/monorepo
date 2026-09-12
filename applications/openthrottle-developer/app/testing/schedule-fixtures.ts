@@ -4,12 +4,12 @@
  * out only the part it asserts on, and so a loader-shape change lands in one place.
  */
 
+import type { Route } from '@/app/routes/+types/schedule._index';
 import type {
   ScheduledJobCardFragment,
   ScheduleInFlightRunFragment,
   ScheduleRunStatsFragment,
 } from '~/__generated__/graphql';
-import type { Route } from '@/app/routes/+types/schedule._index';
 
 export const scheduleJobFixture = (
   overrides: Partial<ScheduledJobCardFragment> = {},

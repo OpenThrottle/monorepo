@@ -1,14 +1,15 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import {
   Label,
   ToggleGroup,
   ToggleGroupItem,
 } from '@openthrottle/react-router-shadcn';
+import clsx from 'clsx';
+import * as React from 'react';
+
 import type { SkillCreateDestination } from '~/routing/skills/config/skill-create';
 import {
-  SKILL_CREATE_DESTINATIONS,
   isSkillCreateDestination,
+  SKILL_CREATE_DESTINATIONS,
 } from '~/routing/skills/config/skill-create';
 import { SKILL_CREATE_COPY } from '~/routing/skills/data/data.copy';
 

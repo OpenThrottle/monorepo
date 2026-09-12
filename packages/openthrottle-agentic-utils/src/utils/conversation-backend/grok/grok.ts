@@ -20,21 +20,21 @@
 
 import { spawn } from 'node:child_process';
 
+import { NdjsonBuffer } from '../cursor-agent/ndjson.ts';
+import {
+  resolveAgentTimeouts,
+  terminateChild,
+} from '../cursor-agent/teardown.ts';
+import { withFileMentions } from '../file-mentions.ts';
+import { withKeepalive } from '../keepalive.ts';
 import {
   CONVERSATION_STREAM_CHUNK_KINDS,
   type ConversationBackend,
   type ConversationBackendRun,
   type ConversationStreamChunk,
 } from '../types.ts';
-import { GROK_BIN_ENV, GROK_DEFAULT_BIN, buildGrokArgv } from './argv.ts';
-import { withFileMentions } from '../file-mentions.ts';
-import { withKeepalive } from '../keepalive.ts';
+import { buildGrokArgv, GROK_BIN_ENV, GROK_DEFAULT_BIN } from './argv.ts';
 import { mapGrokEvent } from './events.ts';
-import { NdjsonBuffer } from '../cursor-agent/ndjson.ts';
-import {
-  resolveAgentTimeouts,
-  terminateChild,
-} from '../cursor-agent/teardown.ts';
 
 /** Env vars the child is allowed to inherit (host login + locale), nothing else. */
 const ALLOWED_ENV_KEYS = [

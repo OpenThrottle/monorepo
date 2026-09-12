@@ -1,6 +1,7 @@
-import * as React from 'react';
-import { SwatchBookIcon } from 'lucide-react';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
+import { SwatchBookIcon } from 'lucide-react';
+import * as React from 'react';
+
 import { AppearancePreview } from '~/routing/settings/components/AppearancePreview';
 import { AppearanceSection } from '~/routing/settings/components/AppearanceSection';
 import { APPEARANCE_SECTIONS } from '~/routing/settings/data/data.appearance';

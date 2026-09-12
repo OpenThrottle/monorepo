@@ -1,22 +1,23 @@
+import { Button } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 import { Await, Link, useNavigate } from 'react-router';
-import { Button } from '@openthrottle/react-router-shadcn';
-import { WEEKLY_ACTIVITY_DAYS } from '~/routing/dashboard/config/config.dashboard';
+
+import type { Route } from '@/app/routes/+types/dashboard._index';
 import { DashboardActivityChartSkeleton } from '~/routing/dashboard/components/DashboardActivityChartSkeleton';
 import { DashboardContributionsCard } from '~/routing/dashboard/components/DashboardContributionsCard';
 import { DashboardContributionsCardSkeleton } from '~/routing/dashboard/components/DashboardContributionsCardSkeleton';
 import { DashboardDailyStatsCard } from '~/routing/dashboard/components/DashboardDailyStatsCard';
+import { DashboardDailyStatsModal } from '~/routing/dashboard/components/DashboardDailyStatsModal';
 import { DashboardDeferredCard } from '~/routing/dashboard/components/DashboardDeferredCard';
 import { DashboardGithubTokenEmptyState } from '~/routing/dashboard/components/DashboardGithubTokenEmptyState';
-import { DashboardQueueHealthCard } from '~/routing/dashboard/components/DashboardQueueHealthCard';
-import { DashboardDailyStatsModal } from '~/routing/dashboard/components/DashboardDailyStatsModal';
 import { DashboardOpenPrsByAuthorCard } from '~/routing/dashboard/components/DashboardOpenPrsByAuthorCard';
 import { DashboardPrCardsSkeleton } from '~/routing/dashboard/components/DashboardPrCardsSkeleton';
 import { DashboardPrTimeInStateCard } from '~/routing/dashboard/components/DashboardPrTimeInStateCard';
+import { DashboardQueueHealthCard } from '~/routing/dashboard/components/DashboardQueueHealthCard';
 import { DashboardRecentActivity } from '~/routing/dashboard/components/DashboardRecentActivity';
 import { DashboardRecentChatsCard } from '~/routing/dashboard/components/DashboardRecentChatsCard';
 import { DashboardToolbar } from '~/routing/dashboard/components/DashboardToolbar';
-import type { Route } from '@/app/routes/+types/dashboard._index';
+import { WEEKLY_ACTIVITY_DAYS } from '~/routing/dashboard/config/config.dashboard';
 
 type DashboardLoaderData = Route.ComponentProps['loaderData'];
 

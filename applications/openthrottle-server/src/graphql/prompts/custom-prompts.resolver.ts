@@ -14,28 +14,30 @@
 
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
+
 import { BadRequestException, ForbiddenException } from '@nestjs/common';
-import type { CustomPrompt } from '@openthrottle/nestjs-repositories';
-import {
-  CustomPromptsService,
-  RolesService,
-} from '@openthrottle/nestjs-repositories';
-import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { ConfigService } from '@nestjs/config';
+import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
 import {
   AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
   type AuthPrincipal,
   CurrentUser,
 } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS } from '@openthrottle/nestjs-rbac';
+import type { CustomPrompt } from '@openthrottle/nestjs-repositories';
+import {
+  CustomPromptsService,
+  RolesService,
+} from '@openthrottle/nestjs-repositories';
 import { IsNull } from 'typeorm';
-import { resolveCustomPromptWritePath } from './custom-prompt-write-path';
+
 import {
   CreateCustomPromptInput,
   ListCustomPromptsInput,
   UpdateCustomPromptInput,
 } from './custom-prompt.input';
 import { CustomPromptObject } from './custom-prompt.object';
+import { resolveCustomPromptWritePath } from './custom-prompt-write-path';
 
 // @authz-stance: authenticated-only (Path A — see OT plan 18e16dfc-4f22-43f9-9b77-6fc90309b60a)
 // for the queries and DB-only mutations; any filesystem write additionally

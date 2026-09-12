@@ -1,12 +1,13 @@
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
-import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { NestjsBullmqBoardModule } from '@openthrottle/nestjs-bullmq-board';
 import { NestjsBullmqModule } from '@openthrottle/nestjs-bullmq';
+import { NestjsBullmqBoardModule } from '@openthrottle/nestjs-bullmq-board';
+import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRedisModule } from '@openthrottle/nestjs-redis';
-import { PLANS_QUEUE_NAME } from './plans.constants';
+
 import { PlanCancelChannelService } from './plan-cancel-channel.service';
 import { PlanRunCancellationService } from './plan-run-cancellation.service';
+import { PLANS_QUEUE_NAME } from './plans.constants';
 
 /**
  * @description Producer half of the plans queue: registerQueue (enqueuePlanRun

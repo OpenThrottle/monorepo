@@ -1,9 +1,10 @@
-import * as React from 'react';
 import { render, screen } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { HomeBuiltWith } from '../HomeBuiltWith';
+
 import type { HomeBuiltWithProps } from '../HomeBuiltWith';
+import { HomeBuiltWith } from '../HomeBuiltWith';
 
 describe('HomeBuiltWith Component', () => {
   let props: HomeBuiltWithProps;

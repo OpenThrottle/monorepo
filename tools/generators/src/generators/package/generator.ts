@@ -1,7 +1,3 @@
-import * as path from 'path';
-import { execSync } from 'child_process';
-import { readFileSync } from 'fs';
-import prompts from 'prompts';
 import type { GeneratorCallback, Tree } from '@nx/devkit';
 import {
   addDependenciesToPackageJson,
@@ -11,17 +7,22 @@ import {
   logger,
   runTasksInSerial,
 } from '@nx/devkit';
+import { execSync } from 'child_process';
+import { readFileSync } from 'fs';
+import * as path from 'path';
+import prompts from 'prompts';
+
+import { throwGeneratorError } from '../../utils/generator-errors';
+import { getCommonVariables } from '../../utils/index';
 import { isInteractiveArgPresent } from '../../utils/nx-cli';
 import { ORGANIZATIONS } from '../../utils/organizations';
+import { writeJsonToStdout } from '../../utils/output';
 import {
   getConfigConfirmation,
   getOrganizationName,
   getPackageName,
 } from '../../utils/questions';
-import { getCommonVariables } from '../../utils/index';
 import { REGEX_SLUG } from '../../utils/regex';
-import { writeJsonToStdout } from '../../utils/output';
-import { throwGeneratorError } from '../../utils/generator-errors';
 
 export interface PackageGeneratorSchema {
   readonly describe?: boolean;

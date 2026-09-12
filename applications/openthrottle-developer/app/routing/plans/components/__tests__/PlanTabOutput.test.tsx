@@ -1,13 +1,15 @@
-import * as React from 'react';
 import { Tabs } from '@openthrottle/react-router-shadcn';
 import type { render } from '@testing-library/react';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
+
 import {
   buildPlanDetailLoaderData,
   renderWithPlanDetailRouteData,
 } from '~/routing/plans/testing/plan-detail-route-data';
-import { PlanTabOutput } from '../PlanTabOutput';
+
 import type { PlanTabOutputProps } from '../PlanTabOutput';
+import { PlanTabOutput } from '../PlanTabOutput';
 
 const chunk: PlanTabOutputProps['chunks'][number] = {
   __typename: 'PlanOutputStreamChunkObject',

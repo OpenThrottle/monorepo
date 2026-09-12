@@ -5,13 +5,15 @@
  * three legs to nine and re-shaped into spans + markers.
  */
 
-import { PlansService } from '@openthrottle/nestjs-repositories';
 import { Args, Query, Resolver } from '@nestjs/graphql';
+import { PlansService } from '@openthrottle/nestjs-repositories';
+
 import {
   TimelineLaneGrouping,
   TimelineMarkerKind,
   TimelineSpanKind,
 } from './timeline.enum';
+import { WorkstreamTimelineInput } from './timeline.input';
 import {
   TimelineKindTruncationObject,
   TimelineMarkerObject,
@@ -19,7 +21,6 @@ import {
   WorkstreamTimelineResultObject,
 } from './timeline.object';
 import { resolveTimelineLane } from './timeline-lanes';
-import { WorkstreamTimelineInput } from './timeline.input';
 
 /**
  * Rows read per kind. The chart buckets markers past a density threshold, so

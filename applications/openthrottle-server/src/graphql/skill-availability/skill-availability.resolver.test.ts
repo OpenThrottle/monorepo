@@ -1,3 +1,5 @@
+import { createMock } from '@golevelup/ts-vitest';
+import { Test } from '@nestjs/testing';
 import type {
   SkillAvailabilityRule,
   UserSkillTag,
@@ -6,9 +8,8 @@ import {
   SkillAvailabilityService,
   SkillTagsService,
 } from '@openthrottle/nestjs-repositories';
-import { createMock } from '@golevelup/ts-vitest';
-import { Test } from '@nestjs/testing';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
 import { SkillAvailabilityResolver } from './skill-availability.resolver';
 

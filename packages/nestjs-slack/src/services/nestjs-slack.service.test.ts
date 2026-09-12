@@ -1,15 +1,16 @@
+import { createMock } from '@golevelup/ts-vitest';
+import { Test } from '@nestjs/testing';
+import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
-  describe,
-  it,
-  expect,
+  afterEach,
   beforeAll,
   beforeEach,
-  afterEach,
+  describe,
+  expect,
+  it,
   vi,
 } from 'vitest';
-import { Test } from '@nestjs/testing';
-import { createMock } from '@golevelup/ts-vitest';
-import { LoggerService } from '@openthrottle/nestjs-modules';
+
 import { NestjsSlackError } from '../config/nestjs-slack.error';
 import { NESTJS_SLACK_OPTIONS } from '../config/nestjs-slack.options';
 import { NestjsSlackService } from './nestjs-slack.service';

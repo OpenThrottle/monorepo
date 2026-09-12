@@ -1,11 +1,12 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import { Button, Input, Label } from '@openthrottle/react-router-shadcn';
-import { UserRoundIcon } from 'lucide-react';
-import { Form, useNavigation } from 'react-router';
 import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
-import { WORKSPACE_SETTINGS_COPY } from '~/routing/settings/data/data.copy';
+import clsx from 'clsx';
+import { UserRoundIcon } from 'lucide-react';
+import * as React from 'react';
+import { Form, useNavigation } from 'react-router';
+
 import type { UserWorkspaceProfileFieldsFragment } from '~/__generated__/graphql';
+import { WORKSPACE_SETTINGS_COPY } from '~/routing/settings/data/data.copy';
 
 export interface SettingsWorkspaceProfileFormProps {
   actionError?: string | null;

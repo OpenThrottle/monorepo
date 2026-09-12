@@ -1,17 +1,19 @@
-import * as React from 'react';
+import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import type { RenderResult } from '@testing-library/react';
 import { cleanup } from '@testing-library/react';
-import { TooltipProvider } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
+
+import { WorkspaceEditorId } from '~/__generated__/graphql';
 import { PLAN_CHECKOUT_SELECTOR_COPY } from '~/routing/plans/data/data.copy';
-import { PlanDetailRoute } from '../PlanDetailRoute';
-import type { PlanDetailRouteProps } from '../PlanDetailRoute';
-import { PlanRunConfigStoreProvider } from '../PlanRunConfigStoreProvider';
 import {
   buildPlanDetailLoaderData,
   renderWithPlanDetailRouteData,
 } from '~/routing/plans/testing/plan-detail-route-data';
-import { WorkspaceEditorId } from '~/__generated__/graphql';
+
+import type { PlanDetailRouteProps } from '../PlanDetailRoute';
+import { PlanDetailRoute } from '../PlanDetailRoute';
+import { PlanRunConfigStoreProvider } from '../PlanRunConfigStoreProvider';
 
 const plan: PlanDetailRouteProps['plan'] = {
   __typename: 'PlanObject',

@@ -1,5 +1,3 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import {
   Button,
   Empty,
@@ -7,8 +5,11 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@openthrottle/react-router-shadcn';
-import { Link } from 'react-router';
+import clsx from 'clsx';
 import { CalendarSearchIcon } from 'lucide-react';
+import * as React from 'react';
+import { Link } from 'react-router';
+
 import { CALENDAR_EMPTY_COPY } from '~/routing/calendar/data/data.copy';
 
 export interface CalendarEmptyProps {

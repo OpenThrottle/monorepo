@@ -1,6 +1,6 @@
-import * as React from 'react';
 import clsx from 'clsx';
 import { CheckIcon, LinkIcon } from 'lucide-react';
+import * as React from 'react';
 
 export interface DocHeadingAnchorProps {
   readonly className?: string;

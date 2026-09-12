@@ -8,6 +8,7 @@ import {
   TasksService,
 } from '@openthrottle/nestjs-repositories';
 import { And, LessThan, MoreThanOrEqual } from 'typeorm';
+
 import { NotificationsService } from '../../notifications/notifications.service';
 import { DAILY_STATS_QUEUE_NAME } from './daily-stats.constants';
 import {

@@ -1,4 +1,3 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createMock } from '@golevelup/ts-vitest';
 import { BadRequestException } from '@nestjs/common';
 import type { GlobalClsService } from '@openthrottle/nestjs-modules';
@@ -6,10 +5,12 @@ import type { WorkArtifact } from '@openthrottle/nestjs-repositories';
 import {
   workArtifactsFactory,
   WorkSession,
-  WorkSessionSubject,
   workSessionsFactory,
+  WorkSessionSubject,
 } from '@openthrottle/nestjs-repositories';
 import type { EntityManager, Repository } from 'typeorm';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { WorkLedgerCaptureService } from './work-ledger-capture.service';
 
 const USER_SUB = 'user-1';

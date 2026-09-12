@@ -4,11 +4,11 @@
 // import { LockIcon } from '@phosphor-icons/react/dist/ssr/Lock';
 // import { ADMIN_PATHS, dataNavigation } from '~/global/data/data.navigation';
 
-import type { LinkProps } from 'react-router';
 import type {
   GetRootMetricsQuery,
   ServerHealthObject,
 } from '@openthrottle/openthrottle-developer-codegen';
+import type { LinkProps } from 'react-router';
 
 /**
  * @description Normalized status for a single health component (or the folded

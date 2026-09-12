@@ -1,13 +1,14 @@
-import * as React from 'react';
-import { BookOpenIcon } from 'lucide-react';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalHeading,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import { SITE_TITLE } from '~/global/config/settings';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import { BookOpenIcon } from 'lucide-react';
+import * as React from 'react';
+
 import type { Route } from '@/app/routes/+types/personas.create';
+import { SITE_TITLE } from '~/global/config/settings';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

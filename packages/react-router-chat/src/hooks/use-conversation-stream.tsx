@@ -14,21 +14,22 @@
  * to that reducer, shared by both the developer and admin apps and the home
  * route so the surfaces cannot drift.
  */
-import * as React from 'react';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import {
-  useSubscription,
   type GraphqlWsClient,
+  useSubscription,
 } from '@openthrottle/react-router-graphql';
+import * as React from 'react';
+
+import type { StreamState } from '../conversation-stream';
 import {
+  type ChatStreamChunk,
   INITIAL_STREAM_STATE,
   reduceStreamChunk,
   toThreadMessages,
-  type ChatStreamChunk,
 } from '../conversation-stream';
 import type { ResolvedRunPhase } from '../run-phase';
 import type { ChatMessage } from '../types';
-import type { StreamState } from '../conversation-stream';
 
 /**
  * The subscription payload shape the stream reads: one `conversationStreamChunkAdded`

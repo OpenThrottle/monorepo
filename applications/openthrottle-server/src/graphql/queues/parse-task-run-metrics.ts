@@ -3,6 +3,8 @@
  * and returnvalue contains taskRunMetrics. Used by JobObject.taskRunMetrics resolver.
  */
 
+import { isRecord } from '@openthrottle/nodejs-utils';
+
 import { ChildProcessMetricsObject } from '../metrics/child-process-metrics.object';
 import { ProcessMetricsSnapshotObject } from '../metrics/process-metrics-snapshot.object';
 import {
@@ -13,8 +15,6 @@ import {
   SystemCpuMetricsObject,
   SystemCpuSnapshotObject,
 } from '../metrics/system-cpu-metrics.object';
-import { isRecord } from '@openthrottle/nodejs-utils';
-
 import { TaskRunMetricsObject } from '../metrics/task-run-metrics.object';
 import {
   WallClockInterpretation,

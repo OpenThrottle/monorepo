@@ -1,6 +1,7 @@
-import * as React from 'react';
-import { ClockIcon } from 'lucide-react';
 import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
+import { ClockIcon } from 'lucide-react';
+import * as React from 'react';
+
 import type { JobDetailsCardFragment } from '~/__generated__/graphql';
 
 export interface QueueJobTimestampsProps {

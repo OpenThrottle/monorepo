@@ -2,14 +2,15 @@
  * @description Fishery factories for agent conversation entities.
  */
 
-import { Factory } from 'fishery';
 import { faker } from '@faker-js/faker';
-import type { AgentConversationMessage } from './agent-conversation-message.entity';
+import { Factory } from 'fishery';
+
 import {
   AGENT_CONVERSATION_MESSAGE_ROLES,
   AGENT_CONVERSATION_STATUSES,
 } from './agent-conversation.constants';
 import type { AgentConversation } from './agent-conversation.entity';
+import type { AgentConversationMessage } from './agent-conversation-message.entity';
 
 export type AgentConversationFactoryData = Pick<
   AgentConversation,

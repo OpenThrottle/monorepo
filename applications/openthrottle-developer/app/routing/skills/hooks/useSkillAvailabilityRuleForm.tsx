@@ -1,14 +1,15 @@
+import { getActionError } from '@openthrottle/react-router-utils';
 import * as React from 'react';
 import { useFetcher } from 'react-router';
-import { getActionError } from '@openthrottle/react-router-utils';
+
 import { SKILL_AVAILABILITY_COPY } from '~/routing/skills/data/data.copy';
 import {
   environmentValueToChoice,
   findInvalidSlugs,
+  isSkillAvailabilityEnvironmentChoice,
   parseSlugInput,
   ruleHasAnyEntry,
   SKILL_AVAILABILITY_EMPTY_RULE,
-  isSkillAvailabilityEnvironmentChoice,
   type SkillAvailabilityEnvironmentChoice,
   type SkillAvailabilityRuleValue,
 } from '~/routing/skills/utils/skill-availability';

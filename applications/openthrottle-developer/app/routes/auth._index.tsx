@@ -1,23 +1,26 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { animate, useReducedMotion } from 'framer-motion';
-import {
-  OpenThrottleAuthForm,
-  OpenThrottleLogo,
-} from '@openthrottle/react-router-ui';
 import {
   buildAuthCookie,
   getAuthTokenFromCookie,
 } from '@openthrottle/react-router-auth';
-import { data, redirect, useFetcher } from 'react-router';
-import type { ShouldRevalidateFunction } from 'react-router';
+import {
+  OpenThrottleAuthForm,
+  OpenThrottleLogo,
+} from '@openthrottle/react-router-ui';
 import {
   GlobalAnimationMesh,
   GlobalAnimationWaves,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import clsx from 'clsx';
+import { animate, useReducedMotion } from 'framer-motion';
 import { useAtom } from 'jotai';
+import * as React from 'react';
+import type { ShouldRevalidateFunction } from 'react-router';
+import { data, redirect, useFetcher } from 'react-router';
+
+import type { Route } from '@/app/routes/+types/_index';
+import { SITE_SUBDOMAIN, SITE_TITLE } from '~/global/config/settings';
 import { configAtom, REDUCED_MOTION_MODES } from '~/global/data/atom.config';
 import { callLoginMutation } from '~/global/utils/utils.auth';
 import {
@@ -25,8 +28,6 @@ import {
   GRAIN_REST,
   HOLD_MS,
 } from '~/routing/auth/config/animation';
-import { SITE_SUBDOMAIN, SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/_index';
 
 type AuthFetcherData = { error?: string; ok?: boolean };
 

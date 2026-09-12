@@ -1,9 +1,11 @@
-import * as React from 'react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
-import { RolloutFlagKind } from '~/__generated__/graphql';
+
 import type { RolloutFlagFieldsFragment } from '~/__generated__/graphql';
+import { RolloutFlagKind } from '~/__generated__/graphql';
 import { renderRoutesStub } from '~/testing/route-fixtures';
+
 import Component from '../settings.rollout._index';
 
 vi.mock('@openthrottle/react-router-rollout', () => ({

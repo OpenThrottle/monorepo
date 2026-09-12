@@ -10,8 +10,10 @@
 
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
+
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+
 import { resolveWorktreeRoot } from '../worktree-root/worktree-root.resolver';
 
 const execFileAsync = promisify(execFile);

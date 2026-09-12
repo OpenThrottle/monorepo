@@ -1,16 +1,17 @@
-import * as React from 'react';
-import clsx from 'clsx';
+import type { ComboboxOption } from '@openthrottle/react-router-shadcn';
 import { Combobox } from '@openthrottle/react-router-shadcn';
+import clsx from 'clsx';
+import * as React from 'react';
 import { useNavigate } from 'react-router';
+
 import {
   BRANCH_FILTER_ALL_VALUE,
   BRANCH_FILTER_COPY,
 } from '~/routing/usage/data/branch-filter-copy';
-import { buildUsageSearch } from '~/routing/usage/utils/usage-search';
-import { useUsageBranchSearch } from '~/routing/usage/hooks/useUsageBranchSearch';
-import type { ComboboxOption } from '@openthrottle/react-router-shadcn';
 import type { SkillUsageScopeFilter } from '~/routing/usage/data/skill-usage-copy';
 import type { UsageBranchOption } from '~/routing/usage/hooks/useUsageBranchSearch';
+import { useUsageBranchSearch } from '~/routing/usage/hooks/useUsageBranchSearch';
+import { buildUsageSearch } from '~/routing/usage/utils/usage-search';
 
 export interface UsageBranchFilterProps {
   className?: string;

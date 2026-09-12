@@ -1,5 +1,6 @@
-import { mkdir, open, type FileHandle } from 'node:fs/promises';
+import { type FileHandle, mkdir, open } from 'node:fs/promises';
 import * as path from 'node:path';
+
 import type { JsonlDurabilityLevel } from '../config/nestjs-logging.options';
 import {
   appendUtf8ToFileHandle,

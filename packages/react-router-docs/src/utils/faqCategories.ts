@@ -1,5 +1,5 @@
-import { slugify } from './slugify';
 import type { DocEntry } from './buildDocsManifest';
+import { slugify } from './slugify';
 
 /** A FAQ category: its raw group label plus the anchor id its section carries. */
 export interface FaqCategory {

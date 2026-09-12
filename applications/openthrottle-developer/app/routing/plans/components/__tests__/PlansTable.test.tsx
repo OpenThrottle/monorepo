@@ -1,17 +1,19 @@
-import * as React from 'react';
+import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import type { RenderResult } from '@testing-library/react';
 import { waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { TooltipProvider } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import { PlansTable } from '../PlansTable';
-import type { PlansTableProps } from '../PlansTable';
+
 import type { PlanCardFragment } from '~/__generated__/graphql';
 import {
   PLANS_INDEX_EMPTY_COPY,
   PLANS_ROW_ACTIONS_COPY,
 } from '~/routing/plans/data/data.copy';
 import { renderRoutesStub } from '~/testing/route-fixtures';
+
+import type { PlansTableProps } from '../PlansTable';
+import { PlansTable } from '../PlansTable';
 
 const mockPlans: [PlanCardFragment, PlanCardFragment] = [
   {

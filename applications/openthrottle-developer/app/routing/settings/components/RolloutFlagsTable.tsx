@@ -1,11 +1,12 @@
-import * as React from 'react';
-import { Link } from 'react-router';
-import type { ColumnDef } from '@tanstack/react-table';
 import { Badge, DataTable } from '@openthrottle/react-router-shadcn';
 import { GlobalPopoverActionsHeader } from '@openthrottle/react-router-ui-global';
+import type { ColumnDef } from '@tanstack/react-table';
+import * as React from 'react';
+import { Link } from 'react-router';
+
 import type { RolloutFlagFieldsFragment } from '~/__generated__/graphql';
-import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
 import { RolloutFlagsTableRowActions } from '~/routing/settings/components/RolloutFlagsTableRowActions';
+import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
 import {
   formatRolloutAllocationSummary,
   formatRolloutTimestamp,

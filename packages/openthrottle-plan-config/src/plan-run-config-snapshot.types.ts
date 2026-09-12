@@ -3,12 +3,13 @@
  * Captures the resolved configuration actually enqueued, not the plan defaults column.
  */
 
+import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
+
 import type { PLAN_RUN_CONFIG_SNAPSHOT_VERSION } from './plan-run-config-snapshot.constants.ts';
 import type {
   PlanJobRunHooksStorage,
   PlanRunConfigTargetMode,
 } from './plan-run-config-storage.types.ts';
-import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 
 export type PlanRunConfigSnapshotDebugCli = 'debug' | 'omit' | 'verbose';
 

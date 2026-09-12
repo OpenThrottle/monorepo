@@ -4,12 +4,13 @@
  * indexCodeRepository. Services + the BullMQ queue are mocked.
  */
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createMock } from '@golevelup/ts-vitest';
 import type { WorkspaceLocalRepositoriesService } from '@openthrottle/nestjs-repositories';
 import type { WorkspaceLocalRepository } from '@openthrottle/nestjs-repositories';
 import type { CodeSearchService } from '@openthrottle/nestjs-vector-search';
 import type { Queue } from 'bullmq';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { CodeSearchResolver } from './code-search.resolver';
 
 const USER_ID = 'user-1';

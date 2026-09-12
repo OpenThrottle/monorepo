@@ -1,11 +1,12 @@
-import * as React from 'react';
-import MonacoEditor from '@monaco-editor/react';
 import type {
   BeforeMount,
   EditorProps as MonacoEditorProps,
   OnMount,
 } from '@monaco-editor/react';
+import MonacoEditor from '@monaco-editor/react';
 import { IS_BROWSER } from '@openthrottle/react-router-utils';
+import * as React from 'react';
+
 import { EDITOR_DEFAULTS } from '../config';
 
 export interface EditorWindowProps extends MonacoEditorProps {

@@ -28,14 +28,15 @@ import type {
 } from '@openthrottle/openthrottle-skills';
 import { SKILL_AVAILABILITY_ENVIRONMENTS } from '@openthrottle/openthrottle-skills';
 import { Repository } from 'typeorm';
-import { SkillAvailabilityRuleSet } from './skill-availability-rule-set.entity';
-import { SkillAvailabilityRule } from './skill-availability-rule.entity';
+
 import {
   skillAvailabilityPostureSchema,
-  skillAvailabilityRuleInputSchema,
   type SkillAvailabilityRuleInput,
   type SkillAvailabilityRuleInputArgs,
+  skillAvailabilityRuleInputSchema,
 } from './skill-availability.schemas';
+import { SkillAvailabilityRule } from './skill-availability-rule.entity';
+import { SkillAvailabilityRuleSet } from './skill-availability-rule-set.entity';
 
 /** Narrows a stored posture string to the resolver's tri-safe posture (defaults to allow). */
 const toPosture = (value: string): SkillAvailabilityPosture =>

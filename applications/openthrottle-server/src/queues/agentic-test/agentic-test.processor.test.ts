@@ -1,11 +1,12 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { createMock } from '@golevelup/ts-vitest';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { createMock } from '@golevelup/ts-vitest';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import * as agenticTestEcho from './agentic-test-echo';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { AgenticTestProcessor } from './agentic-test.processor';
 import type { AgenticTestJob } from './agentic-test.types';
+import * as agenticTestEcho from './agentic-test-echo';
 
 describe('AgenticTestProcessor', () => {
   let processor: AgenticTestProcessor;

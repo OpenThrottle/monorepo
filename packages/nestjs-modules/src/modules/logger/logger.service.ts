@@ -2,6 +2,7 @@ import {
   Injectable,
   LoggerService as DefaultLoggerService,
 } from '@nestjs/common';
+
 import { logger } from './logger.config';
 
 /**

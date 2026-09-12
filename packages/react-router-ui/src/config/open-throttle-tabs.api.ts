@@ -2,12 +2,12 @@
  * Spike API contract for OpenThrottle tabs (plan cf15cc9e).
  * Implementation tasks import these types; do not change names without updating the plan.
  */
-import type { ComponentPropsWithoutRef } from 'react';
-import type { VariantProps } from 'class-variance-authority';
 import type {
-  TabsProps,
   tabsListVariants,
+  TabsProps,
 } from '@openthrottle/react-router-shadcn';
+import type { VariantProps } from 'class-variance-authority';
+import type { ComponentPropsWithoutRef } from 'react';
 import type { NavLinkProps } from 'react-router';
 
 /** Approach A — optional URL sync for controlled Radix tabs (same route, search param). */

@@ -1,5 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import type {
+  EmbeddingsConfig,
+  EmbeddingsProvider,
+  IndexWorkspaceResult,
+  SemanticMatch,
+} from '@openthrottle/openthrottle-ide';
 import {
   createEmbeddingsProvider,
   diffSnapshots,
@@ -8,12 +14,7 @@ import {
   indexWorkspace,
   semanticSearch,
 } from '@openthrottle/openthrottle-ide';
-import type {
-  EmbeddingsConfig,
-  EmbeddingsProvider,
-  IndexWorkspaceResult,
-  SemanticMatch,
-} from '@openthrottle/openthrottle-ide';
+
 import { AppConfigService } from './app-config.service';
 import { CodeSnapshotStore } from './code-snapshot-store';
 import { CodeVectorStore } from './code-vector-store';

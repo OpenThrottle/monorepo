@@ -1,9 +1,10 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
+
 import {
   PERMISSIONS,
-  ROLES,
-  roleHasPermission,
   ROLE_PERMISSIONS,
+  roleHasPermission,
+  ROLES,
 } from './roles';
 
 describe('roles', () => {

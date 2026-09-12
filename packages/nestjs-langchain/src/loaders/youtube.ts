@@ -1,5 +1,5 @@
-import type { Document } from '@langchain/core/documents';
 import { YoutubeLoader } from '@langchain/community/document_loaders/web/youtube';
+import type { Document } from '@langchain/core/documents';
 
 /**
  * @description Load a single YouTube video using LangChain's YoutubeLoader

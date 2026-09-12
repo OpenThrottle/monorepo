@@ -1,19 +1,21 @@
-import { render, waitFor } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { createRoutesStub } from 'react-router';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { ChatDialog } from '@openthrottle/react-router-chat';
 import {
   chatToolbarStateAtom,
   DEFAULT_CHAT_TOOLBAR_STATE,
 } from '@openthrottle/react-router-chat-state';
 import { GlobalProviders } from '@openthrottle/react-router-ui-global';
+import type { RenderResult } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { getDefaultStore } from 'jotai';
+import { createRoutesStub } from 'react-router';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+
 import {
   clearChatOptionsCache,
   writeChatOptionsCache,
 } from '~/routing/home/data/chat-options-cache';
+
 import { useHeaderChatController } from '../useHeaderChatController';
 
 // Return no ws client so the stream subscription never opens a real socket

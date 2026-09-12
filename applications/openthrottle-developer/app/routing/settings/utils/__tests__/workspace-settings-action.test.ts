@@ -1,11 +1,13 @@
 import { describe, expect, test } from 'vitest';
+
 import { WorkspaceEditorId } from '~/__generated__/graphql';
+import { WORKSPACE_EDITOR_OPTIONS } from '~/routing/settings/config/workspace-editors';
+
 import {
   optionalTrimmedString,
   parseEnabledEditorsFromFormData,
   parseProjectIdFromFormData,
 } from '../workspace-settings-action';
-import { WORKSPACE_EDITOR_OPTIONS } from '~/routing/settings/config/workspace-editors';
 
 describe('workspace-settings-action', () => {
   describe('parseEnabledEditorsFromFormData', () => {

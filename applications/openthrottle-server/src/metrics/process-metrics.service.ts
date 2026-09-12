@@ -4,6 +4,7 @@
  */
 
 import { Injectable } from '@nestjs/common';
+
 import type { ProcessMetricsSnapshot } from './process-metrics.types';
 
 const METRICS_BYTES_PER_MB = 1024 * 1024;

@@ -1,5 +1,5 @@
-import type { Document } from '@langchain/core/documents';
 import { CheerioWebBaseLoader } from '@langchain/community/document_loaders/web/cheerio';
+import type { Document } from '@langchain/core/documents';
 
 import { assertSafeWebURL } from './url-guard';
 

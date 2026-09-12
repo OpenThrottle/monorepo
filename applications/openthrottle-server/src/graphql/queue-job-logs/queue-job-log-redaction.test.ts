@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { buildRedactedQueueJobLogMessage } from './queue-job-log-redaction';
 
 describe('buildRedactedQueueJobLogMessage', () => {

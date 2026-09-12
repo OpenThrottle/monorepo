@@ -10,8 +10,9 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { AgentConversation } from './agent-conversation.entity';
+
 import type { AgentConversationMessageRole } from './agent-conversation.constants';
+import { AgentConversation } from './agent-conversation.entity';
 
 export interface AgentConversationMessageData {
   readonly content: string;

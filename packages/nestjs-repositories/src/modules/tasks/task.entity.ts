@@ -12,13 +12,14 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import type { Plan } from '../plans/plan.entity';
-import type { Project } from '../projects/project.entity';
-import type { TaskEmbedding } from '../task-embeddings/task-embedding.entity';
+
 import {
   PLAN_STATUS,
   PLAN_STATUS_VALUES,
 } from '../../common/plan-task-status.constants';
+import type { Plan } from '../plans/plan.entity';
+import type { Project } from '../projects/project.entity';
+import type { TaskEmbedding } from '../task-embeddings/task-embedding.entity';
 
 /** Lifecycle-hook role marker: NULL = regular task; 'before'/'after' = hook task. */
 export type TaskHookRole = 'after' | 'before';

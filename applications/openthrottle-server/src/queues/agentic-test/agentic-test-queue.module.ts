@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { AgenticTestQueueProducerModule } from './agentic-test-queue-producer.module';
+
 import { AgenticTestProcessor } from './agentic-test.processor';
+import { AgenticTestQueueProducerModule } from './agentic-test-queue-producer.module';
 
 /**
  * @description Processor half of the agentic-test queue (WorkerHost). Loaded

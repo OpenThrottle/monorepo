@@ -5,9 +5,10 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { roleHasPermission, ROLE_PERMISSIONS } from '../roles';
+
 import { PERMISSIONS_KEY } from '../decorators/permissions.decorator';
 import type { Permission, Role } from '../roles';
+import { ROLE_PERMISSIONS, roleHasPermission } from '../roles';
 import type { RbacUser } from './roles.guard';
 
 /**

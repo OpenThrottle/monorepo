@@ -2,8 +2,9 @@ import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import { NestjsVectorSearchModule } from '@openthrottle/nestjs-vector-search';
-import { CodeIndexQueueProducerModule } from './code-index-queue-producer.module';
+
 import { CodeIndexProcessor } from './code-index.processor';
+import { CodeIndexQueueProducerModule } from './code-index-queue-producer.module';
 
 /**
  * @description Processor half of the code-index queue (WorkerHost). Loaded only

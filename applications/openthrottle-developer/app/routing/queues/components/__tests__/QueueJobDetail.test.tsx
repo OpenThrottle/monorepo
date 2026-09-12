@@ -1,8 +1,10 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import type { JobDetailsCardFragment } from '~/__generated__/graphql';
+
 import { QueueJobDetail } from '../QueueJobDetail';
 
 vi.mock('sonner', () => ({

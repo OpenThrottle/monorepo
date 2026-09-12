@@ -1,5 +1,3 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import {
   ChartContainer,
   ChartLegend,
@@ -9,9 +7,13 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from '@openthrottle/react-router-shadcn';
+import clsx from 'clsx';
+import * as React from 'react';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+
 import type { QueueCardFragment } from '~/__generated__/graphql';
 import { QueueStateChartAxisTick } from '~/routing/queues/components/QueueStateChartAxisTick';
+import type { QueueStateChartView } from '~/routing/queues/utils/queue-state-chart';
 import {
   formatQueueStateChartTick,
   isQueueStateChartView,
@@ -21,7 +23,6 @@ import {
   queueStateChartData,
   queueStateChartHeight,
 } from '~/routing/queues/utils/queue-state-chart';
-import type { QueueStateChartView } from '~/routing/queues/utils/queue-state-chart';
 
 export interface QueueStateChartProps {
   className?: string;

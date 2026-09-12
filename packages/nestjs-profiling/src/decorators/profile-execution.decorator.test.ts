@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { ProfileExecutionResult } from './profile-execution.types';
+
 import { ProfileExecution } from './profile-execution.decorator';
 import { setProfileExecutionReporter } from './profile-execution.reporter';
+import type { ProfileExecutionResult } from './profile-execution.types';
 
 describe('ProfileExecution', () => {
   it('does not capture inputs/output by default', () => {

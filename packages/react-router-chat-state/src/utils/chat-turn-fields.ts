@@ -3,6 +3,7 @@ import type {
   ChatReasoningLevel,
   ChatServiceTier,
 } from '@openthrottle/react-router-chat';
+
 import type { DecodedChatOption } from './chat-model-option';
 
 /**

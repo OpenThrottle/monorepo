@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+
 import { getChartColor, readUnknownRecordValue } from '../chart-config';
 import { useChartConfig } from '../chart-config-context';
 

@@ -1,10 +1,11 @@
+import { Button, Spinner } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 import { useFetcher, useRevalidator } from 'react-router';
-import { Button, Spinner } from '@openthrottle/react-router-shadcn';
-import { useAgentSetupStream } from '~/routing/settings/hooks/useAgentSetupStream';
-import { SETTINGS_AGENTS_COPY } from '~/routing/settings/data/data.copy';
-import type { AgentCliStatus } from '~/routing/settings/data/agent-clis.data';
+
 import type { action as agentSetupAction } from '~/routes/resources.agent-setup';
+import type { AgentCliStatus } from '~/routing/settings/data/agent-clis.data';
+import { SETTINGS_AGENTS_COPY } from '~/routing/settings/data/data.copy';
+import { useAgentSetupStream } from '~/routing/settings/hooks/useAgentSetupStream';
 
 /** Resource-route action path backing the install/update controls. */
 const AGENT_SETUP_ACTION = '/resources/agent-setup';

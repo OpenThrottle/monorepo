@@ -1,12 +1,13 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
+import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
-import { ChatDialogHeader } from '../ChatDialogHeader';
-import type { ChatDialogHeaderProps } from '../ChatDialogHeader';
+
 import type { AgentConversationListItem } from '../../types';
+import type { ChatDialogHeaderProps } from '../ChatDialogHeader';
+import { ChatDialogHeader } from '../ChatDialogHeader';
 
 const CONVERSATIONS: readonly AgentConversationListItem[] = [
   {

@@ -1,6 +1,6 @@
 import { isRecord } from '@openthrottle/nodejs-utils';
-import { APP_NAME, type ThemeMode } from '@openthrottle/react-router-utils';
 import { isThemeId } from '@openthrottle/react-router-shadcn';
+import { APP_NAME, type ThemeMode } from '@openthrottle/react-router-utils';
 import { atomWithStorage, createJSONStorage } from 'jotai/utils';
 import type { SyncStorage } from 'jotai/vanilla/utils/atomWithStorage';
 

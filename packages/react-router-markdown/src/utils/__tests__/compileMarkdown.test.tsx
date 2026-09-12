@@ -1,6 +1,7 @@
 import { render } from '@testing-library/react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, test } from 'vitest';
+
 import type { CompileMarkdownOptions } from '../compileMarkdown';
 import { compileMarkdown, compileMarkdownSync } from '../compileMarkdown';
 

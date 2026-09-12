@@ -1,6 +1,8 @@
 import { describe, expect, test } from 'vitest';
-import { groupTokenUsage } from '../aggregate-token-usage';
+
 import type { UsageTokenUsageRowFragment } from '~/__generated__/graphql';
+
+import { groupTokenUsage } from '../aggregate-token-usage';
 
 const row = (
   overrides: Partial<UsageTokenUsageRowFragment>,

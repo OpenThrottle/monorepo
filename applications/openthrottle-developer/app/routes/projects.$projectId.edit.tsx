@@ -1,23 +1,24 @@
-import * as React from 'react';
-import { z } from 'zod/v3';
 import {
   executeGraphqlWithAuth,
   parseFormData,
 } from '@openthrottle/react-router-graphql';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import { redirect } from 'react-router';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import { GlobalScreen } from '@openthrottle/react-router-ui-global';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import * as React from 'react';
+import { redirect } from 'react-router';
+import { z } from 'zod/v3';
+
+import type { Route } from '@/app/routes/+types/projects.$projectId.edit';
 import {
   GetProjectForEditDocument,
   UpdateProjectDocument,
 } from '~/__generated__/graphql';
 import { UpdateProjectInputSchema } from '~/__generated__/schemas';
+import { SITE_TITLE } from '~/global/config/settings';
 import { ProjectForm } from '~/routing/projects/components/ProjectForm';
 import { ProjectNotFound } from '~/routing/projects/components/ProjectNotFound';
-import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/projects.$projectId.edit';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

@@ -1,9 +1,10 @@
 import type {
-  WorkflowRunContext,
   WorkflowOrchestrator,
+  WorkflowRunContext,
   WorkflowRunResult,
 } from '@openthrottle/openthrottle-agentic-workflow';
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
+
 import { AgenticWorkflowBase } from './agentic-workflow-base';
 import { createAgenticWorkflowRegistry } from './agentic-workflow-base';
 

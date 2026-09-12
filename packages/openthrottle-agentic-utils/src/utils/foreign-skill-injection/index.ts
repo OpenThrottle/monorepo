@@ -11,6 +11,11 @@ export {
   resolveLedgerDir,
   writeLedger,
 } from './ledger.ts';
+export type {
+  EnsureMaterializedOptions,
+  EnsureMaterializedResult,
+  TeardownOptions,
+} from './materialize.ts';
 export { ensureMaterialized, teardown } from './materialize.ts';
 export {
   PERSONAL_SKILLS_DIR_ENV,
@@ -19,10 +24,11 @@ export {
   resolvePersonalSkillsRoot,
 } from './personal-skills-config.ts';
 export type {
-  EnsureMaterializedOptions,
-  EnsureMaterializedResult,
-  TeardownOptions,
-} from './materialize.ts';
+  ForeignSkillInjectionMode,
+  ForeignSkillLedger,
+  ForeignSkillLedgerEntry,
+  GitExcludeOwner,
+} from './types.ts';
 export {
   FOREIGN_SKILL_INJECTION_MODE,
   FOREIGN_SKILL_LEDGER_DIR_ENV,
@@ -30,10 +36,4 @@ export {
   GIT_EXCLUDE_BEGIN_MARKER,
   GIT_EXCLUDE_END_MARKER,
   GIT_EXCLUDE_OWNER,
-} from './types.ts';
-export type {
-  ForeignSkillInjectionMode,
-  GitExcludeOwner,
-  ForeignSkillLedger,
-  ForeignSkillLedgerEntry,
 } from './types.ts';

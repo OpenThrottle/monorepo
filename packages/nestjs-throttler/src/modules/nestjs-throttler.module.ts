@@ -4,17 +4,18 @@ import {
   ThrottlerModule,
   type ThrottlerModuleOptions,
 } from '@nestjs/throttler';
-import { GqlThrottlerGuard } from '../guards/gql-throttler.guard';
-import {
-  applyNestjsThrottlerModuleDefaults,
-  parseNestjsThrottlerModuleOptions,
-  validateNestjsThrottlerModuleOptions,
-} from '../config/nestjs-throttler.options';
+
 import type {
   NestjsThrottlerModuleAsyncOptions,
   NestjsThrottlerModuleOptions,
   ResolvedNestjsThrottlerModuleOptions,
 } from '../config/nestjs-throttler.options';
+import {
+  applyNestjsThrottlerModuleDefaults,
+  parseNestjsThrottlerModuleOptions,
+  validateNestjsThrottlerModuleOptions,
+} from '../config/nestjs-throttler.options';
+import { GqlThrottlerGuard } from '../guards/gql-throttler.guard';
 
 const toThrottlerModuleOptions = (
   resolved: ResolvedNestjsThrottlerModuleOptions,

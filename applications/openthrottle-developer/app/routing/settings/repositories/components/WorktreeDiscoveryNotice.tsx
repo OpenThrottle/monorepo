@@ -1,16 +1,17 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import {
   Button,
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@openthrottle/react-router-shadcn';
+import clsx from 'clsx';
 import { RefreshCwIcon } from 'lucide-react';
+import * as React from 'react';
 import { Link, useRevalidator } from 'react-router';
+
 import { WORKTREE_DISCOVERY_COPY } from '~/routing/settings/repositories/data/data.copy';
-import { summarizeDiscovery } from '~/routing/settings/repositories/utils/discovery-problems';
 import type { DiscoveredWorktreesResult } from '~/routing/settings/repositories/data/types';
+import { summarizeDiscovery } from '~/routing/settings/repositories/utils/discovery-problems';
 
 export interface WorktreeDiscoveryNoticeProps {
   className?: string;

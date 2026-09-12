@@ -1,9 +1,10 @@
-import { render, waitFor } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
-import { IdeRepositorySelector } from '../IdeRepositorySelector';
+
 import type { IdeRepositoryOption } from '../IdeRepositorySelector';
+import { IdeRepositorySelector } from '../IdeRepositorySelector';
 
 const options: IdeRepositoryOption[] = [
   { id: 'r1', label: 'Repo One' },

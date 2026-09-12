@@ -1,10 +1,11 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import { QueueStateBadge } from '../QueueStateBadge';
+
 import type { QueueStateBadgeProps } from '../QueueStateBadge';
+import { QueueStateBadge } from '../QueueStateBadge';
 
 const renderBadge = (props: QueueStateBadgeProps): RenderResult => {
   const Component = () => <QueueStateBadge {...props} />;

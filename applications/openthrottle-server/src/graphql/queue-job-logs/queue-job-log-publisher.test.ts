@@ -1,7 +1,8 @@
-import { queueJobLogTopic } from '@openthrottle/nestjs-graphql';
 import { createMock } from '@golevelup/ts-vitest';
 import type { PubSubEngine } from '@openthrottle/nestjs-graphql';
+import { queueJobLogTopic } from '@openthrottle/nestjs-graphql';
 import { describe, expect, it, vi } from 'vitest';
+
 import { encodeQueueJobLogCursor } from './queue-job-log-cursor';
 import { createQueueJobLogTailPublisher } from './queue-job-log-publisher';
 

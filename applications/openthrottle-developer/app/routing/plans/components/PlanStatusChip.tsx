@@ -1,8 +1,9 @@
-import * as React from 'react';
 import clsx from 'clsx';
-import { isPlanStatusKey } from '~/routing/plans/utils/utils.plans';
+import * as React from 'react';
+
 import { PLAN_STATUS_DOT_COLOR } from '~/routing/plans/data/plan-status-dot-color';
 import { planStatusValues } from '~/routing/plans/types';
+import { isPlanStatusKey } from '~/routing/plans/utils/utils.plans';
 
 export interface PlanStatusChipProps {
   className?: string;

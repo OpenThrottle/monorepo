@@ -2,13 +2,14 @@ import { mkdtempSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { describe, expect, test } from 'vitest';
-import type { RalphPlanRunTuningInput } from './plan.input';
+
 import {
   buildRunPlanOrchestratorJobData,
   parseEnqueueRalphTuning,
   ralphTuningForChildJob,
   validateWorkingDirectory,
 } from './enqueue-plan-ralph-tuning';
+import type { RalphPlanRunTuningInput } from './plan.input';
 
 /**
  * @description Creates a temp directory that looks like an Nx workspace root (has nx.json).

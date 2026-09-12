@@ -5,6 +5,7 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
+
 import { ProcessMetricsService } from '../../metrics/process-metrics.service';
 import { HealthResolver } from './health.resolver';
 import { HealthService } from './health.service';

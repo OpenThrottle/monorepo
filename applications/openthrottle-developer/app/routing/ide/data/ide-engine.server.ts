@@ -1,3 +1,8 @@
+import { toContainerPath } from '@openthrottle/openthrottle-agentic-utils';
+import type {
+  SymbolTarget,
+  WorkspaceConfig,
+} from '@openthrottle/openthrottle-ide';
 import {
   findDefinition,
   findReferences,
@@ -5,11 +10,6 @@ import {
   listFiles,
   searchText,
 } from '@openthrottle/openthrottle-ide';
-import type {
-  SymbolTarget,
-  WorkspaceConfig,
-} from '@openthrottle/openthrottle-ide';
-import { toContainerPath } from '@openthrottle/openthrottle-agentic-utils';
 import type {
   IdeExportsResult,
   IdeRepositoryRef,

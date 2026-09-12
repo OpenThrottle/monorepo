@@ -1,16 +1,18 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
+import { GLOBAL_POPOVER_COPY } from '@openthrottle/react-router-ui-global';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
+
 import {
-  RolloutFlagKind,
   type RolloutFlagFieldsFragment,
+  RolloutFlagKind,
 } from '~/__generated__/graphql';
-import { GLOBAL_POPOVER_COPY } from '@openthrottle/react-router-ui-global';
 import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
-import { RolloutFlagsTable } from '../RolloutFlagsTable';
+
 import type { RolloutFlagsTableProps } from '../RolloutFlagsTable';
+import { RolloutFlagsTable } from '../RolloutFlagsTable';
 
 const flags: RolloutFlagFieldsFragment[] = [
   {

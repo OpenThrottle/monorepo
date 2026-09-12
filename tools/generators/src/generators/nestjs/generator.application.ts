@@ -1,9 +1,10 @@
-import { join } from 'path';
 import type { Tree } from '@nx/devkit';
 import { formatFiles, generateFiles, logger } from '@nx/devkit';
-import { getTargetName, getTargetPort } from '../../utils/questions';
-import { onApplicationSuccess } from '../../utils/messages';
+import { join } from 'path';
+
 import { getGithubUsername } from '../../utils';
+import { onApplicationSuccess } from '../../utils/messages';
+import { getTargetName, getTargetPort } from '../../utils/questions';
 import { REGEX_SLUG } from '../../utils/regex';
 
 export interface NestJSApplicationGeneratorSchema {

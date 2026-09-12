@@ -3,9 +3,10 @@
  * `/bin/sh` command-misparse output sanitizer (plan 65a8dd25).
  */
 
-import { describe, expect, it } from 'vitest';
-import { sanitizeRalphShellNoise } from '../ralph-shell-misparse';
 import { WORKFLOW_PROMPT_SHELL_COMMAND_GUARDRAIL } from '@openthrottle/openthrottle-agentic-utils';
+import { describe, expect, it } from 'vitest';
+
+import { sanitizeRalphShellNoise } from '../ralph-shell-misparse';
 
 const TASK_UUID = '0c8e76bd-a82c-4f49-b5f8-a9a65c047430';
 

@@ -1,7 +1,3 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { Link } from 'react-router';
-import { ENV_SOURCE } from '@openthrottle/react-router-utils';
 import type { ServerHealthObject } from '@openthrottle/openthrottle-developer-codegen';
 import {
   SidebarFooter,
@@ -9,6 +5,11 @@ import {
   SidebarMenu,
   SidebarMenuItem,
 } from '@openthrottle/react-router-shadcn';
+import { ENV_SOURCE } from '@openthrottle/react-router-utils';
+import clsx from 'clsx';
+import * as React from 'react';
+import { Link } from 'react-router';
+
 import {
   deriveOverallHealthStatus,
   healthStatusColorClass,

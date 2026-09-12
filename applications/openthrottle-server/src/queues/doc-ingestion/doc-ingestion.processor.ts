@@ -5,22 +5,24 @@
  */
 
 import { spawn } from 'node:child_process';
+
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { OnApplicationShutdown, OnModuleInit } from '@nestjs/common';
-import { LoggerService } from '@openthrottle/nestjs-modules';
 import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
+import { LoggerService } from '@openthrottle/nestjs-modules';
+import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 import {
   computeDocIngestionDiff,
   deindexDocumentationByPath,
   removePriorState,
   savePriorState,
 } from '@tools/workflows/doc-ingestion';
+
 import { DOC_INGESTION_QUEUE_NAME } from './doc-ingestion.constants';
 import type {
   DocIngestionJob,
   DocIngestionJobResult,
 } from './doc-ingestion.types';
-import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 
 const CONCURRENCY = 1;
 

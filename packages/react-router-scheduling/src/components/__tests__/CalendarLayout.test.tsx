@@ -2,8 +2,8 @@ import { render, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
-import * as useScheduleModule from '../../hooks/useSchedule';
 import type { UseScheduleResult } from '../../hooks/useSchedule';
+import * as useScheduleModule from '../../hooks/useSchedule';
 import { CalendarView } from '../../types';
 import { CalendarLayout } from '../CalendarLayout';
 

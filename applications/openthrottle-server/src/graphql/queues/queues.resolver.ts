@@ -5,24 +5,25 @@
  */
 
 import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
+
+import { PLANS_QUEUE_NAME } from '../../queues/plans/plans.constants';
 import { CleanQueueInput } from './clean-queue.input';
 import { CleanQueueResultObject } from './clean-queue-result.object';
 import { CreateQueueInput } from './create-queue.input';
 import { CreateQueueResultObject } from './create-queue-result.object';
 import { DuplicateJobInput } from './duplicate-job.input';
 import { DuplicateJobResultObject } from './duplicate-job-result.object';
-import { EnqueueDocIngestionInput } from './enqueue-doc-ingestion.input';
 import { EnqueueAgenticTestResultObject } from './enqueue-agentic-test-result.object';
+import { EnqueueDocIngestionInput } from './enqueue-doc-ingestion.input';
 import { EnqueueDocIngestionResultObject } from './enqueue-doc-ingestion-result.object';
 import { JobObject } from './job.object';
-import { JobsResultObject, QueueDetailsObject } from './queue-details.object';
 import { parseTaskRunMetricsFromReturnvalue } from './parse-task-run-metrics';
-import { PLANS_QUEUE_NAME } from '../../queues/plans/plans.constants';
 import { QueueControlInput } from './queue-control.input';
 import { QueueControlResultObject } from './queue-control-result.object';
 import { QueueDetailsInput } from './queue-details.input';
-import { QueuesService } from './queues.service';
+import { JobsResultObject, QueueDetailsObject } from './queue-details.object';
 import { QueueStatsObject } from './queue-stats.object';
+import { QueuesService } from './queues.service';
 import { RemoveRepeatableJobInput } from './remove-repeatable-job.input';
 import { RemoveRepeatableJobResultObject } from './remove-repeatable-job-result.object';
 import { RepeatableJobObject } from './repeatable-job.object';

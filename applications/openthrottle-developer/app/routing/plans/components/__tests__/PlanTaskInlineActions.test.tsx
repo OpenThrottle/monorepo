@@ -1,12 +1,14 @@
-import * as React from 'react';
+import type { RenderResult } from '@testing-library/react';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { RenderResult } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { PlanTaskInlineActions } from '../PlanTaskInlineActions';
-import type { PlanTaskInlineActionsProps } from '../PlanTaskInlineActions';
+
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
+
+import type { PlanTaskInlineActionsProps } from '../PlanTaskInlineActions';
+import { PlanTaskInlineActions } from '../PlanTaskInlineActions';
 
 const task = (
   overrides: Partial<PlanTaskRowFragment> = {},

@@ -1,15 +1,17 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import {
   EditorPresenceState,
   WorkspaceEditorId,
 } from '~/__generated__/graphql';
 import { buildEditorPresenceIndex } from '~/routing/settings/utils/workspace-editor-presence-status';
-import { WorkspaceEditorMultiSelect } from '../WorkspaceEditorMultiSelect';
+
 import type { WorkspaceEditorMultiSelectProps } from '../WorkspaceEditorMultiSelect';
+import { WorkspaceEditorMultiSelect } from '../WorkspaceEditorMultiSelect';
 
 describe('WorkspaceEditorMultiSelect Component', () => {
   let component: RenderResult;

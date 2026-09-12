@@ -2,14 +2,14 @@
  * @description Request-scoped DataLoaders for TasksResolver (plan and project by id). One instance per GraphQL request to batch and cache within the request and avoid N+1.
  */
 
-import {
-  type Plan,
-  type Project,
-  PlansService,
-  ProjectsService,
-  createEntityByIdLoader,
-} from '@openthrottle/nestjs-repositories';
 import { Injectable, Scope } from '@nestjs/common';
+import {
+  createEntityByIdLoader,
+  type Plan,
+  PlansService,
+  type Project,
+  ProjectsService,
+} from '@openthrottle/nestjs-repositories';
 import type DataLoader from 'dataloader';
 
 /**

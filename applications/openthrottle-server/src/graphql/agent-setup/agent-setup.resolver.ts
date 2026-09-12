@@ -31,13 +31,14 @@ import {
   CurrentUser,
   Public,
 } from '@openthrottle/nestjs-auth';
-import { isDriverId } from '@openthrottle/openthrottle-drivers';
-import type { AgentSetupMode } from '@openthrottle/openthrottle-agentic-utils';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 import {
   AgentCliPreferencesService,
   RolesService,
 } from '@openthrottle/nestjs-repositories';
+import type { AgentSetupMode } from '@openthrottle/openthrottle-agentic-utils';
+import { isDriverId } from '@openthrottle/openthrottle-drivers';
+
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
 import { readAgentCliInstallEnabledFromConfig } from './agent-setup.config';
 import {

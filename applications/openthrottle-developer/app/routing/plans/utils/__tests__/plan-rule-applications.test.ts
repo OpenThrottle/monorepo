@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { attentionRank, renderDetails } from '../plan-rule-applications';
 
 describe('attentionRank', () => {

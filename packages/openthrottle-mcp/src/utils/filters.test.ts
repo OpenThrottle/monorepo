@@ -4,6 +4,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
+
 import type { TaskListItem } from '../tools/tasks.ts';
 import { filterTasksByCategory } from './filters.ts';
 

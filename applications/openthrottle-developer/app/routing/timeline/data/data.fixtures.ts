@@ -10,6 +10,7 @@
  */
 
 import { TimelineMarkerKind, TimelineSpanKind } from '~/__generated__/graphql';
+
 import type { TimelineMarker, TimelineSpan } from '../types';
 
 const HOUR = 60 * 60 * 1000;

@@ -1,16 +1,17 @@
 import '../utils/temporal-bootstrap';
 
 import { createCalendar } from '@schedule-x/calendar';
-import { createSchedulingPlugins } from '../utils/plugins';
-import { DEFAULT_VIEW } from '../config/defaults';
-import { fromEngineEvent, toEngineEvent } from '../utils/events';
-import { isHostDark } from '../utils/dark-mode';
-import { toEngineCallbacks } from '../utils/callbacks';
-import { resolveViews } from '../utils/views';
-import { toPlainDate } from '../utils/datetime';
 import { useRef } from 'react';
+
+import { DEFAULT_VIEW } from '../config/defaults';
 import type { CalendarEvent, ScheduleConfig } from '../types';
+import { toEngineCallbacks } from '../utils/callbacks';
+import { isHostDark } from '../utils/dark-mode';
+import { toPlainDate } from '../utils/datetime';
+import { fromEngineEvent, toEngineEvent } from '../utils/events';
 import type { SchedulingPlugins } from '../utils/plugins';
+import { createSchedulingPlugins } from '../utils/plugins';
+import { resolveViews } from '../utils/views';
 
 /** The Schedule-X app instance backing a schedule. */
 export type ScheduleInstance = ReturnType<typeof createCalendar>;

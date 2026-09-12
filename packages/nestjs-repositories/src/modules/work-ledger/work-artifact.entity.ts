@@ -9,6 +9,7 @@ import {
   Entity,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+
 import type {
   WorkArtifactSource,
   WorkArtifactVerification,

@@ -1,19 +1,20 @@
 import { createMock } from '@golevelup/ts-vitest';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import type {
-  PlansService,
   PlanRunsService,
+  PlansService,
   RepositoryCheckoutsService,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
 import {
-  Task,
   type Plan,
   type RepositoryCheckout,
+  Task,
 } from '@openthrottle/nestjs-repositories';
 import { isRecord } from '@openthrottle/nodejs-utils';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { Queue } from 'bullmq';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import type { NotificationsService } from '../../notifications/notifications.service';
 import type { RunPlanJobData } from '../../queues/plans/plans.types';
 import type { QueuesService } from '../queues/queues.service';

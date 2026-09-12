@@ -1,5 +1,6 @@
 import { Global, Module } from '@nestjs/common';
 import { PubSub, type PubSubEngine } from 'graphql-subscriptions';
+
 import { PUB_SUB } from './pubsub.constants';
 
 /**

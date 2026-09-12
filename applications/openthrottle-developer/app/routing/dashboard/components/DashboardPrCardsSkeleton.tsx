@@ -1,6 +1,6 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import { Skeleton } from '@openthrottle/react-router-shadcn';
+import clsx from 'clsx';
+import * as React from 'react';
 
 export interface DashboardPrCardsSkeletonProps {
   className?: string;

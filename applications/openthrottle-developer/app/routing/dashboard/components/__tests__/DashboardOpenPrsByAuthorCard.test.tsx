@@ -1,14 +1,16 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { DashboardOpenPrsByAuthorCard } from '../DashboardOpenPrsByAuthorCard';
-import type { DashboardOpenPrsByAuthorCardProps } from '../DashboardOpenPrsByAuthorCard';
+
 import {
   PRS_BY_AUTHOR_CHART_CONFIG,
   PRS_BY_AUTHOR_CHART_SERIES,
 } from '~/routing/dashboard/utils/prs-by-author-chart';
+
+import type { DashboardOpenPrsByAuthorCardProps } from '../DashboardOpenPrsByAuthorCard';
+import { DashboardOpenPrsByAuthorCard } from '../DashboardOpenPrsByAuthorCard';
 
 const mockGithubStats = {
   closedPrCountByAuthor: [

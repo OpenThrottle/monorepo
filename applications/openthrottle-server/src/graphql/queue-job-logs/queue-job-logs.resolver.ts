@@ -23,15 +23,16 @@
  * not run on the ws connection).
  */
 
-import { Throttle } from '@nestjs/throttler';
 import { ForbiddenException, Inject } from '@nestjs/common';
 import { Args, Context, Query, Resolver, Subscription } from '@nestjs/graphql';
+import { Throttle } from '@nestjs/throttler';
+import { Public } from '@openthrottle/nestjs-auth';
 import {
   PUB_SUB,
-  queueJobLogTopic,
   type PubSubEngine,
+  queueJobLogTopic,
 } from '@openthrottle/nestjs-graphql';
-import { Public } from '@openthrottle/nestjs-auth';
+
 import { QueueJobLogEventObject } from './queue-job-log-event.object';
 import { QueueJobLogPageObject } from './queue-job-log-page.object';
 import { QueueJobLogsInput } from './queue-job-logs.input';

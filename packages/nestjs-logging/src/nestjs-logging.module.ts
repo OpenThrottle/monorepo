@@ -1,5 +1,6 @@
 import { type DynamicModule, Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
+
 import {
   applyNestjsLoggingModuleDefaults,
   DEFAULT_NESTJS_LOGGING_WS_NAMESPACE,

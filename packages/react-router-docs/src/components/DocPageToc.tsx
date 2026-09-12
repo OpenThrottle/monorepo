@@ -1,5 +1,6 @@
-import * as React from 'react';
 import clsx from 'clsx';
+import * as React from 'react';
+
 import type { DocHeading } from '../utils/docHeadings';
 
 export interface DocPageTocProps {

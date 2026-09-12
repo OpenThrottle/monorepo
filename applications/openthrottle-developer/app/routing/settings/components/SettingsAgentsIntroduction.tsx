@@ -1,6 +1,6 @@
-import * as React from 'react';
-import { HatGlassesIcon } from 'lucide-react';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
+import { HatGlassesIcon } from 'lucide-react';
+import * as React from 'react';
 
 export interface SettingsAgentsIntroductionProps {
   /** ISO-8601 timestamp of the discovery scan, shown as "last checked". */

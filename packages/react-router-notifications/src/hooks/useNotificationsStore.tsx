@@ -1,4 +1,5 @@
 import { useContext } from 'react';
+
 import { NotificationsStoreContext } from '../data/index';
 
 export interface UseNotificationsStoreOptions {}

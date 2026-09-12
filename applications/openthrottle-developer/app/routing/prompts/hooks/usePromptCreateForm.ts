@@ -1,6 +1,7 @@
+import type { PromptType } from '@openthrottle/react-router-editor';
 import * as React from 'react';
 import { useFetcher } from 'react-router';
-import type { PromptType } from '@openthrottle/react-router-editor';
+
 import { PROMPTS_DEFAULT_CONTENT } from '~/routing/prompts/config';
 
 export interface UsePromptCreateFormResult {

@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
-import { symbolKey } from '../symbolKey';
+
 import type { ExportedSymbol } from '../../data/view-models';
+import { symbolKey } from '../symbolKey';
 
 describe('symbolKey', () => {
   test('builds a stable pipe-delimited key from path, line, name, and isDefault', () => {

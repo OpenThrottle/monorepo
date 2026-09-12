@@ -1,9 +1,9 @@
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
-import type { ExecuteGraphqlOptionsV2 } from '@openthrottle/nodejs-graphql';
 import type {
   AgenticWorkflowExecuteGraphqlV2,
   AgenticWorkflowWorkerGraphqlAuth,
 } from '@openthrottle/nestjs-agentic-workflow';
+import type { ExecuteGraphqlOptionsV2 } from '@openthrottle/nodejs-graphql';
 import type { WorkflowRalphOrchestratorDeps } from '@openthrottle/openthrottle-agentic-ralph';
 import { createCursorWorkflowRalphIterationRunner } from '@tools/workflows';
 

@@ -3,6 +3,9 @@
  */
 
 import { z } from 'zod';
+
+import { PLAN_RUN_CONFIG_SNAPSHOT_VERSION } from './plan-run-config-snapshot.constants.ts';
+import type { PlanRunConfigSnapshot } from './plan-run-config-snapshot.types.ts';
 import {
   MAX_PLAN_RUN_ITERATIONS,
   MAX_PLAN_RUN_RALPH_STRING_FIELD_LEN,
@@ -10,8 +13,6 @@ import {
   PLAN_RUN_CONFIG_UUID_REGEX,
   PLAN_RUN_KNOWN_BACKENDS,
 } from './plan-run-config-storage.constants.ts';
-import { PLAN_RUN_CONFIG_SNAPSHOT_VERSION } from './plan-run-config-snapshot.constants.ts';
-import type { PlanRunConfigSnapshot } from './plan-run-config-snapshot.types.ts';
 
 const trimToMax = (max: number) =>
   z

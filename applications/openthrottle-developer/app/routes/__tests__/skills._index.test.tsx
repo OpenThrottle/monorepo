@@ -1,18 +1,20 @@
-import * as React from 'react';
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub, useLocation } from 'react-router';
 import { describe, expect, test } from 'vitest';
+
+import type { Route } from '@/app/routes/+types/skills._index';
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
-import type { SkillsIndexUsageData } from '~/routing/skills/data/skills-index-usage';
 import {
   SKILLS_EMPTY_COPY,
   SKILLS_ONBOARDING,
 } from '~/routing/skills/data/data.copy';
+import type { SkillsIndexUsageData } from '~/routing/skills/data/skills-index-usage';
 import { buildRootMatch } from '~/testing/root-match-fixture';
+
 import Component from '../skills._index';
-import type { Route } from '@/app/routes/+types/skills._index';
 
 const buildEntry = (
   index: number,

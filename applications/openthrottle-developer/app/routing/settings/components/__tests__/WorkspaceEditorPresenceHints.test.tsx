@@ -1,15 +1,17 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
+
+import type { GetEditorPresenceQuery } from '~/__generated__/graphql';
 import {
   EditorPresenceState,
   WorkspaceEditorId,
 } from '~/__generated__/graphql';
-import { WorkspaceEditorPresenceHints } from '../WorkspaceEditorPresenceHints';
+
 import type { WorkspaceEditorPresenceHintsProps } from '../WorkspaceEditorPresenceHints';
-import type { GetEditorPresenceQuery } from '~/__generated__/graphql';
+import { WorkspaceEditorPresenceHints } from '../WorkspaceEditorPresenceHints';
 
 type PresenceEntry =
   GetEditorPresenceQuery['editorPresence']['editors'][number];

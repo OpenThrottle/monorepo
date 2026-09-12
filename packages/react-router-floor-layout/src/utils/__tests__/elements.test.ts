@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  FloorElementType,
-  FloorLayer,
   type FloorElement,
   floorElementSchema,
+  FloorElementType,
+  FloorLayer,
 } from '../../types';
 import {
   createFloorElement,

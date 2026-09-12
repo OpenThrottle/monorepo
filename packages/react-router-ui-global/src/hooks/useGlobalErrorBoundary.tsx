@@ -1,17 +1,18 @@
-import * as React from 'react';
-import { isRouteErrorResponse, useRouteError } from 'react-router';
 import { toast } from '@openthrottle/react-router-shadcn';
 import { IS_BROWSER } from '@openthrottle/react-router-utils';
+import * as React from 'react';
+import { isRouteErrorResponse, useRouteError } from 'react-router';
+
 import {
   bucketRouteHttpStatus,
   classifyClientError,
+  type ClientErrorKind,
   createIncidentReferenceId,
   incidentClassificationSummary,
   inferJavascriptErrorSubtype,
   isClientStackToggleEligible,
   isUsableRollbarClientToken,
   readSafeClientEnvironmentTags,
-  type ClientErrorKind,
 } from '../utils/client-error-diagnostics';
 import {
   reportJavaScriptErrorToRollbar,

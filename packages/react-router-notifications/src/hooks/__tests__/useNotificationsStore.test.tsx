@@ -1,6 +1,7 @@
-import * as React from 'react';
 import { renderHook } from '@testing-library/react';
+import * as React from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
+
 import { NotificationsStoreProvider } from '../../components/NotificationsStoreProvider';
 import { useNotificationsStore } from '../useNotificationsStore';
 

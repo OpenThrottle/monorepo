@@ -1,8 +1,10 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import { Button } from '@openthrottle/react-router-shadcn';
 import { GlobalToolbarSearch } from '@openthrottle/react-router-ui-global';
+import clsx from 'clsx';
+import { FolderPlusIcon } from 'lucide-react';
+import * as React from 'react';
 import { Link, useSearchParams } from 'react-router';
+
 import { ProjectsSortDropdown } from '~/routing/projects/components/ProjectsSortDropdown';
 import {
   PROJECTS_SORT_BY,
@@ -10,7 +12,6 @@ import {
   type ProjectsSortBy,
   type ProjectsSortOrder,
 } from '~/routing/prompts/config/types';
-import { FolderPlusIcon } from 'lucide-react';
 
 type ViewMode = 'table' | 'card';
 

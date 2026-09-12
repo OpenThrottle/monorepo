@@ -2,7 +2,9 @@ import { act, render } from '@testing-library/react';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { afterEach, describe, expect, test, vi } from 'vitest';
+
 import { QueueJobLogLevel } from '~/__generated__/graphql';
+
 import type { QueueJobLogEvent } from '../useQueueJobLogs';
 import { useQueueJobLogs } from '../useQueueJobLogs';
 

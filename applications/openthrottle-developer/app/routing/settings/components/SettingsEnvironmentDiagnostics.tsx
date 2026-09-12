@@ -1,17 +1,18 @@
-import * as React from 'react';
 import { Badge, Button } from '@openthrottle/react-router-shadcn';
-import { Link } from 'react-router';
 import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
-import { SETTINGS_PORTS_TROUBLESHOOTING_FRAGMENT_ID } from './SettingsPortsTroubleshootingCard';
+import { MonitorCloudIcon } from 'lucide-react';
+import * as React from 'react';
+import { Link } from 'react-router';
+
+import { URL_MATRIX_ROWS } from '../data/url-matrix-rows';
+import { useSettingsEnvironmentDiagnostics } from '../hooks/useSettingsEnvironmentDiagnostics';
+import type { SettingsDiagnosticsLoaderData } from '../utils/settings-diagnostics-loader-data';
 import {
   VITE_DEVTOOLS_DOC_HREF,
   VITE_DEVTOOLS_DOC_PROFILING_HREF,
   VITE_DEVTOOLS_DOC_QUICK_REF_HREF,
 } from '../utils/settings-docs-links';
-import { URL_MATRIX_ROWS } from '../data/url-matrix-rows';
-import { useSettingsEnvironmentDiagnostics } from '../hooks/useSettingsEnvironmentDiagnostics';
-import type { SettingsDiagnosticsLoaderData } from '../utils/settings-diagnostics-loader-data';
-import { MonitorCloudIcon } from 'lucide-react';
+import { SETTINGS_PORTS_TROUBLESHOOTING_FRAGMENT_ID } from './SettingsPortsTroubleshootingCard';
 
 export interface SettingsEnvironmentDiagnosticsProps extends SettingsDiagnosticsLoaderData {
   className?: string;

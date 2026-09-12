@@ -2,6 +2,7 @@ import type { Provider } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { Test } from '@nestjs/testing';
 import { describe, expect, it } from 'vitest';
+
 import { NestjsThrottlerError } from '../config/nestjs-throttler.error';
 import {
   applyNestjsThrottlerModuleDefaults,

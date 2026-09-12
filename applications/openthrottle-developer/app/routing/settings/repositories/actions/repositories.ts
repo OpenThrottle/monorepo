@@ -3,10 +3,8 @@ import {
   parseFormData,
 } from '@openthrottle/react-router-graphql';
 import { z } from 'zod/v3';
-import {
-  AddWorkspaceFolderInputSchema,
-  CloneRepositoryInputSchema,
-} from '~/__generated__/schemas';
+
+import type { Route } from '@/app/routes/+types/settings.repositories._index';
 import {
   AddWorkspaceFolderDocument,
   BrowseWorkspaceDirectoryDocument,
@@ -15,7 +13,10 @@ import {
   PickFolderNativeDocument,
   RefreshCheckoutDocument,
 } from '~/__generated__/graphql';
-import type { Route } from '@/app/routes/+types/settings.repositories._index';
+import {
+  AddWorkspaceFolderInputSchema,
+  CloneRepositoryInputSchema,
+} from '~/__generated__/schemas';
 
 export const addFolder = async (args: Route.ActionArgs, formData: FormData) => {
   const parsed = parseFormData(formData, AddWorkspaceFolderInputSchema(), {

@@ -1,6 +1,7 @@
 import { act, render } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
+
 import { usePlanOutputStream } from '../usePlanOutputStream';
 
 // Controllable fake graphql-ws client: capture the subscription sink so the test

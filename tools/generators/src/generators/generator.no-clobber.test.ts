@@ -1,6 +1,7 @@
-import { describe, expect, beforeEach, test, vi } from 'vitest';
 import type { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import { componentGenerator } from './react/generator.component';
 import { generatorReactRouterComponent } from './react-router/generator.component';
 

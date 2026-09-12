@@ -1,8 +1,10 @@
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
+
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 import { SKILL_DETAIL_COPY } from '~/routing/skills/data/data.copy';
-import { useSkillDetail, type SkillDetailOptions } from '../useSkillDetail';
+
+import { type SkillDetailOptions, useSkillDetail } from '../useSkillDetail';
 
 const baseEntry = (
   overrides: Partial<RepoSkillEntry> = {},

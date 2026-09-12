@@ -24,13 +24,13 @@ import { createHash } from 'node:crypto';
 
 import type { SnapshotManifest } from './manifest';
 import { assertTableExportable } from './manifest';
-import type { DatabaseSchema } from './schema';
 import {
   DEMO_EMAIL_DOMAIN,
   DEMO_HOME_PREFIX,
   DEMO_HOSTNAME,
   ORGANISATION_ALIASES,
 } from './sanitize.data';
+import type { DatabaseSchema } from './schema';
 
 const EMAIL_PATTERN = new RegExp(
   `\\b[A-Za-z0-9._%+-]+@(?!${DEMO_EMAIL_DOMAIN.replace('.', '\\.')})[A-Za-z0-9.-]+\\.[A-Za-z]{2,}\\b`,

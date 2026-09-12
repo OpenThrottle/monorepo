@@ -1,12 +1,14 @@
-import * as React from 'react';
-import { screen } from '@testing-library/react';
-import { describe, expect, test, vi } from 'vitest';
 import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
-import CreateNote, { loader } from '../notes.create';
-import { buildRootMatch } from '~/testing/root-match-fixture';
 import { createTestRouterContext } from '@openthrottle/react-router-testing';
-import { renderRoutesStub } from '~/testing/route-fixtures';
+import { screen } from '@testing-library/react';
+import * as React from 'react';
+import { describe, expect, test, vi } from 'vitest';
+
 import type { Route } from '@/app/routes/+types/notes.create';
+import { buildRootMatch } from '~/testing/root-match-fixture';
+import { renderRoutesStub } from '~/testing/route-fixtures';
+
+import CreateNote, { loader } from '../notes.create';
 
 vi.mock('@openthrottle/react-router-graphql', async (importOriginal) => {
   const actual =

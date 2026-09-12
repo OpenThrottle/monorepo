@@ -8,13 +8,13 @@
  */
 
 import DataLoader from 'dataloader';
-import { In } from 'typeorm';
 import type {
   FindOptionsOrder,
   FindOptionsWhere,
   ObjectLiteral,
   Repository,
 } from 'typeorm';
+import { In } from 'typeorm';
 
 /**
  * @description Anything that exposes a TypeORM repository — every `*Service` in

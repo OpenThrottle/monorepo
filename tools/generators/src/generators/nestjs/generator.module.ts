@@ -1,4 +1,3 @@
-import { join } from 'path';
 import type { Tree } from '@nx/devkit';
 import {
   createProjectGraphAsync,
@@ -6,6 +5,8 @@ import {
   generateFiles,
   logger,
 } from '@nx/devkit';
+import { join } from 'path';
+
 import { getCommonVariables } from '../../utils/index';
 import { getNestJSApplication } from '../../utils/projects';
 import { getTargetName } from '../../utils/questions';

@@ -1,5 +1,7 @@
 import { describe, expect, test } from 'vitest';
+
 import type { QueueCardFragment } from '~/__generated__/graphql';
+
 import { queueDetailHref, queueRowId } from '../queues-table';
 
 const queue = (

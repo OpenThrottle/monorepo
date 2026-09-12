@@ -1,10 +1,11 @@
+import { logger } from '@nx/devkit';
+import { execSync } from 'child_process';
 import type { Dirent } from 'fs';
 import { readdirSync } from 'fs';
-import { execSync } from 'child_process';
+import { camelCase, kebabCase, upperFirst } from 'lodash';
 import { join } from 'path';
 import pluralize from 'pluralize';
-import { camelCase, kebabCase, upperFirst } from 'lodash';
-import { logger } from '@nx/devkit';
+
 import { getProjectsByTag } from './projects';
 
 /**

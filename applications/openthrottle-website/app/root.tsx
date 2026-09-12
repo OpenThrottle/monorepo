@@ -1,19 +1,9 @@
-import { Analytics } from '@vercel/analytics/react';
-import * as React from 'react';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import {
   APP_URL,
   getEnvironment,
   getPublicEnv,
 } from '@openthrottle/react-router-utils';
-import {
-  Links,
-  Meta,
-  Outlet,
-  Scripts,
-  ScrollRestoration,
-  useRouteLoaderData,
-} from 'react-router';
-import type { ShouldRevalidateFunction } from 'react-router';
 import {
   artwork,
   buildOrganizationJsonLd,
@@ -26,10 +16,21 @@ import {
   serializeJsonLd,
   useNonce,
 } from '@openthrottle/react-router-utils';
-import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import { Analytics } from '@vercel/analytics/react';
+import * as React from 'react';
+import type { ShouldRevalidateFunction } from 'react-router';
+import {
+  Links,
+  Meta,
+  Outlet,
+  Scripts,
+  ScrollRestoration,
+  useRouteLoaderData,
+} from 'react-router';
+
+import type { Route } from '@/app/+types/root';
 import { SITE_TITLE } from '~/global/config/settings';
 import stylesheet from '~/styles.css?url';
-import type { Route } from '@/app/+types/root';
 
 export const links: Route.LinksFunction = () => {
   return [{ href: stylesheet, rel: 'stylesheet' }];

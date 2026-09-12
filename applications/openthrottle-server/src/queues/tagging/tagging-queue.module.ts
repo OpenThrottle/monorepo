@@ -1,12 +1,13 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { GitHubModule } from '@openthrottle/nestjs-github';
+import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+
 import { PlanRulesQueueProducerModule } from '../plan-rules/plan-rules-queue-producer.module';
+import { TaggingProcessor } from './tagging.processor';
 import { taggingModelProviderFactory } from './tagging-model-providers';
 import { TaggingQueueProducerModule } from './tagging-queue-producer.module';
-import { TaggingProcessor } from './tagging.processor';
 
 /**
  * @description Processor half of the tagging queue: the WorkerHost for the

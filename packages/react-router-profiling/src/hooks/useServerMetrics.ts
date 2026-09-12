@@ -3,6 +3,7 @@
  */
 
 import * as React from 'react';
+
 import { getMetricsApiBaseUrl } from '../config/metrics-api';
 import { fetchServerMetrics } from '../data/fetch-server-metrics';
 import type { ProcessMetricsSnapshot } from '../data/metrics-types';

@@ -1,15 +1,16 @@
 import './load-env';
 
-import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
+import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
+import { resolveQueuePrefix } from '@openthrottle/nestjs-bullmq';
+import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   createProfileExecutionFileWriter,
   setProfileExecutionReporter,
 } from '@openthrottle/nestjs-profiling';
-import { LoggerService } from '@openthrottle/nestjs-modules';
 import { getCorsOptions } from '@openthrottle/nestjs-rbac';
-import { resolveQueuePrefix } from '@openthrottle/nestjs-bullmq';
+
 import { buildAppModule } from './app.module';
 import { PROCESS_ROLES, resolveProcessRole } from './config/process-role';
 

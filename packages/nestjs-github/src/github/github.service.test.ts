@@ -1,8 +1,9 @@
-import { describe, expect, test, vi } from 'vitest';
-import type { ConfigService } from '@nestjs/config';
-import { BadGatewayException, GatewayTimeoutException } from '@nestjs/common';
 import { createMock } from '@golevelup/ts-vitest';
+import { BadGatewayException, GatewayTimeoutException } from '@nestjs/common';
+import type { ConfigService } from '@nestjs/config';
 import { asMock } from '@openthrottle/nestjs-testing';
+import { describe, expect, test, vi } from 'vitest';
+
 import {
   GITHUB_REQUEST_TIMEOUT_DEFAULT_MS,
   GitHubService,

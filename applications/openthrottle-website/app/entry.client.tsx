@@ -1,7 +1,7 @@
 import * as React from 'react';
-import { HydratedRouter } from 'react-router/dom';
 import { startTransition, StrictMode } from 'react';
 import { hydrateRoot } from 'react-dom/client';
+import { HydratedRouter } from 'react-router/dom';
 
 /**
  * By default, React Router will handle hydrating your app on the client for you.

@@ -3,6 +3,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import type { CursorAgentChunk } from '../../bin/run-iteration';
 
 const runIterationAsyncMock = vi.hoisted(() =>

@@ -1,14 +1,14 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import {
   getOpenThrottleRoot,
   OPENTHROTTLE_POSTGRES_URL_ENV,
   WORKFLOW_RALPH_OT_ROOT_ENV,
 } from '@openthrottle/openthrottle-agentic-utils';
-import { WORKFLOW_RALPH_TRANSPORT_ENV } from '../workflow-transport.ts';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+
 import {
   applyWorkflowRalphSpawnIdentityOverrides,
   buildWorkflowRalphSpawnEnv,
@@ -16,6 +16,7 @@ import {
   WORKFLOW_RALPH_SPAWN_HOME_ENV,
   WORKFLOW_RALPH_SPAWN_XDG_CONFIG_HOME_ENV,
 } from '../../config/workflow-ralph-spawn-env.ts';
+import { WORKFLOW_RALPH_TRANSPORT_ENV } from '../workflow-transport.ts';
 
 /** Temp dir without a node_modules/.bin so OT bin resolution is a no-op. */
 let emptyRoot: string;

@@ -1,9 +1,11 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
-import { SettingsAgentsToolbar } from '../SettingsAgentsToolbar';
+
 import type { AgentCliFilter } from '~/routing/settings/data/agent-clis.data';
+
+import { SettingsAgentsToolbar } from '../SettingsAgentsToolbar';
 
 describe('SettingsAgentsToolbar', () => {
   test('emits the chosen filter', async () => {

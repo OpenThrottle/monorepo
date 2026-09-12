@@ -1,9 +1,10 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { PullRequestDiffLinks } from '../PullRequestDiffLinks';
+
 import type { PullRequestDiffLinksProps } from '../PullRequestDiffLinks';
+import { PullRequestDiffLinks } from '../PullRequestDiffLinks';
 
 describe('PullRequestDiffLinks Component', () => {
   let component: RenderResult;

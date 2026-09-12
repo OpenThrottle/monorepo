@@ -21,26 +21,27 @@
  * present, else the committed default (slice-2 fallback).
  */
 
-import { Inject } from '@nestjs/common';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
+import { Inject } from '@nestjs/common';
 import { OnApplicationShutdown, OnModuleInit } from '@nestjs/common';
-import { LoggerService } from '@openthrottle/nestjs-modules';
 import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
 import { GitHubService } from '@openthrottle/nestjs-github';
+import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   PlansService,
+  type PlanTag,
   ServiceAccountsService,
   SkillTagsService,
+  type TagCaller,
   TAGGING_SERVICE_ACCOUNT_NAME,
   TagsService,
   TasksService,
-  type PlanTag,
-  type TagCaller,
   type TaskTag,
 } from '@openthrottle/nestjs-repositories';
 import { DEFAULT_TAG_VOCABULARY_SEED } from '@openthrottle/openthrottle-skills';
-import { PlanRulesEvaluationService } from '../plan-rules/plan-rules-evaluation.service';
+
 import { PLAN_RULES_TRIGGER_KINDS } from '../plan-rules/plan-rules.types';
+import { PlanRulesEvaluationService } from '../plan-rules/plan-rules-evaluation.service';
 import {
   TAGGING_DIFF_PATCH_BUDGET_CHARS,
   TAGGING_MAX_DOMAIN_TAGS,
@@ -48,17 +49,17 @@ import {
   TAGGING_WORKER_CONCURRENCY,
 } from './tagging.constants';
 import {
+  type PredictTaggingJob,
+  type RefineTaggingJob,
+  TAGGING_ENTITY_TYPES,
+  type TaggingJobResult,
+} from './tagging.types';
+import {
   TAGGING_MODEL_PROVIDER_TOKEN,
   type TaggingModelProvider,
   type TaggingPrediction,
   type TaggingVocabularyEntry,
 } from './tagging-model.provider';
-import {
-  TAGGING_ENTITY_TYPES,
-  type PredictTaggingJob,
-  type RefineTaggingJob,
-  type TaggingJobResult,
-} from './tagging.types';
 
 const SOURCE_SERVER_LLM = 'server-llm';
 

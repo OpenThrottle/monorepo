@@ -5,8 +5,8 @@
  * discoverable and independently testable.
  */
 
-import type { SkillDetailUsageData } from '~/routing/skills/data/skill-usage-detail';
 import type { GetSkillDetailUsageQuery } from '~/__generated__/graphql';
+import type { SkillDetailUsageData } from '~/routing/skills/data/skill-usage-detail';
 
 /** Map the deferred usage query → the component's discriminated prop. */
 export const toSkillDetailUsageData = (

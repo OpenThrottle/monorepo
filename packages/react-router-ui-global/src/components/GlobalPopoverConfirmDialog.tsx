@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -9,7 +8,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
 import { useFetcher, useSubmit } from 'react-router';
+
 import { GLOBAL_POPOVER_COPY } from '../data/data.copy';
 
 /**

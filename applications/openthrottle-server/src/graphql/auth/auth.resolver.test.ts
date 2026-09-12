@@ -7,6 +7,7 @@ import { Test } from '@nestjs/testing';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { usersFactory } from '@openthrottle/nestjs-repositories';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
+
 import { AuthResolver } from './auth.resolver';
 import { AuthService } from './auth.service';
 

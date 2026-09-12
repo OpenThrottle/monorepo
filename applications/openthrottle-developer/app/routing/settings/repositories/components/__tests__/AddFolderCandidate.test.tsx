@@ -1,11 +1,13 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { AddFolderCandidate } from '../AddFolderCandidate';
-import type { AddFolderCandidateProps } from '../AddFolderCandidate';
+
 import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
+
+import type { AddFolderCandidateProps } from '../AddFolderCandidate';
+import { AddFolderCandidate } from '../AddFolderCandidate';
 
 const candidate: AddFolderCandidateProps['candidate'] = {
   alreadyRegistered: false,

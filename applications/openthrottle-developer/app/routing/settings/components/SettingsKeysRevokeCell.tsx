@@ -1,5 +1,3 @@
-import * as React from 'react';
-import { useFetcher, useRevalidator } from 'react-router';
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -17,6 +15,9 @@ import {
   getActionError,
   isActionSuccess,
 } from '@openthrottle/react-router-utils';
+import * as React from 'react';
+import { useFetcher, useRevalidator } from 'react-router';
+
 import type { ServiceAccountCredentialFieldsFragment } from '~/__generated__/graphql';
 import type { action as settingsKeysAction } from '~/routes/settings.keys';
 import {

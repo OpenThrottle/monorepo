@@ -1,11 +1,13 @@
-import * as React from 'react';
-import { render, waitFor } from '@testing-library/react';
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
+import { render, waitFor } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { buildRootMatch } from '~/testing/root-match-fixture';
-import Index from '../_index';
+
 import type { Route } from '@/app/routes/+types/_index';
+import { buildRootMatch } from '~/testing/root-match-fixture';
+
+import Index from '../_index';
 
 // Isolate the client-state hooks so we can assert the deep-link effect without
 // the real turn lifecycle / conversation-list resource fetch. Scoped to this

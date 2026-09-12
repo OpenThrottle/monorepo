@@ -16,9 +16,10 @@ import {
 import { Reflector } from '@nestjs/core';
 import type { Observable } from 'rxjs';
 import { tap } from 'rxjs';
+
 import {
-  type EmitNotificationMetadataValue,
   EMIT_NOTIFICATION_KEY,
+  type EmitNotificationMetadataValue,
 } from './emit-notification.decorator';
 
 /**

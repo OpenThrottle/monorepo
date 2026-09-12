@@ -16,7 +16,7 @@ export { parseRolloutValueJson } from './parse-rollout-value-json';
 export {
   clearRolloutEvaluationMemoryCache,
   readRolloutEvaluationCache,
+  type RolloutEvaluationCacheEntry,
   rolloutEvaluationCacheKey,
   writeRolloutEvaluationCache,
-  type RolloutEvaluationCacheEntry,
 } from './rollout-evaluation-cache';

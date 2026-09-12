@@ -13,6 +13,7 @@
  * share a token — each request resolves its own header, isolated from the others.
  */
 import type { IncomingMessage } from 'node:http';
+
 import { requestAuthTokenStorage } from '../auth/get-auth-token.ts';
 
 const BEARER_PREFIX = 'Bearer ';

@@ -1,4 +1,3 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type { WorkLedgerService } from '@openthrottle/nestjs-repositories';
@@ -7,6 +6,8 @@ import type {
   WorkSession,
 } from '@openthrottle/nestjs-repositories';
 import type { Repository } from 'typeorm';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { WorkLedgerSweepProcessor } from './work-ledger-sweep.processor';
 import type { WorkLedgerSweepJob } from './work-ledger-sweep.types';
 

@@ -12,8 +12,8 @@
  * so a re-record of one line does not invalidate a whole take.
  */
 
-import { getEpisode, resolveVariant } from '../episodes/registry';
 import { sentences } from '../episodes/derived';
+import { getEpisode, resolveVariant } from '../episodes/registry';
 import type { ParsedScript } from './types';
 
 /**

@@ -1,17 +1,19 @@
-import * as React from 'react';
-import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { ChatComposerMode } from '@openthrottle/react-router-chat';
 import {
   CHAT_TOOLBAR_STORAGE_KEY,
   chatToolbarStateAtom,
   DEFAULT_CHAT_TOOLBAR_STATE,
 } from '@openthrottle/react-router-chat-state';
-import { createStore, getDefaultStore, Provider } from 'jotai';
 import type { RenderResult } from '@testing-library/react';
-import { renderRouteHarness } from '~/testing/route-fixtures';
-import { buildRootMatch } from '~/testing/root-match-fixture';
-import Index, { shouldRevalidate } from '../_index';
+import { createStore, getDefaultStore, Provider } from 'jotai';
+import * as React from 'react';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
+
 import type { Route } from '@/app/routes/+types/_index';
+import { buildRootMatch } from '~/testing/root-match-fixture';
+import { renderRouteHarness } from '~/testing/route-fixtures';
+
+import Index, { shouldRevalidate } from '../_index';
 
 /**
  * Render the home route with a stub `/resources/agent-conversations` action so

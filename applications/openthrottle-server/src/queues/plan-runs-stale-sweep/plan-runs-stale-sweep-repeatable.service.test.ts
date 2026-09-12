@@ -7,10 +7,9 @@
 
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
+import type { WorkspaceEditorConfigService } from '@openthrottle/nestjs-repositories';
 import type { Job, Queue } from 'bullmq';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-
-import type { WorkspaceEditorConfigService } from '@openthrottle/nestjs-repositories';
 
 import type { ForeignSkillInjectionLifecycleService } from '../../services/foreign-skill-injection/foreign-skill-injection-lifecycle.service';
 import type { ForeignSkillMaterializationService } from '../../services/foreign-skill-injection/foreign-skill-materialization.service';

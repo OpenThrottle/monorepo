@@ -2,8 +2,8 @@ import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
-import { type Point } from '../../utils/geometry';
 import { FloorElementType } from '../../types';
+import { type Point } from '../../utils/geometry';
 import { ElementPalette } from '../ElementPalette';
 
 const identity = (client: Point): Point => client;

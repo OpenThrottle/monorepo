@@ -1,5 +1,6 @@
-import * as React from 'react';
 import { OpenThrottleEmptyState } from '@openthrottle/react-router-ui';
+import * as React from 'react';
+
 import { GITHUB_STATS_TOKEN_EMPTY_STATE_COPY } from '~/routing/dashboard/data/data.copy';
 
 export interface DashboardGithubTokenEmptyStateProps {

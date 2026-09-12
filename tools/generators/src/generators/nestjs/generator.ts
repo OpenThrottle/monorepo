@@ -1,10 +1,11 @@
+import type { Tree } from '@nx/devkit';
 import type { Choice } from 'prompts';
 import prompts from 'prompts';
-import type { Tree } from '@nx/devkit';
-import { getProjectsByTags } from '../../utils/projects';
-import { writeJsonToStdout } from '../../utils/output';
+
 import { throwGeneratorError } from '../../utils/generator-errors';
 import { isInteractiveArgPresent } from '../../utils/nx-cli';
+import { writeJsonToStdout } from '../../utils/output';
+import { getProjectsByTags } from '../../utils/projects';
 import { generatorNestJSAIAgent } from './generator.ai-agent';
 import { generatorNestJSApplication } from './generator.application';
 import { generatorNestJSGraphQLService } from './generator.graphql-service';

@@ -1,15 +1,16 @@
-import * as React from 'react';
+import type { RenderResult } from '@testing-library/react';
 import { cleanup, render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { RenderResult } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { afterEach, describe, expect, test } from 'vitest';
+
 import {
   CRON_EXPRESSION_COPY,
   CRON_PRESETS,
 } from '../../data/data.cron-presets';
-import { InputCronExpression } from '../InputCronExpression';
 import type { InputCronExpressionProps } from '../InputCronExpression';
+import { InputCronExpression } from '../InputCronExpression';
 
 const renderInput = (props: InputCronExpressionProps = {}): RenderResult => {
   const Component = () => <InputCronExpression {...props} />;

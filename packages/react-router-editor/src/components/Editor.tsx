@@ -1,6 +1,7 @@
-import * as React from 'react';
-import { IS_BROWSER } from '@openthrottle/react-router-utils';
 import type { EditorProps as MonacoEditorProps } from '@monaco-editor/react';
+import { IS_BROWSER } from '@openthrottle/react-router-utils';
+import * as React from 'react';
+
 import { EditorSidebar } from './EditorSidebar';
 import { EditorTabs } from './EditorTabs';
 import { EditorToolbar } from './EditorToolbar';

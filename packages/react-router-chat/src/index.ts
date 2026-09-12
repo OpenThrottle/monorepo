@@ -1,5 +1,6 @@
 export * from './agent-conversations-api';
 export * from './agents-chat-footer';
+export * from './components/ChatActivityGroup';
 export * from './components/ChatCheckoutSelector';
 export * from './components/ChatCheckoutSelectorRow';
 export * from './components/ChatCheckoutSelectorTrigger';
@@ -8,7 +9,6 @@ export * from './components/ChatComposerToolbar';
 export * from './components/ChatConversationSheet';
 export * from './components/ChatConversationSidebar';
 export * from './components/ChatDialog';
-export * from './components/ChatActivityGroup';
 export * from './components/ChatJumpToLatest';
 export * from './components/ChatMessageBody';
 export * from './components/ChatModelPicker';

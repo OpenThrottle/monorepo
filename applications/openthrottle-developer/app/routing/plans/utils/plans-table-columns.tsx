@@ -3,7 +3,7 @@
  * component file per component-primitive-shape R4 (module-scope helpers live in
  * the sibling utils/ folder) so the table component stays UI-focused.
  */
-import * as React from 'react';
+import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
 import {
   Badge,
   Tooltip,
@@ -11,18 +11,19 @@ import {
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
 import { GlobalPopoverActionsHeader } from '@openthrottle/react-router-ui-global';
+import type { ColumnDef } from '@tanstack/react-table';
 import { formatDate } from 'date-fns';
 import { SlidersHorizontal } from 'lucide-react';
+import * as React from 'react';
 import { Link } from 'react-router';
-import { isPlanStatusKey } from '~/routing/plans/utils/utils.plans';
-import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
-import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
-import { PlansTableRowActions } from '~/routing/plans/components/PlansTableRowActions';
-import { PLANS_DETAIL_TAB_SEARCH_PARAM } from '~/routing/plans/utils/parsers';
-import type { PlanStatusKey } from '~/routing/plans/types';
-import type { ColumnDef } from '@tanstack/react-table';
+
 import type { PlanCardFragment } from '~/__generated__/graphql';
 import type { PlansTableProps } from '~/routing/plans/components/PlansTable';
+import { PlansTableRowActions } from '~/routing/plans/components/PlansTableRowActions';
+import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
+import type { PlanStatusKey } from '~/routing/plans/types';
+import { PLANS_DETAIL_TAB_SEARCH_PARAM } from '~/routing/plans/utils/parsers';
+import { isPlanStatusKey } from '~/routing/plans/utils/utils.plans';
 
 export const buildPlansTableColumns = (
   _statusFilterUrls: PlansTableProps['statusFilterUrls'],

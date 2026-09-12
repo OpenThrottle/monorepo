@@ -3,15 +3,17 @@
  * the posture/rule mutations, and the resolved per-context `skillAvailability` query.
  */
 
-import { Module } from '@nestjs/common';
-import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import { PlanContextAvailabilityModule } from '../../services/plan-context-availability/plan-context-availability.module';
 import './skill-availability-resolution.object';
 import './skill-availability.input';
 import './skill-availability.object';
-import { SkillAvailabilityResolutionResolver } from './skill-availability-resolution.resolver';
+
+import { Module } from '@nestjs/common';
+import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
+import { PlanContextAvailabilityModule } from '../../services/plan-context-availability/plan-context-availability.module';
 import { SkillAvailabilityResolver } from './skill-availability.resolver';
+import { SkillAvailabilityResolutionResolver } from './skill-availability-resolution.resolver';
 
 @Module({
   imports: [NestjsRepositoriesModule, PlanContextAvailabilityModule],

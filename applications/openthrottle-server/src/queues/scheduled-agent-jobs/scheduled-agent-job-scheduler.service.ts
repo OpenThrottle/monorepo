@@ -1,10 +1,11 @@
 import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable } from '@nestjs/common';
-import type { Queue } from 'bullmq';
 import {
-  ScheduledAgentJobCheckoutPathService,
   type ScheduledAgentJob,
+  ScheduledAgentJobCheckoutPathService,
 } from '@openthrottle/nestjs-repositories';
+import type { Queue } from 'bullmq';
+
 import {
   SCHEDULED_AGENT_JOB_NAME,
   SCHEDULED_AGENT_JOB_OPTIONS,

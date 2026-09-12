@@ -16,10 +16,11 @@
  */
 
 import {
-  queueJobLogTopic,
   type PubSubEngine,
+  queueJobLogTopic,
 } from '@openthrottle/nestjs-graphql';
 import type { KeyedJsonlRunRecord } from '@openthrottle/nestjs-logging';
+
 import { encodeQueueJobLogCursor } from './queue-job-log-cursor';
 import { mapRecordToQueueJobLogEvent } from './queue-job-log-event.mapper';
 

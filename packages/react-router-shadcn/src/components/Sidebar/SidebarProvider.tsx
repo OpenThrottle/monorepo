@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+
 import { useIsMobile } from '../../hooks/useIsMobile';
 import { cn } from '../../utils/cn';
 import { TooltipProvider } from '../Tooltip';
@@ -11,8 +12,8 @@ import {
   SIDEBAR_WIDTH,
   SIDEBAR_WIDTH_ICON,
 } from './sidebar-constants';
-import { SidebarContext } from './sidebar-context';
 import type { SidebarContextProps } from './sidebar-context';
+import { SidebarContext } from './sidebar-context';
 
 export type SidebarProviderProps = React.ComponentProps<'div'> & {
   readonly defaultOpen?: boolean;

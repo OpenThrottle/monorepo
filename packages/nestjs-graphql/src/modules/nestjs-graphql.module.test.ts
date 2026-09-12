@@ -5,6 +5,7 @@ import {
 } from '@openthrottle/nestjs-utils';
 import type { ValidationRule } from 'graphql';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { buildCachePlugins, buildDriverConfig } from './nestjs-graphql.module';
 
 /**

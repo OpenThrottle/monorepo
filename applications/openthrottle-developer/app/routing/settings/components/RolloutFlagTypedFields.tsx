@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Label,
   Select,
@@ -7,6 +6,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+
 import type { RolloutFlagFieldsFragment } from '~/__generated__/graphql';
 import { RolloutFlagKind } from '~/__generated__/graphql';
 import { RolloutFlagAllocationEditor } from '~/routing/settings/components/RolloutFlagAllocationEditor';

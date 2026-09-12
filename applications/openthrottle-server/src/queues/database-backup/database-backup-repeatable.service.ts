@@ -7,6 +7,7 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { Queue } from 'bullmq';
+
 import { REPEATABLE_JOB_OPTIONS } from '../repeatable-job.options';
 import { DATABASE_BACKUP_QUEUE_NAME } from './database-backup.constants';
 import { resolveDatabaseBackupSchedule } from './database-backup.env';

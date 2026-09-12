@@ -6,8 +6,8 @@
  * error). Parallels `SkillDetailUsageData` for the single-skill detail card.
  */
 
-import type { SkillUsageChartDatum } from '~/global/data/skill-usage-chart';
 import type { UsageSkillUsageBySkillFragment } from '~/__generated__/graphql';
+import type { SkillUsageChartDatum } from '~/global/data/skill-usage-chart';
 
 /**
  * Discriminated usage state for the index sections:

@@ -1,12 +1,14 @@
-import * as React from 'react';
+import type { RenderResult } from '@testing-library/react';
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { RenderResult } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { afterEach, describe, expect, test, vi } from 'vitest';
-import { SettingsKeysForm } from '../SettingsKeysForm';
-import type { SettingsKeysFormProps } from '../SettingsKeysForm';
+
 import type { ServiceAccountCredentialFieldsFragment } from '~/__generated__/graphql';
+
+import type { SettingsKeysFormProps } from '../SettingsKeysForm';
+import { SettingsKeysForm } from '../SettingsKeysForm';
 
 const { toastError, toastSuccess } = vi.hoisted(() => ({
   toastError: vi.fn(),

@@ -1,8 +1,9 @@
-import { RolesService, UsersService } from '@openthrottle/nestjs-repositories';
-import type { User } from '@openthrottle/nestjs-repositories';
 import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
+import type { User } from '@openthrottle/nestjs-repositories';
+import { RolesService, UsersService } from '@openthrottle/nestjs-repositories';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
+
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
 import { UsersResolver } from './users.resolver';
 

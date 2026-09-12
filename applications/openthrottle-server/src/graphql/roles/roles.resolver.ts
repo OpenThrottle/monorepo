@@ -2,17 +2,19 @@
  * @description GraphQL resolver for roles and permissions. CRUD for roles, assign roles to users, manage role-permission links.
  */
 
+import { UseGuards } from '@nestjs/common';
+import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { CurrentUser } from '@openthrottle/nestjs-auth';
+import { PERMISSIONS } from '@openthrottle/nestjs-rbac';
+import { Permissions } from '@openthrottle/nestjs-rbac';
 import type { Permission, Role } from '@openthrottle/nestjs-repositories';
 import {
   PermissionsService,
   RolesService,
 } from '@openthrottle/nestjs-repositories';
-import { PERMISSIONS } from '@openthrottle/nestjs-rbac';
-import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { CurrentUser } from '@openthrottle/nestjs-auth';
-import { UseGuards } from '@nestjs/common';
-import { Permissions } from '@openthrottle/nestjs-rbac';
+
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
+import { PermissionObject } from './permission.object';
 import {
   AddPermissionToRoleInput,
   AssignRoleToUserInput,
@@ -21,7 +23,6 @@ import {
   RemoveRoleFromUserInput,
   UpdateRoleInput,
 } from './role.input';
-import { PermissionObject } from './permission.object';
 import { RoleObject } from './role.object';
 
 @Resolver(() => RoleObject)

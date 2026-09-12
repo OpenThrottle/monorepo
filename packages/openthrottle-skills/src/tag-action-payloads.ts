@@ -8,6 +8,7 @@
  */
 
 import { z } from 'zod';
+
 import { AGENT_ASSET_SLUG_PATTERN } from './schemas/agent-asset-frontmatter.schemas.ts';
 
 /**

@@ -3,11 +3,12 @@
  * and count of active Ralph child processes via the worktree tracker.
  */
 
-import { promises as fs } from 'fs';
-import * as os from 'os';
 import { Inject, Injectable, Optional } from '@nestjs/common';
 import type { IWorktreeTargetsTracker } from '@openthrottle/nestjs-worktrees';
 import { WORKTREE_TRACKER_TOKEN } from '@openthrottle/nestjs-worktrees';
+import { promises as fs } from 'fs';
+import * as os from 'os';
+
 import type {
   ActiveProcessesSummary,
   PsiSnapshot,

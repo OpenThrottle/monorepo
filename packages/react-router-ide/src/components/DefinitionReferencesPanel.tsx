@@ -1,5 +1,5 @@
-import * as React from 'react';
 import {
+  cn,
   Empty,
   EmptyDescription,
   EmptyHeader,
@@ -9,10 +9,11 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
-  cn,
 } from '@openthrottle/react-router-shadcn';
-import { LocationTable } from './LocationTable';
+import * as React from 'react';
+
 import type { IdeSymbolDetails } from '../data/view-models';
+import { LocationTable } from './LocationTable';
 
 export interface DefinitionReferencesPanelProps {
   className?: string;

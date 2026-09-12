@@ -1,5 +1,5 @@
-import * as React from 'react';
 import type { NotificationSeverity } from '@openthrottle/openthrottle-notifications';
+import * as React from 'react';
 
 export interface NotificationsAnnouncerProps {
   /** Message of the most recently added notification, or null when none yet. */

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  CURSOR_FAILURE_KINDS,
   classifyCursorFailure,
+  CURSOR_FAILURE_KINDS,
   isRetryableCursorFailure,
 } from '../errors.ts';
 

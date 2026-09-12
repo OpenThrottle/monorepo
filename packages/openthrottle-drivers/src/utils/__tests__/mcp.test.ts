@@ -6,6 +6,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
+
 import type { DriverCapabilities } from '../../types/index.ts';
 import { appendMcpShellFlags } from '../mcp.ts';
 

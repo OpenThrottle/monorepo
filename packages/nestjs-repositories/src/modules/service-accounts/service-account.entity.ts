@@ -10,6 +10,7 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+
 import type { Role } from '../roles/role.entity';
 import type { ServiceAccountCredential } from './service-account-credential.entity';
 

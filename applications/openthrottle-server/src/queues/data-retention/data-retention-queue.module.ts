@@ -1,12 +1,13 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
-import { DataRetentionQueueProducerModule } from './data-retention-queue-producer.module';
+
 import {
   DATA_RETENTION_POLICIES,
   DATA_RETENTION_POLICIES_TOKEN,
 } from './data-retention.policies';
 import { DataRetentionProcessor } from './data-retention.processor';
+import { DataRetentionQueueProducerModule } from './data-retention-queue-producer.module';
 import { DataRetentionRepeatableService } from './data-retention-repeatable.service';
 
 /**

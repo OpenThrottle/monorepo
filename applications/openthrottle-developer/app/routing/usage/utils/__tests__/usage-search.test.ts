@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { buildUsageSearch } from '../usage-search';
 
 describe('buildUsageSearch', () => {

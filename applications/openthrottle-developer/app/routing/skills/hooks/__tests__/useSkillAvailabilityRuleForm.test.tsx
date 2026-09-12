@@ -1,10 +1,12 @@
-import * as React from 'react';
-import { act, render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { act, render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
+
 import { SKILL_AVAILABILITY_COPY } from '~/routing/skills/data/data.copy';
 import type { SkillAvailabilityRuleValue } from '~/routing/skills/utils/skill-availability';
+
 import type {
   SkillAvailabilityRuleFormOptions,
   UseSkillAvailabilityRuleFormResult,

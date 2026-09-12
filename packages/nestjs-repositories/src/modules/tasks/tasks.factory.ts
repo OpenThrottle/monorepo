@@ -2,8 +2,9 @@
  * @description Fishery factory for {@link Task}. Use in tests to build mock tasks.
  */
 
-import { Factory } from 'fishery';
 import { faker } from '@faker-js/faker';
+import { Factory } from 'fishery';
+
 import { plansFactory } from '../../modules/plans/plans.factory';
 import type { Task } from './task.entity';
 

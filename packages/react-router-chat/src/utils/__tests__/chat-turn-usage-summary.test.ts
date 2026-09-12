@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
-import { buildBadgeLabel, buildRows } from '../chat-turn-usage-summary';
+
 import type { ChatTokenUsage } from '../../types';
+import { buildBadgeLabel, buildRows } from '../chat-turn-usage-summary';
 
 describe('buildRows', () => {
   test('returns an empty array when nothing is reported', () => {

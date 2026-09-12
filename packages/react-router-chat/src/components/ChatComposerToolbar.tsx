@@ -1,14 +1,6 @@
-import * as React from 'react';
 import clsx from 'clsx';
-import { ChatComposerCheckoutControl } from './ChatComposerCheckoutControl';
-import { ChatComposerAttachControl } from './ChatComposerAttachControl';
-import { ChatComposerMicControl } from './ChatComposerMicControl';
-import { ChatComposerModelControl } from './ChatComposerModelControl';
-import { ChatComposerPersistControl } from './ChatComposerPersistControl';
-import { ChatComposerPersonaSelect } from './ChatComposerPersonaSelect';
-import { ChatPermissionModeControl } from './ChatPermissionModeControl';
-import { ChatReasoningTierControl } from './ChatReasoningTierControl';
-import { ChatComposerMicState } from '../types';
+import * as React from 'react';
+
 import type {
   ChatBackendCapabilities,
   ChatCheckoutOption,
@@ -21,6 +13,15 @@ import type {
   ChatReasoningLevel,
   ChatServiceTier,
 } from '../types';
+import { ChatComposerMicState } from '../types';
+import { ChatComposerAttachControl } from './ChatComposerAttachControl';
+import { ChatComposerCheckoutControl } from './ChatComposerCheckoutControl';
+import { ChatComposerMicControl } from './ChatComposerMicControl';
+import { ChatComposerModelControl } from './ChatComposerModelControl';
+import { ChatComposerPersistControl } from './ChatComposerPersistControl';
+import { ChatComposerPersonaSelect } from './ChatComposerPersonaSelect';
+import { ChatPermissionModeControl } from './ChatPermissionModeControl';
+import { ChatReasoningTierControl } from './ChatReasoningTierControl';
 
 export interface ChatComposerToolbarProps {
   /**

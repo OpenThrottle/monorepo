@@ -1,5 +1,6 @@
-import * as React from 'react';
 import clsx from 'clsx';
+import * as React from 'react';
+
 import { useEditor } from '../hooks/useEditor';
 import { EditorSidebarFile } from './EditorSidebarFile';
 

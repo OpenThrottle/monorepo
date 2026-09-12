@@ -2,7 +2,8 @@ import type {
   WorkflowOrchestrator,
   WorkflowRalphOrchestratorDeps,
 } from '@openthrottle/openthrottle-agentic-ralph';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { AgenticWorkflowRalph } from './agentic-workflow-ralph';
 import { AGENTIC_WORKFLOW_RALPH_ID } from './agentic-workflow-ralph-registration';
 

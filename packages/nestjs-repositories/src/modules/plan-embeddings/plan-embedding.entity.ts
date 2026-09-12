@@ -6,6 +6,7 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+
 import { vectorTransformer } from '../../common/vector.transformer';
 import type { Plan } from '../plans/plan.entity';
 

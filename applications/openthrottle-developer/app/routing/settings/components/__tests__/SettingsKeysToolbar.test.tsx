@@ -1,12 +1,14 @@
-import * as React from 'react';
+import type { RenderResult } from '@testing-library/react';
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { RenderResult } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { afterEach, describe, expect, test, vi } from 'vitest';
-import { SettingsKeysToolbar } from '../SettingsKeysToolbar';
-import type { SettingsKeysToolbarProps } from '../SettingsKeysToolbar';
+
 import type { ServiceAccountListItemFragment } from '~/__generated__/graphql';
+
+import type { SettingsKeysToolbarProps } from '../SettingsKeysToolbar';
+import { SettingsKeysToolbar } from '../SettingsKeysToolbar';
 
 const account = (
   overrides: Partial<ServiceAccountListItemFragment> &

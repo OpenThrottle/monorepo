@@ -2,8 +2,9 @@
  * @description Fishery factory for {@link Project}. Use in tests to build mock projects.
  */
 
-import { Factory } from 'fishery';
 import { faker } from '@faker-js/faker';
+import { Factory } from 'fishery';
+
 import type { ProjectData } from './project.entity';
 
 // /** Column-only shape for building project test data (no relations). */

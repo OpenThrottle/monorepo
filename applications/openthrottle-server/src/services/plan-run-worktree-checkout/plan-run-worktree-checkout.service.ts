@@ -8,14 +8,16 @@
  */
 
 import { basename } from 'node:path';
+
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
+  type PlanRun,
   PlanRunsService,
   RepositoriesService,
   RepositoryCheckoutsService,
-  type PlanRun,
 } from '@openthrottle/nestjs-repositories';
+
 import { RepositoryInspectionService } from '../../graphql/repository-inspection/repository-inspection.service';
 
 export interface RegisterPlanRunWorktreeCheckoutParams {

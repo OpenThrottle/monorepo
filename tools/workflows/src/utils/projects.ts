@@ -1,11 +1,11 @@
 import { createProjectGraphAsync } from '@nx/devkit';
 import { pinNxWorkspaceRootToOpenThrottle } from '@openthrottle/openthrottle-agentic-utils';
 
+export type { PinNxWorkspaceRootResult } from '@openthrottle/openthrottle-agentic-utils';
 export {
   NX_WORKSPACE_ROOT_PATH_ENV,
   pinNxWorkspaceRootToOpenThrottle,
 } from '@openthrottle/openthrottle-agentic-utils';
-export type { PinNxWorkspaceRootResult } from '@openthrottle/openthrottle-agentic-utils';
 
 /** NX project graph node types we treat as "projects" (applications + packages). */
 const PROJECT_TAGS = ['type:application', 'type:package'] as const;

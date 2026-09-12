@@ -1,5 +1,6 @@
-import * as React from 'react';
 import { CommandDialog as CmdkCommandDialog } from 'cmdk';
+import * as React from 'react';
+
 import { cn } from '../../utils/cn';
 
 /** CommandDialog: Command palette inside a modal. Uses cmdk's Dialog (Radix Dialog). */

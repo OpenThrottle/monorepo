@@ -1,11 +1,12 @@
-import * as React from 'react';
 import clsx from 'clsx';
+import * as React from 'react';
+
 import {
   formatTimelineTick,
   timelineZoneLabel,
 } from '~/routing/timeline/utils/formatters';
-import { buildTimelineTicks, nowLineX } from '~/routing/timeline/utils/scale';
 import type { TimelineScale } from '~/routing/timeline/utils/scale';
+import { buildTimelineTicks, nowLineX } from '~/routing/timeline/utils/scale';
 
 export interface TimelineAxisProps {
   readonly className?: string;

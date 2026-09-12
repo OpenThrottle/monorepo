@@ -4,6 +4,7 @@
 
 import type { Task } from '@openthrottle/nestjs-repositories';
 import type { Repository } from 'typeorm';
+
 import type { NotificationsService } from './notifications.service';
 
 /**

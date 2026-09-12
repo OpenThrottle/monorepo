@@ -1,6 +1,7 @@
+import clsx from 'clsx';
 import * as React from 'react';
 import { useSearchParams } from 'react-router';
-import clsx from 'clsx';
+
 import {
   DEFAULT_SEARCH_LIMIT,
   SEARCH_LIMIT_OPTIONS,

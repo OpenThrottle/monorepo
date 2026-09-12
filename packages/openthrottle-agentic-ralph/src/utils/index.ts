@@ -28,6 +28,7 @@ interface FormatPlanTaskForPrompt {
   readonly title: string;
 }
 
+export type { PlanTaskSortFields } from './plan-task-list-order.ts';
 export {
   comparePlanTaskListOrder,
   isRunnableRalphTask,
@@ -35,7 +36,6 @@ export {
   pickRalphTaskForIteration,
   sortTasksByPlanListOrder,
 } from './plan-task-list-order.ts';
-export type { PlanTaskSortFields } from './plan-task-list-order.ts';
 
 /**
  * @description Normalizes a task's requirements from either the GraphQL

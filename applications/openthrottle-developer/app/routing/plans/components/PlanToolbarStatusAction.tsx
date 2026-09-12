@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Button,
   Input,
@@ -7,7 +6,9 @@ import {
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
 import { CheckCircle } from 'lucide-react';
+import * as React from 'react';
 import type { useFetcher } from 'react-router';
+
 import type { action } from '~/routes/plans.$planId._index';
 import { PLAN_TOOLBAR_COPY } from '~/routing/plans/data/data.copy';
 

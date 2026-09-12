@@ -1,5 +1,3 @@
-import * as React from 'react';
-import { Link } from 'react-router';
 import {
   Card,
   CardContent,
@@ -7,16 +5,19 @@ import {
   CardHeader,
   CardTitle,
 } from '@openthrottle/react-router-shadcn';
-import { GaugeCircleIcon } from 'lucide-react';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalErrorBoundary,
   GlobalHeading,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import { ADMIN_PATHS } from '~/global/data/data.navigation';
-import { SITE_TITLE } from '~/global/config/settings';
+import { GaugeCircleIcon } from 'lucide-react';
+import * as React from 'react';
+import { Link } from 'react-router';
+
 import type { Route } from '@/app/routes/+types/dashboard._index';
+import { SITE_TITLE } from '~/global/config/settings';
+import { ADMIN_PATHS } from '~/global/data/data.navigation';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

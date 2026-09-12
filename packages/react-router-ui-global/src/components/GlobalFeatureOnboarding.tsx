@@ -1,12 +1,13 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import {
   Card,
   CardContent,
   DialogDescription,
   DialogTitle,
 } from '@openthrottle/react-router-shadcn';
+import clsx from 'clsx';
 import type { LucideIcon } from 'lucide-react';
+import * as React from 'react';
+
 import { GlobalFeatureOnboardingBody } from './GlobalFeatureOnboardingBody';
 
 /**

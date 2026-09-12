@@ -2,12 +2,13 @@
  * @description Builds {@link PlanRunConfigSnapshot} from validated BullMQ plan-run job data at enqueue.
  */
 
-import type { RunPlanJobData } from '../../queues/plans/plans.types';
-import { isRunPlanOrchestratorJobData } from '../../queues/plans/plans.types';
 import {
   buildPlanRunConfigSnapshot,
   type PlanRunConfigSnapshot,
 } from '@openthrottle/nestjs-repositories';
+
+import type { RunPlanJobData } from '../../queues/plans/plans.types';
+import { isRunPlanOrchestratorJobData } from '../../queues/plans/plans.types';
 
 /**
  * @description Registered workspace ids resolved at enqueue (the run's `workingDirectory` is

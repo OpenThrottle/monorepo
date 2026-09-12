@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { toSkillDetailUsageData } from '../to-skill-detail-usage-data';
+
 import type { GetSkillDetailUsageQuery } from '~/__generated__/graphql';
+
+import { toSkillDetailUsageData } from '../to-skill-detail-usage-data';
 
 type SkillUsage = GetSkillDetailUsageQuery['skillUsage'];
 

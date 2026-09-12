@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { computeQueueHealth } from '../queue-health';
 
 describe('computeQueueHealth', () => {

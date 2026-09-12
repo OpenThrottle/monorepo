@@ -1,12 +1,14 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub, useFetcher } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import { RoleEditSheet } from '../RoleEditSheet';
-import type { RoleEditSheetProps } from '../RoleEditSheet';
+
 import type { action as roleDetailAction } from '~/routes/roles.$roleId';
+
+import type { RoleEditSheetProps } from '../RoleEditSheet';
+import { RoleEditSheet } from '../RoleEditSheet';
 
 const role: RoleEditSheetProps['role'] = {
   __typename: 'RoleObject',

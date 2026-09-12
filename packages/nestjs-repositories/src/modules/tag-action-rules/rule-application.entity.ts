@@ -12,6 +12,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+
 import { Plan } from '../plans/plan.entity';
 import { Task } from '../tasks/task.entity';
 import { TagActionRule } from './tag-action-rule.entity';

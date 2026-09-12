@@ -1,12 +1,13 @@
 import { describe, expect, test } from 'vitest';
+
 import {
-  RUN_PHASE_CONNECTING_UNTIL_MS,
-  RUN_PHASE_STILL_WORKING_AFTER_MS,
   deriveRunPhaseFromElapsed,
   deriveRunPhaseFromEvents,
+  RUN_PHASE_CONNECTING_UNTIL_MS,
+  RUN_PHASE_STILL_WORKING_AFTER_MS,
 } from '../run-phase';
-import { ChatRunPhase } from '../types';
 import type { ChatTurnEvent, ChatTurnToolEvent } from '../types';
+import { ChatRunPhase } from '../types';
 
 const tool = (
   overrides: Partial<ChatTurnToolEvent> = {},

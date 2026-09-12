@@ -1,22 +1,23 @@
+import { createMock } from '@golevelup/ts-vitest';
+import { BadRequestException, ConflictException } from '@nestjs/common';
+import { Test } from '@nestjs/testing';
+import type { Plan, Task } from '@openthrottle/nestjs-repositories';
 import {
   CROSS_PLAN_TASK_LIST_ORDER,
   PLAN_TASK_LIST_ORDER,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
-import type { Plan, Task } from '@openthrottle/nestjs-repositories';
 import { isRecord } from '@openthrottle/nodejs-utils';
-import { createMock } from '@golevelup/ts-vitest';
-import { BadRequestException, ConflictException } from '@nestjs/common';
-import { Test } from '@nestjs/testing';
-import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import { QueryFailedError } from 'typeorm';
+import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+
 import { NotificationsService } from '../../notifications/notifications.service';
-import { TasksLoaders } from './tasks-loaders';
 import { PlanRulesEvaluationService } from '../../queues/plan-rules/plan-rules-evaluation.service';
 import { TaggingEnqueueService } from '../../queues/tagging/tagging-enqueue.service';
 import { TaskPromotionEnqueueService } from '../../queues/task-promotion/task-promotion-enqueue.service';
-import { TasksResolver } from './tasks.resolver';
 import { WorkLedgerCaptureService } from '../work-ledger/work-ledger-capture.service';
+import { TasksResolver } from './tasks.resolver';
+import { TasksLoaders } from './tasks-loaders';
 
 describe('TasksResolver', () => {
   let resolver: TasksResolver;

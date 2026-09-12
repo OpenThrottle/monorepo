@@ -1,11 +1,13 @@
 import { describe, expect, test } from 'vitest';
+
+import type { PlanTaskRowFragment } from '~/__generated__/graphql';
+
 import {
   getPlanTaskBoardColumnId,
   getPlanTaskBoardColumnTitle,
   groupPlanTasksByStatus,
   PLAN_TASK_BOARD_COLUMN_ORDER,
 } from '../group-plan-tasks-by-status';
-import type { PlanTaskRowFragment } from '~/__generated__/graphql';
 
 const baseTask = (): PlanTaskRowFragment => ({
   __typename: 'TaskObject',

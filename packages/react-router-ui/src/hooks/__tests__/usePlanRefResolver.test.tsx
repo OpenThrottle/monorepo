@@ -1,9 +1,10 @@
-import * as React from 'react';
 import { act, render, screen } from '@testing-library/react';
+import * as React from 'react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+
 import {
-  usePlanRefResolver,
   type PlanRefResolverData,
+  usePlanRefResolver,
 } from '../usePlanRefResolver';
 
 const FULL_UUID = 'f5e40886-36d3-4886-9781-9722e0b9217b';

@@ -1,17 +1,19 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import { SkillsIndexUsage } from '../SkillsIndexUsage';
-import type { SkillsIndexUsageProps } from '../SkillsIndexUsage';
+
+import type { UsageSkillUsageBySkillFragment } from '~/__generated__/graphql';
 import { SKILLS_INDEX_USAGE_COPY } from '~/routing/skills/data/data.copy';
 import { SKILL_PRESENCE_LABELS } from '~/routing/usage/data/skill-presence';
 import {
   SKILL_USAGE_COPY,
   SKILL_USAGE_SCOPES,
 } from '~/routing/usage/data/skill-usage-copy';
-import type { UsageSkillUsageBySkillFragment } from '~/__generated__/graphql';
+
+import type { SkillsIndexUsageProps } from '../SkillsIndexUsage';
+import { SkillsIndexUsage } from '../SkillsIndexUsage';
 
 const buildBySkill = (
   overrides: Partial<UsageSkillUsageBySkillFragment>,

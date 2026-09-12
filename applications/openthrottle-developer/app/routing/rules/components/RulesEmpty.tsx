@@ -1,5 +1,3 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import {
   Button,
   Empty,
@@ -7,8 +5,11 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@openthrottle/react-router-shadcn';
-import { Link } from 'react-router';
+import clsx from 'clsx';
 import { SearchAlertIcon } from 'lucide-react';
+import * as React from 'react';
+import { Link } from 'react-router';
+
 import { RULES_COPY } from '~/routing/rules/data/data.copy';
 
 export interface RulesEmptyProps {

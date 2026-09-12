@@ -5,6 +5,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
+
 import { ServiceAccount } from '../service-accounts/service-account.entity';
 import { User } from '../users/user.entity';
 import { Permission } from './permission.entity';

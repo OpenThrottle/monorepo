@@ -15,6 +15,7 @@
 
 import { ConfigService } from '@nestjs/config';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+
 import {
   buildTaggingPrompt,
   parseTaggingResponse,

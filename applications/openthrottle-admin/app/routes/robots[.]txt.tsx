@@ -1,4 +1,5 @@
 import { buildRobotsResponse } from '@openthrottle/react-router-utils';
+
 import type { Route } from '@/app/routes/+types/robots[.]txt';
 
 /**

@@ -1,9 +1,10 @@
+import { Button } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 import { Link } from 'react-router';
-import { Button } from '@openthrottle/react-router-shadcn';
+
+import type { PullRequestDetailFragment } from '~/__generated__/graphql';
 import { PullRequestDetailHeader } from '~/routing/pull-requests/components/PullRequestDetailHeader';
 import { PullRequestGithubCard } from '~/routing/pull-requests/components/PullRequestGithubCard';
-import type { PullRequestDetailFragment } from '~/__generated__/graphql';
 
 export interface PullRequestDetailProps {
   listQuery: string;

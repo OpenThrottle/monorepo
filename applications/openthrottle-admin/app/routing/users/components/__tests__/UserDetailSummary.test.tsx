@@ -1,10 +1,11 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import { UserDetailSummary } from '../UserDetailSummary';
+
 import type { UserDetailSummaryProps } from '../UserDetailSummary';
+import { UserDetailSummary } from '../UserDetailSummary';
 
 // Constructed from local y/m/d components (not an ISO date-only string) so the
 // rendered `formatDate` output is stable regardless of the test runner's

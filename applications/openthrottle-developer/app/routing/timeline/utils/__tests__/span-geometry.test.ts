@@ -5,14 +5,16 @@
  */
 
 import { describe, expect, it } from 'vitest';
+
 import { TimelineSpanKind } from '~/__generated__/graphql';
-import { spanRect, spanStatusOpacity } from '../span-geometry';
-import { createTimelineScale } from '../scale';
+
 import {
   TIMELINE_LANE_ROW_HEIGHT,
   TIMELINE_MIN_SPAN_WIDTH,
 } from '../../config/layout';
 import type { TimelineSpan } from '../../types';
+import { createTimelineScale } from '../scale';
+import { spanRect, spanStatusOpacity } from '../span-geometry';
 
 const FROM = new Date('2026-09-01T00:00:00Z');
 const TO = new Date('2026-09-02T00:00:00Z');

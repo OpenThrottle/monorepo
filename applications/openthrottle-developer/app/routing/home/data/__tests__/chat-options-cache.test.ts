@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+
 import type { ChatOptionsResponse } from '~/routes/resources.chat-options';
+
 import {
   CHAT_OPTIONS_CACHE_TTL_MS,
   clearChatOptionsCache,

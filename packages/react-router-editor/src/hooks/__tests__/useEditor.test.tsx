@@ -1,9 +1,10 @@
-import * as React from 'react';
 import { act, renderHook } from '@testing-library/react';
-import { Provider, createStore } from 'jotai';
+import { createStore, Provider } from 'jotai';
+import * as React from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { editorAtom, editorAtomDefaults } from '../../data/atom.editor';
+
 import type { EditorAtom, EditorFile } from '../../data/atom.editor';
+import { editorAtom, editorAtomDefaults } from '../../data/atom.editor';
 import { useEditor } from '../useEditor';
 
 const mockNavigate = vi.fn();

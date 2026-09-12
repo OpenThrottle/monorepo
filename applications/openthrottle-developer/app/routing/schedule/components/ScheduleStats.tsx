@@ -1,8 +1,9 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import { OpenThrottleStatCard } from '@openthrottle/react-router-ui';
-import { RUN_STATUS_DOT_CLASS } from '~/routing/schedule/data/data.run-status';
+import clsx from 'clsx';
+import * as React from 'react';
+
 import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
+import { RUN_STATUS_DOT_CLASS } from '~/routing/schedule/data/data.run-status';
 
 export interface ScheduleStatsProps {
   className?: string;

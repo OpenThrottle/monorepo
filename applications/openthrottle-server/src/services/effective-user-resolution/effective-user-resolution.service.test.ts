@@ -1,14 +1,15 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { createMock } from '@golevelup/ts-vitest';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { createMock } from '@golevelup/ts-vitest';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import type { User } from '@openthrottle/nestjs-repositories';
 import {
   ServiceAccountsService,
   UsersService,
 } from '@openthrottle/nestjs-repositories';
-import type { User } from '@openthrottle/nestjs-repositories';
 import { asMock } from '@openthrottle/nestjs-testing';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { EffectiveUserResolutionService } from './effective-user-resolution.service';
 
 const userId = '11111111-1111-4111-8111-111111111111';

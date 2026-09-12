@@ -1,5 +1,7 @@
-import * as React from 'react';
-import clsx from 'clsx';
+import {
+  formatTokenCount,
+  formatUsageCost,
+} from '@openthrottle/react-router-chat';
 import {
   Card,
   CardContent,
@@ -12,22 +14,21 @@ import {
   TableHeader,
   TableRow,
 } from '@openthrottle/react-router-shadcn';
-import {
-  formatTokenCount,
-  formatUsageCost,
-} from '@openthrottle/react-router-chat';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
+import clsx from 'clsx';
+import * as React from 'react';
+
+import type {
+  UsageTokenUsageRowFragment,
+  UsageTokenUsageTotalsFragment,
+} from '~/__generated__/graphql';
 import { UsageTokenUsageFilters } from '~/routing/usage/components/UsageTokenUsageFilters';
-import { groupTokenUsage } from '~/routing/usage/utils/aggregate-token-usage';
 import {
   TOKEN_USAGE_COPY,
   TOKEN_USAGE_STATS,
   tokenUsageProviderLabel,
 } from '~/routing/usage/data/token-usage-copy';
-import type {
-  UsageTokenUsageRowFragment,
-  UsageTokenUsageTotalsFragment,
-} from '~/__generated__/graphql';
+import { groupTokenUsage } from '~/routing/usage/utils/aggregate-token-usage';
 
 export interface UsageTokenUsageProps {
   className?: string;

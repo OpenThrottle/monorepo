@@ -1,14 +1,16 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test, vi } from 'vitest';
+
+import type { PlanRunConfigRepositoryFieldsFragment } from '~/__generated__/graphql';
+import { PLAN_RUN_WORKSPACE_SELECTOR_COPY } from '~/routing/plans/data/data.copy';
+
 import {
   PlanWorkflowConfigWorkspaceSelector,
   type PlanWorkflowConfigWorkspaceSelectorProps,
 } from '../PlanWorkflowConfigWorkspaceSelector';
-import type { PlanRunConfigRepositoryFieldsFragment } from '~/__generated__/graphql';
-import { PLAN_RUN_WORKSPACE_SELECTOR_COPY } from '~/routing/plans/data/data.copy';
 
 const checkout = (
   overrides: Partial<

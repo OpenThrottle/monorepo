@@ -13,8 +13,8 @@
  * - a real machine hostname (everything .local should be the demo hostname).
  */
 
-import { DEMO_HOME_PREFIX, DEMO_HOSTNAME } from './sanitize.data';
 import { detectSecret } from './sanitize';
+import { DEMO_HOME_PREFIX, DEMO_HOSTNAME } from './sanitize.data';
 
 export interface SnapshotFinding {
   /** What matched, trimmed for display. */

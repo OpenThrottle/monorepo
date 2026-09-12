@@ -3,8 +3,9 @@
  * snapshots.
  */
 
-import { Factory } from 'fishery';
 import { faker } from '@faker-js/faker';
+import { Factory } from 'fishery';
+
 import type { CodeIndexSnapshot } from './code-index-snapshot.entity';
 
 /**

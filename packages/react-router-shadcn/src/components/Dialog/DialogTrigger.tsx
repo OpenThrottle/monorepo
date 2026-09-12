@@ -1,5 +1,5 @@
-import type { ComponentPropsWithoutRef } from 'react';
 import { Dialog as DialogPrimitive } from 'radix-ui';
+import type { ComponentPropsWithoutRef } from 'react';
 
 export const DialogTrigger = DialogPrimitive.Trigger;
 

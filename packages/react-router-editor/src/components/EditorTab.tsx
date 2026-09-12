@@ -1,7 +1,8 @@
-import * as React from 'react';
 import { XIcon } from '@phosphor-icons/react/dist/ssr/X';
 import clsx from 'clsx';
+import * as React from 'react';
 import { Link, useParams, useSearchParams } from 'react-router';
+
 import { useEditor } from '../hooks/useEditor';
 
 export interface EditorTabProps {

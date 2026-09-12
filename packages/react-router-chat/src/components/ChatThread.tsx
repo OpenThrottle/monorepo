@@ -1,10 +1,11 @@
-import * as React from 'react';
 import clsx from 'clsx';
-import { ChatRetryNotice } from './ChatRetryNotice';
-import { ChatThreadMessage } from './ChatThreadMessage';
+import * as React from 'react';
+
 import { usePinnedToBottom } from '../hooks/use-pinned-to-bottom';
 import type { ChatMessage } from '../types';
 import { findLastUserMessageId } from '../utils/chat-thread';
+import { ChatRetryNotice } from './ChatRetryNotice';
+import { ChatThreadMessage } from './ChatThreadMessage';
 
 export interface ChatThreadProps {
   /**

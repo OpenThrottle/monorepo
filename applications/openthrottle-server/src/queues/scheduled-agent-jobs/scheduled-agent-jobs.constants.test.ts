@@ -9,8 +9,9 @@
  * starting at all.
  */
 
-import { afterEach, describe, expect, it } from 'vitest';
 import { WORKTREE_FLAG_ONLY } from '@openthrottle/openthrottle-drivers';
+import { afterEach, describe, expect, it } from 'vitest';
+
 import {
   resolveScheduledAgentJobConcurrencyKey,
   resolveScheduledAgentJobCwd,

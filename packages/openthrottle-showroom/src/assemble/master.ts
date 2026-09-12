@@ -13,12 +13,12 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 
+import type { NarrationTimings } from '../narrate/types';
+import type { FormatSpec, FormatVariant } from '../runner/format';
+import type { RecordingManifest } from '../runner/types';
+import type { Cue } from './captions';
 import { buildCues, toSrt } from './captions';
 import { cropExpression, cropPath, planTimeline } from './timeline';
-import type { Cue } from './captions';
-import type { FormatSpec, FormatVariant } from '../runner/format';
-import type { NarrationTimings } from '../narrate/types';
-import type { RecordingManifest } from '../runner/types';
 
 const execFileAsync = promisify(execFile);
 

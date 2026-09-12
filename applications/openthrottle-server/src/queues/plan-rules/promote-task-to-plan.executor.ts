@@ -21,12 +21,13 @@ import {
   TasksService,
 } from '@openthrottle/nestjs-repositories';
 import { TAG_ACTION_TYPES } from '@openthrottle/openthrottle-skills';
-import { TaskPromotionService } from '../task-promotion/task-promotion.service';
+
 import { PROMOTED_TAG } from '../task-promotion/task-promotion.constants';
+import { TaskPromotionService } from '../task-promotion/task-promotion.service';
 import {
-  ActionExecutorRegistry,
   type ActionExecutor,
   type ActionExecutorContext,
+  ActionExecutorRegistry,
 } from './action-executor';
 
 @Injectable()

@@ -1,14 +1,14 @@
 import { describe, expect, test } from 'vitest';
 
-import {
-  resolveSkillAvailability,
-  SKILL_AVAILABILITY_ENVIRONMENTS,
-} from '../resolve-skill-availability.ts';
 import type {
   SkillAvailabilityContext,
   SkillAvailabilityInput,
   SkillAvailabilityRule,
   SkillAvailabilityRuleSet,
+} from '../resolve-skill-availability.ts';
+import {
+  resolveSkillAvailability,
+  SKILL_AVAILABILITY_ENVIRONMENTS,
 } from '../resolve-skill-availability.ts';
 
 const VOCAB = ['commit', 'git', 'github', 'infra', 'terraform'] as const;

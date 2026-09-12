@@ -1,6 +1,7 @@
+import { screen } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import { screen } from '@testing-library/react';
+
 import { SettingsDebugPanel } from '~/routing/settings/components/SettingsDebugPanel';
 import { VITE_DEVTOOLS_DOC_QUICK_REF_HREF } from '~/routing/settings/utils/settings-docs-links';
 import { renderWithMemoryRouter } from '~/testing/route-fixtures';

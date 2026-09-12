@@ -1,13 +1,15 @@
-import * as React from 'react';
+import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import type { RenderResult } from '@testing-library/react';
 import { waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { TooltipProvider } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { PlanToolbar } from '../PlanToolbar';
-import type { PlanToolbarProps } from '../PlanToolbar';
-import { renderRouteHarness, renderRoutesStub } from '~/testing/route-fixtures';
+
 import { WorkspaceEditorId } from '~/__generated__/graphql';
+import { renderRouteHarness, renderRoutesStub } from '~/testing/route-fixtures';
+
+import type { PlanToolbarProps } from '../PlanToolbar';
+import { PlanToolbar } from '../PlanToolbar';
 
 const renderToolbar = (toolbarProps: PlanToolbarProps): RenderResult =>
   renderRoutesStub(

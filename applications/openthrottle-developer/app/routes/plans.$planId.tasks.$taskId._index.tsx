@@ -1,18 +1,20 @@
-import * as React from 'react';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import { GlobalScreen } from '@openthrottle/react-router-ui-global';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import * as React from 'react';
+import { redirect } from 'react-router';
+
+import type { Route } from '@/app/routes/+types/plans.$planId.tasks.$taskId._index';
 import {
   GetPlanByIdDocument,
   GetTaskByIdDocument,
   TaskLinkedArtifactsDocument,
   TaskOutputStreamChunksDocument,
 } from '~/__generated__/graphql';
-import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
-import { PlanTaskNotFound } from '~/routing/plans/components/PlanTaskNotFound';
-import { redirect } from 'react-router';
+import { SITE_TITLE } from '~/global/config/settings';
 import { detachHook } from '~/routing/plans/actions/planId';
 import {
   addTaskHook,
@@ -20,9 +22,8 @@ import {
   setTaskStatus,
   updateTaskTag,
 } from '~/routing/plans/actions/taskId';
-import { SITE_TITLE } from '~/global/config/settings';
+import { PlanTaskNotFound } from '~/routing/plans/components/PlanTaskNotFound';
 import { TaskDetailRoute } from '~/routing/plans/components/TaskDetailRoute';
-import type { Route } from '@/app/routes/+types/plans.$planId.tasks.$taskId._index';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

@@ -1,14 +1,15 @@
 import { describe, expect, it } from 'vitest';
+
+import { SKILL_RECORD_TAGS_COPY } from '~/routing/skills/data/data.copy';
 import {
+  classifySkillUsagePresence,
   SKILL_PRESENCE,
-  SKILL_PRESENCES,
   SKILL_PRESENCE_BADGED,
   SKILL_PRESENCE_LABELS,
   SKILL_PRESENCE_LINKABLE,
   SKILL_PRESENCE_TOOLTIPS,
-  classifySkillUsagePresence,
+  SKILL_PRESENCES,
 } from '~/routing/usage/data/skill-presence';
-import { SKILL_RECORD_TAGS_COPY } from '~/routing/skills/data/data.copy';
 import { SKILL_USAGE_SCOPES } from '~/routing/usage/data/skill-usage-copy';
 
 describe('skill-presence', () => {

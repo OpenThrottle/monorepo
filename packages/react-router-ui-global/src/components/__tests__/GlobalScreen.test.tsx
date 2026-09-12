@@ -1,10 +1,11 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import { GlobalScreen } from '../GlobalScreen';
+
 import type { GlobalScreenProps } from '../GlobalScreen';
+import { GlobalScreen } from '../GlobalScreen';
 
 describe('GlobalScreen Component', () => {
   const setup = (props: GlobalScreenProps = {}): RenderResult => {

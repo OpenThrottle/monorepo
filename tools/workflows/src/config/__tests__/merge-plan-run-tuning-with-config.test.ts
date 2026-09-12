@@ -1,6 +1,7 @@
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { loadWorkflowRalphConfig } from '../load-workflow-ralph-config.ts';

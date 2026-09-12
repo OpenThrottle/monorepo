@@ -1,8 +1,8 @@
-import * as React from 'react';
+import { Button, Input, Label } from '@openthrottle/react-router-shadcn';
 import clsx from 'clsx';
+import * as React from 'react';
 import { Form } from 'react-router';
 import { Link } from 'react-router';
-import { Button, Input, Label } from '@openthrottle/react-router-shadcn';
 
 export interface QueueFormProps {
   actionData?: { error?: string } | null;

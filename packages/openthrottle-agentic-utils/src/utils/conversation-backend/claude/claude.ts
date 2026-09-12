@@ -16,21 +16,21 @@
 
 import { spawn } from 'node:child_process';
 
+import { NdjsonBuffer } from '../cursor-agent/ndjson.ts';
+import {
+  resolveAgentTimeouts,
+  terminateChild,
+} from '../cursor-agent/teardown.ts';
+import { withFileMentions } from '../file-mentions.ts';
+import { withKeepalive } from '../keepalive.ts';
 import {
   CONVERSATION_STREAM_CHUNK_KINDS,
   type ConversationBackend,
   type ConversationBackendRun,
   type ConversationStreamChunk,
 } from '../types.ts';
-import { CLAUDE_BIN_ENV, CLAUDE_DEFAULT_BIN, buildClaudeArgv } from './argv.ts';
-import { withFileMentions } from '../file-mentions.ts';
-import { withKeepalive } from '../keepalive.ts';
+import { buildClaudeArgv, CLAUDE_BIN_ENV, CLAUDE_DEFAULT_BIN } from './argv.ts';
 import { mapClaudeEvent } from './events.ts';
-import { NdjsonBuffer } from '../cursor-agent/ndjson.ts';
-import {
-  resolveAgentTimeouts,
-  terminateChild,
-} from '../cursor-agent/teardown.ts';
 
 /**
  * Env var pointing headless chat spawns at a dedicated claude config directory

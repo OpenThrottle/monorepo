@@ -1,5 +1,6 @@
-import { describe, expect, test, vi } from 'vitest';
 import type { OpenThrottleEnv } from '@openthrottle/react-router-utils';
+import { describe, expect, test, vi } from 'vitest';
+
 import { getSettingsDiagnosticsLoaderData } from '../settings-diagnostics-loader-data';
 
 const MOCK_ENV: OpenThrottleEnv = {

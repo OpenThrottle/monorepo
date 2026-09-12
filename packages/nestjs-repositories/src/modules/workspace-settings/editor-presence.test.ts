@@ -7,11 +7,11 @@
  * than trusting one shared code path to cover them all.
  */
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   CONTAINER_WORKSPACES_DIR_ENV,
   HOST_WORKSPACES_DIR_ENV,
 } from '@openthrottle/openthrottle-agentic-utils';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { mockAccess, mockSpawn } = vi.hoisted(() => ({
   mockAccess: vi.fn(),
@@ -21,8 +21,8 @@ const { mockAccess, mockSpawn } = vi.hoisted(() => ({
 vi.mock('node:fs/promises', () => ({ access: mockAccess }));
 vi.mock('node:child_process', () => ({ spawn: mockSpawn }));
 
-import { detectEditorPresence } from './editor-presence';
 import type { EditorPresenceState } from './editor-presence';
+import { detectEditorPresence } from './editor-presence';
 
 const HOME = '/Users/jane';
 const HOST_ENV: NodeJS.ProcessEnv = { HOME, PATH: '/usr/bin' };

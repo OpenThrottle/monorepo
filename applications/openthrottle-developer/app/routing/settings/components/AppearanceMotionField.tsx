@@ -1,10 +1,11 @@
-import * as React from 'react';
 import {
   Label,
   ToggleGroup,
   ToggleGroupItem,
 } from '@openthrottle/react-router-shadcn';
 import { useAtom } from 'jotai';
+import * as React from 'react';
+
 import { configAtom, isReducedMotionMode } from '~/global/data/atom.config';
 import { APPEARANCE_MOTION_OPTIONS } from '~/routing/settings/data/data.appearance';
 import { APPEARANCE_COPY } from '~/routing/settings/data/data.copy';

@@ -7,22 +7,6 @@
  * tools. See docs/monorepo/plan-task-tags-rules-design.md.
  */
 
-import {
-  AUTH_PRINCIPAL_KIND_USER,
-  CurrentUser,
-  type AuthPrincipal,
-} from '@openthrottle/nestjs-auth';
-import {
-  type PlanTag,
-  PlansService,
-  type ProjectTag,
-  ServiceAccountsService,
-  type TagCaller,
-  TagsService,
-  TasksService,
-  type TaskTag,
-} from '@openthrottle/nestjs-repositories';
-import { LoggerService } from '@openthrottle/nestjs-modules';
 import { UseGuards } from '@nestjs/common';
 import {
   Args,
@@ -31,13 +15,31 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
+import {
+  AUTH_PRINCIPAL_KIND_USER,
+  type AuthPrincipal,
+  CurrentUser,
+} from '@openthrottle/nestjs-auth';
+import { LoggerService } from '@openthrottle/nestjs-modules';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
+import {
+  PlansService,
+  type PlanTag,
+  type ProjectTag,
+  ServiceAccountsService,
+  type TagCaller,
+  TagsService,
+  TasksService,
+  type TaskTag,
+} from '@openthrottle/nestjs-repositories';
+
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import { PlanRulesEvaluationService } from '../../queues/plan-rules/plan-rules-evaluation.service';
 import { PLAN_RULES_TRIGGER_KINDS } from '../../queues/plan-rules/plan-rules.types';
+import { PlanRulesEvaluationService } from '../../queues/plan-rules/plan-rules-evaluation.service';
 import { PlanObject } from '../plans/plan.object';
 import { ProjectObject } from '../projects/project.object';
 import { TaskObject } from '../tasks/task.object';
+import { PlanTagObject, ProjectTagObject, TaskTagObject } from './tag.object';
 import {
   AddPlanTagInput,
   AddProjectTagInput,
@@ -46,7 +48,6 @@ import {
   RemoveProjectTagInput,
   RemoveTaskTagInput,
 } from './tags.input';
-import { PlanTagObject, ProjectTagObject, TaskTagObject } from './tag.object';
 import { TagsLoaders } from './tags-loaders';
 
 @Resolver(() => PlanObject)

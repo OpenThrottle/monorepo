@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { asMock } from '../as-mock';
 import { isRecord } from '../is-record';
 

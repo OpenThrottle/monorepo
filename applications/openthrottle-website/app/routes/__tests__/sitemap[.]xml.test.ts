@@ -1,5 +1,6 @@
-import { describe, expect, test, vi } from 'vitest';
 import { createTestRouterContext } from '@openthrottle/react-router-testing';
+import { describe, expect, test, vi } from 'vitest';
+
 import type { Route } from '@/app/routes/+types/sitemap[.]xml';
 
 // The URL/dedup/absolute-canonical behavior lives in (and is tested with)

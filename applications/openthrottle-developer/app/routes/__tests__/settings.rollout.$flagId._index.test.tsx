@@ -1,11 +1,13 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
+import * as React from 'react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import Component from '../settings.rollout.$flagId._index';
+
+import type { RolloutFlagFieldsFragment } from '~/__generated__/graphql';
 import { RolloutFlagKind } from '~/__generated__/graphql';
 import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
-import type { RolloutFlagFieldsFragment } from '~/__generated__/graphql';
+
+import Component from '../settings.rollout.$flagId._index';
 
 function stubMatches(): React.ComponentProps<typeof Component>['matches'];
 function stubMatches(): unknown {

@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Button,
   DropdownMenu,
@@ -8,8 +7,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@openthrottle/react-router-shadcn';
-import { Check, SlidersHorizontal } from 'lucide-react';
 import clsx from 'clsx';
+import { Check, SlidersHorizontal } from 'lucide-react';
+import * as React from 'react';
+
 import {
   DEFAULT_REASONING_LABELS,
   DEFAULT_SERVICE_TIER_LABELS,

@@ -1,8 +1,9 @@
 import { describe, expect, test } from 'vitest';
+
 import {
+  isWorkflowRunOptionsExpandedFromSearchParams,
   WORKFLOW_RUN_OPTIONS_EXPANDED_VALUE,
   WORKFLOW_RUN_OPTIONS_SEARCH_PARAM,
-  isWorkflowRunOptionsExpandedFromSearchParams,
 } from '../workflow-run-options-search-param';
 
 describe('workflow-run-options-search-param', () => {

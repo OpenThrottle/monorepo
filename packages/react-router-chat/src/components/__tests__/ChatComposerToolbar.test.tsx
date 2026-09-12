@@ -1,18 +1,10 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
+import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
-import { ChatComposerToolbar } from '../ChatComposerToolbar';
-import type { ChatComposerToolbarProps } from '../ChatComposerToolbar';
-import {
-  ChatComposerMicState,
-  ChatComposerMode,
-  ChatPermissionMode,
-  ChatReasoningLevel,
-  ChatServiceTier,
-} from '../../types';
+
 import type {
   ChatBackendCapabilities,
   ChatCheckoutOption,
@@ -20,6 +12,15 @@ import type {
   ChatModelOption,
   ChatPersonaOption,
 } from '../../types';
+import {
+  ChatComposerMicState,
+  ChatComposerMode,
+  ChatPermissionMode,
+  ChatReasoningLevel,
+  ChatServiceTier,
+} from '../../types';
+import type { ChatComposerToolbarProps } from '../ChatComposerToolbar';
+import { ChatComposerToolbar } from '../ChatComposerToolbar';
 
 const MODELS: readonly ChatModelOption[] = [
   { id: 'opus', label: 'Opus 4.8' },

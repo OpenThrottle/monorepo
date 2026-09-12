@@ -1,11 +1,13 @@
-import * as React from 'react';
 import type { RenderResult } from '@testing-library/react';
+import * as React from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { PromptsTable } from '../PromptsTable';
-import type { PromptsTableProps } from '../PromptsTable';
+
 import type { PromptCardFragment } from '~/__generated__/graphql';
 import { CustomPromptType } from '~/__generated__/graphql';
 import { renderRoutesStub } from '~/testing/route-fixtures';
+
+import type { PromptsTableProps } from '../PromptsTable';
+import { PromptsTable } from '../PromptsTable';
 
 const mockPrompts: PromptCardFragment[] = [
   {

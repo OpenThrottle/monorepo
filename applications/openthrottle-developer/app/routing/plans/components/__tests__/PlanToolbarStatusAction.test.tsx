@@ -1,13 +1,15 @@
-import * as React from 'react';
-import { render, waitFor } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
+import type { RenderResult } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub, useFetcher } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { PlanToolbarStatusAction } from '../PlanToolbarStatusAction';
-import type { PlanToolbarStatusActionProps } from '../PlanToolbarStatusAction';
+
 import type { action } from '~/routes/plans.$planId._index';
+
+import type { PlanToolbarStatusActionProps } from '../PlanToolbarStatusAction';
+import { PlanToolbarStatusAction } from '../PlanToolbarStatusAction';
 
 type OwnProps = Omit<PlanToolbarStatusActionProps, 'fetcherSetPlanStatus'>;
 

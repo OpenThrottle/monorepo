@@ -1,11 +1,12 @@
-import * as React from 'react';
 import clsx from 'clsx';
+import * as React from 'react';
+
+import { CHAT_ROLE_LABEL } from '../data/chat-thread-message-role-labels';
+import type { ChatMessage } from '../types';
+import { formatChatTimestamp } from '../utils/index';
 import { ChatMessageBody } from './ChatMessageBody';
 import { ChatTurnTimeline } from './ChatTurnTimeline';
 import { RunningIndicator } from './RunningIndicator';
-import { CHAT_ROLE_LABEL } from '../data/chat-thread-message-role-labels';
-import { formatChatTimestamp } from '../utils/index';
-import type { ChatMessage } from '../types';
 
 export interface ChatThreadMessageProps {
   readonly message: ChatMessage;

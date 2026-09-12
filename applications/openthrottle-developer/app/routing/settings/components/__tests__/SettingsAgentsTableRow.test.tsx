@@ -1,15 +1,17 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { createRoutesStub } from 'react-router';
 import {
   Table,
   TableBody,
   TooltipProvider,
 } from '@openthrottle/react-router-shadcn';
+import { render } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import * as React from 'react';
+import { createRoutesStub } from 'react-router';
 import { describe, expect, test, vi } from 'vitest';
-import { SettingsAgentsTableRow } from '../SettingsAgentsTableRow';
+
 import type { AgentCliStatus } from '~/routing/settings/data/agent-clis.data';
+
+import { SettingsAgentsTableRow } from '../SettingsAgentsTableRow';
 
 vi.mock('~/services/graphql-ws-client', () => ({
   getGraphqlWsClient: () => null,

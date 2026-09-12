@@ -25,6 +25,7 @@ import {
   PlanRunsService,
   STALE_CUTOFF_MS,
 } from '@openthrottle/nestjs-repositories';
+
 import { WorktreeDiscoveryService } from '../worktree-discovery/worktree-discovery.service';
 import type {
   DiscoveredWorktree,

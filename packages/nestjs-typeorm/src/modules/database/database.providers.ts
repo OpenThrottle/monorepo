@@ -1,5 +1,6 @@
 import { ConfigService } from '@nestjs/config';
 import { DataSource } from 'typeorm';
+
 import { getTypeormConfig } from '../../nestjs-typeorm.config';
 import { DATA_SOURCE } from './database.constants';
 

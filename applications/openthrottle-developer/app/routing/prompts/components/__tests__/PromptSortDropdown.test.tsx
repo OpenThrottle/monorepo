@@ -1,10 +1,11 @@
-import * as React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
-import { PromptSortDropdown } from '../PromptSortDropdown';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import type { PromptSortDropdownProps } from '../PromptSortDropdown';
+import { PromptSortDropdown } from '../PromptSortDropdown';
 
 describe('PromptSortDropdown Component', () => {
   let props: PromptSortDropdownProps;

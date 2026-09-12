@@ -12,8 +12,8 @@
  * `pnpm exec workflow-ralph --help`.
  */
 
-export * from './workflow-ralph-config';
 export * from './workflow-ralph-argv-builder';
+export * from './workflow-ralph-config';
+export * from './workflow-ralph-diff';
 export * from './workflow-ralph-tuning';
 export * from './workflow-ralph-validate';
-export * from './workflow-ralph-diff';

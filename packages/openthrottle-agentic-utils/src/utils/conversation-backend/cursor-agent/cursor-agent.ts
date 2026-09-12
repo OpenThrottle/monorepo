@@ -26,21 +26,21 @@
 
 import { spawn } from 'node:child_process';
 
+import { warnUnsupportedAdditionalDirectories } from '../additional-directories.ts';
+import { withFileMentions } from '../file-mentions.ts';
+import { withKeepalive } from '../keepalive.ts';
 import {
   CONVERSATION_STREAM_CHUNK_KINDS,
   type ConversationBackend,
   type ConversationBackendRun,
   type ConversationStreamChunk,
 } from '../types.ts';
-import { warnUnsupportedAdditionalDirectories } from '../additional-directories.ts';
 import {
+  buildCursorAgentArgv,
   CURSOR_AGENT_BIN_ENV,
   CURSOR_AGENT_DEFAULT_BIN,
-  buildCursorAgentArgv,
 } from './argv.ts';
 import { formatCursorMintFailure } from './diagnostics.ts';
-import { withFileMentions } from '../file-mentions.ts';
-import { withKeepalive } from '../keepalive.ts';
 import { mapCursorEvent } from './events.ts';
 import { NdjsonBuffer } from './ndjson.ts';
 import { parseCursorChatId } from './session-id.ts';

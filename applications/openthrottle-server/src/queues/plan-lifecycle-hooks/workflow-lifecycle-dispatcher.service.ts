@@ -19,13 +19,14 @@ import type {
 import {
   isPlanScopedJobRunHookPhase,
   isTaskScopedJobRunHookPhase,
-  shouldRunJobRunHook,
-  sortJobRunHookEntries,
   type JobRunHookPhase,
   type JobRunHookRunKind,
   type JobRunHooksConfig,
+  shouldRunJobRunHook,
+  sortJobRunHookEntries,
 } from '@tools/workflows';
 import { Queue, QueueEvents } from 'bullmq';
+
 import type { RunPlanJobData } from '../plans/plans.types';
 import { isRunPlanOrchestratorJobData } from '../plans/plans.types';
 import {

@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRedisModule } from '@openthrottle/nestjs-redis';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+
 import { ScheduledAgentJobDirectoryLockService } from './scheduled-agent-job-directory-lock.service';
 import { ScheduledAgentJobsProcessor } from './scheduled-agent-jobs.processor';
 import { ScheduledAgentJobsQueueProducerModule } from './scheduled-agent-jobs-queue-producer.module';

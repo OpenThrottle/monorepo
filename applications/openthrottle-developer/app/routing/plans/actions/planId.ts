@@ -1,3 +1,4 @@
+import { PlanDetailCancelPlanRunDocument } from '@openthrottle/openthrottle-developer-codegen';
 import {
   coerceNumber,
   executeGraphqlWithAuth,
@@ -5,19 +6,12 @@ import {
   parseFormData,
 } from '@openthrottle/react-router-graphql';
 import { z } from 'zod/v3';
-import { PlanDetailCancelPlanRunDocument } from '@openthrottle/openthrottle-developer-codegen';
-import {
-  AddHookInputSchema,
-  AddPlanTagInputSchema,
-  CancelPlanRunInputSchema,
-  DetachHookInputSchema,
-  EnqueuePlanRunInputSchema,
-  ForceSettlePlanRunInputSchema,
-  RalphPlanRunTuningInputSchema,
-  RemovePlanTagInputSchema,
-  SetPlanStatusInputSchema,
-  UpdateTaskInputSchema,
-} from '~/__generated__/schemas';
+
+import type { Route } from '@/app/routes/+types/plans.$planId._index';
+import type {
+  PlanDetailForceSettlePlanRunMutation,
+  RalphPlanRunTuningInput,
+} from '~/__generated__/graphql';
 import {
   PlanDetailAddHookDocument,
   PlanDetailAddPlanTagDocument,
@@ -31,13 +25,20 @@ import {
   PlanDetailUpdatePlanRunConfigDocument,
   PlanDetailUpdateTaskDocument,
 } from '~/__generated__/graphql';
-import { parseJobRunHooksJsonFromPlan } from '~/routing/plans/utils/job-run-hooks-ui';
+import {
+  AddHookInputSchema,
+  AddPlanTagInputSchema,
+  CancelPlanRunInputSchema,
+  DetachHookInputSchema,
+  EnqueuePlanRunInputSchema,
+  ForceSettlePlanRunInputSchema,
+  RalphPlanRunTuningInputSchema,
+  RemovePlanTagInputSchema,
+  SetPlanStatusInputSchema,
+  UpdateTaskInputSchema,
+} from '~/__generated__/schemas';
 import { toErrorMessage } from '~/global/utils/utils.error-message';
-import type {
-  PlanDetailForceSettlePlanRunMutation,
-  RalphPlanRunTuningInput,
-} from '~/__generated__/graphql';
-import type { Route } from '@/app/routes/+types/plans.$planId._index';
+import { parseJobRunHooksJsonFromPlan } from '~/routing/plans/utils/job-run-hooks-ui';
 
 export const cancelPlanRun = async (args: Route.ActionArgs, planId: string) => {
   try {

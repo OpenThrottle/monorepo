@@ -1,6 +1,3 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { useDebouncedSearchParam } from '@openthrottle/react-router-ui';
 import {
   Button,
   Input,
@@ -8,14 +5,19 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
-import { Link, useSearchParams } from 'react-router';
+import { useDebouncedSearchParam } from '@openthrottle/react-router-ui';
+import clsx from 'clsx';
 import { FilePlusIcon } from 'lucide-react';
-import { TypeMultiSelect } from './TypeMultiSelect';
-import { PromptSortDropdown } from './PromptSortDropdown';
+import * as React from 'react';
+import { Link, useSearchParams } from 'react-router';
+
 import type {
   PromptsSortBy,
   PromptsSortOrder,
 } from '~/routing/prompts/config/types';
+
+import { PromptSortDropdown } from './PromptSortDropdown';
+import { TypeMultiSelect } from './TypeMultiSelect';
 
 export interface PromptToolbarProps {
   className?: string;

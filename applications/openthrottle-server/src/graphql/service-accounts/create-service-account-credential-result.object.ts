@@ -3,6 +3,7 @@
  */
 
 import { Field, ObjectType } from '@nestjs/graphql';
+
 import { ServiceAccountCredentialObject } from './service-account-credential.object';
 
 @ObjectType()

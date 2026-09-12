@@ -1,7 +1,7 @@
 import type { ProfileExecutionRedactor } from './profile-execution.redaction';
-import type { ProfileExecutionResult } from './profile-execution.types';
 import { defaultProfileExecutionRedactor } from './profile-execution.redaction';
 import { notifyProfileExecutionReporter } from './profile-execution.reporter';
+import type { ProfileExecutionResult } from './profile-execution.types';
 
 /**
  * @description Options for {@link profileExecution}.

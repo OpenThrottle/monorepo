@@ -1,10 +1,11 @@
+import { cn, Tabs } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
-import { Tabs, cn } from '@openthrottle/react-router-shadcn';
-import { useUrlSyncedTabValue } from '../hooks/useUrlSyncedTabValue';
+
 import type {
   OpenThrottleTabsProps as OpenThrottleTabsPropsContract,
   UrlSyncedTabConfig,
 } from '../config/open-throttle-tabs.api';
+import { useUrlSyncedTabValue } from '../hooks/useUrlSyncedTabValue';
 import { isFullyControlled } from '../utils/is-fully-controlled';
 
 type TabsRestProps = Omit<OpenThrottleTabsPropsContract, 'urlSync'>;

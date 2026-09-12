@@ -1,12 +1,12 @@
-import * as React from 'react';
 import { render, waitFor } from '@testing-library/react';
+import * as React from 'react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { defineRolloutFlags } from '../../index';
 import { useRolloutContext } from '../../hooks/useRolloutContext';
+import { defineRolloutFlags } from '../../index';
+import type { RolloutFetchEvaluations } from '../../types';
 import { clearRolloutEvaluationMemoryCache } from '../../utils';
 import { RolloutProvider } from '../RolloutProvider';
-import type { RolloutFetchEvaluations } from '../../types';
 
 const flags = defineRolloutFlags({
   'billing.invoices': { defaultValue: false, kind: 'boolean' },

@@ -4,6 +4,7 @@
 
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { withMcpDeveloperAuthToken } from '../auth/get-auth-token.ts';
 import { listSourcesToolHandler } from './search.ts';
 

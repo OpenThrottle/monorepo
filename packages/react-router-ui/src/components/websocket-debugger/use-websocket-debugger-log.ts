@@ -1,8 +1,9 @@
-import * as React from 'react';
 import type {
   NotificationEventName,
   NotificationPayload,
 } from '@openthrottle/openthrottle-notifications';
+import * as React from 'react';
+
 import { WEBSOCKET_DEBUGGER_ALL_EVENT_NAMES } from './event-options';
 import type { WebsocketDebuggerLogEntry } from './types';
 import { WEBSOCKET_DEBUGGER_LOG_CAP } from './types';

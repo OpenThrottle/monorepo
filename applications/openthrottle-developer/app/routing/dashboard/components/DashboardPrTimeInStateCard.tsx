@@ -1,11 +1,12 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
 } from '@openthrottle/react-router-shadcn';
+import clsx from 'clsx';
+import * as React from 'react';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+
 import { PR_TIME_IN_STATE_CHART_CONFIG } from '~/routing/dashboard/data/pr-time-in-state-chart';
 
 /** One row for the chart: state + count + avgDaysInState. */

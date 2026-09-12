@@ -1,11 +1,13 @@
-import { beforeEach, describe, expect, test, vi } from 'vitest';
 import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
 import { createTestRouterContext } from '@openthrottle/react-router-testing';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+
+import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
+import * as modelsServer from '~/routing/home/data/models.server';
 import * as readSkillFile from '~/routing/skills/data/read-skill-file.server';
 import * as skillIndexLoaders from '~/routing/skills/data/skill-index-loaders';
-import * as modelsServer from '~/routing/home/data/models.server';
+
 import { loader } from '../skills.$slug';
-import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 
 vi.mock('@openthrottle/react-router-graphql');
 vi.mock('~/routing/skills/data/read-skill-file.server');

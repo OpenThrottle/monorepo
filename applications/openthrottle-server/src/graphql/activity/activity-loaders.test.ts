@@ -4,6 +4,7 @@ import type {
   TasksService,
 } from '@openthrottle/nestjs-repositories';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import { ActivityLoaders } from './activity-loaders';
 
 describe('ActivityLoaders', () => {

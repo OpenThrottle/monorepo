@@ -1,16 +1,18 @@
-import * as React from 'react';
+import type { RenderResult } from '@testing-library/react';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { RenderResult } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import {
   EditorPresenceState,
   WorkspaceEditorId,
 } from '~/__generated__/graphql';
 import { buildEditorPresenceIndex } from '~/routing/settings/utils/workspace-editor-presence-status';
-import { SettingsWorkspaceEditorTargets } from '../SettingsWorkspaceEditorTargets';
+
 import type { SettingsWorkspaceEditorTargetsProps } from '../SettingsWorkspaceEditorTargets';
+import { SettingsWorkspaceEditorTargets } from '../SettingsWorkspaceEditorTargets';
 
 const editors = [
   { id: WorkspaceEditorId.Cursor, label: 'Cursor' },

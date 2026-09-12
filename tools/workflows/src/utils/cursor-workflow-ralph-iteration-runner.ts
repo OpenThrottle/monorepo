@@ -9,8 +9,9 @@
  */
 
 import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
-import { runIterationAsync } from '../bin/run-iteration';
+
 import type { CursorAgentChunk } from '../bin/run-iteration';
+import { runIterationAsync } from '../bin/run-iteration';
 
 /**
  * @description Parameters for one agent iteration; aligned with

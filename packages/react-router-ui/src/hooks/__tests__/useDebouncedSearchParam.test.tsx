@@ -1,7 +1,8 @@
-import * as React from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub, useSearchParams } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+
 import {
   useDebouncedSearchParam,
   type UseDebouncedSearchParamOptions,

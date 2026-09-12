@@ -1,10 +1,5 @@
-import * as React from 'react';
-import { CustomPromptType, GetPromptsDocument } from '~/__generated__/graphql';
-import {
-  mergeRouteModuleMeta,
-  parsePagination,
-} from '@openthrottle/react-router-utils';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { OpenThrottlePagination } from '@openthrottle/react-router-ui';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalErrorBoundary,
@@ -12,20 +7,26 @@ import {
   GlobalFeatureOnboardingModal,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import { OpenThrottlePagination } from '@openthrottle/react-router-ui';
+import {
+  mergeRouteModuleMeta,
+  parsePagination,
+} from '@openthrottle/react-router-utils';
+import * as React from 'react';
+import { useSearchParams } from 'react-router';
+
+import type { Route } from '@/app/routes/+types/prompts._index';
+import { CustomPromptType, GetPromptsDocument } from '~/__generated__/graphql';
+import { SITE_TITLE } from '~/global/config/settings';
+import { PromptsIntroduction } from '~/routing/prompts/components/PromptsIntroduction';
+import { PromptsStats } from '~/routing/prompts/components/PromptsStats';
+import { PromptsTable } from '~/routing/prompts/components/PromptsTable';
+import { PromptToolbar } from '~/routing/prompts/components/PromptToolbar';
+import { PROMPTS_ONBOARDING } from '~/routing/prompts/data/data.copy';
 import {
   parsePromptsSortFromSearchParams,
   parsePromptsTypesFromSearchParams,
 } from '~/routing/prompts/utils/parsers';
 import { isCustomPromptType } from '~/routing/prompts/utils/prompt-type-guards';
-import { PromptsIntroduction } from '~/routing/prompts/components/PromptsIntroduction';
-import { PromptsStats } from '~/routing/prompts/components/PromptsStats';
-import { PromptToolbar } from '~/routing/prompts/components/PromptToolbar';
-import { PromptsTable } from '~/routing/prompts/components/PromptsTable';
-import { PROMPTS_ONBOARDING } from '~/routing/prompts/data/data.copy';
-import { SITE_TITLE } from '~/global/config/settings';
-import { useSearchParams } from 'react-router';
-import type { Route } from '@/app/routes/+types/prompts._index';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

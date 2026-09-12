@@ -4,16 +4,17 @@ import {
   ConflictException,
   NotFoundException,
 } from '@nestjs/common';
-import { getRepositoryToken } from '@nestjs/typeorm';
 import { Test } from '@nestjs/testing';
+import { getRepositoryToken } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import { asMock } from '@openthrottle/nestjs-testing';
 import {
   DEFAULT_SKILL_TAG_VOCABULARY,
   DEFAULT_TAG_VOCABULARY_SEED,
 } from '@openthrottle/openthrottle-skills';
-import { asMock } from '@openthrottle/nestjs-testing';
 import { QueryFailedError } from 'typeorm';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { SkillTagsService } from './skill-tags.service';
 import { UserSkillTag } from './user-skill-tag.entity';
 

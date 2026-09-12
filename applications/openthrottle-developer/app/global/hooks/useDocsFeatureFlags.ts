@@ -1,13 +1,14 @@
 import * as React from 'react';
+
+import type {
+  DocsFeatureFlagKey,
+  DocsFeatureFlags,
+} from '~/global/config/docs-feature-flags';
 import {
   DOCS_FEATURE_FLAG_DEFAULTS,
   isDocsFeatureFlags,
 } from '~/global/config/docs-feature-flags';
 import { usePersistentSetting } from '~/global/hooks/usePersistentSetting';
-import type {
-  DocsFeatureFlagKey,
-  DocsFeatureFlags,
-} from '~/global/config/docs-feature-flags';
 
 /** Namespaced persistent-setting key for the docs feature flags. */
 const DOCS_FEATURE_FLAGS_SETTING = 'docs.featureFlags';

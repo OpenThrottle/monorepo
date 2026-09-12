@@ -1,4 +1,5 @@
 import { buildFaqCategories } from '@openthrottle/react-router-docs';
+
 import { docsManifest } from '~/routing/docs/data/docsManifest';
 
 /** Manifest entries in the `faq` section. */

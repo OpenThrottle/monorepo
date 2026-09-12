@@ -1,6 +1,7 @@
 import { createMock } from '@golevelup/ts-vitest';
-import { describe, expect, test, vi } from 'vitest';
 import type { Queue } from 'bullmq';
+import { describe, expect, test, vi } from 'vitest';
+
 import {
   RUN_PLAN_ORCHESTRATOR_JOB_NAME,
   RUN_PLAN_SPAWN_JOB_NAME,

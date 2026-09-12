@@ -6,13 +6,13 @@
  * failure) returns null instead of throwing.
  */
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
   RepositoryCheckout,
   RepositoryCheckoutsService,
 } from '@openthrottle/nestjs-repositories';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { mockRealpathSync } = vi.hoisted(() => ({
   mockRealpathSync: vi.fn(),

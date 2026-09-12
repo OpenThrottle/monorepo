@@ -6,35 +6,35 @@
  * values. Extracted from the component per component-primitive-shape R7 so the
  * route body stays UI-focused.
  */
-import * as React from 'react';
 import { useAtomValue } from 'jotai';
+import * as React from 'react';
 import { useFetcher, useSearchParams } from 'react-router';
+
+import type { Route } from '@/app/routes/+types/plans.$planId._index';
+import type { PlanDetailsFragment } from '~/__generated__/graphql';
 import { DEFAULT_PLAN_TASKS_VIEW_STORAGE_KEY } from '~/routing/plans/config/defaults';
-import { isPlanStatusKey } from '~/routing/plans/utils/utils.plans';
-import { parsePlanTasksView } from '~/routing/plans/utils/parsers';
-import { getResolvedTaskCount } from '~/routing/plans/utils/utils.plans';
-import { usePlanDeferredValue } from '~/routing/plans/hooks/usePlanDeferredValue';
-import { resolvePlanWorkingDirectory } from '~/routing/plans/utils/resolve-plan-working-directory';
-import { usePlanOutputStream } from '~/routing/plans/hooks/usePlanOutputStream';
-import { usePlanLifecycleRevalidation } from '~/routing/plans/hooks/usePlanLifecycleRevalidation';
-import { usePlanRunConfigEditor } from '~/routing/plans/hooks/usePlanRunConfigEditor';
 import {
   jobRunHooksJsonAtom,
   jobRunHooksValidationAtom,
   runConfigSaveBlockedAtom,
   runConfigSaveBlockedReasonAtom,
   workflowBranchAtom,
-  workflowRalphTuningJsonAtom,
   workflowCheckoutIdAtom,
+  workflowRalphTuningJsonAtom,
   workflowRepositoryIdAtom,
   workflowWorkingDirectoryAtom,
   workspaceRepositoriesReadyAtom,
 } from '~/routing/plans/data/atom.plan';
 import { PLAN_RUN_GATING_COPY } from '~/routing/plans/data/data.copy';
+import { usePlanDeferredValue } from '~/routing/plans/hooks/usePlanDeferredValue';
+import { usePlanLifecycleRevalidation } from '~/routing/plans/hooks/usePlanLifecycleRevalidation';
+import { usePlanOutputStream } from '~/routing/plans/hooks/usePlanOutputStream';
+import { usePlanRunConfigEditor } from '~/routing/plans/hooks/usePlanRunConfigEditor';
 import type { PlanStatusKey } from '~/routing/plans/types';
-
-import type { Route } from '@/app/routes/+types/plans.$planId._index';
-import type { PlanDetailsFragment } from '~/__generated__/graphql';
+import { parsePlanTasksView } from '~/routing/plans/utils/parsers';
+import { resolvePlanWorkingDirectory } from '~/routing/plans/utils/resolve-plan-working-directory';
+import { isPlanStatusKey } from '~/routing/plans/utils/utils.plans';
+import { getResolvedTaskCount } from '~/routing/plans/utils/utils.plans';
 
 export interface UsePlanDetailRouteOptions {
   readonly loaderData: Route.ComponentProps['loaderData'];

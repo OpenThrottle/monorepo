@@ -1,5 +1,6 @@
-import * as React from 'react';
 import { CommandItem as CmdkCommandItem } from 'cmdk';
+import * as React from 'react';
+
 import { cn } from '../../utils/cn';
 
 export interface CommandItemProps extends React.ComponentPropsWithoutRef<

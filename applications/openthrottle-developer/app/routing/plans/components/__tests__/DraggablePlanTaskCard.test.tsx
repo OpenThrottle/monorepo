@@ -1,13 +1,15 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
+
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
-import { DraggablePlanTaskCard } from '../DraggablePlanTaskCard';
+
 import type { DraggablePlanTaskCardProps } from '../DraggablePlanTaskCard';
+import { DraggablePlanTaskCard } from '../DraggablePlanTaskCard';
 
 const mockTask: PlanTaskRowFragment = {
   __typename: 'TaskObject',

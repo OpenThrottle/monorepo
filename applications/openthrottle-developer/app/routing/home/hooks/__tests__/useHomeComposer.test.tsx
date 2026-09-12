@@ -1,6 +1,3 @@
-import { act, render } from '@testing-library/react';
-import * as React from 'react';
-import { createRoutesStub } from 'react-router';
 import type {
   ChatModelOption,
   ChatPersonaOption,
@@ -9,11 +6,16 @@ import {
   chatToolbarStateAtom,
   DEFAULT_CHAT_TOOLBAR_STATE,
 } from '@openthrottle/react-router-chat-state';
+import { act, render } from '@testing-library/react';
 import { getDefaultStore } from 'jotai';
+import * as React from 'react';
+import { createRoutesStub } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+
 import type { RepositoryOption } from '~/routing/home/data/models.server';
 import type { UseAgenticChatTurnResult } from '~/routing/home/hooks/useAgenticChatTurn';
 import type { UseConversationListResult } from '~/routing/home/hooks/useConversationList';
+
 import {
   useHomeComposer,
   type UseHomeComposerOptions,

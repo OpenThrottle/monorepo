@@ -1,22 +1,29 @@
-import * as React from 'react';
-import { Link } from 'react-router';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import { Button } from '@openthrottle/react-router-shadcn';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalErrorBoundary,
   GlobalHeading,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
+import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { BookOpenIcon } from 'lucide-react';
-import { Button } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+import { Link } from 'react-router';
+
+import type { Route } from '@/app/routes/+types/skills.availability';
 import {
   SkillAvailabilityAuthoringRuleSetDocument,
   SkillAvailabilityAuthoringVocabularyDocument,
 } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
+import {
+  resolveDogfoodProject,
+  runAvailabilityAction,
+} from '~/routing/skills/actions/availability';
 import { SkillAvailabilityPostureCard } from '~/routing/skills/components/SkillAvailabilityPostureCard';
 import { SkillAvailabilityRulesEditor } from '~/routing/skills/components/SkillAvailabilityRulesEditor';
+import { DOGFOOD_NX_PROJECT_NAME } from '~/routing/skills/config/availability';
 import { SKILL_AVAILABILITY_COPY } from '~/routing/skills/data/data.copy';
 import {
   isSkillAvailabilityPosture,
@@ -25,12 +32,6 @@ import {
   type SkillTagValue,
 } from '~/routing/skills/utils/skill-availability';
 import { toEnvironmentValue } from '~/routing/skills/utils/skill-availability-action';
-import { DOGFOOD_NX_PROJECT_NAME } from '~/routing/skills/config/availability';
-import {
-  resolveDogfoodProject,
-  runAvailabilityAction,
-} from '~/routing/skills/actions/availability';
-import type { Route } from '@/app/routes/+types/skills.availability';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

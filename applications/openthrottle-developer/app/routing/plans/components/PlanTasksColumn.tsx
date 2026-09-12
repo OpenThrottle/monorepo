@@ -1,10 +1,10 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import {
   Card,
   CardContent,
   CardHeader,
 } from '@openthrottle/react-router-shadcn';
+import clsx from 'clsx';
+import * as React from 'react';
 
 export interface PlanTasksColumnProps {
   children: React.ReactNode;

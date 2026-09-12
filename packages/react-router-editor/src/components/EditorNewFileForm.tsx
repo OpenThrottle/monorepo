@@ -1,6 +1,3 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { useFetcher } from 'react-router';
 import {
   Select,
   SelectContent,
@@ -8,8 +5,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@openthrottle/react-router-shadcn';
-import { PROMPT_TYPE_OPTIONS, PROMPT_TYPE_VALUES } from '../config';
+import clsx from 'clsx';
+import * as React from 'react';
+import { useFetcher } from 'react-router';
+
 import type { PromptType } from '../config';
+import { PROMPT_TYPE_OPTIONS, PROMPT_TYPE_VALUES } from '../config';
 import { getFilenameError, validateFilename } from '../utils';
 
 export interface EditorNewFileFormProps {

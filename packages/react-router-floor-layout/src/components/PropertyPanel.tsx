@@ -1,4 +1,4 @@
-import { Button, Input, Label, cn } from '@openthrottle/react-router-shadcn';
+import { Button, cn, Input, Label } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import { type DisplayUnit, type FloorElement } from '../types';

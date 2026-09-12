@@ -2,12 +2,12 @@
  * @description Request-scoped DataLoader for PlanEmbeddingsResolver (plan by id). One instance per GraphQL request to batch and cache within the request and avoid N+1 when resolving the plan relation across many embedding rows.
  */
 
+import { Injectable, Scope } from '@nestjs/common';
 import {
+  createEntityByIdLoader,
   type Plan,
   PlansService,
-  createEntityByIdLoader,
 } from '@openthrottle/nestjs-repositories';
-import { Injectable, Scope } from '@nestjs/common';
 import type DataLoader from 'dataloader';
 
 /**

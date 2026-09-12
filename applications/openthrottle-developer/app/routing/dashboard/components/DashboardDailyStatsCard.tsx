@@ -1,18 +1,19 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
 } from '@openthrottle/react-router-shadcn';
+import clsx from 'clsx';
+import * as React from 'react';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+
+import type { DashboardDailyStatsCardFragment } from '~/__generated__/graphql';
 import { DAILY_STATS_CHART_CONFIG } from '~/routing/dashboard/data/daily-stats-chart';
-import { resolveDateFromActiveIndex } from '~/routing/dashboard/utils/daily-stats-selection';
 import {
   formatChartDate,
   mapToChartData,
 } from '~/routing/dashboard/utils/daily-stats-chart';
-import type { DashboardDailyStatsCardFragment } from '~/__generated__/graphql';
+import { resolveDateFromActiveIndex } from '~/routing/dashboard/utils/daily-stats-selection';
 
 export interface DashboardDailyStatsCardProps {
   className?: string;

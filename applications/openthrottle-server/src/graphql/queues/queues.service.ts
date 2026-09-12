@@ -3,22 +3,29 @@
  */
 
 import { posix } from 'node:path';
+
 import { InjectQueue } from '@nestjs/bullmq';
-import type { Job, JobState, Queue } from 'bullmq';
-import { Queue as BullQueue } from 'bullmq';
-import { ConfigService } from '@nestjs/config';
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { resolveQueuePrefix } from '@openthrottle/nestjs-bullmq';
 import { isRecord } from '@openthrottle/nodejs-utils';
+import type { Job, JobState, Queue } from 'bullmq';
+import { Queue as BullQueue } from 'bullmq';
+
 import {
   AGENTIC_TEST_JOB_NAME,
   AGENTIC_TEST_QUEUE_NAME,
 } from '../../queues/agentic-test/agentic-test.constants';
 import type { AgenticTestJobPayload } from '../../queues/agentic-test/agentic-test.types';
+import { CODE_INDEX_QUEUE_NAME } from '../../queues/code-index/code-index.constants';
 import { DAILY_STATS_QUEUE_NAME } from '../../queues/daily-stats/daily-stats.constants';
 import type { AggregateDailyStatsJobData } from '../../queues/daily-stats/daily-stats.types';
+import { DATABASE_BACKUP_QUEUE_NAME } from '../../queues/database-backup/database-backup.constants';
+import type { DatabaseBackupJobPayload } from '../../queues/database-backup/database-backup.types';
 import { DOC_INGESTION_QUEUE_NAME } from '../../queues/doc-ingestion/doc-ingestion.constants';
 import type { DocIngestionJobPayload } from '../../queues/doc-ingestion/doc-ingestion.types';
+import { PLAN_LIFECYCLE_HOOKS_QUEUE_NAME } from '../../queues/plan-lifecycle-hooks/plan-lifecycle-hooks.constants';
+import { PLAN_RULES_QUEUE_NAME } from '../../queues/plan-rules/plan-rules.constants';
 import {
   PLANS_QUEUE_NAME,
   RUN_PLAN_ORCHESTRATOR_JOB_NAME,
@@ -28,11 +35,6 @@ import type {
   RunPlanJobData,
   RunPlanOrchestratorJobData,
 } from '../../queues/plans/plans.types';
-import { CODE_INDEX_QUEUE_NAME } from '../../queues/code-index/code-index.constants';
-import { DATABASE_BACKUP_QUEUE_NAME } from '../../queues/database-backup/database-backup.constants';
-import type { DatabaseBackupJobPayload } from '../../queues/database-backup/database-backup.types';
-import { PLAN_LIFECYCLE_HOOKS_QUEUE_NAME } from '../../queues/plan-lifecycle-hooks/plan-lifecycle-hooks.constants';
-import { PLAN_RULES_QUEUE_NAME } from '../../queues/plan-rules/plan-rules.constants';
 import { TAGGING_QUEUE_NAME } from '../../queues/tagging/tagging.constants';
 import { TASK_PROMOTION_QUEUE_NAME } from '../../queues/task-promotion/task-promotion.constants';
 import { WORK_LEDGER_SWEEP_QUEUE_NAME } from '../../queues/work-ledger-sweep/work-ledger-sweep.constants';

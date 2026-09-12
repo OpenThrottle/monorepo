@@ -1,4 +1,5 @@
 import { SetMetadata } from '@nestjs/common';
+
 import type { Permission } from '../roles';
 
 /** Metadata key for required permissions on a route. */

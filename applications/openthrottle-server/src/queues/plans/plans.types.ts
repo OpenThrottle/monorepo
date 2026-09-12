@@ -1,9 +1,10 @@
-import type { Job } from 'bullmq';
 import type { WorktreeWorkflowResult } from '@openthrottle/nestjs-worktrees';
 import type {
   ChildProcessMetrics,
   WallClockMetrics,
 } from '@openthrottle/openthrottle-agentic-utils';
+import type { Job } from 'bullmq';
+
 import type { TaskRunMetrics } from '../../metrics/process-metrics.types';
 import type { RunPlanOrchestratorJobData } from '../agentic-ralph/agentic-ralph.types';
 import { isRunPlanOrchestratorJobData } from '../agentic-ralph/agentic-ralph.types';

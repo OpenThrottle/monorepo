@@ -1,23 +1,24 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { NotFoundException } from '@nestjs/common';
-import { describe, expect, test, vi } from 'vitest';
-import {
-  PERSISTED_CONVERSATION_NOT_FOUND_ERROR,
-  parseAgentsChatTurnToolMetadata,
-  persistSuccessfulAgentsChatTurn,
-  resolveHumanUserForPersist,
-  resolvePersistedConversation,
-} from './agents-chat-persistence';
 import {
   AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
   AUTH_PRINCIPAL_KIND_USER,
 } from '@openthrottle/nestjs-auth';
+import type { AgentConversationsService } from '@openthrottle/nestjs-repositories';
 import {
   agentConversationMessagesFactory,
   agentConversationsFactory,
 } from '@openthrottle/nestjs-repositories';
-import type { AgentConversationsService } from '@openthrottle/nestjs-repositories';
+import { describe, expect, test, vi } from 'vitest';
+
 import { AgentsChatTurnResult } from './agents.object';
+import {
+  parseAgentsChatTurnToolMetadata,
+  PERSISTED_CONVERSATION_NOT_FOUND_ERROR,
+  persistSuccessfulAgentsChatTurn,
+  resolveHumanUserForPersist,
+  resolvePersistedConversation,
+} from './agents-chat-persistence';
 
 describe('agents-chat-persistence', () => {
   describe('resolveHumanUserForPersist', () => {

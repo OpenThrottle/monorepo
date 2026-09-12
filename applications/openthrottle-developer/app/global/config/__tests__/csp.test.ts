@@ -1,5 +1,6 @@
 import { ENV_SOURCE } from '@openthrottle/react-router-utils';
 import { describe, expect, test } from 'vitest';
+
 import { getCspOptions } from '../csp';
 
 describe('getCspOptions', () => {

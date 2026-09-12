@@ -1,4 +1,5 @@
 import * as React from 'react';
+
 import type { ChatModelGroup, ChatModelOption } from '../types';
 
 /** Id of the synthetic favorites group (the rail's first entry). */

@@ -1,5 +1,6 @@
 import type { FactoryProvider, ModuleMetadata } from '@nestjs/common';
 import { isRecord } from '@openthrottle/nodejs-utils';
+
 import { NestjsThrottlerError } from './nestjs-throttler.error';
 
 /**

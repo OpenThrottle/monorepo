@@ -1,11 +1,13 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test, vi } from 'vitest';
-import { PlanWorkflowConfigWorktreeCursorFields } from '../PlanWorkflowConfigWorktreeCursorFields';
-import type { PlanWorkflowConfigWorktreeCursorFieldsProps } from '../PlanWorkflowConfigWorktreeCursorFields';
+
 import { getDefaultWorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
+
+import type { PlanWorkflowConfigWorktreeCursorFieldsProps } from '../PlanWorkflowConfigWorktreeCursorFields';
+import { PlanWorkflowConfigWorktreeCursorFields } from '../PlanWorkflowConfigWorktreeCursorFields';
 
 const renderFields = (
   props: PlanWorkflowConfigWorktreeCursorFieldsProps,

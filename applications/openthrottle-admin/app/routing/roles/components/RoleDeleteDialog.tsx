@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,8 +10,10 @@ import {
   AlertDialogTrigger,
   Button,
 } from '@openthrottle/react-router-shadcn';
-import type { action as roleDetailAction } from '~/routes/roles.$roleId';
+import * as React from 'react';
 import type { useFetcher } from 'react-router';
+
+import type { action as roleDetailAction } from '~/routes/roles.$roleId';
 
 export interface RoleDeleteDialogProps {
   fetcher: ReturnType<typeof useFetcher<typeof roleDetailAction>>;

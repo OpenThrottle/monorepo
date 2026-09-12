@@ -4,9 +4,10 @@
  * to the corresponding emit methods so the EmitNotificationInterceptor can use this as the injectable emitter.
  */
 
+import { Injectable } from '@nestjs/common';
 import type { EmitNotificationEmitter } from '@openthrottle/nestjs-websockets';
 import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
-import { Injectable } from '@nestjs/common';
+
 import { NotificationsService } from './notifications.service';
 
 /*

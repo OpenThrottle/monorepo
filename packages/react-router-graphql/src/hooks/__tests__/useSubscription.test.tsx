@@ -1,8 +1,9 @@
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
-import { parse } from 'graphql';
 import { render } from '@testing-library/react';
+import { parse } from 'graphql';
 import * as React from 'react';
-import { type Mock, afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, type Mock, vi } from 'vitest';
+
 import type { GraphqlWsClient } from '../createGraphqlWsClient';
 import { useSubscription } from '../useSubscription';
 

@@ -1,10 +1,11 @@
-import * as React from 'react';
-import { cleanup, render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { cleanup, render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { TypeMultiSelect } from '../TypeMultiSelect';
+
 import type { TypeMultiSelectProps } from '../TypeMultiSelect';
+import { TypeMultiSelect } from '../TypeMultiSelect';
 
 describe('TypeMultiSelect Component', () => {
   let component: RenderResult;

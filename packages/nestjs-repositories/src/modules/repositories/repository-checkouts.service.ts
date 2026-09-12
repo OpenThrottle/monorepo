@@ -7,11 +7,12 @@ import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { Repository as OrmRepository } from 'typeorm';
-import { isUniqueViolation } from '../../common/unique-violation';
+
 import {
   type ListPaginationInput,
   resolveListPagination,
 } from '../../common/list-pagination';
+import { isUniqueViolation } from '../../common/unique-violation';
 import {
   RepositoryCheckout,
   type RepositoryCheckoutKind,

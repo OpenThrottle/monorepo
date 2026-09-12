@@ -1,5 +1,7 @@
 import { describe, expect, test } from 'vitest';
+
 import type { RepositoryCheckoutFieldsFragment } from '~/__generated__/graphql';
+
 import { deriveCheckoutInspectionBadges } from '../checkout-inspection-badges';
 
 type CheckoutInspection = RepositoryCheckoutFieldsFragment['inspection'];

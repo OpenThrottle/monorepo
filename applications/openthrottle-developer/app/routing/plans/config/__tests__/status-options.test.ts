@@ -1,11 +1,12 @@
 import { describe, expect, test } from 'vitest';
+
 import {
   DEFAULT_PLAN_STATUS,
   DEFAULT_STATUSES,
-  PLAN_STATUS_FILTER_OPTIONS,
   isPlanStatusFilterValue,
-  parseStatusFromSearchParams,
   parseStatusesFromSearchParams,
+  parseStatusFromSearchParams,
+  PLAN_STATUS_FILTER_OPTIONS,
 } from '../status-options';
 
 describe('status-options constants', () => {

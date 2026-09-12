@@ -1,11 +1,13 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { PullRequestActionsLinks } from '../PullRequestActionsLinks';
-import type { PullRequestActionsLinksProps } from '../PullRequestActionsLinks';
-import { githubRepoActionsForBranchUrl } from '~/routing/pull-requests/utils/github-pr-links';
+
 import type { PullRequestDetailFragment } from '~/__generated__/graphql';
+import { githubRepoActionsForBranchUrl } from '~/routing/pull-requests/utils/github-pr-links';
+
+import type { PullRequestActionsLinksProps } from '../PullRequestActionsLinks';
+import { PullRequestActionsLinks } from '../PullRequestActionsLinks';
 
 const pull: PullRequestDetailFragment = {
   __typename: 'PullListItemObject',

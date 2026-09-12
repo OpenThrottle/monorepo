@@ -6,8 +6,8 @@
  * `toSkillDetailUsageData` for the single-skill detail card.
  */
 
-import type { SkillsIndexUsageData } from '~/routing/skills/data/skills-index-usage';
 import type { GetUsageSkillUsageQuery } from '~/__generated__/graphql';
+import type { SkillsIndexUsageData } from '~/routing/skills/data/skills-index-usage';
 
 /** Map the deferred aggregate usage query → the sections' discriminated prop. */
 export const toSkillsIndexUsageData = (

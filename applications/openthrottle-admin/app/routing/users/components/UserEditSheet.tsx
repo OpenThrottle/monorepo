@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Button,
   Input,
@@ -9,9 +8,11 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@openthrottle/react-router-shadcn';
-import type { action as userDetailAction } from '~/routes/users.$userId';
+import * as React from 'react';
 import type { useFetcher } from 'react-router';
+
 import type { UserDetailsFragment } from '~/__generated__/graphql';
+import type { action as userDetailAction } from '~/routes/users.$userId';
 
 export interface UserEditSheetProps {
   fetcher: ReturnType<typeof useFetcher<typeof userDetailAction>>;

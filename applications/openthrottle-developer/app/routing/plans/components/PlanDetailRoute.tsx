@@ -5,14 +5,13 @@
  * a component cannot consume a Jotai Provider it renders in its own JSX, so the body
  * lives here. Extracted from `routes/plans.$planId._index.tsx`; behavior is unchanged.
  */
-import * as React from 'react';
 import { Card } from '@openthrottle/react-router-shadcn';
-import { GlobalScreen } from '@openthrottle/react-router-ui-global';
 import { OpenThrottleTabs } from '@openthrottle/react-router-ui';
-import {
-  PLANS_DETAIL_TAB_SEARCH_PARAM,
-  parsePlanDetailTab,
-} from '~/routing/plans/utils/parsers';
+import { GlobalScreen } from '@openthrottle/react-router-ui-global';
+import * as React from 'react';
+
+import type { Route } from '@/app/routes/+types/plans.$planId._index';
+import type { PlanDetailsFragment } from '~/__generated__/graphql';
 import { PlanDetailRouteHeader } from '~/routing/plans/components/PlanDetailRouteHeader';
 import { PlanDetailTabsList } from '~/routing/plans/components/PlanDetailTabsList';
 import { PlanTabConfiguration } from '~/routing/plans/components/PlanTabConfiguration';
@@ -21,10 +20,12 @@ import { PlanTabOutput } from '~/routing/plans/components/PlanTabOutput';
 import { PlanTabTasks } from '~/routing/plans/components/PlanTabTasks';
 import { PlanTasksBoard } from '~/routing/plans/components/PlanTasksBoard';
 import { PlanToolbar } from '~/routing/plans/components/PlanToolbar';
-import { usePlanDetailRoute } from '~/routing/plans/hooks/usePlanDetailRoute';
-import type { Route } from '@/app/routes/+types/plans.$planId._index';
-import type { PlanDetailsFragment } from '~/__generated__/graphql';
 import { usePlanCheckoutSelection } from '~/routing/plans/hooks/usePlanCheckoutSelection';
+import { usePlanDetailRoute } from '~/routing/plans/hooks/usePlanDetailRoute';
+import {
+  parsePlanDetailTab,
+  PLANS_DETAIL_TAB_SEARCH_PARAM,
+} from '~/routing/plans/utils/parsers';
 
 export interface PlanDetailRouteProps {
   readonly loaderData: Route.ComponentProps['loaderData'];

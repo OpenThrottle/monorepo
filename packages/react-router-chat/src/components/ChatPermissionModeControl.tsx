@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Button,
   DropdownMenu,
@@ -6,8 +5,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@openthrottle/react-router-shadcn';
-import { Check, Lock } from 'lucide-react';
 import clsx from 'clsx';
+import { Check, Lock } from 'lucide-react';
+import * as React from 'react';
+
 import { PERMISSION_MODE_META } from '../data/chat-permission-mode-meta';
 import type { ChatPermissionMode } from '../types';
 import type { ChatBackendCapabilities } from '../types';

@@ -5,12 +5,13 @@
  * preference for system notifications and tuning" (localStorage).
  */
 
+import { isRecord } from '@openthrottle/nodejs-utils';
 import type {
   NotificationEventName,
   NotificationPayload,
 } from '@openthrottle/openthrottle-notifications';
-import { isRecord } from '@openthrottle/nodejs-utils';
 import { IS_BROWSER } from '@openthrottle/react-router-utils';
+
 import { NOTIFICATIONS_STORAGE_KEY } from '../config/index';
 
 /** @public */

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { buildInFlightByJob } from '~/routing/schedule/utils/build-in-flight-by-job';
+
 import type { ScheduleInFlightRunFragment } from '~/__generated__/graphql';
+import { buildInFlightByJob } from '~/routing/schedule/utils/build-in-flight-by-job';
 
 const run = (
   id: string,

@@ -1,18 +1,19 @@
-import * as React from 'react';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import {
-  mergeRouteModuleMeta,
-  parsePagination,
-} from '@openthrottle/react-router-utils';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalErrorBoundary,
   GlobalScreen,
   readSearchParam,
 } from '@openthrottle/react-router-ui-global';
-import { SITE_TITLE } from '~/global/config/settings';
+import {
+  mergeRouteModuleMeta,
+  parsePagination,
+} from '@openthrottle/react-router-utils';
+import * as React from 'react';
+
+import type { Route } from '@/app/routes/+types/settings.repositories._index';
 import { GetSettingsRepositoriesDocument } from '~/__generated__/graphql';
-import { RepositoriesSection } from '~/routing/settings/repositories/components/RepositoriesSection';
+import { SITE_TITLE } from '~/global/config/settings';
 import {
   addFolder,
   browseDirectory,
@@ -21,17 +22,17 @@ import {
   pickFolderNative,
   refreshCheckout,
 } from '~/routing/settings/repositories/actions/repositories';
+import { RepositoriesSection } from '~/routing/settings/repositories/components/RepositoriesSection';
 import {
+  isRepositoriesSortBy,
+  isRepositoriesSortOrder,
   REPOSITORIES_DEFAULT_LIMIT,
   REPOSITORIES_DEFAULT_SORT_BY,
   REPOSITORIES_DEFAULT_SORT_ORDER,
-  isRepositoriesSortBy,
-  isRepositoriesSortOrder,
 } from '~/routing/settings/repositories/config/repositories.defaults';
 import { buildRepositoryRows } from '~/routing/settings/repositories/utils/rows';
 import { filterRepositoryRows } from '~/routing/settings/repositories/utils/search';
 import { sortRepositoryRows } from '~/routing/settings/repositories/utils/sorting';
-import type { Route } from '@/app/routes/+types/settings.repositories._index';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

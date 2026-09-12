@@ -6,8 +6,9 @@
 import { Module } from '@nestjs/common';
 import { GlobalClsModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
-import { WorkLedgerCaptureService } from './work-ledger-capture.service';
+
 import { WorkLedgerResolver } from './work-ledger.resolver';
+import { WorkLedgerCaptureService } from './work-ledger-capture.service';
 
 @Module({
   exports: [WorkLedgerCaptureService],

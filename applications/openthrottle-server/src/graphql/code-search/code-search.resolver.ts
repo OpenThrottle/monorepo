@@ -5,15 +5,16 @@
  * queue, and derives index status. Backs the /ide Semantic tab.
  */
 
+import { InjectQueue } from '@nestjs/bullmq';
 import { BadRequestException, UseGuards } from '@nestjs/common';
 import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { InjectQueue } from '@nestjs/bullmq';
 import { CurrentUser } from '@openthrottle/nestjs-auth';
-import { toContainerPath } from '@openthrottle/openthrottle-agentic-utils';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 import { WorkspaceLocalRepositoriesService } from '@openthrottle/nestjs-repositories';
 import { CodeSearchService } from '@openthrottle/nestjs-vector-search';
+import { toContainerPath } from '@openthrottle/openthrottle-agentic-utils';
 import { Queue } from 'bullmq';
+
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
 import {
   CODE_INDEX_QUEUE_NAME,

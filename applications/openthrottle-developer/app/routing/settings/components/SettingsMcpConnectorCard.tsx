@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Badge,
   Button,
@@ -9,7 +8,9 @@ import {
   CardHeader,
   CardTitle,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
 import { Link } from 'react-router';
+
 import type {
   McpConnectorConnectionFieldsFragment,
   McpConnectorFieldsFragment,
@@ -19,6 +20,7 @@ import {
   MCP_TRANSPORT_LABEL,
 } from '~/routing/settings/data/mcp-connectors.data';
 import { getConnectorStatus } from '~/routing/settings/utils/settings-mcp-connection';
+
 import { SettingsMcpConnectionStatusBadge } from './SettingsMcpConnectionStatusBadge';
 
 export interface SettingsMcpConnectorCardProps {

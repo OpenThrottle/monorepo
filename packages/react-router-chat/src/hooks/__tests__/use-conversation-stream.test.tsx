@@ -1,12 +1,13 @@
+import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { renderHook } from '@testing-library/react';
 import { parse } from 'graphql';
 import { describe, expect, test } from 'vitest';
-import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
+
 import type { ChatMessage } from '../../types';
 import {
-  useConversationStream,
   type ConversationStreamSubscriptionData,
   type ConversationStreamSubscriptionVariables,
+  useConversationStream,
 } from '../use-conversation-stream';
 
 // A syntactically-valid document so `print(document)` in useSubscription never

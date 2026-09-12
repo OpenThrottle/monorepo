@@ -12,6 +12,7 @@ import { existsSync, statSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { isAbsolute, join } from 'node:path';
 import { promisify } from 'node:util';
+
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
@@ -20,6 +21,7 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { isRecord } from '@openthrottle/nodejs-utils';
 import { toContainerPath } from '@openthrottle/openthrottle-agentic-utils';
+
 import { parseLinkedWorktrees } from './parse-linked-worktrees';
 import type {
   RepositoryInspectionAgentConfig,

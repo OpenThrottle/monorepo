@@ -1,6 +1,3 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { useFetcher } from 'react-router';
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -19,6 +16,10 @@ import {
   ToggleGroupItem,
 } from '@openthrottle/react-router-shadcn';
 import { getActionError } from '@openthrottle/react-router-utils';
+import clsx from 'clsx';
+import * as React from 'react';
+import { useFetcher } from 'react-router';
+
 import { SKILL_AVAILABILITY_COPY } from '~/routing/skills/data/data.copy';
 import {
   isSkillAvailabilityPosture,

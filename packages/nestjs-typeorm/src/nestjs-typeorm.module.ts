@@ -1,6 +1,7 @@
+import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { Module } from '@nestjs/common';
+
 import { DatabaseModule } from './modules/database/database.module';
 import { schema } from './nestjs-typeorm.config';
 

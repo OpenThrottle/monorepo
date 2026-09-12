@@ -1,7 +1,7 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import type { PullRequestCardFragment } from '@openthrottle/openthrottle-developer-codegen';
+import clsx from 'clsx';
 import { CircleIcon } from 'lucide-react';
+import * as React from 'react';
 
 export interface PullRequestStatusProps {
   state: PullRequestCardFragment['state'];

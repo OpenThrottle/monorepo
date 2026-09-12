@@ -4,8 +4,8 @@
 
 import type { ProcessMetricsSnapshot } from './metrics-types';
 import {
-  DEFAULT_REQUEST_TIMEOUT_MS,
   buildRequestSignal,
+  DEFAULT_REQUEST_TIMEOUT_MS,
 } from './request-timeout';
 
 /** Numeric fields that must all be present and finite on a valid snapshot. */

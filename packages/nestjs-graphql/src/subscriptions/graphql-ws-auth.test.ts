@@ -1,12 +1,13 @@
 import jwt from 'jsonwebtoken';
 import { describe, expect, it } from 'vitest';
+
 import {
   createGraphqlWsOnConnect,
   extractConnectionToken,
+  type GraphqlWsConnectionContext,
   isGraphqlWsContext,
   resolveGraphqlWsUserId,
   verifyConnectionToken,
-  type GraphqlWsConnectionContext,
 } from './graphql-ws-auth';
 
 const SECRET = 'test-secret';

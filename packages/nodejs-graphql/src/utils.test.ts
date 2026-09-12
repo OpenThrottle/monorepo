@@ -1,5 +1,6 @@
 import { isRecord } from '@openthrottle/nodejs-utils';
 import { afterEach, describe, expect, it } from 'vitest';
+
 import {
   getGraphQLToken,
   getGraphQLUrl,

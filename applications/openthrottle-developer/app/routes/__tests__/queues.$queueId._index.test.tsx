@@ -1,15 +1,17 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
+import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { createTestRouterContext } from '@openthrottle/react-router-testing';
 import {
   DEFAULT_PAGINATION_LIMIT,
   getPublicEnv,
 } from '@openthrottle/react-router-utils';
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import QueueDetailIndex, { loader } from '../queues.$queueId._index';
+
 import type { Route } from '@/app/routes/+types/queues.$queueId._index';
-import { createTestRouterContext } from '@openthrottle/react-router-testing';
+
+import QueueDetailIndex, { loader } from '../queues.$queueId._index';
 
 vi.mock('@openthrottle/react-router-graphql', async (importOriginal) => {
   const actual =

@@ -6,9 +6,11 @@
  * seeded store, so all run-config atoms auto-reset and two mounted plan routes
  * never share state. This replaces the shell's former plan-change re-seed effect.
  */
-import * as React from 'react';
 import { createStore, Provider } from 'jotai';
+import * as React from 'react';
+
 import type { PlanRunConfigRepositoryFieldsFragment } from '~/__generated__/graphql';
+import { PlanRunConfigRepositoriesHydrator } from '~/routing/plans/components/PlanRunConfigRepositoriesHydrator';
 import {
   getWorkflowRunSeedValues,
   jobRunHookDraftRowsAtom,
@@ -17,11 +19,10 @@ import {
   workflowRalphRunOptionsAtom,
   workflowRepositoryIdAtom,
   workflowRunIterationTimeoutTextAtom,
-  workflowWorkingDirectoryAtom,
   type WorkflowRunSeedPlan,
+  workflowWorkingDirectoryAtom,
 } from '~/routing/plans/data/atom.plan';
 import { resolveDefaultRunBranch } from '~/routing/plans/utils/plan-run-branch';
-import { PlanRunConfigRepositoriesHydrator } from '~/routing/plans/components/PlanRunConfigRepositoriesHydrator';
 
 export interface PlanRunConfigStoreProviderProps {
   readonly children: React.ReactNode;

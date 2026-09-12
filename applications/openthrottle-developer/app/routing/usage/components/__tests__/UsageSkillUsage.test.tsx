@@ -1,20 +1,22 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import { UsageSkillUsage } from '../UsageSkillUsage';
-import type { UsageSkillUsageProps } from '../UsageSkillUsage';
-import {
-  SKILL_USAGE_COPY,
-  SKILL_USAGE_SCOPES,
-} from '../../data/skill-usage-copy';
+
 import type {
   UsageSkillUsageByDayFragment,
   UsageSkillUsageByScopeFragment,
   UsageSkillUsageBySkillFragment,
   UsageSkillUsageFilterOptionsFragment,
 } from '~/__generated__/graphql';
+
+import {
+  SKILL_USAGE_COPY,
+  SKILL_USAGE_SCOPES,
+} from '../../data/skill-usage-copy';
+import type { UsageSkillUsageProps } from '../UsageSkillUsage';
+import { UsageSkillUsage } from '../UsageSkillUsage';
 
 const buildBySkill = (
   overrides: Partial<UsageSkillUsageBySkillFragment>,

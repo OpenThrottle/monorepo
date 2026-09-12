@@ -10,19 +10,21 @@
  * - Drag a task card to another column: status should update (optimistic move), then match the server after the action; the
  *   `aria-live` region should announce moves and errors.
  */
-import * as React from 'react';
+import type { RenderResult } from '@testing-library/react';
 import { act, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import type { RenderResult } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { PlanTasksBoard } from '../PlanTasksBoard';
+
+import type { PlanTaskRowFragment } from '~/__generated__/graphql';
 import {
   buildPlanDetailLoaderData,
   renderWithPlanDetailRouteData,
 } from '~/routing/plans/testing/plan-detail-route-data';
-import type { PlanTaskRowFragment } from '~/__generated__/graphql';
+
+import { PlanTasksBoard } from '../PlanTasksBoard';
 
 // Spy on the toast boundary so we can assert the move-status effect fires
 // exactly once per real busy->idle transition (never on a stale re-render).

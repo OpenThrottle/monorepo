@@ -1,5 +1,3 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import {
   Card,
   CardContent,
@@ -7,6 +5,9 @@ import {
   CardHeader,
   CardTitle,
 } from '@openthrottle/react-router-shadcn';
+import clsx from 'clsx';
+import * as React from 'react';
+
 import type { ProposedPlanDecomposition } from '~/routing/plans/types/document-decompose';
 
 export interface DocumentDecomposePreviewProps {

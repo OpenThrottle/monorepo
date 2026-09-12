@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { normalizeSource } from '../search-card';
 
 describe('normalizeSource', () => {

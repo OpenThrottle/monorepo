@@ -18,9 +18,9 @@ import {
 } from 'react';
 
 import {
+  clampPointToRect,
   type Point,
   type Rect,
-  clampPointToRect,
   snapPointToGrid,
 } from '../utils/geometry';
 

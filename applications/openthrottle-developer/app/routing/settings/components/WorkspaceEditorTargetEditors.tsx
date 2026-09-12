@@ -1,15 +1,16 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import { Badge } from '@openthrottle/react-router-shadcn';
+import clsx from 'clsx';
+import * as React from 'react';
+
+import type {
+  EditorPresenceState,
+  WorkspaceEditorId,
+} from '~/__generated__/graphql';
 import { WorkspaceEditorPresenceMarker } from '~/routing/settings/components/WorkspaceEditorPresenceMarker';
 import {
   getEditorPresenceStatus,
   readEditorPresence,
 } from '~/routing/settings/utils/workspace-editor-presence-status';
-import type {
-  EditorPresenceState,
-  WorkspaceEditorId,
-} from '~/__generated__/graphql';
 import type { WorkspaceEditorTargetEditor } from '~/routing/settings/utils/workspace-editor-targets';
 
 export interface WorkspaceEditorTargetEditorsProps {

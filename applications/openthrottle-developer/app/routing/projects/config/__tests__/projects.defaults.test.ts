@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { PROJECTS_DEFAULT_LIMIT } from '../projects.defaults';
 
 describe('routing/projects config projects.defaults', () => {

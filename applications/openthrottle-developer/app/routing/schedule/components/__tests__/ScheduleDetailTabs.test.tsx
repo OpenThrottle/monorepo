@@ -1,15 +1,17 @@
-import * as React from 'react';
 import type { RenderResult } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { useLocation } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import { ScheduleDetailTabs } from '../ScheduleDetailTabs';
-import type { ScheduleDetailTabsProps } from '../ScheduleDetailTabs';
+
 import type { ScheduledJobRunRowFragment } from '~/__generated__/graphql';
 import {
   renderRoutesStub,
   renderWithMemoryRouter,
 } from '~/testing/route-fixtures';
+
+import type { ScheduleDetailTabsProps } from '../ScheduleDetailTabs';
+import { ScheduleDetailTabs } from '../ScheduleDetailTabs';
 
 const run = (
   overrides: Partial<ScheduledJobRunRowFragment> = {},

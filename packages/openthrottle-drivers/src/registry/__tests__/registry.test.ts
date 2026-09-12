@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
+
 import { UnknownDriverError } from '../../errors/index.ts';
 import type { AgentDriver } from '../../types/index.ts';
 import {
   DEFAULT_DRIVER_ID,
-  DRIVER_IDS,
   defineDriver,
+  DRIVER_IDS,
   isDriverId,
   lookupDriver,
   parseDriverId,

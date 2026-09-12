@@ -34,6 +34,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { isRecord } from '@openthrottle/nodejs-utils';
+
 import { resolveAuthToken, resolveGraphqlUrl } from '../config/env';
 import { logHookError } from '../utils/logging';
 

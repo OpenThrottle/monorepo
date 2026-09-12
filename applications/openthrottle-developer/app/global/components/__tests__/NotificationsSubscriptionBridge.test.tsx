@@ -1,11 +1,12 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
+import { NotificationsStoreProvider } from '@openthrottle/react-router-notifications';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { NotificationsStoreProvider } from '@openthrottle/react-router-notifications';
-import { NotificationsSubscriptionBridge } from '../NotificationsSubscriptionBridge';
+
 import type { NotificationsSubscriptionBridgeProps } from '../NotificationsSubscriptionBridge';
+import { NotificationsSubscriptionBridge } from '../NotificationsSubscriptionBridge';
 
 describe('NotificationsSubscriptionBridge Component', () => {
   let component: RenderResult;

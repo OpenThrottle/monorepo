@@ -13,14 +13,13 @@ import { mkdir, readdir, rm } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { basename, dirname, isAbsolute, join } from 'node:path';
 import { promisify } from 'node:util';
+
 import {
   BadRequestException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { isRecord } from '@openthrottle/nodejs-utils';
-import { expandHome } from '../../services/paths/expand-home';
 import type {
   Repository,
   RepositoryCheckout,
@@ -31,13 +30,16 @@ import {
   RepositoriesService,
   RepositoryCheckoutsService,
 } from '@openthrottle/nestjs-repositories';
+import { isRecord } from '@openthrottle/nodejs-utils';
 import {
   toContainerPath,
   toHostPath,
 } from '@openthrottle/openthrottle-agentic-utils';
+
+import { ForeignSkillMaterializationService } from '../../services/foreign-skill-injection/foreign-skill-materialization.service';
+import { expandHome } from '../../services/paths/expand-home';
 import { RepositoryInspectionService } from '../repository-inspection/repository-inspection.service';
 import type { RepositoryInspectionSnapshot } from '../repository-inspection/repository-inspection.snapshot';
-import { ForeignSkillMaterializationService } from '../../services/foreign-skill-injection/foreign-skill-materialization.service';
 import {
   canUseNativeFolderDialog,
   type NativeDialogRunner,

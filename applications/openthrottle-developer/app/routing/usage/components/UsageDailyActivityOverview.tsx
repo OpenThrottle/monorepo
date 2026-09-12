@@ -1,5 +1,6 @@
-import * as React from 'react';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
+import * as React from 'react';
+
 import {
   USAGE_COMPLETION_ATTRIBUTION_CAVEAT,
   USAGE_DAILY_STATS_SERIES,

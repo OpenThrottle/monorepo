@@ -11,8 +11,8 @@
 export * from './types';
 
 // Hardcoded element catalog (default sizes/seats/layer + palette copy)
-export * from './data/elements';
 export * from './data/data.demo';
+export * from './data/elements';
 
 // Components (editor + canvas, grid, element views, palette, panel, handles, toolbar)
 export * from './components/ElementPalette';

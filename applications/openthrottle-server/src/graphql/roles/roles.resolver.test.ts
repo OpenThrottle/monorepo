@@ -2,14 +2,15 @@
  * @description Unit tests for RolesResolver. Guards are mocked so permission checks are not exercised here.
  */
 
+import { createMock } from '@golevelup/ts-vitest';
+import { Test } from '@nestjs/testing';
+import type { Permission, Role } from '@openthrottle/nestjs-repositories';
 import {
   PermissionsService,
   RolesService,
 } from '@openthrottle/nestjs-repositories';
-import type { Permission, Role } from '@openthrottle/nestjs-repositories';
-import { createMock } from '@golevelup/ts-vitest';
-import { Test } from '@nestjs/testing';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
+
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
 import type {
   // AddPermissionToRoleInput,

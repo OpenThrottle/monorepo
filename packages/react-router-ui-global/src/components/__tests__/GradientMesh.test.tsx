@@ -1,6 +1,7 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
+import * as React from 'react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
+
 import { GradientMesh } from '../GradientMesh';
 
 /**

@@ -7,28 +7,29 @@
  */
 
 import { createMock } from '@golevelup/ts-vitest';
-import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type { GitHubService } from '@openthrottle/nestjs-github';
+import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
   Plan,
-  PlanTag,
   PlansService,
+  PlanTag,
   ServiceAccountsService,
   SkillTagsService,
   TagsService,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
 import { asMock } from '@openthrottle/nestjs-testing';
-import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
+import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
+
 import type { PlanRulesEvaluationService } from '../plan-rules/plan-rules-evaluation.service';
-import { StubTaggingModelProvider } from './tagging-model-providers';
+import { TaggingProcessor } from './tagging.processor';
+import type { PredictTaggingJob, RefineTaggingJob } from './tagging.types';
 import {
   parseTaggingResponse,
   type TaggingModelProvider,
   type TaggingPrediction,
 } from './tagging-model.provider';
-import { TaggingProcessor } from './tagging.processor';
-import type { PredictTaggingJob, RefineTaggingJob } from './tagging.types';
+import { StubTaggingModelProvider } from './tagging-model-providers';
 
 const planId = '00000000-0000-4000-8000-000000000001';
 

@@ -18,8 +18,9 @@
  *  - Anonymous (no identity, no header) returns `null` — shared public cache.
  */
 
-import type { BaseContext } from '@apollo/server';
 import { createHash } from 'node:crypto';
+
+import type { BaseContext } from '@apollo/server';
 
 /** Namespacing prefixes so a user-id key can never collide with a header key. */
 const USER_KEY_PREFIX = 'u:';

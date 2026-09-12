@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { formatPlanTaskStatus } from '../format-status';
 
 describe('formatPlanTaskStatus', () => {

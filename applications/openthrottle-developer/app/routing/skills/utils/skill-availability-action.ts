@@ -1,5 +1,6 @@
 import { parseFormData } from '@openthrottle/react-router-graphql';
 import { z } from 'zod/v3';
+
 import type { SkillAvailabilityRuleInput } from '~/__generated__/graphql';
 import { SkillAvailabilityRuleInputSchema } from '~/__generated__/schemas';
 import {

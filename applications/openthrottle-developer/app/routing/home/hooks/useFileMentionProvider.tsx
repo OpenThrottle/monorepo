@@ -1,5 +1,6 @@
-import * as React from 'react';
 import type { ChatMentionProvider } from '@openthrottle/react-router-chat';
+import * as React from 'react';
+
 import type { IdeFilesResponse } from '~/routes/ide.files';
 
 /** Cap on suggestions surfaced in the composer's `@`-mention popover. */

@@ -1,4 +1,6 @@
 import { describe, expect, test } from 'vitest';
+
+import type { OutputStreamChunk } from '../output-stream-chunks';
 import {
   formatChunkDay,
   formatChunkTime,
@@ -6,7 +8,6 @@ import {
   groupChunksByDay,
   toChunkDateTimeAttribute,
 } from '../output-stream-chunks';
-import type { OutputStreamChunk } from '../output-stream-chunks';
 
 /** Local-midday timestamps keep the assertions timezone-agnostic. */
 const chunkAt = (id: string, createdAt: unknown): OutputStreamChunk => ({

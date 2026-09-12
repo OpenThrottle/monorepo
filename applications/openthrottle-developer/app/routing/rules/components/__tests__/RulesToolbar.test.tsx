@@ -1,12 +1,13 @@
-import * as React from 'react';
+import type { RenderResult } from '@testing-library/react';
 import { cleanup, render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { RenderResult } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub, useSearchParams } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
+
 import { RULES_COPY } from '../../data/data.copy';
-import { RulesToolbar } from '../RulesToolbar';
 import type { RulesToolbarProps } from '../RulesToolbar';
+import { RulesToolbar } from '../RulesToolbar';
 
 function RulesToolbarWithQueryString(props: RulesToolbarProps) {
   const [searchParams] = useSearchParams();

@@ -1,11 +1,12 @@
-import * as React from 'react';
-import { act, render, waitFor, within } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { act, render, waitFor, within } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { ChatThread } from '../ChatThread';
-import type { ChatThreadProps } from '../ChatThread';
+
 import type { ChatMessage } from '../../types';
+import type { ChatThreadProps } from '../ChatThread';
+import { ChatThread } from '../ChatThread';
 
 describe('ChatThread Component', () => {
   let component: RenderResult;

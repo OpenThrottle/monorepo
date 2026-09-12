@@ -1,9 +1,10 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import { OpenThrottleToolbar } from '../OpenThrottleToolbar';
+
 import type { OpenThrottleToolbarProps } from '../OpenThrottleToolbar';
+import { OpenThrottleToolbar } from '../OpenThrottleToolbar';
 
 const renderToolbar = (props: OpenThrottleToolbarProps): RenderResult =>
   render(<OpenThrottleToolbar {...props} />);

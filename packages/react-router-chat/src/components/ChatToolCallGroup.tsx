@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Badge,
   Collapsible,
@@ -6,10 +5,12 @@ import {
   CollapsibleTrigger,
 } from '@openthrottle/react-router-shadcn';
 import { ChevronDown, Layers } from 'lucide-react';
-import { ChatToolCall } from './ChatToolCall';
+import * as React from 'react';
+
 import { STATUS_CONFIG } from '../data/chat-tool-call-status-config';
-import type { ChatTurnToolEvent } from '../types';
 import { activeToolOf, aggregateToolStatus } from '../turn-tool-groups';
+import type { ChatTurnToolEvent } from '../types';
+import { ChatToolCall } from './ChatToolCall';
 
 export interface ChatToolCallGroupProps {
   /** Whether the group starts expanded. Collapsed by default, even while running. */

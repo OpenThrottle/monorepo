@@ -6,8 +6,9 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { Repository } from 'typeorm';
-import type { WorkspaceEditorId } from './workspace-editor-id';
+
 import { UserWorkspaceSettings } from './user-workspace-settings.entity';
+import type { WorkspaceEditorId } from './workspace-editor-id';
 
 interface UpdateUserWorkspaceProfileData {
   readonly contactDisplayName?: string | null;

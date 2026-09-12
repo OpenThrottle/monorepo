@@ -12,6 +12,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+
 import { Project } from '../projects/project.entity';
 
 /** Scalar/column fields of ProjectSkill (no relations). Use to type DTOs that mirror the entity. */

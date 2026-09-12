@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   TabsContent,
   TabsList,
@@ -6,18 +5,20 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleTabs } from '@openthrottle/react-router-ui';
 import { FileTextIcon, GaugeIcon } from 'lucide-react';
+import * as React from 'react';
+
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 import type { RunSkillPayload } from '~/routing/skills/components/RunSkillDialog';
 import { SkillDetail } from '~/routing/skills/components/SkillDetail';
 import { SkillIntroduction } from '~/routing/skills/components/SkillIntroduction';
-import { SkillUsageTabPanel } from '~/routing/skills/components/SkillUsageTabPanel';
 import type { RunSkillRunOptions } from '~/routing/skills/components/SkillRunControl';
 import type { SkillTagVocabularyOption } from '~/routing/skills/components/SkillTagChips';
+import { SkillUsageTabPanel } from '~/routing/skills/components/SkillUsageTabPanel';
 import type { SkillDetailUsageData } from '~/routing/skills/data/skill-usage-detail';
 import { useSkillDetail } from '~/routing/skills/hooks/useSkillDetail';
 import {
-  SKILLS_DETAIL_TAB_SEARCH_PARAM,
   parseSkillDetailTab,
+  SKILLS_DETAIL_TAB_SEARCH_PARAM,
 } from '~/routing/skills/utils/parse-skill-detail-tab';
 
 export interface SkillDetailTabsProps {

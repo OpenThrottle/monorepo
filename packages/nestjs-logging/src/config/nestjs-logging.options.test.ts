@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { NestjsLoggingError } from './nestjs-logging.error';
 import {
   applyNestjsLoggingModuleDefaults,

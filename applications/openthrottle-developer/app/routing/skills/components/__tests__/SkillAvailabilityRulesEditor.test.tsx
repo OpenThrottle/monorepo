@@ -1,11 +1,12 @@
-import * as React from 'react';
-import { cleanup, render } from '@testing-library/react';
+import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import type { RenderResult } from '@testing-library/react';
+import { cleanup, render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { afterEach, describe, expect, test } from 'vitest';
-import { TooltipProvider } from '@openthrottle/react-router-shadcn';
-import { SkillAvailabilityRulesEditor } from '../SkillAvailabilityRulesEditor';
+
 import type { SkillAvailabilityRulesEditorProps } from '../SkillAvailabilityRulesEditor';
+import { SkillAvailabilityRulesEditor } from '../SkillAvailabilityRulesEditor';
 
 const renderEditor = (
   props: SkillAvailabilityRulesEditorProps,

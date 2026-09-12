@@ -1,12 +1,13 @@
-import * as React from 'react';
 import {
+  cn,
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyTitle,
   Skeleton,
-  cn,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+
 import type { ExportedSymbol, IdeExportsResult } from '../data/view-models';
 import { groupSymbolsByPath } from '../utils/groupSymbolsByPath';
 import { symbolKey } from '../utils/symbolKey';

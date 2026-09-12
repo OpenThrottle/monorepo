@@ -1,10 +1,12 @@
-import * as React from 'react';
+import { createTestEnv } from '@openthrottle/react-router-testing';
 import { render } from '@testing-library/react';
+import * as React from 'react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import { createTestEnv } from '@openthrottle/react-router-testing';
-import Component from '../docs';
+
 import type { Route } from '@/app/routes/+types/docs';
+
+import Component from '../docs';
 
 // The real ancestor chain for this route: root -> docs. matches is unused
 // by the component under test, but its type is a fixed tuple keyed to that

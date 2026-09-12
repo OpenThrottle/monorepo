@@ -277,7 +277,6 @@ export const eslintConfig = tslint.config([
         },
       ],
       'no-undef': 'off',
-
       'no-unused-vars': 'off',
       // New in the ESLint 10 `recommended` set. 13 real dead stores across the
       // repo when the upgrade landed; `warn` so the bump stays behaviour-neutral
@@ -343,34 +342,8 @@ export const eslintConfig = tslint.config([
       'react/no-multi-comp': ['error', { ignoreStateless: false }],
       'react/prop-types': 'off',
       'react/react-in-jsx-scope': 'off',
-      // Import/export order. Default `groups` are kept deliberately: there was
-      // no existing convention to encode. The three files spot-checked when
-      // this landed each ordered imports differently — `main.ts` by rough
-      // dependency tiers, `root.tsx` with a type import stranded mid-block,
-      // and this very file by *local binding name* rather than module path,
-      // which `simple-import-sort` cannot express at all (it sorts on the
-      // `from` string). So there is nothing to preserve.
-      //
-      // `warn`, not `error`, and deliberately NOT autofixed in the change that
-      // enabled it. Measured 2026-09-11: 3,655 `imports` + 88 `exports`
-      // violations across 3,714 of 5,343 source files — 70% of the repo. The
-      // rule is 100% autofixable and `eslint --fix` was verified safe on the
-      // riskiest surface (see below), but a 3,700-file mechanical diff is its
-      // own change, not a rider on a dependency refresh. Ratchet to `error`
-      // per project once that project's files are sorted, the same way the
-      // component and route primitive shapes graduate.
-      //
-      // The safety question this rule raises is side-effect imports, which
-      // `sortImportExportItems` always hoists to the top of their chunk. 27 of
-      // the repo's 57 side-effect imports sit after a real import and so would
-      // move. Verified by autofixing openthrottle-server (477 files, then
-      // reverted): relative order *among* side-effect imports is preserved, so
-      // `main.ts` keeps `./load-env` first and the code-first GraphQL modules
-      // keep their dependency-ordered `*.enum` → `*.object` → `*.input`
-      // registration sequence. typecheck and the server test suite both passed
-      // on the autofixed tree.
-      'simple-import-sort/exports': 'warn',
-      'simple-import-sort/imports': 'warn',
+      'simple-import-sort/exports': 'error',
+      'simple-import-sort/imports': 'error',
       'sort-keys': [
         'error',
         'asc',

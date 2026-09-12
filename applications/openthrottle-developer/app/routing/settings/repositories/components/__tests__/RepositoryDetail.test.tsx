@@ -1,12 +1,14 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
+
 import { WORKSPACE_REPOSITORY_DETAIL_COPY } from '~/routing/settings/data/data.copy';
-import { RepositoryDetail } from '../RepositoryDetail';
+
 import type { RepositoryDetailProps } from '../RepositoryDetail';
+import { RepositoryDetail } from '../RepositoryDetail';
 
 const checkout = {
   createdAt: '2026-07-24T00:00:00.000Z',

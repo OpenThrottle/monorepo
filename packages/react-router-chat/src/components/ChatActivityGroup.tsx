@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Badge,
   Collapsible,
@@ -6,12 +5,14 @@ import {
   CollapsibleTrigger,
 } from '@openthrottle/react-router-shadcn';
 import { Activity, ChevronDown } from 'lucide-react';
+import * as React from 'react';
+
+import { STATUS_CONFIG } from '../data/chat-tool-call-status-config';
+import type { TurnTimelineActivityGroup } from '../turn-tool-groups';
+import { activeToolOf } from '../turn-tool-groups';
 import { ChatThinkingBlock } from './ChatThinkingBlock';
 import { ChatToolCall } from './ChatToolCall';
 import { ChatToolCallGroup } from './ChatToolCallGroup';
-import { STATUS_CONFIG } from '../data/chat-tool-call-status-config';
-import { activeToolOf } from '../turn-tool-groups';
-import type { TurnTimelineActivityGroup } from '../turn-tool-groups';
 
 export interface ChatActivityGroupProps {
   /** Whether the run starts expanded. Collapsed by default, even while running. */

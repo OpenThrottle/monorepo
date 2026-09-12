@@ -2,14 +2,17 @@
  * @description GraphQL resolver for the agents chat namespace. Runs one turn by routing to the in-process {@link McpDeveloperMcpSurface} tools (OpenThrottle / MCP developer).
  */
 
-import { Args, Context, Mutation, Resolver } from '@nestjs/graphql';
 import { ConfigService } from '@nestjs/config';
+import { Args, Context, Mutation, Resolver } from '@nestjs/graphql';
+import { type AuthPrincipal, CurrentUser } from '@openthrottle/nestjs-auth';
 import {
   McpDeveloperMcpSurface,
   withMcpDeveloperAuthTokenAsync,
 } from '@openthrottle/nestjs-openthrottle-mcp';
 import { AgentConversationsService } from '@openthrottle/nestjs-repositories';
-import { type AuthPrincipal, CurrentUser } from '@openthrottle/nestjs-auth';
+
+import { AgentsRunChatTurnInput } from './agents.input';
+import { AgentsChatTurnResult } from './agents.object';
 import {
   isAgentsChatMutationRoutedTool,
   readAgentsChatMutationsEnabledFromConfig,
@@ -25,10 +28,8 @@ import {
   parseBearerJwt,
 } from './agents-mcp-chat.mapper';
 import { dispatchAgentsMcpRoutedTool } from './agents-mcp-dispatch';
-import { AgentsMcpRouterLlmService } from './agents-mcp-router-llm.service';
 import { AgentsMcpRouter } from './agents-mcp-router';
-import { AgentsRunChatTurnInput } from './agents.input';
-import { AgentsChatTurnResult } from './agents.object';
+import { AgentsMcpRouterLlmService } from './agents-mcp-router-llm.service';
 
 interface AgentsGqlContext {
   readonly req?: { headers?: Record<string, string | string[] | undefined> };

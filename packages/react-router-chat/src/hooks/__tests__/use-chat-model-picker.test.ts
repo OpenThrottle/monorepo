@@ -1,11 +1,12 @@
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
+
+import type { ChatModelGroup, ChatModelOption } from '../../types';
 import {
   FAVORITES_GROUP_ID,
   useChatModelPicker,
   type UseChatModelPickerOptions,
 } from '../use-chat-model-picker';
-import type { ChatModelGroup, ChatModelOption } from '../../types';
 
 const groups: readonly ChatModelGroup[] = [
   { id: 'claude', label: 'Claude' },

@@ -11,25 +11,26 @@ import { BadRequestException, UseGuards } from '@nestjs/common';
 import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
 import {
   AUTH_PRINCIPAL_KIND_USER,
-  CurrentUser,
   type AuthPrincipal,
+  CurrentUser,
 } from '@openthrottle/nestjs-auth';
+import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 import {
   type RuleApplication,
   RuleApplicationsService,
   type TagActionRule,
   TagActionRulesService,
 } from '@openthrottle/nestjs-repositories';
-import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
+
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import {
-  DeleteTagActionRuleInput,
-  UpsertTagActionRuleInput,
-} from './tag-action-rules.input';
 import {
   RuleApplicationObject,
   TagActionRuleObject,
 } from './tag-action-rule.object';
+import {
+  DeleteTagActionRuleInput,
+  UpsertTagActionRuleInput,
+} from './tag-action-rules.input';
 
 const requireUserPrincipal = (principal: AuthPrincipal): string => {
   if (principal.kind !== AUTH_PRINCIPAL_KIND_USER) {

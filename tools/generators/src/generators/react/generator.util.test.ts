@@ -1,6 +1,7 @@
-import { describe, expect, beforeEach, test, vi } from 'vitest';
 import type { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import { utilGenerator } from './generator.util';
 
 // The generator resolves `destination` through the real Nx project graph, whose

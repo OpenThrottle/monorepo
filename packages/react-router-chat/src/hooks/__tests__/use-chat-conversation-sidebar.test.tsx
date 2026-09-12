@@ -1,9 +1,10 @@
-import * as React from 'react';
 import { act, render, renderHook } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
-import { useChatConversationSidebar } from '../use-chat-conversation-sidebar';
+
 import type { AgentConversationListItem } from '../../types';
+import { useChatConversationSidebar } from '../use-chat-conversation-sidebar';
 
 const conversation: AgentConversationListItem = {
   id: 'c1',

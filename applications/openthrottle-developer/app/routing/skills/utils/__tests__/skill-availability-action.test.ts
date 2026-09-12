@@ -1,5 +1,7 @@
 import { describe, expect, test } from 'vitest';
+
 import { serializeList } from '~/routing/skills/utils/skill-availability';
+
 import {
   readRuleInput,
   toEnvironmentValue,

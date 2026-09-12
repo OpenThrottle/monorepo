@@ -1,6 +1,7 @@
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { SetAgentModelEnabledDocument } from '~/__generated__/graphql';
+
 import type { Route } from '@/app/routes/+types/resources.agent-model-enabled';
+import { SetAgentModelEnabledDocument } from '~/__generated__/graphql';
 
 /** JSON shape returned by the toggle (mirrors SetAgentModelEnabledResult + a client error slot). */
 export interface AgentModelEnabledActionResult {

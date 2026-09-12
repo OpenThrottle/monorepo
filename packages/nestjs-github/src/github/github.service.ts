@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { isRecord } from '@openthrottle/nodejs-utils';
+
 import type { IssueWithLabelsDto } from './dto/issue-with-labels.dto';
 import type { PullDetailDto } from './dto/pull-detail.dto';
 import type { PullListItemDto } from './dto/pull-list-item.dto';

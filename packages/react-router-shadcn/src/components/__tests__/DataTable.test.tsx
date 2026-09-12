@@ -1,8 +1,9 @@
-import * as React from 'react';
-import userEvent from '@testing-library/user-event';
-import { render } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
 import type { ColumnDef } from '@tanstack/react-table';
+import { render } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import * as React from 'react';
+import { describe, expect, it, vi } from 'vitest';
+
 import { DataTable } from '../DataTable';
 
 type DemoRow = {

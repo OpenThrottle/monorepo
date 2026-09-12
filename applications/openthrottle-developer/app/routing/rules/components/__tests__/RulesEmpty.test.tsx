@@ -1,11 +1,13 @@
-import * as React from 'react';
-import { cleanup, render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { cleanup, render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
+
 import { RULES_COPY } from '~/routing/rules/data/data.copy';
-import { RulesEmpty } from '../RulesEmpty';
+
 import type { RulesEmptyProps } from '../RulesEmpty';
+import { RulesEmpty } from '../RulesEmpty';
 
 describe('RulesEmpty Component', () => {
   let component: RenderResult;

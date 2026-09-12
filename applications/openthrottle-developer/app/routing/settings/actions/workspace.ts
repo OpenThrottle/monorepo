@@ -3,14 +3,15 @@ import {
   parseFormData,
 } from '@openthrottle/react-router-graphql';
 import { z } from 'zod/v3';
-import { UpdateWorkspaceProfileInputSchema } from '~/__generated__/schemas';
+
+import type { Route } from '@/app/routes/+types/settings.workspace._index';
 import {
   ApplyWorkspaceEditorConfigurationDocument,
   UpdateWorkspaceProfileDocument,
 } from '~/__generated__/graphql';
+import { UpdateWorkspaceProfileInputSchema } from '~/__generated__/schemas';
 import { formatEditorConfigApplyMessage } from '~/routing/settings/utils/format-editor-config-result';
 import { parseEnabledEditorsFromFormData } from '~/routing/settings/utils/workspace-settings-action';
-import type { Route } from '@/app/routes/+types/settings.workspace._index';
 
 export const updateProfile = async (
   args: Route.ActionArgs,

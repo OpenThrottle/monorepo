@@ -1,7 +1,8 @@
-import * as React from 'react';
-import { Accordion as AccordionPrimitive } from 'radix-ui';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import { Accordion as AccordionPrimitive } from 'radix-ui';
+import * as React from 'react';
+
 import { AccordionContent } from '../AccordionContent';
 import { AccordionItem } from '../AccordionItem';
 import { AccordionTrigger } from '../AccordionTrigger';

@@ -1,8 +1,10 @@
 import { describe, expect, test } from 'vitest';
+
 import {
   DEFAULT_SEARCH_LIMIT,
   SEARCH_BASE_PATH,
 } from '~/routing/search/config';
+
 import { buildSearchUrl, parseSearchParams } from '../parsers';
 
 describe('parseSearchParams', () => {

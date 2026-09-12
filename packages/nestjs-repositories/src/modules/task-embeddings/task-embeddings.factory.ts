@@ -2,8 +2,9 @@
  * @description Fishery factory for {@link TaskEmbedding}. Use in tests to build mock task embeddings.
  */
 
-import { Factory } from 'fishery';
 import { faker } from '@faker-js/faker';
+import { Factory } from 'fishery';
+
 import { tasksFactory } from '../../modules/tasks/tasks.factory';
 import type { TaskEmbedding } from './task-embedding.entity';
 

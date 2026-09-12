@@ -1,10 +1,11 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { SearchIntroduction } from '../SearchIntroduction';
+
 import type { SearchIntroductionProps } from '../SearchIntroduction';
+import { SearchIntroduction } from '../SearchIntroduction';
 
 describe('SearchIntroduction Component', () => {
   let component: RenderResult;

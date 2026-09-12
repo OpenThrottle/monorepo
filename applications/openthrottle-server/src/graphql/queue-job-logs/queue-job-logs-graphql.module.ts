@@ -6,6 +6,7 @@
  */
 
 import { Module } from '@nestjs/common';
+
 import { QueueJobLogsResolver } from './queue-job-logs.resolver';
 import { QueueJobLogsService } from './queue-job-logs.service';
 

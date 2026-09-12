@@ -1,13 +1,14 @@
-import * as React from 'react';
-import { render, renderHook } from '@testing-library/react';
+import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import type { RenderResult } from '@testing-library/react';
+import { render, renderHook } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { TooltipProvider } from '@openthrottle/react-router-shadcn';
+
 import { ChatDialog } from '../../components/ChatDialog';
-import { ChatProvider, useChat } from '../chat-context';
 import type { ChatMessage } from '../../types';
+import { ChatProvider, useChat } from '../chat-context';
 
 describe('ChatProvider', () => {
   let onSendMessage: ReturnType<typeof vi.fn<(message: string) => void>>;

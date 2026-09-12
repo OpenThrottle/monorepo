@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { describeProvenance } from '~/routing/skills/utils/provenance';
 
 describe('describeProvenance', () => {

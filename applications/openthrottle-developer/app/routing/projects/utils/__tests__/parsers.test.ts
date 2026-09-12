@@ -1,10 +1,12 @@
 import { describe, expect, test } from 'vitest';
+
 import type { GetProjectsQuery } from '~/__generated__/graphql';
 import type { ProjectWithStats } from '~/routing/projects/data/types';
+
 import {
-  parseProjectWithStats,
   parseProjectsBySearch,
   parseProjectsSortFromSearchParams,
+  parseProjectWithStats,
 } from '../parsers';
 
 function apiProject(

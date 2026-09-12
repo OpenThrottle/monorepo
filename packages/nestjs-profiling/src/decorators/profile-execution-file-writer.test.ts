@@ -1,12 +1,14 @@
-import { Logger } from '@nestjs/common';
 import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
+
+import { Logger } from '@nestjs/common';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createProfileExecutionFileWriter } from './profile-execution-file-writer';
+
 import { setProfileExecutionReporter } from './profile-execution.reporter';
 import type { ProfileExecutionResult } from './profile-execution.types';
 import { profileExecution } from './profile-execution.util';
+import { createProfileExecutionFileWriter } from './profile-execution-file-writer';
 
 const parseRecord = (text: string): Record<string, unknown> => JSON.parse(text);
 

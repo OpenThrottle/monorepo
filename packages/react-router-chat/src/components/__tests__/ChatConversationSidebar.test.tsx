@@ -1,11 +1,12 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
-import { ChatConversationSidebar } from '../ChatConversationSidebar';
-import type { ChatConversationSidebarProps } from '../ChatConversationSidebar';
+
 import type { AgentConversationListItem } from '../../types';
+import type { ChatConversationSidebarProps } from '../ChatConversationSidebar';
+import { ChatConversationSidebar } from '../ChatConversationSidebar';
 
 const CONVERSATIONS: readonly AgentConversationListItem[] = [
   {

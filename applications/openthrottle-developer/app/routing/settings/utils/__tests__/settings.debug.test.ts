@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { readStorageEntries, summarizeStoragePair } from '../settings.debug';
 
 /** Coerces a partial mock to a target type without a type assertion. */

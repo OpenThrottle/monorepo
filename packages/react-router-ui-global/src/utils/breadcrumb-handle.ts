@@ -1,4 +1,5 @@
 import type { UIMatch } from 'react-router';
+
 import type { GlobalLayoutBreadcrumbsHandle } from '../components/GlobalLayoutBreadcrumbs';
 
 /** A router match whose `handle` is a {@link GlobalLayoutBreadcrumbsHandle}. */

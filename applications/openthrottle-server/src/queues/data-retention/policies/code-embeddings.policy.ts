@@ -38,6 +38,7 @@
  */
 
 import type { DataSource } from 'typeorm';
+
 import type { RetentionPolicy } from '../data-retention.types';
 
 /** A root with no embedding newer than this is considered idle. */

@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
+
+import type { ChatCheckoutOption } from '../../types';
 import {
   checkoutSearchTerms,
   groupCheckoutOptions,
   LOCAL_ONLY_GROUP_HEADING,
 } from '../checkout-groups';
-import type { ChatCheckoutOption } from '../../types';
 
 /** The reported bug: three checkouts, two of them named `monorepo`. */
 const CHECKOUTS: readonly [

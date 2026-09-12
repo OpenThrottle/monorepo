@@ -1,5 +1,7 @@
 import { describe, expect, test } from 'vitest';
+
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
+
 import {
   getPlanIsCancelable,
   getPlanIsRunning,

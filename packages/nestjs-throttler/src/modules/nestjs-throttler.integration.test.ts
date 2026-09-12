@@ -1,7 +1,9 @@
 import type { AddressInfo } from 'node:net';
+
 import { Controller, Get, type INestApplication, Module } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { afterEach, describe, expect, it } from 'vitest';
+
 import { NestjsThrottlerModule } from './nestjs-throttler.module';
 
 /**

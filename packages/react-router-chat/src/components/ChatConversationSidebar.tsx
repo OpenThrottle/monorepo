@@ -1,17 +1,18 @@
-import * as React from 'react';
 import {
   Button,
   Empty,
   ScrollArea,
   Skeleton,
 } from '@openthrottle/react-router-shadcn';
-import { MessageSquarePlus } from 'lucide-react';
 import clsx from 'clsx';
-import { ChatConversationDeleteDialog } from './ChatConversationDeleteDialog';
-import { ChatConversationRow } from './ChatConversationRow';
+import { MessageSquarePlus } from 'lucide-react';
+import * as React from 'react';
+
 import { CHAT_CONVERSATION_SIDEBAR_COPY } from '../data/chat-conversation-sidebar.copy';
 import { useChatConversationSidebar } from '../hooks/use-chat-conversation-sidebar';
 import type { AgentConversationListItem } from '../types';
+import { ChatConversationDeleteDialog } from './ChatConversationDeleteDialog';
+import { ChatConversationRow } from './ChatConversationRow';
 
 export interface ChatConversationSidebarProps {
   /** Currently-open conversation, highlighted in the list; null/undefined for a fresh thread. */

@@ -3,12 +3,13 @@ import { OnApplicationShutdown, OnModuleInit } from '@nestjs/common';
 import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
 import { GitHubService } from '@openthrottle/nestjs-github';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import type { WorkArtifact } from '@openthrottle/nestjs-repositories';
 import {
   WORK_ARTIFACT_VERIFICATION,
   WorkLedgerService,
 } from '@openthrottle/nestjs-repositories';
-import type { WorkArtifact } from '@openthrottle/nestjs-repositories';
 import { Not } from 'typeorm';
+
 import { TaggingEnqueueService } from '../tagging/tagging-enqueue.service';
 import {
   WORK_LEDGER_VERIFY_BATCH_SIZE,

@@ -1,15 +1,16 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { Link } from 'react-router';
 import { Badge } from '@openthrottle/react-router-shadcn';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
+import clsx from 'clsx';
+import * as React from 'react';
+import { Link } from 'react-router';
+
 import { SkillUsageDailyChart } from '~/global/components/SkillUsageDailyChart';
 import { SkillUsageStatTile } from '~/routing/skills/components/SkillUsageStatTile';
 import { SKILL_USAGE_DETAIL_COPY } from '~/routing/skills/data/data.copy';
 import {
+  type SkillDetailUsageData,
   skillUsageLastUsedLabel,
   skillUsageSuccessRateLabel,
-  type SkillDetailUsageData,
 } from '~/routing/skills/data/skill-usage-detail';
 import {
   SKILL_USAGE_COPY,

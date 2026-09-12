@@ -10,6 +10,7 @@ import {
   Entity,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+
 import type { ScheduledAgentJobDriverId } from './scheduled-agent-job.entity';
 
 /**

@@ -1,15 +1,17 @@
-import * as React from 'react';
+import { TooltipProvider } from '@openthrottle/react-router-shadcn';
+import { getPublicEnv } from '@openthrottle/react-router-utils';
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { getPublicEnv } from '@openthrottle/react-router-utils';
-import { TooltipProvider } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
+
+import type { Route } from '@/app/routes/+types/plans.$planId._index';
 import {
   buildPlanDetailLoaderData,
   renderWithPlanDetailRouteData,
 } from '~/routing/plans/testing/plan-detail-route-data';
+
 import PlanDetail from '../plans.$planId._index';
-import type { Route } from '@/app/routes/+types/plans.$planId._index';
 
 type PlanDetailMatches = Route.ComponentProps['matches'];
 type PlanDetailLoaderData = Route.ComponentProps['loaderData'];

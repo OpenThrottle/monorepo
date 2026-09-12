@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { getPlanToolbarRunButtonLabel } from '../plan-toolbar-run-label';
 
 describe('getPlanToolbarRunButtonLabel', () => {

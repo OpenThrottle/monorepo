@@ -1,4 +1,5 @@
 import { isRecord } from '@openthrottle/nodejs-utils';
+
 import {
   AUTH_COOKIE_MAX_AGE_DAYS,
   AUTH_COOKIE_NAME,

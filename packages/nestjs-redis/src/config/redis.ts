@@ -13,8 +13,9 @@
 
 import { KeyvAdapter } from '@apollo/utils.keyvadapter';
 import { ErrorsAreMissesCache } from '@apollo/utils.keyvaluecache';
-import Keyv from 'keyv';
 import KeyvRedis from '@keyv/redis';
+import Keyv from 'keyv';
+
 import { redisConfig } from './nestjs-redis.config';
 
 /**

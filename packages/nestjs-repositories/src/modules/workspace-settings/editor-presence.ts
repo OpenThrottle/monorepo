@@ -34,9 +34,11 @@
 import { spawn } from 'node:child_process';
 import { access } from 'node:fs/promises';
 import { join } from 'node:path';
+
 import { getWorkspacePathMapping } from '@openthrottle/openthrottle-agentic-utils';
-import { WORKSPACE_EDITOR_IDS } from './workspace-editor-id';
+
 import type { WorkspaceEditorId } from './workspace-editor-id';
+import { WORKSPACE_EDITOR_IDS } from './workspace-editor-id';
 
 /**
  * Presence states. `installed` and `not_found` are claims about the user's machine;

@@ -1,30 +1,31 @@
-import * as React from 'react';
-import { useAtom, useSetAtom } from 'jotai';
 import { Card, TabsContent } from '@openthrottle/react-router-shadcn';
-import { DEFAULT_RALPH_PROMPT } from '~/routing/plans/utils/build-workflow-ralph-argv';
+import { useAtom, useSetAtom } from 'jotai';
+import * as React from 'react';
+
+import type { PlanRunConfigRepositoryFieldsFragment } from '~/__generated__/graphql';
+import { PlanConfigurationTabSkeleton } from '~/routing/plans/components/PlanConfigurationTabSkeleton';
+import { PlanDeferredSection } from '~/routing/plans/components/PlanDeferredSection';
 import { PlanTabConfigurationValidation } from '~/routing/plans/components/PlanTabConfigurationValidation';
 import { PlanWorkflowCommand } from '~/routing/plans/components/PlanWorkflowCommand';
 import { PlanWorkflowConfigExecution } from '~/routing/plans/components/PlanWorkflowConfigExecution';
+import { PlanWorkflowConfigHooks } from '~/routing/plans/components/PlanWorkflowConfigHooks';
 import { PlanWorkflowConfigPrompt } from '~/routing/plans/components/PlanWorkflowConfigPrompt';
 import { PlanWorkflowConfigTarget } from '~/routing/plans/components/PlanWorkflowConfigTarget';
-import { PlanWorkflowConfigHooks } from '~/routing/plans/components/PlanWorkflowConfigHooks';
 import { PlanWorkflowConfigTuning } from '~/routing/plans/components/PlanWorkflowConfigTuning';
-import { PlanWorkflowConfigWorktree } from '~/routing/plans/components/PlanWorkflowConfigWorktree';
 import { PlanWorkflowConfigWorkspaceSelector } from '~/routing/plans/components/PlanWorkflowConfigWorkspaceSelector';
-import { PlanDeferredSection } from '~/routing/plans/components/PlanDeferredSection';
-import { PlanConfigurationTabSkeleton } from '~/routing/plans/components/PlanConfigurationTabSkeleton';
-import { PLAN_DEFERRED_SECTION_COPY } from '~/routing/plans/data/data.copy';
-import type { PlanRunConfigRepositoryFieldsFragment } from '~/__generated__/graphql';
+import { PlanWorkflowConfigWorktree } from '~/routing/plans/components/PlanWorkflowConfigWorktree';
 import {
   jobRunHookDraftRowsAtom,
-  workflowBranchAtom,
   setWorkflowBranchByUserAtom,
+  workflowBranchAtom,
   workflowCheckoutIdAtom,
   workflowRalphRunOptionsAtom,
   workflowRepositoryIdAtom,
   workflowRunIterationTimeoutTextAtom,
   workflowWorkingDirectoryAtom,
 } from '~/routing/plans/data/atom.plan';
+import { PLAN_DEFERRED_SECTION_COPY } from '~/routing/plans/data/data.copy';
+import { DEFAULT_RALPH_PROMPT } from '~/routing/plans/utils/build-workflow-ralph-argv';
 
 /**
  * @description Workflow-ralph CLI options (`--plan` / `--task` and tuning flags)

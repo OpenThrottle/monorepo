@@ -7,8 +7,8 @@
  * from a route module never opens a socket during server rendering. The native
  * browser WebSocket is used (no webSocketImpl needed client-side).
  */
-import { type Client, type ClientOptions, createClient } from 'graphql-ws';
 import { IS_BROWSER } from '@openthrottle/react-router-utils';
+import { type Client, type ClientOptions, createClient } from 'graphql-ws';
 
 /**
  * Browser graphql-ws client handle (null during SSR).

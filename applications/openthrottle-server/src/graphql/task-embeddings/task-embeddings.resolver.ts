@@ -2,9 +2,10 @@
  * @description Resolver for TaskEmbedding queries. Injects TaskEmbeddingsService from @openthrottle/nestjs-repositories and maps entities to TaskEmbeddingObject.
  */
 
+import { Args, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
 import type { Task, TaskEmbedding } from '@openthrottle/nestjs-repositories';
 import { TaskEmbeddingsService } from '@openthrottle/nestjs-repositories';
-import { Args, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
+
 import { TaskObject } from '../tasks/task.object';
 import {
   GetTaskEmbeddingInput,

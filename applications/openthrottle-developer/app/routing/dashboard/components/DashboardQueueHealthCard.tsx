@@ -1,8 +1,9 @@
-import * as React from 'react';
 import { Button, Card } from '@openthrottle/react-router-shadcn';
-import { Link } from 'react-router';
-import { ArrowRightIcon } from 'lucide-react';
 import clsx from 'clsx';
+import { ArrowRightIcon } from 'lucide-react';
+import * as React from 'react';
+import { Link } from 'react-router';
+
 import type { DashboardQueueStatsCardFragment } from '~/__generated__/graphql';
 import { QueueHealthPill } from '~/routing/queues/components/QueueHealthPill';
 import { QUEUE_HEALTH_RANK } from '~/routing/queues/data/queue-health-display';

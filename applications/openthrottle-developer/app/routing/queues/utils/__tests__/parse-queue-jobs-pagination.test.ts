@@ -1,9 +1,11 @@
 import { DEFAULT_PAGINATION_LIMIT } from '@openthrottle/react-router-utils';
 import { describe, expect, test } from 'vitest';
+
 import {
   QUEUE_JOBS_LIMIT_MAX,
   QUEUE_JOBS_LIMIT_MIN,
 } from '~/routing/queues/config/queue-jobs';
+
 import { parseQueueJobsPagination } from '../parse-queue-jobs-pagination';
 
 describe('parseQueueJobsPagination', () => {

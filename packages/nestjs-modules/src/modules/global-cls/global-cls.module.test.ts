@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest';
 import { ClsServiceManager } from 'nestjs-cls';
+import { describe, expect, it } from 'vitest';
+
 import { setupGlobalCls } from './global-cls.module';
 import type { GlobalClsStore } from './global-cls.service';
 

@@ -1,10 +1,11 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+
 import { describe, expect, test } from 'vitest';
 
 import {
-  mapAgentAssetFileToIngestRecord,
   mapAgentAssetFilesToIngestRecords,
+  mapAgentAssetFileToIngestRecord,
 } from '../map-agent-assets-for-ingest.ts';
 import type { AgentAssetFileEntry } from '../walk-agent-assets-on-disk.ts';
 

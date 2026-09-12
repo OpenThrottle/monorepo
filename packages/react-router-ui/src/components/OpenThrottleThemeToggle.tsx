@@ -1,10 +1,11 @@
-import * as React from 'react';
 import {
   ToggleGroup,
   ToggleGroupItem,
   type ToggleGroupProps,
 } from '@openthrottle/react-router-shadcn';
 import { isThemeMode, type ThemeMode } from '@openthrottle/react-router-utils';
+import * as React from 'react';
+
 import { THEME_TOGGLE_OPTIONS } from '../data/theme-toggle-options';
 
 export interface OpenThrottleThemeToggleProps {

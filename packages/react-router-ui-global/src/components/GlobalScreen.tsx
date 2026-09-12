@@ -1,7 +1,7 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { Link } from 'react-router';
 import { OPENTHROTTLE_GITHUB_URL } from '@openthrottle/react-router-utils';
+import clsx from 'clsx';
+import * as React from 'react';
+import { Link } from 'react-router';
 
 export interface GlobalScreenProps extends React.PropsWithChildren<
   React.HTMLAttributes<HTMLDivElement>

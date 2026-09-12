@@ -4,9 +4,10 @@
  * queue-success + error toast wiring. Extracted from the component per
  * component-primitive-shape R7 so the toolbar stays UI-focused.
  */
-import * as React from 'react';
 import { toast } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
 import { useFetcher } from 'react-router';
+
 import { useActionToast } from '~/global/hooks/useActionToast';
 import type { action } from '~/routes/plans.$planId._index';
 import {

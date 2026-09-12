@@ -4,14 +4,15 @@
  */
 
 import { BadRequestException } from '@nestjs/common';
+import type { RolloutFlag } from '@openthrottle/nestjs-rollout';
 import {
   ROLLOUT_BOOLEAN_DEFAULT_FALLTHROUGH,
   ROLLOUT_BOOLEAN_DEFAULT_VARIATIONS,
   ROLLOUT_EVALUATION_REASON,
   ROLLOUT_FLAG_KIND,
 } from '@openthrottle/nestjs-rollout';
-import type { RolloutFlag } from '@openthrottle/nestjs-rollout';
 import { describe, expect, test } from 'vitest';
+
 import {
   toDomainCreateInput,
   toDomainUpdatePatch,

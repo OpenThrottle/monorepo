@@ -9,6 +9,7 @@ import {
   ManyToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+
 import type { Role } from './role.entity';
 
 /** Scalar/column fields of Permission (no relations). */

@@ -1,7 +1,8 @@
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
-import { type DocumentNode, parse } from 'graphql';
 import { isRecord } from '@openthrottle/nodejs-utils';
+import { type DocumentNode, parse } from 'graphql';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+
 import { executeGraphqlV2 } from './index-v2.ts';
 import { GRAPHQL_TIMEOUT_ERROR_PREFIX } from './utils.ts';
 

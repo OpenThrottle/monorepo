@@ -1,6 +1,3 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { Link } from 'react-router';
 import {
   Badge,
   Table,
@@ -10,6 +7,10 @@ import {
   TableHeader,
   TableRow,
 } from '@openthrottle/react-router-shadcn';
+import clsx from 'clsx';
+import * as React from 'react';
+import { Link } from 'react-router';
+
 import {
   SKILL_PRESENCE_BADGED,
   SKILL_PRESENCE_LABELS,

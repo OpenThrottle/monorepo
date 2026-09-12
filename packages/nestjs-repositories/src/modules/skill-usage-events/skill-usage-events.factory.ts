@@ -2,8 +2,9 @@
  * @description Fishery factory for the skill_usage_events entity (test fixtures).
  */
 
-import { Factory } from 'fishery';
 import { faker } from '@faker-js/faker';
+import { Factory } from 'fishery';
+
 import type { SkillUsageEvent } from './skill-usage-events.entity';
 import {
   SKILL_USAGE_PRIVACY_LEVELS,

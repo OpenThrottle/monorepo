@@ -15,6 +15,7 @@
 
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+
 import type { CDPSession } from 'playwright';
 
 export interface Capture {

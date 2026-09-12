@@ -1,8 +1,9 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import { Label, Separator, Switch } from '@openthrottle/react-router-shadcn';
-import { NOTIFICATION_PREFERENCE_ROWS } from '~/routing/settings/config/notification-preferences';
+import clsx from 'clsx';
+import * as React from 'react';
+
 import type { NotificationPreferenceId } from '~/routing/settings/config/notification-preferences';
+import { NOTIFICATION_PREFERENCE_ROWS } from '~/routing/settings/config/notification-preferences';
 import { getDefaultNotificationSettings } from '~/routing/settings/utils/parsers';
 
 export interface NotificationPreferencesSectionProps {

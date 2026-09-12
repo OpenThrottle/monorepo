@@ -1,9 +1,10 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { Test } from '@nestjs/testing';
 import { createMock } from '@golevelup/ts-vitest';
+import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { IsNull, Not } from 'typeorm';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { AgentCliPreferencesService } from './agent-cli-preferences.service';
 import { UserDisabledAgentCli } from './user-disabled-agent-cli.entity';
 import { UserFavoriteAgentModel } from './user-favorite-agent-model.entity';

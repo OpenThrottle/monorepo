@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   SidebarContent,
   SidebarGroup,
@@ -7,8 +6,10 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@openthrottle/react-router-shadcn';
-import { NavLink, useLocation } from 'react-router';
+import * as React from 'react';
 import type { NavLinkProps } from 'react-router';
+import { NavLink, useLocation } from 'react-router';
+
 import { getPathFromTo } from '../utils/utils.global';
 
 export interface GlobalSidebarLinkProps extends NavLinkProps {

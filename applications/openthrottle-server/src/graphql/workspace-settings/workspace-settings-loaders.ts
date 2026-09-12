@@ -2,12 +2,12 @@
  * @description Request-scoped DataLoader for WorkspaceSettingsResolver (project by id). One instance per GraphQL request to batch and cache within the request and avoid N+1 when resolving the project relation across many workspace local repository rows.
  */
 
+import { Injectable, Scope } from '@nestjs/common';
 import {
+  createEntityByIdLoader,
   type Project,
   ProjectsService,
-  createEntityByIdLoader,
 } from '@openthrottle/nestjs-repositories';
-import { Injectable, Scope } from '@nestjs/common';
 import type DataLoader from 'dataloader';
 
 /**

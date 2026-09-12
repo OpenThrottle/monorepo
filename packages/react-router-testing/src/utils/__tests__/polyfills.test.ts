@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
+
 import { installPolyfills, uninstallPolyfills } from '../polyfills';
 
 describe('installPolyfills', () => {

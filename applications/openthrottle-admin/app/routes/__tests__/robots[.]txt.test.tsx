@@ -1,8 +1,10 @@
 // @vitest-environment node
-import { describe, expect, test } from 'vitest';
 import { createLoaderArgs } from '@openthrottle/react-router-testing';
-import { loader } from '../robots[.]txt';
+import { describe, expect, test } from 'vitest';
+
 import type { Route } from '@/app/routes/+types/robots[.]txt';
+
+import { loader } from '../robots[.]txt';
 
 describe('routes/robots[.]txt.tsx loader', () => {
   test('responds with a noindex robots.txt for this authenticated app', async () => {

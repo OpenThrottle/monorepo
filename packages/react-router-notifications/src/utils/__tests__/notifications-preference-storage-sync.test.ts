@@ -3,6 +3,7 @@
  */
 
 import { describe, expect, test, vi } from 'vitest';
+
 import { NOTIFICATIONS_STORAGE_KEY } from '../../config/index';
 import { subscribeToNotificationsPreferenceStorageEvents } from '../notifications-preference-storage-sync';
 

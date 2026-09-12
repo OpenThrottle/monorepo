@@ -1,7 +1,8 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
 import { fireEvent } from '@testing-library/react';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
+
 import { useTimelinePan } from '../useTimelinePan';
 
 const Probe = (): React.ReactElement => {

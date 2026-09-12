@@ -1,7 +1,8 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
+
 import { WorkspaceEditorAffiliateLinks } from '../WorkspaceEditorAffiliateLinks';
 
 describe('WorkspaceEditorAffiliateLinks Component', () => {

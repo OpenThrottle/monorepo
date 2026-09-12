@@ -1,4 +1,6 @@
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+
+import type { Route } from '@/app/routes/+types/resources.queue-job-logs';
 import { QueueJobLogsDocument } from '~/__generated__/graphql';
 import {
   DEFAULT_LIMIT,
@@ -8,7 +10,6 @@ import {
   EMPTY_PAGE,
   type QueueJobLogsPage,
 } from '~/routing/queues/data/queue-job-logs-page';
-import type { Route } from '@/app/routes/+types/resources.queue-job-logs';
 
 /**
  * Resource loader backing the live job-log console's history backfill —

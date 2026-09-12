@@ -2,8 +2,8 @@
  * @description GraphQL ObjectType for a user's MCP connector connection (never exposes the credential hash).
  */
 
-import type { McpConnectorConnectionData } from '@openthrottle/nestjs-repositories';
 import { Field, ID, ObjectType } from '@nestjs/graphql';
+import type { McpConnectorConnectionData } from '@openthrottle/nestjs-repositories';
 
 /** Public connection fields (excludes credentialSecretHash). */
 type PublicMcpConnectorConnectionData = Omit<

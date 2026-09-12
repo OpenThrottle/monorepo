@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+
 import { bullmqBoardConfig } from './nestjs-bullmq-board.config';
 
 describe('bullmqBoardConfig', () => {

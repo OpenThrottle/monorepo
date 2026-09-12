@@ -1,4 +1,3 @@
-import { afterEach, describe, it, expect, vi, beforeEach } from 'vitest';
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
@@ -12,6 +11,8 @@ import type {
   WorkSession,
 } from '@openthrottle/nestjs-repositories';
 import type { Repository } from 'typeorm';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { WorkLedgerRunService } from './work-ledger-run.service';
 
 const RALPH_SA_ID = 'ralph-sa-1';

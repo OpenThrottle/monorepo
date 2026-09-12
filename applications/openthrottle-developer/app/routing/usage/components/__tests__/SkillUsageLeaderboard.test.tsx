@@ -1,10 +1,9 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import { SkillUsageLeaderboard } from '../SkillUsageLeaderboard';
-import type { SkillUsageLeaderboardProps } from '../SkillUsageLeaderboard';
+
 import {
   SKILL_PRESENCE,
   SKILL_PRESENCE_LABELS,
@@ -15,6 +14,8 @@ import {
   SKILL_USAGE_SCOPES,
 } from '../../data/skill-usage-copy';
 import type { SkillUsageRowWithPresence } from '../../utils/partition-skill-usage-by-presence';
+import type { SkillUsageLeaderboardProps } from '../SkillUsageLeaderboard';
+import { SkillUsageLeaderboard } from '../SkillUsageLeaderboard';
 
 const buildBySkill = (
   overrides: Partial<SkillUsageRowWithPresence>,

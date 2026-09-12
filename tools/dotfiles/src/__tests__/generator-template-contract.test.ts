@@ -1,7 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+
 import { RuleTester } from '@typescript-eslint/rule-tester';
 import { afterAll, describe, expect, it } from 'vitest';
+
 import { componentPrimitiveShape } from '../rules/component-primitive-shape.ts';
 import { preHooksUnpack } from '../rules/pre-hooks-unpack.ts';
 import { routePrimitiveShape } from '../rules/route-primitive-shape.ts';

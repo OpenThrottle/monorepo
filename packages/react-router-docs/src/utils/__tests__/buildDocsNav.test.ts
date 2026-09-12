@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
-import { buildDocsManifest } from '../buildDocsManifest';
+
 import type { DocsContentModules } from '../buildDocsManifest';
+import { buildDocsManifest } from '../buildDocsManifest';
 import { buildDocsNav } from '../buildDocsNav';
 
 const md = (frontmatter: string, body: string): string =>

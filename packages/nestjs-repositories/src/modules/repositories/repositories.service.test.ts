@@ -1,9 +1,10 @@
 import { createMock } from '@golevelup/ts-vitest';
-import { getRepositoryToken } from '@nestjs/typeorm';
 import { Test } from '@nestjs/testing';
+import { getRepositoryToken } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { RepositoriesService } from './repositories.service';
 import { Repository } from './repository.entity';
 

@@ -1,18 +1,20 @@
-import * as React from 'react';
+import { TooltipProvider } from '@openthrottle/react-router-shadcn';
+import { getPublicEnv } from '@openthrottle/react-router-utils';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { getPublicEnv } from '@openthrottle/react-router-utils';
-import { TooltipProvider } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
 import { createRoutesStub, useSearchParams } from 'react-router';
 import { describe, expect, test } from 'vitest';
+
+import type { Route } from '@/app/routes/+types/plans.$planId._index';
 import { PLAN_TASKS_EMPTY_COPY } from '~/routing/plans/data/data.copy';
-import { PLANS_DETAIL_TAB_SEARCH_PARAM } from '~/routing/plans/utils/parsers';
 import {
   buildPlanDetailLoaderData,
   renderWithPlanDetailRouteData,
 } from '~/routing/plans/testing/plan-detail-route-data';
+import { PLANS_DETAIL_TAB_SEARCH_PARAM } from '~/routing/plans/utils/parsers';
+
 import PlanDetail from '../plans.$planId._index';
-import type { Route } from '@/app/routes/+types/plans.$planId._index';
 
 type PlanDetailMatches = Route.ComponentProps['matches'];
 type PlanDetailLoaderData = Route.ComponentProps['loaderData'];

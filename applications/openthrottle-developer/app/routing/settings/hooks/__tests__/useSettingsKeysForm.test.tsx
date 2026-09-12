@@ -1,12 +1,14 @@
-import * as React from 'react';
-import { act, render, waitFor } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { act, render, waitFor } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub, useSubmit } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import type { ServiceAccountCredentialFieldsFragment } from '~/__generated__/graphql';
+
 import type { SettingsKeysCreateCredentialActionData } from '../useSettingsKeysForm';
-import { useSettingsKeysForm } from '../useSettingsKeysForm';
 import type { UseSettingsKeysFormResult } from '../useSettingsKeysForm';
+import { useSettingsKeysForm } from '../useSettingsKeysForm';
 
 const mockCredential: ServiceAccountCredentialFieldsFragment = {
   __typename: 'ServiceAccountCredentialObject',

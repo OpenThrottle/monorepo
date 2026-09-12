@@ -1,11 +1,13 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub, useFetcher } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import { RoleDetailCard } from '../RoleDetailCard';
-import type { RoleDetailCardProps } from '../RoleDetailCard';
+
 import type { action as roleDetailAction } from '~/routes/roles.$roleId';
+
+import type { RoleDetailCardProps } from '../RoleDetailCard';
+import { RoleDetailCard } from '../RoleDetailCard';
 
 // Constructed from local y/m/d components (not an ISO date-only string) so the
 // rendered `formatDate` output is stable regardless of the test runner's

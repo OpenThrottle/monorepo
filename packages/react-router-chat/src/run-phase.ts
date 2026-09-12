@@ -1,9 +1,9 @@
-import { ChatRunPhase, ChatToolStatus } from './types';
 import type {
   ChatRunPhase as ChatRunPhaseType,
   ChatTurnEvent,
   ChatTurnToolEvent,
 } from './types';
+import { ChatRunPhase, ChatToolStatus } from './types';
 
 /** A resolved phase plus an optional subject (tool/model name) for the label. */
 export interface ResolvedRunPhase {

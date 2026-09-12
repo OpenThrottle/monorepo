@@ -1,23 +1,24 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { BadRequestException, ConflictException } from '@nestjs/common';
-import { getRepositoryToken } from '@nestjs/typeorm';
 import { Test } from '@nestjs/testing';
+import { getRepositoryToken } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { SkillTagsService } from '../skill-tags/skill-tags.service';
 import type { UserSkillTag } from '../skill-tags/user-skill-tag.entity';
 import { PlanTag } from './plan-tag.entity';
 import { ProjectTag } from './project-tag.entity';
-import { TaskTag } from './task-tag.entity';
 import {
   deriveTagSource,
   TAG_SOURCES,
-  TAGGING_SERVICE_ACCOUNT_NAME,
   type TagCaller,
+  TAGGING_SERVICE_ACCOUNT_NAME,
   type TagSource,
 } from './tag-provenance';
 import { TagsService } from './tags.service';
+import { TaskTag } from './task-tag.entity';
 
 describe('deriveTagSource', () => {
   it('classifies a user principal as human', () => {

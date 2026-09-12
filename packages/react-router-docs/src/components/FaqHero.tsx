@@ -1,5 +1,6 @@
-import * as React from 'react';
 import clsx from 'clsx';
+import * as React from 'react';
+
 import { formatGroupLabel } from '../utils/buildDocsNav';
 import type { FaqCategory } from '../utils/faqCategories';
 

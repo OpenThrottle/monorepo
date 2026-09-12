@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { isPromptsSortBy, isPromptsSortOrder } from '../prompts-sort';
 
 describe('isPromptsSortBy', () => {

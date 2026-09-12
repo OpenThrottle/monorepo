@@ -1,5 +1,6 @@
 import type { Fetcher } from 'react-router';
 import { describe, expect, test } from 'vitest';
+
 import { isFetcherBusy, isFetcherFormPending } from '../fetcher';
 
 const idle = (): Fetcher => ({

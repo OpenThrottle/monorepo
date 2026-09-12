@@ -1,12 +1,14 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub, useLocation } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
+
 import { REPOSITORIES_TABLE_COPY } from '~/routing/settings/repositories/data/data.copy';
-import { RepositoriesTableEmpty } from '../RepositoriesTableEmpty';
+
 import type { RepositoriesTableEmptyProps } from '../RepositoriesTableEmpty';
+import { RepositoriesTableEmpty } from '../RepositoriesTableEmpty';
 
 describe('RepositoriesTableEmpty Component', () => {
   let component: RenderResult;

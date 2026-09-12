@@ -2,8 +2,9 @@
  * @description Fishery factory for {@link DailyStat}. Use in tests to build mock daily stats.
  */
 
-import { Factory } from 'fishery';
 import { faker } from '@faker-js/faker';
+import { Factory } from 'fishery';
+
 import type { DailyStat } from './daily-stat.entity';
 
 /** Column-only shape for building daily stat test data. */

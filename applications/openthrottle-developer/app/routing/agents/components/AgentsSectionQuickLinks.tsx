@@ -1,5 +1,3 @@
-import * as React from 'react';
-import { Link } from 'react-router';
 import {
   Card,
   CardContent,
@@ -8,6 +6,8 @@ import {
   CardTitle,
 } from '@openthrottle/react-router-shadcn';
 import { BrainCircuitIcon, BrainIcon, FileChartColumn } from 'lucide-react';
+import * as React from 'react';
+import { Link } from 'react-router';
 
 export interface AgentsSectionQuickLinksProps {}
 

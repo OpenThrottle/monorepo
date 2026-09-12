@@ -1,13 +1,14 @@
-import * as React from 'react';
-import { Link } from 'react-router';
-import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import {
   Badge,
   Button,
   Card,
   CardContent,
 } from '@openthrottle/react-router-shadcn';
+import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { FolderGit2Icon, PencilIcon } from 'lucide-react';
+import * as React from 'react';
+import { Link } from 'react-router';
+
 import type { WorkspaceRepositoryFieldsFragment } from '~/__generated__/graphql';
 import {
   WORKSPACE_FOLDERS_COPY,

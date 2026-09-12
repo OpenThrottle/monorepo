@@ -1,5 +1,3 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import {
   Button,
   Collapsible,
@@ -12,11 +10,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@openthrottle/react-router-shadcn';
+import clsx from 'clsx';
 import { ChevronDownIcon } from 'lucide-react';
+import * as React from 'react';
+
 import { GLOBAL_METRICS_POLL_INTERVAL_PRESETS } from '../config';
-import { formatMetricsSummary } from '../utils/utils.global';
 import { useGlobalMetrics } from '../hooks/useGlobalMetrics';
 import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
+import { formatMetricsSummary } from '../utils/utils.global';
 import { GlobalMetricsInfoModal } from './GlobalMetricsInfoModal';
 import { GlobalMetricsInfoTrigger } from './GlobalMetricsInfoTrigger';
 import { GlobalMetricsStatCards } from './GlobalMetricsStatCards';

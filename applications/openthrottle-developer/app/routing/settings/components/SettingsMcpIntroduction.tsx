@@ -1,6 +1,6 @@
-import * as React from 'react';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { BlocksIcon } from 'lucide-react';
+import * as React from 'react';
 
 export interface SettingsMcpIntroductionProps {
   className?: string;

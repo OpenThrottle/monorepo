@@ -1,5 +1,6 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+
 import { useFileMentionProvider } from '../useFileMentionProvider';
 
 const paths = ['src/App.tsx', 'src/app-shell.ts', 'lib/util.ts'];

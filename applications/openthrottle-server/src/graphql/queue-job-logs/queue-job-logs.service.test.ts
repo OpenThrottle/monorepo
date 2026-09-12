@@ -1,11 +1,13 @@
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import * as path from 'node:path';
+
 import { KeyedJsonlWriter } from '@openthrottle/nestjs-logging';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+
 import { decodeQueueJobLogCursor } from './queue-job-log-cursor';
-import { QueueJobLogsService } from './queue-job-logs.service';
 import type { QueueJobLogsInput } from './queue-job-logs.input';
+import { QueueJobLogsService } from './queue-job-logs.service';
 
 const QUEUE = 'plans-queue';
 const JOB = 'job-1';

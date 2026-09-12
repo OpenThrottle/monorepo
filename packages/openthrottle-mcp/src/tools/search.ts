@@ -3,18 +3,19 @@
  * All backend communication via GraphQL only (search, getDocument, listSources queries).
  */
 
-import { z } from 'zod';
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
+import { z } from 'zod';
+
 import {
-  type GetDocumentQuery,
-  type ListSourcesQuery,
-  type SearchQuery,
   GetDocumentDocument,
+  type GetDocumentQuery,
   ListSourcesDocument,
+  type ListSourcesQuery,
   SearchDocument,
+  type SearchQuery,
 } from '../__generated__/graphql.js';
-import type { GenericResult } from '../types/index.ts';
 import { getAuthToken } from '../auth/get-auth-token.ts';
+import type { GenericResult } from '../types/index.ts';
 import { invalidArgsContent, SafeToolError } from '../utils/errors.ts';
 import { runTool } from '../utils/tool-result.ts';
 

@@ -6,12 +6,14 @@
  */
 
 import { describe, expect, it } from 'vitest';
+
 import { TimelineMarkerKind } from '~/__generated__/graphql';
-import { markerGlyphPath, markerKindPath } from '../marker-glyph-path';
+
 import {
   TIMELINE_MARKER_GLYPH,
   TIMELINE_MARKER_KINDS,
 } from '../../config/kinds';
+import { markerGlyphPath, markerKindPath } from '../marker-glyph-path';
 
 describe('markerGlyphPath', () => {
   it('returns a path for every glyph in the set', () => {

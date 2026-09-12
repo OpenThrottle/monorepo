@@ -1,5 +1,5 @@
-export { NestjsRedisModule } from './modules/nestjs-redis.module';
 export { getRedisCache } from './config/redis';
+export { NestjsRedisModule } from './modules/nestjs-redis.module';
 /**
  * @public
  * The shared, dedicated ioredis client provided by {@link NestjsRedisModule}

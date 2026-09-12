@@ -1,5 +1,6 @@
 import type { OpenThrottleEnv } from '@openthrottle/react-router-utils';
 import { getEnvironment } from '@openthrottle/react-router-utils';
+
 import { sanitizeEnvForDiagnostics } from './sanitize-client-env';
 
 export interface SettingsDiagnosticsLoaderData {

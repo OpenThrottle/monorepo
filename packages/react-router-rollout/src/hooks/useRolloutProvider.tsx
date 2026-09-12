@@ -1,7 +1,7 @@
 import * as React from 'react';
 
-import type { RolloutFlagCatalog } from '../types';
 import type { RolloutContextValue } from '../data';
+import type { RolloutFlagCatalog } from '../types';
 import type {
   RolloutCacheOptions,
   RolloutEvaluation,
@@ -12,8 +12,8 @@ import {
   defaultsFromCatalog,
   mergeRolloutEvaluations,
   readRolloutEvaluationCache,
-  writeRolloutEvaluationCache,
   type RolloutResolvedValues,
+  writeRolloutEvaluationCache,
 } from '../utils';
 
 export interface UseRolloutProviderOptions<

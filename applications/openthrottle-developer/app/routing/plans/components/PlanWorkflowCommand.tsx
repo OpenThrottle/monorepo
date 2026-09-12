@@ -1,10 +1,11 @@
-import * as React from 'react';
+import { Button } from '@openthrottle/react-router-shadcn';
+import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import clsx from 'clsx';
 import { useAtomValue } from 'jotai';
-import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
-import { workflowRalphCanonicalCommandLineAtom } from '~/routing/plans/data/atom.plan';
-import { Button } from '@openthrottle/react-router-shadcn';
 import { RefreshCcwIcon } from 'lucide-react';
+import * as React from 'react';
+
+import { workflowRalphCanonicalCommandLineAtom } from '~/routing/plans/data/atom.plan';
 
 export interface PlanWorkflowCommandProps {
   className?: string;

@@ -1,9 +1,11 @@
-import * as React from 'react';
 import {
   ToggleGroup,
   ToggleGroupItem,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
 import { useSearchParams } from 'react-router';
+
+import { TIMELINE_SEARCH_PARAM } from '~/routing/timeline/config/defaults';
 import {
   TIMELINE_MARKER_KIND_LABEL,
   TIMELINE_MARKER_KINDS,
@@ -11,8 +13,8 @@ import {
   TIMELINE_SPAN_KINDS,
 } from '~/routing/timeline/config/kinds';
 import { TIMELINE_CONTROLS_COPY } from '~/routing/timeline/data/data.copy';
-import { TIMELINE_SEARCH_PARAM } from '~/routing/timeline/config/defaults';
 import { withTimelineKinds } from '~/routing/timeline/utils/search-params';
+
 import { TimelineMarkerGlyph } from './TimelineMarkerGlyph';
 export interface TimelineKindTogglesProps {
   readonly selectedMarkerKinds: readonly string[] | null;

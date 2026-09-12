@@ -1,10 +1,11 @@
-import * as React from 'react';
 import { Button, Input } from '@openthrottle/react-router-shadcn';
-import { Pencil, Trash2 } from 'lucide-react';
 import clsx from 'clsx';
+import { Pencil, Trash2 } from 'lucide-react';
+import * as React from 'react';
+
 import { CHAT_CONVERSATION_SIDEBAR_COPY } from '../data/chat-conversation-sidebar.copy';
-import { formatRelativeChatTimestamp } from '../utils/index';
 import type { AgentConversationListItem } from '../types';
+import { formatRelativeChatTimestamp } from '../utils/index';
 
 export interface ChatConversationRowProps {
   readonly conversation: AgentConversationListItem;

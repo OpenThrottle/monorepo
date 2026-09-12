@@ -1,5 +1,7 @@
-import type { DashboardActivityCardFragment } from '~/__generated__/graphql';
 import { describe, expect, test } from 'vitest';
+
+import type { DashboardActivityCardFragment } from '~/__generated__/graphql';
+
 import type { ActivityRow } from '../recent-activity';
 import {
   activityDetailHref,

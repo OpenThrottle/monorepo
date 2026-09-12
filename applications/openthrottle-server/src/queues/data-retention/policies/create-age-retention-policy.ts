@@ -15,6 +15,7 @@
  */
 
 import type { DataSource } from 'typeorm';
+
 import type { RetentionPolicy } from '../data-retention.types';
 
 /** snake_case identifiers only — anything else is a programming error, not input. */

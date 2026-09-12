@@ -1,13 +1,14 @@
-import * as React from 'react';
-import { GlobalPopover } from '@openthrottle/react-router-ui-global';
 import type { GlobalPopoverAction } from '@openthrottle/react-router-ui-global';
+import { GlobalPopover } from '@openthrottle/react-router-ui-global';
 import {
   CodeXmlIcon,
   PanelRightIcon,
   StopCircle,
   TargetIcon,
 } from 'lucide-react';
+import * as React from 'react';
 import { useFetcher, useNavigation } from 'react-router';
+
 import type { PlanCardFragment } from '~/__generated__/graphql';
 import type { action as planDetailAction } from '~/routes/plans.$planId._index';
 import { PLANS_ROW_ACTIONS_COPY } from '~/routing/plans/data/data.copy';

@@ -1,13 +1,14 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
-import { getRepositoryToken } from '@nestjs/typeorm';
 import { Test } from '@nestjs/testing';
+import { getRepositoryToken } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { SkillAvailabilityRuleSet } from './skill-availability-rule-set.entity';
-import { SkillAvailabilityRule } from './skill-availability-rule.entity';
+
 import { SkillAvailabilityService } from './skill-availability.service';
+import { SkillAvailabilityRule } from './skill-availability-rule.entity';
+import { SkillAvailabilityRuleSet } from './skill-availability-rule-set.entity';
 
 describe('SkillAvailabilityService', () => {
   const projectId = '22222222-2222-4222-8222-222222222222';

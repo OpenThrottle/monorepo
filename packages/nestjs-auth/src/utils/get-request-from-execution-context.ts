@@ -1,5 +1,6 @@
 import type { ExecutionContext } from '@nestjs/common';
 import { GqlExecutionContext } from '@nestjs/graphql';
+
 import type { AuthPrincipal } from '../auth-principal';
 import type { JwtPayload } from '../strategies/jwt.strategy';
 

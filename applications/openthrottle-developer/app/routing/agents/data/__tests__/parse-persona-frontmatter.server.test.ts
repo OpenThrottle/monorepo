@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { describe, expect, test } from 'vitest';
+
 import { parsePersonaFrontmatter } from '~/routing/agents/data/parse-persona-frontmatter.server';
 
 describe('parsePersonaFrontmatter (re-export)', () => {

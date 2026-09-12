@@ -2,6 +2,7 @@ import { createMock } from '@golevelup/ts-vitest';
 import type { ProjectsService } from '@openthrottle/nestjs-repositories';
 import { type Project } from '@openthrottle/nestjs-repositories';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import { WorkspaceSettingsLoaders } from './workspace-settings-loaders';
 
 describe('WorkspaceSettingsLoaders', () => {

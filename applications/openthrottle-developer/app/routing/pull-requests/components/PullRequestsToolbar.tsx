@@ -1,9 +1,10 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { Form, Link } from 'react-router';
 import { Button, Input, Label } from '@openthrottle/react-router-shadcn';
-import type { PullRequestsListFilters } from '~/routing/pull-requests/types/pull-requests-list-filters';
+import clsx from 'clsx';
 import { Building2Icon, GitGraphIcon } from 'lucide-react';
+import * as React from 'react';
+import { Form, Link } from 'react-router';
+
+import type { PullRequestsListFilters } from '~/routing/pull-requests/types/pull-requests-list-filters';
 
 export interface PullRequestsToolbarProps {
   className?: string;

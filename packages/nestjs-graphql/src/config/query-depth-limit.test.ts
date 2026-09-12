@@ -1,5 +1,6 @@
 import { buildSchema, parse, validate, type ValidationRule } from 'graphql';
 import { describe, expect, it } from 'vitest';
+
 import { createQueryDepthLimitRule } from './query-depth-limit';
 
 // A recursive schema: Node.children is a list of Node, so queries can nest

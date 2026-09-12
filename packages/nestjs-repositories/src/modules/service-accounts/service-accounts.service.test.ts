@@ -1,11 +1,12 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { Test } from '@nestjs/testing';
 import { createMock } from '@golevelup/ts-vitest';
+import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { asMock } from '@openthrottle/nestjs-testing';
-import { ServiceAccountCredential } from './service-account-credential.entity';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { ServiceAccount } from './service-account.entity';
+import { ServiceAccountCredential } from './service-account-credential.entity';
 import { SERVICE_ACCOUNT_BEARER_PREFIX } from './service-account-token.util';
 import { ServiceAccountsService } from './service-accounts.service';
 

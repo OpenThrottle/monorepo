@@ -1,9 +1,9 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import { Button } from '@openthrottle/react-router-shadcn';
-import { Form } from 'react-router';
-import { SignOutIcon } from '@phosphor-icons/react/dist/ssr/SignOut';
 import { OpenThrottleBreadcrumbs } from '@openthrottle/react-router-ui';
+import { SignOutIcon } from '@phosphor-icons/react/dist/ssr/SignOut';
+import clsx from 'clsx';
+import * as React from 'react';
+import { Form } from 'react-router';
 
 export interface GlobalHeaderProps {
   className?: string;

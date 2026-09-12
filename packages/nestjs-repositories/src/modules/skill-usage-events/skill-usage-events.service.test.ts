@@ -1,6 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { describe, expect, it, vi } from 'vitest';
+
 import {
   SKILL_USAGE_PRIVACY_LEVELS,
   SKILL_USAGE_SCOPES,

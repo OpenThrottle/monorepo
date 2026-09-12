@@ -18,14 +18,16 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { Injectable, Inject } from '@nestjs/common';
+
+import { Inject, Injectable } from '@nestjs/common';
 import {
   PUB_SUB,
-  transcriptionStreamTopic,
   type PubSubEngine,
+  transcriptionStreamTopic,
 } from '@openthrottle/nestjs-graphql';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { isRecord } from '@openthrottle/nodejs-utils';
+
 import {
   TRANSCRIPTION_STREAM_CHUNK_FIELD,
   type TranscriptionStreamChunkPayload,

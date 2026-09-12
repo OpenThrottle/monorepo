@@ -1,13 +1,14 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import {
   Button,
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@openthrottle/react-router-shadcn';
+import clsx from 'clsx';
 import type { LucideIcon } from 'lucide-react';
 import { ChevronDownIcon, ChevronUpIcon } from 'lucide-react';
+import * as React from 'react';
+
 import { GlobalHeading } from './GlobalHeading';
 
 export interface GlobalCollapsibleProps extends React.PropsWithChildren {

@@ -1,10 +1,11 @@
-import * as React from 'react';
 import {
   Badge,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+
 import { KillPlanRunButton } from '~/routing/plans/components/KillPlanRunButton';
 import { SettlePlanRunButton } from '~/routing/plans/components/SettlePlanRunButton';
 import { getPlanIsCancelable } from '~/routing/plans/utils/utils.plans';

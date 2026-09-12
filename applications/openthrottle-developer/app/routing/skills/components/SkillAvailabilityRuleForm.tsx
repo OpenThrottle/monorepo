@@ -1,5 +1,3 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import {
   Button,
   Input,
@@ -8,6 +6,9 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from '@openthrottle/react-router-shadcn';
+import clsx from 'clsx';
+import * as React from 'react';
+
 import { SkillAvailabilityRuleRemoveButton } from '~/routing/skills/components/SkillAvailabilityRuleRemoveButton';
 import { SKILL_AVAILABILITY_COPY } from '~/routing/skills/data/data.copy';
 import { useSkillAvailabilityRuleForm } from '~/routing/skills/hooks/useSkillAvailabilityRuleForm';

@@ -9,9 +9,10 @@
  * unmount by {@link useSubscription}. Replaces the retired Socket.IO
  * revalidation. Extracted verbatim from `routes/plans.$planId._index.tsx`.
  */
+import { useSubscription } from '@openthrottle/react-router-graphql';
 import * as React from 'react';
 import { useRevalidator } from 'react-router';
-import { useSubscription } from '@openthrottle/react-router-graphql';
+
 import { PlanLifecycleNotificationsDocument } from '~/__generated__/graphql';
 import { getGraphqlWsClient } from '~/services/graphql-ws-client';
 

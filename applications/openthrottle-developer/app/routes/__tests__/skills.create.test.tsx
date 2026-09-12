@@ -1,11 +1,13 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test, vi } from 'vitest';
-import { buildRootMatch } from '~/testing/root-match-fixture';
-import { SKILL_CREATE_COPY } from '~/routing/skills/data/data.copy';
-import SkillsCreate from '../skills.create';
+
 import type { Route } from '@/app/routes/+types/skills.create';
+import { SKILL_CREATE_COPY } from '~/routing/skills/data/data.copy';
+import { buildRootMatch } from '~/testing/root-match-fixture';
+
+import SkillsCreate from '../skills.create';
 
 // Monaco cannot boot under jsdom.
 vi.mock('@openthrottle/react-router-editor', () => ({

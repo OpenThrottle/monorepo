@@ -1,5 +1,6 @@
-import * as React from 'react';
 import clsx from 'clsx';
+import * as React from 'react';
+
 import { GLOBAL_POPOVER_COPY } from '../data/data.copy';
 
 /**

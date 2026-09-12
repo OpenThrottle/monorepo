@@ -1,14 +1,15 @@
-import { describe, expect, test } from 'vitest';
 import type { SystemCpuMetrics } from '@openthrottle/openthrottle-agentic-workflow';
+import { describe, expect, test } from 'vitest';
+
 import type { ChildProcessMetrics } from '../../types/child-process-metrics';
 import type { WallClockMetrics } from '../../types/wall-clock-metrics';
+import type { TaskRunMetrics } from '../process-metrics-format';
 import {
   characterizeWorkload,
   formatChildProcessMetrics,
   formatTaskRunMetricsDetailed,
   formatTaskRunMetricsSummary,
 } from '../process-metrics-format';
-import type { TaskRunMetrics } from '../process-metrics-format';
 
 const createMockChildProcessMetrics = (
   overrides: Partial<ChildProcessMetrics> = {},

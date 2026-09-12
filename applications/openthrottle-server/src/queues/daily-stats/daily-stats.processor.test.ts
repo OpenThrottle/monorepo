@@ -1,17 +1,18 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { createMock } from '@golevelup/ts-vitest';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { createMock } from '@golevelup/ts-vitest';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   DailyStatsService,
   PlansService,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { NotificationsService } from '../../notifications/notifications.service';
 import { addUtcDaysToYmd, getPreviousUtcDayYmd } from './daily-stats.dates';
-import type { AggregateDailyStatsJob } from './daily-stats.types';
 import { DailyStatsProcessor } from './daily-stats.processor';
+import type { AggregateDailyStatsJob } from './daily-stats.types';
 
 /**
  * Local mock signature for `DailyStatsService.upsertForDate`: same call args as the real

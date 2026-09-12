@@ -5,11 +5,12 @@
  * per-user scoping (WHERE user_id = principal.sub).
  */
 
-import { AgentTokenUsageService } from '@openthrottle/nestjs-repositories';
-import { type AuthPrincipal, CurrentUser } from '@openthrottle/nestjs-auth';
 import { UseGuards } from '@nestjs/common';
 import { Args, Query, Resolver } from '@nestjs/graphql';
+import { type AuthPrincipal, CurrentUser } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
+import { AgentTokenUsageService } from '@openthrottle/nestjs-repositories';
+
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
 import { assertHumanAuthPrincipal } from '../service-accounts/assert-human-auth-principal';
 import {

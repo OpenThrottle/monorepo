@@ -1,5 +1,3 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import {
   Button,
   Input,
@@ -8,13 +6,16 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@openthrottle/react-router-shadcn';
+import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
+import clsx from 'clsx';
 import { FolderOpen, History, X } from 'lucide-react';
+import * as React from 'react';
+
 import {
   getRecentWorkspacePaths,
   removeRecentWorkspacePath,
   validateWorkspacePathClient,
 } from '~/routing/plans/utils/workspace-path';
-import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
 
 export interface PlanWorkflowConfigWorkspaceProps {
   heading: string;

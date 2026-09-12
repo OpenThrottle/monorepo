@@ -3,22 +3,23 @@
  * agent_conversation_list, agent_conversation_get, agent_conversation_get_messages.
  */
 
-import { z } from 'zod';
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
+import { z } from 'zod';
+
 import {
-  type GetAgentConversationMessagesQuery,
-  type GetAgentConversationQuery,
-  type ListAgentConversationsQuery,
   GetAgentConversationDocument,
   GetAgentConversationMessagesDocument,
+  type GetAgentConversationMessagesQuery,
+  type GetAgentConversationQuery,
   ListAgentConversationsDocument,
+  type ListAgentConversationsQuery,
 } from '../__generated__/graphql.js';
 import {
   GetAgentConversationMessagesInputSchema,
   ListAgentConversationsInputSchema,
 } from '../__generated__/schemas.ts';
-import type { GenericResult } from '../types/index.ts';
 import { getAuthToken } from '../auth/get-auth-token.ts';
+import type { GenericResult } from '../types/index.ts';
 import { invalidArgsContent } from '../utils/errors.ts';
 import { runTool } from '../utils/tool-result.ts';
 

@@ -1,7 +1,8 @@
-import * as React from 'react';
+import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import clsx from 'clsx';
 import { MonitorCogIcon } from 'lucide-react';
-import { GlobalHeading } from '@openthrottle/react-router-ui-global';
+import * as React from 'react';
+
 import { WORKSPACE_SETTINGS_COPY } from '~/routing/settings/data/data.copy';
 
 export interface SettingsWorkspaceIntroProps {

@@ -1,8 +1,9 @@
 import { act, render } from '@testing-library/react';
 import { createRoutesStub, useSearchParams } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import { useIdeWorkspace } from '../useIdeWorkspace';
+
 import type { UseIdeWorkspaceResult } from '../useIdeWorkspace';
+import { useIdeWorkspace } from '../useIdeWorkspace';
 
 interface WorkspaceProbeValue {
   search: URLSearchParams;

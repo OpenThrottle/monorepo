@@ -1,11 +1,12 @@
-import * as React from 'react';
+import type { PullRequestCardFragment } from '@openthrottle/openthrottle-developer-codegen';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { PullRequestCardFragment } from '@openthrottle/openthrottle-developer-codegen';
+import * as React from 'react';
 import { createRoutesStub, useSearchParams } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { PullRequestPreviewSheet } from '../PullRequestPreviewSheet';
+
 import type { PullRequestPreviewSheetProps } from '../PullRequestPreviewSheet';
+import { PullRequestPreviewSheet } from '../PullRequestPreviewSheet';
 
 const baseFilters: PullRequestPreviewSheetProps['filters'] = {
   author: '',

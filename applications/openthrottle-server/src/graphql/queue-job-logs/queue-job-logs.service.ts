@@ -15,14 +15,15 @@
 
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { readKeyedJsonlRun } from '@openthrottle/nestjs-logging';
+
 import { getBullMqRunOutputBaseDirectory } from '../../config/bullmq-run-output';
 import {
   decodeQueueJobLogCursor,
   encodeQueueJobLogCursor,
 } from './queue-job-log-cursor';
 import { mapRecordToQueueJobLogEvent } from './queue-job-log-event.mapper';
-import { deriveQueueJobLogLevel } from './queue-job-log-mapping';
 import type { QueueJobLogEventObject } from './queue-job-log-event.object';
+import { deriveQueueJobLogLevel } from './queue-job-log-mapping';
 import type { QueueJobLogPageObject } from './queue-job-log-page.object';
 import type { QueueJobLogsInput } from './queue-job-logs.input';
 

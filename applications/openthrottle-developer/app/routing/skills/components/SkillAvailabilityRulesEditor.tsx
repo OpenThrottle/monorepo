@@ -1,7 +1,8 @@
-import * as React from 'react';
 import clsx from 'clsx';
-import { SKILL_AVAILABILITY_COPY } from '~/routing/skills/data/data.copy';
+import * as React from 'react';
+
 import { SkillAvailabilityRuleForm } from '~/routing/skills/components/SkillAvailabilityRuleForm';
+import { SKILL_AVAILABILITY_COPY } from '~/routing/skills/data/data.copy';
 import type { SkillAvailabilityRuleValue } from '~/routing/skills/utils/skill-availability';
 
 const COPY = SKILL_AVAILABILITY_COPY.rules;

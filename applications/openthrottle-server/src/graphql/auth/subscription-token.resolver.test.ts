@@ -3,6 +3,7 @@ import type { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import type { UsersService } from '@openthrottle/nestjs-repositories';
 import { describe, expect, it, vi } from 'vitest';
+
 import { AuthService } from './auth.service';
 import { SubscriptionTokenResolver } from './subscription-token.resolver';
 

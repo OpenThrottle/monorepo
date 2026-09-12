@@ -1,7 +1,8 @@
-import { UnauthorizedException, type ExecutionContext } from '@nestjs/common';
+import { type ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { asMock } from '@openthrottle/nestjs-testing';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import { JwtAuthGuard } from './jwt-auth.guard';
 

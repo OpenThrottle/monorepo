@@ -7,9 +7,10 @@
  * Deliberately tiny — no Apollo Client. Pair it with the loader snapshot: seed
  * component state from the loader, then merge deltas from here (dedupe by id).
  */
-import * as React from 'react';
-import { print } from 'graphql';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
+import { print } from 'graphql';
+import * as React from 'react';
+
 import type { GraphqlWsClient } from './createGraphqlWsClient';
 
 /**

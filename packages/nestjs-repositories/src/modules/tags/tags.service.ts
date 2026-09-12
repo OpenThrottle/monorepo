@@ -24,18 +24,19 @@ import {
   DEFAULT_TAG_VOCABULARY_SEED,
 } from '@openthrottle/openthrottle-skills';
 import { QueryFailedError, Repository } from 'typeorm';
-import { SkillTagsService } from '../skill-tags/skill-tags.service';
+
 import { Plan } from '../plans/plan.entity';
+import { SkillTagsService } from '../skill-tags/skill-tags.service';
 import { Task } from '../tasks/task.entity';
 import { PlanTag } from './plan-tag.entity';
 import { ProjectTag } from './project-tag.entity';
-import { TaskTag } from './task-tag.entity';
 import {
   deriveTagSource,
   TAG_SOURCE_RANK,
   type TagCaller,
   type TagSource,
 } from './tag-provenance';
+import { TaskTag } from './task-tag.entity';
 
 const PHASE_DIMENSION = 'phase';
 

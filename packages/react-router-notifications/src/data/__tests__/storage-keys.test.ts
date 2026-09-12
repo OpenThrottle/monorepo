@@ -6,13 +6,14 @@
  */
 
 import { beforeEach, describe, expect, test } from 'vitest';
+
 import { NOTIFICATIONS_STORAGE_KEY } from '../../config/index';
+import type { NotificationInstance } from '../../types';
 import {
   DEFAULT_NOTIFICATIONS_STORAGE_KEY,
   loadFromStorage,
   saveToStorage,
 } from '../notifications-store.context';
-import type { NotificationInstance } from '../../types';
 
 function makeNotification(message: string): NotificationInstance {
   return {

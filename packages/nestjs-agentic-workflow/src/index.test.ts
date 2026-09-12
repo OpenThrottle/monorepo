@@ -1,6 +1,5 @@
-import { describe, expect, it } from 'vitest';
-
 import * as packageEntry from '@openthrottle/nestjs-agentic-workflow';
+import { describe, expect, it } from 'vitest';
 
 describe('@openthrottle/nestjs-agentic-workflow package entry', () => {
   it('resolves the documented public symbols from the package name', () => {

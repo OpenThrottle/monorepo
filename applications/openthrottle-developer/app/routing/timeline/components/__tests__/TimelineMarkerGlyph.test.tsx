@@ -1,12 +1,14 @@
-import * as React from 'react';
-import { render, within } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render, within } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
+
 import { TimelineMarkerKind } from '~/__generated__/graphql';
 import { TIMELINE_MARKER_KIND_LABEL } from '~/routing/timeline/config/kinds';
-import { TimelineMarkerGlyph } from '../TimelineMarkerGlyph';
+
 import type { TimelineMarkerGlyphProps } from '../TimelineMarkerGlyph';
+import { TimelineMarkerGlyph } from '../TimelineMarkerGlyph';
 
 const renderGlyph = (props: TimelineMarkerGlyphProps): RenderResult => {
   const Component = () => (

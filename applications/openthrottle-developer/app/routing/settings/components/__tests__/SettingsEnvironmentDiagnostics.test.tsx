@@ -1,9 +1,10 @@
-import * as React from 'react';
+import type { OpenThrottleEnv } from '@openthrottle/react-router-utils';
 import { render, screen, within } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
-import type { OpenThrottleEnv } from '@openthrottle/react-router-utils';
+
 import type { SettingsDiagnosticsLoaderData } from '../../utils/settings-diagnostics-loader-data';
 import { VITE_DEVTOOLS_DOC_QUICK_REF_HREF } from '../../utils/settings-docs-links';
 import { SettingsEnvironmentDiagnostics } from '../SettingsEnvironmentDiagnostics';

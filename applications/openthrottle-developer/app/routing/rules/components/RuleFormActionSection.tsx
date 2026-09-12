@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Input,
   Label,
@@ -8,6 +7,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+
 import { RULES_COPY } from '~/routing/rules/data/data.copy';
 
 export interface RuleFormActionSectionProps {

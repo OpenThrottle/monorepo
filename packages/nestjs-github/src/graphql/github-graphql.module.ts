@@ -7,6 +7,7 @@
  */
 
 import { Module } from '@nestjs/common';
+
 import { GitHubModule } from '../github/github.module';
 import { GithubResolver } from './github.resolver';
 import { GitHubStatsService } from './github-stats.service';

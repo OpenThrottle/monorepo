@@ -1,9 +1,9 @@
+import {
+  type CodegenConfig,
+  defineCodegen,
+} from '@openthrottle/graphql-codegen';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
-import {
-  defineCodegen,
-  type CodegenConfig,
-} from '@openthrottle/graphql-codegen';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);

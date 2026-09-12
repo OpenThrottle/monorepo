@@ -8,8 +8,8 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { isBlocking, validateEpisode, validateSeason } from '../rules';
 import type { VideoEpisode } from '../../episodes/types';
+import { isBlocking, validateEpisode, validateSeason } from '../rules';
 
 const base: VideoEpisode = {
   beats: [

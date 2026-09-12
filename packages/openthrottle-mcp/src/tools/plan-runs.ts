@@ -14,9 +14,10 @@
  * caller must settle it on every exit path, including failure.
  */
 
-import { z } from 'zod';
-import { hostname as osHostname } from 'os';
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
+import { hostname as osHostname } from 'os';
+import { z } from 'zod';
+
 import type {
   GetPlanRunsQuery,
   RegisterCliPlanRunMutation,
@@ -29,13 +30,13 @@ import {
   RegisterPlanRunWorktreeCheckoutDocument,
   SettleCliPlanRunDocument,
 } from '../__generated__/graphql.js';
-import type { GenericResult } from '../types/index.ts';
 import { getAuthToken } from '../auth/get-auth-token.ts';
 import { resolveExecutionBackend } from '../config/execution-backend.ts';
 import {
   forgetPlanRunForBackstop,
   rememberPlanRunForBackstop,
 } from '../config/plan-run-backstop.ts';
+import type { GenericResult } from '../types/index.ts';
 import { invalidArgsContent } from '../utils/errors.ts';
 import { runTool } from '../utils/tool-result.ts';
 

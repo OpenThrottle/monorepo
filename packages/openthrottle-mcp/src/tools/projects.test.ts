@@ -4,6 +4,7 @@
 
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { deleteProjectToolHandler } from './projects.ts';
 
 vi.mock('@openthrottle/nodejs-graphql', () => ({

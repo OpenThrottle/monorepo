@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Badge,
   Tooltip,
@@ -6,9 +5,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
-import { buildBadgeLabel, buildRows } from '../utils/chat-turn-usage-summary';
-import { hasUsageCounts } from '../usage';
+import * as React from 'react';
+
 import type { ChatTurnUsageEvent } from '../types';
+import { hasUsageCounts } from '../usage';
+import { buildBadgeLabel, buildRows } from '../utils/chat-turn-usage-summary';
 
 export interface ChatTurnUsageSummaryProps {
   readonly event: ChatTurnUsageEvent;

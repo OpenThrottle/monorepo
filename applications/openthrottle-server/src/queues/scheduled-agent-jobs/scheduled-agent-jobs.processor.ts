@@ -1,33 +1,34 @@
 import { stat } from 'node:fs/promises';
-import { Processor, WorkerHost, OnWorkerEvent } from '@nestjs/bullmq';
-import { Inject, Optional } from '@nestjs/common';
+
+import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
 import type { OnApplicationShutdown } from '@nestjs/common';
+import { Inject, Optional } from '@nestjs/common';
 import {
   hasUsageCounts,
+  type NormalizedTokenUsage,
   normalizeUsage,
   sumUsage,
-  type NormalizedTokenUsage,
 } from '@openthrottle/agentic-token-usage';
 import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
 import type { KeyedJsonlWriter } from '@openthrottle/nestjs-logging';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
+  ScheduledAgentJobCheckoutPathService,
+  type ScheduledAgentJobRunSettingsSnapshot,
+  type ScheduledAgentJobRunStatus,
+  ScheduledAgentJobsService,
+} from '@openthrottle/nestjs-repositories';
+import {
   DRIVER_REGISTRY,
   RUN_AGENT_STATUS,
   type RunAgentStatus,
 } from '@openthrottle/openthrottle-drivers';
-import {
-  ScheduledAgentJobCheckoutPathService,
-  ScheduledAgentJobsService,
-  type ScheduledAgentJobRunSettingsSnapshot,
-  type ScheduledAgentJobRunStatus,
-} from '@openthrottle/nestjs-repositories';
+
 import { closeRunOutputForJob } from '../bullmq-keyed-run-logging';
 import { BullMqRunOutputRetentionService } from '../bullmq-run-output-retention.service';
 import { BULLMQ_RUN_OUTPUT_WRITER } from '../bullmq-run-output-writer.token';
 import { ScheduledAgentJobCancellationService } from './scheduled-agent-job-cancellation.service';
 import { ScheduledAgentJobDirectoryLockService } from './scheduled-agent-job-directory-lock.service';
-import { ScheduledAgentRunnerService } from './scheduled-agent-runner.service';
 import {
   resolveScheduledAgentJobConcurrencyKey,
   resolveScheduledAgentJobRunCwd,
@@ -37,6 +38,7 @@ import {
   SCHEDULED_AGENT_JOBS_QUEUE_NAME,
 } from './scheduled-agent-jobs.constants';
 import type { ScheduledAgentJobBullJob } from './scheduled-agent-jobs.types';
+import { ScheduledAgentRunnerService } from './scheduled-agent-runner.service';
 
 /** Run-status terminal states — a run in one of these is done and must not be re-marked. */
 const TERMINAL_RUN_STATUSES: ReadonlySet<ScheduledAgentJobRunStatus> = new Set([

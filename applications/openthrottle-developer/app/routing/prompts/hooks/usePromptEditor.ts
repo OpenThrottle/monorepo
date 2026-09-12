@@ -1,6 +1,7 @@
+import { getLanguageFromExt } from '@openthrottle/react-router-editor';
 import * as React from 'react';
 import { useFetcher } from 'react-router';
-import { getLanguageFromExt } from '@openthrottle/react-router-editor';
+
 import type { Route } from '@/app/routes/+types/prompts.$promptId';
 
 type PromptDetail = Route.ComponentProps['loaderData']['prompt'];

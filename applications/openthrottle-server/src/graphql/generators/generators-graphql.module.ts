@@ -3,6 +3,7 @@
  */
 
 import { Module } from '@nestjs/common';
+
 import { GeneratorsResolver } from './generators.resolver';
 
 @Module({

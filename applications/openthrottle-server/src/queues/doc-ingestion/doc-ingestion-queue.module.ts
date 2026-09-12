@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { DocIngestionQueueProducerModule } from './doc-ingestion-queue-producer.module';
+
 import { DocIngestionProcessor } from './doc-ingestion.processor';
+import { DocIngestionQueueProducerModule } from './doc-ingestion-queue-producer.module';
 import { DocIngestionRepeatableService } from './doc-ingestion-repeatable.service';
 
 /**

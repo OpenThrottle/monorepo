@@ -1,12 +1,13 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import { DataTable } from '@openthrottle/react-router-shadcn';
 import { readSearchParam } from '@openthrottle/react-router-ui-global';
-import { Link, useSearchParams } from 'react-router';
-import { CalendarEmpty } from '~/routing/calendar/components/CalendarEmpty';
-import { formatCalendarRange } from '~/routing/calendar/utils/formatters';
-import type { CalendarListEvent } from '~/routing/calendar/types';
 import type { ColumnDef } from '@tanstack/react-table';
+import clsx from 'clsx';
+import * as React from 'react';
+import { Link, useSearchParams } from 'react-router';
+
+import { CalendarEmpty } from '~/routing/calendar/components/CalendarEmpty';
+import type { CalendarListEvent } from '~/routing/calendar/types';
+import { formatCalendarRange } from '~/routing/calendar/utils/formatters';
 
 export interface CalendarTableProps {
   className?: string;

@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Empty,
   EmptyDescription,
@@ -6,6 +5,8 @@ import {
   EmptyTitle,
 } from '@openthrottle/react-router-shadcn';
 import { PuzzlePieceIcon } from '@phosphor-icons/react/dist/ssr/PuzzlePiece';
+import * as React from 'react';
+
 import { PLAN_TASK_NOT_FOUND_COPY } from '~/routing/plans/data/data.copy';
 
 export interface PlanTaskNotFoundProps {}

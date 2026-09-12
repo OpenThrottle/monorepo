@@ -1,6 +1,6 @@
-import { useChatOptional } from '../context/chat-context';
-import type { ChatComposerControls } from '../context/chat-context';
 import type { ChatConversationSidebarProps } from '../components/ChatConversationSidebar';
+import type { ChatComposerControls } from '../context/chat-context';
+import { useChatOptional } from '../context/chat-context';
 import type { ChatMessage } from '../types';
 
 export interface UseChatDialogOptions {

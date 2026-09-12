@@ -5,8 +5,10 @@
  */
 
 import { resolveGitBranchFromCwd } from '@openthrottle/openthrottle-agentic-utils';
+
 import { ARTWORK_RALPH, ARTWORK_THANK_YOU, COLORS } from '../config/index';
 import { MESSAGE_COMPLETED, MESSAGE_INTRO } from '../config/messages';
+import { isComplete, showConfiguration, showRalphUsage } from '../utils/index';
 import {
   bumpCliPlanRunHeartbeat,
   captureRunLocation,
@@ -26,7 +28,6 @@ import {
   updatePlanStatus,
   updateTaskStatus,
 } from '../utils/openthrottle-ralph';
-import { isComplete, showConfiguration, showRalphUsage } from '../utils/index';
 import { logWorkflowRalphOtDiagnostics } from '../utils/ot-diagnostics';
 import type { RalphArgs } from '../utils/parsers';
 import {

@@ -6,6 +6,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+
 import { getWorktreeTargetsFromEnv } from './worktree-targets.env';
 
 describe('getWorktreeTargetsFromEnv', () => {

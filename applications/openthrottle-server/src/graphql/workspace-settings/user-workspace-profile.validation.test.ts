@@ -1,10 +1,11 @@
 import { describe, expect, test } from 'vitest';
-import { WorkspaceEditorIdEnum } from './workspace-editor-id.enum';
+
 import {
   validateContactDisplayName,
   validateContactEmail,
   validateEnabledEditors,
 } from './user-workspace-profile.validation';
+import { WorkspaceEditorIdEnum } from './workspace-editor-id.enum';
 
 describe('validateContactDisplayName', () => {
   test('returns trimmed name when valid', () => {

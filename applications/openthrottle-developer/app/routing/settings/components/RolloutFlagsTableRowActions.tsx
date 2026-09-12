@@ -1,6 +1,7 @@
-import * as React from 'react';
-import { GlobalPopover } from '@openthrottle/react-router-ui-global';
 import type { GlobalPopoverAction } from '@openthrottle/react-router-ui-global';
+import { GlobalPopover } from '@openthrottle/react-router-ui-global';
+import * as React from 'react';
+
 import type { RolloutFlagFieldsFragment } from '~/__generated__/graphql';
 import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
 import { rolloutFlagEditPath } from '~/routing/settings/utils/rollout-flag-format';

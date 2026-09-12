@@ -3,6 +3,7 @@
  */
 
 import { Field, Int, ObjectType } from '@nestjs/graphql';
+
 import { JobObject } from './job.object';
 import { QueueStatsObject } from './queue-stats.object';
 

@@ -1,10 +1,12 @@
-import * as React from 'react';
+import { createTestEnv } from '@openthrottle/react-router-testing';
 import { render } from '@testing-library/react';
+import * as React from 'react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import { createTestEnv } from '@openthrottle/react-router-testing';
-import Component from '../docs._index';
+
 import type { Route } from '@/app/routes/+types/docs._index';
+
+import Component from '../docs._index';
 
 // The real ancestor chain for this route: root -> docs (layout) -> docs._index.
 // matches is unused by the component under test, but its type is a fixed

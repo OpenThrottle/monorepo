@@ -5,6 +5,7 @@
  */
 
 import { Field, ObjectType, registerEnumType } from '@nestjs/graphql';
+
 import { ProjectObject } from '../projects/project.object';
 import {
   RepositoryCheckoutObject,

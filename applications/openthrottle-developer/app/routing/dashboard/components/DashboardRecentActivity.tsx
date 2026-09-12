@@ -1,6 +1,3 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { Link } from 'react-router';
 import {
   Table,
   TableBody,
@@ -10,8 +7,11 @@ import {
   TableHeader,
   TableRow,
 } from '@openthrottle/react-router-shadcn';
-import { isPlanStatusKey } from '~/routing/plans/utils/utils.plans';
-import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
+import clsx from 'clsx';
+import * as React from 'react';
+import { Link } from 'react-router';
+
+import type { DashboardActivityCardFragment } from '~/__generated__/graphql';
 import {
   activityDetailHref,
   commitLinkAriaLabel,
@@ -20,7 +20,8 @@ import {
   taskLinkAriaLabel,
   toActivityRows,
 } from '~/routing/dashboard/utils/recent-activity';
-import type { DashboardActivityCardFragment } from '~/__generated__/graphql';
+import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
+import { isPlanStatusKey } from '~/routing/plans/utils/utils.plans';
 
 export interface DashboardRecentActivityProps {
   className?: string;

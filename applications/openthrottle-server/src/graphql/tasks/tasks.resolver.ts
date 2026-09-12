@@ -14,8 +14,11 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { CurrentUser } from '@openthrottle/nestjs-auth';
-import { EmitNotification } from '@openthrottle/nestjs-websockets';
-import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
+import type {
+  CreateTaskBatchItem,
+  Plan,
+  Project,
+} from '@openthrottle/nestjs-repositories';
 import {
   CROSS_PLAN_TASK_LIST_ORDER,
   PLAN_TASK_LIST_ORDER,
@@ -23,16 +26,20 @@ import {
   TASK_SORT_ORDER_GAP,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
-import type {
-  CreateTaskBatchItem,
-  Plan,
-  Project,
-} from '@openthrottle/nestjs-repositories';
 import { Task } from '@openthrottle/nestjs-repositories';
+import { EmitNotification } from '@openthrottle/nestjs-websockets';
+import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
 import { In, QueryFailedError } from 'typeorm';
+
 import { NotificationsService } from '../../notifications/notifications.service';
+import { PLAN_RULES_TRIGGER_KINDS } from '../../queues/plan-rules/plan-rules.types';
+import { PlanRulesEvaluationService } from '../../queues/plan-rules/plan-rules-evaluation.service';
+import { TAGGING_ENTITY_TYPES } from '../../queues/tagging/tagging.types';
+import { TaggingEnqueueService } from '../../queues/tagging/tagging-enqueue.service';
+import { TaskPromotionEnqueueService } from '../../queues/task-promotion/task-promotion-enqueue.service';
 import { PlanObject } from '../plans/plan.object';
 import { ProjectObject } from '../projects/project.object';
+import { WorkLedgerCaptureService } from '../work-ledger/work-ledger-capture.service';
 import {
   AddHookInput,
   CreateTaskInput,
@@ -40,8 +47,8 @@ import {
   DeleteTaskInput,
   DetachHookInput,
   PromoteTaskToPlanInput,
-  ReorderPlanTasksInput,
   RemainingTasksByPlanIdInput,
+  ReorderPlanTasksInput,
   TasksByPlanIdInput,
   TasksByProjectIdInput,
   UpdateTaskInput,
@@ -52,12 +59,6 @@ import {
   TaskObject,
   TasksByProjectIdResultObject,
 } from './task.object';
-import { PlanRulesEvaluationService } from '../../queues/plan-rules/plan-rules-evaluation.service';
-import { TaggingEnqueueService } from '../../queues/tagging/tagging-enqueue.service';
-import { TAGGING_ENTITY_TYPES } from '../../queues/tagging/tagging.types';
-import { PLAN_RULES_TRIGGER_KINDS } from '../../queues/plan-rules/plan-rules.types';
-import { TaskPromotionEnqueueService } from '../../queues/task-promotion/task-promotion-enqueue.service';
-import { WorkLedgerCaptureService } from '../work-ledger/work-ledger-capture.service';
 import { TasksLoaders } from './tasks-loaders';
 
 /** Default cap for the unpaginated tasks() list query so it never full-table-scans. */

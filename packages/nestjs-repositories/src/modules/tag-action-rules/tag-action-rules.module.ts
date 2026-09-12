@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
+
 import { RuleApplication } from './rule-application.entity';
 import { RuleApplicationsService } from './rule-applications.service';
 import { TagActionRule } from './tag-action-rule.entity';

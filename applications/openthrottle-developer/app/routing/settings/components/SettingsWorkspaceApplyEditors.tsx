@@ -1,7 +1,8 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { Form, useNavigation } from 'react-router';
 import { Button } from '@openthrottle/react-router-shadcn';
+import clsx from 'clsx';
+import * as React from 'react';
+import { Form, useNavigation } from 'react-router';
+
 import { WORKSPACE_SETTINGS_COPY } from '~/routing/settings/data/data.copy';
 
 export interface SettingsWorkspaceApplyEditorsProps {

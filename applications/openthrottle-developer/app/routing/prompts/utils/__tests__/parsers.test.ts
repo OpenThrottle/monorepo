@@ -1,10 +1,11 @@
 import { describe, expect, test } from 'vitest';
+
 import { CustomPromptType } from '~/__generated__/graphql';
 import {
-  PROMPTS_TYPE_FILTER_OPTIONS,
-  TYPE_OPTIONS,
   parsePromptsSortFromSearchParams,
   parsePromptsTypesFromSearchParams,
+  PROMPTS_TYPE_FILTER_OPTIONS,
+  TYPE_OPTIONS,
 } from '~/routing/prompts/utils/parsers';
 
 describe('routing/prompts utils parsers', () => {

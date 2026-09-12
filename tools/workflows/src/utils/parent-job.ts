@@ -8,6 +8,7 @@
  */
 
 import { spawnSync } from 'child_process';
+
 import type {
   IWorktreeTargetsTracker,
   ParentJobAcquireOptions,

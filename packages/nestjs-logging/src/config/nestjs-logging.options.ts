@@ -3,12 +3,13 @@ import type {
   FactoryProvider,
   ModuleMetadata,
 } from '@nestjs/common';
+import { isRecord } from '@openthrottle/nodejs-utils';
+
 import {
   createLogRedactor,
   type LogRedactor,
   type RedactionOptions,
 } from '../services/log-redaction';
-import { isRecord } from '@openthrottle/nodejs-utils';
 import { NestjsLoggingError } from './nestjs-logging.error';
 import {
   ALL_NESTJS_LOGGING_LEVELS,

@@ -1,18 +1,20 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { QueuesStats } from '../QueuesStats';
-import type { QueuesStatsProps } from '../QueuesStats';
+
 import type { QueueCardFragment } from '~/__generated__/graphql';
 import {
-  REPRESENTATIVE_SKEWED_QUEUES,
   maxSingleSeriesForQueues,
   queueStatsChartHeight,
   queuesToStatsChartData,
+  REPRESENTATIVE_SKEWED_QUEUES,
 } from '~/routing/queues/utils/queue-stats-chart';
+
+import type { QueuesStatsProps } from '../QueuesStats';
+import { QueuesStats } from '../QueuesStats';
 
 const mockQueues: QueueCardFragment[] = [
   {

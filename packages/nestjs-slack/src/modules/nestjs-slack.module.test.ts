@@ -1,4 +1,5 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
+
 import { NestjsSlackService } from '../services/nestjs-slack.service';
 import { NestjsSlackModule } from './nestjs-slack.module';
 

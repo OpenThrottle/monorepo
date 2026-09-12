@@ -1,14 +1,15 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { useDebouncedSearchParam } from '@openthrottle/react-router-ui';
 import {
   Button,
   Input,
   ToggleGroup,
   ToggleGroupItem,
 } from '@openthrottle/react-router-shadcn';
-import { Link, useSearchParams } from 'react-router';
+import { useDebouncedSearchParam } from '@openthrottle/react-router-ui';
+import clsx from 'clsx';
 import { PlusIcon } from 'lucide-react';
+import * as React from 'react';
+import { Link, useSearchParams } from 'react-router';
+
 import { RULES_COPY } from '../data/data.copy';
 import {
   isRulesEnabledFilter,

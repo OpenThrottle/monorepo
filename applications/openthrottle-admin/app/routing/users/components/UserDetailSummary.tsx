@@ -1,6 +1,7 @@
-import * as React from 'react';
 import { Badge } from '@openthrottle/react-router-shadcn';
 import { formatDate } from 'date-fns';
+import * as React from 'react';
+
 import type { UserDetailsFragment } from '~/__generated__/graphql';
 
 export interface UserDetailSummaryProps {

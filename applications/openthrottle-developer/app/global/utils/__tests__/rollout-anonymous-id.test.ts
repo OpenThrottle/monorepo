@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, test } from 'vitest';
+
 import {
   getOrCreateRolloutAnonymousId,
   ROLLOUT_ANONYMOUS_ID_STORAGE_KEY,

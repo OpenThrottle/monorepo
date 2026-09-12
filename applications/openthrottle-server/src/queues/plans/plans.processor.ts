@@ -1,3 +1,5 @@
+import * as os from 'node:os';
+
 import {
   InjectQueue,
   OnWorkerEvent,
@@ -6,13 +8,12 @@ import {
 } from '@nestjs/bullmq';
 import {
   Inject,
-  Optional,
   OnApplicationShutdown,
   OnModuleInit,
+  Optional,
 } from '@nestjs/common';
+import type { KeyedJsonlWriter } from '@openthrottle/nestjs-logging';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { getWorkflowConfigCwd } from '@openthrottle/openthrottle-agentic-utils';
-import { loadWorkflowRalphConfig } from '@tools/workflows';
 import {
   HEARTBEAT_INTERVAL_MS,
   PlanOutputStreamService,
@@ -20,7 +21,26 @@ import {
   PlansService,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
-import * as os from 'node:os';
+import { getWorkflowConfigCwd } from '@openthrottle/openthrottle-agentic-utils';
+import {
+  isLifecycleHooksChildJobsEnabled,
+  WORKFLOW_EVENT,
+} from '@openthrottle/openthrottle-agentic-workflow';
+import { loadWorkflowRalphConfig } from '@tools/workflows';
+import type { Queue } from 'bullmq';
+
+import { ProcessMetricsService } from '../../metrics/process-metrics.service';
+import type {
+  EnhancedTaskRunMetrics,
+  ProcessMetricsSnapshot,
+} from '../../metrics/process-metrics.types';
+import { formatEnhancedTaskRunMetricsSummary } from '../../metrics/process-metrics-format';
+import { NotificationsService } from '../../notifications/notifications.service';
+import { AgenticRalphOrchestratorService } from '../agentic-ralph/agentic-ralph-orchestrator.service';
+import { closeRunOutputForJob } from '../bullmq-keyed-run-logging';
+import { BullMqRunOutputRetentionService } from '../bullmq-run-output-retention.service';
+import { BULLMQ_RUN_OUTPUT_WRITER } from '../bullmq-run-output-writer.token';
+import type { PlanQueueJobCompletedPayload } from '../job-run-hooks/execute-plan-job-run-hooks';
 import {
   runAfterAllHooksWithDispatcherThenNotify,
   runAfterRunHooksThenNotify,
@@ -29,24 +49,7 @@ import {
 } from '../job-run-hooks/execute-plan-job-run-hooks';
 // import { DelayedError } from 'bullmq';
 import { WorkflowLifecycleDispatcherFactory } from '../plan-lifecycle-hooks/workflow-lifecycle-dispatcher.service';
-import type { KeyedJsonlWriter } from '@openthrottle/nestjs-logging';
-import type { PlanQueueJobCompletedPayload } from '../job-run-hooks/execute-plan-job-run-hooks';
-import type { Queue } from 'bullmq';
-import {
-  isLifecycleHooksChildJobsEnabled,
-  WORKFLOW_EVENT,
-} from '@openthrottle/openthrottle-agentic-workflow';
-import { formatEnhancedTaskRunMetricsSummary } from '../../metrics/process-metrics-format';
-import type {
-  EnhancedTaskRunMetrics,
-  ProcessMetricsSnapshot,
-} from '../../metrics/process-metrics.types';
-import { ProcessMetricsService } from '../../metrics/process-metrics.service';
-import { NotificationsService } from '../../notifications/notifications.service';
-import { AgenticRalphOrchestratorService } from '../agentic-ralph/agentic-ralph-orchestrator.service';
-import { closeRunOutputForJob } from '../bullmq-keyed-run-logging';
-import { BullMqRunOutputRetentionService } from '../bullmq-run-output-retention.service';
-import { BULLMQ_RUN_OUTPUT_WRITER } from '../bullmq-run-output-writer.token';
+import { PlanRunCancellationService } from './plan-run-cancellation.service';
 import {
   PLANS_QUEUE_NAME,
   PLANS_WORKER_LOCK_DURATION_MS,
@@ -54,14 +57,13 @@ import {
   PLANS_WORKER_STALLED_INTERVAL_MS,
   // WORKTREE_RETRY_DELAY_MS,
 } from './plans.constants';
-import { PlanRunCancellationService } from './plan-run-cancellation.service';
-import { WorkLedgerRunService } from './work-ledger-run.service';
-import { isRunPlanOrchestratorJobData } from './plans.types';
 import type {
   PlanRunJobResult,
   RunPlanJob,
   RunPlanJobData,
 } from './plans.types';
+import { isRunPlanOrchestratorJobData } from './plans.types';
+import { WorkLedgerRunService } from './work-ledger-run.service';
 
 const CONCURRENCY = 1;
 

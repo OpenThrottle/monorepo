@@ -1,13 +1,14 @@
+import { usePollServerMetrics } from '@openthrottle/react-router-ui';
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { usePollServerMetrics } from '@openthrottle/react-router-ui';
+
 import {
   GLOBAL_METRICS_COLLAPSED_KEY,
   GLOBAL_METRICS_STORAGE_KEY,
 } from '../../config';
 import * as globalMetricsStorage from '../../utils/storage';
-import { useGlobalMetrics } from '../useGlobalMetrics';
 import type { UseGlobalMetricsOptions } from '../useGlobalMetrics';
+import { useGlobalMetrics } from '../useGlobalMetrics';
 
 vi.mock('@openthrottle/react-router-ui', async (importOriginal) => {
   const actual =

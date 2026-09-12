@@ -5,8 +5,9 @@
  * Use this when the mutation should ride the already-open realtime socket
  * (e.g. high-frequency audio chunk uploads) instead of a separate HTTP POST.
  */
-import { print } from 'graphql';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
+import { print } from 'graphql';
+
 import type { GraphqlWsClient } from './createGraphqlWsClient';
 
 /**

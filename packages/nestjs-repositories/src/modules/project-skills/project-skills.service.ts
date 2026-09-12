@@ -26,6 +26,7 @@ import {
   DEFAULT_TAG_VOCABULARY_SEED,
 } from '@openthrottle/openthrottle-skills';
 import { Repository } from 'typeorm';
+
 import { SkillTagsService } from '../skill-tags/skill-tags.service';
 import type { TagCaller } from '../tags/tag-provenance';
 import { ProjectSkill } from './project-skill.entity';

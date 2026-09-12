@@ -1,7 +1,9 @@
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import Component from '../plans.temp';
+
 import { renderRoutesStub } from '~/testing/route-fixtures';
+
+import Component from '../plans.temp';
 
 function stubMatches(): React.ComponentProps<typeof Component>['matches'];
 function stubMatches(): unknown {

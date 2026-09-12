@@ -1,18 +1,19 @@
+import { createMock } from '@golevelup/ts-vitest';
 import { getQueueToken } from '@nestjs/bullmq';
 import { ConfigService } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
-import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest';
 import type { Job, Queue } from 'bullmq';
-import { createMock } from '@golevelup/ts-vitest';
+import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest';
+
 import { AGENTIC_TEST_QUEUE_NAME } from '../../queues/agentic-test/agentic-test.constants';
 import type {
   AgenticTestJobPayload,
   AgenticTestJobResult,
 } from '../../queues/agentic-test/agentic-test.types';
 import { CODE_INDEX_QUEUE_NAME } from '../../queues/code-index/code-index.constants';
-import { DATABASE_BACKUP_QUEUE_NAME } from '../../queues/database-backup/database-backup.constants';
 import { DAILY_STATS_QUEUE_NAME } from '../../queues/daily-stats/daily-stats.constants';
 import type { AggregateDailyStatsJobData } from '../../queues/daily-stats/daily-stats.types';
+import { DATABASE_BACKUP_QUEUE_NAME } from '../../queues/database-backup/database-backup.constants';
 import { DOC_INGESTION_QUEUE_NAME } from '../../queues/doc-ingestion/doc-ingestion.constants';
 import type {
   DocIngestionJobPayload,

@@ -2,6 +2,10 @@
  * @description TypeORM entity for OpenThrottle plans table. Matches databases/migrations (002, 012, 014, 022, 055).
  */
 
+import type {
+  PlanJobRunHooksStorage,
+  PlanRunConfigStorage,
+} from '@openthrottle/openthrottle-plan-config';
 import {
   Column,
   CreateDateColumn,
@@ -12,18 +16,15 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import type { PlanEmbedding } from '../plan-embeddings/plan-embedding.entity';
-import type { PlanOutputStreamChunk } from '../plan-output-stream/plan-output-stream.entity';
-import type { Project } from '../projects/project.entity';
-import type { Task } from '../tasks/task.entity';
-import type {
-  PlanJobRunHooksStorage,
-  PlanRunConfigStorage,
-} from '@openthrottle/openthrottle-plan-config';
+
 import {
   PLAN_STATUS,
   PLAN_STATUS_VALUES,
 } from '../../common/plan-task-status.constants';
+import type { PlanEmbedding } from '../plan-embeddings/plan-embedding.entity';
+import type { PlanOutputStreamChunk } from '../plan-output-stream/plan-output-stream.entity';
+import type { Project } from '../projects/project.entity';
+import type { Task } from '../tasks/task.entity';
 
 /** Scalar/column fields of Plan (no relations). Use this to type GraphQL objects or DTOs that mirror the entity. */
 export type PlanData = Pick<

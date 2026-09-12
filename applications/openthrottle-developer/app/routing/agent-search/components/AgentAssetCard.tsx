@@ -1,5 +1,3 @@
-import * as React from 'react';
-import { Link } from 'react-router';
 import {
   Badge,
   Card,
@@ -7,6 +5,9 @@ import {
   CardHeader,
   CardTitle,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+import { Link } from 'react-router';
+
 import {
   AGENT_ASSET_LIST_HREF_BY_TYPE,
   AGENT_ASSET_PROMPT_TYPE_LABEL,

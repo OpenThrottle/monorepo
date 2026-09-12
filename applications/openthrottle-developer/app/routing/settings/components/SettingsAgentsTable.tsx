@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Table,
   TableBody,
@@ -7,9 +6,11 @@ import {
   TableHeader,
   TableRow,
 } from '@openthrottle/react-router-shadcn';
-import { SETTINGS_AGENTS_COPY } from '~/routing/settings/data/data.copy';
+import * as React from 'react';
+
 import { SettingsAgentsTableRow } from '~/routing/settings/components/SettingsAgentsTableRow';
 import type { AgentCliStatus } from '~/routing/settings/data/agent-clis.data';
+import { SETTINGS_AGENTS_COPY } from '~/routing/settings/data/data.copy';
 
 export interface SettingsAgentsTableProps {
   /** Server-computed: current user holds SETTINGS_WRITE. */

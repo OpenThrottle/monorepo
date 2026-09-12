@@ -1,11 +1,13 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
+
 import { EditorPresenceState } from '~/__generated__/graphql';
-import { WorkspaceEditorPresenceMarker } from '../WorkspaceEditorPresenceMarker';
+
 import type { WorkspaceEditorPresenceMarkerProps } from '../WorkspaceEditorPresenceMarker';
+import { WorkspaceEditorPresenceMarker } from '../WorkspaceEditorPresenceMarker';
 
 const renderMarker = (
   props: WorkspaceEditorPresenceMarkerProps,

@@ -1,5 +1,6 @@
 import { GraphqlAuthError } from '@openthrottle/react-router-graphql';
 import { describe, expect, it } from 'vitest';
+
 import {
   classifyRootLoaderError,
   httpStatusFromRootLoaderError,

@@ -1,5 +1,6 @@
-import * as React from 'react';
 import clsx from 'clsx';
+import * as React from 'react';
+
 import type { TimelineLane } from '~/routing/timeline/types';
 
 export interface TimelineLaneGutterProps {

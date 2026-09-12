@@ -25,7 +25,8 @@ import type {
   UsersService,
 } from '@openthrottle/nestjs-repositories';
 import { asMock } from '@openthrottle/nestjs-testing';
-import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
+import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
+
 import { PlanContextAvailabilityService } from './plan-context-availability.service';
 
 const planId = '00000000-0000-4000-8000-000000000001';

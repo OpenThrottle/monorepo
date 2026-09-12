@@ -1,7 +1,5 @@
-export { NestjsWorktreesModule } from './modules/nestjs-worktrees.module';
 export { WORKTREE_TRACKER_TOKEN } from './config/nestjs-worktrees.constants';
-export { getWorktreeTargetsFromEnv } from './worktree-targets.env';
-
+export { NestjsWorktreesModule } from './modules/nestjs-worktrees.module';
 export type {
   AcquireResult,
   ChildJobFailure,
@@ -43,3 +41,4 @@ export {
 } from './utils/parent-job';
 export { runWorktreeWorkflow } from './utils/workflow';
 export { WorktreeTargetsTracker } from './utils/worktree-targets';
+export { getWorktreeTargetsFromEnv } from './worktree-targets.env';

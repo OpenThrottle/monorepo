@@ -1,8 +1,8 @@
-import type { Job } from 'bullmq';
 import type {
   ScheduledAgentJobDriverId,
   ScheduledAgentJobSettings,
 } from '@openthrottle/nestjs-repositories';
+import type { Job } from 'bullmq';
 
 /**
  * @description Self-contained payload for one scheduled-agent-job run: a snapshot taken at

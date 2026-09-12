@@ -1,7 +1,8 @@
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+
+import type { Route } from '@/app/routes/+types/ide.symbol';
 import { GetWorkspaceSettingsDocument } from '~/__generated__/graphql';
 import { resolveSelectedRepository } from '~/routing/ide/utils/repositories';
-import type { Route } from '@/app/routes/+types/ide.symbol';
 
 /**
  * Resource route (loader-only) for a single symbol's definition + references.

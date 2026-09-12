@@ -5,7 +5,6 @@
  * tolerated, and `unregistered` tracks the checkout row independently of activity.
  */
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
@@ -13,6 +12,8 @@ import type {
   PlanRunsService,
 } from '@openthrottle/nestjs-repositories';
 import { STALE_CUTOFF_MS } from '@openthrottle/nestjs-repositories';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import type { WorktreeDiscoveryService } from '../worktree-discovery/worktree-discovery.service';
 import type {
   DiscoveredWorktree,

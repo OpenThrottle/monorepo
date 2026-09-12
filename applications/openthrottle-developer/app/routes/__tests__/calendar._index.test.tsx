@@ -1,9 +1,11 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
+import * as React from 'react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import Component from '../calendar._index';
+
 import { CALENDAR_DEMO_EVENTS } from '~/routing/calendar/data/data.calendar-demo';
+
+import Component from '../calendar._index';
 
 function stubMatches(): React.ComponentProps<typeof Component>['matches'];
 function stubMatches(): unknown {

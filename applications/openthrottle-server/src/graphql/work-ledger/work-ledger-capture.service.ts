@@ -22,6 +22,7 @@ import {
   WorkSessionSubject,
 } from '@openthrottle/nestjs-repositories';
 import { EntityManager, IsNull } from 'typeorm';
+
 import { resolveArtifactForWrite } from './artifact-type-registry';
 
 const INSTANT_SESSION_TOOL_NAME = 'developer-app';

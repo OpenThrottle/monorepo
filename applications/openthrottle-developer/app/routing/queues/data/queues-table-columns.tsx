@@ -4,16 +4,17 @@
  * controls). Hoisted out of QueuesTable per component-primitive-shape R4.
  */
 
-import * as React from 'react';
 import { Badge } from '@openthrottle/react-router-shadcn';
+import type { GlobalPopoverAction } from '@openthrottle/react-router-ui-global';
 import {
   GlobalPopover,
   GlobalPopoverActionsHeader,
 } from '@openthrottle/react-router-ui-global';
-import type { GlobalPopoverAction } from '@openthrottle/react-router-ui-global';
 import type { ColumnDef } from '@tanstack/react-table';
 import { PauseIcon, PlayIcon } from 'lucide-react';
+import * as React from 'react';
 import { Link } from 'react-router';
+
 import type { QueueCardFragment } from '~/__generated__/graphql';
 import { QueueHealthPill } from '~/routing/queues/components/QueueHealthPill';
 import { QUEUES_ROW_ACTIONS_COPY } from '~/routing/queues/data/data.copy';

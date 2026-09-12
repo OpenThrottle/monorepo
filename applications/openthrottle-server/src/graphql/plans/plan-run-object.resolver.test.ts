@@ -8,8 +8,9 @@ import type {
 } from '@openthrottle/nestjs-repositories';
 import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { PlanRunObjectResolver } from './plan-run-object.resolver';
+
 import type { PlanRunObject } from './plan.object';
+import { PlanRunObjectResolver } from './plan-run-object.resolver';
 
 const run = (overrides: Partial<PlanRunObject> = {}): PlanRunObject =>
   asMock<PlanRunObject>({

@@ -20,7 +20,8 @@ import type {
 } from '@openthrottle/nestjs-repositories';
 import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { ActionExecutorRegistry, type ActionExecutor } from './action-executor';
+
+import { type ActionExecutor, ActionExecutorRegistry } from './action-executor';
 import { PlanRulesProcessor } from './plan-rules.processor';
 import type { PlanRulesEvaluateJob } from './plan-rules.types';
 

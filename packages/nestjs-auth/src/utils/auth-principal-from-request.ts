@@ -1,6 +1,6 @@
 import {
-  normalizeRequestAuthPrincipal,
   type AuthPrincipal,
+  normalizeRequestAuthPrincipal,
 } from '../auth-principal';
 
 /**

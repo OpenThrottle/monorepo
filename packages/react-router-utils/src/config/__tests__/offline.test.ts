@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { getOfflineModeTemplate } from '../offline';
 
 describe('getOfflineModeTemplate', () => {

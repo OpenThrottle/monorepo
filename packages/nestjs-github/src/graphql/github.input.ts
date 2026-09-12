@@ -3,6 +3,7 @@
  */
 
 import { Field, InputType, Int } from '@nestjs/graphql';
+
 import type { ListPullsOptions } from '../github/github.service';
 
 /** Shared owner/repo input for openPrCountByAuthor and prTimeInStateSummary. */

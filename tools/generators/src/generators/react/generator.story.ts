@@ -1,9 +1,11 @@
-import { join } from 'path';
 import type { Tree } from '@nx/devkit';
 import { createProjectGraphAsync, formatFiles, logger } from '@nx/devkit';
+import { join } from 'path';
+
 import { getCommonVariables, getGeneratorOverview } from '../../utils';
-import { acceptsChildren, extractCvaVariants } from '../../utils/cva-variants';
 import type { CvaVariantGroup } from '../../utils/cva-variants';
+import { acceptsChildren, extractCvaVariants } from '../../utils/cva-variants';
+import { generateFilesSafely } from '../../utils/generate-files-safely';
 import {
   getComponentNames,
   getConfigConfirmation,
@@ -11,7 +13,6 @@ import {
   parsePossibleNames,
 } from '../../utils/questions';
 import { throwInvalidDestinationError } from '../../utils/target-validation';
-import { generateFilesSafely } from '../../utils/generate-files-safely';
 
 export interface ReactStoryGeneratorSchema {
   readonly destination?: string;

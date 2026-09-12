@@ -1,6 +1,3 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { CalendarClockIcon, MapPinIcon } from 'lucide-react';
 import {
   Badge,
   Card,
@@ -9,8 +6,12 @@ import {
   CardHeader,
   CardTitle,
 } from '@openthrottle/react-router-shadcn';
-import { formatCalendarRange } from '~/routing/calendar/utils/formatters';
+import clsx from 'clsx';
+import { CalendarClockIcon, MapPinIcon } from 'lucide-react';
+import * as React from 'react';
+
 import type { CalendarListEvent } from '~/routing/calendar/types';
+import { formatCalendarRange } from '~/routing/calendar/utils/formatters';
 
 export interface CalendarEventDetailsProps {
   className?: string;

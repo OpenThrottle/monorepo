@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Button,
   Select,
@@ -7,8 +6,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@openthrottle/react-router-shadcn';
-import type { action as roleDetailAction } from '~/routes/roles.$roleId';
+import * as React from 'react';
 import type { useFetcher } from 'react-router';
+
+import type { action as roleDetailAction } from '~/routes/roles.$roleId';
 
 export interface AddPermissionSelectFormProps {
   readonly availablePermissions: Array<{ id: string; name: string }>;

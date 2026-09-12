@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { Badge, Button } from '@openthrottle/react-router-shadcn';
 import {
   ChevronRightIcon,
@@ -6,6 +5,8 @@ import {
   FolderGit2Icon,
   HardDriveIcon,
 } from 'lucide-react';
+import * as React from 'react';
+
 import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
 import { BrowseEntryRow } from '~/routing/settings/repositories/components/BrowseEntryRow';
 import type {

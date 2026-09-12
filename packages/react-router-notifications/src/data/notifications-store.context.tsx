@@ -3,20 +3,21 @@
  * localStorage persistence. Exposes list, read/unread, and dismiss state via React context.
  */
 
-import * as React from 'react';
 import { isRecord } from '@openthrottle/nodejs-utils';
-import { isRenderableMessage, toast } from '@openthrottle/react-router-shadcn';
 import type {
   NotificationEventName,
   NotificationPayload,
 } from '@openthrottle/openthrottle-notifications';
+import { isRenderableMessage, toast } from '@openthrottle/react-router-shadcn';
+import { APP_NAME } from '@openthrottle/react-router-utils';
+import * as React from 'react';
+
 import {
   NOTIFICATIONS_DEDUP_WINDOW_MS,
-  NOTIFICATIONS_MAX_STORED,
   NOTIFICATIONS_MAX_PERSISTED,
+  NOTIFICATIONS_MAX_STORED,
 } from '../config/index';
 import type { NotificationInstance } from '../types';
-import { APP_NAME } from '@openthrottle/react-router-utils';
 
 /**
  * @description Default localStorage key for the persisted notification **list** (array).

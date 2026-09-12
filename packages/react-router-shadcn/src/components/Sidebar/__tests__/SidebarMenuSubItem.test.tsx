@@ -1,16 +1,17 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { SidebarMenuSubItem } from '../SidebarMenuSubItem';
-import type { SidebarMenuSubItemProps } from '../SidebarMenuSubItem';
+
 import { Sidebar } from '../Sidebar';
 import { SidebarContent } from '../SidebarContent';
 import { SidebarGroup } from '../SidebarGroup';
 import { SidebarGroupContent } from '../SidebarGroupContent';
 import { SidebarMenu } from '../SidebarMenu';
 import { SidebarMenuItem } from '../SidebarMenuItem';
+import type { SidebarMenuSubItemProps } from '../SidebarMenuSubItem';
+import { SidebarMenuSubItem } from '../SidebarMenuSubItem';
 import { SidebarProvider } from '../SidebarProvider';
 
 describe('SidebarMenuSubItem Component', () => {

@@ -23,11 +23,11 @@
  */
 
 import { execFileSync } from 'node:child_process';
-
-import { expandHome } from '../paths/expand-home';
 import { readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { basename, isAbsolute, join } from 'node:path';
+
+import { expandHome } from '../paths/expand-home';
 
 /** Which rung of the ladder produced the resolved root. */
 export const WORKTREE_ROOT_SOURCE = {

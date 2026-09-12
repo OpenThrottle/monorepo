@@ -1,6 +1,8 @@
 import { describe, expect, test } from 'vitest';
-import { filterJobsBySearch } from '../filter-jobs-by-search';
+
 import type { ScheduledJobCardFragment } from '~/__generated__/graphql';
+
+import { filterJobsBySearch } from '../filter-jobs-by-search';
 
 const buildJob = (
   overrides: Partial<ScheduledJobCardFragment>,

@@ -5,14 +5,15 @@
 
 import { Injectable, Scope } from '@nestjs/common';
 import type DataLoader from 'dataloader';
+
 import { createCollectionByColumnLoader } from './common/entity-loaders';
+import type { Plan } from './modules/plans/plan.entity';
 import { PlansService } from './modules/plans/plans.service';
+import type { Task } from './modules/tasks/task.entity';
 import {
   CROSS_PLAN_TASK_LIST_ORDER,
   TasksService,
 } from './modules/tasks/tasks.service';
-import type { Plan } from './modules/plans/plan.entity';
-import type { Task } from './modules/tasks/task.entity';
 
 /**
  * Holds plansByProjectId and tasksByProjectId DataLoaders for the current request.

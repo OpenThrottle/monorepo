@@ -2,11 +2,12 @@
  * @description Unit tests for DatabaseBackupProcessor (spawn command and cwd).
  */
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { createMock } from '@golevelup/ts-vitest';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { createMock } from '@golevelup/ts-vitest';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { NotificationsService } from '../../notifications/notifications.service';
 import { DATABASE_BACKUP_PNPM_SCRIPT } from './database-backup.constants';
 import { DatabaseBackupProcessor } from './database-backup.processor';

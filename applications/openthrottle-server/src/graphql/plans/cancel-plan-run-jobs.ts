@@ -6,6 +6,7 @@
 
 import type { JobType } from 'bullmq';
 import type { Queue } from 'bullmq';
+
 import { isPlanRalphBullJobName } from '../../queues/plans/plans.constants';
 import type { RunPlanJobData } from '../../queues/plans/plans.types';
 

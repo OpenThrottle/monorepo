@@ -1,12 +1,12 @@
-import * as React from 'react';
+import './preview.css';
+
 import {
   buildThemeStylesheet,
   OPENTHROTTLE_THEME,
   THEMES,
 } from '@openthrottle/react-router-shadcn';
 import type { Decorator, Preview } from '@storybook/react-vite';
-
-import './preview.css';
+import * as React from 'react';
 
 const THEME_STYLESHEET_ID = 'openthrottle-theme-registry';
 

@@ -1,14 +1,15 @@
-import type { TaskEmbedding } from '@openthrottle/nestjs-repositories';
-import {
-  TaskEmbeddingsService,
-  getDefaultPlanRunConfigStorage,
-  tasksFactory,
-} from '@openthrottle/nestjs-repositories';
 import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
-import { describe, expect, beforeAll, test, vi } from 'vitest';
-import { TaskEmbeddingsLoaders } from './task-embeddings-loaders';
+import type { TaskEmbedding } from '@openthrottle/nestjs-repositories';
+import {
+  getDefaultPlanRunConfigStorage,
+  TaskEmbeddingsService,
+  tasksFactory,
+} from '@openthrottle/nestjs-repositories';
+import { beforeAll, describe, expect, test, vi } from 'vitest';
+
 import { TaskEmbeddingsResolver } from './task-embeddings.resolver';
+import { TaskEmbeddingsLoaders } from './task-embeddings-loaders';
 
 const taskEmbeddingsRepo = { find: vi.fn(), findOne: vi.fn() };
 

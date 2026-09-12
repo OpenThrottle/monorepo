@@ -1,9 +1,10 @@
 import { describe, expect, test } from 'vitest';
+
 import {
   dedupeRepoSkillEntriesBySlug,
   getRepoSkillsRegistryCounts,
-  REQUIRED_AGENTS_SKILL_SLUGS,
   type RepoSkillEntry,
+  REQUIRED_AGENTS_SKILL_SLUGS,
 } from '~/routing/agents/data/repo-skills-registry';
 
 describe('REQUIRED_AGENTS_SKILL_SLUGS', () => {

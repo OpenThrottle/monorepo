@@ -8,12 +8,13 @@ import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type { Queue } from 'bullmq';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { PlanRulesEvaluationService } from './plan-rules-evaluation.service';
+
 import {
   PLAN_RULES_EVALUATE_JOB_NAME,
   planRulesEvaluationDedupId,
 } from './plan-rules.constants';
 import type { PlanRulesEvaluateJobData } from './plan-rules.types';
+import { PlanRulesEvaluationService } from './plan-rules-evaluation.service';
 
 const planId = '00000000-0000-4000-8000-000000000001';
 const otherPlanId = '00000000-0000-4000-8000-000000000002';

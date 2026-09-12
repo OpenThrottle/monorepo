@@ -1,8 +1,9 @@
-import { beforeEach, describe, expect, test, vi } from 'vitest';
 import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
-import { action as createAction } from '../notes.create';
-import { action as updateAction } from '../notes.$noteId';
 import { createTestRouterContext } from '@openthrottle/react-router-testing';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+
+import { action as updateAction } from '../notes.$noteId';
+import { action as createAction } from '../notes.create';
 
 // Keep the real `parseFormData`; only stub the network call.
 vi.mock('@openthrottle/react-router-graphql', async (importOriginal) => {

@@ -6,8 +6,9 @@
  *
  * Must be called inside `PlanRunConfigStoreProvider`.
  */
-import * as React from 'react';
 import { useAtomValue, useSetAtom } from 'jotai';
+import * as React from 'react';
+
 import type { PlanRunConfigRepositoryFieldsFragment } from '~/__generated__/graphql';
 import {
   workflowBranchAtom,

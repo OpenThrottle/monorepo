@@ -12,6 +12,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+
 import type { User } from '../users/user.entity';
 
 /** Scalar/column fields of Subscription (no relations). */

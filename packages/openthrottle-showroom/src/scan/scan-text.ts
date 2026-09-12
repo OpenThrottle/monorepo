@@ -3,8 +3,8 @@
  * tested without shelling out or touching the filesystem.
  */
 
-import { ALLOWED_HOSTS, DENYLIST, RULES } from './rules';
 import type { ScanKind } from './rules';
+import { ALLOWED_HOSTS, DENYLIST, RULES } from './rules';
 
 export interface Finding {
   readonly because: string;

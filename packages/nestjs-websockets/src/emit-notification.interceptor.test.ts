@@ -1,19 +1,20 @@
-import { firstValueFrom, of } from 'rxjs';
-import { describe, expect, it, vi } from 'vitest';
-import { Logger } from '@nestjs/common';
-import type { Reflector } from '@nestjs/core';
 import type { CallHandler, ExecutionContext } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import type {
   HttpArgumentsHost,
   RpcArgumentsHost,
   WsArgumentsHost,
 } from '@nestjs/common/interfaces/features/arguments-host.interface.ts';
+import type { Reflector } from '@nestjs/core';
 import { asMock } from '@openthrottle/nestjs-testing';
-import {
-  EmitNotificationInterceptor,
-  type EmitNotificationEmitter,
-} from './emit-notification.interceptor';
+import { firstValueFrom, of } from 'rxjs';
+import { describe, expect, it, vi } from 'vitest';
+
 import type { EmitNotificationMetadata } from './emit-notification.decorator';
+import {
+  type EmitNotificationEmitter,
+  EmitNotificationInterceptor,
+} from './emit-notification.interceptor';
 
 function createMockContext(handler: () => void): ExecutionContext {
   return asMock<ExecutionContext>({

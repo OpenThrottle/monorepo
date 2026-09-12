@@ -3,6 +3,7 @@
  */
 
 import { type DynamicModule, Module } from '@nestjs/common';
+
 import { WebhooksController } from '../controllers/webhooks.controller';
 import { StripeProductResolver } from '../graphql/stripe-product.resolver';
 import { StripeWebhookResolver } from '../graphql/stripe-webhook.resolver';

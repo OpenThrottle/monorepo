@@ -10,16 +10,16 @@
 /* eslint-disable no-await-in-loop */
 
 import type { ExecuteGraphqlOptionsV2 } from '@openthrottle/nodejs-graphql';
-import type {
-  WorkflowRunResult,
-  WorkflowLifecycleTaskContext,
-} from '@openthrottle/openthrottle-agentic-workflow';
 import { WORKFLOW_PROMPT_SHELL_COMMAND_GUARDRAIL } from '@openthrottle/openthrottle-agentic-utils';
+import {
+  buildForeignWorkspacePromptLayer,
+  resolveForeignWorkspaceContext,
+} from '@openthrottle/openthrottle-agentic-utils';
 import type {
-  WorkflowFailedReason,
-  WorkflowFinishedReason,
-  WorkflowOrchestrator,
-} from '../types.ts';
+  WorkflowLifecycleTaskContext,
+  WorkflowRunResult,
+} from '@openthrottle/openthrottle-agentic-workflow';
+
 import {
   GetPlanDocument,
   GetServerHealthDocument,
@@ -29,28 +29,29 @@ import {
   UpdateTaskDocument,
 } from '../__generated__/graphql.js';
 import {
-  buildForeignWorkspacePromptLayer,
-  resolveForeignWorkspaceContext,
-} from '@openthrottle/openthrottle-agentic-utils';
-import type { WorkflowContext } from '../types.ts';
+  DEFAULT_ITERATIONS,
+  resolveRalphMaxTotalMsFromEnv,
+} from '../config/index.ts';
 import type {
   WorkflowRalphIterationOnChunk,
   WorkflowRalphOrchestratorDeps,
 } from '../contract/ralph-orchestrator-deps.ts';
-import {
-  parseAgentOutput,
-  parseAgentCompleteTaskSignals,
-  agentOutputHasPromiseComplete,
-} from '../utils/output.ts';
+import type {
+  WorkflowFailedReason,
+  WorkflowFinishedReason,
+  WorkflowOrchestrator,
+} from '../types.ts';
+import type { WorkflowContext } from '../types.ts';
 import {
   formatPlanAndTasksForPrompt,
   isRunnableRalphTask,
   pickRalphTaskForIteration,
 } from '../utils/index.ts';
 import {
-  DEFAULT_ITERATIONS,
-  resolveRalphMaxTotalMsFromEnv,
-} from '../config/index.ts';
+  agentOutputHasPromiseComplete,
+  parseAgentCompleteTaskSignals,
+  parseAgentOutput,
+} from '../utils/output.ts';
 
 /**
  * @description Clamps the iteration ceiling defensively. `WorkflowContext` is built by paths that

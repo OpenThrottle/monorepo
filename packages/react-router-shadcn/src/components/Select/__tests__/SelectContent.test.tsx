@@ -1,7 +1,8 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
+
 import { Select, SelectContent, SelectTrigger, SelectValue } from '../index';
 import type { SelectContentProps } from '../SelectContent';
 

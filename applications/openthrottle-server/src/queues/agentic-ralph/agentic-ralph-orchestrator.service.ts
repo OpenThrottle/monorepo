@@ -1,3 +1,5 @@
+import { join } from 'node:path';
+
 import { Inject, Injectable } from '@nestjs/common';
 import type { AgenticWorkflowRegistry } from '@openthrottle/nestjs-agentic-workflow';
 import {
@@ -13,31 +15,31 @@ import {
   UserWorkspaceSettingsService,
 } from '@openthrottle/nestjs-repositories';
 import type {
-  WorkflowConfigRunner,
-  WorkflowCorrelation,
-  WorkflowLifecycleDispatcher,
-} from '@openthrottle/openthrottle-agentic-workflow';
+  WorkflowContext,
+  WorkflowOrchestrator,
+  WorkflowRunResult,
+} from '@openthrottle/openthrottle-agentic-ralph';
+import { buildRalphFlowContextFromPlanRunTuning } from '@openthrottle/openthrottle-agentic-ralph';
 import {
   ensureMaterialized,
   getWorkflowConfigCwd,
   resolveForeignWorkspaceContext,
   resolvePersonalSkillsDir,
 } from '@openthrottle/openthrottle-agentic-utils';
-import { join } from 'node:path';
+import type {
+  WorkflowConfigRunner,
+  WorkflowCorrelation,
+  WorkflowLifecycleDispatcher,
+} from '@openthrottle/openthrottle-agentic-workflow';
 import {
-  applyWorkflowRalphOtRootFromConfig,
   applyWorkflowRalphDebugCli,
+  applyWorkflowRalphOtRootFromConfig,
   loadWorkflowRalphConfig,
   mergePlanRunTuningWithWorkflowRalphConfig,
 } from '@tools/workflows';
-import { buildRalphFlowContextFromPlanRunTuning } from '@openthrottle/openthrottle-agentic-ralph';
-import type {
-  WorkflowContext,
-  WorkflowOrchestrator,
-  WorkflowRunResult,
-} from '@openthrottle/openthrottle-agentic-ralph';
-import { PlanRunWorktreeCheckoutService } from '../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.service';
+
 import { PlanRunWorkspacePreflightService } from '../../services/plan-run-workspace-preflight/plan-run-workspace-preflight.service';
+import { PlanRunWorktreeCheckoutService } from '../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.service';
 import { PlanRunWorktreeProvisionService } from '../../services/plan-run-worktree-provision/plan-run-worktree-provision.service';
 import type { RunPlanOrchestratorJobData } from './agentic-ralph.types';
 

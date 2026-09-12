@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  FloorElementType,
   floorElementSchema,
+  FloorElementType,
   floorLayoutSchema,
 } from '../types';
 

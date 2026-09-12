@@ -1,16 +1,17 @@
-import * as React from 'react';
-import { ChevronDownIcon, ChevronRightIcon } from 'lucide-react';
 import { Badge, TableCell, TableRow } from '@openthrottle/react-router-shadcn';
-import {
-  SETTINGS_AGENTS_COPY,
-  settingsAgentsModelsEnabledSummary,
-  settingsAgentsModelsSummary,
-} from '~/routing/settings/data/data.copy';
+import { ChevronDownIcon, ChevronRightIcon } from 'lucide-react';
+import * as React from 'react';
+
 import { SettingsAgentsAgentToggle } from '~/routing/settings/components/SettingsAgentsAgentToggle';
 import { SettingsAgentsCliControls } from '~/routing/settings/components/SettingsAgentsCliControls';
 import { SettingsAgentsModelBulkToggle } from '~/routing/settings/components/SettingsAgentsModelBulkToggle';
 import { SettingsAgentsModelRow } from '~/routing/settings/components/SettingsAgentsModelRow';
 import type { AgentCliStatus } from '~/routing/settings/data/agent-clis.data';
+import {
+  SETTINGS_AGENTS_COPY,
+  settingsAgentsModelsEnabledSummary,
+  settingsAgentsModelsSummary,
+} from '~/routing/settings/data/data.copy';
 
 /** Column count of the setup table — the expansion row spans all of it. */
 const SETTINGS_AGENTS_COLUMN_COUNT = 5;

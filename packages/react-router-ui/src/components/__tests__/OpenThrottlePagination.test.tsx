@@ -1,11 +1,12 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
+
 import { PAGINATION_CONFIG } from '../../config/pagination';
-import { OpenThrottlePagination } from '../OpenThrottlePagination';
 import type { OpenThrottlePaginationProps } from '../OpenThrottlePagination';
+import { OpenThrottlePagination } from '../OpenThrottlePagination';
 
 function renderPagination(
   props: OpenThrottlePaginationProps,

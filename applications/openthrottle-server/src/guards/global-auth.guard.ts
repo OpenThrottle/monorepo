@@ -1,20 +1,21 @@
 import {
+  type CanActivate,
   type ExecutionContext,
   Injectable,
-  type CanActivate,
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import {
+  type AuthenticatedRequest,
   getAuthPrincipalFromRequest,
   IS_PUBLIC_KEY,
-  type AuthenticatedRequest,
 } from '@openthrottle/nestjs-auth';
 import { isRecord } from '@openthrottle/nodejs-utils';
+
 import { GlobalClsAuthHook } from '../auth/global-cls-auth-hook.service';
 import { ServiceAccountAuthService } from '../auth/service-account-auth.service';
-import { GqlJwtAuthGuard } from './gql-jwt-auth.guard';
 import { getRequestFromExecutionContext } from './get-request-from-execution-context';
+import { GqlJwtAuthGuard } from './gql-jwt-auth.guard';
 
 const readAuthorizationHeader = (req: object): string | undefined => {
   const headers = 'headers' in req ? req.headers : undefined;

@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { TabsList, TabsTrigger } from '@openthrottle/react-router-shadcn';
 import {
   BoltIcon,
@@ -6,6 +5,8 @@ import {
   LayoutListIcon,
   TerminalSquareIcon,
 } from 'lucide-react';
+import * as React from 'react';
+
 import type {
   PlanRunConfigRepositoryFieldsFragment,
   WorkspaceEditorId,

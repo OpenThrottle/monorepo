@@ -1,6 +1,8 @@
 import { describe, expect, test } from 'vitest';
-import { formatRankSummary } from '../search-why-this-result';
+
 import type { SearchRankMeta } from '~/routing/search/types/search-rank-meta';
+
+import { formatRankSummary } from '../search-why-this-result';
 
 describe('formatRankSummary', () => {
   test('summarizes global index, page, and within-page position', () => {

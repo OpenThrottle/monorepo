@@ -9,6 +9,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, type SelectQueryBuilder } from 'typeorm';
+
 import { toLikeContainsPattern } from '../../common/like-pattern';
 import {
   SKILL_USAGE_PRIVACY_LEVELS,

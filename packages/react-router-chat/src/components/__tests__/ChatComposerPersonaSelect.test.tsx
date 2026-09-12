@@ -1,12 +1,13 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
+import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
-import { ChatComposerPersonaSelect } from '../ChatComposerPersonaSelect';
-import type { ChatComposerPersonaSelectProps } from '../ChatComposerPersonaSelect';
+
 import type { ChatPersonaOption } from '../../types';
+import type { ChatComposerPersonaSelectProps } from '../ChatComposerPersonaSelect';
+import { ChatComposerPersonaSelect } from '../ChatComposerPersonaSelect';
 
 const PERSONAS: readonly ChatPersonaOption[] = [
   { id: 'architect', label: 'Architect' },

@@ -1,6 +1,7 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import { OpenThrottleStatCard } from '@openthrottle/react-router-ui';
+import clsx from 'clsx';
+import * as React from 'react';
+
 import { RULES_COPY } from '../data/data.copy';
 
 export interface RulesStatsProps {

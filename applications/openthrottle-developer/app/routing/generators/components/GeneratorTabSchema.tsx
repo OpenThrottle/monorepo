@@ -1,5 +1,3 @@
-import * as React from 'react';
-import type { GeneratorDetailCardFragment } from '~/__generated__/graphql';
 import {
   Card,
   CardContent,
@@ -10,6 +8,9 @@ import {
   CollapsibleTrigger,
   TabsContent,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+
+import type { GeneratorDetailCardFragment } from '~/__generated__/graphql';
 
 export interface GeneratorTabSchemaProps {
   generator: GeneratorDetailCardFragment;

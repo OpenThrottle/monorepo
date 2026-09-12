@@ -1,4 +1,5 @@
 import { beforeAll, describe, expect, test } from 'vitest';
+
 import { SITE_TITLE } from '~/global/config/settings';
 
 /**

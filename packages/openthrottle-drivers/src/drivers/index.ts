@@ -5,8 +5,8 @@
  * an import cycle (driver modules import `defineDriver`), which is also why the gate lives here.
  */
 
-import { DRIVER_IDS, lookupDriver } from '../registry/index.ts';
 import type { DriverId } from '../registry/index.ts';
+import { DRIVER_IDS, lookupDriver } from '../registry/index.ts';
 import type { AgentDriver } from '../types/index.ts';
 import { antigravityDriver } from './antigravity.ts';
 import { claudeDriver } from './claude.ts';

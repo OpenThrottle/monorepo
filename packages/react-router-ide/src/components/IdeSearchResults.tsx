@@ -1,12 +1,13 @@
-import * as React from 'react';
 import {
+  cn,
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyTitle,
   Skeleton,
-  cn,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+
 import type { IdeSearchResult, SearchMatch } from '../data/view-models';
 import { IdeSearchResultRow } from './IdeSearchResultRow';
 

@@ -1,9 +1,10 @@
+import { Module } from '@nestjs/common';
+import { LoggerModule } from '@openthrottle/nestjs-modules';
+
+import { NotificationsModule } from '../../notifications/notifications.module';
 import { DatabaseBackupProcessor } from './database-backup.processor';
 import { DatabaseBackupQueueProducerModule } from './database-backup-queue-producer.module';
 import { DatabaseBackupRepeatableService } from './database-backup-repeatable.service';
-import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { Module } from '@nestjs/common';
-import { NotificationsModule } from '../../notifications/notifications.module';
 
 /**
  * @description Processor half of the database-backup queue (WorkerHost +

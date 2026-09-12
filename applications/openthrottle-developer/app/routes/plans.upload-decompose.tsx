@@ -1,5 +1,4 @@
-import * as React from 'react';
-import { FileUpIcon } from 'lucide-react';
+import { Button, Input, Label } from '@openthrottle/react-router-shadcn';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalHeading,
@@ -7,22 +6,24 @@ import {
 } from '@openthrottle/react-router-ui-global';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import { Button, Input, Label } from '@openthrottle/react-router-shadcn';
+import { FileUpIcon } from 'lucide-react';
+import * as React from 'react';
 import { useFetcher } from 'react-router';
-import { PlanCreateMcpParityShell } from '~/routing/plans/components/PlanCreateMcpParityShell';
+
+import type { Route } from '@/app/routes/+types/plans.upload-decompose';
+import { SITE_TITLE } from '~/global/config/settings';
 import { DocumentDecomposePreview } from '~/routing/plans/components/DocumentDecomposePreview';
 import { DocumentUploadProgress } from '~/routing/plans/components/DocumentUploadProgress';
-import { SITE_TITLE } from '~/global/config/settings';
+import { PlanCreateMcpParityShell } from '~/routing/plans/components/PlanCreateMcpParityShell';
 import {
   ACCEPT_EXTENSIONS,
   MAX_UPLOAD_BYTES,
 } from '~/routing/plans/config/upload';
-import { buildStubProposal } from '~/routing/plans/utils/document-decompose';
 import type {
   DocumentDecomposeActionData,
   ProposedPlanDecomposition,
 } from '~/routing/plans/types/document-decompose';
-import type { Route } from '@/app/routes/+types/plans.upload-decompose';
+import { buildStubProposal } from '~/routing/plans/utils/document-decompose';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

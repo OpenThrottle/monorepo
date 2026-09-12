@@ -1,6 +1,3 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { GlobalToolbarSearch } from '@openthrottle/react-router-ui-global';
 import {
   Select,
   SelectContent,
@@ -8,7 +5,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@openthrottle/react-router-shadcn';
+import { GlobalToolbarSearch } from '@openthrottle/react-router-ui-global';
+import clsx from 'clsx';
+import * as React from 'react';
 import { useSearchParams } from 'react-router';
+
 import {
   REPOSITORIES_DEFAULT_SORT_BY,
   REPOSITORIES_DEFAULT_SORT_ORDER,

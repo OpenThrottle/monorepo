@@ -1,18 +1,19 @@
-import * as React from 'react';
-import { CircleHelpIcon } from 'lucide-react';
+import { DocsSearch, FaqHero, FaqView } from '@openthrottle/react-router-docs';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalHeading,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import { DocsSearch, FaqHero, FaqView } from '@openthrottle/react-router-docs';
-import { SITE_TITLE } from '~/global/config/settings';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { docsManifest } from '~/routing/docs/data/docsManifest';
-import { faqCategories, faqEntries } from '~/routing/faq/data/faq-navigation';
-import { FAQ_INTRO } from '~/routing/faq/data/data.copy';
-import { useDocsFeatureFlags } from '~/global/hooks/useDocsFeatureFlags';
+import { CircleHelpIcon } from 'lucide-react';
+import * as React from 'react';
+
 import type { Route } from '@/app/routes/+types/faq._index';
+import { SITE_TITLE } from '~/global/config/settings';
+import { useDocsFeatureFlags } from '~/global/hooks/useDocsFeatureFlags';
+import { docsManifest } from '~/routing/docs/data/docsManifest';
+import { FAQ_INTRO } from '~/routing/faq/data/data.copy';
+import { faqCategories, faqEntries } from '~/routing/faq/data/faq-navigation';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

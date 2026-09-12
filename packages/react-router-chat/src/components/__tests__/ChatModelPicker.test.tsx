@@ -1,12 +1,13 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
+import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
-import { ChatModelPicker } from '../ChatModelPicker';
-import type { ChatModelPickerProps } from '../ChatModelPicker';
+
 import type { ChatModelGroup, ChatModelOption } from '../../types';
+import type { ChatModelPickerProps } from '../ChatModelPicker';
+import { ChatModelPicker } from '../ChatModelPicker';
 
 const GROUPS: readonly ChatModelGroup[] = [
   { id: 'claude', label: 'Claude Code' },

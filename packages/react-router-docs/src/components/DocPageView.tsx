@@ -1,14 +1,15 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
-import { DocPagePager } from './DocPagePager';
-import { DocPageToc } from './DocPageToc';
+import clsx from 'clsx';
+import * as React from 'react';
+
+import type { DocEntry } from '../utils/buildDocsManifest';
+import type { DocsNavItem } from '../utils/buildDocsNav';
+import { getDocPager } from '../utils/buildDocsNav';
 import { DOC_CODE_COMPONENTS } from '../utils/docCodeComponents';
 import { DOC_HEADING_COMPONENTS } from '../utils/docHeadingComponents';
 import { extractDocHeadings } from '../utils/docHeadings';
-import { getDocPager } from '../utils/buildDocsNav';
-import type { DocsNavItem } from '../utils/buildDocsNav';
-import type { DocEntry } from '../utils/buildDocsManifest';
+import { DocPagePager } from './DocPagePager';
+import { DocPageToc } from './DocPageToc';
 
 export interface DocPageViewProps {
   readonly className?: string;

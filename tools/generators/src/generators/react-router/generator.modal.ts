@@ -1,15 +1,16 @@
-import { join } from 'path';
-import prompts from 'prompts';
 import type { Tree } from '@nx/devkit';
 import { formatFiles, logger } from '@nx/devkit';
+import { join } from 'path';
+import prompts from 'prompts';
+
 import { getCommonVariables, getRemixRoutingFolders } from '../../utils';
+import { generateFilesSafely } from '../../utils/generate-files-safely';
 import {
   getTargetApplication,
   parsePossibleNames,
 } from '../../utils/questions';
 import { REGEX_PASCAL_CASE } from '../../utils/regex';
 import { throwInvalidFolderError } from '../../utils/target-validation';
-import { generateFilesSafely } from '../../utils/generate-files-safely';
 
 export interface ReactRouterModalGeneratorSchema {
   readonly application?: string;

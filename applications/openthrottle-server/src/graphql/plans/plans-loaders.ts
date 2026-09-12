@@ -2,16 +2,16 @@
  * @description Request-scoped DataLoaders for PlansResolver (project by id, task count by plan id, plan hooks by plan id). One instance per GraphQL request to batch and cache within the request and avoid N+1 when resolving relation fields across many plan rows.
  */
 
+import { Injectable, Scope } from '@nestjs/common';
 import {
+  createEntityByIdLoader,
+  createGroupedCountLoader,
   type GroupedHooks,
   type Project,
   ProjectsService,
   TASK_STATUS,
   TasksService,
-  createEntityByIdLoader,
-  createGroupedCountLoader,
 } from '@openthrottle/nestjs-repositories';
-import { Injectable, Scope } from '@nestjs/common';
 import DataLoader from 'dataloader';
 
 /**

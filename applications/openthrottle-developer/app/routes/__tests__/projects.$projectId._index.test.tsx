@@ -1,10 +1,12 @@
-import * as React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import ProjectDetail from '../projects.$projectId._index';
+
 import { PROJECT_NOT_FOUND_COPY } from '~/routing/projects/data/data.copy';
+
+import ProjectDetail from '../projects.$projectId._index';
 
 const mockProject = {
   __typename: 'ProjectObject' as const,

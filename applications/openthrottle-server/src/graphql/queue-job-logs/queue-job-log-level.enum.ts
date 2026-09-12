@@ -7,6 +7,7 @@
  */
 
 import { registerEnumType } from '@nestjs/graphql';
+
 import {
   QUEUE_JOB_LOG_LEVELS,
   type QueueJobLogLevel,

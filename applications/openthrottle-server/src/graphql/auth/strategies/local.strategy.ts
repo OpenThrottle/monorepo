@@ -5,10 +5,10 @@
 
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
-import { Strategy } from 'passport-local';
+import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { User } from '@openthrottle/nestjs-repositories';
 import { UsersService } from '@openthrottle/nestjs-repositories';
-import { LoggerService } from '@openthrottle/nestjs-modules';
+import { Strategy } from 'passport-local';
 
 /** Strategy name for use with AuthGuard('local'). */
 export const LOCAL_STRATEGY_NAME = 'local';

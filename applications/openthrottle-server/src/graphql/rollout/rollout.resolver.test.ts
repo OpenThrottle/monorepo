@@ -6,8 +6,8 @@
  * has no FLAGS_READ).
  */
 
-import { BadRequestException } from '@nestjs/common';
 import { createMock } from '@golevelup/ts-vitest';
+import { BadRequestException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import {
   AUTH_PRINCIPAL_KIND_USER,
@@ -16,6 +16,7 @@ import {
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { PERMISSIONS, PERMISSIONS_KEY } from '@openthrottle/nestjs-rbac';
 import { RolesService } from '@openthrottle/nestjs-repositories';
+import type { RolloutFlag } from '@openthrottle/nestjs-rollout';
 import {
   ROLLOUT_BOOLEAN_DEFAULT_FALLTHROUGH,
   ROLLOUT_BOOLEAN_DEFAULT_VARIATIONS,
@@ -23,8 +24,8 @@ import {
   ROLLOUT_FLAG_KIND,
   RolloutService,
 } from '@openthrottle/nestjs-rollout';
-import type { RolloutFlag } from '@openthrottle/nestjs-rollout';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
+
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
 import { ROLLOUT_DEGRADED_ANONYMOUS_SUB } from './resolve-evaluation-principal';
 import { RolloutResolver } from './rollout.resolver';

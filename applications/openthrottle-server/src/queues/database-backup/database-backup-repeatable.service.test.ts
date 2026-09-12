@@ -2,24 +2,25 @@
  * @description Unit tests for DatabaseBackupRepeatableService (repeatable registration).
  */
 
+import { createMock } from '@golevelup/ts-vitest';
 import { getQueueToken } from '@nestjs/bullmq';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { createMock } from '@golevelup/ts-vitest';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { Job, Queue } from 'bullmq';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import {
   DATABASE_BACKUP_JOB_NAME,
   DATABASE_BACKUP_QUEUE_NAME,
   DATABASE_BACKUP_REPEATABLE_JOB_ID,
 } from './database-backup.constants';
 import { resolveDatabaseBackupSchedule } from './database-backup.env';
-import { DatabaseBackupRepeatableService } from './database-backup-repeatable.service';
 import type {
   DatabaseBackupJobPayload,
   DatabaseBackupJobResult,
 } from './database-backup.types';
+import { DatabaseBackupRepeatableService } from './database-backup-repeatable.service';
 
 vi.mock('./database-backup.env', () => ({
   resolveDatabaseBackupSchedule: vi.fn(),

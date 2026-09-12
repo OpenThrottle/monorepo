@@ -5,8 +5,8 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { EmbeddingsProvider } from '../embeddings.ts';
-import { indexWorkspace } from '../semantic.ts';
 import type { StoredChunk, VectorStore } from '../semantic.ts';
+import { indexWorkspace } from '../semantic.ts';
 
 /** An in-memory {@link VectorStore} that records calls, keyed by chunk id. */
 function createMemoryStore(): VectorStore & {

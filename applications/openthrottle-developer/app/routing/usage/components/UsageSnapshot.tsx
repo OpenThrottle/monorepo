@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Button,
   Card,
@@ -8,8 +7,10 @@ import {
   CardTitle,
   toast,
 } from '@openthrottle/react-router-shadcn';
-import { buildUsageSupportSnapshotJson } from '~/routing/usage/utils/build-usage-support-snapshot';
+import * as React from 'react';
+
 import type { DashboardDailyStatsCardFragment } from '~/__generated__/graphql';
+import { buildUsageSupportSnapshotJson } from '~/routing/usage/utils/build-usage-support-snapshot';
 
 export interface UsageSnapshotProps {
   dailyStats: ReadonlyArray<DashboardDailyStatsCardFragment>;

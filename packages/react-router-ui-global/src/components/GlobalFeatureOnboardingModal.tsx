@@ -1,7 +1,8 @@
 import * as React from 'react';
+
 import { GLOBAL_FEATURE_ONBOARDING_MODAL } from '../config';
-import { GlobalFeatureOnboarding } from './GlobalFeatureOnboarding';
 import type { GlobalFeatureOnboardingContent } from './GlobalFeatureOnboarding';
+import { GlobalFeatureOnboarding } from './GlobalFeatureOnboarding';
 import { GlobalModal } from './GlobalModal';
 
 export interface GlobalFeatureOnboardingModalProps {

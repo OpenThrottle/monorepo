@@ -1,5 +1,5 @@
-import * as React from 'react';
 import { Skeleton } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
 
 export interface PlanConfigurationTabSkeletonProps {
   className?: string;

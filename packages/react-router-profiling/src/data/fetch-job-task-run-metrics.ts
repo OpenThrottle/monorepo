@@ -9,8 +9,8 @@ import type {
   ProcessMetricsSnapshot,
 } from './metrics-types';
 import {
-  DEFAULT_REQUEST_TIMEOUT_MS,
   buildRequestSignal,
+  DEFAULT_REQUEST_TIMEOUT_MS,
 } from './request-timeout';
 
 const PROCESS_METRICS_FIELDS = `

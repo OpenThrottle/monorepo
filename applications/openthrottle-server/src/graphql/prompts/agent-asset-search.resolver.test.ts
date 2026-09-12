@@ -1,6 +1,7 @@
-import { embedQuery, searchAgentAssets } from '@openthrottle/node-client';
 import { Test } from '@nestjs/testing';
+import { embedQuery, searchAgentAssets } from '@openthrottle/node-client';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+
 import { AgentAssetSearchResolver } from './agent-asset-search.resolver';
 import { CustomPromptTypeEnum } from './custom-prompt.object';
 

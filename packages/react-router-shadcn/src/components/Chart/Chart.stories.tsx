@@ -1,12 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Bar, BarChart, CartesianGrid, XAxis } from 'recharts';
+
+import type { ChartConfig } from '../chart-config';
 import { BUILD_DURATIONS } from '../chart-fixtures.stories-data';
 import { ChartContainer } from './ChartContainer';
 import { ChartLegend } from './ChartLegend';
 import { ChartLegendContent } from './ChartLegendContent';
 import { ChartTooltip } from './ChartTooltip';
 import { ChartTooltipContent } from './ChartTooltipContent';
-import type { ChartConfig } from '../chart-config';
 
 /**
  * `Chart` is the low-level toolkit the `Simple*Chart` components are built on:

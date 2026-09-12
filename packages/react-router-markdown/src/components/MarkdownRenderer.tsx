@@ -1,8 +1,9 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import { MDXProvider } from '@mdx-js/react';
-import { compileMarkdownSync } from '../utils/compileMarkdown';
+import clsx from 'clsx';
+import * as React from 'react';
+
 import type { CompiledMarkdown } from '../utils/compileMarkdown';
+import { compileMarkdownSync } from '../utils/compileMarkdown';
 
 type MarkdownComponents = React.ComponentProps<
   typeof MDXProvider

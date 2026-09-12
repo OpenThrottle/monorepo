@@ -4,6 +4,7 @@
  */
 
 import { Field, ObjectType } from '@nestjs/graphql';
+
 import { ServerMetricsObject } from '../health/server-metrics.object';
 import { PlanRunMetricsEntryObject } from './plan-run-metrics-entry.object';
 

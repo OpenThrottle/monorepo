@@ -1,11 +1,12 @@
-import * as React from 'react';
+import type { RenderResult } from '@testing-library/react';
 import { cleanup, render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub, useSearchParams } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
-import type { RenderResult } from '@testing-library/react';
-import { GlobalMetricsInfoTrigger } from '../GlobalMetricsInfoTrigger';
+
 import type { GlobalMetricsInfoTriggerProps } from '../GlobalMetricsInfoTrigger';
+import { GlobalMetricsInfoTrigger } from '../GlobalMetricsInfoTrigger';
 
 function Harness(props: GlobalMetricsInfoTriggerProps): React.ReactElement {
   const [searchParams] = useSearchParams();

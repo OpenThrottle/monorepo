@@ -1,8 +1,9 @@
 import { useAtom } from 'jotai';
 import { useNavigate } from 'react-router';
-import { editorAtom, filteredFilesAtom } from '../data/atom.editor';
-import type { EditorFile } from '../data/atom.editor';
+
 import type { PromptType } from '../config';
+import type { EditorFile } from '../data/atom.editor';
+import { editorAtom, filteredFilesAtom } from '../data/atom.editor';
 import { getLanguageFromExt } from '../utils';
 
 export interface UseEditorOptions {

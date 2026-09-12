@@ -1,11 +1,12 @@
 import { createMock } from '@golevelup/ts-vitest';
 import type { Task } from '@openthrottle/nestjs-repositories';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type {
   Repository,
   SelectQueryBuilder,
   UpdateQueryBuilder,
 } from 'typeorm';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import { updateMatchingTasksAndEmitStatusChanged } from './emit-bulk-task-status-changes';
 import type { NotificationsService } from './notifications.service';
 

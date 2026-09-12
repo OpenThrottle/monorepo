@@ -1,6 +1,7 @@
-import { redirect } from 'react-router';
-import type { MiddlewareFunction } from 'react-router';
 import { FEATURE_BETA_PREVIEW } from '@openthrottle/react-router-utils';
+import type { MiddlewareFunction } from 'react-router';
+import { redirect } from 'react-router';
+
 import {
   getAuthTokenFromCookie,
   getClearAuthCookieHeader,

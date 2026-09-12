@@ -2,8 +2,9 @@
  * @description Fishery factory for {@link Note}. Use in tests to build mock notes.
  */
 
-import { Factory } from 'fishery';
 import { faker } from '@faker-js/faker';
+import { Factory } from 'fishery';
+
 import type { Note } from './note.entity';
 
 /** Column-only shape for building note test data. */

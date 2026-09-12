@@ -1,8 +1,10 @@
-import * as React from 'react';
 import { act, render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
+
 import { PROMPTS_DEFAULT_CONTENT } from '~/routing/prompts/config';
+
 import {
   usePromptCreateForm,
   type UsePromptCreateFormResult,

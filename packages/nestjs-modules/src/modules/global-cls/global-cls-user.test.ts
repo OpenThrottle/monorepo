@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { globalClsUserFromJwtLike } from './global-cls-user';
 
 describe('globalClsUserFromJwtLike', () => {

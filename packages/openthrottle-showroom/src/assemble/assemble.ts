@@ -33,14 +33,14 @@ import {
 } from 'node:fs';
 import { join } from 'node:path';
 
-import { buildMaster } from './master';
 import { getEpisode, resolveVariant } from '../episodes/registry';
-import { buildMetadata } from './metadata';
-import { captureDir, loadFormat, repositoryRoot } from '../runner/format';
-import { renderCaptionPlates, renderCards } from './cards';
 import type { NarrationTimings } from '../narrate/types';
-import type { Overlay } from './master';
+import { captureDir, loadFormat, repositoryRoot } from '../runner/format';
 import type { RecordingManifest } from '../runner/types';
+import { renderCaptionPlates, renderCards } from './cards';
+import type { Overlay } from './master';
+import { buildMaster } from './master';
+import { buildMetadata } from './metadata';
 
 const argValue = (name: string): string | undefined => {
   const index = process.argv.indexOf(`--${name}`);

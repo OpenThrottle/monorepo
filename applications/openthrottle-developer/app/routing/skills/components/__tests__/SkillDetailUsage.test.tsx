@@ -1,12 +1,13 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import { SkillDetailUsage } from '../SkillDetailUsage';
-import type { SkillDetailUsageProps } from '../SkillDetailUsage';
+
 import { SKILL_USAGE_DETAIL_COPY } from '../../data/data.copy';
 import type { SkillDetailUsageSkillStats } from '../../data/skill-usage-detail';
+import type { SkillDetailUsageProps } from '../SkillDetailUsage';
+import { SkillDetailUsage } from '../SkillDetailUsage';
 
 const buildSkill = (
   overrides: Partial<SkillDetailUsageSkillStats> = {},

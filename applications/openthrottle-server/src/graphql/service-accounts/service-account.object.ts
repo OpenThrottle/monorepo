@@ -2,8 +2,8 @@
  * @description GraphQL ObjectType for ServiceAccount.
  */
 
-import type { ServiceAccountData } from '@openthrottle/nestjs-repositories';
 import { Field, ObjectType } from '@nestjs/graphql';
+import type { ServiceAccountData } from '@openthrottle/nestjs-repositories';
 
 @ObjectType()
 export class ServiceAccountObject implements ServiceAccountData {

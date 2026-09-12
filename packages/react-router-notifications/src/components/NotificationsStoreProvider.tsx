@@ -3,6 +3,7 @@ import type {
   NotificationPayload,
 } from '@openthrottle/openthrottle-notifications';
 import * as React from 'react';
+
 import type { NotificationsStoreContextValue } from '../data';
 import {
   DEFAULT_NOTIFICATIONS_STORAGE_KEY,

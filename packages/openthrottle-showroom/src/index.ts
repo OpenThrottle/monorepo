@@ -6,7 +6,6 @@
  * through this file — no deep imports into `src/`.
  */
 
-export { composeDescription } from './episodes/description';
 export {
   budgetWords,
   estimatedSpokenSeconds,
@@ -14,6 +13,7 @@ export {
   spokenWords,
   WORDS_PER_MINUTE,
 } from './episodes/derived';
+export { composeDescription } from './episodes/description';
 export {
   EPISODES,
   episodesInReleaseOrder,
@@ -21,12 +21,6 @@ export {
   getVariant,
   resolveVariant,
 } from './episodes/registry';
-export {
-  EPISODE_FORMATS,
-  EPISODE_STATUSES,
-  PLAYLISTS,
-  RECORDING_MODES,
-} from './episodes/types';
 export type {
   Beat,
   Chapter,
@@ -40,4 +34,10 @@ export type {
   Variant,
   VideoEpisode,
   YouTubeMetadata,
+} from './episodes/types';
+export {
+  EPISODE_FORMATS,
+  EPISODE_STATUSES,
+  PLAYLISTS,
+  RECORDING_MODES,
 } from './episodes/types';

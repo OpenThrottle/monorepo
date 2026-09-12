@@ -1,9 +1,10 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { SettingsMcpIntroduction } from '../SettingsMcpIntroduction';
+
 import type { SettingsMcpIntroductionProps } from '../SettingsMcpIntroduction';
+import { SettingsMcpIntroduction } from '../SettingsMcpIntroduction';
 
 describe('SettingsMcpIntroduction Component', () => {
   let component: RenderResult;

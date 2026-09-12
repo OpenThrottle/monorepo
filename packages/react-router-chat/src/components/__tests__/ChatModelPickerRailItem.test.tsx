@@ -1,15 +1,16 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
+import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
-import { ChatModelPickerRailItem } from '../ChatModelPickerRailItem';
-import type { ChatModelPickerRailItemProps } from '../ChatModelPickerRailItem';
+
 import {
   FAVORITES_GROUP_ID,
   type ResolvedGroup,
 } from '../../hooks/use-chat-model-picker';
+import type { ChatModelPickerRailItemProps } from '../ChatModelPickerRailItem';
+import { ChatModelPickerRailItem } from '../ChatModelPickerRailItem';
 
 const GROUP: ResolvedGroup = {
   id: 'claude',

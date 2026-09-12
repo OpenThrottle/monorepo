@@ -34,7 +34,7 @@ import { episode as ep21DashboardTour } from './21-dashboard-tour/episode';
 import { episode as ep22SelfHostDockerCompose } from './22-self-host-docker-compose/episode';
 import { episode as epL1IdeaToShippedCommit } from './L1-idea-to-shipped-commit/episode';
 import { episode as epL2SetupFromScratch } from './L2-setup-from-scratch/episode';
-import type { VideoEpisode, Variant } from './types';
+import type { Variant, VideoEpisode } from './types';
 
 /**
  * Every episode, keyed by id — the whole of Season 1.

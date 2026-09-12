@@ -1,5 +1,6 @@
 import type { Location, MetaArgs, MetaDescriptor } from 'react-router';
 import { describe, expect, test } from 'vitest';
+
 import { mergeMeta, mergeRouteModuleMeta } from '../metadata';
 
 const location: Location = {

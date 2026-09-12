@@ -1,3 +1,4 @@
+import type { Dirent } from 'node:fs';
 import {
   existsSync,
   readdirSync,
@@ -5,7 +6,6 @@ import {
   realpathSync,
   statSync,
 } from 'node:fs';
-import type { Dirent } from 'node:fs';
 import { join, sep } from 'node:path';
 
 import {
@@ -15,13 +15,14 @@ import {
   type SkillsLockMap,
   type SkillSource,
 } from '@openthrottle/openthrottle-skills';
+
 import { parseSkillFrontmatter } from '~/routing/agents/data/parse-skill-frontmatter.server';
-import { isPathInsidePersonalSkillsRoot } from '~/routing/agents/data/skill-path-allowlist.server';
 import {
   dedupeRepoSkillEntriesBySlug,
   type RepoSkillEntry,
   type SkillRegistryLayout,
 } from '~/routing/agents/data/repo-skills-registry';
+import { isPathInsidePersonalSkillsRoot } from '~/routing/agents/data/skill-path-allowlist.server';
 
 const SKILL_FILE_NAME = 'SKILL.md';
 

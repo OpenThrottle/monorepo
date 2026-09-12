@@ -2,17 +2,9 @@
  * @description Plan CRUD tool handlers + schemas: list_plans_by_status, create_plan, create_plans, get_plan, update_plan, delete_plan. Wired up via the shared `developerMcpToolDefinitions` registry and the Nest surface.
  */
 
-import { z } from 'zod';
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
-import {
-  CreatePlanDocument,
-  CreatePlansDocument,
-  DeletePlanDocument,
-  GetPlanDocument,
-  ListPlansByStatusDocument,
-  PlanTaskStatus,
-  UpdatePlanDocument,
-} from '../__generated__/graphql.js';
+import { z } from 'zod';
+
 import type {
   CreatePlanInput,
   CreatePlanMutation,
@@ -22,15 +14,24 @@ import type {
   UpdatePlanMutation,
 } from '../__generated__/graphql.js';
 import {
+  CreatePlanDocument,
+  CreatePlansDocument,
+  DeletePlanDocument,
+  GetPlanDocument,
+  ListPlansByStatusDocument,
+  PlanTaskStatus,
+  UpdatePlanDocument,
+} from '../__generated__/graphql.js';
+import {
   CreatePlanInputSchema,
   CreatePlansInputSchema,
   DeletePlanInputSchema,
   ListPlansByStatusInputSchema,
   UpdatePlanInputSchema,
 } from '../__generated__/schemas.ts';
-import type { GenericResult } from '../types/index.ts';
 import { getAuthToken } from '../auth/get-auth-token.ts';
 import { resolveWorkspacePathArgument } from '../config/workspace-path.ts';
+import type { GenericResult } from '../types/index.ts';
 import { invalidArgsContent } from '../utils/errors.ts';
 import { runTool } from '../utils/tool-result.ts';
 

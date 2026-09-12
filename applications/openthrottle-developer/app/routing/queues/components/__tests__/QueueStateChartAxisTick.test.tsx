@@ -1,8 +1,10 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import { QueueStateChartAxisTick } from '../QueueStateChartAxisTick';
+
 import { QUEUE_STATE_CHART_LABEL_MAX_CHARS } from '~/routing/queues/utils/queue-state-chart';
+
+import { QueueStateChartAxisTick } from '../QueueStateChartAxisTick';
 
 const renderTick = (value: string) =>
   render(

@@ -11,6 +11,6 @@ export { runServer, runServerLocal } from './run-server.ts';
  */
 export {
   getAuthToken,
-  withMcpDeveloperAuthTokenAsync,
   withMcpDeveloperAuthToken,
+  withMcpDeveloperAuthTokenAsync,
 } from './auth/get-auth-token.ts';

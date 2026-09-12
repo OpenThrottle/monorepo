@@ -6,6 +6,7 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+
 import { CheckoutPathResolutionService } from './checkout-path-resolution.service';
 
 @Module({

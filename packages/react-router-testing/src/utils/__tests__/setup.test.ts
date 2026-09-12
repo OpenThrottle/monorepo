@@ -1,4 +1,5 @@
 import { afterAll, describe, expect, test } from 'vitest';
+
 import { installPolyfills, uninstallPolyfills } from '../polyfills';
 import { setupReactRouterTest } from '../setup';
 

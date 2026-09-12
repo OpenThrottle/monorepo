@@ -1,10 +1,11 @@
 import { describe, expect, test } from 'vitest';
+
 import {
-  RULES_ENABLED_FILTERS,
   filterRulesList,
   isRulesEnabledFilter,
   parseRulesEnabledFilterFromSearchParams,
   parseRulesSearchFromSearchParams,
+  RULES_ENABLED_FILTERS,
   type RulesListFilterable,
 } from '~/routing/rules/utils/parsers';
 

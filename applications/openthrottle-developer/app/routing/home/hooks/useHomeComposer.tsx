@@ -1,12 +1,11 @@
-import * as React from 'react';
 import {
-  parseFileMentions,
   type ChatComposerMode,
   type ChatModelOption,
   type ChatPermissionMode,
   type ChatPersonaOption,
   type ChatReasoningLevel,
   type ChatServiceTier,
+  parseFileMentions,
 } from '@openthrottle/react-router-chat';
 import {
   buildChatTurnFields,
@@ -19,6 +18,8 @@ import {
   toCheckoutOptions,
 } from '@openthrottle/react-router-chat-state';
 import { useAtom } from 'jotai';
+import * as React from 'react';
+
 import type { RepositoryOption } from '~/routing/home/data/models.server';
 import type { UseAgenticChatTurnResult } from '~/routing/home/hooks/useAgenticChatTurn';
 import type { UseConversationListResult } from '~/routing/home/hooks/useConversationList';

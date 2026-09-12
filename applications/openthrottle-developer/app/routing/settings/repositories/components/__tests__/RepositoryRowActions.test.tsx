@@ -1,19 +1,21 @@
-import * as React from 'react';
-import { render, waitFor } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
+
+import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
+import { REPOSITORIES_ROW_ACTIONS_COPY } from '~/routing/settings/repositories/data/data.copy';
 import {
   mockCheckout,
   mockDiscoveredWorktree,
   mockRepository,
 } from '~/routing/settings/repositories/data/mock.repositories';
-import { REPOSITORIES_ROW_ACTIONS_COPY } from '~/routing/settings/repositories/data/data.copy';
-import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
 import { buildRepositoryRows } from '~/routing/settings/repositories/utils/rows';
-import { RepositoryRowActions } from '../RepositoryRowActions';
+
 import type { RepositoryRowActionsProps } from '../RepositoryRowActions';
+import { RepositoryRowActions } from '../RepositoryRowActions';
 
 const [row] = buildRepositoryRows([
   mockRepository({

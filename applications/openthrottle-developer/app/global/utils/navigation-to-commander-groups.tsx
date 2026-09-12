@@ -1,9 +1,9 @@
-import * as React from 'react';
 import type {
   CommanderGroup,
   CommanderItem,
 } from '@openthrottle/react-router-ui';
 import type { GlobalSidebarContentLinkProps } from '@openthrottle/react-router-ui-global';
+import * as React from 'react';
 import type { LinkProps } from 'react-router';
 
 const ICON_SM = 'h-3! w-3!';

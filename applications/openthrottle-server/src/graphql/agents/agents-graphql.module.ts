@@ -5,10 +5,11 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+
 import { McpDeveloperModule } from '../../modules/mcp-developer/mcp-developer.module';
-import { AgentsMcpRouterLlmService } from './agents-mcp-router-llm.service';
-import { AgentsMcpRouter } from './agents-mcp-router';
 import { AgentsResolver } from './agents.resolver';
+import { AgentsMcpRouter } from './agents-mcp-router';
+import { AgentsMcpRouterLlmService } from './agents-mcp-router-llm.service';
 
 @Module({
   imports: [ConfigModule, McpDeveloperModule, NestjsRepositoriesModule],

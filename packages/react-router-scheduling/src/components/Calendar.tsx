@@ -3,15 +3,16 @@ import './Calendar.css';
 import '../utils/temporal-bootstrap';
 import '@schedule-x/theme-shadcn/dist/index.css';
 
-import * as React from 'react';
-import clsx from 'clsx';
-import { ScheduleXCalendar } from '@schedule-x/react';
 import { IS_BROWSER } from '@openthrottle/react-router-utils';
-import { buildCustomComponents } from './slots';
-import { isHostDark } from '../utils/dark-mode';
+import { ScheduleXCalendar } from '@schedule-x/react';
+import clsx from 'clsx';
 import type { CSSProperties, ReactElement } from 'react';
-import type { CalendarSlots } from './slots';
+import * as React from 'react';
+
 import type { UseScheduleResult } from '../hooks/useSchedule';
+import { isHostDark } from '../utils/dark-mode';
+import type { CalendarSlots } from './slots';
+import { buildCustomComponents } from './slots';
 
 export interface CalendarProps {
   /** Class applied to the calendar wrapper element. */

@@ -2,8 +2,8 @@
  * @description GraphQL ObjectType for ServiceAccountCredential (never exposes secret hash).
  */
 
-import type { ServiceAccountCredentialData } from '@openthrottle/nestjs-repositories';
 import { Field, ID, ObjectType } from '@nestjs/graphql';
+import type { ServiceAccountCredentialData } from '@openthrottle/nestjs-repositories';
 
 /** Public credential fields (excludes secretHash). */
 type PublicServiceAccountCredentialData = Omit<

@@ -1,6 +1,3 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { FileIcon } from '@phosphor-icons/react/dist/ssr/File';
 import {
   Button,
   Input,
@@ -10,6 +7,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@openthrottle/react-router-shadcn';
+import { FileIcon } from '@phosphor-icons/react/dist/ssr/File';
+import clsx from 'clsx';
+import * as React from 'react';
+
 import { PROMPT_TYPE_OPTIONS, PROMPT_TYPE_VALUES } from '../config';
 import { useEditor } from '../hooks/useEditor';
 import { EditorNewFileForm } from './EditorNewFileForm';

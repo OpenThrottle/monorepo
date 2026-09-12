@@ -1,12 +1,13 @@
 import * as React from 'react';
+
+import type {
+  ClientLogEntry,
+  ClientLogLevel,
+} from '~/routing/settings/client-log-sink';
 import {
   clearClientLogSink,
   getClientLogEntries,
   subscribeClientLogSink,
-} from '~/routing/settings/client-log-sink';
-import type {
-  ClientLogEntry,
-  ClientLogLevel,
 } from '~/routing/settings/client-log-sink';
 import { CLIENT_LOG_LEVELS } from '~/routing/settings/client-log-sink';
 import { isClientLogLevel } from '~/routing/settings/utils/is-client-log-level';

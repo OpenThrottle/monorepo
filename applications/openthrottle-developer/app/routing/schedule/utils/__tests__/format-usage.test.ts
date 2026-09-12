@@ -1,12 +1,13 @@
 import { describe, expect, test } from 'vitest';
+
 import {
   formatRunCost,
   formatRunTotalTokens,
   formatSettingsSnapshot,
   hasRunUsage,
+  type RunUsage,
   runUsageRows,
   runUsageTooltip,
-  type RunUsage,
 } from '../format-usage';
 
 const EMPTY_USAGE: RunUsage = {};

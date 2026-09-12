@@ -1,5 +1,6 @@
 import { executeGraphql } from '@openthrottle/react-router-graphql';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import {
   callLoginMutation,
   callLogoutMutation,

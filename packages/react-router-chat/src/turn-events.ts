@@ -10,6 +10,7 @@
  */
 
 import { isRecord } from '@openthrottle/nodejs-utils';
+
 import type { ChatTurnEvent, ChatTurnUsageEvent } from './types';
 import { hasUsageCounts, normalizeUsage, sumUsage } from './usage';
 

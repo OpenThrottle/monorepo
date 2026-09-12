@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Button,
   Command,
@@ -9,13 +8,15 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@openthrottle/react-router-shadcn';
-import { ChevronsUpDown } from 'lucide-react';
 import clsx from 'clsx';
+import { ChevronsUpDown } from 'lucide-react';
+import * as React from 'react';
+
+import { useChatModelPicker } from '../hooks/use-chat-model-picker';
+import type { ChatModelGroup, ChatModelOption } from '../types';
 import { ChatModelPickerRailItem } from './ChatModelPickerRailItem';
 import { ChatModelPickerRailSettings } from './ChatModelPickerRailSettings';
 import { ChatModelPickerRow } from './ChatModelPickerRow';
-import { useChatModelPicker } from '../hooks/use-chat-model-picker';
-import type { ChatModelGroup, ChatModelOption } from '../types';
 
 export interface ChatModelPickerProps {
   /** Popover alignment against the trigger. */

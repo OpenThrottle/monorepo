@@ -1,6 +1,8 @@
 import { describe, expect, test } from 'vitest';
-import type { QueueJobLogEvent } from '~/routing/queues/hooks/useQueueJobLogs';
+
 import { QueueJobLogLevel } from '~/__generated__/graphql';
+import type { QueueJobLogEvent } from '~/routing/queues/hooks/useQueueJobLogs';
+
 import { formatQueueJobLogLine } from '../queue-job-log-line';
 
 const baseEvent: QueueJobLogEvent = {

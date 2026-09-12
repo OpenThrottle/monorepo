@@ -1,5 +1,5 @@
-import * as React from 'react';
 import { MultiSelect } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
 
 export interface AssigneeMultiSelectProps {
   onChange: (value: string[]) => void;

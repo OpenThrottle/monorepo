@@ -4,12 +4,13 @@
 
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { captureCallerWorkspacePath } from '../config/workspace-path.ts';
 import {
-  createPlanToolDescription,
-  createPlanToolHandler,
   createPlansToolDescription,
   createPlansToolHandler,
+  createPlanToolDescription,
+  createPlanToolHandler,
   listPlansByStatusToolDescription,
   listPlansByStatusToolHandler,
 } from './plans.ts';

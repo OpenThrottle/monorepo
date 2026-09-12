@@ -1,5 +1,5 @@
-import { parse as parseYamlDocument } from 'yaml';
 import { isRecord } from '@openthrottle/nodejs-utils';
+import { parse as parseYamlDocument } from 'yaml';
 
 import { extractFrontmatterBody } from './extract-frontmatter-body.ts';
 

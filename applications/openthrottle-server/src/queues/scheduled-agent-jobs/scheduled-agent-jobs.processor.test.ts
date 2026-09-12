@@ -1,10 +1,6 @@
-import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 import { createMock } from '@golevelup/ts-vitest';
+import type { KeyedJsonlWriter } from '@openthrottle/nestjs-logging';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import {
-  RUN_AGENT_STATUS,
-  type RunAgentPromptResult,
-} from '@openthrottle/openthrottle-drivers';
 import type {
   ScheduledAgentJobCheckoutPathService,
   ScheduledAgentJobsService,
@@ -13,7 +9,12 @@ import {
   type ScheduledAgentJob,
   type ScheduledAgentJobRun,
 } from '@openthrottle/nestjs-repositories';
-import type { KeyedJsonlWriter } from '@openthrottle/nestjs-logging';
+import {
+  RUN_AGENT_STATUS,
+  type RunAgentPromptResult,
+} from '@openthrottle/openthrottle-drivers';
+import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
+
 import type { BullMqRunOutputRetentionService } from '../bullmq-run-output-retention.service';
 import type { ScheduledAgentJobCancellationService } from './scheduled-agent-job-cancellation.service';
 import type { ScheduledAgentJobDirectoryLockService } from './scheduled-agent-job-directory-lock.service';
@@ -23,8 +24,8 @@ import {
   parseRunOutcome,
   ScheduledAgentJobsProcessor,
 } from './scheduled-agent-jobs.processor';
-import type { ScheduledAgentRunnerService } from './scheduled-agent-runner.service';
 import type { ScheduledAgentJobBullJob } from './scheduled-agent-jobs.types';
+import type { ScheduledAgentRunnerService } from './scheduled-agent-runner.service';
 
 const result = (
   overrides: Partial<RunAgentPromptResult>,

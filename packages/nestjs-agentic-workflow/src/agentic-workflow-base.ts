@@ -1,6 +1,6 @@
 import type {
-  WorkflowRunContext,
   WorkflowOrchestrator,
+  WorkflowRunContext,
 } from '@openthrottle/openthrottle-agentic-workflow';
 
 /**

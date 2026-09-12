@@ -3,6 +3,7 @@
  */
 
 import { Module } from '@nestjs/common';
+
 import { AgenticTestQueueProducerModule } from '../../queues/agentic-test/agentic-test-queue-producer.module';
 import { AgenticWorkflowResolver } from './agentic-workflow.resolver';
 import { AgenticWorkflowService } from './agentic-workflow.service';

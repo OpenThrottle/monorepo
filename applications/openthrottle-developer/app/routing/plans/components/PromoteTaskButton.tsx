@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -16,7 +15,9 @@ import {
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
 import { ArrowUpCircle } from 'lucide-react';
+import * as React from 'react';
 import { useFetcher, useRevalidator } from 'react-router';
+
 import type { action as taskDetailAction } from '~/routes/plans.$planId.tasks.$taskId._index';
 import { PLAN_TASK_TOOLBAR_COPY } from '~/routing/plans/data/data.copy';
 

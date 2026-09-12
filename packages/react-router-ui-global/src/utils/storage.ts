@@ -1,11 +1,12 @@
-import type { GetRootMetricsQuery } from '@openthrottle/openthrottle-developer-codegen';
 import { isRecord } from '@openthrottle/nodejs-utils';
+import type { GetRootMetricsQuery } from '@openthrottle/openthrottle-developer-codegen';
+import { APP_NAME } from '@openthrottle/react-router-utils';
+
 import {
   GLOBAL_METRICS_COLLAPSED_KEY,
   GLOBAL_METRICS_STORAGE_KEY,
   GLOBAL_METRICS_VALID_INTERVALS,
 } from '../config/index';
-import { APP_NAME } from '@openthrottle/react-router-utils';
 
 type ServerMetricsSnapshot = GetRootMetricsQuery['serverMetrics'];
 

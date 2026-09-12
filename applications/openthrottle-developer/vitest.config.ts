@@ -1,4 +1,5 @@
 import { availableParallelism } from 'node:os';
+
 import type { ConfigEnv } from 'vite';
 import { loadEnv } from 'vite';
 import { defineConfig } from 'vitest/config';

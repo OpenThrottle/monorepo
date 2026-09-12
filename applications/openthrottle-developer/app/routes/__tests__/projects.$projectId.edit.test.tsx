@@ -1,13 +1,15 @@
-import * as React from 'react';
-import { screen } from '@testing-library/react';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
 import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
 import { createTestRouterContext } from '@openthrottle/react-router-testing';
-import EditProject, { action, loader } from '../projects.$projectId.edit';
-import { UpdateProjectDocument } from '~/__generated__/graphql';
-import { renderRoutesStub } from '~/testing/route-fixtures';
-import { buildRootMatch } from '~/testing/root-match-fixture';
+import { screen } from '@testing-library/react';
+import * as React from 'react';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import type { Route } from '@/app/routes/+types/projects.$projectId.edit';
+import { UpdateProjectDocument } from '~/__generated__/graphql';
+import { buildRootMatch } from '~/testing/root-match-fixture';
+import { renderRoutesStub } from '~/testing/route-fixtures';
+
+import EditProject, { action, loader } from '../projects.$projectId.edit';
 
 // Keep the real `parseFormData`; only stub the network call.
 vi.mock('@openthrottle/react-router-graphql', async (importOriginal) => {

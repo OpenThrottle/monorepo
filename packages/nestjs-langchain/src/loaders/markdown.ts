@@ -1,8 +1,9 @@
 /* eslint-disable no-await-in-loop */
 
-import path from 'path';
 import { TextLoader } from '@langchain/classic/document_loaders/fs/text';
 import type { Document } from '@langchain/core/documents';
+import path from 'path';
+
 import { getFilesByExtension } from '../utils/files';
 
 export type Extension =

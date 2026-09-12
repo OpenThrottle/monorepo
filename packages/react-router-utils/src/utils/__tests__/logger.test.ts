@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+
 import type { logger as LoggerType } from '../logger';
 
 // `logger` binds each console method (`console.error.bind(console)`) at

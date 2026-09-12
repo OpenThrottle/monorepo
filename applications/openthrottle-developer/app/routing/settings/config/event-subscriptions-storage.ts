@@ -1,4 +1,5 @@
 import { IS_BROWSER } from '@openthrottle/react-router-utils';
+
 import {
   buildInitialSubscriptions,
   type EventSubscriptionId,

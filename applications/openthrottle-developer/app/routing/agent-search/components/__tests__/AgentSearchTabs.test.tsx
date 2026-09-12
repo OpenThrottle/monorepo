@@ -1,11 +1,12 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub, useSearchParams } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { AgentSearchTabs } from '../AgentSearchTabs';
+
 import type { AgentSearchTabsProps } from '../AgentSearchTabs';
+import { AgentSearchTabs } from '../AgentSearchTabs';
 
 const renderTabs = (
   tabsProps: AgentSearchTabsProps,

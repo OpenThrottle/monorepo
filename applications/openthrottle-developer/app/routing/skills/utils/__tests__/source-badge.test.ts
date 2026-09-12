@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { SKILLS_SOURCE_COPY } from '~/routing/skills/data/data.copy';
 import { getSkillSourceBadge } from '~/routing/skills/utils/source-badge';
 

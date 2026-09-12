@@ -6,6 +6,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { Repository } from 'typeorm';
+
 import { CustomPrompt } from './custom-prompt.entity';
 
 @Injectable()

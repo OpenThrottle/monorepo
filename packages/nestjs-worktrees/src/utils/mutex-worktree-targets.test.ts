@@ -7,6 +7,7 @@
 
 import { Mutex } from 'async-mutex';
 import { beforeEach, describe, expect, it } from 'vitest';
+
 import type { AcquireResult } from '../types/worktree';
 import type { MutexWorktreeTargetsTracker } from './mutex-worktree-targets';
 import { createMutexWorktreeTargetsTracker } from './mutex-worktree-targets';

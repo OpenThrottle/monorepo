@@ -1,12 +1,13 @@
 import { act, render, waitFor } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { useUsageBranchSearch } from '../useUsageBranchSearch';
+
 import type {
   UsageBranchOption,
   UsageBranchSearchData,
   UseUsageBranchSearchResult,
 } from '../useUsageBranchSearch';
+import { useUsageBranchSearch } from '../useUsageBranchSearch';
 
 const INITIAL_OPTIONS: readonly UsageBranchOption[] = [
   { branch: 'main', count: 12 },

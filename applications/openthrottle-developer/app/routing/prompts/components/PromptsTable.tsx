@@ -1,18 +1,19 @@
-import * as React from 'react';
-import clsx from 'clsx';
+import { CustomPromptType } from '@openthrottle/openthrottle-developer-codegen';
 import type { BadgeProps } from '@openthrottle/react-router-shadcn';
 import { Badge, DataTable } from '@openthrottle/react-router-shadcn';
+import { GlobalPopoverActionsHeader } from '@openthrottle/react-router-ui-global';
+import type { ColumnDef } from '@tanstack/react-table';
+import clsx from 'clsx';
 import { Clock, FileText } from 'lucide-react';
-import { CustomPromptType } from '@openthrottle/openthrottle-developer-codegen';
+import * as React from 'react';
+import { Link } from 'react-router';
+
+import type { PromptCardFragment } from '~/__generated__/graphql';
+import { PromptsEmpty } from '~/routing/prompts/components/PromptsEmpty';
 import {
   formatPromptDate,
   formatPromptType,
 } from '~/routing/prompts/utils/formatters';
-import { GlobalPopoverActionsHeader } from '@openthrottle/react-router-ui-global';
-import { Link } from 'react-router';
-import { PromptsEmpty } from '~/routing/prompts/components/PromptsEmpty';
-import type { ColumnDef } from '@tanstack/react-table';
-import type { PromptCardFragment } from '~/__generated__/graphql';
 
 export interface PromptsTableProps {
   className?: string;

@@ -1,15 +1,16 @@
-import * as React from 'react';
-import { useFetcher, useRevalidator } from 'react-router';
-import { StarIcon } from 'lucide-react';
 import {
   Button,
+  cn,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-  cn,
 } from '@openthrottle/react-router-shadcn';
-import { SETTINGS_AGENTS_COPY } from '~/routing/settings/data/data.copy';
+import { StarIcon } from 'lucide-react';
+import * as React from 'react';
+import { useFetcher, useRevalidator } from 'react-router';
+
 import type { action as agentModelFavoriteAction } from '~/routes/resources.agent-model-favorite';
+import { SETTINGS_AGENTS_COPY } from '~/routing/settings/data/data.copy';
 
 /** Resource-route action path backing the per-model favorite toggle. */
 const AGENT_MODEL_FAVORITE_ACTION = '/resources/agent-model-favorite';

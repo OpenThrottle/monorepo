@@ -1,11 +1,12 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { ConflictException } from '@nestjs/common';
-import { getRepositoryToken } from '@nestjs/typeorm';
 import { Test } from '@nestjs/testing';
+import { getRepositoryToken } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { asMock } from '@openthrottle/nestjs-testing';
 import { QueryFailedError } from 'typeorm';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { RepositoryCheckout } from './repository-checkout.entity';
 import { RepositoryCheckoutsService } from './repository-checkouts.service';
 

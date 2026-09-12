@@ -1,6 +1,5 @@
-import { describe, expect, it } from 'vitest';
-
 import { eslintConfig } from '@tools/dotfiles';
+import { describe, expect, it } from 'vitest';
 
 interface FlatConfigEntry {
   readonly files?: ReadonlyArray<string | readonly string[]>;

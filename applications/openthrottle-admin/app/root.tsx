@@ -1,5 +1,18 @@
-import * as React from 'react';
-import type { ShouldRevalidateFunction } from 'react-router';
+import {
+  buildAuthCookie,
+  getAuthTokenFromCookie,
+  getClearAuthCookieHeader,
+} from '@openthrottle/react-router-auth';
+import { executeGraphql } from '@openthrottle/react-router-graphql';
+import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { Toaster } from '@openthrottle/react-router-shadcn';
+import {
+  GlobalErrorBoundary,
+  GlobalLayout,
+  GlobalLayoutHeader,
+  GlobalMetrics,
+  GlobalProviders,
+} from '@openthrottle/react-router-ui-global';
 // import { Analytics } from '@vercel/analytics/react';
 import {
   APP_URL,
@@ -9,6 +22,8 @@ import {
   OPENTHROTTLE_META_DESCRIPTION,
   useNonce,
 } from '@openthrottle/react-router-utils';
+import * as React from 'react';
+import type { ShouldRevalidateFunction } from 'react-router';
 import {
   Links,
   Meta,
@@ -19,21 +34,8 @@ import {
   useLocation,
   useRouteLoaderData,
 } from 'react-router';
-import { executeGraphql } from '@openthrottle/react-router-graphql';
-import {
-  buildAuthCookie,
-  getAuthTokenFromCookie,
-  getClearAuthCookieHeader,
-} from '@openthrottle/react-router-auth';
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { Toaster } from '@openthrottle/react-router-shadcn';
-import {
-  GlobalErrorBoundary,
-  GlobalLayout,
-  GlobalLayoutHeader,
-  GlobalMetrics,
-  GlobalProviders,
-} from '@openthrottle/react-router-ui-global';
+
+import type { Route } from '@/app/+types/root';
 import type { ServerHealthObject, UserObject } from '~/__generated__/graphql';
 import {
   GetMeDocument,
@@ -42,10 +44,9 @@ import {
   SignoutDocument,
 } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/+types/root';
-import stylesheet from '~/styles.css?url';
 import { dataNavigation } from '~/global/data/data.navigation';
 import { useHeaderChatController } from '~/routing/chat/hooks/useHeaderChatController';
+import stylesheet from '~/styles.css?url';
 
 export const links: Route.LinksFunction = () => {
   return [{ href: stylesheet, rel: 'stylesheet' }];

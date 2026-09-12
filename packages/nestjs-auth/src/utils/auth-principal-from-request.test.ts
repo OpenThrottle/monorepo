@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import {
   AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
   AUTH_PRINCIPAL_KIND_USER,

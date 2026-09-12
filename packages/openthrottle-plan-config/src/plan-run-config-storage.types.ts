@@ -4,6 +4,7 @@
  */
 
 import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
+
 import type { PLAN_RUN_CONFIG_VERSION } from './plan-run-config-storage.constants.ts';
 
 export type PlanRunConfigTargetMode = 'plan' | 'task';

@@ -1,11 +1,12 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
-import { ChatConversationRow } from '../ChatConversationRow';
-import type { ChatConversationRowProps } from '../ChatConversationRow';
+
 import type { AgentConversationListItem } from '../../types';
+import type { ChatConversationRowProps } from '../ChatConversationRow';
+import { ChatConversationRow } from '../ChatConversationRow';
 
 const CONVERSATION: AgentConversationListItem = {
   id: 'conv-1',

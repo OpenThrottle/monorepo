@@ -1,11 +1,12 @@
 import { createMock } from '@golevelup/ts-vitest';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { Test } from '@nestjs/testing';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { Test } from '@nestjs/testing';
+import { getRepositoryToken } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import type { ProjectSkillInput } from '@openthrottle/openthrottle-skills';
 import { asMock } from '@openthrottle/nestjs-testing';
+import type { ProjectSkillInput } from '@openthrottle/openthrottle-skills';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { SkillTagsService } from '../skill-tags/skill-tags.service';
 import type { TagCaller } from '../tags/tag-provenance';
 import { ProjectSkill } from './project-skill.entity';

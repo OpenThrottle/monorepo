@@ -1,9 +1,11 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
+
 import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
+
 import { ScheduleIntroduction } from '../ScheduleIntroduction';
 
 describe('ScheduleIntroduction Component', () => {

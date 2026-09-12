@@ -1,13 +1,15 @@
-import * as React from 'react';
+import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import NoteDetail from '../notes.$noteId';
+
+import type { Route } from '@/app/routes/+types/notes.$noteId';
 import { buildRootMatch } from '~/testing/root-match-fixture';
 import { createTestRoutesStub } from '~/testing/route-fixtures';
-import { render } from '@testing-library/react';
-import { TooltipProvider } from '@openthrottle/react-router-shadcn';
-import type { Route } from '@/app/routes/+types/notes.$noteId';
+
+import NoteDetail from '../notes.$noteId';
 
 const note = {
   __typename: 'NoteObject' as const,

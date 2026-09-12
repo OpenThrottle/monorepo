@@ -1,6 +1,7 @@
 import { Body, Controller, HttpCode, Post } from '@nestjs/common';
 import { Public } from '@openthrottle/nestjs-auth';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+
 import { parseCspReportPayload } from './csp-reports.parser';
 
 /**

@@ -1,45 +1,46 @@
 import { createMock } from '@golevelup/ts-vitest';
+import { getQueueToken } from '@nestjs/bullmq';
+import { BadRequestException } from '@nestjs/common';
+import { Test } from '@nestjs/testing';
+import { AUTH_PRINCIPAL_KIND_USER } from '@openthrottle/nestjs-auth';
+import { PERMISSIONS, PERMISSIONS_KEY } from '@openthrottle/nestjs-rbac';
+import type { Plan } from '@openthrottle/nestjs-repositories';
 import {
   AgentCliPreferencesService,
   getDefaultPlanRunConfigStorage,
-  PlansService,
   PlanRunsService,
+  PlansService,
   ProjectsService,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
-import type { Plan } from '@openthrottle/nestjs-repositories';
 import { Task } from '@openthrottle/nestjs-repositories';
-import { BadRequestException } from '@nestjs/common';
-import { getQueueToken } from '@nestjs/bullmq';
-import { Test } from '@nestjs/testing';
-import { describe, expect, beforeAll, test, vi, beforeEach } from 'vitest';
 import type { Queue } from 'bullmq';
 import type { SelectQueryBuilder } from 'typeorm';
-import { AUTH_PRINCIPAL_KIND_USER } from '@openthrottle/nestjs-auth';
+import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
 import { NotificationsService } from '../../notifications/notifications.service';
-import { PLANS_QUEUE_NAME } from '../../queues/plans/plans.constants';
+import { PLAN_RULES_TRIGGER_KINDS } from '../../queues/plan-rules/plan-rules.types';
+import { PlanRulesEvaluationService } from '../../queues/plan-rules/plan-rules-evaluation.service';
 import { PlanCancelChannelService } from '../../queues/plans/plan-cancel-channel.service';
 import { PlanRunCancellationService } from '../../queues/plans/plan-run-cancellation.service';
+import { PLANS_QUEUE_NAME } from '../../queues/plans/plans.constants';
 import type { RunPlanJobData } from '../../queues/plans/plans.types';
+import { TaggingEnqueueService } from '../../queues/tagging/tagging-enqueue.service';
 import { EffectiveUserResolutionService } from '../../services/effective-user-resolution/effective-user-resolution.service';
 import { PlanCreationService } from '../../services/plan-creation/plan-creation.service';
 import { PlanRunWorktreeCheckoutService } from '../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.service';
-import { PlanEnqueueService } from './plan-enqueue.service';
-import { PlanStatusService } from './plan-status.service';
+import { WorkLedgerCaptureService } from '../work-ledger/work-ledger-capture.service';
 import type {
   CreatePlanInput,
   ListPlansByStatusInput,
   UpdatePlanInput,
 } from './plan.input';
 import { PlanRalphWorkflowModeGraphQL } from './plan.input';
-import { PlansLoaders } from './plans-loaders';
-import { PlanRulesEvaluationService } from '../../queues/plan-rules/plan-rules-evaluation.service';
-import { PLAN_RULES_TRIGGER_KINDS } from '../../queues/plan-rules/plan-rules.types';
-import { TaggingEnqueueService } from '../../queues/tagging/tagging-enqueue.service';
-import { PERMISSIONS, PERMISSIONS_KEY } from '@openthrottle/nestjs-rbac';
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
+import { PlanEnqueueService } from './plan-enqueue.service';
+import { PlanStatusService } from './plan-status.service';
 import { PlansResolver } from './plans.resolver';
-import { WorkLedgerCaptureService } from '../work-ledger/work-ledger-capture.service';
+import { PlansLoaders } from './plans-loaders';
 
 vi.mock('@openthrottle/node-client', () => ({
   getPostgresConfig: vi.fn(),

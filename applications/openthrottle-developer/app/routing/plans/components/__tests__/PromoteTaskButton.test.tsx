@@ -1,9 +1,11 @@
-import * as React from 'react';
 import { screen, waitFor, within } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import { PromoteTaskButton } from '../PromoteTaskButton';
+
 import { renderRouteHarness } from '~/testing/route-fixtures';
+
+import { PromoteTaskButton } from '../PromoteTaskButton';
 
 const renderButton = (
   isPromoted: boolean,

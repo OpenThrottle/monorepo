@@ -1,9 +1,10 @@
-import * as React from 'react';
 import {
   GlobalFeatureOnboardingTrigger,
   GlobalHeading,
 } from '@openthrottle/react-router-ui-global';
 import { KeyRoundIcon } from 'lucide-react';
+import * as React from 'react';
+
 import { SETTINGS_KEYS_COPY } from '~/routing/settings/data/data.copy';
 
 export interface SettingsKeysIntroductionProps {

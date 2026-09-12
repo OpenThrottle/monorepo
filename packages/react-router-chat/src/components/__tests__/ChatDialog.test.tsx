@@ -1,16 +1,17 @@
-import { act, render } from '@testing-library/react';
+import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import type { RenderResult } from '@testing-library/react';
+import { act, render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { TooltipProvider } from '@openthrottle/react-router-shadcn';
-import { ChatProvider } from '../../context/chat-context';
+
 import type { ChatComposerControls } from '../../context/chat-context';
-import { ChatDialog } from '../ChatDialog';
-import type { ChatDialogProps } from '../ChatDialog';
-import { ChatComposerMode } from '../../types';
+import { ChatProvider } from '../../context/chat-context';
 import type { ChatMessage } from '../../types';
+import { ChatComposerMode } from '../../types';
+import type { ChatDialogProps } from '../ChatDialog';
+import { ChatDialog } from '../ChatDialog';
 
 describe('ChatDialog Component', () => {
   let component: RenderResult | undefined;

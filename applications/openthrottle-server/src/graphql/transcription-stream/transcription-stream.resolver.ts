@@ -23,9 +23,10 @@ import {
 import { Public } from '@openthrottle/nestjs-auth';
 import {
   PUB_SUB,
-  transcriptionStreamTopic,
   type PubSubEngine,
+  transcriptionStreamTopic,
 } from '@openthrottle/nestjs-graphql';
+
 import {
   StartTranscriptionStreamResult,
   TranscriptionStreamChunkObject,

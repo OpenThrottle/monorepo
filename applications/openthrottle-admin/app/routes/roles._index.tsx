@@ -1,5 +1,8 @@
-import * as React from 'react';
-import { redirect } from 'react-router';
+import {
+  executeGraphqlWithAuth,
+  isAuthError,
+  parseFormData,
+} from '@openthrottle/react-router-graphql';
 import {
   Button,
   Input,
@@ -10,24 +13,22 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@openthrottle/react-router-shadcn';
-import { useFetcher } from 'react-router';
-import {
-  executeGraphqlWithAuth,
-  isAuthError,
-  parseFormData,
-} from '@openthrottle/react-router-graphql';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalHeading,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import { ShieldCheckIcon } from 'lucide-react';
+import * as React from 'react';
+import { redirect } from 'react-router';
+import { useFetcher } from 'react-router';
+
+import type { Route } from '@/app/routes/+types/roles._index';
 import { CreateRoleDocument, GetRolesDocument } from '~/__generated__/graphql';
 import { CreateRoleInputSchema } from '~/__generated__/schemas';
-import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { RolesTable } from '~/routing/roles/components/RolesTable';
-import { ShieldCheckIcon } from 'lucide-react';
 import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/roles._index';
+import { RolesTable } from '~/routing/roles/components/RolesTable';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

@@ -1,8 +1,9 @@
+import { createMock } from '@golevelup/ts-vitest';
 import type { KeyedJsonlWriter } from '@openthrottle/nestjs-logging';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import { createMock } from '@golevelup/ts-vitest';
 import type { ChildJobStreamChunk } from '@tools/workflows';
 import { beforeEach, describe, expect, it } from 'vitest';
+
 import {
   appendChildJobChunkToRunOutput,
   classifyRunOutputSource,

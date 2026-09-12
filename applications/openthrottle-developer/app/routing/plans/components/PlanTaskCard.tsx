@@ -1,18 +1,19 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import {
   Badge,
   Card,
   CardContent,
   CardFooter,
 } from '@openthrottle/react-router-shadcn';
+import clsx from 'clsx';
+import * as React from 'react';
 import { Link } from 'react-router';
+
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
 import { PlanManagedTaskBadge } from '~/routing/plans/components/PlanManagedTaskBadge';
-import { isPlanStatusKey } from '~/routing/plans/utils/utils.plans';
 import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
 import { PlanTaskInlineActions } from '~/routing/plans/components/PlanTaskInlineActions';
 import { formatPlanTaskStatus } from '~/routing/plans/utils/format-status';
+import { isPlanStatusKey } from '~/routing/plans/utils/utils.plans';
 
 const TASK_CARD_CONTEXT_TRUNCATE = 120;
 

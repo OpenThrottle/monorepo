@@ -1,8 +1,10 @@
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
-import { ANY } from '~/routing/rules/data/rule-form-options';
-import { useRuleForm } from '../useRuleForm';
+
 import type { TagActionRuleRowData } from '~/routing/rules/components/RulesTable';
+import { ANY } from '~/routing/rules/data/rule-form-options';
+
+import { useRuleForm } from '../useRuleForm';
 
 const buildInitialRule = (
   overrides: Partial<TagActionRuleRowData> = {},

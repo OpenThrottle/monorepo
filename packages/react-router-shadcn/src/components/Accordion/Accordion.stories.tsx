@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Accordion } from './index';
+
 import { AccordionContent } from './AccordionContent';
 import { AccordionItem } from './AccordionItem';
 import { AccordionTrigger } from './AccordionTrigger';
+import { Accordion } from './index';
 
 /**
  * `Accordion` is Radix's `Accordion.Root` re-exported directly, and its props

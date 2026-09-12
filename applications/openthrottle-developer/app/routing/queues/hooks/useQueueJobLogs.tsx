@@ -5,15 +5,16 @@
  * loader-seed + subscription-delta pattern of usePlanOutputStream. SSR-safe:
  * with no browser ws client it simply shows the backfilled history.
  */
+import { useSubscription } from '@openthrottle/react-router-graphql';
 import * as React from 'react';
 import { useFetcher } from 'react-router';
-import { useSubscription } from '@openthrottle/react-router-graphql';
-import { QueueJobLogTailDocument } from '~/__generated__/graphql';
+
 import type {
   QueueJobLogEventFragment,
-  QueueJobLogTailSubscription,
   QueueJobLogsQuery,
+  QueueJobLogTailSubscription,
 } from '~/__generated__/graphql';
+import { QueueJobLogTailDocument } from '~/__generated__/graphql';
 import { getGraphqlWsClient } from '~/services/graphql-ws-client';
 
 export type QueueJobLogEvent = QueueJobLogEventFragment;

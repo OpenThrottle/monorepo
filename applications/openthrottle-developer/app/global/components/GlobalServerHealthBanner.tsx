@@ -1,7 +1,8 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import { Button } from '@openthrottle/react-router-shadcn';
+import clsx from 'clsx';
 import { X } from 'lucide-react';
+import * as React from 'react';
+
 import type { ServerHealthObject } from '~/__generated__/graphql';
 
 export interface GlobalServerHealthBannerProps {

@@ -1,8 +1,10 @@
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import { ScheduleRunsTable } from '../ScheduleRunsTable';
-import { renderRoutesStub } from '~/testing/route-fixtures';
+
 import type { ScheduledJobRunRowFragment } from '~/__generated__/graphql';
+import { renderRoutesStub } from '~/testing/route-fixtures';
+
+import { ScheduleRunsTable } from '../ScheduleRunsTable';
 
 const run = (
   overrides: Partial<ScheduledJobRunRowFragment> = {},

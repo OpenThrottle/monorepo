@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { describe, expect, test } from 'vitest';
+
 import { messageOrFallback, toErrorMessage } from '../utils.error-message';
 
 describe('messageOrFallback', () => {

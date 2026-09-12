@@ -1,8 +1,10 @@
 import { describe, expect, test } from 'vitest';
-import { partitionSkillUsageByPresence } from '../partition-skill-usage-by-presence';
+
+import type { UsageSkillUsageBySkillFragment } from '~/__generated__/graphql';
 import { SKILL_PRESENCE } from '~/routing/usage/data/skill-presence';
 import { SKILL_USAGE_SCOPES } from '~/routing/usage/data/skill-usage-copy';
-import type { UsageSkillUsageBySkillFragment } from '~/__generated__/graphql';
+
+import { partitionSkillUsageByPresence } from '../partition-skill-usage-by-presence';
 
 const row = (
   skillName: string,

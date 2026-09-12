@@ -1,8 +1,9 @@
-import * as React from 'react';
 import { Badge } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
 import { Link } from 'react-router';
+
+import { type PlanStatusKey, planStatusValues } from '~/routing/plans/types';
 import { getPlanStatusBadgeColor } from '~/routing/plans/utils/utils.plans';
-import { planStatusValues, type PlanStatusKey } from '~/routing/plans/types';
 
 export interface PlanStatusBadgeProps {
   className?: string;

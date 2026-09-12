@@ -1,6 +1,7 @@
-import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
+import { Test } from '@nestjs/testing';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import { AgentsMcpRouterLlmService } from './agents-mcp-router-llm.service';
 
 describe('AgentsMcpRouterLlmService', () => {

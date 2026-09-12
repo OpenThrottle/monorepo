@@ -1,8 +1,10 @@
-import * as React from 'react';
 import { screen } from '@testing-library/react';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import PullRequestsIndex from '../pull-requests._index';
+
 import { renderRoutesStub } from '~/testing/route-fixtures';
+
+import PullRequestsIndex from '../pull-requests._index';
 
 const mockLoaderData = {
   filters: {

@@ -3,6 +3,7 @@
  */
 
 import * as React from 'react';
+
 import { getMetricsApiBaseUrl } from '../config/metrics-api';
 import { fetchJobTaskRunMetrics } from '../data/fetch-job-task-run-metrics';
 import type { JobWithTaskRunMetrics } from '../data/metrics-types';

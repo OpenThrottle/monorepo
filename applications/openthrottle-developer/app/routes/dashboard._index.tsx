@@ -1,8 +1,12 @@
-import * as React from 'react';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import { GlobalScreen } from '@openthrottle/react-router-ui-global';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import * as React from 'react';
+import type { ShouldRevalidateFunction } from 'react-router';
+
+import type { Route } from '@/app/routes/+types/dashboard._index';
 import type { GetDashboardQueryVariables } from '~/__generated__/graphql';
 import {
   GetDashboardDocument,
@@ -10,16 +14,13 @@ import {
   GetDashboardOnboardingDocument,
   TriggerNotificationDocument,
 } from '~/__generated__/graphql';
+import { SITE_TITLE } from '~/global/config/settings';
 import { callListAgentConversations } from '~/global/utils/utils.agents-chat';
-import { CONTRIBUTIONS_DAYS_BACK } from '~/routing/dashboard/config/config.dashboard';
 import { DashboardContentGrid } from '~/routing/dashboard/components/DashboardContentGrid';
 import { DashboardGetStartedSection } from '~/routing/dashboard/components/DashboardGetStartedSection';
 import { DashboardIntroduction } from '~/routing/dashboard/components/DashboardIntroduction';
-import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import { CONTRIBUTIONS_DAYS_BACK } from '~/routing/dashboard/config/config.dashboard';
 import { parseDashboardGithubParams } from '~/routing/dashboard/utils/parsers';
-import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/dashboard._index';
-import type { ShouldRevalidateFunction } from 'react-router';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
