@@ -18,8 +18,8 @@ import {
   SKILL_USAGE_OUTCOMES,
   toRecordSkillUsageInput,
   toRecordSkillUsageOutcomeInput,
-} from '../../index';
-import type { OutcomeEvent, UsageEvent } from '../../types';
+} from '../../index.ts';
+import type { OutcomeEvent, UsageEvent } from '../../types.ts';
 
 describe('buildUsageEvent + appendJsonl', () => {
   let tmpRoot: string;

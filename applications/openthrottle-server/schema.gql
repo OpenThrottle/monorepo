@@ -88,14 +88,6 @@ type PrCountByLabelObject {
   label: String!
 }
 
-type PrsMergedPerPeriodObject {
-  """Number of PRs merged in this period."""
-  count: Int!
-
-  """Period bucket in UTC (e.g. YYYY-MM or YYYY-Www)."""
-  period: String!
-}
-
 type PrTimeInStateSummaryObject {
   """Average number of days PRs spent in this state."""
   avgDaysInState: Float
@@ -105,6 +97,32 @@ type PrTimeInStateSummaryObject {
 
   """PR state (e.g. open, closed, merged)."""
   state: String!
+}
+
+type PrsMergedPerPeriodObject {
+  """Number of PRs merged in this period."""
+  count: Int!
+
+  """Period bucket in UTC (e.g. YYYY-MM or YYYY-Www)."""
+  period: String!
+}
+
+type PullListItemObject {
+  author: String!
+  baseRef: String
+  createdAt: String!
+  headRef: String
+
+  """
+  Head commit SHA when GitHub returns head.sha (for commit/checks drill-down).
+  """
+  headSha: String
+  htmlUrl: String!
+  mergedAt: String
+  number: Int!
+  state: String!
+  title: String!
+  updatedAt: String!
 }
 
 type ReviewCycleTimeObject {
@@ -127,24 +145,6 @@ type ReviewCycleTimeObject {
   Number of merged PRs in this bucket that had at least one CHANGES_REQUESTED and then an APPROVED or merge.
   """
   prCount: Int!
-}
-
-type PullListItemObject {
-  author: String!
-  baseRef: String
-  createdAt: String!
-  headRef: String
-
-  """
-  Head commit SHA when GitHub returns head.sha (for commit/checks drill-down).
-  """
-  headSha: String
-  htmlUrl: String!
-  mergedAt: String
-  number: Int!
-  state: String!
-  title: String!
-  updatedAt: String!
 }
 
 type ProjectObject {
@@ -616,23 +616,6 @@ type LastActivityResultObject {
   taskUpdate: LastActivityTaskUpdatePartObject
 }
 
-type EnqueueAgenticWorkflowMockResultObject {
-  """Whether the job was enqueued."""
-  success: Boolean!
-
-  """BullMQ job id when success is true."""
-  jobId: String
-
-  """BullMQ job name when success is true."""
-  jobName: String
-
-  """BullMQ queue name when success is true."""
-  queueName: String
-
-  """Error message when success is false."""
-  error: String
-}
-
 type AgentConversationObject {
   createdAt: DateTime!
   id: String!
@@ -881,6 +864,23 @@ type StartAgentSetupResult {
   runId: String
 }
 
+type EnqueueAgenticWorkflowMockResultObject {
+  """Whether the job was enqueued."""
+  success: Boolean!
+
+  """BullMQ job id when success is true."""
+  jobId: String
+
+  """BullMQ job name when success is true."""
+  jobName: String
+
+  """BullMQ queue name when success is true."""
+  queueName: String
+
+  """Error message when success is false."""
+  error: String
+}
+
 type AgentsChatTurnResult {
   """
   Assistant-visible reply text. Null when the turn failed (see errorMessage).
@@ -1051,73 +1051,6 @@ type StartConversationStreamResult {
   userMessageId: String
 }
 
-"""A custom prompt document for AI workflow customization"""
-type CustomPromptObject {
-  id: String!
-  createdAt: DateTime!
-  updatedAt: DateTime!
-  title: String!
-  content: String!
-  description: String
-  promptType: CustomPromptType!
-  labels: [String!]!
-  filePath: String
-  userId: String
-  projectId: String
-  deletedAt: DateTime
-}
-
-"""Type of custom prompt document"""
-enum CustomPromptType {
-  AGENTS
-  COMMANDS
-  PERSONAS
-  PROMPTS
-  RULES
-  SKILLS
-}
-
-"""
-A ranked agent-asset match from semantic search over custom_prompt embeddings.
-"""
-type AgentAssetChunk {
-  """Embedding chunk UUID (custom_prompt_embeddings id)."""
-  id: String!
-
-  """Parent custom_prompt UUID."""
-  customPromptId: String!
-
-  """Asset title."""
-  title: String!
-
-  """Prompt type (skills, rules, personas, …)."""
-  promptType: CustomPromptType!
-
-  """Repo-relative file path on disk (SSOT), if known."""
-  filePath: String
-
-  """Owning project id, if scoped."""
-  projectId: String
-
-  """Asset description / summary."""
-  description: String
-
-  """Asset labels."""
-  labels: [String!]!
-
-  """Matched embedding chunk content."""
-  content: String!
-
-  """Cosine similarity (0–1, higher is more relevant)."""
-  similarity: Float!
-}
-
-"""Result wrapper for agent-asset semantic search."""
-type AgentAssetSearchResult {
-  """Ranked agent-asset matches by similarity."""
-  chunks: [AgentAssetChunk!]!
-}
-
 type DailyStatsObject {
   """Row created_at."""
   createdAt: DateTime!
@@ -1269,32 +1202,6 @@ type ServerMetricsObject {
   cpuSystemMs: Float!
 }
 
-type McpConnectorConnectionObject {
-  """Auth mechanism recorded at connect time: api_token or oauth."""
-  authType: String!
-  connectedAt: DateTime!
-
-  """Catalog key this connection is for."""
-  connectorKey: ID!
-  createdAt: DateTime!
-  credentialLabel: String
-
-  """
-  Masked credential hint for display (api_token only); never the raw secret.
-  """
-  credentialPrefix: String
-  enabled: Boolean!
-  id: ID!
-  lastUsedAt: DateTime
-  updatedAt: DateTime!
-  userId: ID!
-}
-
-type McpConnectorConnectionResultObject {
-  """The connection after the mutation (credential hash is never returned)."""
-  connection: McpConnectorConnectionObject!
-}
-
 type McpConnectorObject {
   """Auth mechanism: api_token or oauth."""
   authType: String!
@@ -1321,6 +1228,32 @@ type McpConnectorObject {
 
   """Transport: local-stdio, remote-http, or remote-sse."""
   transport: String!
+}
+
+type McpConnectorConnectionObject {
+  """Auth mechanism recorded at connect time: api_token or oauth."""
+  authType: String!
+  connectedAt: DateTime!
+
+  """Catalog key this connection is for."""
+  connectorKey: ID!
+  createdAt: DateTime!
+  credentialLabel: String
+
+  """
+  Masked credential hint for display (api_token only); never the raw secret.
+  """
+  credentialPrefix: String
+  enabled: Boolean!
+  id: ID!
+  lastUsedAt: DateTime
+  updatedAt: DateTime!
+  userId: ID!
+}
+
+type McpConnectorConnectionResultObject {
+  """The connection after the mutation (credential hash is never returned)."""
+  connection: McpConnectorConnectionObject!
 }
 
 type CleanQueueResultObject {
@@ -1625,6 +1558,17 @@ type JobObject {
   timestamp: Float
 }
 
+type QueueControlResultObject {
+  """Whether the control action was accepted."""
+  success: Boolean!
+
+  """Queue name when success is true."""
+  queueName: String
+
+  """Error message when success is false."""
+  error: String
+}
+
 type QueueStatsObject {
   """Queue name (e.g. plans)."""
   name: String!
@@ -1679,17 +1623,6 @@ type QueueDetailsObject {
 
   """Paginated jobs for this queue (optional; omit for stats-only)."""
   jobs: JobsResultObject
-}
-
-type QueueControlResultObject {
-  """Whether the control action was accepted."""
-  success: Boolean!
-
-  """Queue name when success is true."""
-  queueName: String
-
-  """Error message when success is false."""
-  error: String
 }
 
 type RemoveRepeatableJobResultObject {
@@ -2068,37 +2001,6 @@ type WorkArtifactListResult {
   totalCount: Int!
 }
 
-type QueueJobLogEventObject {
-  """Opaque cursor positioned AFTER this event; pass as `after` to resume."""
-  cursor: String!
-  jobId: String!
-  level: QueueJobLogLevel!
-  message: String!
-  queueName: String!
-
-  """Origin layer, e.g. plans-queue | workflow-queue | ralph-shim."""
-  source: String!
-  timestamp: DateTime!
-}
-
-"""
-Severity bucket for a keyed run-output log event (derived; see field semantics).
-"""
-enum QueueJobLogLevel {
-  debug
-  info
-  warn
-  error
-}
-
-type QueueJobLogPageObject {
-  events: [QueueJobLogEventObject!]!
-  hasMore: Boolean!
-
-  """Opaque cursor for the next page; null when caught up to end-of-file."""
-  nextCursor: String
-}
-
 """
 A single skill in a project's ingested skill universe, with its static frontmatter tags and tri-state disable-model-invocation flag.
 """
@@ -2221,6 +2123,233 @@ type TaskTagObject {
   confidence: Float
   createdAt: DateTime!
   updatedAt: DateTime!
+}
+
+"""A custom prompt document for AI workflow customization"""
+type CustomPromptObject {
+  id: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  title: String!
+  content: String!
+  description: String
+  promptType: CustomPromptType!
+  labels: [String!]!
+  filePath: String
+  userId: String
+  projectId: String
+  deletedAt: DateTime
+}
+
+"""Type of custom prompt document"""
+enum CustomPromptType {
+  AGENTS
+  COMMANDS
+  PERSONAS
+  PROMPTS
+  RULES
+  SKILLS
+}
+
+"""
+A ranked agent-asset match from semantic search over custom_prompt embeddings.
+"""
+type AgentAssetChunk {
+  """Embedding chunk UUID (custom_prompt_embeddings id)."""
+  id: String!
+
+  """Parent custom_prompt UUID."""
+  customPromptId: String!
+
+  """Asset title."""
+  title: String!
+
+  """Prompt type (skills, rules, personas, …)."""
+  promptType: CustomPromptType!
+
+  """Repo-relative file path on disk (SSOT), if known."""
+  filePath: String
+
+  """Owning project id, if scoped."""
+  projectId: String
+
+  """Asset description / summary."""
+  description: String
+
+  """Asset labels."""
+  labels: [String!]!
+
+  """Matched embedding chunk content."""
+  content: String!
+
+  """Cosine similarity (0–1, higher is more relevant)."""
+  similarity: Float!
+}
+
+"""Result wrapper for agent-asset semantic search."""
+type AgentAssetSearchResult {
+  """Ranked agent-asset matches by similarity."""
+  chunks: [AgentAssetChunk!]!
+}
+
+type QueueJobLogEventObject {
+  """Opaque cursor positioned AFTER this event; pass as `after` to resume."""
+  cursor: String!
+  jobId: String!
+  level: QueueJobLogLevel!
+  message: String!
+  queueName: String!
+
+  """Origin layer, e.g. plans-queue | workflow-queue | ralph-shim."""
+  source: String!
+  timestamp: DateTime!
+}
+
+"""
+Severity bucket for a keyed run-output log event (derived; see field semantics).
+"""
+enum QueueJobLogLevel {
+  debug
+  info
+  warn
+  error
+}
+
+type QueueJobLogPageObject {
+  events: [QueueJobLogEventObject!]!
+  hasMore: Boolean!
+
+  """Opaque cursor for the next page; null when caught up to end-of-file."""
+  nextCursor: String
+}
+
+type PermissionObject {
+  createdAt: DateTime!
+  description: String
+  id: String!
+
+  """Permission identifier (e.g. users:read, settings:write)"""
+  name: String!
+}
+
+type RoleObject {
+  createdAt: DateTime!
+  description: String
+  id: String!
+
+  """Role identifier (e.g. admin, user, viewer)"""
+  name: String!
+
+  """Permissions assigned to this role"""
+  permissions: [PermissionObject!]!
+  updatedAt: DateTime!
+}
+
+"""
+Evaluated rollout flag for the current actor (kind + valueJson discriminator).
+"""
+type FeatureFlagObject {
+  """
+  Boolean flags: resolved variation value. Other kinds: true when reason is fallthrough.
+  """
+  enabled: Boolean!
+
+  """Flag key."""
+  key: String!
+
+  """Flag value kind of the resolved variation."""
+  kind: RolloutFlagKind!
+
+  """Why this variation was chosen."""
+  reason: RolloutEvaluationReason!
+
+  """JSON-serialized resolved variation value (matches kind)."""
+  valueJson: String!
+
+  """Index into the flag's variations array for the resolved value."""
+  variationIndex: Int!
+}
+
+"""
+Typed rollout flag kind: boolean | string | number | json. Variation values must match.
+"""
+enum RolloutFlagKind {
+  boolean
+  json
+  number
+  string
+}
+
+"""
+Why a rollout variation was chosen: off | target_roles | fallthrough | flag_not_found.
+"""
+enum RolloutEvaluationReason {
+  fallthrough
+  flag_not_found
+  off
+  target_roles
+}
+
+"""
+One weighted bucket in a fallthrough allocation (integer percent 0–100).
+"""
+type RolloutFallthroughBucketObject {
+  """Index into the flag's variations array."""
+  variation: Int!
+
+  """Integer percent weight 0–100. All weights on a flag must sum to 100."""
+  weight: Int!
+}
+
+"""
+Percentage allocation among variations when the flag is on and targeting passes.
+"""
+type RolloutFallthroughObject {
+  """Ordered weighted buckets. Weights must sum to 100."""
+  variations: [RolloutFallthroughBucketObject!]!
+}
+
+"""One variation on a typed rollout flag. valueJson is JSON-serialized."""
+type RolloutFlagVariationObject {
+  """Optional human description of this variation."""
+  description: String
+
+  """Optional display name for this variation."""
+  name: String
+
+  """JSON-serialized variation value (must match the flag kind)."""
+  valueJson: String!
+}
+
+"""
+Admin view of a typed rollout feature flag (kind, variations, allocations).
+"""
+type RolloutFlagObject {
+  createdAt: DateTime!
+  description: String
+
+  """Master switch. When false the flag is off for everyone."""
+  enabled: Boolean!
+
+  """Fallthrough percentage allocation when enabled and targeting passes."""
+  fallthrough: RolloutFallthroughObject!
+  id: ID!
+
+  """Unique flag key (e.g. new-dashboard or billing.invoices)"""
+  key: String!
+
+  """Flag value kind: boolean | string | number | json."""
+  kind: RolloutFlagKind!
+
+  """Index into variations returned when disabled or role gate fails."""
+  offVariation: Int!
+
+  """RBAC role names the flag targets. Empty => enabled for everyone."""
+  targetRoles: [String!]!
+  updatedAt: DateTime!
+
+  """Ordered variations. valueJson is JSON-serialized and must match kind."""
+  variations: [RolloutFlagVariationObject!]!
 }
 
 """
@@ -2429,67 +2558,6 @@ type ScheduledAgentJobRunStatsObject {
   windowTotalCount: Int!
 }
 
-type ServiceAccountCredentialObject {
-  createdAt: DateTime!
-  expiresAt: DateTime
-  id: ID!
-  label: String
-  lastUsedAt: DateTime
-
-  """Lookup prefix embedded in ot_sa_<prefix>_<secret> tokens."""
-  prefix: String!
-  revokedAt: DateTime
-  serviceAccountId: ID!
-}
-
-type CreateServiceAccountCredentialResultObject {
-  """Saved credential metadata (secret hash is never returned)."""
-  credential: ServiceAccountCredentialObject!
-
-  """
-  Plaintext ot_sa_<prefix>_<secret> token; store securely — not retrievable again.
-  """
-  token: String!
-}
-
-type ServiceAccountObject {
-  """
-  The human user this machine identity acts as for user-scoped conveniences (e.g. plan workspace seeding). A hint, never a permission grant.
-  """
-  actingUserId: String
-  createdAt: DateTime!
-  description: String
-
-  """When set, the service account cannot authenticate."""
-  disabledAt: DateTime
-  id: String!
-
-  """Stable identifier (e.g. openthrottle-mcp, workflow-ralph)."""
-  name: String!
-}
-
-type PermissionObject {
-  createdAt: DateTime!
-  description: String
-  id: String!
-
-  """Permission identifier (e.g. users:read, settings:write)"""
-  name: String!
-}
-
-type RoleObject {
-  createdAt: DateTime!
-  description: String
-  id: String!
-
-  """Role identifier (e.g. admin, user, viewer)"""
-  name: String!
-
-  """Permissions assigned to this role"""
-  permissions: [PermissionObject!]!
-  updatedAt: DateTime!
-}
-
 type SearchChunk {
   """Chunk content (plan or task text)."""
   content: String!
@@ -2556,6 +2624,45 @@ type ListSourcesResultObject {
 
   """All plans (id, title) for discovery."""
   plans: [ListPlanSourceObject!]!
+}
+
+type ServiceAccountCredentialObject {
+  createdAt: DateTime!
+  expiresAt: DateTime
+  id: ID!
+  label: String
+  lastUsedAt: DateTime
+
+  """Lookup prefix embedded in ot_sa_<prefix>_<secret> tokens."""
+  prefix: String!
+  revokedAt: DateTime
+  serviceAccountId: ID!
+}
+
+type CreateServiceAccountCredentialResultObject {
+  """Saved credential metadata (secret hash is never returned)."""
+  credential: ServiceAccountCredentialObject!
+
+  """
+  Plaintext ot_sa_<prefix>_<secret> token; store securely — not retrievable again.
+  """
+  token: String!
+}
+
+type ServiceAccountObject {
+  """
+  The human user this machine identity acts as for user-scoped conveniences (e.g. plan workspace seeding). A hint, never a permission grant.
+  """
+  actingUserId: String
+  createdAt: DateTime!
+  description: String
+
+  """When set, the service account cannot authenticate."""
+  disabledAt: DateTime
+  id: String!
+
+  """Stable identifier (e.g. openthrottle-mcp, workflow-ralph)."""
+  name: String!
 }
 
 """
@@ -3728,113 +3835,6 @@ type RefreshCheckoutPayloadObject {
   Project link that was dropped from the provisional repository when the merge kept the canonical link.
   """
   supersededProjectId: String
-}
-
-"""
-Evaluated rollout flag for the current actor (kind + valueJson discriminator).
-"""
-type FeatureFlagObject {
-  """
-  Boolean flags: resolved variation value. Other kinds: true when reason is fallthrough.
-  """
-  enabled: Boolean!
-
-  """Flag key."""
-  key: String!
-
-  """Flag value kind of the resolved variation."""
-  kind: RolloutFlagKind!
-
-  """Why this variation was chosen."""
-  reason: RolloutEvaluationReason!
-
-  """JSON-serialized resolved variation value (matches kind)."""
-  valueJson: String!
-
-  """Index into the flag's variations array for the resolved value."""
-  variationIndex: Int!
-}
-
-"""
-Typed rollout flag kind: boolean | string | number | json. Variation values must match.
-"""
-enum RolloutFlagKind {
-  boolean
-  json
-  number
-  string
-}
-
-"""
-Why a rollout variation was chosen: off | target_roles | fallthrough | flag_not_found.
-"""
-enum RolloutEvaluationReason {
-  fallthrough
-  flag_not_found
-  off
-  target_roles
-}
-
-"""
-One weighted bucket in a fallthrough allocation (integer percent 0–100).
-"""
-type RolloutFallthroughBucketObject {
-  """Index into the flag's variations array."""
-  variation: Int!
-
-  """Integer percent weight 0–100. All weights on a flag must sum to 100."""
-  weight: Int!
-}
-
-"""
-Percentage allocation among variations when the flag is on and targeting passes.
-"""
-type RolloutFallthroughObject {
-  """Ordered weighted buckets. Weights must sum to 100."""
-  variations: [RolloutFallthroughBucketObject!]!
-}
-
-"""One variation on a typed rollout flag. valueJson is JSON-serialized."""
-type RolloutFlagVariationObject {
-  """Optional human description of this variation."""
-  description: String
-
-  """Optional display name for this variation."""
-  name: String
-
-  """JSON-serialized variation value (must match the flag kind)."""
-  valueJson: String!
-}
-
-"""
-Admin view of a typed rollout feature flag (kind, variations, allocations).
-"""
-type RolloutFlagObject {
-  createdAt: DateTime!
-  description: String
-
-  """Master switch. When false the flag is off for everyone."""
-  enabled: Boolean!
-
-  """Fallthrough percentage allocation when enabled and targeting passes."""
-  fallthrough: RolloutFallthroughObject!
-  id: ID!
-
-  """Unique flag key (e.g. new-dashboard or billing.invoices)"""
-  key: String!
-
-  """Flag value kind: boolean | string | number | json."""
-  kind: RolloutFlagKind!
-
-  """Index into variations returned when disabled or role gate fails."""
-  offVariation: Int!
-
-  """RBAC role names the flag targets. Empty => enabled for everyone."""
-  targetRoles: [String!]!
-  updatedAt: DateTime!
-
-  """Ordered variations. valueJson is JSON-serialized and must match kind."""
-  variations: [RolloutFlagVariationObject!]!
 }
 
 type Query {

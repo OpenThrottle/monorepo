@@ -8,7 +8,7 @@ import path from 'node:path';
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { drainJsonlFile } from '../../index';
+import { drainJsonlFile } from '../../index.ts';
 
 describe('drainJsonlFile', () => {
   let tmpRoot: string;

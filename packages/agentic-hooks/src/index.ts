@@ -9,13 +9,13 @@
  * Every public symbol below is re-exported from its module, which carries the
  * `@public` JSDoc tag so Knip retains it.
  */
-export * from './config/env';
-export * from './data/events';
-export * from './data/jsonl';
-export * from './data/persist';
-export * from './data/plan-runs';
-export * from './data/starts';
-export * from './types';
-export * from './utils/logging';
-export * from './utils/privacy';
-export * from './utils/scope';
+export * from './config/env.ts';
+export * from './data/events.ts';
+export * from './data/jsonl.ts';
+export * from './data/persist.ts';
+export * from './data/plan-runs.ts';
+export * from './data/starts.ts';
+export * from './types.ts';
+export * from './utils/logging.ts';
+export * from './utils/privacy.ts';
+export * from './utils/scope.ts';

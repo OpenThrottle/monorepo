@@ -8,7 +8,7 @@ import path from 'node:path';
 
 import { isRecord } from '@openthrottle/nodejs-utils';
 
-import { detectScope } from '../../index';
+import { detectScope } from '../../index.ts';
 
 const skillName = process.argv[2];
 const repoRoot = process.argv[3] || process.cwd();

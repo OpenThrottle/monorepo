@@ -15,7 +15,7 @@ import {
   recordSkillStart,
   startCorrelationKey,
   startsFilePathForSession,
-} from '../../index';
+} from '../../index.ts';
 
 describe('start-correlation store', () => {
   let startsDir: string;

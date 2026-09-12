@@ -5,7 +5,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import type { Scope } from '../types';
+import type { Scope } from '../types.ts';
 
 /**
  * @public

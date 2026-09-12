@@ -7,7 +7,7 @@ import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { logHookError } from '../utils/logging';
+import { logHookError } from '../utils/logging.ts';
 
 /**
  * Resolve the current git branch for `repoRoot`. Fail-open → '' on any error.

@@ -16,6 +16,9 @@
   ],
   "references": [
     {
+      "path": "../agentic-hooks/tsconfig.lib.json"
+    },
+    {
       "path": "../nestjs-modules/tsconfig.lib.json"
     },
     {

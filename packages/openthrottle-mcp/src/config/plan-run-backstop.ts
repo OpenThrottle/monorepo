@@ -13,57 +13,42 @@
  * is freed in hours rather than half a day.
  *
  * The reader is `@openthrottle/agentic-hooks` (`src/data/plan-runs.ts`, bundled to
- * `.claude/hooks/plan-run-janitor.cjs`). The two are NOT coupled through an import:
- * that package's ESM declarations re-export extensionless relative paths, which do not
- * resolve for a NodeNext consumer, and fixing that is a change to a shipped hook
- * package rather than something to do in passing here. They share a deliberately tiny,
- * stable file contract instead — one JSON object per session, documented on both sides.
- * Keep {@link PlanRunBackstopRecord} in lockstep with `PlanRunRecord` there.
+ * `.claude/hooks/plan-run-janitor.cjs`). The JSON file on disk stays the contract
+ * between them, and always will: the janitor is a separate esbuild-bundled process with
+ * no `node_modules` to resolve, so the file is cross-process IPC that no import can
+ * replace.
+ *
+ * What the import DOES replace is the duplication that used to sit around it. This
+ * module called a hand-copied writer, against a hand-mirrored record interface, keyed by
+ * a hand-copied path constant — three things a human had to keep in lockstep. It now
+ * calls the same {@link recordPlanRunForSession} the janitor reads for, so the shape
+ * cannot drift.
  *
  * Stdio only, and silent whenever it cannot write: the HTTP surface has no caller
  * session and no caller workspace, and a missing backstop costs the backstop, never
  * the run.
  */
 
-import fs from 'fs';
-import path from 'path';
+import {
+  clearPlanRunForSession,
+  recordPlanRunForSession,
+} from '@openthrottle/agentic-hooks';
 
 import { getCapturedWorkspacePath } from './workspace-path.ts';
-
-/** The on-disk shape, mirroring `PlanRunRecord` in @openthrottle/agentic-hooks. */
-interface PlanRunBackstopRecord {
-  readonly planId: string;
-  readonly planRunId: string;
-  readonly recordedAt: string;
-  readonly sessionId: string;
-}
-
-/** Mirrors `PLAN_RUNS_DIR_REL` in the janitor. Gitignored via `.cache`. */
-const PLAN_RUNS_DIR_REL = path.join('.cache', 'plan-runs');
-
-const sanitizeSessionId = (sessionId: string): string =>
-  sessionId.replace(/[^A-Za-z0-9._-]/g, '-');
 
 /**
  * The session and workspace to key the note on, or null when either is unavailable —
  * which is the normal case off the stdio path.
  */
 const resolveBackstopTarget = (): {
-  readonly filePath: string;
+  readonly repoRoot: string;
   readonly sessionId: string;
 } | null => {
   const repoRoot = getCapturedWorkspacePath();
   const sessionId = process.env.CLAUDE_CODE_SESSION_ID?.trim() ?? '';
   if (repoRoot === null || sessionId === '') return null;
 
-  return {
-    filePath: path.join(
-      repoRoot,
-      PLAN_RUNS_DIR_REL,
-      `${sanitizeSessionId(sessionId)}.json`,
-    ),
-    sessionId,
-  };
+  return { repoRoot, sessionId };
 };
 
 /** @description Records the run this session opened. Best-effort; never throws. */
@@ -71,25 +56,17 @@ export const rememberPlanRunForBackstop = (
   planId: string,
   planRunId: string,
 ): void => {
-  try {
-    const target = resolveBackstopTarget();
-    if (target === null) return;
+  const target = resolveBackstopTarget();
+  if (target === null) return;
 
-    const record: PlanRunBackstopRecord = {
-      planId,
-      planRunId,
-      recordedAt: new Date().toISOString(),
-      sessionId: target.sessionId,
-    };
-    fs.mkdirSync(path.dirname(target.filePath), { recursive: true });
-    fs.writeFileSync(
-      target.filePath,
-      `${JSON.stringify(record, null, 2)}\n`,
-      'utf8',
-    );
-  } catch {
-    // A missing backstop is a degraded backstop, not a failed run.
-  }
+  // Fail-open inside: a write failure is logged to stderr and reported by the return
+  // value, never thrown. A missing backstop is a degraded backstop, not a failed run.
+  recordPlanRunForSession({
+    planId,
+    planRunId,
+    repoRoot: target.repoRoot,
+    sessionId: target.sessionId,
+  });
 };
 
 /**
@@ -97,12 +74,11 @@ export const rememberPlanRunForBackstop = (
  * same run. Best-effort; never throws.
  */
 export const forgetPlanRunForBackstop = (): void => {
-  try {
-    const target = resolveBackstopTarget();
-    if (target === null) return;
+  const target = resolveBackstopTarget();
+  if (target === null) return;
 
-    fs.rmSync(target.filePath, { force: true });
-  } catch {
-    // Settling twice is a safe no-op server-side; this is belt and braces.
-  }
+  clearPlanRunForSession({
+    repoRoot: target.repoRoot,
+    sessionId: target.sessionId,
+  });
 };

@@ -8,8 +8,8 @@ import path from 'node:path';
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { buildUsageEvent } from '../../../index';
-import { CURSOR_SOURCE, normalizeCursorPayload } from '../payload';
+import { buildUsageEvent } from '../../../index.ts';
+import { CURSOR_SOURCE, normalizeCursorPayload } from '../payload.ts';
 
 describe('normalizeCursorPayload', () => {
   it('maps a skill-tool-style payload', () => {

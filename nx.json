@@ -233,6 +233,28 @@
         "cwd": "{workspaceRoot}"
       }
     },
+    "check-nodenext-references": {
+      "cache": true,
+      "description": "Verify every workspace dependency of a NodeNext project is resolvable — either the consumer holds a tsconfig project reference to it, or the dependency's src/ is free of extensionless relative specifiers — via scripts/check-nodenext-references.ts. Error-mode. `inputs` MUST be explicit {workspaceRoot} globs — the root `monorepo` project owns 0 files, so the default {projectRoot} input would hash nothing and cache-hit forever.",
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsx ./scripts/check-nodenext-references.ts",
+        "cwd": "{workspaceRoot}"
+      },
+      "inputs": [
+        "{workspaceRoot}/applications/*/package.json",
+        "{workspaceRoot}/applications/*/src/**/*.{ts,tsx}",
+        "{workspaceRoot}/applications/*/tsconfig*.json",
+        "{workspaceRoot}/packages/*/package.json",
+        "{workspaceRoot}/packages/*/src/**/*.{ts,tsx}",
+        "{workspaceRoot}/packages/*/tsconfig*.json",
+        "{workspaceRoot}/scripts/check-nodenext-references.ts",
+        "{workspaceRoot}/tools/*/package.json",
+        "{workspaceRoot}/tools/*/src/**/*.{ts,tsx}",
+        "{workspaceRoot}/tools/*/tsconfig*.json",
+        "{workspaceRoot}/tsconfig*.json"
+      ]
+    },
     "check-package-entrypoints": {
       "cache": true,
       "description": "Verify no workspace package steers Vite into a gitignored build directory while its own sources import it by name, via scripts/check-package-entrypoints.ts. `inputs` MUST be explicit {workspaceRoot} globs — the root `monorepo` project owns 0 files, so the default {projectRoot} input would hash nothing and cache-hit forever.",

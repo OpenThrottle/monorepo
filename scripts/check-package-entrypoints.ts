@@ -1,21 +1,31 @@
 /**
- * @description Guards the package-entrypoint contract that turned CI red
- * shard-dependently: a workspace package whose `exports` steer Vite/Vitest into
- * a gitignored build directory can only be imported by name once something else
- * happened to build it first, so whether a suite collects is decided by shard
- * assignment rather than by the code.
+ * @description Guards the package-entrypoint contract: a workspace package whose
+ * `exports` steer a consumer into a gitignored build directory can only be
+ * imported by name once something else happened to build it first.
  *
- * The gate is deliberately narrow. Pointing the `import` condition at a
- * gitignored build directory is the workspace norm and is harmless on its own —
- * consumers get the package built through Nx `^build`. It only breaks when the
- * package's *own* sources import it by name, because a project's `test` target
- * never depends on its own `build`. So:
+ * Two consumers resolve `exports`, and each has its own failure mode:
  *
- * 1. error — the condition Vite resolves (`import`, or a bare/`default` string)
- *    points into a gitignored build directory AND the package's own `src/**`
- *    imports the package by its own name. This is the guaranteed break.
- * 2. warn — the same mis-pointed condition without a self-referential import: a
- *    latent landmine that arms itself the moment someone writes an entry test.
+ * - **Vite/Vitest** read `import`/`default` at runtime. A mis-pointed condition
+ *   here turned CI red shard-dependently — whether a suite collected was decided
+ *   by shard assignment rather than by the code.
+ * - **TypeScript under NodeNext** reads `types`. A mis-pointed condition here
+ *   makes the package unimportable by name at typecheck time — `TS2305`, "has no
+ *   exported member" — unless the consumer holds a tsconfig project reference, or
+ *   the package's emitted declarations carry `.ts`-extensioned re-exports.
+ *
+ * The gate is deliberately narrow. Pointing a condition at a gitignored build
+ * directory is the workspace norm for a package that genuinely ships one, and is
+ * harmless on its own — consumers get it built through Nx `^build`. Only packages
+ * whose own `main`/`module` already names `src/` are considered, because those
+ * ship no build output a consumer should be reading.
+ *
+ * 1. error — a *runtime* condition (`import`, or a bare/`default` string) points
+ *    into a gitignored build directory AND the package's own `src/**` imports the
+ *    package by its own name. This is the guaranteed break: a project's `test`
+ *    target never depends on its own `build`.
+ * 2. warn — any other mis-pointed condition, `types` included: a latent landmine
+ *    that arms itself the moment someone writes an entry test or imports the
+ *    package from a NodeNext project.
  *
  * Ignored directories are read from the real `.gitignore` via `git check-ignore`
  * rather than hardcoding `dist`, so a package that commits its build output is
@@ -23,7 +33,7 @@
  */
 
 import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
 import { createLogger, hasFlag } from './lib/index.ts';
@@ -34,9 +44,19 @@ const ROOT = process.cwd();
 const WORKSPACE_DIRS = ['applications', 'packages', 'tools'] as const;
 
 /**
- * @description Conditions Vite/Vitest resolve when importing a package by name
+ * @description Every condition a consumer resolves when importing a package by
+ * name — `import`/`default` by Vite and Vitest, `types` by TypeScript under
+ * NodeNext
  */
-const VITE_CONDITIONS = ['import', 'default'] as const;
+const RESOLVED_CONDITIONS = ['default', 'import', 'types'] as const;
+
+/**
+ * @description The subset of {@link RESOLVED_CONDITIONS} that decides whether
+ * code *runs*. Only these can produce the shard-dependent test failure that makes
+ * an offender an error rather than a warning; a mis-pointed `types` condition
+ * breaks typechecking, which is a different (and currently warn-only) problem.
+ */
+const RUNTIME_CONDITIONS = ['default', 'import'] as const;
 
 interface ExportTarget {
   /** Dotted condition path, e.g. `.` › `import` */
@@ -169,7 +189,7 @@ const run = (): void => {
   const candidates = packages.flatMap((info) =>
     info.exportTargets
       .filter((exportTarget) =>
-        VITE_CONDITIONS.some(
+        RESOLVED_CONDITIONS.some(
           (condition) => condition === exportTarget.condition,
         ),
       )
@@ -192,23 +212,44 @@ const run = (): void => {
       ignored.has(entry.relativePath) && pointsAtSource(entry.info.main),
   );
 
-  const describe = (entry: (typeof offenders)[number]): string =>
-    `${entry.info.name}: exports["${entry.exportTarget.subpath}"].${entry.exportTarget.condition} → ${entry.exportTarget.target} is gitignored, but main/module → ${entry.info.main}. ` +
-    `Vite and Vitest resolve the "${entry.exportTarget.condition}" condition, so importing this package by name only resolves once its build has run. ` +
-    `Point that condition at the source entry and leave "require"/"types" on the build output.`;
+  const describe = (entry: (typeof offenders)[number]): string => {
+    const { condition, subpath, target } = entry.exportTarget;
+
+    const resolver =
+      condition === 'types'
+        ? 'TypeScript resolves the "types" condition under NodeNext'
+        : `Vite and Vitest resolve the "${condition}" condition`;
+
+    return (
+      `${entry.info.name}: exports["${subpath}"].${condition} → ${target} is gitignored, but main/module → ${entry.info.main}. ` +
+      `${resolver}, so importing this package by name only resolves once its build has run. ` +
+      `Point EVERY condition at the source entry: a package whose main/module already names src/ ships no build output a consumer should read — the "__build"/"__build-package" target placeholder marks these — so "require" and "types" belong on source too. ` +
+      `A dist-targeted "types" condition is resolvable only when the consumer holds a tsconfig project reference to this package, or when its emitted declarations carry .ts-extensioned re-exports.`
+    );
+  };
+
+  const isRuntimeCondition = (entry: (typeof offenders)[number]): boolean =>
+    RUNTIME_CONDITIONS.some(
+      (condition) => condition === entry.exportTarget.condition,
+    );
 
   const errors = offenders
-    .filter((entry) => entry.info.importsItselfByName)
+    .filter(
+      (entry) => entry.info.importsItselfByName && isRuntimeCondition(entry),
+    )
     .map(
       (entry) =>
         `${describe(entry)} This package's own src/ imports it by name, so its test target — which never depends on its own build — fails whenever no other project on the shard built it first.`,
     );
 
   const warnings = offenders
-    .filter((entry) => !entry.info.importsItselfByName)
-    .map(
-      (entry) =>
-        `${describe(entry)} No self-referential import today, so nothing breaks yet.`,
+    .filter(
+      (entry) => !(entry.info.importsItselfByName && isRuntimeCondition(entry)),
+    )
+    .map((entry) =>
+      entry.exportTarget.condition === 'types'
+        ? `${describe(entry)} No NodeNext consumer imports this package by name today, so nothing breaks yet.`
+        : `${describe(entry)} No self-referential import today, so nothing breaks yet.`,
     );
 
   const verbose = hasFlag('verbose');
@@ -220,12 +261,15 @@ const run = (): void => {
   } else if (warnings.length > 0) {
     const latentPackages = new Set(
       offenders
-        .filter((entry) => !entry.info.importsItselfByName)
+        .filter(
+          (entry) =>
+            !(entry.info.importsItselfByName && isRuntimeCondition(entry)),
+        )
         .map((entry) => entry.info.name),
     );
 
     logger.warn(
-      `check-package-entrypoints: ${latentPackages.size} package(s) point a Vite-resolved condition at a gitignored build directory with no self-referential import — latent, not failing. Re-run with --verbose to list them.`,
+      `check-package-entrypoints: ${latentPackages.size} package(s) point a resolved condition ("import"/"default" for Vite, "types" for NodeNext) at a gitignored build directory — latent, not failing. Re-run with --verbose to list them.`,
     );
   }
 

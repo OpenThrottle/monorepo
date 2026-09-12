@@ -5,7 +5,7 @@
  *
  * Usage: node .claude/hooks/skill-usage-drain.cjs [--budget-ms <n>]
  */
-import { drainBufferedUsage, logHookError } from '../../index';
+import { drainBufferedUsage, logHookError } from '../../index.ts';
 
 const parseArg = (flag: string): string | undefined => {
   const idx = process.argv.indexOf(flag);

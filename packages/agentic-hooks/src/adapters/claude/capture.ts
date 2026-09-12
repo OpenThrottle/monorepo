@@ -14,8 +14,8 @@ import {
   logHookError,
   persistUsageEvent,
   recordSkillStart,
-} from '../../index';
-import { CLAUDE_SOURCE, normalizeClaudePayload } from './payload';
+} from '../../index.ts';
+import { CLAUDE_SOURCE, normalizeClaudePayload } from './payload.ts';
 
 const main = async (): Promise<void> => {
   try {

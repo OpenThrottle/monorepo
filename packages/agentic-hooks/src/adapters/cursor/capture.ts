@@ -13,8 +13,8 @@ import {
   logHookError,
   persistUsageEvent,
   recordSkillStart,
-} from '../../index';
-import { CURSOR_SOURCE, normalizeCursorPayload } from './payload';
+} from '../../index.ts';
+import { CURSOR_SOURCE, normalizeCursorPayload } from './payload.ts';
 
 const main = async (): Promise<void> => {
   try {

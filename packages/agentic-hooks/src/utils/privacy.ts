@@ -3,7 +3,7 @@
  * the machine. Kept as a discrete unit so plan 91679bbf can extend it
  * (configurable privacy) without touching the rest of the core.
  */
-import type { PrivacyLevel } from '../types';
+import type { PrivacyLevel } from '../types.ts';
 
 /** @public */
 export const PRIVACY_LEVELS = Object.freeze({

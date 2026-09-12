@@ -15,7 +15,7 @@ import {
   logHookError,
   persistOutcomeEvent,
   SKILL_USAGE_OUTCOMES,
-} from '../../index';
+} from '../../index.ts';
 
 const parseArgs = (argv: string[]): Record<string, string> => {
   const out: Record<string, string> = {};
