@@ -55,7 +55,7 @@ export const TimelineControls = (
   const range = `${formatTimelineTimestamp(windowFromIso)} – ${formatTimelineTimestamp(windowToIso)} (${timelineZoneLabel()})`;
 
   // Handlers
-  //
+
   // Radix hands back a bare string and clears it when the active item is
   // re-clicked, so both handlers narrow through a predicate and ignore
   // anything unrecognised — re-clicking the current preset must not empty the
