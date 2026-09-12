@@ -1,13 +1,18 @@
 import * as React from 'react';
 import clsx from 'clsx';
 import { FocusError } from 'focus-formik-error';
-import { Form, FormProps } from 'react-router';
-import { Button, Error, Input, Markdown } from '@openthrottle/react-router-shadcn';
-import { useForm } from '@openthrottle/react-router-utils';
+import { Form } from 'react-router';
+import type { FormProps } from 'react-router';
 import {
-  formSetup,
-  FormSchema
-} from '~/<%= directory %>/config/form.<%= schema %>';
+  Button,
+  InlineErrors,
+  Input,
+  Label,
+  Markdown
+} from '@openthrottle/react-router-shadcn';
+import { useForm } from '@openthrottle/react-router-utils';
+import { formSetup } from '~/<%= directory %>/config/form.<%= schema %>';
+import type { FormSchema } from '~/<%= directory %>/config/form.<%= schema %>';
 
 export interface <%= name %>Props extends FormProps {
   className?: string;
@@ -23,9 +28,12 @@ export const <%= name %> = (props: <%= name %>Props): React.ReactElement => {
   const { formik, onSubmit } = useForm(form);
 
   // Setup
-  const { dirty, errors, handleChange, handleBlur, submitCount, touched, values } = formik;
+  const { errors, handleChange, handleBlur, submitCount, touched, values } = formik;
 
-  const isDirty = dirty && submitCount > 0;
+  // Formik marks every field touched on submit, so this gates the error summary
+  // on "the user has tried to submit at least once" rather than on `dirty` —
+  // submitting a pristine, invalid form must still surface why it was rejected.
+  const hasSubmitted = submitCount > 0;
 
   // Handlers
 
@@ -45,18 +53,25 @@ export const <%= name %> = (props: <%= name %>Props): React.ReactElement => {
       role="form"
     >
       <FocusError formik={formik} />
-      <Error errors={isDirty ? Object.values(errors) : []} />
+      <InlineErrors errors={hasSubmitted ? Object.values(errors) : []} />
 
       {/* ... Implement your form fields here ... */}
-      <Input
-        error={!!touched.search && !!errors.search}
-        id="search"
-        label="Search"
-        onBlur={handleBlur}
-        onChange={handleChange}
-        type="text"
-        value={values.search}
-      />
+      {/*
+        `Input` has no `error` or `label` prop by design — a field is composed
+        from `Label` + `Input`, and the invalid styling is driven by the
+        `aria-invalid` attribute rather than a variant prop.
+      */}
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="search">Search</Label>
+        <Input
+          aria-invalid={!!touched.search && !!errors.search}
+          id="search"
+          onBlur={handleBlur}
+          onChange={handleChange}
+          type="text"
+          value={values.search}
+        />
+      </div>
 
       <div className="flex justify-end">
         <Button
