@@ -1,25 +1,21 @@
+import js from '@eslint/js';
+import graphqlEslint, {
+  parser as graphqlParser,
+} from '@graphql-eslint/eslint-plugin';
+import pluginNx from '@nx/eslint-plugin';
+import type { Linter } from 'eslint';
+import pluginImportX from 'eslint-plugin-import-x';
+import pluginJest from 'eslint-plugin-jest';
+import pluginPerfectionist from 'eslint-plugin-perfectionist';
+import pluginReact from 'eslint-plugin-react';
+import pluginReactHooks from 'eslint-plugin-react-hooks';
+import pluginSimpleImportSort from 'eslint-plugin-simple-import-sort';
+import tslint from 'typescript-eslint';
+
 import { componentPrimitiveShape } from './rules/component-primitive-shape.ts';
 import { preHooksUnpack } from './rules/pre-hooks-unpack.ts';
 import { routePrimitiveShape } from './rules/route-primitive-shape.ts';
 import { getDirname } from './vite-config.ts';
-import graphqlEslint, {
-  parser as graphqlParser,
-} from '@graphql-eslint/eslint-plugin';
-import js from '@eslint/js';
-import pluginImport from 'eslint-plugin-import';
-import pluginImportSort from 'eslint-plugin-simple-import-sort';
-import pluginJest from 'eslint-plugin-jest';
-import pluginNx from '@nx/eslint-plugin';
-import pluginReact from 'eslint-plugin-react';
-import pluginReactHooks from 'eslint-plugin-react-hooks';
-import tslint from 'typescript-eslint';
-// These plugins ship no types; ambient `declare module` shims in src/types.d.ts
-// satisfy the resolver (see tsconfig.lib.json include).
-import pluginComments from 'eslint-plugin-eslint-comments';
-import pluginJson from 'eslint-plugin-json';
-import pluginSortKeys from 'eslint-plugin-sort-keys-fix';
-import pluginTypescriptSortKeys from 'eslint-plugin-typescript-sort-keys';
-import type { Linter } from 'eslint';
 
 /** @public */
 export type { Config as EslintFlatConfig } from 'eslint/config';
@@ -28,21 +24,21 @@ export { prettierConfig } from './prettier-config.ts';
 /** @public */
 export {
   createViteConfig,
+  type CreateViteConfigOptions,
   defineViteConfig,
   getDirname,
-  type CreateViteConfigOptions,
   type PackageType,
 } from './vite-config.ts';
 /** @public */
 export {
   createVitestConfig,
-  createVitestConfigJsdom,
   createVitestConfigHappyDom,
+  createVitestConfigJsdom,
   createVitestConfigNode,
-  VITEST_HOOK_TIMEOUT_MS,
-  VITEST_TEST_TIMEOUT_MS,
   type CreateVitestConfigOptions,
   type TestEnvironment,
+  VITEST_HOOK_TIMEOUT_MS,
+  VITEST_TEST_TIMEOUT_MS,
 } from './vitest-config.ts';
 
 /**
@@ -55,6 +51,16 @@ export {
  * and rules run normally). `supportsAutofix` keeps `eslint --fix` working
  * through the processor.
  */
+/**
+ * Printable ASCII in code-point order, fed to `perfectionist`'s `type: 'custom'`
+ * so its collation matches the core `sort-keys` rule exactly. Perfectionist's
+ * built-in `'alphabetical'` mode collates by locale instead, which disagrees
+ * with `sort-keys` wherever a name differs only by case.
+ */
+const CODE_POINT_ALPHABET = Array.from({ length: 95 }, (_, index) =>
+  String.fromCharCode(32 + index),
+).join('');
+
 const skipEmptyGraphqlProcessor: Linter.Processor = {
   meta: { name: 'skip-empty-graphql', version: '1.0.0' },
   postprocess(messages) {
@@ -199,10 +205,8 @@ export const eslintConfig = tslint.config([
 
     plugins: {
       '@nx': pluginNx,
-      comments: pluginComments,
-      import: pluginImport,
+      'import-x': pluginImportX,
       jest: pluginJest,
-      json: pluginJson,
       openthrottle: {
         rules: {
           'component-primitive-shape': componentPrimitiveShape,
@@ -210,11 +214,10 @@ export const eslintConfig = tslint.config([
           'route-primitive-shape': routePrimitiveShape,
         },
       },
+      perfectionist: pluginPerfectionist,
       react: pluginReact,
       'react-hooks': pluginReactHooks,
-      'simple-import-sort': pluginImportSort,
-      'sort-keys-fix': pluginSortKeys,
-      'typescript-sort-keys': pluginTypescriptSortKeys,
+      'simple-import-sort': pluginSimpleImportSort,
     },
 
     rules: {
@@ -260,8 +263,8 @@ export const eslintConfig = tslint.config([
       // Named exports only — a default export costs the importer the shared,
       // greppable name. Framework entry points that *require* a default are
       // carved out below; everything else is an error.
-      'import/no-default-export': 'error',
-      'import/no-named-as-default-member': 'off',
+      'import-x/no-default-export': 'error',
+      'import-x/no-named-as-default-member': 'off',
       'no-await-in-loop': 'error',
       'no-console': 'off',
       // Enforce the "no new TypeScript enums — use `as const` objects" rule
@@ -276,6 +279,62 @@ export const eslintConfig = tslint.config([
       'no-undef': 'off',
 
       'no-unused-vars': 'off',
+      // New in the ESLint 10 `recommended` set. 13 real dead stores across the
+      // repo when the upgrade landed; `warn` so the bump stays behaviour-neutral
+      // at `error`, and because a "useless" assignment is occasionally a typo
+      // masking a bug, which wants a human read rather than a blind delete.
+      'no-useless-assignment': 'warn',
+      // Interface-member and enum alphabetization, replacing
+      // eslint-plugin-typescript-sort-keys. That plugin is abandoned (peer range
+      // `^7 || ^8`) and crashes at rule *load* under ESLint 10 —
+      // `createNodeSwapper` calls the removed `context.getSourceCode()` — so it
+      // could not be carried forward.
+      //
+      // `type: 'custom'` with an explicit printable-ASCII alphabet, not the
+      // default `'alphabetical'`. Perfectionist's alphabetical mode collates by
+      // locale, where `editors` sorts before `editorWorkingDirectory` and
+      // `pickedPath` before `pickError`. Core `sort-keys` (still on, below)
+      // compares by code point, where the capital sorts first in both. Measured:
+      // the locale default disagreed with the repo's existing order on 32
+      // interfaces. Two collations in one repo is worse than either, so this
+      // matches `sort-keys` rather than the other way round.
+      //
+      // `perfectionist/sort-objects` is deliberately NOT enabled. Core
+      // `sort-keys` already covers object literals with identical detection
+      // (sort-keys-fix was a fork of it that only added a fixer), and
+      // perfectionist's version additionally sorts destructuring patterns —
+      // 369 new errors, and a reordering hazard where a default value
+      // references an earlier binding. The cost of dropping sort-keys-fix is
+      // therefore the autofix alone, not the enforcement.
+      'perfectionist/sort-enums': [
+        'error',
+        {
+          alphabet: CODE_POINT_ALPHABET,
+          ignoreCase: false,
+          order: 'asc',
+          type: 'custom',
+        },
+      ],
+      'perfectionist/sort-interfaces': [
+        'error',
+        {
+          alphabet: CODE_POINT_ALPHABET,
+          // Index signatures sort ahead of named members rather than being
+          // collated with them by their rendered text (`readonly [key: string]`,
+          // which would sort under `r`). `typescript-sort-keys` skipped index
+          // signatures entirely, so this keeps the one interface in the repo
+          // that mixes the two — ConversationStreamSubscriptionVariables — legal.
+          groups: ['index-signature', 'unknown'],
+          ignoreCase: false,
+          order: 'asc',
+          type: 'custom',
+        },
+      ],
+      // Also new in the ESLint 10 `recommended` set: 9 sites rethrow inside a
+      // `catch` without attaching `{ cause }`, losing the original error. Real
+      // findings and worth fixing, but they are edits to error-handling paths,
+      // not part of a toolchain bump — `warn` until they are done deliberately.
+      'preserve-caught-error': 'warn',
       'react/jsx-boolean-value': ['error', 'always'],
       'react/jsx-curly-brace-presence': ['error', 'never'],
       'react/jsx-sort-props': 'error',
@@ -284,14 +343,39 @@ export const eslintConfig = tslint.config([
       'react/no-multi-comp': ['error', { ignoreStateless: false }],
       'react/prop-types': 'off',
       'react/react-in-jsx-scope': 'off',
+      // Import/export order. Default `groups` are kept deliberately: there was
+      // no existing convention to encode. The three files spot-checked when
+      // this landed each ordered imports differently — `main.ts` by rough
+      // dependency tiers, `root.tsx` with a type import stranded mid-block,
+      // and this very file by *local binding name* rather than module path,
+      // which `simple-import-sort` cannot express at all (it sorts on the
+      // `from` string). So there is nothing to preserve.
+      //
+      // `warn`, not `error`, and deliberately NOT autofixed in the change that
+      // enabled it. Measured 2026-09-11: 3,655 `imports` + 88 `exports`
+      // violations across 3,714 of 5,343 source files — 70% of the repo. The
+      // rule is 100% autofixable and `eslint --fix` was verified safe on the
+      // riskiest surface (see below), but a 3,700-file mechanical diff is its
+      // own change, not a rider on a dependency refresh. Ratchet to `error`
+      // per project once that project's files are sorted, the same way the
+      // component and route primitive shapes graduate.
+      //
+      // The safety question this rule raises is side-effect imports, which
+      // `sortImportExportItems` always hoists to the top of their chunk. 27 of
+      // the repo's 57 side-effect imports sit after a real import and so would
+      // move. Verified by autofixing openthrottle-server (477 files, then
+      // reverted): relative order *among* side-effect imports is preserved, so
+      // `main.ts` keeps `./load-env` first and the code-first GraphQL modules
+      // keep their dependency-ordered `*.enum` → `*.object` → `*.input`
+      // registration sequence. typecheck and the server test suite both passed
+      // on the autofixed tree.
+      'simple-import-sort/exports': 'warn',
+      'simple-import-sort/imports': 'warn',
       'sort-keys': [
         'error',
         'asc',
         { caseSensitive: true, minKeys: 2, natural: false },
       ],
-      'sort-keys-fix/sort-keys-fix': 'error',
-      'typescript-sort-keys/interface': 'error',
-      'typescript-sort-keys/string-enum': 'error',
     },
   },
 
@@ -423,7 +507,7 @@ export const eslintConfig = tslint.config([
       '**/src/generators/*/generator.ts',
     ],
     rules: {
-      'import/no-default-export': 'off',
+      'import-x/no-default-export': 'off',
     },
   },
 

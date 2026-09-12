@@ -37,29 +37,30 @@ Every convention inherited from the retired rules tree — 15 of the 16 relocate
 [Corrections](#corrections-made-in-the-move)) — plus the rules that were already enforced by
 lint but never had a rule file of their own:
 
-| Convention                                                            | Enforcement                            | Mechanism                                                                           |
-| --------------------------------------------------------------------- | -------------------------------------- | ----------------------------------------------------------------------------------- |
-| [No new enums](#no-new-enums)                                         | **Enforced**                           | `no-restricted-syntax` → `TSEnumDeclaration`                                        |
-| [Component and data boundaries](#component-and-data-boundaries)       | **Enforced**                           | `openthrottle/component-primitive-shape` + `audit:component-shape`                  |
-| [No default exports](#no-default-exports)                             | **Enforced**                           | `import/no-default-export`                                                          |
-| [`import type`](#import-type)                                         | **Enforced**                           | `@typescript-eslint/consistent-type-imports`                                        |
-| [Naming conventions](#naming-conventions)                             | **Enforced** (file names honor system) | `@typescript-eslint/naming-convention`                                              |
-| [Indexed access is `\| undefined`](#indexed-access-returns-undefined) | **Enforced**                           | `noUncheckedIndexedAccess` compiler flag                                            |
-| [No `as` casts](#no-as-casts)                                         | **Enforced**                           | `consistent-type-assertions`, `assertionStyle: 'never'`                             |
-| [No `any`](#no-any)                                                   | **Enforced**                           | `@typescript-eslint/no-explicit-any`                                                |
-| [Alphabetize keys](#alphabetize-arrays-and-object-keys)               | **Enforced**                           | `sort-keys`, `sort-keys-fix`, `typescript-sort-keys`, `@graphql-eslint/alphabetize` |
-| [File length caps](#file-length-caps)                                 | **Enforced**                           | `max-lines` (210 components / 210 routes)                                           |
-| [No `await` in loops](#no-await-in-loops)                             | **Enforced**                           | `no-await-in-loop`                                                                  |
-| [Return types](#return-types)                                         | **Warned**                             | `explicit-module-boundary-types`                                                    |
-| [Route primitive shape](#route-and-component-shape)                   | **Warned**                             | `openthrottle/route-primitive-shape`, `openthrottle/pre-hooks-unpack`               |
-| [Discriminated unions](#discriminated-unions)                         | Honor system                           | —                                                                                   |
-| [`interface extends` over `&`](#interface-extends-over-)              | Honor system                           | —                                                                                   |
-| [`readonly` by default](#readonly-properties)                         | Honor system                           | —                                                                                   |
-| [Optional properties sparingly](#optional-properties)                 | Honor system                           | —                                                                                   |
-| [Prefer results over throwing](#prefer-results-over-throwing)         | Honor system                           | —                                                                                   |
-| [JSDoc](#jsdoc-comments)                                              | Honor system                           | —                                                                                   |
-| [Installing libraries](#installing-libraries)                         | Honor system                           | —                                                                                   |
-| [Frontend design](#frontend-design)                                   | Honor system                           | —                                                                                   |
+| Convention                                                            | Enforcement                            | Mechanism                                                             |
+| --------------------------------------------------------------------- | -------------------------------------- | --------------------------------------------------------------------- |
+| [No new enums](#no-new-enums)                                         | **Enforced**                           | `no-restricted-syntax` → `TSEnumDeclaration`                          |
+| [Component and data boundaries](#component-and-data-boundaries)       | **Enforced**                           | `openthrottle/component-primitive-shape` + `audit:component-shape`    |
+| [No default exports](#no-default-exports)                             | **Enforced**                           | `import-x/no-default-export`                                          |
+| [`import type`](#import-type)                                         | **Enforced**                           | `@typescript-eslint/consistent-type-imports`                          |
+| [Naming conventions](#naming-conventions)                             | **Enforced** (file names honor system) | `@typescript-eslint/naming-convention`                                |
+| [Indexed access is `\| undefined`](#indexed-access-returns-undefined) | **Enforced**                           | `noUncheckedIndexedAccess` compiler flag                              |
+| [No `as` casts](#no-as-casts)                                         | **Enforced**                           | `consistent-type-assertions`, `assertionStyle: 'never'`               |
+| [No `any`](#no-any)                                                   | **Enforced**                           | `@typescript-eslint/no-explicit-any`                                  |
+| [Alphabetize keys](#alphabetize-arrays-and-object-keys)               | **Enforced**                           | `sort-keys`, `perfectionist/*`, `@graphql-eslint/alphabetize`         |
+| [File length caps](#file-length-caps)                                 | **Enforced**                           | `max-lines` (210 components / 210 routes)                             |
+| [No `await` in loops](#no-await-in-loops)                             | **Enforced**                           | `no-await-in-loop`                                                    |
+| [Return types](#return-types)                                         | **Warned**                             | `explicit-module-boundary-types`                                      |
+| [Route primitive shape](#route-and-component-shape)                   | **Warned**                             | `openthrottle/route-primitive-shape`, `openthrottle/pre-hooks-unpack` |
+| [Import order](#import-order)                                         | **Warned**                             | `simple-import-sort/imports`, `simple-import-sort/exports`            |
+| [Discriminated unions](#discriminated-unions)                         | Honor system                           | —                                                                     |
+| [`interface extends` over `&`](#interface-extends-over-)              | Honor system                           | —                                                                     |
+| [`readonly` by default](#readonly-properties)                         | Honor system                           | —                                                                     |
+| [Optional properties sparingly](#optional-properties)                 | Honor system                           | —                                                                     |
+| [Prefer results over throwing](#prefer-results-over-throwing)         | Honor system                           | —                                                                     |
+| [JSDoc](#jsdoc-comments)                                              | Honor system                           | —                                                                     |
+| [Installing libraries](#installing-libraries)                         | Honor system                           | —                                                                     |
+| [Frontend design](#frontend-design)                                   | Honor system                           | —                                                                     |
 
 ## Corrections made in the move
 
@@ -103,8 +104,19 @@ from an older doc.
 
 ### Alphabetize arrays and object keys
 
-**Enforced** by `sort-keys`, `sort-keys-fix/sort-keys-fix`, `typescript-sort-keys/interface`
-and `typescript-sort-keys/string-enum`, all at `error`. `sort-keys-fix` is auto-fixable.
+**Enforced** by `sort-keys`, `perfectionist/sort-interfaces` and
+`perfectionist/sort-enums`, all at `error`. The perfectionist rules are auto-fixable;
+core `sort-keys` is not.
+
+Perfectionist replaced `eslint-plugin-sort-keys-fix` and
+`eslint-plugin-typescript-sort-keys` in the ESLint 10 upgrade — both were abandoned and
+both crashed under ESLint 10. It is configured with `type: 'custom'` and an explicit
+printable-ASCII alphabet rather than its default `'alphabetical'`, because that default
+collates by locale (`editors` before `editorWorkingDirectory`) while core `sort-keys`
+compares by code point (the capital first). Matching them keeps one collation in the repo.
+
+Object literals are covered by core `sort-keys` alone; `perfectionist/sort-objects` is
+deliberately not enabled, because it also reorders destructuring patterns.
 
 This extends to **GraphQL selection sets and fragment fields** in `*.graphql` documents,
 enforced by `@graphql-eslint/alphabetize` and fixable with
@@ -286,6 +298,41 @@ unit tests all stay green. Declaring it made the rule skip 420 of 884 candidate 
 NestJS files down to 93). Aligning the parser options to `tsconfig.base.json` reintroduces
 a boot-time failure no gate catches.
 
+### Import order
+
+**Warned** by `simple-import-sort/imports` and `simple-import-sort/exports`, autofixable
+with `eslint --fix`.
+
+Imports are sorted by the module path, in the plugin's default groups: side-effect imports,
+then packages, then relative — each group separated by a blank line, each group sorted
+alphabetically.
+
+```ts
+import './load-env';
+
+import { ConfigService } from '@nestjs/config';
+import { NestFactory } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
+
+import { buildAppModule } from './app.module';
+```
+
+The default groups are used as-is because there was no prior convention to encode — files
+predating this rule each ordered imports differently, and one sorted by _local binding
+name_, which the plugin cannot express at all since it sorts on the `from` string.
+
+`warn` rather than `error` because 3,743 violations across 3,714 of 5,343 source files were
+outstanding when the rule landed, and they were deliberately left unfixed: the rule is fully
+autofixable, so the cleanup is a mechanical change of its own rather than a rider on the
+change that enabled it. Projects ratchet to `error` individually once sorted, the same way
+the component and route primitive shapes graduate.
+
+One behaviour to know before running `--fix`: side-effect imports (`import './x'`) are
+always hoisted to the top of their chunk. Their order _relative to each other_ is preserved,
+so dependency-ordered registration blocks — the code-first GraphQL `*.enum` → `*.object` →
+`*.input` modules, and `main.ts`'s `./load-env` — survive intact. Imports that previously sat
+above a side-effect import will end up below it.
+
 ### `interface extends` over `&`
 
 **Honor system.** Always prefer interfaces when modelling inheritance. The `&` operator
@@ -446,7 +493,7 @@ that exception is not machine-expressible, so components are warned about too. T
 
 ### No default exports
 
-**Enforced** by `import/no-default-export` at `error`.
+**Enforced** by `import-x/no-default-export` at `error`.
 
 ```ts
 // BAD

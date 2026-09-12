@@ -46,7 +46,7 @@ catalog:
   '@commitlint/cli': '21.0.2'
   '@commitlint/config-conventional': '21.0.2'
   '@commitlint/config-nx-scopes': '21.0.2'
-  '@eslint/js': '^9.39.2'
+  '@eslint/js': '^10.0.1'
   '@faker-js/faker': '^10.4.0'
   '@golevelup/ts-vitest': '^4.0.0'
   '@graphql-codegen/cli': '^6.2.1'
@@ -158,10 +158,10 @@ catalog:
   '@types/sanitize-html': '^2.16.0'
   '@types/tmp': '^0.2.6'
   '@types/yargs': '^17.0.35'
-  '@typescript-eslint/eslint-plugin': '^8.65.0'
-  '@typescript-eslint/parser': '^8.65.0'
-  '@typescript-eslint/rule-tester': '^8.65.0'
-  '@typescript-eslint/utils': '^8.65.0'
+  '@typescript-eslint/eslint-plugin': '^8.69.0'
+  '@typescript-eslint/parser': '^8.69.0'
+  '@typescript-eslint/rule-tester': '^8.69.0'
+  '@typescript-eslint/utils': '^8.69.0'
   '@vercel/analytics': '^2.0.1'
   '@vercel/react-router': '^1.2.4'
   '@vitejs/plugin-react': '^6.0.1'
@@ -197,17 +197,19 @@ catalog:
   'dotenv': '^17.2.3'
   'enhanced-resolve': '^5.18.4'
   'esbuild': '^0.24.0'
-  'eslint': '^9.39.2'
-  'eslint-plugin-eslint-comments': '^3.2.0'
-  'eslint-plugin-import': '^2.32.0'
-  'eslint-plugin-import-x': '^4.16.2'
-  'eslint-plugin-jest': '^29.15.1'
-  'eslint-plugin-json': '^4.0.1'
+  'eslint': '^10.10.0'
+  # The maintained fork of eslint-plugin-import, and a drop-in for the one rule this repo
+  # uses (no-default-export). Taken over eslint-plugin-import@2.32.0 because it peers
+  # eslint ^10, ships its own types, and makes both its resolver peers optional.
+  'eslint-plugin-import-x': '^4.17.1'
+  'eslint-plugin-jest': '^29.16.6'
+  # Replaces eslint-plugin-sort-keys-fix and eslint-plugin-typescript-sort-keys, both
+  # of which crash outright under ESLint 10 - see the note on the two rules in
+  # tools/dotfiles/src/index.ts. Peers eslint ^8.45 || ^9 || ^10.
+  'eslint-plugin-perfectionist': '^5.11.0'
   'eslint-plugin-react': '^7.37.5'
-  'eslint-plugin-react-hooks': '^7.0.1'
-  'eslint-plugin-simple-import-sort': '^13.0.0'
-  'eslint-plugin-sort-keys-fix': '^1.1.2'
-  'eslint-plugin-typescript-sort-keys': '^3.3.0'
+  'eslint-plugin-react-hooks': '^7.1.1'
+  'eslint-plugin-simple-import-sort': '^14.0.0'
   'express-basic-auth': '^1.2.1'
   'fishery': '^2.4.0'
   # focus-formik-error / formik / yup: DO NOT REMOVE as "unused".
@@ -339,7 +341,7 @@ catalog:
   'typescript': 'npm:@typescript/typescript6@^6.0.2'
   # TS7 native compiler. Provides the `tsc` bin only - no programmatic API, no tsserver.
   'typescript7': 'npm:typescript@^7.0.2'
-  'typescript-eslint': '^8.65.0'
+  'typescript-eslint': '^8.69.0'
   'typescript-json-schema': '^0.67.1'
   'unplugin-swc': '^1.5.9'
   'use-latest-callback': '^0.3.3'
@@ -373,6 +375,16 @@ catalogMode: strict
 minimumReleaseAge: 10080 # 7 days (in minutes)
 minimumReleaseAgeExclude:
   - '@openthrottle/*'
+
+# eslint-plugin-react@7.37.5 is the latest release and its peer range stops at ^9.7,
+# but only 7 of its 103 rules actually break under ESLint 10 (the two that call a
+# removed context method without a fallback, plus five spacing rules that call the
+# removed SourceCode#isSpaceBetweenTokens). This repo enables none of them, and the
+# six rules it does enable were measured to report identically under 9.39.5 and
+# 10.10.0. Drop this when the plugin widens its peer range.
+peerDependencyRules:
+  allowedVersions:
+    'eslint-plugin-react>eslint': '10'
 
 # 🔧 Dependency overrides | https://pnpm.io/settings#overrides
 # Migrated out of package.json's `pnpm` field, which pnpm 11 no longer reads.
