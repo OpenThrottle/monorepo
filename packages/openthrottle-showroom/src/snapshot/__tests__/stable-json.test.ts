@@ -8,7 +8,7 @@ import { stableStringify, stableStringifyManifest } from '../stable-json';
  */
 describe('stableStringify', () => {
   test('sorts object keys recursively', () => {
-    // eslint-disable-next-line sort-keys, sort-keys-fix/sort-keys-fix -- unsorted input is the fixture
+    // eslint-disable-next-line sort-keys -- unsorted input is the fixture
     expect(stableStringify({ b: { d: 1, c: 2 }, a: 3 })).toBe(
       '{"a":3,"b":{"c":2,"d":1}}',
     );
@@ -16,7 +16,7 @@ describe('stableStringify', () => {
 
   test('two key orders of the same object serialize identically', () => {
     expect(stableStringify({ x: 1, y: 2 })).toBe(
-      // eslint-disable-next-line sort-keys, sort-keys-fix/sort-keys-fix -- unsorted input is the fixture
+      // eslint-disable-next-line sort-keys -- unsorted input is the fixture
       stableStringify({ y: 2, x: 1 }),
     );
   });
@@ -72,7 +72,7 @@ describe('stableStringifyManifest', () => {
   test('sorts keys within an entry and preserves entry order', () => {
     expect(
       stableStringifyManifest([
-        // eslint-disable-next-line sort-keys, sort-keys-fix/sort-keys-fix -- unsorted input is the fixture
+        // eslint-disable-next-line sort-keys -- unsorted input is the fixture
         { table: 'b', rowCount: 2 },
         { rowCount: 1, table: 'a' },
       ]),

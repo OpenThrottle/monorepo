@@ -13,7 +13,7 @@ type XxxxXxxx = {
 
 export type FormSchema = InferType<typeof formSchema>;
 
-/* eslint-disable sort-keys-fix/sort-keys-fix */
+/* eslint-disable sort-keys */
 export const formSchema: ObjectSchema<XxxxXxxx> = object({
   // TODO: Implement your schema fields
   search: string()
@@ -22,7 +22,7 @@ export const formSchema: ObjectSchema<XxxxXxxx> = object({
     .meta({ placeholder: 'Search for something' })
     .required('Search is required.'),
 });
-/* eslint-enable sort-keys-fix/sort-keys-fix */
+/* eslint-enable sort-keys */
 
 export const formDefaults: FormSchema = formSchema.getDefault();
 

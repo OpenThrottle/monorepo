@@ -94,7 +94,6 @@
     "@nx/*",
     "@testing-library/*",
     "@types/*",
-    "@typescript-eslint/*",
     "@vitest/*",
     "eslint-*",
     "prettier",

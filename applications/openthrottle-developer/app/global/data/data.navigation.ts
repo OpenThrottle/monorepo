@@ -37,7 +37,7 @@ import {
   WrenchIcon,
 } from 'lucide-react';
 
-/* eslint-disable sort-keys, sort-keys-fix/sort-keys-fix */
+/* eslint-disable sort-keys */
 export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
   {
     Agents: [
@@ -259,4 +259,4 @@ export const dataNavigationGuest: Record<string, GlobalSidebarLinkProps[]> = {
   ],
 };
 
-/* eslint-enable sort-keys, sort-keys-fix/sort-keys-fix */
+/* eslint-enable sort-keys */
