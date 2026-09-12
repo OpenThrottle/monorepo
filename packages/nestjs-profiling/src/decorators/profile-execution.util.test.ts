@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+
 import { setProfileExecutionReporter } from './profile-execution.reporter';
 import type { ProfileExecutionResult } from './profile-execution.types';
 import { profileExecution } from './profile-execution.util';

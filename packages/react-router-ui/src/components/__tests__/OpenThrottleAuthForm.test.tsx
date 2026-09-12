@@ -1,10 +1,11 @@
-import * as React from 'react';
 import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { OpenThrottleAuthForm } from '../OpenThrottleAuthForm';
+
 import type { OpenThrottleAuthFormProps } from '../OpenThrottleAuthForm';
+import { OpenThrottleAuthForm } from '../OpenThrottleAuthForm';
 
 describe('OpenThrottleAuthForm Component', () => {
   let component: ReturnType<typeof render>;

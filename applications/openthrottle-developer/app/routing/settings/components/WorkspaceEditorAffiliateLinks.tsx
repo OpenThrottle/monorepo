@@ -1,5 +1,6 @@
-import * as React from 'react';
 import clsx from 'clsx';
+import * as React from 'react';
+
 import { getWorkspaceEditorAffiliateUrl } from '~/routing/settings/config/workspace-editor-affiliate-links';
 import { WORKSPACE_EDITOR_OPTIONS } from '~/routing/settings/config/workspace-editors';
 import { WORKSPACE_SETTINGS_COPY } from '~/routing/settings/data/data.copy';

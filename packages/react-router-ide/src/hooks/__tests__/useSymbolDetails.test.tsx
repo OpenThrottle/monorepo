@@ -1,10 +1,11 @@
-import * as React from 'react';
 import { render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import { useSymbolDetails } from '../useSymbolDetails';
+
 import type { ExportedSymbol, IdeSymbolDetails } from '../../data/view-models';
+import { useSymbolDetails } from '../useSymbolDetails';
 
 const symbol: ExportedSymbol = {
   isDefault: false,

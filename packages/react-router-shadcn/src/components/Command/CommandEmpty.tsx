@@ -1,5 +1,5 @@
-import * as React from 'react';
 import { CommandEmpty as CmdkCommandEmpty } from 'cmdk';
+import * as React from 'react';
 
 export interface CommandEmptyProps extends React.ComponentPropsWithoutRef<
   typeof CmdkCommandEmpty

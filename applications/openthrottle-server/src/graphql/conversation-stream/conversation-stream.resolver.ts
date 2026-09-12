@@ -6,8 +6,8 @@
  */
 
 import { randomUUID } from 'node:crypto';
+
 import { ForbiddenException } from '@nestjs/common';
-import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   Args,
   Context,
@@ -23,15 +23,16 @@ import {
   Public,
 } from '@openthrottle/nestjs-auth';
 import { NestjsModelDiscoveryService } from '@openthrottle/nestjs-model-discovery';
+import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   AGENT_CONVERSATION_MESSAGE_ROLES,
+  AgentCliPreferencesService,
   type AgentConversationMessage,
   type AgentConversationMessageRole,
-  AgentCliPreferencesService,
   AgentConversationsService,
+  buildManagedMcpServers,
   CustomPromptsService,
   WorkspaceLocalRepositoriesService,
-  buildManagedMcpServers,
 } from '@openthrottle/nestjs-repositories';
 import {
   AGENT_CLI_ALLOWLIST,
@@ -45,6 +46,7 @@ import {
   toConversationReasoningEffort,
   toConversationServiceTier,
 } from '@openthrottle/openthrottle-agentic-utils';
+
 import { StartConversationStreamInput } from './conversation-stream.input';
 import {
   ConversationStreamChunkObject,

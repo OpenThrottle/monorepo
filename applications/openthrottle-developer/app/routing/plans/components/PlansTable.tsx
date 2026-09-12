@@ -1,11 +1,12 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import { DataTable } from '@openthrottle/react-router-shadcn';
 import { readSearchParam } from '@openthrottle/react-router-ui-global';
+import clsx from 'clsx';
+import * as React from 'react';
 import { useSearchParams } from 'react-router';
+
+import type { PlanCardFragment } from '~/__generated__/graphql';
 import { PlanTasksEmpty } from '~/routing/plans/components/PlanTasksEmpty';
 import { buildPlansTableColumns } from '~/routing/plans/utils/plans-table-columns';
-import type { PlanCardFragment } from '~/__generated__/graphql';
 
 export interface PlansTableProps {
   className?: string;

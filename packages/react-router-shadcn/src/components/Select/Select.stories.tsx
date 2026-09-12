@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+
 import { Label } from '../Label';
 import { Select, SelectGroup, SelectValue } from './index';
 import { SelectContent } from './SelectContent';

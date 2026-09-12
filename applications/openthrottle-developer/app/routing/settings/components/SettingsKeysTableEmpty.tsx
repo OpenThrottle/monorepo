@@ -1,11 +1,11 @@
-import * as React from 'react';
-import { KeyRoundIcon } from 'lucide-react';
 import {
   Empty,
   EmptyDescription,
   EmptyMedia,
   EmptyTitle,
 } from '@openthrottle/react-router-shadcn';
+import { KeyRoundIcon } from 'lucide-react';
+import * as React from 'react';
 
 export interface SettingsKeysTableEmptyProps {}
 

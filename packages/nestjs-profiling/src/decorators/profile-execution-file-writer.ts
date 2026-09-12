@@ -1,5 +1,7 @@
 import * as fs from 'node:fs/promises';
+
 import { Logger } from '@nestjs/common';
+
 import type { ProfileExecutionResult } from './profile-execution.types';
 
 const DEFAULT_MAX_LINE_BYTES = 64 * 1024;

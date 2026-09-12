@@ -5,6 +5,7 @@ import type {
 } from '@openthrottle/nestjs-repositories';
 import { type Project, type Task } from '@openthrottle/nestjs-repositories';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import { PlansLoaders } from './plans-loaders';
 
 describe('PlansLoaders', () => {

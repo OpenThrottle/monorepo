@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
-import { parseScheduleForm } from '../parse-form';
+
 import { SCHEDULE_REPOSITORY_NONE_VALUE } from '../data.repositories';
+import { parseScheduleForm } from '../parse-form';
 
 const formOf = (entries: Record<string, string>): FormData => {
   const form = new FormData();

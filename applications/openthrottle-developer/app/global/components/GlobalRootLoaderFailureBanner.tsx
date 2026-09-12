@@ -1,7 +1,9 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import { Button } from '@openthrottle/react-router-shadcn';
+import clsx from 'clsx';
 import { AlertTriangle, RefreshCw, X } from 'lucide-react';
+import * as React from 'react';
+
+import { ROOT_LOADER_FAILURE_SNIPPET_MAX } from '~/global/config/root-loader-failure-banner';
 import type {
   RootLoaderDiagnostics,
   RootLoaderFailure,
@@ -11,7 +13,6 @@ import {
   rootLoaderStepLabel,
   truncateForBanner,
 } from '~/global/utils/root-loader-diagnostics';
-import { ROOT_LOADER_FAILURE_SNIPPET_MAX } from '~/global/config/root-loader-failure-banner';
 
 export interface GlobalRootLoaderFailureBannerProps {
   readonly diagnostics?: RootLoaderDiagnostics | null;

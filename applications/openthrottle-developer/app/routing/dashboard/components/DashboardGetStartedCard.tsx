@@ -1,15 +1,16 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import { Button, Card } from '@openthrottle/react-router-shadcn';
+import clsx from 'clsx';
 import { useAtom } from 'jotai';
 import { XIcon } from 'lucide-react';
+import * as React from 'react';
+
 import { DashboardGetStartedStep } from '~/routing/dashboard/components/DashboardGetStartedStep';
-import { GET_STARTED_STEPS } from '~/routing/dashboard/data/get-started-steps';
+import { onboardingStateAtom } from '~/routing/dashboard/data/atom.onboarding';
 import {
   GET_STARTED_CARD_COPY,
   GET_STARTED_STEP_COPY,
 } from '~/routing/dashboard/data/data.copy';
-import { onboardingStateAtom } from '~/routing/dashboard/data/atom.onboarding';
+import { GET_STARTED_STEPS } from '~/routing/dashboard/data/get-started-steps';
 import {
   isOnboardingComplete,
   type OnboardingCompletion,

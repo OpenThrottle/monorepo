@@ -1,6 +1,8 @@
+import { Button, Markdown } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 import { isRouteErrorResponse, Link } from 'react-router';
-import { Button, Markdown } from '@openthrottle/react-router-shadcn';
+
+import { useGlobalErrorBoundary } from '../hooks/useGlobalErrorBoundary';
 import {
   clientErrorKindLabel,
   getLooseErrorStack,
@@ -9,7 +11,6 @@ import {
   javascriptErrorBoundaryTitle,
   routeHttpErrorSummary,
 } from '../utils/client-error-diagnostics';
-import { useGlobalErrorBoundary } from '../hooks/useGlobalErrorBoundary';
 import { GlobalErrorBoundaryReferencePanel } from './GlobalErrorBoundaryReferencePanel';
 import { GlobalErrorBoundaryStackToggle } from './GlobalErrorBoundaryStackToggle';
 

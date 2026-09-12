@@ -16,6 +16,7 @@
    whole point of the pacing is that they do not overlap. */
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+
 import { chromium } from 'playwright';
 
 const BASE = process.env.DEMO_BASE_URL ?? 'http://localhost:7180';

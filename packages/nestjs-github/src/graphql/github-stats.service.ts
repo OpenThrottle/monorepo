@@ -3,6 +3,7 @@
  */
 
 import { Injectable } from '@nestjs/common';
+
 import type { ListPullsOptions } from '../github/github.service';
 import { GitHubService } from '../github/github.service';
 

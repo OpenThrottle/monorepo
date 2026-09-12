@@ -1,5 +1,6 @@
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, test } from 'vitest';
+
 import { DOCS_FEATURE_FLAG_DEFAULTS } from '~/global/config/docs-feature-flags';
 import { buildPersistentSettingKey } from '~/global/config/persistent-setting-storage';
 import { useDocsFeatureFlags } from '~/global/hooks/useDocsFeatureFlags';

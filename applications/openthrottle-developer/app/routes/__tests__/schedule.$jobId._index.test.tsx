@@ -1,9 +1,11 @@
-import * as React from 'react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import Component from '../schedule.$jobId._index';
-import { renderRoutesStub } from '~/testing/route-fixtures';
+
 import type { Route } from '@/app/routes/+types/schedule.$jobId._index';
+import { renderRoutesStub } from '~/testing/route-fixtures';
+
+import Component from '../schedule.$jobId._index';
 
 function stubMatches(): React.ComponentProps<typeof Component>['matches'];
 function stubMatches(): unknown {

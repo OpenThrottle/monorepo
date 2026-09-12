@@ -1,11 +1,12 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
-import type { ProcessMetricsSnapshot } from './process-metrics.types';
-import type { SystemMetricsSnapshot } from './system-metrics.types';
+
 import { MetricsController } from './metrics.controller';
 import { ProcessMetricsService } from './process-metrics.service';
+import type { ProcessMetricsSnapshot } from './process-metrics.types';
 import { SystemMetricsService } from './system-metrics.service';
+import type { SystemMetricsSnapshot } from './system-metrics.types';
 
 describe('MetricsController', () => {
   let controller: MetricsController;

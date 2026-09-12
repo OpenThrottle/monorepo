@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -8,6 +7,7 @@ import {
   BreadcrumbSeparator,
   cn,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
 import type { LinkProps } from 'react-router';
 import { Link } from 'react-router';
 

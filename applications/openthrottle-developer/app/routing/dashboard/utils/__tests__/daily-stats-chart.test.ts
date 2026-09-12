@@ -1,6 +1,8 @@
 import { describe, expect, test } from 'vitest';
-import { formatChartDate, mapToChartData } from '../daily-stats-chart';
+
 import type { DashboardDailyStatsCardFragment } from '~/__generated__/graphql';
+
+import { formatChartDate, mapToChartData } from '../daily-stats-chart';
 
 describe('formatChartDate', () => {
   test('formats a YYYY-MM-DD value as a full US date', () => {

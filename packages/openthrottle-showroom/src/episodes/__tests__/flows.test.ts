@@ -25,8 +25,8 @@
 
 import { describe, expect, test } from 'vitest';
 
+import { flowBeats, FLOWS, getFlow } from '../flows';
 import { EPISODES } from '../registry';
-import { FLOWS, flowBeats, getFlow } from '../flows';
 
 const episodes = Object.values(EPISODES);
 

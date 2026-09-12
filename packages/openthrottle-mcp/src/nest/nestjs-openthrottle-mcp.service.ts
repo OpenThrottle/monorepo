@@ -1,5 +1,5 @@
-import { LoggerService } from '@openthrottle/nestjs-modules';
 import { Injectable } from '@nestjs/common';
+import { LoggerService } from '@openthrottle/nestjs-modules';
 
 /**
  * @description Placeholder service for future Nest-only MCP wiring; tools live on {@link McpDeveloperMcpSurface}.

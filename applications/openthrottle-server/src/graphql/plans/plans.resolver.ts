@@ -2,12 +2,6 @@
  * @description Resolver for Plan queries and mutations. Injects PlansService from @openthrottle/nestjs-repositories and maps Plan entities to PlanObject.
  */
 
-import {
-  getPostgresConfig,
-  searchPlansBySemanticQuery,
-} from '@openthrottle/node-client';
-import type { PlanStatusCount } from '@openthrottle/node-client';
-import { isRecord } from '@openthrottle/nodejs-utils';
 import { BadRequestException, UseGuards } from '@nestjs/common';
 import {
   Args,
@@ -19,25 +13,31 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import { ProfileResponseTime } from '@openthrottle/nestjs-profiling';
-import { EmitNotification } from '@openthrottle/nestjs-websockets';
 import {
   AUTH_PRINCIPAL_KIND_USER,
   CurrentUser,
 } from '@openthrottle/nestjs-auth';
+import { ProfileResponseTime } from '@openthrottle/nestjs-profiling';
+import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
+import type { PlanStatus, TaskStatus } from '@openthrottle/nestjs-repositories';
+import type {
+  PlanJobRunHooksStorage,
+  PlanRun,
+  PlanRunConfigStorage,
+  PlanRunExecutionBackend,
+} from '@openthrottle/nestjs-repositories';
+import type { Project, Task } from '@openthrottle/nestjs-repositories';
 import {
   AgentCliPreferencesService,
   getDefaultPlanRunConfigStorage,
   isPlanStatus,
   parsePlanRunConfigJson,
-  planHasCustomRunConfig,
   PLAN_STATUS_LIST,
   PLAN_STATUS_VALUES,
-  PlansService,
-  PlanRunsService,
+  planHasCustomRunConfig,
   planRunConfigFromPlanStorage,
+  PlanRunsService,
+  PlansService,
   resolveCompletedAtForStatusChange,
   serializePlanRunConfigForGraphql,
   serializePlanRunConfigSnapshotForGraphql,
@@ -45,32 +45,26 @@ import {
   TASK_STATUS_VALUES,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
-import type { PlanStatus, TaskStatus } from '@openthrottle/nestjs-repositories';
-import { PlanTaskStatus } from './plan-task-status.enum';
-import type {
-  PlanJobRunHooksStorage,
-  PlanRun,
-  PlanRunConfigStorage,
-  PlanRunExecutionBackend,
-} from '@openthrottle/nestjs-repositories';
+import { EmitNotification } from '@openthrottle/nestjs-websockets';
+import type { PlanStatusCount } from '@openthrottle/node-client';
+import {
+  getPostgresConfig,
+  searchPlansBySemanticQuery,
+} from '@openthrottle/node-client';
+import { isRecord } from '@openthrottle/nodejs-utils';
 import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
-import type { Project, Task } from '@openthrottle/nestjs-repositories';
+
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
+import { PLAN_RULES_TRIGGER_KINDS } from '../../queues/plan-rules/plan-rules.types';
+import { PlanRulesEvaluationService } from '../../queues/plan-rules/plan-rules-evaluation.service';
+import { TAGGING_ENTITY_TYPES } from '../../queues/tagging/tagging.types';
+import { TaggingEnqueueService } from '../../queues/tagging/tagging-enqueue.service';
 import { EffectiveUserResolutionService } from '../../services/effective-user-resolution/effective-user-resolution.service';
 import { PlanCreationService } from '../../services/plan-creation/plan-creation.service';
 import { PlanRunWorktreeCheckoutService } from '../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.service';
 import { ProjectObject } from '../projects/project.object';
 import { TaskObject } from '../tasks/task.object';
-import {
-  type EnqueueOutcome,
-  PlanEnqueueService,
-} from './plan-enqueue.service';
-import { PlanStatusService } from './plan-status.service';
-import { PlanRulesEvaluationService } from '../../queues/plan-rules/plan-rules-evaluation.service';
-import { TaggingEnqueueService } from '../../queues/tagging/tagging-enqueue.service';
-import { TAGGING_ENTITY_TYPES } from '../../queues/tagging/tagging.types';
-import { PLAN_RULES_TRIGGER_KINDS } from '../../queues/plan-rules/plan-rules.types';
 import { WorkLedgerCaptureService } from '../work-ledger/work-ledger-capture.service';
-import { PlansLoaders } from './plans-loaders';
 import {
   parseJobRunHooksJsonInput,
   serializeJobRunHooksForGraphql,
@@ -82,10 +76,10 @@ import {
   DeletePlanInput,
   EnqueuePlanRalphOrchestratorInput,
   EnqueuePlanRunInput,
+  ForceSettlePlanRunInput,
   ListPlansByStatusInput,
   PlanRalphWorkflowModeGraphQL,
   PlanRunsByPlanIdInput,
-  ForceSettlePlanRunInput,
   RecordPlanRunHeartbeatInput,
   RegisterCliPlanRunInput,
   RegisterPlanRunWorktreeCheckoutInput,
@@ -105,6 +99,13 @@ import {
   PlanRunObject,
   PlanStatusCountObject,
 } from './plan.object';
+import {
+  type EnqueueOutcome,
+  PlanEnqueueService,
+} from './plan-enqueue.service';
+import { PlanStatusService } from './plan-status.service';
+import { PlanTaskStatus } from './plan-task-status.enum';
+import { PlansLoaders } from './plans-loaders';
 
 const DEFAULT_SEARCH_PLANS_LIMIT = 20;
 const DEFAULT_PLAN_RUNS_LIMIT = 20;

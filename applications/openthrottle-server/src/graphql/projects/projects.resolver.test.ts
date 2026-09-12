@@ -1,12 +1,13 @@
+import { createMock } from '@golevelup/ts-vitest';
+import { Test } from '@nestjs/testing';
+import type { Plan, Project, Task } from '@openthrottle/nestjs-repositories';
 import {
   ProjectsLoaders,
   ProjectsService,
 } from '@openthrottle/nestjs-repositories';
-import type { Plan, Project, Task } from '@openthrottle/nestjs-repositories';
 import { getDefaultPlanRunConfigStorage } from '@openthrottle/nestjs-repositories';
-import { createMock } from '@golevelup/ts-vitest';
-import { Test } from '@nestjs/testing';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
+
 import { ProjectsResolver } from './projects.resolver';
 
 const buildMockPlan = (projectId: string): Plan => ({

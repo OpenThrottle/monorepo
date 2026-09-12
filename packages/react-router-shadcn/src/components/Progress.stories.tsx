@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+
 import { Progress } from './Progress';
 
 const STEPS = [0, 25, 50, 75, 100];

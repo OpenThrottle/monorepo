@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Button,
   Card,
@@ -8,14 +7,16 @@ import {
   CardTitle,
 } from '@openthrottle/react-router-shadcn';
 import { ChevronDown, ChevronRight, ExternalLink } from 'lucide-react';
+import * as React from 'react';
+
+import type { PromptDetailsFragment } from '~/__generated__/graphql';
+import { githubOpenThrottleMainBlob } from '~/routing/agents/constants/github-repo-paths';
+import { buildPromptDebugSnapshotJson } from '~/routing/prompts/utils/prompt-debug-snapshot';
 import {
   fnv1a32Hex,
   formatIso,
   formatRelativeFromIso,
 } from '~/routing/prompts/utils/utils.prompts';
-import { buildPromptDebugSnapshotJson } from '~/routing/prompts/utils/prompt-debug-snapshot';
-import { githubOpenThrottleMainBlob } from '~/routing/agents/constants/github-repo-paths';
-import type { PromptDetailsFragment } from '~/__generated__/graphql';
 
 export interface PromptDetailMetadataPanelProps {
   contentLength: number;

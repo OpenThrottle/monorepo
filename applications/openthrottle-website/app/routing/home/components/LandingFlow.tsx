@@ -1,6 +1,7 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import { GlobalAnimationWaves } from '@openthrottle/react-router-ui-global';
+import clsx from 'clsx';
+import * as React from 'react';
+
 import { LANDING_FLOW } from '~/routing/home/data/data.landing';
 
 export interface LandingFlowProps {

@@ -1,8 +1,8 @@
 'use client';
 
-import * as React from 'react';
-import { Slot } from 'radix-ui';
 import type { VariantProps } from 'class-variance-authority';
+import { Slot } from 'radix-ui';
+import * as React from 'react';
 
 import { cn } from '../../utils/cn';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../Tooltip';

@@ -6,12 +6,13 @@
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { discoverRepoPersonas } from '~/routing/agents/data/discover-repo-personas.server';
-import { discoverRepoSkills } from '~/routing/agents/data/discover-repo-skills.server';
+
 import type {
   AgentAssetPromptType,
   AgentAssetResult,
 } from '~/routing/agent-search/types';
+import { discoverRepoPersonas } from '~/routing/agents/data/discover-repo-personas.server';
+import { discoverRepoSkills } from '~/routing/agents/data/discover-repo-skills.server';
 
 const SNIPPET_LENGTH = 240;
 

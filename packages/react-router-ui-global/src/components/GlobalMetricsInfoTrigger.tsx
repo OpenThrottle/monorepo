@@ -1,6 +1,7 @@
-import * as React from 'react';
 import clsx from 'clsx';
 import { Info } from 'lucide-react';
+import * as React from 'react';
+
 import { useUrlSyncedOverlay } from '../hooks/useUrlSyncedOverlay';
 
 export interface GlobalMetricsInfoTriggerProps {

@@ -11,15 +11,16 @@
  * get/upsert/delete/add/update/remove_skill_availability_rule(_set) tools.
  */
 
+import { UseGuards } from '@nestjs/common';
+import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { CurrentUser } from '@openthrottle/nestjs-auth';
+import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 import type { SkillAvailabilityRule } from '@openthrottle/nestjs-repositories';
 import {
   SkillAvailabilityService,
   SkillTagsService,
 } from '@openthrottle/nestjs-repositories';
-import { CurrentUser } from '@openthrottle/nestjs-auth';
-import { UseGuards } from '@nestjs/common';
-import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
+
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
 import { SkillAvailabilityRuleInput } from './skill-availability.input';
 import {

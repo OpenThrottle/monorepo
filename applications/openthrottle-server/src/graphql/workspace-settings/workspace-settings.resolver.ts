@@ -2,6 +2,19 @@
  * @description GraphQL resolver for workspace local repository CRUD (user-scoped).
  */
 
+import { UseGuards } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import {
+  Args,
+  ID,
+  Mutation,
+  Parent,
+  Query,
+  ResolveField,
+  Resolver,
+} from '@nestjs/graphql';
+import { CurrentUser } from '@openthrottle/nestjs-auth';
+import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 import type {
   Project,
   UserWorkspaceSettings,
@@ -12,48 +25,36 @@ import {
   WorkspaceEditorConfigService,
   WorkspaceLocalRepositoriesService,
 } from '@openthrottle/nestjs-repositories';
-import { CurrentUser } from '@openthrottle/nestjs-auth';
-import { ConfigService } from '@nestjs/config';
-import { UseGuards } from '@nestjs/common';
-import {
-  Args,
-  ID,
-  Mutation,
-  Parent,
-  Query,
-  ResolveField,
-  Resolver,
-} from '@nestjs/graphql';
-import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
+
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
 import { ProjectObject } from '../projects/project.object';
 import { ApplyWorkspaceEditorConfigurationInput } from './apply-workspace-editor-configuration.input';
-import { ApplyWorkspaceEditorConfigurationResultObject } from './workspace-editor-config-application.object';
-import {
-  CreateWorkspaceLocalRepositoryInput,
-  SetWorkspaceLocalRepositoryProjectInput,
-  UpdateWorkspaceLocalRepositoryInput,
-  UpdateWorkspaceProfileInput,
-} from './workspace-settings.input';
-import { UserWorkspaceProfileObject } from './user-workspace-profile.object';
 import {
   toUserWorkspaceProfileObject,
   toWorkspaceEditorIdEnum,
 } from './user-workspace-profile.mapper';
+import { UserWorkspaceProfileObject } from './user-workspace-profile.object';
 import {
   validateContactDisplayName,
   validateContactEmail,
   validateEnabledEditors,
 } from './user-workspace-profile.validation';
+import { ApplyWorkspaceEditorConfigurationResultObject } from './workspace-editor-config-application.object';
 import { WorkspaceLocalRepositoryObject } from './workspace-local-repository.object';
-import { WorkspaceSettingsLoaders } from './workspace-settings-loaders';
-import { WorkspaceSettingsObject } from './workspace-settings.object';
 import {
   validateAndNormalizeFilesystemPath,
   validateDisplayName,
   validateGitDefaultBranch,
   validateGitRemoteUrl,
 } from './workspace-local-repository.validation';
+import {
+  CreateWorkspaceLocalRepositoryInput,
+  SetWorkspaceLocalRepositoryProjectInput,
+  UpdateWorkspaceLocalRepositoryInput,
+  UpdateWorkspaceProfileInput,
+} from './workspace-settings.input';
+import { WorkspaceSettingsObject } from './workspace-settings.object';
+import { WorkspaceSettingsLoaders } from './workspace-settings-loaders';
 
 @Resolver(() => WorkspaceLocalRepositoryObject)
 @UseGuards(GqlPermissionsGuard)

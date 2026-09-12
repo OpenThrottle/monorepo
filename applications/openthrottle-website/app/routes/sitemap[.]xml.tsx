@@ -1,6 +1,7 @@
 import { buildSitemapResponse } from '@openthrottle/react-router-utils';
-import { STATIC_PATHS } from '~/routing/home/data/sitemap-paths';
+
 import type { Route } from '@/app/routes/+types/sitemap[.]xml';
+import { STATIC_PATHS } from '~/routing/home/data/sitemap-paths';
 
 /**
  * `GET /sitemap.xml` — a resource route (loader-only, no default export) that

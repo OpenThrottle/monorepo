@@ -1,10 +1,11 @@
-import * as React from 'react';
-import { describe, expect, test } from 'vitest';
-import { createRoutesStub } from 'react-router';
-import { OpenThrottlePaginationSimple } from '../OpenThrottlePaginationSimple';
-import { render } from '@testing-library/react';
-import type { OpenThrottlePaginationSimpleProps } from '../OpenThrottlePaginationSimple';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
+import { createRoutesStub } from 'react-router';
+import { describe, expect, test } from 'vitest';
+
+import type { OpenThrottlePaginationSimpleProps } from '../OpenThrottlePaginationSimple';
+import { OpenThrottlePaginationSimple } from '../OpenThrottlePaginationSimple';
 
 const renderPagination = (
   props: OpenThrottlePaginationSimpleProps,

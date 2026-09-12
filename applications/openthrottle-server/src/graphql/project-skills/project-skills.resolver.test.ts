@@ -1,3 +1,8 @@
+import { createMock } from '@golevelup/ts-vitest';
+import { NotFoundException } from '@nestjs/common';
+import { Test } from '@nestjs/testing';
+import type { AuthPrincipal } from '@openthrottle/nestjs-auth';
+import { AUTH_PRINCIPAL_KIND_USER } from '@openthrottle/nestjs-auth';
 import type {
   Project,
   ProjectSkillView,
@@ -7,12 +12,8 @@ import {
   ProjectsService,
   ServiceAccountsService,
 } from '@openthrottle/nestjs-repositories';
-import { AUTH_PRINCIPAL_KIND_USER } from '@openthrottle/nestjs-auth';
-import type { AuthPrincipal } from '@openthrottle/nestjs-auth';
-import { createMock } from '@golevelup/ts-vitest';
-import { NotFoundException } from '@nestjs/common';
-import { Test } from '@nestjs/testing';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
 import { ProjectSkillsResolver } from './project-skills.resolver';
 

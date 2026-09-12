@@ -1,7 +1,8 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { useSearchParams } from 'react-router';
 import { Button, Input } from '@openthrottle/react-router-shadcn';
+import clsx from 'clsx';
+import * as React from 'react';
+import { useSearchParams } from 'react-router';
+
 import { GLOBAL_TOOLBAR_SEARCH_COPY } from '../data/data.copy';
 
 export interface GlobalToolbarSearchProps {

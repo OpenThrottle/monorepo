@@ -2,28 +2,29 @@
  * @description Task CRUD tool handlers + schemas: create_task, create_tasks, get_task, get_tasks_by_plan_id, get_remaining_tasks_for_plan, list_tasks_by_category, reorder_plan_tasks, update_task, promote_task, delete_task. Wired up via the shared `developerMcpToolDefinitions` registry and the Nest surface.
  */
 
-import { z } from 'zod';
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
+import { z } from 'zod';
+
 import {
-  type CreateTaskMutation,
-  type CreateTasksMutation,
-  type GetRemainingTasksByPlanIdQuery,
-  type GetTaskQuery,
-  type GetTasksByPlanIdQuery,
-  type GetTasksQuery,
-  type PromoteTaskToPlanMutation,
-  type ReorderPlanTasksMutation,
-  type UpdateTaskMutation,
   CreateTaskDocument,
+  type CreateTaskMutation,
   CreateTasksDocument,
+  type CreateTasksMutation,
   DeleteTaskDocument,
   GetRemainingTasksByPlanIdDocument,
+  type GetRemainingTasksByPlanIdQuery,
   GetTaskDocument,
+  type GetTaskQuery,
   GetTasksByPlanIdDocument,
+  type GetTasksByPlanIdQuery,
   GetTasksDocument,
+  type GetTasksQuery,
   PromoteTaskToPlanDocument,
+  type PromoteTaskToPlanMutation,
   ReorderPlanTasksDocument,
+  type ReorderPlanTasksMutation,
   UpdateTaskDocument,
+  type UpdateTaskMutation,
 } from '../__generated__/graphql.js';
 import {
   CreateTaskInputSchema,
@@ -34,10 +35,10 @@ import {
   TasksByPlanIdInputSchema,
   UpdateTaskInputSchema,
 } from '../__generated__/schemas.ts';
-import type { GenericResult } from '../types/index.ts';
-import { filterTasksByCategory } from '../utils/filters.ts';
 import { getAuthToken } from '../auth/get-auth-token.ts';
+import type { GenericResult } from '../types/index.ts';
 import { invalidArgsContent } from '../utils/errors.ts';
+import { filterTasksByCategory } from '../utils/filters.ts';
 import { runTool } from '../utils/tool-result.ts';
 
 export type TaskListItem = GetTasksQuery['tasks'][number];

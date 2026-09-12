@@ -1,12 +1,14 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { CustomPromptType } from '~/__generated__/graphql';
+
 import type { PromptDetailsFragment } from '~/__generated__/graphql';
-import { PromptDetailMetadataPanel } from '../PromptDetailMetadataPanel';
+import { CustomPromptType } from '~/__generated__/graphql';
+
 import type { PromptDetailMetadataPanelProps } from '../PromptDetailMetadataPanel';
+import { PromptDetailMetadataPanel } from '../PromptDetailMetadataPanel';
 
 const prompt: PromptDetailsFragment = {
   content: '# Test Prompt',

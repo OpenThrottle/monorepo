@@ -1,20 +1,22 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
+
 import { WorkspaceFolderReconciliation } from '~/__generated__/graphql';
 import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
+import { REPOSITORIES_ONBOARDING } from '~/routing/settings/repositories/data/data.copy';
 import {
   mockCheckout,
   mockDiscoveredWorktrees,
   mockRepository,
 } from '~/routing/settings/repositories/data/mock.repositories';
-import { REPOSITORIES_ONBOARDING } from '~/routing/settings/repositories/data/data.copy';
 import { buildRepositoryRows } from '~/routing/settings/repositories/utils/rows';
-import { RepositoriesSection } from '../RepositoriesSection';
+
 import type { RepositoriesSectionProps } from '../RepositoriesSection';
+import { RepositoriesSection } from '../RepositoriesSection';
 
 const repository = mockRepository({
   checkouts: [mockCheckout({ displayName: 'openthrottle', id: 'checkout-1' })],

@@ -2,14 +2,15 @@ import type {
   ChatModelOption,
   ChatPersonaOption,
 } from '@openthrottle/react-router-chat';
+import type { RepositoryOption } from '@openthrottle/react-router-chat-state';
 import {
   composeModelOptions,
   toAgentChatOptions,
   toChatModelOptions,
   toPersonaOptions,
 } from '@openthrottle/react-router-chat-state';
-import type { RepositoryOption } from '@openthrottle/react-router-chat-state';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+
 import type {
   DiscoverAgentClisQuery,
   DiscoverLocalModelsQuery,

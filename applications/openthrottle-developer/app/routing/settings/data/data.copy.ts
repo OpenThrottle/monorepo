@@ -5,6 +5,7 @@
 
 import type { GlobalFeatureOnboardingContent } from '@openthrottle/react-router-ui-global';
 import { KeyRoundIcon } from 'lucide-react';
+
 import { MCP_DEVELOPER_AUTH_DOC_HREF } from '~/routing/settings/utils/settings-docs-links';
 
 export const WORKSPACE_FOLDERS_COPY = {

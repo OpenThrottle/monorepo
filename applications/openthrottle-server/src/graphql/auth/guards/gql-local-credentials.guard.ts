@@ -2,7 +2,6 @@
  * @description Copies GraphQL login mutation input onto the request body so AuthGuard('local') can read credentials. Run before AuthGuard('local') on the login mutation. Validates the credential shape/length first and rejects malformed input before it reaches Passport's LocalStrategy.
  */
 
-import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   type CanActivate,
   type ExecutionContext,
@@ -10,6 +9,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { GqlExecutionContext } from '@nestjs/graphql';
+import { LoggerService } from '@openthrottle/nestjs-modules';
 
 /** RFC 5321 maximum total email length. */
 const MAX_EMAIL_LENGTH = 320;

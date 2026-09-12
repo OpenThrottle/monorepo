@@ -1,5 +1,6 @@
+import { cn, SidebarHeader } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
-import { SidebarHeader, cn } from '@openthrottle/react-router-shadcn';
+
 import { OpenThrottleLogo } from './OpenThrottleLogo';
 
 export interface OpenThrottleSidebarHeaderProps {

@@ -1,8 +1,9 @@
-import * as React from 'react';
 import { renderHook } from '@testing-library/react';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import { SidebarContext } from '../sidebar-context';
+
 import type { SidebarContextProps } from '../sidebar-context';
+import { SidebarContext } from '../sidebar-context';
 
 describe('sidebar-context', () => {
   test('defaults to null without a provider', () => {

@@ -1,12 +1,13 @@
-import * as React from 'react';
+import type { RenderResult } from '@testing-library/react';
 import { cleanup, render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { afterEach, describe, expect, test, vi } from 'vitest';
-import type { RenderResult } from '@testing-library/react';
+
 import { GLOBAL_POPOVER_COPY } from '../../data/data.copy';
-import { GlobalPopover } from '../GlobalPopover';
 import type { GlobalPopoverAction, GlobalPopoverProps } from '../GlobalPopover';
+import { GlobalPopover } from '../GlobalPopover';
 
 const openMenu = async (
   component: RenderResult,

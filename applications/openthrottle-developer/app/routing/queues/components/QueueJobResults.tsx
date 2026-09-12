@@ -1,9 +1,10 @@
-import * as React from 'react';
-import { HeartHandshakeIcon } from 'lucide-react';
 import {
   OpenThrottleClipboard,
   OpenThrottleFieldset,
 } from '@openthrottle/react-router-ui';
+import { HeartHandshakeIcon } from 'lucide-react';
+import * as React from 'react';
+
 import type { JobDetailsCardFragment } from '~/__generated__/graphql';
 // import clsx from 'clsx';
 

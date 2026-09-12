@@ -1,10 +1,11 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { OpenThrottleEmptyState } from '../OpenThrottleEmptyState';
+
 import type { OpenThrottleEmptyStateProps } from '../OpenThrottleEmptyState';
+import { OpenThrottleEmptyState } from '../OpenThrottleEmptyState';
 
 describe('OpenThrottleEmptyState Component', () => {
   let component: RenderResult;

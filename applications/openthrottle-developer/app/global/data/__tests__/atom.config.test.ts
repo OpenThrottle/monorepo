@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+
 import {
   CONFIG_STORAGE_KEY,
   DEFAULT_APPEARANCE_CONFIG,

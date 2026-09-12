@@ -1,12 +1,13 @@
-import * as React from 'react';
-import { beforeEach, describe, expect, test } from 'vitest';
-import { createRoutesStub, useSearchParams } from 'react-router';
+import { GLOBAL_TOOLBAR_SEARCH_COPY } from '@openthrottle/react-router-ui-global';
+import type { RenderResult } from '@testing-library/react';
 import { cleanup, render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { RenderResult } from '@testing-library/react';
-import { GLOBAL_TOOLBAR_SEARCH_COPY } from '@openthrottle/react-router-ui-global';
-import { ProjectsToolbar } from '../ProjectsToolbar';
+import * as React from 'react';
+import { createRoutesStub, useSearchParams } from 'react-router';
+import { beforeEach, describe, expect, test } from 'vitest';
+
 import type { ProjectsToolbarProps } from '../ProjectsToolbar';
+import { ProjectsToolbar } from '../ProjectsToolbar';
 
 const DEFAULT_PROPS: ProjectsToolbarProps = {
   limit: 5,

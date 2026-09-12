@@ -1,12 +1,14 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import Index from '../plans._index';
-import { buildRootMatch } from '~/testing/root-match-fixture';
-import { PLANS_INDEX_EMPTY_COPY } from '~/routing/plans/data/data.copy';
-import type { PlanCardFragment } from '~/__generated__/graphql';
+
 import type { Route } from '@/app/routes/+types/plans._index';
+import type { PlanCardFragment } from '~/__generated__/graphql';
+import { PLANS_INDEX_EMPTY_COPY } from '~/routing/plans/data/data.copy';
+import { buildRootMatch } from '~/testing/root-match-fixture';
+
+import Index from '../plans._index';
 
 const mockPlan: PlanCardFragment = {
   __typename: 'PlanObject',

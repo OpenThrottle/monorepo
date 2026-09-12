@@ -1,12 +1,13 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import type { PullRequestCardFragment } from '@openthrottle/openthrottle-developer-codegen';
 import { DataTable } from '@openthrottle/react-router-shadcn';
+import clsx from 'clsx';
+import * as React from 'react';
+
+import type { PullRequestsTableColumnValue } from '~/routing/pull-requests/config/pull-requests-table-columns';
 import {
   createPullRequestsTableColumns,
   getPullRequestsTableRowId,
 } from '~/routing/pull-requests/config/pull-requests-table-columns';
-import type { PullRequestsTableColumnValue } from '~/routing/pull-requests/config/pull-requests-table-columns';
 import type { PullRequestsListFilters } from '~/routing/pull-requests/types/pull-requests-list-filters';
 
 export interface PullRequestsTableProps {

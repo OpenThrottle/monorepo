@@ -1,15 +1,16 @@
-import * as React from 'react';
 import type { NotificationEventName } from '@openthrottle/openthrottle-notifications';
+import * as React from 'react';
+
+import type {
+  WebsocketDebuggerEventSubscriber,
+  WebsocketDebuggerLogEntry,
+  WebsocketDebuggerSocket,
+} from '../components/websocket-debugger';
 import {
   filterWebsocketDebuggerEntries,
   useWebsocketDebuggerLog,
   useWebsocketDebuggerSocketSubscription,
   WEBSOCKET_DEBUGGER_ALL_EVENT_NAMES,
-} from '../components/websocket-debugger';
-import type {
-  WebsocketDebuggerEventSubscriber,
-  WebsocketDebuggerLogEntry,
-  WebsocketDebuggerSocket,
 } from '../components/websocket-debugger';
 import { isNotificationEventName } from '../utils/is-notification-event-name';
 

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { AGENT_CONVERSATION_TOOL_METADATA_MAX_BYTES } from './agent-conversation.constants';
 import {
   capAgentConversationContent,

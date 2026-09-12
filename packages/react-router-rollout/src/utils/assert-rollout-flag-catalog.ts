@@ -1,9 +1,9 @@
-import type { RolloutFlagValueByKind, RolloutJsonValue } from '../types';
 import {
   isRolloutFlagKind,
   ROLLOUT_FLAG_KIND,
   type RolloutFlagKind,
 } from '../config/rollout-flag-kind';
+import type { RolloutFlagValueByKind, RolloutJsonValue } from '../types';
 
 /**
  * Whether a value is valid for the given kind (mirrors nestjs-rollout checks).

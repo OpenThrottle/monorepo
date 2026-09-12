@@ -1,10 +1,12 @@
-import * as React from 'react';
-import type { RenderResult } from '@testing-library/react';
 import { Tabs, TooltipProvider } from '@openthrottle/react-router-shadcn';
+import type { RenderResult } from '@testing-library/react';
+import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
-import { PlanDetailTabsList } from '../PlanDetailTabsList';
-import type { PlanDetailTabsListProps } from '../PlanDetailTabsList';
+
 import { renderRoutesStub } from '~/testing/route-fixtures';
+
+import type { PlanDetailTabsListProps } from '../PlanDetailTabsList';
+import { PlanDetailTabsList } from '../PlanDetailTabsList';
 
 const renderTabs = (
   overrides: Partial<PlanDetailTabsListProps> = {},

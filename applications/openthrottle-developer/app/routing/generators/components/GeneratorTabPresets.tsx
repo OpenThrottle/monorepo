@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Card,
   CardContent,
@@ -7,8 +6,10 @@ import {
   TabsContent,
 } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
-import { buildGeneratorNxPresets } from '~/routing/generators/utils/build-generator-nx-presets';
+import * as React from 'react';
+
 import type { GeneratorDetailCardFragment } from '~/__generated__/graphql';
+import { buildGeneratorNxPresets } from '~/routing/generators/utils/build-generator-nx-presets';
 
 export interface GeneratorTabPresetsProps {
   generator: GeneratorDetailCardFragment;

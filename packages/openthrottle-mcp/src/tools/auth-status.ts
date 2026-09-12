@@ -7,14 +7,15 @@
  * Registered via the shared `developerMcpToolDefinitions` registry and the Nest surface.
  */
 
-import { z } from 'zod';
 import {
   executeGraphqlWithAuth,
   getGraphQLUrl,
 } from '@openthrottle/nodejs-graphql';
+import { z } from 'zod';
+
 import { ListSourcesDocument } from '../__generated__/graphql.js';
-import type { GenericResult } from '../types/index.ts';
 import { getAuthToken } from '../auth/get-auth-token.ts';
+import type { GenericResult } from '../types/index.ts';
 
 type AuthStatusStructured = {
   authStatus: {

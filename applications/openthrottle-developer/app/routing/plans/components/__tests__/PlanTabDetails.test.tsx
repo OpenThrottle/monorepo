@@ -1,16 +1,18 @@
-import * as React from 'react';
 import { Tabs, TooltipProvider } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
-import { PlanTabDetails } from '../PlanTabDetails';
-import type { PlanTabDetailsProps } from '../PlanTabDetails';
-import {
-  buildPlanDetailLoaderData,
-  renderWithPlanDetailRouteData,
-} from '~/routing/plans/testing/plan-detail-route-data';
+
 import type {
   PlanDetailRunHistoryQuery,
   PlanDetailsFragment,
 } from '~/__generated__/graphql';
+import {
+  buildPlanDetailLoaderData,
+  renderWithPlanDetailRouteData,
+} from '~/routing/plans/testing/plan-detail-route-data';
+
+import type { PlanTabDetailsProps } from '../PlanTabDetails';
+import { PlanTabDetails } from '../PlanTabDetails';
 
 const mockPlan: PlanDetailsFragment = {
   __typename: 'PlanObject',

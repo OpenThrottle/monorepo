@@ -33,7 +33,7 @@ import {
   unwrapWorkflowGraphqlResult,
   WorkflowGraphqlError,
 } from '@openthrottle/openthrottle-agentic-ralph';
-import { ralphDebugLogger } from './ralph-debug-logger';
+
 import type {
   CliPlanRunCancelMarker,
   CommitLinkInput,
@@ -45,6 +45,7 @@ import type {
   TaskRow,
 } from './openthrottle-ralph-types';
 import { taskRequirementsFromRow } from './openthrottle-ralph-types';
+import { ralphDebugLogger } from './ralph-debug-logger';
 
 const normalizeStatus = (status: string): string => status.trim().toUpperCase();
 

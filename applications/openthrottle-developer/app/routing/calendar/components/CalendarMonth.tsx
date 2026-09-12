@@ -1,4 +1,4 @@
-import * as React from 'react';
+import type { CalendarEvent } from '@openthrottle/react-router-scheduling';
 import {
   Calendar,
   CalendarView,
@@ -7,8 +7,9 @@ import {
 } from '@openthrottle/react-router-scheduling';
 import { Button } from '@openthrottle/react-router-shadcn';
 import { IS_BROWSER } from '@openthrottle/react-router-utils';
+import * as React from 'react';
+
 import { CalendarEventCard } from './CalendarEventCard';
-import type { CalendarEvent } from '@openthrottle/react-router-scheduling';
 
 export interface CalendarMonthProps {
   readonly className?: string;

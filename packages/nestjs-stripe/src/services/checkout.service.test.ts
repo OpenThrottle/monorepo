@@ -4,6 +4,7 @@
 
 import { Test } from '@nestjs/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import type { StripeCheckoutUserPort } from '../tokens/stripe-ports';
 import { STRIPE_CHECKOUT_USER_PORT } from '../tokens/stripe-tokens';
 import { CheckoutService } from './checkout.service';

@@ -1,20 +1,22 @@
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import ScheduleIndex from '../schedule._index';
-import { buildRootMatch } from '~/testing/root-match-fixture';
+
+import type { Route } from '@/app/routes/+types/schedule._index';
 import {
-  scheduleJobFixture,
-  scheduleLoaderDataFixture,
-} from '~/testing/schedule-fixtures';
+  SCHEDULE_COPY,
+  SCHEDULE_ONBOARDING,
+} from '~/routing/schedule/data/data.copy';
+import { buildRootMatch } from '~/testing/root-match-fixture';
 import {
   renderRoutesStub,
   renderWithMemoryRouter,
 } from '~/testing/route-fixtures';
 import {
-  SCHEDULE_COPY,
-  SCHEDULE_ONBOARDING,
-} from '~/routing/schedule/data/data.copy';
-import type { Route } from '@/app/routes/+types/schedule._index';
+  scheduleJobFixture,
+  scheduleLoaderDataFixture,
+} from '~/testing/schedule-fixtures';
+
+import ScheduleIndex from '../schedule._index';
 
 const matches: Route.ComponentProps['matches'] = [
   buildRootMatch(),

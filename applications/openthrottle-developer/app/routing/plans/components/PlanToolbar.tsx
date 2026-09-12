@@ -1,15 +1,16 @@
 import * as React from 'react';
+
+import type { WorkspaceEditorId } from '~/__generated__/graphql';
 import { OpenThrottleToolbar } from '~/routing/plans/components/OpenThrottleToolbar';
 import { PlanEditorActions } from '~/routing/plans/components/PlanEditorActions';
-import { PlanToolbarRunActions } from '~/routing/plans/components/PlanToolbarRunActions';
-import { PlanToolbarStatusAction } from '~/routing/plans/components/PlanToolbarStatusAction';
-import { PlanToolbarTags } from '~/routing/plans/components/PlanToolbarTags';
-import { usePlanToolbar } from '~/routing/plans/hooks/usePlanToolbar';
 import type {
   PlanTagChipData,
   PlanTagVocabularyOption,
 } from '~/routing/plans/components/PlanTagChips';
-import type { WorkspaceEditorId } from '~/__generated__/graphql';
+import { PlanToolbarRunActions } from '~/routing/plans/components/PlanToolbarRunActions';
+import { PlanToolbarStatusAction } from '~/routing/plans/components/PlanToolbarStatusAction';
+import { PlanToolbarTags } from '~/routing/plans/components/PlanToolbarTags';
+import { usePlanToolbar } from '~/routing/plans/hooks/usePlanToolbar';
 
 export interface PlanToolbarProps {
   /**

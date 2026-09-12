@@ -1,19 +1,20 @@
-import * as React from 'react';
+import { OpenThrottleProductGetStarted } from '@openthrottle/react-router-ui';
+import { getRandomIntroduction } from '@openthrottle/react-router-ui';
 import {
   GlobalAnimationMesh,
   GlobalErrorBoundary,
 } from '@openthrottle/react-router-ui-global';
-import { SITE_TITLE } from '~/global/config/settings';
 import {
   APP_URL,
   canonicalMeta,
   mergeRouteModuleMeta,
   OPENTHROTTLE_META_DESCRIPTION,
 } from '@openthrottle/react-router-utils';
-import { OpenThrottleProductGetStarted } from '@openthrottle/react-router-ui';
-import { getRandomIntroduction } from '@openthrottle/react-router-ui';
-import { GlobalFooter } from '~/global/components/GlobalFooter';
+import * as React from 'react';
+
 import type { Route } from '@/app/routes/+types/download';
+import { GlobalFooter } from '~/global/components/GlobalFooter';
+import { SITE_TITLE } from '~/global/config/settings';
 
 export const loader = async (_args: Route.LoaderArgs) => {
   const introduction = getRandomIntroduction();

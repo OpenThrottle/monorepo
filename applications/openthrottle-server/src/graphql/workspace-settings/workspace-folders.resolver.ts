@@ -18,6 +18,7 @@ import {
 import { CurrentUser } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 import type { Project } from '@openthrottle/nestjs-repositories';
+
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
 import { ProjectObject } from '../projects/project.object';
 import { RepositoryObject } from './repository.object';

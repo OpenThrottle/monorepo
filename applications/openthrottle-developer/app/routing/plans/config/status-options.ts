@@ -4,7 +4,7 @@
  * derived from the generated PlanTaskStatus GraphQL enum) so this filter cannot
  * drift from the canonical status vocabulary. Only the display ORDER is local.
  */
-import { planStatusValues, type PlanStatusKey } from '~/routing/plans/types';
+import { type PlanStatusKey, planStatusValues } from '~/routing/plans/types';
 
 export const DEFAULT_PLAN_STATUS = 'PENDING' as const;
 

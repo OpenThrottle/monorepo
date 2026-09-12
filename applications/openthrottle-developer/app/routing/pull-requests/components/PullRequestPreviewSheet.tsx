@@ -1,6 +1,4 @@
-import * as React from 'react';
-import { formatDate } from 'date-fns';
-import { GitPullRequestIcon } from 'lucide-react';
+import type { PullRequestCardFragment } from '@openthrottle/openthrottle-developer-codegen';
 import {
   Button,
   Sheet,
@@ -9,8 +7,11 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@openthrottle/react-router-shadcn';
+import { formatDate } from 'date-fns';
+import { GitPullRequestIcon } from 'lucide-react';
+import * as React from 'react';
 import { Link, useSearchParams } from 'react-router';
-import type { PullRequestCardFragment } from '@openthrottle/openthrottle-developer-codegen';
+
 import { PullRequestStatus } from '~/routing/pull-requests/components/PullRequestStatus';
 import { PULL_REQUEST_LIST_PREVIEW_SEARCH_PARAM } from '~/routing/pull-requests/constants/pull-request-list-url';
 import type { PullRequestsListFilters } from '~/routing/pull-requests/types/pull-requests-list-filters';

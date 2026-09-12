@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Button,
   DropdownMenu,
@@ -10,6 +9,8 @@ import {
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
 import { Paperclip } from 'lucide-react';
+import * as React from 'react';
+
 import type { ChatContextSource } from '../types';
 
 export interface ChatComposerAttachControlProps {

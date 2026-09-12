@@ -1,8 +1,9 @@
 import { Test } from '@nestjs/testing';
 import { describe, expect, it } from 'vitest';
-import type { LogJsonlSink, LogStreamHub } from './ports/logging-ports';
+
 import { NestjsLoggingModule } from './nestjs-logging.module';
 import { NestjsLoggingService } from './nestjs-logging.service';
+import type { LogJsonlSink, LogStreamHub } from './ports/logging-ports';
 import { LOG_JSONL_SINK, LOG_STREAM_HUB } from './tokens/nestjs-logging.tokens';
 
 describe('NestjsLoggingModule', () => {

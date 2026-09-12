@@ -3,6 +3,7 @@
  */
 
 import { Field, Int, ObjectType } from '@nestjs/graphql';
+
 import { PlanObject } from '../plans/plan.object';
 import { TaskObject } from '../tasks/task.object';
 

@@ -5,6 +5,8 @@
  */
 
 import { TimelineLaneGrouping } from '~/__generated__/graphql';
+
+import type { TimelineWindowPreset } from '../config/defaults';
 import {
   DEFAULT_TIMELINE_GROUPING,
   DEFAULT_TIMELINE_WINDOW_PRESET,
@@ -12,7 +14,6 @@ import {
   TIMELINE_WINDOW_HOURS,
   TIMELINE_WINDOW_PRESETS,
 } from '../config/defaults';
-import type { TimelineWindowPreset } from '../config/defaults';
 
 const MS_PER_HOUR = 60 * 60 * 1000;
 

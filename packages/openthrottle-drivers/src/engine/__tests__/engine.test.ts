@@ -4,13 +4,15 @@
  * ordering, timeout + abort sentinels (including a pre-spawn aborted signal), and error-event reject.
  */
 
-import type { ChildProcess } from 'child_process';
-import { spawn, spawnSync } from 'child_process';
 import { EventEmitter } from 'node:events';
 import { PassThrough } from 'node:stream';
+
+import type { ChildProcess } from 'child_process';
+import { spawn, spawnSync } from 'child_process';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { AgentDriver, DriverChunk } from '../../types/index.ts';
+
 import { defineDriver } from '../../registry/index.ts';
+import type { AgentDriver, DriverChunk } from '../../types/index.ts';
 import { runDriverAsync, runDriverSync } from '../index.ts';
 
 /**

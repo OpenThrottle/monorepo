@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
+
 import { AppConfigService } from './app-config.service';
 import { CodeSearchService } from './code-search.service';
 import { CodeSnapshotStore } from './code-snapshot-store';

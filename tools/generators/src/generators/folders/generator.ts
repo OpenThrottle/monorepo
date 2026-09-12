@@ -1,17 +1,18 @@
-import { join } from 'path';
-import prompts from 'prompts';
 import type { Tree } from '@nx/devkit';
 import { formatFiles, generateFiles, logger } from '@nx/devkit';
+import { join } from 'path';
+import prompts from 'prompts';
+
+import { getMonorepoApplications } from '../../utils';
+import { throwGeneratorError } from '../../utils/generator-errors';
 import { getCommonVariables } from '../../utils/index';
+import { isInteractiveArgPresent } from '../../utils/nx-cli';
+import { writeJsonToStdout } from '../../utils/output';
 import {
   getConfigConfirmation,
   getTargetApplication,
 } from '../../utils/questions';
 import { REGEX_SLUG } from '../../utils/regex';
-import { getMonorepoApplications } from '../../utils';
-import { writeJsonToStdout } from '../../utils/output';
-import { throwGeneratorError } from '../../utils/generator-errors';
-import { isInteractiveArgPresent } from '../../utils/nx-cli';
 
 export interface FoldersGeneratorSchema {
   readonly application?: string;

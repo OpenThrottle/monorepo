@@ -1,12 +1,14 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
-import { createRoutesStub } from 'react-router';
+import { render } from '@testing-library/react';
 import { within } from '@testing-library/react';
+import * as React from 'react';
+import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { SearchPlanCard } from '../SearchPlanCard';
-import type { SearchPlanCardProps } from '../SearchPlanCard';
+
 import type { SearchChunk } from '~/__generated__/graphql';
+
+import type { SearchPlanCardProps } from '../SearchPlanCard';
+import { SearchPlanCard } from '../SearchPlanCard';
 
 function mockSearchChunk(overrides: Partial<SearchChunk> = {}): SearchChunk {
   return {

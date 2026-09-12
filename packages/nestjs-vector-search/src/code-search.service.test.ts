@@ -1,15 +1,15 @@
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
+import type {
+  EmbeddingsConfig,
+  WorkspaceFileHash,
+} from '@openthrottle/openthrottle-ide';
 import {
   createEmbeddingsProvider,
   diffSnapshots,
   hashWorkspace,
   indexWorkspace,
   semanticSearch,
-} from '@openthrottle/openthrottle-ide';
-import type {
-  EmbeddingsConfig,
-  WorkspaceFileHash,
 } from '@openthrottle/openthrottle-ide';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 

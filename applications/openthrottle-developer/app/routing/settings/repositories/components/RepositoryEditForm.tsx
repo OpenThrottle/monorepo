@@ -1,6 +1,3 @@
-import * as React from 'react';
-import { GlobalHeading } from '@openthrottle/react-router-ui-global';
-import { Form, Link, useNavigation } from 'react-router';
 import {
   Button,
   Card,
@@ -13,11 +10,15 @@ import {
   Separator,
   Switch,
 } from '@openthrottle/react-router-shadcn';
+import { GlobalHeading } from '@openthrottle/react-router-ui-global';
+import { FolderPenIcon } from 'lucide-react';
+import * as React from 'react';
+import { Form, Link, useNavigation } from 'react-router';
+
 import type { WorkspaceRepositoryFieldsFragment } from '~/__generated__/graphql';
 import { WORKSPACE_REPOSITORY_DETAIL_COPY } from '~/routing/settings/data/data.copy';
-import { RepositoryProjectSelect } from '~/routing/settings/repositories/components/RepositoryProjectSelect';
 import type { ProjectOption } from '~/routing/settings/repositories/components/RepositoryProjectSelect';
-import { FolderPenIcon } from 'lucide-react';
+import { RepositoryProjectSelect } from '~/routing/settings/repositories/components/RepositoryProjectSelect';
 
 export interface RepositoryEditFormProps {
   actionError?: string | null;

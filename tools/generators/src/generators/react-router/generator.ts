@@ -1,13 +1,14 @@
-import prompts from 'prompts';
 import type { Tree } from '@nx/devkit';
+import prompts from 'prompts';
+
 import {
   getMonorepoApplications,
   getRemixRoutingFolders,
   getRemixServiceFolders,
 } from '../../utils';
-import { writeJsonToStdout } from '../../utils/output';
 import { throwGeneratorError } from '../../utils/generator-errors';
 import { isInteractiveArgPresent } from '../../utils/nx-cli';
+import { writeJsonToStdout } from '../../utils/output';
 import { assertReactRouterApplication } from '../../utils/target-validation';
 import { generatorReactRouterApplication } from './generator.application';
 import { generatorReactRouterComponent } from './generator.component';

@@ -1,5 +1,3 @@
-import * as React from 'react';
-import { Link } from 'react-router';
 import {
   Button,
   Card,
@@ -7,10 +5,13 @@ import {
   CardHeader,
   CardTitle,
 } from '@openthrottle/react-router-shadcn';
-import { AssignRoleSelectForm } from '~/routing/users/components/AssignRoleSelectForm';
-import type { action as userDetailAction } from '~/routes/users.$userId';
-import type { Route } from '@/app/routes/+types/users.$userId';
+import * as React from 'react';
 import type { useFetcher } from 'react-router';
+import { Link } from 'react-router';
+
+import type { Route } from '@/app/routes/+types/users.$userId';
+import type { action as userDetailAction } from '~/routes/users.$userId';
+import { AssignRoleSelectForm } from '~/routing/users/components/AssignRoleSelectForm';
 
 type LoaderData = Route.ComponentProps['loaderData'];
 

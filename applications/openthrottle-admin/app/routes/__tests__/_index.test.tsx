@@ -1,8 +1,9 @@
-import * as React from 'react';
+import { createLoaderArgs } from '@openthrottle/react-router-testing';
 import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test, vi } from 'vitest';
-import { createLoaderArgs } from '@openthrottle/react-router-testing';
+
 import * as RouteModule from '../_index';
 
 type LoaderArgs = Parameters<typeof RouteModule.loader>[0];

@@ -1,10 +1,11 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { Tooltip } from '../Tooltip';
+
 import type { TooltipProps } from '../Tooltip';
+import { Tooltip } from '../Tooltip';
 import { TooltipContent } from '../TooltipContent';
 import { TooltipProvider } from '../TooltipProvider';
 import { TooltipTrigger } from '../TooltipTrigger';

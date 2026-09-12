@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { WorkspaceEditorId } from '~/__generated__/graphql';
 import { formatEditorConfigApplyMessage } from '~/routing/settings/utils/format-editor-config-result';
 

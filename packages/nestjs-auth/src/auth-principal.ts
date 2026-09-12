@@ -1,4 +1,5 @@
 import { isRecord } from '@openthrottle/nodejs-utils';
+
 import type { JwtPayload } from './strategies/jwt.strategy';
 
 /** Discriminant for {@link UserAuthPrincipal}. */

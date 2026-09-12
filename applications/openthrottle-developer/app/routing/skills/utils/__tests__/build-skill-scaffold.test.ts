@@ -1,8 +1,9 @@
 import { validateAgentAssetFrontmatter } from '@openthrottle/openthrottle-skills';
 import { describe, expect, test } from 'vitest';
+
 import {
-  SKILL_SCAFFOLD_DESCRIPTION_PLACEHOLDER,
   buildSkillScaffold,
+  SKILL_SCAFFOLD_DESCRIPTION_PLACEHOLDER,
 } from '~/routing/skills/utils/build-skill-scaffold';
 
 const errorsFor = (content: string, slug: string): readonly string[] =>

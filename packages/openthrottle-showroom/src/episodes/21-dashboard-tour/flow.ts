@@ -10,6 +10,7 @@
  * search entry point anyway.
  */
 
+import type { DemoFlow } from '../../runner/types';
 import {
   click,
   dwell,
@@ -19,7 +20,6 @@ import {
   type_,
   waitFor,
 } from '../../runner/types';
-import type { DemoFlow } from '../../runner/types';
 
 export const flow: DemoFlow = {
   id: '21-dashboard-tour',

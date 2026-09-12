@@ -10,25 +10,25 @@ import {
   AUTH_PRINCIPAL_KIND_USER,
   type AuthPrincipal,
 } from '@openthrottle/nestjs-auth';
+import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type { AgentCliPreferencesService } from '@openthrottle/nestjs-repositories';
 import {
   type RepositoryCheckout,
   type ScheduledAgentJob,
   type ScheduledAgentJobRun,
 } from '@openthrottle/nestjs-repositories';
-import type { LoggerService } from '@openthrottle/nestjs-modules';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type {
   ScheduledAgentJobObject,
   ScheduledAgentJobRunObject,
 } from './scheduled-agent-job.object';
-import type { ScheduledAgentJobsLoaders } from './scheduled-agent-jobs-loaders';
 import {
   ScheduledAgentJobRunRepositoryResolver,
   ScheduledAgentJobsResolver,
 } from './scheduled-agent-jobs.resolver';
 import type { ScheduledAgentJobsGraphqlService } from './scheduled-agent-jobs-graphql.service';
+import type { ScheduledAgentJobsLoaders } from './scheduled-agent-jobs-loaders';
 
 const human: AuthPrincipal = { kind: AUTH_PRINCIPAL_KIND_USER, sub: 'user-1' };
 const serviceAccount: AuthPrincipal = {

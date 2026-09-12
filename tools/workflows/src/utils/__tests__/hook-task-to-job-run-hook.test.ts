@@ -6,12 +6,13 @@
  */
 
 import { describe, expect, it } from 'vitest';
+
 import {
   hookTaskPhase,
-  projectHookTaskToJobRunHookEntry,
-  projectHookTasksToJobRunHookEntries,
-  skillSlugToSkillPath,
   type MaterializedHookTask,
+  projectHookTasksToJobRunHookEntries,
+  projectHookTaskToJobRunHookEntry,
+  skillSlugToSkillPath,
 } from '../hook-task-to-job-run-hook';
 
 const hookTask = (

@@ -1,9 +1,11 @@
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import Component from '../settings.rollout.$flagId.edit';
-import { RolloutFlagKind } from '~/__generated__/graphql';
+
 import type { RolloutFlagFieldsFragment } from '~/__generated__/graphql';
+import { RolloutFlagKind } from '~/__generated__/graphql';
 import { renderRoutesStub } from '~/testing/route-fixtures';
+
+import Component from '../settings.rollout.$flagId.edit';
 
 function stubMatches(): React.ComponentProps<typeof Component>['matches'];
 function stubMatches(): unknown {

@@ -1,11 +1,13 @@
-import * as React from 'react';
+import type { CellContext, HeaderContext } from '@tanstack/react-table';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import { buildPlansTableColumns } from '../plans-table-columns';
+
 import type { PlanCardFragment } from '~/__generated__/graphql';
 import { PLANS_ROW_ACTIONS_COPY } from '~/routing/plans/data/data.copy';
 import { renderRoutesStub } from '~/testing/route-fixtures';
-import type { CellContext, HeaderContext } from '@tanstack/react-table';
+
+import { buildPlansTableColumns } from '../plans-table-columns';
 
 function asMock<T>(value: unknown): T;
 function asMock(value: unknown): unknown {

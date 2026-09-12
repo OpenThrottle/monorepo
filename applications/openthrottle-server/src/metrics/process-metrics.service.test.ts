@@ -1,7 +1,8 @@
 import { Test } from '@nestjs/testing';
 import { describe, expect, test } from 'vitest';
-import type { ProcessMetricsSnapshot } from './process-metrics.types';
+
 import { ProcessMetricsService } from './process-metrics.service';
+import type { ProcessMetricsSnapshot } from './process-metrics.types';
 
 describe('ProcessMetricsService', () => {
   let service: ProcessMetricsService;

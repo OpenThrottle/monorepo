@@ -13,9 +13,9 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { beatIndexForCue, beatSeconds, planTimeline } from '../timeline';
 import type { NarrationTimings, SegmentTiming } from '../../narrate/types';
 import type { ManifestStep, RecordingManifest } from '../../runner/types';
+import { beatIndexForCue, beatSeconds, planTimeline } from '../timeline';
 
 const BEATS = ['0:00', '0:09', '0:15', '0:24'];
 

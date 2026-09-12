@@ -6,14 +6,12 @@ export {
   DEFAULT_EXCLUDE_GLOBS,
   resolveWorkspaceConfig,
 } from './config/workspace-config.ts';
-
 export type { ChunkOptions, CodeChunk } from './data/chunk.ts';
 export {
   chunkFile,
   chunkWorkspace,
   DEFAULT_CHUNK_WINDOW_LINES,
 } from './data/chunk.ts';
-
 export type {
   EmbeddingsConfig,
   EmbeddingsProvider,
@@ -28,10 +26,8 @@ export {
   EMBEDDING_DIMENSIONS,
   MAX_EMBEDDING_CHARS,
 } from './data/embeddings.ts';
-
 export type { SearchMatch, SearchOptions } from './data/search.ts';
 export { searchText } from './data/search.ts';
-
 export type {
   IndexWorkspaceOptions,
   IndexWorkspaceResult,
@@ -47,7 +43,6 @@ export {
   indexWorkspace,
   semanticSearch,
 } from './data/semantic.ts';
-
 export type {
   DefinitionLocation,
   ExportedSymbol,
@@ -64,10 +59,8 @@ export {
   findReferences,
   listExports,
 } from './data/symbols.ts';
-
 export type { LoadProjectOptions } from './data/ts-project.ts';
 export { loadProject, resetProjectCache } from './data/ts-project.ts';
-
 export type {
   IndexSubscriber,
   WatchEvent,
@@ -81,9 +74,7 @@ export {
   DEFAULT_WATCH_DEBOUNCE_MS,
   watchWorkspace,
 } from './data/watch.ts';
-
 export type { SnapshotDiff, WorkspaceFileHash } from './data/workspace.ts';
 export { diffSnapshots, hashWorkspace, listFiles } from './data/workspace.ts';
-
 export { hashContent, hashFile } from './utils/hash.ts';
 export { runRipgrep, workspaceRipgrepArgs } from './utils/ripgrep.ts';

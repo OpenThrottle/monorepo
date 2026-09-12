@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
@@ -6,14 +5,18 @@ import {
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import * as React from 'react';
 import { useSearchParams } from 'react-router';
+
+import type { Route } from '@/app/routes/+types/agent-search._index';
 import { SearchAgentAssetsDocument } from '~/__generated__/graphql';
-import { AGENT_SEARCH_LIMIT } from '~/routing/agent-search/config';
+import { SITE_TITLE } from '~/global/config/settings';
 import { AgentAssetCard } from '~/routing/agent-search/components/AgentAssetCard';
 import { AgentSearchEmpty } from '~/routing/agent-search/components/AgentSearchEmpty';
 import { AgentSearchForm } from '~/routing/agent-search/components/AgentSearchForm';
 import { AgentSearchIntroduction } from '~/routing/agent-search/components/AgentSearchIntroduction';
 import { AgentSearchTabs } from '~/routing/agent-search/components/AgentSearchTabs';
+import { AGENT_SEARCH_LIMIT } from '~/routing/agent-search/config';
 import { AGENT_SEARCH_COPY } from '~/routing/agent-search/data/data.copy';
 import { EMPTY_COUNTS } from '~/routing/agent-search/data/empty-counts';
 import {
@@ -26,8 +29,6 @@ import {
   type AgentSearchCounts,
 } from '~/routing/agent-search/types';
 import { parseAgentSearchParams } from '~/routing/agent-search/utils/parsers';
-import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/agent-search._index';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

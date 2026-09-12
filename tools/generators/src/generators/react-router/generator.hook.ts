@@ -1,19 +1,20 @@
-import { join } from 'path';
 import type { Tree } from '@nx/devkit';
 import { formatFiles, logger } from '@nx/devkit';
+import { join } from 'path';
 import prompts from 'prompts';
+
 import {
   getCommonVariables,
   getRemixRoutingFolders,
   getRemixServiceFolders,
 } from '../../utils';
+import { generateFilesSafely } from '../../utils/generate-files-safely';
 import {
   getTargetApplication,
   parsePossibleNames,
 } from '../../utils/questions';
-import { validateCamelCase } from '../../utils/validation';
 import { throwInvalidFolderError } from '../../utils/target-validation';
-import { generateFilesSafely } from '../../utils/generate-files-safely';
+import { validateCamelCase } from '../../utils/validation';
 
 export interface ReactRouterHookGeneratorSchema {
   readonly application?: string;

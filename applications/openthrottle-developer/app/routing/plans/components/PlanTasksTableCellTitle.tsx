@@ -1,11 +1,12 @@
-import * as React from 'react';
-import { Badge } from '@openthrottle/react-router-shadcn';
-import { Link } from 'react-router';
-import type { Row } from '@tanstack/react-table';
-import { getRequirementsCount } from '~/routing/plans/utils/formatters';
 import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
-import { PlanManagedTaskBadge } from '~/routing/plans/components/PlanManagedTaskBadge';
+import { Badge } from '@openthrottle/react-router-shadcn';
+import type { Row } from '@tanstack/react-table';
+import * as React from 'react';
+import { Link } from 'react-router';
+
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
+import { PlanManagedTaskBadge } from '~/routing/plans/components/PlanManagedTaskBadge';
+import { getRequirementsCount } from '~/routing/plans/utils/formatters';
 
 export interface PlanTasksTableCellTitleProps {
   /** True when a tag→action rule manages this task's placement. */

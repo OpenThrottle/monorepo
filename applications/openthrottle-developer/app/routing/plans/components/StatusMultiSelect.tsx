@@ -1,8 +1,7 @@
-import * as React from 'react';
-import { Check, ChevronsUpDown, X } from 'lucide-react';
 import {
   Badge,
   Button,
+  cn,
   Command,
   CommandGroup,
   CommandItem,
@@ -11,8 +10,9 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-  cn,
 } from '@openthrottle/react-router-shadcn';
+import { Check, ChevronsUpDown, X } from 'lucide-react';
+import * as React from 'react';
 
 export interface StatusMultiSelectProps {
   /** When true, trigger shows "Status (n)" and badges below are hidden for a compact toolbar row. */

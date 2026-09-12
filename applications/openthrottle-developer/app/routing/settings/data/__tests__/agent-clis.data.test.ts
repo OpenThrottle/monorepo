@@ -1,8 +1,9 @@
 import { describe, expect, test } from 'vitest';
+
 import {
+  type AgentCliStatus,
   filterAgentCliStatuses,
   mergeAgentCliStatuses,
-  type AgentCliStatus,
 } from '../agent-clis.data';
 
 describe('mergeAgentCliStatuses', () => {

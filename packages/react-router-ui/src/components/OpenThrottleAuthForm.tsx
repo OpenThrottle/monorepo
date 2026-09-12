@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Button,
   Card,
@@ -12,6 +11,7 @@ import {
   Label,
 } from '@openthrottle/react-router-shadcn';
 import { IS_DEVELOPMENT } from '@openthrottle/react-router-utils';
+import * as React from 'react';
 
 export interface OpenThrottleAuthFormProps {
   /** Optional form action URL (e.g. for React Router action). Defaults to current path. */

@@ -1,10 +1,11 @@
-import * as React from 'react';
 import {
   CommandItem,
   CommandShortcut,
 } from '@openthrottle/react-router-shadcn';
-import { Check, Star } from 'lucide-react';
 import clsx from 'clsx';
+import { Check, Star } from 'lucide-react';
+import * as React from 'react';
+
 import type { ChatModelOption } from '../types';
 
 export interface ChatModelPickerRowProps {

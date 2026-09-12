@@ -1,11 +1,12 @@
 import type { ConfigService } from '@nestjs/config';
 import { asMock } from '@openthrottle/nestjs-testing';
 import { describe, expect, it } from 'vitest';
+
 import type { NestjsAuthOptions } from '../config/nestjs-auth.options';
 import {
   JWT_SECRET_MIN_BYTES,
-  JwtStrategy,
   type JwtPayload,
+  JwtStrategy,
 } from './jwt.strategy';
 
 const createConfigService = (

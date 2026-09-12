@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { maskCredentialToken } from './mcp-connector-credential.util';
 
 describe('maskCredentialToken', () => {

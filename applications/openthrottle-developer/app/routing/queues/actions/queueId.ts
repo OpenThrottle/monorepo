@@ -4,13 +4,14 @@ import {
   parseFormData,
 } from '@openthrottle/react-router-graphql';
 import { z } from 'zod/v3';
-import { CleanQueueInputSchema } from '~/__generated__/schemas';
+
+import type { Route } from '@/app/routes/+types/queues.$queueId._index';
 import {
   QueueDetailCleanQueueDocument,
   QueueDetailPauseQueueDocument,
   QueueDetailResumeQueueDocument,
 } from '~/__generated__/graphql';
-import type { Route } from '@/app/routes/+types/queues.$queueId._index';
+import { CleanQueueInputSchema } from '~/__generated__/schemas';
 
 /**
  * @description Queue detail ops (pause / resume / clean), dispatched by `intent`.

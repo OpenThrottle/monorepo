@@ -4,12 +4,17 @@
  * @description Resolver for activity-by-date-range. Uses PlansService repository manager for raw SQL across the work ledger (work_artifacts git_commit), plan_output_stream, tasks.
  */
 
+import { Args, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
 import { Plan, Task } from '@openthrottle/nestjs-repositories';
 import { PlansService } from '@openthrottle/nestjs-repositories';
-import { Args, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
+
 import { PlanObject } from '../plans/plan.object';
 import { TaskObject } from '../tasks/task.object';
-import { ActivityLoaders } from './activity-loaders';
+import {
+  ActivityByDateInput,
+  ActivityByDateRangeInput,
+  LastActivityInput,
+} from './activity.input';
 import {
   ActivityByDateResultObject,
   ActivityCommitRowObject,
@@ -20,11 +25,7 @@ import {
   LastActivityResultObject,
   LastActivityTaskUpdatePartObject,
 } from './activity.object';
-import {
-  ActivityByDateInput,
-  ActivityByDateRangeInput,
-  LastActivityInput,
-} from './activity.input';
+import { ActivityLoaders } from './activity-loaders';
 
 type ActivityRow =
   | ActivityCommitRowObject

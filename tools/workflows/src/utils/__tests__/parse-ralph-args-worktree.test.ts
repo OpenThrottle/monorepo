@@ -3,6 +3,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { RALPH_WORKTREE_FLAG_ONLY } from '../ralph-worktree-cli';
 
 vi.mock('../ralph-runtime-config', async (importOriginal) => {

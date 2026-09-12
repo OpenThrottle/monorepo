@@ -19,16 +19,17 @@ import {
   AUTH_PRINCIPAL_KIND_USER,
   CurrentUser,
 } from '@openthrottle/nestjs-auth';
-import {
-  WORK_ARTIFACT_SOURCE,
-  WorkLedgerService,
-} from '@openthrottle/nestjs-repositories';
 import type {
   WorkArtifact,
   WorkSession,
   WorkSessionSubject,
 } from '@openthrottle/nestjs-repositories';
+import {
+  WORK_ARTIFACT_SOURCE,
+  WorkLedgerService,
+} from '@openthrottle/nestjs-repositories';
 import { In, IsNull } from 'typeorm';
+
 import {
   ARTIFACT_IDENTITY,
   resolveArtifactForWrite,

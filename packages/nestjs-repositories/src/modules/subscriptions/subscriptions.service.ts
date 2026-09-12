@@ -1,8 +1,9 @@
-import type { DeepPartial } from 'typeorm/common/DeepPartial';
-import { In } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { In } from 'typeorm';
 import { Repository } from 'typeorm';
+import type { DeepPartial } from 'typeorm/common/DeepPartial';
+
 import {
   type ListPaginationInput,
   resolveListPagination,

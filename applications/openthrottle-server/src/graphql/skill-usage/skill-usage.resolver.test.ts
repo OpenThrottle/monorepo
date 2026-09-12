@@ -1,17 +1,18 @@
+import { createMock } from '@golevelup/ts-vitest';
+import { BadRequestException } from '@nestjs/common';
+import { Test } from '@nestjs/testing';
+import { PERMISSIONS, PERMISSIONS_KEY } from '@openthrottle/nestjs-rbac';
 import {
   RolesService,
   SKILL_USAGE_OUTCOMES,
   SKILL_USAGE_PRIVACY_LEVELS,
   SKILL_USAGE_SCOPES,
-  SkillUsageEventsService,
   type SkillUsageEvent,
+  SkillUsageEventsService,
   type SkillUsageOutcome,
 } from '@openthrottle/nestjs-repositories';
-import { BadRequestException } from '@nestjs/common';
-import { PERMISSIONS, PERMISSIONS_KEY } from '@openthrottle/nestjs-rbac';
-import { createMock } from '@golevelup/ts-vitest';
-import { Test } from '@nestjs/testing';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
+
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
 import { EffectiveUserResolutionService } from '../../services/effective-user-resolution/effective-user-resolution.service';
 import { SkillUsageResolver } from './skill-usage.resolver';

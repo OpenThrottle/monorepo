@@ -10,6 +10,7 @@
  */
 
 import { isAbsolute } from 'node:path';
+
 import type {
   AcquireResult,
   IWorktreeTargetsTracker,

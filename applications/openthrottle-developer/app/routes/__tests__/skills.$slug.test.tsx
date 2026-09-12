@@ -1,14 +1,16 @@
-import * as React from 'react';
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
+
+import type { Route } from '@/app/routes/+types/skills.$slug';
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 import type { SkillDetailUsageData } from '~/routing/skills/data/skill-usage-detail';
 import { buildRootMatch } from '~/testing/root-match-fixture';
+
 import Component from '../skills.$slug';
-import type { Route } from '@/app/routes/+types/skills.$slug';
 
 const entry: RepoSkillEntry = {
   disableModelInvocation: true,

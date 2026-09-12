@@ -26,8 +26,8 @@ import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   Plan,
-  PlanTag,
   PlansService,
+  PlanTag,
   Task,
   TASK_SORT_ORDER_GAP,
   TaskTag,
@@ -39,11 +39,12 @@ import {
   WorkSessionSubject,
 } from '@openthrottle/nestjs-repositories';
 import type { EntityManager } from 'typeorm';
-import { NotificationsService } from '../../notifications/notifications.service';
+
 import { resolveArtifactForWrite } from '../../graphql/work-ledger/artifact-type-registry';
+import { NotificationsService } from '../../notifications/notifications.service';
 import {
-  PROMOTED_TASK_STATUS,
   PROMOTED_TAG,
+  PROMOTED_TASK_STATUS,
   PROMOTION_SESSION_TOOL_NAME,
   SEED_TASK_TITLE,
 } from './task-promotion.constants';

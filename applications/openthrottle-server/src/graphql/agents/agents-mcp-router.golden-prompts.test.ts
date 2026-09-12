@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { AGENTS_MCP_ROUTER_GOLDEN_PROMPTS } from './agents-mcp-router.golden-prompts';
+
 import { AgentsMcpRouter } from './agents-mcp-router';
+import { AGENTS_MCP_ROUTER_GOLDEN_PROMPTS } from './agents-mcp-router.golden-prompts';
 
 describe('AgentsMcpRouter golden prompts', () => {
   const router = new AgentsMcpRouter();

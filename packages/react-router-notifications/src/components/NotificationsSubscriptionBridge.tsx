@@ -1,16 +1,17 @@
-import * as React from 'react';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import type { GraphqlWsClient } from '@openthrottle/react-router-graphql';
 import { useSubscription } from '@openthrottle/react-router-graphql';
 import { IS_BROWSER } from '@openthrottle/react-router-utils';
+import * as React from 'react';
 import { useNavigate } from 'react-router';
+
 import { toastForNotification } from '../data/notifications-store.context';
 import { useNotificationsStore } from '../hooks/useNotificationsStore';
-import { toStorePayload } from '../utils/to-store-payload';
 import {
   getSystemNotificationsPreference,
   showSystemNotification,
 } from '../utils/system-notification';
+import { toStorePayload } from '../utils/to-store-payload';
 
 /**
  * @description Minimum shape the injected subscription document's payload must

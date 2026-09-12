@@ -4,6 +4,7 @@
  */
 
 import { Field, Float, ObjectType } from '@nestjs/graphql';
+
 import { CustomPromptTypeEnum } from './custom-prompt.object';
 
 @ObjectType({

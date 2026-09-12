@@ -1,5 +1,5 @@
-import { ChatRunPhase } from '../types';
 import type { ChatRunPhase as ChatRunPhaseType } from '../types';
+import { ChatRunPhase } from '../types';
 
 /**
  * Default human label per {@link ChatRunPhase}. Kept out of

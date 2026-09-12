@@ -2,15 +2,16 @@
  * @description GraphQL resolver for persisted agent conversations (human JWT user-scoped).
  */
 
+import { UseGuards } from '@nestjs/common';
+import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { type AuthPrincipal, CurrentUser } from '@openthrottle/nestjs-auth';
+import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 import {
   AGENT_CONVERSATION_STATUSES,
   AgentConversationsService,
   type AgentConversationStatus,
 } from '@openthrottle/nestjs-repositories';
-import { type AuthPrincipal, CurrentUser } from '@openthrottle/nestjs-auth';
-import { UseGuards } from '@nestjs/common';
-import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
+
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
 import { assertHumanAuthPrincipal } from '../service-accounts/assert-human-auth-principal';
 import {

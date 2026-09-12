@@ -2,8 +2,9 @@
  * @description Fishery factory for the agent_token_usage entity (test fixtures).
  */
 
-import { Factory } from 'fishery';
 import { faker } from '@faker-js/faker';
+import { Factory } from 'fishery';
+
 import type { AgentTokenUsage } from './agent-token-usage.entity';
 
 export type AgentTokenUsageFactoryData = Pick<

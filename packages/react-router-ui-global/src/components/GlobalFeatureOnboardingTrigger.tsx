@@ -1,6 +1,7 @@
-import * as React from 'react';
 import clsx from 'clsx';
 import { SparklesIcon } from 'lucide-react';
+import * as React from 'react';
+
 import { GLOBAL_FEATURE_ONBOARDING_MODAL } from '../config';
 import { GLOBAL_FEATURE_ONBOARDING_TRIGGER_LABEL } from '../data/data.copy';
 import { useUrlSyncedOverlay } from '../hooks/useUrlSyncedOverlay';

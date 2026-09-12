@@ -1,10 +1,23 @@
-import * as React from 'react';
-import { Analytics } from '@vercel/analytics/react';
+import type { ServerHealthObject } from '@openthrottle/openthrottle-developer-codegen';
 import {
-  APP_URL,
-  getEnvironment,
-  getPublicEnv,
-} from '@openthrottle/react-router-utils';
+  authMiddleware,
+  buildAuthCookie,
+  getAuthTokenFromCookie,
+  getClearAuthCookieHeader,
+} from '@openthrottle/react-router-auth';
+import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { NotificationsStoreProvider } from '@openthrottle/react-router-notifications';
+import {
+  buildThemeStylesheet,
+  THEMES,
+  Toaster,
+} from '@openthrottle/react-router-shadcn';
+import type { PlanRefResolverData } from '@openthrottle/react-router-ui';
+import {
+  OpenThrottleCommander,
+  usePlanRefResolver,
+} from '@openthrottle/react-router-ui';
+import type { GlobalLayoutHeaderSearchEvent } from '@openthrottle/react-router-ui-global';
 import {
   GlobalErrorBoundary,
   GlobalLayout,
@@ -12,7 +25,28 @@ import {
   GlobalMetrics,
   GlobalProviders,
 } from '@openthrottle/react-router-ui-global';
-import type { GlobalLayoutHeaderSearchEvent } from '@openthrottle/react-router-ui-global';
+import {
+  APP_URL,
+  getEnvironment,
+  getPublicEnv,
+} from '@openthrottle/react-router-utils';
+import {
+  artwork,
+  buildAppearanceRootCssBlock,
+  buildThemePrehydrationScript,
+  FEATURE_BETA_PREVIEW,
+  OPENTHROTTLE_BUCKET,
+  OPENTHROTTLE_META_DESCRIPTION,
+  useResolvedThemeMode,
+} from '@openthrottle/react-router-utils';
+import { useNonce } from '@openthrottle/react-router-utils';
+import { Analytics } from '@vercel/analytics/react';
+import { useAtom } from 'jotai';
+import * as React from 'react';
+import type {
+  MiddlewareFunction,
+  ShouldRevalidateFunction,
+} from 'react-router';
 import {
   data,
   Links,
@@ -27,88 +61,55 @@ import {
   useLocation,
   useRevalidator,
 } from 'react-router';
-import type {
-  MiddlewareFunction,
-  ShouldRevalidateFunction,
-} from 'react-router';
-import {
-  OpenThrottleCommander,
-  usePlanRefResolver,
-} from '@openthrottle/react-router-ui';
-import type { PlanRefResolverData } from '@openthrottle/react-router-ui';
-import {
-  buildThemeStylesheet,
-  THEMES,
-  Toaster,
-} from '@openthrottle/react-router-shadcn';
-import {
-  authMiddleware,
-  buildAuthCookie,
-  getAuthTokenFromCookie,
-  getClearAuthCookieHeader,
-} from '@openthrottle/react-router-auth';
-import {
-  artwork,
-  buildAppearanceRootCssBlock,
-  buildThemePrehydrationScript,
-  FEATURE_BETA_PREVIEW,
-  OPENTHROTTLE_BUCKET,
-  OPENTHROTTLE_META_DESCRIPTION,
-  useResolvedThemeMode,
-} from '@openthrottle/react-router-utils';
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { NotificationsStoreProvider } from '@openthrottle/react-router-notifications';
-import { DeveloperRolloutProvider } from '~/global/components/DeveloperRolloutProvider';
-import { NotificationsSubscriptionBridge } from '~/global/components/NotificationsSubscriptionBridge';
-import { useAtom } from 'jotai';
+
+import type { Route } from '@/app/+types/root';
 import type { UserObject } from '~/__generated__/graphql';
 import {
   GetMyUserDocument,
   GetRootHealthDocument,
 } from '~/__generated__/graphql';
+import { DeveloperRolloutProvider } from '~/global/components/DeveloperRolloutProvider';
 import { GlobalRootLoaderFailureBanner } from '~/global/components/GlobalRootLoaderFailureBanner';
 import { GlobalServerHealthBanner } from '~/global/components/GlobalServerHealthBanner';
-import type {
-  RootLoaderDiagnostics,
-  RootLoaderFailure,
-} from '~/global/utils/root-loader-diagnostics';
-import {
-  ROOT_LOADER_UNREACHABLE_HEALTH,
-  classifyRootLoaderError,
-  httpStatusFromRootLoaderError,
-  rootLoaderErrorMessage,
-} from '~/global/utils/root-loader-diagnostics';
+import { NotificationsSubscriptionBridge } from '~/global/components/NotificationsSubscriptionBridge';
+import { PROTECTED_PATH_PREFIXES } from '~/global/config/config.app';
 import { SITE_TITLE } from '~/global/config/settings';
-import { useCommanderOptions } from '~/global/hooks/useCommanderOptions';
+import { CONFIG_STORAGE_KEY, configAtom } from '~/global/data/atom.config';
 import { userAtom } from '~/global/data/atom.user';
 import {
   dataNavigationGuest,
   dataNavigationV2,
 } from '~/global/data/data.navigation';
-import { CONFIG_STORAGE_KEY, configAtom } from '~/global/data/atom.config';
+import { useCommanderOptions } from '~/global/hooks/useCommanderOptions';
 import type { CommanderSearchFields } from '~/global/utils/commander-empty-extras';
 import {
-  REGEX_UUID,
   buildCommanderEmptyStateExtras,
   parseQueueAndJobIdsFromCommanderQuery,
+  REGEX_UUID,
 } from '~/global/utils/commander-empty-extras';
 import { handleGlobalLayoutHeaderSearchChromeEvent } from '~/global/utils/handle-global-layout-header-search-chrome-event';
-import { useNonce } from '@openthrottle/react-router-utils';
-import { queueJobDetailPath } from '~/routing/queues/utils/queue-job-detail-path';
+import type {
+  RootLoaderDiagnostics,
+  RootLoaderFailure,
+} from '~/global/utils/root-loader-diagnostics';
+import {
+  classifyRootLoaderError,
+  httpStatusFromRootLoaderError,
+  ROOT_LOADER_UNREACHABLE_HEALTH,
+  rootLoaderErrorMessage,
+} from '~/global/utils/root-loader-diagnostics';
+import {
+  handleLoadAgentConversationMessagesIntent,
+  handleSendAgentMessageIntent,
+} from '~/global/utils/utils.agents-chat';
 import {
   callLoginMutation,
   callLogoutMutation,
   callRegisterMutation,
 } from '~/global/utils/utils.auth';
-import {
-  handleLoadAgentConversationMessagesIntent,
-  handleSendAgentMessageIntent,
-} from '~/global/utils/utils.agents-chat';
-import { PROTECTED_PATH_PREFIXES } from '~/global/config/config.app';
 import { useHeaderChatController } from '~/routing/home/hooks/useHeaderChatController';
-import type { ServerHealthObject } from '@openthrottle/openthrottle-developer-codegen';
+import { queueJobDetailPath } from '~/routing/queues/utils/queue-job-detail-path';
 import stylesheet from '~/styles.css?url';
-import type { Route } from '@/app/+types/root';
 
 /**
  * @external https://remix.run/docs/en/main/route/should-revalidate

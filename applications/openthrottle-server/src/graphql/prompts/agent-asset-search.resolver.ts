@@ -6,12 +6,13 @@
  * back to a live disk scan.
  */
 
+import { Args, Query, Resolver } from '@nestjs/graphql';
+import type { AgentAssetSearchChunk } from '@openthrottle/node-client';
 import {
   embedQuery,
   searchAgentAssets as runAgentAssetSearch,
 } from '@openthrottle/node-client';
-import type { AgentAssetSearchChunk } from '@openthrottle/node-client';
-import { Args, Query, Resolver } from '@nestjs/graphql';
+
 import { AgentAssetSearchInput } from './agent-asset-search.input';
 import {
   AgentAssetChunk,

@@ -1,5 +1,5 @@
-import { WORKSPACE_EDITOR_OPTIONS } from '~/routing/settings/config/workspace-editors';
 import type { WorkspaceEditorId } from '~/__generated__/graphql';
+import { WORKSPACE_EDITOR_OPTIONS } from '~/routing/settings/config/workspace-editors';
 
 /**
  * @description One repository/editor application returned by applyWorkspaceEditorConfiguration,

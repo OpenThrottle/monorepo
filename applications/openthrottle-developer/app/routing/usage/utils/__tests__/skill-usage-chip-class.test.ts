@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { skillUsageChipClass } from '../skill-usage-chip-class';
 
 describe('skillUsageChipClass', () => {

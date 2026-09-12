@@ -14,8 +14,8 @@
  * it should be checkable on its own.
  */
 
-import { composeDescription } from '../episodes/description';
 import { spokenWords } from '../episodes/derived';
+import { composeDescription } from '../episodes/description';
 import type { Chapter, Variant, VideoEpisode } from '../episodes/types';
 
 /** Facts only the render knows. */

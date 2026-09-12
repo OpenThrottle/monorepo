@@ -1,4 +1,5 @@
 import type { FileHandle } from 'node:fs/promises';
+
 import type { JsonlDurabilityLevel } from '../config/nestjs-logging.options';
 
 /**

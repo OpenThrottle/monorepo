@@ -3,14 +3,15 @@
  */
 
 import { createMock } from '@golevelup/ts-vitest';
-import { describe, expect, it, vi, beforeEach } from 'vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type { Job, Queue, QueueEvents } from 'bullmq';
-import { WorkflowLifecycleDispatcherFactory } from './workflow-lifecycle-dispatcher.service';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import type {
   PlanLifecycleHookJobData,
   PlanLifecycleHookJobResult,
 } from './plan-lifecycle-hooks.types';
+import { WorkflowLifecycleDispatcherFactory } from './workflow-lifecycle-dispatcher.service';
 
 type LifecycleHookQueue = Queue<
   PlanLifecycleHookJobData,

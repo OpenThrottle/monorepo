@@ -7,6 +7,7 @@ import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { OnApplicationShutdown, OnModuleInit } from '@nestjs/common';
 import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+
 import { NotificationsService } from '../../notifications/notifications.service';
 import {
   DATABASE_BACKUP_PNPM_SCRIPT,

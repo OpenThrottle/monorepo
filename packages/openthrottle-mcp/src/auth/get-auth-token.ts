@@ -3,8 +3,8 @@
  * Source: per-request store (see {@link withMcpDeveloperAuthToken}), then env OPENTHROTTLE_MCP_AUTH_TOKEN.
  */
 
-import { readFileSync } from 'node:fs';
 import { AsyncLocalStorage } from 'node:async_hooks';
+import { readFileSync } from 'node:fs';
 
 export const requestAuthTokenStorage = new AsyncLocalStorage<string>();
 

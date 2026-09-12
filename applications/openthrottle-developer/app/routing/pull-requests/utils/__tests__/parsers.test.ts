@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { parsePullListState, parsePullRequestsDate } from '../parsers';
 
 describe('parsePullRequestsDate', () => {

@@ -1,5 +1,3 @@
-import * as React from 'react';
-import { Form } from 'react-router';
 import {
   Button,
   Dialog,
@@ -12,14 +10,17 @@ import {
   Label,
 } from '@openthrottle/react-router-shadcn';
 import { FolderPlusIcon } from 'lucide-react';
+import * as React from 'react';
+import { Form } from 'react-router';
+
 import type {
   DiscoveredFolderObject,
   WorkspacePickerCapabilitiesObject,
 } from '~/__generated__/graphql';
+import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
 import { AddFolderCandidate } from '~/routing/settings/repositories/components/AddFolderCandidate';
 import { DirectoryPicker } from '~/routing/settings/repositories/components/DirectoryPicker';
 import { NativeBrowse } from '~/routing/settings/repositories/components/NativeBrowse';
-import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
 import { useAddFolderDialog } from '~/routing/settings/repositories/hooks/useAddFolderDialog';
 
 export interface AddFolderDialogProps {

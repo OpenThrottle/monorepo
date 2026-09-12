@@ -1,17 +1,18 @@
-import * as React from 'react';
 import clsx from 'clsx';
+import * as React from 'react';
+
 import {
   TIMELINE_SPAN_FILL_CLASS,
   TIMELINE_SPAN_KIND_LABEL,
 } from '~/routing/timeline/config/kinds';
 import { TIMELINE_SPAN_TOOLTIP_COPY } from '~/routing/timeline/data/data.copy';
+import type { TimelineSpan } from '~/routing/timeline/types';
 import {
   formatTimelineDuration,
   formatTimelineTimestamp,
 } from '~/routing/timeline/utils/formatters';
-import { spanStatusOpacity } from '~/routing/timeline/utils/span-geometry';
-import type { TimelineSpan } from '~/routing/timeline/types';
 import type { TimelineSpanRect } from '~/routing/timeline/utils/span-geometry';
+import { spanStatusOpacity } from '~/routing/timeline/utils/span-geometry';
 
 export interface TimelineSpanBarProps {
   readonly onSelect?: (span: TimelineSpan) => void;

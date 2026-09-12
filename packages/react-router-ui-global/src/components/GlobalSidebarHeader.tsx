@@ -1,7 +1,7 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import { SidebarHeader } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleLogo } from '@openthrottle/react-router-ui';
+import clsx from 'clsx';
+import * as React from 'react';
 
 export interface GlobalSidebarHeaderProps {
   readonly className?: string;

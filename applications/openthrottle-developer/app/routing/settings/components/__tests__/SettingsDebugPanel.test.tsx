@@ -1,10 +1,12 @@
-import * as React from 'react';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import { SettingsDebugPanel } from '../SettingsDebugPanel';
-import type { SettingsDebugGraphQLResult } from '../SettingsDebugPanel';
+
 import { renderRoutesStub } from '~/testing/route-fixtures';
+
+import type { SettingsDebugGraphQLResult } from '../SettingsDebugPanel';
+import { SettingsDebugPanel } from '../SettingsDebugPanel';
 
 const envSnapshot = {
   APP_NAME: 'openthrottle-developer',

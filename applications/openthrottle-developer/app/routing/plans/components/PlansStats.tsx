@@ -1,6 +1,6 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import { OpenThrottleStatCard } from '@openthrottle/react-router-ui';
+import clsx from 'clsx';
+import * as React from 'react';
 
 export interface PlansStatsProps {
   className?: string;

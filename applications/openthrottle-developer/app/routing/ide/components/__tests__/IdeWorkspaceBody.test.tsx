@@ -1,11 +1,13 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { IdeWorkspaceBody } from '../IdeWorkspaceBody';
-import type { IdeWorkspaceBodyProps } from '../IdeWorkspaceBody';
+
 import type { UseIdeWorkspaceResult } from '~/routing/ide/hooks/useIdeWorkspace';
+
+import type { IdeWorkspaceBodyProps } from '../IdeWorkspaceBody';
+import { IdeWorkspaceBody } from '../IdeWorkspaceBody';
 
 const baseWorkspace: UseIdeWorkspaceResult = {
   details: undefined,

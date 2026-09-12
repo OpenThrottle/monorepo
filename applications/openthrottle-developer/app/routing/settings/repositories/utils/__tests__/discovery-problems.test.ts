@@ -1,14 +1,16 @@
 import { describe, expect, test } from 'vitest';
+
 import {
   WorktreeDiscoveryProblemKind,
   WorktreeRootSource,
 } from '~/__generated__/graphql';
 import { mockDiscoveredWorktrees } from '~/routing/settings/repositories/data/mock.repositories';
-import {
-  WORKTREE_PROBLEM_GROUP,
-  summarizeDiscovery,
-} from '../discovery-problems';
 import type { DiscoveredWorktreesResult } from '~/routing/settings/repositories/data/types';
+
+import {
+  summarizeDiscovery,
+  WORKTREE_PROBLEM_GROUP,
+} from '../discovery-problems';
 
 const problem = (
   kind: WorktreeDiscoveryProblemKind,

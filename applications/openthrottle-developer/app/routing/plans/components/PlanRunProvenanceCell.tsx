@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { editorHref } from '@openthrottle/react-router-ide';
 import { Badge } from '@openthrottle/react-router-shadcn';
 import {
@@ -7,6 +6,7 @@ import {
   GitBranch,
   GitPullRequest,
 } from 'lucide-react';
+import * as React from 'react';
 
 export interface PlanRunProvenanceCheckout {
   readonly displayName: string;

@@ -32,18 +32,19 @@
  * the dev database is a leak.
  */
 
+import { spawn } from 'node:child_process';
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { spawn } from 'node:child_process';
+
 import { chromium } from 'playwright';
 
 import { getFlow } from '../episodes/flows';
+import type { ActionContext } from './actions';
+import { runStep, signIn, stepTarget } from './actions';
 import { isDemoDataDirty } from './dirty';
 import { loadFormat, outputRoot, repositoryRoot } from './format';
-import { toRegionSample } from './regions';
 import { createCapture } from './record';
-import { runStep, signIn, stepTarget } from './actions';
-import type { ActionContext } from './actions';
+import { toRegionSample } from './regions';
 import type {
   DemoFlow,
   ManifestStep,

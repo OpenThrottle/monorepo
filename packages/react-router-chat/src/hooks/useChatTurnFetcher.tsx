@@ -1,17 +1,18 @@
 import { isRecord } from '@openthrottle/nodejs-utils';
 import * as React from 'react';
 import { useFetcher } from 'react-router';
+
 import { buildAgentsChatAssistantFooter } from '../agents-chat-footer';
 import type {
   ChatMessage,
   ChatTurnResult,
   LoadAgentConversationMessagesResult,
 } from '../types';
-import { useChatMessages } from './use-chat-messages';
 import type {
   UseChatMessagesOptions,
   UseChatMessagesResult,
 } from './use-chat-messages';
+import { useChatMessages } from './use-chat-messages';
 
 export const SEND_AGENT_MESSAGE_INTENT = 'send-agent-message';
 export const LOAD_AGENT_CONVERSATION_MESSAGES_INTENT =

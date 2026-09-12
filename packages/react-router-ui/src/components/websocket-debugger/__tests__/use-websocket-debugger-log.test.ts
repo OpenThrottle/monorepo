@@ -1,14 +1,15 @@
-import { act, renderHook } from '@testing-library/react';
-import { describe, expect, test } from 'vitest';
 import {
   NOTIFICATION_EVENT_NAMES,
   type NotificationPayload,
 } from '@openthrottle/openthrottle-notifications';
+import { act, renderHook } from '@testing-library/react';
+import { describe, expect, test } from 'vitest';
+
+import type { WebsocketDebuggerLogEntry } from '../types';
 import {
   filterWebsocketDebuggerEntries,
   useWebsocketDebuggerLog,
 } from '../use-websocket-debugger-log';
-import type { WebsocketDebuggerLogEntry } from '../types';
 
 const systemAlertPayload = {
   message: 'Test alert',

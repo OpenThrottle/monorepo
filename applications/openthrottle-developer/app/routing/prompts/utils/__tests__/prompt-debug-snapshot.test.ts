@@ -1,6 +1,8 @@
 import { describe, expect, test } from 'vitest';
-import { CustomPromptType } from '~/__generated__/graphql';
+
 import type { PromptDetailsFragment } from '~/__generated__/graphql';
+import { CustomPromptType } from '~/__generated__/graphql';
+
 import { buildPromptDebugSnapshotJson } from '../prompt-debug-snapshot';
 
 const customPrompt = (

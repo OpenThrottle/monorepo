@@ -1,17 +1,19 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
+import * as React from 'react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
+
+import type { Route } from '@/app/routes/+types/timeline._index';
 import { TimelineLaneGrouping } from '~/__generated__/graphql';
+import { TIMELINE_PAGE_COPY } from '~/routing/timeline/data/data.copy';
 import {
   FIXTURE_WINDOW_FROM,
   FIXTURE_WINDOW_TO,
   TIMELINE_FIXTURE_MARKERS,
   TIMELINE_FIXTURE_SPANS,
 } from '~/routing/timeline/data/data.fixtures';
-import { TIMELINE_PAGE_COPY } from '~/routing/timeline/data/data.copy';
 import { buildRootMatch } from '~/testing/root-match-fixture';
-import type { Route } from '@/app/routes/+types/timeline._index';
+
 import Component, { shouldRevalidate } from '../timeline._index';
 
 // The fixtures are readonly; the generated loader-data type is not, so they are

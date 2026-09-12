@@ -1,9 +1,10 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import Transport from 'winston-transport';
-import { LoggerService } from './logger.service';
+
 import { logger } from './logger.config';
+import { LoggerService } from './logger.service';
 
 /**
  * @description Captures the structured `info` records that Winston emits so we

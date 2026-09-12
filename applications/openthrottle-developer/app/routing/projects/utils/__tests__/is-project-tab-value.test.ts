@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { isProjectTabValue } from '../is-project-tab-value';
 
 describe('isProjectTabValue', () => {

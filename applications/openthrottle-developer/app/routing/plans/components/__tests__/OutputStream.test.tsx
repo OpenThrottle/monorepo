@@ -1,9 +1,10 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import { OutputStream } from '../OutputStream';
+
 import type { OutputStreamProps } from '../OutputStream';
+import { OutputStream } from '../OutputStream';
 
 const renderStream = (props: OutputStreamProps): RenderResult =>
   render(<OutputStream {...props} />);

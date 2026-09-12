@@ -11,8 +11,9 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { AgentConversationMessage } from '../agent-conversations/agent-conversation-message.entity';
+
 import { AgentConversation } from '../agent-conversations/agent-conversation.entity';
+import { AgentConversationMessage } from '../agent-conversations/agent-conversation-message.entity';
 import { User } from '../users/user.entity';
 
 /**

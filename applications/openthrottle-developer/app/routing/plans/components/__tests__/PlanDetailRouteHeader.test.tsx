@@ -1,8 +1,10 @@
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import { PlanDetailRouteHeader } from '../PlanDetailRouteHeader';
+
 import type { PlanDetailsFragment } from '~/__generated__/graphql';
 import { renderRoutesStub } from '~/testing/route-fixtures';
+
+import { PlanDetailRouteHeader } from '../PlanDetailRouteHeader';
 
 const basePlan: PlanDetailsFragment = {
   __typename: 'PlanObject',

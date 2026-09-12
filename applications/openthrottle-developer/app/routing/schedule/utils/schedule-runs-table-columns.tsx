@@ -3,9 +3,13 @@
  * component file per component-primitive-shape R4 (module-scope helpers live in
  * the sibling utils/ folder) so the table component stays UI-focused.
  */
-import * as React from 'react';
 import { Badge } from '@openthrottle/react-router-shadcn';
+import type { ColumnDef } from '@tanstack/react-table';
+import * as React from 'react';
 import { Link } from 'react-router';
+
+import type { ScheduledJobRunRowFragment } from '~/__generated__/graphql';
+import type { ScheduleRunsTableProps } from '~/routing/schedule/components/ScheduleRunsTable';
 import {
   RUN_STATUS_COLOR,
   RUN_STATUS_LABEL,
@@ -18,9 +22,6 @@ import {
   runUsageTooltip,
 } from '~/routing/schedule/utils/format-usage';
 import { formatWhen } from '~/routing/schedule/utils/format-when';
-import type { ColumnDef } from '@tanstack/react-table';
-import type { ScheduledJobRunRowFragment } from '~/__generated__/graphql';
-import type { ScheduleRunsTableProps } from '~/routing/schedule/components/ScheduleRunsTable';
 
 export const buildScheduleRunsTableColumns = (
   jobId: ScheduleRunsTableProps['jobId'],

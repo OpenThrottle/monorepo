@@ -1,10 +1,12 @@
-import * as React from 'react';
 import { render, screen } from '@testing-library/react';
+import * as React from 'react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import PullRequestDetail from '../pull-requests.$prId';
-import { buildRootMatch } from '~/testing/root-match-fixture';
+
 import type { Route } from '@/app/routes/+types/pull-requests.$prId';
+import { buildRootMatch } from '~/testing/root-match-fixture';
+
+import PullRequestDetail from '../pull-requests.$prId';
 
 const matches: Route.ComponentProps['matches'] = [
   buildRootMatch(),

@@ -1,23 +1,24 @@
-import * as React from 'react';
-import { print } from 'graphql';
-import { usePollServerMetrics } from '@openthrottle/react-router-ui';
-import { ENV_SOURCE } from '@openthrottle/react-router-utils';
 import type { GetRootMetricsQuery } from '@openthrottle/openthrottle-developer-codegen';
 import { GetRootMetricsDocument } from '@openthrottle/openthrottle-developer-codegen';
-import {
-  getStoredMetricsCollapsed,
-  getStoredPollIntervalMs,
-  readStoredMetricsChartHistory,
-  trimMetricsChartData,
-  writeStoredMetricsChartHistory,
-  writeStoredMetricsCollapsed,
-  type MetricsChartDatum,
-} from '../utils/storage';
+import { usePollServerMetrics } from '@openthrottle/react-router-ui';
+import { ENV_SOURCE } from '@openthrottle/react-router-utils';
+import { print } from 'graphql';
+import * as React from 'react';
+
 import {
   GLOBAL_METRICS_POLL_INTERVAL_DEFAULT,
   GLOBAL_METRICS_STORAGE_KEY,
   GLOBAL_METRICS_VALID_INTERVALS,
 } from '../config';
+import {
+  getStoredMetricsCollapsed,
+  getStoredPollIntervalMs,
+  type MetricsChartDatum,
+  readStoredMetricsChartHistory,
+  trimMetricsChartData,
+  writeStoredMetricsChartHistory,
+  writeStoredMetricsCollapsed,
+} from '../utils/storage';
 
 /** Options for {@link useGlobalMetrics}. */
 export interface UseGlobalMetricsOptions {

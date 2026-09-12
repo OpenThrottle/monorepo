@@ -9,6 +9,7 @@
  * at build time and introduces no runtime import cycle.
  */
 import { useRouteLoaderData } from 'react-router';
+
 import type { loader } from '~/routes/plans.$planId._index';
 
 /**

@@ -4,14 +4,15 @@ import {
   type OnApplicationBootstrap,
   type OnApplicationShutdown,
 } from '@nestjs/common';
-import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   parsePlanIdFromCancelTopic,
-  planCancelTopic,
   PLAN_CANCEL_TOPIC_PATTERN,
+  planCancelTopic,
 } from '@openthrottle/nestjs-graphql';
+import { LoggerService } from '@openthrottle/nestjs-modules';
 import { REDIS_CLIENT } from '@openthrottle/nestjs-redis';
 import type { Redis } from 'ioredis';
+
 import { PlanRunCancellationService } from './plan-run-cancellation.service';
 
 /**

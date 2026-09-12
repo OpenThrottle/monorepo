@@ -1,9 +1,10 @@
 import {
   CHAT_TOOLBAR_CONTEXT_SOURCES,
   CHAT_TOOLBAR_PERSONAS,
-  useHeaderChatController as useSharedHeaderChatController,
   type HeaderChatSurface,
+  useHeaderChatController as useSharedHeaderChatController,
 } from '@openthrottle/react-router-chat-state';
+
 import { ConversationStreamChunkAddedDocument } from '~/__generated__/graphql';
 import { getGraphqlWsClient } from '~/services/graphql-ws-client';
 

@@ -34,9 +34,9 @@ import {
   estimatedSpokenSeconds,
   spokenWords,
 } from '../episodes/derived';
-import { loadFormat } from '../runner/format';
-import { PLAYLISTS } from '../episodes/types';
 import type { VideoEpisode } from '../episodes/types';
+import { PLAYLISTS } from '../episodes/types';
+import { loadFormat } from '../runner/format';
 
 /** Grace over the budget before a script fails rather than warns. */
 const OVER_BUDGET_TOLERANCE_WORDS = 5;

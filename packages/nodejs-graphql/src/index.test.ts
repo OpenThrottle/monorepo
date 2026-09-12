@@ -1,13 +1,14 @@
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
-import { type DocumentNode, parse } from 'graphql';
 import { isRecord } from '@openthrottle/nodejs-utils';
+import { type DocumentNode, parse } from 'graphql';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+
 import {
   DEFAULT_GRAPHQL_TIMEOUT_MS,
-  GRAPHQL_TIMEOUT_ERROR_PREFIX,
   executeGraphql,
   executeGraphqlAtUrl,
   executeGraphqlWithAuth,
+  GRAPHQL_TIMEOUT_ERROR_PREFIX,
 } from './index.ts';
 
 // See graphql-v2.test.ts: the generic overload brands the parsed document with

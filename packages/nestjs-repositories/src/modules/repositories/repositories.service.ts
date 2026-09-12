@@ -7,6 +7,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { Repository as OrmRepository } from 'typeorm';
+
 import { normalizeRemoteUrl } from './normalize-remote-url';
 import { Repository } from './repository.entity';
 import { RepositoryCheckout } from './repository-checkout.entity';

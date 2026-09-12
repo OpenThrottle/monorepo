@@ -3,6 +3,7 @@
  */
 
 import { Field, ObjectType } from '@nestjs/graphql';
+
 import { TaskObject } from '../tasks/task.object';
 
 @ObjectType()

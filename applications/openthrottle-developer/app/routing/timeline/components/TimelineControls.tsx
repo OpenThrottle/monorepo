@@ -1,9 +1,10 @@
-import * as React from 'react';
 import {
   ToggleGroup,
   ToggleGroupItem,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
 import { useSearchParams } from 'react-router';
+
 import type { TimelineLaneGrouping } from '~/__generated__/graphql';
 import {
   TIMELINE_GROUPINGS,
@@ -23,6 +24,7 @@ import {
   withTimelineGrouping,
   withTimelineWindow,
 } from '~/routing/timeline/utils/search-params';
+
 import { TimelineKindToggles } from './TimelineKindToggles';
 
 export interface TimelineControlsProps {

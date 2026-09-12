@@ -1,13 +1,15 @@
-import * as React from 'react';
-import { act, render, waitFor } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { act, render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { EventSubscriptionsSection } from '../EventSubscriptionsSection';
+
 import { buildInitialSubscriptions } from '~/routing/settings/config/event-subscriptions';
 import { EVENT_SUBSCRIPTION_ROWS } from '~/routing/settings/config/event-subscriptions';
 import { EVENT_SUBSCRIPTIONS_STORAGE_KEY } from '~/routing/settings/config/event-subscriptions-storage';
+
+import { EventSubscriptionsSection } from '../EventSubscriptionsSection';
 
 describe('EventSubscriptionsSection', () => {
   let component: RenderResult;

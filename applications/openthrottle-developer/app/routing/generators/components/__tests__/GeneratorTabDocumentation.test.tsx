@@ -1,9 +1,10 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
-import { createRoutesStub } from 'react-router';
 import { Tabs } from '@openthrottle/react-router-shadcn';
+import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
+import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
+
 import {
   GENERATOR_DOCS_AGENT_USAGE,
   GENERATOR_DOCS_AGENTS,
@@ -11,6 +12,7 @@ import {
   GENERATOR_DOCS_OT_GENERATORS_SKILL,
   GENERATOR_DOCS_TOOLS_PACKAGE_README,
 } from '~/routing/generators/constants/generator-nx-docs';
+
 import { GeneratorTabDocumentation } from '../GeneratorTabDocumentation';
 
 function renderTab(): RenderResult {

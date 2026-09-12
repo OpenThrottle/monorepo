@@ -1,5 +1,3 @@
-import * as React from 'react';
-import { Link } from 'react-router';
 import {
   Label,
   Select,
@@ -8,6 +6,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+import { Link } from 'react-router';
+
 import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
 import {
   SCHEDULE_REPOSITORY_NONE_VALUE,

@@ -1,12 +1,14 @@
 // @vitest-environment node
 import { existsSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
+
 import { describe, expect, test } from 'vitest';
+
 import { discoverRepoSkills } from '~/routing/agents/data/discover-repo-skills.server';
 import {
   getRepoSkillsRegistryCounts,
-  REQUIRED_AGENTS_SKILL_SLUGS,
   type RepoSkillEntry,
+  REQUIRED_AGENTS_SKILL_SLUGS,
 } from '~/routing/agents/data/repo-skills-registry';
 import {
   findMonorepoRootFromPath,

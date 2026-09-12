@@ -1,6 +1,6 @@
-import * as React from 'react';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { SearchIcon } from 'lucide-react';
+import * as React from 'react';
 
 export interface SearchIntroductionProps {
   className?: string;

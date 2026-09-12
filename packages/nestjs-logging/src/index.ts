@@ -1,10 +1,5 @@
 export { NestjsLoggingError } from './config/nestjs-logging.error';
 export {
-  ALL_NESTJS_LOGGING_LEVELS,
-  NESTJS_LOGGING_LEVELS,
-  type NestjsLoggingLevel,
-} from './config/nestjs-logging-levels';
-export {
   applyNestjsLoggingModuleDefaults,
   type CorrelationIdExtractor,
   DEFAULT_MAX_PENDING_WS_RECORDS,
@@ -23,6 +18,11 @@ export {
   validateNestjsLoggingModuleOptions,
 } from './config/nestjs-logging.options';
 export {
+  ALL_NESTJS_LOGGING_LEVELS,
+  NESTJS_LOGGING_LEVELS,
+  type NestjsLoggingLevel,
+} from './config/nestjs-logging-levels';
+export {
   buildNestjsLoggingWebsocketGatewayClass,
   recordMatchesLogSubscriptionFilter,
 } from './gateways/nestjs-logging-websocket.gateway';
@@ -39,31 +39,30 @@ export type {
 export { FileBackedLogStreamHub } from './services/file-backed-log-stream-hub.service';
 export { FileLogJsonlSink } from './services/file-log-jsonl-sink.service';
 export {
-  KeyedJsonlWriter,
-  type KeyedJsonlRunChunkInput,
-  type KeyedJsonlRunRecord,
-  type KeyedJsonlWriterOptions,
-} from './services/keyed-jsonl-writer';
-export { KeyedJsonlWriterError } from './services/keyed-jsonl-writer.error';
-export {
-  readKeyedJsonlRun,
-  type KeyedJsonlRunLine,
-  type ReadKeyedJsonlRunOptions,
-  type ReadKeyedJsonlRunParams,
-  type ReadKeyedJsonlRunResult,
-} from './services/keyed-jsonl-reader';
-export {
-  type PruneKeyedRunOutputDirectoryParams,
-  type PruneKeyedRunOutputDirectoryResult,
-  pruneKeyedRunOutputDirectory,
-} from './services/keyed-run-output-retention';
-export { StubLogJsonlSink } from './services/stub-log-jsonl-sink.service';
-export {
   orderJsonlRootObjectKeys,
   parseJsonlLineToStructuredRecord,
   serializeStructuredLogLine,
   structuredLogRecordToJsonlPayload,
 } from './services/jsonl-payload';
+export {
+  type KeyedJsonlRunLine,
+  readKeyedJsonlRun,
+  type ReadKeyedJsonlRunOptions,
+  type ReadKeyedJsonlRunParams,
+  type ReadKeyedJsonlRunResult,
+} from './services/keyed-jsonl-reader';
+export {
+  type KeyedJsonlRunChunkInput,
+  type KeyedJsonlRunRecord,
+  KeyedJsonlWriter,
+  type KeyedJsonlWriterOptions,
+} from './services/keyed-jsonl-writer';
+export { KeyedJsonlWriterError } from './services/keyed-jsonl-writer.error';
+export {
+  pruneKeyedRunOutputDirectory,
+  type PruneKeyedRunOutputDirectoryParams,
+  type PruneKeyedRunOutputDirectoryResult,
+} from './services/keyed-run-output-retention';
 export {
   createLogRedactor,
   DEFAULT_LOG_REDACTOR,
@@ -73,5 +72,6 @@ export {
   type LogRedactor,
   type RedactionOptions,
 } from './services/log-redaction';
+export { StubLogJsonlSink } from './services/stub-log-jsonl-sink.service';
 export { StubLogStreamHub } from './services/stub-log-stream-hub.service';
 export { LOG_JSONL_SINK, LOG_STREAM_HUB } from './tokens/nestjs-logging.tokens';

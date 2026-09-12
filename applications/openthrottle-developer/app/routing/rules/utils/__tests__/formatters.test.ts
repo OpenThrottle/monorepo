@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { summarizeRuleAction } from '../formatters';
 
 describe('summarizeRuleAction', () => {

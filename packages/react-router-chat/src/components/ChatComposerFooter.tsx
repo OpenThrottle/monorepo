@@ -1,8 +1,9 @@
-import * as React from 'react';
 import { Button } from '@openthrottle/react-router-shadcn';
 import clsx from 'clsx';
-import { ChatUsageCounter } from './ChatUsageCounter';
+import * as React from 'react';
+
 import type { ChatTokenUsage } from '../types';
+import { ChatUsageCounter } from './ChatUsageCounter';
 
 export interface ChatComposerFooterProps {
   readonly disabled: boolean;

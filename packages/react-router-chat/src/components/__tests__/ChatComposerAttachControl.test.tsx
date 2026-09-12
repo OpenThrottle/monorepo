@@ -1,12 +1,13 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
+import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
-import { ChatComposerAttachControl } from '../ChatComposerAttachControl';
-import type { ChatComposerAttachControlProps } from '../ChatComposerAttachControl';
+
 import type { ChatContextSource } from '../../types';
+import type { ChatComposerAttachControlProps } from '../ChatComposerAttachControl';
+import { ChatComposerAttachControl } from '../ChatComposerAttachControl';
 
 const SOURCES: readonly ChatContextSource[] = [
   { id: 'file', label: 'File' },

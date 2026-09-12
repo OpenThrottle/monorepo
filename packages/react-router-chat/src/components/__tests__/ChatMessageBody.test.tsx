@@ -1,10 +1,11 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { ChatMessageBody } from '../ChatMessageBody';
+
 import type { ChatMessageBodyProps } from '../ChatMessageBody';
+import { ChatMessageBody } from '../ChatMessageBody';
 
 /**
  * `ChatMessageBody` loads `MarkdownRenderer` through `React.lazy`, so the first

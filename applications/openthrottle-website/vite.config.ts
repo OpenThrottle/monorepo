@@ -1,10 +1,10 @@
-import { analyzer } from 'vite-bundle-analyzer';
+import { reactRouter } from '@react-router/dev/vite';
+import tailwindcss from '@tailwindcss/vite';
+import { reactRouterDevTools } from 'react-router-devtools';
 import type { ConfigEnv } from 'vite';
 import { defineConfig, loadEnv } from 'vite';
-import { reactRouter } from '@react-router/dev/vite';
-import { reactRouterDevTools } from 'react-router-devtools';
+import { analyzer } from 'vite-bundle-analyzer';
 import devtoolsJson from 'vite-plugin-devtools-json';
-import tailwindcss from '@tailwindcss/vite';
 
 export default (config: ConfigEnv) => {
   const { mode } = config;

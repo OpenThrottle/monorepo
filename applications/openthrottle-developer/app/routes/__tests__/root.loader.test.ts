@@ -1,14 +1,16 @@
 // @vitest-environment node
-import { beforeEach, describe, expect, test, vi } from 'vitest';
-import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
 import { buildAuthCookie } from '@openthrottle/react-router-auth';
+import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
 import { createLoaderArgs } from '@openthrottle/react-router-testing';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+
+import type { Route } from '@/app/+types/root';
 import {
   GetMyUserDocument,
   GetRootHealthDocument,
 } from '~/__generated__/graphql';
+
 import { loader } from '../../root';
-import type { Route } from '@/app/+types/root';
 
 vi.mock('@openthrottle/react-router-graphql', async (importOriginal) => {
   const actual =

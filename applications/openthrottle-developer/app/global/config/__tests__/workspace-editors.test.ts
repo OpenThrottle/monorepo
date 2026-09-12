@@ -4,11 +4,12 @@
 
 import { describe, expect, it } from 'vitest';
 
+import { WorkspaceEditorId } from '~/__generated__/graphql';
+
 import {
   isWorkspaceEditorId,
   WORKSPACE_EDITOR_IDS,
 } from '../workspace-editors';
-import { WorkspaceEditorId } from '~/__generated__/graphql';
 
 describe('workspace editor ids', () => {
   it('covers every member of the generated enum, without re-listing them', () => {

@@ -1,8 +1,9 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { Link } from 'react-router';
 import { EditorWindow } from '@openthrottle/react-router-editor';
 import { Button, Input, Label } from '@openthrottle/react-router-shadcn';
+import clsx from 'clsx';
+import * as React from 'react';
+import { Link } from 'react-router';
+
 import { SkillCreateDestinationField } from '~/routing/skills/components/SkillCreateDestinationField';
 import { SKILL_CREATE_COPY } from '~/routing/skills/data/data.copy';
 import type { UseSkillCreateFormResult } from '~/routing/skills/hooks/useSkillCreateForm';

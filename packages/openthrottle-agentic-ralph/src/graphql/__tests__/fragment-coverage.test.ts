@@ -25,13 +25,14 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+
 import {
-  Kind,
   buildSchema,
   getNamedType,
   isEnumType,
   isObjectType,
   isScalarType,
+  Kind,
   parse,
 } from 'graphql';
 import { describe, expect, it } from 'vitest';

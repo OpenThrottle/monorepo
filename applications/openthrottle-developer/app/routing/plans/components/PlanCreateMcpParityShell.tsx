@@ -1,5 +1,5 @@
-import * as React from 'react';
 import clsx from 'clsx';
+import * as React from 'react';
 
 /**
  * @description Layout wrapper for the plan upload-decompose route, aligned with the MCP `create_plan` contract (server-side defaults and embeddings). It outlived the plan create form, which was removed in favour of authoring plans through the MCP.

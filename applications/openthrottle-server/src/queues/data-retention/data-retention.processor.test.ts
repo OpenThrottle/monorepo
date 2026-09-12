@@ -2,6 +2,7 @@ import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type { DataSource } from 'typeorm';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { DATA_RETENTION_BATCH_SIZE } from './data-retention.constants';
 import { DataRetentionProcessor } from './data-retention.processor';
 import type { DataRetentionJob, RetentionPolicy } from './data-retention.types';

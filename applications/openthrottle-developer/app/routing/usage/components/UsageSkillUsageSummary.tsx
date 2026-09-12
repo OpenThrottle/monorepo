@@ -1,17 +1,18 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from '@openthrottle/react-router-shadcn';
+import clsx from 'clsx';
+import * as React from 'react';
+
+import type { UsageSkillUsageByScopeFragment } from '~/__generated__/graphql';
 import {
   SKILL_USAGE_COPY,
   SKILL_USAGE_SCOPES,
 } from '~/routing/usage/data/skill-usage-copy';
 import { skillUsageScopeCount } from '~/routing/usage/utils/skill-usage-scope-count';
-import type { UsageSkillUsageByScopeFragment } from '~/__generated__/graphql';
 
 export interface UsageSkillUsageSummaryProps {
   byScope: readonly UsageSkillUsageByScopeFragment[];

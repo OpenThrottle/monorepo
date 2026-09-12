@@ -1,5 +1,3 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import {
   OpenThrottleAuthForm,
   OpenThrottleLogo,
@@ -10,8 +8,11 @@ import {
   GlobalErrorBoundary,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import { SITE_SUBDOMAIN, SITE_TITLE } from '~/global/config/settings';
+import clsx from 'clsx';
+import * as React from 'react';
+
 import type { Route } from '@/app/routes/+types/_index';
+import { SITE_SUBDOMAIN, SITE_TITLE } from '~/global/config/settings';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

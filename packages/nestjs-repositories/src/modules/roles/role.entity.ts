@@ -11,6 +11,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+
 import type { ServiceAccount } from '../service-accounts/service-account.entity';
 import type { User } from '../users/user.entity';
 import type { Permission } from './permission.entity';

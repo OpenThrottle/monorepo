@@ -18,6 +18,7 @@
  */
 
 import { DEFAULT_LOG_REDACTOR } from '@openthrottle/nestjs-logging';
+
 import {
   extractQueueJobLogMessage,
   type QueueJobLogSourceRecord,

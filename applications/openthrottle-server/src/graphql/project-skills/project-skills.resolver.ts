@@ -12,17 +12,18 @@
  * gracefully on a DB that has not yet been migrated/ingested.
  */
 
-import { CurrentUser } from '@openthrottle/nestjs-auth';
+import { NotFoundException, UseGuards } from '@nestjs/common';
+import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
 import type { AuthPrincipal } from '@openthrottle/nestjs-auth';
+import { CurrentUser } from '@openthrottle/nestjs-auth';
+import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 import type { ProjectSkillView } from '@openthrottle/nestjs-repositories';
 import {
   ProjectSkillsService,
   ProjectsService,
   ServiceAccountsService,
 } from '@openthrottle/nestjs-repositories';
-import { NotFoundException, UseGuards } from '@nestjs/common';
-import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
+
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
 import { resolveTagCaller } from '../tags/tags.resolver';
 import {

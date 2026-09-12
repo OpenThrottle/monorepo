@@ -5,8 +5,8 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { type UseViewportResult } from '../../hooks/useViewport';
 import { type FloorElement, FloorElementType } from '../../types';
-import { type Point } from '../../utils/geometry';
 import { createFloorElement } from '../../utils/elements';
+import { type Point } from '../../utils/geometry';
 import { SelectionHandles } from '../SelectionHandles';
 
 function element(): FloorElement {

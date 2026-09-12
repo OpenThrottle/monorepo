@@ -1,5 +1,8 @@
-import * as React from 'react';
 import clsx from 'clsx';
+import * as React from 'react';
+
+import { useChatComposerMentions } from '../hooks/use-chat-composer-mentions';
+import { useChatComposerSlashCommands } from '../hooks/use-chat-composer-slash-commands';
 import type {
   ChatMentionProvider,
   ChatSlashCommandProvider,
@@ -7,8 +10,6 @@ import type {
 } from '../types';
 import { ChatComposerFooter } from './ChatComposerFooter';
 import { ChatComposerInput } from './ChatComposerInput';
-import { useChatComposerMentions } from '../hooks/use-chat-composer-mentions';
-import { useChatComposerSlashCommands } from '../hooks/use-chat-composer-slash-commands';
 
 export interface ChatComposerProps {
   readonly className?: string;

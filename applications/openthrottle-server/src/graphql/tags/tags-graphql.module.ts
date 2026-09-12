@@ -3,13 +3,15 @@
  * Plan/Task, and the identity-derived tag mutations.
  */
 
+import './tag.object';
+import './tags.input';
+
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
 import { PlanRulesQueueProducerModule } from '../../queues/plan-rules/plan-rules-queue-producer.module';
-import './tag.object';
-import './tags.input';
 import {
   PlanTagsResolver,
   ProjectTagsResolver,

@@ -6,6 +6,7 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+
 import { WorktreeDiscoveryService } from './worktree-discovery.service';
 
 @Module({

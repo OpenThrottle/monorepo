@@ -1,17 +1,18 @@
-import * as React from 'react';
-import { cleanup, render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
 import { Dialog, DialogContent } from '@openthrottle/react-router-shadcn';
-import { createRoutesStub } from 'react-router';
+import type { RenderResult } from '@testing-library/react';
+import { cleanup, render } from '@testing-library/react';
 import { RocketIcon } from 'lucide-react';
+import * as React from 'react';
+import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
+
 import { GLOBAL_FEATURE_ONBOARDING_MODAL } from '../../config';
-import { GlobalFeatureOnboarding } from '../GlobalFeatureOnboarding';
 import type {
   GlobalFeatureOnboardingContent,
   GlobalFeatureOnboardingLink,
   GlobalFeatureOnboardingProps,
 } from '../GlobalFeatureOnboarding';
+import { GlobalFeatureOnboarding } from '../GlobalFeatureOnboarding';
 
 const CTA: GlobalFeatureOnboardingLink = {
   label: 'Create your first thing',

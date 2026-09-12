@@ -1,12 +1,13 @@
-import * as React from 'react';
 import { Button } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+
+import type { PullRequestDetailFragment } from '~/__generated__/graphql';
 import {
   githubPullCompareUrl,
   githubPullConversationUrl,
   githubPullFilesUrl,
   githubRepoWorkflowsDirUrl,
 } from '~/routing/pull-requests/utils/github-pr-links';
-import type { PullRequestDetailFragment } from '~/__generated__/graphql';
 
 export interface PullRequestDiffLinksProps {
   owner: string;

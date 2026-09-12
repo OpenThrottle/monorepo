@@ -1,6 +1,8 @@
 import 'reflect-metadata';
+
 import type { DynamicModule, Provider } from '@nestjs/common';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+
 import {
   redisConfig,
   resolveQueuePrefix,

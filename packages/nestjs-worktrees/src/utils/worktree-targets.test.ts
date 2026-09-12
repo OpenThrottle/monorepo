@@ -7,6 +7,7 @@
  */
 
 import { beforeEach, describe, expect, it } from 'vitest';
+
 import { WorktreeTargetsTracker } from './worktree-targets';
 
 const initialTargets = [

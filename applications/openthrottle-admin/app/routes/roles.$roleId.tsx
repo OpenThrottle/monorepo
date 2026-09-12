@@ -1,5 +1,3 @@
-import * as React from 'react';
-import { redirect, useFetcher } from 'react-router';
 import {
   executeGraphqlWithAuth,
   isAuthError,
@@ -9,17 +7,20 @@ import {
   GlobalHeading,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import { ShieldCheckIcon } from 'lucide-react';
+import * as React from 'react';
+import { redirect, useFetcher } from 'react-router';
+
+import type { Route } from '@/app/routes/+types/roles.$roleId';
 import {
   GetPermissionsDocument,
   GetRoleDocument,
 } from '~/__generated__/graphql';
-import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import { SITE_TITLE } from '~/global/config/settings';
+import { runRoleDetailAction } from '~/routing/roles/actions/roleId';
 import { RoleDetailCard } from '~/routing/roles/components/RoleDetailCard';
 import { RolePermissionsCard } from '~/routing/roles/components/RolePermissionsCard';
-import { runRoleDetailAction } from '~/routing/roles/actions/roleId';
-import { ShieldCheckIcon } from 'lucide-react';
-import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/roles.$roleId';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

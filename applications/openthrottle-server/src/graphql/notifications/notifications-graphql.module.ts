@@ -5,6 +5,7 @@
  * subscriptions return the interface.
  */
 import { Module } from '@nestjs/common';
+
 import { NotificationsSubscriptionResolver } from './notifications-subscription.resolver';
 
 @Module({

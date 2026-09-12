@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { resolveCompletedAtForStatusChange } from './completed-at';
 
 describe('resolveCompletedAtForStatusChange', () => {

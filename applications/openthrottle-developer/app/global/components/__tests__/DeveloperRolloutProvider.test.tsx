@@ -1,15 +1,17 @@
-import * as React from 'react';
-import { render, waitFor } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
 import {
   clearRolloutEvaluationMemoryCache,
   type RolloutEvaluation,
 } from '@openthrottle/react-router-rollout';
+import type { RenderResult } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { DeveloperRolloutProvider } from '../DeveloperRolloutProvider';
-import type { DeveloperRolloutProviderProps } from '../DeveloperRolloutProvider';
+
 import { ROLLOUT_ANONYMOUS_ID_STORAGE_KEY } from '~/global/utils/rollout-anonymous-id';
+
+import type { DeveloperRolloutProviderProps } from '../DeveloperRolloutProvider';
+import { DeveloperRolloutProvider } from '../DeveloperRolloutProvider';
 
 const fetchRolloutEvaluationsMock = vi.hoisted(() =>
   vi.fn(async (): Promise<readonly RolloutEvaluation[]> => []),

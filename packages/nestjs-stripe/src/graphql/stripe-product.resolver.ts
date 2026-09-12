@@ -3,6 +3,7 @@
  */
 
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
+
 import { StripeProductsService } from '../services/stripe-products.service';
 import { StripePriceObject, stripePriceToGql } from './stripe-price.object';
 import { StripeProductObject } from './stripe-product.object';

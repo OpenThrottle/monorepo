@@ -7,6 +7,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { In, Repository } from 'typeorm';
+
 import type {
   ScheduledAgentJobDriverId,
   ScheduledAgentJobSettings,

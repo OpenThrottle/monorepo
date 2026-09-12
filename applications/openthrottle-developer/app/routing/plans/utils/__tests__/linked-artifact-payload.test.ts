@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { toLinkedArtifactView } from '../linked-artifact-payload';
 
 const view = (type: string, payload: unknown, externalKey = 'key:1') =>

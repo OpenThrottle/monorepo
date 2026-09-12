@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
-import { docEntryKey } from '../docEntryKey';
+
 import type { DocEntry } from '../buildDocsManifest';
+import { docEntryKey } from '../docEntryKey';
 
 const makeEntry = (overrides: Partial<DocEntry>): DocEntry => ({
   content: '',

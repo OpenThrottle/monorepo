@@ -1,10 +1,12 @@
-import * as React from 'react';
 import { cleanup } from '@testing-library/react';
+import * as React from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { renderRoutesStub } from '../../../../testing/route-fixtures';
-import { SkillsEmpty } from '../SkillsEmpty';
-import type { SkillsEmptyProps } from '../SkillsEmpty';
+
 import { SKILLS_EMPTY_COPY } from '~/routing/skills/data/data.copy';
+
+import { renderRoutesStub } from '../../../../testing/route-fixtures';
+import type { SkillsEmptyProps } from '../SkillsEmpty';
+import { SkillsEmpty } from '../SkillsEmpty';
 
 describe('SkillsEmpty Component', () => {
   let props: SkillsEmptyProps;

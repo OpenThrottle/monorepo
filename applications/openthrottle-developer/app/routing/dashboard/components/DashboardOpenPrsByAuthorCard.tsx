@@ -1,5 +1,3 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import {
   ChartContainer,
   ChartLegend,
@@ -7,7 +5,10 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from '@openthrottle/react-router-shadcn';
+import clsx from 'clsx';
+import * as React from 'react';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+
 import type { GetDashboardGithubStatsQuery } from '~/__generated__/graphql';
 import {
   PRS_BY_AUTHOR_CHART_CONFIG,

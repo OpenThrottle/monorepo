@@ -1,5 +1,7 @@
 import { describe, expect, test } from 'vitest';
+
 import { WorkspaceEditorId } from '~/__generated__/graphql';
+
 import { buildWorkspaceEditorTargetGroups } from '../workspace-editor-targets';
 
 const repositories = [

@@ -1,7 +1,7 @@
+import { createMock } from '@golevelup/ts-vitest';
 import type { ExecutionContext } from '@nestjs/common';
 import { ForbiddenException } from '@nestjs/common';
 import type { Reflector } from '@nestjs/core';
-import { createMock } from '@golevelup/ts-vitest';
 import {
   AUTH_PRINCIPAL_KIND_USER,
   authPrincipalFromServiceAccountId,
@@ -9,6 +9,7 @@ import {
 import { PERMISSIONS } from '@openthrottle/nestjs-rbac';
 import type { RolesService } from '@openthrottle/nestjs-repositories';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { GqlPermissionsGuard } from './gql-permissions.guard';
 
 const userId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';

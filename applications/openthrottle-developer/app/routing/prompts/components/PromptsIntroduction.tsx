@@ -1,9 +1,10 @@
-import * as React from 'react';
-import { BrainIcon } from 'lucide-react';
 import {
   GlobalFeatureOnboardingTrigger,
   GlobalHeading,
 } from '@openthrottle/react-router-ui-global';
+import { BrainIcon } from 'lucide-react';
+import * as React from 'react';
+
 import { PROMPTS_COPY } from '~/routing/prompts/data/data.copy';
 
 export interface PromptsIntroductionProps {}

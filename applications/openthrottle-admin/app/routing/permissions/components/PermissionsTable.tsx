@@ -1,8 +1,9 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import { DataTable } from '@openthrottle/react-router-shadcn';
-import { Link } from 'react-router';
 import type { ColumnDef } from '@tanstack/react-table';
+import clsx from 'clsx';
+import * as React from 'react';
+import { Link } from 'react-router';
+
 import type { PermissionRowFragment } from '~/__generated__/graphql';
 
 export interface PermissionsTableProps {

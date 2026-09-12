@@ -20,9 +20,9 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { quoteIdentifier } from './schema';
-import type { DatabaseSchema, QueryRunner, UniqueKey } from './schema';
 import { SNAPSHOT_TABLES_FILE } from './export';
+import type { DatabaseSchema, QueryRunner, UniqueKey } from './schema';
+import { quoteIdentifier } from './schema';
 
 /** Ids in this namespace belong to the hand-authored hero fixture. */
 export const HERO_ID_PREFIX = 'd0d0d0d0-';

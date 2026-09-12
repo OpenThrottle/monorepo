@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+
 import { ForeignSkillInjectionModule } from '../../services/foreign-skill-injection/foreign-skill-injection.module';
-import { PlanRunsStaleSweepQueueProducerModule } from './plan-runs-stale-sweep-queue-producer.module';
 import { PlanRunsStaleSweepProcessor } from './plan-runs-stale-sweep.processor';
+import { PlanRunsStaleSweepQueueProducerModule } from './plan-runs-stale-sweep-queue-producer.module';
 import { PlanRunsStaleSweepRepeatableService } from './plan-runs-stale-sweep-repeatable.service';
 
 /**

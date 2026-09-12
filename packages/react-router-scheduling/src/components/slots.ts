@@ -1,6 +1,7 @@
-import { createElement } from 'react';
 import type { CalendarEventExternal } from '@schedule-x/calendar';
 import type { ComponentType, ReactElement } from 'react';
+import { createElement } from 'react';
+
 import type { CalendarEvent } from '../types';
 import { fromEngineEvent } from '../utils/events';
 

@@ -1,16 +1,17 @@
-import * as React from 'react';
-import clsx from 'clsx';
+import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from '@openthrottle/react-router-shadcn';
-import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
+import clsx from 'clsx';
+import * as React from 'react';
+
+import type { DocEntry } from '../utils/buildDocsManifest';
 import { formatGroupLabel } from '../utils/buildDocsNav';
 import { groupFaqEntries } from '../utils/groupFaqEntries';
 import { slugify } from '../utils/slugify';
-import type { DocEntry } from '../utils/buildDocsManifest';
 
 export interface FaqViewProps {
   readonly className?: string;

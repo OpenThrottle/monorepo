@@ -16,7 +16,7 @@
  * up: `/plans` with a plan at the top that nobody typed in.
  */
 
-import { CONNECT_OT_MCP_COMMANDS, CONNECT_OT_MCP_SURFACES } from './surface';
+import type { DemoFlow } from '../../runner/types';
 import {
   dwell,
   highlight,
@@ -28,7 +28,7 @@ import {
   type_,
   waitFor,
 } from '../../runner/types';
-import type { DemoFlow } from '../../runner/types';
+import { CONNECT_OT_MCP_COMMANDS, CONNECT_OT_MCP_SURFACES } from './surface';
 
 export const flow: DemoFlow = {
   id: '05-connect-ot-mcp',

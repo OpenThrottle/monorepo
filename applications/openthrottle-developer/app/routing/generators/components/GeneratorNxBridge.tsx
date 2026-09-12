@@ -1,7 +1,3 @@
-import * as React from 'react';
-import { type GeneratorDetailCardFragment } from '~/__generated__/graphql';
-import clsx from 'clsx';
-import { readGeneratorLastRun } from '~/routing/generators/utils/generator-last-run-storage';
 import {
   Card,
   CardContent,
@@ -12,6 +8,11 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@openthrottle/react-router-shadcn';
+import clsx from 'clsx';
+import * as React from 'react';
+
+import { type GeneratorDetailCardFragment } from '~/__generated__/graphql';
+import { readGeneratorLastRun } from '~/routing/generators/utils/generator-last-run-storage';
 
 export interface GeneratorNxBridgeProps {
   className?: string;

@@ -1,13 +1,15 @@
-import * as React from 'react';
-import { cleanup, render } from '@testing-library/react';
+import { GLOBAL_POPOVER_COPY } from '@openthrottle/react-router-ui-global';
 import type { RenderResult } from '@testing-library/react';
+import { cleanup, render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { GLOBAL_POPOVER_COPY } from '@openthrottle/react-router-ui-global';
+
 import { RULES_COPY } from '~/routing/rules/data/data.copy';
-import { RulesTable } from '../RulesTable';
+
 import type { RulesTableProps } from '../RulesTable';
+import { RulesTable } from '../RulesTable';
 
 describe('RulesTable Component', () => {
   let component: RenderResult;

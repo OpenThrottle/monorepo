@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
+
+import type { ChatCheckoutOption } from '../../types';
 import { checkoutSearchTerms } from '../checkout-groups';
 import { checkoutSearchFilter } from '../checkout-search-filter';
-import type { ChatCheckoutOption } from '../../types';
 
 /**
  * The reported bug's list: personal checkouts alongside an org's, every one of

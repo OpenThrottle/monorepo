@@ -1,7 +1,8 @@
-import * as React from 'react';
 import clsx from 'clsx';
 import { ArrowLeftIcon, ArrowRightIcon } from 'lucide-react';
+import * as React from 'react';
 import { Link } from 'react-router';
+
 import type { DocsNavItem } from '../utils/buildDocsNav';
 
 export interface DocPagePagerProps {

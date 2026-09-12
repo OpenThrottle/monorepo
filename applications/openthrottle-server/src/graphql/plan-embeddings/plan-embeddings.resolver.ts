@@ -2,9 +2,10 @@
  * @description Resolver for PlanEmbedding queries. Injects PlanEmbeddingsService from @openthrottle/nestjs-repositories and maps entities to PlanEmbeddingObject.
  */
 
+import { Args, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
 import type { PlanEmbedding } from '@openthrottle/nestjs-repositories';
 import { PlanEmbeddingsService } from '@openthrottle/nestjs-repositories';
-import { Args, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
+
 import { PlanObject } from '../plans/plan.object';
 import {
   GetPlanEmbeddingInput,

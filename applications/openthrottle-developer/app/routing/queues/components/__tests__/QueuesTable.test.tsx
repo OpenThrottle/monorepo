@@ -1,13 +1,15 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { QueuesTable } from '../QueuesTable';
-import type { QueuesTableProps } from '../QueuesTable';
+
 import type { QueueCardFragment } from '~/__generated__/graphql';
 import { QUEUES_ROW_ACTIONS_COPY } from '~/routing/queues/data/data.copy';
+
+import type { QueuesTableProps } from '../QueuesTable';
+import { QueuesTable } from '../QueuesTable';
 
 const mockQueues: QueueCardFragment[] = [
   {

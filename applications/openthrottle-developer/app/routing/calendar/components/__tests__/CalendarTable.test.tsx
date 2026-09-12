@@ -1,11 +1,13 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { CalendarTable } from '../CalendarTable';
-import type { CalendarTableProps } from '../CalendarTable';
+
 import { CALENDAR_EVENTS } from '~/routing/calendar/data/data.events';
+
+import type { CalendarTableProps } from '../CalendarTable';
+import { CalendarTable } from '../CalendarTable';
 
 describe('CalendarTable Component', () => {
   let component: RenderResult;

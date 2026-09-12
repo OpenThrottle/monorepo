@@ -1,14 +1,15 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { Link } from 'react-router';
 import {
   Button,
   ToggleGroup,
   ToggleGroupItem,
 } from '@openthrottle/react-router-shadcn';
-import { FEATURE_BETA_PREVIEW } from '@openthrottle/react-router-utils';
 import { GlobalToolbarSearch } from '@openthrottle/react-router-ui-global';
+import { FEATURE_BETA_PREVIEW } from '@openthrottle/react-router-utils';
+import clsx from 'clsx';
 import { PlusIcon, SlidersHorizontalIcon, TagsIcon } from 'lucide-react';
+import * as React from 'react';
+import { Link } from 'react-router';
+
 import {
   SKILL_AVAILABILITY_COPY,
   SKILL_CREATE_COPY,

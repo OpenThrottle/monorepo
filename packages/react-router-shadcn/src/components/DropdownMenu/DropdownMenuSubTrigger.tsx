@@ -1,6 +1,7 @@
-import * as React from 'react';
-import { DropdownMenu as DropdownMenuPrimitive } from 'radix-ui';
 import { ChevronRight } from 'lucide-react';
+import { DropdownMenu as DropdownMenuPrimitive } from 'radix-ui';
+import * as React from 'react';
+
 import { cn } from '../../utils/cn';
 
 export interface DropdownMenuSubTriggerProps extends React.ComponentPropsWithoutRef<

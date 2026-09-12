@@ -1,5 +1,6 @@
-import { describe, expect, test } from 'vitest';
 import type { OpenThrottleEnv } from '@openthrottle/react-router-utils';
+import { describe, expect, test } from 'vitest';
+
 import {
   maskSensitiveEnvValue,
   sanitizeEnvForDiagnostics,

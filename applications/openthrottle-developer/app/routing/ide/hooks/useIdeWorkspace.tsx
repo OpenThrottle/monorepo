@@ -1,11 +1,11 @@
-import * as React from 'react';
-import { useSymbolDetails } from '@openthrottle/react-router-ide';
 import type {
   ExportedSymbol,
   IdeExportsResult,
   IdeSemanticResult,
   IdeSymbolDetails,
 } from '@openthrottle/react-router-ide';
+import { useSymbolDetails } from '@openthrottle/react-router-ide';
+import * as React from 'react';
 import { useFetcher, useSearchParams } from 'react-router';
 
 export interface UseIdeWorkspaceResult {

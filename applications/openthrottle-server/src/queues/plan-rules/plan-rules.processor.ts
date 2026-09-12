@@ -24,8 +24,8 @@
 
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { OnApplicationShutdown, OnModuleInit } from '@nestjs/common';
-import { LoggerService } from '@openthrottle/nestjs-modules';
 import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
+import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   PlansService,
   RULE_APPLICATION_STATES,
@@ -38,6 +38,7 @@ import {
   evaluateTagActionRules,
   type TagActionRuleInput,
 } from '@openthrottle/openthrottle-skills';
+
 import { ActionExecutorRegistry } from './action-executor';
 import {
   PLAN_RULES_QUEUE_NAME,

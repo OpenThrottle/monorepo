@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Select,
   SelectContent,
@@ -6,6 +5,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+
 import { PROMPTS_SORT_OPTIONS } from '~/routing/prompts/config';
 import type {
   PromptsSortBy,

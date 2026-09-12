@@ -1,11 +1,12 @@
-import * as React from 'react';
-import { cleanup, render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
-import { createRoutesStub } from 'react-router';
+import { cleanup, render } from '@testing-library/react';
 import { RocketIcon } from 'lucide-react';
+import * as React from 'react';
+import { createRoutesStub } from 'react-router';
 import { afterEach, describe, expect, test } from 'vitest';
-import { GlobalFeatureOnboardingModal } from '../GlobalFeatureOnboardingModal';
+
 import type { GlobalFeatureOnboardingContent } from '../GlobalFeatureOnboarding';
+import { GlobalFeatureOnboardingModal } from '../GlobalFeatureOnboardingModal';
 
 const CTA = { label: 'Create your first thing', to: '/things/new' } as const;
 

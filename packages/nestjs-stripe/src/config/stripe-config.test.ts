@@ -1,11 +1,12 @@
 import Stripe from 'stripe';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+
 import {
-  STRIPE_API_VERSION,
-  STRIPE_MAX_NETWORK_RETRIES,
   createLazyStripeClient,
   createStripeClient,
   getStripeConfig,
+  STRIPE_API_VERSION,
+  STRIPE_MAX_NETWORK_RETRIES,
 } from './stripe-config';
 
 describe('getStripeConfig', () => {

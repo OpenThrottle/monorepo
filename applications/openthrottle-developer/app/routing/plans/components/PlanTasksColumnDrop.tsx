@@ -1,9 +1,10 @@
 import * as React from 'react';
 import { useDrop } from 'react-dnd';
+
 import { PlanTasksColumn } from '~/routing/plans/components/PlanTasksColumn';
-import { PLAN_TASK_DRAG_TYPE } from '~/routing/plans/utils/plan-task-drag-type';
-import type { PlanTaskDragItem } from '~/routing/plans/utils/plan-task-drag-type';
 import type { PlanTaskBoardGroupKey } from '~/routing/plans/utils/group-plan-tasks-by-status';
+import type { PlanTaskDragItem } from '~/routing/plans/utils/plan-task-drag-type';
+import { PLAN_TASK_DRAG_TYPE } from '~/routing/plans/utils/plan-task-drag-type';
 
 export interface PlanTasksColumnDropProps {
   acceptsDrop: boolean;

@@ -3,6 +3,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { WorkspaceEditorConfigService } from '@openthrottle/nestjs-repositories';
 import type { Queue } from 'bullmq';
+
 import { ForeignSkillInjectionLifecycleService } from '../../services/foreign-skill-injection/foreign-skill-injection-lifecycle.service';
 import { ForeignSkillMaterializationService } from '../../services/foreign-skill-injection/foreign-skill-materialization.service';
 import { REPEATABLE_JOB_OPTIONS } from '../repeatable-job.options';

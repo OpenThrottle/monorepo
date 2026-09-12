@@ -1,11 +1,12 @@
-import * as React from 'react';
-import { Link } from 'react-router';
 import {
   Badge,
   Card,
   CardContent,
   CardHeader,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+import { Link } from 'react-router';
+
 import type { SearchChunk } from '~/__generated__/graphql';
 import { SearchWhyThisResult } from '~/routing/search/components/SearchWhyThisResult';
 import type { SearchRankMeta } from '~/routing/search/types/search-rank-meta';

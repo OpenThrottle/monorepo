@@ -1,33 +1,34 @@
+import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
+
 import { COLORS } from '../config/index';
+import {
+  loadWorkflowRalphConfig,
+  mapDefaultsDebugToRalphDebugLevel,
+} from '../config/load-workflow-ralph-config';
 import { MESSAGE_OUTRO } from '../config/messages';
 import { showRalphUsage } from '../utils/index';
 import type { RalphDebugLevel } from './ralph-debug-logger';
 import { ralphDebugLogger, setRalphDebugLevel } from './ralph-debug-logger';
 import { parseRalphExecutionBackendId } from './ralph-execution-backend';
 import {
-  RALPH_WORKTREE_FLAG_ONLY,
-  resolveRalphWorktreeName,
-  type RalphWorktreeName,
-} from './ralph-worktree-cli';
-import {
-  loadWorkflowRalphConfig,
-  mapDefaultsDebugToRalphDebugLevel,
-} from '../config/load-workflow-ralph-config';
-import {
-  mergeRalphRuntimeSeed,
-  resolveIterationTimeoutMs,
-  DEFAULT_RALPH_ITERATIONS,
-  DEFAULT_RALPH_PROMPT,
-} from './ralph-runtime-config';
-import {
   formatRalphPromptFileProfileLabel,
+  type RalphPromptProfileKind,
   readRalphPromptFilesUtf8,
   readRalphPromptStdinUtf8,
   resolveRalphPromptFromSeed,
-  type RalphPromptProfileKind,
 } from './ralph-prompt-resolution';
+import {
+  DEFAULT_RALPH_ITERATIONS,
+  DEFAULT_RALPH_PROMPT,
+  mergeRalphRuntimeSeed,
+  resolveIterationTimeoutMs,
+} from './ralph-runtime-config';
 import { sanitizeRalphShellNoise } from './ralph-shell-misparse';
-import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
+import {
+  RALPH_WORKTREE_FLAG_ONLY,
+  type RalphWorktreeName,
+  resolveRalphWorktreeName,
+} from './ralph-worktree-cli';
 
 /** RFC 4122 UUID v4 pattern: plan/task is OpenThrottle plan or task ID when matching */
 const RALPH_UUID_REGEX =

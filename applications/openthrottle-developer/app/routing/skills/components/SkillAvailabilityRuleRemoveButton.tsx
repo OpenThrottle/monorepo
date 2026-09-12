@@ -1,5 +1,3 @@
-import * as React from 'react';
-import { useFetcher } from 'react-router';
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -11,6 +9,9 @@ import {
   AlertDialogTrigger,
   Button,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+import { useFetcher } from 'react-router';
+
 import { SKILL_AVAILABILITY_COPY } from '~/routing/skills/data/data.copy';
 
 const COPY = SKILL_AVAILABILITY_COPY.rules;

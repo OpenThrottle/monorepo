@@ -1,4 +1,5 @@
 import { parsePagination } from '@openthrottle/react-router-utils';
+
 import {
   DEFAULT_SEARCH_LIMIT,
   SEARCH_BASE_PATH,

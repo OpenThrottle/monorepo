@@ -1,3 +1,6 @@
+import { createMock } from '@golevelup/ts-vitest';
+import { ConfigService } from '@nestjs/config';
+import { Test } from '@nestjs/testing';
 import type {
   Project,
   UserWorkspaceSettings,
@@ -9,19 +12,17 @@ import {
   WorkspaceEditorConfigService,
   WorkspaceLocalRepositoriesService,
 } from '@openthrottle/nestjs-repositories';
-import { ConfigService } from '@nestjs/config';
-import { createMock } from '@golevelup/ts-vitest';
 import type DataLoader from 'dataloader';
-import { Test } from '@nestjs/testing';
 import { mkdtempSync } from 'fs';
-import { join } from 'path';
 import { tmpdir } from 'os';
+import { join } from 'path';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
+
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import { WorkspaceEditorIdEnum } from './workspace-editor-id.enum';
 import { toUserWorkspaceProfileObject } from './user-workspace-profile.mapper';
-import { WorkspaceSettingsLoaders } from './workspace-settings-loaders';
+import { WorkspaceEditorIdEnum } from './workspace-editor-id.enum';
 import { WorkspaceSettingsResolver } from './workspace-settings.resolver';
+import { WorkspaceSettingsLoaders } from './workspace-settings-loaders';
 
 describe('WorkspaceSettingsResolver', () => {
   const userId = '11111111-1111-4111-8111-111111111111';

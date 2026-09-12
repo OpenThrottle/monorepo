@@ -1,6 +1,5 @@
-import type { Note } from '@openthrottle/nestjs-repositories';
-import { NotesService } from '@openthrottle/nestjs-repositories';
 import { createMock } from '@golevelup/ts-vitest';
+import { Test } from '@nestjs/testing';
 import {
   AUTH_PRINCIPAL_KIND_USER,
   type AuthPrincipal,
@@ -9,8 +8,10 @@ import {
   GlobalClsService,
   type GlobalClsUser,
 } from '@openthrottle/nestjs-modules';
-import { Test } from '@nestjs/testing';
+import type { Note } from '@openthrottle/nestjs-repositories';
+import { NotesService } from '@openthrottle/nestjs-repositories';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+
 import { NotesResolver } from './notes.resolver';
 
 /** The subset of the persisted draft the author-derivation tests assert on. */

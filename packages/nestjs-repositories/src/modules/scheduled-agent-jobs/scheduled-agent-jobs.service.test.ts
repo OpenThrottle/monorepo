@@ -1,8 +1,9 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { Test } from '@nestjs/testing';
 import { createMock } from '@golevelup/ts-vitest';
+import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { ScheduledAgentJob } from './scheduled-agent-job.entity';
 import {
   SCHEDULED_AGENT_JOB_RUN_IN_FLIGHT_STATUSES,

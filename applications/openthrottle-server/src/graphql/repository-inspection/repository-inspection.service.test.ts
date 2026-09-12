@@ -1,12 +1,14 @@
 import { execFile } from 'node:child_process';
-import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
+
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type { RepositoryCheckoutsService } from '@openthrottle/nestjs-repositories';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+
 import { RepositoryInspectionService } from './repository-inspection.service';
 
 const execFileAsync = promisify(execFile);

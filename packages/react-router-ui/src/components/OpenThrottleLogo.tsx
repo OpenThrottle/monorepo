@@ -1,7 +1,7 @@
-import * as React from 'react';
 import { cn } from '@openthrottle/react-router-shadcn';
-import { Link } from 'react-router';
 import { SpeedometerIcon } from '@phosphor-icons/react/dist/ssr/Speedometer';
+import * as React from 'react';
+import { Link } from 'react-router';
 
 export interface OpenThrottleLogoProps {
   readonly className?: string;

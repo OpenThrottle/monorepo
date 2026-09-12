@@ -2,16 +2,17 @@
  * @description Fishery factories for the work-ledger entities. Use in tests to build mock rows.
  */
 
-import { Factory } from 'fishery';
 import { faker } from '@faker-js/faker';
+import { Factory } from 'fishery';
+
+import type { WorkArtifactData } from './work-artifact.entity';
 import {
   WORK_ARTIFACT_SOURCE,
   WORK_ARTIFACT_VERIFICATION,
   WORK_SESSION_CLOSED_BY,
 } from './work-ledger.constants';
-import type { WorkArtifactData } from './work-artifact.entity';
-import type { WorkSessionSubjectData } from './work-session-subject.entity';
 import type { WorkSessionData } from './work-session.entity';
+import type { WorkSessionSubjectData } from './work-session-subject.entity';
 
 /**
  * Factory for WorkSession-shaped data. Defaults to a closed service-account session

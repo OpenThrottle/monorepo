@@ -1,11 +1,12 @@
-import basicAuth from 'express-basic-auth';
-import { BullBoardModule } from '@bull-board/nestjs';
-import { ConfigModule } from '@nestjs/config';
-import { ExpressAdapter } from '@bull-board/express';
-import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { DynamicModule, Module } from '@nestjs/common';
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
+import { ExpressAdapter } from '@bull-board/express';
+import { BullBoardModule } from '@bull-board/nestjs';
+import { DynamicModule, Module } from '@nestjs/common';
 import type { ConfigType } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
+import { LoggerModule } from '@openthrottle/nestjs-modules';
+import basicAuth from 'express-basic-auth';
+
 import {
   bullmqBoardConfig,
   configValidationSchema,

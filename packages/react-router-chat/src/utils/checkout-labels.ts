@@ -1,8 +1,8 @@
+import type { ChatCheckoutOption } from '../types';
 import {
   parseRepositoryRemote,
   shortenFilesystemPath,
 } from './repository-identity';
-import type { ChatCheckoutOption } from '../types';
 
 /** What to render for one checkout, resolved against the whole list. @public */
 export interface ChatCheckoutDescriptor {

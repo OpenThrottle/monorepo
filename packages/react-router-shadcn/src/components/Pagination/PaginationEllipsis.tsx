@@ -1,5 +1,5 @@
-import * as React from 'react';
 import { MoreHorizontalIcon } from 'lucide-react';
+import * as React from 'react';
 
 import { cn } from '../../utils/cn';
 

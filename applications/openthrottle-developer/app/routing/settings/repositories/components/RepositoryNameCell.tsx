@@ -1,8 +1,9 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import { Badge, Button } from '@openthrottle/react-router-shadcn';
+import clsx from 'clsx';
 import { ChevronRightIcon, FolderIcon } from 'lucide-react';
+import * as React from 'react';
 import { Link } from 'react-router';
+
 import { REPOSITORIES_TABLE_COPY } from '~/routing/settings/repositories/data/data.copy';
 import type { RepositoryCheckoutRow } from '~/routing/settings/repositories/data/types';
 import { repositoryDetailPath } from '~/routing/settings/repositories/utils/paths';

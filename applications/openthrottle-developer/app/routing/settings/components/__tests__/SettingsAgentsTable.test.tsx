@@ -1,11 +1,13 @@
-import * as React from 'react';
+import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
-import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { describe, expect, test, vi } from 'vitest';
-import { SettingsAgentsTable } from '../SettingsAgentsTable';
+
 import type { AgentCliStatus } from '~/routing/settings/data/agent-clis.data';
+
+import { SettingsAgentsTable } from '../SettingsAgentsTable';
 
 // The embedded install/update controls open a graphql-ws subscription; stub the
 // singleton so the table never reaches for a real socket.

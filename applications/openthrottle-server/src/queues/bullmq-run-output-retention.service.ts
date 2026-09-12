@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { pruneKeyedRunOutputDirectory } from '@openthrottle/nestjs-logging';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+
 import {
-  getBullMqRunOutputRetentionConfig,
   type BullMqRunOutputRetentionConfig,
+  getBullMqRunOutputRetentionConfig,
 } from '../config/bullmq-run-output-retention';
 
 /**

@@ -1,21 +1,22 @@
-import * as React from 'react';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalHeading,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { BotIcon } from 'lucide-react';
+import * as React from 'react';
+
+import type { Route } from '@/app/routes/+types/generators._index';
+import { GetGeneratorsDocument } from '~/__generated__/graphql';
+import { SITE_TITLE } from '~/global/config/settings';
+import { GeneratorCard } from '~/routing/generators/components/GeneratorCard';
 import {
   GENERATOR_DOCS_AGENT_USAGE,
   GENERATOR_DOCS_TOOLS_PACKAGE_README,
 } from '~/routing/generators/constants/generator-nx-docs';
-import { GeneratorCard } from '~/routing/generators/components/GeneratorCard';
-import { GetGeneratorsDocument } from '~/__generated__/graphql';
-import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/generators._index';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

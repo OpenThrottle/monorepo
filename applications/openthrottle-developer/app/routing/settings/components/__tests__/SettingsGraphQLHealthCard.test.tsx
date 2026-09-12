@@ -1,10 +1,11 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { SettingsGraphQLHealthCard } from '../SettingsGraphQLHealthCard';
+
 import type { SettingsGraphQLHealthCardProps } from '../SettingsGraphQLHealthCard';
+import { SettingsGraphQLHealthCard } from '../SettingsGraphQLHealthCard';
 
 describe('SettingsGraphQLHealthCard Component', () => {
   let component: RenderResult;

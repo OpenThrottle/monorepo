@@ -14,12 +14,12 @@ import {
   existsSync,
   lstatSync,
   mkdirSync,
-  readFileSync,
   readdirSync,
+  readFileSync,
   readlinkSync,
   realpathSync,
-  rmSync,
   rmdirSync,
+  rmSync,
   symlinkSync,
 } from 'node:fs';
 import { isAbsolute, join, relative, sep } from 'node:path';
@@ -37,15 +37,15 @@ import {
   readLedger,
   writeLedger,
 } from './ledger.ts';
-import {
-  FOREIGN_SKILL_INJECTION_MODE,
-  FOREIGN_SKILL_TARGET_DIRS,
-  GIT_EXCLUDE_OWNER,
-} from './types.ts';
 import type {
   ForeignSkillInjectionMode,
   ForeignSkillLedger,
   ForeignSkillLedgerEntry,
+} from './types.ts';
+import {
+  FOREIGN_SKILL_INJECTION_MODE,
+  FOREIGN_SKILL_TARGET_DIRS,
+  GIT_EXCLUDE_OWNER,
 } from './types.ts';
 
 /** @public */

@@ -1,7 +1,8 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub, useRouteError } from 'react-router';
 import { describe, expect, test } from 'vitest';
+
 import {
   PLAN_DETAIL_ROUTE_ID,
   usePlanDetailRouteData,

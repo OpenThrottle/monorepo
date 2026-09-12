@@ -1,5 +1,5 @@
-import * as React from 'react';
 import { OpenThrottleLogo } from '@openthrottle/react-router-ui';
+import * as React from 'react';
 
 export interface GlobalFooterProps {}
 

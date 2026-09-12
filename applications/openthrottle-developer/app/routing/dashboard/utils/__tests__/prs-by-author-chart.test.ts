@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import {
   PRS_BY_AUTHOR_CHART_CONFIG,
   PRS_BY_AUTHOR_CHART_SERIES,

@@ -1,8 +1,9 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import { OpenThrottleBreadcrumbs } from '@openthrottle/react-router-ui';
+import clsx from 'clsx';
+import * as React from 'react';
 import type { LinkProps, UIMatch } from 'react-router';
 import { useMatches } from 'react-router';
+
 import { hasBreadcrumbHandle } from '../utils/breadcrumb-handle';
 
 export interface GlobalLayoutBreadcrumbsHandle<TLoaderData = {}, THandle = {}> {

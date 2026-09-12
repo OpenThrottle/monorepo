@@ -1,7 +1,3 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { SearchIcon } from 'lucide-react';
-import { useNavigate } from 'react-router';
 import {
   Button,
   CommandDialog,
@@ -13,9 +9,14 @@ import {
   CommandSeparator,
   CommandShortcut,
 } from '@openthrottle/react-router-shadcn';
-import { docEntryHref, searchDocEntries } from '../utils/searchDocs';
-import { docEntryKey } from '../utils/docEntryKey';
+import clsx from 'clsx';
+import { SearchIcon } from 'lucide-react';
+import * as React from 'react';
+import { useNavigate } from 'react-router';
+
 import type { DocEntry } from '../utils/buildDocsManifest';
+import { docEntryKey } from '../utils/docEntryKey';
+import { docEntryHref, searchDocEntries } from '../utils/searchDocs';
 
 export interface DocsSearchProps {
   readonly className?: string;

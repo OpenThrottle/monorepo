@@ -8,22 +8,23 @@
 
 import { InjectQueue } from '@nestjs/bullmq';
 import { BadRequestException, Injectable } from '@nestjs/common';
-import type { Queue } from 'bullmq';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import {
+  type ScheduledAgentJob,
+  ScheduledAgentJobCheckoutPathService,
+  type ScheduledAgentJobDriverId,
+  type ScheduledAgentJobRun,
+  type ScheduledAgentJobRunStatusCount,
+  type ScheduledAgentJobSettings,
+  ScheduledAgentJobsService,
+} from '@openthrottle/nestjs-repositories';
 import {
   getDriver,
   parseDriverId,
   UnknownDriverError,
 } from '@openthrottle/openthrottle-drivers';
-import {
-  ScheduledAgentJobCheckoutPathService,
-  ScheduledAgentJobsService,
-  type ScheduledAgentJob,
-  type ScheduledAgentJobDriverId,
-  type ScheduledAgentJobRun,
-  type ScheduledAgentJobRunStatusCount,
-  type ScheduledAgentJobSettings,
-} from '@openthrottle/nestjs-repositories';
+import type { Queue } from 'bullmq';
+
 import { ScheduledAgentJobCancellationService } from '../../queues/scheduled-agent-jobs/scheduled-agent-job-cancellation.service';
 import { ScheduledAgentJobSchedulerService } from '../../queues/scheduled-agent-jobs/scheduled-agent-job-scheduler.service';
 import {

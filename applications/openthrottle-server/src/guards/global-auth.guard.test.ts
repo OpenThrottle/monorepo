@@ -1,13 +1,14 @@
+import { createMock } from '@golevelup/ts-vitest';
 import type { ExecutionContext } from '@nestjs/common';
 import { UnauthorizedException } from '@nestjs/common';
 import type { Reflector } from '@nestjs/core';
-import { createMock } from '@golevelup/ts-vitest';
 import {
   AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
   authPrincipalFromJwtPayload,
   authPrincipalFromServiceAccountId,
 } from '@openthrottle/nestjs-auth';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import type { GlobalClsAuthHook } from '../auth/global-cls-auth-hook.service';
 import type { ServiceAccountAuthService } from '../auth/service-account-auth.service';
 import { GlobalAuthGuard } from './global-auth.guard';

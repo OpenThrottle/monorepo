@@ -1,6 +1,3 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { Form } from 'react-router';
 import {
   Button,
   DatePicker,
@@ -13,6 +10,10 @@ import {
   Input,
   Label,
 } from '@openthrottle/react-router-shadcn';
+import clsx from 'clsx';
+import * as React from 'react';
+import { Form } from 'react-router';
+
 import { SettingsKeysFormSuccess } from '~/routing/settings/components/SettingsKeysFormSuccess';
 import { useSettingsKeysForm } from '~/routing/settings/hooks/useSettingsKeysForm';
 import type { SettingsKeysActionData } from '~/routing/settings/utils/settings-keys-action';

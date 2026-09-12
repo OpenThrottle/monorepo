@@ -1,9 +1,10 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import { Button } from '@openthrottle/react-router-shadcn';
 import { GlobalToolbarSearch } from '@openthrottle/react-router-ui-global';
-import { Link } from 'react-router';
+import clsx from 'clsx';
 import { PlusIcon } from 'lucide-react';
+import * as React from 'react';
+import { Link } from 'react-router';
+
 import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
 
 export interface ScheduleToolbarProps {

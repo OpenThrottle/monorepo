@@ -1,12 +1,13 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
+import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
-import { ChatComposerModelSelect } from '../ChatComposerModelSelect';
-import type { ChatComposerModelSelectProps } from '../ChatComposerModelSelect';
+
 import type { ChatModelOption } from '../../types';
+import type { ChatComposerModelSelectProps } from '../ChatComposerModelSelect';
+import { ChatComposerModelSelect } from '../ChatComposerModelSelect';
 
 const MODELS: readonly ChatModelOption[] = [
   { id: 'opus', label: 'Opus 4.8' },

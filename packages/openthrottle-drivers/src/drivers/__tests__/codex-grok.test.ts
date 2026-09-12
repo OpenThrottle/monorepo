@@ -5,6 +5,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
+
 import type { DriverInvocationConfig } from '../../types/index.ts';
 import { codexDriver, getDriver, grokDriver } from '../index.ts';
 

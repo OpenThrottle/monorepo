@@ -1,11 +1,13 @@
-import * as React from 'react';
 import { fireEvent, render } from '@testing-library/react';
 import { getDefaultStore } from 'jotai/vanilla';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { PlanWorkflowCommand } from '../PlanWorkflowCommand';
-import type { PlanWorkflowCommandProps } from '../PlanWorkflowCommand';
+
 import { resetWorkflowRunToDefaultsAtom } from '~/routing/plans/data/atom.plan';
+
+import type { PlanWorkflowCommandProps } from '../PlanWorkflowCommand';
+import { PlanWorkflowCommand } from '../PlanWorkflowCommand';
 
 describe('PlanWorkflowCommand Component', () => {
   /** Value passed to `document.execCommand('copy')` via OpenThrottleClipboard fallback (jsdom has no Clipboard API by default). */

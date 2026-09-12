@@ -1,10 +1,11 @@
+import { createMock } from '@golevelup/ts-vitest';
+import { Test } from '@nestjs/testing';
 import {
   dailyStatsFactory,
   DailyStatsService,
 } from '@openthrottle/nestjs-repositories';
-import { createMock } from '@golevelup/ts-vitest';
-import { Test } from '@nestjs/testing';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
+
 import { DailyStatsResolver } from './daily-stats.resolver';
 
 /**

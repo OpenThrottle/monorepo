@@ -1,10 +1,11 @@
-import * as React from 'react';
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
 import { Bar, BarChart, Cell, XAxis, YAxis } from 'recharts';
+
 import {
   DAILY_STATS_CHART_CONFIG,
   type DailyStatsChartDatum,

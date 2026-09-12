@@ -1,5 +1,6 @@
-import * as React from 'react';
 import { useSetAtom } from 'jotai';
+import * as React from 'react';
+
 import {
   CHAT_TOOLBAR_STORAGE_KEY,
   chatToolbarStateAtom,

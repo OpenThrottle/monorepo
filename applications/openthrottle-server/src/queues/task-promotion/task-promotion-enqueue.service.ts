@@ -12,10 +12,11 @@
  * the GraphQL result object; it never throws for validation failures.
  */
 
-import { Injectable } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
-import type { Queue } from 'bullmq';
+import { Injectable } from '@nestjs/common';
 import { TagsService, TasksService } from '@openthrottle/nestjs-repositories';
+import type { Queue } from 'bullmq';
+
 import { normalizeIdempotencyKey } from '../../graphql/queues/queues.service';
 import {
   PROMOTED_TAG,

@@ -1,10 +1,12 @@
-import * as React from 'react';
-import { render, waitFor } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import type { SkillDetailUsageData } from '~/routing/skills/data/skill-usage-detail';
+
 import { SKILL_USAGE_DETAIL_COPY } from '~/routing/skills/data/data.copy';
+import type { SkillDetailUsageData } from '~/routing/skills/data/skill-usage-detail';
+
 import { SkillUsageTabPanel } from '../SkillUsageTabPanel';
 
 const renderPanel = (usage: Promise<SkillDetailUsageData>): RenderResult => {

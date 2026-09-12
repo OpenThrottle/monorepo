@@ -7,8 +7,9 @@
  * An X-OT-Session-Id header is sent so server-side side effects can attribute to this session.
  */
 
-import { z } from 'zod';
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
+import { z } from 'zod';
+
 import type {
   AttachWorkSessionSubjectMutation,
   EndWorkSessionMutation,
@@ -21,13 +22,13 @@ import {
   RecordWorkArtifactDocument,
   WorkSessionsByPlanDocument,
 } from '../__generated__/graphql.js';
-import type { GenericResult } from '../types/index.ts';
 import { getAuthToken } from '../auth/get-auth-token.ts';
 import {
   clearCurrentSession,
   ensureWorkSession,
   getCurrentSessionId,
 } from '../session/current-session.ts';
+import type { GenericResult } from '../types/index.ts';
 import { invalidArgsContent } from '../utils/errors.ts';
 import { runTool } from '../utils/tool-result.ts';
 

@@ -1,16 +1,18 @@
-import * as React from 'react';
 import type { RenderResult } from '@testing-library/react';
 import { waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import { PlanEditorActions } from '../PlanEditorActions';
-import type { PlanEditorActionsProps } from '../PlanEditorActions';
-import { renderRoutesStub } from '~/testing/route-fixtures';
+
 import { WorkspaceEditorId } from '~/__generated__/graphql';
 import {
   PLAN_DEFERRED_SECTION_COPY,
   PLAN_EDITOR_ACTIONS_COPY,
 } from '~/routing/plans/data/data.copy';
+import { renderRoutesStub } from '~/testing/route-fixtures';
+
+import type { PlanEditorActionsProps } from '../PlanEditorActions';
+import { PlanEditorActions } from '../PlanEditorActions';
 
 const PLAN_ID = 'ec3dcee9-36e6-4ecb-876a-f689723f6db4';
 const WORKING_DIRECTORY = '/Users/matt/Development/openthrottle';

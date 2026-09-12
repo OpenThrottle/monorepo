@@ -1,4 +1,5 @@
 import * as React from 'react';
+
 import { ClaudeIcon } from '../components/ClaudeIcon';
 import { CursorIcon } from '../components/CursorIcon';
 import { GeminiIcon } from '../components/GeminiIcon';

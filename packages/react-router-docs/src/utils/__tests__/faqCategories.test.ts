@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
-import { buildFaqCategories } from '../faqCategories';
+
 import type { DocEntry } from '../buildDocsManifest';
+import { buildFaqCategories } from '../faqCategories';
 
 const faq = (group: string, slug: string): DocEntry => ({
   content: '',

@@ -1,4 +1,5 @@
 import type { MetaDescriptor } from 'react-router';
+
 import { APP_URL } from '../config/application';
 
 /**

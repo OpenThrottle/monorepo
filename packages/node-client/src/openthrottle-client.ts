@@ -2,22 +2,23 @@
  * @description Runs vector similarity search against OpenThrottle Postgres (plan_embeddings + task_embeddings + documentation_embeddings).
  */
 
-import {
-  PLAN_TASK_LIST_ORDER,
-  Plan,
-  PlanEmbedding,
-  resolveCompletedAtForStatusChange,
-  Task,
-  TaskEmbedding,
-} from '@openthrottle/nestjs-repositories';
 import type {
   PlanData,
   PlanEmbeddingSearchRow,
   TaskData,
   TaskEmbeddingSearchRow,
 } from '@openthrottle/nestjs-repositories';
+import {
+  Plan,
+  PLAN_TASK_LIST_ORDER,
+  PlanEmbedding,
+  resolveCompletedAtForStatusChange,
+  Task,
+  TaskEmbedding,
+} from '@openthrottle/nestjs-repositories';
 import { isRecord } from '@openthrottle/nodejs-utils';
 import { In } from 'typeorm';
+
 import { getOrCreateDataSource, runQuery } from './data-source.ts';
 import { embedQuery } from './embedding.ts';
 

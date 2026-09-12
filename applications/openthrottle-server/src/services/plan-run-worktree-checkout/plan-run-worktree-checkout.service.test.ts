@@ -1,4 +1,3 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
@@ -11,6 +10,8 @@ import {
   type Repository,
   type RepositoryCheckout,
 } from '@openthrottle/nestjs-repositories';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import type { RepositoryInspectionService } from '../../graphql/repository-inspection/repository-inspection.service';
 import type { RepositoryInspectionSnapshot } from '../../graphql/repository-inspection/repository-inspection.snapshot';
 import { PlanRunWorktreeCheckoutService } from './plan-run-worktree-checkout.service';

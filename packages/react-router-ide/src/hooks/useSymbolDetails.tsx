@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { useFetcher } from 'react-router';
+
 import type { ExportedSymbol, IdeSymbolDetails } from '../data/view-models';
 
 export interface UseSymbolDetailsOptions {

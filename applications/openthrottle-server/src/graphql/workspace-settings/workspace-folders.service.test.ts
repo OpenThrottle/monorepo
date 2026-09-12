@@ -1,9 +1,10 @@
 import { execFile } from 'node:child_process';
 import { existsSync, realpathSync } from 'node:fs';
-import { mkdtemp, mkdir, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm } from 'node:fs/promises';
 import { homedir, tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
+
 import { createMock } from '@golevelup/ts-vitest';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
@@ -28,6 +29,7 @@ import {
   it,
   vi,
 } from 'vitest';
+
 import type { ForeignSkillMaterializationService } from '../../services/foreign-skill-injection/foreign-skill-materialization.service';
 import { RepositoryInspectionService } from '../repository-inspection/repository-inspection.service';
 import { NATIVE_PICKER_ENV } from './native-folder-picker';
@@ -36,8 +38,8 @@ import {
   getCheckoutRoot,
   repositoryNameFromGitUrl,
   repositoryNameFromRemote,
-  WorkspaceFoldersService,
   WORKSPACE_ROOTS_ENV,
+  WorkspaceFoldersService,
 } from './workspace-folders.service';
 
 const execFileAsync = promisify(execFile);

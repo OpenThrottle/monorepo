@@ -7,6 +7,11 @@
 
 import { describe, expect, it } from 'vitest';
 
+import type { DriverInvocationConfig } from '../../types/index.ts';
+import {
+  appendPluginDirShellFlags,
+  OPENTHROTTLE_PLUGIN_DIR_REL,
+} from '../../utils/plugin-dir.ts';
 import {
   claudeDriver,
   codexDriver,
@@ -14,11 +19,6 @@ import {
   grokDriver,
   opencodeDriver,
 } from '../index.ts';
-import type { DriverInvocationConfig } from '../../types/index.ts';
-import {
-  appendPluginDirShellFlags,
-  OPENTHROTTLE_PLUGIN_DIR_REL,
-} from '../../utils/plugin-dir.ts';
 
 const PROMPT = 'do the thing';
 const BASE = `claude -p --permission-mode acceptEdits "${PROMPT}"`;

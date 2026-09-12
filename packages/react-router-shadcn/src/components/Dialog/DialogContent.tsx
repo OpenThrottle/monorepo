@@ -1,9 +1,10 @@
-import * as React from 'react';
-import { Dialog as DialogPrimitive } from 'radix-ui';
 import { X } from 'lucide-react';
+import { Dialog as DialogPrimitive } from 'radix-ui';
+import * as React from 'react';
+
 import { cn } from '../../utils/cn';
-import { DialogOverlay } from './DialogOverlay';
 import { DialogPortal } from './Dialog';
+import { DialogOverlay } from './DialogOverlay';
 
 export interface DialogContentProps extends React.ComponentPropsWithoutRef<
   typeof DialogPrimitive.Content

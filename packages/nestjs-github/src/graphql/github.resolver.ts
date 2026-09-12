@@ -5,9 +5,10 @@
 import { cacheControlFromInfo } from '@apollo/cache-control-types';
 import { Args, Info, Query, Resolver } from '@nestjs/graphql';
 import type { GraphQLResolveInfo } from 'graphql';
+
 import type { ListPullsOptions } from '../github/github.service';
 import { GitHubService } from '../github/github.service';
-import { GitHubStatsService } from './github-stats.service';
+import { CommitsPerPrRowObject } from './commits-per-pr.object';
 import {
   CommitsPerPrInput,
   GetPullInput,
@@ -19,15 +20,15 @@ import {
   PrsMergedPerPeriodInput,
   ReviewCycleTimeInput,
 } from './github.input';
-import { CommitsPerPrRowObject } from './commits-per-pr.object';
+import { GitHubStatsService } from './github-stats.service';
 import { LinesAddedDeletedRowObject } from './lines-added-deleted.object';
 import { OpenPrCountByAuthorObject } from './open-pr-count-by-author.object';
 import { OpenToMergedCycleTimeObject } from './open-to-merged-cycle-time.object';
 import { PrCountByLabelObject } from './pr-count-by-label.object';
-import { PrsMergedPerPeriodObject } from './prs-merged-per-period.object';
 import { PrTimeInStateSummaryObject } from './pr-time-in-state-summary.object';
-import { ReviewCycleTimeObject } from './review-cycle-time.object';
+import { PrsMergedPerPeriodObject } from './prs-merged-per-period.object';
 import { PullListItemObject } from './pull-list-item.object';
+import { ReviewCycleTimeObject } from './review-cycle-time.object';
 
 /** Sets cache hint when Apollo cache control plugin is present (no-op in unit tests). */
 function setCacheHint(

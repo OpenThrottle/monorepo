@@ -1,16 +1,18 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
+
+import { REPOSITORIES_TABLE_COPY } from '~/routing/settings/repositories/data/data.copy';
 import {
   mockCheckout,
   mockRepository,
 } from '~/routing/settings/repositories/data/mock.repositories';
-import { REPOSITORIES_TABLE_COPY } from '~/routing/settings/repositories/data/data.copy';
 import { buildRepositoryRows } from '~/routing/settings/repositories/utils/rows';
-import { RepositoryInjectionCell } from '../RepositoryInjectionCell';
+
 import type { RepositoryInjectionCellProps } from '../RepositoryInjectionCell';
+import { RepositoryInjectionCell } from '../RepositoryInjectionCell';
 
 const [parentRow] = buildRepositoryRows([
   mockRepository({

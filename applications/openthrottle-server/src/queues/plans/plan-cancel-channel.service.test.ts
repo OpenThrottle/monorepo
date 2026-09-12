@@ -1,7 +1,8 @@
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Redis } from 'ioredis';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { PlanCancelChannelService } from './plan-cancel-channel.service';
 import type { PlanRunCancellationService } from './plan-run-cancellation.service';
 

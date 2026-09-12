@@ -1,12 +1,13 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import { DataTable } from '@openthrottle/react-router-shadcn';
+import clsx from 'clsx';
+import * as React from 'react';
+
 import type { RepoPersonaEntry } from '~/routing/agents/data/repo-personas-registry';
+import type { PersonasTableColumnValue } from '~/routing/personas/config/personas-table-columns';
 import {
   getPersonasTableRowId,
   personasTableColumns,
 } from '~/routing/personas/config/personas-table-columns';
-import type { PersonasTableColumnValue } from '~/routing/personas/config/personas-table-columns';
 
 export interface PersonasTableProps {
   className?: string;

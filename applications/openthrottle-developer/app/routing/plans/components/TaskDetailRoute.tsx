@@ -5,15 +5,14 @@
  * Details / Output / Artifacts / Hooks tabs. The route module's default export
  * is a thin wrapper that delegates to this component for the happy path.
  */
-import * as React from 'react';
 import {
   Button,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from '@openthrottle/react-router-shadcn';
-import { GlobalScreen } from '@openthrottle/react-router-ui-global';
 import { OpenThrottleTabs } from '@openthrottle/react-router-ui';
+import { GlobalScreen } from '@openthrottle/react-router-ui-global';
 import {
   BoltIcon,
   ChevronLeftIcon,
@@ -21,26 +20,28 @@ import {
   TerminalSquareIcon,
   WebhookIcon,
 } from 'lucide-react';
+import * as React from 'react';
 import { Link, useFetcher } from 'react-router';
+
+import type { Route } from '@/app/routes/+types/plans.$planId.tasks.$taskId._index';
+import type { TaskDetailsFragment } from '~/__generated__/graphql';
 import { LinkedArtifactsPanel } from '~/routing/plans/components/LinkedArtifactsPanel';
 import { PlanLifecycleHooksSection } from '~/routing/plans/components/PlanLifecycleHooksSection';
-import { PLAN_LIFECYCLE_HOOKS_COPY } from '~/routing/plans/data/data.copy';
+import type { PlanTagChipData } from '~/routing/plans/components/PlanTagChips';
 import { PlanTaskToolbar } from '~/routing/plans/components/PlanTaskToolbar';
-import {
-  PLANS_DETAIL_TAB_SEARCH_PARAM,
-  parseTaskDetailTab,
-} from '~/routing/plans/utils/parsers';
-import { TaskDetails } from '~/routing/plans/components/TaskDetails';
 import { TaskDetailRouteHeader } from '~/routing/plans/components/TaskDetailRouteHeader';
+import { TaskDetails } from '~/routing/plans/components/TaskDetails';
 import { TaskTabOutput } from '~/routing/plans/components/TaskTabOutput';
+import { PLAN_LIFECYCLE_HOOKS_COPY } from '~/routing/plans/data/data.copy';
+import { useTaskOutputStream } from '~/routing/plans/hooks/useTaskOutputStream';
+import {
+  parseTaskDetailTab,
+  PLANS_DETAIL_TAB_SEARCH_PARAM,
+} from '~/routing/plans/utils/parsers';
 import {
   getPlanIsRunning,
   getPlanIsTerminal,
 } from '~/routing/plans/utils/utils.plans';
-import { useTaskOutputStream } from '~/routing/plans/hooks/useTaskOutputStream';
-import type { Route } from '@/app/routes/+types/plans.$planId.tasks.$taskId._index';
-import type { TaskDetailsFragment } from '~/__generated__/graphql';
-import type { PlanTagChipData } from '~/routing/plans/components/PlanTagChips';
 
 export interface TaskDetailRouteProps {
   readonly loaderData: Route.ComponentProps['loaderData'];

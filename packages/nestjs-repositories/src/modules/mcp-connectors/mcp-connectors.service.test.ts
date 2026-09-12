@@ -1,9 +1,10 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { Test } from '@nestjs/testing';
 import { createMock } from '@golevelup/ts-vitest';
+import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import * as bcrypt from 'bcrypt';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { McpConnectorConnection } from './mcp-connector-connection.entity';
 import { McpConnectorsService } from './mcp-connectors.service';
 

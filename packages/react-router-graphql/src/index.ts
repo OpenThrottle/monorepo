@@ -6,9 +6,9 @@
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import {
   DEFAULT_GRAPHQL_TIMEOUT_MS,
-  GRAPHQL_TIMEOUT_ERROR_PREFIX,
   executeGraphql,
   executeGraphqlWithAuth as executeGraphqlWithAuthNodeJS,
+  GRAPHQL_TIMEOUT_ERROR_PREFIX,
 } from '@openthrottle/nodejs-graphql';
 import { getAuthTokenFromCookie } from '@openthrottle/react-router-auth';
 

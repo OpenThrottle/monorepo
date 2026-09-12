@@ -4,8 +4,9 @@
 
 import { Injectable } from '@nestjs/common';
 import { ResourceTemplate, Tool } from '@rekog/mcp-nest';
-import * as Th from '../nest-tool-handlers.ts';
 import { z } from 'zod';
+
+import * as Th from '../nest-tool-handlers.ts';
 
 /**
  * @description Bridges the codegen tool-parameter schemas to `@rekog/mcp-nest`'s

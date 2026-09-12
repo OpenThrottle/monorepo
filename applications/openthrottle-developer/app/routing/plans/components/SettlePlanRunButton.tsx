@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -13,7 +12,9 @@ import {
   toast,
 } from '@openthrottle/react-router-shadcn';
 import { Unplug } from 'lucide-react';
+import * as React from 'react';
 import { useFetcher, useRevalidator } from 'react-router';
+
 import type { action as planDetailAction } from '~/routes/plans.$planId._index';
 import { PLAN_TOOLBAR_COPY } from '~/routing/plans/data/data.copy';
 

@@ -1,6 +1,7 @@
-import * as React from 'react';
 import { Badge } from '@openthrottle/react-router-shadcn';
 import clsx from 'clsx';
+import * as React from 'react';
+
 import { QUEUE_HEALTH_DOT_CLASS } from '~/routing/queues/data/queue-health-display';
 import {
   computeQueueHealth,

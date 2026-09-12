@@ -1,12 +1,14 @@
-import * as React from 'react';
+import type { RenderResult } from '@testing-library/react';
 import { cleanup, render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { RenderResult } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub, useSearchParams } from 'react-router';
 import { afterEach, describe, expect, test } from 'vitest';
+
 import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
-import { ScheduleToolbar } from '../ScheduleToolbar';
+
 import type { ScheduleToolbarProps } from '../ScheduleToolbar';
+import { ScheduleToolbar } from '../ScheduleToolbar';
 
 function ScheduleToolbarWithQueryString(props: ScheduleToolbarProps) {
   const [searchParams] = useSearchParams();

@@ -1,20 +1,22 @@
-import * as React from 'react';
-import { render, within } from '@testing-library/react';
-import { createRoutesStub } from 'react-router';
 import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
 import { createActionArgs } from '@openthrottle/react-router-testing';
+import { render, within } from '@testing-library/react';
+import * as React from 'react';
+import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import Component, { action } from '../settings.mcp.$connectorId';
+
+import type { Route } from '@/app/routes/+types/settings.mcp.$connectorId';
+import type {
+  McpConnectorConnectionFieldsFragment,
+  McpConnectorFieldsFragment,
+} from '~/__generated__/graphql';
 import {
   ConnectMcpConnectorDocument,
   DisconnectMcpConnectorDocument,
   SetMcpConnectorEnabledDocument,
 } from '~/__generated__/graphql';
-import type {
-  McpConnectorConnectionFieldsFragment,
-  McpConnectorFieldsFragment,
-} from '~/__generated__/graphql';
-import type { Route } from '@/app/routes/+types/settings.mcp.$connectorId';
+
+import Component, { action } from '../settings.mcp.$connectorId';
 
 vi.mock('@openthrottle/react-router-graphql', async (importOriginal) => {
   const actual =

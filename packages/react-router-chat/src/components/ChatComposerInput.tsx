@@ -1,6 +1,7 @@
-import * as React from 'react';
 import { TextArea } from '@openthrottle/react-router-shadcn';
 import clsx from 'clsx';
+import * as React from 'react';
+
 import type { UseChatComposerMentionsResult } from '../hooks/use-chat-composer-mentions';
 import type { UseChatComposerSlashCommandsResult } from '../hooks/use-chat-composer-slash-commands';
 import type { ChatMentionProvider, ChatSlashCommandProvider } from '../types';

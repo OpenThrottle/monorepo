@@ -1,11 +1,12 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
+
 import { SidebarProvider } from '../SidebarProvider';
-import { SidebarTrigger } from '../SidebarTrigger';
 import type { SidebarTriggerProps } from '../SidebarTrigger';
+import { SidebarTrigger } from '../SidebarTrigger';
 
 describe('SidebarTrigger Component', () => {
   let component: RenderResult;

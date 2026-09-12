@@ -2,11 +2,12 @@
  * @description Unit tests for {@link AgenticWorkflowService}.
  */
 
+import { createMock } from '@golevelup/ts-vitest';
 import { getQueueToken } from '@nestjs/bullmq';
 import { Test } from '@nestjs/testing';
-import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest';
 import type { Job, Queue } from 'bullmq';
-import { createMock } from '@golevelup/ts-vitest';
+import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest';
+
 import {
   AGENTIC_TEST_JOB_NAME,
   AGENTIC_TEST_QUEUE_NAME,
@@ -15,8 +16,8 @@ import type {
   AgenticTestJobPayload,
   AgenticTestJobResult,
 } from '../../queues/agentic-test/agentic-test.types';
-import { AGENTIC_WORKFLOW_MOCK_PAYLOAD } from './agentic-workflow-mock-payload';
 import { AgenticWorkflowService } from './agentic-workflow.service';
+import { AGENTIC_WORKFLOW_MOCK_PAYLOAD } from './agentic-workflow-mock-payload';
 
 describe('AgenticWorkflowService', () => {
   let service: AgenticWorkflowService;

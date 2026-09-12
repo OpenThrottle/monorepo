@@ -10,6 +10,7 @@ import type {
   RolloutEvaluationReason,
   RolloutFlagKind,
 } from '@openthrottle/nestjs-rollout';
+
 import { RolloutEvaluationReasonEnum } from './rollout-evaluation-reason.enum';
 import { RolloutFlagKindEnum } from './rollout-flag-kind.enum';
 

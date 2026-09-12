@@ -1,8 +1,9 @@
-import * as React from 'react';
 import clsx from 'clsx';
+import * as React from 'react';
 import { NavLink } from 'react-router';
-import { formatGroupLabel } from '../utils/buildDocsNav';
+
 import type { DocsNavGroup } from '../utils/buildDocsNav';
+import { formatGroupLabel } from '../utils/buildDocsNav';
 
 export interface DocsNavProps {
   readonly className?: string;

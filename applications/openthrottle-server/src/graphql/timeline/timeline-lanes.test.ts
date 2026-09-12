@@ -5,6 +5,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
+
 import { TimelineLaneGrouping } from './timeline.enum';
 import { resolveTimelineLane } from './timeline-lanes';
 

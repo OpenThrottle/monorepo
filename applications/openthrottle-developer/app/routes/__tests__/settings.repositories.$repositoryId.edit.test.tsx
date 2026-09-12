@@ -1,8 +1,10 @@
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import Component from '../settings.repositories.$repositoryId.edit';
-import { renderRoutesStub } from '~/testing/route-fixtures';
+
 import type { WorkspaceRepositoryFieldsFragment } from '~/__generated__/graphql';
+import { renderRoutesStub } from '~/testing/route-fixtures';
+
+import Component from '../settings.repositories.$repositoryId.edit';
 
 function stubMatches(): React.ComponentProps<typeof Component>['matches'];
 function stubMatches(): unknown {

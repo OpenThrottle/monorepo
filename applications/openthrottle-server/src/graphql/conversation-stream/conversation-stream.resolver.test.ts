@@ -6,17 +6,17 @@ import {
 } from '@openthrottle/nestjs-auth';
 import type { NestjsModelDiscoveryService } from '@openthrottle/nestjs-model-discovery';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
+import type {
+  AgentCliPreferencesService,
+  AgentConversationsService,
+  CustomPrompt,
+  CustomPromptsService,
+  WorkspaceLocalRepositoriesService,
+  WorkspaceLocalRepository,
+} from '@openthrottle/nestjs-repositories';
 import {
   agentConversationMessagesFactory,
   agentConversationsFactory,
-} from '@openthrottle/nestjs-repositories';
-import type {
-  CustomPrompt,
-  WorkspaceLocalRepository,
-  AgentCliPreferencesService,
-  AgentConversationsService,
-  CustomPromptsService,
-  WorkspaceLocalRepositoriesService,
 } from '@openthrottle/nestjs-repositories';
 import type { DiscoveryResult } from '@openthrottle/openthrottle-agentic-utils';
 import type { Repository } from 'typeorm';

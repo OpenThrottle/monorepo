@@ -1,17 +1,19 @@
-import * as React from 'react';
-import { render, waitFor } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test, vi } from 'vitest';
+
 import {
   WorktreeDiscoveryProblemKind,
   WorktreeRootSource,
 } from '~/__generated__/graphql';
-import { mockDiscoveredWorktrees } from '~/routing/settings/repositories/data/mock.repositories';
 import { WORKTREE_DISCOVERY_COPY } from '~/routing/settings/repositories/data/data.copy';
-import { WorktreeDiscoveryNotice } from '../WorktreeDiscoveryNotice';
+import { mockDiscoveredWorktrees } from '~/routing/settings/repositories/data/mock.repositories';
 import type { DiscoveredWorktreesResult } from '~/routing/settings/repositories/data/types';
+
+import { WorktreeDiscoveryNotice } from '../WorktreeDiscoveryNotice';
 
 const renderNotice = (
   discoveredWorktrees: DiscoveredWorktreesResult,

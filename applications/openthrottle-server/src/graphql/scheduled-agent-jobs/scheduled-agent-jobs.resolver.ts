@@ -7,11 +7,6 @@
  */
 
 import {
-  AUTH_PRINCIPAL_KIND_USER,
-  CurrentUser,
-  type AuthPrincipal,
-} from '@openthrottle/nestjs-auth';
-import {
   BadRequestException,
   ForbiddenException,
   UseGuards,
@@ -26,21 +21,25 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
+import {
+  AUTH_PRINCIPAL_KIND_USER,
+  type AuthPrincipal,
+  CurrentUser,
+} from '@openthrottle/nestjs-auth';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 import {
   AgentCliPreferencesService,
   type ScheduledAgentJob,
 } from '@openthrottle/nestjs-repositories';
+
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import { ScheduledAgentJobsGraphqlService } from './scheduled-agent-jobs-graphql.service';
-import { ScheduledAgentJobRunStatsObject } from './scheduled-agent-job-run-stats.object';
 import {
   ScheduledAgentJobObject,
   ScheduledAgentJobRepositoryObject,
   ScheduledAgentJobRunObject,
 } from './scheduled-agent-job.object';
-import { ScheduledAgentJobsLoaders } from './scheduled-agent-jobs-loaders';
+import { ScheduledAgentJobRunStatsObject } from './scheduled-agent-job-run-stats.object';
 import {
   CreateScheduledAgentJobInputType,
   SetScheduledAgentJobEnabledInputType,
@@ -51,6 +50,8 @@ import {
   toScheduledAgentJobRunObject,
   toScheduledAgentJobRunStatsObject,
 } from './scheduled-agent-jobs.mapper';
+import { ScheduledAgentJobsGraphqlService } from './scheduled-agent-jobs-graphql.service';
+import { ScheduledAgentJobsLoaders } from './scheduled-agent-jobs-loaders';
 
 /** Default window for the run-stats query: the trailing 24 hours. */
 const RUN_STATS_WINDOW_MS = 24 * 60 * 60 * 1000;

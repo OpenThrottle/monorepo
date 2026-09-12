@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
+import type { RecurrenceSpec } from '../recurrence';
 import {
-  RecurrenceFrequency,
-  RecurrenceWeekday,
   buildRRule,
   parseRRule,
+  RecurrenceFrequency,
+  RecurrenceWeekday,
 } from '../recurrence';
-import type { RecurrenceSpec } from '../recurrence';
 
 describe('buildRRule', () => {
   it('emits FREQ first and only the provided parts', () => {

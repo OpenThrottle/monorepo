@@ -1,11 +1,12 @@
-import { renderHook } from '@testing-library/react';
-import { describe, expect, test, vi } from 'vitest';
 import type {
   NotificationEventName,
   NotificationPayload,
 } from '@openthrottle/openthrottle-notifications';
-import { useWebsocketDebuggerSocketSubscription } from '../use-websocket-debugger-socket-subscription';
+import { renderHook } from '@testing-library/react';
+import { describe, expect, test, vi } from 'vitest';
+
 import type { WebsocketDebuggerSocket } from '../types';
+import { useWebsocketDebuggerSocketSubscription } from '../use-websocket-debugger-socket-subscription';
 
 describe('useWebsocketDebuggerSocketSubscription', () => {
   test('uses subscribeToEvents instead of socket.on when provided', () => {

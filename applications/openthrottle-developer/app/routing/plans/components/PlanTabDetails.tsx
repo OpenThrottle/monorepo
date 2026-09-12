@@ -1,29 +1,30 @@
-import * as React from 'react';
+import { EditorWindow } from '@openthrottle/react-router-editor';
+import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
+import { TabsContent } from '@openthrottle/react-router-shadcn';
+import { GlobalHeading } from '@openthrottle/react-router-ui-global';
+import { FEATURE_CHARLIE_PREVIEW } from '@openthrottle/react-router-utils';
 import clsx from 'clsx';
 import { useAtomValue } from 'jotai';
-import { EditorWindow } from '@openthrottle/react-router-editor';
-import { GlobalHeading } from '@openthrottle/react-router-ui-global';
-import { TabsContent } from '@openthrottle/react-router-shadcn';
-import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
-import { usePlanDetailRouteData } from '~/routing/plans/hooks/usePlanDetailRouteData';
-import { PlanLifecycleHooksSection } from '~/routing/plans/components/PlanLifecycleHooksSection';
-import { PLAN_LIFECYCLE_HOOKS_COPY } from '~/routing/plans/data/data.copy';
-import { FEATURE_CHARLIE_PREVIEW } from '@openthrottle/react-router-utils';
-import { PlanWorkflowRunTransparency } from '~/routing/plans/components/PlanWorkflowRunTransparency';
+import * as React from 'react';
+
 import { PlanDeferredSection } from '~/routing/plans/components/PlanDeferredSection';
+import { PlanLifecycleHooksSection } from '~/routing/plans/components/PlanLifecycleHooksSection';
 import { PlanRunTransparencySkeleton } from '~/routing/plans/components/PlanRunTransparencySkeleton';
+import { PlanWorkflowRunTransparency } from '~/routing/plans/components/PlanWorkflowRunTransparency';
+import {
+  workflowRalphRunOptionsAtom,
+  workflowRunIterationTimeoutTextAtom,
+  workflowWorkingDirectoryAtom,
+} from '~/routing/plans/data/atom.plan';
+import { PLAN_LIFECYCLE_HOOKS_COPY } from '~/routing/plans/data/data.copy';
 import { PLAN_DEFERRED_SECTION_COPY } from '~/routing/plans/data/data.copy';
+import { usePlanDetailRouteData } from '~/routing/plans/hooks/usePlanDetailRouteData';
 import {
   buildWorkflowRalphOptionArgs,
   formatWorkflowRalphCommandLine,
   parseWorkflowRunIterationTimeoutSeconds,
   type WorkflowRalphRunOptionsInput,
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
-import {
-  workflowRalphRunOptionsAtom,
-  workflowRunIterationTimeoutTextAtom,
-  workflowWorkingDirectoryAtom,
-} from '~/routing/plans/data/atom.plan';
 
 export interface PlanTabDetailsProps {
   fullscreen: boolean;

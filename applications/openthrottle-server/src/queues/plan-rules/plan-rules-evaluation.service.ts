@@ -12,6 +12,7 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { Queue } from 'bullmq';
+
 import {
   PLAN_RULES_EVALUATE_JOB_NAME,
   PLAN_RULES_QUEUE_NAME,

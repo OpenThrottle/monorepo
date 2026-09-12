@@ -1,7 +1,8 @@
-import * as React from 'react';
-import { Form } from 'react-router';
 import { Badge, Button } from '@openthrottle/react-router-shadcn';
 import { FolderGit2Icon, FolderIcon } from 'lucide-react';
+import * as React from 'react';
+import { Form } from 'react-router';
+
 import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
 import type { WorkspaceBrowseEntry } from '~/routing/settings/repositories/hooks/useAddFolderDialog';
 

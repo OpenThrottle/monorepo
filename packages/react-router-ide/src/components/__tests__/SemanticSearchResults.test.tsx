@@ -1,8 +1,9 @@
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
-import { SemanticSearchResults } from '../SemanticSearchResults';
+
 import type { IdeSemanticResult } from '../../data/view-models';
+import { SemanticSearchResults } from '../SemanticSearchResults';
 
 const repository = { displayName: 'Repo One', repositoryId: 'r1' };
 

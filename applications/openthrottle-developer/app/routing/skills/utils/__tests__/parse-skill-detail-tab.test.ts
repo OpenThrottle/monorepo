@@ -1,7 +1,8 @@
 import { describe, expect, test } from 'vitest';
+
 import {
-  SKILLS_DETAIL_TAB_SEARCH_PARAM,
   parseSkillDetailTab,
+  SKILLS_DETAIL_TAB_SEARCH_PARAM,
 } from '../parse-skill-detail-tab';
 
 describe('parseSkillDetailTab', () => {

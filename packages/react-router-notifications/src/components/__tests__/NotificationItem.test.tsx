@@ -1,16 +1,17 @@
-import * as React from 'react';
-import { render, screen } from '@testing-library/react';
-import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test } from 'vitest';
 import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '@openthrottle/react-router-shadcn';
+import { render, screen } from '@testing-library/react';
+import * as React from 'react';
+import { createRoutesStub } from 'react-router';
+import { beforeEach, describe, expect, test } from 'vitest';
+
 import type { NotificationInstance } from '../../types';
-import { NotificationItem } from '../NotificationItem';
 import type { NotificationItemProps } from '../NotificationItem';
+import { NotificationItem } from '../NotificationItem';
 
 describe('NotificationItem Component', () => {
   let props: NotificationItemProps;

@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,12 +11,14 @@ import {
   Label,
 } from '@openthrottle/react-router-shadcn';
 import { useAtom } from 'jotai';
+import * as React from 'react';
+
 import {
   configAtom,
   DEFAULT_APPEARANCE_CONFIG,
 } from '~/global/data/atom.config';
-import { countNonDefaultAppearanceFields } from '~/routing/settings/utils/count-non-default-appearance-fields';
 import { APPEARANCE_COPY } from '~/routing/settings/data/data.copy';
+import { countNonDefaultAppearanceFields } from '~/routing/settings/utils/count-non-default-appearance-fields';
 
 export interface AppearanceResetFieldProps {}
 

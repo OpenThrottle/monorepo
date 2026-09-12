@@ -1,7 +1,8 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
+import * as React from 'react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
+
 import { DocPagePager } from '../DocPagePager';
 
 const prev = { path: '/docs/getting-started', title: 'Getting Started' };

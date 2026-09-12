@@ -1,10 +1,11 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import { DocsSearch } from '../DocsSearch';
+
 import type { DocEntry } from '../../utils/buildDocsManifest';
+import { DocsSearch } from '../DocsSearch';
 
 const entry = (overrides: Partial<DocEntry>): DocEntry => ({
   content: '',

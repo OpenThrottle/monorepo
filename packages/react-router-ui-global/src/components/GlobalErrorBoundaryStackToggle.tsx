@@ -1,5 +1,5 @@
-import * as React from 'react';
 import { Button, Markdown } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
 
 export interface GlobalErrorBoundaryStackToggleProps {
   readonly stack?: string;

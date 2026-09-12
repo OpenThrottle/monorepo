@@ -2,6 +2,7 @@ import type { ExecutionContext } from '@nestjs/common';
 import { GqlExecutionContext } from '@nestjs/graphql';
 import { asMock } from '@openthrottle/nestjs-testing';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+
 import type { JwtPayload } from '../strategies/jwt.strategy';
 import { getRequestFromExecutionContext } from './get-request-from-execution-context';
 

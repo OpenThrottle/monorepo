@@ -1,13 +1,14 @@
 import { createMock } from '@golevelup/ts-vitest';
+import { NotFoundException } from '@nestjs/common';
 import type {
   Plan,
   PlanRunsService,
   PlansService,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
-import { NotFoundException } from '@nestjs/common';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { Queue } from 'bullmq';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import type { NotificationsService } from '../../notifications/notifications.service';
 import type { PlanCancelChannelService } from '../../queues/plans/plan-cancel-channel.service';
 import type { PlanRunCancellationService } from '../../queues/plans/plan-run-cancellation.service';

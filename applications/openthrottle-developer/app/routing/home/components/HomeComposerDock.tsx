@@ -1,5 +1,5 @@
-import * as React from 'react';
 import clsx from 'clsx';
+import * as React from 'react';
 
 export interface HomeComposerDockProps {
   /** The composer region to dock — the `<Await>` boundary and its skeleton fallback. */

@@ -1,11 +1,12 @@
-import * as React from 'react';
+import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
 import {
   Card,
   CardContent,
   Separator,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
 import { Link } from 'react-router';
-import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
+
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
 import { TASK_DETAIL_COPY } from '~/routing/plans/data/data.copy';
 import { formatTaskDate } from '~/routing/plans/utils/task-details';

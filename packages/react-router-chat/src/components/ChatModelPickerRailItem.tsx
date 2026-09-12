@@ -1,12 +1,13 @@
-import * as React from 'react';
 import {
   Button,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
-import { Star } from 'lucide-react';
 import clsx from 'clsx';
+import { Star } from 'lucide-react';
+import * as React from 'react';
+
 import {
   FAVORITES_GROUP_ID,
   type ResolvedGroup,

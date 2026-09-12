@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Card,
   CardContent,
@@ -8,6 +7,8 @@ import {
   Input,
   Label,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+
 import { AgentsSkillsRegistryGrid } from '~/routing/agents/components/AgentsSkillsRegistryGrid';
 import {
   getRepoSkillsRegistryCounts,

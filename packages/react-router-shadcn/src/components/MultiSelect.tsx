@@ -1,5 +1,6 @@
-import * as React from 'react';
 import { Check } from 'lucide-react';
+import * as React from 'react';
+
 import { cn } from '../utils/cn';
 import { Badge } from './Badge';
 import {

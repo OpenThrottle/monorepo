@@ -1,14 +1,16 @@
-import * as React from 'react';
-import { cleanup, render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
 import type { PullRequestCardFragment } from '@openthrottle/openthrottle-developer-codegen';
 import { GLOBAL_POPOVER_COPY } from '@openthrottle/react-router-ui-global';
+import type { RenderResult } from '@testing-library/react';
+import { cleanup, render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import { PULL_REQUESTS_ROW_ACTIONS_COPY } from '~/routing/pull-requests/data/data.copy';
-import { PullRequestsTable } from '../PullRequestsTable';
+
 import type { PullRequestsTableProps } from '../PullRequestsTable';
+import { PullRequestsTable } from '../PullRequestsTable';
 
 const baseFilters: PullRequestsTableProps['filters'] = {
   author: '',

@@ -1,10 +1,11 @@
-import * as React from 'react';
 import {
   Badge,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 import type { ModelInvocationBadge } from '~/routing/skills/utils/model-invocation-badge';
 import { getSkillSourceBadge } from '~/routing/skills/utils/source-badge';

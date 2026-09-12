@@ -18,12 +18,12 @@
 
 /** @public */
 export {
-  type ApolloServerPluginCacheControlOptions,
   ApolloServerPluginCacheControl,
+  type ApolloServerPluginCacheControlOptions,
 } from '@apollo/server/plugin/cacheControl';
 
 /** @public */
 export {
-  default as createResponseCachePlugin,
   type ApolloServerPluginResponseCacheOptions,
+  default as createResponseCachePlugin,
 } from '@apollo/server-plugin-response-cache';

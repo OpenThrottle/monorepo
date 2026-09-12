@@ -4,8 +4,8 @@
  * updates one place and no spec breaks on copy drift. Add new copy here rather than
  * inlining sentence-length literals in components.
  */
-import { CalendarClockIcon } from 'lucide-react';
 import type { GlobalFeatureOnboardingContent } from '@openthrottle/react-router-ui-global';
+import { CalendarClockIcon } from 'lucide-react';
 
 export const SCHEDULE_COPY = {
   activeRunsCancel: `Cancel`,

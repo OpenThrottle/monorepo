@@ -1,9 +1,9 @@
+import type { EditorLanguage } from '../config';
 import {
   FILE_EXTENSIONS,
   REGEX_KEBAB_CASE,
   REGEX_PASCAL_CASE,
 } from '../config';
-import type { EditorLanguage } from '../config';
 import type { EditorFile } from '../data/atom.editor';
 
 const FILE_EXTENSION_LANGUAGES: Readonly<Record<string, EditorLanguage>> =

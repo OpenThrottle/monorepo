@@ -1,5 +1,7 @@
 import { describe, expect, test } from 'vitest';
+
 import type { PlanRunConfigRepositoryFieldsFragment } from '~/__generated__/graphql';
+
 import {
   FALLBACK_RUN_BRANCH,
   resolveDefaultRunBranch,

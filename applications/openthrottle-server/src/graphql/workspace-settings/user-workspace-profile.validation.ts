@@ -5,6 +5,7 @@
 
 import type { WorkspaceEditorId } from '@openthrottle/nestjs-repositories';
 import { isWorkspaceEditorId } from '@openthrottle/nestjs-repositories';
+
 import type { WorkspaceEditorIdEnum } from './workspace-editor-id.enum';
 
 const MAX_CONTACT_DISPLAY_NAME_LEN = 256;

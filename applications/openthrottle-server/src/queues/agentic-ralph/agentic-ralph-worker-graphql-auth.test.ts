@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
+
 import { resolveAgenticRalphWorkerWorkflowGraphqlConfigFromEnv } from './agentic-ralph-worker-graphql-auth';
 
 describe('resolveAgenticRalphWorkerWorkflowGraphqlConfigFromEnv (auth token)', () => {

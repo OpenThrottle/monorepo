@@ -1,12 +1,13 @@
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import * as React from 'react';
-import { renderHook } from '@testing-library/react';
-import { Provider, createStore } from 'jotai';
 import { ChatPermissionMode } from '@openthrottle/react-router-chat';
+import { renderHook } from '@testing-library/react';
+import { createStore, Provider } from 'jotai';
+import * as React from 'react';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+
 import {
   CHAT_TOOLBAR_STORAGE_KEY,
-  DEFAULT_CHAT_TOOLBAR_STATE,
   type ChatToolbarState,
+  DEFAULT_CHAT_TOOLBAR_STATE,
 } from '../../data/atom.chat-toolbar';
 import {
   CHAT_TOOLBAR_SESSION_SENTINEL_KEY,

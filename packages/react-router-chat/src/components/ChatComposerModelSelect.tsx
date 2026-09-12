@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Select,
   SelectContent,
@@ -9,6 +8,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+
 import type { ChatModelOption } from '../types';
 
 export interface ChatComposerModelSelectProps {

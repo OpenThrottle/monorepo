@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import {
   DATA_RETENTION_DEFAULT_CRON_PATTERN,
   resolveDataRetentionConfig,

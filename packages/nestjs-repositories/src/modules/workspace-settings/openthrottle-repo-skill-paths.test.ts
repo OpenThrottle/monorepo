@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { OPENTHROTTLE_REPO_SKILL_PATHS } from './openthrottle-repo-skill-paths';
 
 const REQUIRED_AGENTS_SKILL_SLUGS = [

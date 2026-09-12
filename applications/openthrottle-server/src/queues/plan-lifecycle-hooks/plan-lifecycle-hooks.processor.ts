@@ -4,18 +4,19 @@
 
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { OnApplicationShutdown, OnModuleInit } from '@nestjs/common';
-import { LoggerService } from '@openthrottle/nestjs-modules';
 import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
+import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   PlanOutputStreamService,
   PlansService,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
-import {
-  PLAN_LIFECYCLE_HOOKS_WORKER_CONCURRENCY,
-  PLAN_LIFECYCLE_HOOKS_QUEUE_NAME,
-} from './plan-lifecycle-hooks.constants';
+
 import { executeSinglePlanLifecycleHook } from './execute-single-plan-lifecycle-hook';
+import {
+  PLAN_LIFECYCLE_HOOKS_QUEUE_NAME,
+  PLAN_LIFECYCLE_HOOKS_WORKER_CONCURRENCY,
+} from './plan-lifecycle-hooks.constants';
 import type {
   PlanLifecycleHookJob,
   PlanLifecycleHookJobResult,

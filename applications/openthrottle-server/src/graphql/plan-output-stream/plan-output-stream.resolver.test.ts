@@ -1,15 +1,16 @@
+import { createMock } from '@golevelup/ts-vitest';
+import { Test } from '@nestjs/testing';
+import { PUB_SUB } from '@openthrottle/nestjs-graphql';
 import type {
   Plan,
   PlanOutputStreamChunk,
 } from '@openthrottle/nestjs-repositories';
 import {
-  PlanOutputStreamService,
   getDefaultPlanRunConfigStorage,
+  PlanOutputStreamService,
 } from '@openthrottle/nestjs-repositories';
-import { PUB_SUB } from '@openthrottle/nestjs-graphql';
-import { createMock } from '@golevelup/ts-vitest';
-import { Test } from '@nestjs/testing';
-import { describe, expect, beforeAll, test, vi } from 'vitest';
+import { beforeAll, describe, expect, test, vi } from 'vitest';
+
 import { PlanOutputStreamResolver } from './plan-output-stream.resolver';
 
 const mockAsyncIterator = { next: vi.fn(), return: vi.fn(), throw: vi.fn() };

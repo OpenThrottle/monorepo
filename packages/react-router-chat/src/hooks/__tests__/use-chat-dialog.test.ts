@@ -1,11 +1,12 @@
+import { renderHook } from '@testing-library/react';
 import type { PropsWithChildren, ReactElement } from 'react';
 import * as React from 'react';
-import { renderHook } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
-import { useChatDialog } from '../use-chat-dialog';
-import { ChatProvider } from '../../context/chat-context';
+
 import type { ChatProviderProps } from '../../context/chat-context';
+import { ChatProvider } from '../../context/chat-context';
 import type { ChatMessage } from '../../types';
+import { useChatDialog } from '../use-chat-dialog';
 
 const messages: readonly ChatMessage[] = [
   { body: 'Hi', id: '1', role: 'user' },

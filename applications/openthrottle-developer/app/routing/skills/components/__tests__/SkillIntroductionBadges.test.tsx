@@ -1,14 +1,16 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
+import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
+
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 import { SKILLS_SOURCE_COPY } from '~/routing/skills/data/data.copy';
 import { getModelInvocationBadge } from '~/routing/skills/utils/model-invocation-badge';
-import { SkillIntroductionBadges } from '../SkillIntroductionBadges';
+
 import type { SkillIntroductionBadgesProps } from '../SkillIntroductionBadges';
+import { SkillIntroductionBadges } from '../SkillIntroductionBadges';
 
 const baseEntry: RepoSkillEntry = {
   disableModelInvocation: undefined,

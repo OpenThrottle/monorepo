@@ -1,18 +1,19 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { APP_NAME_SHORT } from '@openthrottle/react-router-utils';
 import type { ServerHealthObject } from '@openthrottle/openthrottle-developer-codegen';
 import {
   Sidebar,
   SidebarInset,
   SidebarRail,
 } from '@openthrottle/react-router-shadcn';
+import { APP_NAME_SHORT } from '@openthrottle/react-router-utils';
+import clsx from 'clsx';
+import * as React from 'react';
+
+import { useScrollContainerRestoration } from '../hooks/useScrollContainerRestoration';
+import { GLOBAL_SCROLL_CONTAINER_ATTRIBUTE } from '../utils/global-scroll-container';
+import type { GlobalSidebarContentLinkProps } from './GlobalSidebarContent';
 import { GlobalSidebarContent } from './GlobalSidebarContent';
 import { GlobalSidebarFooter } from './GlobalSidebarFooter';
 import { GlobalSidebarHeader } from './GlobalSidebarHeader';
-import type { GlobalSidebarContentLinkProps } from './GlobalSidebarContent';
-import { useScrollContainerRestoration } from '../hooks/useScrollContainerRestoration';
-import { GLOBAL_SCROLL_CONTAINER_ATTRIBUTE } from '../utils/global-scroll-container';
 
 export interface GlobalLayoutProps {
   readonly authenticated?: boolean;

@@ -1,26 +1,27 @@
-import * as React from 'react';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalErrorBoundary,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import { SITE_TITLE } from '~/global/config/settings';
+import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import * as React from 'react';
+
+import type { Route } from '@/app/routes/+types/settings.agents';
 import {
   AgentCliSetupConfigDocument,
   SettingsAgentsAgentClisDocument,
 } from '~/__generated__/graphql';
-import {
-  filterAgentCliStatuses,
-  mergeAgentCliStatuses,
-  type AgentCliFilter,
-} from '~/routing/settings/data/agent-clis.data';
+import { SITE_TITLE } from '~/global/config/settings';
+import { SettingsAgentsInstallNotice } from '~/routing/settings/components/SettingsAgentsInstallNotice';
 import { SettingsAgentsIntroduction } from '~/routing/settings/components/SettingsAgentsIntroduction';
 import { SettingsAgentsTable } from '~/routing/settings/components/SettingsAgentsTable';
 import { SettingsAgentsToolbar } from '~/routing/settings/components/SettingsAgentsToolbar';
-import type { Route } from '@/app/routes/+types/settings.agents';
-import { SettingsAgentsInstallNotice } from '~/routing/settings/components/SettingsAgentsInstallNotice';
+import {
+  type AgentCliFilter,
+  filterAgentCliStatuses,
+  mergeAgentCliStatuses,
+} from '~/routing/settings/data/agent-clis.data';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useFetcher } from 'react-router';
+
 import type { SkillCreateDestination } from '~/routing/skills/config/skill-create';
 import {
   DEFAULT_SKILL_CREATE_DESTINATION,

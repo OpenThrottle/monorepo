@@ -13,6 +13,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+
 import { SkillAvailabilityRuleSet } from './skill-availability-rule-set.entity';
 
 /** Scalar/column fields of SkillAvailabilityRule (no relations). */

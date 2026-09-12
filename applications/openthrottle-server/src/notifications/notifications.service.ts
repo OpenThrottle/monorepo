@@ -6,6 +6,15 @@
  * are the code-first NotificationEvent types in the schema.
  */
 
+import { Inject, Injectable } from '@nestjs/common';
+import {
+  notificationsFirehoseTopic,
+  planLifecycleTopic,
+  PUB_SUB,
+  type PubSubEngine,
+  systemAlertTopic,
+} from '@openthrottle/nestjs-graphql';
+import { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
   DebugPayload,
   NotificationSeverity,
@@ -19,15 +28,6 @@ import type {
   TaskStatusChangedPayload,
 } from '@openthrottle/openthrottle-notifications';
 import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
-import { Inject, Injectable } from '@nestjs/common';
-import { LoggerService } from '@openthrottle/nestjs-modules';
-import {
-  PUB_SUB,
-  notificationsFirehoseTopic,
-  planLifecycleTopic,
-  systemAlertTopic,
-  type PubSubEngine,
-} from '@openthrottle/nestjs-graphql';
 
 function isoNow(): string {
   return new Date().toISOString();

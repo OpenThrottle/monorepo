@@ -11,8 +11,9 @@ import {
   PrimaryColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import type { WorkspaceEditorId } from './workspace-editor-id';
+
 import { User } from '../users/user.entity';
+import type { WorkspaceEditorId } from './workspace-editor-id';
 
 export interface UserWorkspaceSettingsData {
   readonly contactDisplayName: string | null;

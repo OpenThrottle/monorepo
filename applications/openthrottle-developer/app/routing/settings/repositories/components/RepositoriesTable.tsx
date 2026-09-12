@@ -1,28 +1,29 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import { Badge, DataTable } from '@openthrottle/react-router-shadcn';
 import {
   GlobalFeatureOnboarding,
   GlobalPopoverActionsHeader,
 } from '@openthrottle/react-router-ui-global';
-import { Link } from 'react-router';
 import type { ColumnDef, ExpandedState } from '@tanstack/react-table';
+import clsx from 'clsx';
+import * as React from 'react';
+import { Link } from 'react-router';
+
 import { formatUpdatedAt } from '~/routing/plans/utils/formatters';
-import {
-  REPOSITORIES_ONBOARDING,
-  REPOSITORIES_TABLE_COPY,
-} from '~/routing/settings/repositories/data/data.copy';
-import { driftLabels } from '~/routing/settings/utils/drift-labels';
+import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
 import { RepositoriesTableEmpty } from '~/routing/settings/repositories/components/RepositoriesTableEmpty';
 import { RepositoryInjectionCell } from '~/routing/settings/repositories/components/RepositoryInjectionCell';
 import { RepositoryNameCell } from '~/routing/settings/repositories/components/RepositoryNameCell';
 import { RepositoryRowActions } from '~/routing/settings/repositories/components/RepositoryRowActions';
-import { deriveWorktreeBadges } from '~/routing/settings/repositories/utils/worktree-badges';
+import {
+  REPOSITORIES_ONBOARDING,
+  REPOSITORIES_TABLE_COPY,
+} from '~/routing/settings/repositories/data/data.copy';
+import type { RepositoryCheckoutRow } from '~/routing/settings/repositories/data/types';
 import { toExpandedState } from '~/routing/settings/repositories/utils/expansion';
 import { planDetailPath } from '~/routing/settings/repositories/utils/paths';
-import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
+import { deriveWorktreeBadges } from '~/routing/settings/repositories/utils/worktree-badges';
 import type { CheckoutDrift } from '~/routing/settings/utils/drift-labels';
-import type { RepositoryCheckoutRow } from '~/routing/settings/repositories/data/types';
+import { driftLabels } from '~/routing/settings/utils/drift-labels';
 
 export interface RepositoriesTableProps {
   /** Parent row ids to open on mount, e.g. groups whose worktree matched the search. */

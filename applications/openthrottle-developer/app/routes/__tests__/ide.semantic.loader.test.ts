@@ -1,7 +1,8 @@
 // @vitest-environment node
-import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { IDE_SEMANTIC_STATUS } from '@openthrottle/react-router-ide';
 import { createTestRouterContext } from '@openthrottle/react-router-testing';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import type { Route } from '@/app/routes/+types/ide.semantic';
 
 vi.mock('@openthrottle/react-router-graphql', () => ({

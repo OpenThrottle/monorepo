@@ -1,13 +1,14 @@
-import type { Plan, PlanEmbedding } from '@openthrottle/nestjs-repositories';
-import {
-  PlanEmbeddingsService,
-  getDefaultPlanRunConfigStorage,
-} from '@openthrottle/nestjs-repositories';
 import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
-import { describe, expect, beforeAll, test, vi } from 'vitest';
-import { PlanEmbeddingsLoaders } from './plan-embeddings-loaders';
+import type { Plan, PlanEmbedding } from '@openthrottle/nestjs-repositories';
+import {
+  getDefaultPlanRunConfigStorage,
+  PlanEmbeddingsService,
+} from '@openthrottle/nestjs-repositories';
+import { beforeAll, describe, expect, test, vi } from 'vitest';
+
 import { PlanEmbeddingsResolver } from './plan-embeddings.resolver';
+import { PlanEmbeddingsLoaders } from './plan-embeddings-loaders';
 
 const planEmbeddingsRepo = { find: vi.fn(), findOne: vi.fn() };
 

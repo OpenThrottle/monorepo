@@ -1,5 +1,3 @@
-import * as React from 'react';
-import { Bell } from 'lucide-react';
 import {
   Badge,
   Button,
@@ -11,14 +9,17 @@ import {
   Label,
   Switch,
 } from '@openthrottle/react-router-shadcn';
-import { useNotificationsStoreOptional } from '../hooks/useNotificationsStoreOptional';
-import { useNotificationPermission } from '../hooks/useNotificationPermission';
+import { Bell } from 'lucide-react';
+import * as React from 'react';
+
 import { useNotificationsSystemPreferences } from '../hooks/use-system-notifications-preference';
-import { NotificationPermissionDenied } from './NotificationPermissionDenied';
-import { NotificationPermissionUnsupported } from './NotificationPermissionUnsupported';
+import { useNotificationPermission } from '../hooks/useNotificationPermission';
+import { useNotificationsStoreOptional } from '../hooks/useNotificationsStoreOptional';
 import { NotificationActions } from './NotificationActions';
 import { NotificationEmpty } from './NotificationEmpty';
 import { NotificationItem } from './NotificationItem';
+import { NotificationPermissionDenied } from './NotificationPermissionDenied';
+import { NotificationPermissionUnsupported } from './NotificationPermissionUnsupported';
 
 export interface NotificationBellProps {}
 

@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+
 import { fetchServerMetrics } from '../fetch-server-metrics';
 
 const VALID_SNAPSHOT = {

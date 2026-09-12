@@ -1,14 +1,15 @@
-import * as React from 'react';
-import { cleanup, render } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { createRoutesStub } from 'react-router';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import type { RenderResult } from '@testing-library/react';
+import type { ChatMessage } from '@openthrottle/react-router-chat';
 import * as ReactRouterChat from '@openthrottle/react-router-chat';
 import { useChat } from '@openthrottle/react-router-chat';
-import type { ChatMessage } from '@openthrottle/react-router-chat';
-import { LegacyChatTurnProvider } from '../LegacyChatTurnProvider';
+import type { RenderResult } from '@testing-library/react';
+import { cleanup, render } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import * as React from 'react';
+import { createRoutesStub } from 'react-router';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+
 import type { LegacyChatTurnProviderProps } from '../LegacyChatTurnProvider';
+import { LegacyChatTurnProvider } from '../LegacyChatTurnProvider';
 
 vi.mock('@openthrottle/react-router-chat', async (importOriginal) => {
   const actual =

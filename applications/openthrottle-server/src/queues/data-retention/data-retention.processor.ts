@@ -25,6 +25,7 @@ import { InjectDataSource } from '@nestjs/typeorm';
 import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { DataSource } from 'typeorm';
+
 import {
   DATA_RETENTION_BATCH_SIZE,
   DATA_RETENTION_MAX_BATCHES_PER_POLICY,

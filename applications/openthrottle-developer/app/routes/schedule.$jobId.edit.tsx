@@ -1,5 +1,3 @@
-import * as React from 'react';
-import { redirect } from 'react-router';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
@@ -11,19 +9,22 @@ import {
   getActionError,
   mergeRouteModuleMeta,
 } from '@openthrottle/react-router-utils';
+import { ClockIcon } from 'lucide-react';
+import * as React from 'react';
+import { redirect } from 'react-router';
+
+import type { Route } from '@/app/routes/+types/schedule.$jobId.edit';
 import {
-  ScheduleFormAgentClisDocument,
   ScheduledAgentJobDetailDocument,
+  ScheduleFormAgentClisDocument,
   ScheduleRepositoryOptionsDocument,
   UpdateScheduledAgentJobDocument,
   type UpdateScheduledAgentJobInputType,
 } from '~/__generated__/graphql';
-import { ScheduleForm } from '~/routing/schedule/components/ScheduleForm';
-import { parseScheduleForm } from '~/routing/schedule/data/parse-form';
 import { SITE_TITLE } from '~/global/config/settings';
-import { ClockIcon } from 'lucide-react';
-import type { Route } from '@/app/routes/+types/schedule.$jobId.edit';
+import { ScheduleForm } from '~/routing/schedule/components/ScheduleForm';
 import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
+import { parseScheduleForm } from '~/routing/schedule/data/parse-form';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

@@ -2,23 +2,24 @@
  * @description Plan output tool handlers + schemas: append_plan_output, get_plan_output. Wired up via the shared `developerMcpToolDefinitions` registry and the Nest surface.
  */
 
-import type { z } from 'zod';
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
+import type { z } from 'zod';
+
 import {
-  type AppendPlanOutputMutation,
-  type DeletePlanOutputMutation,
-  type GetPlanOutputStreamChunksQuery,
   AppendPlanOutputDocument,
+  type AppendPlanOutputMutation,
   DeletePlanOutputDocument,
+  type DeletePlanOutputMutation,
   GetPlanOutputStreamChunksDocument,
+  type GetPlanOutputStreamChunksQuery,
 } from '../__generated__/graphql.js';
 import {
   AppendPlanOutputInputSchema,
   DeletePlanOutputInputSchema,
   ListPlanOutputStreamChunksInputSchema,
 } from '../__generated__/schemas.ts';
-import type { GenericResult } from '../types/index.ts';
 import { getAuthToken } from '../auth/get-auth-token.ts';
+import type { GenericResult } from '../types/index.ts';
 import { invalidArgsContent } from '../utils/errors.ts';
 import { runTool } from '../utils/tool-result.ts';
 

@@ -1,6 +1,7 @@
+import { toast } from '@openthrottle/react-router-shadcn';
 import { renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { toast } from '@openthrottle/react-router-shadcn';
+
 import { useActionToast } from '~/global/hooks/useActionToast';
 
 vi.mock('@openthrottle/react-router-shadcn', () => ({

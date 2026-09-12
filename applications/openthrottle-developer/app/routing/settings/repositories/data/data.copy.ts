@@ -4,8 +4,8 @@
  * change updates one place and no spec breaks on copy drift. Add new copy here
  * rather than inlining sentence-length literals in components.
  */
-import { FolderGit2Icon } from 'lucide-react';
 import type { GlobalFeatureOnboardingContent } from '@openthrottle/react-router-ui-global';
+import { FolderGit2Icon } from 'lucide-react';
 
 /**
  * @description Copy for the repositories index table, toolbar, and per-row

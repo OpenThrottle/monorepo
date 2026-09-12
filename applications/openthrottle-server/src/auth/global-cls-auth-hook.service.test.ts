@@ -3,24 +3,25 @@
  */
 
 import { Test } from '@nestjs/testing';
-import { ClsService } from 'nestjs-cls';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
   AUTH_PRINCIPAL_KIND_USER,
 } from '@openthrottle/nestjs-auth';
 import {
-  globalClsUserFromJwtLike,
   GlobalClsModule,
   type GlobalClsStore,
+  globalClsUserFromJwtLike,
 } from '@openthrottle/nestjs-modules';
 import {
-  type ServiceAccount,
-  type User,
   RolesService,
+  type ServiceAccount,
   ServiceAccountsService,
+  type User,
   UsersService,
 } from '@openthrottle/nestjs-repositories';
+import { ClsService } from 'nestjs-cls';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { GlobalClsAuthHook } from './global-cls-auth-hook.service';
 
 const userRow = (

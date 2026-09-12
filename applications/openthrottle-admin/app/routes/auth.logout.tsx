@@ -1,9 +1,10 @@
-import { redirect } from 'react-router';
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { getClearAuthCookieHeader } from '@openthrottle/react-router-auth';
+import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { SignoutDocument } from '~/__generated__/graphql';
+import { redirect } from 'react-router';
+
 import type { Route } from '@/app/routes/+types/auth.logout';
+import { SignoutDocument } from '~/__generated__/graphql';
 
 /**
  * @link https://reactrouter.com/start/framework/route-module#loader

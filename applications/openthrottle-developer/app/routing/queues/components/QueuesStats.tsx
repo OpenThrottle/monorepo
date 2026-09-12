@@ -1,5 +1,3 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import {
   ChartContainer,
   ChartLegend,
@@ -8,7 +6,10 @@ import {
   Label,
   Switch,
 } from '@openthrottle/react-router-shadcn';
+import clsx from 'clsx';
+import * as React from 'react';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+
 import type { QueueCardFragment } from '~/__generated__/graphql';
 import { QueueStatsChartTooltip } from '~/routing/queues/components/QueueStatsChartTooltip';
 import {

@@ -1,8 +1,8 @@
-import * as React from 'react';
 import { Button } from '@openthrottle/react-router-shadcn';
-import { Link } from 'react-router';
-import { ArrowRightIcon, CircleCheckBigIcon, CircleIcon } from 'lucide-react';
 import clsx from 'clsx';
+import { ArrowRightIcon, CircleCheckBigIcon, CircleIcon } from 'lucide-react';
+import * as React from 'react';
+import { Link } from 'react-router';
 
 export interface DashboardGetStartedStepProps {
   className?: string;

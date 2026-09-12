@@ -1,12 +1,13 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { Link } from 'react-router';
-import { Check, X } from 'lucide-react';
 import {
   Button,
   cn,
   DropdownMenuItem,
 } from '@openthrottle/react-router-shadcn';
+import clsx from 'clsx';
+import { Check, X } from 'lucide-react';
+import * as React from 'react';
+import { Link } from 'react-router';
+
 import type { NotificationInstance } from '../types';
 import { formatRelativeTime, formatSeverityToColor } from '../utils/formatters';
 

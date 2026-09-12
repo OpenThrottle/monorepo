@@ -1,8 +1,8 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { Link } from 'react-router';
 import { Button } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleEmptyState } from '@openthrottle/react-router-ui';
+import clsx from 'clsx';
+import * as React from 'react';
+import { Link } from 'react-router';
 
 export interface PullRequestNotFoundProps {
   className?: string;

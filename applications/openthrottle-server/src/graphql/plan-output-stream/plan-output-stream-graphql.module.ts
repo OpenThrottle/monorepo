@@ -2,11 +2,12 @@
  * @description GraphQL module that registers PlanOutputStreamResolver and PlanOutputStreamLoaders (request-scoped DataLoaders) and imports NestjsRepositoriesModule for PlanOutputStreamService.
  */
 
-import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import { Module } from '@nestjs/common';
+import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+
+import { PlanOutputStreamResolver } from './plan-output-stream.resolver';
 import { PlanOutputStreamFieldsResolver } from './plan-output-stream-fields.resolver';
 import { PlanOutputStreamLoaders } from './plan-output-stream-loaders';
-import { PlanOutputStreamResolver } from './plan-output-stream.resolver';
 
 @Module({
   imports: [NestjsRepositoriesModule],

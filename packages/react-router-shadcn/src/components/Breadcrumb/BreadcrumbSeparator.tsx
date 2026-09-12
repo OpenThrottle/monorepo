@@ -1,5 +1,6 @@
-import * as React from 'react';
 import { ChevronRight } from 'lucide-react';
+import * as React from 'react';
+
 import { cn } from '../../utils/cn';
 
 export interface BreadcrumbSeparatorProps extends React.ComponentPropsWithoutRef<'li'> {

@@ -1,12 +1,12 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
   Markdown,
 } from '@openthrottle/react-router-shadcn';
+import clsx from 'clsx';
 import { ChevronDown } from 'lucide-react';
+import * as React from 'react';
 
 export interface ChatThinkingBlockProps {
   /** Whether the reasoning starts expanded. Collapsed by default. */

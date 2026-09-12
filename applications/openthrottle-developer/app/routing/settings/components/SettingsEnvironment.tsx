@@ -1,7 +1,7 @@
-import * as React from 'react';
-import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
 import { Button, toast } from '@openthrottle/react-router-shadcn';
+import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
 import { SquareAsteriskIcon } from 'lucide-react';
+import * as React from 'react';
 
 export interface SettingsEnvironmentProps {
   className?: string;

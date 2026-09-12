@@ -1,15 +1,3 @@
-export { NestjsProfilingModule } from './modules/nestjs-profiling.module';
-export {
-  createProfileExecutionFileWriter,
-  createProfileExecutionRedactor,
-  DEFAULT_REDACTION_DENYLIST,
-  defaultProfileExecutionRedactor,
-  getProfileExecutionReporter,
-  ProfileExecution,
-  ProfileResponseTime,
-  profileExecution,
-  setProfileExecutionReporter,
-} from './decorators';
 export type {
   ProfileExecutionDecoratorOptions,
   ProfileExecutionFileWriter,
@@ -20,3 +8,15 @@ export type {
   ProfileExecutionResult,
   ProfileExecutionUtilResult,
 } from './decorators';
+export {
+  createProfileExecutionFileWriter,
+  createProfileExecutionRedactor,
+  DEFAULT_REDACTION_DENYLIST,
+  defaultProfileExecutionRedactor,
+  getProfileExecutionReporter,
+  ProfileExecution,
+  profileExecution,
+  ProfileResponseTime,
+  setProfileExecutionReporter,
+} from './decorators';
+export { NestjsProfilingModule } from './modules/nestjs-profiling.module';

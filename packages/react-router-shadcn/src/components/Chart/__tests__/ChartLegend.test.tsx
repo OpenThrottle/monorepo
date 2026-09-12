@@ -1,11 +1,12 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
-import { Bar, BarChart, XAxis } from 'recharts';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
+import { Bar, BarChart, XAxis } from 'recharts';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { ChartLegend } from '../ChartLegend';
+
 import type { ChartLegendProps } from '../ChartLegend';
+import { ChartLegend } from '../ChartLegend';
 
 describe('ChartLegend Component', () => {
   let component: RenderResult;

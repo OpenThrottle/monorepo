@@ -1,6 +1,6 @@
-import * as React from 'react';
 import { toast } from '@openthrottle/react-router-shadcn';
 import { getActionError } from '@openthrottle/react-router-utils';
+import * as React from 'react';
 
 /**
  * Resolves a toast message from an action result: either a static string or a

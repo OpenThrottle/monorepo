@@ -1,13 +1,14 @@
 import { Module } from '@nestjs/common';
-import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
+import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import { NestjsWorktreesModule } from '@openthrottle/nestjs-worktrees';
+
 import { MetricsModule } from '../../metrics/metrics.module';
 import { NotificationsModule } from '../../notifications/notifications.module';
 import { AgenticRalphModule } from '../agentic-ralph/agentic-ralph.module';
 import { PlanLifecycleHooksQueueProducerModule } from '../plan-lifecycle-hooks/plan-lifecycle-hooks-queue-producer.module';
-import { PlansQueueProducerModule } from './plans-queue-producer.module';
 import { PlansProcessor } from './plans.processor';
+import { PlansQueueProducerModule } from './plans-queue-producer.module';
 import { WorkLedgerRunService } from './work-ledger-run.service';
 
 /**

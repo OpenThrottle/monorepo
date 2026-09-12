@@ -1,5 +1,6 @@
 import { ConfigService } from '@nestjs/config';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+
 import type { Schema } from '../src/nestjs-typeorm.config';
 import { getTypeormConfig, schema } from '../src/nestjs-typeorm.config';
 

@@ -1,11 +1,12 @@
-import * as React from 'react';
+import type { RenderResult } from '@testing-library/react';
 import { render } from '@testing-library/react';
 import { BotIcon } from 'lucide-react';
-import type { RenderResult } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { OpenThrottleProductFeatures } from '../OpenThrottleProductFeatures';
+
 import type { OpenThrottleProductFeaturesProps } from '../OpenThrottleProductFeatures';
+import { OpenThrottleProductFeatures } from '../OpenThrottleProductFeatures';
 
 describe('OpenThrottleProductFeatures Component', () => {
   let component: RenderResult;

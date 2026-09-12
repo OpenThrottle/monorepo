@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Button,
   Input,
@@ -7,15 +6,17 @@ import {
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
 import { CheckCircle } from 'lucide-react';
-import { usePlanTaskToolbar } from '~/routing/plans/hooks/usePlanTaskToolbar';
-import { PLAN_TASK_TOOLBAR_COPY } from '~/routing/plans/data/data.copy';
+import * as React from 'react';
+
 import { OpenThrottleToolbar } from '~/routing/plans/components/OpenThrottleToolbar';
-import { PlanTagChips } from '~/routing/plans/components/PlanTagChips';
 import type {
   PlanTagChipData,
   PlanTagVocabularyOption,
 } from '~/routing/plans/components/PlanTagChips';
+import { PlanTagChips } from '~/routing/plans/components/PlanTagChips';
 import { PromoteTaskButton } from '~/routing/plans/components/PromoteTaskButton';
+import { PLAN_TASK_TOOLBAR_COPY } from '~/routing/plans/data/data.copy';
+import { usePlanTaskToolbar } from '~/routing/plans/hooks/usePlanTaskToolbar';
 
 export interface PlanTaskToolbarProps {
   className?: string;

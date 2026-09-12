@@ -18,13 +18,14 @@
  */
 
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
+
 import { StartWorkSessionDocument } from '../__generated__/graphql.js';
-import { SERVER_VERSION } from '../config/index.ts';
 import {
   resolveSessionModel,
   resolveSessionToolName,
   resolveSessionToolVersion,
 } from '../config/client-identity.ts';
+import { SERVER_VERSION } from '../config/index.ts';
 
 const MCP_TOOL_NAME = 'openthrottle-mcp';
 

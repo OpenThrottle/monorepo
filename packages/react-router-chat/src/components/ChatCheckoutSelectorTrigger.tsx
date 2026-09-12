@@ -1,7 +1,7 @@
-import * as React from 'react';
 import { Button } from '@openthrottle/react-router-shadcn';
-import { FolderGit2, GitBranch } from 'lucide-react';
 import clsx from 'clsx';
+import { FolderGit2, GitBranch } from 'lucide-react';
+import * as React from 'react';
 
 export interface ChatCheckoutSelectorTriggerProps extends Omit<
   React.ComponentPropsWithoutRef<typeof Button>,

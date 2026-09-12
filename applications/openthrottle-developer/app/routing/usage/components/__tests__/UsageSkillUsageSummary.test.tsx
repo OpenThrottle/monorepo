@@ -1,14 +1,16 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import { UsageSkillUsageSummary } from '../UsageSkillUsageSummary';
-import type { UsageSkillUsageSummaryProps } from '../UsageSkillUsageSummary';
+
+import type { UsageSkillUsageByScopeFragment } from '~/__generated__/graphql';
+
 import {
   SKILL_USAGE_COPY,
   SKILL_USAGE_SCOPES,
 } from '../../data/skill-usage-copy';
-import type { UsageSkillUsageByScopeFragment } from '~/__generated__/graphql';
+import type { UsageSkillUsageSummaryProps } from '../UsageSkillUsageSummary';
+import { UsageSkillUsageSummary } from '../UsageSkillUsageSummary';
 
 const buildByScope = (
   overrides: Partial<UsageSkillUsageByScopeFragment>,

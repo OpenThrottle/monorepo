@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { tabsTriggerVariants } from '../tabsTriggerVariants';
 
 describe('tabsTriggerVariants', () => {

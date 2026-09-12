@@ -1,29 +1,30 @@
-import * as React from 'react';
-import { redirect, useFetcher } from 'react-router';
 import {
   executeGraphqlWithAuth,
   isAuthError,
 } from '@openthrottle/react-router-graphql';
+import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalHeading,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import { UserIcon } from 'lucide-react';
+import * as React from 'react';
+import { redirect, useFetcher } from 'react-router';
+
+import type { Route } from '@/app/routes/+types/users.$userId';
 import {
   GetRolesForUserDocument,
   GetUserDocument,
   ListRolesForAssignDocument,
 } from '~/__generated__/graphql';
-import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
-import { runUserDetailAction } from '~/routing/users/actions/userId';
 import { SITE_TITLE } from '~/global/config/settings';
+import { runUserDetailAction } from '~/routing/users/actions/userId';
 import { UserDetailSummary } from '~/routing/users/components/UserDetailSummary';
 import { UserEditSheet } from '~/routing/users/components/UserEditSheet';
-import { UserIcon } from 'lucide-react';
 import { UserRolesCard } from '~/routing/users/components/UserRolesCard';
 import { UserStatusActions } from '~/routing/users/components/UserStatusActions';
-import type { Route } from '@/app/routes/+types/users.$userId';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

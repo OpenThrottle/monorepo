@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { formatChatTimestamp, formatRelativeChatTimestamp } from '../index';
 
 describe('formatChatTimestamp', () => {

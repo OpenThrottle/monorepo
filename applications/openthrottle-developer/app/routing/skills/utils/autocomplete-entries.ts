@@ -1,8 +1,10 @@
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+
 import {
   ProjectSkillsDocument,
   SkillAvailabilityDocument,
 } from '~/__generated__/graphql';
+import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 import {
   mergeRepoSkillsWithProjectSkills,
   type ProjectSkillFlagRow,
@@ -11,7 +13,6 @@ import {
   mergeRepoSkillsWithSkillAvailability,
   type SkillAvailabilityRow,
 } from '~/routing/skills/utils/merge-skill-availability';
-import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 
 /** One skill offered to the composer's `/`-command provider. */
 export interface SkillAutocompleteEntry {

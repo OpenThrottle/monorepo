@@ -4,8 +4,9 @@
  * and exposes granted/denied/default for UI (e.g. "Enable desktop notifications").
  */
 
-import * as React from 'react';
 import { IS_BROWSER } from '@openthrottle/react-router-utils';
+import * as React from 'react';
+
 import type { NotificationPermissionState } from '../types';
 
 /** @public */

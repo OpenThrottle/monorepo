@@ -1,11 +1,12 @@
 import { Inject, Module, type OnApplicationShutdown } from '@nestjs/common';
 import { LoggerModule, LoggerService } from '@openthrottle/nestjs-modules';
 import type { Redis } from 'ioredis';
+
+import { disconnectRedisCaches } from '../config/redis';
 import {
   createRedisClient,
   disconnectRedisClient,
 } from '../config/redis-client';
-import { disconnectRedisCaches } from '../config/redis';
 import { REDIS_CLIENT } from './redis-client.token';
 
 @Module({

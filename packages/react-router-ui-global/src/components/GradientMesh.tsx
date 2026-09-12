@@ -1,6 +1,7 @@
-import * as React from 'react';
-import { MeshGradient } from '@paper-design/shaders-react';
 import { cn } from '@openthrottle/react-router-shadcn';
+import { MeshGradient } from '@paper-design/shaders-react';
+import * as React from 'react';
+
 import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
 
 /**

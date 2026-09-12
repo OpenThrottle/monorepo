@@ -1,8 +1,9 @@
 import { createParamDecorator, type ExecutionContext } from '@nestjs/common';
+
 import {
+  type AuthPrincipal,
   getAuthPrincipalSub,
   normalizeRequestAuthPrincipal,
-  type AuthPrincipal,
 } from '../auth-principal';
 import { getRequestFromExecutionContext } from '../utils/get-request-from-execution-context';
 

@@ -1,10 +1,11 @@
-import { describe, expect, it } from 'vitest';
 import { MCP_CONNECTOR_AUTH_TYPES } from '@openthrottle/nestjs-repositories';
+import { describe, expect, it } from 'vitest';
+
 import {
+  findMcpConnector,
   MCP_CONNECTOR_CATALOG,
   MCP_CONNECTOR_PROVIDERS,
   MCP_CONNECTOR_TRANSPORTS,
-  findMcpConnector,
 } from './mcp-connector-catalog';
 
 describe('MCP_CONNECTOR_CATALOG', () => {

@@ -1,7 +1,8 @@
-import * as React from 'react';
 import { render, screen } from '@testing-library/react';
+import * as React from 'react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
+
 import PersonaDetail from '../personas.$personaId';
 
 function stubMatches(): React.ComponentProps<typeof PersonaDetail>['matches'];

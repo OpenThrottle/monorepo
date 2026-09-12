@@ -1,16 +1,17 @@
-import * as React from 'react';
 import clsx from 'clsx';
+import * as React from 'react';
 import { Link } from 'react-router';
+
+import type { UsageSkillUsageFilterOptionsFragment } from '~/__generated__/graphql';
+import { UsageBranchFilter } from '~/routing/usage/components/UsageBranchFilter';
 import {
   SKILL_USAGE_SCOPES,
   skillUsageCwdLabel,
   type SkillUsageScopeFilter,
 } from '~/routing/usage/data/skill-usage-copy';
-import { skillUsageChipClass } from '~/routing/usage/utils/skill-usage-chip-class';
-import { UsageBranchFilter } from '~/routing/usage/components/UsageBranchFilter';
-import { buildUsageSearch } from '~/routing/usage/utils/usage-search';
 import type { UsageBranchOption } from '~/routing/usage/hooks/useUsageBranchSearch';
-import type { UsageSkillUsageFilterOptionsFragment } from '~/__generated__/graphql';
+import { skillUsageChipClass } from '~/routing/usage/utils/skill-usage-chip-class';
+import { buildUsageSearch } from '~/routing/usage/utils/usage-search';
 
 export interface UsageSkillUsageFiltersProps {
   /** SSR first page of branches: default branch first, then A–Z. */

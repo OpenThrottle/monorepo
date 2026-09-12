@@ -7,9 +7,10 @@ import { createMock } from '@golevelup/ts-vitest';
 import { ConflictException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { UsersService, usersFactory } from '@openthrottle/nestjs-repositories';
 import { Test } from '@nestjs/testing';
+import { usersFactory, UsersService } from '@openthrottle/nestjs-repositories';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import { AuthService } from './auth.service';
 
 const mockUser = usersFactory.build({

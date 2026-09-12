@@ -1,7 +1,8 @@
 import { mkdirSync, mkdtempSync, writeFileSync } from 'fs';
-import { join } from 'path';
 import { tmpdir } from 'os';
+import { join } from 'path';
 import { describe, expect, test } from 'vitest';
+
 import {
   buildManagedMcpServers,
   mergeManagedMcpServers,

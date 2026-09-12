@@ -1,13 +1,14 @@
 import { describe, expect, test } from 'vitest';
+
 import {
+  isRepositoriesSortBy,
+  isRepositoriesSortOrder,
   REPOSITORIES_DEFAULT_LIMIT,
   REPOSITORIES_DEFAULT_SORT_BY,
   REPOSITORIES_DEFAULT_SORT_ORDER,
   REPOSITORIES_SORT_BY,
   REPOSITORIES_SORT_OPTIONS,
   REPOSITORIES_SORT_ORDER,
-  isRepositoriesSortBy,
-  isRepositoriesSortOrder,
 } from '../repositories.defaults';
 
 describe('repositories.defaults', () => {

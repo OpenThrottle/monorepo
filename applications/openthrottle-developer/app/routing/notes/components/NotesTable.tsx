@@ -1,15 +1,16 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import { DataTable } from '@openthrottle/react-router-shadcn';
 import { readSearchParam } from '@openthrottle/react-router-ui-global';
+import type { ColumnDef } from '@tanstack/react-table';
+import clsx from 'clsx';
+import * as React from 'react';
 import { Link, useSearchParams } from 'react-router';
+
+import type { NoteCardFragment } from '~/__generated__/graphql';
 import { NotesEmpty } from '~/routing/notes/components/NotesEmpty';
 import {
   formatNoteDate,
   notePreviewLabel,
 } from '~/routing/notes/utils/notes-table';
-import type { ColumnDef } from '@tanstack/react-table';
-import type { NoteCardFragment } from '~/__generated__/graphql';
 
 export interface NotesTableProps {
   className?: string;

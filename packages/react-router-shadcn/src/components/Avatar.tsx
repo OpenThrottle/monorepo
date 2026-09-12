@@ -1,7 +1,7 @@
 'use client';
 
-import * as React from 'react';
 import { Avatar as AvatarPrimitive } from 'radix-ui';
+import * as React from 'react';
 
 import { cn } from '../utils/cn';
 
@@ -116,9 +116,9 @@ export const AvatarFallback = React.forwardRef<
 
 AvatarFallback.displayName = 'AvatarFallback';
 
-export { AvatarBadge, AvatarGroup, AvatarGroupCount } from './AvatarGroup';
 export type {
   AvatarBadgeProps,
   AvatarGroupCountProps,
   AvatarGroupProps,
 } from './AvatarGroup';
+export { AvatarBadge, AvatarGroup, AvatarGroupCount } from './AvatarGroup';

@@ -1,13 +1,14 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import { Badge, Button } from '@openthrottle/react-router-shadcn';
+import clsx from 'clsx';
+import * as React from 'react';
+
 import { LINKED_ARTIFACTS_PANEL_COPY } from '~/routing/plans/data/data.copy';
 import { LINKED_ARTIFACT_GROUP_LABELS } from '~/routing/plans/data/linked-artifacts-panel-groups';
+import type { LinkedArtifactsSummaryModel } from '~/routing/plans/utils/summarize-linked-artifacts';
 import {
   ARTIFACT_FILTER_ALL,
   ARTIFACT_VERIFICATIONS,
 } from '~/routing/plans/utils/summarize-linked-artifacts';
-import type { LinkedArtifactsSummaryModel } from '~/routing/plans/utils/summarize-linked-artifacts';
 
 export interface LinkedArtifactsSummaryProps {
   onTypeChange: (type: string) => void;

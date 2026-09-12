@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Input,
   Label,
@@ -10,8 +9,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@openthrottle/react-router-shadcn';
-import { GitBranch } from 'lucide-react';
 import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
+import { GitBranch } from 'lucide-react';
+import * as React from 'react';
+
 import type { PlanRunConfigRepositoryFieldsFragment } from '~/__generated__/graphql';
 import { PlanWorkflowConfigWorkspace } from '~/routing/plans/components/PlanWorkflowConfigWorkspace';
 import { PLAN_RUN_WORKSPACE_SELECTOR_COPY } from '~/routing/plans/data/data.copy';

@@ -1,4 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
+
 import { buildGeneratorSupportBundle } from '../generator-last-run-storage';
 
 describe('buildGeneratorSupportBundle', () => {

@@ -1,13 +1,15 @@
-import * as React from 'react';
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { cleanup, render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { afterEach, describe, expect, test } from 'vitest';
+
+import type { Route } from '@/app/routes/+types/rules._index';
+import type { TagActionRuleRowData } from '~/routing/rules/components/RulesTable';
 import { RULES_COPY, RULES_ONBOARDING } from '~/routing/rules/data/data.copy';
 import { buildRootMatch } from '~/testing/root-match-fixture';
-import type { TagActionRuleRowData } from '~/routing/rules/components/RulesTable';
+
 import Index from '../rules._index';
-import type { Route } from '@/app/routes/+types/rules._index';
 
 const enabledRule: TagActionRuleRowData = {
   actionPayloadJson: '{"placement":"first","skillSlug":"grilling"}',

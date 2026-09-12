@@ -7,8 +7,9 @@
 
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { OnApplicationShutdown, OnModuleInit } from '@nestjs/common';
-import { LoggerService } from '@openthrottle/nestjs-modules';
 import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
+import { LoggerService } from '@openthrottle/nestjs-modules';
+
 import {
   TASK_PROMOTION_QUEUE_NAME,
   TASK_PROMOTION_WORKER_CONCURRENCY,

@@ -1,7 +1,7 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
+import clsx from 'clsx';
 import { GaugeIcon } from 'lucide-react';
+import * as React from 'react';
 
 export interface DashboardIntroductionProps {
   className?: string;

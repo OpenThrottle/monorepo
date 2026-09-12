@@ -1,5 +1,3 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import {
   Input,
   Label,
@@ -9,9 +7,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@openthrottle/react-router-shadcn';
-import { DEFAULT_RALPH_PROMPT } from '~/routing/plans/utils/build-workflow-ralph-argv';
-import type { WorkflowRalphPromptLayer } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
+import clsx from 'clsx';
+import * as React from 'react';
+
+import type { WorkflowRalphPromptLayer } from '~/routing/plans/utils/build-workflow-ralph-argv';
+import { DEFAULT_RALPH_PROMPT } from '~/routing/plans/utils/build-workflow-ralph-argv';
 
 export interface PlanWorkflowConfigPromptProps {
   className?: string;

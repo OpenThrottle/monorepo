@@ -1,5 +1,6 @@
 import type { GraphQLFormattedError } from 'graphql';
 import { describe, expect, it, vi } from 'vitest';
+
 import { createFormatError, type FormatErrorLogger } from './format-error';
 
 const createLogger = (): FormatErrorLogger => {

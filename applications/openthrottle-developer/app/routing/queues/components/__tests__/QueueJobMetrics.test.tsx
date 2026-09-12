@@ -1,8 +1,10 @@
-import * as React from 'react';
 import { render, screen } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
+
 import type { JobDetailsCardFragment } from '~/__generated__/graphql';
+
 import { QueueJobMetrics } from '../QueueJobMetrics';
 
 const baseJob = (): JobDetailsCardFragment => ({

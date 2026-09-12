@@ -1,11 +1,12 @@
 // @vitest-environment node
-import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { createTestRouterContext } from '@openthrottle/react-router-testing';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+
+import type { Route } from '@/app/routes/+types/plans.temp';
 import {
   RalphNestedDebugCli,
   TestWorkflowDocument,
 } from '~/__generated__/graphql';
-import type { Route } from '@/app/routes/+types/plans.temp';
 
 vi.mock('@openthrottle/react-router-graphql', () => ({
   executeGraphqlWithAuth: vi.fn(),

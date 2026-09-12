@@ -1,10 +1,5 @@
-import * as React from 'react';
-import { useFetcher } from 'react-router';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import {
-  parseFileMentions,
-  useAgenticChatTurn,
-  useConversationList,
   type ChatComposerControls,
   type ChatComposerMode,
   type ChatContextSource,
@@ -16,22 +11,28 @@ import {
   type ChatServiceTier,
   type ConversationStreamSubscriptionData,
   type ConversationStreamSubscriptionVariables,
+  parseFileMentions,
+  useAgenticChatTurn,
+  useConversationList,
 } from '@openthrottle/react-router-chat';
 import type { GraphqlWsClient } from '@openthrottle/react-router-graphql';
 import { useAtom } from 'jotai';
-import { buildModelGroups } from '../utils/chat-model-option';
-import { buildChatTurnFields } from '../utils/chat-turn-fields';
+import * as React from 'react';
+import { useFetcher } from 'react-router';
+
 import { capabilitiesForChatOption } from '../config/chat-capabilities';
-import { decodeChatOption } from '../utils/chat-model-option';
-import { chatToolbarStateAtom } from '../data/atom.chat-toolbar';
-import { reconcileChatToolbarState } from '../utils/chat-toolbar-reconcile';
-import { toCheckoutOptions } from '../utils/chat-discovery-options';
-import { useSessionPermissionDecay } from './useSessionPermissionDecay';
 import type {
   ChatToolbarBackendPrefs,
   ChatToolbarState,
 } from '../data/atom.chat-toolbar';
+import { chatToolbarStateAtom } from '../data/atom.chat-toolbar';
 import type { ChatOptionsResponse } from '../utils/chat-discovery-options';
+import { toCheckoutOptions } from '../utils/chat-discovery-options';
+import { buildModelGroups } from '../utils/chat-model-option';
+import { decodeChatOption } from '../utils/chat-model-option';
+import { reconcileChatToolbarState } from '../utils/chat-toolbar-reconcile';
+import { buildChatTurnFields } from '../utils/chat-turn-fields';
+import { useSessionPermissionDecay } from './useSessionPermissionDecay';
 
 const CHAT_OPTIONS_ROUTE = '/resources/chat-options';
 

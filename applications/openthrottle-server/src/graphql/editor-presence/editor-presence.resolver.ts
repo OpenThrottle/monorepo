@@ -14,6 +14,7 @@
 import { UseGuards } from '@nestjs/common';
 import { Query, Resolver } from '@nestjs/graphql';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
+
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
 import { EditorPresenceResultObject } from './editor-presence.object';
 import { EditorPresenceService } from './editor-presence.service';

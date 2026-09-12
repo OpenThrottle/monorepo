@@ -1,5 +1,6 @@
-import { PROMPT_TYPE_VALUES } from '@openthrottle/react-router-editor';
 import type { PromptType } from '@openthrottle/react-router-editor';
+import { PROMPT_TYPE_VALUES } from '@openthrottle/react-router-editor';
+
 import { CustomPromptType } from '~/__generated__/graphql';
 
 /** Narrow a raw string to a create-form {@link PromptType}. */

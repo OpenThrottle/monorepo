@@ -1,8 +1,10 @@
 import { describe, expect, test } from 'vitest';
+
 import {
   mockCheckout,
   mockRepository,
 } from '~/routing/settings/repositories/data/mock.repositories';
+
 import { buildRepositoryRows } from '../rows';
 import { sortRepositoryRows } from '../sorting';
 

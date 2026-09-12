@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
+
 import {
   NESTJS_LOGGING_MODULE_OPTIONS,
   type ResolvedNestjsLoggingModuleOptions,

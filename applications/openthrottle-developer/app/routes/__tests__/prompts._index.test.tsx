@@ -1,18 +1,20 @@
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import { buildRootMatch } from '~/testing/root-match-fixture';
-import Index from '../prompts._index';
+
+import type { Route } from '@/app/routes/+types/prompts._index';
 import type { PromptCardFragment } from '~/__generated__/graphql';
 import { CustomPromptType } from '~/__generated__/graphql';
-import {
-  renderRoutesStub,
-  renderWithMemoryRouter,
-} from '~/testing/route-fixtures';
 import {
   PROMPTS_EMPTY_COPY,
   PROMPTS_ONBOARDING,
 } from '~/routing/prompts/data/data.copy';
-import type { Route } from '@/app/routes/+types/prompts._index';
+import { buildRootMatch } from '~/testing/root-match-fixture';
+import {
+  renderRoutesStub,
+  renderWithMemoryRouter,
+} from '~/testing/route-fixtures';
+
+import Index from '../prompts._index';
 
 type PromptsIndexLoaderData = Route.ComponentProps['loaderData'];
 

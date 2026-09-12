@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+
 import {
   NESTJS_LOGGING_MODULE_OPTIONS,
   type ResolvedNestjsLoggingModuleOptions,

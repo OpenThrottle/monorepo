@@ -15,8 +15,8 @@ import {
   getAuthPrincipalFromRequest,
   getRequestFromExecutionContext,
 } from '@openthrottle/nestjs-auth';
-import { PERMISSIONS_KEY } from '@openthrottle/nestjs-rbac';
 import type { Permission } from '@openthrottle/nestjs-rbac';
+import { PERMISSIONS_KEY } from '@openthrottle/nestjs-rbac';
 import { RolesService } from '@openthrottle/nestjs-repositories';
 
 @Injectable()

@@ -1,11 +1,12 @@
-import * as React from 'react';
-import { Button, Card } from '@openthrottle/react-router-shadcn';
-import { Link } from 'react-router';
 import {
-  formatRelativeChatTimestamp,
   type AgentConversationListItem,
+  formatRelativeChatTimestamp,
 } from '@openthrottle/react-router-chat';
+import { Button, Card } from '@openthrottle/react-router-shadcn';
 import clsx from 'clsx';
+import * as React from 'react';
+import { Link } from 'react-router';
+
 import {
   RECENT_CHATS_CARD_COPY,
   RECENT_CHATS_CARD_DESTINATION_LABELS,

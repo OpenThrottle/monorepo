@@ -1,9 +1,10 @@
-import * as React from 'react';
 import type { RenderResult } from '@testing-library/react';
+import * as React from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
+
 import { renderRoutesStub } from '../../../../testing/route-fixtures';
-import { PromptToolbar } from '../PromptToolbar';
 import type { PromptToolbarProps } from '../PromptToolbar';
+import { PromptToolbar } from '../PromptToolbar';
 
 const DEFAULT_PROPS: PromptToolbarProps = {
   limit: 20,

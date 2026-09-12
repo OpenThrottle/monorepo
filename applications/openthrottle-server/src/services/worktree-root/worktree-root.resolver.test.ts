@@ -6,6 +6,7 @@
  */
 
 import { resolve } from 'node:path';
+
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { mockExecFileSync, mockHomedir, mockReadFileSync } = vi.hoisted(() => ({
@@ -20,10 +21,10 @@ vi.mock('node:os', () => ({ homedir: mockHomedir }));
 
 import {
   DEFAULT_WORKTREE_ROOT_RELATIVE_PATH,
-  WORKTREE_ROOT_SOURCE,
   normalizeWorktreeRootSetting,
   repositoryNamespace,
   resolveWorktreeRoot,
+  WORKTREE_ROOT_SOURCE,
 } from './worktree-root.resolver';
 
 const BASE = '/Users/matt/Development/openthrottle';

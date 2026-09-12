@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { PAGINATION_CONFIG } from '../../config/pagination';
 import {
   buildPaginationPageItems,

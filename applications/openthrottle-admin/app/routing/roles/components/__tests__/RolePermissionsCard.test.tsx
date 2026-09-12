@@ -1,11 +1,13 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub, useFetcher } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import { RolePermissionsCard } from '../RolePermissionsCard';
-import type { RolePermissionsCardProps } from '../RolePermissionsCard';
+
 import type { action as roleDetailAction } from '~/routes/roles.$roleId';
+
+import type { RolePermissionsCardProps } from '../RolePermissionsCard';
+import { RolePermissionsCard } from '../RolePermissionsCard';
 
 const renderCard = (
   props: Pick<RolePermissionsCardProps, 'availablePermissions' | 'permissions'>,

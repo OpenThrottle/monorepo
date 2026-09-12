@@ -1,8 +1,10 @@
-import { describe, expect, test, vi } from 'vitest';
 import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
-import { action, meta } from '../prompts.create';
 import { createTestRouterContext } from '@openthrottle/react-router-testing';
+import { describe, expect, test, vi } from 'vitest';
+
 import { buildRootMatch } from '~/testing/root-match-fixture';
+
+import { action, meta } from '../prompts.create';
 
 // Keep the real `parseFormData`; only stub the network call.
 vi.mock('@openthrottle/react-router-graphql', async (importOriginal) => {

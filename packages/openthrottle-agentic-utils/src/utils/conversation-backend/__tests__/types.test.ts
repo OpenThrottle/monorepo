@@ -1,14 +1,5 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  CONVERSATION_PERMISSION_MODES,
-  CONVERSATION_REASONING_EFFORTS,
-  CONVERSATION_SERVICE_TIERS,
-  CONVERSATION_STREAM_CHUNK_KINDS,
-  toConversationPermissionMode,
-  toConversationReasoningEffort,
-  toConversationServiceTier,
-} from '../types.ts';
 import type {
   ConversationBackend,
   ConversationBackendRun,
@@ -17,6 +8,15 @@ import type {
   ConversationServiceTier,
   ConversationStreamChunk,
   ConversationStreamChunkKind,
+} from '../types.ts';
+import {
+  CONVERSATION_PERMISSION_MODES,
+  CONVERSATION_REASONING_EFFORTS,
+  CONVERSATION_SERVICE_TIERS,
+  CONVERSATION_STREAM_CHUNK_KINDS,
+  toConversationPermissionMode,
+  toConversationReasoningEffort,
+  toConversationServiceTier,
 } from '../types.ts';
 
 describe('CONVERSATION_PERMISSION_MODES', () => {

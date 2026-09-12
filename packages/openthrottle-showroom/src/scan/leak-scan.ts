@@ -15,13 +15,13 @@
  * image, which is a real gap and is called out in the checklist as a human item.
  */
 
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { captureDir, takeDir } from '../runner/format';
 import { getEpisode, resolveVariant } from '../episodes/registry';
-import { scanText } from './scan-text';
+import { captureDir, takeDir } from '../runner/format';
 import type { ScanKind } from './rules';
+import { scanText } from './scan-text';
 
 const argValue = (name: string): string | undefined => {
   const index = process.argv.indexOf(`--${name}`);

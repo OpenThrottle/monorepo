@@ -10,11 +10,12 @@
  * (executeWsMutation) — no second realtime transport, and no HTTP overhead per
  * ~250ms chunk. SSR-safe: with no browser ws client, start() reports an error.
  */
-import * as React from 'react';
 import {
   executeWsMutation,
   useSubscription,
 } from '@openthrottle/react-router-graphql';
+import * as React from 'react';
+
 import type { TranscriptionStreamChunkAddedSubscription } from '~/__generated__/graphql';
 import {
   SendTranscriptionAudioChunkDocument,

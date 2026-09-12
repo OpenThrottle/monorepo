@@ -1,8 +1,9 @@
-import type { UserSkillTag } from '@openthrottle/nestjs-repositories';
-import { SkillTagsService } from '@openthrottle/nestjs-repositories';
 import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
+import type { UserSkillTag } from '@openthrottle/nestjs-repositories';
+import { SkillTagsService } from '@openthrottle/nestjs-repositories';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
+
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
 import { SkillTagsResolver } from './skill-tags.resolver';
 

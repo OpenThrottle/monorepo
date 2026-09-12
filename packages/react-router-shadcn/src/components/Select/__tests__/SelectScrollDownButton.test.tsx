@@ -1,7 +1,8 @@
-import * as React from 'react';
 import { render, waitFor } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
+
 import {
   Select,
   SelectContent,

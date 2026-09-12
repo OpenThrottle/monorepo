@@ -1,5 +1,3 @@
-import * as React from 'react';
-import { Form, useNavigation } from 'react-router';
 import {
   Button,
   Dialog,
@@ -10,8 +8,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@openthrottle/react-router-shadcn';
-import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
+import * as React from 'react';
+import { Form, useNavigation } from 'react-router';
+
 import { RolloutFlagFormFields } from '~/routing/settings/components/RolloutFlagFormFields';
+import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
 
 export interface RolloutFlagCreateDialogProps {
   actionError?: string | null;

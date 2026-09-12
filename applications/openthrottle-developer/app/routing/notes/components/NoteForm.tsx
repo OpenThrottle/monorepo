@@ -1,12 +1,13 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { Form, Link } from 'react-router';
 import {
   Button,
   Input,
   Label,
   TextArea,
 } from '@openthrottle/react-router-shadcn';
+import clsx from 'clsx';
+import * as React from 'react';
+import { Form, Link } from 'react-router';
+
 import type { NoteCardFragment } from '~/__generated__/graphql';
 
 export interface NoteFormProps {

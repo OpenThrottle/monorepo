@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildOpencodeArgv } from '../argv.ts';
 import { CONVERSATION_REASONING_EFFORTS } from '../../types.ts';
+import { buildOpencodeArgv } from '../argv.ts';
 
 /** The value after a flag, or undefined when the flag is absent. */
 const valueAfter = (

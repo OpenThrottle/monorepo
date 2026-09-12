@@ -3,6 +3,7 @@
 // extend already happens inside setupReactRouterTest; this import is what the TS
 // program needs since it does not follow Vitest's setupFiles.
 import '@testing-library/jest-dom/vitest';
+
 import { setupReactRouterTest } from '@openthrottle/react-router-testing';
 
 // `webgl: true` — the landing deck renders GradientMesh / GlobalAnimationWaves,

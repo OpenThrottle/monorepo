@@ -1,6 +1,7 @@
 import type { DynamicModule, Provider } from '@nestjs/common';
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
+
 import type { AnyAgenticWorkflow } from '../agentic-workflow-base';
 import {
   AGENTIC_WORKFLOW_REGISTRY,

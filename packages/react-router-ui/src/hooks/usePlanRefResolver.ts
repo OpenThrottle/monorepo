@@ -1,9 +1,9 @@
-import * as React from 'react';
 import {
   classifyIdInput,
   ID_INPUT_KIND,
   normalizeIdFragment,
 } from '@openthrottle/react-router-utils';
+import * as React from 'react';
 
 const DEFAULT_DEBOUNCE_MS = 250;
 

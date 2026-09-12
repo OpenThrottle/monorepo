@@ -1,10 +1,11 @@
-import * as React from 'react';
-import { GlobalPopover } from '@openthrottle/react-router-ui-global';
 import type { GlobalPopoverAction } from '@openthrottle/react-router-ui-global';
+import { GlobalPopover } from '@openthrottle/react-router-ui-global';
+import * as React from 'react';
 import { useNavigation } from 'react-router';
+
+import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
 import { REPOSITORIES_ROW_ACTIONS_COPY } from '~/routing/settings/repositories/data/data.copy';
 import type { RepositoryCheckoutRow } from '~/routing/settings/repositories/data/types';
-import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
 
 export interface RepositoryRowActionsProps {
   className?: string;

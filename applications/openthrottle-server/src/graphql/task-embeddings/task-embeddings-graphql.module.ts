@@ -2,10 +2,11 @@
  * @description GraphQL module that registers TaskEmbeddingsResolver and TaskEmbeddingsLoaders (request-scoped DataLoaders) and imports NestjsRepositoriesModule for TaskEmbeddingsService.
  */
 
-import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import { Module } from '@nestjs/common';
-import { TaskEmbeddingsLoaders } from './task-embeddings-loaders';
+import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+
 import { TaskEmbeddingsResolver } from './task-embeddings.resolver';
+import { TaskEmbeddingsLoaders } from './task-embeddings-loaders';
 
 @Module({
   imports: [NestjsRepositoriesModule],

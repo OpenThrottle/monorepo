@@ -1,8 +1,10 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
+
 import { LANDING_FLOW } from '~/routing/home/data/data.landing';
+
 import { LandingFlow } from '../LandingFlow';
 
 describe('LandingFlow Component', () => {

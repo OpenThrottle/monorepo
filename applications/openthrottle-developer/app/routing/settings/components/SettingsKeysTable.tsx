@@ -1,19 +1,20 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import type { ColumnDef } from '@tanstack/react-table';
 import { DataTable } from '@openthrottle/react-router-shadcn';
 import { GlobalPopoverActionsHeader } from '@openthrottle/react-router-ui-global';
+import type { ColumnDef } from '@tanstack/react-table';
+import clsx from 'clsx';
+import * as React from 'react';
+
 import type { ServiceAccountCredentialFieldsFragment } from '~/__generated__/graphql';
 import { SettingsKeysCredentialStatusBadge } from '~/routing/settings/components/SettingsKeysCredentialStatusBadge';
 import { SettingsKeysRevokeCell } from '~/routing/settings/components/SettingsKeysRevokeCell';
 import { SettingsKeysTableEmpty } from '~/routing/settings/components/SettingsKeysTableEmpty';
+import type { SettingsKeysCredentialStatus } from '~/routing/settings/utils/settings-keys-credential';
 import {
   credentialDisplayName,
   credentialRowId,
   formatCredentialTimestamp,
   getSettingsKeysCredentialStatus,
 } from '~/routing/settings/utils/settings-keys-credential';
-import type { SettingsKeysCredentialStatus } from '~/routing/settings/utils/settings-keys-credential';
 
 export interface SettingsKeysTableProps {
   actionError?: string | null;

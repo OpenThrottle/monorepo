@@ -10,11 +10,11 @@
  */
 
 import { getDriver } from '../drivers/index.ts';
-import { runDriverAsync } from '../engine/index.ts';
 import type { RunDriverOptions } from '../engine/index.ts';
+import { runDriverAsync } from '../engine/index.ts';
 import { DriverCapabilityError } from '../errors/index.ts';
-import { parseDriverId } from '../registry/index.ts';
 import type { DriverId } from '../registry/index.ts';
+import { parseDriverId } from '../registry/index.ts';
 import type {
   DriverChunk,
   DriverEndpointConfig,

@@ -1,11 +1,13 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
+
 import { createTimelineScale } from '~/routing/timeline/utils/scale';
-import { TimelineAxis } from '../TimelineAxis';
+
 import type { TimelineAxisProps } from '../TimelineAxis';
+import { TimelineAxis } from '../TimelineAxis';
 
 const renderAxis = (props: TimelineAxisProps): RenderResult => {
   const Component = () => <TimelineAxis {...props} />;

@@ -2,9 +2,9 @@ import { describe, expect, test } from 'vitest';
 
 import { EPISODES } from '../../episodes/registry';
 import type { VideoEpisode } from '../../episodes/types';
+import type { QueryRunner } from '../schema';
 import type { EpisodeRequirements } from '../verify-episodes';
 import { formatFailure, verifyEpisodeData } from '../verify-episodes';
-import type { QueryRunner } from '../schema';
 
 /** A runner that answers each SQL string with a canned `value`. */
 const runnerReturning = (values: Record<string, number>): QueryRunner => ({

@@ -1,5 +1,6 @@
-import * as React from 'react';
 import { formatDate } from 'date-fns';
+import * as React from 'react';
+
 import type { PullRequestDetailFragment } from '~/__generated__/graphql';
 
 export interface PullRequestDetailHeaderProps {

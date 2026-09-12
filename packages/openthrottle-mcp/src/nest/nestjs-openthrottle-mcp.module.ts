@@ -1,10 +1,11 @@
 import { DynamicModule, Module } from '@nestjs/common';
+import { LoggerModule } from '@openthrottle/nestjs-modules';
 import type { McpOptions } from '@rekog/mcp-nest';
 import { McpModule, McpTransportType } from '@rekog/mcp-nest';
-import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { McpDeveloperMcpSurface } from './openthrottle-mcp-mcp-surface.ts';
-import type { NestjsMcpDeveloperBootstrapOptions } from './nestjs-openthrottle-mcp-bootstrap-options.interface.ts';
+
 import { NestjsMcpDeveloperService } from './nestjs-openthrottle-mcp.service.ts';
+import type { NestjsMcpDeveloperBootstrapOptions } from './nestjs-openthrottle-mcp-bootstrap-options.interface.ts';
+import { McpDeveloperMcpSurface } from './openthrottle-mcp-mcp-surface.ts';
 
 const buildMcpRootOptions = (
   options: NestjsMcpDeveloperBootstrapOptions,

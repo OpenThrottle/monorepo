@@ -1,5 +1,6 @@
-import * as React from 'react';
 import { Badge } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+
 import { PLAN_RULE_APPLICATION_STATE_STYLES } from '~/routing/plans/data/plan-rule-applications-state-styles';
 import {
   attentionRank,

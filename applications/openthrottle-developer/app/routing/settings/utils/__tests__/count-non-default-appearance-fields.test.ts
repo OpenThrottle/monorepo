@@ -1,6 +1,8 @@
 import { describe, expect, test } from 'vitest';
-import { countNonDefaultAppearanceFields } from '../count-non-default-appearance-fields';
+
 import { DEFAULT_APPEARANCE_CONFIG } from '~/global/data/atom.config';
+
+import { countNonDefaultAppearanceFields } from '../count-non-default-appearance-fields';
 
 describe('countNonDefaultAppearanceFields', () => {
   test('counts nothing for the default config', () => {

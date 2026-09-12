@@ -1,11 +1,12 @@
 // @vitest-environment node
-import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { createActionArgs } from '@openthrottle/react-router-testing';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+
+import type { Route } from '@/app/routes/+types/resources.conversation-stream';
 import {
   CancelConversationStreamDocument,
   StartConversationStreamDocument,
 } from '~/__generated__/graphql';
-import type { Route } from '@/app/routes/+types/resources.conversation-stream';
 
 vi.mock('@openthrottle/react-router-graphql', () => ({
   executeGraphqlWithAuth: vi.fn(),

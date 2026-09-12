@@ -1,7 +1,8 @@
-import * as React from 'react';
 import { render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
+
 import { NOTIFICATIONS_STORAGE_KEY } from '../../config/index';
 import { useNotificationsSystemPreferences } from '../use-system-notifications-preference';
 

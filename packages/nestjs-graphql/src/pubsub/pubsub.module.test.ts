@@ -1,5 +1,6 @@
 import { PubSub } from 'graphql-subscriptions';
 import { describe, expect, it } from 'vitest';
+
 import { createPubSub } from './pubsub.module';
 
 describe('createPubSub', () => {

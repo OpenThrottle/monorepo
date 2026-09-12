@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
+
 import {
   applyTurnToolCall,
   applyTurnToolResult,
   foldPersistedTurnEvents,
-  parseChunkMetadata as parseMeta,
   parseChunkMetadata,
+  parseChunkMetadata as parseMeta,
   toolLabelFromMetadataJson,
 } from '../turn-events';
 

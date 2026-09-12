@@ -1,7 +1,8 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { describe, expect, it, vi } from 'vitest';
+
 import { ContributionHeatmap } from '../ContributionHeatmap';
 
 // 2026-01-31 is a Saturday, so a grid ending on it has no future

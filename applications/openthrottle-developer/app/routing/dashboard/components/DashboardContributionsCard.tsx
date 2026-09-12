@@ -1,14 +1,15 @@
-import * as React from 'react';
 import {
   Button,
   Card,
   ContributionHeatmap,
 } from '@openthrottle/react-router-shadcn';
-import { Link } from 'react-router';
-import { ArrowRightIcon } from 'lucide-react';
 import clsx from 'clsx';
-import { mapDailyStatsToContributions } from '~/routing/dashboard/utils/contributions-heatmap';
+import { ArrowRightIcon } from 'lucide-react';
+import * as React from 'react';
+import { Link } from 'react-router';
+
 import type { DashboardDailyStatsCardFragment } from '~/__generated__/graphql';
+import { mapDailyStatsToContributions } from '~/routing/dashboard/utils/contributions-heatmap';
 
 export interface DashboardContributionsCardProps {
   className?: string;

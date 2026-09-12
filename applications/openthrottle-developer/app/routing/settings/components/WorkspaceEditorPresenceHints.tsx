@@ -1,10 +1,11 @@
-import * as React from 'react';
 import clsx from 'clsx';
+import * as React from 'react';
+
+import type { GetEditorPresenceQuery } from '~/__generated__/graphql';
 import { EditorPresenceState } from '~/__generated__/graphql';
+import { WorkspaceEditorPresenceChip } from '~/routing/settings/components/WorkspaceEditorPresenceChip';
 import { WORKSPACE_EDITOR_LABELS } from '~/routing/settings/config/workspace-editors';
 import { WORKSPACE_SETTINGS_COPY } from '~/routing/settings/data/data.copy';
-import { WorkspaceEditorPresenceChip } from '~/routing/settings/components/WorkspaceEditorPresenceChip';
-import type { GetEditorPresenceQuery } from '~/__generated__/graphql';
 
 export interface WorkspaceEditorPresenceHintsProps {
   className?: string;

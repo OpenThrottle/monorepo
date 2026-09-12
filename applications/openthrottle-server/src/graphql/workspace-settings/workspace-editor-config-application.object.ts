@@ -3,6 +3,7 @@
  */
 
 import { Field, ID, ObjectType } from '@nestjs/graphql';
+
 import { WorkspaceEditorIdEnum } from './workspace-editor-id.enum';
 
 @ObjectType({

@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   CommandDialog,
   CommandEmpty,
@@ -9,6 +8,8 @@ import {
   CommandSeparator,
   CommandShortcut,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+
 import { useOpenThrottleCommander } from '../hooks/useOpenThrottleCommander';
 import { CommanderFooter } from './CommanderFooter';
 

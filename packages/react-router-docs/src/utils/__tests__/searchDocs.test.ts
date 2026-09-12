@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
-import { docEntryHref, searchDocEntries } from '../searchDocs';
+
 import type { DocEntry } from '../buildDocsManifest';
+import { docEntryHref, searchDocEntries } from '../searchDocs';
 
 const entry = (overrides: Partial<DocEntry>): DocEntry => ({
   content: '',

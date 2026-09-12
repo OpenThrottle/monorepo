@@ -2,13 +2,14 @@
  * @description GraphQL resolver for metrics namespace. Exposes metrics { serverSnapshot, recentPlanRunsMetrics }.
  */
 
-import { Args, ID, Int, Query, Resolver, ResolveField } from '@nestjs/graphql';
-import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
+import { Args, ID, Int, Query, ResolveField, Resolver } from '@nestjs/graphql';
 import { EmitNotification } from '@openthrottle/nestjs-websockets';
+import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
+
 import { ProcessMetricsService } from '../../metrics/process-metrics.service';
+import { ServerMetricsObject } from '../health/server-metrics.object';
 import { parseTaskRunMetricsFromReturnvalue } from '../queues/parse-task-run-metrics';
 import { QueuesService } from '../queues/queues.service';
-import { ServerMetricsObject } from '../health/server-metrics.object';
 import { MetricsObject } from './metrics.object';
 import { PlanRunMetricsEntryObject } from './plan-run-metrics-entry.object';
 

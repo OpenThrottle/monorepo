@@ -3,18 +3,19 @@
  * component file per component-primitive-shape R4 (module-scope helpers live in
  * the sibling utils/ folder) so the table component stays UI-focused.
  */
-import * as React from 'react';
 import { Badge } from '@openthrottle/react-router-shadcn';
-import { Link } from 'react-router';
-import { RUN_STATUS_COLOR } from '~/routing/schedule/data/data.run-status';
-import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
 import {
   GlobalPopover,
   GlobalPopoverActionsHeader,
 } from '@openthrottle/react-router-ui-global';
 import type { ColumnDef } from '@tanstack/react-table';
-import type { ScheduleTableProps } from '~/routing/schedule/components/ScheduleTable';
+import * as React from 'react';
+import { Link } from 'react-router';
+
 import type { ScheduledJobCardFragment } from '~/__generated__/graphql';
+import type { ScheduleTableProps } from '~/routing/schedule/components/ScheduleTable';
+import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
+import { RUN_STATUS_COLOR } from '~/routing/schedule/data/data.run-status';
 // import { formatWhen } from '~/routing/schedule/utils/format-when';
 // import { RepositoryRowActions } from '~/routing/settings/repositories/components/RepositoryRowActions';
 

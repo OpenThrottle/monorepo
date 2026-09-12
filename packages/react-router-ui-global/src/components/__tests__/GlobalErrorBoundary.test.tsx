@@ -1,13 +1,14 @@
+import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import * as ReactRouter from 'react-router';
-import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { createRoutesStub } from 'react-router';
-import { GlobalErrorBoundary } from '../GlobalErrorBoundary';
-import { render } from '@testing-library/react';
-import type { GlobalErrorBoundaryProps } from '../GlobalErrorBoundary';
 import type { MockedFunction } from 'vitest';
-import type { RenderResult } from '@testing-library/react';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+
+import type { GlobalErrorBoundaryProps } from '../GlobalErrorBoundary';
+import { GlobalErrorBoundary } from '../GlobalErrorBoundary';
 
 vi.mock('react-router', async (importOriginal) => {
   const actual = await importOriginal<typeof import('react-router')>();

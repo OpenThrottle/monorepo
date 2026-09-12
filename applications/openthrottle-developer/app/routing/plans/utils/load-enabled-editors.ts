@@ -5,8 +5,9 @@
  */
 
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { PlanDetailWorkspaceEditorsDocument } from '~/__generated__/graphql';
+
 import type { WorkspaceEditorId } from '~/__generated__/graphql';
+import { PlanDetailWorkspaceEditorsDocument } from '~/__generated__/graphql';
 
 /**
  * @description Reads the user's enabled editors, degrading to none on failure.

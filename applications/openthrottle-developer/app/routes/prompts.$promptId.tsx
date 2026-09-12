@@ -1,18 +1,19 @@
-import * as React from 'react';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { Editor } from '@openthrottle/react-router-editor';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { Button } from '@openthrottle/react-router-shadcn';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import { GlobalScreen } from '@openthrottle/react-router-ui-global';
-import { GetPromptDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { PROMPTS_BASE_PATH } from '~/routing/prompts/config';
-import { PromptDetailMetadataPanel } from '~/routing/prompts/components/PromptDetailMetadataPanel';
-import { usePromptEditor } from '~/routing/prompts/hooks/usePromptEditor';
-import { runPromptDetailAction } from '~/routing/prompts/actions/promptId';
-import { SITE_TITLE } from '~/global/config/settings';
+import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import * as React from 'react';
+
 import type { Route } from '@/app/routes/+types/prompts.$promptId';
+import { GetPromptDocument } from '~/__generated__/graphql';
+import { SITE_TITLE } from '~/global/config/settings';
+import { runPromptDetailAction } from '~/routing/prompts/actions/promptId';
+import { PromptDetailMetadataPanel } from '~/routing/prompts/components/PromptDetailMetadataPanel';
+import { PROMPTS_BASE_PATH } from '~/routing/prompts/config';
+import { usePromptEditor } from '~/routing/prompts/hooks/usePromptEditor';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

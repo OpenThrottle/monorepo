@@ -11,6 +11,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+
 import { Plan } from '../plans/plan.entity';
 import { Project } from '../projects/project.entity';
 import { User } from '../users/user.entity';

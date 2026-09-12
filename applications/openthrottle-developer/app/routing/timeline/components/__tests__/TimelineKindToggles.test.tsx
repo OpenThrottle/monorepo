@@ -1,17 +1,19 @@
-import * as React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
-import { SearchParamsProbe } from '~/testing/SearchParamsProbe';
 import { describe, expect, test } from 'vitest';
+
 import {
   TIMELINE_MARKER_KIND_LABEL,
   TIMELINE_MARKER_KINDS,
   TIMELINE_SPAN_KIND_LABEL,
   TIMELINE_SPAN_KINDS,
 } from '~/routing/timeline/config/kinds';
-import { TimelineKindToggles } from '../TimelineKindToggles';
+import { SearchParamsProbe } from '~/testing/SearchParamsProbe';
+
 import type { TimelineKindTogglesProps } from '../TimelineKindToggles';
+import { TimelineKindToggles } from '../TimelineKindToggles';
 
 const renderToggles = (
   overrides: Partial<TimelineKindTogglesProps> = {},

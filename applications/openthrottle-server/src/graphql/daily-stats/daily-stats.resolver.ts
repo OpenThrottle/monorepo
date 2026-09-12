@@ -2,8 +2,9 @@
  * @description Resolver for daily stats: single date and date range. Uses DailyStatsService from @openthrottle/nestjs-repositories.
  */
 
-import { DailyStatsService } from '@openthrottle/nestjs-repositories';
 import { Args, Query, Resolver } from '@nestjs/graphql';
+import { DailyStatsService } from '@openthrottle/nestjs-repositories';
+
 import {
   DailyStatsObject,
   DailyStatsRangeResultObject,

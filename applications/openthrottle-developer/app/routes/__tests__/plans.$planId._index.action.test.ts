@@ -1,15 +1,17 @@
-import { describe, expect, test, vi, beforeEach } from 'vitest';
 import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
-import { action } from '../plans.$planId._index';
+import { createTestRouterContext } from '@openthrottle/react-router-testing';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import {
   PlanDetailCancelPlanRunDocument,
+  type PlanDetailCancelPlanRunMutation,
   PlanDetailEnqueuePlanRunDocument,
   PlanDetailForceSettlePlanRunDocument,
-  PlanDetailUpdatePlanRunConfigDocument,
-  type PlanDetailCancelPlanRunMutation,
   type PlanDetailForceSettlePlanRunMutation,
+  PlanDetailUpdatePlanRunConfigDocument,
 } from '~/__generated__/graphql';
-import { createTestRouterContext } from '@openthrottle/react-router-testing';
+
+import { action } from '../plans.$planId._index';
 
 // Keep the real `parseFormData`; only stub the network call.
 vi.mock('@openthrottle/react-router-graphql', async (importOriginal) => {

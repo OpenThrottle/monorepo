@@ -1,16 +1,9 @@
-import type { ChildProcess } from 'child_process';
-import { spawn as nodeSpawn } from 'child_process';
-import type { Readable } from 'stream';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { Test } from '@nestjs/testing';
-import { getQueueToken } from '@nestjs/bullmq';
-import { LoggerService } from '@openthrottle/nestjs-modules';
+import 'reflect-metadata';
+
 import { createMock } from '@golevelup/ts-vitest';
-import { WORKTREE_TRACKER_TOKEN } from '@openthrottle/nestjs-worktrees';
-import type {
-  ChildProcessMetrics,
-  WallClockMetrics,
-} from '@openthrottle/openthrottle-agentic-utils';
+import { getQueueToken } from '@nestjs/bullmq';
+import { Test } from '@nestjs/testing';
+import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   HEARTBEAT_INTERVAL_MS,
   PlanOutputStreamService,
@@ -18,23 +11,32 @@ import {
   PlansService,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
-import 'reflect-metadata';
-import type { EnhancedTaskRunMetrics } from '../../metrics/process-metrics.types';
+import { WORKTREE_TRACKER_TOKEN } from '@openthrottle/nestjs-worktrees';
+import type {
+  ChildProcessMetrics,
+  WallClockMetrics,
+} from '@openthrottle/openthrottle-agentic-utils';
+import type { ChildProcess } from 'child_process';
+import { spawn as nodeSpawn } from 'child_process';
+import type { Readable } from 'stream';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { ProcessMetricsService } from '../../metrics/process-metrics.service';
+import type { EnhancedTaskRunMetrics } from '../../metrics/process-metrics.types';
 import { NotificationsService } from '../../notifications/notifications.service';
 import { AgenticRalphOrchestratorService } from '../agentic-ralph/agentic-ralph-orchestrator.service';
 import { BullMqRunOutputRetentionService } from '../bullmq-run-output-retention.service';
-import type { PlanRunJobResult, RunPlanJob } from './plans.types';
+import { WorkflowLifecycleDispatcherFactory } from '../plan-lifecycle-hooks/workflow-lifecycle-dispatcher.service';
+import { PlanRunCancellationService } from './plan-run-cancellation.service';
 import {
   PLANS_QUEUE_NAME,
   PLANS_WORKER_LOCK_DURATION_MS,
   PLANS_WORKER_MAX_STALLED_COUNT,
   PLANS_WORKER_STALLED_INTERVAL_MS,
 } from './plans.constants';
-import { PlanRunCancellationService } from './plan-run-cancellation.service';
-import { WorkLedgerRunService } from './work-ledger-run.service';
 import { PlansProcessor } from './plans.processor';
-import { WorkflowLifecycleDispatcherFactory } from '../plan-lifecycle-hooks/workflow-lifecycle-dispatcher.service';
+import type { PlanRunJobResult, RunPlanJob } from './plans.types';
+import { WorkLedgerRunService } from './work-ledger-run.service';
 
 /** @nestjs/bullmq Worker options metadata key (from bull.constants WORKER_METADATA). Used to assert stalled-job recovery options. */
 const WORKER_METADATA_KEY = 'bullmq:worker_metadata';

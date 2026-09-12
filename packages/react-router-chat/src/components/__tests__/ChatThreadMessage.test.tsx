@@ -1,9 +1,10 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import { ChatThreadMessage } from '../ChatThreadMessage';
+
 import type { ChatMessage } from '../../types';
+import { ChatThreadMessage } from '../ChatThreadMessage';
 
 const renderMessage = (message: ChatMessage): RenderResult =>
   render(<ChatThreadMessage message={message} />);

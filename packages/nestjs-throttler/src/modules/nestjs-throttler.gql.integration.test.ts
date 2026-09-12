@@ -1,9 +1,11 @@
 import type { AddressInfo } from 'node:net';
-import { type INestApplication, Module } from '@nestjs/common';
+
 import { ApolloDriver, type ApolloDriverConfig } from '@nestjs/apollo';
+import { type INestApplication, Module } from '@nestjs/common';
 import { GraphQLModule, Query, Resolver } from '@nestjs/graphql';
 import { Test } from '@nestjs/testing';
 import { afterEach, describe, expect, it } from 'vitest';
+
 import { NestjsThrottlerModule } from './nestjs-throttler.module';
 
 /**

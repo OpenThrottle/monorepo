@@ -1,10 +1,10 @@
 import type {
   WorkflowConfigLegacy,
-  WorkflowLifecycleDispatcher,
-  WorkflowCorrelation,
-  WorkflowRunResult as WorkflowRunResultBase,
-  WorkflowOrchestrator as WorkflowOrchestratorBase,
   WorkflowConfigRunner,
+  WorkflowCorrelation,
+  WorkflowLifecycleDispatcher,
+  WorkflowOrchestrator as WorkflowOrchestratorBase,
+  WorkflowRunResult as WorkflowRunResultBase,
 } from '@openthrottle/openthrottle-agentic-workflow';
 
 export type WorkflowFinishedReason =

@@ -5,6 +5,7 @@
 
 import { Field, ID, Int, ObjectType } from '@nestjs/graphql';
 import type { RolloutFlagKind } from '@openthrottle/nestjs-rollout';
+
 import { RolloutFlagKindEnum } from './rollout-flag-kind.enum';
 
 @ObjectType({

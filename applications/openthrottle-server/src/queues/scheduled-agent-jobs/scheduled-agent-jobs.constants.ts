@@ -4,8 +4,9 @@
  * driverId and dispatches via openthrottle-drivers `runAgentPrompt`.
  */
 
-import type { JobsOptions } from 'bullmq';
 import { getOpenThrottleRoot } from '@openthrottle/openthrottle-agentic-utils';
+import type { JobsOptions } from 'bullmq';
+
 import { REPEATABLE_JOB_OPTIONS } from '../repeatable-job.options';
 
 /** Human-readable Bull Board queue name (matches `Database Backup`, `Doc Ingestion`). */

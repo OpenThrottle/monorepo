@@ -2,12 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
-import { IsNull, Repository } from 'typeorm';
-import type { EntityManager } from 'typeorm';
 import type { PlanRunConfigSnapshot } from '@openthrottle/openthrottle-plan-config';
-import { PLAN_RUN_STATUS } from './plan-runs.constants';
+import type { EntityManager } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
+
 import type { PlanRunExecutionBackend, PlanRunKind } from './plan-run.entity';
 import { PlanRun } from './plan-run.entity';
+import { PLAN_RUN_STATUS } from './plan-runs.constants';
 
 interface RecordQueuedPlanRunInput {
   /** User who enqueued the run (auth sub for a user principal); null for service-account/system. */

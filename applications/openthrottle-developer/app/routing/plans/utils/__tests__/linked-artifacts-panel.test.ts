@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { formatProducedAt, toDate, toMillis } from '../linked-artifacts-panel';
 
 describe('toDate', () => {

@@ -1,12 +1,7 @@
-import * as React from 'react';
 import clsx from 'clsx';
-import { buildTimelineLanes } from '~/routing/timeline/utils/lanes';
-import { createTimelineScale } from '~/routing/timeline/utils/scale';
+import * as React from 'react';
+
 import { TIMELINE_LANE_ROW_HEIGHT } from '~/routing/timeline/config/layout';
-import { TimelineAxis } from './TimelineAxis';
-import { TimelineLaneGutter } from './TimelineLaneGutter';
-import { TimelineMarkerLayer } from './TimelineMarkerLayer';
-import { TimelineSpanLayer } from './TimelineSpanLayer';
 import { useTimelinePan } from '~/routing/timeline/hooks/useTimelinePan';
 import { useTimelineWidth } from '~/routing/timeline/hooks/useTimelineWidth';
 import type {
@@ -15,7 +10,14 @@ import type {
   TimelineMarkerCluster,
   TimelineSpan,
 } from '~/routing/timeline/types';
+import { buildTimelineLanes } from '~/routing/timeline/utils/lanes';
 import type { TimelineScale } from '~/routing/timeline/utils/scale';
+import { createTimelineScale } from '~/routing/timeline/utils/scale';
+
+import { TimelineAxis } from './TimelineAxis';
+import { TimelineLaneGutter } from './TimelineLaneGutter';
+import { TimelineMarkerLayer } from './TimelineMarkerLayer';
+import { TimelineSpanLayer } from './TimelineSpanLayer';
 
 export interface TimelineChartProps {
   readonly className?: string;

@@ -9,6 +9,7 @@ import {
   getGraphQLUrl,
 } from '@openthrottle/nodejs-graphql';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { authStatusToolHandler } from './auth-status.ts';
 
 vi.mock('@openthrottle/nodejs-graphql', () => ({

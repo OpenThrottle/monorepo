@@ -2,9 +2,10 @@ import { BadRequestException } from '@nestjs/common';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+
+import type { PullListItemDto } from './dto/pull-list-item.dto';
 import { GitHubController } from './github.controller';
 import { GitHubService } from './github.service';
-import type { PullListItemDto } from './dto/pull-list-item.dto';
 
 describe('GitHubController', () => {
   let controller: GitHubController;

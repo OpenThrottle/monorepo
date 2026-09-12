@@ -1,4 +1,5 @@
 import * as React from 'react';
+
 import type {
   McpConnectorConnectionFieldsFragment,
   McpConnectorFieldsFragment,
@@ -7,6 +8,7 @@ import {
   groupConnectorsByProvider,
   indexConnectionsByKey,
 } from '~/routing/settings/utils/settings-mcp-connection';
+
 import { SettingsMcpConnectorCard } from './SettingsMcpConnectorCard';
 
 export interface SettingsMcpCatalogProps {

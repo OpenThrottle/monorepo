@@ -11,6 +11,7 @@ import {
   Entity,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+
 import {
   SKILL_USAGE_SCOPES,
   type SkillUsageScope,

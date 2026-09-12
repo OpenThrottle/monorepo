@@ -1,9 +1,10 @@
-import * as React from 'react';
+import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
-import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { describe, expect, test } from 'vitest';
+
 import { SettingsAgentsAgentToggle } from '../SettingsAgentsAgentToggle';
 
 const renderToggle = (

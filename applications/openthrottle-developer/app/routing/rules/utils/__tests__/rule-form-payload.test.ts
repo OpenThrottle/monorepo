@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { parsePayloadField, splitList } from '../rule-form-payload';
 
 describe('parsePayloadField', () => {

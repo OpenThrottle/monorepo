@@ -1,10 +1,11 @@
 import * as React from 'react';
+
+import type { TagActionRuleRowData } from '~/routing/rules/components/RulesTable';
 import { ANY } from '~/routing/rules/data/rule-form-options';
 import {
   parsePayloadField,
   splitList,
 } from '~/routing/rules/utils/rule-form-payload';
-import type { TagActionRuleRowData } from '~/routing/rules/components/RulesTable';
 
 export interface UseRuleFormOptions {
   /** Existing rule when editing; null/undefined when creating. */

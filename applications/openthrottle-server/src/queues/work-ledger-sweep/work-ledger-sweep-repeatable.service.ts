@@ -2,6 +2,7 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { Queue } from 'bullmq';
+
 import { REPEATABLE_JOB_OPTIONS } from '../repeatable-job.options';
 import { WORK_LEDGER_SWEEP_QUEUE_NAME } from './work-ledger-sweep.constants';
 import type { WorkLedgerSweepJobData } from './work-ledger-sweep.types';

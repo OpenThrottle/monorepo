@@ -1,6 +1,3 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { Form, Link } from 'react-router';
 import {
   Button,
   Card,
@@ -10,6 +7,9 @@ import {
   Label,
   TextArea,
 } from '@openthrottle/react-router-shadcn';
+import clsx from 'clsx';
+import * as React from 'react';
+import { Form, Link } from 'react-router';
 
 export interface ProjectFormDefaultValues {
   description?: string | null;

@@ -1,6 +1,3 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { NavLink, useLocation } from 'react-router';
 import {
   Collapsible,
   CollapsibleContent,
@@ -13,13 +10,17 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@openthrottle/react-router-shadcn';
-import { ChevronDown, StarIcon } from 'lucide-react';
-import type { NavLinkProps } from 'react-router';
-import { getPathFromTo } from '../utils/utils.global';
 import {
   FEATURE_BETA_PREVIEW,
   FEATURE_CHARLIE_PREVIEW,
 } from '@openthrottle/react-router-utils';
+import clsx from 'clsx';
+import { ChevronDown, StarIcon } from 'lucide-react';
+import * as React from 'react';
+import type { NavLinkProps } from 'react-router';
+import { NavLink, useLocation } from 'react-router';
+
+import { getPathFromTo } from '../utils/utils.global';
 
 export interface GlobalSidebarContentLinkProps extends NavLinkProps {
   beta?: boolean;

@@ -1,14 +1,15 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { Provider, createStore } from 'jotai';
+import { createStore, Provider } from 'jotai';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import { editorAtom, editorAtomDefaults } from '../../data/atom.editor';
+
 import type { EditorAtom } from '../../data/atom.editor';
-import { EditorSidebarFile } from '../EditorSidebarFile';
+import { editorAtom, editorAtomDefaults } from '../../data/atom.editor';
 import type { EditorSidebarFileProps } from '../EditorSidebarFile';
+import { EditorSidebarFile } from '../EditorSidebarFile';
 
 const renderSidebarFile = (
   initial: Partial<EditorAtom> = {},

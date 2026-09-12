@@ -1,9 +1,11 @@
 import { describe, expect, test } from 'vitest';
+
+import type { PlanDetailCancelPlanRunMutation } from '~/__generated__/graphql';
+
 import {
   cancelPlanRunToastTone,
   describeCancelPlanRunResult,
 } from '../describe-cancel-plan-run-result';
-import type { PlanDetailCancelPlanRunMutation } from '~/__generated__/graphql';
 
 type CancelPayload = PlanDetailCancelPlanRunMutation['cancelPlanRun'];
 

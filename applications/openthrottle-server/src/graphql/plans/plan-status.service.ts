@@ -5,13 +5,12 @@
  * (queue cancellation + active-run abort + plan/task status reset).
  */
 
+import { InjectQueue } from '@nestjs/bullmq';
 import {
   BadRequestException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectQueue } from '@nestjs/bullmq';
-import type { Queue } from 'bullmq';
 import {
   Plan,
   PlanRunsService,
@@ -19,11 +18,13 @@ import {
   resolveCompletedAtForStatusChange,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
+import type { Queue } from 'bullmq';
+
 import { updateMatchingTasksAndEmitStatusChanged } from '../../notifications/emit-bulk-task-status-changes';
 import { NotificationsService } from '../../notifications/notifications.service';
-import { PLANS_QUEUE_NAME } from '../../queues/plans/plans.constants';
 import { PlanCancelChannelService } from '../../queues/plans/plan-cancel-channel.service';
 import { PlanRunCancellationService } from '../../queues/plans/plan-run-cancellation.service';
+import { PLANS_QUEUE_NAME } from '../../queues/plans/plans.constants';
 import type { RunPlanJobData } from '../../queues/plans/plans.types';
 import { cancelPlanRunJobsForPlan } from './cancel-plan-run-jobs';
 

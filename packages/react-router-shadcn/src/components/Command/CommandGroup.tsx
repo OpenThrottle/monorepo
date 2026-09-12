@@ -1,5 +1,6 @@
-import * as React from 'react';
 import { CommandGroup as CmdkCommandGroup } from 'cmdk';
+import * as React from 'react';
+
 import { cn } from '../../utils/cn';
 
 export interface CommandGroupProps extends React.ComponentPropsWithoutRef<

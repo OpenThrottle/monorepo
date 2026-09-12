@@ -1,5 +1,6 @@
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
+
 import type { PlanRunConfigRepositoryFieldsFragment } from '~/__generated__/graphql';
 import {
   CHECKOUT_PREFIX,
@@ -7,9 +8,10 @@ import {
   REPOSITORY_PREFIX,
   ROOT_VALUE,
 } from '~/routing/plans/utils/plan-workflow-config-workspace-selector';
+
 import {
-  usePlanWorkflowConfigWorkspaceSelector,
   type PlanWorkflowConfigWorkspaceSelectorOptions,
+  usePlanWorkflowConfigWorkspaceSelector,
 } from '../usePlanWorkflowConfigWorkspaceSelector';
 
 type Checkout = PlanRunConfigRepositoryFieldsFragment['checkouts'][number];

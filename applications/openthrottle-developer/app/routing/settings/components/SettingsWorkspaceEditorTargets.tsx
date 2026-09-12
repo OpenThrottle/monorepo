@@ -1,6 +1,3 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { Form, Link, useNavigation } from 'react-router';
 import {
   Button,
   Empty,
@@ -14,12 +11,16 @@ import {
   TableHeader,
   TableRow,
 } from '@openthrottle/react-router-shadcn';
-import { WORKSPACE_SETTINGS_COPY } from '~/routing/settings/data/data.copy';
-import { WorkspaceEditorTargetEditors } from '~/routing/settings/components/WorkspaceEditorTargetEditors';
+import clsx from 'clsx';
+import * as React from 'react';
+import { Form, Link, useNavigation } from 'react-router';
+
 import type {
   EditorPresenceState,
   WorkspaceEditorId,
 } from '~/__generated__/graphql';
+import { WorkspaceEditorTargetEditors } from '~/routing/settings/components/WorkspaceEditorTargetEditors';
+import { WORKSPACE_SETTINGS_COPY } from '~/routing/settings/data/data.copy';
 import type { WorkspaceEditorTargetGroup } from '~/routing/settings/utils/workspace-editor-targets';
 
 /** How many repositories render before the list collapses behind a show-all toggle. */

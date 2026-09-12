@@ -1,16 +1,17 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import {
+  captureStdioExecutionBackend,
+  detectExecutionBackendFromEnv,
+  resolveExecutionBackend,
+} from '../config/execution-backend.ts';
 import {
   getPlanRunsToolHandler,
   registerPlanRunToolHandler,
   registerPlanRunWorktreeCheckoutToolHandler,
   settlePlanRunToolHandler,
 } from './plan-runs.ts';
-import {
-  captureStdioExecutionBackend,
-  detectExecutionBackendFromEnv,
-  resolveExecutionBackend,
-} from '../config/execution-backend.ts';
 
 vi.mock('@openthrottle/nodejs-graphql', () => ({
   executeGraphqlWithAuth: vi.fn(),

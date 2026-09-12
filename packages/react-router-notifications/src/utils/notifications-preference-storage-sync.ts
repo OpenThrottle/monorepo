@@ -6,6 +6,7 @@
  */
 
 import { IS_BROWSER } from '@openthrottle/react-router-utils';
+
 import { NOTIFICATIONS_STORAGE_KEY } from '../config/index';
 
 const listeners = new Set<() => void>();

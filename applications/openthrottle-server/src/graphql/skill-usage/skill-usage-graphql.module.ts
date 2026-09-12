@@ -5,8 +5,9 @@
  * user its authenticated principal acts as.
  */
 
-import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import { Module } from '@nestjs/common';
+import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+
 import { EffectiveUserResolutionModule } from '../../services/effective-user-resolution/effective-user-resolution.module';
 import { SkillUsageResolver } from './skill-usage.resolver';
 

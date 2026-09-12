@@ -1,12 +1,14 @@
-import * as React from 'react';
 import type { RenderResult } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
-import { PlanCheckoutSelector } from '../PlanCheckoutSelector';
-import type { PlanCheckoutSelectorProps } from '../PlanCheckoutSelector';
-import { renderRoutesStub } from '~/testing/route-fixtures';
+
 import type { PlanRunConfigRepositoryFieldsFragment } from '~/__generated__/graphql';
 import { PLAN_CHECKOUT_SELECTOR_COPY } from '~/routing/plans/data/data.copy';
+import { renderRoutesStub } from '~/testing/route-fixtures';
+
+import type { PlanCheckoutSelectorProps } from '../PlanCheckoutSelector';
+import { PlanCheckoutSelector } from '../PlanCheckoutSelector';
 
 type Checkout = PlanRunConfigRepositoryFieldsFragment['checkouts'][number];
 

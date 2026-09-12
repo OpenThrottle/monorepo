@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
+
 import {
-  resolveThemeMode,
   type ResolvedThemeMode,
+  resolveThemeMode,
   type ThemeMode,
 } from '../utils/theme';
 

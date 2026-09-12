@@ -2,11 +2,12 @@
  * @description Compares persisted plan run snapshots to current Configuration tab state.
  */
 
+import { isRecord } from '@openthrottle/nodejs-utils';
 import {
   DEFAULT_PLAN_RUN_RALPH_ITERATIONS,
   DEFAULT_PLAN_RUN_RALPH_RUNNER,
 } from '@openthrottle/openthrottle-plan-config';
-import { isRecord } from '@openthrottle/nodejs-utils';
+
 import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import { formatWorkflowRalphExecutionBackendLabel } from '~/routing/plans/utils/build-workflow-ralph-argv';
 

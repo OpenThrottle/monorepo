@@ -15,6 +15,9 @@
  * docs/monorepo/skill-availability-design.md ("Output contract").
  */
 
+import { BadRequestException } from '@nestjs/common';
+import { Args, ID, Query, Resolver } from '@nestjs/graphql';
+import { CurrentUser } from '@openthrottle/nestjs-auth';
 import {
   ProjectSkillsService,
   ProjectsService,
@@ -29,9 +32,7 @@ import {
   resolveSkillAvailability,
   SKILL_AVAILABILITY_ENVIRONMENTS,
 } from '@openthrottle/openthrottle-skills';
-import { CurrentUser } from '@openthrottle/nestjs-auth';
-import { BadRequestException } from '@nestjs/common';
-import { Args, ID, Query, Resolver } from '@nestjs/graphql';
+
 import { PlanContextAvailabilityService } from '../../services/plan-context-availability/plan-context-availability.service';
 import {
   SkillAvailabilityResolutionResult,

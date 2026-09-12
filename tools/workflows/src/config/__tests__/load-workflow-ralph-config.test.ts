@@ -5,8 +5,15 @@
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+
 import { afterEach, describe, expect, it, vi } from 'vitest';
+
+import {
+  OPENTHROTTLE_PLANS_SPAWN_DIAGNOSTICS_ENV,
+  WORKFLOW_RALPH_OT_DIAGNOSTICS_ENV,
+} from '../../utils/ot-diagnostics';
 import { DEFAULT_RALPH_RUNNER } from '../../utils/ralph-execution-backend';
+import { WORKFLOW_RALPH_TRANSPORT_ENV } from '../../utils/workflow-transport';
 import {
   DEFAULT_RALPH_ITERATIONS,
   DEFAULT_RALPH_MODEL,
@@ -20,11 +27,6 @@ import {
   WORKFLOW_RALPH_ENV,
 } from '../load-workflow-ralph-config';
 import { WORKFLOW_RALPH_DEFAULTS_FILENAME } from '../workflow-ralph-defaults.types';
-import {
-  OPENTHROTTLE_PLANS_SPAWN_DIAGNOSTICS_ENV,
-  WORKFLOW_RALPH_OT_DIAGNOSTICS_ENV,
-} from '../../utils/ot-diagnostics';
-import { WORKFLOW_RALPH_TRANSPORT_ENV } from '../../utils/workflow-transport';
 
 describe('loadWorkflowRalphDefaultsFileV1', () => {
   it('returns {} when file is missing (ENOENT)', () => {

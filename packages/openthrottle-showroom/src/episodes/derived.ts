@@ -12,9 +12,9 @@
  */
 
 import { applyLexicon } from '../narrate/lexicon';
+import type { NarrationSentence } from '../narrate/types';
 import { loadFormat } from '../runner/format';
 import type { EpisodeFormat, Variant } from './types';
-import type { NarrationSentence } from '../narrate/types';
 
 /** Natural narration pace used to convert a word count into seconds. */
 export const WORDS_PER_MINUTE = 145;

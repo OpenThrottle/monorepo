@@ -1,6 +1,6 @@
-import * as React from 'react';
-import { Form, Link, redirect } from 'react-router';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { Button } from '@openthrottle/react-router-shadcn';
+import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalErrorBoundary,
@@ -11,20 +11,21 @@ import {
   getActionError,
   mergeRouteModuleMeta,
 } from '@openthrottle/react-router-utils';
-import { Button } from '@openthrottle/react-router-shadcn';
 import { CalendarClockIcon } from 'lucide-react';
+import * as React from 'react';
+import { Form, Link, redirect } from 'react-router';
+
+import type { Route } from '@/app/routes/+types/schedule.$jobId._index';
 import {
   DeleteScheduledAgentJobDocument,
   RunScheduledAgentJobNowDocument,
   ScheduledAgentJobDetailDocument,
   SetScheduledAgentJobEnabledDocument,
 } from '~/__generated__/graphql';
-import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
+import { SITE_TITLE } from '~/global/config/settings';
 import { ScheduleDetailSummary } from '~/routing/schedule/components/ScheduleDetailSummary';
 import { ScheduleDetailTabs } from '~/routing/schedule/components/ScheduleDetailTabs';
 import { ScheduleRunNowButton } from '~/routing/schedule/components/ScheduleRunNowButton';
-import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/schedule.$jobId._index';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

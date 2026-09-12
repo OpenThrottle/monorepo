@@ -25,12 +25,13 @@
  * literal a file happens to contain.
  */
 
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
+
 import { describe, expect, test } from 'vitest';
 
-import { FLOWS } from '../flows';
 import { repositoryRoot } from '../../runner/format';
+import { FLOWS } from '../flows';
 
 /**
  * Directories whose rendered markup a flow is allowed to target.

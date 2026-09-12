@@ -9,14 +9,15 @@
  */
 import { WORKFLOW_RUNNER_IDS } from '@openthrottle/openthrottle-agentic-utils';
 import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
+
 import type { RalphPlanRunTuningInput } from '../__generated__/graphql.js';
-import type { WorkflowContext } from '../types.ts';
 import {
   DEFAULT_ITERATIONS,
   DEFAULT_MODEL,
   DEFAULT_PROMPT,
   DEFAULT_RUNNER,
 } from '../config/index.ts';
+import type { WorkflowContext } from '../types.ts';
 
 /**
  * Type guard: narrows an arbitrary string to a known {@link WorkflowConfigRunner}. Backed by the

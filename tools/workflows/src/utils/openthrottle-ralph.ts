@@ -7,7 +7,12 @@
  * {@link ensureDatabaseReachableOrExit} for a single fail-fast flow.
  */
 
+import os from 'node:os';
+
 import { resolveWorkflowAuthTokenFromEnv } from '@openthrottle/openthrottle-agentic-ralph';
+import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
+
+import { resolveWorkflowRalphTransport } from '../config/load-workflow-ralph-config.ts';
 import {
   appendPlanOutputGraphql,
   bumpCliPlanRunHeartbeatGraphql,
@@ -64,9 +69,6 @@ import {
   formatPlanAndTasksForPrompt,
   taskRequirementsFromRow,
 } from './openthrottle-ralph-types';
-import { resolveWorkflowRalphTransport } from '../config/load-workflow-ralph-config.ts';
-import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
-import os from 'node:os';
 import { ralphDebugLogger } from './ralph-debug-logger';
 
 export type {
@@ -90,8 +92,8 @@ export {
   taskRequirementsFromRow,
 };
 
-export { WORKFLOW_RALPH_TRANSPORT_ENV } from './workflow-transport';
 export type { WorkflowRalphTransport } from './workflow-transport';
+export { WORKFLOW_RALPH_TRANSPORT_ENV } from './workflow-transport';
 
 /** Fatal error prefix used by getOpenThrottleConfigOrExit and ensureDatabaseReachableOrExit for consistent CLI output. */
 export const RALPH_FATAL_PREFIX = '\n🚨 FATAL: ';

@@ -3,17 +3,17 @@
 /** @public */
 export {
   createViteConfig,
+  type CreateViteConfigOptions,
   defineViteConfig,
   getDirname,
-  type CreateViteConfigOptions,
   type PackageType,
 } from './vite-config.ts';
 
 /** @public */
 export {
   createVitestConfig,
-  createVitestConfigJsdom,
   createVitestConfigHappyDom,
+  createVitestConfigJsdom,
   createVitestConfigNode,
   type CreateVitestConfigOptions,
   type TestEnvironment,

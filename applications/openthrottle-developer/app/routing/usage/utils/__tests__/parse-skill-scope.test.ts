@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { parseSkillScope } from '~/routing/usage/utils/parse-skill-scope';
+
 import { SKILL_USAGE_SCOPES } from '~/routing/usage/data/skill-usage-copy';
+import { parseSkillScope } from '~/routing/usage/utils/parse-skill-scope';
 
 describe('parseSkillScope', () => {
   it('returns the "ours" scope unchanged', () => {

@@ -1,10 +1,11 @@
-import type { Job } from 'bullmq';
 import type {
   JobRunHookEntry,
   JobRunHookPhase,
   JobRunHookTaskContext,
   JobRunHookTaskOutcome,
 } from '@tools/workflows';
+import type { Job } from 'bullmq';
+
 import type { RunPlanJobData } from '../plans/plans.types';
 
 /**

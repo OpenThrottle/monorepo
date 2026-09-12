@@ -1,11 +1,13 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import { ScheduleStats } from '../ScheduleStats';
-import type { ScheduleStatsProps } from '../ScheduleStats';
+
 import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
+
+import type { ScheduleStatsProps } from '../ScheduleStats';
+import { ScheduleStats } from '../ScheduleStats';
 
 const renderStats = (
   overrides: Partial<ScheduleStatsProps> = {},

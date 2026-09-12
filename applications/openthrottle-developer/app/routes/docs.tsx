@@ -1,13 +1,14 @@
-import * as React from 'react';
-import { Outlet } from 'react-router';
+import { DocsNav, DocsSearch } from '@openthrottle/react-router-docs';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import { GlobalScreen } from '@openthrottle/react-router-ui-global';
-import { DocsNav, DocsSearch } from '@openthrottle/react-router-docs';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { docsManifest } from '~/routing/docs/data/docsManifest';
-import { docsNav } from '~/routing/docs/data/docs-navigation';
-import { useDocsFeatureFlags } from '~/global/hooks/useDocsFeatureFlags';
+import * as React from 'react';
+import { Outlet } from 'react-router';
+
 import type { Route } from '@/app/routes/+types/docs';
+import { useDocsFeatureFlags } from '~/global/hooks/useDocsFeatureFlags';
+import { docsNav } from '~/routing/docs/data/docs-navigation';
+import { docsManifest } from '~/routing/docs/data/docsManifest';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

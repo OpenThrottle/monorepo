@@ -1,8 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import { Tooltip as RechartsTooltip } from 'recharts';
 import type { TooltipProps as RechartsTooltipProps } from 'recharts';
+import { Tooltip as RechartsTooltip } from 'recharts';
 
 export interface ChartTooltipProps extends RechartsTooltipProps {}
 

@@ -4,7 +4,6 @@
  */
 
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import type { WorkflowLifecycleDispatcher } from '@openthrottle/openthrottle-agentic-workflow';
 import type {
   PlanOutputStreamService,
   PlansService,
@@ -12,18 +11,20 @@ import type {
 } from '@openthrottle/nestjs-repositories';
 import { PLAN_TASK_LIST_ORDER } from '@openthrottle/nestjs-repositories';
 import { formatPlanAndTasksForPrompt } from '@openthrottle/openthrottle-agentic-ralph';
+import type { WorkflowLifecycleDispatcher } from '@openthrottle/openthrottle-agentic-workflow';
 import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 import {
   createCursorWorkflowRalphIterationRunner,
   executeJobRunHooksPhase,
-  formatJobRunHookEntryLabel,
-  mergeRalphNestedRunTuningWithExecutionBackend,
   type ExecuteJobRunHooksPhaseResult,
+  formatJobRunHookEntryLabel,
   type JobRunHookPhase,
   type JobRunHookRunKind,
   type JobRunHooksConfig,
+  mergeRalphNestedRunTuningWithExecutionBackend,
   type RalphNestedRunTuningInput,
 } from '@tools/workflows';
+
 import type { RunPlanJobData } from '../plans/plans.types';
 import { isRunPlanOrchestratorJobData } from '../plans/plans.types';
 

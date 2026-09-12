@@ -1,11 +1,12 @@
+import { Test } from '@nestjs/testing';
 import {
   embedQuery,
   getChunkById,
   listSources,
   runSemanticSearch,
 } from '@openthrottle/node-client';
-import { Test } from '@nestjs/testing';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+
 import { SearchResolver } from './search.resolver';
 
 vi.mock('@openthrottle/node-client', () => ({

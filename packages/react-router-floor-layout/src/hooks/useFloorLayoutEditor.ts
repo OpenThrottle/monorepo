@@ -23,22 +23,22 @@ import { isEditableTarget } from '../utils/editable-target';
 import { createElementId } from '../utils/element-id';
 import { createFloorElement, floorBounds } from '../utils/elements';
 import {
+  clampPointToRect,
   type Point,
   type Rect,
-  clampPointToRect,
   snapValueToGrid,
 } from '../utils/geometry';
 import {
-  type ElementPatch,
   addElement,
   createEmptyLayout,
+  type ElementPatch,
   moveElement,
   removeElement,
   updateElement,
 } from '../utils/layout-operations';
 import { useFloorLayoutHistory } from './useFloorLayoutHistory';
 import { useSelectionKeyboard } from './useSelectionKeyboard';
-import { type UseViewportResult, useViewport } from './useViewport';
+import { useViewport, type UseViewportResult } from './useViewport';
 
 /** Rotation snap step (degrees) — mirrors SelectionHandles' handle-drag snap. */
 const ROTATE_SNAP_DEGREES = 15;

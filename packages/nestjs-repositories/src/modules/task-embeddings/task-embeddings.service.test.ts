@@ -1,8 +1,9 @@
-import { describe, it, expect, beforeAll } from 'vitest';
-import { Test } from '@nestjs/testing';
 import { createMock } from '@golevelup/ts-vitest';
+import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import { beforeAll, describe, expect, it } from 'vitest';
+
 import { TaskEmbedding } from './task-embedding.entity';
 import { taskEmbeddingsFactory } from './task-embeddings.factory';
 import { TaskEmbeddingsService } from './task-embeddings.service';

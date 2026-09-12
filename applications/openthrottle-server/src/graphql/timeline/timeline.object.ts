@@ -4,6 +4,7 @@
  */
 
 import { Field, Int, ObjectType } from '@nestjs/graphql';
+
 import { TimelineMarkerKind, TimelineSpanKind } from './timeline.enum';
 
 @ObjectType()

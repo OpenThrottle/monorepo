@@ -28,8 +28,8 @@
 
 import { isRecord } from '@openthrottle/nodejs-utils';
 
-import { CONVERSATION_STREAM_CHUNK_KINDS } from '../types.ts';
 import type { ConversationStreamChunk } from '../types.ts';
+import { CONVERSATION_STREAM_CHUNK_KINDS } from '../types.ts';
 
 /** Terminal step states: the step is finished, successfully or not. */
 const TERMINAL_STEP_STATES = new Set(['DONE', 'ERROR']);

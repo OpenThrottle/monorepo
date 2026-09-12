@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
+
 import type { OpenThrottleEnv, OpenThrottlePublicEnv } from '../../types';
 
 const VALID_ENV: Record<string, number | string> = {

@@ -1,11 +1,13 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub, useFetcher } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import { AddPermissionSelectForm } from '../AddPermissionSelectForm';
-import type { AddPermissionSelectFormProps } from '../AddPermissionSelectForm';
+
 import type { action as roleDetailAction } from '~/routes/roles.$roleId';
+
+import type { AddPermissionSelectFormProps } from '../AddPermissionSelectForm';
+import { AddPermissionSelectForm } from '../AddPermissionSelectForm';
 
 const availablePermissions: AddPermissionSelectFormProps['availablePermissions'] =
   [

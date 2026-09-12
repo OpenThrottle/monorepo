@@ -1,5 +1,6 @@
 import clsx from 'clsx';
 import * as React from 'react';
+
 import { LANDING_PROMISE } from '~/routing/home/data/data.landing';
 
 export interface LandingPromiseProps {

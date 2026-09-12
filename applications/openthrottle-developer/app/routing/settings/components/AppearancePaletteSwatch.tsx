@@ -1,7 +1,8 @@
-import * as React from 'react';
 import type { Theme } from '@openthrottle/react-router-shadcn';
 import type { ResolvedThemeMode } from '@openthrottle/react-router-utils';
 import clsx from 'clsx';
+import * as React from 'react';
+
 import { APPEARANCE_SWATCH_TOKEN_NAMES } from '~/routing/settings/data/data.appearance';
 
 export interface AppearancePaletteSwatchProps {

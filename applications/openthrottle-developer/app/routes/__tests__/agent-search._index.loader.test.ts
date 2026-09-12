@@ -1,9 +1,10 @@
 // @vitest-environment node
+import { createTestRouterContext } from '@openthrottle/react-router-testing';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+
+import type { Route } from '@/app/routes/+types/agent-search._index';
 import { CustomPromptType } from '~/__generated__/graphql';
 import type { AgentAssetResult } from '~/routing/agent-search/types';
-import { createTestRouterContext } from '@openthrottle/react-router-testing';
-import type { Route } from '@/app/routes/+types/agent-search._index';
 
 vi.mock('@openthrottle/react-router-graphql', () => ({
   executeGraphqlWithAuth: vi.fn(),

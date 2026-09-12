@@ -1,6 +1,3 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { PlusIcon } from 'lucide-react';
 import {
   Button,
   Label,
@@ -10,6 +7,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@openthrottle/react-router-shadcn';
+import clsx from 'clsx';
+import { PlusIcon } from 'lucide-react';
+import * as React from 'react';
+
 import type { ServiceAccountListItemFragment } from '~/__generated__/graphql';
 
 export interface SettingsKeysToolbarProps {

@@ -1,8 +1,9 @@
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+
+import type { Route } from '@/app/routes/+types/ide.files';
 import { GetWorkspaceSettingsDocument } from '~/__generated__/graphql';
 import { MAX_FILE_MENTION_RESULTS } from '~/routing/ide/config/file-mention';
 import { resolveSelectedRepository } from '~/routing/ide/utils/repositories';
-import type { Route } from '@/app/routes/+types/ide.files';
 
 /** JSON shape returned to the composer's `@`-mention file provider. */
 export interface IdeFilesResponse {

@@ -1,13 +1,15 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import {
   Button,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
-import { CodeXmlIcon } from 'lucide-react';
 import { FEATURE_BETA_PREVIEW } from '@openthrottle/react-router-utils';
+import clsx from 'clsx';
+import { CodeXmlIcon } from 'lucide-react';
+import * as React from 'react';
+
+import type { WorkspaceEditorId } from '~/__generated__/graphql';
 import { getWorkspaceEditorDeepLink } from '~/global/config/workspace-editor-deep-links';
 import { PlanDeferredSection } from '~/routing/plans/components/PlanDeferredSection';
 import { PlanToolbarTagsSkeleton } from '~/routing/plans/components/PlanToolbarTagsSkeleton';
@@ -15,7 +17,6 @@ import {
   PLAN_DEFERRED_SECTION_COPY,
   PLAN_EDITOR_ACTIONS_COPY,
 } from '~/routing/plans/data/data.copy';
-import type { WorkspaceEditorId } from '~/__generated__/graphql';
 
 export interface PlanEditorActionsProps {
   className?: string;

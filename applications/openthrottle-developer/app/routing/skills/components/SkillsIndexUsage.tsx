@@ -1,12 +1,13 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
+import clsx from 'clsx';
+import * as React from 'react';
+
 import { SkillUsageDailyChart } from '~/global/components/SkillUsageDailyChart';
-import { SkillUsageLeaderboard } from '~/routing/usage/components/SkillUsageLeaderboard';
-import { partitionSkillUsageByPresence } from '~/routing/usage/utils/partition-skill-usage-by-presence';
 import { SKILLS_INDEX_USAGE_COPY } from '~/routing/skills/data/data.copy';
-import { SKILL_USAGE_COPY } from '~/routing/usage/data/skill-usage-copy';
 import type { SkillsIndexUsageData } from '~/routing/skills/data/skills-index-usage';
+import { SkillUsageLeaderboard } from '~/routing/usage/components/SkillUsageLeaderboard';
+import { SKILL_USAGE_COPY } from '~/routing/usage/data/skill-usage-copy';
+import { partitionSkillUsageByPresence } from '~/routing/usage/utils/partition-skill-usage-by-presence';
 
 export interface SkillsIndexUsageProps {
   className?: string;

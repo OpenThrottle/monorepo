@@ -1,9 +1,10 @@
 import { BullModule } from '@nestjs/bullmq';
-import { ConfigModule } from '@nestjs/config';
-import type { ConfigType } from '@nestjs/config';
 import { DynamicModule, Module } from '@nestjs/common';
+import type { ConfigType } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
+
 import {
   configValidationSchema,
   redisConfig,

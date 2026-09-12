@@ -1,17 +1,21 @@
-import * as React from 'react';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { OpenThrottlePaginationSimple } from '@openthrottle/react-router-ui';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalHeading,
   GlobalScreen,
   readSearchParam,
 } from '@openthrottle/react-router-ui-global';
-import { OpenThrottlePaginationSimple } from '@openthrottle/react-router-ui';
-import { ListOrderedIcon } from 'lucide-react';
-import { useSearchParams } from 'react-router';
-import { GetQueueDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import { ListOrderedIcon } from 'lucide-react';
+import * as React from 'react';
+import { useSearchParams } from 'react-router';
+
+import type { Route } from '@/app/routes/+types/queues.$queueId._index';
+import { GetQueueDocument } from '~/__generated__/graphql';
+import { SITE_TITLE } from '~/global/config/settings';
+import { runQueueDetailAction } from '~/routing/queues/actions/queueId';
 import { QueueDetailControls } from '~/routing/queues/components/QueueDetailControls';
 import { QueueHealthPill } from '~/routing/queues/components/QueueHealthPill';
 import { QueueJobsTable } from '~/routing/queues/components/QueueJobsTable';
@@ -19,9 +23,6 @@ import { QueueOpsToolbar } from '~/routing/queues/components/QueueOpsToolbar';
 import { QueueStatRow } from '~/routing/queues/components/QueueStatRow';
 import { QUEUE_JOB_STATE_FILTER_OPTIONS } from '~/routing/queues/data/job-state-filter-options';
 import { parseQueueJobsPagination } from '~/routing/queues/utils/parse-queue-jobs-pagination';
-import { runQueueDetailAction } from '~/routing/queues/actions/queueId';
-import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/queues.$queueId._index';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

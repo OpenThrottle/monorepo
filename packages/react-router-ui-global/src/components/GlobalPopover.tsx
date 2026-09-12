@@ -1,5 +1,3 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import {
   Button,
   DropdownMenu,
@@ -7,10 +5,13 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@openthrottle/react-router-shadcn';
+import clsx from 'clsx';
 import { MoreHorizontalIcon } from 'lucide-react';
+import * as React from 'react';
+
+import { isGlobalPopoverConfirmSubmitAction } from '../utils/is-global-popover-confirm-submit-action';
 import { GlobalPopoverActionItem } from './GlobalPopoverActionItem';
 import { GlobalPopoverConfirmDialog } from './GlobalPopoverConfirmDialog';
-import { isGlobalPopoverConfirmSubmitAction } from '../utils/is-global-popover-confirm-submit-action';
 
 /**
  * @public

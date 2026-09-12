@@ -1,6 +1,7 @@
+import { screen } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import { screen } from '@testing-library/react';
+
 import { SettingsLogsPanel } from '~/routing/settings/components/SettingsLogsPanel';
 import { buildSupportBundlePayload } from '~/routing/settings/utils/settings.support';
 import { renderWithMemoryRouter } from '~/testing/route-fixtures';

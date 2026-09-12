@@ -5,6 +5,7 @@
 
 import { Module } from '@nestjs/common';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
 import { RolesResolver } from './roles.resolver';
 

@@ -1,8 +1,9 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import { AvatarGroup } from '../AvatarGroup';
+
 import type { AvatarGroupProps } from '../AvatarGroup';
+import { AvatarGroup } from '../AvatarGroup';
 
 describe('AvatarGroup', () => {
   test('renders the primitive with its data-slot and merges className', () => {

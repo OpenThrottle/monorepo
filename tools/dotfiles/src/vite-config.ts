@@ -1,13 +1,14 @@
+import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+import react from '@vitejs/plugin-react';
 import { existsSync } from 'fs';
 import { dirname } from 'path';
-import { fileURLToPath } from 'url';
 import { join } from 'path';
-import { calculateOutputDir } from './calculate-output-dir.ts';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
-import dts from 'vite-plugin-dts';
-import react from '@vitejs/plugin-react';
+import { fileURLToPath } from 'url';
 import type { UserConfig } from 'vite';
 import { defineConfig } from 'vite';
+import dts from 'vite-plugin-dts';
+
+import { calculateOutputDir } from './calculate-output-dir.ts';
 
 /**
  * @description Gets the directory path in ESM modules (replacement for __dirname)

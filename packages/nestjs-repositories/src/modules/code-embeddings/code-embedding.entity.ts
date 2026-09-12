@@ -1,4 +1,5 @@
 import { Column, CreateDateColumn, Entity, PrimaryColumn } from 'typeorm';
+
 import { vectorTransformer } from '../../common/vector.transformer';
 
 /**

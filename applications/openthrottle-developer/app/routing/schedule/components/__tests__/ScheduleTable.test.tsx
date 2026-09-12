@@ -1,12 +1,14 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { ScheduleTable } from '../ScheduleTable';
-import type { ScheduleTableProps } from '../ScheduleTable';
-import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
+
 import type { ScheduledJobCardFragment } from '~/__generated__/graphql';
+import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
+
+import type { ScheduleTableProps } from '../ScheduleTable';
+import { ScheduleTable } from '../ScheduleTable';
 
 const job = (
   overrides: Partial<ScheduledJobCardFragment> = {},

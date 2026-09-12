@@ -1,9 +1,10 @@
 import { describe, expect, test } from 'vitest';
+
 import {
-  PLANS_DETAIL_TAB_SEARCH_PARAM,
   buildStatusFilterUrls,
   parseAssigneesFromSearchParams,
   parsePlanDetailTab,
+  PLANS_DETAIL_TAB_SEARCH_PARAM,
 } from '../parsers';
 
 describe('routing/plans/utils/parsers', () => {

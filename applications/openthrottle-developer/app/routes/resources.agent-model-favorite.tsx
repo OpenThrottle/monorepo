@@ -1,6 +1,7 @@
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { SetAgentModelFavoriteDocument } from '~/__generated__/graphql';
+
 import type { Route } from '@/app/routes/+types/resources.agent-model-favorite';
+import { SetAgentModelFavoriteDocument } from '~/__generated__/graphql';
 
 /** JSON shape returned by the toggle (mirrors SetAgentModelFavoriteResult + a client error slot). */
 export interface AgentModelFavoriteActionResult {

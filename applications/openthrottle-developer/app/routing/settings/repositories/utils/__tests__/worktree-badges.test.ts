@@ -1,11 +1,13 @@
-import { WorktreeActivity } from '~/__generated__/graphql';
 import { describe, expect, test } from 'vitest';
+
+import { WorktreeActivity } from '~/__generated__/graphql';
+import { REPOSITORIES_TABLE_COPY } from '~/routing/settings/repositories/data/data.copy';
 import {
   mockCheckout,
   mockDiscoveredWorktree,
   mockRepository,
 } from '~/routing/settings/repositories/data/mock.repositories';
-import { REPOSITORIES_TABLE_COPY } from '~/routing/settings/repositories/data/data.copy';
+
 import { buildRepositoryRows } from '../rows';
 import { deriveWorktreeBadges } from '../worktree-badges';
 

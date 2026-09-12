@@ -1,10 +1,11 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import { QueueHealthPill } from '../QueueHealthPill';
+
 import type { QueueHealthPillProps } from '../QueueHealthPill';
+import { QueueHealthPill } from '../QueueHealthPill';
 
 const renderPill = (props: QueueHealthPillProps): RenderResult => {
   const Component = () => <QueueHealthPill {...props} />;

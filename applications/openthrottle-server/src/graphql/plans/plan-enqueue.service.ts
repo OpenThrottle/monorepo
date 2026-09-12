@@ -8,24 +8,26 @@
  */
 
 import { randomUUID } from 'node:crypto';
+
+import { InjectQueue } from '@nestjs/bullmq';
 import {
   BadRequestException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectQueue } from '@nestjs/bullmq';
-import type { Queue } from 'bullmq';
+import type { PlanRunExecutionBackend } from '@openthrottle/nestjs-repositories';
 import {
   Plan,
-  PlansService,
   PlanRunsService,
+  PlansService,
   RepositoryCheckoutsService,
   Task,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
-import type { PlanRunExecutionBackend } from '@openthrottle/nestjs-repositories';
 import type { JobRunHookEntry } from '@tools/workflows';
 import { projectHookTasksToJobRunHookEntries } from '@tools/workflows';
+import type { Queue } from 'bullmq';
+
 import { updateMatchingTasksAndEmitStatusChanged } from '../../notifications/emit-bulk-task-status-changes';
 import { NotificationsService } from '../../notifications/notifications.service';
 import {

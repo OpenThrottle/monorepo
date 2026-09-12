@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,9 +11,10 @@ import {
   Button,
   toast,
 } from '@openthrottle/react-router-shadcn';
-import { useFetcher } from 'react-router';
-import { PauseIcon, PlayIcon, Trash2Icon } from 'lucide-react';
 import clsx from 'clsx';
+import { PauseIcon, PlayIcon, Trash2Icon } from 'lucide-react';
+import * as React from 'react';
+import { useFetcher } from 'react-router';
 
 export interface QueueDetailControlsProps {
   className?: string;

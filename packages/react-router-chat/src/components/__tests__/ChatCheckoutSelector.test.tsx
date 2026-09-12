@@ -1,11 +1,12 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
-import { ChatCheckoutSelector } from '../ChatCheckoutSelector';
-import type { ChatCheckoutSelectorProps } from '../ChatCheckoutSelector';
+
 import type { ChatCheckoutOption } from '../../types';
+import type { ChatCheckoutSelectorProps } from '../ChatCheckoutSelector';
+import { ChatCheckoutSelector } from '../ChatCheckoutSelector';
 
 const CHECKOUTS: readonly ChatCheckoutOption[] = [
   { branch: 'main', id: 'repo-a', label: 'openthrottle' },

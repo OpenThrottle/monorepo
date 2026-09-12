@@ -2,6 +2,7 @@ import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+
 import { CspReportsController } from './csp-reports.controller';
 
 describe('CspReportsController', () => {

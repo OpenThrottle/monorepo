@@ -1,4 +1,5 @@
 import { isRecord } from '@openthrottle/nodejs-utils';
+
 import {
   DEFAULT_ROLLOUT_CACHE_TTL_MS,
   ROLLOUT_CACHE_KEY_PREFIX,

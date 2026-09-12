@@ -1,4 +1,5 @@
 import { formatDate } from 'date-fns';
+
 import type { NoteCardFragment } from '~/__generated__/graphql';
 
 /** First non-empty line of a note (heading markers stripped), truncated to 80. */

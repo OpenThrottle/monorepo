@@ -1,5 +1,5 @@
-import * as React from 'react';
-import clsx from 'clsx';
+import { ChatDialog } from '@openthrottle/react-router-chat';
+import { NotificationBell } from '@openthrottle/react-router-notifications';
 import {
   Avatar,
   AvatarFallback,
@@ -12,14 +12,15 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
-import { Link } from 'react-router';
-import { SignOutIcon } from '@phosphor-icons/react/dist/ssr/SignOut';
-import { GithubLogoIcon } from '@phosphor-icons/react/dist/ssr/GithubLogo';
-import { GlobalLayoutBreadcrumbs } from './GlobalLayoutBreadcrumbs';
-import { ChatDialog } from '@openthrottle/react-router-chat';
-import { NotificationBell } from '@openthrottle/react-router-notifications';
 import { OPENTHROTTLE_GITHUB_URL } from '@openthrottle/react-router-utils';
+import { GithubLogoIcon } from '@phosphor-icons/react/dist/ssr/GithubLogo';
+import { SignOutIcon } from '@phosphor-icons/react/dist/ssr/SignOut';
+import clsx from 'clsx';
 import { BugIcon } from 'lucide-react';
+import * as React from 'react';
+import { Link } from 'react-router';
+
+import { GlobalLayoutBreadcrumbs } from './GlobalLayoutBreadcrumbs';
 
 /**
  * @description Discriminated events from the header chrome search control; the app decides navigation vs commander.

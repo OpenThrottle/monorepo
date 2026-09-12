@@ -6,12 +6,13 @@
  * SIGTERM→SIGKILL escalation) but with the Ralph logger replaced by an injectable {@link DriverLogger}.
  */
 
-import { spawn, spawnSync } from 'child_process';
 import type { ChildProcess } from 'child_process';
+import { spawn, spawnSync } from 'child_process';
+
 import type { AgentDriver, DriverInvocationConfig } from '../types/index.ts';
 import { escalateKill } from '../utils/child-kill.ts';
-import { noopDriverLogger } from '../utils/logger.ts';
 import type { DriverLogger } from '../utils/logger.ts';
+import { noopDriverLogger } from '../utils/logger.ts';
 
 /**
  * @description Optional dependencies for a driver run. `logger` defaults to a no-op.

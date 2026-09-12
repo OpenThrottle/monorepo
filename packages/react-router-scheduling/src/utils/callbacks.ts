@@ -1,7 +1,8 @@
 import type { CalendarConfig } from '@schedule-x/calendar';
+
 import type { ScheduleCallbacks } from '../types';
-import { fromEngineEvent } from './events';
 import { temporalToISOString } from './datetime';
+import { fromEngineEvent } from './events';
 
 // Adapt the engine-agnostic ScheduleCallbacks into the Schedule-X `callbacks`
 // config: Temporal datetimes become ISO strings and engine events become domain

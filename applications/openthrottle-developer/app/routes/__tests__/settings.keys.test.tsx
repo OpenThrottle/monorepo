@@ -1,12 +1,14 @@
-import { describe, expect, test, vi, beforeEach } from 'vitest';
 import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
-import { action, loader } from '../settings.keys';
+import { createTestRouterContext } from '@openthrottle/react-router-testing';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+
+import type { Route } from '@/app/routes/+types/settings.keys';
 import {
   SETTINGS_KEYS_ACCOUNT_SEARCH_PARAM,
   SETTINGS_KEYS_PROBE_SERVICE_ACCOUNT_ID,
 } from '~/routing/settings/utils/settings-keys-action';
-import type { Route } from '@/app/routes/+types/settings.keys';
-import { createTestRouterContext } from '@openthrottle/react-router-testing';
+
+import { action, loader } from '../settings.keys';
 
 vi.mock('@openthrottle/react-router-graphql', async (importOriginal) => {
   const actual =

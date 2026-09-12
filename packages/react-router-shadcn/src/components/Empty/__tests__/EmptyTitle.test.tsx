@@ -1,8 +1,9 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import { EmptyTitle } from '../EmptyTitle';
+
 import type { EmptyTitleProps } from '../EmptyTitle';
+import { EmptyTitle } from '../EmptyTitle';
 
 describe('EmptyTitle', () => {
   test('renders the primitive with its data-slot and merges className', () => {

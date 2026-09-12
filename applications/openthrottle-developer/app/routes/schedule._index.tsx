@@ -1,7 +1,4 @@
-import * as React from 'react';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { buildInFlightByJob } from '~/routing/schedule/utils/build-in-flight-by-job';
-import { filterJobsBySearch } from '~/routing/schedule/utils/filter-jobs-by-search';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalErrorBoundary,
@@ -11,22 +8,26 @@ import {
   readSearchParam,
 } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import * as React from 'react';
+
+import type { Route } from '@/app/routes/+types/schedule._index';
 import {
   CancelScheduleIndexRunDocument,
   ScheduledAgentJobsDocument,
 } from '~/__generated__/graphql';
+import { SITE_TITLE } from '~/global/config/settings';
 import { ScheduleActiveRuns } from '~/routing/schedule/components/ScheduleActiveRuns';
 import { ScheduleIntroduction } from '~/routing/schedule/components/ScheduleIntroduction';
 import { ScheduleStats } from '~/routing/schedule/components/ScheduleStats';
 import { ScheduleTable } from '~/routing/schedule/components/ScheduleTable';
 import { ScheduleToolbar } from '~/routing/schedule/components/ScheduleToolbar';
-import { useScheduleAutoRefresh } from '~/routing/schedule/hooks/useScheduleAutoRefresh';
-import { SITE_TITLE } from '~/global/config/settings';
 import {
   SCHEDULE_COPY,
   SCHEDULE_ONBOARDING,
 } from '~/routing/schedule/data/data.copy';
-import type { Route } from '@/app/routes/+types/schedule._index';
+import { useScheduleAutoRefresh } from '~/routing/schedule/hooks/useScheduleAutoRefresh';
+import { buildInFlightByJob } from '~/routing/schedule/utils/build-in-flight-by-job';
+import { filterJobsBySearch } from '~/routing/schedule/utils/filter-jobs-by-search';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

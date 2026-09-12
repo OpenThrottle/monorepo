@@ -1,26 +1,27 @@
-import * as React from 'react';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import { authMiddleware } from '@openthrottle/react-router-auth';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import { GlobalScreen } from '@openthrottle/react-router-ui-global';
-import { authMiddleware } from '@openthrottle/react-router-auth';
-import { getDefaultGithubRepo } from '~/global/config/github-default-repo';
-import { GetPullRequestsDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import {
-  parsePullRequestListPreviewNumber,
-  PULL_REQUEST_LIST_PREVIEW_SEARCH_PARAM,
-} from '~/routing/pull-requests/constants/pull-request-list-url';
+import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import * as React from 'react';
+import type { MiddlewareFunction } from 'react-router';
+
+import type { Route } from '@/app/routes/+types/pull-requests._index';
+import type { ListPullsInput } from '~/__generated__/graphql';
+import { GetPullRequestsDocument } from '~/__generated__/graphql';
+import { getDefaultGithubRepo } from '~/global/config/github-default-repo';
+import { SITE_TITLE } from '~/global/config/settings';
 import { PullRequestPreviewSheet } from '~/routing/pull-requests/components/PullRequestPreviewSheet';
-import { parsePullListState } from '~/routing/pull-requests/utils/parsers';
 import { PullRequestsIntroduction } from '~/routing/pull-requests/components/PullRequestsIntroduction';
 import { PullRequestsTable } from '~/routing/pull-requests/components/PullRequestsTable';
 import { PullRequestStats } from '~/routing/pull-requests/components/PullRequestStats';
 import { PullRequestsToolbar } from '~/routing/pull-requests/components/PullRequestsToolbar';
-import { SITE_TITLE } from '~/global/config/settings';
-import type { ListPullsInput } from '~/__generated__/graphql';
-import type { MiddlewareFunction } from 'react-router';
-import type { Route } from '@/app/routes/+types/pull-requests._index';
+import {
+  parsePullRequestListPreviewNumber,
+  PULL_REQUEST_LIST_PREVIEW_SEARCH_PARAM,
+} from '~/routing/pull-requests/constants/pull-request-list-url';
+import { parsePullListState } from '~/routing/pull-requests/utils/parsers';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

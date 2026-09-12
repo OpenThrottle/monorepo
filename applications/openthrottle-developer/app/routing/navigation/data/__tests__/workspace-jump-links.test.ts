@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import {
   WORKSPACE_CORE_ENTITY_LINKS,
   WORKSPACE_FULL_JUMP_LINKS,

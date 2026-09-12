@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Badge,
   Collapsible,
@@ -6,11 +5,13 @@ import {
   CollapsibleTrigger,
 } from '@openthrottle/react-router-shadcn';
 import { ChevronDown, Wrench } from 'lucide-react';
-import { ToolPayload } from './ToolPayload';
+import * as React from 'react';
+
 import { STATUS_CONFIG } from '../data/chat-tool-call-status-config';
-import { formatJsonPayload } from '../utils/index';
-import { ChatToolStatus } from '../types';
 import type { ChatTurnToolEvent } from '../types';
+import { ChatToolStatus } from '../types';
+import { formatJsonPayload } from '../utils/index';
+import { ToolPayload } from './ToolPayload';
 
 export interface ChatToolCallProps {
   /** Whether the card starts expanded. Defaults to open when the call failed. */

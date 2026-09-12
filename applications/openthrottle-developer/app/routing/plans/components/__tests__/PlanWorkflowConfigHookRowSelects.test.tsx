@@ -1,11 +1,13 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import type { JobRunHookDraftRow } from '~/routing/plans/utils/job-run-hooks-ui';
-import { PlanWorkflowConfigHookRowSelects } from '../PlanWorkflowConfigHookRowSelects';
+
 import type { PlanWorkflowConfigHookRowSelectsProps } from '../PlanWorkflowConfigHookRowSelects';
+import { PlanWorkflowConfigHookRowSelects } from '../PlanWorkflowConfigHookRowSelects';
 
 const row: JobRunHookDraftRow = {
   draftId: 'draft-1',

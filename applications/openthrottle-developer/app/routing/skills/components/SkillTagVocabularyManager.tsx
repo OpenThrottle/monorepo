@@ -1,6 +1,3 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { useFetcher } from 'react-router';
 import {
   Button,
   Input,
@@ -12,8 +9,12 @@ import {
   TableRow,
 } from '@openthrottle/react-router-shadcn';
 import { getActionError } from '@openthrottle/react-router-utils';
-import { SKILL_AVAILABILITY_COPY } from '~/routing/skills/data/data.copy';
+import clsx from 'clsx';
+import * as React from 'react';
+import { useFetcher } from 'react-router';
+
 import { SkillTagVocabularyRow } from '~/routing/skills/components/SkillTagVocabularyRow';
+import { SKILL_AVAILABILITY_COPY } from '~/routing/skills/data/data.copy';
 import {
   isKebabCase,
   type SkillTagValue,

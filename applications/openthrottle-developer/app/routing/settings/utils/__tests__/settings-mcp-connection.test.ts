@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
+
 import type {
   McpConnectorConnectionFieldsFragment,
   McpConnectorFieldsFragment,
 } from '~/__generated__/graphql';
+
 import {
   getConnectorStatus,
   getProviderLabel,

@@ -27,6 +27,7 @@
 
 import fs from 'fs';
 import path from 'path';
+
 import { getCapturedWorkspacePath } from './workspace-path.ts';
 
 /** The on-disk shape, mirroring `PlanRunRecord` in @openthrottle/agentic-hooks. */

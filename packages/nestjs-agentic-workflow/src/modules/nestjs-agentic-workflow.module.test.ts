@@ -1,16 +1,17 @@
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { Module } from '@nestjs/common';
+import type { ExecuteGraphqlOptionsV2 } from '@openthrottle/nodejs-graphql';
 import type {
   WorkflowOrchestrator,
   WorkflowRunResult,
 } from '@openthrottle/openthrottle-agentic-workflow';
-import type { ExecuteGraphqlOptionsV2 } from '@openthrottle/nodejs-graphql';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
+
+import type { AgenticWorkflowRegistry } from '../agentic-workflow-base';
 import {
   AGENTIC_WORKFLOW_REGISTRY,
   AgenticWorkflowBase,
 } from '../agentic-workflow-base';
-import type { AgenticWorkflowRegistry } from '../agentic-workflow-base';
 import type {
   AgenticWorkflowExecuteGraphqlV2,
   AgenticWorkflowWorkerGraphqlAuth,

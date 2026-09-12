@@ -2,18 +2,20 @@
  * @description Service account CRUD and credential lifecycle (generate, verify, revoke).
  */
 
+import { randomBytes } from 'node:crypto';
+
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import * as bcrypt from 'bcrypt';
-import { randomBytes } from 'node:crypto';
 import { IsNull, Repository } from 'typeorm';
+
 import {
   type ListPaginationInput,
   resolveListPagination,
 } from '../../common/list-pagination';
-import { ServiceAccountCredential } from './service-account-credential.entity';
 import { ServiceAccount } from './service-account.entity';
+import { ServiceAccountCredential } from './service-account-credential.entity';
 import {
   formatServiceAccountToken,
   normalizeServiceAccountBearerToken,

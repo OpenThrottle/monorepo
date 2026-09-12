@@ -1,10 +1,11 @@
-import * as React from 'react';
 import { Button, Input, Label } from '@openthrottle/react-router-shadcn';
-import { useAtom } from 'jotai';
 import {
   DEFAULT_BRAND_HSL,
   getBrandColorInputValue,
 } from '@openthrottle/react-router-utils';
+import { useAtom } from 'jotai';
+import * as React from 'react';
+
 import { configAtom } from '~/global/data/atom.config';
 import { APPEARANCE_COPY } from '~/routing/settings/data/data.copy';
 

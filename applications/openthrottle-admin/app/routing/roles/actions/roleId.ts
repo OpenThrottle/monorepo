@@ -1,8 +1,9 @@
-import { redirect } from 'react-router';
 import {
   executeGraphqlWithAuth,
   parseFormData,
 } from '@openthrottle/react-router-graphql';
+import { redirect } from 'react-router';
+
 import {
   AddPermissionToRoleDocument,
   DeleteRoleDocument,

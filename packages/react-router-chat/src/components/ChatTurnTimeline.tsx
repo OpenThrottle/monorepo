@@ -1,4 +1,8 @@
 import * as React from 'react';
+
+import { deriveRunPhaseFromEvents } from '../run-phase';
+import { buildTurnTimeline, foldTurnActivity } from '../turn-tool-groups';
+import type { ChatTurnEvent } from '../types';
 import { ChatActivityGroup } from './ChatActivityGroup';
 import { ChatMessageBody } from './ChatMessageBody';
 import { ChatThinkingBlock } from './ChatThinkingBlock';
@@ -6,9 +10,6 @@ import { ChatToolCall } from './ChatToolCall';
 import { ChatToolCallGroup } from './ChatToolCallGroup';
 import { ChatTurnUsageSummary } from './ChatTurnUsageSummary';
 import { RunningIndicator } from './RunningIndicator';
-import { deriveRunPhaseFromEvents } from '../run-phase';
-import { buildTurnTimeline, foldTurnActivity } from '../turn-tool-groups';
-import type { ChatTurnEvent } from '../types';
 
 export interface ChatTurnTimelineProps {
   /** Structured, ordered events for an assistant turn. */

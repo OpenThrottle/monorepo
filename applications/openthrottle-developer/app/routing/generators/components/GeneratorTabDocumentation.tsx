@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Card,
   CardContent,
@@ -6,7 +5,9 @@ import {
   CardHeader,
   TabsContent,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
 import { Link } from 'react-router';
+
 import { generators } from '~/routing/generators/data/data.generators';
 
 export interface GeneratorTabDocumentationProps {

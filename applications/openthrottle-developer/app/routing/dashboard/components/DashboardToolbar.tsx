@@ -1,6 +1,3 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { useSearchParams } from 'react-router';
 import {
   Select,
   SelectContent,
@@ -8,6 +5,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@openthrottle/react-router-shadcn';
+import clsx from 'clsx';
+import * as React from 'react';
+import { useSearchParams } from 'react-router';
+
 import {
   GITHUB_ORGS,
   GITHUB_REPOSITORIES,

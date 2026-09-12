@@ -1,8 +1,9 @@
-import * as React from 'react';
+import type { TaskOutputStreamChunksQuery } from '@openthrottle/openthrottle-developer-codegen';
 import { TabsContent } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleEmptyState } from '@openthrottle/react-router-ui';
+import * as React from 'react';
+
 import { OutputStream } from '~/routing/plans/components/OutputStream';
-import type { TaskOutputStreamChunksQuery } from '@openthrottle/openthrottle-developer-codegen';
 
 type Chunk = TaskOutputStreamChunksQuery['planOutputStreamChunks'][number];
 

@@ -1,12 +1,13 @@
 // @vitest-environment node
-import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { createTestRouterContext } from '@openthrottle/react-router-testing';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+
+import type { Route } from '@/app/routes/+types/settings.rollout.$flagId.edit';
 import {
   DeleteRolloutFlagDocument,
   UpdateRolloutFlagDocument,
 } from '~/__generated__/graphql';
 import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
-import type { Route } from '@/app/routes/+types/settings.rollout.$flagId.edit';
 
 vi.mock('@openthrottle/react-router-graphql', async (importOriginal) => {
   const actual =

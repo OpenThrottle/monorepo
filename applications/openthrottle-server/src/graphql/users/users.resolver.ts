@@ -2,13 +2,14 @@
  * @description Resolver for User queries and mutations. Injects UsersService from @openthrottle/nestjs-repositories and maps User entities to UserObject.
  */
 
-import type { User } from '@openthrottle/nestjs-repositories';
-import { UsersService } from '@openthrottle/nestjs-repositories';
-import { CurrentUser } from '@openthrottle/nestjs-auth';
-import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { UseGuards } from '@nestjs/common';
+import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { CurrentUser } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS } from '@openthrottle/nestjs-rbac';
 import { Permissions } from '@openthrottle/nestjs-rbac';
+import type { User } from '@openthrottle/nestjs-repositories';
+import { UsersService } from '@openthrottle/nestjs-repositories';
+
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
 import { CreateUserInput, UpdateUserInput } from './user.input';
 import { UserObject } from './user.object';

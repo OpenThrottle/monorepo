@@ -1,12 +1,13 @@
-import * as React from 'react';
 import {
   Button,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
-import { Loader2, Mic } from 'lucide-react';
 import clsx from 'clsx';
+import { Loader2, Mic } from 'lucide-react';
+import * as React from 'react';
+
 import { ChatComposerMicState } from '../types';
 
 export interface ChatComposerMicControlProps {

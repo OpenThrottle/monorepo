@@ -1,5 +1,6 @@
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, test } from 'vitest';
+
 import { buildPersistentSettingKey } from '~/global/config/persistent-setting-storage';
 import { usePersistentSetting } from '~/global/hooks/usePersistentSetting';
 

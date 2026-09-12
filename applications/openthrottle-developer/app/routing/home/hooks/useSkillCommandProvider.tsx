@@ -1,8 +1,9 @@
-import * as React from 'react';
 import type {
   ChatSlashCommand,
   ChatSlashCommandProvider,
 } from '@openthrottle/react-router-chat';
+import * as React from 'react';
+
 import type { SkillsAutocompleteResponse } from '~/routing/skills/utils/autocomplete-entries';
 
 /** Cap on suggestions surfaced in the composer's `/`-command popover. */

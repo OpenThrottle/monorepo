@@ -3,8 +3,9 @@ import type {
   ChatModelOption,
   ChatPersonaOption,
 } from '@openthrottle/react-router-chat';
-import type { ChatToolbarState } from '../data/atom.chat-toolbar';
+
 import { capabilitiesForChatOption } from '../config/chat-capabilities';
+import type { ChatToolbarState } from '../data/atom.chat-toolbar';
 import { decodeChatOption } from './chat-model-option';
 
 /**

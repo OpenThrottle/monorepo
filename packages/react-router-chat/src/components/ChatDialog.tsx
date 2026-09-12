@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Button,
   Dialog,
@@ -13,15 +12,17 @@ import {
   SheetTrigger,
 } from '@openthrottle/react-router-shadcn';
 import clsx from 'clsx';
+import * as React from 'react';
+
 import type { ChatComposerControls } from '../context/chat-context';
-import { ChatComposer } from './ChatComposer';
-import { ChatComposerToolbar } from './ChatComposerToolbar';
-import { ChatDialogHeader } from './ChatDialogHeader';
-import { ChatJumpToLatest } from './ChatJumpToLatest';
-import type { ChatConversationSidebarProps } from './ChatConversationSidebar';
-import { ChatThread } from './ChatThread';
 import { useChatDialog } from '../hooks/use-chat-dialog';
 import type { ChatMessage } from '../types';
+import { ChatComposer } from './ChatComposer';
+import { ChatComposerToolbar } from './ChatComposerToolbar';
+import type { ChatConversationSidebarProps } from './ChatConversationSidebar';
+import { ChatDialogHeader } from './ChatDialogHeader';
+import { ChatJumpToLatest } from './ChatJumpToLatest';
+import { ChatThread } from './ChatThread';
 
 type ChatDialogVariant = 'dialog' | 'sheet';
 

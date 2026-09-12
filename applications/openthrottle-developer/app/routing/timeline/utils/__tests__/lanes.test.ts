@@ -5,14 +5,16 @@
  */
 
 import { describe, expect, it } from 'vitest';
+
 import { TimelineMarkerKind, TimelineSpanKind } from '~/__generated__/graphql';
+
+import type { TimelineMarker, TimelineSpan } from '../../types';
 import {
   buildTimelineLanes,
   clusterMarkers,
   packSpansIntoSubRows,
 } from '../lanes';
 import { createTimelineScale } from '../scale';
-import type { TimelineMarker, TimelineSpan } from '../../types';
 
 const FROM = new Date('2026-09-01T00:00:00Z');
 const TO = new Date('2026-09-02T00:00:00Z');

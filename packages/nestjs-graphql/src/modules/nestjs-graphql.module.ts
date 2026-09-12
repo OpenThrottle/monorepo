@@ -4,24 +4,25 @@ import {
   ApolloServerPluginLandingPageProductionDefault,
 } from '@apollo/server/plugin/landingPage/default';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
-import { GraphQLModule } from '@nestjs/graphql';
 import { DynamicModule, Module } from '@nestjs/common';
+import { GraphQLModule } from '@nestjs/graphql';
+import { LoggerModule } from '@openthrottle/nestjs-modules';
+import { LoggerService } from '@openthrottle/nestjs-modules';
+import { getRedisCache } from '@openthrottle/nestjs-redis';
 import {
   HEADER_APP_NAME,
   HEADER_APP_VERSION,
 } from '@openthrottle/nestjs-utils';
-import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { LoggerService } from '@openthrottle/nestjs-modules';
-import { getRedisCache } from '@openthrottle/nestjs-redis';
 import type { ValidationRule } from 'graphql';
+
 import { createFormatError } from '../config/format-error';
-import {
-  ApolloServerPluginCacheControl,
-  createResponseCachePlugin,
-} from '../config/nestjs-graphql.plugins';
 import type {
   ApolloServerPluginCacheControlOptions,
   ApolloServerPluginResponseCacheOptions,
+} from '../config/nestjs-graphql.plugins';
+import {
+  ApolloServerPluginCacheControl,
+  createResponseCachePlugin,
 } from '../config/nestjs-graphql.plugins';
 import { createQueryDepthLimitRule } from '../config/query-depth-limit';
 import { defaultResponseCacheSessionId } from '../config/response-cache-session';

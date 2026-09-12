@@ -1,7 +1,8 @@
-import * as React from 'react';
-import { describe, expect, test } from 'vitest';
-import { MemoryRouter } from 'react-router';
 import { render } from '@testing-library/react';
+import * as React from 'react';
+import { MemoryRouter } from 'react-router';
+import { describe, expect, test } from 'vitest';
+
 import { AgentAssetCard } from '~/routing/agent-search/components/AgentAssetCard';
 import type { AgentAssetResult } from '~/routing/agent-search/types';
 

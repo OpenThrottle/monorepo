@@ -1,12 +1,14 @@
 import * as React from 'react';
+
+import { TIMELINE_LANE_ROW_HEIGHT } from '~/routing/timeline/config/layout';
+import type { TimelineLane, TimelineSpan } from '~/routing/timeline/types';
+import type { TimelineScale } from '~/routing/timeline/utils/scale';
 import { spanRect } from '~/routing/timeline/utils/span-geometry';
+
 import {
   TIMELINE_DERIVED_PATTERN_ID,
   TimelineSpanBar,
 } from './TimelineSpanBar';
-import { TIMELINE_LANE_ROW_HEIGHT } from '~/routing/timeline/config/layout';
-import type { TimelineLane, TimelineSpan } from '~/routing/timeline/types';
-import type { TimelineScale } from '~/routing/timeline/utils/scale';
 
 export interface TimelineSpanLayerProps {
   readonly lane: TimelineLane;

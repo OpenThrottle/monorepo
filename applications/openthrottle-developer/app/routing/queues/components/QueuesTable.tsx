@@ -1,8 +1,9 @@
-import * as React from 'react';
 import { Card, DataTable, toast } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleEmptyState } from '@openthrottle/react-router-ui';
 import clsx from 'clsx';
+import * as React from 'react';
 import { useFetcher } from 'react-router';
+
 import type { QueueCardFragment } from '~/__generated__/graphql';
 import {
   buildQueuesTableColumns,

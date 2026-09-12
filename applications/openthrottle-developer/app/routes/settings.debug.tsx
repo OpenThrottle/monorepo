@@ -1,15 +1,16 @@
-import * as React from 'react';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { getEnvironment } from '@openthrottle/react-router-utils';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import { GlobalScreen } from '@openthrottle/react-router-ui-global';
-import { GetRootHealthDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import { getEnvironment } from '@openthrottle/react-router-utils';
+import * as React from 'react';
+
+import type { Route } from '@/app/routes/+types/settings.debug';
+import { GetRootHealthDocument } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
 import { SettingsDebugPanel } from '~/routing/settings/components/SettingsDebugPanel';
 import { SettingsDocsExperimental } from '~/routing/settings/components/SettingsDocsExperimental';
 import { sanitizeEnvForDiagnostics } from '~/routing/settings/utils/sanitize-client-env';
-import type { Route } from '@/app/routes/+types/settings.debug';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

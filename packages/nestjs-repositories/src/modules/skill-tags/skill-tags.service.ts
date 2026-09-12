@@ -21,6 +21,7 @@ import {
   DEFAULT_TAG_VOCABULARY_SEED,
 } from '@openthrottle/openthrottle-skills';
 import { QueryFailedError, Repository } from 'typeorm';
+
 import { UserSkillTag } from './user-skill-tag.entity';
 
 const isUniqueViolation = (error: unknown): boolean => {

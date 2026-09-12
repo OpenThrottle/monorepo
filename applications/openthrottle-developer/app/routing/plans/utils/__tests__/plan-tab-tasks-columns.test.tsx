@@ -1,8 +1,10 @@
+import type { CellContext, HeaderContext } from '@tanstack/react-table';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import type { CellContext, HeaderContext } from '@tanstack/react-table';
+
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
 import { renderRoutesStub } from '~/testing/route-fixtures';
+
 import { buildPlanTabTasksColumns } from '../plan-tab-tasks-columns';
 
 function asMock<T>(value: unknown): T;

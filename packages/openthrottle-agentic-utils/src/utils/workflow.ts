@@ -1,8 +1,10 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { isDriverId, parseDriverId } from '@openthrottle/openthrottle-drivers';
+
 import type { DriverId } from '@openthrottle/openthrottle-drivers';
+import { isDriverId, parseDriverId } from '@openthrottle/openthrottle-drivers';
+
 import {
   WORKFLOW_RALPH_DEBUG_ENV,
   WORKFLOW_RALPH_DEBUG_LEGACY_ENV,

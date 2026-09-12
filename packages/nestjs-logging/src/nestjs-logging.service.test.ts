@@ -1,7 +1,8 @@
 import { createMock } from '@golevelup/ts-vitest';
-import { LoggerService } from '@openthrottle/nestjs-modules';
 import { Test } from '@nestjs/testing';
+import { LoggerService } from '@openthrottle/nestjs-modules';
 import { beforeAll, describe, expect, it } from 'vitest';
+
 import { NestjsLoggingModule } from './nestjs-logging.module';
 import { NestjsLoggingService } from './nestjs-logging.service';
 

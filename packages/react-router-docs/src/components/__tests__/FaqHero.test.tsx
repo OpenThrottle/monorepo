@@ -1,11 +1,12 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import { FaqHero } from '../FaqHero';
-import { FaqView } from '../FaqView';
-import { buildFaqCategories } from '../../utils/faqCategories';
+
 import type { DocEntry } from '../../utils/buildDocsManifest';
 import type { FaqCategory } from '../../utils/faqCategories';
+import { buildFaqCategories } from '../../utils/faqCategories';
+import { FaqHero } from '../FaqHero';
+import { FaqView } from '../FaqView';
 
 const categories: readonly FaqCategory[] = [
   { id: '00-general', label: '00. General' },

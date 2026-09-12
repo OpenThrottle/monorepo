@@ -1,17 +1,18 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { ArrowRightIcon } from 'lucide-react';
-import { Link } from 'react-router';
+import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from '@openthrottle/react-router-shadcn';
-import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
-import { formatGroupLabel } from '../utils/buildDocsNav';
-import type { DocsNavGroup } from '../utils/buildDocsNav';
+import clsx from 'clsx';
+import { ArrowRightIcon } from 'lucide-react';
+import * as React from 'react';
+import { Link } from 'react-router';
+
 import type { DocEntry } from '../utils/buildDocsManifest';
+import type { DocsNavGroup } from '../utils/buildDocsNav';
+import { formatGroupLabel } from '../utils/buildDocsNav';
 
 export interface DocsLandingProps {
   readonly className?: string;

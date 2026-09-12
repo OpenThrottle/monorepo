@@ -1,8 +1,9 @@
-import * as React from 'react';
 import { toast } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
 import { useNavigation, useRevalidator } from 'react-router';
-import type { SettingsKeysActionData } from '~/routing/settings/utils/settings-keys-action';
+
 import { copyText } from '~/routing/settings/utils/settings.support';
+import type { SettingsKeysActionData } from '~/routing/settings/utils/settings-keys-action';
 
 /** The create-credential slice of the settings/keys action payload. */
 export type SettingsKeysCreateCredentialActionData = Extract<

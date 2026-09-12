@@ -4,13 +4,14 @@
  */
 
 import { createMock } from '@golevelup/ts-vitest';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
   PlanOutputStreamService,
   PlansService,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { executeSinglePlanLifecycleHook } from './execute-single-plan-lifecycle-hook';
 import { PlanLifecycleHooksProcessor } from './plan-lifecycle-hooks.processor';
 import type {

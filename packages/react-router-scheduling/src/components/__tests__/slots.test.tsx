@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 
 import type { CalendarEvent } from '../../types';
 import { toEngineEvent } from '../../utils/events';
-import { buildCustomComponents } from '../slots';
 import type { CalendarEventSlot, CalendarHeaderSlot } from '../slots';
+import { buildCustomComponents } from '../slots';
 
 const DOMAIN_EVENT: CalendarEvent = {
   end: '2026-06-15T11:00:00.000Z',

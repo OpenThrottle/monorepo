@@ -3,6 +3,7 @@
  */
 
 import type { ConfigService } from '@nestjs/config';
+
 import type { AgentsMcpRoutedToolName } from './agents-mcp-router';
 
 /**

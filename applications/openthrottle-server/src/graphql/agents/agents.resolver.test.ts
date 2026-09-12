@@ -1,19 +1,20 @@
 import { createMock } from '@golevelup/ts-vitest';
-import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
-import { McpDeveloperMcpSurface } from '@openthrottle/nestjs-openthrottle-mcp';
-import { AgentConversationsService } from '@openthrottle/nestjs-repositories';
+import { Test } from '@nestjs/testing';
 import {
   AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
   AUTH_PRINCIPAL_KIND_USER,
 } from '@openthrottle/nestjs-auth';
-import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+import { McpDeveloperMcpSurface } from '@openthrottle/nestjs-openthrottle-mcp';
+import { AgentConversationsService } from '@openthrottle/nestjs-repositories';
 import type { Mock } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+
+import { AgentsResolver } from './agents.resolver';
+import { PERSISTED_CONVERSATION_AUTH_ERROR } from './agents-chat-persistence';
 import type { AgentsMcpRouteDecision } from './agents-mcp-router';
 import { AgentsMcpRouter } from './agents-mcp-router';
 import { AgentsMcpRouterLlmService } from './agents-mcp-router-llm.service';
-import { PERSISTED_CONVERSATION_AUTH_ERROR } from './agents-chat-persistence';
-import { AgentsResolver } from './agents.resolver';
 
 const createConfigStub = (): ConfigService =>
   createMock<ConfigService>({

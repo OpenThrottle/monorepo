@@ -1,15 +1,16 @@
 import { Module } from '@nestjs/common';
-import { ClsModule, ClsService } from 'nestjs-cls';
 import {
   HEADER_APP_NAME,
   HEADER_APP_VERSION,
 } from '@openthrottle/nestjs-utils';
-import type { GlobalClsUser } from './global-cls-user';
+import { ClsModule, ClsService } from 'nestjs-cls';
+
 import {
   applyGlobalClsUser,
   GlobalClsService,
   type GlobalClsStore,
 } from './global-cls.service';
+import type { GlobalClsUser } from './global-cls-user';
 
 /**
  * @description CLS middleware setup hook: reads the `x-app-name` /

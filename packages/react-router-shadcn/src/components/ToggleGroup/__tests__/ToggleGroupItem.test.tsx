@@ -1,11 +1,12 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
+
 import { ToggleGroup } from '../ToggleGroup';
-import { ToggleGroupItem } from '../ToggleGroupItem';
 import type { ToggleGroupItemProps } from '../ToggleGroupItem';
+import { ToggleGroupItem } from '../ToggleGroupItem';
 
 describe('ToggleGroupItem Component', () => {
   let component: RenderResult;

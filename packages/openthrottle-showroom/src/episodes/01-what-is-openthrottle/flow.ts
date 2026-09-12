@@ -11,6 +11,7 @@
  * detail tabs already carry them, so no new test hooks were added.
  */
 
+import type { DemoFlow } from '../../runner/types';
 import {
   click,
   dwell,
@@ -19,7 +20,6 @@ import {
   scrollTo,
   waitFor,
 } from '../../runner/types';
-import type { DemoFlow } from '../../runner/types';
 
 /** The rate-limiting plan from src/fixtures/demo-content.ts. */
 const PLAN_ID = 'd0d0d0d0-0000-4000-8000-000000000001';

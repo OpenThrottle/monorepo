@@ -1,4 +1,5 @@
 import type { ChartConfig } from '@openthrottle/react-router-shadcn';
+
 import type { QueueCardFragment } from '~/__generated__/graphql';
 
 /** Recharts data keys for each job-state series (shared with the grouped stats chart). */

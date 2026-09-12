@@ -1,13 +1,15 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { RolloutFlagKind } from '~/__generated__/graphql';
+
 import type { RolloutFlagFieldsFragment } from '~/__generated__/graphql';
+import { RolloutFlagKind } from '~/__generated__/graphql';
 import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
-import { RolloutFlagDetail } from '../RolloutFlagDetail';
+
 import type { RolloutFlagDetailProps } from '../RolloutFlagDetail';
+import { RolloutFlagDetail } from '../RolloutFlagDetail';
 
 const mockFlag: RolloutFlagFieldsFragment = {
   __typename: 'RolloutFlagObject',

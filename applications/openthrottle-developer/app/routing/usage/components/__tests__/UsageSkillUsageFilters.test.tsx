@@ -1,12 +1,14 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import { UsageSkillUsageFilters } from '../UsageSkillUsageFilters';
-import type { UsageSkillUsageFiltersProps } from '../UsageSkillUsageFilters';
-import { SKILL_USAGE_SCOPES } from '../../data/skill-usage-copy';
+
 import type { UsageSkillUsageFilterOptionsFragment } from '~/__generated__/graphql';
+
+import { SKILL_USAGE_SCOPES } from '../../data/skill-usage-copy';
+import type { UsageSkillUsageFiltersProps } from '../UsageSkillUsageFilters';
+import { UsageSkillUsageFilters } from '../UsageSkillUsageFilters';
 
 const buildFilterOptions = (
   overrides: Partial<UsageSkillUsageFilterOptionsFragment> = {},

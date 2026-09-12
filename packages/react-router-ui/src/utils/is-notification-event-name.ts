@@ -5,6 +5,7 @@
  */
 
 import type { NotificationEventName } from '@openthrottle/openthrottle-notifications';
+
 import { WEBSOCKET_DEBUGGER_EVENT_OPTIONS } from '../components/websocket-debugger';
 
 const KNOWN_EVENT_NAMES = new Set<string>(

@@ -1,9 +1,10 @@
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
-import { IdeSearchResultRow } from '../IdeSearchResultRow';
+
 import type { SearchMatch } from '../../data/view-models';
+import { IdeSearchResultRow } from '../IdeSearchResultRow';
 
 const match: SearchMatch = {
   column: 7,

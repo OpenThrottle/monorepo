@@ -1,10 +1,11 @@
-import * as React from 'react';
 import { Button } from '@openthrottle/react-router-shadcn';
-import { ClipboardIcon, DollarSignIcon } from 'lucide-react';
-import { GithubLogoIcon } from '@phosphor-icons/react/dist/ssr/GithubLogo';
-import { getRandomIntroduction } from '../data/data.introductions';
-import { Link } from 'react-router';
 import { OPENTHROTTLE_GITHUB_URL } from '@openthrottle/react-router-utils';
+import { GithubLogoIcon } from '@phosphor-icons/react/dist/ssr/GithubLogo';
+import { ClipboardIcon, DollarSignIcon } from 'lucide-react';
+import * as React from 'react';
+import { Link } from 'react-router';
+
+import { getRandomIntroduction } from '../data/data.introductions';
 import { OpenThrottleClipboard } from './OpenThrottleClipboard';
 import { OpenThrottleLogo } from './OpenThrottleLogo';
 

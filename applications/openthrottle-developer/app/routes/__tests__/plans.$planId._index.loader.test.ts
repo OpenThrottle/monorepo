@@ -1,7 +1,11 @@
-import { describe, expect, test, vi, beforeEach } from 'vitest';
 import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
+import {
+  createLoaderArgs,
+  createTestRouterContext,
+} from '@openthrottle/react-router-testing';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import type { Route } from '@/app/routes/+types/plans.$planId._index';
-import { loader } from '../plans.$planId._index';
 import {
   PlanDetailCriticalDocument,
   PlanDetailLedgerDocument,
@@ -11,10 +15,8 @@ import {
   PlanDetailWorkspaceEditorsDocument,
   PlanDetailWorkspaceRepositoriesDocument,
 } from '~/__generated__/graphql';
-import {
-  createLoaderArgs,
-  createTestRouterContext,
-} from '@openthrottle/react-router-testing';
+
+import { loader } from '../plans.$planId._index';
 
 vi.mock('@openthrottle/react-router-graphql');
 

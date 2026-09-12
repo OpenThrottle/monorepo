@@ -5,11 +5,12 @@
  */
 
 import { Module } from '@nestjs/common';
+
 import { AgenticTestQueueProducerModule } from '../../queues/agentic-test/agentic-test-queue-producer.module';
 import { CodeIndexQueueProducerModule } from '../../queues/code-index/code-index-queue-producer.module';
 import { DailyStatsQueueProducerModule } from '../../queues/daily-stats/daily-stats-queue-producer.module';
-import { DatabaseBackupQueueProducerModule } from '../../queues/database-backup/database-backup-queue-producer.module';
 import { DataRetentionQueueProducerModule } from '../../queues/data-retention/data-retention-queue-producer.module';
+import { DatabaseBackupQueueProducerModule } from '../../queues/database-backup/database-backup-queue-producer.module';
 import { DocIngestionQueueProducerModule } from '../../queues/doc-ingestion/doc-ingestion-queue-producer.module';
 import { PlanLifecycleHooksQueueProducerModule } from '../../queues/plan-lifecycle-hooks/plan-lifecycle-hooks-queue-producer.module';
 import { PlanRulesQueueProducerModule } from '../../queues/plan-rules/plan-rules-queue-producer.module';

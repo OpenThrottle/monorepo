@@ -1,14 +1,15 @@
-import { join } from 'path';
-import prompts from 'prompts';
 import type { Tree } from '@nx/devkit';
 import { formatFiles, logger } from '@nx/devkit';
+import { join } from 'path';
+import prompts from 'prompts';
+
+import { generateFilesSafely } from '../../utils/generate-files-safely';
 import { getCommonVariables } from '../../utils/index';
-import { getRouteTitleVariables } from '../../utils/route-title';
 import {
   getTargetApplication,
   parsePossibleNames,
 } from '../../utils/questions';
-import { generateFilesSafely } from '../../utils/generate-files-safely';
+import { getRouteTitleVariables } from '../../utils/route-title';
 
 export interface ReactRouterRouteGeneratorSchema {
   readonly application?: string;

@@ -1,5 +1,6 @@
-import * as React from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import * as React from 'react';
+
 import { Calendar } from './Calendar';
 
 /** Fixed so the story renders the same month every time. */

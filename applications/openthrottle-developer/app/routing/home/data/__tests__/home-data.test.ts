@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { technologies } from '~/routing/home/data/technology';
 
 describe('routing/home data', () => {

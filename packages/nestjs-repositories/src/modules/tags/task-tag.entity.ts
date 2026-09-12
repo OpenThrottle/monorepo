@@ -11,6 +11,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+
 import { Task } from '../tasks/task.entity';
 import type { TagSource } from './tag-provenance';
 

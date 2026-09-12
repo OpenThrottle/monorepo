@@ -1,4 +1,5 @@
 import { isAuthError } from '@openthrottle/react-router-graphql';
+
 import type { ServerHealthObject } from '~/__generated__/graphql';
 
 /** Health snapshot when the root loader cannot reach openthrottle-server for serverHealth. */

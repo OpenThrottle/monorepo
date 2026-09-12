@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { formatFinishedOn } from '../plan-workflow-run-transparency';
 
 describe('formatFinishedOn', () => {

@@ -1,8 +1,9 @@
-import { ForbiddenException } from '@nestjs/common';
-import { queueJobLogTopic } from '@openthrottle/nestjs-graphql';
 import { createMock } from '@golevelup/ts-vitest';
+import { ForbiddenException } from '@nestjs/common';
 import type { PubSubEngine } from '@openthrottle/nestjs-graphql';
+import { queueJobLogTopic } from '@openthrottle/nestjs-graphql';
 import { describe, expect, it, vi } from 'vitest';
+
 import { QueueJobLogsResolver } from './queue-job-logs.resolver';
 import type { QueueJobLogsService } from './queue-job-logs.service';
 

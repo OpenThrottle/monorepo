@@ -4,7 +4,8 @@
  */
 
 import type { WorkflowConfigDebug } from '@openthrottle/openthrottle-agentic-workflow';
-import { setRalphDebugLevel, type RalphDebugLevel } from './ralph-debug-logger';
+
+import { type RalphDebugLevel, setRalphDebugLevel } from './ralph-debug-logger';
 
 const mapDebugCliToLevel = (debug: WorkflowConfigDebug): RalphDebugLevel => {
   switch (debug) {

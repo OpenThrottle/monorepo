@@ -1,13 +1,15 @@
-import * as React from 'react';
+import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import type { RenderResult } from '@testing-library/react';
 import { within } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
-import { TooltipProvider } from '@openthrottle/react-router-shadcn';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import * as React from 'react';
 import type { Mock } from 'vitest';
-import { PlanTaskToolbar } from '../PlanTaskToolbar';
-import type { PlanTaskToolbarProps } from '../PlanTaskToolbar';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import { renderRoutesStub } from '~/testing/route-fixtures';
+
+import type { PlanTaskToolbarProps } from '../PlanTaskToolbar';
+import { PlanTaskToolbar } from '../PlanTaskToolbar';
 
 const renderToolbar = (props: PlanTaskToolbarProps): RenderResult =>
   renderRoutesStub(

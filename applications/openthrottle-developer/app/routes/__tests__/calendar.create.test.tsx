@@ -1,11 +1,13 @@
-import * as React from 'react';
+import { createActionArgs } from '@openthrottle/react-router-testing';
 import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import Component, { action } from '../calendar.create';
-import { buildRootMatch } from '~/testing/root-match-fixture';
-import { createActionArgs } from '@openthrottle/react-router-testing';
+
 import type { Route } from '@/app/routes/+types/calendar.create';
+import { buildRootMatch } from '~/testing/root-match-fixture';
+
+import Component, { action } from '../calendar.create';
 
 const matches: Route.ComponentProps['matches'] = [
   buildRootMatch(),

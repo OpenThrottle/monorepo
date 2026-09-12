@@ -1,9 +1,10 @@
 import { Test, type TestingModule } from '@nestjs/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { StripeProductsService } from '../services/stripe-products.service';
 import type { StripePriceObject } from './stripe-price.object';
-import { StripeProductResolver } from './stripe-product.resolver';
 import type { StripeProductObject } from './stripe-product.object';
+import { StripeProductResolver } from './stripe-product.resolver';
 
 describe('StripeProductResolver', () => {
   let resolver: StripeProductResolver;

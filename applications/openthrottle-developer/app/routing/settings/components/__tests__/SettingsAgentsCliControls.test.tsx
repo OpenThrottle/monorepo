@@ -1,9 +1,11 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test, vi } from 'vitest';
-import { SettingsAgentsCliControls } from '../SettingsAgentsCliControls';
+
 import type { AgentCliStatus } from '~/routing/settings/data/agent-clis.data';
+
+import { SettingsAgentsCliControls } from '../SettingsAgentsCliControls';
 
 // The stream hook opens a graphql-ws subscription; with no browser client it is
 // inert, but stub the singleton so the component never reaches for a real socket.

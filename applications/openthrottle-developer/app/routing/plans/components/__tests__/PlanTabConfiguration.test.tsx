@@ -1,12 +1,14 @@
-import * as React from 'react';
+import { Tabs } from '@openthrottle/react-router-shadcn';
 import { render } from '@testing-library/react';
 import { getDefaultStore } from 'jotai/vanilla';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { Tabs } from '@openthrottle/react-router-shadcn';
-import { PlanTabConfiguration } from '../PlanTabConfiguration';
-import type { PlanTabConfigurationProps } from '../PlanTabConfiguration';
+
 import { resetWorkflowRunToDefaultsAtom } from '~/routing/plans/data/atom.plan';
+
+import type { PlanTabConfigurationProps } from '../PlanTabConfiguration';
+import { PlanTabConfiguration } from '../PlanTabConfiguration';
 
 const renderTab = (props: PlanTabConfigurationProps) => {
   const Component = () => (

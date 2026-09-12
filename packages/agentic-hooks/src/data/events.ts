@@ -3,8 +3,6 @@
  * a NormalizedInvocation and gets back the durable event shape.
  */
 import { resolveGitBranch } from '../config/env';
-import { applyPrivacy, DEFAULT_PRIVACY_LEVEL } from '../utils/privacy';
-import { detectScope } from '../utils/scope';
 import type {
   NormalizedInvocation,
   OutcomeEvent,
@@ -12,6 +10,8 @@ import type {
   SkillUsageOutcome,
   UsageEvent,
 } from '../types';
+import { applyPrivacy, DEFAULT_PRIVACY_LEVEL } from '../utils/privacy';
+import { detectScope } from '../utils/scope';
 
 /** @public */
 export const RECORD_SKILL_USAGE_MUTATION = `

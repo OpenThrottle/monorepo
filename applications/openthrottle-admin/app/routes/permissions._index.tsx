@@ -1,6 +1,3 @@
-import * as React from 'react';
-import { redirect } from 'react-router';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import {
   executeGraphqlWithAuth,
   isAuthError,
@@ -11,11 +8,15 @@ import {
   GlobalHeading,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import { GetPermissionsDocument } from '~/__generated__/graphql';
+import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { KeyRoundIcon } from 'lucide-react';
-import { PermissionsTable } from '~/routing/permissions/components/PermissionsTable';
-import { SITE_TITLE } from '~/global/config/settings';
+import * as React from 'react';
+import { redirect } from 'react-router';
+
 import type { Route } from '@/app/routes/+types/permissions._index';
+import { GetPermissionsDocument } from '~/__generated__/graphql';
+import { SITE_TITLE } from '~/global/config/settings';
+import { PermissionsTable } from '~/routing/permissions/components/PermissionsTable';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

@@ -3,8 +3,9 @@
  * from {@link loadWorkflowRalphConfig}. Precedence: **enqueue tuning > env > file > built-ins**.
  */
 
-import type { WorkflowRalphResolvedDefaults } from './workflow-ralph-defaults.types.ts';
 import type { WorkflowConfigDebug } from '@openthrottle/openthrottle-agentic-workflow';
+
+import type { WorkflowRalphResolvedDefaults } from './workflow-ralph-defaults.types.ts';
 
 /** @description Subset of GraphQL `RalphPlanRunTuningInput` / nested job tuning fields. */
 export interface PlanRunTuningMergeInput {

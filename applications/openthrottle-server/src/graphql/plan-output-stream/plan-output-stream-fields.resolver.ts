@@ -6,8 +6,9 @@
  * request-scoped loader there would promote it to request scope and break boot.
  */
 
-import type { Plan } from '@openthrottle/nestjs-repositories';
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
+import type { Plan } from '@openthrottle/nestjs-repositories';
+
 import { PlanObject } from '../plans/plan.object';
 import { PlanOutputStreamChunkObject } from './plan-output-stream-chunk.object';
 import { PlanOutputStreamLoaders } from './plan-output-stream-loaders';

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { normalizeRemoteUrl } from './normalize-remote-url';
 
 describe('normalizeRemoteUrl', () => {

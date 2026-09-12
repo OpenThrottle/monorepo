@@ -1,11 +1,12 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import { buildDocsManifest } from '../../utils/buildDocsManifest';
+
 import type { DocsContentModules } from '../../utils/buildDocsManifest';
+import { buildDocsManifest } from '../../utils/buildDocsManifest';
 import { buildDocsNav } from '../../utils/buildDocsNav';
 import { DocPageView } from '../DocPageView';
 import { DocsNav } from '../DocsNav';

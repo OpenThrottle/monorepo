@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Button,
   DialogDescription,
@@ -12,6 +11,8 @@ import {
   Label,
 } from '@openthrottle/react-router-shadcn';
 import { CopyIcon } from 'lucide-react';
+import * as React from 'react';
+
 import type { SettingsKeysCreateCredentialActionData } from '~/routing/settings/hooks/useSettingsKeysForm';
 
 export interface SettingsKeysFormSuccessProps {

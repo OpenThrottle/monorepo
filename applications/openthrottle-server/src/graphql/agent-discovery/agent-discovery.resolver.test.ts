@@ -10,8 +10,8 @@ import {
   AUTH_PRINCIPAL_KIND_USER,
   type AuthPrincipal,
 } from '@openthrottle/nestjs-auth';
-import type { AgentCliDiscoveryResult } from '@openthrottle/openthrottle-agentic-utils';
 import type { AgentCliPreferencesService } from '@openthrottle/nestjs-repositories';
+import type { AgentCliDiscoveryResult } from '@openthrottle/openthrottle-agentic-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AgentDiscoveryResolver } from './agent-discovery.resolver';

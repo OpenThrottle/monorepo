@@ -11,7 +11,7 @@
 
 import { homedir } from 'node:os';
 import { join } from 'node:path';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
@@ -19,6 +19,7 @@ import type {
   RepositoryCheckoutsService,
   UserWorkspaceSettingsService,
 } from '@openthrottle/nestjs-repositories';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { mockExecFile, mockReaddirSync, mockRealpathSync, mockStatSync } =
   vi.hoisted(() => ({

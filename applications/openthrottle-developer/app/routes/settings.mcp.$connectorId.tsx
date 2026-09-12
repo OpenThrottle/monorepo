@@ -1,34 +1,35 @@
-import * as React from 'react';
-import { z } from 'zod/v3';
 import {
   coerceBoolean,
   executeGraphqlWithAuth,
   parseFormData,
 } from '@openthrottle/react-router-graphql';
-import {
-  getActionError,
-  mergeRouteModuleMeta,
-} from '@openthrottle/react-router-utils';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalErrorBoundary,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
+import {
+  getActionError,
+  mergeRouteModuleMeta,
+} from '@openthrottle/react-router-utils';
+import * as React from 'react';
 import { Link } from 'react-router';
-import { SITE_TITLE } from '~/global/config/settings';
-import { toErrorMessage } from '~/global/utils/utils.error-message';
-import { ConnectMcpConnectorInputSchema } from '~/__generated__/schemas';
+import { z } from 'zod/v3';
+
+import type { Route } from '@/app/routes/+types/settings.mcp.$connectorId';
 import {
   ConnectMcpConnectorDocument,
   DisconnectMcpConnectorDocument,
   GetSettingsMcpDocument,
   SetMcpConnectorEnabledDocument,
 } from '~/__generated__/graphql';
+import { ConnectMcpConnectorInputSchema } from '~/__generated__/schemas';
+import { SITE_TITLE } from '~/global/config/settings';
+import { toErrorMessage } from '~/global/utils/utils.error-message';
 import { SettingsMcpConnectForm } from '~/routing/settings/components/SettingsMcpConnectForm';
 import { SettingsMcpConnectionActions } from '~/routing/settings/components/SettingsMcpConnectionActions';
 import { SettingsMcpSetupDocs } from '~/routing/settings/components/SettingsMcpSetupDocs';
 import type { SettingsMcpActionData } from '~/routing/settings/utils/settings-mcp-action';
-import type { Route } from '@/app/routes/+types/settings.mcp.$connectorId';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

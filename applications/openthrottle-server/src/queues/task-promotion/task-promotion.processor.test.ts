@@ -8,6 +8,7 @@ import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import { asMock } from '@openthrottle/nestjs-testing';
 import { describe, expect, it, vi } from 'vitest';
+
 import {
   TASK_PROMOTION_QUEUE_NAME,
   TASK_PROMOTION_WORKER_CONCURRENCY,

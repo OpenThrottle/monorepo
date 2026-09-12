@@ -1,7 +1,8 @@
 import { Global, Module } from '@nestjs/common';
-import { KeyedJsonlWriter } from '@openthrottle/nestjs-logging';
 import { PUB_SUB, type PubSubEngine } from '@openthrottle/nestjs-graphql';
+import { KeyedJsonlWriter } from '@openthrottle/nestjs-logging';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
+
 import { getBullMqRunOutputBaseDirectory } from '../config/bullmq-run-output';
 import { createQueueJobLogTailPublisher } from '../graphql/queue-job-logs/queue-job-log-publisher';
 import { BullMqRunOutputRetentionService } from './bullmq-run-output-retention.service';

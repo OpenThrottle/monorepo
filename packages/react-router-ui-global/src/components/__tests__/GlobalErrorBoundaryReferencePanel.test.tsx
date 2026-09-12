@@ -1,11 +1,12 @@
-import * as React from 'react';
+import type { RenderResult } from '@testing-library/react';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import type { RenderResult } from '@testing-library/react';
-import { GlobalErrorBoundaryReferencePanel } from '../GlobalErrorBoundaryReferencePanel';
+
 import type { GlobalErrorBoundaryReferencePanelProps } from '../GlobalErrorBoundaryReferencePanel';
+import { GlobalErrorBoundaryReferencePanel } from '../GlobalErrorBoundaryReferencePanel';
 
 describe('GlobalErrorBoundaryReferencePanel Component', () => {
   let component: RenderResult;

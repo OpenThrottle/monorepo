@@ -13,23 +13,23 @@
 import {
   type PointerEvent as ReactPointerEvent,
   type RefObject,
-  type WheelEvent as ReactWheelEvent,
   useCallback,
   useMemo,
   useRef,
   useState,
+  type WheelEvent as ReactWheelEvent,
 } from 'react';
 
 import { type Point, type Size } from '../utils/geometry';
 import {
-  type ViewBox,
-  type ViewportRect,
-  type ZoomLimits,
   clientToWorld as clientToWorldMath,
   fitViewBox,
   panViewBoxByClient,
   pinchViewBox,
+  type ViewBox,
   viewBoxToString,
+  type ViewportRect,
+  type ZoomLimits,
   zoomViewBoxAt,
 } from '../utils/viewport';
 

@@ -1,5 +1,6 @@
-import { afterEach, describe, expect, test, vi } from 'vitest';
 import type { OpenThrottleEnv } from '@openthrottle/react-router-utils';
+import { afterEach, describe, expect, test, vi } from 'vitest';
+
 import { createTestEnv, installTestEnv } from '../env';
 
 // Compile-time contract: the set of keys the fixture must contain, derived from

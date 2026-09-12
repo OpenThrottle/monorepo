@@ -4,10 +4,10 @@ import { join } from 'node:path';
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { CODEX_BIN_ENV } from '../argv.ts';
-import { codexConversationBackend } from '../codex.ts';
 import { AGENT_IDLE_TIMEOUT_MS_ENV } from '../../cursor-agent/teardown.ts';
 import type { ConversationStreamChunk } from '../../types.ts';
+import { CODEX_BIN_ENV } from '../argv.ts';
+import { codexConversationBackend } from '../codex.ts';
 
 let dir: string;
 

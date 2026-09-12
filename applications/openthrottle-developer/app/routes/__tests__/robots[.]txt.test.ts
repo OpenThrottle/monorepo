@@ -1,6 +1,7 @@
 // @vitest-environment node
-import { describe, expect, test } from 'vitest';
 import { createTestRouterContext } from '@openthrottle/react-router-testing';
+import { describe, expect, test } from 'vitest';
+
 import type { Route } from '@/app/routes/+types/robots[.]txt';
 
 const { loader } = await import('../robots[.]txt');

@@ -1,16 +1,17 @@
-import * as React from 'react';
 import {
   Badge,
   Card,
   CardContent,
   CardHeader,
+  cn,
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyTitle,
   Skeleton,
-  cn,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+
 import type { IdeSemanticResult } from '../data/view-models';
 import { IDE_SEMANTIC_STATUS } from '../data/view-models';
 import { formatLocationLabel } from '../utils/formatLocationLabel';

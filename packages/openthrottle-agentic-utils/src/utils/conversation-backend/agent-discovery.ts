@@ -7,9 +7,10 @@
  * models it can run via the driver's `discoverModels` descriptor.
  */
 
-import { ALL_DRIVERS } from '@openthrottle/openthrottle-drivers';
-import type { DriverModelListing } from '@openthrottle/openthrottle-drivers';
 import { spawn } from 'node:child_process';
+
+import type { DriverModelListing } from '@openthrottle/openthrottle-drivers';
+import { ALL_DRIVERS } from '@openthrottle/openthrottle-drivers';
 
 /**
  * A supported agent CLI in the allowlist, projected from a registry driver.

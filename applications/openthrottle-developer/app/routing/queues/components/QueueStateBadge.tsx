@@ -1,6 +1,7 @@
-import * as React from 'react';
 import { Badge } from '@openthrottle/react-router-shadcn';
 import clsx from 'clsx';
+import * as React from 'react';
+
 import {
   queueJobStateColor,
   queueJobStateLabel,

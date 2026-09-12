@@ -1,6 +1,7 @@
-import * as React from 'react';
-import { Menubar as MenubarPrimitive } from 'radix-ui';
 import { Check } from 'lucide-react';
+import { Menubar as MenubarPrimitive } from 'radix-ui';
+import * as React from 'react';
+
 import { cn } from '../../utils/cn';
 
 export interface MenubarCheckboxItemProps extends React.ComponentPropsWithoutRef<

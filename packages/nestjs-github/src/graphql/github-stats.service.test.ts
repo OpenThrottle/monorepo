@@ -1,6 +1,7 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+
 import { GitHubService } from '../github/github.service';
 import { GitHubStatsService } from './github-stats.service';
 

@@ -1,18 +1,19 @@
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { IDE_SEMANTIC_STATUS } from '@openthrottle/react-router-ide';
 import type {
   IdeSemanticResult,
   SemanticMatch,
 } from '@openthrottle/react-router-ide';
+import { IDE_SEMANTIC_STATUS } from '@openthrottle/react-router-ide';
+
+import type { Route } from '@/app/routes/+types/ide.semantic';
 import {
   CodeIndexStatusDocument,
   CodeSemanticSearchDocument,
   GetWorkspaceSettingsDocument,
   IndexCodeRepositoryDocument,
 } from '~/__generated__/graphql';
-import { toSemanticStatus } from '~/routing/ide/utils/semantic-status';
 import { resolveSelectedRepository } from '~/routing/ide/utils/repositories';
-import type { Route } from '@/app/routes/+types/ide.semantic';
+import { toSemanticStatus } from '~/routing/ide/utils/semantic-status';
 
 /**
  * Resource route for the semantic tier (GraphQL-backed, architecture B). The loader

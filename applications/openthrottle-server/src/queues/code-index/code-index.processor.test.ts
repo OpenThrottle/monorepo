@@ -3,13 +3,14 @@
  * resolution, and the happy-path delegation to CodeSearchService.indexCodeWorkspace.
  */
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { createMock } from '@golevelup/ts-vitest';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { WorkspaceLocalRepositoriesService } from '@openthrottle/nestjs-repositories';
 import { CodeSearchService } from '@openthrottle/nestjs-vector-search';
-import { createMock } from '@golevelup/ts-vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { CodeIndexProcessor } from './code-index.processor';
 import type { CodeIndexJob } from './code-index.types';
 

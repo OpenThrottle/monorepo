@@ -5,6 +5,7 @@
  */
 
 import OpenAI from 'openai';
+
 import { EMBEDDING_MAX_INPUT_CHARS } from './constants.ts';
 import {
   embedWithOllama,

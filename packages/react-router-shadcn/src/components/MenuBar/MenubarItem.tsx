@@ -1,5 +1,6 @@
-import * as React from 'react';
 import { Menubar as MenubarPrimitive } from 'radix-ui';
+import * as React from 'react';
+
 import { cn } from '../../utils/cn';
 
 export interface MenubarItemProps extends React.ComponentPropsWithoutRef<

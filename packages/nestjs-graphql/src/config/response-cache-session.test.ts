@@ -1,6 +1,8 @@
-import type { BaseContext } from '@apollo/server';
 import { createHash } from 'node:crypto';
+
+import type { BaseContext } from '@apollo/server';
 import { describe, expect, it } from 'vitest';
+
 import {
   defaultResponseCacheSessionId,
   type ResponseCacheSessionRequestContext,

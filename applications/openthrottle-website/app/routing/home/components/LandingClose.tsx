@@ -1,7 +1,8 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import { Button } from '@openthrottle/react-router-shadcn';
 import { GradientMesh } from '@openthrottle/react-router-ui-global';
+import clsx from 'clsx';
+import * as React from 'react';
+
 import { LANDING_CLOSE } from '~/routing/home/data/data.landing';
 
 export interface LandingCloseProps {

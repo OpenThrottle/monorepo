@@ -15,14 +15,15 @@ import type {
   UpdateRolloutFlagInput as DomainUpdateRolloutFlagInput,
 } from '@openthrottle/nestjs-rollout';
 import { ROLLOUT_FLAG_KIND } from '@openthrottle/nestjs-rollout';
+
 import type { FeatureFlagObject } from './feature-flag.object';
-import type { RolloutFlagObject } from './rollout-flag.object';
 import type {
   CreateRolloutFlagInput,
   RolloutFallthroughInput,
   RolloutFlagVariationInput,
   UpdateRolloutFlagInput,
 } from './rollout.input';
+import type { RolloutFlagObject } from './rollout-flag.object';
 
 const isRolloutVariationValue = (
   value: unknown,

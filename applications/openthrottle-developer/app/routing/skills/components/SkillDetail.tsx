@@ -1,7 +1,8 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import { Editor } from '@openthrottle/react-router-editor';
 import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
+import clsx from 'clsx';
+import * as React from 'react';
+
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 import { SKILL_DETAIL_COPY } from '~/routing/skills/data/data.copy';
 

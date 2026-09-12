@@ -2,8 +2,9 @@
  * @description Fishery factory for {@link CodeEmbedding}. Use in tests to build mock code embeddings.
  */
 
-import { Factory } from 'fishery';
 import { faker } from '@faker-js/faker';
+import { Factory } from 'fishery';
+
 import type { CodeEmbedding } from './code-embedding.entity';
 
 /**

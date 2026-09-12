@@ -1,7 +1,8 @@
-import * as React from 'react';
 import { render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { describe, expect, it, vi } from 'vitest';
+
 import { ServerMetricsCard } from '../ServerMetricsCard';
 
 const mockRefetch = vi.fn().mockResolvedValue(undefined);

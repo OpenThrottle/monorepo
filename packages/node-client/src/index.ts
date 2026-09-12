@@ -6,8 +6,8 @@
 
 export * from './config.ts';
 export * from './constants.ts';
-export * from './openthrottle-client.ts';
 export * from './data-source.ts';
 export * from './embedding.ts';
 export * from './embedding-content.ts';
 export * from './ollama-embedding.ts';
+export * from './openthrottle-client.ts';

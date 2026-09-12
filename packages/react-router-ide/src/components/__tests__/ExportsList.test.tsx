@@ -1,9 +1,10 @@
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
-import { ExportsList } from '../ExportsList';
+
 import type { ExportedSymbol, IdeExportsResult } from '../../data/view-models';
+import { ExportsList } from '../ExportsList';
 
 const repository = { displayName: 'Repo One', repositoryId: 'r1' };
 

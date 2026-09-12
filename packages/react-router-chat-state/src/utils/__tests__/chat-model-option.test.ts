@@ -1,14 +1,14 @@
-import { describe, expect, it } from 'vitest';
-
 import {
   ChatPermissionMode,
   ChatReasoningLevel,
 } from '@openthrottle/react-router-chat';
-import { capabilitiesForChatOption } from '../../config/chat-capabilities';
 import * as React from 'react';
+import { describe, expect, it } from 'vitest';
+
+import { capabilitiesForChatOption } from '../../config/chat-capabilities';
 import {
-  CLI_MODEL_GROUP_ID,
   buildModelGroups,
+  CLI_MODEL_GROUP_ID,
   cliGroupId,
   decodeChatOption,
   decodeModelOptionId,

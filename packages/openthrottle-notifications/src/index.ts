@@ -6,9 +6,6 @@
  * Import from @openthrottle/openthrottle-notifications in openthrottle-server and openthrottle-developer.
  */
 
-export { NOTIFICATION_EVENT_NAMES } from './events.ts';
-export { NOTIFICATION_SEVERITIES } from './types.ts';
-
 export type {
   DebugPayload,
   NotificationEventMap,
@@ -26,4 +23,6 @@ export type {
   TaskCompletedPayload,
   TaskStatusChangedPayload,
 } from './events.ts';
+export { NOTIFICATION_EVENT_NAMES } from './events.ts';
 export type { NotificationSeverity } from './types.ts';
+export { NOTIFICATION_SEVERITIES } from './types.ts';

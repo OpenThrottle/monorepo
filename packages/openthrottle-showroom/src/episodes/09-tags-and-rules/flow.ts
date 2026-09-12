@@ -31,6 +31,7 @@
  * matched to flow beats POSITIONALLY (assemble/timeline.ts).
  */
 
+import type { DemoFlow } from '../../runner/types';
 import {
   click,
   dwell,
@@ -40,7 +41,6 @@ import {
   type_,
   waitFor,
 } from '../../runner/types';
-import type { DemoFlow } from '../../runner/types';
 
 /** The rate-limiting plan — the seeded rule fires on it at 0:00. */
 const PLAN_A = 'd0d0d0d0-0000-4000-8000-000000000001';

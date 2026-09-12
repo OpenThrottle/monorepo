@@ -8,8 +8,8 @@
  */
 
 import type { NarrationTimings } from '../narrate/types';
-import type { RecordingManifest } from '../runner/types';
 import type { SafeArea } from '../runner/format';
+import type { RecordingManifest } from '../runner/types';
 
 export interface BeatPlan {
   readonly audioSeconds: number;

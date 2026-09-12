@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Button,
   Input,
@@ -9,9 +8,11 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@openthrottle/react-router-shadcn';
-import type { action as roleDetailAction } from '~/routes/roles.$roleId';
+import * as React from 'react';
 import type { useFetcher } from 'react-router';
+
 import type { RoleDetailsFragment } from '~/__generated__/graphql';
+import type { action as roleDetailAction } from '~/routes/roles.$roleId';
 
 export interface RoleEditSheetProps {
   fetcher: ReturnType<typeof useFetcher<typeof roleDetailAction>>;

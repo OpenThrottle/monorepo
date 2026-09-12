@@ -14,11 +14,12 @@ import { asMock } from '@openthrottle/nestjs-testing';
 import type { Queue } from 'bullmq';
 import type { Repository } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { TaskPromotionEnqueueService } from './task-promotion-enqueue.service';
+
 import type {
   PromoteTaskJobData,
   PromoteTaskJobResult,
 } from './task-promotion.types';
+import { TaskPromotionEnqueueService } from './task-promotion-enqueue.service';
 
 const TASK_ID = '00000000-0000-4000-8000-000000000001';
 

@@ -1,6 +1,7 @@
-import * as React from 'react';
-import { PlusIcon, XIcon } from 'lucide-react';
 import { Badge, Button, cn } from '@openthrottle/react-router-shadcn';
+import { PlusIcon, XIcon } from 'lucide-react';
+import * as React from 'react';
+
 import { HOOK_LIST_COPY } from '~/routing/plans/data/data.copy';
 
 /**

@@ -1,9 +1,11 @@
-import * as React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
-import { SortDropdown } from '../SortDropdown';
+
 import type { PlansSortBy, PlansSortOrder } from '~/routing/plans/config/types';
+
+import { SortDropdown } from '../SortDropdown';
 
 function asMock<T>(value: unknown): T;
 function asMock(value: unknown): unknown {

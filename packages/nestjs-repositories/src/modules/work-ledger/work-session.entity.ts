@@ -9,6 +9,7 @@ import {
   Entity,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+
 import type { WorkSessionClosedBy } from './work-ledger.constants';
 
 /** Column-only shape of WorkSession (no relations). */

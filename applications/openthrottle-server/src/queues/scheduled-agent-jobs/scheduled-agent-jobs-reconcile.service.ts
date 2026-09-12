@@ -1,6 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { ScheduledAgentJobsService } from '@openthrottle/nestjs-repositories';
+
 import { ScheduledAgentJobSchedulerService } from './scheduled-agent-job-scheduler.service';
 import { resolveScheduledAgentJobsBootOwner } from './scheduled-agent-jobs.constants';
 

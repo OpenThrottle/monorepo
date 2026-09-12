@@ -1,13 +1,14 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { FolderGit2Icon } from 'lucide-react';
+import { OpenThrottlePagination } from '@openthrottle/react-router-ui';
 import {
   GlobalFeatureOnboarding,
   GlobalFeatureOnboardingModal,
   GlobalFeatureOnboardingTrigger,
   GlobalHeading,
 } from '@openthrottle/react-router-ui-global';
-import { OpenThrottlePagination } from '@openthrottle/react-router-ui';
+import clsx from 'clsx';
+import { FolderGit2Icon } from 'lucide-react';
+import * as React from 'react';
+
 import type {
   AddWorkspaceFolderMutation,
   DiscoveredFolderObject,
@@ -17,15 +18,15 @@ import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
 import { AddFolderDialog } from '~/routing/settings/repositories/components/AddFolderDialog';
 import { AddFolderResult } from '~/routing/settings/repositories/components/AddFolderResult';
 import { CloneRepoDialog } from '~/routing/settings/repositories/components/CloneRepoDialog';
-import { REPOSITORIES_ONBOARDING } from '~/routing/settings/repositories/data/data.copy';
 import { RepositoriesTable } from '~/routing/settings/repositories/components/RepositoriesTable';
 import { RepositoriesToolbar } from '~/routing/settings/repositories/components/RepositoriesToolbar';
 import { WorktreeDiscoveryNotice } from '~/routing/settings/repositories/components/WorktreeDiscoveryNotice';
-import type { CheckoutDrift } from '~/routing/settings/utils/drift-labels';
+import { REPOSITORIES_ONBOARDING } from '~/routing/settings/repositories/data/data.copy';
 import type {
   DiscoveredWorktreesResult,
   RepositoryCheckoutRow,
 } from '~/routing/settings/repositories/data/types';
+import type { CheckoutDrift } from '~/routing/settings/utils/drift-labels';
 
 export interface RepositoriesSectionProps {
   actionError?: string | null;

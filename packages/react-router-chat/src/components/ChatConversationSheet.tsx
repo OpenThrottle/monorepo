@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Button,
   Sheet,
@@ -12,9 +11,11 @@ import {
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
 import { MessageSquarePlus, MessagesSquare } from 'lucide-react';
+import * as React from 'react';
+
 import { CHAT_CONVERSATION_SIDEBAR_COPY } from '../data/chat-conversation-sidebar.copy';
-import { ChatConversationSidebar } from './ChatConversationSidebar';
 import type { ChatConversationSidebarProps } from './ChatConversationSidebar';
+import { ChatConversationSidebar } from './ChatConversationSidebar';
 
 export interface ChatConversationSheetProps extends ChatConversationSidebarProps {
   /** Controls the sheet open state externally; omit to keep it uncontrolled. */

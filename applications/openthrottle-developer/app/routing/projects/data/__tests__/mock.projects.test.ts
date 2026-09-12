@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { MOCK_PROJECTS } from '../mock.projects';
 
 describe('MOCK_PROJECTS', () => {

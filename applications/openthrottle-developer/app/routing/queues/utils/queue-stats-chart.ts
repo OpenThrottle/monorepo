@@ -1,5 +1,6 @@
 import { isRecord } from '@openthrottle/nodejs-utils';
 import type { ChartConfig } from '@openthrottle/react-router-shadcn';
+
 import type { QueueCardFragment } from '~/__generated__/graphql';
 
 /** Recharts data keys for each job-count series (aligned with the queues table). */

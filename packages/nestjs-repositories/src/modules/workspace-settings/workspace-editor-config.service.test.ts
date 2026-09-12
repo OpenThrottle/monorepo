@@ -1,31 +1,32 @@
-import { execFileSync, spawnSync } from 'child_process';
-import {
-  existsSync,
-  mkdtempSync,
-  mkdirSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from 'fs';
-import { dirname, join } from 'path';
-import { tmpdir } from 'os';
 import { createMock } from '@golevelup/ts-vitest';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import { asMock } from '@openthrottle/nestjs-testing';
 import {
   CONTAINER_WORKSPACES_DIR_ENV,
+  ensureMaterialized,
   FOREIGN_SKILL_LEDGER_DIR_ENV,
   GIT_EXCLUDE_OWNER,
   HOST_WORKSPACES_DIR_ENV,
-  ensureMaterialized,
   teardown,
 } from '@openthrottle/openthrottle-agentic-utils';
+import { execFileSync, spawnSync } from 'child_process';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'fs';
+import { tmpdir } from 'os';
+import { dirname, join } from 'path';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+
+import type { RepositoryCheckout } from '../repositories/repository-checkout.entity';
+import type { RepositoryCheckoutsService } from '../repositories/repository-checkouts.service';
 import { OPENTHROTTLE_REPO_SKILL_PATHS } from './openthrottle-repo-skill-paths';
 import type { UserWorkspaceSettings } from './user-workspace-settings.entity';
 import type { UserWorkspaceSettingsService } from './user-workspace-settings.service';
-import type { RepositoryCheckout } from '../repositories/repository-checkout.entity';
-import type { RepositoryCheckoutsService } from '../repositories/repository-checkouts.service';
 import { WorkspaceEditorConfigService } from './workspace-editor-config.service';
 
 describe('WorkspaceEditorConfigService', () => {

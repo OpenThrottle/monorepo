@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,8 +10,10 @@ import {
   AlertDialogTrigger,
   Button,
 } from '@openthrottle/react-router-shadcn';
-import type { action as userDetailAction } from '~/routes/users.$userId';
+import * as React from 'react';
 import type { useFetcher } from 'react-router';
+
+import type { action as userDetailAction } from '~/routes/users.$userId';
 
 export interface UserStatusActionsProps {
   fetcher: ReturnType<typeof useFetcher<typeof userDetailAction>>;

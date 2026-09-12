@@ -1,9 +1,11 @@
 import type { GlobalSidebarContentLinkProps } from '@openthrottle/react-router-ui-global';
 import { describe, expect, test, vi } from 'vitest';
+
 import {
   dataNavigationGuest,
   dataNavigationV2,
 } from '~/global/data/data.navigation';
+
 import type { NavigationRecord } from '../navigation-to-commander-groups';
 import {
   buildCommanderGroupsFromNavigation,

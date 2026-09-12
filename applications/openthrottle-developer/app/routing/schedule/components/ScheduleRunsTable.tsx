@@ -1,8 +1,9 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import { DataTable } from '@openthrottle/react-router-shadcn';
-import { buildScheduleRunsTableColumns } from '~/routing/schedule/utils/schedule-runs-table-columns';
+import clsx from 'clsx';
+import * as React from 'react';
+
 import type { ScheduledJobRunRowFragment } from '~/__generated__/graphql';
+import { buildScheduleRunsTableColumns } from '~/routing/schedule/utils/schedule-runs-table-columns';
 
 export interface ScheduleRunsTableProps {
   className?: string;

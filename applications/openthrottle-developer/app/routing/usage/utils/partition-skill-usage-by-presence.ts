@@ -12,12 +12,12 @@
  * cannot drift.
  */
 
+import type { UsageSkillUsageBySkillFragment } from '~/__generated__/graphql';
 import {
-  SKILL_PRESENCE,
   classifySkillUsagePresence,
+  SKILL_PRESENCE,
   type SkillPresence,
 } from '~/routing/usage/data/skill-presence';
-import type { UsageSkillUsageBySkillFragment } from '~/__generated__/graphql';
 
 /** A leaderboard row with its presence already resolved by the caller. */
 export interface SkillUsageRowWithPresence extends UsageSkillUsageBySkillFragment {

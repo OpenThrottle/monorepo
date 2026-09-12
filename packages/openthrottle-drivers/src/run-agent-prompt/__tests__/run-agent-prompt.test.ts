@@ -5,16 +5,18 @@
  * partial-output buffering on timeout, onChunk pass-through, and typed capability-mismatch errors.
  */
 
-import type { ChildProcess } from 'child_process';
-import { spawn } from 'child_process';
 import { EventEmitter } from 'node:events';
 import { PassThrough } from 'node:stream';
+
+import type { ChildProcess } from 'child_process';
+import { spawn } from 'child_process';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { getDriver } from '../../drivers/index.ts';
 import {
   DriverCapabilityError,
   UnknownDriverError,
 } from '../../errors/index.ts';
-import { getDriver } from '../../drivers/index.ts';
 import { DRIVER_IDS } from '../../registry/index.ts';
 import type { DriverChunk } from '../../types/index.ts';
 import { RUN_AGENT_STATUS, runAgentPrompt } from '../index.ts';

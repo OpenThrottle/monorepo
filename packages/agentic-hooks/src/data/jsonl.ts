@@ -4,8 +4,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { logHookError } from '../utils/logging';
 import type { DrainFileResult } from '../types';
+import { logHookError } from '../utils/logging';
 
 /** @public */
 export const DEFAULT_JSONL_REL: string = path.join(

@@ -4,9 +4,9 @@
  * back to the base checkout, and serialize concurrent provisioning of the same name.
  */
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { mockExecFile } = vi.hoisted(() => ({ mockExecFile: vi.fn() }));
 

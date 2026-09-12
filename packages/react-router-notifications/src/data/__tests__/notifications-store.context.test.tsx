@@ -1,13 +1,14 @@
-import * as React from 'react';
+import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
 import { render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
-import { NOTIFICATIONS_DEDUP_WINDOW_MS } from '../../config/index';
+
 import { NotificationsStoreProvider } from '../../components/NotificationsStoreProvider';
+import { NOTIFICATIONS_DEDUP_WINDOW_MS } from '../../config/index';
 import { useNotificationsStore } from '../../hooks/useNotificationsStore';
-import { reducer } from '../notifications-store.context';
 import type { NotificationInstance } from '../../types';
+import { reducer } from '../notifications-store.context';
 
 const systemAlertPayload = {
   message: 'Test alert',

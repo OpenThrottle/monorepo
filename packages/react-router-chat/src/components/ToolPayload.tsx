@@ -1,5 +1,5 @@
-import * as React from 'react';
 import { Markdown } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
 
 export interface ToolPayloadProps {
   readonly content: string;

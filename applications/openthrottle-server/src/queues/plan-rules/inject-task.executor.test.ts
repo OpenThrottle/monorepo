@@ -16,10 +16,11 @@ import type {
   Task,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
-import type { MatchedTagAction } from '@openthrottle/openthrottle-skills';
 import { asMock } from '@openthrottle/nestjs-testing';
+import type { MatchedTagAction } from '@openthrottle/openthrottle-skills';
 import { QueryFailedError } from 'typeorm';
-import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
+import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
+
 import type { PlanContextAvailabilityService } from '../../services/plan-context-availability/plan-context-availability.service';
 import { ActionExecutorRegistry } from './action-executor';
 import { InjectTaskExecutor } from './inject-task.executor';

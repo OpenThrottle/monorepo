@@ -1,7 +1,8 @@
-import * as React from 'react';
-import { LANDING_NAV } from '~/routing/home/data/data.landing';
-import { Link } from 'react-router';
 import { OpenThrottleLogo } from '@openthrottle/react-router-ui';
+import * as React from 'react';
+import { Link } from 'react-router';
+
+import { LANDING_NAV } from '~/routing/home/data/data.landing';
 
 export interface LandingNavProps {
   className?: string;

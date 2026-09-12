@@ -1,4 +1,5 @@
 import type { ModuleMetadata, Provider, Type } from '@nestjs/common';
+
 import type { AnyAgenticWorkflow } from './agentic-workflow-base';
 import type {
   AgenticWorkflowExecuteGraphqlV2,

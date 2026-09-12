@@ -1,5 +1,3 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import { Button } from '@openthrottle/react-router-shadcn';
 import {
   Empty,
@@ -7,7 +5,9 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@openthrottle/react-router-shadcn';
+import clsx from 'clsx';
 import { SearchAlertIcon } from 'lucide-react';
+import * as React from 'react';
 import { Link } from 'react-router';
 
 export interface ProjectsEmptyProps {

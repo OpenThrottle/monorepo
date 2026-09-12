@@ -1,9 +1,10 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { HomeComposerSkeleton } from '../HomeComposerSkeleton';
+
 import type { HomeComposerSkeletonProps } from '../HomeComposerSkeleton';
+import { HomeComposerSkeleton } from '../HomeComposerSkeleton';
 
 describe('HomeComposerSkeleton Component', () => {
   let component: RenderResult;

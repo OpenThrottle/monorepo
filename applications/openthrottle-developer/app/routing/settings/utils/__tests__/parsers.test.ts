@@ -1,5 +1,7 @@
 import { describe, expect, test } from 'vitest';
+
 import { NOTIFICATION_PREFERENCE_ROWS } from '~/routing/settings/config/notification-preferences';
+
 import { getDefaultNotificationSettings } from '../parsers';
 
 describe('routing/settings utils parsers', () => {

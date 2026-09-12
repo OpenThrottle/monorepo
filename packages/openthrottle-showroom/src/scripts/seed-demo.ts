@@ -17,6 +17,9 @@
  * look like take 1.
  */
 
+import { fileURLToPath } from 'node:url';
+
+import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   getOpenThrottleTypeOrmOptions,
   Role,
@@ -25,16 +28,12 @@ import {
   User,
   UsersService,
 } from '@openthrottle/nestjs-repositories';
-import { LoggerService } from '@openthrottle/nestjs-modules';
 import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
-import { DataSource } from 'typeorm';
-
-import { fileURLToPath } from 'node:url';
-
 import {
   DEFAULT_DOMAIN_TAG_VOCABULARY,
   DEFAULT_PHASE_TAG_VOCABULARY,
 } from '@openthrottle/openthrottle-skills';
+import { DataSource } from 'typeorm';
 
 import {
   DEMO_EXTRA_TAG,
@@ -46,13 +45,13 @@ import {
   DEMO_SKILLS,
   DEMO_USER,
 } from '../fixtures/demo-content';
+import { writeSeedMarker } from '../runner/dirty';
 import {
   loadSnapshot,
   readSnapshotTables,
   remapOwnershipToDemoUser,
 } from '../snapshot/load';
 import { reflectSchema } from '../snapshot/schema';
-import { writeSeedMarker } from '../runner/dirty';
 
 const ROLE_NAMES = ['admin', 'user', 'viewer'] as const;
 

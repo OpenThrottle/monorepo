@@ -1,12 +1,14 @@
-import * as React from 'react';
 import { waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
-import ScheduleRunDetail from '../schedule.$jobId.runs.$runId';
+
+import type { Route } from '@/app/routes/+types/schedule.$jobId.runs.$runId';
+import type { ScheduledJobRunDetailFragment } from '~/__generated__/graphql';
 import { buildRootMatch } from '~/testing/root-match-fixture';
 import { renderRouteHarness } from '~/testing/route-fixtures';
-import type { ScheduledJobRunDetailFragment } from '~/__generated__/graphql';
-import type { Route } from '@/app/routes/+types/schedule.$jobId.runs.$runId';
+
+import ScheduleRunDetail from '../schedule.$jobId.runs.$runId';
 
 const job = { id: 'job-1', name: 'Nightly audit' };
 

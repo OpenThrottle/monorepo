@@ -1,6 +1,7 @@
 import * as React from 'react';
-import { BASE_SVG_PROPS } from './svg-base';
+
 import type { ProviderIconProps } from './svg-base';
+import { BASE_SVG_PROPS } from './svg-base';
 
 /** Props for the Cursor brand glyph. @public */
 export interface CursorIconProps extends ProviderIconProps {}

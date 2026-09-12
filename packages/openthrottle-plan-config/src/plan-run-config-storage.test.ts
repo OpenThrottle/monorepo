@@ -1,5 +1,7 @@
 import { asMock } from '@openthrottle/nestjs-testing';
 import { describe, expect, it } from 'vitest';
+
+import { planHasCustomRunConfig } from './plan-run-config-storage.compare.ts';
 import {
   DEFAULT_PLAN_RUN_RALPH_ITERATIONS,
   DEFAULT_PLAN_RUN_RALPH_MODEL,
@@ -17,7 +19,6 @@ import {
   planRunConfigFromWorkflowUiState,
   workflowUiStateFromPlanRunConfig,
 } from './plan-run-config-storage.round-trip.ts';
-import { planHasCustomRunConfig } from './plan-run-config-storage.compare.ts';
 import type {
   PlanRunConfigStorage,
   PlanWorkflowUiState,

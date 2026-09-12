@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { buildPlanRunConfigSnapshotFromJobData } from './enqueue-plan-run-config-snapshot';
 
 describe('buildPlanRunConfigSnapshotFromJobData', () => {

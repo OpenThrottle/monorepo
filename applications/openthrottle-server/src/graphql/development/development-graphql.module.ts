@@ -8,6 +8,7 @@
  */
 
 import { Module } from '@nestjs/common';
+
 import { NotificationsModule } from '../../notifications/notifications.module';
 import { DevelopmentResolver } from './development.resolver';
 import { DevelopmentService } from './development.service';

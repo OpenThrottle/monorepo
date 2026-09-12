@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import {
   GENERATOR_DOCS_AGENT_USAGE,
   GENERATOR_DOCS_AGENTS,

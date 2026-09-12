@@ -30,6 +30,7 @@
  */
 
 import type { DataSource } from 'typeorm';
+
 import type { RetentionPolicy } from '../data-retention.types';
 
 /** Sessions holding a verified artifact are kept this long. */

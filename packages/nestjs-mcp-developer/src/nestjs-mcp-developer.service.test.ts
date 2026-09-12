@@ -1,7 +1,6 @@
-import { Test } from '@nestjs/testing';
 import { createMock } from '@golevelup/ts-vitest';
+import { Test } from '@nestjs/testing';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { describe, it, expect, beforeAll } from 'vitest';
 import * as packageEntry from '@openthrottle/nestjs-openthrottle-mcp';
 import {
   McpDeveloperMcpSurface,
@@ -11,6 +10,7 @@ import {
   withMcpDeveloperAuthToken,
   withMcpDeveloperAuthTokenAsync,
 } from '@openthrottle/nestjs-openthrottle-mcp';
+import { beforeAll, describe, expect, it } from 'vitest';
 
 describe('NestjsMcpDeveloperService', () => {
   let service: NestjsMcpDeveloperService;

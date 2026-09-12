@@ -1,15 +1,16 @@
-import * as React from 'react';
 import { DocPageView, DocsLanding } from '@openthrottle/react-router-docs';
-import { SITE_TITLE } from '~/global/config/settings';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import * as React from 'react';
+
+import type { Route } from '@/app/routes/+types/docs._index';
+import { SITE_TITLE } from '~/global/config/settings';
+import { useDocsFeatureFlags } from '~/global/hooks/useDocsFeatureFlags';
 import {
   docsNav,
   docsSequence,
   indexEntry,
 } from '~/routing/docs/data/docs-navigation';
-import { useDocsFeatureFlags } from '~/global/hooks/useDocsFeatureFlags';
-import type { Route } from '@/app/routes/+types/docs._index';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

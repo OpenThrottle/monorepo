@@ -1,13 +1,15 @@
-import * as React from 'react';
 import type { RenderResult } from '@testing-library/react';
+import * as React from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { PlanTasksEmpty } from '../PlanTasksEmpty';
-import type { PlanTasksEmptyProps } from '../PlanTasksEmpty';
+
 import {
   PLAN_TASKS_EMPTY_COPY,
   PLANS_INDEX_EMPTY_COPY,
 } from '~/routing/plans/data/data.copy';
 import { renderRoutesStub } from '~/testing/route-fixtures';
+
+import type { PlanTasksEmptyProps } from '../PlanTasksEmpty';
+import { PlanTasksEmpty } from '../PlanTasksEmpty';
 
 describe('PlanTasksEmpty Component', () => {
   describe('plans variant with no active filter', () => {

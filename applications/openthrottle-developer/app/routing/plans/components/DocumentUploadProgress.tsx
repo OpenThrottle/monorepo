@@ -1,6 +1,6 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import { Progress, Spinner } from '@openthrottle/react-router-shadcn';
+import clsx from 'clsx';
+import * as React from 'react';
 
 export type DocumentUploadProgressState =
   | { readonly kind: 'busy'; readonly message: string; readonly value: number }

@@ -1,11 +1,12 @@
-import * as React from 'react';
 import clsx from 'clsx';
+import * as React from 'react';
+
+import type { TimelineMarkerKind } from '~/routing/timeline/config/kinds';
 import {
   TIMELINE_MARKER_FILL_CLASS,
   TIMELINE_MARKER_KIND_LABEL,
 } from '~/routing/timeline/config/kinds';
 import { markerKindPath } from '~/routing/timeline/utils/marker-glyph-path';
-import type { TimelineMarkerKind } from '~/routing/timeline/config/kinds';
 
 export interface TimelineMarkerGlyphProps {
   readonly className?: string;

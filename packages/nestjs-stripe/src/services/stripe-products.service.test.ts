@@ -5,6 +5,7 @@
 import { Test } from '@nestjs/testing';
 import Stripe from 'stripe';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import {
   partitionPricesByDefault,
   StripeProductsService,

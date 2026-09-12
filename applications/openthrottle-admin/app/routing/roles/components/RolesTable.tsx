@@ -1,9 +1,10 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import { Badge, DataTable } from '@openthrottle/react-router-shadcn';
-import { formatDate } from 'date-fns';
-import { Link } from 'react-router';
 import type { ColumnDef } from '@tanstack/react-table';
+import clsx from 'clsx';
+import { formatDate } from 'date-fns';
+import * as React from 'react';
+import { Link } from 'react-router';
+
 import type { RoleRowFragment } from '~/__generated__/graphql';
 
 export interface RolesTableProps {

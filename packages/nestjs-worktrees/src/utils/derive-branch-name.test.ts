@@ -7,6 +7,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { deriveBranchName } from './parent-job';
 
 describe('deriveBranchName', () => {

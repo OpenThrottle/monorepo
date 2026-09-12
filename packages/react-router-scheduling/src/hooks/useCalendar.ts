@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+
 import { DEFAULT_VIEW } from '../config/defaults';
 import { CalendarView } from '../types';
 import { temporalToDate, toPlainDate } from '../utils/datetime';

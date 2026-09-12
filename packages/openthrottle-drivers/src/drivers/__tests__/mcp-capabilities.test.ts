@@ -9,6 +9,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
+
 import { ALL_DRIVERS, getDriver } from '../index.ts';
 
 describe('MCP capability matrix', () => {

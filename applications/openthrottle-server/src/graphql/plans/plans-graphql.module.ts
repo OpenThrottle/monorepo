@@ -4,6 +4,7 @@
 
 import { Module } from '@nestjs/common';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+
 import { NotificationsModule } from '../../notifications/notifications.module';
 import { PlanRulesQueueProducerModule } from '../../queues/plan-rules/plan-rules-queue-producer.module';
 import { PlansQueueProducerModule } from '../../queues/plans/plans-queue-producer.module';
@@ -16,8 +17,8 @@ import { WorkLedgerGraphqlModule } from '../work-ledger/work-ledger-graphql.modu
 import { PlanEnqueueService } from './plan-enqueue.service';
 import { PlanRunObjectResolver } from './plan-run-object.resolver';
 import { PlanStatusService } from './plan-status.service';
-import { PlansLoaders } from './plans-loaders';
 import { PlansResolver } from './plans.resolver';
+import { PlansLoaders } from './plans-loaders';
 
 @Module({
   imports: [

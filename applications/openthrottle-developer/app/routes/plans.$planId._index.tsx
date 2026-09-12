@@ -1,11 +1,17 @@
-import * as React from 'react';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import {
+  OpenThrottleClipboard,
+  OpenThrottleEmptyState,
+} from '@openthrottle/react-router-ui';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalErrorBoundary,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import * as React from 'react';
+
+import type { Route } from '@/app/routes/+types/plans.$planId._index';
 import {
   PlanDetailCriticalDocument,
   PlanDetailLedgerDocument,
@@ -14,6 +20,7 @@ import {
   PlanDetailTagVocabularyDocument,
   PlanDetailWorkspaceRepositoriesDocument,
 } from '~/__generated__/graphql';
+import { SITE_TITLE } from '~/global/config/settings';
 import {
   addHook,
   addPlanTag,
@@ -28,15 +35,9 @@ import {
   setPlanStatus,
   updateTaskStatus,
 } from '~/routing/plans/actions/planId';
-import { loadEnabledEditors } from '~/routing/plans/utils/load-enabled-editors';
 import { PlanDetailRoute } from '~/routing/plans/components/PlanDetailRoute';
 import { PlanRunConfigStoreProvider } from '~/routing/plans/components/PlanRunConfigStoreProvider';
-import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/plans.$planId._index';
-import {
-  OpenThrottleClipboard,
-  OpenThrottleEmptyState,
-} from '@openthrottle/react-router-ui';
+import { loadEnabledEditors } from '~/routing/plans/utils/load-enabled-editors';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

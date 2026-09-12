@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { toLinkedArtifactDestination } from '../linked-artifact-href';
 import { toLinkedArtifactView } from '../linked-artifact-payload';
 

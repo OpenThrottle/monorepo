@@ -9,9 +9,9 @@
  * not "M C P".
  */
 
-import { beatIndexForCue } from './timeline';
-import type { BeatPlan } from './timeline';
 import type { NarrationTimings } from '../narrate/types';
+import type { BeatPlan } from './timeline';
+import { beatIndexForCue } from './timeline';
 
 export interface Cue {
   readonly endSeconds: number;

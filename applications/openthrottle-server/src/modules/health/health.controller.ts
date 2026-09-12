@@ -1,5 +1,6 @@
 import { Controller, Get } from '@nestjs/common';
 import { Public } from '@openthrottle/nestjs-auth';
+
 import type { ServerHealthResponse } from '../../graphql/health/health.service';
 import { HealthService } from '../../graphql/health/health.service';
 

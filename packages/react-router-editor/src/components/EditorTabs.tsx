@@ -1,9 +1,10 @@
-import * as React from 'react';
 import clsx from 'clsx';
 import { useAtom } from 'jotai';
+import * as React from 'react';
+
+import type { EditorFile } from '../data/atom.editor';
 import { editorAtom } from '../data/atom.editor';
 import { useEditor } from '../hooks/useEditor';
-import type { EditorFile } from '../data/atom.editor';
 import { EditorTab } from './EditorTab';
 
 export interface EditorTabsProps {

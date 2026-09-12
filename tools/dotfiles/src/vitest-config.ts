@@ -1,8 +1,9 @@
-import { calculateOutputDir } from './calculate-output-dir.ts';
-import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import swc from 'unplugin-swc';
 import type { UserConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
+
+import { calculateOutputDir } from './calculate-output-dir.ts';
 
 export { getDirname } from './vite-config.ts';
 

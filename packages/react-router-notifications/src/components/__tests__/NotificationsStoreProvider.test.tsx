@@ -1,12 +1,13 @@
 /* eslint-disable react/no-multi-comp -- test-local store probes and route wrappers */
-import * as React from 'react';
 import { render, waitFor } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
+
 import { DEFAULT_NOTIFICATIONS_STORAGE_KEY } from '../../data';
 import { useNotificationsStore } from '../../hooks/useNotificationsStore';
-import { NotificationsStoreProvider } from '../NotificationsStoreProvider';
 import type { NotificationsStoreProviderProps } from '../NotificationsStoreProvider';
+import { NotificationsStoreProvider } from '../NotificationsStoreProvider';
 
 const STORED_NOTIFICATION = {
   createdAt: '2026-01-01T00:00:00.000Z',

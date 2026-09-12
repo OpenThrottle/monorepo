@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { formatCpuMs, formatMb } from '../format-metric';
 
 describe('formatMb', () => {

@@ -3,6 +3,7 @@
  */
 
 import { Field, ID, ObjectType } from '@nestjs/graphql';
+
 import type { McpConnectorCatalogEntry } from './mcp-connector-catalog';
 
 @ObjectType()

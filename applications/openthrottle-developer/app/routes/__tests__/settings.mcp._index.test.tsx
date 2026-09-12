@@ -1,12 +1,14 @@
-import * as React from 'react';
 import { render, within } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import Component from '../settings.mcp._index';
+
 import type {
   McpConnectorConnectionFieldsFragment,
   McpConnectorFieldsFragment,
 } from '~/__generated__/graphql';
+
+import Component from '../settings.mcp._index';
 
 const githubConnector: McpConnectorFieldsFragment = {
   __typename: 'McpConnectorObject',

@@ -1,12 +1,13 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
-import { ChatComposerInput } from '../ChatComposerInput';
-import type { ChatComposerInputProps } from '../ChatComposerInput';
+
 import type { UseChatComposerMentionsResult } from '../../hooks/use-chat-composer-mentions';
 import type { UseChatComposerSlashCommandsResult } from '../../hooks/use-chat-composer-slash-commands';
+import type { ChatComposerInputProps } from '../ChatComposerInput';
+import { ChatComposerInput } from '../ChatComposerInput';
 
 const buildMentions = (
   overrides: Partial<UseChatComposerMentionsResult> = {},

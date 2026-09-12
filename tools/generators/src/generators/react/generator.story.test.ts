@@ -1,6 +1,7 @@
-import { describe, expect, beforeEach, test, vi } from 'vitest';
 import type { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import { storyGenerator } from './generator.story';
 // The generator resolves `destination` through the real Nx project graph, whose
 // first (cold) computation dominated this file's runtime — ~900ms of workspace

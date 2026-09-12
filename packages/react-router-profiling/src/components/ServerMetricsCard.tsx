@@ -2,7 +2,6 @@
  * @description Displays current process snapshot (rssMb, heap, external, CPU) from GET /metrics. Uses {@link useServerMetrics}; refresh on demand or optional polling.
  */
 
-import * as React from 'react';
 import {
   Button,
   Card,
@@ -17,6 +16,8 @@ import {
   TableHeader,
   TableRow,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+
 import { METRIC_ROWS } from '../data/metric-rows';
 import { useServerMetrics } from '../hooks/useServerMetrics';
 

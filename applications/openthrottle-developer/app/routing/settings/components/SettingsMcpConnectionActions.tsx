@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Button,
   Card,
@@ -7,11 +6,14 @@ import {
   CardHeader,
   CardTitle,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
 import { Form } from 'react-router';
+
 import type {
   McpConnectorConnectionFieldsFragment,
   McpConnectorFieldsFragment,
 } from '~/__generated__/graphql';
+
 import { SettingsMcpConnectionStatusBadge } from './SettingsMcpConnectionStatusBadge';
 
 export interface SettingsMcpConnectionActionsProps {

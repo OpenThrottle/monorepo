@@ -8,6 +8,7 @@
  */
 
 import { getPublicEnv } from '@openthrottle/react-router-utils';
+
 import type { Route as RootRoute } from '@/app/+types/root';
 
 type RootMatch = RootRoute.ComponentProps['matches'][0];

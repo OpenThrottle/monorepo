@@ -10,6 +10,7 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { Queue } from 'bullmq';
+
 import {
   TAGGING_PREDICT_JOB_NAME,
   TAGGING_QUEUE_NAME,

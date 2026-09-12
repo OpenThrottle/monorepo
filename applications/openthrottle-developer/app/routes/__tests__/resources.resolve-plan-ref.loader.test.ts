@@ -1,6 +1,7 @@
 // @vitest-environment node
-import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { createLoaderArgs } from '@openthrottle/react-router-testing';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import type { Route } from '@/app/routes/+types/resources.resolve-plan-ref';
 
 vi.mock('@openthrottle/react-router-graphql', () => ({

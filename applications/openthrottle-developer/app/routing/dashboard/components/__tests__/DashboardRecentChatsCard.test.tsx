@@ -1,10 +1,12 @@
-import * as React from 'react';
+import type { AgentConversationListItem } from '@openthrottle/react-router-chat';
 import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import type { AgentConversationListItem } from '@openthrottle/react-router-chat';
-import { DashboardRecentChatsCard } from '../DashboardRecentChatsCard';
+
 import { RECENT_CHATS_CARD_COPY } from '~/routing/dashboard/data/data.copy';
+
+import { DashboardRecentChatsCard } from '../DashboardRecentChatsCard';
 
 const CONVERSATIONS: readonly AgentConversationListItem[] = [
   {

@@ -2,11 +2,12 @@
  * @description Resolver for Note queries and mutations. Injects NotesService from @openthrottle/nestjs-repositories and maps entities to NoteObject.
  */
 
+import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { type AuthPrincipal, CurrentUser } from '@openthrottle/nestjs-auth';
+import { GlobalClsService } from '@openthrottle/nestjs-modules';
 import type { Note } from '@openthrottle/nestjs-repositories';
 import { NotesService } from '@openthrottle/nestjs-repositories';
-import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { CurrentUser, type AuthPrincipal } from '@openthrottle/nestjs-auth';
-import { GlobalClsService } from '@openthrottle/nestjs-modules';
+
 import { CreateNoteInput, UpdateNoteInput } from './note.input';
 import { NoteObject } from './note.object';
 import { resolveNoteAuthor } from './resolve-note-author';

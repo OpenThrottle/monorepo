@@ -1,6 +1,7 @@
-import { describe, it, expect } from 'vitest';
-import * as entrypoint from './index';
+import { describe, expect, it } from 'vitest';
+
 import { NestjsSlackError } from './config/nestjs-slack.error';
+import * as entrypoint from './index';
 import { NestjsSlackModule } from './modules/nestjs-slack.module';
 import { NestjsSlackService } from './services/nestjs-slack.service';
 

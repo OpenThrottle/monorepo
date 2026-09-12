@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
+import type { EmbeddingsConfig } from '@openthrottle/openthrottle-ide';
 import {
   DEFAULT_OLLAMA_BASE_URL,
   DEFAULT_OLLAMA_EMBEDDING_MODEL,
   DEFAULT_OPENAI_BASE_URL,
   DEFAULT_OPENAI_EMBEDDING_MODEL,
 } from '@openthrottle/openthrottle-ide';
-import type { EmbeddingsConfig } from '@openthrottle/openthrottle-ide';
 
 /**
  * Ollama embedding models known to emit 1536-dimensional vectors (the pgvector column width), i.e. the

@@ -1,12 +1,13 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import {
   Card,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
 } from '@openthrottle/react-router-shadcn';
+import clsx from 'clsx';
+import * as React from 'react';
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from 'recharts';
+
 import { GLOBAL_METRICS_CHART_CONFIG } from '../config';
 import type { MetricsChartDatum } from '../utils/storage';
 

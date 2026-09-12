@@ -9,18 +9,20 @@
  */
 
 import { randomUUID } from 'node:crypto';
+
 import { Inject, Injectable } from '@nestjs/common';
 import {
-  PUB_SUB,
   agentSetupStreamTopic,
+  PUB_SUB,
   type PubSubEngine,
 } from '@openthrottle/nestjs-graphql';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
-  runAgentSetup,
   type AgentSetupMode,
   type AgentSetupResult,
+  runAgentSetup,
 } from '@openthrottle/openthrottle-agentic-utils';
+
 import { AgentDiscoveryService } from '../agent-discovery/agent-discovery.service';
 import {
   AGENT_SETUP_CHUNK_FIELD,

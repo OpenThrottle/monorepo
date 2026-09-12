@@ -1,11 +1,12 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyTitle,
 } from '@openthrottle/react-router-shadcn';
+import clsx from 'clsx';
+import * as React from 'react';
+
 import { WORKSPACE_SETTINGS_COPY } from '~/routing/settings/data/data.copy';
 import type { WorkspaceApplyResult } from '~/routing/settings/utils/workspace-apply-results';
 

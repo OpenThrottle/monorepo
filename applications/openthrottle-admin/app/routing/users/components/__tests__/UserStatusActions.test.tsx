@@ -1,11 +1,13 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub, useFetcher } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import { UserStatusActions } from '../UserStatusActions';
+
 import type { action as userDetailAction } from '~/routes/users.$userId';
+
+import { UserStatusActions } from '../UserStatusActions';
 
 const renderActions = (isDisabled: boolean): RenderResult => {
   const Harness = () => {

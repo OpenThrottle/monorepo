@@ -7,6 +7,7 @@
 import { createMock } from '@golevelup/ts-vitest';
 import type { PlansService } from '@openthrottle/nestjs-repositories';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import type { ActivityByDateRangeInput } from './activity.input';
 import { ActivityResolver } from './activity.resolver';
 

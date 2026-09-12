@@ -1,6 +1,6 @@
-import * as React from 'react';
 import { cn } from '@openthrottle/react-router-shadcn';
 import { motion } from 'framer-motion';
+import * as React from 'react';
 
 export interface OpenThrottleEntranceProps {
   readonly children: React.ReactNode;

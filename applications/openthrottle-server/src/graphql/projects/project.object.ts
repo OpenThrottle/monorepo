@@ -2,9 +2,10 @@
  * @description GraphQL ObjectType for Project. Implements {@link ProjectData} from @openthrottle/nestjs-repositories so the API shape stays in sync with the entity.
  */
 
+import { Field, ObjectType } from '@nestjs/graphql';
 import type { Plan, Task } from '@openthrottle/nestjs-repositories';
 import type { ProjectData } from '@openthrottle/nestjs-repositories';
-import { Field, ObjectType } from '@nestjs/graphql';
+
 import type { PlanObject } from '../plans/plan.object';
 import type { TaskObject } from '../tasks/task.object';
 

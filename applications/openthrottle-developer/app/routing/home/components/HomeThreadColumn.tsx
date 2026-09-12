@@ -1,11 +1,12 @@
-import * as React from 'react';
-import { Await } from 'react-router';
 import { ChatJumpToLatest, ChatThread } from '@openthrottle/react-router-chat';
 import { getGlobalScrollElement } from '@openthrottle/react-router-ui-global';
+import * as React from 'react';
+import { Await } from 'react-router';
+
+import type { HomeComposerProps } from '~/routing/home/components/HomeComposer';
 import { HomeComposer } from '~/routing/home/components/HomeComposer';
 import { HomeComposerDock } from '~/routing/home/components/HomeComposerDock';
 import { HomeComposerSkeleton } from '~/routing/home/components/HomeComposerSkeleton';
-import type { HomeComposerProps } from '~/routing/home/components/HomeComposer';
 import type { UseAgenticChatTurnResult } from '~/routing/home/hooks/useAgenticChatTurn';
 import type { UseConversationListResult } from '~/routing/home/hooks/useConversationList';
 

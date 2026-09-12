@@ -12,11 +12,12 @@
  * navigate must await the result (findBy queries or waitFor) since the loader
  * revalidation is async.
  */
-import * as React from 'react';
 import { render, type RenderResult } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
-import { PLAN_DETAIL_ROUTE_ID } from '~/routing/plans/hooks/usePlanDetailRouteData';
+
 import type { PlanDetailRouteData } from '~/routing/plans/hooks/usePlanDetailRouteData';
+import { PLAN_DETAIL_ROUTE_ID } from '~/routing/plans/hooks/usePlanDetailRouteData';
 
 /** Loose shape for seed loader data — tests provide only the fields they assert on. */
 export type PlanDetailRouteDataSeed = Record<string, unknown>;

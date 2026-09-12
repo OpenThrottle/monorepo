@@ -1,12 +1,13 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
+import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
-import { ChatComposerMicControl } from '../ChatComposerMicControl';
-import type { ChatComposerMicControlProps } from '../ChatComposerMicControl';
+
 import { ChatComposerMicState } from '../../types';
+import type { ChatComposerMicControlProps } from '../ChatComposerMicControl';
+import { ChatComposerMicControl } from '../ChatComposerMicControl';
 
 const renderControl = (props: ChatComposerMicControlProps): RenderResult =>
   render(

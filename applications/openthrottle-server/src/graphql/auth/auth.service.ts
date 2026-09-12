@@ -4,11 +4,13 @@
  */
 
 import { randomUUID } from 'node:crypto';
+
 import { ConflictException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
-import { UsersService } from '@openthrottle/nestjs-repositories';
 import type { User } from '@openthrottle/nestjs-repositories';
+import { UsersService } from '@openthrottle/nestjs-repositories';
+
 import type { RegisterInput } from './register.input';
 import type { RegisterResultObject } from './register-result.object';
 

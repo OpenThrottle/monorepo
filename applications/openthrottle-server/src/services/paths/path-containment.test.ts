@@ -5,6 +5,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
+
 import { isPathWithin, pathDepth } from './path-containment';
 
 describe('isPathWithin', () => {

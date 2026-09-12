@@ -1,13 +1,14 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { SidebarGroupAction } from '../SidebarGroupAction';
-import type { SidebarGroupActionProps } from '../SidebarGroupAction';
+
 import { Sidebar } from '../Sidebar';
 import { SidebarContent } from '../SidebarContent';
 import { SidebarGroup } from '../SidebarGroup';
+import type { SidebarGroupActionProps } from '../SidebarGroupAction';
+import { SidebarGroupAction } from '../SidebarGroupAction';
 import { SidebarGroupContent } from '../SidebarGroupContent';
 import { SidebarMenu } from '../SidebarMenu';
 import { SidebarMenuItem } from '../SidebarMenuItem';

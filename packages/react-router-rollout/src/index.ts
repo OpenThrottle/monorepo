@@ -1,5 +1,5 @@
-export { RolloutProvider } from './components';
 export type { RolloutProviderProps } from './components';
+export { RolloutProvider } from './components';
 export {
   DEFAULT_ROLLOUT_CACHE_TTL_MS,
   isRolloutFlagKind,
@@ -7,18 +7,18 @@ export {
   ROLLOUT_FLAG_KIND,
   type RolloutFlagKind,
 } from './config';
-export { RolloutContext } from './data';
 export type { RolloutContextValue } from './data';
+export { RolloutContext } from './data';
+export type {
+  UseRolloutContextOptions,
+  UseRolloutProviderOptions,
+  UseRolloutResult,
+} from './hooks';
 export {
   useIsRolloutEnabled,
   useRollout,
   useRolloutContext,
   useRolloutFlag,
-} from './hooks';
-export type {
-  UseRolloutContextOptions,
-  UseRolloutProviderOptions,
-  UseRolloutResult,
 } from './hooks';
 export type {
   RolloutBooleanFlagKey,

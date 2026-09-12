@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Button,
   Card,
@@ -11,6 +10,8 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+
 import {
   CLIENT_LOG_BUFFER_MAX_ENTRIES,
   CLIENT_LOG_LEVELS,

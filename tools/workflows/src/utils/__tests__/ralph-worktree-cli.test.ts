@@ -3,11 +3,12 @@
  */
 
 import { describe, expect, it } from 'vitest';
+
 import {
-  RALPH_WORKTREE_FLAG_ONLY,
   appendRalphWorktreeShellFlags,
   buildWorktreeNestedArgv,
   escapeShellArg,
+  RALPH_WORKTREE_FLAG_ONLY,
   resolveRalphWorktreeName,
 } from '../ralph-worktree-cli';
 

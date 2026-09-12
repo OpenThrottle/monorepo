@@ -2,25 +2,26 @@
  * @description Note CRUD tool handlers + schemas: create_note, get_note, list_notes, update_note, delete_note. Wired up via the shared `developerMcpToolDefinitions` registry and the Nest surface.
  */
 
-import { z } from 'zod';
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
+import { z } from 'zod';
+
 import {
-  type CreateNoteMutation,
-  type GetNoteQuery,
-  type GetNotesQuery,
-  type UpdateNoteMutation,
   CreateNoteDocument,
+  type CreateNoteMutation,
   DeleteNoteDocument,
   GetNoteDocument,
+  type GetNoteQuery,
   GetNotesDocument,
+  type GetNotesQuery,
   UpdateNoteDocument,
+  type UpdateNoteMutation,
 } from '../__generated__/graphql.js';
 import {
   CreateNoteInputSchema,
   UpdateNoteInputSchema,
 } from '../__generated__/schemas.ts';
-import type { GenericResult } from '../types/index.ts';
 import { getAuthToken } from '../auth/get-auth-token.ts';
+import type { GenericResult } from '../types/index.ts';
 import { invalidArgsContent } from '../utils/errors.ts';
 import { runTool } from '../utils/tool-result.ts';
 

@@ -3,6 +3,7 @@
  */
 
 import { Field, ID, ObjectType } from '@nestjs/graphql';
+
 import { ProjectObject } from '../projects/project.object';
 
 @ObjectType({

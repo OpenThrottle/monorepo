@@ -1,4 +1,3 @@
-import * as React from 'react';
 import type {
   ChatCheckoutOption,
   ChatModelGroup,
@@ -12,6 +11,8 @@ import {
   reconcileChatToolbarState,
 } from '@openthrottle/react-router-chat-state';
 import { useAtom } from 'jotai';
+import * as React from 'react';
+
 import type { RepositoryOption } from '~/routing/home/data/models.server';
 
 /**

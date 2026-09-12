@@ -10,6 +10,7 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+
 import type { Plan } from '../plans/plan.entity';
 import type { Task } from '../tasks/task.entity';
 

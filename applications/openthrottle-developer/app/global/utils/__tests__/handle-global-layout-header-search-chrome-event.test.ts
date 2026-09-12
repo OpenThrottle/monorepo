@@ -1,4 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
+
 import { handleGlobalLayoutHeaderSearchChromeEvent } from '../handle-global-layout-header-search-chrome-event';
 
 describe('handleGlobalLayoutHeaderSearchChromeEvent', () => {

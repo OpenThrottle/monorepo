@@ -1,11 +1,13 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
+import { Tabs } from '@openthrottle/react-router-shadcn';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { Tabs } from '@openthrottle/react-router-shadcn';
+
 import type { GeneratorDetailCardFragment } from '~/__generated__/graphql';
+
 import { GeneratorTabDebug } from '../GeneratorTabDebug';
 
 const mockGenerator: GeneratorDetailCardFragment = {

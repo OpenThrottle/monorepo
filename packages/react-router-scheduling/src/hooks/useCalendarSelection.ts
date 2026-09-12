@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
+
 import type { CalendarEvent, ScheduleCallbacks } from '../types';
 
 // An ergonomic selection layer over the engine-agnostic interaction callbacks.

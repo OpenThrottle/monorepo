@@ -1,13 +1,14 @@
-import * as React from 'react';
+import { toast } from '@openthrottle/react-router-shadcn';
 import { cleanup, render } from '@testing-library/react';
+import * as React from 'react';
 import * as ReactRouter from 'react-router';
 import { createRoutesStub } from 'react-router';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import type { MockedFunction } from 'vitest';
-import { toast } from '@openthrottle/react-router-shadcn';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+
 import * as clientErrorRollbar from '../../utils/client-error-rollbar';
-import { useGlobalErrorBoundary } from '../useGlobalErrorBoundary';
 import type { UseGlobalErrorBoundaryResult } from '../useGlobalErrorBoundary';
+import { useGlobalErrorBoundary } from '../useGlobalErrorBoundary';
 
 vi.mock('react-router', async (importOriginal) => {
   const actual = await importOriginal<typeof import('react-router')>();

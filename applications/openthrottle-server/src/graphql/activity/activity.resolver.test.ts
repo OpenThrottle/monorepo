@@ -2,21 +2,22 @@
  * @description Unit tests for activity ResolveField handlers (plan, task) on commit rows, output chunk rows, and task-updated rows. Relations resolve through the request-scoped ActivityLoaders.
  */
 
-import { plansFactory, tasksFactory } from '@openthrottle/nestjs-repositories';
 import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
-import { beforeEach, describe, expect, beforeAll, test, vi } from 'vitest';
+import { plansFactory, tasksFactory } from '@openthrottle/nestjs-repositories';
+import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+
 import {
   ActivityCommitRowObject,
   ActivityOutputChunkRowObject,
   ActivityTaskUpdatedRowObject,
 } from './activity.object';
-import { ActivityLoaders } from './activity-loaders';
 import {
   ActivityCommitRowResolver,
   ActivityOutputChunkRowResolver,
   ActivityTaskUpdatedRowResolver,
 } from './activity.resolver';
+import { ActivityLoaders } from './activity-loaders';
 
 const mockPlan = plansFactory.build();
 const mockTask = tasksFactory.build();

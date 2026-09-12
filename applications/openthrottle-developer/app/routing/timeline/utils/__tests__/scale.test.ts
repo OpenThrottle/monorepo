@@ -5,6 +5,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
+
 import { buildTimelineTicks, createTimelineScale, nowLineX } from '../scale';
 
 const HOUR = 60 * 60 * 1000;

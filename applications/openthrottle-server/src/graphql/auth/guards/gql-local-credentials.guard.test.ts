@@ -5,11 +5,12 @@
  */
 
 import { createMock } from '@golevelup/ts-vitest';
-import { UnauthorizedException } from '@nestjs/common';
 import type { ExecutionContext } from '@nestjs/common';
+import { UnauthorizedException } from '@nestjs/common';
 import { GqlExecutionContext } from '@nestjs/graphql';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { GqlLocalCredentialsGuard } from './gql-local-credentials.guard';
 
 interface FakeRequest {

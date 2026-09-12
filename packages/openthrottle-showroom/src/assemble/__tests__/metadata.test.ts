@@ -11,11 +11,11 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { buildMetadata } from '../metadata';
 import { getEpisode, resolveVariant } from '../../episodes/registry';
+import type { VideoEpisode } from '../../episodes/types';
 import { scanText } from '../../scan/scan-text';
 import type { RenderFacts } from '../metadata';
-import type { VideoEpisode } from '../../episodes/types';
+import { buildMetadata } from '../metadata';
 
 const FACTS: RenderFacts = {
   cues: 12,

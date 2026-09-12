@@ -1,23 +1,25 @@
 import {
+  type FileHandle,
   mkdir,
   open,
   rename,
   rm,
   stat,
-  type FileHandle,
 } from 'node:fs/promises';
 import * as path from 'node:path';
+
 import {
   Inject,
   Injectable,
   Logger,
-  Optional,
   type OnModuleDestroy,
   type OnModuleInit,
+  Optional,
 } from '@nestjs/common';
+
 import {
-  NESTJS_LOGGING_MODULE_OPTIONS,
   type JsonlRotationPolicy,
+  NESTJS_LOGGING_MODULE_OPTIONS,
   type ResolvedNestjsLoggingModuleOptions,
 } from '../config/nestjs-logging.options';
 import type {

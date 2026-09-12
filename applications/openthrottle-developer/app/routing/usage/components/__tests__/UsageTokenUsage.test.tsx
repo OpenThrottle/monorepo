@@ -1,14 +1,16 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import { UsageTokenUsage } from '../UsageTokenUsage';
-import type { UsageTokenUsageProps } from '../UsageTokenUsage';
+
 import type {
   UsageTokenUsageRowFragment,
   UsageTokenUsageTotalsFragment,
 } from '~/__generated__/graphql';
+
+import type { UsageTokenUsageProps } from '../UsageTokenUsage';
+import { UsageTokenUsage } from '../UsageTokenUsage';
 
 const buildRow = (
   overrides: Partial<UsageTokenUsageRowFragment>,

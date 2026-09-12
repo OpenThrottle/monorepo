@@ -1,15 +1,17 @@
-import * as React from 'react';
 import type { ChatModelOption } from '@openthrottle/react-router-chat';
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { Mock } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import { SKILL_RUN_COPY } from '~/routing/skills/data/data.copy';
-import { RunSkillDialog } from '../RunSkillDialog';
+
 import type { RunSkillDialogProps, RunSkillPayload } from '../RunSkillDialog';
+import { RunSkillDialog } from '../RunSkillDialog';
 
 type RunHandler = Mock<(payload: RunSkillPayload) => void>;
 

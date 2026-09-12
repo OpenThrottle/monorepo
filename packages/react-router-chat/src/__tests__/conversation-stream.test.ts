@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import type { ChatMessage } from '../types';
+
 import {
   INITIAL_STREAM_STATE,
   reduceStreamChunk,
   toThreadMessages,
 } from '../conversation-stream';
+import type { ChatMessage } from '../types';
 
 const chunk = (overrides: {
   delta?: string;

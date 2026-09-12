@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import * as codegen from '../src/index';
 import { CustomPromptType } from '../src/index';
 

@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import {
   classifyIdInput,
   ID_INPUT_KIND,

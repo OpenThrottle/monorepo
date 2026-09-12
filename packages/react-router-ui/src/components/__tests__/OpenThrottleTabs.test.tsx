@@ -1,15 +1,16 @@
-import * as React from 'react';
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import {
   TabsContent,
   TabsList,
   TabsTrigger,
 } from '@openthrottle/react-router-shadcn';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub, useSearchParams } from 'react-router';
 import { describe, expect, test, vi } from 'vitest';
-import { OpenThrottleTabs } from '../OpenThrottleTabs';
+
 import type { OpenThrottleTabsProps } from '../OpenThrottleTabs';
+import { OpenThrottleTabs } from '../OpenThrottleTabs';
 
 const PARAM = 'tab';
 const SEARCH_PARAMS_ID = 'search-params-string';

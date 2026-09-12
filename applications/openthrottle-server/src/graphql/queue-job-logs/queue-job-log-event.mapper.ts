@@ -11,9 +11,9 @@
  * `queue-job-log-mapping`; putting the composer here avoids an import cycle.
  */
 
+import type { QueueJobLogEventObject } from './queue-job-log-event.object';
 import { deriveQueueJobLogLevel } from './queue-job-log-mapping';
 import { buildRedactedQueueJobLogMessage } from './queue-job-log-redaction';
-import type { QueueJobLogEventObject } from './queue-job-log-event.object';
 
 /**
  * @description Minimal record shape the mapper reads — structurally satisfied by

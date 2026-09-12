@@ -1,5 +1,5 @@
-import type { Document } from '@langchain/core/documents';
 import { PDFLoader } from '@langchain/community/document_loaders/fs/pdf';
+import type { Document } from '@langchain/core/documents';
 
 /**
  * @description Load a single PDF file using LangChain's PDFLoader

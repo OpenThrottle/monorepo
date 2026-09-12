@@ -1,10 +1,11 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { GlobalFooter } from '../GlobalFooter';
+
 import type { GlobalFooterProps } from '../GlobalFooter';
+import { GlobalFooter } from '../GlobalFooter';
 
 describe('GlobalFooter Component', () => {
   let component: RenderResult;

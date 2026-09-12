@@ -5,19 +5,21 @@
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+
 import { describe, expect, it } from 'vitest';
+
 import { DEFAULT_RALPH_RUNNER } from '../ralph-execution-backend';
+import {
+  formatRalphPromptFileProfileLabel,
+  readRalphPromptFilesUtf8,
+  readRalphPromptFileUtf8,
+  resolveRalphPromptFromSeed,
+} from '../ralph-prompt-resolution';
 import {
   DEFAULT_RALPH_ITERATIONS,
   DEFAULT_RALPH_MODEL,
   DEFAULT_RALPH_PROMPT,
 } from '../ralph-runtime-config';
-import {
-  formatRalphPromptFileProfileLabel,
-  readRalphPromptFileUtf8,
-  readRalphPromptFilesUtf8,
-  resolveRalphPromptFromSeed,
-} from '../ralph-prompt-resolution';
 
 describe('resolveRalphPromptFromSeed', () => {
   it('returns named profile when promptFile is absent', () => {

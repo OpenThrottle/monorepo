@@ -1,10 +1,12 @@
-import * as React from 'react';
 import { render, screen } from '@testing-library/react';
+import * as React from 'react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import { buildRootMatch } from '~/testing/root-match-fixture';
-import CreatePersona from '../personas.create';
+
 import type { Route } from '@/app/routes/+types/personas.create';
+import { buildRootMatch } from '~/testing/root-match-fixture';
+
+import CreatePersona from '../personas.create';
 
 const matches: Route.ComponentProps['matches'] = [
   buildRootMatch(),

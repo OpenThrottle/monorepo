@@ -14,8 +14,8 @@ import {
 import { type FloorElement, type FloorLayout } from '../types';
 import { type Point } from '../utils/geometry';
 import {
-  type ElementPatch,
   addElement,
+  type ElementPatch,
   moveElement,
   removeElement,
   updateElement,

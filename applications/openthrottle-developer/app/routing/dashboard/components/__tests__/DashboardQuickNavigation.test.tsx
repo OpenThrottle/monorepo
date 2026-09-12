@@ -1,11 +1,13 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
+
 import { WORKSPACE_FULL_JUMP_LINKS } from '~/routing/navigation/data/workspace-jump-links';
-import { DashboardQuickNavigation } from '../DashboardQuickNavigation';
+
 import type { DashboardQuickNavigationProps } from '../DashboardQuickNavigation';
+import { DashboardQuickNavigation } from '../DashboardQuickNavigation';
 
 function renderWithProps(props: DashboardQuickNavigationProps): RenderResult {
   const Component = () => <DashboardQuickNavigation {...props} />;

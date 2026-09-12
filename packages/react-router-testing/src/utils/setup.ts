@@ -1,7 +1,9 @@
 import '@testing-library/jest-dom/vitest';
+
+import type { OpenThrottleEnv } from '@openthrottle/react-router-utils';
 import { cleanup } from '@testing-library/react';
 import { afterEach } from 'vitest';
-import type { OpenThrottleEnv } from '@openthrottle/react-router-utils';
+
 import { installTestEnv } from './env';
 import type { InstallPolyfillsOptions } from './polyfills';
 import { installPolyfills } from './polyfills';

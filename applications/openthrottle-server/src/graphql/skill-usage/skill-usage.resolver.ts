@@ -6,6 +6,10 @@
  * truncated/redacted payloads.
  */
 
+import { BadRequestException, UseGuards } from '@nestjs/common';
+import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { CurrentUser } from '@openthrottle/nestjs-auth';
+import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 import {
   SKILL_USAGE_OUTCOMES,
   SKILL_USAGE_PRIVACY_LEVELS,
@@ -15,10 +19,7 @@ import {
   type SkillUsagePrivacyLevel,
   type SkillUsageScope,
 } from '@openthrottle/nestjs-repositories';
-import { BadRequestException, UseGuards } from '@nestjs/common';
-import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { CurrentUser } from '@openthrottle/nestjs-auth';
-import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
+
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
 import { EffectiveUserResolutionService } from '../../services/effective-user-resolution/effective-user-resolution.service';
 import {

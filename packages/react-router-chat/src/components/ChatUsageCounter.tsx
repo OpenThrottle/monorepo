@@ -1,8 +1,9 @@
-import * as React from 'react';
 import clsx from 'clsx';
-import { resolveTotalTokens } from '../utils/chat-usage-counter';
+import * as React from 'react';
+
 import type { ChatTokenUsage } from '../types';
 import { formatTokenCount, formatUsageCost, hasUsageCounts } from '../usage';
+import { resolveTotalTokens } from '../utils/chat-usage-counter';
 
 export interface ChatUsageCounterProps {
   readonly className?: string;

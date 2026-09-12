@@ -4,8 +4,8 @@
  * updates one place and no spec breaks on copy drift. Add new copy here rather than
  * inlining sentence-length literals in components.
  */
-import { BrainCircuitIcon } from 'lucide-react';
 import type { GlobalFeatureOnboardingContent } from '@openthrottle/react-router-ui-global';
+import { BrainCircuitIcon } from 'lucide-react';
 
 /**
  * @description New-user "teach-me-fast" onboarding copy for the skills index,

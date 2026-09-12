@@ -1,6 +1,7 @@
-import * as React from 'react';
 import { OpenThrottleStatCard } from '@openthrottle/react-router-ui';
 import clsx from 'clsx';
+import * as React from 'react';
+
 import {
   QUEUE_STAT_ROW_COLUMN_CLASS,
   type QueueStatRowColumns,

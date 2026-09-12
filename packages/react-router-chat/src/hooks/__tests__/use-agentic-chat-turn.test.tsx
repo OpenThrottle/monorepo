@@ -1,11 +1,12 @@
-import * as React from 'react';
-import { act, fireEvent, render, waitFor } from '@testing-library/react';
+import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import type { RenderResult } from '@testing-library/react';
+import { act, fireEvent, render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { parse } from 'graphql';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
+
 import { useAgenticChatTurn } from '../use-agentic-chat-turn';
 import type {
   ConversationStreamSubscriptionData,

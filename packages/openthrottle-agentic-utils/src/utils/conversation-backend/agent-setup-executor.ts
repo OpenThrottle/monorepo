@@ -13,9 +13,10 @@
  *   discovery scan can see a freshly installed binary (the `~/.local/bin` PATH gotcha).
  */
 
-import { getDriver, isDriverId } from '@openthrottle/openthrottle-drivers';
-import type { AgentDriver } from '@openthrottle/openthrottle-drivers';
 import { spawn } from 'node:child_process';
+
+import type { AgentDriver } from '@openthrottle/openthrottle-drivers';
+import { getDriver, isDriverId } from '@openthrottle/openthrottle-drivers';
 
 /** Default per-run wall-clock budget (10 minutes) before the child is force-killed. */
 export const DEFAULT_AGENT_SETUP_TIMEOUT_MS = 600_000;
