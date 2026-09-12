@@ -33,12 +33,102 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 
 // packages/agentic-hooks/src/adapters/claude/outcome.ts
-var import_node_path5 = __toESM(require("node:path"), 1);
+var import_node_path6 = __toESM(require("node:path"), 1);
 
 // packages/agentic-hooks/src/config/env.ts
+var import_node_child_process2 = require("node:child_process");
+var import_node_fs2 = __toESM(require("node:fs"), 1);
+var import_node_path2 = __toESM(require("node:path"), 1);
+
+// packages/agentic-hooks/src/config/profile.ts
 var import_node_child_process = require("node:child_process");
+var import_node_crypto = require("node:crypto");
 var import_node_fs = __toESM(require("node:fs"), 1);
+var import_node_os = __toESM(require("node:os"), 1);
 var import_node_path = __toESM(require("node:path"), 1);
+var REPO_PROFILES = Object.freeze({
+  FOREIGN: "foreign",
+  HOME: "home"
+});
+var HOME_MARKER = ".openthrottle.mjs";
+var resolveRepoProfile = (repoRoot) => {
+  try {
+    return import_node_fs.default.existsSync(import_node_path.default.join(repoRoot, HOME_MARKER)) ? REPO_PROFILES.HOME : REPO_PROFILES.FOREIGN;
+  } catch {
+    return REPO_PROFILES.FOREIGN;
+  }
+};
+var normalizeRemoteUrl = (remote) => {
+  let rest = remote.trim();
+  if (!rest) {
+    return null;
+  }
+  const schemeEnd = rest.indexOf("://");
+  if (schemeEnd !== -1) {
+    rest = rest.slice(schemeEnd + 3);
+  }
+  const at = rest.lastIndexOf("@");
+  if (at !== -1) {
+    rest = rest.slice(at + 1);
+  }
+  const colon = rest.indexOf(":");
+  if (colon !== -1) {
+    const after = rest.slice(colon + 1);
+    rest = /^\d+(\/|$)/.test(after) ? `${rest.slice(0, colon)}${after.replace(/^\d+/, "")}` : `${rest.slice(0, colon)}/${after}`;
+  }
+  rest = rest.replace(/\.git$/, "").replace(/\/+$/, "");
+  const slash = rest.indexOf("/");
+  if (slash === -1) {
+    return rest.toLowerCase() || null;
+  }
+  return `${rest.slice(0, slash).toLowerCase()}${rest.slice(slash)}`;
+};
+var identityCache = /* @__PURE__ */ new Map();
+var resolveRepoIdentity = (repoRoot) => {
+  const cached = identityCache.get(repoRoot);
+  if (cached !== void 0) {
+    return cached;
+  }
+  const resolved = readRepoIdentity(repoRoot);
+  identityCache.set(repoRoot, resolved);
+  return resolved;
+};
+var readRepoIdentity = (repoRoot) => {
+  try {
+    const remote = (0, import_node_child_process.execFileSync)(
+      "git",
+      ["config", "--get", "remote.origin.url"],
+      {
+        cwd: repoRoot,
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "ignore"],
+        timeout: 2e3
+      }
+    ).trim();
+    return remote ? normalizeRemoteUrl(remote) : null;
+  } catch {
+    return null;
+  }
+};
+var openThrottleHome = () => import_node_path.default.join(import_node_os.default.homedir(), ".openthrottle");
+var foreignStateDir = (repoRoot) => {
+  const key = resolveRepoIdentity(repoRoot) ?? repoRoot;
+  const hash = (0, import_node_crypto.createHash)("sha256").update(key).digest("hex").slice(0, 32);
+  return import_node_path.default.join(openThrottleHome(), "skill-usage", hash);
+};
+var OPERATOR_CONFIG_PATH_REL = "hooks.json";
+var readOperatorConfig = () => {
+  try {
+    const raw = import_node_fs.default.readFileSync(
+      import_node_path.default.join(openThrottleHome(), OPERATOR_CONFIG_PATH_REL),
+      "utf8"
+    );
+    const parsed = JSON.parse(raw);
+    return typeof parsed === "object" && parsed !== null && !Array.isArray(parsed) ? { ...parsed } : {};
+  } catch {
+    return {};
+  }
+};
 
 // packages/agentic-hooks/src/utils/logging.ts
 var logHookError = (message, err) => {
@@ -55,7 +145,7 @@ var logHookError = (message, err) => {
 // packages/agentic-hooks/src/config/env.ts
 var resolveGitBranch = (repoRoot) => {
   try {
-    return (0, import_node_child_process.execFileSync)("git", ["rev-parse", "--abbrev-ref", "HEAD"], {
+    return (0, import_node_child_process2.execFileSync)("git", ["rev-parse", "--abbrev-ref", "HEAD"], {
       cwd: repoRoot,
       encoding: "utf8",
       stdio: ["ignore", "pipe", "ignore"],
@@ -68,11 +158,11 @@ var resolveGitBranch = (repoRoot) => {
 var readRepoEnvFile = (repoRoot) => {
   const out = {};
   try {
-    const envPath = import_node_path.default.join(repoRoot, ".env");
-    if (!import_node_fs.default.existsSync(envPath)) {
+    const envPath = import_node_path2.default.join(repoRoot, ".env");
+    if (!import_node_fs2.default.existsSync(envPath)) {
       return out;
     }
-    const text = import_node_fs.default.readFileSync(envPath, "utf8");
+    const text = import_node_fs2.default.readFileSync(envPath, "utf8");
     for (const line of text.split("\n")) {
       const trimmed = line.trim();
       if (!trimmed || trimmed.startsWith("#")) {
@@ -97,19 +187,35 @@ var readRepoEnvFile = (repoRoot) => {
   }
   return out;
 };
+var OPERATOR_CONFIG_KEYS = Object.freeze({
+  OPENTHROTTLE_GRAPHQL_URL: "graphqlUrl",
+  OPENTHROTTLE_MCP_AUTH_TOKEN: "authToken",
+  OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN: "authToken"
+});
+var operatorConfigValue = (key) => {
+  const field = OPERATOR_CONFIG_KEYS[key];
+  if (field === void 0) {
+    return "";
+  }
+  const value = readOperatorConfig()[field];
+  return typeof value === "string" && value.trim() ? value.trim() : "";
+};
 var resolveOtEnv = (repoRoot, key) => {
   const skillOverride = key === "OPENTHROTTLE_GRAPHQL_URL" ? process.env.SKILL_USAGE_GRAPHQL_URL : key === "OPENTHROTTLE_MCP_AUTH_TOKEN" ? process.env.SKILL_USAGE_AUTH_TOKEN : void 0;
   if (skillOverride && skillOverride.trim()) {
     return skillOverride.trim();
   }
-  if (repoRoot) {
+  if (repoRoot && resolveRepoProfile(repoRoot) === REPO_PROFILES.HOME) {
     const fromFile = readRepoEnvFile(repoRoot)[key];
     if (fromFile && fromFile.trim()) {
       return fromFile.trim();
     }
   }
   const fromProcess = process.env[key];
-  return fromProcess && fromProcess.trim() ? fromProcess.trim() : "";
+  if (fromProcess && fromProcess.trim()) {
+    return fromProcess.trim();
+  }
+  return operatorConfigValue(key);
 };
 var graphqlUrlFromEnvMap = (env) => {
   const explicit = env.OPENTHROTTLE_GRAPHQL_URL?.trim() || env.OPENTHROTTLE_WORKER_GRAPHQL_URL?.trim();
@@ -127,13 +233,18 @@ var resolveGraphqlUrl = (repoRoot) => {
   if (skillOverride) {
     return skillOverride.replace(/\/$/, "");
   }
-  if (repoRoot) {
+  if (repoRoot && resolveRepoProfile(repoRoot) === REPO_PROFILES.HOME) {
     const fromFile = graphqlUrlFromEnvMap(readRepoEnvFile(repoRoot));
     if (fromFile) {
       return fromFile;
     }
   }
-  return graphqlUrlFromEnvMap(process.env);
+  const fromProcess = graphqlUrlFromEnvMap(process.env);
+  if (fromProcess) {
+    return fromProcess;
+  }
+  const fromOperator = operatorConfigValue("OPENTHROTTLE_GRAPHQL_URL");
+  return fromOperator ? fromOperator.replace(/\/$/, "") : null;
 };
 var resolveAuthToken = (repoRoot) => resolveOtEnv(repoRoot, "OPENTHROTTLE_MCP_AUTH_TOKEN") || resolveOtEnv(repoRoot, "OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN") || "";
 
@@ -144,17 +255,18 @@ var PRIVACY_LEVELS = Object.freeze({
   TRUNCATED: "truncated"
 });
 var DEFAULT_PRIVACY_LEVEL = PRIVACY_LEVELS.TRUNCATED;
+var FOREIGN_PRIVACY_LEVEL = PRIVACY_LEVELS.NAME_ONLY;
 
 // packages/agentic-hooks/src/utils/scope.ts
-var import_node_fs2 = __toESM(require("node:fs"), 1);
-var import_node_path2 = __toESM(require("node:path"), 1);
+var import_node_fs3 = __toESM(require("node:fs"), 1);
+var import_node_path3 = __toESM(require("node:path"), 1);
 var detectScope = (skillName, repoRoot) => {
   if (!skillName || skillName.includes(":")) {
     return "third-party";
   }
-  const authoredDir = import_node_path2.default.join(repoRoot, "skills", skillName);
+  const authoredDir = import_node_path3.default.join(repoRoot, "skills", skillName);
   try {
-    if (import_node_fs2.default.existsSync(authoredDir) && import_node_fs2.default.statSync(authoredDir).isDirectory()) {
+    if (import_node_fs3.default.existsSync(authoredDir) && import_node_fs3.default.statSync(authoredDir).isDirectory()) {
       return "ours";
     }
   } catch {
@@ -248,29 +360,32 @@ var toRecordSkillUsageOutcomeInput = (event) => {
 };
 
 // packages/agentic-hooks/src/data/jsonl.ts
-var import_node_fs3 = __toESM(require("node:fs"), 1);
-var import_node_path3 = __toESM(require("node:path"), 1);
-var DEFAULT_JSONL_REL = import_node_path3.default.join(
+var import_node_fs4 = __toESM(require("node:fs"), 1);
+var import_node_path4 = __toESM(require("node:path"), 1);
+var BUFFER_DIR_REL = import_node_path4.default.join(".cache", "skill-usage");
+var OUTCOMES_LEAF = "outcomes.jsonl";
+var DEFAULT_JSONL_REL = import_node_path4.default.join(
   ".cache",
   "skill-usage",
   "events.jsonl"
 );
-var DEFAULT_OUTCOMES_JSONL_REL = import_node_path3.default.join(
+var DEFAULT_OUTCOMES_JSONL_REL = import_node_path4.default.join(
   ".cache",
   "skill-usage",
   "outcomes.jsonl"
 );
-var DEFAULT_STARTS_DIR_REL = import_node_path3.default.join(
+var DEFAULT_STARTS_DIR_REL = import_node_path4.default.join(
   ".cache",
   "skill-usage",
   "starts"
 );
 var appendJsonl = (jsonlPath, event) => {
-  import_node_fs3.default.mkdirSync(import_node_path3.default.dirname(jsonlPath), { recursive: true });
-  import_node_fs3.default.appendFileSync(jsonlPath, `${JSON.stringify(event)}
+  import_node_fs4.default.mkdirSync(import_node_path4.default.dirname(jsonlPath), { recursive: true });
+  import_node_fs4.default.appendFileSync(jsonlPath, `${JSON.stringify(event)}
 `, "utf8");
 };
-var defaultOutcomesJsonlPath = (repoRoot) => import_node_path3.default.join(repoRoot, DEFAULT_OUTCOMES_JSONL_REL);
+var bufferPath = (repoRoot, leaf) => resolveRepoProfile(repoRoot) === REPO_PROFILES.FOREIGN ? import_node_path4.default.join(foreignStateDir(repoRoot), leaf) : import_node_path4.default.join(repoRoot, BUFFER_DIR_REL, leaf);
+var defaultOutcomesJsonlPath = (repoRoot) => bufferPath(repoRoot, OUTCOMES_LEAF);
 
 // packages/nodejs-utils/dist/src/utils/is-record.js
 var isRecord = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
@@ -413,8 +528,8 @@ var persistOutcomeEvent = async ({
 };
 
 // packages/agentic-hooks/src/data/plan-runs.ts
-var import_node_path4 = __toESM(require("node:path"), 1);
-var PLAN_RUNS_DIR_REL = import_node_path4.default.join(".cache", "plan-runs");
+var import_node_path5 = __toESM(require("node:path"), 1);
+var PLAN_RUNS_DIR_REL = import_node_path5.default.join(".cache", "plan-runs");
 var PLAN_RUN_ABANDONED_MS = 6 * 60 * 60 * 1e3;
 
 // packages/agentic-hooks/src/adapters/claude/payload.ts
@@ -471,7 +586,7 @@ var main = async () => {
     const outPath = process.env.SKILL_USAGE_OUTCOMES_JSONL_PATH || defaultOutcomesJsonlPath(repoRoot);
     await persistOutcomeEvent({
       event,
-      jsonlPath: import_node_path5.default.resolve(outPath),
+      jsonlPath: import_node_path6.default.resolve(outPath),
       repoRoot
     });
   } catch (err) {

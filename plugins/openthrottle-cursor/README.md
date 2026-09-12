@@ -28,19 +28,33 @@ Per skill invocation: the skill name, whether the skill is OpenThrottle-authored
 third-party, a timestamp, the session id, the git branch, and — on completion — an
 outcome (`success` / `error` / `abandoned`) and a duration.
 
-Outside the OpenThrottle monorepo the default privacy level is `name-only`: skill
-**arguments are not collected at all**. A secret redactor runs regardless of level.
+In your repository the privacy level is `name-only`: **skill arguments are not
+collected at all** — the recorded `args` is null, not a truncated string. "It records
+which skills ran, never what you typed" is the claim, and you can check it by reading
+`src/utils/privacy.ts` in the OpenThrottle monorepo. A secret redactor runs on top of
+that regardless, as a backstop rather than as the control.
+
+The one exception is the OpenThrottle monorepo itself, where the operator owns the code
+the arguments come from: there the level is `truncated` (redacted, capped at 256 chars).
+Raising any other repository to that level takes an explicit opt-in in the operator's own
+machine-global config. It is never inferred from your repository.
 
 ## What it never does
 
-- It never writes inside your repository.
+- **It never writes inside your repository — no file, on any code path, including
+  error paths.** When it cannot reach a server it buffers to
+  `~/.openthrottle/skill-usage/<hash>/` in the operator's home directory instead. This
+  is tested rather than merely promised: a test runs a whole capture → persist → drain
+  cycle against a dead endpoint and fails unless the checkout is byte-identical after.
+- **It never reads your `.env`**, not even to find a server. The endpoint comes only
+  from the environment the process was started with, or from the operator's own
+  `~/.openthrottle/hooks.json`. A repository cannot redirect this telemetry.
 - It never blocks or fails a tool call. Every hook is fail-open and exits 0.
-- It never reads your `.env`. Outside the OpenThrottle monorepo the endpoint comes
-  only from the environment or from your own `~/.openthrottle/hooks.json`.
 - It never forwards your email address, even where the tool puts one in every payload.
 - With no OpenThrottle server configured it sends nothing, silently.
 
-See `docs/monorepo/child-repo-hook-telemetry-contract.md` for the full contract.
+See `docs/monorepo/child-repo-hook-telemetry-contract.md` for the full contract, which
+also records the parts of it that are not implemented yet.
 
 ## Turning it off
 

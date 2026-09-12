@@ -12,6 +12,7 @@ import { resolveGraphqlUrl } from '../../index';
 
 describe('resolveGraphqlUrl', () => {
   let tmpRoot: string;
+  let foreignRoot: string;
   const prev = {
     APP: process.env.OPENTHROTTLE_SERVER_APP_URL,
     GRAPHQL: process.env.OPENTHROTTLE_GRAPHQL_URL,
@@ -21,14 +22,26 @@ describe('resolveGraphqlUrl', () => {
 
   beforeAll(() => {
     tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-usage-url-'));
+    // The home marker is what makes the `.env` leg legal at all.
+    fs.writeFileSync(path.join(tmpRoot, '.openthrottle.mjs'), 'export {};\n');
     fs.writeFileSync(
       path.join(tmpRoot, '.env'),
       'OPENTHROTTLE_SERVER_APP_URL="http://localhost:7231"\n',
+    );
+
+    // Same .env, no marker — a repo the operator does not own.
+    foreignRoot = fs.mkdtempSync(
+      path.join(os.tmpdir(), 'skill-usage-foreign-'),
+    );
+    fs.writeFileSync(
+      path.join(foreignRoot, '.env'),
+      'OPENTHROTTLE_SERVER_APP_URL="http://evil.example/pwned"\n',
     );
   });
 
   afterAll(() => {
     fs.rmSync(tmpRoot, { force: true, recursive: true });
+    fs.rmSync(foreignRoot, { force: true, recursive: true });
     const restore: Array<[keyof typeof prev, string]> = [
       ['GRAPHQL', 'OPENTHROTTLE_GRAPHQL_URL'],
       ['WORKER', 'OPENTHROTTLE_WORKER_GRAPHQL_URL'],
@@ -55,5 +68,25 @@ describe('resolveGraphqlUrl', () => {
   it('SKILL_USAGE_GRAPHQL_URL overrides .env', () => {
     process.env.SKILL_USAGE_GRAPHQL_URL = 'http://localhost:9/graphql';
     expect(resolveGraphqlUrl(tmpRoot)).toBe('http://localhost:9/graphql');
+  });
+
+  it("never reads a foreign checkout's .env, even to find the endpoint", () => {
+    // A repo the operator does not own could otherwise redirect their telemetry
+    // simply by committing an .env — the reason this leg is profile-gated.
+    delete process.env.OPENTHROTTLE_GRAPHQL_URL;
+    delete process.env.OPENTHROTTLE_WORKER_GRAPHQL_URL;
+    delete process.env.SKILL_USAGE_GRAPHQL_URL;
+    process.env.OPENTHROTTLE_SERVER_APP_URL = 'http://localhost:6021';
+    expect(resolveGraphqlUrl(foreignRoot)).toBe(
+      'http://localhost:6021/graphql',
+    );
+  });
+
+  it('falls back to nothing in a foreign repo with no ambient endpoint', () => {
+    delete process.env.OPENTHROTTLE_GRAPHQL_URL;
+    delete process.env.OPENTHROTTLE_WORKER_GRAPHQL_URL;
+    delete process.env.SKILL_USAGE_GRAPHQL_URL;
+    delete process.env.OPENTHROTTLE_SERVER_APP_URL;
+    expect(resolveGraphqlUrl(foreignRoot)).toBeNull();
   });
 });

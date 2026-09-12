@@ -175,3 +175,36 @@ what is collected and how to turn it off.
 | privacy default                   | `truncated` (args redacted, 256 cap)  | **`name-only`** (no args)                              |
 | warning on unreachable endpoint   | per failure                           | one per session                                        |
 | writes inside the checkout        | yes (gitignored)                      | **never**                                              |
+
+---
+
+## Implementation status
+
+This document was written as a specification and, for a while, described a profile that existed only
+on paper — the payload README summarised it as though it shipped. That gap is now partly closed, so
+the status is tracked here rather than assumed.
+
+**Measured 2026-09-11.** The `home` profile is unchanged throughout; every row below is about
+`foreign`.
+
+| §   | rule                                             | status | where                                              |
+| --- | ------------------------------------------------ | ------ | -------------------------------------------------- |
+| 1   | `home` vs `foreign` classification               | ✅     | `config/profile.ts` → `resolveRepoProfile`         |
+| 2   | endpoint/auth never from a foreign `.env`        | ✅     | `config/env.ts`, profile-gated                     |
+| 2   | `~/.openthrottle/hooks.json` as the leg-A source | ✅     | `config/profile.ts` → `readOperatorConfig`         |
+| 3   | repo identity = normalized git remote            | ⚠️     | computed (`resolveRepoIdentity`), **not yet sent** |
+| 3   | `detectScope` against the injected skill set     | ❌     | still `<repoRoot>/skills/<name>` — see below       |
+| 4   | buffers relocate out of the checkout             | ✅     | `data/jsonl.ts`, one seam for every call site      |
+| 5   | unreachable-endpoint warning, one per session    | ❌     | still one per failed post                          |
+| 6   | privacy default `name-only`                      | ✅     | `utils/privacy.ts` → `resolvePrivacyLevel`         |
+| 7   | total off switch (layer 2)                       | ❌     | only layers 1 and 3 exist                          |
+
+The ✅ rows are covered by `packages/agentic-hooks/src/config/__tests__/profile.test.ts`, including
+§4 as the contract asks for it: a full capture → persist → drain cycle against a dead endpoint,
+asserting the scratch repo is byte-identical afterwards. That test was confirmed to fail when the
+relocation is removed, so it is a guard that has been seen to work.
+
+The ❌ rows are real gaps, not deferred polish. The most consequential is **§3 `detectScope`**: in a
+foreign repo every OT-authored skill is currently reported as `third-party`, which quietly corrupts
+the exact metric this telemetry exists to produce. It is tracked separately; do not read the
+ours-vs-third-party split for foreign repos until it lands.

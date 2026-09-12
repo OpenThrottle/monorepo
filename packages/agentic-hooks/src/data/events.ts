@@ -3,7 +3,7 @@
  * a NormalizedInvocation and gets back the durable event shape.
  */
 import { resolveGitBranch } from '../config/env';
-import { applyPrivacy, DEFAULT_PRIVACY_LEVEL } from '../utils/privacy';
+import { applyPrivacy, resolvePrivacyLevel } from '../utils/privacy';
 import { detectScope } from '../utils/scope';
 import type {
   NormalizedInvocation,
@@ -52,7 +52,7 @@ export const buildUsageEvent = ({
   normalized,
   repoRoot,
   source,
-  privacyLevel = DEFAULT_PRIVACY_LEVEL,
+  privacyLevel,
   timestamp = new Date().toISOString(),
   gitBranch,
 }: {
@@ -69,7 +69,11 @@ export const buildUsageEvent = ({
 
   const cwd = normalized.cwd || repoRoot;
   const scope = detectScope(normalized.skill_name, repoRoot);
-  const args = applyPrivacy(privacyLevel, normalized.args);
+  // Resolved from the repo profile when the caller does not pin one, so an
+  // adapter cannot accidentally opt a foreign repo back into arg collection by
+  // passing the home default.
+  const level = privacyLevel ?? resolvePrivacyLevel(repoRoot);
+  const args = applyPrivacy(level, normalized.args);
   const resolvedSource = source ?? normalized.source ?? undefined;
 
   const event: UsageEvent = {
@@ -77,7 +81,7 @@ export const buildUsageEvent = ({
     cwd,
     git_branch: gitBranch ?? resolveGitBranch(repoRoot),
     invocation_path: normalized.invocation_path ?? null,
-    privacy_level: privacyLevel,
+    privacy_level: level,
     scope,
     session_id: normalized.session_id ?? null,
     skill_name: normalized.skill_name,

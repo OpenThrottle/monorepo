@@ -1,11 +1,28 @@
 /**
- * JSONL sink + drain primitives and the canonical `.cache/skill-usage/*` paths.
+ * JSONL sink + drain primitives and the canonical skill-usage buffer paths.
+ *
+ * The three `default*` helpers below are the ONE seam every buffer write goes
+ * through — adapters, persist, and starts all resolve their path here — so
+ * making them profile-aware relocates every foreign-repo write at once. See
+ * `docs/monorepo/child-repo-hook-telemetry-contract.md` §4.
  */
 import fs from 'node:fs';
 import path from 'node:path';
 
+import {
+  foreignStateDir,
+  REPO_PROFILES,
+  resolveRepoProfile,
+} from '../config/profile';
 import { logHookError } from '../utils/logging';
 import type { DrainFileResult } from '../types';
+
+/** Buffer directory inside a `home` checkout, relative to the repo root. */
+const BUFFER_DIR_REL = path.join('.cache', 'skill-usage');
+
+const EVENTS_LEAF = 'events.jsonl';
+const OUTCOMES_LEAF = 'outcomes.jsonl';
+const STARTS_LEAF = 'starts';
 
 /** @public */
 export const DEFAULT_JSONL_REL: string = path.join(
@@ -43,17 +60,41 @@ export const appendJsonl = (jsonlPath: string, event: object): void => {
   fs.appendFileSync(jsonlPath, `${JSON.stringify(event)}\n`, 'utf8');
 };
 
+/**
+ * Root for this repo's buffers: inside the checkout for `home` (gitignored, and
+ * where a developer expects to find it), and out under `~/.openthrottle/` for
+ * `foreign`.
+ *
+ * Leg B's headline property is zero disk mutation in the target repo, and the
+ * JSONL fallback used to break it precisely where it mattered most: a foreign
+ * repo is the case MOST likely to have no reachable OT server, so buffering is
+ * the normal path there rather than the rare one.
+ */
+/**
+ * Resolve one buffer path for a repo.
+ *
+ * At home the buffers sit under `<repoRoot>/.cache/skill-usage/`, gitignored and
+ * where a developer expects to find them. In a foreign repo they move to
+ * `~/.openthrottle/skill-usage/<hash>/`, and the `.cache/skill-usage/` prefix is
+ * dropped — the machine-global directory already says what it holds, and
+ * repeating it would nest `skill-usage` inside `skill-usage`.
+ */
+const bufferPath = (repoRoot: string, leaf: string): string =>
+  resolveRepoProfile(repoRoot) === REPO_PROFILES.FOREIGN
+    ? path.join(foreignStateDir(repoRoot), leaf)
+    : path.join(repoRoot, BUFFER_DIR_REL, leaf);
+
 /** @public */
 export const defaultJsonlPath = (repoRoot: string): string =>
-  path.join(repoRoot, DEFAULT_JSONL_REL);
+  bufferPath(repoRoot, EVENTS_LEAF);
 
 /** @public */
 export const defaultOutcomesJsonlPath = (repoRoot: string): string =>
-  path.join(repoRoot, DEFAULT_OUTCOMES_JSONL_REL);
+  bufferPath(repoRoot, OUTCOMES_LEAF);
 
 /** @public */
 export const defaultStartsDir = (repoRoot: string): string =>
-  path.join(repoRoot, DEFAULT_STARTS_DIR_REL);
+  bufferPath(repoRoot, STARTS_LEAF);
 
 /**
  * A session id is used as a filename; keep it filesystem-safe.
