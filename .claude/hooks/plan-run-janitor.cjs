@@ -33,11 +33,42 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 
 // packages/agentic-hooks/src/adapters/claude/plan-run-janitor.ts
-var import_node_fs3 = __toESM(require("node:fs"), 1);
+var import_node_fs4 = __toESM(require("node:fs"), 1);
 
 // packages/agentic-hooks/src/config/env.ts
+var import_node_fs2 = __toESM(require("node:fs"), 1);
+var import_node_path2 = __toESM(require("node:path"), 1);
+
+// packages/agentic-hooks/src/config/profile.ts
 var import_node_fs = __toESM(require("node:fs"), 1);
+var import_node_os = __toESM(require("node:os"), 1);
 var import_node_path = __toESM(require("node:path"), 1);
+var REPO_PROFILES = Object.freeze({
+  FOREIGN: "foreign",
+  HOME: "home"
+});
+var HOME_MARKER = ".openthrottle.mjs";
+var resolveRepoProfile = (repoRoot) => {
+  try {
+    return import_node_fs.default.existsSync(import_node_path.default.join(repoRoot, HOME_MARKER)) ? REPO_PROFILES.HOME : REPO_PROFILES.FOREIGN;
+  } catch {
+    return REPO_PROFILES.FOREIGN;
+  }
+};
+var openThrottleHome = () => import_node_path.default.join(import_node_os.default.homedir(), ".openthrottle");
+var OPERATOR_CONFIG_PATH_REL = "hooks.json";
+var readOperatorConfig = () => {
+  try {
+    const raw = import_node_fs.default.readFileSync(
+      import_node_path.default.join(openThrottleHome(), OPERATOR_CONFIG_PATH_REL),
+      "utf8"
+    );
+    const parsed = JSON.parse(raw);
+    return typeof parsed === "object" && parsed !== null && !Array.isArray(parsed) ? { ...parsed } : {};
+  } catch {
+    return {};
+  }
+};
 
 // packages/agentic-hooks/src/utils/logging.ts
 var logHookError = (message, err) => {
@@ -55,11 +86,11 @@ var logHookError = (message, err) => {
 var readRepoEnvFile = (repoRoot) => {
   const out = {};
   try {
-    const envPath = import_node_path.default.join(repoRoot, ".env");
-    if (!import_node_fs.default.existsSync(envPath)) {
+    const envPath = import_node_path2.default.join(repoRoot, ".env");
+    if (!import_node_fs2.default.existsSync(envPath)) {
       return out;
     }
-    const text = import_node_fs.default.readFileSync(envPath, "utf8");
+    const text = import_node_fs2.default.readFileSync(envPath, "utf8");
     for (const line of text.split("\n")) {
       const trimmed = line.trim();
       if (!trimmed || trimmed.startsWith("#")) {
@@ -84,19 +115,35 @@ var readRepoEnvFile = (repoRoot) => {
   }
   return out;
 };
+var OPERATOR_CONFIG_KEYS = Object.freeze({
+  OPENTHROTTLE_GRAPHQL_URL: "graphqlUrl",
+  OPENTHROTTLE_MCP_AUTH_TOKEN: "authToken",
+  OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN: "authToken"
+});
+var operatorConfigValue = (key) => {
+  const field = OPERATOR_CONFIG_KEYS[key];
+  if (field === void 0) {
+    return "";
+  }
+  const value = readOperatorConfig()[field];
+  return typeof value === "string" && value.trim() ? value.trim() : "";
+};
 var resolveOtEnv = (repoRoot, key) => {
   const skillOverride = key === "OPENTHROTTLE_GRAPHQL_URL" ? process.env.SKILL_USAGE_GRAPHQL_URL : key === "OPENTHROTTLE_MCP_AUTH_TOKEN" ? process.env.SKILL_USAGE_AUTH_TOKEN : void 0;
   if (skillOverride && skillOverride.trim()) {
     return skillOverride.trim();
   }
-  if (repoRoot) {
+  if (repoRoot && resolveRepoProfile(repoRoot) === REPO_PROFILES.HOME) {
     const fromFile = readRepoEnvFile(repoRoot)[key];
     if (fromFile && fromFile.trim()) {
       return fromFile.trim();
     }
   }
   const fromProcess = process.env[key];
-  return fromProcess && fromProcess.trim() ? fromProcess.trim() : "";
+  if (fromProcess && fromProcess.trim()) {
+    return fromProcess.trim();
+  }
+  return operatorConfigValue(key);
 };
 var graphqlUrlFromEnvMap = (env) => {
   const explicit = env.OPENTHROTTLE_GRAPHQL_URL?.trim() || env.OPENTHROTTLE_WORKER_GRAPHQL_URL?.trim();
@@ -114,13 +161,18 @@ var resolveGraphqlUrl = (repoRoot) => {
   if (skillOverride) {
     return skillOverride.replace(/\/$/, "");
   }
-  if (repoRoot) {
+  if (repoRoot && resolveRepoProfile(repoRoot) === REPO_PROFILES.HOME) {
     const fromFile = graphqlUrlFromEnvMap(readRepoEnvFile(repoRoot));
     if (fromFile) {
       return fromFile;
     }
   }
-  return graphqlUrlFromEnvMap(process.env);
+  const fromProcess = graphqlUrlFromEnvMap(process.env);
+  if (fromProcess) {
+    return fromProcess;
+  }
+  const fromOperator = operatorConfigValue("OPENTHROTTLE_GRAPHQL_URL");
+  return fromOperator ? fromOperator.replace(/\/$/, "") : null;
 };
 var resolveAuthToken = (repoRoot) => resolveOtEnv(repoRoot, "OPENTHROTTLE_MCP_AUTH_TOKEN") || resolveOtEnv(repoRoot, "OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN") || "";
 
@@ -131,6 +183,7 @@ var PRIVACY_LEVELS = Object.freeze({
   TRUNCATED: "truncated"
 });
 var DEFAULT_PRIVACY_LEVEL = PRIVACY_LEVELS.TRUNCATED;
+var FOREIGN_PRIVACY_LEVEL = PRIVACY_LEVELS.NAME_ONLY;
 
 // packages/agentic-hooks/src/data/events.ts
 var SKILL_USAGE_OUTCOMES = Object.freeze({
@@ -140,18 +193,19 @@ var SKILL_USAGE_OUTCOMES = Object.freeze({
 });
 
 // packages/agentic-hooks/src/data/jsonl.ts
-var import_node_path2 = __toESM(require("node:path"), 1);
-var DEFAULT_JSONL_REL = import_node_path2.default.join(
+var import_node_path3 = __toESM(require("node:path"), 1);
+var BUFFER_DIR_REL = import_node_path3.default.join(".cache", "skill-usage");
+var DEFAULT_JSONL_REL = import_node_path3.default.join(
   ".cache",
   "skill-usage",
   "events.jsonl"
 );
-var DEFAULT_OUTCOMES_JSONL_REL = import_node_path2.default.join(
+var DEFAULT_OUTCOMES_JSONL_REL = import_node_path3.default.join(
   ".cache",
   "skill-usage",
   "outcomes.jsonl"
 );
-var DEFAULT_STARTS_DIR_REL = import_node_path2.default.join(
+var DEFAULT_STARTS_DIR_REL = import_node_path3.default.join(
   ".cache",
   "skill-usage",
   "starts"
@@ -164,9 +218,9 @@ var isRecord = (value) => typeof value === "object" && value !== null && !Array.
 var DEFAULT_ABANDONED_MS = 6 * 60 * 60 * 1e3;
 
 // packages/agentic-hooks/src/data/plan-runs.ts
-var import_node_fs2 = __toESM(require("node:fs"), 1);
-var import_node_path3 = __toESM(require("node:path"), 1);
-var PLAN_RUNS_DIR_REL = import_node_path3.default.join(".cache", "plan-runs");
+var import_node_fs3 = __toESM(require("node:fs"), 1);
+var import_node_path4 = __toESM(require("node:path"), 1);
+var PLAN_RUNS_DIR_REL = import_node_path4.default.join(".cache", "plan-runs");
 var PLAN_RUN_ABANDONED_MS = 6 * 60 * 60 * 1e3;
 var SETTLE_CLI_PLAN_RUN_MUTATION = `
 mutation SettlePlanRunFromHook($input: SettleCliPlanRunInput!) {
@@ -176,11 +230,11 @@ mutation SettlePlanRunFromHook($input: SettleCliPlanRunInput!) {
   }
 }
 `;
-var planRunsDir = (repoRoot) => import_node_path3.default.join(repoRoot, PLAN_RUNS_DIR_REL);
+var planRunsDir = (repoRoot) => import_node_path4.default.join(repoRoot, PLAN_RUNS_DIR_REL);
 var sanitizeSessionId2 = (sessionId) => String(sessionId).replace(/[^A-Za-z0-9._-]/g, "-");
 var readPlanRunRecord = (filePath) => {
   try {
-    const parsed = JSON.parse(import_node_fs2.default.readFileSync(filePath, "utf8"));
+    const parsed = JSON.parse(import_node_fs3.default.readFileSync(filePath, "utf8"));
     if (!isRecord(parsed) || typeof parsed.planRunId !== "string" || parsed.planRunId.trim() === "") {
       return null;
     }
@@ -236,7 +290,7 @@ var settleAbandonedPlanRuns = async ({
   const dir = planRunsDir(repoRoot);
   let files;
   try {
-    files = import_node_fs2.default.readdirSync(dir);
+    files = import_node_fs3.default.readdirSync(dir);
   } catch {
     return { settled: 0 };
   }
@@ -247,17 +301,17 @@ var settleAbandonedPlanRuns = async ({
   const candidates = [];
   for (const file of files) {
     if (!file.endsWith(".json") || file === currentFile) continue;
-    const filePath = import_node_path3.default.join(dir, file);
+    const filePath = import_node_path4.default.join(dir, file);
     let mtimeMs;
     try {
-      mtimeMs = import_node_fs2.default.statSync(filePath).mtimeMs;
+      mtimeMs = import_node_fs3.default.statSync(filePath).mtimeMs;
     } catch {
       continue;
     }
     if (now - mtimeMs < maxAgeMs) continue;
     const record = readPlanRunRecord(filePath);
     if (record === null) {
-      import_node_fs2.default.rmSync(filePath, { force: true });
+      import_node_fs3.default.rmSync(filePath, { force: true });
       continue;
     }
     candidates.push({ filePath, record });
@@ -271,7 +325,7 @@ var settleAbandonedPlanRuns = async ({
         planRunId: record.planRunId,
         timeoutMs
       });
-      if (ok) import_node_fs2.default.rmSync(filePath, { force: true });
+      if (ok) import_node_fs3.default.rmSync(filePath, { force: true });
       return ok;
     })
   );
@@ -297,7 +351,7 @@ var normalizeClaudeStopPayload = (raw) => {
 var main = async () => {
   try {
     const repoRoot = process.env.CLAUDE_PROJECT_DIR || process.env.OPEN_THROTTLE_REPO_ROOT || process.cwd();
-    const stdinBuf = import_node_fs3.default.readFileSync(0, "utf8");
+    const stdinBuf = import_node_fs4.default.readFileSync(0, "utf8");
     if (!stdinBuf || !stdinBuf.trim()) {
       return;
     }

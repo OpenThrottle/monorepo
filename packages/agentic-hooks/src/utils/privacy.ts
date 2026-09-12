@@ -2,7 +2,11 @@
  * Privacy seam — args truncation + secret redaction before an event ever leaves
  * the machine. Kept as a discrete unit so plan 91679bbf can extend it
  * (configurable privacy) without touching the rest of the core.
+ *
+ * The level is chosen from the repo profile rather than being a fixed constant:
+ * `truncated` at home, `name-only` in a repo the operator does not own.
  */
+import { REPO_PROFILES, resolveRepoProfile } from '../config/profile';
 import type { PrivacyLevel } from '../types';
 
 /** @public */
@@ -12,8 +16,32 @@ export const PRIVACY_LEVELS = Object.freeze({
   TRUNCATED: 'truncated',
 } as const) satisfies Readonly<Record<string, PrivacyLevel>>;
 
-/** @public */
+/** The `home` default: args redacted and capped. @public */
 export const DEFAULT_PRIVACY_LEVEL: PrivacyLevel = PRIVACY_LEVELS.TRUNCATED;
+
+/** The `foreign` default: no args at all. @public */
+export const FOREIGN_PRIVACY_LEVEL: PrivacyLevel = PRIVACY_LEVELS.NAME_ONLY;
+
+/**
+ * The privacy level for a repo, from its profile.
+ *
+ * The asymmetry is about consent, not about the redactor's quality: in this
+ * repo the operator owns the code the args are drawn from; in someone else's
+ * they do not, and skill args routinely quote file contents, paths and prompt
+ * text belonging to a third party. `name-only` is also what makes the plugin
+ * defensible to install — "it records which skills ran, never what you typed"
+ * is a claim a user can check by reading the payload's README.
+ *
+ * Raising a foreign repo to `truncated`/`full` is an explicit opt-in in the
+ * operator's own machine-global config; it is never inferable from the repo.
+ * See `docs/monorepo/child-repo-hook-telemetry-contract.md` §6.
+ *
+ * @public
+ */
+export const resolvePrivacyLevel = (repoRoot: string): PrivacyLevel =>
+  resolveRepoProfile(repoRoot) === REPO_PROFILES.FOREIGN
+    ? FOREIGN_PRIVACY_LEVEL
+    : DEFAULT_PRIVACY_LEVEL;
 
 /** @public */
 export const DEFAULT_ARGS_MAX_LEN = 256;

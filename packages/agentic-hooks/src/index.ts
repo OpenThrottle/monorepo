@@ -10,6 +10,7 @@
  * `@public` JSDoc tag so Knip retains it.
  */
 export * from './config/env';
+export * from './config/profile';
 export * from './data/events';
 export * from './data/jsonl';
 export * from './data/persist';

@@ -39,6 +39,19 @@ var import_node_path4 = __toESM(require("node:path"), 1);
 // packages/nodejs-utils/dist/src/utils/is-record.js
 var isRecord = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
 
+// packages/agentic-hooks/src/config/profile.ts
+var REPO_PROFILES = Object.freeze({
+  FOREIGN: "foreign",
+  HOME: "home"
+});
+
+// packages/agentic-hooks/src/config/env.ts
+var OPERATOR_CONFIG_KEYS = Object.freeze({
+  OPENTHROTTLE_GRAPHQL_URL: "graphqlUrl",
+  OPENTHROTTLE_MCP_AUTH_TOKEN: "authToken",
+  OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN: "authToken"
+});
+
 // packages/agentic-hooks/src/utils/privacy.ts
 var PRIVACY_LEVELS = Object.freeze({
   FULL: "full",
@@ -46,6 +59,7 @@ var PRIVACY_LEVELS = Object.freeze({
   TRUNCATED: "truncated"
 });
 var DEFAULT_PRIVACY_LEVEL = PRIVACY_LEVELS.TRUNCATED;
+var FOREIGN_PRIVACY_LEVEL = PRIVACY_LEVELS.NAME_ONLY;
 
 // packages/agentic-hooks/src/utils/scope.ts
 var import_node_fs = __toESM(require("node:fs"), 1);
@@ -73,6 +87,7 @@ var SKILL_USAGE_OUTCOMES = Object.freeze({
 
 // packages/agentic-hooks/src/data/jsonl.ts
 var import_node_path2 = __toESM(require("node:path"), 1);
+var BUFFER_DIR_REL = import_node_path2.default.join(".cache", "skill-usage");
 var DEFAULT_JSONL_REL = import_node_path2.default.join(
   ".cache",
   "skill-usage",
