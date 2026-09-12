@@ -188,7 +188,7 @@ export const GlobalLayoutHeader = (
       <Link
         className="text-foreground"
         target="_blank"
-        to={`${OPENTHROTTLE_GITHUB_URL}/monorepo`}
+        to={`${OPENTHROTTLE_GITHUB_URL}/monorepo/issues/new/choose`}
       >
         <Button
           className="relative size-6 shrink-0 rounded-full"

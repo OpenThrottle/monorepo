@@ -206,8 +206,8 @@ This workspace ships two local `createNodesV2` inference plugins, registered in 
 // nx.json
 "plugins": [
   // ...
-  { "plugin": "./tools/nx-plugins/react-router-typecheck.ts" },
-  { "plugin": "./tools/nx-plugins/package-typecheck.ts" }
+  { "options": { "compiler": "tsc" }, "plugin": "./tools/nx-plugins/react-router-typecheck.ts" },
+  { "options": { "compiler": "tsc" }, "plugin": "./tools/nx-plugins/package-typecheck.ts" }
 ]
 ```
 
@@ -215,5 +215,7 @@ Both infer a real `typecheck` target so the policy lives once at the workspace r
 
 - **`react-router-typecheck.ts`** — matches `applications/*/react-router.config.ts`. React Router apps are source-first (no dist emit), so the target runs `react-router typegen && tsc --noEmit` over source + tests, with `outputs: []`.
 - **`package-typecheck.ts`** — matches projects with a `tsconfig.lib.json`/`tsconfig.app.json` (buildable packages and the NestJS server). The target runs `tsc --build --emitDeclarationOnly` (emitting dist `.d.ts` as outputs), then `tsc --noEmit -p tsconfig.test.json` when a test tsconfig exists.
+
+**The `tsc` in both commands is a knob, not a hardcode.** Both plugins resolve their compiler binary through the shared [`tools/nx-plugins/typecheck-compiler.ts`](../../tools/nx-plugins/typecheck-compiler.ts): `compilerOverrides[projectRoot]`, then `$OPENTHROTTLE_TSC_BIN`, then the plugin's `compiler` option, then the built-in `tsc6` default. `tsc` is TypeScript 7 and `tsc6` is TypeScript 6 — the `"options": { "compiler": "tsc" }` above is what puts the workspace on 7, and deleting it reverts to 6. That module also supplies `TYPECHECK_COMPILER_INPUTS`, which both plugins spread into `inputs` so the compiler identity is part of the task hash; without it Nx serves one compiler's cached result for the other's run. Full rationale, the per-consumer resolution table and the cache-purge procedure live in [MONOREPO.md § TypeScript toolchain](../../MONOREPO.md#typescript-toolchain-two-compilers-one-workspace).
 
 `nx.json` `targetDefaults.typecheck` still layers `cache`/`dependsOn` (`^typecheck`) on top of what these plugins infer.
