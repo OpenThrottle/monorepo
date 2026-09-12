@@ -44,11 +44,13 @@ type RecordArtifactResult = GenericResult<{
   artifact: RecordWorkArtifactMutation['recordWorkArtifact'];
 }>;
 
-export const recordArtifactToolParameters = z.object({
-  message: z.string().nullable().optional(),
-  payloadJson: z.string().min(1),
-  type: z.string().min(1),
-});
+export const recordArtifactToolParameters = z
+  .object({
+    message: z.string().nullable().optional(),
+    payloadJson: z.string().min(1),
+    type: z.string().min(1),
+  })
+  .strict();
 
 export const recordArtifactToolDescription =
   'Record an output you produced in the current work session (opened automatically): a git_commit, pull_request, document, or deployment. payloadJson is the JSON payload for the type, e.g. git_commit {"repo":"owner/repo","sha":"<sha>"}, pull_request {"repo":"owner/repo","number":123}, document {"url":"..."}. Self-report artifacts as you create them.';
@@ -98,10 +100,12 @@ type AttachSubjectResult = GenericResult<{
   subject: AttachWorkSessionSubjectMutation['attachWorkSessionSubject'];
 }>;
 
-export const attachSessionSubjectToolParameters = z.object({
-  planId: z.string().uuid(),
-  taskId: z.string().uuid().nullable().optional(),
-});
+export const attachSessionSubjectToolParameters = z
+  .object({
+    planId: z.string().uuid(),
+    taskId: z.string().uuid().nullable().optional(),
+  })
+  .strict();
 
 export const attachSessionSubjectToolDescription =
   'Attach the current work session to a plan (and optionally a task), so the artifacts you record are tied to that work. Opens a session automatically if none is active.';
@@ -150,9 +154,11 @@ type EndSessionResult = GenericResult<{
   session: EndWorkSessionMutation['endWorkSession'];
 }>;
 
-export const endSessionToolParameters = z.object({
-  summary: z.string().nullable().optional(),
-});
+export const endSessionToolParameters = z
+  .object({
+    summary: z.string().nullable().optional(),
+  })
+  .strict();
 
 export const endSessionToolDescription =
   'Close the current work session, optionally with a summary of what was done. No-op if no session is active.';
@@ -209,10 +215,12 @@ type GetWorkSessionsResult = GenericResult<{
 const WORK_SESSION_LIMIT_DEFAULT = 25;
 const WORK_SESSION_LIMIT_MAX = 100;
 
-export const getWorkSessionsToolParameters = z.object({
-  limit: z.number().int().positive().nullable().optional(),
-  planId: z.string().uuid(),
-});
+export const getWorkSessionsToolParameters = z
+  .object({
+    limit: z.number().int().positive().nullable().optional(),
+    planId: z.string().uuid(),
+  })
+  .strict();
 
 export const getWorkSessionsToolDescription =
   'List the work sessions attached to a plan, newest first: which tool and version connected, which model (when the launcher reported one), the actor, and when the session started and ended. Use it to attribute an executed plan to the agent that ran it — especially for interactive runs, which record no plan_run. Bounded; pass limit to widen or narrow (default 25, max 100).';

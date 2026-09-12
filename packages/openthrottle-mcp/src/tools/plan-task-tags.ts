@@ -80,7 +80,7 @@ type ProjectSkillTagResult = {
 
 // ── add_plan_tag ─────────────────────────────────────────────────────────────
 
-export const addPlanTagToolParameters = AddPlanTagInputSchema();
+export const addPlanTagToolParameters = AddPlanTagInputSchema().strict();
 
 export const addPlanTagToolDescription = `Attach a tag to a plan via the addPlanTag GraphQL mutation. The tag must be kebab-case and in the caller's skill-tag vocabulary; source is derived server-side from the caller identity (never an argument). At most one phase tag per plan — an equal-or-lower-provenance phase tag is replaced, a higher one rejects.`;
 
@@ -121,7 +121,7 @@ export async function addPlanTagToolHandler(
 
 // ── remove_plan_tag ──────────────────────────────────────────────────────────
 
-export const removePlanTagToolParameters = RemovePlanTagInputSchema();
+export const removePlanTagToolParameters = RemovePlanTagInputSchema().strict();
 
 export const removePlanTagToolDescription = `Remove a tag from a plan via the removePlanTag GraphQL mutation. The provenance ladder applies (an agent cannot remove a human row). Returns whether a tag was removed.`;
 
@@ -148,7 +148,7 @@ export async function removePlanTagToolHandler(
 
 // ── add_project_tag ──────────────────────────────────────────────────────────
 
-export const addProjectTagToolParameters = AddProjectTagInputSchema();
+export const addProjectTagToolParameters = AddProjectTagInputSchema().strict();
 
 export const addProjectTagToolDescription = `Attach a tag to a project via the addProjectTag GraphQL mutation. The tag must be kebab-case and in the caller's skill-tag vocabulary; source is derived server-side from the caller identity (never an argument). Multiple tags per project are allowed.`;
 
@@ -189,7 +189,8 @@ export async function addProjectTagToolHandler(
 
 // ── remove_project_tag ───────────────────────────────────────────────────────
 
-export const removeProjectTagToolParameters = RemoveProjectTagInputSchema();
+export const removeProjectTagToolParameters =
+  RemoveProjectTagInputSchema().strict();
 
 export const removeProjectTagToolDescription = `Remove a tag from a project via the removeProjectTag GraphQL mutation. The provenance ladder applies (an agent cannot remove a human row). Returns whether a tag was removed.`;
 
@@ -218,7 +219,7 @@ export async function removeProjectTagToolHandler(
 
 // ── add_task_tag ─────────────────────────────────────────────────────────────
 
-export const addTaskTagToolParameters = AddTaskTagInputSchema();
+export const addTaskTagToolParameters = AddTaskTagInputSchema().strict();
 
 export const addTaskTagToolDescription = `Attach a tag to a task via the addTaskTag GraphQL mutation. The tag must be kebab-case and in the caller's skill-tag vocabulary; source is derived server-side from the caller identity (never an argument).`;
 
@@ -259,7 +260,7 @@ export async function addTaskTagToolHandler(
 
 // ── remove_task_tag ──────────────────────────────────────────────────────────
 
-export const removeTaskTagToolParameters = RemoveTaskTagInputSchema();
+export const removeTaskTagToolParameters = RemoveTaskTagInputSchema().strict();
 
 export const removeTaskTagToolDescription = `Remove a tag from a task via the removeTaskTag GraphQL mutation. The provenance ladder applies (an agent cannot remove a human row). Returns whether a tag was removed.`;
 
@@ -286,7 +287,8 @@ export async function removeTaskTagToolHandler(
 
 // ── add_project_skill_tag ────────────────────────────────────────────────────
 
-export const addProjectSkillTagToolParameters = AddProjectSkillTagInputSchema();
+export const addProjectSkillTagToolParameters =
+  AddProjectSkillTagInputSchema().strict();
 
 export const addProjectSkillTagToolDescription = `Attach a domain tag to a project_skills row via addProjectSkillTag. The tag must be kebab-case and in the caller's skill-tag vocabulary; phase tags are rejected. Idempotent when the tag is already present. Omit projectId to target the dogfood monorepo project.`;
 
@@ -333,7 +335,7 @@ export async function addProjectSkillTagToolHandler(
 // ── remove_project_skill_tag ─────────────────────────────────────────────────
 
 export const removeProjectSkillTagToolParameters =
-  RemoveProjectSkillTagInputSchema();
+  RemoveProjectSkillTagInputSchema().strict();
 
 export const removeProjectSkillTagToolDescription = `Remove a tag from a project_skills row via removeProjectSkillTag. Returns false when the row or tag is absent (never a 500). Omit projectId to target the dogfood monorepo project.`;
 

@@ -67,6 +67,10 @@ const BUNDLES: readonly BundleSpec[] = [
     outFile: '.claude/hooks/skill-usage-drain.cjs',
   },
   {
+    entry: 'adapters/claude/memory-index-guard.ts',
+    outFile: '.claude/hooks/memory-index-guard.cjs',
+  },
+  {
     entry: 'adapters/claude/plan-run-janitor.ts',
     outFile: '.claude/hooks/plan-run-janitor.cjs',
   },

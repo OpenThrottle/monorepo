@@ -29,7 +29,7 @@ type DiscoverAgentClisStructured = {
   totalCount: number;
 };
 
-export const discoverAgentClisToolParameters = z.object({});
+export const discoverAgentClisToolParameters = z.object({}).strict();
 
 export const discoverAgentClisToolDescription = `Discover the agentic CLIs (claude, codex, cursor, gemini, grok, opencode, …) detected as available on the server host, with each CLI's --version and the models it can run, via the discoverAgentClis GraphQL query. No arguments. Returns a cached snapshot (60s TTL). Each agent reports chatCapable — whether it has a wired streaming chat backend (false for plan-run-only drivers). Caveat: availability reflects the server's host, not this MCP process's host.`;
 

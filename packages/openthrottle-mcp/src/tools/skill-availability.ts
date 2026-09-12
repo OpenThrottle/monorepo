@@ -66,9 +66,11 @@ const describeRuleSet = (ruleSet: SkillAvailabilityRuleSet): string =>
 
 // ── get_skill_availability_rule_set ──────────────────────────────────────────
 
-export const getSkillAvailabilityRuleSetToolParameters = z.object({
-  projectId: z.string(),
-});
+export const getSkillAvailabilityRuleSetToolParameters = z
+  .object({
+    projectId: z.string(),
+  })
+  .strict();
 
 export const getSkillAvailabilityRuleSetToolDescription = `Get a project's skill-availability rule set (posture + rules) via the skillAvailabilityRuleSet GraphQL query. Returns null when the project has no rules (passthrough).`;
 
@@ -126,13 +128,15 @@ type SkillAvailabilityResolution = {
   warnings: string[];
 };
 
-export const getSkillAvailabilityToolParameters = z.object({
-  environment: z.enum(['ci', 'interactive', 'ralph']).optional(),
-  planId: z.string().optional(),
-  projectId: z.string().optional(),
-  relevantOnly: z.boolean().optional(),
-  taskId: z.string().optional(),
-});
+export const getSkillAvailabilityToolParameters = z
+  .object({
+    environment: z.enum(['ci', 'interactive', 'ralph']).optional(),
+    planId: z.string().optional(),
+    projectId: z.string().optional(),
+    relevantOnly: z.boolean().optional(),
+    taskId: z.string().optional(),
+  })
+  .strict();
 
 export const getSkillAvailabilityToolDescription = `Resolve every skill's effective disable-model-invocation for a project and environment via the skillAvailability GraphQL query. Omit projectId to resolve the dogfood monorepo project; environment defaults to "interactive" (ci | interactive | ralph). Optional plan context: planId (and taskId within it) annotates each skill with matchedPlanTags (skill tags ∩ the plan's effective domain tag set) and planRelevant, applies matched availability-exception rules ephemerally, and relevantOnly=true filters to plan-relevant skills. Returns each skill's static (tri-state) and effective flags plus the decisive rung's provenance, and deduped resolve-time warnings. Concerns model auto-invocation only — human /skill invocation is never gated.`;
 
@@ -188,10 +192,12 @@ export async function getSkillAvailabilityToolHandler(
 
 // ── upsert_skill_availability_rule_set ───────────────────────────────────────
 
-export const upsertSkillAvailabilityRuleSetToolParameters = z.object({
-  posture: z.enum(['allow', 'deny']),
-  projectId: z.string(),
-});
+export const upsertSkillAvailabilityRuleSetToolParameters = z
+  .object({
+    posture: z.enum(['allow', 'deny']),
+    projectId: z.string(),
+  })
+  .strict();
 
 export const upsertSkillAvailabilityRuleSetToolDescription = `Create or update a project's skill-availability rule set posture ("allow" | "deny") via the upsertSkillAvailabilityRuleSet GraphQL mutation. Idempotent per project.`;
 
@@ -231,9 +237,11 @@ export async function upsertSkillAvailabilityRuleSetToolHandler(
 
 // ── delete_skill_availability_rule_set ───────────────────────────────────────
 
-export const deleteSkillAvailabilityRuleSetToolParameters = z.object({
-  projectId: z.string(),
-});
+export const deleteSkillAvailabilityRuleSetToolParameters = z
+  .object({
+    projectId: z.string(),
+  })
+  .strict();
 
 export const deleteSkillAvailabilityRuleSetToolDescription = `Delete a project's skill-availability rule set (cascading its rules) via the deleteSkillAvailabilityRuleSet GraphQL mutation. Returns whether a rule set was deleted.`;
 
@@ -265,10 +273,12 @@ export async function deleteSkillAvailabilityRuleSetToolHandler(
 
 // ── add_skill_availability_rule ──────────────────────────────────────────────
 
-export const addSkillAvailabilityRuleToolParameters = z.object({
-  input: SkillAvailabilityRuleInputSchema(),
-  projectId: z.string(),
-});
+export const addSkillAvailabilityRuleToolParameters = z
+  .object({
+    input: SkillAvailabilityRuleInputSchema(),
+    projectId: z.string(),
+  })
+  .strict();
 
 export const addSkillAvailabilityRuleToolDescription = `Add a rule to a project's skill-availability rule set via the addSkillAvailabilityRule GraphQL mutation (creating the rule set with the default "allow" posture if absent). Tag references are validated against the caller's skill-tag vocabulary.`;
 
@@ -302,10 +312,12 @@ export async function addSkillAvailabilityRuleToolHandler(
 
 // ── update_skill_availability_rule ───────────────────────────────────────────
 
-export const updateSkillAvailabilityRuleToolParameters = z.object({
-  input: SkillAvailabilityRuleInputSchema(),
-  ruleId: z.string(),
-});
+export const updateSkillAvailabilityRuleToolParameters = z
+  .object({
+    input: SkillAvailabilityRuleInputSchema(),
+    ruleId: z.string(),
+  })
+  .strict();
 
 export const updateSkillAvailabilityRuleToolDescription = `Replace a rule's tag/slug lists and environment by rule id via the updateSkillAvailabilityRule GraphQL mutation. Tag references are validated against the caller's skill-tag vocabulary.`;
 
@@ -339,9 +351,11 @@ export async function updateSkillAvailabilityRuleToolHandler(
 
 // ── remove_skill_availability_rule ───────────────────────────────────────────
 
-export const removeSkillAvailabilityRuleToolParameters = z.object({
-  ruleId: z.string(),
-});
+export const removeSkillAvailabilityRuleToolParameters = z
+  .object({
+    ruleId: z.string(),
+  })
+  .strict();
 
 export const removeSkillAvailabilityRuleToolDescription = `Remove a rule by id via the removeSkillAvailabilityRule GraphQL mutation. Returns whether a rule was removed.`;
 

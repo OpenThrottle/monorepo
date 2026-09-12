@@ -7,7 +7,7 @@
   "dependencies": {
     "@openthrottle/nodejs-utils": "workspace:^"
   },
-  "description": "Tool-neutral skill-usage hook core (scope, privacy, buildUsageEvent, GraphQL/JSONL persistence, outcome/duration correlation, drain) authored in TS. Per-tool adapters are esbuild entrypoints bundled to self-contained committed .cjs under each tool's hook folder (.claude/hooks, .cursor/hooks, ...) — zero runtime node_modules dependency, fail-open. A drift check keeps committed bundles from rotting.",
+  "description": "Tool-neutral skill-usage hook core (scope, privacy, buildUsageEvent, GraphQL/JSONL persistence, outcome/duration correlation, drain) authored in TS. Per-tool adapters are esbuild entrypoints bundled to self-contained committed .cjs under each tool's hook folder (.claude/hooks, .cursor/hooks, ...) \u2014 zero runtime node_modules dependency, fail-open. A drift check keeps committed bundles from rotting.",
   "devDependencies": {
     "esbuild": "catalog:"
   },
@@ -58,6 +58,7 @@
           "cwd": "{workspaceRoot}"
         },
         "outputs": [
+          "{workspaceRoot}/.claude/hooks/memory-index-guard.cjs",
           "{workspaceRoot}/.claude/hooks/plan-run-janitor.cjs",
           "{workspaceRoot}/.claude/hooks/skill-usage-capture.cjs",
           "{workspaceRoot}/.claude/hooks/skill-usage-complete.cjs",
@@ -84,6 +85,7 @@
           "{projectRoot}/package.json",
           "{projectRoot}/scripts/bundle-hooks.ts",
           "{projectRoot}/src/**/*",
+          "{workspaceRoot}/.claude/hooks/memory-index-guard.cjs",
           "{workspaceRoot}/.claude/hooks/plan-run-janitor.cjs",
           "{workspaceRoot}/.claude/hooks/skill-usage-capture.cjs",
           "{workspaceRoot}/.claude/hooks/skill-usage-complete.cjs",
