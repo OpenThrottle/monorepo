@@ -47,6 +47,7 @@ Along the way:
 - **Folders & conventions:** the `ot-folders` skill (`.agents/skills/ot-folders/SKILL.md`) — where code goes, what it is named, what shape it must have, and how to prove it; [MONOREPO.md § Naming Conventions](../MONOREPO.md#naming-conventions)
 - **CI quality gates:** [monorepo/CI-quality-gates.md](./monorepo/CI-quality-gates.md)
 - **Dead-code (Knip):** [monorepo/Knip.md](./monorepo/Knip.md)
+- **Source-first packages:** [monorepo/source-first-packages-and-strip-only.md](./monorepo/source-first-packages-and-strip-only.md) — why a package whose `exports` name `./src/` cannot use parameter properties, enums, decorators or namespaces, and the gate that says so.
 - **Component shape:** [monorepo/component-primitive-shape.md](./monorepo/component-primitive-shape.md)
 - **Route shape:** [monorepo/route-primitive-shape.md](./monorepo/route-primitive-shape.md) — the enforceable standard every `app/routes/*.tsx` module follows.
 - **Test coverage:** [monorepo/test-coverage-audit.md](./monorepo/test-coverage-audit.md) — which source files must ship a co-located spec, and what "tested" means.
