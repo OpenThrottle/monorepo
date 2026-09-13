@@ -54,7 +54,7 @@ type RuleApplication = {
 
 // ── list_tag_action_rules ────────────────────────────────────────────────────
 
-export const listTagActionRulesToolParameters = z.object({});
+export const listTagActionRulesToolParameters = z.object({}).strict();
 
 export const listTagActionRulesToolDescription = `List the authenticated user's tag→action rules via the tagActionRules GraphQL query. No arguments. Rules map tag combinations on plans to actions (inject-task, availability-exception).`;
 
@@ -109,9 +109,11 @@ export async function listTagActionRulesToolHandler(
 
 // ── list_rule_applications ───────────────────────────────────────────────────
 
-export const listRuleApplicationsToolParameters = z.object({
-  planId: z.string().min(1),
-});
+export const listRuleApplicationsToolParameters = z
+  .object({
+    planId: z.string().min(1),
+  })
+  .strict();
 
 export const listRuleApplicationsToolDescription = `List the apply-once ledger rows (rule_applications) for a plan via the ruleApplications GraphQL query. Requires planId. States: applied | pre-satisfied | flagged | orphaned — flagged/orphaned rows are the human-attention queue.`;
 
@@ -169,7 +171,7 @@ export async function listRuleApplicationsToolHandler(
 // ── upsert_tag_action_rule ───────────────────────────────────────────────────
 
 export const upsertTagActionRuleToolParameters =
-  UpsertTagActionRuleInputSchema();
+  UpsertTagActionRuleInputSchema().strict();
 
 export const upsertTagActionRuleToolDescription = `Create or update a tag→action rule via the upsertTagActionRule GraphQL mutation. actionPayloadJson is a JSON string validated per actionType server-side (inject-task: {skillSlug, placement?, anchor?, titleTemplate?, descriptionTemplate?}; placement is 'first'|'last'|'before'|'after' (default 'first') — 'before'/'after' require an anchor {taskId|skillSlug|titleMatch} naming the task to land beside; availability-exception: {tagAllow?, tagDeny?, slugAllow?, slugDeny?}). Requires a USER token (rules are user-owned in v1).`;
 
@@ -220,7 +222,7 @@ export async function upsertTagActionRuleToolHandler(
 // ── delete_tag_action_rule ───────────────────────────────────────────────────
 
 export const deleteTagActionRuleToolParameters =
-  DeleteTagActionRuleInputSchema();
+  DeleteTagActionRuleInputSchema().strict();
 
 export const deleteTagActionRuleToolDescription = `Delete a tag→action rule via the deleteTagActionRule GraphQL mutation (its ledger rows CASCADE). Returns whether a rule was deleted. Requires a USER token.`;
 
