@@ -23,9 +23,25 @@
  *    into a gitignored build directory AND the package's own `src/**` imports the
  *    package by its own name. This is the guaranteed break: a project's `test`
  *    target never depends on its own `build`.
- * 2. warn — any other mis-pointed condition, `types` included: a latent landmine
- *    that arms itself the moment someone writes an entry test or imports the
- *    package from a NodeNext project.
+ * 2. error — the package is not listed in the shrink-only baseline (see below).
+ *    A newly mis-pointed condition is always cheaper to fix at the moment it is
+ *    written than after it has been inherited.
+ * 3. warn — any other mis-pointed condition, `types` included, on a package the
+ *    baseline already lists: a latent landmine that arms itself the moment
+ *    someone writes an entry test or imports the package from a NodeNext project.
+ *
+ * ## The baseline is a ratchet
+ *
+ * {@link BASELINE_PATH} freezes the packages that were already offending, so the
+ * gate can error on *new* offenders without first requiring the existing
+ * population to be fixed. It is keyed on package names, not warning strings: the
+ * warning text churns with the remediation message, and the warning count is an
+ * artifact of the `./*` subpath map rather than a measure of the problem.
+ *
+ * Crucially, a baselined package that *stops* offending is also an error — the
+ * file must be pruned. That asymmetry is what makes this a ratchet rather than a
+ * suppression list: the listed population can only shrink, and a stale entry can
+ * never quietly re-authorize a regression.
  *
  * Ignored directories are read from the real `.gitignore` via `git check-ignore`
  * rather than hardcoding `dist`, so a package that commits its build output is
@@ -42,6 +58,12 @@ const logger = createLogger();
 
 const ROOT = process.cwd();
 const WORKSPACE_DIRS = ['applications', 'packages', 'tools'] as const;
+
+/**
+ * @description Repo-relative path to the shrink-only baseline — the packages that
+ * were already offending when the gate started erroring on new ones
+ */
+const BASELINE_PATH = 'scripts/check-package-entrypoints.baseline.txt';
 
 /**
  * @description Every condition a consumer resolves when importing a package by
@@ -183,6 +205,24 @@ const partitionIgnored = (
 const pointsAtSource = (entry: string | undefined): boolean =>
   entry !== undefined && entry.replace(/^\.\//, '').startsWith('src/');
 
+/**
+ * @description Reads the baseline package names, skipping blank lines and `#`
+ * comments. A missing file is an empty baseline, which makes every offender new
+ * — the correct reading once the file has been deleted at zero.
+ */
+const readBaseline = (): ReadonlySet<string> => {
+  const absolute = path.join(ROOT, BASELINE_PATH);
+
+  if (!existsSync(absolute)) return new Set();
+
+  const names = readFileSync(absolute, 'utf8')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0 && !line.startsWith('#'));
+
+  return new Set(names);
+};
+
 const run = (): void => {
   const packages = listPackages();
 
@@ -233,18 +273,51 @@ const run = (): void => {
       (condition) => condition === entry.exportTarget.condition,
     );
 
+  const baseline = readBaseline();
+  const offendingPackages = new Set(offenders.map((entry) => entry.info.name));
+
+  const isSelfImportBreak = (entry: (typeof offenders)[number]): boolean =>
+    entry.info.importsItselfByName && isRuntimeCondition(entry);
+
   const errors = offenders
-    .filter(
-      (entry) => entry.info.importsItselfByName && isRuntimeCondition(entry),
-    )
+    .filter(isSelfImportBreak)
     .map(
       (entry) =>
         `${describe(entry)} This package's own src/ imports it by name, so its test target — which never depends on its own build — fails whenever no other project on the shard built it first.`,
     );
 
+  // A package the baseline does not list is newly mis-pointed. Erroring here is
+  // what stops the population growing; it is reported once per package rather
+  // than once per condition, since the fix is a single `exports` map either way.
+  const newOffenders = [...offendingPackages]
+    .filter((name) => !baseline.has(name))
+    .sort();
+
+  const newOffenderErrors = newOffenders.map((name) => {
+    const first = offenders.find((entry) => entry.info.name === name);
+
+    return (
+      `${first === undefined ? name : describe(first)} ` +
+      `This package is NEWLY flagged — it is not in ${BASELINE_PATH}. ` +
+      `Fix it rather than adding a line: either point EVERY condition at the source entry, or — if it genuinely ships a build consumers should read — move main/module off src/ to the built entry, which removes it from this gate's candidate set entirely. ` +
+      `The baseline is shrink-only and must not grow.`
+    );
+  });
+
+  // A baselined package that no longer offends has to leave the file, or the
+  // baseline slowly becomes a list of things that would be re-allowed to break.
+  const staleBaselineErrors = [...baseline]
+    .filter((name) => !offendingPackages.has(name))
+    .sort()
+    .map(
+      (name) =>
+        `${name} is listed in ${BASELINE_PATH} but no longer points any resolved condition at a gitignored build directory. ` +
+        `Delete its line — the baseline is a shrink-only ratchet, and a stale entry would silently re-authorize a regression in this package.`,
+    );
+
   const warnings = offenders
     .filter(
-      (entry) => !(entry.info.importsItselfByName && isRuntimeCondition(entry)),
+      (entry) => !isSelfImportBreak(entry) && baseline.has(entry.info.name),
     )
     .map((entry) =>
       entry.exportTarget.condition === 'types'
@@ -262,29 +335,30 @@ const run = (): void => {
     const latentPackages = new Set(
       offenders
         .filter(
-          (entry) =>
-            !(entry.info.importsItselfByName && isRuntimeCondition(entry)),
+          (entry) => !isSelfImportBreak(entry) && baseline.has(entry.info.name),
         )
         .map((entry) => entry.info.name),
     );
 
     logger.warn(
-      `check-package-entrypoints: ${latentPackages.size} package(s) point a resolved condition ("import"/"default" for Vite, "types" for NodeNext) at a gitignored build directory — latent, not failing. Re-run with --verbose to list them.`,
+      `check-package-entrypoints: ${latentPackages.size} baselined package(s) point a resolved condition ("import"/"default" for Vite, "types" for NodeNext) at a gitignored build directory — latent, not failing. Re-run with --verbose to list them.`,
     );
   }
 
-  if (errors.length > 0) {
-    for (const error of errors) {
+  const allErrors = [...errors, ...newOffenderErrors, ...staleBaselineErrors];
+
+  if (allErrors.length > 0) {
+    for (const error of allErrors) {
       logger.fail(`check-package-entrypoints: error: ${error}`);
     }
     logger.fail(
-      `check-package-entrypoints: ${errors.length} violation(s) across ${packages.length} workspace package(s)`,
+      `check-package-entrypoints: ${allErrors.length} violation(s) across ${packages.length} workspace package(s)`,
     );
     process.exit(1);
   }
 
   logger.success(
-    `check-package-entrypoints: OK (${packages.length} workspace package(s), ${warnings.length} warning(s))`,
+    `check-package-entrypoints: OK (${packages.length} workspace package(s), ${warnings.length} warning(s) across ${baseline.size} baselined package(s))`,
   );
 };
 

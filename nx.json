@@ -257,7 +257,7 @@
     },
     "check-package-entrypoints": {
       "cache": true,
-      "description": "Verify no workspace package steers Vite into a gitignored build directory while its own sources import it by name, via scripts/check-package-entrypoints.ts. `inputs` MUST be explicit {workspaceRoot} globs — the root `monorepo` project owns 0 files, so the default {projectRoot} input would hash nothing and cache-hit forever.",
+      "description": "Verify no workspace package steers Vite or NodeNext into a gitignored build directory while its own main/module names src/, via scripts/check-package-entrypoints.ts. Offenders already listed in scripts/check-package-entrypoints.baseline.txt warn; a package missing from that shrink-only baseline errors, as does a baselined package that no longer offends. `inputs` MUST be explicit {workspaceRoot} globs — the root `monorepo` project owns 0 files, so the default {projectRoot} input would hash nothing and cache-hit forever.",
       "executor": "nx:run-commands",
       "options": {
         "command": "tsx ./scripts/check-package-entrypoints.ts",
@@ -269,6 +269,7 @@
         "{workspaceRoot}/applications/*/src/**/*.{ts,tsx}",
         "{workspaceRoot}/packages/*/package.json",
         "{workspaceRoot}/packages/*/src/**/*.{ts,tsx}",
+        "{workspaceRoot}/scripts/check-package-entrypoints.baseline.txt",
         "{workspaceRoot}/scripts/check-package-entrypoints.ts",
         "{workspaceRoot}/tools/*/package.json",
         "{workspaceRoot}/tools/*/src/**/*.{ts,tsx}"

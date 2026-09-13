@@ -27,8 +27,8 @@
       "require": "./dist/*.js"
     }
   },
-  "main": "./src/index.ts",
-  "module": "./src/index.ts",
+  "main": "./dist/src/index.js",
+  "module": "./dist/src/index.js",
   "name": "@openthrottle/nestjs-rollout",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
@@ -84,6 +84,6 @@
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
   "type": "commonjs",
-  "types": "./src/index.ts",
+  "types": "./dist/src/index.d.ts",
   "version": "1.0.0"
 }

@@ -1,0 +1,23 @@
+# check-package-entrypoints — shrink-only baseline
+#
+# Packages that already point a resolved `exports` condition ("import"/"default"
+# for Vite, "types" for NodeNext) at a gitignored build directory while their own
+# main/module names src/. Frozen 2026-09-13 at 37 packages; see OpenThrottle plan
+# a6f0706c-9336-4542-a332-5f1833f52f04.
+#
+# This is a RATCHET, not a suppression list:
+#
+#   - listed here and still offending -> warn, unchanged
+#   - NOT listed here and offending   -> error; fix it rather than adding a line
+#   - listed here and no longer offending -> error; delete its line
+#
+# The last rule is what keeps the file honest — the population can only shrink.
+# Keyed on package names rather than warning strings because the warning text
+# churns with the remediation message and the count is an artifact of the `./*`
+# subpath map (37 packages produced 151 warnings). Three packages were flagged on
+# only one of the two conditions, so a condition-keyed baseline would have needed
+# special cases; a name-keyed one does not.
+#
+# Sorted, one package name per line. Blank lines and `#` comments are ignored.
+
+@openthrottle/nodejs-utils
