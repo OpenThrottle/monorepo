@@ -14,10 +14,32 @@
     "@openthrottle/react-router-ui": "workspace:^",
     "@openthrottle/react-router-ui-global": "workspace:^",
     "@openthrottle/react-router-utils": "workspace:^",
-    "clsx": "catalog:"
+    "@phosphor-icons/react": "catalog:",
+    "@react-router/dev": "catalog:",
+    "@react-router/fs-routes": "catalog:",
+    "@react-router/node": "catalog:",
+    "@vercel/analytics": "catalog:",
+    "@vercel/react-router": "catalog:",
+    "clsx": "catalog:",
+    "dotenv": "catalog:",
+    "isbot": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "react-router": "catalog:",
+    "tailwindcss": "catalog:",
+    "tw-animate-css": "catalog:"
   },
   "devDependencies": {
-    "@openthrottle/react-router-testing": "workspace:^"
+    "@openthrottle/react-router-testing": "workspace:^",
+    "@tailwindcss/vite": "catalog:",
+    "@testing-library/jest-dom": "catalog:",
+    "@testing-library/react": "catalog:",
+    "@testing-library/user-event": "catalog:",
+    "react-router-devtools": "catalog:",
+    "vite": "catalog:",
+    "vite-bundle-analyzer": "catalog:",
+    "vite-plugin-devtools-json": "catalog:",
+    "vitest": "catalog:"
   },
   "license": "Apache-2.0",
   "nx": {

@@ -8,10 +8,14 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
+    "@nestjs/common": "catalog:",
     "@openthrottle/nestjs-modules": "workspace:^",
     "@openthrottle/nodejs-utils": "workspace:^"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "reflect-metadata": "catalog:",
+    "vitest": "catalog:"
+  },
   "exports": {
     ".": {
       "types": "./dist/src/index.d.ts",

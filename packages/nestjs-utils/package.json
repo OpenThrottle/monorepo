@@ -60,5 +60,8 @@
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
   "type": "commonjs",
-  "types": "./src/index.ts"
+  "types": "./src/index.ts",
+  "devDependencies": {
+    "vitest": "catalog:"
+  }
 }

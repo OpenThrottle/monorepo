@@ -10,7 +10,9 @@
   "dependencies": {
     "@openthrottle/openthrottle-drivers": "workspace:^"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "vitest": "catalog:"
+  },
   "exports": {
     ".": {
       "types": "./dist/src/index.d.ts",

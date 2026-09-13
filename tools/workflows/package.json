@@ -12,14 +12,21 @@
     "@openthrottle/openthrottle-agentic-workflow": "workspace:^",
     "@openthrottle/openthrottle-drivers": "workspace:^",
     "@tools/generators": "workspace:^",
+    "async-mutex": "catalog:",
+    "chrome-launcher": "catalog:",
     "commander": "catalog:",
+    "lighthouse": "catalog:",
     "pg": "catalog:",
     "pidusage": "catalog:"
   },
   "deprecated": "Use @openthrottle/nestjs-agentic-workflow for BullMQ agentic workflows. See tools/workflows/README.md.",
   "description": "[DEPRECATED] Legacy workflow CLIs and re-exports. New code should use @openthrottle/nestjs-agentic-workflow (queued runs), @openthrottle/nestjs-worktrees (worktrees), and @openthrottle/openthrottle-agentic-workflow (contracts). workflow-ralph remains a thin local CLI shim; workflow-link-merge and workflow-lighthouse stay here until relocated.",
   "devDependencies": {
-    "@types/pidusage": "catalog:"
+    "@nx/vite": "catalog:",
+    "@types/pidusage": "catalog:",
+    "vite": "catalog:",
+    "vite-plugin-dts": "catalog:",
+    "vitest": "catalog:"
   },
   "exports": {
     ".": {

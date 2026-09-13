@@ -81,5 +81,8 @@
     "e2e": "node scripts/e2e.mjs"
   },
   "type": "module",
-  "version": "1.0.0"
+  "version": "1.0.0",
+  "devDependencies": {
+    "vitest": "catalog:"
+  }
 }

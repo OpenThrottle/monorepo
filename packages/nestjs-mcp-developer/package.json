@@ -84,6 +84,9 @@
   "type": "module",
   "types": "./src/index.ts",
   "devDependencies": {
-    "@openthrottle/nestjs-modules": "workspace:^"
+    "@golevelup/ts-vitest": "catalog:",
+    "@nestjs/testing": "catalog:",
+    "@openthrottle/nestjs-modules": "workspace:^",
+    "vitest": "catalog:"
   }
 }

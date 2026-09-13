@@ -11,8 +11,12 @@
     "@openthrottle/openthrottle-notifications": "workspace:^",
     "@openthrottle/react-router-shadcn": "workspace:^",
     "@openthrottle/react-router-utils": "workspace:^",
+    "@phosphor-icons/react": "catalog:",
     "class-variance-authority": "catalog:",
-    "framer-motion": "catalog:"
+    "framer-motion": "catalog:",
+    "lucide-react": "catalog:",
+    "react": "catalog:",
+    "react-router": "catalog:"
   },
   "license": "Apache-2.0",
   "main": "./src/index.ts",
@@ -45,5 +49,11 @@
   "scripts": {},
   "sideEffects": false,
   "type": "module",
-  "types": "./src/index.ts"
+  "types": "./src/index.ts",
+  "devDependencies": {
+    "@testing-library/jest-dom": "catalog:",
+    "@testing-library/react": "catalog:",
+    "@testing-library/user-event": "catalog:",
+    "vitest": "catalog:"
+  }
 }

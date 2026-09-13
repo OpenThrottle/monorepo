@@ -11,7 +11,8 @@
     "@openthrottle/openthrottle-agentic-utils": "workspace:^",
     "@openthrottle/openthrottle-agentic-workflow": "workspace:^",
     "@openthrottle/openthrottle-mcp": "workspace:^",
-    "@tools/workflows": "workspace:^"
+    "@tools/workflows": "workspace:^",
+    "async-mutex": "catalog:"
   },
   "exports": {
     ".": {
@@ -66,5 +67,8 @@
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
   "type": "commonjs",
-  "types": "./src/index.ts"
+  "types": "./src/index.ts",
+  "devDependencies": {
+    "vitest": "catalog:"
+  }
 }

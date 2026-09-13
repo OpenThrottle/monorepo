@@ -8,6 +8,7 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
+    "@nestjs/common": "catalog:",
     "@nestjs/typeorm": "catalog:",
     "@openthrottle/agentic-token-usage": "workspace:^",
     "@openthrottle/nestjs-modules": "workspace:^",
@@ -25,8 +26,11 @@
   },
   "devDependencies": {
     "@faker-js/faker": "catalog:",
+    "@golevelup/ts-vitest": "catalog:",
+    "@nestjs/testing": "catalog:",
     "@openthrottle/nestjs-testing": "workspace:^",
-    "@types/bcrypt": "catalog:"
+    "@types/bcrypt": "catalog:",
+    "vitest": "catalog:"
   },
   "exports": {
     ".": {

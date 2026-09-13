@@ -8,7 +8,9 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {},
-  "devDependencies": {},
+  "devDependencies": {
+    "vitest": "catalog:"
+  },
   "exports": {
     ".": {
       "types": "./dist/src/index.d.ts",

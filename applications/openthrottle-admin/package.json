@@ -8,6 +8,7 @@
     "url": "https://admin.openthrottle.com"
   },
   "dependencies": {
+    "@graphql-typed-document-node/core": "catalog:",
     "@openthrottle/graphql-codegen": "workspace:^",
     "@openthrottle/react-router-auth": "workspace:^",
     "@openthrottle/react-router-chat": "workspace:^",
@@ -18,11 +19,36 @@
     "@openthrottle/react-router-ui": "workspace:^",
     "@openthrottle/react-router-ui-global": "workspace:^",
     "@openthrottle/react-router-utils": "workspace:^",
+    "@react-router/dev": "catalog:",
+    "@react-router/fs-routes": "catalog:",
+    "@react-router/node": "catalog:",
+    "@tanstack/react-table": "catalog:",
+    "@vercel/react-router": "catalog:",
     "clsx": "catalog:",
-    "jotai": "catalog:"
+    "date-fns": "catalog:",
+    "dotenv": "catalog:",
+    "isbot": "catalog:",
+    "jotai": "catalog:",
+    "lucide-react": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "react-router": "catalog:",
+    "tailwindcss": "catalog:",
+    "tw-animate-css": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
-    "@openthrottle/react-router-testing": "workspace:^"
+    "@openthrottle/react-router-testing": "workspace:^",
+    "@tailwindcss/vite": "catalog:",
+    "@testing-library/jest-dom": "catalog:",
+    "@testing-library/react": "catalog:",
+    "@testing-library/user-event": "catalog:",
+    "graphql-codegen-typescript-validation-schema": "catalog:",
+    "react-router-devtools": "catalog:",
+    "vite": "catalog:",
+    "vite-bundle-analyzer": "catalog:",
+    "vite-plugin-devtools-json": "catalog:",
+    "vitest": "catalog:"
   },
   "license": "Apache-2.0",
   "nx": {

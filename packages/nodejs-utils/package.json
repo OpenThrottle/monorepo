@@ -6,7 +6,9 @@
   },
   "dependencies": {},
   "description": "Zero-dependency, runtime-agnostic TypeScript utilities (shared type guards) for OpenThrottle server and client code.",
-  "devDependencies": {},
+  "devDependencies": {
+    "vitest": "catalog:"
+  },
   "exports": {
     ".": {
       "types": "./dist/src/index.d.ts",
