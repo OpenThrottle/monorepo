@@ -25,8 +25,8 @@
     }
   },
   "license": "Apache-2.0",
-  "main": "./src/index.ts",
-  "module": "./src/index.ts",
+  "main": "./dist/src/index.js",
+  "module": "./dist/src/index.js",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "projectType": "library",
@@ -63,5 +63,5 @@
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
   "type": "commonjs",
-  "types": "./src/index.ts"
+  "types": "./dist/src/index.d.ts"
 }

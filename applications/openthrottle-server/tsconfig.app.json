@@ -11,9 +11,6 @@
       "path": "../../tools/generators/tsconfig.lib.json"
     },
     {
-      "path": "../../packages/openthrottle-drivers/tsconfig.lib.json"
-    },
-    {
       "path": "../../tools/workflows/tsconfig.lib.json"
     },
     {
@@ -21,6 +18,9 @@
     },
     {
       "path": "../../packages/openthrottle-notifications/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/openthrottle-drivers/tsconfig.lib.json"
     },
     {
       "path": "../../packages/openthrottle-agentic-workflow/tsconfig.lib.json"
@@ -105,6 +105,9 @@
     },
     {
       "path": "../../packages/agentic-token-usage/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/agentic-hooks/tsconfig.lib.json"
     },
     {
       "path": "../../packages/nestjs-testing/tsconfig.lib.json"
