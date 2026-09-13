@@ -49,7 +49,12 @@ export interface DefineCodegenOptions {
   outputDir?: string;
   /**
    * Extra `presetConfig` keys merged onto the shared `{ fragmentMasking: false }`
-   * for the `client` preset (e.g. `{ enumsAsTypes: true }`).
+   * for the `client` preset (e.g. `{ persistedDocuments: true }`).
+   *
+   * Not the place for enum handling: `enumsAsConst` is a `typescript`-plugin
+   * option set in the shared `config` block, and `enumsAsTypes` would emit a
+   * string-union type only, breaking every value-position use of a generated
+   * enum name.
    */
   presetConfig?: ClientPresetConfig;
   /**
@@ -100,6 +105,20 @@ export const defineCodegen = (options: DefineCodegenOptions): CodegenConfig => {
 
   const generates: CodegenConfig['generates'] = {
     [outputDir]: {
+      config: {
+        // Generated code was the one place the repo's no-enums rule could not
+        // reach: AGENTS.md bans `enum` and ESLint enforces it, but neither can
+        // touch a file codegen overwrites. The cost was real — `export enum` is
+        // non-erasable syntax, so every project whose program included a
+        // generated `graphql.ts` needed an `erasableSyntaxOnly: false` opt-out,
+        // six of them, including one package that merely *consumes* a
+        // source-first package carrying generated enums. `enumsAsConst` emits an
+        // `as const` object plus a matching type alias, which keeps both value
+        // and type positions working. Note this is a `typescript`-plugin option:
+        // in `presetConfig` the client preset silently ignores it.
+        // See docs/monorepo/source-first-packages-and-strip-only.md.
+        enumsAsConst: true,
+      },
       overwrite: true,
       preset: 'client',
       presetConfig: {

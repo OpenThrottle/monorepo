@@ -18,6 +18,9 @@ describe('defineCodegen', () => {
   const zodBlock = (config: ReturnType<typeof defineCodegen>) =>
     config.generates['./app/__generated__/schemas.ts'];
 
+  const clientBlock = (config: ReturnType<typeof defineCodegen>) =>
+    config.generates['./app/__generated__/'];
+
   it('emits the typescript-validation-schema (Zod) block by default', () => {
     const config = build();
     const block = zodBlock(config);
@@ -38,6 +41,18 @@ describe('defineCodegen', () => {
     const block = zodBlock(build());
 
     expect(block).toMatchObject({ config: { zodImportPath: 'zod/v3' } });
+  });
+
+  it('emits generated enums as const objects rather than TypeScript enums', () => {
+    const block = clientBlock(build());
+
+    expect(block).toMatchObject({ config: { enumsAsConst: true } });
+  });
+
+  it('keeps enumsAsConst out of reach of a consumer presetConfig override', () => {
+    const block = clientBlock(build({ presetConfig: { enumsAsConst: false } }));
+
+    expect(block).toMatchObject({ config: { enumsAsConst: true } });
   });
 
   it('omits the Zod block when withZodSchemas is false', () => {

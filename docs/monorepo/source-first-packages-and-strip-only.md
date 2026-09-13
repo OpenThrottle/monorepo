@@ -129,32 +129,55 @@ Repo-wide, the default is on and the exceptions are explicit.
 
 It also catches `import x = require('...')`, which is non-erasable for the same reason.
 
-#### The two opt-outs
+#### The one opt-out
 
-`"erasableSyntaxOnly": false` appears in exactly two places, both for reasons that do not
-apply to source-first packages:
+`"erasableSyntaxOnly": false` appears in exactly one place, for a reason that does not
+apply to source-first packages: **the decorated tier** — `tsconfig.nestjs.json` and
+`tsconfig.nestjs-package.json` (31 projects). NestJS dependency injection _is_ constructor
+parameter properties; `openthrottle-server` alone has 394 of them. These projects ship
+built JavaScript, so nothing ever hands a consumer their raw TypeScript.
 
-1. **The decorated tier** — `tsconfig.nestjs.json` and `tsconfig.nestjs-package.json`
-   (31 projects). NestJS dependency injection _is_ constructor parameter properties;
-   `openthrottle-server` alone has 394 of them. These projects ship built JavaScript, so
-   nothing ever hands a consumer their raw TypeScript.
-2. **Projects whose program includes GraphQL Codegen output** — `openthrottle-developer`,
-   `openthrottle-admin`, `openthrottle-agentic-ralph`, `openthrottle-mcp`,
-   `openthrottle-developer-codegen`, and `react-router-ui-global`. Codegen emits
-   `export enum` into `__generated__/graphql.ts`, and a compiler flag cannot be scoped to
-   exclude a directory. The durable fix is `enumsAsConst` in the shared codegen preset,
-   which would also serve the repo's own "no new enums" rule — but that is a cross-consumer
-   migration (18 enums, 200+ call sites), not a silent flip.
+##### History: the six codegen opt-outs, and how they were closed
 
-   `react-router-ui-global` is the instructive one: it holds no generated file of its own.
-   It consumes `@openthrottle/openthrottle-developer-codegen`, whose `main`/`module`/`types`
-   name `./src/` with no `exports` field at all — so that package's generated enums are
-   compiled _in its consumers' programs, under their options_. The exemption has to follow
-   the program, not the file. That package is also a latent instance of the hazard this
-   document describes: source-first by `main` rather than by `exports`, and shipping enums.
+There used to be a second exemption, covering six projects whose program included GraphQL
+Codegen output — `openthrottle-developer`, `openthrottle-admin`, `openthrottle-agentic-ralph`,
+`openthrottle-mcp`, `openthrottle-developer-codegen`, and `react-router-ui-global`. Codegen
+emitted `export enum` into `__generated__/graphql.ts`, a compiler flag cannot be scoped to
+exclude a directory, and nothing can lint a file codegen overwrites — so generated code was
+the one place the repo's own "no new enums" rule was unenforceable, and a per-project
+opt-out was the only lever left.
 
-Neither exemption overlaps the source-first set, which is the point: every package whose
-`exports` name `./src/` is covered, and the exemptions are where the constructs are both
+`enumsAsConst` in the shared `defineCodegen` preset closed it. Generated enums are now
+`as const` objects with a matching type alias, which keeps both value and type positions
+working, so all six opt-outs are gone. Two details are worth keeping:
+
+- `enumsAsConst` is a `@graphql-codegen/typescript` **plugin** option. Set in the client
+  preset's `presetConfig` it is silently ignored — no warning, no error, identical output —
+  so it lives in the output entry's `config` block instead.
+- The migration was expected to cost 200+ call sites and broke none. All the generated enums
+  are string-valued, and a string enum has no reverse mapping to lose; `Object.values` on one
+  returns the same array either way. The reverse-mapping hazard is real only for **numeric**
+  enums.
+
+`openthrottle-mcp` was the exception: its opt-out had a second cause nobody had recorded — a
+lone NestJS constructor parameter property in `NestjsMcpDeveloperService`. It extends
+`tsconfig.esm.json` rather than the decorated tier, so it carried its own copy of the flag.
+That one site now assigns the field in the constructor body (Nest resolves the dependency
+from `design:paramtypes`, which the constructor signature still provides).
+
+##### The hazard `react-router-ui-global` illustrates
+
+`react-router-ui-global` was the instructive member of that set, and the reason it needed an
+exemption outlives the enums. It holds no generated file of its own. It consumes
+`@openthrottle/openthrottle-developer-codegen`, whose `main`/`module`/`types` name `./src/`
+with no `exports` field at all — so that package's source is compiled _in its consumers'
+programs, under their options_. Whatever non-erasable syntax such a package carries, the
+error surfaces in a consumer that did not write it, and any exemption has to follow the
+program rather than the file. That remains true, and it is a latent instance of the hazard
+this document describes: source-first by `main` rather than by `exports`.
+
+The exemption does not overlap the source-first set, which is the point: every package whose
+`exports` name `./src/` is covered, and the exemption is where the constructs are both
 necessary and harmless.
 
 ### ESLint — decorators

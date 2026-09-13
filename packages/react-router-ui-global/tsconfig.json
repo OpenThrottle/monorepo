@@ -1,14 +1,5 @@
 {
   "extends": "../../tsconfig.react.json",
-  "compilerOptions": {
-    // Opts out of the repo-wide `erasableSyntaxOnly` (tsconfig.base.json).
-    // This project's program includes `@openthrottle/openthrottle-developer-codegen`'s
-    // `__generated__/graphql.ts` — that package is source-first (main/module/types
-    // name ./src/), so its GraphQL Codegen `export enum`s are compiled here, under
-    // this project's options. The durable fix is `enumsAsConst` in the codegen
-    // preset: docs/monorepo/source-first-packages-and-strip-only.md
-    "erasableSyntaxOnly": false
-  },
   "files": [],
   "include": [],
   "references": [{ "path": "./tsconfig.lib.json" }]

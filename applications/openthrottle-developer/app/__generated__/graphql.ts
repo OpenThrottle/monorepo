@@ -841,15 +841,17 @@ export type CustomPromptObject = {
 };
 
 /** Type of custom prompt document */
-export enum CustomPromptType {
-  Agents = 'AGENTS',
-  Commands = 'COMMANDS',
-  Personas = 'PERSONAS',
-  Prompts = 'PROMPTS',
-  Rules = 'RULES',
-  Skills = 'SKILLS',
-}
+export const CustomPromptType = {
+  Agents: 'AGENTS',
+  Commands: 'COMMANDS',
+  Personas: 'PERSONAS',
+  Prompts: 'PROMPTS',
+  Rules: 'RULES',
+  Skills: 'SKILLS',
+} as const;
 
+export type CustomPromptType =
+  (typeof CustomPromptType)[keyof typeof CustomPromptType];
 export type DailyStatsObject = {
   __typename?: 'DailyStatsObject';
   /** Row created_at. */
@@ -1055,15 +1057,17 @@ export type EditorPresenceResultObject = {
 };
 
 /** Whether an editor appears to be installed on the machine hosting the OpenThrottle server. Advisory only — never a gate on enabling an editor. Supported values: installed, not_found, unknown. */
-export enum EditorPresenceState {
+export const EditorPresenceState = {
   /** The probe found the editor on the host. */
-  Installed = 'INSTALLED',
+  Installed: 'INSTALLED',
   /** The probe ran on the user's own machine and did not find the editor. Safe to show as an advisory; still never a reason to disable the editor. */
-  NotFound = 'NOT_FOUND',
+  NotFound: 'NOT_FOUND',
   /** The probe could not be trusted, so nothing is claimed either way — the server is containerized (its filesystem is not the user's), the platform has no verified probe, or the probe failed. Clients must render no hint for this state. */
-  Unknown = 'UNKNOWN',
-}
+  Unknown: 'UNKNOWN',
+} as const;
 
+export type EditorPresenceState =
+  (typeof EditorPresenceState)[keyof typeof EditorPresenceState];
 export type EndWorkSessionInput = {
   /** Session to close */
   sessionId: Scalars['ID']['input'];
@@ -2570,11 +2574,13 @@ export type PlanOutputStreamChunkObject = {
 };
 
 /** Plan-scoped run (default) or task-centric run ("task" requires taskId). */
-export enum PlanRalphWorkflowMode {
-  Plan = 'plan',
-  Task = 'task',
-}
+export const PlanRalphWorkflowMode = {
+  Plan: 'plan',
+  Task: 'task',
+} as const;
 
+export type PlanRalphWorkflowMode =
+  (typeof PlanRalphWorkflowMode)[keyof typeof PlanRalphWorkflowMode];
 export type PlanRefObject = {
   __typename?: 'PlanRefObject';
   /** Full plan UUID the prefix resolved to. */
@@ -2704,17 +2710,19 @@ export type PlanTagObject = {
 };
 
 /** Canonical plan/task status vocabulary (the Postgres plan_task_status enum). QUEUED is plans-only. Sourced from the shared SSOT so the DB enum, GraphQL schema, and MCP tool contract cannot diverge. */
-export enum PlanTaskStatus {
-  Backlog = 'BACKLOG',
-  Blocked = 'BLOCKED',
-  Canceled = 'CANCELED',
-  Completed = 'COMPLETED',
-  InProgress = 'IN_PROGRESS',
-  Pending = 'PENDING',
-  Queued = 'QUEUED',
-  Skipped = 'SKIPPED',
-}
+export const PlanTaskStatus = {
+  Backlog: 'BACKLOG',
+  Blocked: 'BLOCKED',
+  Canceled: 'CANCELED',
+  Completed: 'COMPLETED',
+  InProgress: 'IN_PROGRESS',
+  Pending: 'PENDING',
+  Queued: 'QUEUED',
+  Skipped: 'SKIPPED',
+} as const;
 
+export type PlanTaskStatus =
+  (typeof PlanTaskStatus)[keyof typeof PlanTaskStatus];
 export type PlanUpdatedNotification = NotificationEvent & {
   __typename?: 'PlanUpdatedNotification';
   /** Well-known event name (e.g. task.completed). */
@@ -2773,13 +2781,14 @@ export type PrTimeInStateSummaryObject = {
 };
 
 /** System CPU pressure level interpretation. */
-export enum PressureLevel {
-  High = 'high',
-  Low = 'low',
-  Moderate = 'moderate',
-  Unknown = 'unknown',
-}
+export const PressureLevel = {
+  High: 'high',
+  Low: 'low',
+  Moderate: 'moderate',
+  Unknown: 'unknown',
+} as const;
 
+export type PressureLevel = (typeof PressureLevel)[keyof typeof PressureLevel];
 /** Process metrics snapshot: memory (RSS, heap, external in MB) and CPU (user/system in ms). */
 export type ProcessMetricsSnapshot = {
   __typename?: 'ProcessMetricsSnapshot';
@@ -3598,13 +3607,15 @@ export type QueueJobLogEventObject = {
 };
 
 /** Severity bucket for a keyed run-output log event (derived; see field semantics). */
-export enum QueueJobLogLevel {
-  Debug = 'debug',
-  Error = 'error',
-  Info = 'info',
-  Warn = 'warn',
-}
+export const QueueJobLogLevel = {
+  Debug: 'debug',
+  Error: 'error',
+  Info: 'info',
+  Warn: 'warn',
+} as const;
 
+export type QueueJobLogLevel =
+  (typeof QueueJobLogLevel)[keyof typeof QueueJobLogLevel];
 export type QueueJobLogPageObject = {
   __typename?: 'QueueJobLogPageObject';
   events: Array<QueueJobLogEventObject>;
@@ -3643,12 +3654,14 @@ export type QueueStatsObject = {
 };
 
 /** Nested workflow-ralph logging: omit (default CLI/env), --debug, or --verbose. */
-export enum RalphNestedDebugCli {
-  Debug = 'debug',
-  Omit = 'omit',
-  Verbose = 'verbose',
-}
+export const RalphNestedDebugCli = {
+  Debug: 'debug',
+  Omit: 'omit',
+  Verbose: 'verbose',
+} as const;
 
+export type RalphNestedDebugCli =
+  (typeof RalphNestedDebugCli)[keyof typeof RalphNestedDebugCli];
 export type RalphPlanRunTuningInput = {
   /** Execution backend (e.g. cursor). Omit to use worktree defaults. */
   backend?: InputMaybe<Scalars['String']['input']>;
@@ -4084,13 +4097,15 @@ export type RoleObject = {
 };
 
 /** Why a rollout variation was chosen: off | target_roles | fallthrough | flag_not_found. */
-export enum RolloutEvaluationReason {
-  Fallthrough = 'fallthrough',
-  FlagNotFound = 'flag_not_found',
-  Off = 'off',
-  TargetRoles = 'target_roles',
-}
+export const RolloutEvaluationReason = {
+  Fallthrough: 'fallthrough',
+  FlagNotFound: 'flag_not_found',
+  Off: 'off',
+  TargetRoles: 'target_roles',
+} as const;
 
+export type RolloutEvaluationReason =
+  (typeof RolloutEvaluationReason)[keyof typeof RolloutEvaluationReason];
 /** One weighted fallthrough bucket (variation index + integer percent). */
 export type RolloutFallthroughBucketInput = {
   /** Index into the flag's variations array. */
@@ -4122,13 +4137,15 @@ export type RolloutFallthroughObject = {
 };
 
 /** Typed rollout flag kind: boolean | string | number | json. Variation values must match. */
-export enum RolloutFlagKind {
-  Boolean = 'boolean',
-  Json = 'json',
-  Number = 'number',
-  String = 'string',
-}
+export const RolloutFlagKind = {
+  Boolean: 'boolean',
+  Json: 'json',
+  Number: 'number',
+  String: 'string',
+} as const;
 
+export type RolloutFlagKind =
+  (typeof RolloutFlagKind)[keyof typeof RolloutFlagKind];
 /** Admin view of a typed rollout feature flag (kind, variations, allocations). */
 export type RolloutFlagObject = {
   __typename?: 'RolloutFlagObject';
@@ -5095,31 +5112,35 @@ export type TimelineKindTruncationObject = {
 };
 
 /** How timeline rows are grouped into lanes. */
-export enum TimelineLaneGrouping {
+export const TimelineLaneGrouping = {
   /** One lane per execution backend / tool / driver. */
-  ByBackend = 'BY_BACKEND',
+  ByBackend: 'BY_BACKEND',
   /** One lane per repository checkout (falling back to branch). */
-  ByCheckout = 'BY_CHECKOUT',
+  ByCheckout: 'BY_CHECKOUT',
   /** One lane per plan. The default. */
-  ByPlan = 'BY_PLAN',
-}
+  ByPlan: 'BY_PLAN',
+} as const;
 
+export type TimelineLaneGrouping =
+  (typeof TimelineLaneGrouping)[keyof typeof TimelineLaneGrouping];
 /** Kinds of timeline marker (work recorded at an instant). */
-export enum TimelineMarkerKind {
+export const TimelineMarkerKind = {
   /** A git_commit work artifact, keyed on produced_at. */
-  GitCommit = 'GIT_COMMIT',
+  GitCommit: 'GIT_COMMIT',
   /** A grilling skill invocation (skill_usage_events where skill_name = 'grilling'), keyed on occurred_at. Attributed via `userId` when ingest resolved a principal; older rows carry none and fall back to the branch heuristic. */
-  Grilling = 'GRILLING',
+  Grilling: 'GRILLING',
   /** A pull_request work artifact, keyed on produced_at. */
-  PullRequest = 'PULL_REQUEST',
+  PullRequest: 'PULL_REQUEST',
   /** A status_change work artifact, keyed on produced_at. Recorded inconsistently — expect a sparse lane. */
-  StatusChange = 'STATUS_CHANGE',
+  StatusChange: 'STATUS_CHANGE',
   /** A task was created (tasks.created_at). */
-  TaskAdded = 'TASK_ADDED',
+  TaskAdded: 'TASK_ADDED',
   /** A task was last written (tasks.updated_at). Last write only — tasks carry no status history. */
-  TaskUpdated = 'TASK_UPDATED',
-}
+  TaskUpdated: 'TASK_UPDATED',
+} as const;
 
+export type TimelineMarkerKind =
+  (typeof TimelineMarkerKind)[keyof typeof TimelineMarkerKind];
 export type TimelineMarkerObject = {
   __typename?: 'TimelineMarkerObject';
   /** When the marker happened. */
@@ -5146,15 +5167,17 @@ export type TimelineMarkerObject = {
 };
 
 /** Kinds of timeline span (work with a duration). */
-export enum TimelineSpanKind {
+export const TimelineSpanKind = {
   /** A queued Ralph plan run (plan_runs). Its end is always derived — the table records no finish timestamp. */
-  PlanRun = 'PLAN_RUN',
+  PlanRun: 'PLAN_RUN',
   /** A scheduled agent job run (scheduled_agent_job_runs). Carries measured started_at/finished_at. */
-  ScheduledRun = 'SCHEDULED_RUN',
+  ScheduledRun: 'SCHEDULED_RUN',
   /** A work-ledger session (work_sessions). Measured unless still open (ended_at IS NULL). */
-  WorkSession = 'WORK_SESSION',
-}
+  WorkSession: 'WORK_SESSION',
+} as const;
 
+export type TimelineSpanKind =
+  (typeof TimelineSpanKind)[keyof typeof TimelineSpanKind];
 export type TimelineSpanObject = {
   __typename?: 'TimelineSpanObject';
   /** Execution backend / tool name / driver id, when the source carries one. */
@@ -5480,13 +5503,15 @@ export type UserWorkspaceProfileObject = {
 };
 
 /** Interpretation of wall-clock to CPU time ratio. */
-export enum WallClockInterpretation {
-  CpuBound = 'cpu_bound',
-  Idle = 'idle',
-  IoBound = 'io_bound',
-  Mixed = 'mixed',
-}
+export const WallClockInterpretation = {
+  CpuBound: 'cpu_bound',
+  Idle: 'idle',
+  IoBound: 'io_bound',
+  Mixed: 'mixed',
+} as const;
 
+export type WallClockInterpretation =
+  (typeof WallClockInterpretation)[keyof typeof WallClockInterpretation];
 /** Wall-clock and CPU time metrics for determining job workload characteristics. */
 export type WallClockMetrics = {
   __typename?: 'WallClockMetrics';
@@ -5612,24 +5637,28 @@ export type WorkspaceEditorConfigApplicationObject = {
 };
 
 /** Editor OpenThrottle may configure in linked local repositories (MCP, skills, rules). Supported values: claude, cursor, vscode. */
-export enum WorkspaceEditorId {
+export const WorkspaceEditorId = {
   /** Claude Code */
-  Claude = 'CLAUDE',
+  Claude: 'CLAUDE',
   /** Cursor IDE */
-  Cursor = 'CURSOR',
+  Cursor: 'CURSOR',
   /** Visual Studio Code */
-  Vscode = 'VSCODE',
-}
+  Vscode: 'VSCODE',
+} as const;
 
+export type WorkspaceEditorId =
+  (typeof WorkspaceEditorId)[keyof typeof WorkspaceEditorId];
 /** How addWorkspaceFolder resolved the folder's identity: via the on-disk OT manifest (checkout or repository id), via the normalized git remote, or by creating a new canonical/provisional repository. */
-export enum WorkspaceFolderReconciliation {
-  CreatedCanonical = 'CREATED_CANONICAL',
-  CreatedProvisional = 'CREATED_PROVISIONAL',
-  MatchedManifestCheckout = 'MATCHED_MANIFEST_CHECKOUT',
-  MatchedManifestRepository = 'MATCHED_MANIFEST_REPOSITORY',
-  MatchedRemote = 'MATCHED_REMOTE',
-}
+export const WorkspaceFolderReconciliation = {
+  CreatedCanonical: 'CREATED_CANONICAL',
+  CreatedProvisional: 'CREATED_PROVISIONAL',
+  MatchedManifestCheckout: 'MATCHED_MANIFEST_CHECKOUT',
+  MatchedManifestRepository: 'MATCHED_MANIFEST_REPOSITORY',
+  MatchedRemote: 'MATCHED_REMOTE',
+} as const;
 
+export type WorkspaceFolderReconciliation =
+  (typeof WorkspaceFolderReconciliation)[keyof typeof WorkspaceFolderReconciliation];
 /** A local filesystem checkout registered under the user's workspace settings. */
 export type WorkspaceLocalRepositoryObject = {
   __typename?: 'WorkspaceLocalRepositoryObject';
@@ -5702,31 +5731,35 @@ export type WorkstreamTimelineResultObject = {
 };
 
 /** What a discovered worktree is doing. Never inferred from the directory merely existing. */
-export enum WorktreeActivity {
+export const WorktreeActivity = {
   /** No live run, but there is uncommitted work or commits ahead of the upstream. */
-  Dirty = 'DIRTY',
+  Dirty: 'DIRTY',
   /** Clean, with nothing running. */
-  Idle = 'IDLE',
+  Idle: 'IDLE',
   /** A live IN_PROGRESS plan run is executing here — live meaning its heartbeat is inside the staleness cutoff. A stale IN_PROGRESS run is dead and does NOT read as running. */
-  Running = 'RUNNING',
-}
+  Running: 'RUNNING',
+} as const;
 
+export type WorktreeActivity =
+  (typeof WorktreeActivity)[keyof typeof WorktreeActivity];
 /** What a scan noticed that was less than complete. The server decides WHAT happened; the client decides how loud it is. States that are merely the healthy default — above all a repository that has no worktrees yet — are not problems and are never reported. */
-export enum WorktreeDiscoveryProblemKind {
+export const WorktreeDiscoveryProblemKind = {
   /** More worktrees exist than the hard cap; the overflow is counted in droppedCount and not listed. */
-  CapExceeded = 'CAP_EXCEEDED',
+  CapExceeded: 'CAP_EXCEEDED',
   /** The registered checkouts could not be listed, so the scan had nothing to scan from. The whole result is empty. */
-  CheckoutListFailed = 'CHECKOUT_LIST_FAILED',
+  CheckoutListFailed: 'CHECKOUT_LIST_FAILED',
   /** A registered folder is not a git checkout at all. Carries repositoryId — belongs on that repository’s row, not on the page. */
-  NotAGitRepo = 'NOT_A_GIT_REPO',
+  NotAGitRepo: 'NOT_A_GIT_REPO',
   /** A read-only git probe against a directory that does exist failed. The genuinely degraded case: worktrees may be missing from the list. */
-  ProbeFailed = 'PROBE_FAILED',
+  ProbeFailed: 'PROBE_FAILED',
   /** A worktree root exists but could not be read (EACCES and friends). A root that simply does not exist is NOT this — that is a repository with no worktrees yet, and is silent. */
-  RootUnreadable = 'ROOT_UNREADABLE',
+  RootUnreadable: 'ROOT_UNREADABLE',
   /** git still reports a worktree whose directory is gone. Actionable exactly once, with `git worktree prune`; the path is never probed. */
-  StaleWorktreeEntry = 'STALE_WORKTREE_ENTRY',
-}
+  StaleWorktreeEntry: 'STALE_WORKTREE_ENTRY',
+} as const;
 
+export type WorktreeDiscoveryProblemKind =
+  (typeof WorktreeDiscoveryProblemKind)[keyof typeof WorktreeDiscoveryProblemKind];
 /** One classified, non-fatal thing that happened during a scan. */
 export type WorktreeDiscoveryProblemObject = {
   __typename?: 'WorktreeDiscoveryProblemObject';
@@ -5741,15 +5774,17 @@ export type WorktreeDiscoveryProblemObject = {
 };
 
 /** Which rung of the shared worktree-root ladder resolved the scanned root. The same ladder skills/ot-worktree/scripts/root.sh applies, so the page can never disagree with where the script writes. */
-export enum WorktreeRootSource {
+export const WorktreeRootSource = {
   /** OPENTHROTTLE_WORKTREE_ROOT in the target repo’s .env file — how a repo customizes where its worktrees go. */
-  CheckoutEnv = 'CHECKOUT_ENV',
+  CheckoutEnv: 'CHECKOUT_ENV',
   /** The default: ~/.openthrottle/worktrees, the hidden root OpenThrottle owns. OT appends <org>/<repo> beneath it, taken from the checkout’s git remote. */
-  Default = 'DEFAULT',
+  Default: 'DEFAULT',
   /** OPENTHROTTLE_WORKTREE_ROOT in the server process's environment. */
-  Env = 'ENV',
-}
+  Env: 'ENV',
+} as const;
 
+export type WorktreeRootSource =
+  (typeof WorktreeRootSource)[keyof typeof WorktreeRootSource];
 export type HealthCardFragment = {
   __typename?: 'ServerHealthObject';
   api: string;
