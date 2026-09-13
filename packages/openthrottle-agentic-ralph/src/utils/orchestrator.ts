@@ -27,7 +27,7 @@ import {
   GetTasksByPlanIdDocument,
   UpdatePlanDocument,
   UpdateTaskDocument,
-} from '../__generated__/graphql.js';
+} from '../__generated__/graphql.ts';
 import {
   DEFAULT_ITERATIONS,
   resolveRalphMaxTotalMsFromEnv,

@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import {
   McpTransportType,
   NestjsMcpDeveloperModule,
-} from '@openthrottle/nestjs-openthrottle-mcp';
+} from '@openthrottle/nestjs-mcp-developer';
 
 /**
  * @description Registers {@link NestjsMcpDeveloperModule} in-process so GraphQL (and HTTP MCP clients) can reach the same developer MCP tool surface as stdio `openthrottle-mcp`.

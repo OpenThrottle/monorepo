@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { DEFAULT_ITERATIONS, DEFAULT_RUNNER } from '../../config/index.js';
-import { resolveWorkflowRunOptions } from '../context.js';
+import { DEFAULT_ITERATIONS, DEFAULT_RUNNER } from '../../config/index.ts';
+import { resolveWorkflowRunOptions } from '../context.ts';
 
 const PLAN_ID = '0f9e1a94-8d39-4aa7-ada2-2d107d41ab37';
 

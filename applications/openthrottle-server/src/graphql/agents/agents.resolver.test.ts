@@ -5,7 +5,7 @@ import {
   AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
   AUTH_PRINCIPAL_KIND_USER,
 } from '@openthrottle/nestjs-auth';
-import { McpDeveloperMcpSurface } from '@openthrottle/nestjs-openthrottle-mcp';
+import { McpDeveloperMcpSurface } from '@openthrottle/nestjs-mcp-developer';
 import { AgentConversationsService } from '@openthrottle/nestjs-repositories';
 import type { Mock } from 'vitest';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';

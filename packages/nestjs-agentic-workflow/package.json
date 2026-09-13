@@ -16,24 +16,24 @@
   },
   "exports": {
     ".": {
-      "import": "./src/index.ts",
-      "require": "./dist/src/index.js",
-      "types": "./dist/src/index.d.ts"
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/src/index.js",
+      "require": "./dist/src/index.js"
     },
     "./testing": {
-      "import": "./src/testing/index.ts",
-      "require": "./dist/src/testing/index.js",
-      "types": "./dist/src/testing/index.d.ts"
+      "types": "./dist/src/testing/index.d.ts",
+      "import": "./dist/src/testing/index.js",
+      "require": "./dist/src/testing/index.js"
     },
     "./*": {
-      "import": "./*.ts",
-      "require": "./dist/*.js",
-      "types": "./dist/*.d.ts"
+      "types": "./dist/*.d.ts",
+      "import": "./dist/*.js",
+      "require": "./dist/*.js"
     }
   },
   "license": "Apache-2.0",
-  "main": "./src/index.ts",
-  "module": "./src/index.ts",
+  "main": "./dist/src/index.js",
+  "module": "./dist/src/index.js",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "projectType": "library",
@@ -61,8 +61,25 @@
         }
       },
       "lint": {},
-      "test": {},
-      "typecheck": {}
+      "test": {
+        "dependsOn": [
+          "^build",
+          "^codegen-graphql",
+          "build",
+          "codegen-graphql",
+          "codegen-react-router"
+        ]
+      },
+      "typecheck": {
+        "dependsOn": [
+          "^build",
+          "^codegen-graphql",
+          "^typecheck",
+          "build",
+          "codegen-graphql",
+          "codegen-react-router"
+        ]
+      }
     }
   },
   "peerDependencies": {
@@ -95,7 +112,7 @@
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
   "type": "commonjs",
-  "types": "./src/index.ts",
+  "types": "./dist/src/index.d.ts",
   "devDependencies": {
     "@golevelup/ts-vitest": "catalog:",
     "@nestjs/testing": "catalog:",

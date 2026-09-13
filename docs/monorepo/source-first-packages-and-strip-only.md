@@ -6,7 +6,9 @@ workspace norm for libraries with no `build` target (see
 [MONOREPO.md § Projects without a `build` target](../../MONOREPO.md#projects-without-a-build-target)).
 
 It carries one constraint, and this document exists because the constraint is invisible at
-the point where you would violate it.
+the point where you would violate it. One whole tag is exempt from the pattern by rule
+rather than by measurement — see
+[`technology:nestjs` is built, as a blanket rule](#technologynestjs-is-built-as-a-blanket-rule).
 
 ## The constraint
 
@@ -204,14 +206,87 @@ Node TypeScript. The six above are the `error` tier: a CJS-resolvable condition 
 or a bare/`default` string) names source, so every Node resolution of the package —
 `require()` included — gets raw TypeScript.
 
-`@openthrottle/nestjs-agentic-workflow` and `@openthrottle/nestjs-openthrottle-mcp` are the
-remaining source-first packages, and they are **not** in the list. Only their `import`
-condition names source; `require` points at built output, so the CJS path that actually
-bites today is safe. A Node ESM `import` of either would still hit the loader. They cannot
-be moved into the list — NestJS _is_ decorators — so the only way to close that gap is to
-stop pointing their `import` condition at `./src/`.
+No `nestjs-*` package appears here, and none can: see below.
+
+## `technology:nestjs` is built, as a blanket rule
+
+Every package tagged `technology:nestjs` points `main`, `module`, `types` and every
+`exports` condition at built output, and declares live `build` **and** `dev` targets.
+
+The `dev` half matters as much as the build: `openthrottle-server:dev` cascades `^dev` to
+its dependencies, so a package whose `dev` is parked as `__dev` gets no watcher. Edit it and
+the `dist/` its own entry fields name goes stale under you while the server keeps serving
+the old build — silently, with no error anywhere. Four of the five packages that were
+missing a live `dev` had been parked that way since the initial port rather than by any
+decision, which is exactly the kind of drift the gate now catches.
+`scripts/check-package-entrypoints.ts` enforces this from `package.json` alone and errors
+on any violation.
+
+No package is exempt. The gate's `NESTJS_BLOCKERS` map exists and is empty, which is the
+intended steady state; it is shrink-only on the same terms as the baseline above, so a
+listed package that stops violating is itself an error.
+
+### What the last exemption taught us about source-first ESM packages
+
+`@openthrottle/nestjs-agentic-workflow` was the final holdout, and the two defects behind it
+were both in `@openthrottle/openthrottle-agentic-ralph` — a source-first **ESM** package.
+Neither was visible until something resolved ralph from _built_ code, and both are now
+prevented at the codegen config rather than fixed per package:
+
+1. **`.js` specifiers in a source-first package.** ralph's `codegen.ts` set
+   `importExtension: '.js'`, and a dozen hand-written files followed suit. That is correct
+   for an ESM package that is **built** (`@openthrottle/openthrottle-mcp` — NodeNext source
+   must name the emitted `.js`) and wrong for one that is **source-first**, where consumers
+   read the TypeScript and the `.js` file never exists. Pick `importExtension` from how the
+   package is _consumed_, not from its `type` field. The Zod-schema block in `defineCodegen`
+   hardcoded `importFrom: './graphql.js'` and ignored the setting; it now follows it.
+
+2. **A types-only package emitted as a value import.**
+   `@graphql-typed-document-node/core` has `"main": ""` and ships nothing but
+   `typings/index.d.ts`. Codegen emitted `import { TypedDocumentNode ... }`, and Node's
+   strip-only loader erases type _annotations_ but never removes an import that looks like a
+   value — so the statement survived and resolution failed with `Cannot find package`,
+   naming the package rather than the generated file importing it. Declaring the dependency
+   does not help: there is no runtime entry to resolve. `useTypeImports: true` is now set in
+   the shared config, so the import erases at the source level.
+
+The shared lesson: a bundler-only consumer hides both of these indefinitely. They surface
+the first time a built consumer resolves the package, which can be years after the code was
+written.
+
+**The rule is keyed on the tag, not on a scan for the constructs above.** That is
+deliberate, and it is the part worth understanding before you argue with it:
+
+- **Construct-freedom is not stable.** A package named `nestjs-*` acquires its first
+  `@Injectable()` eventually. On a per-package rule, the day it does is the day the
+  package silently becomes wrong, with nothing to catch it.
+- **The construct scan is only one of three conditions.** A package is safe to make
+  source-first only if it carries no strip-only constructs, **and** no CommonJS
+  `require()` chain reaches it, **and** no live build target emits declarations consumers
+  read. Only the first is mechanically checkable. `@openthrottle/nestjs-utils` passed the
+  construct scan on all four forms — in sources and tests — and moving it to source-first
+  still broke 16 test projects, because it is reached through a CJS `require()` chain and
+  NestJS compiles to CJS. That hazard is a property of the **consumer graph** and is
+  invisible to any scan of the package's own source.
+- **The uniform arrangement is the proven one.** Before the tag rule landed, all 26
+  `nestjs-*` packages already resolved to `dist` through `exports` and the workspace was
+  green. The source-first carve-outs were the novel state, not the built one.
+
+So a `nestjs-*` package that happens to contain zero decorators — a thin re-export shim, a
+test harness, a wrapper around a non-Nest library — is still built. Its cleanliness is
+incidental rather than architectural, and trading a rule you can read off `package.json`
+for one that needs a whole-graph reachability analysis is a bad trade.
+
+### The exit
+
+When NestJS supports ESM, the whole tag flips to source-first **at once** — one atomic
+change across all 26 packages, not 26 independent re-litigations. Until then, do not move
+an individual `nestjs-*` package to source-first, however clean it looks.
 
 ## If you are flipping a package to source-first
+
+This procedure does **not** apply to `technology:nestjs` packages — those are built by
+blanket rule, and the gate will reject the flip.
 
 1. Run `typecheck`. `erasableSyntaxOnly` will fail on any parameter property, `enum` or
    `namespace` in the package before it ever reaches a consumer.
