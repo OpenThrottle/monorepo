@@ -7,8 +7,13 @@
     "name": "Matthew Scholta",
     "url": "https://mattscholta.com"
   },
+  "dependencies": {
+    "@nestjs/common": "catalog:",
+    "@nestjs/core": "catalog:"
+  },
   "devDependencies": {
-    "@openthrottle/nestjs-testing": "workspace:^"
+    "@openthrottle/nestjs-testing": "workspace:^",
+    "vitest": "catalog:"
   },
   "exports": {
     ".": {

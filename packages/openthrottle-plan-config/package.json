@@ -10,7 +10,8 @@
   },
   "description": "Isomorphic plan-run-config helpers shared by the OpenThrottle server (via nestjs-repositories) and the developer app: storage defaults, plan/workflow-UI conversion, and GraphQL serialization.",
   "devDependencies": {
-    "@openthrottle/nestjs-testing": "workspace:^"
+    "@openthrottle/nestjs-testing": "workspace:^",
+    "vitest": "catalog:"
   },
   "exports": {
     ".": {

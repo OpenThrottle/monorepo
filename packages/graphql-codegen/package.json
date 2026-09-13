@@ -10,9 +10,12 @@
   "dependencies": {
     "@graphql-codegen/cli": "catalog:",
     "@graphql-codegen/client-preset": "catalog:",
+    "dotenv": "catalog:",
     "graphql-codegen-typescript-validation-schema": "catalog:"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "vitest": "catalog:"
+  },
   "license": "Apache-2.0",
   "main": "./src/index.ts",
   "module": "./src/index.ts",

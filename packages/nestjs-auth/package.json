@@ -8,16 +8,20 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
+    "@nestjs/common": "catalog:",
     "@nestjs/config": "catalog:",
+    "@nestjs/core": "catalog:",
     "@nestjs/passport": "catalog:",
     "@openthrottle/nestjs-modules": "workspace:^",
     "@openthrottle/nodejs-utils": "workspace:^",
     "passport": "catalog:",
-    "passport-jwt": "catalog:"
+    "passport-jwt": "catalog:",
+    "rxjs": "catalog:"
   },
   "devDependencies": {
     "@openthrottle/nestjs-testing": "workspace:^",
-    "@types/passport-jwt": "catalog:"
+    "@types/passport-jwt": "catalog:",
+    "vitest": "catalog:"
   },
   "exports": {
     ".": {

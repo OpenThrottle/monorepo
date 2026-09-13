@@ -15,6 +15,10 @@
     "bullmq": "catalog:",
     "joi": "catalog:"
   },
+  "devDependencies": {
+    "reflect-metadata": "catalog:",
+    "vitest": "catalog:"
+  },
   "exports": {
     ".": {
       "types": "./dist/src/index.d.ts",

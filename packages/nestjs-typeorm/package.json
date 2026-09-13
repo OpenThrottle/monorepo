@@ -15,6 +15,9 @@
     "pg": "catalog:",
     "typeorm": "catalog:"
   },
+  "devDependencies": {
+    "vitest": "catalog:"
+  },
   "exports": {
     ".": {
       "types": "./dist/src/index.d.ts",

@@ -8,11 +8,16 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
+    "@nestjs/common": "catalog:",
     "@openthrottle/nestjs-utils": "workspace:^",
     "logform": "catalog:",
     "nestjs-cls": "catalog:",
     "winston": "catalog:",
     "winston-transport": "catalog:"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "catalog:",
+    "vitest": "catalog:"
   },
   "exports": {
     ".": {

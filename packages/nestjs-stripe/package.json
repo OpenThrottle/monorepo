@@ -56,7 +56,10 @@
       "typecheck": {}
     }
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "@nestjs/testing": "catalog:",
+    "vitest": "catalog:"
+  },
   "peerDependencies": {
     "@nestjs/common": "catalog:",
     "@nestjs/config": "catalog:",

@@ -8,9 +8,14 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
-    "@nx/devkit": "catalog:"
+    "@nx/devkit": "catalog:",
+    "lodash": "catalog:",
+    "pluralize": "catalog:",
+    "prompts": "catalog:"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "vitest": "catalog:"
+  },
   "__exports": {
     ".": {
       "import": "./dist/src/index.js",

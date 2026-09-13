@@ -10,12 +10,13 @@
   "dependencies": {
     "@graphql-typed-document-node/core": "catalog:",
     "@openthrottle/nodejs-utils": "workspace:^",
+    "@openthrottle/openthrottle-notifications": "workspace:^",
     "@openthrottle/react-router-graphql": "workspace:^",
     "@openthrottle/react-router-shadcn": "workspace:^",
-    "@openthrottle/openthrottle-notifications": "workspace:^",
     "@openthrottle/react-router-utils": "workspace:^",
     "clsx": "catalog:",
     "lucide-react": "catalog:",
+    "react": "catalog:",
     "react-router": "catalog:"
   },
   "license": "Apache-2.0",
@@ -67,6 +68,9 @@
   "types": "./src/index.ts",
   "devDependencies": {
     "@testing-library/jest-dom": "catalog:",
-    "graphql": "catalog:"
+    "@testing-library/react": "catalog:",
+    "@testing-library/user-event": "catalog:",
+    "graphql": "catalog:",
+    "vitest": "catalog:"
   }
 }

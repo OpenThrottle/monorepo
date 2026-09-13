@@ -5,6 +5,7 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
+    "@nestjs/common": "catalog:",
     "@nestjs/typeorm": "catalog:",
     "@openthrottle/nestjs-auth": "workspace:^",
     "@openthrottle/nestjs-modules": "workspace:^",
@@ -13,7 +14,10 @@
   },
   "description": "OpenThrottle rollout: RBAC-aware feature-flagging domain (entity, module, and RolloutService with role-targeted evaluation).",
   "devDependencies": {
-    "@openthrottle/nestjs-testing": "workspace:^"
+    "@golevelup/ts-vitest": "catalog:",
+    "@nestjs/testing": "catalog:",
+    "@openthrottle/nestjs-testing": "workspace:^",
+    "vitest": "catalog:"
   },
   "exports": {
     ".": {
