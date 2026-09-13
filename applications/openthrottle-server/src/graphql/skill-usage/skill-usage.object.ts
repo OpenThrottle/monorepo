@@ -208,6 +208,12 @@ export class SkillUsageOutcomeObject {
   skillName!: string;
 
   @Field(() => String, {
+    description: `Producer id of the tool/adapter that recorded this outcome (e.g. claude-code, cursor). Null for rows ingested before source tracking.`,
+    nullable: true,
+  })
+  source!: string | null;
+
+  @Field(() => String, {
     description: `Optional tool_use_id for tighter correlation.`,
     nullable: true,
   })

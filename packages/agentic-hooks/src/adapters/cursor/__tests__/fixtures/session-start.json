@@ -1,0 +1,12 @@
+{
+  "conversation_id": "e747cb7c-e568-4341-aece-6fe8bb11b174",
+  "generation_id": "e747cb7c-e568-4341-aece-6fe8bb11b174",
+  "model": "claude-4.5-sonnet-thinking",
+  "is_background_agent": false,
+  "session_id": "e747cb7c-e568-4341-aece-6fe8bb11b174",
+  "hook_event_name": "sessionStart",
+  "cursor_version": "2026.09.10-fd3934a",
+  "workspace_roots": ["/tmp/probe-repo"],
+  "user_email": "probe@example.com",
+  "transcript_path": null
+}

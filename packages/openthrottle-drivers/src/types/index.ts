@@ -232,6 +232,13 @@ export interface AgentDriver {
   /** Human/iteration label, e.g. `claude-code`, `cursor-agent`. */
   readonly label: string;
   /**
+   * Workspace-relative path of the hook plugin payload THIS CLI should be pointed at, for drivers
+   * that advertise `capabilities.pluginDir`. Per-driver rather than global because a payload's
+   * hook config names one tool's events; a shared payload loads under a second tool and records
+   * nothing. Omitted ⇒ the resolver falls back to `OPENTHROTTLE_PLUGIN_DIR_REL`.
+   */
+  readonly pluginDirRel?: string;
+  /**
    * How this CLI updates itself. Omitted ⇒ falls back to re-running {@link install} (when present).
    */
   readonly update?: DriverUpdateDescriptor;

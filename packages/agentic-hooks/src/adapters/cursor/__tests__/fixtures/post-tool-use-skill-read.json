@@ -1,0 +1,18 @@
+{
+  "conversation_id": "e747cb7c-e568-4341-aece-6fe8bb11b174",
+  "generation_id": "e747cb7c-e568-4341-aece-6fe8bb11b174",
+  "model": "claude-sonnet-4-5",
+  "tool_name": "Read",
+  "tool_input": {
+    "file_path": "/tmp/probe-repo/.agents/skills/probe-ping/SKILL.md"
+  },
+  "tool_output": "{\"file_path\":\"/tmp/probe-repo/.agents/skills/probe-ping/SKILL.md\",\"content_length\":214}",
+  "duration": 316.096,
+  "tool_use_id": "toolu_bdrk_01Rrz6PdLgA78QuDLzHHXzpT",
+  "session_id": "e747cb7c-e568-4341-aece-6fe8bb11b174",
+  "hook_event_name": "postToolUse",
+  "cursor_version": "2026.09.10-fd3934a",
+  "workspace_roots": ["/tmp/probe-repo"],
+  "user_email": "probe@example.com",
+  "transcript_path": "/home/probe/.cursor/projects/probe-repo/agent-transcripts/e747cb7c-e568-4341-aece-6fe8bb11b174.jsonl"
+}

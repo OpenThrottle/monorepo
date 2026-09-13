@@ -144,6 +144,7 @@ mutation RecordSkillUsageOutcome($input: RecordSkillUsageOutcomeInput!) {
     id
     skillName
     outcome
+    source
   }
 }
 `;
@@ -202,6 +203,9 @@ var toRecordSkillUsageOutcomeInput = (event) => {
     outcome: event.outcome,
     skillName: event.skill_name
   };
+  if (event.source != null) {
+    input.source = event.source;
+  }
   if (event.scope != null) {
     input.scope = event.scope;
   }

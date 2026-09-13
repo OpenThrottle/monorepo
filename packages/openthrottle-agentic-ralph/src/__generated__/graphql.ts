@@ -3731,6 +3731,8 @@ export type RecordSkillUsageOutcomeInput = {
   sessionId?: InputMaybe<Scalars['String']['input']>;
   /** Skill identifier matching the start event. */
   skillName: Scalars['String']['input'];
+  /** Producer id of the tool/adapter that recorded this outcome (e.g. claude-code, cursor). Stamped by the per-tool skill-usage adapter; matches the start event's source. */
+  source?: InputMaybe<Scalars['String']['input']>;
   /** Optional tool_use_id for tighter start↔outcome correlation. */
   toolUseId?: InputMaybe<Scalars['String']['input']>;
 };
@@ -4700,6 +4702,8 @@ export type SkillUsageOutcomeObject = {
   sessionId?: Maybe<Scalars['String']['output']>;
   /** Skill identifier matching the start event. */
   skillName: Scalars['String']['output'];
+  /** Producer id of the tool/adapter that recorded this outcome (e.g. claude-code, cursor). Null for rows ingested before source tracking. */
+  source?: Maybe<Scalars['String']['output']>;
   /** Optional tool_use_id for tighter correlation. */
   toolUseId?: Maybe<Scalars['String']['output']>;
 };

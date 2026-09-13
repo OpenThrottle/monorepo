@@ -21,13 +21,12 @@
  *   - Cursor: a `~/.cursor/mcp.json` JSON object.
  *
  * The launcher path is resolved to the absolute path of this checkout on the
- * current machine. Every `${...}` env placeholder is printed LITERALLY — those
- * are resolved at runtime by the MCP launcher/tooling, not by this script.
+ * current machine. Neither client config carries an `env` block — the launcher
+ * (`scripts/run-openthrottle-mcp.sh`) resolves its own environment.
  *
- * Single source of truth: both blocks derive from the same `command`, `args`,
- * `description`, and env-key set below (`Record<EnvKey, string>` guarantees the
- * two clients cover exactly the same keys). Only the placeholder VALUES differ
- * per client, and those are preserved verbatim from the original instructions.
+ * Single source of truth: both blocks derive from the same `command` and `args`
+ * below. Only the shape differs per client — Claude Code takes a `description`,
+ * Cursor keys the entry by server name.
  *
  * Pure stdout, no side effects: it never edits ~/.cursor/mcp.json and never
  * runs the `claude mcp add-json` command itself.
@@ -35,10 +34,12 @@
 import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { fileURLToPath } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import chalk from 'chalk';
 
+import { scriptArgs } from './lib/args.ts';
 import { SYMBOLS } from './lib/index.ts';
 
 const SERVER_NAME = 'openthrottle-mcp';
@@ -99,45 +100,6 @@ const detectInstallStatus = (): InstallStatus => ({
   cursor: isServerInstalled(clientConfigPaths.cursor),
 });
 
-/**
- * The env keys are identical across both clients; typing both records as
- * `Record<EnvKey, string>` makes it a compile error for the two blocks to drift
- * out of key-parity. The placeholder VALUES intentionally differ per client.
- */
-type EnvKey =
-  | 'ANTHROPIC_API_KEY'
-  | 'API_URL'
-  | 'API_URL_INTERNAL'
-  | 'OPENTHROTTLE_MCP_AUTH_TOKEN'
-  | 'OPENTHROTTLE_MCP_WORKSPACE_PATH';
-
-/**
- * OPENTHROTTLE_MCP_WORKSPACE_PATH is the folder a plan is recorded as authored
- * in — the input that links it to a registered checkout. It is declared here
- * only as a belt-and-braces override for a client that launches the server from
- * a fixed directory instead of the open workspace: the launcher already
- * captures the caller's cwd before it chdirs into the checkout, and it treats
- * an unexpanded `${...}` literal as unset, so an editor that does not know the
- * variable below simply falls back to that cwd. Cursor's own workspace variable
- * is used for the Cursor block, since a user-scope registration is shared by
- * every project.
- */
-const claudeEnv: Record<EnvKey, string> = {
-  ANTHROPIC_API_KEY: '${ANTHROPIC_API_KEY}',
-  API_URL: '${OPENTHROTTLE_DEVELOPER_API_URL_EXTERNAL}',
-  API_URL_INTERNAL: '${OPENTHROTTLE_DEVELOPER_API_URL_INTERNAL}',
-  OPENTHROTTLE_MCP_AUTH_TOKEN: '${OPENTHROTTLE_MCP_AUTH_TOKEN}',
-  OPENTHROTTLE_MCP_WORKSPACE_PATH: '${OPENTHROTTLE_MCP_WORKSPACE_PATH}',
-};
-
-const cursorEnv: Record<EnvKey, string> = {
-  ANTHROPIC_API_KEY: '${ANTHROPIC_API_KEY}',
-  API_URL: '${API_URL}',
-  API_URL_INTERNAL: '${API_URL_INTERNAL}',
-  OPENTHROTTLE_MCP_AUTH_TOKEN: '${OPENTHROTTLE_MCP_AUTH_TOKEN}',
-  OPENTHROTTLE_MCP_WORKSPACE_PATH: '${workspaceFolder}',
-};
-
 interface Payloads {
   /** The full `claude mcp add-json ... --scope user '<json>'` command line. */
   claudeCommand: string;
@@ -146,14 +108,10 @@ interface Payloads {
     args: string[];
     command: string;
     description: string;
-    env: Record<EnvKey, string>;
   };
   /** The parsed ~/.cursor/mcp.json object. */
   cursorConfig: {
-    mcpServers: Record<
-      string,
-      { args: string[]; command: string; env: Record<EnvKey, string> }
-    >;
+    mcpServers: Record<string, { args: string[]; command: string }>;
   };
   /** The absolute launcher path both clients invoke. */
   launcher: string;
@@ -172,7 +130,6 @@ const buildPayloads = (root: string): Payloads => {
     args: [launcher],
     command: 'bash',
     description: DESCRIPTION,
-    env: claudeEnv,
   };
 
   const claudeCommand = `claude mcp add-json ${SERVER_NAME} --scope user '${JSON.stringify(claudeConfig)}'`;
@@ -183,7 +140,6 @@ const buildPayloads = (root: string): Payloads => {
       [SERVER_NAME]: {
         args: [launcher],
         command: 'bash',
-        env: cursorEnv,
       },
     },
   };
@@ -202,7 +158,10 @@ const renderInstructions = (
   status: InstallStatus = detectInstallStatus(),
 ): string => {
   const { launcher, claudeCommand, cursorConfig } = buildPayloads(root);
+
+  const args = scriptArgs();
   const cursorJson = JSON.stringify(cursorConfig, null, 2);
+  const showInstructions = args.includes('--show');
 
   const rule = chalk.dim('─'.repeat(72));
   const fileCursor = chalk.blueBright.bold('~/.cursor/mcp.json');
@@ -212,32 +171,40 @@ const renderInstructions = (
   const done = (label: string): string =>
     `${chalk.bold.green(`${SYMBOLS.success} ${label}`)} ${chalk.dim('— already installed, nothing to do.')}`;
 
-  const claudeBlock = status.claude
-    ? [done('Claude Code')]
-    : [
-        heading('Claude Code'),
-        chalk.dim(
-          'Install it globally for all your Claude Code instances by running:',
-        ),
-        claudeCommand,
-      ];
+  const claudeBlock =
+    status.claude && !showInstructions
+      ? [done('Claude Code')]
+      : [
+          heading('Claude Code'),
+          chalk.dim(
+            `Install it globally for all your Claude Code instances by running:`,
+          ),
+          claudeCommand,
+        ];
 
-  const cursorBlock = status.cursor
-    ? [done('Cursor')]
-    : [
-        heading('Cursor'),
-        chalk.dim(
-          `Install it globally across all Cursor instances by adding this to ${fileCursor}:`,
-        ),
-        cursorJson,
-      ];
+  const cursorBlock =
+    status.cursor && !showInstructions
+      ? [done('Cursor')]
+      : [
+          heading('Cursor'),
+          chalk.dim(
+            `Install it globally across all Cursor instances by adding this to ${fileCursor}:`,
+          ),
+          cursorJson,
+        ];
 
   const intro =
-    status.claude && status.cursor
+    status.claude && status.cursor && !showInstructions
       ? chalk.dim(`The ${mcpName} is already set up in every client. 🎉`)
       : chalk.dim(
           `Installing the ${mcpName} globally looks a bit different in each client. Take a look at the instructions below for each client that still needs setup.`,
         );
+
+  const outro = !showInstructions
+    ? chalk.dim(
+        `To show the instructions again, run: ${chalk.bold.blue(`pnpm run setup:mcp-instructions --show`)}`,
+      )
+    : chalk.dim(``);
 
   return [
     ``,
@@ -246,13 +213,17 @@ const renderInstructions = (
     ...cursorBlock,
     rule,
     chalk.dim(
-      `Launcher resolved to: ${chalk.underline(launcher)} \nThe \${...} entries are placeholders resolved at launch by the MCP tooling — ${chalk.bold.inverse(' copy them verbatim ')}.`,
+      `Launcher resolved to: ${chalk.underline(launcher)} \nThe launcher resolves its own environment — ${chalk.bold.inverse(' copy the block verbatim ')}.`,
     ),
+    outro,
   ].join('\n\n');
 };
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  process.stdout.write(`${renderInstructions(resolveRoot())}\n`);
+  const root = resolveRoot();
+  const instructions = renderInstructions(root);
+
+  process.stdout.write(`${instructions}\n`);
 }
 
 export {
@@ -262,4 +233,4 @@ export {
   isServerInstalled,
   renderInstructions,
 };
-export type { EnvKey, InstallStatus, Payloads };
+export type { InstallStatus, Payloads };

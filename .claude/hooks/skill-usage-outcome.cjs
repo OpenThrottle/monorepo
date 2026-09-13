@@ -169,6 +169,7 @@ mutation RecordSkillUsageOutcome($input: RecordSkillUsageOutcomeInput!) {
     id
     skillName
     outcome
+    source
   }
 }
 `;
@@ -186,7 +187,8 @@ var buildOutcomeEvent = ({
   durationMs = null,
   timestamp = (/* @__PURE__ */ new Date()).toISOString(),
   gitBranch,
-  cwd
+  cwd,
+  source
 }) => {
   const name = typeof skillName === "string" ? skillName.trim() : "";
   if (!name) {
@@ -198,7 +200,7 @@ var buildOutcomeEvent = ({
   const scope = detectScope(name, repoRoot);
   const resolvedCwd = cwd || repoRoot;
   const resolvedDuration = durationMs == null || Number.isNaN(Number(durationMs)) ? null : Math.max(0, Math.round(Number(durationMs)));
-  return {
+  const event = {
     cwd: resolvedCwd,
     duration_ms: resolvedDuration,
     event_kind: "outcome",
@@ -210,6 +212,10 @@ var buildOutcomeEvent = ({
     timestamp,
     tool_use_id: toolUseId
   };
+  if (source != null) {
+    event.source = source;
+  }
+  return event;
 };
 var toRecordSkillUsageOutcomeInput = (event) => {
   const input = {
@@ -217,6 +223,9 @@ var toRecordSkillUsageOutcomeInput = (event) => {
     outcome: event.outcome,
     skillName: event.skill_name
   };
+  if (event.source != null) {
+    input.source = event.source;
+  }
   if (event.scope != null) {
     input.scope = event.scope;
   }
@@ -408,6 +417,9 @@ var import_node_path4 = __toESM(require("node:path"), 1);
 var PLAN_RUNS_DIR_REL = import_node_path4.default.join(".cache", "plan-runs");
 var PLAN_RUN_ABANDONED_MS = 6 * 60 * 60 * 1e3;
 
+// packages/agentic-hooks/src/adapters/claude/payload.ts
+var CLAUDE_SOURCE = "claude-code";
+
 // packages/agentic-hooks/src/adapters/claude/outcome.ts
 var parseArgs = (argv) => {
   const out = {};
@@ -449,6 +461,7 @@ var main = async () => {
       repoRoot,
       sessionId,
       skillName,
+      source: CLAUDE_SOURCE,
       toolUseId
     });
     if (!event) {

@@ -1090,6 +1090,7 @@ export function RecordSkillUsageOutcomeInputSchema(): z.ZodObject<
     scope: z.string().nullish(),
     sessionId: z.string().nullish(),
     skillName: z.string().min(1),
+    source: z.string().nullish(),
     toolUseId: z.string().nullish(),
   });
 }

@@ -177,6 +177,7 @@ mutation RecordSkillUsageOutcome($input: RecordSkillUsageOutcomeInput!) {
     id
     skillName
     outcome
+    source
   }
 }
 `;
@@ -194,7 +195,8 @@ var buildOutcomeEvent = ({
   durationMs = null,
   timestamp = (/* @__PURE__ */ new Date()).toISOString(),
   gitBranch,
-  cwd
+  cwd,
+  source
 }) => {
   const name = typeof skillName === "string" ? skillName.trim() : "";
   if (!name) {
@@ -206,7 +208,7 @@ var buildOutcomeEvent = ({
   const scope = detectScope(name, repoRoot);
   const resolvedCwd = cwd || repoRoot;
   const resolvedDuration = durationMs == null || Number.isNaN(Number(durationMs)) ? null : Math.max(0, Math.round(Number(durationMs)));
-  return {
+  const event = {
     cwd: resolvedCwd,
     duration_ms: resolvedDuration,
     event_kind: "outcome",
@@ -218,6 +220,10 @@ var buildOutcomeEvent = ({
     timestamp,
     tool_use_id: toolUseId
   };
+  if (source != null) {
+    event.source = source;
+  }
+  return event;
 };
 var toRecordSkillUsageInput = (event) => {
   const input = {
@@ -269,6 +275,9 @@ var toRecordSkillUsageOutcomeInput = (event) => {
     outcome: event.outcome,
     skillName: event.skill_name
   };
+  if (event.source != null) {
+    input.source = event.source;
+  }
   if (event.scope != null) {
     input.scope = event.scope;
   }
@@ -710,7 +719,8 @@ var completeOpenStartsForSession = async ({
   fetchImpl,
   graphqlUrl,
   authToken,
-  timeoutMs
+  timeoutMs,
+  source
 }) => {
   const starts = listStartsForSession({ repoRoot, sessionId, startsDir });
   if (!starts.length) {
@@ -738,6 +748,7 @@ var completeOpenStartsForSession = async ({
         repoRoot,
         sessionId: typeof start.session_id === "string" ? start.session_id : sessionId,
         skillName: typeof start.skill_name === "string" ? start.skill_name : "",
+        source,
         timestamp: finishedAt,
         toolUseId: typeof start.tool_use_id === "string" ? start.tool_use_id : null
       });
@@ -777,7 +788,8 @@ var sweepAbandonedStarts = async ({
   graphqlUrl,
   authToken,
   timeoutMs,
-  jsonlPath
+  jsonlPath,
+  source
 }) => {
   const dir = startsDir || defaultStartsDir(repoRoot);
   let files;
@@ -826,6 +838,7 @@ var sweepAbandonedStarts = async ({
         repoRoot,
         sessionId: typeof start.session_id === "string" ? start.session_id : sessionId,
         skillName: typeof start.skill_name === "string" ? start.skill_name : "",
+        source,
         timestamp: detectedAt,
         toolUseId: typeof start.tool_use_id === "string" ? start.tool_use_id : null
       });
@@ -913,6 +926,7 @@ var PLAN_RUNS_DIR_REL = import_node_path5.default.join(".cache", "plan-runs");
 var PLAN_RUN_ABANDONED_MS = 6 * 60 * 60 * 1e3;
 
 // packages/agentic-hooks/src/adapters/claude/payload.ts
+var CLAUDE_SOURCE = "claude-code";
 var normalizeClaudeStopPayload = (raw) => {
   if (!isRecord(raw)) {
     return null;
@@ -944,17 +958,21 @@ var main = async () => {
     }
     const normalized = normalizeClaudeStopPayload(raw);
     if (!normalized) {
-      await sweepAbandonedStarts({ repoRoot }).catch(() => {
-      });
+      await sweepAbandonedStarts({ repoRoot, source: CLAUDE_SOURCE }).catch(
+        () => {
+        }
+      );
       return;
     }
     await completeOpenStartsForSession({
       repoRoot,
-      sessionId: normalized.session_id
+      sessionId: normalized.session_id,
+      source: CLAUDE_SOURCE
     });
     await sweepAbandonedStarts({
       currentSessionId: normalized.session_id,
-      repoRoot
+      repoRoot,
+      source: CLAUDE_SOURCE
     });
     await drainBufferedUsage({ budgetMs: 500, repoRoot });
   } catch (err) {

@@ -72,6 +72,12 @@ let warned = false;
 /** Options for {@link resolveHookPluginDirs}. */
 export interface ResolveHookPluginDirsOptions {
   readonly env?: NodeJS.ProcessEnv;
+  /**
+   * Workspace-relative payload directory for the driver being spawned — pass a driver's
+   * `pluginDirRel`. Per-driver because a payload's hook config names one tool's events, so the
+   * wrong payload loads without error and records nothing. Omitted ⇒ the Claude payload.
+   */
+  readonly payloadRel?: string;
   readonly warn?: (message: string) => void;
 }
 
@@ -131,7 +137,10 @@ export const resolveHookPluginDirs = (
     );
   }
 
-  const payload = path.join(otRoot, OPENTHROTTLE_PLUGIN_DIR_REL);
+  const payload = path.join(
+    otRoot,
+    options.payloadRel ?? OPENTHROTTLE_PLUGIN_DIR_REL,
+  );
   return isPluginPayload(payload)
     ? [payload]
     : warnOnce(

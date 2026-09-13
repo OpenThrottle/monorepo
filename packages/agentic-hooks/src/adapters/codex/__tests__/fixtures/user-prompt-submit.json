@@ -1,0 +1,10 @@
+{
+  "session_id": "01a092c0-bba1-71e2-bb55-b6b904201cf7",
+  "turn_id": "01a092c0-bc5d-74e2-b2b6-1731849ea539",
+  "transcript_path": "/home/probe/.codex/sessions/2026/09/11/rollout-2026-09-11T16-14-59-01a092c0-bba1-71e2-bb55-b6b904201cf7.jsonl",
+  "cwd": "/tmp/probe-repo",
+  "hook_event_name": "UserPromptSubmit",
+  "model": "gpt-5.1-codex",
+  "permission_mode": "bypassPermissions",
+  "prompt": "Use the foreign-ping skill."
+}
