@@ -14,9 +14,9 @@
  * it should be checkable on its own.
  */
 
-import { spokenWords } from '../episodes/derived';
-import { composeDescription } from '../episodes/description';
-import type { Chapter, Variant, VideoEpisode } from '../episodes/types';
+import { spokenWords } from '../episodes/derived.ts';
+import { composeDescription } from '../episodes/description.ts';
+import type { Chapter, Variant, VideoEpisode } from '../episodes/types.ts';
 
 /** Facts only the render knows. */
 export interface RenderFacts {

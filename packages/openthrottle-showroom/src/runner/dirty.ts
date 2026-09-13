@@ -42,7 +42,7 @@
 import { existsSync, mkdirSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { outputRoot } from './format';
+import { outputRoot } from './format.ts';
 
 const MARKER = '.demo-seeded-at';
 

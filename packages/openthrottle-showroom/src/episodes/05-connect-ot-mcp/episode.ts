@@ -35,7 +35,7 @@
  * nothing in frame is a real machine.
  */
 
-import type { VideoEpisode } from '../types';
+import type { VideoEpisode } from '../types.ts';
 
 export const episode: VideoEpisode = {
   // The picture. Identical across all four takes — verified by hashing the action

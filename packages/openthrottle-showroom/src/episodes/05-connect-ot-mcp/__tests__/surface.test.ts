@@ -1,7 +1,10 @@
 import { describe, expect, test } from 'vitest';
 
-import { scanText } from '../../../scan/scan-text';
-import { CONNECT_OT_MCP_COMMANDS, CONNECT_OT_MCP_SURFACES } from '../surface';
+import { scanText } from '../../../scan/scan-text.ts';
+import {
+  CONNECT_OT_MCP_COMMANDS,
+  CONNECT_OT_MCP_SURFACES,
+} from '../surface.ts';
 
 /**
  * Video 05 is the season's worst case for the `home-path` rule: its subject matter

@@ -12,15 +12,15 @@ export {
   sentences,
   spokenWords,
   WORDS_PER_MINUTE,
-} from './episodes/derived';
-export { composeDescription } from './episodes/description';
+} from './episodes/derived.ts';
+export { composeDescription } from './episodes/description.ts';
 export {
   EPISODES,
   episodesInReleaseOrder,
   getEpisode,
   getVariant,
   resolveVariant,
-} from './episodes/registry';
+} from './episodes/registry.ts';
 export type {
   Beat,
   Chapter,
@@ -34,10 +34,10 @@ export type {
   Variant,
   VideoEpisode,
   YouTubeMetadata,
-} from './episodes/types';
+} from './episodes/types.ts';
 export {
   EPISODE_FORMATS,
   EPISODE_STATUSES,
   PLAYLISTS,
   RECORDING_MODES,
-} from './episodes/types';
+} from './episodes/types.ts';

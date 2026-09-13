@@ -14,10 +14,10 @@
  * of those entries.
  */
 
-import type { DemoFlow } from '../runner/types';
-import { flow as flow01WhatIsOpenthrottle } from './01-what-is-openthrottle/flow';
-import { flow as flow05ConnectOtMcp } from './05-connect-ot-mcp/flow';
-import { flow as flow21DashboardTour } from './21-dashboard-tour/flow';
+import type { DemoFlow } from '../runner/types.ts';
+import { flow as flow01WhatIsOpenthrottle } from './01-what-is-openthrottle/flow.ts';
+import { flow as flow05ConnectOtMcp } from './05-connect-ot-mcp/flow.ts';
+import { flow as flow21DashboardTour } from './21-dashboard-tour/flow.ts';
 
 /**
  * Every flow that exists, keyed by the episode id it records.

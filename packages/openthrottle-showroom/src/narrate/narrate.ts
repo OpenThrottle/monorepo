@@ -28,24 +28,24 @@ import { copyFileSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { extname, join } from 'node:path';
 import { promisify } from 'node:util';
 
-import { captureDir, loadFormat, takeDir } from '../runner/format';
+import { captureDir, loadFormat, takeDir } from '../runner/format.ts';
 import {
   DEFAULT_ELEVENLABS_VOICE,
   elevenLabsBackend,
-} from './backends/elevenlabs';
+} from './backends/elevenlabs.ts';
 import {
   DEFAULT_FISH_AUDIO_VOICE,
   fishAudioBackend,
-} from './backends/fish-audio';
-import { DEFAULT_PIPER_VOICE, piperBackend } from './backends/piper';
-import { sayBackend } from './backends/say';
-import { parseScript } from './parse-script';
+} from './backends/fish-audio.ts';
+import { DEFAULT_PIPER_VOICE, piperBackend } from './backends/piper.ts';
+import { sayBackend } from './backends/say.ts';
+import { parseScript } from './parse-script.ts';
 import {
   findCachedRender,
   renderCacheKey,
   storeCachedRender,
-} from './render-cache';
-import type { NarrationTimings, SegmentTiming, TtsBackend } from './types';
+} from './render-cache.ts';
+import type { NarrationTimings, SegmentTiming, TtsBackend } from './types.ts';
 
 const execFileAsync = promisify(execFile);
 

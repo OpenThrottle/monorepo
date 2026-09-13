@@ -38,19 +38,19 @@ import { join } from 'node:path';
 
 import { chromium } from 'playwright';
 
-import { getFlow } from '../episodes/flows';
-import type { ActionContext } from './actions';
-import { runStep, signIn, stepTarget } from './actions';
-import { isDemoDataDirty } from './dirty';
-import { loadFormat, outputRoot, repositoryRoot } from './format';
-import { createCapture } from './record';
-import { toRegionSample } from './regions';
+import { getFlow } from '../episodes/flows.ts';
+import type { ActionContext } from './actions.ts';
+import { runStep, signIn, stepTarget } from './actions.ts';
+import { isDemoDataDirty } from './dirty.ts';
+import { loadFormat, outputRoot, repositoryRoot } from './format.ts';
+import { createCapture } from './record.ts';
+import { toRegionSample } from './regions.ts';
 import type {
   DemoFlow,
   ManifestStep,
   RecordingManifest,
   RegionSample,
-} from './types';
+} from './types.ts';
 
 /**
  * Chrome kept out of frame. The editor deep-link buttons on the plan detail

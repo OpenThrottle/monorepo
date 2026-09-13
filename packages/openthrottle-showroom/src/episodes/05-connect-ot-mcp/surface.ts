@@ -36,8 +36,8 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { DEMO_MACHINE, DEMO_PLANS } from '../../fixtures/demo-content';
-import { shellSurface } from '../../surfaces/shell';
+import { DEMO_MACHINE, DEMO_PLANS } from '../../fixtures/demo-content.ts';
+import { shellSurface } from '../../surfaces/shell.ts';
 
 /** The plan the agent writes on camera. Fixture-seeded, newest in the workspace. */
 const AGENT_PLAN_ID = 'd0d0d0d0-0000-4000-8000-000000000011';

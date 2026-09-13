@@ -18,10 +18,10 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { getEpisode, resolveVariant } from '../episodes/registry';
-import { captureDir, takeDir } from '../runner/format';
-import type { ScanKind } from './rules';
-import { scanText } from './scan-text';
+import { getEpisode, resolveVariant } from '../episodes/registry.ts';
+import { captureDir, takeDir } from '../runner/format.ts';
+import type { ScanKind } from './rules.ts';
+import { scanText } from './scan-text.ts';
 
 const argValue = (name: string): string | undefined => {
   const index = process.argv.indexOf(`--${name}`);

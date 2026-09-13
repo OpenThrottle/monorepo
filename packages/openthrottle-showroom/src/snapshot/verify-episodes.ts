@@ -8,8 +8,8 @@
  * discovered as an empty state halfway through a take.
  */
 
-import type { DataRequirement, VideoEpisode } from '../episodes/types';
-import type { QueryRunner } from './schema';
+import type { DataRequirement, VideoEpisode } from '../episodes/types.ts';
+import type { QueryRunner } from './schema.ts';
 
 export interface RequirementResult {
   /** The value the SQL actually returned, for the failure message. */

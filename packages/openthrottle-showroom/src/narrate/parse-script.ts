@@ -12,9 +12,9 @@
  * so a re-record of one line does not invalidate a whole take.
  */
 
-import { sentences } from '../episodes/derived';
-import { getEpisode, resolveVariant } from '../episodes/registry';
-import type { ParsedScript } from './types';
+import { sentences } from '../episodes/derived.ts';
+import { getEpisode, resolveVariant } from '../episodes/registry.ts';
+import type { ParsedScript } from './types.ts';
 
 /**
  * @public Load a script's narration, optionally choosing a variant.

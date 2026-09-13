@@ -30,8 +30,8 @@ import { join } from 'node:path';
 
 import { describe, expect, test } from 'vitest';
 
-import { repositoryRoot } from '../../runner/format';
-import { FLOWS } from '../flows';
+import { repositoryRoot } from '../../runner/format.ts';
+import { FLOWS } from '../flows.ts';
 
 /**
  * Directories whose rendered markup a flow is allowed to target.

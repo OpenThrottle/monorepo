@@ -16,7 +16,7 @@
  * contract, not a style choice.
  */
 
-import type { DemoFlow } from '../../runner/types';
+import type { DemoFlow } from '../../runner/types.ts';
 import {
   dwell,
   highlight,
@@ -27,11 +27,11 @@ import {
   stage,
   type_,
   waitFor,
-} from '../../runner/types';
+} from '../../runner/types.ts';
 import {
   ONE_COMMAND_BOOT_COMMANDS,
   ONE_COMMAND_BOOT_SURFACES,
-} from './surface';
+} from './surface.ts';
 
 export const flow: DemoFlow = {
   id: '02-one-command-boot',

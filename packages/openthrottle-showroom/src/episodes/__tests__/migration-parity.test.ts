@@ -12,9 +12,9 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { budgetWords, spokenWords } from '../derived';
-import { EPISODES, episodesInReleaseOrder, getEpisode } from '../registry';
-import { resolveVariant } from '../registry';
+import { budgetWords, spokenWords } from '../derived.ts';
+import { EPISODES, episodesInReleaseOrder, getEpisode } from '../registry.ts';
+import { resolveVariant } from '../registry.ts';
 
 /** Episode id -> spoken words, as `validate-video-scripts.ts` counted them. */
 const MARKDOWN_WORD_COUNTS: Readonly<Record<string, number>> = {

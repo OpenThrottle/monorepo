@@ -18,7 +18,7 @@
  * **Replay.** The stuck run is seeded, not produced live.
  */
 
-import type { VideoEpisode } from '../types';
+import type { VideoEpisode } from '../types.ts';
 
 export const episode: VideoEpisode = {
   beats: [

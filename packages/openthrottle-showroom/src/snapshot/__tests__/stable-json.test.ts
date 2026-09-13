@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { stableStringify, stableStringifyManifest } from '../stable-json';
+import { stableStringify, stableStringifyManifest } from '../stable-json.ts';
 
 /**
  * Determinism is the exporter's contract: a re-export against unchanged data

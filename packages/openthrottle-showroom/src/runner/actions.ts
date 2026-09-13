@@ -12,8 +12,8 @@
 
 import type { Page } from 'playwright';
 
-import { installCursor, moveCursorTo, setClickRing } from './cursor';
-import type { DemoStep } from './types';
+import { installCursor, moveCursorTo, setClickRing } from './cursor.ts';
+import type { DemoStep } from './types.ts';
 
 /** ~50 wpm with per-character jitter. Instant fill reads as fake. */
 const TYPING_BASE_MS = 48;

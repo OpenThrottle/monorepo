@@ -1,12 +1,12 @@
 import { describe, expect, test } from 'vitest';
 
-import type { RowFetcher, SnapshotScope } from '../closure';
+import type { RowFetcher, SnapshotScope } from '../closure.ts';
 import {
   collectSnapshotRows,
   computeDownwardTables,
   orderTablesTopologically,
-} from '../closure';
-import type { DatabaseSchema, TableSchema } from '../schema';
+} from '../closure.ts';
+import type { DatabaseSchema, TableSchema } from '../schema.ts';
 
 /**
  * A miniature of the real graph: `plans` is the windowed root; `tasks` (with a

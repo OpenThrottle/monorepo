@@ -7,9 +7,9 @@
  * there is, and it makes UI unreadable exactly when the narration is explaining it.
  */
 
-import type { NarrationTimings } from '../narrate/types';
-import type { SafeArea } from '../runner/format';
-import type { RecordingManifest } from '../runner/types';
+import type { NarrationTimings } from '../narrate/types.ts';
+import type { SafeArea } from '../runner/format.ts';
+import type { RecordingManifest } from '../runner/types.ts';
 
 export interface BeatPlan {
   readonly audioSeconds: number;

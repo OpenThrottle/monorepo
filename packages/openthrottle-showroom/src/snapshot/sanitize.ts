@@ -22,15 +22,15 @@
 
 import { createHash } from 'node:crypto';
 
-import type { SnapshotManifest } from './manifest';
-import { assertTableExportable } from './manifest';
+import type { SnapshotManifest } from './manifest.ts';
+import { assertTableExportable } from './manifest.ts';
 import {
   DEMO_EMAIL_DOMAIN,
   DEMO_HOME_PREFIX,
   DEMO_HOSTNAME,
   ORGANISATION_ALIASES,
-} from './sanitize.data';
-import type { DatabaseSchema } from './schema';
+} from './sanitize.data.ts';
+import type { DatabaseSchema } from './schema.ts';
 
 const EMAIL_PATTERN = new RegExp(
   `\\b[A-Za-z0-9._%+-]+@(?!${DEMO_EMAIL_DOMAIN.replace('.', '\\.')})[A-Za-z0-9.-]+\\.[A-Za-z]{2,}\\b`,
