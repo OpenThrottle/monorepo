@@ -7,13 +7,13 @@ import fs from 'node:fs';
 
 import { isRecord } from '@openthrottle/nodejs-utils';
 
-import { logHookError } from '../utils/logging';
+import { logHookError } from '../utils/logging.ts';
 import {
   appendJsonl,
   defaultStartsDir,
   startCorrelationKey,
   startsFilePathForSession,
-} from './jsonl';
+} from './jsonl.ts';
 
 /**
  * Record a start-correlation entry (identifiers + timestamp only — NO args)

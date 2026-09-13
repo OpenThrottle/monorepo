@@ -9,12 +9,12 @@ import path from 'node:path';
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { buildUsageEvent } from '../../../index';
+import { buildUsageEvent } from '../../../index.ts';
 import {
   CLAUDE_SOURCE,
   normalizeClaudePayload,
   normalizeClaudeStopPayload,
-} from '../payload';
+} from '../payload.ts';
 
 describe('normalizeClaudePayload', () => {
   it('maps PreToolUse Skill tool_input', () => {

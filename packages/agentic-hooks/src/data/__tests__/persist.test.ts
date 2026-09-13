@@ -20,8 +20,8 @@ import {
   recordSkillStart,
   startsFilePathForSession,
   sweepAbandonedStarts,
-} from '../../index';
-import type { HookFetch, OutcomeEvent, UsageEvent } from '../../types';
+} from '../../index.ts';
+import type { HookFetch, OutcomeEvent, UsageEvent } from '../../types.ts';
 
 /** Build a HookFetch that returns a fixed JSON body. */
 const jsonFetch = (

@@ -12,8 +12,8 @@ import {
   drainBufferedUsage,
   logHookError,
   sweepAbandonedStarts,
-} from '../../index';
-import { normalizeClaudeStopPayload } from './payload';
+} from '../../index.ts';
+import { normalizeClaudeStopPayload } from './payload.ts';
 
 const main = async (): Promise<void> => {
   try {

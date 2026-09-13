@@ -54,7 +54,19 @@ export class StaleWhileRevalidateCache<T> {
    * `Date.now` reference) so fake timers installed after construction still take
    * effect.
    */
-  constructor(private readonly now: () => number = () => Date.now()) {}
+  private readonly now: () => number;
+
+  /**
+   * Assigns {@link now} explicitly rather than declaring it as a constructor
+   * parameter property. This package's `exports` now names its TypeScript
+   * source, so a consumer's Vitest run externalizes it to Node, and Node's
+   * strip-only type loader cannot compile a parameter property — it erases
+   * types, it does not emit the assignment those imply. Writing the assignment
+   * out keeps this source loadable by a plain type-stripping loader.
+   */
+  constructor(now: () => number = () => Date.now()) {
+    this.now = now;
+  }
 
   /**
    * Fetch through the cache. Returns the fresh snapshot within the soft TTL; the

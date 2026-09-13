@@ -8,7 +8,7 @@
  */
 import { isRecord } from '@openthrottle/nodejs-utils';
 
-import type { NormalizedInvocation } from '../../types';
+import type { NormalizedInvocation } from '../../types.ts';
 
 /** Producer id stamped onto every event this adapter emits. @public */
 export const CURSOR_SOURCE = 'cursor';

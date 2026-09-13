@@ -4,7 +4,7 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { applyPrivacy, PRIVACY_LEVELS } from '../../index';
+import { applyPrivacy, PRIVACY_LEVELS } from '../../index.ts';
 
 describe('applyPrivacy', () => {
   it('name-only returns null', () => {

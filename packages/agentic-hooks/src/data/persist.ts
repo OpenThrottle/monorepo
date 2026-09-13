@@ -8,7 +8,7 @@ import path from 'node:path';
 
 import { isRecord } from '@openthrottle/nodejs-utils';
 
-import { resolveAuthToken, resolveGraphqlUrl } from '../config/env';
+import { resolveAuthToken, resolveGraphqlUrl } from '../config/env.ts';
 import type {
   DrainFileResult,
   HookFetch,
@@ -17,8 +17,8 @@ import type {
   PostResult,
   SkillUsageOutcome,
   UsageEvent,
-} from '../types';
-import { logHookError } from '../utils/logging';
+} from '../types.ts';
+import { logHookError } from '../utils/logging.ts';
 import {
   buildOutcomeEvent,
   RECORD_SKILL_USAGE_MUTATION,
@@ -26,7 +26,7 @@ import {
   SKILL_USAGE_OUTCOMES,
   toRecordSkillUsageInput,
   toRecordSkillUsageOutcomeInput,
-} from './events';
+} from './events.ts';
 import {
   appendJsonl,
   defaultJsonlPath,
@@ -35,8 +35,8 @@ import {
   drainJsonlFile,
   sanitizeSessionId,
   startCorrelationKey,
-} from './jsonl';
-import { drainStartsForSession, listStartsForSession } from './starts';
+} from './jsonl.ts';
+import { drainStartsForSession, listStartsForSession } from './starts.ts';
 
 /**
  * Read GraphQL `errors` from a JSON payload. Returns null when there is no

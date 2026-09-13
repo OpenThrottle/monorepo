@@ -2,16 +2,16 @@
  * Event construction + GraphQL input mapping. Tool-neutral: an adapter hands in
  * a NormalizedInvocation and gets back the durable event shape.
  */
-import { resolveGitBranch } from '../config/env';
+import { resolveGitBranch } from '../config/env.ts';
 import type {
   NormalizedInvocation,
   OutcomeEvent,
   PrivacyLevel,
   SkillUsageOutcome,
   UsageEvent,
-} from '../types';
-import { applyPrivacy, DEFAULT_PRIVACY_LEVEL } from '../utils/privacy';
-import { detectScope } from '../utils/scope';
+} from '../types.ts';
+import { applyPrivacy, DEFAULT_PRIVACY_LEVEL } from '../utils/privacy.ts';
+import { detectScope } from '../utils/scope.ts';
 
 /** @public */
 export const RECORD_SKILL_USAGE_MUTATION = `

@@ -35,8 +35,8 @@ import path from 'node:path';
 
 import { isRecord } from '@openthrottle/nodejs-utils';
 
-import { resolveAuthToken, resolveGraphqlUrl } from '../config/env';
-import { logHookError } from '../utils/logging';
+import { resolveAuthToken, resolveGraphqlUrl } from '../config/env.ts';
+import { logHookError } from '../utils/logging.ts';
 
 const PLAN_RUNS_DIR_REL = path.join('.cache', 'plan-runs');
 

@@ -8,7 +8,7 @@ import path from 'node:path';
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { resolveGraphqlUrl } from '../../index';
+import { resolveGraphqlUrl } from '../../index.ts';
 
 describe('resolveGraphqlUrl', () => {
   let tmpRoot: string;

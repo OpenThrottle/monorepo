@@ -8,7 +8,7 @@ import path from 'node:path';
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { detectScope } from '../../index';
+import { detectScope } from '../../index.ts';
 
 describe('detectScope', () => {
   let tmpRoot: string;
