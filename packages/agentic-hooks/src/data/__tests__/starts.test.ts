@@ -28,7 +28,6 @@ describe('start-correlation store', () => {
 
   it('records a start (identifiers + timestamp only, no args)', () => {
     const res = recordSkillStart({
-      repoRoot: startsDir,
       scope: 'ours',
       sessionId: 'sess-A',
       skillName: 'ot-plans',
@@ -39,7 +38,6 @@ describe('start-correlation store', () => {
     expect(res.ok).toBe(true);
 
     const entries = listStartsForSession({
-      repoRoot: startsDir,
       sessionId: 'sess-A',
       startsDir,
     });
@@ -56,7 +54,6 @@ describe('start-correlation store', () => {
 
   it('skips (does not error) when session_id is missing', () => {
     const res = recordSkillStart({
-      repoRoot: startsDir,
       sessionId: null,
       skillName: 'ot-plans',
       startsDir,
@@ -70,7 +67,6 @@ describe('start-correlation store', () => {
   it('lists [] for an unknown session and skips malformed lines', () => {
     expect(
       listStartsForSession({
-        repoRoot: startsDir,
         sessionId: 'nope',
         startsDir,
       }),
@@ -84,7 +80,6 @@ describe('start-correlation store', () => {
       'utf8',
     );
     const entries = listStartsForSession({
-      repoRoot: startsDir,
       sessionId: 'sess-malformed',
       startsDir,
     });
@@ -114,7 +109,6 @@ describe('start-correlation store', () => {
   it('drains only resolved keys, retaining the rest, then unlinks when empty', () => {
     const sessionId = 'sess-drain';
     recordSkillStart({
-      repoRoot: startsDir,
       sessionId,
       skillName: 'alpha',
       startedAt: 't1',
@@ -122,7 +116,6 @@ describe('start-correlation store', () => {
       toolUseId: 'tu-1',
     });
     recordSkillStart({
-      repoRoot: startsDir,
       sessionId,
       skillName: 'beta',
       startedAt: 't2',
@@ -131,7 +124,6 @@ describe('start-correlation store', () => {
     });
 
     const drained = drainStartsForSession({
-      repoRoot: startsDir,
       resolvedKeys: new Set([`${sessionId}::alpha::tu-1`]),
       sessionId,
       startsDir,
@@ -139,7 +131,6 @@ describe('start-correlation store', () => {
     expect(drained).toBe(1);
 
     const remaining = listStartsForSession({
-      repoRoot: startsDir,
       sessionId,
       startsDir,
     });
@@ -147,7 +138,6 @@ describe('start-correlation store', () => {
     expect(remaining[0]?.skill_name).toBe('beta');
 
     const drainedAll = drainStartsForSession({
-      repoRoot: startsDir,
       sessionId,
       startsDir,
     });
@@ -155,8 +145,6 @@ describe('start-correlation store', () => {
     expect(fs.existsSync(startsFilePathForSession(startsDir, sessionId))).toBe(
       false,
     );
-    expect(
-      drainStartsForSession({ repoRoot: startsDir, sessionId, startsDir }),
-    ).toBe(0);
+    expect(drainStartsForSession({ sessionId, startsDir })).toBe(0);
   });
 });

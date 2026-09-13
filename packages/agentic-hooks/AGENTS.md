@@ -19,7 +19,8 @@ payload as `--plugin-dir` for orchestrated runs.
   producer id + a normalizer) and one file per hook event. Nothing else belongs here.
 - `src/utils/` — `scope.ts` (ours vs third-party), `privacy.ts` (truncation + secret redaction),
   `logging.ts`.
-- `src/config/` — `env.ts`: endpoint resolution, git branch, the disable switches.
+- `src/config/` — `env.ts`: endpoint resolution by location, the OpenThrottle-checkout
+  predicate, git branch, the disable switches.
 - `src/data/` — `events.ts` (event construction + GraphQL inputs), `persist.ts` (POST → JSONL
   fallback, correlation, drain), `starts.ts` (identifiers-only start records used to compute
   duration), `jsonl.ts`, `plan-runs.ts`.
@@ -38,6 +39,23 @@ Each of these is a rule you can fail, not a description.
 - **Anything a second tool would duplicate goes in the core, not the adapter.** If a new producer
   cannot reuse a core function, that is a signal the core function is not neutral enough. Fix it
   there; do not fork the logic into the adapter.
+- **This package ships into repositories that are not ours; it must leave no trace in them.** Two
+  rules carry that, and both fail closed. The `<repoRoot>/.env` layer is gated on
+  `isOpenThrottleCheckout` — an ambiguous checkout counts as foreign, so the worst case is telemetry
+  that buffers rather than a stranger's `.env` being opened. And every buffered artifact goes to
+  `~/.openthrottle/skill-usage/`, never under a repo root; the path helpers take no `repoRoot`
+  argument precisely so a future caller cannot reintroduce one. A foreign-repo run must leave
+  `git status` clean.
+- **Configuration is resolved by location, under `OPENTHROTTLE_*` names only.** Repo `.env` (OT
+  checkouts), then process env, then `~/.openthrottle/.env`. The repo layer outranks the ambient
+  shell on purpose: an OT worktree runs its own server on its own port, and a stale parent shell
+  must not divert that worktree's capture to a sibling's schema. Do not add a second name for a
+  value that already has one — a `SKILL_USAGE_*` vocabulary existed alongside `OPENTHROTTLE_*` for
+  exactly that reason and cost a debugging session before it was removed.
+- **A configuration path named in a README must be one the code reads.** `~/.openthrottle/hooks.json`
+  was advertised in both plugin READMEs from the day they shipped and read by nothing, which is how
+  a foreign-repo user was left with no working way to configure an endpoint. Grep before you
+  document.
 - **Every hook is fail-open and exits 0.** Swallow every error, bound every network call, and never
   let a failure surface to the tool. A hook that can break the work it observes is worse than no
   hook.

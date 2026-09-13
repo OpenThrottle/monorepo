@@ -20,7 +20,9 @@ const main = async (): Promise<void> => {
       process.cwd();
 
     const budgetRaw =
-      parseArg('--budget-ms') || process.env.SKILL_USAGE_DRAIN_BUDGET_MS || '';
+      parseArg('--budget-ms') ||
+      process.env.OPENTHROTTLE_TELEMETRY_DRAIN_BUDGET_MS ||
+      '';
     // Manual runs are unbounded by default; a positive value time-boxes them.
     const budgetMs = budgetRaw === '' ? null : Number(budgetRaw) || null;
 

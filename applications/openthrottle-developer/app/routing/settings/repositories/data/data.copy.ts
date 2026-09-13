@@ -121,3 +121,50 @@ export const REPOSITORIES_ONBOARDING: GlobalFeatureOnboardingContent = {
   ],
   whatItIs: `A repository is an on-disk git checkout on the server host that OpenThrottle can plan against, run agents in, and open in the IDE. Checkouts sharing a git remote are grouped under one repository entry.`,
 };
+
+/**
+ * @description Copy for the per-checkout skill-usage telemetry readiness badge
+ * and its expanded explanation.
+ *
+ * Every negative state carries a `remediation` the user can act on without
+ * leaving the page. That is the point of the feature: a cursor-agent run once
+ * captured a skill invocation correctly, resolved no endpoint, wrote the record
+ * to a local buffer, and nothing in the product said so — the missing value was
+ * a single line in `~/.openthrottle/.env`.
+ *
+ * `notWired` is deliberately not phrased as breakage. An OpenThrottle-
+ * orchestrated run passes `--plugin-dir` at spawn time and records from any
+ * checkout, wired or not; what is missing is only the wiring for runs the user
+ * starts himself.
+ */
+export const REPOSITORY_HOOK_TELEMETRY_COPY = {
+  bufferingLabel: `Buffering locally`,
+  bufferingRemediation: `Add your OpenThrottle server to ~/.openthrottle/.env — one line, and it applies to every repository on this machine:`,
+  bufferingSummary: `Skill invocations are captured here, but no OpenThrottle endpoint resolves, so records are written to a local file instead of being sent.`,
+  columnLabel: `Telemetry`,
+  endpointSourceLabels: {
+    none: `not configured`,
+    process_env: `the shell environment`,
+    repo_env: `this checkout's .env`,
+    user_env: `~/.openthrottle/.env`,
+  },
+  envSnippet: `OPENTHROTTLE_GRAPHQL_URL=https://your-openthrottle-server/graphql`,
+  heading: `Skill-usage telemetry`,
+  missingTokenLabel: `Buffering locally`,
+  missingTokenRemediation: `An endpoint is configured but no auth token is. A server that requires authentication rejects these records and they buffer instead — add the token alongside the URL in ~/.openthrottle/.env:`,
+  missingTokenSnippet: `OPENTHROTTLE_MCP_AUTH_TOKEN=your-token`,
+  missingTokenSummary: `An endpoint resolves but no auth token does, so records are rejected with Unauthorized and buffered locally.`,
+  notInspectedLabel: `Not inspected`,
+  notInspectedSummary: `This checkout has not been inspected since telemetry readiness was added. Refresh it to find out.`,
+  notWiredLabel: `Not wired here`,
+  notWiredRemediation: `Install the plugin for the agent you use, or start runs through OpenThrottle — the driver passes --plugin-dir at spawn time and records either way:`,
+  notWiredSummary: `Nothing in this checkout wires the hooks up, so a run you start yourself records nothing. OpenThrottle-orchestrated runs still record.`,
+  offlineLabel: `Offline`,
+  offlineRemediation: `Unset OPENTHROTTLE_TELEMETRY_OFFLINE to start sending again:`,
+  offlineSnippet: `unset OPENTHROTTLE_TELEMETRY_OFFLINE`,
+  offlineSummary: `OPENTHROTTLE_TELEMETRY_OFFLINE is set, so records are buffered on purpose and never sent.`,
+  producersLabel: `Wired for`,
+  recordingLabel: `Recording`,
+  recordingSummary: `Skill invocations from this checkout are sent to OpenThrottle.`,
+  wireSnippet: `cursor-agent --plugin-dir <monorepo>/plugins/openthrottle-cursor -p "…"`,
+} as const;

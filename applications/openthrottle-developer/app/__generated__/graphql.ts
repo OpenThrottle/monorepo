@@ -3973,11 +3973,32 @@ export type RepositoryInspectionGitObject = {
   normalizedRemoteUrl?: Maybe<Scalars['String']['output']>;
 };
 
+/** Whether this checkout can actually produce skill-usage telemetry, and if not why not. Carries no secret: the endpoint URL and auth token never cross this boundary, only whether each resolved and which location supplied it. */
+export type RepositoryInspectionHookTelemetryObject = {
+  __typename?: 'RepositoryInspectionHookTelemetryObject';
+  /** True when an auth token resolved. The token itself is never exposed. */
+  authTokenConfigured: Scalars['Boolean']['output'];
+  /** True when an endpoint resolved. The URL itself is never exposed. */
+  endpointConfigured: Scalars['Boolean']['output'];
+  /** Which location supplied the endpoint: repo_env, process_env, user_env, or none. */
+  endpointSource: Scalars['String']['output'];
+  /** Hook configs found in the checkout, e.g. claude, cursor, codex. Empty means nothing in this checkout wires the hooks up — an OT-orchestrated run still records, since the driver passes --plugin-dir at spawn time. */
+  producers: Array<Scalars['String']['output']>;
+  /** Machine-readable reason for a non-recording status: no_producer, no_endpoint, no_auth_token, or offline_flag. Null when recording. */
+  reason?: Maybe<Scalars['String']['output']>;
+  /** recording, buffering, offline, or not_wired. */
+  status: Scalars['String']['output'];
+  /** Absolute path telemetry buffers to when it cannot be sent. */
+  telemetryDir: Scalars['String']['output'];
+};
+
 /** Cached inspection snapshot for a checkout; disk is the source of truth and this refreshes on view (15-minute TTL) or via refreshCheckout. */
 export type RepositoryInspectionObject = {
   __typename?: 'RepositoryInspectionObject';
   agentConfig: RepositoryInspectionAgentConfigObject;
   git: RepositoryInspectionGitObject;
+  /** Absent on snapshots written before hook-readiness was reported; refresh the checkout to populate it. */
+  hookTelemetry?: Maybe<RepositoryInspectionHookTelemetryObject>;
   scannedAt: Scalars['DateTime']['output'];
   stack: RepositoryInspectionStackObject;
   warnings: Array<Scalars['String']['output']>;
@@ -9521,6 +9542,16 @@ export type GetWorkspaceRepositoryQuery = {
           linkedWorktrees: Array<string>;
           normalizedRemoteUrl?: string | null;
         };
+        hookTelemetry?: {
+          __typename?: 'RepositoryInspectionHookTelemetryObject';
+          authTokenConfigured: boolean;
+          endpointConfigured: boolean;
+          endpointSource: string;
+          producers: Array<string>;
+          reason?: string | null;
+          status: string;
+          telemetryDir: string;
+        } | null;
         stack: {
           __typename?: 'RepositoryInspectionStackObject';
           languages: Array<string>;
@@ -9585,6 +9616,16 @@ export type GetWorkspaceRepositoryForEditQuery = {
           linkedWorktrees: Array<string>;
           normalizedRemoteUrl?: string | null;
         };
+        hookTelemetry?: {
+          __typename?: 'RepositoryInspectionHookTelemetryObject';
+          authTokenConfigured: boolean;
+          endpointConfigured: boolean;
+          endpointSource: string;
+          producers: Array<string>;
+          reason?: string | null;
+          status: string;
+          telemetryDir: string;
+        } | null;
         stack: {
           __typename?: 'RepositoryInspectionStackObject';
           languages: Array<string>;
@@ -9648,6 +9689,16 @@ export type UpdateRepositoryMutation = {
           linkedWorktrees: Array<string>;
           normalizedRemoteUrl?: string | null;
         };
+        hookTelemetry?: {
+          __typename?: 'RepositoryInspectionHookTelemetryObject';
+          authTokenConfigured: boolean;
+          endpointConfigured: boolean;
+          endpointSource: string;
+          producers: Array<string>;
+          reason?: string | null;
+          status: string;
+          telemetryDir: string;
+        } | null;
         stack: {
           __typename?: 'RepositoryInspectionStackObject';
           languages: Array<string>;
@@ -9696,6 +9747,16 @@ export type RepositoryCheckoutFieldsFragment = {
       linkedWorktrees: Array<string>;
       normalizedRemoteUrl?: string | null;
     };
+    hookTelemetry?: {
+      __typename?: 'RepositoryInspectionHookTelemetryObject';
+      authTokenConfigured: boolean;
+      endpointConfigured: boolean;
+      endpointSource: string;
+      producers: Array<string>;
+      reason?: string | null;
+      status: string;
+      telemetryDir: string;
+    } | null;
     stack: {
       __typename?: 'RepositoryInspectionStackObject';
       languages: Array<string>;
@@ -9764,6 +9825,16 @@ export type WorkspaceRepositoryFieldsFragment = {
         linkedWorktrees: Array<string>;
         normalizedRemoteUrl?: string | null;
       };
+      hookTelemetry?: {
+        __typename?: 'RepositoryInspectionHookTelemetryObject';
+        authTokenConfigured: boolean;
+        endpointConfigured: boolean;
+        endpointSource: string;
+        producers: Array<string>;
+        reason?: string | null;
+        status: string;
+        telemetryDir: string;
+      } | null;
       stack: {
         __typename?: 'RepositoryInspectionStackObject';
         languages: Array<string>;
@@ -9872,6 +9943,16 @@ export type GetSettingsRepositoriesQuery = {
           linkedWorktrees: Array<string>;
           normalizedRemoteUrl?: string | null;
         };
+        hookTelemetry?: {
+          __typename?: 'RepositoryInspectionHookTelemetryObject';
+          authTokenConfigured: boolean;
+          endpointConfigured: boolean;
+          endpointSource: string;
+          producers: Array<string>;
+          reason?: string | null;
+          status: string;
+          telemetryDir: string;
+        } | null;
         stack: {
           __typename?: 'RepositoryInspectionStackObject';
           languages: Array<string>;
@@ -9961,6 +10042,16 @@ export type AddWorkspaceFolderMutation = {
           linkedWorktrees: Array<string>;
           normalizedRemoteUrl?: string | null;
         };
+        hookTelemetry?: {
+          __typename?: 'RepositoryInspectionHookTelemetryObject';
+          authTokenConfigured: boolean;
+          endpointConfigured: boolean;
+          endpointSource: string;
+          producers: Array<string>;
+          reason?: string | null;
+          status: string;
+          telemetryDir: string;
+        } | null;
         stack: {
           __typename?: 'RepositoryInspectionStackObject';
           languages: Array<string>;
@@ -10015,6 +10106,16 @@ export type AddWorkspaceFolderMutation = {
             linkedWorktrees: Array<string>;
             normalizedRemoteUrl?: string | null;
           };
+          hookTelemetry?: {
+            __typename?: 'RepositoryInspectionHookTelemetryObject';
+            authTokenConfigured: boolean;
+            endpointConfigured: boolean;
+            endpointSource: string;
+            producers: Array<string>;
+            reason?: string | null;
+            status: string;
+            telemetryDir: string;
+          } | null;
           stack: {
             __typename?: 'RepositoryInspectionStackObject';
             languages: Array<string>;
@@ -10078,6 +10179,16 @@ export type CloneRepositoryMutation = {
           linkedWorktrees: Array<string>;
           normalizedRemoteUrl?: string | null;
         };
+        hookTelemetry?: {
+          __typename?: 'RepositoryInspectionHookTelemetryObject';
+          authTokenConfigured: boolean;
+          endpointConfigured: boolean;
+          endpointSource: string;
+          producers: Array<string>;
+          reason?: string | null;
+          status: string;
+          telemetryDir: string;
+        } | null;
         stack: {
           __typename?: 'RepositoryInspectionStackObject';
           languages: Array<string>;
@@ -10132,6 +10243,16 @@ export type CloneRepositoryMutation = {
             linkedWorktrees: Array<string>;
             normalizedRemoteUrl?: string | null;
           };
+          hookTelemetry?: {
+            __typename?: 'RepositoryInspectionHookTelemetryObject';
+            authTokenConfigured: boolean;
+            endpointConfigured: boolean;
+            endpointSource: string;
+            producers: Array<string>;
+            reason?: string | null;
+            status: string;
+            telemetryDir: string;
+          } | null;
           stack: {
             __typename?: 'RepositoryInspectionStackObject';
             languages: Array<string>;
@@ -10195,6 +10316,16 @@ export type RefreshCheckoutMutation = {
           linkedWorktrees: Array<string>;
           normalizedRemoteUrl?: string | null;
         };
+        hookTelemetry?: {
+          __typename?: 'RepositoryInspectionHookTelemetryObject';
+          authTokenConfigured: boolean;
+          endpointConfigured: boolean;
+          endpointSource: string;
+          producers: Array<string>;
+          reason?: string | null;
+          status: string;
+          telemetryDir: string;
+        } | null;
         stack: {
           __typename?: 'RepositoryInspectionStackObject';
           languages: Array<string>;
@@ -10254,6 +10385,16 @@ export type RefreshCheckoutMutation = {
             linkedWorktrees: Array<string>;
             normalizedRemoteUrl?: string | null;
           };
+          hookTelemetry?: {
+            __typename?: 'RepositoryInspectionHookTelemetryObject';
+            authTokenConfigured: boolean;
+            endpointConfigured: boolean;
+            endpointSource: string;
+            producers: Array<string>;
+            reason?: string | null;
+            status: string;
+            telemetryDir: string;
+          } | null;
           stack: {
             __typename?: 'RepositoryInspectionStackObject';
             languages: Array<string>;
@@ -13072,6 +13213,43 @@ export const RepositoryCheckoutFieldsFragmentDoc = {
                     ],
                   },
                 },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'hookTelemetry' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'authTokenConfigured' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'endpointConfigured' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'endpointSource' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'producers' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'reason' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'status' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'telemetryDir' },
+                      },
+                    ],
+                  },
+                },
                 { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
                 {
                   kind: 'Field',
@@ -13243,6 +13421,43 @@ export const WorkspaceRepositoryFieldsFragmentDoc = {
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'normalizedRemoteUrl' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'hookTelemetry' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'authTokenConfigured' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'endpointConfigured' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'endpointSource' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'producers' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'reason' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'status' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'telemetryDir' },
                       },
                     ],
                   },
@@ -24547,6 +24762,43 @@ export const GetWorkspaceRepositoryDocument = {
                     ],
                   },
                 },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'hookTelemetry' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'authTokenConfigured' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'endpointConfigured' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'endpointSource' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'producers' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'reason' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'status' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'telemetryDir' },
+                      },
+                    ],
+                  },
+                },
                 { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
                 {
                   kind: 'Field',
@@ -24782,6 +25034,43 @@ export const GetWorkspaceRepositoryForEditDocument = {
                     ],
                   },
                 },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'hookTelemetry' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'authTokenConfigured' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'endpointConfigured' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'endpointSource' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'producers' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'reason' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'status' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'telemetryDir' },
+                      },
+                    ],
+                  },
+                },
                 { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
                 {
                   kind: 'Field',
@@ -25005,6 +25294,43 @@ export const UpdateRepositoryDocument = {
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'normalizedRemoteUrl' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'hookTelemetry' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'authTokenConfigured' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'endpointConfigured' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'endpointSource' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'producers' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'reason' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'status' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'telemetryDir' },
                       },
                     ],
                   },
@@ -25315,6 +25641,43 @@ export const GetSettingsRepositoriesDocument = {
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'normalizedRemoteUrl' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'hookTelemetry' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'authTokenConfigured' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'endpointConfigured' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'endpointSource' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'producers' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'reason' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'status' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'telemetryDir' },
                       },
                     ],
                   },
@@ -25710,6 +26073,43 @@ export const AddWorkspaceFolderDocument = {
                     ],
                   },
                 },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'hookTelemetry' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'authTokenConfigured' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'endpointConfigured' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'endpointSource' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'producers' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'reason' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'status' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'telemetryDir' },
+                      },
+                    ],
+                  },
+                },
                 { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
                 {
                   kind: 'Field',
@@ -25980,6 +26380,43 @@ export const CloneRepositoryDocument = {
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'normalizedRemoteUrl' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'hookTelemetry' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'authTokenConfigured' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'endpointConfigured' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'endpointSource' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'producers' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'reason' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'status' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'telemetryDir' },
                       },
                     ],
                   },
@@ -26261,6 +26698,43 @@ export const RefreshCheckoutDocument = {
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'normalizedRemoteUrl' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'hookTelemetry' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'authTokenConfigured' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'endpointConfigured' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'endpointSource' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'producers' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'reason' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'status' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'telemetryDir' },
                       },
                     ],
                   },

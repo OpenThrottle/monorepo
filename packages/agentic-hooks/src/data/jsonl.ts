@@ -1,37 +1,49 @@
 /**
- * JSONL sink + drain primitives and the canonical `.cache/skill-usage/*` paths.
+ * JSONL sink + drain primitives and the canonical telemetry directory paths.
  */
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { userConfigDir } from '../config/env.ts';
 import type { DrainFileResult } from '../types.ts';
 import { logHookError } from '../utils/logging.ts';
 
-/** @public */
-export const DEFAULT_JSONL_REL: string = path.join(
-  '.cache',
-  'skill-usage',
-  'events.jsonl',
-);
-
-/** @public */
-export const DEFAULT_OUTCOMES_JSONL_REL: string = path.join(
-  '.cache',
-  'skill-usage',
-  'outcomes.jsonl',
-);
-
 /**
- * Session-scoped start-correlation store. One file per session; each line is an
- * identifiers-only start entry (NO args).
+ * Telemetry artifacts live in ONE directory, so a single override redirects all
+ * of them. Basenames are fixed; only the directory is configurable.
  *
  * @public
  */
-export const DEFAULT_STARTS_DIR_REL: string = path.join(
-  '.cache',
-  'skill-usage',
-  'starts',
-);
+export const TELEMETRY_DIR_BASENAME = 'skill-usage';
+
+/** @public */
+export const EVENTS_JSONL_BASENAME = 'events.jsonl';
+
+/** @public */
+export const OUTCOMES_JSONL_BASENAME = 'outcomes.jsonl';
+
+/** @public */
+export const STARTS_DIR_BASENAME = 'starts';
+
+/**
+ * The directory holding buffered events, outcomes and start entries:
+ * `~/.openthrottle/skill-usage/`, with `OPENTHROTTLE_TELEMETRY_DIR` overriding
+ * it wholesale.
+ *
+ * User-global, NOT per repository. This plugin ships into other people's
+ * checkouts, and the buffer used to land in `<repoRoot>/.cache/skill-usage/` —
+ * i.e. inside whatever workspace the agent happened to be standing in, which
+ * contradicted the plugin's own "never writes inside your repository" claim.
+ * Nothing is lost by collapsing the directories: every buffered record already
+ * carries `cwd` and `git_branch`, so repository identity lives in the data
+ * rather than in the path, and the drain hook now has exactly one place to
+ * look regardless of where a session ran.
+ *
+ * @public
+ */
+export const resolveTelemetryDir = (): string =>
+  process.env.OPENTHROTTLE_TELEMETRY_DIR?.trim() ||
+  path.join(userConfigDir(), TELEMETRY_DIR_BASENAME);
 
 /**
  * Append one event as a JSONL line, creating parent dirs as needed.
@@ -44,16 +56,16 @@ export const appendJsonl = (jsonlPath: string, event: object): void => {
 };
 
 /** @public */
-export const defaultJsonlPath = (repoRoot: string): string =>
-  path.join(repoRoot, DEFAULT_JSONL_REL);
+export const defaultJsonlPath = (): string =>
+  path.join(resolveTelemetryDir(), EVENTS_JSONL_BASENAME);
 
 /** @public */
-export const defaultOutcomesJsonlPath = (repoRoot: string): string =>
-  path.join(repoRoot, DEFAULT_OUTCOMES_JSONL_REL);
+export const defaultOutcomesJsonlPath = (): string =>
+  path.join(resolveTelemetryDir(), OUTCOMES_JSONL_BASENAME);
 
 /** @public */
-export const defaultStartsDir = (repoRoot: string): string =>
-  path.join(repoRoot, DEFAULT_STARTS_DIR_REL);
+export const defaultStartsDir = (): string =>
+  path.join(resolveTelemetryDir(), STARTS_DIR_BASENAME);
 
 /**
  * A session id is used as a filename; keep it filesystem-safe.

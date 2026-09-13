@@ -39,6 +39,26 @@ var import_node_path4 = __toESM(require("node:path"), 1);
 // packages/nodejs-utils/dist/src/utils/is-record.js
 var isRecord = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
 
+// packages/agentic-hooks/src/config/env.ts
+var import_node_path = __toESM(require("node:path"), 1);
+var OT_MARKER_REL = import_node_path.default.join(
+  "applications",
+  "openthrottle-server",
+  "package.json"
+);
+
+// packages/agentic-hooks/src/config/describe.ts
+var TELEMETRY_CONFIG_SOURCES = Object.freeze({
+  /** No layer yielded an endpoint. */
+  NONE: "none",
+  /** The ambient shell. */
+  PROCESS_ENV: "process_env",
+  /** This checkout's own `.env` — only read in an OpenThrottle checkout. */
+  REPO_ENV: "repo_env",
+  /** `~/.openthrottle/.env`. */
+  USER_ENV: "user_env"
+});
+
 // packages/agentic-hooks/src/utils/privacy.ts
 var PRIVACY_LEVELS = Object.freeze({
   FULL: "full",
@@ -49,12 +69,12 @@ var DEFAULT_PRIVACY_LEVEL = PRIVACY_LEVELS.TRUNCATED;
 
 // packages/agentic-hooks/src/utils/scope.ts
 var import_node_fs = __toESM(require("node:fs"), 1);
-var import_node_path = __toESM(require("node:path"), 1);
+var import_node_path2 = __toESM(require("node:path"), 1);
 var detectScope = (skillName2, repoRoot2) => {
   if (!skillName2 || skillName2.includes(":")) {
     return "third-party";
   }
-  const authoredDir = import_node_path.default.join(repoRoot2, "skills", skillName2);
+  const authoredDir = import_node_path2.default.join(repoRoot2, "skills", skillName2);
   try {
     if (import_node_fs.default.existsSync(authoredDir) && import_node_fs.default.statSync(authoredDir).isDirectory()) {
       return "ours";
@@ -70,24 +90,6 @@ var SKILL_USAGE_OUTCOMES = Object.freeze({
   ERROR: "error",
   SUCCESS: "success"
 });
-
-// packages/agentic-hooks/src/data/jsonl.ts
-var import_node_path2 = __toESM(require("node:path"), 1);
-var DEFAULT_JSONL_REL = import_node_path2.default.join(
-  ".cache",
-  "skill-usage",
-  "events.jsonl"
-);
-var DEFAULT_OUTCOMES_JSONL_REL = import_node_path2.default.join(
-  ".cache",
-  "skill-usage",
-  "outcomes.jsonl"
-);
-var DEFAULT_STARTS_DIR_REL = import_node_path2.default.join(
-  ".cache",
-  "skill-usage",
-  "starts"
-);
 
 // packages/agentic-hooks/src/data/persist.ts
 var DEFAULT_ABANDONED_MS = 6 * 60 * 60 * 1e3;

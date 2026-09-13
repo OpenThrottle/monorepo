@@ -188,16 +188,23 @@ flag at all**. Both captured a skill event and a correlated `success` outcome wi
 Leg B writes nothing into the target checkout: no ledger, no teardown, no `.git/info/exclude` block.
 That is a genuine improvement over skill injection, which needs all three.
 
-**But the hook core itself is not yet foreign-repo-safe.** When the OT server is unreachable, the
-JSONL buffer falls back to `<repoRoot>/.cache/skill-usage/`, which is _inside the target repo_. The
-live verification run reproduced this exactly — `?? .cache/` appeared in the scratch repo's
-`git status`. A foreign repo is the case _most_ likely to have no reachable server, so this is the
-normal path there rather than a rare one.
+**The core is now foreign-repo-safe too.** It was not: when the OT server was unreachable the JSONL
+buffer fell back to `<repoRoot>/.cache/skill-usage/`, _inside the target repo_, and the live
+verification run reproduced it exactly — `?? .cache/` in the scratch repo's `git status`. A foreign
+repo is the case _most_ likely to have no reachable server, so that was the normal path there rather
+than a rare one.
 
-§4 of the [telemetry contract](./child-repo-hook-telemetry-contract.md) makes relocating the buffer to
-a machine-global root a hard requirement, along with the other foreign-repo behaviors (no reading a
-stranger's `.env`, `name-only` privacy, scope detection against the injected skill set). **Until that
-lands, leg B's zero-mutation property holds for the flag but not for the core.**
+Two changes closed it, both unconditional rather than gated on a `home`/`foreign` mode:
+
+- The buffer is `~/.openthrottle/skill-usage/` for **every** repo, this one included. Repository
+  identity travels in each record's `cwd` and `git_branch`, so no per-repo directory is needed and the
+  drain has one place to look.
+- The `<repoRoot>/.env` layer is gated on `isOpenThrottleCheckout`, so a stranger's `.env` is never
+  opened. It fails closed: an ambiguous checkout is treated as foreign.
+
+**Leg B's zero-mutation property now holds for the core as well as the flag.** The remaining
+foreign-repo behaviors in §4 of the [telemetry contract](./child-repo-hook-telemetry-contract.md) —
+`name-only` privacy and scope detection against the injected skill set — are unchanged by this.
 
 ---
 

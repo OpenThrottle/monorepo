@@ -11,12 +11,14 @@ import { Link } from 'react-router';
 import { formatUpdatedAt } from '~/routing/plans/utils/formatters';
 import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
 import { RepositoriesTableEmpty } from '~/routing/settings/repositories/components/RepositoriesTableEmpty';
+import { RepositoryHookTelemetryCell } from '~/routing/settings/repositories/components/RepositoryHookTelemetryCell';
 import { RepositoryInjectionCell } from '~/routing/settings/repositories/components/RepositoryInjectionCell';
 import { RepositoryNameCell } from '~/routing/settings/repositories/components/RepositoryNameCell';
 import { RepositoryRowActions } from '~/routing/settings/repositories/components/RepositoryRowActions';
 import {
   REPOSITORIES_ONBOARDING,
   REPOSITORIES_TABLE_COPY,
+  REPOSITORY_HOOK_TELEMETRY_COPY,
 } from '~/routing/settings/repositories/data/data.copy';
 import type { RepositoryCheckoutRow } from '~/routing/settings/repositories/data/types';
 import { toExpandedState } from '~/routing/settings/repositories/utils/expansion';
@@ -147,6 +149,11 @@ RepositoriesTable.buildTable = (
       ),
       header: () => REPOSITORIES_TABLE_COPY.injectionColumn,
       id: 'injection',
+    },
+    {
+      cell: ({ row }) => <RepositoryHookTelemetryCell row={row.original} />,
+      header: () => REPOSITORY_HOOK_TELEMETRY_COPY.columnLabel,
+      id: 'hookTelemetry',
     },
     {
       cell: ({ row }) => {

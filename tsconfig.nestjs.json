@@ -3,6 +3,13 @@
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "emitDecoratorMetadata": true,
+    // The decorated tier opts out of the repo-wide `erasableSyntaxOnly`
+    // (tsconfig.base.json). NestJS DI *is* constructor parameter properties and
+    // decorators — neither survives type erasure — and these projects ship
+    // built JavaScript, so nothing ever hands a consumer their raw TypeScript.
+    // The constraint only binds packages whose `exports` name `./src/`:
+    // docs/monorepo/source-first-packages-and-strip-only.md
+    "erasableSyntaxOnly": false,
     "experimentalDecorators": true,
     "module": "nodenext",
     "moduleResolution": "nodenext", // node10 was REMOVED in TS7 (TS5108)

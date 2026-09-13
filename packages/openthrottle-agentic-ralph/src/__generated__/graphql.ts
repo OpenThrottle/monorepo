@@ -3973,11 +3973,32 @@ export type RepositoryInspectionGitObject = {
   normalizedRemoteUrl?: Maybe<Scalars['String']['output']>;
 };
 
+/** Whether this checkout can actually produce skill-usage telemetry, and if not why not. Carries no secret: the endpoint URL and auth token never cross this boundary, only whether each resolved and which location supplied it. */
+export type RepositoryInspectionHookTelemetryObject = {
+  __typename?: 'RepositoryInspectionHookTelemetryObject';
+  /** True when an auth token resolved. The token itself is never exposed. */
+  authTokenConfigured: Scalars['Boolean']['output'];
+  /** True when an endpoint resolved. The URL itself is never exposed. */
+  endpointConfigured: Scalars['Boolean']['output'];
+  /** Which location supplied the endpoint: repo_env, process_env, user_env, or none. */
+  endpointSource: Scalars['String']['output'];
+  /** Hook configs found in the checkout, e.g. claude, cursor, codex. Empty means nothing in this checkout wires the hooks up — an OT-orchestrated run still records, since the driver passes --plugin-dir at spawn time. */
+  producers: Array<Scalars['String']['output']>;
+  /** Machine-readable reason for a non-recording status: no_producer, no_endpoint, no_auth_token, or offline_flag. Null when recording. */
+  reason?: Maybe<Scalars['String']['output']>;
+  /** recording, buffering, offline, or not_wired. */
+  status: Scalars['String']['output'];
+  /** Absolute path telemetry buffers to when it cannot be sent. */
+  telemetryDir: Scalars['String']['output'];
+};
+
 /** Cached inspection snapshot for a checkout; disk is the source of truth and this refreshes on view (15-minute TTL) or via refreshCheckout. */
 export type RepositoryInspectionObject = {
   __typename?: 'RepositoryInspectionObject';
   agentConfig: RepositoryInspectionAgentConfigObject;
   git: RepositoryInspectionGitObject;
+  /** Absent on snapshots written before hook-readiness was reported; refresh the checkout to populate it. */
+  hookTelemetry?: Maybe<RepositoryInspectionHookTelemetryObject>;
   scannedAt: Scalars['DateTime']['output'];
   stack: RepositoryInspectionStackObject;
   warnings: Array<Scalars['String']['output']>;

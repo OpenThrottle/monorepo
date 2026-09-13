@@ -52,7 +52,6 @@ const main = async (): Promise<void> => {
     }
 
     recordSkillStart({
-      repoRoot,
       scope: event.scope,
       sessionId: event.session_id,
       skillName: event.skill_name,
@@ -60,8 +59,7 @@ const main = async (): Promise<void> => {
       toolUseId: event.tool_use_id ?? null,
     });
 
-    const outPath =
-      process.env.SKILL_USAGE_JSONL_PATH || defaultJsonlPath(repoRoot);
+    const outPath = defaultJsonlPath();
 
     await persistUsageEvent({
       event,

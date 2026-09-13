@@ -165,9 +165,9 @@ If you find yourself needing a tool name in the core, you probably need a new fi
 
 Tool-neutral, applies to every producer:
 
-| how                            | effect                       |
-| ------------------------------ | ---------------------------- |
-| `SKILL_USAGE_DISABLE_SERVER=1` | buffers locally, never posts |
+| how                                | effect                       |
+| ---------------------------------- | ---------------------------- |
+| `OPENTHROTTLE_TELEMETRY_OFFLINE=1` | buffers locally, never posts |
 
 Delivery-specific, and only meaningful where that delivery leg exists:
 

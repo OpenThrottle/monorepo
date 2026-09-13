@@ -136,11 +136,11 @@ describe('postSkillUsageEvent + persistUsageEvent', () => {
     expect(fs.existsSync(errPath)).toBe(true);
   });
 
-  it('SKILL_USAGE_DISABLE_SERVER forces JSONL without calling fetch', async () => {
+  it('OPENTHROTTLE_TELEMETRY_OFFLINE forces JSONL without calling fetch', async () => {
     const forcedPath = path.join(tmpRoot, 'forced.jsonl');
     let called = false;
-    const prev = process.env.SKILL_USAGE_DISABLE_SERVER;
-    process.env.SKILL_USAGE_DISABLE_SERVER = '1';
+    const prev = process.env.OPENTHROTTLE_TELEMETRY_OFFLINE;
+    process.env.OPENTHROTTLE_TELEMETRY_OFFLINE = '1';
     try {
       const result = await persistUsageEvent({
         event: sampleEvent,
@@ -156,9 +156,9 @@ describe('postSkillUsageEvent + persistUsageEvent', () => {
       expect(fs.existsSync(forcedPath)).toBe(true);
     } finally {
       if (prev === undefined) {
-        delete process.env.SKILL_USAGE_DISABLE_SERVER;
+        delete process.env.OPENTHROTTLE_TELEMETRY_OFFLINE;
       } else {
-        process.env.SKILL_USAGE_DISABLE_SERVER = prev;
+        process.env.OPENTHROTTLE_TELEMETRY_OFFLINE = prev;
       }
     }
   });
@@ -266,7 +266,6 @@ describe('completeOpenStartsForSession', () => {
   it('emits one success outcome per open start with computed duration, then drains', async () => {
     const sessionId = 'sess-complete';
     recordSkillStart({
-      repoRoot: tmpRoot,
       scope: 'ours',
       sessionId,
       skillName: 'ot-plans',
@@ -275,7 +274,6 @@ describe('completeOpenStartsForSession', () => {
       toolUseId: 'tu-a',
     });
     recordSkillStart({
-      repoRoot: tmpRoot,
       scope: 'ours',
       sessionId,
       skillName: 'create-readme',
@@ -305,9 +303,7 @@ describe('completeOpenStartsForSession', () => {
     expect(bySkill['ot-plans']?.toolUseId).toBe('tu-a');
     expect(bySkill['create-readme']?.durationMs).toBe(2000);
 
-    expect(
-      listStartsForSession({ repoRoot: tmpRoot, sessionId, startsDir }),
-    ).toEqual([]);
+    expect(listStartsForSession({ sessionId, startsDir })).toEqual([]);
     const posted2: Array<Record<string, unknown>> = [];
     const res2 = await completeOpenStartsForSession({
       fetchImpl: recordingFetch(posted2),
@@ -324,7 +320,6 @@ describe('completeOpenStartsForSession', () => {
     const sessionId = 'sess-dupe';
     for (let i = 0; i < 3; i += 1) {
       recordSkillStart({
-        repoRoot: tmpRoot,
         sessionId,
         skillName: 'ot-plans',
         startedAt: '2026-08-01T00:00:00.000Z',
@@ -348,7 +343,6 @@ describe('completeOpenStartsForSession', () => {
   it('falls back to outcomes JSONL when the server is down, still draining starts', async () => {
     const sessionId = 'sess-offline';
     recordSkillStart({
-      repoRoot: tmpRoot,
       sessionId,
       skillName: 'ot-plans',
       startedAt: '2026-08-01T00:00:00.000Z',
@@ -373,9 +367,7 @@ describe('completeOpenStartsForSession', () => {
     const line = JSON.parse(fs.readFileSync(jsonlPath, 'utf8').trim());
     expect(line.outcome).toBe('success');
     expect(line.duration_ms).toBe(2000);
-    expect(
-      listStartsForSession({ repoRoot: tmpRoot, sessionId, startsDir }),
-    ).toEqual([]);
+    expect(listStartsForSession({ sessionId, startsDir })).toEqual([]);
   });
 });
 
@@ -396,7 +388,6 @@ describe('sweepAbandonedStarts', () => {
     const maxAgeMs = 6 * 60 * 60 * 1000;
 
     recordSkillStart({
-      repoRoot: tmpRoot,
       sessionId: 'sess-stale',
       skillName: 'ot-plans',
       startedAt: '2026-07-31T00:00:00.000Z',
@@ -408,7 +399,6 @@ describe('sweepAbandonedStarts', () => {
     fs.utimesSync(stalePath, new Date(oldMs), new Date(oldMs));
 
     recordSkillStart({
-      repoRoot: tmpRoot,
       sessionId: 'sess-current',
       skillName: 'ot-plans',
       startedAt: '2026-08-01T00:00:00.000Z',
@@ -422,7 +412,6 @@ describe('sweepAbandonedStarts', () => {
     );
 
     recordSkillStart({
-      repoRoot: tmpRoot,
       sessionId: 'sess-fresh',
       skillName: 'ot-plans',
       startedAt: '2026-08-01T23:59:00.000Z',
@@ -486,7 +475,7 @@ describe('drainBufferedUsage', () => {
     tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-drainall-'));
   });
   afterEach(() => {
-    delete process.env.SKILL_USAGE_DISABLE_SERVER;
+    delete process.env.OPENTHROTTLE_TELEMETRY_OFFLINE;
   });
   afterAll(() => {
     fs.rmSync(tmpRoot, { force: true, recursive: true });
@@ -537,10 +526,10 @@ describe('drainBufferedUsage', () => {
     expect(fs.existsSync(outcomesPath)).toBe(false);
   });
 
-  it('is a no-op when SKILL_USAGE_DISABLE_SERVER=1 (buffer left intact)', async () => {
+  it('is a no-op when OPENTHROTTLE_TELEMETRY_OFFLINE=1 (buffer left intact)', async () => {
     const eventsPath = path.join(tmpRoot, 'events-disabled.jsonl');
     fs.writeFileSync(eventsPath, `${JSON.stringify({ a: 1 })}\n`, 'utf8');
-    process.env.SKILL_USAGE_DISABLE_SERVER = '1';
+    process.env.OPENTHROTTLE_TELEMETRY_OFFLINE = '1';
     const res = await drainBufferedUsage({
       eventsPath,
       fetchImpl: async () => {
