@@ -170,6 +170,7 @@ var PRIVACY_LEVELS = Object.freeze({
   TRUNCATED: "truncated"
 });
 var DEFAULT_PRIVACY_LEVEL = PRIVACY_LEVELS.TRUNCATED;
+var FOREIGN_PRIVACY_LEVEL = PRIVACY_LEVELS.NAME_ONLY;
 
 // packages/agentic-hooks/src/data/events.ts
 var SKILL_USAGE_OUTCOMES = Object.freeze({

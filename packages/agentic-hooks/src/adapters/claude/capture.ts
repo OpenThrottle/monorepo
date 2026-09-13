@@ -9,7 +9,6 @@ import path from 'node:path';
 
 import {
   buildUsageEvent,
-  DEFAULT_PRIVACY_LEVEL,
   defaultJsonlPath,
   logHookError,
   persistUsageEvent,
@@ -44,7 +43,6 @@ const main = async (): Promise<void> => {
 
     const event = buildUsageEvent({
       normalized,
-      privacyLevel: DEFAULT_PRIVACY_LEVEL,
       repoRoot,
       source: CLAUDE_SOURCE,
     });

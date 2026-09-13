@@ -2,7 +2,12 @@
  * Privacy seam — args truncation + secret redaction before an event ever leaves
  * the machine. Kept as a discrete unit so plan 91679bbf can extend it
  * (configurable privacy) without touching the rest of the core.
+ *
+ * The level is chosen from the checkout rather than being a fixed constant:
+ * `truncated` in an OpenThrottle checkout, `name-only` in a repo the operator
+ * does not own.
  */
+import { isOpenThrottleCheckout } from '../config/env.ts';
 import type { PrivacyLevel } from '../types.ts';
 
 /** @public */
@@ -12,8 +17,35 @@ export const PRIVACY_LEVELS = Object.freeze({
   TRUNCATED: 'truncated',
 } as const) satisfies Readonly<Record<string, PrivacyLevel>>;
 
-/** @public */
+/** The OpenThrottle-checkout default: args redacted and capped. @public */
 export const DEFAULT_PRIVACY_LEVEL: PrivacyLevel = PRIVACY_LEVELS.TRUNCATED;
+
+/** The foreign-checkout default: no args at all. @public */
+export const FOREIGN_PRIVACY_LEVEL: PrivacyLevel = PRIVACY_LEVELS.NAME_ONLY;
+
+/**
+ * The privacy level for `repoRoot`, from the same checkout test that gates the
+ * `.env` layer — so a repo is either ours for both purposes or neither.
+ *
+ * The asymmetry is about consent, not about the redactor's quality: in this
+ * repo the operator owns the code the args are drawn from; in someone else's
+ * they do not, and skill args routinely quote file contents, paths and prompt
+ * text belonging to a third party. `name-only` is also what makes the plugin
+ * defensible to install — "it records which skills ran, never what you typed"
+ * is a claim a user can check by reading the payload's README, which has
+ * advertised exactly that since before anything selected it.
+ *
+ * Fails closed with `isOpenThrottleCheckout`: an unreadable root collects no
+ * args.
+ *
+ * @public
+ */
+export const resolvePrivacyLevel = (
+  repoRoot: string | undefined,
+): PrivacyLevel =>
+  isOpenThrottleCheckout(repoRoot)
+    ? DEFAULT_PRIVACY_LEVEL
+    : FOREIGN_PRIVACY_LEVEL;
 
 /** @public */
 export const DEFAULT_ARGS_MAX_LEN = 256;
