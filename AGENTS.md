@@ -113,7 +113,7 @@ The rules are grouped by **who catches you**. The honor-system ones lead, becaus
 ### Enforced — ESLint `error` or a compiler flag; CI fails
 
 - **No new TypeScript enums** — use an `as const` object. Existing enums are grandfathered. [↳](docs/monorepo/code-style.md#no-new-enums)
-- **No non-erasable TypeScript** — `erasableSyntaxOnly` in `tsconfig.base.json` rejects constructor parameter properties, `enum`, `namespace` and `import x = require()` with `TS1294`. The decorated (NestJS) tier and the two projects that typecheck GraphQL Codegen enums opt out; a package whose `exports` name `./src/` never can, and also bans decorators through `sourceFirstEslintConfig`. [↳](docs/monorepo/source-first-packages-and-strip-only.md)
+- **No non-erasable TypeScript** — `erasableSyntaxOnly` in `tsconfig.base.json` rejects constructor parameter properties, `enum`, `namespace` and `import x = require()` with `TS1294`. Only the decorated (NestJS) tier opts out; a package whose `exports` name `./src/` never can, and also bans decorators through `sourceFirstEslintConfig`. Generated GraphQL clients used to force six more opt-outs and no longer do — codegen emits `as const` objects rather than `enum`. [↳](docs/monorepo/source-first-packages-and-strip-only.md)
 - **No `as` casts** in any form (`x as T`, `<T>x`, `x as unknown as T`). Narrow with a runtime check, write a type predicate, or parse at the boundary. [↳](docs/monorepo/code-style.md#no-as-casts)
 - **No `any`** anywhere, generic function bodies included. Use `unknown` + narrowing, a generic parameter, or an overload signature. [↳](docs/monorepo/code-style.md#no-any)
 - **`import type` at the top level**, not inline `import { type … }`. Auto-fixable. [↳](docs/monorepo/code-style.md#import-type)
