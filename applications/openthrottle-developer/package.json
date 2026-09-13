@@ -8,6 +8,8 @@
     "url": "https://developer.openthrottle.ai"
   },
   "dependencies": {
+    "@faker-js/faker": "catalog:",
+    "@graphql-typed-document-node/core": "catalog:",
     "@openthrottle/graphql-codegen": "workspace:^",
     "@openthrottle/nodejs-utils": "workspace:*",
     "@openthrottle/openthrottle-agentic-utils": "workspace:*",
@@ -32,16 +34,19 @@
     "@openthrottle/react-router-ui-global": "workspace:^",
     "@openthrottle/react-router-utils": "workspace:^",
     "@phosphor-icons/react": "catalog:",
+    "@react-router/dev": "catalog:",
     "@react-router/express": "catalog:",
     "@react-router/fs-routes": "catalog:",
     "@react-router/node": "catalog:",
     "@react-router/serve": "catalog:",
     "@tanstack/react-table": "catalog:",
     "@vercel/analytics": "catalog:",
+    "@vercel/react-router": "catalog:",
     "@vscode/ripgrep": "catalog:",
     "clsx": "catalog:",
     "date-fns": "catalog:",
     "dotenv": "catalog:",
+    "framer-motion": "catalog:",
     "isbot": "catalog:",
     "jotai": "catalog:",
     "lucide-react": "catalog:",
@@ -51,12 +56,26 @@
     "react-router": "catalog:",
     "recharts": "catalog:",
     "sonner": "catalog:",
-    "ts-morph": "catalog:"
+    "tailwindcss": "catalog:",
+    "ts-morph": "catalog:",
+    "tw-animate-css": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@openthrottle/openthrottle-drivers": "workspace:*",
     "@openthrottle/react-router-testing": "workspace:^",
-    "playwright": "catalog:"
+    "@tailwindcss/vite": "catalog:",
+    "@testing-library/jest-dom": "catalog:",
+    "@testing-library/react": "catalog:",
+    "@testing-library/user-event": "catalog:",
+    "graphql-codegen-typescript-validation-schema": "catalog:",
+    "playwright": "catalog:",
+    "react-dnd-html5-backend": "catalog:",
+    "react-router-devtools": "catalog:",
+    "vite": "catalog:",
+    "vite-bundle-analyzer": "catalog:",
+    "vite-plugin-devtools-json": "catalog:",
+    "vitest": "catalog:"
   },
   "license": "Apache-2.0",
   "nx": {

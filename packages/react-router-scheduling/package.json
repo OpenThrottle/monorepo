@@ -26,7 +26,10 @@
   },
   "description": "Source-first React Router scheduling calendar package: an engine-agnostic wrapper (hooks, components, utils) around Schedule-X for day/week/month views, drag-and-drop, resize, and event CRUD.",
   "devDependencies": {
-    "@openthrottle/react-router-testing": "workspace:^"
+    "@openthrottle/react-router-testing": "workspace:^",
+    "@testing-library/react": "catalog:",
+    "@testing-library/user-event": "catalog:",
+    "vitest": "catalog:"
   },
   "license": "Apache-2.0",
   "main": "./src/index.ts",

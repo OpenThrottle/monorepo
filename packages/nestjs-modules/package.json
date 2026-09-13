@@ -8,6 +8,7 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
+    "@nestjs/common": "catalog:",
     "@openthrottle/nestjs-utils": "workspace:^",
     "logform": "catalog:",
     "nestjs-cls": "catalog:",
@@ -64,5 +65,9 @@
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
   "type": "commonjs",
-  "types": "./src/index.ts"
+  "types": "./src/index.ts",
+  "devDependencies": {
+    "@nestjs/testing": "catalog:",
+    "vitest": "catalog:"
+  }
 }

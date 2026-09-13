@@ -10,7 +10,9 @@
   "dependencies": {
     "@apollo/server": "catalog:",
     "@apollo/server-plugin-response-cache": "catalog:",
+    "@as-integrations/express5": "catalog:",
     "@nestjs/apollo": "catalog:",
+    "@nestjs/common": "catalog:",
     "@nestjs/graphql": "catalog:",
     "@openthrottle/nestjs-modules": "workspace:^",
     "@openthrottle/nestjs-redis": "workspace:^",
@@ -21,7 +23,8 @@
     "jsonwebtoken": "catalog:"
   },
   "devDependencies": {
-    "@types/jsonwebtoken": "catalog:"
+    "@types/jsonwebtoken": "catalog:",
+    "vitest": "catalog:"
   },
   "exports": {
     ".": {

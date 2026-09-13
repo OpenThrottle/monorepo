@@ -8,9 +8,13 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
-    "@nestjs/common": "catalog:"
+    "@nestjs/common": "catalog:",
+    "tslib": "catalog:"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "@nestjs/testing": "catalog:",
+    "vitest": "catalog:"
+  },
   "exports": {
     ".": {
       "types": "./dist/src/index.d.ts",

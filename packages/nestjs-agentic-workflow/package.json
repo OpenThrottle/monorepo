@@ -99,6 +99,7 @@
   "devDependencies": {
     "@golevelup/ts-vitest": "catalog:",
     "@nestjs/testing": "catalog:",
-    "@openthrottle/nestjs-modules": "workspace:^"
+    "@openthrottle/nestjs-modules": "workspace:^",
+    "vitest": "catalog:"
   }
 }

@@ -13,7 +13,11 @@
     "monaco-editor": "catalog:"
   },
   "description": "Monaco-based editor for OpenThrottle custom prompts: tabbed files, searchable sidebar, and React Router integration.",
-  "devDependencies": {},
+  "devDependencies": {
+    "@testing-library/react": "catalog:",
+    "@testing-library/user-event": "catalog:",
+    "vitest": "catalog:"
+  },
   "license": "Apache-2.0",
   "main": "./src/index.ts",
   "module": "./src/index.ts",

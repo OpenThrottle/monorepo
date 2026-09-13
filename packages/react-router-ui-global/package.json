@@ -13,13 +13,24 @@
     "@openthrottle/react-router-ui": "workspace:^",
     "@openthrottle/react-router-utils": "workspace:^",
     "@paper-design/shaders-react": "catalog:",
+    "@phosphor-icons/react": "catalog:",
     "clsx": "catalog:",
+    "graphql": "catalog:",
     "lucide-react": "catalog:",
+    "react": "catalog:",
+    "react-dnd": "catalog:",
+    "react-dnd-html5-backend": "catalog:",
+    "react-router": "catalog:",
+    "recharts": "catalog:",
     "rollbar": "catalog:"
   },
   "description": "TODO: Add a description",
   "devDependencies": {
-    "@openthrottle/react-router-testing": "workspace:^"
+    "@openthrottle/react-router-testing": "workspace:^",
+    "@testing-library/jest-dom": "catalog:",
+    "@testing-library/react": "catalog:",
+    "@testing-library/user-event": "catalog:",
+    "vitest": "catalog:"
   },
   "license": "Apache-2.0",
   "main": "./src/index.ts",

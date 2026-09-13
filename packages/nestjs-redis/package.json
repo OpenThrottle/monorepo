@@ -11,6 +11,8 @@
     "@apollo/utils.keyvadapter": "catalog:",
     "@apollo/utils.keyvaluecache": "catalog:",
     "@keyv/redis": "catalog:",
+    "@nestjs/common": "catalog:",
+    "@nestjs/config": "catalog:",
     "@openthrottle/nestjs-modules": "workspace:^",
     "ioredis": "catalog:",
     "keyv": "catalog:"
@@ -65,5 +67,9 @@
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
   "type": "commonjs",
-  "types": "./src/index.ts"
+  "types": "./src/index.ts",
+  "devDependencies": {
+    "@golevelup/ts-vitest": "catalog:",
+    "vitest": "catalog:"
+  }
 }

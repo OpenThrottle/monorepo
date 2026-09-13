@@ -8,7 +8,9 @@
     "@openthrottle/nodejs-utils": "workspace:^"
   },
   "description": "TODO: Add a description",
-  "devDependencies": {},
+  "devDependencies": {
+    "vitest": "catalog:"
+  },
   "exports": {
     ".": {
       "types": "./dist/src/index.d.ts",

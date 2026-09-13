@@ -18,11 +18,13 @@
     "ignore": "catalog:",
     "pdf-parse": "catalog:",
     "pg": "catalog:",
+    "tslib": "catalog:",
     "youtubei.js": "catalog:"
   },
   "devDependencies": {
     "@types/pg": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   },
   "exports": {
     ".": {

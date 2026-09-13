@@ -13,7 +13,11 @@
     "@openthrottle/openthrottle-agentic-utils": "workspace:^",
     "joi": "catalog:"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "@golevelup/ts-vitest": "catalog:",
+    "@nestjs/testing": "catalog:",
+    "vitest": "catalog:"
+  },
   "exports": {
     ".": {
       "types": "./dist/src/index.d.ts",

@@ -18,7 +18,8 @@
     "@types/pidusage": "catalog:",
     "nx": "catalog:",
     "pg": "catalog:",
-    "pidusage": "catalog:"
+    "pidusage": "catalog:",
+    "vitest": "catalog:"
   },
   "exports": {
     ".": {
