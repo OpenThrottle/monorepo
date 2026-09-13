@@ -6,9 +6,76 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from 'vitest';
 
-import { drainJsonlFile } from '../../index.ts';
+import {
+  defaultJsonlPath,
+  defaultOutcomesJsonlPath,
+  defaultStartsDir,
+  drainJsonlFile,
+} from '../../index.ts';
+
+describe('telemetry directory resolution', () => {
+  let tmpRoot: string;
+  let fakeHome: string;
+  let prev: string | undefined;
+  let prevHome: string | undefined;
+
+  beforeEach(() => {
+    tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-usage-dir-'));
+    fakeHome = path.join(tmpRoot, 'home');
+    fs.mkdirSync(fakeHome, { recursive: true });
+    prev = process.env.OPENTHROTTLE_TELEMETRY_DIR;
+    prevHome = process.env.HOME;
+    delete process.env.OPENTHROTTLE_TELEMETRY_DIR;
+    process.env.HOME = fakeHome;
+  });
+
+  afterEach(() => {
+    fs.rmSync(tmpRoot, { force: true, recursive: true });
+    if (prev === undefined) {
+      delete process.env.OPENTHROTTLE_TELEMETRY_DIR;
+    } else {
+      process.env.OPENTHROTTLE_TELEMETRY_DIR = prev;
+    }
+    if (prevHome === undefined) {
+      delete process.env.HOME;
+    } else {
+      process.env.HOME = prevHome;
+    }
+  });
+
+  it('defaults all three artifacts to ~/.openthrottle/skill-usage, NOT the repo', () => {
+    const dir = path.join(fakeHome, '.openthrottle', 'skill-usage');
+    expect(defaultJsonlPath()).toBe(path.join(dir, 'events.jsonl'));
+    expect(defaultOutcomesJsonlPath()).toBe(path.join(dir, 'outcomes.jsonl'));
+    expect(defaultStartsDir()).toBe(path.join(dir, 'starts'));
+  });
+
+  it('OPENTHROTTLE_TELEMETRY_DIR redirects events, outcomes AND starts together', () => {
+    process.env.OPENTHROTTLE_TELEMETRY_DIR = tmpRoot;
+    expect(defaultJsonlPath()).toBe(path.join(tmpRoot, 'events.jsonl'));
+    expect(defaultOutcomesJsonlPath()).toBe(
+      path.join(tmpRoot, 'outcomes.jsonl'),
+    );
+    expect(defaultStartsDir()).toBe(path.join(tmpRoot, 'starts'));
+  });
+
+  it('ignores a blank override', () => {
+    process.env.OPENTHROTTLE_TELEMETRY_DIR = '   ';
+    expect(defaultJsonlPath()).toBe(
+      path.join(fakeHome, '.openthrottle', 'skill-usage', 'events.jsonl'),
+    );
+  });
+});
 
 describe('drainJsonlFile', () => {
   let tmpRoot: string;

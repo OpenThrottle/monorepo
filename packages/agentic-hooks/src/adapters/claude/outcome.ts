@@ -45,17 +45,23 @@ const main = async (): Promise<void> => {
       process.env.OPEN_THROTTLE_REPO_ROOT ||
       process.cwd();
 
-    const skillName = args.skill || process.env.SKILL_USAGE_SKILL_NAME || '';
-    const outcome = args.outcome || process.env.SKILL_USAGE_OUTCOME || '';
+    const skillName =
+      args.skill || process.env.OPENTHROTTLE_TELEMETRY_SKILL_NAME || '';
+    const outcome =
+      args.outcome || process.env.OPENTHROTTLE_TELEMETRY_OUTCOME || '';
     const sessionId =
       args.session ||
-      process.env.SKILL_USAGE_SESSION_ID ||
+      process.env.OPENTHROTTLE_TELEMETRY_SESSION_ID ||
       process.env.CLAUDE_SESSION_ID ||
       null;
     const toolUseId =
-      args['tool-use-id'] || process.env.SKILL_USAGE_TOOL_USE_ID || null;
+      args['tool-use-id'] ||
+      process.env.OPENTHROTTLE_TELEMETRY_TOOL_USE_ID ||
+      null;
     const durationRaw =
-      args['duration-ms'] || process.env.SKILL_USAGE_DURATION_MS || '';
+      args['duration-ms'] ||
+      process.env.OPENTHROTTLE_TELEMETRY_DURATION_MS ||
+      '';
     const durationMs = durationRaw === '' ? null : Number(durationRaw);
 
     if (
@@ -83,9 +89,7 @@ const main = async (): Promise<void> => {
       return;
     }
 
-    const outPath =
-      process.env.SKILL_USAGE_OUTCOMES_JSONL_PATH ||
-      defaultOutcomesJsonlPath(repoRoot);
+    const outPath = defaultOutcomesJsonlPath();
 
     await persistOutcomeEvent({
       event,

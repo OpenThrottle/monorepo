@@ -14,6 +14,7 @@ import {
   WORKSPACE_FOLDERS_COPY,
   WORKSPACE_REPOSITORY_DETAIL_COPY,
 } from '~/routing/settings/data/data.copy';
+import { RepositoryHookTelemetry } from '~/routing/settings/repositories/components/RepositoryHookTelemetry';
 import { deriveCheckoutInspectionBadges } from '~/routing/settings/repositories/utils/checkout-inspection-badges';
 
 export interface RepositoryDetailProps {
@@ -187,6 +188,7 @@ export const RepositoryDetail = (
                       ))}
                     </div>
                   ) : null}
+                  <RepositoryHookTelemetry inspection={checkout.inspection} />
                 </Card>
               );
             })}

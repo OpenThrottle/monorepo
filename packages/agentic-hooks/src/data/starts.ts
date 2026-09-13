@@ -17,13 +17,12 @@ import {
 
 /**
  * Record a start-correlation entry (identifiers + timestamp only — NO args)
- * under `.cache/skill-usage/starts/<session_id>.jsonl`. Skips (does not error)
+ * under `<telemetry dir>/starts/<session_id>.jsonl`. Skips (does not error)
  * when session_id or skill_name is missing.
  *
  * @public
  */
 export const recordSkillStart = ({
-  repoRoot,
   sessionId,
   skillName,
   toolUseId = null,
@@ -31,7 +30,6 @@ export const recordSkillStart = ({
   startedAt = new Date().toISOString(),
   startsDir,
 }: {
-  repoRoot: string;
   scope?: string | null;
   sessionId: string | null | undefined;
   skillName: string | null | undefined;
@@ -45,7 +43,7 @@ export const recordSkillStart = ({
     if (!sid || !name) {
       return { ok: false, reason: 'missing session_id or skill_name' };
     }
-    const dir = startsDir || defaultStartsDir(repoRoot);
+    const dir = startsDir || defaultStartsDir();
     const filePath = startsFilePathForSession(dir, sid);
     appendJsonl(filePath, {
       scope: scope ?? null,
@@ -71,11 +69,9 @@ export const recordSkillStart = ({
  * @public
  */
 export const listStartsForSession = ({
-  repoRoot,
   sessionId,
   startsDir,
 }: {
-  repoRoot: string;
   sessionId: string | null | undefined;
   startsDir?: string;
 }): Array<Record<string, unknown>> => {
@@ -84,7 +80,7 @@ export const listStartsForSession = ({
     if (!sid) {
       return [];
     }
-    const dir = startsDir || defaultStartsDir(repoRoot);
+    const dir = startsDir || defaultStartsDir();
     const filePath = startsFilePathForSession(dir, sid);
     if (!fs.existsSync(filePath)) {
       return [];
@@ -121,12 +117,10 @@ export const listStartsForSession = ({
  * @public
  */
 export const drainStartsForSession = ({
-  repoRoot,
   sessionId,
   resolvedKeys,
   startsDir,
 }: {
-  repoRoot: string;
   resolvedKeys?: Set<string>;
   sessionId: string | null | undefined;
   startsDir?: string;
@@ -136,13 +130,12 @@ export const drainStartsForSession = ({
     if (!sid) {
       return 0;
     }
-    const dir = startsDir || defaultStartsDir(repoRoot);
+    const dir = startsDir || defaultStartsDir();
     const filePath = startsFilePathForSession(dir, sid);
     if (!fs.existsSync(filePath)) {
       return 0;
     }
     const entries = listStartsForSession({
-      repoRoot,
       sessionId: sid,
       startsDir: dir,
     });

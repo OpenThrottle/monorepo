@@ -9,6 +9,7 @@
  * Every public symbol below is re-exported from its module, which carries the
  * `@public` JSDoc tag so Knip retains it.
  */
+export * from './config/describe.ts';
 export * from './config/env.ts';
 export * from './data/events.ts';
 export * from './data/jsonl.ts';

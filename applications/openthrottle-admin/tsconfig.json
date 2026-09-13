@@ -1,6 +1,14 @@
 {
   "extends": "../../tsconfig.react-router.json",
   "compilerOptions": {
+    // Opts out of the repo-wide `erasableSyntaxOnly` (tsconfig.base.json)
+    // because GraphQL Codegen emits `export enum` into `__generated__/graphql.ts`
+    // and a compiler flag cannot be scoped to exclude a directory. The durable
+    // fix is `enumsAsConst` in the codegen preset — a cross-consumer migration,
+    // not a silent flip. This project ships built output, so nothing hands a
+    // consumer its raw TypeScript:
+    // docs/monorepo/source-first-packages-and-strip-only.md
+    "erasableSyntaxOnly": false,
     "paths": {
       "~/*": ["./app/*"],
       "@/*": ["./.react-router/types/*"]

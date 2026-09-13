@@ -32,8 +32,13 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
+// packages/agentic-hooks/src/data/jsonl.ts
+var import_node_fs2 = __toESM(require("node:fs"), 1);
+var import_node_path2 = __toESM(require("node:path"), 1);
+
 // packages/agentic-hooks/src/config/env.ts
 var import_node_fs = __toESM(require("node:fs"), 1);
+var import_node_os = __toESM(require("node:os"), 1);
 var import_node_path = __toESM(require("node:path"), 1);
 
 // packages/agentic-hooks/src/utils/logging.ts
@@ -49,10 +54,38 @@ var logHookError = (message, err) => {
 };
 
 // packages/agentic-hooks/src/config/env.ts
-var readRepoEnvFile = (repoRoot) => {
+var userConfigDir = () => import_node_path.default.join(import_node_os.default.homedir(), ".openthrottle");
+var OT_MARKER_REL = import_node_path.default.join(
+  "applications",
+  "openthrottle-server",
+  "package.json"
+);
+var OT_MARKER_NAME = "openthrottle-server";
+var checkoutCache = /* @__PURE__ */ new Map();
+var isOpenThrottleCheckout = (repoRoot) => {
+  if (!repoRoot) {
+    return false;
+  }
+  const cached = checkoutCache.get(repoRoot);
+  if (cached !== void 0) {
+    return cached;
+  }
+  let match = false;
+  try {
+    const markerPath = import_node_path.default.join(repoRoot, OT_MARKER_REL);
+    if (import_node_fs.default.existsSync(markerPath)) {
+      const parsed = JSON.parse(import_node_fs.default.readFileSync(markerPath, "utf8"));
+      match = typeof parsed === "object" && parsed !== null && "name" in parsed && parsed.name === OT_MARKER_NAME;
+    }
+  } catch {
+    match = false;
+  }
+  checkoutCache.set(repoRoot, match);
+  return match;
+};
+var readEnvFile = (envPath) => {
   const out = {};
   try {
-    const envPath = import_node_path.default.join(repoRoot, ".env");
     if (!import_node_fs.default.existsSync(envPath)) {
       return out;
     }
@@ -77,23 +110,25 @@ var readRepoEnvFile = (repoRoot) => {
       out[key] = value;
     }
   } catch (err) {
-    logHookError("readRepoEnvFile failed", err);
+    logHookError("readEnvFile failed", err);
   }
   return out;
 };
-var resolveOtEnv = (repoRoot, key) => {
-  const skillOverride = key === "OPENTHROTTLE_GRAPHQL_URL" ? process.env.SKILL_USAGE_GRAPHQL_URL : key === "OPENTHROTTLE_MCP_AUTH_TOKEN" ? process.env.SKILL_USAGE_AUTH_TOKEN : void 0;
-  if (skillOverride && skillOverride.trim()) {
-    return skillOverride.trim();
-  }
-  if (repoRoot) {
-    const fromFile = readRepoEnvFile(repoRoot)[key];
-    if (fromFile && fromFile.trim()) {
-      return fromFile.trim();
+var readRepoEnvFile = (repoRoot) => isOpenThrottleCheckout(repoRoot) ? readEnvFile(import_node_path.default.join(repoRoot, ".env")) : {};
+var readUserEnvFile = () => readEnvFile(import_node_path.default.join(userConfigDir(), ".env"));
+var envLayers = (repoRoot, options) => [
+  repoRoot ? readRepoEnvFile(repoRoot) : {},
+  ...options?.includeProcessEnv === false ? [] : [process.env],
+  readUserEnvFile()
+];
+var resolveOtEnv = (repoRoot, key, options) => {
+  for (const layer of envLayers(repoRoot, options)) {
+    const value = layer[key];
+    if (value && value.trim()) {
+      return value.trim();
     }
   }
-  const fromProcess = process.env[key];
-  return fromProcess && fromProcess.trim() ? fromProcess.trim() : "";
+  return "";
 };
 var graphqlUrlFromEnvMap = (env) => {
   const explicit = env.OPENTHROTTLE_GRAPHQL_URL?.trim() || env.OPENTHROTTLE_WORKER_GRAPHQL_URL?.trim();
@@ -106,20 +141,121 @@ var graphqlUrlFromEnvMap = (env) => {
   }
   return null;
 };
-var resolveGraphqlUrl = (repoRoot) => {
-  const skillOverride = process.env.SKILL_USAGE_GRAPHQL_URL?.trim();
-  if (skillOverride) {
-    return skillOverride.replace(/\/$/, "");
-  }
-  if (repoRoot) {
-    const fromFile = graphqlUrlFromEnvMap(readRepoEnvFile(repoRoot));
-    if (fromFile) {
-      return fromFile;
+var resolveGraphqlUrl = (repoRoot, options) => {
+  for (const layer of envLayers(repoRoot, options)) {
+    const url = graphqlUrlFromEnvMap(layer);
+    if (url) {
+      return url;
     }
   }
-  return graphqlUrlFromEnvMap(process.env);
+  return null;
 };
-var resolveAuthToken = (repoRoot) => resolveOtEnv(repoRoot, "OPENTHROTTLE_MCP_AUTH_TOKEN") || resolveOtEnv(repoRoot, "OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN") || "";
+var resolveAuthToken = (repoRoot, options) => resolveOtEnv(repoRoot, "OPENTHROTTLE_MCP_AUTH_TOKEN", options) || resolveOtEnv(repoRoot, "OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN", options) || "";
+
+// packages/agentic-hooks/src/data/jsonl.ts
+var TELEMETRY_DIR_BASENAME = "skill-usage";
+var EVENTS_JSONL_BASENAME = "events.jsonl";
+var OUTCOMES_JSONL_BASENAME = "outcomes.jsonl";
+var resolveTelemetryDir = () => process.env.OPENTHROTTLE_TELEMETRY_DIR?.trim() || import_node_path2.default.join(userConfigDir(), TELEMETRY_DIR_BASENAME);
+var defaultJsonlPath = () => import_node_path2.default.join(resolveTelemetryDir(), EVENTS_JSONL_BASENAME);
+var defaultOutcomesJsonlPath = () => import_node_path2.default.join(resolveTelemetryDir(), OUTCOMES_JSONL_BASENAME);
+var drainJsonlFile = async ({
+  filePath,
+  post,
+  deadlineMs,
+  nowFn = Date.now
+}) => {
+  const result = { retained: 0, sent: 0, skipped: 0 };
+  if (!import_node_fs2.default.existsSync(filePath)) {
+    return result;
+  }
+  const snapshotPath = `${filePath}.draining.${process.pid}`;
+  try {
+    import_node_fs2.default.renameSync(filePath, snapshotPath);
+  } catch {
+    return result;
+  }
+  const retain = [];
+  try {
+    let stopped = false;
+    const lines = import_node_fs2.default.readFileSync(snapshotPath, "utf8").split("\n");
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) {
+        continue;
+      }
+      if (stopped) {
+        retain.push(trimmed);
+        continue;
+      }
+      if (deadlineMs != null && nowFn() > deadlineMs) {
+        stopped = true;
+        retain.push(trimmed);
+        continue;
+      }
+      let event;
+      try {
+        event = JSON.parse(trimmed);
+      } catch {
+        result.skipped += 1;
+        logHookError("drain: skipping malformed jsonl line");
+        continue;
+      }
+      let ok = false;
+      try {
+        const res = await post(event);
+        ok = Boolean(res && res.ok);
+      } catch (err) {
+        logHookError("drain: post threw", err);
+      }
+      if (ok) {
+        result.sent += 1;
+      } else {
+        retain.push(trimmed);
+      }
+    }
+  } catch (err) {
+    logHookError("drainJsonlFile read failed", err);
+    try {
+      const leftover = import_node_fs2.default.readFileSync(snapshotPath, "utf8");
+      if (leftover.trim()) {
+        import_node_fs2.default.appendFileSync(
+          filePath,
+          leftover.endsWith("\n") ? leftover : `${leftover}
+`,
+          "utf8"
+        );
+      }
+      import_node_fs2.default.rmSync(snapshotPath, { force: true });
+    } catch (foldErr) {
+      logHookError("drain: fold-back failed", foldErr);
+    }
+    return result;
+  }
+  try {
+    if (retain.length) {
+      import_node_fs2.default.appendFileSync(filePath, `${retain.join("\n")}
+`, "utf8");
+      result.retained = retain.length;
+    }
+    import_node_fs2.default.rmSync(snapshotPath, { force: true });
+  } catch (err) {
+    logHookError("drain: finalize failed", err);
+  }
+  return result;
+};
+
+// packages/agentic-hooks/src/config/describe.ts
+var TELEMETRY_CONFIG_SOURCES = Object.freeze({
+  /** No layer yielded an endpoint. */
+  NONE: "none",
+  /** The ambient shell. */
+  PROCESS_ENV: "process_env",
+  /** This checkout's own `.env` — only read in an OpenThrottle checkout. */
+  REPO_ENV: "repo_env",
+  /** `~/.openthrottle/.env`. */
+  USER_ENV: "user_env"
+});
 
 // packages/agentic-hooks/src/utils/privacy.ts
 var PRIVACY_LEVELS = Object.freeze({
@@ -225,112 +361,6 @@ var toRecordSkillUsageOutcomeInput = (event) => {
     input.durationMs = event.duration_ms;
   }
   return input;
-};
-
-// packages/agentic-hooks/src/data/jsonl.ts
-var import_node_fs2 = __toESM(require("node:fs"), 1);
-var import_node_path2 = __toESM(require("node:path"), 1);
-var DEFAULT_JSONL_REL = import_node_path2.default.join(
-  ".cache",
-  "skill-usage",
-  "events.jsonl"
-);
-var DEFAULT_OUTCOMES_JSONL_REL = import_node_path2.default.join(
-  ".cache",
-  "skill-usage",
-  "outcomes.jsonl"
-);
-var DEFAULT_STARTS_DIR_REL = import_node_path2.default.join(
-  ".cache",
-  "skill-usage",
-  "starts"
-);
-var defaultJsonlPath = (repoRoot) => import_node_path2.default.join(repoRoot, DEFAULT_JSONL_REL);
-var defaultOutcomesJsonlPath = (repoRoot) => import_node_path2.default.join(repoRoot, DEFAULT_OUTCOMES_JSONL_REL);
-var drainJsonlFile = async ({
-  filePath,
-  post,
-  deadlineMs,
-  nowFn = Date.now
-}) => {
-  const result = { retained: 0, sent: 0, skipped: 0 };
-  if (!import_node_fs2.default.existsSync(filePath)) {
-    return result;
-  }
-  const snapshotPath = `${filePath}.draining.${process.pid}`;
-  try {
-    import_node_fs2.default.renameSync(filePath, snapshotPath);
-  } catch {
-    return result;
-  }
-  const retain = [];
-  try {
-    let stopped = false;
-    const lines = import_node_fs2.default.readFileSync(snapshotPath, "utf8").split("\n");
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (!trimmed) {
-        continue;
-      }
-      if (stopped) {
-        retain.push(trimmed);
-        continue;
-      }
-      if (deadlineMs != null && nowFn() > deadlineMs) {
-        stopped = true;
-        retain.push(trimmed);
-        continue;
-      }
-      let event;
-      try {
-        event = JSON.parse(trimmed);
-      } catch {
-        result.skipped += 1;
-        logHookError("drain: skipping malformed jsonl line");
-        continue;
-      }
-      let ok = false;
-      try {
-        const res = await post(event);
-        ok = Boolean(res && res.ok);
-      } catch (err) {
-        logHookError("drain: post threw", err);
-      }
-      if (ok) {
-        result.sent += 1;
-      } else {
-        retain.push(trimmed);
-      }
-    }
-  } catch (err) {
-    logHookError("drainJsonlFile read failed", err);
-    try {
-      const leftover = import_node_fs2.default.readFileSync(snapshotPath, "utf8");
-      if (leftover.trim()) {
-        import_node_fs2.default.appendFileSync(
-          filePath,
-          leftover.endsWith("\n") ? leftover : `${leftover}
-`,
-          "utf8"
-        );
-      }
-      import_node_fs2.default.rmSync(snapshotPath, { force: true });
-    } catch (foldErr) {
-      logHookError("drain: fold-back failed", foldErr);
-    }
-    return result;
-  }
-  try {
-    if (retain.length) {
-      import_node_fs2.default.appendFileSync(filePath, `${retain.join("\n")}
-`, "utf8");
-      result.retained = retain.length;
-    }
-    import_node_fs2.default.rmSync(snapshotPath, { force: true });
-  } catch (err) {
-    logHookError("drain: finalize failed", err);
-  }
-  return result;
 };
 
 // packages/nodejs-utils/dist/src/utils/is-record.js
@@ -466,7 +496,7 @@ var postSkillUsageOutcome = async ({
   }
   return { id, ok: true };
 };
-var resolveTimeout = (timeoutMs) => timeoutMs ?? (Number(process.env.SKILL_USAGE_POST_TIMEOUT_MS) || DEFAULT_POST_TIMEOUT_MS);
+var resolveTimeout = (timeoutMs) => timeoutMs ?? (Number(process.env.OPENTHROTTLE_TELEMETRY_TIMEOUT_MS) || DEFAULT_POST_TIMEOUT_MS);
 var drainBufferedUsage = async ({
   repoRoot,
   eventsPath,
@@ -479,7 +509,7 @@ var drainBufferedUsage = async ({
   nowFn = Date.now
 }) => {
   const empty = () => ({ retained: 0, sent: 0, skipped: 0 });
-  if (process.env.SKILL_USAGE_DISABLE_SERVER === "1") {
+  if (process.env.OPENTHROTTLE_TELEMETRY_OFFLINE === "1") {
     return { events: empty(), outcomes: empty() };
   }
   const graphqlUrl = graphqlUrlOverride ?? resolveGraphqlUrl(repoRoot);
@@ -491,7 +521,7 @@ var drainBufferedUsage = async ({
   const deadlineMs = budgetMs == null ? void 0 : nowFn() + budgetMs;
   const events = await drainJsonlFile({
     deadlineMs,
-    filePath: eventsPath || defaultJsonlPath(repoRoot),
+    filePath: eventsPath || defaultJsonlPath(),
     nowFn,
     post: (event) => postSkillUsageEvent({
       authToken,
@@ -503,7 +533,7 @@ var drainBufferedUsage = async ({
   });
   const outcomes = await drainJsonlFile({
     deadlineMs,
-    filePath: outcomesPath || defaultOutcomesJsonlPath(repoRoot),
+    filePath: outcomesPath || defaultOutcomesJsonlPath(),
     nowFn,
     post: (event) => postSkillUsageOutcome({
       authToken,
@@ -529,7 +559,7 @@ var parseArg = (flag) => {
 var main = async () => {
   try {
     const repoRoot = process.env.CLAUDE_PROJECT_DIR || process.env.OPEN_THROTTLE_REPO_ROOT || process.cwd();
-    const budgetRaw = parseArg("--budget-ms") || process.env.SKILL_USAGE_DRAIN_BUDGET_MS || "";
+    const budgetRaw = parseArg("--budget-ms") || process.env.OPENTHROTTLE_TELEMETRY_DRAIN_BUDGET_MS || "";
     const budgetMs = budgetRaw === "" ? null : Number(budgetRaw) || null;
     const summary = await drainBufferedUsage({ budgetMs, repoRoot });
     process.stderr.write(

@@ -3434,11 +3434,48 @@ type RepositoryInspectionStackObject {
 }
 
 """
+Whether this checkout can actually produce skill-usage telemetry, and if not why not. Carries no secret: the endpoint URL and auth token never cross this boundary, only whether each resolved and which location supplied it.
+"""
+type RepositoryInspectionHookTelemetryObject {
+  """True when an auth token resolved. The token itself is never exposed."""
+  authTokenConfigured: Boolean!
+
+  """True when an endpoint resolved. The URL itself is never exposed."""
+  endpointConfigured: Boolean!
+
+  """
+  Which location supplied the endpoint: repo_env, process_env, user_env, or none.
+  """
+  endpointSource: String!
+
+  """
+  Hook configs found in the checkout, e.g. claude, cursor, codex. Empty means nothing in this checkout wires the hooks up — an OT-orchestrated run still records, since the driver passes --plugin-dir at spawn time.
+  """
+  producers: [String!]!
+
+  """
+  Machine-readable reason for a non-recording status: no_producer, no_endpoint, no_auth_token, or offline_flag. Null when recording.
+  """
+  reason: String
+
+  """recording, buffering, offline, or not_wired."""
+  status: String!
+
+  """Absolute path telemetry buffers to when it cannot be sent."""
+  telemetryDir: String!
+}
+
+"""
 Cached inspection snapshot for a checkout; disk is the source of truth and this refreshes on view (15-minute TTL) or via refreshCheckout.
 """
 type RepositoryInspectionObject {
   agentConfig: RepositoryInspectionAgentConfigObject!
   git: RepositoryInspectionGitObject!
+
+  """
+  Absent on snapshots written before hook-readiness was reported; refresh the checkout to populate it.
+  """
+  hookTelemetry: RepositoryInspectionHookTelemetryObject
   scannedAt: DateTime!
   stack: RepositoryInspectionStackObject!
   warnings: [String!]!

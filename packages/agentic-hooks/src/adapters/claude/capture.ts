@@ -55,7 +55,6 @@ const main = async (): Promise<void> => {
     // Additive: remember this start (identifiers + timestamp only, no args) so
     // the completion hook can compute duration and correlate. Fail-open inside.
     recordSkillStart({
-      repoRoot,
       scope: event.scope,
       sessionId: event.session_id,
       skillName: event.skill_name,
@@ -63,8 +62,7 @@ const main = async (): Promise<void> => {
       toolUseId: event.tool_use_id ?? null,
     });
 
-    const outPath =
-      process.env.SKILL_USAGE_JSONL_PATH || defaultJsonlPath(repoRoot);
+    const outPath = defaultJsonlPath();
 
     await persistUsageEvent({
       event,

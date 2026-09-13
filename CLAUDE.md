@@ -1,4 +1,4 @@
-@~/.claude/info.md
+<!-- @~/.claude/info.md -->
 
 # CLAUDE.md
 

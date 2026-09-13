@@ -105,6 +105,7 @@ const toInspectionObject = (
     linkedWorktrees: snapshot.git.linkedWorktrees,
     normalizedRemoteUrl: snapshot.git.normalizedRemoteUrl,
   },
+  hookTelemetry: snapshot.hookTelemetry ? { ...snapshot.hookTelemetry } : null,
   scannedAt: new Date(snapshot.scannedAt),
   stack: { ...snapshot.stack },
   warnings: snapshot.warnings,

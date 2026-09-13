@@ -72,7 +72,9 @@ export const DEFAULT_POST_TIMEOUT_MS = 750;
 
 /**
  * A start-correlation file older than this whose session is not the current
- * one is considered abandoned. Default 6h; override via SKILL_USAGE_ABANDONED_MS.
+ * one is considered abandoned. Default 6h; override per call via `maxAgeMs`
+ * (there is no env override — the previous doc comment named one that no code
+ * has ever read).
  *
  * @public
  */
@@ -244,7 +246,8 @@ export const postSkillUsageOutcome = async ({
 
 const resolveTimeout = (timeoutMs?: number): number =>
   timeoutMs ??
-  (Number(process.env.SKILL_USAGE_POST_TIMEOUT_MS) || DEFAULT_POST_TIMEOUT_MS);
+  (Number(process.env.OPENTHROTTLE_TELEMETRY_TIMEOUT_MS) ||
+    DEFAULT_POST_TIMEOUT_MS);
 
 /**
  * Persist a usage event to OT; on any failure append events JSONL. Always
@@ -269,15 +272,15 @@ export const persistUsageEvent = async ({
   repoRoot: string;
   timeoutMs?: number;
 }): Promise<PersistResult> => {
-  const outPath = jsonlPath || defaultJsonlPath(repoRoot);
+  const outPath = jsonlPath || defaultJsonlPath();
 
-  if (process.env.SKILL_USAGE_DISABLE_SERVER === '1') {
+  if (process.env.OPENTHROTTLE_TELEMETRY_OFFLINE === '1') {
     try {
       appendJsonl(outPath, event);
     } catch (err) {
       logHookError('jsonl append failed', err);
     }
-    return { detail: 'SKILL_USAGE_DISABLE_SERVER=1', sink: 'jsonl' };
+    return { detail: 'OPENTHROTTLE_TELEMETRY_OFFLINE=1', sink: 'jsonl' };
   }
 
   const graphqlUrl = graphqlUrlOverride ?? resolveGraphqlUrl(repoRoot);
@@ -351,15 +354,15 @@ export const persistOutcomeEvent = async ({
   repoRoot: string;
   timeoutMs?: number;
 }): Promise<PersistResult> => {
-  const outPath = jsonlPath || defaultOutcomesJsonlPath(repoRoot);
+  const outPath = jsonlPath || defaultOutcomesJsonlPath();
 
-  if (process.env.SKILL_USAGE_DISABLE_SERVER === '1') {
+  if (process.env.OPENTHROTTLE_TELEMETRY_OFFLINE === '1') {
     try {
       appendJsonl(outPath, event);
     } catch (err) {
       logHookError('outcome jsonl append failed', err);
     }
-    return { detail: 'SKILL_USAGE_DISABLE_SERVER=1', sink: 'jsonl' };
+    return { detail: 'OPENTHROTTLE_TELEMETRY_OFFLINE=1', sink: 'jsonl' };
   }
 
   const graphqlUrl = graphqlUrlOverride ?? resolveGraphqlUrl(repoRoot);
@@ -450,7 +453,7 @@ export const completeOpenStartsForSession = async ({
   startsDir?: string;
   timeoutMs?: number;
 }): Promise<{ resolved: number; results: CompletionResult[] }> => {
-  const starts = listStartsForSession({ repoRoot, sessionId, startsDir });
+  const starts = listStartsForSession({ sessionId, startsDir });
   if (!starts.length) {
     return { resolved: 0, results: [] };
   }
@@ -518,7 +521,7 @@ export const completeOpenStartsForSession = async ({
   const results = maybeResults.filter((r): r is CompletionResult => r !== null);
   const resolvedKeys = new Set(results.map((r) => r.key));
 
-  drainStartsForSession({ repoRoot, resolvedKeys, sessionId, startsDir });
+  drainStartsForSession({ resolvedKeys, sessionId, startsDir });
   return { resolved: resolvedKeys.size, results };
 };
 
@@ -562,7 +565,7 @@ export const sweepAbandonedStarts = async ({
   startsDir?: string;
   timeoutMs?: number;
 }): Promise<{ swept: number }> => {
-  const dir = startsDir || defaultStartsDir(repoRoot);
+  const dir = startsDir || defaultStartsDir();
   let files: string[];
   try {
     files = fs.readdirSync(dir);
@@ -595,11 +598,7 @@ export const sweepAbandonedStarts = async ({
     }
 
     const sessionId = file.replace(/\.jsonl$/, '');
-    const starts = listStartsForSession({
-      repoRoot,
-      sessionId,
-      startsDir: dir,
-    });
+    const starts = listStartsForSession({ sessionId, startsDir: dir });
     // Stamp the row when the abandonment is DETECTED, not with the session
     // file's mtime — an mtime timestamp lands the row alongside the start that
     // wrote it, making every abandonment look instantaneous.
@@ -660,7 +659,7 @@ export const sweepAbandonedStarts = async ({
   );
 
   for (const sessionId of staleSessions) {
-    drainStartsForSession({ repoRoot, sessionId, startsDir: dir });
+    drainStartsForSession({ sessionId, startsDir: dir });
   }
 
   return { swept: abandoned.length };
@@ -668,7 +667,7 @@ export const sweepAbandonedStarts = async ({
 
 /**
  * Opportunistic/scheduled drain of both buffered files (events + outcomes) to
- * OT. Time-boxed via `budgetMs`. Respects SKILL_USAGE_DISABLE_SERVER + a missing
+ * OT. Time-boxed via `budgetMs`. Respects OPENTHROTTLE_TELEMETRY_OFFLINE + a missing
  * URL (both → no-op). Fail-open.
  *
  * @public
@@ -696,7 +695,7 @@ export const drainBufferedUsage = async ({
 }): Promise<{ events: DrainFileResult; outcomes: DrainFileResult }> => {
   const empty = (): DrainFileResult => ({ retained: 0, sent: 0, skipped: 0 });
 
-  if (process.env.SKILL_USAGE_DISABLE_SERVER === '1') {
+  if (process.env.OPENTHROTTLE_TELEMETRY_OFFLINE === '1') {
     return { events: empty(), outcomes: empty() };
   }
 
@@ -710,7 +709,7 @@ export const drainBufferedUsage = async ({
 
   const events = await drainJsonlFile<UsageEvent>({
     deadlineMs,
-    filePath: eventsPath || defaultJsonlPath(repoRoot),
+    filePath: eventsPath || defaultJsonlPath(),
     nowFn,
     post: (event) =>
       postSkillUsageEvent({
@@ -724,7 +723,7 @@ export const drainBufferedUsage = async ({
 
   const outcomes = await drainJsonlFile<OutcomeEvent>({
     deadlineMs,
-    filePath: outcomesPath || defaultOutcomesJsonlPath(repoRoot),
+    filePath: outcomesPath || defaultOutcomesJsonlPath(),
     nowFn,
     post: (event) =>
       postSkillUsageOutcome({

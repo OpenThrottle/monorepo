@@ -74,6 +74,7 @@ const buildSnapshot = (
         : overrides.normalizedRemoteUrl,
     remotes: [],
   },
+  hookTelemetry: undefined,
   manifest: {
     checkoutId: null,
     present: false,

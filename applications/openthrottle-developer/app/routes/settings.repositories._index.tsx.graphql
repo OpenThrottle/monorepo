@@ -20,6 +20,15 @@ fragment RepositoryCheckoutFields on RepositoryCheckoutObject {
       linkedWorktrees
       normalizedRemoteUrl
     }
+    hookTelemetry {
+      authTokenConfigured
+      endpointConfigured
+      endpointSource
+      producers
+      reason
+      status
+      telemetryDir
+    }
     scannedAt
     stack {
       languages

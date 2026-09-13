@@ -630,3 +630,47 @@ export const eslintConfig = tslint.config([
     },
   },
 ]);
+
+/**
+ * The one strip-only restriction the TypeScript compiler will not enforce for
+ * us, for the packages that need it.
+ *
+ * A **source-first** package — one whose `exports` name `./src/` — hands raw
+ * TypeScript to its consumers, and when the consumer is Node, its strip-only
+ * type loader *erases* types but never *emits* code. Every construct whose
+ * semantics require generated output is rejected outright, in an unrelated
+ * project's test run, with an error naming neither the package nor `exports`.
+ * See docs/monorepo/source-first-packages-and-strip-only.md.
+ *
+ * `erasableSyntaxOnly` in `tsconfig.base.json` covers that class repo-wide —
+ * parameter properties, `enum`, `namespace`, `import x = require()` — at
+ * `typecheck`, in the editor, with no custom code. It deliberately does **not**
+ * flag decorators, which are equally unemittable but which the NestJS surface
+ * is built out of. So decorators are the residue, and they are banned here
+ * rather than globally, scoped by each package that opts into source-first.
+ *
+ * Spread this **after** `eslintConfig` in a source-first package's
+ * `eslint.config.ts`. `no-restricted-syntax` options replace rather than merge,
+ * so the enum entry from the base block is repeated; `__tests__` is left alone
+ * so the snapshot restrictions there survive.
+ * @public
+ */
+export const sourceFirstEslintConfig = tslint.config([
+  {
+    files: ['**/*.ts', '**/*.tsx'],
+    ignores: ['**/__tests__/**'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          message: `Avoid TypeScript enums. Use an \`as const\` object instead (existing enums are grandfathered).`,
+          selector: 'TSEnumDeclaration',
+        },
+        {
+          message: `This package is source-first — its "exports" name ./src/, so consumers get raw TypeScript. A decorator implies a generated call wrapping the declaration, which Node's strip-only loader cannot emit: a consumer resolving this package through Node fails with "SyntaxError: Invalid or unexpected token", naming neither this package nor the "exports" decision. Either drop the decorator, or stop pointing this package's require/default conditions at ./src/. See docs/monorepo/source-first-packages-and-strip-only.md.`,
+          selector: 'Decorator',
+        },
+      ],
+    },
+  },
+]);

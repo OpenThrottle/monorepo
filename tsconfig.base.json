@@ -8,6 +8,12 @@
     "declarationMap": true,
     "emitDeclarationOnly": false,
     "emitDecoratorMetadata": false,
+    // Bans the syntax Node's strip-only type loader cannot erase — parameter
+    // properties, `enum`, `namespace`, `import x = require()`. Repo-wide rather
+    // than scoped to the packages whose `exports` name `./src/`, so there is no
+    // set to keep in sync. Why it matters, and the decorator case this flag does
+    // not cover: docs/monorepo/source-first-packages-and-strip-only.md
+    "erasableSyntaxOnly": true,
     "esModuleInterop": true,
     "experimentalDecorators": false,
     "forceConsistentCasingInFileNames": true,

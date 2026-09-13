@@ -72,6 +72,47 @@ export class RepositoryInspectionStackObject {
 }
 
 @ObjectType({
+  description: `Whether this checkout can actually produce skill-usage telemetry, and if not why not. Carries no secret: the endpoint URL and auth token never cross this boundary, only whether each resolved and which location supplied it.`,
+})
+export class RepositoryInspectionHookTelemetryObject {
+  @Field(() => Boolean, {
+    description: `True when an auth token resolved. The token itself is never exposed.`,
+  })
+  authTokenConfigured!: boolean;
+
+  @Field(() => Boolean, {
+    description: `True when an endpoint resolved. The URL itself is never exposed.`,
+  })
+  endpointConfigured!: boolean;
+
+  @Field(() => String, {
+    description: `Which location supplied the endpoint: repo_env, process_env, user_env, or none.`,
+  })
+  endpointSource!: string;
+
+  @Field(() => [String], {
+    description: `Hook configs found in the checkout, e.g. claude, cursor, codex. Empty means nothing in this checkout wires the hooks up — an OT-orchestrated run still records, since the driver passes --plugin-dir at spawn time.`,
+  })
+  producers!: readonly string[];
+
+  @Field(() => String, {
+    description: `Machine-readable reason for a non-recording status: no_producer, no_endpoint, no_auth_token, or offline_flag. Null when recording.`,
+    nullable: true,
+  })
+  reason!: string | null;
+
+  @Field(() => String, {
+    description: `recording, buffering, offline, or not_wired.`,
+  })
+  status!: string;
+
+  @Field(() => String, {
+    description: `Absolute path telemetry buffers to when it cannot be sent.`,
+  })
+  telemetryDir!: string;
+}
+
+@ObjectType({
   description: `Cached inspection snapshot for a checkout; disk is the source of truth and this refreshes on view (15-minute TTL) or via refreshCheckout.`,
 })
 export class RepositoryInspectionObject {
@@ -80,6 +121,12 @@ export class RepositoryInspectionObject {
 
   @Field(() => RepositoryInspectionGitObject)
   git!: RepositoryInspectionGitObject;
+
+  @Field(() => RepositoryInspectionHookTelemetryObject, {
+    description: `Absent on snapshots written before hook-readiness was reported; refresh the checkout to populate it.`,
+    nullable: true,
+  })
+  hookTelemetry!: RepositoryInspectionHookTelemetryObject | null;
 
   @Field(() => Date)
   scannedAt!: Date;
