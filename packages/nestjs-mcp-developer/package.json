@@ -1,5 +1,5 @@
 {
-  "name": "@openthrottle/nestjs-openthrottle-mcp",
+  "name": "@openthrottle/nestjs-mcp-developer",
   "description": "Nest-facing entry for the OpenThrottle developer MCP surface; implementation lives in `@openthrottle/openthrottle-mcp/nest`.",
   "version": "1.0.0",
   "author": {
@@ -13,24 +13,24 @@
   "exports": {
     ".": {
       "types": "./dist/src/index.d.ts",
-      "import": "./src/index.ts",
+      "import": "./dist/src/index.js",
       "require": "./dist/src/index.js"
     },
     "./*": {
       "types": "./dist/*.d.ts",
-      "import": "./*.ts",
+      "import": "./dist/*.js",
       "require": "./dist/*.js"
     }
   },
   "license": "Apache-2.0",
-  "main": "./src/index.ts",
-  "module": "./src/index.ts",
+  "main": "./dist/src/index.js",
+  "module": "./dist/src/index.js",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "projectType": "library",
     "sourceRoot": "./",
     "tags": [
-      "name:@openthrottle/nestjs-openthrottle-mcp",
+      "name:@openthrottle/nestjs-mcp-developer",
       "production:true",
       "publish:false",
       "technology:nestjs",
@@ -52,8 +52,25 @@
         }
       },
       "lint": {},
-      "test": {},
-      "typecheck": {}
+      "test": {
+        "dependsOn": [
+          "^build",
+          "^codegen-graphql",
+          "build",
+          "codegen-graphql",
+          "codegen-react-router"
+        ]
+      },
+      "typecheck": {
+        "dependsOn": [
+          "^build",
+          "^codegen-graphql",
+          "^typecheck",
+          "build",
+          "codegen-graphql",
+          "codegen-react-router"
+        ]
+      }
     }
   },
   "peerDependencies": {
@@ -82,7 +99,7 @@
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
   "type": "module",
-  "types": "./src/index.ts",
+  "types": "./dist/src/index.d.ts",
   "devDependencies": {
     "@openthrottle/nestjs-modules": "workspace:^"
   }

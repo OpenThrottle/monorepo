@@ -11,14 +11,8 @@
   "devDependencies": {},
   "exports": {
     ".": {
-      "types": "./dist/src/index.d.ts",
-      "import": "./dist/src/index.js",
-      "require": "./dist/src/index.js"
-    },
-    "./*": {
-      "types": "./dist/*.d.ts",
-      "import": "./dist/*.js",
-      "require": "./dist/*.js"
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
     }
   },
   "license": "Apache-2.0",
@@ -37,8 +31,8 @@
       "type:package"
     ],
     "targets": {
-      "build": {},
-      "build-package": {},
+      "__build": {},
+      "__build-package": {},
       "lint": {},
       "test": {},
       "typecheck": {}

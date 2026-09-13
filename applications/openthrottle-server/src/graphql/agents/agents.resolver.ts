@@ -8,7 +8,7 @@ import { type AuthPrincipal, CurrentUser } from '@openthrottle/nestjs-auth';
 import {
   McpDeveloperMcpSurface,
   withMcpDeveloperAuthTokenAsync,
-} from '@openthrottle/nestjs-openthrottle-mcp';
+} from '@openthrottle/nestjs-mcp-developer';
 import { AgentConversationsService } from '@openthrottle/nestjs-repositories';
 
 import { AgentsRunChatTurnInput } from './agents.input';

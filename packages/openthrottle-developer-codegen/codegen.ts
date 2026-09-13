@@ -52,7 +52,7 @@ const config: CodegenConfig = defineCodegen({
     '!src/__generated__/**/*',
   ],
   envPath: join(__dirname, '../../applications/openthrottle-developer/.env'),
-  importExtension: '.js',
+  importExtension: '.ts',
   outputDir: './src/__generated__/',
   withZodSchemas: false,
 });

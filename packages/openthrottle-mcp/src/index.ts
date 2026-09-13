@@ -6,7 +6,7 @@ export { registerKnowledgeBaseResource } from './resources/index.ts';
 export { runServer, runServerLocal } from './run-server.ts';
 
 /**
- * @description Public `./auth` subpath — consumed via `@openthrottle/openthrottle-mcp/auth` and `@openthrottle/nestjs-openthrottle-mcp`.
+ * @description Public `./auth` subpath — consumed via `@openthrottle/openthrottle-mcp/auth` and `@openthrottle/nestjs-mcp-developer`.
  * @public
  */
 export {

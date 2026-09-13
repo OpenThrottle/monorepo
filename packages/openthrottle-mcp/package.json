@@ -51,8 +51,8 @@
     }
   },
   "license": "Apache-2.0",
-  "main": "./src/index.ts",
-  "module": "./src/index.ts",
+  "main": "./dist/src/index.js",
+  "module": "./dist/src/index.js",
   "name": "@openthrottle/openthrottle-mcp",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
@@ -125,6 +125,6 @@
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
   "type": "module",
-  "types": "./src/index.ts",
+  "types": "./dist/src/index.d.ts",
   "version": "1.0.0"
 }

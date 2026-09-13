@@ -10,7 +10,7 @@
 import { WORKFLOW_RUNNER_IDS } from '@openthrottle/openthrottle-agentic-utils';
 import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 
-import type { RalphPlanRunTuningInput } from '../__generated__/graphql.js';
+import type { RalphPlanRunTuningInput } from '../__generated__/graphql.ts';
 import {
   DEFAULT_ITERATIONS,
   DEFAULT_MODEL,

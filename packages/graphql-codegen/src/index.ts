@@ -37,8 +37,17 @@ export interface DefineCodegenOptions {
    */
   envPath?: string;
   /**
-   * `importExtension` forwarded to the root config (e.g. `'.js'` for
-   * ESM packages that emit `.js` import specifiers).
+   * `importExtension` forwarded to the root config, and to the Zod schemas'
+   * `importFrom`. Pick it from how the package is *consumed*, not just from its
+   * module type:
+   *
+   * - `'.js'` for an ESM package that is **built** — NodeNext source must name
+   *   the emitted `.js` (e.g. `@openthrottle/openthrottle-mcp`).
+   * - `'.ts'` for an ESM package that is **source-first** — consumers read the
+   *   TypeScript directly, so a `.js` specifier names a file that does not
+   *   exist. The failure only appears once something resolves the package from
+   *   built code, which is why it can sit latent for a long time.
+   * - unset for the React Router apps, whose Vite resolves either.
    */
   importExtension?: CodegenConfig['importExtension'];
   /**
@@ -118,6 +127,18 @@ export const defineCodegen = (options: DefineCodegenOptions): CodegenConfig => {
         // in `presetConfig` the client preset silently ignores it.
         // See docs/monorepo/source-first-packages-and-strip-only.md.
         enumsAsConst: true,
+        // `@graphql-typed-document-node/core` is a TYPES-ONLY package: its
+        // package.json has `"main": ""` and it ships nothing but
+        // `typings/index.d.ts`. Emitted as a plain value import, the statement
+        // survives Node's strip-only loader — which erases type annotations but
+        // never removes an import that looks like a value — and resolution then
+        // fails with `Cannot find package`, naming the package rather than the
+        // generated file that imported it. Declaring the dependency does not
+        // help; there is no runtime entry to resolve. `import type` erases at
+        // the source level, so the statement is gone before any loader sees it.
+        // Bundler consumers were unaffected, which is why this sat latent until
+        // a source-first ESM package was first reached from built code.
+        useTypeImports: true,
       },
       overwrite: true,
       preset: 'client',
@@ -131,7 +152,11 @@ export const defineCodegen = (options: DefineCodegenOptions): CodegenConfig => {
   if (withZodSchemas) {
     generates[`${outputDir}schemas.ts`] = {
       config: {
-        importFrom: './graphql.js',
+        // Must follow `importExtension`: a source-first ESM package is consumed
+        // as TypeScript, so a `.js` specifier here names a file that does not
+        // exist. Defaults to `.js` so configs that leave `importExtension` unset
+        // (the React Router apps, whose Vite resolves it) are unaffected.
+        importFrom: `./graphql${importExtension ?? '.js'}`,
         // Required (non-null) GraphQL string inputs reject `''` (emitted as
         // `.min(1)`). Only applies to non-null strings — nullable/optional
         // fields stay lenient — so route actions and MCP tools no longer need

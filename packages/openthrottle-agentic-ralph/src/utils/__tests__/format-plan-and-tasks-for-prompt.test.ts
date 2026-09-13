@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import type {
   PlanFragment,
   TaskFragment,
-} from '../../__generated__/graphql.js';
-import { formatPlanAndTasksForPrompt } from '../index.js';
+} from '../../__generated__/graphql.ts';
+import { formatPlanAndTasksForPrompt } from '../index.ts';
 
 const plan = (): PlanFragment => ({
   __typename: 'PlanObject',

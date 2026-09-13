@@ -1,4 +1,4 @@
-export * from './__generated__/graphql.js';
+export * from './__generated__/graphql.ts';
 export * from './contract/index.ts';
 export * from './types.ts';
 export * from './utils/graphql.ts';
