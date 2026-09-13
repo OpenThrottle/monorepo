@@ -1,15 +1,5 @@
 {
   "extends": "../../tsconfig.esm.json",
-  "compilerOptions": {
-    // Opts out of the repo-wide `erasableSyntaxOnly` (tsconfig.base.json)
-    // because GraphQL Codegen emits `export enum` into `__generated__/graphql.ts`
-    // and a compiler flag cannot be scoped to exclude a directory. Same
-    // reasoning as openthrottle-agentic-ralph; the durable fix is `enumsAsConst`
-    // in the codegen preset. This project ships built output, so nothing hands a
-    // consumer its raw TypeScript:
-    // docs/monorepo/source-first-packages-and-strip-only.md
-    "erasableSyntaxOnly": false
-  },
   "files": [],
   "include": [],
   "references": [{ "path": "./tsconfig.lib.json" }]
