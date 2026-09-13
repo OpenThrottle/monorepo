@@ -5,7 +5,15 @@
  */
 export { flagValue, hasFlag, positionals, scriptArgs } from './args.ts';
 export { parseEnvContents, readEnvFile, readEnvValue } from './env.ts';
-export { renderCommand, run } from './exec.ts';
 export type { RunOptions, RunResult } from './exec.ts';
-export { createLogger, SYMBOLS } from './logger.ts';
+export { renderCommand, run } from './exec.ts';
 export type { Logger, LoggerOptions } from './logger.ts';
+export { createLogger, SYMBOLS } from './logger.ts';
+export type {
+  StripOnlyConstruct,
+  StripOnlyFinding,
+} from './strip-only-constructs.ts';
+export {
+  findStripOnlyConstructs,
+  STRIP_ONLY_CONSTRUCT,
+} from './strip-only-constructs.ts';
