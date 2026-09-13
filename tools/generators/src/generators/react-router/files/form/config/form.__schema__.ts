@@ -1,6 +1,6 @@
-import { FormikConfig } from 'formik';
-import type { ObjectSchema } from 'yup';
-import { InferType, object, string } from 'yup';
+import type { FormikConfig } from 'formik';
+import type { InferType, ObjectSchema } from 'yup';
+import { object, string } from 'yup';
 
 /**
  * Reference the doc above for details on how to use forms.

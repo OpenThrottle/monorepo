@@ -1,6 +1,12 @@
 import * as React from 'react';
 import { useSearchParams } from 'react-router';
-import { Modal } from '@openthrottle/react-router-shadcn';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle
+} from '@openthrottle/react-router-shadcn';
 
 export interface <%= name %>Props {}
 
@@ -14,7 +20,11 @@ export const <%= name %> = (
   const isOpen = searchParams.get('modal') === <%= name %>.id;
 
   // Handlers
-  const onClose = () => {
+  // Radix drives open state through a single `onOpenChange`; the modal is
+  // closed by dropping the search param that opened it.
+  const onOpenChange = (open: boolean) => {
+    if (open) return;
+
     const params = new URLSearchParams(searchParams);
 
     params.delete('modal');
@@ -28,23 +38,20 @@ export const <%= name %> = (
   // 🔌 Short Circuit
 
   return (
-    <Modal
-      className="flex max-h-[90vh] w-full md:w-auto md:min-w-[360px] flex-col"
-      data-testid="<%= name %>"
-      onClose={onClose}
-      open={isOpen}
-    >
-      {/* TODO: Fill in the gaps */}
-      <div className="ui-padding">
-        <h3 className="ui-heading"><%= name %></h3>
-        <p>
-          Lorem ipsum dolor sit amet consectetur, adipisicing elit. Doloribus
-          distinctio reiciendis mollitia ipsa saepe minus aperiam porro
-          aspernatur ea culpa, cum, molestias ab laboriosam assumenda aliquid
-          atque possimus nulla aut.
-        </p>
-      </div>
-    </Modal>
+    <Dialog onOpenChange={onOpenChange} open={isOpen}>
+      <DialogContent
+        className="flex max-h-[90vh] w-full flex-col md:w-auto md:min-w-[360px]"
+        data-testid="<%= name %>"
+      >
+        {/* TODO: Fill in the gaps */}
+        <DialogHeader>
+          <DialogTitle><%= name %></DialogTitle>
+          <DialogDescription>
+            Describe what this modal is for.
+          </DialogDescription>
+        </DialogHeader>
+      </DialogContent>
+    </Dialog>
   );
 };
 
