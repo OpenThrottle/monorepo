@@ -10,7 +10,7 @@
  * read-only guest instance will need — written as if it will be promoted.
  */
 
-import type { DatabaseSchema } from './schema';
+import type { DatabaseSchema } from './schema.ts';
 
 export const COLUMN_ACTION = {
   /** Nulled at export; the column never reaches the snapshot. */

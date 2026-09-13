@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { loadFormat } from '../format';
+import { loadFormat } from '../format.ts';
 
 /**
  * The app's mobile breakpoint, mirrored from `MOBILE_BREAKPOINT` in

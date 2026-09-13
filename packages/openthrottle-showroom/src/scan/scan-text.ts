@@ -3,8 +3,8 @@
  * tested without shelling out or touching the filesystem.
  */
 
-import type { ScanKind } from './rules';
-import { ALLOWED_HOSTS, DENYLIST, RULES } from './rules';
+import type { ScanKind } from './rules.ts';
+import { ALLOWED_HOSTS, DENYLIST, RULES } from './rules.ts';
 
 export interface Finding {
   readonly because: string;

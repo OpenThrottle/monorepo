@@ -23,9 +23,9 @@ import {
   budgetWords,
   estimatedSpokenSeconds,
   spokenWords,
-} from '../episodes/derived';
-import { episodesInReleaseOrder } from '../episodes/registry';
-import { isBlocking, validateSeason } from './rules';
+} from '../episodes/derived.ts';
+import { episodesInReleaseOrder } from '../episodes/registry.ts';
+import { isBlocking, validateSeason } from './rules.ts';
 
 const run = (): void => {
   const episodes = episodesInReleaseOrder();

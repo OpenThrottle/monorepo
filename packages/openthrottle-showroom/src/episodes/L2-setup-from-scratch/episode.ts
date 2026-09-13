@@ -15,7 +15,7 @@
  * by omission, and the first comment will say so.
  */
 
-import type { VideoEpisode } from '../types';
+import type { VideoEpisode } from '../types.ts';
 
 export const episode: VideoEpisode = {
   beats: [

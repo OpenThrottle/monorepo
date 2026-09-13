@@ -13,8 +13,8 @@
  * - a real machine hostname (everything .local should be the demo hostname).
  */
 
-import { detectSecret } from './sanitize';
-import { DEMO_HOME_PREFIX, DEMO_HOSTNAME } from './sanitize.data';
+import { DEMO_HOME_PREFIX, DEMO_HOSTNAME } from './sanitize.data.ts';
+import { detectSecret } from './sanitize.ts';
 
 export interface SnapshotFinding {
   /** What matched, trimmed for display. */

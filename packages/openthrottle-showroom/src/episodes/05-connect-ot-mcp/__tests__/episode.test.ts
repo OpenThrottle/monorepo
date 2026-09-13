@@ -18,9 +18,9 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { budgetWords, spokenWords } from '../../derived';
-import { resolveVariant } from '../../registry';
-import { episode } from '../episode';
+import { budgetWords, spokenWords } from '../../derived.ts';
+import { resolveVariant } from '../../registry.ts';
+import { episode } from '../episode.ts';
 
 describe('episode 05 migration parity', () => {
   test.each([

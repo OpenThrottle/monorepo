@@ -1,10 +1,10 @@
 import { describe, expect, test } from 'vitest';
 
-import { EPISODES } from '../../episodes/registry';
-import type { VideoEpisode } from '../../episodes/types';
-import type { QueryRunner } from '../schema';
-import type { EpisodeRequirements } from '../verify-episodes';
-import { formatFailure, verifyEpisodeData } from '../verify-episodes';
+import { EPISODES } from '../../episodes/registry.ts';
+import type { VideoEpisode } from '../../episodes/types.ts';
+import type { QueryRunner } from '../schema.ts';
+import type { EpisodeRequirements } from '../verify-episodes.ts';
+import { formatFailure, verifyEpisodeData } from '../verify-episodes.ts';
 
 /** A runner that answers each SQL string with a canned `value`. */
 const runnerReturning = (values: Record<string, number>): QueryRunner => ({

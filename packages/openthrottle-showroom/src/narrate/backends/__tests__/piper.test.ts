@@ -10,7 +10,7 @@ import {
   piperModelPath,
   resolvePiperBinary,
   resolvePiperDataDir,
-} from '../piper';
+} from '../piper.ts';
 
 describe('resolvePiperBinary', () => {
   test('defaults to piper on PATH', () => {

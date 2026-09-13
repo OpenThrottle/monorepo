@@ -44,14 +44,14 @@ import {
   DEMO_RUN,
   DEMO_SKILLS,
   DEMO_USER,
-} from '../fixtures/demo-content';
-import { writeSeedMarker } from '../runner/dirty';
+} from '../fixtures/demo-content.ts';
+import { writeSeedMarker } from '../runner/dirty.ts';
 import {
   loadSnapshot,
   readSnapshotTables,
   remapOwnershipToDemoUser,
-} from '../snapshot/load';
-import { reflectSchema } from '../snapshot/schema';
+} from '../snapshot/load.ts';
+import { reflectSchema } from '../snapshot/schema.ts';
 
 const ROLE_NAMES = ['admin', 'user', 'viewer'] as const;
 

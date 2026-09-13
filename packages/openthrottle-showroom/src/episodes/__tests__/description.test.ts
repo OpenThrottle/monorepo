@@ -9,8 +9,8 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { composeDescription } from '../description';
-import type { VideoEpisode } from '../types';
+import { composeDescription } from '../description.ts';
+import type { VideoEpisode } from '../types.ts';
 
 const base: VideoEpisode = {
   beats: [{ action: 'Terminal.', t: '0:00' }],

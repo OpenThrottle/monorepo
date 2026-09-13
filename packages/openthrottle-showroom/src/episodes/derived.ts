@@ -11,10 +11,10 @@
  * filter and the rounding, so the migration cannot silently change a count.
  */
 
-import { applyLexicon } from '../narrate/lexicon';
-import type { NarrationSentence } from '../narrate/types';
-import { loadFormat } from '../runner/format';
-import type { EpisodeFormat, Variant } from './types';
+import { applyLexicon } from '../narrate/lexicon.ts';
+import type { NarrationSentence } from '../narrate/types.ts';
+import { loadFormat } from '../runner/format.ts';
+import type { EpisodeFormat, Variant } from './types.ts';
 
 /** Natural narration pace used to convert a word count into seconds. */
 export const WORDS_PER_MINUTE = 145;

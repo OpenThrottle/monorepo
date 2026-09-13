@@ -32,7 +32,7 @@
  * matched to flow beats POSITIONALLY (assemble/timeline.ts).
  */
 
-import type { DemoFlow } from '../../runner/types';
+import type { DemoFlow } from '../../runner/types.ts';
 import {
   click,
   dwell,
@@ -40,7 +40,7 @@ import {
   navigate,
   scrollTo,
   waitFor,
-} from '../../runner/types';
+} from '../../runner/types.ts';
 
 /** The Saved-map-views plan from src/fixtures/demo-content.ts (PENDING). */
 const PLAN_ID = 'd0d0d0d0-0000-4000-8000-000000000004';

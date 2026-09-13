@@ -9,7 +9,7 @@
  * described UI that does not exist. See the audit notes in `./flow.ts`.
  */
 
-import type { VideoEpisode } from '../types';
+import type { VideoEpisode } from '../types.ts';
 
 export const episode: VideoEpisode = {
   beats: [

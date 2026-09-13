@@ -22,8 +22,8 @@
  * the product's own renderers, and neither should be able to put markup in the frame.
  */
 
-import type { FormatSpec } from '../runner/format';
-import { loadFormat } from '../runner/format';
+import type { FormatSpec } from '../runner/format.ts';
+import { loadFormat } from '../runner/format.ts';
 
 /**
  * One addressable run of output.

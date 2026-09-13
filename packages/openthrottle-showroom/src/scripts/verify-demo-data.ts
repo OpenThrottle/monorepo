@@ -16,8 +16,11 @@
 import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 import pg from 'pg';
 
-import { EPISODES } from '../episodes/registry';
-import { formatFailure, verifyEpisodeData } from '../snapshot/verify-episodes';
+import { EPISODES } from '../episodes/registry.ts';
+import {
+  formatFailure,
+  verifyEpisodeData,
+} from '../snapshot/verify-episodes.ts';
 
 const main = async (): Promise<void> => {
   const url = new URL(getPostgresUrl());

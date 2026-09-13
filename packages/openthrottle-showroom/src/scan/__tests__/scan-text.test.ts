@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { scanText } from '../scan-text';
+import { scanText } from '../scan-text.ts';
 
 /**
  * These tests are the negative proof for the publish gate. The gate's whole value is

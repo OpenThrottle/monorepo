@@ -18,8 +18,8 @@ import { join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { isDemoDataDirty, seedMarkerPath, writeSeedMarker } from '../dirty';
-import * as format from '../format';
+import { isDemoDataDirty, seedMarkerPath, writeSeedMarker } from '../dirty.ts';
+import * as format from '../format.ts';
 
 let root = '';
 

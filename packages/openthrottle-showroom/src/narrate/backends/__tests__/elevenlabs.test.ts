@@ -8,7 +8,7 @@ import {
   DEFAULT_ELEVENLABS_VOICE,
   elevenLabsBackend,
   resolveElevenLabsApiKey,
-} from '../elevenlabs';
+} from '../elevenlabs.ts';
 
 describe('resolveElevenLabsApiKey', () => {
   test('returns the key when set', () => {

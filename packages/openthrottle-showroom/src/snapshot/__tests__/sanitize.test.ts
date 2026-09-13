@@ -1,15 +1,15 @@
 import { describe, expect, test } from 'vitest';
 
-import type { SnapshotManifest } from '../manifest';
-import type { SanitizeContext } from '../sanitize';
+import type { SnapshotManifest } from '../manifest.ts';
+import type { SanitizeContext } from '../sanitize.ts';
 import {
   createSanitizer,
   detectSecret,
   parsePostgresTimestamp,
   scrubEmail,
   scrubIdentity,
-} from '../sanitize';
-import type { DatabaseSchema, TableSchema } from '../schema';
+} from '../sanitize.ts';
+import type { DatabaseSchema, TableSchema } from '../schema.ts';
 
 describe('scrubIdentity', () => {
   test('rewrites real emails onto the demo domain deterministically', () => {

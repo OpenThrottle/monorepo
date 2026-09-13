@@ -9,7 +9,7 @@
  * has never heard the name, without a single word of setup.
  */
 
-import type { VideoEpisode } from '../types';
+import type { VideoEpisode } from '../types.ts';
 
 export const episode: VideoEpisode = {
   beats: [

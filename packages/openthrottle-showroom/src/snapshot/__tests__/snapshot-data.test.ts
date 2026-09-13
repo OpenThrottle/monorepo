@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 import { describe, expect, test } from 'vitest';
 
-import { scanSnapshotText } from '../scan-snapshot';
+import { scanSnapshotText } from '../scan-snapshot.ts';
 
 /**
  * The CI gate over the COMMITTED snapshot: every line of every data file goes
