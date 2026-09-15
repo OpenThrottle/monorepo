@@ -2,8 +2,8 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 
-import { DatabaseModule } from './modules/database/database.module';
-import { schema } from './nestjs-typeorm.config';
+import { DatabaseModule } from './modules/database/database.module.ts';
+import { schema } from './nestjs-typeorm.config.ts';
 
 /**
  * Composition root for the package. Sets up the Joi-validated `ConfigModule`

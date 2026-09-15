@@ -8,7 +8,7 @@ import { DailyStatsService } from '@openthrottle/nestjs-repositories';
 import {
   DailyStatsObject,
   DailyStatsRangeResultObject,
-} from './daily-stats.object';
+} from './daily-stats.object.ts';
 
 function toDailyStatsObject(row: {
   createdAt: Date;

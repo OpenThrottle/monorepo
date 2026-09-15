@@ -4,7 +4,7 @@
 
 import { Field, ID, ObjectType } from '@nestjs/graphql';
 
-import { WorkspaceEditorIdEnum } from './workspace-editor-id.enum';
+import { WorkspaceEditorIdEnum } from './workspace-editor-id.enum.ts';
 
 @ObjectType({
   description: `Result of applying editor configuration for one linked repository and editor.`,

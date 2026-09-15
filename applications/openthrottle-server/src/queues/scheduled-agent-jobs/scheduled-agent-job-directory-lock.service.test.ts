@@ -14,8 +14,8 @@ import {
   SCHEDULED_AGENT_JOB_LOCK_RENEW_MS,
   SCHEDULED_AGENT_JOB_LOCK_TTL_MS,
   ScheduledAgentJobDirectoryLockService,
-} from './scheduled-agent-job-directory-lock.service';
-import { SCHEDULED_AGENT_JOBS_LOCK_KEY_PREFIX } from './scheduled-agent-jobs.constants';
+} from './scheduled-agent-job-directory-lock.service.ts';
+import { SCHEDULED_AGENT_JOBS_LOCK_KEY_PREFIX } from './scheduled-agent-jobs.constants.ts';
 
 /**
  * Minimal in-memory stand-in for the two Redis operations the lock uses: `SET NX PX` and the two Lua

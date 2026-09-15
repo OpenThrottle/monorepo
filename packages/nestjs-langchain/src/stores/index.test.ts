@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { getVectorStore } from './index';
+import { getVectorStore } from './index.ts';
 
 const { getEmbeddingsModel, initialize } = vi.hoisted(() => ({
   getEmbeddingsModel: vi.fn(),

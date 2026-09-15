@@ -15,10 +15,10 @@ import { isRecord } from '@openthrottle/nodejs-utils';
 import type { Queue } from 'bullmq';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { NotificationsService } from '../../notifications/notifications.service';
-import type { RunPlanJobData } from '../../queues/plans/plans.types';
-import type { QueuesService } from '../queues/queues.service';
-import { PlanEnqueueService } from './plan-enqueue.service';
+import type { NotificationsService } from '../../notifications/notifications.service.ts';
+import type { RunPlanJobData } from '../../queues/plans/plans.types.ts';
+import type { QueuesService } from '../queues/queues.service.ts';
+import { PlanEnqueueService } from './plan-enqueue.service.ts';
 
 const mockPlan = createMock<Plan>({
   id: '80864bba-630a-451d-bfd2-4b25ec202381',

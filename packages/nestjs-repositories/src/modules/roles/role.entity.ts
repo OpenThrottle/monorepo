@@ -12,9 +12,9 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-import type { ServiceAccount } from '../service-accounts/service-account.entity';
-import type { User } from '../users/user.entity';
-import type { Permission } from './permission.entity';
+import type { ServiceAccount } from '../service-accounts/service-account.entity.ts';
+import type { User } from '../users/user.entity.ts';
+import type { Permission } from './permission.entity.ts';
 
 /** Scalar/column fields of Role (no relations). */
 export type RoleData = Pick<

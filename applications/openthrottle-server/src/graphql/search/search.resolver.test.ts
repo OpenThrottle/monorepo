@@ -7,7 +7,7 @@ import {
 } from '@openthrottle/node-client';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { SearchResolver } from './search.resolver';
+import { SearchResolver } from './search.resolver.ts';
 
 vi.mock('@openthrottle/node-client', () => ({
   embedQuery: vi.fn(),

@@ -13,20 +13,20 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 import { RolloutService } from '@openthrottle/nestjs-rollout';
 
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import { FeatureFlagObject } from './feature-flag.object';
-import { resolveEvaluationPrincipal } from './resolve-evaluation-principal';
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { FeatureFlagObject } from './feature-flag.object.ts';
+import { resolveEvaluationPrincipal } from './resolve-evaluation-principal.ts';
 import {
   CreateRolloutFlagInput,
   UpdateRolloutFlagInput,
-} from './rollout.input';
+} from './rollout.input.ts';
 import {
   toDomainCreateInput,
   toDomainUpdatePatch,
   toFeatureFlagObject,
   toRolloutFlagObject,
-} from './rollout.mapper';
-import { RolloutFlagObject } from './rollout-flag.object';
+} from './rollout.mapper.ts';
+import { RolloutFlagObject } from './rollout-flag.object.ts';
 
 @Resolver(() => RolloutFlagObject)
 @UseGuards(GqlPermissionsGuard)

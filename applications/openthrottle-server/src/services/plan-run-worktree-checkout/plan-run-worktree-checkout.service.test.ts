@@ -12,9 +12,9 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { RepositoryInspectionService } from '../../graphql/repository-inspection/repository-inspection.service';
-import type { RepositoryInspectionSnapshot } from '../../graphql/repository-inspection/repository-inspection.snapshot';
-import { PlanRunWorktreeCheckoutService } from './plan-run-worktree-checkout.service';
+import type { RepositoryInspectionService } from '../../graphql/repository-inspection/repository-inspection.service.ts';
+import type { RepositoryInspectionSnapshot } from '../../graphql/repository-inspection/repository-inspection.snapshot.ts';
+import { PlanRunWorktreeCheckoutService } from './plan-run-worktree-checkout.service.ts';
 
 const PLAN_RUN_ID = '11111111-1111-4111-8111-111111111111';
 const USER_ID = '22222222-2222-4222-8222-222222222222';

@@ -5,7 +5,7 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 
-import { PlanRunWorkspacePreflightService } from './plan-run-workspace-preflight.service';
+import { PlanRunWorkspacePreflightService } from './plan-run-workspace-preflight.service.ts';
 
 @Module({
   exports: [PlanRunWorkspacePreflightService],

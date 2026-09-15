@@ -9,12 +9,12 @@ import type { Queue } from 'bullmq';
 import {
   AGENTIC_TEST_JOB_NAME,
   AGENTIC_TEST_QUEUE_NAME,
-} from '../../queues/agentic-test/agentic-test.constants';
+} from '../../queues/agentic-test/agentic-test.constants.ts';
 import type {
   AgenticTestJobPayload,
   AgenticTestJobResult,
-} from '../../queues/agentic-test/agentic-test.types';
-import { AGENTIC_WORKFLOW_MOCK_PAYLOAD } from './agentic-workflow-mock-payload';
+} from '../../queues/agentic-test/agentic-test.types.ts';
+import { AGENTIC_WORKFLOW_MOCK_PAYLOAD } from './agentic-workflow-mock-payload.ts';
 
 @Injectable()
 export class AgenticWorkflowService {

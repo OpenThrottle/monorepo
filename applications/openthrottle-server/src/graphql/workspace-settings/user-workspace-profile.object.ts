@@ -4,7 +4,7 @@
 
 import { Field, ID, ObjectType } from '@nestjs/graphql';
 
-import { WorkspaceEditorIdEnum } from './workspace-editor-id.enum';
+import { WorkspaceEditorIdEnum } from './workspace-editor-id.enum.ts';
 
 @ObjectType({
   description: `Per-user workspace profile: contact fields and enabled editors.`,

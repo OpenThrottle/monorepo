@@ -4,8 +4,8 @@
 
 import { Field, Int, ObjectType } from '@nestjs/graphql';
 
-import { PlanObject } from '../plans/plan.object';
-import { ProjectObject } from '../projects/project.object';
+import { PlanObject } from '../plans/plan.object.ts';
+import { ProjectObject } from '../projects/project.object.ts';
 
 @ObjectType()
 export class TaskObject {

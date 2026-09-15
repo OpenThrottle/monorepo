@@ -22,7 +22,7 @@ import {
 import { ClsService } from 'nestjs-cls';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { GlobalClsAuthHook } from './global-cls-auth-hook.service';
+import { GlobalClsAuthHook } from './global-cls-auth-hook.service.ts';
 
 const userRow = (
   fields: Pick<User, 'disabledAt' | 'email' | 'githubUsername' | 'id'>,

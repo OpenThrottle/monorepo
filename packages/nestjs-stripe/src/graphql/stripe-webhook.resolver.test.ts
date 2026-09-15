@@ -1,8 +1,8 @@
 import { Test, type TestingModule } from '@nestjs/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { StripeWebhookHandlerService } from '../services/stripe-webhook-handler.service';
-import { StripeWebhookResolver } from './stripe-webhook.resolver';
+import { StripeWebhookHandlerService } from '../services/stripe-webhook-handler.service.ts';
+import { StripeWebhookResolver } from './stripe-webhook.resolver.ts';
 
 describe('StripeWebhookResolver', () => {
   let resolver: StripeWebhookResolver;

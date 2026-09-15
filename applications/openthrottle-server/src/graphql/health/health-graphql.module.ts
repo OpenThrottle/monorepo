@@ -7,9 +7,9 @@ import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRedisModule } from '@openthrottle/nestjs-redis';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 
-import { MetricsModule } from '../../metrics/metrics.module';
-import { HealthResolver } from './health.resolver';
-import { HealthService } from './health.service';
+import { MetricsModule } from '../../metrics/metrics.module.ts';
+import { HealthResolver } from './health.resolver.ts';
+import { HealthService } from './health.service.ts';
 
 @Module({
   exports: [HealthService],

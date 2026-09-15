@@ -8,7 +8,7 @@
 
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { WorktreeTargetsTracker } from './worktree-targets';
+import { WorktreeTargetsTracker } from './worktree-targets.ts';
 
 const initialTargets = [
   { id: 'wt1', path: '/tmp/wt1' },

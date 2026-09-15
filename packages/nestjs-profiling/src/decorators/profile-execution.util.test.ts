@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { setProfileExecutionReporter } from './profile-execution.reporter';
-import type { ProfileExecutionResult } from './profile-execution.types';
-import { profileExecution } from './profile-execution.util';
+import { setProfileExecutionReporter } from './profile-execution.reporter.ts';
+import type { ProfileExecutionResult } from './profile-execution.types.ts';
+import { profileExecution } from './profile-execution.util.ts';
 
 describe('profileExecution', () => {
   it('returns result and does not capture output by default', async () => {

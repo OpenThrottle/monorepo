@@ -1,11 +1,11 @@
 import { PGVectorStore } from '@langchain/community/vectorstores/pgvector';
 import type { EmbeddingsInterface } from '@langchain/core/embeddings';
 
-import type { ResilienceConfig } from '../config/resilience';
+import type { ResilienceConfig } from '../config/resilience.ts';
 import {
   getEmbeddingModelDimensions,
   getEmbeddingsModel,
-} from '../embeddings/index';
+} from '../embeddings/index.ts';
 
 /**
  * ------------------------------------------------------------

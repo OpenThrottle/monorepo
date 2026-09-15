@@ -26,9 +26,9 @@ import {
 } from '@openthrottle/nestjs-rollout';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import { ROLLOUT_DEGRADED_ANONYMOUS_SUB } from './resolve-evaluation-principal';
-import { RolloutResolver } from './rollout.resolver';
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { ROLLOUT_DEGRADED_ANONYMOUS_SUB } from './resolve-evaluation-principal.ts';
+import { RolloutResolver } from './rollout.resolver.ts';
 
 const flag: RolloutFlag = {
   createdAt: new Date(),

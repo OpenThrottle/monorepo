@@ -15,22 +15,22 @@ import { CodeSearchService } from '@openthrottle/nestjs-vector-search';
 import { toContainerPath } from '@openthrottle/openthrottle-agentic-utils';
 import { Queue } from 'bullmq';
 
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import {
   CODE_INDEX_QUEUE_NAME,
   INDEX_CODE_REPOSITORY_JOB_NAME,
-} from '../../queues/code-index/code-index.constants';
+} from '../../queues/code-index/code-index.constants.ts';
 import type {
   CodeIndexJobPayload,
   CodeIndexJobResult,
-} from '../../queues/code-index/code-index.types';
-import { CODE_INDEX_STATUS } from './code-index-status';
-import { CodeSemanticSearchInput } from './code-search.input';
+} from '../../queues/code-index/code-index.types.ts';
+import { CODE_INDEX_STATUS } from './code-index-status.ts';
+import { CodeSemanticSearchInput } from './code-search.input.ts';
 import {
   CodeIndexStatusObject,
   CodeSemanticSearchResult,
   IndexCodeRepositoryResult,
-} from './code-search.object';
+} from './code-search.object.ts';
 
 const DEFAULT_SEARCH_LIMIT = 10;
 const MAX_SEARCH_LIMIT = 50;

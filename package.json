@@ -66,6 +66,7 @@
     "only-allow": "catalog:",
     "prettier": "catalog:",
     "prettier-plugin-tailwindcss": "catalog:",
+    "ts-morph": "catalog:",
     "tsx": "catalog:",
     "vite": "catalog:",
     "vitest": "catalog:"

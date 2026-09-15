@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { getEmbeddingModelDimensions } from './index';
+import { getEmbeddingModelDimensions } from './index.ts';
 
 describe('getEmbeddingModelDimensions', () => {
   describe('known models', () => {

@@ -2,8 +2,8 @@ import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { GitHubService } from '../github/github.service';
-import { GitHubStatsService } from './github-stats.service';
+import { GitHubService } from '../github/github.service.ts';
+import { GitHubStatsService } from './github-stats.service.ts';
 
 describe('GitHubStatsService', () => {
   let githubService: GitHubService;

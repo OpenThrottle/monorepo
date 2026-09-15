@@ -11,8 +11,8 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-import type { Plan } from '../plans/plan.entity';
-import type { Task } from '../tasks/task.entity';
+import type { Plan } from '../plans/plan.entity.ts';
+import type { Task } from '../tasks/task.entity.ts';
 
 /** Scalar/column fields of Project (no relations). Use to type GraphQL objects or DTOs that mirror the entity. */
 export type ProjectData = Omit<Project, 'plans' | 'tasks'>;

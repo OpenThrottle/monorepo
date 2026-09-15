@@ -14,14 +14,14 @@ import type {
 import { STALE_CUTOFF_MS } from '@openthrottle/nestjs-repositories';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { WorktreeDiscoveryService } from '../worktree-discovery/worktree-discovery.service';
+import type { WorktreeDiscoveryService } from '../worktree-discovery/worktree-discovery.service.ts';
 import type {
   DiscoveredWorktree,
   WorktreeDiscoveryResult,
-} from '../worktree-discovery/worktree-discovery.types';
-import { WORKTREE_DISCOVERY_SOURCE } from '../worktree-discovery/worktree-discovery.types';
-import { WorktreeActivityService } from './worktree-activity.service';
-import { WORKTREE_ACTIVITY } from './worktree-activity.types';
+} from '../worktree-discovery/worktree-discovery.types.ts';
+import { WORKTREE_DISCOVERY_SOURCE } from '../worktree-discovery/worktree-discovery.types.ts';
+import { WorktreeActivityService } from './worktree-activity.service.ts';
+import { WORKTREE_ACTIVITY } from './worktree-activity.types.ts';
 
 const ROOT = '/Users/matt/Development/openthrottle-worktrees';
 const USER = 'user-1';

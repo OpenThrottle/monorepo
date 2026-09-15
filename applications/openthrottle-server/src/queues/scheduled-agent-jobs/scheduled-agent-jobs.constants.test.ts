@@ -18,7 +18,7 @@ import {
   resolveScheduledAgentJobRunCwd,
   resolveScheduledAgentJobsConcurrency,
   SCHEDULED_AGENT_JOBS_DEFAULT_CONCURRENCY,
-} from './scheduled-agent-jobs.constants';
+} from './scheduled-agent-jobs.constants.ts';
 
 describe('resolveScheduledAgentJobCwd', () => {
   it('prefers an explicit per-schedule cwd', () => {

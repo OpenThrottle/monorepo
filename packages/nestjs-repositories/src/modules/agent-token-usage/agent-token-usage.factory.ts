@@ -5,7 +5,7 @@
 import { faker } from '@faker-js/faker';
 import { Factory } from 'fishery';
 
-import type { AgentTokenUsage } from './agent-token-usage.entity';
+import type { AgentTokenUsage } from './agent-token-usage.entity.ts';
 
 export type AgentTokenUsageFactoryData = Pick<
   AgentTokenUsage,

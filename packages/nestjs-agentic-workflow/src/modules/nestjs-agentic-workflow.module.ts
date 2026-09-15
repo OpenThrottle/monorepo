@@ -2,20 +2,20 @@ import type { DynamicModule, Provider } from '@nestjs/common';
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 
-import type { AnyAgenticWorkflow } from '../agentic-workflow-base';
+import type { AnyAgenticWorkflow } from '../agentic-workflow-base.ts';
 import {
   AGENTIC_WORKFLOW_REGISTRY,
   createAgenticWorkflowRegistry,
-} from '../agentic-workflow-base';
+} from '../agentic-workflow-base.ts';
 import type {
   AgenticWorkflowModuleAsyncOptions,
   AgenticWorkflowRegisterWorkflowOptions,
   AgenticWorkflowRegistrationOptions,
-} from '../agentic-workflow-module.definition';
+} from '../agentic-workflow-module.definition.ts';
 import {
   AGENTIC_WORKFLOW_EXECUTE_GRAPHQL_V2,
   AGENTIC_WORKFLOW_WORKER_GRAPHQL_AUTH,
-} from '../agentic-workflow-worker-graphql';
+} from '../agentic-workflow-worker-graphql.ts';
 
 const AGENTIC_WORKFLOW_REGISTRATION = Symbol('AGENTIC_WORKFLOW_REGISTRATION');
 

@@ -2,10 +2,10 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 
-import { RuleApplication } from './rule-application.entity';
-import { RuleApplicationsService } from './rule-applications.service';
-import { TagActionRule } from './tag-action-rule.entity';
-import { TagActionRulesService } from './tag-action-rules.service';
+import { RuleApplication } from './rule-application.entity.ts';
+import { RuleApplicationsService } from './rule-applications.service.ts';
+import { TagActionRule } from './tag-action-rule.entity.ts';
+import { TagActionRulesService } from './tag-action-rules.service.ts';
 
 @Module({
   controllers: [],

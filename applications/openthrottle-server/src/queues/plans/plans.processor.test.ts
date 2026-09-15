@@ -21,22 +21,22 @@ import { spawn as nodeSpawn } from 'child_process';
 import type { Readable } from 'stream';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ProcessMetricsService } from '../../metrics/process-metrics.service';
-import type { EnhancedTaskRunMetrics } from '../../metrics/process-metrics.types';
-import { NotificationsService } from '../../notifications/notifications.service';
-import { AgenticRalphOrchestratorService } from '../agentic-ralph/agentic-ralph-orchestrator.service';
-import { BullMqRunOutputRetentionService } from '../bullmq-run-output-retention.service';
-import { WorkflowLifecycleDispatcherFactory } from '../plan-lifecycle-hooks/workflow-lifecycle-dispatcher.service';
-import { PlanRunCancellationService } from './plan-run-cancellation.service';
+import { ProcessMetricsService } from '../../metrics/process-metrics.service.ts';
+import type { EnhancedTaskRunMetrics } from '../../metrics/process-metrics.types.ts';
+import { NotificationsService } from '../../notifications/notifications.service.ts';
+import { AgenticRalphOrchestratorService } from '../agentic-ralph/agentic-ralph-orchestrator.service.ts';
+import { BullMqRunOutputRetentionService } from '../bullmq-run-output-retention.service.ts';
+import { WorkflowLifecycleDispatcherFactory } from '../plan-lifecycle-hooks/workflow-lifecycle-dispatcher.service.ts';
+import { PlanRunCancellationService } from './plan-run-cancellation.service.ts';
 import {
   PLANS_QUEUE_NAME,
   PLANS_WORKER_LOCK_DURATION_MS,
   PLANS_WORKER_MAX_STALLED_COUNT,
   PLANS_WORKER_STALLED_INTERVAL_MS,
-} from './plans.constants';
-import { PlansProcessor } from './plans.processor';
-import type { PlanRunJobResult, RunPlanJob } from './plans.types';
-import { WorkLedgerRunService } from './work-ledger-run.service';
+} from './plans.constants.ts';
+import { PlansProcessor } from './plans.processor.ts';
+import type { PlanRunJobResult, RunPlanJob } from './plans.types.ts';
+import { WorkLedgerRunService } from './work-ledger-run.service.ts';
 
 /** @nestjs/bullmq Worker options metadata key (from bull.constants WORKER_METADATA). Used to assert stalled-job recovery options. */
 const WORKER_METADATA_KEY = 'bullmq:worker_metadata';

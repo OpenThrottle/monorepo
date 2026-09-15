@@ -24,11 +24,11 @@ import {
   type RunAgentStatus,
 } from '@openthrottle/openthrottle-drivers';
 
-import { closeRunOutputForJob } from '../bullmq-keyed-run-logging';
-import { BullMqRunOutputRetentionService } from '../bullmq-run-output-retention.service';
-import { BULLMQ_RUN_OUTPUT_WRITER } from '../bullmq-run-output-writer.token';
-import { ScheduledAgentJobCancellationService } from './scheduled-agent-job-cancellation.service';
-import { ScheduledAgentJobDirectoryLockService } from './scheduled-agent-job-directory-lock.service';
+import { closeRunOutputForJob } from '../bullmq-keyed-run-logging.ts';
+import { BullMqRunOutputRetentionService } from '../bullmq-run-output-retention.service.ts';
+import { BULLMQ_RUN_OUTPUT_WRITER } from '../bullmq-run-output-writer.token.ts';
+import { ScheduledAgentJobCancellationService } from './scheduled-agent-job-cancellation.service.ts';
+import { ScheduledAgentJobDirectoryLockService } from './scheduled-agent-job-directory-lock.service.ts';
 import {
   resolveScheduledAgentJobConcurrencyKey,
   resolveScheduledAgentJobRunCwd,
@@ -36,9 +36,9 @@ import {
   resolveScheduledAgentJobTimeoutMs,
   SCHEDULED_AGENT_JOB_OUTPUT_SOURCE,
   SCHEDULED_AGENT_JOBS_QUEUE_NAME,
-} from './scheduled-agent-jobs.constants';
-import type { ScheduledAgentJobBullJob } from './scheduled-agent-jobs.types';
-import { ScheduledAgentRunnerService } from './scheduled-agent-runner.service';
+} from './scheduled-agent-jobs.constants.ts';
+import type { ScheduledAgentJobBullJob } from './scheduled-agent-jobs.types.ts';
+import { ScheduledAgentRunnerService } from './scheduled-agent-runner.service.ts';
 
 /** Run-status terminal states — a run in one of these is done and must not be re-marked. */
 const TERMINAL_RUN_STATUSES: ReadonlySet<ScheduledAgentJobRunStatus> = new Set([

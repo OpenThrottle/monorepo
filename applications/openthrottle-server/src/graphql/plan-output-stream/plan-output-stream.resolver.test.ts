@@ -11,7 +11,7 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 
-import { PlanOutputStreamResolver } from './plan-output-stream.resolver';
+import { PlanOutputStreamResolver } from './plan-output-stream.resolver.ts';
 
 const mockAsyncIterator = { next: vi.fn(), return: vi.fn(), throw: vi.fn() };
 const mockPubSub = {

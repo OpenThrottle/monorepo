@@ -8,10 +8,10 @@
 import { Mutex } from 'async-mutex';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import type { AcquireResult } from '../types/worktree';
-import type { MutexWorktreeTargetsTracker } from './mutex-worktree-targets';
-import { createMutexWorktreeTargetsTracker } from './mutex-worktree-targets';
-import { WorktreeTargetsTracker } from './worktree-targets';
+import type { AcquireResult } from '../types/worktree.ts';
+import type { MutexWorktreeTargetsTracker } from './mutex-worktree-targets.ts';
+import { createMutexWorktreeTargetsTracker } from './mutex-worktree-targets.ts';
+import { WorktreeTargetsTracker } from './worktree-targets.ts';
 
 const buildTracker = (count: number): WorktreeTargetsTracker =>
   new WorktreeTargetsTracker(

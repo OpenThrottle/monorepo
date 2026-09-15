@@ -6,16 +6,16 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { PlansService } from '../plans/plans.service';
-import { ProjectsService } from '../projects/projects.service';
+import { PlansService } from '../plans/plans.service.ts';
+import { ProjectsService } from '../projects/projects.service.ts';
 import {
   AGENT_CONVERSATION_MESSAGE_ROLES,
   AGENT_CONVERSATION_STATUSES,
-} from './agent-conversation.constants';
-import { AgentConversation } from './agent-conversation.entity';
-import { AgentConversationMessage } from './agent-conversation-message.entity';
-import { agentConversationsFactory } from './agent-conversations.factory';
-import { AgentConversationsService } from './agent-conversations.service';
+} from './agent-conversation.constants.ts';
+import { AgentConversation } from './agent-conversation.entity.ts';
+import { AgentConversationMessage } from './agent-conversation-message.entity.ts';
+import { agentConversationsFactory } from './agent-conversations.factory.ts';
+import { AgentConversationsService } from './agent-conversations.service.ts';
 
 describe('AgentConversationsService', () => {
   const userId = '11111111-1111-4111-8111-111111111111';

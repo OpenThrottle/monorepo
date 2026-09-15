@@ -8,9 +8,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { Repository as OrmRepository } from 'typeorm';
 
-import { normalizeRemoteUrl } from './normalize-remote-url';
-import { Repository } from './repository.entity';
-import { RepositoryCheckout } from './repository-checkout.entity';
+import { normalizeRemoteUrl } from './normalize-remote-url.ts';
+import { Repository } from './repository.entity.ts';
+import { RepositoryCheckout } from './repository-checkout.entity.ts';
 
 interface CreateRepositoryData {
   readonly defaultBranch: string | null;

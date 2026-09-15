@@ -1,5 +1,5 @@
-import { LoggerService } from '@openthrottle/nestjs-modules';
 import { Injectable } from '@nestjs/common';
+import { LoggerService } from '@openthrottle/nestjs-modules';
 
 @Injectable()
 export class <%= namePascal %>Service {

@@ -38,10 +38,10 @@ import {
   mergePlanRunTuningWithWorkflowRalphConfig,
 } from '@tools/workflows';
 
-import { PlanRunWorkspacePreflightService } from '../../services/plan-run-workspace-preflight/plan-run-workspace-preflight.service';
-import { PlanRunWorktreeCheckoutService } from '../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.service';
-import { PlanRunWorktreeProvisionService } from '../../services/plan-run-worktree-provision/plan-run-worktree-provision.service';
-import type { RunPlanOrchestratorJobData } from './agentic-ralph.types';
+import { PlanRunWorkspacePreflightService } from '../../services/plan-run-workspace-preflight/plan-run-workspace-preflight.service.ts';
+import { PlanRunWorktreeCheckoutService } from '../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.service.ts';
+import { PlanRunWorktreeProvisionService } from '../../services/plan-run-worktree-provision/plan-run-worktree-provision.service.ts';
+import type { RunPlanOrchestratorJobData } from './agentic-ralph.types.ts';
 
 type PlanRunTuningInput = NonNullable<
   Parameters<typeof buildRalphFlowContextFromPlanRunTuning>[0]['ralph']

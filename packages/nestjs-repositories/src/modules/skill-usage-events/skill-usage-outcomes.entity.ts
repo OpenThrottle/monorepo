@@ -15,7 +15,7 @@ import {
 import {
   SKILL_USAGE_SCOPES,
   type SkillUsageScope,
-} from './skill-usage-events.entity';
+} from './skill-usage-events.entity.ts';
 
 export const SKILL_USAGE_OUTCOMES = {
   ABANDONED: 'abandoned',

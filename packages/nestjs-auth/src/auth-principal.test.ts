@@ -8,7 +8,7 @@ import {
   getAuthPrincipalSub,
   isAuthPrincipal,
   normalizeRequestAuthPrincipal,
-} from './auth-principal';
+} from './auth-principal.ts';
 
 describe('authPrincipalFromServiceAccountId', () => {
   it('maps service account id to service_account principal', () => {

@@ -5,11 +5,11 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ServiceAccount } from '../service-accounts/service-account.entity';
-import { User } from '../users/user.entity';
-import type { Permission } from './permission.entity';
-import { Role } from './role.entity';
-import { RolesService } from './roles.service';
+import { ServiceAccount } from '../service-accounts/service-account.entity.ts';
+import { User } from '../users/user.entity.ts';
+import type { Permission } from './permission.entity.ts';
+import { Role } from './role.entity.ts';
+import { RolesService } from './roles.service.ts';
 
 const serviceAccountId = '11111111-1111-4111-8111-111111111111';
 const roleAId = '22222222-2222-4222-8222-222222222222';

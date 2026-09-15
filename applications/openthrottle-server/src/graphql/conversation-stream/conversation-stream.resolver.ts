@@ -47,13 +47,13 @@ import {
   toConversationServiceTier,
 } from '@openthrottle/openthrottle-agentic-utils';
 
-import { StartConversationStreamInput } from './conversation-stream.input';
+import { StartConversationStreamInput } from './conversation-stream.input.ts';
 import {
   ConversationStreamChunkObject,
   StartConversationStreamResult,
-} from './conversation-stream.object';
-import { ConversationStreamService } from './conversation-stream.service';
-import { type ConversationStreamChunkEnvelope } from './conversation-stream.types';
+} from './conversation-stream.object.ts';
+import { ConversationStreamService } from './conversation-stream.service.ts';
+import { type ConversationStreamChunkEnvelope } from './conversation-stream.types.ts';
 
 /**
  * Roles the model accepts; persisted `tool` rows are excluded from the prompt.

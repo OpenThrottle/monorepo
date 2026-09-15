@@ -5,7 +5,7 @@ import { ChatOllama } from '@langchain/ollama';
 import {
   type ResilienceConfig,
   resolveResilienceConfig,
-} from '../config/resilience';
+} from '../config/resilience.ts';
 
 /**
  * ------------------------------------------------------------

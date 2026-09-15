@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 
-import { GitHubController } from './github.controller';
-import { GitHubService } from './github.service';
+import { GitHubController } from './github.controller.ts';
+import { GitHubService } from './github.service.ts';
 
 @Module({
   controllers: [GitHubController],

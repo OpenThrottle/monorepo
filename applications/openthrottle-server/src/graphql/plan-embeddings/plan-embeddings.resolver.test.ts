@@ -7,8 +7,8 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 
-import { PlanEmbeddingsResolver } from './plan-embeddings.resolver';
-import { PlanEmbeddingsLoaders } from './plan-embeddings-loaders';
+import { PlanEmbeddingsResolver } from './plan-embeddings.resolver.ts';
+import { PlanEmbeddingsLoaders } from './plan-embeddings-loaders.ts';
 
 const planEmbeddingsRepo = { find: vi.fn(), findOne: vi.fn() };
 

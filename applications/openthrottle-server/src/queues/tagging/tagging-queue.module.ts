@@ -4,10 +4,10 @@ import { GitHubModule } from '@openthrottle/nestjs-github';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 
-import { PlanRulesQueueProducerModule } from '../plan-rules/plan-rules-queue-producer.module';
-import { TaggingProcessor } from './tagging.processor';
-import { taggingModelProviderFactory } from './tagging-model-providers';
-import { TaggingQueueProducerModule } from './tagging-queue-producer.module';
+import { PlanRulesQueueProducerModule } from '../plan-rules/plan-rules-queue-producer.module.ts';
+import { TaggingProcessor } from './tagging.processor.ts';
+import { taggingModelProviderFactory } from './tagging-model-providers.ts';
+import { TaggingQueueProducerModule } from './tagging-queue-producer.module.ts';
 
 /**
  * @description Processor half of the tagging queue: the WorkerHost for the

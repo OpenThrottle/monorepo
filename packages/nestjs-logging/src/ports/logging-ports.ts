@@ -1,4 +1,4 @@
-import type { NestjsLoggingLevel } from '../config/nestjs-logging-levels';
+import type { NestjsLoggingLevel } from '../config/nestjs-logging-levels.ts';
 
 /**
  * @description JSON primitives allowed inside {@link JsonValue}.

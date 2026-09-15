@@ -4,8 +4,8 @@ import { NestjsBullmqModule } from '@openthrottle/nestjs-bullmq';
 import { NestjsBullmqBoardModule } from '@openthrottle/nestjs-bullmq-board';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 
-import { PLAN_LIFECYCLE_HOOKS_QUEUE_NAME } from './plan-lifecycle-hooks.constants';
-import { WorkflowLifecycleDispatcherFactory } from './workflow-lifecycle-dispatcher.service';
+import { PLAN_LIFECYCLE_HOOKS_QUEUE_NAME } from './plan-lifecycle-hooks.constants.ts';
+import { WorkflowLifecycleDispatcherFactory } from './workflow-lifecycle-dispatcher.service.ts';
 
 /**
  * @description Producer half of the plan-lifecycle-hooks queue: registerQueue,

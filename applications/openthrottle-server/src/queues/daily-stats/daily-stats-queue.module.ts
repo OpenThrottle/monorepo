@@ -2,10 +2,10 @@ import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 
-import { NotificationsModule } from '../../notifications/notifications.module';
-import { DailyStatsProcessor } from './daily-stats.processor';
-import { DailyStatsQueueProducerModule } from './daily-stats-queue-producer.module';
-import { DailyStatsRepeatableService } from './daily-stats-repeatable.service';
+import { NotificationsModule } from '../../notifications/notifications.module.ts';
+import { DailyStatsProcessor } from './daily-stats.processor.ts';
+import { DailyStatsQueueProducerModule } from './daily-stats-queue-producer.module.ts';
+import { DailyStatsRepeatableService } from './daily-stats-repeatable.service.ts';
 
 /**
  * @description Processor half of the daily-stats queue (WorkerHost + repeatable

@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 
-import { PermissionsGuard } from './guards/permissions.guard';
-import { RolesGuard } from './guards/roles.guard';
+import { PermissionsGuard } from './guards/permissions.guard.ts';
+import { RolesGuard } from './guards/roles.guard.ts';
 
 @Module({
   controllers: [],

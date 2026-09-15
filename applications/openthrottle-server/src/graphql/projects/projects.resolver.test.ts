@@ -8,7 +8,7 @@ import {
 import { getDefaultPlanRunConfigStorage } from '@openthrottle/nestjs-repositories';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 
-import { ProjectsResolver } from './projects.resolver';
+import { ProjectsResolver } from './projects.resolver.ts';
 
 const buildMockPlan = (projectId: string): Plan => ({
   assignee: null,

@@ -16,7 +16,7 @@ import type {
   ReleaseResult,
   WorktreeTarget,
   WorktreeTargetAvailable,
-} from '../types/worktree';
+} from '../types/worktree.ts';
 
 /**
  * @description Async mutex-wrapped interface for worktree target tracking.

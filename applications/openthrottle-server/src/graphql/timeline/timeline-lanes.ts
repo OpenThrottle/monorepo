@@ -5,7 +5,7 @@
  * N single-row lanes. Kept out of the resolver so it is testable without SQL.
  */
 
-import { TimelineLaneGrouping } from './timeline.enum';
+import { TimelineLaneGrouping } from './timeline.enum.ts';
 
 /** The shared bucket for rows the active grouping cannot attribute. */
 export const UNATTRIBUTED_LANE_KEY = 'unattributed';

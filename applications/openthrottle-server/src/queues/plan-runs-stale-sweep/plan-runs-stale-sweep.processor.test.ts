@@ -8,8 +8,8 @@ import type {
 import type { PlanRun } from '@openthrottle/nestjs-repositories';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { PlanRunsStaleSweepProcessor } from './plan-runs-stale-sweep.processor';
-import type { PlanRunsStaleSweepJob } from './plan-runs-stale-sweep.types';
+import { PlanRunsStaleSweepProcessor } from './plan-runs-stale-sweep.processor.ts';
+import type { PlanRunsStaleSweepJob } from './plan-runs-stale-sweep.types.ts';
 
 /** Minimal stale-run fixture (only the fields the processor reads). */
 const staleRun = (id: string, planId: string): PlanRun =>

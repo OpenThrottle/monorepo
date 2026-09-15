@@ -3,8 +3,11 @@ import { Inject, Injectable } from '@nestjs/common';
 import {
   NESTJS_LOGGING_MODULE_OPTIONS,
   type ResolvedNestjsLoggingModuleOptions,
-} from '../config/nestjs-logging.options';
-import type { LogJsonlSink, StructuredLogRecord } from '../ports/logging-ports';
+} from '../config/nestjs-logging.options.ts';
+import type {
+  LogJsonlSink,
+  StructuredLogRecord,
+} from '../ports/logging-ports.ts';
 
 /**
  * @description Placeholder sink until the JSONL file implementation lands; keeps DI graph stable.

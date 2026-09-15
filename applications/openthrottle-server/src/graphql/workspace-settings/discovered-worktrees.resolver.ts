@@ -16,9 +16,9 @@ import { Query, Resolver } from '@nestjs/graphql';
 import { CurrentUser } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import { WorktreeActivityService } from '../../services/worktree-activity/worktree-activity.service';
-import { DiscoveredWorktreesObject } from './discovered-worktrees.object';
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { WorktreeActivityService } from '../../services/worktree-activity/worktree-activity.service.ts';
+import { DiscoveredWorktreesObject } from './discovered-worktrees.object.ts';
 
 @Resolver(() => DiscoveredWorktreesObject)
 @UseGuards(GqlPermissionsGuard)

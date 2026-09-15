@@ -5,7 +5,7 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import type { RoleData } from '@openthrottle/nestjs-repositories';
 
-import { PermissionObject } from './permission.object';
+import { PermissionObject } from './permission.object.ts';
 
 @ObjectType()
 export class RoleObject implements RoleData {

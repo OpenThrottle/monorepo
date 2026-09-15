@@ -1,12 +1,12 @@
 import { DynamicModule, Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 
-import type { NestjsSlackModuleOptions } from '../config/nestjs-slack.options';
+import type { NestjsSlackModuleOptions } from '../config/nestjs-slack.options.ts';
 import {
   NESTJS_SLACK_OPTIONS,
   validateNestjsSlackOptions,
-} from '../config/nestjs-slack.options';
-import { NestjsSlackService } from '../services/nestjs-slack.service';
+} from '../config/nestjs-slack.options.ts';
+import { NestjsSlackService } from '../services/nestjs-slack.service.ts';
 
 @Module({
   controllers: [],

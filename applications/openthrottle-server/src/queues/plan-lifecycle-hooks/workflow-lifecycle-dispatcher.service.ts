@@ -27,16 +27,16 @@ import {
 } from '@tools/workflows';
 import { Queue, QueueEvents } from 'bullmq';
 
-import type { RunPlanJobData } from '../plans/plans.types';
-import { isRunPlanOrchestratorJobData } from '../plans/plans.types';
+import type { RunPlanJobData } from '../plans/plans.types.ts';
+import { isRunPlanOrchestratorJobData } from '../plans/plans.types.ts';
 import {
   PLAN_LIFECYCLE_HOOK_JOB_NAME,
   PLAN_LIFECYCLE_HOOKS_QUEUE_NAME,
-} from './plan-lifecycle-hooks.constants';
+} from './plan-lifecycle-hooks.constants.ts';
 import type {
   PlanLifecycleHookJobData,
   PlanLifecycleHookJobResult,
-} from './plan-lifecycle-hooks.types';
+} from './plan-lifecycle-hooks.types.ts';
 
 export interface CreateWorkflowLifecycleDispatcherParams {
   readonly hooks: JobRunHooksConfig | undefined;

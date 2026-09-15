@@ -9,7 +9,7 @@ GraphQL API. It shares almost nothing with the React Router tree: no `app/`, no
 ```bash
 applications/openthrottle-server
 ├── docs                      # Design notes for this app
-├── eslint.config.mts         # NOTE the .mts extension — not .ts like the RR apps
+├── eslint.config.ts
 ├── langgraph.json            # LangGraph agent config
 ├── nest-cli.json
 ├── package.json

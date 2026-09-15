@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   createProfileExecutionRedactor,
   defaultProfileExecutionRedactor,
-} from './profile-execution.redaction';
+} from './profile-execution.redaction.ts';
 
 describe('createProfileExecutionRedactor', () => {
   it('redacts default sensitive keys case-insensitively and by substring', () => {

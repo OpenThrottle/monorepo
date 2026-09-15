@@ -4,7 +4,7 @@ import { hashContent } from '@openthrottle/openthrottle-ide';
 import type { DataSource } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { CodeVectorStore } from './code-vector-store';
+import { CodeVectorStore } from './code-vector-store.ts';
 
 const WORKSPACE = '/Users/dev/repo';
 

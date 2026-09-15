@@ -11,7 +11,7 @@ import { GqlExecutionContext } from '@nestjs/graphql';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { GqlLocalCredentialsGuard } from './gql-local-credentials.guard';
+import { GqlLocalCredentialsGuard } from './gql-local-credentials.guard.ts';
 
 interface FakeRequest {
   body?: Record<string, unknown>;

@@ -5,7 +5,7 @@ import { describe, expect, test } from 'vitest';
 import {
   isAgentsChatMutationRoutedTool,
   readAgentsChatMutationsEnabledFromConfig,
-} from './agents-chat-mutation-policy';
+} from './agents-chat-mutation-policy.ts';
 
 describe('readAgentsChatMutationsEnabledFromConfig', () => {
   test('returns false when unset', () => {

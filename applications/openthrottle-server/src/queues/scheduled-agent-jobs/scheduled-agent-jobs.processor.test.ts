@@ -15,17 +15,17 @@ import {
 } from '@openthrottle/openthrottle-drivers';
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 
-import type { BullMqRunOutputRetentionService } from '../bullmq-run-output-retention.service';
-import type { ScheduledAgentJobCancellationService } from './scheduled-agent-job-cancellation.service';
-import type { ScheduledAgentJobDirectoryLockService } from './scheduled-agent-job-directory-lock.service';
-import { type ScheduledAgentJobDirectoryLockResult } from './scheduled-agent-job-directory-lock.service';
+import type { BullMqRunOutputRetentionService } from '../bullmq-run-output-retention.service.ts';
+import type { ScheduledAgentJobCancellationService } from './scheduled-agent-job-cancellation.service.ts';
+import type { ScheduledAgentJobDirectoryLockService } from './scheduled-agent-job-directory-lock.service.ts';
+import { type ScheduledAgentJobDirectoryLockResult } from './scheduled-agent-job-directory-lock.service.ts';
 import {
   foldRunUsage,
   parseRunOutcome,
   ScheduledAgentJobsProcessor,
-} from './scheduled-agent-jobs.processor';
-import type { ScheduledAgentJobBullJob } from './scheduled-agent-jobs.types';
-import type { ScheduledAgentRunnerService } from './scheduled-agent-runner.service';
+} from './scheduled-agent-jobs.processor.ts';
+import type { ScheduledAgentJobBullJob } from './scheduled-agent-jobs.types.ts';
+import type { ScheduledAgentRunnerService } from './scheduled-agent-runner.service.ts';
 
 const result = (
   overrides: Partial<RunAgentPromptResult>,

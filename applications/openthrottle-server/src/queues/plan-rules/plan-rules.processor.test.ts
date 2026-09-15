@@ -21,9 +21,12 @@ import type {
 import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { type ActionExecutor, ActionExecutorRegistry } from './action-executor';
-import { PlanRulesProcessor } from './plan-rules.processor';
-import type { PlanRulesEvaluateJob } from './plan-rules.types';
+import {
+  type ActionExecutor,
+  ActionExecutorRegistry,
+} from './action-executor.ts';
+import { PlanRulesProcessor } from './plan-rules.processor.ts';
+import type { PlanRulesEvaluateJob } from './plan-rules.types.ts';
 
 const planId = '00000000-0000-4000-8000-000000000001';
 const userId = '00000000-0000-4000-8000-000000000002';

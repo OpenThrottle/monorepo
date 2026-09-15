@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   deriveQueueJobLogLevel,
   extractQueueJobLogMessage,
-} from './queue-job-log-mapping';
+} from './queue-job-log-mapping.ts';
 
 describe('deriveQueueJobLogLevel', () => {
   it('maps stream type when data is a plain string', () => {

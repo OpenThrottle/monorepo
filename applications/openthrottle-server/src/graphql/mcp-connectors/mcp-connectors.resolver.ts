@@ -11,18 +11,18 @@ import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 import type { McpConnectorConnection } from '@openthrottle/nestjs-repositories';
 import { McpConnectorsService } from '@openthrottle/nestjs-repositories';
 
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import {
   ConnectMcpConnectorInput,
   SetMcpConnectorEnabledInput,
-} from './mcp-connector.input';
-import { McpConnectorObject } from './mcp-connector.object';
+} from './mcp-connector.input.ts';
+import { McpConnectorObject } from './mcp-connector.object.ts';
 import {
   findMcpConnector,
   MCP_CONNECTOR_CATALOG,
-} from './mcp-connector-catalog';
-import { McpConnectorConnectionObject } from './mcp-connector-connection.object';
-import { McpConnectorConnectionResultObject } from './mcp-connector-connection-result.object';
+} from './mcp-connector-catalog.ts';
+import { McpConnectorConnectionObject } from './mcp-connector-connection.object.ts';
+import { McpConnectorConnectionResultObject } from './mcp-connector-connection-result.object.ts';
 
 const toConnectionObject = (
   connection: McpConnectorConnection,

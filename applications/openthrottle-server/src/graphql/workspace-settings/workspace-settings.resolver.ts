@@ -26,35 +26,35 @@ import {
   WorkspaceLocalRepositoriesService,
 } from '@openthrottle/nestjs-repositories';
 
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import { ProjectObject } from '../projects/project.object';
-import { ApplyWorkspaceEditorConfigurationInput } from './apply-workspace-editor-configuration.input';
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { ProjectObject } from '../projects/project.object.ts';
+import { ApplyWorkspaceEditorConfigurationInput } from './apply-workspace-editor-configuration.input.ts';
 import {
   toUserWorkspaceProfileObject,
   toWorkspaceEditorIdEnum,
-} from './user-workspace-profile.mapper';
-import { UserWorkspaceProfileObject } from './user-workspace-profile.object';
+} from './user-workspace-profile.mapper.ts';
+import { UserWorkspaceProfileObject } from './user-workspace-profile.object.ts';
 import {
   validateContactDisplayName,
   validateContactEmail,
   validateEnabledEditors,
-} from './user-workspace-profile.validation';
-import { ApplyWorkspaceEditorConfigurationResultObject } from './workspace-editor-config-application.object';
-import { WorkspaceLocalRepositoryObject } from './workspace-local-repository.object';
+} from './user-workspace-profile.validation.ts';
+import { ApplyWorkspaceEditorConfigurationResultObject } from './workspace-editor-config-application.object.ts';
+import { WorkspaceLocalRepositoryObject } from './workspace-local-repository.object.ts';
 import {
   validateAndNormalizeFilesystemPath,
   validateDisplayName,
   validateGitDefaultBranch,
   validateGitRemoteUrl,
-} from './workspace-local-repository.validation';
+} from './workspace-local-repository.validation.ts';
 import {
   CreateWorkspaceLocalRepositoryInput,
   SetWorkspaceLocalRepositoryProjectInput,
   UpdateWorkspaceLocalRepositoryInput,
   UpdateWorkspaceProfileInput,
-} from './workspace-settings.input';
-import { WorkspaceSettingsObject } from './workspace-settings.object';
-import { WorkspaceSettingsLoaders } from './workspace-settings-loaders';
+} from './workspace-settings.input.ts';
+import { WorkspaceSettingsObject } from './workspace-settings.object.ts';
+import { WorkspaceSettingsLoaders } from './workspace-settings-loaders.ts';
 
 @Resolver(() => WorkspaceLocalRepositoryObject)
 @UseGuards(GqlPermissionsGuard)

@@ -5,8 +5,8 @@
 import { Module } from '@nestjs/common';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 
-import { AgentAssetSearchResolver } from './agent-asset-search.resolver';
-import { CustomPromptsResolver } from './custom-prompts.resolver';
+import { AgentAssetSearchResolver } from './agent-asset-search.resolver.ts';
+import { CustomPromptsResolver } from './custom-prompts.resolver.ts';
 
 @Module({
   imports: [NestjsRepositoriesModule],

@@ -7,7 +7,7 @@
 import { getOpenThrottleRoot } from '@openthrottle/openthrottle-agentic-utils';
 import type { JobsOptions } from 'bullmq';
 
-import { REPEATABLE_JOB_OPTIONS } from '../repeatable-job.options';
+import { REPEATABLE_JOB_OPTIONS } from '../repeatable-job.options.ts';
 
 /** Human-readable Bull Board queue name (matches `Database Backup`, `Doc Ingestion`). */
 export const SCHEDULED_AGENT_JOBS_QUEUE_NAME = 'Scheduled Agent Jobs';

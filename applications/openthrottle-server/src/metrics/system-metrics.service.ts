@@ -13,12 +13,12 @@ import type {
   ActiveProcessesSummary,
   PsiSnapshot,
   SystemMetricsSnapshot,
-} from './system-metrics.types';
+} from './system-metrics.types.ts';
 import {
   captureLoadAverage,
   createEmptyPsiSnapshot,
   determinePressureLevel,
-} from './system-metrics.types';
+} from './system-metrics.types.ts';
 
 const PSI_CPU_PATH = '/proc/pressure/cpu';
 

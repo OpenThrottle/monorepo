@@ -1,15 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import * as bcrypt from 'bcrypt';
+import bcrypt from 'bcrypt';
+import type { DeepPartial } from 'typeorm';
 import { Repository } from 'typeorm';
-import type { DeepPartial } from 'typeorm/common/DeepPartial';
 
 import {
   type ListPaginationInput,
   resolveListPagination,
-} from '../../common/list-pagination';
-import { User } from './user.entity';
+} from '../../common/list-pagination.ts';
+import { User } from './user.entity.ts';
 
 @Injectable()
 export class UsersService {

@@ -10,9 +10,9 @@ import { type AuthPrincipal, CurrentUser } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 import { AgentCliPreferencesService } from '@openthrottle/nestjs-repositories';
 
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import { DiscoverAgentClisResult } from './agent-discovery.object';
-import { AgentDiscoveryService } from './agent-discovery.service';
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { DiscoverAgentClisResult } from './agent-discovery.object.ts';
+import { AgentDiscoveryService } from './agent-discovery.service.ts';
 
 @Resolver()
 @UseGuards(GqlPermissionsGuard)

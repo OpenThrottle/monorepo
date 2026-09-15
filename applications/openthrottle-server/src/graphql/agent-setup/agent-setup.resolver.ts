@@ -39,8 +39,8 @@ import {
 import type { AgentSetupMode } from '@openthrottle/openthrottle-agentic-utils';
 import { isDriverId } from '@openthrottle/openthrottle-drivers';
 
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import { readAgentCliInstallEnabledFromConfig } from './agent-setup.config';
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { readAgentCliInstallEnabledFromConfig } from './agent-setup.config.ts';
 import {
   AgentCliSetupConfigObject,
   AgentSetupStreamChunkObject,
@@ -49,9 +49,9 @@ import {
   SetAgentModelFavoriteResult,
   SetAgentModelsEnabledResult,
   StartAgentSetupResult,
-} from './agent-setup.object';
-import { AgentSetupService } from './agent-setup.service';
-import { type AgentSetupStreamChunkEnvelope } from './agent-setup.types';
+} from './agent-setup.object.ts';
+import { AgentSetupService } from './agent-setup.service.ts';
+import { type AgentSetupStreamChunkEnvelope } from './agent-setup.types.ts';
 
 @Resolver()
 export class AgentSetupResolver {

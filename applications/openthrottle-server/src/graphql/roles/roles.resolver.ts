@@ -13,8 +13,8 @@ import {
   RolesService,
 } from '@openthrottle/nestjs-repositories';
 
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import { PermissionObject } from './permission.object';
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { PermissionObject } from './permission.object.ts';
 import {
   AddPermissionToRoleInput,
   AssignRoleToUserInput,
@@ -22,8 +22,8 @@ import {
   RemovePermissionFromRoleInput,
   RemoveRoleFromUserInput,
   UpdateRoleInput,
-} from './role.input';
-import { RoleObject } from './role.object';
+} from './role.input.ts';
+import { RoleObject } from './role.object.ts';
 
 @Resolver(() => RoleObject)
 @UseGuards(GqlPermissionsGuard)

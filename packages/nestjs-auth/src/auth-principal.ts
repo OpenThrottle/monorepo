@@ -1,6 +1,6 @@
 import { isRecord } from '@openthrottle/nodejs-utils';
 
-import type { JwtPayload } from './strategies/jwt.strategy';
+import type { JwtPayload } from './strategies/jwt.strategy.ts';
 
 /** Discriminant for {@link UserAuthPrincipal}. */
 export const AUTH_PRINCIPAL_KIND_USER = 'user' as const;

@@ -12,10 +12,10 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   TASK_PROMOTION_QUEUE_NAME,
   TASK_PROMOTION_WORKER_CONCURRENCY,
-} from './task-promotion.constants';
-import { TaskPromotionProcessor } from './task-promotion.processor';
-import type { TaskPromotionService } from './task-promotion.service';
-import type { PromoteTaskJob } from './task-promotion.types';
+} from './task-promotion.constants.ts';
+import { TaskPromotionProcessor } from './task-promotion.processor.ts';
+import type { TaskPromotionService } from './task-promotion.service.ts';
+import type { PromoteTaskJob } from './task-promotion.types.ts';
 
 const buildJob = (): PromoteTaskJob =>
   asMock<PromoteTaskJob>({

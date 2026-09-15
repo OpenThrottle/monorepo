@@ -5,8 +5,8 @@ import { NestjsBullmqBoardModule } from '@openthrottle/nestjs-bullmq-board';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 
-import { TASK_PROMOTION_QUEUE_NAME } from './task-promotion.constants';
-import { TaskPromotionEnqueueService } from './task-promotion-enqueue.service';
+import { TASK_PROMOTION_QUEUE_NAME } from './task-promotion.constants.ts';
+import { TaskPromotionEnqueueService } from './task-promotion-enqueue.service.ts';
 
 /**
  * @description Producer half of the task-promotion queue: registerQueue, Bull

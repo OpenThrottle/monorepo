@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { runAgenticTestEchoLoop } from './agentic-test-echo';
+import { runAgenticTestEchoLoop } from './agentic-test-echo.ts';
 
 describe('runAgenticTestEchoLoop', () => {
   it('echoes timestamps echoCount times and sleeps between echoes', async () => {

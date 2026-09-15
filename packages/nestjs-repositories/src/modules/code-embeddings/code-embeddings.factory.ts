@@ -5,7 +5,7 @@
 import { faker } from '@faker-js/faker';
 import { Factory } from 'fishery';
 
-import type { CodeEmbedding } from './code-embedding.entity';
+import type { CodeEmbedding } from './code-embedding.entity.ts';
 
 /**
  * Factory for building CodeEmbedding-shaped objects (plain data for mocks / tests).

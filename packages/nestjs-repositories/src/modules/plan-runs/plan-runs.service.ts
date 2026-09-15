@@ -6,9 +6,12 @@ import type { PlanRunConfigSnapshot } from '@openthrottle/openthrottle-plan-conf
 import type { EntityManager } from 'typeorm';
 import { IsNull, Repository } from 'typeorm';
 
-import type { PlanRunExecutionBackend, PlanRunKind } from './plan-run.entity';
-import { PlanRun } from './plan-run.entity';
-import { PLAN_RUN_STATUS } from './plan-runs.constants';
+import type {
+  PlanRunExecutionBackend,
+  PlanRunKind,
+} from './plan-run.entity.ts';
+import { PlanRun } from './plan-run.entity.ts';
+import { PLAN_RUN_STATUS } from './plan-runs.constants.ts';
 
 interface RecordQueuedPlanRunInput {
   /** User who enqueued the run (auth sub for a user principal); null for service-account/system. */

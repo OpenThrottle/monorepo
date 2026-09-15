@@ -5,7 +5,7 @@
 import { faker } from '@faker-js/faker';
 import { Factory } from 'fishery';
 
-import type { User } from './user.entity';
+import type { User } from './user.entity.ts';
 
 // /** Column-only shape for building user test data (no relations). */
 // export type UserFactoryData = Pick<

@@ -2,8 +2,8 @@ import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { describe, expect, it, vi } from 'vitest';
 
-import { AgentTokenUsage } from './agent-token-usage.entity';
-import { AgentTokenUsageService } from './agent-token-usage.service';
+import { AgentTokenUsage } from './agent-token-usage.entity.ts';
+import { AgentTokenUsageService } from './agent-token-usage.service.ts';
 
 describe('AgentTokenUsageService', () => {
   // Plain untyped mock repo (provided as `useValue`) so the vi.fn stand-ins for

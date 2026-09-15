@@ -12,12 +12,12 @@ import type {
 } from '@openthrottle/nestjs-repositories';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { executeSinglePlanLifecycleHook } from './execute-single-plan-lifecycle-hook';
-import { PlanLifecycleHooksProcessor } from './plan-lifecycle-hooks.processor';
+import { executeSinglePlanLifecycleHook } from './execute-single-plan-lifecycle-hook.ts';
+import { PlanLifecycleHooksProcessor } from './plan-lifecycle-hooks.processor.ts';
 import type {
   PlanLifecycleHookJob,
   PlanLifecycleHookJobData,
-} from './plan-lifecycle-hooks.types';
+} from './plan-lifecycle-hooks.types.ts';
 
 vi.mock('./execute-single-plan-lifecycle-hook', () => ({
   executeSinglePlanLifecycleHook: vi.fn(),

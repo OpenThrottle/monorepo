@@ -13,8 +13,8 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-import { Project } from '../projects/project.entity';
-import { User } from '../users/user.entity';
+import { Project } from '../projects/project.entity.ts';
+import { User } from '../users/user.entity.ts';
 
 /**
  * @description Strict set of document purposes for custom prompts.

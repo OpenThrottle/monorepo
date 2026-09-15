@@ -3,13 +3,13 @@ import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import { NestjsWorktreesModule } from '@openthrottle/nestjs-worktrees';
 
-import { MetricsModule } from '../../metrics/metrics.module';
-import { NotificationsModule } from '../../notifications/notifications.module';
-import { AgenticRalphModule } from '../agentic-ralph/agentic-ralph.module';
-import { PlanLifecycleHooksQueueProducerModule } from '../plan-lifecycle-hooks/plan-lifecycle-hooks-queue-producer.module';
-import { PlansProcessor } from './plans.processor';
-import { PlansQueueProducerModule } from './plans-queue-producer.module';
-import { WorkLedgerRunService } from './work-ledger-run.service';
+import { MetricsModule } from '../../metrics/metrics.module.ts';
+import { NotificationsModule } from '../../notifications/notifications.module.ts';
+import { AgenticRalphModule } from '../agentic-ralph/agentic-ralph.module.ts';
+import { PlanLifecycleHooksQueueProducerModule } from '../plan-lifecycle-hooks/plan-lifecycle-hooks-queue-producer.module.ts';
+import { PlansProcessor } from './plans.processor.ts';
+import { PlansQueueProducerModule } from './plans-queue-producer.module.ts';
+import { WorkLedgerRunService } from './work-ledger-run.service.ts';
 
 /**
  * @description Processor half of the plans queue: the plans worker

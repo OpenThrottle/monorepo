@@ -14,7 +14,7 @@ import {
   pickNativeFolder,
   resolveNativeDialogCommand,
   resolveNativePickerOverride,
-} from './native-folder-picker';
+} from './native-folder-picker.ts';
 
 describe('native-folder-picker', () => {
   describe('isLoopbackAddress', () => {

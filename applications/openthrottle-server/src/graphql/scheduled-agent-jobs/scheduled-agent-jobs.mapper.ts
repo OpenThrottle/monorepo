@@ -12,8 +12,8 @@ import type {
 import type {
   ScheduledAgentJobObject,
   ScheduledAgentJobRunObject,
-} from './scheduled-agent-job.object';
-import type { ScheduledAgentJobRunStatsObject } from './scheduled-agent-job-run-stats.object';
+} from './scheduled-agent-job.object.ts';
+import type { ScheduledAgentJobRunStatsObject } from './scheduled-agent-job-run-stats.object.ts';
 
 export const toScheduledAgentJobObject = (
   job: ScheduledAgentJob,

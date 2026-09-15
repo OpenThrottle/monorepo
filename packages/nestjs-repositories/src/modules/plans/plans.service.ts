@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { Repository } from 'typeorm';
 
-import { Plan } from './plan.entity';
+import { Plan } from './plan.entity.ts';
 
 @Injectable()
 export class PlansService {

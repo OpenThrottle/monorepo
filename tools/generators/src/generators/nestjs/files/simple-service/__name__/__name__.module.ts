@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-common';
 import { CertsRepositoryModule } from '@openthrottle/nestjs-core/src/repositories/certs/certs.module';
-import { <%= namePascal %>Service } from './<%= name %>.service';
+import { <%= namePascal %>Service } from './<%= name %>.service.ts';
 
 @Module({
   controllers: [],

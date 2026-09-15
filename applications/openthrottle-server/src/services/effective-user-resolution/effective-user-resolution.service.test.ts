@@ -10,7 +10,7 @@ import {
 import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { EffectiveUserResolutionService } from './effective-user-resolution.service';
+import { EffectiveUserResolutionService } from './effective-user-resolution.service.ts';
 
 const userId = '11111111-1111-4111-8111-111111111111';
 const serviceAccountId = '22222222-2222-4222-8222-222222222222';

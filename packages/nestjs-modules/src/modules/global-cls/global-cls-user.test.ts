@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { globalClsUserFromJwtLike } from './global-cls-user';
+import { globalClsUserFromJwtLike } from './global-cls-user.ts';
 
 describe('globalClsUserFromJwtLike', () => {
   it('maps sub to uuid and uses email for displayName when email present', () => {

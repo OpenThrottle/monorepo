@@ -11,13 +11,13 @@ import {
   ActivityCommitRowObject,
   ActivityOutputChunkRowObject,
   ActivityTaskUpdatedRowObject,
-} from './activity.object';
+} from './activity.object.ts';
 import {
   ActivityCommitRowResolver,
   ActivityOutputChunkRowResolver,
   ActivityTaskUpdatedRowResolver,
-} from './activity.resolver';
-import { ActivityLoaders } from './activity-loaders';
+} from './activity.resolver.ts';
+import { ActivityLoaders } from './activity-loaders.ts';
 
 const mockPlan = plansFactory.build();
 const mockTask = tasksFactory.build();

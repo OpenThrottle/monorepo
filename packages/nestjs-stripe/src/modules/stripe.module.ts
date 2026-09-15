@@ -4,12 +4,12 @@
 
 import { type DynamicModule, Module } from '@nestjs/common';
 
-import { WebhooksController } from '../controllers/webhooks.controller';
-import { StripeProductResolver } from '../graphql/stripe-product.resolver';
-import { StripeWebhookResolver } from '../graphql/stripe-webhook.resolver';
-import { CheckoutService } from '../services/checkout.service';
-import { StripeProductsService } from '../services/stripe-products.service';
-import { StripeWebhookHandlerService } from '../services/stripe-webhook-handler.service';
+import { WebhooksController } from '../controllers/webhooks.controller.ts';
+import { StripeProductResolver } from '../graphql/stripe-product.resolver.ts';
+import { StripeWebhookResolver } from '../graphql/stripe-webhook.resolver.ts';
+import { CheckoutService } from '../services/checkout.service.ts';
+import { StripeProductsService } from '../services/stripe-products.service.ts';
+import { StripeWebhookHandlerService } from '../services/stripe-webhook-handler.service.ts';
 import {
   STRIPE_CHECKOUT_USER_PORT,
   STRIPE_MODULE_INIT,
@@ -17,7 +17,7 @@ import {
   STRIPE_SUBSCRIPTIONS_PORT,
   type StripeModuleAsyncOptions,
   type StripeModuleInit,
-} from '../tokens/stripe-tokens';
+} from '../tokens/stripe-tokens.ts';
 
 @Module({})
 export class StripeModule {

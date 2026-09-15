@@ -4,7 +4,7 @@
 
 import { Field, ObjectType } from '@nestjs/graphql';
 
-import { McpConnectorConnectionObject } from './mcp-connector-connection.object';
+import { McpConnectorConnectionObject } from './mcp-connector-connection.object.ts';
 
 @ObjectType()
 export class McpConnectorConnectionResultObject {

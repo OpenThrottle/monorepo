@@ -4,7 +4,7 @@
  * WorktreeActivityService, which is the only thing allowed to say a worktree is "in progress".
  */
 
-import type { WorktreeRootSource } from '../worktree-root/worktree-root.resolver';
+import type { WorktreeRootSource } from '../worktree-root/worktree-root.resolver.ts';
 
 /** One linked git worktree that exists on disk right now. */
 export interface DiscoveredWorktree {

@@ -21,19 +21,19 @@ import {
   type JsonlRotationPolicy,
   NESTJS_LOGGING_MODULE_OPTIONS,
   type ResolvedNestjsLoggingModuleOptions,
-} from '../config/nestjs-logging.options';
+} from '../config/nestjs-logging.options.ts';
 import type {
   LogJsonlSink,
   LogStreamHub,
   StructuredLogRecord,
-} from '../ports/logging-ports';
-import { LOG_STREAM_HUB } from '../tokens/nestjs-logging.tokens';
-import { getActiveJsonlRelativePath } from './get-active-jsonl-relative-path';
+} from '../ports/logging-ports.ts';
+import { LOG_STREAM_HUB } from '../tokens/nestjs-logging.tokens.ts';
+import { getActiveJsonlRelativePath } from './get-active-jsonl-relative-path.ts';
 import {
   appendUtf8ToFileHandle,
   flushFileHandle,
-} from './jsonl-file-handle-io';
-import { serializeStructuredLogLine } from './jsonl-payload';
+} from './jsonl-file-handle-io.ts';
+import { serializeStructuredLogLine } from './jsonl-payload.ts';
 
 /**
  * @description Append-only JSONL sink: structured lines, periodic `fsync`, optional size/daily rotation.

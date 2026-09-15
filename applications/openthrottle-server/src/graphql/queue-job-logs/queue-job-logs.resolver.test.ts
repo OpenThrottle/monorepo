@@ -4,8 +4,8 @@ import type { PubSubEngine } from '@openthrottle/nestjs-graphql';
 import { queueJobLogTopic } from '@openthrottle/nestjs-graphql';
 import { describe, expect, it, vi } from 'vitest';
 
-import { QueueJobLogsResolver } from './queue-job-logs.resolver';
-import type { QueueJobLogsService } from './queue-job-logs.service';
+import { QueueJobLogsResolver } from './queue-job-logs.resolver.ts';
+import type { QueueJobLogsService } from './queue-job-logs.service.ts';
 
 const iterator = { next: vi.fn(), return: vi.fn(), throw: vi.fn() };
 

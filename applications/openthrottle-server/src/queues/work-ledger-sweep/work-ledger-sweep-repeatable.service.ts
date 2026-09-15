@@ -3,9 +3,9 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { Queue } from 'bullmq';
 
-import { REPEATABLE_JOB_OPTIONS } from '../repeatable-job.options';
-import { WORK_LEDGER_SWEEP_QUEUE_NAME } from './work-ledger-sweep.constants';
-import type { WorkLedgerSweepJobData } from './work-ledger-sweep.types';
+import { REPEATABLE_JOB_OPTIONS } from '../repeatable-job.options.ts';
+import { WORK_LEDGER_SWEEP_QUEUE_NAME } from './work-ledger-sweep.constants.ts';
+import type { WorkLedgerSweepJobData } from './work-ledger-sweep.types.ts';
 
 /** @description Cron pattern: hourly at minute 0 (sec min hour day month dow). */
 const CRON_PATTERN = '0 0 * * * *';

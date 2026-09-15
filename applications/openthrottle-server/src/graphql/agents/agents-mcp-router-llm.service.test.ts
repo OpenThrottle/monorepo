@@ -2,7 +2,7 @@ import { ConfigService } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { AgentsMcpRouterLlmService } from './agents-mcp-router-llm.service';
+import { AgentsMcpRouterLlmService } from './agents-mcp-router-llm.service.ts';
 
 describe('AgentsMcpRouterLlmService', () => {
   let configGet: ReturnType<typeof vi.fn>;

@@ -9,9 +9,9 @@ import type {
 import type { Repository } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { TaggingEnqueueService } from '../tagging/tagging-enqueue.service';
-import { WorkLedgerVerifyProcessor } from './work-ledger-verify.processor';
-import type { WorkLedgerVerifyJob } from './work-ledger-verify.types';
+import type { TaggingEnqueueService } from '../tagging/tagging-enqueue.service.ts';
+import { WorkLedgerVerifyProcessor } from './work-ledger-verify.processor.ts';
+import type { WorkLedgerVerifyJob } from './work-ledger-verify.types.ts';
 
 const RECENT = new Date();
 const OLD = new Date('2020-01-01T00:00:00Z');

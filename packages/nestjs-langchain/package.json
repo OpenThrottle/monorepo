@@ -1,6 +1,6 @@
 {
   "name": "@openthrottle/nestjs-langchain",
-  "description": "LangChain and LangGraph integration for NestJS APIs—embeddings, checkpoints, document loaders (PDF, URL, YouTube), models, and vector stores.",
+  "description": "LangChain and LangGraph integration for NestJS APIs\u2014embeddings, checkpoints, document loaders (PDF, URL, YouTube), models, and vector stores.",
   "version": "2.2.25",
   "author": {
     "email": "matthew.scholta@gmail.com",
@@ -75,6 +75,6 @@
   },
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
-  "type": "commonjs",
+  "type": "module",
   "types": "./dist/src/index.d.ts"
 }

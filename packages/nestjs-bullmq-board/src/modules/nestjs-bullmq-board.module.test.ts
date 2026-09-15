@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { NestjsBullmqBoardModule } from './nestjs-bullmq-board.module';
+import { NestjsBullmqBoardModule } from './nestjs-bullmq-board.module.ts';
 
 describe('NestjsBullmqBoardModule', () => {
   describe('forRoot', () => {

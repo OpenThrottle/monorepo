@@ -15,8 +15,8 @@ import {
 import type { SkillAvailabilityRuleSet } from '@openthrottle/openthrottle-skills';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { PlanContextAvailabilityService } from '../../services/plan-context-availability/plan-context-availability.service';
-import { SkillAvailabilityResolutionResolver } from './skill-availability-resolution.resolver';
+import { PlanContextAvailabilityService } from '../../services/plan-context-availability/plan-context-availability.service.ts';
+import { SkillAvailabilityResolutionResolver } from './skill-availability-resolution.resolver.ts';
 
 describe('SkillAvailabilityResolutionResolver', () => {
   const userId = '11111111-1111-4111-8111-111111111111';

@@ -25,15 +25,15 @@ import {
 } from '@openthrottle/openthrottle-drivers';
 import type { Queue } from 'bullmq';
 
-import { ScheduledAgentJobCancellationService } from '../../queues/scheduled-agent-jobs/scheduled-agent-job-cancellation.service';
-import { ScheduledAgentJobSchedulerService } from '../../queues/scheduled-agent-jobs/scheduled-agent-job-scheduler.service';
+import { ScheduledAgentJobCancellationService } from '../../queues/scheduled-agent-jobs/scheduled-agent-job-cancellation.service.ts';
+import { ScheduledAgentJobSchedulerService } from '../../queues/scheduled-agent-jobs/scheduled-agent-job-scheduler.service.ts';
 import {
   SCHEDULED_AGENT_JOB_NAME,
   SCHEDULED_AGENT_JOB_OPTIONS,
   SCHEDULED_AGENT_JOBS_QUEUE_NAME,
-} from '../../queues/scheduled-agent-jobs/scheduled-agent-jobs.constants';
-import type { ScheduledAgentJobPayload } from '../../queues/scheduled-agent-jobs/scheduled-agent-jobs.types';
-import { validateScheduledAgentJobCron } from './scheduled-agent-jobs.cron';
+} from '../../queues/scheduled-agent-jobs/scheduled-agent-jobs.constants.ts';
+import type { ScheduledAgentJobPayload } from '../../queues/scheduled-agent-jobs/scheduled-agent-jobs.types.ts';
+import { validateScheduledAgentJobCron } from './scheduled-agent-jobs.cron.ts';
 
 /** Shape a create request arrives in (settings already validated/parsed). */
 interface CreateArgs {

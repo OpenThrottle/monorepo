@@ -5,8 +5,8 @@
 import { faker } from '@faker-js/faker';
 import { Factory } from 'fishery';
 
-import { plansFactory } from '../../modules/plans/plans.factory';
-import type { PlanOutputStreamChunk } from './plan-output-stream.entity';
+import { plansFactory } from '../../modules/plans/plans.factory.ts';
+import type { PlanOutputStreamChunk } from './plan-output-stream.entity.ts';
 
 // /** Column-only shape for building plan output stream chunk test data (no relations). */
 // export type PlanOutputStreamChunkFactoryData = Pick<

@@ -9,8 +9,8 @@ import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import { RolloutFlagsModule } from '@openthrottle/nestjs-rollout';
 
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import { RolloutResolver } from './rollout.resolver';
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { RolloutResolver } from './rollout.resolver.ts';
 
 @Module({
   imports: [LoggerModule, NestjsRepositoriesModule, RolloutFlagsModule],

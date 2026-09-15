@@ -11,8 +11,8 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
-import { vectorTransformer } from '../../common/vector.transformer';
-import type { Task } from '../tasks/task.entity';
+import { vectorTransformer } from '../../common/vector.transformer.ts';
+import type { Task } from '../tasks/task.entity.ts';
 
 @Entity('task_embeddings')
 export class TaskEmbedding {

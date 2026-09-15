@@ -4,4 +4,4 @@ export {
   type CreateDataLoaderOptions,
   createLoaderFromFindByIds,
   type CreateLoaderFromFindByIdsOptions,
-} from './create-data-loader';
+} from './create-data-loader.ts';

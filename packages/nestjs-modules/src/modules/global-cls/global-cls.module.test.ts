@@ -1,8 +1,8 @@
 import { ClsServiceManager } from 'nestjs-cls';
 import { describe, expect, it } from 'vitest';
 
-import { setupGlobalCls } from './global-cls.module';
-import type { GlobalClsStore } from './global-cls.service';
+import { setupGlobalCls } from './global-cls.module.ts';
+import type { GlobalClsStore } from './global-cls.service.ts';
 
 /** @description Presents a blank structural store as {@link GlobalClsStore} without a cast. */
 function asStore<T>(value: unknown): T;

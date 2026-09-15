@@ -30,9 +30,9 @@ import {
   vi,
 } from 'vitest';
 
-import type { ForeignSkillMaterializationService } from '../../services/foreign-skill-injection/foreign-skill-materialization.service';
-import { RepositoryInspectionService } from '../repository-inspection/repository-inspection.service';
-import { NATIVE_PICKER_ENV } from './native-folder-picker';
+import type { ForeignSkillMaterializationService } from '../../services/foreign-skill-injection/foreign-skill-materialization.service.ts';
+import { RepositoryInspectionService } from '../repository-inspection/repository-inspection.service.ts';
+import { NATIVE_PICKER_ENV } from './native-folder-picker.ts';
 import {
   CHECKOUT_ROOT_ENV,
   getCheckoutRoot,
@@ -40,7 +40,7 @@ import {
   repositoryNameFromRemote,
   WORKSPACE_ROOTS_ENV,
   WorkspaceFoldersService,
-} from './workspace-folders.service';
+} from './workspace-folders.service.ts';
 
 const execFileAsync = promisify(execFile);
 

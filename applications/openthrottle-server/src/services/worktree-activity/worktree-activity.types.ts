@@ -7,8 +7,8 @@ import type {
   DiscoveredWorktree,
   ScannedWorktreeRoot,
   WorktreeDiscoveryProblem,
-} from '../worktree-discovery/worktree-discovery.types';
-import type { WorktreeRootSource } from '../worktree-root/worktree-root.resolver';
+} from '../worktree-discovery/worktree-discovery.types.ts';
+import type { WorktreeRootSource } from '../worktree-root/worktree-root.resolver.ts';
 
 /**
  * One activity state per worktree, in precedence order:

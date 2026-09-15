@@ -6,7 +6,7 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 
-import { DailyStatsResolver } from './daily-stats.resolver';
+import { DailyStatsResolver } from './daily-stats.resolver.ts';
 
 /**
  * @description Unit tests for daily stats resolver: dailyStats and dailyStatsRange. Mocks DailyStatsService.

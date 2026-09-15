@@ -5,11 +5,11 @@ import { createInterface } from 'node:readline';
 
 import { isRecord } from '@openthrottle/nodejs-utils';
 
-import type { KeyedJsonlRunRecord } from './keyed-jsonl-writer';
+import type { KeyedJsonlRunRecord } from './keyed-jsonl-writer.ts';
 import {
   buildKeyedJsonlRelativePath,
   keyedJsonlPairHash8,
-} from './keyed-jsonl-writer-path';
+} from './keyed-jsonl-writer-path.ts';
 
 /**
  * @description Streaming, cursor-based reader for the per-(queue,job) JSONL run

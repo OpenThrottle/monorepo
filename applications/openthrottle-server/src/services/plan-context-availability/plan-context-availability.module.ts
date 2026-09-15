@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 
-import { PlanContextAvailabilityService } from './plan-context-availability.service';
+import { PlanContextAvailabilityService } from './plan-context-availability.service.ts';
 
 /**
  * @description Provides {@link PlanContextAvailabilityService}, shared by the

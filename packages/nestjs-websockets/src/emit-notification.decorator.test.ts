@@ -9,7 +9,7 @@ import {
   EmitNotification,
   type EmitNotificationMetadata,
   type EmitNotificationMetadataValue,
-} from './emit-notification.decorator';
+} from './emit-notification.decorator.ts';
 
 const reflector = new Reflector();
 

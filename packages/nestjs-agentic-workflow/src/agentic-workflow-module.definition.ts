@@ -1,10 +1,10 @@
 import type { ModuleMetadata, Provider, Type } from '@nestjs/common';
 
-import type { AnyAgenticWorkflow } from './agentic-workflow-base';
+import type { AnyAgenticWorkflow } from './agentic-workflow-base.ts';
 import type {
   AgenticWorkflowExecuteGraphqlV2,
   AgenticWorkflowWorkerGraphqlAuth,
-} from './agentic-workflow-worker-graphql';
+} from './agentic-workflow-worker-graphql.ts';
 
 /**
  * @description Values bound to {@link AGENTIC_WORKFLOW_WORKER_GRAPHQL_AUTH} and {@link AGENTIC_WORKFLOW_EXECUTE_GRAPHQL_V2}.

@@ -21,15 +21,15 @@ import type {
 import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 
-import type { PlanRulesEvaluationService } from '../plan-rules/plan-rules-evaluation.service';
-import { TaggingProcessor } from './tagging.processor';
-import type { PredictTaggingJob, RefineTaggingJob } from './tagging.types';
+import type { PlanRulesEvaluationService } from '../plan-rules/plan-rules-evaluation.service.ts';
+import { TaggingProcessor } from './tagging.processor.ts';
+import type { PredictTaggingJob, RefineTaggingJob } from './tagging.types.ts';
 import {
   parseTaggingResponse,
   type TaggingModelProvider,
   type TaggingPrediction,
-} from './tagging-model.provider';
-import { StubTaggingModelProvider } from './tagging-model-providers';
+} from './tagging-model.provider.ts';
+import { StubTaggingModelProvider } from './tagging-model-providers.ts';
 
 const planId = '00000000-0000-4000-8000-000000000001';
 

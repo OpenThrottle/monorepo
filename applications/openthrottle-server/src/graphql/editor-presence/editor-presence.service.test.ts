@@ -11,7 +11,7 @@ import type { EditorPresenceResult } from '@openthrottle/nestjs-repositories';
 import { detectEditorPresence } from '@openthrottle/nestjs-repositories';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { EditorPresenceService } from './editor-presence.service';
+import { EditorPresenceService } from './editor-presence.service.ts';
 
 vi.mock('@openthrottle/nestjs-repositories', async (importOriginal) => {
   const actual =

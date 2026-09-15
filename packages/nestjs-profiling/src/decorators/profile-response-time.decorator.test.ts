@@ -3,7 +3,7 @@ import 'reflect-metadata';
 import { Logger } from '@nestjs/common';
 import { describe, expect, it, vi } from 'vitest';
 
-import { ProfileResponseTime } from './profile-response-time.decorator';
+import { ProfileResponseTime } from './profile-response-time.decorator.ts';
 
 // Mirrors how NestJS GraphQL/HTTP param decorators (`@Args`, `design:paramtypes`,
 // route metadata) store metadata: a key on the method function value and a key on the

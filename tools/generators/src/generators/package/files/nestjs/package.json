@@ -4,9 +4,16 @@
     "name": "Matthew Scholta",
     "url": "https://mattscholta.com"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@nestjs/common": "catalog:",
+    "@openthrottle/nestjs-modules": "workspace:^"
+  },
   "description": "TODO: Add a description",
-  "devDependencies": {},
+  "devDependencies": {
+    "@golevelup/ts-vitest": "catalog:",
+    "@nestjs/testing": "catalog:",
+    "vitest": "catalog:"
+  },
   "exports": {
     ".": {
       "types": "./dist/src/index.d.ts",
@@ -75,7 +82,7 @@
   },
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
-  "type": "commonjs",
+  "type": "module",
   "types": "./src/index.ts",
   "version": "1.0.0"
 }

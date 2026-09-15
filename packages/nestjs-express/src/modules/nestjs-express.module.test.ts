@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { describe, expect, it } from 'vitest';
 
-import { NestjsExpressModule } from './nestjs-express.module';
+import { NestjsExpressModule } from './nestjs-express.module.ts';
 
 describe('NestjsExpressModule', () => {
   it('compiles as a valid NestJS module', async () => {

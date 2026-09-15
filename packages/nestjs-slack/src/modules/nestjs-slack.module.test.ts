@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { NestjsSlackService } from '../services/nestjs-slack.service';
-import { NestjsSlackModule } from './nestjs-slack.module';
+import { NestjsSlackService } from '../services/nestjs-slack.service.ts';
+import { NestjsSlackModule } from './nestjs-slack.module.ts';
 
 describe('NestjsSlackModule', () => {
   describe('forRoot', () => {

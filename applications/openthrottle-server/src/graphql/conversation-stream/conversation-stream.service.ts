@@ -42,13 +42,13 @@ import {
   resolveChatIdleTimeoutMs,
 } from '@openthrottle/openthrottle-agentic-utils';
 
-import { composeCursorStartupErrorText } from './conversation-stream.copy';
+import { composeCursorStartupErrorText } from './conversation-stream.copy.ts';
 import {
   CONVERSATION_STREAM_CHUNK_FIELD,
   type ConversationStreamChunkEnvelope,
   type ConversationStreamChunkPayload,
   type TerminalTimeoutMetadata,
-} from './conversation-stream.types';
+} from './conversation-stream.types.ts';
 
 /**
  * CLI backends (spawned agent adapters) keyed by the driver-id discriminator,

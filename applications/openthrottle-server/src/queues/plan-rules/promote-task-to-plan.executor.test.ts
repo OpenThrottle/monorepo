@@ -20,12 +20,12 @@ import type { MatchedTagAction } from '@openthrottle/openthrottle-skills';
 import type { Repository } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { TaskPromotionService } from '../task-promotion/task-promotion.service';
+import type { TaskPromotionService } from '../task-promotion/task-promotion.service.ts';
 import {
   type ActionExecutorContext,
   ActionExecutorRegistry,
-} from './action-executor';
-import { PromoteTaskToPlanExecutor } from './promote-task-to-plan.executor';
+} from './action-executor.ts';
+import { PromoteTaskToPlanExecutor } from './promote-task-to-plan.executor.ts';
 
 const PLAN_ID = '00000000-0000-4000-8000-0000000000a1';
 const OWNER_ID = '00000000-0000-4000-8000-0000000000b2';

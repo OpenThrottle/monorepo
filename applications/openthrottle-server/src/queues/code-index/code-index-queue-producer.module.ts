@@ -3,7 +3,7 @@ import { Module } from '@nestjs/common';
 import { NestjsBullmqModule } from '@openthrottle/nestjs-bullmq';
 import { NestjsBullmqBoardModule } from '@openthrottle/nestjs-bullmq-board';
 
-import { CODE_INDEX_QUEUE_NAME } from './code-index.constants';
+import { CODE_INDEX_QUEUE_NAME } from './code-index.constants.ts';
 
 /**
  * @description Producer half of the code-index queue: registerQueue (enqueue

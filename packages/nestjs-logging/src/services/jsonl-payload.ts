@@ -3,13 +3,13 @@ import { isRecord } from '@openthrottle/nodejs-utils';
 import {
   ALL_NESTJS_LOGGING_LEVELS,
   type NestjsLoggingLevel,
-} from '../config/nestjs-logging-levels';
+} from '../config/nestjs-logging-levels.ts';
 import type {
   JsonPrimitive,
   JsonValue,
   StructuredLogRecord,
-} from '../ports/logging-ports';
-import { DEFAULT_LOG_REDACTOR, type LogRedactor } from './log-redaction';
+} from '../ports/logging-ports.ts';
+import { DEFAULT_LOG_REDACTOR, type LogRedactor } from './log-redaction.ts';
 
 /**
  * @description JSONL root object key order is **explicit per contract** (see

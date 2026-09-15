@@ -3,7 +3,7 @@ import { Module } from '@nestjs/common';
 import { NestjsBullmqModule } from '@openthrottle/nestjs-bullmq';
 import { NestjsBullmqBoardModule } from '@openthrottle/nestjs-bullmq-board';
 
-import { DATABASE_BACKUP_QUEUE_NAME } from './database-backup.constants';
+import { DATABASE_BACKUP_QUEUE_NAME } from './database-backup.constants.ts';
 
 /**
  * @description Producer half of the database-backup queue: registerQueue

@@ -5,9 +5,9 @@
 import { Args, Mutation, Resolver } from '@nestjs/graphql';
 import { Public } from '@openthrottle/nestjs-auth';
 
-import { StripeWebhookHandlerService } from '../services/stripe-webhook-handler.service';
-import { ProcessStripeWebhookInput } from './stripe-webhook-mutation.input';
-import { StripeWebhookProcessedPayload } from './stripe-webhook-mutation.object';
+import { StripeWebhookHandlerService } from '../services/stripe-webhook-handler.service.ts';
+import { ProcessStripeWebhookInput } from './stripe-webhook-mutation.input.ts';
+import { StripeWebhookProcessedPayload } from './stripe-webhook-mutation.object.ts';
 
 @Resolver()
 export class StripeWebhookResolver {

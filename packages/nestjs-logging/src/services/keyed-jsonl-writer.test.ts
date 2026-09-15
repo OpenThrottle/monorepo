@@ -4,9 +4,9 @@ import * as path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import type { KeyedJsonlRunRecord } from './keyed-jsonl-writer';
-import { KeyedJsonlWriter } from './keyed-jsonl-writer';
-import { KeyedJsonlWriterError } from './keyed-jsonl-writer.error';
+import { KeyedJsonlWriterError } from './keyed-jsonl-writer.error.ts';
+import type { KeyedJsonlRunRecord } from './keyed-jsonl-writer.ts';
+import { KeyedJsonlWriter } from './keyed-jsonl-writer.ts';
 
 describe('KeyedJsonlWriter', () => {
   let baseDir: string;

@@ -3,15 +3,15 @@ import { APP_GUARD } from '@nestjs/core';
 import { Test } from '@nestjs/testing';
 import { describe, expect, it } from 'vitest';
 
-import { NestjsThrottlerError } from '../config/nestjs-throttler.error';
+import { NestjsThrottlerError } from '../config/nestjs-throttler.error.ts';
 import {
   applyNestjsThrottlerModuleDefaults,
   DEFAULT_THROTTLER_LIMIT,
   DEFAULT_THROTTLER_TTL_MS,
   validateNestjsThrottlerModuleOptions,
-} from '../config/nestjs-throttler.options';
-import { GqlThrottlerGuard } from '../guards/gql-throttler.guard';
-import { NestjsThrottlerModule } from './nestjs-throttler.module';
+} from '../config/nestjs-throttler.options.ts';
+import { GqlThrottlerGuard } from '../guards/gql-throttler.guard.ts';
+import { NestjsThrottlerModule } from './nestjs-throttler.module.ts';
 
 describe('applyNestjsThrottlerModuleDefaults', () => {
   it('applies the default tier when none provided', () => {

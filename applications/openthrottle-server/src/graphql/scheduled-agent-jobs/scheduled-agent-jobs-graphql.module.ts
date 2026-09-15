@@ -4,22 +4,22 @@
  * cancellation services, so the api process can enqueue run-now and project schedulers on mutation.
  */
 
-import './scheduled-agent-job.object';
-import './scheduled-agent-job-run-stats.object';
-import './scheduled-agent-jobs.input';
+import './scheduled-agent-job.object.ts';
+import './scheduled-agent-job-run-stats.object.ts';
+import './scheduled-agent-jobs.input.ts';
 
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import { ScheduledAgentJobsQueueProducerModule } from '../../queues/scheduled-agent-jobs/scheduled-agent-jobs-queue-producer.module';
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { ScheduledAgentJobsQueueProducerModule } from '../../queues/scheduled-agent-jobs/scheduled-agent-jobs-queue-producer.module.ts';
 import {
   ScheduledAgentJobRunRepositoryResolver,
   ScheduledAgentJobsResolver,
-} from './scheduled-agent-jobs.resolver';
-import { ScheduledAgentJobsGraphqlService } from './scheduled-agent-jobs-graphql.service';
-import { ScheduledAgentJobsLoaders } from './scheduled-agent-jobs-loaders';
+} from './scheduled-agent-jobs.resolver.ts';
+import { ScheduledAgentJobsGraphqlService } from './scheduled-agent-jobs-graphql.service.ts';
+import { ScheduledAgentJobsLoaders } from './scheduled-agent-jobs-loaders.ts';
 
 @Module({
   imports: [

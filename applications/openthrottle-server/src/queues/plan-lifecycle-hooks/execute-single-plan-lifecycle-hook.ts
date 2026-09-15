@@ -28,9 +28,9 @@ import {
   shouldRunJobRunHook,
 } from '@tools/workflows';
 
-import type { RunPlanJobData } from '../plans/plans.types';
-import { isRunPlanOrchestratorJobData } from '../plans/plans.types';
-import type { PlanLifecycleHookJobResult } from './plan-lifecycle-hooks.types';
+import type { RunPlanJobData } from '../plans/plans.types.ts';
+import { isRunPlanOrchestratorJobData } from '../plans/plans.types.ts';
+import type { PlanLifecycleHookJobResult } from './plan-lifecycle-hooks.types.ts';
 
 const hookFailed = (result: {
   readonly cancelled?: boolean;

@@ -31,7 +31,7 @@ import { isRecord } from '@openthrottle/nodejs-utils';
 import {
   TRANSCRIPTION_STREAM_CHUNK_FIELD,
   type TranscriptionStreamChunkPayload,
-} from './transcription-stream.types';
+} from './transcription-stream.types.ts';
 
 /** Reap a session when no audio chunk has arrived for this long. */
 const IDLE_REAP_MS = 15_000;

@@ -10,11 +10,11 @@ import { AgentConversationsService } from '@openthrottle/nestjs-repositories';
 import type { Mock } from 'vitest';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { AgentsResolver } from './agents.resolver';
-import { PERSISTED_CONVERSATION_AUTH_ERROR } from './agents-chat-persistence';
-import type { AgentsMcpRouteDecision } from './agents-mcp-router';
-import { AgentsMcpRouter } from './agents-mcp-router';
-import { AgentsMcpRouterLlmService } from './agents-mcp-router-llm.service';
+import { AgentsResolver } from './agents.resolver.ts';
+import { PERSISTED_CONVERSATION_AUTH_ERROR } from './agents-chat-persistence.ts';
+import type { AgentsMcpRouteDecision } from './agents-mcp-router.ts';
+import { AgentsMcpRouter } from './agents-mcp-router.ts';
+import { AgentsMcpRouterLlmService } from './agents-mcp-router-llm.service.ts';
 
 const createConfigStub = (): ConfigService =>
   createMock<ConfigService>({

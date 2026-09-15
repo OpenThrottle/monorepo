@@ -3,31 +3,31 @@
  * CRUD (deprecated surface), and the add-folder onboarding gesture.
  */
 
-import './workspace-editor-id.enum';
-import './user-workspace-profile.object';
-import './workspace-local-repository.object';
-import './workspace-settings.object';
-import './workspace-settings.input';
-import './apply-workspace-editor-configuration.input';
-import './workspace-editor-config-application.object';
-import './repository.object';
-import './discovered-worktrees.object';
-import './workspace-folders.input';
-import './workspace-folders.object';
+import './workspace-editor-id.enum.ts';
+import './user-workspace-profile.object.ts';
+import './workspace-local-repository.object.ts';
+import './workspace-settings.object.ts';
+import './workspace-settings.input.ts';
+import './apply-workspace-editor-configuration.input.ts';
+import './workspace-editor-config-application.object.ts';
+import './repository.object.ts';
+import './discovered-worktrees.object.ts';
+import './workspace-folders.input.ts';
+import './workspace-folders.object.ts';
 
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import { ForeignSkillInjectionModule } from '../../services/foreign-skill-injection/foreign-skill-injection.module';
-import { WorktreeActivityModule } from '../../services/worktree-activity/worktree-activity.module';
-import { RepositoryInspectionModule } from '../repository-inspection/repository-inspection.module';
-import { DiscoveredWorktreesResolver } from './discovered-worktrees.resolver';
-import { WorkspaceFoldersResolver } from './workspace-folders.resolver';
-import { WorkspaceFoldersService } from './workspace-folders.service';
-import { WorkspaceSettingsResolver } from './workspace-settings.resolver';
-import { WorkspaceSettingsLoaders } from './workspace-settings-loaders';
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { ForeignSkillInjectionModule } from '../../services/foreign-skill-injection/foreign-skill-injection.module.ts';
+import { WorktreeActivityModule } from '../../services/worktree-activity/worktree-activity.module.ts';
+import { RepositoryInspectionModule } from '../repository-inspection/repository-inspection.module.ts';
+import { DiscoveredWorktreesResolver } from './discovered-worktrees.resolver.ts';
+import { WorkspaceFoldersResolver } from './workspace-folders.resolver.ts';
+import { WorkspaceFoldersService } from './workspace-folders.service.ts';
+import { WorkspaceSettingsResolver } from './workspace-settings.resolver.ts';
+import { WorkspaceSettingsLoaders } from './workspace-settings-loaders.ts';
 
 @Module({
   imports: [

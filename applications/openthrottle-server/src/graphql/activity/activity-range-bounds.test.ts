@@ -8,8 +8,8 @@ import { createMock } from '@golevelup/ts-vitest';
 import type { PlansService } from '@openthrottle/nestjs-repositories';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { ActivityByDateRangeInput } from './activity.input';
-import { ActivityResolver } from './activity.resolver';
+import type { ActivityByDateRangeInput } from './activity.input.ts';
+import { ActivityResolver } from './activity.resolver.ts';
 
 type QueryFn = (sql: string, params?: unknown[]) => Promise<unknown[]>;
 

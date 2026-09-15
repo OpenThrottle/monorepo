@@ -2,8 +2,8 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 
-import { PlanEmbedding } from './plan-embedding.entity';
-import { PlanEmbeddingsService } from './plan-embeddings.service';
+import { PlanEmbedding } from './plan-embedding.entity.ts';
+import { PlanEmbeddingsService } from './plan-embeddings.service.ts';
 
 @Module({
   controllers: [],

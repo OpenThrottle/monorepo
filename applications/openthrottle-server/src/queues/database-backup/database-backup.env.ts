@@ -7,7 +7,7 @@ import {
   DATABASE_BACKUP_JOB_NAME,
   DATABASE_BACKUP_PNPM_SCRIPT,
   DATABASE_BACKUP_REPEATABLE_JOB_ID,
-} from './database-backup.constants';
+} from './database-backup.constants.ts';
 
 /** @description BullMQ cron: daily at 00:00:00 (UTC when DATABASE_BACKUP_TZ is unset). */
 export const DATABASE_BACKUP_DEFAULT_CRON_PATTERN = '0 0 0 * * *';

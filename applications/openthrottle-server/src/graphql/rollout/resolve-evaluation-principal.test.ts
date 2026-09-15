@@ -13,7 +13,7 @@ import { describe, expect, test } from 'vitest';
 import {
   resolveEvaluationPrincipal,
   ROLLOUT_DEGRADED_ANONYMOUS_SUB,
-} from './resolve-evaluation-principal';
+} from './resolve-evaluation-principal.ts';
 
 const userPrincipal: AuthPrincipal = {
   kind: AUTH_PRINCIPAL_KIND_USER,

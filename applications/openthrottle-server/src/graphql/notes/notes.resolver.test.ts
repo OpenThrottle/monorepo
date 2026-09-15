@@ -12,7 +12,7 @@ import type { Note } from '@openthrottle/nestjs-repositories';
 import { NotesService } from '@openthrottle/nestjs-repositories';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { NotesResolver } from './notes.resolver';
+import { NotesResolver } from './notes.resolver.ts';
 
 /** The subset of the persisted draft the author-derivation tests assert on. */
 interface NoteDraft {

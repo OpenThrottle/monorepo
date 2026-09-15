@@ -8,8 +8,8 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 
-import { TaskEmbeddingsResolver } from './task-embeddings.resolver';
-import { TaskEmbeddingsLoaders } from './task-embeddings-loaders';
+import { TaskEmbeddingsResolver } from './task-embeddings.resolver.ts';
+import { TaskEmbeddingsLoaders } from './task-embeddings-loaders.ts';
 
 const taskEmbeddingsRepo = { find: vi.fn(), findOne: vi.fn() };
 

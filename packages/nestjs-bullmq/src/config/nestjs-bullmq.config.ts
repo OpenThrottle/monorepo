@@ -1,5 +1,5 @@
 import { registerAs } from '@nestjs/config';
-import * as Joi from 'joi';
+import Joi from 'joi';
 
 /**
  * @external https://docs.nestjs.com/techniques/configuration

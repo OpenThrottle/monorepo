@@ -5,7 +5,7 @@
 import type { Task } from '@openthrottle/nestjs-repositories';
 import type { Repository } from 'typeorm';
 
-import type { NotificationsService } from './notifications.service';
+import type { NotificationsService } from './notifications.service.ts';
 
 /**
  * @description Updates tasks matching `fromStatuses` to `toStatus` and emits one

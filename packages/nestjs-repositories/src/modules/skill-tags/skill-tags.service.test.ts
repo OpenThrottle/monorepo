@@ -15,8 +15,8 @@ import {
 import { QueryFailedError } from 'typeorm';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { SkillTagsService } from './skill-tags.service';
-import { UserSkillTag } from './user-skill-tag.entity';
+import { SkillTagsService } from './skill-tags.service.ts';
+import { UserSkillTag } from './user-skill-tag.entity.ts';
 
 describe('SkillTagsService', () => {
   const userId = '11111111-1111-4111-8111-111111111111';

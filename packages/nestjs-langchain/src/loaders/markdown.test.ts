@@ -1,7 +1,7 @@
 import type { Document } from '@langchain/core/documents';
 import { describe, expect, it } from 'vitest';
 
-import { getMarkdownDocumentStats } from './markdown';
+import { getMarkdownDocumentStats } from './markdown.ts';
 
 const makeDoc = (pageContent: string, source: string): Document => ({
   metadata: { source },

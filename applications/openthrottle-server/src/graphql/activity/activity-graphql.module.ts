@@ -10,8 +10,8 @@ import {
   ActivityOutputChunkRowResolver,
   ActivityResolver,
   ActivityTaskUpdatedRowResolver,
-} from './activity.resolver';
-import { ActivityLoaders } from './activity-loaders';
+} from './activity.resolver.ts';
+import { ActivityLoaders } from './activity-loaders.ts';
 
 @Module({
   imports: [NestjsRepositoriesModule],

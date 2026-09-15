@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { parseTaskRunMetricsFromReturnvalue } from './parse-task-run-metrics';
+import { parseTaskRunMetricsFromReturnvalue } from './parse-task-run-metrics.ts';
 
 describe('parseTaskRunMetricsFromReturnvalue', () => {
   const validSnapshot = {

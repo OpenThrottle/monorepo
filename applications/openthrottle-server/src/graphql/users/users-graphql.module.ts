@@ -5,8 +5,8 @@
 import { Module } from '@nestjs/common';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import { UsersResolver } from './users.resolver';
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { UsersResolver } from './users.resolver.ts';
 
 @Module({
   imports: [NestjsRepositoriesModule],

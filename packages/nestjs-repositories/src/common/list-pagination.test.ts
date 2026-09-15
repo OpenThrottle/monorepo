@@ -4,7 +4,7 @@ import {
   LIST_PAGINATION_DEFAULT_LIMIT,
   LIST_PAGINATION_MAX_LIMIT,
   resolveListPagination,
-} from './list-pagination';
+} from './list-pagination.ts';
 
 describe('resolveListPagination', () => {
   it('defaults limit and offset when no input is provided', () => {

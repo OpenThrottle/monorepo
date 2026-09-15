@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 
-import { DevelopmentGraphqlModule } from '../../graphql/development/development-graphql.module';
+import { DevelopmentGraphqlModule } from '../../graphql/development/development-graphql.module.ts';
 
 /**
  * Development module for testing flows (e.g. websocket notifications) from the web app.

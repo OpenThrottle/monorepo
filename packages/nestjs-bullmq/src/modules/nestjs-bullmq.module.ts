@@ -8,7 +8,7 @@ import { LoggerModule } from '@openthrottle/nestjs-modules';
 import {
   configValidationSchema,
   redisConfig,
-} from '../config/nestjs-bullmq.config';
+} from '../config/nestjs-bullmq.config.ts';
 
 /**
  * Root BullMQ defaults. Worker-level options (lockDuration, stalledInterval) are not set here;

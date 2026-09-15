@@ -11,8 +11,8 @@ import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import type { User } from '@openthrottle/nestjs-repositories';
 import { UsersService } from '@openthrottle/nestjs-repositories';
 
-import type { RegisterInput } from './register.input';
-import type { RegisterResultObject } from './register-result.object';
+import type { RegisterInput } from './register.input.ts';
+import type { RegisterResultObject } from './register-result.object.ts';
 
 const DEFAULT_EXPIRES_IN = '24h';
 /** Short-lived: the subscription token only guards the graphql-ws handshake. */

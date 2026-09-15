@@ -9,7 +9,7 @@ import { PlansService } from '@openthrottle/nestjs-repositories';
 import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 import type { Redis } from 'ioredis';
 
-import type { ServerHealthStatus } from './server-health.object';
+import type { ServerHealthStatus } from './server-health.object.ts';
 
 export interface ServerHealthResponse {
   readonly api: string;

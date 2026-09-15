@@ -6,7 +6,7 @@
  */
 import { Module } from '@nestjs/common';
 
-import { NotificationsSubscriptionResolver } from './notifications-subscription.resolver';
+import { NotificationsSubscriptionResolver } from './notifications-subscription.resolver.ts';
 
 @Module({
   providers: [NotificationsSubscriptionResolver],

@@ -49,17 +49,65 @@ That mentions no package, no file, no `exports`, and gives no hint that a resolu
 decision made in a third package is why Node is reading TypeScript at all.
 
 **The path is not the obvious one.** `node-client`'s test imports
-`@openthrottle/nestjs-repositories`, whose `exports` name `./dist/` and whose emitted dist
-is CommonJS:
+`@openthrottle/nestjs-repositories`, whose `exports` name `./dist/`. That emitted dist
+statically imports the source-first package:
 
 ```js
 // packages/nestjs-repositories/dist/src/database.config.js
-const openthrottle_agentic_utils_1 = require('@openthrottle/openthrottle-agentic-utils');
+import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 ```
 
-That `require()` runs inside a module Node already owns, so **Node's resolver** handles it.
-It reads the source-first `exports`, gets `./src/index.ts`, and hands raw TypeScript to the
+That `import` runs inside a module Node already owns, so **Node's resolver** handles it. It
+reads the source-first `exports`, gets `./src/index.ts`, and hands raw TypeScript to the
 strip-only loader.
+
+> **This example used to be a CommonJS `require()`.** The nestjs tier emitted CJS until the
+> NestJS 12 / ESM migration; the line above was
+> `const openthrottle_agentic_utils_1 = require('@openthrottle/openthrottle-agentic-utils')`.
+> **The module format was never the cause**, and switching it changed nothing. Re-measured
+> after the migration by adding one parameter property to
+> `@openthrottle/openthrottle-agentic-utils` and importing `nestjs-repositories`' built dist:
+>
+> ```
+> SyntaxError: TypeScript parameter property is not supported in strip-only mode
+> ```
+>
+> Byte-identical to the message the `require()` version produced. What matters is that
+> **some** already-emitted module resolves a source-first package through Node's own
+> resolver — `import` and `require` reach the same strip-only loader.
+
+## Two limits the ESM migration measured
+
+Both were found while migrating the nestjs tier to ESM, and both are properties of the
+source-first shape rather than of any package.
+
+**A source-first package cannot be loaded from `node_modules` in a production image.** Node
+refuses to type-strip anything under `node_modules` at all — a stricter rule than the
+strip-only constructs above, and not a flag that can be flipped:
+
+```
+ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING: Stripping types is currently unsupported for
+files under node_modules, for ".../openthrottle-agentic-utils/src/index.ts"
+```
+
+This is **not** ESM-specific — a CommonJS `require()` of the same package in the same image
+fails with the identical code. It means the `exports`-name-source shape works in the
+workspace (where packages are symlinked and resolved as workspace paths) and does not
+survive into a pruned deploy tree. `openthrottle-server` has ten source-first runtime
+dependencies, so this is a packaging question, not a per-package one; it is tracked
+separately.
+
+**`rewriteRelativeImportExtensions` does not rewrite declaration files.** A built ESM
+package's `.js` emit gets `./x.js`, but its `.d.ts` keeps `./x.ts`:
+
+```ts
+// packages/nestjs-utils/dist/src/index.d.ts
+export * from './config/index.ts';
+```
+
+In-repo consumers resolve it because `allowImportingTsExtensions` is on workspace-wide, and
+`scripts/check-nodenext-references.ts` passes. An **external** consumer of a published
+`@openthrottle/*` package without that flag would not.
 
 ## What does not fix it
 
@@ -226,6 +274,26 @@ No package is exempt. The gate's `NESTJS_BLOCKERS` map exists and is empty, whic
 intended steady state; it is shrink-only on the same terms as the baseline above, so a
 listed package that stops violating is itself an error.
 
+### Four packages could be source-first today. They are built anyway, deliberately.
+
+A decorator and constructor-parameter-property scan across the tier found **four** with zero
+of both: `nestjs-langchain`, `nestjs-mcp-developer`, `nestjs-testing` and `nestjs-utils`.
+They satisfy the constraint above and could drop their build targets. They do not, and the
+rule stays keyed on the tag rather than on measured contents:
+
+- **The exemption is one commit from being wrong.** Any of the four gains a single
+  `@Injectable()` and it becomes a source-first package containing a decorator — precisely
+  the failure this document exists to prevent, and one whose error names neither the cause
+  nor the package.
+- **It would split the tier's config.** Four packages on `erasableSyntaxOnly: true` outside
+  `tsconfig.nestjs-package.json` and the rest inside it means "where does this package's
+  config come from" stops having one answer.
+- **The saving is four `@nx/js:tsc` invocations**, every one of them Nx-cached.
+
+The measurement is recorded so it is not repeated and mistaken for a finding. (The NestJS 12
+plan recorded _three_; it scanned only the CommonJS manifests, and `nestjs-mcp-developer` was
+already ESM.)
+
 ### What the last exemption taught us about source-first ESM packages
 
 `@openthrottle/nestjs-agentic-workflow` was the final holdout, and the two defects behind it
@@ -279,9 +347,13 @@ for one that needs a whole-graph reachability analysis is a bad trade.
 
 ### The exit
 
-When NestJS supports ESM, the whole tag flips to source-first **at once** — one atomic
-change across all 26 packages, not 26 independent re-litigations. Until then, do not move
-an individual `nestjs-*` package to source-first, however clean it looks.
+**That flip is never coming, and this is the record of why.** An earlier version of this
+document said the whole tag would flip to source-first "when NestJS supports ESM". NestJS 12
+supports ESM, the tier migrated to it, and **not one package became source-first-able** —
+because Node's loader is strip-only and decorators and constructor parameter properties both
+require _emitted_ code. That is a property of the loader, not of the module format. Do not
+re-open this on the basis that the tier is now ESM; it was evaluated and the answer was
+zero reclaimed build steps.
 
 ## If you are flipping a package to source-first
 

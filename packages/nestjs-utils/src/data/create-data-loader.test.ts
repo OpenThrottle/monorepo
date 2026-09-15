@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   createDataLoader,
   createLoaderFromFindByIds,
-} from './create-data-loader';
+} from './create-data-loader.ts';
 
 interface User {
   readonly id: string;

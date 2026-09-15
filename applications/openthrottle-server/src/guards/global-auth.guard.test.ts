@@ -9,10 +9,10 @@ import {
 } from '@openthrottle/nestjs-auth';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { GlobalClsAuthHook } from '../auth/global-cls-auth-hook.service';
-import type { ServiceAccountAuthService } from '../auth/service-account-auth.service';
-import { GlobalAuthGuard } from './global-auth.guard';
-import type { GqlJwtAuthGuard } from './gql-jwt-auth.guard';
+import type { GlobalClsAuthHook } from '../auth/global-cls-auth-hook.service.ts';
+import type { ServiceAccountAuthService } from '../auth/service-account-auth.service.ts';
+import { GlobalAuthGuard } from './global-auth.guard.ts';
+import type { GqlJwtAuthGuard } from './gql-jwt-auth.guard.ts';
 
 const createHttpExecutionContext = (req: object): ExecutionContext =>
   createMock<ExecutionContext>({

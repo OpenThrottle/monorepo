@@ -5,8 +5,8 @@
 import type { UserWorkspaceSettings } from '@openthrottle/nestjs-repositories';
 import type { WorkspaceEditorId } from '@openthrottle/nestjs-repositories';
 
-import type { UserWorkspaceProfileObject } from './user-workspace-profile.object';
-import { WorkspaceEditorIdEnum } from './workspace-editor-id.enum';
+import type { UserWorkspaceProfileObject } from './user-workspace-profile.object.ts';
+import { WorkspaceEditorIdEnum } from './workspace-editor-id.enum.ts';
 
 const EDITOR_ID_TO_ENUM: Record<WorkspaceEditorId, WorkspaceEditorIdEnum> = {
   claude: WorkspaceEditorIdEnum.CLAUDE,

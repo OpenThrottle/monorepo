@@ -2,8 +2,8 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 
-import { SkillTagsService } from './skill-tags.service';
-import { UserSkillTag } from './user-skill-tag.entity';
+import { SkillTagsService } from './skill-tags.service.ts';
+import { UserSkillTag } from './user-skill-tag.entity.ts';
 
 @Module({
   controllers: [],

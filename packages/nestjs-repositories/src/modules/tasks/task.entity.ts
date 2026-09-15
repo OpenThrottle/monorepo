@@ -16,10 +16,10 @@ import {
 import {
   PLAN_STATUS,
   PLAN_STATUS_VALUES,
-} from '../../common/plan-task-status.constants';
-import type { Plan } from '../plans/plan.entity';
-import type { Project } from '../projects/project.entity';
-import type { TaskEmbedding } from '../task-embeddings/task-embedding.entity';
+} from '../../common/plan-task-status.constants.ts';
+import type { Plan } from '../plans/plan.entity.ts';
+import type { Project } from '../projects/project.entity.ts';
+import type { TaskEmbedding } from '../task-embeddings/task-embedding.entity.ts';
 
 /** Lifecycle-hook role marker: NULL = regular task; 'before'/'after' = hook task. */
 export type TaskHookRole = 'after' | 'before';

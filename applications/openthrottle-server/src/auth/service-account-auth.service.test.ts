@@ -4,7 +4,7 @@ import { authPrincipalFromServiceAccountId } from '@openthrottle/nestjs-auth';
 import type { ServiceAccountsService } from '@openthrottle/nestjs-repositories';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ServiceAccountAuthService } from './service-account-auth.service';
+import { ServiceAccountAuthService } from './service-account-auth.service.ts';
 
 describe('ServiceAccountAuthService', () => {
   let serviceAccountsService: ServiceAccountsService;

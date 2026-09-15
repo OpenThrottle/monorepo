@@ -1,10 +1,13 @@
 import { Test } from '@nestjs/testing';
 import { describe, expect, it } from 'vitest';
 
-import { NestjsLoggingModule } from './nestjs-logging.module';
-import { NestjsLoggingService } from './nestjs-logging.service';
-import type { LogJsonlSink, LogStreamHub } from './ports/logging-ports';
-import { LOG_JSONL_SINK, LOG_STREAM_HUB } from './tokens/nestjs-logging.tokens';
+import { NestjsLoggingModule } from './nestjs-logging.module.ts';
+import { NestjsLoggingService } from './nestjs-logging.service.ts';
+import type { LogJsonlSink, LogStreamHub } from './ports/logging-ports.ts';
+import {
+  LOG_JSONL_SINK,
+  LOG_STREAM_HUB,
+} from './tokens/nestjs-logging.tokens.ts';
 
 describe('NestjsLoggingModule', () => {
   it('forRoot wires sink and hub tokens', async () => {

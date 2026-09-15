@@ -7,7 +7,7 @@
  * Even/odd splits are the 50/50 special case of the same math (weights 50/50).
  */
 
-import type { RolloutFallthroughBucket } from './rollout-flag.constants';
+import type { RolloutFallthroughBucket } from './rollout-flag.constants.ts';
 
 /**
  * @description Maps a principal id (user/service-account UUID) to a bucket in

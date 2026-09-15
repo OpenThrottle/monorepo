@@ -21,9 +21,9 @@ import type { MatchedTagAction } from '@openthrottle/openthrottle-skills';
 import { QueryFailedError } from 'typeorm';
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 
-import type { PlanContextAvailabilityService } from '../../services/plan-context-availability/plan-context-availability.service';
-import { ActionExecutorRegistry } from './action-executor';
-import { InjectTaskExecutor } from './inject-task.executor';
+import type { PlanContextAvailabilityService } from '../../services/plan-context-availability/plan-context-availability.service.ts';
+import { ActionExecutorRegistry } from './action-executor.ts';
+import { InjectTaskExecutor } from './inject-task.executor.ts';
 
 const planId = '00000000-0000-4000-8000-000000000001';
 const ruleId = '00000000-0000-4000-8000-000000000002';

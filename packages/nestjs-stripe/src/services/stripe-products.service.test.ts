@@ -9,7 +9,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   partitionPricesByDefault,
   StripeProductsService,
-} from './stripe-products.service';
+} from './stripe-products.service.ts';
 
 /** @description Presents a partial structural fixture as the target Stripe type without a cast. */
 function asMock<T>(value: unknown): T;

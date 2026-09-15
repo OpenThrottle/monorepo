@@ -6,7 +6,7 @@
 import type Stripe from 'stripe';
 import { describe, expect, it } from 'vitest';
 
-import { stripePriceToGql } from './stripe-price.object';
+import { stripePriceToGql } from './stripe-price.object.ts';
 
 describe('stripePriceToGql', () => {
   it('maps a one-time price', () => {

@@ -23,7 +23,7 @@ import {
 import { isRecord } from '@openthrottle/nodejs-utils';
 import { toContainerPath } from '@openthrottle/openthrottle-agentic-utils';
 
-import { parseLinkedWorktrees } from './parse-linked-worktrees';
+import { parseLinkedWorktrees } from './parse-linked-worktrees.ts';
 import type {
   RepositoryInspectionAgentConfig,
   RepositoryInspectionGit,
@@ -32,12 +32,12 @@ import type {
   RepositoryInspectionRemote,
   RepositoryInspectionSnapshot,
   RepositoryInspectionStack,
-} from './repository-inspection.snapshot';
+} from './repository-inspection.snapshot.ts';
 import {
   HOOK_TELEMETRY_PRODUCER_MARKERS,
   HOOK_TELEMETRY_REASONS,
   HOOK_TELEMETRY_STATUSES,
-} from './repository-inspection.snapshot';
+} from './repository-inspection.snapshot.ts';
 
 const execFileAsync = promisify(execFile);
 

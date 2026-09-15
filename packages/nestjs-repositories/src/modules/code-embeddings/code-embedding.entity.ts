@@ -1,6 +1,6 @@
 import { Column, CreateDateColumn, Entity, PrimaryColumn } from 'typeorm';
 
-import { vectorTransformer } from '../../common/vector.transformer';
+import { vectorTransformer } from '../../common/vector.transformer.ts';
 
 /**
  * @description TypeORM entity for the code_embeddings table (databases/migrations 052). Backs the

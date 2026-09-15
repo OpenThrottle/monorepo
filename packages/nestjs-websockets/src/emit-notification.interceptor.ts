@@ -20,7 +20,7 @@ import { tap } from 'rxjs';
 import {
   EMIT_NOTIFICATION_KEY,
   type EmitNotificationMetadataValue,
-} from './emit-notification.decorator';
+} from './emit-notification.decorator.ts';
 
 /**
  * Injection token for the emitter used by {@link EmitNotificationInterceptor}.

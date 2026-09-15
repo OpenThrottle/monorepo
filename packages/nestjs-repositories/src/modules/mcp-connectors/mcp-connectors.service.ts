@@ -8,14 +8,14 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import * as bcrypt from 'bcrypt';
+import bcrypt from 'bcrypt';
 import { Repository } from 'typeorm';
 
 import {
   type McpConnectorAuthType,
   McpConnectorConnection,
-} from './mcp-connector-connection.entity';
-import { maskCredentialToken } from './mcp-connector-credential.util';
+} from './mcp-connector-connection.entity.ts';
+import { maskCredentialToken } from './mcp-connector-credential.util.ts';
 
 /** Input for {@link McpConnectorsService.connect}. */
 export type ConnectMcpConnectorInput = {

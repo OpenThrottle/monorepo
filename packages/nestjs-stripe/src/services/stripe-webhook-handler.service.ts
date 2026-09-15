@@ -14,15 +14,15 @@ import Stripe from 'stripe';
 import {
   createLazyStripeClient,
   getStripeConfig,
-} from '../config/stripe-config';
+} from '../config/stripe-config.ts';
 import type {
   StripeProcessedEventsPort,
   StripeSubscriptionsPort,
-} from '../tokens/stripe-ports';
+} from '../tokens/stripe-ports.ts';
 import {
   STRIPE_PROCESSED_EVENTS_PORT,
   STRIPE_SUBSCRIPTIONS_PORT,
-} from '../tokens/stripe-tokens';
+} from '../tokens/stripe-tokens.ts';
 
 /**
  * As of API version `2026-02-25.clover`, `current_period_start` and

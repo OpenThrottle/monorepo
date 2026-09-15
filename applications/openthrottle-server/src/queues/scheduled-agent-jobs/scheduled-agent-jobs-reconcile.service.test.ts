@@ -4,8 +4,8 @@ import type { ScheduledAgentJobsService } from '@openthrottle/nestjs-repositorie
 import { type ScheduledAgentJob } from '@openthrottle/nestjs-repositories';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { ScheduledAgentJobSchedulerService } from './scheduled-agent-job-scheduler.service';
-import { ScheduledAgentJobsReconcileService } from './scheduled-agent-jobs-reconcile.service';
+import type { ScheduledAgentJobSchedulerService } from './scheduled-agent-job-scheduler.service.ts';
+import { ScheduledAgentJobsReconcileService } from './scheduled-agent-jobs-reconcile.service.ts';
 
 const job = (id: string): ScheduledAgentJob =>
   createMock<ScheduledAgentJob>({ id, schedulerKey: `scheduled-job:${id}` });

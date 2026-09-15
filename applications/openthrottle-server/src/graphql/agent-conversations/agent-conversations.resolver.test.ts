@@ -17,8 +17,8 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import { AgentConversationsResolver } from './agent-conversations.resolver';
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { AgentConversationsResolver } from './agent-conversations.resolver.ts';
 
 describe('AgentConversationsResolver', () => {
   let resolver: AgentConversationsResolver;

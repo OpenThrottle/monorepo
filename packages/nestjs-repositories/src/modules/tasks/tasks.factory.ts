@@ -5,8 +5,8 @@
 import { faker } from '@faker-js/faker';
 import { Factory } from 'fishery';
 
-import { plansFactory } from '../../modules/plans/plans.factory';
-import type { Task } from './task.entity';
+import { plansFactory } from '../../modules/plans/plans.factory.ts';
+import type { Task } from './task.entity.ts';
 
 /** Column-only shape for building task test data (no relations). */
 // export type TaskFactoryData = Pick<

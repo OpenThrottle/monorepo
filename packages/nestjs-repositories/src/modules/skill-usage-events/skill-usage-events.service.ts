@@ -10,19 +10,19 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, type SelectQueryBuilder } from 'typeorm';
 
-import { toLikeContainsPattern } from '../../common/like-pattern';
+import { toLikeContainsPattern } from '../../common/like-pattern.ts';
 import {
   SKILL_USAGE_PRIVACY_LEVELS,
   SKILL_USAGE_SCOPES,
   SkillUsageEvent,
   type SkillUsagePrivacyLevel,
   type SkillUsageScope,
-} from './skill-usage-events.entity';
+} from './skill-usage-events.entity.ts';
 import {
   SKILL_USAGE_OUTCOMES,
   SkillUsageOutcome,
   type SkillUsageOutcomeValue,
-} from './skill-usage-outcomes.entity';
+} from './skill-usage-outcomes.entity.ts';
 
 /**
  * One skill-usage event to persist. Mirrors the Phase 1 JSONL shape; `args`

@@ -10,7 +10,7 @@ import {
   createSpawnRunOutputHandlers,
   RUN_OUTPUT_SOURCE,
   runOutputLogContext,
-} from './bullmq-keyed-run-logging';
+} from './bullmq-keyed-run-logging.ts';
 
 const QUEUE = 'plans';
 const JOB_ID = '42';

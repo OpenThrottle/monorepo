@@ -5,7 +5,7 @@ import {
   ROLE_PERMISSIONS,
   roleHasPermission,
   ROLES,
-} from './roles';
+} from './roles.ts';
 
 describe('roles', () => {
   describe('ROLE_PERMISSIONS', () => {

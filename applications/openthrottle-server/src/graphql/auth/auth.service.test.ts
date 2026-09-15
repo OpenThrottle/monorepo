@@ -11,7 +11,7 @@ import { Test } from '@nestjs/testing';
 import { usersFactory, UsersService } from '@openthrottle/nestjs-repositories';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { AuthService } from './auth.service';
+import { AuthService } from './auth.service.ts';
 
 const mockUser = usersFactory.build({
   createdAt: new Date('2026-02-02T10:00:00.000Z'),

@@ -5,11 +5,11 @@
 import { faker } from '@faker-js/faker';
 import { Factory } from 'fishery';
 
-import type { SkillUsageEvent } from './skill-usage-events.entity';
+import type { SkillUsageEvent } from './skill-usage-events.entity.ts';
 import {
   SKILL_USAGE_PRIVACY_LEVELS,
   SKILL_USAGE_SCOPES,
-} from './skill-usage-events.entity';
+} from './skill-usage-events.entity.ts';
 
 export type SkillUsageEventFactoryData = Pick<
   SkillUsageEvent,

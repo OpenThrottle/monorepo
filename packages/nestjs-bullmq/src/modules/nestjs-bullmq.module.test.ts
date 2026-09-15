@@ -6,8 +6,8 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   redisConfig,
   resolveQueuePrefix,
-} from '../config/nestjs-bullmq.config';
-import { NestjsBullmqModule } from './nestjs-bullmq.module';
+} from '../config/nestjs-bullmq.config.ts';
+import { NestjsBullmqModule } from './nestjs-bullmq.module.ts';
 
 /**
  * Pull the real BullMQ root `useFactory` out of the module's `@Module({ imports })`

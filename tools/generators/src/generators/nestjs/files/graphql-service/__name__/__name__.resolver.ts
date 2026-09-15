@@ -6,7 +6,7 @@ import { PaginatedResult, Result } from '@openthrottle/nestjs-core/src/entities/
 import { AppAbility } from '@openthrottle/nestjs-core/src/policies/types';
 import { PoliciesGuard } from '@openthrottle/nestjs-core/src/policies/policies.guard';
 import { CheckPolicies } from '@openthrottle/nestjs-core/src/policies/policies.decorator';
-import { <%= namePascal %>Service } from './<%= name %>.service';
+import { <%= namePascal %>Service } from './<%= name %>.service.ts';
 import { <%= singularPascal %> } from '~/services/<%= name %>/entities/<%= singular %>.entity';
 import { <%= namePascal %>Policy } from '~/services/<%= name %>/<%= name %>.policy';
 import { Get<%= namePascal %>Args } from '~/services/<%= name %>/dto/get-<%= name %>.args';

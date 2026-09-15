@@ -29,41 +29,41 @@ import {
 import { loadWorkflowRalphConfig } from '@tools/workflows';
 import type { Queue } from 'bullmq';
 
-import { ProcessMetricsService } from '../../metrics/process-metrics.service';
+import { ProcessMetricsService } from '../../metrics/process-metrics.service.ts';
 import type {
   EnhancedTaskRunMetrics,
   ProcessMetricsSnapshot,
-} from '../../metrics/process-metrics.types';
-import { formatEnhancedTaskRunMetricsSummary } from '../../metrics/process-metrics-format';
-import { NotificationsService } from '../../notifications/notifications.service';
-import { AgenticRalphOrchestratorService } from '../agentic-ralph/agentic-ralph-orchestrator.service';
-import { closeRunOutputForJob } from '../bullmq-keyed-run-logging';
-import { BullMqRunOutputRetentionService } from '../bullmq-run-output-retention.service';
-import { BULLMQ_RUN_OUTPUT_WRITER } from '../bullmq-run-output-writer.token';
-import type { PlanQueueJobCompletedPayload } from '../job-run-hooks/execute-plan-job-run-hooks';
+} from '../../metrics/process-metrics.types.ts';
+import { formatEnhancedTaskRunMetricsSummary } from '../../metrics/process-metrics-format.ts';
+import { NotificationsService } from '../../notifications/notifications.service.ts';
+import { AgenticRalphOrchestratorService } from '../agentic-ralph/agentic-ralph-orchestrator.service.ts';
+import { closeRunOutputForJob } from '../bullmq-keyed-run-logging.ts';
+import { BullMqRunOutputRetentionService } from '../bullmq-run-output-retention.service.ts';
+import { BULLMQ_RUN_OUTPUT_WRITER } from '../bullmq-run-output-writer.token.ts';
+import type { PlanQueueJobCompletedPayload } from '../job-run-hooks/execute-plan-job-run-hooks.ts';
 import {
   runAfterAllHooksWithDispatcherThenNotify,
   runAfterRunHooksThenNotify,
   runBeforeAllHooksWithDispatcher,
   runBeforeRunHooksAndHandleBlock,
-} from '../job-run-hooks/execute-plan-job-run-hooks';
+} from '../job-run-hooks/execute-plan-job-run-hooks.ts';
 // import { DelayedError } from 'bullmq';
-import { WorkflowLifecycleDispatcherFactory } from '../plan-lifecycle-hooks/workflow-lifecycle-dispatcher.service';
-import { PlanRunCancellationService } from './plan-run-cancellation.service';
+import { WorkflowLifecycleDispatcherFactory } from '../plan-lifecycle-hooks/workflow-lifecycle-dispatcher.service.ts';
+import { PlanRunCancellationService } from './plan-run-cancellation.service.ts';
 import {
   PLANS_QUEUE_NAME,
   PLANS_WORKER_LOCK_DURATION_MS,
   PLANS_WORKER_MAX_STALLED_COUNT,
   PLANS_WORKER_STALLED_INTERVAL_MS,
   // WORKTREE_RETRY_DELAY_MS,
-} from './plans.constants';
+} from './plans.constants.ts';
 import type {
   PlanRunJobResult,
   RunPlanJob,
   RunPlanJobData,
-} from './plans.types';
-import { isRunPlanOrchestratorJobData } from './plans.types';
-import { WorkLedgerRunService } from './work-ledger-run.service';
+} from './plans.types.ts';
+import { isRunPlanOrchestratorJobData } from './plans.types.ts';
+import { WorkLedgerRunService } from './work-ledger-run.service.ts';
 
 const CONCURRENCY = 1;
 

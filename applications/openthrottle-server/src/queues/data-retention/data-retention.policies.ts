@@ -6,15 +6,15 @@
  * shared and need no change.
  */
 
-import type { RetentionPolicy } from './data-retention.types';
-import { agentTokenUsagePolicy } from './policies/agent-token-usage.policy';
-import { codeEmbeddingsPolicy } from './policies/code-embeddings.policy';
-import { planOutputStreamPolicy } from './policies/plan-output-stream.policy';
+import type { RetentionPolicy } from './data-retention.types.ts';
+import { agentTokenUsagePolicy } from './policies/agent-token-usage.policy.ts';
+import { codeEmbeddingsPolicy } from './policies/code-embeddings.policy.ts';
+import { planOutputStreamPolicy } from './policies/plan-output-stream.policy.ts';
 import {
   skillUsageEventsPolicy,
   skillUsageOutcomesPolicy,
-} from './policies/skill-usage.policy';
-import { workLedgerPolicy } from './policies/work-ledger.policy';
+} from './policies/skill-usage.policy.ts';
+import { workLedgerPolicy } from './policies/work-ledger.policy.ts';
 
 export const DATA_RETENTION_POLICIES: readonly RetentionPolicy[] = [
   planOutputStreamPolicy,

@@ -4,8 +4,8 @@ import { JwtService } from '@nestjs/jwt';
 import type { UsersService } from '@openthrottle/nestjs-repositories';
 import { describe, expect, it, vi } from 'vitest';
 
-import { AuthService } from './auth.service';
-import { SubscriptionTokenResolver } from './subscription-token.resolver';
+import { AuthService } from './auth.service.ts';
+import { SubscriptionTokenResolver } from './subscription-token.resolver.ts';
 
 const SECRET = 'test-secret';
 

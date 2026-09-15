@@ -2,7 +2,7 @@ import type { format, Logger } from 'winston';
 import { createLogger, transports } from 'winston';
 import type * as Transport from 'winston-transport';
 
-import { formatters, isFormatterName } from './logger.formatters';
+import { formatters, isFormatterName } from './logger.formatters.ts';
 
 const isProduction = process.env.NODE_ENV === 'production';
 const formatterEnv = process.env.LOG_FORMAT;

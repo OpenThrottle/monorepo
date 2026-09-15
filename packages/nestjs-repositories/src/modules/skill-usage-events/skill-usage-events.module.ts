@@ -2,9 +2,9 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 
-import { SkillUsageEvent } from './skill-usage-events.entity';
-import { SkillUsageEventsService } from './skill-usage-events.service';
-import { SkillUsageOutcome } from './skill-usage-outcomes.entity';
+import { SkillUsageEvent } from './skill-usage-events.entity.ts';
+import { SkillUsageEventsService } from './skill-usage-events.service.ts';
+import { SkillUsageOutcome } from './skill-usage-outcomes.entity.ts';
 
 @Module({
   controllers: [],

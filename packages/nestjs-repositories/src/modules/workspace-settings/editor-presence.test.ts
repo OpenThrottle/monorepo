@@ -21,8 +21,8 @@ const { mockAccess, mockSpawn } = vi.hoisted(() => ({
 vi.mock('node:fs/promises', () => ({ access: mockAccess }));
 vi.mock('node:child_process', () => ({ spawn: mockSpawn }));
 
-import type { EditorPresenceState } from './editor-presence';
-import { detectEditorPresence } from './editor-presence';
+import type { EditorPresenceState } from './editor-presence.ts';
+import { detectEditorPresence } from './editor-presence.ts';
 
 const HOME = '/Users/jane';
 const HOST_ENV: NodeJS.ProcessEnv = { HOME, PATH: '/usr/bin' };

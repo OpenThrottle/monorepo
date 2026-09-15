@@ -5,8 +5,8 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { UserWorkspaceSettings } from './user-workspace-settings.entity';
-import { UserWorkspaceSettingsService } from './user-workspace-settings.service';
+import { UserWorkspaceSettings } from './user-workspace-settings.entity.ts';
+import { UserWorkspaceSettingsService } from './user-workspace-settings.service.ts';
 
 describe('UserWorkspaceSettingsService', () => {
   const userId = '11111111-1111-4111-8111-111111111111';

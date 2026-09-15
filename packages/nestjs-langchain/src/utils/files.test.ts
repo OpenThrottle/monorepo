@@ -3,7 +3,7 @@ import os from 'os';
 import path from 'path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { getFilesByExtension } from './files';
+import { getFilesByExtension } from './files.ts';
 
 let root: string;
 

@@ -11,13 +11,13 @@ import { isRecord } from '@openthrottle/nodejs-utils';
 import { QueryFailedError } from 'typeorm';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { NotificationsService } from '../../notifications/notifications.service';
-import { PlanRulesEvaluationService } from '../../queues/plan-rules/plan-rules-evaluation.service';
-import { TaggingEnqueueService } from '../../queues/tagging/tagging-enqueue.service';
-import { TaskPromotionEnqueueService } from '../../queues/task-promotion/task-promotion-enqueue.service';
-import { WorkLedgerCaptureService } from '../work-ledger/work-ledger-capture.service';
-import { TasksResolver } from './tasks.resolver';
-import { TasksLoaders } from './tasks-loaders';
+import { NotificationsService } from '../../notifications/notifications.service.ts';
+import { PlanRulesEvaluationService } from '../../queues/plan-rules/plan-rules-evaluation.service.ts';
+import { TaggingEnqueueService } from '../../queues/tagging/tagging-enqueue.service.ts';
+import { TaskPromotionEnqueueService } from '../../queues/task-promotion/task-promotion-enqueue.service.ts';
+import { WorkLedgerCaptureService } from '../work-ledger/work-ledger-capture.service.ts';
+import { TasksResolver } from './tasks.resolver.ts';
+import { TasksLoaders } from './tasks-loaders.ts';
 
 describe('TasksResolver', () => {
   let resolver: TasksResolver;

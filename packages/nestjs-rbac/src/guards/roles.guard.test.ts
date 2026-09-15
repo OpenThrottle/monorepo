@@ -3,9 +3,9 @@ import { Reflector } from '@nestjs/core';
 import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { Roles } from '../decorators/roles.decorator';
-import { ROLES } from '../roles';
-import { RolesGuard } from './roles.guard';
+import { Roles } from '../decorators/roles.decorator.ts';
+import { ROLES } from '../roles.ts';
+import { RolesGuard } from './roles.guard.ts';
 
 function createMockContext(
   user: { roles?: unknown } | undefined,

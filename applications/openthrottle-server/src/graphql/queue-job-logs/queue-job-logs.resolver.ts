@@ -33,10 +33,10 @@ import {
   queueJobLogTopic,
 } from '@openthrottle/nestjs-graphql';
 
-import { QueueJobLogEventObject } from './queue-job-log-event.object';
-import { QueueJobLogPageObject } from './queue-job-log-page.object';
-import { QueueJobLogsInput } from './queue-job-logs.input';
-import { QueueJobLogsService } from './queue-job-logs.service';
+import { QueueJobLogEventObject } from './queue-job-log-event.object.ts';
+import { QueueJobLogPageObject } from './queue-job-log-page.object.ts';
+import { QueueJobLogsInput } from './queue-job-logs.input.ts';
+import { QueueJobLogsService } from './queue-job-logs.service.ts';
 
 /** Strict per-subject limit for the catch-up query (global default is 1000/60s). */
 const QUEUE_JOB_LOGS_THROTTLE = {

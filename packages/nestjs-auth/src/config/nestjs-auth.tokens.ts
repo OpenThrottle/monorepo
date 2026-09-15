@@ -1,4 +1,4 @@
-import type { NestjsAuthOptions } from './nestjs-auth.options';
+import type { NestjsAuthOptions } from './nestjs-auth.options.ts';
 
 /**
  * @description Typed DI token for {@link NestjsAuthOptions}. Prefer this `symbol`

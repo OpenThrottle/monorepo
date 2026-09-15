@@ -11,7 +11,7 @@ import {
 import type { EntityManager, Repository } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { WorkLedgerCaptureService } from './work-ledger-capture.service';
+import { WorkLedgerCaptureService } from './work-ledger-capture.service.ts';
 
 const USER_SUB = 'user-1';
 const USER_KIND = 'user';

@@ -11,8 +11,8 @@ import type {
   RolloutFlagKind,
 } from '@openthrottle/nestjs-rollout';
 
-import { RolloutEvaluationReasonEnum } from './rollout-evaluation-reason.enum';
-import { RolloutFlagKindEnum } from './rollout-flag-kind.enum';
+import { RolloutEvaluationReasonEnum } from './rollout-evaluation-reason.enum.ts';
+import { RolloutFlagKindEnum } from './rollout-flag-kind.enum.ts';
 
 @ObjectType({
   description: `Evaluated rollout flag for the current actor (kind + valueJson discriminator).`,

@@ -6,7 +6,7 @@ import type {
 import {
   TokenUsageRowObject,
   TokenUsageTotalsObject,
-} from './token-usage.object';
+} from './token-usage.object.ts';
 
 /** Map a persisted usage row to its GraphQL object (DB `cached_*` → client `cache*` naming). */
 export const toTokenUsageRowObject = (

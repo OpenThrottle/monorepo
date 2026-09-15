@@ -7,20 +7,20 @@ import { randomBytes } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import * as bcrypt from 'bcrypt';
+import bcrypt from 'bcrypt';
 import { IsNull, Repository } from 'typeorm';
 
 import {
   type ListPaginationInput,
   resolveListPagination,
-} from '../../common/list-pagination';
-import { ServiceAccount } from './service-account.entity';
-import { ServiceAccountCredential } from './service-account-credential.entity';
+} from '../../common/list-pagination.ts';
+import { ServiceAccount } from './service-account.entity.ts';
+import { ServiceAccountCredential } from './service-account-credential.entity.ts';
 import {
   formatServiceAccountToken,
   normalizeServiceAccountBearerToken,
   parseServiceAccountToken,
-} from './service-account-token.util';
+} from './service-account-token.util.ts';
 
 /** Result of a successful {@link ServiceAccountsService.verifyBearerToken}. */
 export type VerifiedServiceAccountCredential = {

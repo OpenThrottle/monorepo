@@ -7,8 +7,8 @@ import type {
 } from '@openthrottle/openthrottle-agentic-ralph';
 import { createWorkflowRalphOrchestrator } from '@openthrottle/openthrottle-agentic-ralph';
 
-import { AgenticWorkflowBase } from './agentic-workflow-base';
-import { AGENTIC_WORKFLOW_RALPH_ID } from './agentic-workflow-ralph-registration';
+import { AgenticWorkflowBase } from './agentic-workflow-base.ts';
+import { AGENTIC_WORKFLOW_RALPH_ID } from './agentic-workflow-ralph-registration.ts';
 
 /**
  * @description Concrete Ralph workflow ({@link AgenticWorkflowBase} implementation).

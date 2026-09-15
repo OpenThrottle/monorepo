@@ -5,34 +5,34 @@ import { Test } from '@nestjs/testing';
 import type { Job, Queue } from 'bullmq';
 import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest';
 
-import { AGENTIC_TEST_QUEUE_NAME } from '../../queues/agentic-test/agentic-test.constants';
+import { AGENTIC_TEST_QUEUE_NAME } from '../../queues/agentic-test/agentic-test.constants.ts';
 import type {
   AgenticTestJobPayload,
   AgenticTestJobResult,
-} from '../../queues/agentic-test/agentic-test.types';
-import { CODE_INDEX_QUEUE_NAME } from '../../queues/code-index/code-index.constants';
-import { DAILY_STATS_QUEUE_NAME } from '../../queues/daily-stats/daily-stats.constants';
-import type { AggregateDailyStatsJobData } from '../../queues/daily-stats/daily-stats.types';
-import { DATABASE_BACKUP_QUEUE_NAME } from '../../queues/database-backup/database-backup.constants';
-import { DOC_INGESTION_QUEUE_NAME } from '../../queues/doc-ingestion/doc-ingestion.constants';
+} from '../../queues/agentic-test/agentic-test.types.ts';
+import { CODE_INDEX_QUEUE_NAME } from '../../queues/code-index/code-index.constants.ts';
+import { DAILY_STATS_QUEUE_NAME } from '../../queues/daily-stats/daily-stats.constants.ts';
+import type { AggregateDailyStatsJobData } from '../../queues/daily-stats/daily-stats.types.ts';
+import { DATABASE_BACKUP_QUEUE_NAME } from '../../queues/database-backup/database-backup.constants.ts';
+import { DOC_INGESTION_QUEUE_NAME } from '../../queues/doc-ingestion/doc-ingestion.constants.ts';
 import type {
   DocIngestionJobPayload,
   DocIngestionJobResult,
-} from '../../queues/doc-ingestion/doc-ingestion.types';
-import { PLAN_LIFECYCLE_HOOKS_QUEUE_NAME } from '../../queues/plan-lifecycle-hooks/plan-lifecycle-hooks.constants';
-import { PLAN_RULES_QUEUE_NAME } from '../../queues/plan-rules/plan-rules.constants';
+} from '../../queues/doc-ingestion/doc-ingestion.types.ts';
+import { PLAN_LIFECYCLE_HOOKS_QUEUE_NAME } from '../../queues/plan-lifecycle-hooks/plan-lifecycle-hooks.constants.ts';
+import { PLAN_RULES_QUEUE_NAME } from '../../queues/plan-rules/plan-rules.constants.ts';
 import {
   PLANS_QUEUE_NAME,
   RUN_PLAN_ORCHESTRATOR_JOB_NAME,
-} from '../../queues/plans/plans.constants';
+} from '../../queues/plans/plans.constants.ts';
 import type {
   RunPlanJobData,
   RunPlanOrchestratorJobData,
-} from '../../queues/plans/plans.types';
-import { TAGGING_QUEUE_NAME } from '../../queues/tagging/tagging.constants';
-import { WORK_LEDGER_SWEEP_QUEUE_NAME } from '../../queues/work-ledger-sweep/work-ledger-sweep.constants';
-import { WORK_LEDGER_VERIFY_QUEUE_NAME } from '../../queues/work-ledger-verify/work-ledger-verify.constants';
-import { QueuesService } from './queues.service';
+} from '../../queues/plans/plans.types.ts';
+import { TAGGING_QUEUE_NAME } from '../../queues/tagging/tagging.constants.ts';
+import { WORK_LEDGER_SWEEP_QUEUE_NAME } from '../../queues/work-ledger-sweep/work-ledger-sweep.constants.ts';
+import { WORK_LEDGER_VERIFY_QUEUE_NAME } from '../../queues/work-ledger-verify/work-ledger-verify.constants.ts';
+import { QueuesService } from './queues.service.ts';
 
 function createMockJob(overrides: Partial<Job<RunPlanJobData, void>> = {}) {
   return createMock<Job<RunPlanJobData, void>>({

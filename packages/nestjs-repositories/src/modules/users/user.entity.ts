@@ -11,7 +11,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-import type { Role } from '../roles/role.entity';
+import type { Role } from '../roles/role.entity.ts';
 
 /** Scalar/column fields of User (no relations). Use to type GraphQL objects or DTOs that mirror the entity. */
 export type UserData = Pick<

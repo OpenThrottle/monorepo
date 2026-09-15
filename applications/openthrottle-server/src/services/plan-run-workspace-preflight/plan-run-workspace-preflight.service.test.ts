@@ -12,7 +12,7 @@ import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { PlanRunWorkspacePreflightService } from './plan-run-workspace-preflight.service';
+import { PlanRunWorkspacePreflightService } from './plan-run-workspace-preflight.service.ts';
 
 const CURSOR_CONFIG = {
   mcpServers: {

@@ -41,7 +41,7 @@ describe('nestjs generator', () => {
         `applications/${name}/.env.default`,
         `applications/${name}/.gitignore`,
         `applications/${name}/README.md`,
-        `applications/${name}/eslint.config.mts`,
+        `applications/${name}/eslint.config.ts`,
         `applications/${name}/langgraph.json`,
         `applications/${name}/package.json`,
         `applications/${name}/src/agents/.gitkeep`,

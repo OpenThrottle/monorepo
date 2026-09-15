@@ -37,8 +37,8 @@ import { join } from 'node:path';
 
 import { getWorkspacePathMapping } from '@openthrottle/openthrottle-agentic-utils';
 
-import type { WorkspaceEditorId } from './workspace-editor-id';
-import { WORKSPACE_EDITOR_IDS } from './workspace-editor-id';
+import type { WorkspaceEditorId } from './workspace-editor-id.ts';
+import { WORKSPACE_EDITOR_IDS } from './workspace-editor-id.ts';
 
 /**
  * Presence states. `installed` and `not_found` are claims about the user's machine;

@@ -25,13 +25,13 @@ import type {
 import { existsSync, statSync } from 'fs';
 import { isAbsolute } from 'path';
 
-import type { RunPlanOrchestratorJobData } from '../../queues/plans/plans.types';
+import type { RunPlanOrchestratorJobData } from '../../queues/plans/plans.types.ts';
 import {
   jobRunHooksForJobPayload,
   resolveJobRunHooksForEnqueue,
-} from './enqueue-plan-job-run-hooks';
-import { applyPlanRunProgrammaticDefaults } from './enqueue-plan-run-defaults';
-import type { RalphPlanRunTuningInput } from './plan.input';
+} from './enqueue-plan-job-run-hooks.ts';
+import { applyPlanRunProgrammaticDefaults } from './enqueue-plan-run-defaults.ts';
+import type { RalphPlanRunTuningInput } from './plan.input.ts';
 
 /**
  * RFC 4122 UUID — aligned with `tools/workflows` plan/task validation and developer `isOpenThrottleUuid`.

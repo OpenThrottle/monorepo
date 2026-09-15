@@ -11,9 +11,9 @@ import {
   vi,
 } from 'vitest';
 
-import { NestjsSlackError } from '../config/nestjs-slack.error';
-import { NESTJS_SLACK_OPTIONS } from '../config/nestjs-slack.options';
-import { NestjsSlackService } from './nestjs-slack.service';
+import { NestjsSlackError } from '../config/nestjs-slack.error.ts';
+import { NESTJS_SLACK_OPTIONS } from '../config/nestjs-slack.options.ts';
+import { NestjsSlackService } from './nestjs-slack.service.ts';
 
 describe('NestjsSlackService', () => {
   describe('when options are not provided', () => {

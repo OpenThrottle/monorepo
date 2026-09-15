@@ -9,12 +9,24 @@
     // built JavaScript, so nothing ever hands a consumer their raw TypeScript.
     // The constraint only binds packages whose `exports` name `./src/`:
     // docs/monorepo/source-first-packages-and-strip-only.md
+    //
+    // NOTE: this tier is ESM as of NestJS 12, and that changed nothing here.
+    // Decorators and parameter properties need *emit*, which is a property of
+    // Node's strip-only loader, not of the module format.
     "erasableSyntaxOnly": false,
     "experimentalDecorators": true,
-    "module": "nodenext",
-    "moduleResolution": "nodenext", // node10 was REMOVED in TS7 (TS5108)
-    "target": "es2020", // More compatible than "esnext"
+    // `target`/`lib` are pinned rather than inherited from base's `esnext`
+    // deliberately. The Node floor (>= 22.22, package.json `engines`) could
+    // support a much higher target, but `esnext` names a different language
+    // level in every TypeScript release, so inheriting it would make this
+    // tier's emit drift silently on upgrade — and this repo compiles with two
+    // compilers (`tsc` = TS7, `tsc6` = TS6, see $OPENTHROTTLE_TSC_BIN). A
+    // pinned target is what keeps their output comparable. Raise it as a
+    // deliberate, separately-verified change, never as a side effect.
+    "target": "es2020",
     "lib": ["ES2020"], // Match target
     "types": ["node"]
+    // `module`/`moduleResolution: nodenext` are NOT repeated here: they are
+    // inherited from tsconfig.base.json, verified identical via `tsc --showConfig`.
   }
 }

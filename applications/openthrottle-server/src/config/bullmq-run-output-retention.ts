@@ -1,4 +1,4 @@
-import { getBullMqRunOutputBaseDirectory } from './bullmq-run-output';
+import { getBullMqRunOutputBaseDirectory } from './bullmq-run-output.ts';
 
 const MAX_AGE_MS_ENV = 'BULLMQ_RUN_OUTPUT_MAX_AGE_MS';
 const MAX_TOTAL_BYTES_ENV = 'BULLMQ_RUN_OUTPUT_MAX_TOTAL_BYTES';

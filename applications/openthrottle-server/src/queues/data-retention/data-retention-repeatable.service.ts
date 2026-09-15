@@ -3,14 +3,14 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { Queue } from 'bullmq';
 
-import { REPEATABLE_JOB_OPTIONS } from '../repeatable-job.options';
+import { REPEATABLE_JOB_OPTIONS } from '../repeatable-job.options.ts';
 import {
   DATA_RETENTION_JOB_NAME,
   DATA_RETENTION_QUEUE_NAME,
   DATA_RETENTION_REPEATABLE_JOB_ID,
-} from './data-retention.constants';
-import { resolveDataRetentionConfig } from './data-retention.env';
-import type { DataRetentionJobData } from './data-retention.types';
+} from './data-retention.constants.ts';
+import { resolveDataRetentionConfig } from './data-retention.env.ts';
+import type { DataRetentionJobData } from './data-retention.types.ts';
 
 /**
  * @description Registers the repeatable data-retention sweep on app bootstrap.

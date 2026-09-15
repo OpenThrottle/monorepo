@@ -8,7 +8,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { deriveBranchName } from './parent-job';
+import { deriveBranchName } from './parent-job.ts';
 
 describe('deriveBranchName', () => {
   beforeEach(() => {

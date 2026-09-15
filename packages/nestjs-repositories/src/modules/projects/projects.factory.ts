@@ -5,7 +5,7 @@
 import { faker } from '@faker-js/faker';
 import { Factory } from 'fishery';
 
-import type { ProjectData } from './project.entity';
+import type { ProjectData } from './project.entity.ts';
 
 // /** Column-only shape for building project test data (no relations). */
 // export type ProjectFactoryData = Pick<

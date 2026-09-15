@@ -20,7 +20,7 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import { REDIS_CLIENT } from '@openthrottle/nestjs-redis';
 import type { Redis } from 'ioredis';
 
-import { SCHEDULED_AGENT_JOBS_LOCK_KEY_PREFIX } from './scheduled-agent-jobs.constants';
+import { SCHEDULED_AGENT_JOBS_LOCK_KEY_PREFIX } from './scheduled-agent-jobs.constants.ts';
 
 /**
  * Lock TTL. Deliberately far SHORTER than a run (runs default to 15m), because the TTL is the only

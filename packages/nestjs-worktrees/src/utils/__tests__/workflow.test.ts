@@ -18,7 +18,7 @@ import type {
   WorktreeTarget,
   WorktreeTargetAvailable,
   WorktreeWorkflowOptions,
-} from '../../types/worktree';
+} from '../../types/worktree.ts';
 
 const mockState: {
   acquireResult: ParentJobAcquireResult;

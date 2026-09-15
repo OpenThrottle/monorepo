@@ -5,14 +5,14 @@
 import { faker } from '@faker-js/faker';
 import { Factory } from 'fishery';
 
-import type { WorkArtifactData } from './work-artifact.entity';
+import type { WorkArtifactData } from './work-artifact.entity.ts';
 import {
   WORK_ARTIFACT_SOURCE,
   WORK_ARTIFACT_VERIFICATION,
   WORK_SESSION_CLOSED_BY,
-} from './work-ledger.constants';
-import type { WorkSessionData } from './work-session.entity';
-import type { WorkSessionSubjectData } from './work-session-subject.entity';
+} from './work-ledger.constants.ts';
+import type { WorkSessionData } from './work-session.entity.ts';
+import type { WorkSessionSubjectData } from './work-session-subject.entity.ts';
 
 /**
  * Factory for WorkSession-shaped data. Defaults to a closed service-account session

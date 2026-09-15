@@ -14,8 +14,8 @@ import type { AgentCliPreferencesService } from '@openthrottle/nestjs-repositori
 import type { AgentCliDiscoveryResult } from '@openthrottle/openthrottle-agentic-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { AgentDiscoveryResolver } from './agent-discovery.resolver';
-import type { AgentDiscoveryService } from './agent-discovery.service';
+import { AgentDiscoveryResolver } from './agent-discovery.resolver.ts';
+import type { AgentDiscoveryService } from './agent-discovery.service.ts';
 
 const human: AuthPrincipal = { kind: AUTH_PRINCIPAL_KIND_USER, sub: 'user-1' };
 

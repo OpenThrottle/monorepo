@@ -5,7 +5,7 @@
 import { Test } from '@nestjs/testing';
 import { beforeAll, describe, expect, test } from 'vitest';
 
-import { GeneratorsResolver } from './generators.resolver';
+import { GeneratorsResolver } from './generators.resolver.ts';
 
 describe('GeneratorsResolver', () => {
   let resolver: GeneratorsResolver;

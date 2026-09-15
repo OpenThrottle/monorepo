@@ -9,13 +9,13 @@ import type {
   NestjsThrottlerModuleAsyncOptions,
   NestjsThrottlerModuleOptions,
   ResolvedNestjsThrottlerModuleOptions,
-} from '../config/nestjs-throttler.options';
+} from '../config/nestjs-throttler.options.ts';
 import {
   applyNestjsThrottlerModuleDefaults,
   parseNestjsThrottlerModuleOptions,
   validateNestjsThrottlerModuleOptions,
-} from '../config/nestjs-throttler.options';
-import { GqlThrottlerGuard } from '../guards/gql-throttler.guard';
+} from '../config/nestjs-throttler.options.ts';
+import { GqlThrottlerGuard } from '../guards/gql-throttler.guard.ts';
 
 const toThrottlerModuleOptions = (
   resolved: ResolvedNestjsThrottlerModuleOptions,

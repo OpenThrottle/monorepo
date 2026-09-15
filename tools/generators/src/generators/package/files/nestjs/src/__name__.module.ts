@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { <%= namePascal %>Service } from './<%= name %>.service';
+
+import { <%= namePascal %>Service } from './<%= name %>.service.ts';
 
 @Module({
   controllers: [],

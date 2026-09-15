@@ -17,11 +17,11 @@ import {
   PLAN_RULES_EVALUATE_JOB_NAME,
   PLAN_RULES_QUEUE_NAME,
   planRulesEvaluationDedupId,
-} from './plan-rules.constants';
+} from './plan-rules.constants.ts';
 import type {
   PlanRulesEvaluateJobData,
   PlanRulesTriggerKind,
-} from './plan-rules.types';
+} from './plan-rules.types.ts';
 
 @Injectable()
 export class PlanRulesEvaluationService {

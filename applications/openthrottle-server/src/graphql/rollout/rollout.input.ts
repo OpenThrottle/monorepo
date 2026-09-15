@@ -6,7 +6,7 @@
 import { Field, ID, InputType, Int } from '@nestjs/graphql';
 import type { RolloutFlagKind } from '@openthrottle/nestjs-rollout';
 
-import { RolloutFlagKindEnum } from './rollout-flag-kind.enum';
+import { RolloutFlagKindEnum } from './rollout-flag-kind.enum.ts';
 
 @InputType({
   description: `One weighted fallthrough bucket (variation index + integer percent).`,

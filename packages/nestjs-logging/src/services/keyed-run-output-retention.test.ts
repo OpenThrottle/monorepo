@@ -4,7 +4,7 @@ import * as path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { pruneKeyedRunOutputDirectory } from './keyed-run-output-retention';
+import { pruneKeyedRunOutputDirectory } from './keyed-run-output-retention.ts';
 
 const mkBase = async (): Promise<string> =>
   mkdtemp(path.join(os.tmpdir(), 'keyed-ret-'));

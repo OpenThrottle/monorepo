@@ -9,9 +9,9 @@
 
 import { Module } from '@nestjs/common';
 
-import { NotificationsModule } from '../../notifications/notifications.module';
-import { DevelopmentResolver } from './development.resolver';
-import { DevelopmentService } from './development.service';
+import { NotificationsModule } from '../../notifications/notifications.module.ts';
+import { DevelopmentResolver } from './development.resolver.ts';
+import { DevelopmentService } from './development.service.ts';
 
 @Module({
   imports: [NotificationsModule],

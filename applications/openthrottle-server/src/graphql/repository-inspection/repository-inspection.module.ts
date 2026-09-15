@@ -9,7 +9,7 @@ import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 
-import { RepositoryInspectionService } from './repository-inspection.service';
+import { RepositoryInspectionService } from './repository-inspection.service.ts';
 
 @Module({
   controllers: [],

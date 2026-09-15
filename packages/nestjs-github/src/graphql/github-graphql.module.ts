@@ -8,9 +8,9 @@
 
 import { Module } from '@nestjs/common';
 
-import { GitHubModule } from '../github/github.module';
-import { GithubResolver } from './github.resolver';
-import { GitHubStatsService } from './github-stats.service';
+import { GitHubModule } from '../github/github.module.ts';
+import { GithubResolver } from './github.resolver.ts';
+import { GitHubStatsService } from './github-stats.service.ts';
 
 @Module({
   exports: [GitHubModule],

@@ -16,7 +16,7 @@
 
 import type { DataSource } from 'typeorm';
 
-import type { RetentionPolicy } from '../data-retention.types';
+import type { RetentionPolicy } from '../data-retention.types.ts';
 
 /** snake_case identifiers only — anything else is a programming error, not input. */
 const SAFE_IDENTIFIER = /^[a-z_][a-z0-9_]*$/;

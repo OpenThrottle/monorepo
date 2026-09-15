@@ -11,13 +11,16 @@ import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 import type { UserSkillTag } from '@openthrottle/nestjs-repositories';
 import { SkillTagsService } from '@openthrottle/nestjs-repositories';
 
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import { SkillTagObject, SkillTagVocabularyResult } from './skill-tag.object';
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import {
+  SkillTagObject,
+  SkillTagVocabularyResult,
+} from './skill-tag.object.ts';
 import {
   AddSkillTagInput,
   RemoveSkillTagInput,
   RenameSkillTagInput,
-} from './skill-tags.input';
+} from './skill-tags.input.ts';
 
 @Resolver(() => SkillTagObject)
 @UseGuards(GqlPermissionsGuard)

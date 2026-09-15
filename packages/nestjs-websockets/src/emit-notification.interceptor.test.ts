@@ -10,11 +10,11 @@ import { asMock } from '@openthrottle/nestjs-testing';
 import { firstValueFrom, of } from 'rxjs';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { EmitNotificationMetadata } from './emit-notification.decorator';
+import type { EmitNotificationMetadata } from './emit-notification.decorator.ts';
 import {
   type EmitNotificationEmitter,
   EmitNotificationInterceptor,
-} from './emit-notification.interceptor';
+} from './emit-notification.interceptor.ts';
 
 function createMockContext(handler: () => void): ExecutionContext {
   return asMock<ExecutionContext>({

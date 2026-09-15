@@ -3,7 +3,7 @@ import { Module } from '@nestjs/common';
 import { NestjsBullmqModule } from '@openthrottle/nestjs-bullmq';
 import { NestjsBullmqBoardModule } from '@openthrottle/nestjs-bullmq-board';
 
-import { DATA_RETENTION_QUEUE_NAME } from './data-retention.constants';
+import { DATA_RETENTION_QUEUE_NAME } from './data-retention.constants.ts';
 
 /**
  * @description Producer half of the data-retention queue: registerQueue + Bull Board,

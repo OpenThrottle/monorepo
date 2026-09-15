@@ -6,10 +6,10 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { isRecord } from '@openthrottle/nodejs-utils';
 
-import type { IssueWithLabelsDto } from './dto/issue-with-labels.dto';
-import type { PullDetailDto } from './dto/pull-detail.dto';
-import type { PullListItemDto } from './dto/pull-list-item.dto';
-import type { PullReviewDto, PullReviewState } from './dto/pull-review.dto';
+import type { IssueWithLabelsDto } from './dto/issue-with-labels.dto.ts';
+import type { PullDetailDto } from './dto/pull-detail.dto.ts';
+import type { PullListItemDto } from './dto/pull-list-item.dto.ts';
+import type { PullReviewDto, PullReviewState } from './dto/pull-review.dto.ts';
 
 /** GitHub REST API pull request list item (subset we use). */
 interface GitHubPullItem {

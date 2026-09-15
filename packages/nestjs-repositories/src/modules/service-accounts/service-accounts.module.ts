@@ -6,9 +6,9 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 
-import { ServiceAccount } from './service-account.entity';
-import { ServiceAccountCredential } from './service-account-credential.entity';
-import { ServiceAccountsService } from './service-accounts.service';
+import { ServiceAccount } from './service-account.entity.ts';
+import { ServiceAccountCredential } from './service-account-credential.entity.ts';
+import { ServiceAccountsService } from './service-accounts.service.ts';
 
 @Module({
   controllers: [],

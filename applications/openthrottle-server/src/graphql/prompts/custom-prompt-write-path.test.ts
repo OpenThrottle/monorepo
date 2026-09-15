@@ -7,7 +7,7 @@ import { beforeAll, describe, expect, test } from 'vitest';
 import {
   CUSTOM_PROMPT_WRITE_REFUSAL,
   resolveCustomPromptWritePath,
-} from './custom-prompt-write-path';
+} from './custom-prompt-write-path.ts';
 
 describe('resolveCustomPromptWritePath', () => {
   let workspaceRoot: string;

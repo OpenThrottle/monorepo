@@ -1,14 +1,14 @@
 import { Inject, Injectable, Optional } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 
-import { NestjsSlackError } from '../config/nestjs-slack.error';
-import type { NestjsSlackModuleOptions } from '../config/nestjs-slack.options';
+import { NestjsSlackError } from '../config/nestjs-slack.error.ts';
+import type { NestjsSlackModuleOptions } from '../config/nestjs-slack.options.ts';
 import {
   NESTJS_SLACK_DEFAULT_MAX_RETRIES,
   NESTJS_SLACK_DEFAULT_RETRY_BASE_DELAY_MS,
   NESTJS_SLACK_DEFAULT_TIMEOUT_MS,
   NESTJS_SLACK_OPTIONS,
-} from '../config/nestjs-slack.options';
+} from '../config/nestjs-slack.options.ts';
 
 /**
  * @description Minimal payload for Slack incoming webhooks. At least one of

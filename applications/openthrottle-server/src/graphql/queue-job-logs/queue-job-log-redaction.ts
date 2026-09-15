@@ -22,7 +22,7 @@ import { DEFAULT_LOG_REDACTOR } from '@openthrottle/nestjs-logging';
 import {
   extractQueueJobLogMessage,
   type QueueJobLogSourceRecord,
-} from './queue-job-log-mapping';
+} from './queue-job-log-mapping.ts';
 
 /**
  * @description Extract and redact the message for a log event. Always use this

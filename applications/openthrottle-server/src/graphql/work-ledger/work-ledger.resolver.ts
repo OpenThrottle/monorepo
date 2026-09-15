@@ -33,7 +33,7 @@ import { In, IsNull } from 'typeorm';
 import {
   ARTIFACT_IDENTITY,
   resolveArtifactForWrite,
-} from './artifact-type-registry';
+} from './artifact-type-registry.ts';
 import {
   AttachWorkSessionSubjectInput,
   EndWorkSessionInput,
@@ -44,14 +44,14 @@ import {
   WorkArtifactsBySessionInput,
   WorkArtifactsByTaskInput,
   WorkSessionsByPlanInput,
-} from './work-ledger.input';
+} from './work-ledger.input.ts';
 import {
   WorkArtifactListResult,
   WorkArtifactObject,
   WorkSessionListResult,
   WorkSessionObject,
   WorkSessionSubjectObject,
-} from './work-ledger.object';
+} from './work-ledger.object.ts';
 
 const DEFAULT_UNVERIFIED_LIMIT = 100;
 const MAX_UNVERIFIED_LIMIT = 500;

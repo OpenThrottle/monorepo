@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import { AGENT_CONVERSATION_TOOL_METADATA_MAX_BYTES } from './agent-conversation.constants';
+import { AGENT_CONVERSATION_TOOL_METADATA_MAX_BYTES } from './agent-conversation.constants.ts';
 import {
   capAgentConversationContent,
   capAgentConversationToolMetadata,
   clampAgentConversationListLimit,
   clampAgentConversationMessagesLimit,
   deriveConversationTitleFromMessage,
-} from './agent-conversation.util';
+} from './agent-conversation.util.ts';
 
 describe('deriveConversationTitleFromMessage', () => {
   it('returns trimmed content when within 80 characters', () => {

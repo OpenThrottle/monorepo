@@ -5,7 +5,7 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   type BullMqRunOutputRetentionConfig,
   getBullMqRunOutputRetentionConfig,
-} from '../config/bullmq-run-output-retention';
+} from '../config/bullmq-run-output-retention.ts';
 
 /**
  * @description Throttled post-job disk retention for keyed BullMQ run transcripts (see `OT_BULLMQ_RUN_OUTPUT_*` env vars).

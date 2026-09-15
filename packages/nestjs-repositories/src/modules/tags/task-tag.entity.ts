@@ -12,8 +12,8 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-import { Task } from '../tasks/task.entity';
-import type { TagSource } from './tag-provenance';
+import { Task } from '../tasks/task.entity.ts';
+import type { TagSource } from './tag-provenance.ts';
 
 export interface TaskTagData {
   readonly confidence: number | null;

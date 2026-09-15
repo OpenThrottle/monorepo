@@ -12,9 +12,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   PLAN_RULES_EVALUATE_JOB_NAME,
   planRulesEvaluationDedupId,
-} from './plan-rules.constants';
-import type { PlanRulesEvaluateJobData } from './plan-rules.types';
-import { PlanRulesEvaluationService } from './plan-rules-evaluation.service';
+} from './plan-rules.constants.ts';
+import type { PlanRulesEvaluateJobData } from './plan-rules.types.ts';
+import { PlanRulesEvaluationService } from './plan-rules-evaluation.service.ts';
 
 const planId = '00000000-0000-4000-8000-000000000001';
 const otherPlanId = '00000000-0000-4000-8000-000000000002';

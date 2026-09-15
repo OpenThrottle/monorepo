@@ -11,13 +11,13 @@ import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest';
 import {
   AGENTIC_TEST_JOB_NAME,
   AGENTIC_TEST_QUEUE_NAME,
-} from '../../queues/agentic-test/agentic-test.constants';
+} from '../../queues/agentic-test/agentic-test.constants.ts';
 import type {
   AgenticTestJobPayload,
   AgenticTestJobResult,
-} from '../../queues/agentic-test/agentic-test.types';
-import { AgenticWorkflowService } from './agentic-workflow.service';
-import { AGENTIC_WORKFLOW_MOCK_PAYLOAD } from './agentic-workflow-mock-payload';
+} from '../../queues/agentic-test/agentic-test.types.ts';
+import { AgenticWorkflowService } from './agentic-workflow.service.ts';
+import { AGENTIC_WORKFLOW_MOCK_PAYLOAD } from './agentic-workflow-mock-payload.ts';
 
 describe('AgenticWorkflowService', () => {
   let service: AgenticWorkflowService;

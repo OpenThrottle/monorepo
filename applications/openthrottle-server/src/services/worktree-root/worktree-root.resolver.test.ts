@@ -25,7 +25,7 @@ import {
   repositoryNamespace,
   resolveWorktreeRoot,
   WORKTREE_ROOT_SOURCE,
-} from './worktree-root.resolver';
+} from './worktree-root.resolver.ts';
 
 const BASE = '/Users/matt/Development/openthrottle';
 

@@ -7,7 +7,7 @@ import { describe, expect, test, vi } from 'vitest';
 import {
   GITHUB_REQUEST_TIMEOUT_DEFAULT_MS,
   GitHubService,
-} from './github.service';
+} from './github.service.ts';
 
 describe('GitHubService', () => {
   const mockConfig = createMock<ConfigService>({

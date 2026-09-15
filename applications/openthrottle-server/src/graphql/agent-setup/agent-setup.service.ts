@@ -23,12 +23,12 @@ import {
   runAgentSetup,
 } from '@openthrottle/openthrottle-agentic-utils';
 
-import { AgentDiscoveryService } from '../agent-discovery/agent-discovery.service';
+import { AgentDiscoveryService } from '../agent-discovery/agent-discovery.service.ts';
 import {
   AGENT_SETUP_CHUNK_FIELD,
   type AgentSetupStreamChunkEnvelope,
   type AgentSetupStreamChunkPayload,
-} from './agent-setup.types';
+} from './agent-setup.types.ts';
 
 /** How long a finished run's chunk buffer is retained after its terminal chunk, for late subscribers. */
 const BUFFER_GRACE_MS = 30_000;

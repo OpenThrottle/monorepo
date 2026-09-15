@@ -14,19 +14,19 @@ import { constants, existsSync } from 'fs';
 import { access, mkdir, readFile, writeFile } from 'fs/promises';
 import { dirname, join } from 'path';
 
-import { RepositoryCheckoutsService } from '../repositories/repository-checkouts.service';
-import { OPENTHROTTLE_REPO_SKILL_PATHS } from './openthrottle-repo-skill-paths';
-import { UserWorkspaceSettingsService } from './user-workspace-settings.service';
+import { RepositoryCheckoutsService } from '../repositories/repository-checkouts.service.ts';
+import { OPENTHROTTLE_REPO_SKILL_PATHS } from './openthrottle-repo-skill-paths.ts';
+import { UserWorkspaceSettingsService } from './user-workspace-settings.service.ts';
 import {
   getWorkspaceEditorConfigPaths,
   OPENTHROTTLE_MANIFEST_RELATIVE_PATH,
-} from './workspace-editor-config-paths';
-import type { WorkspaceEditorId } from './workspace-editor-id';
+} from './workspace-editor-config-paths.ts';
+import type { WorkspaceEditorId } from './workspace-editor-id.ts';
 import {
   buildManagedMcpServers,
   type McpServersJson,
   mergeManagedMcpServers,
-} from './workspace-editor-mcp-config';
+} from './workspace-editor-mcp-config.ts';
 
 export interface ApplyWorkspaceEditorConfigOptions {
   readonly apiBaseUrl: string;

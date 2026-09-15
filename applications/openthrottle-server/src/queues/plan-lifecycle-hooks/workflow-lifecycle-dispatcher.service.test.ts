@@ -10,8 +10,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type {
   PlanLifecycleHookJobData,
   PlanLifecycleHookJobResult,
-} from './plan-lifecycle-hooks.types';
-import { WorkflowLifecycleDispatcherFactory } from './workflow-lifecycle-dispatcher.service';
+} from './plan-lifecycle-hooks.types.ts';
+import { WorkflowLifecycleDispatcherFactory } from './workflow-lifecycle-dispatcher.service.ts';
 
 type LifecycleHookQueue = Queue<
   PlanLifecycleHookJobData,

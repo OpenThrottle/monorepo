@@ -5,9 +5,9 @@
 import { faker } from '@faker-js/faker';
 import { Factory } from 'fishery';
 
-import { SKILL_USAGE_SCOPES } from './skill-usage-events.entity';
-import type { SkillUsageOutcome } from './skill-usage-outcomes.entity';
-import { SKILL_USAGE_OUTCOMES } from './skill-usage-outcomes.entity';
+import { SKILL_USAGE_SCOPES } from './skill-usage-events.entity.ts';
+import type { SkillUsageOutcome } from './skill-usage-outcomes.entity.ts';
+import { SKILL_USAGE_OUTCOMES } from './skill-usage-outcomes.entity.ts';
 
 export type SkillUsageOutcomeFactoryData = Pick<
   SkillUsageOutcome,

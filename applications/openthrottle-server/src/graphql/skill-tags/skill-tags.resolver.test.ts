@@ -4,8 +4,8 @@ import type { UserSkillTag } from '@openthrottle/nestjs-repositories';
 import { SkillTagsService } from '@openthrottle/nestjs-repositories';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import { SkillTagsResolver } from './skill-tags.resolver';
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { SkillTagsResolver } from './skill-tags.resolver.ts';
 
 describe('SkillTagsResolver', () => {
   const userId = '11111111-1111-4111-8111-111111111111';

@@ -4,8 +4,8 @@ import { asMock } from '@openthrottle/nestjs-testing';
 import type { DeepPartial } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { Subscription } from './subscription.entity';
-import { SubscriptionsService } from './subscriptions.service';
+import { Subscription } from './subscription.entity.ts';
+import { SubscriptionsService } from './subscriptions.service.ts';
 
 describe('SubscriptionsService', () => {
   type Repo = {

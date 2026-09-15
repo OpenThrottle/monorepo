@@ -20,24 +20,24 @@ import {
   type SkillUsageScope,
 } from '@openthrottle/nestjs-repositories';
 
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import { EffectiveUserResolutionService } from '../../services/effective-user-resolution/effective-user-resolution.service';
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { EffectiveUserResolutionService } from '../../services/effective-user-resolution/effective-user-resolution.service.ts';
 import {
   RecordSkillUsageInput,
   RecordSkillUsageOutcomeInput,
-} from './skill-usage.input';
+} from './skill-usage.input.ts';
 import {
   toSkillUsageEventObject,
   toSkillUsageGitBranchSearchObject,
   toSkillUsageOutcomeObject,
   toSkillUsageResultObject,
-} from './skill-usage.mapper';
+} from './skill-usage.mapper.ts';
 import {
   SkillUsageEventObject,
   SkillUsageGitBranchSearchObject,
   SkillUsageOutcomeObject,
   SkillUsageResultObject,
-} from './skill-usage.object';
+} from './skill-usage.object.ts';
 
 const isSkillUsageScope = (value: string): value is SkillUsageScope =>
   value === SKILL_USAGE_SCOPES.OURS || value === SKILL_USAGE_SCOPES.THIRD_PARTY;

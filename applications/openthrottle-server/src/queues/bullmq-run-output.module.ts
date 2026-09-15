@@ -3,10 +3,10 @@ import { PUB_SUB, type PubSubEngine } from '@openthrottle/nestjs-graphql';
 import { KeyedJsonlWriter } from '@openthrottle/nestjs-logging';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 
-import { getBullMqRunOutputBaseDirectory } from '../config/bullmq-run-output';
-import { createQueueJobLogTailPublisher } from '../graphql/queue-job-logs/queue-job-log-publisher';
-import { BullMqRunOutputRetentionService } from './bullmq-run-output-retention.service';
-import { BULLMQ_RUN_OUTPUT_WRITER } from './bullmq-run-output-writer.token';
+import { getBullMqRunOutputBaseDirectory } from '../config/bullmq-run-output.ts';
+import { createQueueJobLogTailPublisher } from '../graphql/queue-job-logs/queue-job-log-publisher.ts';
+import { BullMqRunOutputRetentionService } from './bullmq-run-output-retention.service.ts';
+import { BULLMQ_RUN_OUTPUT_WRITER } from './bullmq-run-output-writer.token.ts';
 
 /**
  * @description Registers a singleton {@link KeyedJsonlWriter} when `BULLMQ_RUN_OUTPUT_DIR` is set;

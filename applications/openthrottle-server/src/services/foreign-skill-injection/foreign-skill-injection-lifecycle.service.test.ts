@@ -22,7 +22,7 @@ import {
 } from '@openthrottle/openthrottle-agentic-utils';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { ForeignSkillInjectionLifecycleService } from './foreign-skill-injection-lifecycle.service';
+import { ForeignSkillInjectionLifecycleService } from './foreign-skill-injection-lifecycle.service.ts';
 
 const git = (repo: string, ...args: string[]): string =>
   execFileSync('git', ['-C', repo, ...args], { encoding: 'utf8' }).trim();

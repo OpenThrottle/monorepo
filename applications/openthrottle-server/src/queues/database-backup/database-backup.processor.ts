@@ -8,18 +8,18 @@ import { OnApplicationShutdown, OnModuleInit } from '@nestjs/common';
 import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 
-import { NotificationsService } from '../../notifications/notifications.service';
+import { NotificationsService } from '../../notifications/notifications.service.ts';
 import {
   DATABASE_BACKUP_PNPM_SCRIPT,
   DATABASE_BACKUP_QUEUE_NAME,
   DATABASE_BACKUP_WORKER_LOCK_DURATION_MS,
-} from './database-backup.constants';
-import { getDatabaseBackupWorkspaceRoot } from './database-backup.env';
-import { spawnDatabaseBackup } from './database-backup.spawn';
+} from './database-backup.constants.ts';
+import { getDatabaseBackupWorkspaceRoot } from './database-backup.env.ts';
+import { spawnDatabaseBackup } from './database-backup.spawn.ts';
 import type {
   DatabaseBackupJob,
   DatabaseBackupJobResult,
-} from './database-backup.types';
+} from './database-backup.types.ts';
 
 const CONCURRENCY = 1;
 const JOB_TYPE = 'database-backup';

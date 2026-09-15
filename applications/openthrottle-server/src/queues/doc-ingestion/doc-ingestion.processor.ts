@@ -18,11 +18,11 @@ import {
   savePriorState,
 } from '@tools/workflows/doc-ingestion';
 
-import { DOC_INGESTION_QUEUE_NAME } from './doc-ingestion.constants';
+import { DOC_INGESTION_QUEUE_NAME } from './doc-ingestion.constants.ts';
 import type {
   DocIngestionJob,
   DocIngestionJobResult,
-} from './doc-ingestion.types';
+} from './doc-ingestion.types.ts';
 
 const CONCURRENCY = 1;
 

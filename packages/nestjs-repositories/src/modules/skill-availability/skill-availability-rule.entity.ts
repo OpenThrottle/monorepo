@@ -14,7 +14,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-import { SkillAvailabilityRuleSet } from './skill-availability-rule-set.entity';
+import { SkillAvailabilityRuleSet } from './skill-availability-rule-set.entity.ts';
 
 /** Scalar/column fields of SkillAvailabilityRule (no relations). */
 export type SkillAvailabilityRuleData = Omit<SkillAvailabilityRule, 'ruleSet'>;

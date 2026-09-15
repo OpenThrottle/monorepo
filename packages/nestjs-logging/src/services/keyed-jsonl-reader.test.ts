@@ -4,12 +4,12 @@ import * as path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { readKeyedJsonlRun } from './keyed-jsonl-reader';
-import { KeyedJsonlWriter } from './keyed-jsonl-writer';
+import { readKeyedJsonlRun } from './keyed-jsonl-reader.ts';
+import { KeyedJsonlWriter } from './keyed-jsonl-writer.ts';
 import {
   buildKeyedJsonlRelativePath,
   keyedJsonlPairHash8,
-} from './keyed-jsonl-writer-path';
+} from './keyed-jsonl-writer-path.ts';
 
 const QUEUE = 'Plans';
 const JOB = 'job-1';

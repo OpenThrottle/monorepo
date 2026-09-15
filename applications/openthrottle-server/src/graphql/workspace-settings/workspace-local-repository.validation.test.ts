@@ -8,7 +8,7 @@ import {
   validateDisplayName,
   validateGitDefaultBranch,
   validateGitRemoteUrl,
-} from './workspace-local-repository.validation';
+} from './workspace-local-repository.validation.ts';
 
 describe('validateAndNormalizeFilesystemPath', () => {
   test('returns resolved path for an existing directory', () => {

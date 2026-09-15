@@ -5,7 +5,7 @@ import {
 } from '@openthrottle/nestjs-auth';
 import { describe, expect, it } from 'vitest';
 
-import { assertHumanAuthPrincipal } from './assert-human-auth-principal';
+import { assertHumanAuthPrincipal } from './assert-human-auth-principal.ts';
 
 describe('assertHumanAuthPrincipal', () => {
   it('returns user principal when kind is user', () => {

@@ -21,7 +21,7 @@
 
 import type { DataSource } from 'typeorm';
 
-import type { RetentionPolicy } from '../data-retention.types';
+import type { RetentionPolicy } from '../data-retention.types.ts';
 
 /** Chunks older than this are dropped regardless of the per-plan cap. */
 const RETENTION_DAYS = 90;

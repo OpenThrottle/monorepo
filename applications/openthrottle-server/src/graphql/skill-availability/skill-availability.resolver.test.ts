@@ -10,8 +10,8 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import { SkillAvailabilityResolver } from './skill-availability.resolver';
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { SkillAvailabilityResolver } from './skill-availability.resolver.ts';
 
 describe('SkillAvailabilityResolver', () => {
   const userId = '11111111-1111-4111-8111-111111111111';

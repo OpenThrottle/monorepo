@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 
-import { GeneratorsController } from './generators.controller';
+import { GeneratorsController } from './generators.controller.ts';
 
 @Module({
   controllers: [GeneratorsController],

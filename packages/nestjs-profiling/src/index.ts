@@ -7,7 +7,7 @@ export type {
   ProfileExecutionRedactor,
   ProfileExecutionResult,
   ProfileExecutionUtilResult,
-} from './decorators';
+} from './decorators/index.ts';
 export {
   createProfileExecutionFileWriter,
   createProfileExecutionRedactor,
@@ -18,5 +18,5 @@ export {
   profileExecution,
   ProfileResponseTime,
   setProfileExecutionReporter,
-} from './decorators';
-export { NestjsProfilingModule } from './modules/nestjs-profiling.module';
+} from './decorators/index.ts';
+export { NestjsProfilingModule } from './modules/nestjs-profiling.module.ts';

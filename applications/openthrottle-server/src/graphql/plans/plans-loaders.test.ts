@@ -6,7 +6,7 @@ import type {
 import { type Project, type Task } from '@openthrottle/nestjs-repositories';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { PlansLoaders } from './plans-loaders';
+import { PlansLoaders } from './plans-loaders.ts';
 
 describe('PlansLoaders', () => {
   const findProjects = vi.fn();

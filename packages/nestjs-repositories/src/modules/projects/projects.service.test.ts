@@ -6,9 +6,9 @@ import { asMock } from '@openthrottle/nestjs-testing';
 import type { DeepPartial } from 'typeorm';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { Project } from './project.entity';
-import { projectsFactory } from './projects.factory';
-import { ProjectsService } from './projects.service';
+import { Project } from './project.entity.ts';
+import { projectsFactory } from './projects.factory.ts';
+import { ProjectsService } from './projects.service.ts';
 
 describe('ProjectsService', () => {
   type GetRepository = ReturnType<ProjectsService['getRepository']>;

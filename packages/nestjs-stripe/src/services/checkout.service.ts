@@ -4,9 +4,9 @@
 
 import { Inject, Injectable } from '@nestjs/common';
 
-import { createLazyStripeClient } from '../config/stripe-config';
-import type { StripeCheckoutUserPort } from '../tokens/stripe-ports';
-import { STRIPE_CHECKOUT_USER_PORT } from '../tokens/stripe-tokens';
+import { createLazyStripeClient } from '../config/stripe-config.ts';
+import type { StripeCheckoutUserPort } from '../tokens/stripe-ports.ts';
+import { STRIPE_CHECKOUT_USER_PORT } from '../tokens/stripe-tokens.ts';
 
 export interface CreateCheckoutSessionParams {
   readonly cancelUrl: string;

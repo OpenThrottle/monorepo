@@ -6,7 +6,7 @@ import { GraphQLModule, Query, Resolver } from '@nestjs/graphql';
 import { Test } from '@nestjs/testing';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { NestjsThrottlerModule } from './nestjs-throttler.module';
+import { NestjsThrottlerModule } from './nestjs-throttler.module.ts';
 
 /**
  * GraphQL integration coverage for the wired global {@link NestjsThrottlerModule}.

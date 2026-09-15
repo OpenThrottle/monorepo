@@ -20,13 +20,13 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import type { Queue } from 'bullmq';
 
-import { updateMatchingTasksAndEmitStatusChanged } from '../../notifications/emit-bulk-task-status-changes';
-import { NotificationsService } from '../../notifications/notifications.service';
-import { PlanCancelChannelService } from '../../queues/plans/plan-cancel-channel.service';
-import { PlanRunCancellationService } from '../../queues/plans/plan-run-cancellation.service';
-import { PLANS_QUEUE_NAME } from '../../queues/plans/plans.constants';
-import type { RunPlanJobData } from '../../queues/plans/plans.types';
-import { cancelPlanRunJobsForPlan } from './cancel-plan-run-jobs';
+import { updateMatchingTasksAndEmitStatusChanged } from '../../notifications/emit-bulk-task-status-changes.ts';
+import { NotificationsService } from '../../notifications/notifications.service.ts';
+import { PlanCancelChannelService } from '../../queues/plans/plan-cancel-channel.service.ts';
+import { PlanRunCancellationService } from '../../queues/plans/plan-run-cancellation.service.ts';
+import { PLANS_QUEUE_NAME } from '../../queues/plans/plans.constants.ts';
+import type { RunPlanJobData } from '../../queues/plans/plans.types.ts';
+import { cancelPlanRunJobsForPlan } from './cancel-plan-run-jobs.ts';
 
 const IN_PROGRESS_TRANSITION_FORBIDDEN_MESSAGE = `Cannot transition to IN_PROGRESS: only PENDING, QUEUED, or already IN_PROGRESS plans may enter this state.`;
 

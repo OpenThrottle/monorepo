@@ -9,9 +9,9 @@
 import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import type { Plan } from '@openthrottle/nestjs-repositories';
 
-import { PlanObject } from '../plans/plan.object';
-import { PlanOutputStreamChunkObject } from './plan-output-stream-chunk.object';
-import { PlanOutputStreamLoaders } from './plan-output-stream-loaders';
+import { PlanObject } from '../plans/plan.object.ts';
+import { PlanOutputStreamChunkObject } from './plan-output-stream-chunk.object.ts';
+import { PlanOutputStreamLoaders } from './plan-output-stream-loaders.ts';
 
 // @authz-stance: authenticated-only (Path A — see OT plan 18e16dfc-4f22-43f9-9b77-6fc90309b60a)
 @Resolver(() => PlanOutputStreamChunkObject)

@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { Subscription } from './subscription.entity';
-import { SubscriptionsService } from './subscriptions.service';
+import { Subscription } from './subscription.entity.ts';
+import { SubscriptionsService } from './subscriptions.service.ts';
 
 @Module({
   controllers: [],

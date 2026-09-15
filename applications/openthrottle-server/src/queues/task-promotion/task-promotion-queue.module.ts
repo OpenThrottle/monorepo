@@ -2,10 +2,10 @@ import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 
-import { NotificationsModule } from '../../notifications/notifications.module';
-import { TaskPromotionProcessor } from './task-promotion.processor';
-import { TaskPromotionService } from './task-promotion.service';
-import { TaskPromotionQueueProducerModule } from './task-promotion-queue-producer.module';
+import { NotificationsModule } from '../../notifications/notifications.module.ts';
+import { TaskPromotionProcessor } from './task-promotion.processor.ts';
+import { TaskPromotionService } from './task-promotion.service.ts';
+import { TaskPromotionQueueProducerModule } from './task-promotion-queue-producer.module.ts';
 
 /**
  * @description Processor half of the task-promotion queue: the WorkerHost that

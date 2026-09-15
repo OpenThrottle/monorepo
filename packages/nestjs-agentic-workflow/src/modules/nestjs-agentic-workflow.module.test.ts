@@ -7,21 +7,21 @@ import type {
 } from '@openthrottle/openthrottle-agentic-workflow';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import type { AgenticWorkflowRegistry } from '../agentic-workflow-base';
+import type { AgenticWorkflowRegistry } from '../agentic-workflow-base.ts';
 import {
   AGENTIC_WORKFLOW_REGISTRY,
   AgenticWorkflowBase,
-} from '../agentic-workflow-base';
+} from '../agentic-workflow-base.ts';
 import type {
   AgenticWorkflowExecuteGraphqlV2,
   AgenticWorkflowWorkerGraphqlAuth,
-} from '../agentic-workflow-worker-graphql';
+} from '../agentic-workflow-worker-graphql.ts';
 import {
   AGENTIC_WORKFLOW_EXECUTE_GRAPHQL_V2,
   AGENTIC_WORKFLOW_WORKER_GRAPHQL_AUTH,
-} from '../agentic-workflow-worker-graphql';
-import { compileAgenticWorkflowTestingModule } from '../testing';
-import { NestjsAgenticWorkflowModule } from './nestjs-agentic-workflow.module';
+} from '../agentic-workflow-worker-graphql.ts';
+import { compileAgenticWorkflowTestingModule } from '../testing/index.ts';
+import { NestjsAgenticWorkflowModule } from './nestjs-agentic-workflow.module.ts';
 
 const TEST_WORKFLOW_DEPS = Symbol('TEST_WORKFLOW_DEPS');
 

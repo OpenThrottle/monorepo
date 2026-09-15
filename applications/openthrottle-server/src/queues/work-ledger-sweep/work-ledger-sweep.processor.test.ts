@@ -8,8 +8,8 @@ import type {
 import type { Repository } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { WorkLedgerSweepProcessor } from './work-ledger-sweep.processor';
-import type { WorkLedgerSweepJob } from './work-ledger-sweep.types';
+import { WorkLedgerSweepProcessor } from './work-ledger-sweep.processor.ts';
+import type { WorkLedgerSweepJob } from './work-ledger-sweep.types.ts';
 
 describe('WorkLedgerSweepProcessor', () => {
   let sessionRepo: Repository<WorkSession>;

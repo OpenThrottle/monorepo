@@ -11,12 +11,12 @@ import { Repository as OrmRepository } from 'typeorm';
 import {
   type ListPaginationInput,
   resolveListPagination,
-} from '../../common/list-pagination';
-import { isUniqueViolation } from '../../common/unique-violation';
+} from '../../common/list-pagination.ts';
+import { isUniqueViolation } from '../../common/unique-violation.ts';
 import {
   RepositoryCheckout,
   type RepositoryCheckoutKind,
-} from './repository-checkout.entity';
+} from './repository-checkout.entity.ts';
 
 interface CreateRepositoryCheckoutData {
   readonly displayName: string;

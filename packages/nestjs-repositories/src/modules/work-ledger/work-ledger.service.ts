@@ -3,9 +3,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { Repository } from 'typeorm';
 
-import { WorkArtifact } from './work-artifact.entity';
-import { WorkSession } from './work-session.entity';
-import { WorkSessionSubject } from './work-session-subject.entity';
+import { WorkArtifact } from './work-artifact.entity.ts';
+import { WorkSession } from './work-session.entity.ts';
+import { WorkSessionSubject } from './work-session-subject.entity.ts';
 
 @Injectable()
 export class WorkLedgerService {

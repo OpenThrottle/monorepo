@@ -4,7 +4,7 @@
 
 import { Field, Float, ObjectType } from '@nestjs/graphql';
 
-import { TaskRunMetricsObject } from './task-run-metrics.object';
+import { TaskRunMetricsObject } from './task-run-metrics.object.ts';
 
 @ObjectType('PlanRunMetricsEntry', {
   description:

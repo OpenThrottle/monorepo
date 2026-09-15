@@ -5,7 +5,7 @@ import {
   configValidationSchema,
   DEFAULT_CACHE_TTL_MS,
   DEFAULT_HARD_TTL_MULTIPLIER,
-} from './nestjs-model-discovery.config';
+} from './nestjs-model-discovery.config.ts';
 
 describe('configValidationSchema', () => {
   it('passes valid env values', () => {

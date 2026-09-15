@@ -7,8 +7,8 @@
 
 import { Module } from '@nestjs/common';
 
-import { QueueJobLogsResolver } from './queue-job-logs.resolver';
-import { QueueJobLogsService } from './queue-job-logs.service';
+import { QueueJobLogsResolver } from './queue-job-logs.resolver.ts';
+import { QueueJobLogsService } from './queue-job-logs.service.ts';
 
 @Module({
   providers: [QueueJobLogsResolver, QueueJobLogsService],

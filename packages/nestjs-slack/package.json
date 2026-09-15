@@ -1,6 +1,6 @@
 {
   "name": "@openthrottle/nestjs-slack",
-  "description": "NestJS module for Slack incoming webhooks via native fetch—validates webhook URL at bootstrap and exposes NestjsSlackService (no Slack SDK).",
+  "description": "NestJS module for Slack incoming webhooks via native fetch\u2014validates webhook URL at bootstrap and exposes NestjsSlackService (no Slack SDK).",
   "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
@@ -66,6 +66,6 @@
   },
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
-  "type": "commonjs",
+  "type": "module",
   "types": "./dist/src/index.d.ts"
 }

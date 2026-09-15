@@ -7,8 +7,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   buildScheduledAgentJobPayload,
   ScheduledAgentJobSchedulerService,
-} from './scheduled-agent-job-scheduler.service';
-import type { ScheduledAgentJobPayload } from './scheduled-agent-jobs.types';
+} from './scheduled-agent-job-scheduler.service.ts';
+import type { ScheduledAgentJobPayload } from './scheduled-agent-jobs.types.ts';
 
 const makeJob = (
   overrides: Partial<ScheduledAgentJob> = {},

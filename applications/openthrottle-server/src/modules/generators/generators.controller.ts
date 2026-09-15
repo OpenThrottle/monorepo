@@ -4,7 +4,7 @@ import {
   GeneratorItem,
   getGeneratorByName,
   getGeneratorsList,
-} from './generators.service';
+} from './generators.service.ts';
 
 @Controller('generators')
 export class GeneratorsController {

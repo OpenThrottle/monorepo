@@ -8,13 +8,13 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { Queue } from 'bullmq';
 
-import { REPEATABLE_JOB_OPTIONS } from '../repeatable-job.options';
-import { DATABASE_BACKUP_QUEUE_NAME } from './database-backup.constants';
-import { resolveDatabaseBackupSchedule } from './database-backup.env';
+import { REPEATABLE_JOB_OPTIONS } from '../repeatable-job.options.ts';
+import { DATABASE_BACKUP_QUEUE_NAME } from './database-backup.constants.ts';
+import { resolveDatabaseBackupSchedule } from './database-backup.env.ts';
 import type {
   DatabaseBackupJobPayload,
   DatabaseBackupJobResult,
-} from './database-backup.types';
+} from './database-backup.types.ts';
 
 /**
  * Registers the repeatable database-backup job on app bootstrap when env enables it.

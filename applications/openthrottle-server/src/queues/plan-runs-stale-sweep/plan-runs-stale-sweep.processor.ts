@@ -14,11 +14,11 @@ import {
 import {
   PLAN_RUNS_STALE_SWEEP_BATCH_SIZE,
   PLAN_RUNS_STALE_SWEEP_QUEUE_NAME,
-} from './plan-runs-stale-sweep.constants';
+} from './plan-runs-stale-sweep.constants.ts';
 import type {
   PlanRunsStaleSweepJob,
   PlanRunsStaleSweepSummary,
-} from './plan-runs-stale-sweep.types';
+} from './plan-runs-stale-sweep.types.ts';
 
 const CONCURRENCY = 1;
 /** How many recent runs to inspect when deciding whether a plan still has a live run. */

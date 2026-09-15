@@ -4,7 +4,7 @@
 
 import { Field, InputType, Int } from '@nestjs/graphql';
 
-import type { ListPullsOptions } from '../github/github.service';
+import type { ListPullsOptions } from '../github/github.service.ts';
 
 /** Shared owner/repo input for openPrCountByAuthor and prTimeInStateSummary. */
 @InputType()

@@ -6,9 +6,9 @@ import { asMock, isRecord } from '@openthrottle/nestjs-testing';
 import type { DeepPartial } from 'typeorm';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { DailyStat } from './daily-stat.entity';
-import { dailyStatsFactory } from './daily-stats.factory';
-import { DailyStatsService } from './daily-stats.service';
+import { DailyStat } from './daily-stat.entity.ts';
+import { dailyStatsFactory } from './daily-stats.factory.ts';
+import { DailyStatsService } from './daily-stats.service.ts';
 
 describe('DailyStatsService', () => {
   let service: DailyStatsService;

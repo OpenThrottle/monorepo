@@ -6,7 +6,7 @@ import {
   getPreviousUtcDayYmd,
   getUtcDayBounds,
   toYmd,
-} from './daily-stats.dates';
+} from './daily-stats.dates.ts';
 
 describe('daily-stats.dates', () => {
   describe('getUtcDayBounds', () => {
