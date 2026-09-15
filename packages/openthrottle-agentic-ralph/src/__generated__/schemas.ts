@@ -150,6 +150,7 @@ import {
   WorkArtifactsByPlanInput,
   WorkArtifactsBySessionInput,
   WorkArtifactsByTaskInput,
+  WorkLedgerCompletenessInput,
   WorkSessionsByPlanInput,
   WorkspaceEditorId,
   WorkspaceFolderReconciliation,
@@ -1366,7 +1367,9 @@ export function SettleCliPlanRunInputSchema(): z.ZodObject<
   Properties<SettleCliPlanRunInput>
 > {
   return z.object({
+    headSha: z.string().nullish(),
     planRunId: z.string().min(1),
+    prNumber: z.number().nullish(),
     status: z.string().min(1),
   });
 }
@@ -1678,6 +1681,14 @@ export function WorkArtifactsByTaskInputSchema(): z.ZodObject<
 > {
   return z.object({
     taskId: z.string().min(1),
+  });
+}
+
+export function WorkLedgerCompletenessInputSchema(): z.ZodObject<
+  Properties<WorkLedgerCompletenessInput>
+> {
+  return z.object({
+    limit: z.number().nullish(),
   });
 }
 

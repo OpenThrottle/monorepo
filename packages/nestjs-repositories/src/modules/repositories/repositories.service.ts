@@ -46,6 +46,15 @@ export class RepositoriesService {
   }
 
   /**
+   * @description Returns the TypeORM repository for repositories. Use for queries this service
+   * does not wrap — e.g. the work-ledger harvest listing enabled repos and stamping its watermark.
+   * @public
+   */
+  getRepository(): OrmRepository<Repository> {
+    return this.repository;
+  }
+
+  /**
    * @description Finds a repository by id.
    */
   async findById(id: string): Promise<Repository | null> {

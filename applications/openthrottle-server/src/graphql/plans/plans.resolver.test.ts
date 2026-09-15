@@ -30,6 +30,7 @@ import { TaggingEnqueueService } from '../../queues/tagging/tagging-enqueue.serv
 import { EffectiveUserResolutionService } from '../../services/effective-user-resolution/effective-user-resolution.service.ts';
 import { PlanCreationService } from '../../services/plan-creation/plan-creation.service.ts';
 import { PlanRunWorktreeCheckoutService } from '../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.service.ts';
+import { SettleRunLedgerService } from '../work-ledger/settle-run-ledger.service.ts';
 import { WorkLedgerCaptureService } from '../work-ledger/work-ledger-capture.service.ts';
 import type {
   CreatePlanInput,
@@ -251,6 +252,11 @@ describe('PlansResolver', () => {
     },
   );
 
+  const mockRecordSettledRunArtifacts = vi.fn().mockResolvedValue(undefined);
+  const mockSettleRunLedgerService = createMock<SettleRunLedgerService>({
+    recordSettledRunArtifacts: mockRecordSettledRunArtifacts,
+  });
+
   beforeAll(async () => {
     const app = await Test.createTestingModule({
       providers: [
@@ -303,6 +309,10 @@ describe('PlansResolver', () => {
         { provide: PlansService, useValue: mockPlansService },
         { provide: ProjectsService, useValue: mockProjectsService },
         { provide: TasksService, useValue: mockTasksService },
+        {
+          provide: SettleRunLedgerService,
+          useValue: mockSettleRunLedgerService,
+        },
         {
           provide: WorkLedgerCaptureService,
           useValue: createMock<WorkLedgerCaptureService>(),
@@ -1499,7 +1509,9 @@ describe('PlansResolver', () => {
       });
 
       const result = await resolver.settleCliPlanRun({
+        headSha: null,
         planRunId: 'cli-run-1',
+        prNumber: null,
         status: 'cancelled',
       });
 
@@ -1513,7 +1525,9 @@ describe('PlansResolver', () => {
       mockSettleCliRun.mockClear();
       await expect(
         resolver.settleCliPlanRun({
+          headSha: null,
           planRunId: 'cli-run-1',
+          prNumber: null,
           status: 'IN_PROGRESS',
         }),
       ).rejects.toThrow(/Invalid settle status/);
@@ -1524,11 +1538,76 @@ describe('PlansResolver', () => {
       mockSettleCliRun.mockResolvedValueOnce(null);
 
       const result = await resolver.settleCliPlanRun({
+        headSha: null,
         planRunId: 'missing',
+        prNumber: null,
         status: 'COMPLETED',
       });
 
       expect(result).toBeNull();
+    });
+
+    test('records both artifacts when a COMPLETED run reports a sha and a PR', async () => {
+      mockRecordSettledRunArtifacts.mockClear();
+      const run = {
+        bullmqJobId: null,
+        createdAt: new Date('2026-07-22T00:00:00.000Z'),
+        executionBackend: 'claude',
+        hostname: null,
+        id: 'cli-run-1',
+        pid: null,
+        planId: mockPlan.id,
+        queueName: PLANS_QUEUE_NAME,
+        runConfigSnapshot: null,
+        runKind: 'orchestrator',
+        status: 'COMPLETED',
+        updatedAt: new Date('2026-07-22T00:01:00.000Z'),
+        workerId: null,
+      };
+      mockSettleCliRun.mockResolvedValueOnce(run);
+
+      await resolver.settleCliPlanRun({
+        headSha: 'deadbeef',
+        planRunId: 'cli-run-1',
+        prNumber: 537,
+        status: 'COMPLETED',
+      });
+
+      expect(mockRecordSettledRunArtifacts).toHaveBeenCalledWith({
+        headSha: 'deadbeef',
+        planRun: run,
+        prNumber: 537,
+      });
+    });
+
+    test('records nothing on a non-COMPLETED exit even when a sha is supplied', async () => {
+      mockRecordSettledRunArtifacts.mockClear();
+      mockSettleCliRun.mockResolvedValueOnce({
+        bullmqJobId: null,
+        createdAt: new Date('2026-07-22T00:00:00.000Z'),
+        executionBackend: 'claude',
+        hostname: null,
+        id: 'cli-run-1',
+        pid: null,
+        planId: mockPlan.id,
+        queueName: PLANS_QUEUE_NAME,
+        runConfigSnapshot: null,
+        runKind: 'orchestrator',
+        status: 'FAILED',
+        updatedAt: new Date('2026-07-22T00:01:00.000Z'),
+        workerId: null,
+      });
+
+      // A run that died mid-way may still have pushed a branch; that is not a claim
+      // the ledger should make on its behalf.
+      await resolver.settleCliPlanRun({
+        headSha: 'deadbeef',
+        planRunId: 'cli-run-1',
+        prNumber: null,
+        status: 'FAILED',
+      });
+
+      expect(mockRecordSettledRunArtifacts).not.toHaveBeenCalled();
     });
   });
 

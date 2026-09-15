@@ -5,6 +5,7 @@ import {
   isRegisteredArtifactType,
   registeredArtifactTypes,
   resolveArtifactForWrite,
+  shouldFireLifecycleTriggers,
 } from './artifact-type-registry.ts';
 
 describe('artifact-type-registry', () => {
@@ -71,5 +72,44 @@ describe('artifact-type-registry', () => {
     expect(first.externalKey).toContain('status_change:task:task-1:COMPLETED:');
     // Event: same transition → distinct keys (so each is a separate append-only row).
     expect(second.externalKey).not.toBe(first.externalKey);
+  });
+  describe('shouldFireLifecycleTriggers', () => {
+    const landing = (
+      overrides: Partial<Parameters<typeof shouldFireLifecycleTriggers>[0]>,
+    ) =>
+      shouldFireLifecycleTriggers({
+        fireTriggers: undefined,
+        lifecycle: 'landed',
+        source: 'agent',
+        type: 'git_commit',
+        ...overrides,
+      });
+
+    it('fires for live agent-reported work', () => {
+      expect(landing({})).toBe(true);
+      expect(landing({ source: 'human' })).toBe(true);
+    });
+
+    it('suppresses bulk and adapter sources', () => {
+      expect(landing({ source: 'legacy' })).toBe(false);
+      expect(landing({ source: 'adapter' })).toBe(false);
+    });
+
+    it('lets an explicit fireTriggers override the source rule in both directions', () => {
+      expect(landing({ fireTriggers: false })).toBe(false);
+      expect(landing({ fireTriggers: true, source: 'legacy' })).toBe(true);
+    });
+
+    it("never fires for a state outside the type's triggerStates", () => {
+      expect(landing({ lifecycle: 'created' })).toBe(false);
+      expect(landing({ fireTriggers: true, lifecycle: 'created' })).toBe(false);
+      expect(landing({ lifecycle: 'merged', type: 'pull_request' })).toBe(
+        false,
+      );
+    });
+
+    it('never fires for an unregistered type', () => {
+      expect(landing({ fireTriggers: true, type: 'nope' })).toBe(false);
+    });
   });
 });

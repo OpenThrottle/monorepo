@@ -249,8 +249,44 @@ describe('GitHubService', () => {
       author: 'alice',
       changedFiles: 4,
       deletions: 10,
+      // Absent from this payload: the shape guard validates only the diff-stat fields,
+      // so everything outside that set is read defensively.
+      mergeCommitSha: null,
       mergedAt: '2026-01-15T12:00:00Z',
       number: 42,
+      state: 'open',
+    });
+
+    vi.unstubAllGlobals();
+  });
+
+  test('getPullDetail surfaces merge_commit_sha and state when GitHub sends them', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        json: () =>
+          Promise.resolve({
+            additions: 1,
+            changed_files: 1,
+            deletions: 0,
+            merge_commit_sha: 'squash-sha',
+            merged_at: '2026-01-15T12:00:00Z',
+            number: 42,
+            state: 'closed',
+            user: { login: 'alice' },
+          }),
+        ok: true,
+      }),
+    );
+
+    const service = new GitHubService(mockConfig);
+    const result = await service.getPullDetail('owner', 'repo', 42);
+
+    // The work-ledger verifier needs both: the merge sha is what a rebased-away branch
+    // commit gets repaired from, and state distinguishes merged from abandoned.
+    expect(result).toMatchObject({
+      mergeCommitSha: 'squash-sha',
+      state: 'closed',
     });
 
     vi.unstubAllGlobals();

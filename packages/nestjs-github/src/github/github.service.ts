@@ -30,8 +30,10 @@ interface GitHubPullDetail {
   readonly additions: number;
   readonly changed_files: number;
   readonly deletions: number;
+  readonly merge_commit_sha: string | null;
   readonly merged_at: string | null;
   readonly number: number;
+  readonly state: string;
   readonly user: { readonly login: string } | null;
 }
 
@@ -545,8 +547,12 @@ export class GitHubService {
       author: data.user?.login ?? '',
       changedFiles: data.changed_files,
       deletions: data.deletions,
-      mergedAt: data.merged_at,
+      // Read defensively: isPullDetail validates only the diff-stat fields, matching the
+      // existing treatment of merged_at, so anything outside that set can be absent.
+      mergeCommitSha: data.merge_commit_sha ?? null,
+      mergedAt: data.merged_at ?? null,
       number: data.number,
+      state: data.state === 'closed' ? 'closed' : 'open',
     };
   }
 
@@ -597,6 +603,65 @@ export class GitHubService {
       }
 
       return [...pageResults, ...(await fetchPage(page + 1))];
+    };
+
+    return fetchPage(1);
+  }
+
+  /**
+   * @description Lists commits on a branch, newest first, with their full messages. GET
+   * /repos/{o}/{r}/commits returns sha AND commit.message together, so trailer harvesting needs no
+   * per-commit fetch — one paginated call yields everything.
+   *
+   * `stopAtSha` is the watermark: paging stops as soon as that sha is seen, and it is NOT included
+   * in the result. Pass the last-harvested sha to fetch only what has landed since. Omit it to scan
+   * from the beginning.
+   *
+   * Returns [] when the repo or branch is unknown (404), so an inaccessible repo self-excludes
+   * rather than failing a sweep.
+   */
+  async listCommits(
+    owner: string,
+    repo: string,
+    branch: string,
+    stopAtSha?: string | null,
+  ): Promise<CommitSummaryDto[]> {
+    const headers = this.buildHeaders();
+    const perPage = 100;
+
+    const fetchPage = async (page: number): Promise<CommitSummaryDto[]> => {
+      const url = new URL(
+        `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/commits`,
+      );
+      url.searchParams.set('sha', branch);
+      url.searchParams.set('per_page', String(perPage));
+      url.searchParams.set('page', String(page));
+
+      const res = await this.fetchWithTimeout(url.toString(), headers);
+      if (res.status === 404 || res.status === 409) return [];
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(
+          `GitHub API error ${res.status}: ${text.slice(0, 200)}`,
+        );
+      }
+
+      const data = parseUnknownArray(await res.json());
+      const commits: CommitSummaryDto[] = [];
+
+      for (const item of data) {
+        const commit = parseCommitSummary(item);
+        if (commit == null) continue;
+        // The watermark is exclusive: everything from here down was harvested already.
+        if (stopAtSha != null && commit.sha === stopAtSha) return commits;
+        commits.push(commit);
+      }
+
+      if (data.length < perPage || page >= GITHUB_PAGINATION_MAX_PAGES) {
+        return commits;
+      }
+
+      return [...commits, ...(await fetchPage(page + 1))];
     };
 
     return fetchPage(1);
@@ -928,6 +993,41 @@ export interface CommitFileDto {
   readonly filename: string;
   readonly patch: string | null;
   readonly status: string;
+}
+
+/** A commit as the list endpoint returns it: identity, message, and GitHub's author login. */
+export interface CommitSummaryDto {
+  /** GitHub account login of the commit author; null when GitHub cannot attribute it. */
+  readonly authorLogin: string | null;
+  /** Full commit message, including trailers. */
+  readonly message: string;
+  readonly sha: string;
+}
+
+/**
+ * Validates one item from GET .../commits. Returns null for anything without a sha and a
+ * message — a malformed entry should be skipped, not fail the whole page.
+ */
+function parseCommitSummary(value: unknown): CommitSummaryDto | null {
+  if (!isObject(value)) return null;
+
+  const sha = value.sha;
+  const commit = value.commit;
+
+  if (typeof sha !== 'string' || !isObject(commit)) return null;
+
+  const message = commit.message;
+
+  if (typeof message !== 'string') return null;
+
+  const author = value.author;
+  const login = isObject(author) ? author.login : undefined;
+
+  return {
+    authorLogin: typeof login === 'string' && login !== '' ? login : null,
+    message,
+    sha,
+  };
 }
 
 /** Commit detail for diff-driven classification (refine-tagging). */
