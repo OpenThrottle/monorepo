@@ -27,6 +27,7 @@ const buildBySkill = (
   outcomeCount: 0,
   presence: SKILL_PRESENCE.INSTALLED,
   scope: SKILL_USAGE_SCOPES.OURS,
+  sessionEndedCount: 0,
   skillName: 'ot-plans',
   successCount: 0,
   ...overrides,
@@ -51,6 +52,7 @@ describe('SkillUsageLeaderboard Component', () => {
           outcomeCount: 3,
           presence: SKILL_PRESENCE.INSTALLED,
           scope: SKILL_USAGE_SCOPES.OURS,
+          sessionEndedCount: 0,
           skillName: 'ot-plans',
           successCount: 3,
         }),
@@ -58,6 +60,7 @@ describe('SkillUsageLeaderboard Component', () => {
           count: 2,
           presence: SKILL_PRESENCE.EXTERNAL,
           scope: SKILL_USAGE_SCOPES.THIRD_PARTY,
+          sessionEndedCount: 0,
           skillName: 'vercel:deploy',
         }),
       ],
@@ -88,11 +91,13 @@ describe('SkillUsageLeaderboard Component', () => {
         buildBySkill({
           presence: SKILL_PRESENCE.INSTALLED,
           scope: SKILL_USAGE_SCOPES.OURS,
+          sessionEndedCount: 0,
           skillName: 'ot-plans',
         }),
         buildBySkill({
           presence: SKILL_PRESENCE.EXTERNAL,
           scope: SKILL_USAGE_SCOPES.THIRD_PARTY,
+          sessionEndedCount: 0,
           skillName: 'vercel:deploy',
         }),
       ],
@@ -116,6 +121,7 @@ describe('SkillUsageLeaderboard Component', () => {
         buildBySkill({
           presence: SKILL_PRESENCE.INSTALLED,
           scope: SKILL_USAGE_SCOPES.OURS,
+          sessionEndedCount: 0,
           skillName: 'engineering:code-review',
         }),
       ],
@@ -132,6 +138,7 @@ describe('SkillUsageLeaderboard Component', () => {
         buildBySkill({
           presence: SKILL_PRESENCE.MISSING,
           scope: SKILL_USAGE_SCOPES.OURS,
+          sessionEndedCount: 0,
           skillName: 'renamed-away',
         }),
       ],
@@ -152,6 +159,7 @@ describe('SkillUsageLeaderboard Component', () => {
         buildBySkill({
           presence: SKILL_PRESENCE.MISSING,
           scope: SKILL_USAGE_SCOPES.OURS,
+          sessionEndedCount: 0,
           skillName: 'renamed-away',
         }),
       ],
@@ -167,6 +175,7 @@ describe('SkillUsageLeaderboard Component', () => {
         buildBySkill({
           presence: SKILL_PRESENCE.EXTERNAL,
           scope: SKILL_USAGE_SCOPES.THIRD_PARTY,
+          sessionEndedCount: 0,
           skillName: 'vercel:deploy',
         }),
       ],

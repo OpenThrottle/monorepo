@@ -371,8 +371,10 @@ mutation RecordSkillUsageOutcome($input: RecordSkillUsageOutcomeInput!) {
 var SKILL_USAGE_OUTCOMES = Object.freeze({
   ABANDONED: "abandoned",
   ERROR: "error",
+  SESSION_ENDED: "session_ended",
   SUCCESS: "success"
 });
+var SKILL_USAGE_QUALITY_OUTCOMES = Object.freeze([SKILL_USAGE_OUTCOMES.ERROR, SKILL_USAGE_OUTCOMES.SUCCESS]);
 var buildOutcomeEvent = ({
   skillName,
   outcome,
@@ -389,7 +391,7 @@ var buildOutcomeEvent = ({
   if (!name) {
     return null;
   }
-  if (outcome !== "success" && outcome !== "abandoned" && outcome !== "error") {
+  if (outcome !== "success" && outcome !== "abandoned" && outcome !== "error" && outcome !== "session_ended") {
     return null;
   }
   const scope = detectScope(name, repoRoot);
@@ -775,7 +777,7 @@ var persistOutcomeEvent = async ({
 var completeOpenStartsForSession = async ({
   repoRoot,
   sessionId,
-  outcome = SKILL_USAGE_OUTCOMES.SUCCESS,
+  outcome = SKILL_USAGE_OUTCOMES.SESSION_ENDED,
   finishedAt = (/* @__PURE__ */ new Date()).toISOString(),
   startsDir,
   jsonlPath,
@@ -789,7 +791,6 @@ var completeOpenStartsForSession = async ({
   if (!starts.length) {
     return { resolved: 0, results: [] };
   }
-  const finishMs = Date.parse(finishedAt);
   const seen = /* @__PURE__ */ new Set();
   const unique = [];
   for (const start of starts) {
@@ -803,8 +804,7 @@ var completeOpenStartsForSession = async ({
   const maybeResults = await Promise.all(
     unique.map(async (start) => {
       const key = startCorrelationKey(start);
-      const startedMs = Date.parse(String(start.started_at));
-      const durationMs = Number.isFinite(startedMs) && Number.isFinite(finishMs) ? Math.max(0, finishMs - startedMs) : null;
+      const durationMs = null;
       const event = buildOutcomeEvent({
         durationMs,
         outcome,
@@ -881,7 +881,6 @@ var sweepAbandonedStarts = async ({
     const sessionId = file.replace(/\.jsonl$/, "");
     const starts = listStartsForSession({ sessionId, startsDir: dir });
     const detectedAt = new Date(now).toISOString();
-    const lastSignalMs = mtimeMs;
     const seen = /* @__PURE__ */ new Set();
     for (const start of starts) {
       const key = startCorrelationKey(start);
@@ -889,10 +888,12 @@ var sweepAbandonedStarts = async ({
         continue;
       }
       seen.add(key);
-      const startedMs = Date.parse(String(start.started_at));
-      const observedMs = Number.isFinite(startedMs) ? Math.max(0, lastSignalMs - startedMs) : null;
       const event = buildOutcomeEvent({
-        durationMs: observedMs,
+        // Null for the same reason as the completion path: mtime − started_at
+        // is how long the SESSION ran before going silent, not how long this
+        // skill's work took. Averaged into `avgDurationMs` it would keep the
+        // column reporting session length under an honest-looking label.
+        durationMs: null,
         outcome: SKILL_USAGE_OUTCOMES.ABANDONED,
         repoRoot,
         sessionId: typeof start.session_id === "string" ? start.session_id : sessionId,
@@ -1020,7 +1021,7 @@ var normalizeCursorSessionEndPayload = (raw) => {
 };
 var cursorOutcomeForFinalStatus = (finalStatus) => {
   if (finalStatus === "completed") {
-    return SKILL_USAGE_OUTCOMES.SUCCESS;
+    return SKILL_USAGE_OUTCOMES.SESSION_ENDED;
   }
   if (finalStatus === "error" || finalStatus === "failed") {
     return SKILL_USAGE_OUTCOMES.ERROR;

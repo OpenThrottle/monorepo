@@ -318,7 +318,7 @@ describe('completeOpenStartsForSession', () => {
       };
     };
 
-  it('emits one success outcome per open start with computed duration, then drains', async () => {
+  it('emits one session_ended outcome per open start with no duration, then drains', async () => {
     const sessionId = 'sess-complete';
     recordSkillStart({
       scope: 'ours',
@@ -352,11 +352,16 @@ describe('completeOpenStartsForSession', () => {
     const bySkill = Object.fromEntries(
       posted.map((p) => [String(p.skillName), p]),
     );
-    expect(bySkill['ot-plans']?.outcome).toBe('success');
-    expect(bySkill['ot-plans']?.durationMs).toBe(5000);
+    // `session_ended`, never `success`: a session-end payload cannot tell
+    // whether the skill helped, so this path makes no quality claim.
+    expect(bySkill['ot-plans']?.outcome).toBe('session_ended');
     expect(bySkill['ot-plans']?.sessionId).toBe(sessionId);
     expect(bySkill['ot-plans']?.toolUseId).toBe('tu-a');
-    expect(bySkill['create-readme']?.durationMs).toBe(2000);
+    // No duration on any automatic path — the only figure available is
+    // session-tail length, which is not this skill's work. The event carries
+    // null, and the GraphQL input omits null durations entirely.
+    expect(bySkill['ot-plans']?.durationMs).toBeUndefined();
+    expect(bySkill['create-readme']?.durationMs).toBeUndefined();
 
     expect(listStartsForSession({ sessionId, startsDir })).toEqual([]);
     const posted2: Array<Record<string, unknown>> = [];
@@ -420,8 +425,8 @@ describe('completeOpenStartsForSession', () => {
     expect(res.resolved).toBe(1);
     expect(res.results[0]?.sink).toBe('jsonl');
     const line = JSON.parse(fs.readFileSync(jsonlPath, 'utf8').trim());
-    expect(line.outcome).toBe('success');
-    expect(line.duration_ms).toBe(2000);
+    expect(line.outcome).toBe('session_ended');
+    expect(line.duration_ms).toBeNull();
     expect(listStartsForSession({ sessionId, startsDir })).toEqual([]);
   });
 });
@@ -510,9 +515,11 @@ describe('sweepAbandonedStarts', () => {
     // mtime — an mtime stamp lands the row next to the start that wrote it and
     // makes every abandonment look instantaneous.
     expect(posted[0]?.occurredAt).toBe(new Date(now).toISOString());
-    // Observed lower bound on how far the run got: last file signal (mtime,
-    // now − 24h) minus started_at (now − 48h) = 24h.
-    expect(posted[0]?.durationMs).toBe(24 * 60 * 60 * 1000);
+    // Absent like every other automatic path: mtime − started_at is how long the
+    // SESSION ran before going silent, not how long this skill's work took, and
+    // averaging it into avgDurationMs would keep that column reporting session
+    // length under an honest-looking label.
+    expect(posted[0]?.durationMs).toBeUndefined();
 
     expect(fs.existsSync(stalePath)).toBe(false);
     expect(

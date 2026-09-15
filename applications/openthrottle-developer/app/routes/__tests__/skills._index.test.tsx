@@ -382,6 +382,7 @@ describe('routes/skills._index.tsx usage sections', () => {
           errorCount: 0,
           outcomeCount: 3,
           scope: 'ours',
+          sessionEndedCount: 0,
           skillName: 'skill-000',
           successCount: 3,
         },

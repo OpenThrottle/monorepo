@@ -161,7 +161,9 @@ describe('normalizeCursorSessionEndPayload', () => {
 
 describe('cursorOutcomeForFinalStatus', () => {
   it('treats only completed as success', () => {
-    expect(cursorOutcomeForFinalStatus('completed')).toBe('success');
+    // A clean session end is liveness, not quality — even from Cursor, which is
+    // the one adapter whose payload carries a real status.
+    expect(cursorOutcomeForFinalStatus('completed')).toBe('session_ended');
   });
 
   it('treats error and failed as error', () => {

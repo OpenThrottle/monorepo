@@ -75,6 +75,7 @@ const skillUsageResponse = {
         errorCount: 0,
         outcomeCount: 0,
         scope: 'ours',
+        sessionEndedCount: 0,
         skillName: 'ot-plans',
         successCount: 0,
       },

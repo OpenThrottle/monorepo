@@ -15,8 +15,11 @@ export interface SkillDetailUsageSkillStats {
   readonly errorCount: number;
   /** ISO timestamp of the most recent invocation in range; null when none. */
   readonly lastUsedAt: string | null;
+  /** QUALITY outcomes only — success + error. Never counts session-end records. */
   readonly outcomeCount: number;
   readonly scope: string;
+  /** Automatic session-end records: liveness, not quality. */
+  readonly sessionEndedCount: number;
   readonly skillName: string;
   readonly successCount: number;
 }
@@ -36,7 +39,12 @@ export type SkillDetailUsageData =
       readonly skill: SkillDetailUsageSkillStats | null;
     };
 
-/** Success rate over reported outcomes; em dash when no outcomes reported. */
+/**
+ * Success rate over REPORTED QUALITY outcomes (success + error); em dash when
+ * none were reported. The denominator deliberately excludes session-end and
+ * abandoned records — dividing by those would let a skill nobody measured show
+ * a confident percentage built entirely out of "the session finished".
+ */
 export const skillUsageSuccessRateLabel = (
   successCount: number,
   outcomeCount: number,

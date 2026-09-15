@@ -21,6 +21,7 @@ export type SkillUsageEventFactoryData = Pick<
   | 'hookEventName'
   | 'id'
   | 'invocationPath'
+  | 'isFixture'
   | 'occurredAt'
   | 'privacyLevel'
   | 'promptId'
@@ -46,6 +47,7 @@ export const skillUsageEventsFactory =
       hookEventName: 'PreToolUse',
       id: faker.string.uuid(),
       invocationPath: 'skill_tool',
+      isFixture: false,
       occurredAt,
       privacyLevel: SKILL_USAGE_PRIVACY_LEVELS.TRUNCATED,
       promptId: null,

@@ -190,9 +190,14 @@ export const normalizeCursorSessionEndPayload = (
  * `aborted`, `error`, `failed`, `cancelled` and `timeout`. `error`/`failed`
  * are the only ones that mean the work itself went wrong — everything else is
  * a session that stopped before finishing, which is exactly what `abandoned`
- * records. An unknown future status therefore lands on `abandoned` rather than
- * on `success`, so a status we have never seen can never be mistaken for one
- * we have.
+ * records. An unknown future status therefore lands on `abandoned`, so a status
+ * we have never seen can never be mistaken for one we have.
+ *
+ * `completed` maps to `session_ended`, NOT `success`. Cursor is reporting that
+ * the SESSION finished cleanly, which says nothing about whether the skill
+ * loaded in it helped. `error`/`failed` still map to `error` because that is a
+ * real failure the harness actually observed — Cursor is the one adapter whose
+ * payload carries a genuine failure signal, and that is worth keeping.
  *
  * @public
  */
@@ -200,7 +205,7 @@ export const cursorOutcomeForFinalStatus = (
   finalStatus: string | null,
 ): SkillUsageOutcome => {
   if (finalStatus === 'completed') {
-    return SKILL_USAGE_OUTCOMES.SUCCESS;
+    return SKILL_USAGE_OUTCOMES.SESSION_ENDED;
   }
   if (finalStatus === 'error' || finalStatus === 'failed') {
     return SKILL_USAGE_OUTCOMES.ERROR;
