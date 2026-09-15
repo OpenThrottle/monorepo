@@ -13,7 +13,9 @@
     "rxjs": "catalog:"
   },
   "devDependencies": {
-    "@openthrottle/nestjs-testing": "workspace:^"
+    "@openthrottle/nestjs-testing": "workspace:^",
+    "reflect-metadata": "catalog:",
+    "vitest": "catalog:"
   },
   "exports": {
     ".": {

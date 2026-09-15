@@ -13,7 +13,9 @@
     "typeorm": "catalog:"
   },
   "description": "Node-only OpenThrottle data client: Postgres vector search, plan/task/note CRUD, and embeddings (OpenAI/Ollama).",
-  "devDependencies": {},
+  "devDependencies": {
+    "vitest": "catalog:"
+  },
   "exports": {
     ".": {
       "types": "./src/index.ts",

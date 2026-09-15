@@ -12,7 +12,8 @@
     "@openthrottle/react-router-markdown": "workspace:^",
     "@openthrottle/react-router-shadcn": "workspace:^",
     "@openthrottle/react-router-ui": "workspace:^",
-    "clsx": "catalog:"
+    "clsx": "catalog:",
+    "lucide-react": "catalog:"
   },
   "description": "Reusable modal chat UI for React Router apps: dialog shell, message thread, composer, and Markdown rendering via react-router-shadcn and react-router-ui.",
   "license": "Apache-2.0",
@@ -69,5 +70,12 @@
   "style": "./src/index.css",
   "type": "module",
   "types": "./src/index.ts",
-  "version": "1.0.0"
+  "version": "1.0.0",
+  "devDependencies": {
+    "@testing-library/jest-dom": "catalog:",
+    "@testing-library/react": "catalog:",
+    "@testing-library/user-event": "catalog:",
+    "graphql": "catalog:",
+    "vitest": "catalog:"
+  }
 }

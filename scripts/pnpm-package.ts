@@ -1,8 +1,9 @@
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { readFile, writeFile } from 'fs/promises';
 import { createExportableManifest } from '@pnpm/exportable-manifest';
 import { readProjectManifestOnly } from '@pnpm/read-project-manifest';
+import { readFile, writeFile } from 'fs/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
 import { createLogger } from './lib/index.ts';
 
 const logger = createLogger();
@@ -33,8 +34,20 @@ const parts = name.split('/');
 const isTools = parts[0] === 'tools';
 const basePath = isTools ? `tools` : `packages`;
 const projectName = name.split('/').slice(1).join('/');
-const modulesDir = path.join(__dirname, `../node_modules`); // Our "node_modules" folder
 const projectDir = path.join(__dirname, `../${basePath}/${projectName}`); // folder of "package.json" to be translated
+/**
+ * Where `workspace:` specs are resolved to concrete versions, by reading each
+ * dependency's package.json out of this directory.
+ *
+ * This is the project's OWN node_modules, not the repo root's. It used to be
+ * the root's, which quietly required root package.json to declare every
+ * workspace package — publishing any one package depended on a root
+ * declaration that the publishing package never mentioned. Now that each
+ * project declares the siblings it uses, its own node_modules holds exactly
+ * the `workspace:` deps its manifest names, which is the correct and
+ * self-describing place to resolve them.
+ */
+const modulesDir = path.join(projectDir, `node_modules`);
 const distDir = path.join(__dirname, `../${basePath}/${projectName}/dist`); // folder to save the translated one
 
 const workspaceFile = path.join(__dirname, `../pnpm-workspace.yaml`); // catalog source of truth

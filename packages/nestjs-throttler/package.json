@@ -16,9 +16,12 @@
   },
   "devDependencies": {
     "@apollo/server": "catalog:",
+    "@as-integrations/express5": "catalog:",
     "@nestjs/apollo": "catalog:",
+    "@nestjs/testing": "catalog:",
     "@openthrottle/nestjs-testing": "workspace:^",
-    "graphql": "catalog:"
+    "graphql": "catalog:",
+    "vitest": "catalog:"
   },
   "exports": {
     ".": {

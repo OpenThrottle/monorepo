@@ -11,9 +11,15 @@
     "@apollo/utils.keyvadapter": "catalog:",
     "@apollo/utils.keyvaluecache": "catalog:",
     "@keyv/redis": "catalog:",
+    "@nestjs/common": "catalog:",
+    "@nestjs/config": "catalog:",
     "@openthrottle/nestjs-modules": "workspace:^",
     "ioredis": "catalog:",
     "keyv": "catalog:"
+  },
+  "devDependencies": {
+    "@golevelup/ts-vitest": "catalog:",
+    "vitest": "catalog:"
   },
   "exports": {
     ".": {

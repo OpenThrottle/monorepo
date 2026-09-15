@@ -11,7 +11,11 @@
     "@openthrottle/openthrottle-agentic-utils": "workspace:^",
     "@openthrottle/openthrottle-agentic-workflow": "workspace:^",
     "@openthrottle/openthrottle-mcp": "workspace:^",
-    "@tools/workflows": "workspace:^"
+    "@tools/workflows": "workspace:^",
+    "async-mutex": "catalog:"
+  },
+  "devDependencies": {
+    "vitest": "catalog:"
   },
   "exports": {
     ".": {

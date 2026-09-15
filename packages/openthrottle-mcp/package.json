@@ -8,20 +8,26 @@
     "openthrottle-mcp": "./dist/src/bin.js"
   },
   "dependencies": {
+    "@graphql-typed-document-node/core": "catalog:",
     "@modelcontextprotocol/sdk": "catalog:",
     "@nestjs/common": "catalog:",
     "@nestjs/core": "catalog:",
+    "@nestjs/platform-express": "catalog:",
     "@openthrottle/agentic-hooks": "workspace:^",
     "@openthrottle/graphql-codegen": "workspace:^",
     "@openthrottle/nestjs-modules": "workspace:^",
     "@openthrottle/nodejs-graphql": "workspace:^",
     "@rekog/mcp-nest": "catalog:",
-    "zod": "catalog:",
-    "@nestjs/platform-express": "catalog:"
+    "dotenv": "catalog:",
+    "zod": "catalog:"
   },
   "description": "Model Context Protocol server for OpenThrottle: plans, tasks, and GraphQL-backed tools (no direct database access).",
   "devDependencies": {
-    "esbuild": "catalog:"
+    "@nestjs/testing": "catalog:",
+    "esbuild": "catalog:",
+    "graphql-codegen-typescript-validation-schema": "catalog:",
+    "reflect-metadata": "catalog:",
+    "vitest": "catalog:"
   },
   "exports": {
     ".": {

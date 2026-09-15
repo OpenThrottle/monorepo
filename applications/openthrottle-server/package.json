@@ -17,6 +17,8 @@
     "@nestjs/jwt": "catalog:",
     "@nestjs/passport": "catalog:",
     "@nestjs/platform-express": "catalog:",
+    "@nestjs/throttler": "catalog:",
+    "@nestjs/typeorm": "catalog:",
     "@openthrottle/agentic-hooks": "workspace:^",
     "@openthrottle/agentic-token-usage": "workspace:^",
     "@openthrottle/nestjs-agentic-workflow": "workspace:^",
@@ -210,6 +212,13 @@
   "type": "commonjs",
   "version": "1.3.0",
   "devDependencies": {
-    "@openthrottle/nestjs-testing": "workspace:^"
+    "@golevelup/ts-vitest": "catalog:",
+    "@nestjs/testing": "catalog:",
+    "@openthrottle/nestjs-testing": "workspace:^",
+    "@testing-library/jest-dom": "catalog:",
+    "nestjs-cls": "catalog:",
+    "unplugin-swc": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
   }
 }

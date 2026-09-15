@@ -10,7 +10,8 @@
   "dependencies": {
     "@openthrottle/react-router-shadcn": "workspace:^",
     "react": "catalog:",
-    "react-dom": "catalog:"
+    "react-dom": "catalog:",
+    "tailwindcss": "catalog:"
   },
   "devDependencies": {
     "@storybook/addon-docs": "catalog:",

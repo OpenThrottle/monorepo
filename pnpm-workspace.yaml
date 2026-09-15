@@ -33,6 +33,16 @@ allowBuilds:
 # Single source of truth for every external dependency version in the
 # workspace. All package.json files reference these via the `catalog:`
 # protocol; enforced by `pnpm run check:catalog` (scripts/check-catalog-coverage.ts).
+# `@bull-board/api` requires `bullmq` dynamically from inside its own
+# `queueAdapters/bullMQ.js` but declares it neither as a dependency nor as a
+# peer, so pnpm has nothing to link and the require only ever resolved by
+# walking up to a hoisted root `node_modules`. Declaring the peer here lets the
+# consuming project satisfy it honestly instead of relying on root hoisting.
+packageExtensions:
+  '@bull-board/api':
+    peerDependencies:
+      bullmq: '*'
+
 catalog:
   '@apollo/cache-control-types': '^1.0.3'
   '@apollo/server': '^5.2.0'

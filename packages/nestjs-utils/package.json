@@ -10,6 +10,9 @@
   "dependencies": {
     "dataloader": "catalog:"
   },
+  "devDependencies": {
+    "vitest": "catalog:"
+  },
   "exports": {
     ".": {
       "types": "./dist/src/index.d.ts",

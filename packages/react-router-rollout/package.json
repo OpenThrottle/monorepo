@@ -11,7 +11,9 @@
     "@openthrottle/nodejs-utils": "workspace:^"
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "catalog:"
+    "@testing-library/jest-dom": "catalog:",
+    "@testing-library/react": "catalog:",
+    "vitest": "catalog:"
   },
   "license": "Apache-2.0",
   "main": "./src/index.ts",
