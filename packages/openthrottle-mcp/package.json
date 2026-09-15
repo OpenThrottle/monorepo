@@ -74,6 +74,7 @@
     ],
     "targets": {
       "__dev": {
+        "cache": false,
         "continuous": true,
         "dependsOn": [
           "codegen-graphql-watch"

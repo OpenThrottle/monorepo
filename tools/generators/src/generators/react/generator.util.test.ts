@@ -31,7 +31,7 @@ describe('utilGenerator', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ formatter: 'prettier' });
   });
 
   const target = '@openthrottle/react-router-ui';

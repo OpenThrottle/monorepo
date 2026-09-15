@@ -31,7 +31,7 @@ describe('componentGenerator', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ formatter: 'prettier' });
   });
 
   const target = '@openthrottle/react-router-shadcn';

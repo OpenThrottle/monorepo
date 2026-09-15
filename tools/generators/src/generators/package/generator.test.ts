@@ -14,7 +14,7 @@ describe('package generator', () => {
     const name = 'example-xxx-package';
 
     beforeEach(() => {
-      tree = createTreeWithEmptyWorkspace();
+      tree = createTreeWithEmptyWorkspace({ formatter: 'prettier' });
     });
 
     test('should create a new "@tools" package', async () => {
@@ -80,7 +80,7 @@ describe('package generator', () => {
     const name = 'example-xxx-package';
 
     beforeEach(() => {
-      tree = createTreeWithEmptyWorkspace();
+      tree = createTreeWithEmptyWorkspace({ formatter: 'prettier' });
     });
 
     test('should create a new "@openthrottle" package', async () => {

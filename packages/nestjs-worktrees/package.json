@@ -48,6 +48,7 @@
         "executor": "@nx/js:tsc"
       },
       "dev": {
+        "cache": false,
         "continuous": true,
         "executor": "@nx/js:tsc",
         "options": {

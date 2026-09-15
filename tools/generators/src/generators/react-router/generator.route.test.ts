@@ -8,7 +8,7 @@ describe('generatorReactRouterRoute', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ formatter: 'prettier' });
   });
 
   const application = 'openthrottle';

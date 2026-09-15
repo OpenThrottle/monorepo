@@ -33,7 +33,7 @@ describe('generators do not clobber existing files', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ formatter: 'prettier' });
   });
 
   const name = 'TestComponent';

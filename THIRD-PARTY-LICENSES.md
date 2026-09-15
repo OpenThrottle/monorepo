@@ -13,13 +13,13 @@ Platform-specific prebuilt binaries (packages that declare `os`/`cpu`, e.g.
 `@rollup/rollup-linux-x64-gnu`, `fsevents`) are omitted: which ones install depends on
 the host OS, and each shares the license of the cross-platform toolchain already listed.
 
-**2037** third-party packages.
+**2039** third-party packages.
 
 ## License summary
 
 | License | Packages |
 | --- | --- |
-| MIT | 1766 |
+| MIT | 1768 |
 | Apache-2.0 | 90 |
 | ISC | 74 |
 | BSD-3-Clause | 52 |
@@ -212,6 +212,8 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@cacheable/memory` | 2.2.0 | MIT | [Jared Wray](https://github.com/jaredwray/cacheable#readme) |
 | `@cacheable/utils` | 2.5.0 | MIT | [Jared Wray](https://github.com/jaredwray/cacheable#readme) |
 | `@cfworker/json-schema` | 4.1.1 | MIT | [Jeremy Danyow](https://github.com/cfworker/cfworker/tree/master/packages/json-schema/README.md) |
+| `@clack/core` | 1.4.3 | MIT | [Nate Moore](https://github.com/bombshell-dev/clack/tree/main/packages/core#readme) |
+| `@clack/prompts` | 1.7.0 | MIT | [Nate Moore](https://github.com/bombshell-dev/clack/tree/main/packages/prompts#readme) |
 | `@colors/colors` | 1.5.0, 1.6.0 | MIT | [DABH](https://github.com/DABH/colors.js) |
 | `@commitlint/cli` | 21.0.2 | MIT | [Mario Nebl](https://commitlint.js.org/) |
 | `@commitlint/config-conventional` | 21.0.2 | MIT | [Mario Nebl](https://commitlint.js.org/) |
@@ -416,17 +418,17 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@nodelib/fs.scandir` | 2.1.5 | MIT | [source](https://github.com/nodelib/nodelib/tree/master#readme) |
 | `@nodelib/fs.stat` | 2.0.5 | MIT | [source](https://github.com/nodelib/nodelib/tree/master#readme) |
 | `@nodelib/fs.walk` | 1.2.8 | MIT | [source](https://github.com/nodelib/nodelib/tree/master#readme) |
-| `@nx/devkit` | 23.1.3 | MIT | [Victor Savkin](https://nx.dev) |
-| `@nx/eslint` | 23.1.3 | MIT | [Victor Savkin](https://nx.dev) |
-| `@nx/eslint-plugin` | 23.1.3 | MIT | [Victor Savkin](https://nx.dev) |
-| `@nx/jest` | 23.1.3 | MIT | [Victor Savkin](https://nx.dev) |
-| `@nx/js` | 23.1.3 | MIT | [source](https://nx.dev) |
-| `@nx/plugin` | 23.1.3 | MIT | [Nrwl](https://nx.dev) |
-| `@nx/react` | 23.1.3 | MIT | [Victor Savkin](https://nx.dev) |
-| `@nx/vite` | 23.1.3 | MIT | [Victor Savkin](https://nx.dev) |
-| `@nx/vitest` | 23.1.3 | MIT | [Victor Savkin](https://nx.dev) |
-| `@nx/web` | 23.1.3 | MIT | [Victor Savkin](https://nx.dev) |
-| `@nx/workspace` | 23.1.3 | MIT | [Victor Savkin](https://nx.dev) |
+| `@nx/devkit` | 23.2.0 | MIT | [Victor Savkin](https://nx.dev) |
+| `@nx/eslint` | 23.2.0 | MIT | [Victor Savkin](https://nx.dev) |
+| `@nx/eslint-plugin` | 23.2.0 | MIT | [Victor Savkin](https://nx.dev) |
+| `@nx/jest` | 23.2.0 | MIT | [Victor Savkin](https://nx.dev) |
+| `@nx/js` | 23.2.0 | MIT | [source](https://nx.dev) |
+| `@nx/plugin` | 23.2.0 | MIT | [Nrwl](https://nx.dev) |
+| `@nx/react` | 23.2.0 | MIT | [Victor Savkin](https://nx.dev) |
+| `@nx/vite` | 23.2.0 | MIT | [Victor Savkin](https://nx.dev) |
+| `@nx/vitest` | 23.2.0 | MIT | [Victor Savkin](https://nx.dev) |
+| `@nx/web` | 23.2.0 | MIT | [Victor Savkin](https://nx.dev) |
+| `@nx/workspace` | 23.2.0 | MIT | [Victor Savkin](https://nx.dev) |
 | `@opentelemetry/api` | 1.9.1 | Apache-2.0 | [OpenTelemetry Authors](https://github.com/open-telemetry/opentelemetry-js/tree/main/api) |
 | `@opentelemetry/api-logs` | 0.220.0 | Apache-2.0 | [OpenTelemetry Authors](https://github.com/open-telemetry/opentelemetry-js/tree/main/experimental/packages/api-logs) |
 | `@opentelemetry/core` | 2.10.0 | Apache-2.0 | [OpenTelemetry Authors](https://github.com/open-telemetry/opentelemetry-js/tree/main/packages/opentelemetry-core) |
@@ -1075,7 +1077,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `engine.io` | 6.6.9 | MIT | [Guillermo Rauch](https://github.com/socketio/socket.io/tree/main/packages/engine.io#readme) |
 | `engine.io-parser` | 5.2.3 | MIT | [source](https://github.com/socketio/socket.io/tree/main/packages/engine.io-parser#readme) |
 | `enhanced-resolve` | 5.24.5 | MIT | [Tobias Koppers @sokra](https://github.com/webpack/enhanced-resolve#readme) |
-| `enquirer` | 2.3.6, 2.4.1 | MIT | [Jon Schlinkert](https://github.com/enquirer/enquirer) |
+| `enquirer` | 2.4.1 | MIT | [Jon Schlinkert](https://github.com/enquirer/enquirer) |
 | `entities` | 4.5.0, 6.0.1, 7.0.1, 8.0.0 | BSD-2-Clause | [Felix Boehm](https://github.com/fb55/entities#readme) |
 | `env-paths` | 2.2.1 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/env-paths#readme) |
 | `environment` | 1.1.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/environment#readme) |
@@ -1150,7 +1152,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `fast-string-truncated-width` | 3.0.3 | MIT | [source](https://github.com/fabiospampinato/fast-string-truncated-width#readme) |
 | `fast-string-width` | 3.0.2 | MIT | [source](https://github.com/fabiospampinato/fast-string-width#readme) |
 | `fast-uri` | 3.1.4 | BSD-3-Clause | [Vincent Le Goff](https://github.com/fastify/fast-uri) |
-| `fast-wrap-ansi` | 0.2.2 | MIT | [James Garbutt](https://github.com/43081j/fast-wrap-ansi#readme) |
+| `fast-wrap-ansi` | 0.2.0, 0.2.2 | MIT | [James Garbutt](https://github.com/43081j/fast-wrap-ansi#readme) |
 | `fast-xml-builder` | 1.3.0 | MIT | [Amit Gupta](https://github.com/NaturalIntelligence/fast-xml-builder#readme) |
 | `fast-xml-parser` | 5.10.1 | MIT | [Amit Gupta](https://github.com/NaturalIntelligence/fast-xml-parser#readme) |
 | `fastq` | 1.20.1 | ISC | [Matteo Collina](https://github.com/mcollina/fastq#readme) |
@@ -1591,7 +1593,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `normalize-url` | 8.1.1 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/normalize-url#readme) |
 | `npm-run-path` | 4.0.1, 5.3.0, 6.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/npm-run-path#readme) |
 | `nth-check` | 2.1.1 | BSD-2-Clause | [Felix Boehm](https://github.com/fb55/nth-check) |
-| `nx` | 23.1.3 | MIT | [Victor Savkin](https://nx.dev) |
+| `nx` | 23.2.0 | MIT | [Victor Savkin](https://nx.dev) |
 | `oauth` | 0.10.2, 0.9.15 | MIT | [Ciaran Jessup](https://github.com/ciaranj/node-oauth#readme) |
 | `object-assign` | 4.1.1 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/object-assign#readme) |
 | `object-hash` | 3.0.0 | MIT | [Scott Puleo](https://github.com/puleos/object-hash) |
