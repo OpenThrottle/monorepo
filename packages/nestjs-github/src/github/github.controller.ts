@@ -6,8 +6,8 @@ import {
   Query,
 } from '@nestjs/common';
 
-import type { PullListItemDto } from './dto/pull-list-item.dto';
-import { GitHubService, type ListPullsOptions } from './github.service';
+import type { PullListItemDto } from './dto/pull-list-item.dto.ts';
+import { GitHubService, type ListPullsOptions } from './github.service.ts';
 
 /** Query param: 'open' | 'closed' | 'all'. */
 type StateQuery = 'all' | 'closed' | 'open';

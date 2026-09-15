@@ -18,7 +18,7 @@ import {
   vi,
 } from 'vitest';
 
-import { RepositoryInspectionService } from './repository-inspection.service';
+import { RepositoryInspectionService } from './repository-inspection.service.ts';
 
 const execFileAsync = promisify(execFile);
 

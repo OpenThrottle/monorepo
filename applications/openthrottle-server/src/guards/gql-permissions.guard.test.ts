@@ -10,7 +10,7 @@ import { PERMISSIONS } from '@openthrottle/nestjs-rbac';
 import type { RolesService } from '@openthrottle/nestjs-repositories';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { GqlPermissionsGuard } from './gql-permissions.guard';
+import { GqlPermissionsGuard } from './gql-permissions.guard.ts';
 
 const userId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const serviceAccountId = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';

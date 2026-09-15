@@ -4,7 +4,7 @@
 
 import type { ConfigService } from '@nestjs/config';
 
-import type { AgentsMcpRoutedToolName } from './agents-mcp-router';
+import type { AgentsMcpRoutedToolName } from './agents-mcp-router.ts';
 
 /**
  * @description Routed MCP tools that mutate OpenThrottle data; blocked in agents chat unless {@link readAgentsChatMutationsEnabledFromConfig} is true. Extend when write routes are added to {@link AgentsMcpRouter}.

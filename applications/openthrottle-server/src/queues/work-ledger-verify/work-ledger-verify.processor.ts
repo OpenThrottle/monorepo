@@ -10,16 +10,16 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { Not } from 'typeorm';
 
-import { TaggingEnqueueService } from '../tagging/tagging-enqueue.service';
+import { TaggingEnqueueService } from '../tagging/tagging-enqueue.service.ts';
 import {
   WORK_LEDGER_VERIFY_BATCH_SIZE,
   WORK_LEDGER_VERIFY_ORPHAN_GRACE_HOURS,
   WORK_LEDGER_VERIFY_QUEUE_NAME,
-} from './work-ledger-verify.constants';
+} from './work-ledger-verify.constants.ts';
 import type {
   WorkLedgerVerifyJob,
   WorkLedgerVerifySummary,
-} from './work-ledger-verify.types';
+} from './work-ledger-verify.types.ts';
 
 const CONCURRENCY = 1;
 const MS_PER_HOUR = 60 * 60 * 1000;

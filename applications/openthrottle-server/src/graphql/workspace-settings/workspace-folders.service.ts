@@ -36,20 +36,20 @@ import {
   toHostPath,
 } from '@openthrottle/openthrottle-agentic-utils';
 
-import { ForeignSkillMaterializationService } from '../../services/foreign-skill-injection/foreign-skill-materialization.service';
-import { expandHome } from '../../services/paths/expand-home';
-import { RepositoryInspectionService } from '../repository-inspection/repository-inspection.service';
-import type { RepositoryInspectionSnapshot } from '../repository-inspection/repository-inspection.snapshot';
+import { ForeignSkillMaterializationService } from '../../services/foreign-skill-injection/foreign-skill-materialization.service.ts';
+import { expandHome } from '../../services/paths/expand-home.ts';
+import { RepositoryInspectionService } from '../repository-inspection/repository-inspection.service.ts';
+import type { RepositoryInspectionSnapshot } from '../repository-inspection/repository-inspection.snapshot.ts';
 import {
   canUseNativeFolderDialog,
   type NativeDialogRunner,
   pickNativeFolder,
-} from './native-folder-picker';
+} from './native-folder-picker.ts';
 import type {
   RepositoryCheckoutObject,
   RepositoryInspectionObject,
   RepositoryObject,
-} from './repository.object';
+} from './repository.object.ts';
 import type {
   AddWorkspaceFolderPayloadObject,
   BrowseDirectoryEntryObject,
@@ -59,8 +59,8 @@ import type {
   RefreshCheckoutPayloadObject,
   WorkspaceDirectoryListingObject,
   WorkspacePickerCapabilitiesObject,
-} from './workspace-folders.object';
-import { WorkspaceFolderReconciliationEnum } from './workspace-folders.object';
+} from './workspace-folders.object.ts';
+import { WorkspaceFolderReconciliationEnum } from './workspace-folders.object.ts';
 
 /** Env var: comma-separated absolute host-view paths scanned for candidates. */
 export const WORKSPACE_ROOTS_ENV = 'OPENTHROTTLE_WORKSPACE_ROOTS';

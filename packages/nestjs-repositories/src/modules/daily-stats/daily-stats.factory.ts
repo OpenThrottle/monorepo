@@ -5,7 +5,7 @@
 import { faker } from '@faker-js/faker';
 import { Factory } from 'fishery';
 
-import type { DailyStat } from './daily-stat.entity';
+import type { DailyStat } from './daily-stat.entity.ts';
 
 /** Column-only shape for building daily stat test data. */
 export type DailyStatFactoryData = Pick<

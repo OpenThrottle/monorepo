@@ -6,13 +6,13 @@ import { Args, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
 import type { PlanEmbedding } from '@openthrottle/nestjs-repositories';
 import { PlanEmbeddingsService } from '@openthrottle/nestjs-repositories';
 
-import { PlanObject } from '../plans/plan.object';
+import { PlanObject } from '../plans/plan.object.ts';
 import {
   GetPlanEmbeddingInput,
   PlanEmbeddingsByPlanInput,
-} from './plan-embedding.input';
-import { PlanEmbeddingObject } from './plan-embedding.object';
-import { PlanEmbeddingsLoaders } from './plan-embeddings-loaders';
+} from './plan-embedding.input.ts';
+import { PlanEmbeddingObject } from './plan-embedding.object.ts';
+import { PlanEmbeddingsLoaders } from './plan-embeddings-loaders.ts';
 
 /** Default and hard ceiling for the unbounded list query (bounds API memory). */
 const DEFAULT_LIST_LIMIT = 1000;

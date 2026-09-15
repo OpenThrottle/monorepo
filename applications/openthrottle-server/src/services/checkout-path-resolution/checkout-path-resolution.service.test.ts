@@ -20,7 +20,7 @@ const { mockRealpathSync } = vi.hoisted(() => ({
 
 vi.mock('node:fs', () => ({ realpathSync: mockRealpathSync }));
 
-import { CheckoutPathResolutionService } from './checkout-path-resolution.service';
+import { CheckoutPathResolutionService } from './checkout-path-resolution.service.ts';
 
 const PRIMARY = '/Users/matt/Development/openthrottle';
 const WORKTREE = `${PRIMARY}/worktrees/feature`;

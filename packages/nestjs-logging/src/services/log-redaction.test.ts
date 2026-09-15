@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import type { JsonValue } from '../ports/logging-ports';
+import type { JsonValue } from '../ports/logging-ports.ts';
 import {
   createLogRedactor,
   DEFAULT_LOG_REDACTOR,
   DEFAULT_REDACTION_REPLACEMENT,
-} from './log-redaction';
+} from './log-redaction.ts';
 
 describe('createLogRedactor (default-on)', () => {
   const redactor = createLogRedactor();

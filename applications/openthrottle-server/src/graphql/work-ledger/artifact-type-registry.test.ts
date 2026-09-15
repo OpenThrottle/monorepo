@@ -5,7 +5,7 @@ import {
   isRegisteredArtifactType,
   registeredArtifactTypes,
   resolveArtifactForWrite,
-} from './artifact-type-registry';
+} from './artifact-type-registry.ts';
 
 describe('artifact-type-registry', () => {
   it('registers the seed types', () => {

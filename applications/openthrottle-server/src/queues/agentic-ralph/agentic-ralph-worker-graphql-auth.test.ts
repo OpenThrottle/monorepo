@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { resolveAgenticRalphWorkerWorkflowGraphqlConfigFromEnv } from './agentic-ralph-worker-graphql-auth';
+import { resolveAgenticRalphWorkerWorkflowGraphqlConfigFromEnv } from './agentic-ralph-worker-graphql-auth.ts';
 
 describe('resolveAgenticRalphWorkerWorkflowGraphqlConfigFromEnv (auth token)', () => {
   const snapshot = { ...process.env };

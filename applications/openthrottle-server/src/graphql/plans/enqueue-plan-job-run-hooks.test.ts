@@ -10,7 +10,7 @@ import {
   parseJobRunHooksJsonInput,
   resolveJobRunHooksForEnqueue,
   serializeJobRunHooksForGraphql,
-} from './enqueue-plan-job-run-hooks';
+} from './enqueue-plan-job-run-hooks.ts';
 
 describe('parseJobRunHooksJsonInput', () => {
   it('returns undefined for null/empty', () => {

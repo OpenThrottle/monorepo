@@ -336,9 +336,14 @@ it did exactly that.
   error. Removing it is **not** sufficient on its own: TypeScript then rejects non-relative `paths`
   targets with **TS5090**, so every mapping must be explicitly relative (`["./app/*"]`, not `["app/*"]`).
 - **`moduleResolution: "node"` (node10) is removed (TS5108).** The two NestJS presets used it deliberately
-  to opt out of nodenext; they are now `nodenext`. CommonJS emit is preserved because those packages
-  declare `"type": "commonjs"`, which also keeps their files exempt from TS2835 — so no import-extension
-  migration was needed.
+  to opt out of nodenext; they are now `nodenext`. **This paragraph used to end "CommonJS emit is
+  preserved … so no import-extension migration was needed" — that deferral expired.** NestJS 12's
+  packages are ESM-only, the tier dropped `"type": "commonjs"`, and the import-extension migration
+  happened: ~2,560 relative specifiers gained `.ts` suffixes via `scripts/codemod-import-extensions.ts`,
+  which relies on `allowImportingTsExtensions` + `rewriteRelativeImportExtensions` (both already in
+  `tsconfig.base.json`) to emit `.js`. One package, `@openthrottle/nestjs-redis`, is still
+  `"type": "commonjs"` — the reason is a third-party dual-package type conflict recorded at the call
+  site that causes it.
 - **`ignoreDeprecations: "6.0"` is gone** from `tsconfig.base.json`. It existed to suppress the node10
   deprecation warning; with node10 gone it suppressed nothing, and removing it leaves the workspace green
   under both compilers.
@@ -559,7 +564,7 @@ A little under a third of the Nx projects in this workspace do **not** expose a 
 
 Most no-build packages are **`technology:react-router`** workspace libraries under `packages/react-router-*` (plus a couple of React-related codegen/MCP helpers). They follow a **source-first** pattern: `package.json` `main`/`module`/`types` point at `./src/index.ts` (not a precompiled `dist/`), and React Router apps (Vite) transpile these workspace dependencies when you run `dev` or `build` on the app. Their `nx.targets` use `__build`/`__build-package` placeholders so the `@nx/js/typescript` plugin does not infer a library `build` target. Do **not** add a standalone `build` target to these libraries unless you are deliberately moving them to a publishable `dist/` workflow.
 
-`nestjs-*` packages are the standing exception in the other direction: every `technology:nestjs` package is **built**, with `main`/`module`/`types` and every `exports` condition on `dist/` and live `build` and `dev` targets, enforced by `scripts/check-package-entrypoints.ts`. That rule is keyed on the tag, not on a per-package scan, and the whole tag flips to source-first at once when NestJS supports ESM — never flip one of them individually.
+`nestjs-*` packages are the standing exception in the other direction: every `technology:nestjs` package is **built**, with `main`/`module`/`types` and every `exports` condition on `dist/` and live `build` and `dev` targets, enforced by `scripts/check-package-entrypoints.ts`. That rule is keyed on the tag, not on a per-package scan — never flip one of them individually. **It is not a CommonJS artifact and it is not going away**: the tier moved to ESM with NestJS 12 and not one package became source-first-able, because Node's loader is strip-only and decorators and parameter properties require _emitted_ code. Four packages happen to carry neither today and are still built, deliberately. [↳](docs/monorepo/source-first-packages-and-strip-only.md)
 
 Source-first carries one constraint worth knowing before you flip a package into it: a package whose `exports` name `./src/` hands consumers raw TypeScript, and when that consumer is **Node** its strip-only loader rejects constructor parameter properties, `enum`, decorators and `namespace` blocks outright. The failure surfaces in an unrelated project's test run with an error naming neither the package nor `exports`, and no test-runner setting lifts it. `erasableSyntaxOnly` in `tsconfig.base.json` catches all of it except decorators, which each source-first package bans through `sourceFirstEslintConfig` — see [docs/monorepo/source-first-packages-and-strip-only.md](docs/monorepo/source-first-packages-and-strip-only.md).
 

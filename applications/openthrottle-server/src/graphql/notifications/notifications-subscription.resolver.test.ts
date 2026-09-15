@@ -2,7 +2,7 @@ import { createMock } from '@golevelup/ts-vitest';
 import type { PubSubEngine } from '@openthrottle/nestjs-graphql';
 import { describe, expect, it, vi } from 'vitest';
 
-import { NotificationsSubscriptionResolver } from './notifications-subscription.resolver';
+import { NotificationsSubscriptionResolver } from './notifications-subscription.resolver.ts';
 
 const iterator = { next: vi.fn(), return: vi.fn(), throw: vi.fn() };
 const pubSub = createMock<PubSubEngine>({

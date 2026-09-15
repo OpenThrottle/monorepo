@@ -18,8 +18,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type {
   PromoteTaskJobData,
   PromoteTaskJobResult,
-} from './task-promotion.types';
-import { TaskPromotionEnqueueService } from './task-promotion-enqueue.service';
+} from './task-promotion.types.ts';
+import { TaskPromotionEnqueueService } from './task-promotion-enqueue.service.ts';
 
 const TASK_ID = '00000000-0000-4000-8000-000000000001';
 

@@ -11,9 +11,9 @@ import type { WorkspaceEditorConfigService } from '@openthrottle/nestjs-reposito
 import type { Job, Queue } from 'bullmq';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { ForeignSkillInjectionLifecycleService } from '../../services/foreign-skill-injection/foreign-skill-injection-lifecycle.service';
-import type { ForeignSkillMaterializationService } from '../../services/foreign-skill-injection/foreign-skill-materialization.service';
-import { PlanRunsStaleSweepRepeatableService } from './plan-runs-stale-sweep-repeatable.service';
+import type { ForeignSkillInjectionLifecycleService } from '../../services/foreign-skill-injection/foreign-skill-injection-lifecycle.service.ts';
+import type { ForeignSkillMaterializationService } from '../../services/foreign-skill-injection/foreign-skill-materialization.service.ts';
+import { PlanRunsStaleSweepRepeatableService } from './plan-runs-stale-sweep-repeatable.service.ts';
 
 describe('PlanRunsStaleSweepRepeatableService.onModuleInit', () => {
   const calls: string[] = [];

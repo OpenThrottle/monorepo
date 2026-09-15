@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 
-import { DocIngestionProcessor } from './doc-ingestion.processor';
-import { DocIngestionQueueProducerModule } from './doc-ingestion-queue-producer.module';
-import { DocIngestionRepeatableService } from './doc-ingestion-repeatable.service';
+import { DocIngestionProcessor } from './doc-ingestion.processor.ts';
+import { DocIngestionQueueProducerModule } from './doc-ingestion-queue-producer.module.ts';
+import { DocIngestionRepeatableService } from './doc-ingestion-repeatable.service.ts';
 
 /**
  * @description Processor half of the doc-ingestion queue (WorkerHost +

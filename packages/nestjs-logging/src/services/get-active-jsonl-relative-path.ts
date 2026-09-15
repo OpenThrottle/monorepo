@@ -1,6 +1,6 @@
 import * as path from 'node:path';
 
-import type { ResolvedNestjsLoggingModuleOptions } from '../config/nestjs-logging.options';
+import type { ResolvedNestjsLoggingModuleOptions } from '../config/nestjs-logging.options.ts';
 
 const utcDateStamp = (): string => new Date().toISOString().slice(0, 10);
 

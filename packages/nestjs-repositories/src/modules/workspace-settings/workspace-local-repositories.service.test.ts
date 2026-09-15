@@ -5,13 +5,13 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { Project } from '../projects/project.entity';
-import { ProjectsService } from '../projects/projects.service';
-import { RepositoriesService } from '../repositories/repositories.service';
-import type { Repository } from '../repositories/repository.entity';
-import type { RepositoryCheckout } from '../repositories/repository-checkout.entity';
-import { RepositoryCheckoutsService } from '../repositories/repository-checkouts.service';
-import { WorkspaceLocalRepositoriesService } from './workspace-local-repositories.service';
+import type { Project } from '../projects/project.entity.ts';
+import { ProjectsService } from '../projects/projects.service.ts';
+import { RepositoriesService } from '../repositories/repositories.service.ts';
+import type { Repository } from '../repositories/repository.entity.ts';
+import type { RepositoryCheckout } from '../repositories/repository-checkout.entity.ts';
+import { RepositoryCheckoutsService } from '../repositories/repository-checkouts.service.ts';
+import { WorkspaceLocalRepositoriesService } from './workspace-local-repositories.service.ts';
 
 describe('WorkspaceLocalRepositoriesService', () => {
   const userId = '11111111-1111-4111-8111-111111111111';

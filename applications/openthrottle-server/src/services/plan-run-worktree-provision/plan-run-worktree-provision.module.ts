@@ -6,7 +6,7 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 
-import { PlanRunWorktreeProvisionService } from './plan-run-worktree-provision.service';
+import { PlanRunWorktreeProvisionService } from './plan-run-worktree-provision.service.ts';
 
 @Module({
   exports: [PlanRunWorktreeProvisionService],

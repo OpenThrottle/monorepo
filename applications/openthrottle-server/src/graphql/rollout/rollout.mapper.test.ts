@@ -18,7 +18,7 @@ import {
   toDomainUpdatePatch,
   toFeatureFlagObject,
   toRolloutFlagObject,
-} from './rollout.mapper';
+} from './rollout.mapper.ts';
 
 const flag: RolloutFlag = {
   createdAt: new Date('2026-01-01T00:00:00.000Z'),

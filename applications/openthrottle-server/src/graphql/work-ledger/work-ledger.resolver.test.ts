@@ -5,7 +5,7 @@ import type {
 } from '@openthrottle/nestjs-repositories';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { WorkLedgerResolver } from './work-ledger.resolver';
+import { WorkLedgerResolver } from './work-ledger.resolver.ts';
 
 describe('WorkLedgerResolver.recordWorkArtifact', () => {
   // Plain mock repo (not createMock<Repository>) so create/save take simple

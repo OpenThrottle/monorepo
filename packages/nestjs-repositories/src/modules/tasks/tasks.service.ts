@@ -3,9 +3,13 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { In, IsNull, Not, Repository } from 'typeorm';
 
-import { Plan } from '../plans/plan.entity';
-import { PlansService } from '../plans/plans.service';
-import { Task, type TaskHookScope, type TaskHookSource } from './task.entity';
+import { Plan } from '../plans/plan.entity.ts';
+import { PlansService } from '../plans/plans.service.ts';
+import {
+  Task,
+  type TaskHookScope,
+  type TaskHookSource,
+} from './task.entity.ts';
 
 /** Gap between auto-assigned sortOrder values within a plan. */
 export const TASK_SORT_ORDER_GAP = 1000;

@@ -253,7 +253,7 @@ USER appuser
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD ["node", "-e", "require('http').get('http://127.0.0.1:'+String(process.env.PORT||'3000')+'/health',function(r){r.resume();r.on('end',function(){process.exit(r.statusCode===200?0:1)})}).on('error',function(){process.exit(1)})"]
 
-CMD ["node", "-r", "dotenv/config", "build/src/main.js"]
+CMD ["node", "build/src/main.js"]
 
 ################################################################################
 #
@@ -280,4 +280,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD ["/nodejs/bin/node", "-e", "require('http').get('http://127.0.0.1:'+String(process.env.PORT||'3000')+'/health',function(r){r.resume();r.on('end',function(){process.exit(r.statusCode===200?0:1)})}).on('error',function(){process.exit(1)})"]
 
 # ENTRYPOINT is Node; CMD is argv only (see distroless/nodejs README).
-CMD ["-r", "dotenv/config", "build/src/main.js"]
+CMD ["build/src/main.js"]

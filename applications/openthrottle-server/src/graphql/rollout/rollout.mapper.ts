@@ -16,14 +16,14 @@ import type {
 } from '@openthrottle/nestjs-rollout';
 import { ROLLOUT_FLAG_KIND } from '@openthrottle/nestjs-rollout';
 
-import type { FeatureFlagObject } from './feature-flag.object';
+import type { FeatureFlagObject } from './feature-flag.object.ts';
 import type {
   CreateRolloutFlagInput,
   RolloutFallthroughInput,
   RolloutFlagVariationInput,
   UpdateRolloutFlagInput,
-} from './rollout.input';
-import type { RolloutFlagObject } from './rollout-flag.object';
+} from './rollout.input.ts';
+import type { RolloutFlagObject } from './rollout-flag.object.ts';
 
 const isRolloutVariationValue = (
   value: unknown,

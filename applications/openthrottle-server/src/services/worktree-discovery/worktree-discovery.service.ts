@@ -35,10 +35,10 @@ import {
   UserWorkspaceSettingsService,
 } from '@openthrottle/nestjs-repositories';
 
-import { parseLinkedWorktrees } from '../../graphql/repository-inspection/parse-linked-worktrees';
-import { realPath } from '../paths/real-path';
-import type { WorktreeRootSource } from '../worktree-root/worktree-root.resolver';
-import { resolveWorktreeRoot } from '../worktree-root/worktree-root.resolver';
+import { parseLinkedWorktrees } from '../../graphql/repository-inspection/parse-linked-worktrees.ts';
+import { realPath } from '../paths/real-path.ts';
+import type { WorktreeRootSource } from '../worktree-root/worktree-root.resolver.ts';
+import { resolveWorktreeRoot } from '../worktree-root/worktree-root.resolver.ts';
 import type {
   DiscoveredWorktree,
   ScannedWorktreeRoot,
@@ -46,11 +46,11 @@ import type {
   WorktreeDiscoveryProblemKind,
   WorktreeDiscoveryResult,
   WorktreeDiscoverySource,
-} from './worktree-discovery.types';
+} from './worktree-discovery.types.ts';
 import {
   WORKTREE_DISCOVERY_PROBLEM,
   WORKTREE_DISCOVERY_SOURCE,
-} from './worktree-discovery.types';
+} from './worktree-discovery.types.ts';
 
 const execFileAsync = promisify(execFile);
 

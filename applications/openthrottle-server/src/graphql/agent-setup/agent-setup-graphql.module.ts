@@ -9,10 +9,10 @@ import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import { AgentDiscoveryGraphqlModule } from '../agent-discovery/agent-discovery-graphql.module';
-import { AgentSetupResolver } from './agent-setup.resolver';
-import { AgentSetupService } from './agent-setup.service';
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { AgentDiscoveryGraphqlModule } from '../agent-discovery/agent-discovery-graphql.module.ts';
+import { AgentSetupResolver } from './agent-setup.resolver.ts';
+import { AgentSetupService } from './agent-setup.service.ts';
 
 @Module({
   imports: [

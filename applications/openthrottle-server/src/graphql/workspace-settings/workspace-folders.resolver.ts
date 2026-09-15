@@ -19,15 +19,15 @@ import { CurrentUser } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 import type { Project } from '@openthrottle/nestjs-repositories';
 
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import { ProjectObject } from '../projects/project.object';
-import { RepositoryObject } from './repository.object';
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { ProjectObject } from '../projects/project.object.ts';
+import { RepositoryObject } from './repository.object.ts';
 import {
   AddWorkspaceFolderInput,
   CloneRepositoryInput,
   RefreshCheckoutInput,
   UpdateRepositoryInput,
-} from './workspace-folders.input';
+} from './workspace-folders.input.ts';
 import {
   AddWorkspaceFolderPayloadObject,
   DiscoveredFolderObject,
@@ -35,9 +35,9 @@ import {
   RefreshCheckoutPayloadObject,
   WorkspaceDirectoryListingObject,
   WorkspacePickerCapabilitiesObject,
-} from './workspace-folders.object';
-import { WorkspaceFoldersService } from './workspace-folders.service';
-import { WorkspaceSettingsLoaders } from './workspace-settings-loaders';
+} from './workspace-folders.object.ts';
+import { WorkspaceFoldersService } from './workspace-folders.service.ts';
+import { WorkspaceSettingsLoaders } from './workspace-settings-loaders.ts';
 
 @Resolver(() => RepositoryObject)
 @UseGuards(GqlPermissionsGuard)

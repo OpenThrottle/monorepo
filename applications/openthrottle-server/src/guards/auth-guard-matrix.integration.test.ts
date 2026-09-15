@@ -21,11 +21,11 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { GlobalClsAuthHook } from '../auth/global-cls-auth-hook.service';
-import { ServiceAccountAuthService } from '../auth/service-account-auth.service';
-import { GlobalAuthGuard } from './global-auth.guard';
-import { GqlJwtAuthGuard } from './gql-jwt-auth.guard';
-import { GqlPermissionsGuard } from './gql-permissions.guard';
+import { GlobalClsAuthHook } from '../auth/global-cls-auth-hook.service.ts';
+import { ServiceAccountAuthService } from '../auth/service-account-auth.service.ts';
+import { GlobalAuthGuard } from './global-auth.guard.ts';
+import { GqlJwtAuthGuard } from './gql-jwt-auth.guard.ts';
+import { GqlPermissionsGuard } from './gql-permissions.guard.ts';
 
 const serviceAccountId = '11111111-1111-4111-8111-111111111111';
 const userId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';

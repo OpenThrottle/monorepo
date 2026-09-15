@@ -18,11 +18,11 @@ import { tmpdir } from 'os';
 import { join } from 'path';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import { toUserWorkspaceProfileObject } from './user-workspace-profile.mapper';
-import { WorkspaceEditorIdEnum } from './workspace-editor-id.enum';
-import { WorkspaceSettingsResolver } from './workspace-settings.resolver';
-import { WorkspaceSettingsLoaders } from './workspace-settings-loaders';
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { toUserWorkspaceProfileObject } from './user-workspace-profile.mapper.ts';
+import { WorkspaceEditorIdEnum } from './workspace-editor-id.enum.ts';
+import { WorkspaceSettingsResolver } from './workspace-settings.resolver.ts';
+import { WorkspaceSettingsLoaders } from './workspace-settings-loaders.ts';
 
 describe('WorkspaceSettingsResolver', () => {
   const userId = '11111111-1111-4111-8111-111111111111';

@@ -1,4 +1,4 @@
-export { NestjsLoggingError } from './config/nestjs-logging.error';
+export { NestjsLoggingError } from './config/nestjs-logging.error.ts';
 export {
   applyNestjsLoggingModuleDefaults,
   type CorrelationIdExtractor,
@@ -16,18 +16,18 @@ export {
   type TraceIdExtractor,
   validateNestjsLoggingModuleAsyncOptions,
   validateNestjsLoggingModuleOptions,
-} from './config/nestjs-logging.options';
+} from './config/nestjs-logging.options.ts';
 export {
   ALL_NESTJS_LOGGING_LEVELS,
   NESTJS_LOGGING_LEVELS,
   type NestjsLoggingLevel,
-} from './config/nestjs-logging-levels';
+} from './config/nestjs-logging-levels.ts';
 export {
   buildNestjsLoggingWebsocketGatewayClass,
   recordMatchesLogSubscriptionFilter,
-} from './gateways/nestjs-logging-websocket.gateway';
-export { NestjsLoggingModule } from './nestjs-logging.module';
-export { NestjsLoggingService } from './nestjs-logging.service';
+} from './gateways/nestjs-logging-websocket.gateway.ts';
+export { NestjsLoggingModule } from './nestjs-logging.module.ts';
+export { NestjsLoggingService } from './nestjs-logging.service.ts';
 export type {
   JsonPrimitive,
   JsonValue,
@@ -35,34 +35,34 @@ export type {
   LogReplayChunk,
   LogStreamHub,
   StructuredLogRecord,
-} from './ports/logging-ports';
-export { FileBackedLogStreamHub } from './services/file-backed-log-stream-hub.service';
-export { FileLogJsonlSink } from './services/file-log-jsonl-sink.service';
+} from './ports/logging-ports.ts';
+export { FileBackedLogStreamHub } from './services/file-backed-log-stream-hub.service.ts';
+export { FileLogJsonlSink } from './services/file-log-jsonl-sink.service.ts';
 export {
   orderJsonlRootObjectKeys,
   parseJsonlLineToStructuredRecord,
   serializeStructuredLogLine,
   structuredLogRecordToJsonlPayload,
-} from './services/jsonl-payload';
+} from './services/jsonl-payload.ts';
 export {
   type KeyedJsonlRunLine,
   readKeyedJsonlRun,
   type ReadKeyedJsonlRunOptions,
   type ReadKeyedJsonlRunParams,
   type ReadKeyedJsonlRunResult,
-} from './services/keyed-jsonl-reader';
+} from './services/keyed-jsonl-reader.ts';
+export { KeyedJsonlWriterError } from './services/keyed-jsonl-writer.error.ts';
 export {
   type KeyedJsonlRunChunkInput,
   type KeyedJsonlRunRecord,
   KeyedJsonlWriter,
   type KeyedJsonlWriterOptions,
-} from './services/keyed-jsonl-writer';
-export { KeyedJsonlWriterError } from './services/keyed-jsonl-writer.error';
+} from './services/keyed-jsonl-writer.ts';
 export {
   pruneKeyedRunOutputDirectory,
   type PruneKeyedRunOutputDirectoryParams,
   type PruneKeyedRunOutputDirectoryResult,
-} from './services/keyed-run-output-retention';
+} from './services/keyed-run-output-retention.ts';
 export {
   createLogRedactor,
   DEFAULT_LOG_REDACTOR,
@@ -71,7 +71,10 @@ export {
   DEFAULT_REDACTION_REPLACEMENT,
   type LogRedactor,
   type RedactionOptions,
-} from './services/log-redaction';
-export { StubLogJsonlSink } from './services/stub-log-jsonl-sink.service';
-export { StubLogStreamHub } from './services/stub-log-stream-hub.service';
-export { LOG_JSONL_SINK, LOG_STREAM_HUB } from './tokens/nestjs-logging.tokens';
+} from './services/log-redaction.ts';
+export { StubLogJsonlSink } from './services/stub-log-jsonl-sink.service.ts';
+export { StubLogStreamHub } from './services/stub-log-stream-hub.service.ts';
+export {
+  LOG_JSONL_SINK,
+  LOG_STREAM_HUB,
+} from './tokens/nestjs-logging.tokens.ts';

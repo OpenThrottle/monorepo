@@ -7,10 +7,10 @@
 
 import { Field, ObjectType } from '@nestjs/graphql';
 
-import { ChildProcessMetricsObject } from './child-process-metrics.object';
-import { ProcessMetricsSnapshotObject } from './process-metrics-snapshot.object';
-import { SystemCpuMetricsObject } from './system-cpu-metrics.object';
-import { WallClockMetricsObject } from './wall-clock-metrics.object';
+import { ChildProcessMetricsObject } from './child-process-metrics.object.ts';
+import { ProcessMetricsSnapshotObject } from './process-metrics-snapshot.object.ts';
+import { SystemCpuMetricsObject } from './system-cpu-metrics.object.ts';
+import { WallClockMetricsObject } from './wall-clock-metrics.object.ts';
 
 @ObjectType('TaskRunMetrics', {
   description: `Metrics captured at job start and end for a plan/task run, including process snapshots, child process resource usage, wall-clock analysis, and system CPU pressure.`,

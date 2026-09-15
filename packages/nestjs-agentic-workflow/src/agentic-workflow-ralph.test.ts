@@ -4,8 +4,8 @@ import type {
 } from '@openthrottle/openthrottle-agentic-ralph';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { AgenticWorkflowRalph } from './agentic-workflow-ralph';
-import { AGENTIC_WORKFLOW_RALPH_ID } from './agentic-workflow-ralph-registration';
+import { AgenticWorkflowRalph } from './agentic-workflow-ralph.ts';
+import { AGENTIC_WORKFLOW_RALPH_ID } from './agentic-workflow-ralph-registration.ts';
 
 const { createWorkflowRalphOrchestratorMock } = vi.hoisted(() => ({
   createWorkflowRalphOrchestratorMock: vi.fn(),

@@ -5,7 +5,7 @@
 import { faker } from '@faker-js/faker';
 import { Factory } from 'fishery';
 
-import type { Note } from './note.entity';
+import type { Note } from './note.entity.ts';
 
 /** Column-only shape for building note test data. */
 export type NoteFactoryData = Pick<

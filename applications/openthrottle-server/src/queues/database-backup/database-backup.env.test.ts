@@ -7,7 +7,7 @@ import {
   resolveBackupOwnership,
   resolveDatabaseBackupSchedule,
   validateBackupCronPattern,
-} from './database-backup.env';
+} from './database-backup.env.ts';
 
 const ENV_KEYS = [
   'DATABASE_BACKUP_CRON',

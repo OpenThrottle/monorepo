@@ -2,8 +2,8 @@ import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 
-import { HealthService } from '../../graphql/health/health.service';
-import { HealthController } from './health.controller';
+import { HealthService } from '../../graphql/health/health.service.ts';
+import { HealthController } from './health.controller.ts';
 
 describe('HealthController', () => {
   let controller: HealthController;

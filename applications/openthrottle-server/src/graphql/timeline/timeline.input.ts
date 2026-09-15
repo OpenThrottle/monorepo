@@ -9,7 +9,7 @@ import {
   TimelineLaneGrouping,
   TimelineMarkerKind,
   TimelineSpanKind,
-} from './timeline.enum';
+} from './timeline.enum.ts';
 
 @InputType()
 export class WorkstreamTimelineInput {

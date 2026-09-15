@@ -7,9 +7,9 @@ import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import { EditorPresenceResolver } from './editor-presence.resolver';
-import { EditorPresenceService } from './editor-presence.service';
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { EditorPresenceResolver } from './editor-presence.resolver.ts';
+import { EditorPresenceService } from './editor-presence.service.ts';
 
 @Module({
   exports: [EditorPresenceService],

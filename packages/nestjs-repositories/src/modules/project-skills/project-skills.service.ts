@@ -27,9 +27,9 @@ import {
 } from '@openthrottle/openthrottle-skills';
 import { Repository } from 'typeorm';
 
-import { SkillTagsService } from '../skill-tags/skill-tags.service';
-import type { TagCaller } from '../tags/tag-provenance';
-import { ProjectSkill } from './project-skill.entity';
+import { SkillTagsService } from '../skill-tags/skill-tags.service.ts';
+import type { TagCaller } from '../tags/tag-provenance.ts';
+import { ProjectSkill } from './project-skill.entity.ts';
 
 /**
  * A skill as exposed to the availability resolver: slug, static frontmatter

@@ -2,8 +2,8 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 
-import { User } from './user.entity';
-import { UsersService } from './users.service';
+import { User } from './user.entity.ts';
+import { UsersService } from './users.service.ts';
 
 @Module({
   controllers: [],

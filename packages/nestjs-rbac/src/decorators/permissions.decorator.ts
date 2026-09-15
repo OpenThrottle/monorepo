@@ -1,6 +1,6 @@
 import { SetMetadata } from '@nestjs/common';
 
-import type { Permission } from '../roles';
+import type { Permission } from '../roles.ts';
 
 /** Metadata key for required permissions on a route. */
 export const PERMISSIONS_KEY = 'permissions';

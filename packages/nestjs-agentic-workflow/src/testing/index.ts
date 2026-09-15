@@ -1,4 +1,4 @@
 export {
   compileAgenticWorkflowTestingModule,
   GlobalLoggerStubModule,
-} from './agentic-workflow-testing-module';
+} from './agentic-workflow-testing-module.ts';

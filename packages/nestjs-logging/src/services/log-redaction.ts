@@ -1,4 +1,4 @@
-import type { JsonPrimitive, JsonValue } from '../ports/logging-ports';
+import type { JsonPrimitive, JsonValue } from '../ports/logging-ports.ts';
 
 /**
  * @description Default replacement token written in place of redacted secret/PII values.

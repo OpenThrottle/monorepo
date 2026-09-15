@@ -10,7 +10,7 @@ import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { toContainerPath } from '@openthrottle/openthrottle-agentic-utils';
 
-import { RepositoryCheckoutsService } from '../repositories/repository-checkouts.service';
+import { RepositoryCheckoutsService } from '../repositories/repository-checkouts.service.ts';
 
 /** A checkout to resolve, scoped to the schedule's owner. */
 export interface ResolveScheduledAgentJobCheckoutPathInput {

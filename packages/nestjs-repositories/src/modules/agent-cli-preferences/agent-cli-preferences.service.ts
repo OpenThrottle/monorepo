@@ -14,8 +14,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { IsNull, Not, Repository } from 'typeorm';
 
-import { UserDisabledAgentCli } from './user-disabled-agent-cli.entity';
-import { UserFavoriteAgentModel } from './user-favorite-agent-model.entity';
+import { UserDisabledAgentCli } from './user-disabled-agent-cli.entity.ts';
+import { UserFavoriteAgentModel } from './user-favorite-agent-model.entity.ts';
 
 /**
  * A per-user overlay of model-level preferences, keyed by backend → set of model ids. Used for both

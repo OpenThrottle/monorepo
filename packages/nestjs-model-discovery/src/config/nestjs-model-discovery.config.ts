@@ -6,7 +6,7 @@ import {
   resolveHosts,
   resolvePorts,
 } from '@openthrottle/openthrottle-agentic-utils';
-import * as Joi from 'joi';
+import Joi from 'joi';
 
 /** ConfigService namespace for the model-discovery wrapper. */
 export const MODEL_DISCOVERY_CONFIG_NAMESPACE = 'modelDiscovery';

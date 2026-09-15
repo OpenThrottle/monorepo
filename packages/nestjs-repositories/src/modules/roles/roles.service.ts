@@ -5,13 +5,13 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import type { DeepPartial } from 'typeorm';
 import { Repository } from 'typeorm';
-import type { DeepPartial } from 'typeorm/common/DeepPartial';
 
-import { ServiceAccount } from '../service-accounts/service-account.entity';
-import { User } from '../users/user.entity';
-import { Permission } from './permission.entity';
-import { Role } from './role.entity';
+import { ServiceAccount } from '../service-accounts/service-account.entity.ts';
+import { User } from '../users/user.entity.ts';
+import { Permission } from './permission.entity.ts';
+import { Role } from './role.entity.ts';
 
 @Injectable()
 export class RolesService {

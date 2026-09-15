@@ -4,9 +4,9 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { beforeAll, describe, expect, it } from 'vitest';
 
-import { Note } from './note.entity';
-import { notesFactory } from './notes.factory';
-import { NotesService } from './notes.service';
+import { Note } from './note.entity.ts';
+import { notesFactory } from './notes.factory.ts';
+import { NotesService } from './notes.service.ts';
 
 describe('NotesService', () => {
   type GetRepository = ReturnType<NotesService['getRepository']>;

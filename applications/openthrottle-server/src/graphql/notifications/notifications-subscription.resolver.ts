@@ -18,7 +18,7 @@ import {
   type PubSubEngine,
 } from '@openthrottle/nestjs-graphql';
 
-import { NotificationEvent } from './notification-event.object';
+import { NotificationEvent } from './notification-event.object.ts';
 
 interface NotificationEnvelope {
   readonly event: NotificationEvent;

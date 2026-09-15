@@ -10,14 +10,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 
-import type { ListPaginationInput } from '../../common/list-pagination';
-import { ProjectsService } from '../projects/projects.service';
-import { normalizeRemoteUrl } from '../repositories/normalize-remote-url';
-import { RepositoriesService } from '../repositories/repositories.service';
-import type { Repository } from '../repositories/repository.entity';
-import type { RepositoryCheckout } from '../repositories/repository-checkout.entity';
-import { RepositoryCheckoutsService } from '../repositories/repository-checkouts.service';
-import type { WorkspaceLocalRepository } from './workspace-local-repository.entity';
+import type { ListPaginationInput } from '../../common/list-pagination.ts';
+import { ProjectsService } from '../projects/projects.service.ts';
+import { normalizeRemoteUrl } from '../repositories/normalize-remote-url.ts';
+import { RepositoriesService } from '../repositories/repositories.service.ts';
+import type { Repository } from '../repositories/repository.entity.ts';
+import type { RepositoryCheckout } from '../repositories/repository-checkout.entity.ts';
+import { RepositoryCheckoutsService } from '../repositories/repository-checkouts.service.ts';
+import type { WorkspaceLocalRepository } from './workspace-local-repository.entity.ts';
 
 interface CreateWorkspaceLocalRepositoryData {
   readonly displayName: string;

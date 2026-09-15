@@ -4,8 +4,8 @@
 
 import { Field, ObjectType } from '@nestjs/graphql';
 
-import { UserWorkspaceProfileObject } from './user-workspace-profile.object';
-import { WorkspaceLocalRepositoryObject } from './workspace-local-repository.object';
+import { UserWorkspaceProfileObject } from './user-workspace-profile.object.ts';
+import { WorkspaceLocalRepositoryObject } from './workspace-local-repository.object.ts';
 
 @ObjectType({
   description: `Workspace settings for the authenticated user: profile and local repositories.`,

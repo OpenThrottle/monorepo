@@ -30,15 +30,15 @@ import {
   DATA_RETENTION_BATCH_SIZE,
   DATA_RETENTION_MAX_BATCHES_PER_POLICY,
   DATA_RETENTION_QUEUE_NAME,
-} from './data-retention.constants';
-import { resolveDataRetentionConfig } from './data-retention.env';
-import { DATA_RETENTION_POLICIES_TOKEN } from './data-retention.policies';
+} from './data-retention.constants.ts';
+import { resolveDataRetentionConfig } from './data-retention.env.ts';
+import { DATA_RETENTION_POLICIES_TOKEN } from './data-retention.policies.ts';
 import type {
   DataRetentionJob,
   DataRetentionSweepSummary,
   RetentionPolicy,
   RetentionPolicyResult,
-} from './data-retention.types';
+} from './data-retention.types.ts';
 
 const CONCURRENCY = 1;
 

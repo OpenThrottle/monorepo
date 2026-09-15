@@ -4,7 +4,7 @@ import type {
   LogReplayChunk,
   LogStreamHub,
   StructuredLogRecord,
-} from '../ports/logging-ports';
+} from '../ports/logging-ports.ts';
 
 /**
  * @description No-op hub for tests or apps that disable streaming while keeping the token.

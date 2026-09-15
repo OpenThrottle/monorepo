@@ -7,14 +7,14 @@ import { Inject, Injectable } from '@nestjs/common';
 import {
   NESTJS_LOGGING_MODULE_OPTIONS,
   type ResolvedNestjsLoggingModuleOptions,
-} from '../config/nestjs-logging.options';
+} from '../config/nestjs-logging.options.ts';
 import type {
   LogReplayChunk,
   LogStreamHub,
   StructuredLogRecord,
-} from '../ports/logging-ports';
-import { getActiveJsonlRelativePath } from './get-active-jsonl-relative-path';
-import { parseJsonlLineToStructuredRecord } from './jsonl-payload';
+} from '../ports/logging-ports.ts';
+import { getActiveJsonlRelativePath } from './get-active-jsonl-relative-path.ts';
+import { parseJsonlLineToStructuredRecord } from './jsonl-payload.ts';
 
 const DEFAULT_MAX_REPLAY_BYTES = 256 * 1024;
 

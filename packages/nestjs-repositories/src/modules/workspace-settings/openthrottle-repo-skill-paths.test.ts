@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { OPENTHROTTLE_REPO_SKILL_PATHS } from './openthrottle-repo-skill-paths';
+import { OPENTHROTTLE_REPO_SKILL_PATHS } from './openthrottle-repo-skill-paths.ts';
 
 const REQUIRED_AGENTS_SKILL_SLUGS = [
   'ot-generators',

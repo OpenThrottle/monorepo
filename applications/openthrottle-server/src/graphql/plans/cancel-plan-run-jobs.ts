@@ -7,8 +7,8 @@
 import type { JobType } from 'bullmq';
 import type { Queue } from 'bullmq';
 
-import { isPlanRalphBullJobName } from '../../queues/plans/plans.constants';
-import type { RunPlanJobData } from '../../queues/plans/plans.types';
+import { isPlanRalphBullJobName } from '../../queues/plans/plans.constants.ts';
+import type { RunPlanJobData } from '../../queues/plans/plans.types.ts';
 
 const PLAN_RUN_SCAN_STATES: readonly JobType[] = [
   'waiting',

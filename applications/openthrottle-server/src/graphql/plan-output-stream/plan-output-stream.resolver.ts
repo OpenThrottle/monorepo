@@ -30,11 +30,11 @@ import {
   DeletePlanOutputInput,
   GetPlanOutputStreamChunkInput,
   ListPlanOutputStreamChunksInput,
-} from './plan-output-stream.input';
+} from './plan-output-stream.input.ts';
 import {
   DeletePlanOutputResult,
   PlanOutputStreamChunkObject,
-} from './plan-output-stream-chunk.object';
+} from './plan-output-stream-chunk.object.ts';
 
 /** Default and hard ceiling for the unbounded list query (bounds API memory). */
 const DEFAULT_LIST_LIMIT = 1000;

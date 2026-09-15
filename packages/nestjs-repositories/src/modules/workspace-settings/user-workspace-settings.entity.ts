@@ -12,8 +12,8 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-import { User } from '../users/user.entity';
-import type { WorkspaceEditorId } from './workspace-editor-id';
+import { User } from '../users/user.entity.ts';
+import type { WorkspaceEditorId } from './workspace-editor-id.ts';
 
 export interface UserWorkspaceSettingsData {
   readonly contactDisplayName: string | null;

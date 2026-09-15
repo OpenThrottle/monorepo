@@ -303,10 +303,10 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@graphql-tools/import` | 7.1.18 | MIT | [Dotan Simha](https://github.com/ardatan/graphql-tools#readme) |
 | `@graphql-tools/json-file-loader` | 8.0.32 | MIT | [Dotan Simha](https://github.com/ardatan/graphql-tools#readme) |
 | `@graphql-tools/load` | 8.1.15 | MIT | [Dotan Simha](https://github.com/ardatan/graphql-tools#readme) |
-| `@graphql-tools/merge` | 9.2.2, 9.2.3 | MIT | [Dotan Simha](https://github.com/ardatan/graphql-tools#readme) |
+| `@graphql-tools/merge` | 9.2.3 | MIT | [Dotan Simha](https://github.com/ardatan/graphql-tools#readme) |
 | `@graphql-tools/optimize` | 2.0.0 | MIT | [source](https://github.com/ardatan/graphql-tools#readme) |
 | `@graphql-tools/relay-operation-optimizer` | 7.1.8 | MIT | [Laurin Quast](https://github.com/ardatan/graphql-tools#readme) |
-| `@graphql-tools/schema` | 10.0.38, 10.1.0 | MIT | [source](https://github.com/ardatan/graphql-tools#readme) |
+| `@graphql-tools/schema` | 10.1.0 | MIT | [source](https://github.com/ardatan/graphql-tools#readme) |
 | `@graphql-tools/url-loader` | 9.1.6 | MIT | [Dotan Simha](https://github.com/ardatan/graphql-tools#readme) |
 | `@graphql-tools/utils` | 10.11.0, 11.2.2, 12.0.0 | MIT | [Dotan Simha](https://github.com/ardatan/graphql-tools#readme) |
 | `@graphql-tools/wrap` | 11.1.21 | MIT | [source](https://github.com/graphql-hive/gateway#readme) |
@@ -722,15 +722,15 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@types/yargs-parser` | 21.0.3 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/yargs-parser) |
 | `@typescript-eslint/eslint-plugin` | 8.69.0 | MIT | [source](https://typescript-eslint.io/packages/eslint-plugin) |
 | `@typescript-eslint/parser` | 8.69.0 | MIT | [source](https://typescript-eslint.io/packages/parser) |
-| `@typescript-eslint/project-service` | 8.65.0, 8.69.0 | MIT | [source](https://typescript-eslint.io) |
+| `@typescript-eslint/project-service` | 8.69.0 | MIT | [source](https://typescript-eslint.io) |
 | `@typescript-eslint/rule-tester` | 8.69.0 | MIT | [source](https://typescript-eslint.io/packages/rule-tester) |
-| `@typescript-eslint/scope-manager` | 8.65.0, 8.69.0 | MIT | [source](https://typescript-eslint.io/packages/scope-manager) |
-| `@typescript-eslint/tsconfig-utils` | 8.65.0, 8.69.0 | MIT | [source](https://typescript-eslint.io) |
-| `@typescript-eslint/type-utils` | 8.65.0, 8.69.0 | MIT | [source](https://typescript-eslint.io) |
-| `@typescript-eslint/types` | 8.65.0, 8.69.0 | MIT | [source](https://typescript-eslint.io) |
-| `@typescript-eslint/typescript-estree` | 8.65.0, 8.69.0 | MIT | [source](https://typescript-eslint.io/packages/typescript-estree) |
-| `@typescript-eslint/utils` | 8.65.0, 8.69.0 | MIT | [source](https://typescript-eslint.io/packages/utils) |
-| `@typescript-eslint/visitor-keys` | 8.65.0, 8.69.0 | MIT | [source](https://typescript-eslint.io) |
+| `@typescript-eslint/scope-manager` | 8.69.0 | MIT | [source](https://typescript-eslint.io/packages/scope-manager) |
+| `@typescript-eslint/tsconfig-utils` | 8.69.0 | MIT | [source](https://typescript-eslint.io) |
+| `@typescript-eslint/type-utils` | 8.69.0 | MIT | [source](https://typescript-eslint.io) |
+| `@typescript-eslint/types` | 8.69.0 | MIT | [source](https://typescript-eslint.io) |
+| `@typescript-eslint/typescript-estree` | 8.69.0 | MIT | [source](https://typescript-eslint.io/packages/typescript-estree) |
+| `@typescript-eslint/utils` | 8.69.0 | MIT | [source](https://typescript-eslint.io/packages/utils) |
+| `@typescript-eslint/visitor-keys` | 8.69.0 | MIT | [source](https://typescript-eslint.io) |
 | `@typescript/typescript6` | 6.0.2 | Apache-2.0 | [Microsoft Corp.](https://www.typescriptlang.org/) |
 | `@ungap/structured-clone` | 1.3.3 | ISC | [Andrea Giammarchi](https://github.com/ungap/structured-clone#readme) |
 | `@vercel/analytics` | 2.0.1 | MIT | [source](https://github.com/vercel/analytics#readme) |
@@ -1091,7 +1091,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `es-set-tostringtag` | 2.1.0 | MIT | [Jordan Harband](https://github.com/es-shims/es-set-tostringtag#readme) |
 | `es-shim-unscopables` | 1.1.0 | MIT | [Jordan Harband](https://github.com/ljharb/es-shim-unscopables#readme) |
 | `es-to-primitive` | 1.3.4 | MIT | [Jordan Harband](https://github.com/ljharb/es-to-primitive#readme) |
-| `es-toolkit` | 1.50.0, 1.51.0 | MIT | [source](https://es-toolkit.dev) |
+| `es-toolkit` | 1.51.0 | MIT | [source](https://es-toolkit.dev) |
 | `esast-util-from-estree` | 2.0.0 | MIT | [Titus Wormer](https://github.com/syntax-tree/esast-util-from-estree#readme) |
 | `esast-util-from-js` | 2.0.1 | MIT | [Titus Wormer](https://github.com/syntax-tree/esast-util-from-js#readme) |
 | `esbuild` | 0.24.2, 0.28.1 | MIT | [source](https://github.com/evanw/esbuild#readme) |
@@ -1230,7 +1230,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `graphql-depth-limit` | 1.1.0 | MIT | [Andrew Carlson](https://github.com/stems/graphql-depth-limit#readme) |
 | `graphql-subscriptions` | 2.0.0 | MIT | [source](https://github.com/apollostack/graphql-subscriptions#readme) |
 | `graphql-tag` | 2.12.7 | MIT | [source](https://github.com/apollographql/graphql-tag#readme) |
-| `graphql-ws` | 6.2.0, 6.2.1 | MIT | [Denis Badurina](https://the-guild.dev/graphql/ws) |
+| `graphql-ws` | 6.2.1 | MIT | [Denis Badurina](https://the-guild.dev/graphql/ws) |
 | `gtoken` | 7.1.0 | MIT | [Google, LLC](https://github.com/google/node-gtoken#readme) |
 | `handlebars` | 4.7.9 | MIT | [Yehuda Katz](https://handlebarsjs.com/) |
 | `happy-dom` | 20.11.1 | MIT | [David Ortner](https://github.com/capricorn86/happy-dom) |
@@ -2062,7 +2062,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `wrappy` | 1.0.2 | ISC | [Isaac Z. Schlueter](https://github.com/npm/wrappy) |
 | `write-file-atomic` | 5.0.1 | ISC | [GitHub Inc.](https://github.com/npm/write-file-atomic) |
 | `write-yaml-file` | 5.0.0 | MIT | [Zoltan Kochan](https://github.com/zkochan/packages/tree/main/write-yaml-file#readme) |
-| `ws` | 7.5.13, 8.21.1, 8.21.3 | MIT | [Einar Otto Stangvik](https://github.com/websockets/ws) |
+| `ws` | 7.5.13, 8.21.3 | MIT | [Einar Otto Stangvik](https://github.com/websockets/ws) |
 | `wsl-utils` | 0.1.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/wsl-utils#readme) |
 | `xdg-basedir` | 5.1.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/xdg-basedir#readme) |
 | `xml-name-validator` | 5.0.0 | Apache-2.0 | [Domenic Denicola](https://github.com/jsdom/xml-name-validator#readme) |

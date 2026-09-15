@@ -9,7 +9,7 @@ import type {
   PlanRunExecutionBackend,
 } from '@openthrottle/nestjs-repositories';
 
-import { ProjectObject } from '../projects/project.object';
+import { ProjectObject } from '../projects/project.object.ts';
 
 @ObjectType()
 export class PlanObject implements PlanData {

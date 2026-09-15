@@ -11,7 +11,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
-import type { ScheduledAgentJobDriverId } from './scheduled-agent-job.entity';
+import type { ScheduledAgentJobDriverId } from './scheduled-agent-job.entity.ts';
 
 /**
  * queued (pre-created by run-now) -> running (claimed) -> succeeded | no_op | failed | cancelled.

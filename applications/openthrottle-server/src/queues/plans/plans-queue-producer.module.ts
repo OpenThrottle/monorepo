@@ -5,9 +5,9 @@ import { NestjsBullmqBoardModule } from '@openthrottle/nestjs-bullmq-board';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRedisModule } from '@openthrottle/nestjs-redis';
 
-import { PlanCancelChannelService } from './plan-cancel-channel.service';
-import { PlanRunCancellationService } from './plan-run-cancellation.service';
-import { PLANS_QUEUE_NAME } from './plans.constants';
+import { PlanCancelChannelService } from './plan-cancel-channel.service.ts';
+import { PlanRunCancellationService } from './plan-run-cancellation.service.ts';
+import { PLANS_QUEUE_NAME } from './plans.constants.ts';
 
 /**
  * @description Producer half of the plans queue: registerQueue (enqueuePlanRun

@@ -12,11 +12,11 @@ import {
   WORK_LEDGER_SWEEP_BATCH_SIZE,
   WORK_LEDGER_SWEEP_QUEUE_NAME,
   WORK_LEDGER_SWEEP_TTL_HOURS,
-} from './work-ledger-sweep.constants';
+} from './work-ledger-sweep.constants.ts';
 import type {
   WorkLedgerSweepJob,
   WorkLedgerSweepSummary,
-} from './work-ledger-sweep.types';
+} from './work-ledger-sweep.types.ts';
 
 const CONCURRENCY = 1;
 const MS_PER_HOUR = 60 * 60 * 1000;

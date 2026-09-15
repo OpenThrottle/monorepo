@@ -1,5 +1,5 @@
 import type { ConfigService } from '@nestjs/config';
-import * as Joi from 'joi';
+import Joi from 'joi';
 
 export interface Schema {
   POSTGRES_CONNECT_TIMEOUT_MS: number;

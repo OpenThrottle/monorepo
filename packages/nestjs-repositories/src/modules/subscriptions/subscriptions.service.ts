@@ -1,14 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import type { DeepPartial } from 'typeorm';
 import { In } from 'typeorm';
 import { Repository } from 'typeorm';
-import type { DeepPartial } from 'typeorm/common/DeepPartial';
 
 import {
   type ListPaginationInput,
   resolveListPagination,
-} from '../../common/list-pagination';
-import { Subscription } from './subscription.entity';
+} from '../../common/list-pagination.ts';
+import { Subscription } from './subscription.entity.ts';
 
 @Injectable()
 export class SubscriptionsService {

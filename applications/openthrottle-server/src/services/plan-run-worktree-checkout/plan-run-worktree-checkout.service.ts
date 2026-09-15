@@ -18,7 +18,7 @@ import {
   RepositoryCheckoutsService,
 } from '@openthrottle/nestjs-repositories';
 
-import { RepositoryInspectionService } from '../../graphql/repository-inspection/repository-inspection.service';
+import { RepositoryInspectionService } from '../../graphql/repository-inspection/repository-inspection.service.ts';
 
 export interface RegisterPlanRunWorktreeCheckoutParams {
   /** Absolute filesystem path of the resolved worktree for this run. */

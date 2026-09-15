@@ -8,7 +8,7 @@ import { Injectable } from '@nestjs/common';
 import type { EmitNotificationEmitter } from '@openthrottle/nestjs-websockets';
 import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
 
-import { NotificationsService } from './notifications.service';
+import { NotificationsService } from './notifications.service.ts';
 
 /*
  * `EmitNotificationEmitter.emit(event, payload)` is a fixed cross-package

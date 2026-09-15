@@ -24,7 +24,7 @@ import {
   SkillUsageGitBranchSearchObject,
   SkillUsageOutcomeObject,
   SkillUsageResultObject,
-} from './skill-usage.object';
+} from './skill-usage.object.ts';
 
 export const toSkillUsageEventObject = (
   row: SkillUsageEvent,

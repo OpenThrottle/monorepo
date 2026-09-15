@@ -11,13 +11,13 @@ import { type AuthPrincipal, CurrentUser } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 import { AgentTokenUsageService } from '@openthrottle/nestjs-repositories';
 
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import { assertHumanAuthPrincipal } from '../service-accounts/assert-human-auth-principal';
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { assertHumanAuthPrincipal } from '../service-accounts/assert-human-auth-principal.ts';
 import {
   toTokenUsageRowObject,
   toTokenUsageTotalsObject,
-} from './token-usage.mapper';
-import { TokenUsageResultObject } from './token-usage.object';
+} from './token-usage.mapper.ts';
+import { TokenUsageResultObject } from './token-usage.object.ts';
 
 // @authz-stance: authenticated human user, scoped to their own rows.
 @Resolver()

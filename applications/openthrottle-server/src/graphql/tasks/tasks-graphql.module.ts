@@ -5,13 +5,13 @@
 import { Module } from '@nestjs/common';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 
-import { NotificationsModule } from '../../notifications/notifications.module';
-import { PlanRulesQueueProducerModule } from '../../queues/plan-rules/plan-rules-queue-producer.module';
-import { TaggingQueueProducerModule } from '../../queues/tagging/tagging-queue-producer.module';
-import { TaskPromotionQueueProducerModule } from '../../queues/task-promotion/task-promotion-queue-producer.module';
-import { WorkLedgerGraphqlModule } from '../work-ledger/work-ledger-graphql.module';
-import { TasksResolver } from './tasks.resolver';
-import { TasksLoaders } from './tasks-loaders';
+import { NotificationsModule } from '../../notifications/notifications.module.ts';
+import { PlanRulesQueueProducerModule } from '../../queues/plan-rules/plan-rules-queue-producer.module.ts';
+import { TaggingQueueProducerModule } from '../../queues/tagging/tagging-queue-producer.module.ts';
+import { TaskPromotionQueueProducerModule } from '../../queues/task-promotion/task-promotion-queue-producer.module.ts';
+import { WorkLedgerGraphqlModule } from '../work-ledger/work-ledger-graphql.module.ts';
+import { TasksResolver } from './tasks.resolver.ts';
+import { TasksLoaders } from './tasks-loaders.ts';
 
 @Module({
   imports: [

@@ -13,9 +13,9 @@ import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { DEFAULT_WORKTREE_ROOT_RELATIVE_PATH } from './worktree-root.resolver';
+import { DEFAULT_WORKTREE_ROOT_RELATIVE_PATH } from './worktree-root.resolver.ts';
 
-const REPO_ROOT = join(__dirname, '../../../../..');
+const REPO_ROOT = join(import.meta.dirname, '../../../../..');
 
 const read = (relativePath: string): string =>
   readFileSync(join(REPO_ROOT, relativePath), 'utf-8');

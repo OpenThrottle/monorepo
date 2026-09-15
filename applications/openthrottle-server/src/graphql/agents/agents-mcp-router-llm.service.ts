@@ -8,12 +8,12 @@ import { ChatOpenAI } from '@langchain/openai';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
-import type { AgentsMcpRouteDecision } from './agents-mcp-router';
+import type { AgentsMcpRouteDecision } from './agents-mcp-router.ts';
 import {
   buildAgentsMcpLlmRoutingSystemPrompt,
   messageContentToString,
   parseAgentsMcpLlmRoutingJson,
-} from './agents-mcp-router-llm.parse';
+} from './agents-mcp-router-llm.parse.ts';
 
 export interface AgentsRouterModelSnapshot {
   readonly modelName: string;

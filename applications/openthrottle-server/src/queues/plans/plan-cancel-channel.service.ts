@@ -13,7 +13,7 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import { REDIS_CLIENT } from '@openthrottle/nestjs-redis';
 import type { Redis } from 'ioredis';
 
-import { PlanRunCancellationService } from './plan-run-cancellation.service';
+import { PlanRunCancellationService } from './plan-run-cancellation.service.ts';
 
 /**
  * @description Channel 2 (the low-latency fast path) of the plan-run cancellation design

@@ -3,9 +3,9 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { Queue } from 'bullmq';
 
-import { REPEATABLE_JOB_OPTIONS } from '../repeatable-job.options';
-import { DAILY_STATS_QUEUE_NAME } from './daily-stats.constants';
-import type { AggregateDailyStatsJobData } from './daily-stats.types';
+import { REPEATABLE_JOB_OPTIONS } from '../repeatable-job.options.ts';
+import { DAILY_STATS_QUEUE_NAME } from './daily-stats.constants.ts';
+import type { AggregateDailyStatsJobData } from './daily-stats.types.ts';
 
 /** @description Cron pattern for 6am UTC daily (sec min hour day month dow). */
 const CRON_PATTERN = '0 0 6 * * *';

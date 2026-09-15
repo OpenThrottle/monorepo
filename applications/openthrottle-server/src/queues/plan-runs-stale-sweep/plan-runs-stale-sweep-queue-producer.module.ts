@@ -3,7 +3,7 @@ import { Module } from '@nestjs/common';
 import { NestjsBullmqModule } from '@openthrottle/nestjs-bullmq';
 import { NestjsBullmqBoardModule } from '@openthrottle/nestjs-bullmq-board';
 
-import { PLAN_RUNS_STALE_SWEEP_QUEUE_NAME } from './plan-runs-stale-sweep.constants';
+import { PLAN_RUNS_STALE_SWEEP_QUEUE_NAME } from './plan-runs-stale-sweep.constants.ts';
 
 /**
  * @description Producer half of the plan-runs-stale-sweep queue: registerQueue + Bull Board,

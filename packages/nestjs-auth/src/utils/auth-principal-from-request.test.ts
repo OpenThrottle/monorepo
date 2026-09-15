@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import {
   AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
   AUTH_PRINCIPAL_KIND_USER,
-} from '../auth-principal';
-import { getAuthPrincipalFromRequest } from './auth-principal-from-request';
+} from '../auth-principal.ts';
+import { getAuthPrincipalFromRequest } from './auth-principal-from-request.ts';
 
 describe('getAuthPrincipalFromRequest', () => {
   describe('returns undefined for non-request inputs', () => {

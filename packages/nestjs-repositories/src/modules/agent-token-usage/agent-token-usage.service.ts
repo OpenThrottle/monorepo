@@ -11,7 +11,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import type { NormalizedTokenUsage } from '@openthrottle/agentic-token-usage';
 import { Repository, type SelectQueryBuilder } from 'typeorm';
 
-import { AgentTokenUsage } from './agent-token-usage.entity';
+import { AgentTokenUsage } from './agent-token-usage.entity.ts';
 
 /**
  * A normalized usage row to persist: the folded {@link NormalizedTokenUsage} for

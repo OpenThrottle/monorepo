@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { normalizeRemoteUrl } from './normalize-remote-url';
+import { normalizeRemoteUrl } from './normalize-remote-url.ts';
 
 describe('normalizeRemoteUrl', () => {
   it('converts ssh shorthand to canonical https', () => {

@@ -31,7 +31,7 @@
 
 import type { DataSource } from 'typeorm';
 
-import type { RetentionPolicy } from '../data-retention.types';
+import type { RetentionPolicy } from '../data-retention.types.ts';
 
 /** Sessions holding a verified artifact are kept this long. */
 const VERIFIED_RETENTION_DAYS = 365;

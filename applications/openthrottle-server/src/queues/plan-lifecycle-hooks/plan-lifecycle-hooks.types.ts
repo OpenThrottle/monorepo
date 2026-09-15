@@ -6,7 +6,7 @@ import type {
 } from '@tools/workflows';
 import type { Job } from 'bullmq';
 
-import type { RunPlanJobData } from '../plans/plans.types';
+import type { RunPlanJobData } from '../plans/plans.types.ts';
 
 /**
  * Payload for one lifecycle hook child BullMQ job.

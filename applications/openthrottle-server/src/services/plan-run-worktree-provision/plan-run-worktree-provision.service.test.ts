@@ -12,7 +12,7 @@ const { mockExecFile } = vi.hoisted(() => ({ mockExecFile: vi.fn() }));
 
 vi.mock('node:child_process', () => ({ execFile: mockExecFile }));
 
-import { PlanRunWorktreeProvisionService } from './plan-run-worktree-provision.service';
+import { PlanRunWorktreeProvisionService } from './plan-run-worktree-provision.service.ts';
 
 const BASE = '/Users/matt/Development/openthrottle';
 const WORKTREE = '/Users/matt/Development/openthrottle-worktrees/plan-5e172b67';

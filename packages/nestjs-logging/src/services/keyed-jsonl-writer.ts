@@ -1,16 +1,16 @@
 import { type FileHandle, mkdir, open } from 'node:fs/promises';
 import * as path from 'node:path';
 
-import type { JsonlDurabilityLevel } from '../config/nestjs-logging.options';
+import type { JsonlDurabilityLevel } from '../config/nestjs-logging.options.ts';
 import {
   appendUtf8ToFileHandle,
   flushFileHandle,
-} from './jsonl-file-handle-io';
-import { KeyedJsonlWriterError } from './keyed-jsonl-writer.error';
+} from './jsonl-file-handle-io.ts';
+import { KeyedJsonlWriterError } from './keyed-jsonl-writer.error.ts';
 import {
   buildKeyedJsonlRelativePath,
   keyedJsonlPairHash8,
-} from './keyed-jsonl-writer-path';
+} from './keyed-jsonl-writer-path.ts';
 
 const compoundKey = (queueName: string, jobId: string): string =>
   `${queueName}\0${jobId}`;

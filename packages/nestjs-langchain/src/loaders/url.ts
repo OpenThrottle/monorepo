@@ -1,7 +1,7 @@
 import { CheerioWebBaseLoader } from '@langchain/community/document_loaders/web/cheerio';
 import type { Document } from '@langchain/core/documents';
 
-import { assertSafeWebURL } from './url-guard';
+import { assertSafeWebURL } from './url-guard.ts';
 
 /**
  * @link https://js.langchain.com/docs/integrations/document_loaders/web_loaders/web_cheerio/

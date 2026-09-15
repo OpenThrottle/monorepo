@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { NestjsSlackError } from './nestjs-slack.error';
-import { validateNestjsSlackOptions } from './nestjs-slack.options';
+import { NestjsSlackError } from './nestjs-slack.error.ts';
+import { validateNestjsSlackOptions } from './nestjs-slack.options.ts';
 
 describe('validateNestjsSlackOptions', () => {
   describe('when options are null or undefined', () => {

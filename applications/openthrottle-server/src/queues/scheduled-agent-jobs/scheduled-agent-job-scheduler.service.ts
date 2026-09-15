@@ -11,8 +11,8 @@ import {
   SCHEDULED_AGENT_JOB_OPTIONS,
   SCHEDULED_AGENT_JOB_SCHEDULER_PREFIX,
   SCHEDULED_AGENT_JOBS_QUEUE_NAME,
-} from './scheduled-agent-jobs.constants';
-import type { ScheduledAgentJobPayload } from './scheduled-agent-jobs.types';
+} from './scheduled-agent-jobs.constants.ts';
+import type { ScheduledAgentJobPayload } from './scheduled-agent-jobs.types.ts';
 
 /**
  * @description Builds the self-contained run snapshot embedded in the BullMQ scheduler (and re-used

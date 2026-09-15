@@ -9,8 +9,8 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import { usersFactory } from '@openthrottle/nestjs-repositories';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 
-import { AuthResolver } from './auth.resolver';
-import { AuthService } from './auth.service';
+import { AuthResolver } from './auth.resolver.ts';
+import { AuthService } from './auth.service.ts';
 
 describe('AuthResolver', () => {
   let resolver: AuthResolver;

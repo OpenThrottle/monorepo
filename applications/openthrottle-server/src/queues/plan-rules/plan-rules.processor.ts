@@ -39,15 +39,15 @@ import {
   type TagActionRuleInput,
 } from '@openthrottle/openthrottle-skills';
 
-import { ActionExecutorRegistry } from './action-executor';
+import { ActionExecutorRegistry } from './action-executor.ts';
 import {
   PLAN_RULES_QUEUE_NAME,
   PLAN_RULES_WORKER_CONCURRENCY,
-} from './plan-rules.constants';
+} from './plan-rules.constants.ts';
 import type {
   PlanRulesEvaluateJob,
   PlanRulesEvaluateJobResult,
-} from './plan-rules.types';
+} from './plan-rules.types.ts';
 
 @Processor(PLAN_RULES_QUEUE_NAME, {
   ...defaultWorkerOptions,

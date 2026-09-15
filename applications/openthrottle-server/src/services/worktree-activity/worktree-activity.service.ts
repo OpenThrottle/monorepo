@@ -26,17 +26,17 @@ import {
   STALE_CUTOFF_MS,
 } from '@openthrottle/nestjs-repositories';
 
-import { WorktreeDiscoveryService } from '../worktree-discovery/worktree-discovery.service';
+import { WorktreeDiscoveryService } from '../worktree-discovery/worktree-discovery.service.ts';
 import type {
   DiscoveredWorktree,
   WorktreeDiscoveryProblem,
-} from '../worktree-discovery/worktree-discovery.types';
-import { WORKTREE_DISCOVERY_PROBLEM } from '../worktree-discovery/worktree-discovery.types';
+} from '../worktree-discovery/worktree-discovery.types.ts';
+import { WORKTREE_DISCOVERY_PROBLEM } from '../worktree-discovery/worktree-discovery.types.ts';
 import type {
   ClassifiedWorktree,
   WorktreeActivityResult,
-} from './worktree-activity.types';
-import { WORKTREE_ACTIVITY } from './worktree-activity.types';
+} from './worktree-activity.types.ts';
+import { WORKTREE_ACTIVITY } from './worktree-activity.types.ts';
 
 /**
  * @description The classification itself, as a pure function of the discovered git signals plus the

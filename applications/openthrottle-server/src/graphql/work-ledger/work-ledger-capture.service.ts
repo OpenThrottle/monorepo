@@ -23,7 +23,7 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { EntityManager, IsNull } from 'typeorm';
 
-import { resolveArtifactForWrite } from './artifact-type-registry';
+import { resolveArtifactForWrite } from './artifact-type-registry.ts';
 
 const INSTANT_SESSION_TOOL_NAME = 'developer-app';
 

@@ -7,7 +7,7 @@ import {
   getStripeConfig,
   STRIPE_API_VERSION,
   STRIPE_MAX_NETWORK_RETRIES,
-} from './stripe-config';
+} from './stripe-config.ts';
 
 describe('getStripeConfig', () => {
   const originalEnv = process.env;

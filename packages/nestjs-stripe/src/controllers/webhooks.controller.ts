@@ -4,7 +4,7 @@
 
 import { Controller, Headers, Post, Req } from '@nestjs/common';
 
-import { StripeWebhookHandlerService } from '../services/stripe-webhook-handler.service';
+import { StripeWebhookHandlerService } from '../services/stripe-webhook-handler.service.ts';
 
 /** Request carrying raw body for signature verification (Nest `rawBody: true`). */
 interface RequestWithRawBody {

@@ -9,7 +9,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   ConversationStreamService,
   type StartConversationStreamRun,
-} from './conversation-stream.service';
+} from './conversation-stream.service.ts';
 
 const {
   claudeStreamMock,

@@ -6,15 +6,15 @@ import {
   SKILL_USAGE_PRIVACY_LEVELS,
   SKILL_USAGE_SCOPES,
   SkillUsageEvent,
-} from './skill-usage-events.entity';
+} from './skill-usage-events.entity.ts';
 import {
   SKILL_USAGE_DEFAULT_BRANCHES,
   SkillUsageEventsService,
-} from './skill-usage-events.service';
+} from './skill-usage-events.service.ts';
 import {
   SKILL_USAGE_OUTCOMES,
   SkillUsageOutcome,
-} from './skill-usage-outcomes.entity';
+} from './skill-usage-outcomes.entity.ts';
 
 type QueryBuilderMock = {
   addGroupBy: ReturnType<typeof vi.fn>;

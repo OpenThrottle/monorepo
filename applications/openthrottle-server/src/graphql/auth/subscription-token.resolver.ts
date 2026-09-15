@@ -9,7 +9,7 @@
 import { Mutation, Resolver } from '@nestjs/graphql';
 import { CurrentUser } from '@openthrottle/nestjs-auth';
 
-import { AuthService } from './auth.service';
+import { AuthService } from './auth.service.ts';
 
 // @authz-stance: authenticated-only (Path A — see OT plan 18e16dfc-4f22-43f9-9b77-6fc90309b60a)
 @Resolver()

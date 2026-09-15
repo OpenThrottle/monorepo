@@ -14,7 +14,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-import { Project } from '../projects/project.entity';
+import { Project } from '../projects/project.entity.ts';
 
 export interface RepositoryData {
   readonly defaultBranch: string | null;

@@ -26,7 +26,7 @@ import {
   WorkLedgerService,
 } from '@openthrottle/nestjs-repositories';
 
-import { resolveAgenticRalphWorkerWorkflowGraphqlConfigFromEnv } from '../agentic-ralph/agentic-ralph-worker-graphql-auth';
+import { resolveAgenticRalphWorkerWorkflowGraphqlConfigFromEnv } from '../agentic-ralph/agentic-ralph-worker-graphql-auth.ts';
 
 /** Seeded service account that owns Ralph runs (databases/migrations/045). */
 const WORKFLOW_RALPH_SERVICE_ACCOUNT_NAME = 'workflow-ralph';

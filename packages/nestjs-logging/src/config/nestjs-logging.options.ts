@@ -9,12 +9,12 @@ import {
   createLogRedactor,
   type LogRedactor,
   type RedactionOptions,
-} from '../services/log-redaction';
-import { NestjsLoggingError } from './nestjs-logging.error';
+} from '../services/log-redaction.ts';
+import { NestjsLoggingError } from './nestjs-logging.error.ts';
 import {
   ALL_NESTJS_LOGGING_LEVELS,
   type NestjsLoggingLevel,
-} from './nestjs-logging-levels';
+} from './nestjs-logging-levels.ts';
 
 /**
  * @description Injection token for resolved {@link NestjsLoggingModuleOptions} (including defaults).

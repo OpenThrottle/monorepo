@@ -8,9 +8,6 @@
   "exclude": ["build", "src/**/*.test.ts"],
   "references": [
     {
-      "path": "../../tools/generators/tsconfig.lib.json"
-    },
-    {
       "path": "../../tools/workflows/tsconfig.lib.json"
     },
     {

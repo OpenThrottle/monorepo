@@ -6,13 +6,13 @@ import { Args, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
 import type { Task, TaskEmbedding } from '@openthrottle/nestjs-repositories';
 import { TaskEmbeddingsService } from '@openthrottle/nestjs-repositories';
 
-import { TaskObject } from '../tasks/task.object';
+import { TaskObject } from '../tasks/task.object.ts';
 import {
   GetTaskEmbeddingInput,
   TaskEmbeddingsByTaskInput,
-} from './task-embedding.input';
-import { TaskEmbeddingObject } from './task-embedding.object';
-import { TaskEmbeddingsLoaders } from './task-embeddings-loaders';
+} from './task-embedding.input.ts';
+import { TaskEmbeddingObject } from './task-embedding.object.ts';
+import { TaskEmbeddingsLoaders } from './task-embeddings-loaders.ts';
 
 /** Default and hard ceiling for the unbounded list query (bounds API memory). */
 const DEFAULT_LIST_LIMIT = 1000;

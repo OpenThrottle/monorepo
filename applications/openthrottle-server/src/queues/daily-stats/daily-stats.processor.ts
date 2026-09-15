@@ -9,19 +9,19 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { And, LessThan, MoreThanOrEqual } from 'typeorm';
 
-import { NotificationsService } from '../../notifications/notifications.service';
-import { DAILY_STATS_QUEUE_NAME } from './daily-stats.constants';
+import { NotificationsService } from '../../notifications/notifications.service.ts';
+import { DAILY_STATS_QUEUE_NAME } from './daily-stats.constants.ts';
 import {
   addUtcDaysToYmd,
   enumerateYmdRange,
   getPreviousUtcDayYmd,
   getUtcDayBounds,
-} from './daily-stats.dates';
+} from './daily-stats.dates.ts';
 import type {
   AggregateDailyStatsJob,
   CatchUpSummary,
   DailyStatsAggregate,
-} from './daily-stats.types';
+} from './daily-stats.types.ts';
 
 const CONCURRENCY = 1;
 

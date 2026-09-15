@@ -11,25 +11,25 @@ import {
 } from '@openthrottle/nestjs-mcp-developer';
 import { AgentConversationsService } from '@openthrottle/nestjs-repositories';
 
-import { AgentsRunChatTurnInput } from './agents.input';
-import { AgentsChatTurnResult } from './agents.object';
+import { AgentsRunChatTurnInput } from './agents.input.ts';
+import { AgentsChatTurnResult } from './agents.object.ts';
 import {
   isAgentsChatMutationRoutedTool,
   readAgentsChatMutationsEnabledFromConfig,
-} from './agents-chat-mutation-policy';
+} from './agents-chat-mutation-policy.ts';
 import {
   PERSISTED_CONVERSATION_AUTH_ERROR,
   persistSuccessfulAgentsChatTurn,
   resolveHumanUserForPersist,
   resolvePersistedConversation,
-} from './agents-chat-persistence';
+} from './agents-chat-persistence.ts';
 import {
   agentsChatTurnFromMcpToolResult,
   parseBearerJwt,
-} from './agents-mcp-chat.mapper';
-import { dispatchAgentsMcpRoutedTool } from './agents-mcp-dispatch';
-import { AgentsMcpRouter } from './agents-mcp-router';
-import { AgentsMcpRouterLlmService } from './agents-mcp-router-llm.service';
+} from './agents-mcp-chat.mapper.ts';
+import { dispatchAgentsMcpRoutedTool } from './agents-mcp-dispatch.ts';
+import { AgentsMcpRouter } from './agents-mcp-router.ts';
+import { AgentsMcpRouterLlmService } from './agents-mcp-router-llm.service.ts';
 
 interface AgentsGqlContext {
   readonly req?: { headers?: Record<string, string | string[] | undefined> };

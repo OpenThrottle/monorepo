@@ -14,8 +14,8 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import { ProjectSkillsResolver } from './project-skills.resolver';
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { ProjectSkillsResolver } from './project-skills.resolver.ts';
 
 describe('ProjectSkillsResolver', () => {
   const dogfoodProject = createMock<Project>({

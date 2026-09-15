@@ -3,7 +3,7 @@ import type { WorkspaceFileHash } from '@openthrottle/openthrottle-ide';
 import type { DataSource } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { CodeSnapshotStore } from './code-snapshot-store';
+import { CodeSnapshotStore } from './code-snapshot-store.ts';
 
 const WORKSPACE = '/Users/dev/repo';
 const SNAPSHOT: WorkspaceFileHash[] = [

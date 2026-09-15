@@ -10,7 +10,7 @@ import {
   PLAN_STATUS_VALUES,
   TASK_STATUS,
   TASK_STATUS_VALUES,
-} from './plan-task-status.constants';
+} from './plan-task-status.constants.ts';
 
 /**
  * Ascends from the working directory to the monorepo root (the first ancestor

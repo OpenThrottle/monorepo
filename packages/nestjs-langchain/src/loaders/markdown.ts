@@ -4,7 +4,7 @@ import { TextLoader } from '@langchain/classic/document_loaders/fs/text';
 import type { Document } from '@langchain/core/documents';
 import path from 'path';
 
-import { getFilesByExtension } from '../utils/files';
+import { getFilesByExtension } from '../utils/files.ts';
 
 export type Extension =
   'js' | 'json' | 'jsx' | 'md' | 'pdf' | 'ts' | 'tsx' | 'txt' | 'yaml' | 'yml';

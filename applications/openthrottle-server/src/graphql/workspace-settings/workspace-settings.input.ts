@@ -4,7 +4,7 @@
 
 import { Field, ID, InputType } from '@nestjs/graphql';
 
-import { WorkspaceEditorIdEnum } from './workspace-editor-id.enum';
+import { WorkspaceEditorIdEnum } from './workspace-editor-id.enum.ts';
 
 @InputType()
 export class UpdateWorkspaceProfileInput {

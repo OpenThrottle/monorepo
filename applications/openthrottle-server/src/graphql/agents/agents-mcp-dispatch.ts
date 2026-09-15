@@ -4,8 +4,8 @@
 
 import type { McpDeveloperMcpSurface } from '@openthrottle/nestjs-mcp-developer';
 
-import type { AgentsMcpToolHandlerResult } from './agents-mcp-chat.mapper';
-import type { AgentsMcpRouteDecision } from './agents-mcp-router';
+import type { AgentsMcpToolHandlerResult } from './agents-mcp-chat.mapper.ts';
+import type { AgentsMcpRouteDecision } from './agents-mcp-router.ts';
 
 /*
  * The rule router and the LLM-refinement parser both produce

@@ -5,10 +5,10 @@
 import { Query, Resolver } from '@nestjs/graphql';
 import { Public } from '@openthrottle/nestjs-auth';
 
-import { ProcessMetricsService } from '../../metrics/process-metrics.service';
-import { HealthService } from './health.service';
-import { ServerHealthObject } from './server-health.object';
-import { ServerMetricsObject } from './server-metrics.object';
+import { ProcessMetricsService } from '../../metrics/process-metrics.service.ts';
+import { HealthService } from './health.service.ts';
+import { ServerHealthObject } from './server-health.object.ts';
+import { ServerMetricsObject } from './server-metrics.object.ts';
 
 /** Database health status: ok, unconfigured, or unreachable. */
 type HealthStatus = 'ok' | 'unconfigured' | 'unreachable';

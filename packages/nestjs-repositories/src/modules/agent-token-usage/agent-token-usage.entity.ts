@@ -12,9 +12,9 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
-import { AgentConversation } from '../agent-conversations/agent-conversation.entity';
-import { AgentConversationMessage } from '../agent-conversations/agent-conversation-message.entity';
-import { User } from '../users/user.entity';
+import { AgentConversation } from '../agent-conversations/agent-conversation.entity.ts';
+import { AgentConversationMessage } from '../agent-conversations/agent-conversation-message.entity.ts';
+import { User } from '../users/user.entity.ts';
 
 /**
  * Postgres returns bigint/numeric as strings (to avoid precision loss). Token

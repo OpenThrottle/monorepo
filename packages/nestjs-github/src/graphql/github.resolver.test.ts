@@ -4,8 +4,8 @@ import { asMock } from '@openthrottle/nestjs-testing';
 import type { GraphQLResolveInfo } from 'graphql';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 
-import type { PullListItemDto } from '../github/dto/pull-list-item.dto';
-import { GitHubService } from '../github/github.service';
+import type { PullListItemDto } from '../github/dto/pull-list-item.dto.ts';
+import { GitHubService } from '../github/github.service.ts';
 import type {
   CommitsPerPrInput,
   GetPullInput,
@@ -16,9 +16,9 @@ import type {
   PrCountByLabelInput,
   PrsMergedPerPeriodInput,
   ReviewCycleTimeInput,
-} from './github.input';
-import { GithubResolver } from './github.resolver';
-import { GitHubStatsService } from './github-stats.service';
+} from './github.input.ts';
+import { GithubResolver } from './github.resolver.ts';
+import { GitHubStatsService } from './github-stats.service.ts';
 
 const gqlInfo = asMock<GraphQLResolveInfo>({});
 

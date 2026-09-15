@@ -6,7 +6,7 @@
 
 import { Field, ObjectType } from '@nestjs/graphql';
 
-import { QueueJobLogEventObject } from './queue-job-log-event.object';
+import { QueueJobLogEventObject } from './queue-job-log-event.object.ts';
 
 @ObjectType()
 export class QueueJobLogPageObject {

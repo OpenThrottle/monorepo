@@ -22,7 +22,7 @@ import {
 } from '@openthrottle/openthrottle-skills';
 import { QueryFailedError, Repository } from 'typeorm';
 
-import { UserSkillTag } from './user-skill-tag.entity';
+import { UserSkillTag } from './user-skill-tag.entity.ts';
 
 const isUniqueViolation = (error: unknown): boolean => {
   if (!(error instanceof QueryFailedError)) return false;

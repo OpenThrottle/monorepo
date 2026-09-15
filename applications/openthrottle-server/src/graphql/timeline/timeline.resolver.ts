@@ -12,15 +12,15 @@ import {
   TimelineLaneGrouping,
   TimelineMarkerKind,
   TimelineSpanKind,
-} from './timeline.enum';
-import { WorkstreamTimelineInput } from './timeline.input';
+} from './timeline.enum.ts';
+import { WorkstreamTimelineInput } from './timeline.input.ts';
 import {
   TimelineKindTruncationObject,
   TimelineMarkerObject,
   TimelineSpanObject,
   WorkstreamTimelineResultObject,
-} from './timeline.object';
-import { resolveTimelineLane } from './timeline-lanes';
+} from './timeline.object.ts';
+import { resolveTimelineLane } from './timeline-lanes.ts';
 
 /**
  * Rows read per kind. The chart buckets markers past a density threshold, so

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { mapRecordToQueueJobLogEvent } from './queue-job-log-event.mapper';
+import { mapRecordToQueueJobLogEvent } from './queue-job-log-event.mapper.ts';
 
 const TS = '2026-05-04T23:00:00.000Z';
 

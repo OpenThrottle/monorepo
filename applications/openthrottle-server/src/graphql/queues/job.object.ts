@@ -4,7 +4,7 @@
 
 import { Field, Float, Int, ObjectType } from '@nestjs/graphql';
 
-import { TaskRunMetricsObject } from '../metrics/task-run-metrics.object';
+import { TaskRunMetricsObject } from '../metrics/task-run-metrics.object.ts';
 
 @ObjectType()
 export class JobObject {

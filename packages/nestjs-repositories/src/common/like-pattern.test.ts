@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { escapeLikePattern, toLikeContainsPattern } from './like-pattern';
+import { escapeLikePattern, toLikeContainsPattern } from './like-pattern.ts';
 
 describe('escapeLikePattern', () => {
   it('leaves ordinary branch-like text untouched', () => {

@@ -40,14 +40,14 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import type { EntityManager } from 'typeorm';
 
-import { resolveArtifactForWrite } from '../../graphql/work-ledger/artifact-type-registry';
-import { NotificationsService } from '../../notifications/notifications.service';
+import { resolveArtifactForWrite } from '../../graphql/work-ledger/artifact-type-registry.ts';
+import { NotificationsService } from '../../notifications/notifications.service.ts';
 import {
   PROMOTED_TAG,
   PROMOTED_TASK_STATUS,
   PROMOTION_SESSION_TOOL_NAME,
   SEED_TASK_TITLE,
-} from './task-promotion.constants';
+} from './task-promotion.constants.ts';
 
 const PHASE_DIMENSION = 'phase';
 

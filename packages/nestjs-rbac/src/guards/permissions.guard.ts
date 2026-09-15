@@ -6,10 +6,10 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 
-import { PERMISSIONS_KEY } from '../decorators/permissions.decorator';
-import type { Permission, Role } from '../roles';
-import { ROLE_PERMISSIONS, roleHasPermission } from '../roles';
-import type { RbacUser } from './roles.guard';
+import { PERMISSIONS_KEY } from '../decorators/permissions.decorator.ts';
+import type { Permission, Role } from '../roles.ts';
+import { ROLE_PERMISSIONS, roleHasPermission } from '../roles.ts';
+import type { RbacUser } from './roles.guard.ts';
 
 /**
  * @description Guard that enforces permission-based access. Use with @Permissions() and after an auth guard.

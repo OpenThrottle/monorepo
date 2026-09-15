@@ -4,7 +4,7 @@
 
 import { Field, ID, InputType } from '@nestjs/graphql';
 
-import { CustomPromptTypeEnum } from './custom-prompt.object';
+import { CustomPromptTypeEnum } from './custom-prompt.object.ts';
 
 @InputType({ description: 'Input for creating a new custom prompt' })
 export class CreateCustomPromptInput {

@@ -11,10 +11,10 @@ import {
 import type { Queue } from 'bullmq';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { ScheduledAgentJobCancellationService } from '../../queues/scheduled-agent-jobs/scheduled-agent-job-cancellation.service';
-import type { ScheduledAgentJobSchedulerService } from '../../queues/scheduled-agent-jobs/scheduled-agent-job-scheduler.service';
-import type { ScheduledAgentJobPayload } from '../../queues/scheduled-agent-jobs/scheduled-agent-jobs.types';
-import { ScheduledAgentJobsGraphqlService } from './scheduled-agent-jobs-graphql.service';
+import type { ScheduledAgentJobCancellationService } from '../../queues/scheduled-agent-jobs/scheduled-agent-job-cancellation.service.ts';
+import type { ScheduledAgentJobSchedulerService } from '../../queues/scheduled-agent-jobs/scheduled-agent-job-scheduler.service.ts';
+import type { ScheduledAgentJobPayload } from '../../queues/scheduled-agent-jobs/scheduled-agent-jobs.types.ts';
+import { ScheduledAgentJobsGraphqlService } from './scheduled-agent-jobs-graphql.service.ts';
 
 const jobFixture = (
   overrides: Partial<ScheduledAgentJob> = {},

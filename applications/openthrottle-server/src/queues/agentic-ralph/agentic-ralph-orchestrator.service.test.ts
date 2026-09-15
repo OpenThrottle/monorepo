@@ -23,10 +23,10 @@ import { asMock } from '@openthrottle/nestjs-testing';
 import type { Repository } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { PlanRunWorkspacePreflightService } from '../../services/plan-run-workspace-preflight/plan-run-workspace-preflight.service';
-import type { PlanRunWorktreeCheckoutService } from '../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.service';
-import type { PlanRunWorktreeProvisionService } from '../../services/plan-run-worktree-provision/plan-run-worktree-provision.service';
-import { AgenticRalphOrchestratorService } from './agentic-ralph-orchestrator.service';
+import type { PlanRunWorkspacePreflightService } from '../../services/plan-run-workspace-preflight/plan-run-workspace-preflight.service.ts';
+import type { PlanRunWorktreeCheckoutService } from '../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.service.ts';
+import type { PlanRunWorktreeProvisionService } from '../../services/plan-run-worktree-provision/plan-run-worktree-provision.service.ts';
+import { AgenticRalphOrchestratorService } from './agentic-ralph-orchestrator.service.ts';
 
 // Force the run's path to read as foreign and stub the materializer so the gate is
 // exercised deterministically (no filesystem, no env-derived OT-root fragility).

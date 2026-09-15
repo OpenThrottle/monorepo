@@ -1,8 +1,8 @@
 import type { ExecutionContext } from '@nestjs/common';
 import { GqlExecutionContext } from '@nestjs/graphql';
 
-import type { AuthPrincipal } from '../auth-principal';
-import type { JwtPayload } from '../strategies/jwt.strategy';
+import type { AuthPrincipal } from '../auth-principal.ts';
+import type { JwtPayload } from '../strategies/jwt.strategy.ts';
 
 /** HTTP/GraphQL request shape after auth (JWT payload or {@link AuthPrincipal}). */
 export type AuthenticatedRequest = {

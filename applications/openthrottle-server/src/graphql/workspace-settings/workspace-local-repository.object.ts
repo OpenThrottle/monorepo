@@ -4,7 +4,7 @@
 
 import { Field, ID, ObjectType } from '@nestjs/graphql';
 
-import { ProjectObject } from '../projects/project.object';
+import { ProjectObject } from '../projects/project.object.ts';
 
 @ObjectType({
   description: `A local filesystem checkout registered under the user's workspace settings.`,

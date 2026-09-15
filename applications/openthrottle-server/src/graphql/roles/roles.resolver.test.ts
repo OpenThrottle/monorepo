@@ -11,7 +11,7 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import type {
   // AddPermissionToRoleInput,
   AssignRoleToUserInput,
@@ -19,8 +19,8 @@ import type {
   // RemovePermissionFromRoleInput,
   // RemoveRoleFromUserInput,
   // UpdateRoleInput,
-} from './role.input';
-import { RolesResolver } from './roles.resolver';
+} from './role.input.ts';
+import { RolesResolver } from './roles.resolver.ts';
 
 describe('RolesResolver', () => {
   let resolver: RolesResolver;

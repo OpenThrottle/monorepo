@@ -25,8 +25,8 @@ import {
   type RalphNestedRunTuningInput,
 } from '@tools/workflows';
 
-import type { RunPlanJobData } from '../plans/plans.types';
-import { isRunPlanOrchestratorJobData } from '../plans/plans.types';
+import type { RunPlanJobData } from '../plans/plans.types.ts';
+import { isRunPlanOrchestratorJobData } from '../plans/plans.types.ts';
 
 function getWorkspaceRoot(jobData: RunPlanJobData): string {
   return (

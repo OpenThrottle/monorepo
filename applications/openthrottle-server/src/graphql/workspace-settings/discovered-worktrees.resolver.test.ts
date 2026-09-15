@@ -7,11 +7,11 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { WorktreeActivityService } from '../../services/worktree-activity/worktree-activity.service';
-import type { WorktreeActivityResult } from '../../services/worktree-activity/worktree-activity.types';
-import { WORKTREE_ACTIVITY } from '../../services/worktree-activity/worktree-activity.types';
-import { WORKTREE_DISCOVERY_SOURCE } from '../../services/worktree-discovery/worktree-discovery.types';
-import { DiscoveredWorktreesResolver } from './discovered-worktrees.resolver';
+import type { WorktreeActivityService } from '../../services/worktree-activity/worktree-activity.service.ts';
+import type { WorktreeActivityResult } from '../../services/worktree-activity/worktree-activity.types.ts';
+import { WORKTREE_ACTIVITY } from '../../services/worktree-activity/worktree-activity.types.ts';
+import { WORKTREE_DISCOVERY_SOURCE } from '../../services/worktree-discovery/worktree-discovery.types.ts';
+import { DiscoveredWorktreesResolver } from './discovered-worktrees.resolver.ts';
 
 const ROOT = '/Users/matt/Development/openthrottle-worktrees';
 

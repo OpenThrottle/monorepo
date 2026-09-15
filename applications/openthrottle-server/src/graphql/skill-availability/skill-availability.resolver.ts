@@ -21,12 +21,12 @@ import {
   SkillTagsService,
 } from '@openthrottle/nestjs-repositories';
 
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import { SkillAvailabilityRuleInput } from './skill-availability.input';
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { SkillAvailabilityRuleInput } from './skill-availability.input.ts';
 import {
   SkillAvailabilityRuleObject,
   SkillAvailabilityRuleSetObject,
-} from './skill-availability.object';
+} from './skill-availability.object.ts';
 
 /** Minimal shape shared by the resolver rule type and the stored entity, for mapping to the object. */
 interface RuleLike {

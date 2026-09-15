@@ -15,12 +15,12 @@ import {
   TAGGING_PREDICT_JOB_NAME,
   TAGGING_QUEUE_NAME,
   TAGGING_REFINE_JOB_NAME,
-} from './tagging.constants';
+} from './tagging.constants.ts';
 import type {
   PredictTaggingJobData,
   RefineTaggingJobData,
   TaggingEntityType,
-} from './tagging.types';
+} from './tagging.types.ts';
 
 @Injectable()
 export class TaggingEnqueueService {

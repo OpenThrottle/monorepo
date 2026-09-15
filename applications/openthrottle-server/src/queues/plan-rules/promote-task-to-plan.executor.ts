@@ -22,13 +22,13 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { TAG_ACTION_TYPES } from '@openthrottle/openthrottle-skills';
 
-import { PROMOTED_TAG } from '../task-promotion/task-promotion.constants';
-import { TaskPromotionService } from '../task-promotion/task-promotion.service';
+import { PROMOTED_TAG } from '../task-promotion/task-promotion.constants.ts';
+import { TaskPromotionService } from '../task-promotion/task-promotion.service.ts';
 import {
   type ActionExecutor,
   type ActionExecutorContext,
   ActionExecutorRegistry,
-} from './action-executor';
+} from './action-executor.ts';
 
 @Injectable()
 export class PromoteTaskToPlanExecutor implements ActionExecutor, OnModuleInit {

@@ -10,8 +10,8 @@ import { Test } from '@nestjs/testing';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { DocIngestionProcessor } from './doc-ingestion.processor';
-import type { DocIngestionJob } from './doc-ingestion.types';
+import { DocIngestionProcessor } from './doc-ingestion.processor.ts';
+import type { DocIngestionJob } from './doc-ingestion.types.ts';
 
 describe('DocIngestionProcessor', () => {
   let processor: DocIngestionProcessor;

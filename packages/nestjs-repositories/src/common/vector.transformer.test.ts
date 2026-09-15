@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { vectorTransformer } from './vector.transformer';
+import { vectorTransformer } from './vector.transformer.ts';
 
 const VECTOR_DIM = 1536;
 

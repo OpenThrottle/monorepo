@@ -4,9 +4,9 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { beforeAll, describe, expect, it } from 'vitest';
 
-import { PlanOutputStreamChunk } from './plan-output-stream.entity';
-import { planOutputStreamFactory } from './plan-output-stream.factory';
-import { PlanOutputStreamService } from './plan-output-stream.service';
+import { PlanOutputStreamChunk } from './plan-output-stream.entity.ts';
+import { planOutputStreamFactory } from './plan-output-stream.factory.ts';
+import { PlanOutputStreamService } from './plan-output-stream.service.ts';
 
 describe('PlanOutputStreamService', () => {
   type GetRepository = ReturnType<PlanOutputStreamService['getRepository']>;

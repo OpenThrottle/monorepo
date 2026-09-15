@@ -8,8 +8,8 @@ import {
   parseEnqueueRalphTuning,
   ralphTuningForChildJob,
   validateWorkingDirectory,
-} from './enqueue-plan-ralph-tuning';
-import type { RalphPlanRunTuningInput } from './plan.input';
+} from './enqueue-plan-ralph-tuning.ts';
+import type { RalphPlanRunTuningInput } from './plan.input.ts';
 
 /**
  * @description Creates a temp directory that looks like an Nx workspace root (has nx.json).

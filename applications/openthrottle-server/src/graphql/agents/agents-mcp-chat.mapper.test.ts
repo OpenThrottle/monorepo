@@ -3,7 +3,7 @@ import { describe, expect, test } from 'vitest';
 import {
   agentsChatTurnFromMcpToolResult,
   parseBearerJwt,
-} from './agents-mcp-chat.mapper';
+} from './agents-mcp-chat.mapper.ts';
 
 describe('parseBearerJwt', () => {
   test('returns undefined for undefined input', () => {

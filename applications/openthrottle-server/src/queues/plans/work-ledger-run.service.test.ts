@@ -13,7 +13,7 @@ import type {
 import type { Repository } from 'typeorm';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { WorkLedgerRunService } from './work-ledger-run.service';
+import { WorkLedgerRunService } from './work-ledger-run.service.ts';
 
 const RALPH_SA_ID = 'ralph-sa-1';
 const PLAN_ID = 'plan-1';

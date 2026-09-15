@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { getLogger, logger } from './logger.config';
+import { getLogger, logger } from './logger.config.ts';
 
 describe('getLogger', () => {
   it('returns a logger without a name when none is given', () => {

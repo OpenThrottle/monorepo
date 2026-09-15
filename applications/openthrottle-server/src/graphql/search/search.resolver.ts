@@ -13,14 +13,14 @@ import {
   runSemanticSearch,
 } from '@openthrottle/node-client';
 
-import { SearchInput } from './search.input';
+import { SearchInput } from './search.input.ts';
 import {
   ListPlanSourceObject,
   ListSourceInfoObject,
   ListSourcesResultObject,
   SearchChunk,
   SearchResult,
-} from './search.object';
+} from './search.object.ts';
 
 const DEFAULT_SEARCH_LIMIT = 20;
 const MAX_SEARCH_LIMIT = 50;

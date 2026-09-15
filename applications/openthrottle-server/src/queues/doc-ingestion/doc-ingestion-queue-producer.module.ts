@@ -3,7 +3,7 @@ import { Module } from '@nestjs/common';
 import { NestjsBullmqModule } from '@openthrottle/nestjs-bullmq';
 import { NestjsBullmqBoardModule } from '@openthrottle/nestjs-bullmq-board';
 
-import { DOC_INGESTION_QUEUE_NAME } from './doc-ingestion.constants';
+import { DOC_INGESTION_QUEUE_NAME } from './doc-ingestion.constants.ts';
 
 /**
  * @description Producer half of the doc-ingestion queue: registerQueue

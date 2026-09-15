@@ -14,7 +14,17 @@ export default {
   // and `mjs` belong here: without them a staged .mjs skips both eslint and
   // prettier locally and only fails later in check:local's format-check, which
   // is exactly how scripts/check-node-engine.mjs landed unformatted.
-  '**/*.{cjs,js,jsx,mjs,ts,tsx}': (files) => {
+  '**/*.{cjs,js,jsx,mjs,ts,tsx}': (allFiles) => {
+    // Generator templates are EJS, not TypeScript — `<%= namePascal %>` is a
+    // parse error. @tools/dotfiles ignores them for `nx run <p>:lint`, but that
+    // does not take effect for every template tree when eslint is invoked from
+    // the repo root the way lint-staged invokes it, so they are excluded here.
+    const files = allFiles.filter(
+      (file) =>
+        !file.replace(/\\/g, '/').includes('tools/generators/src/generators/'),
+    );
+    if (files.length === 0) return [];
+
     const list = files.join(', \n');
     const count = files.length;
     const prettierFiles = files.map((file) => JSON.stringify(file)).join(' ');
@@ -35,7 +45,7 @@ export default {
     const eslintCommands = [];
     if (openthrottleServerFiles.length > 0) {
       eslintCommands.push(
-        `pnpm exec eslint --config applications/openthrottle-server/eslint.config.mts --fix ${eslintServer}`,
+        `pnpm exec eslint --config applications/openthrottle-server/eslint.config.ts --fix ${eslintServer}`,
       );
     }
     if (otherTsFiles.length > 0) {

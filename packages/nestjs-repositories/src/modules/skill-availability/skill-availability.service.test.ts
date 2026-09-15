@@ -6,9 +6,9 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { SkillAvailabilityService } from './skill-availability.service';
-import { SkillAvailabilityRule } from './skill-availability-rule.entity';
-import { SkillAvailabilityRuleSet } from './skill-availability-rule-set.entity';
+import { SkillAvailabilityService } from './skill-availability.service.ts';
+import { SkillAvailabilityRule } from './skill-availability-rule.entity.ts';
+import { SkillAvailabilityRuleSet } from './skill-availability-rule-set.entity.ts';
 
 describe('SkillAvailabilityService', () => {
   const projectId = '22222222-2222-4222-8222-222222222222';

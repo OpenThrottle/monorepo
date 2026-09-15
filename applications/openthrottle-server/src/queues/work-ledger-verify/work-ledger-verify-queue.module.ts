@@ -3,10 +3,10 @@ import { GitHubModule } from '@openthrottle/nestjs-github';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 
-import { TaggingQueueProducerModule } from '../tagging/tagging-queue-producer.module';
-import { WorkLedgerVerifyProcessor } from './work-ledger-verify.processor';
-import { WorkLedgerVerifyQueueProducerModule } from './work-ledger-verify-queue-producer.module';
-import { WorkLedgerVerifyRepeatableService } from './work-ledger-verify-repeatable.service';
+import { TaggingQueueProducerModule } from '../tagging/tagging-queue-producer.module.ts';
+import { WorkLedgerVerifyProcessor } from './work-ledger-verify.processor.ts';
+import { WorkLedgerVerifyQueueProducerModule } from './work-ledger-verify-queue-producer.module.ts';
+import { WorkLedgerVerifyRepeatableService } from './work-ledger-verify-repeatable.service.ts';
 
 /**
  * @description Processor half of the work-ledger-verify queue (WorkerHost + repeatable

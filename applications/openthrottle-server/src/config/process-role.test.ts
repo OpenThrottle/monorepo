@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { resolveProcessRole } from './process-role';
+import { resolveProcessRole } from './process-role.ts';
 
 describe('resolveProcessRole', () => {
   const originalRole = process.env.PROCESS_ROLE;

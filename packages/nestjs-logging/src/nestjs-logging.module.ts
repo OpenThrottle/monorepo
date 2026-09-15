@@ -10,12 +10,15 @@ import {
   parseNestjsLoggingModuleOptions,
   validateNestjsLoggingModuleAsyncOptions,
   validateNestjsLoggingModuleOptions,
-} from './config/nestjs-logging.options';
-import { buildNestjsLoggingWebsocketGatewayClass } from './gateways/nestjs-logging-websocket.gateway';
-import { NestjsLoggingService } from './nestjs-logging.service';
-import { FileBackedLogStreamHub } from './services/file-backed-log-stream-hub.service';
-import { FileLogJsonlSink } from './services/file-log-jsonl-sink.service';
-import { LOG_JSONL_SINK, LOG_STREAM_HUB } from './tokens/nestjs-logging.tokens';
+} from './config/nestjs-logging.options.ts';
+import { buildNestjsLoggingWebsocketGatewayClass } from './gateways/nestjs-logging-websocket.gateway.ts';
+import { NestjsLoggingService } from './nestjs-logging.service.ts';
+import { FileBackedLogStreamHub } from './services/file-backed-log-stream-hub.service.ts';
+import { FileLogJsonlSink } from './services/file-log-jsonl-sink.service.ts';
+import {
+  LOG_JSONL_SINK,
+  LOG_STREAM_HUB,
+} from './tokens/nestjs-logging.tokens.ts';
 
 @Module({})
 export class NestjsLoggingModule {

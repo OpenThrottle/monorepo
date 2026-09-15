@@ -8,9 +8,9 @@ import { GlobalClsService } from '@openthrottle/nestjs-modules';
 import type { Note } from '@openthrottle/nestjs-repositories';
 import { NotesService } from '@openthrottle/nestjs-repositories';
 
-import { CreateNoteInput, UpdateNoteInput } from './note.input';
-import { NoteObject } from './note.object';
-import { resolveNoteAuthor } from './resolve-note-author';
+import { CreateNoteInput, UpdateNoteInput } from './note.input.ts';
+import { NoteObject } from './note.object.ts';
+import { resolveNoteAuthor } from './resolve-note-author.ts';
 
 // @authz-stance: authenticated-only (Path A — see OT plan 18e16dfc-4f22-43f9-9b77-6fc90309b60a)
 @Resolver(() => NoteObject)

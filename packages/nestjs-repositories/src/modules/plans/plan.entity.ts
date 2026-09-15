@@ -20,11 +20,11 @@ import {
 import {
   PLAN_STATUS,
   PLAN_STATUS_VALUES,
-} from '../../common/plan-task-status.constants';
-import type { PlanEmbedding } from '../plan-embeddings/plan-embedding.entity';
-import type { PlanOutputStreamChunk } from '../plan-output-stream/plan-output-stream.entity';
-import type { Project } from '../projects/project.entity';
-import type { Task } from '../tasks/task.entity';
+} from '../../common/plan-task-status.constants.ts';
+import type { PlanEmbedding } from '../plan-embeddings/plan-embedding.entity.ts';
+import type { PlanOutputStreamChunk } from '../plan-output-stream/plan-output-stream.entity.ts';
+import type { Project } from '../projects/project.entity.ts';
+import type { Task } from '../tasks/task.entity.ts';
 
 /** Scalar/column fields of Plan (no relations). Use this to type GraphQL objects or DTOs that mirror the entity. */
 export type PlanData = Pick<

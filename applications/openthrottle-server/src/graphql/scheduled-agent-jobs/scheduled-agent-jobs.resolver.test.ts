@@ -22,13 +22,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type {
   ScheduledAgentJobObject,
   ScheduledAgentJobRunObject,
-} from './scheduled-agent-job.object';
+} from './scheduled-agent-job.object.ts';
 import {
   ScheduledAgentJobRunRepositoryResolver,
   ScheduledAgentJobsResolver,
-} from './scheduled-agent-jobs.resolver';
-import type { ScheduledAgentJobsGraphqlService } from './scheduled-agent-jobs-graphql.service';
-import type { ScheduledAgentJobsLoaders } from './scheduled-agent-jobs-loaders';
+} from './scheduled-agent-jobs.resolver.ts';
+import type { ScheduledAgentJobsGraphqlService } from './scheduled-agent-jobs-graphql.service.ts';
+import type { ScheduledAgentJobsLoaders } from './scheduled-agent-jobs-loaders.ts';
 
 const human: AuthPrincipal = { kind: AUTH_PRINCIPAL_KIND_USER, sub: 'user-1' };
 const serviceAccount: AuthPrincipal = {

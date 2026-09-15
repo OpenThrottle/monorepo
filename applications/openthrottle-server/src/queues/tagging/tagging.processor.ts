@@ -40,26 +40,26 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { DEFAULT_TAG_VOCABULARY_SEED } from '@openthrottle/openthrottle-skills';
 
-import { PLAN_RULES_TRIGGER_KINDS } from '../plan-rules/plan-rules.types';
-import { PlanRulesEvaluationService } from '../plan-rules/plan-rules-evaluation.service';
+import { PLAN_RULES_TRIGGER_KINDS } from '../plan-rules/plan-rules.types.ts';
+import { PlanRulesEvaluationService } from '../plan-rules/plan-rules-evaluation.service.ts';
 import {
   TAGGING_DIFF_PATCH_BUDGET_CHARS,
   TAGGING_MAX_DOMAIN_TAGS,
   TAGGING_QUEUE_NAME,
   TAGGING_WORKER_CONCURRENCY,
-} from './tagging.constants';
+} from './tagging.constants.ts';
 import {
   type PredictTaggingJob,
   type RefineTaggingJob,
   TAGGING_ENTITY_TYPES,
   type TaggingJobResult,
-} from './tagging.types';
+} from './tagging.types.ts';
 import {
   TAGGING_MODEL_PROVIDER_TOKEN,
   type TaggingModelProvider,
   type TaggingPrediction,
   type TaggingVocabularyEntry,
-} from './tagging-model.provider';
+} from './tagging-model.provider.ts';
 
 const SOURCE_SERVER_LLM = 'server-llm';
 

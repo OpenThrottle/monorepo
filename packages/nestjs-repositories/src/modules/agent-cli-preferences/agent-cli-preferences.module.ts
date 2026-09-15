@@ -6,9 +6,9 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 
-import { AgentCliPreferencesService } from './agent-cli-preferences.service';
-import { UserDisabledAgentCli } from './user-disabled-agent-cli.entity';
-import { UserFavoriteAgentModel } from './user-favorite-agent-model.entity';
+import { AgentCliPreferencesService } from './agent-cli-preferences.service.ts';
+import { UserDisabledAgentCli } from './user-disabled-agent-cli.entity.ts';
+import { UserFavoriteAgentModel } from './user-favorite-agent-model.entity.ts';
 
 @Module({
   controllers: [],

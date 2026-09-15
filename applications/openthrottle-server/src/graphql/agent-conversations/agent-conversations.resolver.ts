@@ -12,8 +12,8 @@ import {
   type AgentConversationStatus,
 } from '@openthrottle/nestjs-repositories';
 
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import { assertHumanAuthPrincipal } from '../service-accounts/assert-human-auth-principal';
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { assertHumanAuthPrincipal } from '../service-accounts/assert-human-auth-principal.ts';
 import {
   ArchiveAgentConversationInput,
   CreateAgentConversationInput,
@@ -21,17 +21,17 @@ import {
   GetAgentConversationMessagesInput,
   ListAgentConversationsInput,
   UpdateAgentConversationTitleInput,
-} from './agent-conversation.input';
+} from './agent-conversation.input.ts';
 import {
   parseAgentConversationMetadataJson,
   toAgentConversationMessageObject,
   toAgentConversationObject,
-} from './agent-conversation.mapper';
+} from './agent-conversation.mapper.ts';
 import {
   AgentConversationObject,
   ListAgentConversationMessagesResultObject,
   ListAgentConversationsResultObject,
-} from './agent-conversation.object';
+} from './agent-conversation.object.ts';
 
 const resolveConversationStatus = (
   status: string | null | undefined,

@@ -1,8 +1,8 @@
 import { ConfigService } from '@nestjs/config';
 import { DataSource } from 'typeorm';
 
-import { getTypeormConfig } from '../../nestjs-typeorm.config';
-import { DATA_SOURCE } from './database.constants';
+import { getTypeormConfig } from '../../nestjs-typeorm.config.ts';
+import { DATA_SOURCE } from './database.constants.ts';
 
 /**
  * @external https://docs.nestjs.com/recipes/sql-typeorm#getting-started
@@ -46,7 +46,23 @@ export const databaseProviders = [
       const dataSource = new DataSource({
         connectTimeoutMS: config.POSTGRES_CONNECT_TIMEOUT_MS,
         database: config.POSTGRES_DB,
-        entities: [__dirname + '/../**/*.entity.js'],
+        /**
+         * Empty on purpose, and not a mechanical `__dirname` ->
+         * `import.meta.dirname` swap of the glob that used to be here.
+         *
+         * That glob was `__dirname + '/../**' + '/*.entity.js'`, resolved
+         * against this package's own emitted `dist/`. This package ships **no
+         * entities** — all 45 live in `@openthrottle/nestjs-repositories` and
+         * `@openthrottle/nestjs-rollout` — so it matched nothing, before or
+         * after this change. Keeping it under ESM would have preserved dead
+         * config while implying it loaded something.
+         *
+         * Real entity registration is explicit and static, in
+         * `packages/nestjs-repositories/src/database.config.ts`
+         * (`getTypeOrmOptions`), which is the shape this repo wants anyway:
+         * typed, and visible to the build graph in a way a runtime glob is not.
+         */
+        entities: [],
         /**
          * `extra` is passed through to the `pg` Pool. Bounding `max` keeps a
          * single process from exhausting the server's `max_connections`;

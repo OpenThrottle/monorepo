@@ -1,7 +1,7 @@
 import type { ClsStore } from 'nestjs-cls';
 import { ClsService } from 'nestjs-cls';
 
-import type { GlobalClsUser } from './global-cls-user';
+import type { GlobalClsUser } from './global-cls-user.ts';
 
 /**
  * @external https://papooch.github.io/nestjs-cls/features-and-use-cases/type-safety-and-type-inference#type-safe-clsservice

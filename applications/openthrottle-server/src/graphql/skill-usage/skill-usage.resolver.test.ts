@@ -13,9 +13,9 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import { EffectiveUserResolutionService } from '../../services/effective-user-resolution/effective-user-resolution.service';
-import { SkillUsageResolver } from './skill-usage.resolver';
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { EffectiveUserResolutionService } from '../../services/effective-user-resolution/effective-user-resolution.service.ts';
+import { SkillUsageResolver } from './skill-usage.resolver.ts';
 
 describe('SkillUsageResolver', () => {
   let resolver: SkillUsageResolver;

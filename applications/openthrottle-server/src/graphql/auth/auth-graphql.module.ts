@@ -9,12 +9,12 @@ import { PassportModule } from '@nestjs/passport';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 
-import { AuthResolver } from './auth.resolver';
-import { AuthService } from './auth.service';
-import { GqlLocalAuthGuard } from './guards/gql-local-auth.guard';
-import { GqlLocalCredentialsGuard } from './guards/gql-local-credentials.guard';
-import { LocalStrategy } from './strategies/local.strategy';
-import { SubscriptionTokenResolver } from './subscription-token.resolver';
+import { AuthResolver } from './auth.resolver.ts';
+import { AuthService } from './auth.service.ts';
+import { GqlLocalAuthGuard } from './guards/gql-local-auth.guard.ts';
+import { GqlLocalCredentialsGuard } from './guards/gql-local-credentials.guard.ts';
+import { LocalStrategy } from './strategies/local.strategy.ts';
+import { SubscriptionTokenResolver } from './subscription-token.resolver.ts';
 
 @Module({
   imports: [

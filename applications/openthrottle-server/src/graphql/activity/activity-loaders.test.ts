@@ -5,7 +5,7 @@ import type {
 } from '@openthrottle/nestjs-repositories';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { ActivityLoaders } from './activity-loaders';
+import { ActivityLoaders } from './activity-loaders.ts';
 
 describe('ActivityLoaders', () => {
   const findPlans = vi.fn();

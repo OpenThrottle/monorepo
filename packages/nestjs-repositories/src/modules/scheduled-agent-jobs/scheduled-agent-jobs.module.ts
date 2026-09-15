@@ -2,11 +2,11 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 
-import { RepositoriesModule } from '../repositories/repositories.module';
-import { ScheduledAgentJob } from './scheduled-agent-job.entity';
-import { ScheduledAgentJobCheckoutPathService } from './scheduled-agent-job-checkout-path.service';
-import { ScheduledAgentJobRun } from './scheduled-agent-job-run.entity';
-import { ScheduledAgentJobsService } from './scheduled-agent-jobs.service';
+import { RepositoriesModule } from '../repositories/repositories.module.ts';
+import { ScheduledAgentJob } from './scheduled-agent-job.entity.ts';
+import { ScheduledAgentJobCheckoutPathService } from './scheduled-agent-job-checkout-path.service.ts';
+import { ScheduledAgentJobRun } from './scheduled-agent-job-run.entity.ts';
+import { ScheduledAgentJobsService } from './scheduled-agent-jobs.service.ts';
 
 @Module({
   controllers: [],

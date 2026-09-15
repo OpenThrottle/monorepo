@@ -12,9 +12,9 @@ import {
   TimelineLaneGrouping,
   TimelineMarkerKind,
   TimelineSpanKind,
-} from './timeline.enum';
-import type { WorkstreamTimelineInput } from './timeline.input';
-import { TimelineResolver } from './timeline.resolver';
+} from './timeline.enum.ts';
+import type { WorkstreamTimelineInput } from './timeline.input.ts';
+import { TimelineResolver } from './timeline.resolver.ts';
 
 type QueryFn = (sql: string, params?: unknown[]) => Promise<unknown[]>;
 

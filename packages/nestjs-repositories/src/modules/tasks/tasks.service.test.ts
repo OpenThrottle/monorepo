@@ -4,17 +4,17 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { EntityManager, Repository } from 'typeorm';
 import { In, IsNull, Not } from 'typeorm';
-import type { IsolationLevel } from 'typeorm/driver/types/IsolationLevel';
+import type { IsolationLevel } from 'typeorm/driver/types/IsolationLevel.js';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { PlansService } from '../plans/plans.service';
-import { Task } from './task.entity';
-import { tasksFactory } from './tasks.factory';
+import { PlansService } from '../plans/plans.service.ts';
+import { Task } from './task.entity.ts';
+import { tasksFactory } from './tasks.factory.ts';
 import {
   type CreateTaskBatchItem,
   TASK_SORT_ORDER_GAP,
   TasksService,
-} from './tasks.service';
+} from './tasks.service.ts';
 
 describe('TasksService', () => {
   type GetRepository = ReturnType<TasksService['getRepository']>;

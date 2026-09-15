@@ -17,19 +17,19 @@ import {
   ServiceAccountsService,
 } from '@openthrottle/nestjs-repositories';
 
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import { RoleObject } from '../roles/role.object';
-import { assertHumanAuthPrincipal } from './assert-human-auth-principal';
-import { CreateServiceAccountCredentialResultObject } from './create-service-account-credential-result.object';
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { RoleObject } from '../roles/role.object.ts';
+import { assertHumanAuthPrincipal } from './assert-human-auth-principal.ts';
+import { CreateServiceAccountCredentialResultObject } from './create-service-account-credential-result.object.ts';
 import {
   AssignRoleToServiceAccountInput,
   CreateServiceAccountCredentialInput,
   CreateServiceAccountInput,
   RemoveRoleFromServiceAccountInput,
   UpdateServiceAccountInput,
-} from './service-account.input';
-import { ServiceAccountObject } from './service-account.object';
-import { ServiceAccountCredentialObject } from './service-account-credential.object';
+} from './service-account.input.ts';
+import { ServiceAccountObject } from './service-account.object.ts';
+import { ServiceAccountCredentialObject } from './service-account-credential.object.ts';
 
 const toCredentialObject = (
   credential: ServiceAccountCredential,

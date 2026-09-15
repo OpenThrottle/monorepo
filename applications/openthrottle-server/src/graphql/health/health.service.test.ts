@@ -11,7 +11,7 @@ import { PlansService } from '@openthrottle/nestjs-repositories';
 import type { Redis } from 'ioredis';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { HealthService } from './health.service';
+import { HealthService } from './health.service.ts';
 
 const getPostgresUrl = vi.fn<() => string | undefined>();
 vi.mock('@openthrottle/openthrottle-agentic-utils', () => ({

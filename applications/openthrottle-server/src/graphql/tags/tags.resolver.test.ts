@@ -10,10 +10,10 @@ import type {
 import { type ProjectTag } from '@openthrottle/nestjs-repositories';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { PLAN_RULES_TRIGGER_KINDS } from '../../queues/plan-rules/plan-rules.types';
-import type { PlanRulesEvaluationService } from '../../queues/plan-rules/plan-rules-evaluation.service';
-import { ProjectTagsResolver } from './tags.resolver';
-import type { TagsLoaders } from './tags-loaders';
+import { PLAN_RULES_TRIGGER_KINDS } from '../../queues/plan-rules/plan-rules.types.ts';
+import type { PlanRulesEvaluationService } from '../../queues/plan-rules/plan-rules-evaluation.service.ts';
+import { ProjectTagsResolver } from './tags.resolver.ts';
+import type { TagsLoaders } from './tags-loaders.ts';
 
 const PROJECT_ID = 'project-1';
 const userPrincipal: AuthPrincipal = createMock<AuthPrincipal>({

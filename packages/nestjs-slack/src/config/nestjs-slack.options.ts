@@ -1,4 +1,4 @@
-import { NestjsSlackError } from './nestjs-slack.error';
+import { NestjsSlackError } from './nestjs-slack.error.ts';
 
 /**
  * Injection token for NestjsSlackModuleOptions. Use when registering the module with forRoot() so the service can send to Slack.

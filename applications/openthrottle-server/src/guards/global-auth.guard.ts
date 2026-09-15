@@ -12,10 +12,10 @@ import {
 } from '@openthrottle/nestjs-auth';
 import { isRecord } from '@openthrottle/nodejs-utils';
 
-import { GlobalClsAuthHook } from '../auth/global-cls-auth-hook.service';
-import { ServiceAccountAuthService } from '../auth/service-account-auth.service';
-import { getRequestFromExecutionContext } from './get-request-from-execution-context';
-import { GqlJwtAuthGuard } from './gql-jwt-auth.guard';
+import { GlobalClsAuthHook } from '../auth/global-cls-auth-hook.service.ts';
+import { ServiceAccountAuthService } from '../auth/service-account-auth.service.ts';
+import { getRequestFromExecutionContext } from './get-request-from-execution-context.ts';
+import { GqlJwtAuthGuard } from './gql-jwt-auth.guard.ts';
 
 const readAuthorizationHeader = (req: object): string | undefined => {
   const headers = 'headers' in req ? req.headers : undefined;

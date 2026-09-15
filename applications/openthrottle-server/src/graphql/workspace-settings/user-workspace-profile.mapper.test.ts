@@ -1,8 +1,8 @@
 import type { UserWorkspaceSettings } from '@openthrottle/nestjs-repositories';
 import { describe, expect, test } from 'vitest';
 
-import { toUserWorkspaceProfileObject } from './user-workspace-profile.mapper';
-import { WorkspaceEditorIdEnum } from './workspace-editor-id.enum';
+import { toUserWorkspaceProfileObject } from './user-workspace-profile.mapper.ts';
+import { WorkspaceEditorIdEnum } from './workspace-editor-id.enum.ts';
 
 describe('toUserWorkspaceProfileObject', () => {
   test('maps enabled editor ids to GraphQL enum values', () => {

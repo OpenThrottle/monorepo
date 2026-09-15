@@ -13,9 +13,9 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-import { Plan } from '../plans/plan.entity';
-import { Task } from '../tasks/task.entity';
-import { TagActionRule } from './tag-action-rule.entity';
+import { Plan } from '../plans/plan.entity.ts';
+import { Task } from '../tasks/task.entity.ts';
+import { TagActionRule } from './tag-action-rule.entity.ts';
 
 /**
  * @description Ledger states: applied (action performed), pre-satisfied

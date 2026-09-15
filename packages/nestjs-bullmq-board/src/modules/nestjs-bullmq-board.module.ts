@@ -10,7 +10,7 @@ import basicAuth from 'express-basic-auth';
 import {
   bullmqBoardConfig,
   configValidationSchema,
-} from '../config/nestjs-bullmq-board.config';
+} from '../config/nestjs-bullmq-board.config.ts';
 
 /**
  * Single source of truth for whether the Bull Board dashboard should mount.

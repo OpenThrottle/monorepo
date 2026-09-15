@@ -4,9 +4,9 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { beforeAll, describe, expect, it } from 'vitest';
 
-import { PlanEmbedding } from './plan-embedding.entity';
-import { planEmbeddingsFactory } from './plan-embeddings.factory';
-import { PlanEmbeddingsService } from './plan-embeddings.service';
+import { PlanEmbedding } from './plan-embedding.entity.ts';
+import { planEmbeddingsFactory } from './plan-embeddings.factory.ts';
+import { PlanEmbeddingsService } from './plan-embeddings.service.ts';
 
 describe('PlanEmbeddingsService', () => {
   type GetRepository = ReturnType<PlanEmbeddingsService['getRepository']>;

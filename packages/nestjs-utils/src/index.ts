@@ -1,2 +1,2 @@
-export * from './config/index';
-export * from './data';
+export * from './config/index.ts';
+export * from './data/index.ts';

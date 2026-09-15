@@ -5,8 +5,8 @@
 import { Module } from '@nestjs/common';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 
-import { PlanEmbeddingsResolver } from './plan-embeddings.resolver';
-import { PlanEmbeddingsLoaders } from './plan-embeddings-loaders';
+import { PlanEmbeddingsResolver } from './plan-embeddings.resolver.ts';
+import { PlanEmbeddingsLoaders } from './plan-embeddings-loaders.ts';
 
 @Module({
   imports: [NestjsRepositoriesModule],

@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { buildPlanRunConfigSnapshotFromJobData } from './enqueue-plan-run-config-snapshot';
+import { buildPlanRunConfigSnapshotFromJobData } from './enqueue-plan-run-config-snapshot.ts';
 
 describe('buildPlanRunConfigSnapshotFromJobData', () => {
   test('maps orchestrator job data to plan-target snapshot', () => {

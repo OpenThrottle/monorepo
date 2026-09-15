@@ -4,8 +4,8 @@
 
 import { Mutation, Resolver } from '@nestjs/graphql';
 
-import { AgenticWorkflowService } from './agentic-workflow.service';
-import { EnqueueAgenticWorkflowMockResultObject } from './enqueue-agentic-workflow-mock-result.object';
+import { AgenticWorkflowService } from './agentic-workflow.service.ts';
+import { EnqueueAgenticWorkflowMockResultObject } from './enqueue-agentic-workflow-mock-result.object.ts';
 
 // @authz-stance: authenticated-only (Path A — see OT plan 18e16dfc-4f22-43f9-9b77-6fc90309b60a)
 @Resolver()

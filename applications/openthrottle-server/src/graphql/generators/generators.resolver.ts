@@ -8,9 +8,9 @@ import {
   GeneratorDetail,
   getGeneratorByName,
   getGeneratorsList,
-} from '../../modules/generators/generators.service';
-import { GetGeneratorInput } from './generator.input';
-import { GeneratorDetailObject, GeneratorObject } from './generator.object';
+} from '../../modules/generators/generators.service.ts';
+import { GetGeneratorInput } from './generator.input.ts';
+import { GeneratorDetailObject, GeneratorObject } from './generator.object.ts';
 
 // @authz-stance: authenticated-only (Path A — see OT plan 18e16dfc-4f22-43f9-9b77-6fc90309b60a)
 @Resolver()

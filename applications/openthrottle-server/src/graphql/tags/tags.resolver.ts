@@ -33,13 +33,17 @@ import {
   type TaskTag,
 } from '@openthrottle/nestjs-repositories';
 
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import { PLAN_RULES_TRIGGER_KINDS } from '../../queues/plan-rules/plan-rules.types';
-import { PlanRulesEvaluationService } from '../../queues/plan-rules/plan-rules-evaluation.service';
-import { PlanObject } from '../plans/plan.object';
-import { ProjectObject } from '../projects/project.object';
-import { TaskObject } from '../tasks/task.object';
-import { PlanTagObject, ProjectTagObject, TaskTagObject } from './tag.object';
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { PLAN_RULES_TRIGGER_KINDS } from '../../queues/plan-rules/plan-rules.types.ts';
+import { PlanRulesEvaluationService } from '../../queues/plan-rules/plan-rules-evaluation.service.ts';
+import { PlanObject } from '../plans/plan.object.ts';
+import { ProjectObject } from '../projects/project.object.ts';
+import { TaskObject } from '../tasks/task.object.ts';
+import {
+  PlanTagObject,
+  ProjectTagObject,
+  TaskTagObject,
+} from './tag.object.ts';
 import {
   AddPlanTagInput,
   AddProjectTagInput,
@@ -47,8 +51,8 @@ import {
   RemovePlanTagInput,
   RemoveProjectTagInput,
   RemoveTaskTagInput,
-} from './tags.input';
-import { TagsLoaders } from './tags-loaders';
+} from './tags.input.ts';
+import { TagsLoaders } from './tags-loaders.ts';
 
 @Resolver(() => PlanObject)
 @UseGuards(GqlPermissionsGuard)

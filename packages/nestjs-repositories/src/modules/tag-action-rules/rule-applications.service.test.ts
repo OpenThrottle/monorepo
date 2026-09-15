@@ -4,12 +4,12 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { Task } from '../tasks/task.entity';
+import { Task } from '../tasks/task.entity.ts';
 import {
   RULE_APPLICATION_STATES,
   RuleApplication,
-} from './rule-application.entity';
-import { RuleApplicationsService } from './rule-applications.service';
+} from './rule-application.entity.ts';
+import { RuleApplicationsService } from './rule-applications.service.ts';
 
 const PLAN_ID = 'plan-1';
 

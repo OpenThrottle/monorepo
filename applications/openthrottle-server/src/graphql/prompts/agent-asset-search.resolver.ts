@@ -13,12 +13,12 @@ import {
   searchAgentAssets as runAgentAssetSearch,
 } from '@openthrottle/node-client';
 
-import { AgentAssetSearchInput } from './agent-asset-search.input';
+import { AgentAssetSearchInput } from './agent-asset-search.input.ts';
 import {
   AgentAssetChunk,
   AgentAssetSearchResult,
-} from './agent-asset-search.object';
-import { CustomPromptTypeEnum } from './custom-prompt.object';
+} from './agent-asset-search.object.ts';
+import { CustomPromptTypeEnum } from './custom-prompt.object.ts';
 
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 50;

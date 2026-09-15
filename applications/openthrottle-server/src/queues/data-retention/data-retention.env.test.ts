@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   DATA_RETENTION_DEFAULT_CRON_PATTERN,
   resolveDataRetentionConfig,
-} from './data-retention.env';
+} from './data-retention.env.ts';
 
 describe('resolveDataRetentionConfig', () => {
   it('defaults to dry-run with the nightly cron and UTC', () => {

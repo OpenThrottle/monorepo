@@ -3,10 +3,10 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 
-import type { NestjsAuthOptions } from '../config/nestjs-auth.options';
-import { NESTJS_AUTH_OPTIONS } from '../config/nestjs-auth.tokens';
-import { JwtAuthGuard } from '../guards/jwt-auth.guard';
-import { JwtStrategy } from '../strategies/jwt.strategy';
+import type { NestjsAuthOptions } from '../config/nestjs-auth.options.ts';
+import { NESTJS_AUTH_OPTIONS } from '../config/nestjs-auth.tokens.ts';
+import { JwtAuthGuard } from '../guards/jwt-auth.guard.ts';
+import { JwtStrategy } from '../strategies/jwt.strategy.ts';
 
 /**
  * @description Asserts that an async factory returned a usable {@link NestjsAuthOptions}.

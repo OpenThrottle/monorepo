@@ -1,14 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import type { DeepPartial } from 'typeorm';
 import { Repository } from 'typeorm';
-import type { DeepPartial } from 'typeorm/common/DeepPartial';
 
 import {
   type ListPaginationInput,
   resolveListPagination,
-} from '../../common/list-pagination';
-import { Project } from './project.entity';
+} from '../../common/list-pagination.ts';
+import { Project } from './project.entity.ts';
 
 @Injectable()
 export class ProjectsService {

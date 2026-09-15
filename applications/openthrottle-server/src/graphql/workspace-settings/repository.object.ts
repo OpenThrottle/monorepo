@@ -6,7 +6,7 @@
 
 import { Field, ID, ObjectType } from '@nestjs/graphql';
 
-import { ProjectObject } from '../projects/project.object';
+import { ProjectObject } from '../projects/project.object.ts';
 
 @ObjectType({
   description: `Presence of agent configuration files at the checkout root.`,

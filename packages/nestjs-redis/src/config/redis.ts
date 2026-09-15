@@ -70,6 +70,25 @@ export const getRedisCache = (logger?: RedisCacheLogger) => {
   const redisUri = `${scheme}://${credentials}${host}:${port}`;
 
   const cacheRedis = new KeyvRedis(redisUri, { namespace });
+  // NOTE: this line is why `@openthrottle/nestjs-redis` is the one nestjs
+  // package still on `"type": "commonjs"`.
+  //
+  // `keyv` is dual-published with SEPARATE declarations per condition
+  // (`dist/index.d.cts` for require, `dist/index.d.ts` for import).
+  // `@apollo/utils.keyvadapter` is CommonJS-only — no `type`, no `exports` map,
+  // and 4.0.1 is the latest release — so its own `.d.ts` resolves `keyv`
+  // through the require condition. Flip this package to ESM and our `Keyv`
+  // resolves through import instead, producing two nominally distinct classes:
+  //
+  //   Argument of type 'keyv/dist/index' with resolution-mode "import").Keyv<string>'
+  //   is not assignable to parameter of type 'keyv/dist/index').Keyv<string>'
+  //   Types have separate declarations of a private property '_ttl'.
+  //
+  // The usual escape hatch is an `as` cast, which this repo bans outright, and
+  // there is no adapter version to upgrade to. So this package stays CommonJS
+  // until `@apollo/utils.keyvadapter` ships ESM/dual types. Nothing else is
+  // blocked by it: ESM packages consume this one fine via its `import`
+  // condition, and Node's `require(esm)` covers the reverse.
   const cacheKV = new Keyv(cacheRedis);
 
   const logConnectionError =

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { maskCredentialToken } from './mcp-connector-credential.util';
+import { maskCredentialToken } from './mcp-connector-credential.util.ts';
 
 describe('maskCredentialToken', () => {
   it('reveals only a short head and tail for a long token', () => {

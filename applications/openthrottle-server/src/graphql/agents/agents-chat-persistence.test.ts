@@ -11,14 +11,14 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { describe, expect, test, vi } from 'vitest';
 
-import { AgentsChatTurnResult } from './agents.object';
+import { AgentsChatTurnResult } from './agents.object.ts';
 import {
   parseAgentsChatTurnToolMetadata,
   PERSISTED_CONVERSATION_NOT_FOUND_ERROR,
   persistSuccessfulAgentsChatTurn,
   resolveHumanUserForPersist,
   resolvePersistedConversation,
-} from './agents-chat-persistence';
+} from './agents-chat-persistence.ts';
 
 describe('agents-chat-persistence', () => {
   describe('resolveHumanUserForPersist', () => {

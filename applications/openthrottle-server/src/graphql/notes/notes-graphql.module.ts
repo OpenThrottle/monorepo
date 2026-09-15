@@ -6,7 +6,7 @@ import { Module } from '@nestjs/common';
 import { GlobalClsModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 
-import { NotesResolver } from './notes.resolver';
+import { NotesResolver } from './notes.resolver.ts';
 
 @Module({
   imports: [GlobalClsModule, NestjsRepositoriesModule],

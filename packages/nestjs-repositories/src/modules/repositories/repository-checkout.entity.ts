@@ -14,8 +14,8 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-import { User } from '../users/user.entity';
-import { Repository } from './repository.entity';
+import { User } from '../users/user.entity.ts';
+import { Repository } from './repository.entity.ts';
 
 export const REPOSITORY_CHECKOUT_KINDS = ['primary', 'worktree'] as const;
 

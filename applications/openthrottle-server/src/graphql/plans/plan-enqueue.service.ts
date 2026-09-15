@@ -28,20 +28,20 @@ import type { JobRunHookEntry } from '@tools/workflows';
 import { projectHookTasksToJobRunHookEntries } from '@tools/workflows';
 import type { Queue } from 'bullmq';
 
-import { updateMatchingTasksAndEmitStatusChanged } from '../../notifications/emit-bulk-task-status-changes';
-import { NotificationsService } from '../../notifications/notifications.service';
+import { updateMatchingTasksAndEmitStatusChanged } from '../../notifications/emit-bulk-task-status-changes.ts';
+import { NotificationsService } from '../../notifications/notifications.service.ts';
 import {
   PLAN_JOB_PRIORITY_DEFAULT,
   PLANS_QUEUE_NAME,
-} from '../../queues/plans/plans.constants';
-import type { RunPlanJobData } from '../../queues/plans/plans.types';
+} from '../../queues/plans/plans.constants.ts';
+import type { RunPlanJobData } from '../../queues/plans/plans.types.ts';
 import {
   normalizeIdempotencyKey,
   QueuesService,
-} from '../queues/queues.service';
-import { buildRunPlanOrchestratorJobData } from './enqueue-plan-ralph-tuning';
-import { buildPlanRunConfigSnapshotFromJobData } from './enqueue-plan-run-config-snapshot';
-import type { RalphPlanRunTuningInput } from './plan.input';
+} from '../queues/queues.service.ts';
+import { buildRunPlanOrchestratorJobData } from './enqueue-plan-ralph-tuning.ts';
+import { buildPlanRunConfigSnapshotFromJobData } from './enqueue-plan-run-config-snapshot.ts';
+import type { RalphPlanRunTuningInput } from './plan.input.ts';
 
 /** Task statuses reset to QUEUED when a plan run is enqueued (COMPLETED tasks are left unchanged). */
 const ENQUEUE_TASK_STATUSES_TO_RESET = [

@@ -3,11 +3,11 @@ import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRedisModule } from '@openthrottle/nestjs-redis';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 
-import { ScheduledAgentJobDirectoryLockService } from './scheduled-agent-job-directory-lock.service';
-import { ScheduledAgentJobsProcessor } from './scheduled-agent-jobs.processor';
-import { ScheduledAgentJobsQueueProducerModule } from './scheduled-agent-jobs-queue-producer.module';
-import { ScheduledAgentJobsReconcileService } from './scheduled-agent-jobs-reconcile.service';
-import { ScheduledAgentRunnerService } from './scheduled-agent-runner.service';
+import { ScheduledAgentJobDirectoryLockService } from './scheduled-agent-job-directory-lock.service.ts';
+import { ScheduledAgentJobsProcessor } from './scheduled-agent-jobs.processor.ts';
+import { ScheduledAgentJobsQueueProducerModule } from './scheduled-agent-jobs-queue-producer.module.ts';
+import { ScheduledAgentJobsReconcileService } from './scheduled-agent-jobs-reconcile.service.ts';
+import { ScheduledAgentRunnerService } from './scheduled-agent-runner.service.ts';
 
 /**
  * @description Processor half of the scheduled-agent-jobs queue (WorkerHost + driver runner). Loaded

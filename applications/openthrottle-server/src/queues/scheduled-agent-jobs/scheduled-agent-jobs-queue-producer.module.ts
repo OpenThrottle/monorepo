@@ -5,9 +5,9 @@ import { NestjsBullmqBoardModule } from '@openthrottle/nestjs-bullmq-board';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 
-import { ScheduledAgentJobCancellationService } from './scheduled-agent-job-cancellation.service';
-import { ScheduledAgentJobSchedulerService } from './scheduled-agent-job-scheduler.service';
-import { SCHEDULED_AGENT_JOBS_QUEUE_NAME } from './scheduled-agent-jobs.constants';
+import { ScheduledAgentJobCancellationService } from './scheduled-agent-job-cancellation.service.ts';
+import { ScheduledAgentJobSchedulerService } from './scheduled-agent-job-scheduler.service.ts';
+import { SCHEDULED_AGENT_JOBS_QUEUE_NAME } from './scheduled-agent-jobs.constants.ts';
 
 /**
  * @description Producer half of the scheduled-agent-jobs queue: registerQueue (enqueue run-now +

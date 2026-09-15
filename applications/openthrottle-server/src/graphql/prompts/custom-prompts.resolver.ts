@@ -35,9 +35,9 @@ import {
   CreateCustomPromptInput,
   ListCustomPromptsInput,
   UpdateCustomPromptInput,
-} from './custom-prompt.input';
-import { CustomPromptObject } from './custom-prompt.object';
-import { resolveCustomPromptWritePath } from './custom-prompt-write-path';
+} from './custom-prompt.input.ts';
+import { CustomPromptObject } from './custom-prompt.object.ts';
+import { resolveCustomPromptWritePath } from './custom-prompt-write-path.ts';
 
 // @authz-stance: authenticated-only (Path A — see OT plan 18e16dfc-4f22-43f9-9b77-6fc90309b60a)
 // for the queries and DB-only mutations; any filesystem write additionally

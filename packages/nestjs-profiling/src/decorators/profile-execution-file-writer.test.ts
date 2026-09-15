@@ -5,10 +5,10 @@ import * as path from 'node:path';
 import { Logger } from '@nestjs/common';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { setProfileExecutionReporter } from './profile-execution.reporter';
-import type { ProfileExecutionResult } from './profile-execution.types';
-import { profileExecution } from './profile-execution.util';
-import { createProfileExecutionFileWriter } from './profile-execution-file-writer';
+import { setProfileExecutionReporter } from './profile-execution.reporter.ts';
+import type { ProfileExecutionResult } from './profile-execution.types.ts';
+import { profileExecution } from './profile-execution.util.ts';
+import { createProfileExecutionFileWriter } from './profile-execution-file-writer.ts';
 
 const parseRecord = (text: string): Record<string, unknown> => JSON.parse(text);
 

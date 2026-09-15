@@ -4,7 +4,7 @@
 
 import { Module } from '@nestjs/common';
 
-import { SearchResolver } from './search.resolver';
+import { SearchResolver } from './search.resolver.ts';
 
 @Module({
   providers: [SearchResolver],

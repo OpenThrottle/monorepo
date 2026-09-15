@@ -5,10 +5,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import type { DeepPartial } from 'typeorm';
 import { Repository } from 'typeorm';
-import type { DeepPartial } from 'typeorm/common/DeepPartial';
 
-import { Permission } from './permission.entity';
+import { Permission } from './permission.entity.ts';
 
 @Injectable()
 export class PermissionsService {

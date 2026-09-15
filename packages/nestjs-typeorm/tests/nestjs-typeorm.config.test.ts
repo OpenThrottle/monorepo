@@ -1,8 +1,8 @@
 import { ConfigService } from '@nestjs/config';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import type { Schema } from '../src/nestjs-typeorm.config';
-import { getTypeormConfig, schema } from '../src/nestjs-typeorm.config';
+import type { Schema } from '../src/nestjs-typeorm.config.ts';
+import { getTypeormConfig, schema } from '../src/nestjs-typeorm.config.ts';
 
 /**
  * A complete, valid set of required env values used as the base for schema

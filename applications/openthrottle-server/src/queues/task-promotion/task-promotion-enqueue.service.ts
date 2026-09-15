@@ -17,17 +17,17 @@ import { Injectable } from '@nestjs/common';
 import { TagsService, TasksService } from '@openthrottle/nestjs-repositories';
 import type { Queue } from 'bullmq';
 
-import { normalizeIdempotencyKey } from '../../graphql/queues/queues.service';
+import { normalizeIdempotencyKey } from '../../graphql/queues/queues.service.ts';
 import {
   PROMOTED_TAG,
   PROMOTED_TASK_STATUS,
   TASK_PROMOTION_PROMOTE_JOB_NAME,
   TASK_PROMOTION_QUEUE_NAME,
-} from './task-promotion.constants';
+} from './task-promotion.constants.ts';
 import type {
   PromoteTaskJobData,
   PromoteTaskJobResult,
-} from './task-promotion.types';
+} from './task-promotion.types.ts';
 
 export interface EnqueuePromotionParams {
   readonly actorServiceAccountId: string | null;

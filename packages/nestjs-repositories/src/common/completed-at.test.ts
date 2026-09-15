@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { resolveCompletedAtForStatusChange } from './completed-at';
+import { resolveCompletedAtForStatusChange } from './completed-at.ts';
 
 describe('resolveCompletedAtForStatusChange', () => {
   const fixedNow = new Date('2026-07-10T12:00:00.000Z');

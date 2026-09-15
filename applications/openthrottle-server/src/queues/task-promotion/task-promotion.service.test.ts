@@ -26,9 +26,12 @@ import { asMock } from '@openthrottle/nestjs-testing';
 import type { EntityManager, Repository } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { NotificationsService } from '../../notifications/notifications.service';
-import { PROMOTED_TAG, PROMOTED_TASK_STATUS } from './task-promotion.constants';
-import { TaskPromotionService } from './task-promotion.service';
+import type { NotificationsService } from '../../notifications/notifications.service.ts';
+import {
+  PROMOTED_TAG,
+  PROMOTED_TASK_STATUS,
+} from './task-promotion.constants.ts';
+import { TaskPromotionService } from './task-promotion.service.ts';
 
 const TASK_ID = '00000000-0000-4000-8000-000000000001';
 const SOURCE_PLAN_ID = '00000000-0000-4000-8000-0000000000a1';

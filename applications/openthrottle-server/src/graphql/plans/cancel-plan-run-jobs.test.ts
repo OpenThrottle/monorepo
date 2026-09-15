@@ -5,9 +5,9 @@ import { describe, expect, test, vi } from 'vitest';
 import {
   RUN_PLAN_ORCHESTRATOR_JOB_NAME,
   RUN_PLAN_SPAWN_JOB_NAME,
-} from '../../queues/plans/plans.constants';
-import type { RunPlanJobData } from '../../queues/plans/plans.types';
-import { cancelPlanRunJobsForPlan } from './cancel-plan-run-jobs';
+} from '../../queues/plans/plans.constants.ts';
+import type { RunPlanJobData } from '../../queues/plans/plans.types.ts';
+import { cancelPlanRunJobsForPlan } from './cancel-plan-run-jobs.ts';
 
 describe('cancelPlanRunJobsForPlan', () => {
   test('returns empty when no jobs match plan id', async () => {

@@ -7,7 +7,7 @@
 import { Module } from '@nestjs/common';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 
-import { TimelineResolver } from './timeline.resolver';
+import { TimelineResolver } from './timeline.resolver.ts';
 
 @Module({
   imports: [NestjsRepositoriesModule],

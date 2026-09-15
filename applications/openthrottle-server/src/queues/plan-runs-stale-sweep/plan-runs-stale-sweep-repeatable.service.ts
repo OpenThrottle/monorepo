@@ -4,11 +4,11 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import { WorkspaceEditorConfigService } from '@openthrottle/nestjs-repositories';
 import type { Queue } from 'bullmq';
 
-import { ForeignSkillInjectionLifecycleService } from '../../services/foreign-skill-injection/foreign-skill-injection-lifecycle.service';
-import { ForeignSkillMaterializationService } from '../../services/foreign-skill-injection/foreign-skill-materialization.service';
-import { REPEATABLE_JOB_OPTIONS } from '../repeatable-job.options';
-import { PLAN_RUNS_STALE_SWEEP_QUEUE_NAME } from './plan-runs-stale-sweep.constants';
-import type { PlanRunsStaleSweepJobData } from './plan-runs-stale-sweep.types';
+import { ForeignSkillInjectionLifecycleService } from '../../services/foreign-skill-injection/foreign-skill-injection-lifecycle.service.ts';
+import { ForeignSkillMaterializationService } from '../../services/foreign-skill-injection/foreign-skill-materialization.service.ts';
+import { REPEATABLE_JOB_OPTIONS } from '../repeatable-job.options.ts';
+import { PLAN_RUNS_STALE_SWEEP_QUEUE_NAME } from './plan-runs-stale-sweep.constants.ts';
+import type { PlanRunsStaleSweepJobData } from './plan-runs-stale-sweep.types.ts';
 
 /**
  * @description Cron pattern: every minute at second 0 (sec min hour day month dow). The passive

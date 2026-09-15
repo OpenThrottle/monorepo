@@ -1,4 +1,4 @@
-import { RUN_PLAN_ORCHESTRATOR_JOB_NAME } from '../agentic-ralph/agentic-ralph.constants';
+import { RUN_PLAN_ORCHESTRATOR_JOB_NAME } from '../agentic-ralph/agentic-ralph.constants.ts';
 
 export const PLANS_QUEUE_NAME = 'Plans';
 

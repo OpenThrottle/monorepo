@@ -3,7 +3,7 @@ import { Module } from '@nestjs/common';
 import { NestjsBullmqModule } from '@openthrottle/nestjs-bullmq';
 import { NestjsBullmqBoardModule } from '@openthrottle/nestjs-bullmq-board';
 
-import { DAILY_STATS_QUEUE_NAME } from './daily-stats.constants';
+import { DAILY_STATS_QUEUE_NAME } from './daily-stats.constants.ts';
 
 /**
  * @description Producer half of the daily-stats queue: registerQueue (enqueue

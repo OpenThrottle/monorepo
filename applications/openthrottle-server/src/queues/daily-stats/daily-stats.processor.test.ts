@@ -9,10 +9,10 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { NotificationsService } from '../../notifications/notifications.service';
-import { addUtcDaysToYmd, getPreviousUtcDayYmd } from './daily-stats.dates';
-import { DailyStatsProcessor } from './daily-stats.processor';
-import type { AggregateDailyStatsJob } from './daily-stats.types';
+import { NotificationsService } from '../../notifications/notifications.service.ts';
+import { addUtcDaysToYmd, getPreviousUtcDayYmd } from './daily-stats.dates.ts';
+import { DailyStatsProcessor } from './daily-stats.processor.ts';
+import type { AggregateDailyStatsJob } from './daily-stats.types.ts';
 
 /**
  * Local mock signature for `DailyStatsService.upsertForDate`: same call args as the real

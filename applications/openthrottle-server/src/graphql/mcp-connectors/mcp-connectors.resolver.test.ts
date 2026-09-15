@@ -8,8 +8,8 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import { McpConnectorsResolver } from './mcp-connectors.resolver';
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { McpConnectorsResolver } from './mcp-connectors.resolver.ts';
 
 const userId = 'user-id';
 

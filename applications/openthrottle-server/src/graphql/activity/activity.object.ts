@@ -4,8 +4,8 @@
 
 import { Field, Int, ObjectType } from '@nestjs/graphql';
 
-import { PlanObject } from '../plans/plan.object';
-import { TaskObject } from '../tasks/task.object';
+import { PlanObject } from '../plans/plan.object.ts';
+import { TaskObject } from '../tasks/task.object.ts';
 
 @ObjectType()
 export class ActivityCommitRowObject {

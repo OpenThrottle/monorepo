@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { NestjsLoggingError } from './nestjs-logging.error';
+import { NestjsLoggingError } from './nestjs-logging.error.ts';
 import {
   applyNestjsLoggingModuleDefaults,
   validateNestjsLoggingModuleAsyncOptions,
   validateNestjsLoggingModuleOptions,
-} from './nestjs-logging.options';
+} from './nestjs-logging.options.ts';
 
 describe('validateNestjsLoggingModuleOptions', () => {
   it('throws when options are missing', () => {

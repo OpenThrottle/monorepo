@@ -3,8 +3,8 @@ import type { PubSubEngine } from '@openthrottle/nestjs-graphql';
 import { queueJobLogTopic } from '@openthrottle/nestjs-graphql';
 import { describe, expect, it, vi } from 'vitest';
 
-import { encodeQueueJobLogCursor } from './queue-job-log-cursor';
-import { createQueueJobLogTailPublisher } from './queue-job-log-publisher';
+import { encodeQueueJobLogCursor } from './queue-job-log-cursor.ts';
+import { createQueueJobLogTailPublisher } from './queue-job-log-publisher.ts';
 
 const TS = '2026-05-04T23:00:00.000Z';
 

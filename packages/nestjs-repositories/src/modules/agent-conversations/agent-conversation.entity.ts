@@ -12,10 +12,10 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-import { Plan } from '../plans/plan.entity';
-import { Project } from '../projects/project.entity';
-import { User } from '../users/user.entity';
-import type { AgentConversationStatus } from './agent-conversation.constants';
+import { Plan } from '../plans/plan.entity.ts';
+import { Project } from '../projects/project.entity.ts';
+import { User } from '../users/user.entity.ts';
+import type { AgentConversationStatus } from './agent-conversation.constants.ts';
 
 export interface AgentConversationData {
   readonly createdAt: Date;

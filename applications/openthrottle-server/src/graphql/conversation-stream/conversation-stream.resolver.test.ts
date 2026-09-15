@@ -22,8 +22,8 @@ import type { DiscoveryResult } from '@openthrottle/openthrottle-agentic-utils';
 import type { Repository } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ConversationStreamResolver } from './conversation-stream.resolver';
-import type { ConversationStreamService } from './conversation-stream.service';
+import { ConversationStreamResolver } from './conversation-stream.resolver.ts';
+import type { ConversationStreamService } from './conversation-stream.service.ts';
 
 const { createCursorAgentSessionMock } = vi.hoisted(() => ({
   createCursorAgentSessionMock: vi.fn(),

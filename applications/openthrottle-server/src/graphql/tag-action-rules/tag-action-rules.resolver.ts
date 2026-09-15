@@ -22,15 +22,15 @@ import {
   TagActionRulesService,
 } from '@openthrottle/nestjs-repositories';
 
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import {
   RuleApplicationObject,
   TagActionRuleObject,
-} from './tag-action-rule.object';
+} from './tag-action-rule.object.ts';
 import {
   DeleteTagActionRuleInput,
   UpsertTagActionRuleInput,
-} from './tag-action-rules.input';
+} from './tag-action-rules.input.ts';
 
 const requireUserPrincipal = (principal: AuthPrincipal): string => {
   if (principal.kind !== AUTH_PRINCIPAL_KIND_USER) {

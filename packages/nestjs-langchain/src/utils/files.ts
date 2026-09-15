@@ -3,7 +3,7 @@ import { glob } from 'glob';
 import ignore from 'ignore';
 import path from 'path';
 
-import type { Extension } from '../loaders/markdown';
+import type { Extension } from '../loaders/markdown.ts';
 
 /**
  * @description Resolve the directory to search from. Callers should pass an

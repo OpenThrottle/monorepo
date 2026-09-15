@@ -1,7 +1,7 @@
 /** @public */
-export { NestjsSlackModule } from './modules/nestjs-slack.module';
+export { NestjsSlackModule } from './modules/nestjs-slack.module.ts';
 /** @public */
-export type { SlackWebhookPayload } from './services/nestjs-slack.service';
-export { NestjsSlackService } from './services/nestjs-slack.service';
+export type { SlackWebhookPayload } from './services/nestjs-slack.service.ts';
+export { NestjsSlackService } from './services/nestjs-slack.service.ts';
 /** @public */
-export { NestjsSlackError } from './config/nestjs-slack.error';
+export { NestjsSlackError } from './config/nestjs-slack.error.ts';

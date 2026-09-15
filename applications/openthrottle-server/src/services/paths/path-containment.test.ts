@@ -6,7 +6,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { isPathWithin, pathDepth } from './path-containment';
+import { isPathWithin, pathDepth } from './path-containment.ts';
 
 describe('isPathWithin', () => {
   it('treats a path as within itself', () => {

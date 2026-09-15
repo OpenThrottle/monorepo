@@ -4,15 +4,15 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ScheduledAgentJob } from './scheduled-agent-job.entity';
+import { ScheduledAgentJob } from './scheduled-agent-job.entity.ts';
 import {
   SCHEDULED_AGENT_JOB_RUN_IN_FLIGHT_STATUSES,
   ScheduledAgentJobRun,
-} from './scheduled-agent-job-run.entity';
+} from './scheduled-agent-job-run.entity.ts';
 import {
   ScheduledAgentJobsService,
   schedulerKeyForJob,
-} from './scheduled-agent-jobs.service';
+} from './scheduled-agent-jobs.service.ts';
 
 type JobRepo = {
   create: ReturnType<typeof vi.fn>;

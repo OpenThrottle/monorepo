@@ -38,7 +38,7 @@ import {
   executePlanJobRunHooks,
   runAfterRunHooksThenNotify,
   runBeforeRunHooksAndHandleBlock,
-} from './execute-plan-job-run-hooks';
+} from './execute-plan-job-run-hooks.ts';
 
 const planId = '2794d106-95f9-427e-904d-e0f9b5cbe734';
 

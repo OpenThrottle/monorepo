@@ -8,14 +8,14 @@ import { Public } from '@openthrottle/nestjs-auth';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { User } from '@openthrottle/nestjs-repositories';
 
-import { AuthService } from './auth.service';
-import { GqlLocalAuthGuard } from './guards/gql-local-auth.guard';
-import { GqlLocalCredentialsGuard } from './guards/gql-local-credentials.guard';
-import { LoginInput } from './login.input';
-import { LoginResultObject } from './login-result.object';
-import { RegisterInput } from './register.input';
-import { RegisterResultObject } from './register-result.object';
-import { SignoutResultObject } from './signout-result.object';
+import { AuthService } from './auth.service.ts';
+import { GqlLocalAuthGuard } from './guards/gql-local-auth.guard.ts';
+import { GqlLocalCredentialsGuard } from './guards/gql-local-credentials.guard.ts';
+import { LoginInput } from './login.input.ts';
+import { LoginResultObject } from './login-result.object.ts';
+import { RegisterInput } from './register.input.ts';
+import { RegisterResultObject } from './register-result.object.ts';
+import { SignoutResultObject } from './signout-result.object.ts';
 
 @Public()
 @Resolver()

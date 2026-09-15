@@ -5,8 +5,8 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { RepositoriesService } from './repositories.service';
-import { Repository } from './repository.entity';
+import { RepositoriesService } from './repositories.service.ts';
+import { Repository } from './repository.entity.ts';
 
 describe('RepositoriesService', () => {
   const repositoryId = '22222222-2222-4222-8222-222222222222';

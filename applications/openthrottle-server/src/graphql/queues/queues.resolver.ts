@@ -6,30 +6,33 @@
 
 import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
 
-import { PLANS_QUEUE_NAME } from '../../queues/plans/plans.constants';
-import { CleanQueueInput } from './clean-queue.input';
-import { CleanQueueResultObject } from './clean-queue-result.object';
-import { CreateQueueInput } from './create-queue.input';
-import { CreateQueueResultObject } from './create-queue-result.object';
-import { DuplicateJobInput } from './duplicate-job.input';
-import { DuplicateJobResultObject } from './duplicate-job-result.object';
-import { EnqueueAgenticTestResultObject } from './enqueue-agentic-test-result.object';
-import { EnqueueDocIngestionInput } from './enqueue-doc-ingestion.input';
-import { EnqueueDocIngestionResultObject } from './enqueue-doc-ingestion-result.object';
-import { JobObject } from './job.object';
-import { parseTaskRunMetricsFromReturnvalue } from './parse-task-run-metrics';
-import { QueueControlInput } from './queue-control.input';
-import { QueueControlResultObject } from './queue-control-result.object';
-import { QueueDetailsInput } from './queue-details.input';
-import { JobsResultObject, QueueDetailsObject } from './queue-details.object';
-import { QueueStatsObject } from './queue-stats.object';
-import { QueuesService } from './queues.service';
-import { RemoveRepeatableJobInput } from './remove-repeatable-job.input';
-import { RemoveRepeatableJobResultObject } from './remove-repeatable-job-result.object';
-import { RepeatableJobObject } from './repeatable-job.object';
-import { RepeatableJobsInput } from './repeatable-jobs.input';
-import { RetryJobInput } from './retry-job.input';
-import { RetryJobResultObject } from './retry-job-result.object';
+import { PLANS_QUEUE_NAME } from '../../queues/plans/plans.constants.ts';
+import { CleanQueueInput } from './clean-queue.input.ts';
+import { CleanQueueResultObject } from './clean-queue-result.object.ts';
+import { CreateQueueInput } from './create-queue.input.ts';
+import { CreateQueueResultObject } from './create-queue-result.object.ts';
+import { DuplicateJobInput } from './duplicate-job.input.ts';
+import { DuplicateJobResultObject } from './duplicate-job-result.object.ts';
+import { EnqueueAgenticTestResultObject } from './enqueue-agentic-test-result.object.ts';
+import { EnqueueDocIngestionInput } from './enqueue-doc-ingestion.input.ts';
+import { EnqueueDocIngestionResultObject } from './enqueue-doc-ingestion-result.object.ts';
+import { JobObject } from './job.object.ts';
+import { parseTaskRunMetricsFromReturnvalue } from './parse-task-run-metrics.ts';
+import { QueueControlInput } from './queue-control.input.ts';
+import { QueueControlResultObject } from './queue-control-result.object.ts';
+import { QueueDetailsInput } from './queue-details.input.ts';
+import {
+  JobsResultObject,
+  QueueDetailsObject,
+} from './queue-details.object.ts';
+import { QueueStatsObject } from './queue-stats.object.ts';
+import { QueuesService } from './queues.service.ts';
+import { RemoveRepeatableJobInput } from './remove-repeatable-job.input.ts';
+import { RemoveRepeatableJobResultObject } from './remove-repeatable-job-result.object.ts';
+import { RepeatableJobObject } from './repeatable-job.object.ts';
+import { RepeatableJobsInput } from './repeatable-jobs.input.ts';
+import { RetryJobInput } from './retry-job.input.ts';
+import { RetryJobResultObject } from './retry-job-result.object.ts';
 
 const DEFAULT_JOBS_OFFSET = 0;
 

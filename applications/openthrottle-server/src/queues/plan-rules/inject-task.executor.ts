@@ -57,14 +57,14 @@ import {
 } from '@openthrottle/openthrottle-skills';
 import { QueryFailedError } from 'typeorm';
 
-import { PlanContextAvailabilityService } from '../../services/plan-context-availability/plan-context-availability.service';
+import { PlanContextAvailabilityService } from '../../services/plan-context-availability/plan-context-availability.service.ts';
 import {
   type ActionExecutor,
   type ActionExecutorContext,
   ActionExecutorRegistry,
   type ActionReconcileContext,
-} from './action-executor';
-import { isReconcilePlacementEnabled } from './reconcile-placement-policy';
+} from './action-executor.ts';
+import { isReconcilePlacementEnabled } from './reconcile-placement-policy.ts';
 
 /**
  * @description Task statuses reconcile never repositions: a completed/skipped/

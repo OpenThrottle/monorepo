@@ -365,7 +365,7 @@ const collectNestjsViolations = (
     const remediation =
       `Every "${NESTJS_TAG}" package is built, not source-first — the rule is keyed on the tag, so it holds regardless of whether this package happens to contain decorators or parameter properties today. ` +
       `Point main/module at ./dist/src/index.js, types at ./dist/src/index.d.ts, every "exports" condition at built output, and rename any "__build" placeholder back to "${BUILD_TARGET}". ` +
-      `Source-first is the workspace default everywhere else; the whole tag flips to it at once when NestJS supports ESM.`;
+      `Source-first is the workspace default everywhere else, and this tier will NOT join it: Node's loader is strip-only, so decorators and constructor parameter properties require emitted code. That is a property of the loader, not of the module format — the tier moved to ESM in NestJS 12 and still cannot be source-first.`;
 
     const fieldViolation =
       sourceFields.length === 0

@@ -2,8 +2,8 @@ import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 
-import { PlanLifecycleHooksProcessor } from './plan-lifecycle-hooks.processor';
-import { PlanLifecycleHooksQueueProducerModule } from './plan-lifecycle-hooks-queue-producer.module';
+import { PlanLifecycleHooksProcessor } from './plan-lifecycle-hooks.processor.ts';
+import { PlanLifecycleHooksQueueProducerModule } from './plan-lifecycle-hooks-queue-producer.module.ts';
 
 /**
  * @description Processor half of the plan-lifecycle-hooks queue: the WorkerHost

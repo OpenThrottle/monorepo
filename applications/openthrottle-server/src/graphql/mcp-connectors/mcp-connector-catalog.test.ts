@@ -6,7 +6,7 @@ import {
   MCP_CONNECTOR_CATALOG,
   MCP_CONNECTOR_PROVIDERS,
   MCP_CONNECTOR_TRANSPORTS,
-} from './mcp-connector-catalog';
+} from './mcp-connector-catalog.ts';
 
 describe('MCP_CONNECTOR_CATALOG', () => {
   it('seeds the curated top-10', () => {

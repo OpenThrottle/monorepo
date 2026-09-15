@@ -6,12 +6,12 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 
-import { ServiceAccount } from '../service-accounts/service-account.entity';
-import { User } from '../users/user.entity';
-import { Permission } from './permission.entity';
-import { PermissionsService } from './permissions.service';
-import { Role } from './role.entity';
-import { RolesService } from './roles.service';
+import { ServiceAccount } from '../service-accounts/service-account.entity.ts';
+import { User } from '../users/user.entity.ts';
+import { Permission } from './permission.entity.ts';
+import { PermissionsService } from './permissions.service.ts';
+import { Role } from './role.entity.ts';
+import { RolesService } from './roles.service.ts';
 
 @Module({
   controllers: [],

@@ -8,13 +8,13 @@ import { Args, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
 import { Plan, Task } from '@openthrottle/nestjs-repositories';
 import { PlansService } from '@openthrottle/nestjs-repositories';
 
-import { PlanObject } from '../plans/plan.object';
-import { TaskObject } from '../tasks/task.object';
+import { PlanObject } from '../plans/plan.object.ts';
+import { TaskObject } from '../tasks/task.object.ts';
 import {
   ActivityByDateInput,
   ActivityByDateRangeInput,
   LastActivityInput,
-} from './activity.input';
+} from './activity.input.ts';
 import {
   ActivityByDateResultObject,
   ActivityCommitRowObject,
@@ -24,8 +24,8 @@ import {
   LastActivityOutputChunkPartObject,
   LastActivityResultObject,
   LastActivityTaskUpdatePartObject,
-} from './activity.object';
-import { ActivityLoaders } from './activity-loaders';
+} from './activity.object.ts';
+import { ActivityLoaders } from './activity-loaders.ts';
 
 type ActivityRow =
   | ActivityCommitRowObject

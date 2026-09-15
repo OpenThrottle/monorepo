@@ -2,10 +2,10 @@ import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 
-import { ForeignSkillInjectionModule } from '../../services/foreign-skill-injection/foreign-skill-injection.module';
-import { PlanRunsStaleSweepProcessor } from './plan-runs-stale-sweep.processor';
-import { PlanRunsStaleSweepQueueProducerModule } from './plan-runs-stale-sweep-queue-producer.module';
-import { PlanRunsStaleSweepRepeatableService } from './plan-runs-stale-sweep-repeatable.service';
+import { ForeignSkillInjectionModule } from '../../services/foreign-skill-injection/foreign-skill-injection.module.ts';
+import { PlanRunsStaleSweepProcessor } from './plan-runs-stale-sweep.processor.ts';
+import { PlanRunsStaleSweepQueueProducerModule } from './plan-runs-stale-sweep-queue-producer.module.ts';
+import { PlanRunsStaleSweepRepeatableService } from './plan-runs-stale-sweep-repeatable.service.ts';
 
 /**
  * @description Processor half of the plan-runs-stale-sweep queue (WorkerHost + repeatable

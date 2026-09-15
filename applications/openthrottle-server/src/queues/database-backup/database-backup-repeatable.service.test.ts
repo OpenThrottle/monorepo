@@ -14,13 +14,13 @@ import {
   DATABASE_BACKUP_JOB_NAME,
   DATABASE_BACKUP_QUEUE_NAME,
   DATABASE_BACKUP_REPEATABLE_JOB_ID,
-} from './database-backup.constants';
-import { resolveDatabaseBackupSchedule } from './database-backup.env';
+} from './database-backup.constants.ts';
+import { resolveDatabaseBackupSchedule } from './database-backup.env.ts';
 import type {
   DatabaseBackupJobPayload,
   DatabaseBackupJobResult,
-} from './database-backup.types';
-import { DatabaseBackupRepeatableService } from './database-backup-repeatable.service';
+} from './database-backup.types.ts';
+import { DatabaseBackupRepeatableService } from './database-backup-repeatable.service.ts';
 
 vi.mock('./database-backup.env', () => ({
   resolveDatabaseBackupSchedule: vi.fn(),

@@ -12,9 +12,9 @@ import type { AgentConversationsService } from '@openthrottle/nestjs-repositorie
 import { deriveConversationTitleFromMessage } from '@openthrottle/nestjs-repositories';
 import { isRecord } from '@openthrottle/nodejs-utils';
 
-import type { AgentsChatTurnResult } from './agents.object';
-import type { AgentsMcpRouteDecision } from './agents-mcp-router';
-import type { AgentsRouterModelSnapshot } from './agents-mcp-router-llm.service';
+import type { AgentsChatTurnResult } from './agents.object.ts';
+import type { AgentsMcpRouteDecision } from './agents-mcp-router.ts';
+import type { AgentsRouterModelSnapshot } from './agents-mcp-router-llm.service.ts';
 
 export type { AgentsRouterModelSnapshot };
 

@@ -15,13 +15,13 @@ import {
   TASK_STATUS,
   TASK_STATUS_VALUES,
   type TaskStatus,
-} from '../../common/plan-task-status.constants';
-import { Task } from '../tasks/task.entity';
+} from '../../common/plan-task-status.constants.ts';
+import { Task } from '../tasks/task.entity.ts';
 import {
   RULE_APPLICATION_STATES,
   RuleApplication,
   type RuleApplicationState,
-} from './rule-application.entity';
+} from './rule-application.entity.ts';
 
 /**
  * @description Status an orphaned injected task is soft-closed to (reversible).

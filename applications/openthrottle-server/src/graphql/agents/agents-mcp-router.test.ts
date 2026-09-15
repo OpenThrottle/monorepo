@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { AgentsMcpRouter } from './agents-mcp-router';
+import { AgentsMcpRouter } from './agents-mcp-router.ts';
 
 const PLAN_ID = '18e1ca8f-8ba5-483c-bb59-4e89f95ccfe0';
 const TASK_ID = 'f337a3a2-43d6-4d31-beea-89f05489f482';

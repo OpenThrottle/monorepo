@@ -1,7 +1,7 @@
 import {
   type AuthPrincipal,
   normalizeRequestAuthPrincipal,
-} from '../auth-principal';
+} from '../auth-principal.ts';
 
 /**
  * @description Returns {@link AuthPrincipal} from an HTTP-like request, or undefined

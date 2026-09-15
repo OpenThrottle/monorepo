@@ -24,16 +24,16 @@ import {
   ServiceAccountsService,
 } from '@openthrottle/nestjs-repositories';
 
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import { resolveTagCaller } from '../tags/tags.resolver';
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { resolveTagCaller } from '../tags/tags.resolver.ts';
 import {
   ProjectSkillObject,
   ProjectSkillsResult,
-} from './project-skill.object';
+} from './project-skill.object.ts';
 import {
   AddProjectSkillTagInput,
   RemoveProjectSkillTagInput,
-} from './project-skills.input';
+} from './project-skills.input.ts';
 
 /** nx_project_name of the dogfood project the monorepo's own skills reconcile into. */
 const DOGFOOD_NX_PROJECT_NAME = 'OpenThrottle/monorepo';

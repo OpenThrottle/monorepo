@@ -5,8 +5,8 @@
 import { faker } from '@faker-js/faker';
 import { Factory } from 'fishery';
 
-import { tasksFactory } from '../../modules/tasks/tasks.factory';
-import type { TaskEmbedding } from './task-embedding.entity';
+import { tasksFactory } from '../../modules/tasks/tasks.factory.ts';
+import type { TaskEmbedding } from './task-embedding.entity.ts';
 
 // /** Column-only shape for building task embedding test data (no relations). */
 // export type TaskEmbeddingFactoryData = Pick<

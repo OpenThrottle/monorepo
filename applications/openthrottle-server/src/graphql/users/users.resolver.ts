@@ -10,9 +10,9 @@ import { Permissions } from '@openthrottle/nestjs-rbac';
 import type { User } from '@openthrottle/nestjs-repositories';
 import { UsersService } from '@openthrottle/nestjs-repositories';
 
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import { CreateUserInput, UpdateUserInput } from './user.input';
-import { UserObject } from './user.object';
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { CreateUserInput, UpdateUserInput } from './user.input.ts';
+import { UserObject } from './user.object.ts';
 
 @Resolver(() => UserObject)
 @UseGuards(GqlPermissionsGuard)

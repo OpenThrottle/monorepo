@@ -10,9 +10,9 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { embedQuery } from '@openthrottle/node-client';
 
-import type { CreatePlanInput } from '../../graphql/plans/plan.input';
-import { CheckoutPathResolutionService } from '../checkout-path-resolution/checkout-path-resolution.service';
-import { EffectiveUserResolutionService } from '../effective-user-resolution/effective-user-resolution.service';
+import type { CreatePlanInput } from '../../graphql/plans/plan.input.ts';
+import { CheckoutPathResolutionService } from '../checkout-path-resolution/checkout-path-resolution.service.ts';
+import { EffectiveUserResolutionService } from '../effective-user-resolution/effective-user-resolution.service.ts';
 
 /** @description Same GitHub-login rule as assignee normalization in @openthrottle/node-client openthrottle-client. */
 const GITHUB_USERNAME_REGEX =

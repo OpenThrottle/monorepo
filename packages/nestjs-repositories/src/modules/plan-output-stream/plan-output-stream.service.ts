@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { Repository } from 'typeorm';
 
-import { PlanOutputStreamChunk } from './plan-output-stream.entity';
+import { PlanOutputStreamChunk } from './plan-output-stream.entity.ts';
 
 @Injectable()
 export class PlanOutputStreamService {

@@ -9,14 +9,17 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   applyNestjsLoggingModuleDefaults,
   NESTJS_LOGGING_MODULE_OPTIONS,
-} from '../config/nestjs-logging.options';
-import { NESTJS_LOGGING_LEVELS } from '../config/nestjs-logging-levels';
-import type { LogStreamHub, StructuredLogRecord } from '../ports/logging-ports';
-import { LOG_STREAM_HUB } from '../tokens/nestjs-logging.tokens';
+} from '../config/nestjs-logging.options.ts';
+import { NESTJS_LOGGING_LEVELS } from '../config/nestjs-logging-levels.ts';
+import type {
+  LogStreamHub,
+  StructuredLogRecord,
+} from '../ports/logging-ports.ts';
+import { LOG_STREAM_HUB } from '../tokens/nestjs-logging.tokens.ts';
 import {
   buildNestjsLoggingWebsocketGatewayClass,
   recordMatchesLogSubscriptionFilter,
-} from './nestjs-logging-websocket.gateway';
+} from './nestjs-logging-websocket.gateway.ts';
 
 /**
  * @description Cast-free partial-mock helper: returns the given value typed as `T` for tests

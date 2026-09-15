@@ -2,7 +2,7 @@
  * @description Maps MCP developer tool outcomes into {@link AgentsChatTurnResult} for the agents GraphQL surface.
  */
 
-import { AgentsChatTurnResult } from './agents.object';
+import { AgentsChatTurnResult } from './agents.object.ts';
 
 /**
  * @description MCP tool outcome from {@link McpDeveloperMcpSurface} handlers for agents chat mapping.

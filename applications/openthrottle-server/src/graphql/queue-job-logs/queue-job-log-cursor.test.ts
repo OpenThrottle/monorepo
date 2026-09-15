@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   decodeQueueJobLogCursor,
   encodeQueueJobLogCursor,
-} from './queue-job-log-cursor';
+} from './queue-job-log-cursor.ts';
 
 describe('queue-job-log cursor', () => {
   it('round-trips a line index', () => {

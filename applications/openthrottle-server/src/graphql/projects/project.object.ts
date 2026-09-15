@@ -6,8 +6,13 @@ import { Field, ObjectType } from '@nestjs/graphql';
 import type { Plan, Task } from '@openthrottle/nestjs-repositories';
 import type { ProjectData } from '@openthrottle/nestjs-repositories';
 
-import type { PlanObject } from '../plans/plan.object';
-import type { TaskObject } from '../tasks/task.object';
+// Value imports, not `import type`: the `@Field(() => [...])` thunks below
+// dereference these at schema-build time. ESM hoists the bindings and the
+// thunk defers the read past module evaluation, so the plan.object <->
+// project.object cycle resolves without the inline `require()` calls this
+// replaced — `require` does not exist under `type: module`.
+import { PlanObject } from '../plans/plan.object.ts';
+import { TaskObject } from '../tasks/task.object.ts';
 
 @ObjectType()
 export class ProjectObject implements ProjectData {
@@ -29,15 +34,13 @@ export class ProjectObject implements ProjectData {
   })
   nxProjectName!: string | null;
 
-  /* eslint-disable-next-line @typescript-eslint/no-require-imports -- circular ref: plan.object imports ProjectObject */
-  @Field(() => [require('../plans/plan.object').PlanObject], {
+  @Field(() => [PlanObject], {
     description: `Plans linked to this project; resolved via ResolveField.`,
     nullable: true,
   })
   plans!: (PlanObject | Plan)[] | null;
 
-  /* eslint-disable-next-line @typescript-eslint/no-require-imports -- circular ref: task.object imports ProjectObject */
-  @Field(() => [require('../tasks/task.object').TaskObject], {
+  @Field(() => [TaskObject], {
     description: `Tasks linked to this project; resolved via ResolveField.`,
     nullable: true,
   })

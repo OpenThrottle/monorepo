@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { getCorsConfiguration, getCorsOptions } from './cors';
+import { getCorsConfiguration, getCorsOptions } from './cors.ts';
 
 const CORS_ORIGINS = 'CORS_ORIGINS';
 const CORS_CREDENTIALS = 'CORS_CREDENTIALS';

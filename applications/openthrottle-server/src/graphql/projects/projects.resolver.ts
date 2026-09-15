@@ -17,14 +17,14 @@ import {
   ProjectsService,
 } from '@openthrottle/nestjs-repositories';
 
-import { PlanObject } from '../plans/plan.object';
-import { TaskObject } from '../tasks/task.object';
+import { PlanObject } from '../plans/plan.object.ts';
+import { TaskObject } from '../tasks/task.object.ts';
 import {
   CreateProjectInput,
   DeleteProjectInput,
   UpdateProjectInput,
-} from './project.input';
-import { ProjectObject } from './project.object';
+} from './project.input.ts';
+import { ProjectObject } from './project.object.ts';
 
 // @authz-stance: authenticated-only (Path A — see OT plan 18e16dfc-4f22-43f9-9b77-6fc90309b60a)
 @Resolver(() => ProjectObject)

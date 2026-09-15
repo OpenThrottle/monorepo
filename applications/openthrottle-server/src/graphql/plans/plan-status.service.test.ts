@@ -9,11 +9,11 @@ import type {
 import type { Queue } from 'bullmq';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { NotificationsService } from '../../notifications/notifications.service';
-import type { PlanCancelChannelService } from '../../queues/plans/plan-cancel-channel.service';
-import type { PlanRunCancellationService } from '../../queues/plans/plan-run-cancellation.service';
-import type { RunPlanJobData } from '../../queues/plans/plans.types';
-import { PlanStatusService } from './plan-status.service';
+import type { NotificationsService } from '../../notifications/notifications.service.ts';
+import type { PlanCancelChannelService } from '../../queues/plans/plan-cancel-channel.service.ts';
+import type { PlanRunCancellationService } from '../../queues/plans/plan-run-cancellation.service.ts';
+import type { RunPlanJobData } from '../../queues/plans/plans.types.ts';
+import { PlanStatusService } from './plan-status.service.ts';
 
 const IN_PROGRESS_TRANSITION_FORBIDDEN_MESSAGE =
   'Cannot transition to IN_PROGRESS: only PENDING, QUEUED, or already IN_PROGRESS plans may enter this state.';

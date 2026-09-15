@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { asMock } from '../as-mock';
-import { isRecord } from '../is-record';
+import { asMock } from '../as-mock.ts';
+import { isRecord } from '../is-record.ts';
 
 interface Example {
   readonly id: string;

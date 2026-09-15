@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { POLICY_FACTORY } from '@openthrottle/nestjs-common';
-import { <%= namePascal %>Resolver } from './<%= name %>.resolver';
-import { <%= namePascal %>Service } from './<%= name %>.service';
+import { <%= namePascal %>Resolver } from './<%= name %>.resolver.ts';
+import { <%= namePascal %>Service } from './<%= name %>.service.ts';
 
 describe('<%= namePascal %>Resolver', () => {
   let resolver: <%= namePascal %>Resolver;

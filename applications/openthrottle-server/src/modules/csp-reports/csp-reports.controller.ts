@@ -2,7 +2,7 @@ import { Body, Controller, HttpCode, Post } from '@nestjs/common';
 import { Public } from '@openthrottle/nestjs-auth';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 
-import { parseCspReportPayload } from './csp-reports.parser';
+import { parseCspReportPayload } from './csp-reports.parser.ts';
 
 /**
  * @description Public sink for browser Content-Security-Policy violation

@@ -34,9 +34,9 @@ import {
   type SkillAvailabilityRuleInput,
   type SkillAvailabilityRuleInputArgs,
   skillAvailabilityRuleInputSchema,
-} from './skill-availability.schemas';
-import { SkillAvailabilityRule } from './skill-availability-rule.entity';
-import { SkillAvailabilityRuleSet } from './skill-availability-rule-set.entity';
+} from './skill-availability.schemas.ts';
+import { SkillAvailabilityRule } from './skill-availability-rule.entity.ts';
+import { SkillAvailabilityRuleSet } from './skill-availability-rule-set.entity.ts';
 
 /** Narrows a stored posture string to the resolver's tri-safe posture (defaults to allow). */
 const toPosture = (value: string): SkillAvailabilityPosture =>

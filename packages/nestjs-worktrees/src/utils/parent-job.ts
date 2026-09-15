@@ -20,7 +20,7 @@ import type {
   ParentJobEnsureCommitResult,
   ParentJobHandoff,
   PushBranchResult,
-} from '../types/worktree';
+} from '../types/worktree.ts';
 
 const DEFAULT_BASE_BRANCH = 'main';
 

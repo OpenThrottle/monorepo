@@ -3,7 +3,7 @@ import { Module } from '@nestjs/common';
 import { NestjsBullmqModule } from '@openthrottle/nestjs-bullmq';
 import { NestjsBullmqBoardModule } from '@openthrottle/nestjs-bullmq-board';
 
-import { AGENTIC_TEST_QUEUE_NAME } from './agentic-test.constants';
+import { AGENTIC_TEST_QUEUE_NAME } from './agentic-test.constants.ts';
 
 /**
  * @description Producer half of the agentic-test queue: registerQueue (enqueue

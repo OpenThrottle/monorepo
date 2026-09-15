@@ -6,8 +6,8 @@
 
 import { Field, ObjectType } from '@nestjs/graphql';
 
-import { WorkspaceEditorIdEnum } from '../workspace-settings/workspace-editor-id.enum';
-import { EditorPresenceStateEnum } from './editor-presence-state.enum';
+import { WorkspaceEditorIdEnum } from '../workspace-settings/workspace-editor-id.enum.ts';
+import { EditorPresenceStateEnum } from './editor-presence-state.enum.ts';
 
 @ObjectType()
 export class EditorPresenceObject {

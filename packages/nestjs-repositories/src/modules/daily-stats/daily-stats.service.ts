@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { Repository } from 'typeorm';
 
-import { DailyStat } from './daily-stat.entity';
+import { DailyStat } from './daily-stat.entity.ts';
 
 /**
  * @description Normalizes a Postgres `date` value (pg returns `YYYY-MM-DD`

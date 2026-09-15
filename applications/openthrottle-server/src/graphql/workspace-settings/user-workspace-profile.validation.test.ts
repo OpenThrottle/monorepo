@@ -4,8 +4,8 @@ import {
   validateContactDisplayName,
   validateContactEmail,
   validateEnabledEditors,
-} from './user-workspace-profile.validation';
-import { WorkspaceEditorIdEnum } from './workspace-editor-id.enum';
+} from './user-workspace-profile.validation.ts';
+import { WorkspaceEditorIdEnum } from './workspace-editor-id.enum.ts';
 
 describe('validateContactDisplayName', () => {
   test('returns trimmed name when valid', () => {

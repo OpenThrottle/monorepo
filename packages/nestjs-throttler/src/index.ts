@@ -1,4 +1,4 @@
-export { NestjsThrottlerError } from './config/nestjs-throttler.error';
+export { NestjsThrottlerError } from './config/nestjs-throttler.error.ts';
 export {
   applyNestjsThrottlerModuleDefaults,
   DEFAULT_THROTTLER_LIMIT,
@@ -10,6 +10,6 @@ export {
   type ResolvedNestjsThrottlerModuleOptions,
   type ThrottlerTierOptions,
   validateNestjsThrottlerModuleOptions,
-} from './config/nestjs-throttler.options';
-export { GqlThrottlerGuard } from './guards/gql-throttler.guard';
-export { NestjsThrottlerModule } from './modules/nestjs-throttler.module';
+} from './config/nestjs-throttler.options.ts';
+export { GqlThrottlerGuard } from './guards/gql-throttler.guard.ts';
+export { NestjsThrottlerModule } from './modules/nestjs-throttler.module.ts';

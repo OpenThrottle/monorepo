@@ -6,7 +6,7 @@ import {
   createEntityByIdLoader,
   createGroupedCountLoader,
   type RepositoryAccessor,
-} from './entity-loaders';
+} from './entity-loaders.ts';
 
 interface Row {
   id: string;

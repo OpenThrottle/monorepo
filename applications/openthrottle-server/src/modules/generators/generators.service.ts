@@ -1,7 +1,17 @@
+import { fileURLToPath } from 'node:url';
+
 import { readFileSync } from 'fs';
 import { dirname, join } from 'path';
 
-declare const require: NodeRequire;
+/**
+ * Locate `@tools/generators` on disk.
+ *
+ * Uses `import.meta.resolve`, not `require.resolve`: this file is ESM, where
+ * `require` does not exist. It resolves through the same `exports` map and
+ * returns a `file://` URL, so the result is converted back to a path.
+ */
+const resolveGeneratorsPackageJson = (): string =>
+  fileURLToPath(import.meta.resolve('@tools/generators/package.json'));
 
 interface GeneratorMeta {
   readonly description: string;
@@ -15,7 +25,7 @@ export interface GeneratorItem {
 }
 
 const generatorsData = ((): Record<string, GeneratorMeta> => {
-  const pkgPath = require.resolve('@tools/generators/package.json');
+  const pkgPath = resolveGeneratorsPackageJson();
   const generatorsPath = join(dirname(pkgPath), 'generators.json');
   const raw = readFileSync(generatorsPath, 'utf-8');
   const data: { generators: Record<string, GeneratorMeta> } = JSON.parse(raw);
@@ -48,7 +58,7 @@ export function getGeneratorByName(name: string): GeneratorDetail | null {
   }
   let schema: Record<string, unknown> | null = null;
   try {
-    const pkgPath = require.resolve('@tools/generators/package.json');
+    const pkgPath = resolveGeneratorsPackageJson();
     const pkgDir = dirname(pkgPath);
     const schemaPath = join(pkgDir, meta.schema.replace(/^\.\//, ''));
     const raw = readFileSync(schemaPath, 'utf-8');

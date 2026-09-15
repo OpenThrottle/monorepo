@@ -7,8 +7,8 @@ import {
   type PlanRunConfigSnapshot,
 } from '@openthrottle/nestjs-repositories';
 
-import type { RunPlanJobData } from '../../queues/plans/plans.types';
-import { isRunPlanOrchestratorJobData } from '../../queues/plans/plans.types';
+import type { RunPlanJobData } from '../../queues/plans/plans.types.ts';
+import { isRunPlanOrchestratorJobData } from '../../queues/plans/plans.types.ts';
 
 /**
  * @description Registered workspace ids resolved at enqueue (the run's `workingDirectory` is

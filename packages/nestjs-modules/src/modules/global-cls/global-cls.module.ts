@@ -9,8 +9,8 @@ import {
   applyGlobalClsUser,
   GlobalClsService,
   type GlobalClsStore,
-} from './global-cls.service';
-import type { GlobalClsUser } from './global-cls-user';
+} from './global-cls.service.ts';
+import type { GlobalClsUser } from './global-cls-user.ts';
 
 /**
  * @description CLS middleware setup hook: reads the `x-app-name` /

@@ -6,12 +6,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type {
   StripeProcessedEventsPort,
   StripeSubscriptionsPort,
-} from '../tokens/stripe-ports';
+} from '../tokens/stripe-ports.ts';
 import {
   STRIPE_PROCESSED_EVENTS_PORT,
   STRIPE_SUBSCRIPTIONS_PORT,
-} from '../tokens/stripe-tokens';
-import { StripeWebhookHandlerService } from './stripe-webhook-handler.service';
+} from '../tokens/stripe-tokens.ts';
+import { StripeWebhookHandlerService } from './stripe-webhook-handler.service.ts';
 
 /** @description Presents a structural test double as the target type without a cast. */
 function asMock<T>(value: unknown): T;

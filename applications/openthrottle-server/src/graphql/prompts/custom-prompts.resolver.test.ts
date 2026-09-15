@@ -18,9 +18,9 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { CustomPromptTypeEnum } from './custom-prompt.object';
-import { CUSTOM_PROMPT_WRITE_REFUSAL } from './custom-prompt-write-path';
-import { CustomPromptsResolver } from './custom-prompts.resolver';
+import { CustomPromptTypeEnum } from './custom-prompt.object.ts';
+import { CUSTOM_PROMPT_WRITE_REFUSAL } from './custom-prompt-write-path.ts';
+import { CustomPromptsResolver } from './custom-prompts.resolver.ts';
 
 const workspaceRoot = mkdtempSync(join(tmpdir(), 'custom-prompts-resolver-'));
 

@@ -7,8 +7,8 @@ import type {
 } from 'typeorm';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { updateMatchingTasksAndEmitStatusChanged } from './emit-bulk-task-status-changes';
-import type { NotificationsService } from './notifications.service';
+import { updateMatchingTasksAndEmitStatusChanged } from './emit-bulk-task-status-changes.ts';
+import type { NotificationsService } from './notifications.service.ts';
 
 describe('updateMatchingTasksAndEmitStatusChanged', () => {
   const emitTaskStatusChanged = vi.fn();

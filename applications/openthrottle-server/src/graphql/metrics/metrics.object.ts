@@ -5,8 +5,8 @@
 
 import { Field, ObjectType } from '@nestjs/graphql';
 
-import { ServerMetricsObject } from '../health/server-metrics.object';
-import { PlanRunMetricsEntryObject } from './plan-run-metrics-entry.object';
+import { ServerMetricsObject } from '../health/server-metrics.object.ts';
+import { PlanRunMetricsEntryObject } from './plan-run-metrics-entry.object.ts';
 
 @ObjectType({
   description: `Metrics namespace: server snapshot and plan-run metrics. serverMetrics at root remains for backward compatibility.`,

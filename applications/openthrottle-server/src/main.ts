@@ -1,4 +1,4 @@
-import './load-env';
+import './load-env.ts';
 
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
@@ -11,8 +11,8 @@ import {
 } from '@openthrottle/nestjs-profiling';
 import { getCorsOptions } from '@openthrottle/nestjs-rbac';
 
-import { buildAppModule } from './app.module';
-import { PROCESS_ROLES, resolveProcessRole } from './config/process-role';
+import { buildAppModule } from './app.module.ts';
+import { PROCESS_ROLES, resolveProcessRole } from './config/process-role.ts';
 
 /**
  * @description Worker-only bootstrap: an application context with BullMQ

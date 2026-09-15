@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
-import { NESTJS_LOGGING_LEVELS } from '../config/nestjs-logging-levels';
-import type { JsonValue, StructuredLogRecord } from '../ports/logging-ports';
+import { NESTJS_LOGGING_LEVELS } from '../config/nestjs-logging-levels.ts';
+import type { JsonValue, StructuredLogRecord } from '../ports/logging-ports.ts';
 import {
   orderJsonlRootObjectKeys,
   parseJsonlLineToStructuredRecord,
   serializeStructuredLogLine,
   structuredLogRecordToJsonlPayload,
-} from './jsonl-payload';
-import { createLogRedactor } from './log-redaction';
+} from './jsonl-payload.ts';
+import { createLogRedactor } from './log-redaction.ts';
 
 /**
  * @description Cast-free partial-mock helper: returns the given value typed as `T`. Used here to

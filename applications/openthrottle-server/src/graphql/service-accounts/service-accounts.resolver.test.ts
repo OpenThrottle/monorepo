@@ -17,8 +17,8 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import { ServiceAccountsResolver } from './service-accounts.resolver';
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { ServiceAccountsResolver } from './service-accounts.resolver.ts';
 
 describe('ServiceAccountsResolver', () => {
   let resolver: ServiceAccountsResolver;

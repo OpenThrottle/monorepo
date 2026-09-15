@@ -14,8 +14,8 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import { TokenUsageResolver } from './token-usage.resolver';
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { TokenUsageResolver } from './token-usage.resolver.ts';
 
 describe('TokenUsageResolver', () => {
   let resolver: TokenUsageResolver;

@@ -11,17 +11,17 @@ import { In, Repository } from 'typeorm';
 import type {
   ScheduledAgentJobDriverId,
   ScheduledAgentJobSettings,
-} from './scheduled-agent-job.entity';
-import { ScheduledAgentJob } from './scheduled-agent-job.entity';
+} from './scheduled-agent-job.entity.ts';
+import { ScheduledAgentJob } from './scheduled-agent-job.entity.ts';
 import type {
   ScheduledAgentJobRunSettingsSnapshot,
   ScheduledAgentJobRunStatus,
   ScheduledAgentJobRunTrigger,
-} from './scheduled-agent-job-run.entity';
+} from './scheduled-agent-job-run.entity.ts';
 import {
   SCHEDULED_AGENT_JOB_RUN_IN_FLIGHT_STATUSES,
   ScheduledAgentJobRun,
-} from './scheduled-agent-job-run.entity';
+} from './scheduled-agent-job-run.entity.ts';
 
 /** Fields a caller supplies to create a schedule; `schedulerKey` is derived from the new id. */
 export interface CreateScheduledAgentJobInput {

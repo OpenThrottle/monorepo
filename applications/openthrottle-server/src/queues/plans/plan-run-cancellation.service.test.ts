@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { PlanRunCancellationService } from './plan-run-cancellation.service';
+import { PlanRunCancellationService } from './plan-run-cancellation.service.ts';
 
 describe('PlanRunCancellationService', () => {
   let service: PlanRunCancellationService;

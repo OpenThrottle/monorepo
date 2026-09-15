@@ -1,10 +1,10 @@
-import type { ProfileExecutionRedactor } from './profile-execution.redaction';
-import { defaultProfileExecutionRedactor } from './profile-execution.redaction';
+import type { ProfileExecutionRedactor } from './profile-execution.redaction.ts';
+import { defaultProfileExecutionRedactor } from './profile-execution.redaction.ts';
 import {
   getProfileExecutionReporter,
   notifyProfileExecutionReporter,
-} from './profile-execution.reporter';
-import type { ProfileExecutionResult } from './profile-execution.types';
+} from './profile-execution.reporter.ts';
+import type { ProfileExecutionResult } from './profile-execution.types.ts';
 
 /**
  * @description Options for {@link ProfileExecution}.

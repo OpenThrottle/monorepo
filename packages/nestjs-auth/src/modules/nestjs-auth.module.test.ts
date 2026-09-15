@@ -1,10 +1,10 @@
 import { asMock } from '@openthrottle/nestjs-testing';
 import { describe, expect, it } from 'vitest';
 
-import type { NestjsAuthOptions } from '../config/nestjs-auth.options';
-import { NESTJS_AUTH_OPTIONS } from '../config/nestjs-auth.tokens';
-import { JWT_SECRET_MIN_BYTES } from '../strategies/jwt.strategy';
-import { NestjsAuthModule } from './nestjs-auth.module';
+import type { NestjsAuthOptions } from '../config/nestjs-auth.options.ts';
+import { NESTJS_AUTH_OPTIONS } from '../config/nestjs-auth.tokens.ts';
+import { JWT_SECRET_MIN_BYTES } from '../strategies/jwt.strategy.ts';
+import { NestjsAuthModule } from './nestjs-auth.module.ts';
 
 const STRONG_SECRET = 'a'.repeat(JWT_SECRET_MIN_BYTES);
 
