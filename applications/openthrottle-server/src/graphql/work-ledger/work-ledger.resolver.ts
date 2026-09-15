@@ -120,6 +120,10 @@ export class WorkLedgerResolver {
       // Ralph's verified inheritance is stamped on its own write path (slice 4).
       onBehalfOfVerified: false,
       planRunId: input.planRunId,
+      // started_at is NOT NULL DEFAULT NOW() in the DB, but a DB default is not read back by
+      // save(), which would leave the returned entity's non-nullable startedAt undefined and
+      // fail the GraphQL projection for a row that was written fine. Stamp it here instead.
+      startedAt: new Date(),
       toolName: input.toolName,
       toolVersion: input.toolVersion,
     });

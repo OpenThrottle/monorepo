@@ -5582,7 +5582,7 @@ export type WorkSessionObject = {
   __typename?: 'WorkSessionObject';
   actorServiceAccountId?: Maybe<Scalars['String']['output']>;
   actorUserId?: Maybe<Scalars['String']['output']>;
-  /** How the session closed: explicit | sweeper; null while open */
+  /** How the session closed: explicit (after real work) | instant (no span) | sweeper (abandoned past TTL); null while open */
   closedBy?: Maybe<Scalars['String']['output']>;
   conversationId?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['DateTime']['output'];

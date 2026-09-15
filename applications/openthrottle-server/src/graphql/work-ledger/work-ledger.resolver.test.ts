@@ -2,6 +2,7 @@ import { createMock } from '@golevelup/ts-vitest';
 import type {
   WorkArtifact,
   WorkLedgerService,
+  WorkSession,
 } from '@openthrottle/nestjs-repositories';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -70,5 +71,52 @@ describe('WorkLedgerResolver.recordWorkArtifact', () => {
     // Promote path reuses the loaded row (create is not called) and keeps its producedAt.
     expect(repo.create).not.toHaveBeenCalled();
     expect(artifact.producedAt).toEqual(new Date('2026-02-01T00:00:00.000Z'));
+  });
+});
+
+describe('WorkLedgerResolver.startWorkSession', () => {
+  // Same shape as the artifact repo above, and for the same reason: it deliberately does
+  // NOT synthesize the `started_at DEFAULT now()` DB default, so a create path that omits
+  // startedAt surfaces as undefined — which is the bug this guards against.
+  const repo = {
+    create: vi.fn((data: Record<string, unknown>) => data),
+    save: vi.fn((entity: WorkSession) => Promise.resolve(entity)),
+  };
+
+  let workLedgerService: WorkLedgerService;
+  let resolver: WorkLedgerResolver;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    workLedgerService = createMock<WorkLedgerService>({
+      getSessionRepository: vi.fn().mockReturnValue(repo),
+    });
+    resolver = new WorkLedgerResolver(workLedgerService);
+  });
+
+  const input = {
+    conversationId: null,
+    externalRef: 'openthrottle-mcp:123',
+    model: null,
+    onBehalfOfUserId: null,
+    planRunId: null,
+    toolName: 'claude-code',
+    toolVersion: '1.0.0',
+  };
+
+  it('stamps startedAt on the create path so the non-nullable field never resolves to null', async () => {
+    const session = await resolver.startWorkSession(input, 'user-1', 'user');
+
+    expect(repo.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        actorUserId: 'user-1',
+        startedAt: expect.any(Date),
+        toolName: 'claude-code',
+      }),
+    );
+    // The returned entity is what GraphQL serializes for the non-nullable
+    // WorkSessionObject.startedAt field — it must be a real Date, not null.
+    // Selecting `id` alone used to work while selecting `startedAt` errored.
+    expect(session.startedAt).toBeInstanceOf(Date);
   });
 });

@@ -15,7 +15,7 @@ export class WorkSessionObject {
   actorUserId!: string | null;
 
   @Field(() => String, {
-    description: `How the session closed: explicit | sweeper; null while open`,
+    description: `How the session closed: explicit (after real work) | instant (no span) | sweeper (abandoned past TTL); null while open`,
     nullable: true,
   })
   closedBy!: string | null;

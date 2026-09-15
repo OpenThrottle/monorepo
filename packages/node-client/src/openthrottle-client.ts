@@ -1235,12 +1235,12 @@ export async function createCommitLink(
       );
     }
 
-    // 2. Create-or-reuse the (plan, task) instant session (started_at = ended_at, closed explicitly).
+    // 2. Create-or-reuse the (plan, task) instant session (started_at = ended_at, closed_by='instant').
     await runQuery(
       manager,
       `INSERT INTO work_sessions
          (actor_service_account_id, closed_by, ended_at, external_ref, on_behalf_of_verified, started_at, tool_name)
-       SELECT $1, 'explicit', NOW(), $2, FALSE, NOW(), 'node-client'
+       SELECT $1, 'instant', NOW(), $2, FALSE, NOW(), 'node-client'
        WHERE NOT EXISTS (SELECT 1 FROM work_sessions WHERE external_ref = $2)`,
       [serviceAccountId, externalRef],
     );

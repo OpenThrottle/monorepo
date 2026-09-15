@@ -22,6 +22,14 @@ import type { GlobalClsUser } from './global-cls-user.ts';
 /** Request header carrying an active work-ledger session id for ambient attribution (G11). */
 const HEADER_OT_SESSION_ID = 'x-ot-session-id';
 
+/**
+ * @description Sentinel seeded into `app.name` when the caller sent no usable `x-app-name`.
+ * Exported so consumers that attribute work to a client can recognise "we do not know who
+ * this was" rather than treating the sentinel as a real client name.
+ * @public
+ */
+export const UNKNOWN_APP_NAME = 'x-app-name - unknown';
+
 export const setupGlobalCls = (
   cls: ClsService,
   req: { headers: Record<string, string | undefined> },
@@ -30,7 +38,7 @@ export const setupGlobalCls = (
   const headerAppVersion = req.headers[HEADER_APP_VERSION];
 
   const app: GlobalClsStore['app'] = {
-    name: headerAppName || 'x-app-name - unknown',
+    name: headerAppName || UNKNOWN_APP_NAME,
     version: headerAppVersion || 'x-app-version - unknown',
   };
 

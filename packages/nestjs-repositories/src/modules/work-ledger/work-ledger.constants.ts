@@ -6,8 +6,14 @@
 
 /** How a work session was closed. Mirrors chk_work_sessions_closed_by. */
 export const WORK_SESSION_CLOSED_BY = {
-  /** Closed by endWorkSession, or an instant session (human mutation). */
+  /** Closed by endWorkSession after real work — the session records a span. */
   EXPLICIT: 'explicit',
+  /**
+   * Instantaneous by nature: a single first-party mutation with no span to record
+   * (started_at = ended_at). Distinct from EXPLICIT so "does this session have a
+   * duration" is a value in the data, not an ended_at = started_at comparison.
+   */
+  INSTANT: 'instant',
   /** Closed by the abandoned-session sweeper past the TTL (design §4.4). */
   SWEEPER: 'sweeper',
 } as const;
