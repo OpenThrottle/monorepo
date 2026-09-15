@@ -1,9 +1,13 @@
 /**
  * Claude Code AUTOMATIC completion entrypoint (Stop / SubagentStop hook).
- * Resolves the open skill-starts recorded for this session into `success`
- * outcomes with `duration_ms = now − started_at`, drains them (deduped), sweeps
- * abandoned starts from long-dead sessions, then does a small time-boxed JSONL
- * drain. Additive only; fail-open (always exits 0).
+ * Resolves the open skill-starts recorded for this session into `session_ended`
+ * outcomes, drains them (deduped), sweeps abandoned starts from long-dead
+ * sessions, then does a small time-boxed JSONL drain. Additive only; fail-open
+ * (always exits 0).
+ *
+ * A Claude `Stop` payload carries a session id and nothing else — no error
+ * signal, no per-skill signal — so this path makes no quality claim and reports
+ * no duration. See `completeOpenStartsForSession`.
  */
 import fs from 'node:fs';
 

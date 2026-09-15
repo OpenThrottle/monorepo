@@ -129,8 +129,8 @@ export const SkillUsageLeaderboard = (
                 className="text-right tabular-nums"
                 title={
                   row.outcomeCount > 0
-                    ? `${row.successCount} success · ${row.abandonedCount} abandoned · ${row.errorCount} error`
-                    : 'No opt-in outcome reported (valid for third-party and uninstrumented skills)'
+                    ? `${row.successCount} success · ${row.errorCount} error — plus ${row.sessionEndedCount} session ended · ${row.abandonedCount} abandoned, which are not outcomes`
+                    : `No outcome reported by this skill. ${row.sessionEndedCount} session ended · ${row.abandonedCount} abandoned — those describe the process, not the work.`
                 }
               >
                 {skillUsageOutcomesLabel(row.outcomeCount, row.count)}

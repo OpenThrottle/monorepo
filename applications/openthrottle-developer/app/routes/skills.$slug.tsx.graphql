@@ -6,6 +6,7 @@ fragment SkillDetailUsageBySkill on SkillUsageBySkillObject {
   lastUsedAt
   outcomeCount
   scope
+  sessionEndedCount
   skillName
   successCount
 }

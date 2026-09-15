@@ -45,11 +45,11 @@ const main = async (): Promise<void> => {
 
     // Codex's SessionEnd `reason` is not an outcome: the captured value for a
     // normal end is `other`, so it cannot distinguish success from failure the
-    // way Cursor's `final_status` does. Record `success` — the same thing the
-    // Claude completion path records — rather than inventing a mapping from a
-    // field that does not carry the distinction.
+    // way Cursor's `final_status` does. Record `session_ended` — the same thing
+    // the Claude completion path records — rather than inventing a mapping from
+    // a field that does not carry the distinction.
     await completeOpenStartsForSession({
-      outcome: SKILL_USAGE_OUTCOMES.SUCCESS,
+      outcome: SKILL_USAGE_OUTCOMES.SESSION_ENDED,
       repoRoot,
       sessionId: normalized.session_id,
       source: CODEX_SOURCE,

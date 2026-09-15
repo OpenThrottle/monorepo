@@ -106,12 +106,12 @@ export class SkillUsageEventObject {
 @ObjectType()
 export class SkillUsageBySkillObject {
   @Field(() => Int, {
-    description: `Opt-in abandoned outcomes for this skill in the filtered range.`,
+    description: `Abandoned outcomes for this skill in the filtered range — the session died without a clean end. Liveness, not quality; excluded from outcomeCount.`,
   })
   abandonedCount!: number;
 
   @Field(() => Int, {
-    description: `Average reported duration_ms for outcomes with a duration; null when none.`,
+    description: `Average reported duration_ms for outcomes with a duration; null when none. Only a deliberate reporter supplies a duration — the automatic session-end paths report null, because no hook brackets a skill's own work.`,
     nullable: true,
   })
   avgDurationMs!: number | null;
@@ -122,7 +122,7 @@ export class SkillUsageBySkillObject {
   count!: number;
 
   @Field(() => Int, {
-    description: `Opt-in error outcomes for this skill in the filtered range.`,
+    description: `Reported error outcomes for this skill in the filtered range. A quality claim; only a deliberate reporter or a harness with a real failure status writes it.`,
   })
   errorCount!: number;
 
@@ -133,7 +133,7 @@ export class SkillUsageBySkillObject {
   lastUsedAt!: Date | null;
 
   @Field(() => Int, {
-    description: `Opt-in outcome events for this skill. May be less than count; missing outcomes are normal.`,
+    description: `QUALITY outcomes for this skill — successCount + errorCount only. Deliberately excludes sessionEndedCount and abandonedCount, which say the process finished or died, not that the skill's work went well. May be far less than count; zero is the normal, honest reading for any skill that does not report its own outcome.`,
   })
   outcomeCount!: number;
 
@@ -142,13 +142,18 @@ export class SkillUsageBySkillObject {
   })
   scope!: string;
 
+  @Field(() => Int, {
+    description: `Automatic session-end records for this skill — the session that loaded it ended normally. Liveness, not quality; excluded from outcomeCount.`,
+  })
+  sessionEndedCount!: number;
+
   @Field(() => String, {
     description: `Skill identifier (e.g. ot-plans, vercel:deploy).`,
   })
   skillName!: string;
 
   @Field(() => Int, {
-    description: `Opt-in success outcomes for this skill in the filtered range.`,
+    description: `Reported success outcomes for this skill in the filtered range. A quality claim; only a deliberate reporter writes it.`,
   })
   successCount!: number;
 }

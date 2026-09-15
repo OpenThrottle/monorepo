@@ -8,18 +8,22 @@ This page exists because a "0 invocations" reading is routinely mistaken for
 "nobody uses this skill". It is not the same claim. Read this before deleting a
 skill on usage grounds.
 
+**The outcome model changed on 2026-09-13.** Everything below the
+[dated snapshot](#invocation-snapshot--measured-2026-08-20) describes the old contract and is kept
+as history. Start with [The outcome model](#the-outcome-model-what-each-value-may-claim).
+
 ## Where the rows come from
 
 Authoring lives in [`packages/agentic-hooks`](../../packages/agentic-hooks); the
 `.claude/hooks/*.cjs` and `.cursor/hooks/*.cjs` files are generated bundles
 (`pnpm nx run @openthrottle/agentic-hooks:bundle-hooks`). Do not edit the bundles.
 
-| Hook                               | Registered as                         | Emits                                                                        |
-| ---------------------------------- | ------------------------------------- | ---------------------------------------------------------------------------- |
-| `skill-usage-capture.cjs`          | Claude `PreToolUse` (matcher `Skill`) | one event, `invocation_path='skill_tool'`                                    |
-| `skill-usage-capture.cjs`          | Claude `UserPromptExpansion`          | one event, `invocation_path='slash'`                                         |
-| `skill-usage-complete.cjs`         | Claude `Stop`                         | resolves open starts → `success` outcomes; sweeps stale starts → `abandoned` |
-| `skill-usage-capture.cjs` (cursor) | Cursor `beforeSubmitPrompt`           | one event, `source='cursor'`                                                 |
+| Hook                               | Registered as                         | Emits                                                                     |
+| ---------------------------------- | ------------------------------------- | ------------------------------------------------------------------------- |
+| `skill-usage-capture.cjs`          | Claude `PreToolUse` (matcher `Skill`) | one event, `invocation_path='skill_tool'`                                 |
+| `skill-usage-capture.cjs`          | Claude `UserPromptExpansion`          | one event, `invocation_path='slash'`                                      |
+| `skill-usage-complete.cjs`         | Claude `Stop`                         | resolves open starts → `session_ended`; sweeps stale starts → `abandoned` |
+| `skill-usage-capture.cjs` (cursor) | Cursor `beforeSubmitPrompt`           | one event, `source='cursor'`                                              |
 
 Every write is fail-open: POST to OT GraphQL first, append to
 `.cache/skill-usage/{events,outcomes}.jsonl` on any failure, drained
@@ -30,6 +34,79 @@ there mean sessions are in flight, not that the drain is broken.
 As of the baseline snapshot neither `events.jsonl` nor `outcomes.jsonl` exists in
 any checkout, i.e. every recorded event reached the server directly. The drain
 path is healthy.
+
+## The outcome model: what each value may claim
+
+Until 2026-09-13 the automatic session-end path passed `success` as a hardcoded default, so every
+clean session end scored a win for every skill loaded in it. The signature was unmissable in
+hindsight: **546 `success` rows and zero `error`, ever.** The Outcomes column was measuring
+liveness and reading as quality.
+
+The correction splits the vocabulary by who can honestly emit each value:
+
+| value           | who writes it                                      | claims                                            |
+| --------------- | -------------------------------------------------- | ------------------------------------------------- |
+| `session_ended` | the automatic session-end hook                     | the session that loaded this skill ended normally |
+| `abandoned`     | the stale-start sweep                              | the session died without a clean end              |
+| `success`       | a deliberate reporter only                         | the skill's work went well                        |
+| `error`         | a deliberate reporter, or a harness failure status | the skill's work went wrong                       |
+
+`session_ended` and `abandoned` describe **the process**. `success` and `error` describe **the
+work**. Only the latter two enter the "outcomes reported" numerator on `/usage`, so a skill that
+never reports its own outcome shows `—` — which is the honest reading of "nobody measured this",
+not missing data.
+
+### Why the automatic path cannot do better
+
+A Claude `Stop` payload carries a session id and a hook event name. That is all. It has no error
+signal and no per-skill signal, so it cannot tell whether the skill helped, was followed, or was
+even read.
+
+**There is no skill-scoped end signal in this harness.** `PostToolUse` with `matcher: "Skill"` fires
+when the Skill tool _call_ returns — i.e. when the skill file is injected — not when the skill's
+work finishes, which spans later turns. Bracketing with it would measure file-read time: a different
+wrong number, not a fix. There is no `SkillEnd` hook.
+
+Cursor is the one adapter whose payload carries a genuine status, so `final_status: error|failed`
+still maps to `error`. Its `completed` maps to `session_ended`, because a clean session end is
+liveness there too.
+
+### `duration_ms` is null on every automatic path
+
+It used to be `Stop − started_at`: skill load to the end of the whole session, counting everything
+the session did afterwards. Since nothing brackets a skill's own work, the automatic paths now write
+`null` rather than a number that means something else. Only a deliberate reporter, which knows when
+it finished, supplies a duration.
+
+### Reporting an outcome from a skill
+
+This is the only path that may claim quality or report a duration:
+
+```bash
+node .claude/hooks/skill-usage-outcome.cjs \
+  --skill ot-plans \
+  --outcome error \
+  --duration-ms 4200 \
+  --session "$CLAUDE_SESSION_ID"
+```
+
+`--outcome` accepts `success` | `abandoned` | `error`. It deliberately **rejects** `session_ended`:
+that value exists to say "no quality claim", and a reporter that knows how the work went has no
+reason to emit it. Fail-open throughout — outcome capture never blocks or slows a skill.
+
+### Legacy rows are quarantined, not rewritten
+
+`skill_usage_outcomes.capture_model` (migration 114) marks every pre-fix row
+`legacy_assumed_success`; new rows default to `reported_v1`. Rewriting the old rows to
+`session_ended` would have made them indistinguishable from measured ones, so they are excluded from
+every `/usage` count instead — including `avgDurationMs`, since their durations were session-tail
+length too.
+
+`skill_usage_events.is_fixture` (migration 115) flags the 7 telemetry bring-up probes. They are 1.1%
+of all events but **all 7 belong to `ot-plans`**, where they were 7 of 42 invocations — enough to
+make that one skill's number wrong.
+
+Migration 113 widened the `outcome` CHECK to admit `session_ended`.
 
 ## Captured
 
@@ -125,6 +202,11 @@ source), 1 cursor, 1 unclassified legacy.
 
 ### Outcomes (same snapshot)
 
+> **Historical — pre-2026-09-13 contract.** Every `success` below was written by the path that
+> hardcoded it, and every `avg duration` is session-tail length. These rows now carry
+> `capture_model = 'legacy_assumed_success'` and are excluded from `/usage`. Kept as the record of
+> what the broken contract produced; do not read them as quality or timing data.
+
 | skill                     | success | abandoned | error | avg duration   |
 | ------------------------- | ------- | --------- | ----- | -------------- |
 | `ot-claude-loop`          | 65      | **5**     | 0     | 2880s (48 min) |
@@ -142,8 +224,8 @@ source), 1 cursor, 1 unclassified legacy.
 | `monitor-ci`              | 1       | 0         | 0     | 1233s          |
 | `ot-onboarding`           | 1       | 0         | 0     | 24s            |
 
-`abandoned` rows carry no `duration_ms` (the sweep cannot know how far in a run
-died), so `avg duration` is a success-only average.
+In that snapshot `abandoned` rows carried no `duration_ms`, so `avg duration` was a success-only
+average. Under the current contract **no** automatic row carries a duration.
 
 **Vocabulary caveat:** `abandoned` is emitted by the stale-start sweep for any
 open start whose session ended without a `Stop`-resolved completion. It is not a
@@ -160,7 +242,8 @@ Two specific readings the data rules out:
 
 - **It is not a declined confirmation gate.** The three `github-squash` abandons are not the
   force-push prompt being refused. Declining a gate still ends the turn normally, which fires `Stop`
-  and records **`success`**. An abandoned row requires `Stop` never to have run at all. So the
+  and records **`session_ended`** (**`success`** under the pre-2026-09-13 contract that produced
+  these rows). An abandoned row requires `Stop` never to have run at all. So the
   vocabulary does not conflate user choice with breakage — it conflates _the session dying_ with
   _the skill failing_, which is a different problem and the one worth naming.
 - **It is not "the run died 36 minutes in".** See the bug below.
@@ -181,9 +264,11 @@ both stamped 00:04:41.628 — the single file mtime, shared.
 
 Fixed in `packages/agentic-hooks/src/data/persist.ts`:
 
-- `occurred_at` is now the **detection** time.
-- `duration_ms` is the **observed lower bound** — last file signal (mtime) minus `started_at` — so
-  an abandoned row now says roughly how far the run got before the session went silent.
+- `occurred_at` is now the **detection** time. This still holds.
+- `duration_ms` was set to the observed lower bound (last file signal minus `started_at`).
+  **Superseded on 2026-09-13:** that figure is how long the _session_ ran before going silent, not
+  how long the skill's work took, and it averaged into the same `avgDurationMs` column — so it now
+  writes `null` like every other automatic path.
 
 Rows written before this fix keep the old semantics; treat their `occurred_at` as "when the skill
 started", not "when it was abandoned".

@@ -131,6 +131,7 @@ export const SKILL_USAGE_DETAIL_COPY = {
   outcomesTile: `Outcomes reported`,
   overTimeHeading: `Usage over time`,
   scopeTile: `Scope`,
+  sessionEndedTile: `Session ended`,
   successRateTile: `Success rate`,
   successTile: `Success`,
   totalTile: `Total invocations`,

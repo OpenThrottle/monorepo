@@ -85,6 +85,7 @@ export const toSkillUsageBySkillObject = (
   object.lastUsedAt = row.lastUsedAt;
   object.outcomeCount = row.outcomeCount;
   object.scope = row.scope;
+  object.sessionEndedCount = row.sessionEndedCount;
   object.skillName = row.skillName;
   object.successCount = row.successCount;
 

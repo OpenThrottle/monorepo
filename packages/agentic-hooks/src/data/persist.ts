@@ -421,16 +421,33 @@ interface CompletionResult {
 }
 
 /**
- * Resolve the open starts for a session into `success` outcomes: compute
- * `duration_ms = finishedAt − started_at`, persist each, and drain the resolved
- * starts (deduped so a repeated completion never double-emits). Fail-open.
+ * Resolve the open starts for a session into `session_ended` outcomes, persist
+ * each, and drain the resolved starts (deduped so a repeated completion never
+ * double-emits). Fail-open.
+ *
+ * This path is AUTOMATIC and deliberately makes no quality claim. A harness
+ * session-end payload carries a session id and nothing more: it cannot tell
+ * whether the skill helped, was followed, or was even read. It previously
+ * defaulted to `success`, which made the Outcomes column measure liveness while
+ * reading as quality — every clean session end scored a win. `session_ended`
+ * says only what is actually known.
+ *
+ * `duration_ms` is `null` here for the same reason. It used to be
+ * `finishedAt − started_at`, i.e. skill load → END OF THE WHOLE SESSION, so it
+ * counted every unrelated thing the session did afterwards. No hook brackets a
+ * skill's own work (`PostToolUse` on `Skill` fires when the skill file is
+ * INJECTED, not when its work completes), so there is nothing honest to put
+ * here — only a deliberate reporter that knows when it finished can supply one.
+ *
+ * An adapter whose harness reports a genuine failure status may still pass
+ * `error` explicitly; nothing automatic may pass `success`.
  *
  * @public
  */
 export const completeOpenStartsForSession = async ({
   repoRoot,
   sessionId,
-  outcome = SKILL_USAGE_OUTCOMES.SUCCESS,
+  outcome = SKILL_USAGE_OUTCOMES.SESSION_ENDED,
   finishedAt = new Date().toISOString(),
   startsDir,
   jsonlPath,
@@ -458,8 +475,6 @@ export const completeOpenStartsForSession = async ({
     return { resolved: 0, results: [] };
   }
 
-  const finishMs = Date.parse(finishedAt);
-
   // Dedupe by correlation key first (a duplicate correlation line counts once),
   // then persist the unique outcomes concurrently.
   const seen = new Set<string>();
@@ -476,11 +491,9 @@ export const completeOpenStartsForSession = async ({
   const maybeResults = await Promise.all(
     unique.map(async (start): Promise<CompletionResult | null> => {
       const key = startCorrelationKey(start);
-      const startedMs = Date.parse(String(start.started_at));
-      const durationMs =
-        Number.isFinite(startedMs) && Number.isFinite(finishMs)
-          ? Math.max(0, finishMs - startedMs)
-          : null;
+      // Deliberately null: see the doc comment. The only duration available
+      // here is session-tail length, which is not this skill's work.
+      const durationMs = null;
 
       const event = buildOutcomeEvent({
         durationMs,
@@ -528,14 +541,16 @@ export const completeOpenStartsForSession = async ({
 /**
  * Sweep abandoned starts: files whose session is NOT the current one and whose
  * mtime is older than `maxAgeMs`. Emit one `abandoned` outcome per open start,
- * stamped at detection time with `duration_ms` set to the observed lower bound
- * (last file signal − started_at), then remove the file. Fail-open; returns the
- * count swept.
+ * stamped at detection time with a null `duration_ms`, then remove the file.
+ * Fail-open; returns the count swept.
  *
  * `abandoned` means the session ended without a `Stop` that resolved this start
  * — a killed process, a closed terminal, a reaped worktree. It does NOT mean
  * the skill errored, and it is NOT a declined confirmation gate: declining one
- * still ends the turn normally, so that path records `success`.
+ * still ends the turn normally, so that path records `session_ended`.
+ *
+ * Like `session_ended`, this is a statement about the PROCESS, not about the
+ * skill's work, so it is excluded from the quality numerator `/usage` renders.
  *
  * @public
  */
@@ -603,10 +618,6 @@ export const sweepAbandonedStarts = async ({
     // file's mtime — an mtime timestamp lands the row alongside the start that
     // wrote it, making every abandonment look instantaneous.
     const detectedAt = new Date(now).toISOString();
-    // The session went silent at mtime, so mtime − started_at is the observed
-    // lower bound on how far the run got. Without it an abandoned row says
-    // nothing about how much work was lost.
-    const lastSignalMs = mtimeMs;
     const seen = new Set<string>();
     for (const start of starts) {
       const key = startCorrelationKey(start);
@@ -614,12 +625,12 @@ export const sweepAbandonedStarts = async ({
         continue;
       }
       seen.add(key);
-      const startedMs = Date.parse(String(start.started_at));
-      const observedMs = Number.isFinite(startedMs)
-        ? Math.max(0, lastSignalMs - startedMs)
-        : null;
       const event = buildOutcomeEvent({
-        durationMs: observedMs,
+        // Null for the same reason as the completion path: mtime − started_at
+        // is how long the SESSION ran before going silent, not how long this
+        // skill's work took. Averaged into `avgDurationMs` it would keep the
+        // column reporting session length under an honest-looking label.
+        durationMs: null,
         outcome: SKILL_USAGE_OUTCOMES.ABANDONED,
         repoRoot,
         sessionId:

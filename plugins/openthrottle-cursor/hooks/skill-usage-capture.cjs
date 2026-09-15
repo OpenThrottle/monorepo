@@ -271,8 +271,10 @@ mutation RecordSkillUsage($input: RecordSkillUsageInput!) {
 var SKILL_USAGE_OUTCOMES = Object.freeze({
   ABANDONED: "abandoned",
   ERROR: "error",
+  SESSION_ENDED: "session_ended",
   SUCCESS: "success"
 });
+var SKILL_USAGE_QUALITY_OUTCOMES = Object.freeze([SKILL_USAGE_OUTCOMES.ERROR, SKILL_USAGE_OUTCOMES.SUCCESS]);
 var buildUsageEvent = ({
   normalized,
   repoRoot,

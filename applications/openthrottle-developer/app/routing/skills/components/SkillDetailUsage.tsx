@@ -143,7 +143,7 @@ export const SkillDetailUsage = (
         title={SKILL_USAGE_DETAIL_COPY.outcomeBreakdownHeading}
       />
       <div
-        className="mb-2 grid grid-cols-3 gap-3"
+        className="mb-2 grid grid-cols-2 gap-3 md:grid-cols-4"
         data-testid="SkillDetailUsageOutcomes"
       >
         <SkillUsageStatTile
@@ -151,12 +151,16 @@ export const SkillDetailUsage = (
           value={skill.successCount}
         />
         <SkillUsageStatTile
-          label={SKILL_USAGE_DETAIL_COPY.abandonedTile}
-          value={skill.abandonedCount}
-        />
-        <SkillUsageStatTile
           label={SKILL_USAGE_DETAIL_COPY.errorTile}
           value={skill.errorCount}
+        />
+        <SkillUsageStatTile
+          label={SKILL_USAGE_DETAIL_COPY.sessionEndedTile}
+          value={skill.sessionEndedCount}
+        />
+        <SkillUsageStatTile
+          label={SKILL_USAGE_DETAIL_COPY.abandonedTile}
+          value={skill.abandonedCount}
         />
       </div>
       <p className="text-muted-foreground mb-8 text-xs">

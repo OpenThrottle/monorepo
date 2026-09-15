@@ -39,8 +39,20 @@ mutation RecordSkillUsageOutcome($input: RecordSkillUsageOutcomeInput!) {
 export const SKILL_USAGE_OUTCOMES = Object.freeze({
   ABANDONED: 'abandoned',
   ERROR: 'error',
+  SESSION_ENDED: 'session_ended',
   SUCCESS: 'success',
 } as const) satisfies Readonly<Record<string, SkillUsageOutcome>>;
+
+/**
+ * The outcomes that represent a QUALITY judgement about the skill's work, as
+ * opposed to the liveness of the session that loaded it. Only these belong in
+ * an "outcomes reported" numerator; `session_ended` and `abandoned` say
+ * something about the process, not about the skill.
+ *
+ * @public
+ */
+export const SKILL_USAGE_QUALITY_OUTCOMES: readonly SkillUsageOutcome[] =
+  Object.freeze([SKILL_USAGE_OUTCOMES.ERROR, SKILL_USAGE_OUTCOMES.SUCCESS]);
 
 /**
  * Build a tool-neutral usage event from an adapter's NormalizedInvocation.
@@ -141,7 +153,12 @@ export const buildOutcomeEvent = ({
   if (!name) {
     return null;
   }
-  if (outcome !== 'success' && outcome !== 'abandoned' && outcome !== 'error') {
+  if (
+    outcome !== 'success' &&
+    outcome !== 'abandoned' &&
+    outcome !== 'error' &&
+    outcome !== 'session_ended'
+  ) {
     return null;
   }
 

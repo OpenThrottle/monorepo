@@ -175,8 +175,10 @@ var DEFAULT_PRIVACY_LEVEL = PRIVACY_LEVELS.TRUNCATED;
 var SKILL_USAGE_OUTCOMES = Object.freeze({
   ABANDONED: "abandoned",
   ERROR: "error",
+  SESSION_ENDED: "session_ended",
   SUCCESS: "success"
 });
+var SKILL_USAGE_QUALITY_OUTCOMES = Object.freeze([SKILL_USAGE_OUTCOMES.ERROR, SKILL_USAGE_OUTCOMES.SUCCESS]);
 
 // packages/nodejs-utils/dist/src/utils/is-record.js
 var isRecord = (value) => typeof value === "object" && value !== null && !Array.isArray(value);

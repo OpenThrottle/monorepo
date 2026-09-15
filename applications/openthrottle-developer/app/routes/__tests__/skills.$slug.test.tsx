@@ -156,6 +156,7 @@ describe('routes/skills.$slug.tsx', () => {
           lastUsedAt: '2026-08-05T12:00:00.000Z',
           outcomeCount: 3,
           scope: 'ours',
+          sessionEndedCount: 0,
           skillName: 'ot-plans',
           successCount: 3,
         },
