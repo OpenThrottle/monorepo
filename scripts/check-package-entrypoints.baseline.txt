@@ -19,5 +19,9 @@
 # special cases; a name-keyed one does not.
 #
 # Sorted, one package name per line. Blank lines and `#` comments are ignored.
+#
+# STATUS: the population reached ZERO on 2026-09-14 (plan a326de36), when
+# @openthrottle/nodejs-utils went source-first. This file is intentionally
+# empty, not accidentally emptied. Keep it: it is still the live ratchet, and
+# an unlisted offender is an error. Nothing should ever be added back.
 
-@openthrottle/nodejs-utils

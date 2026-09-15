@@ -456,7 +456,7 @@ var toRecordSkillUsageOutcomeInput = (event) => {
 var import_node_fs5 = __toESM(require("node:fs"), 1);
 var import_node_path4 = __toESM(require("node:path"), 1);
 
-// packages/nodejs-utils/dist/src/utils/is-record.js
+// packages/nodejs-utils/src/utils/is-record.ts
 var isRecord = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
 
 // packages/agentic-hooks/src/data/starts.ts

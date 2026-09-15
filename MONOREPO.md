@@ -351,6 +351,75 @@ it did exactly that.
   `#/node_modules/@openthrottle/<pkg>/dist/src` a legal specifier, so TypeScript 7 named inferred types
   through it and refused them as non-portable (**TS2883**). The alias was removed.
 
+#### Relative import extensions under NodeNext
+
+Relative specifiers in this workspace carry their extension — `from './foo.ts'`, not
+`from './foo'`. The rule that decides when that is **required** is narrower than it looks, and
+stating it imprecisely is what produced two rounds of unnecessary migration planning.
+
+**The hazard is `"type": "module"` AND extensionless — both, not either.** Under
+`moduleResolution: nodenext`, Node picks the resolution algorithm from the package's `type` field. An
+ESM package (`"type": "module"`) gets Node's ESM resolver, which does **not** probe extensions: the
+specifier must name the file exactly. A CommonJS package gets the CJS resolver, which still probes,
+so extensionless relative specifiers resolve there without complaint.
+
+Three things discharge the hazard, any one of which is sufficient:
+
+1. **`.ts` extensions on relative specifiers** — what the workspace does, and the only mechanism that
+   survives publication (see the residual gap below).
+2. **A tsconfig project reference** from the consumer to the dependency — TypeScript then reads the
+   dependency's source directly rather than resolving through its `exports` map.
+3. **Being CommonJS** — no longer an interesting option here; see below.
+
+**Assume you are ESM.** 67 of 70 workspace projects are `"type": "module"`. A new package is ESM
+unless you deliberately make it otherwise, so in practice _extensions are required_ and the third
+mechanism is not a choice you get to make. `#536` moved 26 packages across that line in a single
+commit, adding ~2,560 extensions via `scripts/codemod-import-extensions.ts`.
+
+The three exceptions, and why each is exempt:
+
+| project                 | why CommonJS                                                                     |
+| ----------------------- | -------------------------------------------------------------------------------- |
+| `packages/nestjs-redis` | third-party dual-package type conflict, recorded at the call site that causes it |
+| `tools/generators`      | generator tooling, not consumed as a library                                     |
+| `tools/workflows`       | CLI with live `build` / `build:tsc` / `dev` targets                              |
+
+**The gate is deliberately stricter than the rule.** `scripts/check-nodenext-references.ts`
+(wired into `check:local`) accepts a dependency if it has a project reference **or** zero
+extensionless relative specifiers. That second condition ignores the `type` field, so it would flag a
+CommonJS dependency that is in fact perfectly resolvable. This is sound but not complete, and it is
+the intended design: it keeps the check cheap and stops a package drifting into the hazard the moment
+someone flips it to ESM. **Do not loosen the gate to match the rule** — reading the gate's source and
+inferring the stricter form is the real rule is the mistake this paragraph exists to prevent.
+
+**Counting these requires a comment-aware scan.** A naive grep reports 7 extensionless specifiers in
+`packages/nestjs-repositories/src/index.ts`; all 7 are commented-out `export type` lines, and the real
+count is 0. A scan that does not strip comments manufactures violations and will disagree with
+`check-nodenext-references`, which is green. Likewise, any scan that reads project references must
+read `tsconfig.lib.json` **and** `tsconfig.app.json` — reading only the former misses every
+application and manufactures 21 phantom violations against `openthrottle-server` alone.
+
+**Residual gap: project references are workspace-only.** Mechanism 2 exists only inside this repo. A
+published consumer has no project references and no visibility into our tsconfigs, so for any package
+intended to ship outside the workspace, extensions are the _only_ mechanism available. Nothing here
+ships today, so this is recorded rather than acted on.
+
+Being **outside** the NodeNext closure is a normal, supported state, not technical debt — the bundler
+presets (`tsconfig.react.json`, `tsconfig.node.json`, `tsconfig.react-router.json`) let Vite resolve,
+and Vite does not care about extensions. `moduleResolution: "node"` (node10) no longer exists anywhere
+in the workspace; TypeScript 7 removed it (TS5108).
+
+Figures as of the commit that added this section — re-measure rather than trusting them:
+
+|                                        | value |
+| -------------------------------------- | ----- |
+| workspace projects                     | 70    |
+| `"type": "module"`                     | 67    |
+| `"type": "commonjs"`                   | 3     |
+| NodeNext projects scanned by the gate  | 40    |
+| `check-nodenext-references` violations | 0     |
+| `check-package-entrypoints` offenders  | 0     |
+
 ### Internal Package References
 
 Applications and packages can reference each other directly:

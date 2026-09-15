@@ -36,7 +36,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 var import_node_fs2 = __toESM(require("node:fs"), 1);
 var import_node_path4 = __toESM(require("node:path"), 1);
 
-// packages/nodejs-utils/dist/src/utils/is-record.js
+// packages/nodejs-utils/src/utils/is-record.ts
 var isRecord = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
 
 // packages/agentic-hooks/src/config/env.ts
