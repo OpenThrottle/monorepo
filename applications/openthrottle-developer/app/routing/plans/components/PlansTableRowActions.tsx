@@ -1,3 +1,4 @@
+import { toast } from '@openthrottle/react-router-shadcn';
 import type { GlobalPopoverAction } from '@openthrottle/react-router-ui-global';
 import { GlobalPopover } from '@openthrottle/react-router-ui-global';
 import {
@@ -12,6 +13,10 @@ import { useFetcher, useNavigation } from 'react-router';
 import type { PlanCardFragment } from '~/__generated__/graphql';
 import type { action as planDetailAction } from '~/routes/plans.$planId._index';
 import { PLANS_ROW_ACTIONS_COPY } from '~/routing/plans/data/data.copy';
+import {
+  cancelPlanRunToastTone,
+  describeCancelPlanRunResult,
+} from '~/routing/plans/utils/describe-cancel-plan-run-result';
 import { getPlanIsCancelable } from '~/routing/plans/utils/utils.plans';
 
 export interface PlansTableRowActionsProps {
@@ -31,6 +36,7 @@ export const PlansTableRowActions = (
 
   // Hooks
   const navigation = useNavigation();
+  const killBusyRef = React.useRef(false);
   // Keyed so this row can observe its own cancel submission. The action posts
   // with `navigate: false`, and a non-navigating submission never appears in
   // `useNavigation()` — deriving pending state from there produced a value that
@@ -142,6 +148,35 @@ export const PlansTableRowActions = (
   // Markup
 
   // Life Cycle
+  // Surface the Kill outcome on the busy -> idle edge, the same shape
+  // `KillPlanRunButton` uses on the plan detail page. This only works because
+  // `PlansTable` keeps its column identities stable across a revalidation; if
+  // this subtree remounts, React Router purges the keyed fetcher's payload and
+  // the outcome is lost (see the column-stability guard in PlansTable.test).
+  React.useEffect(() => {
+    const busy = killFetcher.state !== 'idle';
+    const data = killFetcher.data;
+
+    if (killBusyRef.current && !busy && data != null) {
+      if ('cancelPlanRun' in data && data.cancelPlanRun != null) {
+        const message = describeCancelPlanRunResult(data.cancelPlanRun);
+
+        // A no-op cancel (NO_ACTIVE_RUN) reads as info, never a false success.
+        if (cancelPlanRunToastTone(data.cancelPlanRun) === 'success') {
+          toast.success(message);
+        } else {
+          toast.info(message);
+        }
+      } else if (
+        'cancelPlanRunError' in data &&
+        typeof data.cancelPlanRunError === 'string'
+      ) {
+        toast.error(data.cancelPlanRunError);
+      }
+    }
+
+    killBusyRef.current = busy;
+  }, [killFetcher.data, killFetcher.state]);
 
   // 🔌 Short Circuit
 
