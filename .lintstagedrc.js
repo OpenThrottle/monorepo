@@ -19,9 +19,25 @@ export default {
     // parse error. @tools/dotfiles ignores them for `nx run <p>:lint`, but that
     // does not take effect for every template tree when eslint is invoked from
     // the repo root the way lint-staged invokes it, so they are excluded here.
+    // Generated hook bundles (`.claude/hooks/*.cjs`, `.cursor/`, `.codex/`, and
+    // the `plugins/*/hooks/` copies) are esbuild output banner-marked GENERATED
+    // — DO NOT EDIT. They are not lint-clean and never were: they carry
+    // `require()` calls, unused consts and empty blocks straight from the
+    // bundler. Worse, `eslint --fix` would REWRITE a generated file, and the
+    // next `bundle-hooks` run reverts it — leaving `bundle-hooks-check`
+    // failing. Authoring lives in @openthrottle/agentic-hooks/src, which is
+    // linted normally; lint the source, not the bundle.
+    const isGeneratedHookBundle = (file) =>
+      /(^|\/)(\.claude|\.cursor|\.codex|plugins\/[^/]+)\/hooks\/[^/]+\.cjs$/.test(
+        file.replace(/\\/g, '/'),
+      );
+
     const files = allFiles.filter(
       (file) =>
-        !file.replace(/\\/g, '/').includes('tools/generators/src/generators/'),
+        !file
+          .replace(/\\/g, '/')
+          .includes('tools/generators/src/generators/') &&
+        !isGeneratedHookBundle(file),
     );
     if (files.length === 0) return [];
 

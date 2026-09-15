@@ -190,7 +190,8 @@
             "target": "ensure-migrations",
             "projects": "monorepo"
           },
-          "^build"
+          "^build",
+          "build"
         ]
       },
       "test": {},

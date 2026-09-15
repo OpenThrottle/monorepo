@@ -363,7 +363,7 @@ var toRecordSkillUsageOutcomeInput = (event) => {
   return input;
 };
 
-// packages/nodejs-utils/dist/src/utils/is-record.js
+// packages/nodejs-utils/src/utils/is-record.ts
 var isRecord = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
 
 // packages/agentic-hooks/src/data/persist.ts
