@@ -8,8 +8,9 @@ import {
   WORK_ARTIFACT_VERIFICATION,
   WorkLedgerService,
 } from '@openthrottle/nestjs-repositories';
-import { Not } from 'typeorm';
+import { In, Not } from 'typeorm';
 
+import { shouldFireLifecycleTriggers } from '../../graphql/work-ledger/artifact-type-registry.ts';
 import { TaggingEnqueueService } from '../tagging/tagging-enqueue.service.ts';
 import {
   WORK_LEDGER_VERIFY_BATCH_SIZE,
@@ -24,6 +25,11 @@ import type {
 const CONCURRENCY = 1;
 const MS_PER_HOUR = 60 * 60 * 1000;
 const LANDED = 'landed';
+const MERGED = 'merged';
+const CLOSED = 'closed';
+
+/** Lifecycle states a pull_request never leaves — nothing more to ask GitHub about. */
+const TERMINAL_PULL_REQUEST_STATES = [CLOSED, MERGED];
 
 /** Compare statuses that mean `head` is reachable from `base` (i.e. it has landed). */
 const REACHABLE_STATUSES = new Set(['behind', 'identical']);
@@ -45,7 +51,14 @@ type VerifyOutcome = 'landed' | 'orphaned' | 'pending' | 'verified';
  * PR's merge_commit_sha (recorded as payload.landedSha) — and promotes lifecycle to 'landed'; and
  * orphans a commit GitHub still can't find past the grace window. On a landed transition it re-keys
  * the #182 refine-tagging trigger by enqueueing a refine per subject plan (deterministic jobId →
- * self-healing). Idempotent: re-queries each sweep, so a dropped run recovers next time.
+ * self-healing) — but only when the artifact's source says this is live agent-reported work; bulk
+ * and adapter-sourced rows land silently (see shouldFireLifecycleTriggers). Idempotent: re-queries
+ * each sweep, so a dropped run recovers next time.
+ *
+ * It also sweeps pull_request artifacts, advancing open -> merged (recording the merge_commit_sha)
+ * or open -> closed. A merged PR names the commit that actually landed, which is how an ORPHANED
+ * sibling git_commit gets repaired: a branch sha recorded at PR-open and then rebased away is
+ * unfindable on its own, but the PR still knows what it became.
  *
  * NOTE: trailer harvesting (adopting un-claimed trailer commits on main as source='adapter' artifacts)
  * is a separate discovery concern, tracked in the verifier follow-up — not done here.
@@ -89,9 +102,10 @@ export class WorkLedgerVerifyProcessor
     );
 
     const summary = await this.verifyGitCommits();
+    await this.verifyPullRequests(summary);
 
     this.logger.info(
-      `Work-ledger verify sweep done: examined=${summary.examined}, verified=${summary.verified}, landed=${summary.landed}, orphaned=${summary.orphaned}, pending=${summary.pending}`,
+      `Work-ledger verify sweep done: examined=${summary.examined}, verified=${summary.verified}, landed=${summary.landed}, orphaned=${summary.orphaned}, pending=${summary.pending}, pullRequestsExamined=${summary.pullRequestsExamined}, merged=${summary.merged}, closed=${summary.closed}, repaired=${summary.repaired}`,
       WorkLedgerVerifyProcessor.name,
     );
   }
@@ -112,10 +126,14 @@ export class WorkLedgerVerifyProcessor
     // Default branch is per-repo; resolve once per repo per sweep.
     const defaultBranchByRepo = new Map<string, string | null>();
     const summary: WorkLedgerVerifySummary = {
+      closed: 0,
       examined: artifacts.length,
       landed: 0,
+      merged: 0,
       orphaned: 0,
       pending: 0,
+      pullRequestsExamined: 0,
+      repaired: 0,
       verified: 0,
     };
 
@@ -176,11 +194,22 @@ export class WorkLedgerVerifyProcessor
         artifact.lifecycle = LANDED;
         artifact.payload = { ...artifact.payload, landedSha };
         await repo.save(artifact);
-        await this.enqueueRefineForSubjects(
-          artifact.sessionId,
-          repoKey,
-          landedSha,
-        );
+
+        if (
+          shouldFireLifecycleTriggers({
+            fireTriggers: undefined,
+            lifecycle: LANDED,
+            source: artifact.source,
+            type: artifact.type,
+          })
+        ) {
+          await this.enqueueRefineForSubjects(
+            artifact.sessionId,
+            repoKey,
+            landedSha,
+          );
+        }
+
         return 'landed';
       }
 
@@ -254,6 +283,145 @@ export class WorkLedgerVerifyProcessor
     return mergeStatus != null && REACHABLE_STATUSES.has(mergeStatus)
       ? mergeSha
       : null;
+  }
+
+  /**
+   * Sweep pull_request artifacts that have not reached a terminal lifecycle state. These were
+   * registered in the type registry but nothing ever verified them, so every one written sat at
+   * lifecycle='open', unverified, forever.
+   */
+  private async verifyPullRequests(
+    summary: WorkLedgerVerifySummary,
+  ): Promise<void> {
+    const artifacts = await this.workLedgerService
+      .getArtifactRepository()
+      .find({
+        order: { producedAt: 'ASC' },
+        take: WORK_LEDGER_VERIFY_BATCH_SIZE,
+        where: {
+          lifecycle: Not(In(TERMINAL_PULL_REQUEST_STATES)),
+          type: 'pull_request',
+          verification: Not(WORK_ARTIFACT_VERIFICATION.ORPHANED),
+        },
+      });
+
+    summary.pullRequestsExamined = artifacts.length;
+
+    for (const artifact of artifacts) {
+      // eslint-disable-next-line no-await-in-loop -- sequential to bound GitHub API pressure
+      await this.verifyOnePullRequest(artifact, summary);
+    }
+  }
+
+  private async verifyOnePullRequest(
+    artifact: WorkArtifact,
+    summary: WorkLedgerVerifySummary,
+  ): Promise<void> {
+    const ownerRepo = parseOwnerRepo(artifact.payload.repo);
+    const number = artifact.payload.number;
+
+    if (ownerRepo == null || typeof number !== 'number') {
+      this.logger.warn(
+        `Work-ledger verify: malformed pull_request payload on artifact ${artifact.id}; skipping.`,
+        WorkLedgerVerifyProcessor.name,
+      );
+      return;
+    }
+
+    const { name, owner } = ownerRepo;
+
+    try {
+      const pull = await this.githubService.getPullDetail(owner, name, number);
+      const repo = this.workLedgerService.getArtifactRepository();
+
+      artifact.verification = WORK_ARTIFACT_VERIFICATION.VERIFIED;
+      artifact.verifiedAt = new Date();
+
+      if (pull.mergedAt != null) {
+        artifact.lifecycle = MERGED;
+
+        if (pull.mergeCommitSha != null) {
+          artifact.payload = {
+            ...artifact.payload,
+            mergeCommitSha: pull.mergeCommitSha,
+          };
+        }
+
+        await repo.save(artifact);
+        summary.merged += 1;
+
+        if (pull.mergeCommitSha != null) {
+          summary.repaired += await this.repairSiblingCommits(
+            artifact.sessionId,
+            `${owner}/${name}`,
+            pull.mergeCommitSha,
+          );
+        }
+
+        return;
+      }
+
+      if (pull.state === CLOSED) {
+        artifact.lifecycle = CLOSED;
+        await repo.save(artifact);
+        summary.closed += 1;
+        return;
+      }
+
+      // Still open: confirmed to exist, but not yet an outcome.
+      await repo.save(artifact);
+    } catch (error) {
+      this.logger.warn(
+        `Work-ledger verify: error checking pull_request artifact ${artifact.id}: ${String(error)}`,
+        WorkLedgerVerifyProcessor.name,
+      );
+    }
+  }
+
+  /**
+   * A merged PR names the commit that actually landed. Use it to finish any git_commit on the same
+   * session that has not landed — including an ORPHANED one, which is the case worth having: a
+   * branch sha recorded at PR-open and then rebased away before the merge can never be found on its
+   * own, and would otherwise sit orphaned forever. The PR is the rebase-proof anchor.
+   *
+   * Returns how many rows were repaired.
+   */
+  private async repairSiblingCommits(
+    sessionId: string,
+    repoKey: string,
+    mergeCommitSha: string,
+  ): Promise<number> {
+    const repo = this.workLedgerService.getArtifactRepository();
+    const siblings = await repo.find({
+      where: { lifecycle: Not(LANDED), sessionId, type: 'git_commit' },
+    });
+
+    if (siblings.length === 0) return 0;
+
+    for (const sibling of siblings) {
+      sibling.lifecycle = LANDED;
+      sibling.payload = { ...sibling.payload, landedSha: mergeCommitSha };
+      sibling.verification = WORK_ARTIFACT_VERIFICATION.VERIFIED;
+      sibling.verifiedAt = new Date();
+    }
+
+    await repo.save(siblings);
+
+    const firing = siblings.filter((sibling) =>
+      shouldFireLifecycleTriggers({
+        fireTriggers: undefined,
+        lifecycle: LANDED,
+        source: sibling.source,
+        type: sibling.type,
+      }),
+    );
+
+    for (const _sibling of firing) {
+      // eslint-disable-next-line no-await-in-loop -- small set (a session's own commits)
+      await this.enqueueRefineForSubjects(sessionId, repoKey, mergeCommitSha);
+    }
+
+    return siblings.length;
   }
 
   /** Re-key the #182 refine-tagging trigger: one refine per subject plan of the landed artifact. */

@@ -256,19 +256,34 @@ Task-Id: 9f8e7d6c-…-…
 - Only conventional footers are allowed (`Plan-Id:`, `Task-Id:`, `BREAKING CHANGE:`, `Closes #123`). **Never** add `Co-authored-by` or any attribution line — this is enforced by repo convention ([CLAUDE.md](../../CLAUDE.md)).
 - **Do not** record a commit artifact for these intermediate work commits.
 
-**2. Record the _landed_ squash commit on the work ledger — after merge.** The legacy `link_commit` tool is retired; record a work-ledger `git_commit` artifact instead. `attach_session_subject(planId, taskId?)` then `record_artifact(type: "git_commit", payloadJson: {repo, sha}, message?)` associates the **squash commit on `main` after the PR merges** with the plan (and optionally a specific task) — **one artifact per task**, to what actually shipped. On a merge-queue-protected branch, `gh pr merge --auto` may only enqueue the PR; wait until `gh pr view --json mergedAt,mergeCommitSha` shows the landed commit, then use that SHA rather than the branch head. This is what keeps `get_activity_by_date` / `get_last_activity` aligned with landed work.
+**2. The ledger records itself when the PR opens.** There is no post-merge step, and the legacy `link_commit` tool is retired. Pass `headSha` (the branch head you pushed) and `prNumber` to `settle_plan_run` alongside `status: COMPLETED`; the server resolves `owner/repo` from the run's checkout and writes a `git_commit` artifact, a `pull_request` artifact, and their subject rows in one transaction.
 
 ```jsonc
-// AFTER the PR merges to main (under an open session):
+// When the PR opens — the same call that settles the run row:
+settle_plan_run({ "planRunId": "…run-uuid…",
+                  "status": "COMPLETED",
+                  "headSha": "…branch-head-sha…",
+                  "prNumber": 123 })
+```
+
+You record the **branch head**, not a landed squash sha, and that is deliberate: the verifier maps it to its squash commit once the PR merges, and repairs it from the `pull_request` sibling when a rebase leaves the sha unfindable. Waiting for the merge was never required — it just moved the write to a moment when no session exists to make it.
+
+Anything neither path covers — a run that died before opening a PR, a PR opened by hand outside the loop — is adopted by an hourly harvest that reads `Plan-Id:` trailers off the default branch. That is what those footers are for.
+
+**Manual fallback,** for a commit no automated path claimed:
+
+```jsonc
 attach_session_subject({ "planId": "…plan-uuid…", "taskId": "…task-uuid…" })
 record_artifact({ "type": "git_commit",
-                  "payloadJson": "{\"repo\":\"OpenThrottle/monorepo\",\"sha\":\"…squash-sha…\"}",
+                  "payloadJson": "{\"repo\":\"OpenThrottle/monorepo\",\"sha\":\"…sha…\"}",
                   "message": "feat(server): add rate-limit guard (#123)" })
 ```
 
-Or the one-shot CLI equivalent (orchestrates the same primitives): `pnpm exec workflow-link-merge --plan <plan-uuid> --sha <squash-sha> --repo <owner/repo>`. The SHA must be the landed default-branch commit, not the PR head SHA.
+Do not reach for `workflow-link-merge` — it lives in the deprecated `@tools/workflows` package.
 
-> **Why the split?** Footers give you cheap, per-commit traceability while work is in flight; the ledger `git_commit` artifact gives OT a clean record of exactly one shipped SHA per task. Recording every branch commit would pollute that record — so footers during, one ledger artifact on merge.
+The merge-queue caveat still holds where it always did: `gh pr merge --auto` may only _enqueue_ a PR, so do not call it merged, or read a landed sha from it, until `gh pr view --json mergedAt,mergeCommitSha` shows one. It no longer gates ledger recording.
+
+> **Why the split?** Footers give you cheap, per-commit traceability while work is in flight; the ledger artifacts give OT a clean record of exactly one commit per PR. Recording every branch commit would pollute that record — so footers during, one ledger artifact when the PR opens. The footers also double as the harvest's input, which is what makes them worth enforcing.
 
 ## End-to-end worked example
 
@@ -347,17 +362,16 @@ update_task({ "id": "9f8e7d6c-0000-4000-8000-000000000002", "status": "COMPLETED
 
 **7 — Open a PR, get it merged.** Repeat steps 4–6 for the remaining tasks.
 
-**8 — After the PR merges to `main`, record the landed squash commit on the work ledger** — one `git_commit` artifact per task, to the shipped SHA:
+**8 — Settle the run when the PR opens, and the ledger records itself.** Pass the branch head and the PR number; the server writes the artifacts:
 
 ```jsonc
-attach_session_subject({ "planId": "1a2b3c4d-0000-4000-8000-000000000001",
-                         "taskId": "9f8e7d6c-0000-4000-8000-000000000002" })
-record_artifact({ "type": "git_commit",
-                  "payloadJson": "{\"repo\":\"OpenThrottle/monorepo\",\"sha\":\"abcdef1234567890\"}",
-                  "message": "feat(server): add rate-limit guard (#123)" })
+settle_plan_run({ "planRunId": "…run-uuid…",
+                  "status": "COMPLETED",
+                  "headSha": "abcdef1234567890",
+                  "prNumber": 123 })
 ```
 
-Or simply: `pnpm exec workflow-link-merge --plan 1a2b3c4d-0000-4000-8000-000000000001 --task 9f8e7d6c-0000-4000-8000-000000000002 --repo OpenThrottle/monorepo --sha abcdef1234567890`.
+Nothing to do after the merge — the verifier resolves the squash commit itself.
 
 **9 — Close out the plan.** When every task is `COMPLETED`, set the plan to `COMPLETED` and give it a `summary` (next actions / usage notes). Now `get_last_activity` and `get_activity_by_date` show the plan's landed history, and `semantic_search` can surface it for the next person. The idea became rows, the rows became shipped code, and the code points back to the rows.
 

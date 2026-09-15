@@ -82,7 +82,9 @@ Missing a poll only delays a cancel; it corrupts nothing. Best-effort is fine, s
 
 > **Invariant — every exit path settles the run.** `settle_plan_run(planRunId, status)` with
 > `COMPLETED` when the PR opens, `CANCELLED` on a deliberate stop, `FAILED` when you give up or
-> hit something you cannot finish. A row opened and never settled sits `IN_PROGRESS` forever,
+> hit something you cannot finish. On the `COMPLETED` path also pass `headSha` and `prNumber` —
+> that call is what puts the work on the ledger. They are optional precisely so the other two
+> paths, which have no PR, stay valid. A row opened and never settled sits `IN_PROGRESS` forever,
 > reads as live, and holds its worktree marked busy. This is the same class of bug as leaving a task
 > `IN_PROGRESS` (the loop's most common failure), one level up. Settling twice is a safe no-op, so
 > settle when in doubt.
@@ -110,8 +112,8 @@ which the run reads as live and its worktree stays marked busy.
 2. Before continuing ensure `nx run-many -t lint test typecheck format-write check:local` all complete, flagging any errors we encounter
 3. To minimize friction merging with main we will run `/github-squash` to condense our PR to a single commit
 4. Next we will fetch main `git fetch origin main:main` and rebase the branch against `main`
-5. **Open a Draft PR** with `/github-pull-request` (conventional-commit title, the repo PR template, testing steps phrased as things to do) — this is the single push for the whole plan. Leave it in **draft**: `build` skips on draft PRs, so a draft is what keeps any later push cheap. Mark it ready (`gh pr ready`) only when the work is genuinely up for review. **Capture the PR URL** — a real PR (branch pushed to the remote, PR object created) is the precondition for teardown below.
-6. **Settle your run row** — `settle_plan_run(planRunId, 'COMPLETED')`. The PR is open, so the run is genuinely done. Nothing else will ever close this row.
+5. **Open a Draft PR** with `/github-pull-request` (conventional-commit title, the repo PR template, testing steps phrased as things to do) — this is the single push for the whole plan. Leave it in **draft**: `build` skips on draft PRs, so a draft is what keeps any later push cheap. Mark it ready (`gh pr ready`) only when the work is genuinely up for review. **Capture the PR URL and number, and the branch head sha** — the PR is the precondition for teardown below, and step 6 records both.
+6. **Settle your run row, with the sha and the PR number** — `settle_plan_run(planRunId, 'COMPLETED', headSha, prNumber)`. The PR is open, so the run is genuinely done, and nothing else will ever close this row. Those two values are also how the work gets onto the ledger: the server writes the artifacts itself from them. Pass them here and there is nothing to do after the merge — see [Recording the work on the ledger](#recording-the-work-on-the-ledger).
 7. **Stop the loop** once the PR is open. Do **not** merge.
 
 ## Teardown the worktree (only after a successful PR)
@@ -126,11 +128,36 @@ Once — and **only** once — the PR is confirmed open, tear down the isolated 
 
 4. **Report** the PR link and note that the branch is now free to check out in the primary instance for manual verification (`git checkout <branch>`), or in a fresh isolated worktree via [`ot-worktree`](../ot-worktree/SKILL.md) create.
 
-## After merge (not part of the loop)
+## Recording the work on the ledger
 
-This loop **does not wait for merge**. It stops once the PR is open, and any later merge-queue enqueue/landing is a separate step.
+**You do not do this. The server does, when you settle the run.**
 
-Only **after the PR is actually merged**, record the squash on the work ledger — `attach_session_subject({ planId, taskId? })` then `record_artifact({ type: 'git_commit', payload: { repo, sha } })`, or run `pnpm exec workflow-link-merge --plan <id> --sha <squash-sha> --repo <owner/repo>`. On a merge-queue-protected branch, `gh pr merge --auto` can return after **queuing** the PR, so do not use the branch head SHA for this step. Wait until `gh pr view --json mergedAt,mergeCommitSha` shows the landed merge commit (or read it back from `main`), then record that SHA. One `git_commit` artifact per merged commit, never per intermediate work commit.
+Pass `headSha` (the branch head you pushed) and `prNumber` (the PR you opened) to `settle_plan_run`
+alongside `status: COMPLETED`. The server resolves `owner/repo` from the run's checkout and writes
+the `git_commit` and `pull_request` artifacts and their subject rows itself, in one transaction.
+
+That is the whole obligation. There is **no post-merge step**, and nothing to remember after the PR
+lands. The ledger records a claim now, and the verifier discovers what it became — mapping the
+branch sha to its squash commit once the PR merges, and repairing it from the PR when a rebase
+leaves the sha unfindable.
+
+Why the change: the old instruction was to wait for the merge and record the landed squash sha by
+hand. It appeared in eight documents and produced 38 artifacts ever, none since August, against 197
+plans with landed work. It asked for a write at a moment when no session exists to make it — the
+human merges hours later, in a session that has no idea a plan is owed anything.
+
+If nothing records a plan anyway — a run that died before opening a PR, or a PR opened by hand
+outside the loop — the hourly trailer harvest adopts it from the `Plan-Id:` footer on `main`. That
+is the backstop, and it is why those footers matter.
+
+**Manual fallback**, for a commit neither path covers: `attach_session_subject({ planId, taskId? })`
+then `record_artifact({ type: 'git_commit', payload: { repo, sha } })` under an open session. One
+artifact per commit, never per intermediate work commit. Do not reach for `workflow-link-merge` —
+it lives in the deprecated `@tools/workflows` package and is not a path worth keeping alive.
+
+The merge-queue caveat still holds where it always did: `gh pr merge --auto` can return after
+**enqueuing** a PR, so do not call it merged, or read a landed sha from it, until
+`gh pr view --json mergedAt,mergeCommitSha` shows one. It no longer gates ledger recording.
 
 ## Rules
 

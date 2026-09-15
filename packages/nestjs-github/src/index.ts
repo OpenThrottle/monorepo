@@ -2,6 +2,7 @@ export { GitHubModule } from './github/github.module.ts';
 export type {
   CommitDetailDto,
   CommitFileDto,
+  CommitSummaryDto,
 } from './github/github.service.ts';
 export type { GitHubCompareStatus } from './github/github.service.ts';
 export type {
