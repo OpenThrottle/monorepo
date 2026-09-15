@@ -48,6 +48,10 @@ ENV NX_DAEMON="false"
 
 # Only copy what's needed to install our dependencies
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig*.json ./
+# Required by the root `preinstall`; without it `pnpm install` below fails with
+# MODULE_NOT_FOUND. Named explicitly rather than `COPY scripts/` so the rest of
+# scripts/ does not bust this layer's cache.
+COPY scripts/check-node-engine.mjs ./scripts/check-node-engine.mjs
 
 # Enable pnpm via corepack
 RUN corepack enable

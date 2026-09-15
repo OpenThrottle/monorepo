@@ -8,6 +8,7 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
+    "@nestjs/common": "catalog:",
     "@nestjs/config": "catalog:",
     "@openthrottle/nestjs-modules": "workspace:^",
     "@openthrottle/openthrottle-agentic-utils": "workspace:^",
@@ -63,9 +64,6 @@
       "test": {},
       "typecheck": {}
     }
-  },
-  "peerDependencies": {
-    "@nestjs/common": ">=10.0.0"
   },
   "private": true,
   "publishConfig": {

@@ -4,7 +4,7 @@ import graphqlEslint, {
 } from '@graphql-eslint/eslint-plugin';
 import pluginNx from '@nx/eslint-plugin';
 import type { Linter } from 'eslint';
-import pluginImportX from 'eslint-plugin-import-x';
+import pluginImportX, { createNodeResolver } from 'eslint-plugin-import-x';
 import pluginJest from 'eslint-plugin-jest';
 import pluginPerfectionist from 'eslint-plugin-perfectionist';
 import pluginReact from 'eslint-plugin-react';
@@ -670,6 +670,56 @@ export const sourceFirstEslintConfig = tslint.config([
           message: `This package is source-first — its "exports" name ./src/, so consumers get raw TypeScript. A decorator implies a generated call wrapping the declaration, which Node's strip-only loader cannot emit: a consumer resolving this package through Node fails with "SyntaxError: Invalid or unexpected token", naming neither this package nor the "exports" decision. Either drop the decorator, or stop pointing this package's require/default conditions at ./src/. See docs/monorepo/source-first-packages-and-strip-only.md.`,
           selector: 'Decorator',
         },
+      ],
+    },
+  },
+]);
+
+/**
+ * Autofix for the file extensions Node ESM requires, for the packages that
+ * require them.
+ *
+ * A `"type": "module"` package compiled under `moduleResolution: nodenext` must
+ * spell out the extension on every relative specifier: Node's ESM resolver,
+ * unlike CJS, does no extension searching, and `tsc` never rewrites a specifier
+ * it was not given. (`rewriteRelativeImportExtensions` in `tsconfig.base.json`
+ * maps a `.ts` you wrote down to `.js` on emit — it cannot invent one.) So we
+ * write `./foo.ts` and ship `./foo.js`.
+ *
+ * `tsc` already *enforces* this — a missing extension is TS2835. What it does
+ * not do is *write* it, which left ~23 specifiers per package to type by hand.
+ * That is all this block buys: `eslint --fix` now writes them.
+ *
+ * The resolver is not optional. Without one the rule cannot see the file behind
+ * `./foo`, so `extension` falls back to `path.extname(importPath)` — which
+ * silently passes every dotted filename in this repo (`./pubsub.constants`
+ * "already has" a `.constants` extension) and downgrades the rest to a
+ * suggestion with no fixer. With it, all 23 report and all 23 fix.
+ *
+ * Spread this **after** `eslintConfig` in an ESM + nodenext package's
+ * `eslint.config.ts`. It is opt-in rather than repo-wide because the two other
+ * tiers must NOT have extensions forced on them: `moduleResolution: bundler`
+ * packages (every `react-router-*`) are resolved by Vite, which never sees a
+ * Node specifier, and CommonJS packages do not need extensions at all.
+ * @public
+ */
+export const nodeEsmEslintConfig = tslint.config([
+  {
+    files: ['**/*.ts', '**/*.tsx'],
+    rules: {
+      // `ignorePackages` scopes this to relative specifiers — a bare
+      // `@nestjs/common` is resolved by its own `exports` map and must stay
+      // extensionless. `checkTypeImports` because `import type` is erased at
+      // runtime but still resolved by `tsc`, which fails it identically.
+      'import-x/extensions': [
+        'error',
+        'ignorePackages',
+        { checkTypeImports: true, fix: true },
+      ],
+    },
+    settings: {
+      'import-x/resolver-next': [
+        createNodeResolver({ extensions: ['.ts', '.tsx', '.js', '.jsx'] }),
       ],
     },
   },

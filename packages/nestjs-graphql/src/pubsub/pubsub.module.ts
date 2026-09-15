@@ -1,7 +1,7 @@
 import { Global, Module } from '@nestjs/common';
 import { PubSub, type PubSubEngine } from 'graphql-subscriptions';
 
-import { PUB_SUB } from './pubsub.constants';
+import { PUB_SUB } from './pubsub.constants.ts';
 
 /**
  * @description Builds the process-wide PubSub engine. In-memory `PubSub` from

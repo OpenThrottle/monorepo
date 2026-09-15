@@ -3,6 +3,7 @@
  */
 
 import { createMock } from '@golevelup/ts-vitest';
+import { PassportModule } from '@nestjs/passport';
 import { Test } from '@nestjs/testing';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { usersFactory } from '@openthrottle/nestjs-repositories';
@@ -35,6 +36,12 @@ describe('AuthResolver', () => {
 
   beforeAll(async () => {
     const app = await Test.createTestingModule({
+      // NestJS 12 resolves the guards named by `@UseGuards` when the testing
+      // module compiles; v11 left them alone unless a request ran through
+      // them. `GqlLocalAuthGuard` extends `AuthGuard()`, whose constructor
+      // takes `AuthModuleOptions`, so the module no longer compiles without
+      // the passport providers in scope.
+      imports: [PassportModule.register({})],
       providers: [
         AuthResolver,
         { provide: AuthService, useValue: mockAuthService },

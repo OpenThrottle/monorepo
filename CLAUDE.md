@@ -98,6 +98,7 @@ examples. The subset that bites most often:
 - No new TypeScript enums — use `as const` objects (existing enums stay).
 - No `as` casts in any form, and no `any` anywhere (generic function bodies included). Narrow, write a type predicate, or use an overload signature.
 - `import type` at the top level for type-only imports.
+- Relative imports in ESM + `nodenext` packages carry the file extension (`./foo.ts`, emitted as `./foo.js`). Never hand-type them — those packages spread `nodeEsmEslintConfig`, so `eslint --fix` writes them. Not applicable to `react-router-*` (bundler resolution) or CommonJS packages.
 - No default exports outside the framework carve-outs already in the ESLint config.
 - Alphabetize object keys and interface members, and GraphQL selection sets in `*.graphql` documents.
 - Indexed access yields `T | undefined` — `noUncheckedIndexedAccess` is on.

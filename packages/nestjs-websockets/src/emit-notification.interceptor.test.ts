@@ -4,7 +4,7 @@ import type {
   HttpArgumentsHost,
   RpcArgumentsHost,
   WsArgumentsHost,
-} from '@nestjs/common/interfaces/features/arguments-host.interface.ts';
+} from '@nestjs/common/interfaces/features/arguments-host.interface.js';
 import type { Reflector } from '@nestjs/core';
 import { asMock } from '@openthrottle/nestjs-testing';
 import { firstValueFrom, of } from 'rxjs';

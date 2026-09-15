@@ -48,8 +48,13 @@ ENV CI="true"
 ENV HUSKY="0"
 ENV NX_DAEMON="false"
 
-# Only copy what's needed to install our dependencies
+# Only copy what's needed to install our dependencies.
+# `scripts/check-node-engine.mjs` is part of that set, not an extra: the root
+# `preinstall` runs it, so `pnpm install` below fails with MODULE_NOT_FOUND
+# without it. Keep it a single named file rather than `COPY scripts/` — the
+# rest of scripts/ changes constantly and would bust this layer's cache.
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig*.json ./
+COPY scripts/check-node-engine.mjs ./scripts/check-node-engine.mjs
 
 # Enable pnpm via corepack
 RUN corepack enable

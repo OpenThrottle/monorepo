@@ -15,18 +15,18 @@ import {
 } from '@openthrottle/nestjs-utils';
 import type { ValidationRule } from 'graphql';
 
-import { createFormatError } from '../config/format-error';
+import { createFormatError } from '../config/format-error.ts';
 import type {
   ApolloServerPluginCacheControlOptions,
   ApolloServerPluginResponseCacheOptions,
-} from '../config/nestjs-graphql.plugins';
+} from '../config/nestjs-graphql.plugins.ts';
 import {
   ApolloServerPluginCacheControl,
   createResponseCachePlugin,
-} from '../config/nestjs-graphql.plugins';
-import { createQueryDepthLimitRule } from '../config/query-depth-limit';
-import { defaultResponseCacheSessionId } from '../config/response-cache-session';
-import { createGraphqlWsOnConnect } from '../subscriptions/graphql-ws-auth';
+} from '../config/nestjs-graphql.plugins.ts';
+import { createQueryDepthLimitRule } from '../config/query-depth-limit.ts';
+import { defaultResponseCacheSessionId } from '../config/response-cache-session.ts';
+import { createGraphqlWsOnConnect } from '../subscriptions/graphql-ws-auth.ts';
 
 /**
  * Default maximum query nesting depth. Deeply-nested/recursive queries can fan
