@@ -11,7 +11,7 @@ describe('nestjs "module" generator', () => {
   const name = 'example-module';
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ formatter: 'prettier' });
   });
 
   it('should run successfully', async () => {

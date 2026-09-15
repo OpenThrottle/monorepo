@@ -69,7 +69,7 @@ describe('storyGenerator', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ formatter: 'prettier' });
   });
 
   test('should run successfully and emit a story beside the component', async () => {

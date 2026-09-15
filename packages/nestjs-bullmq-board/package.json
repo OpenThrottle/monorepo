@@ -53,6 +53,7 @@
       },
       "build-package__DISABLED__": {},
       "dev": {
+        "cache": false,
         "continuous": true,
         "executor": "@nx/js:tsc",
         "options": {

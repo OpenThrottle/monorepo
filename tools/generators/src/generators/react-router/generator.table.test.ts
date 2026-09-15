@@ -12,7 +12,7 @@ describe('react-router table generator', () => {
   const name = 'HomeExampleTable';
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ formatter: 'prettier' });
   });
 
   test('should run successfully', async () => {

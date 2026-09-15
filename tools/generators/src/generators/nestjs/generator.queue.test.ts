@@ -11,7 +11,7 @@ describe('nestjs "queue" generator', () => {
   const name = 'example-queue';
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ formatter: 'prettier' });
   });
 
   it('should run successfully', async () => {

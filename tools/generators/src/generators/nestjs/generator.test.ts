@@ -16,7 +16,7 @@ describe('nestjs generator', () => {
   const username = 'test-user';
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ formatter: 'prettier' });
   });
 
   it('should run successfully', async () => {

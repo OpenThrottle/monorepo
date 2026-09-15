@@ -12,7 +12,7 @@ describe('folders generator', () => {
   const name = 'example-folder';
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ formatter: 'prettier' });
   });
 
   test('should run successfully', async () => {

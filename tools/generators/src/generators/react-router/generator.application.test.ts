@@ -8,7 +8,7 @@ describe('generatorReactRouterApplication', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ formatter: 'prettier' });
   });
 
   const name = 'application-name';

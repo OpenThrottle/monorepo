@@ -45,7 +45,7 @@ describe('reactRouterGenerator --application validation', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ formatter: 'prettier' });
   });
 
   const name = 'TestComponentName';

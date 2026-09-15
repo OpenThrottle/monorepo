@@ -11,7 +11,7 @@ describe('nestjs-simple-service generator', () => {
   const name = 'test-logs';
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ formatter: 'prettier' });
   });
 
   it('should run successfully', async () => {

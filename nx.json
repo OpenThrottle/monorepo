@@ -144,6 +144,7 @@
   },
   "targetDefaults": {
     "@nx/js:tsc": {
+      "cache": true,
       "dependsOn": ["^build", "^codegen-graphql", "^codegen-react-router"],
       "description": "Shared @nx/js:tsc compile defaults: emit the package to {projectRoot}/dist from src/index.ts using tsconfig.lib.json (after upstream build + codegen).",
       "executor": "@nx/js:tsc",
@@ -361,7 +362,7 @@
       "inputs": [
         "{workspaceRoot}/**/*.{cjs,css,html,js,json,jsx,less,md,mdx,mjs,sass,scss,ts,tsx,yaml,yml}",
         "{workspaceRoot}/.prettierignore",
-        "{workspaceRoot}/.prettierrc",
+        "{workspaceRoot}/.prettierrc.mjs",
         {
           "externalDependencies": ["prettier"]
         }

@@ -15,7 +15,7 @@ describe('react-router form generator', () => {
   const componentPath = `${base}/components/HomeExampleForm.tsx`;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ formatter: 'prettier' });
     await generatorReactRouterForm(tree, { application, folder, name });
   });
 
