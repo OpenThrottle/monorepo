@@ -19,7 +19,7 @@ disable-model-invocation: false
 
 ## What Ralph does
 
-1. **Input:** An idea or a PRD (JSON/Markdown or already in OpenThrottle). If it's rough, turn it into a **plan** and **tasks** in OpenThrottle — OpenThrottle MCP `create_plan` / `create_task` per [openthrottle.mdc](../../rules/commands/openthrottle.mdc). For a strict, hyper-detailed PRD, ensure plan/tasks in OpenThrottle match the PRD; required vs optional vs inferred attributes are defined in [Databases README.md](../../../databases/README.md).
+1. **Input:** An idea or a PRD (JSON/Markdown or already in OpenThrottle). If it's rough, turn it into a **plan** and **tasks** in OpenThrottle — OpenThrottle MCP `create_plan` / `create_task` per [`ot-plans`](../ot-plans/SKILL.md). For a strict, hyper-detailed PRD, ensure plan/tasks in OpenThrottle match the PRD; required vs optional vs inferred attributes are defined in [Databases README.md](../../databases/README.md).
 2. **Loop:** Pick one task → set `IN_PROGRESS` → do the work → validate (e.g. `nx affected --targets lint typecheck`) → set `COMPLETED` → **run `/github-commit`**. Do **not** record a commit artifact during the loop. Record only the **squash commit after the PR is actually merged**, as a work-ledger `git_commit` artifact. On a merge-queue-protected branch, `gh pr merge` can succeed by **enqueuing** the PR rather than merging it immediately, so ledger recording must wait until the PR shows `mergedAt` / `mergeCommitSha`. Resolve the landed SHA from the merged PR or from `main` after the merge, never from the branch head that was pushed. After merge, either call the openthrottle-mcp ledger tools (`attach_session_subject` with `planId`/optional `taskId`, then `record_artifact` type `git_commit`, payload `{repo, sha}`, optional PR message) or run `pnpm exec workflow-link-merge --plan <id> --sha <squash-sha> --repo <owner/repo>` (it orchestrates the same primitives). Add new tasks when the work reveals more work. Repeat until every task is `COMPLETED`.
 3. **Progress:** Plan and tasks live in OpenThrottle; decisions and logs go to **plan_output_stream** via `append_plan_output` / `get_plan_output`. No separate output files. When logging progress, pass `taskId` = the task you are **actively working** (not just the iteration seed) so output is attributed to that task and surfaces on the Task detail Output tab. One iteration can touch several tasks — tag the id of the task the log actually describes; omit `taskId` only for genuinely plan-level notes.
 
@@ -27,7 +27,13 @@ disable-model-invocation: false
 
 - **Plan and tasks context (reads come from the injected block).** Ralph injects the plan and task list into the prompt from OpenThrottle (you will see a block like "--- OpenThrottle plan (injected by Ralph from OpenThrottle)" with Plan-Id, title, description, and Tasks). **Use that injected context**; do not call `get_plan` or `get_tasks_by_plan_id`—agent-session MCP reads are often unavailable. If for some reason the prompt does not contain the injected block, only then try OpenThrottle MCP to load plan/tasks. Do not create or require a ref file.
 - **Reads vs writes (by design).** Reads come from the injected block above; **writes go through MCP** (`update_task` / `update_plan` / `append_plan_output`). Rationale: prompt injection is reliable in-session, but status mutations need a live call. Your MCP writes and the Ralph CLI's own reconciliation (it parses `<ralph:task-complete>` and writes through its configured transport — GraphQL by default) both reach the **same OpenThrottle server**; they are not separate datastores.
-- Follow [agents.mdc](../../rules/commands/agents.mdc) and [github.mdc](../../rules/commands/github.mdc).
+- **Never attribute a commit or PR to a tool or an agent.** No `Co-authored-by`, no "Made with"
+  line, no link to an agent vendor — in commit messages, PR descriptions, or any other output. The
+  only permitted footers are conventional-commit ones: `BREAKING CHANGE:`, `Closes #123`,
+  `Plan-Id:`, `Task-Id:`.
+- Follow [`AGENTS.md`](../../AGENTS.md) § Code style, and the commit/PR skills —
+  [`github-commit`](../github-commit/SKILL.md), [`github-pull-request`](../github-pull-request/SKILL.md),
+  [`github-squash`](../github-squash/SKILL.md).
 - Task states: `BACKLOG`, `BLOCKED`, `CANCELED`, `COMPLETED`, `IN_PROGRESS`, `PENDING`, `QUEUED`, `SKIPPED`
 - **One task at a time.** Resume the lowest `sortOrder` `IN_PROGRESS` task first; otherwise pick the lowest `sortOrder` `PENDING` or `QUEUED`. Canonical list order is `sortOrder ASC`, `createdAt ASC` — not `createdAt` alone. Injected plan/task lists follow this order.
 - **Fix task order:** prefer MCP `reorder_plan_tasks` (GraphQL `reorderPlanTasks`) over delete-and-recreate when Ralph should run tasks in a different sequence. Batch `create_tasks` appends after the plan max when `sortOrder` is omitted per item.
@@ -55,6 +61,6 @@ Always keep plan and task status in OpenThrottle up to date:
 
 ## References
 
-- **OpenThrottle:** What it is, how to interact, MCP tools, and Cursor commands: [openthrottle.mdc)](../../rules/commands/openthrottle.mdc). Schema and PRD attribute mapping (required / inferred / optional): [databases README](../../../databases/README.md).
+- **OpenThrottle:** What it is, how to interact, and the full MCP tool catalog: [`ot-plans`](../ot-plans/SKILL.md). Schema and PRD attribute mapping (required / inferred / optional): [databases README](../../databases/README.md).
 - **Ralph:** [ghuntley.com/ralph](https://ghuntley.com/ralph)
-- Workflow/design: [Workflow README](../../../tools/workflows/README.md) and [Ralph Design](../../../docs/workflows/ralph-design.md)
+- Workflow/design: [Workflow README](../../tools/workflows/README.md) and [Ralph Design](../../docs/workflows/ralph-design.md)

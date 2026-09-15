@@ -23,13 +23,13 @@ Use **ot-generators** for scaffolding, **nx-workspace** for graph and targets, *
 
 | Need                                                       | Use                                                                       |
 | ---------------------------------------------------------- | ------------------------------------------------------------------------- |
-| `@tools/generators`, `NX_ISOLATE_PLUGINS`                  | **ot-generators** — `.agents/skills/ot-generators/SKILL.md`               |
-| Plans, `Plan-Id` / `Task-Id`, work-ledger commit recording | **ot-plans** — `.agents/skills/ot-plans/SKILL.md`                         |
-| Ralph loop prompt (one task at a time)                     | **agents-ralph** — `.agents/skills/agents-ralph/SKILL.md`                 |
+| `@tools/generators`, `NX_ISOLATE_PLUGINS`                  | [**ot-generators**](../ot-generators/SKILL.md)                            |
+| Plans, `Plan-Id` / `Task-Id`, work-ledger commit recording | [**ot-plans**](../ot-plans/SKILL.md)                                      |
+| Ralph loop prompt (one task at a time)                     | [**agents-ralph**](../agents-ralph/SKILL.md)                              |
 | Ralph CLI, BullMQ mental model                             | `tools/workflows/README.md` (no skill)                                    |
-| Nx graph, `nx show project`, affected                      | **nx-workspace** — `.agents/skills/nx-workspace/SKILL.md`                 |
-| Run `nx` targets                                           | **nx-workspace** — `.agents/skills/nx-workspace/SKILL.md`                 |
-| **SQL migrations / table comments**                        | **ot-postgres** — `.agents/skills/ot-postgres/SKILL.md`                   |
+| Nx graph, `nx show project`, affected                      | **nx-workspace** (installed skill — invoke by name)                       |
+| Run `nx` targets                                           | **nx-workspace** (installed skill — invoke by name)                       |
+| **SQL migrations / table comments**                        | [**ot-postgres**](../ot-postgres/SKILL.md)                                |
 | **This file**                                              | Server conventions, DB/embeddings, developer UI, openthrottle-mcp package |
 
 ---
@@ -70,7 +70,7 @@ Use **ot-generators** for scaffolding, **nx-workspace** for graph and targets, *
 
 ## 2. Data, embeddings, imports (`databases/`)
 
-**SQL migrations and table comments:** **ot-postgres** — `.agents/skills/ot-postgres/SKILL.md` (`COMMENT ON TABLE`, migration naming, diff-scoped lint). **Schema, ingest, embeddings:** **`databases/README.md`**.
+**SQL migrations and table comments:** [**ot-postgres**](../ot-postgres/SKILL.md) (`COMMENT ON TABLE`, migration naming, diff-scoped lint). **Schema, ingest, embeddings:** **`databases/README.md`**.
 
 **Typical commands (repo root)**
 
