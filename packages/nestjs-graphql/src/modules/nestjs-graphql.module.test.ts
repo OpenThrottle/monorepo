@@ -6,7 +6,10 @@ import {
 import type { ValidationRule } from 'graphql';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { buildCachePlugins, buildDriverConfig } from './nestjs-graphql.module';
+import {
+  buildCachePlugins,
+  buildDriverConfig,
+} from './nestjs-graphql.module.ts';
 
 /**
  * Read the graphql-ws block off a built driver config, asserting the

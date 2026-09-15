@@ -32,14 +32,21 @@ const defaultJobOptions = {
     // Fail fast at bootstrap: validate REDIS_* env vars against the Joi schema
     // instead of letting a missing/invalid REDIS_HOST surface as a late runtime
     // throw at first connection. allowUnknown keeps unrelated system env vars
-    // from tripping validation; validationOptions.abortEarly: false reports all
-    // misconfigured vars at once.
+    // from tripping validation; abortEarly: false reports all misconfigured
+    // vars at once.
+    //
+    // Joi-specific options live under `libraryOptions` since @nestjs/config v12,
+    // which validates through Standard Schema rather than calling Joi directly.
+    // These two are also v12's defaults for Joi schemas, and are kept explicit
+    // because the behaviour they buy is the reason this block exists.
     ConfigModule.forRoot({
       cache: true,
       load: [redisConfig],
       validationOptions: {
-        abortEarly: false,
-        allowUnknown: true,
+        libraryOptions: {
+          abortEarly: false,
+          allowUnknown: true,
+        },
       },
       validationSchema: configValidationSchema,
     }),

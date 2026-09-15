@@ -39,7 +39,16 @@ import { SubscriptionTokenResolver } from './subscription-token.resolver';
     }),
     LoggerModule,
     NestjsRepositoriesModule,
-    PassportModule,
+    // `.register({})` and not a bare `PassportModule`: only the dynamic form
+    // provides `AuthModuleOptions`, which `AuthGuard()` — and therefore the
+    // `GqlLocalAuthGuard` below — takes as its first constructor argument.
+    // NestJS 12 instantiates that guard eagerly because it is listed in
+    // `providers`, so a bare import fails bootstrap outright with
+    // "Nest can't resolve dependencies of the GqlLocalAuthGuard (?)".
+    // `{}` is correct here: both guards name their strategy explicitly, so
+    // there is no `defaultStrategy` to set (contrast nestjs-auth, which
+    // registers `{ defaultStrategy: 'jwt' }`).
+    PassportModule.register({}),
   ],
   providers: [
     AuthResolver,

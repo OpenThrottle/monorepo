@@ -13,7 +13,7 @@ import {
   systemAlertTopic,
   transcriptionStreamTopic,
   userNotificationsTopic,
-} from './topics';
+} from './topics.ts';
 
 describe('instanceTopic', () => {
   it('formats as <entity>:<id>:<facet>', () => {

@@ -19,10 +19,17 @@ import { schema } from './nestjs-typeorm.config';
     ConfigModule.forRoot({
       cache: true,
       isGlobal: true,
+      // Joi-specific options live under `libraryOptions` since @nestjs/config
+      // v12, which validates through Standard Schema rather than calling Joi
+      // directly. Kept explicit rather than dropped: v12 defaults Joi schemas to
+      // `abortEarly: false`, so deleting these would silently flip this module
+      // from reporting the first bad POSTGRES_* var to reporting all of them.
       validationOptions: {
-        abortEarly: true,
-        allowUnknown: true,
-        cache: true,
+        libraryOptions: {
+          abortEarly: true,
+          allowUnknown: true,
+          cache: true,
+        },
       },
       validationSchema: schema,
     }),

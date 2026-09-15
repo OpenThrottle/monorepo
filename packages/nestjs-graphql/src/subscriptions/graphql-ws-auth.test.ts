@@ -8,7 +8,7 @@ import {
   isGraphqlWsContext,
   resolveGraphqlWsUserId,
   verifyConnectionToken,
-} from './graphql-ws-auth';
+} from './graphql-ws-auth.ts';
 
 const SECRET = 'test-secret';
 const sign = (
