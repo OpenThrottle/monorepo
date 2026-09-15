@@ -18,13 +18,13 @@ description: >-
 
 ## How this fits other skills (no duplication)
 
-| Need                                                                      | Use                                                                             |
-| ------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| **Local `@tools/generators` workflow, OT flags, doc paths**               | **This skill**                                                                  |
-| **Read-only** workspace: project list, `nx show project`, graph, affected | **nx-workspace** — `.agents/skills/nx-workspace/SKILL.md`                       |
-| **Execute** `nx run`, `affected`, `run-many` after code exists            | **nx-workspace** — `.agents/skills/nx-workspace/SKILL.md`                       |
-| **Plans, Plan-Id / Task-Id, openthrottle-mcp**                            | **ot-plans** — `.agents/skills/ot-plans/SKILL.md`                               |
-| **Link workspace packages** after new packages                            | **link-workspace-packages** — `.agents/skills/link-workspace-packages/SKILL.md` |
+| Need                                                                      | Use                                                            |
+| ------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| **Local `@tools/generators` workflow, OT flags, doc paths**               | **This skill**                                                 |
+| **Read-only** workspace: project list, `nx show project`, graph, affected | **nx-workspace** (installed skill — invoke by name)            |
+| **Execute** `nx run`, `affected`, `run-many` after code exists            | **nx-workspace** (installed skill — invoke by name)            |
+| **Plans, Plan-Id / Task-Id, openthrottle-mcp**                            | [**ot-plans**](../ot-plans/SKILL.md)                           |
+| **Link workspace packages** after new packages                            | **link-workspace-packages** (installed skill — invoke by name) |
 
 ## Non-negotiable: `NX_ISOLATE_PLUGINS=false`
 
@@ -159,5 +159,5 @@ Scaffolding is unrelated to **OT** tool calls, but if work is tracked under a pl
 
 ## Cross-links
 
-- \*_nx-workspace:^_ `.agents/skills/nx-workspace/SKILL.md`
-- **ot-plans:** `.agents/skills/ot-plans/SKILL.md`
+- **nx-workspace** — installed skill, not authored under `skills/`; invoke it by name.
+- [**ot-plans**](../ot-plans/SKILL.md)

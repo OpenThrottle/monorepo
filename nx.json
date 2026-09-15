@@ -201,18 +201,26 @@
     },
     "check-agent-assets-ssot": {
       "cache": true,
-      "description": "Verify the skill layout stays single-sourced, via ot-skill-sync's own `sync.sh --check`. `inputs` MUST be explicit {workspaceRoot} globs - the root `monorepo` project owns 0 files, so the default {projectRoot} input would hash nothing and cache-hit forever.",
+      "description": "The one skills gate: `sync.sh --check` verifies the layout is single-sourced, then `check-links.sh` verifies every relative link in a skill BODY resolves from the file that contains it. `inputs` MUST be explicit {workspaceRoot} globs - the root `monorepo` project owns 0 files, so the default {projectRoot} input would hash nothing and cache-hit forever. The link check reads targets outside skills/, so the doc globs below are inputs too; a target deleted outside them can stale-pass until the next skills change, which is the deliberate trade for keeping this target cacheable.",
       "executor": "nx:run-commands",
       "options": {
-        "command": "bash skills/ot-skill-sync/scripts/sync.sh --check",
-        "cwd": "{workspaceRoot}"
+        "commands": [
+          "bash skills/ot-skill-sync/scripts/sync.sh --check",
+          "bash skills/ot-skill-sync/scripts/check-links.sh"
+        ],
+        "cwd": "{workspaceRoot}",
+        "parallel": false
       },
       "inputs": [
+        "{workspaceRoot}/*.md",
         "{workspaceRoot}/.agents/**/*",
         "{workspaceRoot}/.claude/**/*",
         "{workspaceRoot}/.gemini/**/*",
+        "{workspaceRoot}/databases/**/*.md",
+        "{workspaceRoot}/docs/**/*.md",
         "{workspaceRoot}/skills/**/*",
-        "{workspaceRoot}/skills-lock.json"
+        "{workspaceRoot}/skills-lock.json",
+        "{workspaceRoot}/tools/**/*.md"
       ]
     },
     "check-migration-hygiene": {
