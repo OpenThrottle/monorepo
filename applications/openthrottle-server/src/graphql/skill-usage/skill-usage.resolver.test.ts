@@ -41,6 +41,7 @@ describe('SkillUsageResolver', () => {
     hookEventName: 'PreToolUse',
     id: 'event-1',
     invocationPath: 'skill_tool',
+    isFixture: false,
     occurredAt: new Date('2026-07-31T12:00:00.000Z'),
     privacyLevel: SKILL_USAGE_PRIVACY_LEVELS.TRUNCATED,
     promptId: null,
@@ -240,6 +241,7 @@ describe('SkillUsageResolver', () => {
 
   describe('recordSkillUsageOutcome', () => {
     const savedOutcome: SkillUsageOutcome = {
+      captureModel: 'reported_v1',
       cwd: '/repo',
       durationMs: 4200,
       gitBranch: 'example-usage-tracking',

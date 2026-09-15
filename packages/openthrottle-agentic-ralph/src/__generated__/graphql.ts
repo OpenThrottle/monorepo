@@ -4630,23 +4630,25 @@ export type SkillUsageByScopeObject = {
 
 export type SkillUsageBySkillObject = {
   __typename?: 'SkillUsageBySkillObject';
-  /** Opt-in abandoned outcomes for this skill in the filtered range. */
+  /** Abandoned outcomes for this skill in the filtered range — the session died without a clean end. Liveness, not quality; excluded from outcomeCount. */
   abandonedCount: Scalars['Int']['output'];
-  /** Average reported duration_ms for outcomes with a duration; null when none. */
+  /** Average reported duration_ms for outcomes with a duration; null when none. Only a deliberate reporter supplies a duration — the automatic session-end paths report null, because no hook brackets a skill's own work. */
   avgDurationMs?: Maybe<Scalars['Int']['output']>;
   /** Harness start (invocation) count for this skill in the filtered range. */
   count: Scalars['Int']['output'];
-  /** Opt-in error outcomes for this skill in the filtered range. */
+  /** Reported error outcomes for this skill in the filtered range. A quality claim; only a deliberate reporter or a harness with a real failure status writes it. */
   errorCount: Scalars['Int']['output'];
   /** Most recent start (invocation) timestamp for this skill in the filtered range; null when there are no invocations. */
   lastUsedAt?: Maybe<Scalars['DateTime']['output']>;
-  /** Opt-in outcome events for this skill. May be less than count; missing outcomes are normal. */
+  /** QUALITY outcomes for this skill — successCount + errorCount only. Deliberately excludes sessionEndedCount and abandonedCount, which say the process finished or died, not that the skill's work went well. May be far less than count; zero is the normal, honest reading for any skill that does not report its own outcome. */
   outcomeCount: Scalars['Int']['output'];
   /** ours | third-party for this skill row. */
   scope: Scalars['String']['output'];
+  /** Automatic session-end records for this skill — the session that loaded it ended normally. Liveness, not quality; excluded from outcomeCount. */
+  sessionEndedCount: Scalars['Int']['output'];
   /** Skill identifier (e.g. ot-plans, vercel:deploy). */
   skillName: Scalars['String']['output'];
-  /** Opt-in success outcomes for this skill in the filtered range. */
+  /** Reported success outcomes for this skill in the filtered range. A quality claim; only a deliberate reporter writes it. */
   successCount: Scalars['Int']['output'];
 };
 

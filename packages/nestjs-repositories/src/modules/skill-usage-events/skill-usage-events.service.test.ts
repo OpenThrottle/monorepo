@@ -318,6 +318,7 @@ describe('SkillUsageEventsService', () => {
             avgDurationMs: '1500.4',
             errorCount: '0',
             outcomeCount: '8',
+            sessionEndedCount: '0',
             skillName: 'ot-plans',
             successCount: '7',
           },
@@ -335,6 +336,15 @@ describe('SkillUsageEventsService', () => {
 
       expect(eventsQb.groupBy).toHaveBeenCalledWith('e.skill_name');
       expect(eventsQb.limit).toHaveBeenCalledWith(50);
+
+      // The two discriminators are the whole point of migrations 114/115: a
+      // count that quietly readmits instrumentation probes or pre-fix
+      // assumed-success rows is the bug, not a cosmetic difference.
+      expect(eventsQb.andWhere).toHaveBeenCalledWith('e.is_fixture = FALSE');
+      expect(outcomesQb.where).toHaveBeenCalledWith(
+        'o.capture_model = :captureModel',
+        { captureModel: 'reported_v1' },
+      );
       expect(rows).toEqual([
         {
           abandonedCount: 1,
@@ -344,6 +354,7 @@ describe('SkillUsageEventsService', () => {
           lastUsedAt: new Date('2026-07-30T09:00:00.000Z'),
           outcomeCount: 8,
           scope: SKILL_USAGE_SCOPES.OURS,
+          sessionEndedCount: 0,
           skillName: 'ot-plans',
           successCount: 7,
         },
@@ -355,6 +366,7 @@ describe('SkillUsageEventsService', () => {
           lastUsedAt: new Date('2026-07-28T09:00:00.000Z'),
           outcomeCount: 0,
           scope: SKILL_USAGE_SCOPES.THIRD_PARTY,
+          sessionEndedCount: 0,
           skillName: 'vercel:deploy',
           successCount: 0,
         },
@@ -383,6 +395,7 @@ describe('SkillUsageEventsService', () => {
             avgDurationMs: '2000', // AVG over the 6 success + 1 error timed rows
             errorCount: '1',
             outcomeCount: '10',
+            sessionEndedCount: '0',
             skillName: 'ot-plans',
             successCount: '6',
           },
@@ -412,6 +425,7 @@ describe('SkillUsageEventsService', () => {
           lastUsedAt: new Date('2026-07-31T00:00:00.000Z'),
           outcomeCount: 10,
           scope: SKILL_USAGE_SCOPES.OURS,
+          sessionEndedCount: 0,
           skillName: 'ot-plans',
           successCount: 6,
         },
@@ -695,6 +709,7 @@ describe('SkillUsageEventsService', () => {
           lastUsedAt: null,
           outcomeCount: 0,
           scope: SKILL_USAGE_SCOPES.OURS,
+          sessionEndedCount: 0,
           skillName: 'ot-plans',
           successCount: 0,
         },

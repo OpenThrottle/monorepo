@@ -70,23 +70,32 @@ attributable per tool. Pick a short, stable kebab-case id and keep it constant.
   so hooks run as bare `node x.cjs` in fresh checkouts / worktrees with no
   `node_modules`.
 
-## Outcomes & duration (automatic)
-
-The **Outcomes** and **Avg duration** columns on `/usage` are populated
-**automatically — zero manual steps**:
+## Outcomes & duration
 
 1. On each start, the capture hook also records an identifiers-only correlation
    entry (`session_id, skill_name, tool_use_id, started_at, scope` — **no args**)
    under `.cache/skill-usage/starts/<session_id>.jsonl`.
 2. At turn end, the Claude Code `Stop` hook (`skill-usage-complete.cjs`) resolves
-   the open starts, emits one `success` outcome each with
-   `duration_ms = Stop − started_at`, and drains them (deduped). Starts stranded
-   by a session that ended without a `Stop` are later swept as `abandoned`.
+   the open starts, emits one **`session_ended`** outcome each with a **null**
+   `duration_ms`, and drains them (deduped). Starts stranded by a session that
+   ended without a `Stop` are later swept as `abandoned`, also with a null
+   duration.
 
-For a specific outcome the automatic path can't infer — notably `error` — call
-the opt-in helper `.claude/hooks/skill-usage-outcome.cjs`
-(`--skill … --outcome error [--duration-ms …] --session …`). Additive, not a
-replacement. Absent outcomes are expected for third-party / uninstrumented skills.
+**The automatic path makes no quality claim, by design.** A `Stop` payload
+carries a session id and nothing else, so it cannot know whether the skill
+helped; it used to record `success` regardless, which made the Outcomes column
+measure liveness while reading as quality. No hook brackets a skill's own work
+either (`PostToolUse` on `Skill` fires at injection, not completion), so there is
+no honest duration to record.
+
+`success` and `error` are therefore reserved for a deliberate reporter — the
+opt-in helper `.claude/hooks/skill-usage-outcome.cjs`
+(`--skill … --outcome error [--duration-ms …] --session …`), which is also the
+only path that may report a duration. It rejects `session_ended`. A skill that
+never reports shows `—` on `/usage`, which is the honest state, not missing data.
+
+Full model, including the legacy-row quarantine:
+[`docs/monorepo/skill-usage-telemetry-scope.md`](../../../docs/monorepo/skill-usage-telemetry-scope.md).
 
 ### Draining the JSONL fallback
 

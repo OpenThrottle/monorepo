@@ -19,6 +19,7 @@ import {
   type SkillUsageScope,
 } from './skill-usage-events.entity';
 import {
+  SKILL_USAGE_CAPTURE_MODELS,
   SKILL_USAGE_OUTCOMES,
   SkillUsageOutcome,
   type SkillUsageOutcomeValue,
@@ -90,8 +91,16 @@ export interface SkillUsageBySkillRow {
   readonly errorCount: number;
   /** Most recent start (invocation) time in the filtered window; null if none. */
   readonly lastUsedAt: Date | null;
+  /**
+   * QUALITY outcomes only — `success` + `error`. Deliberately excludes
+   * `session_ended` and `abandoned`, which report whether the process finished,
+   * not whether the skill's work went well. Counting those here is exactly the
+   * bug this replaced: it made every clean session end look like a measured win.
+   */
   readonly outcomeCount: number;
   readonly scope: SkillUsageScope;
+  /** Automatic session-end records. Liveness, not quality — never in `outcomeCount`. */
+  readonly sessionEndedCount: number;
   readonly skillName: string;
   readonly successCount: number;
 }
@@ -152,6 +161,7 @@ interface SkillUsageOutcomeStats {
   readonly avgDurationMs: number | null;
   readonly errorCount: number;
   readonly outcomeCount: number;
+  readonly sessionEndedCount: number;
   readonly successCount: number;
 }
 
@@ -160,6 +170,7 @@ const EMPTY_OUTCOME_STATS: SkillUsageOutcomeStats = {
   avgDurationMs: null,
   errorCount: 0,
   outcomeCount: 0,
+  sessionEndedCount: 0,
   successCount: 0,
 };
 
@@ -358,6 +369,7 @@ export class SkillUsageEventsService {
         lastUsedAt: row.lastUsedAt,
         outcomeCount: outcomes.outcomeCount,
         scope: row.scope,
+        sessionEndedCount: outcomes.sessionEndedCount,
         skillName: row.skillName,
         successCount: outcomes.successCount,
       };
@@ -534,7 +546,17 @@ export class SkillUsageEventsService {
     const qb = this.outcomesRepository
       .createQueryBuilder('o')
       .select('o.skill_name', 'skillName')
-      .addSelect('COUNT(*)', 'outcomeCount')
+      // QUALITY outcomes only. `COUNT(*)` here would readmit `session_ended`
+      // and `abandoned` and put the leaderboard straight back to reporting
+      // liveness as if it were quality.
+      .addSelect(
+        `COUNT(*) FILTER (WHERE o.outcome IN ('${SKILL_USAGE_OUTCOMES.SUCCESS}', '${SKILL_USAGE_OUTCOMES.ERROR}'))`,
+        'outcomeCount',
+      )
+      .addSelect(
+        `COUNT(*) FILTER (WHERE o.outcome = '${SKILL_USAGE_OUTCOMES.SESSION_ENDED}')`,
+        'sessionEndedCount',
+      )
       .addSelect(
         `COUNT(*) FILTER (WHERE o.outcome = '${SKILL_USAGE_OUTCOMES.SUCCESS}')`,
         'successCount',
@@ -548,7 +570,14 @@ export class SkillUsageEventsService {
         'errorCount',
       )
       .addSelect('AVG(o.duration_ms)', 'avgDurationMs')
-      .where('o.occurred_at >= :start', { start: query.start })
+      // Legacy rows are excluded wholesale, not just from the quality counts.
+      // Their `success` was a hardcoded default rather than an observation, and
+      // their duration was session-tail length — so counting them anywhere here
+      // would reintroduce the exact numbers this work exists to retire.
+      .where('o.capture_model = :captureModel', {
+        captureModel: SKILL_USAGE_CAPTURE_MODELS.REPORTED_V1,
+      })
+      .andWhere('o.occurred_at >= :start', { start: query.start })
       .andWhere('o.occurred_at < :endExclusive', {
         endExclusive: exclusiveEndInstant(query.end),
       })
@@ -579,6 +608,7 @@ export class SkillUsageEventsService {
         avgDurationMs: toAvgOrNull(row.avgDurationMs),
         errorCount: toNumber(row.errorCount),
         outcomeCount: toNumber(row.outcomeCount),
+        sessionEndedCount: toNumber(row.sessionEndedCount),
         successCount: toNumber(row.successCount),
       });
     }
@@ -598,7 +628,14 @@ export class SkillUsageEventsService {
     return qb;
   }
 
-  /** Shared date-window filter (no optional scope/branch/cwd). */
+  /**
+   * Shared date-window filter (no optional scope/branch/cwd).
+   *
+   * Every event aggregate funnels through here, which is why the fixture
+   * exclusion lives here and nowhere else: instrumentation probes from telemetry
+   * bring-up are not usage, and one of them slipping into a count that a later
+   * decision rests on is the failure worth preventing. See migration 115.
+   */
   private dateRangeQuery(query: {
     readonly end: string;
     readonly start: string;
@@ -608,7 +645,8 @@ export class SkillUsageEventsService {
       .where('e.occurred_at >= :start', { start: query.start })
       .andWhere('e.occurred_at < :endExclusive', {
         endExclusive: exclusiveEndInstant(query.end),
-      });
+      })
+      .andWhere('e.is_fixture = FALSE');
   }
 
   /** Date window + optional scope / gitBranch / cwd filters. */

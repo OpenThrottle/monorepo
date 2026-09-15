@@ -26,7 +26,13 @@ export const skillUsageCwdLabel = (cwd: string): string => {
   return parts.length > 0 ? (parts[parts.length - 1] ?? cwd) : cwd;
 };
 
-/** Format avg duration for the leaderboard; em dash when no samples. */
+/**
+ * Format avg duration for the leaderboard; em dash when no samples.
+ *
+ * Em dash is the COMMON case by design. Only a deliberate reporter supplies a
+ * duration: no harness hook brackets a skill's own work, so the automatic
+ * session-end paths report null rather than session-tail length.
+ */
 export const skillUsageAvgDurationLabel = (
   avgDurationMs: number | null | undefined,
 ): string => {
@@ -36,7 +42,14 @@ export const skillUsageAvgDurationLabel = (
   return `${(avgDurationMs / 1000).toFixed(1)}s`;
 };
 
-/** Compact outcomes cell: "3/5" or em dash when none reported. */
+/**
+ * Compact outcomes cell: "3/5" or em dash when none reported.
+ *
+ * `outcomeCount` is QUALITY outcomes only (success + error). Session-end and
+ * abandoned records are excluded upstream, so a skill that never reports its own
+ * outcome shows `—` — the honest reading of "nobody measured this", rather than
+ * a full score assembled from "the session finished".
+ */
 export const skillUsageOutcomesLabel = (
   outcomeCount: number,
   startCount: number,
@@ -52,7 +65,7 @@ export const SKILL_USAGE_COPY = {
   emptyFiltered: 'No skill invocations match the current filters.',
   heading: 'Skill usage',
   intro: (rangeDays: number): string =>
-    `Harness-captured Skill invocations over the last ${rangeDays} days — ours (skills/) and third-party (plugin-namespaced) alike. Args are truncated at capture; this view never expands them. Outcome/duration columns are opt-in enrichment for skills we author; missing outcomes are normal.`,
+    `Harness-captured Skill invocations over the last ${rangeDays} days — ours (skills/) and third-party (plugin-namespaced) alike. Args are truncated at capture; this view never expands them. Outcome and duration are reported by the skill itself; the automatic session-end hooks report neither, so an em dash means nobody measured it.`,
   leaderboardHeading: 'Top skills',
   /**
    * The de-emphasized second table. Shared by /skills and /usage: both routes
@@ -62,7 +75,7 @@ export const SKILL_USAGE_COPY = {
   missingHeading: 'No longer on disk',
   missingIntro: `These skills have recorded history but no SKILL.md in this checkout — they were removed, renamed, or moved. Their counts are kept as history; they are ranked separately because you can no longer invoke them.`,
   outcomesColumn: 'Outcomes',
-  outcomesHint: `Outcome and duration stats are opt-in enrichment for skills we author; missing outcomes are normal.`,
+  outcomesHint: `Outcomes count only what a skill reports about its own work (success / error). A session ending cleanly is not an outcome — it says the process finished, not that the skill helped — so it is tracked separately and never counted here. An em dash means nothing was measured, which is the normal state for any skill that does not report.`,
   overTimeHeading: 'Usage over time',
   scopeOursHint: 'Authored under skills/ (and synced into .agents/skills).',
   scopeSplitHeading: 'Ours vs third-party',
