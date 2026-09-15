@@ -74,8 +74,12 @@ describe('WorkLedgerCaptureService', () => {
       expect.objectContaining({
         actorServiceAccountId: null,
         actorUserId: USER_SUB,
-        closedBy: 'explicit',
-        toolName: 'developer-app',
+        // 'instant', not 'explicit': the session has no span, and saying so in the data
+        // is what keeps duration views from having to infer it from ended_at = started_at.
+        closedBy: 'instant',
+        // No usable x-app-name on this request, so the client is honestly unknown
+        // rather than the old hardcoded (and frequently wrong) 'developer-app'.
+        toolName: 'unknown',
       }),
     );
     expect(artifactRepo.create).toHaveBeenCalledWith(
@@ -85,6 +89,35 @@ describe('WorkLedgerCaptureService', () => {
         type: 'status_change',
         verification: 'verified',
       }),
+    );
+  });
+
+  it('records the calling client from x-app-name as the instant session tool_name', async () => {
+    vi.mocked(cls.get).mockImplementation((key?: unknown) =>
+      key === 'app'
+        ? { name: 'openthrottle-developer', version: '1.2.3' }
+        : undefined,
+    );
+
+    await service.recordStatusChange(manager, params);
+
+    expect(sessionRepo.create).toHaveBeenCalledWith(
+      expect.objectContaining({ toolName: 'openthrottle-developer' }),
+    );
+  });
+
+  it('falls back to unknown when x-app-name is only the sentinel', async () => {
+    vi.mocked(cls.get).mockImplementation((key?: unknown) =>
+      key === 'app'
+        ? { name: 'x-app-name - unknown', version: 'x-app-version - unknown' }
+        : undefined,
+    );
+
+    await service.recordStatusChange(manager, params);
+
+    // The sentinel means "no header", so it must not be recorded as a client name.
+    expect(sessionRepo.create).toHaveBeenCalledWith(
+      expect.objectContaining({ toolName: 'unknown' }),
     );
   });
 

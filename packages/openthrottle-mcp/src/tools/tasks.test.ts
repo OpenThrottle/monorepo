@@ -6,6 +6,10 @@ import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  clearCurrentSession,
+  ensureWorkSession,
+} from '../session/current-session.ts';
+import {
   createTasksToolHandler,
   createTaskToolHandler,
   getTasksByPlanIdToolHandler,
@@ -18,12 +22,32 @@ vi.mock('@openthrottle/nodejs-graphql', () => ({
   executeGraphqlWithAuth: vi.fn(),
 }));
 
+/**
+ * @description Puts the process-level work session into a known state. Mutating plan/task
+ * tools now attach the connection's ambient session to their GraphQL calls, so the first such
+ * call in a process also opens the session. Priming it here through the ordinary public path
+ * keeps that one-off out of each test's mock sequence, and stops the cached session leaking
+ * between tests, so each test goes on asserting only the call it cares about.
+ */
+const SESSION_ID = 'sess-test';
+const SESSION_OPTIONS = { headers: { 'X-OT-Session-Id': SESSION_ID } };
+
+async function primeWorkSession(): Promise<void> {
+  clearCurrentSession();
+  const mock = vi.mocked(executeGraphqlWithAuth);
+  mock.mockResolvedValueOnce({ startWorkSession: { id: SESSION_ID } });
+  await ensureWorkSession('prime-token');
+  // Reset AFTER priming: the session is cached in module state, not mock state, so the
+  // cache survives while the call history starts clean for the test's own assertions.
+  mock.mockReset();
+}
+
 const planId = 'd37426aa-3d3e-469e-9d27-9f9bbbd1f13e';
 const serviceAccountToken = '***REMOVED-OT-TOKEN***';
 
 describe('createTaskToolHandler', () => {
-  beforeEach(() => {
-    vi.mocked(executeGraphqlWithAuth).mockReset();
+  beforeEach(async () => {
+    await primeWorkSession();
     delete process.env.OPENTHROTTLE_MCP_AUTH_TOKEN;
   });
 
@@ -75,6 +99,7 @@ describe('createTaskToolHandler', () => {
             title: 'Add handler tests',
           },
         },
+        SESSION_OPTIONS,
       );
     });
   });
@@ -107,6 +132,7 @@ describe('createTaskToolHandler', () => {
             title: 'Add handler tests',
           },
         },
+        SESSION_OPTIONS,
       );
     });
   });
@@ -130,8 +156,8 @@ describe('createTaskToolHandler', () => {
 });
 
 describe('createTasksToolHandler', () => {
-  beforeEach(() => {
-    vi.mocked(executeGraphqlWithAuth).mockReset();
+  beforeEach(async () => {
+    await primeWorkSession();
     process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = serviceAccountToken;
   });
 
@@ -208,6 +234,7 @@ describe('createTasksToolHandler', () => {
             ],
           },
         },
+        SESSION_OPTIONS,
       );
     });
 
@@ -250,6 +277,7 @@ describe('createTasksToolHandler', () => {
             ],
           },
         },
+        SESSION_OPTIONS,
       );
     });
   });
@@ -274,8 +302,8 @@ describe('createTasksToolHandler', () => {
 });
 
 describe('getTasksByPlanIdToolHandler', () => {
-  beforeEach(() => {
-    vi.mocked(executeGraphqlWithAuth).mockReset();
+  beforeEach(async () => {
+    await primeWorkSession();
     process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = serviceAccountToken;
   });
 
@@ -329,8 +357,8 @@ describe('getTasksByPlanIdToolHandler', () => {
 const taskId = '27956636-1ab4-4ded-b227-8c52bf888b05';
 
 describe('updateTaskToolHandler', () => {
-  beforeEach(() => {
-    vi.mocked(executeGraphqlWithAuth).mockReset();
+  beforeEach(async () => {
+    await primeWorkSession();
     process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = serviceAccountToken;
   });
 
@@ -363,14 +391,15 @@ describe('updateTaskToolHandler', () => {
             sortOrder: 2500,
           },
         },
+        SESSION_OPTIONS,
       );
     });
   });
 });
 
 describe('reorderPlanTasksToolHandler', () => {
-  beforeEach(() => {
-    vi.mocked(executeGraphqlWithAuth).mockReset();
+  beforeEach(async () => {
+    await primeWorkSession();
     process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = serviceAccountToken;
   });
 
@@ -431,6 +460,7 @@ describe('reorderPlanTasksToolHandler', () => {
             taskIds: [tasks[0]?.id, tasks[1]?.id],
           },
         },
+        SESSION_OPTIONS,
       );
     });
   });
@@ -455,8 +485,8 @@ describe('reorderPlanTasksToolHandler', () => {
 });
 
 describe('promoteTaskToolHandler', () => {
-  beforeEach(() => {
-    vi.mocked(executeGraphqlWithAuth).mockReset();
+  beforeEach(async () => {
+    await primeWorkSession();
     process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = serviceAccountToken;
   });
 
@@ -480,6 +510,7 @@ describe('promoteTaskToolHandler', () => {
         serviceAccountToken,
         expect.anything(),
         { input: { taskId } },
+        SESSION_OPTIONS,
       );
       expect(result).toMatchObject({
         structuredContent: {

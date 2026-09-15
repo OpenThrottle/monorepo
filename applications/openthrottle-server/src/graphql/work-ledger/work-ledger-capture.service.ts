@@ -5,6 +5,9 @@
  * it to an ambient work session when a valid X-OT-Session-Id was presented (validated against the
  * request principal), otherwise opens an instant session. Downstream reactions stay OUTSIDE the
  * transaction — this service only writes the fact (session + subject + artifact).
+ *
+ * @see docs/monorepo/work-ledger-sessions.md for what a session means and why instant
+ * sessions exist as their own closed_by value.
  */
 
 import { BadRequestException, Injectable } from '@nestjs/common';
@@ -12,7 +15,10 @@ import {
   AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
   AUTH_PRINCIPAL_KIND_USER,
 } from '@openthrottle/nestjs-auth';
-import { GlobalClsService } from '@openthrottle/nestjs-modules';
+import {
+  GlobalClsService,
+  UNKNOWN_APP_NAME,
+} from '@openthrottle/nestjs-modules';
 import {
   WORK_ARTIFACT_SOURCE,
   WORK_ARTIFACT_VERIFICATION,
@@ -25,7 +31,12 @@ import { EntityManager, IsNull } from 'typeorm';
 
 import { resolveArtifactForWrite } from './artifact-type-registry.ts';
 
-const INSTANT_SESSION_TOOL_NAME = 'developer-app';
+/**
+ * Recorded as the tool_name of an instant session when the request carried no usable
+ * `x-app-name`. Deliberately not a guess: an honest "unknown" is worth more to a reviewer
+ * than a plausible-looking client that did not actually make the call.
+ */
+const UNKNOWN_INSTANT_SESSION_TOOL_NAME = 'unknown';
 
 interface ActorColumns {
   actorServiceAccountId: string | null;
@@ -142,13 +153,29 @@ export class WorkLedgerCaptureService {
       sessionRepo.create({
         actorServiceAccountId: actor.actorServiceAccountId,
         actorUserId: actor.actorUserId,
-        closedBy: WORK_SESSION_CLOSED_BY.EXPLICIT,
+        closedBy: WORK_SESSION_CLOSED_BY.INSTANT,
         endedAt: now,
         onBehalfOfVerified: false,
         startedAt: now,
-        toolName: INSTANT_SESSION_TOOL_NAME,
+        toolName: this.resolveInstantSessionToolName(),
       }),
     );
+  }
+
+  /**
+   * @description The client to record on an instant session, taken from the request's
+   * `x-app-name` (seeded into CLS as `app.name`). This used to be hardcoded to
+   * 'developer-app', which misattributed every instant session an MCP agent caused to the
+   * developer app — and tool_name is exactly what `get_work_sessions` reports as attribution.
+   */
+  private resolveInstantSessionToolName(): string {
+    const appName = this.globalCls.get('app')?.name;
+
+    if (appName == null || appName === '' || appName === UNKNOWN_APP_NAME) {
+      return UNKNOWN_INSTANT_SESSION_TOOL_NAME;
+    }
+
+    return appName;
   }
 
   /** Idempotently ensure a (session, plan, task) subject row (mirrors the sentinel unique index). */

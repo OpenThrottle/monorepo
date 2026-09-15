@@ -7,6 +7,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { captureCallerWorkspacePath } from '../config/workspace-path.ts';
 import {
+  clearCurrentSession,
+  ensureWorkSession,
+} from '../session/current-session.ts';
+import {
   createPlansToolDescription,
   createPlansToolHandler,
   createPlanToolDescription,
@@ -18,6 +22,26 @@ import {
 vi.mock('@openthrottle/nodejs-graphql', () => ({
   executeGraphqlWithAuth: vi.fn(),
 }));
+
+/**
+ * @description Puts the process-level work session into a known state. Mutating plan/task
+ * tools now attach the connection's ambient session to their GraphQL calls, so the first such
+ * call in a process also opens the session. Priming it here through the ordinary public path
+ * keeps that one-off out of each test's mock sequence, and stops the cached session leaking
+ * between tests, so each test goes on asserting only the call it cares about.
+ */
+const SESSION_ID = 'sess-test';
+const SESSION_OPTIONS = { headers: { 'X-OT-Session-Id': SESSION_ID } };
+
+async function primeWorkSession(): Promise<void> {
+  clearCurrentSession();
+  const mock = vi.mocked(executeGraphqlWithAuth);
+  mock.mockResolvedValueOnce({ startWorkSession: { id: SESSION_ID } });
+  await ensureWorkSession('prime-token');
+  // Reset AFTER priming: the session is cached in module state, not mock state, so the
+  // cache survives while the call history starts clean for the test's own assertions.
+  mock.mockReset();
+}
 
 describe('tool descriptions reflect the canonical status set', () => {
   it('list_plans_by_status lists the uppercase canonical statuses, not the stale lowercase trio', () => {
@@ -67,8 +91,8 @@ describe('the captured workspace reaches create_plan / create_plans', () => {
   const sentInput = (): unknown =>
     vi.mocked(executeGraphqlWithAuth).mock.calls[0]?.[2];
 
-  beforeEach(() => {
-    vi.mocked(executeGraphqlWithAuth).mockReset();
+  beforeEach(async () => {
+    await primeWorkSession();
     vi.mocked(executeGraphqlWithAuth).mockResolvedValue({
       createPlan: { id: 'plan-1' },
       createPlans: { plans: [{ id: 'plan-1' }], totalCount: 1 },
@@ -161,8 +185,8 @@ describe('the captured workspace reaches create_plan / create_plans', () => {
 describe('createPlanToolHandler', () => {
   const serviceAccountToken = '***REMOVED-OT-TOKEN***';
 
-  beforeEach(() => {
-    vi.mocked(executeGraphqlWithAuth).mockReset();
+  beforeEach(async () => {
+    await primeWorkSession();
     delete process.env.OPENTHROTTLE_MCP_AUTH_TOKEN;
   });
 
@@ -236,6 +260,7 @@ describe('createPlanToolHandler', () => {
             title: 'Improve test coverage',
           },
         },
+        SESSION_OPTIONS,
       );
     });
   });
@@ -288,8 +313,8 @@ describe('createPlanToolHandler', () => {
 describe('createPlansToolHandler', () => {
   const serviceAccountToken = '***REMOVED-OT-TOKEN***';
 
-  beforeEach(() => {
-    vi.mocked(executeGraphqlWithAuth).mockReset();
+  beforeEach(async () => {
+    await primeWorkSession();
     process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = serviceAccountToken;
   });
 
@@ -363,6 +388,7 @@ describe('createPlansToolHandler', () => {
             ],
           },
         },
+        SESSION_OPTIONS,
       );
     });
   });
@@ -390,8 +416,8 @@ describe('createPlansToolHandler', () => {
 describe('listPlansByStatusToolHandler', () => {
   const serviceAccountToken = '***REMOVED-OT-TOKEN***';
 
-  beforeEach(() => {
-    vi.mocked(executeGraphqlWithAuth).mockReset();
+  beforeEach(async () => {
+    await primeWorkSession();
     process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = serviceAccountToken;
   });
 

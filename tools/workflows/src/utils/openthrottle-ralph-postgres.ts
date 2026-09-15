@@ -605,7 +605,7 @@ export async function insertCommitLinkPostgres(
     await client.query(
       `INSERT INTO work_sessions
          (actor_service_account_id, closed_by, ended_at, external_ref, on_behalf_of_verified, started_at, tool_name)
-       SELECT $1, 'explicit', NOW(), $2, FALSE, NOW(), 'workflow-ralph'
+       SELECT $1, 'instant', NOW(), $2, FALSE, NOW(), 'workflow-ralph'
        WHERE NOT EXISTS (SELECT 1 FROM work_sessions WHERE external_ref = $2)`,
       [serviceAccountId, externalRef],
     );

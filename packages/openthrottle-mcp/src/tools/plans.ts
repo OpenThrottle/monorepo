@@ -31,6 +31,7 @@ import {
 } from '../__generated__/schemas.ts';
 import { getAuthToken } from '../auth/get-auth-token.ts';
 import { resolveWorkspacePathArgument } from '../config/workspace-path.ts';
+import { ambientSessionOptions } from '../session/session-headers.ts';
 import type { GenericResult } from '../types/index.ts';
 import { invalidArgsContent } from '../utils/errors.ts';
 import { runTool } from '../utils/tool-result.ts';
@@ -146,9 +147,14 @@ export async function createPlanToolHandler(
     'create_plan',
     async () => {
       const token = getAuthToken();
-      const result = await executeGraphqlWithAuth(token, CreatePlanDocument, {
-        input: withWorkspacePath(parsed.data),
-      });
+      const result = await executeGraphqlWithAuth(
+        token,
+        CreatePlanDocument,
+        {
+          input: withWorkspacePath(parsed.data),
+        },
+        await ambientSessionOptions(token),
+      );
 
       const plan = result?.createPlan;
       if (!plan) return null;
@@ -172,9 +178,14 @@ export async function createPlansToolHandler(
     totalCount: number;
   }>('create_plans', async () => {
     const token = getAuthToken();
-    const result = await executeGraphqlWithAuth(token, CreatePlansDocument, {
-      input: { plans: parsed.data.plans.map(withWorkspacePath) },
-    });
+    const result = await executeGraphqlWithAuth(
+      token,
+      CreatePlansDocument,
+      {
+        input: { plans: parsed.data.plans.map(withWorkspacePath) },
+      },
+      await ambientSessionOptions(token),
+    );
 
     const createResult = result?.createPlans;
     if (!createResult) return null;
@@ -223,9 +234,14 @@ export async function updatePlanToolHandler(
     'update_plan',
     async () => {
       const token = getAuthToken();
-      const result = await executeGraphqlWithAuth(token, UpdatePlanDocument, {
-        input: parsed.data,
-      });
+      const result = await executeGraphqlWithAuth(
+        token,
+        UpdatePlanDocument,
+        {
+          input: parsed.data,
+        },
+        await ambientSessionOptions(token),
+      );
 
       const plan = result?.updatePlan;
       if (!plan) return null;
@@ -246,9 +262,14 @@ export async function deletePlanToolHandler(
 
   return runTool<{ deleted: boolean }>('delete_plan', async () => {
     const token = getAuthToken();
-    const result = await executeGraphqlWithAuth(token, DeletePlanDocument, {
-      input: parsed.data,
-    });
+    const result = await executeGraphqlWithAuth(
+      token,
+      DeletePlanDocument,
+      {
+        input: parsed.data,
+      },
+      await ambientSessionOptions(token),
+    );
 
     const deleted = result?.deletePlan ?? false;
     const text = deleted

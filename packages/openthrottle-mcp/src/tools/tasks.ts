@@ -36,6 +36,7 @@ import {
   UpdateTaskInputSchema,
 } from '../__generated__/schemas.ts';
 import { getAuthToken } from '../auth/get-auth-token.ts';
+import { ambientSessionOptions } from '../session/session-headers.ts';
 import type { GenericResult } from '../types/index.ts';
 import { invalidArgsContent } from '../utils/errors.ts';
 import { filterTasksByCategory } from '../utils/filters.ts';
@@ -157,9 +158,14 @@ export async function createTaskToolHandler(
     'create_task',
     async () => {
       const token = getAuthToken();
-      const result = await executeGraphqlWithAuth(token, CreateTaskDocument, {
-        input: parsed.data,
-      });
+      const result = await executeGraphqlWithAuth(
+        token,
+        CreateTaskDocument,
+        {
+          input: parsed.data,
+        },
+        await ambientSessionOptions(token),
+      );
 
       const task = result?.createTask;
       if (!task) return null;
@@ -206,9 +212,14 @@ export async function createTasksToolHandler(
         })),
       };
 
-      const result = await executeGraphqlWithAuth(token, CreateTasksDocument, {
-        input,
-      });
+      const result = await executeGraphqlWithAuth(
+        token,
+        CreateTasksDocument,
+        {
+          input,
+        },
+        await ambientSessionOptions(token),
+      );
 
       const tasks: CreateTasksMutation['createTasks']['tasks'] =
         result?.createTasks?.tasks ?? [];
@@ -234,9 +245,14 @@ export async function deleteTaskToolHandler(
 
   return runTool<{ deleted: boolean }>('delete_task', async () => {
     const token = getAuthToken();
-    const result = await executeGraphqlWithAuth(token, DeleteTaskDocument, {
-      input: parsed.data,
-    });
+    const result = await executeGraphqlWithAuth(
+      token,
+      DeleteTaskDocument,
+      {
+        input: parsed.data,
+      },
+      await ambientSessionOptions(token),
+    );
 
     const deleted = result?.deleteTask ?? false;
     const text = deleted
@@ -378,6 +394,7 @@ export async function reorderPlanTasksToolHandler(
         token,
         ReorderPlanTasksDocument,
         { input: parsed.data },
+        await ambientSessionOptions(token),
       );
 
       const tasks = result?.reorderPlanTasks ?? [];
@@ -404,9 +421,14 @@ export async function updateTaskToolHandler(
     'update_task',
     async () => {
       const token = getAuthToken();
-      const result = await executeGraphqlWithAuth(token, UpdateTaskDocument, {
-        input: parsed.data,
-      });
+      const result = await executeGraphqlWithAuth(
+        token,
+        UpdateTaskDocument,
+        {
+          input: parsed.data,
+        },
+        await ambientSessionOptions(token),
+      );
 
       const task = result?.updateTask;
       if (!task) return null;
@@ -433,6 +455,7 @@ export async function promoteTaskToolHandler(
       token,
       PromoteTaskToPlanDocument,
       { input: parsed.data },
+      await ambientSessionOptions(token),
     );
 
     const promotion = result?.promoteTaskToPlan;

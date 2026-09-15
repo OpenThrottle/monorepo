@@ -28,15 +28,10 @@ import {
   ensureWorkSession,
   getCurrentSessionId,
 } from '../session/current-session.ts';
+import { sessionHeaders } from '../session/session-headers.ts';
 import type { GenericResult } from '../types/index.ts';
 import { invalidArgsContent } from '../utils/errors.ts';
 import { runTool } from '../utils/tool-result.ts';
-
-const sessionHeaders = (
-  sessionId: string,
-): { headers: Record<string, string> } => ({
-  headers: { 'X-OT-Session-Id': sessionId },
-});
 
 // ── record_artifact ────────────────────────────────────────────────────────
 
