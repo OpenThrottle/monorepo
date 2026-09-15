@@ -65,6 +65,30 @@ const mockPlans: [PlanCardFragment, PlanCardFragment] = [
   },
 ];
 
+/**
+ * Mirrors a revalidation: the loader hands down a fresh `plans` array with the
+ * same contents but a new identity. `PlansTable` must not rebuild its columns
+ * in response — new `columnDef.cell` function identities are new React element
+ * types, so every cell subtree would unmount and remount.
+ */
+
+const RevalidationHarness = (): React.ReactElement => {
+  const [revision, setRevision] = React.useState(0);
+  const plans = React.useMemo(
+    () => mockPlans.map((plan) => ({ ...plan })),
+    [revision],
+  );
+
+  return (
+    <TooltipProvider>
+      <button onClick={() => setRevision((value) => value + 1)} type="button">
+        Revalidate
+      </button>
+      <PlansTable plans={plans} />
+    </TooltipProvider>
+  );
+};
+
 const renderPlansTable = (tableProps: PlansTableProps): RenderResult =>
   renderRoutesStub(
     <TooltipProvider>
@@ -134,6 +158,23 @@ describe('PlansTable Component', () => {
         name: `${PLANS_ROW_ACTIONS_COPY.menuAriaLabelPrefix} Second Plan`,
       }),
     ).toBeInTheDocument();
+  });
+
+  // A remount here is what destroyed the keyed cancel fetcher's payload: React
+  // Router refcounts fetcher keys, so tearing down the row took the count to
+  // zero and purged `fetcher.data` before the Kill outcome could be toasted.
+  test('keeps row cells mounted across a revalidation', async () => {
+    const user = userEvent.setup();
+    const component = renderRoutesStub(<RevalidationHarness />);
+    const actionsLabel = `${PLANS_ROW_ACTIONS_COPY.menuAriaLabelPrefix} First Plan`;
+    const before = component.getByRole('button', { name: actionsLabel });
+
+    await user.click(component.getByRole('button', { name: 'Revalidate' }));
+
+    const after = component.getByRole('button', { name: actionsLabel });
+
+    // Same DOM node instance: the cell re-rendered, it did not remount.
+    expect(after).toBe(before);
   });
 
   test('shows author, assignee, and updated date when present', () => {

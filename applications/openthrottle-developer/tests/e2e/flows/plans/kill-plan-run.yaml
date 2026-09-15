@@ -1,0 +1,53 @@
+# Plans list: the per-row Kill action reaches the server AND reports its outcome.
+#
+# Why this flow exists: a Kill that silently does nothing and a Kill that works
+# were visually identical — the whole point of OT plan d29174ff. jsdom can prove
+# the toast fires from a fetcher payload, but only a real browser can prove the
+# payload survives the post-action revalidation, because the defect was a React
+# remount (PlansTable rebuilt its columns on every revalidation, which unmounted
+# the row and made React Router purge the keyed fetcher's data).
+#
+# Stable-data assumption: the Kill action only renders for a cancelable plan
+# (PENDING / QUEUED / IN_PROGRESS — see getPlanIsCancelable). The kill leg is
+# therefore guarded by `when: visible`, so this flow asserts the list on any
+# seed and asserts the outcome toast whenever a cancelable plan is present.
+# Prereqs: production build on :6020 + seeded user (tests/e2e/scripts/seed-user.sh).
+url: http://localhost:6020/plans
+name: kill-plan-run
+tags:
+  - plans
+  - full
+---
+- runFlow:
+    file: ../../helpers/login.yaml
+- openLink: http://localhost:6020/plans
+# The list loaded.
+- extendedWaitUntil:
+    visible:
+      id: 'PlansTable'
+    timeout: 20000
+# Only a cancelable plan carries the Kill action, so gate the rest on one.
+- runFlow:
+    when:
+      visible: 'Plan actions for'
+    commands:
+      - tapOn: 'Plan actions for'
+      - extendedWaitUntil:
+          visible: 'Kill run'
+          timeout: 10000
+      - tapOn: 'Kill run'
+      # The confirm gate, owned by GlobalPopoverConfirmDialog.
+      - extendedWaitUntil:
+          visible: 'Kill plan run?'
+          timeout: 10000
+      # Confirm by testid: the confirm label ("Kill run") is identical to the
+      # menu item's label, and the menu stays open behind the dialog, so a text
+      # selector here would be ambiguous.
+      - tapOn:
+          id: 'GlobalPopoverConfirmDialogConfirm'
+      # The assertion no jsdom test can make: the outcome reaches the user on
+      # the far side of the list revalidation. Any of the four outcome copy
+      # variants is a pass — what must never happen is no toast at all.
+      - extendedWaitUntil:
+          visible: '.*(Run cancelled|Run stopping|Cancellation requested|No queued or active plan run).*'
+          timeout: 20000

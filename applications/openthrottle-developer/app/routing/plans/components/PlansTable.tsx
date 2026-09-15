@@ -30,9 +30,16 @@ export const PlansTable = (props: PlansTableProps): React.ReactElement => {
     searchParams.getAll('status').length > 0 ||
     searchParams.getAll('assignee').length > 0;
 
+  // Deliberately NOT keyed on `plans`: the factory does not read it, and a new
+  // `plans` identity arrives on every revalidation. Rebuilding the columns mints
+  // new `columnDef.cell` function identities, and `DataTable` renders cells via
+  // `flexRender(cell.column.columnDef.cell, ...)` — a new function identity is a
+  // new React element type, so every cell subtree unmounts and remounts. That
+  // remount destroyed the keyed cancel fetcher (its refcount hit zero, so React
+  // Router purged the payload) and the Kill outcome could never be surfaced.
   const columns = React.useMemo(
     () => buildPlansTableColumns(statusFilterUrls),
-    [plans, statusFilterUrls],
+    [statusFilterUrls],
   );
 
   // Handlers
