@@ -179,7 +179,7 @@
       },
       "start": {
         "continuous": true,
-        "description": "Run openthrottle-server via `nest start` (no watch, no debug) after dependencies build. Replaces `nest start`: the SWC builder it uses cannot rewrite `.ts` import specifiers to `.js`, so ESM output does not resolve at runtime (OT plan 31454927 task 2). tsc emits, `node --watch` reruns.",
+        "description": "Run openthrottle-server (no watch, no debug) after building the server and its dependencies. `build` is listed in dependsOn alongside `^build`: `^build` is only *dependencies'* output, so without it this target would run whatever stale `build/` happened to be on disk. Replaces `nest start`: the SWC builder it uses cannot rewrite `.ts` import specifiers to `.js`, so ESM output does not resolve at runtime (OT plan 31454927 task 2). tsc emits, `node --watch` reruns.",
         "executor": "nx:run-commands",
         "options": {
           "command": "node --enable-source-maps ./build/src/main.js",
@@ -190,6 +190,7 @@
             "target": "ensure-migrations",
             "projects": "monorepo"
           },
+          "build",
           "^build"
         ]
       },
@@ -211,6 +212,7 @@
             "target": "ensure-migrations",
             "projects": "monorepo"
           },
+          "build",
           "^build"
         ]
       }
