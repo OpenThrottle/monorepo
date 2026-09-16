@@ -375,7 +375,7 @@
     },
     "ingest-agent-assets": {
       "cache": false,
-      "dependsOn": ["@openthrottle/openthrottle-skills:build"],
+      "dependsOn": ["@openthrottle/nodejs-utils:build"],
       "description": "Ingest agent assets into the OpenThrottle knowledge base via scripts/openthrottle-ingest-agent-assets.ts. Depends on the openthrottle-skills build because the script imports the package through its `exports` map (dist).",
       "executor": "nx:run-commands",
       "options": {
@@ -502,7 +502,7 @@
     },
     "validate-agent-assets-frontmatter": {
       "cache": true,
-      "dependsOn": ["@openthrottle/openthrottle-skills:build"],
+      "dependsOn": ["@openthrottle/nodejs-utils:build"],
       "description": "Validate frontmatter on agent-asset files via scripts/validate-agent-assets-frontmatter.ts. Depends on the openthrottle-skills build because the script imports the package through its `exports` map (dist), which does not exist on a clean CI checkout.",
       "executor": "nx:run-commands",
       "inputs": [

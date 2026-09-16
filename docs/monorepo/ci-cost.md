@@ -146,11 +146,17 @@ Baseline measured on four post-migration `build` runs before the matrix was touc
 | affected `lint`/`typecheck`                   | ~4m14s     | —                                                |
 | affected `test`                               | ~10m51s    | —                                                |
 | affected step, combined                       | ~15m08s    | **27m01s** (main, fat graph)                     |
-| once-per-run gates                            | ~20s       | ~21s                                             |
+| once-per-run gates                            | ~92s       | ~110s                                            |
 | **job total**                                 | **17m07s** | **28m24s** — and one run was cancelled at 28m55s |
 
 Per-box fixed overhead is therefore ~1.6 min — 6% of a typical job, 9% of the worst case — against
 88–95% shardable work. The 30-minute job ceiling was already the live risk, not a future one.
+
+⚠️ **The `once-per-run gates` row above was `~20s / ~21s` until 2026-09-16 and was wrong by 4.6x.**
+Re-measured across three fat-graph runs, shard 1's job tail ran **82–110s** against ~12s on shards 2
+and 3. That figure was load-bearing — it is what the "keep them on shard 1" argument below rested
+on — and it is why those gates now run in their own job. See "Whole-tree gates run beside the
+matrix" below.
 
 Why **3** and not 2, and not a target-split:
 
@@ -172,14 +178,14 @@ Measured across three fat-graph runs at the live settings ([35049973988](https:/
 [35051408212](https://github.com/OpenThrottle/monorepo/actions/runs/35051408212)), segmenting every
 one of the nine shard-jobs into setup / NX work / tail:
 
-| segment                               | measured                                             | previously recorded here     |
-| ------------------------------------- | ---------------------------------------------------- | ---------------------------- |
-| per-box setup                         | **86s**                                              | ~1.6 min — still accurate    |
-| once-per-run gates (shard 1's tail)   | **92s**                                              | ~20s — **stale, 4.6x low**   |
-| other shards' tail                    | 12s                                                  | —                            |
-| total shardable work                  | **1413s**                                            | —                            |
-| observed max shard vs perfect balance | 548s vs 471s (**imbalance 1.16x mean, 1.34x worst**) | not modelled                 |
-| critical-box job                      | **712s observed = 11.9 min**                         | 17m07s typical, 28m24s worst |
+| segment                               | measured                                             | previously recorded here                     |
+| ------------------------------------- | ---------------------------------------------------- | -------------------------------------------- |
+| per-box setup                         | **86s**                                              | ~1.6 min — still accurate                    |
+| once-per-run gates (shard 1's tail)   | **92s**                                              | ~20s — was 4.6x low, **now corrected above** |
+| other shards' tail                    | 12s                                                  | —                                            |
+| total shardable work                  | **1413s**                                            | —                                            |
+| observed max shard vs perfect balance | 548s vs 471s (**imbalance 1.16x mean, 1.34x worst**) | not modelled                                 |
+| critical-box job                      | **712s observed = 11.9 min**                         | 17m07s typical, 28m24s worst                 |
 
 Projecting with `setup + (shardable / N) x imbalance + gates` (which predicts 727s against 712s
 observed, so it is sound enough to project with):
@@ -201,27 +207,122 @@ observed, so it is sound enough to project with):
 - **The risk that justified sharding is gone.** Sharding was adopted because one box hit 28m24s
   against the 30-minute ceiling. Worst job now observed: **869s = 14.5 min**, under half of it.
   There is no longer a deadline being defended, only a wall-clock preference.
-- **Imbalance is the bigger and cheaper lever.** The round-robin partition ran **667s / 335s / 495s**
-  in run 35051408212. Perfect balance caps that run at 499s — saving 168s, _more than the 137s a 4th
-  box buys_, at zero extra runner cost. Shard 1 additionally carries 92s of once-per-run gates that
-  adding boxes does not move at all.
+- **Imbalance and the gate tail are cheaper levers than a 4th box.** ~~The round-robin partition ran
+  667s / 335s / 495s in run 35051408212; perfect balance caps that run at 499s, saving 168s.~~
+  **Both halves of this have since been acted on, and the 168s figure did not survive contact with
+  the data** — see "Shard partitioning is weighted by measured cost" and "Runner variance dominates
+  the residual spread" below. Weighted packing is worth 15–30% on ordinary PRs but only ~5% on a fat
+  graph, and most of that 667/335/495 spread turned out to be runner variance, not the partitioner.
+  The 92s gate tail was real and is gone.
 - **Runner minutes are free only while this repo is public.** A 4th box is +33% billed minutes the
   day that changes.
 
-If you want this pipeline faster, fix the partition and move the gates off the critical shard before
-you buy another runner.
+Both of those were done (2026-09-16, OT plan 3feb3613) and neither required a 4th box. **jobCount
+stays 3.**
 
 Two things sharding required, both easy to get wrong:
 
-- **Once-per-run gates sit behind `if: matrix.jobIndex == 1`.** Whole-tree checks (circular deps,
-  codegen drift guard, agent-asset SSOT/frontmatter, licenses, notices, prettier, `audit:strict`)
-  return the same answer on every box, so running them three times triples work for zero coverage.
-  They live on shard 1 rather than a sibling job because they total ~20s — less than the
-  checkout+install a fourth runner would cost to reclaim them. Codegen itself stays on every box:
-  it is a prerequisite for typecheck, not a gate.
+- **Once-per-run gates run in their own `gates` job.** Whole-tree checks (circular deps, codegen
+  drift guard, agent-asset SSOT/frontmatter, licenses, notices, prettier, `audit:strict`) return the
+  same answer on every box, so running them three times triples work for zero coverage. They used to
+  sit behind `if: matrix.jobIndex == 1` on shard 1; see "Whole-tree gates run beside the matrix"
+  below for why that moved and what it measured. Codegen itself stays on every box: it is a
+  prerequisite for typecheck, not a gate.
 - **The Nx cache key needs a per-shard discriminator.** `actions/cache` drops all but the first
   save of an identical key, so three legs of one commit would discard two shards' task hashes
   entirely. `node-setup` takes an optional `cache-suffix` (see its header).
+
+### Whole-tree gates run beside the matrix (2026-09-16)
+
+The once-per-run gates moved off shard 1 into a sibling `gates` job. Two measurements drove it
+(OT plans 0494d906 and 3feb3613):
+
+- **They cost ~92s, not ~20s.** Shard 1's job tail ran 82–110s across three fat-graph runs, against
+  ~12s on shards 2 and 3. Shard 1 was consequently the critical path in every one of those runs.
+- **The "a sibling job would pay ~1.6 min of checkout+install" objection does not apply**, because
+  that setup is not on the critical path. `gates` runs CONCURRENTLY with the matrix and finishes in
+  **168–172s** against the matrix's ~600–700s, so it contributes nothing to wall-clock.
+
+⚠️ **This is not the 4th shard that was measured and rejected.** A 4th shard adds a box whose setup
+lands ON the critical path, and per-box fixed overhead is already ~24.5% of the critical job — more
+boxes make that worse. A sibling job finishing in a quarter of the matrix's runtime adds nothing to
+the critical path at all. Same-sounding change, opposite arithmetic.
+
+Measured before/after, three fat-graph runs each:
+
+|        | shard-1 tail | critical job (mean) | critical job (median) |
+| ------ | ------------ | ------------------- | --------------------- |
+| before | 82–110s      | 712s                | 656s                  |
+| after  | 9–17s        | **635s**            | **611s**              |
+
+The tail collapse is certain. The end-to-end figure carries wide error bars — see "Runner variance"
+below.
+
+⚠️ **`ci-success` must keep `gates` in its `needs`.** Branch protection requires `ci-success` and
+nothing else, so a gate that fails is only a real gate because that job aggregates this one. Drop it
+and every whole-tree check silently becomes advisory while CI reports green.
+
+⚠️ **Adding a step to CI? Decide which side it belongs on.** A per-chunk check belongs in `build`,
+where it sees only that shard's projects. A whole-tree check belongs in `gates`. Putting a per-chunk
+check in `gates` silently narrows it to nothing; putting a whole-tree check in `build` triples it.
+
+One thing this move flushed out: `validate-agent-assets-frontmatter` and `ingest-agent-assets` both
+declared `dependsOn` on `@openthrottle/openthrottle-skills:build`, **a target that does not exist**
+(that package is source-first and carries the `__build` placeholder), so Nx silently ignored it.
+They passed only by free-riding on the affected `lint`/`typecheck` run, whose `^build` chain built
+`@openthrottle/nodejs-utils` first. A job that runs no lint/typecheck removed the free ride and
+exposed it. If you move a gate into a job that builds nothing, purge every `dist/` and
+`*.tsbuildinfo` and run it from clean before trusting it.
+
+### Shard partitioning is weighted by measured cost
+
+`scripts/parallelize-tasks.ts` packs projects longest-processing-time-first using
+`scripts/shard-weights.json`, rather than dealing them round-robin by count. Round-robin was blind
+to a project being 100x another, and this workspace spans **1.2s to 117.5s** per project.
+
+**The weights table is committed, and that is deliberate.** Two more obvious sources both break the
+one invariant the partitioner has — that every shard computes the IDENTICAL partition from the same
+affected list, or a project lands on two boxes or none:
+
+- Nx's own task history (`task_history` in `.nx/workspace-data/*-v3.db`) is **empty** in this
+  workspace; Nx 23.2.0 does not populate it here. Verified immediately after a real
+  `nx run <p>:lint --skip-nx-cache`.
+- The Nx cache is keyed per shard (`cache-suffix: shard-<jobIndex>`, see `node-setup`), so each
+  shard restores a **different** cache. Weights derived from local cache state would differ per box.
+
+Regenerate with `pnpm exec tsx ./scripts/generate-shard-weights.ts` (~20 min, sequential by design).
+It is **expected to drift and safe to let drift**: weights affect BALANCE only. Correctness comes
+from `verifyShardSelection()`'s Nx round-trip, which never reads them, and a missing or corrupt
+table falls back to the old round-robin deal. Do not wire this into CI.
+
+Simulated over the measured weights, the packing beats round-robin in 96–100% of trials:
+
+| affected projects | round-robin critical | LPT critical | saved |
+| ----------------- | -------------------- | ------------ | ----- |
+| 10                | 81.6s                | 57.4s        | 29.7% |
+| 20                | 158.1s               | 114.5s       | 27.6% |
+| 50                | 321.7s               | 271.1s       | 15.7% |
+| 72 (fat graph)    | 415.0s               | 395.1s       | 4.8%  |
+
+Note the shape: **the gain is largest on partial affected sets — ordinary PRs — and smallest on a
+fat graph**, where round-robin already averages out across 72 projects. Anyone quoting a
+fat-graph number as the benefit has it backwards.
+
+### Runner variance dominates the residual spread
+
+⚠️ Before attributing a slow shard to the partitioner, rule this out. Across three runs with an
+**identical** affected set and an identical partition (the partitioner logs `[~395s]` per shard on
+every run), the same chunk took:
+
+- shard 2: **603s → 383s → 360s** — a 1.7x swing on identical work
+- shard 3: **512s → 517s → 333s**
+
+while shard 1, holding the 117.5s `openthrottle-server`, was steady at 494/483/489s.
+
+Identical work, identical partition, 1.7x swing: that is the GitHub runner, and no partitioning
+algorithm can fix it. An earlier analysis read one run's 667/335/495 spread as partition imbalance
+and projected ~168s of recoverable time from it; that was over-attribution, and it is why the
+numbers in this section come from repeated runs rather than one.
 
 ### Suite sharding: splitting one project across all three boxes
 

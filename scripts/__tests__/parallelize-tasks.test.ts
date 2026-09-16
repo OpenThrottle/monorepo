@@ -1,15 +1,22 @@
 import { describe, expect, it } from 'vitest';
+
 import {
+  byName,
   distributeEvenly,
   formatShardOutputs,
   getChunkIndex,
+  getChunkWeight,
   getExcludeSelector,
   getIsPackage,
+  getMedianWeight,
   getShardOutputs,
   getShardSelectionErrors,
   getShardSelector,
   getSuiteShardedProjects,
   getTestGrouping,
+  getWeight,
+  packByWeight,
+  partitionProjects,
   splitProjects,
   SUITE_SHARDED_PROJECTS,
 } from '../parallelize-tasks.ts';
@@ -449,5 +456,149 @@ describe('formatShardOutputs', () => {
     formatShardOutputs(outputs)
       .split('\n')
       .forEach((line) => expect(line).not.toContain(' '));
+  });
+});
+
+describe('byName', () => {
+  // localeCompare would consult the runtime's default locale; every shard must
+  // break ties identically or they compute different partitions.
+  it('orders by code unit, not locale', () => {
+    expect(byName('a', 'b')).toBeLessThan(0);
+    expect(byName('b', 'a')).toBeGreaterThan(0);
+    expect(byName('a', 'a')).toBe(0);
+    expect(byName('Z', 'a')).toBeLessThan(0);
+  });
+});
+
+describe('getMedianWeight', () => {
+  it('takes the middle value of an odd-sized table', () => {
+    expect(getMedianWeight({ a: 1, b: 5, c: 100 })).toBe(5);
+  });
+
+  it('averages the two middle values of an even-sized table', () => {
+    expect(getMedianWeight({ a: 1, b: 3, c: 5, d: 100 })).toBe(4);
+  });
+
+  it('is unmoved by a single extreme outlier, unlike a mean', () => {
+    expect(getMedianWeight({ a: 1, b: 2, c: 3, d: 1_000_000 })).toBe(2.5);
+  });
+
+  it('returns 0 for an empty table', () => {
+    expect(getMedianWeight({})).toBe(0);
+  });
+});
+
+describe('getWeight', () => {
+  it('reads a known project straight from the table', () => {
+    expect(getWeight('a', { a: 42 }, 7)).toBe(42);
+  });
+
+  // A new project treated as weightless would be packed onto whichever bin is
+  // already heaviest — exactly the skew this packing exists to remove.
+  it('falls back for an unknown project rather than treating it as free', () => {
+    expect(getWeight('missing', { a: 42 }, 7)).toBe(7);
+  });
+
+  it('keeps a genuine zero rather than substituting the fallback', () => {
+    expect(getWeight('a', { a: 0 }, 7)).toBe(0);
+  });
+});
+
+describe('packByWeight', () => {
+  it('balances by weight where dealing by count cannot', () => {
+    // Round-robin deals 3 projects to 3 bins and calls it even; by weight the
+    // one 100s project outweighs everything else combined.
+    const weights = { heavy: 100, light1: 1, light2: 1 };
+    const chunks = packByWeight(['heavy', 'light1', 'light2'], 3, weights);
+    const totals = chunks.map((chunk) => getChunkWeight(chunk, weights));
+
+    expect(chunks.find((chunk) => chunk.includes('heavy'))).toHaveLength(1);
+    expect(Math.max(...totals)).toBe(100);
+  });
+
+  it('puts the next project on the currently lightest shard', () => {
+    const weights = { a: 10, b: 6, c: 5, d: 4 };
+    const chunks = packByWeight(['a', 'b', 'c', 'd'], 2, weights);
+    const totals = chunks
+      .map((chunk) => getChunkWeight(chunk, weights))
+      .sort((x, y) => x - y);
+
+    // 10+4 vs 6+5 — LPT reaches 14/11, not the 16/9 a naive deal would.
+    expect(totals).toEqual([11, 14]);
+  });
+
+  it('is deterministic across input orderings — the load-bearing property', () => {
+    const weights = { a: 10, b: 10, c: 3, d: 7, e: 1 };
+    const forwards = packByWeight(['a', 'b', 'c', 'd', 'e'], 3, weights);
+    const backwards = packByWeight(['e', 'd', 'c', 'b', 'a'], 3, weights);
+
+    expect(backwards).toEqual(forwards);
+  });
+
+  it('breaks equal weights by name so ties cannot depend on input order', () => {
+    const weights = { alpha: 5, beta: 5, gamma: 5 };
+    const chunks = packByWeight(['gamma', 'beta', 'alpha'], 3, weights);
+
+    expect(chunks).toEqual([['alpha'], ['beta'], ['gamma']]);
+  });
+
+  it('gives unknown projects the median instead of dropping them', () => {
+    const weights = { known1: 10, known2: 10, known3: 10 };
+    const chunks = packByWeight(['known1', 'known2', 'brand-new'], 3, weights);
+
+    expect(chunks.flat().sort()).toEqual(['brand-new', 'known1', 'known2']);
+    expect(getChunkWeight(['brand-new'], weights)).toBe(10);
+  });
+
+  it('assigns every project exactly once, with no loss and no overlap', () => {
+    const projects = [...APPS, ...PACKAGES];
+    const weights = Object.fromEntries(
+      projects.map((project, index) => [project, (index % 5) + 1]),
+    );
+    const flat = packByWeight(projects, 3, weights).flat();
+
+    expect(flat).toHaveLength(projects.length);
+    expect(new Set(flat)).toEqual(new Set(projects));
+  });
+
+  it('returns chunkCount empty chunks for an empty affected set', () => {
+    expect(packByWeight([], 3, { a: 1 })).toEqual([[], [], []]);
+  });
+
+  it('puts everything on one chunk when jobCount is 1', () => {
+    const chunks = packByWeight(['a', 'b'], 1, { a: 1, b: 2 });
+
+    expect(chunks).toHaveLength(1);
+    expect(chunks[0]?.sort()).toEqual(['a', 'b']);
+  });
+});
+
+describe('partitionProjects', () => {
+  it('packs by weight when a table is supplied', () => {
+    const weights = { heavy: 100, light1: 1, light2: 1 };
+
+    expect(
+      partitionProjects(['heavy', 'light1', 'light2'], 3, weights),
+    ).toEqual(packByWeight(['heavy', 'light1', 'light2'], 3, weights));
+  });
+
+  // The fallback is what makes the weights table safe to let drift: delete or
+  // corrupt it and CI still partitions correctly, only less evenly.
+  it('falls back to round-robin when no table is available', () => {
+    const projects = [...APPS, ...PACKAGES];
+
+    expect(partitionProjects(projects, 3)).toEqual(
+      distributeEvenly(projects, 3),
+    );
+  });
+});
+
+describe('getChunkWeight', () => {
+  it('sums the chunk', () => {
+    expect(getChunkWeight(['a', 'b'], { a: 10, b: 5 })).toBe(15);
+  });
+
+  it('is 0 for an empty chunk', () => {
+    expect(getChunkWeight([], { a: 10 })).toBe(0);
   });
 });
