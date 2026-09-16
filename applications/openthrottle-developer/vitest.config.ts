@@ -75,7 +75,7 @@ export default (config: ConfigEnv) => {
       /**
        * @description `vmForks` runs each test file with an isolated module registry
        * but REUSES the worker process, so the module graph is imported once per worker
-       * and amortized across the ~364 files it handles — the big wall-clock win over
+       * and amortized across the ~250 files a shard handles — the big wall-clock win over
        * `forks`, which re-imports per file (measured on this suite: forks 253s vs
        * vmForks 86s, ~2.9x; OT plan e448a51d task ae26a40c).
        *
@@ -94,7 +94,8 @@ export default (config: ConfigEnv) => {
        * Vitest's own `--shard` splits WITHIN a project, which is a third lever the
        * either/or framing missed. CI now runs this suite as three shards across the
        * 3-box matrix — 679 files / 137s whole, ~227 files / ~46s per shard (OT plan
-       * 9fc16731).
+       * 9fc16731). The suite is 761 files as of 2026-09-16, split 254/254/253
+       * (OT plan 0494d906); re-derive the split rather than trusting the constant.
        *
        * The pool tuning here is ORTHOGONAL to that and still load-bearing: `--shard`
        * lowers how many files a box carries, and does nothing about V8 VM-context

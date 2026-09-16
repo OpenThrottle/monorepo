@@ -556,7 +556,17 @@ Two hardening changes reduce this (see `nx.json` `targetDefaults` and the app `v
 - **Ordered declaration writes.** `typecheck` depends on `^build`, its own `build`, and `^typecheck`; `build` depends on `^typecheck`. For any project its own build precedes its own typecheck, and a dependent waits for each dependency's build **and** typecheck — so within Nx's scheduling no `dist` is read while another task writes it. This eliminated the `TS6305`/`TS2307` signatures across repeated cold `--parallel=4` runs.
 - **No fixed-port build server.** `vite-bundle-analyzer` is gated behind `ANALYZE=true` (and uses `analyzerPort: 'auto'`), so app builds no longer start a server on the fixed port `8888` and collide under `--parallel` (`EADDRINUSE`).
 
-These remove the named signatures, but `tsc --build`'s autonomous reference rebuilds can still occasionally collide at high parallelism. **For a trustworthy cold full build, lower the parallelism** to `--parallel=2` (as `pnpm run build:all` does); `--parallel=4` was intermittently flaky. When reproducing, purge first (`rm -rf .nx/workspace-data` and `dist`/`*.tsbuildinfo`) — stale `.nx/workspace-data` compounds the issue. If you need higher throughput in CI, connect [Nx Cloud and enable automatic flaky-task retry](https://nx.dev/ci/features/flaky-tasks); this workspace currently uses GCS bucket-based remote caching rather than Nx Cloud, so flaky-task retry is not active today.
+These removed the named signatures. `--parallel=2` was nevertheless kept for a long time because `--parallel=4` remained _intermittently_ flaky after them — **re-measured 2026-09-16 (OT plan 0494d906), and it no longer is.** Twenty cold purged runs (`rm -rf .nx/workspace-data`, every non-`node_modules` `dist/` and `*.tsbuildinfo`, then `nx run-many --target=build,typecheck --all --parallel=<n> --skip-nx-cache`), settings interleaved 2/4/8 rather than blocked so machine drift could not favour one arm, every run confirmed at the same scope (71 projects + 10 tasks):
+
+| setting            | n      | mean      | median | stdev | TS6305 / TS2307 / TS7016 / EADDRINUSE |
+| ------------------ | ------ | --------- | ------ | ----- | ------------------------------------- |
+| `--parallel=2`     | 5      | 74.4s     | 74.0s  | 2.1   | 0 / 0 / 0 / 0                         |
+| **`--parallel=4`** | **10** | **58.0s** | 58.5s  | 3.4   | **0 / 0 / 0 / 0**                     |
+| `--parallel=8`     | 5      | 56.4s     | 55.0s  | 6.1   | 0 / 0 / 0 / 0                         |
+
+`pnpm run build:all` therefore runs at **`--parallel=4`** — a measured 22% faster than 2, with zero collisions in ten cold runs. **8 was rejected**, not because it failed, but because it adds only 2.2 further points while nearly doubling the variance (stdev 6.1 vs 3.4), and it oversubscribes any machine with fewer than 8 cores.
+
+This is one machine's evidence (10-core Apple Silicon) against a failure that was always non-deterministic, so it lowers the probability of a collision rather than proving it impossible. `build:all` is a local convenience script — CI never runs it — so the cost of being wrong is a flaky local build, not a broken pipeline. **If `TS6305` ever returns, drop back to `--parallel=2` and say so here.** When reproducing, purge first — stale `.nx/workspace-data` compounds the issue. If you need higher throughput in CI, connect [Nx Cloud and enable automatic flaky-task retry](https://nx.dev/ci/features/flaky-tasks); this workspace currently uses GCS bucket-based remote caching rather than Nx Cloud, so flaky-task retry is not active today.
 
 ### Projects without a `build` target
 

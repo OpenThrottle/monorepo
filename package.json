@@ -164,7 +164,7 @@
     "audit:workspace-deps:json": "tsx ./scripts/audit-workspace-deps.ts --json",
     "audit:workspace-deps:strict": "tsx ./scripts/audit-workspace-deps.ts --strict",
     "build": "pnpm run build:graphql && pnpm run build:packages",
-    "build:all": "nx run-many --target=build,typecheck --all --parallel=2",
+    "build:all": "nx run-many --target=build,typecheck --all --parallel=4",
     "build:docker": "pnpm nx run openthrottle-server:docker-build",
     "build:graphql": "pnpm nx run-many --target=codegen-graphql,codegen-react-router --projects tag:production:true --parallel",
     "build:licenses": "pnpm dlx license-checker --csv --production --out \"$(basename $PWD)-licenses.csv\"",
