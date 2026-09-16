@@ -203,6 +203,8 @@ var PRIVACY_LEVELS = Object.freeze({
   TRUNCATED: "truncated"
 });
 var DEFAULT_PRIVACY_LEVEL = PRIVACY_LEVELS.TRUNCATED;
+var FOREIGN_PRIVACY_LEVEL = PRIVACY_LEVELS.NAME_ONLY;
+var resolvePrivacyLevel = (repoRoot) => isOpenThrottleCheckout(repoRoot) ? DEFAULT_PRIVACY_LEVEL : FOREIGN_PRIVACY_LEVEL;
 var DEFAULT_ARGS_MAX_LEN = 256;
 var SECRET_PATTERNS = [
   /\bBearer\s+[A-Za-z0-9._\-+=/]+/gi,
@@ -308,7 +310,7 @@ var buildUsageEvent = ({
   normalized,
   repoRoot,
   source,
-  privacyLevel = DEFAULT_PRIVACY_LEVEL,
+  privacyLevel,
   timestamp = (/* @__PURE__ */ new Date()).toISOString(),
   gitBranch
 }) => {
@@ -317,14 +319,15 @@ var buildUsageEvent = ({
   }
   const cwd = normalized.cwd || repoRoot;
   const scope = detectScope(normalized.skill_name, repoRoot);
-  const args = applyPrivacy(privacyLevel, normalized.args);
+  const level = privacyLevel ?? resolvePrivacyLevel(repoRoot);
+  const args = applyPrivacy(level, normalized.args);
   const resolvedSource = source ?? normalized.source ?? void 0;
   const event = {
     args,
     cwd,
     git_branch: gitBranch ?? resolveGitBranch(repoRoot),
     invocation_path: normalized.invocation_path ?? null,
-    privacy_level: privacyLevel,
+    privacy_level: level,
     scope,
     session_id: normalized.session_id ?? null,
     skill_name: normalized.skill_name,
@@ -627,7 +630,6 @@ var main = async () => {
     }
     const event = buildUsageEvent({
       normalized,
-      privacyLevel: DEFAULT_PRIVACY_LEVEL,
       repoRoot: normalized.cwd || repoRoot,
       source: CODEX_SOURCE
     });

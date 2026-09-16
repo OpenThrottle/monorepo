@@ -172,6 +172,13 @@ Aligned with `91679bbf` rather than re-decided:
 - The secret redactor in `utils/privacy.ts` applies regardless of level. It is a backstop, not the
   control — `name-only` is the control.
 
+**Implemented** in `utils/privacy.ts` → `resolvePrivacyLevel`, which keys off the same
+`isOpenThrottleCheckout` test that gates the `.env` layer in §2, so a repo is ours for both purposes or
+neither. Adapters no longer pin a level, so passing the `home` default cannot accidentally opt a foreign
+repo back into arg collection. Covered by `utils/__tests__/privacy.test.ts`, including the path through
+`buildUsageEvent`. The opt-in in the second bullet is **not** implemented: there is currently no way to
+raise a foreign repo above `name-only`.
+
 ## 7. Kill switch
 
 Three layers, each independently sufficient, in precedence order:
