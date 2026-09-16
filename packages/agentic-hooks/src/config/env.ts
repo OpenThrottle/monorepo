@@ -234,6 +234,38 @@ export const resolveOtEnv = (
 };
 
 /**
+ * Matches a host of exactly `localhost` in the authority position: the scheme,
+ * optional userinfo, then the host, which must end at a port, path, query,
+ * fragment or the end of the string.
+ *
+ * The lookahead is what keeps `localhost.example.com` and `mylocalhost` out,
+ * and the userinfo group is what keeps `http://localhost@example.com` from
+ * being read as a loopback host.
+ */
+const LOOPBACK_AUTHORITY =
+  /^([a-z][a-z0-9+.-]*:\/\/(?:[^/?#@]*@)?)localhost(?=[:/?#]|$)/i;
+
+/**
+ * Rewrite a `localhost` host to `127.0.0.1`, leaving scheme, userinfo, port,
+ * path, query and fragment untouched.
+ *
+ * Node's `fetch` (undici) and `curl` order address families differently for
+ * `localhost`. When it resolves to `::1` first and the server binds only
+ * `0.0.0.0`, undici's connect fails where curl transparently falls back to
+ * IPv4 — and because telemetry is fail-open, that failure is invisible: events
+ * divert to the JSONL buffer while every surface still looks healthy. Pinning
+ * the literal IPv4 loopback at resolution time fixes every adapter at once and
+ * adds no runtime dependency, which the committed bundles require.
+ *
+ * A string that is not URL-shaped simply does not match and is returned as-is;
+ * this sits on a fail-open path and must never throw.
+ *
+ * @public
+ */
+export const normalizeLoopbackHost = (url: string): string =>
+  url.replace(LOOPBACK_AUTHORITY, '$1127.0.0.1');
+
+/**
  * Build a graphql URL from an env map (file or process).
  *
  * @public
@@ -245,11 +277,11 @@ export const graphqlUrlFromEnvMap = (
     env.OPENTHROTTLE_GRAPHQL_URL?.trim() ||
     env.OPENTHROTTLE_WORKER_GRAPHQL_URL?.trim();
   if (explicit) {
-    return explicit.replace(/\/$/, '');
+    return normalizeLoopbackHost(explicit.replace(/\/$/, ''));
   }
   const appUrl = env.OPENTHROTTLE_SERVER_APP_URL?.trim()?.replace(/\/$/, '');
   if (appUrl) {
-    return `${appUrl}/graphql`;
+    return normalizeLoopbackHost(`${appUrl}/graphql`);
   }
   return null;
 };

@@ -67,6 +67,14 @@ const readMutationId = (payload: unknown, field: string): string | null => {
   return null;
 };
 
+/**
+ * Render an endpoint for a log line. Userinfo is stripped: an endpoint is
+ * operator-supplied and could carry `user:password@`, and a diagnostic is not
+ * worth leaking a credential into stderr or a CI log.
+ */
+const forLog = (graphqlUrl: string): string =>
+  graphqlUrl.replace(/^([a-z][a-z0-9+.-]*:\/\/)[^/?#]*@/i, '$1***@');
+
 /** Short enough that a dead server never stalls Skill tool use. @public */
 export const DEFAULT_POST_TIMEOUT_MS = 750;
 
@@ -309,7 +317,7 @@ export const persistUsageEvent = async ({
     }
 
     logHookError(
-      `server post failed; falling back to jsonl (${result.reason})`,
+      `server post failed; falling back to jsonl (${result.reason}) [endpoint ${forLog(graphqlUrl)}]`,
     );
     try {
       appendJsonl(outPath, event);
@@ -391,7 +399,7 @@ export const persistOutcomeEvent = async ({
     }
 
     logHookError(
-      `outcome server post failed; falling back to jsonl (${result.reason})`,
+      `outcome server post failed; falling back to jsonl (${result.reason}) [endpoint ${forLog(graphqlUrl)}]`,
     );
     try {
       appendJsonl(outPath, event);
