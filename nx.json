@@ -158,19 +158,6 @@
         "tsConfig": "{projectRoot}/tsconfig.lib.json"
       }
     },
-    "@nx/vite:build": {
-      "description": "Shared @nx/vite:build defaults: bundle the library with its vite.config.ts to {projectRoot}/dist (libs built from source, tsconfig.lib.json).",
-      "executor": "@nx/vite:build",
-      "options": {
-        "buildLibsFromSource": true,
-        "configFile": "{projectRoot}/vite.config.ts",
-        "emptyOutDir": true,
-        "generatePackageJson": false,
-        "outputPath": "{projectRoot}/dist",
-        "tsConfig": "{projectRoot}/tsconfig.lib.json"
-      },
-      "outputs": ["{options.outputPath}"]
-    },
     "build": {
       "cache": true,
       "description": "Build the project to {projectRoot}/dist via @nx/vite:build; runs after upstream build, codegen, and typecheck.",
