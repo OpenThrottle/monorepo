@@ -35,6 +35,23 @@ export class Repository {
   @Column({ name: 'name', type: 'text' })
   name!: string;
 
+  @Column({ name: 'ledger_harvest_cursor', nullable: true, type: 'text' })
+  ledgerHarvestCursor!: string | null;
+
+  @Column({
+    default: true,
+    name: 'ledger_harvest_enabled',
+    type: 'boolean',
+  })
+  ledgerHarvestEnabled!: boolean;
+
+  @Column({
+    name: 'ledger_harvested_at',
+    nullable: true,
+    type: 'timestamp with time zone',
+  })
+  ledgerHarvestedAt!: Date | null;
+
   @Column({ name: 'default_branch', nullable: true, type: 'text' })
   defaultBranch!: string | null;
 

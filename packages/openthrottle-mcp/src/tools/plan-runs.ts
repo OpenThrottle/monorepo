@@ -126,12 +126,14 @@ type SettledRun = NonNullable<SettleCliPlanRunMutation['settleCliPlanRun']>;
 type SettlePlanRunResult = GenericResult<{ run: SettledRun | null }>;
 
 export const settlePlanRunToolParameters = z.object({
+  headSha: z.string().min(1).optional(),
   planRunId: z.string().uuid(),
+  prNumber: z.number().int().positive().optional(),
   status: z.string().min(1),
 });
 
 export const settlePlanRunToolDescription =
-  "Close the plan_runs row opened by register_plan_run. status is COMPLETED (the work shipped), CANCELLED (a deliberate stop) or FAILED (you gave up or crashed out). Call this on EVERY exit path: these rows are exempt from the server's stale sweep, so an unsettled one sits IN_PROGRESS forever, reads as live, and holds its worktree marked busy. Settling an already-settled or unknown run is a safe no-op.";
+  "Close the plan_runs row opened by register_plan_run. status is COMPLETED (the work shipped), CANCELLED (a deliberate stop) or FAILED (you gave up or crashed out). Call this on EVERY exit path: these rows are exempt from the server's stale sweep, so an unsettled one sits IN_PROGRESS forever, reads as live, and holds its worktree marked busy. Settling an already-settled or unknown run is a safe no-op. On COMPLETED, also pass headSha (the branch head you pushed) and prNumber (the PR you opened): the server records the work-ledger git_commit and pull_request artifacts for you, resolving the repo itself, so there is no separate ledger ritual to remember after the merge. Omit both on any exit that opened no PR.";
 
 export async function settlePlanRunToolHandler(
   args: z.infer<typeof settlePlanRunToolParameters>,
@@ -150,7 +152,9 @@ export async function settlePlanRunToolHandler(
       SettleCliPlanRunDocument,
       {
         input: {
+          headSha: parsed.data.headSha ?? null,
           planRunId: parsed.data.planRunId,
+          prNumber: parsed.data.prNumber ?? null,
           status: parsed.data.status,
         },
       },

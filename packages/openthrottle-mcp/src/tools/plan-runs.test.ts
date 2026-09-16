@@ -238,7 +238,36 @@ describe('plan-run tools', () => {
     await settlePlanRunToolHandler({ planRunId: RUN_ID, status: 'completed' });
 
     expect(mockExecute).toHaveBeenCalledWith('test-token', expect.anything(), {
-      input: { planRunId: RUN_ID, status: 'completed' },
+      input: {
+        headSha: null,
+        planRunId: RUN_ID,
+        prNumber: null,
+        status: 'completed',
+      },
+    });
+  });
+
+  it('settle_plan_run forwards the sha and PR number so the server can record them', async () => {
+    mockExecute.mockResolvedValueOnce({
+      settleCliPlanRun: planRunRow({ status: 'COMPLETED' }),
+    });
+
+    await settlePlanRunToolHandler({
+      headSha: 'deadbeef',
+      planRunId: RUN_ID,
+      prNumber: 537,
+      status: 'COMPLETED',
+    });
+
+    // This is the whole mechanism: the ledger write rides the call the loop already makes,
+    // rather than a separate ritual after the merge that nothing is left around to perform.
+    expect(mockExecute).toHaveBeenCalledWith('test-token', expect.anything(), {
+      input: {
+        headSha: 'deadbeef',
+        planRunId: RUN_ID,
+        prNumber: 537,
+        status: 'COMPLETED',
+      },
     });
   });
 

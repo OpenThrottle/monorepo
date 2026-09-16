@@ -477,10 +477,22 @@ export class RegisterCliPlanRunInput {
 /** Input for {@link PlansResolver.settleCliPlanRun}: settle a detached-CLI run on exit. */
 @InputType()
 export class SettleCliPlanRunInput {
+  @Field(() => String, {
+    description: `Branch head sha at PR-open. Recorded as a git_commit artifact on COMPLETED; the verifier maps it to its squash commit once the PR merges. Optional — a run that exits without opening a PR has none.`,
+    nullable: true,
+  })
+  headSha!: string | null;
+
   @Field(() => ID, {
     description: `Plan-run row id to settle (returned by registerCliPlanRun).`,
   })
   planRunId!: string;
+
+  @Field(() => Int, {
+    description: `Number of the PR the run opened. Recorded as a pull_request artifact on COMPLETED — it survives a rebase or amend, which the head sha does not. Optional.`,
+    nullable: true,
+  })
+  prNumber!: number | null;
 
   @Field(() => String, {
     description: `Terminal status to set: COMPLETED, CANCELLED, or FAILED. Normalized to uppercase.`,
