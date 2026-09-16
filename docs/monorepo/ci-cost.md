@@ -157,13 +157,59 @@ Why **3** and not 2, and not a target-split:
 - Projected worst case: 2 boxes → ~15 min; 3 boxes → ~10.6 min. Typical at 3 → ~7.6 min.
 - A 4th box would start paying ~1.6 min of setup for shards below the ~5.6 min floor set by the
   single heaviest project — whose Vitest suite is one Nx project and cannot be split by **project**
-  sharding at all (the lever there was the `vmForks` pool config). **That floor has since
-  moved — see "Suite sharding" below — but the conclusion is unchanged and needs re-measuring, not
-  re-deriving, before anyone adds a 4th box.**
+  sharding at all (the lever there was the `vmForks` pool config). That floor has since moved (see
+  "Suite sharding" below), so it was **re-measured on 2026-09-16 (OT plan 0494d906) rather than
+  re-derived** — see "The 4th box, re-measured" below. Conclusion unchanged; reasoning replaced.
 - A target-split (`target: [lint, typecheck, test]`) is the right answer only when shards are
   **setup-bound**; at 6–9% overhead they are not, and it would leave the ~11-minute `test` graph —
   the segment that is actually growing — whole on one box.
 - A `target` × `jobIndex` cross product would be 9 boxes for no extra coverage. Don't.
+
+### The 4th box, re-measured (2026-09-16)
+
+Measured across three fat-graph runs at the live settings ([35049973988](https://github.com/OpenThrottle/monorepo/actions/runs/35049973988),
+[35050723575](https://github.com/OpenThrottle/monorepo/actions/runs/35050723575),
+[35051408212](https://github.com/OpenThrottle/monorepo/actions/runs/35051408212)), segmenting every
+one of the nine shard-jobs into setup / NX work / tail:
+
+| segment                               | measured                                             | previously recorded here     |
+| ------------------------------------- | ---------------------------------------------------- | ---------------------------- |
+| per-box setup                         | **86s**                                              | ~1.6 min — still accurate    |
+| once-per-run gates (shard 1's tail)   | **92s**                                              | ~20s — **stale, 4.6x low**   |
+| other shards' tail                    | 12s                                                  | —                            |
+| total shardable work                  | **1413s**                                            | —                            |
+| observed max shard vs perfect balance | 548s vs 471s (**imbalance 1.16x mean, 1.34x worst**) | not modelled                 |
+| critical-box job                      | **712s observed = 11.9 min**                         | 17m07s typical, 28m24s worst |
+
+Projecting with `setup + (shardable / N) x imbalance + gates` (which predicts 727s against 712s
+observed, so it is sound enough to project with):
+
+| jobCount     | critical job     | vs 3  | fixed-overhead share |
+| ------------ | ---------------- | ----- | -------------------- |
+| 2            | 1001s (16.7m)    | +274s | 17.8%                |
+| **3 (live)** | **727s (12.1m)** | —     | **24.5%**            |
+| 4            | 590s (9.8m)      | -137s | 30.2%                |
+| 5            | 507s (8.5m)      | -219s | 35.2%                |
+
+**Still 3**, but none of the original reasons is why:
+
+- **The 6-9% fixed-overhead figure is dead; it is 24.5% today.** That is the number that actually
+  moved, and it moves _against_ more boxes. The rule stated above is that a further split is right
+  only when shards are **setup-bound**; at 24.5% — 30.2% at four boxes — they are becoming exactly
+  that. Suite sharding lowered the per-project floor as predicted, but it did so by shrinking the
+  shardable segment, which raised overhead's share of what remains.
+- **The risk that justified sharding is gone.** Sharding was adopted because one box hit 28m24s
+  against the 30-minute ceiling. Worst job now observed: **869s = 14.5 min**, under half of it.
+  There is no longer a deadline being defended, only a wall-clock preference.
+- **Imbalance is the bigger and cheaper lever.** The round-robin partition ran **667s / 335s / 495s**
+  in run 35051408212. Perfect balance caps that run at 499s — saving 168s, _more than the 137s a 4th
+  box buys_, at zero extra runner cost. Shard 1 additionally carries 92s of once-per-run gates that
+  adding boxes does not move at all.
+- **Runner minutes are free only while this repo is public.** A 4th box is +33% billed minutes the
+  day that changes.
+
+If you want this pipeline faster, fix the partition and move the gates off the critical shard before
+you buy another runner.
 
 Two things sharding required, both easy to get wrong:
 
@@ -196,6 +242,11 @@ Measured through Nx with `--skip-nx-cache`, `CI=true`:
 The other two boxes take 226 files each (43.8s / 43.6s); 227 + 226 + 226 = 679, which is the check
 that matters — a silently-ignored `--shard` would run the whole suite on all three boxes and still
 report green. Shard 1's files-collected count is the number to read in the log, never the colour.
+
+The table above is the measurement as taken; **the suite has since grown to 761 files** and the sum
+check still holds — re-verified 2026-09-16 across 8 runs as **254 + 254 + 253 = 761**, against 761
+matches for `find applications/openthrottle-developer -name '*.test.ts*'`. Re-run that `find` when
+you re-check the total; the constant in this table will keep drifting, the _equality_ is the rule.
 
 How it is wired, and the two traps:
 
@@ -315,12 +366,47 @@ The reverse procedure (disabling again) is what this section's DISABLED note rec
 - **`NX_KEY` is an unreferenced repo variable** and should be deleted from repo settings. It was also stored as a **variable rather than a secret** — Actions variables are not masked in logs. A licence key belongs in `secrets`.
 - **`gs://openthrottle-staging-nx-cache`** is kept for a soak period after the cache retirement; delete it around **2026-09-01** so the 90-day lifecycle stops paying storage on dead entries.
 - **Nx Powerpack licence type** (paid vs Nx's free-for-OSS grant) is unconfirmed — needs the Nx account. Moot now that `@nx/gcs-cache` is removed.
-- **`nx affected --target=test` still runs at Nx's default concurrency.** The step has no
-  `--parallel` flag (so 3), despite prose here and elsewhere having long called it
-  "`--parallel=1`" — that claim was never true of the live command and has been corrected in
-  place. Sharding (below) does **not** settle this: it changes which projects share a box, not
-  what happens when two heavy jsdom suites land on the same one. The evidence needed can only be
-  gathered on CI; see the comment above that step in `continuous-integration.yml`.
+- ~~**`nx affected --target=test` still runs at Nx's default concurrency.**~~ **Settled
+  2026-09-16 (OT plan 0494d906)** — see "Nx `--parallel` semantics" below. Measured at
+  `--parallel=4` over 5 CI runs against a 3-run control: it does **not** OOM (peak ~7.7 GB of
+  16 GB, zero `(0 test)` files, zero killed workers), and it delivers **no measurable
+  throughput gain**. It stays at the default 3 because widening it was measured to do nothing,
+  not because of the OOM. Full method and run URLs in the comment above that step in
+  `continuous-integration.yml`.
+
+## Nx `--parallel` semantics
+
+Recorded here because misreading this flag produced three separate false claims in this repo, in
+this file and in `continuous-integration.yml`. Verified against the installed Nx **23.2.0**
+(`getThreadPoolSize`, `node_modules/nx/dist/src/tasks-runner/task-orchestrator.js`):
+
+| flag form                           | effective concurrency           |
+| ----------------------------------- | ------------------------------- |
+| _no `--parallel` flag_              | **3**                           |
+| `--parallel` (bare)                 | **3**                           |
+| `--parallel=true`                   | **3**                           |
+| `--parallel=1` / `--parallel=false` | 1                               |
+| `--parallel=N`                      | N                               |
+| `--parallel=50%`                    | 50% of `availableParallelism()` |
+
+**A bare `--parallel` does not mean "use all cores".** It means 3, identical to omitting the flag.
+`availableParallelism()` is consulted _only_ for a percentage value. `nx.json` sets no
+workspace-level `parallel`, so nothing overrides that default.
+
+Consequences that had been recorded backwards:
+
+- CI's `lint,typecheck,bundle-hooks-check --parallel` and its flagless `--target=test` run at the
+  **same** concurrency. The workflow comment claiming lint/typecheck ran "at full parallelism" while
+  `test` was throttled was never true.
+- `check:local:affected-lint` / `-typecheck` / `-test` all pass a bare `--parallel`, so the local
+  lane runs at **3** as well. There is no local-vs-CI concurrency asymmetry, contrary to prose that
+  claimed one.
+- Only an **explicit number** changes anything. `build:all --parallel=4` is a real setting;
+  `--parallel` on its own is decoration.
+
+Unrelated: `"parallel": false` on `check-agent-assets-ssot` in `nx.json` is an `nx:run-commands`
+option that serializes that target's two shell commands. It is not task concurrency and has nothing
+to do with any of the above.
 
 ## Vitest time budget
 

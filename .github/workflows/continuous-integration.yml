@@ -261,7 +261,8 @@ jobs:
         # not a second axis.
         target: ['lint,typecheck,test']
 
-    # openthrottle-developer:test (264 jsdom files) used to cost ~12 CPU-minutes
+    # openthrottle-developer:test (761 jsdom files today; 264 when this was
+    # written) used to cost ~12 CPU-minutes
     # because forks re-imported the full module graph per file, which forced the
     # 15 -> 30 bump. Switching that suite to Vitest's vmForks pool dropped it to
     # ~3 CPU-minutes (~730s -> ~172s user CPU), so the original 15m budget holds.
@@ -335,41 +336,63 @@ jobs:
         run: |
           pnpm exec tsx ./scripts/nx-circular-dependencies.ts
 
-      # lint + typecheck run at full parallelism — they are not the memory hog.
-      # `test` is left at Nx's DEFAULT concurrency (no `--parallel` flag, so 3):
-      # every app's Vitest target spawns its own worker pool, and co-running the
-      # heavy jsdom suites (esp. openthrottle-developer, now ~675 files) on ONE
-      # shared box has historically exceeded its memory ceiling — the OOM-killer
-      # then SIGKILLs an in-flight worker, which surfaces as files reporting
-      # `(0 test)`. That failure mode is SILENT-PASSING (green CI, tests never ran),
-      # which is strictly worse than slow, so the bar for widening is evidence, not
-      # reasoning.
+      # ⚠️ READ THIS BEFORE CHANGING ANY `--parallel` FLAG IN THIS FILE.
+      # In Nx 23.2.0, a BARE `--parallel` is NOT "use all cores" — it resolves to
+      # 3, exactly the same as omitting the flag. `availableParallelism()` is only
+      # consulted for a PERCENTAGE value (`--parallel=50%`). Verified against the
+      # installed package, `getThreadPoolSize` in
+      # node_modules/nx/dist/src/tasks-runner/task-orchestrator.js:
+      #     no flag | --parallel | --parallel=true  -> 3
+      #     --parallel=1 | --parallel=false         -> 1
+      #     --parallel=N                            -> N
+      # So the `lint,typecheck,bundle-hooks-check --parallel` line below and the
+      # flagless `test` line below it run at the SAME concurrency. This comment
+      # used to claim lint/typecheck ran "at full parallelism" while `test` was
+      # throttled; that was never true. Only an explicit number changes anything.
       #
-      # ⚠️ The commented `--parallel=1` line below is the STRICTER setting, not the
-      # live one. Prose in this repo has repeatedly described this step as
-      # "serialized (`--parallel=1`)"; it is not, and never has been. Do not
-      # "restore" `--parallel=1` on the strength of a doc sentence — decide it on
-      # evidence, in either direction.
+      # `test` is left at Nx's DEFAULT concurrency (3). The original reason was
+      # fear of the OOM: every app's Vitest target spawns its own worker pool, and
+      # co-running the heavy jsdom suites (esp. openthrottle-developer, now ~761
+      # files) on ONE shared box historically exceeded its memory ceiling — the
+      # OOM-killer then SIGKILLs an in-flight worker, which surfaces as files
+      # reporting `(0 test)`. That failure mode is SILENT-PASSING (green CI, tests
+      # never ran), which is strictly worse than slow.
       #
-      # 💰 Three things have since changed the memory calculus, and all argue the
-      # concurrency could probably be widened — but none has been demonstrated on
-      # the CI box:
-      #   1. openthrottle-developer moved to Vitest's `vmForks` pool with
-      #      `vmMemoryLimit: '512MB'` (PR #267, OT plan e448a51d), so a reused
-      #      worker's V8-VM-context accumulation is now bounded and recycled.
-      #   2. `runs-on: ubuntu-latest` (plan 6ced8d0e) doubled available RAM from
-      #      Blacksmith's 8 GB at 4 vCPU to 16 GB at 4 vCPU.
-      #   3. Sharding (plan b19377d1) means a box now holds ~1/3 of the affected
-      #      projects, so there are fewer heavy suites available to co-run at all.
+      # ✅ RE-TESTED 2026-09-16 (OT plan 0494d906). That fear is no longer the
+      # reason, because it was measured and did not reproduce — but the setting
+      # still stands, for a better reason. Method: `--parallel=4` on a scratch
+      # branch, fat affected graph (72/73 projects, forced by touching
+      # tsconfig.base.json with a fresh marker commit per run so nx-set-shas could
+      # not narrow the diff), 5 runs, against a 3-run control at the default 3.
       #
-      # DELIBERATELY LEFT AS IS. Sharding is NOT the evidence — it changes which
-      # projects share a box, not what happens when two heavy jsdom suites land on
-      # the same one, and an unlucky partition can still put two of them together.
-      # The evidence required is repeated runs on a 16 GB Linux runner with zero
-      # `(0 test)` files and no killed workers; a developer machine with different
-      # RAM proves nothing about that ceiling. Revisit by flipping to `--parallel`
-      # on a scratch branch, running it several times, and checking every suite
-      # reported a non-zero test count. If there is ANY doubt, it stays as it is.
+      #   Arm A, --parallel=4 (n=5): runs 35045162100, 35046125046, 35047105781,
+      #     35048008075, 35048941252
+      #   Arm B, control at 3 (n=3): runs 35049973988, 35050723575, 35051408212
+      #
+      #   SAFETY  — every shard of all 8 runs: zero `(0 test)` files, zero
+      #     SIGKILL/heap-OOM, dmesg clean, and Vitest collected 254+254+253 = 761
+      #     files, exactly the 761 test files on disk. Peak memory at
+      #     `--parallel=4` was ~7.7 GB of a 15.99 GB box — under half. The three
+      #     changes that were expected to help (bounded `vmForks`, 16 GB runners,
+      #     sharding) are real: this does NOT OOM at 4.
+      #   THROUGHPUT — and it buys nothing. Slowest-shard NX step: 612s mean at
+      #     `--parallel=4` vs 548s at the default 3. That is +11.7%, but n is small
+      #     and the ranges overlap (504–663 vs 462–667), so the honest reading is
+      #     NO MEASURABLE GAIN IN EITHER DIRECTION. The memory delta, by contrast,
+      #     is clean and non-overlapping: 6135–6435 MiB at 3 vs 7416–7667 MiB at 4.
+      #
+      # So: ~1.2 GB more headroom consumed for no measurable wall-clock. The
+      # reason is structural — after project sharding AND Vitest suite sharding, a
+      # box holds too few test projects to saturate even 3 slots, and the critical
+      # path is the single `openthrottle-developer --shard` invocation below, which
+      # is ONE Nx task that no amount of task concurrency can split.
+      #
+      # LEAVE IT AT THE DEFAULT. Not out of caution about an OOM that no longer
+      # reproduces, but because widening it has been measured to do nothing. If you
+      # want this step faster, the lever is shard BALANCE (the partition ran
+      # 667s/335s/495s in run 35051408212) — not concurrency. The bar for revisiting
+      # is unchanged: evidence, not argument, and a developer machine with different
+      # RAM still proves nothing about the CI box's ceiling.
       - name: '🧠 NX ${{ matrix.target }} affected (shard ${{ matrix.jobIndex }}/${{ env.jobCount }})'
         run: |
           set -euo pipefail
@@ -421,10 +444,11 @@ jobs:
             echo "🧠 shard ${{ matrix.jobIndex }}/${{ env.jobCount }} → $selector"
           fi
 
-          # Same parallelism split as the single-box version. Sharding does NOT
-          # license un-serializing `test`: that stays evidence-gated (see the note
-          # above), and splitting one suite across boxes changes nothing about
-          # co-running two heavy jsdom suites on ONE box. Which targets run, and
+          # Both invocations below run at Nx's default concurrency of 3 — the bare
+          # `--parallel` here is not "full", see the flag-semantics note above.
+          # Sharding does NOT license widening `test`: that stays evidence-gated,
+          # and splitting one suite across boxes changes nothing about co-running
+          # two heavy jsdom suites on ONE box. Which targets run, and
           # how, is the workflow's business — the partitioner only answers which
           # projects, and which slice of a sharded suite, are mine.
           if [ -n "$selector" ]; then
@@ -436,7 +460,6 @@ jobs:
           # instead. Empty when this box's whole chunk was suite-sharded away.
           if [ -n "$testSelector" ]; then
             pnpm exec nx affected --exclude="*,$testSelector" --target=test ${{ env.OUTPUT_DEBUG }}
-            # pnpm exec nx affected --exclude="*,$testSelector" --target=test --parallel=1 ${{ env.OUTPUT_DEBUG }}
           fi
 
           # ⚠️ `--shard` MUST stay on its own invocation. Attaching it to the
