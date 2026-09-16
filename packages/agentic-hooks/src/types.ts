@@ -7,8 +7,16 @@
 /** Privacy seam levels (plan 91679bbf extends this). */
 export type PrivacyLevel = 'full' | 'name-only' | 'truncated';
 
-/** Skill provenance: authored by us vs installed/third-party. */
-export type Scope = 'ours' | 'third-party';
+/**
+ * Who a captured invocation belongs to: authored in this repo (`ours`),
+ * authored by the invoking user under their personal skills root outside the
+ * repo (`personal`), or installed/plugin-namespaced (`third-party`).
+ *
+ * Mirrors `SKILL_USAGE_SCOPES` in
+ * `@openthrottle/nestjs-repositories`'s `skill-usage-events.entity.ts`, which
+ * is the canonical declaration and the one the Postgres CHECK follows.
+ */
+export type Scope = 'ours' | 'personal' | 'third-party';
 
 /** Automatic + manual outcome classifiers. */
 export type SkillUsageOutcome = 'abandoned' | 'error' | 'success';

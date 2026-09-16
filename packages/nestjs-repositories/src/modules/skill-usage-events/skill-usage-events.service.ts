@@ -1,6 +1,6 @@
 /**
  * @description Typed persistence for skill_usage_events — harness-captured
- * skill invocations (ours + third-party) — plus opt-in skill_usage_outcomes
+ * skill invocations (ours, personal and third-party) — plus opt-in skill_usage_outcomes
  * enrichment for skills we author. Owns writes from the ingest mutations and
  * read/aggregation for the Developer Usage surface. Stores args exactly as
  * the client sent them (already privacy-processed).
@@ -12,7 +12,9 @@ import { Repository, type SelectQueryBuilder } from 'typeorm';
 
 import { toLikeContainsPattern } from '../../common/like-pattern.ts';
 import {
+  isSkillUsageScope,
   SKILL_USAGE_PRIVACY_LEVELS,
+  SKILL_USAGE_SCOPE_COUNT_KEYS,
   SKILL_USAGE_SCOPES,
   SkillUsageEvent,
   type SkillUsagePrivacyLevel,
@@ -96,16 +98,22 @@ export interface SkillUsageBySkillRow {
   readonly successCount: number;
 }
 
-/** Count of invocations for one scope (ours | third-party). */
+/** Count of invocations for one scope (ours | personal | third-party). */
 export interface SkillUsageByScopeRow {
   readonly count: number;
   readonly scope: SkillUsageScope;
 }
 
-/** Per-UTC-day invocation counts, split by scope. */
+/**
+ * Per-UTC-day invocation counts, split by scope. `thirdPartyCount` excludes
+ * personal invocations — before the personal member existed they were counted
+ * here, and historical rows are never reclassified, so a personal skill's
+ * series can legitimately straddle both columns across the migration date.
+ */
 export interface SkillUsageByDayRow {
   readonly date: string;
   readonly oursCount: number;
+  readonly personalCount: number;
   readonly thirdPartyCount: number;
   readonly totalCount: number;
 }
@@ -155,6 +163,13 @@ interface SkillUsageOutcomeStats {
   readonly successCount: number;
 }
 
+/**
+ * Composite key for the outcome-stats lookup. Outcomes and starts are both
+ * grouped by (skill_name, scope), so they must be joined on the same tuple.
+ */
+const outcomeStatsKey = (skillName: string, scope: SkillUsageScope): string =>
+  `${skillName}\u0000${scope}`;
+
 const EMPTY_OUTCOME_STATS: SkillUsageOutcomeStats = {
   abandonedCount: 0,
   avgDurationMs: null,
@@ -202,16 +217,23 @@ const toDateOrNull = (value: unknown): Date | null => {
   return Number.isNaN(date.getTime()) ? null : date;
 };
 
-/** Narrow a raw SQL scope value to SkillUsageScope; fall back to ours. */
+/**
+ * Narrow a raw SQL scope value to SkillUsageScope.
+ *
+ * The fallback is `third-party`, not `ours`. A CHECK constraint makes an
+ * unrecognized value nearly impossible, but "nearly" is doing work during a
+ * migration window or against a hand-edited row — and defaulting an unknown to
+ * `ours` inflates the count of skills we authored, which is the number people
+ * actually act on. `third-party` matches how capture itself fails open
+ * (`detectScope`), so the same unknown is treated the same way end to end, and
+ * it can never be mistaken for a positive classification.
+ */
 const toSkillUsageScope = (value: unknown): SkillUsageScope => {
-  if (
-    value === SKILL_USAGE_SCOPES.OURS ||
-    value === SKILL_USAGE_SCOPES.THIRD_PARTY
-  ) {
+  if (typeof value === 'string' && isSkillUsageScope(value)) {
     return value;
   }
 
-  return SKILL_USAGE_SCOPES.OURS;
+  return SKILL_USAGE_SCOPES.THIRD_PARTY;
 };
 
 /** Cap the leaderboard so a noisy window stays UI-friendly. */
@@ -299,6 +321,10 @@ export class SkillUsageEventsService {
       gitBranch: input.gitBranch ?? null,
       occurredAt: input.occurredAt,
       outcome: input.outcome,
+      // Legacy default for two-member senders. Every current hook posts an
+      // explicit scope from detectScope, including `personal`; this only
+      // catches an older child repo that predates the field. See
+      // docs/monorepo/child-repo-hook-telemetry-contract.md.
       scope: input.scope ?? SKILL_USAGE_SCOPES.OURS,
       sessionId: input.sessionId ?? null,
       skillName: input.skillName,
@@ -311,7 +337,7 @@ export class SkillUsageEventsService {
 
   /**
    * Aggregated skill usage over `[start, end]` (inclusive days, UTC): top
-   * skills (with opt-in outcome stats), ours-vs-third-party split, per-day
+   * skills (with opt-in outcome stats), the ours / personal / third-party split, per-day
    * series, and filter option lists. Branch/cwd filters apply to the
    * aggregates; filterOptions are computed over the same date range without
    * those two filters so the dropdowns stay populated while a filter is active.
@@ -337,7 +363,13 @@ export class SkillUsageEventsService {
 
   /**
    * Top skills by start-invocation count (skill_name + scope), highest first,
-   * enriched with opt-in outcome stats keyed by skill_name.
+   * enriched with opt-in outcome stats keyed by skill_name AND scope.
+   *
+   * Both halves must key on the same tuple. Starts have always grouped by
+   * (skill_name, scope), so keying outcomes by skill_name alone merged one
+   * skill's entire outcome history into *every* scope row it has — surfacing
+   * as impossible cells like "31/1" once a skill's history straddled two
+   * scopes, which the personal member made routine.
    */
   async listBySkill(
     query: SkillUsageRangeQuery,
@@ -348,7 +380,9 @@ export class SkillUsageEventsService {
     ]);
 
     return startRows.map((row) => {
-      const outcomes = outcomeBySkill.get(row.skillName) ?? EMPTY_OUTCOME_STATS;
+      const outcomes =
+        outcomeBySkill.get(outcomeStatsKey(row.skillName, row.scope)) ??
+        EMPTY_OUTCOME_STATS;
 
       return {
         abandonedCount: outcomes.abandonedCount,
@@ -364,7 +398,11 @@ export class SkillUsageEventsService {
     });
   }
 
-  /** Invocation counts grouped by scope (ours | third-party). */
+  /**
+   * Invocation counts grouped by scope (ours | personal | third-party).
+   * Groups by the column itself, so it needed no widening — a new member
+   * appears as a new row the moment one is captured.
+   */
   async listByScope(
     query: SkillUsageRangeQuery,
   ): Promise<SkillUsageByScopeRow[]> {
@@ -381,21 +419,21 @@ export class SkillUsageEventsService {
     }));
   }
 
-  /** Per-UTC-day counts with ours / third-party split. */
+  /** Per-UTC-day counts with the ours / personal / third-party split. */
   async listByDay(query: SkillUsageRangeQuery): Promise<SkillUsageByDayRow[]> {
-    const rows = await this.rangeQuery(query)
-      .select(
-        `to_char(date_trunc('day', e.occurred_at AT TIME ZONE 'UTC'), 'YYYY-MM-DD')`,
-        'date',
-      )
-      .addSelect(
-        `COUNT(*) FILTER (WHERE e.scope = '${SKILL_USAGE_SCOPES.OURS}')`,
-        'oursCount',
-      )
-      .addSelect(
-        `COUNT(*) FILTER (WHERE e.scope = '${SKILL_USAGE_SCOPES.THIRD_PARTY}')`,
-        'thirdPartyCount',
-      )
+    const qb = this.rangeQuery(query).select(
+      `to_char(date_trunc('day', e.occurred_at AT TIME ZONE 'UTC'), 'YYYY-MM-DD')`,
+      'date',
+    );
+
+    // One FILTER per scope, generated from the exhaustive count-key record
+    // rather than hand-written per member — that is what makes a future
+    // fourth scope a compile error at the record instead of a missing series.
+    for (const [scope, alias] of Object.entries(SKILL_USAGE_SCOPE_COUNT_KEYS)) {
+      qb.addSelect(`COUNT(*) FILTER (WHERE e.scope = '${scope}')`, alias);
+    }
+
+    const rows = await qb
       .addSelect('COUNT(*)', 'totalCount')
       .groupBy(`date_trunc('day', e.occurred_at AT TIME ZONE 'UTC')`)
       .orderBy(`date_trunc('day', e.occurred_at AT TIME ZONE 'UTC')`, 'ASC')
@@ -403,8 +441,11 @@ export class SkillUsageEventsService {
 
     return rows.map((row) => ({
       date: String(row.date),
-      oursCount: toNumber(row.oursCount),
-      thirdPartyCount: toNumber(row.thirdPartyCount),
+      oursCount: toNumber(row[SKILL_USAGE_SCOPE_COUNT_KEYS.ours]),
+      personalCount: toNumber(row[SKILL_USAGE_SCOPE_COUNT_KEYS.personal]),
+      thirdPartyCount: toNumber(
+        row[SKILL_USAGE_SCOPE_COUNT_KEYS['third-party']],
+      ),
       totalCount: toNumber(row.totalCount),
     }));
   }
@@ -527,13 +568,14 @@ export class SkillUsageEventsService {
     }));
   }
 
-  /** Outcome aggregates by skill_name for the same filter window. */
+  /** Outcome aggregates by (skill_name, scope) for the same filter window. */
   private async listOutcomeStatsBySkill(
     query: SkillUsageRangeQuery,
   ): Promise<Map<string, SkillUsageOutcomeStats>> {
     const qb = this.outcomesRepository
       .createQueryBuilder('o')
       .select('o.skill_name', 'skillName')
+      .addSelect('o.scope', 'scope')
       .addSelect('COUNT(*)', 'outcomeCount')
       .addSelect(
         `COUNT(*) FILTER (WHERE o.outcome = '${SKILL_USAGE_OUTCOMES.SUCCESS}')`,
@@ -552,7 +594,8 @@ export class SkillUsageEventsService {
       .andWhere('o.occurred_at < :endExclusive', {
         endExclusive: exclusiveEndInstant(query.end),
       })
-      .groupBy('o.skill_name');
+      .groupBy('o.skill_name')
+      .addGroupBy('o.scope');
 
     if (query.scope != null) {
       qb.andWhere('o.scope = :scope', { scope: query.scope });
@@ -574,13 +617,16 @@ export class SkillUsageEventsService {
     const map = new Map<string, SkillUsageOutcomeStats>();
 
     for (const row of rows) {
-      map.set(String(row.skillName), {
-        abandonedCount: toNumber(row.abandonedCount),
-        avgDurationMs: toAvgOrNull(row.avgDurationMs),
-        errorCount: toNumber(row.errorCount),
-        outcomeCount: toNumber(row.outcomeCount),
-        successCount: toNumber(row.successCount),
-      });
+      map.set(
+        outcomeStatsKey(String(row.skillName), toSkillUsageScope(row.scope)),
+        {
+          abandonedCount: toNumber(row.abandonedCount),
+          avgDurationMs: toAvgOrNull(row.avgDurationMs),
+          errorCount: toNumber(row.errorCount),
+          outcomeCount: toNumber(row.outcomeCount),
+          successCount: toNumber(row.successCount),
+        },
+      );
     }
 
     return map;

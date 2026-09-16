@@ -16,7 +16,7 @@ one silently assumes it. Running unchanged in a child repo, the core would:
 | ----------------------------------------- | ------------------------------------- | ------------------------------------------------------------------------- |
 | read `<repoRoot>/.env` for the endpoint   | `config/env.ts` → `resolveGraphqlUrl` | reads a **stranger's** `.env`                                             |
 | read `<repoRoot>/.env` for the auth token | `config/env.ts` → `resolveAuthToken`  | ditto, for credentials                                                    |
-| classify a skill as ours vs third-party   | `utils/scope.ts` → `detectScope`      | `<repoRoot>/skills/<name>` never exists → **everything** is `third-party` |
+| classify a skill by scope                 | `utils/scope.ts` → `detectScope`      | `<repoRoot>/skills/<name>` never exists → **everything** is `third-party` |
 | buffer failed posts to JSONL              | `data/jsonl.ts` → `defaultJsonlPath`  | wrote `<repoRoot>/.cache/skill-usage/…` **into the child's working tree** |
 
 The last row is the serious one: leg B's headline property is _zero disk mutation in the target repo_,
@@ -97,6 +97,23 @@ quietly corrupting the exact metric the telemetry exists to produce.
 In `foreign` repos, scope resolves against the **injected/plugin skill set** — the skills OT actually
 put there — and falls back to `third-party` only when the skill is in neither. Fail-open is preserved:
 any error still yields `third-party`.
+
+#### The scope vocabulary grows; senders are never required to catch up
+
+Scope is `ours | personal | third-party` as of OT plan `a5f2ce0b`. It was
+`ours | third-party` before that, and the server **keeps accepting the two-member set
+indefinitely** — a child repo running an older overlay simply never emits `personal`, which is
+correct for it rather than a degraded state.
+
+Two consequences this contract commits to:
+
+- **Adding a member is additive, never breaking.** Validation messages and the by-day aggregate are
+  generated from the scope const rather than hand-written, so widening the set cannot orphan an older
+  sender. The `recordSkillUsageOutcome` mutation's `scope` default of `ours` exists precisely for
+  senders that predate the field, and is retained for that reason.
+- **Rows are never retroactively reclassified.** A personal skills root is per-user and lives outside
+  any repo, so the server cannot resolve another machine's, and therefore cannot tell which historical
+  `third-party` rows were really personal. Pre-widening invocations stay as captured, forever.
 
 ## 4. Buffering — nothing is written into a foreign working tree
 

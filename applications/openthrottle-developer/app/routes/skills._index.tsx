@@ -83,11 +83,6 @@ export const loader = async (args: Route.LoaderArgs) => {
   // and which ones are only history. Reuse the same disk gate `/skills/$slug`
   // uses to 404, so neither depends on DB ingest/auth state (mirrors /usage).
   const presentSlugs = diskEntries.map((entry) => entry.slug);
-  // Present, but only in this person's checkout — the leaderboard says so
-  // rather than letting a personal skill read as an ordinary shared one.
-  const personalSlugs = diskEntries
-    .filter((entry) => entry.isPersonal === true)
-    .map((entry) => entry.slug);
 
   // Deferred aggregate usage over a fixed 30-day window (YYYY-MM-DD, matching
   // the /usage contract; all skills, no scope/branch/cwd filter). Streamed as a
@@ -112,7 +107,7 @@ export const loader = async (args: Route.LoaderArgs) => {
     .then(({ skillUsage }) => toSkillsIndexUsageData(skillUsage))
     .catch(() => ({ available: false as const }));
 
-  return { entries, personalSlugs, presentSlugs, tagVocabulary, usage };
+  return { entries, presentSlugs, tagVocabulary, usage };
 };
 
 export const links: Route.LinksFunction = () => {
@@ -126,8 +121,7 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
 export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
-  const { entries, personalSlugs, presentSlugs, tagVocabulary, usage } =
-    props.loaderData;
+  const { entries, presentSlugs, tagVocabulary, usage } = props.loaderData;
 
   // Hooks
   const [searchParams, setSearchParams] = useSearchParams();
@@ -278,7 +272,6 @@ export default function Component(
           <Await resolve={usage}>
             {(data) => (
               <SkillsIndexUsage
-                personalSlugs={personalSlugs}
                 presentSlugs={presentSlugs}
                 rangeDays={SKILL_USAGE_RANGE_DAYS}
                 usage={data}

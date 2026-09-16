@@ -45,6 +45,7 @@ const buildByDay = (
 ): UsageSkillUsageByDayFragment => ({
   date: '2026-07-15',
   oursCount: 0,
+  personalCount: 0,
   thirdPartyCount: 0,
   totalCount: 0,
   ...overrides,
@@ -101,7 +102,7 @@ describe('UsageSkillUsage Component', () => {
     ).toBeInTheDocument();
   });
 
-  test('renders leaderboard rows with ours vs third-party labels', () => {
+  test('renders leaderboard rows with their scope labels', () => {
     const component = renderComponent({
       ...baseProps(),
       byScope: [
@@ -270,6 +271,20 @@ describe('UsageSkillUsage Component', () => {
     expect(
       component.getByRole('link', { name: 'Third-party' }),
     ).toHaveAttribute('href', '/?skillScope=third-party');
+  });
+
+  test('the Personal chip round-trips through the skillScope param', () => {
+    const component = renderComponent({
+      ...baseProps(),
+      selectedScope: SKILL_USAGE_SCOPES.PERSONAL,
+    });
+
+    const personalLink = component.getByRole('link', { name: 'Personal' });
+    expect(personalLink).toHaveAttribute('href', '/?skillScope=personal');
+    expect(personalLink).toHaveAttribute('aria-current', 'true');
+    expect(component.getByRole('link', { name: 'Ours' })).not.toHaveAttribute(
+      'aria-current',
+    );
   });
 
   test('renders the branch dropdown and cwd chips, preserving provider', () => {

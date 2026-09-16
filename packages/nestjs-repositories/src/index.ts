@@ -258,7 +258,10 @@ export type {
   SkillUsageScope,
 } from './modules/skill-usage-events/skill-usage-events.entity.ts';
 export {
+  isSkillUsageScope,
   SKILL_USAGE_PRIVACY_LEVELS,
+  SKILL_USAGE_SCOPE_COUNT_KEYS,
+  SKILL_USAGE_SCOPE_LIST,
   SKILL_USAGE_SCOPES,
   SkillUsageEvent,
 } from './modules/skill-usage-events/skill-usage-events.entity.ts';

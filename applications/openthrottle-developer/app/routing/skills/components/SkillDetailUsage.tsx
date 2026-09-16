@@ -14,9 +14,9 @@ import {
 } from '~/routing/skills/data/skill-usage-detail';
 import {
   SKILL_USAGE_COPY,
-  SKILL_USAGE_SCOPES,
   skillUsageAvgDurationLabel,
   skillUsageOutcomesLabel,
+  skillUsageScopeBadgeColor,
   skillUsageScopeLabel,
 } from '~/routing/usage/data/skill-usage-copy';
 
@@ -41,6 +41,7 @@ export const SkillDetailUsage = (
 
   // Setup
   const skill = usage.available ? usage.skill : null;
+  const scopeBadgeColor = skillUsageScopeBadgeColor(skill?.scope ?? '');
 
   // Handlers
 
@@ -106,12 +107,7 @@ export const SkillDetailUsage = (
         <SkillUsageStatTile
           label={SKILL_USAGE_DETAIL_COPY.scopeTile}
           value={
-            <Badge
-              color={
-                skill.scope === SKILL_USAGE_SCOPES.OURS ? 'green' : 'orange'
-              }
-              size="xs"
-            >
+            <Badge color={scopeBadgeColor} size="xs">
               {skillUsageScopeLabel(skill.scope)}
             </Badge>
           }

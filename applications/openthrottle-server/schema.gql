@@ -2824,7 +2824,9 @@ type SkillUsageEventObject {
   """Server receipt time (set on insert)."""
   receivedAt: DateTime!
 
-  """ours | third-party — derived by the client against skills/."""
+  """
+  ours | personal | third-party — derived by the client: ours is authored under skills/, personal is linked from the invoking user's personal skills root outside the repo, third-party is everything else.
+  """
   scope: String!
 
   """Harness session id when present."""
@@ -2867,7 +2869,7 @@ type SkillUsageBySkillObject {
   """
   outcomeCount: Int!
 
-  """ours | third-party for this skill row."""
+  """ours | personal | third-party for this skill row."""
   scope: String!
 
   """Skill identifier (e.g. ot-plans, vercel:deploy)."""
@@ -2899,7 +2901,7 @@ type SkillUsageOutcomeObject {
   """Server receipt time (set on insert)."""
   receivedAt: DateTime!
 
-  """ours | third-party."""
+  """ours | personal | third-party."""
   scope: String!
 
   """Harness session id when present."""
@@ -2921,7 +2923,7 @@ type SkillUsageByScopeObject {
   """Invocation count for this scope in the filtered range."""
   count: Int!
 
-  """ours | third-party."""
+  """ours | personal | third-party."""
   scope: String!
 }
 
@@ -2932,7 +2934,12 @@ type SkillUsageByDayObject {
   """ours-scoped invocations on this day."""
   oursCount: Int!
 
-  """third-party-scoped invocations on this day."""
+  """personal-scoped invocations on this day."""
+  personalCount: Int!
+
+  """
+  third-party-scoped invocations on this day. Excludes personal invocations, which have counted into personalCount since that member was added; historical rows are never reclassified, so a personal skill's series can straddle both fields across that date.
+  """
   thirdPartyCount: Int!
 
   """Total invocations on this day."""
@@ -2970,10 +2977,12 @@ type SkillUsageGitBranchSearchObject {
 }
 
 type SkillUsageResultObject {
-  """Per-day series (UTC), oldest first, with ours/third-party split."""
+  """
+  Per-day series (UTC), oldest first, split into ours / personal / third-party.
+  """
   byDay: [SkillUsageByDayObject!]!
 
-  """ours vs third-party totals for the filtered range."""
+  """ours / personal / third-party totals for the filtered range."""
   byScope: [SkillUsageByScopeObject!]!
 
   """Top skills by count (highest first; capped)."""
@@ -4292,7 +4301,7 @@ type Query {
   skillTagVocabulary: SkillTagVocabularyResult!
 
   """
-  Aggregated skill usage over [start, end] (inclusive YYYY-MM-DD, UTC): top skills (with opt-in outcome stats), ours-vs-third-party split, per-day series, and branch/cwd filter options. Optional scope/gitBranch/cwd/skillName narrow the aggregates.
+  Aggregated skill usage over [start, end] (inclusive YYYY-MM-DD, UTC): top skills (with opt-in outcome stats), the ours / personal / third-party split, per-day series, and branch/cwd filter options. Optional scope/gitBranch/cwd/skillName narrow the aggregates.
   """
   skillUsage(
     """Start date (inclusive), YYYY-MM-DD"""
@@ -4301,7 +4310,7 @@ type Query {
     """End date (inclusive), YYYY-MM-DD"""
     end: String!
 
-    """Restrict to ours or third-party; omit for both."""
+    """Restrict to one of: ours, personal, third-party; omit for all."""
     scope: String
 
     """Restrict to one git branch; omit for all branches."""
@@ -6560,7 +6569,7 @@ input RecordSkillUsageInput {
   """Harness prompt_id when present."""
   promptId: String
 
-  """ours | third-party."""
+  """ours | personal | third-party."""
   scope: String!
 
   """Harness session id when present."""
@@ -6594,7 +6603,9 @@ input RecordSkillUsageOutcomeInput {
   """success | abandoned | error."""
   outcome: String!
 
-  """ours | third-party. Defaults to ours for authored-skill enrichment."""
+  """
+  ours | personal | third-party. Omitting it defaults to ours — a legacy default for senders that predate the field; every current hook posts an explicit scope.
+  """
   scope: String
 
   """Harness session id — primary correlation key with skillName."""

@@ -68,7 +68,7 @@ export class RecordSkillUsageInput {
   promptId?: string | null;
 
   @Field(() => String, {
-    description: `ours | third-party.`,
+    description: `ours | personal | third-party.`,
   })
   scope!: string;
 
@@ -127,7 +127,7 @@ export class RecordSkillUsageOutcomeInput {
   outcome!: string;
 
   @Field(() => String, {
-    description: `ours | third-party. Defaults to ours for authored-skill enrichment.`,
+    description: `ours | personal | third-party. Omitting it defaults to ours — a legacy default for senders that predate the field; every current hook posts an explicit scope.`,
     nullable: true,
   })
   scope?: string | null;

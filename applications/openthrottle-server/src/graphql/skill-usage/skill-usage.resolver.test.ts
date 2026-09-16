@@ -112,6 +112,39 @@ describe('SkillUsageResolver', () => {
       expect(result.args).toBe('truncated args…');
     });
 
+    describe('scope validation', () => {
+      test('accepts a personal-scoped invocation', async () => {
+        recordSkillUsage.mockResolvedValue({
+          ...savedRow,
+          scope: SKILL_USAGE_SCOPES.PERSONAL,
+          skillName: 'ot-beta-loop',
+        });
+
+        const result = await resolver.recordSkillUsage({
+          occurredAt: new Date('2026-07-31T12:00:00.000Z'),
+          scope: SKILL_USAGE_SCOPES.PERSONAL,
+          skillName: 'ot-beta-loop',
+        });
+
+        expect(recordSkillUsage).toHaveBeenLastCalledWith(
+          expect.objectContaining({ scope: SKILL_USAGE_SCOPES.PERSONAL }),
+        );
+        expect(result.scope).toBe(SKILL_USAGE_SCOPES.PERSONAL);
+      });
+
+      test('rejects an unknown scope with a message naming every member', async () => {
+        // Generated from the scope const, so this message can never go stale
+        // the way the old hardcoded 'ours or third-party' string did.
+        await expect(
+          resolver.recordSkillUsage({
+            occurredAt: new Date('2026-07-31T12:00:00.000Z'),
+            scope: 'not-a-real-scope',
+            skillName: 'ot-plans',
+          }),
+        ).rejects.toThrow('scope must be one of: ours, personal, third-party');
+      });
+    });
+
     describe('attribution', () => {
       test('stamps the user the authenticated principal resolves to', async () => {
         recordSkillUsage.mockResolvedValue(savedRow);
@@ -320,12 +353,14 @@ describe('SkillUsageResolver', () => {
           {
             date: '2026-07-15',
             oursCount: 2,
+            personalCount: 3,
             thirdPartyCount: 1,
-            totalCount: 3,
+            totalCount: 6,
           },
         ],
         byScope: [
           { count: 2, scope: SKILL_USAGE_SCOPES.OURS },
+          { count: 3, scope: SKILL_USAGE_SCOPES.PERSONAL },
           { count: 1, scope: SKILL_USAGE_SCOPES.THIRD_PARTY },
         ],
         bySkill: [
@@ -341,7 +376,7 @@ describe('SkillUsageResolver', () => {
           },
         ],
         filterOptions: { cwds: ['/repo'], gitBranches: ['main'] },
-        totalCount: 3,
+        totalCount: 6,
       });
 
       const result = await resolver.skillUsage(
@@ -360,10 +395,11 @@ describe('SkillUsageResolver', () => {
         skillName: null,
         start: '2026-07-01',
       });
-      expect(result.totalCount).toBe(3);
+      expect(result.totalCount).toBe(6);
       expect(result.bySkill[0]?.skillName).toBe('ot-plans');
-      expect(result.byScope).toHaveLength(2);
+      expect(result.byScope).toHaveLength(3);
       expect(result.byDay[0]?.date).toBe('2026-07-15');
+      expect(result.byDay[0]?.personalCount).toBe(3);
       expect(result.filterOptions.gitBranches).toEqual(['main']);
     });
 

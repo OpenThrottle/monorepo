@@ -95,9 +95,9 @@ describe('skill-presence', () => {
     });
 
     it('classifies an on-disk personal skill as personal, not installed', () => {
+      // Read straight off the captured scope — no slug-set intersection.
       const presence = classifySkillUsagePresence(
-        { scope: 'ours', skillName: 'my-draft' },
-        new Set(['my-draft']),
+        { scope: 'personal', skillName: 'my-draft' },
         new Set(['my-draft']),
       );
 
@@ -106,10 +106,9 @@ describe('skill-presence', () => {
 
     // Present-but-not-shared is neither of the two states it could be mistaken
     // for: it is right there on disk, and it is yours, not a third party's.
-    it('never reads a personal skill as missing or as third-party', () => {
+    it('never reads an on-disk personal skill as missing or as third-party', () => {
       const presence = classifySkillUsagePresence(
-        { scope: 'ours', skillName: 'my-draft' },
-        new Set(['my-draft']),
+        { scope: 'personal', skillName: 'my-draft' },
         new Set(['my-draft']),
       );
 
@@ -117,13 +116,37 @@ describe('skill-presence', () => {
       expect(presence).not.toBe('external');
     });
 
-    it('falls back to installed when the caller has no personal set', () => {
+    // The personal tier is where drafts live, so deletion is routine. Calling a
+    // deleted one `personal` would render a /skills/$slug link into a 404,
+    // because SKILL_PRESENCE_LINKABLE.personal is true.
+    it('classifies a deleted personal skill as missing, not personal', () => {
       const presence = classifySkillUsagePresence(
-        { scope: 'ours', skillName: 'my-draft' },
-        new Set(['my-draft']),
+        { scope: 'personal', skillName: 'deleted-draft' },
+        new Set(['still-here']),
+      );
+
+      expect(presence).toBe('missing');
+    });
+
+    it('still classifies an on-disk ours-scoped skill as installed', () => {
+      const presence = classifySkillUsagePresence(
+        { scope: 'ours', skillName: 'ot-plans' },
+        new Set(['ot-plans']),
       );
 
       expect(presence).toBe('installed');
+    });
+
+    // Pre-migration rows kept their captured scope, so a personal skill's old
+    // history still classifies as external. That is the honest answer; the
+    // leaderboard keys by skillName:scope, so it renders as its own row.
+    it('classifies a pre-migration third-party row as external even when the slug is on disk', () => {
+      const presence = classifySkillUsagePresence(
+        { scope: 'third-party', skillName: 'my-draft' },
+        new Set(['my-draft']),
+      );
+
+      expect(presence).toBe('external');
     });
   });
 });

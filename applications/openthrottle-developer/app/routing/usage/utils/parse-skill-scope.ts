@@ -11,6 +11,7 @@ import {
 export const parseSkillScope = (raw: string | null): SkillUsageScopeFilter => {
   if (
     raw === SKILL_USAGE_SCOPES.OURS ||
+    raw === SKILL_USAGE_SCOPES.PERSONAL ||
     raw === SKILL_USAGE_SCOPES.THIRD_PARTY
   ) {
     return raw;

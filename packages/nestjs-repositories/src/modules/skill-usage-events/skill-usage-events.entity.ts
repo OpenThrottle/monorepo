@@ -1,7 +1,8 @@
 /**
  * @description TypeORM entity for skill_usage_events. Matches
- * databases/migrations/084_create_skill_usage_events.sql. One immutable row
- * per harness-captured skill invocation (ours + third-party).
+ * databases/migrations/084_create_skill_usage_events.sql, as widened by
+ * 114_widen_skill_usage_scope_personal.sql. One immutable row per
+ * harness-captured skill invocation (ours, personal and third-party).
  */
 
 import {
@@ -11,13 +12,69 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
+/**
+ * Who a captured invocation belongs to. The canonical declaration — enforced
+ * in Postgres by `skill_usage_events_scope_check`, mirrored (deliberately, to
+ * avoid a React Router app importing from a NestJS package) by
+ * `SKILL_USAGE_SCOPES` in
+ * `applications/openthrottle-developer/app/routing/usage/data/skill-usage-copy.ts`,
+ * and by the `Scope` union in `packages/agentic-hooks/src/types.ts` which the
+ * capture hooks bundle. Widening the vocabulary means touching all three.
+ *
+ * `personal` = authored by the invoking user under their personal skills root
+ * (`~/.openthrottle/skills` / `OPENTHROTTLE_PERSONAL_SKILLS_DIR`): on disk and
+ * invokable, but outside the repo, so nobody else's checkout has it.
+ *
+ * Distinct from the `/agents` registry provenance vocabulary
+ * (`committed | installed | external`), which answers where the file came from
+ * rather than who the invocation belongs to. The two are deliberately not
+ * unified.
+ */
 export const SKILL_USAGE_SCOPES = {
   OURS: 'ours',
+  PERSONAL: 'personal',
   THIRD_PARTY: 'third-party',
 } as const;
 
 export type SkillUsageScope =
   (typeof SKILL_USAGE_SCOPES)[keyof typeof SKILL_USAGE_SCOPES];
+
+const SKILL_USAGE_SCOPE_VALUES: readonly string[] =
+  Object.values(SKILL_USAGE_SCOPES);
+
+/**
+ * Type predicate over {@link SKILL_USAGE_SCOPES}, derived from the const so a
+ * new member widens every caller for free. The canonical one — the resolver
+ * and the repository service both use this rather than hand-rolling a chain of
+ * `===` comparisons that silently stops matching when the vocabulary grows.
+ *
+ * @public
+ */
+export const isSkillUsageScope = (value: string): value is SkillUsageScope =>
+  SKILL_USAGE_SCOPE_VALUES.includes(value);
+
+/**
+ * Human-readable member list for validation messages, e.g.
+ * `scope must be one of: ours, personal, third-party`. Generated from the
+ * const so an error message can never name a stale vocabulary.
+ *
+ * @public
+ */
+export const SKILL_USAGE_SCOPE_LIST = SKILL_USAGE_SCOPE_VALUES.join(', ');
+
+/**
+ * The per-day aggregate column each scope counts into. Exhaustive over the
+ * scope union on purpose: this `Record` is the gate that makes adding a fourth
+ * member a compile error here instead of a silently dropped series in the
+ * chart, which is exactly how `personal` went uncounted.
+ *
+ * @public
+ */
+export const SKILL_USAGE_SCOPE_COUNT_KEYS = {
+  [SKILL_USAGE_SCOPES.OURS]: 'oursCount',
+  [SKILL_USAGE_SCOPES.PERSONAL]: 'personalCount',
+  [SKILL_USAGE_SCOPES.THIRD_PARTY]: 'thirdPartyCount',
+} as const satisfies Record<SkillUsageScope, string>;
 
 export const SKILL_USAGE_PRIVACY_LEVELS = {
   FULL: 'full',

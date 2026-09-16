@@ -18,6 +18,7 @@ export const toSkillsIndexUsageData = (
     byDay: skillUsage.byDay.map((day) => ({
       date: day.date,
       oursCount: day.oursCount,
+      personalCount: day.personalCount,
       thirdPartyCount: day.thirdPartyCount,
       totalCount: day.totalCount,
     })),

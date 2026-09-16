@@ -13,6 +13,7 @@ fragment SkillDetailUsageBySkill on SkillUsageBySkillObject {
 fragment SkillDetailUsageByDay on SkillUsageByDayObject {
   date
   oursCount
+  personalCount
   thirdPartyCount
   totalCount
 }
