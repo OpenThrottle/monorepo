@@ -56,6 +56,7 @@ export const UsageSkillUsageFilters = (
   }> = [
     { id: null, label: 'All scopes' },
     { id: SKILL_USAGE_SCOPES.OURS, label: 'Ours' },
+    { id: SKILL_USAGE_SCOPES.PERSONAL, label: 'Personal' },
     { id: SKILL_USAGE_SCOPES.THIRD_PARTY, label: 'Third-party' },
   ];
 

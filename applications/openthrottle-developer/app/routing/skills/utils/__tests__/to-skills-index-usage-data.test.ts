@@ -23,8 +23,9 @@ describe('toSkillsIndexUsageData', () => {
           {
             date: '2026-08-05',
             oursCount: 3,
+            personalCount: 2,
             thirdPartyCount: 1,
-            totalCount: 4,
+            totalCount: 6,
           },
         ],
         bySkill: [
@@ -46,7 +47,13 @@ describe('toSkillsIndexUsageData', () => {
     expect(result.available).toBe(true);
     if (!result.available) throw new Error('expected available');
     expect(result.byDay).toEqual([
-      { date: '2026-08-05', oursCount: 3, thirdPartyCount: 1, totalCount: 4 },
+      {
+        date: '2026-08-05',
+        oursCount: 3,
+        personalCount: 2,
+        thirdPartyCount: 1,
+        totalCount: 6,
+      },
     ]);
     expect(result.bySkill).toHaveLength(1);
     expect(result.bySkill[0]?.skillName).toBe('ot-plans');

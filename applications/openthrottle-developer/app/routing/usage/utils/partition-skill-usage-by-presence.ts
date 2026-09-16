@@ -28,7 +28,7 @@ export interface SkillUsageRowWithPresence extends UsageSkillUsageBySkillFragmen
 export interface PartitionedSkillUsage {
   /** Rows still invokable in this checkout: `installed`, `personal`, `external`. */
   readonly active: readonly SkillUsageRowWithPresence[];
-  /** `ours`-scope rows with recorded usage but no SKILL.md on disk. */
+  /** `ours` or `personal` rows with recorded usage but no SKILL.md on disk. */
   readonly missing: readonly SkillUsageRowWithPresence[];
 }
 
@@ -41,17 +41,12 @@ export interface PartitionedSkillUsage {
 export const partitionSkillUsageByPresence = (
   bySkill: readonly UsageSkillUsageBySkillFragment[],
   presentSlugs: ReadonlySet<string>,
-  personalSlugs: ReadonlySet<string> = new Set(),
 ): PartitionedSkillUsage => {
   const active: SkillUsageRowWithPresence[] = [];
   const missing: SkillUsageRowWithPresence[] = [];
 
   for (const row of bySkill) {
-    const presence = classifySkillUsagePresence(
-      row,
-      presentSlugs,
-      personalSlugs,
-    );
+    const presence = classifySkillUsagePresence(row, presentSlugs);
     const bucket = presence === SKILL_PRESENCE.MISSING ? missing : active;
 
     bucket.push({ ...row, presence });

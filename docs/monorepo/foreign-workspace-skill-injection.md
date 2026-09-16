@@ -350,7 +350,36 @@ A staging guard on the existing Husky pre-commit chain refuses a commit that sta
 
 CI has no `~/.openthrottle/skills` and must never gain one. **With the root absent, every code path is byte-identical to today** — same output, same exit code, no new warnings. Personal skills never appear in `skills-lock.json` or the `docs/Skills.md` source table, and that is asserted rather than left to chance.
 
-### 7.6 What the later work must not break
+### 7.6 Telemetry knows about the tier too (added 2026-09-15, OT plan `a5f2ce0b`)
+
+Fan-out and the read allowlist were only half the story. Skill-usage telemetry recorded a binary
+`ours | third-party`, and a personal skill — which by construction has no `<repoRoot>/skills/<name>`
+directory — landed in `third-party`. So `/skills/<slug>?tab=usage` showed an orange **Third-party**
+pill for a skill the user had written themselves, and the `personal` arm of the usage surface's
+presence classifier was unreachable dead code for real captured data.
+
+Scope is now `ours | personal | third-party`, with `personal` meaning the same thing this section
+does: on disk and invokable, but linked in from outside the repo, so nobody else's checkout has it.
+
+- **Detection** is realpath containment against the _currently resolved_ personal root — the same
+  test §7.3 and `skill-path-allowlist.server.ts` use, and for the same reason: a plain path-prefix
+  check on `.agents/skills/<name>` would never match, because that path _is_ the symlink. A skill
+  whose realpath escapes the repo but lands outside this user's personal root is nobody's personal
+  tier and stays `third-party`.
+- **The root resolver is `resolvePersonalSkillsRoot`, never `resolvePersonalSkillsDir`** — telemetry
+  classifies the in-repo tier, which has no `ENABLED` gate (§7.1). Using the gated wrapper would make
+  a personal skill's scope depend on the unrelated foreign-injection toggle.
+- **There is now a fourth implementation of the root contract**, vendored into
+  `packages/agentic-hooks/src/utils/scope.ts`. The hooks bundle to committed, runtime-dependency-free
+  `.cjs`, and the utils package's only export is a barrel pulling in `openai`, drivers and postgres.
+  §7.1's "one contract, two implementations" is now one contract, three implementations (TypeScript,
+  bash, vendored). Change one, change all three.
+- **No retroactive reclassification.** Personal roots are per-user and unresolvable server-side, so
+  rows captured before this stay `third-party` permanently. A personal skill's history straddles two
+  scopes for a while; the leaderboard groups and keys by `(skill_name, scope)`, so that renders as
+  two honest rows rather than a duplicate.
+
+### 7.7 What the later work must not break
 
 - The stage-1/stage-2 shape. Personal skills enter at stage 1 and ride the existing stage 2 unchanged — **no special-casing downstream**, or the fan-out and the reaper drift apart.
 - The ownership-by-type read. Nothing may need a side-ledger; the personal case is still answerable from the filesystem alone (§7.3).

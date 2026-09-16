@@ -1,5 +1,5 @@
 /**
- * CLI wrapper for scope-detection (ours | third-party).
+ * CLI wrapper for scope-detection (ours | personal | third-party).
  *
  * Usage: node .claude/hooks/skill-usage-scope.cjs <skill_name> [repo_root]
  */
@@ -29,6 +29,11 @@ if (skillName.includes(':')) {
 } else if (scope === 'ours') {
   reason = 'directory under skills/';
   registryHit = path.join(repoRoot, 'skills', skillName);
+} else if (scope === 'personal') {
+  reason = 'linked from the personal skills root (outside the repo)';
+  // The link, not its target: the target is the user's personal root, which is
+  // per-user and not a path anyone else could act on.
+  registryHit = path.join(repoRoot, '.agents', 'skills', skillName);
 } else {
   const lockPath = path.join(repoRoot, 'skills-lock.json');
   try {

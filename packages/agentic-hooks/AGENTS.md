@@ -17,7 +17,7 @@ payload as `--plugin-dir` for orchestrated runs.
   targets; `UsageEvent` / `OutcomeEvent` are what the core builds from it.
 - `src/adapters/<tool>/` — thin per-tool entrypoints **only**: `payload.ts` (a `<TOOL>_SOURCE`
   producer id + a normalizer) and one file per hook event. Nothing else belongs here.
-- `src/utils/` — `scope.ts` (ours vs third-party), `privacy.ts` (truncation + secret redaction),
+- `src/utils/` — `scope.ts` (ours | personal | third-party), `privacy.ts` (truncation + secret redaction),
   `logging.ts`.
 - `src/config/` — `env.ts`: endpoint resolution by location, the OpenThrottle-checkout
   predicate, git branch, the disable switches.

@@ -23,7 +23,7 @@ if a second producer would duplicate it, it belongs in the core.
 src/
   types.ts                 the producer contract every adapter satisfies
   adapters/<tool>/         thin per-tool entrypoints: native payload → NormalizedInvocation
-  utils/scope.ts           ours vs third-party
+  utils/scope.ts           ours | personal | third-party
   utils/privacy.ts         args truncation + secret redaction, before anything leaves the machine
   config/env.ts            endpoint + git branch resolution
   data/events.ts           neutral event construction + the GraphQL mutations

@@ -10,6 +10,14 @@ describe('parseSkillScope', () => {
     );
   });
 
+  it('returns the "personal" scope unchanged', () => {
+    // Before personal was a member this fell through to null, so a
+    // ?skillScope=personal link looked like it worked while showing everything.
+    expect(parseSkillScope(SKILL_USAGE_SCOPES.PERSONAL)).toBe(
+      SKILL_USAGE_SCOPES.PERSONAL,
+    );
+  });
+
   it('returns the "third-party" scope unchanged', () => {
     expect(parseSkillScope(SKILL_USAGE_SCOPES.THIRD_PARTY)).toBe(
       SKILL_USAGE_SCOPES.THIRD_PARTY,

@@ -10,8 +10,9 @@ const byDay: SkillUsage['byDay'] = [
   {
     date: '2026-08-01',
     oursCount: 2,
+    personalCount: 4,
     thirdPartyCount: 1,
-    totalCount: 3,
+    totalCount: 7,
   },
 ];
 
@@ -34,7 +35,13 @@ describe('toSkillDetailUsageData', () => {
     expect(result).toEqual({
       available: true,
       byDay: [
-        { date: '2026-08-01', oursCount: 2, thirdPartyCount: 1, totalCount: 3 },
+        {
+          date: '2026-08-01',
+          oursCount: 2,
+          personalCount: 4,
+          thirdPartyCount: 1,
+          totalCount: 7,
+        },
       ],
       skill: {
         abandonedCount: 1,

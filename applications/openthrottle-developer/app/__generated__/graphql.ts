@@ -3134,7 +3134,7 @@ export type Query = {
   skillAvailabilityRuleSet?: Maybe<SkillAvailabilityRuleSetObject>;
   /** The authenticated user's skill-tag vocabulary. Seeded from the platform default on first read. */
   skillTagVocabulary: SkillTagVocabularyResult;
-  /** Aggregated skill usage over [start, end] (inclusive YYYY-MM-DD, UTC): top skills (with opt-in outcome stats), ours-vs-third-party split, per-day series, and branch/cwd filter options. Optional scope/gitBranch/cwd/skillName narrow the aggregates. */
+  /** Aggregated skill usage over [start, end] (inclusive YYYY-MM-DD, UTC): top skills (with opt-in outcome stats), the ours / personal / third-party split, per-day series, and branch/cwd filter options. Optional scope/gitBranch/cwd/skillName narrow the aggregates. */
   skillUsage: SkillUsageResultObject;
   /** Git branches present in [start, end] (inclusive YYYY-MM-DD, UTC) for the /usage branch filter: the default branch (main, else master) first, then A-Z. Optional query narrows by case-insensitive substring; limit defaults to 20 and is capped at 50, with hasMore signalling that the search should be narrowed rather than paged. */
   skillUsageGitBranches: SkillUsageGitBranchSearchObject;
@@ -3715,7 +3715,7 @@ export type RecordSkillUsageInput = {
   privacyLevel?: InputMaybe<Scalars['String']['input']>;
   /** Harness prompt_id when present. */
   promptId?: InputMaybe<Scalars['String']['input']>;
-  /** ours | third-party. */
+  /** ours | personal | third-party. */
   scope: Scalars['String']['input'];
   /** Harness session id when present. */
   sessionId?: InputMaybe<Scalars['String']['input']>;
@@ -3738,7 +3738,7 @@ export type RecordSkillUsageOutcomeInput = {
   occurredAt: Scalars['DateTime']['input'];
   /** success | abandoned | error. */
   outcome: Scalars['String']['input'];
-  /** ours | third-party. Defaults to ours for authored-skill enrichment. */
+  /** ours | personal | third-party. Omitting it defaults to ours — a legacy default for senders that predate the field; every current hook posts an explicit scope. */
   scope?: InputMaybe<Scalars['String']['input']>;
   /** Harness session id — primary correlation key with skillName. */
   sessionId?: InputMaybe<Scalars['String']['input']>;
@@ -4614,7 +4614,9 @@ export type SkillUsageByDayObject = {
   date: Scalars['String']['output'];
   /** ours-scoped invocations on this day. */
   oursCount: Scalars['Int']['output'];
-  /** third-party-scoped invocations on this day. */
+  /** personal-scoped invocations on this day. */
+  personalCount: Scalars['Int']['output'];
+  /** third-party-scoped invocations on this day. Excludes personal invocations, which have counted into personalCount since that member was added; historical rows are never reclassified, so a personal skill's series can straddle both fields across that date. */
   thirdPartyCount: Scalars['Int']['output'];
   /** Total invocations on this day. */
   totalCount: Scalars['Int']['output'];
@@ -4624,7 +4626,7 @@ export type SkillUsageByScopeObject = {
   __typename?: 'SkillUsageByScopeObject';
   /** Invocation count for this scope in the filtered range. */
   count: Scalars['Int']['output'];
-  /** ours | third-party. */
+  /** ours | personal | third-party. */
   scope: Scalars['String']['output'];
 };
 
@@ -4642,7 +4644,7 @@ export type SkillUsageBySkillObject = {
   lastUsedAt?: Maybe<Scalars['DateTime']['output']>;
   /** Opt-in outcome events for this skill. May be less than count; missing outcomes are normal. */
   outcomeCount: Scalars['Int']['output'];
-  /** ours | third-party for this skill row. */
+  /** ours | personal | third-party for this skill row. */
   scope: Scalars['String']['output'];
   /** Skill identifier (e.g. ot-plans, vercel:deploy). */
   skillName: Scalars['String']['output'];
@@ -4676,7 +4678,7 @@ export type SkillUsageEventObject = {
   promptId?: Maybe<Scalars['String']['output']>;
   /** Server receipt time (set on insert). */
   receivedAt: Scalars['DateTime']['output'];
-  /** ours | third-party — derived by the client against skills/. */
+  /** ours | personal | third-party — derived by the client: ours is authored under skills/, personal is linked from the invoking user's personal skills root outside the repo, third-party is everything else. */
   scope: Scalars['String']['output'];
   /** Harness session id when present. */
   sessionId?: Maybe<Scalars['String']['output']>;
@@ -4734,7 +4736,7 @@ export type SkillUsageOutcomeObject = {
   outcome: Scalars['String']['output'];
   /** Server receipt time (set on insert). */
   receivedAt: Scalars['DateTime']['output'];
-  /** ours | third-party. */
+  /** ours | personal | third-party. */
   scope: Scalars['String']['output'];
   /** Harness session id when present. */
   sessionId?: Maybe<Scalars['String']['output']>;
@@ -4748,9 +4750,9 @@ export type SkillUsageOutcomeObject = {
 
 export type SkillUsageResultObject = {
   __typename?: 'SkillUsageResultObject';
-  /** Per-day series (UTC), oldest first, with ours/third-party split. */
+  /** Per-day series (UTC), oldest first, split into ours / personal / third-party. */
   byDay: Array<SkillUsageByDayObject>;
-  /** ours vs third-party totals for the filtered range. */
+  /** ours / personal / third-party totals for the filtered range. */
   byScope: Array<SkillUsageByScopeObject>;
   /** Top skills by count (highest first; capped). */
   bySkill: Array<SkillUsageBySkillObject>;
@@ -10758,6 +10760,7 @@ export type SkillDetailUsageByDayFragment = {
   __typename?: 'SkillUsageByDayObject';
   date: string;
   oursCount: number;
+  personalCount: number;
   thirdPartyCount: number;
   totalCount: number;
 };
@@ -10776,6 +10779,7 @@ export type GetSkillDetailUsageQuery = {
       __typename?: 'SkillUsageByDayObject';
       date: string;
       oursCount: number;
+      personalCount: number;
       thirdPartyCount: number;
       totalCount: number;
     }>;
@@ -11175,6 +11179,7 @@ export type UsageSkillUsageByDayFragment = {
   __typename?: 'SkillUsageByDayObject';
   date: string;
   oursCount: number;
+  personalCount: number;
   thirdPartyCount: number;
   totalCount: number;
 };
@@ -11202,6 +11207,7 @@ export type GetUsageSkillUsageQuery = {
       __typename?: 'SkillUsageByDayObject';
       date: string;
       oursCount: number;
+      personalCount: number;
       thirdPartyCount: number;
       totalCount: number;
     }>;
@@ -13711,6 +13717,7 @@ export const SkillDetailUsageByDayFragmentDoc = {
         selections: [
           { kind: 'Field', name: { kind: 'Name', value: 'date' } },
           { kind: 'Field', name: { kind: 'Name', value: 'oursCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'personalCount' } },
           { kind: 'Field', name: { kind: 'Name', value: 'thirdPartyCount' } },
           { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
         ],
@@ -13921,6 +13928,7 @@ export const UsageSkillUsageByDayFragmentDoc = {
         selections: [
           { kind: 'Field', name: { kind: 'Name', value: 'date' } },
           { kind: 'Field', name: { kind: 'Name', value: 'oursCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'personalCount' } },
           { kind: 'Field', name: { kind: 'Name', value: 'thirdPartyCount' } },
           { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
         ],
@@ -27834,6 +27842,7 @@ export const GetSkillDetailUsageDocument = {
         selections: [
           { kind: 'Field', name: { kind: 'Name', value: 'date' } },
           { kind: 'Field', name: { kind: 'Name', value: 'oursCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'personalCount' } },
           { kind: 'Field', name: { kind: 'Name', value: 'thirdPartyCount' } },
           { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
         ],
@@ -29251,6 +29260,7 @@ export const GetUsageSkillUsageDocument = {
         selections: [
           { kind: 'Field', name: { kind: 'Name', value: 'date' } },
           { kind: 'Field', name: { kind: 'Name', value: 'oursCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'personalCount' } },
           { kind: 'Field', name: { kind: 'Name', value: 'thirdPartyCount' } },
           { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
         ],

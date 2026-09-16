@@ -75,6 +75,7 @@ describe('SkillDetailUsage Component', () => {
           {
             date: '2026-08-05',
             oursCount: 12,
+            personalCount: 0,
             thirdPartyCount: 0,
             totalCount: 12,
           },

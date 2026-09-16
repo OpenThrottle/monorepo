@@ -42,9 +42,6 @@ const buildLoaderData = (
   loaderEntries: RepoSkillEntry[] = entries,
 ): Route.ComponentProps['loaderData'] => ({
   entries: loaderEntries,
-  personalSlugs: loaderEntries
-    .filter((entry) => entry.isPersonal === true)
-    .map((entry) => entry.slug),
   presentSlugs: loaderEntries.map((entry) => entry.slug),
   tagVocabulary: [],
   usage: Promise.resolve(usage),
@@ -369,7 +366,13 @@ describe('routes/skills._index.tsx usage sections', () => {
     const component = renderRoute('/skills', {
       available: true,
       byDay: [
-        { date: '2026-08-05', oursCount: 5, thirdPartyCount: 1, totalCount: 6 },
+        {
+          date: '2026-08-05',
+          oursCount: 5,
+          personalCount: 0,
+          thirdPartyCount: 1,
+          totalCount: 6,
+        },
       ],
       bySkill: [
         {

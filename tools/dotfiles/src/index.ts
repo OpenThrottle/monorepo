@@ -92,6 +92,14 @@ export const eslintConfig = tslint.config([
       '**/*.d.ts',
       '**/__generated__/**/*',
       '**/.cache/**/*',
+      // Every hook bundle under a tool's hooks/ folder is esbuild output from
+      // @openthrottle/agentic-hooks, committed and drift-checked byte-for-byte
+      // by bundle-hooks-check. Linting it is meaningless (it is not authored
+      // code) and `eslint --fix` would fight esbuild and break the drift gate.
+      // `.cursor` is already covered wholesale below. Mirrors the same set in
+      // .prettierignore — change one, change both.
+      '**/.claude/hooks/**/*',
+      '**/.codex/hooks/**/*',
       '**/.cursor/**/*',
       '**/.git/**/*',
       '**/.github/**/*',
@@ -103,6 +111,7 @@ export const eslintConfig = tslint.config([
       '**/build/**/*',
       '**/dist/**/*',
       '**/node_modules/**/*',
+      '**/plugins/*/hooks/**/*',
       '**/public/worker.js',
       '**/tools/generators/src/generators/*/files/**/*',
       '**/vite.config.ts.timestamp-*.mjs',

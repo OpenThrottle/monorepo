@@ -71,6 +71,7 @@ fragment UsageSkillUsageByScope on SkillUsageByScopeObject {
 fragment UsageSkillUsageByDay on SkillUsageByDayObject {
   date
   oursCount
+  personalCount
   thirdPartyCount
   totalCount
 }

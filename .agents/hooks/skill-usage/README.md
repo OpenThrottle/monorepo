@@ -1,6 +1,6 @@
 # Skill-usage capture — cross-tool producer contract
 
-Tool-neutral capture of **skill invocations** (ours vs third-party) that any AI
+Tool-neutral capture of **skill invocations** (ours, personal and third-party) that any AI
 agent/editor can feed, persisted in OpenThrottle as the system of record and
 surfaced on the Developer **Usage** route. See OT plans `d3759118` (base),
 `f5e40886` (outcomes & duration), `21f150c6` (this package extraction).
@@ -60,8 +60,12 @@ attributable per tool. Pick a short, stable kebab-case id and keep it constant.
 
 ### 3. Guarantees the core gives you
 
-- **Scope**: `ours` when authored under `skills/<name>/`; `third-party` when
-  plugin-namespaced (`a:b`) or a `skills-lock.json` install.
+- **Scope**: `ours` when authored under `skills/<name>/`; `personal` when linked
+  into `.agents/skills/<name>` from the invoking user's personal skills root
+  (`~/.openthrottle/skills`, or `OPENTHROTTLE_PERSONAL_SKILLS_DIR`) — on disk and
+  invokable, but outside the repo, so nobody else's checkout has it;
+  `third-party` when plugin-namespaced (`a:b`) or a `skills-lock.json` install.
+  Detection is realpath-based, so the symlink fan-out resolves correctly.
 - **Privacy**: args are truncated + secret-redacted by default before they ever
   leave the machine (`src/privacy.ts` — the seam plan `91679bbf` extends).
 - **Fail-open**: capture never blocks or throws into the host tool. On any server
@@ -86,7 +90,10 @@ The **Outcomes** and **Avg duration** columns on `/usage` are populated
 For a specific outcome the automatic path can't infer — notably `error` — call
 the opt-in helper `.claude/hooks/skill-usage-outcome.cjs`
 (`--skill … --outcome error [--duration-ms …] --session …`). Additive, not a
-replacement. Absent outcomes are expected for third-party / uninstrumented skills.
+replacement. Absent outcomes are expected for uninstrumented skills — which is
+most third-party ones, since we do not control their internals. Scope is not the
+test, though: a `personal` skill is yours to instrument, so a personal row with
+no outcome means nobody wired one up, not that one was impossible.
 
 ### Draining the JSONL fallback
 

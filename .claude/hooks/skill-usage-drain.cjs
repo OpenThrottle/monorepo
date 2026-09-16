@@ -265,6 +265,10 @@ var PRIVACY_LEVELS = Object.freeze({
 });
 var DEFAULT_PRIVACY_LEVEL = PRIVACY_LEVELS.TRUNCATED;
 
+// packages/agentic-hooks/src/utils/scope.ts
+var import_node_path3 = __toESM(require("node:path"), 1);
+var SKILL_LINK_DIR = import_node_path3.default.join(".agents", "skills");
+
 // packages/agentic-hooks/src/data/events.ts
 var RECORD_SKILL_USAGE_MUTATION = `
 mutation RecordSkillUsage($input: RecordSkillUsageInput!) {
@@ -547,8 +551,8 @@ var drainBufferedUsage = async ({
 };
 
 // packages/agentic-hooks/src/data/plan-runs.ts
-var import_node_path3 = __toESM(require("node:path"), 1);
-var PLAN_RUNS_DIR_REL = import_node_path3.default.join(".cache", "plan-runs");
+var import_node_path4 = __toESM(require("node:path"), 1);
+var PLAN_RUNS_DIR_REL = import_node_path4.default.join(".cache", "plan-runs");
 var PLAN_RUN_ABANDONED_MS = 6 * 60 * 60 * 1e3;
 
 // packages/agentic-hooks/src/adapters/claude/drain.ts

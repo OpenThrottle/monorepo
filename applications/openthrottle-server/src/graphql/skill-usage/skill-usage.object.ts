@@ -75,7 +75,7 @@ export class SkillUsageEventObject {
   receivedAt!: Date;
 
   @Field(() => String, {
-    description: `ours | third-party — derived by the client against skills/.`,
+    description: `ours | personal | third-party — derived by the client: ours is authored under skills/, personal is linked from the invoking user's personal skills root outside the repo, third-party is everything else.`,
   })
   scope!: string;
 
@@ -138,7 +138,7 @@ export class SkillUsageBySkillObject {
   outcomeCount!: number;
 
   @Field(() => String, {
-    description: `ours | third-party for this skill row.`,
+    description: `ours | personal | third-party for this skill row.`,
   })
   scope!: string;
 
@@ -192,7 +192,7 @@ export class SkillUsageOutcomeObject {
   receivedAt!: Date;
 
   @Field(() => String, {
-    description: `ours | third-party.`,
+    description: `ours | personal | third-party.`,
   })
   scope!: string;
 
@@ -228,7 +228,7 @@ export class SkillUsageByScopeObject {
   count!: number;
 
   @Field(() => String, {
-    description: `ours | third-party.`,
+    description: `ours | personal | third-party.`,
   })
   scope!: string;
 }
@@ -246,7 +246,12 @@ export class SkillUsageByDayObject {
   oursCount!: number;
 
   @Field(() => Int, {
-    description: `third-party-scoped invocations on this day.`,
+    description: `personal-scoped invocations on this day.`,
+  })
+  personalCount!: number;
+
+  @Field(() => Int, {
+    description: `third-party-scoped invocations on this day. Excludes personal invocations, which have counted into personalCount since that member was added; historical rows are never reclassified, so a personal skill's series can straddle both fields across that date.`,
   })
   thirdPartyCount!: number;
 
@@ -300,12 +305,12 @@ export class SkillUsageGitBranchSearchObject {
 @ObjectType()
 export class SkillUsageResultObject {
   @Field(() => [SkillUsageByDayObject], {
-    description: `Per-day series (UTC), oldest first, with ours/third-party split.`,
+    description: `Per-day series (UTC), oldest first, split into ours / personal / third-party.`,
   })
   byDay!: SkillUsageByDayObject[];
 
   @Field(() => [SkillUsageByScopeObject], {
-    description: `ours vs third-party totals for the filtered range.`,
+    description: `ours / personal / third-party totals for the filtered range.`,
   })
   byScope!: SkillUsageByScopeObject[];
 

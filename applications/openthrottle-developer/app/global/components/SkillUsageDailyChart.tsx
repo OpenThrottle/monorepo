@@ -10,6 +10,7 @@ import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 import {
   formatSkillUsageChartDate,
   SKILL_USAGE_CHART_CONFIG,
+  SKILL_USAGE_CHART_SERIES,
   type SkillUsageChartDatum,
 } from '~/global/data/skill-usage-chart';
 
@@ -19,7 +20,8 @@ export interface SkillUsageDailyChartProps {
 }
 
 /**
- * @description Stacked daily bar chart: ours vs third-party skill invocations.
+ * @description Stacked daily bar chart: ours / personal / third-party skill
+ * invocations.
  * Shared by the /usage route and the /skills/$slug detail route. Under jsdom,
  * Recharts draws no geometry — tests assert the wrapper mounts.
  */
@@ -77,18 +79,19 @@ export const SkillUsageDailyChart = (
             width={36}
           />
           <ChartTooltip content={<ChartTooltipContent />} />
-          <Bar
-            dataKey="oursCount"
-            fill="var(--color-oursCount)"
-            radius={[0, 0, 0, 0]}
-            stackId="skillUsage"
-          />
-          <Bar
-            dataKey="thirdPartyCount"
-            fill="var(--color-thirdPartyCount)"
-            radius={[4, 4, 0, 0]}
-            stackId="skillUsage"
-          />
+          {SKILL_USAGE_CHART_SERIES.map((series, index) => (
+            <Bar
+              dataKey={series}
+              fill={`var(--color-${series})`}
+              key={series}
+              radius={
+                index === SKILL_USAGE_CHART_SERIES.length - 1
+                  ? [4, 4, 0, 0]
+                  : [0, 0, 0, 0]
+              }
+              stackId="skillUsage"
+            />
+          ))}
         </BarChart>
       </ChartContainer>
     </div>

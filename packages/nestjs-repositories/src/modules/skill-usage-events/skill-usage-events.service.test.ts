@@ -318,6 +318,7 @@ describe('SkillUsageEventsService', () => {
             avgDurationMs: '1500.4',
             errorCount: '0',
             outcomeCount: '8',
+            scope: SKILL_USAGE_SCOPES.OURS,
             skillName: 'ot-plans',
             successCount: '7',
           },
@@ -361,6 +362,79 @@ describe('SkillUsageEventsService', () => {
       ]);
     });
 
+    it("does not merge one scope row's outcomes into another scope row of the same skill", async () => {
+      // A personal skill whose history straddles the migration: 34 old
+      // third-party starts and 1 new personal start, with outcomes recorded
+      // only against the third-party half. Keying outcomes by skill_name alone
+      // gave BOTH rows all 31 outcomes, rendering the impossible cell "31/1".
+      const eventsQb = createQueryBuilderMock({
+        getRawMany: vi.fn().mockResolvedValue([
+          {
+            count: '34',
+            lastUsedAt: '2026-09-16T01:39:07.600Z',
+            scope: SKILL_USAGE_SCOPES.THIRD_PARTY,
+            skillName: 'ot-beta-loop',
+          },
+          {
+            count: '1',
+            lastUsedAt: '2026-09-16T02:37:43.113Z',
+            scope: SKILL_USAGE_SCOPES.PERSONAL,
+            skillName: 'ot-beta-loop',
+          },
+        ]),
+      });
+      const outcomesQb = createQueryBuilderMock({
+        getRawMany: vi.fn().mockResolvedValue([
+          {
+            abandonedCount: '4',
+            avgDurationMs: '3830200',
+            errorCount: '0',
+            outcomeCount: '31',
+            scope: SKILL_USAGE_SCOPES.THIRD_PARTY,
+            skillName: 'ot-beta-loop',
+            successCount: '27',
+          },
+        ]),
+      });
+      const service = await buildService({
+        events: { createQueryBuilder: vi.fn().mockReturnValue(eventsQb) },
+        outcomes: { createQueryBuilder: vi.fn().mockReturnValue(outcomesQb) },
+      });
+
+      const rows = await service.listBySkill({
+        end: '2026-09-16',
+        start: '2026-08-17',
+      });
+
+      expect(rows[0]).toMatchObject({
+        count: 34,
+        outcomeCount: 31,
+        scope: SKILL_USAGE_SCOPES.THIRD_PARTY,
+      });
+      // The personal row has its own (empty) outcome history, not the other
+      // row's — an outcome count may never exceed its own start count.
+      expect(rows[1]).toMatchObject({
+        avgDurationMs: null,
+        count: 1,
+        outcomeCount: 0,
+        scope: SKILL_USAGE_SCOPES.PERSONAL,
+      });
+    });
+
+    it('groups outcomes by skill_name and scope so the join matches starts', async () => {
+      const eventsQb = createQueryBuilderMock();
+      const outcomesQb = createQueryBuilderMock();
+      const service = await buildService({
+        events: { createQueryBuilder: vi.fn().mockReturnValue(eventsQb) },
+        outcomes: { createQueryBuilder: vi.fn().mockReturnValue(outcomesQb) },
+      });
+
+      await service.listBySkill({ end: '2026-07-31', start: '2026-07-01' });
+
+      expect(outcomesQb.groupBy).toHaveBeenCalledWith('o.skill_name');
+      expect(outcomesQb.addGroupBy).toHaveBeenCalledWith('o.scope');
+    });
+
     it('merges a mixed automatic + opt-in feed and averages only non-null durations', async () => {
       // One skill, one aggregated outcome row that blends the automatic feed
       // (success + abandoned, abandoned having null duration) with an opt-in
@@ -383,6 +457,7 @@ describe('SkillUsageEventsService', () => {
             avgDurationMs: '2000', // AVG over the 6 success + 1 error timed rows
             errorCount: '1',
             outcomeCount: '10',
+            scope: SKILL_USAGE_SCOPES.OURS,
             skillName: 'ot-plans',
             successCount: '6',
           },
@@ -571,10 +646,13 @@ describe('SkillUsageEventsService', () => {
   });
 
   describe('listByScope', () => {
-    it('returns ours vs third-party counts', async () => {
+    it('returns ours vs personal vs third-party counts', async () => {
+      // Grouping is by the column itself, so a new scope member needs no
+      // widening here — it simply arrives as another row.
       const qb = createQueryBuilderMock({
         getRawMany: vi.fn().mockResolvedValue([
           { count: '10', scope: SKILL_USAGE_SCOPES.OURS },
+          { count: '7', scope: SKILL_USAGE_SCOPES.PERSONAL },
           { count: '4', scope: SKILL_USAGE_SCOPES.THIRD_PARTY },
         ]),
       });
@@ -589,13 +667,87 @@ describe('SkillUsageEventsService', () => {
 
       expect(rows).toEqual([
         { count: 10, scope: SKILL_USAGE_SCOPES.OURS },
+        { count: 7, scope: SKILL_USAGE_SCOPES.PERSONAL },
         { count: 4, scope: SKILL_USAGE_SCOPES.THIRD_PARTY },
+      ]);
+    });
+
+    it('does not fall back to ours for an unrecognized stored scope', async () => {
+      // Falling back to ours would inflate the count of skills we authored —
+      // the number people actually act on. third-party matches how capture
+      // itself fails open.
+      const qb = createQueryBuilderMock({
+        getRawMany: vi
+          .fn()
+          .mockResolvedValue([{ count: '3', scope: 'not-a-real-scope' }]),
+      });
+      const service = await buildService({
+        events: { createQueryBuilder: vi.fn().mockReturnValue(qb) },
+      });
+
+      const rows = await service.listByScope({
+        end: '2026-07-31',
+        start: '2026-07-01',
+      });
+
+      expect(rows).toEqual([
+        { count: 3, scope: SKILL_USAGE_SCOPES.THIRD_PARTY },
       ]);
     });
   });
 
   describe('listByDay', () => {
-    it('maps per-day ours/third-party/total counts', async () => {
+    it('maps per-day ours/personal/third-party/total counts', async () => {
+      const qb = createQueryBuilderMock({
+        getRawMany: vi.fn().mockResolvedValue([
+          {
+            date: '2026-07-15',
+            oursCount: '2',
+            personalCount: '4',
+            thirdPartyCount: '1',
+            totalCount: '7',
+          },
+        ]),
+      });
+      const service = await buildService({
+        events: { createQueryBuilder: vi.fn().mockReturnValue(qb) },
+      });
+
+      const rows = await service.listByDay({
+        end: '2026-07-31',
+        start: '2026-07-01',
+      });
+
+      expect(rows).toEqual([
+        {
+          date: '2026-07-15',
+          oursCount: 2,
+          personalCount: 4,
+          thirdPartyCount: 1,
+          totalCount: 7,
+        },
+      ]);
+    });
+
+    it('selects one COUNT FILTER per scope member', async () => {
+      const qb = createQueryBuilderMock();
+      const service = await buildService({
+        events: { createQueryBuilder: vi.fn().mockReturnValue(qb) },
+      });
+
+      await service.listByDay({ end: '2026-07-31', start: '2026-07-01' });
+
+      const aliases = qb.addSelect.mock.calls.map((call) => call[1]);
+      expect(aliases).toEqual(
+        expect.arrayContaining([
+          'oursCount',
+          'personalCount',
+          'thirdPartyCount',
+        ]),
+      );
+    });
+
+    it('reports a zero count for a scope absent from the window', async () => {
       const qb = createQueryBuilderMock({
         getRawMany: vi.fn().mockResolvedValue([
           {
@@ -615,14 +767,7 @@ describe('SkillUsageEventsService', () => {
         start: '2026-07-01',
       });
 
-      expect(rows).toEqual([
-        {
-          date: '2026-07-15',
-          oursCount: 2,
-          thirdPartyCount: 1,
-          totalCount: 3,
-        },
-      ]);
+      expect(rows[0]?.personalCount).toBe(0);
     });
   });
 
@@ -650,8 +795,9 @@ describe('SkillUsageEventsService', () => {
           {
             date: '2026-07-15',
             oursCount: '5',
+            personalCount: '2',
             thirdPartyCount: '0',
-            totalCount: '5',
+            totalCount: '7',
           },
         ]),
       });
@@ -701,6 +847,15 @@ describe('SkillUsageEventsService', () => {
       ]);
       expect(result.byScope).toEqual([
         { count: 5, scope: SKILL_USAGE_SCOPES.OURS },
+      ]);
+      expect(result.byDay).toEqual([
+        {
+          date: '2026-07-15',
+          oursCount: 5,
+          personalCount: 2,
+          thirdPartyCount: 0,
+          totalCount: 7,
+        },
       ]);
       expect(result.filterOptions).toEqual({
         cwds: ['/repo'],

@@ -300,8 +300,33 @@ var DEFAULT_PRIVACY_LEVEL = PRIVACY_LEVELS.TRUNCATED;
 
 // packages/agentic-hooks/src/utils/scope.ts
 var import_node_fs3 = __toESM(require("node:fs"), 1);
+var import_node_os2 = __toESM(require("node:os"), 1);
 var import_node_path3 = __toESM(require("node:path"), 1);
-var detectScope = (skillName, repoRoot) => {
+var PERSONAL_SKILLS_DIR_ENV = "OPENTHROTTLE_PERSONAL_SKILLS_DIR";
+var SKILL_LINK_DIR = import_node_path3.default.join(".agents", "skills");
+var resolvePersonalSkillsRoot = (env) => {
+  const override = env[PERSONAL_SKILLS_DIR_ENV]?.trim();
+  if (override !== void 0 && override !== "") {
+    return override;
+  }
+  return import_node_path3.default.join(import_node_os2.default.homedir(), ".openthrottle", "skills");
+};
+var isPathInsideRoot = (root, candidate) => {
+  try {
+    const realRoot = import_node_fs3.default.realpathSync(root);
+    return import_node_fs3.default.realpathSync(candidate).startsWith(`${realRoot}${import_node_path3.default.sep}`);
+  } catch {
+    return false;
+  }
+};
+var isPersonalSkill = (skillName, repoRoot, env) => {
+  const personalRoot = resolvePersonalSkillsRoot(env);
+  return isPathInsideRoot(
+    personalRoot,
+    import_node_path3.default.join(repoRoot, SKILL_LINK_DIR, skillName)
+  );
+};
+var detectScope = (skillName, repoRoot, env = process.env) => {
   if (!skillName || skillName.includes(":")) {
     return "third-party";
   }
@@ -309,6 +334,12 @@ var detectScope = (skillName, repoRoot) => {
   try {
     if (import_node_fs3.default.existsSync(authoredDir) && import_node_fs3.default.statSync(authoredDir).isDirectory()) {
       return "ours";
+    }
+  } catch {
+  }
+  try {
+    if (isPersonalSkill(skillName, repoRoot, env)) {
+      return "personal";
     }
   } catch {
   }

@@ -25,27 +25,35 @@ const renderComponent = (props: UsageSkillUsageSummaryProps): RenderResult => {
 };
 
 describe('UsageSkillUsageSummary Component', () => {
-  test('renders total and ours vs third-party counts', () => {
+  test('renders total and the ours / personal / third-party counts', () => {
     const component = renderComponent({
       byScope: [
         buildByScope({ count: 5, scope: SKILL_USAGE_SCOPES.OURS }),
+        buildByScope({ count: 4, scope: SKILL_USAGE_SCOPES.PERSONAL }),
         buildByScope({ count: 2, scope: SKILL_USAGE_SCOPES.THIRD_PARTY }),
       ],
-      totalCount: 7,
+      totalCount: 11,
     });
 
     expect(component.getByTestId('UsageSkillUsageSummary')).toBeInTheDocument();
     expect(component.getByText('Total invocations')).toBeInTheDocument();
-    expect(component.getByText('7')).toBeInTheDocument();
+    expect(component.getByText('11')).toBeInTheDocument();
     expect(component.getByText('5')).toBeInTheDocument();
+    expect(component.getByText('4')).toBeInTheDocument();
     expect(component.getByText('2')).toBeInTheDocument();
     expect(
       component.getByText(`${SKILL_USAGE_COPY.scopeSplitHeading} — Ours`),
     ).toBeInTheDocument();
     expect(
+      component.getByText(`${SKILL_USAGE_COPY.scopeSplitHeading} — Personal`),
+    ).toBeInTheDocument();
+    expect(
       component.getByText(
         `${SKILL_USAGE_COPY.scopeSplitHeading} — Third-party`,
       ),
+    ).toBeInTheDocument();
+    expect(
+      component.getByText(SKILL_USAGE_COPY.scopePersonalHint),
     ).toBeInTheDocument();
   });
 
@@ -55,6 +63,7 @@ describe('UsageSkillUsageSummary Component', () => {
       totalCount: 0,
     });
 
-    expect(component.getAllByText('0')).toHaveLength(3);
+    // Total plus one tile per scope member.
+    expect(component.getAllByText('0')).toHaveLength(4);
   });
 });

@@ -69,8 +69,33 @@ var DEFAULT_PRIVACY_LEVEL = PRIVACY_LEVELS.TRUNCATED;
 
 // packages/agentic-hooks/src/utils/scope.ts
 var import_node_fs = __toESM(require("node:fs"), 1);
+var import_node_os = __toESM(require("node:os"), 1);
 var import_node_path2 = __toESM(require("node:path"), 1);
-var detectScope = (skillName2, repoRoot2) => {
+var PERSONAL_SKILLS_DIR_ENV = "OPENTHROTTLE_PERSONAL_SKILLS_DIR";
+var SKILL_LINK_DIR = import_node_path2.default.join(".agents", "skills");
+var resolvePersonalSkillsRoot = (env) => {
+  const override = env[PERSONAL_SKILLS_DIR_ENV]?.trim();
+  if (override !== void 0 && override !== "") {
+    return override;
+  }
+  return import_node_path2.default.join(import_node_os.default.homedir(), ".openthrottle", "skills");
+};
+var isPathInsideRoot = (root, candidate) => {
+  try {
+    const realRoot = import_node_fs.default.realpathSync(root);
+    return import_node_fs.default.realpathSync(candidate).startsWith(`${realRoot}${import_node_path2.default.sep}`);
+  } catch {
+    return false;
+  }
+};
+var isPersonalSkill = (skillName2, repoRoot2, env) => {
+  const personalRoot = resolvePersonalSkillsRoot(env);
+  return isPathInsideRoot(
+    personalRoot,
+    import_node_path2.default.join(repoRoot2, SKILL_LINK_DIR, skillName2)
+  );
+};
+var detectScope = (skillName2, repoRoot2, env = process.env) => {
   if (!skillName2 || skillName2.includes(":")) {
     return "third-party";
   }
@@ -78,6 +103,12 @@ var detectScope = (skillName2, repoRoot2) => {
   try {
     if (import_node_fs.default.existsSync(authoredDir) && import_node_fs.default.statSync(authoredDir).isDirectory()) {
       return "ours";
+    }
+  } catch {
+  }
+  try {
+    if (isPersonalSkill(skillName2, repoRoot2, env)) {
+      return "personal";
     }
   } catch {
   }
@@ -116,6 +147,9 @@ if (skillName.includes(":")) {
 } else if (scope === "ours") {
   reason = "directory under skills/";
   registryHit = import_node_path4.default.join(repoRoot, "skills", skillName);
+} else if (scope === "personal") {
+  reason = "linked from the personal skills root (outside the repo)";
+  registryHit = import_node_path4.default.join(repoRoot, ".agents", "skills", skillName);
 } else {
   const lockPath = import_node_path4.default.join(repoRoot, "skills-lock.json");
   try {

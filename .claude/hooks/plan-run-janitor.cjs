@@ -171,6 +171,10 @@ var PRIVACY_LEVELS = Object.freeze({
 });
 var DEFAULT_PRIVACY_LEVEL = PRIVACY_LEVELS.TRUNCATED;
 
+// packages/agentic-hooks/src/utils/scope.ts
+var import_node_path2 = __toESM(require("node:path"), 1);
+var SKILL_LINK_DIR = import_node_path2.default.join(".agents", "skills");
+
 // packages/agentic-hooks/src/data/events.ts
 var SKILL_USAGE_OUTCOMES = Object.freeze({
   ABANDONED: "abandoned",
@@ -186,8 +190,8 @@ var DEFAULT_ABANDONED_MS = 6 * 60 * 60 * 1e3;
 
 // packages/agentic-hooks/src/data/plan-runs.ts
 var import_node_fs2 = __toESM(require("node:fs"), 1);
-var import_node_path2 = __toESM(require("node:path"), 1);
-var PLAN_RUNS_DIR_REL = import_node_path2.default.join(".cache", "plan-runs");
+var import_node_path3 = __toESM(require("node:path"), 1);
+var PLAN_RUNS_DIR_REL = import_node_path3.default.join(".cache", "plan-runs");
 var PLAN_RUN_ABANDONED_MS = 6 * 60 * 60 * 1e3;
 var SETTLE_CLI_PLAN_RUN_MUTATION = `
 mutation SettlePlanRunFromHook($input: SettleCliPlanRunInput!) {
@@ -197,7 +201,7 @@ mutation SettlePlanRunFromHook($input: SettleCliPlanRunInput!) {
   }
 }
 `;
-var planRunsDir = (repoRoot) => import_node_path2.default.join(repoRoot, PLAN_RUNS_DIR_REL);
+var planRunsDir = (repoRoot) => import_node_path3.default.join(repoRoot, PLAN_RUNS_DIR_REL);
 var sanitizeSessionId2 = (sessionId) => String(sessionId).replace(/[^A-Za-z0-9._-]/g, "-");
 var readPlanRunRecord = (filePath) => {
   try {
@@ -268,7 +272,7 @@ var settleAbandonedPlanRuns = async ({
   const candidates = [];
   for (const file of files) {
     if (!file.endsWith(".json") || file === currentFile) continue;
-    const filePath = import_node_path2.default.join(dir, file);
+    const filePath = import_node_path3.default.join(dir, file);
     let mtimeMs;
     try {
       mtimeMs = import_node_fs2.default.statSync(filePath).mtimeMs;
