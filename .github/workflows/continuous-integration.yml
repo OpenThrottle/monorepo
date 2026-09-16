@@ -420,19 +420,6 @@ jobs:
           pnpm exec nx affected --target=codegen-graphql,codegen-react-router --parallel ${{ env.OUTPUT_DEBUG }}
           git diff --exit-code
 
-      # 💰 Folded in from a separate job to avoid spinning a second runner per push.
-      # Placed before the affected run so structural breakage fails fast.
-      # 💰 Gated on project-graph inputs. A cycle can only appear or disappear
-      # when package.json / project.json / tsconfig* / nx.json change; editing a
-      # function body cannot alter the graph. Fails closed (`graph` is 'true' for
-      # non-PR events and whenever the diff could not be computed).
-      # 🧩 Once per run (jobIndex == 1): the project graph is identical on every
-      # shard, so re-deriving it on all three buys nothing.
-      - name: '🔍 Check for circular dependencies'
-        if: matrix.jobIndex == 1 && github.actor != 'dependabot[bot]' && needs.changes.outputs.graph == 'true'
-        run: |
-          pnpm exec tsx ./scripts/nx-circular-dependencies.ts
-
       # ⚠️ READ THIS BEFORE CHANGING ANY `--parallel` FLAG IN THIS FILE.
       # In Nx 23.2.0, a BARE `--parallel` is NOT "use all cores" — it resolves to
       # 3, exactly the same as omitting the flag. `availableParallelism()` is only
@@ -599,31 +586,103 @@ jobs:
       #       --nxBail
 
       # ────────────────────────────────────────────────────────────────────────
-      # 🧩 ONCE-PER-RUN GATES — `if: matrix.jobIndex == 1`.
+  # 🧩 ONCE-PER-RUN GATES — whole-tree checks, run exactly once per run.
+  #
+  # These read the whole tree (or the whole installed graph), not any shard's
+  # chunk, so their result is identical on every box. Running them on all three
+  # would triple the work for zero extra coverage.
+  #
+  # 💰 They used to live on shard 1 under `if: matrix.jobIndex == 1`, justified
+  # by "they total ~20s: a separate job would pay ~1.6 min of checkout+install
+  # to save ~20s of shard-1 wall-clock". That arithmetic was measured and is
+  # wrong twice over (OT plan 3feb3613):
+  #   1. They total ~92s, not ~20s — 4.6x the figure the argument rested on.
+  #      Shard 1's job tail ran 82-110s against ~12s on shards 2 and 3.
+  #   2. The ~1.6 min of setup is NOT paid on the critical path. This job runs
+  #      CONCURRENTLY with the matrix and finishes in roughly 178s (86s setup +
+  #      92s gates) against the matrix's ~727s critical path, so it costs zero
+  #      wall-clock while taking 92s off the longest shard.
+  #
+  # ⚠️ This is NOT the 4th shard that was measured and rejected (OT plan
+  # 0494d906). A 4th shard adds a box whose setup lands ON the critical path —
+  # per-box fixed overhead is now 24.5% of the critical job, so more boxes make
+  # that worse. A sibling job that finishes in a quarter of the matrix's runtime
+  # adds nothing to the critical path at all. Different shape, opposite answer.
+  #
+  # ⚠️ Adding a step? Decide which side it belongs on. A PER-CHUNK check belongs
+  # in `build`, where it sees only that shard's projects. A WHOLE-TREE check
+  # belongs HERE. Putting a per-chunk check here silently narrows it to nothing;
+  # putting a whole-tree check in `build` triples it.
+  #
+  # ⚠️ This job MUST stay in `ci-success`'s `needs`. Branch protection requires
+  # `ci-success` and nothing else, so a gate that fails here is only a real gate
+  # because that job aggregates this one.
+  gates:
+    needs: changes
+    if: |
+      needs.changes.outputs.run == 'true' &&
+      (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+      group: continuous-integration-${{ github.ref }}-gates
+
+    steps:
+      - name: '📦 Checkout the code'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Same partial clone as `build`: nx-set-shas walks history and diffs
+          # trees, it never reads an historical blob.
+          fetch-depth: 0
+          filter: 'blob:none'
+
+      # cache-suffix: this job shares its commit with all three shards, so
+      # without a discriminator it would race their exact Nx cache key and lose
+      # its task hashes to a duplicate-save drop.
+      - name: '🤖 Node Setup'
+        uses: ./.github/actions/node-setup
+        with:
+          cache-suffix: gates
+
+      # check-agent-assets-ssot and the frontmatter validator read the
+      # .agents/skills -> skills/ fan-out, which is generated and gitignored.
+      - name: '🔗 Materialize agent-skill symlinks (ot-skill-sync)'
+        run: bash skills/ot-skill-sync/scripts/sync.sh
+
+      # The Prettier gate below reads NX_BASE/NX_HEAD to scope itself to a PR's
+      # diff; without this it would fail closed to a full-tree sweep every run.
+      - name: "🕵️‍♂️ NX Setup SHA's"
+        uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
+
+      # 🧩 No codegen step, deliberately. `build` needs it because lint/typecheck
+      # consume generated output; nothing here does. The GraphQL guard below
+      # snapshots, regenerates and byte-compares on its own — see the header of
+      # scripts/verify-graphql-codegen.ts.
+
+      # 💰 Gated on project-graph inputs. A cycle can only appear or disappear
+      # when package.json / project.json / tsconfig* / nx.json change; editing a
+      # function body cannot alter the graph. Fails closed (`graph` is 'true' for
+      # non-PR events and whenever the diff could not be computed).
       #
-      # These read the whole tree (or the whole installed graph), not this
-      # shard's chunk, so their result is identical on every box. Running them
-      # on all three would triple the work for zero extra coverage — which is
-      # exactly the mistake "just uncomment the shard loop" would have made.
-      # They live on shard 1 rather than in a sibling `gates` job because they
-      # total ~20s: a separate job would pay ~1.6 min of checkout+install to
-      # save ~20s of shard-1 wall-clock, and add a `needs` edge to keep correct.
-      #
-      # ⚠️ Adding a step below this line? Decide which side it belongs on. A
-      # per-chunk check goes ABOVE, without the `if`; a whole-tree check goes
-      # here, WITH it.
-      # ────────────────────────────────────────────────────────────────────────
+      # First in this job so structural breakage still surfaces early. It used to
+      # sit in `build` BEFORE the affected run for that reason; from here it no
+      # longer short-circuits the matrix, so a cycle now fails `gates` while the
+      # shards run on. That costs runner minutes (free on this public repo) and
+      # buys back its share of shard 1's wall-clock, which is the scarce one.
+      - name: '🔍 Check for circular dependencies'
+        if: github.actor != 'dependabot[bot]' && needs.changes.outputs.graph == 'true'
+        run: |
+          pnpm exec tsx ./scripts/nx-circular-dependencies.ts
+
       - name: '🔒 GraphQL codegen drift guard (agentic-ralph, openthrottle-mcp)'
-        if: matrix.jobIndex == 1
         run: |
           pnpm exec nx run-many --target=verify-graphql-codegen --projects=@openthrottle/openthrottle-agentic-ralph,@openthrottle/openthrottle-mcp
 
       - name: '🔗 Agent assets SSOT (symlink drift guard)'
-        if: matrix.jobIndex == 1
         run: pnpm exec nx run monorepo:check-agent-assets-ssot
 
       - name: '📋 Agent assets frontmatter validation (D5)'
-        if: matrix.jobIndex == 1
         run: pnpm exec nx run monorepo:validate-agent-assets-frontmatter
 
       # Static and build-free, so one shard is enough. Catches the `exports`
@@ -631,7 +690,6 @@ jobs:
       # sources import it by name — the mismatch that made shard assignment,
       # rather than the code, decide whether a suite could collect.
       - name: '📦 Package entrypoint consistency'
-        if: matrix.jobIndex == 1
         run: pnpm exec nx run monorepo:check-package-entrypoints
 
       # 🗄️ Static, whole-tree, no database — so one shard is enough.
@@ -657,7 +715,6 @@ jobs:
       # merge, and with the merge queue on `main` disabled (see the `on:` block)
       # there is no merge_group run to do it either.
       - name: '🗄️ Migration hygiene (foreign keys + duplicate prefixes)'
-        if: matrix.jobIndex == 1
         run: pnpm exec nx run monorepo:check-migration-hygiene
         env:
           MIGRATION_COMMENT_LINT_BASE: ${{ github.base_ref || 'main' }}
@@ -674,14 +731,14 @@ jobs:
       # change pulling in copyleft" case this gate exists for. Fails closed.
       # Waivers live in license-policy.json (see CONTRIBUTING.md § Dependency licenses).
       - name: '⚖️ Dependency-license compliance gate'
-        if: matrix.jobIndex == 1 && needs.changes.outputs.deps == 'true'
+        if: needs.changes.outputs.deps == 'true'
         run: pnpm exec nx run monorepo:validate-licenses
 
       # Keep THIRD-PARTY-LICENSES.md (Apache-2.0 §4 attribution manifest) fresh:
       # regenerate from the installed graph and fail if the committed copy drifted.
       # Same `deps` gate and same reason — it is generated FROM the installed graph.
       - name: '📜 THIRD-PARTY-LICENSES freshness guard'
-        if: matrix.jobIndex == 1 && needs.changes.outputs.deps == 'true'
+        if: needs.changes.outputs.deps == 'true'
         run: pnpm run validate:notices
 
       # 💰 On PRs, check only the files this PR touched; husky pre-commit already
@@ -693,7 +750,6 @@ jobs:
       # Fails closed: if NX_BASE/NX_HEAD are missing or the diff errors, fall back
       # to the full sweep rather than checking nothing.
       - name: '🎨 Prettier format-check'
-        if: matrix.jobIndex == 1
         run: |
           set -euo pipefail
 
@@ -731,7 +787,6 @@ jobs:
       # step of its own. Note `audit:templates-compliance` has no `:strict`
       # variant and so is NOT in this glob, despite the old step name.
       - name: '🧩 Strict audits (audit:strict)'
-        if: matrix.jobIndex == 1
         run: pnpm run audit:strict
 
       # 💰 The warn-only test-coverage audit MOVED OUT of the per-PR path to
@@ -759,7 +814,7 @@ jobs:
   # `fail-fast: false` above, a red shard therefore still turns this job red while
   # its siblings run to completion.
   ci-success:
-    needs: [attribution-guard, changes, build]
+    needs: [attribution-guard, changes, build, gates]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 2
@@ -769,8 +824,9 @@ jobs:
           attribution_result="${{ needs.attribution-guard.result }}"
           changes_result="${{ needs.changes.result }}"
           build_result="${{ needs.build.result }}"
+          gates_result="${{ needs.gates.result }}"
 
-          echo "attribution-guard: $attribution_result | changes: $changes_result | build: $build_result"
+          echo "attribution-guard: $attribution_result | changes: $changes_result | build: $build_result | gates: $gates_result"
 
           if [ "$changes_result" != "success" ]; then
             echo "❌ changes gate did not succeed ($changes_result)"
@@ -784,8 +840,16 @@ jobs:
             exit 1
           fi
 
+          # `gates` carries every whole-tree check. It shares `build`'s `if`, so
+          # it skips on exactly the same docs-only/draft runs — 'skipped' is a
+          # legitimate outcome, anything else is not.
+          if [ "$gates_result" != "success" ] && [ "$gates_result" != "skipped" ]; then
+            echo "❌ whole-tree gates did not succeed (gates: $gates_result)"
+            exit 1
+          fi
+
           if [ "$build_result" = "success" ] || [ "$build_result" = "skipped" ]; then
-            echo "✅ CI gate satisfied (build: $build_result)"
+            echo "✅ CI gate satisfied (build: $build_result, gates: $gates_result)"
             exit 0
           fi
 

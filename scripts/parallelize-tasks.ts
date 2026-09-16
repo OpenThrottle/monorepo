@@ -1,5 +1,9 @@
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+
 import { execSync } from 'child_process';
 import { fileURLToPath } from 'url';
+
 import { createLogger } from './lib/index.ts';
 
 // This script has a stdout contract (the final key=value lines the workflow
@@ -39,9 +43,10 @@ const logger = createLogger({ stream: process.stderr });
  * projects removed. Both round-trip through verifyShardSelection().
  *
  * Deliberately NOT parameterized by target: the workflow issues one Nx command
- * per parallelism class (lint/typecheck at `--parallel`, `test` left serialized
- * — see the memory note in the workflow), so which targets run, and how, stays
- * the workflow's business. Emitting every selector from ONE invocation rather
+ * per class of work, so which targets run, and how, stays the workflow's
+ * business. (Both of its invocations happen to run at Nx's default concurrency
+ * of 3 — a bare `--parallel` is NOT "full", see the flag-semantics note in the
+ * workflow. This script has never had an opinion either way.) Emitting every selector from ONE invocation rather
  * than taking a target argument also keeps this script to a single Nx graph
  * computation per box, which is the expensive part. The quoting hazard the old
  * single-line contract guarded against is unchanged: no emitted value can ever
@@ -108,9 +113,18 @@ const getChunkIndex = (chunks: string[][], chunkCount: number): number => {
  * a run computes the SAME partition from the same affected list — that is what
  * guarantees no project lands on two boxes and none is dropped.
  *
+ * ⚠️ THIS IS NOW THE FALLBACK, not the live strategy — partitionProjects()
+ * prefers packByWeight() whenever `shard-weights.json` is usable. It is kept,
+ * and kept working, because it is what makes that table safe to let drift:
+ * delete or corrupt the file and CI still partitions correctly, just less
+ * evenly.
+ *
  * Not duration-weighted: a chunk holding two heavy app suites is slower than
  * one holding six packages. Dealing applications first bounds that skew without
- * needing timing data. See OT plan b19377d1.
+ * needing timing data. See OT plan b19377d1. Measurement has since shown the
+ * applications-first premise is only half true — packages in this workspace
+ * span 1.2s to 56.3s, and four of the six heaviest projects are packages — which
+ * is precisely why the weighted packing replaced it.
  *
  * Suite-sharded projects are still dealt here — they are only lifted out of the
  * TEST selector, downstream. Pulling them out of the deal entirely would be
@@ -141,6 +155,178 @@ const distributeEvenly = (
   }
 
   return chunks;
+};
+
+/**
+ * @description Byte-for-byte name ordering. NOT `localeCompare`: that consults
+ * the runtime's default locale, and every shard must break ties identically or
+ * they compute different partitions. Code-unit order is the same everywhere.
+ */
+const byName = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
+
+const WEIGHTS_PATH = join(
+  dirname(fileURLToPath(import.meta.url)),
+  'shard-weights.json',
+);
+
+/**
+ * @description The committed measured-cost table, or undefined when it cannot
+ * be used.
+ *
+ * Read from a COMMITTED file on purpose. The two sources that look more
+ * "live" both break the one invariant this script has — that every shard of a
+ * run computes the SAME partition:
+ *
+ *   - Nx's task history (`task_history` in `.nx/workspace-data/*-v3.db`) is
+ *     empty in this workspace; Nx 23.2.0 does not populate it here.
+ *   - `.github/actions/node-setup` keys the Nx cache with
+ *     `cache-suffix: shard-<jobIndex>`, so each shard restores a DIFFERENT
+ *     cache. Weights derived from local cache state would differ per box.
+ *
+ * Returns undefined rather than throwing on a missing, unreadable or malformed
+ * file: the caller falls back to round-robin. Weights are an OPTIMIZATION.
+ * Correctness lives in verifyShardSelection()'s Nx round-trip, which never
+ * consults them, so a bad table can cost balance and can never drop a project.
+ */
+const hasWeightsKey = (value: object): value is { weights: unknown } =>
+  'weights' in value;
+
+const loadWeights = (): Record<string, number> | undefined => {
+  try {
+    const parsed: unknown = JSON.parse(readFileSync(WEIGHTS_PATH, 'utf-8'));
+
+    if (typeof parsed !== 'object' || parsed === null) return undefined;
+    if (!hasWeightsKey(parsed)) return undefined;
+
+    const { weights } = parsed;
+
+    if (typeof weights !== 'object' || weights === null) return undefined;
+
+    // Drop anything non-numeric rather than trusting the file's shape: a
+    // hand-edited or half-written table should degrade to the round-robin
+    // fallback, never poison the packing with NaN.
+    const entries = Object.entries(weights).filter(
+      (entry): entry is [string, number] =>
+        typeof entry[1] === 'number' && Number.isFinite(entry[1]),
+    );
+
+    return entries.length > 0 ? Object.fromEntries(entries) : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
+/**
+ * @description Median of the known weights — the stand-in for a project the
+ * table has never seen.
+ *
+ * Median, not zero and not the mean: a brand-new project treated as weightless
+ * would be packed onto whichever bin is already heaviest, which is exactly the
+ * skew this packing exists to remove. The median is also robust to the one
+ * 117s outlier that a mean would chase.
+ */
+const getMedianWeight = (weights: Record<string, number>): number => {
+  const values = Object.values(weights).sort((a, b) => a - b);
+
+  if (values.length === 0) return 0;
+
+  const middle = Math.floor(values.length / 2);
+
+  return values.length % 2 === 0
+    ? ((values[middle - 1] ?? 0) + (values[middle] ?? 0)) / 2
+    : (values[middle] ?? 0);
+};
+
+/**
+ * @description This project's cost to the box that draws it.
+ *
+ * Suite-sharded projects are already recorded as lint+typecheck only (the
+ * generator measures them that way), because their `test` runs on EVERY box
+ * under `--shard` — a constant that cannot be balanced away, and which would
+ * make the packer flee a cost every shard pays regardless.
+ */
+const getWeight = (
+  project: string,
+  weights: Record<string, number>,
+  fallback: number,
+): number => weights[project] ?? fallback;
+
+/**
+ * @description Longest-processing-time-first bin packing: sort heaviest-first,
+ * then repeatedly put the next project on whichever shard is currently lightest.
+ *
+ * LPT is the standard greedy approximation for this problem and is provably
+ * within 4/3 of optimal — more than good enough when the input is measured
+ * durations that drift anyway, and far better than dealing by COUNT, which is
+ * blind to a project being 100x another (this workspace spans 1.2s to 117.5s).
+ *
+ * DETERMINISM IS LOAD-BEARING, not a nicety. Every shard runs this independently
+ * over the same affected list and must reach the same answer, or a project lands
+ * on two boxes or none. So both tie-breaks are total and machine-independent:
+ * equal weights break by name (code units, not locale), and equal bin loads
+ * break by lowest bin index. Nothing consults input order, wall-clock or host.
+ */
+const packByWeight = (
+  projects: string[],
+  chunkCount: number,
+  weights: Record<string, number>,
+): string[][] => {
+  const fallback = getMedianWeight(weights);
+  const chunks: string[][] = Array.from({ length: chunkCount }, () => []);
+  const loads: number[] = Array.from({ length: chunkCount }, () => 0);
+
+  const ordered = [...projects].sort((a, b) => {
+    const delta = getWeight(b, weights, fallback) - getWeight(a, weights, fallback); // prettier-ignore
+
+    return delta !== 0 ? delta : byName(a, b);
+  });
+
+  ordered.forEach((project) => {
+    let lightest = 0;
+
+    for (let index = 1; index < chunkCount; index += 1) {
+      if ((loads[index] ?? 0) < (loads[lightest] ?? 0)) lightest = index;
+    }
+
+    chunks[lightest]?.push(project);
+    loads[lightest] = (loads[lightest] ?? 0) + getWeight(project, weights, fallback); // prettier-ignore
+  });
+
+  return chunks;
+};
+
+/**
+ * @description The partition every shard agrees on: measured packing when the
+ * weights table is usable, today's round-robin deal when it is not.
+ *
+ * The fallback is not defensive clutter — it is what makes the weights table
+ * safe to let drift. Delete the file, corrupt it, or land a PR before
+ * regenerating it, and CI keeps partitioning correctly; only the balance
+ * regresses to what it was before this existed.
+ */
+const partitionProjects = (
+  projects: string[],
+  chunkCount: number,
+  weights?: Record<string, number>,
+): string[][] =>
+  weights
+    ? packByWeight(projects, chunkCount, weights)
+    : distributeEvenly(projects, chunkCount);
+
+/**
+ * @description Total projected cost of one chunk, for the CI log. Reading three
+ * of these next to each other is how a future reader sees the table going stale.
+ */
+const getChunkWeight = (
+  chunk: string[],
+  weights: Record<string, number>,
+): number => {
+  const fallback = getMedianWeight(weights);
+
+  return chunk.reduce(
+    (total, project) => total + getWeight(project, weights, fallback),
+    0,
+  );
 };
 
 /**
@@ -201,8 +387,9 @@ const getShardSelector = (
   projects: string[],
   jobIndex: number,
   jobCount: number,
+  weights?: Record<string, number>,
 ): string => {
-  const groups = distributeEvenly(projects, jobCount);
+  const groups = partitionProjects(projects, jobCount, weights);
   const grouping = groups[jobIndex - 1];
 
   if (!grouping || grouping.length === 0) {
@@ -220,18 +407,19 @@ const getShardOutputs = (
   projects: string[],
   jobIndex: number,
   jobCount: number,
+  weights?: Record<string, number>,
 ): {
   selector: string;
   suiteShard: string;
   suiteShardProjects: string;
   testSelector: string;
 } => {
-  const groups = distributeEvenly(projects, jobCount);
+  const groups = partitionProjects(projects, jobCount, weights);
   const grouping = groups[jobIndex - 1] ?? [];
   const sharded = getSuiteShardedProjects(projects);
 
   return {
-    selector: getShardSelector(projects, jobIndex, jobCount),
+    selector: getShardSelector(projects, jobIndex, jobCount, weights),
     suiteShard: sharded.length > 0 ? `${jobIndex}/${jobCount}` : '',
     suiteShardProjects: sharded.join(','),
     testSelector: getExcludeSelector(getTestGrouping(grouping)),
@@ -368,19 +556,35 @@ const main = (): void => {
   }
 
   const affected = getAffectedProjects();
-  const groups = distributeEvenly(affected, jobCount);
+  const weights = loadWeights();
+  const groups = partitionProjects(affected, jobCount, weights);
   const grouping = groups[jobIndex - 1] ?? [];
-  const outputs = getShardOutputs(affected, jobIndex, jobCount);
+  const outputs = getShardOutputs(affected, jobIndex, jobCount, weights);
 
   // Partition evidence for the CI log. stderr so it cannot pollute the
   // machine-read stdout contract.
   logger.heading(
     `shard ${jobIndex}/${jobCount} — ${affected.length} affected project(s)`,
   );
+
+  if (!weights) {
+    logger.warn(
+      'shard-weights.json missing or unusable — falling back to round-robin. ' +
+        'Regenerate with: pnpm exec tsx ./scripts/generate-shard-weights.ts',
+    );
+  }
+
+  // Projected totals sit next to each shard so the log shows the balance that
+  // was actually achieved. Three numbers drifting apart over time is the signal
+  // that the weights table wants regenerating.
   groups.forEach((group, index) => {
     const marker = index === jobIndex - 1 ? '→' : ' ';
+    const projected = weights
+      ? ` [~${(getChunkWeight(group, weights) / 1000).toFixed(0)}s]`
+      : '';
+
     console.error(
-      `  ${marker} shard ${index + 1}: ${group.join(', ') || '(empty)'}`,
+      `  ${marker} shard ${index + 1}${projected}: ${group.join(', ') || '(empty)'}`,
     );
   });
 
@@ -400,16 +604,22 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
 }
 
 export {
+  byName,
   distributeEvenly,
   formatShardOutputs,
   getChunkIndex,
+  getChunkWeight,
   getExcludeSelector,
   getIsPackage,
+  getMedianWeight,
   getShardOutputs,
   getShardSelectionErrors,
   getShardSelector,
   getSuiteShardedProjects,
   getTestGrouping,
+  getWeight,
+  packByWeight,
+  partitionProjects,
   splitProjects,
   SUITE_SHARDED_PROJECTS,
 };
