@@ -251,16 +251,20 @@ describe('GitHubStatsService', () => {
           author: 'alice',
           changedFiles: 5,
           deletions: 20,
+          mergeCommitSha: null,
           mergedAt: '2026-02-01T00:00:00Z',
           number: 1,
+          state: 'closed',
         })
         .mockResolvedValueOnce({
           additions: 50,
           author: 'bob',
           changedFiles: 2,
           deletions: 10,
+          mergeCommitSha: null,
           mergedAt: '2026-02-01T00:00:00Z',
           number: 2,
+          state: 'closed',
         });
 
       const result =
@@ -331,16 +335,20 @@ describe('GitHubStatsService', () => {
           author: 'alice',
           changedFiles: 1,
           deletions: 0,
+          mergeCommitSha: null,
           mergedAt: '2026-01-01T00:00:00Z',
           number: 1,
+          state: 'closed',
         })
         .mockResolvedValueOnce({
           additions: 2,
           author: 'bob',
           changedFiles: 1,
           deletions: 0,
+          mergeCommitSha: null,
           mergedAt: '2026-01-01T00:00:00Z',
           number: 2,
+          state: 'closed',
         });
 
       await githubStatsService.getLinesAddedDeletedByPeriodOrAuthor('o', 'r', {

@@ -134,3 +134,12 @@ export class UnverifiedWorkArtifactsInput {
   })
   type!: string | null;
 }
+
+@InputType()
+export class WorkLedgerCompletenessInput {
+  @Field(() => Int, {
+    description: `Max owed plans listed; the counts are always over the full set`,
+    nullable: true,
+  })
+  limit!: number | null;
+}

@@ -8,6 +8,7 @@
 
 import { randomUUID } from 'node:crypto';
 
+import { WORK_ARTIFACT_SOURCE } from '@openthrottle/nestjs-repositories';
 import { z } from 'zod';
 
 /**
@@ -35,7 +36,13 @@ interface ArtifactTypeDefinition {
   readonly initialLifecycle: string | null;
   /** The full lifecycle vocabulary (for validation); empty for lifecycle-less types. */
   readonly lifecycleStates: readonly string[];
-  /** Lifecycle states whose entry fires downstream triggers (e.g. git_commit 'landed'). */
+  /**
+   * Lifecycle states whose entry fires downstream triggers (e.g. git_commit 'landed').
+   *
+   * These fire on the *live* path only — an agent reporting its own work as it happens.
+   * Bulk and adapter-sourced writes deliberately do NOT fire them; see
+   * {@link shouldFireLifecycleTriggers} for the rule and the reasoning.
+   */
   readonly triggerStates: readonly string[];
   /**
    * Validate a raw payload against this type's zod schema, returning the parsed record.
@@ -202,4 +209,61 @@ export const resolveArtifactForWrite = (
     initialLifecycle: definition.initialLifecycle,
     payload,
   };
+};
+
+/**
+ * @description Artifact sources whose writes are bulk or backfill rather than a live agent
+ * reporting its own work as it happens: the `commit_links` backfill (`legacy`) and any
+ * verifier/scanner adopting history after the fact (`adapter`).
+ *
+ * Landing thousands of historical commits is a bookkeeping correction, not news. Firing
+ * `triggerStates` on them fans out one refine-tagging job per subject plan, and each of those
+ * makes an LLM call and replace-own-rows reconciles that plan's `server-llm` tags — so a single
+ * backfill sweep would spend ~1k LLM calls re-deriving tags for work that finished weeks ago
+ * and churn essentially the entire tag corpus.
+ *
+ * `legacy` is on this list because it is reachable from the *normal* verifier path: demoting the
+ * false legacy rows puts them back in the verifier's work queue, where they promote to `landed`
+ * like anything else. Keying suppression off `adapter` alone would miss them entirely.
+ */
+const TRIGGER_SUPPRESSED_ARTIFACT_SOURCES: ReadonlySet<string> = new Set([
+  WORK_ARTIFACT_SOURCE.ADAPTER,
+  WORK_ARTIFACT_SOURCE.LEGACY,
+]);
+
+/** @description Inputs to the lifecycle-trigger decision. */
+export interface LifecycleTriggerContext {
+  /**
+   * Explicit caller override. `false` suppresses unconditionally (a bulk write that knows it is
+   * one); `true` forces firing; `undefined` defers to the source rule.
+   */
+  readonly fireTriggers: boolean | undefined;
+  /** The lifecycle state just entered. */
+  readonly lifecycle: string;
+  /** The artifact's `source` column. */
+  readonly source: string;
+  /** The artifact's registered `type`. */
+  readonly type: string;
+}
+
+/**
+ * @description Decide whether entering `lifecycle` on this artifact should fire the type's
+ * downstream triggers. A state that is not in the type's `triggerStates` never fires; beyond
+ * that an explicit `fireTriggers` wins, and otherwise the artifact's source decides — see
+ * {@link TRIGGER_SUPPRESSED_ARTIFACT_SOURCES}.
+ * @public
+ */
+export const shouldFireLifecycleTriggers = ({
+  fireTriggers,
+  lifecycle,
+  source,
+  type,
+}: LifecycleTriggerContext): boolean => {
+  const definition = ARTIFACT_TYPE_REGISTRY[type];
+
+  if (definition === undefined) return false;
+  if (!definition.triggerStates.includes(lifecycle)) return false;
+  if (fireTriggers !== undefined) return fireTriggers;
+
+  return !TRIGGER_SUPPRESSED_ARTIFACT_SOURCES.has(source);
 };

@@ -155,7 +155,7 @@ Per-generator markdown deep-dives live under `docs/tools/templates/` (e.g. `reac
 
 ## OpenThrottle and commits
 
-Scaffolding is unrelated to **OT** tool calls, but if work is tracked under a plan/task, follow **ot-plans**: conventional commits with **`Plan-Id`** / **`Task-Id`** in the footer; record the merged squash on the work ledger (`record_artifact` / `workflow-link-merge`) post-merge when your team uses that workflow.
+Scaffolding is unrelated to **OT** tool calls, but if work is tracked under a plan/task, follow **ot-plans**: conventional commits with **`Plan-Id`** / **`Task-Id`** in the footer; the work ledger records itself when the PR opens (`settle_plan_run` with `headSha` / `prNumber`), so there is no post-merge step to remember.
 
 ## Cross-links
 

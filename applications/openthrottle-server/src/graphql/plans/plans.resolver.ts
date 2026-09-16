@@ -64,6 +64,7 @@ import { PlanCreationService } from '../../services/plan-creation/plan-creation.
 import { PlanRunWorktreeCheckoutService } from '../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.service.ts';
 import { ProjectObject } from '../projects/project.object.ts';
 import { TaskObject } from '../tasks/task.object.ts';
+import { SettleRunLedgerService } from '../work-ledger/settle-run-ledger.service.ts';
 import { WorkLedgerCaptureService } from '../work-ledger/work-ledger-capture.service.ts';
 import {
   parseJobRunHooksJsonInput,
@@ -293,6 +294,7 @@ export class PlansResolver {
     private readonly plansService: PlansService,
     private readonly taggingEnqueueService: TaggingEnqueueService,
     private readonly tasksService: TasksService,
+    private readonly settleRunLedgerService: SettleRunLedgerService,
     private readonly workLedgerCapture: WorkLedgerCaptureService,
   ) {}
 
@@ -523,6 +525,17 @@ export class PlansResolver {
       input.planRunId,
       status,
     );
+
+    if (run != null && status === 'COMPLETED') {
+      // Best-effort and awaited: recording must not fail the settle, but it must also not race
+      // past it. This is the whole point of the mechanism — the run is settled here, while the
+      // PR is open and the row still names its plan, checkout and actor.
+      await this.settleRunLedgerService.recordSettledRunArtifacts({
+        headSha: input.headSha ?? null,
+        planRun: run,
+        prNumber: input.prNumber ?? null,
+      });
+    }
 
     return run ? this.mapPlanRunObject(run) : null;
   }

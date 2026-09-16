@@ -2003,6 +2003,35 @@ type WorkArtifactListResult {
   totalCount: Int!
 }
 
+type WorkLedgerPlanCompletenessObject {
+  """git_commit artifacts linked to this plan, truthful or not"""
+  artifactCount: Int!
+  planId: ID!
+  planStatus: String!
+  planTitle: String!
+
+  """
+  True when at least one linked git_commit carries a verifier-confirmed landedSha
+  """
+  recorded: Boolean!
+}
+
+type WorkLedgerCompletenessResult {
+  """
+  Plans with git work but no verifier-confirmed commit; worst-known first
+  """
+  owed: [WorkLedgerPlanCompletenessObject!]!
+
+  """Plans with git work and nothing truthful"""
+  owedCount: Int!
+
+  """Plans with at least one verifier-confirmed landed commit"""
+  recordedCount: Int!
+
+  """Plans the ledger knows have git work (see the denominator caveat)"""
+  totalCount: Int!
+}
+
 """
 A single skill in a project's ingested skill universe, with its static frontmatter tags and tri-state disable-model-invocation flag.
 """
@@ -4152,6 +4181,7 @@ type Query {
   workArtifactsBySession(input: WorkArtifactsBySessionInput!): WorkArtifactListResult!
   workArtifactsByPlan(input: WorkArtifactsByPlanInput!): WorkArtifactListResult!
   workArtifactsByTask(input: WorkArtifactsByTaskInput!): WorkArtifactListResult!
+  workLedgerCompleteness(input: WorkLedgerCompletenessInput!): WorkLedgerCompletenessResult!
   unverifiedWorkArtifacts(input: UnverifiedWorkArtifactsInput!): WorkArtifactListResult!
 
   """
@@ -4821,6 +4851,11 @@ input WorkArtifactsByPlanInput {
 input WorkArtifactsByTaskInput {
   """Task id to list linked artifacts for"""
   taskId: ID!
+}
+
+input WorkLedgerCompletenessInput {
+  """Max owed plans listed; the counts are always over the full set"""
+  limit: Int
 }
 
 input UnverifiedWorkArtifactsInput {
@@ -5853,8 +5888,18 @@ input RegisterCliPlanRunInput {
 }
 
 input SettleCliPlanRunInput {
+  """
+  Branch head sha at PR-open. Recorded as a git_commit artifact on COMPLETED; the verifier maps it to its squash commit once the PR merges. Optional — a run that exits without opening a PR has none.
+  """
+  headSha: String
+
   """Plan-run row id to settle (returned by registerCliPlanRun)."""
   planRunId: ID!
+
+  """
+  Number of the PR the run opened. Recorded as a pull_request artifact on COMPLETED — it survives a rebase or amend, which the head sha does not. Optional.
+  """
+  prNumber: Int
 
   """
   Terminal status to set: COMPLETED, CANCELLED, or FAILED. Normalized to uppercase.

@@ -101,6 +101,7 @@ import { PlansQueueModule } from './queues/plans/plans-queue.module.ts';
 import { ScheduledAgentJobsQueueModule } from './queues/scheduled-agent-jobs/scheduled-agent-jobs-queue.module.ts';
 import { TaggingQueueModule } from './queues/tagging/tagging-queue.module.ts';
 import { TaskPromotionQueueModule } from './queues/task-promotion/task-promotion-queue.module.ts';
+import { WorkLedgerHarvestQueueModule } from './queues/work-ledger-harvest/work-ledger-harvest-queue.module.ts';
 import { WorkLedgerSweepQueueModule } from './queues/work-ledger-sweep/work-ledger-sweep-queue.module.ts';
 import { WorkLedgerVerifyQueueModule } from './queues/work-ledger-verify/work-ledger-verify-queue.module.ts';
 
@@ -244,6 +245,7 @@ const buildImports = (role: ProcessRole): AppModuleImports => {
           ScheduledAgentJobsQueueModule,
           TaggingQueueModule,
           TaskPromotionQueueModule,
+          WorkLedgerHarvestQueueModule,
           WorkLedgerSweepQueueModule,
           WorkLedgerVerifyQueueModule,
         ]

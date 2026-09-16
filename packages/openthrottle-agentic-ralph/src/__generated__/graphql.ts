@@ -3166,6 +3166,7 @@ export type Query = {
   workArtifactsByPlan: WorkArtifactListResult;
   workArtifactsBySession: WorkArtifactListResult;
   workArtifactsByTask: WorkArtifactListResult;
+  workLedgerCompleteness: WorkLedgerCompletenessResult;
   workSession?: Maybe<WorkSessionObject>;
   workSessionsByPlan: WorkSessionListResult;
   /** List local repositories for the authenticated user. */
@@ -3509,6 +3510,10 @@ export type QueryWorkArtifactsBySessionArgs = {
 
 export type QueryWorkArtifactsByTaskArgs = {
   input: WorkArtifactsByTaskInput;
+};
+
+export type QueryWorkLedgerCompletenessArgs = {
+  input: WorkLedgerCompletenessInput;
 };
 
 export type QueryWorkSessionArgs = {
@@ -4507,8 +4512,12 @@ export type SetWorkspaceLocalRepositoryProjectInput = {
 };
 
 export type SettleCliPlanRunInput = {
+  /** Branch head sha at PR-open. Recorded as a git_commit artifact on COMPLETED; the verifier maps it to its squash commit once the PR merges. Optional — a run that exits without opening a PR has none. */
+  headSha?: InputMaybe<Scalars['String']['input']>;
   /** Plan-run row id to settle (returned by registerCliPlanRun). */
   planRunId: Scalars['ID']['input'];
+  /** Number of the PR the run opened. Recorded as a pull_request artifact on COMPLETED — it survives a rebase or amend, which the head sha does not. Optional. */
+  prNumber?: InputMaybe<Scalars['Int']['input']>;
   /** Terminal status to set: COMPLETED, CANCELLED, or FAILED. Normalized to uppercase. */
   status: Scalars['String']['input'];
 };
@@ -5570,6 +5579,34 @@ export type WorkArtifactsBySessionInput = {
 export type WorkArtifactsByTaskInput = {
   /** Task id to list linked artifacts for */
   taskId: Scalars['ID']['input'];
+};
+
+export type WorkLedgerCompletenessInput = {
+  /** Max owed plans listed; the counts are always over the full set */
+  limit?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type WorkLedgerCompletenessResult = {
+  __typename?: 'WorkLedgerCompletenessResult';
+  /** Plans with git work but no verifier-confirmed commit; worst-known first */
+  owed: Array<WorkLedgerPlanCompletenessObject>;
+  /** Plans with git work and nothing truthful */
+  owedCount: Scalars['Int']['output'];
+  /** Plans with at least one verifier-confirmed landed commit */
+  recordedCount: Scalars['Int']['output'];
+  /** Plans the ledger knows have git work (see the denominator caveat) */
+  totalCount: Scalars['Int']['output'];
+};
+
+export type WorkLedgerPlanCompletenessObject = {
+  __typename?: 'WorkLedgerPlanCompletenessObject';
+  /** git_commit artifacts linked to this plan, truthful or not */
+  artifactCount: Scalars['Int']['output'];
+  planId: Scalars['ID']['output'];
+  planStatus: Scalars['String']['output'];
+  planTitle: Scalars['String']['output'];
+  /** True when at least one linked git_commit carries a verifier-confirmed landedSha */
+  recorded: Scalars['Boolean']['output'];
 };
 
 export type WorkSessionListResult = {
