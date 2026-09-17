@@ -87,6 +87,8 @@ export type ActivityOutputChunkRowObject = {
   plan?: Maybe<PlanObject>;
   planId: Scalars['String']['output'];
   planTitle: Scalars['String']['output'];
+  /** Task this chunk is attributed to; null for plan-scoped chunks and historical rows. */
+  taskId?: Maybe<Scalars['String']['output']>;
 };
 
 export type ActivityTaskUpdatedRowObject = {
@@ -1337,6 +1339,8 @@ export type LastActivityOutputChunkPartObject = {
   __typename?: 'LastActivityOutputChunkPartObject';
   content: Scalars['String']['output'];
   iteration?: Maybe<Scalars['Int']['output']>;
+  /** Task this chunk is attributed to; null for plan-scoped chunks and historical rows. */
+  taskId?: Maybe<Scalars['String']['output']>;
 };
 
 export type LastActivityResultObject = {
@@ -1432,6 +1436,8 @@ export type ListPlanOutputStreamChunksInput = {
   offset?: InputMaybe<Scalars['Int']['input']>;
   /** Plan id to list chunks for */
   planId: Scalars['ID']['input'];
+  /** Return only chunks attributed to this task id. Omit for the whole plan stream (both tagged and untagged chunks). */
+  taskId?: InputMaybe<Scalars['ID']['input']>;
 };
 
 export type ListPlanSourceObject = {
