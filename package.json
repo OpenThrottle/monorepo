@@ -99,25 +99,28 @@
       "check-nodenext-references": {},
       "check-package-entrypoints": {},
       "ensure-migrations": {
-        "description": "Dev/start gate: wait for Postgres then apply pending SQL migrations before openthrottle-server boots. Uses the server's env (applications/openthrottle-server/.env) so it migrates the exact DB the server connects to; fails fast pointing at `pnpm run database:start` if Postgres is unreachable. Never cached (external DB state). Docker installs remain covered by Dockerfile.Migrations.",
-        "executor": "nx:run-commands",
         "cache": false,
+        "executor": "nx:run-commands",
+        "metadata": {
+          "description": "Dev/start gate: wait for Postgres then apply pending SQL migrations before openthrottle-server boots. Uses the server's env (applications/openthrottle-server/.env) so it migrates the exact DB the server connects to; fails fast pointing at `pnpm run database:start` if Postgres is unreachable. Never cached (external DB state). Docker installs remain covered by Dockerfile.Migrations."
+        },
         "options": {
           "command": "tsx --env-file applications/openthrottle-server/.env ./scripts/ensure-migrations.ts",
           "cwd": "{workspaceRoot}"
         }
       },
       "ensure-worktree": {
-        "description": "Self-healing on first use (no-op in the primary checkout and on provisioned worktrees).",
-        "executor": "nx:run-commands",
         "cache": false,
+        "executor": "nx:run-commands",
+        "metadata": {
+          "description": "Self-healing on first use (no-op in the primary checkout and on provisioned worktrees)."
+        },
         "options": {
           "command": "sh -c 'd=skills/ot-worktree/scripts; [ -x \"$d/heal.sh\" ] || d=.agents/skills/ot-worktree/scripts; exec \"$d/heal.sh\" \"$@\"' --",
           "cwd": "{workspaceRoot}"
         }
       },
-      "format-check": {},
-      "format-write": {},
+      "format": {},
       "generate-third-party-notices": {},
       "ingest-agent-assets": {},
       "knip": {},
@@ -181,7 +184,7 @@
     "check:local:bundle-hooks": "pnpm nx run @openthrottle/agentic-hooks:bundle-hooks-check",
     "check:local:codegen": "pnpm nx affected --target=codegen-graphql,codegen-react-router --parallel",
     "check:local:component-shape": "pnpm run audit:component-shape:strict && pnpm run audit:component-shape:shadcn:strict",
-    "check:local:format": "pnpm nx run monorepo:format-check",
+    "check:local:format": "pnpm nx run monorepo:format:check",
     "check:local:knip": "pnpm nx run monorepo:knip",
     "check:local:migration-comments": "pnpm nx run monorepo:check-migration-table-comments",
     "check:local:migration-hygiene": "pnpm nx run monorepo:check-migration-hygiene",
@@ -221,8 +224,6 @@
     "database:stop": "docker compose down --remove-orphans",
     "dev:native": "pnpm nx run openthrottle-server:dev",
     "dev:native:split": "pnpm nx run-many --projects openthrottle-server --targets dev-api,worker",
-    "format": "pnpm nx run monorepo:format-write",
-    "format:check": "pnpm nx run monorepo:format-check",
     "generate": "pnpm run generate:list",
     "generate:folders": "NX_ISOLATE_PLUGINS=false nx generate @tools/generators:folders --interactive",
     "generate:generator": "nx generate @nx/plugin:generator $1 --project=@tools/generators",

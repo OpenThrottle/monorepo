@@ -28,13 +28,17 @@
         "dependsOn": [
           "build:tsc"
         ],
-        "description": "Aggregate build entrypoint for @tools/ollama-proxy: all the work is in `build:tsc`, reached as a graph EDGE rather than by shelling out to a nested `nx run`. See the same fix on @tools/workflows:build — a nested invocation is a second Nx task graph that re-restores shared `^build` outputs (other packages' dist/) with no ordering against the outer graph's in-flight test tasks, which raced Vitest readers of those same dist directories.",
+        "metadata": {
+          "description": "Aggregate build entrypoint for @tools/ollama-proxy: all the work is in `build:tsc`, reached as a graph EDGE rather than by shelling out to a nested `nx run`. See the same fix on @tools/workflows:build — a nested invocation is a second Nx task graph that re-restores shared `^build` outputs (other packages' dist/) with no ordering against the outer graph's in-flight test tasks, which raced Vitest readers of those same dist directories."
+        },
         "executor": "nx:noop"
       },
       "build:tsc": {
         "cache": false,
-        "description": "Compile @tools/ollama-proxy to dist with @nx/js:tsc (src rootDir, tsconfig.lib.json).",
         "executor": "@nx/js:tsc",
+        "metadata": {
+          "description": "Compile @tools/ollama-proxy to dist with @nx/js:tsc (src rootDir, tsconfig.lib.json)."
+        },
         "options": {
           "outputPath": "{projectRoot}/dist",
           "rootDir": "{projectRoot}/src",
@@ -43,8 +47,10 @@
       },
       "e2e": {
         "cache": false,
-        "description": "Run the @tools/ollama-proxy end-to-end check via scripts/e2e.mjs.",
         "executor": "nx:run-commands",
+        "metadata": {
+          "description": "Run the @tools/ollama-proxy end-to-end check via scripts/e2e.mjs."
+        },
         "options": {
           "cwd": "{projectRoot}",
           "commands": [
@@ -56,8 +62,10 @@
       "test": {},
       "serve": {
         "cache": false,
-        "description": "Build then run the ollama-proxy server (dist/server.js) with .env.default/.env loaded.",
         "executor": "nx:run-commands",
+        "metadata": {
+          "description": "Build then run the ollama-proxy server (dist/server.js) with .env.default/.env loaded."
+        },
         "options": {
           "cwd": "{projectRoot}",
           "commands": [

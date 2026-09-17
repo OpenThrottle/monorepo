@@ -105,8 +105,10 @@
         "dependsOn": [
           "build"
         ],
-        "description": "Run the built openthrottle-mcp server entrypoint (dist/src/bin.js) after build.",
         "executor": "nx:run-commands",
+        "metadata": {
+          "description": "Run the built openthrottle-mcp server entrypoint (dist/src/bin.js) after build."
+        },
         "options": {
           "command": "node ./dist/src/bin.js",
           "cwd": "{projectRoot}"
@@ -116,8 +118,10 @@
       "typecheck": {},
       "verify-graphql-codegen": {
         "cache": false,
-        "description": "Regenerate openthrottle-mcp GraphQL types and fail if the generated src/__generated__ output drifts from the .graphql documents. Output is gitignored here, so the guard byte-compares against whatever is on disk rather than against git, and reports a vacuous pass when there is no baseline.",
         "executor": "nx:run-commands",
+        "metadata": {
+          "description": "Regenerate openthrottle-mcp GraphQL types and fail if the generated src/__generated__ output drifts from the .graphql documents. Output is gitignored here, so the guard byte-compares against whatever is on disk rather than against git, and reports a vacuous pass when there is no baseline."
+        },
         "options": {
           "command": "tsx ./scripts/verify-graphql-codegen.ts --project=packages/openthrottle-mcp",
           "cwd": "{workspaceRoot}"

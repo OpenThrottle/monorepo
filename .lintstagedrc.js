@@ -10,9 +10,9 @@ const _toRelativePath = (filePath) => {
 // repo-wide named-exports rule cannot apply here.
 // eslint-disable-next-line import-x/no-default-export
 export default {
-  // Mirrors the extension list in monorepo:format-check's prettier glob. `cjs`
+  // Mirrors the extension list in monorepo:format:check's prettier glob. `cjs`
   // and `mjs` belong here: without them a staged .mjs skips both eslint and
-  // prettier locally and only fails later in check:local's format-check, which
+  // prettier locally and only fails later in check:local's format:check, which
   // is exactly how scripts/check-node-engine.mjs landed unformatted.
   '**/*.{cjs,js,jsx,mjs,ts,tsx}': (allFiles) => {
     // Generator templates are EJS, not TypeScript — `<%= namePascal %>` is a

@@ -125,7 +125,9 @@ mutation deleteAgentConversation($input: DeleteAgentConversationInput!) {
   }
 }
 
-mutation updateAgentConversationTitle($input: UpdateAgentConversationTitleInput!) {
+mutation updateAgentConversationTitle(
+  $input: UpdateAgentConversationTitleInput!
+) {
   updateAgentConversationTitle(input: $input) {
     id
     status

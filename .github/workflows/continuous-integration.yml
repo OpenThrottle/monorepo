@@ -749,23 +749,23 @@ jobs:
       #
       # Fails closed: if NX_BASE/NX_HEAD are missing or the diff errors, fall back
       # to the full sweep rather than checking nothing.
-      - name: '🎨 Prettier format-check'
+      - name: '🎨 Prettier format:check'
         run: |
           set -euo pipefail
 
           if [ "${{ github.event_name }}" != "pull_request" ] || [ -z "${NX_BASE:-}" ] || [ -z "${NX_HEAD:-}" ]; then
             echo "→ full-tree sweep (event=${{ github.event_name }})"
-            pnpm exec nx run monorepo:format-check --verbose
+            pnpm exec nx run monorepo:format:check --verbose
             exit 0
           fi
 
           if ! changed="$(git diff --name-only --diff-filter=ACMR "$NX_BASE" "$NX_HEAD" 2>&1)"; then
             echo "→ full-tree sweep (could not compute the diff; failing closed)"
-            pnpm exec nx run monorepo:format-check --verbose
+            pnpm exec nx run monorepo:format:check --verbose
             exit 0
           fi
 
-          # Keep in sync with the glob in nx.json's format-check target.
+          # Keep in sync with the glob in nx.json's format:check target.
           formattable="$(echo "$changed" | grep -E '\.(cjs|css|html|js|json|jsx|less|md|mdx|mjs|sass|scss|ts|tsx|yaml|yml)$' || true)"
 
           if [ -z "$formattable" ]; then

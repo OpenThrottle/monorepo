@@ -2,6 +2,7 @@
 
 import { glob, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+
 import { createLogger } from './lib/index.ts';
 
 const logger = createLogger();
@@ -53,15 +54,24 @@ interface TargetRecord {
   target: string;
 }
 
-type NxTargetConfig = { description?: unknown; executor?: unknown } | undefined;
+type NxTargetConfig =
+  | {
+      description?: unknown;
+      executor?: unknown;
+      metadata?: { description?: unknown };
+    }
+  | undefined;
 
 const readJson = async (file: string): Promise<Record<string, unknown>> =>
   JSON.parse(await readFile(join(process.cwd(), file), 'utf8'));
 
-const hasDescription = (config: NxTargetConfig): boolean => {
-  const value = config?.description;
-  return typeof value === 'string' && value.trim().length > 0;
-};
+const isNonEmptyString = (value: unknown): boolean =>
+  typeof value === 'string' && value.trim().length > 0;
+
+/** A target is described by either the legacy top-level key or Nx's `metadata.description`. */
+const hasDescription = (config: NxTargetConfig): boolean =>
+  isNonEmptyString(config?.description) ||
+  isNonEmptyString(config?.metadata?.description);
 
 interface Defaults {
   byExecutor: Map<string, boolean>;
@@ -78,6 +88,7 @@ async function collectTargetDefaults(): Promise<Defaults> {
 
   for (const [key, config] of Object.entries(targetDefaults)) {
     const described = hasDescription(config);
+
     if (isExecutorKey(key)) {
       byExecutor.set(key, described);
     } else {
@@ -92,6 +103,7 @@ async function collectTargetDefaults(): Promise<Defaults> {
       target: key,
     });
   }
+
   return { byExecutor, byName, records };
 }
 
@@ -120,15 +132,18 @@ async function collectPackageTargets(
       }
 
       const project = typeof manifest.name === 'string' ? manifest.name : file;
+
       return Object.entries(targets).map(([target, config]) => {
         const ownDescription = hasDescription(config);
         const executor =
           typeof config?.executor === 'string' ? config.executor : undefined;
+
         const covered =
           ownDescription ||
           defaults.byName.get(target) === true ||
           (executor !== undefined &&
             defaults.byExecutor.get(executor) === true);
+
         return {
           covered,
           ownDescription,

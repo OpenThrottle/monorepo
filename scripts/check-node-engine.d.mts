@@ -15,4 +15,7 @@ export declare const parseVersion: (value: string) => ParsedVersion | null;
  * Evaluate a `||`-separated range of space-separated comparators.
  * Returns `null` when the range uses syntax the parser does not implement.
  */
-export declare const satisfies: (version: ParsedVersion, range: string) => boolean | null;
+export declare const satisfies: (
+  version: ParsedVersion,
+  range: string,
+) => boolean | null;

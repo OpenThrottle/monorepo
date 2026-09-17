@@ -96,6 +96,9 @@
       "codegen-react-router-watch": {},
       "docker-build": {
         "executor": "nx:run-commands",
+        "metadata": {
+          "description": "Build openthrottle-developer image from root Dockerfile.ReactRouter (monorepo context). Set GITHUB_TOKEN in environment for private deps."
+        },
         "options": {
           "command": "docker build -f Dockerfile.ReactRouter --target production --build-arg APP_NAME=openthrottle-developer --build-arg APP_VERSION=$APP_VERSION --build-arg PNPM_VERSION=$PNPM_VERSION --build-arg GITHUB_TOKEN=$GITHUB_TOKEN -t openthrottle-developer:local .",
           "cwd": "{workspaceRoot}",
@@ -103,8 +106,7 @@
             "APP_VERSION": "1.0.0",
             "PNPM_VERSION": "11.6.0"
           }
-        },
-        "description": "Build openthrottle-developer image from root Dockerfile.ReactRouter (monorepo context). Set GITHUB_TOKEN in environment for private deps."
+        }
       },
       "lint": {},
       "start": {
@@ -117,7 +119,9 @@
             "target": "start"
           }
         ],
-        "description": "Serve the production build via react-router-serve after build; also starts openthrottle-server:start so the GraphQL API is up."
+        "metadata": {
+          "description": "Serve the production build via react-router-serve after build; also starts openthrottle-server:start so the GraphQL API is up."
+        }
       },
       "test": {},
       "test-e2e": {}

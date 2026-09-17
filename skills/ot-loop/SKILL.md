@@ -227,7 +227,7 @@ which the run reads as live and its worktree stays marked busy.
 ## Finishing
 
 1. **Verify every task is closed, THEN set the plan `COMPLETED`.** First re-fetch `get_tasks_by_plan_id(planId)` (or `get_remaining_tasks_for_plan`) and confirm **zero** tasks are `IN_PROGRESS`, `PENDING`, or `QUEUED`. Flip any stranded task to `COMPLETED` (or `BLOCKED`/`SKIPPED`) before continuing — a committed task left `IN_PROGRESS` is the usual culprit (see the loop invariant). Only once the list is clean, `update_plan(planId, { status: 'COMPLETED' })`. There is no server-side downward reconcile in **either** direction: the plan can read `COMPLETED` while tasks are still `IN_PROGRESS`, so this explicit re-fetch is mandatory — never skip it.
-2. Before continuing ensure `nx run-many -t lint test typecheck format-write check:local` all complete, flagging any errors we encounter
+2. Before continuing ensure `nx run-many -t lint test typecheck format check:local` all complete, flagging any errors we encounter
 3. To minimize friction merging with main we will run `/github-squash` to condense our PR to a single commit
 4. Next we will fetch main `git fetch origin main:main` and rebase the branch against `main`
 5. **Open a Draft PR** with `/github-pull-request` (conventional-commit title, the repo PR template, testing steps phrased as things to do) — this is the single push for the whole plan. Leave it in **draft**: `build` skips on draft PRs, so a draft is what keeps any later push cheap. Mark it ready (`gh pr ready`) only when the work is genuinely up for review. **Capture the PR URL and number, and the branch head sha** — the PR is the precondition for teardown below, and step 6 records both.

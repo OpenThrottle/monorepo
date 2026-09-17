@@ -68,11 +68,15 @@
       }
     },
     {
-      "options": { "compiler": "tsc" },
+      "options": {
+        "compiler": "tsc"
+      },
       "plugin": "./tools/nx-plugins/react-router-typecheck.ts"
     },
     {
-      "options": { "compiler": "tsc" },
+      "options": {
+        "compiler": "tsc"
+      },
       "plugin": "./tools/nx-plugins/package-typecheck.ts"
     }
   ],
@@ -146,8 +150,10 @@
     "@nx/js:tsc": {
       "cache": true,
       "dependsOn": ["^build", "^codegen-graphql", "^codegen-react-router"],
-      "description": "Shared @nx/js:tsc compile defaults: emit the package to {projectRoot}/dist from src/index.ts using tsconfig.lib.json (after upstream build + codegen).",
       "executor": "@nx/js:tsc",
+      "metadata": {
+        "description": "Shared @nx/js:tsc compile defaults: emit the package to {projectRoot}/dist from src/index.ts using tsconfig.lib.json (after upstream build + codegen)."
+      },
       "options": {
         "generateExportsField": false,
         "generatePackageJson": false,
@@ -160,7 +166,6 @@
     },
     "build": {
       "cache": true,
-      "description": "Build the project to {projectRoot}/dist via @nx/vite:build; runs after upstream build, codegen, and typecheck.",
       "executor": "@nx/vite:build",
       "dependsOn": [
         "^build",
@@ -169,6 +174,9 @@
         "^typecheck"
       ],
       "inputs": ["noMarkdown", "^noMarkdown"],
+      "metadata": {
+        "description": "Build the project to {projectRoot}/dist via @nx/vite:build; runs after upstream build, codegen, and typecheck."
+      },
       "options": {
         "buildLibsFromSource": true,
         "emptyOutDir": true,
@@ -179,8 +187,10 @@
     "build-package": {
       "cache": true,
       "dependsOn": ["build"],
-      "description": "Generate the publishable {projectRoot}/dist/package.json via scripts/pnpm-package.ts (runs after build).",
       "executor": "nx:run-commands",
+      "metadata": {
+        "description": "Generate the publishable {projectRoot}/dist/package.json via scripts/pnpm-package.ts (runs after build)."
+      },
       "options": {
         "cwd": "{workspaceRoot}",
         "command": "node --experimental-strip-types ./scripts/pnpm-package.ts {projectRoot}"
@@ -189,16 +199,7 @@
     },
     "check-agent-assets-ssot": {
       "cache": true,
-      "description": "The one skills gate: `sync.sh --check` verifies the layout is single-sourced, then `check-links.sh` verifies every relative link in a skill BODY resolves from the file that contains it. `inputs` MUST be explicit {workspaceRoot} globs - the root `monorepo` project owns 0 files, so the default {projectRoot} input would hash nothing and cache-hit forever. The link check reads targets outside skills/, so the doc globs below are inputs too; a target deleted outside them can stale-pass until the next skills change, which is the deliberate trade for keeping this target cacheable.",
       "executor": "nx:run-commands",
-      "options": {
-        "commands": [
-          "bash skills/ot-skill-sync/scripts/sync.sh --check",
-          "bash skills/ot-skill-sync/scripts/check-links.sh"
-        ],
-        "cwd": "{workspaceRoot}",
-        "parallel": false
-      },
       "inputs": [
         "{workspaceRoot}/*.md",
         "{workspaceRoot}/.agents/**/*",
@@ -209,12 +210,25 @@
         "{workspaceRoot}/skills/**/*",
         "{workspaceRoot}/skills-lock.json",
         "{workspaceRoot}/tools/**/*.md"
-      ]
+      ],
+      "metadata": {
+        "description": "The one skills gate: `sync.sh --check` verifies the layout is single-sourced, then `check-links.sh` verifies every relative link in a skill BODY resolves from the file that contains it. `inputs` MUST be explicit {workspaceRoot} globs - the root `monorepo` project owns 0 files, so the default {projectRoot} input would hash nothing and cache-hit forever. The link check reads targets outside skills/, so the doc globs below are inputs too; a target deleted outside them can stale-pass until the next skills change, which is the deliberate trade for keeping this target cacheable."
+      },
+      "options": {
+        "commands": [
+          "bash skills/ot-skill-sync/scripts/sync.sh --check",
+          "bash skills/ot-skill-sync/scripts/check-links.sh"
+        ],
+        "cwd": "{workspaceRoot}",
+        "parallel": false
+      }
     },
     "check-migration-hygiene": {
       "cache": true,
-      "description": "Static lint for databases/migrations/: no inline REFERENCES under an IF NOT EXISTS guard, and no new duplicate numeric prefixes.",
       "executor": "nx:run-commands",
+      "metadata": {
+        "description": "Static lint for databases/migrations/: no inline REFERENCES under an IF NOT EXISTS guard, and no new duplicate numeric prefixes."
+      },
       "options": {
         "command": "tsx ./scripts/check-migration-hygiene.ts",
         "cwd": "{workspaceRoot}"
@@ -222,8 +236,10 @@
     },
     "check-migration-table-comments": {
       "cache": true,
-      "description": "Verify every migration table/column carries COMMENT ON metadata via scripts/check-migration-table-comments.ts.",
       "executor": "nx:run-commands",
+      "metadata": {
+        "description": "Verify every migration table/column carries COMMENT ON metadata via scripts/check-migration-table-comments.ts."
+      },
       "options": {
         "command": "tsx ./scripts/check-migration-table-comments.ts",
         "cwd": "{workspaceRoot}"
@@ -231,12 +247,7 @@
     },
     "check-nodenext-references": {
       "cache": true,
-      "description": "Verify every workspace dependency of a NodeNext project is resolvable — either the consumer holds a tsconfig project reference to it, or the dependency's src/ is free of extensionless relative specifiers — via scripts/check-nodenext-references.ts. Error-mode. `inputs` MUST be explicit {workspaceRoot} globs — the root `monorepo` project owns 0 files, so the default {projectRoot} input would hash nothing and cache-hit forever.",
       "executor": "nx:run-commands",
-      "options": {
-        "command": "tsx ./scripts/check-nodenext-references.ts",
-        "cwd": "{workspaceRoot}"
-      },
       "inputs": [
         "{workspaceRoot}/applications/*/package.json",
         "{workspaceRoot}/applications/*/src/**/*.{ts,tsx}",
@@ -249,16 +260,18 @@
         "{workspaceRoot}/tools/*/src/**/*.{ts,tsx}",
         "{workspaceRoot}/tools/*/tsconfig*.json",
         "{workspaceRoot}/tsconfig*.json"
-      ]
+      ],
+      "metadata": {
+        "description": "Verify every workspace dependency of a NodeNext project is resolvable — either the consumer holds a tsconfig project reference to it, or the dependency's src/ is free of extensionless relative specifiers — via scripts/check-nodenext-references.ts. Error-mode. `inputs` MUST be explicit {workspaceRoot} globs — the root `monorepo` project owns 0 files, so the default {projectRoot} input would hash nothing and cache-hit forever."
+      },
+      "options": {
+        "command": "tsx ./scripts/check-nodenext-references.ts",
+        "cwd": "{workspaceRoot}"
+      }
     },
     "check-package-entrypoints": {
       "cache": true,
-      "description": "Verify no workspace package steers Vite or NodeNext into a gitignored build directory while its own main/module names src/, via scripts/check-package-entrypoints.ts. Offenders already listed in scripts/check-package-entrypoints.baseline.txt warn; a package missing from that shrink-only baseline errors, as does a baselined package that no longer offends. Additionally enforces the blanket technology:nestjs invariant: every such type:package points main/module/types and every exports condition at built output and declares live build and dev targets, with no exemptions — the script's NESTJS_BLOCKERS map is empty and shrink-only on the same terms as the baseline. `inputs` MUST be explicit {workspaceRoot} globs — the root `monorepo` project owns 0 files, so the default {projectRoot} input would hash nothing and cache-hit forever.",
       "executor": "nx:run-commands",
-      "options": {
-        "command": "tsx ./scripts/check-package-entrypoints.ts",
-        "cwd": "{workspaceRoot}"
-      },
       "inputs": [
         "{workspaceRoot}/.gitignore",
         "{workspaceRoot}/applications/*/package.json",
@@ -269,13 +282,22 @@
         "{workspaceRoot}/scripts/check-package-entrypoints.ts",
         "{workspaceRoot}/tools/*/package.json",
         "{workspaceRoot}/tools/*/src/**/*.{ts,tsx}"
-      ]
+      ],
+      "metadata": {
+        "description": "Verify no workspace package steers Vite or NodeNext into a gitignored build directory while its own main/module names src/, via scripts/check-package-entrypoints.ts. Offenders already listed in scripts/check-package-entrypoints.baseline.txt warn; a package missing from that shrink-only baseline errors, as does a baselined package that no longer offends. Additionally enforces the blanket technology:nestjs invariant: every such type:package points main/module/types and every exports condition at built output and declares live build and dev targets, with no exemptions — the script's NESTJS_BLOCKERS map is empty and shrink-only on the same terms as the baseline. `inputs` MUST be explicit {workspaceRoot} globs — the root `monorepo` project owns 0 files, so the default {projectRoot} input would hash nothing and cache-hit forever."
+      },
+      "options": {
+        "command": "tsx ./scripts/check-package-entrypoints.ts",
+        "cwd": "{workspaceRoot}"
+      }
     },
     "codegen-graphql": {
       "cache": true,
-      "description": "Generate GraphQL types and typed operations for the project with graphql-codegen.",
       "executor": "nx:run-commands",
       "inputs": ["codegenGraphqlInputs"],
+      "metadata": {
+        "description": "Generate GraphQL types and typed operations for the project with graphql-codegen."
+      },
       "options": {
         "command": "graphql-codegen",
         "cwd": "{projectRoot}"
@@ -287,8 +309,10 @@
     },
     "codegen-graphql-watch": {
       "continuous": true,
-      "description": "Watch mode for graphql-codegen — regenerate GraphQL types on change.",
       "executor": "nx:run-commands",
+      "metadata": {
+        "description": "Watch mode for graphql-codegen — regenerate GraphQL types on change."
+      },
       "options": {
         "command": "graphql-codegen --watch",
         "cwd": "{projectRoot}"
@@ -296,7 +320,6 @@
     },
     "codegen-react-router": {
       "cache": true,
-      "description": "Generate React Router route types with `react-router typegen`.",
       "executor": "nx:run-commands",
       "inputs": [
         "{projectRoot}/react-router.config.ts",
@@ -308,6 +331,9 @@
           "externalDependencies": ["@react-router/dev", "react-router"]
         }
       ],
+      "metadata": {
+        "description": "Generate React Router route types with `react-router typegen`."
+      },
       "options": {
         "command": "react-router typegen",
         "cwd": "{projectRoot}"
@@ -316,8 +342,10 @@
     },
     "codegen-react-router-watch": {
       "continuous": true,
-      "description": "Watch mode for `react-router typegen` — regenerate route types on change.",
       "executor": "nx:run-commands",
+      "metadata": {
+        "description": "Watch mode for `react-router typegen` — regenerate route types on change."
+      },
       "options": {
         "command": "react-router typegen --watch",
         "cwd": "{projectRoot}"
@@ -336,16 +364,21 @@
         "codegen-graphql-watch",
         "codegen-react-router-watch"
       ],
-      "description": "Run the project in continuous watch mode, cascading dev and codegen-watch to dependencies. Depends on monorepo:ensure-worktree so any `dev` in an unprovisioned linked worktree self-heals on first use (no-op in the primary checkout and on provisioned worktrees)."
+      "metadata": {
+        "description": "Run the project in continuous watch mode, cascading dev and codegen-watch to dependencies. Depends on monorepo:ensure-worktree so any `dev` in an unprovisioned linked worktree self-heals on first use (no-op in the primary checkout and on provisioned worktrees)."
+      }
     },
-    "format-check": {
-      "cache": true,
-      "description": "Check workspace formatting with Prettier without writing — CI parity for format-write. `inputs` MUST enumerate {workspaceRoot} globs: the `monorepo` project's root is `.` but owns 0 files (Nx assigns each file to its most specific project), so the default {projectRoot} input hashes nothing and every run would cache-hit regardless of the files being checked.",
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "prettier --check \"**/*.{cjs,css,html,js,json,jsx,less,md,mdx,mjs,sass,scss,ts,tsx,yaml,yml}\"",
-        "cwd": "{workspaceRoot}"
+    "format": {
+      "cache": false,
+      "configurations": {
+        "check": {
+          "command": "prettier --check ."
+        },
+        "fix": {
+          "command": "prettier --write ."
+        }
       },
+      "executor": "nx:run-commands",
       "inputs": [
         "{workspaceRoot}/**/*.{cjs,css,html,js,json,jsx,less,md,mdx,mjs,sass,scss,ts,tsx,yaml,yml}",
         "{workspaceRoot}/.prettierignore",
@@ -353,21 +386,21 @@
         {
           "externalDependencies": ["prettier"]
         }
-      ]
-    },
-    "format-write": {
-      "cache": false,
-      "description": "Format the workspace in place with Prettier (css/html/js/json/md/ts/yaml and more).",
-      "executor": "nx:run-commands",
+      ],
+      "metadata": {
+        "description": "Check workspace formatting with Prettier without writing — CI parity for format:write. `inputs` MUST enumerate globs: the `monorepo` project's root is `.` but owns 0 files (Nx assigns each file to its most specific project), so the default {projectRoot} input hashes nothing and every run would cache-hit regardless of the files being checked."
+      },
       "options": {
-        "command": "prettier --write \"**/*.{cjs,css,html,js,json,jsx,less,md,mdx,mjs,sass,scss,ts,tsx,yaml,yml}\"",
+        "command": "prettier --check .",
         "cwd": "{workspaceRoot}"
       }
     },
     "generate-third-party-notices": {
       "cache": false,
-      "description": "Regenerate THIRD-PARTY-LICENSES.md — the aggregated dependency-attribution manifest for Apache-2.0 §4 (scripts/generate-third-party-notices.ts). Pass `--check` (via `pnpm validate:notices`) to fail on a stale file instead of writing. Not cached — reads the installed node_modules graph.",
       "executor": "nx:run-commands",
+      "metadata": {
+        "description": "Regenerate THIRD-PARTY-LICENSES.md — the aggregated dependency-attribution manifest for Apache-2.0 §4 (scripts/generate-third-party-notices.ts). Pass `--check` (via `pnpm validate:notices`) to fail on a stale file instead of writing. Not cached — reads the installed node_modules graph."
+      },
       "options": {
         "command": "tsx ./scripts/generate-third-party-notices.ts",
         "cwd": "{workspaceRoot}"
@@ -376,8 +409,10 @@
     "ingest-agent-assets": {
       "cache": false,
       "dependsOn": ["@openthrottle/nodejs-utils:build"],
-      "description": "Ingest agent assets into the OpenThrottle knowledge base via scripts/openthrottle-ingest-agent-assets.ts. Depends on the openthrottle-skills build because the script imports the package through its `exports` map (dist).",
       "executor": "nx:run-commands",
+      "metadata": {
+        "description": "Ingest agent assets into the OpenThrottle knowledge base via scripts/openthrottle-ingest-agent-assets.ts. Depends on the openthrottle-skills build because the script imports the package through its `exports` map (dist)."
+      },
       "options": {
         "command": "tsx ./scripts/openthrottle-ingest-agent-assets.ts",
         "cwd": "{workspaceRoot}"
@@ -386,8 +421,10 @@
     "knip": {
       "cache": true,
       "dependsOn": ["^build"],
-      "description": "Dead-code / unused-dependency report via knip (knip.jsonc). Report-only (dry-run) and non-blocking (--no-exit-code) — run on demand with `pnpm nx run monorepo:knip`. DO NOT add `--fix`/`--fix-type`/`--allow-remove-files` here; knip only mutates files with `--fix`. Triage findings piecemeal (`--include`/`--workspace`) — see docs/monorepo/Knip.md.",
       "executor": "nx:run-commands",
+      "metadata": {
+        "description": "Dead-code / unused-dependency report via knip (knip.jsonc). Report-only (dry-run) and non-blocking (--no-exit-code) — run on demand with `pnpm nx run monorepo:knip`. DO NOT add `--fix`/`--fix-type`/`--allow-remove-files` here; knip only mutates files with `--fix`. Triage findings piecemeal (`--include`/`--workspace`) — see docs/monorepo/Knip.md."
+      },
       "options": {
         "command": "knip --config knip.jsonc --no-exit-code",
         "cwd": "{workspaceRoot}",
@@ -400,8 +437,10 @@
     },
     "lint": {
       "cache": true,
-      "description": "Lint the project with ESLint using the workspace eslint.config.ts.",
       "executor": "nx:run-commands",
+      "metadata": {
+        "description": "Lint the project with ESLint using the workspace eslint.config.ts."
+      },
       "inputs": ["noMarkdown", "^noMarkdown"],
       "options": {
         "command": "pnpm exec eslint -c ./eslint.config.ts .",
@@ -409,8 +448,6 @@
       }
     },
     "nestjs": {
-      "description": "Drive a NestJS app through the Nest CLI (configurations: build, dev, debug, repl, start).",
-      "executor": "nx:run-commands",
       "configurations": {
         "build": {
           "command": "nest build --path ./tsconfig.app.json",
@@ -433,14 +470,20 @@
           "command": "nest start --path ./tsconfig.app.json"
         }
       },
+      "executor": "nx:run-commands",
+      "metadata": {
+        "description": "Drive a NestJS app through the Nest CLI (configurations: build, dev, debug, repl, start)."
+      },
       "options": {
         "cwd": "{projectRoot}"
       }
     },
     "nx-release-publish": {
       "dependsOn": ["build-package", "^build-package"],
-      "description": "Publish the package to the registry via Nx release (@nx/js:release-publish).",
       "executor": "@nx/js:release-publish",
+      "metadata": {
+        "description": "Publish the package to the registry via Nx release (@nx/js:release-publish)."
+      },
       "options": {
         "packageRoot": "{projectRoot}/dist"
       }
@@ -453,9 +496,11 @@
         "codegen-graphql",
         "codegen-react-router"
       ],
-      "description": "Run the project Vitest suite. Coverage is opt-in: set VITEST_COVERAGE=true to emit it under {workspaceRoot}/coverage/{projectRoot}. Depends on codegen (self + deps) so a fresh checkout generates the gitignored __generated__ output before Vitest collects — mirrors the typecheck/build wiring; without it source-first codegen packages (e.g. @openthrottle/openthrottle-developer-codegen) fail collection on 'Failed to resolve import ./__generated__/graphql'.",
       "executor": "@nx/vitest:test",
       "inputs": ["default", "^production"],
+      "metadata": {
+        "description": "Run the project Vitest suite. Coverage is opt-in: set VITEST_COVERAGE=true to emit it under {workspaceRoot}/coverage/{projectRoot}. Depends on codegen (self + deps) so a fresh checkout generates the gitignored __generated__ output before Vitest collects — mirrors the typecheck/build wiring; without it source-first codegen packages (e.g. @openthrottle/openthrottle-developer-codegen) fail collection on 'Failed to resolve import ./__generated__/graphql'."
+      },
       "options": {
         "configFile": "{projectRoot}/vitest.config.ts",
         "passWithNoTests": true,
@@ -482,8 +527,10 @@
           "command": "find flows -name '*.yaml' -type f | sort -u | xargs maestro test --config config.yaml -c"
         }
       },
-      "description": "Run the app's Maestro E2E flows from {projectRoot}/tests/e2e against a running server; configurations: smoke/full tag filters, watch, record, studio.",
       "executor": "nx:run-commands",
+      "metadata": {
+        "description": "Run the app's Maestro E2E flows from {projectRoot}/tests/e2e against a running server; configurations: smoke/full tag filters, watch, record, studio."
+      },
       "options": {
         "command": "find flows -name '*.yaml' -type f | sort -u | xargs maestro test --config config.yaml",
         "cwd": "{projectRoot}/tests/e2e"
@@ -498,12 +545,13 @@
         "codegen-graphql",
         "codegen-react-router"
       ],
-      "description": "Type-check the project; runs after build and codegen. The compiler binary is a knob, not a hardcode - `tsc` is TypeScript 7 and `tsc6` is TypeScript 6, selected per plugin options or $OPENTHROTTLE_TSC_BIN (see tools/nx-plugins/typecheck-compiler.ts). Outputs are declared per-plugin: dist .d.ts for buildable packages (tools/nx-plugins/package-typecheck.ts), none for source-first RR apps' noEmit pass (tools/nx-plugins/react-router-typecheck.ts)."
+      "metadata": {
+        "description": "Type-check the project; runs after build and codegen. The compiler binary is a knob, not a hardcode - `tsc` is TypeScript 7 and `tsc6` is TypeScript 6, selected per plugin options or $OPENTHROTTLE_TSC_BIN (see tools/nx-plugins/typecheck-compiler.ts). Outputs are declared per-plugin: dist .d.ts for buildable packages (tools/nx-plugins/package-typecheck.ts), none for source-first RR apps' noEmit pass (tools/nx-plugins/react-router-typecheck.ts)."
+      }
     },
     "validate-agent-assets-frontmatter": {
       "cache": true,
       "dependsOn": ["@openthrottle/nodejs-utils:build"],
-      "description": "Validate frontmatter on agent-asset files via scripts/validate-agent-assets-frontmatter.ts. Depends on the openthrottle-skills build because the script imports the package through its `exports` map (dist), which does not exist on a clean CI checkout.",
       "executor": "nx:run-commands",
       "inputs": [
         "{workspaceRoot}/.agents/personas/**/*",
@@ -512,6 +560,9 @@
         "{workspaceRoot}/scripts/validate-agent-assets-frontmatter.ts",
         "{workspaceRoot}/skills/**/*"
       ],
+      "metadata": {
+        "description": "Validate frontmatter on agent-asset files via scripts/validate-agent-assets-frontmatter.ts. Depends on the openthrottle-skills build because the script imports the package through its `exports` map (dist), which does not exist on a clean CI checkout."
+      },
       "options": {
         "command": "tsx ./scripts/validate-agent-assets-frontmatter.ts",
         "cwd": "{workspaceRoot}"
@@ -519,8 +570,10 @@
     },
     "validate-licenses": {
       "cache": false,
-      "description": "Dependency-license compliance gate: apply license-policy.json to `pnpm licenses list --json` and fail on any disallowed or undetected license (scripts/validate-license-compliance.ts). Not cached — reads the installed node_modules graph, which Nx does not hash.",
       "executor": "nx:run-commands",
+      "metadata": {
+        "description": "Dependency-license compliance gate: apply license-policy.json to `pnpm licenses list --json` and fail on any disallowed or undetected license (scripts/validate-license-compliance.ts). Not cached — reads the installed node_modules graph, which Nx does not hash."
+      },
       "options": {
         "command": "tsx ./scripts/validate-license-compliance.ts",
         "cwd": "{workspaceRoot}"
@@ -528,8 +581,10 @@
     },
     "snapshot-refresh": {
       "cache": false,
-      "description": "Re-export the sanitized snapshot of the REAL workspace database into packages/openthrottle-showroom/src/snapshot/data (docs in PIPELINE.md). Refresh on a branch and READ THE DIFF before merging — the diff review is the leak review. Never cached: it reads a live external database. POSTGRES_HOST pinned to localhost for the same reason as video-seed.",
       "executor": "nx:run-commands",
+      "metadata": {
+        "description": "Re-export the sanitized snapshot of the REAL workspace database into packages/openthrottle-showroom/src/snapshot/data (docs in PIPELINE.md). Refresh on a branch and READ THE DIFF before merging — the diff review is the leak review. Never cached: it reads a live external database. POSTGRES_HOST pinned to localhost for the same reason as video-seed."
+      },
       "options": {
         "command": "pnpm exec tsx --env-file .env packages/openthrottle-showroom/src/scripts/snapshot-export.ts",
         "env": {
@@ -539,8 +594,10 @@
     },
     "video-assemble": {
       "cache": false,
-      "description": "Compose a recorded flow plus one variant's narration into upload-ready 16:9 and 9:16 masters, an .srt and metadata.json (docs/marketing/pipeline.md). Pass --script <episode> and optionally --variant <id>; the capture under output/<episode>/ is shared by every variant, and the take is written to output/<episode>/<variant>/. Not cached: the inputs are gitignored capture artifacts Nx cannot hash, and a stale hit would silently publish last week's footage.",
       "executor": "nx:run-commands",
+      "metadata": {
+        "description": "Compose a recorded flow plus one variant's narration into upload-ready 16:9 and 9:16 masters, an .srt and metadata.json (docs/marketing/pipeline.md). Pass --script <episode> and optionally --variant <id>; the capture under output/<episode>/ is shared by every variant, and the take is written to output/<episode>/<variant>/. Not cached: the inputs are gitignored capture artifacts Nx cannot hash, and a stale hit would silently publish last week's footage."
+      },
       "options": {
         "command": "pnpm exec tsx ./src/assemble/assemble.ts",
         "cwd": "{projectRoot}"
@@ -548,8 +605,10 @@
     },
     "video-narrate": {
       "cache": false,
-      "description": "Render one variant's narration to per-sentence audio plus segment timings (docs/marketing/pipeline.md). Pass --script <episode> and optionally --variant <id>, which defaults to the episode's selectedVariant; audio lands in output/<episode>/<variant>/audio/ so two takes never overwrite each other. Not cached: it shells out to a TTS backend whose output Nx cannot hash, and the backend is chosen by env.",
       "executor": "nx:run-commands",
+      "metadata": {
+        "description": "Render one variant's narration to per-sentence audio plus segment timings (docs/marketing/pipeline.md). Pass --script <episode> and optionally --variant <id>, which defaults to the episode's selectedVariant; audio lands in output/<episode>/<variant>/audio/ so two takes never overwrite each other. Not cached: it shells out to a TTS backend whose output Nx cannot hash, and the backend is chosen by env."
+      },
       "options": {
         "command": "pnpm exec tsx ./src/narrate/narrate.ts",
         "cwd": "{projectRoot}"
@@ -557,8 +616,10 @@
     },
     "video-record": {
       "cache": false,
-      "description": "Drive a demo flow through the app with Playwright and capture frames plus a step-timing manifest (docs/marketing/pipeline.md). Takes no --variant: every variant of an episode shares one recording, which is the point — you re-narrate rather than re-record. Needs a production build serving the DEMO database. Never cached, because it reads live app state.",
       "executor": "nx:run-commands",
+      "metadata": {
+        "description": "Drive a demo flow through the app with Playwright and capture frames plus a step-timing manifest (docs/marketing/pipeline.md). Takes no --variant: every variant of an episode shares one recording, which is the point — you re-narrate rather than re-record. Needs a production build serving the DEMO database. Never cached, because it reads live app state."
+      },
       "options": {
         "command": "pnpm exec tsx ./src/runner/run.ts",
         "cwd": "{projectRoot}"
@@ -566,8 +627,10 @@
     },
     "video-scan": {
       "cache": false,
-      "description": "Leak-scan a recorded video before publishing: per-beat on-screen text from the shared capture plus the .srt and metadata.json of one take, checked for tokens, JWTs, home paths, real email addresses and denylisted names (docs/marketing/publish-checklist.md). Pass --script <episode> and optionally --variant <id>. Non-zero exit means do not publish. Not cached, because it reads capture artifacts Nx cannot hash.",
       "executor": "nx:run-commands",
+      "metadata": {
+        "description": "Leak-scan a recorded video before publishing: per-beat on-screen text from the shared capture plus the .srt and metadata.json of one take, checked for tokens, JWTs, home paths, real email addresses and denylisted names (docs/marketing/publish-checklist.md). Pass --script <episode> and optionally --variant <id>. Non-zero exit means do not publish. Not cached, because it reads capture artifacts Nx cannot hash."
+      },
       "options": {
         "command": "pnpm exec tsx ./src/scan/leak-scan.ts",
         "cwd": "{projectRoot}"
@@ -575,8 +638,10 @@
     },
     "video-seed-verify": {
       "cache": false,
-      "description": "Assert every episode's declared dataRequirements against the seeded DEMO database and fail naming the episode a missing row breaks. Runs at the end of video-seed; run standalone to re-check without re-seeding. Never cached: it reads an external database.",
       "executor": "nx:run-commands",
+      "metadata": {
+        "description": "Assert every episode's declared dataRequirements against the seeded DEMO database and fail naming the episode a missing row breaks. Runs at the end of video-seed; run standalone to re-check without re-seeding. Never cached: it reads an external database."
+      },
       "options": {
         "command": "sh ./src/scripts/verify-demo-data.sh",
         "cwd": "{projectRoot}"
@@ -584,8 +649,10 @@
     },
     "video-seed": {
       "cache": false,
-      "description": "Create, migrate and seed the deterministic fictional demo database the screencast pipeline records against; pass --reset to truncate first. Never cached, because it mutates an external database. POSTGRES_HOST is pinned to localhost: Nx loads the PROJECT's .env into the task, and the app's .env points Postgres at host.docker.internal, which does not resolve outside a container.",
       "executor": "nx:run-commands",
+      "metadata": {
+        "description": "Create, migrate and seed the deterministic fictional demo database the screencast pipeline records against; pass --reset to truncate first. Never cached, because it mutates an external database. POSTGRES_HOST is pinned to localhost: Nx loads the PROJECT's .env into the task, and the app's .env points Postgres at host.docker.internal, which does not resolve outside a container."
+      },
       "options": {
         "command": "sh ./src/scripts/seed-demo.sh",
         "cwd": "{projectRoot}",
@@ -596,13 +663,15 @@
     },
     "video-validate": {
       "cache": true,
-      "description": "Validate every episode against the format spec: spoken-word budget, beat and cue ordering, release slots, and the YouTube conventions from docs/marketing/youtube-format.md (tag baseline, title style, chapters, thumbnails). Structural problems fail immediately; documented conventions are advisory on a draft and become errors once an episode is marked ready or published, so the gate stays enforceable while Season 1's tag drift is still being worked through. Unlike the script it replaces, it never rewrites source — word counts are computed.",
       "executor": "nx:run-commands",
       "inputs": [
         "{projectRoot}/src/episodes/**/*",
         "{projectRoot}/src/validate/**/*",
         "{workspaceRoot}/docs/marketing/format.json"
       ],
+      "metadata": {
+        "description": "Validate every episode against the format spec: spoken-word budget, beat and cue ordering, release slots, and the YouTube conventions from docs/marketing/youtube-format.md (tag baseline, title style, chapters, thumbnails). Structural problems fail immediately; documented conventions are advisory on a draft and become errors once an episode is marked ready or published, so the gate stays enforceable while Season 1's tag drift is still being worked through. Unlike the script it replaces, it never rewrites source — word counts are computed."
+      },
       "options": {
         "command": "pnpm exec tsx ./src/validate/validate.ts",
         "cwd": "{projectRoot}"
