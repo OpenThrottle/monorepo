@@ -103,8 +103,16 @@ export const GlobalPopoverConfirmDialog = (
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>{cancelLabel}</AlertDialogCancel>
-          <AlertDialogAction onClick={handleConfirm} type="button">
+          <AlertDialogCancel data-testid="GlobalPopoverConfirmDialogCancel">
+            {cancelLabel}
+          </AlertDialogCancel>
+          {/* Stable hook for e2e: the confirm label is often identical to the
+              menu item's label, which leaves a text selector ambiguous. */}
+          <AlertDialogAction
+            data-testid="GlobalPopoverConfirmDialogConfirm"
+            onClick={handleConfirm}
+            type="button"
+          >
             {confirmLabel}
           </AlertDialogAction>
         </AlertDialogFooter>
