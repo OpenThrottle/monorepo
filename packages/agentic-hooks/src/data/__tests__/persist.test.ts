@@ -7,7 +7,15 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest';
 
 import {
   completeOpenStartsForSession,
@@ -97,6 +105,53 @@ describe('postSkillUsageEvent + persistUsageEvent', () => {
     expect(result.sink).toBe('server');
     expect(result.id).toBe('evt-2');
     expect(fs.existsSync(jsonlPath)).toBe(false);
+  });
+
+  /**
+   * The endpoint in the log line is the whole point: `fetch failed` alone gave
+   * no clue which host was tried, which is what made the IPv6 loopback bug
+   * slow to spot.
+   */
+  it('names the resolved endpoint in the fallback log line', async () => {
+    const write = vi.spyOn(process.stderr, 'write').mockReturnValue(true);
+
+    await persistUsageEvent({
+      event: sampleEvent,
+      fetchImpl: async () => {
+        throw new Error('fetch failed');
+      },
+      graphqlUrl: 'http://127.0.0.1:7451/graphql',
+      jsonlPath: path.join(tmpRoot, 'named-endpoint.jsonl'),
+      repoRoot: tmpRoot,
+      timeoutMs: 50,
+    });
+
+    const logged = write.mock.calls.map(([line]) => String(line)).join('');
+    expect(logged).toContain('server post failed; falling back to jsonl');
+    expect(logged).toContain('http://127.0.0.1:7451/graphql');
+
+    vi.restoreAllMocks();
+  });
+
+  it('redacts userinfo from the endpoint it logs', async () => {
+    const write = vi.spyOn(process.stderr, 'write').mockReturnValue(true);
+
+    await persistUsageEvent({
+      event: sampleEvent,
+      fetchImpl: async () => {
+        throw new Error('fetch failed');
+      },
+      graphqlUrl: 'http://user:hunter2@127.0.0.1:7451/graphql',
+      jsonlPath: path.join(tmpRoot, 'redacted-endpoint.jsonl'),
+      repoRoot: tmpRoot,
+      timeoutMs: 50,
+    });
+
+    const logged = write.mock.calls.map(([line]) => String(line)).join('');
+    expect(logged).not.toContain('hunter2');
+    expect(logged).toContain('http://***@127.0.0.1:7451/graphql');
+
+    vi.restoreAllMocks();
   });
 
   it('falls back to JSONL when fetch fails', async () => {

@@ -20,6 +20,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   describeTelemetryConfig,
   isOpenThrottleCheckout,
+  normalizeLoopbackHost,
   readRepoEnvFile,
   resolveAuthToken,
   resolveGraphqlUrl,
@@ -115,7 +116,7 @@ describe('config/env resolution by location', () => {
 
     it('reads an OpenThrottle checkout .env', () => {
       writeEnv(otRepo, 'OPENTHROTTLE_SERVER_APP_URL="http://localhost:7231"\n');
-      expect(resolveGraphqlUrl(otRepo)).toBe('http://localhost:7231/graphql');
+      expect(resolveGraphqlUrl(otRepo)).toBe('http://127.0.0.1:7231/graphql');
     });
   });
 
@@ -123,7 +124,7 @@ describe('config/env resolution by location', () => {
     it('this worktree .env beats a stale ambient shell', () => {
       writeEnv(otRepo, 'OPENTHROTTLE_SERVER_APP_URL="http://localhost:7231"\n');
       process.env.OPENTHROTTLE_SERVER_APP_URL = 'http://localhost:6021';
-      expect(resolveGraphqlUrl(otRepo)).toBe('http://localhost:7231/graphql');
+      expect(resolveGraphqlUrl(otRepo)).toBe('http://127.0.0.1:7231/graphql');
     });
 
     it('the ambient shell beats the user-global file', () => {
@@ -152,7 +153,7 @@ describe('config/env resolution by location', () => {
         path.join(fakeHome, '.openthrottle'),
         'OPENTHROTTLE_GRAPHQL_URL=http://home:3/graphql\n',
       );
-      expect(resolveGraphqlUrl(otRepo)).toBe('http://localhost:7231/graphql');
+      expect(resolveGraphqlUrl(otRepo)).toBe('http://127.0.0.1:7231/graphql');
     });
 
     it('trailing slashes are stripped at every layer', () => {
@@ -161,6 +162,76 @@ describe('config/env resolution by location', () => {
         'OPENTHROTTLE_GRAPHQL_URL=http://home:3/graphql/\n',
       );
       expect(resolveGraphqlUrl(foreignRepo)).toBe('http://home:3/graphql');
+    });
+  });
+
+  describe('loopback normalization', () => {
+    /**
+     * Node's fetch may prefer `::1` for `localhost` while the dev server binds
+     * only `0.0.0.0`. Telemetry is fail-open, so that connect failure is
+     * silent — events divert to JSONL while every surface looks healthy.
+     */
+    it('pins a localhost host to the IPv4 loopback, preserving the rest', () => {
+      expect(normalizeLoopbackHost('http://localhost:7451/graphql')).toBe(
+        'http://127.0.0.1:7451/graphql',
+      );
+      expect(normalizeLoopbackHost('http://localhost/graphql')).toBe(
+        'http://127.0.0.1/graphql',
+      );
+      expect(normalizeLoopbackHost('http://localhost')).toBe(
+        'http://127.0.0.1',
+      );
+      expect(normalizeLoopbackHost('https://localhost:7451/a/b?c=1#d')).toBe(
+        'https://127.0.0.1:7451/a/b?c=1#d',
+      );
+      expect(normalizeLoopbackHost('http://user@localhost:7451/graphql')).toBe(
+        'http://user@127.0.0.1:7451/graphql',
+      );
+    });
+
+    it('leaves every other host alone', () => {
+      for (const url of [
+        'http://127.0.0.1:7451/graphql',
+        'http://[::1]:7451/graphql',
+        'http://localhost.example.com/graphql',
+        'http://mylocalhost:7451/graphql',
+        'http://localhost@example.com/graphql',
+        'https://api.openthrottle.dev/graphql',
+      ]) {
+        expect(normalizeLoopbackHost(url)).toBe(url);
+      }
+    });
+
+    it('passes a value that is not URL-shaped straight through', () => {
+      // Resolution is fail-open; a malformed endpoint must never throw here.
+      for (const value of ['', 'localhost:7451', 'not a url', '://localhost']) {
+        expect(normalizeLoopbackHost(value)).toBe(value);
+      }
+    });
+
+    it('normalizes both the explicit and the app-url branch identically', () => {
+      writeEnv(
+        otRepo,
+        'OPENTHROTTLE_GRAPHQL_URL=http://localhost:7451/graphql\n',
+      );
+      expect(resolveGraphqlUrl(otRepo)).toBe('http://127.0.0.1:7451/graphql');
+
+      writeEnv(otRepo, 'OPENTHROTTLE_SERVER_APP_URL=http://localhost:7451\n');
+      expect(resolveGraphqlUrl(otRepo)).toBe('http://127.0.0.1:7451/graphql');
+    });
+
+    it('resolves the localhost and 127.0.0.1 forms to the same endpoint', () => {
+      writeEnv(
+        otRepo,
+        'OPENTHROTTLE_GRAPHQL_URL=http://localhost:7451/graphql\n',
+      );
+      const viaHostname = resolveGraphqlUrl(otRepo);
+
+      writeEnv(
+        otRepo,
+        'OPENTHROTTLE_GRAPHQL_URL=http://127.0.0.1:7451/graphql\n',
+      );
+      expect(resolveGraphqlUrl(otRepo)).toBe(viaHostname);
     });
   });
 

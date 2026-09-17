@@ -129,14 +129,16 @@ var resolveOtEnv = (repoRoot, key, options) => {
   }
   return "";
 };
+var LOOPBACK_AUTHORITY = /^([a-z][a-z0-9+.-]*:\/\/(?:[^/?#@]*@)?)localhost(?=[:/?#]|$)/i;
+var normalizeLoopbackHost = (url) => url.replace(LOOPBACK_AUTHORITY, "$1127.0.0.1");
 var graphqlUrlFromEnvMap = (env) => {
   const explicit = env.OPENTHROTTLE_GRAPHQL_URL?.trim() || env.OPENTHROTTLE_WORKER_GRAPHQL_URL?.trim();
   if (explicit) {
-    return explicit.replace(/\/$/, "");
+    return normalizeLoopbackHost(explicit.replace(/\/$/, ""));
   }
   const appUrl = env.OPENTHROTTLE_SERVER_APP_URL?.trim()?.replace(/\/$/, "");
   if (appUrl) {
-    return `${appUrl}/graphql`;
+    return normalizeLoopbackHost(`${appUrl}/graphql`);
   }
   return null;
 };
