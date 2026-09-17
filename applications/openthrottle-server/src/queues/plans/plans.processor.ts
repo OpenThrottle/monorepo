@@ -14,8 +14,10 @@ import {
 } from '@nestjs/common';
 import type { KeyedJsonlWriter } from '@openthrottle/nestjs-logging';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import type { PlanRunStatus } from '@openthrottle/nestjs-repositories';
 import {
   HEARTBEAT_INTERVAL_MS,
+  PLAN_RUN_STATUS,
   PlanOutputStreamService,
   PlanRunsService,
   PlansService,
@@ -235,6 +237,29 @@ export class PlansProcessor
     if (typeof planId !== 'string') return;
 
     await this.resetPlanStatusToQueued(planId, 'failed', error?.message);
+
+    // The retry boundary: 'failed' fires on EVERY attempt, but a retry is still going
+    // to re-claim this row (via markRunStarted, back to IN_PROGRESS). Only settle the
+    // plan_runs row to the terminal FAILED status once BullMQ will not retry again —
+    // settling earlier would have a retry re-claim a row that already reads terminal.
+    if (job !== undefined && this.hasExhaustedRetries(job)) {
+      await this.settleQueuedRunStatus(
+        PLANS_QUEUE_NAME,
+        String(job.id),
+        PLAN_RUN_STATUS.FAILED,
+      );
+    }
+  }
+
+  /**
+   * Whether a job's failed attempt is its last — `attempts` guards against undefined by
+   * defaulting to 1 (BullMQ's own default, meaning no retries), so an unconfigured job is
+   * treated as exhausted on its first and only attempt.
+   */
+  private hasExhaustedRetries(job: RunPlanJob): boolean {
+    const attempts = job.opts.attempts ?? 1;
+
+    return job.attemptsMade >= attempts;
   }
 
   /**
@@ -528,6 +553,7 @@ export class PlansProcessor
         logContext,
         metricsAtStart,
         abortSignal,
+        heartbeatTimer,
         lifecycleDispatcher,
         workSessionId,
       );
@@ -622,6 +648,27 @@ export class PlansProcessor
     } catch (error) {
       this.logger.warn(
         `Failed to clear plan_runs location: jobId=${bullmqJobId}, error=${error instanceof Error ? error.message : String(error)}`,
+        PlansProcessor.name,
+      );
+    }
+  }
+
+  /**
+   * Best-effort: settle the plan_runs row for this job to a terminal status
+   * (COMPLETED / CANCELLED / FAILED — never STALE, which is reserved for the stale
+   * sweeper) and null its run-location columns. Never throws — the settle write is
+   * diagnostic bookkeeping, not on the critical path of the job outcome itself.
+   */
+  private async settleQueuedRunStatus(
+    queueName: string,
+    bullmqJobId: string,
+    status: PlanRunStatus,
+  ): Promise<void> {
+    try {
+      await this.planRunsService.settleRunByJob(queueName, bullmqJobId, status);
+    } catch (error) {
+      this.logger.warn(
+        `Failed to settle plan_runs status: jobId=${bullmqJobId}, status=${status}, error=${error instanceof Error ? error.message : String(error)}`,
         PlansProcessor.name,
       );
     }
@@ -746,6 +793,7 @@ export class PlansProcessor
     logContext: string,
     metricsAtStart: ProcessMetricsSnapshot,
     abortSignal: AbortSignal,
+    heartbeatTimer: ReturnType<typeof setInterval>,
     lifecycleDispatcher?: ReturnType<
       WorkflowLifecycleDispatcherFactory['create']
     >,
@@ -793,6 +841,12 @@ export class PlansProcessor
       workflowKind: 'ralph',
     });
 
+    // Stop the wall-clock heartbeat BEFORE any terminal plan_runs write below: a tick
+    // landing after the row is settled would advance last_heartbeat_at on a terminal
+    // (COMPLETED/CANCELLED/FAILED) row, which reads as a live run to the staleness
+    // reader/sweeper and to any human looking at the column.
+    clearInterval(heartbeatTimer);
+
     const metricsAtEnd = this.processMetrics.getCurrentSnapshot();
     const taskRunMetrics = { atEnd: metricsAtEnd, atStart: metricsAtStart };
 
@@ -800,6 +854,12 @@ export class PlansProcessor
       this.logger.warn(
         `Orchestrator Ralph failed: reason=${outcome.reason}, ${logContext}`,
         PlansProcessor.name,
+      );
+
+      await this.settleQueuedRunStatus(
+        PLANS_QUEUE_NAME,
+        jobId,
+        PLAN_RUN_STATUS.FAILED,
       );
 
       await this.completePlanRunWithHooks({
@@ -822,6 +882,12 @@ export class PlansProcessor
       this.logger.info(
         `Orchestrator Ralph cancelled (user or API), ${logContext}`,
         PlansProcessor.name,
+      );
+
+      await this.settleQueuedRunStatus(
+        PLANS_QUEUE_NAME,
+        jobId,
+        PLAN_RUN_STATUS.CANCELLED,
       );
 
       await this.completePlanRunWithHooks({
@@ -863,6 +929,12 @@ export class PlansProcessor
     this.logger.info(
       `Orchestrator Ralph finished: reason=${outcome.reason}, jobId=${jobId}, ${logContext}`,
       PlansProcessor.name,
+    );
+
+    await this.settleQueuedRunStatus(
+      PLANS_QUEUE_NAME,
+      jobId,
+      PLAN_RUN_STATUS.COMPLETED,
     );
 
     await this.completePlanRunWithHooks({
