@@ -142,6 +142,12 @@ deterministic: fixed esbuild version, `minify: false`, no sourcemap, and a banne
 Never hand-edit a generated `.cjs` or anything under a generated payload directory — edit `src/` and
 regenerate.
 
+The root [`.gitattributes`](../../.gitattributes) marks every payload path `-diff
+linguist-generated=true`: git reports them as binary and GitHub collapses them in "Files changed",
+so review lands on the source rather than the bundle. For the same reason **`git blame` on a `.cjs`
+is meaningless** — it names whoever last ran `bundle-hooks`. Blame the `Source:` path in the
+bundle's header banner.
+
 ## Fail-open is the whole posture
 
 A hook runs on the critical path of a tool call, so it is never allowed to be the reason something

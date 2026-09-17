@@ -61,7 +61,10 @@ mechanics, see [MONOREPO.md](./MONOREPO.md) and [docs/monorepo/](./docs/monorepo
    (enforced by commitlint + Husky). Don't bypass the hooks (`--no-verify`).
 5. **Open a PR** with the
    [pull request template](./.github/pull_request_template.md): a
-   conventional-commit title, and testing steps phrased as things to do.
+   conventional-commit title, and testing steps phrased as things to do. Files
+   that arrive **collapsed** in "Files changed" are generator output marked in
+   [`.gitattributes`](./.gitattributes) and do not need review — each entry
+   there names the gate that protects it and the source to read instead.
 6. **Merge with a direct squash.** The merge queue on `main` is currently
    **disabled** (single contributor — see
    [docs/monorepo/ci-cost.md](./docs/monorepo/ci-cost.md#merge-queue-on-main); it

@@ -136,6 +136,34 @@ The rules are grouped by **who catches you**. The honor-system ones lead, becaus
 - **`nx sync` (TypeScript project references):** use `pnpm nx sync:check` to report drift (it also gates `check:local`) and `pnpm nx sync` to fix it, inspecting the diff before committing. The generator is deliberately **not** attached to the task pipeline, so `nx run`/`affected` never sync and never fail on drift. An `applications/*` → `applications/*` reference is always wrong. Full decision and measurements: [docs/monorepo/NX.md](docs/monorepo/NX.md#nx-sync--the-typescript-project-reference-sync).
 - **Knip (dead code):** Run **`pnpm nx run monorepo:knip`** for reports only. Do **not** run `knip --fix` or `knip --fix-type exports` on application UI—it strips intentional `export` on component prop types. Optional `knip --fix-type dependencies` only after human review. See [docs/monorepo/Knip.md](docs/monorepo/Knip.md). CI gate priorities and owners: [docs/monorepo/CI-quality-gates.md](docs/monorepo/CI-quality-gates.md). **CI cost model** — what CI costs, why the free tier depends on the repo being public, and the checklist before adding a job / changing a `runs-on` / adding a schedule: [docs/monorepo/ci-cost.md](docs/monorepo/ci-cost.md).
 
+## Committed generator output
+
+Generated payloads are committed (hooks must run from a bare checkout) and gated
+byte-for-byte, so they cannot be gitignored — instead the root
+[`.gitattributes`](.gitattributes) tells git and GitHub what they are.
+
+- Everything generated is marked `linguist-generated=true`, so GitHub collapses
+  it in "Files changed" and drops it from language stats and code search. Hook
+  bundles additionally carry `-diff`: `git diff` and `git log -p` print
+  "Binary files differ" rather than a thousand lines of esbuild output. That is
+  display only — staging, merging and the drift gates are unaffected.
+- **`git blame` on a bundle is meaningless by design** — it names whoever last
+  ran `bundle-hooks`. Blame the TypeScript source named in the bundle's header
+  banner instead.
+- `applications/openthrottle-server/schema.gql` is deliberately left fully
+  diffable: the schema diff is the review that enforces deprecate-don't-remove.
+- **Adding a new committed payload directory? Add its glob in the same commit**
+  — a folder glob (`.gemini/hooks/*.cjs`), never a file name, which is how
+  `plan-run-janitor.cjs` slipped past `.prettierignore`. _(Enforced.)_
+  `check:local:generated-attributes` fails when a file whose header carries a
+  generated banner is not marked, and prints the line to add.
+- Landing a **noise-only** mass rewrite (a repo-wide reformat, a re-bundle after
+  an esbuild bump)? Append its **landed squash SHA** to
+  [`.git-blame-ignore-revs`](.git-blame-ignore-revs) with a `# <subject>`
+  comment. Never list a commit that changed behavior. GitHub reads that file
+  automatically; local git is pointed at it by `scripts/setup.ts` and worktree
+  provisioning.
+
 ## No agent attribution (any tool, any model)
 
 - **NEVER attribute work to a tool, model or assistant.** Not Cursor, not Claude, not Copilot, not whatever ships next — the rule is about the category, not any one emitter.

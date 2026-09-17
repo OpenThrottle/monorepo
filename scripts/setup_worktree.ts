@@ -14,10 +14,11 @@ import { basename, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { run } from './lib/exec.ts';
+import { configureBlameIgnoreRevs } from './lib/git.ts';
 import { createLogger } from './lib/logger.ts';
-import { resetEnvironmentFiles } from './setup_environment.ts';
-import { APP_PORT_NAMES, CANONICAL_APP_PORTS, resolveWorktreePorts } from './lib/worktree-ports.ts'; // prettier-ignore
 import type { AppPortName } from './lib/worktree-ports.ts';
+import { APP_PORT_NAMES, CANONICAL_APP_PORTS, resolveWorktreePorts } from './lib/worktree-ports.ts'; // prettier-ignore
+import { resetEnvironmentFiles } from './setup_environment.ts';
 
 const logger = createLogger();
 
@@ -197,6 +198,11 @@ const step = (command: string, args: string[] = []): void => {
 const main = async (): Promise<void> => {
   // 0. Set up our skills (pre-install by design — owned by ot-skill-sync).
   step('./skills/ot-skill-sync/scripts/sync.sh');
+
+  // 0b. Point local git blame at .git-blame-ignore-revs. Linked worktrees
+  //     share the primary checkout's config, so this is usually already set;
+  //     it is idempotent, and a no-op on a branch that predates the file.
+  configureBlameIgnoreRevs(process.cwd());
 
   // 1. Create the environment file(s) — resets each .env to .env.default
   //    unconditionally: worktree provisioning always starts from the template

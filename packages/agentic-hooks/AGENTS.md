@@ -63,6 +63,11 @@ Each of these is a rule you can fail, not a description.
   under a tool hook folder (`.claude/hooks/`, `.cursor/hooks/`, …) and everything under
   `plugins/openthrottle/`. Edit `src/`, then run
   `pnpm nx run @openthrottle/agentic-hooks:bundle-hooks`.
+- **`git blame` on a bundle is meaningless by design** — every line names whoever last ran
+  `bundle-hooks`. Blame the `Source:` path in the bundle's header banner instead. The root
+  `.gitattributes` marks these paths `-diff linguist-generated=true`, so `git diff` and `git log -p`
+  report them as binary and GitHub collapses them in review; a _new_ payload directory must get its
+  own glob there in the same commit, or `check:local:generated-attributes` fails.
 - **Adding a bundle means THREE edits, not one.** (1) the adapter under `src/adapters/<tool>/`,
   (2) a `BUNDLES` row in `scripts/bundle-hooks.ts`, (3) the new path in the `outputs` array of
   `bundle-hooks` **and** the `inputs` array of `bundle-hooks-check` in `package.json`. Miss the

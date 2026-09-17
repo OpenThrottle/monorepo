@@ -15,8 +15,8 @@
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
+import { configureBlameIgnoreRevs, isLinkedWorktree } from './lib/git.ts';
 import { createLogger } from './lib/index.ts';
-import { isLinkedWorktree } from './lib/git.ts';
 import { interactiveConfirm, resetEnvironmentFiles } from './setup_environment.ts'; // prettier-ignore
 
 const logger = createLogger();
@@ -84,6 +84,13 @@ const main = async (): Promise<void> => {
     logger.fail('setup runs on the primary checkout only — this is a linked worktree.'); // prettier-ignore
     logger.detail('Provision worktrees with: pnpm run worktree:new <name> (or pnpm run worktree:heal)'); // prettier-ignore
     process.exit(1);
+  }
+
+  // Local git needs blame.ignoreRevsFile pointed at .git-blame-ignore-revs;
+  // GitHub picks the root file up on its own. Best-effort — a checkout without
+  // the file is left unconfigured on purpose (see configureBlameIgnoreRevs).
+  if (configureBlameIgnoreRevs(process.cwd())) {
+    logger.detail('git blame.ignoreRevsFile → .git-blame-ignore-revs');
   }
 
   logger.heading('Environment files 🔐');
