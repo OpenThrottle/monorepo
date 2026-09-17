@@ -1,13 +1,14 @@
 /**
  * @description Live task-scoped output stream for the task detail view. Mirrors
- * {@link usePlanOutputStream} but filters to a single task: it seeds from the
- * loader's plan chunks (filtered by taskId), merges live `planOutputChunkAdded`
- * deltas (also filtered by taskId), and dedupes by chunk id. Attribution is loose
- * (task 8 v1 filters client-side), so only chunks whose `taskId` matches are kept.
- * On task navigation the accumulated map resets so one task's chunks never leak
- * into another; on same-task revalidation the fresh snapshot is merged (so a live
- * delta not yet in the snapshot survives). SSR-safe: with no ws client it returns
- * the filtered seed.
+ * {@link usePlanOutputStream} but scoped to a single task: it seeds from the
+ * loader's already-task-filtered chunks (the server filters by both planId and
+ * taskId), merges live `planOutputChunkAdded` deltas, and dedupes by chunk id.
+ * The subscription is plan-scoped and selects `taskId`, so incoming deltas are
+ * still filtered client-side to this task before being merged in — only the
+ * fetch-time filter moved server-side. On task navigation the accumulated map
+ * resets so one task's chunks never leak into another; on same-task
+ * revalidation the fresh snapshot is merged (so a live delta not yet in the
+ * snapshot survives). SSR-safe: with no ws client it returns the seed.
  */
 import type {
   PlanOutputChunkAddedSubscription,
@@ -39,12 +40,7 @@ export function useTaskOutputStream(
 ): Chunk[] {
   // Hooks
   const [byId, setById] = React.useState<ReadonlyMap<string, Chunk>>(
-    () =>
-      new Map(
-        seedChunks
-          .filter((chunk) => chunk.taskId === taskId)
-          .map((chunk) => [chunk.id, chunk]),
-      ),
+    () => new Map(seedChunks.map((chunk) => [chunk.id, chunk])),
   );
   const seededTaskId = React.useRef(taskId);
 
@@ -79,7 +75,7 @@ export function useTaskOutputStream(
 
       const next = new Map(base);
       for (const chunk of seedChunks) {
-        if (chunk.taskId === taskId) next.set(chunk.id, chunk);
+        next.set(chunk.id, chunk);
       }
 
       return next;

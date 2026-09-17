@@ -29,6 +29,7 @@ const planOutputStreamRepo = {
 
 const mockPlanOutputStreamService = createMock<PlanOutputStreamService>({
   getRepository: vi.fn().mockReturnValue(planOutputStreamRepo),
+  listChunks: vi.fn(),
 });
 
 describe('PlanOutputStreamResolver', () => {
@@ -108,7 +109,9 @@ describe('PlanOutputStreamResolver', () => {
 
   describe('planOutputStreamChunks', () => {
     test('returns array of PlanOutputStreamChunkObjects for planId', async () => {
-      vi.mocked(planOutputStreamRepo.find).mockResolvedValue([mockChunk]);
+      vi.mocked(mockPlanOutputStreamService.listChunks).mockResolvedValue([
+        mockChunk,
+      ]);
 
       const result = await resolver.planOutputStreamChunks({
         planId: mockChunk.planId,
@@ -121,7 +124,7 @@ describe('PlanOutputStreamResolver', () => {
     });
 
     test('returns empty array when no chunks for plan', async () => {
-      vi.mocked(planOutputStreamRepo.find).mockResolvedValue([]);
+      vi.mocked(mockPlanOutputStreamService.listChunks).mockResolvedValue([]);
 
       const result = await resolver.planOutputStreamChunks({
         planId: mockChunk.planId,
@@ -131,17 +134,17 @@ describe('PlanOutputStreamResolver', () => {
     });
 
     test('applies the default cap (take 1000, skip 0) when no limit/offset', async () => {
-      vi.mocked(planOutputStreamRepo.find).mockResolvedValue([]);
+      vi.mocked(mockPlanOutputStreamService.listChunks).mockResolvedValue([]);
 
       await resolver.planOutputStreamChunks({ planId: mockChunk.planId });
 
-      expect(planOutputStreamRepo.find).toHaveBeenCalledWith(
+      expect(mockPlanOutputStreamService.listChunks).toHaveBeenCalledWith(
         expect.objectContaining({ skip: 0, take: 1000 }),
       );
     });
 
     test('passes through an explicit limit/offset', async () => {
-      vi.mocked(planOutputStreamRepo.find).mockResolvedValue([]);
+      vi.mocked(mockPlanOutputStreamService.listChunks).mockResolvedValue([]);
 
       await resolver.planOutputStreamChunks({
         limit: 50,
@@ -149,66 +152,26 @@ describe('PlanOutputStreamResolver', () => {
         planId: mockChunk.planId,
       });
 
-      expect(planOutputStreamRepo.find).toHaveBeenCalledWith(
+      expect(mockPlanOutputStreamService.listChunks).toHaveBeenCalledWith(
         expect.objectContaining({ skip: 10, take: 50 }),
       );
     });
 
-    test('filters by taskId when one is supplied', async () => {
-      vi.mocked(planOutputStreamRepo.find).mockResolvedValue([]);
-
-      await resolver.planOutputStreamChunks({
-        planId: mockChunk.planId,
-        taskId: 'task-1',
-      });
-
-      expect(planOutputStreamRepo.find).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { planId: mockChunk.planId, taskId: 'task-1' },
-        }),
-      );
-    });
-
-    test('omits the taskId filter entirely when none is supplied', async () => {
-      vi.mocked(planOutputStreamRepo.find).mockResolvedValue([]);
-
-      await resolver.planOutputStreamChunks({ planId: mockChunk.planId });
-
-      expect(planOutputStreamRepo.find).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { planId: mockChunk.planId } }),
-      );
-    });
-
-    // A null taskId means "no filter", not "only untagged chunks" — spreading a
-    // literal null into the where clause would silently narrow the plan stream.
-    test('treats a null taskId as no filter rather than a null match', async () => {
-      vi.mocked(planOutputStreamRepo.find).mockResolvedValue([]);
-
-      await resolver.planOutputStreamChunks({
-        planId: mockChunk.planId,
-        taskId: null,
-      });
-
-      expect(planOutputStreamRepo.find).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { planId: mockChunk.planId } }),
-      );
-    });
-
     test('clamps a limit above the max down to 1000', async () => {
-      vi.mocked(planOutputStreamRepo.find).mockResolvedValue([]);
+      vi.mocked(mockPlanOutputStreamService.listChunks).mockResolvedValue([]);
 
       await resolver.planOutputStreamChunks({
         limit: 5000,
         planId: mockChunk.planId,
       });
 
-      expect(planOutputStreamRepo.find).toHaveBeenCalledWith(
+      expect(mockPlanOutputStreamService.listChunks).toHaveBeenCalledWith(
         expect.objectContaining({ take: 1000 }),
       );
     });
 
     test('clamps a non-positive limit up to 1 and a negative offset to 0', async () => {
-      vi.mocked(planOutputStreamRepo.find).mockResolvedValue([]);
+      vi.mocked(mockPlanOutputStreamService.listChunks).mockResolvedValue([]);
 
       await resolver.planOutputStreamChunks({
         limit: 0,
@@ -216,9 +179,36 @@ describe('PlanOutputStreamResolver', () => {
         planId: mockChunk.planId,
       });
 
-      expect(planOutputStreamRepo.find).toHaveBeenCalledWith(
+      expect(mockPlanOutputStreamService.listChunks).toHaveBeenCalledWith(
         expect.objectContaining({ skip: 0, take: 1 }),
       );
+    });
+
+    test('does not pass a taskId to the service when omitted from input', async () => {
+      vi.mocked(mockPlanOutputStreamService.listChunks).mockResolvedValue([]);
+
+      await resolver.planOutputStreamChunks({ planId: mockChunk.planId });
+
+      expect(mockPlanOutputStreamService.listChunks).toHaveBeenCalledWith(
+        expect.objectContaining({ taskId: undefined }),
+      );
+    });
+
+    test('forwards taskId to the service when provided (task-scoped filter)', async () => {
+      const taskId = '9b1f0c3a-2d4e-4f6a-8b0c-1d2e3f4a5b6c';
+      vi.mocked(mockPlanOutputStreamService.listChunks).mockResolvedValue([
+        { ...mockChunk, taskId },
+      ]);
+
+      const result = await resolver.planOutputStreamChunks({
+        planId: mockChunk.planId,
+        taskId,
+      });
+
+      expect(mockPlanOutputStreamService.listChunks).toHaveBeenCalledWith(
+        expect.objectContaining({ planId: mockChunk.planId, taskId }),
+      );
+      expect(result[0]?.taskId).toBe(taskId);
     });
   });
 

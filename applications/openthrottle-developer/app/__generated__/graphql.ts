@@ -7683,6 +7683,7 @@ export type TaskLinkedArtifactsQuery = {
 
 export type TaskOutputStreamChunksQueryVariables = Exact<{
   planId: Scalars['ID']['input'];
+  taskId: Scalars['ID']['input'];
 }>;
 
 export type TaskOutputStreamChunksQuery = {
@@ -19217,6 +19218,17 @@ export const TaskOutputStreamChunksDocument = {
             type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
           },
         },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'taskId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
       ],
       selectionSet: {
         kind: 'SelectionSet',
@@ -19237,6 +19249,14 @@ export const TaskOutputStreamChunksDocument = {
                       value: {
                         kind: 'Variable',
                         name: { kind: 'Name', value: 'planId' },
+                      },
+                    },
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'taskId' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'taskId' },
                       },
                     },
                   ],

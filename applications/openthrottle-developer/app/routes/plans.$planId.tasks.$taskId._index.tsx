@@ -77,9 +77,8 @@ export const loader = async (args: Route.LoaderArgs) => {
   /*
     The plan, the linked artifacts and the output chunks each depend only on the
     task we just fetched — never on each other — so they issue together instead
-    of stacking three more round-trips behind the first. Task-scoped output (v1)
-    fetches the plan's chunks; the Output tab filters client-side by taskId (see
-    useTaskOutputStream).
+    of stacking three more round-trips behind the first. The server filters
+    output chunks by both planId and taskId.
   */
   const [planResult, linkedArtifactsResult, planOutputChunksResult] =
     await Promise.all([
@@ -96,6 +95,7 @@ export const loader = async (args: Route.LoaderArgs) => {
       task?.planId != null
         ? executeGraphqlWithAuth(args.request, TaskOutputStreamChunksDocument, {
             planId: task.planId,
+            taskId,
           })
         : null,
     ]);

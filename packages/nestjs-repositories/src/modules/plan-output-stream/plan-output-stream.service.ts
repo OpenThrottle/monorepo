@@ -21,4 +21,26 @@ export class PlanOutputStreamService {
   getRepository(): Repository<PlanOutputStreamChunk> {
     return this.planOutputStreamRepository;
   }
+
+  /**
+   * @description Lists a plan's output stream chunks, ordered by createdAt ascending. An
+   * omitted or null taskId applies no task filter and returns the full plan stream — matching
+   * deletePlanOutput's scoping semantics, where taskId only narrows an already-scoped query.
+   */
+  async listChunks(params: {
+    planId: string;
+    skip: number;
+    take: number;
+    taskId?: string | null;
+  }): Promise<PlanOutputStreamChunk[]> {
+    return this.planOutputStreamRepository.find({
+      order: { createdAt: 'ASC' },
+      skip: params.skip,
+      take: params.take,
+      where: {
+        planId: params.planId,
+        ...(params.taskId ? { taskId: params.taskId } : {}),
+      },
+    });
+  }
 }
