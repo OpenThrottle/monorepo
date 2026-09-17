@@ -685,6 +685,13 @@ jobs:
       - name: '📋 Agent assets frontmatter validation (D5)'
         run: pnpm exec nx run monorepo:validate-agent-assets-frontmatter
 
+      # Whole-tree read of every tracked file's header — a `gates` job step for
+      # the same reason as its neighbours. Fails when a generated payload is not
+      # marked linguist-generated in the root .gitattributes, the omission that
+      # otherwise stays invisible until a PR diff is drowned in bundle churn.
+      - name: '🫥 Generated-payload .gitattributes coverage'
+        run: pnpm exec nx run monorepo:check-generated-attributes
+
       # Static and build-free, so one shard is enough. Catches the `exports`
       # condition pointing into a gitignored build dir on a package whose own
       # sources import it by name — the mismatch that made shard assignment,

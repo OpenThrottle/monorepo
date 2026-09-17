@@ -223,6 +223,24 @@
         "parallel": false
       }
     },
+    "check-generated-attributes": {
+      "cache": true,
+      "description": "Verify every tracked file whose header carries a generated banner is marked linguist-generated in the root .gitattributes, via scripts/check-generated-attributes.ts. Catches a new payload directory the moment it is committed, so generator output cannot quietly start dominating PR diffs, blame and code search. Error-mode. `inputs` MUST be explicit {workspaceRoot} globs — the root `monorepo` project owns 0 files, so the default {projectRoot} input would hash nothing and cache-hit forever.",
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsx ./scripts/check-generated-attributes.ts",
+        "cwd": "{workspaceRoot}"
+      },
+      "inputs": [
+        "{workspaceRoot}/.claude/hooks/*.cjs",
+        "{workspaceRoot}/.codex/hooks/*.cjs",
+        "{workspaceRoot}/.cursor/hooks/*.cjs",
+        "{workspaceRoot}/.gitattributes",
+        "{workspaceRoot}/applications/*/schema.gql",
+        "{workspaceRoot}/plugins/*/**",
+        "{workspaceRoot}/scripts/check-generated-attributes.ts"
+      ]
+    },
     "check-migration-hygiene": {
       "cache": true,
       "executor": "nx:run-commands",
