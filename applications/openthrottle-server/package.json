@@ -86,8 +86,10 @@
           "^build",
           "^build-package"
         ],
-        "description": "Emit the server to ./build with tsc. NOT `nest build`: its SWC builder cannot rewrite `.ts` import specifiers to `.js`, so ESM output would not resolve at runtime (OT plan 31454927 task 2). `--noCheck` keeps this an emit-only step, preserving the separation the old `typeCheck: false` had \u2014 the `typecheck` target is the type gate, and it resolves workspace types through project references that the pruned Docker tree does not carry. The compiler is the same $OPENTHROTTLE_TSC_BIN knob typecheck uses.",
         "executor": "nx:run-commands",
+        "metadata": {
+          "description": "Emit the server to ./build with tsc. NOT `nest build`: its SWC builder cannot rewrite `.ts` import specifiers to `.js`, so ESM output would not resolve at runtime (OT plan 31454927 task 2). `--noCheck` keeps this an emit-only step, preserving the separation the old `typeCheck: false` had \u2014 the `typecheck` target is the type gate, and it resolves workspace types through project references that the pruned Docker tree does not carry. The compiler is the same $OPENTHROTTLE_TSC_BIN knob typecheck uses."
+        },
         "options": {
           "command": "${OPENTHROTTLE_TSC_BIN:-tsc} -p tsconfig.app.json --noCheck",
           "cwd": "{projectRoot}"
@@ -106,8 +108,10 @@
           },
           "^dev"
         ],
-        "description": "Run the server in watch mode (PROCESS_ROLE=all). Replaces `nest start`: the SWC builder it uses cannot rewrite `.ts` import specifiers to `.js`, so ESM output does not resolve at runtime (OT plan 31454927 task 2). tsc emits, `node --watch` reruns.",
         "executor": "nx:run-commands",
+        "metadata": {
+          "description": "Run the server in watch mode (PROCESS_ROLE=all). Replaces `nest start`: the SWC builder it uses cannot rewrite `.ts` import specifiers to `.js`, so ESM output does not resolve at runtime (OT plan 31454927 task 2). tsc emits, `node --watch` reruns."
+        },
         "options": {
           "commands": [
             "${OPENTHROTTLE_TSC_BIN:-tsc} -p tsconfig.app.json --watch --preserveWatchOutput",
@@ -129,8 +133,10 @@
           },
           "^dev"
         ],
-        "description": "Run the API role in watch mode. Replaces `nest start`: the SWC builder it uses cannot rewrite `.ts` import specifiers to `.js`, so ESM output does not resolve at runtime (OT plan 31454927 task 2). tsc emits, `node --watch` reruns.",
         "executor": "nx:run-commands",
+        "metadata": {
+          "description": "Run the API role in watch mode. Replaces `nest start`: the SWC builder it uses cannot rewrite `.ts` import specifiers to `.js`, so ESM output does not resolve at runtime (OT plan 31454927 task 2). tsc emits, `node --watch` reruns."
+        },
         "options": {
           "commands": [
             "${OPENTHROTTLE_TSC_BIN:-tsc} -p tsconfig.app.json --watch --preserveWatchOutput",
@@ -148,8 +154,10 @@
         "dependsOn": [
           "^dev"
         ],
-        "description": "Run the server in watch mode with the inspector on 9229. Replaces `nest start`: the SWC builder it uses cannot rewrite `.ts` import specifiers to `.js`, so ESM output does not resolve at runtime (OT plan 31454927 task 2). tsc emits, `node --watch` reruns.",
         "executor": "nx:run-commands",
+        "metadata": {
+          "description": "Run the server in watch mode with the inspector on 9229. Replaces `nest start`: the SWC builder it uses cannot rewrite `.ts` import specifiers to `.js`, so ESM output does not resolve at runtime (OT plan 31454927 task 2). tsc emits, `node --watch` reruns."
+        },
         "options": {
           "commands": [
             "${OPENTHROTTLE_TSC_BIN:-tsc} -p tsconfig.app.json --watch --preserveWatchOutput",
@@ -161,6 +169,9 @@
       },
       "docker-build": {
         "executor": "nx:run-commands",
+        "metadata": {
+          "description": "Build openthrottle-server image from root Dockerfile.NestJS (monorepo context). Set GITHUB_TOKEN in environment for private deps."
+        },
         "options": {
           "command": "docker build -f Dockerfile.NestJS --target production --build-arg APP_NAME=openthrottle-server --build-arg APP_VERSION=$APP_VERSION --build-arg PNPM_VERSION=$PNPM_VERSION --build-arg GITHUB_TOKEN=$GITHUB_TOKEN -t openthrottle-server:local .",
           "cwd": "{workspaceRoot}",
@@ -168,8 +179,7 @@
             "APP_VERSION": "1.3.0",
             "PNPM_VERSION": "11.6.0"
           }
-        },
-        "description": "Build openthrottle-server image from root Dockerfile.NestJS (monorepo context). Set GITHUB_TOKEN in environment for private deps."
+        }
       },
       "lint": {
         "options": {
@@ -179,12 +189,6 @@
       },
       "start": {
         "continuous": true,
-        "description": "Run openthrottle-server (no watch, no debug) after building the server and its dependencies. `build` is listed in dependsOn alongside `^build`: `^build` is only *dependencies'* output, so without it this target would run whatever stale `build/` happened to be on disk. Replaces `nest start`: the SWC builder it uses cannot rewrite `.ts` import specifiers to `.js`, so ESM output does not resolve at runtime (OT plan 31454927 task 2). tsc emits, `node --watch` reruns.",
-        "executor": "nx:run-commands",
-        "options": {
-          "command": "node --enable-source-maps ./build/src/main.js",
-          "cwd": "{projectRoot}"
-        },
         "dependsOn": [
           {
             "target": "ensure-migrations",
@@ -192,29 +196,39 @@
           },
           "build",
           "^build"
-        ]
+        ],
+        "executor": "nx:run-commands",
+        "metadata": {
+          "description": "Run openthrottle-server (no watch, no debug) after building the server and its dependencies. `build` is listed in dependsOn alongside `^build`: `^build` is only *dependencies'* output, so without it this target would run whatever stale `build/` happened to be on disk. Replaces `nest start`: the SWC builder it uses cannot rewrite `.ts` import specifiers to `.js`, so ESM output does not resolve at runtime (OT plan 31454927 task 2). tsc emits, `node --watch` reruns."
+        },
+        "options": {
+          "command": "node --enable-source-maps ./build/src/main.js",
+          "cwd": "{projectRoot}"
+        }
       },
       "test": {},
       "typecheck": {},
       "worker": {
         "continuous": true,
-        "description": "Run BullMQ processors only (PROCESS_ROLE=worker, no HTTP listener, no watch \u2014 deliberately, so API edits can't restart it). Pair with `dev-api` for the split dev loop. Replaces `nest start`: the SWC builder it uses cannot rewrite `.ts` import specifiers to `.js`, so ESM output does not resolve at runtime (OT plan 31454927 task 2). tsc emits, `node --watch` reruns.",
+        "dependsOn": [
+          {
+            "target": "ensure-migrations",
+            "projects": "monorepo"
+          },
+          "build",
+          "^build"
+        ],
         "executor": "nx:run-commands",
+        "metadata": {
+          "description": "Run BullMQ processors only (PROCESS_ROLE=worker, no HTTP listener, no watch \u2014 deliberately, so API edits can't restart it). Pair with `dev-api` for the split dev loop. Replaces `nest start`: the SWC builder it uses cannot rewrite `.ts` import specifiers to `.js`, so ESM output does not resolve at runtime (OT plan 31454927 task 2). tsc emits, `node --watch` reruns."
+        },
         "options": {
           "command": "node --enable-source-maps ./build/src/main.js",
           "cwd": "{projectRoot}",
           "env": {
             "PROCESS_ROLE": "worker"
           }
-        },
-        "dependsOn": [
-          {
-            "target": "ensure-migrations",
-            "projects": "monorepo"
-          },
-          "build",
-          "^build"
-        ]
+        }
       }
     }
   },

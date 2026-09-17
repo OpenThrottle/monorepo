@@ -104,7 +104,6 @@ query getDashboardOnboarding {
 # (hinted at only 30s, since it tracks server env) therefore lives on
 # getDashboardOnboarding instead — the loader joins the two.
 query getDashboardGithubStats($owner: String!, $repo: String!) {
-
   closedPrCountByAuthor: openPrCountByAuthor(
     input: { owner: $owner, repo: $repo, state: "closed" }
   ) {
@@ -119,9 +118,7 @@ query getDashboardGithubStats($owner: String!, $repo: String!) {
     openCount
   }
 
-  prTimeInStateSummary(
-    input: { owner: $owner, repo: $repo, state: "open" }
-  ) {
+  prTimeInStateSummary(input: { owner: $owner, repo: $repo, state: "open" }) {
     avgDaysInState
     count
     state

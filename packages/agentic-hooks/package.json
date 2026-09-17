@@ -40,7 +40,6 @@
         "dependsOn": [
           "^build"
         ],
-        "description": "esbuild-bundle each per-tool hook adapter into a self-contained committed .cjs under its tool hook folder (.claude/hooks, .cursor/hooks), and generate the distributable Claude Code plugin payload under plugins/openthrottle from the same sources.",
         "executor": "nx:run-commands",
         "inputs": [
           "{projectRoot}/package.json",
@@ -48,6 +47,9 @@
           "{projectRoot}/src/**/*",
           "^production"
         ],
+        "metadata": {
+          "description": "esbuild-bundle each per-tool hook adapter into a self-contained committed .cjs under its tool hook folder (.claude/hooks, .cursor/hooks), and generate the distributable Claude Code plugin payload under plugins/openthrottle from the same sources."
+        },
         "options": {
           "command": "pnpm exec tsx packages/agentic-hooks/scripts/bundle-hooks.ts",
           "cwd": "{workspaceRoot}"
@@ -82,7 +84,6 @@
         "dependsOn": [
           "^build"
         ],
-        "description": "Drift gate: regenerate the hook bundles and the plugin payload in-memory and diff against the committed files, failing on drift (codegen-style).",
         "executor": "nx:run-commands",
         "inputs": [
           "^production",
@@ -112,6 +113,9 @@
           "{workspaceRoot}/plugins/openthrottle/hooks/skill-usage-complete.cjs",
           "{workspaceRoot}/plugins/openthrottle/plugin.json"
         ],
+        "metadata": {
+          "description": "Drift gate: regenerate the hook bundles and the plugin payload in-memory and diff against the committed files, failing on drift (codegen-style)."
+        },
         "options": {
           "command": "pnpm exec tsx packages/agentic-hooks/scripts/bundle-hooks.ts --check",
           "cwd": "{workspaceRoot}"

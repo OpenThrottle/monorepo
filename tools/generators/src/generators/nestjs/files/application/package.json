@@ -24,25 +24,19 @@
     "targets": {
       "build": {
         "executor": "nx:run-commands",
-        "options": {
-          "command": "${OPENTHROTTLE_TSC_BIN:-tsc} -p {projectRoot}/tsconfig.app.json --noCheck"
-        },
         "dependsOn": [
           "^build",
           "^build-package"
         ],
-        "description": "Emit the app to ./build with tsc (emit only; `typecheck` is the type gate). Not `nest build`/`nest start`: their SWC builder cannot rewrite `.ts` import specifiers to `.js`, so the ESM this package emits would not resolve at runtime (OT plan 31454927 task 2). Mirrors applications/openthrottle-server."
+        "metadata": {
+          "description": "Emit the app to ./build with tsc (emit only; `typecheck` is the type gate). Not `nest build`/`nest start`: their SWC builder cannot rewrite `.ts` import specifiers to `.js`, so the ESM this package emits would not resolve at runtime (OT plan 31454927 task 2). Mirrors applications/openthrottle-server."
+        },
+        "options": {
+          "command": "${OPENTHROTTLE_TSC_BIN:-tsc} -p {projectRoot}/tsconfig.app.json --noCheck"
+        },
       },
       "dev": {
         "continuous": true,
-        "executor": "nx:run-commands",
-        "options": {
-          "commands": [
-            "${OPENTHROTTLE_TSC_BIN:-tsc} -p {projectRoot}/tsconfig.app.json --watch --preserveWatchOutput",
-            "node --watch --enable-source-maps ./build/src/main.js"
-          ],
-          "parallel": true
-        },
         "dependsOn": [
           {
             "target": "ensure-worktree",
@@ -50,7 +44,17 @@
           },
           "^dev"
         ],
-        "description": "Run the app in watch mode: tsc emits, `node --watch` reruns. Not `nest build`/`nest start`: their SWC builder cannot rewrite `.ts` import specifiers to `.js`, so the ESM this package emits would not resolve at runtime (OT plan 31454927 task 2). Mirrors applications/openthrottle-server."
+        "executor": "nx:run-commands",
+        "metadata": {
+          "description": "Run the app in watch mode: tsc emits, `node --watch` reruns. Not `nest build`/`nest start`: their SWC builder cannot rewrite `.ts` import specifiers to `.js`, so the ESM this package emits would not resolve at runtime (OT plan 31454927 task 2). Mirrors applications/openthrottle-server."
+        },
+        "options": {
+          "commands": [
+            "${OPENTHROTTLE_TSC_BIN:-tsc} -p {projectRoot}/tsconfig.app.json --watch --preserveWatchOutput",
+            "node --watch --enable-source-maps ./build/src/main.js"
+          ],
+          "parallel": true
+        },
       },
       "lint": {
         "options": {
@@ -61,10 +65,12 @@
       "start": {
         "continuous": true,
         "executor": "nx:run-commands",
+        "metadata": {
+          "description": "Run the built app. Not `nest build`/`nest start`: their SWC builder cannot rewrite `.ts` import specifiers to `.js`, so the ESM this package emits would not resolve at runtime (OT plan 31454927 task 2). Mirrors applications/openthrottle-server."
+        },
         "options": {
           "command": "node --enable-source-maps ./build/src/main.js"
         },
-        "description": "Run the built app. Not `nest build`/`nest start`: their SWC builder cannot rewrite `.ts` import specifiers to `.js`, so the ESM this package emits would not resolve at runtime (OT plan 31454927 task 2). Mirrors applications/openthrottle-server."
       },
       "test": {},
       "typecheck": {}
