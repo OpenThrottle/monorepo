@@ -1,10 +1,12 @@
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
+
 import {
-  createNodesFromFiles,
   type CreateNodes,
+  createNodesFromFiles,
   type CreateNodesResultArray,
 } from '@nx/devkit';
+
 import {
   resolveTypecheckCompiler,
   TYPECHECK_COMPILER_INPUTS,
@@ -56,7 +58,12 @@ import {
  * declarations before this pass runs.
  *
  */
-const SOURCE_CONFIG_GLOB = `{applications,packages,tools}/*/tsconfig.{lib,app}.json`;
+// `skills` was added so a skill's bundled scripts (e.g. skills/ot-telemetry)
+// can opt into the same real typecheck target as any package/tool by adding a
+// tsconfig.lib.json — see skills/ot-telemetry/package.json and
+// skills/AGENTS.md's validation note. No other skills/* directory has one
+// today, so this is additive.
+const SOURCE_CONFIG_GLOB = `{applications,packages,skills,tools}/*/tsconfig.{lib,app}.json`;
 
 export const createNodesV2: CreateNodes<TypecheckCompilerOptions> = [
   SOURCE_CONFIG_GLOB,

@@ -1,0 +1,53 @@
+{
+  "name": "@openthrottle/ot-telemetry-skill",
+  "description": "Validation-only Nx wiring for the ot-telemetry skill's bundled scripts (skills/ot-telemetry/scripts). The scripts themselves are run directly via tsx per SKILL.md, never imported as a package — this file exists so lint/typecheck/test actually run in CI.",
+  "version": "1.0.0",
+  "author": {
+    "email": "matthew.scholta@gmail.com",
+    "name": "Matthew Scholta",
+    "url": "https://mattscholta.com"
+  },
+  "dependencies": {
+    "@openthrottle/openthrottle-agentic-utils": "workspace:^",
+    "pg": "catalog:"
+  },
+  "devDependencies": {
+    "@types/pg": "catalog:",
+    "tsx": "catalog:",
+    "vitest": "catalog:"
+  },
+  "exports": {
+    ".": {
+      "default": "./scripts/report.ts",
+      "types": "./scripts/report.ts"
+    }
+  },
+  "license": "Apache-2.0",
+  "main": "./scripts/report.ts",
+  "module": "./scripts/report.ts",
+  "nx": {
+    "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
+    "projectType": "library",
+    "sourceRoot": "./scripts",
+    "tags": [
+      "name:@openthrottle/ot-telemetry-skill",
+      "production:false",
+      "publish:false",
+      "technology:nodejs",
+      "technology:typescript",
+      "type:tool"
+    ],
+    "targets": {
+      "__build": {},
+      "__build-package": {},
+      "lint": {},
+      "test": {},
+      "typecheck": {}
+    }
+  },
+  "private": true,
+  "repository": "git://github.com/OpenThrottle/monorepo.git",
+  "scripts": {},
+  "type": "module",
+  "types": "./scripts/report.ts"
+}

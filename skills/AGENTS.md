@@ -13,7 +13,7 @@ Authoring references (load these; do not restate them here):
 
 Need a machine check? [`skills-ref validate`](https://github.com/agentskills/agentskills/tree/main/skills-ref) against the skill directory — a format check, not a production dependency.
 
-This folder is both OpenThrottle-wide workflow skills (the `github-*` family: `github-commit`, `github-pull-request`, `github-squash`) and repo-specific ones like [`ot-onboarding/`](./ot-onboarding/) (the new-user orientation on-ramp). Other OpenThrottle repos install these via `npx skills add openthrottle/monorepo --agent universal`.
+This folder is both OpenThrottle-wide workflow skills (the `github-*` family: `github-commit`, `github-pull-request`, `github-squash`) and repo-specific ones like [`ot-onboarding/`](./ot-onboarding/) (the new-user orientation on-ramp) and [`ot-telemetry/`](./ot-telemetry/) (a local, privacy-preserving OT usage report). Other OpenThrottle repos install these via `npx skills add openthrottle/monorepo --agent universal`.
 
 ## Where skills live
 
@@ -49,6 +49,7 @@ npx skills update
 - Each skill is its own directory containing a `SKILL.md`. Keep it focused and self-contained.
 - **Never use relative links that point outside the skill's directory.** Skills are copied into other repos on install, so a `../../docs/...` link dangles there. Link within the skill relatively; link everything else by absolute URL (e.g. `https://github.com/openthrottle/monorepo/blob/main/docs/openthrottle/first-time-onboarding.md`) — anyone who installed the skill has repo access already.
 - When a skill overlaps with docs (e.g. `ot-onboarding` and `docs/openthrottle/first-time-onboarding.md`), cross-link the two so agents can find either entry point.
+- **`skills/**/*` is excluded from the root ESLint config and root `tsconfig.json` — nothing validates a skill's bundled scripts by default.** If a skill ships non-trivial `scripts/` (more than a shell one-liner), give it its own Nx project so `lint`/`typecheck`/`test` actually run in `check:local`: a `package.json` next to `SKILL.md` with an explicit `nx.targets` block (`lint`/`typecheck`/`test`, following the `packages/nodejs-utils` "no `build` target" shape — `main`/`exports` pointing at source, not `dist`), its own `tsconfig*.json`/`eslint.config.ts`/`vitest.config.ts`, and an entry in `pnpm-workspace.yaml`'s `packages:` list. See [`ot-telemetry/package.json`](./ot-telemetry/package.json) for a worked example, including why its `typecheck` target needed `tools/nx-plugins/package-typecheck.ts`'s glob widened to include `skills/*`.
 
 ## See also
 
