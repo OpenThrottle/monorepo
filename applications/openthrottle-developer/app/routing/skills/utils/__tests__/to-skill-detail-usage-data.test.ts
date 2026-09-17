@@ -24,6 +24,7 @@ const row: SkillUsage['bySkill'][number] = {
   lastUsedAt: '2026-08-09T00:00:00.000Z',
   outcomeCount: 8,
   scope: 'user',
+  sessionEndedCount: 0,
   skillName: 'graphify',
   successCount: 6,
 };
@@ -51,6 +52,7 @@ describe('toSkillDetailUsageData', () => {
         lastUsedAt: '2026-08-09T00:00:00.000Z',
         outcomeCount: 8,
         scope: 'user',
+        sessionEndedCount: 0,
         skillName: 'graphify',
         successCount: 6,
       },

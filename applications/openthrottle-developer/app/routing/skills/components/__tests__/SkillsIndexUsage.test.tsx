@@ -24,6 +24,7 @@ const buildBySkill = (
   errorCount: 0,
   outcomeCount: 0,
   scope: SKILL_USAGE_SCOPES.OURS,
+  sessionEndedCount: 0,
   skillName: 'ot-plans',
   successCount: 0,
   ...overrides,

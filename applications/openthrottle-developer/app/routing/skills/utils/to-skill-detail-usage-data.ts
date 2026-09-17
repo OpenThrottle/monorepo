@@ -32,6 +32,7 @@ export const toSkillDetailUsageData = (
           lastUsedAt: row.lastUsedAt == null ? null : String(row.lastUsedAt),
           outcomeCount: row.outcomeCount,
           scope: row.scope,
+          sessionEndedCount: row.sessionEndedCount,
           skillName: row.skillName,
           successCount: row.successCount,
         }

@@ -18,6 +18,7 @@ const row = (
   errorCount: 0,
   outcomeCount: 0,
   scope,
+  sessionEndedCount: 0,
   skillName,
   successCount: 0,
 });

@@ -18,8 +18,21 @@ export type PrivacyLevel = 'full' | 'name-only' | 'truncated';
  */
 export type Scope = 'ours' | 'personal' | 'third-party';
 
-/** Automatic + manual outcome classifiers. */
-export type SkillUsageOutcome = 'abandoned' | 'error' | 'success';
+/**
+ * Outcome classifiers, split by who can honestly emit them.
+ *
+ * The AUTOMATIC session-end path can only ever produce `session_ended` or
+ * `abandoned`: a harness Stop payload carries a session id and nothing else, so
+ * it knows the session finished but nothing about whether the skill helped, was
+ * followed, or was even read.
+ *
+ * `success` and `error` are QUALITY claims and are reserved for a deliberate
+ * reporter that actually knows how the work went — the opt-in
+ * `skill-usage-outcome` helper, or an adapter whose harness reports a genuine
+ * failure status. Nothing automatic may emit them.
+ */
+export type SkillUsageOutcome =
+  'abandoned' | 'error' | 'session_ended' | 'success';
 
 /**
  * The producer contract — what a per-tool adapter must supply. Everything

@@ -182,8 +182,10 @@ var SKILL_LINK_DIR = import_node_path2.default.join(".agents", "skills");
 var SKILL_USAGE_OUTCOMES = Object.freeze({
   ABANDONED: "abandoned",
   ERROR: "error",
+  SESSION_ENDED: "session_ended",
   SUCCESS: "success"
 });
+var SKILL_USAGE_QUALITY_OUTCOMES = Object.freeze([SKILL_USAGE_OUTCOMES.ERROR, SKILL_USAGE_OUTCOMES.SUCCESS]);
 
 // packages/nodejs-utils/src/utils/is-record.ts
 var isRecord = (value) => typeof value === "object" && value !== null && !Array.isArray(value);

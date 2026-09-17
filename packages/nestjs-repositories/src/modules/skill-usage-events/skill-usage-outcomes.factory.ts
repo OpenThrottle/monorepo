@@ -7,10 +7,14 @@ import { Factory } from 'fishery';
 
 import { SKILL_USAGE_SCOPES } from './skill-usage-events.entity.ts';
 import type { SkillUsageOutcome } from './skill-usage-outcomes.entity.ts';
-import { SKILL_USAGE_OUTCOMES } from './skill-usage-outcomes.entity.ts';
+import {
+  SKILL_USAGE_CAPTURE_MODELS,
+  SKILL_USAGE_OUTCOMES,
+} from './skill-usage-outcomes.entity.ts';
 
 export type SkillUsageOutcomeFactoryData = Pick<
   SkillUsageOutcome,
+  | 'captureModel'
   | 'cwd'
   | 'durationMs'
   | 'gitBranch'
@@ -30,6 +34,7 @@ export const skillUsageOutcomesFactory =
     const occurredAt = faker.date.recent();
 
     return {
+      captureModel: SKILL_USAGE_CAPTURE_MODELS.REPORTED_V1,
       cwd: faker.system.directoryPath(),
       durationMs: faker.number.int({ max: 120_000, min: 50 }),
       gitBranch: faker.git.branch(),

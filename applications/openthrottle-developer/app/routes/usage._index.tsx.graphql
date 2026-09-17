@@ -59,6 +59,7 @@ fragment UsageSkillUsageBySkill on SkillUsageBySkillObject {
   errorCount
   outcomeCount
   scope
+  sessionEndedCount
   skillName
   successCount
 }

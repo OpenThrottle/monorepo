@@ -172,4 +172,12 @@ export class SkillUsageEvent {
    */
   @Column({ name: 'user_id', nullable: true, type: 'uuid' })
   userId!: string | null;
+
+  /**
+   * Instrumentation probe from telemetry bring-up, not real usage. A closed
+   * historical set; /usage excludes these so they stop inflating counts. See
+   * migration 115.
+   */
+  @Column({ default: false, name: 'is_fixture', type: 'boolean' })
+  isFixture!: boolean;
 }

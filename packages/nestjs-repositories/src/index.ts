@@ -286,10 +286,12 @@ export {
   SkillUsageEventsService,
 } from './modules/skill-usage-events/skill-usage-events.service.ts';
 export type {
+  SkillUsageCaptureModel,
   SkillUsageOutcomeData,
   SkillUsageOutcomeValue,
 } from './modules/skill-usage-events/skill-usage-outcomes.entity.ts';
 export {
+  SKILL_USAGE_CAPTURE_MODELS,
   SKILL_USAGE_OUTCOMES,
   SkillUsageOutcome,
 } from './modules/skill-usage-events/skill-usage-outcomes.entity.ts';

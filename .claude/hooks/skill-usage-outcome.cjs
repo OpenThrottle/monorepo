@@ -264,8 +264,10 @@ mutation RecordSkillUsageOutcome($input: RecordSkillUsageOutcomeInput!) {
 var SKILL_USAGE_OUTCOMES = Object.freeze({
   ABANDONED: "abandoned",
   ERROR: "error",
+  SESSION_ENDED: "session_ended",
   SUCCESS: "success"
 });
+var SKILL_USAGE_QUALITY_OUTCOMES = Object.freeze([SKILL_USAGE_OUTCOMES.ERROR, SKILL_USAGE_OUTCOMES.SUCCESS]);
 var buildOutcomeEvent = ({
   skillName,
   outcome,
@@ -282,7 +284,7 @@ var buildOutcomeEvent = ({
   if (!name) {
     return null;
   }
-  if (outcome !== "success" && outcome !== "abandoned" && outcome !== "error") {
+  if (outcome !== "success" && outcome !== "abandoned" && outcome !== "error" && outcome !== "session_ended") {
     return null;
   }
   const scope = detectScope(name, repoRoot);
@@ -515,7 +517,11 @@ var main = async () => {
     const durationMs = durationRaw === "" ? null : Number(durationRaw);
     if (outcome !== SKILL_USAGE_OUTCOMES.SUCCESS && outcome !== SKILL_USAGE_OUTCOMES.ABANDONED && outcome !== SKILL_USAGE_OUTCOMES.ERROR) {
       logHookError(
-        `invalid --outcome (want ${Object.values(SKILL_USAGE_OUTCOMES).join("|")})`
+        `invalid --outcome (want ${[
+          SKILL_USAGE_OUTCOMES.SUCCESS,
+          SKILL_USAGE_OUTCOMES.ABANDONED,
+          SKILL_USAGE_OUTCOMES.ERROR
+        ].join("|")})`
       );
       return;
     }
