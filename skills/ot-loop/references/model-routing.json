@@ -1,0 +1,143 @@
+{
+  "_readme": [
+    "Machine-readable model routing policy for skills/ot-loop. This file is the SINGLE source of",
+    "truth for category -> model. CLAUDE.md stays the source of truth for what each model IS",
+    "(its cost/intelligence/taste ranking); this file only decides which one a task gets.",
+    "Rationale, measurements and the reasons behind each choice: docs/openthrottle/per-task-model-routing.md",
+    "",
+    "Shape: look up lower(tasks.category) in `categories`. A hit gives a tier name; a miss, or a",
+    "null/blank category, gives `default`. Resolve the tier in `tiers` to get the `agentModel`",
+    "(the value to pass as the Agent tool's `model` parameter) and `recordAs` (the model id to",
+    "declare to begin_task_session so attribution and routing agree)."
+  ],
+
+  "version": 1,
+
+  "READ_COST_CORRECTLY": [
+    "In CLAUDE.md's table, every axis is a RANKING where HIGHER = BETTER FOR THE OWNER.",
+    "For cost that means HIGHER = CHEAPER. sonnet-5 (cost 5) is the CHEAPEST of the three.",
+    "fable-5 (cost 2) is the MOST EXPENSIVE.",
+    "This has been read backwards once, with consequences: ~10 fable subagents were fanned out",
+    "over ~60 mechanical component conformances (OT 0f0528ff) and exhausted the org's MONTHLY",
+    "spend cap mid-run. The most expensive model was chosen for the most mechanical job because",
+    "cost=2 was read as 'cheap'. If you are about to escalate, re-read this paragraph."
+  ],
+
+  "models": {
+    "claude-sonnet-5": {
+      "claudeMdLabel": "sonnet-5",
+      "cost": 5,
+      "intelligence": 5,
+      "taste": 7,
+      "note": "Cheapest. CLAUDE.md: bulk/mechanical work, 'effectively free'. Taste 7 already meets CLAUDE.md's user-facing bar of >= 7, so user-facing work does NOT require escalation on taste alone."
+    },
+    "claude-opus-5": {
+      "claudeMdLabel": "opus-4.8",
+      "cost": 4,
+      "intelligence": 7,
+      "taste": 8,
+      "note": "The escalation tier. CLAUDE.md's table names this row opus-4.8 while the harness's current Opus selector resolves to Opus 5; the ranking is what matters here, not the point version. See the naming-drift note in the routing doc."
+    },
+    "claude-fable-5": {
+      "claudeMdLabel": "fable-5",
+      "cost": 2,
+      "intelligence": 9,
+      "taste": 9,
+      "note": "Strongest AND most expensive. Never selected by automatic routing — see tiers.review."
+    }
+  },
+
+  "tiers": {
+    "default": {
+      "agentModel": "sonnet",
+      "recordAs": "claude-sonnet-5",
+      "why": "Cheapest model that clears the bar for clear-spec work. The default is deliberately the cheap tier: escalation must be an explicit decision, never what happens when nothing matched."
+    },
+    "escalate": {
+      "agentModel": "opus",
+      "recordAs": "claude-opus-5",
+      "why": "Intelligence 7 and taste 8 for work whose spec is genuinely open — the task has to decide something, not implement something already decided."
+    },
+    "review": {
+      "agentModel": "fable",
+      "recordAs": "claude-fable-5",
+      "neverAutoRouted": true,
+      "why": "CLAUDE.md names fable-5 (or opus-4.8) for reviews of plans/implementations, but fable-5 is the most expensive model, so no category maps here. Reaching this tier requires a deliberate per-task decision by the orchestrator or the human, and never applies to a batch."
+    }
+  },
+
+  "guardrails": {
+    "_why": [
+      "Routing makes spawning expensive agents trivial, and that has already gone wrong once",
+      "(OT 0f0528ff). These bound it. The first two are structural — the loop's shape enforces",
+      "them — and the rest are rules a caller has to follow."
+    ],
+    "maxConcurrentNonDefaultTierAgents": 1,
+    "maxConcurrentNonDefaultTierAgents_note": [
+      "STRUCTURALLY ENFORCED today, not an honour-system number: skills/ot-loop runs exactly one",
+      "task at a time (its stated invariant) and delegates at most one subagent per task, so 1 is",
+      "the shape of the loop rather than a limit bolted onto it.",
+      "Any change that introduces intra-task fan-out or parallel task lanes (OT c22e5ba1,",
+      "1c0d627a) MUST re-decide this number explicitly for non-default tiers rather than",
+      "inheriting whatever concurrency it sets for the cheap tier."
+    ],
+    "autoRoutedToMostExpensiveTier": 0,
+    "autoRoutedToMostExpensiveTier_note": [
+      "No category maps to the review tier, so automatic routing can never select fable-5.",
+      "This is the load-bearing guardrail: the 0f0528ff failure was an inverted cost axis",
+      "producing a fleet of the most expensive model, and that path no longer exists. Even a",
+      "cost-axis misreading cannot reach fable through the lookup."
+    ],
+    "escalationIsPerTask": [
+      "Escalate one task because that task needs it. NEVER escalate a fleet, a batch, or a plan.",
+      "There is no 'this plan is hard, run it all on opus' — the tier is a property of the task.",
+      "0f0528ff escalated a batch: ~10 fable subagents over ~60 mechanical component",
+      "conformances, which exhausted the org's MONTHLY spend cap mid-run."
+    ],
+    "splitMixedWorkByDifficulty": [
+      "When a batch mixes difficulties, split it and route each part. Never route the whole batch",
+      "at its hardest item's tier — that is how one genuinely hard task drags 59 mechanical ones",
+      "up with it."
+    ],
+    "preferFinishingTheMechanicalTail": [
+      "A finite mechanical tail is cheaper finished in the main loop than re-spawned. Spawning has",
+      "a fixed cost per agent and mechanical work does not benefit from a stronger model."
+    ],
+    "beforeYouEscalate": [
+      "Re-read READ_COST_CORRECTLY at the top of this file. Higher cost number = CHEAPER.",
+      "If you are escalating more than one task at a time, stop — see escalationIsPerTask."
+    ]
+  },
+
+  "unknownCategory": "default",
+  "nullCategory": "default",
+
+  "categories": {
+    "analysis": "escalate",
+    "architecture": "escalate",
+    "chore": "default",
+    "cleanup": "default",
+    "database": "default",
+    "design": "escalate",
+    "doc": "default",
+    "docs": "default",
+    "documentation": "default",
+    "exploration": "escalate",
+    "implementation": "default",
+    "investigation": "escalate",
+    "maintenance": "default",
+    "migration": "default",
+    "refactor": "default",
+    "research": "escalate",
+    "spike": "escalate",
+    "test": "default",
+    "testing": "default",
+    "tests": "default",
+    "verification": "default"
+  },
+
+  "notKeyedOn": {
+    "task_tags": "Rejected for v1. task_tags.dimension is CHECK-constrained to ('domain','phase') (migration 064), so a routing dimension needs a migration, and task_tags is sparsely populated compared to tasks.category (84% populated). Revisit only if category proves too coarse in practice.",
+    "tag_action_rules": "Rejected. It has the right extension seam but the wrong semantics: rules are fingerprinted one-application-per-(rule, plan) and 'Actions are NEVER undone' — un-matching only flips a ledger row to 'orphaned'. Model routing must be re-decided fresh on every run."
+  }
+}
