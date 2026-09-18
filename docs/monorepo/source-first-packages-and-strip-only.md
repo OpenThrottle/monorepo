@@ -271,8 +271,10 @@ decision, which is exactly the kind of drift the gate now catches.
 on any violation.
 
 No package is exempt. The gate's `NESTJS_BLOCKERS` map exists and is empty, which is the
-intended steady state; it is shrink-only on the same terms as the baseline above, so a
-listed package that stops violating is itself an error.
+intended steady state; it is shrink-only, so a listed package that stops violating is itself
+an error. It is now the gate's only exemption mechanism — the shrink-only baseline that
+froze the 37 packages already mis-pointing an `exports` condition reached zero and was
+deleted, which is what took the `types` condition from warn to error.
 
 ### Four packages could be source-first today. They are built anyway, deliberately.
 

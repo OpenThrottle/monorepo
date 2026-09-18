@@ -19,29 +19,40 @@
  * whose own `main`/`module` already names `src/` are considered, because those
  * ship no build output a consumer should be reading.
  *
- * 1. error — a *runtime* condition (`import`, or a bare/`default` string) points
- *    into a gitignored build directory AND the package's own `src/**` imports the
- *    package by its own name. This is the guaranteed break: a project's `test`
- *    target never depends on its own `build`.
- * 2. error — the package is not listed in the shrink-only baseline (see below).
- *    A newly mis-pointed condition is always cheaper to fix at the moment it is
- *    written than after it has been inherited.
- * 3. warn — any other mis-pointed condition, `types` included, on a package the
- *    baseline already lists: a latent landmine that arms itself the moment
- *    someone writes an entry test or imports the package from a NodeNext project.
+ * **One severity: error.** Any of {@link RESOLVED_CONDITIONS} pointing into a
+ * gitignored build directory fails the gate, `types` included. This rule has no
+ * warn tier and no exemption list; the only exemption mechanism left anywhere in
+ * the gate is {@link NESTJS_BLOCKERS}, which belongs to the separate
+ * `technology:nestjs` invariant below and is empty.
  *
- * ## The baseline is a ratchet
+ * ## Why `types` errors, when the original rationale only covered runtime
  *
- * {@link BASELINE_PATH} freezes the packages that were already offending, so the
- * gate can error on *new* offenders without first requiring the existing
- * population to be fixed. It is keyed on package names, not warning strings: the
- * warning text churns with the remediation message, and the warning count is an
- * artifact of the `./*` subpath map rather than a measure of the problem.
+ * The gate shipped warn-mode with a shrink-only baseline of the 37 packages that
+ * were already offending, and an error tier scoped to *runtime* conditions on a
+ * package whose own `src/**` imports it by name — the one guaranteed break, since
+ * a project's `test` target never depends on its own `build`. `types` sat at warn
+ * because it could not inherit that argument: a mis-pointed `types` is `TS2305`
+ * only for a consumer that holds no tsconfig project reference, and
+ * `pnpm nx sync:check` now enforces reference parity for every in-workspace
+ * project unconditionally. The residual risk is a *published* consumer — and
+ * every package in this workspace is `private: true`, so that set is empty.
  *
- * Crucially, a baselined package that *stops* offending is also an error — the
- * file must be pruned. That asymmetry is what makes this a ratchet rather than a
- * suppression list: the listed population can only shrink, and a stale entry can
- * never quietly re-authorize a regression.
+ * So `types` is **not** promoted on the strength of its own hazard, and not on
+ * symmetry either. It errors because the baseline reached zero. A package absent
+ * from the baseline was always an error on any resolved condition; once the file
+ * was empty every package was absent from it, and `types` had been erroring in
+ * practice for as long as the population has been zero. Deleting the baseline
+ * changed no verdict on any tree — it deleted the branch that could no longer
+ * fire. The claim this gate makes is therefore narrower than "a mis-pointed
+ * `types` breaks something": it is that a package contradicting itself — `main`
+ * naming `src/` while a resolved condition names a build directory — is a defect
+ * regardless of which consumer would notice first, and the workspace has already
+ * paid down the entire population, so the cost of holding the line is zero.
+ *
+ * `importsItselfByName` survives as *diagnosis*, not severity. It no longer
+ * decides whether a package fails — everything fails — and it is retained only to
+ * tell an author whose test suite is already broken why, rather than leaving them
+ * to discover the shard dependence themselves.
  *
  * Ignored directories are read from the real `.gitignore` via `git check-ignore`
  * rather than hardcoding `dist`, so a package that commits its build output is
@@ -73,18 +84,12 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
-import { createLogger, hasFlag } from './lib/index.ts';
+import { createLogger } from './lib/index.ts';
 
 const logger = createLogger();
 
 const ROOT = process.cwd();
 const WORKSPACE_DIRS = ['applications', 'packages', 'tools'] as const;
-
-/**
- * @description Repo-relative path to the shrink-only baseline — the packages that
- * were already offending when the gate started erroring on new ones
- */
-const BASELINE_PATH = 'scripts/check-package-entrypoints.baseline.txt';
 
 /**
  * @description The Nx tag that carries the built-not-source-first shape. See the
@@ -121,10 +126,11 @@ const DEV_TARGET = 'dev';
 
 /**
  * @description The `technology:nestjs` packages that cannot satisfy the rule yet,
- * mapped to what blocks them. Their violations warn instead of erroring — and, as
- * with {@link BASELINE_PATH}, a listed package that *stops* violating is itself an
- * error, so the map can only shrink and a stale entry can never quietly
- * re-authorize a regression.
+ * mapped to what blocks them. Their violations warn instead of erroring, and a
+ * listed package that *stops* violating is itself an error, so the map can only
+ * shrink and a stale entry can never quietly re-authorize a regression. This is
+ * the last exemption mechanism left in the gate — the entrypoint baseline it was
+ * modelled on reached zero and was deleted.
  *
  * **Currently empty, and that is the intended steady state.** It held
  * `@openthrottle/nestjs-agentic-workflow` until the two defects behind it were
@@ -154,9 +160,10 @@ const RESOLVED_CONDITIONS = ['default', 'import', 'types'] as const;
 
 /**
  * @description The subset of {@link RESOLVED_CONDITIONS} that decides whether
- * code *runs*. Only these can produce the shard-dependent test failure that makes
- * an offender an error rather than a warning; a mis-pointed `types` condition
- * breaks typechecking, which is a different (and currently warn-only) problem.
+ * code *runs*. Only these can produce the shard-dependent test failure described
+ * in the module JSDoc, so this no longer selects a severity — every resolved
+ * condition errors — and serves only to decide whether an error message earns
+ * that extra sentence of diagnosis.
  */
 const RUNTIME_CONDITIONS = ['default', 'import'] as const;
 
@@ -440,24 +447,6 @@ const collectNestjsViolations = (
   };
 };
 
-/**
- * @description Reads the baseline package names, skipping blank lines and `#`
- * comments. A missing file is an empty baseline, which makes every offender new
- * — the correct reading once the file has been deleted at zero.
- */
-const readBaseline = (): ReadonlySet<string> => {
-  const absolute = path.join(ROOT, BASELINE_PATH);
-
-  if (!existsSync(absolute)) return new Set();
-
-  const names = readFileSync(absolute, 'utf8')
-    .split('\n')
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0 && !line.startsWith('#'));
-
-  return new Set(names);
-};
-
 const run = (): void => {
   const packages = listPackages();
 
@@ -508,77 +497,29 @@ const run = (): void => {
       (condition) => condition === entry.exportTarget.condition,
     );
 
-  const baseline = readBaseline();
   const offendingPackages = new Set(offenders.map((entry) => entry.info.name));
 
-  const isSelfImportBreak = (entry: (typeof offenders)[number]): boolean =>
-    entry.info.importsItselfByName && isRuntimeCondition(entry);
+  // One error per offending package, not per condition: all of a package's
+  // mis-pointed conditions are fixed by the same single edit to its `exports`
+  // map, so reporting each one separately would multiply the output without
+  // adding an action. The 37-package population this gate was built against
+  // produced 151 condition-level warnings for exactly this reason.
+  const errors = [...offendingPackages].sort().map((name) => {
+    const entries = offenders.filter((entry) => entry.info.name === name);
+    const first = entries[0];
 
-  const errors = offenders
-    .filter(isSelfImportBreak)
-    .map(
-      (entry) =>
-        `${describe(entry)} This package's own src/ imports it by name, so its test target — which never depends on its own build — fails whenever no other project on the shard built it first.`,
-    );
+    if (first === undefined) return name;
 
-  // A package the baseline does not list is newly mis-pointed. Erroring here is
-  // what stops the population growing; it is reported once per package rather
-  // than once per condition, since the fix is a single `exports` map either way.
-  const newOffenders = [...offendingPackages]
-    .filter((name) => !baseline.has(name))
-    .sort();
+    // Retained as diagnosis only — see the module JSDoc. A self-importing
+    // package is already failing its own test suite shard-dependently, and this
+    // sentence is the difference between an author knowing why and not.
+    const selfImport =
+      first.info.importsItselfByName && entries.some(isRuntimeCondition)
+        ? " This package's own src/ imports it by name, so its test target — which never depends on its own build — fails whenever no other project on the shard built it first."
+        : '';
 
-  const newOffenderErrors = newOffenders.map((name) => {
-    const first = offenders.find((entry) => entry.info.name === name);
-
-    return (
-      `${first === undefined ? name : describe(first)} ` +
-      `This package is NEWLY flagged — it is not in ${BASELINE_PATH}. ` +
-      `Fix it rather than adding a line: either point EVERY condition at the source entry, or — if it genuinely ships a build consumers should read — move main/module off src/ to the built entry, which removes it from this gate's candidate set entirely. ` +
-      `The baseline is shrink-only and must not grow.`
-    );
+    return `${describe(first)}${selfImport}`;
   });
-
-  // A baselined package that no longer offends has to leave the file, or the
-  // baseline slowly becomes a list of things that would be re-allowed to break.
-  const staleBaselineErrors = [...baseline]
-    .filter((name) => !offendingPackages.has(name))
-    .sort()
-    .map(
-      (name) =>
-        `${name} is listed in ${BASELINE_PATH} but no longer points any resolved condition at a gitignored build directory. ` +
-        `Delete its line — the baseline is a shrink-only ratchet, and a stale entry would silently re-authorize a regression in this package.`,
-    );
-
-  const warnings = offenders
-    .filter(
-      (entry) => !isSelfImportBreak(entry) && baseline.has(entry.info.name),
-    )
-    .map((entry) =>
-      entry.exportTarget.condition === 'types'
-        ? `${describe(entry)} No NodeNext consumer imports this package by name today, so nothing breaks yet.`
-        : `${describe(entry)} No self-referential import today, so nothing breaks yet.`,
-    );
-
-  const verbose = hasFlag('verbose');
-
-  if (warnings.length > 0 && verbose) {
-    for (const warning of warnings) {
-      logger.warn(`check-package-entrypoints: warning: ${warning}`);
-    }
-  } else if (warnings.length > 0) {
-    const latentPackages = new Set(
-      offenders
-        .filter(
-          (entry) => !isSelfImportBreak(entry) && baseline.has(entry.info.name),
-        )
-        .map((entry) => entry.info.name),
-    );
-
-    logger.warn(
-      `check-package-entrypoints: ${latentPackages.size} baselined package(s) point a resolved condition ("import"/"default" for Vite, "types" for NodeNext) at a gitignored build directory — latent, not failing. Re-run with --verbose to list them.`,
-    );
-  }
 
   const nestjs = collectNestjsViolations(packages);
 
@@ -586,12 +527,7 @@ const run = (): void => {
     logger.warn(`check-package-entrypoints: warning: ${warning}`);
   }
 
-  const allErrors = [
-    ...errors,
-    ...newOffenderErrors,
-    ...staleBaselineErrors,
-    ...nestjs.errors,
-  ];
+  const allErrors = [...errors, ...nestjs.errors];
 
   if (allErrors.length > 0) {
     for (const error of allErrors) {
@@ -604,7 +540,7 @@ const run = (): void => {
   }
 
   logger.success(
-    `check-package-entrypoints: OK (${packages.length} workspace package(s), ${warnings.length} warning(s) across ${baseline.size} baselined package(s), ${nestjs.scopedCount - NESTJS_BLOCKERS.size}/${nestjs.scopedCount} "${NESTJS_TAG}" package(s) built)`,
+    `check-package-entrypoints: OK (${packages.length} workspace package(s), 0 mis-pointed condition(s), ${nestjs.scopedCount - NESTJS_BLOCKERS.size}/${nestjs.scopedCount} "${NESTJS_TAG}" package(s) built)`,
   );
 };
 
