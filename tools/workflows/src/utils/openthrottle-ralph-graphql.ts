@@ -95,6 +95,7 @@ export const taskFragmentToRow = (task: TaskFragment): TaskRow => {
     status: task.status,
     title: task.title,
     updatedAt: toIsoString(task.updatedAt),
+    wave: task.wave ?? null,
   };
 };
 

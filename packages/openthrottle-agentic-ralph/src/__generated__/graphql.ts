@@ -779,6 +779,8 @@ export type CreateTaskInput = {
   status?: InputMaybe<Scalars['String']['input']>;
   summary?: InputMaybe<Scalars['String']['input']>;
   title: Scalars['String']['input'];
+  /** Optional. Coarse concurrency layer within the plan: tasks sharing a wave may be worked concurrently. Never 0; NULL (omitted) means unassigned and runs sequentially in sortOrder position. Not consumed for execution yet. */
+  wave?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type CreateTasksInput = {
@@ -802,6 +804,8 @@ export type CreateTasksItemInput = {
   status?: InputMaybe<Scalars['String']['input']>;
   summary?: InputMaybe<Scalars['String']['input']>;
   title: Scalars['String']['input'];
+  /** Optional. Coarse concurrency layer within the plan: tasks sharing a wave may be worked concurrently. Never 0; NULL (omitted) means unassigned and runs sequentially in sortOrder position. Not consumed for execution yet. */
+  wave?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type CreateTasksResultObject = {
@@ -5050,6 +5054,8 @@ export type TaskObject = {
   tags: Array<TaskTagObject>;
   title: Scalars['String']['output'];
   updatedAt: Scalars['DateTime']['output'];
+  /** Coarse concurrency layer within the plan, nullable. NULL means unassigned (runs alone, in sortOrder position) -- never wave zero. Tasks sharing a wave are the author's claim that they may be worked concurrently; sortOrder remains canonical and is the tiebreaker within a wave. Not consumed for execution yet. */
+  wave?: Maybe<Scalars['Int']['output']>;
 };
 
 /** Metrics captured at job start and end for a plan/task run, including process snapshots, child process resource usage, wall-clock analysis, and system CPU pressure. */
@@ -5449,6 +5455,8 @@ export type UpdateTaskInput = {
   status?: InputMaybe<Scalars['String']['input']>;
   summary?: InputMaybe<Scalars['String']['input']>;
   title?: InputMaybe<Scalars['String']['input']>;
+  /** Optional. Coarse concurrency layer within the plan: tasks sharing a wave may be worked concurrently. Never 0; pass null to clear (unassigned); omit to leave unchanged. Not consumed for execution yet. */
+  wave?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type UpdateUserInput = {
@@ -5882,6 +5890,7 @@ export type TaskFragment = {
   summary?: string | null;
   title: string;
   updatedAt: any;
+  wave?: number | null;
 };
 
 export type ProjectFragment = {
@@ -6057,6 +6066,7 @@ export type CreateTaskMutation = {
     summary?: string | null;
     title: string;
     updatedAt: any;
+    wave?: number | null;
   };
 };
 
@@ -6091,6 +6101,7 @@ export type CreateTasksMutation = {
       summary?: string | null;
       title: string;
       updatedAt: any;
+      wave?: number | null;
     }>;
   };
 };
@@ -6153,6 +6164,7 @@ export type UpdateTaskMutation = {
     summary?: string | null;
     title: string;
     updatedAt: any;
+    wave?: number | null;
   } | null;
 };
 
@@ -6207,6 +6219,7 @@ export type ReorderPlanTasksMutation = {
     summary?: string | null;
     title: string;
     updatedAt: any;
+    wave?: number | null;
   }>;
 };
 
@@ -6528,6 +6541,7 @@ export type GetTaskQuery = {
     summary?: string | null;
     title: string;
     updatedAt: any;
+    wave?: number | null;
   } | null;
 };
 
@@ -6559,6 +6573,7 @@ export type GetTasksByPlanIdQuery = {
     summary?: string | null;
     title: string;
     updatedAt: any;
+    wave?: number | null;
   }>;
 };
 
@@ -6590,6 +6605,7 @@ export type GetRemainingTasksByPlanIdQuery = {
     summary?: string | null;
     title: string;
     updatedAt: any;
+    wave?: number | null;
   }>;
 };
 
@@ -6621,6 +6637,7 @@ export type GetTasksQuery = {
     summary?: string | null;
     title: string;
     updatedAt: any;
+    wave?: number | null;
   }>;
 };
 
@@ -7022,6 +7039,7 @@ export const TaskFragmentDoc = {
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
           { kind: 'Field', name: { kind: 'Name', value: 'title' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'wave' } },
         ],
       },
     },
@@ -7611,6 +7629,7 @@ export const CreateTaskDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
           { kind: 'Field', name: { kind: 'Name', value: 'title' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'wave' } },
         ],
       },
     },
@@ -7708,6 +7727,7 @@ export const CreateTasksDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
           { kind: 'Field', name: { kind: 'Name', value: 'title' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'wave' } },
         ],
       },
     },
@@ -7887,6 +7907,7 @@ export const UpdateTaskDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
           { kind: 'Field', name: { kind: 'Name', value: 'title' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'wave' } },
         ],
       },
     },
@@ -8075,6 +8096,7 @@ export const ReorderPlanTasksDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
           { kind: 'Field', name: { kind: 'Name', value: 'title' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'wave' } },
         ],
       },
     },
@@ -9215,6 +9237,7 @@ export const GetTaskDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
           { kind: 'Field', name: { kind: 'Name', value: 'title' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'wave' } },
         ],
       },
     },
@@ -9302,6 +9325,7 @@ export const GetTasksByPlanIdDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
           { kind: 'Field', name: { kind: 'Name', value: 'title' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'wave' } },
         ],
       },
     },
@@ -9392,6 +9416,7 @@ export const GetRemainingTasksByPlanIdDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
           { kind: 'Field', name: { kind: 'Name', value: 'title' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'wave' } },
         ],
       },
     },
@@ -9476,6 +9501,7 @@ export const GetTasksDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
           { kind: 'Field', name: { kind: 'Name', value: 'title' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'wave' } },
         ],
       },
     },

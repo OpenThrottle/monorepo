@@ -73,7 +73,7 @@ Present the vetted findings table to the user, ordered by leverage (impact ÷ ef
 
 Present **direction findings separately**, after the table — they're options for the maintainer to weigh, not problems ranked against bugs, and burying "build a plugin system" under "fix the N+1" serves neither. 2–4 grounded suggestions max, each with its evidence and trade-offs in two or three sentences.
 
-Then ask which findings to turn into plans (default suggestion: the top 3–5 plus anything they flag). Also surface **dependency ordering** — e.g. "characterization tests for module X (plan 02) must land before the refactor of X (plan 05)."
+Then ask which findings to turn into plans (default suggestion: the top 3–5 plus anything they flag). Also surface **dependency ordering** — e.g. "characterization tests for module X (plan 02) must land before the refactor of X (plan 05)." — and, within a single plan, any steps independent enough to be worked concurrently; the plan template's optional `Wave: N` step tag captures that, and it becomes OT's `tasks.wave` at transcription time (this skill writes Markdown, not OT rows, so it hands the ordering off rather than writing the field itself — see docs/openthrottle/task-wave-encoding.md).
 
 Wait for the selection. Do not write 30 plans nobody asked for. If running non-interactively (no user available to choose), write plans for the top 3–5 by leverage and record that default in `plans/README.md`.
 

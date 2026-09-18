@@ -228,6 +228,7 @@ describe('ProjectsResolver', () => {
           taskEmbeddings: [],
           title: 'Task One',
           updatedAt: new Date('2026-02-03T10:00:00.000Z'),
+          wave: null,
         },
       ];
       vi.mocked(tasksByProjectIdLoader.load).mockResolvedValue(mockTasks);

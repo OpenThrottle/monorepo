@@ -181,6 +181,83 @@ was configured with, so it should still call `begin_task_session` per task and d
 gives the same per-task read-back with a constant value, which is the honest answer for a run that
 genuinely used one model.
 
+## Intra-task fan-out
+
+Step 2 — and only step 2 — may be worked by **several agents in parallel**. Nothing structural
+moves when it does: exactly one task stays `IN_PROGRESS`, the parent turn still owns every status
+flip, validation, and the single commit with its one correct `Task-Id:` footer. Fan-out is entirely
+inside step 2's box in [§ What delegates, and what never does](#what-delegates-and-what-never-does)
+— it is **not** task-level parallelism, it does not touch the one-task-`IN_PROGRESS` invariant, and
+it does not add a second delegable step.
+
+### Eligibility test
+
+A task is fan-out eligible only when its work decomposes into units with **disjoint file sets** —
+no two units write the same file. That is the test's floor, and it is necessary but not sufficient:
+units that pass it can still be coupled by a shared invariant, so both halves have to hold.
+
+The failure mode the disjoint-file rule rules out: two agents editing the same file, one silently
+losing the other's edit when both write back.
+
+- **Eligible** — plan `f9c8e688`'s task to re-point ~10 doc files across `docs/`,
+  `.agents/personas/`, and the developer UI copy. One file per unit, and no unit's file appears in
+  any other unit — a clean partition.
+- **NOT eligible** — a task to implement the prompt-layer mechanism in both the orchestrator and
+  the CLI, asserting both produce the same shape. The two edits can even touch disjoint files and
+  still fail this test, because they are coupled by a shared assertion that only makes sense once
+  both sides agree — a shared invariant (a shared assertion, a shared contract, a shared generated
+  artifact) is coupling regardless of whether the file sets overlap.
+
+When a task doesn't clearly pass, don't fan it out — the parent doing step 2 itself is always the
+safe fallback.
+
+### What a fan-out agent may not do
+
+Each fan-out agent owns exactly one disjoint unit and reports back; it is a worker, not a
+participant in the loop's bookkeeping. A fan-out agent must never:
+
+- Mutate OT status — no `update_task`, `update_plan`, `begin_task_session`, or any other OT write.
+- Commit.
+- Push.
+- Run an `nx` target, for any project — `lint`, `typecheck`, `test`, `build`, none of them.
+
+That last one is not caution for its own sake. Concurrent `nx` targets in the **same checkout**
+contend on the shared `.nx` cache and produce spurious failures at scale — a suite that passed
+1076/1076 run alone showed dozens of unrelated failures when run alongside a build and a lint in the
+same worktree. Fan-out agents write files; they never validate them.
+
+### Validation stays serialized in the parent
+
+Step 3 is unchanged by fan-out. Once every unit rejoins, the parent runs
+`pnpm nx affected --target=lint,typecheck,test` **sequentially** — the same shared-`.nx`-cache reason
+that already makes every target in this loop run one at a time (§ Validate, above) applies just as
+much to a task that fanned out internally. Fan-out changes who writes the files; it never changes
+who validates them, or that validation happens one target at a time, after the fan-out has fully
+rejoined.
+
+### Model tier and concurrency cap
+
+Fan-out agents default to the cheap (`default`) tier, same as any other step-2 delegation — [§ Model
+routing](#model-routing). Escalating a fan-out unit still follows [§ Cost
+guardrails](#cost-guardrails): per task, never per fleet, and never as a blanket policy for a whole
+fan-out.
+
+The two tiers get **different** caps under fan-out:
+
+- **Cheap-tier (`default`) fan-out agents: at most 4 running at once.** Nothing bounded this before
+  fan-out existed, because there was never more than one step-2 delegate to bound. Fan-out changes
+  that, so this cap is new rather than inherited — pick it deliberately, don't leave it unmetered
+  just because the tier is cheap. Tune it in [`model-routing.json`](./references/model-routing.json)
+  if practice shows a different number is right; treat 4 as a starting point, not a law of nature.
+- **Non-default-tier agents under fan-out: at most 1 — unchanged from the loop-wide cap.**
+  [`model-routing.json`](./references/model-routing.json)'s
+  `guardrails.maxConcurrentNonDefaultTierAgents` is `1`, and its own note requires that any change
+  introducing intra-task fan-out (this one, OT `c22e5ba1`) re-decide that number for non-default
+  tiers explicitly rather than inherit the cheap tier's concurrency. Re-decided explicitly: it stays
+  `1`. Escalation is per task, never per fleet, and that does not stop being true just because the
+  fleet is now inside one task instead of across several — at most one escalated agent runs at a
+  time, fan-out or not.
+
 ## Your run row
 
 Everything here is specific to running interactively. It is deliberately outside the canonical
