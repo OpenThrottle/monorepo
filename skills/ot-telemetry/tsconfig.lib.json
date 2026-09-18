@@ -1,0 +1,22 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDirs": ["./scripts"]
+  },
+  "include": ["scripts/**/*"],
+  "exclude": [
+    "scripts/**/*.spec.ts",
+    "scripts/**/*.test.ts",
+    "scripts/__tests__/**",
+    "dist"
+  ],
+  "references": [
+    {
+      "path": "../../packages/openthrottle-agentic-utils/tsconfig.lib.json"
+    },
+    {
+      "path": "../../tools/dotfiles/tsconfig.lib.json"
+    }
+  ]
+}

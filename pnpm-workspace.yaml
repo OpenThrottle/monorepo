@@ -416,6 +416,7 @@ packages:
   - 'applications/*'
   - 'infra/'
   - 'packages/*'
+  - 'skills/ot-telemetry'
   - 'tools/*'
   - '!packages/*/dist/**/*'
   - '!services/**/*'

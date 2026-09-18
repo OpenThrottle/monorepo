@@ -41,7 +41,10 @@ echo -e "${GREEN}Checking skill links in: $REPO_ROOT/$SRC${NC}"
 
 # -L so an installed repo's symlinked skill dirs are followed. Links are resolved
 # from the file's real location, which is what a reader on GitHub sees.
-FILES=$(find -L "$REPO_ROOT/$SRC" -name '*.md' -type f | sort)
+# `node_modules` is excluded because a skill may carry its own package.json for
+# CI validation (e.g. skills/ot-telemetry) — its installed dependencies' READMEs
+# are not skill bodies and their links are not this script's concern.
+FILES=$(find -L "$REPO_ROOT/$SRC" -name '*.md' -type f -not -path '*/node_modules/*' | sort)
 
 # awk emits one `path<TAB>line<TAB>target` record per candidate link, with fenced
 # code blocks excluded. Existence is tested in bash, where a failure can be
