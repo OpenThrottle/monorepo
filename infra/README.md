@@ -9,16 +9,35 @@ This directory contains Infrastructure as Code (IaC) configurations for managing
 - Open source and widely adopted
 - State management for tracking infrastructure changes
 
+## Hosting options
+
+This directory is a **suite of pre-configured hosting options for the same application**, not one
+stack. **[HOSTING-OPTIONS.md](./HOSTING-OPTIONS.md) is the entry point** — it compares the options on
+cost, assumptions and fit, and shows how an environment selects one.
+
+| Option                                                                             | Provider | Postgres / Redis                  | Est. cost    |
+| ---------------------------------------------------------------------------------- | -------- | --------------------------------- | ------------ |
+| [`applications/openthrottle`](./applications/openthrottle/README.md)               | GCP      | Cloud SQL + Memorystore (managed) | ~52 USD/mo   |
+| [`applications/openthrottle_hcloud`](./applications/openthrottle_hcloud/README.md) | Hetzner  | containers on one box             | ~5.39 EUR/mo |
+
+Both are supported. **Neither has ever been applied** — every `openthrottle` module block in
+`environments/` is commented out. Do not assume any of this is deployed.
+
+Related: [provider-contract.md](./provider-contract.md) (what keeps the two interchangeable, and the
+known defects on each), [SCALING.md](./SCALING.md) (per-rung commands),
+[hetzner-topology.md](./hetzner-topology.md) (sizing).
+
 **Current Setup:**
 
-- **Provider**: Google Cloud Platform (GCP)
+- **Providers**: Google Cloud Platform and Hetzner Cloud
 - **Environments**: Staging (`environments/staging/`) and production (`environments/production/`) each have their own Terraform root and GCS state; see [environments/README.md](environments/README.md). Additional envs (e.g. development) can follow the same pattern.
-- **Modules**: Cloudflare (`modules/cloudflare/`) and OpenThrottle-oriented GCP building blocks (`gcp_compute_e2`, `gcp_memorystore_redis`, `gcp_cloud_sql_mysql`, `gcp_cloud_sql_postgres`). Environment stacks may also define one-off resources (for example a Terraform state bucket in staging).
+- **Modules**: OpenThrottle-oriented GCP building blocks (`gcp_compute_e2`, `gcp_memorystore_redis`, `gcp_cloud_sql_mysql`, `gcp_cloud_sql_postgres`) and the Hetzner building block (`hcloud_server`). Environment stacks may also define one-off resources (for example a Terraform state bucket in staging). Note: `modules/cloudflare/` is referenced below but does **not** exist — no DNS is managed in Terraform today.
 - **Resources**: Compute instances, Cloud SQL, Memorystore, Cloud Storage, and other GCP services as defined per environment.
 
 ## Providers
 
 - https://registry.terraform.io/providers/hashicorp/google/latest
+- https://registry.terraform.io/providers/hetznercloud/hcloud/latest
 
 ## Links
 
@@ -102,5 +121,7 @@ These are exposed as Terraform outputs in `environments/staging/outputs.tf` (e.g
 ## Related Documentation
 
 - **OpenThrottle GCP estimate**: `infra/gcp-estimate.csv` — Pricing Calculator spec; modules above align to this CSV.
+- **OpenThrottle Hetzner estimate**: `infra/hetzner-estimate.csv` — the sibling estimate, not a replacement. Postgres and Redis have no line item there by design (they are containers on the box). Sizing rationale and the scaling ladder are in `infra/hetzner-topology.md`.
+- **Provider contract**: `infra/provider-contract.md` — GCP and Hetzner are both supported. The shared variable contract that lets an environment switch providers by changing which application module it calls.
 
 This repo uses **pnpm** at the monorepo root; there are no Nx tasks defined for `infra` in `infra/package.json` — use the Terraform CLI from an environment directory as shown above.

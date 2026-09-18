@@ -121,6 +121,11 @@ variable "deploy_enabled" {
     condition     = !var.deploy_enabled || (length(var.server_image) > 0 && length(var.developer_image) > 0)
     error_message = "When deploy_enabled is true, server_image and developer_image must be set."
   }
+
+  validation {
+    condition     = !var.deploy_enabled || (length(var.migrations_image) > 0 && length(var.mcp_image) > 0)
+    error_message = "When deploy_enabled is true, migrations_image and mcp_image must be set. The migrations runner is the server's schema gate; without it the server can start against a stale schema."
+  }
 }
 
 variable "artifact_registry_region" {
@@ -170,6 +175,48 @@ variable "postgres_password" {
   description = "Cloud SQL password (POSTGRES_PASSWORD). Sensitive; prefer Secret Manager when available."
   type        = string
   sensitive   = true
+}
+
+variable "migrations_image" {
+  default     = ""
+  description = "Full image for the one-shot migrations runner. Required when deploy_enabled: without it the server has NO schema gate and will start against whatever schema Cloud SQL happens to have. Must carry the SAME sha tag as server_image — a migrations image from a different commit is how a schema/code mismatch reaches production."
+  type        = string
+}
+
+variable "mcp_image" {
+  default     = ""
+  description = "Full image for openthrottle-mcp (streamable HTTP transport). Required when deploy_enabled."
+  type        = string
+}
+
+variable "mcp_domain" {
+  default     = ""
+  description = "Optional hostname for the openthrottle-mcp transport. Empty (the default) keeps mcp reachable only on the compose network, which is the safer default: it is guarded solely by OPENTHROTTLE_MCP_AUTH_TOKEN."
+  type        = string
+}
+
+variable "jwt_secret" {
+  default     = ""
+  description = "HS256 secret for issuing and verifying JWTs, written to .env as JWT_SECRET. The server HARD-REQUIRES it — jwt.strategy.ts throws at boot without it and rejects anything under 32 bytes. EMPTY IS RECOMMENDED: the startup script then generates one on the instance and persists it, so it never appears in instance metadata (readable with compute.instances.get) or in Terraform state. Never use the .env.default value; it is a published 32-byte string."
+  sensitive   = true
+  type        = string
+}
+
+variable "postgres_ssl_reject_unauthorized" {
+  default     = false
+  description = "Whether to verify the Postgres server certificate chain. Defaults to FALSE because Cloud SQL presents a certificate signed by a per-instance CA that is not in the public trust store, so verification fails unless that CA is installed on the instance. Set true once you distribute the instance's server-ca.pem — that is the stronger configuration, and this default trades it for a connection that works out of the box."
+  type        = bool
+}
+
+variable "ssh_allowed_cidrs" {
+  default     = []
+  description = "Source ranges permitted to reach port 22 on the instance. Previously this module defined NO SSH rule at all and relied on the VPC's default rules, which is only safe if you have verified those defaults do not expose 22 to the internet. An empty list creates no rule and preserves that old inherited behaviour; setting it creates an explicit, scoped rule. 0.0.0.0/0 is rejected by validation."
+  type        = list(string)
+
+  validation {
+    condition     = !contains(var.ssh_allowed_cidrs, "0.0.0.0/0")
+    error_message = "ssh_allowed_cidrs must not open SSH to the whole internet. Scope it to known administrative ranges, or leave it empty to inherit the VPC's rules."
+  }
 }
 
 variable "server_image" {
