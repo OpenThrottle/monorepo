@@ -286,6 +286,22 @@ describe('PlanRunsService', () => {
       );
     });
 
+    it('markRunStarted writes status IN_PROGRESS in the SAME update as the location stamp', async () => {
+      await service.markRunStarted({
+        bullmqJobId: 'job-1',
+        hostname: 'host-a',
+        pid: 4242,
+        queueName: 'plans',
+        workerId: 'worker-x',
+      });
+
+      expect(repo.update).toHaveBeenCalledTimes(1);
+      expect(repo.update).toHaveBeenCalledWith(
+        { bullmqJobId: 'job-1', queueName: 'plans' },
+        expect.objectContaining({ status: 'IN_PROGRESS' }),
+      );
+    });
+
     it('clearRunLocation nulls the location columns but not the marker', async () => {
       await service.clearRunLocation('plans', 'job-1');
 
@@ -293,6 +309,34 @@ describe('PlanRunsService', () => {
         { bullmqJobId: 'job-1', queueName: 'plans' },
         { hostname: null, pid: null, workerId: null },
       );
+    });
+  });
+
+  describe('settleRunByJob', () => {
+    it('sets terminal status by (queueName, bullmqJobId) and clears location columns', async () => {
+      repo.findOne.mockResolvedValueOnce(
+        buildRun({ bullmqJobId: 'job-42', status: 'COMPLETED' }),
+      );
+
+      const result = await service.settleRunByJob(
+        'plans',
+        'job-42',
+        'COMPLETED',
+      );
+
+      expect(repo.update).toHaveBeenCalledWith(
+        { bullmqJobId: 'job-42', queueName: 'plans' },
+        { hostname: null, pid: null, status: 'COMPLETED', workerId: null },
+      );
+      expect(result?.status).toBe('COMPLETED');
+    });
+
+    it('returns null when no row matches the (queueName, bullmqJobId) pair', async () => {
+      repo.findOne.mockResolvedValueOnce(null);
+
+      expect(
+        await service.settleRunByJob('plans', 'missing-job', 'FAILED'),
+      ).toBeNull();
     });
   });
 

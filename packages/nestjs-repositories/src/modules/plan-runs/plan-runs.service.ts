@@ -11,6 +11,7 @@ import type {
   PlanRunKind,
 } from './plan-run.entity.ts';
 import { PlanRun } from './plan-run.entity.ts';
+import type { PlanRunStatus } from './plan-runs.constants.ts';
 import { PLAN_RUN_STATUS } from './plan-runs.constants.ts';
 
 interface RecordQueuedPlanRunInput {
@@ -295,8 +296,10 @@ export class PlanRunsService {
 
   /**
    * @description Stamps run-location columns when a worker picks up the job (alongside
-   * PlanRunCancellationService.attach). Best-effort by key; matches 0 rows for a run that was never
-   * recorded (e.g. legacy). Returns the number of rows updated.
+   * PlanRunCancellationService.attach), in the SAME update as the IN_PROGRESS status write — a row
+   * that is located-but-still-QUEUED, even briefly, is the bug this claim exists to close (a crash
+   * in that window would recreate it permanently). Best-effort by key; matches 0 rows for a run that
+   * was never recorded (e.g. legacy). Returns the number of rows updated.
    */
   async markRunStarted(location: RunLocation): Promise<number> {
     const result = await this.getRepository().update(
@@ -307,11 +310,37 @@ export class PlanRunsService {
         // is immediately alive before the processor's first heartbeat tick.
         lastHeartbeatAt: new Date(),
         pid: location.pid,
+        status: PLAN_RUN_STATUS.IN_PROGRESS,
         workerId: location.workerId,
       },
     );
 
     return result.affected ?? 0;
+  }
+
+  /**
+   * @description Settles a queued/worker-owned run on exit, keyed on the (queueName,
+   * bullmqJobId) pair — the unique key a BullMQ worker knows at run time, symmetric with
+   * {@link PlanRunsService.markRunStarted} and {@link PlanRunsService.clearRunLocation}. Unlike
+   * {@link PlanRunsService.settleCliRun} (keyed on the run id — the CLI shape, which the worker
+   * never has a handle on), this addresses the queued-run row by its job key. Sets the terminal
+   * status (COMPLETED / CANCELLED / FAILED — never STALE, which is reserved for the stale sweeper)
+   * and nulls the run-location columns in one update; leaves the cancel marker and
+   * lastHeartbeatAt untouched. Best-effort by key: returns null when no row matched.
+   */
+  async settleRunByJob(
+    queueName: string,
+    bullmqJobId: string,
+    status: PlanRunStatus,
+  ): Promise<PlanRun | null> {
+    const repo = this.getRepository();
+
+    await repo.update(
+      { bullmqJobId, queueName },
+      { hostname: null, pid: null, status, workerId: null },
+    );
+
+    return repo.findOne({ where: { bullmqJobId, queueName } });
   }
 
   /**
