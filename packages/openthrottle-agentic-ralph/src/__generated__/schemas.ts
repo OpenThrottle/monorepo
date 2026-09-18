@@ -900,6 +900,7 @@ export function ListPlanOutputStreamChunksInputSchema(): z.ZodObject<
     limit: z.number().nullish(),
     offset: z.number().nullish(),
     planId: z.string().min(1),
+    taskId: z.string().nullish(),
   });
 }
 

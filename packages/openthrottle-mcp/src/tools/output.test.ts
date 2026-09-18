@@ -178,7 +178,45 @@ describe('getPlanOutputToolHandler', () => {
       expect(executeGraphqlWithAuth).toHaveBeenCalledWith(
         serviceAccountToken,
         expect.anything(),
-        { input: { planId } },
+        { input: { limit: null, offset: null, planId, taskId: null } },
+      );
+    });
+
+    it('forwards a taskId filter into the GraphQL variables', async () => {
+      const outputTaskId = 'b7c8d9e0-f1a2-4b3c-8d4e-5f6a7b8c9d0e';
+      vi.mocked(executeGraphqlWithAuth).mockResolvedValue({
+        planOutputStreamChunks: [],
+      });
+
+      await getPlanOutputToolHandler({ planId, taskId: outputTaskId });
+
+      expect(executeGraphqlWithAuth).toHaveBeenCalledWith(
+        serviceAccountToken,
+        expect.anything(),
+        {
+          input: {
+            limit: null,
+            offset: null,
+            planId,
+            taskId: outputTaskId,
+          },
+        },
+      );
+    });
+
+    // limit/offset were accepted by the generated schema but dropped before the
+    // request, so a paged read silently returned the default first page.
+    it('forwards limit and offset instead of dropping them', async () => {
+      vi.mocked(executeGraphqlWithAuth).mockResolvedValue({
+        planOutputStreamChunks: [],
+      });
+
+      await getPlanOutputToolHandler({ limit: 25, offset: 50, planId });
+
+      expect(executeGraphqlWithAuth).toHaveBeenCalledWith(
+        serviceAccountToken,
+        expect.anything(),
+        { input: { limit: 25, offset: 50, planId, taskId: null } },
       );
     });
   });
@@ -193,6 +231,27 @@ describe('getPlanOutputToolHandler', () => {
 
       expect(result).toMatchObject({
         content: [{ text: 'No output chunks for this plan.' }],
+        structuredContent: { chunks: [] },
+      });
+    });
+
+    it('names the task in the empty message when filtering by taskId', async () => {
+      const outputTaskId = 'b7c8d9e0-f1a2-4b3c-8d4e-5f6a7b8c9d0e';
+      vi.mocked(executeGraphqlWithAuth).mockResolvedValue({
+        planOutputStreamChunks: [],
+      });
+
+      const result = await getPlanOutputToolHandler({
+        planId,
+        taskId: outputTaskId,
+      });
+
+      expect(result).toMatchObject({
+        content: [
+          {
+            text: `No output chunks attributed to task ${outputTaskId} on this plan.`,
+          },
+        ],
         structuredContent: { chunks: [] },
       });
     });

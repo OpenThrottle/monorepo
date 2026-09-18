@@ -154,6 +154,46 @@ describe('PlanOutputStreamResolver', () => {
       );
     });
 
+    test('filters by taskId when one is supplied', async () => {
+      vi.mocked(planOutputStreamRepo.find).mockResolvedValue([]);
+
+      await resolver.planOutputStreamChunks({
+        planId: mockChunk.planId,
+        taskId: 'task-1',
+      });
+
+      expect(planOutputStreamRepo.find).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { planId: mockChunk.planId, taskId: 'task-1' },
+        }),
+      );
+    });
+
+    test('omits the taskId filter entirely when none is supplied', async () => {
+      vi.mocked(planOutputStreamRepo.find).mockResolvedValue([]);
+
+      await resolver.planOutputStreamChunks({ planId: mockChunk.planId });
+
+      expect(planOutputStreamRepo.find).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { planId: mockChunk.planId } }),
+      );
+    });
+
+    // A null taskId means "no filter", not "only untagged chunks" — spreading a
+    // literal null into the where clause would silently narrow the plan stream.
+    test('treats a null taskId as no filter rather than a null match', async () => {
+      vi.mocked(planOutputStreamRepo.find).mockResolvedValue([]);
+
+      await resolver.planOutputStreamChunks({
+        planId: mockChunk.planId,
+        taskId: null,
+      });
+
+      expect(planOutputStreamRepo.find).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { planId: mockChunk.planId } }),
+      );
+    });
+
     test('clamps a limit above the max down to 1000', async () => {
       vi.mocked(planOutputStreamRepo.find).mockResolvedValue([]);
 

@@ -79,7 +79,7 @@ export const getPlanOutputToolParameters =
   ListPlanOutputStreamChunksInputSchema();
 
 export const getPlanOutputToolDescription =
-  'Fetch all streaming output chunks for a plan, ordered by created_at ascending (stream order).';
+  'Fetch streaming output chunks for a plan, ordered by created_at ascending (stream order). Pass taskId to return only the narration attributed to that task; omit it for the whole plan stream. limit (default and hard cap 1000) and offset page the result.';
 
 export async function getPlanOutputToolHandler(
   args: z.infer<typeof getPlanOutputToolParameters>,
@@ -93,17 +93,28 @@ export async function getPlanOutputToolHandler(
     chunks: GetPlanOutputStreamChunksQuery['planOutputStreamChunks'];
   }>('get_plan_output', async () => {
     const token = getAuthToken();
+    // Forward every parsed argument: limit/offset were already accepted by the
+    // generated schema but silently dropped here, so a paged request quietly
+    // returned the default first 1000 rows instead.
     const result = await executeGraphqlWithAuth(
       token,
       GetPlanOutputStreamChunksDocument,
-      { input: { planId: parsed.data.planId } },
+      {
+        input: {
+          limit: parsed.data.limit ?? null,
+          offset: parsed.data.offset ?? null,
+          planId: parsed.data.planId,
+          taskId: parsed.data.taskId ?? null,
+        },
+      },
     );
 
     const chunks = result?.planOutputStreamChunks ?? [];
+    const emptyText = parsed.data.taskId
+      ? `No output chunks attributed to task ${parsed.data.taskId} on this plan.`
+      : 'No output chunks for this plan.';
     const text =
-      chunks.length === 0
-        ? 'No output chunks for this plan.'
-        : JSON.stringify(chunks, null, 2);
+      chunks.length === 0 ? emptyText : JSON.stringify(chunks, null, 2);
 
     return { structuredContent: { chunks }, text };
   });

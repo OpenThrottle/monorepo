@@ -554,6 +554,11 @@ type ActivityOutputChunkRowObject {
   plan: PlanObject
   planId: String!
   planTitle: String!
+
+  """
+  Task this chunk is attributed to; null for plan-scoped chunks and historical rows.
+  """
+  taskId: String
 }
 
 type ActivityTaskUpdatedRowObject {
@@ -592,6 +597,11 @@ type LastActivityCommitPartObject {
 type LastActivityOutputChunkPartObject {
   content: String!
   iteration: Int
+
+  """
+  Task this chunk is attributed to; null for plan-scoped chunks and historical rows.
+  """
+  taskId: String
 }
 
 type LastActivityTaskUpdatePartObject {
@@ -4788,6 +4798,11 @@ input ListPlanOutputStreamChunksInput {
 
   """Rows to skip (pagination offset)."""
   offset: Int
+
+  """
+  Return only chunks attributed to this task id. Omit for the whole plan stream (both tagged and untagged chunks).
+  """
+  taskId: ID
 }
 
 input PlanRunsByPlanIdInput {

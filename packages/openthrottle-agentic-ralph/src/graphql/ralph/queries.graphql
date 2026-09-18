@@ -97,6 +97,7 @@ query getActivityByDate($input: ActivityByDateInput!) {
       iteration
       planId
       planTitle
+      taskId
     }
     tasksUpdated {
       id
@@ -131,6 +132,7 @@ query getActivityByDateRange($input: ActivityByDateRangeInput!) {
       iteration
       planId
       planTitle
+      taskId
     }
     tasksUpdated {
       id
@@ -156,6 +158,7 @@ query getLastActivity($input: LastActivityInput!) {
     outputChunk {
       content
       iteration
+      taskId
     }
     planId
     summary
@@ -175,6 +178,7 @@ query getPlanOutputStreamChunks($input: ListPlanOutputStreamChunksInput!) {
     id
     iteration
     planId
+    taskId
   }
 }
 

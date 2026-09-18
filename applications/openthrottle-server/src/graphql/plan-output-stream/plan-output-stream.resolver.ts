@@ -79,11 +79,17 @@ export class PlanOutputStreamResolver {
     );
     const skip = Math.max(0, input.offset ?? 0);
 
+    // An omitted taskId must return the WHOLE plan stream, so the filter is
+    // spread in only when supplied — `taskId: undefined` would be dropped by
+    // TypeORM anyway, but `taskId: null` would narrow to untagged chunks only.
     const entities = await this.planOutputStreamService.getRepository().find({
       order: { createdAt: 'ASC' },
       skip,
       take,
-      where: { planId: input.planId },
+      where: {
+        planId: input.planId,
+        ...(input.taskId ? { taskId: input.taskId } : {}),
+      },
     });
 
     return entities;

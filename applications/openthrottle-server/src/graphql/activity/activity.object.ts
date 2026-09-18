@@ -74,6 +74,13 @@ export class ActivityOutputChunkRowObject {
 
   @Field(() => String)
   planTitle!: string;
+
+  @Field(() => String, {
+    description:
+      'Task this chunk is attributed to; null for plan-scoped chunks and historical rows.',
+    nullable: true,
+  })
+  taskId!: string | null;
 }
 
 @ObjectType()
@@ -152,6 +159,13 @@ export class LastActivityOutputChunkPartObject {
 
   @Field(() => Int, { nullable: true })
   iteration!: number | null;
+
+  @Field(() => String, {
+    description:
+      'Task this chunk is attributed to; null for plan-scoped chunks and historical rows.',
+    nullable: true,
+  })
+  taskId!: string | null;
 }
 
 /** Nested type for lastActivity when kind is task_update. */
