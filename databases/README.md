@@ -84,7 +84,7 @@ Plan JSON must have a `metadata` object (with `author` (GitHub handle), `categor
 
 - **plans** – Plan metadata: `id`, `title`, `author`, `category`, `status`, `description`, `summary` (optional; PRD summarization: next actions, usage guides, wrap-up notes), `assignee` (optional; see [Assignee rule](#assignee-rule) below), `project_id` (optional, FK to projects; nullable), `completed_at` (TIMESTAMPTZ, nullable; set once on transition into COMPLETED by app write path; cleared if status leaves COMPLETED; not maintained by `updated_at` triggers — see migrations `055`, `056`), `created_at`, `updated_at`. In the OpenThrottle API, `projectId` is optional on create/update and in list filters; `projectRelation` is null when `projectId` is unset.
 - **projects** – NX project reference for scoping plans/tasks: `id`, `name`, `nx_project_name` (TEXT; unique when not null per migration 032), `description`, `created_at`, `updated_at`. Only **NX applications** are kept; see [Projects collection (applications only)](#projects-collection-applications-only).
-- **tasks** – Tasks for each plan: `id`, `plan_id` (FK), `title`, `description`, `category`, `status`, `requirements` (JSONB), `summary` (optional; per-task wrap-up: actions, usage notes, or why blocked), `assignee` (optional; see [Assignee rule](#assignee-rule) below), `sort_order` (INTEGER NOT NULL; explicit execution/list order within the plan; see [Task sort_order](#task-sort_order)), `completed_at` (TIMESTAMPTZ, nullable; same semantics as `plans.completed_at` — migrations `055`, `056`), `created_at`, `updated_at`.
+- **tasks** – Tasks for each plan: `id`, `plan_id` (FK), `title`, `description`, `category`, `status`, `requirements` (JSONB), `summary` (optional; per-task wrap-up: actions, usage notes, or why blocked), `assignee` (optional; see [Assignee rule](#assignee-rule) below), `sort_order` (INTEGER NOT NULL; explicit execution/list order within the plan; see [Task sort_order](#task-sort_order)), `wave` (INTEGER, nullable; coarse concurrency layer, `CHECK (wave IS NULL OR wave >= 1)`; see [Task wave](#task-wave) — migration `126`), `completed_at` (TIMESTAMPTZ, nullable; same semantics as `plans.completed_at` — migrations `055`, `056`), `created_at`, `updated_at`.
 - **plan_embeddings** – Vector embeddings for plan content: `id`, `plan_id` (FK), `content`, `embedding` (vector 1536), `metadata` (JSONB), `created_at`.
 - **task_embeddings** – Vector embeddings for task content: `id`, `task_id` (FK), `content`, `embedding` (vector 1536), `metadata` (JSONB), `created_at`.
 - **plan_output_stream** – Streaming output (e.g. agent iteration log) per plan: `id`, `plan_id` (FK), `iteration` (nullable), `content`, `created_at`. Chunks appended in order; exposed via MCP `append_plan_output` and `get_plan_output`.
@@ -243,6 +243,17 @@ Remaining-work semantics (e.g. `get_remaining_tasks_for_plan`): tasks whose stat
 - **Auto-assign on create:** when omitted, append `MAX(sort_order) + 1000` (first task in plan → 1000).
 - **Batch create (`create_tasks`):** when `sortOrder` is omitted per item, each new task appends after the plan max (`MAX + 1000`, `MAX + 2000`, …) preserving array order at the end of the plan. Explicit per-item `sortOrder` is respected.
 - **Reorder:** prefer `reorderPlanTasks` / MCP `reorder_plan_tasks` over delete-and-recreate when fixing Ralph execution order. Gap-based `updateTask(sortOrder)` supports mid-list inserts (e.g. 1500 between 1000 and 2000). Bulk reorder renumbers `1000, 2000, …` atomically in the given `taskIds` order.
+
+#### Task wave
+
+`wave` (GraphQL: `wave`) is a nullable `INTEGER` on tasks (migration `126_add_wave_to_tasks.sql`) that groups a `sort_order` sequence into a coarse concurrency layer: a claim that the tasks sharing a wave number **may** be worked concurrently, not a dependency graph. Full contract: [docs/openthrottle/task-wave-encoding.md](../docs/openthrottle/task-wave-encoding.md).
+
+- **Nullable, and NULL means unassigned — never wave zero.** `CHECK (wave IS NULL OR wave >= 1)` enforces this at the schema level. Waves number densely from `1`, with no reserved gaps.
+- **No UNIQUE constraint.** Several tasks sharing a wave is the entire point; `UNIQUE (plan_id, sort_order)` (migration `049`) is untouched.
+- **`sort_order` stays canonical.** Wave groups a `sort_order` sequence; it never resequences it, and `sort_order` remains the tiebreaker within a wave.
+- **Populate at creation.** The authoring agent sets `wave` per item in `create_tasks` / `create_task` at plan-creation time, next to the `sortOrder` decision — see [Task sort_order](#task-sort_order) above. A second pass via `update_task` works too, but is easy to skip.
+- **Hook tasks are never waved.** Lifecycle hook tasks (`hookRole` non-NULL) always carry `wave = NULL` and run at their anchored position.
+- **Not consumed for execution yet.** No driver runs tasks concurrently based on `wave` in v1; a driver that ignores the column is correct, just serial. This is stated as a hard scope boundary in the contract doc, not an oversight.
 
 #### Assignee rule
 

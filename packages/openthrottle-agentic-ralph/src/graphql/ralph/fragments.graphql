@@ -52,6 +52,7 @@ fragment Task on TaskObject {
   summary
   title
   updatedAt
+  wave
 }
 
 fragment Project on ProjectObject {

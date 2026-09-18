@@ -79,7 +79,22 @@
       "the shape of the loop rather than a limit bolted onto it.",
       "Any change that introduces intra-task fan-out or parallel task lanes (OT c22e5ba1,",
       "1c0d627a) MUST re-decide this number explicitly for non-default tiers rather than",
-      "inheriting whatever concurrency it sets for the cheap tier."
+      "inheriting whatever concurrency it sets for the cheap tier.",
+      "RE-DECIDED (OT c22e5ba1, intra-task fan-out): stays 1. Escalation is per task, never per",
+      "fleet or per fan-out, so at most one non-default-tier agent runs at a time even while",
+      "several default-tier fan-out agents run alongside it on the same task."
+    ],
+    "maxConcurrentFanOutDefaultTierAgents": 4,
+    "maxConcurrentFanOutDefaultTierAgents_note": [
+      "NEW cap introduced by intra-task fan-out (OT c22e5ba1) — nothing bounded this before,",
+      "because step 2 previously delegated to at most one subagent, full stop. Fan-out lets step 2",
+      "split into several default-tier units running at once (see skills/ot-loop/SKILL.md",
+      "'Intra-task fan-out'), so an explicit cap is needed even though the tier is the cheap one:",
+      "unmetered fan-out is still N agents' worth of spend and review surface.",
+      "This bounds ONLY default-tier fan-out agents. maxConcurrentNonDefaultTierAgents above",
+      "still separately caps non-default-tier agents at 1, fan-out or not.",
+      "Treated as a starting point, not a measured optimum — revisit if practice shows a",
+      "different number is right."
     ],
     "autoRoutedToMostExpensiveTier": 0,
     "autoRoutedToMostExpensiveTier_note": [

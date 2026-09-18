@@ -40,6 +40,25 @@ Tasks within a plan are sequenced by **`sortOrder`** (DB column `sort_order`, `I
 - **Auto-assign on create:** omit `sortOrder` and OT appends `MAX(sort_order) + 1000` (first task → `1000`, next → `2000`, …). Batch creates preserve array order.
 - **Re-sequence with the right tool:** use `reorder_plan_tasks` to renumber; never delete-and-recreate to reorder. Gaps (the `1000` stride) leave room for `update_task`'s gap-based inserts (e.g. `1500` between `1000` and `2000`).
 
+### `wave` groups sortOrder into a concurrency layer — decide it while you author
+
+`wave` is an optional integer (`>= 1`, nullable) on each task: the plan's claim that the tasks
+sharing a wave number **may** be worked concurrently. It groups a `sortOrder` run; it never replaces
+or reorders it, and — as of this writing — **nothing executes tasks concurrently from it**. Full
+contract: [task-wave-encoding.md](./task-wave-encoding.md).
+
+- **Set it per item in the same `create_tasks` call.** This is the only cheap moment: the batch is
+  one atomic transaction, so the tasks don't have ids yet for a `depends_on`-style second pass, and a
+  field that needs a second pass tends to stay empty. Decide `wave` in the same breath as `sortOrder`.
+- **Same number = may run together.** Tasks 2 and 3 both `wave: 1` says "these are independent, go
+  ahead and work them at the same time"; a task with no `wave` (the default, `null`) runs alone, in
+  its `sortOrder` position — exactly like every plan before this field existed.
+- **Never `0`; dense from `1`.** `wave: 1`, `wave: 2`, … — no reserved gaps, unlike `sortOrder`'s
+  1000-wide stride.
+- **Hook tasks (added via `add_hook`) are never waved** — leave `wave` unset on them.
+- **When unsure, leave it `null`.** A wrong or missing wave never breaks anything; it just falls back
+  to sequential, which is always correct, only slower.
+
 ### Status lifecycle
 
 Both plans and tasks carry a `status` from a fixed enum. The canonical statuses are **`BACKLOG`**, **`BLOCKED`**, **`CANCELED`**, **`COMPLETED`**, **`IN_PROGRESS`**, **`PENDING`**, **`SKIPPED`** (plus **`QUEUED`** for plans only — set when a Run-plan job is enqueued in BullMQ until the worker picks it up).
@@ -176,10 +195,10 @@ Records several plans in one call — the **whole batch commits or rolls back to
 
 ### Create tasks — `create_task` / `create_tasks`
 
-- **`create_task`** — one task on a plan. **Required:** `planId`, `title`. **Optional:** `description`, `category`, `status`, `requirements`, `summary`, `assignee`, `project`/`projectId`, `sortOrder`.
+- **`create_task`** — one task on a plan. **Required:** `planId`, `title`. **Optional:** `description`, `category`, `status`, `requirements`, `summary`, `assignee`, `project`/`projectId`, `sortOrder`, `wave`.
 - **`create_tasks`** — many tasks on **one** plan, **atomically** (all or nothing). Prefer this for authoring a plan's task list in a single shot.
 
-`sortOrder` semantics (see [the mental model](#sortorder-is-the-canonical-execution-order)): omit it to auto-append `MAX + 1000`; in a batch, tasks are appended in **array order**, so the array itself is your execution sequence.
+`sortOrder` semantics (see [the mental model](#sortorder-is-the-canonical-execution-order)): omit it to auto-append `MAX + 1000`; in a batch, tasks are appended in **array order**, so the array itself is your execution sequence. `wave` semantics (see [the wave mental model](#wave-groups-sortorder-into-a-concurrency-layer--decide-it-while-you-author)): set it per item now, in this same call — a plan with tasks that can genuinely run in parallel should say so here.
 
 ```jsonc
 create_tasks({
@@ -391,4 +410,5 @@ Nothing to do after the merge — the verifier resolves the squash commit itself
 | **Run loop / queue** (Ralph)                       | [tools/workflows/README.md](../../tools/workflows/README.md), [`agents-ralph` skill](../../skills/agents-ralph/SKILL.md) |
 | **Conventional commits & staging**                 | [`github-commit` skill](../../skills/github-commit/SKILL.md)                                                             |
 | **Schema, migrations, `sort_order`, commit links** | [databases/README.md](../../databases/README.md)                                                                         |
+| **`wave` full contract** (why a layer, not a DAG)  | [task-wave-encoding.md](./task-wave-encoding.md)                                                                         |
 | **Monorepo-wide agent conventions**                | [AGENTS.md § OpenThrottle](../../AGENTS.md), [CLAUDE.md](../../CLAUDE.md)                                                |

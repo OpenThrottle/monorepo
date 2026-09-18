@@ -804,6 +804,7 @@ function _mapTaskRow(r: {
   summary: string | null;
   title: string;
   updated_at: string;
+  wave: number | null;
 }): TaskRow {
   const requirements = r.requirements;
   return {
@@ -822,6 +823,7 @@ function _mapTaskRow(r: {
     summary: r.summary,
     title: r.title,
     updatedAt: r.updated_at,
+    wave: r.wave,
   };
 }
 
@@ -891,6 +893,7 @@ function mapTaskEntityToRow(task: Task): TaskRow {
     summary: task.summary,
     title: task.title,
     updatedAt: updatedAt.toISOString(),
+    wave: task.wave,
   };
 }
 

@@ -8,6 +8,9 @@
   "exclude": ["build", "src/**/*.test.ts"],
   "references": [
     {
+      "path": "../../tools/workflows/tsconfig.lib.json"
+    },
+    {
       "path": "../../packages/openthrottle-skills/tsconfig.lib.json"
     },
     {

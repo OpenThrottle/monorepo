@@ -610,6 +610,7 @@ export function CreateTaskInputSchema(): z.ZodObject<
     status: z.string().nullish(),
     summary: z.string().nullish(),
     title: z.string().min(1),
+    wave: z.number().nullish(),
   });
 }
 
@@ -636,6 +637,7 @@ export function CreateTasksItemInputSchema(): z.ZodObject<
     status: z.string().nullish(),
     summary: z.string().nullish(),
     title: z.string().min(1),
+    wave: z.number().nullish(),
   });
 }
 
@@ -1609,6 +1611,7 @@ export function UpdateTaskInputSchema(): z.ZodObject<
     status: z.string().nullish(),
     summary: z.string().nullish(),
     title: z.string().nullish(),
+    wave: z.number().nullish(),
   });
 }
 

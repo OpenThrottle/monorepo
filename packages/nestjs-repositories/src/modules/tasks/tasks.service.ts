@@ -44,6 +44,7 @@ export interface CreateTaskBatchItem {
   status: string;
   summary: string | null;
   title: string;
+  wave: number | null;
 }
 
 /**
@@ -515,6 +516,7 @@ export class TasksService {
           status: item.status,
           summary: item.summary,
           title: item.title,
+          wave: item.wave,
         });
       });
 

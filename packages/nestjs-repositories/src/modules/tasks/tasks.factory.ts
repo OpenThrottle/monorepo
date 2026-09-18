@@ -61,4 +61,5 @@ export const tasksFactory = Factory.define<Task>(() => ({
   taskEmbeddings: [],
   title: faker.lorem.sentence(),
   updatedAt: faker.date.recent(),
+  wave: null,
 }));
