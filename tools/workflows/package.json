@@ -1,7 +1,8 @@
 {
   "bin": {
-    "workflow-link-merge": "./dist/src/bin/link-merge.js",
     "workflow-lighthouse": "./dist/src/bin/lighthouse.js",
+    "workflow-link-merge": "./dist/src/bin/link-merge.js",
+    "workflow-memory-reconcile": "./dist/src/bin/memory-reconcile.js",
     "workflow-ralph": "./dist/src/bin/ralph.js"
   },
   "dependencies": {

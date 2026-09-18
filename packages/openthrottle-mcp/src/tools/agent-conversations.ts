@@ -46,14 +46,16 @@ type GetAgentConversationMessagesResult = GenericResult<{
 }>;
 
 export const listAgentConversationsToolParameters =
-  ListAgentConversationsInputSchema();
+  ListAgentConversationsInputSchema().strict();
 
-export const getAgentConversationToolParameters = z.object({
-  id: z.string().min(1),
-});
+export const getAgentConversationToolParameters = z
+  .object({
+    id: z.string().min(1),
+  })
+  .strict();
 
 export const getAgentConversationMessagesToolParameters =
-  GetAgentConversationMessagesInputSchema();
+  GetAgentConversationMessagesInputSchema().strict();
 
 export const listAgentConversationsToolDescription = `List persisted web chat conversations for the authenticated human user. Optional status filter (default \`active\`), limit, and offset. ${AGENT_CONVERSATION_BOUNDARY_WARNING}`;
 

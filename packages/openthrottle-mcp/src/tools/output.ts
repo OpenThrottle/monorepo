@@ -35,7 +35,8 @@ type DeletePlanOutputResult = GenericResult<{
   deletedCount: DeletePlanOutputMutation['deletePlanOutput']['deletedCount'];
 }>;
 
-export const appendPlanOutputToolParameters = AppendPlanOutputInputSchema();
+export const appendPlanOutputToolParameters =
+  AppendPlanOutputInputSchema().strict();
 
 export const appendPlanOutputToolDescription = `Append a chunk of streaming output (e.g. agent iteration log) to a plan. Requires planId and content; optional iteration number and taskId (attribute the chunk to the task you are actively working, for task-scoped output).`;
 
@@ -76,7 +77,7 @@ export async function appendPlanOutputToolHandler(
 }
 
 export const getPlanOutputToolParameters =
-  ListPlanOutputStreamChunksInputSchema();
+  ListPlanOutputStreamChunksInputSchema().strict();
 
 export const getPlanOutputToolDescription =
   'Fetch streaming output chunks for a plan, ordered by created_at ascending (stream order). Pass taskId to return only the narration attributed to that task; omit it for the whole plan stream. limit (default and hard cap 1000) and offset page the result.';
@@ -120,7 +121,8 @@ export async function getPlanOutputToolHandler(
   });
 }
 
-export const deletePlanOutputToolParameters = DeletePlanOutputInputSchema();
+export const deletePlanOutputToolParameters =
+  DeletePlanOutputInputSchema().strict();
 
 export const deletePlanOutputToolDescription =
   'Delete plan output stream chunks. With chunkId, delete that single chunk (it must belong to planId). Without chunkId, clear all chunks for planId, optionally scoped to taskId. Returns the number of chunks deleted. Use to remove stale or incorrect output (e.g. when resetting a plan back to PENDING). GraphQL-only: delegates to the deletePlanOutput mutation.';

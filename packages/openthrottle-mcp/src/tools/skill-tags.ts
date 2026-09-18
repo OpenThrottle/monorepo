@@ -34,7 +34,7 @@ type SkillTag = {
 
 // ── list_skill_tags ──────────────────────────────────────────────────────────
 
-export const listSkillTagsToolParameters = z.object({});
+export const listSkillTagsToolParameters = z.object({}).strict();
 
 export const listSkillTagsToolDescription = `List the authenticated user's skill-tag vocabulary via the skillTagVocabulary GraphQL query. No arguments. The vocabulary is seeded from the platform default on first read, then user-owned. Returns the tags (alphabetical) and a total count.`;
 
@@ -80,7 +80,7 @@ export async function listSkillTagsToolHandler(
 
 // ── add_skill_tag ────────────────────────────────────────────────────────────
 
-export const addSkillTagToolParameters = AddSkillTagInputSchema();
+export const addSkillTagToolParameters = AddSkillTagInputSchema().strict();
 
 export const addSkillTagToolDescription = `Add a kebab-case tag to the authenticated user's skill-tag vocabulary via the addSkillTag GraphQL mutation. Rejects non-kebab-case or duplicate tags.`;
 
@@ -115,7 +115,8 @@ export async function addSkillTagToolHandler(
 
 // ── rename_skill_tag ─────────────────────────────────────────────────────────
 
-export const renameSkillTagToolParameters = RenameSkillTagInputSchema();
+export const renameSkillTagToolParameters =
+  RenameSkillTagInputSchema().strict();
 
 export const renameSkillTagToolDescription = `Rename a tag in the authenticated user's skill-tag vocabulary via the renameSkillTag GraphQL mutation. Rejects when the source tag is absent or the target already exists.`;
 
@@ -153,7 +154,8 @@ export async function renameSkillTagToolHandler(
 
 // ── remove_skill_tag ─────────────────────────────────────────────────────────
 
-export const removeSkillTagToolParameters = RemoveSkillTagInputSchema();
+export const removeSkillTagToolParameters =
+  RemoveSkillTagInputSchema().strict();
 
 export const removeSkillTagToolDescription = `Remove a tag from the authenticated user's skill-tag vocabulary via the removeSkillTag GraphQL mutation. Returns whether a tag was removed.`;
 
