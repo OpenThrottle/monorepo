@@ -14,16 +14,13 @@
   ],
   "references": [
     {
+      "path": "../openthrottle-mcp/tsconfig.lib.json"
+    },
+    {
       "path": "../openthrottle-agentic-workflow/tsconfig.lib.json"
     },
     {
-      "path": "../../tools/workflows/tsconfig.lib.json"
-    },
-    {
       "path": "../openthrottle-agentic-utils/tsconfig.lib.json"
-    },
-    {
-      "path": "../openthrottle-mcp/tsconfig.lib.json"
     },
     {
       "path": "../../tools/dotfiles/tsconfig.lib.json"
