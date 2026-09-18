@@ -39,6 +39,7 @@ const baseTask = (overrides: Partial<TaskRow> = {}): TaskRow => ({
   status: 'PENDING',
   title: 'Test task',
   updatedAt: ISO,
+  wave: null,
   ...overrides,
 });
 

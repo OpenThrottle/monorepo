@@ -28,6 +28,11 @@ export interface TaskRow {
   readonly status: string;
   readonly title: string;
   readonly updatedAt: string;
+  /**
+   * Coarse concurrency layer, nullable (migration 126). Carried through for
+   * readers; the Ralph CLI loop does not consume it to run tasks concurrently.
+   */
+  readonly wave: number | null;
 }
 
 /**

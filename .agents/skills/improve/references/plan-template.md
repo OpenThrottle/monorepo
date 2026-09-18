@@ -117,6 +117,17 @@ line).
 is never broken between steps when possible — e.g. add new path, switch
 callers, then remove old path.)
 
+**Wave (optional):** when two or more consecutive steps touch disjoint files and
+share no invariant — so they could genuinely be worked at the same time —
+label each with the same `Wave: N` tag (dense from 1; most plans need none).
+This is the raw material for OT's `tasks.wave` column
+(docs/openthrottle/task-wave-encoding.md), which the transcriber sets per task
+in the same `create_tasks` call. Do not label steps "same wave" just because
+they are unrelated in topic — the bar is file-disjointness and no shared
+invariant, the same test `ot-loop` applies before running anything
+concurrently. When in doubt, leave the step unlabeled (sequential is always
+correct).
+
 ## Test plan
 
 - New tests to write, in which file, covering which cases (list them:

@@ -336,6 +336,7 @@ export class TasksResolver {
       status,
       summary: input.summary ?? null,
       title: input.title,
+      wave: input.wave ?? null,
     });
 
     let saved: Task;
@@ -389,6 +390,7 @@ export class TasksResolver {
       status: (item.status ?? 'PENDING').toUpperCase(),
       summary: item.summary ?? null,
       title: item.title,
+      wave: item.wave ?? null,
     }));
 
     let saved: Task[];
@@ -506,6 +508,7 @@ export class TasksResolver {
     if (input.sortOrder !== undefined && input.sortOrder !== null) {
       entity.sortOrder = input.sortOrder;
     }
+    if (input.wave !== undefined) entity.wave = input.wave;
 
     // A real status transition (not a no-op re-assert). The status_change ledger fact and the
     // row's completed_at must commit together (G12) — so save + capture run in one transaction.

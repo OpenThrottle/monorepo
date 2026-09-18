@@ -44,6 +44,26 @@ injection and every list tool sort by `sortOrder ASC, createdAt ASC`.
 - **Renumber:** `reorder_plan_tasks` assigns `1000, 2000, …` in the task-id order you give.
 - Schema: `databases/README.md` § Task sort_order.
 
+## Task wave (concurrency layer) — set it while you author
+
+`wave` is a nullable integer, `>= 1`, that groups a contiguous `sortOrder` run as the plan's claim
+that those tasks **may** be worked concurrently. It is not a dependency graph, it does not reorder
+anything, and nothing executes tasks in parallel from it today — see
+[docs/openthrottle/task-wave-encoding.md](../../docs/openthrottle/task-wave-encoding.md).
+
+- **Set it in the same `create_tasks` call, or it will likely never get set.** `create_tasks` is one
+  atomic batch — the tasks in it have no ids yet, so there is no cheap second pass. Decide grouping
+  in the same breath you decide `sortOrder`, per item in the array.
+- **Same wave number = may run together.** Give independent tasks (disjoint files, no shared
+  invariant) the same `wave`; give a task that must run alone its own `wave` or leave it `null`.
+- **Omit it when you don't know, or when the plan is genuinely sequential.** `null` (the default) is
+  always safe: it means "runs alone, in `sortOrder` position" — the same behavior every plan had
+  before this field existed.
+- **Never `0`.** Waves number densely from `1`.
+- **Hook tasks are never waved.** Leave `wave` unset on any task you attach via `addHook` / `add_hook`.
+- **Update later with `update_task`** if you didn't decide at creation time — passing `null` clears it
+  back to unassigned.
+
 ## Retrieval gotchas
 
 - **"What did I work on yesterday / last 7 days"** → `get_activity_by_date`, taking either `date`

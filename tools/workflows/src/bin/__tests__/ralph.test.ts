@@ -38,6 +38,7 @@ const mockTask: TaskRow = {
   status: 'IN_PROGRESS',
   title: 'Document current behavior',
   updatedAt: new Date().toISOString(),
+  wave: null,
 };
 
 const mockTasks: TaskRow[] = [mockTask];

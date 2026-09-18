@@ -205,6 +205,11 @@ type TaskObject {
   title: String!
   updatedAt: DateTime!
 
+  """
+  Coarse concurrency layer within the plan, nullable. NULL means unassigned (runs alone, in sortOrder position) -- never wave zero. Tasks sharing a wave are the author's claim that they may be worked concurrently; sortOrder remains canonical and is the tiebreaker within a wave. Not consumed for execution yet.
+  """
+  wave: Int
+
   """Tags attached to this task, alphabetically by tag."""
   tags: [TaskTagObject!]!
 
@@ -6798,6 +6803,11 @@ input CreateTaskInput {
   status: String
   summary: String
   title: String!
+
+  """
+  Optional. Coarse concurrency layer within the plan: tasks sharing a wave may be worked concurrently. Never 0; NULL (omitted) means unassigned and runs sequentially in sortOrder position. Not consumed for execution yet.
+  """
+  wave: Int
 }
 
 input CreateTasksInput {
@@ -6831,6 +6841,11 @@ input CreateTasksItemInput {
   status: String
   summary: String
   title: String!
+
+  """
+  Optional. Coarse concurrency layer within the plan: tasks sharing a wave may be worked concurrently. Never 0; NULL (omitted) means unassigned and runs sequentially in sortOrder position. Not consumed for execution yet.
+  """
+  wave: Int
 }
 
 input UpdateTaskInput {
@@ -6856,6 +6871,11 @@ input UpdateTaskInput {
   status: String
   summary: String
   title: String
+
+  """
+  Optional. Coarse concurrency layer within the plan: tasks sharing a wave may be worked concurrently. Never 0; pass null to clear (unassigned); omit to leave unchanged. Not consumed for execution yet.
+  """
+  wave: Int
 }
 
 input ReorderPlanTasksInput {
