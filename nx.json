@@ -296,13 +296,12 @@
         "{workspaceRoot}/applications/*/src/**/*.{ts,tsx}",
         "{workspaceRoot}/packages/*/package.json",
         "{workspaceRoot}/packages/*/src/**/*.{ts,tsx}",
-        "{workspaceRoot}/scripts/check-package-entrypoints.baseline.txt",
         "{workspaceRoot}/scripts/check-package-entrypoints.ts",
         "{workspaceRoot}/tools/*/package.json",
         "{workspaceRoot}/tools/*/src/**/*.{ts,tsx}"
       ],
       "metadata": {
-        "description": "Verify no workspace package steers Vite or NodeNext into a gitignored build directory while its own main/module names src/, via scripts/check-package-entrypoints.ts. Offenders already listed in scripts/check-package-entrypoints.baseline.txt warn; a package missing from that shrink-only baseline errors, as does a baselined package that no longer offends. Additionally enforces the blanket technology:nestjs invariant: every such type:package points main/module/types and every exports condition at built output and declares live build and dev targets, with no exemptions — the script's NESTJS_BLOCKERS map is empty and shrink-only on the same terms as the baseline. `inputs` MUST be explicit {workspaceRoot} globs — the root `monorepo` project owns 0 files, so the default {projectRoot} input would hash nothing and cache-hit forever."
+        "description": "Verify no workspace package steers Vite or NodeNext into a gitignored build directory while its own main/module names src/, via scripts/check-package-entrypoints.ts. Error-mode on every resolved condition (import/default for Vite, types for NodeNext), with no warn tier and no baseline — the shrink-only baseline this gate shipped with reached zero and was deleted, which is what promoted types from warn to error. Additionally enforces the blanket technology:nestjs invariant: every such type:package points main/module/types and every exports condition at built output and declares live build and dev targets, with no exemptions — the script's NESTJS_BLOCKERS map is empty and shrink-only, and is now the gate's only exemption mechanism. `inputs` MUST be explicit {workspaceRoot} globs — the root `monorepo` project owns 0 files, so the default {projectRoot} input would hash nothing and cache-hit forever."
       },
       "options": {
         "command": "tsx ./scripts/check-package-entrypoints.ts",
