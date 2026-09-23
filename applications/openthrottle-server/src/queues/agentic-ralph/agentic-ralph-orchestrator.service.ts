@@ -22,7 +22,9 @@ import type {
 import { buildRalphFlowContextFromPlanRunTuning } from '@openthrottle/openthrottle-agentic-ralph';
 import {
   ensureMaterialized,
+  getOpenThrottleRoot,
   getWorkflowConfigCwd,
+  OPENTHROTTLE_WORKSPACE_MARKER,
   resolveForeignWorkspaceContext,
   resolvePersonalSkillsDir,
 } from '@openthrottle/openthrottle-agentic-utils';
@@ -304,8 +306,23 @@ export class AgenticRalphOrchestratorService {
       return baseCheckoutCwd;
     }
 
+    // `worktree:new` is a root-only workspace script. An explicit `workingDirectory` (itself
+    // derived from checkoutId/repositoryId upstream — see PlanEnqueueService.resolveWorkspace) is
+    // trusted as-is and takes precedence, unchanged. Absent that, `baseCheckoutCwd` is whatever
+    // `getWorkflowConfigCwd` fell back to (WORKSPACE_ROOT, or this process's own cwd — a
+    // subdirectory such as `applications/openthrottle-server` when nothing named a checkout), which
+    // is not necessarily a repo root and must not be handed to the script.
+    const explicitWorkingDirectory = jobData.workingDirectory?.trim();
+    const baseCheckoutPath =
+      explicitWorkingDirectory !== undefined && explicitWorkingDirectory !== ''
+        ? baseCheckoutCwd
+        : this.resolveRepoRootForWorktreeProvisioning(
+            jobData.planId,
+            worktreeName,
+          );
+
     const worktreePath = await this.planRunWorktreeProvisionService.provision({
-      baseCheckoutPath: baseCheckoutCwd,
+      baseCheckoutPath,
       worktreeName,
     });
 
@@ -315,6 +332,33 @@ export class AgenticRalphOrchestratorService {
     );
 
     return worktreePath;
+  }
+
+  /**
+   * @description Resolves a genuine OpenThrottle repo root (via {@link getOpenThrottleRoot}'s
+   * `.openthrottle.mjs` marker walk) to hand `worktree:new` — a root-only workspace script — when
+   * the enqueue named no checkoutId/repositoryId/workingDirectory. Throws a legible error naming
+   * what is missing when no root is resolvable, so the job fails fast with that message in
+   * `failedReason` instead of retrying three times against a doomed `baseCheckoutPath` and giving up
+   * silently.
+   */
+  private resolveRepoRootForWorktreeProvisioning(
+    planId: string,
+    worktreeName: string,
+  ): string {
+    const repoRoot = getOpenThrottleRoot(process.env);
+    if (repoRoot === undefined) {
+      throw new Error(
+        `Cannot provision worktree "${worktreeName}" for plan run ${planId}: no checkoutId, ` +
+          `repositoryId, or workingDirectory was provided on enqueue, and no OpenThrottle ` +
+          `repository root could be resolved from this process (checked WORKFLOW_RALPH_OT_ROOT, ` +
+          `WORKSPACE_ROOT, and a walk up from this process's cwd for the ` +
+          `${OPENTHROTTLE_WORKSPACE_MARKER} marker). Pass a checkoutId, repositoryId, or ` +
+          `workingDirectory when enqueuing this plan run, or set WORKSPACE_ROOT/WORKFLOW_RALPH_OT_ROOT ` +
+          `on the server process.`,
+      );
+    }
+    return repoRoot;
   }
 
   /**

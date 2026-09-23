@@ -6,6 +6,7 @@ import { Test } from '@nestjs/testing';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   HEARTBEAT_INTERVAL_MS,
+  PLAN_RUN_STATUS,
   PlanOutputStreamService,
   PlanRunsService,
   PlansService,
@@ -137,6 +138,7 @@ const mockRunPlanOrchestratorJob = vi.fn().mockResolvedValue({
 });
 
 const mockRecordHeartbeatByJob = vi.fn().mockResolvedValue(1);
+const mockSettleRunByJob = vi.fn().mockResolvedValue(null);
 
 const mockSpawn = vi.mocked(nodeSpawn);
 
@@ -265,6 +267,7 @@ describe('PlansProcessor', () => {
             clearRunLocation: vi.fn().mockResolvedValue(0),
             markRunStarted: vi.fn().mockResolvedValue(0),
             recordHeartbeatByJob: mockRecordHeartbeatByJob,
+            settleRunByJob: mockSettleRunByJob,
           }),
         },
         {
@@ -557,6 +560,100 @@ describe('PlansProcessor', () => {
     });
   });
 
+  describe('plan_runs status settle on the three processOrchestrator exits', () => {
+    it('settles the row to COMPLETED on orchestrator success', async () => {
+      mockRunPlanOrchestratorJob.mockResolvedValueOnce({
+        exitCode: 0,
+        reason: 'workflow_tasks_exhausted',
+        status: 'finished',
+      });
+
+      await processor.process(mockJob);
+
+      expect(mockSettleRunByJob).toHaveBeenCalledWith(
+        PLANS_QUEUE_NAME,
+        'job-1',
+        PLAN_RUN_STATUS.COMPLETED,
+      );
+    });
+
+    it('settles the row to FAILED when the orchestrator outcome is failed', async () => {
+      mockRunPlanOrchestratorJob.mockResolvedValueOnce({
+        exitCode: 1,
+        reason: 'workflow_error',
+        status: 'failed',
+      });
+
+      await processor.process(mockJob);
+
+      expect(mockSettleRunByJob).toHaveBeenCalledWith(
+        PLANS_QUEUE_NAME,
+        'job-1',
+        PLAN_RUN_STATUS.FAILED,
+      );
+    });
+
+    it('settles the row to CANCELLED when the orchestrator outcome is cancelled', async () => {
+      mockRunPlanOrchestratorJob.mockResolvedValueOnce({
+        exitCode: 0,
+        reason: 'workflow_cancelled',
+        status: 'finished',
+      });
+
+      await processor.process(mockJob);
+
+      expect(mockSettleRunByJob).toHaveBeenCalledWith(
+        PLANS_QUEUE_NAME,
+        'job-1',
+        PLAN_RUN_STATUS.CANCELLED,
+      );
+    });
+
+    it('never writes STALE from the processor', async () => {
+      await processor.process(mockJob);
+
+      for (const call of mockSettleRunByJob.mock.calls) {
+        expect(call[2]).not.toBe(PLAN_RUN_STATUS.STALE);
+      }
+    });
+
+    it('stops the heartbeat timer before the terminal settle write lands', async () => {
+      vi.useFakeTimers();
+      mockRecordHeartbeatByJob.mockClear();
+      mockSettleRunByJob.mockClear();
+
+      // Delay the after-run-hooks/notify pipeline (which runs after the terminal
+      // settle write) so a heartbeat tick landing in that window would prove the
+      // timer was still armed when the terminal write happened.
+      let resolveHooks!: () => void;
+      mockRunAfterRunHooksThenNotify.mockImplementationOnce(
+        () =>
+          new Promise<void>((resolve) => {
+            resolveHooks = resolve;
+          }),
+      );
+
+      const run = processor.process(mockJob);
+
+      // Let the orchestrator promise (resolved synchronously) settle the row, then
+      // advance well past a heartbeat interval while the hooks pipeline is stalled.
+      await vi.advanceTimersByTimeAsync(0);
+      expect(mockSettleRunByJob).toHaveBeenCalledWith(
+        PLANS_QUEUE_NAME,
+        'job-1',
+        PLAN_RUN_STATUS.COMPLETED,
+      );
+
+      mockRecordHeartbeatByJob.mockClear();
+      await vi.advanceTimersByTimeAsync(HEARTBEAT_INTERVAL_MS * 2 + 50);
+      expect(mockRecordHeartbeatByJob).not.toHaveBeenCalled();
+
+      resolveHooks();
+      await run;
+      vi.useRealTimers();
+    });
+  });
+
   describe('iteration limit notification (orchestrator path)', () => {
     it('emits warning when Ralph hits max iterations but plan is still IN_PROGRESS', async () => {
       mockRunPlanOrchestratorJob.mockResolvedValueOnce({
@@ -729,6 +826,65 @@ describe('PlansProcessor', () => {
       });
 
       expect(mockRepoUpdate).not.toHaveBeenCalled();
+    });
+
+    it('a non-final failed attempt leaves the plan_runs row IN_PROGRESS (no settle write)', async () => {
+      const planId = 'plan-retrying';
+      mockSettleRunByJob.mockClear();
+
+      await processor.onPlanJobFailed({
+        error: new Error('Job failed'),
+        job: createMock<RunPlanJob>({
+          attemptsMade: 1,
+          data: { planId },
+          id: 'job-retry-1',
+          opts: { attempts: 3 },
+        }),
+      });
+
+      expect(mockSettleRunByJob).not.toHaveBeenCalled();
+    });
+
+    it('the final failed attempt settles the plan_runs row to FAILED', async () => {
+      const planId = 'plan-exhausted';
+      mockSettleRunByJob.mockClear();
+
+      await processor.onPlanJobFailed({
+        error: new Error('Job failed'),
+        job: createMock<RunPlanJob>({
+          attemptsMade: 3,
+          data: { planId },
+          id: 'job-retry-1',
+          opts: { attempts: 3 },
+        }),
+      });
+
+      expect(mockSettleRunByJob).toHaveBeenCalledWith(
+        PLANS_QUEUE_NAME,
+        'job-retry-1',
+        PLAN_RUN_STATUS.FAILED,
+      );
+    });
+
+    it('treats a job with no configured attempts as final (settles to FAILED)', async () => {
+      const planId = 'plan-no-retry-config';
+      mockSettleRunByJob.mockClear();
+
+      await processor.onPlanJobFailed({
+        error: new Error('Job failed'),
+        job: createMock<RunPlanJob>({
+          attemptsMade: 1,
+          data: { planId },
+          id: 'job-single-attempt',
+          opts: {},
+        }),
+      });
+
+      expect(mockSettleRunByJob).toHaveBeenCalledWith(
+        PLANS_QUEUE_NAME,
+        'job-single-attempt',
+        PLAN_RUN_STATUS.FAILED,
+      );
     });
 
     it('onPlanJobStalled resets plan status to QUEUED when job has planId', async () => {
