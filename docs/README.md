@@ -37,6 +37,7 @@ Along the way:
 - **Plan-run worktrees:** [openthrottle/plan-run-worktrees.md](./openthrottle/plan-run-worktrees.md) — the git worktree OpenThrottle creates for every programmatic plan run, and how the run binds to it.
 - **Per-task model attribution:** [openthrottle/per-task-model-attribution.md](./openthrottle/per-task-model-attribution.md) — how a model that varies per task reaches the work ledger, and why the session rotates rather than the task row gaining a column.
 - **Per-task model routing:** [openthrottle/per-task-model-routing.md](./openthrottle/per-task-model-routing.md) — which model a task gets, the measured reach of routing on `tasks.category`, and why the fallback is the cheap tier.
+- **`ot-loop` CI gate:** [openthrottle/ot-loop-ci-gate.md](./openthrottle/ot-loop-ci-gate.md) — which CI signal the loop must see before it settles `COMPLETED` and tears down its worktree, and why waiting costs about twelve seconds on a draft PR.
 - **Recurring agent jobs:** [monorepo/recurring-agent-jobs.md](./monorepo/recurring-agent-jobs.md) — the ten read-only `Job_*` audit prompts in `.agents/prompts/` and the two ways to invoke them.
 - **Driver stream contracts:** [openthrottle/antigravity-stream-json-schema.md](./openthrottle/antigravity-stream-json-schema.md), [openthrottle/gemini-stream-json-schema.md](./openthrottle/gemini-stream-json-schema.md) — the headless stream-JSON each CLI emits, as probed.
 - **Workspace folder picker:** [openthrottle/workspace-native-folder-picker.md](./openthrottle/workspace-native-folder-picker.md) — when the server may open a native OS folder dialog, and the per-OS commands behind it.
@@ -48,6 +49,7 @@ Along the way:
 - **Docs contract:** [../CONTRIBUTING.md#documentation](../CONTRIBUTING.md#documentation) — what a doc in `docs/` is for, and the `audit:docs-index` reachability gate.
 - **Folders & conventions:** the `ot-folders` skill (`.agents/skills/ot-folders/SKILL.md`) — where code goes, what it is named, what shape it must have, and how to prove it; [MONOREPO.md § Naming Conventions](../MONOREPO.md#naming-conventions)
 - **CI quality gates:** [monorepo/CI-quality-gates.md](./monorepo/CI-quality-gates.md)
+- **Attribution guards:** [monorepo/attribution-guard-layers.md](./monorepo/attribution-guard-layers.md) — the four layers enforcing `AGENTS.md` § No agent attribution, and why the two local-and-rewritable ones strip while the two published ones refuse.
 - **Dead-code (Knip):** [monorepo/Knip.md](./monorepo/Knip.md)
 - **Source-first packages:** [monorepo/source-first-packages-and-strip-only.md](./monorepo/source-first-packages-and-strip-only.md) — why a package whose `exports` name `./src/` cannot use parameter properties, enums, decorators or namespaces, and how `erasableSyntaxOnly` and ESLint enforce it.
 - **Component shape:** [monorepo/component-primitive-shape.md](./monorepo/component-primitive-shape.md)

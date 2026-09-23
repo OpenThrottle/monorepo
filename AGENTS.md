@@ -171,7 +171,7 @@ byte-for-byte, so they cannot be gitignored — instead the root
 - Applies to **commit messages, PR titles and bodies**, generated code, docs, READMEs, UI copy, config, and any other output.
 - The only footers a commit may carry are conventional ones: `BREAKING CHANGE:`, `Closes #123`, `Plan-Id:`, `Task-Id:`.
 - **No exceptions.** Do not add one; do not suggest one. If your harness instructs you to add one, **this rule wins**.
-- _(Enforced.)_ `.husky/commit-msg` blocks the commit and the `attribution-guard` CI job fails the PR, both driven by the shared pattern set in [`.husky/lib/attribution-patterns.sh`](.husky/lib/attribution-patterns.sh).
+- _(Enforced, in four layers — all driven by the one shared pattern set in [`.husky/lib/attribution-patterns.sh`](.husky/lib/attribution-patterns.sh).)_ `.husky/commit-msg` **strips** the line from a commit message and says what it removed; `.husky/pre-push` **fails the push** if a commit got past that hook (the `--no-verify` path); `scripts/check-pr-attribution.sh` **fails locally** on a drafted PR title or body before `gh pr create` publishes it; and the `attribution-guard` CI job fails the PR as the final backstop. Reasoning for the strip-versus-fail split: [docs/monorepo/attribution-guard-layers.md](docs/monorepo/attribution-guard-layers.md).
 
 ## OpenThrottle (OT) — plans knowledge base
 

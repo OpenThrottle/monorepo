@@ -7,10 +7,25 @@
 # .husky/lib/attribution-patterns.sh, and the match is case-insensitive because
 # the exact spelling varies by tool (`Co-Authored-By:` vs `Co-authored-by:`).
 #
+# It strips rather than fails on purpose: several harnesses inject the line
+# themselves, so failing here would block nearly every agent commit and teach
+# `--no-verify` as the way around it — which is how the one line that reached
+# CI on PR #554 got there. But it strips LOUDLY. The silent version rewrote
+# three commits on that branch without the author ever learning the rule
+# existed, which is why the fourth was written without care. Saying what was
+# removed costs nothing and is the whole difference.
+#
 . "$(dirname "$0")/lib/attribution-patterns.sh"
 
 if [ -n "$1" ] && [ -f "$1" ]; then
-  if grep -qiE "$OT_ATTRIBUTION_PATTERN" "$1"; then
+  if stripped="$(grep -inE "$OT_ATTRIBUTION_PATTERN" "$1")"; then
+    echo "✂️  Removed agent attribution from the commit message:"
+    echo "$stripped" | sed 's/^/     line /'
+    echo "   Rule:  AGENTS.md § No agent attribution — commits carry only"
+    echo "          conventional footers (BREAKING CHANGE:, Closes #, Plan-Id:, Task-Id:)."
+    echo "   Guard: .husky/lib/attribution-patterns.sh"
+    echo "   The commit itself is fine — the line is gone. Nothing to redo."
+
     grep -viE "$OT_ATTRIBUTION_PATTERN" "$1" > "$1.stripped" || true
     mv "$1.stripped" "$1"
   fi

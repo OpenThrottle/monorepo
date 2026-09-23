@@ -16,6 +16,7 @@ Your job is to look at all commits on the current branch and summarize them into
    - Review the actual diff with `git diff <base-branch>..HEAD` to understand the scope of changes
 4. **Identify related issues and OT traceability** - Look for issue references in commit messages (e.g., `#123`, `fixes #456`) and for `Plan-Id:` / `Task-Id:` footers (see [Traceability](#traceability))
 5. **Generate PR content** - Create a comprehensive PR description using the template
+6. **Guard the title and body before publishing** - Write the drafted title and body to files and run `scripts/check-pr-attribution.sh` on them (see [Attribution](#attribution)). Only call `gh pr create`/`gh pr edit` once it exits 0.
 
 ## Rules
 
@@ -25,6 +26,7 @@ Your job is to look at all commits on the current branch and summarize them into
 - **ALWAYS** Update the existing `Pull Request` if one exists, otherwise create a new one
 - **ALWAYS** Return a clickable URL to the PR upon completion
 - **ALWAYS** use the GitHub CLI (`gh`). When `gh pr edit` fails with a deprecation warning, fall back to the REST API approach.
+- **ALWAYS** run `scripts/check-pr-attribution.sh` against the drafted title and body before calling `gh pr create`/`gh pr edit` — see [Attribution](#attribution). Fix the offending line(s) and re-run the guard; never bypass it.
 - **NEVER** push directly to `main`; **never** use `--no-verify` or bypass the Husky hooks. Require human confirmation before a `rebase` or a `force push`.
 - This skill only **creates or updates** the PR. If the user also wants to merge it, treat that as a separate step.
 - On a merge-queue-protected branch, do **not** describe a PR as merged just because `gh pr merge` accepted the request. That command may only **enqueue** the PR. Only report "merged" after `gh pr view --json mergedAt,mergeCommitSha` shows a landed merge commit.
@@ -95,6 +97,31 @@ It is worth stating because the prior wording said "No exceptions" and was viola
 shipped with `🤖 Generated with [Claude Code](https://claude.com/claude-code)` in its body. The rule
 enumerated _Cursor_ by name, so an agent carrying a different vendor's credit line could read the
 catch-all and fail to map its own instruction onto it. Lead with the category, not the vendor.
+
+### Guard the title and body locally, before `gh pr create` publishes them
+
+Saying the rule twice was still not enough: PR #554 shipped a robot-emoji "Generated with" credit
+line on **body line 39**, and the first thing that ever inspected that text was the CI `attribution-guard`
+job — which only runs once the PR already exists on GitHub. A PR body cannot be silently rewritten
+the way `.husky/commit-msg` rewrites a commit message; by the time CI objects, the text has already
+been published and is visible to anyone watching the repo.
+
+`scripts/check-pr-attribution.sh` closes that gap by running the same pattern set locally, before
+`gh pr create`/`gh pr edit` is ever called. It sources `OT_ATTRIBUTION_PATTERN`/
+`OT_ATTRIBUTION_PATTERN_INLINE` from `.husky/lib/attribution-patterns.sh` — the same file the
+commit-msg hook and the CI job use — so there is exactly one place the pattern set lives.
+
+**ALWAYS**, right before the `gh pr create`/`gh pr edit` call:
+
+```bash
+printf '%s' "$title" > /tmp/pr-title.txt
+printf '%s' "$body"  > /tmp/pr-body.txt
+scripts/check-pr-attribution.sh --title-file /tmp/pr-title.txt --body-file /tmp/pr-body.txt
+```
+
+A non-zero exit names the rule and the offending line — delete it from the draft and re-run the
+guard rather than passing `--body-file`/`--title-file` a second time with the same content. Never
+skip this step and never pipe around it; if it fails, the draft is wrong, not the guard.
 
 ## PR title
 
