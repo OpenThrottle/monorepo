@@ -16,7 +16,20 @@ pnpm exec workflow-memory-reconcile --index <path/to/MEMORY.md> --repo OpenThrot
 
 It extracts every PR reference and OT plan id from the index, resolves PR state via `gh` and plan status via OT GraphQL, and prints **only** the disagreements. Exit 0 = none, exit 1 = disagreements found.
 
-The memory index for this repo lives under `~/.claude/projects/<encoded-repo-path>/memory/MEMORY.md`. There is more than one such directory on a typical machine — pick the one matching the repo you are running for, and say which you used.
+### Choosing the directory — and distrusting the match
+
+The memory index for this repo lives under `~/.claude/projects/<encoded-repo-path>/memory/MEMORY.md`. There is more than one such directory on a typical machine, so start from the one matching the repo you are running for — but **do not stop there.**
+
+That directory name encodes the session's **cwd**, not the repo's git root. A session opened one level up from the repo therefore writes to a _different_ directory that looks just as legitimate, and neither side signals the split. On 2026-09-21 this job hit exactly that: the path-matched directory held 2 entries and 0 checkable claims, while 220 entries sat one directory over under the parent path. Following the old rule literally, the job reconciled the stub, exited 0, and reported a clean run while the real index went unchecked.
+
+So the match is a starting point, not an answer:
+
+- **Count the checkable claims in the directory you picked** before reconciling it.
+- **A path match holding few or no checkable claims is a FINDING, not a clean run.** Do not reconcile it, exit 0, and report success — that is the failure this rule exists to prevent. List the other `~/.claude/projects/*/memory/` directories, compare their entry counts, and say plainly in the output that the path-matched directory looks like a stub and which directory holds the real index.
+- **Reconcile the stub anyway if you like, but never report its clean exit as the repo's result.** An exit 0 over 2 entries means nothing about 220 unchecked ones.
+- **Never silently reconcile a non-matching directory instead.** If the real index is somewhere the path rule does not point, that mismatch is itself the finding — file it, rather than quietly following the bigger number and leaving the split in place.
+
+**Known gap, out of scope for this job:** none of the worktree-encoded project directories under `~/.claude/projects` has a `memory/` directory at all (26 such directories at last count, 0 with memory), so sessions running inside a git worktree start with no memory. That is a known limitation of how the project directory is derived — **do not report it as drift and do not try to repair it ad hoc.** File it as its own plan if it needs fixing.
 
 ## Read the report the way it is written
 
@@ -74,7 +87,8 @@ Demotion moves volume; only deletion reduces it. Delete a memory only when it is
 
 State plainly, in the final message:
 
-- which index file was reconciled,
+- which index file was reconciled, **and how many entries it holds** — so a stub is visible in the output rather than hidden behind a clean exit,
+- whether any other `~/.claude/projects/*/memory/` directory holds more entries than the one you used,
 - how many disagreements were found and corrected, quoting each before/after,
 - whether the plan half ran or was skipped,
 - what the report said it did not check.
