@@ -3,6 +3,7 @@
  * and a single in-process agent iteration per hook.
  */
 
+import { AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT } from '@openthrottle/nestjs-auth';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
   PlanOutputStreamService,
@@ -25,6 +26,8 @@ import {
   type RalphNestedRunTuningInput,
 } from '@tools/workflows';
 
+import type { PlanStatusService } from '../../graphql/plans/plan-status.service.ts';
+import type { StatusChangeSystemAccountService } from '../../graphql/work-ledger/status-change-system-account.service.ts';
 import type { RunPlanJobData } from '../plans/plans.types.ts';
 import { isRunPlanOrchestratorJobData } from '../plans/plans.types.ts';
 
@@ -91,6 +94,35 @@ const logAfterRunHookFailures = (
       logLabel,
     );
   }
+};
+
+/**
+ * @description Sets `planId` to BLOCKED via the applyStatusChange chokepoint, attributed to the
+ * status-change-system service account with a non-fatal capture failure (a missing
+ * migration/ledger hiccup must not block the beforeAll-hook-blocked terminal path). No
+ * guardCurrentStatus: the write this replaced was unconditional (any status → BLOCKED when a
+ * beforeAll hook blocks the run), which this preserves — `writeGuardedStatus`'s own no-op check
+ * (current already BLOCKED) is the only place this could now skip, and that case writes nothing
+ * else (no completedAt, no other column), so skipping it is behaviourally identical to the old
+ * unconditional write landing on an unchanged value. `execute-plan-job-run-hooks.ts` exports plain
+ * functions rather than an injectable, so both `planStatusService` and `statusChangeSystemAccount`
+ * are threaded in from the caller (PlansProcessor) rather than instantiated here.
+ */
+const setPlanBlocked = async (
+  planStatusService: PlanStatusService,
+  statusChangeSystemAccount: StatusChangeSystemAccountService,
+  planId: string,
+): Promise<void> => {
+  const actorSub = await statusChangeSystemAccount.resolveId();
+
+  await planStatusService.writeGuardedStatus(planId, {
+    actorKind: AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
+    actorSub: actorSub ?? undefined,
+    captureFailureIsFatal: false,
+    guardCurrentStatus: undefined,
+    requestedStatus: 'BLOCKED',
+    throwOnForbiddenInProgress: false,
+  });
 };
 
 export interface ExecutePlanJobRunHooksParams {
@@ -291,8 +323,10 @@ export const runBeforeAllHooksAndHandleBlock = async (params: {
     }) => void;
   };
   readonly planOutputStreamService: PlanOutputStreamService;
+  readonly planStatusService: PlanStatusService;
   readonly plansService: PlansService;
   readonly signal?: AbortSignal;
+  readonly statusChangeSystemAccount: StatusChangeSystemAccountService;
   readonly tasksService: TasksService;
 }): Promise<boolean> => {
   const phaseResult = await executePlanJobRunHooks({
@@ -312,7 +346,6 @@ export const runBeforeAllHooksAndHandleBlock = async (params: {
   }
 
   const planId = params.jobData.planId;
-  const repo = params.plansService.getRepository();
 
   await runAfterRunHooks({
     hooks: params.hooks,
@@ -327,7 +360,11 @@ export const runBeforeAllHooksAndHandleBlock = async (params: {
     tasksService: params.tasksService,
   });
 
-  await repo.update({ id: planId }, { status: 'BLOCKED' });
+  await setPlanBlocked(
+    params.planStatusService,
+    params.statusChangeSystemAccount,
+    planId,
+  );
 
   params.notifications.emitPlanStatusChanged({
     planId,
@@ -368,8 +405,10 @@ export const runBeforeAllHooksWithDispatcher = async (params: {
     }) => void;
   };
   readonly planOutputStreamService: PlanOutputStreamService;
+  readonly planStatusService: PlanStatusService;
   readonly plansService: PlansService;
   readonly signal?: AbortSignal;
+  readonly statusChangeSystemAccount: StatusChangeSystemAccountService;
   readonly tasksService: TasksService;
 }): Promise<boolean> => {
   const phaseResult = await params.dispatcher.runPlan({ phase: 'beforeAll' });
@@ -386,8 +425,11 @@ export const runBeforeAllHooksWithDispatcher = async (params: {
     phase: 'afterAll',
   });
 
-  const repo = params.plansService.getRepository();
-  await repo.update({ id: planId }, { status: 'BLOCKED' });
+  await setPlanBlocked(
+    params.planStatusService,
+    params.statusChangeSystemAccount,
+    planId,
+  );
 
   params.notifications.emitPlanStatusChanged({
     planId,

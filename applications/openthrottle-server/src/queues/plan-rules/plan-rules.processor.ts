@@ -24,12 +24,15 @@
 
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { OnApplicationShutdown, OnModuleInit } from '@nestjs/common';
+import { AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT } from '@openthrottle/nestjs-auth';
 import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
+  type OrphanedTaskStatusCaptureParams,
   PlansService,
   RULE_APPLICATION_STATES,
   RuleApplicationsService,
+  SOFT_CLOSED_TASK_STATUS,
   TagActionRulesService,
   TagsService,
   UsersService,
@@ -39,6 +42,9 @@ import {
   type TagActionRuleInput,
 } from '@openthrottle/openthrottle-skills';
 
+import { StatusChangeSystemAccountService } from '../../graphql/work-ledger/status-change-system-account.service.ts';
+import { WorkLedgerCaptureService } from '../../graphql/work-ledger/work-ledger-capture.service.ts';
+import { WORK_LEDGER_CAPTURE_FAILED_MARKER } from '../../graphql/work-ledger/work-ledger-capture-failure-marker.ts';
 import { ActionExecutorRegistry } from './action-executor.ts';
 import {
   PLAN_RULES_QUEUE_NAME,
@@ -62,11 +68,46 @@ export class PlanRulesProcessor
     private readonly logger: LoggerService,
     private readonly plansService: PlansService,
     private readonly ruleApplicationsService: RuleApplicationsService,
+    private readonly statusChangeSystemAccount: StatusChangeSystemAccountService,
     private readonly tagActionRulesService: TagActionRulesService,
     private readonly tagsService: TagsService,
     private readonly usersService: UsersService,
+    private readonly workLedgerCapture: WorkLedgerCaptureService,
   ) {
     super();
+  }
+
+  /**
+   * @description {@link OrphanedTaskStatusCapture} supplied to
+   * `orphanUnmatchedApplications`: captures one `status_change` artifact per task that call
+   * soft-closes, inside the SAME transaction (`params.manager`) as the ledger flip and the task
+   * write. This worker has no request principal (jobs carry only `{planId, triggerKind}`), so
+   * attribution is the `status-change-system` service account, same as the stale-run sweeper and
+   * `InjectTaskExecutor`'s revive path. Non-fatal: a ledger hiccup must not fail the whole
+   * evaluation pass over a capture error.
+   */
+  private async captureOrphanedTaskStatusChange(
+    params: OrphanedTaskStatusCaptureParams,
+  ): Promise<void> {
+    const actorSub = await this.statusChangeSystemAccount.resolveId();
+
+    try {
+      await this.workLedgerCapture.recordStatusChange(params.manager, {
+        actorKind: AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
+        actorSub: actorSub ?? undefined,
+        entity: 'task',
+        from: params.fromStatus,
+        id: params.taskId,
+        planId: params.planId,
+        taskId: params.taskId,
+        to: SOFT_CLOSED_TASK_STATUS,
+      });
+    } catch (error) {
+      this.logger.error(
+        `${WORK_LEDGER_CAPTURE_FAILED_MARKER} entity=task id=${params.taskId} from=${params.fromStatus} to=${SOFT_CLOSED_TASK_STATUS}: ${String(error)}`,
+        PlanRulesProcessor.name,
+      );
+    }
   }
 
   onModuleInit(): void {
@@ -257,6 +298,7 @@ export class PlanRulesProcessor
       await this.ruleApplicationsService.orphanUnmatchedApplications(
         planId,
         matched.map((action) => action.ruleId),
+        (capture) => this.captureOrphanedTaskStatusChange(capture),
       );
 
     if (orphaned > 0) {

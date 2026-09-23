@@ -22,6 +22,8 @@ import { spawn as nodeSpawn } from 'child_process';
 import type { Readable } from 'stream';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { PlanStatusService } from '../../graphql/plans/plan-status.service.ts';
+import { StatusChangeSystemAccountService } from '../../graphql/work-ledger/status-change-system-account.service.ts';
 import { ProcessMetricsService } from '../../metrics/process-metrics.service.ts';
 import type { EnhancedTaskRunMetrics } from '../../metrics/process-metrics.types.ts';
 import { NotificationsService } from '../../notifications/notifications.service.ts';
@@ -154,7 +156,6 @@ const mockWorktreeTracker = {
 const mockRepoUpdate = vi.fn().mockResolvedValue(undefined);
 const mockRepoFind = vi.fn().mockResolvedValue([]);
 const mockTaskRepoFindOne = vi.fn().mockResolvedValue(null);
-const mocksyncParentPlanStatus = vi.fn().mockResolvedValue(false);
 /** Default: plan is COMPLETED so job completed message is success. Override to { status: 'IN_PROGRESS' } to test iteration-limit notification. */
 const mockRepoFindOne = vi.fn().mockResolvedValue({ status: 'COMPLETED' });
 const mockPlansService = createMock<PlansService>({
@@ -172,8 +173,25 @@ const mockTasksService = createMock<TasksService>({
       find: vi.fn().mockResolvedValue([]),
       findOne: mockTaskRepoFindOne,
     }),
-  syncParentPlanStatus: mocksyncParentPlanStatus,
 });
+
+// The plans.status write chokepoint and the background-writer service-account lookup, both now
+// injected into PlansProcessor in place of the old direct repo.update/TasksService.syncParentPlanStatus
+// writes. Mocked wholesale here — PlanStatusService's own race/capture behaviour is covered by
+// plan-status.service.test.ts.
+const mockPromoteParentPlanToInProgress = vi.fn().mockResolvedValue(false);
+const mockWriteGuardedStatus = vi.fn().mockResolvedValue(true);
+const mockPlanStatusService = createMock<PlanStatusService>({
+  promoteParentPlanToInProgress: mockPromoteParentPlanToInProgress,
+  writeGuardedStatus: mockWriteGuardedStatus,
+});
+const mockResolveStatusChangeSystemAccountId = vi
+  .fn()
+  .mockResolvedValue('status-change-system-account-id');
+const mockStatusChangeSystemAccountService =
+  createMock<StatusChangeSystemAccountService>({
+    resolveId: mockResolveStatusChangeSystemAccountId,
+  });
 
 const snapshotStub = {
   cpuSystemMs: 10,
@@ -275,6 +293,14 @@ describe('PlansProcessor', () => {
           useValue: mockPlansService,
         },
         {
+          provide: PlanStatusService,
+          useValue: mockPlanStatusService,
+        },
+        {
+          provide: StatusChangeSystemAccountService,
+          useValue: mockStatusChangeSystemAccountService,
+        },
+        {
           provide: TasksService,
           useValue: mockTasksService,
         },
@@ -337,10 +363,16 @@ describe('PlansProcessor', () => {
   it('should set plan status to IN_PROGRESS when job starts', async () => {
     await processor.process(mockJob);
 
-    expect(mockRepoUpdate).toHaveBeenCalledTimes(1);
-    expect(mockRepoUpdate).toHaveBeenCalledWith(
-      { id: mockJob.data.planId },
-      { status: 'IN_PROGRESS' },
+    // Routed through the applyStatusChange chokepoint (PlanStatusService), attributed to the
+    // status-change-system service account, in place of the old bare repo.update.
+    expect(mockPromoteParentPlanToInProgress).toHaveBeenCalledTimes(1);
+    expect(mockPromoteParentPlanToInProgress).toHaveBeenCalledWith(
+      mockJob.data.planId,
+      {
+        actorKind: 'service_account',
+        actorSub: 'status-change-system-account-id',
+      },
+      false,
     );
   });
 
@@ -714,11 +746,18 @@ describe('PlansProcessor', () => {
 
       await processor.onModuleInit();
 
-      expect(mockRepoUpdate).toHaveBeenCalledWith(
-        { id: stuckPlanId },
-        { status: 'QUEUED' },
-      );
-      expect(mockRepoUpdate).toHaveBeenCalledTimes(1);
+      // Routed through the applyStatusChange chokepoint (PlanStatusService.writeGuardedStatus),
+      // attributed to the status-change-system service account, in place of the old bare
+      // repo.update.
+      expect(mockWriteGuardedStatus).toHaveBeenCalledWith(stuckPlanId, {
+        actorKind: 'service_account',
+        actorSub: 'status-change-system-account-id',
+        captureFailureIsFatal: false,
+        guardCurrentStatus: 'IN_PROGRESS',
+        requestedStatus: 'QUEUED',
+        throwOnForbiddenInProgress: false,
+      });
+      expect(mockWriteGuardedStatus).toHaveBeenCalledTimes(1);
     });
 
     it('does not reset IN_PROGRESS plan when it has an active job', async () => {
@@ -732,7 +771,7 @@ describe('PlansProcessor', () => {
 
       await processor.onModuleInit();
 
-      expect(mockRepoUpdate).not.toHaveBeenCalled();
+      expect(mockWriteGuardedStatus).not.toHaveBeenCalled();
     });
 
     it('does nothing when no plans are IN_PROGRESS', async () => {
@@ -741,7 +780,7 @@ describe('PlansProcessor', () => {
       await processor.onModuleInit();
 
       expect(mockGetJobs).not.toHaveBeenCalled();
-      expect(mockRepoUpdate).not.toHaveBeenCalled();
+      expect(mockWriteGuardedStatus).not.toHaveBeenCalled();
     });
 
     it('promotes QUEUED plans that have an IN_PROGRESS task and emits plan status changed', async () => {
@@ -756,11 +795,18 @@ describe('PlansProcessor', () => {
         planId: divergedPlanId,
         status: 'IN_PROGRESS',
       });
-      mocksyncParentPlanStatus.mockResolvedValueOnce(true);
+      mockPromoteParentPlanToInProgress.mockResolvedValueOnce(true);
 
       await processor.onModuleInit();
 
-      expect(mocksyncParentPlanStatus).toHaveBeenCalledWith(divergedPlanId);
+      expect(mockPromoteParentPlanToInProgress).toHaveBeenCalledWith(
+        divergedPlanId,
+        {
+          actorKind: 'service_account',
+          actorSub: 'status-change-system-account-id',
+        },
+        false,
+      );
       const notifications = getProcessorNotifications(processor);
       expect(notifications.emitPlanStatusChanged).toHaveBeenCalledWith({
         planId: divergedPlanId,
@@ -780,11 +826,18 @@ describe('PlansProcessor', () => {
         planId: divergedPlanId,
         status: 'IN_PROGRESS',
       });
-      mocksyncParentPlanStatus.mockResolvedValueOnce(false);
+      mockPromoteParentPlanToInProgress.mockResolvedValueOnce(false);
 
       await processor.onModuleInit();
 
-      expect(mocksyncParentPlanStatus).toHaveBeenCalledWith(divergedPlanId);
+      expect(mockPromoteParentPlanToInProgress).toHaveBeenCalledWith(
+        divergedPlanId,
+        {
+          actorKind: 'service_account',
+          actorSub: 'status-change-system-account-id',
+        },
+        false,
+      );
       const notifications = getProcessorNotifications(processor);
       expect(notifications.emitPlanStatusChanged).not.toHaveBeenCalled();
     });
@@ -800,7 +853,7 @@ describe('PlansProcessor', () => {
 
       await processor.onModuleInit();
 
-      expect(mocksyncParentPlanStatus).not.toHaveBeenCalled();
+      expect(mockPromoteParentPlanToInProgress).not.toHaveBeenCalled();
     });
   });
 
@@ -813,10 +866,17 @@ describe('PlansProcessor', () => {
         job: createMock<RunPlanJob>({ data: { planId }, id: 'job-1' }),
       });
 
-      expect(mockRepoUpdate).toHaveBeenCalledWith(
-        { id: planId },
-        { status: 'QUEUED' },
-      );
+      // Routed through the applyStatusChange chokepoint (PlanStatusService.writeGuardedStatus),
+      // attributed to the status-change-system service account, in place of the old bare
+      // repo.update.
+      expect(mockWriteGuardedStatus).toHaveBeenCalledWith(planId, {
+        actorKind: 'service_account',
+        actorSub: 'status-change-system-account-id',
+        captureFailureIsFatal: false,
+        guardCurrentStatus: undefined,
+        requestedStatus: 'QUEUED',
+        throwOnForbiddenInProgress: false,
+      });
     });
 
     it('onPlanJobFailed does nothing when job has no planId', async () => {
@@ -825,7 +885,7 @@ describe('PlansProcessor', () => {
         job: createMock<RunPlanJob>({ data: {}, id: 'job-1' }),
       });
 
-      expect(mockRepoUpdate).not.toHaveBeenCalled();
+      expect(mockWriteGuardedStatus).not.toHaveBeenCalled();
     });
 
     it('a non-final failed attempt leaves the plan_runs row IN_PROGRESS (no settle write)', async () => {
@@ -897,10 +957,14 @@ describe('PlansProcessor', () => {
       await processor.onPlanJobStalled('job-stalled-1');
 
       expect(mockGetJob).toHaveBeenCalledWith('job-stalled-1');
-      expect(mockRepoUpdate).toHaveBeenCalledWith(
-        { id: planId },
-        { status: 'QUEUED' },
-      );
+      expect(mockWriteGuardedStatus).toHaveBeenCalledWith(planId, {
+        actorKind: 'service_account',
+        actorSub: 'status-change-system-account-id',
+        captureFailureIsFatal: false,
+        guardCurrentStatus: undefined,
+        requestedStatus: 'QUEUED',
+        throwOnForbiddenInProgress: false,
+      });
     });
 
     it('onPlanJobStalled does nothing when job is missing or has no planId', async () => {
@@ -910,7 +974,7 @@ describe('PlansProcessor', () => {
       await processor.onPlanJobStalled('missing-job');
 
       expect(mockGetJob).toHaveBeenCalledWith('missing-job');
-      expect(mockRepoUpdate).not.toHaveBeenCalled();
+      expect(mockWriteGuardedStatus).not.toHaveBeenCalled();
     });
   });
 

@@ -24,8 +24,9 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { asMock } from '@openthrottle/nestjs-testing';
 import type { EntityManager, Repository } from 'typeorm';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 
+import type { WorkLedgerCaptureService } from '../../graphql/work-ledger/work-ledger-capture.service.ts';
 import type { NotificationsService } from '../../notifications/notifications.service.ts';
 import {
   PROMOTED_TAG,
@@ -50,6 +51,9 @@ describe('TaskPromotionService.promote', () => {
   let plansService: PlansService;
   let service: TaskPromotionService;
   let getOne: ReturnType<typeof vi.fn>;
+  let mockRecordStatusChange: Mock<
+    WorkLedgerCaptureService['recordStatusChange']
+  >;
 
   const buildTask = (overrides: Partial<Task> = {}): Task =>
     tasksFactory.build({
@@ -143,10 +147,15 @@ describe('TaskPromotionService.promote', () => {
     });
     notifications = createMock<NotificationsService>();
 
+    mockRecordStatusChange = vi.fn().mockResolvedValue(undefined);
+
     service = new TaskPromotionService(
       createMock<LoggerService>(),
       notifications,
       plansService,
+      createMock<WorkLedgerCaptureService>({
+        recordStatusChange: mockRecordStatusChange,
+      }),
     );
   });
 
@@ -154,6 +163,7 @@ describe('TaskPromotionService.promote', () => {
     const result = await service.promote({
       actorServiceAccountId: null,
       actorUserId: 'user-1',
+      captureFailureIsFatal: true,
       taskId: TASK_ID,
     });
 
@@ -193,6 +203,20 @@ describe('TaskPromotionService.promote', () => {
       expect.objectContaining({ tag: PROMOTED_TAG, taskId: TASK_ID }),
     );
 
+    // Step 4b: the source task's status_change is captured (own real prior status as `from`).
+    expect(mockRecordStatusChange).toHaveBeenCalledWith(
+      manager,
+      expect.objectContaining({
+        actorKind: 'user',
+        actorSub: 'user-1',
+        entity: 'task',
+        from: 'PENDING',
+        planId: SOURCE_PLAN_ID,
+        taskId: TASK_ID,
+        to: PROMOTED_TASK_STATUS,
+      }),
+    );
+
     // Step 5: born-verified plan_promotion artifact under a 2-subject session,
     // attributed to the requesting user (exactly one actor column set).
     expect(sessionRepo.create).toHaveBeenCalledWith(
@@ -225,6 +249,7 @@ describe('TaskPromotionService.promote', () => {
     await service.promote({
       actorServiceAccountId: 'svc-1',
       actorUserId: null,
+      captureFailureIsFatal: true,
       taskId: TASK_ID,
     });
 
@@ -240,6 +265,7 @@ describe('TaskPromotionService.promote', () => {
     const result = await service.promote({
       actorServiceAccountId: null,
       actorUserId: null,
+      captureFailureIsFatal: true,
       taskId: TASK_ID,
     });
 
@@ -247,6 +273,45 @@ describe('TaskPromotionService.promote', () => {
     expect(result).toEqual({ newPlanId: NEW_PLAN_ID, skipped: null });
     expect(sessionRepo.create).not.toHaveBeenCalled();
     expect(artifactRepo.create).not.toHaveBeenCalled();
+    // Same guard applies to the status_change capture: no actor, no attempted write.
+    expect(mockRecordStatusChange).not.toHaveBeenCalled();
+  });
+
+  it('a fatal capture failure (captureFailureIsFatal: true) rolls back the whole promotion', async () => {
+    mockRecordStatusChange.mockRejectedValueOnce(new Error('ledger down'));
+
+    await expect(
+      service.promote({
+        actorServiceAccountId: null,
+        actorUserId: 'user-1',
+        captureFailureIsFatal: true,
+        taskId: TASK_ID,
+      }),
+    ).rejects.toThrow('ledger down');
+    expect(notifications.emitTaskStatusChanged).not.toHaveBeenCalled();
+  });
+
+  it('a non-fatal capture failure (captureFailureIsFatal: false) still commits the promotion', async () => {
+    mockRecordStatusChange.mockRejectedValueOnce(new Error('ledger down'));
+
+    const result = await service.promote({
+      actorServiceAccountId: null,
+      actorUserId: 'plan-owner-1',
+      captureFailureIsFatal: false,
+      taskId: TASK_ID,
+    });
+
+    expect(result).toEqual({ newPlanId: NEW_PLAN_ID, skipped: null });
+    expect(taskRepo.update).toHaveBeenCalledWith(
+      { id: TASK_ID },
+      expect.objectContaining({ status: PROMOTED_TASK_STATUS }),
+    );
+    // Emitted after commit — the capture failure did not roll back the row write.
+    expect(notifications.emitTaskStatusChanged).toHaveBeenCalledWith({
+      planId: SOURCE_PLAN_ID,
+      status: PROMOTED_TASK_STATUS,
+      taskId: TASK_ID,
+    });
   });
 
   it('copies task tags to the plan, keeping at most one phase tag', async () => {
@@ -263,6 +328,7 @@ describe('TaskPromotionService.promote', () => {
     await service.promote({
       actorServiceAccountId: null,
       actorUserId: null,
+      captureFailureIsFatal: true,
       taskId: TASK_ID,
     });
 
@@ -286,6 +352,7 @@ describe('TaskPromotionService.promote', () => {
     const result = await service.promote({
       actorServiceAccountId: null,
       actorUserId: 'user-1',
+      captureFailureIsFatal: true,
       taskId: TASK_ID,
     });
 
@@ -300,6 +367,7 @@ describe('TaskPromotionService.promote', () => {
     const result = await service.promote({
       actorServiceAccountId: null,
       actorUserId: null,
+      captureFailureIsFatal: true,
       taskId: TASK_ID,
     });
 

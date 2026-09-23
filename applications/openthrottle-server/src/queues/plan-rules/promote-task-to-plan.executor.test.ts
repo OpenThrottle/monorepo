@@ -126,6 +126,7 @@ describe('PromoteTaskToPlanExecutor', () => {
     expect(taskPromotionService.promote).toHaveBeenCalledWith({
       actorServiceAccountId: null,
       actorUserId: OWNER_ID,
+      captureFailureIsFatal: false,
       taskId: 'task-1',
     });
     expect(ruleApplicationsService.record).toHaveBeenCalledWith(

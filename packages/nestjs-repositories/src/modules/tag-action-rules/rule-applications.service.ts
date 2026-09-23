@@ -9,7 +9,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { In, QueryFailedError, Repository } from 'typeorm';
+import { type EntityManager, In, QueryFailedError, Repository } from 'typeorm';
 
 import {
   TASK_STATUS,
@@ -66,6 +66,34 @@ export interface RecordRuleApplicationInput {
   readonly state: RuleApplicationState;
   readonly taskId?: string | null;
 }
+
+/**
+ * @description Parameters {@link OrphanedTaskStatusCapture} receives for one soft-closed task.
+ * `fromStatus` is that task's own real prior status (never a guess).
+ * @public
+ */
+export interface OrphanedTaskStatusCaptureParams {
+  readonly fromStatus: string;
+  readonly manager: EntityManager;
+  readonly planId: string;
+  readonly taskId: string;
+}
+
+/**
+ * @description Work-ledger capture hook for {@link RuleApplicationsService.orphanUnmatchedApplications}'s
+ * task soft-close, supplied by the caller as a plain function rather than resolved via DI.
+ *
+ * This package cannot depend on `WorkLedgerCaptureService` (it lives in `openthrottle-server`, a
+ * layer above this package), so the capture itself is delegated back to the caller instead of a
+ * DI-injected port — the caller already has the concrete service and the actor/fatality policy to
+ * apply. `params.manager` is the SAME transactional manager the soft-close update runs under, so
+ * the ledger-row flip, the task status write, and every capture the caller performs here commit or
+ * roll back together, exactly as before this hook existed.
+ * @public
+ */
+export type OrphanedTaskStatusCapture = (
+  params: OrphanedTaskStatusCaptureParams,
+) => Promise<void>;
 
 @Injectable()
 export class RuleApplicationsService {
@@ -164,10 +192,16 @@ export class RuleApplicationsService {
    * transaction, unless it is already terminal (COMPLETED/SKIPPED/CANCELED) or
    * a human already deleted it (task_id SET NULL). The ledger row is untouched
    * so the rule still never re-injects. Returns the number of rows flipped.
+   *
+   * `captureOrphanedTaskStatusChange`, when supplied, is invoked once per task actually
+   * soft-closed (never for a task the terminal-status guard excluded), inside the SAME
+   * transaction as the write — see {@link OrphanedTaskStatusCapture}'s doc comment for why this
+   * package takes the capture as a callback instead of a DI-injected work-ledger service.
    */
   async orphanUnmatchedApplications(
     planId: string,
     matchedRuleIds: readonly string[],
+    captureOrphanedTaskStatusChange?: OrphanedTaskStatusCapture,
   ): Promise<number> {
     const applied = await this.repository.find({
       where: { planId, state: RULE_APPLICATION_STATES.APPLIED },
@@ -181,6 +215,9 @@ export class RuleApplicationsService {
     const injectedTaskIds = toOrphan
       .map((row) => row.taskId)
       .filter((taskId): taskId is string => taskId != null);
+    const nonTerminalStatuses = TASK_STATUS_VALUES.filter(
+      (status) => !IS_TERMINAL_TASK_STATUS[status],
+    );
 
     await this.repository.manager.transaction(async (manager) => {
       await manager.update(
@@ -189,19 +226,44 @@ export class RuleApplicationsService {
         { state: RULE_APPLICATION_STATES.ORPHANED },
       );
 
-      if (injectedTaskIds.length > 0) {
-        await manager
-          .createQueryBuilder()
-          .update(Task)
-          .set({ status: SOFT_CLOSED_TASK_STATUS })
-          .where('id IN (:...ids)', { ids: injectedTaskIds })
-          .andWhere('status NOT IN (:...terminal)', {
-            terminal: TASK_STATUS_VALUES.filter(
-              (status) => IS_TERMINAL_TASK_STATUS[status],
-            ),
-          })
-          .execute();
-      }
+      if (injectedTaskIds.length === 0) return;
+
+      // Select-lock-update: a bulk `.update()` has no per-row `from`, and a supplied capture
+      // needs each task's own real prior status. Mirrors the shape of
+      // openthrottle-server's applyBulkTaskStatusChange (reimplemented here, not imported —
+      // this package cannot depend on that server-side module).
+      const taskRepo = manager.getRepository(Task);
+      const affected = await taskRepo
+        .createQueryBuilder('task')
+        .setLock('pessimistic_write')
+        .where('task.id IN (:...ids)', { ids: injectedTaskIds })
+        .andWhere('task.status IN (:...nonTerminal)', {
+          nonTerminal: nonTerminalStatuses,
+        })
+        .getMany();
+
+      if (affected.length === 0) return;
+
+      const ids = affected.map((task) => task.id);
+      await manager
+        .createQueryBuilder()
+        .update(Task)
+        .set({ status: SOFT_CLOSED_TASK_STATUS })
+        .where('id IN (:...ids)', { ids })
+        .execute();
+
+      if (captureOrphanedTaskStatusChange == null) return;
+
+      await Promise.all(
+        affected.map((task) =>
+          captureOrphanedTaskStatusChange({
+            fromStatus: task.status,
+            manager,
+            planId,
+            taskId: task.id,
+          }),
+        ),
+      );
     });
 
     if (injectedTaskIds.length > 0) {

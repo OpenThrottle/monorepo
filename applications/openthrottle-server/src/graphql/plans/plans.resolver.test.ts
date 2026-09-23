@@ -3,6 +3,7 @@ import { getQueueToken } from '@nestjs/bullmq';
 import { BadRequestException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { AUTH_PRINCIPAL_KIND_USER } from '@openthrottle/nestjs-auth';
+import { LoggerService } from '@openthrottle/nestjs-modules';
 import { PERMISSIONS, PERMISSIONS_KEY } from '@openthrottle/nestjs-rbac';
 import type { Plan } from '@openthrottle/nestjs-repositories';
 import {
@@ -297,6 +298,10 @@ describe('PlansResolver', () => {
           }),
         },
         { provide: PlanEnqueueService, useValue: mockPlanEnqueueService },
+        {
+          provide: LoggerService,
+          useValue: createMock<LoggerService>(),
+        },
         // Real PlanStatusService wired to the existing mocks: updatePlan's merge + transition
         // policy orchestration is exercised end-to-end here; the focused setStatus/cancelRun/policy
         // unit coverage lives in plan-status.service.test.ts.
@@ -941,6 +946,8 @@ describe('PlansResolver', () => {
       });
 
       expect(mockEnqueueSpawn).toHaveBeenCalledWith({
+        actorKind: undefined,
+        actorSub: undefined,
         actorUserId: null,
         branch: 'feature/test',
         idempotencyKey: 'caller-key',

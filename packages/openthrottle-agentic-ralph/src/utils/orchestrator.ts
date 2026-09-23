@@ -201,7 +201,8 @@ const buildSessionOptions = (
 
 /**
  * @description Promotes plan to IN_PROGRESS via GraphQL (parity with
- * `openthrottle-ralph.promotePlanToInProgressIfNeeded` / `TasksService.syncParentPlanStatus`).
+ * `openthrottle-ralph.promotePlanToInProgressIfNeeded` /
+ * `PlanStatusService.promoteParentPlanToInProgress`).
  */
 const promotePlanToInProgressIfNeeded = async (
   executeGraphqlV2: WorkflowRalphOrchestratorDeps['executeGraphqlV2'],

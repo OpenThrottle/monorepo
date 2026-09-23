@@ -9,6 +9,7 @@ import { NotificationsModule } from '../../notifications/notifications.module.ts
 import { PlanRulesQueueProducerModule } from '../../queues/plan-rules/plan-rules-queue-producer.module.ts';
 import { TaggingQueueProducerModule } from '../../queues/tagging/tagging-queue-producer.module.ts';
 import { TaskPromotionQueueProducerModule } from '../../queues/task-promotion/task-promotion-queue-producer.module.ts';
+import { PlanStatusModule } from '../plans/plan-status.module.ts';
 import { WorkLedgerGraphqlModule } from '../work-ledger/work-ledger-graphql.module.ts';
 import { TasksResolver } from './tasks.resolver.ts';
 import { TasksLoaders } from './tasks-loaders.ts';
@@ -18,6 +19,7 @@ import { TasksLoaders } from './tasks-loaders.ts';
     NestjsRepositoriesModule,
     NotificationsModule,
     PlanRulesQueueProducerModule,
+    PlanStatusModule,
     TaggingQueueProducerModule,
     TaskPromotionQueueProducerModule,
     WorkLedgerGraphqlModule,

@@ -74,6 +74,9 @@ export class PromoteTaskToPlanExecutor implements ActionExecutor, OnModuleInit {
           .promote({
             actorServiceAccountId: null,
             actorUserId: ownerUserId,
+            // Background tag-rule automation on the plan-rules queue, not a direct request —
+            // a ledger hiccup must not fail the whole evaluation pass over one capture.
+            captureFailureIsFatal: false,
             taskId,
           })
           .then((outcome) => ({ outcome, taskId })),

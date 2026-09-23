@@ -52,6 +52,10 @@ export class TaskPromotionProcessor
     const outcome = await this.taskPromotionService.promote({
       actorServiceAccountId,
       actorUserId,
+      // This queue is reached only from the promoteTaskToPlan GraphQL mutation
+      // (TaskPromotionEnqueueService.enqueuePromotion) — a user-initiated write, same fatality
+      // as the mutation's other chokepoints (PlanStatusService.cancelRun, PlanEnqueueService).
+      captureFailureIsFatal: true,
       taskId,
     });
 

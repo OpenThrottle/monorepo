@@ -9,14 +9,20 @@ import { GlobalClsModule, LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 
 import { SettleRunLedgerService } from './settle-run-ledger.service.ts';
+import { StatusChangeSystemAccountService } from './status-change-system-account.service.ts';
 import { WorkLedgerResolver } from './work-ledger.resolver.ts';
 import { WorkLedgerCaptureService } from './work-ledger-capture.service.ts';
 
 @Module({
-  exports: [SettleRunLedgerService, WorkLedgerCaptureService],
+  exports: [
+    SettleRunLedgerService,
+    StatusChangeSystemAccountService,
+    WorkLedgerCaptureService,
+  ],
   imports: [GlobalClsModule, LoggerModule, NestjsRepositoriesModule],
   providers: [
     SettleRunLedgerService,
+    StatusChangeSystemAccountService,
     WorkLedgerCaptureService,
     WorkLedgerResolver,
   ],

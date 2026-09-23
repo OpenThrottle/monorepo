@@ -39,6 +39,7 @@
 
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT } from '@openthrottle/nestjs-auth';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   type Plan,
@@ -57,6 +58,9 @@ import {
 } from '@openthrottle/openthrottle-skills';
 import { QueryFailedError } from 'typeorm';
 
+import { StatusChangeSystemAccountService } from '../../graphql/work-ledger/status-change-system-account.service.ts';
+import { WorkLedgerCaptureService } from '../../graphql/work-ledger/work-ledger-capture.service.ts';
+import { WORK_LEDGER_CAPTURE_FAILED_MARKER } from '../../graphql/work-ledger/work-ledger-capture-failure-marker.ts';
 import { PlanContextAvailabilityService } from '../../services/plan-context-availability/plan-context-availability.service.ts';
 import {
   type ActionExecutor,
@@ -110,7 +114,9 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
     private readonly logger: LoggerService,
     private readonly planContextAvailabilityService: PlanContextAvailabilityService,
     private readonly ruleApplicationsService: RuleApplicationsService,
+    private readonly statusChangeSystemAccount: StatusChangeSystemAccountService,
     private readonly tasksService: TasksService,
+    private readonly workLedgerCapture: WorkLedgerCaptureService,
   ) {}
 
   onModuleInit(): void {
@@ -213,9 +219,7 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
         .findOne({ where: { id: application.taskId, planId: plan.id } });
       if (existing != null) {
         if (existing.status === SOFT_CLOSED_TASK_STATUS) {
-          await this.tasksService
-            .getRepository()
-            .update({ id: existing.id }, { status: 'PENDING' });
+          await this.reviveSoftClosedTask(plan.id, existing);
         }
         await this.ruleApplicationsService.upsertApplication({
           details: { matchedTags: action.matchedTags, reason: 'revived' },
@@ -275,6 +279,47 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
       state: RULE_APPLICATION_STATES.APPLIED,
       taskId: task.id,
     });
+  }
+
+  /**
+   * @description Reopens a soft-closed (SKIPPED) injected task back to PENDING for the
+   * delete-to-reset / orphan-revive {@link reinject} paths, capturing a `status_change` artifact
+   * for the write. This executor runs on the plan-rules BullMQ worker with no request principal
+   * (jobs carry only `{planId, triggerKind}` — see `PlanRulesEvaluateJobData`), so the write is
+   * attributed to the seeded `status-change-system` service account, same as the stale-run
+   * sweeper's background writes. Non-fatal: a ledger hiccup must not block reviving the task, so a
+   * capture failure is logged behind {@link WORK_LEDGER_CAPTURE_FAILED_MARKER} rather than thrown.
+   */
+  private async reviveSoftClosedTask(
+    planId: string,
+    task: Task,
+  ): Promise<void> {
+    const fromStatus = task.status;
+    const actorSub = await this.statusChangeSystemAccount.resolveId();
+
+    await this.tasksService
+      .getRepository()
+      .manager.transaction(async (manager) => {
+        await manager.update(Task, { id: task.id }, { status: 'PENDING' });
+
+        try {
+          await this.workLedgerCapture.recordStatusChange(manager, {
+            actorKind: AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
+            actorSub: actorSub ?? undefined,
+            entity: 'task',
+            from: fromStatus,
+            id: task.id,
+            planId,
+            taskId: task.id,
+            to: 'PENDING',
+          });
+        } catch (error) {
+          this.logger.error(
+            `${WORK_LEDGER_CAPTURE_FAILED_MARKER} entity=task id=${task.id} from=${fromStatus} to=PENDING: ${String(error)}`,
+            InjectTaskExecutor.name,
+          );
+        }
+      });
   }
 
   /**

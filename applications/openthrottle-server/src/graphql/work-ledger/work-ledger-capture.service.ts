@@ -50,6 +50,14 @@ export interface RecordStatusChangeParams {
   readonly from: string | null;
   readonly id: string;
   readonly planId: string;
+  /**
+   * Reuse an already-resolved session id instead of resolving ambient-or-instant again — set by a
+   * bulk writer ({@link applyBulkTaskStatusChange}) that resolves the session ONCE via
+   * {@link WorkLedgerCaptureService.resolveSessionId} for the (identical) actor shared by every row
+   * in one bulk call, so one reset of N tasks does not mint N instant work sessions. Single-row
+   * callers omit this and get the usual ambient-or-instant resolution.
+   */
+  readonly sessionId?: string | undefined;
   readonly taskId: string | null;
   readonly to: string;
 }
@@ -89,8 +97,9 @@ export class WorkLedgerCaptureService {
 
   /**
    * @description Write the ledger fact for a status transition using the caller's transactional
-   * manager. Resolves an ambient-or-instant session, ensures the subject, and appends a born-verified
-   * status_change artifact. Throws only on an unresolved principal (rolls back with the row update).
+   * manager. Resolves an ambient-or-instant session (or reuses `params.sessionId` when supplied),
+   * ensures the subject, and appends a born-verified status_change artifact. Throws only on an
+   * unresolved principal (rolls back with the row update).
    */
   async recordStatusChange(
     manager: EntityManager,
@@ -98,9 +107,10 @@ export class WorkLedgerCaptureService {
   ): Promise<void> {
     const actor = resolveActorColumns(params.actorSub, params.actorKind);
     const now = new Date();
-    const session = await this.resolveSession(manager, actor, now);
+    const sessionId =
+      params.sessionId ?? (await this.resolveSession(manager, actor, now)).id;
 
-    await this.ensureSubject(manager, session.id, params.planId, params.taskId);
+    await this.ensureSubject(manager, sessionId, params.planId, params.taskId);
 
     const resolved = resolveArtifactForWrite('status_change', {
       entity: params.entity,
@@ -117,7 +127,7 @@ export class WorkLedgerCaptureService {
         message: null,
         payload: resolved.payload,
         producedAt: now,
-        sessionId: session.id,
+        sessionId,
         source: WORK_ARTIFACT_SOURCE.SERVER,
         type: 'status_change',
         // First-party, server-witnessed event: born verified, not a claim (design §3.3).
@@ -125,6 +135,25 @@ export class WorkLedgerCaptureService {
         verifiedAt: now,
       }),
     );
+  }
+
+  /**
+   * @description Resolves (or opens) the session {@link recordStatusChange} would use for `actor`,
+   * without writing any artifact — so a bulk writer can resolve it ONCE and pass the same id to
+   * every row's `recordStatusChange` call via `params.sessionId`, instead of each row
+   * independently resolving (and, absent an ambient session, each opening its OWN instant one).
+   * Throws on an unresolved principal, same as `recordStatusChange`.
+   */
+  async resolveSessionId(
+    manager: EntityManager,
+    params: {
+      readonly actorKind: string | undefined;
+      readonly actorSub: string | undefined;
+    },
+  ): Promise<string> {
+    const actor = resolveActorColumns(params.actorSub, params.actorKind);
+    const session = await this.resolveSession(manager, actor, new Date());
+    return session.id;
   }
 
   /**

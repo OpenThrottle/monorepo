@@ -13,6 +13,7 @@ import pluginSimpleImportSort from 'eslint-plugin-simple-import-sort';
 import tslint from 'typescript-eslint';
 
 import { componentPrimitiveShape } from './rules/component-primitive-shape.ts';
+import { planTaskStatusChokepoint } from './rules/plan-task-status-chokepoint.ts';
 import { preHooksUnpack } from './rules/pre-hooks-unpack.ts';
 import { routePrimitiveShape } from './rules/route-primitive-shape.ts';
 import { getDirname } from './vite-config.ts';
@@ -219,6 +220,7 @@ export const eslintConfig = tslint.config([
       openthrottle: {
         rules: {
           'component-primitive-shape': componentPrimitiveShape,
+          'plan-task-status-chokepoint': planTaskStatusChokepoint,
           'pre-hooks-unpack': preHooksUnpack,
           'route-primitive-shape': routePrimitiveShape,
         },
@@ -597,6 +599,29 @@ export const eslintConfig = tslint.config([
       'react/no-multi-comp': 'off',
     },
   },
+
+  /**
+   * The plans/tasks status-write chokepoint (`openthrottle/plan-task-status-
+   * chokepoint`, registered above) is enabled with its per-file
+   * `allowedFunctionNames` overrides in EACH project's own `eslint.config.ts`
+   * — `applications/openthrottle-server/eslint.config.ts` and
+   * `packages/nestjs-repositories/eslint.config.ts` — not here. `nx run
+   * <project>:lint` runs `eslint -c ./eslint.config.ts` with cwd AT the
+   * project, so a shared-config `files` pattern prefixed with
+   * `applications/openthrottle-server/…` can never match: from that cwd the
+   * file is just `src/graphql/…`, with no project-path prefix left to match
+   * against. This is exactly why `component-primitive-shape`'s shadcn variant
+   * below has its enabling override duplicated inside
+   * `packages/react-router-shadcn/eslint.config.ts` rather than relying on the
+   * `packages/react-router-shadcn/**` glob a few blocks down — that glob only
+   * matches when eslint is invoked from the repo root (lint-staged), not via
+   * `nx run`. `packages/node-client` is out of scope for the status-write
+   * rule (`openthrottle-client.ts` writes `plan.status`/`task.status` directly
+   * against its own `DataSource` — no NestJS DI graph, no HTTP request for the
+   * server-side chokepoint to intercept, a real gap not a carve-out): its own
+   * `eslint.config.ts` deliberately has no enabling override, so no `files`
+   * glob here needs to exclude it.
+   */
 
   /**
    * GraphQL operation documents — alphabetize selection-set fields.

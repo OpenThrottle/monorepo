@@ -18,6 +18,9 @@ import type { JobRunHooksConfig } from '@tools/workflows';
 import type { Repository } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { PlanStatusService } from '../../graphql/plans/plan-status.service.ts';
+import type { StatusChangeSystemAccountService } from '../../graphql/work-ledger/status-change-system-account.service.ts';
+
 const mockExecuteJobRunHooksPhase = vi.fn();
 const mockCreateCursorWorkflowRalphIterationRunner = vi.fn();
 
@@ -58,16 +61,29 @@ const mockLogger = createMock<LoggerService>({
   warn: vi.fn(),
 });
 
-const mockRepoUpdate = vi.fn().mockResolvedValue(undefined);
 const mockPlanFindOne = vi.fn();
 const mockTaskFind = vi.fn().mockResolvedValue([]);
 const mockPlansService = createMock<PlansService>({
   getRepository: () =>
     createMock<Repository<Plan>>({
       findOne: mockPlanFindOne,
-      update: mockRepoUpdate,
     }),
 });
+
+// The plans.status write chokepoint and the background-writer service-account lookup, in place
+// of the old direct repo.update({ status: 'BLOCKED' }) — mocked wholesale here; their own
+// race/capture behaviour is covered by plan-status.service.test.ts.
+const mockWriteGuardedStatus = vi.fn().mockResolvedValue(true);
+const mockPlanStatusService = createMock<PlanStatusService>({
+  writeGuardedStatus: mockWriteGuardedStatus,
+});
+const mockResolveStatusChangeSystemAccountId = vi
+  .fn()
+  .mockResolvedValue('status-change-system-account-id');
+const mockStatusChangeSystemAccountService =
+  createMock<StatusChangeSystemAccountService>({
+    resolveId: mockResolveStatusChangeSystemAccountId,
+  });
 
 const mockTasksService = createMock<TasksService>({
   getRepository: () =>
@@ -216,6 +232,10 @@ describe('runBeforeRunHooksAndHandleBlock', () => {
     mockCreateCursorWorkflowRalphIterationRunner.mockReturnValue({
       run: vi.fn(),
     });
+    mockWriteGuardedStatus.mockReset().mockResolvedValue(true);
+    mockResolveStatusChangeSystemAccountId
+      .mockReset()
+      .mockResolvedValue('status-change-system-account-id');
   });
 
   it('returns false when before_run does not block', async () => {
@@ -234,12 +254,14 @@ describe('runBeforeRunHooksAndHandleBlock', () => {
         emitQueueJobCompleted,
       },
       planOutputStreamService: mockPlanOutputStreamService,
+      planStatusService: mockPlanStatusService,
       plansService: mockPlansService,
+      statusChangeSystemAccount: mockStatusChangeSystemAccountService,
       tasksService: mockTasksService,
     });
 
     expect(blocked).toBe(false);
-    expect(mockRepoUpdate).not.toHaveBeenCalled();
+    expect(mockWriteGuardedStatus).not.toHaveBeenCalled();
     expect(emitQueueJobCompleted).not.toHaveBeenCalled();
     expect(mockExecuteJobRunHooksPhase).toHaveBeenCalledTimes(1);
   });
@@ -259,7 +281,9 @@ describe('runBeforeRunHooksAndHandleBlock', () => {
         emitQueueJobCompleted,
       },
       planOutputStreamService: mockPlanOutputStreamService,
+      planStatusService: mockPlanStatusService,
       plansService: mockPlansService,
+      statusChangeSystemAccount: mockStatusChangeSystemAccountService,
       tasksService: mockTasksService,
     });
 
@@ -271,10 +295,17 @@ describe('runBeforeRunHooksAndHandleBlock', () => {
     expect(mockExecuteJobRunHooksPhase.mock.calls[1]?.[0]?.mainRunStarted).toBe(
       false,
     );
-    expect(mockRepoUpdate).toHaveBeenCalledWith(
-      { id: planId },
-      { status: 'BLOCKED' },
-    );
+    // Routed through the applyStatusChange chokepoint (PlanStatusService.writeGuardedStatus),
+    // attributed to the status-change-system service account, in place of the old bare
+    // repo.update.
+    expect(mockWriteGuardedStatus).toHaveBeenCalledWith(planId, {
+      actorKind: 'service_account',
+      actorSub: 'status-change-system-account-id',
+      captureFailureIsFatal: false,
+      guardCurrentStatus: undefined,
+      requestedStatus: 'BLOCKED',
+      throwOnForbiddenInProgress: false,
+    });
     expect(emitPlanStatusChanged).toHaveBeenCalledWith({
       planId,
       status: 'BLOCKED',

@@ -308,7 +308,11 @@ export {
   RULE_APPLICATION_STATES,
   RuleApplication,
 } from './modules/tag-action-rules/rule-application.entity.ts';
-export type { RecordRuleApplicationInput } from './modules/tag-action-rules/rule-applications.service.ts';
+export type {
+  OrphanedTaskStatusCapture,
+  OrphanedTaskStatusCaptureParams,
+  RecordRuleApplicationInput,
+} from './modules/tag-action-rules/rule-applications.service.ts';
 export {
   RuleApplicationsService,
   SOFT_CLOSED_TASK_STATUS,

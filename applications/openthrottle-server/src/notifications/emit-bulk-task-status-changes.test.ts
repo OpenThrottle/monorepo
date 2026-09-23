@@ -1,73 +1,73 @@
 import { createMock } from '@golevelup/ts-vitest';
-import type { Task } from '@openthrottle/nestjs-repositories';
-import type {
-  Repository,
-  SelectQueryBuilder,
-  UpdateQueryBuilder,
-} from 'typeorm';
+import type { LoggerService } from '@openthrottle/nestjs-modules';
+import type { EntityManager } from 'typeorm';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import type { WorkLedgerCaptureService } from '../graphql/work-ledger/work-ledger-capture.service.ts';
 import { updateMatchingTasksAndEmitStatusChanged } from './emit-bulk-task-status-changes.ts';
 import type { NotificationsService } from './notifications.service.ts';
+
+// The row-locking/update/capture mechanics live in applyBulkTaskStatusChange (its own dedicated
+// test file); this suite only needs to verify updateMatchingTasksAndEmitStatusChanged forwards its
+// params through and emits one notification per row that call reports as affected.
+const mockApplyBulkTaskStatusChange = vi.fn();
+vi.mock('../graphql/work-ledger/bulk-task-status-change.ts', () => ({
+  applyBulkTaskStatusChange: (
+    ...args: Parameters<typeof mockApplyBulkTaskStatusChange>
+  ) => mockApplyBulkTaskStatusChange(...args),
+}));
 
 describe('updateMatchingTasksAndEmitStatusChanged', () => {
   const emitTaskStatusChanged = vi.fn();
   const notifications = createMock<NotificationsService>({
     emitTaskStatusChanged,
   });
+  const logger = createMock<LoggerService>();
+  const manager = createMock<EntityManager>();
+  const workLedgerCapture = createMock<WorkLedgerCaptureService>();
 
-  // The helper runs a single `UPDATE ... RETURNING id` query builder; mock the chain and let each
-  // test drive what RETURNING yields. `.update()` on the select builder yields an update builder
-  // that carries `set`/`where`/`andWhere`/`returning`/`execute`.
-  const execute = vi.fn();
-  const updateQueryBuilder = createMock<UpdateQueryBuilder<Task>>({
-    andWhere: vi.fn().mockReturnThis(),
-    execute,
-    returning: vi.fn().mockReturnThis(),
-    set: vi.fn().mockReturnThis(),
-    where: vi.fn().mockReturnThis(),
-  });
-  const queryBuilder = createMock<SelectQueryBuilder<Task>>({
-    update: vi.fn(() => updateQueryBuilder),
-  });
-  const taskRepo = createMock<Repository<Task>>({
-    createQueryBuilder: vi.fn(() => queryBuilder),
-  });
+  const baseParams = {
+    actorKind: 'user',
+    actorSub: 'user-1',
+    captureFailureIsFatal: true,
+    fromStatuses: ['PENDING', 'IN_PROGRESS'],
+    logger,
+    manager,
+    notifications,
+    planId: 'plan-1',
+    toStatus: 'QUEUED',
+    workLedgerCapture,
+  };
 
   beforeEach(() => {
     emitTaskStatusChanged.mockClear();
-    execute.mockReset();
+    mockApplyBulkTaskStatusChange.mockReset();
   });
 
-  test('returns 0 and emits nothing when no rows are updated', async () => {
-    execute.mockResolvedValueOnce({ affected: 0, generatedMaps: [], raw: [] });
+  test('returns 0 and emits nothing when no rows are affected', async () => {
+    mockApplyBulkTaskStatusChange.mockResolvedValue([]);
 
-    const count = await updateMatchingTasksAndEmitStatusChanged({
-      fromStatuses: ['PENDING', 'IN_PROGRESS'],
-      notifications,
-      planId: 'plan-1',
-      taskRepo,
-      toStatus: 'QUEUED',
-    });
+    const count = await updateMatchingTasksAndEmitStatusChanged(baseParams);
 
     expect(count).toBe(0);
     expect(emitTaskStatusChanged).not.toHaveBeenCalled();
   });
 
-  test('updates matching tasks and emits one event per updated row', async () => {
-    execute.mockResolvedValueOnce({
-      affected: 2,
-      generatedMaps: [],
-      raw: [{ id: 'task-a' }, { id: 'task-b' }],
-    });
+  test('forwards its params to applyBulkTaskStatusChange unchanged', async () => {
+    mockApplyBulkTaskStatusChange.mockResolvedValue([]);
 
-    const count = await updateMatchingTasksAndEmitStatusChanged({
-      fromStatuses: ['PENDING', 'IN_PROGRESS'],
-      notifications,
-      planId: 'plan-1',
-      taskRepo,
-      toStatus: 'QUEUED',
-    });
+    await updateMatchingTasksAndEmitStatusChanged(baseParams);
+
+    expect(mockApplyBulkTaskStatusChange).toHaveBeenCalledWith(baseParams);
+  });
+
+  test('emits one task.status_changed event per affected row and returns the count', async () => {
+    mockApplyBulkTaskStatusChange.mockResolvedValue([
+      { fromStatus: 'PENDING', taskId: 'task-a' },
+      { fromStatus: 'IN_PROGRESS', taskId: 'task-b' },
+    ]);
+
+    const count = await updateMatchingTasksAndEmitStatusChanged(baseParams);
 
     expect(count).toBe(2);
     expect(emitTaskStatusChanged).toHaveBeenCalledTimes(2);
@@ -80,33 +80,6 @@ describe('updateMatchingTasksAndEmitStatusChanged', () => {
       planId: 'plan-1',
       status: 'QUEUED',
       taskId: 'task-b',
-    });
-  });
-
-  // Atomicity (Plan ca6e3ecb): events come from the rows the UPDATE actually changed (its RETURNING
-  // output), not from an earlier SELECT. The previous SELECT-then-UPDATE could emit for rows a
-  // concurrent writer changed between the two statements; now it cannot.
-  test('emits for exactly the rows the atomic UPDATE ... RETURNING changed', async () => {
-    execute.mockResolvedValueOnce({
-      affected: 1,
-      generatedMaps: [],
-      raw: [{ id: 'task-a' }],
-    });
-
-    const count = await updateMatchingTasksAndEmitStatusChanged({
-      fromStatuses: ['PENDING', 'IN_PROGRESS'],
-      notifications,
-      planId: 'plan-1',
-      taskRepo,
-      toStatus: 'QUEUED',
-    });
-
-    expect(count).toBe(1);
-    expect(emitTaskStatusChanged).toHaveBeenCalledTimes(1);
-    expect(emitTaskStatusChanged).toHaveBeenCalledWith({
-      planId: 'plan-1',
-      status: 'QUEUED',
-      taskId: 'task-a',
     });
   });
 });

@@ -1,5 +1,6 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
+import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
   PlanRunsService,
   PlansService,
@@ -18,7 +19,9 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { NotificationsService } from '../../notifications/notifications.service.ts';
 import type { RunPlanJobData } from '../../queues/plans/plans.types.ts';
 import type { QueuesService } from '../queues/queues.service.ts';
+import type { WorkLedgerCaptureService } from '../work-ledger/work-ledger-capture.service.ts';
 import { PlanEnqueueService } from './plan-enqueue.service.ts';
+import type { PlanStatusService } from './plan-status.service.ts';
 
 const mockPlan = createMock<Plan>({
   id: '80864bba-630a-451d-bfd2-4b25ec202381',
@@ -39,16 +42,21 @@ describe('PlanEnqueueService', () => {
     getWaitingCount: mockGetWaitingCount,
   });
 
-  // updateMatchingTasksAndEmitStatusChanged runs a single `UPDATE ... RETURNING id` query builder;
-  // mock the chain and drive what RETURNING yields via mockTaskUpdateExecute.
+  // updateMatchingTasksAndEmitStatusChanged (via applyBulkTaskStatusChange) selects the plan's
+  // matching tasks under a pessimistic write lock (mockTaskSelectGetMany drives which rows are
+  // "affected", and each row's own status is what gets captured as `from`), then updates them by
+  // id (mockTaskUpdateExecute).
+  const mockTaskSelectGetMany = vi.fn().mockResolvedValue([]);
   const mockTaskUpdateExecute = vi
     .fn()
     .mockResolvedValue({ affected: 0, generatedMaps: [], raw: [] });
   const mockTaskUpdateQueryBuilder = {
     andWhere: vi.fn().mockReturnThis(),
     execute: mockTaskUpdateExecute,
+    getMany: mockTaskSelectGetMany,
     returning: vi.fn().mockReturnThis(),
     set: vi.fn().mockReturnThis(),
+    setLock: vi.fn().mockReturnThis(),
     update: vi.fn().mockReturnThis(),
     where: vi.fn().mockReturnThis(),
   };
@@ -74,6 +82,7 @@ describe('PlanEnqueueService', () => {
           }),
       ),
     },
+    save: vi.fn().mockResolvedValue(undefined),
     update: vi.fn().mockResolvedValue(undefined),
   };
 
@@ -100,6 +109,20 @@ describe('PlanEnqueueService', () => {
     getRepository: vi.fn().mockReturnValue(repo),
   });
 
+  // The plans.status write chokepoint, in place of the old direct repo.update({ status: 'QUEUED' })
+  // — mocked wholesale here; its own mutate/capture/race behaviour is covered by
+  // plan-status.service.test.ts. Deliberately does NOT mutate `params.entity`: `mockPlan` is a
+  // single shared object reused (not cloned) across this file's tests via `repo.findOne`, so
+  // mutating it here would leak status changes across unrelated tests.
+  const mockApplyStatusChange = vi.fn().mockResolvedValue({
+    applied: true,
+    fromStatus: 'PENDING',
+    toStatus: 'QUEUED',
+  });
+  const mockPlanStatusService = createMock<PlanStatusService>({
+    applyStatusChange: mockApplyStatusChange,
+  });
+
   const mockGetPlanHooks = vi.fn().mockResolvedValue({ after: [], before: [] });
   const mockTasksService = createMock<TasksService>({
     getPlanHooks: mockGetPlanHooks,
@@ -114,19 +137,36 @@ describe('PlanEnqueueService', () => {
     },
   );
 
+  const mockLogger = createMock<LoggerService>();
+  const mockRecordStatusChange = vi.fn().mockResolvedValue(undefined);
+  const mockResolveSessionId = vi.fn().mockResolvedValue('session-1');
+  const mockWorkLedgerCapture = createMock<WorkLedgerCaptureService>({
+    recordStatusChange: mockRecordStatusChange,
+    resolveSessionId: mockResolveSessionId,
+  });
+
   const service = new PlanEnqueueService(
+    mockLogger,
     mockNotificationsService,
     mockPlanRunsService,
     mockPlansService,
+    mockPlanStatusService,
     mockQueuesService,
     mockRepositoryCheckoutsService,
     mockTasksService,
+    mockWorkLedgerCapture,
     mockPlansQueue,
   );
 
   beforeEach(() => {
     repo.findOne.mockResolvedValue(mockPlan);
+    repo.save.mockReset().mockResolvedValue(undefined);
     repo.update.mockResolvedValue(undefined);
+    mockApplyStatusChange.mockReset().mockResolvedValue({
+      applied: true,
+      fromStatus: 'PENDING',
+      toStatus: 'QUEUED',
+    });
     mockAdd.mockClear();
     mockAdd.mockResolvedValue({ id: 'job-1', name: 'run-plan' });
     mockGetJobs.mockResolvedValue([{ id: 'job-1', name: 'run-plan' }]);
@@ -141,8 +181,11 @@ describe('PlanEnqueueService', () => {
       generatedMaps: [],
       raw: [],
     });
+    mockTaskSelectGetMany.mockReset().mockResolvedValue([]);
     mockTaskUpdateQueryBuilder.set.mockClear();
     mockTaskUpdateQueryBuilder.andWhere.mockClear();
+    mockRecordStatusChange.mockReset().mockResolvedValue(undefined);
+    mockResolveSessionId.mockReset().mockResolvedValue('session-1');
   });
 
   describe('enqueueSpawn (delegates to the orchestrator path)', () => {
@@ -448,8 +491,110 @@ describe('PlanEnqueueService', () => {
       );
     });
 
+    test('routes the plans.status write through applyStatusChange with the request-principal actor', async () => {
+      await service.enqueueOrchestrator({
+        actorKind: 'user',
+        actorSub: 'user-42',
+        branch: 'feature/test',
+        idempotencyKey: null,
+        mode: null,
+        planId: mockPlan.id,
+        priority: null,
+        taskId: null,
+        workingDirectory: null,
+      });
+
+      expect(mockApplyStatusChange).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          actorKind: 'user',
+          actorSub: 'user-42',
+          captureFailureIsFatal: true,
+          requestedStatus: 'QUEUED',
+          throwOnForbiddenInProgress: false,
+        }),
+      );
+      expect(repo.save).toHaveBeenCalledWith(mockPlan);
+    });
+
+    test("captures a status_change for each task the QUEUED reset affects, with that task's own prior status as `from`", async () => {
+      // ENQUEUE_TASK_STATUSES_TO_RESET spans six different current statuses; the two rows below
+      // prove the ledgered `from` is each row's own status, not a shared guess.
+      mockTaskSelectGetMany.mockResolvedValue([
+        { id: 'task-a', status: 'PENDING' },
+        { id: 'task-b', status: 'BLOCKED' },
+      ]);
+
+      await service.enqueueOrchestrator({
+        actorKind: 'user',
+        actorSub: 'user-42',
+        branch: 'feature/test',
+        idempotencyKey: null,
+        mode: null,
+        planId: mockPlan.id,
+        priority: null,
+        taskId: null,
+        workingDirectory: null,
+      });
+
+      expect(mockRecordStatusChange).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          actorKind: 'user',
+          actorSub: 'user-42',
+          entity: 'task',
+          from: 'PENDING',
+          taskId: 'task-a',
+          to: 'QUEUED',
+        }),
+      );
+      expect(mockRecordStatusChange).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          actorKind: 'user',
+          actorSub: 'user-42',
+          entity: 'task',
+          from: 'BLOCKED',
+          taskId: 'task-b',
+          to: 'QUEUED',
+        }),
+      );
+      expect(mockEmitTaskStatusChanged).toHaveBeenCalledWith({
+        planId: mockPlan.id,
+        status: 'QUEUED',
+        taskId: 'task-a',
+      });
+      expect(mockEmitTaskStatusChanged).toHaveBeenCalledWith({
+        planId: mockPlan.id,
+        status: 'QUEUED',
+        taskId: 'task-b',
+      });
+    });
+
+    test('a fatal task-status capture failure rolls back the enqueue transaction', async () => {
+      mockTaskSelectGetMany.mockResolvedValue([
+        { id: 'task-a', status: 'PENDING' },
+      ]);
+      mockRecordStatusChange.mockRejectedValueOnce(new Error('ledger down'));
+
+      await expect(
+        service.enqueueOrchestrator({
+          branch: 'feature/test',
+          idempotencyKey: null,
+          mode: null,
+          planId: mockPlan.id,
+          priority: null,
+          taskId: null,
+          workingDirectory: null,
+        }),
+      ).rejects.toThrow('ledger down');
+      expect(mockEnqueuePlanRalphOrchestrator).not.toHaveBeenCalled();
+    });
+
     test('a DB failure during the transaction rolls back and never enqueues', async () => {
-      repo.update.mockRejectedValueOnce(new Error('db down'));
+      // repo.save is the plans.status write's persistence call now (via the applyStatusChange
+      // chokepoint), in place of the old bare repo.update.
+      repo.save.mockRejectedValueOnce(new Error('db down'));
 
       await expect(
         service.enqueueOrchestrator({
