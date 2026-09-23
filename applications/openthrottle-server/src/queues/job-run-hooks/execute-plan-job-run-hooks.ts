@@ -3,12 +3,14 @@
  * and a single in-process agent iteration per hook.
  */
 
+import { AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT } from '@openthrottle/nestjs-auth';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
   PlanOutputStreamService,
   PlansService,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
+import { Plan } from '@openthrottle/nestjs-repositories';
 import { PLAN_TASK_LIST_ORDER } from '@openthrottle/nestjs-repositories';
 import { formatPlanAndTasksForPrompt } from '@openthrottle/openthrottle-agentic-ralph';
 import type { WorkflowLifecycleDispatcher } from '@openthrottle/openthrottle-agentic-workflow';
@@ -25,6 +27,7 @@ import {
   type RalphNestedRunTuningInput,
 } from '@tools/workflows';
 
+import type { WorkLedgerCaptureService } from '../../graphql/work-ledger/work-ledger-capture.service.ts';
 import type { RunPlanJobData } from '../plans/plans.types.ts';
 import { isRunPlanOrchestratorJobData } from '../plans/plans.types.ts';
 
@@ -277,6 +280,44 @@ export const runAfterRunHooksThenNotify = async (params: {
 };
 
 /**
+ * @description Reads the plan's current status, writes BLOCKED, and records the plan-level
+ * `status_change` ledger fact — in ONE transaction (G12), the property `updatePlan` has and this
+ * path otherwise lacks. The prior status is read rather than assumed: unlike the completion
+ * cascade's `{ id, status: 'IN_PROGRESS' }` guard, a plan can reach `beforeAll` from more than one
+ * status before being blocked, so an honest `from` needs an actual read. `recordStatusChange`
+ * throws on an unresolved principal (BadRequestException), which rolls back the row update too —
+ * the same bargain `updatePlan`/`captureParentPlanReconcile` already make: never write an
+ * unattributed artifact, and never leave the row changed without the fact that explains it.
+ */
+const recordPlanBlockedTransition = async (params: {
+  readonly actorServiceAccountId: string | null;
+  readonly planId: string;
+  readonly plansService: PlansService;
+  readonly workLedgerCapture: WorkLedgerCaptureService;
+}): Promise<void> => {
+  const repo = params.plansService.getRepository();
+
+  await repo.manager.transaction(async (manager) => {
+    const planRepo = manager.getRepository(Plan);
+    const current = await planRepo.findOne({ where: { id: params.planId } });
+    const previousStatus = current?.status ?? null;
+
+    await planRepo.update({ id: params.planId }, { status: 'BLOCKED' });
+
+    await params.workLedgerCapture.recordStatusChange(manager, {
+      actorKind: AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
+      actorSub: params.actorServiceAccountId ?? undefined,
+      entity: 'plan',
+      from: previousStatus,
+      id: params.planId,
+      planId: params.planId,
+      taskId: null,
+      to: 'BLOCKED',
+    });
+  });
+};
+
+/**
  * @description Runs `beforeAll` hooks; when blocked, sets plan status to BLOCKED and returns true.
  */
 export const runBeforeAllHooksAndHandleBlock = async (params: {
@@ -292,8 +333,11 @@ export const runBeforeAllHooksAndHandleBlock = async (params: {
   };
   readonly planOutputStreamService: PlanOutputStreamService;
   readonly plansService: PlansService;
+  /** Resolves the worker-side service-account actor for the BLOCKED ledger capture. */
+  readonly resolveActor: () => Promise<string | null>;
   readonly signal?: AbortSignal;
   readonly tasksService: TasksService;
+  readonly workLedgerCapture: WorkLedgerCaptureService;
 }): Promise<boolean> => {
   const phaseResult = await executePlanJobRunHooks({
     hooks: params.hooks,
@@ -312,7 +356,6 @@ export const runBeforeAllHooksAndHandleBlock = async (params: {
   }
 
   const planId = params.jobData.planId;
-  const repo = params.plansService.getRepository();
 
   await runAfterRunHooks({
     hooks: params.hooks,
@@ -327,7 +370,14 @@ export const runBeforeAllHooksAndHandleBlock = async (params: {
     tasksService: params.tasksService,
   });
 
-  await repo.update({ id: planId }, { status: 'BLOCKED' });
+  const actorServiceAccountId = await params.resolveActor();
+
+  await recordPlanBlockedTransition({
+    actorServiceAccountId,
+    planId,
+    plansService: params.plansService,
+    workLedgerCapture: params.workLedgerCapture,
+  });
 
   params.notifications.emitPlanStatusChanged({
     planId,
@@ -369,8 +419,11 @@ export const runBeforeAllHooksWithDispatcher = async (params: {
   };
   readonly planOutputStreamService: PlanOutputStreamService;
   readonly plansService: PlansService;
+  /** Resolves the worker-side service-account actor for the BLOCKED ledger capture. */
+  readonly resolveActor: () => Promise<string | null>;
   readonly signal?: AbortSignal;
   readonly tasksService: TasksService;
+  readonly workLedgerCapture: WorkLedgerCaptureService;
 }): Promise<boolean> => {
   const phaseResult = await params.dispatcher.runPlan({ phase: 'beforeAll' });
 
@@ -386,8 +439,14 @@ export const runBeforeAllHooksWithDispatcher = async (params: {
     phase: 'afterAll',
   });
 
-  const repo = params.plansService.getRepository();
-  await repo.update({ id: planId }, { status: 'BLOCKED' });
+  const actorServiceAccountId = await params.resolveActor();
+
+  await recordPlanBlockedTransition({
+    actorServiceAccountId,
+    planId,
+    plansService: params.plansService,
+    workLedgerCapture: params.workLedgerCapture,
+  });
 
   params.notifications.emitPlanStatusChanged({
     planId,

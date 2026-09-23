@@ -17,6 +17,7 @@ import { CurrentUser } from '@openthrottle/nestjs-auth';
 import type {
   CreateTaskBatchItem,
   Plan,
+  PlanStatusTransition,
   Project,
 } from '@openthrottle/nestjs-repositories';
 import {
@@ -29,6 +30,7 @@ import {
 import { Task } from '@openthrottle/nestjs-repositories';
 import { EmitNotification } from '@openthrottle/nestjs-websockets';
 import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
+import type { EntityManager } from 'typeorm';
 import { In, QueryFailedError } from 'typeorm';
 
 import { NotificationsService } from '../../notifications/notifications.service.ts';
@@ -127,6 +129,17 @@ const parseHookScope = (
   if (scope === 'once' || scope === 'each') return scope;
   throw new BadRequestException("hook scope must be 'once' or 'each'");
 };
+
+/** Arguments for {@link TasksResolver.captureParentPlanReconcile}. */
+interface CaptureParentPlanReconcileOptions {
+  readonly actorKind: string | undefined;
+  readonly actorSub: string | undefined;
+  readonly planId: string;
+  /** The guarded reconcile to run inside the capture transaction. */
+  readonly reconcile: (
+    manager: EntityManager,
+  ) => Promise<PlanStatusTransition | null>;
+}
 
 // @authz-stance: authenticated-only (Path A — see OT plan 18e16dfc-4f22-43f9-9b77-6fc90309b60a)
 @Resolver(() => TaskObject)
@@ -313,6 +326,8 @@ export class TasksResolver {
   )
   async createTask(
     @Args('input', { type: () => CreateTaskInput }) input: CreateTaskInput,
+    @CurrentUser('sub') actorSub?: string,
+    @CurrentUser('kind') actorKind?: string,
   ): Promise<Task> {
     const repo = this.tasksService.getRepository();
     const requirementsArr = parseRequirements(input.requirements);
@@ -348,11 +363,26 @@ export class TasksResolver {
       throw error;
     }
 
+    // Upward reconcile: a task created already IN_PROGRESS starts its plan, same as updateTask's.
+    // Captured here for the same reason: the reconcile writes plans.status outside updatePlan, so
+    // this call site is the only capturing writer for it.
+    //
+    // Unlike updateTask, this mutation has no prior capture in this request to lean on for a
+    // resolvable principal — so route through captureParentPlanReconcile (which fails the mutation
+    // via recordStatusChange's unresolved-principal check) rather than falling back to an
+    // unattributed write. That is safe to do unconditionally: createTask carries no @Public()
+    // opt-out, so the global GlobalAuthGuard (app.module.ts APP_GUARD) has already rejected any
+    // caller without a user or service-account principal before this line runs — the same guarantee
+    // updatePlan/setStatus already rely on (see PlanStatusService.setStatus).
     if (saved.status === 'IN_PROGRESS') {
-      const promoted = await this.tasksService.syncParentPlanStatus(
-        saved.planId,
-      );
-      if (promoted) {
+      const promotion = await this.captureParentPlanReconcile({
+        actorKind,
+        actorSub,
+        planId: saved.planId,
+        reconcile: (manager) =>
+          this.tasksService.syncParentPlanStatus(saved.planId, manager),
+      });
+      if (promotion != null) {
         this.notificationsService.emitPlanStatusChanged({
           planId: saved.planId,
           status: 'IN_PROGRESS',
@@ -377,6 +407,8 @@ export class TasksResolver {
   })
   async createTasks(
     @Args('input', { type: () => CreateTasksInput }) input: CreateTasksInput,
+    @CurrentUser('sub') actorSub?: string,
+    @CurrentUser('kind') actorKind?: string,
   ): Promise<CreateTasksResultObject> {
     const items: CreateTaskBatchItem[] = input.tasks.map((item) => ({
       assignee: item.assignee ?? null,
@@ -401,11 +433,17 @@ export class TasksResolver {
       throw error;
     }
 
+    // Upward reconcile: same as createTask's — see the comment there for why this routes through
+    // captureParentPlanReconcile (fail-consistent with updatePlan/setStatus) rather than a fallback.
     if (saved.some((task) => task.status === 'IN_PROGRESS')) {
-      const promoted = await this.tasksService.syncParentPlanStatus(
-        input.planId,
-      );
-      if (promoted) {
+      const promotion = await this.captureParentPlanReconcile({
+        actorKind,
+        actorSub,
+        planId: input.planId,
+        reconcile: (manager) =>
+          this.tasksService.syncParentPlanStatus(input.planId, manager),
+      });
+      if (promotion != null) {
         this.notificationsService.emitPlanStatusChanged({
           planId: input.planId,
           status: 'IN_PROGRESS',
@@ -539,11 +577,17 @@ export class TasksResolver {
       throw error;
     }
 
+    // Upward reconcile: starting a task starts its plan. Captured here because the reconcile writes
+    // plans.status without going through updatePlan, which is otherwise the only capturing writer.
     if (saved.status === 'IN_PROGRESS' && previousStatus !== 'IN_PROGRESS') {
-      const promoted = await this.tasksService.syncParentPlanStatus(
-        saved.planId,
-      );
-      if (promoted) {
+      const promotion = await this.captureParentPlanReconcile({
+        actorKind,
+        actorSub,
+        planId: saved.planId,
+        reconcile: (manager) =>
+          this.tasksService.syncParentPlanStatus(saved.planId, manager),
+      });
+      if (promotion != null) {
         this.notificationsService.emitPlanStatusChanged({
           planId: saved.planId,
           status: 'IN_PROGRESS',
@@ -551,14 +595,23 @@ export class TasksResolver {
       }
     }
 
-    // Downward reconcile: completing the last task closes out the plan. Without this the plan can be
-    // stranded IN_PROGRESS with every task COMPLETED (the orchestrator only completes plans at its
-    // top-of-loop check, which several exit paths skip). See TasksService.completeParentPlanIfTasksDone.
+    // Downward reconcile: completing the last task closes out the plan. This is what normally
+    // completes a plan — it wins the race against the orchestrator's later explicit
+    // updatePlan(status: COMPLETED), which then finds the plan already COMPLETED and records nothing.
+    // So the plan's IN_PROGRESS -> COMPLETED ledger fact has to be written here or nowhere.
+    // See TasksService.completeParentPlanIfTasksDone.
     if (saved.status === 'COMPLETED' && previousStatus !== 'COMPLETED') {
-      const completed = await this.tasksService.completeParentPlanIfTasksDone(
-        saved.planId,
-      );
-      if (completed) {
+      const completion = await this.captureParentPlanReconcile({
+        actorKind,
+        actorSub,
+        planId: saved.planId,
+        reconcile: (manager) =>
+          this.tasksService.completeParentPlanIfTasksDone(
+            saved.planId,
+            manager,
+          ),
+      });
+      if (completion != null) {
         this.notificationsService.emitPlanStatusChanged({
           planId: saved.planId,
           status: 'COMPLETED',
@@ -724,5 +777,50 @@ export class TasksResolver {
       out.error = result.error;
     }
     return out;
+  }
+
+  /**
+   * @description Runs a guarded parent-plan reconcile and, when it actually moved the plan, writes
+   * the plan-level status_change ledger fact in the SAME transaction (G12) — the property
+   * `updatePlan` already has. Returns the transition, or null when the guard matched no row (nothing
+   * happened, so nothing is recorded).
+   *
+   * Deliberately its own transaction, not the task update's: the task row and its own ledger fact
+   * have already committed by the time a reconcile runs, and folding this in would make a plan-level
+   * ledger failure roll back a task completion that succeeded. The capture cannot live inside
+   * TasksService either — nestjs-repositories must not depend on this app-internal service — so the
+   * service returns the transition and the resolver records it.
+   *
+   * recordStatusChange throws on an unresolved principal, failing the whole mutation rather than
+   * writing an unattributed artifact — the same bargain updatePlan/PlanStatusService.setStatus already
+   * make. From updateTask that cannot newly break anything: a reconcile only runs after the task's own
+   * capture succeeded, which already required the same principal. createTask/createTasks have no such
+   * prior capture to lean on, but the guarantee holds there too: neither carries a @Public() opt-out,
+   * so the global GlobalAuthGuard (app.module.ts APP_GUARD) has already rejected any caller without a
+   * resolvable user or service-account principal before the resolver body runs.
+   */
+  private async captureParentPlanReconcile(
+    options: CaptureParentPlanReconcileOptions,
+  ): Promise<PlanStatusTransition | null> {
+    return this.tasksService
+      .getRepository()
+      .manager.transaction(async (manager) => {
+        const transition = await options.reconcile(manager);
+
+        if (transition == null) return null;
+
+        await this.workLedgerCapture.recordStatusChange(manager, {
+          actorKind: options.actorKind,
+          actorSub: options.actorSub,
+          entity: 'plan',
+          from: transition.from,
+          id: options.planId,
+          planId: options.planId,
+          taskId: null,
+          to: transition.to,
+        });
+
+        return transition;
+      });
   }
 }

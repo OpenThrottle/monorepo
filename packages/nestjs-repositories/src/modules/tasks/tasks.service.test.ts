@@ -7,6 +7,7 @@ import { In, IsNull, Not } from 'typeorm';
 import type { IsolationLevel } from 'typeorm/driver/types/IsolationLevel.js';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { Plan } from '../plans/plan.entity.ts';
 import { PlansService } from '../plans/plans.service.ts';
 import { Task } from './task.entity.ts';
 import { tasksFactory } from './tasks.factory.ts';
@@ -19,11 +20,18 @@ import {
 describe('TasksService', () => {
   type GetRepository = ReturnType<TasksService['getRepository']>;
 
-  const mockPlanRepo = {
+  const mockPlanQueryBuilder = {
+    getOne: vi.fn().mockResolvedValue(null),
+    setLock: vi.fn().mockReturnThis(),
+    where: vi.fn().mockReturnThis(),
+  };
+
+  const mockPlanRepo = createMock<Repository<Plan>>({
+    createQueryBuilder: vi.fn().mockReturnValue(mockPlanQueryBuilder),
     update: vi
       .fn()
       .mockResolvedValue({ affected: 0, generatedMaps: [], raw: [] }),
-  };
+  });
 
   const mockPlansService = createMock<PlansService>({
     getRepository: vi.fn().mockReturnValue(mockPlanRepo),
@@ -223,8 +231,36 @@ describe('TasksService', () => {
   });
 
   describe('syncParentPlanStatus', () => {
-    it('returns true and runs atomic update when a non-IN_PROGRESS plan row is updated', async () => {
+    // The reconcile reads the plan under a row lock so the `from` it returns is the status the
+    // UPDATE actually replaced. Without a caller manager it opens that transaction itself.
+    const txPlanManager = createMock<EntityManager>({
+      getRepository: () => mockPlanRepo,
+    });
+
+    beforeEach(() => {
+      vi.mocked(mockPlanQueryBuilder.getOne)
+        .mockReset()
+        .mockResolvedValue(null);
+      vi.mocked(mockPlanQueryBuilder.setLock).mockClear();
+      vi.mocked(mockPlanRepo.createQueryBuilder).mockClear();
+      vi.mocked(mockPlanRepo.manager.transaction).mockClear();
+      vi.mocked(mockPlanRepo.manager.transaction).mockImplementation(
+        (
+          isolationOrRun:
+            IsolationLevel | ((manager: EntityManager) => Promise<unknown>),
+        ) =>
+          typeof isolationOrRun === 'function'
+            ? isolationOrRun(txPlanManager)
+            : Promise.resolve(undefined),
+      );
+    });
+
+    it('returns the transition it performed when a non-IN_PROGRESS plan row is updated', async () => {
       const planId = '11111111-1111-1111-1111-111111111111';
+      vi.mocked(mockPlanQueryBuilder.getOne).mockResolvedValue({
+        id: planId,
+        status: 'PENDING',
+      });
       vi.mocked(mockPlanRepo.update).mockResolvedValueOnce({
         affected: 1,
         generatedMaps: [],
@@ -233,15 +269,62 @@ describe('TasksService', () => {
 
       const promoted = await service.syncParentPlanStatus(planId);
 
-      expect(promoted).toBe(true);
+      expect(promoted).toEqual({ from: 'PENDING', to: 'IN_PROGRESS' });
       expect(mockPlanRepo.update).toHaveBeenCalledWith(
         { id: planId, status: Not('IN_PROGRESS') },
         { completedAt: null, status: 'IN_PROGRESS' },
       );
     });
 
-    it('returns false when the plan is already IN_PROGRESS (no row matched)', async () => {
+    // Guards the `from` the caller records on the work ledger: a concurrent writer must not be
+    // able to slip between the status read and the guarded UPDATE.
+    it('row-locks the plan with pessimistic_write before reading the prior status', async () => {
+      const planId = '11111111-1111-1111-1111-111111111111';
+      vi.mocked(mockPlanQueryBuilder.getOne).mockResolvedValue({
+        id: planId,
+        status: 'QUEUED',
+      });
+      vi.mocked(mockPlanRepo.update).mockResolvedValueOnce({
+        affected: 1,
+        generatedMaps: [],
+        raw: [],
+      });
+
+      await service.syncParentPlanStatus(planId);
+
+      expect(mockPlanQueryBuilder.setLock).toHaveBeenCalledWith(
+        'pessimistic_write',
+      );
+      expect(mockPlanRepo.manager.transaction).toHaveBeenCalledTimes(1);
+    });
+
+    it('enlists in a caller manager instead of opening its own transaction', async () => {
+      const planId = '11111111-1111-1111-1111-111111111111';
+      vi.mocked(mockPlanQueryBuilder.getOne).mockResolvedValue({
+        id: planId,
+        status: 'PENDING',
+      });
+      vi.mocked(mockPlanRepo.update).mockResolvedValueOnce({
+        affected: 1,
+        generatedMaps: [],
+        raw: [],
+      });
+
+      const promoted = await service.syncParentPlanStatus(
+        planId,
+        txPlanManager,
+      );
+
+      expect(promoted).toEqual({ from: 'PENDING', to: 'IN_PROGRESS' });
+      expect(mockPlanRepo.manager.transaction).not.toHaveBeenCalled();
+    });
+
+    it('returns null when the plan is already IN_PROGRESS (no row matched)', async () => {
       const planId = '22222222-2222-2222-2222-222222222222';
+      vi.mocked(mockPlanQueryBuilder.getOne).mockResolvedValue({
+        id: planId,
+        status: 'IN_PROGRESS',
+      });
       vi.mocked(mockPlanRepo.update).mockResolvedValueOnce({
         affected: 0,
         generatedMaps: [],
@@ -250,15 +333,30 @@ describe('TasksService', () => {
 
       const promoted = await service.syncParentPlanStatus(planId);
 
-      expect(promoted).toBe(false);
+      expect(promoted).toBeNull();
       expect(mockPlanRepo.update).toHaveBeenCalledWith(
         { id: planId, status: Not('IN_PROGRESS') },
         { completedAt: null, status: 'IN_PROGRESS' },
       );
     });
 
-    it('treats undefined affected as no update', async () => {
+    it('returns null without updating when the plan does not exist', async () => {
+      vi.mocked(mockPlanQueryBuilder.getOne).mockResolvedValue(null);
+
+      const promoted = await service.syncParentPlanStatus(
+        '33333333-3333-3333-3333-333333333333',
+      );
+
+      expect(promoted).toBeNull();
+      expect(mockPlanRepo.update).not.toHaveBeenCalled();
+    });
+
+    it('treats undefined affected as no transition', async () => {
       const planId = '33333333-3333-3333-3333-333333333333';
+      vi.mocked(mockPlanQueryBuilder.getOne).mockResolvedValue({
+        id: planId,
+        status: 'PENDING',
+      });
       vi.mocked(mockPlanRepo.update).mockResolvedValueOnce({
         affected: undefined,
         generatedMaps: [],
@@ -267,7 +365,7 @@ describe('TasksService', () => {
 
       const promoted = await service.syncParentPlanStatus(planId);
 
-      expect(promoted).toBe(false);
+      expect(promoted).toBeNull();
     });
   });
 
@@ -284,7 +382,8 @@ describe('TasksService', () => {
 
       const completed = await service.completeParentPlanIfTasksDone(planId);
 
-      expect(completed).toBe(true);
+      // The guard is `status = IN_PROGRESS`, so a matched row makes `from` unambiguous.
+      expect(completed).toEqual({ from: 'IN_PROGRESS', to: 'COMPLETED' });
       expect(mockTaskRepo.count).toHaveBeenCalledWith({
         where: {
           planId,
@@ -297,16 +396,42 @@ describe('TasksService', () => {
       );
     });
 
+    it('reads and writes through a caller manager when one is given', async () => {
+      const managerRepo = createMock<Repository<Task>>({
+        count: vi.fn().mockResolvedValue(0),
+        update: vi
+          .fn()
+          .mockResolvedValue({ affected: 1, generatedMaps: [], raw: [] }),
+      });
+      const callerManager = createMock<EntityManager>({
+        getRepository: () => managerRepo,
+      });
+
+      const completed = await service.completeParentPlanIfTasksDone(
+        planId,
+        callerManager,
+      );
+
+      expect(completed).toEqual({ from: 'IN_PROGRESS', to: 'COMPLETED' });
+      expect(managerRepo.count).toHaveBeenCalledTimes(1);
+      expect(managerRepo.update).toHaveBeenCalledWith(
+        { id: planId, status: 'IN_PROGRESS' },
+        { completedAt: expect.any(Date), status: 'COMPLETED' },
+      );
+      expect(mockTaskRepo.count).not.toHaveBeenCalled();
+      expect(mockPlanRepo.update).not.toHaveBeenCalled();
+    });
+
     it('does not complete the plan while tasks remain', async () => {
       vi.mocked(mockTaskRepo.count).mockResolvedValueOnce(2);
 
       const completed = await service.completeParentPlanIfTasksDone(planId);
 
-      expect(completed).toBe(false);
+      expect(completed).toBeNull();
       expect(mockPlanRepo.update).not.toHaveBeenCalled();
     });
 
-    it('returns false when the plan is not IN_PROGRESS (no row matched)', async () => {
+    it('returns null when the plan is not IN_PROGRESS (no row matched)', async () => {
       vi.mocked(mockTaskRepo.count).mockResolvedValueOnce(0);
       vi.mocked(mockPlanRepo.update).mockResolvedValueOnce({
         affected: 0,
@@ -316,7 +441,7 @@ describe('TasksService', () => {
 
       const completed = await service.completeParentPlanIfTasksDone(planId);
 
-      expect(completed).toBe(false);
+      expect(completed).toBeNull();
     });
   });
 

@@ -111,8 +111,11 @@ export class WorkLedgerRunService {
    * session actor equals the request principal and the capture guard's actor-match (G11) attaches
    * status changes to this session. Falls back to the seeded `workflow-ralph` account by name when
    * no worker token is configured or the token does not verify. Returns null when neither resolves.
+   *
+   * Public: also the worker-side actor for the plans queue's `beforeAll`-hook BLOCKED capture
+   * (execute-plan-job-run-hooks.ts), which has no request principal of its own to lean on.
    */
-  private async resolveActorServiceAccountId(): Promise<string | null> {
+  async resolveActorServiceAccountId(): Promise<string | null> {
     const token = resolveAgenticRalphWorkerWorkflowGraphqlConfigFromEnv().token;
 
     if (token != null && token !== '') {

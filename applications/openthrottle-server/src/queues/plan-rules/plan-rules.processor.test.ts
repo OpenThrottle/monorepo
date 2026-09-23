@@ -6,6 +6,7 @@
  */
 
 import { createMock } from '@golevelup/ts-vitest';
+import { AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT } from '@openthrottle/nestjs-auth';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
   Plan,
@@ -21,6 +22,8 @@ import type {
 import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { WorkLedgerCaptureService } from '../../graphql/work-ledger/work-ledger-capture.service.ts';
+import type { WorkLedgerRunService } from '../plans/work-ledger-run.service.ts';
 import {
   type ActionExecutor,
   ActionExecutorRegistry,
@@ -67,6 +70,10 @@ describe('PlanRulesProcessor.process', () => {
   let tagActionRulesService: TagActionRulesService;
   let tagsService: TagsService;
   let usersService: UsersService;
+  let workLedgerCapture: WorkLedgerCaptureService;
+  let workLedgerRun: WorkLedgerRunService;
+  let transactionManager: unknown;
+  let mockTransaction: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -96,10 +103,29 @@ describe('PlanRulesProcessor.process', () => {
     tagActionRulesService = createMock<TagActionRulesService>({
       listEnabledForUser: vi.fn().mockResolvedValue([buildRule()]),
     });
+
+    transactionManager = { __brand: 'transaction-manager' };
+    mockTransaction = vi.fn(async (cb: (manager: unknown) => unknown) =>
+      cb(transactionManager),
+    );
     ruleApplicationsService = createMock<RuleApplicationsService>({
       findByRuleAndPlan: vi.fn().mockResolvedValue(null),
-      orphanUnmatchedApplications: vi.fn().mockResolvedValue(0),
+      getRepository: vi.fn(() =>
+        asMock({ manager: { transaction: mockTransaction } }),
+      ),
+      orphanUnmatchedApplications: vi
+        .fn()
+        .mockResolvedValue({ rowsOrphaned: 0, softClosedTasks: [] }),
       record: vi.fn(),
+    });
+
+    workLedgerCapture = createMock<WorkLedgerCaptureService>({
+      recordStatusChange: vi.fn().mockResolvedValue(undefined),
+    });
+    workLedgerRun = createMock<WorkLedgerRunService>({
+      resolveActorServiceAccountId: vi
+        .fn()
+        .mockResolvedValue('service-account-1'),
     });
 
     processor = new PlanRulesProcessor(
@@ -110,6 +136,8 @@ describe('PlanRulesProcessor.process', () => {
       tagActionRulesService,
       tagsService,
       usersService,
+      workLedgerCapture,
+      workLedgerRun,
     );
   });
 
@@ -246,14 +274,83 @@ describe('PlanRulesProcessor.process', () => {
     registry.register(executor);
     vi.mocked(
       ruleApplicationsService.orphanUnmatchedApplications,
-    ).mockResolvedValue(2);
+    ).mockResolvedValue({ rowsOrphaned: 2, softClosedTasks: [] });
 
     const result = await processor.process(buildJob());
 
     expect(
       ruleApplicationsService.orphanUnmatchedApplications,
-    ).toHaveBeenCalledWith(planId, ['rule-1']);
+    ).toHaveBeenCalledWith(planId, ['rule-1'], transactionManager);
     expect(result.orphaned).toBe(2);
+  });
+
+  it('captures a work-ledger status_change for each task the orphan flip soft-closed to SKIPPED', async () => {
+    registry.register(executor);
+    vi.mocked(
+      ruleApplicationsService.orphanUnmatchedApplications,
+    ).mockResolvedValue({
+      rowsOrphaned: 1,
+      softClosedTasks: [
+        {
+          from: 'PENDING',
+          planId,
+          taskId: 'task-orphaned-1',
+          to: 'SKIPPED',
+        },
+      ],
+    });
+
+    const result = await processor.process(buildJob());
+
+    expect(mockTransaction).toHaveBeenCalledTimes(1);
+    expect(workLedgerRun.resolveActorServiceAccountId).toHaveBeenCalledTimes(1);
+    expect(workLedgerCapture.recordStatusChange).toHaveBeenCalledWith(
+      transactionManager,
+      {
+        actorKind: AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
+        actorSub: 'service-account-1',
+        entity: 'task',
+        from: 'PENDING',
+        id: 'task-orphaned-1',
+        planId,
+        taskId: 'task-orphaned-1',
+        to: 'SKIPPED',
+      },
+    );
+    expect(result.orphaned).toBe(1);
+  });
+
+  it('resolves no actor and captures nothing when the orphan flip soft-closes no task', async () => {
+    registry.register(executor);
+    vi.mocked(
+      ruleApplicationsService.orphanUnmatchedApplications,
+    ).mockResolvedValue({ rowsOrphaned: 1, softClosedTasks: [] });
+
+    await processor.process(buildJob());
+
+    expect(workLedgerRun.resolveActorServiceAccountId).not.toHaveBeenCalled();
+    expect(workLedgerCapture.recordStatusChange).not.toHaveBeenCalled();
+  });
+
+  it('propagates when the ledger capture throws, rolling back the soft-close with it', async () => {
+    registry.register(executor);
+    vi.mocked(
+      ruleApplicationsService.orphanUnmatchedApplications,
+    ).mockResolvedValue({
+      rowsOrphaned: 1,
+      softClosedTasks: [
+        { from: 'PENDING', planId, taskId: 'task-orphaned-1', to: 'SKIPPED' },
+      ],
+    });
+    vi.mocked(workLedgerCapture.recordStatusChange).mockRejectedValueOnce(
+      new Error(
+        'Cannot record work-ledger status change: unresolved authentication principal.',
+      ),
+    );
+
+    await expect(processor.process(buildJob())).rejects.toThrow(
+      'unresolved authentication principal',
+    );
   });
 
   it('an executor blocked by its own gating writes flagged via the ledger (contract shape)', async () => {

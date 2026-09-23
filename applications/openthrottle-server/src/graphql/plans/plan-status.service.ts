@@ -26,6 +26,7 @@ import { PlanCancelChannelService } from '../../queues/plans/plan-cancel-channel
 import { PlanRunCancellationService } from '../../queues/plans/plan-run-cancellation.service.ts';
 import { PLANS_QUEUE_NAME } from '../../queues/plans/plans.constants.ts';
 import type { RunPlanJobData } from '../../queues/plans/plans.types.ts';
+import { WorkLedgerCaptureService } from '../work-ledger/work-ledger-capture.service.ts';
 import { cancelPlanRunJobsForPlan } from './cancel-plan-run-jobs.ts';
 
 const IN_PROGRESS_TRANSITION_FORBIDDEN_MESSAGE = `Cannot transition to IN_PROGRESS: only PENDING, QUEUED, or already IN_PROGRESS plans may enter this state.`;
@@ -80,6 +81,15 @@ interface CancelRunOutcome {
 }
 
 /**
+ * @description The request principal a plan status write is attributed to on the work ledger,
+ * plumbed from `@CurrentUser('sub')` / `@CurrentUser('kind')` at the mutation.
+ */
+export interface PlanStatusActor {
+  readonly actorKind: string | undefined;
+  readonly actorSub: string | undefined;
+}
+
+/**
  * @description Service owning plan status policy and cancellation orchestration. App-internal; not
  * exported from a package boundary, so no @public tag is required.
  */
@@ -92,6 +102,7 @@ export class PlanStatusService {
     private readonly planRunsService: PlanRunsService,
     private readonly plansService: PlansService,
     private readonly tasksService: TasksService,
+    private readonly workLedgerCapture: WorkLedgerCaptureService,
     @InjectQueue(PLANS_QUEUE_NAME)
     private readonly plansQueue: Queue<RunPlanJobData, void>,
   ) {}
@@ -141,10 +152,21 @@ export class PlanStatusService {
    * @description Sets a plan's status with transition validation (the setPlanStatus mutation body).
    * Returns the (possibly unchanged) plan, or null when the plan does not exist. Throws
    * BadRequestException when an IN_PROGRESS transition is forbidden.
+   *
+   * A real transition writes the work-ledger `status_change` fact in the same transaction as the row
+   * (G12), exactly as `updatePlan` does — this is the second capturing writer of `plans.status`.
+   * An idempotent re-assert returns early and records nothing: no transition, no artifact.
+   *
+   * On an unattributable request `recordStatusChange` throws and the mutation fails, rather than
+   * writing an unattributed artifact — provenance is the whole point of the artifact. That is the
+   * same bargain `updatePlan` already makes, and it costs nothing here: `setPlanStatus` carries no
+   * `@Public()` opt-out, so the global `GlobalAuthGuard` has already rejected any caller without a
+   * user or service-account principal before this runs.
    */
   async setStatus(
     planId: string,
     requestedStatus: string,
+    actor: PlanStatusActor,
   ): Promise<Plan | null> {
     const repo = this.plansService.getRepository();
     const entity = await repo.findOne({ where: { id: planId } });
@@ -171,7 +193,22 @@ export class PlanStatusService {
       previousStatus,
     });
 
-    return repo.save(entity);
+    return repo.manager.transaction(async (manager) => {
+      const persisted = await manager.save(entity);
+
+      await this.workLedgerCapture.recordStatusChange(manager, {
+        actorKind: actor.actorKind,
+        actorSub: actor.actorSub,
+        entity: 'plan',
+        from: previousStatus,
+        id: persisted.id,
+        planId: persisted.id,
+        taskId: null,
+        to: persisted.status,
+      });
+
+      return persisted;
+    });
   }
 
   /**

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import type { EntityManager } from 'typeorm';
 import { In, IsNull, Not, Repository } from 'typeorm';
 
 import { Plan } from '../plans/plan.entity.ts';
@@ -64,6 +65,18 @@ export interface HookTaskInput {
 export interface GroupedHooks {
   readonly after: Task[];
   readonly before: Task[];
+}
+
+/**
+ * @description The plan status transition a guarded reconcile actually performed
+ * ({@link TasksService.syncParentPlanStatus}, {@link TasksService.completeParentPlanIfTasksDone}).
+ * A `null` return means the guard matched no row: no transition happened, and there is nothing for
+ * the caller to record. Callers that capture the work-ledger `status_change` fact need the `from`
+ * side, which an `affected` count alone cannot give them.
+ */
+export interface PlanStatusTransition {
+  readonly from: string;
+  readonly to: string;
 }
 
 @Injectable()
@@ -525,17 +538,53 @@ export class TasksService {
   }
 
   /**
-   * @description When a task is IN_PROGRESS, sets its parent plan to IN_PROGRESS if not already (atomic UPDATE; idempotent and safe under concurrent writers). Returns whether a plan row was updated.
+   * @description When a task is IN_PROGRESS, sets its parent plan to IN_PROGRESS if not already
+   * (guarded atomic UPDATE; idempotent and safe under concurrent writers). Returns the transition it
+   * performed, or null when the guard matched no row (the plan was already IN_PROGRESS, or is gone).
+   *
+   * This writes `plans.status` outside the `updatePlan` resolver, so the caller owns the work-ledger
+   * `status_change` fact for it — pass the transactional `manager` the artifact will be written with
+   * so the row update and the artifact commit together. Unlike
+   * {@link completeParentPlanIfTasksDone} the guard (`status != IN_PROGRESS`) does not imply the
+   * prior status, so the row is read under a row lock and the `from` side is returned rather than
+   * assumed. Without a caller manager it opens its own transaction (the lock needs one).
    */
-  async syncParentPlanStatus(planId: string): Promise<boolean> {
-    const planRepo = this.plansService.getRepository();
-    // Clear completedAt when leaving COMPLETED (e.g. re-open); null is a no-op for other statuses.
-    const result = await planRepo.update(
-      { id: planId, status: Not('IN_PROGRESS') },
-      { completedAt: null, status: 'IN_PROGRESS' },
-    );
+  async syncParentPlanStatus(
+    planId: string,
+    manager?: EntityManager,
+  ): Promise<PlanStatusTransition | null> {
+    const run = async (
+      tx: EntityManager,
+    ): Promise<PlanStatusTransition | null> => {
+      const planRepo = tx.getRepository(Plan);
+      // Row-lock before reading: the status this UPDATE replaces is what the caller records as the
+      // ledger `from`, so a concurrent writer must not slip between the read and the write.
+      const locked = await planRepo
+        .createQueryBuilder('plan')
+        .setLock('pessimistic_write')
+        .where('plan.id = :planId', { planId })
+        .getOne();
 
-    return (result.affected ?? 0) > 0;
+      if (locked == null) {
+        return null;
+      }
+
+      // Clear completedAt when leaving COMPLETED (e.g. re-open); null is a no-op for other statuses.
+      const result = await planRepo.update(
+        { id: planId, status: Not('IN_PROGRESS') },
+        { completedAt: null, status: 'IN_PROGRESS' },
+      );
+
+      if ((result.affected ?? 0) === 0) {
+        return null;
+      }
+
+      return { from: locked.status, to: 'IN_PROGRESS' };
+    };
+
+    return manager != null
+      ? run(manager)
+      : this.plansService.getRepository().manager.transaction(run);
   }
 
   /**
@@ -543,14 +592,27 @@ export class TasksService {
    * COMPLETED. Acts only on a plan that is currently IN_PROGRESS and has no remaining tasks (PENDING,
    * QUEUED, IN_PROGRESS, or BLOCKED) — COMPLETED/SKIPPED/CANCELED are terminal. The guarded atomic
    * UPDATE keeps it idempotent and race-safe (mirrors {@link syncParentPlanStatus}); the IN_PROGRESS
-   * guard avoids resurrecting CANCELED/PENDING/BACKLOG plans. Returns whether the plan was completed.
+   * guard avoids resurrecting CANCELED/PENDING/BACKLOG plans. Returns the transition it performed,
+   * or null when tasks remain or the guard matched no row.
    *
-   * Without this, the only thing that completes a plan is the Ralph orchestrator's top-of-loop check,
-   * which several exit paths (agent completion signal, max iterations, cancellation) skip — stranding
-   * a plan IN_PROGRESS with every task COMPLETED.
+   * In practice this is what normally completes a plan: it fires on the task update that finishes the
+   * last open task, milliseconds before the Ralph orchestrator's top-of-loop check gets there, so the
+   * orchestrator's later explicit `updatePlan(status: COMPLETED)` finds the plan already COMPLETED and
+   * is a no-op. It is also the only thing that completes a plan on the exit paths (agent completion
+   * signal, max iterations, cancellation) that skip that check — without it a plan is stranded
+   * IN_PROGRESS with every task COMPLETED.
+   *
+   * Because this writes `plans.status` outside the `updatePlan` resolver, the caller owns the
+   * work-ledger `status_change` fact for it: pass the transactional `manager` the artifact will be
+   * written with so the row update and the artifact commit together. The guard makes the `from` side
+   * unambiguous — a matched row was IN_PROGRESS.
    */
-  async completeParentPlanIfTasksDone(planId: string): Promise<boolean> {
-    const remaining = await this.taskRepository.count({
+  async completeParentPlanIfTasksDone(
+    planId: string,
+    manager?: EntityManager,
+  ): Promise<PlanStatusTransition | null> {
+    const taskRepo = manager?.getRepository(Task) ?? this.taskRepository;
+    const remaining = await taskRepo.count({
       where: {
         planId,
         status: In(['BLOCKED', 'IN_PROGRESS', 'PENDING', 'QUEUED']),
@@ -558,15 +620,20 @@ export class TasksService {
     });
 
     if (remaining > 0) {
-      return false;
+      return null;
     }
 
-    const planRepo = this.plansService.getRepository();
+    const planRepo =
+      manager?.getRepository(Plan) ?? this.plansService.getRepository();
     const result = await planRepo.update(
       { id: planId, status: 'IN_PROGRESS' },
       { completedAt: new Date(), status: 'COMPLETED' },
     );
 
-    return (result.affected ?? 0) > 0;
+    if ((result.affected ?? 0) === 0) {
+      return null;
+    }
+
+    return { from: 'IN_PROGRESS', to: 'COMPLETED' };
   }
 }

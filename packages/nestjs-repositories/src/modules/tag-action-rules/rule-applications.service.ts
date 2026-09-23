@@ -9,11 +9,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { In, QueryFailedError, Repository } from 'typeorm';
+import { type EntityManager, In, QueryFailedError, Repository } from 'typeorm';
 
 import {
+  isTaskStatus,
   TASK_STATUS,
-  TASK_STATUS_VALUES,
   type TaskStatus,
 } from '../../common/plan-task-status.constants.ts';
 import { Task } from '../tasks/task.entity.ts';
@@ -65,6 +65,32 @@ export interface RecordRuleApplicationInput {
   readonly ruleId: string;
   readonly state: RuleApplicationState;
   readonly taskId?: string | null;
+}
+
+/**
+ * @description One injected task's soft-close to {@link SOFT_CLOSED_TASK_STATUS}, performed by
+ * {@link RuleApplicationsService.orphanUnmatchedApplications}. Callers that capture the work-ledger
+ * `status_change` fact need the `from` side, which a bulk "rows affected" count alone can't give
+ * them — the same reason {@link PlanStatusTransition} (tasks.service.ts) exists.
+ * @public
+ */
+export interface OrphanedTaskSoftClose {
+  readonly from: TaskStatus;
+  readonly planId: string;
+  readonly taskId: string;
+  readonly to: typeof SOFT_CLOSED_TASK_STATUS;
+}
+
+/**
+ * @description Result of {@link RuleApplicationsService.orphanUnmatchedApplications}: the number of
+ * ledger rows flipped to 'orphaned', plus the (possibly empty) task transitions performed as a side
+ * effect. The caller owns capturing those transitions on the work ledger — this package deliberately
+ * has no dependency on WorkLedgerCaptureService.
+ * @public
+ */
+export interface OrphanUnmatchedApplicationsResult {
+  readonly rowsOrphaned: number;
+  readonly softClosedTasks: readonly OrphanedTaskSoftClose[];
 }
 
 @Injectable()
@@ -163,54 +189,103 @@ export class RuleApplicationsService {
    * task_id, an INJECT_TASK result) is soft-closed to SKIPPED in the same
    * transaction, unless it is already terminal (COMPLETED/SKIPPED/CANCELED) or
    * a human already deleted it (task_id SET NULL). The ledger row is untouched
-   * so the rule still never re-injects. Returns the number of rows flipped.
+   * so the rule still never re-injects.
+   *
+   * The soft-close moves a task to a TERMINAL status (unlike the operational-reset
+   * paths this codebase leaves uncaptured, which move work back toward PENDING/
+   * QUEUED/IN_PROGRESS), so it asserts a new fact about the work rather than just
+   * putting it back in a restartable state — the caller is expected to capture it
+   * on the work ledger (see the decision recorded at the call site in
+   * plan-rules.processor.ts). This package has no dependency on
+   * WorkLedgerCaptureService, so it cannot write that fact itself: it returns the
+   * transitions performed instead, mirroring {@link PlanStatusTransition}
+   * (tasks.service.ts). Accepts a caller-owned `manager` so the row updates and
+   * the caller's ledger write commit in the SAME transaction; without one it opens
+   * its own (the eligibility read needs a lock either way).
    */
   async orphanUnmatchedApplications(
     planId: string,
     matchedRuleIds: readonly string[],
-  ): Promise<number> {
+    manager?: EntityManager,
+  ): Promise<OrphanUnmatchedApplicationsResult> {
     const applied = await this.repository.find({
       where: { planId, state: RULE_APPLICATION_STATES.APPLIED },
     });
     const matched = new Set(matchedRuleIds);
     const toOrphan = applied.filter((row) => !matched.has(row.ruleId));
     if (toOrphan.length === 0) {
-      return 0;
+      return { rowsOrphaned: 0, softClosedTasks: [] };
     }
 
     const injectedTaskIds = toOrphan
       .map((row) => row.taskId)
       .filter((taskId): taskId is string => taskId != null);
 
-    await this.repository.manager.transaction(async (manager) => {
-      await manager.update(
+    const run = async (
+      tx: EntityManager,
+    ): Promise<OrphanUnmatchedApplicationsResult> => {
+      await tx.update(
         RuleApplication,
         { id: In(toOrphan.map((row) => row.id)) },
         { state: RULE_APPLICATION_STATES.ORPHANED },
       );
 
-      if (injectedTaskIds.length > 0) {
-        await manager
-          .createQueryBuilder()
-          .update(Task)
-          .set({ status: SOFT_CLOSED_TASK_STATUS })
-          .where('id IN (:...ids)', { ids: injectedTaskIds })
-          .andWhere('status NOT IN (:...terminal)', {
-            terminal: TASK_STATUS_VALUES.filter(
-              (status) => IS_TERMINAL_TASK_STATUS[status],
-            ),
-          })
-          .execute();
+      if (injectedTaskIds.length === 0) {
+        return { rowsOrphaned: toOrphan.length, softClosedTasks: [] };
       }
-    });
 
-    if (injectedTaskIds.length > 0) {
+      // Row-lock before reading: the `from` side of each transition, and which
+      // tasks are even eligible (not already terminal), must be read under the
+      // same lock the soft-close UPDATE runs under — mirrors the row-lock-before-
+      // read precedent in tasks.service.ts's syncParentPlanStatus.
+      const lockedTasks = await tx.getRepository(Task).find({
+        lock: { mode: 'pessimistic_write' },
+        where: { id: In(injectedTaskIds) },
+      });
+      // task.status is a raw DB `string` column; narrow it through the shared
+      // isTaskStatus guard rather than an `as` cast (a Postgres check constraint
+      // guarantees it is always a real TaskStatus in practice).
+      const eligible = lockedTasks.flatMap((task) => {
+        const { status } = task;
+        if (!isTaskStatus(status) || IS_TERMINAL_TASK_STATUS[status]) {
+          return [];
+        }
+        return [{ id: task.id, status }];
+      });
+
+      if (eligible.length === 0) {
+        return { rowsOrphaned: toOrphan.length, softClosedTasks: [] };
+      }
+
+      await tx.update(
+        Task,
+        { id: In(eligible.map((task) => task.id)) },
+        { status: SOFT_CLOSED_TASK_STATUS },
+      );
+
+      return {
+        rowsOrphaned: toOrphan.length,
+        softClosedTasks: eligible.map((task) => ({
+          from: task.status,
+          planId,
+          taskId: task.id,
+          to: SOFT_CLOSED_TASK_STATUS,
+        })),
+      };
+    };
+
+    const result =
+      manager != null
+        ? await run(manager)
+        : await this.repository.manager.transaction(run);
+
+    if (result.softClosedTasks.length > 0) {
       this.logger.debug(
-        `Soft-closed up to ${injectedTaskIds.length} orphaned injected task(s) on plan ${planId}`,
+        `Soft-closed ${result.softClosedTasks.length} orphaned injected task(s) on plan ${planId}`,
         RuleApplicationsService.name,
       );
     }
 
-    return toOrphan.length;
+    return result;
   }
 }
