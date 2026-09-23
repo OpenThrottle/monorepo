@@ -4,6 +4,11 @@
 # https://stackoverflow.com/questions/53726982/setup-pre-push-hook-with-husky-to-prevent-pushing-to-master-branch
 # A Husky pre-push hook to prevent pushing to any "protected" branch like "main"
 #
+# Read the pre-push refs BEFORE anything else. Git hands them to this hook on
+# stdin, stdin can only be consumed once, and a sourced gate that read it
+# directly would leave the next gate nothing to read.
+OT_PUSH_REFS=$(cat)
+
 echo "🛫 Pre Push: Checking branch name"
 
 BRANCH=`git rev-parse --abbrev-ref HEAD`
@@ -22,6 +27,11 @@ fi
 # shared snippet so pre-commit, pre-push, and CI stay in lockstep on the exact
 # same command; sourcing it lets its `exit 1` abort the push.
 . "$(dirname "$0")/lib/component-shape-gate.sh"
+
+# Catch an attribution line in any commit this push would add. `commit-msg`
+# strips these as a commit is written, so anything reaching here got past that
+# hook — which is precisely the --no-verify path that put one on PR #554.
+. "$(dirname "$0")/lib/attribution-push-gate.sh"
 
 # We're good to go here
 exit 0
