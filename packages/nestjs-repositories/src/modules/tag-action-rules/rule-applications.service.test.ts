@@ -2,6 +2,8 @@ import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import { asMock } from '@openthrottle/nestjs-testing';
+import type { EntityManager } from 'typeorm';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { Task } from '../tasks/task.entity.ts';
@@ -9,7 +11,10 @@ import {
   RULE_APPLICATION_STATES,
   RuleApplication,
 } from './rule-application.entity.ts';
-import { RuleApplicationsService } from './rule-applications.service.ts';
+import {
+  RuleApplicationsService,
+  SOFT_CLOSED_TASK_STATUS,
+} from './rule-applications.service.ts';
 
 const PLAN_ID = 'plan-1';
 
@@ -26,27 +31,23 @@ const appliedRow = (
     taskId,
   });
 
+const taskRow = (id: string, status: string): Task =>
+  createMock<Task>({ id, status });
+
 describe('RuleApplicationsService.orphanUnmatchedApplications', () => {
   const find = vi.fn();
-  const taskUpdateExecute = vi.fn().mockResolvedValue({ affected: 1 });
-  const taskUpdateBuilder = {
-    andWhere: vi.fn().mockReturnThis(),
-    execute: taskUpdateExecute,
-    set: vi.fn().mockReturnThis(),
-    update: vi.fn().mockReturnThis(),
-    where: vi.fn().mockReturnThis(),
-  };
+  const taskRepoFind = vi.fn().mockResolvedValue([]);
+  const managerGetRepository = vi.fn(() => ({ find: taskRepoFind }));
   const managerUpdate = vi.fn().mockResolvedValue(undefined);
-  const managerCreateQueryBuilder = vi.fn(() => taskUpdateBuilder);
   const transaction = vi.fn(
     async (
       cb: (manager: {
-        createQueryBuilder: typeof managerCreateQueryBuilder;
+        getRepository: typeof managerGetRepository;
         update: typeof managerUpdate;
       }) => unknown,
     ) =>
       cb({
-        createQueryBuilder: managerCreateQueryBuilder,
+        getRepository: managerGetRepository,
         update: managerUpdate,
       }),
   );
@@ -60,11 +61,9 @@ describe('RuleApplicationsService.orphanUnmatchedApplications', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
-    taskUpdateBuilder.update.mockReturnThis();
-    taskUpdateBuilder.set.mockReturnThis();
-    taskUpdateBuilder.where.mockReturnThis();
-    taskUpdateBuilder.andWhere.mockReturnThis();
-    managerCreateQueryBuilder.mockReturnValue(taskUpdateBuilder);
+    taskRepoFind.mockResolvedValue([]);
+    managerGetRepository.mockReturnValue({ find: taskRepoFind });
+    managerUpdate.mockResolvedValue(undefined);
 
     const app = await Test.createTestingModule({
       providers: [
@@ -78,47 +77,129 @@ describe('RuleApplicationsService.orphanUnmatchedApplications', () => {
 
   test('orphans unmatched applied rows and soft-closes their injected tasks', async () => {
     find.mockResolvedValue([appliedRow('app-1', 'rule-unmatched', 'task-1')]);
+    taskRepoFind.mockResolvedValue([taskRow('task-1', 'PENDING')]);
 
-    const count = await service.orphanUnmatchedApplications(PLAN_ID, [
+    const result = await service.orphanUnmatchedApplications(PLAN_ID, [
       'rule-still-matched',
     ]);
 
-    expect(count).toBe(1);
-    expect(managerUpdate).toHaveBeenCalledWith(
+    expect(result.rowsOrphaned).toBe(1);
+    expect(managerUpdate).toHaveBeenNthCalledWith(
+      1,
       RuleApplication,
       { id: expect.anything() },
       { state: RULE_APPLICATION_STATES.ORPHANED },
     );
-    expect(managerCreateQueryBuilder).toHaveBeenCalledTimes(1);
-    expect(taskUpdateBuilder.update).toHaveBeenCalledWith(Task);
-    expect(taskUpdateBuilder.set).toHaveBeenCalledWith({ status: 'SKIPPED' });
-    expect(taskUpdateBuilder.where).toHaveBeenCalledWith('id IN (:...ids)', {
-      ids: ['task-1'],
+    expect(managerGetRepository).toHaveBeenCalledWith(Task);
+    expect(taskRepoFind).toHaveBeenCalledWith({
+      lock: { mode: 'pessimistic_write' },
+      where: { id: expect.anything() },
     });
-    expect(taskUpdateBuilder.andWhere).toHaveBeenCalledWith(
-      'status NOT IN (:...terminal)',
-      { terminal: ['CANCELED', 'COMPLETED', 'SKIPPED'] },
+    expect(managerUpdate).toHaveBeenNthCalledWith(
+      2,
+      Task,
+      { id: expect.anything() },
+      { status: SOFT_CLOSED_TASK_STATUS },
     );
+    expect(result.softClosedTasks).toEqual([
+      {
+        from: 'PENDING',
+        planId: PLAN_ID,
+        taskId: 'task-1',
+        to: SOFT_CLOSED_TASK_STATUS,
+      },
+    ]);
   });
 
   test('does not touch tasks for an orphaned row with no injected task', async () => {
     find.mockResolvedValue([appliedRow('app-2', 'rule-unmatched', null)]);
 
-    const count = await service.orphanUnmatchedApplications(PLAN_ID, []);
+    const result = await service.orphanUnmatchedApplications(PLAN_ID, []);
 
-    expect(count).toBe(1);
+    expect(result.rowsOrphaned).toBe(1);
+    expect(result.softClosedTasks).toEqual([]);
     expect(managerUpdate).toHaveBeenCalledTimes(1);
-    expect(managerCreateQueryBuilder).not.toHaveBeenCalled();
+    expect(managerGetRepository).not.toHaveBeenCalled();
   });
 
   test('is a no-op when every applied row still matches', async () => {
     find.mockResolvedValue([appliedRow('app-3', 'rule-a', 'task-3')]);
 
-    const count = await service.orphanUnmatchedApplications(PLAN_ID, [
+    const result = await service.orphanUnmatchedApplications(PLAN_ID, [
       'rule-a',
     ]);
 
-    expect(count).toBe(0);
+    expect(result).toEqual({ rowsOrphaned: 0, softClosedTasks: [] });
     expect(transaction).not.toHaveBeenCalled();
+  });
+
+  test('does not soft-close (or report a transition for) an already-terminal task', async () => {
+    find.mockResolvedValue([appliedRow('app-4', 'rule-unmatched', 'task-4')]);
+    taskRepoFind.mockResolvedValue([taskRow('task-4', 'COMPLETED')]);
+
+    const result = await service.orphanUnmatchedApplications(PLAN_ID, []);
+
+    expect(result.rowsOrphaned).toBe(1);
+    expect(result.softClosedTasks).toEqual([]);
+    // Only the ledger row flip runs — the terminal task is never written.
+    expect(managerUpdate).toHaveBeenCalledTimes(1);
+  });
+
+  test('reports one transition per eligible task when several orphan in one pass', async () => {
+    find.mockResolvedValue([
+      appliedRow('app-5', 'rule-unmatched-1', 'task-5'),
+      appliedRow('app-6', 'rule-unmatched-2', 'task-6'),
+    ]);
+    taskRepoFind.mockResolvedValue([
+      taskRow('task-5', 'IN_PROGRESS'),
+      taskRow('task-6', 'BLOCKED'),
+    ]);
+
+    const result = await service.orphanUnmatchedApplications(PLAN_ID, []);
+
+    expect(result.rowsOrphaned).toBe(2);
+    expect(result.softClosedTasks).toEqual([
+      {
+        from: 'IN_PROGRESS',
+        planId: PLAN_ID,
+        taskId: 'task-5',
+        to: SOFT_CLOSED_TASK_STATUS,
+      },
+      {
+        from: 'BLOCKED',
+        planId: PLAN_ID,
+        taskId: 'task-6',
+        to: SOFT_CLOSED_TASK_STATUS,
+      },
+    ]);
+  });
+
+  test('uses a caller-supplied manager instead of opening its own transaction', async () => {
+    find.mockResolvedValue([appliedRow('app-7', 'rule-unmatched', 'task-7')]);
+    const callerTaskRepoFind = vi
+      .fn()
+      .mockResolvedValue([taskRow('task-7', 'PENDING')]);
+    const callerManagerUpdate = vi.fn().mockResolvedValue(undefined);
+    const callerManager = createMock<EntityManager>({
+      getRepository: vi.fn(() => asMock({ find: callerTaskRepoFind })),
+      update: callerManagerUpdate,
+    });
+
+    const result = await service.orphanUnmatchedApplications(
+      PLAN_ID,
+      [],
+      callerManager,
+    );
+
+    expect(transaction).not.toHaveBeenCalled();
+    expect(callerManagerUpdate).toHaveBeenCalledTimes(2);
+    expect(result.softClosedTasks).toEqual([
+      {
+        from: 'PENDING',
+        planId: PLAN_ID,
+        taskId: 'task-7',
+        to: SOFT_CLOSED_TASK_STATUS,
+      },
+    ]);
   });
 });

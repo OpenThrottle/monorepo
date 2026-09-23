@@ -3,6 +3,7 @@
  */
 
 import { createMock } from '@golevelup/ts-vitest';
+import { AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT } from '@openthrottle/nestjs-auth';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
   PlanOutputStreamService,
@@ -14,9 +15,12 @@ import {
   type PlanOutputStreamChunk,
   type Task,
 } from '@openthrottle/nestjs-repositories';
+import type { WorkflowLifecycleDispatcher } from '@openthrottle/openthrottle-agentic-workflow';
 import type { JobRunHooksConfig } from '@tools/workflows';
 import type { Repository } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import type { WorkLedgerCaptureService } from '../../graphql/work-ledger/work-ledger-capture.service.ts';
 
 const mockExecuteJobRunHooksPhase = vi.fn();
 const mockCreateCursorWorkflowRalphIterationRunner = vi.fn();
@@ -37,6 +41,7 @@ vi.mock('@tools/workflows', async (importOriginal) => {
 import {
   executePlanJobRunHooks,
   runAfterRunHooksThenNotify,
+  runBeforeAllHooksWithDispatcher,
   runBeforeRunHooksAndHandleBlock,
 } from './execute-plan-job-run-hooks.ts';
 
@@ -61,13 +66,39 @@ const mockLogger = createMock<LoggerService>({
 const mockRepoUpdate = vi.fn().mockResolvedValue(undefined);
 const mockPlanFindOne = vi.fn();
 const mockTaskFind = vi.fn().mockResolvedValue([]);
+
+// The BLOCKED-transition capture opens its own transaction (repo.manager.transaction) and reads/
+// updates the plan through the transactional EntityManager's repository, not the outer `repo`
+// directly — so the transactional repo gets its own findOne/update mocks, distinct from the ones
+// `executePlanJobRunHooks` uses for its (non-transactional) plan/task load.
+const mockTransactionPlanFindOne = vi.fn();
+const mockTransactionPlanUpdate = vi.fn().mockResolvedValue(undefined);
+const transactionPlanRepo = createMock<Repository<Plan>>({
+  findOne: mockTransactionPlanFindOne,
+  update: mockTransactionPlanUpdate,
+});
+const mockManagerTransaction = vi.fn(
+  async (
+    work: (manager: {
+      getRepository: () => typeof transactionPlanRepo;
+    }) => unknown,
+  ) => work({ getRepository: () => transactionPlanRepo }),
+);
 const mockPlansService = createMock<PlansService>({
   getRepository: () =>
     createMock<Repository<Plan>>({
       findOne: mockPlanFindOne,
+      manager: { transaction: mockManagerTransaction },
       update: mockRepoUpdate,
     }),
 });
+
+const mockRecordStatusChange = vi.fn().mockResolvedValue(undefined);
+const mockWorkLedgerCapture = createMock<WorkLedgerCaptureService>({
+  recordStatusChange: mockRecordStatusChange,
+});
+
+const mockResolveActor = vi.fn().mockResolvedValue('workflow-ralph-sa-1');
 
 const mockTasksService = createMock<TasksService>({
   getRepository: () =>
@@ -213,6 +244,13 @@ describe('runBeforeRunHooksAndHandleBlock', () => {
       status: 'IN_PROGRESS',
       title: 'Test plan',
     });
+    mockTransactionPlanFindOne.mockResolvedValue({
+      id: planId,
+      status: 'IN_PROGRESS',
+      title: 'Test plan',
+    });
+    mockRecordStatusChange.mockResolvedValue(undefined);
+    mockResolveActor.mockResolvedValue('workflow-ralph-sa-1');
     mockCreateCursorWorkflowRalphIterationRunner.mockReturnValue({
       run: vi.fn(),
     });
@@ -235,19 +273,30 @@ describe('runBeforeRunHooksAndHandleBlock', () => {
       },
       planOutputStreamService: mockPlanOutputStreamService,
       plansService: mockPlansService,
+      resolveActor: mockResolveActor,
       tasksService: mockTasksService,
+      workLedgerCapture: mockWorkLedgerCapture,
     });
 
     expect(blocked).toBe(false);
-    expect(mockRepoUpdate).not.toHaveBeenCalled();
+    expect(mockResolveActor).not.toHaveBeenCalled();
+    expect(mockManagerTransaction).not.toHaveBeenCalled();
+    expect(mockTransactionPlanUpdate).not.toHaveBeenCalled();
     expect(emitQueueJobCompleted).not.toHaveBeenCalled();
     expect(mockExecuteJobRunHooksPhase).toHaveBeenCalledTimes(1);
   });
 
-  it('runs after_run, sets BLOCKED, and notifies when before_run blocks', async () => {
+  it('runs after_run, sets BLOCKED, records an honest `from` on the ledger, and notifies when before_run blocks', async () => {
     mockExecuteJobRunHooksPhase
       .mockResolvedValueOnce({ blocked: true, results: [] })
       .mockResolvedValueOnce({ blocked: false, results: [] });
+    // The plan was QUEUED (not IN_PROGRESS) going into this beforeAll hook — the capture must read
+    // this rather than assume the completion cascade's IN_PROGRESS guard.
+    mockTransactionPlanFindOne.mockResolvedValue({
+      id: planId,
+      status: 'QUEUED',
+      title: 'Test plan',
+    });
 
     const blocked = await runBeforeRunHooksAndHandleBlock({
       hooks: namedBeforeHook,
@@ -260,7 +309,9 @@ describe('runBeforeRunHooksAndHandleBlock', () => {
       },
       planOutputStreamService: mockPlanOutputStreamService,
       plansService: mockPlansService,
+      resolveActor: mockResolveActor,
       tasksService: mockTasksService,
+      workLedgerCapture: mockWorkLedgerCapture,
     });
 
     expect(blocked).toBe(true);
@@ -271,10 +322,24 @@ describe('runBeforeRunHooksAndHandleBlock', () => {
     expect(mockExecuteJobRunHooksPhase.mock.calls[1]?.[0]?.mainRunStarted).toBe(
       false,
     );
-    expect(mockRepoUpdate).toHaveBeenCalledWith(
+    expect(mockResolveActor).toHaveBeenCalledTimes(1);
+    expect(mockTransactionPlanFindOne).toHaveBeenCalledWith({
+      where: { id: planId },
+    });
+    expect(mockTransactionPlanUpdate).toHaveBeenCalledWith(
       { id: planId },
       { status: 'BLOCKED' },
     );
+    expect(mockRecordStatusChange).toHaveBeenCalledWith(expect.anything(), {
+      actorKind: AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
+      actorSub: 'workflow-ralph-sa-1',
+      entity: 'plan',
+      from: 'QUEUED',
+      id: planId,
+      planId,
+      taskId: null,
+      to: 'BLOCKED',
+    });
     expect(emitPlanStatusChanged).toHaveBeenCalledWith({
       planId,
       status: 'BLOCKED',
@@ -286,6 +351,156 @@ describe('runBeforeRunHooksAndHandleBlock', () => {
         severity: 'error',
       }),
     );
+  });
+
+  it('propagates when the ledger capture throws, so the row update never commits on its own', async () => {
+    mockExecuteJobRunHooksPhase
+      .mockResolvedValueOnce({ blocked: true, results: [] })
+      .mockResolvedValueOnce({ blocked: false, results: [] });
+    mockRecordStatusChange.mockRejectedValueOnce(
+      new Error(
+        'Cannot record work-ledger status change: unresolved authentication principal.',
+      ),
+    );
+
+    await expect(
+      runBeforeRunHooksAndHandleBlock({
+        hooks: namedBeforeHook,
+        jobData: baseJobData,
+        logLabel: 'test',
+        logger: mockLogger,
+        notifications: {
+          emitPlanStatusChanged,
+          emitQueueJobCompleted,
+        },
+        planOutputStreamService: mockPlanOutputStreamService,
+        plansService: mockPlansService,
+        resolveActor: mockResolveActor,
+        tasksService: mockTasksService,
+        workLedgerCapture: mockWorkLedgerCapture,
+      }),
+    ).rejects.toThrow('unresolved authentication principal');
+
+    // The failing capture ran inside the same manager.transaction callback as the row update: a real
+    // Postgres transaction rolls both back together when the callback rejects. Here we assert the
+    // caller never sees a committed BLOCKED — no status-changed / queue-completed notification fires.
+    expect(emitPlanStatusChanged).not.toHaveBeenCalled();
+    expect(emitQueueJobCompleted).not.toHaveBeenCalled();
+  });
+});
+
+describe('runBeforeAllHooksWithDispatcher', () => {
+  const emitPlanStatusChanged = vi.fn();
+  const emitQueueJobCompleted = vi.fn();
+  const mockDispatcherRunPlan = vi.fn();
+  const mockDispatcher = createMock<WorkflowLifecycleDispatcher>({
+    runPlan: mockDispatcherRunPlan,
+  });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockTransactionPlanFindOne.mockResolvedValue({
+      id: planId,
+      status: 'IN_PROGRESS',
+      title: 'Test plan',
+    });
+    mockRecordStatusChange.mockResolvedValue(undefined);
+    mockResolveActor.mockResolvedValue('workflow-ralph-sa-1');
+  });
+
+  it('returns false without touching the plan row when beforeAll does not block', async () => {
+    mockDispatcherRunPlan.mockResolvedValueOnce({ blocked: false });
+
+    const blocked = await runBeforeAllHooksWithDispatcher({
+      dispatcher: mockDispatcher,
+      hooks: namedBeforeHook,
+      jobData: baseJobData,
+      logLabel: 'test',
+      logger: mockLogger,
+      notifications: { emitPlanStatusChanged, emitQueueJobCompleted },
+      planOutputStreamService: mockPlanOutputStreamService,
+      plansService: mockPlansService,
+      resolveActor: mockResolveActor,
+      tasksService: mockTasksService,
+      workLedgerCapture: mockWorkLedgerCapture,
+    });
+
+    expect(blocked).toBe(false);
+    expect(mockResolveActor).not.toHaveBeenCalled();
+    expect(mockTransactionPlanUpdate).not.toHaveBeenCalled();
+  });
+
+  it('sets BLOCKED and records the ledger fact with an honest `from` when beforeAll blocks', async () => {
+    mockDispatcherRunPlan
+      .mockResolvedValueOnce({ blocked: true })
+      .mockResolvedValueOnce({ blocked: false });
+
+    const blocked = await runBeforeAllHooksWithDispatcher({
+      dispatcher: mockDispatcher,
+      hooks: namedBeforeHook,
+      jobData: baseJobData,
+      logLabel: 'test',
+      logger: mockLogger,
+      notifications: { emitPlanStatusChanged, emitQueueJobCompleted },
+      planOutputStreamService: mockPlanOutputStreamService,
+      plansService: mockPlansService,
+      resolveActor: mockResolveActor,
+      tasksService: mockTasksService,
+      workLedgerCapture: mockWorkLedgerCapture,
+    });
+
+    expect(blocked).toBe(true);
+    expect(mockDispatcherRunPlan).toHaveBeenNthCalledWith(2, {
+      mainRunStarted: false,
+      mainRunSucceeded: false,
+      phase: 'afterAll',
+    });
+    expect(mockTransactionPlanUpdate).toHaveBeenCalledWith(
+      { id: planId },
+      { status: 'BLOCKED' },
+    );
+    expect(mockRecordStatusChange).toHaveBeenCalledWith(expect.anything(), {
+      actorKind: AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
+      actorSub: 'workflow-ralph-sa-1',
+      entity: 'plan',
+      from: 'IN_PROGRESS',
+      id: planId,
+      planId,
+      taskId: null,
+      to: 'BLOCKED',
+    });
+    expect(emitPlanStatusChanged).toHaveBeenCalledWith({
+      planId,
+      status: 'BLOCKED',
+    });
+  });
+
+  it('propagates when the ledger capture throws', async () => {
+    mockDispatcherRunPlan
+      .mockResolvedValueOnce({ blocked: true })
+      .mockResolvedValueOnce({ blocked: false });
+    mockRecordStatusChange.mockRejectedValueOnce(
+      new Error('unresolved authentication principal'),
+    );
+
+    await expect(
+      runBeforeAllHooksWithDispatcher({
+        dispatcher: mockDispatcher,
+        hooks: namedBeforeHook,
+        jobData: baseJobData,
+        logLabel: 'test',
+        logger: mockLogger,
+        notifications: { emitPlanStatusChanged, emitQueueJobCompleted },
+        planOutputStreamService: mockPlanOutputStreamService,
+        plansService: mockPlansService,
+        resolveActor: mockResolveActor,
+        tasksService: mockTasksService,
+        workLedgerCapture: mockWorkLedgerCapture,
+      }),
+    ).rejects.toThrow('unresolved authentication principal');
+
+    expect(emitPlanStatusChanged).not.toHaveBeenCalled();
+    expect(emitQueueJobCompleted).not.toHaveBeenCalled();
   });
 });
 

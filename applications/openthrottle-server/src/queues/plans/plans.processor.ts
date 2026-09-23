@@ -29,6 +29,7 @@ import {
 import { loadWorkflowRalphConfig } from '@tools/workflows';
 import type { Queue } from 'bullmq';
 
+import { WorkLedgerCaptureService } from '../../graphql/work-ledger/work-ledger-capture.service.ts';
 import { ProcessMetricsService } from '../../metrics/process-metrics.service.ts';
 import type {
   EnhancedTaskRunMetrics,
@@ -121,6 +122,7 @@ export class PlansProcessor
     private readonly plansService: PlansService,
     private readonly processMetrics: ProcessMetricsService,
     private readonly tasksService: TasksService,
+    private readonly workLedgerCapture: WorkLedgerCaptureService,
     private readonly workLedgerRun: WorkLedgerRunService,
   ) {
     super();
@@ -198,11 +200,11 @@ export class PlansProcessor
         continue;
       }
 
-      const promoted =
+      const promotion =
         // eslint-disable-next-line no-await-in-loop
         await this.tasksService.syncParentPlanStatus(plan.id);
 
-      if (!promoted) {
+      if (promotion == null) {
         continue;
       }
 
@@ -467,9 +469,15 @@ export class PlansProcessor
       // startup status reconcile). This intentionally does NOT emit a status_change artifact:
       // it bypasses the updatePlan resolver, and the orchestrator's later
       // promotePlanToInProgressIfNeeded is then a no-op for capture (from === to). The plan's
-      // worked-on state is instead represented by the run session's attached plan subject; the
-      // plan's COMPLETED transition and all task transitions ARE captured (via the orchestrator's
-      // resolver calls, attributed to this run session through X-OT-Session-Id).
+      // worked-on state is instead represented by the run session's attached plan subject.
+      //
+      // Task transitions ARE captured (via the orchestrator's updateTask calls, attributed to this
+      // run session through X-OT-Session-Id), and so is the plan's COMPLETED transition — but not,
+      // as this comment once claimed, because the orchestrator's updatePlan records it. In the
+      // normal case the plan is already closed by TasksService.completeParentPlanIfTasksDone, the
+      // downward reconcile that fires on the last task's completion; the orchestrator's later
+      // updatePlan(status: COMPLETED) then finds nothing to change. That reconcile captures its own
+      // transition at the updateTask call site (TasksResolver.captureParentPlanReconcile).
       await repo.update({ id: planId }, { status: 'IN_PROGRESS' });
 
       this.notifications.emitPlanUpdated({
@@ -499,8 +507,11 @@ export class PlansProcessor
               notifications: this.notifications,
               planOutputStreamService: this.planOutputStreamService,
               plansService: this.plansService,
+              resolveActor: () =>
+                this.workLedgerRun.resolveActorServiceAccountId(),
               signal: abortSignal,
               tasksService: this.tasksService,
+              workLedgerCapture: this.workLedgerCapture,
             })
           : await runBeforeRunHooksAndHandleBlock({
               hooks: job.data.jobRunHooks,
@@ -510,8 +521,11 @@ export class PlansProcessor
               notifications: this.notifications,
               planOutputStreamService: this.planOutputStreamService,
               plansService: this.plansService,
+              resolveActor: () =>
+                this.workLedgerRun.resolveActorServiceAccountId(),
               signal: abortSignal,
               tasksService: this.tasksService,
+              workLedgerCapture: this.workLedgerCapture,
             });
 
       if (blockedByBeforeRunHook) {

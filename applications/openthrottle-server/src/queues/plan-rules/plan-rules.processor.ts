@@ -24,9 +24,11 @@
 
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { OnApplicationShutdown, OnModuleInit } from '@nestjs/common';
+import { AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT } from '@openthrottle/nestjs-auth';
 import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
+  type OrphanUnmatchedApplicationsResult,
   PlansService,
   RULE_APPLICATION_STATES,
   RuleApplicationsService,
@@ -39,6 +41,8 @@ import {
   type TagActionRuleInput,
 } from '@openthrottle/openthrottle-skills';
 
+import { WorkLedgerCaptureService } from '../../graphql/work-ledger/work-ledger-capture.service.ts';
+import { WorkLedgerRunService } from '../plans/work-ledger-run.service.ts';
 import { ActionExecutorRegistry } from './action-executor.ts';
 import {
   PLAN_RULES_QUEUE_NAME,
@@ -65,6 +69,8 @@ export class PlanRulesProcessor
     private readonly tagActionRulesService: TagActionRulesService,
     private readonly tagsService: TagsService,
     private readonly usersService: UsersService,
+    private readonly workLedgerCapture: WorkLedgerCaptureService,
+    private readonly workLedgerRun: WorkLedgerRunService,
   ) {
     super();
   }
@@ -253,11 +259,11 @@ export class PlanRulesProcessor
       Promise.resolve(),
     );
     const reinjected = reinjectable.length;
-    const orphaned =
-      await this.ruleApplicationsService.orphanUnmatchedApplications(
-        planId,
-        matched.map((action) => action.ruleId),
-      );
+    const orphanResult = await this.captureOrphanedTaskSoftCloses(
+      planId,
+      matched.map((action) => action.ruleId),
+    );
+    const orphaned = orphanResult.rowsOrphaned;
 
     if (orphaned > 0) {
       this.logger.info(
@@ -274,5 +280,67 @@ export class PlanRulesProcessor
       reinjected,
       skipped: null,
     };
+  }
+
+  /**
+   * @description Flips un-matched applied ledger rows to 'orphaned' and, in the SAME transaction,
+   * captures the work-ledger `status_change` fact for every injected task that soft-closes to
+   * SKIPPED as a side effect (G12) — that write bypasses `updateTask`, so nothing else records it
+   * (see the decision recorded at {@link RuleApplicationsService.orphanUnmatchedApplications}).
+   *
+   * One artifact per task: the existing `status_change` artifact type is per-entity
+   * (`status_change:task:<id>:<to>`), matching every other capture in this codebase, and a task's
+   * own status trail should show its own soft-close regardless of how many siblings were closed in
+   * the same pass. A single batch artifact would blur which of several tasks was affected and has
+   * no representation in the artifact-type registry.
+   *
+   * The actor is this worker's own resolvable service account — there is no request principal in a
+   * queue processor — via {@link WorkLedgerRunService.resolveActorServiceAccountId}, the same actor
+   * `execute-plan-job-run-hooks.ts` uses for the sibling plan-level BLOCKED capture. Resolved once
+   * per batch (not per task), and only when there is at least one soft-close to attribute. Like that
+   * sibling path, an unresolved actor throws (rather than silently skipping the capture), rolling
+   * back the orphan flip and the soft-close together — a transient resolution failure just delays
+   * this pass; it never produces an unattributed artifact.
+   */
+  private async captureOrphanedTaskSoftCloses(
+    planId: string,
+    matchedRuleIds: readonly string[],
+  ): Promise<OrphanUnmatchedApplicationsResult> {
+    return this.ruleApplicationsService
+      .getRepository()
+      .manager.transaction(async (manager) => {
+        const result =
+          await this.ruleApplicationsService.orphanUnmatchedApplications(
+            planId,
+            matchedRuleIds,
+            manager,
+          );
+
+        if (result.softClosedTasks.length === 0) {
+          return result;
+        }
+
+        const actorServiceAccountId =
+          await this.workLedgerRun.resolveActorServiceAccountId();
+
+        await result.softClosedTasks.reduce<Promise<void>>(
+          (chain, transition) =>
+            chain.then(() =>
+              this.workLedgerCapture.recordStatusChange(manager, {
+                actorKind: AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
+                actorSub: actorServiceAccountId ?? undefined,
+                entity: 'task',
+                from: transition.from,
+                id: transition.taskId,
+                planId: transition.planId,
+                taskId: transition.taskId,
+                to: transition.to,
+              }),
+            ),
+          Promise.resolve(),
+        );
+
+        return result;
+      });
   }
 }

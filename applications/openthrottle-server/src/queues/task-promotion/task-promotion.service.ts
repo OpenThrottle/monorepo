@@ -8,7 +8,12 @@
  *      matching the service-enforced plan invariant);
  *   3. seeds one runnable task ("Break down and scope this plan");
  *   4. closes out the source task: status → SKIPPED, a summary note pointing at the
- *      new plan, and a `promoted` tag;
+ *      new plan, and a `promoted` tag — and, in the SAME transaction, a task-level
+ *      `status_change` ledger fact (G12), the same property `updateTask` gives every
+ *      other task transition. This write bypasses `updateTask` (the promotion owns its
+ *      own close-out), so it must own its own capture rather than relying on the
+ *      `plan_promotion` artifact from step 5, which records a different fact (the
+ *      promotion event, not the task's own status transition);
  *   5. records a born-verified `plan_promotion` work-ledger artifact under a session
  *      whose subjects are the source (plan, task) and the new plan, so the provenance
  *      surfaces on both sides.
@@ -23,6 +28,10 @@
  */
 
 import { Injectable } from '@nestjs/common';
+import {
+  AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
+  AUTH_PRINCIPAL_KIND_USER,
+} from '@openthrottle/nestjs-auth';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   Plan,
@@ -41,6 +50,7 @@ import {
 import type { EntityManager } from 'typeorm';
 
 import { resolveArtifactForWrite } from '../../graphql/work-ledger/artifact-type-registry.ts';
+import { WorkLedgerCaptureService } from '../../graphql/work-ledger/work-ledger-capture.service.ts';
 import { NotificationsService } from '../../notifications/notifications.service.ts';
 import {
   PROMOTED_TAG,
@@ -75,6 +85,7 @@ export class TaskPromotionService {
     private readonly logger: LoggerService,
     private readonly notificationsService: NotificationsService,
     private readonly plansService: PlansService,
+    private readonly workLedgerCapture: WorkLedgerCaptureService,
   ) {}
 
   /**
@@ -114,7 +125,10 @@ export class TaskPromotionService {
       const newPlan = await this.createPlanFromTask(manager, task, sourcePlan);
       await this.copyTaskTagsToPlan(manager, task.id, newPlan.id);
       await this.seedInitialTask(manager, newPlan.id, task);
-      await this.closeOutSourceTask(manager, task, newPlan.id);
+      await this.closeOutSourceTask(manager, task, newPlan.id, {
+        actorServiceAccountId,
+        actorUserId,
+      });
       await this.recordPromotionProvenance(manager, {
         actorServiceAccountId,
         actorUserId,
@@ -242,21 +256,47 @@ export class TaskPromotionService {
     );
   }
 
-  /** Step 4: close out the source task (SKIPPED + summary note + `promoted` tag). */
+  /**
+   * Step 4: close out the source task (SKIPPED + summary note + `promoted` tag), and, in the
+   * same transaction, the task's own `status_change` ledger fact (G12) — this write bypasses
+   * `updateTask`, so nothing else records it. Skipped, like {@link recordPromotionProvenance},
+   * when no actor resolves (a degenerate system path): never write with an unattributed actor.
+   */
   private async closeOutSourceTask(
     manager: EntityManager,
     task: Task,
     newPlanId: string,
+    actor: {
+      readonly actorServiceAccountId: string | null;
+      readonly actorUserId: string | null;
+    },
   ): Promise<void> {
     const note = `Promoted into plan ${newPlanId}.`;
     const summary =
       task.summary == null || task.summary.trim() === ''
         ? note
         : `${task.summary}\n\n${note}`;
+    const previousStatus = task.status;
 
     await manager
       .getRepository(Task)
       .update({ id: task.id }, { status: PROMOTED_TASK_STATUS, summary });
+
+    if (actor.actorUserId != null || actor.actorServiceAccountId != null) {
+      await this.workLedgerCapture.recordStatusChange(manager, {
+        actorKind:
+          actor.actorUserId != null
+            ? AUTH_PRINCIPAL_KIND_USER
+            : AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
+        actorSub: actor.actorUserId ?? actor.actorServiceAccountId ?? undefined,
+        entity: 'task',
+        from: previousStatus,
+        id: task.id,
+        planId: task.planId,
+        taskId: task.id,
+        to: PROMOTED_TASK_STATUS,
+      });
+    }
 
     const tagRepo = manager.getRepository(TaskTag);
     const existing = await tagRepo.findOne({

@@ -1,5 +1,5 @@
 import { createMock } from '@golevelup/ts-vitest';
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import type {
   Plan,
   PlanRunsService,
@@ -13,7 +13,11 @@ import type { NotificationsService } from '../../notifications/notifications.ser
 import type { PlanCancelChannelService } from '../../queues/plans/plan-cancel-channel.service.ts';
 import type { PlanRunCancellationService } from '../../queues/plans/plan-run-cancellation.service.ts';
 import type { RunPlanJobData } from '../../queues/plans/plans.types.ts';
+import type { WorkLedgerCaptureService } from '../work-ledger/work-ledger-capture.service.ts';
 import { PlanStatusService } from './plan-status.service.ts';
+
+/** The authenticated principal the global auth guard guarantees every setPlanStatus call carries. */
+const ACTOR = { actorKind: 'user', actorSub: 'user-uuid-1' } as const;
 
 const IN_PROGRESS_TRANSITION_FORBIDDEN_MESSAGE =
   'Cannot transition to IN_PROGRESS: only PENDING, QUEUED, or already IN_PROGRESS plans may enter this state.';
@@ -45,11 +49,26 @@ describe('PlanStatusService', () => {
     createQueryBuilder: vi.fn(() => mockTaskUpdateQueryBuilder),
   };
 
+  // Mirrors repo.manager.transaction: runs the callback with a manager whose save delegates to
+  // repo.save, so the setStatus assertions below still read as row writes. Rejections propagate,
+  // which is how the rollback case is asserted.
   const repo = {
     findOne: vi.fn(),
+    manager: {
+      transaction: vi.fn(
+        async (
+          cb: (manager: { save: <T>(entity: T) => Promise<T> }) => unknown,
+        ) => cb({ save: <T>(entity: T): Promise<T> => repo.save(entity) }),
+      ),
+    },
     save: vi.fn(),
     update: vi.fn().mockResolvedValue(undefined),
   };
+
+  const mockRecordStatusChange = vi.fn().mockResolvedValue(undefined);
+  const mockWorkLedgerCapture = createMock<WorkLedgerCaptureService>({
+    recordStatusChange: mockRecordStatusChange,
+  });
 
   const mockEmitTaskStatusChanged = vi.fn();
   const mockNotificationsService = createMock<NotificationsService>({
@@ -84,12 +103,15 @@ describe('PlanStatusService', () => {
     }),
     mockPlansService,
     mockTasksService,
+    mockWorkLedgerCapture,
     mockPlansQueue,
   );
 
   beforeEach(() => {
     repo.findOne.mockReset();
     repo.save.mockReset();
+    mockRecordStatusChange.mockReset();
+    mockRecordStatusChange.mockResolvedValue(undefined);
     repo.update.mockReset();
     repo.update.mockResolvedValue(undefined);
     mockGetJobs.mockReset();
@@ -168,7 +190,7 @@ describe('PlanStatusService', () => {
       repo.findOne.mockResolvedValue(planToUpdate);
       repo.save.mockResolvedValue(saved);
 
-      const result = await service.setStatus(mockPlan.id, 'COMPLETED');
+      const result = await service.setStatus(mockPlan.id, 'COMPLETED', ACTOR);
 
       expect(result?.status).toBe('COMPLETED');
       expect(repo.save).toHaveBeenCalledWith(
@@ -189,7 +211,7 @@ describe('PlanStatusService', () => {
       repo.findOne.mockResolvedValue(planToUpdate);
       repo.save.mockImplementation(async (e) => e);
 
-      await service.setStatus(mockPlan.id, 'COMPLETED');
+      await service.setStatus(mockPlan.id, 'COMPLETED', ACTOR);
 
       expect(repo.save).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -207,7 +229,7 @@ describe('PlanStatusService', () => {
         status: 'COMPLETED',
       });
 
-      const result = await service.setStatus(mockPlan.id, 'completed');
+      const result = await service.setStatus(mockPlan.id, 'completed', ACTOR);
 
       expect(result?.completedAt).toBe(existingCompletedAt);
       expect(repo.save).not.toHaveBeenCalled();
@@ -224,7 +246,7 @@ describe('PlanStatusService', () => {
       repo.save.mockImplementation(async (e) => e);
 
       // PENDING is allowed from COMPLETED via setStatus (IN_PROGRESS is not).
-      await service.setStatus(mockPlan.id, 'PENDING');
+      await service.setStatus(mockPlan.id, 'PENDING', ACTOR);
 
       expect(repo.save).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -239,7 +261,7 @@ describe('PlanStatusService', () => {
       repo.findOne.mockResolvedValue(planToUpdate);
       repo.save.mockImplementation(async (e) => e);
 
-      const result = await service.setStatus(mockPlan.id, 'in_progress');
+      const result = await service.setStatus(mockPlan.id, 'in_progress', ACTOR);
 
       expect(result?.status).toBe('IN_PROGRESS');
     });
@@ -249,7 +271,7 @@ describe('PlanStatusService', () => {
       repo.findOne.mockResolvedValue(queued);
       repo.save.mockImplementation(async (e) => e);
 
-      const result = await service.setStatus(mockPlan.id, 'IN_PROGRESS');
+      const result = await service.setStatus(mockPlan.id, 'IN_PROGRESS', ACTOR);
 
       expect(result?.status).toBe('IN_PROGRESS');
     });
@@ -258,7 +280,7 @@ describe('PlanStatusService', () => {
       repo.findOne.mockResolvedValue({ ...mockPlan, status: 'COMPLETED' });
 
       await expect(
-        service.setStatus(mockPlan.id, 'IN_PROGRESS'),
+        service.setStatus(mockPlan.id, 'IN_PROGRESS', ACTOR),
       ).rejects.toMatchObject({
         message: IN_PROGRESS_TRANSITION_FORBIDDEN_MESSAGE,
       });
@@ -268,7 +290,7 @@ describe('PlanStatusService', () => {
     test('returns the plan unchanged (no save) for an idempotent status', async () => {
       repo.findOne.mockResolvedValue({ ...mockPlan, status: 'COMPLETED' });
 
-      const result = await service.setStatus(mockPlan.id, 'completed');
+      const result = await service.setStatus(mockPlan.id, 'completed', ACTOR);
 
       expect(result?.status).toBe('COMPLETED');
       expect(repo.save).not.toHaveBeenCalled();
@@ -277,10 +299,61 @@ describe('PlanStatusService', () => {
     test('returns null when the plan does not exist', async () => {
       repo.findOne.mockResolvedValue(null);
 
-      const result = await service.setStatus('missing-id', 'COMPLETED');
+      const result = await service.setStatus('missing-id', 'COMPLETED', ACTOR);
 
       expect(result).toBeNull();
       expect(repo.save).not.toHaveBeenCalled();
+    });
+
+    // setStatus is the second capturing writer of plans.status; the fact and the row commit
+    // together, the same shape updatePlan has.
+    test('records a status_change artifact for a real transition', async () => {
+      const planToUpdate = {
+        ...mockPlan,
+        completedAt: null,
+        status: 'PENDING',
+      };
+      repo.findOne.mockResolvedValue(planToUpdate);
+      repo.save.mockImplementation(async (e) => e);
+
+      await service.setStatus(mockPlan.id, 'COMPLETED', ACTOR);
+
+      expect(mockRecordStatusChange).toHaveBeenCalledWith(expect.anything(), {
+        actorKind: 'user',
+        actorSub: 'user-uuid-1',
+        entity: 'plan',
+        from: 'PENDING',
+        id: mockPlan.id,
+        planId: mockPlan.id,
+        taskId: null,
+        to: 'COMPLETED',
+      });
+    });
+
+    test('records nothing for an idempotent no-op', async () => {
+      repo.findOne.mockResolvedValue({ ...mockPlan, status: 'COMPLETED' });
+
+      await service.setStatus(mockPlan.id, 'completed', ACTOR);
+
+      expect(mockRecordStatusChange).not.toHaveBeenCalled();
+    });
+
+    test('fails the write (rolling the row back) when capture rejects', async () => {
+      repo.findOne.mockResolvedValue({
+        ...mockPlan,
+        completedAt: null,
+        status: 'PENDING',
+      });
+      repo.save.mockImplementation(async (e) => e);
+      mockRecordStatusChange.mockRejectedValueOnce(
+        new BadRequestException(
+          'Cannot record work-ledger status change: unresolved authentication principal.',
+        ),
+      );
+
+      await expect(
+        service.setStatus(mockPlan.id, 'COMPLETED', ACTOR),
+      ).rejects.toBeInstanceOf(BadRequestException);
     });
   });
 

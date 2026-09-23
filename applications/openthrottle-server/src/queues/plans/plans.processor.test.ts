@@ -21,6 +21,7 @@ import { spawn as nodeSpawn } from 'child_process';
 import type { Readable } from 'stream';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { WorkLedgerCaptureService } from '../../graphql/work-ledger/work-ledger-capture.service.ts';
 import { ProcessMetricsService } from '../../metrics/process-metrics.service.ts';
 import type { EnhancedTaskRunMetrics } from '../../metrics/process-metrics.types.ts';
 import { NotificationsService } from '../../notifications/notifications.service.ts';
@@ -152,7 +153,7 @@ const mockWorktreeTracker = {
 const mockRepoUpdate = vi.fn().mockResolvedValue(undefined);
 const mockRepoFind = vi.fn().mockResolvedValue([]);
 const mockTaskRepoFindOne = vi.fn().mockResolvedValue(null);
-const mocksyncParentPlanStatus = vi.fn().mockResolvedValue(false);
+const mocksyncParentPlanStatus = vi.fn().mockResolvedValue(null);
 /** Default: plan is COMPLETED so job completed message is success. Override to { status: 'IN_PROGRESS' } to test iteration-limit notification. */
 const mockRepoFindOne = vi.fn().mockResolvedValue({ status: 'COMPLETED' });
 const mockPlansService = createMock<PlansService>({
@@ -304,10 +305,19 @@ describe('PlansProcessor', () => {
           }),
         },
         {
+          provide: WorkLedgerCaptureService,
+          useValue: createMock<WorkLedgerCaptureService>({
+            recordStatusChange: vi.fn().mockResolvedValue(undefined),
+          }),
+        },
+        {
           provide: WorkLedgerRunService,
           useValue: createMock<WorkLedgerRunService>({
             closeRalphSession: vi.fn().mockResolvedValue(undefined),
             openRalphSession: vi.fn().mockResolvedValue(null),
+            resolveActorServiceAccountId: vi
+              .fn()
+              .mockResolvedValue('workflow-ralph-sa-1'),
           }),
         },
       ],
@@ -659,7 +669,10 @@ describe('PlansProcessor', () => {
         planId: divergedPlanId,
         status: 'IN_PROGRESS',
       });
-      mocksyncParentPlanStatus.mockResolvedValueOnce(true);
+      mocksyncParentPlanStatus.mockResolvedValueOnce({
+        from: 'QUEUED',
+        to: 'IN_PROGRESS',
+      });
 
       await processor.onModuleInit();
 
@@ -683,7 +696,7 @@ describe('PlansProcessor', () => {
         planId: divergedPlanId,
         status: 'IN_PROGRESS',
       });
-      mocksyncParentPlanStatus.mockResolvedValueOnce(false);
+      mocksyncParentPlanStatus.mockResolvedValueOnce(null);
 
       await processor.onModuleInit();
 

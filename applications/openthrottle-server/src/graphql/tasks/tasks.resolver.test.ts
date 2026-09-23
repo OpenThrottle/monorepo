@@ -54,10 +54,14 @@ describe('TasksResolver', () => {
   };
 
   const mockTasksService = createMock<TasksService>({
-    completeParentPlanIfTasksDone: vi.fn().mockResolvedValue(false),
+    completeParentPlanIfTasksDone: vi.fn().mockResolvedValue(null),
     getRepository: vi.fn().mockReturnValue(repo),
     resolveNextSortOrder: vi.fn().mockResolvedValue(1000),
-    syncParentPlanStatus: vi.fn().mockResolvedValue(false),
+    syncParentPlanStatus: vi.fn().mockResolvedValue(null),
+  });
+
+  const mockWorkLedgerCapture = createMock<WorkLedgerCaptureService>({
+    recordStatusChange: vi.fn().mockResolvedValue(undefined),
   });
 
   const mockNotificationsService = createMock<NotificationsService>({
@@ -143,7 +147,7 @@ describe('TasksResolver', () => {
         { provide: TasksService, useValue: mockTasksService },
         {
           provide: WorkLedgerCaptureService,
-          useValue: createMock<WorkLedgerCaptureService>(),
+          useValue: mockWorkLedgerCapture,
         },
       ],
     }).compile();
@@ -153,10 +157,14 @@ describe('TasksResolver', () => {
 
   beforeEach(() => {
     vi.mocked(mockTasksService.syncParentPlanStatus).mockReset();
-    vi.mocked(mockTasksService.syncParentPlanStatus).mockResolvedValue(false);
+    vi.mocked(mockTasksService.syncParentPlanStatus).mockResolvedValue(null);
     vi.mocked(mockTasksService.completeParentPlanIfTasksDone).mockReset();
     vi.mocked(mockTasksService.completeParentPlanIfTasksDone).mockResolvedValue(
-      false,
+      null,
+    );
+    vi.mocked(mockWorkLedgerCapture.recordStatusChange).mockReset();
+    vi.mocked(mockWorkLedgerCapture.recordStatusChange).mockResolvedValue(
+      undefined,
     );
     vi.mocked(mockTasksService.resolveNextSortOrder).mockReset();
     vi.mocked(mockTasksService.resolveNextSortOrder).mockResolvedValue(1000);
@@ -619,7 +627,10 @@ describe('TasksResolver', () => {
         ...mockTask,
         status: 'PENDING',
       });
-      vi.mocked(mockTasksService.syncParentPlanStatus).mockResolvedValue(true);
+      vi.mocked(mockTasksService.syncParentPlanStatus).mockResolvedValue({
+        from: 'PENDING',
+        to: 'IN_PROGRESS',
+      });
       vi.mocked(repo.save).mockImplementation(async (entity: Task) =>
         Promise.resolve({ ...entity, status: 'IN_PROGRESS' }),
       );
@@ -642,6 +653,7 @@ describe('TasksResolver', () => {
       expect(mockTasksService.syncParentPlanStatus).toHaveBeenCalledTimes(1);
       expect(mockTasksService.syncParentPlanStatus).toHaveBeenCalledWith(
         planId,
+        expect.anything(),
       );
       expect(
         mockNotificationsService.emitPlanStatusChanged,
@@ -657,7 +669,7 @@ describe('TasksResolver', () => {
         ...mockTask,
         status: 'PENDING',
       });
-      vi.mocked(mockTasksService.syncParentPlanStatus).mockResolvedValue(false);
+      vi.mocked(mockTasksService.syncParentPlanStatus).mockResolvedValue(null);
       vi.mocked(repo.save).mockImplementation(async (entity: Task) =>
         Promise.resolve({ ...entity, status: 'IN_PROGRESS' }),
       );
@@ -679,6 +691,7 @@ describe('TasksResolver', () => {
 
       expect(mockTasksService.syncParentPlanStatus).toHaveBeenCalledWith(
         planId,
+        expect.anything(),
       );
       expect(
         mockNotificationsService.emitPlanStatusChanged,
@@ -856,7 +869,7 @@ describe('TasksResolver', () => {
       });
       vi.mocked(
         mockTasksService.completeParentPlanIfTasksDone,
-      ).mockResolvedValue(true);
+      ).mockResolvedValue({ from: 'IN_PROGRESS', to: 'COMPLETED' });
       vi.mocked(repo.save).mockImplementation(async (entity: Task) =>
         Promise.resolve({ ...entity, status: 'COMPLETED' }),
       );
@@ -878,7 +891,7 @@ describe('TasksResolver', () => {
 
       expect(
         mockTasksService.completeParentPlanIfTasksDone,
-      ).toHaveBeenCalledWith(planId);
+      ).toHaveBeenCalledWith(planId, expect.anything());
       expect(
         mockNotificationsService.emitPlanStatusChanged,
       ).toHaveBeenCalledWith({
@@ -895,7 +908,7 @@ describe('TasksResolver', () => {
       });
       vi.mocked(
         mockTasksService.completeParentPlanIfTasksDone,
-      ).mockResolvedValue(false);
+      ).mockResolvedValue(null);
       vi.mocked(repo.save).mockImplementation(async (entity: Task) =>
         Promise.resolve({ ...entity, status: 'COMPLETED' }),
       );
@@ -917,7 +930,7 @@ describe('TasksResolver', () => {
 
       expect(
         mockTasksService.completeParentPlanIfTasksDone,
-      ).toHaveBeenCalledWith(planId);
+      ).toHaveBeenCalledWith(planId, expect.anything());
       expect(
         mockNotificationsService.emitPlanStatusChanged,
       ).not.toHaveBeenCalled();
@@ -950,6 +963,172 @@ describe('TasksResolver', () => {
       expect(
         mockTasksService.completeParentPlanIfTasksDone,
       ).not.toHaveBeenCalled();
+    });
+  });
+
+  // The plan-completion cascade is what normally closes a plan (it beats the orchestrator's later
+  // explicit updatePlan to it), so its status_change artifact has to be written here or nowhere.
+  describe('updateTask — parent plan reconcile work-ledger capture', () => {
+    const planId = mockTask.planId;
+
+    const completeLastTask = async (): Promise<Task | null> =>
+      resolver.updateTask(
+        {
+          assignee: undefined,
+          category: undefined,
+          description: undefined,
+          id: mockTask.id,
+          planId: undefined,
+          project: undefined,
+          projectId: undefined,
+          requirements: undefined,
+          sortOrder: undefined,
+          status: 'COMPLETED',
+          summary: undefined,
+          title: undefined,
+        },
+        'user-uuid-1',
+        'user',
+      );
+
+    test('writes a plan IN_PROGRESS -> COMPLETED artifact when the cascade closes the plan', async () => {
+      vi.mocked(repo.findOne).mockResolvedValue({
+        ...mockTask,
+        status: 'IN_PROGRESS',
+      });
+      vi.mocked(
+        mockTasksService.completeParentPlanIfTasksDone,
+      ).mockResolvedValue({ from: 'IN_PROGRESS', to: 'COMPLETED' });
+      vi.mocked(repo.save).mockImplementation(async (entity: Task) =>
+        Promise.resolve({ ...entity, status: 'COMPLETED' }),
+      );
+
+      await completeLastTask();
+
+      expect(mockWorkLedgerCapture.recordStatusChange).toHaveBeenCalledWith(
+        expect.anything(),
+        {
+          actorKind: 'user',
+          actorSub: 'user-uuid-1',
+          entity: 'plan',
+          from: 'IN_PROGRESS',
+          id: planId,
+          planId,
+          taskId: null,
+          to: 'COMPLETED',
+        },
+      );
+    });
+
+    test('writes no plan artifact when the cascade guard matched no row', async () => {
+      vi.mocked(repo.findOne).mockResolvedValue({
+        ...mockTask,
+        status: 'IN_PROGRESS',
+      });
+      vi.mocked(
+        mockTasksService.completeParentPlanIfTasksDone,
+      ).mockResolvedValue(null);
+      vi.mocked(repo.save).mockImplementation(async (entity: Task) =>
+        Promise.resolve({ ...entity, status: 'COMPLETED' }),
+      );
+
+      await completeLastTask();
+
+      expect(mockWorkLedgerCapture.recordStatusChange).not.toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ entity: 'plan' }),
+      );
+    });
+
+    test('writes no plan artifact for a no-op re-assert of COMPLETED', async () => {
+      vi.mocked(repo.findOne).mockResolvedValue({
+        ...mockTask,
+        status: 'COMPLETED',
+      });
+      vi.mocked(repo.save).mockImplementation(async (entity: Task) =>
+        Promise.resolve(entity),
+      );
+
+      await completeLastTask();
+
+      expect(
+        mockTasksService.completeParentPlanIfTasksDone,
+      ).not.toHaveBeenCalled();
+      expect(mockWorkLedgerCapture.recordStatusChange).not.toHaveBeenCalled();
+    });
+
+    // The reconcile and its artifact share one transaction, so a capture failure takes the plan row
+    // update down with it — the mutation fails instead of reporting a plan status it did not record.
+    test('fails the mutation (rolling back the plan update) when capture throws', async () => {
+      vi.mocked(repo.findOne).mockResolvedValue({
+        ...mockTask,
+        status: 'IN_PROGRESS',
+      });
+      vi.mocked(
+        mockTasksService.completeParentPlanIfTasksDone,
+      ).mockResolvedValue({ from: 'IN_PROGRESS', to: 'COMPLETED' });
+      vi.mocked(repo.save).mockImplementation(async (entity: Task) =>
+        Promise.resolve({ ...entity, status: 'COMPLETED' }),
+      );
+      vi.mocked(mockWorkLedgerCapture.recordStatusChange).mockRejectedValueOnce(
+        new BadRequestException(
+          'Cannot record work-ledger status change: unresolved authentication principal.',
+        ),
+      );
+
+      await expect(completeLastTask()).rejects.toBeInstanceOf(
+        BadRequestException,
+      );
+      expect(
+        mockNotificationsService.emitPlanStatusChanged,
+      ).not.toHaveBeenCalled();
+    });
+
+    test('writes a plan artifact with the returned `from` when a task start promotes the plan', async () => {
+      vi.mocked(repo.findOne).mockResolvedValue({
+        ...mockTask,
+        status: 'PENDING',
+      });
+      vi.mocked(mockTasksService.syncParentPlanStatus).mockResolvedValue({
+        from: 'QUEUED',
+        to: 'IN_PROGRESS',
+      });
+      vi.mocked(repo.save).mockImplementation(async (entity: Task) =>
+        Promise.resolve({ ...entity, status: 'IN_PROGRESS' }),
+      );
+
+      await resolver.updateTask(
+        {
+          assignee: undefined,
+          category: undefined,
+          description: undefined,
+          id: mockTask.id,
+          planId: undefined,
+          project: undefined,
+          projectId: undefined,
+          requirements: undefined,
+          sortOrder: undefined,
+          status: 'IN_PROGRESS',
+          summary: undefined,
+          title: undefined,
+        },
+        'ot_sa_abc',
+        'service_account',
+      );
+
+      expect(mockWorkLedgerCapture.recordStatusChange).toHaveBeenCalledWith(
+        expect.anything(),
+        {
+          actorKind: 'service_account',
+          actorSub: 'ot_sa_abc',
+          entity: 'plan',
+          from: 'QUEUED',
+          id: planId,
+          planId,
+          taskId: null,
+          to: 'IN_PROGRESS',
+        },
+      );
     });
   });
 
@@ -1118,7 +1297,10 @@ describe('TasksResolver', () => {
   describe('createTask — parent plan IN_PROGRESS sync', () => {
     test('calls sync and emits when new task is created as IN_PROGRESS and plan was promoted', async () => {
       const planId = mockTask.planId;
-      vi.mocked(mockTasksService.syncParentPlanStatus).mockResolvedValue(true);
+      vi.mocked(mockTasksService.syncParentPlanStatus).mockResolvedValue({
+        from: 'PENDING',
+        to: 'IN_PROGRESS',
+      });
       vi.mocked(repo.save).mockResolvedValue({
         ...mockTask,
         id: 'new-task-id',
@@ -1126,23 +1308,31 @@ describe('TasksResolver', () => {
         status: 'IN_PROGRESS',
       });
 
-      await resolver.createTask({
-        assignee: null,
-        category: null,
-        description: null,
-        planId,
-        project: null,
-        projectId: null,
-        requirements: null,
-        sortOrder: null,
-        status: 'IN_PROGRESS',
-        summary: null,
-        title: 'New task',
-      });
+      await resolver.createTask(
+        {
+          assignee: null,
+          category: null,
+          description: null,
+          planId,
+          project: null,
+          projectId: null,
+          requirements: null,
+          sortOrder: null,
+          status: 'IN_PROGRESS',
+          summary: null,
+          title: 'New task',
+        },
+        'user-uuid-1',
+        'user',
+      );
 
       expect(mockTasksService.syncParentPlanStatus).toHaveBeenCalledTimes(1);
+      // createTask's promotion is now captured on the work ledger via captureParentPlanReconcile,
+      // which opens its own transaction and reconciles on that transaction's manager — so the second
+      // arg is the capture transaction's manager, not undefined.
       expect(mockTasksService.syncParentPlanStatus).toHaveBeenCalledWith(
         planId,
+        expect.anything(),
       );
       expect(
         mockNotificationsService.emitPlanStatusChanged,
@@ -1173,6 +1363,182 @@ describe('TasksResolver', () => {
       });
 
       expect(mockTasksService.syncParentPlanStatus).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('createTask — parent plan reconcile work-ledger capture', () => {
+    const planId = mockTask.planId;
+
+    const createInProgressTask = async (): Promise<Task> =>
+      resolver.createTask(
+        {
+          assignee: null,
+          category: null,
+          description: null,
+          planId,
+          project: null,
+          projectId: null,
+          requirements: null,
+          sortOrder: null,
+          status: 'IN_PROGRESS',
+          summary: null,
+          title: 'New task',
+        },
+        'user-uuid-1',
+        'user',
+      );
+
+    beforeEach(() => {
+      vi.mocked(repo.save).mockResolvedValue({
+        ...mockTask,
+        id: 'new-task-id',
+        planId,
+        status: 'IN_PROGRESS',
+      });
+    });
+
+    test('writes a plan artifact for a real promotion', async () => {
+      vi.mocked(mockTasksService.syncParentPlanStatus).mockResolvedValue({
+        from: 'PENDING',
+        to: 'IN_PROGRESS',
+      });
+
+      await createInProgressTask();
+
+      expect(mockWorkLedgerCapture.recordStatusChange).toHaveBeenCalledWith(
+        expect.anything(),
+        {
+          actorKind: 'user',
+          actorSub: 'user-uuid-1',
+          entity: 'plan',
+          from: 'PENDING',
+          id: planId,
+          planId,
+          taskId: null,
+          to: 'IN_PROGRESS',
+        },
+      );
+    });
+
+    test('writes no plan artifact when the guard matched no row', async () => {
+      vi.mocked(mockTasksService.syncParentPlanStatus).mockResolvedValue(null);
+
+      await createInProgressTask();
+
+      expect(mockWorkLedgerCapture.recordStatusChange).not.toHaveBeenCalled();
+      expect(
+        mockNotificationsService.emitPlanStatusChanged,
+      ).not.toHaveBeenCalled();
+    });
+
+    // The reconcile and its artifact share one transaction, so a capture failure rolls back the
+    // plan-status write with it — the mutation rejects instead of reporting a promotion it did not
+    // record. The task row itself was already saved in an earlier, separate transaction.
+    test('rolls back the plan-status update (rejects) when capture throws', async () => {
+      vi.mocked(mockTasksService.syncParentPlanStatus).mockResolvedValue({
+        from: 'PENDING',
+        to: 'IN_PROGRESS',
+      });
+      vi.mocked(mockWorkLedgerCapture.recordStatusChange).mockRejectedValueOnce(
+        new BadRequestException(
+          'Cannot record work-ledger status change: unresolved authentication principal.',
+        ),
+      );
+
+      await expect(createInProgressTask()).rejects.toBeInstanceOf(
+        BadRequestException,
+      );
+      expect(
+        mockNotificationsService.emitPlanStatusChanged,
+      ).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('createTasks — parent plan reconcile work-ledger capture', () => {
+    const planId = mockTask.planId;
+
+    const createBatchWithInProgressTask = async (): Promise<
+      Awaited<ReturnType<typeof resolver.createTasks>>
+    > =>
+      resolver.createTasks(
+        {
+          planId,
+          tasks: [
+            {
+              assignee: null,
+              category: null,
+              description: null,
+              project: null,
+              projectId: null,
+              requirements: null,
+              sortOrder: null,
+              status: 'IN_PROGRESS',
+              summary: null,
+              title: 'New task',
+            },
+          ],
+        },
+        'ot_sa_abc',
+        'service_account',
+      );
+
+    beforeEach(() => {
+      vi.mocked(mockTasksService.createTasksBatch).mockResolvedValue([
+        { ...mockTask, id: 'new-task-id', planId, status: 'IN_PROGRESS' },
+      ]);
+    });
+
+    test('writes a plan artifact for a real promotion', async () => {
+      vi.mocked(mockTasksService.syncParentPlanStatus).mockResolvedValue({
+        from: 'PENDING',
+        to: 'IN_PROGRESS',
+      });
+
+      await createBatchWithInProgressTask();
+
+      expect(mockWorkLedgerCapture.recordStatusChange).toHaveBeenCalledWith(
+        expect.anything(),
+        {
+          actorKind: 'service_account',
+          actorSub: 'ot_sa_abc',
+          entity: 'plan',
+          from: 'PENDING',
+          id: planId,
+          planId,
+          taskId: null,
+          to: 'IN_PROGRESS',
+        },
+      );
+    });
+
+    test('writes no plan artifact when the guard matched no row', async () => {
+      vi.mocked(mockTasksService.syncParentPlanStatus).mockResolvedValue(null);
+
+      await createBatchWithInProgressTask();
+
+      expect(mockWorkLedgerCapture.recordStatusChange).not.toHaveBeenCalled();
+      expect(
+        mockNotificationsService.emitPlanStatusChanged,
+      ).not.toHaveBeenCalled();
+    });
+
+    test('rolls back the plan-status update (rejects) when capture throws', async () => {
+      vi.mocked(mockTasksService.syncParentPlanStatus).mockResolvedValue({
+        from: 'PENDING',
+        to: 'IN_PROGRESS',
+      });
+      vi.mocked(mockWorkLedgerCapture.recordStatusChange).mockRejectedValueOnce(
+        new BadRequestException(
+          'Cannot record work-ledger status change: unresolved authentication principal.',
+        ),
+      );
+
+      await expect(createBatchWithInProgressTask()).rejects.toBeInstanceOf(
+        BadRequestException,
+      );
+      expect(
+        mockNotificationsService.emitPlanStatusChanged,
+      ).not.toHaveBeenCalled();
     });
   });
 

@@ -308,7 +308,11 @@ export {
   RULE_APPLICATION_STATES,
   RuleApplication,
 } from './modules/tag-action-rules/rule-application.entity.ts';
-export type { RecordRuleApplicationInput } from './modules/tag-action-rules/rule-applications.service.ts';
+export type {
+  OrphanedTaskSoftClose,
+  OrphanUnmatchedApplicationsResult,
+  RecordRuleApplicationInput,
+} from './modules/tag-action-rules/rule-applications.service.ts';
 export {
   RuleApplicationsService,
   SOFT_CLOSED_TASK_STATUS,
@@ -345,6 +349,7 @@ export { tasksFactory } from './modules/tasks/tasks.factory.ts';
 export type {
   CreateTaskBatchItem,
   GroupedHooks,
+  PlanStatusTransition,
 } from './modules/tasks/tasks.service.ts';
 export {
   CROSS_PLAN_TASK_LIST_ORDER,

@@ -1173,6 +1173,8 @@ export class PlansResolver {
   async setPlanStatus(
     @Args('input', { type: () => SetPlanStatusInput })
     input: SetPlanStatusInput,
+    @CurrentUser('sub') actorSub?: string,
+    @CurrentUser('kind') actorKind?: string,
   ): Promise<PlanObject | null> {
     const rawStatus = input.statusEnum ?? input.status;
     if (rawStatus == null || String(rawStatus).trim() === '') {
@@ -1185,6 +1187,7 @@ export class PlansResolver {
     const plan = await this.planStatusService.setStatus(
       input.planId,
       nextStatus,
+      { actorKind, actorSub },
     );
     if (plan != null) {
       await this.planRulesEvaluationService.enqueueEvaluation(

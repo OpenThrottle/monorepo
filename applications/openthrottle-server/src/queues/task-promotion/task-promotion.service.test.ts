@@ -26,6 +26,7 @@ import { asMock } from '@openthrottle/nestjs-testing';
 import type { EntityManager, Repository } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { WorkLedgerCaptureService } from '../../graphql/work-ledger/work-ledger-capture.service.ts';
 import type { NotificationsService } from '../../notifications/notifications.service.ts';
 import {
   PROMOTED_TAG,
@@ -48,6 +49,7 @@ describe('TaskPromotionService.promote', () => {
   let manager: EntityManager;
   let notifications: NotificationsService;
   let plansService: PlansService;
+  let workLedgerCapture: WorkLedgerCaptureService;
   let service: TaskPromotionService;
   let getOne: ReturnType<typeof vi.fn>;
 
@@ -142,11 +144,13 @@ describe('TaskPromotionService.promote', () => {
       getRepository: vi.fn(() => serviceRepo),
     });
     notifications = createMock<NotificationsService>();
+    workLedgerCapture = createMock<WorkLedgerCaptureService>();
 
     service = new TaskPromotionService(
       createMock<LoggerService>(),
       notifications,
       plansService,
+      workLedgerCapture,
     );
   });
 
@@ -193,6 +197,22 @@ describe('TaskPromotionService.promote', () => {
       expect.objectContaining({ tag: PROMOTED_TAG, taskId: TASK_ID }),
     );
 
+    // Step 4 also owns the task's own status_change ledger fact (bypasses updateTask),
+    // in the same transactional manager, attributed to the requesting user.
+    expect(workLedgerCapture.recordStatusChange).toHaveBeenCalledWith(
+      manager,
+      expect.objectContaining({
+        actorKind: 'user',
+        actorSub: 'user-1',
+        entity: 'task',
+        from: 'PENDING',
+        id: TASK_ID,
+        planId: SOURCE_PLAN_ID,
+        taskId: TASK_ID,
+        to: PROMOTED_TASK_STATUS,
+      }),
+    );
+
     // Step 5: born-verified plan_promotion artifact under a 2-subject session,
     // attributed to the requesting user (exactly one actor column set).
     expect(sessionRepo.create).toHaveBeenCalledWith(
@@ -234,9 +254,17 @@ describe('TaskPromotionService.promote', () => {
         actorUserId: null,
       }),
     );
+    // The task's own status_change ledger fact follows the same actor.
+    expect(workLedgerCapture.recordStatusChange).toHaveBeenCalledWith(
+      manager,
+      expect.objectContaining({
+        actorKind: 'service_account',
+        actorSub: 'svc-1',
+      }),
+    );
   });
 
-  it('skips work-ledger provenance (no invalid session) when no actor resolves', async () => {
+  it('skips work-ledger provenance and status_change capture (no invalid session) when no actor resolves', async () => {
     const result = await service.promote({
       actorServiceAccountId: null,
       actorUserId: null,
@@ -247,6 +275,12 @@ describe('TaskPromotionService.promote', () => {
     expect(result).toEqual({ newPlanId: NEW_PLAN_ID, skipped: null });
     expect(sessionRepo.create).not.toHaveBeenCalled();
     expect(artifactRepo.create).not.toHaveBeenCalled();
+    expect(workLedgerCapture.recordStatusChange).not.toHaveBeenCalled();
+    // The row itself still transitions — only the ledger fact is skipped.
+    expect(taskRepo.update).toHaveBeenCalledWith(
+      { id: TASK_ID },
+      expect.objectContaining({ status: PROMOTED_TASK_STATUS }),
+    );
   });
 
   it('copies task tags to the plan, keeping at most one phase tag', async () => {
