@@ -254,6 +254,7 @@
     "sync:openthrottle:server": "scripts/sync-subtree.sh applications/openthrottle-server openthrottle-server main",
     "sync:openthrottle:website": "scripts/sync-subtree.sh applications/openthrottle-website openthrottle-website main",
     "sync:skills": "./skills/ot-skill-sync/scripts/sync.sh",
+    "telemetry:report": "nx run @tools/ot-telemetry:report",
     "tools:dev": "GOOGLE_CLOUD_PROJECT_ID='openthrottle-staging' tsx watch ./tools/index.ts",
     "tools:dev:temp": "node --env-file .env --experimental-strip-types --watch ./tools/index.ts",
     "validate": "pnpm run \"/^validate:.*/\"",
