@@ -4,6 +4,13 @@
 #   GITHUB_TOKEN and APP_VERSION (from applications/<app>/package.json), tag
 #   as <registry>/<app>:<tag>, optional docker push.
 #
+#   Supports publishing the SAME build to several registries (dual-push to
+#   Artifact Registry + GHCR). The image is BUILT ONCE and then tagged per
+#   registry, so every registry receives a byte-identical image with the same
+#   digest — not merely the same tag. That is what lets the Terraform image
+#   variables (server_image / developer_image) point at either registry and
+#   resolve the same artifact. See infra/provider-contract.md.
+#
 #   Location: .github/actions/docker-build-push
 #
 #     - https://docs.github.com/en/actions/creating-actions/creating-a-composite-action
@@ -38,6 +45,14 @@ inputs:
       If true, run docker push after a successful build. Use string true/false
       (e.g. github.ref == 'refs/heads/main').
     required: false
+  registries-additional:
+    default: ''
+    description: >-
+      Optional extra registry/repository prefixes, one per line, to receive the
+      same build (e.g. ghcr.io/openthrottle). Each is tagged from the single
+      build and pushed when push is true, so all registries get the same digest.
+      Blank lines are ignored; omit entirely for a single-registry build.
+    required: false
   registry:
     description: >-
       Registry/repository prefix without trailing slash (e.g.
@@ -50,8 +65,15 @@ inputs:
 
 outputs:
   image:
-    description: 'Full image reference: <registry>/<app>:<tag>.'
+    description: >-
+      Primary image reference: <registry>/<app>:<tag>. Unchanged when
+      registries-additional is unset.
     value: ${{ steps.build.outputs.image }}
+  images:
+    description: >-
+      Every image reference this action tagged, newline-separated: the primary
+      followed by one per registries-additional entry.
+    value: ${{ steps.build.outputs.images }}
 
 runs:
   using: composite
@@ -63,6 +85,7 @@ runs:
         INPUT_DOCKERFILE_PATH: ${{ inputs.dockerfile-path }}
         INPUT_GITHUB_TOKEN: ${{ inputs.github-token }}
         INPUT_PUSH: ${{ inputs.push }}
+        INPUT_REGISTRIES_ADDITIONAL: ${{ inputs.registries-additional }}
         INPUT_REGISTRY: ${{ inputs.registry }}
         INPUT_TAG: ${{ inputs.tag }}
       run: bash "${{ github.action_path }}/docker-build-push.sh"
