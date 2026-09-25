@@ -1919,7 +1919,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `test-exclude` | 6.0.0 | ISC | [Ben Coe](https://istanbul.js.org/) |
 | `text-decoder` | 1.2.7 | Apache-2.0 | [Holepunch](https://github.com/holepunchto/text-decoder#readme) |
 | `text-hex` | 1.0.0 | MIT | [Arnout Kazemier](https://github.com/3rd-Eden/text-hex) |
-| `third-party-web` | 0.29.2 | MIT | [Patrick Hulce](https://github.com/patrickhulce/third-party-web#readme) |
+| `third-party-web` | 0.29.2, 0.30.0 | MIT | [Patrick Hulce](https://github.com/patrickhulce/third-party-web#readme) |
 | `through` | 2.3.8 | MIT | [Dominic Tarr](https://github.com/dominictarr/through) |
 | `time-span` | 5.1.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/time-span#readme) |
 | `timeout-signal` | 2.0.0 | MIT | [Richie Bendall](https://github.com/node-fetch/timeout-signal#readme) |

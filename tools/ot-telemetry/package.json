@@ -1,0 +1,64 @@
+{
+  "name": "@tools/ot-telemetry",
+  "description": "Local, read-only OpenThrottle usage report: aggregates the local OT Postgres database into a privacy-preserving report.json + report.md over a bounded window. Never uploads anything.",
+  "version": "1.0.0",
+  "author": {
+    "email": "matthew.scholta@gmail.com",
+    "name": "Matthew Scholta",
+    "url": "https://mattscholta.com"
+  },
+  "dependencies": {
+    "@openthrottle/openthrottle-agentic-utils": "workspace:^",
+    "pg": "catalog:"
+  },
+  "devDependencies": {
+    "@tools/dotfiles": "workspace:^",
+    "@types/pg": "catalog:",
+    "tsx": "catalog:",
+    "vitest": "catalog:"
+  },
+  "exports": {
+    ".": {
+      "default": "./src/index.ts",
+      "types": "./src/index.ts"
+    }
+  },
+  "license": "Apache-2.0",
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "nx": {
+    "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
+    "projectType": "application",
+    "sourceRoot": "./src",
+    "tags": [
+      "name:@tools/ot-telemetry",
+      "production:false",
+      "publish:false",
+      "technology:nodejs",
+      "technology:typescript",
+      "type:tool"
+    ],
+    "targets": {
+      "__build": {},
+      "__build-package": {},
+      "lint": {},
+      "report": {
+        "cache": false,
+        "executor": "nx:run-commands",
+        "metadata": {
+          "description": "Write report.json + report.md from the local OpenThrottle Postgres (read-only, never uploads). Mirrors the database:* scripts: loads the root .env and forces POSTGRES_HOST=localhost (the committed default only resolves inside a container). Flags after `--` are forwarded: --since, --until, --out, --detail, --format."
+        },
+        "options": {
+          "command": "POSTGRES_HOST='localhost' tsx --env-file .env ./tools/ot-telemetry/src/index.ts"
+        }
+      },
+      "test": {},
+      "typecheck": {}
+    }
+  },
+  "private": true,
+  "repository": "git://github.com/OpenThrottle/monorepo.git",
+  "scripts": {},
+  "type": "module",
+  "types": "./src/index.ts"
+}

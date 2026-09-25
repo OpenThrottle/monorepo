@@ -219,6 +219,9 @@
     },
     {
       "path": "./packages/nodejs-utils"
+    },
+    {
+      "path": "./tools/ot-telemetry"
     }
   ]
 }
