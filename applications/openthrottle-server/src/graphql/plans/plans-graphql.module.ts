@@ -3,6 +3,7 @@
  */
 
 import { Module } from '@nestjs/common';
+import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 
 import { NotificationsModule } from '../../notifications/notifications.module.ts';
@@ -16,18 +17,20 @@ import { QueuesGraphqlModule } from '../queues/queues-graphql.module.ts';
 import { WorkLedgerGraphqlModule } from '../work-ledger/work-ledger-graphql.module.ts';
 import { PlanEnqueueService } from './plan-enqueue.service.ts';
 import { PlanRunObjectResolver } from './plan-run-object.resolver.ts';
-import { PlanStatusService } from './plan-status.service.ts';
+import { PlanStatusModule } from './plan-status.module.ts';
 import { PlansResolver } from './plans.resolver.ts';
 import { PlansLoaders } from './plans-loaders.ts';
 
 @Module({
   imports: [
     EffectiveUserResolutionModule,
+    LoggerModule,
     NestjsRepositoriesModule,
     NotificationsModule,
     PlanCreationModule,
     PlanRulesQueueProducerModule,
     PlanRunWorktreeCheckoutModule,
+    PlanStatusModule,
     PlansQueueProducerModule,
     TaggingQueueProducerModule,
     QueuesGraphqlModule,
@@ -36,7 +39,6 @@ import { PlansLoaders } from './plans-loaders.ts';
   providers: [
     PlanEnqueueService,
     PlanRunObjectResolver,
-    PlanStatusService,
     PlansLoaders,
     PlansResolver,
   ],

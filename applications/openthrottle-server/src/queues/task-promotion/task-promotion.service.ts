@@ -23,6 +23,10 @@
  */
 
 import { Injectable } from '@nestjs/common';
+import {
+  AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
+  AUTH_PRINCIPAL_KIND_USER,
+} from '@openthrottle/nestjs-auth';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   Plan,
@@ -41,6 +45,8 @@ import {
 import type { EntityManager } from 'typeorm';
 
 import { resolveArtifactForWrite } from '../../graphql/work-ledger/artifact-type-registry.ts';
+import { WorkLedgerCaptureService } from '../../graphql/work-ledger/work-ledger-capture.service.ts';
+import { WORK_LEDGER_CAPTURE_FAILED_MARKER } from '../../graphql/work-ledger/work-ledger-capture-failure-marker.ts';
 import { NotificationsService } from '../../notifications/notifications.service.ts';
 import {
   PROMOTED_TAG,
@@ -59,6 +65,15 @@ export interface PromoteTaskParams {
   readonly actorServiceAccountId: string | null;
   /** User id of the promoter, when the principal is a human. */
   readonly actorUserId: string | null;
+  /**
+   * True to roll back the whole promotion when the source task's status_change capture fails
+   * (the `promoteTaskToPlan` mutation path, via {@link TaskPromotionProcessor} — user-initiated);
+   * false to log it and let the promotion commit anyway (the `promote-task-to-plan` tag-rule
+   * automation, via {@link PromoteTaskToPlanExecutor} — background). Callers set this explicitly
+   * per path rather than it being inferred from the actor fields, since both paths can supply a
+   * resolvable actorUserId (the automation attributes to the plan owner, not a system account).
+   */
+  readonly captureFailureIsFatal: boolean;
   readonly taskId: string;
 }
 
@@ -75,6 +90,7 @@ export class TaskPromotionService {
     private readonly logger: LoggerService,
     private readonly notificationsService: NotificationsService,
     private readonly plansService: PlansService,
+    private readonly workLedgerCapture: WorkLedgerCaptureService,
   ) {}
 
   /**
@@ -83,7 +99,12 @@ export class TaskPromotionService {
    * `skipped` reason when the task is missing or already promoted (idempotent).
    */
   async promote(params: PromoteTaskParams): Promise<PromoteTaskOutcome> {
-    const { actorServiceAccountId, actorUserId, taskId } = params;
+    const {
+      actorServiceAccountId,
+      actorUserId,
+      captureFailureIsFatal,
+      taskId,
+    } = params;
     const repo = this.plansService.getRepository();
 
     const outcome = await repo.manager.transaction(async (manager) => {
@@ -114,7 +135,11 @@ export class TaskPromotionService {
       const newPlan = await this.createPlanFromTask(manager, task, sourcePlan);
       await this.copyTaskTagsToPlan(manager, task.id, newPlan.id);
       await this.seedInitialTask(manager, newPlan.id, task);
-      await this.closeOutSourceTask(manager, task, newPlan.id);
+      await this.closeOutSourceTask(manager, task, newPlan.id, {
+        actorServiceAccountId,
+        actorUserId,
+        captureFailureIsFatal,
+      });
       await this.recordPromotionProvenance(manager, {
         actorServiceAccountId,
         actorUserId,
@@ -247,7 +272,13 @@ export class TaskPromotionService {
     manager: EntityManager,
     task: Task,
     newPlanId: string,
+    actor: {
+      readonly actorServiceAccountId: string | null;
+      readonly actorUserId: string | null;
+      readonly captureFailureIsFatal: boolean;
+    },
   ): Promise<void> {
+    const previousStatus = task.status;
     const note = `Promoted into plan ${newPlanId}.`;
     const summary =
       task.summary == null || task.summary.trim() === ''
@@ -257,6 +288,15 @@ export class TaskPromotionService {
     await manager
       .getRepository(Task)
       .update({ id: task.id }, { status: PROMOTED_TASK_STATUS, summary });
+
+    await this.captureSourceTaskStatusChange(manager, {
+      actorServiceAccountId: actor.actorServiceAccountId,
+      actorUserId: actor.actorUserId,
+      captureFailureIsFatal: actor.captureFailureIsFatal,
+      fromStatus: previousStatus,
+      planId: task.planId,
+      taskId: task.id,
+    });
 
     const tagRepo = manager.getRepository(TaskTag);
     const existing = await tagRepo.findOne({
@@ -271,6 +311,61 @@ export class TaskPromotionService {
           tag: PROMOTED_TAG,
           taskId: task.id,
         }),
+      );
+    }
+  }
+
+  /**
+   * @description Captures a `status_change` artifact for {@link closeOutSourceTask}'s write,
+   * inside the same transaction. Mirrors {@link recordPromotionProvenance}'s own guard: when
+   * neither actor field resolves (a degenerate system path), the capture is skipped with a
+   * warning rather than attempted against an invalid principal. `captureFailureIsFatal` is set by
+   * the caller (`TaskPromotionProcessor` for the mutation path — fatal; `PromoteTaskToPlanExecutor`
+   * for the tag-rule automation — non-fatal), not inferred here.
+   */
+  private async captureSourceTaskStatusChange(
+    manager: EntityManager,
+    params: {
+      readonly actorServiceAccountId: string | null;
+      readonly actorUserId: string | null;
+      readonly captureFailureIsFatal: boolean;
+      readonly fromStatus: string;
+      readonly planId: string;
+      readonly taskId: string;
+    },
+  ): Promise<void> {
+    if (params.actorUserId == null && params.actorServiceAccountId == null) {
+      this.logger.warn(
+        `Skipping status_change capture for promoted task ${params.taskId}: no actor to attribute the write to`,
+        TaskPromotionService.name,
+      );
+      return;
+    }
+
+    const actorKind =
+      params.actorUserId != null
+        ? AUTH_PRINCIPAL_KIND_USER
+        : AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT;
+    const actorSub =
+      params.actorUserId ?? params.actorServiceAccountId ?? undefined;
+
+    try {
+      await this.workLedgerCapture.recordStatusChange(manager, {
+        actorKind,
+        actorSub,
+        entity: 'task',
+        from: params.fromStatus,
+        id: params.taskId,
+        planId: params.planId,
+        taskId: params.taskId,
+        to: PROMOTED_TASK_STATUS,
+      });
+    } catch (error) {
+      if (params.captureFailureIsFatal) throw error;
+
+      this.logger.error(
+        `${WORK_LEDGER_CAPTURE_FAILED_MARKER} entity=task id=${params.taskId} from=${params.fromStatus} to=${PROMOTED_TASK_STATUS}: ${String(error)}`,
+        TaskPromotionService.name,
       );
     }
   }

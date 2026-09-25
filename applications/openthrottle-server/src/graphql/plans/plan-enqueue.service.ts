@@ -15,13 +15,13 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { PlanRunExecutionBackend } from '@openthrottle/nestjs-repositories';
 import {
   Plan,
   PlanRunsService,
   PlansService,
   RepositoryCheckoutsService,
-  Task,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
 import type { JobRunHookEntry } from '@tools/workflows';
@@ -39,9 +39,11 @@ import {
   normalizeIdempotencyKey,
   QueuesService,
 } from '../queues/queues.service.ts';
+import { WorkLedgerCaptureService } from '../work-ledger/work-ledger-capture.service.ts';
 import { buildRunPlanOrchestratorJobData } from './enqueue-plan-ralph-tuning.ts';
 import { buildPlanRunConfigSnapshotFromJobData } from './enqueue-plan-run-config-snapshot.ts';
 import type { RalphPlanRunTuningInput } from './plan.input.ts';
+import { PlanStatusService } from './plan-status.service.ts';
 
 /** Task statuses reset to QUEUED when a plan run is enqueued (COMPLETED tasks are left unchanged). */
 const ENQUEUE_TASK_STATUSES_TO_RESET = [
@@ -57,6 +59,10 @@ type ExecutionBackend = PlanRunExecutionBackend;
 
 /** @description Validated parameters for a spawn (nested workflow-ralph) plan-run enqueue. */
 interface EnqueueSpawnParams {
+  /** Request-principal actor kind, for the plans.status write's status_change attribution. */
+  readonly actorKind?: string | undefined;
+  /** Request-principal actor sub, for the plans.status write's status_change attribution. */
+  readonly actorSub?: string | undefined;
   /** User who triggered the enqueue (null for service-account/system); persisted on the run record. */
   readonly actorUserId?: string | null;
   /** REQUIRED git branch the run operates on; persisted on plan_runs.branch. Rejected when blank. */
@@ -75,6 +81,10 @@ interface EnqueueSpawnParams {
 
 /** @description Validated parameters for an in-process orchestrator plan-run enqueue. */
 interface EnqueueOrchestratorParams {
+  /** Request-principal actor kind, for the plans.status write's status_change attribution. */
+  readonly actorKind?: string | undefined;
+  /** Request-principal actor sub, for the plans.status write's status_change attribution. */
+  readonly actorSub?: string | undefined;
   /** User who triggered the enqueue (null for service-account/system); persisted on the run record. */
   readonly actorUserId?: string | null;
   /** REQUIRED git branch the run operates on; persisted on plan_runs.branch. Rejected when blank. */
@@ -110,12 +120,15 @@ export interface EnqueueOutcome {
 @Injectable()
 export class PlanEnqueueService {
   constructor(
+    private readonly logger: LoggerService,
     private readonly notificationsService: NotificationsService,
     private readonly planRunsService: PlanRunsService,
     private readonly plansService: PlansService,
+    private readonly planStatusService: PlanStatusService,
     private readonly queuesService: QueuesService,
     private readonly repositoryCheckoutsService: RepositoryCheckoutsService,
     private readonly tasksService: TasksService,
+    private readonly workLedgerCapture: WorkLedgerCaptureService,
     @InjectQueue(PLANS_QUEUE_NAME)
     private readonly plansQueue: Queue<RunPlanJobData, void>,
   ) {}
@@ -143,6 +156,8 @@ export class PlanEnqueueService {
    */
   async enqueueSpawn(params: EnqueueSpawnParams): Promise<EnqueueOutcome> {
     const {
+      actorKind,
+      actorSub,
       actorUserId,
       branch,
       checkoutId,
@@ -156,6 +171,8 @@ export class PlanEnqueueService {
     } = params;
 
     return this.enqueueOrchestrator({
+      actorKind,
+      actorSub,
       actorUserId,
       branch,
       checkoutId,
@@ -180,6 +197,8 @@ export class PlanEnqueueService {
     params: EnqueueOrchestratorParams,
   ): Promise<EnqueueOutcome> {
     const {
+      actorKind,
+      actorSub,
       actorUserId,
       branch,
       checkoutId,
@@ -252,6 +271,8 @@ export class PlanEnqueueService {
     });
 
     await this.commitEnqueueTransaction({
+      actorKind,
+      actorSub,
       actorUserId,
       // Provenance projection captured at kickoff: branch from the required
       // kickoff input, checkoutId (on-disk home for deep-links) from the resolved
@@ -380,6 +401,8 @@ export class PlanEnqueueService {
    * the processor's onModuleInit reconciliation tolerates.
    */
   private async commitEnqueueTransaction(params: {
+    actorKind?: string | undefined;
+    actorSub?: string | undefined;
     actorUserId?: string | null;
     branch?: string | null;
     bullmqJobId: string;
@@ -391,6 +414,8 @@ export class PlanEnqueueService {
     runKind: 'orchestrator' | 'spawn';
   }): Promise<void> {
     const {
+      actorKind,
+      actorSub,
       actorUserId,
       branch,
       bullmqJobId,
@@ -420,16 +445,43 @@ export class PlanEnqueueService {
         manager,
       );
 
-      await manager
-        .getRepository(Plan)
-        .update({ id: planId }, { status: 'QUEUED' });
+      // Routed through the applyStatusChange chokepoint, attributed to the request principal
+      // (fatal capture — this is a foreground, user-initiated mutation already inside its own
+      // transaction, same as updatePlan/setStatus). Re-reads the plan fresh under this
+      // transaction rather than reusing the caller's earlier (pre-transaction) read, since that
+      // read predates this commit by the time spent building/validating the job.
+      const planRepo = manager.getRepository(Plan);
+      const planEntity = await planRepo.findOne({ where: { id: planId } });
 
+      if (planEntity) {
+        await this.planStatusService.applyStatusChange(manager, {
+          actorKind,
+          actorSub,
+          captureFailureIsFatal: true,
+          entity: planEntity,
+          requestedStatus: 'QUEUED',
+          throwOnForbiddenInProgress: false,
+        });
+
+        await planRepo.save(planEntity);
+      }
+
+      // Select-lock-update-capture, inside this same transaction: ENQUEUE_TASK_STATUSES_TO_RESET
+      // lists SIX different current statuses, so the bulk `.update()` this reset performs has no
+      // single `from` to ledger — each affected task's own prior status is captured instead of a
+      // guess. Attributed to the request principal with a fatal capture (enqueue is user-initiated,
+      // same as the plans.status write immediately above it).
       await updateMatchingTasksAndEmitStatusChanged({
+        actorKind,
+        actorSub,
+        captureFailureIsFatal: true,
         fromStatuses: ENQUEUE_TASK_STATUSES_TO_RESET,
+        logger: this.logger,
+        manager,
         notifications: this.notificationsService,
         planId,
-        taskRepo: manager.getRepository(Task),
         toStatus: 'QUEUED',
+        workLedgerCapture: this.workLedgerCapture,
       });
     });
   }

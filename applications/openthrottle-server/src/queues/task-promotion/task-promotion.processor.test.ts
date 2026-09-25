@@ -63,6 +63,7 @@ describe('TaskPromotionProcessor', () => {
     expect(service.promote).toHaveBeenCalledWith({
       actorServiceAccountId: null,
       actorUserId: null,
+      captureFailureIsFatal: true,
       taskId: '00000000-0000-4000-8000-000000000001',
     });
     expect(result).toEqual({ newPlanId: 'plan-9', skipped: null });

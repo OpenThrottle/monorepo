@@ -4,7 +4,6 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import { In, IsNull, Not, Repository } from 'typeorm';
 
 import { Plan } from '../plans/plan.entity.ts';
-import { PlansService } from '../plans/plans.service.ts';
 import {
   Task,
   type TaskHookScope,
@@ -70,7 +69,6 @@ export interface GroupedHooks {
 export class TasksService {
   constructor(
     private readonly logger: LoggerService,
-    private readonly plansService: PlansService,
     @InjectRepository(Task)
     private readonly taskRepository: Repository<Task>,
   ) {
@@ -525,31 +523,19 @@ export class TasksService {
   }
 
   /**
-   * @description When a task is IN_PROGRESS, sets its parent plan to IN_PROGRESS if not already (atomic UPDATE; idempotent and safe under concurrent writers). Returns whether a plan row was updated.
-   */
-  async syncParentPlanStatus(planId: string): Promise<boolean> {
-    const planRepo = this.plansService.getRepository();
-    // Clear completedAt when leaving COMPLETED (e.g. re-open); null is a no-op for other statuses.
-    const result = await planRepo.update(
-      { id: planId, status: Not('IN_PROGRESS') },
-      { completedAt: null, status: 'IN_PROGRESS' },
-    );
-
-    return (result.affected ?? 0) > 0;
-  }
-
-  /**
-   * @description Downward reconcile: when a plan's last unfinished task completes, mark the plan
-   * COMPLETED. Acts only on a plan that is currently IN_PROGRESS and has no remaining tasks (PENDING,
-   * QUEUED, IN_PROGRESS, or BLOCKED) — COMPLETED/SKIPPED/CANCELED are terminal. The guarded atomic
-   * UPDATE keeps it idempotent and race-safe (mirrors {@link syncParentPlanStatus}); the IN_PROGRESS
-   * guard avoids resurrecting CANCELED/PENDING/BACKLOG plans. Returns whether the plan was completed.
+   * @description Whether `planId` still has a non-terminal task (BLOCKED, IN_PROGRESS, PENDING, or
+   * QUEUED). This is the read-only "should the plan complete?" half of the downward reconcile that
+   * marks a plan COMPLETED when its last task finishes — the guarded write itself lives in
+   * `PlanStatusService.completeParentPlanIfTasksDone` (server), the one legal place that writes
+   * `plans.status`, so it can attribute the write and capture a status_change artifact. Moved out of
+   * this package because `TasksService` (here, in `@openthrottle/nestjs-repositories`) cannot import
+   * the server-side chokepoint without inverting the dependency.
    *
-   * Without this, the only thing that completes a plan is the Ralph orchestrator's top-of-loop check,
-   * which several exit paths (agent completion signal, max iterations, cancellation) skip — stranding
-   * a plan IN_PROGRESS with every task COMPLETED.
+   * Without the downstream write, the only thing that completes a plan is the Ralph orchestrator's
+   * top-of-loop check, which several exit paths (agent completion signal, max iterations,
+   * cancellation) skip — stranding a plan IN_PROGRESS with every task COMPLETED.
    */
-  async completeParentPlanIfTasksDone(planId: string): Promise<boolean> {
+  async hasRemainingTasks(planId: string): Promise<boolean> {
     const remaining = await this.taskRepository.count({
       where: {
         planId,
@@ -557,16 +543,6 @@ export class TasksService {
       },
     });
 
-    if (remaining > 0) {
-      return false;
-    }
-
-    const planRepo = this.plansService.getRepository();
-    const result = await planRepo.update(
-      { id: planId, status: 'IN_PROGRESS' },
-      { completedAt: new Date(), status: 'COMPLETED' },
-    );
-
-    return (result.affected ?? 0) > 0;
+    return remaining > 0;
   }
 }

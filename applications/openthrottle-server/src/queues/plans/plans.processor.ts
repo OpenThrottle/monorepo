@@ -12,6 +12,7 @@ import {
   OnModuleInit,
   Optional,
 } from '@nestjs/common';
+import { AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT } from '@openthrottle/nestjs-auth';
 import type { KeyedJsonlWriter } from '@openthrottle/nestjs-logging';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { PlanRunStatus } from '@openthrottle/nestjs-repositories';
@@ -31,6 +32,8 @@ import {
 import { loadWorkflowRalphConfig } from '@tools/workflows';
 import type { Queue } from 'bullmq';
 
+import { PlanStatusService } from '../../graphql/plans/plan-status.service.ts';
+import { StatusChangeSystemAccountService } from '../../graphql/work-ledger/status-change-system-account.service.ts';
 import { ProcessMetricsService } from '../../metrics/process-metrics.service.ts';
 import type {
   EnhancedTaskRunMetrics,
@@ -121,7 +124,9 @@ export class PlansProcessor
     @InjectQueue(PLANS_QUEUE_NAME)
     private readonly plansQueue: Queue<RunPlanJobData, PlanRunJobResult | void>,
     private readonly plansService: PlansService,
+    private readonly planStatusService: PlanStatusService,
     private readonly processMetrics: ProcessMetricsService,
+    private readonly statusChangeSystemAccount: StatusChangeSystemAccountService,
     private readonly tasksService: TasksService,
     private readonly workLedgerRun: WorkLedgerRunService,
   ) {
@@ -155,6 +160,7 @@ export class PlansProcessor
         .map((job) => job.data?.planId)
         .filter((id): id is string => typeof id === 'string'),
     );
+    const startupActorSub = await this.statusChangeSystemAccount.resolveId();
 
     for (const plan of plans) {
       if (planIdsWithActiveJob.has(plan.id)) {
@@ -166,8 +172,19 @@ export class PlansProcessor
         PlansProcessor.name,
       );
 
+      // Routed through the applyStatusChange chokepoint, attributed to the status-change-system
+      // service account with a non-fatal capture failure (a missing migration/ledger hiccup must
+      // not block a startup reconcile). guardCurrentStatus re-checks IN_PROGRESS under
+      // writeGuardedStatus's own row lock — the `plans` list was read moments earlier, above.
       // eslint-disable-next-line no-await-in-loop
-      await repo.update({ id: plan.id }, { status: 'QUEUED' });
+      await this.planStatusService.writeGuardedStatus(plan.id, {
+        actorKind: AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
+        actorSub: startupActorSub ?? undefined,
+        captureFailureIsFatal: false,
+        guardCurrentStatus: 'IN_PROGRESS',
+        requestedStatus: 'QUEUED',
+        throwOnForbiddenInProgress: false,
+      });
 
       this.notifications.emitPlanStatusChanged({
         planId: plan.id,
@@ -189,6 +206,8 @@ export class PlansProcessor
       return;
     }
 
+    const actorSub = await this.statusChangeSystemAccount.resolveId();
+
     for (const plan of plans) {
       // eslint-disable-next-line no-await-in-loop
       const tasks = await taskRepo.findOne({
@@ -202,7 +221,14 @@ export class PlansProcessor
 
       const promoted =
         // eslint-disable-next-line no-await-in-loop
-        await this.tasksService.syncParentPlanStatus(plan.id);
+        await this.planStatusService.promoteParentPlanToInProgress(
+          plan.id,
+          {
+            actorKind: AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
+            actorSub: actorSub ?? undefined,
+          },
+          false,
+        );
 
       if (!promoted) {
         continue;
@@ -410,8 +436,21 @@ export class PlansProcessor
     detail?: string,
   ): Promise<void> {
     try {
-      const repo = this.plansService.getRepository();
-      await repo.update({ id: planId }, { status: 'QUEUED' });
+      // Routed through the applyStatusChange chokepoint, attributed to the status-change-system
+      // service account with a non-fatal capture failure — this method's own contract ("does not
+      // throw; logs on failure") must hold regardless of ledger health, so a capture failure must
+      // not roll back the row write the way a fatal one would. No guardCurrentStatus: the original
+      // write was unconditional (any status → QUEUED on job failure/stall), so this preserves that.
+      const actorSub = await this.statusChangeSystemAccount.resolveId();
+
+      await this.planStatusService.writeGuardedStatus(planId, {
+        actorKind: AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
+        actorSub: actorSub ?? undefined,
+        captureFailureIsFatal: false,
+        guardCurrentStatus: undefined,
+        requestedStatus: 'QUEUED',
+        throwOnForbiddenInProgress: false,
+      });
 
       this.notifications.emitPlanStatusChanged({ planId, status: 'QUEUED' });
 
@@ -488,14 +527,19 @@ export class PlansProcessor
         queueName,
       });
 
-      // Direct operational write (fast, in-process, drives the notification below and the
-      // startup status reconcile). This intentionally does NOT emit a status_change artifact:
-      // it bypasses the updatePlan resolver, and the orchestrator's later
-      // promotePlanToInProgressIfNeeded is then a no-op for capture (from === to). The plan's
-      // worked-on state is instead represented by the run session's attached plan subject; the
-      // plan's COMPLETED transition and all task transitions ARE captured (via the orchestrator's
-      // resolver calls, attributed to this run session through X-OT-Session-Id).
-      await repo.update({ id: planId }, { status: 'IN_PROGRESS' });
+      // Routed through the applyStatusChange chokepoint (system-account actor, non-fatal capture —
+      // a missing service account or ledger hiccup must not block the run from starting) so this
+      // write, like every other plans.status transition, now emits a status_change artifact.
+      const jobStartActorSub = await this.statusChangeSystemAccount.resolveId();
+
+      await this.planStatusService.promoteParentPlanToInProgress(
+        planId,
+        {
+          actorKind: AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
+          actorSub: jobStartActorSub ?? undefined,
+        },
+        false,
+      );
 
       this.notifications.emitPlanUpdated({
         message: `Plan run started: ${planId}`,
@@ -523,8 +567,10 @@ export class PlansProcessor
               logger: this.logger,
               notifications: this.notifications,
               planOutputStreamService: this.planOutputStreamService,
+              planStatusService: this.planStatusService,
               plansService: this.plansService,
               signal: abortSignal,
+              statusChangeSystemAccount: this.statusChangeSystemAccount,
               tasksService: this.tasksService,
             })
           : await runBeforeRunHooksAndHandleBlock({
@@ -534,8 +580,10 @@ export class PlansProcessor
               logger: this.logger,
               notifications: this.notifications,
               planOutputStreamService: this.planOutputStreamService,
+              planStatusService: this.planStatusService,
               plansService: this.plansService,
               signal: abortSignal,
+              statusChangeSystemAccount: this.statusChangeSystemAccount,
               tasksService: this.tasksService,
             });
 

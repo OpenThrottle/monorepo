@@ -1,5 +1,6 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { OnApplicationShutdown, OnModuleInit } from '@nestjs/common';
+import { AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT } from '@openthrottle/nestjs-auth';
 import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
@@ -11,6 +12,10 @@ import {
   UNSUPERVISED_STALE_CUTOFF_MS,
 } from '@openthrottle/nestjs-repositories';
 
+import { PlanStatusService } from '../../graphql/plans/plan-status.service.ts';
+import { applyBulkTaskStatusChange } from '../../graphql/work-ledger/bulk-task-status-change.ts';
+import { StatusChangeSystemAccountService } from '../../graphql/work-ledger/status-change-system-account.service.ts';
+import { WorkLedgerCaptureService } from '../../graphql/work-ledger/work-ledger-capture.service.ts';
 import {
   PLAN_RUNS_STALE_SWEEP_BATCH_SIZE,
   PLAN_RUNS_STALE_SWEEP_QUEUE_NAME,
@@ -54,7 +59,10 @@ export class PlanRunsStaleSweepProcessor
     private readonly logger: LoggerService,
     private readonly planRunsService: PlanRunsService,
     private readonly plansService: PlansService,
+    private readonly planStatusService: PlanStatusService,
+    private readonly statusChangeSystemAccount: StatusChangeSystemAccountService,
     private readonly tasksService: TasksService,
+    private readonly workLedgerCapture: WorkLedgerCaptureService,
   ) {
     super();
   }
@@ -196,10 +204,47 @@ export class PlanRunsStaleSweepProcessor
       return false;
     }
 
-    await planRepo.update({ id: planId }, { status: 'PENDING' });
-    await this.tasksService
-      .getRepository()
-      .update({ planId, status: 'IN_PROGRESS' }, { status: 'PENDING' });
+    // Routed through the applyStatusChange chokepoint, attributed to the seeded
+    // status-change-system service account with a non-fatal capture failure (a missing
+    // migration/ledger hiccup must not block the reset — the row update must still commit).
+    // writeGuardedStatus re-checks IN_PROGRESS under its own pessimistic write lock, so the
+    // `plan.status !== 'IN_PROGRESS'` check above (against the row read at the top of this
+    // method) is a cheap early-out, not the actual race guard — if another writer moved the
+    // plan off IN_PROGRESS between that read and this call, the lock's fresh read wins and the
+    // reset (and the task reset below) is skipped.
+    const actorSub = await this.statusChangeSystemAccount.resolveId();
+
+    const reset = await this.planStatusService.writeGuardedStatus(planId, {
+      actorKind: AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
+      actorSub: actorSub ?? undefined,
+      captureFailureIsFatal: false,
+      guardCurrentStatus: 'IN_PROGRESS',
+      requestedStatus: 'PENDING',
+      throwOnForbiddenInProgress: false,
+    });
+
+    if (!reset) {
+      return false;
+    }
+
+    // Select-lock-update-capture, in its own transaction: a bulk `.update()` has no per-row
+    // `from`, so this reads+locks the plan's IN_PROGRESS tasks, updates them by id, and captures
+    // one status_change artifact per row (from='IN_PROGRESS' here, but read off the row rather
+    // than assumed — see applyBulkTaskStatusChange). Same system-account/non-fatal attribution as
+    // the plan-row reset immediately above: a ledger hiccup must not block the reset itself.
+    await this.tasksService.getRepository().manager.transaction((manager) =>
+      applyBulkTaskStatusChange({
+        actorKind: AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
+        actorSub: actorSub ?? undefined,
+        captureFailureIsFatal: false,
+        fromStatuses: ['IN_PROGRESS'],
+        logger: this.logger,
+        manager,
+        planId,
+        toStatus: 'PENDING',
+        workLedgerCapture: this.workLedgerCapture,
+      }),
+    );
 
     this.logger.info(
       `Reset stranded plan ${planId} (+ IN_PROGRESS tasks) to PENDING after sweeping a stale run`,

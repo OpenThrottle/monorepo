@@ -3,6 +3,8 @@ import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import { NestjsWorktreesModule } from '@openthrottle/nestjs-worktrees';
 
+import { PlanStatusModule } from '../../graphql/plans/plan-status.module.ts';
+import { WorkLedgerGraphqlModule } from '../../graphql/work-ledger/work-ledger-graphql.module.ts';
 import { MetricsModule } from '../../metrics/metrics.module.ts';
 import { NotificationsModule } from '../../notifications/notifications.module.ts';
 import { AgenticRalphModule } from '../agentic-ralph/agentic-ralph.module.ts';
@@ -23,6 +25,9 @@ import { WorkLedgerRunService } from './work-ledger-run.service.ts';
  * processor is registered separately at the app level under worker/all.
  * Optional per-job run JSONL is wired in {@link PlansProcessor} when
  * `BULLMQ_RUN_OUTPUT_DIR` is set (`BullMqRunOutputModule` in the app module).
+ * PlanStatusModule (the plans.status write chokepoint) and WorkLedgerGraphqlModule (for the
+ * `status-change-system` service-account lookup the worker attributes its writes to) are imported
+ * for the worker's own plan status writes (job start, startup reconcile).
  */
 @Module({
   exports: [PlansQueueProducerModule],
@@ -34,7 +39,9 @@ import { WorkLedgerRunService } from './work-ledger-run.service.ts';
     NestjsWorktreesModule,
     NotificationsModule,
     PlanLifecycleHooksQueueProducerModule,
+    PlanStatusModule,
     PlansQueueProducerModule,
+    WorkLedgerGraphqlModule,
   ],
   providers: [PlansProcessor, WorkLedgerRunService],
 })

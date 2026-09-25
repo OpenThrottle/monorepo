@@ -38,6 +38,7 @@ import { TAGGING_ENTITY_TYPES } from '../../queues/tagging/tagging.types.ts';
 import { TaggingEnqueueService } from '../../queues/tagging/tagging-enqueue.service.ts';
 import { TaskPromotionEnqueueService } from '../../queues/task-promotion/task-promotion-enqueue.service.ts';
 import { PlanObject } from '../plans/plan.object.ts';
+import { PlanStatusService } from '../plans/plan-status.service.ts';
 import { ProjectObject } from '../projects/project.object.ts';
 import { WorkLedgerCaptureService } from '../work-ledger/work-ledger-capture.service.ts';
 import {
@@ -135,6 +136,7 @@ export class TasksResolver {
     private readonly loaders: TasksLoaders,
     private readonly notificationsService: NotificationsService,
     private readonly planRulesEvaluationService: PlanRulesEvaluationService,
+    private readonly planStatusService: PlanStatusService,
     private readonly taggingEnqueueService: TaggingEnqueueService,
     private readonly taskPromotionEnqueueService: TaskPromotionEnqueueService,
     private readonly tasksService: TasksService,
@@ -313,6 +315,8 @@ export class TasksResolver {
   )
   async createTask(
     @Args('input', { type: () => CreateTaskInput }) input: CreateTaskInput,
+    @CurrentUser('sub') actorSub?: string,
+    @CurrentUser('kind') actorKind?: string,
   ): Promise<Task> {
     const repo = this.tasksService.getRepository();
     const requirementsArr = parseRequirements(input.requirements);
@@ -349,9 +353,12 @@ export class TasksResolver {
     }
 
     if (saved.status === 'IN_PROGRESS') {
-      const promoted = await this.tasksService.syncParentPlanStatus(
-        saved.planId,
-      );
+      const promoted =
+        await this.planStatusService.promoteParentPlanToInProgress(
+          saved.planId,
+          { actorKind, actorSub },
+          true,
+        );
       if (promoted) {
         this.notificationsService.emitPlanStatusChanged({
           planId: saved.planId,
@@ -377,6 +384,8 @@ export class TasksResolver {
   })
   async createTasks(
     @Args('input', { type: () => CreateTasksInput }) input: CreateTasksInput,
+    @CurrentUser('sub') actorSub?: string,
+    @CurrentUser('kind') actorKind?: string,
   ): Promise<CreateTasksResultObject> {
     const items: CreateTaskBatchItem[] = input.tasks.map((item) => ({
       assignee: item.assignee ?? null,
@@ -402,9 +411,12 @@ export class TasksResolver {
     }
 
     if (saved.some((task) => task.status === 'IN_PROGRESS')) {
-      const promoted = await this.tasksService.syncParentPlanStatus(
-        input.planId,
-      );
+      const promoted =
+        await this.planStatusService.promoteParentPlanToInProgress(
+          input.planId,
+          { actorKind, actorSub },
+          true,
+        );
       if (promoted) {
         this.notificationsService.emitPlanStatusChanged({
           planId: input.planId,
@@ -540,9 +552,12 @@ export class TasksResolver {
     }
 
     if (saved.status === 'IN_PROGRESS' && previousStatus !== 'IN_PROGRESS') {
-      const promoted = await this.tasksService.syncParentPlanStatus(
-        saved.planId,
-      );
+      const promoted =
+        await this.planStatusService.promoteParentPlanToInProgress(
+          saved.planId,
+          { actorKind, actorSub },
+          true,
+        );
       if (promoted) {
         this.notificationsService.emitPlanStatusChanged({
           planId: saved.planId,
@@ -553,11 +568,13 @@ export class TasksResolver {
 
     // Downward reconcile: completing the last task closes out the plan. Without this the plan can be
     // stranded IN_PROGRESS with every task COMPLETED (the orchestrator only completes plans at its
-    // top-of-loop check, which several exit paths skip). See TasksService.completeParentPlanIfTasksDone.
+    // top-of-loop check, which several exit paths skip). See PlanStatusService.completeParentPlanIfTasksDone.
     if (saved.status === 'COMPLETED' && previousStatus !== 'COMPLETED') {
-      const completed = await this.tasksService.completeParentPlanIfTasksDone(
-        saved.planId,
-      );
+      const completed =
+        await this.planStatusService.completeParentPlanIfTasksDone(
+          saved.planId,
+          { actorKind, actorSub },
+        );
       if (completed) {
         this.notificationsService.emitPlanStatusChanged({
           planId: saved.planId,

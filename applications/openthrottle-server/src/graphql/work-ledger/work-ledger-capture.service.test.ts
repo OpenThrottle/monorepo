@@ -168,4 +168,61 @@ describe('WorkLedgerCaptureService', () => {
     ).rejects.toBeInstanceOf(BadRequestException);
     expect(artifactRepo.create).not.toHaveBeenCalled();
   });
+
+  it('reuses a supplied sessionId instead of resolving ambient-or-instant again', async () => {
+    await service.recordStatusChange(manager, {
+      ...params,
+      sessionId: 'shared-session',
+    });
+
+    // No session lookup/creation at all — the given id is used directly.
+    expect(sessionRepo.findOne).not.toHaveBeenCalled();
+    expect(sessionRepo.create).not.toHaveBeenCalled();
+    expect(artifactRepo.create).toHaveBeenCalledWith(
+      expect.objectContaining({ sessionId: 'shared-session' }),
+    );
+  });
+
+  describe('resolveSessionId', () => {
+    it('resolves (and opens, when needed) a session for the actor without writing an artifact', async () => {
+      const sessionId = await service.resolveSessionId(manager, {
+        actorKind: USER_KIND,
+        actorSub: USER_SUB,
+      });
+
+      expect(sessionId).toBe('instant-session');
+      expect(sessionRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({ actorUserId: USER_SUB }),
+      );
+      expect(artifactRepo.create).not.toHaveBeenCalled();
+    });
+
+    it('reuses a valid ambient session whose actor matches, same as recordStatusChange', async () => {
+      vi.mocked(cls.get).mockReturnValue('ambient-1');
+      vi.mocked(sessionRepo.findOne).mockResolvedValue(
+        workSessionsFactory.build({
+          actorServiceAccountId: null,
+          actorUserId: USER_SUB,
+          id: 'ambient-1',
+        }),
+      );
+
+      const sessionId = await service.resolveSessionId(manager, {
+        actorKind: USER_KIND,
+        actorSub: USER_SUB,
+      });
+
+      expect(sessionId).toBe('ambient-1');
+      expect(sessionRepo.create).not.toHaveBeenCalled();
+    });
+
+    it('throws on an unresolved principal', async () => {
+      await expect(
+        service.resolveSessionId(manager, {
+          actorKind: undefined,
+          actorSub: undefined,
+        }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+    });
+  });
 });

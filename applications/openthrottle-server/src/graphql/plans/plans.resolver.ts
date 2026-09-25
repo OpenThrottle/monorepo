@@ -38,7 +38,6 @@ import {
   planRunConfigFromPlanStorage,
   PlanRunsService,
   PlansService,
-  resolveCompletedAtForStatusChange,
   serializePlanRunConfigForGraphql,
   serializePlanRunConfigSnapshotForGraphql,
   STALE_CUTOFF_MS,
@@ -65,7 +64,6 @@ import { PlanRunWorktreeCheckoutService } from '../../services/plan-run-worktree
 import { ProjectObject } from '../projects/project.object.ts';
 import { TaskObject } from '../tasks/task.object.ts';
 import { SettleRunLedgerService } from '../work-ledger/settle-run-ledger.service.ts';
-import { WorkLedgerCaptureService } from '../work-ledger/work-ledger-capture.service.ts';
 import {
   parseJobRunHooksJsonInput,
   serializeJobRunHooksForGraphql,
@@ -295,7 +293,6 @@ export class PlansResolver {
     private readonly taggingEnqueueService: TaggingEnqueueService,
     private readonly tasksService: TasksService,
     private readonly settleRunLedgerService: SettleRunLedgerService,
-    private readonly workLedgerCapture: WorkLedgerCaptureService,
   ) {}
 
   /**
@@ -1006,8 +1003,19 @@ export class PlansResolver {
       input.status,
     );
 
-    let statusChanged = false;
-    let statusChangeFrom: string | null = null;
+    // Read-only decision: resolveStatusChange does not mutate `entity`. The actual mutation is
+    // deferred to applyStatusChange inside the transaction below, so this is the only place that
+    // decides WHETHER the status changes; entity.status still reads as the pre-transition value
+    // until then.
+    const statusChange =
+      input.status != null
+        ? this.planStatusService.resolveStatusChange(
+            entity.status,
+            input.status,
+          )
+        : null;
+    const statusChanged = statusChange != null;
+
     let touched = false;
 
     if (input.author != null && input.author !== entity.author) {
@@ -1018,23 +1026,8 @@ export class PlansResolver {
       entity.category = input.category;
       touched = true;
     }
-    if (input.status != null) {
-      const change = this.planStatusService.resolveStatusChange(
-        entity.status,
-        input.status,
-      );
-      if (change) {
-        const previousStatus = entity.status;
-        entity.status = change.nextStatus;
-        entity.completedAt = resolveCompletedAtForStatusChange({
-          currentCompletedAt: entity.completedAt,
-          nextStatus: change.nextStatus,
-          previousStatus,
-        });
-        statusChanged = true;
-        statusChangeFrom = previousStatus;
-        touched = true;
-      }
+    if (statusChanged) {
+      touched = true;
     }
     if (input.title != null && input.title !== entity.title) {
       entity.title = input.title;
@@ -1112,24 +1105,23 @@ export class PlansResolver {
       return entity;
     }
 
-    // Status fact + completed_at commit together with the status_change ledger row (G12).
+    // Status fact + completed_at commit together with the status_change ledger row (G12), via the
+    // applyStatusChange chokepoint (mutates entity.status/completedAt in place when statusChanged —
+    // resolveStatusChange above already established the transition is valid and not a no-op, so
+    // this repeats the same decision and always applies).
     const saved = await repo.manager.transaction(async (manager) => {
-      const persisted = await manager.save(entity);
-
-      if (statusChanged) {
-        await this.workLedgerCapture.recordStatusChange(manager, {
+      if (statusChanged && statusChange) {
+        await this.planStatusService.applyStatusChange(manager, {
           actorKind,
           actorSub,
-          entity: 'plan',
-          from: statusChangeFrom,
-          id: persisted.id,
-          planId: persisted.id,
-          taskId: null,
-          to: persisted.status,
+          captureFailureIsFatal: true,
+          entity,
+          requestedStatus: statusChange.nextStatus,
+          throwOnForbiddenInProgress: false,
         });
       }
 
-      return persisted;
+      return manager.save(entity);
     });
 
     // Downstream reaction stays outside the transaction (fire-and-forget, as before).
@@ -1173,6 +1165,8 @@ export class PlansResolver {
   async setPlanStatus(
     @Args('input', { type: () => SetPlanStatusInput })
     input: SetPlanStatusInput,
+    @CurrentUser('sub') actorSub?: string,
+    @CurrentUser('kind') actorKind?: string,
   ): Promise<PlanObject | null> {
     const rawStatus = input.statusEnum ?? input.status;
     if (rawStatus == null || String(rawStatus).trim() === '') {
@@ -1185,6 +1179,7 @@ export class PlansResolver {
     const plan = await this.planStatusService.setStatus(
       input.planId,
       nextStatus,
+      { actorKind, actorSub },
     );
     if (plan != null) {
       await this.planRulesEvaluationService.enqueueEvaluation(
@@ -1286,6 +1281,8 @@ export class PlansResolver {
     }
 
     const outcome = await this.planEnqueueService.enqueueSpawn({
+      actorKind,
+      actorSub,
       actorUserId,
       branch: input.branch,
       checkoutId: input.checkoutId,
@@ -1386,6 +1383,8 @@ export class PlansResolver {
     }
 
     const outcome = await this.planEnqueueService.enqueueOrchestrator({
+      actorKind,
+      actorSub,
       actorUserId,
       branch: input.branch,
       checkoutId: input.checkoutId,
@@ -1459,6 +1458,7 @@ export class PlansResolver {
     const outcome = await this.planStatusService.cancelRun(
       input.planId,
       resolveActorUserId(actorSub, actorKind),
+      { actorKind, actorSub },
     );
 
     const out = new CancelPlanRunResultObject();

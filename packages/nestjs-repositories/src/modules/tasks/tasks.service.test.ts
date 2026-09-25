@@ -7,7 +7,6 @@ import { In, IsNull, Not } from 'typeorm';
 import type { IsolationLevel } from 'typeorm/driver/types/IsolationLevel.js';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { PlansService } from '../plans/plans.service.ts';
 import { Task } from './task.entity.ts';
 import { tasksFactory } from './tasks.factory.ts';
 import {
@@ -18,16 +17,6 @@ import {
 
 describe('TasksService', () => {
   type GetRepository = ReturnType<TasksService['getRepository']>;
-
-  const mockPlanRepo = {
-    update: vi
-      .fn()
-      .mockResolvedValue({ affected: 0, generatedMaps: [], raw: [] }),
-  };
-
-  const mockPlansService = createMock<PlansService>({
-    getRepository: vi.fn().mockReturnValue(mockPlanRepo),
-  });
 
   const mockQueryBuilder = {
     getRawOne: vi.fn(),
@@ -55,10 +44,6 @@ describe('TasksService', () => {
           useValue: createMock<LoggerService>(),
         },
         {
-          provide: PlansService,
-          useValue: mockPlansService,
-        },
-        {
           provide: getRepositoryToken(Task),
           useValue: mockTaskRepo,
         },
@@ -75,11 +60,6 @@ describe('TasksService', () => {
   });
 
   beforeEach(() => {
-    vi.mocked(mockPlanRepo.update).mockReset().mockResolvedValue({
-      affected: 0,
-      generatedMaps: [],
-      raw: [],
-    });
     vi.mocked(mockTaskRepo.count).mockReset().mockResolvedValue(0);
   });
 
@@ -222,101 +202,29 @@ describe('TasksService', () => {
     });
   });
 
-  describe('syncParentPlanStatus', () => {
-    it('returns true and runs atomic update when a non-IN_PROGRESS plan row is updated', async () => {
-      const planId = '11111111-1111-1111-1111-111111111111';
-      vi.mocked(mockPlanRepo.update).mockResolvedValueOnce({
-        affected: 1,
-        generatedMaps: [],
-        raw: [],
-      });
-
-      const promoted = await service.syncParentPlanStatus(planId);
-
-      expect(promoted).toBe(true);
-      expect(mockPlanRepo.update).toHaveBeenCalledWith(
-        { id: planId, status: Not('IN_PROGRESS') },
-        { completedAt: null, status: 'IN_PROGRESS' },
-      );
-    });
-
-    it('returns false when the plan is already IN_PROGRESS (no row matched)', async () => {
-      const planId = '22222222-2222-2222-2222-222222222222';
-      vi.mocked(mockPlanRepo.update).mockResolvedValueOnce({
-        affected: 0,
-        generatedMaps: [],
-        raw: [],
-      });
-
-      const promoted = await service.syncParentPlanStatus(planId);
-
-      expect(promoted).toBe(false);
-      expect(mockPlanRepo.update).toHaveBeenCalledWith(
-        { id: planId, status: Not('IN_PROGRESS') },
-        { completedAt: null, status: 'IN_PROGRESS' },
-      );
-    });
-
-    it('treats undefined affected as no update', async () => {
-      const planId = '33333333-3333-3333-3333-333333333333';
-      vi.mocked(mockPlanRepo.update).mockResolvedValueOnce({
-        affected: undefined,
-        generatedMaps: [],
-        raw: [],
-      });
-
-      const promoted = await service.syncParentPlanStatus(planId);
-
-      expect(promoted).toBe(false);
-    });
-  });
-
-  describe('completeParentPlanIfTasksDone', () => {
+  describe('hasRemainingTasks', () => {
     const planId = '55555555-5555-5555-5555-555555555555';
 
-    it('completes an IN_PROGRESS plan when no remaining tasks exist', async () => {
-      vi.mocked(mockTaskRepo.count).mockResolvedValueOnce(0);
-      vi.mocked(mockPlanRepo.update).mockResolvedValueOnce({
-        affected: 1,
-        generatedMaps: [],
-        raw: [],
-      });
+    it('returns true when a non-terminal task remains', async () => {
+      vi.mocked(mockTaskRepo.count).mockResolvedValueOnce(2);
 
-      const completed = await service.completeParentPlanIfTasksDone(planId);
+      const remaining = await service.hasRemainingTasks(planId);
 
-      expect(completed).toBe(true);
+      expect(remaining).toBe(true);
       expect(mockTaskRepo.count).toHaveBeenCalledWith({
         where: {
           planId,
           status: In(['BLOCKED', 'IN_PROGRESS', 'PENDING', 'QUEUED']),
         },
       });
-      expect(mockPlanRepo.update).toHaveBeenCalledWith(
-        { id: planId, status: 'IN_PROGRESS' },
-        { completedAt: expect.any(Date), status: 'COMPLETED' },
-      );
     });
 
-    it('does not complete the plan while tasks remain', async () => {
-      vi.mocked(mockTaskRepo.count).mockResolvedValueOnce(2);
-
-      const completed = await service.completeParentPlanIfTasksDone(planId);
-
-      expect(completed).toBe(false);
-      expect(mockPlanRepo.update).not.toHaveBeenCalled();
-    });
-
-    it('returns false when the plan is not IN_PROGRESS (no row matched)', async () => {
+    it('returns false when no non-terminal task remains', async () => {
       vi.mocked(mockTaskRepo.count).mockResolvedValueOnce(0);
-      vi.mocked(mockPlanRepo.update).mockResolvedValueOnce({
-        affected: 0,
-        generatedMaps: [],
-        raw: [],
-      });
 
-      const completed = await service.completeParentPlanIfTasksDone(planId);
+      const remaining = await service.hasRemainingTasks(planId);
 
-      expect(completed).toBe(false);
+      expect(remaining).toBe(false);
     });
   });
 

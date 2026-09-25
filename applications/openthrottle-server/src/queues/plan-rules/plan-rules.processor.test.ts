@@ -8,6 +8,7 @@
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
+  OrphanedTaskStatusCaptureParams,
   Plan,
   PlansService,
   RuleApplication,
@@ -19,8 +20,10 @@ import type {
   UsersService,
 } from '@openthrottle/nestjs-repositories';
 import { asMock } from '@openthrottle/nestjs-testing';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 
+import type { StatusChangeSystemAccountService } from '../../graphql/work-ledger/status-change-system-account.service.ts';
+import type { WorkLedgerCaptureService } from '../../graphql/work-ledger/work-ledger-capture.service.ts';
 import {
   type ActionExecutor,
   ActionExecutorRegistry,
@@ -67,6 +70,12 @@ describe('PlanRulesProcessor.process', () => {
   let tagActionRulesService: TagActionRulesService;
   let tagsService: TagsService;
   let usersService: UsersService;
+  let mockRecordStatusChange: Mock<
+    WorkLedgerCaptureService['recordStatusChange']
+  >;
+  let resolveStatusChangeSystemAccountId: Mock<
+    StatusChangeSystemAccountService['resolveId']
+  >;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -102,14 +111,25 @@ describe('PlanRulesProcessor.process', () => {
       record: vi.fn(),
     });
 
+    mockRecordStatusChange = vi.fn().mockResolvedValue(undefined);
+    resolveStatusChangeSystemAccountId = vi
+      .fn()
+      .mockResolvedValue('status-change-system-account-id');
+
     processor = new PlanRulesProcessor(
       registry,
       createMock<LoggerService>(),
       plansService,
       ruleApplicationsService,
+      createMock<StatusChangeSystemAccountService>({
+        resolveId: resolveStatusChangeSystemAccountId,
+      }),
       tagActionRulesService,
       tagsService,
       usersService,
+      createMock<WorkLedgerCaptureService>({
+        recordStatusChange: mockRecordStatusChange,
+      }),
     );
   });
 
@@ -252,8 +272,60 @@ describe('PlanRulesProcessor.process', () => {
 
     expect(
       ruleApplicationsService.orphanUnmatchedApplications,
-    ).toHaveBeenCalledWith(planId, ['rule-1']);
+    ).toHaveBeenCalledWith(planId, ['rule-1'], expect.any(Function));
     expect(result.orphaned).toBe(2);
+  });
+
+  it('captures a status_change (system account, non-fatal) for each task orphanUnmatchedApplications soft-closes', async () => {
+    registry.register(executor);
+    const manager = asMock<OrphanedTaskStatusCaptureParams['manager']>({});
+    vi.mocked(
+      ruleApplicationsService.orphanUnmatchedApplications,
+    ).mockImplementation(
+      async (_planId, _matchedRuleIds, captureOrphanedTaskStatusChange) => {
+        await captureOrphanedTaskStatusChange?.({
+          fromStatus: 'PENDING',
+          manager,
+          planId,
+          taskId: 'orphaned-task-1',
+        });
+        return 1;
+      },
+    );
+
+    await processor.process(buildJob());
+
+    expect(mockRecordStatusChange).toHaveBeenCalledWith(manager, {
+      actorKind: 'service_account',
+      actorSub: 'status-change-system-account-id',
+      entity: 'task',
+      from: 'PENDING',
+      id: 'orphaned-task-1',
+      planId,
+      taskId: 'orphaned-task-1',
+      to: 'SKIPPED',
+    });
+  });
+
+  it('logs (does not throw) when the orphaned-task capture fails — non-fatal', async () => {
+    registry.register(executor);
+    mockRecordStatusChange.mockRejectedValueOnce(new Error('ledger down'));
+    const manager = asMock<OrphanedTaskStatusCaptureParams['manager']>({});
+    vi.mocked(
+      ruleApplicationsService.orphanUnmatchedApplications,
+    ).mockImplementation(
+      async (_planId, _matchedRuleIds, captureOrphanedTaskStatusChange) => {
+        await captureOrphanedTaskStatusChange?.({
+          fromStatus: 'PENDING',
+          manager,
+          planId,
+          taskId: 'orphaned-task-1',
+        });
+        return 1;
+      },
+    );
+
+    await expect(processor.process(buildJob())).resolves.toBeDefined();
   });
 
   it('an executor blocked by its own gating writes flagged via the ledger (contract shape)', async () => {
