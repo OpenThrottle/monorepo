@@ -161,4 +161,4 @@ Pushing images built on a developer machine must use the **same registry prefix 
 - Canonical Dockerfiles: `Dockerfile.NestJS`, `Dockerfile.ReactRouter` (repo root).
 - Strict per-app deploy follow-up: plan `cd59757e-23db-4cd1-ad66-a89c49c66376`.
 - Registry / gcloud: [Google-Cloud.md](../monorepo/Google-Cloud.md).
-- Infra (E2, no images yet): `infra/applications/openthrottle/main.tf`.
+- Infra (E2, no images yet): `infra/applications/openthrottle_gcp/main.tf`.

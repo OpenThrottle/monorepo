@@ -2,8 +2,19 @@
 #
 #   Build and push Docker images for openthrottle-server, openthrottle-developer,
 #   and the openthrottle/migrations one-shot runner when those apps, shared deps,
-#   or the migrations runner change. Pushes to Google Artifact Registry on push to
-#   main; PRs only build (no push) to validate Dockerfiles.
+#   or the migrations runner change. Pushes to BOTH Google Artifact Registry and
+#   GHCR on push to main; PRs only build (no push) to validate Dockerfiles.
+#
+#   🔁 Dual-push is permanent, not transitional. infra/ supports two hosting
+#   providers (see infra/provider-contract.md): the GCP application module pulls
+#   from Artifact Registry, and the Hetzner one pulls from GHCR — which is what
+#   lets its cloud-init skip the entire Google Cloud SDK install. Neither push
+#   may be removed or gated without breaking one of those paths.
+#
+#   The `sha-${GITHUB_SHA}` tag MUST resolve on both registries. Each image is
+#   built once and re-tagged per registry, so both receive the same digest, not
+#   merely the same tag. A SHA published to one registry but not the other
+#   breaks the provider swap at ladder rung 4.
 #
 #   The migrations image is NOT an Nx app (no applications/<app>, no --target
 #   production / NX build args), so it uses a dedicated build step rather than the
@@ -46,6 +57,12 @@ concurrency:
 
 env:
   ARTIFACT_REGISTRY_REGION: us-west2
+  # NOTE: GHCR_REGISTRY is deliberately NOT set here. GHCR requires a lowercase
+  # owner, github.repository_owner preserves the account's casing
+  # ("OpenThrottle"), and GitHub Actions expressions have no lower() function —
+  # so `ghcr.io/${{ github.repository_owner }}` would produce an image reference
+  # docker rejects as invalid. The '🐳 Resolve GHCR registry' step below
+  # lowercases it in bash and exports it via $GITHUB_ENV.
   BRANCH_NAME: ${{ github.head_ref || github.ref_name || 'main' }}
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   GOOGLE_CREDENTIALS: ${{ (github.ref_name == 'main') && secrets.GOOGLE_CREDENTIALS_PRODUCTION || secrets.GOOGLE_CREDENTIALS_STAGING }}
@@ -54,14 +71,23 @@ env:
 permissions:
   contents: read
   id-token: write
+  # Required for `docker push ghcr.io/...` using the job's GITHUB_TOKEN.
+  packages: write
 
 jobs:
   build-and-push:
-    # 💰 Disabled — the most expensive workflow in the repo. It builds 3 images
-    # with NO remote build cache wired (local BuildKit only, so every run starts
-    # cold) and pushes sha-tagged images that accumulate Artifact Registry storage
+    # 💰 Still disabled — the most expensive workflow in the repo. It builds 4
+    # images with NO remote build cache wired (local BuildKit only, so every run
+    # starts cold) and pushes sha-tagged images that accumulate registry storage
     # forever. Do not re-enable without a build-cache strategy AND a registry
     # retention policy. Priced in docs/monorepo/ci-cost.md.
+    #
+    # ⚠️ Adding GHCR did NOT re-enable this workflow, deliberately. GHCR being
+    # free for public repositories addresses the storage half of why this is off;
+    # it does nothing about the missing build cache, which is the expensive half.
+    # Re-enabling remains a separate, costed decision. Until then the GHCR path
+    # is wired but dormant, and a Hetzner deploy must pull an image tag that was
+    # pushed some other way.
     if: false
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -89,6 +115,26 @@ jobs:
         run: |
           gcloud auth configure-docker ${ARTIFACT_REGISTRY_REGION}-docker.pkg.dev -q
 
+      - name: '🐳 Resolve GHCR registry (lowercase owner)'
+        shell: bash
+        env:
+          REPOSITORY_OWNER: ${{ github.repository_owner }}
+        run: |
+          # ${VAR,,} is bash's lowercase expansion. GHCR rejects any uppercase
+          # character in a repository path, so this is required, not cosmetic.
+          echo "GHCR_REGISTRY=ghcr.io/${REPOSITORY_OWNER,,}" >> "${GITHUB_ENV}"
+
+      # Second registry for the Hetzner path. The job's own GITHUB_TOKEN is
+      # sufficient (with packages: write above) — no long-lived PAT to rotate.
+      # Login happens on PRs too: it is free, and it keeps the push and no-push
+      # paths structurally identical so a PR exercises the same steps main does.
+      - name: '🐳 Login to GHCR'
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+        with:
+          password: ${{ secrets.GITHUB_TOKEN }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+
       - name: "🕵️ NX Set SHA's"
         uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
 
@@ -106,6 +152,7 @@ jobs:
           dockerfile-path: Dockerfile.NestJS
           github-token: ${{ env.GITHUB_TOKEN }}
           push: ${{ github.ref == 'refs/heads/main' }}
+          registries-additional: ${{ env.GHCR_REGISTRY }}
           registry: ${{ env.ARTIFACT_REGISTRY_REGION }}-docker.pkg.dev/${{ env.GOOGLE_PROJECT_ID }}/openthrottle
           tag: sha-${{ github.sha }}
 
@@ -117,6 +164,7 @@ jobs:
           dockerfile-path: Dockerfile.ReactRouter
           github-token: ${{ env.GITHUB_TOKEN }}
           push: ${{ github.ref == 'refs/heads/main' }}
+          registries-additional: ${{ env.GHCR_REGISTRY }}
           registry: ${{ env.ARTIFACT_REGISTRY_REGION }}-docker.pkg.dev/${{ env.GOOGLE_PROJECT_ID }}/openthrottle
           tag: sha-${{ github.sha }}
 
@@ -130,10 +178,18 @@ jobs:
       - name: '🐳 Build (and push on main) openthrottle/migrations'
         shell: bash
         run: |
+          set -euo pipefail
           IMAGE="${ARTIFACT_REGISTRY_REGION}-docker.pkg.dev/${GOOGLE_PROJECT_ID}/openthrottle/migrations:sha-${GITHUB_SHA}"
+          GHCR_IMAGE="${GHCR_REGISTRY}/migrations:sha-${GITHUB_SHA}"
+
+          # Build once, tag for both registries: same digest on Artifact
+          # Registry and GHCR, per infra/provider-contract.md.
           docker build -f Dockerfile.Migrations -t "${IMAGE}" .
+          docker tag "${IMAGE}" "${GHCR_IMAGE}"
+
           if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
             docker push "${IMAGE}"
+            docker push "${GHCR_IMAGE}"
           fi
 
       # openthrottle/mcp builds from the Dockerfile.NestJS `mcp` stage (--target mcp),
@@ -143,12 +199,16 @@ jobs:
       # the sha-<GITHUB_SHA> tag scheme. No bootstrap image: one-shot provisioning
       # runs from the server image (build/src/bootstrap.js) via a compose command
       # override. Remote Nx cache is not wired here (no gcs secret) — local BuildKit
-      # cache only; adding it is a follow-up optimization.
+      # cache only; adding it is a follow-up optimization. Dual-pushed to Artifact
+      # Registry + GHCR like the others: the Hetzner compose template runs mcp, so
+      # this image must be pullable without the gcloud SDK.
       - name: '🐳 Build (and push on main) openthrottle/mcp'
         shell: bash
         run: |
+          set -euo pipefail
           PNPM_VERSION="$(node -p "(require('./package.json').packageManager||'').replace(/^pnpm@/,'').split('+')[0]")"
           IMAGE="${ARTIFACT_REGISTRY_REGION}-docker.pkg.dev/${GOOGLE_PROJECT_ID}/openthrottle/mcp:sha-${GITHUB_SHA}"
+          GHCR_IMAGE="${GHCR_REGISTRY}/mcp:sha-${GITHUB_SHA}"
 
           # APP_NAME is nominal here: the builder stage COPYs applications/<APP_NAME>/package.json,
           # so it must be a real app, but mcp-build ignores it (bundles the openthrottle-mcp
@@ -160,6 +220,10 @@ jobs:
             --build-arg PNPM_VERSION="${PNPM_VERSION}" \
             -t "${IMAGE}" .
 
+          # Build once, tag for both registries (see the migrations step above).
+          docker tag "${IMAGE}" "${GHCR_IMAGE}"
+
           if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
             docker push "${IMAGE}"
+            docker push "${GHCR_IMAGE}"
           fi
