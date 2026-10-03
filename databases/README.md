@@ -246,7 +246,7 @@ Remaining-work semantics (e.g. `get_remaining_tasks_for_plan`): tasks whose stat
 
 #### Task wave
 
-`wave` (GraphQL: `wave`) is a nullable `INTEGER` on tasks (migration `126_add_wave_to_tasks.sql`) that groups a `sort_order` sequence into a coarse concurrency layer: a claim that the tasks sharing a wave number **may** be worked concurrently, not a dependency graph. Full contract: [docs/openthrottle/task-wave-encoding.md](../docs/openthrottle/task-wave-encoding.md).
+`wave` (GraphQL: `wave`) is a nullable `INTEGER` on tasks (migration `128_add_wave_to_tasks.sql`) that groups a `sort_order` sequence into a coarse concurrency layer: a claim that the tasks sharing a wave number **may** be worked concurrently, not a dependency graph. Full contract: [docs/openthrottle/task-wave-encoding.md](../docs/openthrottle/task-wave-encoding.md).
 
 - **Nullable, and NULL means unassigned — never wave zero.** `CHECK (wave IS NULL OR wave >= 1)` enforces this at the schema level. Waves number densely from `1`, with no reserved gaps.
 - **No UNIQUE constraint.** Several tasks sharing a wave is the entire point; `UNIQUE (plan_id, sort_order)` (migration `049`) is untouched.

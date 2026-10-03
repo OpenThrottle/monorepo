@@ -1260,6 +1260,7 @@ describe('TasksResolver', () => {
             status: 'IN_PROGRESS',
             summary: null,
             title: 'New task',
+            wave: null,
           },
         ],
       });
@@ -1296,6 +1297,7 @@ describe('TasksResolver', () => {
             status: 'PENDING',
             summary: null,
             title: 'Queued task',
+            wave: null,
           },
         ],
       });

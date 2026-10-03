@@ -4,7 +4,7 @@ How a plan says that two of its tasks may run at the same time. The encoding is 
 `tasks.wave` integer: a coarse layer, not a dependency graph.
 
 Decided for OT plan `c22e5ba1` task 2 (`68b58143`) and shipped by task 3 of the same plan: migration
-`126_add_wave_to_tasks.sql`, the entity field, and the GraphQL/MCP surface. **Nothing consumes the
+`128_add_wave_to_tasks.sql`, the entity field, and the GraphQL/MCP surface. **Nothing consumes the
 column yet** — it makes a plan's concurrency describable, not parallel. This page is the contract
 that implementation follows; everything below about `sortOrder`, migration `049` and `task_tags`
 describes the schema as it is today (verified 2026-09-18).
