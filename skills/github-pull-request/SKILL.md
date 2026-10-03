@@ -14,7 +14,7 @@ Your job is to look at all commits on the current branch and summarize them into
    - Use `git log --oneline <base-branch>..HEAD` to see commit messages
    - Use `git diff <base-branch>..HEAD --stat` to see changed files
    - Review the actual diff with `git diff <base-branch>..HEAD` to understand the scope of changes
-4. **Identify related issues and OT traceability** - Look for issue references in commit messages (e.g., `#123`, `fixes #456`) and for `Plan-Id:` / `Task-Id:` footers (see [Traceability](#traceability))
+4. **Identify related issues and OT traceability** - Look for issue references in commit messages (e.g., `#123`, `fixes #456`). For OT work, the `Plan-Id:` in the commits names the plan, but the `Task-Id:` set comes from OT, not from the commits (see [Traceability](#traceability))
 5. **Generate PR content** - Create a comprehensive PR description using the template
 6. **Guard the title and body before publishing** - Write the drafted title and body to files and run `scripts/check-pr-attribution.sh` on them (see [Attribution](#attribution)). Only call `gh pr create`/`gh pr edit` once it exits 0.
 
@@ -40,22 +40,21 @@ Your job is to look at all commits on the current branch and summarize them into
 - **ALWAYS** group related changes together (all UI changes, all API changes, and so on)
 - **ALWAYS** identify and call out breaking changes if any exist — look for `BREAKING CHANGE:` in commits, or major API changes
 - **ALWAYS** link related GitHub issues mentioned in commits, using `Closes #123` / `Fixes #456`
-- **ALWAYS** carry OT traceability into the body when the branch's commits have it — see [Traceability](#traceability) for the exact shape
+- **ALWAYS** carry OT traceability into the body when the branch is OT work — see [Traceability](#traceability) for the exact shape
 - **NEVER** attribute the PR to anyone other than the logged-in GitHub user, and **never** append a tool, model or generator credit of any kind — in the body, the title, or a trailer. "Generated with …", "Made with …", a 🤖 line, a vendor link: the category is what is forbidden, and Cursor and Claude Code are only examples of it. See [Attribution](#attribution).
 
 ## Traceability
 
-When the branch's commits carry OpenThrottle footers, the PR body must carry them too. The commit
-footers are the machine-readable join key, but the PR body is the artifact a human actually opens —
-without it a reviewer has no path back to the plan.
+When the branch is OpenThrottle work, the PR body must carry its footers too. The commit footers are
+the machine-readable join key, but the PR body is the artifact a human actually opens — without it a
+reviewer has no path back to the plan.
 
-Collect them the same way [`github-squash`](../github-squash/SKILL.md) does:
+**The set is defined in exactly one place:** [`github-squash` § Footers](../github-squash/SKILL.md#footers)
+— OT-sourced, cross-checked against git, with the same git-only fallback. Follow it; do not keep a
+copy of its commands here. If the branch was already squashed, its commit already carries the
+reconciled set — reuse it.
 
-```bash
-git log --format='%b' main..HEAD | grep -E '^(Plan-Id|Task-Id):' | sort -u
-```
-
-Put **one** `Plan-Id:` and **every distinct** `Task-Id:` in a trailer block at the **end** of the
+Put **one** `Plan-Id:` and **every** `Task-Id:` from that set in a trailer block at the **end** of the
 body, after the testing steps. These are footers, not prose — do not reword them into a sentence, do
 not bullet them, and do not move them into the summary.
 
@@ -64,7 +63,8 @@ tempting to stop there. But a PR rarely covers a whole plan cleanly — tasks ge
 `SKIPPED`, and plans get delivered across more than one branch. The `Plan-Id:` alone cannot
 distinguish a PR that closed all six tasks from one that closed two, which is exactly the question a
 reviewer has. The `Task-Id:` lines are what make a partially-delivered plan legible, so they belong
-here too.
+here too. That only holds if the list includes tasks that shipped no commit — which is why the set
+comes from OT, not from the branch's commits.
 
 Worked example of the tail of a body:
 
