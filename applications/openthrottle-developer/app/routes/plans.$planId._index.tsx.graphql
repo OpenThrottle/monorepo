@@ -26,6 +26,7 @@ fragment PlanTaskRow on TaskObject {
   summary
   title
   updatedAt
+  wave
 }
 
 fragment ProjectDetails on ProjectObject {

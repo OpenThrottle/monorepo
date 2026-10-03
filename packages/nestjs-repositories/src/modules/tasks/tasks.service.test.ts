@@ -114,6 +114,7 @@ describe('TasksService', () => {
       requirements: [],
       status: 'PENDING',
       summary: null,
+      wave: null,
     };
 
     const txQueryBuilder = {

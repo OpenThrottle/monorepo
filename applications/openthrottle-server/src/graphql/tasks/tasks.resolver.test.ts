@@ -122,6 +122,7 @@ describe('TasksResolver', () => {
     taskEmbeddings: [],
     title: 'Add graphql/tasks/',
     updatedAt: new Date('2026-02-01T21:33:51.891Z'),
+    wave: null,
   };
 
   beforeAll(async () => {
@@ -444,6 +445,7 @@ describe('TasksResolver', () => {
         summary: mockTask.summary,
         title: mockTask.title,
         updatedAt: mockTask.updatedAt,
+        wave: mockTask.wave,
       };
 
       const result = await resolver.plan(parent);
@@ -538,6 +540,7 @@ describe('TasksResolver', () => {
         summary: mockTask.summary,
         title: mockTask.title,
         updatedAt: mockTask.updatedAt,
+        wave: mockTask.wave,
       };
 
       const result = await r.plan(parent);
@@ -620,6 +623,7 @@ describe('TasksResolver', () => {
         summary: mockTask.summary,
         title: mockTask.title,
         updatedAt: mockTask.updatedAt,
+        wave: mockTask.wave,
       };
 
       const result = await r.plan(parent);
@@ -1015,6 +1019,7 @@ describe('TasksResolver', () => {
         status: 'PENDING',
         summary: null,
         title: 'Appended task',
+        wave: null,
       });
 
       expect(mockTasksService.resolveNextSortOrder).toHaveBeenCalledWith(
@@ -1043,6 +1048,7 @@ describe('TasksResolver', () => {
         status: 'PENDING',
         summary: null,
         title: 'Inserted task',
+        wave: null,
       });
 
       expect(mockTasksService.resolveNextSortOrder).not.toHaveBeenCalled();
@@ -1072,6 +1078,7 @@ describe('TasksResolver', () => {
           status: 'PENDING',
           summary: null,
           title: 'Duplicate slot',
+          wave: null,
         }),
       ).rejects.toBeInstanceOf(ConflictException);
     });
@@ -1091,6 +1098,7 @@ describe('TasksResolver', () => {
       status: 'PENDING',
       summary: null,
       title: 'Requirements task',
+      wave: null,
     };
 
     test('throws BadRequestException on malformed requirements JSON', async () => {
@@ -1180,6 +1188,7 @@ describe('TasksResolver', () => {
         status: 'IN_PROGRESS',
         summary: null,
         title: 'New task',
+        wave: null,
       });
 
       expect(
@@ -1218,6 +1227,7 @@ describe('TasksResolver', () => {
         status: 'PENDING',
         summary: null,
         title: 'Queued task',
+        wave: null,
       });
 
       expect(
@@ -1250,6 +1260,7 @@ describe('TasksResolver', () => {
             status: 'IN_PROGRESS',
             summary: null,
             title: 'New task',
+            wave: null,
           },
         ],
       });
@@ -1286,6 +1297,7 @@ describe('TasksResolver', () => {
             status: 'PENDING',
             summary: null,
             title: 'Queued task',
+            wave: null,
           },
         ],
       });

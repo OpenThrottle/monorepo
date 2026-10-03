@@ -47,6 +47,12 @@ export class CreateTaskInput {
 
   @Field(() => String)
   title!: string;
+
+  @Field(() => Int, {
+    description: `Optional. Coarse concurrency layer within the plan: tasks sharing a wave may be worked concurrently. Never 0; NULL (omitted) means unassigned and runs sequentially in sortOrder position. Not consumed for execution yet.`,
+    nullable: true,
+  })
+  wave!: number | null;
 }
 
 @InputType()
@@ -89,6 +95,12 @@ export class CreateTasksItemInput {
 
   @Field(() => String)
   title!: string;
+
+  @Field(() => Int, {
+    description: `Optional. Coarse concurrency layer within the plan: tasks sharing a wave may be worked concurrently. Never 0; NULL (omitted) means unassigned and runs sequentially in sortOrder position. Not consumed for execution yet.`,
+    nullable: true,
+  })
+  wave!: number | null;
 }
 
 @InputType()
@@ -148,6 +160,12 @@ export class UpdateTaskInput {
 
   @Field(() => String, { nullable: true })
   title?: string | null;
+
+  @Field(() => Int, {
+    description: `Optional. Coarse concurrency layer within the plan: tasks sharing a wave may be worked concurrently. Never 0; pass null to clear (unassigned); omit to leave unchanged. Not consumed for execution yet.`,
+    nullable: true,
+  })
+  wave?: number | null;
 }
 
 @InputType()

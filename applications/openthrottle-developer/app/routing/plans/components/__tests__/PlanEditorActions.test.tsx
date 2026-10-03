@@ -44,7 +44,7 @@ describe('PlanEditorActions Component', () => {
       component.getByRole('link', { name: 'Claude Code' }),
     ).toHaveAttribute(
       'href',
-      `claude://code/new?folder=%2FUsers%2Fmatt%2FDevelopment%2Fopenthrottle%2F&q=%2Fot-loop%20${PLAN_ID}`,
+      `claude://code/new?folder=%2FUsers%2Fmatt%2FDevelopment%2Fopenthrottle%2F&q=Run%20OpenThrottle%20plan%20${PLAN_ID}%20with%20the%20ot-loop%20skill`,
     );
     expect(component.getByRole('link', { name: 'Cursor' })).toHaveAttribute(
       'href',

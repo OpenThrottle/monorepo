@@ -88,8 +88,9 @@ export async function getTaskByIdPostgres(
       status: string;
       title: string;
       updated_at: string;
+      wave: number | null;
     }>(
-      `SELECT id, plan_id, title, description, category, status, requirements, sort_order, created_at, updated_at FROM tasks WHERE id = $1`,
+      `SELECT id, plan_id, title, description, category, status, requirements, sort_order, wave, created_at, updated_at FROM tasks WHERE id = $1`,
       [id],
     );
     const row = res.rows[0];
@@ -105,6 +106,7 @@ export async function getTaskByIdPostgres(
       status: row.status,
       title: row.title,
       updatedAt: row.updated_at,
+      wave: row.wave,
     };
   } finally {
     await client.end();
@@ -265,8 +267,9 @@ export async function getTasksByPlanIdPostgres(
       status: string;
       title: string;
       updated_at: string;
+      wave: number | null;
     }>(
-      `SELECT id, plan_id, title, description, category, status, requirements, sort_order, created_at, updated_at FROM tasks WHERE plan_id = $1 ORDER BY sort_order ASC, created_at ASC`,
+      `SELECT id, plan_id, title, description, category, status, requirements, sort_order, wave, created_at, updated_at FROM tasks WHERE plan_id = $1 ORDER BY sort_order ASC, created_at ASC`,
       [planId],
     );
     return res.rows.map((row) => ({
@@ -280,6 +283,7 @@ export async function getTasksByPlanIdPostgres(
       status: row.status,
       title: row.title,
       updatedAt: row.updated_at,
+      wave: row.wave,
     }));
   } finally {
     await client.end();
@@ -385,6 +389,7 @@ export async function updateTaskStatusPostgres(
       status: string;
       title: string;
       updated_at: string;
+      wave: number | null;
     }>(
       `UPDATE tasks SET status = $1,
         completed_at = CASE
@@ -394,7 +399,7 @@ export async function updateTaskStatusPostgres(
         END,
         updated_at = NOW()
        WHERE id = $2
-       RETURNING id, plan_id, title, description, category, status, requirements, sort_order, created_at, updated_at`,
+       RETURNING id, plan_id, title, description, category, status, requirements, sort_order, wave, created_at, updated_at`,
       [status, id],
     );
     const row = res.rows[0];
@@ -410,6 +415,7 @@ export async function updateTaskStatusPostgres(
       status: row.status,
       title: row.title,
       updatedAt: row.updated_at,
+      wave: row.wave,
     };
     if (status === 'IN_PROGRESS') {
       await updatePlanStatusPostgres(config, taskRow.planId, 'IN_PROGRESS');

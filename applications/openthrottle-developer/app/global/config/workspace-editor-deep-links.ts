@@ -42,6 +42,15 @@ const buildClaudeHref = (params: URLSearchParams): string =>
   `claude://code/new?${toQueryString(params)}`;
 
 /**
+ * Plain-language, not `/ot-loop <planId>`: the Claude desktop app defuses a
+ * leading `/` in any link-supplied prompt (it seeds `／`, U+FF0F) so a link can
+ * never arm a slash command. Naming the skill lets the model invoke it instead,
+ * which requires `ot-loop` to keep `disable-model-invocation: false`.
+ */
+const buildClaudePlanPrompt = (planId: string): string =>
+  `Run OpenThrottle plan ${planId} with the ot-loop skill`;
+
+/**
  * Deep-link metadata per supported editor. Exhaustive over `WorkspaceEditorId`
  * on purpose: adding an editor to the schema fails typecheck here until its
  * link shape is declared, rather than silently rendering a dead link.
@@ -51,7 +60,8 @@ const buildClaudeHref = (params: URLSearchParams): string =>
  *
  * - **Claude Code** — `claude://code/new?folder=…&q=…`. Both a folder and a
  *   prompt; Claude always shows a confirmation dialog for a link-supplied
- *   folder, so the link cannot silently open an unexpected checkout.
+ *   folder, so the link cannot silently open an unexpected checkout. The
+ *   prompt is seeded, never auto-sent, and cannot be a slash command.
  * - **Cursor** — `cursor://anysphere.cursor-deeplink/prompt?text=…` carries a
  *   prompt but *no* folder, so it lands in the focused Cursor window. We ship
  *   the button anyway (it is still the fastest path when Cursor is already
@@ -80,7 +90,7 @@ export const WORKSPACE_EDITOR_DEEP_LINKS: Record<
         : buildClaudeHref(
             new URLSearchParams({
               folder: `${workingDirectory}/`,
-              q: `/ot-loop ${planId}`,
+              q: buildClaudePlanPrompt(planId),
             }),
           ),
     label: 'Claude Code',

@@ -51,6 +51,7 @@ const pendingTask: TaskRow = {
   status: 'PENDING',
   title: 'Do the thing',
   updatedAt: new Date().toISOString(),
+  wave: null,
 };
 
 const {
