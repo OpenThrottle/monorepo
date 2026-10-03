@@ -215,8 +215,8 @@ variable "redis_image" {
 ################################################################################
 
 variable "server_type" {
-  default     = "cx22"
-  description = "Hetzner server type. Ladder rung 1: the single variable to change to scale vertically. Default cx22 is the sizing decision recorded in infra/hetzner-topology.md; expect CPU, not RAM, to be what forces an upgrade."
+  default     = "cx23"
+  description = "Hetzner server type. Ladder rung 1: the single variable to change to scale vertically. Default cx23 is the sizing decision recorded in infra/hetzner-topology.md; expect CPU, not RAM, to be what forces an upgrade."
   type        = string
 }
 

@@ -31,7 +31,7 @@ Three consequences:
    serves traffic. The database task is therefore a _seed from a dump_, not a cutover — the
    authoritative source is the local Docker Postgres volume described in `databases/README.md`.
 2. **The cost comparison is avoided spend, not recovered spend.** Standing this stack up on Hetzner
-   costs ~EUR 5.39/mo where standing the _same_ stack up on GCP would have cost ~50 USD/mo. Nobody is
+   costs ~EUR 7.09/mo where standing the _same_ stack up on GCP would have cost ~50 USD/mo. Nobody is
    currently paying the ~50.
 3. **DNS rollback needs a live target to roll back to.** The cutover task assumes rolling back is a
    DNS change to the GCP deployment. That is only true once the GCP composition is actually applied.
@@ -42,9 +42,18 @@ The GCP resources that _do_ exist are CI support, not application hosting: Artif
 (staging + production), the GCS Nx cache and Terraform state buckets, and two `gcs-workflow` service
 accounts. All stay.
 
-## Rung 0: one CX22
+## Rung 0: one CX23
 
-**Decision: start on CX22** (2 vCPU / 4 GB / 40 GB NVMe), not CX32.
+**Decision: start on CX23** (2 vCPU / 4 GB / 40 GB NVMe), not CX33.
+
+This decision was originally made for the CX22. Hetzner retired the CX22 in 2026 and put the CX23 in
+its place with the same shape, so the sizing below holds unchanged. Since the 2026-06-15 repricing,
+the CX33 (4 vCPU / 8 GB / 80 GB) costs EUR 3.00/mo more than the CX23 (EUR 3.60 with backups). That
+is the cheapest next step, and it is deliberately **not** where we start. A server created as a CX33
+gets an 80 GB boot disk that can never shrink, so it could never come back down to a CX23 without a
+rebuild. Starting on the CX23 and resizing with `keep_disk = true` (the module default) keeps the
+door open in both directions. The CPX line more than doubled in that repricing, so it is no longer
+competitive at this size.
 
 The gate for this decision was whether the container memory limits sum past ~3 GB. They do not.
 
@@ -70,8 +79,8 @@ gated behind `service_completed_successfully`, so the boot-time set is postgres 
 **The honest caveat: RAM is not the binding constraint — 2 shared vCPUs are.** The nominal CPU
 limits sum to 2.5 against 2 vCPU. That is legal (Compose `cpus` is a ceiling, not a reservation, and
 these services do not saturate simultaneously) but it means the first symptom of real traffic will be
-CPU contention between the two SSR/API Node processes, not an OOM kill. Expect the move to CX32 or a
-CPX instance to be driven by CPU. Because server type is a single variable, that is a one-line change
+CPU contention between the two SSR/API Node processes, not an OOM kill. Expect the move to CX33 to be
+driven by CPU. Because server type is a single variable, that is a one-line change
 — see rung 1.
 
 ## Scaling ladder
@@ -79,7 +88,7 @@ CPX instance to be driven by CPU. Because server type is a single variable, that
 Each rung must be reachable without restructuring. That constraint is why the application module's
 variable contract matters more than any individual resource.
 
-### Rung 0 — one CX22, everything co-located
+### Rung 0 — one CX23, everything co-located
 
 Where we start. Caddy terminates TLS and proxies by hostname; Postgres and Redis are containers
 reachable only on the Compose network.

@@ -41,8 +41,8 @@ variable "location" {
 }
 
 variable "server_type" {
-  default     = "cx22"
-  description = "Hetzner server type. cx22 (2 vCPU / 4 GB) runs the whole stack; see infra/hetzner-topology.md for the sizing argument and why CPU, not RAM, is the binding constraint."
+  default     = "cx23"
+  description = "Hetzner server type. cx23 (2 vCPU / 4 GB) runs the whole stack; see infra/hetzner-topology.md for the sizing argument and why CPU, not RAM, is the binding constraint."
   type        = string
 }
 

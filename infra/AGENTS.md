@@ -11,7 +11,7 @@ Terraform IaC providing a **suite of pre-configured hosting options for the same
 - `modules/` — building blocks: `gcp_compute_e2/` (instance + disk + its firewall rules and tag), `gcp_memorystore_redis/` (instance + its VPC peering range), `gcp_cloud_sql_postgres/`, `gcp_artifact_registry/`, and `hcloud_server/` (Hetzner server + firewall + optional data volume). **A module owns the resources that share its lifecycle** — a firewall rule targeting one instance, or a range allocated for one cache, belongs in the module, not in the calling composition. Every module is called by an application or an environment; one with no caller is deleted, not kept. No DNS is managed in Terraform, and there is no Cloudflare module.
 - `tests/` — static CI gates: `terraform fmt`, `terraform validate` (`-backend=false`), tfsec, and Conftest/OPA policies.
 - `gcp-estimate.csv` — the GCP Pricing Calculator spec the `gcp_*` modules are aligned to. Note it prices Cloud SQL for **MySQL** while the stack runs Postgres, and its total was never billed — the app composition is instantiated nowhere.
-- `hetzner-estimate.csv` + `hetzner-topology.md` — the Hetzner sibling estimate, the CX22 sizing decision and the scaling ladder.
+- `hetzner-estimate.csv` + `hetzner-topology.md` — the Hetzner sibling estimate, the CX23 sizing decision and the scaling ladder.
 - `provider-contract.md` — **read this before touching either application module.** GCP and Hetzner are both supported hosting options; this is the shared variable contract that keeps them interchangeable, plus the known defects on the GCP path.
 
 ## Invariants & gotchas

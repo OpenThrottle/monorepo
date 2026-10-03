@@ -31,7 +31,7 @@ Both target the same application. Pick one per environment.
   Required vars: `project_id`, `region`, `zone`, `network`, `env_name`. ~52 USD/mo.
 - **[`openthrottle_hcloud`](./openthrottle_hcloud/README.md)** — **Hetzner Cloud.** One box running
   Caddy, server, developer, `mcp`, Postgres and Redis as containers. Required vars: `env_name`,
-  `api_domain`, `developer_domain`. ~5.39 EUR/mo. Runbooks:
+  `api_domain`, `developer_domain`. ~7.09 EUR/mo. Runbooks:
   [`SECRETS.md`](./openthrottle_hcloud/SECRETS.md),
   [`CUTOVER.md`](./openthrottle_hcloud/CUTOVER.md).
 

@@ -230,7 +230,7 @@ Verified against `applications/openthrottle_hcloud/variables.tf`.
 
 | Variable              | Type           | Default                 | Why it cannot cross                                                    |
 | --------------------- | -------------- | ----------------------- | ---------------------------------------------------------------------- |
-| `server_type`         | `string`       | `"cx22"`                | Ladder rung 1. Resize is stop/resize/start; disk growth is one-way.    |
+| `server_type`         | `string`       | `"cx23"`                | Ladder rung 1. Resize is stop/resize/start; disk growth is one-way.    |
 | `location`            | `string`       | `"nbg1"`                | Hetzner datacenter. Changing it replaces the server.                   |
 | `server_image_os`     | `string`       | `"ubuntu-24.04"`        | hcloud OS image. Named `_os` to keep it distinct from `server_image`.  |
 | `backups_enabled`     | `bool`         | `true`                  | Hetzner's ~20%-of-server backup option.                                |

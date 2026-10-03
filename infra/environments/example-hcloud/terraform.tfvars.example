@@ -30,5 +30,5 @@ backup_remote = "storagebox:openthrottle/backups"
 # env_name            = "production"
 # image_registry      = "ghcr.io/openthrottle"
 # location            = "nbg1"
-# server_type         = "cx22"
+# server_type         = "cx23"
 # data_volume_size_gb = 10

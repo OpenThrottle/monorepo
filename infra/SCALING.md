@@ -19,7 +19,7 @@ Change one variable:
 
 ```hcl
 # environments/production-hcloud/openthrottle.tf
-server_type = "cx32" # was cx22
+server_type = "cx33" # was cx23
 ```
 
 ```bash

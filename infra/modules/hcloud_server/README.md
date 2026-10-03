@@ -14,7 +14,7 @@ scaling ladder.
 | Name                  | Description                                           | Type           | Default                 |
 | --------------------- | ----------------------------------------------------- | -------------- | ----------------------- |
 | `name`                | Name prefix for server, firewall, and data volume     | `string`       | required                |
-| `server_type`         | Hetzner server type — **ladder rung 1**               | `string`       | `"cx22"`                |
+| `server_type`         | Hetzner server type — **ladder rung 1**               | `string`       | `"cx23"`                |
 | `location`            | Hetzner location; changing it **replaces** the server | `string`       | `"nbg1"`                |
 | `image`               | OS image                                              | `string`       | `"ubuntu-24.04"`        |
 | `user_data`           | Cloud-init script; **never put secrets here**         | `string`       | `""`                    |
@@ -48,7 +48,7 @@ module "openthrottle_server" {
   source = "../../modules/hcloud_server"
 
   name        = "openthrottle-production"
-  server_type = "cx22"
+  server_type = "cx23"
   location    = "nbg1"
 
   backups_enabled     = true
