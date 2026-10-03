@@ -7,14 +7,14 @@ calls.
 |                       | [`applications/openthrottle_gcp`](./applications/openthrottle_gcp/README.md) | [`applications/openthrottle_hcloud`](./applications/openthrottle_hcloud/README.md) |
 | --------------------- | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
 | **Provider**          | Google Cloud Platform                                                        | Hetzner Cloud                                                                      |
-| **Compute**           | Compute Engine E2 (`e2-micro`)                                               | one server (`cx22`: 2 vCPU / 4 GB / 40 GB)                                         |
+| **Compute**           | Compute Engine E2 (`e2-micro`)                                               | one server (`cx23`: 2 vCPU / 4 GB / 40 GB)                                         |
 | **Postgres**          | Cloud SQL (managed)                                                          | container on the box, pgvector on PG18                                             |
 | **Redis**             | Memorystore (managed)                                                        | container on the box                                                               |
 | **Images from**       | Artifact Registry                                                            | GHCR                                                                               |
 | **TLS**               | Caddy + ACME                                                                 | Caddy + ACME (identical)                                                           |
 | **Backups**           | Cloud SQL automated                                                          | `backups_enabled` snapshots + an offsite `pg_dump` you own                         |
 | **`mcp` service**     | ✓                                                                            | ✓                                                                                  |
-| **Est. cost**         | ~52 USD/mo ([gcp-estimate.csv](./gcp-estimate.csv))                          | ~5.39 EUR/mo ([hetzner-estimate.csv](./hetzner-estimate.csv))                      |
+| **Est. cost**         | ~52 USD/mo ([gcp-estimate.csv](./gcp-estimate.csv))                          | ~7.09 EUR/mo ([hetzner-estimate.csv](./hetzner-estimate.csv))                      |
 | **Applied anywhere?** | **No** — never instantiated                                                  | **No** — root exists, commented out                                                |
 | **Deploy**            | manual                                                                       | automated ([hetzner-deploy.yml](../.github/workflows/hetzner-deploy.yml))          |
 
@@ -44,7 +44,7 @@ backups, restores, and upgrades become yours.
 **Good for** running the whole thing for the price of a coffee, and for a deployment you can reason
 about end to end — one box, one compose file, no managed-service semantics to learn.
 
-**Costs** ~5.39 EUR/mo including snapshots. The real cost is operational: the nightly offsite dump
+**Costs** ~7.09 EUR/mo including backups and the IPv4. The real cost is operational: the nightly offsite dump
 and its restore drill are work that Cloud SQL would have absorbed.
 
 **Not the cheaper option for everything.** At rung 2b Postgres moves off the box and the gap

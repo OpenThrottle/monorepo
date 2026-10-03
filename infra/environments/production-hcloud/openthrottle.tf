@@ -40,8 +40,8 @@
 #   server_image     = "ghcr.io/openthrottle/openthrottle-server:sha-REPLACE"
 #
 #   # Rung 0 sizing decision — see infra/hetzner-topology.md. Expect CPU, not
-#   # RAM, to be what eventually forces cx32.
-#   server_type = "cx22"
+#   # RAM, to be what eventually forces cx33.
+#   server_type = "cx23"
 #
 #   # 0 keeps Postgres on the boot disk, which is enough at rung 0. Set it (>= 10)
 #   # to make storage scale independently of server_type and survive a rebuild.

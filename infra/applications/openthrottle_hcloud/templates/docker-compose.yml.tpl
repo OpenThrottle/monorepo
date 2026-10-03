@@ -7,7 +7,7 @@
 # managed services. THAT FILE IS CORRECT FOR GCP and is deliberately unmodified;
 # this is a sibling, not a replacement.
 #
-# Memory limits are re-tuned for a 4 GB CX22 rather than an e2-micro. They sum to
+# Memory limits are re-tuned for a 4 GB CX23 rather than an e2-micro. They sum to
 # 2400m, leaving ~1.2 GB for the page cache after the OS and Docker daemon — see
 # infra/hetzner-topology.md for the arithmetic. Boot is not the peak: the
 # migrations runner completes before server/developer/mcp are allowed to start.

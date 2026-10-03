@@ -61,5 +61,5 @@ resource "hcloud_server" "secure" {
   image        = "ubuntu-24.04"
   location     = "nbg1"
   name         = "openthrottle-fixture"
-  server_type  = "cx22"
+  server_type  = "cx23"
 }

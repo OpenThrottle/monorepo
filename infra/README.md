@@ -18,7 +18,7 @@ cost, assumptions and fit, and shows how an environment selects one.
 | Option                                                                             | Provider | Postgres / Redis                  | Est. cost    |
 | ---------------------------------------------------------------------------------- | -------- | --------------------------------- | ------------ |
 | [`applications/openthrottle_gcp`](./applications/openthrottle_gcp/README.md)       | GCP      | Cloud SQL + Memorystore (managed) | ~52 USD/mo   |
-| [`applications/openthrottle_hcloud`](./applications/openthrottle_hcloud/README.md) | Hetzner  | containers on one box             | ~5.39 EUR/mo |
+| [`applications/openthrottle_hcloud`](./applications/openthrottle_hcloud/README.md) | Hetzner  | containers on one box             | ~7.09 EUR/mo |
 
 Both are supported. **Neither has ever been applied** — every application module block in
 `environments/` is commented out. Do not assume any of this is deployed.

@@ -6,9 +6,9 @@ variable "name" {
 }
 
 variable "server_type" {
-  description = "Hetzner server type (e.g. cx22, cx32, cpx21). Ladder rung 1: this is the single variable to change to scale the box vertically. Resize is stop/resize/start, not live — expect downtime."
+  description = "Hetzner server type (e.g. cx23, cx33, cpx22). Ladder rung 1: this is the single variable to change to scale the box vertically. Resize is stop/resize/start, not live — expect downtime."
   type        = string
-  default     = "cx22"
+  default     = "cx23"
 }
 
 variable "location" {

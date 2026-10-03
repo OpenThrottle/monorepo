@@ -45,12 +45,12 @@ That is expected, not a failure.
 
 ## What you get
 
-One server (`cx22` by default) running Caddy, the API, the developer app, `mcp`, Postgres (pgvector
+One server (`cx23` by default) running Caddy, the API, the developer app, `mcp`, Postgres (pgvector
 on PG18) and Redis as containers, plus a one-shot migrations runner that gates the server on a
 successful schema upgrade. Caddy terminates TLS and routes by hostname. **5432 and 6379 are never
 published**, and the firewall opens only 80/443 plus the SSH range you specify.
 
-Roughly **EUR 5.39/mo** including snapshots — see [`../../hetzner-estimate.csv`](../../hetzner-estimate.csv).
+Roughly **EUR 7.09/mo** including backups and the IPv4 — see [`../../hetzner-estimate.csv`](../../hetzner-estimate.csv).
 
 ## Secrets
 
