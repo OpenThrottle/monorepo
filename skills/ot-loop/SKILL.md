@@ -8,7 +8,7 @@ description: >-
 argument-hint: <planId>
 arguments:
   planId: string
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 
 Important: `$planId` is the first (and only) argument passed to this prompt. If that value does not map back to an OpenThrottle Plan or Task ID, throw an error immediately!
