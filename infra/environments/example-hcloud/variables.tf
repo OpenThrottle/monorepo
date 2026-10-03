@@ -8,7 +8,7 @@
 # itself stays public.
 
 variable "api_domain" {
-  description = "Hostname for the API. Must already resolve to this server, or Caddy cannot complete the ACME HTTP-01 challenge."
+  description = "Hostname for the API, e.g. api.example.com. It does NOT need to resolve yet: apply first, then point an A/AAAA record at the ipv4_address/ipv6_address outputs. Caddy retries the ACME HTTP-01 challenge until DNS reaches this server."
   type        = string
 }
 
