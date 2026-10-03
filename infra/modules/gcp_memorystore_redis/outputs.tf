@@ -24,3 +24,13 @@ output "region" {
   description = "Region where the instance is created."
   value       = google_redis_instance.redis.region
 }
+
+output "reserved_address" {
+  description = "Base address of the allocated peering range (no prefix), for environments that need to re-export it."
+  value       = google_compute_global_address.reserved.address
+}
+
+output "reserved_ip_range" {
+  description = "The allocated peering range in CIDR form, as handed to the instance."
+  value       = "${google_compute_global_address.reserved.address}/${var.reserved_prefix_length}"
+}

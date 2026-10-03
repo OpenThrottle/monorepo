@@ -1,0 +1,34 @@
+# Copy to terraform.tfvars and fill in. terraform.tfvars is gitignored, so real
+# values stay out of git — which matters here because this root is public.
+#
+#   cp terraform.tfvars.example terraform.tfvars
+#
+# Alternatively skip the file entirely and use TF_VAR_* environment variables,
+# or Terraform Cloud workspace variables. Both keep values out of the repo.
+
+# ── Required ────────────────────────────────────────────────────────────────
+api_domain       = "api.example.com"
+developer_domain = "developer.example.com"
+
+# Exact tag; all four images must exist at it.
+image_tag = "sha-REPLACE_ME"
+
+# ── Recommended ────────────────────────────────────────────────────────────
+# Your administrative IPs. 0.0.0.0/0 is rejected by validation. An empty list
+# means no SSH ingress at all, recoverable only via the Hetzner console.
+# This is the value most worth keeping out of a public repository.
+ssh_allowed_cidrs = ["203.0.113.4/32"]
+
+# SSH keys that already exist in your Hetzner project.
+ssh_key_ids = ["my-admin-key"]
+
+# rclone destination for the nightly offsite dump. Leaving this empty means the
+# only copy of your data lives on the machine it is meant to protect.
+backup_remote = "storagebox:openthrottle/backups"
+
+# ── Optional ───────────────────────────────────────────────────────────────
+# env_name            = "production"
+# image_registry      = "ghcr.io/openthrottle"
+# location            = "nbg1"
+# server_type         = "cx22"
+# data_volume_size_gb = 10

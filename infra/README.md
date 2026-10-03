@@ -9,16 +9,35 @@ This directory contains Infrastructure as Code (IaC) configurations for managing
 - Open source and widely adopted
 - State management for tracking infrastructure changes
 
+## Hosting options
+
+This directory is a **suite of pre-configured hosting options for the same application**, not one
+stack. **[HOSTING-OPTIONS.md](./HOSTING-OPTIONS.md) is the entry point** — it compares the options on
+cost, assumptions and fit, and shows how an environment selects one.
+
+| Option                                                                             | Provider | Postgres / Redis                  | Est. cost    |
+| ---------------------------------------------------------------------------------- | -------- | --------------------------------- | ------------ |
+| [`applications/openthrottle_gcp`](./applications/openthrottle_gcp/README.md)       | GCP      | Cloud SQL + Memorystore (managed) | ~52 USD/mo   |
+| [`applications/openthrottle_hcloud`](./applications/openthrottle_hcloud/README.md) | Hetzner  | containers on one box             | ~5.39 EUR/mo |
+
+Both are supported. **Neither has ever been applied** — every application module block in
+`environments/` is commented out. Do not assume any of this is deployed.
+
+Related: [provider-contract.md](./provider-contract.md) (what keeps the two interchangeable, and the
+known defects on each), [SCALING.md](./SCALING.md) (per-rung commands),
+[hetzner-topology.md](./hetzner-topology.md) (sizing).
+
 **Current Setup:**
 
-- **Provider**: Google Cloud Platform (GCP)
+- **Providers**: Google Cloud Platform and Hetzner Cloud
 - **Environments**: Staging (`environments/staging/`) and production (`environments/production/`) each have their own Terraform root and GCS state; see [environments/README.md](environments/README.md). Additional envs (e.g. development) can follow the same pattern.
-- **Modules**: Cloudflare (`modules/cloudflare/`) and OpenThrottle-oriented GCP building blocks (`gcp_compute_e2`, `gcp_memorystore_redis`, `gcp_cloud_sql_mysql`, `gcp_cloud_sql_postgres`). Environment stacks may also define one-off resources (for example a Terraform state bucket in staging).
+- **Modules**: OpenThrottle-oriented GCP building blocks (`gcp_compute_e2`, `gcp_memorystore_redis`, `gcp_cloud_sql_postgres`, `gcp_artifact_registry`) and the Hetzner building block (`hcloud_server`). Environment stacks may also define one-off resources (for example a Terraform state bucket in staging). There is no Cloudflare module — no DNS is managed in Terraform today.
 - **Resources**: Compute instances, Cloud SQL, Memorystore, Cloud Storage, and other GCP services as defined per environment.
 
 ## Providers
 
 - https://registry.terraform.io/providers/hashicorp/google/latest
+- https://registry.terraform.io/providers/hetznercloud/hcloud/latest
 
 ## Links
 
@@ -56,30 +75,30 @@ terraform apply
 
 ### Directory structure
 
-- **`applications/`**: Reusable application modules (e.g. `openthrottle`). See [applications/README.md](applications/README.md).
+- **`applications/`**: Reusable application modules, one per hosting option (`openthrottle_gcp`, `openthrottle_hcloud`). See [applications/README.md](applications/README.md).
 - **`environments/`**: Environment-specific configurations (`staging/`, `production/`); add other envs by copying the layout and adjusting locals. See [environments/README.md](environments/README.md) for separate roots vs workspaces.
-- **`modules/`**: Reusable Terraform building-block modules
-  - `cloudflare/`: Cloudflare configuration module
+- **`modules/`**: Reusable Terraform building-block modules. Every module here is called by an application or an environment; nothing is kept "for later".
   - **OpenThrottle GCP** (aligned to `infra/gcp-estimate.csv`):
-    - `gcp_compute_e2/`: Compute Engine E2 + SSD PD
-    - `gcp_memorystore_redis/`: Memorystore for Redis Basic (M1)
-    - `gcp_cloud_sql_mysql/`: Cloud SQL MySQL Zonal Micro + low-cost storage (legacy / non-OT)
+    - `gcp_compute_e2/`: Compute Engine E2 + SSD PD, and the firewall rules that scope it
+    - `gcp_memorystore_redis/`: Memorystore for Redis Basic (M1), and its VPC peering range
     - `gcp_cloud_sql_postgres/`: Cloud SQL PostgreSQL Zonal Micro + low-cost storage (OpenThrottle)
+    - `gcp_artifact_registry/`: Docker repository for the app images, called directly by an environment
+  - **OpenThrottle Hetzner**:
+    - `hcloud_server/`: server + firewall + optional data volume
 
 ## OpenThrottle GCP modules and gcp-estimate.csv
 
-The OpenThrottle stack is specified in **`infra/gcp-estimate.csv`** (GCP Pricing Calculator export). The following modules implement that spec in `us-west1`. The **application composition** lives in `applications/openthrottle/`; staging (and other environments) call it from `environments/<env>/openthrottle.tf` with env-specific `project_id`, `region`, `zone`, `network`, and `env_name` (config/plan only—no apply in this setup).
+The OpenThrottle stack is specified in **`infra/gcp-estimate.csv`** (GCP Pricing Calculator export). The following modules implement that spec in `us-west1`. The **application composition** lives in `applications/openthrottle_gcp/`; staging (and other environments) call it from `environments/<env>/openthrottle.tf` with env-specific `project_id`, `region`, `zone`, `network`, and `env_name` (config/plan only—no apply in this setup).
 
 ### Module list and CSV mapping
 
 | Module                     | CSV spec                                                                     | Key inputs                                                                                                                                                                                     | Key outputs                                                                                       |
 | -------------------------- | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
 | **gcp_compute_e2**         | E2 Instance Core/RAM, SSD backed PD 10 GB, us-west1                          | `name`, `project_id`, `network`, `region`, `zone`, `machine_type` (default `e2-micro`), `disk_size_gb` (default `10`)                                                                          | `instance_name`, `instance_self_link`, `disk_self_link`, `zone`                                   |
-| **gcp_memorystore_redis**  | Redis Capacity Basic M1, us-west1                                            | `name`, `project_id`, `region` (default `us-west1`), `tier` (default `BASIC`), `memory_size_gb` (default `1`), `reserved_ip_range`                                                             | `host`, `port`, `id`, `name`, `region`                                                            |
-| **gcp_cloud_sql_mysql**    | Cloud SQL MySQL Zonal Micro + Low cost storage, us-west1 (legacy)            | same inputs/outputs as Postgres                                                                                                                                                                | same                                                                                              |
+| **gcp_memorystore_redis**  | Redis Capacity Basic M1, us-west1                                            | `name`, `project_id`, `network`, `region` (default `us-west1`), `tier` (default `BASIC`), `memory_size_gb` (default `1`), `reserved_prefix_length` (default `29`)                              | `host`, `port`, `id`, `name`, `region`, `reserved_address`, `reserved_ip_range`                   |
 | **gcp_cloud_sql_postgres** | Cloud SQL PostgreSQL Zonal Micro + Low cost storage, us-west1 (OpenThrottle) | `name`, `project_id`, `region` (default `us-west1`), `tier` (default `db-f1-micro`), `disk_size_gb` (default `10`), `disk_type` (default `PD_HDD`), `database_version` (default `POSTGRES_15`) | `connection_name`, `private_ip_address`, `public_ip_address`, `id`, `name`, `region`, `self_link` |
 
-Full input/output tables and examples: see each module’s `README.md` under `modules/gcp_compute_e2/`, `modules/gcp_memorystore_redis/`, `modules/gcp_cloud_sql_mysql/`, and `modules/gcp_cloud_sql_postgres/`.
+Full input/output tables and examples: see each module’s `README.md` under `modules/gcp_compute_e2/`, `modules/gcp_memorystore_redis/`, and `modules/gcp_cloud_sql_postgres/`.
 
 ### Connection endpoints for OpenThrottle apps
 
@@ -102,5 +121,7 @@ These are exposed as Terraform outputs in `environments/staging/outputs.tf` (e.g
 ## Related Documentation
 
 - **OpenThrottle GCP estimate**: `infra/gcp-estimate.csv` — Pricing Calculator spec; modules above align to this CSV.
+- **OpenThrottle Hetzner estimate**: `infra/hetzner-estimate.csv` — the sibling estimate, not a replacement. Postgres and Redis have no line item there by design (they are containers on the box). Sizing rationale and the scaling ladder are in `infra/hetzner-topology.md`.
+- **Provider contract**: `infra/provider-contract.md` — GCP and Hetzner are both supported. The shared variable contract that lets an environment switch providers by changing which application module it calls.
 
 This repo uses **pnpm** at the monorepo root; there are no Nx tasks defined for `infra` in `infra/package.json` — use the Terraform CLI from an environment directory as shown above.
