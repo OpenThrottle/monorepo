@@ -31,15 +31,17 @@ ot_attribution_zero='0000000000000000000000000000000000000000'
 # POSIX shell, so a flag assigned inside it is invisible out here.
 ot_attribution_report="$(mktemp)"
 
-# The commits this push would actually add. A brand-new branch reports the
-# all-zero remote sha and so has no range to diff — fall back to "reachable from
-# the new head but from no remote", which is the same set without inventing a
-# base branch that may not be the one it forked from.
+# The commits this push would actually add: reachable from the new head but from
+# no remote ref. A brand-new branch reports the all-zero remote sha, so there is
+# no old tip to exclude. An existing branch also excludes its old tip — but
+# never uses "$2..$1" alone, because after a rebase or squash onto a newer main
+# that range includes every commit main gained since. Those already landed —
+# some carrying attribution lines — and are not this push's to answer for.
 ot_attribution_range() {
   if [ "$2" = "$ot_attribution_zero" ]; then
     git rev-list "$1" --not --remotes
   else
-    git rev-list "$2..$1"
+    git rev-list "$1" --not "$2" --remotes
   fi
 }
 
