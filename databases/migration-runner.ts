@@ -16,6 +16,10 @@ import type { Client } from 'pg';
  * (run-once / idempotent). Each migration + its ledger insert runs in a single
  * transaction, so a failed migration rolls back cleanly and is retried on the next run.
  *
+ * An empty ledger on a DB that already carries the schema is a one-time
+ * cut-over: every file is applied once, in order, and recorded. See
+ * {@link isLedgerCutOver} for why it never marks files applied without running them.
+ *
  * Deliberately dependency-free beyond `pg` and `node:*` builtins, and written in
  * erasable TypeScript only (no parameter properties, enums or namespaces), so the
  * container image runs it with Node's native type stripping — no build step, no
@@ -40,7 +44,7 @@ export function createFsMigrationSource(
 /** Ledger table recording which migration files have been applied. */
 export const LEDGER_TABLE = 'schema_migrations';
 
-/** Tables whose presence proves a DB already carries the openthrottle schema. */
+/** Tables whose presence proves a DB already carries the openthrottle schema (gates the cut-over log). */
 export const CORE_TABLES = ['plans', 'tasks'] as const;
 
 /**
@@ -57,7 +61,10 @@ export const RETIRED_MIGRATIONS: ReadonlySet<string> = new Set([
   '013_normalize_assignee_to_visormatt.sql',
 ]);
 
-/** A migration recorded in the ledger. `checksum` is null for bootstrap-seeded rows. */
+/**
+ * A migration recorded in the ledger. `checksum` is null for rows seeded by the
+ * retired mark-only bootstrap, which some existing ledgers still carry.
+ */
 export interface AppliedMigration {
   checksum: string | null;
   filename: string;
@@ -74,9 +81,7 @@ export interface ChecksumDrift {
 export interface MigrationStore {
   /** Apply one migration and record it, atomically. Rejects (recording nothing) on failure. */
   apply(filename: string, sql: string, checksum: string): Promise<void>;
-  /** Seed the ledger with the given filenames as already-applied (no SQL executed). */
-  bootstrap(filenames: readonly string[]): Promise<void>;
-  /** Whether the DB already carries the core schema (used to gate bootstrap). */
+  /** Whether the DB already carries the core schema (distinguishes a cut-over from a fresh DB). */
   coreTablesExist(): Promise<boolean>;
   /** Create the ledger table if it does not exist. */
   ensureLedger(): Promise<void>;
@@ -92,7 +97,8 @@ export interface MigrationSource {
 
 export interface MigrationRunResult {
   applied: string[];
-  bootstrapped: boolean;
+  /** True when this run was the one-time cut-over of a ledgerless, populated DB. */
+  cutOver: boolean;
   skipped: string[];
 }
 
@@ -117,8 +123,8 @@ export function selectPendingMigrations(
 
 /**
  * Already-applied migrations whose current file checksum differs from the one
- * recorded when they were applied (edited-in-place). Bootstrap-seeded rows
- * (null checksum) and files no longer present are ignored — nothing to compare.
+ * recorded when they were applied (edited-in-place). Legacy bootstrap-seeded
+ * rows (null checksum) and files no longer present are ignored — nothing to compare.
  */
 export function findChecksumDrift(
   applied: readonly AppliedMigration[],
@@ -136,14 +142,17 @@ export function findChecksumDrift(
 }
 
 /**
- * Bootstrap only when the ledger is empty AND the DB already has the core schema.
+ * A cut-over is an empty ledger on a DB that already carries the core schema:
+ * one migrated before the ledger existed, by a runner that re-applied every file
+ * on every run (the container image did, until it adopted this ledger).
  *
- * Safe for this repo because the previous runner re-ran *every* migration on
- * *every* invocation, so any DB carrying the schema has necessarily had all
- * current migration files applied — seeding them all as applied is correct and
- * avoids re-running historical data migrations against populated data.
+ * It applies every file once, in order — exactly what that runner did on each
+ * deploy — and records each one. It deliberately does NOT mark the on-disk files
+ * applied without running them: a volume last migrated by an *older* image has
+ * never run the files new in this one, and marking them would silently leave its
+ * schema behind for good.
  */
-export function shouldBootstrapLedger(
+export function isLedgerCutOver(
   appliedCount: number,
   coreTablesExist: boolean,
 ): boolean {
@@ -165,17 +174,20 @@ export async function runMigrations(
   const sqlFiles = filterSortSqlFiles(await source.list());
   if (sqlFiles.length === 0) {
     log('No migration files found.');
-    return { applied: [], bootstrapped: false, skipped: [] };
+    return { applied: [], cutOver: false, skipped: [] };
   }
 
   const applied = await store.readApplied();
+  const cutOver = isLedgerCutOver(
+    applied.length,
+    await store.coreTablesExist(),
+  );
 
-  if (shouldBootstrapLedger(applied.length, await store.coreTablesExist())) {
-    await store.bootstrap(sqlFiles);
+  if (cutOver) {
     log(
-      `Bootstrapped ${LEDGER_TABLE} with ${sqlFiles.length} existing migration(s) (schema already present); nothing re-run.`,
+      `One-time ${LEDGER_TABLE} cut-over: the schema exists but the ledger is empty. ` +
+        `Applying all ${sqlFiles.length} migration(s) once and recording each; later runs apply only new files.`,
     );
-    return { applied: [], bootstrapped: true, skipped: [...sqlFiles] };
   }
 
   await warnOnChecksumDrift(applied, sqlFiles, source, warn);
@@ -203,7 +215,7 @@ export async function runMigrations(
 
   return {
     applied: appliedNow,
-    bootstrapped: false,
+    cutOver,
     skipped: sqlFiles.filter((f) => !appliedNow.includes(f)),
   };
 }
@@ -211,7 +223,7 @@ export async function runMigrations(
 /**
  * Read the current content of already-applied files and warn (never fail, never
  * re-apply) if any no longer matches its recorded checksum. Files with no stored
- * checksum (bootstrap-seeded), no longer on disk, or in {@link RETIRED_MIGRATIONS}
+ * checksum (legacy bootstrap-seeded), no longer on disk, or in {@link RETIRED_MIGRATIONS}
  * are skipped.
  */
 async function warnOnChecksumDrift(
@@ -281,15 +293,6 @@ export class PgMigrationStore implements MigrationStore {
       [[...CORE_TABLES]],
     );
     return rows[0]?.present === true;
-  }
-
-  async bootstrap(filenames: readonly string[]): Promise<void> {
-    await this.client.query(
-      `INSERT INTO ${LEDGER_TABLE} (filename)
-       SELECT unnest($1::text[])
-       ON CONFLICT (filename) DO NOTHING`,
-      [[...filenames]],
-    );
   }
 
   async apply(filename: string, sql: string, checksum: string): Promise<void> {

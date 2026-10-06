@@ -50,10 +50,6 @@ class FakeStore implements MigrationStore {
     return false;
   }
 
-  async bootstrap(filenames: readonly string[]): Promise<void> {
-    for (const f of filenames) this.ledger.set(f, null);
-  }
-
   async apply(filename: string, _sql: string, checksum: string): Promise<void> {
     this.ledger.set(filename, checksum);
     this.applyLog.push(filename);
