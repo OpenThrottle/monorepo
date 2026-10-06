@@ -43,6 +43,20 @@ export const LEDGER_TABLE = 'schema_migrations';
 /** Tables whose presence proves a DB already carries the openthrottle schema. */
 export const CORE_TABLES = ['plans', 'tasks'] as const;
 
+/**
+ * Migrations whose body was deliberately replaced with a no-op after release.
+ * They keep their filename (the ledger key) so nothing re-runs or orphans, and
+ * are exempt from drift warnings: a ledger that recorded the original body
+ * would otherwise warn on every run about an edit that is intended.
+ *
+ * Retire a migration only when re-applying it would damage user data, and say
+ * why in the file itself.
+ */
+export const RETIRED_MIGRATIONS: ReadonlySet<string> = new Set([
+  '010_normalize_author_to_visormatt.sql',
+  '013_normalize_assignee_to_visormatt.sql',
+]);
+
 /** A migration recorded in the ledger. `checksum` is null for bootstrap-seeded rows. */
 export interface AppliedMigration {
   checksum: string | null;
@@ -197,7 +211,8 @@ export async function runMigrations(
 /**
  * Read the current content of already-applied files and warn (never fail, never
  * re-apply) if any no longer matches its recorded checksum. Files with no stored
- * checksum (bootstrap-seeded) or no longer on disk are skipped.
+ * checksum (bootstrap-seeded), no longer on disk, or in {@link RETIRED_MIGRATIONS}
+ * are skipped.
  */
 async function warnOnChecksumDrift(
   applied: readonly AppliedMigration[],
@@ -207,7 +222,10 @@ async function warnOnChecksumDrift(
 ): Promise<void> {
   const present = new Set(sqlFiles);
   const hashable = applied.filter(
-    (a) => a.checksum !== null && present.has(a.filename),
+    (a) =>
+      a.checksum !== null &&
+      present.has(a.filename) &&
+      !RETIRED_MIGRATIONS.has(a.filename),
   );
 
   const entries = await Promise.all(

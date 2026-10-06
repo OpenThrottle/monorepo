@@ -1,11 +1,13 @@
--- Normalize author to visormatt
--- Updates all plans and notes so existing author values are set to visormatt.
--- Guarded to only touch rows that would actually change, so a re-run is a true
--- no-op and does not fire the BEFORE UPDATE updated_at trigger.
-UPDATE plans
-SET author = 'visormatt'
-WHERE author IS DISTINCT FROM 'visormatt';
-
-UPDATE notes
-SET author = 'visormatt'
-WHERE author IS DISTINCT FROM 'visormatt';
+-- RETIRED — intentionally a no-op.
+--
+-- This was a one-off personal data fix that set every plan's and note's author
+-- to 'visormatt'. It has no place in the product migration set: the container
+-- migrations image used to re-run every file on every deploy, so it reset every
+-- author on every install, and the one-time schema_migrations ledger cut-over
+-- would run it once more.
+--
+-- The file is kept, with its filename, because schema_migrations is keyed on
+-- filename: renaming or deleting it would make the runner re-run or orphan it.
+-- Its checksum is allowlisted in RETIRED_MIGRATIONS (databases/migration-runner.ts)
+-- so ledgers that recorded the original body do not warn about drift.
+SELECT 1;

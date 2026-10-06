@@ -1,14 +1,13 @@
--- Normalize assignee to visormatt
--- Sets all existing non-null assignee values on plans and tasks to 'visormatt'
--- to flush out legacy/inconsistent formats before enforcing GH-username-only rule.
--- Guarded so re-runs touch no rows (NULL assignees stay NULL; already-normalized
--- rows are skipped, avoiding a spurious updated_at re-stamp via the trigger).
-UPDATE plans
-SET assignee = 'visormatt'
-WHERE assignee IS NOT NULL
-  AND assignee IS DISTINCT FROM 'visormatt';
-
-UPDATE tasks
-SET assignee = 'visormatt'
-WHERE assignee IS NOT NULL
-  AND assignee IS DISTINCT FROM 'visormatt';
+-- RETIRED — intentionally a no-op.
+--
+-- This was a one-off personal data fix that set every non-null plan and task
+-- assignee to 'visormatt'. It has no place in the product migration set: the
+-- container migrations image used to re-run every file on every deploy, so it
+-- reassigned everyone's work on every install, and the one-time
+-- schema_migrations ledger cut-over would run it once more.
+--
+-- The file is kept, with its filename, because schema_migrations is keyed on
+-- filename: renaming or deleting it would make the runner re-run or orphan it.
+-- Its checksum is allowlisted in RETIRED_MIGRATIONS (databases/migration-runner.ts)
+-- so ledgers that recorded the original body do not warn about drift.
+SELECT 1;

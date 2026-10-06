@@ -7,6 +7,7 @@ import {
   findChecksumDrift,
   type MigrationSource,
   type MigrationStore,
+  RETIRED_MIGRATIONS,
   runMigrations,
   selectPendingMigrations,
   shouldBootstrapLedger,
@@ -196,5 +197,24 @@ describe('runMigrations checksum drift', () => {
     expect(warnings[0]).toContain('001_a.sql');
     // Drift never re-applies; only the genuinely-pending files run.
     expect(store.applyLog).toEqual(['002_b.sql', '003_c.sql']);
+  });
+
+  test('never warns about a retired migration whose body was replaced', async () => {
+    const [retired] = [...RETIRED_MIGRATIONS];
+    if (retired === undefined) throw new Error('expected a retired migration');
+
+    const store = new FakeStore({ coreTables: false });
+    store.ledger.set(retired, 'hash-of-the-original-body');
+
+    const warnings: string[] = [];
+    await runMigrations(
+      store,
+      source([retired]),
+      () => {},
+      (m) => warnings.push(m),
+    );
+
+    expect(warnings).toEqual([]);
+    expect(store.applyLog).toEqual([]);
   });
 });
