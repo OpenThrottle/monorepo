@@ -1,10 +1,11 @@
 import { describe, expect, test, vi } from 'vitest';
+
 import {
   type AppliedMigration,
   type MigrationSource,
   type MigrationStore,
   runMigrations,
-} from '../openthrottle-database-migrations';
+} from '../../databases/migration-runner.ts';
 import {
   DEFAULT_ATTEMPTS,
   PostgresUnreachableError,

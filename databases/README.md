@@ -776,4 +776,4 @@ A timestamp prefix (`20260909T1200_…`) is the only scheme that makes a collisi
 - The duplicate-prefix rule fires more than about three times in a quarter, i.e. the renumbering tax is real rather than theoretical.
 - The numeric sequence approaches **`190`**, which is the point at which the mixed-scheme sort break at `202_` stops being comfortably far away.
 
-If it is revisited, the migration is new-files-only by construction, and the runner (`scripts/openthrottle-database-migrations.ts`) needs an explicit comparator rather than a bare `.sort()` before the first timestamped file lands.
+If it is revisited, the migration is new-files-only by construction, and the shared runner (`filterSortSqlFiles` in `databases/migration-runner.ts`) needs an explicit comparator rather than a bare `.sort()` before the first timestamped file lands.

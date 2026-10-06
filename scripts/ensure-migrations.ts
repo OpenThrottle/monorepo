@@ -1,15 +1,16 @@
 #!/usr/bin/env node
 
-import { Client } from 'pg';
 import {
   ensurePostgresReachable,
   getPostgresUrl,
 } from '@openthrottle/openthrottle-agentic-utils';
+import { Client } from 'pg';
+
 import {
   createFsMigrationSource,
   PgMigrationStore,
   runMigrations,
-} from './openthrottle-database-migrations';
+} from '../databases/migration-runner.ts';
 import { createLogger } from './lib/index.ts';
 
 const logger = createLogger();
@@ -129,6 +130,8 @@ async function main(): Promise<void> {
       await runMigrations(
         new PgMigrationStore(client),
         createFsMigrationSource(),
+        logger.info,
+        logger.warn,
       );
     } finally {
       await client.end();
