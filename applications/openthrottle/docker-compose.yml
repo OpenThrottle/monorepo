@@ -116,7 +116,10 @@ services:
 
   #############################################################################
   #
-  #     🗄️ migrations | one-shot: apply incremental migrations, then exit
+  #     🗄️ migrations | one-shot: apply pending migrations, then exit
+  #
+  #     Run-once via the schema_migrations ledger: a fresh volume gets every
+  #     migration, an upgraded one only the files new in this image.
   #
   migrations:
     image: openthrottle/migrations:${APP_VERSION:-latest}

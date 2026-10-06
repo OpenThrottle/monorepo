@@ -249,11 +249,12 @@ services:
 
   #############################################################################
   #
-  #     🗄️ migrations | one-shot: apply incremental migrations, then exit
+  #     🗄️ migrations | one-shot: apply pending migrations, then exit
   #
   #     Shared (no profile) so both prod and dev servers wait for schema
-  #     upgrades before starting. On a clean volume the seeded postgres image
-  #     already applies seed.sql; this runner covers UPGRADES (idempotent).
+  #     upgrades before starting. Run-once via the schema_migrations ledger
+  #     (databases/migration-runner.ts): a fresh volume gets every migration, a
+  #     migrated one only the new files, and a steady-state `up` touches no rows.
   #
   migrations:
     build:

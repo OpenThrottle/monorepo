@@ -31,7 +31,8 @@ const logger = createLogger();
  *  4. On unreachable after the window: fail fast with actionable guidance and exit 1.
  *
  * The Docker path (Dockerfile.Migrations + compose `migrations` init service) stays
- * authoritative for container installs; this gate is dev/start-only.
+ * authoritative for container installs and runs the same shared ledger
+ * (databases/migration-runner.ts); this gate is dev/start-only.
  */
 
 /** Number of reachability attempts before giving up (probe + retries). */

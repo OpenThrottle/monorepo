@@ -66,11 +66,11 @@ Consumed by docker-compose (which maps them onto the un-namespaced `PORT`,
 
 ## 2. Data stores
 
-| Variable                    | Used for                                                                                                                                                                                     | Defaults                                                    |
-| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| `OPENTHROTTLE_POSTGRES_URL` | Primary Postgres DSN. Precedence: `OPENTHROTTLE_POSTGRES_URL` → `POSTGRES_URL` → `POSTGRES_*` pieces. Read by `databases/run-migrations.mjs` and `@openthrottle/openthrottle-agentic-utils`. | ❌ — no `.env.default` ships it; the `POSTGRES_*` pieces do |
-| `OT_QUEUE_PREFIX`           | Explicit BullMQ Redis key prefix override (`@openthrottle/nestjs-bullmq`)                                                                                                                    | Commented out in server `.env.default`; code default `bull` |
-| `OT_CONTAINER_PREFIX`       | Per-worktree container/queue prefix (`wt-<slug>-`), written by `setup_worktree.ts`; used as the BullMQ prefix when `OT_QUEUE_PREFIX` is unset                                                | ❌ — generated per worktree                                 |
+| Variable                    | Used for                                                                                                                                                                                                    | Defaults                                                    |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| `OPENTHROTTLE_POSTGRES_URL` | Primary Postgres DSN. Precedence: `OPENTHROTTLE_POSTGRES_URL` → `POSTGRES_URL` → `POSTGRES_*` pieces. Read by `databases/migrate.ts` (the migrations image) and `@openthrottle/openthrottle-agentic-utils`. | ❌ — no `.env.default` ships it; the `POSTGRES_*` pieces do |
+| `OT_QUEUE_PREFIX`           | Explicit BullMQ Redis key prefix override (`@openthrottle/nestjs-bullmq`)                                                                                                                                   | Commented out in server `.env.default`; code default `bull` |
+| `OT_CONTAINER_PREFIX`       | Per-worktree container/queue prefix (`wt-<slug>-`), written by `setup_worktree.ts`; used as the BullMQ prefix when `OT_QUEUE_PREFIX` is unset                                                               | ❌ — generated per worktree                                 |
 
 ## 3. Auth and bootstrap
 
