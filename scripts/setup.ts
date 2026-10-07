@@ -13,8 +13,10 @@
  *     share this Postgres and must NOT re-seed (they use setup_worktree).
  */
 import { spawnSync } from 'node:child_process';
+import { homedir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 
+import { runClaudeGlobalSettingsCheck } from './check-claude-global-settings.ts';
 import { configureBlameIgnoreRevs, isLinkedWorktree } from './lib/git.ts';
 import { createLogger } from './lib/index.ts';
 import { interactiveConfirm, resetEnvironmentFiles } from './setup_environment.ts'; // prettier-ignore
@@ -75,6 +77,14 @@ const outro = (): void => {
   logger.info("And lastly run 'pnpm run setup:mcp-instructions' to get the");
   logger.info('OpenThrottle MCP server installed globally.');
   logger.blank();
+
+  // Advisory only and last on screen: reads the per-user Claude settings,
+  // warns with a remediation snippet, and never fails setup.
+  runClaudeGlobalSettingsCheck({
+    env: process.env,
+    homedir: homedir(),
+    logger,
+  });
 };
 
 const main = async (): Promise<void> => {

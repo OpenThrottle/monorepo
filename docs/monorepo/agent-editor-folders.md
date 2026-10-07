@@ -99,6 +99,24 @@ Prompts are flat files in `.agents/prompts/`; the walker derives slug and title 
 
 **Customizing an external skill:** never edit the vendored copy — it stays 1:1 with upstream and a re-sync would overwrite it. Author a companion skill in `skills/`, or layer the OT-specific guidance in a doc that references it. Exemplar: [code-style.md § Frontend design](./code-style.md#frontend-design) overlays the vendored `frontend-design` skill. See [docs/Skills.md](../Skills.md).
 
+### Claude Code: load `AGENTS.md` (global-only setting)
+
+Claude Code reads `CLAUDE.md` natively but only loads a sibling `AGENTS.md` when the built-in `agents-md` plugin is told to. Without it, every `AGENTS.md` in this repo (root and per-folder) is silently ignored. The option is honoured **only in user-global settings** — a checked-in `.claude/settings.json` has no effect — so it cannot be committed and each contributor sets it once in `~/.claude/settings.json` (or `$CLAUDE_CONFIG_DIR/settings.json` if you set that variable). Merge this block in:
+
+```json
+{
+  "pluginConfigs": {
+    "agents-md@builtin": {
+      "options": {
+        "instructionFiles": "claude-md-and-agents-md"
+      }
+    }
+  }
+}
+```
+
+`./scripts/setup.sh` warns at the end when it is missing; run `pnpm run check:claude-settings` any time to re-check (add `-- --strict` to exit 1 on a miss). The check only reads the file and never edits it, and it is deliberately not part of `check:local` because it inspects a per-user file.
+
 ---
 
 ## 3. Where to edit (common tasks)
