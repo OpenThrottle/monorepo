@@ -68,13 +68,15 @@ The lever that works is demotion. The tool prints two sections:
 
 Some workstreams fan out into many files each holding one line of index — roughly ten video/showroom entries and twelve chat entries at last count. Consolidating one workstream into a single topic file trades N index lines for 1 and loses nothing **provided the topic file keeps the detail**. Do this only when the entries genuinely belong to one workstream, and only when you are writing the merged file in the same pass. A group whose detail is summarised away is a deletion wearing a consolidation's clothes.
 
+Shape the topic file so the integrity check can see through it. It is a **hub**: link it from the index with a markdown `[Title](file.md)` line, and link each grouped file from inside it the same way — a `[[name]]` wiki link does not count. The check follows exactly **one hop**: a file linked from a hub that the index links directly is reachable. It does not follow a hub linked from another hub, so never nest them — a file grouped two levels down reports as an orphan, and it should, because no session will be led that far.
+
 ### Deleting
 
 Demotion moves volume; only deletion reduces it. Delete a memory only when it is genuinely **re-derivable on demand** — obtainable from `gh`, the database, or the repo at the moment it is needed. A PR's merge state is re-derivable. A plan's status is re-derivable. A gotcha someone learned the hard way is not, and neither is a decision's rationale. When unsure, demote instead: an archived memory costs one line, and a deleted one costs the next person the whole investigation.
 
 ### Finish with the both-directions check
 
-**Always re-run the tool after any move, group, or delete**, and confirm the integrity section reads `orphans: none` and `broken links: none`. This is not optional politeness — a bulk index rewrite once silently dropped four entries: the files stayed on disk, nothing errored, and they simply stopped being reachable from anywhere. A links-only check would have passed that cleanly. The failure mode of tidying memory is losing it, and this check is the only thing standing between the two.
+**Always re-run the tool after any move, group, or delete**, and confirm the integrity section reads `orphans: none` and `broken links: none` — a broken link inside a hub is reported against the hub, not the index. This is not optional politeness — a bulk index rewrite once silently dropped four entries: the files stayed on disk, nothing errored, and they simply stopped being reachable from anywhere. A links-only check would have passed that cleanly. The failure mode of tidying memory is losing it, and this check is the only thing standing between the two.
 
 ## Hard rules
 

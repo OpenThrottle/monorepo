@@ -15,6 +15,14 @@
  * - **Broken links** (pointer to a file that is not there) — the rename or
  *   delete bug. A session is told to open something that does not exist.
  *
+ * Reachability follows exactly one hop through a **hub**: a topic file linked
+ * directly from the index that itself links the files of one workstream. That
+ * is what consolidating a workstream produces — N index lines become one, and
+ * the detail moves into the hub — so without the hop every consolidation would
+ * report its children as orphans forever, and a check that is always red gets
+ * ignored. One hop only: a hub linked from a hub is not followed, because
+ * memory nested that deep is not something a session will actually be shown.
+ *
  * Pure, and local: no network, so this runs even when everything else is down.
  */
 
@@ -31,17 +39,24 @@ export interface IntegrityIssue {
 export interface IntegrityReport {
   /** Pointers whose target file does not exist. */
   readonly brokenLinks: readonly IntegrityIssue[];
-  /** Files on disk reachable from neither the index nor the archive. */
+  /** Files on disk reachable from neither the index, an archive, nor a hub. */
   readonly orphans: readonly IntegrityIssue[];
   /** Total files considered, for the coverage line. */
   readonly totalFiles: number;
-  /** Total distinct link targets found across index + archive. */
+  /** Total distinct link targets found across index, archives and hubs. */
   readonly totalLinks: number;
 }
 
 export interface IntegrityInput {
   /** Archive contents, keyed by basename. Any number of archives is fine. */
   readonly archives: ReadonlyMap<string, string>;
+  /**
+   * Contents of the other memory files, keyed by basename. Only those linked
+   * directly from the index are read as hubs; the rest are ignored, so passing
+   * every file cannot extend reachability past one hop. Keeping that rule here
+   * rather than in the caller keeps it in one place.
+   */
+  readonly fileContents: ReadonlyMap<string, string>;
   /**
    * Every `*.md` file in the memory directory, by basename. The index itself
    * (and the archive) are included by the caller; they are excluded here rather
@@ -70,21 +85,35 @@ const collectLinks = (content: string): ReadonlySet<string> => {
 
 export const checkIndexIntegrity = ({
   archives,
+  fileContents,
   files,
   indexContent,
   indexName,
 }: IntegrityInput): IntegrityReport => {
   const onDisk = new Set(files);
 
-  const linked = new Set(collectLinks(indexContent));
+  const fromIndex = collectLinks(indexContent);
+  const linked = new Set(fromIndex);
   const linkSource = new Map<string, string>();
   for (const target of linked) linkSource.set(target, indexName);
 
-  for (const [archiveName, content] of archives) {
+  const addLinksFrom = (sourceName: string, content: string): void => {
     for (const target of collectLinks(content)) {
       linked.add(target);
-      if (!linkSource.has(target)) linkSource.set(target, archiveName);
+      if (!linkSource.has(target)) linkSource.set(target, sourceName);
     }
+  };
+
+  for (const [archiveName, content] of archives) {
+    addLinksFrom(archiveName, content);
+  }
+
+  // The one hop. Iterates the index's own links, not `fileContents`, so a file
+  // reachable only through a hub can never act as a hub itself.
+  for (const hubName of fromIndex) {
+    if (hubName === indexName || archives.has(hubName)) continue;
+    const content = fileContents.get(hubName);
+    if (content !== undefined) addLinksFrom(hubName, content);
   }
 
   // The index and the archives are reachable by definition — the index is the
@@ -121,7 +150,7 @@ export const formatIntegrityReport = (report: IntegrityReport): string => {
     lines.push('  orphans:      none');
   } else {
     lines.push(
-      `  orphans:      ${report.orphans.length} file(s) reachable from neither the index nor an archive:`,
+      `  orphans:      ${report.orphans.length} file(s) reachable from neither the index, an archive, nor a hub it links:`,
     );
     for (const issue of report.orphans) lines.push(`    ${issue.file}`);
   }

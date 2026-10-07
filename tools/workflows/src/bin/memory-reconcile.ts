@@ -150,16 +150,18 @@ const fetchPlans = async (): Promise<readonly ObservedPlan[] | null> => {
 };
 
 /**
- * Read the index's sibling `*.md` files and any archive among them.
+ * Read the index's sibling `*.md` files, splitting out any archive among them.
  *
  * An archive is recognised by name suffix rather than a hardcoded filename, so a
  * second archive can be added without editing this tool — and without every file
- * it holds immediately reporting as an orphan.
+ * it holds immediately reporting as an orphan. Every other file's contents are
+ * handed over too; the integrity check decides which of them count as hubs.
  */
 const readMemoryDirectory = (
   indexPath: string,
 ): {
   archives: ReadonlyMap<string, string>;
+  fileContents: ReadonlyMap<string, string>;
   files: readonly string[];
   indexName: string;
 } => {
@@ -171,12 +173,15 @@ const readMemoryDirectory = (
     .sort();
 
   const archives = new Map<string, string>();
+  const fileContents = new Map<string, string>();
   for (const name of files) {
-    if (!name.endsWith('-archive.md')) continue;
-    archives.set(name, fs.readFileSync(path.join(dir, name), 'utf8'));
+    if (name === indexName) continue;
+    const content = fs.readFileSync(path.join(dir, name), 'utf8');
+    if (name.endsWith('-archive.md')) archives.set(name, content);
+    else fileContents.set(name, content);
   }
 
-  return { archives, files, indexName };
+  return { archives, fileContents, files, indexName };
 };
 
 const main = async (): Promise<number> => {
@@ -194,9 +199,11 @@ const main = async (): Promise<number> => {
   // Integrity first, and unconditionally: it is local, needs no network, and is
   // the check that catches memories being LOST rather than merely being stale.
   // Running it before anything that can fail means it always gets run.
-  const { archives, files, indexName } = readMemoryDirectory(index);
+  const { archives, fileContents, files, indexName } =
+    readMemoryDirectory(index);
   const integrity = checkIndexIntegrity({
     archives,
+    fileContents,
     files,
     indexContent,
     indexName,
