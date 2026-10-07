@@ -81,6 +81,22 @@ pnpm nx run openthrottle-server:build
 
 Output under `applications/openthrottle-server/build`. For Docker image (built from monorepo root), see the root Dockerfile referenced in `package.json` (`docker-build` target).
 
+## GraphQL schema (`schema.gql`)
+
+`schema.gql` is generated from the server's code-first decorators and committed; every GraphQL consumer generates from it. After changing any GraphQL type, field, argument, description or deprecation:
+
+```bash
+# 1. Regenerate schema.gql — no Postgres, Redis or running server needed
+pnpm nx run openthrottle-server:schema-gql-write
+
+# 2. Regenerate consumer codegen against it
+pnpm run check:local:codegen
+
+# 3. Commit schema.gql and the regenerated consumer output together
+```
+
+`pnpm run check:local` runs `schema-gql-check`, which fails if the committed file no longer matches the decorators. Both targets open `AppModule` in Nest preview mode, where only `GraphQLModule` initializes, and let Nest's own schema builder write the file, so the output is exactly what a boot writes.
+
 ## LangGraph Studio (optional)
 
 This app can host LangGraph agents. For local LangGraph Studio:
