@@ -34,6 +34,11 @@ mechanics, see [MONOREPO.md](./MONOREPO.md) and [docs/monorepo/](./docs/monorepo
 
    CI and the Docker build stages do the equivalent from their `GITHUB_TOKEN`.
 
+3. **Let Claude Code load `AGENTS.md` (one-time, if you use it).** The setting is
+   user-global only; `setup.sh` warns when it is missing. Check or fix it per
+   [agent-editor-folders.md](./docs/monorepo/agent-editor-folders.md#claude-code-load-agentsmd-global-only-setting)
+   (`pnpm run check:claude-settings`).
+
 ## The change loop
 
 1. **Branch** off `main` — never commit to `main` directly.
