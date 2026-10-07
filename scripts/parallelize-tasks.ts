@@ -4,7 +4,7 @@ import { dirname, join } from 'node:path';
 import { execSync } from 'child_process';
 import { fileURLToPath } from 'url';
 
-import { createLogger } from './lib/index.ts';
+import { createLogger } from './utils/index.ts';
 
 // This script has a stdout contract (the final key=value lines the workflow
 // reads), so all narration is bound to stderr — see the file header.

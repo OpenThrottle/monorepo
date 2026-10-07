@@ -1,9 +1,10 @@
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
-import { parseEnvContents, readEnvFile, readEnvValue } from '../lib/env.ts';
+import { parseEnvContents, readEnvFile, readEnvValue } from '../utils/env.ts';
 
 describe('parseEnvContents', () => {
   it('parses KEY=VALUE lines and ignores comments and blanks', () => {
@@ -34,7 +35,7 @@ describe('parseEnvContents', () => {
 });
 
 describe('readEnvFile / readEnvValue', () => {
-  const dir = mkdtempSync(join(tmpdir(), 'lib-env-'));
+  const dir = mkdtempSync(join(tmpdir(), 'utils-env-'));
   const file = join(dir, '.env');
   writeFileSync(file, 'OPENTHROTTLE_SERVER_PORT=7421\nEMPTY=\n');
 

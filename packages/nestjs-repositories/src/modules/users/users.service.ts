@@ -8,7 +8,7 @@ import { Repository } from 'typeorm';
 import {
   type ListPaginationInput,
   resolveListPagination,
-} from '../../common/list-pagination.ts';
+} from '../../utils/list-pagination.ts';
 import { User } from './user.entity.ts';
 
 @Injectable()

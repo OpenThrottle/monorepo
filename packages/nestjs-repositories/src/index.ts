@@ -1,28 +1,4 @@
 export {
-  resolveCompletedAtForStatusChange,
-  type ResolveCompletedAtForStatusChangeInput,
-} from './common/completed-at.ts';
-export {
-  type CollectionByColumnLoaderOptions,
-  createCollectionByColumnLoader,
-  createEntityByIdLoader,
-  createGroupedCountLoader,
-  type GroupedCountColumnInFilter,
-  type GroupedCountLoaderOptions,
-  type RepositoryAccessor,
-} from './common/entity-loaders.ts';
-export {
-  escapeLikePattern,
-  toLikeContainsPattern,
-} from './common/like-pattern.ts';
-export {
-  LIST_PAGINATION_DEFAULT_LIMIT,
-  LIST_PAGINATION_MAX_LIMIT,
-  type ListPaginationInput,
-  type ResolvedListPagination,
-  resolveListPagination,
-} from './common/list-pagination.ts';
-export {
   isPlanStatus,
   isTaskStatus,
   PLAN_STATUS,
@@ -33,8 +9,7 @@ export {
   TASK_STATUS_LIST,
   TASK_STATUS_VALUES,
   type TaskStatus,
-} from './common/plan-task-status.constants.ts';
-export { vectorTransformer } from './common/vector.transformer.ts';
+} from './config/plan-task-status.constants.ts';
 export { getTypeOrmOptions as getOpenThrottleTypeOrmOptions } from './database.config.ts';
 export { AgentCliPreferencesModule } from './modules/agent-cli-preferences/agent-cli-preferences.module.ts';
 export type { ModelPreferenceMap } from './modules/agent-cli-preferences/agent-cli-preferences.service.ts';
@@ -412,6 +387,31 @@ export type { WorkspaceLocalRepository } from './modules/workspace-settings/work
 export type { WorkspaceLocalRepositoryData } from './modules/workspace-settings/workspace-local-repository.entity.ts';
 export { NestjsRepositoriesModule } from './nestjs-repositories.module.ts';
 export { ProjectsLoaders } from './projects-loaders.ts';
+export {
+  resolveCompletedAtForStatusChange,
+  type ResolveCompletedAtForStatusChangeInput,
+} from './utils/completed-at.ts';
+export {
+  type CollectionByColumnLoaderOptions,
+  createCollectionByColumnLoader,
+  createEntityByIdLoader,
+  createGroupedCountLoader,
+  type GroupedCountColumnInFilter,
+  type GroupedCountLoaderOptions,
+  type RepositoryAccessor,
+} from './utils/entity-loaders.ts';
+export {
+  escapeLikePattern,
+  toLikeContainsPattern,
+} from './utils/like-pattern.ts';
+export {
+  LIST_PAGINATION_DEFAULT_LIMIT,
+  LIST_PAGINATION_MAX_LIMIT,
+  type ListPaginationInput,
+  type ResolvedListPagination,
+  resolveListPagination,
+} from './utils/list-pagination.ts';
+export { vectorTransformer } from './utils/vector.transformer.ts';
 export type {
   BuildPlanRunConfigSnapshotInput,
   PlanJobRunHooksStorage,

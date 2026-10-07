@@ -1,7 +1,8 @@
 import { PassThrough } from 'node:stream';
+
 import { describe, expect, it } from 'vitest';
 
-import { createLogger, SYMBOLS } from '../lib/logger.ts';
+import { createLogger, SYMBOLS } from '../utils/logger.ts';
 
 /** Collect everything written to a stream as plain text (color-free in CI). */
 const collector = (): { lines: () => string; stream: PassThrough } => {

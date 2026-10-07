@@ -3,7 +3,7 @@
 import { glob, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { createLogger } from './lib/index.ts';
+import { createLogger } from './utils/index.ts';
 
 const logger = createLogger();
 

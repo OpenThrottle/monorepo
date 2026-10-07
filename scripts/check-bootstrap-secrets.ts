@@ -14,7 +14,7 @@
 import { fileURLToPath } from 'node:url';
 
 import { LOCAL_SECRETS_FILENAME, readLocalSecrets } from './local-secrets-file';
-import { createLogger } from './lib/index.ts';
+import { createLogger } from './utils/index.ts';
 
 const logger = createLogger();
 

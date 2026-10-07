@@ -14,8 +14,9 @@ through — the sibling `nestjs-typeorm` has no consumers.
   (thin `getRepository()` wrappers) + `*.factory.ts` (fishery test factories).
 - `src/database.config.ts` — DataSource wiring; reads `POSTGRES_URL`/`POSTGRES_*` via
   `getPostgresUrl`, honours `POSTGRES_SLOW_QUERY_MS`.
-- `src/common/` — shared `entity-loaders` (dataloader helpers), `list-pagination`,
+- `src/utils/` — shared `entity-loaders` (dataloader helpers), `list-pagination`,
   `vector.transformer` (pgvector column codec).
+- `src/config/` — `plan-task-status.constants` (the plan/task status sets).
 
 ## Invariants & gotchas
 
@@ -29,7 +30,7 @@ through — the sibling `nestjs-typeorm` has no consumers.
   `workspace:^` dependencies rather than relying on pnpm hoisting (phantom-hoisted-dep bug).
 - Thin DAL by design: services return a repository and do **not** enforce
   ordering/pagination/limit safety — that lives in the caller (resolvers, MCP tools). See
-  `resolveListPagination` in `common/list-pagination.ts` for the opt-in clamp.
+  `resolveListPagination` in `utils/list-pagination.ts` for the opt-in clamp.
 - Built, not source-first: real `build` target, `exports` → `dist`; see
   [../AGENTS.md](../AGENTS.md).
 

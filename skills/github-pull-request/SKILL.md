@@ -108,7 +108,7 @@ been published and is visible to anyone watching the repo.
 
 `scripts/check-pr-attribution.sh` closes that gap by running the same pattern set locally, before
 `gh pr create`/`gh pr edit` is ever called. It sources `OT_ATTRIBUTION_PATTERN`/
-`OT_ATTRIBUTION_PATTERN_INLINE` from `.husky/lib/attribution-patterns.sh` — the same file the
+`OT_ATTRIBUTION_PATTERN_INLINE` from `.husky/utils/attribution-patterns.sh` — the same file the
 commit-msg hook and the CI job use — so there is exactly one place the pattern set lives.
 
 **ALWAYS**, right before the `gh pr create`/`gh pr edit` call:

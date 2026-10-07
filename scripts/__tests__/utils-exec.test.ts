@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { renderCommand, run } from '../lib/exec.ts';
+import { renderCommand, run } from '../utils/exec.ts';
 
 describe('renderCommand', () => {
   it('joins the argv for human-facing messages', () => {

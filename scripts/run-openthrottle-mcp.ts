@@ -35,9 +35,9 @@ import { spawnSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { readEnvValue } from './lib/env.ts';
-import { gitOutput, primaryCheckoutDir } from './lib/git.ts';
-import { createLogger, run } from './lib/index.ts';
+import { readEnvValue } from './utils/env.ts';
+import { gitOutput, primaryCheckoutDir } from './utils/git.ts';
+import { createLogger, run } from './utils/index.ts';
 import { classifyAuthSmoke } from './verify-openthrottle-mcp-env.ts';
 
 const logger = createLogger({ stream: process.stderr });

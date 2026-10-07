@@ -9,8 +9,8 @@
  * surface. Reach for `spawnSync` semantics: these are sequential scripts, not
  * servers.
  */
-import { spawnSync } from 'node:child_process';
 import type { SpawnSyncOptions } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 
 export interface RunOptions {
   /** Do not throw on a non-zero exit; inspect the result instead. */

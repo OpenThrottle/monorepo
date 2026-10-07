@@ -12,7 +12,7 @@
 # and only CI caught it. This script is the check on this side of that gap.
 #
 # The pattern set is NOT restated here — it is sourced from
-# .husky/lib/attribution-patterns.sh, the same file `.husky/commit-msg` and the
+# .husky/utils/attribution-patterns.sh, the same file `.husky/commit-msg` and the
 # CI `attribution-guard` job both use, so all three can never drift apart.
 #
 # Shell, not tsx, though `scripts/` is otherwise 53 TS files to 8 shell ones.
@@ -29,7 +29,7 @@
 #      A guard that waves everything through while reporting ✅ is a worse
 #      outcome than the drift a second copy would risk.
 #   2. The shell file has to exist either way. The CI `attribution-guard` job
-#      sparse-checks out .husky/lib/attribution-patterns.sh alone — no install,
+#      sparse-checks out .husky/utils/attribution-patterns.sh alone — no install,
 #      no Node — so a TS rewrite here would not delete a shell file, it would
 #      add a second language reading the same one.
 #   3. No runtime at the call site. This runs immediately before
@@ -51,8 +51,8 @@ set -eu
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 REPO_ROOT=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
 
-# shellcheck source=../.husky/lib/attribution-patterns.sh
-. "$REPO_ROOT/.husky/lib/attribution-patterns.sh"
+# shellcheck source=../.husky/utils/attribution-patterns.sh
+. "$REPO_ROOT/.husky/utils/attribution-patterns.sh"
 
 usage() {
   echo "Usage: $0 [--title-file <path>] [--body-file <path>|-]" >&2
@@ -127,7 +127,7 @@ if [ "$failed" -ne 0 ]; then
   echo "   \`gh pr create\`/\`gh pr edit\`."
   echo ""
   echo "   Rule:  AGENTS.md § No agent attribution"
-  echo "   Guard: .husky/lib/attribution-patterns.sh (shared with the commit-msg hook and the CI attribution-guard job)"
+  echo "   Guard: .husky/utils/attribution-patterns.sh (shared with the commit-msg hook and the CI attribution-guard job)"
   exit 1
 fi
 

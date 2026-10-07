@@ -19,9 +19,11 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+
 import { globSync } from 'glob';
 import ts from 'typescript';
-import { createLogger } from './lib/index.ts';
+
+import { createLogger } from './utils/index.ts';
 
 const logger = createLogger();
 

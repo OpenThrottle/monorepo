@@ -13,7 +13,7 @@
  */
 import { fileURLToPath } from 'node:url';
 
-import { createLogger, run } from './lib/index.ts';
+import { createLogger, run } from './utils/index.ts';
 
 const logger = createLogger();
 

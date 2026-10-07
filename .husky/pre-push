@@ -26,12 +26,12 @@ fi
 # Mirror the CI component primitive-shape gate at push time. The gate lives in a
 # shared snippet so pre-commit, pre-push, and CI stay in lockstep on the exact
 # same command; sourcing it lets its `exit 1` abort the push.
-. "$(dirname "$0")/lib/component-shape-gate.sh"
+. "$(dirname "$0")/utils/component-shape-gate.sh"
 
 # Catch an attribution line in any commit this push would add. `commit-msg`
 # strips these as a commit is written, so anything reaching here got past that
 # hook — which is precisely the --no-verify path that put one on PR #554.
-. "$(dirname "$0")/lib/attribution-push-gate.sh"
+. "$(dirname "$0")/utils/attribution-push-gate.sh"
 
 # We're good to go here
 exit 0

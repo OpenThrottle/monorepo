@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { flagValue, hasFlag, positionals, scriptArgs } from '../lib/args.ts';
+import { flagValue, hasFlag, positionals, scriptArgs } from '../utils/args.ts';
 
 describe('scriptArgs', () => {
   it('drops the node binary and script path', () => {

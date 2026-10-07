@@ -4,7 +4,7 @@
 # Strip agent-attribution lines so only conventional footers remain.
 #
 # Emitter-agnostic on purpose — the pattern set is shared with CI in
-# .husky/lib/attribution-patterns.sh, and the match is case-insensitive because
+# .husky/utils/attribution-patterns.sh, and the match is case-insensitive because
 # the exact spelling varies by tool (`Co-Authored-By:` vs `Co-authored-by:`).
 #
 # It strips rather than fails on purpose: several harnesses inject the line
@@ -15,7 +15,7 @@
 # existed, which is why the fourth was written without care. Saying what was
 # removed costs nothing and is the whole difference.
 #
-. "$(dirname "$0")/lib/attribution-patterns.sh"
+. "$(dirname "$0")/utils/attribution-patterns.sh"
 
 if [ -n "$1" ] && [ -f "$1" ]; then
   if stripped="$(grep -inE "$OT_ATTRIBUTION_PATTERN" "$1")"; then
@@ -23,7 +23,7 @@ if [ -n "$1" ] && [ -f "$1" ]; then
     echo "$stripped" | sed 's/^/     line /'
     echo "   Rule:  AGENTS.md § No agent attribution — commits carry only"
     echo "          conventional footers (BREAKING CHANGE:, Closes #, Plan-Id:, Task-Id:)."
-    echo "   Guard: .husky/lib/attribution-patterns.sh"
+    echo "   Guard: .husky/utils/attribution-patterns.sh"
     echo "   The commit itself is fine — the line is gone. Nothing to redo."
 
     grep -viE "$OT_ATTRIBUTION_PATTERN" "$1" > "$1.stripped" || true

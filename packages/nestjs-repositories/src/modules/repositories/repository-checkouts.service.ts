@@ -11,8 +11,8 @@ import { Repository as OrmRepository } from 'typeorm';
 import {
   type ListPaginationInput,
   resolveListPagination,
-} from '../../common/list-pagination.ts';
-import { isUniqueViolation } from '../../common/unique-violation.ts';
+} from '../../utils/list-pagination.ts';
+import { isUniqueViolation } from '../../utils/unique-violation.ts';
 import {
   RepositoryCheckout,
   type RepositoryCheckoutKind,
