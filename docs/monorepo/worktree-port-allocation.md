@@ -42,7 +42,7 @@ consistently.
 
 ## How the block is chosen
 
-`scripts/lib/worktree-ports.ts` (`resolveWorktreePorts`):
+`scripts/utils/worktree-ports.ts` (`resolveWorktreePorts`):
 
 1. **Deterministic slot** from the worktree name: `7000 + (cksum(name) % 50) * 10`,
    giving blocks `7000, 7010, … 7490`. Same name → same block across re-setups.
@@ -140,7 +140,7 @@ a plan run is decided by the per-checkout BullMQ queue prefix
 
 ## Files
 
-- `scripts/lib/worktree-ports.ts` — allocation helper (imported by the provisioner).
+- `scripts/utils/worktree-ports.ts` — allocation helper (imported by the provisioner).
 - `skills/ot-worktree/scripts/create.sh` — the create action (`pnpm worktree:new`, Claude hook, Cursor); creates the worktree, then hands off to the repo provisioner.
 - `skills/ot-worktree/scripts/heal.sh` — the heal action (`pnpm worktree:heal`); provisions a plain `git worktree add` on first `dev`.
 - `skills/ot-worktree/scripts/destroy.sh` — the destroy action (`pnpm worktree:remove`); teardown hook, `git worktree remove`, prune.

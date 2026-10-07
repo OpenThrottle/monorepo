@@ -10,7 +10,7 @@
  * checkout, until someone notices. This brings them down.
  *
  * Nothing else needs undoing: ports are derived deterministically from the worktree name
- * (`scripts/lib/worktree-ports.ts`), not leased from a registry, so there is no allocation to
+ * (`scripts/utils/worktree-ports.ts`), not leased from a registry, so there is no allocation to
  * release. `.env` and the compose override die with the directory.
  *
  * Failure policy, per the hook contract: a non-zero exit ABORTS the removal. That is right for a
@@ -23,7 +23,7 @@ import { existsSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { createLogger, readEnvValue, run } from './lib/index.ts';
+import { createLogger, readEnvValue, run } from './utils/index.ts';
 
 /** The compose override setup_worktree.ts generates; its presence proves this worktree was provisioned. */
 const WORKTREE_COMPOSE_FILE = 'docker-compose.worktree.yml';

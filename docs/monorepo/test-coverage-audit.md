@@ -176,7 +176,7 @@ pnpm run audit:test-coverage:strict                # exit 1 on enforced-category
 The audit is a repo-root `tsx` script mirroring the other `audit:*` guard-rails.
 Cross-file / repo-wide dimensions (does a sibling spec exist?) live in the
 script; per-file structural dimensions live in `@tools/dotfiles` ESLint rules.
-This audit is intentionally **not** in the `.husky/lib` / `.husky/pre-commit` /
+This audit is intentionally **not** in the `.husky/utils` / `.husky/pre-commit` /
 `.husky/pre-push` gate yet — it runs in CI as a non-blocking warning only
 (`continue-on-error`).
 
@@ -193,7 +193,7 @@ Once a category's gap is closed:
    so `audit:test-coverage:strict` rejoins the blocking aggregate (optionally
    scope with `--categories` first while other categories still have gaps).
 2. Mirror it into the husky three-surface gate the way the component-shape gate
-   is mirrored byte-identical across `.husky/lib`, `.husky/pre-commit`,
+   is mirrored byte-identical across `.husky/utils`, `.husky/pre-commit`,
    `.husky/pre-push`, and CI.
 
 ## Baseline

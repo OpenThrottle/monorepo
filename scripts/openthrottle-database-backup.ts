@@ -1,12 +1,14 @@
 #!/usr/bin/env node
 
-import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
-import { join } from 'node:path';
+import { spawnSync } from 'node:child_process';
 import { closeSync, openSync } from 'node:fs';
 import { mkdir, readdir, unlink } from 'node:fs/promises';
-import { spawnSync } from 'node:child_process';
+import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { createLogger } from './lib/index.ts';
+
+import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
+
+import { createLogger } from './utils/index.ts';
 
 const logger = createLogger();
 

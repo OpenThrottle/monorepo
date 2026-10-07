@@ -33,14 +33,14 @@ import {
   existsSync,
   mkdirSync,
   mkdtempSync,
-  readFileSync,
   readdirSync,
+  readFileSync,
   rmSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
-import { createLogger, flagValue, run } from './lib/index.ts';
+import { createLogger, flagValue, run } from './utils/index.ts';
 
 const logger = createLogger();
 

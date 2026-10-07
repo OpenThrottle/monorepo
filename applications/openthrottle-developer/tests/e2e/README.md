@@ -223,14 +223,14 @@ follow:
 
 ### The login helper
 
-`helpers/login.yaml` is the reusable building block: it opens `/auth`, waits for
+`subflows/login.yaml` is the reusable building block: it opens `/auth`, waits for
 the form, taps submit (logging in as the prefilled seeded user), and waits for
 `dashboard-content-grid` to confirm an authenticated landing. Reuse it from any
 authenticated spec:
 
 ```yaml
 - runFlow:
-    file: ../../helpers/login.yaml # path is relative to the calling flow
+    file: ../../subflows/login.yaml # path is relative to the calling flow
 ```
 
 ### Test-data strategy (avoid cross-run pollution)
@@ -366,7 +366,7 @@ running dev server (`pnpm nx run openthrottle-developer:dev`, port 6020); for
 applications/openthrottle-developer/tests/e2e/
 ├── config.yaml      # Maestro workspace config (flows glob, tags, local opts)
 ├── flows/           # Maestro flow YAML files (one flow per file, kebab-case)
-├── helpers/         # Reusable subflows referenced via `runFlow`
+├── subflows/        # Reusable subflows referenced via `runFlow`
 ├── scripts/         # seed-user.sh (seed the test user) + run-ci.sh (build→serve→seed→run)
 └── output/          # Run artifacts (gitignored; screenshots, recordings, reports)
 ```
@@ -378,7 +378,7 @@ applications/openthrottle-developer/tests/e2e/
 - **`appId` per flow.** Each YAML must declare its `appId` (mobile bundle id) or
   set `url` for browser/WebView flows. Keep selectors generic until stable
   testIDs / accessibility labels are in place.
-- **Shared steps go in `helpers/`** and are pulled in via `runFlow:` so flows
+- **Shared steps go in `subflows/`** and are pulled in via `runFlow:` so flows
   stay readable.
 - **Artifacts stay in `output/`** which is gitignored. Never commit recordings.
 - **Do not place Maestro files under `app/`.** Application source must remain

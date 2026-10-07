@@ -1,6 +1,7 @@
 import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -13,7 +14,7 @@ import {
   portsForBase,
   posixCksum,
   resolveWorktreePorts,
-} from '../lib/worktree-ports.ts';
+} from '../utils/worktree-ports.ts';
 
 describe('posixCksum', () => {
   // Reference values from the host cksum(1): printf '%s' name | cksum

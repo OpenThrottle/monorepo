@@ -17,9 +17,9 @@ import { homedir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 
 import { runClaudeGlobalSettingsCheck } from './check-claude-global-settings.ts';
-import { configureBlameIgnoreRevs, isLinkedWorktree } from './lib/git.ts';
-import { createLogger } from './lib/index.ts';
 import { interactiveConfirm, resetEnvironmentFiles } from './setup_environment.ts'; // prettier-ignore
+import { configureBlameIgnoreRevs, isLinkedWorktree } from './utils/git.ts';
+import { createLogger } from './utils/index.ts';
 
 const logger = createLogger();
 

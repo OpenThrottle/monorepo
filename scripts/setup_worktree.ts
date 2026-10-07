@@ -4,7 +4,7 @@
  * build. Invoked through the thin scripts/setup_worktree.sh shim, which
  * resolves tsx from the primary checkout because a fresh linked worktree has
  * no node_modules yet — which also means this script may import node builtins
- * and scripts/lib only (the shared logger degrades gracefully without chalk).
+ * and scripts/utils only (the shared logger degrades gracefully without chalk).
  *
  * Runs with cwd = the worktree root (the shim guarantees it).
  */
@@ -13,12 +13,12 @@ import { existsSync, globSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { run } from './lib/exec.ts';
-import { configureBlameIgnoreRevs } from './lib/git.ts';
-import { createLogger } from './lib/logger.ts';
-import type { AppPortName } from './lib/worktree-ports.ts';
-import { APP_PORT_NAMES, CANONICAL_APP_PORTS, resolveWorktreePorts } from './lib/worktree-ports.ts'; // prettier-ignore
 import { resetEnvironmentFiles } from './setup_environment.ts';
+import { run } from './utils/exec.ts';
+import { configureBlameIgnoreRevs } from './utils/git.ts';
+import { createLogger } from './utils/logger.ts';
+import type { AppPortName } from './utils/worktree-ports.ts';
+import { APP_PORT_NAMES, CANONICAL_APP_PORTS, resolveWorktreePorts } from './utils/worktree-ports.ts'; // prettier-ignore
 
 const logger = createLogger();
 

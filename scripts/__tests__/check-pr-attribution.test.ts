@@ -12,7 +12,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
  * CI `attribution-guard` job cannot: it only ever sees a PR body after GitHub
  * already has it (PR #554, body line 39).
  *
- * The pattern set itself (`.husky/lib/attribution-patterns.sh`) is exercised
+ * The pattern set itself (`.husky/utils/attribution-patterns.sh`) is exercised
  * indirectly here — this suite is about the script's own plumbing (arg
  * parsing, title vs. body pattern selection, exit codes, message shape), not
  * a re-test of the shared regex. Same split as `personal-skills-tier.test.ts`
@@ -98,7 +98,7 @@ describe('check-pr-attribution.sh', () => {
       '🤖 Generated with [Claude Code](https://claude.com/claude-code)',
     );
     expect(result.output).toContain('AGENTS.md § No agent attribution');
-    expect(result.output).toContain('.husky/lib/attribution-patterns.sh');
+    expect(result.output).toContain('.husky/utils/attribution-patterns.sh');
   });
 
   it('rejects Co-Authored-By regardless of casing', () => {

@@ -5,7 +5,7 @@ same way: two rewrite, two refuse. This page records which is which and why, so 
 decision rather than as an inconsistency.
 
 Decided for OT plan `40838811-e230-4c3b-a36a-04029792ddd4` task `f80c530d`. The pattern set itself
-lives in exactly one file, [`.husky/lib/attribution-patterns.sh`](../../.husky/lib/attribution-patterns.sh),
+lives in exactly one file, [`.husky/utils/attribution-patterns.sh`](../../.husky/utils/attribution-patterns.sh),
 and every layer below sources it rather than restating it.
 
 ## The layers
@@ -58,7 +58,7 @@ against a PR that already existed.
 if any carries an attribution line, pointing at `git rebase -i` as the fix. A push is the last moment
 the history is still private and still cheap to rewrite, which is exactly where a refusal belongs.
 
-The gate lives in [`.husky/lib/attribution-push-gate.sh`](../../.husky/lib/attribution-push-gate.sh)
+The gate lives in [`.husky/utils/attribution-push-gate.sh`](../../.husky/utils/attribution-push-gate.sh)
 and is _sourced_ by the hook so its `exit 1` aborts the push — the same arrangement
 `component-shape-gate.sh` already uses for the primitive-shape audit.
 

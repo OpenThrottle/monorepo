@@ -387,7 +387,7 @@ lifecycle stages, all on the exact same single command so they can never drift:
 - **CI** — the `🧱 Component primitive-shape audit` step in
   `.github/workflows/continuous-integration.yml`.
 
-All three source the same shared snippet (`.husky/lib/component-shape-gate.sh`)
+All three source the same shared snippet (`.husky/utils/component-shape-gate.sh`)
 / run the same command; keep them in lockstep. Run it yourself with:
 
 ```bash

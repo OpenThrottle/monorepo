@@ -8,8 +8,8 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { gitOutput, isLinkedWorktree } from './lib/git.ts';
-import { createLogger } from './lib/index.ts';
+import { gitOutput, isLinkedWorktree } from './utils/git.ts';
+import { createLogger } from './utils/index.ts';
 
 const logger = createLogger();
 

@@ -199,8 +199,8 @@ jobs:
   # This job is the check on the other side of that boundary.
   #
   # The pattern set is NOT restated here — it is sourced from
-  # .husky/lib/attribution-patterns.sh, the same file the hook sources, so the
-  # two cannot drift. Same arrangement as .husky/lib/component-shape-gate.sh.
+  # .husky/utils/attribution-patterns.sh, the same file the hook sources, so the
+  # two cannot drift. Same arrangement as .husky/utils/component-shape-gate.sh.
   #
   # 💰 No Nx, no install, no cache, no full clone: a sparse depth-1 checkout of
   # one shell file plus one paginated API call. Runs on draft PRs too, unlike
@@ -220,7 +220,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 1
-          sparse-checkout: .husky/lib/attribution-patterns.sh
+          sparse-checkout: .husky/utils/attribution-patterns.sh
           sparse-checkout-cone-mode: false
 
       - name: '🚫 No tool or model attribution'
@@ -234,7 +234,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          . .husky/lib/attribution-patterns.sh
+          . .husky/utils/attribution-patterns.sh
 
           work="$(mktemp -d)"
           failed=0
@@ -279,7 +279,7 @@ jobs:
             echo "   above and push again."
             echo ""
             echo "   Rule:  AGENTS.md § No agent attribution"
-            echo "   Guard: .husky/lib/attribution-patterns.sh (shared with the commit-msg hook)"
+            echo "   Guard: .husky/utils/attribution-patterns.sh (shared with the commit-msg hook)"
             exit 1
           fi
 

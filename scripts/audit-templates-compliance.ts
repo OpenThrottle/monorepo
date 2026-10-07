@@ -6,9 +6,10 @@
  */
 
 import { readFileSync } from 'fs';
-import path from 'path';
 import { globSync } from 'glob';
-import { createLogger } from './lib/index.ts';
+import path from 'path';
+
+import { createLogger } from './utils/index.ts';
 
 const logger = createLogger();
 

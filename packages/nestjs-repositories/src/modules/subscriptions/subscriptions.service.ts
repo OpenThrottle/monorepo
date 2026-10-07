@@ -7,7 +7,7 @@ import { Repository } from 'typeorm';
 import {
   type ListPaginationInput,
   resolveListPagination,
-} from '../../common/list-pagination.ts';
+} from '../../utils/list-pagination.ts';
 import { Subscription } from './subscription.entity.ts';
 
 @Injectable()

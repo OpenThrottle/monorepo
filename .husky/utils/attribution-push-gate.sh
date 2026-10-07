@@ -22,7 +22,7 @@
 # sourcing this: stdin is consumed once, and reading it here would leave later
 # gates in the same hook nothing to read.
 
-. "$(dirname "$0")/lib/attribution-patterns.sh"
+. "$(dirname "$0")/utils/attribution-patterns.sh"
 
 echo "🚫 Attribution gate (pushed commits)"
 
@@ -73,7 +73,7 @@ if [ -s "$ot_attribution_report" ]; then
   echo ""
   echo "    Fix:   git rebase -i  (reword the commits listed above), then push again."
   echo "    Rule:  AGENTS.md § No agent attribution"
-  echo "    Guard: .husky/lib/attribution-patterns.sh (shared with commit-msg, the PR-body guard and CI)"
+  echo "    Guard: .husky/utils/attribution-patterns.sh (shared with commit-msg, the PR-body guard and CI)"
   echo ""
 
   # Exit with a non-zero status code to stop the push

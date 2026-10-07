@@ -46,7 +46,7 @@ mechanics, see [MONOREPO.md](./MONOREPO.md) and [docs/monorepo/](./docs/monorepo
    the generators, not hand-scaffolding — see
    [Creating new projects](./MONOREPO.md#creating-new-projects). Follow the code
    style in [`docs/monorepo/code-style.md`](./docs/monorepo/code-style.md). New repo scripts are
-   TypeScript run via `tsx`, use the shared `scripts/lib/` toolkit, and ship a
+   TypeScript run via `tsx`, use the shared `scripts/utils/` toolkit, and ship a
    Vitest spec in `scripts/__tests__/` — see the `scripts/` convention in
    [MONOREPO.md](./MONOREPO.md#key-directories-explained) (the pre-install
    bootstrap keeps thin POSIX shims).

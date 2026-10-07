@@ -1,16 +1,17 @@
 #!/usr/bin/env node
 
-import { Client } from 'pg';
 import {
   ensurePostgresReachable,
   getPostgresUrl,
 } from '@openthrottle/openthrottle-agentic-utils';
+import { Client } from 'pg';
+
 import {
   createFsMigrationSource,
   PgMigrationStore,
   runMigrations,
 } from './openthrottle-database-migrations';
-import { createLogger } from './lib/index.ts';
+import { createLogger } from './utils/index.ts';
 
 const logger = createLogger();
 

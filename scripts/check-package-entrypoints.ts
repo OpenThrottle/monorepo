@@ -84,7 +84,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
-import { createLogger } from './lib/index.ts';
+import { createLogger } from './utils/index.ts';
 
 const logger = createLogger();
 

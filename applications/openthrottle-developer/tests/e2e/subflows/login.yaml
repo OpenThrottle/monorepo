@@ -1,6 +1,6 @@
 # Reusable login subflow. Pull into authenticated specs via:
 #   - runFlow:
-#       file: ../../helpers/login.yaml   # path is relative to the calling flow
+#       file: ../../subflows/login.yaml   # path is relative to the calling flow
 #
 # Maestro Web notes (see tests/e2e/README.md "Maestro Web selector & input notes"):
 #   - The /auth form pre-fills a real local dev account. Maestro Web cannot reliably

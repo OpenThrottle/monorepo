@@ -19,7 +19,7 @@ tags:
   - full
 ---
 - runFlow:
-    file: ../../helpers/login.yaml
+    file: ../../subflows/login.yaml
 - openLink: http://localhost:6020/plans
 # The list loaded.
 - extendedWaitUntil:

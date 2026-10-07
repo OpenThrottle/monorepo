@@ -1,7 +1,8 @@
 import { execSync } from 'child_process';
-import { readFileSync, existsSync, writeFileSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { join, relative } from 'path';
-import { createLogger } from './lib/index.ts';
+
+import { createLogger } from './utils/index.ts';
 
 const logger = createLogger();
 

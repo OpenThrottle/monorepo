@@ -2,7 +2,8 @@
 name: ot-folders
 description: >-
   Where OpenThrottle code goes, what it is named, what shape it must have, and
-  how to prove it. USE WHEN adding, moving or renaming a file; deciding between
+  how to prove it. USE WHEN adding, moving or renaming a file or folder (naming
+  a new directory included); deciding between
   app/global/ and app/routing/<area>/; deciding whether something is an
   application or a package; or when lint reports
   openthrottle/component-primitive-shape, openthrottle/route-primitive-shape,
@@ -11,7 +12,7 @@ description: >-
   ot-generators first, then use this skill to place and shape it.
 metadata:
   author: OpenThrottle
-  version: '2.0'
+  version: '2.1'
 ---
 
 # OpenThrottle Folders
@@ -109,7 +110,7 @@ is a package, and that is the whole test.
 `app/routing/<area>/`, which carries all eight:
 `{actions,components,config,data,hooks,testing,types,utils}`.
 
-## The three standing rules
+## The four standing rules
 
 1. **Do not invent new folders.** Use the vocabulary above. If nothing fits, the
    code probably belongs in a different bucket, not a new directory.
@@ -118,6 +119,25 @@ is a package, and that is the whole test.
 3. **Do not delete empty folders or their `.gitkeep`.** They are placeholders for
    functionality that is coming, and removing them makes the next generator run
    noisier than it needs to be.
+4. **No junk-drawer folder names: `lib`, `helpers`, `common`, `shared`, `misc`.**
+   `lib` is the main offender. In this monorepo **a package is the lib** — a
+   `type:package` under `packages/`. A `lib/` inside an app, a package or `scripts/`
+   is a vaguer second word for the same idea, and it grows without bound because
+   nothing in the name says what belongs there. Ask "which vocabulary word
+   describes what's in here?"; if none does, see rule 1.
+
+   | You reached for              | Use instead                                                                  |
+   | ---------------------------- | ---------------------------------------------------------------------------- |
+   | `lib/`, `helpers/`, `misc/`  | `utils/` (pure functions), `config/` (constants, defaults), `data/` (static) |
+   | `shared/`, `common/`         | the [promotion ladder](#the-promotion-ladder): `app/global/`, then a package |
+   | "it's reusable library code" | a package — scaffold it with `ot-generators`                                 |
+   | a tool's own specific term   | fine — Maestro `subflows/` is specific; vagueness is the problem             |
+
+   **No exceptions remain.** `scripts/utils/` used to be `scripts/lib/`; `.husky/lib`,
+   `nestjs-repositories/src/common` and the e2e `helpers/` were renamed the same
+   way. `git ls-files | grep -E '(^|/)(lib|helpers|common|shared|misc)/'` returns only
+   `tools/generators/**/files/common/`, which is generator template input, not a
+   source folder.
 
 ## The folder vocabulary
 

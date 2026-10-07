@@ -26,7 +26,7 @@
  */
 import { fileURLToPath } from 'node:url';
 
-import { createLogger, hasFlag, positionals, run } from './lib/index.ts';
+import { createLogger, hasFlag, positionals, run } from './utils/index.ts';
 
 const logger = createLogger();
 

@@ -4,8 +4,8 @@ import { basename, join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { run } from '../lib/exec.ts';
-import { BLAME_IGNORE_REVS_FILE, configureBlameIgnoreRevs } from '../lib/git.ts'; // prettier-ignore
+import { run } from '../utils/exec.ts';
+import { BLAME_IGNORE_REVS_FILE, configureBlameIgnoreRevs } from '../utils/git.ts'; // prettier-ignore
 
 const readConfig = (repoRoot: string): string => {
   const result = run('git', ['config', '--get', 'blame.ignoreRevsFile'], {

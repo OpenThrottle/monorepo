@@ -8,7 +8,7 @@ tags:
   - full
 ---
 - runFlow:
-    file: ../../helpers/login.yaml
+    file: ../../subflows/login.yaml
 # The helper already waits for dashboard-content-grid; additionally confirm the
 # authenticated nav shell rendered.
 - assertVisible:

@@ -1,11 +1,13 @@
 #!/usr/bin/env node
 
-import { Client } from 'pg';
 import { createHash } from 'node:crypto';
-import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
-import { join } from 'node:path';
 import { readdir, readFile } from 'node:fs/promises';
-import { createLogger } from './lib/index.ts';
+import { join } from 'node:path';
+
+import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
+import { Client } from 'pg';
+
+import { createLogger } from './utils/index.ts';
 
 const logger = createLogger();
 

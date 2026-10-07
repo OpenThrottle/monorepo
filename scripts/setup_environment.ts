@@ -9,14 +9,14 @@
  * Invoked through the thin scripts/setup_environment.sh shim (the path the
  * app READMEs document), imported directly by setup_worktree.ts, and run as
  * part of ./scripts/setup.sh. May run before `pnpm install`, so: node
- * builtins + scripts/lib only.
+ * builtins + scripts/utils only.
  */
 import { copyFileSync, existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { createInterface } from 'node:readline/promises';
 import { fileURLToPath } from 'node:url';
 
-import { createLogger } from './lib/logger.ts';
+import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger();
 
