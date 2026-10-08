@@ -77,12 +77,12 @@
 -- checks the external_key. Step 4 skips rows already orphaned. A re-run is a no-op. The runner
 -- wraps this file in one transaction, so it carries no BEGIN/COMMIT of its own.
 
-DROP TABLE IF EXISTS tmp_129_legacy_completions;
+DROP TABLE IF EXISTS tmp_130_legacy_completions;
 
 -- The candidate set, computed once so every step sees the same plans. A plan's history is its
 -- plan-level status_change artifacts, attributed by payload id. Joining on session_id alone
 -- would pick up the other subjects of a shared session; see the agreement report's header.
-CREATE TEMP TABLE tmp_129_legacy_completions AS
+CREATE TEMP TABLE tmp_130_legacy_completions AS
 WITH plan_latest AS (
     SELECT DISTINCT ON (wss.plan_id)
         wss.plan_id,
@@ -132,9 +132,9 @@ SELECT
     c.session_external_ref,
     FALSE,
     c.completed_at,
-    'Reconstructed plan completion from plans.completed_at (migration 129).',
+    'Reconstructed plan completion from plans.completed_at (migration 130).',
     'ledger-migration'
-FROM tmp_129_legacy_completions c
+FROM tmp_130_legacy_completions c
 WHERE NOT EXISTS (
     SELECT 1 FROM work_sessions ws WHERE ws.external_ref = c.session_external_ref
 );
@@ -146,7 +146,7 @@ SELECT
     c.plan_id,
     ws.id,
     NULL
-FROM tmp_129_legacy_completions c
+FROM tmp_130_legacy_completions c
     JOIN work_sessions ws ON ws.external_ref = c.session_external_ref
 WHERE NOT EXISTS (
     SELECT 1
@@ -176,7 +176,7 @@ SELECT
     'legacy',
     'status_change',
     'unverified'
-FROM tmp_129_legacy_completions c
+FROM tmp_130_legacy_completions c
     JOIN work_sessions ws ON ws.external_ref = c.session_external_ref
 WHERE NOT EXISTS (
     SELECT 1
@@ -192,4 +192,4 @@ WHERE
     AND wa.verification <> 'orphaned'
     AND NOT EXISTS (SELECT 1 FROM work_session_subjects s WHERE s.session_id = wa.session_id);
 
-DROP TABLE tmp_129_legacy_completions;
+DROP TABLE tmp_130_legacy_completions;
