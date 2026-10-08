@@ -41,17 +41,17 @@ apps, `packages/openthrottle-mcp`) consumes its schema through the committed
   `cwd` at the project root — so booting the server writes the app copy
   `applications/openthrottle-server/schema.gql`. That is the single committed schema file;
   every consumer reads it via `@openthrottle/graphql-codegen`'s `defineCodegen`. You don't need
-  to boot: `pnpm nx run openthrottle-server:schema-gql-write` writes the same bytes with no
+  to boot: `pnpm nx run openthrottle-server:graphql-schema:write` writes the same bytes with no
   Postgres/Redis. Then run consumer codegen (`pnpm run check:local:codegen`) and commit both.
   (There is no repo-root `schema.gql`.)
-- **Schema drift gate:** `schema-gql-check` (in `check:local`) fails when the committed file no
-  longer matches the decorators. Both schema targets live in `src/scripts/schema-gql.ts` and
+- **Schema drift gate:** `graphql-schema:check` (in `check:local`) fails when the committed file no
+  longer matches the decorators. Both schema targets live in `src/scripts/graphql-schema.ts` and
   use `emitCodeFirstSchema` from `@openthrottle/nestjs-graphql`: `AppModule` is opened in Nest
   preview mode, where only `GraphQLModule` initializes (`@nestjs/graphql` allowlists it), and
   Nest's own builder writes the file. The emit is pinned to `AppModule` (PROCESS_ROLE=all):
   field order follows module registration order, and `ApiAppModule` currently orders the
   work-ledger Query fields differently. A `dev-api` boot may therefore rewrite `schema.gql` in
-  another order. Restore it with `schema-gql-write`.
+  another order. Restore it with `graphql-schema:write`.
 - Schema evolution (never remove/change existing fields; `@deprecated(reason)`) — root CLAUDE.md.
 - TypeORM entities live in `packages/nestjs-repositories`, not here; each entity's JSDoc names
   the `databases/migrations/` files it matches. A schema change means a new SQL migration in
@@ -79,7 +79,7 @@ apps, `packages/openthrottle-mcp`) consumes its schema through the committed
 ## Don't
 
 - Don't hand-edit `schema.gql` — it's generated; regenerate with
-  `pnpm nx run openthrottle-server:schema-gql-write`.
+  `pnpm nx run openthrottle-server:graphql-schema:write`.
 - Don't add a global prefix or a validation pipe casually; webhook routing and GraphQL both
   depend on the current bootstrap shape (see comments in `src/main.ts`).
 

@@ -1,6 +1,7 @@
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { basename, dirname, join, resolve } from 'node:path';
+import { parseArgs } from 'node:util';
 
 import { emitCodeFirstSchema } from '@openthrottle/nestjs-graphql';
 
@@ -26,20 +27,66 @@ import { AppModule } from '../app.module.ts';
  * `autoSchemaFile` is the relative path `schema.gql`, resolved against the
  * working directory when Nest writes it. That is the only seam used here: the
  * check emits from a temporary directory and compares, the write emits from the
- * server root. AppModule itself is left exactly as a boot sees it.
+ * schema's own directory. AppModule itself is left exactly as a boot sees it.
  *
- * Run through nx, which builds first and loads `.env.default` (some modules
+ * Where the schema lives and which project owns it are not known here: the
+ * shared `graphql-schema` target in nx.json passes `--schema={projectRoot}/schema.gql`
+ * and `--project={projectName}`, and Nx supplies `NX_WORKSPACE_ROOT`. Run it
+ * through nx, which also builds first and loads `.env.default` (some modules
  * read the environment at import time):
- *   pnpm nx run openthrottle-server:schema-gql-check
- *   pnpm nx run openthrottle-server:schema-gql-write
+ *   pnpm nx run openthrottle-server:graphql-schema:check
+ *   pnpm nx run openthrottle-server:graphql-schema:write
  */
 
-/** build/src/scripts → the server project root. */
-const SERVER_ROOT = resolve(import.meta.dirname, '..', '..', '..');
-const SCHEMA_FILE = 'schema.gql';
-const SCHEMA_PATH_FROM_REPO = `applications/openthrottle-server/${SCHEMA_FILE}`;
-const WRITE_COMMAND = 'pnpm nx run openthrottle-server:schema-gql-write';
+/** The file name `autoSchemaFile` writes; `--schema` must end in it. */
+const AUTO_SCHEMA_FILE = 'schema.gql';
 const CONTEXT_LINES = 3;
+
+interface SchemaTarget {
+  /** Absolute path of the committed schema. */
+  readonly absolutePath: string;
+  /** `--schema` as passed: workspace-relative, for messages. */
+  readonly displayPath: string;
+  readonly mode: 'check' | 'write';
+  readonly writeCommand: string;
+}
+
+/**
+ * @description Read the target from argv and the Nx task environment, failing
+ * loudly when run outside nx or with a schema `autoSchemaFile` cannot write.
+ */
+const readSchemaTarget = (): SchemaTarget => {
+  const { values } = parseArgs({
+    options: {
+      check: { type: 'boolean' },
+      project: { type: 'string' },
+      schema: { type: 'string' },
+      write: { type: 'boolean' },
+    },
+  });
+  const workspaceRoot = process.env['NX_WORKSPACE_ROOT'];
+  const { check, project, schema, write } = values;
+
+  if (!workspaceRoot || !project || !schema || check === write) {
+    throw new Error(
+      'Run through nx: pnpm nx run <project>:graphql-schema:check (or :write). ' +
+        'The target passes --project, --schema and exactly one of --check/--write; Nx sets NX_WORKSPACE_ROOT.',
+    );
+  }
+
+  if (basename(schema) !== AUTO_SCHEMA_FILE) {
+    throw new Error(
+      `--schema must name a ${AUTO_SCHEMA_FILE} file (that is what autoSchemaFile writes); got ${schema}.`,
+    );
+  }
+
+  return {
+    absolutePath: resolve(workspaceRoot, schema),
+    displayPath: schema,
+    mode: check ? 'check' : 'write',
+    writeCommand: `pnpm nx run ${project}:graphql-schema:write`,
+  };
+};
 
 /**
  * @description Emit the schema with the working directory set to `directory`,
@@ -62,6 +109,7 @@ const emitInto = async (directory: string): Promise<void> => {
  * name what changed without dumping a 200 KB schema.
  */
 const describeFirstDifference = (
+  displayPath: string,
   committed: string,
   emitted: string,
 ): string => {
@@ -86,37 +134,39 @@ const describeFirstDifference = (
 
   return [
     `First difference at line ${index + 1}:`,
-    `--- committed ${SCHEMA_PATH_FROM_REPO}`,
+    `--- committed ${displayPath}`,
     show(committedLines, '-'),
     '+++ emitted from the server decorators',
     show(emittedLines, '+'),
   ].join('\n');
 };
 
-const check = async (): Promise<boolean> => {
-  const directory = await mkdtemp(join(tmpdir(), 'openthrottle-schema-gql-'));
+const check = async (target: SchemaTarget): Promise<boolean> => {
+  const directory = await mkdtemp(
+    join(tmpdir(), 'openthrottle-graphql-schema-'),
+  );
 
   try {
     await emitInto(directory);
 
     const [committed, emitted] = await Promise.all([
-      readFile(join(SERVER_ROOT, SCHEMA_FILE), 'utf8'),
-      readFile(join(directory, SCHEMA_FILE), 'utf8'),
+      readFile(target.absolutePath, 'utf8'),
+      readFile(join(directory, AUTO_SCHEMA_FILE), 'utf8'),
     ]);
 
     if (committed === emitted) {
-      console.log(`✅ ${SCHEMA_PATH_FROM_REPO} matches the server decorators.`);
+      console.log(`✅ ${target.displayPath} matches the server decorators.`);
 
       return true;
     }
 
     console.error(
       [
-        `❌ ${SCHEMA_PATH_FROM_REPO} is stale: it no longer matches what the server's GraphQL decorators emit.`,
+        `❌ ${target.displayPath} is stale: it no longer matches what the server's GraphQL decorators emit.`,
         '',
-        describeFirstDifference(committed, emitted),
+        describeFirstDifference(target.displayPath, committed, emitted),
         '',
-        `Regenerate it with:  ${WRITE_COMMAND}`,
+        `Regenerate it with:  ${target.writeCommand}`,
         'then commit schema.gql and re-run consumer codegen (pnpm run check:local:codegen).',
       ].join('\n'),
     );
@@ -127,13 +177,15 @@ const check = async (): Promise<boolean> => {
   }
 };
 
-const write = async (): Promise<void> => {
-  await emitInto(SERVER_ROOT);
-  console.log(`✅ Wrote ${SCHEMA_PATH_FROM_REPO} from the server decorators.`);
+const write = async (target: SchemaTarget): Promise<void> => {
+  await emitInto(dirname(target.absolutePath));
+  console.log(`✅ Wrote ${target.displayPath} from the server decorators.`);
 };
 
-if (process.argv.includes('--check')) {
-  process.exitCode = (await check()) ? 0 : 1;
+const target = readSchemaTarget();
+
+if (target.mode === 'check') {
+  process.exitCode = (await check(target)) ? 0 : 1;
 } else {
-  await write();
+  await write(target);
 }

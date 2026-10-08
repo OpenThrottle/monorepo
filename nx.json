@@ -423,6 +423,26 @@
         "cwd": "{workspaceRoot}"
       }
     },
+    "graphql-schema": {
+      "cache": false,
+      "configurations": {
+        "check": {
+          "command": "node --enable-source-maps --env-file=.env.default ./build/src/scripts/graphql-schema.js --project={projectName} --schema={projectRoot}/schema.gql --check"
+        },
+        "write": {
+          "command": "node --enable-source-maps --env-file=.env.default ./build/src/scripts/graphql-schema.js --project={projectName} --schema={projectRoot}/schema.gql --write"
+        }
+      },
+      "defaultConfiguration": "check",
+      "dependsOn": ["build"],
+      "executor": "nx:run-commands",
+      "metadata": {
+        "description": "Emit or verify a code-first NestJS API's committed {projectRoot}/schema.gql without booting it (configurations: check, write; default check). Runs the project's built src/scripts/graphql-schema.js, passing the schema location and project name so the script hardcodes neither. The script opens the app module in Nest preview mode — only GraphQLModule initializes, so no Postgres/Redis/HTTP. `check` emits into a temp dir and fails on drift; `write` regenerates in place. `.env.default` is loaded because some modules read env at import time. Opt a project in by declaring an empty `graphql-schema` target. Not cached: the emit depends on the whole decorator graph."
+      },
+      "options": {
+        "cwd": "{projectRoot}"
+      }
+    },
     "ingest-agent-assets": {
       "cache": false,
       "dependsOn": ["@openthrottle/nodejs-utils:build"],
@@ -488,9 +508,10 @@
           "command": "nest start --path ./tsconfig.app.json"
         }
       },
+      "defaultConfiguration": "dev",
       "executor": "nx:run-commands",
       "metadata": {
-        "description": "Drive a NestJS app through the Nest CLI (configurations: build, dev, debug, repl, start)."
+        "description": "Drive a NestJS app through the Nest CLI (configurations: build, dev, debug, repl, start; default dev)."
       },
       "options": {
         "cwd": "{projectRoot}"

@@ -87,7 +87,7 @@ Output under `applications/openthrottle-server/build`. For Docker image (built f
 
 ```bash
 # 1. Regenerate schema.gql — no Postgres, Redis or running server needed
-pnpm nx run openthrottle-server:schema-gql-write
+pnpm nx run openthrottle-server:graphql-schema:write
 
 # 2. Regenerate consumer codegen against it
 pnpm run check:local:codegen
@@ -95,7 +95,7 @@ pnpm run check:local:codegen
 # 3. Commit schema.gql and the regenerated consumer output together
 ```
 
-`pnpm run check:local` runs `schema-gql-check`, which fails if the committed file no longer matches the decorators. Both targets open `AppModule` in Nest preview mode, where only `GraphQLModule` initializes, and let Nest's own schema builder write the file, so the output is exactly what a boot writes.
+`pnpm run check:local` runs `graphql-schema:check`, which fails if the committed file no longer matches the decorators. Both targets open `AppModule` in Nest preview mode, where only `GraphQLModule` initializes, and let Nest's own schema builder write the file, so the output is exactly what a boot writes.
 
 ## LangGraph Studio (optional)
 

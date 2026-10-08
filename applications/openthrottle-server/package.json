@@ -181,37 +181,10 @@
           }
         }
       },
+      "graphql-schema": {},
       "lint": {
         "options": {
           "command": "pnpm exec eslint -c ./eslint.config.ts .",
-          "cwd": "{projectRoot}"
-        }
-      },
-      "schema-gql-check": {
-        "dependsOn": [
-          "build"
-        ],
-        "executor": "nx:run-commands",
-        "cache": false,
-        "metadata": {
-          "description": "Fail when the committed schema.gql no longer matches what the server decorators emit. Opens AppModule in Nest preview mode (only GraphQLModule initializes, so no Postgres/Redis/HTTP) from a temp dir and compares. Wired into check:local; regenerate with schema-gql-write. `.env.default` is loaded because some modules read env at import time."
-        },
-        "options": {
-          "command": "node --enable-source-maps --env-file=.env.default ./build/src/scripts/schema-gql.js --check",
-          "cwd": "{projectRoot}"
-        }
-      },
-      "schema-gql-write": {
-        "dependsOn": [
-          "build"
-        ],
-        "executor": "nx:run-commands",
-        "cache": false,
-        "metadata": {
-          "description": "Regenerate schema.gql from the server decorators without booting the server \u2014 the same Nest schema builder a boot runs, in preview mode, with no Postgres/Redis/HTTP. Run after changing any GraphQL type, field, description or deprecation, then commit schema.gql and re-run consumer codegen."
-        },
-        "options": {
-          "command": "node --enable-source-maps --env-file=.env.default ./build/src/scripts/schema-gql.js",
           "cwd": "{projectRoot}"
         }
       },
