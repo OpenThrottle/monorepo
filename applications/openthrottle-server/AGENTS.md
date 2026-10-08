@@ -45,9 +45,10 @@ apps, `packages/openthrottle-mcp`) consumes its schema through the committed
   Postgres/Redis. Then run consumer codegen (`pnpm run check:local:codegen`) and commit both.
   (There is no repo-root `schema.gql`.)
 - **Schema drift gate:** `graphql-schema:check` (in `check:local`) fails when the committed file no
-  longer matches the decorators. Both schema targets live in `src/scripts/graphql-schema.ts` and
-  use `emitCodeFirstSchema` from `@openthrottle/nestjs-graphql`: `AppModule` is opened in Nest
-  preview mode, where only `GraphQLModule` initializes (`@nestjs/graphql` allowlists it), and
+  longer matches the decorators. The target is the shared `graphql-schema` targetDefault in
+  `nx.json`; this app only opts in with an empty `"graphql-schema": {}`. It runs the command
+  shipped by `@openthrottle/nestjs-graphql` (`src/bin.ts`) against the built
+  `./build/src/app.module.js`: `AppModule` is opened in Nest preview mode, where only `GraphQLModule` initializes (`@nestjs/graphql` allowlists it), and
   Nest's own builder writes the file. The emit is pinned to `AppModule` (PROCESS_ROLE=all):
   field order follows module registration order, and `ApiAppModule` currently orders the
   work-ledger Query fields differently. A `dev-api` boot may therefore rewrite `schema.gql` in

@@ -345,6 +345,16 @@
       "project": ["src/**/*.ts"],
       "ignoreDependencies": ["@golevelup/ts-vitest", "@nestjs/testing"],
     },
+    "packages/nestjs-graphql": {
+      "entry": [
+        "src/index.ts",
+        // Shell-invoked with no in-repo importer: the nx.json `graphql-schema`
+        // targetDefault runs `node .../dist/src/bin.js`, so knip cannot reach it
+        // (or schema/graphql-schema-command.ts, which it imports) via the import graph.
+        "src/bin.ts",
+      ],
+      "project": ["src/**/*.ts"],
+    },
     "packages/nestjs-repositories": {
       "entry": ["src/index.ts", "src/nestjs-repositories.module.ts"],
       "project": ["src/**/*.ts"],

@@ -427,17 +427,17 @@
       "cache": false,
       "configurations": {
         "check": {
-          "command": "node --enable-source-maps --env-file=.env.default ./build/src/scripts/graphql-schema.js --project={projectName} --schema={projectRoot}/schema.gql --check"
+          "command": "node --enable-source-maps --env-file=.env.default ./node_modules/@openthrottle/nestjs-graphql/dist/src/bin.js --module=./build/src/app.module.js --project={projectName} --schema={projectRoot}/schema.gql --check"
         },
         "write": {
-          "command": "node --enable-source-maps --env-file=.env.default ./build/src/scripts/graphql-schema.js --project={projectName} --schema={projectRoot}/schema.gql --write"
+          "command": "node --enable-source-maps --env-file=.env.default ./node_modules/@openthrottle/nestjs-graphql/dist/src/bin.js --module=./build/src/app.module.js --project={projectName} --schema={projectRoot}/schema.gql --write"
         }
       },
       "defaultConfiguration": "check",
-      "dependsOn": ["build"],
+      "dependsOn": ["build", "^build"],
       "executor": "nx:run-commands",
       "metadata": {
-        "description": "Emit or verify a code-first NestJS API's committed {projectRoot}/schema.gql without booting it (configurations: check, write; default check). Runs the project's built src/scripts/graphql-schema.js, passing the schema location and project name so the script hardcodes neither. The script opens the app module in Nest preview mode — only GraphQLModule initializes, so no Postgres/Redis/HTTP. `check` emits into a temp dir and fails on drift; `write` regenerates in place. `.env.default` is loaded because some modules read env at import time. Opt a project in by declaring an empty `graphql-schema` target. Not cached: the emit depends on the whole decorator graph."
+        "description": "Emit or verify a code-first NestJS API's committed {projectRoot}/schema.gql without booting it (configurations: check, write; default check). Runs the command shipped by @openthrottle/nestjs-graphql (src/bin.ts), so an API needs no script of its own: it opts in by declaring an empty `graphql-schema` target and depending on @openthrottle/nestjs-graphql. The target passes the built root module (--module=./build/src/app.module.js, export AppModule), the schema location and the project name. The command opens that module in Nest preview mode — only GraphQLModule initializes, so no Postgres/Redis/HTTP. `check` emits into a temp dir and fails on drift; `write` regenerates in place. Requires the module's autoSchemaFile to be the relative 'schema.gql' (the NestjsGraphqlModule default). `.env.default` is loaded because some modules read env at import time. Depends on build and ^build: the app's built module and the package's dist. Not cached: the emit depends on the whole decorator graph."
       },
       "options": {
         "cwd": "{projectRoot}"

@@ -95,7 +95,7 @@ pnpm run check:local:codegen
 # 3. Commit schema.gql and the regenerated consumer output together
 ```
 
-`pnpm run check:local` runs `graphql-schema:check`, which fails if the committed file no longer matches the decorators. Both targets open `AppModule` in Nest preview mode, where only `GraphQLModule` initializes, and let Nest's own schema builder write the file, so the output is exactly what a boot writes.
+`pnpm run check:local` runs `graphql-schema:check`, which fails if the committed file no longer matches the decorators. Both configurations of the shared `graphql-schema` target (defined in `nx.json`, run by the command in `@openthrottle/nestjs-graphql`) open `AppModule` in Nest preview mode, where only `GraphQLModule` initializes, and let Nest's own schema builder write the file, so the output is exactly what a boot writes.
 
 ## LangGraph Studio (optional)
 
