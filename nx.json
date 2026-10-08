@@ -462,7 +462,8 @@
       "options": {
         "command": "pnpm exec eslint -c ./eslint.config.ts .",
         "cwd": "{projectRoot}"
-      }
+      },
+      "outputs": ["{options.outputFile}"]
     },
     "nestjs": {
       "configurations": {

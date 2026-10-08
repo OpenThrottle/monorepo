@@ -3,10 +3,10 @@
   "collection": "@nestjs/schematics",
   "compilerOptions": {
     "builder": {
-      "type": "swc",
       "options": {
         "ignore": ["**/*.test.ts"]
-      }
+      },
+      "type": "swc"
     },
     "deleteOutDir": true,
     "tsConfigPath": "tsconfig.app.json",
