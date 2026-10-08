@@ -102,7 +102,8 @@ export class AgenticRalphOrchestratorService {
     readonly signal?: AbortSignal;
     /**
      * Work-ledger run session id opened by the plans worker. Forwarded into the orchestrator
-     * context so its status mutations carry X-OT-Session-Id (ambient attribution, G11).
+     * context so its status mutations carry X-OT-Session-Id (ambient attribution; G11 in
+     * docs/monorepo/work-ledger-sessions.md).
      */
     readonly workSessionId?: string | null;
   }): Promise<WorkflowRunResult> {

@@ -14,7 +14,7 @@ export const WORK_SESSION_CLOSED_BY = {
    * duration" is a value in the data, not an ended_at = started_at comparison.
    */
   INSTANT: 'instant',
-  /** Closed by the abandoned-session sweeper past the TTL (design §4.4). */
+  /** Closed by the hourly abandoned-session sweeper, 24h after the session started. */
   SWEEPER: 'sweeper',
 } as const;
 

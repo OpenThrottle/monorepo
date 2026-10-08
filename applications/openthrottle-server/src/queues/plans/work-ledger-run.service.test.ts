@@ -95,7 +95,7 @@ describe('WorkLedgerRunService', () => {
     );
   });
 
-  it('actors the session to the worker token principal so it matches the request principal (G11)', async () => {
+  it('actors the session to the worker token principal so it matches the request principal', async () => {
     vi.stubEnv('OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN', 'ot_sa_worker_token');
     vi.mocked(planRunsService.findByQueueNameAndBullmqJobId).mockResolvedValue(
       createMock<PlanRun>({ actorUserId: 'user-9', id: 'run-1' }),

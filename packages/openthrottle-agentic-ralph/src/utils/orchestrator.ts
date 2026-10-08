@@ -188,7 +188,8 @@ const emitDiagnostic = async (
 
 /**
  * @description Builds the per-call GraphQL options carrying the run's `X-OT-Session-Id` header so
- * the server attributes status_change artifacts to the run session (design §4.3, G11). Returns
+ * the server attributes status_change artifacts to the run session (G11 in
+ * docs/monorepo/work-ledger-sessions.md). Returns
  * `undefined` when no run session is set (CLI/dev paths) so the server opens instant sessions as
  * before. Only status-mutating calls need it; read queries are unaffected.
  */

@@ -523,7 +523,7 @@ export class TasksResolver {
     if (input.wave !== undefined) entity.wave = input.wave;
 
     // A real status transition (not a no-op re-assert). The status_change ledger fact and the
-    // row's completed_at must commit together (G12) — so save + capture run in one transaction.
+    // row's completed_at must commit together — so save + capture run in one transaction.
     const statusChanged =
       input.status != null && entity.status !== previousStatus;
 

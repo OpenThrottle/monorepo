@@ -19,7 +19,13 @@ import type { GlobalClsUser } from './global-cls-user.ts';
  * non-empty value. Extracted from the {@link ClsModule.forRoot} config so it can
  * be unit-tested directly.
  */
-/** Request header carrying an active work-ledger session id for ambient attribution (G11). */
+/**
+ * Request header carrying an active work-ledger session id for ambient attribution. The value is
+ * client-supplied, so it is trusted only when the session exists and its actor matches the
+ * authenticated request principal; on a mismatch or unknown id the server ignores it and opens an
+ * instant session instead — it never errors. That rule is G11 in
+ * docs/monorepo/work-ledger-sessions.md.
+ */
 const HEADER_OT_SESSION_ID = 'x-ot-session-id';
 
 /**
@@ -45,7 +51,7 @@ export const setupGlobalCls = (
   cls.set('app', app);
 
   // Unvalidated claim — the work-ledger capture path verifies the session's actor
-  // against the request principal before trusting it (G11).
+  // against the request principal before trusting it (see HEADER_OT_SESSION_ID above).
   const headerSessionId = req.headers[HEADER_OT_SESSION_ID];
   cls.set(
     'sessionId',

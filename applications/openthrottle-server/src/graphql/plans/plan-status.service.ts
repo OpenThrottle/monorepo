@@ -303,7 +303,7 @@ export class PlanStatusService {
    * @description Sets a plan's status with transition validation (the setPlanStatus mutation body).
    * Returns the (possibly unchanged) plan, or null when the plan does not exist. Throws
    * BadRequestException when an IN_PROGRESS transition is forbidden. Runs entirely inside one
-   * transaction so the row save and the status_change capture commit together (G12).
+   * transaction so the row save and the status_change capture commit together.
    */
   async setStatus(
     planId: string,
