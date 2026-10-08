@@ -13,6 +13,7 @@
     "@as-integrations/express5": "catalog:",
     "@nestjs/apollo": "catalog:",
     "@nestjs/common": "catalog:",
+    "@nestjs/core": "catalog:",
     "@nestjs/graphql": "catalog:",
     "@openthrottle/nestjs-modules": "workspace:^",
     "@openthrottle/nestjs-redis": "workspace:^",

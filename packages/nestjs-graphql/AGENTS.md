@@ -20,6 +20,13 @@ and the subscription topic-name helpers.
   `PubSub`; Redis swap seam documented in its JSDoc).
 - `src/config/` — `format-error` (leak-safe `formatError`), cache plugins, depth-limit rule,
   response-cache session id.
+- `src/schema/emit-code-first-schema.ts` — `emitCodeFirstSchema`: writes a root module's
+  `autoSchemaFile` in Nest preview mode (only `GraphQLModule` initializes; no DB/Redis/HTTP).
+- `src/schema/graphql-schema-command.ts` + `src/bin.ts` — the check/write command behind the
+  shared `graphql-schema` Nx target (`nx.json` targetDefaults). Nx runs `dist/src/bin.js` with
+  node directly (so `--env-file` loads before the app module is imported), passing the app's
+  built `--module`, `--project` and `--schema={projectRoot}/schema.gql`. A GraphQL API needs no
+  script of its own: it opts in with an empty `"graphql-schema": {}` target.
 
 ## Invariants & gotchas
 
@@ -30,7 +37,8 @@ and the subscription topic-name helpers.
   [applications/openthrottle-server/AGENTS.md](../../applications/openthrottle-server/AGENTS.md)).
   Changing this default moves where every consumer's schema lands and breaks the committed-schema
   codegen flow. It appears twice in the module file (`DEFAULT_DRIVER_CONFIG` and a literal inside
-  `forRoot`) — keep both in sync.
+  `forRoot`) — keep both in sync. The `graphql-schema` command depends on it too: it moves the
+  cwd to choose where the schema lands, which only works while `autoSchemaFile` is relative.
 - `mergeSecureDefaults` deep-merges `subscriptions` and `csrfPrevention` so a caller adding one
   nested field (e.g. a ws `path`) can't silently drop the default graphql-ws `onConnect` auth
   (fail-open). Don't simplify to a shallow spread.

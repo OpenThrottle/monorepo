@@ -181,6 +181,7 @@
           }
         }
       },
+      "graphql-schema": {},
       "lint": {
         "options": {
           "command": "pnpm exec eslint -c ./eslint.config.ts .",

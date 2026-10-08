@@ -423,6 +423,26 @@
         "cwd": "{workspaceRoot}"
       }
     },
+    "graphql-schema": {
+      "cache": false,
+      "configurations": {
+        "check": {
+          "command": "node --enable-source-maps --env-file=.env.default ./node_modules/@openthrottle/nestjs-graphql/dist/src/bin.js --module=./build/src/app.module.js --project={projectName} --schema={projectRoot}/schema.gql --check"
+        },
+        "write": {
+          "command": "node --enable-source-maps --env-file=.env.default ./node_modules/@openthrottle/nestjs-graphql/dist/src/bin.js --module=./build/src/app.module.js --project={projectName} --schema={projectRoot}/schema.gql --write"
+        }
+      },
+      "defaultConfiguration": "check",
+      "dependsOn": ["build", "^build"],
+      "executor": "nx:run-commands",
+      "metadata": {
+        "description": "Emit or verify a code-first NestJS API's committed {projectRoot}/schema.gql without booting it (configurations: check, write; default check). Runs the command shipped by @openthrottle/nestjs-graphql (src/bin.ts), so an API needs no script of its own: it opts in by declaring an empty `graphql-schema` target and depending on @openthrottle/nestjs-graphql. The target passes the built root module (--module=./build/src/app.module.js, export AppModule), the schema location and the project name. The command opens that module in Nest preview mode — only GraphQLModule initializes, so no Postgres/Redis/HTTP. `check` emits into a temp dir and fails on drift; `write` regenerates in place. Requires the module's autoSchemaFile to be the relative 'schema.gql' (the NestjsGraphqlModule default). `.env.default` is loaded because some modules read env at import time. Depends on build and ^build: the app's built module and the package's dist. Not cached: the emit depends on the whole decorator graph."
+      },
+      "options": {
+        "cwd": "{projectRoot}"
+      }
+    },
     "ingest-agent-assets": {
       "cache": false,
       "dependsOn": ["@openthrottle/nodejs-utils:build"],
@@ -488,9 +508,10 @@
           "command": "nest start --path ./tsconfig.app.json"
         }
       },
+      "defaultConfiguration": "dev",
       "executor": "nx:run-commands",
       "metadata": {
-        "description": "Drive a NestJS app through the Nest CLI (configurations: build, dev, debug, repl, start)."
+        "description": "Drive a NestJS app through the Nest CLI (configurations: build, dev, debug, repl, start; default dev)."
       },
       "options": {
         "cwd": "{projectRoot}"
