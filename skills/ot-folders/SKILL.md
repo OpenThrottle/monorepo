@@ -260,9 +260,12 @@ the exit code.
 pnpm run audit:component-shape:strict
 pnpm run audit:component-shape:shadcn:strict
 pnpm run audit:route-shape:strict
+pnpm nx run monorepo:check-folder-vocabulary
 ```
 
-`pnpm run check:local:audit` runs all three. Note what `--strict` actually gates:
+`check-folder-vocabulary` fails on any tracked path under a rule-4 junk-drawer
+folder and names the replacement; `check:local` and the CI `gates` job run it too.
+`pnpm run check:local:audit` runs the three shape audits. Note what `--strict` actually gates:
 it exits non-zero on **R4/R5 only** (hoist violations and multi-component files).
 R6, the 210-line count, is reported but never fails the audit — ESLint's
 `max-lines` owns that cap, and the audit's count runs one line higher than

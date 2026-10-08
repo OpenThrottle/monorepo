@@ -165,6 +165,12 @@ Nx project name: **`openthrottle-developer`**. Prefix all generator commands wit
 | `@tools/generators:folders`      | New `routing/<slug>/` or `services/<slug>/` tree | `--application=openthrottle-developer --name=<slug>` with `--folder=routing` or `--folder=services`. Run **before** generating components into a new `routing/<slug>/components` folder so that path appears in `componentFolders`.                                                                                                  |
 | `@tools/generators:react`        | Package or app components                        | `--destination=<project>` (not `--folder`). Shared UI: `--destination=@openthrottle/react-router-shadcn`. App-local: `--destination=openthrottle-developer`. List: `--list=destinations`. `--name` accepts comma-separated component names.                                                                                          |
 
+**Banned folder names.** `react-router --folder` and `folders --name` refuse any
+`lib`, `helpers`, `common`, `shared` or `misc` path segment (ot-folders rule 4) with
+a `banned_folder_name` error naming the folder to use instead. `--describe` lists the
+restriction. The list lives in `tools/generators/src/config/folder-vocabulary.ts`,
+which is the same copy the pre-commit, `check:local` and CI folder-vocabulary check uses.
+
 ### Generator Execution
 
 All new code should go through a generator:
