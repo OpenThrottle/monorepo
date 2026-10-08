@@ -71,8 +71,9 @@ export interface WorkflowContext extends WorkflowConfigLegacy {
   /**
    * @description Work-ledger run session id (opened by the plans worker for this run). When set, the
    * orchestrator sends it as an `X-OT-Session-Id` header on its status-mutating GraphQL calls so the
-   * server-side capture (design §4.3, G11) attaches the run's task/plan status_change artifacts to
-   * this session instead of spawning per-mutation instant sessions. Omitted for CLI/dev paths.
+   * server-side capture attaches the run's task/plan status_change artifacts to this session
+   * instead of spawning per-mutation instant sessions — provided the session's actor matches the
+   * request principal (G11 in docs/monorepo/work-ledger-sessions.md). Omitted for CLI/dev paths.
    */
   readonly workSessionId?: string;
   /**

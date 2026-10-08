@@ -1,7 +1,7 @@
 /**
  * @description GraphQL input types for work-ledger operations. One input arg per operation,
  * matching the repo convention. Actor is NEVER an input — it is stamped server-side from the
- * authenticated principal (design §2.1).
+ * authenticated principal.
  */
 
 import { Field, ID, InputType, Int } from '@nestjs/graphql';

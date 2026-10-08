@@ -1105,7 +1105,7 @@ export class PlansResolver {
       return entity;
     }
 
-    // Status fact + completed_at commit together with the status_change ledger row (G12), via the
+    // Status fact + completed_at commit together with the status_change ledger row, via the
     // applyStatusChange chokepoint (mutates entity.status/completedAt in place when statusChanged —
     // resolveStatusChange above already established the transition is valid and not a no-op, so
     // this repeats the same decision and always applies).

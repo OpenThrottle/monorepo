@@ -1,5 +1,5 @@
 /**
- * @description Lazily-opened work-ledger session for the MCP process (design §4.2).
+ * @description Lazily-opened work-ledger session for the MCP process.
  * Opened on the first mutating work-ledger tool call and reused for the rest of the
  * connection, so an agent's self-reported artifacts group under one session.
  *
