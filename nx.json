@@ -223,6 +223,15 @@
         "parallel": false
       }
     },
+    "check-folder-vocabulary": {
+      "cache": false,
+      "description": "Fail when any tracked path has a directory segment named lib, helpers, common, shared or misc (ot-folders rule 4), via scripts/check-folder-vocabulary.ts. Whole-segment matching, so library.ts and common.ts pass; each hit names the folder to use instead. Never cached: the input is the whole tracked file list, which no `inputs` glob short of the entire tree can hash, and `git ls-files` is fast enough not to need it.",
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsx ./scripts/check-folder-vocabulary.ts",
+        "cwd": "{workspaceRoot}"
+      }
+    },
     "check-generated-attributes": {
       "cache": true,
       "description": "Verify every tracked file whose header carries a generated banner is marked linguist-generated in the root .gitattributes, via scripts/check-generated-attributes.ts. Catches a new payload directory the moment it is committed, so generator output cannot quietly start dominating PR diffs, blame and code search. Error-mode. `inputs` MUST be explicit {workspaceRoot} globs — the root `monorepo` project owns 0 files, so the default {projectRoot} input would hash nothing and cache-hit forever.",

@@ -685,6 +685,13 @@ jobs:
       - name: '📋 Agent assets frontmatter validation (D5)'
         run: pnpm exec nx run monorepo:validate-agent-assets-frontmatter
 
+      # Whole-tree `git ls-files` scan, so a `gates` job step like its neighbours.
+      # Fails when a tracked path sits under a lib/, helpers/, common/, shared/ or
+      # misc/ directory — ot-folders rule 4. Pre-commit checks only newly added
+      # paths; this is the authoritative whole-tree copy.
+      - name: '🗂️ Folder vocabulary (no junk-drawer folders)'
+        run: pnpm exec nx run monorepo:check-folder-vocabulary
+
       # Whole-tree read of every tracked file's header — a `gates` job step for
       # the same reason as its neighbours. Fails when a generated payload is not
       # marked linguist-generated in the root .gitattributes, the omission that
