@@ -106,16 +106,18 @@
             "target": "ensure-migrations",
             "projects": "monorepo"
           },
+          "^build",
+          "^typecheck",
           "^dev"
         ],
         "executor": "nx:run-commands",
         "metadata": {
-          "description": "Run the server in watch mode (PROCESS_ROLE=all). Replaces `nest start`: the SWC builder it uses cannot rewrite `.ts` import specifiers to `.js`, so ESM output does not resolve at runtime (OT plan 31454927 task 2). tsc emits, `node --watch` reruns."
+          "description": "Run the server in watch mode (PROCESS_ROLE=all). `^build` and `^typecheck` run first: tsc -p resolves each project reference through that project's emitted dist/*.d.ts (TS6305 when it is missing), and those declarations come from each package's `typecheck`, since source-first packages have no `build`. Dist-exporting packages also need their one-shot `build` for runtime JS. `^dev` alone does not cover it: continuous dependencies are started, never awaited, and source-first packages have no `dev`. The node half waits for ./build/src/main.js: `node --watch` only watches files it managed to load, so started against a missing entry (any fresh checkout) it waits forever and never sees tsc emit it. Replaces `nest start`: the SWC builder it uses cannot rewrite `.ts` import specifiers to `.js`, so ESM output does not resolve at runtime (OT plan 31454927 task 2). tsc emits, `node --watch` reruns."
         },
         "options": {
           "commands": [
             "${OPENTHROTTLE_TSC_BIN:-tsc} -p tsconfig.app.json --watch --preserveWatchOutput",
-            "node --watch --enable-source-maps ./build/src/main.js"
+            "until [ -f ./build/src/main.js ]; do sleep 1; done; exec node --watch --enable-source-maps ./build/src/main.js"
           ],
           "cwd": "{projectRoot}",
           "parallel": true,
@@ -131,16 +133,18 @@
             "target": "ensure-migrations",
             "projects": "monorepo"
           },
+          "^build",
+          "^typecheck",
           "^dev"
         ],
         "executor": "nx:run-commands",
         "metadata": {
-          "description": "Run the API role in watch mode. Replaces `nest start`: the SWC builder it uses cannot rewrite `.ts` import specifiers to `.js`, so ESM output does not resolve at runtime (OT plan 31454927 task 2). tsc emits, `node --watch` reruns."
+          "description": "Run the API role in watch mode. `^build` and `^typecheck` run first: tsc -p resolves each project reference through that project's emitted dist/*.d.ts (TS6305 when it is missing), and those declarations come from each package's `typecheck`, since source-first packages have no `build`. Dist-exporting packages also need their one-shot `build` for runtime JS. `^dev` alone does not cover it: continuous dependencies are started, never awaited, and source-first packages have no `dev`. The node half waits for ./build/src/main.js: `node --watch` only watches files it managed to load, so started against a missing entry (any fresh checkout) it waits forever and never sees tsc emit it. Replaces `nest start`: the SWC builder it uses cannot rewrite `.ts` import specifiers to `.js`, so ESM output does not resolve at runtime (OT plan 31454927 task 2). tsc emits, `node --watch` reruns."
         },
         "options": {
           "commands": [
             "${OPENTHROTTLE_TSC_BIN:-tsc} -p tsconfig.app.json --watch --preserveWatchOutput",
-            "node --watch --enable-source-maps ./build/src/main.js"
+            "until [ -f ./build/src/main.js ]; do sleep 1; done; exec node --watch --enable-source-maps ./build/src/main.js"
           ],
           "cwd": "{projectRoot}",
           "parallel": true,
@@ -152,16 +156,18 @@
       "dev-debug": {
         "continuous": true,
         "dependsOn": [
+          "^build",
+          "^typecheck",
           "^dev"
         ],
         "executor": "nx:run-commands",
         "metadata": {
-          "description": "Run the server in watch mode with the inspector on 9229. Replaces `nest start`: the SWC builder it uses cannot rewrite `.ts` import specifiers to `.js`, so ESM output does not resolve at runtime (OT plan 31454927 task 2). tsc emits, `node --watch` reruns."
+          "description": "Run the server in watch mode with the inspector on 9229. `^build` and `^typecheck` run first: tsc -p resolves each project reference through that project's emitted dist/*.d.ts (TS6305 when it is missing), and those declarations come from each package's `typecheck`, since source-first packages have no `build`. Dist-exporting packages also need their one-shot `build` for runtime JS. `^dev` alone does not cover it: continuous dependencies are started, never awaited, and source-first packages have no `dev`. The node half waits for ./build/src/main.js: `node --watch` only watches files it managed to load, so started against a missing entry (any fresh checkout) it waits forever and never sees tsc emit it. Replaces `nest start`: the SWC builder it uses cannot rewrite `.ts` import specifiers to `.js`, so ESM output does not resolve at runtime (OT plan 31454927 task 2). tsc emits, `node --watch` reruns."
         },
         "options": {
           "commands": [
             "${OPENTHROTTLE_TSC_BIN:-tsc} -p tsconfig.app.json --watch --preserveWatchOutput",
-            "node --watch --enable-source-maps --inspect=0.0.0.0:9229 ./build/src/main.js"
+            "until [ -f ./build/src/main.js ]; do sleep 1; done; exec node --watch --enable-source-maps --inspect=0.0.0.0:9229 ./build/src/main.js"
           ],
           "cwd": "{projectRoot}",
           "parallel": true

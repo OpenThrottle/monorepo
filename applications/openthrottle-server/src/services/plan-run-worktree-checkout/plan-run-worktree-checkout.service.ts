@@ -3,7 +3,7 @@
  * then NULL-only back-fill of `plan_runs.checkout_id`. Shared by the GraphQL
  * mutation, the in-process Ralph orchestrator run-start hook, and the CLI
  * `workflow-ralph` run-start hook. Shell provision-time registration from
- * `worktree:new` / `setup_worktree.sh` (service-account callback) is explicitly
+ * `worktree:new` / `setup_worktree.ts` (service-account callback) is explicitly
  * deferred — see docs/monorepo/git-worktree-setup-timing.md.
  */
 

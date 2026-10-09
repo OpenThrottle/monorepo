@@ -35,7 +35,8 @@ _ot_run_hook() {
 
   # cwd = the worktree; stdin closed so any prompt takes its default instead of
   # hanging; stdout folded into stderr so create.sh's path-only stdout survives.
-  # A non-executable hook is run through sh rather than treated as an error.
+  # A non-executable hook is run through its interpreter rather than treated as
+  # an error: node for JS/TS (Node 22.18+ strips types natively), sh otherwise.
   (
     cd "$_rh_wt" || exit 1
     OPENTHROTTLE_SOURCE_REPO="$_rh_src"
@@ -45,7 +46,10 @@ _ot_run_hook() {
     if [ -x "$_rh_hook" ]; then
       "$_rh_hook" </dev/null >&2
     else
-      sh "$_rh_hook" </dev/null >&2
+      case "$_rh_hook" in
+        *.ts | *.mts | *.js | *.mjs) node "$_rh_hook" </dev/null >&2 ;;
+        *) sh "$_rh_hook" </dev/null >&2 ;;
+      esac
     fi
   )
 }
@@ -57,7 +61,8 @@ _ot_setup_disabled() {
 
 # Provision the worktree at $1, with $2 as the primary checkout.
 # Discovery, first hit wins, all optional:
-#   1. $OPENTHROTTLE_WORKTREE_PROVISION   2. .worktree/provision.sh   3. scripts/setup_worktree.sh
+#   1. $OPENTHROTTLE_WORKTREE_PROVISION   2. .worktree/provision.sh
+#   3. scripts/setup_worktree.ts   4. scripts/setup_worktree.sh (branches that predate the .ts)
 # No provisioner is a valid outcome, not an error. A provisioner that fails
 # propagates its exit code — better to fail loudly than hand back a half-built tree.
 provision_worktree() {
@@ -72,6 +77,7 @@ provision_worktree() {
   for _pw_candidate in \
     "${OPENTHROTTLE_WORKTREE_PROVISION:-}" \
     ".worktree/provision.sh" \
+    "scripts/setup_worktree.ts" \
     "scripts/setup_worktree.sh"; do
     if _pw_hook="$(_ot_hook_path "$_pw_wt" "$_pw_candidate")"; then
       _ot_run_hook "provision" "$_pw_hook" "$_pw_wt" "$_pw_src"
@@ -84,7 +90,7 @@ provision_worktree() {
 }
 
 # Tear the worktree at $1 down, with $2 as the primary checkout. Mirrors
-# provision_worktree minus the scripts/ rung (no incumbent to preserve).
+# provision_worktree minus the scripts/ rungs (no incumbent to preserve).
 # A teardown that fails ABORTS the removal — that is where a repo stops a
 # container or releases a port lease, and removing anyway would leak it.
 teardown_worktree() {

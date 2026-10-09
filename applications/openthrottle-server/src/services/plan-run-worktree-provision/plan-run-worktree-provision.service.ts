@@ -18,7 +18,7 @@ import { resolveWorktreeRoot } from '../worktree-root/worktree-root.resolver.ts'
 
 const execFileAsync = promisify(execFile);
 
-/** Provisioning runs `setup_worktree.sh` (install + codegen); give it room before giving up. */
+/** Provisioning runs `setup_worktree.ts` (install + codegen); give it room before giving up. */
 const PROVISION_TIMEOUT_MS = 20 * 60 * 1000;
 
 const PROVISION_MAX_BUFFER_BYTES = 16 * 1024 * 1024;
