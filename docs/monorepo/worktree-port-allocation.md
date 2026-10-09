@@ -7,7 +7,7 @@ otherwise fight the ports the main checkout already binds (`server` on `6021`,
 main checkout.
 
 This is wired into **OpenThrottle's worktree provisioner**,
-`scripts/setup_worktree.sh` (a shim for `scripts/setup_worktree.ts`): it
+`scripts/setup_worktree.ts` (run by bare Node — native type stripping, no tsx): it
 allocates the block and rewrites the worktree's `.env` files onto it. The
 provisioner is not called directly — the portable
 [`ot-worktree`](../../skills/ot-worktree/SKILL.md) skill discovers and runs it.
@@ -60,7 +60,7 @@ The base is exported as `OT_PORT_BASE` plus
 ## The .env rewrite
 
 After `setup_environment.sh` resets each `.env` from `.env.default` (back to
-`6020`–`6025`), `setup_worktree.sh` remaps the six ports across the root `.env`
+`6020`–`6025`), `setup_worktree.ts` remaps the six ports across the root `.env`
 and every `applications/*/.env` in one `perl` pass. Because the `70xx` targets
 never overlap the `60xx` sources, the rewrite is internally consistent and
 idempotent (a second run finds no `602x` left). Exact word-boundary matches leave
@@ -82,7 +82,7 @@ the lightest option and avoids one container set per worktree.
 ## docker compose in a worktree
 
 The `.env` rewrite covers host `nx dev`. For `docker compose`, two more things
-would collide, so `setup_worktree.sh` also:
+would collide, so `setup_worktree.ts` also:
 
 - Appends `COMPOSE_PROJECT_NAME=openthrottle-<slug>` and
   `OT_CONTAINER_PREFIX=wt-<slug>-` to the worktree `.env`. The prefix feeds the
@@ -110,7 +110,7 @@ does `source ./.env` from the worktree root, so a placeholder
 `OPENTHROTTLE_MCP_AUTH_TOKEN` makes every authenticated `openthrottle-mcp` call
 return `Unauthorized`.
 
-So at the end of setup, `setup_worktree.sh` copies the real (non-placeholder)
+So at the end of setup, `setup_worktree.ts` copies the real (non-placeholder)
 `OPENTHROTTLE_MCP_AUTH_TOKEN` and `OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN` from
 the **source checkout** (the repo the worktree was created from — exported as
 `OPENTHROTTLE_SOURCE_REPO`, or derived via `git --git-common-dir` for a standalone run)
@@ -144,7 +144,7 @@ a plan run is decided by the per-checkout BullMQ queue prefix
 - `skills/ot-worktree/scripts/create.sh` — the create action (`pnpm worktree:new`, Claude hook, Cursor); creates the worktree, then hands off to the repo provisioner.
 - `skills/ot-worktree/scripts/heal.sh` — the heal action (`pnpm worktree:heal`); provisions a plain `git worktree add` on first `dev`.
 - `skills/ot-worktree/scripts/destroy.sh` — the destroy action (`pnpm worktree:remove`); teardown hook, `git worktree remove`, prune.
-- `scripts/setup_worktree.sh` — **OpenThrottle's provisioner** (a shim for `scripts/setup_worktree.ts`), found by the skill's third discovery rung. Allocates the port block, rewrites `.env`, writes the compose vars, generates the override.
+- `scripts/setup_worktree.ts` — **OpenThrottle's provisioner** (executable, run by bare Node with native type stripping), found by the skill's third discovery rung. Allocates the port block, rewrites `.env`, writes the compose vars, generates the override.
 - `docker-compose.yml` — `container_name` values parametrized with `OT_CONTAINER_PREFIX`.
 
 ## See also

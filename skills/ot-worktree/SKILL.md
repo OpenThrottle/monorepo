@@ -111,7 +111,8 @@ The skill never knows how to set your repo up. It looks for a provisioner, and r
 
 1. `$OPENTHROTTLE_WORKTREE_PROVISION` (absolute, or relative to the worktree)
 2. `<worktree>/.worktree/provision.sh`
-3. `<worktree>/scripts/setup_worktree.sh`
+3. `<worktree>/scripts/setup_worktree.ts`
+4. `<worktree>/scripts/setup_worktree.sh` (legacy — branches that predate the `.ts`)
 
 Teardown mirrors it: `$OPENTHROTTLE_WORKTREE_TEARDOWN`, then `<worktree>/.worktree/teardown.sh` (no `scripts/`
 fallback). Nothing found → log and no-op; a plain `git worktree add`/`remove` is a perfectly valid
@@ -159,8 +160,8 @@ checkout first).
 4. Optionally wire the Claude `WorktreeCreate` hook in `.claude/settings.json` and Cursor's
    `.cursor/worktrees.json` provision-in-place command at the same scripts, using the same ladder.
 
-OpenThrottle itself needs no `.worktree/provision.sh`: its existing `scripts/setup_worktree.sh` is
-discovered by rung 3. It _does_ ship `.worktree/teardown.sh` (teardown has no `scripts/` rung), which
+OpenThrottle itself needs no `.worktree/provision.sh`: its `scripts/setup_worktree.ts` is discovered
+by rung 3 and run by bare Node (native type stripping, so no tsx and no `node_modules` needed). It _does_ ship `.worktree/teardown.sh` (teardown has no `scripts/` rung), which
 stops the worktree's own docker compose project before removal.
 
 Note the hook is read from the **worktree's** checkout, not the primary one — so a worktree on a

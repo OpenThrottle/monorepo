@@ -1,12 +1,15 @@
+#!/usr/bin/env node
 /**
  * @description Per-worktree provisioning: skills sync, .env reset, app-port
  * remapping, docker-compose isolation, service-account token sync, install and
- * build. Invoked through the thin scripts/setup_worktree.sh shim, which
- * resolves tsx from the primary checkout because a fresh linked worktree has
- * no node_modules yet — which also means this script may import node builtins
- * and scripts/utils only (the shared logger degrades gracefully without chalk).
+ * build. Discovered and exec'd directly by the ot-worktree skill (provisioner
+ * rung 3) and run by bare Node's native type stripping — no tsx. A fresh
+ * linked worktree has no node_modules yet, so this script and everything it
+ * imports must stay erasable-syntax TypeScript (no enums, namespaces or
+ * parameter properties) that imports node builtins and scripts/utils only (the
+ * shared logger degrades gracefully without chalk).
  *
- * Runs with cwd = the worktree root (the shim guarantees it).
+ * Runs with cwd = the worktree root (the skill's hook runner guarantees it).
  */
 import { spawnSync } from 'node:child_process';
 import { existsSync, globSync, readFileSync, writeFileSync } from 'node:fs';

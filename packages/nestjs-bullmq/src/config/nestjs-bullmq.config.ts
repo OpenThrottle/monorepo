@@ -43,7 +43,7 @@ const DEFAULT_QUEUE_PREFIX = 'bull';
  *
  * Resolution order:
  * 1. `OT_QUEUE_PREFIX` — explicit override.
- * 2. `OT_CONTAINER_PREFIX` (written per-worktree by `setup_worktree.sh`, e.g.
+ * 2. `OT_CONTAINER_PREFIX` (written per-worktree by `setup_worktree.ts`, e.g.
  *    `wt-<slug>-`) → `bull:wt-<slug>` so worktrees are isolated out of the box.
  * 3. `'bull'` — BullMQ's default; the main checkout and self-hosted deploys
  *    keep their existing Redis keys (repeatable jobs, cron state) untouched.

@@ -11,21 +11,24 @@ to a plain `git worktree add`/`git worktree remove` with a log line.
 
 `provision` — first hit wins:
 
-| #   | Location                               | Notes                                           |
-| --- | -------------------------------------- | ----------------------------------------------- |
-| 1   | `$OPENTHROTTLE_WORKTREE_PROVISION`     | Absolute, or relative to the worktree root      |
-| 2   | `<worktree>/.worktree/provision.sh`    | The portable, repo-agnostic location            |
-| 3   | `<worktree>/scripts/setup_worktree.sh` | Incumbent path — what OpenThrottle already uses |
+| #   | Location                               | Notes                                               |
+| --- | -------------------------------------- | --------------------------------------------------- |
+| 1   | `$OPENTHROTTLE_WORKTREE_PROVISION`     | Absolute, or relative to the worktree root          |
+| 2   | `<worktree>/.worktree/provision.sh`    | The portable, repo-agnostic location                |
+| 3   | `<worktree>/scripts/setup_worktree.ts` | Incumbent path — what OpenThrottle uses             |
+| 4   | `<worktree>/scripts/setup_worktree.sh` | Legacy shim, for OT branches that predate the `.ts` |
 
-`teardown` mirrors it, minus the third rung (there is no incumbent to preserve):
+`teardown` mirrors it, minus the `scripts/` rungs (there is no incumbent to preserve):
 
 | #   | Location                           |
 | --- | ---------------------------------- |
 | 1   | `$OPENTHROTTLE_WORKTREE_TEARDOWN`  |
 | 2   | `<worktree>/.worktree/teardown.sh` |
 
-A discovered hook must be a **regular, readable file**. If it is not executable it is run via `sh`
-rather than treated as an error.
+A discovered hook must be a **regular, readable file**. An executable hook is exec'd (so its shebang
+picks the interpreter). A non-executable one is run through an interpreter rather than treated as an
+error: `node` for `.ts`/`.mts`/`.js`/`.mjs` (Node 22.18+ strips types natively), `sh` for anything
+else.
 
 ## Execution environment
 
