@@ -1,0 +1,16 @@
+# One round trip: the visible-tags list doubles as the existence check, so an
+# unknown or hidden tag slug can 404 without a second request.
+query BlogTag($after: String, $first: Int! = 9, $tagSlug: String!) {
+  blogPosts(after: $after, first: $first, tagSlug: $tagSlug) {
+    endCursor
+    hasNextPage
+    items {
+      ...BlogPostSummary
+    }
+  }
+  blogTags {
+    description
+    name
+    slug
+  }
+}

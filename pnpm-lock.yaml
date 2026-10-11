@@ -1545,12 +1545,21 @@ importers:
 
   applications/openthrottle-website:
     dependencies:
+      '@graphql-typed-document-node/core':
+        specifier: 'catalog:'
+        version: 3.2.0(graphql@16.14.2)
       '@openthrottle/graphql-codegen':
         specifier: workspace:^
         version: link:../../packages/graphql-codegen
       '@openthrottle/react-router-docs':
         specifier: workspace:^
         version: link:../../packages/react-router-docs
+      '@openthrottle/react-router-graphql':
+        specifier: workspace:^
+        version: link:../../packages/react-router-graphql
+      '@openthrottle/react-router-markdown':
+        specifier: workspace:^
+        version: link:../../packages/react-router-markdown
       '@openthrottle/react-router-shadcn':
         specifier: workspace:^
         version: link:../../packages/react-router-shadcn

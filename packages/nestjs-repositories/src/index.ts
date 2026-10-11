@@ -54,6 +54,52 @@ export type {
   TokenUsageTotals,
 } from './modules/agent-token-usage/agent-token-usage.service.ts';
 export { AgentTokenUsageService } from './modules/agent-token-usage/agent-token-usage.service.ts';
+export type { BlogAuthorData } from './modules/blog-authors/blog-author.entity.ts';
+export { BlogAuthor } from './modules/blog-authors/blog-author.entity.ts';
+export { blogAuthorsFactory } from './modules/blog-authors/blog-authors.factory.ts';
+export { BlogAuthorsModule } from './modules/blog-authors/blog-authors.module.ts';
+export type { BlogAuthorUpsertInput } from './modules/blog-authors/blog-authors.service.ts';
+export { BlogAuthorsService } from './modules/blog-authors/blog-authors.service.ts';
+export type { BlogPostStatus } from './modules/blog-posts/blog-post.constants.ts';
+export {
+  BLOG_POST_STATUS,
+  BLOG_POST_STATUS_VALUES,
+} from './modules/blog-posts/blog-post.constants.ts';
+export type { BlogPostData } from './modules/blog-posts/blog-post.entity.ts';
+export { BlogPost } from './modules/blog-posts/blog-post.entity.ts';
+export { applyBlogPostVisibility } from './modules/blog-posts/blog-post-visibility.ts';
+export { blogPostsFactory } from './modules/blog-posts/blog-posts.factory.ts';
+export { BlogPostsModule } from './modules/blog-posts/blog-posts.module.ts';
+export type {
+  BlogPostDraftInput,
+  BlogPostPage,
+  BlogPostPatch,
+  FindPublishedBlogPostsInput,
+} from './modules/blog-posts/blog-posts.service.ts';
+export { BlogPostsService } from './modules/blog-posts/blog-posts.service.ts';
+export type {
+  BlogPostWriteResult,
+  BlogWriteEntity,
+  BlogWriteNotFound,
+  BlogWriteOk,
+  BlogWriteResult,
+  BlogWriteSlugConflict,
+} from './modules/blog-posts/blog-write-result.ts';
+export {
+  BLOG_WRITE_ENTITY,
+  BLOG_WRITE_RESULT_KIND,
+} from './modules/blog-posts/blog-write-result.ts';
+export {
+  assertBlogSlug,
+  assertNotBlank,
+  BLOG_SLUG_PATTERN,
+} from './modules/blog-posts/blog-write-validation.ts';
+export type { BlogTagData } from './modules/blog-tags/blog-tag.entity.ts';
+export { BlogTag } from './modules/blog-tags/blog-tag.entity.ts';
+export { blogTagsFactory } from './modules/blog-tags/blog-tags.factory.ts';
+export { BlogTagsModule } from './modules/blog-tags/blog-tags.module.ts';
+export type { BlogTagUpsertInput } from './modules/blog-tags/blog-tags.service.ts';
+export { BlogTagsService } from './modules/blog-tags/blog-tags.service.ts';
 export type { CodeEmbeddingSearchRow } from './modules/code-embeddings/code-embedding.entity.ts';
 export { CodeEmbedding } from './modules/code-embeddings/code-embedding.entity.ts';
 export type { CodeIndexSnapshotEntry } from './modules/code-index-snapshots/code-index-snapshot.entity.ts';

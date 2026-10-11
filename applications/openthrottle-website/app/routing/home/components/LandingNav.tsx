@@ -2,6 +2,7 @@ import { OpenThrottleLogo } from '@openthrottle/react-router-ui';
 import * as React from 'react';
 import { Link } from 'react-router';
 
+import { isBlogEnabled } from '~/global/utils/blog-enabled';
 import { LANDING_NAV } from '~/routing/home/data/data.landing';
 
 export interface LandingNavProps {
@@ -14,7 +15,10 @@ export const LandingNav = (props: LandingNavProps): React.ReactElement => {
   // Hooks
 
   // Setup
-  const { links } = LANDING_NAV;
+  const blogEnabled = isBlogEnabled();
+  const links = LANDING_NAV.links.filter(
+    (link) => !link.requiresBlog || blogEnabled,
+  );
 
   // Handlers
 

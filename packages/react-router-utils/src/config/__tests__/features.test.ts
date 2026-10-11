@@ -51,4 +51,20 @@ describe('config/features', () => {
     const no = await loadFeatures({ FEATURE_BETA_PREVIEW: 'NO' });
     expect(no.FEATURE_BETA_PREVIEW).toBe(false);
   });
+
+  test('FEATURE_BLOG_ENABLED is off when unset or unrecognized', async () => {
+    const unset = await loadFeatures({});
+    expect(unset.FEATURE_BLOG_ENABLED).toBe(false);
+
+    const garbage = await loadFeatures({ FEATURE_BLOG_ENABLED: 'maybe' });
+    expect(garbage.FEATURE_BLOG_ENABLED).toBe(false);
+  });
+
+  test('FEATURE_BLOG_ENABLED turns on for truthy encodings', async () => {
+    const enabled = await loadFeatures({ FEATURE_BLOG_ENABLED: 'true' });
+    expect(enabled.FEATURE_BLOG_ENABLED).toBe(true);
+
+    const one = await loadFeatures({ FEATURE_BLOG_ENABLED: '1' });
+    expect(one.FEATURE_BLOG_ENABLED).toBe(true);
+  });
 });

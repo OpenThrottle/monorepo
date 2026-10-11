@@ -39,6 +39,7 @@ import { AgentSetupGraphqlModule } from './graphql/agent-setup/agent-setup-graph
 import { AgenticWorkflowGraphqlModule } from './graphql/agentic-workflow/agentic-workflow-graphql.module.ts';
 import { AgentsGraphqlModule } from './graphql/agents/agents-graphql.module.ts';
 import { AuthGraphqlModule } from './graphql/auth/auth-graphql.module.ts';
+import { BlogGraphqlModule } from './graphql/blog/blog-graphql.module.ts';
 import { CodeSearchGraphqlModule } from './graphql/code-search/code-search-graphql.module.ts';
 import { ConversationStreamGraphqlModule } from './graphql/conversation-stream/conversation-stream-graphql.module.ts';
 import { DailyStatsGraphqlModule } from './graphql/daily-stats/daily-stats-graphql.module.ts';
@@ -261,6 +262,7 @@ const buildImports = (role: ProcessRole): AppModuleImports => {
           AgentSetupGraphqlModule,
           AgentsGraphqlModule,
           AuthGraphqlModule,
+          BlogGraphqlModule,
           CodeSearchGraphqlModule,
           ConversationStreamGraphqlModule,
           CustomPromptsGraphqlModule,
