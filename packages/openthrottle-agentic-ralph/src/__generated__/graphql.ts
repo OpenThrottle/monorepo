@@ -418,6 +418,89 @@ export type AttachWorkSessionSubjectInput = {
   taskId?: InputMaybe<Scalars['ID']['input']>;
 };
 
+export type BlogAuthorObject = {
+  __typename?: 'BlogAuthorObject';
+  avatarUrl?: Maybe<Scalars['String']['output']>;
+  bio?: Maybe<Scalars['String']['output']>;
+  displayName: Scalars['String']['output'];
+  slug: Scalars['String']['output'];
+};
+
+export type BlogPostAdminObject = {
+  __typename?: 'BlogPostAdminObject';
+  author?: Maybe<BlogAuthorObject>;
+  bodyMarkdown: Scalars['String']['output'];
+  coverImageAlt?: Maybe<Scalars['String']['output']>;
+  coverImageUrl?: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['DateTime']['output'];
+  excerpt?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  /** When the post goes (or went) live. Null for drafts. A PUBLISHED post with a value in the future is scheduled and not yet publicly visible. */
+  publishedAt?: Maybe<Scalars['DateTime']['output']>;
+  seoDescription?: Maybe<Scalars['String']['output']>;
+  seoTitle?: Maybe<Scalars['String']['output']>;
+  slug: Scalars['String']['output'];
+  status: BlogPostStatus;
+  tags: Array<BlogTagObject>;
+  title: Scalars['String']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+export type BlogPostListResult = {
+  __typename?: 'BlogPostListResult';
+  /** Opaque cursor of the last item; pass as `after` to fetch the next page. Null when the page is empty. */
+  endCursor?: Maybe<Scalars['String']['output']>;
+  hasNextPage: Scalars['Boolean']['output'];
+  items: Array<BlogPostObject>;
+};
+
+/** The saved post, or a BlogSlugConflictError when the slug is already used by another post. */
+export type BlogPostMutationResult =
+  BlogPostAdminObject | BlogSlugConflictError;
+
+export type BlogPostObject = {
+  __typename?: 'BlogPostObject';
+  author?: Maybe<BlogAuthorObject>;
+  bodyMarkdown: Scalars['String']['output'];
+  coverImageAlt?: Maybe<Scalars['String']['output']>;
+  coverImageUrl?: Maybe<Scalars['String']['output']>;
+  excerpt?: Maybe<Scalars['String']['output']>;
+  id: Scalars['String']['output'];
+  publishedAt?: Maybe<Scalars['DateTime']['output']>;
+  /** Estimated reading time in whole minutes (~200 words per minute, minimum 1) */
+  readingTimeMinutes: Scalars['Int']['output'];
+  seoDescription?: Maybe<Scalars['String']['output']>;
+  seoTitle?: Maybe<Scalars['String']['output']>;
+  slug: Scalars['String']['output'];
+  tags: Array<BlogTagObject>;
+  title: Scalars['String']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+/** Lifecycle of a blog post. Only PUBLISHED posts whose publishedAt has passed are publicly visible; a PUBLISHED post with a future publishedAt is scheduled. */
+export const BlogPostStatus = {
+  Archived: 'ARCHIVED',
+  Draft: 'DRAFT',
+  Published: 'PUBLISHED',
+} as const;
+
+export type BlogPostStatus =
+  (typeof BlogPostStatus)[keyof typeof BlogPostStatus];
+export type BlogSlugConflictError = {
+  __typename?: 'BlogSlugConflictError';
+  /** Human-readable explanation. */
+  message: Scalars['String']['output'];
+  /** The slug that is already taken. */
+  slug: Scalars['String']['output'];
+};
+
+export type BlogTagObject = {
+  __typename?: 'BlogTagObject';
+  description?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  slug: Scalars['String']['output'];
+};
+
 /** A subdirectory listed by browseDirectory (server-host path). */
 export type BrowseDirectoryEntryObject = {
   __typename?: 'BrowseDirectoryEntryObject';
@@ -618,6 +701,20 @@ export type CreateAgentConversationInput = {
   projectId?: InputMaybe<Scalars['ID']['input']>;
   /** Optional title; may be set on first persist turn instead */
   title?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type CreateBlogPostInput = {
+  /** Slug of an existing author (see upsertBlogAuthor). Omit for no byline. */
+  authorSlug?: InputMaybe<Scalars['String']['input']>;
+  bodyMarkdown: Scalars['String']['input'];
+  coverImageAlt?: InputMaybe<Scalars['String']['input']>;
+  coverImageUrl?: InputMaybe<Scalars['String']['input']>;
+  excerpt?: InputMaybe<Scalars['String']['input']>;
+  seoDescription?: InputMaybe<Scalars['String']['input']>;
+  seoTitle?: InputMaybe<Scalars['String']['input']>;
+  /** Lowercase letters, digits and single hyphens (^[a-z0-9]+(-[a-z0-9]+)*$), e.g. "my-first-post". */
+  slug: Scalars['String']['input'];
+  title: Scalars['String']['input'];
 };
 
 /** Input for creating a new custom prompt */
@@ -1638,6 +1735,8 @@ export type Mutation = {
   applyWorkspaceEditorConfiguration: ApplyWorkspaceEditorConfigurationResultObject;
   /** Archive an owned agent conversation (no hard delete in v1). */
   archiveAgentConversation: AgentConversationObject;
+  /** Archive a blog post. It stops being publicly visible; publishedAt is kept. */
+  archiveBlogPost: BlogPostAdminObject;
   /** Assign a role to a service account (admin, human only). */
   assignRoleToServiceAccount: Scalars['Boolean']['output'];
   /** Assign a role to a user */
@@ -1657,6 +1756,8 @@ export type Mutation = {
   connectMcpConnector: McpConnectorConnectionResultObject;
   /** Create an agent conversation for the authenticated human user. */
   createAgentConversation: AgentConversationObject;
+  /** Create a blog post as a DRAFT. Returns BlogSlugConflictError when the slug is taken. */
+  createBlogPost: BlogPostMutationResult;
   /** Create a new custom prompt */
   createCustomPrompt: CustomPromptObject;
   /** Create a note */
@@ -1764,6 +1865,8 @@ export type Mutation = {
   pickFolderNative: PickFolderNativePayloadObject;
   /** Promote a task into a new, first-class plan. Validates the task is promotable (exists, not a lifecycle hook, not already promoted) then enqueues an async task-promotion job (enqueue-after-validate, idempotency key doubles as the BullMQ job id). The job creates the plan, carries the task's tags, seeds an initial task, closes out the source task (→ SKIPPED + `promoted` tag), and records provenance. Returns the accepted job id; the new plan surfaces via the task-status subscription once the job completes. */
   promoteTaskToPlan: PromoteTaskToPlanResultObject;
+  /** Publish a blog post: sets status PUBLISHED and publishedAt. Without publishedAt the post goes live now; a future publishedAt schedules it. */
+  publishBlogPost: BlogPostAdminObject;
   /** Bump the liveness heartbeat on a detached-CLI run row (from registerCliPlanRun). The CLI calls this on a ~15s timer so a hard crash (SIGKILL/power-loss) leaves a stale heartbeat the reader/sweeper can detect. Keyed on the run id. Returns null when the row no longer exists. */
   recordPlanRunHeartbeat?: Maybe<PlanRunObject>;
   /** Record one harness-captured skill invocation. Args must already be privacy-processed by the client; the server stores them as-sent. The event is attributed to the human user the authenticated principal acts as, resolved server-side — a userId is never accepted from the client, and stays null when the principal resolves to no one. */
@@ -1825,6 +1928,8 @@ export type Mutation = {
   setAgentModelFavorite: SetAgentModelFavoriteResult;
   /** Bulk enable or disable EVERY model of an agent CLI backend for the current user (the select-all / deselect-all affordance). enabled=true clears all per-model disables for the backend; enabled=false records each supplied model id as disabled. An agent-level OFF still hard-overrides all its models. Gated by SETTINGS_WRITE; rejects unknown backends. */
   setAgentModelsEnabled: SetAgentModelsEnabledResult;
+  /** Replace the full set of tags on a blog post by tag slug. */
+  setBlogPostTags: BlogPostAdminObject;
   /** Enable or disable the authenticated user's connection for a connector. */
   setMcpConnectorEnabled?: Maybe<McpConnectorConnectionResultObject>;
   /** Set a plan's status (e.g. COMPLETED). Convenience mutation for Mark Complete; equivalent to updatePlan with { id, status }. */
@@ -1851,10 +1956,14 @@ export type Mutation = {
   triggerDevJsonlLogSample: Scalars['Boolean']['output'];
   /** Trigger a test websocket notification (system.alert). Returns true when the event was emitted. Use from the web app to verify the notification flow end-to-end. */
   triggerWebsocketNotification: Scalars['Boolean']['output'];
+  /** Return a blog post to DRAFT and clear its publishedAt. It stops being publicly visible immediately. */
+  unpublishBlogPost: BlogPostAdminObject;
   /** Update an allowlisted agent CLI on the server host by driver id. Gated by SETTINGS_WRITE and the default-off OT_AGENT_CLI_INSTALL_ENABLED flag; returns a runId to stream via agentSetupChunkAdded. */
   updateAgentCli: StartAgentSetupResult;
   /** Update the title on an owned agent conversation. */
   updateAgentConversationTitle: AgentConversationObject;
+  /** Partially update a blog post. Returns BlogSlugConflictError when re-slugging onto a slug that is taken. */
+  updateBlogPost: BlogPostMutationResult;
   /** Update an existing custom prompt */
   updateCustomPrompt?: Maybe<CustomPromptObject>;
   /** Update a note */
@@ -1886,6 +1995,10 @@ export type Mutation = {
   updateWorkspaceLocalRepository: WorkspaceLocalRepositoryObject;
   /** Update contact fields and/or enabled editors on the authenticated user's workspace profile. */
   updateWorkspaceProfile: UserWorkspaceProfileObject;
+  /** Create the blog author with this slug, or replace its fields if it exists. */
+  upsertBlogAuthor: BlogAuthorObject;
+  /** Create the blog tag with this slug, or replace its fields if it exists. */
+  upsertBlogTag: BlogTagObject;
   /** Create or update a project's rule set, setting its posture ("allow" | "deny"). Idempotent per project. */
   upsertSkillAvailabilityRuleSet: SkillAvailabilityRuleSetObject;
   /** Create or update a tag→action rule. The JSON payload is validated against the action type's schema. */
@@ -1952,6 +2065,10 @@ export type MutationArchiveAgentConversationArgs = {
   input: ArchiveAgentConversationInput;
 };
 
+export type MutationArchiveBlogPostArgs = {
+  id: Scalars['ID']['input'];
+};
+
 export type MutationAssignRoleToServiceAccountArgs = {
   input: AssignRoleToServiceAccountInput;
 };
@@ -1990,6 +2107,10 @@ export type MutationConnectMcpConnectorArgs = {
 
 export type MutationCreateAgentConversationArgs = {
   input?: InputMaybe<CreateAgentConversationInput>;
+};
+
+export type MutationCreateBlogPostArgs = {
+  input: CreateBlogPostInput;
 };
 
 export type MutationCreateCustomPromptArgs = {
@@ -2180,6 +2301,10 @@ export type MutationPromoteTaskToPlanArgs = {
   input: PromoteTaskToPlanInput;
 };
 
+export type MutationPublishBlogPostArgs = {
+  input: PublishBlogPostInput;
+};
+
 export type MutationRecordPlanRunHeartbeatArgs = {
   input: RecordPlanRunHeartbeatInput;
 };
@@ -2314,6 +2439,10 @@ export type MutationSetAgentModelsEnabledArgs = {
   models: Array<Scalars['String']['input']>;
 };
 
+export type MutationSetBlogPostTagsArgs = {
+  input: SetBlogPostTagsInput;
+};
+
 export type MutationSetMcpConnectorEnabledArgs = {
   input: SetMcpConnectorEnabledInput;
 };
@@ -2346,12 +2475,20 @@ export type MutationStopTranscriptionStreamArgs = {
   sessionId: Scalars['ID']['input'];
 };
 
+export type MutationUnpublishBlogPostArgs = {
+  id: Scalars['ID']['input'];
+};
+
 export type MutationUpdateAgentCliArgs = {
   backend: Scalars['String']['input'];
 };
 
 export type MutationUpdateAgentConversationTitleArgs = {
   input: UpdateAgentConversationTitleInput;
+};
+
+export type MutationUpdateBlogPostArgs = {
+  input: UpdateBlogPostInput;
 };
 
 export type MutationUpdateCustomPromptArgs = {
@@ -2409,6 +2546,14 @@ export type MutationUpdateWorkspaceLocalRepositoryArgs = {
 
 export type MutationUpdateWorkspaceProfileArgs = {
   input: UpdateWorkspaceProfileInput;
+};
+
+export type MutationUpsertBlogAuthorArgs = {
+  input: UpsertBlogAuthorInput;
+};
+
+export type MutationUpsertBlogTagArgs = {
+  input: UpsertBlogTagInput;
 };
 
 export type MutationUpsertSkillAvailabilityRuleSetArgs = {
@@ -2933,6 +3078,12 @@ export type PsiCpuMetrics = {
   someTotalUs?: Maybe<Scalars['Float']['output']>;
 };
 
+export type PublishBlogPostInput = {
+  id: Scalars['ID']['input'];
+  /** When the post goes live. Omit (or null) to publish now; a future date schedules the post — it is PUBLISHED but not publicly visible until then. */
+  publishedAt?: InputMaybe<Scalars['DateTime']['input']>;
+};
+
 export type PullListItemObject = {
   __typename?: 'PullListItemObject';
   author: Scalars['String']['output'];
@@ -2957,6 +3108,12 @@ export type Query = {
   activityByDateRange: ActivityByDateResultObject;
   /** Whether server-side agent-CLI install/update is enabled (env flag) and whether the current user may run it (SETTINGS_WRITE). Drives the /settings/agents control gating. */
   agentCliSetupConfig: AgentCliSetupConfigObject;
+  /** A publicly visible blog post by slug. Null for an unknown slug and for any post that is not public (draft, archived, or scheduled in the future). */
+  blogPost?: Maybe<BlogPostObject>;
+  /** Publicly visible blog posts, newest first, with cursor pagination. Optionally filtered to one tag. */
+  blogPosts: BlogPostListResult;
+  /** Blog tags carried by at least one publicly visible post, ordered by name. */
+  blogTags: Array<BlogTagObject>;
   /** Interactive directory listing for the in-app picker: immediate subdirectories (annotated with isGitRepo / alreadyRegistered) plus navigation context (current + parent path, current-is-git-repo). With no path, lists the configured workspace roots as entries. All paths are on the server host. */
   browseDirectory: WorkspaceDirectoryListingObject;
   /** Index status for a registered repository: unavailable, indexing, ready, or notIndexed. */
@@ -3201,6 +3358,16 @@ export type QueryActivityByDateArgs = {
 
 export type QueryActivityByDateRangeArgs = {
   input: ActivityByDateRangeInput;
+};
+
+export type QueryBlogPostArgs = {
+  slug: Scalars['String']['input'];
+};
+
+export type QueryBlogPostsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  first?: Scalars['Int']['input'];
+  tagSlug?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type QueryBrowseDirectoryArgs = {
@@ -4493,6 +4660,12 @@ export type SetAgentModelsEnabledResult = {
   enabled: Scalars['Boolean']['output'];
 };
 
+export type SetBlogPostTagsInput = {
+  postId: Scalars['ID']['input'];
+  /** Slugs of existing tags (see upsertBlogTag). Replaces the post's whole tag set; an empty list removes every tag. */
+  tagSlugs: Array<Scalars['String']['input']>;
+};
+
 export type SetMcpConnectorEnabledInput = {
   connectorKey: Scalars['ID']['input'];
   enabled: Scalars['Boolean']['input'];
@@ -5317,6 +5490,24 @@ export type UpdateAgentConversationTitleInput = {
   title: Scalars['String']['input'];
 };
 
+/** Partial update. Omitted fields are unchanged; null clears a nullable field. Status and publishedAt change only through publish / unpublish / archive. */
+export type UpdateBlogPostInput = {
+  /** Slug of an existing author; null removes the byline. */
+  authorSlug?: InputMaybe<Scalars['String']['input']>;
+  /** Must not be null. */
+  bodyMarkdown?: InputMaybe<Scalars['String']['input']>;
+  coverImageAlt?: InputMaybe<Scalars['String']['input']>;
+  coverImageUrl?: InputMaybe<Scalars['String']['input']>;
+  excerpt?: InputMaybe<Scalars['String']['input']>;
+  id: Scalars['ID']['input'];
+  seoDescription?: InputMaybe<Scalars['String']['input']>;
+  seoTitle?: InputMaybe<Scalars['String']['input']>;
+  /** Lowercase letters, digits and single hyphens (^[a-z0-9]+(-[a-z0-9]+)*$), e.g. "my-first-post". Must not be null. */
+  slug?: InputMaybe<Scalars['String']['input']>;
+  /** Must not be null. */
+  title?: InputMaybe<Scalars['String']['input']>;
+};
+
 /** Input for updating an existing custom prompt */
 export type UpdateCustomPromptInput = {
   content?: InputMaybe<Scalars['String']['input']>;
@@ -5481,6 +5672,23 @@ export type UpdateWorkspaceProfileInput = {
   contactDisplayName?: InputMaybe<Scalars['String']['input']>;
   contactEmail?: InputMaybe<Scalars['String']['input']>;
   enabledEditors?: InputMaybe<Array<WorkspaceEditorId>>;
+};
+
+/** Creates the author with this slug or replaces its fields. Omitted bio / avatarUrl are cleared. */
+export type UpsertBlogAuthorInput = {
+  avatarUrl?: InputMaybe<Scalars['String']['input']>;
+  bio?: InputMaybe<Scalars['String']['input']>;
+  displayName: Scalars['String']['input'];
+  /** Lowercase letters, digits and single hyphens (^[a-z0-9]+(-[a-z0-9]+)*$), e.g. "my-first-post". */
+  slug: Scalars['String']['input'];
+};
+
+/** Creates the tag with this slug or replaces its fields. An omitted description is cleared. */
+export type UpsertBlogTagInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
+  /** Lowercase letters, digits and single hyphens (^[a-z0-9]+(-[a-z0-9]+)*$), e.g. "my-first-post". */
+  slug: Scalars['String']['input'];
 };
 
 export type UpsertTagActionRuleInput = {

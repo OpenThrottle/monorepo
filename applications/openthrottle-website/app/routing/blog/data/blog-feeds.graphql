@@ -1,0 +1,39 @@
+# Operations behind the discovery surfaces: the RSS feed (`blog.rss[.]xml`) and
+# the sitemap (`sitemap[.]xml`). Public, server-side only, run through
+# `fetchPublicGraphql` from `app/routing/blog/utils/blog-feeds.server.ts`.
+
+query BlogFeed($first: Int! = 20) {
+  blogPosts(first: $first) {
+    items {
+      author {
+        displayName
+      }
+      excerpt
+      publishedAt
+      seoDescription
+      slug
+      tags {
+        name
+      }
+      title
+      updatedAt
+    }
+  }
+}
+
+query BlogSitemapPage($after: String, $first: Int! = 200) {
+  blogPosts(after: $after, first: $first) {
+    endCursor
+    hasNextPage
+    items {
+      slug
+      updatedAt
+    }
+  }
+}
+
+query BlogSitemapTags {
+  blogTags {
+    slug
+  }
+}

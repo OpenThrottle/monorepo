@@ -167,6 +167,7 @@
         "scripts/openthrottle-database-backup.ts",
         "scripts/openthrottle-database-migrations.ts",
         "scripts/openthrottle-database-reset.ts",
+        "scripts/openthrottle-database-seed-blog.ts",
         "scripts/nx-validate-confgurations.ts",
         "scripts/nx-validate-projects.ts",
         "scripts/nx-validate-tags.ts",
