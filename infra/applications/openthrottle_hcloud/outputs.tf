@@ -40,6 +40,11 @@ output "data_volume_device" {
   value       = module.server.data_volume_device
 }
 
+output "deploy_firewall_name" {
+  description = "Name of the deploy firewall, or null when deploy_firewall_enabled is false. This is the value of the HETZNER_DEPLOY_FIREWALL repository variable."
+  value       = module.server.deploy_firewall_name
+}
+
 output "firewall_id" {
   description = "Attached firewall id, or null when deploy_enabled is false."
   value       = module.server.firewall_id

@@ -34,6 +34,26 @@
 #   at IMAGE_TAG and leaves the rest on their current tag — an unaffected
 #   image's last build is, by definition, still current.
 #
+#   🧱 SSH IS OPENED PER RUN. GitHub-hosted runners have no stable IP, so they
+#   cannot be in the box's ssh_allowed_cidrs. The module's deploy firewall
+#   (deploy_firewall_enabled) is empty between runs; this job sets it to a
+#   single /32 for its own IP just before SSHing in, and empties it in an
+#   always-run step afterwards. See .github/actions/hcloud-deploy-firewall.
+#
+#   Configuration (Settings → Secrets and variables → Actions):
+#     secrets  HETZNER_DEPLOY_TOKEN     hcloud API token, read/write. Hetzner
+#                                       cannot scope a token below a project,
+#                                       so keep the box in its own project.
+#              HETZNER_SSH_PRIVATE_KEY  key whose public half is in ssh_key_ids
+#              HETZNER_KNOWN_HOSTS      the box's host key line(s)
+#              HETZNER_DEPLOY_HOST      the box's IPv4 ADDRESS — the firewall
+#                                       rule is IPv4-only, so not a hostname
+#                                       that may resolve to IPv6
+#              HETZNER_DEPLOY_USER      root, unless cloud-init adds a user
+#     vars     HETZNER_DEPLOY_ENABLED   'true' to turn this workflow on
+#              HETZNER_DEPLOY_FIREWALL  the deploy_firewall_name output
+#              HETZNER_API_DOMAIN, HETZNER_DEVELOPER_DOMAIN  post-deploy check
+#
 ################################################################################
 name: '🚀 Hetzner Deploy'
 on:
@@ -150,6 +170,15 @@ jobs:
           printf '%s\n' "${KNOWN_HOSTS}" > ~/.ssh/known_hosts
           chmod 0644 ~/.ssh/known_hosts
 
+      # Last thing before SSH, so the window is only as wide as the deploy.
+      - name: '🧱 Open SSH to this runner'
+        id: open-ssh
+        uses: ./.github/actions/hcloud-deploy-firewall
+        with:
+          firewall: ${{ vars.HETZNER_DEPLOY_FIREWALL }}
+          hcloud-token: ${{ secrets.HETZNER_DEPLOY_TOKEN }}
+          mode: open
+
       - name: '🚀 Roll the stack'
         env:
           DEPLOY_HOST: ${{ secrets.HETZNER_DEPLOY_HOST }}
@@ -167,7 +196,12 @@ jobs:
           # and is reviewed like any other code, rather than drifting on the box.
           # StrictHostKeyChecking=yes with the known_hosts written above means a
           # DNS change cannot silently redirect this deploy.
-          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -i ~/.ssh/id_deploy \
+          #
+          # -4 because the deploy firewall rule is for the runner's IPv4 only.
+          # ConnectionAttempts covers the few seconds a fresh firewall rule can
+          # take to reach the host after Hetzner reports it applied.
+          ssh -4 -o BatchMode=yes -o StrictHostKeyChecking=yes \
+            -o ConnectTimeout=10 -o ConnectionAttempts=6 -i ~/.ssh/id_deploy \
             "${DEPLOY_USER}@${DEPLOY_HOST}" \
             "IMAGE_TAG='${IMAGE_TAG}' IMAGE_REPOS='${IMAGE_REPOS}' bash -s" <<'REMOTEEOF'
           set -euo pipefail
@@ -229,6 +263,18 @@ jobs:
           # images surprisingly fast, and a full disk takes Postgres down.
           docker image prune -af --filter 'until=168h' || true
           REMOTEEOF
+
+      # always(), so a failed or cancelled deploy still closes the window. If
+      # this step itself cannot run (the runner dies), the next run's `open`
+      # REPLACES the rules rather than appending, so the leftover /32 lasts only
+      # until then — and it still needs the deploy key to be any use.
+      - name: '🧱 Close SSH to this runner'
+        if: always() && steps.open-ssh.outcome != 'skipped'
+        uses: ./.github/actions/hcloud-deploy-firewall
+        with:
+          firewall: ${{ vars.HETZNER_DEPLOY_FIREWALL }}
+          hcloud-token: ${{ secrets.HETZNER_DEPLOY_TOKEN }}
+          mode: close
 
       - name: '🩺 Verify the public surface'
         env:

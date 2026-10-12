@@ -268,6 +268,12 @@ variable "ssh_key_ids" {
   type        = list(string)
 }
 
+variable "deploy_firewall_enabled" {
+  default     = false
+  description = "Attach the deploy firewall that .github/workflows/hetzner-deploy.yml opens for its runner's IP for the length of a run. GitHub-hosted runners have no stable IP, so without this the automated deploy cannot reach port 22. Empty between runs. See modules/hcloud_server."
+  type        = bool
+}
+
 variable "http_source_ips" {
   default     = ["0.0.0.0/0", "::/0"]
   description = "Source ranges permitted to reach 80/443. The internet by default: this is a public web endpoint, and Caddy needs port 80 reachable to answer the ACME HTTP-01 challenge. Narrow to a CDN's egress ranges to lock down the origin."

@@ -83,6 +83,39 @@ resource "hcloud_firewall" "this" {
 }
 
 ################################################################################
+# Deploy firewall (optional)
+#
+# Lets .github/workflows/hetzner-deploy.yml reach port 22 from a GitHub-hosted
+# runner, whose IP changes every run and so cannot sit in ssh_allowed_cidrs.
+#
+# It is created EMPTY and owned at runtime by that workflow, which replaces its
+# rules with a single /32 for the runner's own IP before SSHing in and empties
+# them again afterwards. Hetzner merges the rules of every firewall attached to
+# a server, so while it is empty it contributes nothing: the box's surface is
+# exactly what the main firewall above allows.
+#
+# A separate firewall rather than a rule on the one above, deliberately:
+#   - set_rules REPLACES a firewall's whole rule list. Here that is what we
+#     want — each run overwrites whatever a crashed run left behind, so a stale
+#     rule cannot outlive the next deploy. On the main firewall it would be a
+#     read-modify-write race against Terraform.
+#   - Terraform keeps sole ownership of the main firewall, so `plan` never
+#     shows a deploy's temporary rule as drift there.
+#
+# ignore_changes = [rule] is what makes runtime ownership safe: without it, the
+# next apply would see the workflow's rule as drift and fight it.
+################################################################################
+resource "hcloud_firewall" "deploy" {
+  count  = var.deploy_firewall_enabled ? 1 : 0
+  labels = var.labels
+  name   = "${var.name}-deploy-ssh"
+
+  lifecycle {
+    ignore_changes = [rule]
+  }
+}
+
+################################################################################
 # Data volume for the Postgres data directory (optional)
 #
 # `format` is set here so HETZNER formats the volume exactly once, at creation.
@@ -121,7 +154,7 @@ resource "hcloud_volume_attachment" "data" {
 ################################################################################
 resource "hcloud_server" "this" {
   backups      = var.backups_enabled
-  firewall_ids = var.firewall_enabled ? [hcloud_firewall.this[0].id] : []
+  firewall_ids = concat(hcloud_firewall.this[*].id, hcloud_firewall.deploy[*].id)
   image        = var.image
   # Ladder rung 1. See the keep_disk variable for why growing the boot disk is
   # a one-way door.

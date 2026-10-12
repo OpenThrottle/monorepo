@@ -228,18 +228,19 @@ backups, and on Hetzner that becomes owned work.
 
 Verified against `applications/openthrottle_hcloud/variables.tf`.
 
-| Variable              | Type           | Default                 | Why it cannot cross                                                    |
-| --------------------- | -------------- | ----------------------- | ---------------------------------------------------------------------- |
-| `server_type`         | `string`       | `"cx23"`                | Ladder rung 1. Resize is stop/resize/start; disk growth is one-way.    |
-| `location`            | `string`       | `"nbg1"`                | Hetzner datacenter. Changing it replaces the server.                   |
-| `server_image_os`     | `string`       | `"ubuntu-24.04"`        | hcloud OS image. Named `_os` to keep it distinct from `server_image`.  |
-| `backups_enabled`     | `bool`         | `true`                  | Hetzner's ~20%-of-server backup option.                                |
-| `data_volume_size_gb` | `number`       | `0` (off)               | Attached volume for the Postgres data dir. No Cloud SQL equivalent.    |
-| `ssh_allowed_cidrs`   | `list(string)` | `[]`                    | **Not optional in practice** — see below.                              |
-| `ssh_key_ids`         | `list(string)` | `[]`                    | GCP used project metadata / OS Login.                                  |
-| `http_source_ips`     | `list(string)` | `["0.0.0.0/0", "::/0"]` | The GCP module hardcodes `0.0.0.0/0` in its firewall resource instead. |
-| `mcp_domain`          | `string`       | `""`                    | `mcp` is absent from the GCP compose entirely.                         |
-| `labels`              | `map(string)`  | `{}`                    | Spelled the same as GCP's `labels`, but scopes hcloud resources.       |
+| Variable                  | Type           | Default                 | Why it cannot cross                                                                                 |
+| ------------------------- | -------------- | ----------------------- | --------------------------------------------------------------------------------------------------- |
+| `server_type`             | `string`       | `"cx23"`                | Ladder rung 1. Resize is stop/resize/start; disk growth is one-way.                                 |
+| `location`                | `string`       | `"nbg1"`                | Hetzner datacenter. Changing it replaces the server.                                                |
+| `server_image_os`         | `string`       | `"ubuntu-24.04"`        | hcloud OS image. Named `_os` to keep it distinct from `server_image`.                               |
+| `backups_enabled`         | `bool`         | `true`                  | Hetzner's ~20%-of-server backup option.                                                             |
+| `data_volume_size_gb`     | `number`       | `0` (off)               | Attached volume for the Postgres data dir. No Cloud SQL equivalent.                                 |
+| `ssh_allowed_cidrs`       | `list(string)` | `[]`                    | **Not optional in practice** — see below.                                                           |
+| `ssh_key_ids`             | `list(string)` | `[]`                    | GCP used project metadata / OS Login.                                                               |
+| `http_source_ips`         | `list(string)` | `["0.0.0.0/0", "::/0"]` | The GCP module hardcodes `0.0.0.0/0` in its firewall resource instead.                              |
+| `deploy_firewall_enabled` | `bool`         | `false`                 | Empty firewall `hetzner-deploy.yml` opens for its runner's IP per run. GCP has no automated deploy. |
+| `mcp_domain`              | `string`       | `""`                    | `mcp` is absent from the GCP compose entirely.                                                      |
+| `labels`                  | `map(string)`  | `{}`                    | Spelled the same as GCP's `labels`, but scopes hcloud resources.                                    |
 
 Two backup variables are Hetzner-only, because on GCP this was Cloud SQL's job:
 

@@ -106,6 +106,18 @@ idempotent.
 Until it has run there is **no login user and no MCP token**, so the `mcp` container will not serve.
 That is intended: `up` must never silently provision a possibly-shared database.
 
+### 4. Held by CI, never by the box — the automated deploy's credentials
+
+`.github/workflows/hetzner-deploy.yml` needs an SSH key, the box's host key, and
+`HETZNER_DEPLOY_TOKEN`, a Hetzner API token it uses to open the deploy firewall to its runner's IP
+for the length of a run. All of them live in GitHub Actions secrets; none is written to the box,
+`user_data`, or Terraform state.
+
+**The API token is the most powerful credential in this setup.** Hetzner cannot scope a token below
+a project, so a read/write token for opening one firewall can also delete the server and its volume.
+Keep the box in a Hetzner project of its own, so that token reaches nothing else, and rotate it if
+the repository's Actions secrets are ever exposed.
+
 ## Would this also serve the GCP path?
 
 Partly, and it is worth being precise, since the contract is better off with one row for secrets than

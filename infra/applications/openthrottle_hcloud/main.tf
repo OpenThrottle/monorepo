@@ -109,5 +109,9 @@ module "server" {
   # likewise creates its firewall rule under deploy_enabled.
   firewall_enabled = var.deploy_enabled
 
+  # Only meaningful alongside the main firewall: without it every port is open
+  # anyway, and there is nothing to deploy to.
+  deploy_firewall_enabled = var.deploy_enabled && var.deploy_firewall_enabled
+
   user_data = local.startup_script
 }

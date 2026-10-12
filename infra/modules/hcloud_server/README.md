@@ -11,35 +11,37 @@ scaling ladder.
 
 ## Inputs
 
-| Name                  | Description                                           | Type           | Default                 |
-| --------------------- | ----------------------------------------------------- | -------------- | ----------------------- |
-| `name`                | Name prefix for server, firewall, and data volume     | `string`       | required                |
-| `server_type`         | Hetzner server type — **ladder rung 1**               | `string`       | `"cx23"`                |
-| `location`            | Hetzner location; changing it **replaces** the server | `string`       | `"nbg1"`                |
-| `image`               | OS image                                              | `string`       | `"ubuntu-24.04"`        |
-| `user_data`           | Cloud-init script; **never put secrets here**         | `string`       | `""`                    |
-| `backups_enabled`     | Hetzner automatic backups (~20% of server cost)       | `bool`         | `true`                  |
-| `keep_disk`           | Keep boot disk size on resize, preserving downgrade   | `bool`         | `true`                  |
-| `labels`              | Labels for server and volume                          | `map(string)`  | `{}`                    |
-| `data_volume_size_gb` | Postgres data volume; `0` disables, minimum `10`      | `number`       | `0`                     |
-| `ipv4_enabled`        | Public IPv4 — required for ACME HTTP-01               | `bool`         | `true`                  |
-| `ipv6_enabled`        | Public IPv6                                           | `bool`         | `true`                  |
-| `firewall_enabled`    | Create and attach the firewall — **leave this on**    | `bool`         | `true`                  |
-| `http_source_ips`     | Ranges allowed to 80/443                              | `list(string)` | `["0.0.0.0/0", "::/0"]` |
-| `ssh_allowed_cidrs`   | Ranges allowed to 22; `0.0.0.0/0` is rejected         | `list(string)` | `[]`                    |
-| `ssh_key_ids`         | Existing Hetzner SSH keys (id, name, or fingerprint)  | `list(string)` | `[]`                    |
+| Name                      | Description                                              | Type           | Default                 |
+| ------------------------- | -------------------------------------------------------- | -------------- | ----------------------- |
+| `name`                    | Name prefix for server, firewall, and data volume        | `string`       | required                |
+| `server_type`             | Hetzner server type — **ladder rung 1**                  | `string`       | `"cx23"`                |
+| `location`                | Hetzner location; changing it **replaces** the server    | `string`       | `"nbg1"`                |
+| `image`                   | OS image                                                 | `string`       | `"ubuntu-24.04"`        |
+| `user_data`               | Cloud-init script; **never put secrets here**            | `string`       | `""`                    |
+| `backups_enabled`         | Hetzner automatic backups (~20% of server cost)          | `bool`         | `true`                  |
+| `keep_disk`               | Keep boot disk size on resize, preserving downgrade      | `bool`         | `true`                  |
+| `labels`                  | Labels for server and volume                             | `map(string)`  | `{}`                    |
+| `data_volume_size_gb`     | Postgres data volume; `0` disables, minimum `10`         | `number`       | `0`                     |
+| `ipv4_enabled`            | Public IPv4 — required for ACME HTTP-01                  | `bool`         | `true`                  |
+| `ipv6_enabled`            | Public IPv6                                              | `bool`         | `true`                  |
+| `firewall_enabled`        | Create and attach the firewall — **leave this on**       | `bool`         | `true`                  |
+| `deploy_firewall_enabled` | Second, empty firewall the deploy workflow opens per run | `bool`         | `false`                 |
+| `http_source_ips`         | Ranges allowed to 80/443                                 | `list(string)` | `["0.0.0.0/0", "::/0"]` |
+| `ssh_allowed_cidrs`       | Ranges allowed to 22; `0.0.0.0/0` is rejected            | `list(string)` | `[]`                    |
+| `ssh_key_ids`             | Existing Hetzner SSH keys (id, name, or fingerprint)     | `list(string)` | `[]`                    |
 
 ## Outputs
 
-| Name                 | Description                                                   |
-| -------------------- | ------------------------------------------------------------- |
-| `server_id`          | Server id                                                     |
-| `server_name`        | Server name                                                   |
-| `ipv4_address`       | Public IPv4 — the A record target                             |
-| `ipv6_address`       | Public IPv6 — the AAAA record target                          |
-| `firewall_id`        | Firewall id, or `null`                                        |
-| `data_volume_id`     | Data volume id, or `null`                                     |
-| `data_volume_device` | **Stable** `/dev/disk/by-id/...` path for cloud-init to mount |
+| Name                   | Description                                                               |
+| ---------------------- | ------------------------------------------------------------------------- |
+| `server_id`            | Server id                                                                 |
+| `server_name`          | Server name                                                               |
+| `ipv4_address`         | Public IPv4 — the A record target                                         |
+| `ipv6_address`         | Public IPv6 — the AAAA record target                                      |
+| `firewall_id`          | Firewall id, or `null`                                                    |
+| `deploy_firewall_name` | Deploy firewall name — the `HETZNER_DEPLOY_FIREWALL` variable — or `null` |
+| `data_volume_id`       | Data volume id, or `null`                                                 |
+| `data_volume_device`   | **Stable** `/dev/disk/by-id/...` path for cloud-init to mount             |
 
 ## Example
 

@@ -25,6 +25,11 @@ output "firewall_id" {
   value       = var.firewall_enabled ? hcloud_firewall.this[0].id : null
 }
 
+output "deploy_firewall_name" {
+  description = "Name of the deploy firewall, or null when deploy_firewall_enabled is false. Set it as the HETZNER_DEPLOY_FIREWALL repository variable."
+  value       = var.deploy_firewall_enabled ? hcloud_firewall.deploy[0].name : null
+}
+
 output "data_volume_id" {
   description = "Attached data volume id, or null when data_volume_size_gb is 0."
   value       = var.data_volume_size_gb > 0 ? hcloud_volume.data[0].id : null

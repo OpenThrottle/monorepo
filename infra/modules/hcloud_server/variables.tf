@@ -84,6 +84,12 @@ variable "firewall_enabled" {
   default     = true
 }
 
+variable "deploy_firewall_enabled" {
+  description = "Create and attach a second, initially EMPTY firewall that the Hetzner deploy workflow fills with a single /32 SSH rule for its runner's IP for the length of a run, then empties again. Empty, it adds nothing to the box's surface. Leave false unless that workflow deploys to this server."
+  type        = bool
+  default     = false
+}
+
 variable "http_source_ips" {
   description = "Source ranges permitted to reach ports 80 and 443. Defaults to the whole internet, which is intentional for a public web endpoint. Narrow it to a CDN/proxy's egress ranges (e.g. Cloudflare) if the origin should be locked down."
   type        = list(string)

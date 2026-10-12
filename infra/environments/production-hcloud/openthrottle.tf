@@ -24,6 +24,9 @@
 #      been applied, so "roll back to GCP" is NOT an available fallback.
 #   5. After the first successful boot, run `docker compose run --rm bootstrap`
 #      manually — `up` must never silently provision a database.
+#   6. For the automated deploy, set the HETZNER_DEPLOY_* secrets and variables
+#      listed in .github/workflows/hetzner-deploy.yml. HETZNER_DEPLOY_FIREWALL
+#      is the module's deploy_firewall_name output.
 
 # module "openthrottle" {
 #   source = "../../applications/openthrottle_hcloud"
@@ -54,4 +57,9 @@
 #   # rejected by the module's own validation.
 #   ssh_allowed_cidrs = [] # e.g. ["203.0.113.4/32"]
 #   ssh_key_ids       = [] # e.g. ["admin-key"]
+#
+#   # GitHub-hosted runners have no stable IP to put in ssh_allowed_cidrs, so
+#   # the deploy workflow opens this (otherwise empty) firewall for its own /32
+#   # for the length of a run.
+#   deploy_firewall_enabled = true
 # }
