@@ -34,3 +34,8 @@ output "zone" {
   description = "Zone where the instance and disk are created."
   value       = local.zone
 }
+
+output "firewall_tag" {
+  description = "Network tag this module's firewall rules target, and which the instance carries when firewall_enabled."
+  value       = local.firewall_tag
+}

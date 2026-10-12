@@ -1,5 +1,9 @@
 # Environments
 
+> One root per **environment × hosting option**. `staging/` and `production/` target GCP;
+> `production-hcloud/` targets Hetzner; `example-hcloud/` is the copyable template for anyone
+> deploying OpenThrottle themselves. See [../HOSTING-OPTIONS.md](../HOSTING-OPTIONS.md).
+
 | Project Name                             |
 | ---------------------------------------- |
 | [openthrottle-production][ot-production] |
@@ -11,10 +15,12 @@
 
 Each GCP project has its **own Terraform working directory** under `infra/environments/<env>/` with a **dedicated GCS backend** and **separate state file**. This repo does **not** use a single stack with [Terraform workspaces](https://developer.hashicorp.com/terraform/language/state/workspaces) to switch staging/production; that keeps backends, credentials, and blast radius explicit per project.
 
-| Directory     | GCP project               | State bucket (GCS backend)                |
-| ------------- | ------------------------- | ----------------------------------------- |
-| `staging/`    | `openthrottle-staging`    | `openthrottle-staging-terraform-state`    |
-| `production/` | `openthrottle-production` | `openthrottle-production-terraform-state` |
+| Directory            | GCP project                                             | State bucket (GCS backend)                                                          |
+| -------------------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `staging/`           | `openthrottle-staging`                                  | `openthrottle-staging-terraform-state`                                              |
+| `production/`        | `openthrottle-production`                               | `openthrottle-production-terraform-state`                                           |
+| `production-hcloud/` | n/a (Hetzner)                                           | `openthrottle-production-terraform-state` (prefix `openthrottle/production-hcloud`) |
+| `example-hcloud/`    | n/a — **copyable template**, no backend, see its README | n/a                                                                                 |
 
 **Artifact Registry:** Both roots define the same Docker repository id (`openthrottle`) in `us-west2`, each in its own project, so image paths match CI: `us-west2-docker.pkg.dev/<GCP_PROJECT>/openthrottle/<image>:<tag>`.
 

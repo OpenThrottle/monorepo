@@ -22,5 +22,34 @@ tfplan
 *.tfstate.*
 
 #############################################################################
+# Variable values
+#############################################################################
+# NEVER commit real variable values to a PUBLIC repository. Roots here are
+# public on purpose (see HOSTING-OPTIONS.md), so the sensitive part of a
+# deployment is its VALUES, not its structure: `ssh_allowed_cidrs` is a list of
+# your administrative IPs, and a token or password passed this way would be
+# published permanently in git history.
+#
+# `*.tfvars.example` is deliberately still committable — that is how an example
+# root documents what an operator must supply.
+*.tfvars
+*.tfvars.json
+!*.tfvars.example
+# Pre-cutover DNS records (applications/openthrottle_hcloud/CUTOVER.md step 1).
+# This is the rollback procedure: keep it, but keep it off a public repo.
+dns-before-cutover.txt
+
+#############################################################################
+# Provider lock files
+#############################################################################
+# A lock file belongs to an ENVIRONMENT root, where it pins provider versions
+# for an actual apply. Module and application directories get initialized
+# standalone — by local validation and by terraform-validate.yml, which runs
+# `terraform init` in every directory containing *.tf — so without this rule a
+# `git add -A` after validating quietly commits a lock file into every module.
+**/.terraform.lock.hcl
+!environments/*/.terraform.lock.hcl
+
+#############################################################################
 # Includes
 #############################################################################

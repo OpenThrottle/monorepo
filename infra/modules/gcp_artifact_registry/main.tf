@@ -11,7 +11,7 @@ resource "google_artifact_registry_repository" "this" {
 }
 
 # Least-privilege push: writer on this repository only (not whole project).
-# GCE / E2 pull uses roles/artifactregistry.reader on the project in infra/applications/openthrottle.
+# GCE / E2 pull uses roles/artifactregistry.reader on the project in infra/applications/openthrottle_gcp.
 resource "google_artifact_registry_repository_iam_member" "writers" {
   for_each = toset(var.repository_writer_members)
 

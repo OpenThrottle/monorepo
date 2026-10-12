@@ -1,6 +1,7 @@
 # Service accounts for production automation (CI / GitHub Actions).
 # JSON keys are not managed here; create and rotate keys via gcloud — see
-# docs/infra/staging-gcs-workflow-service-account.md (same pattern; production project + secret).
+# environments/staging/service_accounts.tf (same pattern; production project + secret).
+# Secret: GOOGLE_CREDENTIALS_PRODUCTION, read by .github/workflows/openthrottle-docker.yml.
 
 resource "google_service_account" "gcs_workflow" {
   account_id   = "production-gcs-workflow"
