@@ -23,6 +23,17 @@
 #   currently DISABLED (`if: false`) as the most expensive workflow in the repo.
 #   So a tag may simply not exist. See docs/monorepo/ci-cost.md.
 #
+#   ⛓️ TRIGGERED BY THE IMAGE BUILD, not by the push. A `push` trigger would
+#   race openthrottle-docker.yml and pull `sha-<commit>` before it was
+#   published. `workflow_run` starts only once that build has finished, and the
+#   job only proceeds if it succeeded on a push to main.
+#
+#   🧩 PARTIAL BUILDS ARE NORMAL. openthrottle-docker.yml builds server and
+#   developer only when Nx says they are affected, so a given SHA often has
+#   only some of the four images. The deploy retags just the images that exist
+#   at IMAGE_TAG and leaves the rest on their current tag — an unaffected
+#   image's last build is, by definition, still current.
+#
 ################################################################################
 name: '🚀 Hetzner Deploy'
 on:
@@ -32,14 +43,13 @@ on:
         description: "Image tag to deploy (e.g. sha-abc123). Defaults to this run's SHA."
         required: false
         type: string
-  push:
+  workflow_run:
     branches:
       - main
-    paths:
-      - 'applications/openthrottle-developer/**'
-      - 'applications/openthrottle-server/**'
-      - 'databases/**'
-      - 'packages/**'
+    types:
+      - completed
+    workflows:
+      - '🐳 OpenThrottle Docker'
 
 concurrency:
   # Never let two deploys race on one box. Do NOT cancel in progress: a deploy
@@ -49,15 +59,28 @@ concurrency:
 
 permissions:
   contents: read
+  # Read-only, to check which images exist at IMAGE_TAG if the GHCR packages are
+  # private. Public packages need no auth at all.
+  packages: read
 
 jobs:
   deploy:
-    if: vars.HETZNER_DEPLOY_ENABLED == 'true'
+    # `branches: main` on workflow_run matches the head branch NAME, which a PR
+    # from a branch called `main` would also satisfy — so require a push event,
+    # not just the branch.
+    if: >-
+      vars.HETZNER_DEPLOY_ENABLED == 'true' &&
+      (github.event_name == 'workflow_dispatch' ||
+       (github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.event == 'push'))
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
     env:
-      IMAGE_TAG: ${{ inputs.image_tag || format('sha-{0}', github.sha) }}
+      # On workflow_run, github.sha is the default branch HEAD at the time this
+      # run starts — possibly a later commit than the one the images were built
+      # from. head_sha is the commit the build actually ran on.
+      IMAGE_TAG: ${{ inputs.image_tag || format('sha-{0}', github.event.workflow_run.head_sha || github.sha) }}
 
     steps:
       # Needed for infra/tests/exposure/verify-exposure.sh in the last step.
@@ -66,6 +89,44 @@ jobs:
         with:
           # Only the scripts are needed, never history.
           fetch-depth: 1
+
+      # Decide which images to roll BEFORE touching the box. Checked here rather
+      # than on the box so the answer does not depend on whatever registry
+      # credential cloud-init happened to install there.
+      - name: '🔎 Resolve images published at IMAGE_TAG'
+        id: images
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY_OWNER: ${{ github.repository_owner }}
+        run: |
+          set -euo pipefail
+
+          # GHCR rejects uppercase in a repository path; see openthrottle-docker.yml.
+          registry="ghcr.io/${REPOSITORY_OWNER,,}"
+          printf '%s' "${GITHUB_TOKEN}" | docker login ghcr.io --username "${GITHUB_ACTOR}" --password-stdin >/dev/null
+
+          present=()
+          for name in openthrottle-server openthrottle-developer migrations mcp; do
+            ref="${registry}/${name}:${IMAGE_TAG}"
+            if out="$(docker manifest inspect "${ref}" 2>&1 >/dev/null)"; then
+              echo "✅ ${ref}"
+              present+=("${registry}/${name}")
+            elif grep -qiE 'no such manifest|manifest unknown|not found' <<< "${out}"; then
+              echo "⏭️  ${ref} not published — keeping its current tag"
+            else
+              # Anything else (auth, network, rate limit) is NOT evidence the image
+              # is absent. Treating it as absent would silently skip a real update.
+              echo "::error::could not check ${ref}: ${out}"
+              exit 1
+            fi
+          done
+
+          if (( ${#present[@]} == 0 )); then
+            echo "::error::no openthrottle image exists at ${IMAGE_TAG} — nothing to deploy. Was it published to GHCR?"
+            exit 1
+          fi
+
+          echo "repos=${present[*]}" >> "${GITHUB_OUTPUT}"
 
       # Set up SSH inline rather than via a third-party action: one fewer
       # supply-chain dependency on a job that holds a deploy key.
@@ -93,6 +154,7 @@ jobs:
         env:
           DEPLOY_HOST: ${{ secrets.HETZNER_DEPLOY_HOST }}
           DEPLOY_USER: ${{ secrets.HETZNER_DEPLOY_USER }}
+          IMAGE_REPOS: ${{ steps.images.outputs.repos }}
         run: |
           set -euo pipefail
 
@@ -107,15 +169,20 @@ jobs:
           # DNS change cannot silently redirect this deploy.
           ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -i ~/.ssh/id_deploy \
             "${DEPLOY_USER}@${DEPLOY_HOST}" \
-            "IMAGE_TAG='${IMAGE_TAG}' bash -s" <<'REMOTEEOF'
+            "IMAGE_TAG='${IMAGE_TAG}' IMAGE_REPOS='${IMAGE_REPOS}' bash -s" <<'REMOTEEOF'
           set -euo pipefail
           cd /opt/openthrottle
 
           echo "::group::retag to ${IMAGE_TAG}"
-          # Rewrite only the tag on openthrottle images, leaving caddy, postgres
-          # and redis (which are pinned upstream images) untouched.
+          # Rewrite the tag only on the images published at IMAGE_TAG, leaving
+          # every other openthrottle image on its current tag and caddy, postgres
+          # and redis (pinned upstream images) untouched. Each repo is matched
+          # exactly — dots escaped, and a `:` straight after the name — so
+          # ghcr.io/x/openthrottle-server cannot also match a longer name.
           cp docker-compose.yml docker-compose.yml.prev
-          sed -E -i "s|(image: ghcr\.io/[^:]+):[^\"'[:space:]]+|\1:${IMAGE_TAG}|g" docker-compose.yml
+          for repo in ${IMAGE_REPOS}; do
+            sed -E -i "s|(image: ${repo//./\\.}):[^\"'[:space:]]+|\1:${IMAGE_TAG}|g" docker-compose.yml
+          done
           grep -E '^\s+image:' docker-compose.yml
           echo "::endgroup::"
 
