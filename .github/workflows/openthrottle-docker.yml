@@ -88,7 +88,7 @@ jobs:
     # Re-enabling remains a separate, costed decision. Until then the GHCR path
     # is wired but dormant, and a Hetzner deploy must pull an image tag that was
     # pushed some other way.
-    if: false
+    # if: false
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
