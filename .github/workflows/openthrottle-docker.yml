@@ -75,7 +75,67 @@ permissions:
   packages: write
 
 jobs:
-  build-and-push:
+  # ⚡ Two jobs, so the image builds run in PARALLEL. `plan` does the one thing
+  # that needs history and node_modules (Nx affected) and emits a matrix; each
+  # `build` leg then gets its own runner. Sequential builds in one job cost the
+  # SUM of the four builds; this costs the slowest one plus ~1 min of per-leg
+  # setup. Runner minutes go up slightly (four cold setups), which is free on a
+  # public repo's ubuntu-latest — wall clock is the cost that matters here.
+  plan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+
+    steps:
+      - name: '📦 Checkout'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # 💰 Partial clone — `nx affected` walks history and diffs trees but
+          # never reads a historical blob. See docs/monorepo/ci-cost.md.
+          fetch-depth: 0
+          filter: 'blob:none'
+
+      - name: '🤖 Node Setup'
+        uses: ./.github/actions/node-setup
+
+      - name: "🕵️ NX Set SHA's"
+        uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
+
+      - name: '📋 Affected OpenThrottle apps'
+        id: affected
+        uses: ./.github/actions/nx-affected-docker-apps
+        with:
+          apps: openthrottle-developer,openthrottle-server
+
+      # server/developer join the matrix only when Nx says they are affected.
+      # migrations and mcp are not Nx apps, so they are always built whenever
+      # this workflow runs (its path filter is their gate) — which also means
+      # the matrix is never empty.
+      - name: '🧮 Build matrix'
+        id: matrix
+        shell: bash
+        env:
+          BUILD_FLAGS: ${{ steps.affected.outputs.build-flags-json }}
+        run: |
+          set -euo pipefail
+          node --input-type=module -e '
+            import { appendFileSync } from "node:fs";
+            const flags = JSON.parse(process.env.BUILD_FLAGS);
+            const include = [
+              flags["openthrottle-server"] && { dockerfile: "Dockerfile.NestJS", image: "openthrottle-server", kind: "app" },
+              flags["openthrottle-developer"] && { dockerfile: "Dockerfile.ReactRouter", image: "openthrottle-developer", kind: "app" },
+              { dockerfile: "Dockerfile.Migrations", image: "migrations", kind: "migrations" },
+              { dockerfile: "Dockerfile.NestJS", image: "mcp", kind: "mcp" },
+            ].filter(Boolean);
+            const matrix = JSON.stringify({ include });
+            console.log(matrix);
+            appendFileSync(process.env.GITHUB_OUTPUT, `matrix=${matrix}\n`);
+          '
+
+  build:
+    name: 'build (${{ matrix.image }})'
+    needs: plan
     # 💰 Still disabled — the most expensive workflow in the repo. It builds 4
     # images with NO remote build cache wired (local BuildKit only, so every run
     # starts cold) and pushes sha-tagged images that accumulate registry storage
@@ -91,18 +151,21 @@ jobs:
     # if: false
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    strategy:
+      # Let every leg finish: on a PR the point is to validate all four
+      # Dockerfiles, and one failure must not hide another. On main any failed
+      # leg still fails the run, so hetzner-deploy.yml (workflow_run, success
+      # only) will not deploy a half-built SHA.
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
 
     steps:
+      # Shallow: the build legs never touch history — Nx affected ran in `plan`.
+      # No Node Setup either: the only node use here is `node -p` over
+      # package.json, which the runner's preinstalled node handles. Every
+      # install happens inside the Dockerfiles.
       - name: '📦 Checkout'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          # 💰 Partial clone — `nx affected` walks history and diffs trees but
-          # never reads a historical blob. See docs/monorepo/ci-cost.md.
-          fetch-depth: 0
-          filter: 'blob:none'
-
-      - name: '🤖 Node Setup'
-        uses: ./.github/actions/node-setup
 
       - name: '🌥️ GCP and Docker (Artifact Registry)'
         uses: ./.github/actions/google-cloud
@@ -135,33 +198,12 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
 
-      - name: "🕵️ NX Set SHA's"
-        uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
-
-      - name: '📋 Affected OpenThrottle apps'
-        id: affected
-        uses: ./.github/actions/nx-affected-docker-apps
-        with:
-          apps: openthrottle-developer,openthrottle-server
-
-      - name: '🐳 Build (and push on main) openthrottle-server'
-        if: steps.affected.outputs.build-openthrottle-server == 'true'
+      - name: '🐳 Build (and push on main) ${{ matrix.image }}'
+        if: matrix.kind == 'app'
         uses: ./.github/actions/docker-build-push
         with:
-          app: openthrottle-server
-          dockerfile-path: Dockerfile.NestJS
-          github-token: ${{ env.GITHUB_TOKEN }}
-          push: ${{ github.ref == 'refs/heads/main' }}
-          registries-additional: ${{ env.GHCR_REGISTRY }}
-          registry: ${{ env.ARTIFACT_REGISTRY_REGION }}-docker.pkg.dev/${{ env.GOOGLE_PROJECT_ID }}/openthrottle
-          tag: sha-${{ github.sha }}
-
-      - name: '🐳 Build (and push on main) openthrottle-developer'
-        if: steps.affected.outputs.build-openthrottle-developer == 'true'
-        uses: ./.github/actions/docker-build-push
-        with:
-          app: openthrottle-developer
-          dockerfile-path: Dockerfile.ReactRouter
+          app: ${{ matrix.image }}
+          dockerfile-path: ${{ matrix.dockerfile }}
           github-token: ${{ env.GITHUB_TOKEN }}
           push: ${{ github.ref == 'refs/heads/main' }}
           registries-additional: ${{ env.GHCR_REGISTRY }}
@@ -171,12 +213,15 @@ jobs:
       # The migrations image is a tiny non-Nx runner (node + pg + databases/migrations), built
       # directly from Dockerfile.Migrations — it has no applications/<app>/package.json, no
       # `--target production`, and no NX/PNPM build args, so the docker-build-push composite action
-      # (and the Nx-affected gating above) do not apply. It is intentionally cheap to build, so it is
+      # (and the Nx-affected gating in `plan`) do not apply. It is intentionally cheap to build, so it is
       # built unconditionally whenever this workflow runs (the workflow only triggers on changes to
       # databases/**, Dockerfile.Migrations, or shared deps) and pushed only on main, matching the
       # sha-<GITHUB_SHA> tag scheme used for server/developer.
       - name: '🐳 Build (and push on main) openthrottle/migrations'
+        if: matrix.kind == 'migrations'
         shell: bash
+        env:
+          DOCKERFILE: ${{ matrix.dockerfile }}
         run: |
           set -euo pipefail
           IMAGE="${ARTIFACT_REGISTRY_REGION}-docker.pkg.dev/${GOOGLE_PROJECT_ID}/openthrottle/migrations:sha-${GITHUB_SHA}"
@@ -184,7 +229,7 @@ jobs:
 
           # Build once, tag for both registries: same digest on Artifact
           # Registry and GHCR, per infra/provider-contract.md.
-          docker build -f Dockerfile.Migrations -t "${IMAGE}" .
+          docker build -f "${DOCKERFILE}" -t "${IMAGE}" .
           docker tag "${IMAGE}" "${GHCR_IMAGE}"
 
           if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
@@ -203,7 +248,10 @@ jobs:
       # Registry + GHCR like the others: the Hetzner compose template runs mcp, so
       # this image must be pullable without the gcloud SDK.
       - name: '🐳 Build (and push on main) openthrottle/mcp'
+        if: matrix.kind == 'mcp'
         shell: bash
+        env:
+          DOCKERFILE: ${{ matrix.dockerfile }}
         run: |
           set -euo pipefail
           PNPM_VERSION="$(node -p "(require('./package.json').packageManager||'').replace(/^pnpm@/,'').split('+')[0]")"
@@ -213,7 +261,7 @@ jobs:
           # APP_NAME is nominal here: the builder stage COPYs applications/<APP_NAME>/package.json,
           # so it must be a real app, but mcp-build ignores it (bundles the openthrottle-mcp
           # package via esbuild). It does not leak into the distroless mcp image.
-          docker build -f Dockerfile.NestJS --target mcp \
+          docker build -f "${DOCKERFILE}" --target mcp \
             --build-arg APP_NAME=openthrottle-server \
             --build-arg APP_VERSION="sha-${GITHUB_SHA}" \
             --build-arg GITHUB_TOKEN="${GITHUB_TOKEN}" \
