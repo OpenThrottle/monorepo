@@ -90,12 +90,6 @@
       "type:application"
     ],
     "targets": {
-      "build": {
-        "dependsOn": [
-          "codegen-graphql",
-          "codegen-react-router"
-        ]
-      },
       "codegen-graphql": {},
       "codegen-graphql-watch": {},
       "codegen-react-router": {},

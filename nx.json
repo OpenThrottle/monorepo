@@ -149,10 +149,16 @@
   "targetDefaults": {
     "@nx/js:tsc": {
       "cache": true,
-      "dependsOn": ["^build", "^codegen-graphql", "^codegen-react-router"],
+      "dependsOn": [
+        "^build",
+        "^codegen-graphql",
+        "^codegen-react-router",
+        "codegen-graphql",
+        "codegen-react-router"
+      ],
       "executor": "@nx/js:tsc",
       "metadata": {
-        "description": "Shared @nx/js:tsc compile defaults: emit the package to {projectRoot}/dist from src/index.ts using tsconfig.lib.json (after upstream build + codegen)."
+        "description": "Shared @nx/js:tsc compile defaults: emit the package to {projectRoot}/dist from src/index.ts using tsconfig.lib.json (after upstream build and this project's own codegen, when those targets exist)."
       },
       "options": {
         "generateExportsField": false,
@@ -164,26 +170,45 @@
         "tsConfig": "{projectRoot}/tsconfig.lib.json"
       }
     },
-    "build": {
-      "cache": true,
-      "executor": "@nx/vite:build",
-      "dependsOn": [
-        "^build",
-        "^codegen-graphql",
-        "^codegen-react-router",
-        "^typecheck"
-      ],
-      "inputs": ["noMarkdown", "^noMarkdown"],
-      "metadata": {
-        "description": "Build the project to {projectRoot}/dist via @nx/vite:build; runs after upstream build, codegen, and typecheck."
+    "build": [
+      {
+        "cache": true,
+        "dependsOn": [
+          "^build",
+          "^codegen-graphql",
+          "^codegen-react-router",
+          "^typecheck",
+          "codegen-graphql",
+          "codegen-react-router"
+        ],
+        "executor": "@nx/vite:build",
+        "inputs": ["noMarkdown", "^noMarkdown"],
+        "metadata": {
+          "description": "Build the project to {projectRoot}/dist via @nx/vite:build; runs after upstream build, codegen, and typecheck, and after this project's own codegen when those targets exist."
+        },
+        "options": {
+          "buildLibsFromSource": true,
+          "emptyOutDir": true,
+          "outputPath": "{projectRoot}/dist",
+          "tsConfig": "{projectRoot}/tsconfig.lib.json"
+        }
       },
-      "options": {
-        "buildLibsFromSource": true,
-        "emptyOutDir": true,
-        "outputPath": "{projectRoot}/dist",
-        "tsConfig": "{projectRoot}/tsconfig.lib.json"
+      {
+        "dependsOn": [
+          "...",
+          "^codegen-graphql",
+          "^codegen-react-router",
+          "codegen-graphql",
+          "codegen-react-router"
+        ],
+        "filter": {
+          "plugin": "@nx/react/router-plugin"
+        },
+        "metadata": {
+          "description": "Run this app's codegen-graphql and codegen-react-router before the router plugin's react-router build. A separate entry because the @nx/vite:build default above is incompatible with that command, so Nx drops it — including its dependsOn — and the plugin's own dependsOn is only ^build. '...' keeps that ^build. Targets the project does not define are skipped (website has no codegen-graphql). The watch targets stay on dev: they never exit."
+        }
       }
-    },
+    ],
     "build-package": {
       "cache": true,
       "dependsOn": ["build"],
