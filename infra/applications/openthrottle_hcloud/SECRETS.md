@@ -108,9 +108,11 @@ That is intended: `up` must never silently provision a possibly-shared database.
 
 ### 4. Held by CI, never by the box — the automated deploy's credentials
 
-`.github/workflows/hetzner-deploy.yml` needs an SSH key, the box's host key, and
-`HETZNER_DEPLOY_TOKEN`, a Hetzner API token it uses to open the deploy firewall to its runner's IP
-for the length of a run. All of them live in GitHub Actions secrets; none is written to the box,
+`.github/workflows/hetzner-deploy.yml` needs an SSH key, the box's host key, and `HCLOUD_TOKEN`,
+a Hetzner API token it uses to open the deploy firewall to its runner's IP for the length of a run.
+It is the same name the Terraform provider reads, and may be the same token: a separate one would
+not be narrower, since every read/write token reaches the whole project. What a separate token buys
+is only independent revocation. All of them live in GitHub Actions secrets; none is written to the box,
 `user_data`, or Terraform state.
 
 **The API token is the most powerful credential in this setup.** Hetzner cannot scope a token below

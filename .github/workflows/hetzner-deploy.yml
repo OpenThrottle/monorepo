@@ -41,9 +41,10 @@
 #   always-run step afterwards. See .github/actions/hcloud-deploy-firewall.
 #
 #   Configuration (Settings → Secrets and variables → Actions):
-#     secrets  HETZNER_DEPLOY_TOKEN     hcloud API token, read/write. Hetzner
-#                                       cannot scope a token below a project,
-#                                       so keep the box in its own project.
+#     secrets  HCLOUD_TOKEN             hcloud API token, read/write — the same
+#                                       name the Terraform provider reads.
+#                                       Hetzner cannot scope a token below a
+#                                       project, so keep the box in its own.
 #              HETZNER_SSH_PRIVATE_KEY  key whose public half is in ssh_key_ids
 #              HETZNER_KNOWN_HOSTS      the box's host key line(s)
 #              HETZNER_DEPLOY_HOST      the box's IPv4 ADDRESS — the firewall
@@ -176,7 +177,7 @@ jobs:
         uses: ./.github/actions/hcloud-deploy-firewall
         with:
           firewall: ${{ vars.HETZNER_DEPLOY_FIREWALL }}
-          hcloud-token: ${{ secrets.HETZNER_DEPLOY_TOKEN }}
+          hcloud-token: ${{ secrets.HCLOUD_TOKEN }}
           mode: open
 
       - name: '🚀 Roll the stack'
@@ -273,7 +274,7 @@ jobs:
         uses: ./.github/actions/hcloud-deploy-firewall
         with:
           firewall: ${{ vars.HETZNER_DEPLOY_FIREWALL }}
-          hcloud-token: ${{ secrets.HETZNER_DEPLOY_TOKEN }}
+          hcloud-token: ${{ secrets.HCLOUD_TOKEN }}
           mode: close
 
       - name: '🩺 Verify the public surface'

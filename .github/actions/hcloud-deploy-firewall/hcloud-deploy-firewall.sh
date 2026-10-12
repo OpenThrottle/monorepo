@@ -54,7 +54,7 @@ firewall="$(hcloud GET "/firewalls?name=${FIREWALL_NAME}")"
 firewall_id="$(jq -r '.firewalls[0].id // empty' <<< "${firewall}")"
 
 if [[ -z "${firewall_id}" ]]; then
-  echo "::error::no firewall named '${FIREWALL_NAME}' in this Hetzner project. Is deploy_firewall_enabled set, and does HETZNER_DEPLOY_TOKEN belong to the right project?"
+  echo "::error::no firewall named '${FIREWALL_NAME}' in this Hetzner project. Is deploy_firewall_enabled set, and does the API token belong to the right project?"
   exit 1
 fi
 
