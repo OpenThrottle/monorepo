@@ -172,6 +172,19 @@ CMD ["sh", "-c", "node_modules/.bin/tsx packages/openthrottle-mcp/src/bin-http.t
 # single file and needs zero node_modules.
 FROM builder AS mcp-build
 
+# src/__generated__ is gitignored codegen output that the source imports, so it
+# must be generated here — a local build only "works" because the host's copy
+# rides in through the build context; a clean CI checkout has none. Codegen
+# reads the committed server schema.gql (not in `builder`, which copies only the
+# app's package.json) and runs graphql-codegen directly rather than through Nx,
+# which has no nx.json in this stage. Output is identical to
+# `pnpm nx run openthrottle-mcp:codegen-graphql`. NODE_ENV=production for this
+# command only: defineCodegen hard-requires API_URL_INTERNAL (a live server)
+# when NODE_ENV=development, which `builder` sets.
+COPY ./applications/openthrottle-server/schema.gql ./applications/openthrottle-server/schema.gql
+
+RUN cd packages/openthrottle-mcp && NODE_ENV=production pnpm exec graphql-codegen
+
 RUN node packages/openthrottle-mcp/esbuild.http.mjs
 
 ################################################################################
