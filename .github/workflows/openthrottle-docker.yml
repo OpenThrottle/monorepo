@@ -65,8 +65,8 @@ env:
   # lowercases it in bash and exports it via $GITHUB_ENV.
   BRANCH_NAME: ${{ github.head_ref || github.ref_name || 'main' }}
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  GOOGLE_CREDENTIALS: ${{ (github.ref_name == 'main') && secrets.GOOGLE_CREDENTIALS_PRODUCTION || secrets.GOOGLE_CREDENTIALS_STAGING }}
-  GOOGLE_PROJECT_ID: ${{ (github.ref_name == 'main') && vars.GOOGLE_PROJECT_ID_PRODUCTION || vars.GOOGLE_PROJECT_ID_STAGING }}
+  # GOOGLE_CREDENTIALS / GOOGLE_PROJECT_ID live on the `build` job, NOT here —
+  # see the 🙈 note there.
 
 permissions:
   contents: read
@@ -151,6 +151,16 @@ jobs:
     # if: false
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    # 🙈 Scoped to this job, deliberately — never move these back to the
+    # workflow-level env. GOOGLE_CREDENTIALS is a pretty-printed service-account
+    # JSON, and the runner masks EACH LINE of a multi-line secret, including the
+    # lone `{` and `}`. Any job that can see it therefore treats every JSON value
+    # as secret-bearing and silently drops it from job outputs ("Skip output
+    # 'matrix' since it may contain secret"), which leaves `build` with no
+    # matrix at all. `plan` emits JSON and never needs GCP, so it must not see it.
+    env:
+      GOOGLE_CREDENTIALS: ${{ (github.ref_name == 'main') && secrets.GOOGLE_CREDENTIALS_PRODUCTION || secrets.GOOGLE_CREDENTIALS_STAGING }}
+      GOOGLE_PROJECT_ID: ${{ (github.ref_name == 'main') && vars.GOOGLE_PROJECT_ID_PRODUCTION || vars.GOOGLE_PROJECT_ID_STAGING }}
     strategy:
       # Let every leg finish: on a PR the point is to validate all four
       # Dockerfiles, and one failure must not hide another. On main any failed
