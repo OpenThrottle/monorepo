@@ -26,7 +26,8 @@
 #      exposes) or Terraform state. See
 #      infra/applications/openthrottle_hcloud/SECRETS.md.
 #   4. backup_remote is baked into first-boot cloud-init for the same reason.
-#      Changing it later means re-running the startup script over SSH.
+#      Changing it later means re-running the startup script over SSH
+#      (/usr/local/sbin/openthrottle-startup.sh).
 #   5. The GCP composition has never been applied, so "roll back to GCP" is NOT
 #      an available fallback. See applications/openthrottle_hcloud/CUTOVER.md.
 #   6. After the first successful boot, run `docker compose run --rm bootstrap`

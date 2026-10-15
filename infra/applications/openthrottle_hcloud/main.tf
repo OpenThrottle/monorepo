@@ -88,6 +88,29 @@ locals {
     redis_host        = var.redis_host
     redis_port        = tostring(var.redis_port)
   }) : ""
+
+  # Where cloud-init puts the startup script on the box. A fixed path, so the
+  # "re-run it over SSH" advice for template changes has a file to point at.
+  startup_script_path = "/usr/local/sbin/openthrottle-startup.sh"
+
+  # Hetzner caps user_data at 32 KiB, and the rendered script — compose file,
+  # backup script and all their comments — is past that. So user_data is a
+  # small cloud-config that writes the script gzipped+base64 (`gz+b64`, which
+  # cloud-init decodes natively) and runs it once from runcmd: the same
+  # first-boot-only semantics as a raw script part, at well under half the size.
+  user_data = local.startup_script == "" ? "" : join("\n", [
+    "#cloud-config",
+    yamlencode({
+      runcmd = [["bash", local.startup_script_path]]
+      write_files = [{
+        content     = base64gzip(local.startup_script)
+        encoding    = "gz+b64"
+        owner       = "root:root"
+        path        = local.startup_script_path
+        permissions = "0700"
+      }]
+    }),
+  ])
 }
 
 module "server" {
@@ -113,5 +136,5 @@ module "server" {
   # anyway, and there is nothing to deploy to.
   deploy_firewall_enabled = var.deploy_enabled && var.deploy_firewall_enabled
 
-  user_data = local.startup_script
+  user_data = local.user_data
 }

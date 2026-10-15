@@ -183,5 +183,12 @@ resource "hcloud_server" "this" {
     # server deliberately with `terraform taint` once the data lives on the
     # attached volume.
     ignore_changes = [user_data]
+
+    # Hetzner rejects user_data over 32 KiB — but only at create time, after
+    # the firewalls and volume already exist. Fail at plan instead.
+    precondition {
+      condition     = length(var.user_data) <= 32768
+      error_message = "user_data is ${length(var.user_data)} characters; Hetzner accepts at most 32768. Compress it (see applications/openthrottle_hcloud, which wraps its script in a gz+b64 cloud-config) or trim it."
+    }
   }
 }
