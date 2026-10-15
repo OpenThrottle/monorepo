@@ -49,6 +49,18 @@ describe('roles', () => {
       );
     });
 
+    it('blog:write is admin-only: no other built-in role holds it', () => {
+      expect(ROLE_PERMISSIONS[ROLES.ADMIN]).toContain(PERMISSIONS.BLOG_WRITE);
+      for (const role of [
+        ROLES.USER,
+        ROLES.VIEWER,
+        ROLES.MCP,
+        ROLES.WORKFLOW_RALPH,
+      ] as const) {
+        expect(ROLE_PERMISSIONS[role]).not.toContain(PERMISSIONS.BLOG_WRITE);
+      }
+    });
+
     it('mcp and workflow-ralph have plans read/write only', () => {
       for (const role of [ROLES.MCP, ROLES.WORKFLOW_RALPH] as const) {
         const perms = ROLE_PERMISSIONS[role];

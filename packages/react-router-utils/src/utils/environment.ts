@@ -53,6 +53,7 @@ export const getPublicEnv = (): OpenThrottlePublicEnv => {
     APP_URL_WEBSITE: appUrlWebsite,
     APP_VERSION: appVersion.toString(),
     FEATURE_BETA_PREVIEW: ENV_SOURCE['FEATURE_BETA_PREVIEW'] ?? 'false',
+    FEATURE_BLOG_ENABLED: ENV_SOURCE['FEATURE_BLOG_ENABLED'] ?? 'false',
     FEATURE_CHARLIE_PREVIEW: ENV_SOURCE['FEATURE_CHARLIE_PREVIEW'] ?? 'false',
     NODE_ENV: nodeEnv,
     ROLLBAR_TOKEN: rollbarToken.toString(),
