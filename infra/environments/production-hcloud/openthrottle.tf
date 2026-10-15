@@ -12,7 +12,9 @@
 #
 # BEFORE ACTIVATING, in order:
 #
-#   1. Set HCLOUD_TOKEN, and create the SSH key in the Hetzner project.
+#   1. Set HCLOUD_TOKEN, and create the SSH key in the Hetzner project. Copy
+#      terraform.tfvars.example to terraform.tfvars (gitignored) and put your
+#      admin IPs in it — they are the one input that must not be committed.
 #   2. Confirm the images exist on GHCR at the SHA you are pinning. Note that
 #      .github/workflows/openthrottle-docker.yml is currently DISABLED
 #      (`if: false`), so a tag may not exist yet — see docs/monorepo/ci-cost.md.
@@ -53,9 +55,10 @@
 #   backups_enabled = true
 #   backup_remote   = "" # rclone remote; EMPTY MEANS NO OFFSITE BACKUPS
 #
-#   # Hetzner has no default VPC rules to inherit. Scope this; 0.0.0.0/0 is
-#   # rejected by the module's own validation.
-#   ssh_allowed_cidrs = [] # e.g. ["203.0.113.4/32"]
+#   # Hetzner has no default VPC rules to inherit. Your admin IPs come from the
+#   # gitignored terraform.tfvars, never from this public file — see
+#   # variables.tf. 0.0.0.0/0 is rejected by the module's own validation.
+#   ssh_allowed_cidrs = var.ssh_allowed_cidrs
 #   ssh_key_ids       = [] # e.g. ["admin-key"]
 #
 #   # GitHub-hosted runners have no stable IP to put in ssh_allowed_cidrs, so
