@@ -24,7 +24,7 @@ variable "image" {
 }
 
 variable "user_data" {
-  description = "Cloud-init user_data run at first boot. NOTE: readable via the Hetzner API for the life of the server, so it must not contain secrets in plaintext."
+  description = "Cloud-init user_data run at first boot, at most 32768 characters (a Hetzner API limit, checked at plan). NOTE: readable via the Hetzner API for the life of the server, so it must not contain secrets in plaintext."
   type        = string
   default     = ""
 }

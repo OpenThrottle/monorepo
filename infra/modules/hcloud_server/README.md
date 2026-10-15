@@ -120,6 +120,14 @@ The consequence is that **editing the startup template has no effect on a runnin
 out by re-running the script over SSH, or replace the server deliberately with `terraform taint` once
 the data lives on the attached volume.
 
+### user_data is capped at 32 KiB
+
+Hetzner rejects anything longer, and only when it creates the server — by which point the firewalls
+and volume already exist. A `precondition` on the server makes `plan` fail instead.
+[`openthrottle_hcloud`](../../applications/openthrottle_hcloud/README.md) stays under it by wrapping
+its startup script in a cloud-config that writes it gzipped (`gz+b64`) to
+`/usr/local/sbin/openthrottle-startup.sh` and runs it once — so that is also the file to re-run.
+
 ### user_data is not a secret store
 
 Cloud-init `user_data` is readable through the Hetzner API for the life of the server, and lands in
