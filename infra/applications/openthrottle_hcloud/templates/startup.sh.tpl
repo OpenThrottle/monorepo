@@ -297,6 +297,13 @@ if [[ -n "$${backup_remote}" ]]; then
     curl -fsSL https://rclone.org/install.sh | bash
   fi
 
+  # backup-offsite.sh archives the dump with `zip -j` (the format SEEDING.md's
+  # `unzip -p` restore expects). The Ubuntu cloud image ships neither, and
+  # without zip the first nightly run fails after the dump, uploading nothing.
+  if ! command -v zip >/dev/null 2>&1 || ! command -v unzip >/dev/null 2>&1; then
+    apt-get -qq install -y zip unzip
+  fi
+
   cat > /etc/systemd/system/openthrottle-backup.service << 'BACKUPSVCEOF'
 [Unit]
 Description=OpenThrottle nightly offsite database backup
