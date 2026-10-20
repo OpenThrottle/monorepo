@@ -43,20 +43,10 @@ export {
 } from './modules/agent-conversations/agent-conversation.util.ts';
 export type { AgentConversationMessageData } from './modules/agent-conversations/agent-conversation-message.entity.ts';
 export { AgentConversationMessage } from './modules/agent-conversations/agent-conversation-message.entity.ts';
-export type {
-  AgentConversationFactoryData,
-  AgentConversationMessageFactoryData,
-} from './modules/agent-conversations/agent-conversations.factory.ts';
-export {
-  agentConversationMessagesFactory,
-  agentConversationsFactory,
-} from './modules/agent-conversations/agent-conversations.factory.ts';
 export type { AppendTurnResult } from './modules/agent-conversations/agent-conversations.service.ts';
 export { AgentConversationsService } from './modules/agent-conversations/agent-conversations.service.ts';
 export type { AgentTokenUsageData } from './modules/agent-token-usage/agent-token-usage.entity.ts';
 export { AgentTokenUsage } from './modules/agent-token-usage/agent-token-usage.entity.ts';
-export type { AgentTokenUsageFactoryData } from './modules/agent-token-usage/agent-token-usage.factory.ts';
-export { agentTokenUsageFactory } from './modules/agent-token-usage/agent-token-usage.factory.ts';
 export { AgentTokenUsageModule } from './modules/agent-token-usage/agent-token-usage.module.ts';
 export type {
   RecordTokenUsageInput,
@@ -66,13 +56,9 @@ export type {
 export { AgentTokenUsageService } from './modules/agent-token-usage/agent-token-usage.service.ts';
 export type { CodeEmbeddingSearchRow } from './modules/code-embeddings/code-embedding.entity.ts';
 export { CodeEmbedding } from './modules/code-embeddings/code-embedding.entity.ts';
-export { codeEmbeddingsFactory } from './modules/code-embeddings/code-embeddings.factory.ts';
 export type { CodeIndexSnapshotEntry } from './modules/code-index-snapshots/code-index-snapshot.entity.ts';
 export { CodeIndexSnapshot } from './modules/code-index-snapshots/code-index-snapshot.entity.ts';
-export { codeIndexSnapshotsFactory } from './modules/code-index-snapshots/code-index-snapshots.factory.ts';
 export { DailyStat } from './modules/daily-stats/daily-stat.entity.ts';
-export type { DailyStatFactoryData } from './modules/daily-stats/daily-stats.factory.ts';
-export { dailyStatsFactory } from './modules/daily-stats/daily-stats.factory.ts';
 export { DailyStatsService } from './modules/daily-stats/daily-stats.service.ts';
 export type {
   McpConnectorAuthType,
@@ -87,15 +73,11 @@ export { McpConnectorsModule } from './modules/mcp-connectors/mcp-connectors.mod
 export type { ConnectMcpConnectorInput } from './modules/mcp-connectors/mcp-connectors.service.ts';
 export { McpConnectorsService } from './modules/mcp-connectors/mcp-connectors.service.ts';
 export { Note } from './modules/notes/note.entity.ts';
-export type { NoteFactoryData } from './modules/notes/notes.factory.ts';
-export { notesFactory } from './modules/notes/notes.factory.ts';
 export { NotesService } from './modules/notes/notes.service.ts';
 export type { PlanEmbeddingSearchRow } from './modules/plan-embeddings/plan-embedding.entity.ts';
 export { PlanEmbedding } from './modules/plan-embeddings/plan-embedding.entity.ts';
-export { planEmbeddingsFactory } from './modules/plan-embeddings/plan-embeddings.factory.ts';
 export { PlanEmbeddingsService } from './modules/plan-embeddings/plan-embeddings.service.ts';
 export { PlanOutputStreamChunk } from './modules/plan-output-stream/plan-output-stream.entity.ts';
-export { planOutputStreamFactory } from './modules/plan-output-stream/plan-output-stream.factory.ts';
 export { PlanOutputStreamService } from './modules/plan-output-stream/plan-output-stream.service.ts';
 export type {
   PlanRunData,
@@ -113,7 +95,6 @@ export {
 export { PlanRunsService } from './modules/plan-runs/plan-runs.service.ts';
 export type { PlanData } from './modules/plans/plan.entity.ts';
 export { Plan } from './modules/plans/plan.entity.ts';
-export { plansFactory } from './modules/plans/plans.factory.ts';
 export { PlansService } from './modules/plans/plans.service.ts';
 export type { ProjectSkillData } from './modules/project-skills/project-skill.entity.ts';
 export { ProjectSkill } from './modules/project-skills/project-skill.entity.ts';
@@ -124,7 +105,6 @@ export type {
 export { ProjectSkillsService } from './modules/project-skills/project-skills.service.ts';
 export type { ProjectData } from './modules/projects/project.entity.ts';
 export { Project } from './modules/projects/project.entity.ts';
-export { projectsFactory } from './modules/projects/projects.factory.ts';
 export { ProjectsService } from './modules/projects/projects.service.ts';
 export type {
   CustomPromptData,
@@ -134,8 +114,6 @@ export {
   CUSTOM_PROMPT_TYPES,
   CustomPrompt,
 } from './modules/prompts/custom-prompt.entity.ts';
-export type { CustomPromptFactoryData } from './modules/prompts/custom-prompts.factory.ts';
-export { customPromptsFactory } from './modules/prompts/custom-prompts.factory.ts';
 export { CustomPromptsService } from './modules/prompts/custom-prompts.service.ts';
 export { normalizeRemoteUrl } from './modules/repositories/normalize-remote-url.ts';
 export { RepositoriesModule } from './modules/repositories/repositories.module.ts';
@@ -240,8 +218,6 @@ export {
   SKILL_USAGE_SCOPES,
   SkillUsageEvent,
 } from './modules/skill-usage-events/skill-usage-events.entity.ts';
-export type { SkillUsageEventFactoryData } from './modules/skill-usage-events/skill-usage-events.factory.ts';
-export { skillUsageEventsFactory } from './modules/skill-usage-events/skill-usage-events.factory.ts';
 export { SkillUsageEventsModule } from './modules/skill-usage-events/skill-usage-events.module.ts';
 export type {
   RecordSkillUsageInput,
@@ -270,8 +246,6 @@ export {
   SKILL_USAGE_OUTCOMES,
   SkillUsageOutcome,
 } from './modules/skill-usage-events/skill-usage-outcomes.entity.ts';
-export type { SkillUsageOutcomeFactoryData } from './modules/skill-usage-events/skill-usage-outcomes.factory.ts';
-export { skillUsageOutcomesFactory } from './modules/skill-usage-events/skill-usage-outcomes.factory.ts';
 export type { SubscriptionData } from './modules/subscriptions/subscription.entity.ts';
 export { Subscription } from './modules/subscriptions/subscription.entity.ts';
 export { SubscriptionsService } from './modules/subscriptions/subscriptions.service.ts';
@@ -316,11 +290,9 @@ export type { TaskTagData } from './modules/tags/task-tag.entity.ts';
 export { TaskTag } from './modules/tags/task-tag.entity.ts';
 export type { TaskEmbeddingSearchRow } from './modules/task-embeddings/task-embedding.entity.ts';
 export { TaskEmbedding } from './modules/task-embeddings/task-embedding.entity.ts';
-export { taskEmbeddingsFactory } from './modules/task-embeddings/task-embeddings.factory.ts';
 export { TaskEmbeddingsService } from './modules/task-embeddings/task-embeddings.service.ts';
 export type { TaskData } from './modules/tasks/task.entity.ts';
 export { Task } from './modules/tasks/task.entity.ts';
-export { tasksFactory } from './modules/tasks/tasks.factory.ts';
 export type {
   CreateTaskBatchItem,
   GroupedHooks,
@@ -333,7 +305,6 @@ export {
 } from './modules/tasks/tasks.service.ts';
 export type { UserData } from './modules/users/user.entity.ts';
 export { User } from './modules/users/user.entity.ts';
-export { usersFactory } from './modules/users/users.factory.ts';
 export { UsersService } from './modules/users/users.service.ts';
 export type { WorkArtifactData } from './modules/work-ledger/work-artifact.entity.ts';
 export { WorkArtifact } from './modules/work-ledger/work-artifact.entity.ts';
@@ -347,11 +318,6 @@ export {
   WORK_ARTIFACT_VERIFICATION,
   WORK_SESSION_CLOSED_BY,
 } from './modules/work-ledger/work-ledger.constants.ts';
-export {
-  workArtifactsFactory,
-  workSessionsFactory,
-  workSessionSubjectsFactory,
-} from './modules/work-ledger/work-ledger.factory.ts';
 export { WorkLedgerService } from './modules/work-ledger/work-ledger.service.ts';
 export type { WorkSessionData } from './modules/work-ledger/work-session.entity.ts';
 export { WorkSession } from './modules/work-ledger/work-session.entity.ts';

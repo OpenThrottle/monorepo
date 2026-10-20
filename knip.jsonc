@@ -355,8 +355,21 @@
       ],
       "project": ["src/**/*.ts"],
     },
+    // Every file Node runs directly in the production image: the server, the one-shot
+    // `bootstrap` compose service, and the NODE_OPTIONS=--import preload (Dockerfile.NestJS).
+    "applications/openthrottle-server": {
+      "entry": [
+        "src/bootstrap.ts",
+        "src/main.ts",
+        "src/register-workspace-type-stripping.ts",
+      ],
+    },
     "packages/nestjs-repositories": {
-      "entry": ["src/index.ts", "src/nestjs-repositories.module.ts"],
+      "entry": [
+        "src/index.ts",
+        "src/nestjs-repositories.module.ts",
+        "src/testing/index.ts",
+      ],
       "project": ["src/**/*.ts"],
     },
     "packages/nestjs-typeorm": {

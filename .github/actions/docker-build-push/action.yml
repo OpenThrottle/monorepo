@@ -21,7 +21,9 @@ name: '🐳 Docker build and push (Nx app)'
 description: >-
   Builds a Docker image for a given Nx app name: APP_VERSION is read from
   applications/<app>/package.json; dockerfile-path defaults to
-  applications/<app>/Dockerfile when omitted. Optionally pushes when push is true.
+  applications/<app>/Dockerfile when omitted. Boots the built image under the
+  deployed hardening and requires it to serve (boot-check.sh) before anything is
+  pushed. Optionally pushes when push is true.
 
 inputs:
   app:
