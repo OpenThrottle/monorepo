@@ -45,6 +45,7 @@ locals {
 
   compose_content = templatefile("${path.module}/templates/docker-compose.yml.tpl", {
     caddy_image       = var.caddy_image
+    developer_domain  = var.developer_domain
     developer_image   = var.developer_image
     mcp_image         = var.mcp_image
     migrations_image  = var.migrations_image

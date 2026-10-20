@@ -68,14 +68,21 @@ services:
       openthrottle-server:
         condition: service_healthy
     env_file: .env
+    # Per-app identity overrides the shared .env: each app's APP_URL is its OWN
+    # origin, and APP_NAME names its logs and cache namespaces.
+    environment:
+      APP_NAME: openthrottle-developer
+      APP_NAME_SHORT: OpenThrottle
+      APP_URL: https://${developer_domain}
     healthcheck:
-      # curl is present on the production-debian image target (the distroless
-      # default has neither shell nor curl); mirror the server healthcheck.
-      # The React Router app serves SSR HTML at / on port 3000.
+      # Published images are the distroless `production` target (see
+      # .github/actions/docker-build-push) — no shell, no curl — so probe with
+      # the image's own node, exec form. < 400 mirrors `curl -f`, so the SSR
+      # redirect to /login at / still counts as healthy.
       interval: 30s
       retries: 3
       start_period: 40s
-      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      test: ["CMD", "/nodejs/bin/node", "-e", "require('http').get('http://127.0.0.1:3000/',function(r){r.resume();process.exit(r.statusCode<400?0:1)}).on('error',function(){process.exit(1)})"]
       timeout: 10s
     image: ${developer_image}
     mem_limit: 448m
@@ -103,11 +110,18 @@ services:
       redis:
         condition: service_healthy
     env_file: .env
+    # See openthrottle-developer. Without APP_NAME every log line reads
+    # service "__UNKNOWN_SERVICE__".
+    environment:
+      APP_NAME: openthrottle-server
+      APP_NAME_SHORT: Server
     healthcheck:
       interval: 30s
       retries: 3
       start_period: 40s
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      # Distroless image: no curl. Same node probe as the image's own
+      # HEALTHCHECK in Dockerfile.NestJS, restated so compose stays explicit.
+      test: ["CMD", "/nodejs/bin/node", "-e", "require('http').get('http://127.0.0.1:3000/health',function(r){r.resume();process.exit(r.statusCode<400?0:1)}).on('error',function(){process.exit(1)})"]
       timeout: 10s
     image: ${server_image}
     mem_limit: 640m
@@ -190,6 +204,17 @@ services:
   #     convenience.
   #
   postgres:
+    # The entrypoint starts as root, chowns the data directory and the socket
+    # directory, then drops to the postgres user with gosu. Under a bare
+    # `cap_drop: ALL` every one of those steps fails with "Operation not
+    # permitted" and the container restart-loops. These five are the minimum
+    # that lets it init, restart on an existing cluster, and drop privileges.
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
     cap_drop:
       - ALL
     cpus: 0.5
@@ -235,6 +260,14 @@ services:
   #     without a volume would silently drop queued work on every restart.
   #
   redis:
+    # Without these the entrypoint cannot chown /data or drop to the redis
+    # user, so Redis runs as a capability-less root that cannot write /data.
+    # It starts and answers PING, then the first background save fails and
+    # stop-writes-on-bgsave-error makes it refuse every write — BullMQ stalls.
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
     cap_drop:
       - ALL
     command: redis-server

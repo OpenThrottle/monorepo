@@ -191,12 +191,13 @@ case "${APP}" in
     fi
 
     # Every variable getPublicEnv()/getServerEnv() in
-    # packages/react-router-utils/src/utils/environment.ts requires.
+    # packages/react-router-utils/src/utils/environment.ts requires — EXCEPT
+    # APP_ENV, APP_NAME and APP_VERSION, which the image must carry itself
+    # (Dockerfile.ReactRouter's production stage). Passing them here once hid
+    # an image that crashed with "APP_VERSION is not set" on a real deploy.
     start "${APP_CONTAINER}" "${HARDENING[@]}" \
       -e API_URL_EXTERNAL=http://localhost:3000 \
       -e API_URL_INTERNAL=http://localhost:3000 \
-      -e APP_ENV=production \
-      -e APP_NAME=openthrottle-developer \
       -e APP_NAME_SHORT=OpenThrottle \
       -e APP_URL=http://localhost:3001 \
       -e APP_URL_ADMIN=http://localhost:3002 \
@@ -204,7 +205,6 @@ case "${APP}" in
       -e APP_URL_DEVELOPER=http://localhost:3001 \
       -e APP_URL_SERVER=http://localhost:3000 \
       -e APP_URL_WEBSITE=http://localhost:3004 \
-      -e APP_VERSION=boot-check \
       -e PORT=3000 \
       -e ROLLBAR_TOKEN=boot-check \
       "${IMAGE}"
