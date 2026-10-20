@@ -30,9 +30,14 @@ on:
     branches:
       - main
     paths:
+      - '.github/actions/docker-build-push/**'
+      - '.github/actions/nx-affected-docker-apps/**'
+      - '.github/workflows/openthrottle-docker.yml'
       - 'applications/openthrottle-developer/**'
       - 'applications/openthrottle-server/**'
       - 'Dockerfile.Migrations'
+      - 'Dockerfile.NestJS'
+      - 'Dockerfile.ReactRouter'
       - 'databases/**'
       - 'nx.json'
       - 'package.json'
@@ -41,15 +46,28 @@ on:
       - 'tools/workflows/**'
   pull_request:
     paths:
+      - '.github/actions/docker-build-push/**'
+      - '.github/actions/nx-affected-docker-apps/**'
+      - '.github/workflows/openthrottle-docker.yml'
       - 'applications/openthrottle-developer/**'
       - 'applications/openthrottle-server/**'
       - 'Dockerfile.Migrations'
+      - 'Dockerfile.NestJS'
+      - 'Dockerfile.ReactRouter'
       - 'databases/**'
       - 'nx.json'
       - 'package.json'
       - 'packages/**'
       - 'pnpm-lock.yaml'
       - 'tools/workflows/**'
+  # Rebuild on demand — e.g. after a base-image fix, or when a merge that should
+  # have produced images did not. Builds every image regardless of Nx affected.
+  workflow_dispatch:
+    inputs:
+      build_all:
+        default: true
+        description: 'Build every image, ignoring Nx affected'
+        type: boolean
 
 concurrency:
   cancel-in-progress: true
@@ -108,23 +126,54 @@ jobs:
         with:
           apps: openthrottle-developer,openthrottle-server
 
-      # server/developer join the matrix only when Nx says they are affected.
-      # migrations and mcp are not Nx apps, so they are always built whenever
-      # this workflow runs (its path filter is their gate) — which also means
-      # the matrix is never empty.
+      # Nx affected cannot see how an image is BUILT: the root Dockerfiles, the
+      # build action and this workflow belong to no app project. A change to
+      # them once merged without producing a single image (the path filter
+      # skipped the run, and Nx would have skipped the app legs anyway). So a
+      # change to a build definition forces the images it defines.
+      - name: '🧷 Build-definition changes'
+        id: forced
+        shell: bash
+        env:
+          BUILD_ALL_INPUT: ${{ github.event_name == 'workflow_dispatch' && inputs.build_all }}
+        run: |
+          set -euo pipefail
+          changed="$(git diff --name-only "${NX_BASE}" "${NX_HEAD}")"
+          echo "${changed}" | sed 's/^/  changed: /'
+          has() { grep -qE "$1" <<< "${changed}"; }
+          all=false
+          if [[ "${BUILD_ALL_INPUT}" == "true" ]] \
+            || has '^\.github/(workflows/openthrottle-docker\.yml|actions/(docker-build-push|nx-affected-docker-apps)/)'; then
+            all=true
+          fi
+          server="${all}"; developer="${all}"
+          has '^Dockerfile\.NestJS$' && server=true
+          has '^Dockerfile\.ReactRouter$' && developer=true
+          echo "forced: server=${server} developer=${developer}"
+          echo "server=${server}" >> "${GITHUB_OUTPUT}"
+          echo "developer=${developer}" >> "${GITHUB_OUTPUT}"
+
+      # server/developer join the matrix when Nx says they are affected or a
+      # build definition forces them. migrations and mcp are not Nx apps, so
+      # they are always built whenever this workflow runs (its path filter is
+      # their gate) — which also means the matrix is never empty.
       - name: '🧮 Build matrix'
         id: matrix
         shell: bash
         env:
           BUILD_FLAGS: ${{ steps.affected.outputs.build-flags-json }}
+          FORCE_DEVELOPER: ${{ steps.forced.outputs.developer }}
+          FORCE_SERVER: ${{ steps.forced.outputs.server }}
         run: |
           set -euo pipefail
           node --input-type=module -e '
             import { appendFileSync } from "node:fs";
             const flags = JSON.parse(process.env.BUILD_FLAGS);
+            const server = flags["openthrottle-server"] || process.env.FORCE_SERVER === "true";
+            const developer = flags["openthrottle-developer"] || process.env.FORCE_DEVELOPER === "true";
             const include = [
-              flags["openthrottle-server"] && { dockerfile: "Dockerfile.NestJS", image: "openthrottle-server", kind: "app" },
-              flags["openthrottle-developer"] && { dockerfile: "Dockerfile.ReactRouter", image: "openthrottle-developer", kind: "app" },
+              server && { dockerfile: "Dockerfile.NestJS", image: "openthrottle-server", kind: "app" },
+              developer && { dockerfile: "Dockerfile.ReactRouter", image: "openthrottle-developer", kind: "app" },
               { dockerfile: "Dockerfile.Migrations", image: "migrations", kind: "migrations" },
               { dockerfile: "Dockerfile.NestJS", image: "mcp", kind: "mcp" },
             ].filter(Boolean);
