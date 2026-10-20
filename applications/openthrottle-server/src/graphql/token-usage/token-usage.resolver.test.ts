@@ -7,11 +7,11 @@ import {
   type AuthPrincipal,
 } from '@openthrottle/nestjs-auth';
 import {
-  agentTokenUsageFactory,
   AgentTokenUsageService,
   RolesService,
   type TokenUsageTotals,
 } from '@openthrottle/nestjs-repositories';
+import { agentTokenUsageFactory } from '@openthrottle/nestjs-repositories/testing';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';

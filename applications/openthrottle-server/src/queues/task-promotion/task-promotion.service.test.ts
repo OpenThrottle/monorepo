@@ -12,16 +12,18 @@ import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type { WorkArtifact } from '@openthrottle/nestjs-repositories';
 import {
   Plan,
-  plansFactory,
   type PlansService,
   PlanTag,
   Task,
-  tasksFactory,
   TaskTag,
   WorkSession,
-  workSessionsFactory,
   WorkSessionSubject,
 } from '@openthrottle/nestjs-repositories';
+import {
+  plansFactory,
+  tasksFactory,
+  workSessionsFactory,
+} from '@openthrottle/nestjs-repositories/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
 import type { EntityManager, Repository } from 'typeorm';
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';

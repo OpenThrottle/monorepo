@@ -8,7 +8,8 @@ import { ConflictException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
-import { usersFactory, UsersService } from '@openthrottle/nestjs-repositories';
+import { UsersService } from '@openthrottle/nestjs-repositories';
+import { usersFactory } from '@openthrottle/nestjs-repositories/testing';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { AuthService } from './auth.service.ts';

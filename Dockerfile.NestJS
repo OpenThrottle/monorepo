@@ -251,6 +251,12 @@ RUN pnpm --filter "${APP_NAME}" --prod deploy /app/pruned --legacy
 FROM base AS production-debian
 
 ENV NODE_ENV="production"
+# Strip types from source-first workspace packages, which `pnpm deploy` places under
+# node_modules — the one place Node refuses to strip them (ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING).
+# NODE_OPTIONS rather than CMD so every entrypoint gets it, including the one-shot
+# `build/src/bootstrap.js` the compose `bootstrap` service runs. See
+# applications/openthrottle-server/src/workspace-type-stripping.ts.
+ENV NODE_OPTIONS="--import=/app/build/src/register-workspace-type-stripping.js"
 
 RUN apt-get update \
   && apt-get install -y --no-install-recommends git procps \
@@ -282,6 +288,8 @@ FROM gcr.io/distroless/nodejs24-debian12:nonroot AS production
 WORKDIR /app
 
 ENV NODE_ENV="production"
+# Same preload as production-debian — see the note there.
+ENV NODE_OPTIONS="--import=/app/build/src/register-workspace-type-stripping.js"
 
 # Production ships only `pnpm deploy` output: the app package, its `build/`, and prod `node_modules`.
 # We never COPY monorepo roots `/app/packages` or `/app/tools` into this stage; workspace libraries

@@ -9,6 +9,7 @@ set -euo pipefail
 : "${INPUT_REGISTRY:?}"
 : "${INPUT_TAG:?}"
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="${GITHUB_WORKSPACE:-.}"
 cd "${ROOT}"
 
@@ -74,6 +75,12 @@ for i in "${!IMAGES[@]}"; do
   [[ "${i}" -eq 0 ]] && continue
   docker tag "${IMAGE}" "${IMAGES[${i}]}"
 done
+
+# Boot the image before anything is published. Runs on PRs too — that is where a
+# broken image should be caught, not on main after it has been pushed.
+echo "::group::boot check ${INPUT_APP}"
+bash "${SCRIPT_DIR}/boot-check.sh" "${INPUT_APP}" "${IMAGE}"
+echo "::endgroup::"
 
 echo "image=${IMAGE}" >> "${GITHUB_OUTPUT}"
 {
