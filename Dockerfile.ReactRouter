@@ -176,6 +176,16 @@ FROM gcr.io/distroless/nodejs24-debian12:nonroot AS production
 WORKDIR /app
 
 ENV NODE_ENV="production"
+# A stage starts from its own FROM, so the identity `base` sets is not inherited
+# here (production-debian builds FROM base and gets it for free). Re-declared so
+# the distroless image knows its own name and version: the server's log service
+# name and the developer's APP_VERSION (shown in settings, sent to Rollbar).
+ARG APP_ENV="production"
+ARG APP_NAME
+ARG APP_VERSION
+ENV APP_ENV="${APP_ENV}"
+ENV APP_NAME="${APP_NAME}"
+ENV APP_VERSION="${APP_VERSION}"
 
 COPY --from=build --chown=65532:65532 /app/pruned/. /app/
 

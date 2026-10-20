@@ -100,9 +100,15 @@ else
   log "no data volume configured; Postgres data stays on the boot disk"
 fi
 
-# Postgres runs as uid 999 inside the container and the official entrypoint
-# chowns its data directory on first init, so root ownership here is fine.
-install -d -m 0700 "$${DATA_DIR}"
+# This directory is bind-mounted at /var/lib/postgresql, which on PG18 is the
+# PARENT of PGDATA (/var/lib/postgresql/18/docker). The entrypoint chowns only
+# PGDATA, then re-runs `mkdir -p "$PGDATA"` as the postgres user — so a
+# root-owned 0700 mount root restart-loops it with "mkdir: cannot create
+# directory '/var/lib/postgresql': Permission denied". Own it as the image's
+# postgres user (uid/gid 999), matching the image's own /var/lib/postgresql.
+# A named volume would hide this: Docker copies the image's ownership onto an
+# empty one, but never onto a bind mount.
+install -d -m 0700 -o 999 -g 999 "$${DATA_DIR}"
 
 ################################################################################
 # 3. Secrets
@@ -177,7 +183,20 @@ API_URL_EXTERNAL=https://${api_domain}
 API_URL_INTERNAL=http://openthrottle-server:3000
 APP_URL=https://${api_domain}
 APP_URL_DEVELOPER=https://${developer_domain}
+APP_URL_SERVER=https://${api_domain}
 CORS_ORIGINS=https://${developer_domain}
+
+# The developer app refuses to render without these (getPublicEnv in
+# packages/react-router-utils). Admin, CMS and website are not deployed on this
+# path, so their links point at the developer app rather than at nothing.
+APP_URL_ADMIN=https://${developer_domain}
+APP_URL_CMS=https://${developer_domain}
+APP_URL_WEBSITE=https://${developer_domain}
+
+# Required non-empty; "placeholder" is one of the fragments the client treats
+# as "no token", so Rollbar stays off. A Rollbar post_client_item token is
+# public (it ships to every browser) — replace this when one exists.
+ROLLBAR_TOKEN=placeholder-rollbar-disabled
 
 OT_MCP_HTTP_PORT=3000
 ENVEOF
