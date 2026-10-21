@@ -113,6 +113,29 @@ describe('buildSitemapXml', () => {
     expect(xml).toContain('<loc>https://openthrottle.ai/docs</loc>');
     expect(xml.match(/<loc>/g)).toHaveLength(3);
     expect(xml.indexOf('/docs')).toBeLessThan(xml.indexOf('/faq'));
+    expect(xml).not.toContain('<lastmod>');
+  });
+
+  test('renders <lastmod> for entries that carry one', () => {
+    const xml = buildSitemapXml([
+      '/blog',
+      { lastmod: '2026-03-06', path: '/blog/hello' },
+    ]);
+
+    expect(xml).toContain(
+      '<loc>https://openthrottle.ai/blog/hello</loc>\n    <lastmod>2026-03-06</lastmod>',
+    );
+    expect(xml.match(/<lastmod>/g)).toHaveLength(1);
+  });
+
+  test('keeps the first occurrence when a path repeats', () => {
+    const xml = buildSitemapXml([
+      { lastmod: '2026-03-06', path: '/blog/hello' },
+      '/blog/hello',
+    ]);
+
+    expect(xml.match(/<url>/g)).toHaveLength(1);
+    expect(xml).toContain('<lastmod>2026-03-06</lastmod>');
   });
 });
 

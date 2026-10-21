@@ -35,6 +35,8 @@ Shared URL and app identity values are read through `@openthrottle/react-router-
 
 Optional: `OFFLINE_MODE=true` serves an offline placeholder from `entry.server.tsx`. `COOKIE_SECRET` defaults in code if unset.
 
+`FEATURE_BLOG_ENABLED` (`"false"` by default) is the single switch for the blog: while off there are no Blog nav/footer links or sitemap entries, and `/blog`, `/blog/<slug>`, `/blog/tags/<slug>` and `/blog/rss.xml` all return 404 without calling the API. To try the blog locally, set `FEATURE_BLOG_ENABLED="true"` in `.env` (a copy of `.env.default`, gitignored), start `openthrottle-server`, and restart the website dev server. In production, set it only once the API is publicly reachable.
+
 ## Deployment
 
 The app is configured for [Vercel](https://vercel.com). Deployments are triggered from the connected Git repository. Configure the same variables as in `.env.default` in the Vercel project (plus `VERCEL`, set automatically). `react-router.config.ts` enables the Vercel preset when `VERCEL=1`.

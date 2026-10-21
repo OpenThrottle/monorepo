@@ -1,0 +1,12 @@
+query BlogPost($slug: String!) {
+  blogPost(slug: $slug) {
+    author {
+      bio
+    }
+    ...BlogPostSummary
+    bodyMarkdown
+    seoDescription
+    seoTitle
+    updatedAt
+  }
+}

@@ -17,6 +17,8 @@ export interface LandingLink {
   external?: boolean;
   href: string;
   label: string;
+  /** Hidden unless the blog is published (`isBlogEnabled()`). */
+  requiresBlog?: true;
 }
 
 export interface LandingStep {
@@ -29,6 +31,7 @@ export const LANDING_NAV = {
   links: [
     { href: '#how', label: 'How it works' },
     { href: '#surfaces', label: 'Surfaces' },
+    { href: '/blog', label: 'Blog', requiresBlog: true },
     { external: true, href: GITHUB_ORG_URL, label: 'GitHub' },
   ] satisfies LandingLink[],
 } as const;

@@ -20,6 +20,7 @@ export type Role = (typeof ROLES)[keyof typeof ROLES];
 
 /** Built-in permission identifiers (resource:action style). */
 export const PERMISSIONS = {
+  BLOG_WRITE: 'blog:write',
   FLAGS_READ: 'flags:read',
   FLAGS_WRITE: 'flags:write',
   PLANS_READ: 'plans:read',
