@@ -294,15 +294,21 @@ export const formatReport = (result: ComplianceResult): string => {
 };
 
 /**
- * @description Run `pnpm licenses list --json` and parse it. The workspace graph is large
- * (~2800 packages), so the stdout buffer is generously sized.
+ * @description Run `pnpm licenses list --recursive --json` and parse it. The workspace graph is
+ * large (~2800 packages), so the stdout buffer is generously sized. `--recursive` is required
+ * since pnpm 12: without it the list covers only the root project, which silently shrinks the
+ * gate to the root's own dependencies.
  */
 export const readInstalledLicenses = (cwd: string): PnpmLicensesOutput => {
-  const stdout = execFileSync('pnpm', ['licenses', 'list', '--json'], {
-    cwd,
-    encoding: 'utf8',
-    maxBuffer: 128 * 1024 * 1024,
-  });
+  const stdout = execFileSync(
+    'pnpm',
+    ['licenses', 'list', '--recursive', '--json'],
+    {
+      cwd,
+      encoding: 'utf8',
+      maxBuffer: 128 * 1024 * 1024,
+    },
+  );
   // JSON.parse returns `any`; assigning to a typed const narrows without an assertion.
   const parsed: PnpmLicensesOutput = JSON.parse(stdout);
   return parsed;

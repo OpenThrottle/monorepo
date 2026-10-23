@@ -13,15 +13,15 @@ Platform-specific prebuilt binaries (packages that declare `os`/`cpu`, e.g.
 `@rollup/rollup-linux-x64-gnu`, `fsevents`) are omitted: which ones install depends on
 the host OS, and each shares the license of the cross-platform toolchain already listed.
 
-**2039** third-party packages.
+**2031** third-party packages.
 
 ## License summary
 
 | License | Packages |
 | --- | --- |
-| MIT | 1768 |
+| MIT | 1762 |
 | Apache-2.0 | 90 |
-| ISC | 74 |
+| ISC | 73 |
 | BSD-3-Clause | 52 |
 | BSD-2-Clause | 25 |
 | BlueOak-1.0.0 | 8 |
@@ -30,7 +30,6 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | MIT-0 | 2 |
 | MPL-2.0 | 2 |
 | (Apache-2.0 AND BSD-3-Clause) | 1 |
-| (Apache-2.0 AND MIT) | 1 |
 | (Apache-2.0 OR MPL-1.1) | 1 |
 | (MIT AND BSD-3-Clause) | 1 |
 | (MIT OR Apache-2.0) | 1 |
@@ -548,9 +547,6 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@reduxjs/toolkit` | 2.12.0 | MIT | [Mark Erikson](https://redux-toolkit.js.org) |
 | `@rekog/mcp-nest` | 1.9.11 | MIT | [source](https://github.com/rekog-labs/MCP-Nest#readme) |
 | `@remix-run/node-fetch-server` | 0.13.3 | MIT | [Michael Jackson](https://github.com/remix-run/remix/tree/main/packages/node-fetch-server#readme) |
-| `@remix-run/react` | 2.17.5 | MIT | [source](https://github.com/remix-run/remix#readme) |
-| `@remix-run/router` | 1.23.3 | MIT | [Remix Software](https://github.com/remix-run/react-router#readme) |
-| `@remix-run/server-runtime` | 2.17.5 | MIT | [source](https://github.com/remix-run/remix#readme) |
 | `@repeaterjs/repeater` | 3.1.0 | MIT | [source](https://github.com/repeaterjs/repeater#readme) |
 | `@rolldown/binding-wasm32-wasi` | 1.2.1 | MIT | [source](https://rolldown.rs/) |
 | `@rolldown/pluginutils` | 1.0.1 | MIT | [source](https://github.com/rolldown/plugins/tree/main/packages/pluginutils#readme) |
@@ -651,7 +647,6 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@types/chai` | 5.2.3 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/chai) |
 | `@types/compression` | 1.8.1 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/compression) |
 | `@types/connect` | 3.4.38 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/connect) |
-| `@types/cookie` | 0.6.0 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/cookie) |
 | `@types/cors` | 2.8.19 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/cors) |
 | `@types/css-font-loading-module` | 0.0.7 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/css-font-loading-module) |
 | `@types/d3-array` | 3.2.2 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/d3-array) |
@@ -755,7 +750,6 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@vue/compiler-vue2` | 2.7.16 | MIT | [Evan You](https://github.com/vuejs/vue/tree/dev/packages/vue-template-compiler#readme) |
 | `@vue/language-core` | 2.2.0 | MIT | [source](https://github.com/vuejs/language-tools#readme) |
 | `@vue/shared` | 3.5.40 | MIT | [Evan You](https://github.com/vuejs/core/tree/main/packages/shared#readme) |
-| `@web3-storage/multipart-parser` | 1.0.0 | (Apache-2.0 AND MIT) | [vasco-santos](https://github.com/web3-storage/multipart-parser#readme) |
 | `@webassemblyjs/ast` | 1.14.1 | MIT | [Sven Sauleau](https://github.com/xtuc/webassemblyjs#readme) |
 | `@webassemblyjs/floating-point-hex-parser` | 1.13.2 | MIT | [Mauro Bringolf](https://github.com/xtuc/webassemblyjs#readme) |
 | `@webassemblyjs/helper-api-error` | 1.13.2 | MIT | [Sven Sauleau](https://github.com/xtuc/webassemblyjs#readme) |
@@ -916,7 +910,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `cheerio` | 1.2.0 | MIT | [Matt Mueller](https://cheerio.js.org/) |
 | `cheerio-select` | 2.1.0 | BSD-2-Clause | [Felix Boehm](https://github.com/cheeriojs/cheerio-select#readme) |
 | `chokidar` | 4.0.3, 5.0.0 | MIT | [Paul Miller](https://github.com/paulmillr/chokidar) |
-| `chrome-launcher` | 1.2.1 | Apache-2.0 | [The Chromium Authors](https://github.com/GoogleChrome/chrome-launcher#readme) |
+| `chrome-launcher` | 1.2.1 | Apache-2.0 | The Chromium Authors |
 | `chrome-trace-event` | 1.0.4 | MIT | [Trent Mick, Sam Saccone](https://github.com/samccone/chrome-trace-event#readme) |
 | `chromium-bidi` | 17.0.2 | Apache-2.0 | [The Chromium Authors](https://github.com/GoogleChromeLabs/chromium-bidi#readme) |
 | `ci-info` | 4.4.0 | MIT | [Thomas Watson Steen](https://github.com/watson/ci-info) |
@@ -1187,7 +1181,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `formdata-polyfill` | 4.0.10 | MIT | [Jimmy Wärting](https://github.com/jimmywarting/FormData#readme) |
 | `formik` | 2.4.9 | Apache-2.0 | [Jared Palmer](https://formik.org) |
 | `forwarded` | 0.2.0 | MIT | [source](https://github.com/jshttp/forwarded#readme) |
-| `framer-motion` | 12.43.0 | MIT | [Matt Perry](https://github.com/motiondivision/motion#readme) |
+| `framer-motion` | 12.43.0 | MIT | Matt Perry |
 | `fresh` | 2.0.0 | MIT | [TJ Holowaychuk](https://github.com/jshttp/fresh#readme) |
 | `fs-constants` | 1.0.0 | MIT | [Mathias Buus](https://github.com/mafintosh/fs-constants) |
 | `fs-extra` | 10.1.0, 11.3.6 | MIT | [JP Richardson](https://github.com/jprichardson/node-fs-extra) |
@@ -1423,7 +1417,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `kuler` | 2.0.0 | MIT | [Arnout Kazemier](https://github.com/3rd-Eden/kuler) |
 | `langsmith` | 0.8.8 | MIT | [LangChain](https://github.com/langchain-ai/langsmith-sdk#readme) |
 | `launch-editor` | 2.14.1 | MIT | [Evan You](https://github.com/vitejs/launch-editor#readme) |
-| `legacy-javascript` | 0.0.1 | Apache-2.0 | [Google LLC](https://github.com/GoogleChrome/lighthouse#readme) |
+| `legacy-javascript` | 0.0.3 | Apache-2.0 | [Google LLC](https://github.com/GoogleChrome/lighthouse#readme) |
 | `leven` | 3.1.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/leven#readme) |
 | `levn` | 0.4.1 | MIT | [George Zahariev](https://github.com/gkz/levn) |
 | `lighthouse` | 13.4.1 | Apache-2.0 | [Google LLC](https://github.com/GoogleChrome/lighthouse#readme) |
@@ -1724,7 +1718,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `react-day-picker` | 10.0.1 | MIT | [Giampaolo Bellavite](https://daypicker.dev) |
 | `react-dnd` | 16.0.1 | MIT | [source](https://github.com/react-dnd/react-dnd#readme) |
 | `react-dnd-html5-backend` | 16.0.1 | MIT | [source](https://github.com/react-dnd/react-dnd#readme) |
-| `react-docgen` | 8.0.3 | MIT | [Felix Kling](https://github.com/reactjs/react-docgen#readme) |
+| `react-docgen` | 8.0.3 | MIT | [Felix Kling (http://github.com/fkling)](https://github.com/reactjs/react-docgen#readme) |
 | `react-docgen-typescript` | 2.4.0 | MIT | [source](https://github.com/styleguidist/react-docgen-typescript/) |
 | `react-dom` | 19.2.4 | MIT | [source](https://react.dev/) |
 | `react-fast-compare` | 2.0.4 | MIT | [Chris Bolin](https://github.com/FormidableLabs/react-fast-compare) |
@@ -1735,9 +1729,8 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `react-refresh` | 0.18.0 | MIT | [source](https://react.dev/) |
 | `react-remove-scroll` | 2.7.2 | MIT | [Anton Korzunov](https://github.com/theKashey/react-remove-scroll#readme) |
 | `react-remove-scroll-bar` | 2.3.8 | MIT | [Anton Korzunov](https://github.com/theKashey/react-remove-scroll-bar#readme) |
-| `react-router` | 6.30.4, 8.0.1 | MIT | [Remix Software](https://github.com/remix-run/react-router#readme) |
+| `react-router` | 8.0.1 | MIT | [Remix Software](https://github.com/remix-run/react-router#readme) |
 | `react-router-devtools` | 6.2.3 | MIT | [Alem Tuzlak](https://react-router-devtools.forge42.dev/) |
-| `react-router-dom` | 6.30.4 | MIT | [Remix Software](https://github.com/remix-run/react-router#readme) |
 | `react-style-singleton` | 2.2.3 | MIT | [Anton Korzunov](https://github.com/theKashey/react-style-singleton#readme) |
 | `react-tooltip` | 5.30.1 | MIT | [ReactTooltip](https://github.com/ReactTooltip/react-tooltip#readme) |
 | `read-yaml-file` | 2.1.0 | MIT | [Zoltan Kochan](https://github.com/zkochan/packages/tree/master#readme) |
@@ -1821,7 +1814,6 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `seroval` | 1.5.6 | MIT | [Alexis Munsayac](https://github.com/lxsmnsyc/seroval/tree/main/packages/seroval) |
 | `seroval-plugins` | 1.5.6 | MIT | [Alexis Munsayac](https://github.com/lxsmnsyc/seroval/tree/main/packages/plugins) |
 | `serve-static` | 2.2.1 | MIT | [Douglas Christopher Wilson](https://github.com/expressjs/serve-static#readme) |
-| `set-cookie-parser` | 2.7.2 | MIT | [Nathan Friedly](https://github.com/nfriedly/set-cookie-parser) |
 | `set-function-length` | 1.2.2 | MIT | [Jordan Harband](https://github.com/ljharb/set-function-length#readme) |
 | `set-function-name` | 2.0.2 | MIT | [Jordan Harband](https://github.com/ljharb/set-function-name#readme) |
 | `set-proto` | 1.0.0 | MIT | [Jordan Harband](https://github.com/ljharb/set-proto#readme) |
@@ -1955,7 +1947,6 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `tsconfig-paths-webpack-plugin` | 4.2.0 | MIT | [Jonas Kello](https://github.com/dividab/tsconfig-paths-webpack-plugin#readme) |
 | `tslib` | 2.6.3, 2.8.1 | 0BSD | [Microsoft Corp.](https://www.typescriptlang.org/) |
 | `tsx` | 4.23.1 | MIT | [Hiroki Osame](https://tsx.hirok.io) |
-| `turbo-stream` | 2.4.1 | ISC | [Jacob Ebey](https://github.com/jacob-ebey/turbo-stream#readme) |
 | `tw-animate-css` | 1.4.0 | MIT | [Luca Bosin](https://github.com/Wombosvideo/tw-animate-css#readme) |
 | `type-check` | 0.4.0 | MIT | [George Zahariev](https://github.com/gkz/type-check) |
 | `type-detect` | 4.0.8 | MIT | [Jake Luer](https://github.com/chaijs/type-detect#readme) |
@@ -2008,7 +1999,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `url-join` | 4.0.1 | MIT | [José F. Romaniello](https://github.com/jfromaniello/url-join#readme) |
 | `url-parse` | 1.5.10 | MIT | [Arnout Kazemier](https://github.com/unshiftio/url-parse#readme) |
 | `urlpattern-polyfill` | 10.1.0 | MIT | [source](https://github.com/kenchris/urlpattern-polyfill#readme) |
-| `use-callback-ref` | 1.3.3 | MIT | [theKashey](https://github.com/theKashey/use-callback-ref#readme) |
+| `use-callback-ref` | 1.3.3 | MIT | theKashey |
 | `use-sidecar` | 1.1.3 | MIT | [theKashey](https://github.com/theKashey/use-sidecar) |
 | `use-sync-external-store` | 1.6.0 | MIT | [source](https://github.com/facebook/react#readme) |
 | `util-deprecate` | 1.0.2 | MIT | [Nathan Rajlich](https://github.com/TooTallNate/util-deprecate) |
