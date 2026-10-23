@@ -59,6 +59,7 @@
     "sonner": "catalog:",
     "tailwindcss": "catalog:",
     "ts-morph": "catalog:",
+    "tslib": "catalog:",
     "tw-animate-css": "catalog:",
     "zod": "catalog:"
   },
@@ -104,7 +105,7 @@
           "cwd": "{workspaceRoot}",
           "env": {
             "APP_VERSION": "1.0.0",
-            "PNPM_VERSION": "11.6.0"
+            "PNPM_VERSION": "12.13.0"
           }
         }
       },
