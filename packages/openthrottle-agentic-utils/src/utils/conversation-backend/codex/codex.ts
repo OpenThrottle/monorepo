@@ -37,11 +37,13 @@ import { mapCodexEvent } from './events.ts';
 
 /** Env vars the child is allowed to inherit (host login + locale), nothing else. */
 const ALLOWED_ENV_KEYS = [
+  'CODEX_API_KEY',
   'CODEX_HOME',
   'HOME',
   'LANG',
   'LC_ALL',
   'LOGNAME',
+  'OPENAI_API_KEY',
   'PATH',
   'TERM',
   'TMPDIR',

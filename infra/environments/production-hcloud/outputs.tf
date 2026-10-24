@@ -20,3 +20,9 @@ output "ipv6_address" {
   description = "AAAA record target."
   value       = module.openthrottle.ipv6_address
 }
+
+output "startup_script" {
+  description = "The rendered startup script, for rolling a template or variable change out to the EXISTING box (user_data is ignore_changes). `terraform output -raw startup_script`, scp it to /usr/local/sbin/openthrottle-startup.sh, re-run it. See applications/openthrottle_hcloud/README.md."
+  sensitive   = true
+  value       = module.openthrottle.startup_script
+}

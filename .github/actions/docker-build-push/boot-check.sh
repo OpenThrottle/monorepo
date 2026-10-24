@@ -1,7 +1,14 @@
 #!/usr/bin/env bash
 # Boot a freshly built app image and prove it serves, BEFORE it is pushed.
 #
-#   boot-check.sh <app> <image>
+#   boot-check.sh <app> <image> [target]
+#
+# `target` is the Dockerfile target the image was built from (default
+# `production`, the distroless server). For `production-agents` the image is
+# Debian with a shell, so the probe uses its own `node` rather than distroless's
+# /nodejs/bin/node, HOME is a writable tmpfs (as the deployed volume is), and the
+# agent toolchain (claude, codex, gemini, gh, git) must run before the server is
+# even booted.
 #
 # Building an image proves it compiles, not that it starts. Every server and
 # developer image published between 2026-09-15 and this check crashed at
@@ -25,8 +32,9 @@
 # for the length of one CI job.
 set -euo pipefail
 
-APP="${1:?usage: boot-check.sh <app> <image>}"
-IMAGE="${2:?usage: boot-check.sh <app> <image>}"
+APP="${1:?usage: boot-check.sh <app> <image> [target]}"
+IMAGE="${2:?usage: boot-check.sh <app> <image> [target]}"
+TARGET="${3:-production}"
 TIMEOUT_SECONDS="${BOOT_CHECK_TIMEOUT_SECONDS:-90}"
 
 RUN_ID="boot-check-$$"
@@ -41,6 +49,15 @@ HARDENING=(
   --tmpfs /tmp
   --user 1000:1000
 )
+
+# The image's own node: a path under distroless, a bare PATH lookup on Debian.
+NODE_BIN="/nodejs/bin/node"
+if [[ "${TARGET}" == "production-agents" ]]; then
+  NODE_BIN="node"
+  # The deployed HOME (/home/agent) is a mounted volume owned by uid 1000; a
+  # read-only root with no writable HOME would exercise a path nobody runs.
+  HARDENING+=(--tmpfs "/home/agent:uid=1000,gid=1000")
+fi
 
 cleanup() {
   # The +-expansion keeps an empty array safe under `set -u` on bash < 4.4.
@@ -90,7 +107,7 @@ wait_for() {
     if [[ "$(docker inspect -f '{{.State.Running}}' "${APP_CONTAINER}" 2> /dev/null)" != "true" ]]; then
       fail "the container exited before serving ${url}"
     fi
-    if docker run --rm --network "${NETWORK}" --entrypoint /nodejs/bin/node "${IMAGE}" \
+    if docker run --rm --network "${NETWORK}" --entrypoint "${NODE_BIN}" "${IMAGE}" \
       -e "${probe}" "${url}" "${want}"; then
       echo "✅ ${APP}: ${url} served within ${TIMEOUT_SECONDS}s"
       return 0
@@ -100,6 +117,38 @@ wait_for() {
 
   fail "${url} did not answer ${want} within ${TIMEOUT_SECONDS}s"
 }
+
+# Prove the agent toolchain is really in the image and runnable as the deployed
+# user, under the deployed hardening, through the image ENTRYPOINT (so this also
+# proves `docker run <image> <cmd>` overrides still work). Runs before anything
+# else is started: a missing CLI should fail in seconds, not after a 90s boot.
+check_agent_toolchain() {
+  local tool output
+  for tool in claude codex gemini gh git; do
+    if ! output="$(docker run --rm "${HARDENING[@]}" "${IMAGE}" "${tool}" --version 2>&1)"; then
+      echo "::error::${APP} image failed its boot check: '${tool} --version' failed inside the image"
+      echo "${output}" | tail -20
+      exit 1
+    fi
+    echo "✅ ${APP}: ${tool} --version -> $(echo "${output}" | head -1)"
+  done
+
+  # The entrypoint's identity step, end to end: written to the (tmpfs) HOME and
+  # read back by a separate git process.
+  local identity
+  identity="$(docker run --rm "${HARDENING[@]}" \
+    -e OT_GIT_USER_EMAIL=boot-check@example.invalid -e OT_GIT_USER_NAME=boot-check \
+    "${IMAGE}" sh -c 'git config --global user.name && git config --global user.email' 2>&1)" || true
+  if [[ "${identity}" != $'boot-check\nboot-check@example.invalid' ]]; then
+    echo "::error::${APP} image failed its boot check: entrypoint did not write the git identity (got: ${identity})"
+    exit 1
+  fi
+  echo "✅ ${APP}: entrypoint wrote the git identity under HOME"
+}
+
+if [[ "${TARGET}" == "production-agents" ]]; then
+  check_agent_toolchain
+fi
 
 docker network create "${NETWORK}" > /dev/null
 

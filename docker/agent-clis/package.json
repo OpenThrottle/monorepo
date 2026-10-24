@@ -1,0 +1,12 @@
+{
+  "dependencies": {
+    "@anthropic-ai/claude-code": "2.1.309",
+    "@google/gemini-cli": "0.65.0",
+    "@openai/codex": "0.163.0"
+  },
+  "description": "Pinned agent CLIs baked into the Dockerfile.NestJS production-agents image. Not a pnpm workspace package: installed with npm ci, bumped by Dependabot.",
+  "license": "UNLICENSED",
+  "name": "openthrottle-agent-clis",
+  "private": true,
+  "version": "0.0.0"
+}

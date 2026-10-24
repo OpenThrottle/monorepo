@@ -154,6 +154,9 @@ jobs:
             }
 
             vars = {
+              agents_enabled         = false
+              agents_home_dir        = "/mnt/openthrottle-data/agent-home"
+              agents_workspace_dir   = "/mnt/openthrottle-data/workspaces"
               api_domain             = "api.example.com"
               backup_remote          = "remote:bucket"
               backup_retention_count = "14"
@@ -187,6 +190,23 @@ jobs:
             filename = "rendered-without-volume.sh"
           }
 
+          # agents_enabled adds branches (agent directories, REDIS_PASSWORD, the
+          # agent-secrets.env check) that the renders above never reach.
+          resource "local_file" "agents_with_volume" {
+            content  = templatefile(local.tpl, merge(local.vars, { agents_enabled = true, data_volume_device = "/dev/disk/by-id/scsi-0HC_Volume_1" }))
+            filename = "rendered-agents-with-volume.sh"
+          }
+
+          resource "local_file" "agents_without_volume" {
+            content  = templatefile(local.tpl, merge(local.vars, {
+              agents_enabled       = true
+              agents_home_dir      = "/opt/openthrottle/agent-home"
+              agents_workspace_dir = "/opt/openthrottle/workspaces"
+              data_volume_device   = ""
+            }))
+            filename = "rendered-agents-without-volume.sh"
+          }
+
           resource "local_file" "gcp" {
             content  = templatefile(local.tpl_gcp, local.vars_gcp)
             filename = "rendered-gcp.sh"
@@ -202,7 +222,8 @@ jobs:
           terraform -chdir="${scratch}" init -backend=false -input=false -no-color
           terraform -chdir="${scratch}" apply -auto-approve -no-color
 
-          for name in rendered-with-volume.sh rendered-without-volume.sh rendered-gcp.sh; do
+          for name in rendered-with-volume.sh rendered-without-volume.sh \
+            rendered-agents-with-volume.sh rendered-agents-without-volume.sh rendered-gcp.sh; do
             echo "::group::shellcheck ${name}"
             bash -n "${scratch}/${name}"
             shellcheck --shell=bash "${scratch}/${name}"

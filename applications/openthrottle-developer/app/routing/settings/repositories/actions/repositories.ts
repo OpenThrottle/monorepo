@@ -17,6 +17,7 @@ import {
   AddWorkspaceFolderInputSchema,
   CloneRepositoryInputSchema,
 } from '~/__generated__/schemas';
+import { toActionError } from '~/routing/settings/repositories/utils/action-errors';
 
 export const addFolder = async (args: Route.ActionArgs, formData: FormData) => {
   const parsed = parseFormData(formData, AddWorkspaceFolderInputSchema(), {
@@ -40,9 +41,7 @@ export const addFolder = async (args: Route.ActionArgs, formData: FormData) => {
     );
     return { addedFolder: data.addWorkspaceFolder };
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Failed to add folder.';
-    return { error: message };
+    return toActionError(error, 'Failed to add folder.');
   }
 };
 
@@ -65,9 +64,7 @@ export const cloneRepo = async (args: Route.ActionArgs, formData: FormData) => {
     );
     return { addedFolder: data.cloneRepository };
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Failed to clone repository.';
-    return { error: message };
+    return toActionError(error, 'Failed to clone repository.');
   }
 };
 
@@ -91,9 +88,7 @@ export const browseDirectory = async (
     );
     return { browse: data.browseDirectory };
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Failed to browse directory.';
-    return { error: message };
+    return toActionError(error, 'Failed to browse directory.');
   }
 };
 
@@ -105,11 +100,7 @@ export const pickFolderNative = async (args: Route.ActionArgs) => {
     );
     return { picked: { path: data.pickFolderNative.path } };
   } catch (error) {
-    const message =
-      error instanceof Error
-        ? error.message
-        : 'Failed to open the folder dialog.';
-    return { error: message };
+    return toActionError(error, 'Failed to open the folder dialog.');
   }
 };
 

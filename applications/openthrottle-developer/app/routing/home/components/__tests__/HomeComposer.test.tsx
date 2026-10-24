@@ -10,6 +10,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { NO_MODELS_COPY } from '~/routing/home/data/data.copy';
 import type { RepositoryOption } from '~/routing/home/data/models.server';
 import type { UseAgenticChatTurnResult } from '~/routing/home/hooks/useAgenticChatTurn';
 import type { UseConversationListResult } from '~/routing/home/hooks/useConversationList';
@@ -87,13 +88,20 @@ describe('HomeComposer Component', () => {
     expect(component.getByRole('textbox')).toBeInTheDocument();
   });
 
-  test('shows the no-local-models message when no models are discovered', () => {
+  test('shows the no-models message linking to the agents settings when none are discovered', () => {
     component.unmount();
     component = renderComposer({ ...props, models: [] });
 
     expect(
-      component.getByText(/No local models discovered/i),
-    ).toBeInTheDocument();
+      component.getByRole('link', { name: NO_MODELS_COPY.agentsLinkLabel }),
+    ).toHaveAttribute('href', NO_MODELS_COPY.agentsHref);
+    expect(component.getByRole('textbox')).toBeDisabled();
+  });
+
+  test('does not show the no-models message when models are discovered', () => {
+    expect(
+      component.queryByRole('link', { name: NO_MODELS_COPY.agentsLinkLabel }),
+    ).not.toBeInTheDocument();
   });
 
   test('surfaces the turn error via InlineErrors', () => {

@@ -27,6 +27,31 @@ updates:
       timezone: 'America/Los_Angeles'
     target-branch: 'main'
 
+  # The agent CLIs (claude-code, codex, gemini-cli) baked into the
+  # `production-agents` image target are pinned in docker/agent-clis/package.json
+  # + package-lock.json — a standalone npm manifest, NOT a pnpm workspace package,
+  # so the `/applications/*` + `/packages/*` block above never sees it. Unlike
+  # that block (limit 0: security advisories only), this one is NON-zero on
+  # purpose — the pins never move on their own, and bumping them is the whole
+  # point. The 7-day cooldown still applies; all three CLIs land in one PR.
+  - cooldown:
+      default-days: 7
+    directory: '/docker/agent-clis'
+    groups:
+      agent-clis:
+        patterns:
+          - '*'
+    labels:
+      - 'dependencies'
+    open-pull-requests-limit: 3
+    package-ecosystem: 'npm'
+    rebase-strategy: 'auto'
+    schedule:
+      interval: weekly
+      time: '07:00'
+      timezone: 'America/Los_Angeles'
+    target-branch: 'main'
+
   # GitHub Actions are all SHA-pinned (see .github/workflows + .github/actions),
   # so they never update on their own — Dependabot is the ONLY thing that will
   # bump a pinned SHA when a new release ships (and surface a security advisory
