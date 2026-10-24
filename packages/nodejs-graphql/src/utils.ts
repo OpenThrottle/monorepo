@@ -150,8 +150,34 @@ const ISO_DATE_TIME =
  * @description Single GraphQL error object from a response body.
  */
 export interface GraphqlErrorItem {
+  readonly extensions?: Readonly<Record<string, unknown>>;
   readonly message: string;
   readonly path?: ReadonlyArray<string | number>;
+}
+
+/**
+ * @description Error thrown when a GraphQL response carries `errors`. The
+ * `message` keeps the historical `GraphQL errors: <server message>` shape so
+ * existing consumers are unaffected; `graphqlMessage` is the bare server
+ * message and `code` is the first error's `extensions.code` (e.g.
+ * `BAD_USER_INPUT` or a project-specific code) so callers can branch on a
+ * stable code instead of matching message text.
+ * @public
+ */
+export class GraphqlResponseError extends Error {
+  /** @description `extensions.code` of the first GraphQL error, when present. */
+  readonly code: string | undefined;
+  /** @description The server's message for the first GraphQL error, unprefixed. */
+  readonly graphqlMessage: string;
+
+  constructor(first: GraphqlErrorItem | undefined) {
+    const graphqlMessage = first?.message ?? 'unknown';
+    super(`GraphQL errors: ${graphqlMessage}`);
+    this.name = 'GraphqlResponseError';
+    this.graphqlMessage = graphqlMessage;
+    const code = first?.extensions?.code;
+    this.code = typeof code === 'string' ? code : undefined;
+  }
 }
 
 /**
@@ -200,11 +226,15 @@ export function asGraphqlPayload(
         path = pathRaw;
       }
 
-      items.push(
-        path !== undefined
-          ? { message: item.message, path }
-          : { message: item.message },
-      );
+      const extensions = isRecord(item.extensions)
+        ? item.extensions
+        : undefined;
+
+      items.push({
+        ...(extensions !== undefined && { extensions }),
+        message: item.message,
+        ...(path !== undefined && { path }),
+      });
     }
 
     errors = items.length > 0 ? items : undefined;

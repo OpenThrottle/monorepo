@@ -5,6 +5,8 @@ import * as React from 'react';
 import { createRoutesStub, Form, useActionData } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
+import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
+
 import { CloneRepoDialog } from '../CloneRepoDialog';
 
 /**
@@ -78,6 +80,10 @@ describe('CloneRepoDialog Component', () => {
     const dialog = await component.findByTestId('CloneRepoDialog');
     expect(dialog).toBeInTheDocument();
     expect(component.getByLabelText('Git URL')).toBeInTheDocument();
+    expect(component.getByLabelText('Git URL')).toHaveAttribute(
+      'placeholder',
+      WORKSPACE_FOLDERS_COPY.cloneRepoUrlPlaceholder,
+    );
     expect(dialog.querySelector('input[name="intent"]')).toHaveValue(
       'cloneRepo',
     );

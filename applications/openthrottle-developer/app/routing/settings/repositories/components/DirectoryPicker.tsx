@@ -28,6 +28,7 @@ export interface DirectoryPickerProps {
   onOpen: (path: string) => void;
   onUp: () => void;
   parentPath: string | null;
+  rootsNotConfigured: boolean;
 }
 
 /**
@@ -53,6 +54,7 @@ export const DirectoryPicker = (
     onOpen,
     onUp,
     parentPath,
+    rootsNotConfigured,
   } = props;
 
   // Hooks
@@ -66,6 +68,27 @@ export const DirectoryPicker = (
   // Life Cycle
 
   // 🔌 Short Circuit
+  // No roots configured is an operator setup step, not a failure: explain it
+  // instead of rendering a red error beside a picker that cannot work.
+  if (rootsNotConfigured) {
+    return (
+      <div
+        className="space-y-1 rounded-md border p-3"
+        data-testid="DirectoryPickerRootsNotConfigured"
+        role="status"
+      >
+        <p className="text-sm font-medium">
+          {WORKSPACE_FOLDERS_COPY.rootsNotConfiguredTitle}
+        </p>
+        <p className="text-muted-foreground text-sm">
+          {WORKSPACE_FOLDERS_COPY.rootsNotConfiguredBody}
+        </p>
+        <p className="text-muted-foreground text-xs">
+          {WORKSPACE_FOLDERS_COPY.rootsNotConfiguredDocs}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div

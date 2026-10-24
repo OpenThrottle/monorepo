@@ -9,6 +9,7 @@ import {
   executeGraphqlAtUrl,
   executeGraphqlWithAuth,
   GRAPHQL_TIMEOUT_ERROR_PREFIX,
+  GraphqlResponseError,
 } from './index.ts';
 
 // See graphql-v2.test.ts: the generic overload brands the parsed document with
@@ -190,6 +191,48 @@ describe('executeGraphqlAtUrl error branches', () => {
     expect(error).toBeInstanceOf(Error);
     if (error instanceof Error) {
       expect(error.message).toBe('GraphQL errors: nope');
+    }
+  });
+
+  it('exposes the first error extensions.code on the thrown GraphqlResponseError', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      jsonResponse({
+        data: null,
+        errors: [
+          {
+            extensions: { code: 'WORKSPACE_ROOTS_NOT_CONFIGURED' },
+            message: 'Set OPENTHROTTLE_WORKSPACE_ROOTS',
+          },
+        ],
+      }),
+    );
+
+    const error = await executeGraphqlAtUrl(url, doc, undefined).catch(
+      (caught: unknown) => caught,
+    );
+
+    expect(error).toBeInstanceOf(GraphqlResponseError);
+    if (error instanceof GraphqlResponseError) {
+      expect(error.code).toBe('WORKSPACE_ROOTS_NOT_CONFIGURED');
+      expect(error.graphqlMessage).toBe('Set OPENTHROTTLE_WORKSPACE_ROOTS');
+      expect(error.message).toBe(
+        'GraphQL errors: Set OPENTHROTTLE_WORKSPACE_ROOTS',
+      );
+    }
+  });
+
+  it('leaves GraphqlResponseError.code undefined when the error has no code', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      jsonResponse({ data: null, errors: [{ message: 'nope' }] }),
+    );
+
+    const error = await executeGraphqlAtUrl(url, doc, undefined).catch(
+      (caught: unknown) => caught,
+    );
+
+    expect(error).toBeInstanceOf(GraphqlResponseError);
+    if (error instanceof GraphqlResponseError) {
+      expect(error.code).toBeUndefined();
     }
   });
 

@@ -35,6 +35,14 @@
 #   7. For the automated deploy, set the HETZNER_* secrets and variables listed
 #      in .github/workflows/hetzner-deploy.yml. HETZNER_DEPLOY_FIREWALL is the
 #      deploy_firewall_name output.
+#   8. Agents (claude/codex/gemini inside the server) are OFF. They are an
+#      accepted-risk opt-in: an agent turn can read every server secret and
+#      reach Postgres and Redis. Read SECRETS.md § "Agents on this box" before
+#      uncommenting the agents_* lines below. GITHUB_TOKEN and the model API
+#      keys are never Terraform variables: they go in agent-secrets.env on the
+#      box. Enabling does not reach the running box by itself (user_data is
+#      ignore_changes): see README.md § "Rolling a change out to an existing
+#      box".
 
 module "openthrottle" {
   source = "../../applications/openthrottle_hcloud"
@@ -74,6 +82,14 @@ module "openthrottle" {
   # Must already exist in the Hetzner project. Set before the FIRST apply: the
   # provider installs SSH keys only when it creates the server.
   ssh_key_ids = ["openthrottle-admin", "openthrottle-ci-deploy"]
+
+  # Agents: see note 8. server_agents_image is the sha-<sha>-agents tag of the
+  # openthrottle-server repository, built from the same commit as the images
+  # above. cx33 because the 1280m server limit does not fit alongside the rest
+  # on a cx23.
+  #
+  # agents_enabled      = true
+  # server_agents_image = "ghcr.io/openthrottle/openthrottle-server:sha-dd7b6e5788290b6085efd1101ee4a694aa5c0034-agents"
 
   # GitHub-hosted runners have no stable IP to put in ssh_allowed_cidrs, so
   # the deploy workflow opens this (otherwise empty) firewall for its own /32

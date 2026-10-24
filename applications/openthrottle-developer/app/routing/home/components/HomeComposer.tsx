@@ -8,8 +8,9 @@ import { CHAT_TOOLBAR_CONTEXT_SOURCES } from '@openthrottle/react-router-chat-st
 import { InlineErrors } from '@openthrottle/react-router-shadcn';
 import { FEATURE_BETA_PREVIEW } from '@openthrottle/react-router-utils';
 import * as React from 'react';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 
+import { NO_MODELS_COPY } from '~/routing/home/data/data.copy';
 import type { RepositoryOption } from '~/routing/home/data/models.server';
 import type { UseAgenticChatTurnResult } from '~/routing/home/hooks/useAgenticChatTurn';
 import type { UseConversationListResult } from '~/routing/home/hooks/useConversationList';
@@ -140,8 +141,16 @@ export const HomeComposer = (props: HomeComposerProps): React.ReactElement => {
       <InlineErrors errors={[turn.error, voice.error]} />
       {!hasModels ? (
         <p className="text-muted-foreground mb-2 text-center text-sm">
-          No local models discovered. Start a local OpenAI-compatible server
-          (e.g. Ollama) and reload.
+          {NO_MODELS_COPY.lead}
+          <Link
+            className="underline underline-offset-2"
+            to={NO_MODELS_COPY.agentsHref}
+          >
+            {NO_MODELS_COPY.agentsLinkLabel}
+          </Link>
+          {NO_MODELS_COPY.middle}
+          {NO_MODELS_COPY.localServerHint}
+          {NO_MODELS_COPY.trail}
         </p>
       ) : null}
       <ChatComposer

@@ -251,6 +251,30 @@ describe('claudeConversationBackend', () => {
     }
   });
 
+  it('passes the allowlisted auth credentials through the env scrubber', async () => {
+    process.env[CLAUDE_BIN_ENV] = writeFakeBin(
+      'claude-auth-env.js',
+      `const present = ['ANTHROPIC_API_KEY', 'CLAUDE_CODE_OAUTH_TOKEN'].map((key) => key + ':' + (process.env[key] === 'tok-' + key ? 'y' : 'n'));
+      process.stdout.write(JSON.stringify({ type: 'result', subtype: 'success', is_error: false, result: present.join('|') }) + '\\n');`,
+    );
+    process.env.ANTHROPIC_API_KEY = 'tok-ANTHROPIC_API_KEY';
+    process.env.CLAUDE_CODE_OAUTH_TOKEN = 'tok-CLAUDE_CODE_OAUTH_TOKEN';
+    try {
+      const chunks = await collect({
+        cwd: dir,
+        messages: [{ content: 'hi', role: 'user' }],
+        model: 'auto',
+        sessionId: 'sess-1',
+      });
+      expect(chunks.at(-1)?.metadata?.result).toBe(
+        'ANTHROPIC_API_KEY:y|CLAUDE_CODE_OAUTH_TOKEN:y',
+      );
+    } finally {
+      delete process.env.ANTHROPIC_API_KEY;
+      delete process.env.CLAUDE_CODE_OAUTH_TOKEN;
+    }
+  });
+
   it('isolates a headless turn onto a dedicated CLAUDE_CONFIG_DIR when OPENTHROTTLE_CLAUDE_CONFIG_DIR is set (skips user plugin hooks)', async () => {
     process.env[CLAUDE_BIN_ENV] = configDirBin();
     const isolated = join(dir, 'isolated-claude-config');

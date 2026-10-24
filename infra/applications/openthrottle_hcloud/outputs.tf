@@ -49,3 +49,9 @@ output "firewall_id" {
   description = "Attached firewall id, or null when deploy_enabled is false."
   value       = module.server.firewall_id
 }
+
+output "startup_script" {
+  description = "The rendered first-boot startup script, i.e. what cloud-init ran (or would run) at /usr/local/sbin/openthrottle-startup.sh. user_data is in ignore_changes, so a template or variable change (agents_enabled, an image tag) never reaches a running box on its own: write this to a file, scp it over /usr/local/sbin/openthrottle-startup.sh and re-run it (README.md § Rolling a change out to an existing box). Empty when deploy_enabled is false. Marked sensitive because it embeds ghcr_token and any jwt_secret / postgres_password you supplied; with the defaults it contains no secrets."
+  sensitive   = true
+  value       = local.startup_script
+}

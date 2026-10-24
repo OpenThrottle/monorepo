@@ -280,6 +280,18 @@ Two on-box service images stay Hetzner-only, because the GCP path uses managed s
 | `postgres_image`   | `string` | `"pgvector/pgvector:0.8.2-pg18-trixie"` | Upstream prebuilt; a deployed box cannot build `Dockerfile.Postgres`. |
 | `redis_image`      | `string` | `"redis:8.8-alpine"`                    | Tracks `REDIS_VERSION` in `.env.default`.                             |
 
+Three agent variables are Hetzner-only. They run the agent CLIs (claude, codex, gemini) inside
+`openthrottle-server` from the opt-in `production-agents` image; the GCP compose does not render that
+service shape, and nothing here touches `applications/openthrottle_gcp`. Read
+[`applications/openthrottle_hcloud/SECRETS.md`](./applications/openthrottle_hcloud/SECRETS.md)
+§ "Agents on this box" before enabling — an agent turn can read every server secret:
+
+| Variable                  | Type     | Default   | Note                                                                                                      |
+| ------------------------- | -------- | --------- | --------------------------------------------------------------------------------------------------------- |
+| `agents_enabled`          | `bool`   | `false`   | Off renders byte-identical compose and startup script to before the variable existed.                     |
+| `server_agents_image`     | `string` | `""`      | Required when `agents_enabled`. The `sha-<sha>-agents` tag of the `openthrottle-server` repository.       |
+| `agents_server_mem_limit` | `string` | `"1280m"` | Compose `mem_limit` for the server when `agents_enabled`; the default 640m is sized for the server alone. |
+
 `migrations_image` and `mcp_image` are now in the **shared** table above — the GCP compose renders
 those services too.
 

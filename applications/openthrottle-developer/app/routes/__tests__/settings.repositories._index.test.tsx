@@ -1,4 +1,5 @@
 import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
+import { GraphqlResponseError } from '@openthrottle/react-router-graphql';
 import { createTestRouterContext } from '@openthrottle/react-router-testing';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -369,6 +370,45 @@ describe('routes/settings.repositories._index.tsx', () => {
         expect.any(Object),
         { path: null },
       );
+    });
+
+    test('browseDirectory surfaces the server message and stable code when roots are unset', async () => {
+      mockExecuteGraphqlWithAuth.mockRejectedValue(
+        new GraphqlResponseError({
+          extensions: { code: 'WORKSPACE_ROOTS_NOT_CONFIGURED' },
+          message: 'No workspace roots are configured.',
+        }),
+      );
+
+      const formData = new FormData();
+      formData.set('intent', 'browseDirectory');
+
+      const result = await action(actionArgs(formData));
+
+      expect(result).toEqual({
+        error: 'No workspace roots are configured.',
+        errorCode: 'WORKSPACE_ROOTS_NOT_CONFIGURED',
+      });
+    });
+
+    test('cloneRepo surfaces the unprefixed server clone error', async () => {
+      mockExecuteGraphqlWithAuth.mockRejectedValue(
+        new GraphqlResponseError({
+          extensions: { code: 'GIT_CLONE_AUTH_FAILED' },
+          message: 'git clone failed: authentication was rejected.',
+        }),
+      );
+
+      const formData = new FormData();
+      formData.set('intent', 'cloneRepo');
+      formData.set('gitUrl', 'git@github.com:owner/repo.git');
+
+      const result = await action(actionArgs(formData));
+
+      expect(result).toEqual({
+        error: 'git clone failed: authentication was rejected.',
+        errorCode: 'GIT_CLONE_AUTH_FAILED',
+      });
     });
 
     test('pickFolderNative returns the chosen path', async () => {

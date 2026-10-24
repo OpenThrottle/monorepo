@@ -10,6 +10,7 @@ import { print } from 'graphql';
 import {
   buildTimeoutSignal,
   getGraphQLUrl,
+  GraphqlResponseError,
   parseDateTimeInResponse,
   parseGraphqlResponseBody,
   rethrowAsTimeoutIfAborted,
@@ -33,7 +34,11 @@ export type {
 export { defaultRetryOn, executeGraphql_v2 } from './graphql-v2.ts';
 export type { ExecuteGraphqlOptionsV2, GraphqlResponseV2 } from './index-v2.ts';
 export { executeGraphqlV2 } from './index-v2.ts';
-export { getGraphQLUrl, parseDateTimeInResponse } from './utils.ts';
+export {
+  getGraphQLUrl,
+  GraphqlResponseError,
+  parseDateTimeInResponse,
+} from './utils.ts';
 export {
   DEFAULT_GRAPHQL_TIMEOUT_MS,
   GRAPHQL_TIMEOUT_ERROR_PREFIX,
@@ -121,7 +126,7 @@ export async function executeGraphql<
 
   if (json.errors != null && json.errors.length > 0) {
     const first = json.errors[0];
-    throw new Error(`GraphQL errors: ${first?.message ?? 'unknown'}`);
+    throw new GraphqlResponseError(first);
   }
 
   if (json.data == null) {
@@ -215,7 +220,7 @@ export async function executeGraphqlAtUrl<
 
   if (json.errors != null && json.errors.length > 0) {
     const first = json.errors[0];
-    throw new Error(`GraphQL errors: ${first?.message ?? 'unknown'}`);
+    throw new GraphqlResponseError(first);
   }
 
   if (json.data == null) {

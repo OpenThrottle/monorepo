@@ -27,3 +27,9 @@ output "data_volume_device" {
   description = "Stable /dev/disk/by-id path cloud-init mounts for the Postgres data directory, or empty when data_volume_size_gb is 0."
   value       = module.openthrottle.data_volume_device
 }
+
+output "startup_script" {
+  description = "The rendered startup script, for rolling a template or variable change out to an existing box (user_data is ignore_changes): `terraform output -raw startup_script`, scp it to /usr/local/sbin/openthrottle-startup.sh, re-run it. See applications/openthrottle_hcloud/README.md."
+  sensitive   = true
+  value       = module.openthrottle.startup_script
+}

@@ -1,6 +1,8 @@
 import * as React from 'react';
 import { useFetcher, useNavigation, useSubmit } from 'react-router';
 
+import { WORKSPACE_FOLDER_ERROR_CODES } from '~/routing/settings/repositories/utils/action-errors';
+
 /** A single directory entry returned by the enriched `browseDirectory`. */
 export interface WorkspaceBrowseEntry {
   alreadyRegistered: boolean;
@@ -58,6 +60,7 @@ export interface UseAddFolderDialogResult {
   parentPath: string | null;
   pickError: string | null;
   pickedPath: string | null;
+  rootsNotConfigured: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   showManualPath: boolean;
 }
@@ -105,6 +108,7 @@ export const useAddFolderDialog = (
   const browseFetcher = useFetcher<{
     browse?: WorkspaceBrowseListing;
     error?: string;
+    errorCode?: string;
   }>();
   const pickFetcher = useFetcher<{
     error?: string;
@@ -127,6 +131,9 @@ export const useAddFolderDialog = (
     navigation.state === 'submitting' &&
     navigation.formData?.get('intent') === 'addFolder';
   const browseError = browseFetcher.data?.error ?? null;
+  const rootsNotConfigured =
+    browseFetcher.data?.errorCode ===
+    WORKSPACE_FOLDER_ERROR_CODES.rootsNotConfigured;
   const pickError = pickFetcher.data?.error ?? null;
   const pickedPath = pickDismissed
     ? null
@@ -220,6 +227,7 @@ export const useAddFolderDialog = (
     parentPath,
     pickError,
     pickedPath,
+    rootsNotConfigured,
     setOpen,
     showManualPath,
   };

@@ -214,9 +214,19 @@ jobs:
           # and redis (pinned upstream images) untouched. Each repo is matched
           # exactly — dots escaped, and a `:` straight after the name — so
           # ghcr.io/x/openthrottle-server cannot also match a longer name.
+          #
+          # A tag ending in `-agents` is the production-agents server image
+          # (agents_enabled in infra/applications/openthrottle_hcloud). It keeps
+          # its suffix: rewriting it to the bare tag would silently swap the
+          # agent-capable image for the distroless one under a compose file whose
+          # healthcheck, volumes and env assume Debian. Its sha-<sha>-agents tag
+          # is not checked above, so a missing one fails at `pull`, below.
           cp docker-compose.yml docker-compose.yml.prev
           for repo in ${IMAGE_REPOS}; do
-            sed -E -i "s|(image: ${repo//./\\.}):[^\"'[:space:]]+|\1:${IMAGE_TAG}|g" docker-compose.yml
+            sed -E -i \
+              -e "/-agents[[:space:]]*\$/ s|(image: ${repo//./\\.}):[^\"'[:space:]]+|\1:${IMAGE_TAG}-agents|" \
+              -e "/-agents[[:space:]]*\$/! s|(image: ${repo//./\\.}):[^\"'[:space:]]+|\1:${IMAGE_TAG}|" \
+              docker-compose.yml
           done
           grep -E '^\s+image:' docker-compose.yml
           echo "::endgroup::"

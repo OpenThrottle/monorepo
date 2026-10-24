@@ -96,6 +96,25 @@ const listingAtRoot = {
   path: '/root',
 };
 
+const renderRootsNotConfigured = (): RenderResult => {
+  const Component = () => (
+    <AddFolderDialog
+      discoveredFolders={[]}
+      pickerCapabilities={{
+        canUseNativeDialog: false,
+        defaultBrowsePath: '',
+        roots: [],
+      }}
+    />
+  );
+  const action = () => ({
+    error: 'No workspace roots are configured.',
+    errorCode: 'WORKSPACE_ROOTS_NOT_CONFIGURED',
+  });
+  const RoutesStub = createRoutesStub([{ Component, action, path: '/' }]);
+  return render(<RoutesStub />);
+};
+
 const renderPicker = (canUseNativeDialog: boolean): RenderResult => {
   const Component = () => (
     <AddFolderDialog
@@ -131,6 +150,70 @@ const renderPicker = (canUseNativeDialog: boolean): RenderResult => {
   const RoutesStub = createRoutesStub([{ Component, action, path: '/' }]);
   return render(<RoutesStub />);
 };
+
+describe('AddFolderDialog with no workspace roots configured', () => {
+  test('explains which env var to set instead of showing a red error', async () => {
+    const component = renderRootsNotConfigured();
+    const user = userEvent.setup();
+
+    await user.click(component.getByTestId('AddFolderDialogTrigger'));
+
+    const emptyState = await component.findByTestId(
+      'DirectoryPickerRootsNotConfigured',
+    );
+    expect(emptyState).toHaveTextContent('OPENTHROTTLE_WORKSPACE_ROOTS');
+    expect(emptyState).toHaveTextContent(
+      'docs/monorepo/environment-variables.md',
+    );
+    expect(component.queryByRole('alert')).not.toBeInTheDocument();
+    expect(component.queryByTestId('DirectoryPicker')).not.toBeInTheDocument();
+  });
+
+  test('keeps the manual server-path escape hatch available', async () => {
+    const component = renderRootsNotConfigured();
+    const user = userEvent.setup();
+
+    await user.click(component.getByTestId('AddFolderDialogTrigger'));
+    await component.findByTestId('DirectoryPickerRootsNotConfigured');
+    await user.click(component.getByText('Enter a server path manually'));
+
+    expect(component.getByLabelText('Server path')).toBeInTheDocument();
+  });
+
+  test('shows other browse failures as a red error, not the empty state', async () => {
+    const Component = () => (
+      <AddFolderDialog
+        discoveredFolders={[]}
+        pickerCapabilities={{
+          canUseNativeDialog: false,
+          defaultBrowsePath: '/root',
+          roots: ['/root'],
+        }}
+      />
+    );
+    const RoutesStub = createRoutesStub([
+      {
+        Component,
+        action: () => ({
+          error: '/root/locked cannot be read',
+          errorCode: 'WORKSPACE_PATH_NOT_READABLE',
+        }),
+        path: '/',
+      },
+    ]);
+    const component = render(<RoutesStub />);
+    const user = userEvent.setup();
+
+    await user.click(component.getByTestId('AddFolderDialogTrigger'));
+
+    expect(await component.findByRole('alert')).toHaveTextContent(
+      '/root/locked cannot be read',
+    );
+    expect(
+      component.queryByTestId('DirectoryPickerRootsNotConfigured'),
+    ).not.toBeInTheDocument();
+  });
+});
 
 describe('AddFolderDialog picker interactions', () => {
   test('native branch: Browse… opens the dialog and confirms the chosen path', async () => {

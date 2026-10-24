@@ -110,6 +110,7 @@ export const AddFolderDialog = (
               onOpen={picker.handleOpen}
               onUp={picker.handleUp}
               parentPath={picker.parentPath}
+              rootsNotConfigured={picker.rootsNotConfigured}
             />
           </div>
         )}

@@ -8,7 +8,7 @@
  */
 
 import { execFile } from 'node:child_process';
-import { existsSync, realpathSync } from 'node:fs';
+import { type Dirent, existsSync, realpathSync } from 'node:fs';
 import { mkdir, readdir, rm } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { basename, dirname, isAbsolute, join } from 'node:path';
@@ -40,6 +40,7 @@ import { ForeignSkillMaterializationService } from '../../services/foreign-skill
 import { expandHome } from '../../services/paths/expand-home.ts';
 import { RepositoryInspectionService } from '../repository-inspection/repository-inspection.service.ts';
 import type { RepositoryInspectionSnapshot } from '../repository-inspection/repository-inspection.snapshot.ts';
+import { isGitPreferHttpsEnabled, parseGitCloneUrl } from './git-clone-url.ts';
 import {
   canUseNativeFolderDialog,
   type NativeDialogRunner,
@@ -50,6 +51,13 @@ import type {
   RepositoryInspectionObject,
   RepositoryObject,
 } from './repository.object.ts';
+import {
+  classifyCheckoutRootFailure,
+  classifyGitCloneFailure,
+  classifyReadDirectoryFailure,
+  WorkspaceFolderError,
+  WorkspaceFolderErrorCode,
+} from './workspace-folders.errors.ts';
 import type {
   AddWorkspaceFolderPayloadObject,
   BrowseDirectoryEntryObject,
@@ -175,12 +183,6 @@ const sanitizeCloneDirName = (name: string): string | null => {
     .replace(/^-+|-+$/g, '');
   return safe !== '' && safe !== '.' && safe !== '..' ? safe : null;
 };
-
-/** Plausible git clone URL: ssh (scp-like or ssh://), https, git, or file protocol. */
-const isPlausibleGitUrl = (gitUrl: string): boolean =>
-  /^(https?:\/\/|git:\/\/|ssh:\/\/|file:\/\/|git@|[\w.-]+@[\w.-]+:)/.test(
-    gitUrl.trim(),
-  );
 
 @Injectable()
 export class WorkspaceFoldersService {
@@ -322,8 +324,9 @@ export class WorkspaceFoldersService {
   ): Promise<WorkspaceDirectoryListingObject> {
     const roots = getWorkspaceRoots();
     if (roots.length === 0) {
-      throw new Error(
-        `browseDirectory requires ${WORKSPACE_ROOTS_ENV} to be configured`,
+      throw new WorkspaceFolderError(
+        WorkspaceFolderErrorCode.WORKSPACE_ROOTS_NOT_CONFIGURED,
+        `No workspace roots are configured. Set ${WORKSPACE_ROOTS_ENV} on the OpenThrottle server to a comma-separated list of absolute directories to browse, then restart it.`,
       );
     }
 
@@ -356,7 +359,10 @@ export class WorkspaceFoldersService {
     }
 
     if (trimmed.includes('\0') || !isAbsolute(trimmed)) {
-      throw new Error('browseDirectory path must be an absolute path');
+      throw new WorkspaceFolderError(
+        WorkspaceFolderErrorCode.WORKSPACE_PATH_NOT_ABSOLUTE,
+        'The folder path must be an absolute path on the server host.',
+      );
     }
 
     const processView = toContainerPath(trimmed);
@@ -364,7 +370,10 @@ export class WorkspaceFoldersService {
     try {
       resolved = realpathSync(processView);
     } catch {
-      throw new Error(`browseDirectory path does not exist: ${trimmed}`);
+      throw new WorkspaceFolderError(
+        WorkspaceFolderErrorCode.WORKSPACE_PATH_NOT_FOUND,
+        `${trimmed} does not exist on the server host.`,
+      );
     }
 
     const isUnderRoot = (candidate: string): boolean =>
@@ -372,12 +381,18 @@ export class WorkspaceFoldersService {
         (root) => candidate === root || candidate.startsWith(`${root}/`),
       );
     if (!isUnderRoot(resolved)) {
-      throw new Error(
-        'browseDirectory path is not within the configured workspace roots',
+      throw new WorkspaceFolderError(
+        WorkspaceFolderErrorCode.WORKSPACE_PATH_OUTSIDE_ROOTS,
+        `${trimmed} is not within the configured workspace roots (${WORKSPACE_ROOTS_ENV}).`,
       );
     }
 
-    const dirents = await readdir(resolved, { withFileTypes: true });
+    let dirents: Dirent[];
+    try {
+      dirents = await readdir(resolved, { withFileTypes: true });
+    } catch (error) {
+      throw classifyReadDirectoryFailure(error, trimmed) ?? error;
+    }
     const entries = await Promise.all(
       dirents
         .filter((entry) => entry.isDirectory())
@@ -618,32 +633,47 @@ export class WorkspaceFoldersService {
   /**
    * @description Clone a git repository into OPENTHROTTLE_CHECKOUT_ROOT and register
    * it as a managed checkout, converging into the same pipeline as addWorkspaceFolder.
-   * Auth is ambient (host SSH agent / gh) — OT reads and stores no credentials. A
+   * Accepts `owner/repo` and GitHub URLs (see git-clone-url.ts), which resolve to
+   * `https://github.com/<owner>/<repo>.git`. Auth is ambient (the host's gh
+   * credential helper / SSH agent) — OT reads and stores no credentials. A
    * failed clone removes any partial directory and creates no rows (no orphans).
    */
   async cloneRepository(
     userId: string,
     input: { gitUrl: string; name?: string | null },
   ): Promise<AddWorkspaceFolderPayloadObject> {
-    const gitUrl = input.gitUrl.trim();
-    if (gitUrl === '' || !isPlausibleGitUrl(gitUrl)) {
-      throw new BadRequestException('A valid git clone URL is required');
+    const parsedUrl = parseGitCloneUrl(input.gitUrl, {
+      preferHttps: isGitPreferHttpsEnabled(),
+    });
+    if (!parsedUrl.ok) {
+      throw new WorkspaceFolderError(
+        WorkspaceFolderErrorCode.GIT_URL_INVALID,
+        parsedUrl.message,
+      );
     }
+    // `cloneUrl` is credential-free by construction (the parser rejects userinfo),
+    // so what git writes to .git/config never carries a secret.
+    const gitUrl = parsedUrl.cloneUrl;
 
     const root = getCheckoutRoot();
     if (root === null) {
-      throw new BadRequestException(
-        `Cloning requires ${CHECKOUT_ROOT_ENV} to be set to an absolute directory`,
+      throw new WorkspaceFolderError(
+        WorkspaceFolderErrorCode.CHECKOUT_ROOT_NOT_CONFIGURED,
+        `Cloning is not configured. Set ${CHECKOUT_ROOT_ENV} on the OpenThrottle server to the absolute directory repositories should be cloned into (a leading ~ is allowed), then restart it.`,
       );
     }
 
     const normalized = normalizeRemoteUrl(gitUrl);
+    // A blank name defaults to the repo part for GitHub inputs (`monorepo`, not
+    // `owner-monorepo`); other hosts keep the owner-disambiguated fallback.
     const derivedName =
       (input.name != null && input.name.trim() !== ''
         ? input.name.trim()
-        : normalized !== null
-          ? repositoryNameFromRemote(normalized)
-          : null) ?? repositoryNameFromGitUrl(gitUrl);
+        : parsedUrl.github !== null
+          ? parsedUrl.github.repo
+          : normalized !== null
+            ? repositoryNameFromRemote(normalized)
+            : null) ?? repositoryNameFromGitUrl(gitUrl);
     const safeName =
       derivedName !== null ? sanitizeCloneDirName(derivedName) : null;
     if (safeName === null) {
@@ -660,15 +690,16 @@ export class WorkspaceFoldersService {
 
     try {
       await execFileAsync('git', ['clone', '--', gitUrl, targetProcessView], {
-        // Ambient host credentials (SSH agent / gh); never persisted by OT.
-        env: process.env,
+        // Ambient host credentials (gh credential helper / SSH agent); never persisted by OT.
+        // GIT_TERMINAL_PROMPT=0 makes a credential prompt fail fast (surfaced as
+        // an auth error) instead of hanging until the clone timeout.
+        env: { ...process.env, GIT_TERMINAL_PROMPT: '0' },
         timeout: CLONE_TIMEOUT_MS,
       });
     } catch (error) {
       // No DB rows exist yet, so there is nothing to orphan; drop the partial dir.
       await rm(targetProcessView, { force: true, recursive: true });
-      const message = error instanceof Error ? error.message : String(error);
-      throw new BadRequestException(`git clone failed: ${message}`);
+      throw classifyGitCloneFailure(error, CLONE_TIMEOUT_MS);
     }
 
     return this.registerCheckout(userId, toHostPath(targetProcessView), {
@@ -686,7 +717,11 @@ export class WorkspaceFoldersService {
     rootProcessView: string,
     name: string,
   ): Promise<string> {
-    await mkdir(rootProcessView, { recursive: true });
+    try {
+      await mkdir(rootProcessView, { recursive: true });
+    } catch (error) {
+      throw classifyCheckoutRootFailure(error, rootProcessView) ?? error;
+    }
 
     const first = join(rootProcessView, name);
     if (!existsSync(first)) return first;

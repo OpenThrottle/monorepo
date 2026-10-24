@@ -16,6 +16,12 @@
 #   merely the same tag. A SHA published to one registry but not the other
 #   breaks the provider swap at ladder rung 4.
 #
+#   openthrottle-server is published twice from Dockerfile.NestJS: the default
+#   distroless `production` image as sha-<GITHUB_SHA>, and the opt-in agent-capable
+#   `production-agents` image (git, gh, ssh, ripgrep, pnpm, pinned claude/codex/
+#   gemini CLIs from docker/agent-clis) as sha-<GITHUB_SHA>-agents, same repository.
+#   The default tag and image are unchanged by the agents variant.
+#
 #   The migrations image is NOT an Nx app (no applications/<app>, no --target
 #   production / NX build args), so it uses a dedicated build step rather than the
 #   nx-affected-docker-apps + docker-build-push composite action path.
@@ -39,6 +45,7 @@ on:
       - 'Dockerfile.NestJS'
       - 'Dockerfile.ReactRouter'
       - 'databases/**'
+      - 'docker/agent-clis/**'
       - 'nx.json'
       - 'package.json'
       - 'packages/**'
@@ -55,6 +62,7 @@ on:
       - 'Dockerfile.NestJS'
       - 'Dockerfile.ReactRouter'
       - 'databases/**'
+      - 'docker/agent-clis/**'
       - 'nx.json'
       - 'package.json'
       - 'packages/**'
@@ -147,9 +155,15 @@ jobs:
             all=true
           fi
           server="${all}"; developer="${all}"
-          has '^Dockerfile\.NestJS$' && server=true
+          # The agents variant is built from the server's sources, so anything
+          # that forces the server forces it too; docker/agent-clis (the pinned
+          # CLI manifest, lockfile and entrypoint) forces ONLY the agents image.
+          agents="${server}"
+          has '^Dockerfile\.NestJS$' && server=true && agents=true
           has '^Dockerfile\.ReactRouter$' && developer=true
-          echo "forced: server=${server} developer=${developer}"
+          has '^docker/agent-clis/' && agents=true
+          echo "forced: server=${server} agents=${agents} developer=${developer}"
+          echo "agents=${agents}" >> "${GITHUB_OUTPUT}"
           echo "server=${server}" >> "${GITHUB_OUTPUT}"
           echo "developer=${developer}" >> "${GITHUB_OUTPUT}"
 
@@ -162,6 +176,7 @@ jobs:
         shell: bash
         env:
           BUILD_FLAGS: ${{ steps.affected.outputs.build-flags-json }}
+          FORCE_AGENTS: ${{ steps.forced.outputs.agents }}
           FORCE_DEVELOPER: ${{ steps.forced.outputs.developer }}
           FORCE_SERVER: ${{ steps.forced.outputs.server }}
         run: |
@@ -171,8 +186,10 @@ jobs:
             const flags = JSON.parse(process.env.BUILD_FLAGS);
             const server = flags["openthrottle-server"] || process.env.FORCE_SERVER === "true";
             const developer = flags["openthrottle-developer"] || process.env.FORCE_DEVELOPER === "true";
+            const agents = server || process.env.FORCE_AGENTS === "true";
             const include = [
               server && { dockerfile: "Dockerfile.NestJS", image: "openthrottle-server", kind: "app" },
+              agents && { dockerfile: "Dockerfile.NestJS", image: "openthrottle-server", kind: "app-agents" },
               developer && { dockerfile: "Dockerfile.ReactRouter", image: "openthrottle-developer", kind: "app" },
               { dockerfile: "Dockerfile.Migrations", image: "migrations", kind: "migrations" },
               { dockerfile: "Dockerfile.NestJS", image: "mcp", kind: "mcp" },
@@ -183,7 +200,7 @@ jobs:
           '
 
   build:
-    name: 'build (${{ matrix.image }})'
+    name: "build (${{ matrix.image }}${{ matrix.kind == 'app-agents' && ' agents' || '' }})"
     needs: plan
     # 💰 Still disabled — the most expensive workflow in the repo. It builds 4
     # images with NO remote build cache wired (local BuildKit only, so every run
@@ -268,6 +285,25 @@ jobs:
           registries-additional: ${{ env.GHCR_REGISTRY }}
           registry: ${{ env.ARTIFACT_REGISTRY_REGION }}-docker.pkg.dev/${{ env.GOOGLE_PROJECT_ID }}/openthrottle
           tag: sha-${{ github.sha }}
+
+      # The agent-capable server variant: the same Dockerfile.NestJS, `--target
+      # production-agents`, under a DISTINCT tag in the SAME repository so it can
+      # never overwrite the default image. Boot-checked (claude/codex/gemini/gh/git
+      # must run, then the server must serve /health) before it is pushed, and
+      # dual-pushed like every other image. Opt-in at deploy time: nothing pulls
+      # the -agents tag unless an operator points server_image at it.
+      - name: '🐳 Build (and push on main) ${{ matrix.image }} (agents)'
+        if: matrix.kind == 'app-agents'
+        uses: ./.github/actions/docker-build-push
+        with:
+          app: ${{ matrix.image }}
+          dockerfile-path: ${{ matrix.dockerfile }}
+          github-token: ${{ env.GITHUB_TOKEN }}
+          push: ${{ github.ref == 'refs/heads/main' }}
+          registries-additional: ${{ env.GHCR_REGISTRY }}
+          registry: ${{ env.ARTIFACT_REGISTRY_REGION }}-docker.pkg.dev/${{ env.GOOGLE_PROJECT_ID }}/openthrottle
+          tag: sha-${{ github.sha }}-agents
+          target: production-agents
 
       # The migrations image is a tiny non-Nx runner (node + pg + databases/migrations), built
       # directly from Dockerfile.Migrations — it has no applications/<app>/package.json, no
