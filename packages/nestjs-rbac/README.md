@@ -20,16 +20,17 @@ Roles and permissions are defined in the package and used by guards (see task â€
 
 ### Permissions
 
-| Permission       | Description                 |
-| ---------------- | --------------------------- |
-| `flags:read`     | Read feature flags.         |
-| `flags:write`    | Create/update/delete flags. |
-| `plans:read`     | Read plans.                 |
-| `plans:write`    | Create/update/delete plans. |
-| `settings:read`  | Read app settings.          |
-| `settings:write` | Change app settings.        |
-| `users:read`     | Read user list/details.     |
-| `users:write`    | Create/update/delete users. |
+| Permission       | Description                          |
+| ---------------- | ------------------------------------ |
+| `blog:write`     | Manage blog posts, authors and tags. |
+| `flags:read`     | Read feature flags.                  |
+| `flags:write`    | Create/update/delete flags.          |
+| `plans:read`     | Read plans.                          |
+| `plans:write`    | Create/update/delete plans.          |
+| `settings:read`  | Read app settings.                   |
+| `settings:write` | Change app settings.                 |
+| `users:read`     | Read user list/details.              |
+| `users:write`    | Create/update/delete users.          |
 
 ### Mapping (role â†’ permissions)
 

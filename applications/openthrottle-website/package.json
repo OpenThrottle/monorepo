@@ -8,8 +8,11 @@
     "url": "https://developer.openthrottle.ai"
   },
   "dependencies": {
+    "@graphql-typed-document-node/core": "catalog:",
     "@openthrottle/graphql-codegen": "workspace:^",
     "@openthrottle/react-router-docs": "workspace:^",
+    "@openthrottle/react-router-graphql": "workspace:^",
+    "@openthrottle/react-router-markdown": "workspace:^",
     "@openthrottle/react-router-shadcn": "workspace:^",
     "@openthrottle/react-router-ui": "workspace:^",
     "@openthrottle/react-router-ui-global": "workspace:^",
@@ -54,8 +57,8 @@
       "type:application"
     ],
     "targets": {
-      "____codegen-graphql____": {},
-      "____codegen-graphql-watch____": {},
+      "codegen-graphql": {},
+      "codegen-graphql-watch": {},
       "codegen-react-router": {},
       "codegen-react-router-watch": {},
       "lint": {},

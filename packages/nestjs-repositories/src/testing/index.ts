@@ -15,6 +15,9 @@ export {
 } from '../modules/agent-conversations/agent-conversations.factory.ts';
 export type { AgentTokenUsageFactoryData } from '../modules/agent-token-usage/agent-token-usage.factory.ts';
 export { agentTokenUsageFactory } from '../modules/agent-token-usage/agent-token-usage.factory.ts';
+export { blogAuthorsFactory } from '../modules/blog-authors/blog-authors.factory.ts';
+export { blogPostsFactory } from '../modules/blog-posts/blog-posts.factory.ts';
+export { blogTagsFactory } from '../modules/blog-tags/blog-tags.factory.ts';
 export { codeEmbeddingsFactory } from '../modules/code-embeddings/code-embeddings.factory.ts';
 export { codeIndexSnapshotsFactory } from '../modules/code-index-snapshots/code-index-snapshots.factory.ts';
 export type { DailyStatFactoryData } from '../modules/daily-stats/daily-stats.factory.ts';

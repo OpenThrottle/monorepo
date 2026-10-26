@@ -18,6 +18,7 @@ import {
   AssignRoleToServiceAccountInput,
   AssignRoleToUserInput,
   AttachWorkSessionSubjectInput,
+  BlogPostStatus,
   CancelPlanRunInput,
   CleanQueueInput,
   CloneRepositoryInput,
@@ -25,6 +26,7 @@ import {
   CommitsPerPrInput,
   ConnectMcpConnectorInput,
   CreateAgentConversationInput,
+  CreateBlogPostInput,
   CreateCustomPromptInput,
   CreateNoteInput,
   CreatePlanInput,
@@ -80,6 +82,7 @@ import {
   PressureLevel,
   PromoteTaskToPlanInput,
   PrsMergedPerPeriodInput,
+  PublishBlogPostInput,
   QueueControlInput,
   QueueDetailsInput,
   QueueJobLogLevel,
@@ -116,6 +119,7 @@ import {
   RolloutFlagVariationInput,
   SearchInput,
   SearchPlansInput,
+  SetBlogPostTagsInput,
   SetMcpConnectorEnabledInput,
   SetPlanStatusInput,
   SetScheduledAgentJobEnabledInputType,
@@ -132,6 +136,7 @@ import {
   TimelineSpanKind,
   UnverifiedWorkArtifactsInput,
   UpdateAgentConversationTitleInput,
+  UpdateBlogPostInput,
   UpdateCustomPromptInput,
   UpdateNoteInput,
   UpdatePlanInput,
@@ -145,6 +150,8 @@ import {
   UpdateUserInput,
   UpdateWorkspaceLocalRepositoryInput,
   UpdateWorkspaceProfileInput,
+  UpsertBlogAuthorInput,
+  UpsertBlogTagInput,
   UpsertTagActionRuleInput,
   WallClockInterpretation,
   WorkArtifactsByPlanInput,
@@ -172,6 +179,8 @@ export const isDefinedNonNullAny = (v: any): v is definedNonNullAny =>
 export const definedNonNullAnySchema = z
   .any()
   .refine((v) => isDefinedNonNullAny(v));
+
+export const BlogPostStatusSchema = z.nativeEnum(BlogPostStatus);
 
 export const CustomPromptTypeSchema = z.nativeEnum(CustomPromptType);
 
@@ -460,6 +469,22 @@ export function CreateAgentConversationInputSchema(): z.ZodObject<
     planId: z.string().nullish(),
     projectId: z.string().nullish(),
     title: z.string().nullish(),
+  });
+}
+
+export function CreateBlogPostInputSchema(): z.ZodObject<
+  Properties<CreateBlogPostInput>
+> {
+  return z.object({
+    authorSlug: z.string().nullish(),
+    bodyMarkdown: z.string().min(1),
+    coverImageAlt: z.string().nullish(),
+    coverImageUrl: z.string().nullish(),
+    excerpt: z.string().nullish(),
+    seoDescription: z.string().nullish(),
+    seoTitle: z.string().nullish(),
+    slug: z.string().min(1),
+    title: z.string().min(1),
   });
 }
 
@@ -1000,6 +1025,15 @@ export function PrsMergedPerPeriodInputSchema(): z.ZodObject<
   });
 }
 
+export function PublishBlogPostInputSchema(): z.ZodObject<
+  Properties<PublishBlogPostInput>
+> {
+  return z.object({
+    id: z.string().min(1),
+    publishedAt: definedNonNullAnySchema.nullish(),
+  });
+}
+
 export function QueueControlInputSchema(): z.ZodObject<
   Properties<QueueControlInput>
 > {
@@ -1329,6 +1363,15 @@ export function SearchPlansInputSchema(): z.ZodObject<
   });
 }
 
+export function SetBlogPostTagsInputSchema(): z.ZodObject<
+  Properties<SetBlogPostTagsInput>
+> {
+  return z.object({
+    postId: z.string().min(1),
+    tagSlugs: z.array(z.string().min(1)),
+  });
+}
+
 export function SetMcpConnectorEnabledInputSchema(): z.ZodObject<
   Properties<SetMcpConnectorEnabledInput>
 > {
@@ -1466,6 +1509,23 @@ export function UpdateAgentConversationTitleInputSchema(): z.ZodObject<
   return z.object({
     conversationId: z.string().min(1),
     title: z.string().min(1),
+  });
+}
+
+export function UpdateBlogPostInputSchema(): z.ZodObject<
+  Properties<UpdateBlogPostInput>
+> {
+  return z.object({
+    authorSlug: z.string().nullish(),
+    bodyMarkdown: z.string().nullish(),
+    coverImageAlt: z.string().nullish(),
+    coverImageUrl: z.string().nullish(),
+    excerpt: z.string().nullish(),
+    id: z.string().min(1),
+    seoDescription: z.string().nullish(),
+    seoTitle: z.string().nullish(),
+    slug: z.string().nullish(),
+    title: z.string().nullish(),
   });
 }
 
@@ -1645,6 +1705,27 @@ export function UpdateWorkspaceProfileInputSchema(): z.ZodObject<
     contactDisplayName: z.string().nullish(),
     contactEmail: z.string().nullish(),
     enabledEditors: z.array(WorkspaceEditorIdSchema).nullish(),
+  });
+}
+
+export function UpsertBlogAuthorInputSchema(): z.ZodObject<
+  Properties<UpsertBlogAuthorInput>
+> {
+  return z.object({
+    avatarUrl: z.string().nullish(),
+    bio: z.string().nullish(),
+    displayName: z.string().min(1),
+    slug: z.string().min(1),
+  });
+}
+
+export function UpsertBlogTagInputSchema(): z.ZodObject<
+  Properties<UpsertBlogTagInput>
+> {
+  return z.object({
+    description: z.string().nullish(),
+    name: z.string().min(1),
+    slug: z.string().min(1),
   });
 }
 

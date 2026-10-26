@@ -226,6 +226,7 @@
     "database:import-docs": "node --env-file .env --experimental-strip-types ./scripts/openthrottle-ingest-docs.ts",
     "database:migrate": "POSTGRES_HOST='localhost' tsx --env-file .env ./scripts/openthrottle-database-migrations.ts",
     "database:reset": "POSTGRES_HOST='localhost' tsx --env-file .env ./scripts/openthrottle-database-reset.ts",
+    "database:seed:blog": "POSTGRES_HOST='localhost' NODE_ENV=\"${NODE_ENV:-development}\" tsx --env-file .env ./scripts/openthrottle-database-seed-blog.ts",
     "database:start": "docker compose up -d redis postgres",
     "database:stop": "docker compose down --remove-orphans",
     "dev:native": "pnpm nx run openthrottle-server:dev",

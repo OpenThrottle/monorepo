@@ -1,0 +1,9 @@
+query BlogIndex($after: String, $first: Int! = 9) {
+  blogPosts(after: $after, first: $first) {
+    endCursor
+    hasNextPage
+    items {
+      ...BlogPostSummary
+    }
+  }
+}
