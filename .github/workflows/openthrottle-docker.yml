@@ -299,11 +299,11 @@ jobs:
       # openthrottle/mcp builds from the Dockerfile.NestJS `mcp` stage (--target mcp),
       # NOT via the app composite action: it is a workspace package with no
       # applications/<app>/package.json. Built directly with the shared base/builder
-      # ARGs (PNPM_VERSION derived like the composite), pushed only on main, matching
-      # the sha-<GITHUB_SHA> tag scheme. No bootstrap image: one-shot provisioning
-      # runs from the server image (build/src/bootstrap.js) via a compose command
-      # override. Remote Nx cache is not wired here (no gcs secret) — local BuildKit
-      # cache only; adding it is a follow-up optimization. Dual-pushed to Artifact
+      # ARGs, pushed only on main, matching the sha-<GITHUB_SHA> tag scheme. No
+      # bootstrap image: one-shot provisioning runs from the server image
+      # (build/src/bootstrap.js) via a compose command override. Remote Nx cache
+      # is not wired here (no gcs secret) — local BuildKit cache only; adding it
+      # is a follow-up optimization. Dual-pushed to Artifact
       # Registry + GHCR like the others: the Hetzner compose template runs mcp, so
       # this image must be pullable without the gcloud SDK.
       - name: '🐳 Build (and push on main) openthrottle/mcp'
@@ -313,7 +313,6 @@ jobs:
           DOCKERFILE: ${{ matrix.dockerfile }}
         run: |
           set -euo pipefail
-          PNPM_VERSION="$(node -p "(require('./package.json').packageManager||'').replace(/^pnpm@/,'').split('+')[0]")"
           IMAGE="${ARTIFACT_REGISTRY_REGION}-docker.pkg.dev/${GOOGLE_PROJECT_ID}/openthrottle/mcp:sha-${GITHUB_SHA}"
           GHCR_IMAGE="${GHCR_REGISTRY}/mcp:sha-${GITHUB_SHA}"
 
@@ -324,7 +323,6 @@ jobs:
             --build-arg APP_NAME=openthrottle-server \
             --build-arg APP_VERSION="sha-${GITHUB_SHA}" \
             --build-arg GITHUB_TOKEN="${GITHUB_TOKEN}" \
-            --build-arg PNPM_VERSION="${PNPM_VERSION}" \
             -t "${IMAGE}" .
 
           # Build once, tag for both registries (see the migrations step above).

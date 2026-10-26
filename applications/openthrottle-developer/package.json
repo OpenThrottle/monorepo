@@ -101,11 +101,10 @@
           "description": "Build openthrottle-developer image from root Dockerfile.ReactRouter (monorepo context). Set GITHUB_TOKEN in environment for private deps."
         },
         "options": {
-          "command": "docker build -f Dockerfile.ReactRouter --target production --build-arg APP_NAME=openthrottle-developer --build-arg APP_VERSION=$APP_VERSION --build-arg PNPM_VERSION=$PNPM_VERSION --build-arg GITHUB_TOKEN=$GITHUB_TOKEN -t openthrottle-developer:local .",
+          "command": "docker build -f Dockerfile.ReactRouter --target production --build-arg APP_NAME=openthrottle-developer --build-arg APP_VERSION=$APP_VERSION --build-arg GITHUB_TOKEN=$GITHUB_TOKEN -t openthrottle-developer:local .",
           "cwd": "{workspaceRoot}",
           "env": {
-            "APP_VERSION": "1.0.0",
-            "PNPM_VERSION": "12.13.0"
+            "APP_VERSION": "1.0.0"
           }
         }
       },

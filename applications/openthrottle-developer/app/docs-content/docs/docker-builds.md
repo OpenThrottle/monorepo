@@ -41,7 +41,7 @@ This document records the chosen **image build strategy** and **registry** for *
   - `pnpm install --frozen-lockfile` sees the full workspace.
   - `pnpm dlx nx@<version> run <APP_NAME>:build` can resolve and build dependencies (e.g. `@tools/workflows`, openthrottle packages).
 - **Stages:**
-  1. **base** — `node:22-bookworm-slim` (glibc, so native addons match the distroless runtime), pnpm pinned via `PNPM_VERSION`, non-root identity, build args (`APP_NAME`, `APP_VERSION`, `PNPM_VERSION`, `GITHUB_TOKEN`).
+  1. **base** — `node:22-bookworm-slim` (glibc, so native addons match the distroless runtime), pnpm activated by corepack from the root `package.json` `packageManager` pin, non-root identity, build args (`APP_NAME`, `APP_VERSION`, `GITHUB_TOKEN`).
   2. **builder** — `python3 make g++`, copy app `package.json` + `packages/` + `tools/`, `pnpm install --frozen-lockfile`.
   3. **build** — `NODE_ENV=production`, `COPY . .`, `pnpm install --frozen-lockfile`, `pnpm nx run ${APP_NAME}:build` (server also runs the package/tool builds), then `pnpm --filter "${APP_NAME}" --prod deploy /app/pruned --legacy`. Output is `/app/pruned` with the app, its `build/`, and a production `node_modules`.
   4. **production** — `gcr.io/distroless/nodejs24-debian12:nonroot`, `COPY --from=build /app/pruned/. /app/`. Distroless has no shell/curl: the server ships an in-image `HEALTHCHECK` using `/nodejs/bin/node` against `/health`; the entrypoint is Node and `CMD` is argv only.
@@ -81,7 +81,7 @@ pnpm nx run openthrottle-server:docker-build       # -> Dockerfile.NestJS,    -t
 pnpm nx run openthrottle-developer:docker-build    # -> Dockerfile.ReactRouter, -t openthrottle-developer:local
 ```
 
-Each target sets default env (`APP_VERSION`, `PNPM_VERSION=12.13.0`) and passes `--target production`. Set `GITHUB_TOKEN` in your environment for private deps (optional for a local build).
+Each target sets a default `APP_VERSION` and passes `--target production`. Set `GITHUB_TOKEN` in your environment for private deps (optional for a local build).
 
 - **Manual build from repo root** (server shown; developer is identical with `-f Dockerfile.ReactRouter` and `APP_NAME=openthrottle-developer`):
 
@@ -89,12 +89,11 @@ Each target sets default env (`APP_VERSION`, `PNPM_VERSION=12.13.0`) and passes 
   docker build -f Dockerfile.NestJS --target production \
     --build-arg APP_NAME=openthrottle-server \
     --build-arg APP_VERSION=1.3.0 \
-    --build-arg PNPM_VERSION=12.13.0 \
     --build-arg GITHUB_TOKEN=${GITHUB_TOKEN:-} \
     -t openthrottle-server:local .
   ```
 
-- **Build-args:** `APP_NAME`, `APP_VERSION`, `GITHUB_TOKEN`, **`PNPM_VERSION`** (no usable default — must be passed; use the root `packageManager` pin, currently `12.13.0`).
+- **Build-args:** `APP_NAME`, `APP_VERSION`, `GITHUB_TOKEN`. There is no pnpm build-arg: the base stage runs `corepack enable && corepack prepare --activate`, which reads the root `package.json` `packageManager` field (version + sha512), so bumping pnpm is a one-line change there.
 - **Docker Compose:** the repo-root `docker-compose.yml` builds the server with `dockerfile: Dockerfile.NestJS` and the developer with `dockerfile: Dockerfile.ReactRouter` (`context: ./`).
 
 ---
@@ -129,7 +128,7 @@ Both apps define a `start:docker` script used outside the distroless images (the
 
 ### 8.1. Verification
 
-1. **Server image (Nx target):** `pnpm nx run openthrottle-server:docker-build` — builds `openthrottle-server:local` from `Dockerfile.NestJS`. Pass `PNPM_VERSION` via the target (defaulted to `12.13.0`).
+1. **Server image (Nx target):** `pnpm nx run openthrottle-server:docker-build` — builds `openthrottle-server:local` from `Dockerfile.NestJS`.
 2. **Developer image (Nx target):** `pnpm nx run openthrottle-developer:docker-build` — builds `openthrottle-developer:local` from `Dockerfile.ReactRouter`.
 3. **Full stack:** from the repo root, `docker compose up --build` brings up postgres + redis + server + developer. Expect the server `/health` to return `200 {"api":"ok","database":"ok","redis":"ok","websocket":"ok"}` and the developer to serve `/`.
 
