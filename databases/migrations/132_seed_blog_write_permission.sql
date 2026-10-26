@@ -7,8 +7,8 @@
 -- no blog:read, because the public read queries are unauthenticated.
 -- Keeps the DB in sync with @openthrottle/nestjs-rbac PERMISSIONS (BLOG_WRITE = 'blog:write') and
 -- the admin-superset contract (databases/README.md, permissions): admin -> {blog:write}.
--- Mirrors 085_seed_rollout_flag_permissions.sql. Fully idempotent (ON CONFLICT DO NOTHING); the
--- compose runner re-applies every file.
+-- Mirrors 085_seed_rollout_flag_permissions.sql. Applied once via the schema_migrations ledger,
+-- and still fully idempotent (ON CONFLICT DO NOTHING) so a re-run is harmless.
 
 -- Seed the permission (matches nestjs-rbac PERMISSIONS)
 INSERT INTO
