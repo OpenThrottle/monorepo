@@ -28,16 +28,18 @@ import {
 } from '@openthrottle/nestjs-rbac';
 import {
   type BlogAuthor,
-  blogAuthorsFactory,
   BlogAuthorsService,
   type BlogPost,
-  blogPostsFactory,
   BlogPostsService,
   type BlogTag,
-  blogTagsFactory,
   BlogTagsService,
   RolesService,
 } from '@openthrottle/nestjs-repositories';
+import {
+  blogAuthorsFactory,
+  blogPostsFactory,
+  blogTagsFactory,
+} from '@openthrottle/nestjs-repositories/testing';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { GlobalClsAuthHook } from '../../auth/global-cls-auth-hook.service.ts';

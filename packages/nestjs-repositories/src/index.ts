@@ -56,7 +56,6 @@ export type {
 export { AgentTokenUsageService } from './modules/agent-token-usage/agent-token-usage.service.ts';
 export type { BlogAuthorData } from './modules/blog-authors/blog-author.entity.ts';
 export { BlogAuthor } from './modules/blog-authors/blog-author.entity.ts';
-export { blogAuthorsFactory } from './modules/blog-authors/blog-authors.factory.ts';
 export { BlogAuthorsModule } from './modules/blog-authors/blog-authors.module.ts';
 export type { BlogAuthorUpsertInput } from './modules/blog-authors/blog-authors.service.ts';
 export { BlogAuthorsService } from './modules/blog-authors/blog-authors.service.ts';
@@ -68,7 +67,6 @@ export {
 export type { BlogPostData } from './modules/blog-posts/blog-post.entity.ts';
 export { BlogPost } from './modules/blog-posts/blog-post.entity.ts';
 export { applyBlogPostVisibility } from './modules/blog-posts/blog-post-visibility.ts';
-export { blogPostsFactory } from './modules/blog-posts/blog-posts.factory.ts';
 export { BlogPostsModule } from './modules/blog-posts/blog-posts.module.ts';
 export type {
   BlogPostDraftInput,
@@ -96,7 +94,6 @@ export {
 } from './modules/blog-posts/blog-write-validation.ts';
 export type { BlogTagData } from './modules/blog-tags/blog-tag.entity.ts';
 export { BlogTag } from './modules/blog-tags/blog-tag.entity.ts';
-export { blogTagsFactory } from './modules/blog-tags/blog-tags.factory.ts';
 export { BlogTagsModule } from './modules/blog-tags/blog-tags.module.ts';
 export type { BlogTagUpsertInput } from './modules/blog-tags/blog-tags.service.ts';
 export { BlogTagsService } from './modules/blog-tags/blog-tags.service.ts';

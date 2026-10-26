@@ -2,14 +2,16 @@ import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import {
   type BlogAuthor,
-  blogAuthorsFactory,
   type BlogPost,
-  blogPostsFactory,
   BlogPostsService,
   type BlogTag,
-  blogTagsFactory,
   BlogTagsService,
 } from '@openthrottle/nestjs-repositories';
+import {
+  blogAuthorsFactory,
+  blogPostsFactory,
+  blogTagsFactory,
+} from '@openthrottle/nestjs-repositories/testing';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { BlogResolver } from './blog.resolver.ts';
