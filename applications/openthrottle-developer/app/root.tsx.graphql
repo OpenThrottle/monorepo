@@ -67,6 +67,10 @@ fragment RootMetrics on ServerMetricsObject {
   rssMb
 }
 
+query getMyPermissions {
+  myPermissions
+}
+
 query getMyUser {
   me {
     createdAt

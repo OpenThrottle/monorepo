@@ -10,34 +10,35 @@ Roles and permissions are defined in the package and used by guards (see task �
 
 ### Roles
 
-| Role             | Description                                |
-| ---------------- | ------------------------------------------ |
-| `admin`          | Full settings + users access.              |
-| `user`           | Read/write settings, read users.           |
-| `viewer`         | Read-only (settings and users).            |
-| `mcp`            | Read/write plans (MCP service account).    |
-| `workflow-ralph` | Read/write plans (Ralph workflow account). |
+| Role             | Description                                               |
+| ---------------- | --------------------------------------------------------- |
+| `admin`          | Full settings + users access.                             |
+| `user`           | Read/write settings, read users.                          |
+| `viewer`         | Read-only (settings and users).                           |
+| `mcp`            | Read/write plans, draft blog posts (MCP service account). |
+| `workflow-ralph` | Read/write plans (Ralph workflow account).                |
 
 ### Permissions
 
-| Permission       | Description                          |
-| ---------------- | ------------------------------------ |
-| `blog:write`     | Manage blog posts, authors and tags. |
-| `flags:read`     | Read feature flags.                  |
-| `flags:write`    | Create/update/delete flags.          |
-| `plans:read`     | Read plans.                          |
-| `plans:write`    | Create/update/delete plans.          |
-| `settings:read`  | Read app settings.                   |
-| `settings:write` | Change app settings.                 |
-| `users:read`     | Read user list/details.              |
-| `users:write`    | Create/update/delete users.          |
+| Permission       | Description                                                                     |
+| ---------------- | ------------------------------------------------------------------------------- |
+| `blog:draft`     | Create/edit DRAFT blog posts; read all blog posts, tags and authors.            |
+| `blog:write`     | Publish/unpublish/archive posts; edit non-draft posts; manage authors and tags. |
+| `flags:read`     | Read feature flags.                                                             |
+| `flags:write`    | Create/update/delete flags.                                                     |
+| `plans:read`     | Read plans.                                                                     |
+| `plans:write`    | Create/update/delete plans.                                                     |
+| `settings:read`  | Read app settings.                                                              |
+| `settings:write` | Change app settings.                                                            |
+| `users:read`     | Read user list/details.                                                         |
+| `users:write`    | Create/update/delete users.                                                     |
 
 ### Mapping (role → permissions)
 
 - **admin:** every defined permission (full superset — derived from `PERMISSIONS`, so new permissions are granted automatically)
 - **user:** `flags:read`, `settings:read`, `settings:write`, `users:read`
 - **viewer:** `flags:read`, `settings:read`, `users:read`
-- **mcp:** `plans:read`, `plans:write`
+- **mcp:** `blog:draft`, `plans:read`, `plans:write`
 - **workflow-ralph:** `plans:read`, `plans:write`
 
 Usage (for guards and app code):

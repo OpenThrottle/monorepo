@@ -397,6 +397,9 @@ export type ArchiveAgentConversationInput = {
   conversationId: Scalars['ID']['input'];
 };
 
+/** The archived post, or BlogPostNotFoundError. */
+export type ArchiveBlogPostResult = BlogPostAdminObject | BlogPostNotFoundError;
+
 export type AssignRoleToServiceAccountInput = {
   roleId: Scalars['ID']['input'];
   serviceAccountId: Scalars['ID']['input'];
@@ -418,12 +421,29 @@ export type AttachWorkSessionSubjectInput = {
   taskId?: InputMaybe<Scalars['ID']['input']>;
 };
 
+export type BlogAdminPostListResult = {
+  __typename?: 'BlogAdminPostListResult';
+  /** Opaque cursor of the last item; pass as `after` to fetch the next page. Null when the page is empty. */
+  endCursor?: Maybe<Scalars['String']['output']>;
+  hasNextPage: Scalars['Boolean']['output'];
+  items: Array<BlogPostAdminObject>;
+};
+
+/** The post in any state, or BlogPostNotFoundError. */
+export type BlogAdminPostResult = BlogPostAdminObject | BlogPostNotFoundError;
+
 export type BlogAuthorObject = {
   __typename?: 'BlogAuthorObject';
   avatarUrl?: Maybe<Scalars['String']['output']>;
   bio?: Maybe<Scalars['String']['output']>;
   displayName: Scalars['String']['output'];
   slug: Scalars['String']['output'];
+};
+
+export type BlogCoverAltRequiredError = {
+  __typename?: 'BlogCoverAltRequiredError';
+  /** Human-readable explanation. */
+  message: Scalars['String']['output'];
 };
 
 export type BlogPostAdminObject = {
@@ -435,11 +455,15 @@ export type BlogPostAdminObject = {
   createdAt: Scalars['DateTime']['output'];
   excerpt?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
+  /** Who made the most recent write: a user's name or a service account's name. Null for posts last written before this was recorded. */
+  lastEditedBy?: Maybe<Scalars['String']['output']>;
   /** When the post goes (or went) live. Null for drafts. A PUBLISHED post with a value in the future is scheduled and not yet publicly visible. */
   publishedAt?: Maybe<Scalars['DateTime']['output']>;
   seoDescription?: Maybe<Scalars['String']['output']>;
   seoTitle?: Maybe<Scalars['String']['output']>;
   slug: Scalars['String']['output'];
+  /** Derived lifecycle state (DRAFT, SCHEDULED, LIVE, ARCHIVED), computed when the response is built from status and publishedAt. */
+  state: BlogPostState;
   status: BlogPostStatus;
   tags: Array<BlogTagObject>;
   title: Scalars['String']['output'];
@@ -454,9 +478,11 @@ export type BlogPostListResult = {
   items: Array<BlogPostObject>;
 };
 
-/** The saved post, or a BlogSlugConflictError when the slug is already used by another post. */
-export type BlogPostMutationResult =
-  BlogPostAdminObject | BlogSlugConflictError;
+export type BlogPostNotFoundError = {
+  __typename?: 'BlogPostNotFoundError';
+  /** Human-readable explanation. */
+  message: Scalars['String']['output'];
+};
 
 export type BlogPostObject = {
   __typename?: 'BlogPostObject';
@@ -477,6 +503,29 @@ export type BlogPostObject = {
   updatedAt: Scalars['DateTime']['output'];
 };
 
+export type BlogPostPublishPermissionRequiredError = {
+  __typename?: 'BlogPostPublishPermissionRequiredError';
+  /** Human-readable explanation. */
+  message: Scalars['String']['output'];
+};
+
+export type BlogPostStaleWriteError = {
+  __typename?: 'BlogPostStaleWriteError';
+  /** The post's updatedAt now; the value to send as expectedUpdatedAt after reloading. */
+  currentUpdatedAt: Scalars['DateTime']['output'];
+  /** Human-readable explanation. */
+  message: Scalars['String']['output'];
+};
+
+/** Derived lifecycle state of a blog post as the authoring surface shows it. LIVE is the only publicly visible state; SCHEDULED is PUBLISHED with a future publishedAt. */
+export const BlogPostState = {
+  Archived: 'ARCHIVED',
+  Draft: 'DRAFT',
+  Live: 'LIVE',
+  Scheduled: 'SCHEDULED',
+} as const;
+
+export type BlogPostState = (typeof BlogPostState)[keyof typeof BlogPostState];
 /** Lifecycle of a blog post. Only PUBLISHED posts whose publishedAt has passed are publicly visible; a PUBLISHED post with a future publishedAt is scheduled. */
 export const BlogPostStatus = {
   Archived: 'ARCHIVED',
@@ -486,6 +535,24 @@ export const BlogPostStatus = {
 
 export type BlogPostStatus =
   (typeof BlogPostStatus)[keyof typeof BlogPostStatus];
+/** The kind of record a blog write referenced by slug that does not exist. */
+export const BlogReferenceEntity = {
+  Author: 'AUTHOR',
+  Tag: 'TAG',
+} as const;
+
+export type BlogReferenceEntity =
+  (typeof BlogReferenceEntity)[keyof typeof BlogReferenceEntity];
+export type BlogReferenceNotFoundError = {
+  __typename?: 'BlogReferenceNotFoundError';
+  /** Which kind of record was not found. */
+  entity: BlogReferenceEntity;
+  /** The slug that was not found. */
+  key: Scalars['String']['output'];
+  /** Human-readable explanation. */
+  message: Scalars['String']['output'];
+};
+
 export type BlogSlugConflictError = {
   __typename?: 'BlogSlugConflictError';
   /** Human-readable explanation. */
@@ -716,6 +783,13 @@ export type CreateBlogPostInput = {
   slug: Scalars['String']['input'];
   title: Scalars['String']['input'];
 };
+
+/** The new DRAFT post, or why it was not created: the slug is taken, a cover image has no alt text, or the author slug is unknown. */
+export type CreateBlogPostResult =
+  | BlogCoverAltRequiredError
+  | BlogPostAdminObject
+  | BlogReferenceNotFoundError
+  | BlogSlugConflictError;
 
 /** Input for creating a new custom prompt */
 export type CreateCustomPromptInput = {
@@ -1735,8 +1809,8 @@ export type Mutation = {
   applyWorkspaceEditorConfiguration: ApplyWorkspaceEditorConfigurationResultObject;
   /** Archive an owned agent conversation (no hard delete in v1). */
   archiveAgentConversation: AgentConversationObject;
-  /** Archive a blog post. It stops being publicly visible; publishedAt is kept. */
-  archiveBlogPost: BlogPostAdminObject;
+  /** Archive a blog post. It stops being publicly visible; publishedAt is kept. Returns BlogPostNotFoundError for an unknown post. */
+  archiveBlogPost: ArchiveBlogPostResult;
   /** Assign a role to a service account (admin, human only). */
   assignRoleToServiceAccount: Scalars['Boolean']['output'];
   /** Assign a role to a user */
@@ -1756,8 +1830,8 @@ export type Mutation = {
   connectMcpConnector: McpConnectorConnectionResultObject;
   /** Create an agent conversation for the authenticated human user. */
   createAgentConversation: AgentConversationObject;
-  /** Create a blog post as a DRAFT. Returns BlogSlugConflictError when the slug is taken. */
-  createBlogPost: BlogPostMutationResult;
+  /** Create a blog post as a DRAFT. Returns BlogSlugConflictError when the slug is taken, BlogCoverAltRequiredError when a cover image has no alt text, and BlogReferenceNotFoundError for an unknown authorSlug. */
+  createBlogPost: CreateBlogPostResult;
   /** Create a new custom prompt */
   createCustomPrompt: CustomPromptObject;
   /** Create a note */
@@ -1865,8 +1939,8 @@ export type Mutation = {
   pickFolderNative: PickFolderNativePayloadObject;
   /** Promote a task into a new, first-class plan. Validates the task is promotable (exists, not a lifecycle hook, not already promoted) then enqueues an async task-promotion job (enqueue-after-validate, idempotency key doubles as the BullMQ job id). The job creates the plan, carries the task's tags, seeds an initial task, closes out the source task (→ SKIPPED + `promoted` tag), and records provenance. Returns the accepted job id; the new plan surfaces via the task-status subscription once the job completes. */
   promoteTaskToPlan: PromoteTaskToPlanResultObject;
-  /** Publish a blog post: sets status PUBLISHED and publishedAt. Without publishedAt the post goes live now; a future publishedAt schedules it. */
-  publishBlogPost: BlogPostAdminObject;
+  /** Publish a blog post: sets status PUBLISHED and publishedAt. Without publishedAt the post goes live now; a future publishedAt schedules it. Returns BlogPostNotFoundError for an unknown post. */
+  publishBlogPost: PublishBlogPostResult;
   /** Bump the liveness heartbeat on a detached-CLI run row (from registerCliPlanRun). The CLI calls this on a ~15s timer so a hard crash (SIGKILL/power-loss) leaves a stale heartbeat the reader/sweeper can detect. Keyed on the run id. Returns null when the row no longer exists. */
   recordPlanRunHeartbeat?: Maybe<PlanRunObject>;
   /** Record one harness-captured skill invocation. Args must already be privacy-processed by the client; the server stores them as-sent. The event is attributed to the human user the authenticated principal acts as, resolved server-side — a userId is never accepted from the client, and stays null when the principal resolves to no one. */
@@ -1928,8 +2002,8 @@ export type Mutation = {
   setAgentModelFavorite: SetAgentModelFavoriteResult;
   /** Bulk enable or disable EVERY model of an agent CLI backend for the current user (the select-all / deselect-all affordance). enabled=true clears all per-model disables for the backend; enabled=false records each supplied model id as disabled. An agent-level OFF still hard-overrides all its models. Gated by SETTINGS_WRITE; rejects unknown backends. */
   setAgentModelsEnabled: SetAgentModelsEnabledResult;
-  /** Replace the full set of tags on a blog post by tag slug. */
-  setBlogPostTags: BlogPostAdminObject;
+  /** Replace the full set of tags on a blog post by tag slug. A caller holding only blog:draft may tag DRAFT posts; for any other post it gets BlogPostPublishPermissionRequiredError. Also returns BlogPostNotFoundError and BlogReferenceNotFoundError (unknown tag slug). */
+  setBlogPostTags: SetBlogPostTagsResult;
   /** Enable or disable the authenticated user's connection for a connector. */
   setMcpConnectorEnabled?: Maybe<McpConnectorConnectionResultObject>;
   /** Set a plan's status (e.g. COMPLETED). Convenience mutation for Mark Complete; equivalent to updatePlan with { id, status }. */
@@ -1956,14 +2030,14 @@ export type Mutation = {
   triggerDevJsonlLogSample: Scalars['Boolean']['output'];
   /** Trigger a test websocket notification (system.alert). Returns true when the event was emitted. Use from the web app to verify the notification flow end-to-end. */
   triggerWebsocketNotification: Scalars['Boolean']['output'];
-  /** Return a blog post to DRAFT and clear its publishedAt. It stops being publicly visible immediately. */
-  unpublishBlogPost: BlogPostAdminObject;
+  /** Return a blog post to DRAFT and clear its publishedAt. It stops being publicly visible immediately. Returns BlogPostNotFoundError for an unknown post. */
+  unpublishBlogPost: UnpublishBlogPostResult;
   /** Update an allowlisted agent CLI on the server host by driver id. Gated by SETTINGS_WRITE and the default-off OT_AGENT_CLI_INSTALL_ENABLED flag; returns a runId to stream via agentSetupChunkAdded. */
   updateAgentCli: StartAgentSetupResult;
   /** Update the title on an owned agent conversation. */
   updateAgentConversationTitle: AgentConversationObject;
-  /** Partially update a blog post. Returns BlogSlugConflictError when re-slugging onto a slug that is taken. */
-  updateBlogPost: BlogPostMutationResult;
+  /** Partially update a blog post. A caller holding only blog:draft may edit DRAFT posts; for any other post it gets BlogPostPublishPermissionRequiredError. Also returns BlogPostNotFoundError, BlogSlugConflictError, BlogCoverAltRequiredError, BlogReferenceNotFoundError (unknown authorSlug) and, when expectedUpdatedAt no longer matches, BlogPostStaleWriteError. */
+  updateBlogPost: UpdateBlogPostResult;
   /** Update an existing custom prompt */
   updateCustomPrompt?: Maybe<CustomPromptObject>;
   /** Update a note */
@@ -3084,6 +3158,9 @@ export type PublishBlogPostInput = {
   publishedAt?: InputMaybe<Scalars['DateTime']['input']>;
 };
 
+/** The published (or scheduled) post, or BlogPostNotFoundError. */
+export type PublishBlogPostResult = BlogPostAdminObject | BlogPostNotFoundError;
+
 export type PullListItemObject = {
   __typename?: 'PullListItemObject';
   author: Scalars['String']['output'];
@@ -3108,6 +3185,14 @@ export type Query = {
   activityByDateRange: ActivityByDateResultObject;
   /** Whether server-side agent-CLI install/update is enabled (env flag) and whether the current user may run it (SETTINGS_WRITE). Drives the /settings/agents control gating. */
   agentCliSetupConfig: AgentCliSetupConfigObject;
+  /** Every blog author, ordered by display name. */
+  blogAdminAuthors: Array<BlogAuthorObject>;
+  /** One blog post in any state, by id or by slug (exactly one of the two is required, otherwise the query is rejected). BlogPostNotFoundError when no such post exists. */
+  blogAdminPost: BlogAdminPostResult;
+  /** Every blog post in any state, most recently edited first, with cursor pagination. Optionally filtered to one or more derived states and to a case-insensitive title / slug search. */
+  blogAdminPosts: BlogAdminPostListResult;
+  /** Every blog tag (including tags no live post carries yet), ordered by name. */
+  blogAdminTags: Array<BlogTagObject>;
   /** A publicly visible blog post by slug. Null for an unknown slug and for any post that is not public (draft, archived, or scheduled in the future). */
   blogPost?: Maybe<BlogPostObject>;
   /** Publicly visible blog posts, newest first, with cursor pagination. Optionally filtered to one tag. */
@@ -3358,6 +3443,18 @@ export type QueryActivityByDateArgs = {
 
 export type QueryActivityByDateRangeArgs = {
   input: ActivityByDateRangeInput;
+};
+
+export type QueryBlogAdminPostArgs = {
+  id?: InputMaybe<Scalars['ID']['input']>;
+  slug?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type QueryBlogAdminPostsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  first?: Scalars['Int']['input'];
+  search?: InputMaybe<Scalars['String']['input']>;
+  state?: InputMaybe<Array<BlogPostState>>;
 };
 
 export type QueryBlogPostArgs = {
@@ -4666,6 +4763,13 @@ export type SetBlogPostTagsInput = {
   tagSlugs: Array<Scalars['String']['input']>;
 };
 
+/** The post with its new tag set, or why nothing was written: the post does not exist, a tag slug is unknown, or the post is no longer a DRAFT and the caller lacks blog:write. */
+export type SetBlogPostTagsResult =
+  | BlogPostAdminObject
+  | BlogPostNotFoundError
+  | BlogPostPublishPermissionRequiredError
+  | BlogReferenceNotFoundError;
+
 export type SetMcpConnectorEnabledInput = {
   connectorKey: Scalars['ID']['input'];
   enabled: Scalars['Boolean']['input'];
@@ -5478,6 +5582,10 @@ export type TranscriptionStreamChunkObject = {
   transcript: Scalars['String']['output'];
 };
 
+/** The post returned to DRAFT, or BlogPostNotFoundError. */
+export type UnpublishBlogPostResult =
+  BlogPostAdminObject | BlogPostNotFoundError;
+
 export type UnverifiedWorkArtifactsInput = {
   /** Max rows (verifier feed); clamped server-side */
   limit?: InputMaybe<Scalars['Int']['input']>;
@@ -5499,6 +5607,8 @@ export type UpdateBlogPostInput = {
   coverImageAlt?: InputMaybe<Scalars['String']['input']>;
   coverImageUrl?: InputMaybe<Scalars['String']['input']>;
   excerpt?: InputMaybe<Scalars['String']['input']>;
+  /** The post's updatedAt as last read. When set and the post has changed since, nothing is written and BlogPostStaleWriteError is returned. Omit to skip the check. */
+  expectedUpdatedAt?: InputMaybe<Scalars['DateTime']['input']>;
   id: Scalars['ID']['input'];
   seoDescription?: InputMaybe<Scalars['String']['input']>;
   seoTitle?: InputMaybe<Scalars['String']['input']>;
@@ -5507,6 +5617,16 @@ export type UpdateBlogPostInput = {
   /** Must not be null. */
   title?: InputMaybe<Scalars['String']['input']>;
 };
+
+/** The updated post, or why nothing was written: the post or author does not exist, the slug is taken, a cover image would have no alt text, the post changed since expectedUpdatedAt, or the post is no longer a DRAFT and the caller lacks blog:write. */
+export type UpdateBlogPostResult =
+  | BlogCoverAltRequiredError
+  | BlogPostAdminObject
+  | BlogPostNotFoundError
+  | BlogPostPublishPermissionRequiredError
+  | BlogPostStaleWriteError
+  | BlogReferenceNotFoundError
+  | BlogSlugConflictError;
 
 /** Input for updating an existing custom prompt */
 export type UpdateCustomPromptInput = {

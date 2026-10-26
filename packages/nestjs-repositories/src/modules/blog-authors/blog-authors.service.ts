@@ -40,6 +40,16 @@ export class BlogAuthorsService {
   }
 
   /**
+   * @description Every author (admin read), ordered by display name.
+   * @public
+   */
+  async findAllAuthors(): Promise<BlogAuthor[]> {
+    return this.blogAuthorRepository.find({
+      order: { displayName: 'ASC', id: 'ASC' },
+    });
+  }
+
+  /**
    * @description Creates the author with `slug`, or replaces its fields when it exists. A
    * single `INSERT ... ON CONFLICT (slug) DO UPDATE`, so a concurrent upsert of the same slug
    * cannot surface a unique violation — a slug collision is the update path, not an error.

@@ -25,6 +25,7 @@ describe('BlogTagsService', () => {
     orderBy: vi.fn().mockReturnThis(),
   };
 
+  const find = vi.fn();
   const upsert = vi.fn();
   const findOneByOrFail = vi.fn();
   let service: BlogTagsService;
@@ -41,6 +42,7 @@ describe('BlogTagsService', () => {
           provide: getRepositoryToken(BlogTag),
           useValue: createMock<GetRepository>({
             createQueryBuilder: vi.fn().mockReturnValue(queryBuilder),
+            find,
             findOneByOrFail,
             upsert,
           }),
@@ -54,6 +56,16 @@ describe('BlogTagsService', () => {
   describe('getRepository', () => {
     it('returns the blog tag repository', () => {
       expect(service.getRepository().createQueryBuilder).toBeDefined();
+    });
+  });
+
+  describe('findAllTags', () => {
+    it('returns every tag (admin read, no visibility rule) ordered by name, then id', async () => {
+      find.mockResolvedValue(tags);
+
+      expect(await service.findAllTags()).toBe(tags);
+      expect(find).toHaveBeenCalledWith({ order: { id: 'ASC', name: 'ASC' } });
+      expect(queryBuilder.andWhere).not.toHaveBeenCalled();
     });
   });
 

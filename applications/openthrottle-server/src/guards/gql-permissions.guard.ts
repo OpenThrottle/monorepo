@@ -11,13 +11,14 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import {
-  AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
   getAuthPrincipalFromRequest,
   getRequestFromExecutionContext,
 } from '@openthrottle/nestjs-auth';
 import type { Permission } from '@openthrottle/nestjs-rbac';
 import { PERMISSIONS_KEY } from '@openthrottle/nestjs-rbac';
 import { RolesService } from '@openthrottle/nestjs-repositories';
+
+import { getPermissionsForPrincipal } from './principal-access.ts';
 
 @Injectable()
 export class GqlPermissionsGuard {
@@ -43,10 +44,10 @@ export class GqlPermissionsGuard {
       throw new ForbiddenException('Authentication required');
     }
 
-    const principalPermissions =
-      principal.kind === AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT
-        ? await this.rolesService.getPermissionsForServiceAccount(principal.sub)
-        : await this.rolesService.getPermissionsForUser(principal.sub);
+    const principalPermissions = await getPermissionsForPrincipal(
+      this.rolesService,
+      principal,
+    );
 
     const set = new Set(principalPermissions);
 

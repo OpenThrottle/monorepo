@@ -22,6 +22,7 @@ export const blogPostsFactory = Factory.define<BlogPostData>(
     createdAt: faker.date.past(),
     excerpt: faker.lorem.sentence(),
     id: faker.string.uuid(),
+    lastEditedBy: null,
     publishedAt: faker.date.past(),
     seoDescription: faker.lorem.sentence(),
     seoTitle: faker.lorem.words(4),

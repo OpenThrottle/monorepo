@@ -64,6 +64,7 @@ const buildQueueMatches = (loaderData: QueueLoaderData): QueueMatches => {
   const rootData = {
     canonical: 'http://localhost/',
     env: getPublicEnv(),
+    permissions: [],
     rootLoaderDiagnostics: {},
     rootLoaderFailure: null,
     serverHealth: {
