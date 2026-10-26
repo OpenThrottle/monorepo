@@ -33,11 +33,12 @@ runs:
       with:
         node-version-file: '.nvmrc'
 
-    # Parity with root package.json "packageManager"; avoids npm i -g pnpm.
+    # Bare `prepare` activates the root package.json "packageManager" version
+    # (sha512-verified); `prepare pnpm` would take npm's `latest` tag instead.
     - name: '📦 Enable PNPM (Corepack)'
       run: |
         corepack enable
-        corepack prepare pnpm --activate
+        corepack prepare --activate
       shell: bash
 
     # Cache the pnpm content-addressable store (NOT node_modules). pnpm's isolated
@@ -53,7 +54,7 @@ runs:
         cache-dependency-path: 'pnpm-lock.yaml'
         node-version-file: '.nvmrc'
 
-    # pnpm 11 no longer expands ${GITHUB_TOKEN} from the committed .npmrc, so
+    # pnpm ≥11 no longer expands ${GITHUB_TOKEN} from the committed .npmrc, so
     # write the GitHub Packages credential to the trusted user-level config first.
     - name: '🔐 Authenticate GitHub Packages'
       run: pnpm config set "//npm.pkg.github.com/:_authToken" "${GITHUB_TOKEN}"

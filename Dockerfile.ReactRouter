@@ -37,7 +37,6 @@ ARG APP_ENV="production"
 ARG APP_NAME="__REQUIRED_ARG__"
 ARG APP_VERSION="__REQUIRED_ARG__"
 ARG GITHUB_TOKEN="__REQUIRED_ARG__"
-ARG PNPM_VERSION="__REQUIRED_ARG__"
 
 ENV APP_ENV="${APP_ENV}"
 ENV APP_NAME="${APP_NAME}"
@@ -53,9 +52,10 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig*.json ./
 # scripts/ does not bust this layer's cache.
 COPY scripts/check-node-engine.mjs ./scripts/check-node-engine.mjs
 
-# Enable pnpm via corepack
-RUN corepack enable
-RUN corepack prepare pnpm --activate
+# Enable pnpm via corepack. A bare `prepare` reads the root package.json
+# `packageManager` field (copied above), so the version + sha512 there is the
+# single pin — `prepare pnpm` would activate npm's `latest` tag instead.
+RUN corepack enable && corepack prepare --activate
 
 # Non-root identity for intermediate stages (final image uses distroless `nonroot`).
 RUN groupadd --system --gid 1001 appuser \
@@ -80,7 +80,7 @@ COPY ./applications/${APP_NAME}/package.json ./applications/${APP_NAME}/package.
 COPY ./packages ./packages
 COPY ./tools ./tools
 
-# pnpm 11 won't expand ${GITHUB_TOKEN} from the committed .npmrc; write the
+# pnpm ≥11 won't expand ${GITHUB_TOKEN} from the committed .npmrc; write the
 # GitHub Packages credential to the trusted user-level config. Confined to the
 # build stages (builder and the development/build stages that derive from it) —
 # the distroless production stage only copies the pruned tree, never this .npmrc.

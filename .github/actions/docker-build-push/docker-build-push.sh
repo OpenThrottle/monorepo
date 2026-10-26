@@ -50,14 +50,9 @@ while IFS= read -r extra_registry; do
 done <<< "${INPUT_REGISTRIES_ADDITIONAL:-}"
 
 # The canonical root Dockerfiles (Dockerfile.NestJS, Dockerfile.ReactRouter) are
-# parameterized: APP_NAME selects which app to build, PNPM_VERSION pins the pnpm used in
-# every stage, and the build stage runs `pnpm nx`. Derive PNPM_VERSION from
-# the root package.json `packageManager` field so CI and local builds stay in lockstep.
-PNPM_VERSION="$(node -p "(require('./package.json').packageManager || '').replace(/^pnpm@/, '').split('+')[0]")"
-if [[ -z "${PNPM_VERSION}" ]]; then
-  echo "::error::Could not derive PNPM_VERSION from root package.json packageManager field"
-  exit 1
-fi
+# parameterized: APP_NAME selects which app to build, and the build stage runs
+# `pnpm nx`. pnpm itself is pinned by the root package.json `packageManager`
+# field, which corepack reads inside the image — no build-arg needed.
 
 docker build \
   -f "${DOCKERFILE}" \
@@ -65,7 +60,6 @@ docker build \
   --build-arg APP_NAME="${INPUT_APP}" \
   --build-arg APP_VERSION="${APP_VERSION}" \
   --build-arg GITHUB_TOKEN="${INPUT_GITHUB_TOKEN}" \
-  --build-arg PNPM_VERSION="${PNPM_VERSION}" \
   -t "${IMAGE}" \
   .
 

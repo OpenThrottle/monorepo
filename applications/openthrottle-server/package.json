@@ -51,6 +51,7 @@
     "@openthrottle/openthrottle-drivers": "workspace:^",
     "@openthrottle/openthrottle-notifications": "workspace:^",
     "@openthrottle/openthrottle-skills": "workspace:^",
+    "@tools/generators": "workspace:^",
     "@tools/workflows": "workspace:^",
     "bullmq": "catalog:",
     "dataloader": "catalog:",
@@ -62,6 +63,7 @@
     "pg": "catalog:",
     "reflect-metadata": "catalog:",
     "rxjs": "catalog:",
+    "tslib": "catalog:",
     "typeorm": "catalog:",
     "zod": "catalog:"
   },
@@ -173,11 +175,10 @@
           "description": "Build openthrottle-server image from root Dockerfile.NestJS (monorepo context). Set GITHUB_TOKEN in environment for private deps."
         },
         "options": {
-          "command": "docker build -f Dockerfile.NestJS --target production --build-arg APP_NAME=openthrottle-server --build-arg APP_VERSION=$APP_VERSION --build-arg PNPM_VERSION=$PNPM_VERSION --build-arg GITHUB_TOKEN=$GITHUB_TOKEN -t openthrottle-server:local .",
+          "command": "docker build -f Dockerfile.NestJS --target production --build-arg APP_NAME=openthrottle-server --build-arg APP_VERSION=$APP_VERSION --build-arg GITHUB_TOKEN=$GITHUB_TOKEN -t openthrottle-server:local .",
           "cwd": "{workspaceRoot}",
           "env": {
-            "APP_VERSION": "1.3.0",
-            "PNPM_VERSION": "11.6.0"
+            "APP_VERSION": "1.3.0"
           }
         }
       },

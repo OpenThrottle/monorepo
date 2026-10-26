@@ -2,7 +2,7 @@
 #     https://pnpm.io/docker
 #
 
-# 🏗️ pnpm 11 requires an explicit build-script decision per dependency
+# 🏗️ pnpm ≥11 requires an explicit build-script decision per dependency
 # (https://pnpm.io/settings#allowbuilds). All are `false` to preserve the
 # pnpm 10 behavior, under which these were "Ignored build scripts" and the
 # workspace worked off prebuilt binaries. Flip one to `true` only if a build
@@ -397,9 +397,20 @@ peerDependencyRules:
     'eslint-plugin-react>eslint': '10'
 
 # 🔧 Dependency overrides | https://pnpm.io/settings#overrides
-# Migrated out of package.json's `pnpm` field, which pnpm 11 no longer reads.
+# Migrated out of package.json's `pnpm` field, which pnpm ≥11 no longer reads.
 # `$name` reuses the version declared for that dependency in the root manifest.
 overrides:
+  # @bull-board/nestjs@7 and @rekog/mcp-nest@1.9 cap these Nest peers at ^11, and
+  # their importers don't declare them, so pnpm auto-installs the peer. pnpm 11
+  # reused the workspace's Nest 12; pnpm 12 installs a separate in-range Nest 11
+  # copy instead — a second @nestjs/core at runtime. Pin the peers to the
+  # workspace's Nest 12. (peerDependencyRules.allowedVersions and
+  # packageExtensions only change the warning, not what gets installed.) Drop
+  # each line once its package widens its peer range to Nest 12.
+  '@bull-board/nestjs>@nestjs/bull-shared': '^12.0.0'
+  '@bull-board/nestjs>@nestjs/core': 'catalog:'
+  '@rekog/mcp-nest>@nestjs/jwt': 'catalog:'
+  '@rekog/mcp-nest>@nestjs/passport': 'catalog:'
   '@radix-ui/react-slot': 'catalog:'
   '@tanstack/query-sync-storage-persister': 'catalog:'
   '@tanstack/react-query': 'catalog:'
