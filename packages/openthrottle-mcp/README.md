@@ -6,7 +6,7 @@ For schema, embeddings, and local Postgres setup, see [databases/README.md](../.
 
 **Registering this server:** the canonical guide is [docs/openthrottle/mcp-registration.md](../../docs/openthrottle/mcp-registration.md) — tiers, config locations, the `.cursor/mcp.json` template, and editor parity. The package-specific launcher and env details below stay here.
 
-**Cursor launcher:** [`scripts/run-openthrottle-mcp.sh`](../../scripts/run-openthrottle-mcp.sh) does not require a root **`OPENAI_API_KEY`**; configure **`OLLAMA_BASE_URL`** or **`OPENAI_API_KEY`** on **openthrottle-server** for semantic search. See [docs/verification-environment.md](docs/verification-environment.md) and [Ollama.md § Embeddings for OpenThrottle](../../docs/monorepo/Ollama.md#embeddings-for-openthrottle-ollama-or-openai).
+**Cursor launcher:** [`scripts/run-openthrottle-mcp.sh`](../../scripts/run-openthrottle-mcp.sh) does not require a root **`OPENAI_API_KEY`**; configure **`OLLAMA_BASE_URL`** or **`OPENAI_API_KEY`** on **openthrottle-server** for semantic search. See [docs/verification-environment.md](docs/verification-environment.md) and [Ollama.md § Embeddings for OpenThrottle](../../docs/monorepo/Ollama.md#embeddings-for-openthrottle-ollama-or-openai). It picks its own Node rather than the client's PATH; for "Connection closed" on the desktop app or the `OT_MCP_NODE` override, see [docs/NODE_VERSION.md](docs/NODE_VERSION.md).
 
 ## Authentication
 
