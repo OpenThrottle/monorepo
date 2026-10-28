@@ -1,21 +1,13 @@
 import {
   useAgenticChatTurn as useSharedAgenticChatTurn,
-  type UseAgenticChatTurnResult,
+  type UseAgenticChatTurnResult as SharedAgenticChatTurnResult,
 } from '@openthrottle/react-router-chat';
 
 import { ConversationStreamChunkAddedDocument } from '~/__generated__/graphql';
 import { getGraphqlWsClient } from '~/services/graphql-ws-client';
 
-/**
- * The route-independent action constants are single-sourced in
- * `@openthrottle/react-router-chat`; re-exported so existing importers (e.g.
- * `useConversationList`) keep their import path.
- */
-export {
-  AGENT_CONVERSATIONS_ACTION,
-  CONVERSATION_STREAM_ACTION,
-} from '@openthrottle/react-router-chat';
-export type { UseAgenticChatTurnResult };
+/** The shared hook's result, re-typed here so existing importers keep this path. */
+export type UseAgenticChatTurnResult = SharedAgenticChatTurnResult;
 
 /**
  * @description Thin developer-app wrapper over the shared
@@ -25,8 +17,21 @@ export type { UseAgenticChatTurnResult };
  * so the home route, header chat, and the admin app cannot drift.
  */
 export function useAgenticChatTurn(): UseAgenticChatTurnResult {
-  return useSharedAgenticChatTurn({
+  // Hooks
+  const turn = useSharedAgenticChatTurn({
     streamClient: getGraphqlWsClient(),
     streamDocument: ConversationStreamChunkAddedDocument,
   });
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
+  return turn;
 }

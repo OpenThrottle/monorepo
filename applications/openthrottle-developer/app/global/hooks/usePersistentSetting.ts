@@ -5,15 +5,14 @@ import {
   subscribePersistentSetting,
   writePersistentSetting,
 } from '~/global/config/persistent-setting-storage';
+import type { PersistentSettingSetter } from '~/global/types';
+import { acceptAny } from '~/global/utils/accept-any';
+import { isUpdaterFn } from '~/global/utils/is-updater-fn';
 
-/** Accepts any parsed value as `T` — the permissive default validator. */
-const acceptAny = <T>(_value: unknown): _value is T => true;
-
-/** Narrows a setter argument to the functional-updater form. */
-const isUpdaterFn = <T>(value: T | ((prev: T) => T)): value is (prev: T) => T =>
-  typeof value === 'function';
-
-export type PersistentSettingSetter<T> = (next: T | ((prev: T) => T)) => void;
+export type UsePersistentSettingResult<T> = readonly [
+  T,
+  PersistentSettingSetter<T>,
+];
 
 /**
  * @public
@@ -31,7 +30,8 @@ export const usePersistentSetting = <T>(
   name: string,
   defaultValue: T,
   isValid: (value: unknown) => value is T = acceptAny,
-): readonly [T, PersistentSettingSetter<T>] => {
+): UsePersistentSettingResult<T> => {
+  // Hooks
   const subscribe = React.useCallback(
     (onChange: () => void) => subscribePersistentSetting(name, onChange),
     [name],
@@ -53,6 +53,9 @@ export const usePersistentSetting = <T>(
     getServerSnapshot,
   );
 
+  // Setup
+
+  // Handlers
   const setValue = React.useCallback<PersistentSettingSetter<T>>(
     (next) => {
       const resolved = isUpdaterFn(next)
@@ -62,6 +65,12 @@ export const usePersistentSetting = <T>(
     },
     [name, isValid, defaultValue],
   );
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return [value, setValue];
 };

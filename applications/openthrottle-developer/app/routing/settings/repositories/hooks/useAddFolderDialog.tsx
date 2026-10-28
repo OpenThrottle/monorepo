@@ -1,30 +1,14 @@
 import * as React from 'react';
 import { useFetcher, useNavigation, useSubmit } from 'react-router';
 
-/** A single directory entry returned by the enriched `browseDirectory`. */
-export interface WorkspaceBrowseEntry {
-  alreadyRegistered: boolean;
-  isGitRepo: boolean;
-  name: string;
-  path: string;
-}
+import type {
+  WorkspaceBreadcrumbSegment,
+  WorkspaceBrowseEntry,
+  WorkspaceBrowseListing,
+} from '~/routing/settings/repositories/data/types';
+import { buildBreadcrumbs } from '~/routing/settings/repositories/utils/build-breadcrumbs';
 
-/** The rich listing payload the `browseDirectory` action returns. */
-export interface WorkspaceBrowseListing {
-  entries: WorkspaceBrowseEntry[];
-  isGitRepo: boolean;
-  parentPath: string | null;
-  path: string | null;
-}
-
-/** One clickable breadcrumb segment for the current path. */
-export interface WorkspaceBreadcrumbSegment {
-  label: string;
-  navigable: boolean;
-  path: string;
-}
-
-export interface AddFolderDialogOptions {
+export interface UseAddFolderDialogOptions {
   /**
    * The latest add-folder action error, threaded from the route. Used to keep
    * the dialog open on a failed add while auto-closing it on success.
@@ -62,28 +46,6 @@ export interface UseAddFolderDialogResult {
   showManualPath: boolean;
 }
 
-/** Cumulative POSIX breadcrumb segments, marking those still under a root. */
-const buildBreadcrumbs = (
-  path: string,
-  roots: string[],
-): WorkspaceBreadcrumbSegment[] => {
-  const parts = path.split('/').filter((part) => part !== '');
-  const isNavigable = (candidate: string): boolean =>
-    roots.some(
-      (root) => candidate === root || candidate.startsWith(`${root}/`),
-    );
-
-  let accumulated = '';
-  return parts.map((part) => {
-    accumulated = `${accumulated}/${part}`;
-    return {
-      label: part,
-      navigable: isNavigable(accumulated),
-      path: accumulated,
-    };
-  });
-};
-
 /**
  * @description Controller for the workspace add-folder picker: dialog open
  * state, the directory-browse fetcher (seeded from defaultBrowsePath on open,
@@ -92,7 +54,7 @@ const buildBreadcrumbs = (
  * component-primitive-shape R6/R7 — the dialog component renders from this.
  */
 export const useAddFolderDialog = (
-  options: AddFolderDialogOptions,
+  options: UseAddFolderDialogOptions,
 ): UseAddFolderDialogResult => {
   const { actionError, canUseNativeDialog, defaultBrowsePath, roots } = options;
 
@@ -169,6 +131,8 @@ export const useAddFolderDialog = (
   const handleToggleManualPath = (): void => {
     setShowManualPath((current) => !current);
   };
+
+  // Markup
 
   // Life Cycle
   // Seed the picker once per open with no typing (defaultBrowsePath, else roots).

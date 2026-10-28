@@ -4,7 +4,7 @@ import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry'
 import { SKILL_DETAIL_COPY } from '~/routing/skills/data/data.copy';
 import { getResolvedModelInvocationDisplay } from '~/routing/skills/utils/model-invocation-badge';
 
-export interface SkillDetailOptions {
+export interface UseSkillDetailOptions {
   /** Raw SKILL.md content; the pristine draft seed. */
   content: string;
   /** Local checkout with a resolved monorepo root — the route-level precondition. */
@@ -41,7 +41,7 @@ export interface UseSkillDetailResult {
  * Extracted from SkillDetail per component-primitive-shape R6/R7.
  */
 export const useSkillDetail = (
-  options: SkillDetailOptions,
+  options: UseSkillDetailOptions,
 ): UseSkillDetailResult => {
   const { content, editable, entry, onSave, saveError, saving } = options;
 

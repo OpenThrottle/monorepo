@@ -5,6 +5,7 @@ import { RuleTester } from '@typescript-eslint/rule-tester';
 import { afterAll, describe, expect, it } from 'vitest';
 
 import { componentPrimitiveShape } from '../rules/component-primitive-shape.ts';
+import { hookPrimitiveShape } from '../rules/hook-primitive-shape.ts';
 import { preHooksUnpack } from '../rules/pre-hooks-unpack.ts';
 import { routePrimitiveShape } from '../rules/route-primitive-shape.ts';
 
@@ -27,6 +28,16 @@ const REACT_ROUTER_TEMPLATE =
   'generators/src/generators/react-router/files/component/__name__.tsx';
 const ROUTE_TEMPLATE =
   'generators/src/generators/react-router/files/route/__name__.tsx';
+const REACT_HOOK_TEMPLATE =
+  'generators/src/generators/react/files/hook/__name__.tsx';
+const REACT_ROUTER_HOOK_TEMPLATE =
+  'generators/src/generators/react-router/files/hook/__name__.tsx';
+
+/** Fills the hook template's EJS placeholders the way the generator does. */
+const renderHookTemplate = (relativeToTools: string): string =>
+  readTemplate(relativeToTools)
+    .replace(/<%= namePascal %>/g, 'UseSampleThing')
+    .replace(/<%= name %>/g, 'useSampleThing');
 
 // The two component templates are byte-identical; assert that so the single
 // RuleTester run below genuinely covers both.
@@ -96,6 +107,25 @@ ruleTester.run('pre-hooks-unpack template contract', preHooksUnpack, {
         .replace(/<%= namePascal %>/g, 'SampleRoute')
         .replace(/<%= name %>/g, 'sample-route'),
       filename: 'sample-route.tsx',
+    },
+  ],
+});
+
+// Both hook templates MUST pass the hook-primitive-shape rule
+// (docs/monorepo/hook-primitive-shape.md). Each is rendered and checked on its
+// own rather than asserted byte-identical, so a template edit that breaks the
+// rule fails here whichever generator it lands in. The filenames differ only
+// because RuleTester rejects two identical cases.
+ruleTester.run('hook-template-contract', hookPrimitiveShape, {
+  invalid: [],
+  valid: [
+    {
+      code: renderHookTemplate(REACT_HOOK_TEMPLATE),
+      filename: 'packages/sample/src/hooks/useSampleThing.tsx',
+    },
+    {
+      code: renderHookTemplate(REACT_ROUTER_HOOK_TEMPLATE),
+      filename: 'applications/sample/app/global/hooks/useSampleThing.tsx',
     },
   ],
 });

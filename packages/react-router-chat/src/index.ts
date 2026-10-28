@@ -21,11 +21,18 @@ export * from './components/ChatToolCall';
 export * from './components/ChatToolCallGroup';
 export * from './components/ChatTurnTimeline';
 export * from './components/ChatUsageCounter';
+export * from './config/near-bottom-threshold-px';
 export * from './context';
 export * from './conversation-stream';
 export * from './conversation-stream-action';
+export * from './data/chat-conversation-actions';
+export * from './data/chat-model-picker-favorites';
+export * from './data/chat-turn-fetcher-intents';
 export * from './file-mentions';
 export * from './hooks';
+// Legacy names for the hooks' renamed `Use<Name>Options` input interfaces.
+export type { UseAgenticChatTurnOptions as UseAgenticChatTurnConfig } from './hooks/useAgenticChatTurn';
+export type { UseConversationStreamOptions as UseConversationStreamArgs } from './hooks/useConversationStream';
 export * from './map-persisted-messages';
 export * from './run-phase';
 export * from './slash-commands';

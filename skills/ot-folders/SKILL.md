@@ -6,8 +6,9 @@ description: >-
   a new directory included); deciding between
   app/global/ and app/routing/<area>/; deciding whether something is an
   application or a package; or when lint reports
-  openthrottle/component-primitive-shape, openthrottle/route-primitive-shape,
-  openthrottle/pre-hooks-unpack, max-lines, or
+  openthrottle/component-primitive-shape, openthrottle/hook-primitive-shape,
+  openthrottle/route-primitive-shape, openthrottle/pre-hooks-unpack, max-lines,
+  audit:hook-shape, or
   @nx/enforce-module-boundaries. NOT FOR scaffolding — generate the file with
   ot-generators first, then use this skill to place and shape it.
 metadata:
@@ -168,6 +169,12 @@ is a package, and that is the whole test.
   **parent directory name**. So `plans/components/PlanCard.tsx` must export
   `PlanCard`, and `plans/components/PlanCard/index.tsx` must too.
 - The component's props type is its name plus `Props` (`PlanCardProps`).
+- **One hook per file, named after the file, in a `hooks/` folder.** `useFoo` lives
+  in `hooks/useFoo.ts(x)` — camelCase, never `use-foo.ts`. It exports only the hook,
+  `UseFooOptions` and `UseFooResult`; every other type, helper or constant goes to
+  `types.ts`, `utils/`, `data/` or `config/`, and nothing else lives at module scope.
+  Full contract: `docs/monorepo/hook-primitive-shape.md` (H1–H6), enforced by
+  `openthrottle/hook-primitive-shape` and `pnpm run audit:hook-shape:strict`.
 
 ### What a component file may export, and what belongs in `data/`
 
@@ -266,12 +273,10 @@ pnpm nx run monorepo:check-folder-vocabulary
 `check-folder-vocabulary` fails on any tracked path under a rule-4 junk-drawer
 folder and names the replacement; `check:local` and the CI `gates` job run it too.
 `pnpm run check:local:audit` runs the three shape audits. Note what `--strict` actually gates:
-the component audit exits non-zero on **R4/R5/R6** (hoist violations,
-multi-component files, and authored components over the 210-line cap). Its R6
-count matches ESLint's `max-lines` exactly, and it repeats that cap on purpose:
-lint-staged runs `eslint --fix` before `prettier --write`, so prettier can reflow
-a file past 210 after lint has passed. The shadcn profile's VR6 cap stays
-report-only.
+it exits non-zero on **R4/R5 only** (hoist violations and multi-component files).
+R6, the 210-line count, is reported but never fails the audit — ESLint's
+`max-lines` owns that cap, and the audit's count runs one line higher than
+ESLint's, so a file the audit lists as 211 can be at the cap and pass lint.
 
 **3 — New project, moved package, changed tags.**
 
@@ -297,8 +302,9 @@ pnpm run check:local
 
 See `docs/monorepo/CI-quality-gates.md`. In short:
 
-- **Blocking today:** `component-primitive-shape` (both profiles) at `error`, the
-  component `max-lines` cap, `@nx/enforce-module-boundaries`,
+- **Blocking today:** `component-primitive-shape` (both profiles) and
+  `hook-primitive-shape` at `error`, `audit:hook-shape:strict`, the component
+  `max-lines` cap, `@nx/enforce-module-boundaries`,
   `@nx/dependency-checks`, tag validation, and package entrypoints.
 - **Advisory today:** `route-primitive-shape`, `pre-hooks-unpack`, and the route
   `max-lines` cap are all `warn` — the warn-first rollout. Each application

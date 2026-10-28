@@ -8,7 +8,12 @@ import {
 import { ConversationStreamChunkAddedDocument } from '~/__generated__/graphql';
 import { getGraphqlWsClient } from '~/services/graphql-ws-client';
 
-export type { HeaderChatSurface };
+export interface UseHeaderChatControllerOptions {
+  readonly enabled: boolean;
+}
+
+/** The shared header-chat surface, re-typed under this hook's result name. */
+export type UseHeaderChatControllerResult = HeaderChatSurface;
 
 /**
  * @description Thin admin-app wrapper over the shared
@@ -18,14 +23,29 @@ export type { HeaderChatSurface };
  * `/resources/chat-options`. The composition itself is single-sourced in
  * `@openthrottle/react-router-chat-state`.
  */
-export function useHeaderChatController(args: {
-  readonly enabled: boolean;
-}): HeaderChatSurface {
-  return useSharedHeaderChatController({
+export function useHeaderChatController(
+  options: UseHeaderChatControllerOptions,
+): UseHeaderChatControllerResult {
+  const { enabled } = options;
+
+  // Hooks
+  const surface = useSharedHeaderChatController({
     contextSources: CHAT_TOOLBAR_CONTEXT_SOURCES,
-    enabled: args.enabled,
+    enabled,
     personasFallback: CHAT_TOOLBAR_PERSONAS,
     streamClient: getGraphqlWsClient(),
     streamDocument: ConversationStreamChunkAddedDocument,
   });
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
+  return surface;
 }

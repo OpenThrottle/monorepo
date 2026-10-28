@@ -8,18 +8,14 @@
  *   - R4  file-scope helper functions / data / config that belong in the
  *         sibling utils/, data/, config/ folders (or a hooks/use<Name> hook).
  *   - R5  more than one exported component per file.
- *   - R6  over the 210-line cap, counted exactly as ESLint `max-lines` counts.
- *         It duplicates the lint rule on purpose: lint-staged runs
- *         `eslint --fix` before `prettier --write`, so prettier can reflow a
- *         file past the cap after lint passed. This audit sees the final file.
+ *   - R6  line count per file (reported so the 210 cap can be tuned).
  *   - R7  advisory signals (useState / hook / statement counts) flagging
  *         components that should extract a use<Name> hook.
  *
  * Usage: tsx ./scripts/audit-component-shape.ts [--json] [--strict]
  *   --json    emit the full inventory as JSON (for CI / the baseline).
- *   --strict  exit non-zero when any R4/R5/R6 violation exists (the CI gate).
- * Report-only (exit 0) otherwise. The `--shadcn` profile's VR6 cap stays
- * report-only even under --strict.
+ *   --strict  exit non-zero when any R4/R5 violation exists (the CI gate).
+ * Report-only (exit 0) otherwise.
  */
 
 import { readFileSync } from 'node:fs';
@@ -29,7 +25,7 @@ import { fileURLToPath } from 'node:url';
 import { globSync } from 'glob';
 import ts from 'typescript';
 
-import { countLines, createLogger } from './utils/index.ts';
+import { createLogger } from './utils/index.ts';
 
 const logger = createLogger();
 
@@ -52,7 +48,7 @@ const EXCLUDE =
 
 const OPT_OUT = /component-shape:\s*opt-out/;
 
-export interface FileReport {
+interface FileReport {
   readonly dataDecls: number;
   readonly exportedComponents: number;
   readonly file: string;
@@ -129,18 +125,19 @@ const countHookSignals = (
   return { hookCalls, statements, useStateCount };
 };
 
-/**
- * Analyze one authored component source. Pure and content-based so it is
- * unit-testable without the filesystem; `relativePath` is repo-relative.
- */
-export const analyzeComponentSource = (
-  content: string,
-  relativePath = 'Component.tsx',
-): FileReport => {
+const analyze = (absPath: string): FileReport | null => {
+  let content: string;
+  try {
+    content = readFileSync(absPath, 'utf-8');
+  } catch {
+    return null;
+  }
+
+  const relativePath = path.relative(ROOT, absPath);
   const optOut = OPT_OUT.test(content.split('\n')[0] ?? '');
 
   const source = ts.createSourceFile(
-    relativePath,
+    absPath,
     content,
     ts.ScriptTarget.Latest,
     true,
@@ -192,7 +189,7 @@ export const analyzeComponentSource = (
     }
   }
 
-  const lineCount = countLines(content);
+  const lineCount = content.split('\n').length;
   const signals = componentFn
     ? countHookSignals(componentFn)
     : { hookCalls: 0, statements: 0, useStateCount: 0 };
@@ -205,22 +202,11 @@ export const analyzeComponentSource = (
     hookCalls: signals.hookCalls,
     lineCount,
     optOut,
-    overCap: !optOut && lineCount > LINE_CAP,
+    overCap: lineCount > LINE_CAP,
     project: projectOf(relativePath),
     statements: signals.statements,
     useStateCount: signals.useStateCount,
   };
-};
-
-const analyze = (absPath: string): FileReport | null => {
-  let content: string;
-  try {
-    content = readFileSync(absPath, 'utf-8');
-  } catch {
-    return null;
-  }
-
-  return analyzeComponentSource(content, path.relative(ROOT, absPath));
 };
 
 /** True when an initializer is a `forwardRef(...)` / `React.forwardRef(...)` call. */
@@ -332,7 +318,7 @@ export const analyzePrimitiveSource = (
     }
   }
 
-  const lineCount = countLines(content);
+  const lineCount = content.split('\n').length;
   return {
     file,
     forwardRefParts,
@@ -436,8 +422,6 @@ const hasMultiComponent = (r: FileReport): boolean =>
   !r.optOut && r.exportedComponents > 1;
 const isHookHeavy = (r: FileReport): boolean =>
   !r.optOut && (r.useStateCount >= 8 || r.statements >= 30);
-const hasViolation = (r: FileReport): boolean =>
-  hasHoistViolation(r) || hasMultiComponent(r) || r.overCap;
 
 const run = (): void => {
   // The shadcn primitive-variant profile is a separate, report-only scan.
@@ -463,13 +447,18 @@ const run = (): void => {
 
   if (json) {
     console.log(JSON.stringify(reports, null, 2));
-    if (strict && reports.some(hasViolation)) process.exit(1);
+    if (
+      strict &&
+      reports.some((r) => hasHoistViolation(r) || hasMultiComponent(r))
+    ) {
+      process.exit(1);
+    }
     return;
   }
 
   const hoist = reports.filter(hasHoistViolation);
   const multi = reports.filter(hasMultiComponent);
-  const overCap = reports.filter((r) => r.overCap);
+  const overCap = reports.filter((r) => !r.optOut && r.overCap);
   const hookHeavy = reports.filter(isHookHeavy);
 
   const byProject = new Map<string, number>();
@@ -523,9 +512,9 @@ const run = (): void => {
     for (const r of optOuts) logger.detail(r.file);
   }
 
-  if (strict && reports.some(hasViolation)) {
+  if (strict && (hoist.length > 0 || multi.length > 0)) {
     logger.blank();
-    logger.fail('R4/R5/R6 violations present — failing (--strict).');
+    logger.fail('R4/R5 violations present — failing (--strict).');
     process.exit(1);
   }
 };

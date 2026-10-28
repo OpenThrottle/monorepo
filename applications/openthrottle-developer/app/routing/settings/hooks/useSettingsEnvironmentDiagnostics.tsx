@@ -3,7 +3,7 @@ import * as React from 'react';
 import { normalizeUrlBase } from '~/routing/settings/utils/normalize-url-base';
 import type { SettingsDiagnosticsLoaderData } from '~/routing/settings/utils/settings-diagnostics-loader-data';
 
-export interface SettingsEnvironmentDiagnosticsOptions {
+export interface UseSettingsEnvironmentDiagnosticsOptions {
   /** Configured developer portal base URL (`env.APP_URL_DEVELOPER`). */
   appUrlDeveloper: string;
   supportBundle: SettingsDiagnosticsLoaderData['supportBundle'];
@@ -21,7 +21,7 @@ export interface UseSettingsEnvironmentDiagnosticsResult {
  * SettingsEnvironmentDiagnostics per component-primitive-shape R6/R7.
  */
 export const useSettingsEnvironmentDiagnostics = (
-  options: SettingsEnvironmentDiagnosticsOptions,
+  options: UseSettingsEnvironmentDiagnosticsOptions,
 ): UseSettingsEnvironmentDiagnosticsResult => {
   const { appUrlDeveloper, supportBundle } = options;
 

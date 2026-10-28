@@ -4,8 +4,8 @@ import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
 
-import type { UseChatComposerMentionsResult } from '../../hooks/use-chat-composer-mentions';
-import type { UseChatComposerSlashCommandsResult } from '../../hooks/use-chat-composer-slash-commands';
+import type { UseChatComposerMentionsResult } from '../../hooks/useChatComposerMentions';
+import type { UseChatComposerSlashCommandsResult } from '../../hooks/useChatComposerSlashCommands';
 import type { ChatComposerInputProps } from '../ChatComposerInput';
 import { ChatComposerInput } from '../ChatComposerInput';
 

@@ -10,15 +10,7 @@ import {
 } from '~/routing/skills/config/skill-create';
 import { SKILL_CREATE_COPY } from '~/routing/skills/data/data.copy';
 import { buildSkillScaffold } from '~/routing/skills/utils/build-skill-scaffold';
-
-/** Stands in for the slug in the scaffold and the editor path until one is typed. */
-const SLUG_PLACEHOLDER = 'my-new-skill';
-
-const splitTags = (raw: string): readonly string[] =>
-  raw
-    .split(',')
-    .map((tag) => tag.trim())
-    .filter((tag) => tag.length > 0);
+import { splitTags } from '~/routing/skills/utils/split-tags';
 
 /** What the route action returns on a refusal. A success redirects instead. */
 interface SkillCreateActionData {
@@ -89,8 +81,10 @@ export const useSkillCreateForm = (): UseSkillCreateFormResult => {
   const frozenPathRef = React.useRef<string | undefined>(undefined);
 
   // Setup
+  // Stands in for the slug in the scaffold and the editor path until one is typed.
+  const slugPlaceholder = 'my-new-skill';
   const trimmedSlug = slug.trim();
-  const scaffoldName = trimmedSlug.length > 0 ? trimmedSlug : SLUG_PLACEHOLDER;
+  const scaffoldName = trimmedSlug.length > 0 ? trimmedSlug : slugPlaceholder;
 
   const seededContent = React.useMemo(
     () =>
@@ -154,6 +148,8 @@ export const useSkillCreateForm = (): UseSkillCreateFormResult => {
     },
     [handleSubmit],
   );
+
+  // Markup
 
   // Life Cycle
   React.useEffect(() => {

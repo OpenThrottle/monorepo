@@ -18,20 +18,10 @@ import { useSubscription } from '@openthrottle/react-router-graphql';
 import * as React from 'react';
 
 import { PlanOutputChunkAddedDocument } from '~/__generated__/graphql';
+import { compareTaskOutputChunks } from '~/routing/plans/utils/compare-task-output-chunks';
 import { getGraphqlWsClient } from '~/services/graphql-ws-client';
 
 type Chunk = TaskOutputStreamChunksQuery['planOutputStreamChunks'][number];
-
-/** Order by createdAt, then id, so renders are stable regardless of arrival order. */
-function compareChunks(a: Chunk, b: Chunk): number {
-  const at = String(a.createdAt);
-  const bt = String(b.createdAt);
-
-  if (at !== bt) return at < bt ? -1 : 1;
-  if (a.id !== b.id) return a.id < b.id ? -1 : 1;
-
-  return 0;
-}
 
 export function useTaskOutputStream(
   planId: string,
@@ -93,7 +83,7 @@ export function useTaskOutputStream(
   // 🔌 Short Circuit
 
   return React.useMemo(
-    () => Array.from(byId.values()).sort(compareChunks),
+    () => Array.from(byId.values()).sort(compareTaskOutputChunks),
     [byId],
   );
 }

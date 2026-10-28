@@ -10,8 +10,8 @@ import {
 } from '~/routing/plans/utils/plan-workflow-config-workspace-selector';
 
 import {
-  type PlanWorkflowConfigWorkspaceSelectorOptions,
   usePlanWorkflowConfigWorkspaceSelector,
+  type UsePlanWorkflowConfigWorkspaceSelectorOptions,
 } from '../usePlanWorkflowConfigWorkspaceSelector';
 
 type Checkout = PlanRunConfigRepositoryFieldsFragment['checkouts'][number];
@@ -39,8 +39,8 @@ const repository = (
 });
 
 const baseOptions = (
-  overrides: Partial<PlanWorkflowConfigWorkspaceSelectorOptions> = {},
-): PlanWorkflowConfigWorkspaceSelectorOptions => ({
+  overrides: Partial<UsePlanWorkflowConfigWorkspaceSelectorOptions> = {},
+): UsePlanWorkflowConfigWorkspaceSelectorOptions => ({
   checkoutId: '',
   onCheckoutIdChange: vi.fn(),
   onRepositoryIdChange: vi.fn(),
@@ -280,7 +280,7 @@ describe('usePlanWorkflowConfigWorkspaceSelector', () => {
       const repo1 = repository('repo-1', [checkout('c1', 'main')], 'project-1');
 
       const { rerender } = renderHook(
-        (opts: PlanWorkflowConfigWorkspaceSelectorOptions) =>
+        (opts: UsePlanWorkflowConfigWorkspaceSelectorOptions) =>
           usePlanWorkflowConfigWorkspaceSelector(opts),
         {
           initialProps: baseOptions({

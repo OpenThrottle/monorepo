@@ -20,3 +20,4 @@ export {
   rolloutEvaluationCacheKey,
   writeRolloutEvaluationCache,
 } from './rollout-evaluation-cache';
+export { toError } from './to-error';

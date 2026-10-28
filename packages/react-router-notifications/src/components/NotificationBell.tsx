@@ -12,9 +12,9 @@ import {
 import { Bell } from 'lucide-react';
 import * as React from 'react';
 
-import { useNotificationsSystemPreferences } from '../hooks/use-system-notifications-preference';
 import { useNotificationPermission } from '../hooks/useNotificationPermission';
 import { useNotificationsStoreOptional } from '../hooks/useNotificationsStoreOptional';
+import { useNotificationsSystemPreferences } from '../hooks/useNotificationsSystemPreferences';
 import { NotificationActions } from './NotificationActions';
 import { NotificationEmpty } from './NotificationEmpty';
 import { NotificationItem } from './NotificationItem';

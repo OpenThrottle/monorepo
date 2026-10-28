@@ -6,12 +6,12 @@ import { createRoutesStub, Form, useActionData } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 
 import type {
-  AddFolderDialogOptions,
+  UseAddFolderDialogOptions,
   UseAddFolderDialogResult,
 } from '../useAddFolderDialog';
 import { useAddFolderDialog } from '../useAddFolderDialog';
 
-const options: AddFolderDialogOptions = {
+const options: UseAddFolderDialogOptions = {
   canUseNativeDialog: false,
   defaultBrowsePath: '/Users/dev/Development',
   roots: ['/Users/dev/Development'],

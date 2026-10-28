@@ -32,8 +32,6 @@ export interface UseUrlSyncedOverlayResult {
   ) => void;
 }
 
-const DEFAULT_OPEN_TOKEN = 'open';
-
 /**
  * @description Binds overlay open state to a search param (`param` === `openValue`), with optional child-param cleanup on close. Pair with controlled `Dialog` / `Sheet` / `Drawer` roots.
  */
@@ -42,13 +40,15 @@ export const useUrlSyncedOverlay = (
 ): UseUrlSyncedOverlayResult => {
   const {
     clearParamsOnClose = [],
-    openValue = DEFAULT_OPEN_TOKEN,
+    openValue = 'open',
     param,
     setSearchParamsOptions,
   } = options;
 
+  // Hooks
   const [searchParams, setSearchParams] = useSearchParams();
 
+  // Setup
   const navigateOpts = React.useMemo((): NavigateOptions => {
     const base: NavigateOptions = {
       preventScrollReset: true,
@@ -64,6 +64,7 @@ export const useUrlSyncedOverlay = (
 
   const open = searchParams.get(param) === openValue;
 
+  // Handlers
   const applyParams = React.useCallback(
     (nextOpen: boolean, extra?: Readonly<Record<string, string>>) => {
       const next = new URLSearchParams(searchParams);
@@ -111,6 +112,12 @@ export const useUrlSyncedOverlay = (
     },
     [applyParams, open],
   );
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return {
     onOpenChange,

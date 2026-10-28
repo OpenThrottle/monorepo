@@ -12,7 +12,12 @@ import {
 } from '~/routing/home/data/chat-options-cache';
 import { getGraphqlWsClient } from '~/services/graphql-ws-client';
 
-export type { HeaderChatSurface };
+export interface UseHeaderChatControllerOptions {
+  readonly enabled: boolean;
+}
+
+/** The shared header-chat surface, re-typed under this hook's result name. */
+export type UseHeaderChatControllerResult = HeaderChatSurface;
 
 /**
  * @description Thin developer-app wrapper over the shared
@@ -22,12 +27,15 @@ export type { HeaderChatSurface };
  * single-sourced in `@openthrottle/react-router-chat-state` so the home route,
  * header dialog, and the admin app cannot drift.
  */
-export function useHeaderChatController(args: {
-  readonly enabled: boolean;
-}): HeaderChatSurface {
-  return useSharedHeaderChatController({
+export function useHeaderChatController(
+  options: UseHeaderChatControllerOptions,
+): UseHeaderChatControllerResult {
+  const { enabled } = options;
+
+  // Hooks
+  const surface = useSharedHeaderChatController({
     contextSources: CHAT_TOOLBAR_CONTEXT_SOURCES,
-    enabled: args.enabled,
+    enabled,
     optionsCache: {
       read: readChatOptionsCache,
       write: writeChatOptionsCache,
@@ -36,4 +44,16 @@ export function useHeaderChatController(args: {
     streamClient: getGraphqlWsClient(),
     streamDocument: ConversationStreamChunkAddedDocument,
   });
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
+  return surface;
 }

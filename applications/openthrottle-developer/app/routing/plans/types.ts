@@ -1,4 +1,7 @@
+import type { useRouteLoaderData } from 'react-router';
+
 import type { PlanTaskStatus } from '~/__generated__/graphql';
+import type { loader } from '~/routes/plans.$planId._index';
 
 /**
  * @description Canonical UI status key — the string-literal union of the
@@ -26,3 +29,22 @@ export const planStatusValues: Record<PlanStatusKey, string> = {
   QUEUED: 'Queued',
   SKIPPED: 'Skipped',
 };
+
+/**
+ * @description Minimal plan shape the run-config editor reads to gate + seed
+ * saves. Structurally satisfied by the route's loader plan.
+ */
+export interface PlanRunConfigEditorPlan {
+  readonly id: string;
+  readonly jobRunHooksJson?: string | null;
+  readonly runConfigJson?: string | null;
+}
+
+/**
+ * @description The plan detail route's loader data, as returned (non-null) by
+ * `usePlanDetailRouteData`. The loader is imported type-only, so this adds no
+ * runtime import cycle.
+ */
+export type PlanDetailRouteData = NonNullable<
+  ReturnType<typeof useRouteLoaderData<typeof loader>>
+>;

@@ -12,7 +12,7 @@ import clsx from 'clsx';
 import { ChevronsUpDown } from 'lucide-react';
 import * as React from 'react';
 
-import { useChatModelPicker } from '../hooks/use-chat-model-picker';
+import { useChatModelPicker } from '../hooks/useChatModelPicker';
 import type { ChatModelGroup, ChatModelOption } from '../types';
 import { ChatModelPickerRailItem } from './ChatModelPickerRailItem';
 import { ChatModelPickerRailSettings } from './ChatModelPickerRailSettings';

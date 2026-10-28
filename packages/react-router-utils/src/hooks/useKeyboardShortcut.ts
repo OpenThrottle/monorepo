@@ -12,6 +12,8 @@
 
 import { useEffect } from 'react';
 
+import { isEditableTarget } from '../utils/is-editable-target';
+
 /**
  * Configuration for {@link useKeyboardShortcut}.
  *
@@ -36,17 +38,6 @@ export interface UseKeyboardShortcutOptions {
   readonly shift?: boolean;
 }
 
-function isEditableTarget(target: EventTarget | null): boolean {
-  if (!(target instanceof HTMLElement)) return false;
-  const tag = target.tagName;
-  return (
-    target.isContentEditable ||
-    tag === 'INPUT' ||
-    tag === 'SELECT' ||
-    tag === 'TEXTAREA'
-  );
-}
-
 /**
  * @public
  * @description Register a window `keydown` shortcut. SSR-safe (no-op until the
@@ -64,6 +55,15 @@ export function useKeyboardShortcut(options: UseKeyboardShortcutOptions): void {
     shift = false,
   } = options;
 
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (!enabled) return;
@@ -92,4 +92,6 @@ export function useKeyboardShortcut(options: UseKeyboardShortcutOptions): void {
     preventDefault,
     shift,
   ]);
+
+  // 🔌 Short Circuit
 }

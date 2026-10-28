@@ -8,7 +8,6 @@ import { FileTextIcon, GaugeIcon } from 'lucide-react';
 import * as React from 'react';
 
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
-import type { RunSkillPayload } from '~/routing/skills/components/RunSkillDialog';
 import { SkillDetail } from '~/routing/skills/components/SkillDetail';
 import { SkillIntroduction } from '~/routing/skills/components/SkillIntroduction';
 import type { RunSkillRunOptions } from '~/routing/skills/components/SkillRunControl';
@@ -16,6 +15,7 @@ import type { SkillTagVocabularyOption } from '~/routing/skills/components/Skill
 import { SkillUsageTabPanel } from '~/routing/skills/components/SkillUsageTabPanel';
 import type { SkillDetailUsageData } from '~/routing/skills/data/skill-usage-detail';
 import { useSkillDetail } from '~/routing/skills/hooks/useSkillDetail';
+import type { RunSkillPayload } from '~/routing/skills/types';
 import {
   parseSkillDetailTab,
   SKILLS_DETAIL_TAB_SEARCH_PARAM,

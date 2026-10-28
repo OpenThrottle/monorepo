@@ -104,6 +104,7 @@ examples. The subset that bites most often:
 - Indexed access yields `T | undefined` — `noUncheckedIndexedAccess` is on.
 - No `await` inside a loop; collect and `Promise.all`.
 - Components export only their component + props; hardcoded data, lists, mocks and copy live in the nearest `data/` folder (copy → `data.copy.ts`). Keep the six ordered section markers and the 210-line cap.
+- One hook per file, named after the file (`useFoo` in `hooks/useFoo.ts`, never kebab-case), exporting only the hook, `UseFooOptions` and `UseFooResult`, with no module-scope values, the six markers and an explicit return type ([hook-primitive-shape.md](docs/monorepo/hook-primitive-shape.md)).
 
 **Honor system — nothing will stop you.**
 

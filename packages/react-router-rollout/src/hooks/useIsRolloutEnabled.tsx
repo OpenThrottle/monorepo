@@ -1,5 +1,5 @@
 import type { RolloutBooleanFlagKey, RolloutFlagCatalog } from '../types';
-import { useRequiredRolloutContext } from './useRolloutContext';
+import { useRequiredRolloutContext } from './useRequiredRolloutContext';
 
 /**
  * Returns whether a **boolean** catalog flag is enabled.

@@ -7,6 +7,8 @@
  * stays swappable behind the `index.ts` barrel.
  */
 
+import type { createCalendar } from '@schedule-x/calendar';
+
 /**
  * A recurring-event rule, wrapping a raw RFC 5545 RRULE string. The structured
  * wrapper (rather than a bare `string`) keeps the public shape forward-compatible
@@ -147,3 +149,26 @@ export interface ScheduleConfig {
   /** Enabled view styles. Defaults to week + month. */
   views?: readonly CalendarView[];
 }
+
+/**
+ * The most recent calendar selection, in engine-agnostic shape. Each field is
+ * set by the corresponding click and persists until the next click or `clear`.
+ *
+ * @public
+ */
+export interface CalendarSelection {
+  /** Last clicked month-grid day (`YYYY-MM-DD`). */
+  date?: string;
+  /** Last clicked empty time-grid slot (ISO 8601). */
+  dateTime?: string;
+  /** Last clicked existing event. */
+  event?: CalendarEvent;
+}
+
+/**
+ * The Schedule-X app instance backing a schedule. Engine-coupled: exposed only
+ * as an advanced escape hatch via `UseScheduleResult.instance`.
+ *
+ * @public
+ */
+export type ScheduleInstance = ReturnType<typeof createCalendar>;

@@ -178,6 +178,15 @@ export interface ChatMessage {
   readonly role: ChatMessageRole;
 }
 
+/** Input for appending a row to an uncontrolled local thread (`useChatMessages`). */
+export interface AppendChatMessageInput {
+  readonly body: string;
+  readonly createdAt?: string;
+  readonly footer?: string | null;
+  readonly id?: string;
+  readonly role: ChatMessageRole;
+}
+
 /** JSON shape returned by a root `load-agent-conversation-messages` action. */
 export interface LoadAgentConversationMessagesResult {
   readonly conversationId: string | null;
@@ -278,6 +287,30 @@ export interface ChatModelGroup {
   readonly icon?: React.ReactNode;
   readonly id: string;
   readonly label: string;
+}
+
+/**
+ * Result of the conversation-stream start action the agentic turn hook reads.
+ * Structural, so each app's route action result is assignable.
+ * @public
+ */
+export interface ChatStartActionResult {
+  readonly assistantMessageId?: string | null;
+  readonly conversationId?: string | null;
+  readonly errorMessage?: string | null;
+  readonly userMessageId?: string | null;
+}
+
+/**
+ * A model group after the picker resolves it: the synthetic favorites group,
+ * each provider group with its models, and the catch-all for ungrouped models.
+ * @public
+ */
+export interface ResolvedGroup {
+  readonly icon?: React.ReactNode;
+  readonly id: string;
+  readonly label: string;
+  readonly models: readonly ChatModelOption[];
 }
 
 /**

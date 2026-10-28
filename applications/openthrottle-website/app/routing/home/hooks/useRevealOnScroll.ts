@@ -1,5 +1,10 @@
 import * as React from 'react';
 
+import {
+  REVEAL_SELECTOR,
+  REVEALED_CLASS,
+} from '~/routing/home/config/reveal-on-scroll';
+
 /**
  * Reveal-on-scroll for the landing page — the CSP-safe React equivalent of the
  * source mockup's inline IntersectionObserver `<script>`.
@@ -10,14 +15,19 @@ import * as React from 'react';
  * gracefully: when `prefers-reduced-motion: reduce` is set or
  * `IntersectionObserver` is unavailable, elements are revealed immediately.
  */
-const REVEAL_SELECTOR = '.landing-reveal';
-const REVEALED_CLASS = 'is-in';
-
 export const useRevealOnScroll = <
   T extends HTMLElement = HTMLElement,
 >(): React.RefObject<T | null> => {
+  // Hooks
   const containerRef = React.useRef<T>(null);
 
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
   React.useEffect(() => {
     const container = containerRef.current;
 
@@ -65,6 +75,8 @@ export const useRevealOnScroll = <
       observer.disconnect();
     };
   }, []);
+
+  // 🔌 Short Circuit
 
   return containerRef;
 };

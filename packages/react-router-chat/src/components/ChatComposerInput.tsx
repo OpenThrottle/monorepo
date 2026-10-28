@@ -2,8 +2,8 @@ import { TextArea } from '@openthrottle/react-router-shadcn';
 import clsx from 'clsx';
 import * as React from 'react';
 
-import type { UseChatComposerMentionsResult } from '../hooks/use-chat-composer-mentions';
-import type { UseChatComposerSlashCommandsResult } from '../hooks/use-chat-composer-slash-commands';
+import type { UseChatComposerMentionsResult } from '../hooks/useChatComposerMentions';
+import type { UseChatComposerSlashCommandsResult } from '../hooks/useChatComposerSlashCommands';
 import type { ChatMentionProvider, ChatSlashCommandProvider } from '../types';
 import { ChatMentionPopover } from './ChatMentionPopover';
 import { ChatSlashCommandPopover } from './ChatSlashCommandPopover';

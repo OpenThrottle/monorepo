@@ -13,7 +13,7 @@ import {
 import { CopyIcon } from 'lucide-react';
 import * as React from 'react';
 
-import type { SettingsKeysCreateCredentialActionData } from '~/routing/settings/hooks/useSettingsKeysForm';
+import type { SettingsKeysCreateCredentialActionData } from '~/routing/settings/types';
 
 export interface SettingsKeysFormSuccessProps {
   onCopyToken: () => Promise<void>;

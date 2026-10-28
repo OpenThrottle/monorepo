@@ -15,7 +15,7 @@ import clsx from 'clsx';
 import * as React from 'react';
 
 import type { ChatComposerControls } from '../context/chat-context';
-import { useChatDialog } from '../hooks/use-chat-dialog';
+import { useChatDialog } from '../hooks/useChatDialog';
 import type { ChatMessage } from '../types';
 import { ChatComposer } from './ChatComposer';
 import { ChatComposerToolbar } from './ChatComposerToolbar';

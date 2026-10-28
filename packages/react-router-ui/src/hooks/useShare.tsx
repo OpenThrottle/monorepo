@@ -1,5 +1,8 @@
 import * as React from 'react';
 
+import { getIsShareSupported } from '../utils/get-is-share-supported';
+import { resolveShareData } from '../utils/resolve-share-data';
+
 export interface UseShareOptions {
   /**
    * @description Default {@link ShareData} passed to {@link UseShareResult.share} and {@link UseShareResult.canShare} when no override is provided.
@@ -25,24 +28,20 @@ export interface UseShareResult {
   readonly share: (data?: ShareData) => Promise<void>;
 }
 
-const getIsShareSupported = (): boolean =>
-  typeof navigator !== 'undefined' && typeof navigator.share === 'function';
-
-const resolveShareData = (
-  override: ShareData | undefined,
-  fallback: ShareData | undefined,
-): ShareData | undefined => override ?? fallback;
-
 /**
  * @description Wraps the Web Share API (`navigator.share` / `navigator.canShare`) with support detection and error state.
  */
 export function useShare(options: UseShareOptions = {}): UseShareResult {
   const { data: defaultData } = options;
 
-  const isSupported = getIsShareSupported();
+  // Hooks
   const [error, setError] = React.useState<Error | null>(null);
   const [isSharing, setIsSharing] = React.useState(false);
 
+  // Setup
+  const isSupported = getIsShareSupported();
+
+  // Handlers
   const canShare = React.useCallback(
     (override?: ShareData): boolean => {
       const payload = resolveShareData(override, defaultData);
@@ -106,6 +105,12 @@ export function useShare(options: UseShareOptions = {}): UseShareResult {
     },
     [canShare, defaultData, isSupported],
   );
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return {
     canShare,

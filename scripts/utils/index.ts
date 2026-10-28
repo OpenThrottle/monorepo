@@ -7,6 +7,5 @@ export { flagValue, hasFlag, positionals, scriptArgs } from './args.ts';
 export { parseEnvContents, readEnvFile, readEnvValue } from './env.ts';
 export type { RunOptions, RunResult } from './exec.ts';
 export { renderCommand, run } from './exec.ts';
-export { countLines } from './lines.ts';
 export type { Logger, LoggerOptions } from './logger.ts';
 export { createLogger, SYMBOLS } from './logger.ts';

@@ -2,10 +2,17 @@ import * as React from 'react';
 
 export interface <%= namePascal %>Options {}
 
+export interface <%= namePascal %>Result {
+  readonly onCopy: (value: string) => void;
+  readonly value: string | undefined;
+}
+
 /**
  * TODO: Add a description or delete the comment, dealers choice.
  */
-export const <%= name %> = (_options: <%= namePascal %>Options) => {
+export const <%= name %> = (
+  _options: <%= namePascal %>Options,
+): <%= namePascal %>Result => {
   // const {} = _options;
 
   // Hooks
@@ -14,7 +21,7 @@ export const <%= name %> = (_options: <%= namePascal %>Options) => {
   // Setup
 
   // Handlers
-  const onCopy = (value: string) => {
+  const onCopy = (value: string): void => {
     // in case we want to grab its value later
     setValue(value);
   };

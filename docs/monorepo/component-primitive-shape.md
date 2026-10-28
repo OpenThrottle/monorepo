@@ -235,14 +235,9 @@ in a component file, it moves.
   blank-line / comment counting options settled (our mandated markers and
   blank-line whitespace mean a bare skeleton already spends lines on structure —
   the initial cap counts physical lines and will be revisited).
-- This is a hard rule, enforced twice: by ESLint `max-lines` scoped to component
-  files, and by the strict audit (`pnpm run audit:component-shape:strict`), which
-  fails on R6 exactly as it does on R4/R5. Both count lines the same way. The
-  audit duplicates the lint rule on purpose: lint-staged runs `eslint --fix`
-  before `prettier --write`, so prettier can reflow a file past the cap after
-  lint has passed, and the audit re-checks the final content at commit, push and
-  CI. Genuinely-irreducible files use the [opt-out](#opt-out--last-resort)
-  pragma with a written reason, like any other rule; both enforcers honor it.
+- This is a hard rule, enforced by ESLint `max-lines` scoped to component files,
+  not a suggestion. Genuinely-irreducible files use the [opt-out](#opt-out--last-resort)
+  pragma with a written reason, like any other rule.
 
 ### R7 — Keep components UI-focused; extract logic into hooks
 
@@ -310,18 +305,11 @@ signals make the pressure visible.
 
 The `hook` generator emits the **same skeleton** as a component, so an extracted
 `use<Name>` hook (per [R7](#r7--keep-components-ui-focused--extract-logic-into-hooks))
-is itself conformant. The parallel rules:
-
-- Named export `export const useFoo` paired with an exported
-  `export interface FooOptions {}` (the hook's analogue of `FooProps` — empty is
-  fine), accepting `(options: FooOptions)`.
-- The same six markers, same order, same whitespace.
-- Returns a **named object** of what the consumer needs (`return { value, onX }`),
-  not a bare tuple.
-- Lives in the sibling `hooks/` folder and is tested with `renderHook`.
-
-The audit applies R3 (markers) to `hooks/**/*.tsx` too; R1's naming check uses
-the `use*` + `*Options` pairing there instead of `*Props`.
+is itself conformant. Hooks have their own contract —
+[hook-primitive-shape.md](./hook-primitive-shape.md) (H1–H6: one hook per file, only
+the hook plus its `UseFooOptions` / `UseFooResult` exported, no module-scope values, the
+six markers, an explicit return type, camelCase in `hooks/`). Hooks are tested with
+`renderHook`.
 
 ## Scope
 
@@ -371,12 +359,11 @@ the plan `React component primitive-shape audit & continuous enforcement`:
   markers / normalizes whitespace / inserts an empty `FooProps`, plus **R6** via
   ESLint `max-lines` (210) scoped to component files. Runs in `nx lint`, the
   editor, and CI.
-- **Audit script** `audit:component-shape` (cross-file: R4, R5 — file-scope
-  helper/data/config/hook hoisting and one-per-file), plus **R6** re-checked on
-  the final file content (after prettier, which runs after `eslint --fix` in
-  lint-staged) and a repo-wide inventory with **R7 advisory signals**
-  (hook/state/statement counts flagging "extract a `use<Name>` hook"). `--strict`
-  fails on R4, R5 and R6. Runs in `check:local` and CI.
+- **Audit script** `component-shape:check` (cross-file: R4, R5 — file-scope
+  helper/data/config/hook hoisting and one-per-file) plus a repo-wide inventory
+  that reports R6 line counts (so the cap can be tuned) and **R7 advisory
+  signals** (hook/state/statement counts flagging "extract a `use<Name>` hook").
+  Runs in `check:local` and CI.
 
 Both share the scope globs and the opt-out pragma above so they can never
 disagree, and a contract test asserts freshly-generated components pass both —
@@ -390,9 +377,8 @@ lifecycle stages, all on the exact same single command so they can never drift:
 - **pre-commit** (`.husky/pre-commit`) — every commit (human or agent) must
   pass; it runs after `lint-staged`.
 - **pre-push** (`.husky/pre-push`) — every push must pass.
-- **CI** — the `🧩 Strict audits (audit:strict)` step in
-  `.github/workflows/continuous-integration.yml`, whose `audit:*:strict` glob
-  runs the same command.
+- **CI** — the `🧱 Component primitive-shape audit` step in
+  `.github/workflows/continuous-integration.yml`.
 
 All three source the same shared snippet (`.husky/utils/component-shape-gate.sh`)
 / run the same command; keep them in lockstep. Run it yourself with:
@@ -401,7 +387,7 @@ All three source the same shared snippet (`.husky/utils/component-shape-gate.sh`
 pnpm run audit:component-shape:strict
 ```
 
-When it fails, **fix the R4/R5/R6 violation** it lists — do not bypass the hook
+When it fails, **fix the R4/R5 violation** it lists — do not bypass the hook
 with `git commit --no-verify` (CLAUDE.md prohibits `--no-verify` and bypassing
 Husky). The autofix/scaffolding notes above and the rule references (R1–R7) tell
 you how to reshape the offending file.

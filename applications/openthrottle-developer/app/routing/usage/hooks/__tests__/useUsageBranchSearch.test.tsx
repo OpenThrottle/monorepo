@@ -5,8 +5,9 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import type {
   UsageBranchOption,
   UsageBranchSearchData,
-  UseUsageBranchSearchResult,
-} from '../useUsageBranchSearch';
+} from '~/routing/usage/types';
+
+import type { UseUsageBranchSearchResult } from '../useUsageBranchSearch';
 import { useUsageBranchSearch } from '../useUsageBranchSearch';
 
 const INITIAL_OPTIONS: readonly UsageBranchOption[] = [

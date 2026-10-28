@@ -13,6 +13,7 @@ import {
   mergeRolloutEvaluations,
   readRolloutEvaluationCache,
   type RolloutResolvedValues,
+  toError,
   writeRolloutEvaluationCache,
 } from '../utils';
 
@@ -28,9 +29,6 @@ export interface UseRolloutProviderOptions<
   readonly initialEvaluations?: readonly RolloutEvaluation[];
   readonly strict?: boolean;
 }
-
-const toError = (cause: unknown): Error =>
-  cause instanceof Error ? cause : new Error(String(cause));
 
 /**
  * Hydration state machine for {@link RolloutProvider}: cache → fetch → merge.

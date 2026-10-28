@@ -4,8 +4,8 @@ import { createRoutesStub } from 'react-router';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
 import { QueueJobLogLevel } from '~/__generated__/graphql';
+import type { QueueJobLogEvent } from '~/routing/queues/types';
 
-import type { QueueJobLogEvent } from '../useQueueJobLogs';
 import { useQueueJobLogs } from '../useQueueJobLogs';
 
 type Sink = {

@@ -1,4 +1,4 @@
-import type { QueueJobLogEvent } from '~/routing/queues/hooks/useQueueJobLogs';
+import type { QueueJobLogEvent } from '~/routing/queues/types';
 
 const formatTimestamp = (value: unknown): string => {
   if (typeof value !== 'string' && typeof value !== 'number') {

@@ -155,6 +155,8 @@
     "audit:component-shape:shadcn": "tsx ./scripts/audit-component-shape.ts --shadcn",
     "audit:component-shape:shadcn:strict": "tsx ./scripts/audit-component-shape.ts --shadcn --strict",
     "audit:component-shape:strict": "tsx ./scripts/audit-component-shape.ts --strict",
+    "audit:hook-shape": "tsx ./scripts/audit-hook-shape.ts",
+    "audit:hook-shape:strict": "tsx ./scripts/audit-hook-shape.ts --strict",
     "audit:route-shape": "tsx ./scripts/audit-route-shape.ts",
     "audit:route-shape:strict": "tsx ./scripts/audit-route-shape.ts --strict",
     "audit:strict": "pnpm run \"/^audit:(?!test-coverage).*:strict$/\"",

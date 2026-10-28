@@ -3,8 +3,8 @@ import { act, fireEvent, render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { DEFAULT_DEBOUNCE_MS } from '../../config/debounce';
 import type { IdeWorkspaceListing } from '../../data/view-models';
-import { DEFAULT_DEBOUNCE_MS } from '../../hooks/useDebouncedValue';
 import { WorkspaceFilePalette } from '../WorkspaceFilePalette';
 
 const listing: IdeWorkspaceListing = {

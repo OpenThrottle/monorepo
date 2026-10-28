@@ -1,25 +1,28 @@
-import { isRecord } from '@openthrottle/nodejs-utils';
 import * as React from 'react';
 import { useFetcher } from 'react-router';
 
 import { buildAgentsChatAssistantFooter } from '../agents-chat-footer';
+import {
+  LOAD_AGENT_CONVERSATION_MESSAGES_INTENT,
+  SEND_AGENT_MESSAGE_INTENT,
+} from '../data/chat-turn-fetcher-intents';
 import type {
-  ChatMessage,
   ChatTurnResult,
   LoadAgentConversationMessagesResult,
 } from '../types';
+import {
+  clearConversationIdFromStorage,
+  readConversationIdFromStorage,
+  writeConversationIdToStorage,
+} from '../utils/conversation-id-storage';
+import { createUniqueId } from '../utils/create-unique-id';
+import { parseChatTurnResult } from '../utils/parse-chat-turn-result';
+import { parseLoadAgentConversationMessagesResult } from '../utils/parse-load-agent-conversation-messages-result';
 import type {
   UseChatMessagesOptions,
   UseChatMessagesResult,
-} from './use-chat-messages';
-import { useChatMessages } from './use-chat-messages';
-
-export const SEND_AGENT_MESSAGE_INTENT = 'send-agent-message';
-export const LOAD_AGENT_CONVERSATION_MESSAGES_INTENT =
-  'load-agent-conversation-messages';
-
-const DEFAULT_ACTION = '/';
-const DEFAULT_CONVERSATION_STORAGE_KEY = 'openthrottle.chat.conversationId';
+} from './useChatMessages';
+import { useChatMessages } from './useChatMessages';
 
 export interface UseChatTurnFetcherOptions {
   /** Root route path for the fetcher POST (default `/`). */
@@ -50,155 +53,6 @@ export interface UseChatTurnFetcherResult extends UseChatMessagesResult {
   readonly startNewChat: () => void;
 }
 
-const createConversationId = (): string => {
-  if (
-    typeof crypto !== 'undefined' &&
-    typeof crypto.randomUUID === 'function'
-  ) {
-    return crypto.randomUUID();
-  }
-
-  return `conv-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
-};
-
-const readConversationIdFromStorage = (key: string): string | null => {
-  if (typeof sessionStorage === 'undefined') {
-    return null;
-  }
-
-  try {
-    const value = sessionStorage.getItem(key);
-    return value && value.trim().length > 0 ? value.trim() : null;
-  } catch {
-    return null;
-  }
-};
-
-const writeConversationIdToStorage = (key: string, id: string): void => {
-  if (typeof sessionStorage === 'undefined') {
-    return;
-  }
-
-  try {
-    sessionStorage.setItem(key, id);
-  } catch {
-    // Quota or private browsing — conversation id stays in memory only.
-  }
-};
-
-const clearConversationIdFromStorage = (key: string): void => {
-  if (typeof sessionStorage === 'undefined') {
-    return;
-  }
-
-  try {
-    sessionStorage.removeItem(key);
-  } catch {
-    // Ignore storage failures.
-  }
-};
-
-const nullableString = (value: unknown): string | null =>
-  typeof value === 'string' ? value : null;
-
-const parseChatTurnResult = (data: unknown): ChatTurnResult | null => {
-  if (!isRecord(data)) {
-    return null;
-  }
-
-  const d = data;
-
-  // Only require the load-bearing fields. A minimal valid turn carrying just
-  // `assistantText` + `errorMessage` must parse — the remaining fields are
-  // additive metadata and default below, so a stricter presence check would
-  // silently drop replies if the server contract grows or shrinks keys.
-  if (!('assistantText' in d) || !('errorMessage' in d)) {
-    return null;
-  }
-
-  return {
-    assistantText: nullableString(d.assistantText),
-    conversationId: nullableString(d.conversationId),
-    errorMessage: nullableString(d.errorMessage),
-    mcpTool: nullableString(d.mcpTool),
-    readOnlyAgentsChat:
-      typeof d.readOnlyAgentsChat === 'boolean' ? d.readOnlyAgentsChat : true,
-    routingConfidence:
-      typeof d.routingConfidence === 'number' ? d.routingConfidence : null,
-    routingReason: nullableString(d.routingReason),
-    structuredPayloadJson: nullableString(d.structuredPayloadJson),
-    toolMetadataJson: nullableString(d.toolMetadataJson),
-  };
-};
-
-const parseChatMessage = (value: unknown): ChatMessage | null => {
-  if (!isRecord(value)) {
-    return null;
-  }
-
-  const message = value;
-
-  if (
-    typeof message.body !== 'string' ||
-    typeof message.id !== 'string' ||
-    typeof message.role !== 'string'
-  ) {
-    return null;
-  }
-
-  if (
-    message.role !== 'assistant' &&
-    message.role !== 'system' &&
-    message.role !== 'user'
-  ) {
-    return null;
-  }
-
-  return {
-    body: message.body,
-    createdAt:
-      typeof message.createdAt === 'string' ? message.createdAt : undefined,
-    footer:
-      typeof message.footer === 'string'
-        ? message.footer
-        : message.footer === null
-          ? null
-          : undefined,
-    id: message.id,
-    role: message.role,
-  };
-};
-
-const parseLoadAgentConversationMessagesResult = (
-  data: unknown,
-): LoadAgentConversationMessagesResult | null => {
-  if (!isRecord(data)) {
-    return null;
-  }
-
-  const d = data;
-
-  if (!('errorMessage' in d) || !('messages' in d)) {
-    return null;
-  }
-
-  const rawMessages = d.messages;
-
-  if (!Array.isArray(rawMessages)) {
-    return null;
-  }
-
-  const messages = rawMessages
-    .map(parseChatMessage)
-    .filter((message): message is ChatMessage => message != null);
-
-  return {
-    conversationId: nullableString(d.conversationId),
-    errorMessage: nullableString(d.errorMessage),
-    messages,
-  };
-};
-
 /**
  * @description Local chat thread plus root-route fetcher POST for `send-agent-message` / `agentsRunChatTurn`.
  */
@@ -206,14 +60,15 @@ export const useChatTurnFetcher = (
   options: UseChatTurnFetcherOptions = {},
 ): UseChatTurnFetcherResult => {
   const {
-    action = DEFAULT_ACTION,
-    conversationIdStorageKey = DEFAULT_CONVERSATION_STORAGE_KEY,
+    action = '/',
+    conversationIdStorageKey = 'openthrottle.chat.conversationId',
     initialConversationId = null,
     initialMessages,
     intent = SEND_AGENT_MESSAGE_INTENT,
     persist = false,
   } = options;
 
+  // Hooks
   const turnFetcher = useFetcher<ChatTurnResult>();
   const historyFetcher = useFetcher<LoadAgentConversationMessagesResult>();
   const wasSubmittingRef = React.useRef(false);
@@ -227,13 +82,21 @@ export const useChatTurnFetcher = (
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const [lastTurn, setLastTurn] = React.useState<ChatTurnResult | null>(null);
 
+  // Setup
+  const isSubmitting =
+    turnFetcher.state === 'submitting' || turnFetcher.state === 'loading';
+  const isLoadingHistory =
+    historyFetcher.state === 'submitting' || historyFetcher.state === 'loading';
+  const composerDisabled = isSubmitting || isLoadingHistory;
+
+  // Handlers
   const submitTurn = React.useCallback(
     (message: string) => {
       let activeConversationId = conversationId;
 
       if (!persist) {
         if (!activeConversationId) {
-          activeConversationId = createConversationId();
+          activeConversationId = createUniqueId('conv');
           setConversationId(activeConversationId);
           writeConversationIdToStorage(
             conversationIdStorageKey,
@@ -272,6 +135,8 @@ export const useChatTurnFetcher = (
     ],
   );
 
+  // Declared here, not under Hooks: `onSendMessage` closes over `submitTurn`
+  // above, and `startNewChat` below needs `setMessages` from this call.
   const { appendMessage, messages, sendUserMessage, setMessages } =
     useChatMessages({
       initialMessages,
@@ -291,12 +156,9 @@ export const useChatTurnFetcher = (
     setMessages([]);
   }, [conversationIdStorageKey, setMessages]);
 
-  const isSubmitting =
-    turnFetcher.state === 'submitting' || turnFetcher.state === 'loading';
-  const isLoadingHistory =
-    historyFetcher.state === 'submitting' || historyFetcher.state === 'loading';
-  const composerDisabled = isSubmitting || isLoadingHistory;
+  // Markup
 
+  // Life Cycle
   React.useEffect(() => {
     if (!persist || historyRequestedRef.current) {
       return;
@@ -410,6 +272,8 @@ export const useChatTurnFetcher = (
     turnFetcher.data,
     turnFetcher.state,
   ]);
+
+  // 🔌 Short Circuit
 
   return {
     appendMessage,

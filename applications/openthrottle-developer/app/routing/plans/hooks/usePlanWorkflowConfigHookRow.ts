@@ -22,7 +22,7 @@ import {
   isJobRunHookOnFailureValue,
 } from '~/routing/plans/utils/plan-workflow-config-hook-row';
 
-export interface PlanWorkflowConfigHookRowOptions {
+export interface UsePlanWorkflowConfigHookRowOptions {
   readonly hooks: readonly JobRunHookDraftRow[];
   readonly index: number;
   readonly onChange: (next: JobRunHookDraftRow[]) => void;
@@ -49,7 +49,7 @@ export interface UsePlanWorkflowConfigHookRowResult {
 }
 
 export const usePlanWorkflowConfigHookRow = (
-  options: PlanWorkflowConfigHookRowOptions,
+  options: UsePlanWorkflowConfigHookRowOptions,
 ): UsePlanWorkflowConfigHookRowResult => {
   const { hooks, index, onChange, row } = options;
 

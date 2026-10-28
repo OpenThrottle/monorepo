@@ -2,7 +2,7 @@ import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 
 import type { Route } from '@/app/routes/+types/resources.usage-branches';
 import { GetUsageBranchSearchDocument } from '~/__generated__/graphql';
-import type { UsageBranchSearchData } from '~/routing/usage/hooks/useUsageBranchSearch';
+import type { UsageBranchSearchData } from '~/routing/usage/types';
 
 /**
  * Resource route (loader-only) backing the `/usage` branch filter —

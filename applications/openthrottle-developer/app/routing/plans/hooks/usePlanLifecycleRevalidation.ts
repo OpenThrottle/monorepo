@@ -18,8 +18,14 @@ import { getGraphqlWsClient } from '~/services/graphql-ws-client';
 
 export function usePlanLifecycleRevalidation(planId: string): void {
   // Hooks
-  const notificationsClient = React.useMemo(() => getGraphqlWsClient(), []);
   const revalidator = useRevalidator();
+
+  // Setup
+  const notificationsClient = React.useMemo(() => getGraphqlWsClient(), []);
+
+  // Handlers
+
+  // Markup
 
   // Life Cycle
   useSubscription(
@@ -29,4 +35,6 @@ export function usePlanLifecycleRevalidation(planId: string): void {
     { onData: () => revalidator.revalidate() },
     Boolean(planId),
   );
+
+  // 🔌 Short Circuit
 }

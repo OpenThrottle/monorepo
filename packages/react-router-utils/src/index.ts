@@ -10,6 +10,7 @@ export * from './config/openthrottle';
 // export * from './hooks';
 export * from './hooks/useForm';
 export * from './hooks/useKeyboardShortcut';
+export * from './hooks/useNonce';
 export * from './hooks/useResolvedThemeMode';
 export * from './types';
 export * from './utils/action-result';
