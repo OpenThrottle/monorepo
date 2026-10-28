@@ -3,8 +3,8 @@
 # Thin bootstrap shim — ALL logic lives in scripts/teardown_worktree.ts.
 #
 # Discovered by the ot-worktree skill's destroy action (hook rung 2), run with
-# cwd = the worktree, immediately before the worktree is removed. Mirrors
-# scripts/setup_worktree.sh, including its tsx resolution: teardown runs against
+# cwd = the worktree, immediately before the worktree is removed. Resolves tsx
+# (a holdover — scripts/setup_worktree.ts now runs under bare Node): teardown runs against
 # a worktree that may be half-provisioned or have had its node_modules pruned,
 # so tsx is resolved from this checkout first, then from the primary checkout
 # that linked worktrees share.
