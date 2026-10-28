@@ -237,7 +237,7 @@ const nodeEngineBanner = (
   logger.detail('  1. Install the pinned version:  nvm install   (in the checkout; reads .nvmrc)'); // prettier-ignore
   logger.detail('  2. Launch through the shim:     scripts/run-openthrottle-mcp.sh   (it picks a matching Node)'); // prettier-ignore
   logger.detail('  3. Or pin one in the MCP config env block:  OT_MCP_NODE=/absolute/path/to/node'); // prettier-ignore
-  logger.detail('Details: packages/openthrottle-mcp/docs/NODE_VERSION.md');
+  logger.detail('Details: packages/openthrottle-mcp/README.md § Launcher Node version'); // prettier-ignore
   logger.blank();
 };
 

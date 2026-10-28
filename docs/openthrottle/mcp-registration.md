@@ -237,7 +237,7 @@ Optional, and off by default — worktrees share the main Postgres. To split the
 
 MCP clients launch the server with their own PATH, which is often not the repo's Node. The Claude desktop app lists every nvm install oldest-first, and `env -i` has no `node` at all. So the launcher picks a Node that satisfies root `engines.node` itself: `OT_MCP_NODE`, then the `.nvmrc` version under `$NVM_DIR`, then the newest nvm install that fits, then PATH's `node`.
 
-If a client says **"Connection closed"** while the CLI works, or the launcher says **"no reachable OpenThrottle server found"** while the server is up, check the Node version first. Symptom, cause, resolution order and overrides: **[NODE_VERSION.md](../../packages/openthrottle-mcp/docs/NODE_VERSION.md)**.
+If a client says **"Connection closed"** while the CLI works, or the launcher says **"no reachable OpenThrottle server found"** while the server is up, check the Node version first. Symptom, cause, resolution order and overrides: **[openthrottle-mcp README § Launcher Node version](../../packages/openthrottle-mcp/README.md#launcher-node-version)**.
 
 ## Smoke-test checklist
 
@@ -264,7 +264,7 @@ After registering or changing MCP config, confirm `openthrottle-mcp` works. Ther
 | Per-worktree port blocks             | [worktree-port-allocation.md](../monorepo/worktree-port-allocation.md)                          |
 | MCP env, fixtures, smoke checks      | [verification-environment.md](../../packages/openthrottle-mcp/docs/verification-environment.md) |
 | Service account tokens & rotation    | [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md)                                         |
-| Launcher Node version & overrides    | [NODE_VERSION.md](../../packages/openthrottle-mcp/docs/NODE_VERSION.md)                         |
+| Launcher Node version & overrides    | [README.md](../../packages/openthrottle-mcp/README.md#launcher-node-version)                    |
 | First agent workflow after MCP works | [first-time-onboarding.md](./first-time-onboarding.md)                                          |
 | Author OT plans & tasks via MCP      | [authoring-plans-via-mcp.md](./authoring-plans-via-mcp.md)                                      |
 | Fresh clone → server + MCP           | [local-quickstart.md](./local-quickstart.md)                                                    |
