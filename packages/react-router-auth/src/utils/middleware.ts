@@ -11,6 +11,7 @@ import {
 const BETA_ROUTE_PREFIXES = FEATURE_BETA_PREVIEW
   ? []
   : [
+      '/blog',
       '/generators',
       '/ide',
       '/personas',

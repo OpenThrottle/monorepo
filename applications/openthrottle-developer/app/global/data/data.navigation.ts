@@ -216,6 +216,7 @@ export const dataNavigationV2: Record<string, PermissionGatedNavigationLink[]> =
     ],
     Workspace: [
       {
+        beta: true,
         children: 'Blog',
         icon: NewspaperIcon,
         requiredPermission: PERMISSIONS.BLOG_DRAFT,

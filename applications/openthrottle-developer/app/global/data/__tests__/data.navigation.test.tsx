@@ -4,11 +4,28 @@ import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
-import { describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { filterNavigationByPermission } from '~/global/utils/utils.permissions';
 
 import { dataNavigationV2 } from '../data.navigation';
+
+// FEATURE_BETA_PREVIEW resolves from process.env at module load, so the real
+// export is a frozen `false` under test. Mock it as a getter over a hoisted
+// box so a single file can exercise both sides of the gate at render time.
+const betaPreview = vi.hoisted(() => ({ enabled: true }));
+
+vi.mock('@openthrottle/react-router-utils', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('@openthrottle/react-router-utils')>();
+
+  return {
+    ...actual,
+    get FEATURE_BETA_PREVIEW() {
+      return betaPreview.enabled;
+    },
+  };
+});
 
 const renderSidebar = (
   permissions: readonly string[],
@@ -35,6 +52,18 @@ const renderSidebar = (
 };
 
 describe('dataNavigationV2 Blog entry', () => {
+  beforeEach(() => {
+    betaPreview.enabled = true;
+  });
+
+  test('is hidden when beta preview is disabled, even with blog:draft', () => {
+    betaPreview.enabled = false;
+    const component = renderSidebar(['blog:draft']);
+
+    expect(component.queryByRole('link', { name: 'Blog' })).toBeNull();
+    expect(component.getByRole('link', { name: 'Notes' })).toBeDefined();
+  });
+
   test('is hidden without blog:draft', () => {
     const component = renderSidebar(['users:read']);
 
