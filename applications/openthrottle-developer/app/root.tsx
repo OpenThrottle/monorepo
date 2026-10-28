@@ -81,7 +81,7 @@ import {
   dataNavigationV2,
 } from '~/global/data/data.navigation';
 import { useCommanderOptions } from '~/global/hooks/useCommanderOptions';
-import { usePermissions } from '~/global/hooks/useHasPermission';
+import { usePermissions } from '~/global/hooks/usePermissions';
 import type { CommanderSearchFields } from '~/global/utils/commander-empty-extras';
 import {
   buildCommanderEmptyStateExtras,
