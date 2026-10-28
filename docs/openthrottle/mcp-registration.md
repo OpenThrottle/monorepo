@@ -17,6 +17,7 @@ This doc **consolidates** registration guidance that previously lived (partly) a
 - [User-provided servers](#user-provided-servers) — github, shadcn, nx-mcp, maestro, fetch
 - [Secondary workspace](#secondary-workspace) — using OT MCP from another repo
 - [Worktrees](#worktrees) — worktree-aware identity and live-server resolution
+- [Node version](#node-version) — the launcher picks its own Node; "Connection closed" on an old one
 - [Smoke-test checklist](#smoke-test-checklist) — registration gates
 
 ## Current state
@@ -232,6 +233,12 @@ For `openthrottle-mcp-docker`, update the committed `url` port to this worktree'
 
 Optional, and off by default — worktrees share the main Postgres. To split them, set `POSTGRES_*` (or `POSTGRES_URL`) in each worktree's `.env` with a different port or database name; openthrottle-server reads those at runtime. `openthrottle-mcp` reaches OT over GraphQL, so point it at the matching API URL too (see `OT_MCP_TARGET` above).
 
+## Node version
+
+MCP clients launch the server with their own PATH, which is often not the repo's Node. The Claude desktop app lists every nvm install oldest-first, and `env -i` has no `node` at all. So the launcher picks a Node that satisfies root `engines.node` itself: `OT_MCP_NODE`, then the `.nvmrc` version under `$NVM_DIR`, then the newest nvm install that fits, then PATH's `node`.
+
+If a client says **"Connection closed"** while the CLI works, or the launcher says **"no reachable OpenThrottle server found"** while the server is up, check the Node version first. Symptom, cause, resolution order and overrides: **[openthrottle-mcp README § Launcher Node version](../../packages/openthrottle-mcp/README.md#launcher-node-version)**.
+
 ## Smoke-test checklist
 
 After registering or changing MCP config, confirm `openthrottle-mcp` works. There is **no docs-mcp gate** (retired). The full, maintained checklist lives in **[verification-environment.md § Registration smoke-test](../../packages/openthrottle-mcp/docs/verification-environment.md#registration-smoke-test-root--secondary-workspace)**; the gates in brief:
@@ -257,6 +264,7 @@ After registering or changing MCP config, confirm `openthrottle-mcp` works. Ther
 | Per-worktree port blocks             | [worktree-port-allocation.md](../monorepo/worktree-port-allocation.md)                          |
 | MCP env, fixtures, smoke checks      | [verification-environment.md](../../packages/openthrottle-mcp/docs/verification-environment.md) |
 | Service account tokens & rotation    | [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md)                                         |
+| Launcher Node version & overrides    | [README.md](../../packages/openthrottle-mcp/README.md#launcher-node-version)                    |
 | First agent workflow after MCP works | [first-time-onboarding.md](./first-time-onboarding.md)                                          |
 | Author OT plans & tasks via MCP      | [authoring-plans-via-mcp.md](./authoring-plans-via-mcp.md)                                      |
 | Fresh clone → server + MCP           | [local-quickstart.md](./local-quickstart.md)                                                    |
