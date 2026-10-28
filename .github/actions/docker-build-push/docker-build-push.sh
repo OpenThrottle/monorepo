@@ -54,9 +54,13 @@ done <<< "${INPUT_REGISTRIES_ADDITIONAL:-}"
 # `pnpm nx`. pnpm itself is pinned by the root package.json `packageManager`
 # field, which corepack reads inside the image — no build-arg needed.
 
+# Dockerfile target. `production` (distroless) unless the caller opts into another
+# one, e.g. `production-agents`; the same target is handed to the boot check.
+TARGET="${INPUT_TARGET:-production}"
+
 docker build \
   -f "${DOCKERFILE}" \
-  --target production \
+  --target "${TARGET}" \
   --build-arg APP_NAME="${INPUT_APP}" \
   --build-arg APP_VERSION="${APP_VERSION}" \
   --build-arg GITHUB_TOKEN="${INPUT_GITHUB_TOKEN}" \
@@ -73,7 +77,7 @@ done
 # Boot the image before anything is published. Runs on PRs too — that is where a
 # broken image should be caught, not on main after it has been pushed.
 echo "::group::boot check ${INPUT_APP}"
-bash "${SCRIPT_DIR}/boot-check.sh" "${INPUT_APP}" "${IMAGE}"
+bash "${SCRIPT_DIR}/boot-check.sh" "${INPUT_APP}" "${IMAGE}" "${TARGET}"
 echo "::endgroup::"
 
 echo "image=${IMAGE}" >> "${GITHUB_OUTPUT}"

@@ -211,6 +211,47 @@ variable "redis_image" {
 }
 
 ################################################################################
+# Agents — run the agent CLIs (claude, codex, gemini) inside the server container.
+#
+# Opt-in and off by default. Turning it on swaps openthrottle-server (and the
+# one-shot bootstrap that reuses its image) to the Dockerfile.NestJS
+# `production-agents` target, adds /workspaces and /home/agent as the only
+# writable paths, and puts Redis behind requirepass. Agent child processes run as
+# the SAME uid as the server and can read every secret in its environment and
+# reach Postgres and Redis — an accepted risk for a single-operator box, written
+# up in SECRETS.md § "Agents on this box". Credentials (GITHUB_TOKEN, API keys)
+# are NEVER Terraform variables: the operator writes agent-secrets.env on the box.
+################################################################################
+
+variable "agents_enabled" {
+  default     = false
+  description = "Run the agent CLIs inside openthrottle-server. When true: server_agents_image replaces server_image for the server and bootstrap services, /workspaces and /home/agent are bind-mounted from the data volume (or the boot disk), .env gains the OPENTHROTTLE_* workspace roots, Redis gets a generated requirepass, and an operator-written agent-secrets.env is loaded when present. Default false renders the same compose and startup script as before this variable existed. Read SECRETS.md § \"Agents on this box\" first: an agent turn can read every server secret and reach Postgres and Redis."
+  type        = bool
+
+  validation {
+    condition     = !var.agents_enabled || length(var.server_agents_image) > 0
+    error_message = "When agents_enabled is true, server_agents_image must be set (the sha-<sha>-agents tag of the openthrottle-server repository)."
+  }
+
+  validation {
+    condition     = !var.agents_enabled || var.deploy_enabled
+    error_message = "agents_enabled requires deploy_enabled: the agents wiring lives in the rendered compose and startup script."
+  }
+}
+
+variable "server_agents_image" {
+  default     = ""
+  description = "Full image for openthrottle-server built from the Dockerfile.NestJS `production-agents` target (e.g. ghcr.io/openthrottle/openthrottle-server:sha-xxx-agents). Same repository as server_image under a distinct `-agents` tag, and it should carry the SAME sha as migrations_image. Required when agents_enabled; ignored otherwise. Pin an exact tag: the CLI versions are baked into the image (docker/agent-clis), so bumping a CLI means building a new image and bumping this tag."
+  type        = string
+}
+
+variable "agents_server_mem_limit" {
+  default     = "1280m"
+  description = "Compose mem_limit for openthrottle-server WHEN agents_enabled. The default 640m is sized for the server alone; an agent turn runs a CLI (hundreds of MB) plus git and package installs in the same cgroup, and an OOM kill takes the whole server down with it. At 1280m the compose limits sum to ~3040m, which leaves almost nothing for the OS and page cache on a cx23 (4 GB) — plan on cx33 (8 GB) via server_type. Ignored when agents_enabled is false."
+  type        = string
+}
+
+################################################################################
 # Hetzner-specific — no GCP counterpart (see the contract).
 ################################################################################
 

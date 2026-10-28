@@ -76,6 +76,13 @@ Boot is not the peak. The `migrations` one-shot runs while `server`, `developer`
 gated behind `service_completed_successfully`, so the boot-time set is postgres + redis + migrations
 (~1.3 GB) — well under steady state.
 
+**Agents change this arithmetic.** With `agents_enabled`, `server` is limited to
+`agents_server_mem_limit` (1280m, up from 640m) because an agent turn runs a CLI, git and package
+installs in the same cgroup, and the limits then sum to 3040m. That leaves almost nothing on a CX23
+for the OS, the Docker daemon and the page cache, so plan on the CX33 (8 GB) when enabling it. The
+decision to run agents on this box at all is a security one, covered in
+[`SECRETS.md`](./applications/openthrottle_hcloud/SECRETS.md#agents-on-this-box-agents_enabled).
+
 **The honest caveat: RAM is not the binding constraint — 2 shared vCPUs are.** The nominal CPU
 limits sum to 2.5 against 2 vCPU. That is legal (Compose `cpus` is a ceiling, not a reservation, and
 these services do not saturate simultaneously) but it means the first symptom of real traffic will be

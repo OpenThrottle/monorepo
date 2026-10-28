@@ -37,6 +37,24 @@ locals {
 
   app_dir = "/opt/openthrottle"
 
+  # The image openthrottle-server (and bootstrap, which reuses it) runs. With
+  # agents_enabled it is the Dockerfile.NestJS `production-agents` target; the
+  # default is the distroless image, unchanged.
+  server_effective_image = var.agents_enabled ? var.server_agents_image : var.server_image
+
+  # Host directories bind-mounted at /workspaces (checkouts + worktrees) and
+  # /home/agent (gh credentials, git identity, CLI login state) when agents are
+  # on. Bind mounts rather than named volumes for the same reason Postgres uses
+  # one: a named volume only inherits ownership from a directory that already
+  # exists in the image, and /workspaces does not. startup.sh creates these
+  # owned by uid/gid 1000 (the image's `agent` user).
+  #
+  # With a data volume they sit beside the Postgres directory on the attached
+  # volume — so they survive a server rebuild — otherwise on the boot disk.
+  agents_data_root     = var.data_volume_size_gb > 0 ? dirname(local.postgres_data_dir) : local.app_dir
+  agents_home_dir      = "${local.agents_data_root}/agent-home"
+  agents_workspace_dir = "${local.agents_data_root}/workspaces"
+
   caddyfile = templatefile("${path.module}/templates/Caddyfile.tpl", {
     api_domain       = var.api_domain
     developer_domain = var.developer_domain
@@ -44,15 +62,22 @@ locals {
   })
 
   compose_content = templatefile("${path.module}/templates/docker-compose.yml.tpl", {
-    caddy_image       = var.caddy_image
-    developer_domain  = var.developer_domain
-    developer_image   = var.developer_image
-    mcp_image         = var.mcp_image
-    migrations_image  = var.migrations_image
-    postgres_data_dir = local.postgres_data_dir
-    postgres_image    = var.postgres_image
-    redis_image       = var.redis_image
-    server_image      = var.server_image
+    agents_enabled       = var.agents_enabled
+    agents_home_dir      = local.agents_home_dir
+    agents_workspace_dir = local.agents_workspace_dir
+    caddy_image          = var.caddy_image
+    developer_domain     = var.developer_domain
+    developer_image      = var.developer_image
+    mcp_image            = var.mcp_image
+    migrations_image     = var.migrations_image
+    postgres_data_dir    = local.postgres_data_dir
+    postgres_image       = var.postgres_image
+    redis_image          = var.redis_image
+    server_image         = local.server_effective_image
+    server_mem_limit     = var.agents_enabled ? var.agents_server_mem_limit : "640m"
+
+    # The image's own node: a path under distroless, a PATH lookup on Debian.
+    server_node_bin = var.agents_enabled ? "node" : "/nodejs/bin/node"
   })
 
   # The backup script is shipped verbatim onto the box rather than duplicated in
@@ -61,6 +86,9 @@ locals {
   backup_script = file("${path.module}/../../../databases/backup-offsite.sh")
 
   startup_script = var.deploy_enabled ? templatefile("${path.module}/templates/startup.sh.tpl", {
+    agents_enabled         = var.agents_enabled
+    agents_home_dir        = local.agents_home_dir
+    agents_workspace_dir   = local.agents_workspace_dir
     api_domain             = var.api_domain
     backup_remote          = var.backup_remote
     backup_retention_count = tostring(var.backup_retention_count)

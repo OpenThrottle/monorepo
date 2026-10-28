@@ -11,6 +11,7 @@ import {
   buildTimeoutSignal,
   getGraphQLToken,
   getGraphQLUrl,
+  GraphqlResponseError,
   parseDateTimeInResponse,
   parseGraphqlResponseBody,
   rethrowAsTimeoutIfAborted,
@@ -114,7 +115,7 @@ export async function executeGraphqlV2<
 
   if (json.errors != null && json.errors.length > 0) {
     const first = json.errors[0];
-    throw new Error(`GraphQL errors: ${first?.message ?? 'unknown'}`);
+    throw new GraphqlResponseError(first);
   }
 
   if (json.data == null) {

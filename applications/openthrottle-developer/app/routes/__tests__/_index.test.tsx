@@ -10,6 +10,7 @@ import * as React from 'react';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import type { Route } from '@/app/routes/+types/_index';
+import { NO_MODELS_COPY } from '~/routing/home/data/data.copy';
 import { buildRootMatch } from '~/testing/root-match-fixture';
 import { renderRouteHarness } from '~/testing/route-fixtures';
 
@@ -72,7 +73,7 @@ describe('routes/_index.tsx', () => {
     // no models it renders disabled with the discovery hint.
     expect(await view.findByTestId('ChatComposer')).toBeInTheDocument();
     expect(
-      await view.findByText(/No local models discovered/),
+      await view.findByRole('link', { name: NO_MODELS_COPY.agentsLinkLabel }),
     ).toBeInTheDocument();
   });
 

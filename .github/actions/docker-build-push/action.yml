@@ -64,6 +64,15 @@ inputs:
   tag:
     description: 'Image tag (e.g. sha-${GITHUB_SHA}).'
     required: true
+  target:
+    default: 'production'
+    description: >-
+      Dockerfile build target (docker build --target). Defaults to production.
+      Pass a distinct tag alongside a non-default target (e.g. target
+      production-agents with tag sha-<sha>-agents) so it never overwrites the
+      default image. The boot check is told the target and adds its own
+      assertions for it.
+    required: false
 
 outputs:
   image:
@@ -90,4 +99,5 @@ runs:
         INPUT_REGISTRIES_ADDITIONAL: ${{ inputs.registries-additional }}
         INPUT_REGISTRY: ${{ inputs.registry }}
         INPUT_TAG: ${{ inputs.tag }}
+        INPUT_TARGET: ${{ inputs.target }}
       run: bash "${{ github.action_path }}/docker-build-push.sh"

@@ -87,12 +87,83 @@ a drop-in.
 
 ## Runbooks
 
-- [`SECRETS.md`](./SECRETS.md) — what the code actually requires at boot, and how each secret is
-  provisioned without landing in `user_data`.
+- [`SECRETS.md`](./SECRETS.md) — what the code actually requires at boot, how each secret is
+  provisioned without landing in `user_data`, and
+  [running agents on the box](./SECRETS.md#agents-on-this-box-agents_enabled): the accepted risk, the
+  GitHub token, `agent-secrets.env` and rotation.
 - [`CUTOVER.md`](./CUTOVER.md) — DNS/TLS cutover and verifying the public surface with
   [`infra/tests/exposure/verify-exposure.sh`](../../tests/exposure/verify-exposure.sh).
 - [`databases/SEEDING.md`](../../../databases/SEEDING.md) — loading a dump into a fresh database, and
   [`verify-restore.sh`](../../../databases/verify-restore.sh) to prove it worked.
+
+## Agents (opt-in)
+
+`agents_enabled = true` runs the agent CLIs (claude, codex, gemini) inside `openthrottle-server`. It is
+**off by default**, and off renders a compose file and startup script byte-identical to what this
+module produced before the variable existed.
+
+```hcl
+  agents_enabled      = true
+  server_agents_image = "ghcr.io/openthrottle/openthrottle-server:sha-abc123-agents"
+
+  # An agent turn needs real memory: the server's 640m limit becomes
+  # agents_server_mem_limit (1280m), which does not fit a cx23.
+  server_type         = "cx33"
+  data_volume_size_gb = 20 # /workspaces and /home/agent live beside Postgres
+```
+
+Turning it on:
+
+- swaps `openthrottle-server` (and `bootstrap`, which reuses the image) to the `production-agents`
+  image, a Debian image with a shell, git, gh and the pinned CLIs, instead of the distroless one;
+- bind-mounts `/workspaces` (checkouts and worktrees) and `/home/agent` (gh credentials, git identity,
+  CLI login state) as the **only** writable paths besides tmpfs, owned by uid 1000;
+- adds `OPENTHROTTLE_WORKSPACE_ROOTS`, `OPENTHROTTLE_CHECKOUT_ROOT` and `OPENTHROTTLE_WORKTREE_ROOT` to
+  `.env`, and puts Redis behind a password generated on the box;
+- loads an optional, operator-written `agent-secrets.env` into the server only.
+
+**Read [`SECRETS.md`](./SECRETS.md#agents-on-this-box-agents_enabled) first.** An agent turn runs as
+the same uid as the server and can read every secret it holds and reach Postgres and Redis. That is an
+accepted risk for a single-operator box, and the same page covers creating the GitHub token, the
+`agent-secrets.env` format, rotation, and bumping the CLI versions.
+
+The GCP module is untouched and has no equivalent.
+
+## Rolling a change out to an existing box
+
+`user_data` runs once, at first boot, and is in `ignore_changes`, so changing `agents_enabled`, an
+image variable or the templates **does not reach a running server**. (Routine image rolls go through
+[`hetzner-deploy.yml`](../../../.github/workflows/hetzner-deploy.yml), which rewrites the tags in the
+rendered compose file; it keeps a `-agents` suffix.) For anything else, render the startup script and
+re-run it:
+
+```bash
+cd infra/environments/production-hcloud
+terraform apply                      # outputs only: user_data is ignored, so no resource changes
+terraform output -raw startup_script > "${TMPDIR:-/tmp}/openthrottle-startup.sh"
+
+IP="$(terraform output -raw ipv4_address)"
+scp "${TMPDIR:-/tmp}/openthrottle-startup.sh" root@"${IP}":/usr/local/sbin/openthrottle-startup.sh
+ssh root@"${IP}" 'chmod 0700 /usr/local/sbin/openthrottle-startup.sh \
+  && bash /usr/local/sbin/openthrottle-startup.sh'
+rm -f "${TMPDIR:-/tmp}/openthrottle-startup.sh"
+```
+
+Read the `terraform apply` plan: it must show output changes only. A resource change there means
+something else drifted and is not part of this procedure.
+
+The script is idempotent. It never regenerates `.secrets`, never formats the data volume, and appends
+`REDIS_PASSWORD` to an existing `.secrets` rather than replacing it. It does rewrite `.env`, the
+Caddyfile and `docker-compose.yml`, then `pull`s and `up -d --wait`s. Two consequences:
+
+- **Image tags revert to what Terraform has.** If `hetzner-deploy.yml` has rolled the box forward
+  since the last apply, bump the `*_image` variables to the deployed tags first, or this rolls it
+  back. `grep image: /opt/openthrottle/docker-compose.yml` on the box shows what is running.
+- **Hand edits to the compose file or `.env` are lost.** `agent-secrets.env` is not touched.
+
+The first time agents are enabled on a box that has already been running, Redis restarts with
+`requirepass`, so queued BullMQ jobs are kept (the data volume persists) but in-flight ones pause
+while the server restarts.
 
 ## Gotchas
 
@@ -103,7 +174,9 @@ a drop-in.
   transport authenticates with `OPENTHROTTLE_MCP_AUTH_TOKEN`; publishing it widens the surface, so
   set a hostname only when a remote client genuinely needs it.
 - **Cloud-init changes do not reach a running server** — `user_data` is in `ignore_changes` on the
-  underlying module. See [`hcloud_server`](../../modules/hcloud_server/README.md).
+  underlying module. See [`hcloud_server`](../../modules/hcloud_server/README.md), and
+  [Rolling a change out to an existing box](#rolling-a-change-out-to-an-existing-box) for the
+  render-and-re-run path.
 - **First boot does not provision a login user.** `docker compose run --rm bootstrap` is a manual,
   one-time step, deliberately never automatic, because `up` must never silently provision a
   possibly-shared database.

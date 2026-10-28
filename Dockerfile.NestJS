@@ -9,9 +9,11 @@
 # See docs/openthrottle/docker-image-build-strategy.md.
 #
 # Targets: `production` (default — distroless, pruned), `production-debian` (shell + git
-# for the host execution bridge), and `development` (builder-based, shell + full
+# for the host execution bridge), `production-agents` (opt-in: production-debian plus
+# gh, ssh, ripgrep, pnpm and the pinned claude/codex/gemini CLIs, for running agents
+# inside the container), and `development` (builder-based, shell + full
 # workspace, runs `pnpm nx run ${APP_NAME}:dev` with NX_DAEMON=false; used by the compose
-# `dev` profile with `develop.watch`).
+# `dev` profile with `develop.watch`). Also `mcp` (distroless openthrottle-mcp over HTTP).
 #
 # Pruning: each app declares its real runtime deps (see applications/*/package.json), and
 # `pnpm --filter <app> --prod deploy` produces the production tree. No manual
@@ -272,6 +274,104 @@ USER appuser
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD ["node", "-e", "require('http').get('http://127.0.0.1:'+String(process.env.PORT||'3000')+'/health',function(r){r.resume();r.on('end',function(){process.exit(r.statusCode===200?0:1)})}).on('error',function(){process.exit(1)})"]
 
+CMD ["node", "build/src/main.js"]
+
+################################################################################
+#
+#   AGENT-CLIS - the pinned agent CLIs, installed from a lockfile at BUILD time
+#
+################################################################################
+# docker/agent-clis/package.json pins exact versions of claude-code, codex and
+# gemini-cli; package-lock.json pins their whole tree. It is deliberately NOT a
+# pnpm workspace package (see pnpm-workspace.yaml globs) and Dependabot bumps it
+# (npm entry for /docker/agent-clis). No `curl | sh` at image build or at runtime.
+# A dedicated stage keeps this layer cached independently of the app build.
+FROM base AS agent-clis
+
+WORKDIR /opt/agent-clis
+
+COPY docker/agent-clis/package.json docker/agent-clis/package-lock.json ./
+
+RUN npm ci --prefix /opt/agent-clis --omit=dev --no-audit --no-fund \
+  && npm cache clean --force
+
+################################################################################
+#
+#   PRODUCTION-AGENTS ~ production-debian + git/ssh/gh/ripgrep + pnpm + agent CLIs
+#
+################################################################################
+# Opt-in. The server spawns the agent CLIs as child processes, so there is NO uid
+# separation between the server and the agents — an explicitly accepted risk for a
+# single-operator box. Do not publish this image as a multi-tenant runtime.
+#
+#   docker build -f Dockerfile.NestJS --target production-agents ...
+#
+# Runs as uid 1000 (matches compose `user: "1000:1000"`) with HOME=/home/agent, which
+# is meant to be a mounted volume: the entrypoint writes gh credentials and the git
+# identity there, and agent children (allowlisted env: HOME yes, GITHUB_TOKEN no)
+# read them back. See docker/agent-clis/entrypoint.sh.
+FROM base AS production-agents
+
+ARG PNPM_VERSION="__REQUIRED_ARG__"
+
+ENV NODE_ENV="production"
+# Agent discovery resolves the CLIs off PATH (agent-discovery.ts), so the pinned
+# bins go on PATH. The images are immutable: never let a CLI try to self-update.
+ENV PATH="/opt/agent-clis/node_modules/.bin:${PATH}"
+ENV DISABLE_AUTOUPDATER="1"
+# This image has no SSH key; git reaches github.com over HTTPS via the gh credential
+# helper the entrypoint sets up from GITHUB_TOKEN. Make the clone flow rewrite explicit
+# GitHub SSH URLs (git@github.com:o/r.git) to HTTPS so they work here too.
+ENV OPENTHROTTLE_GIT_PREFER_HTTPS="true"
+# corepack's cache must be readable by the non-root user (default is under /root).
+ENV COREPACK_HOME="/opt/corepack"
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT="0"
+
+# git/openssh-client: clone + push. ripgrep: what the agents search with.
+# procps: process management (ps). gh: from GitHub's official apt repo, verified
+# against its signing key (apt enforces signed-by). curl is only needed to fetch that key and is purged after.
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends curl git openssh-client procps ripgrep \
+  && install -d -m 0755 /etc/apt/keyrings \
+  && curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg -o /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+  && chmod 0644 /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+  && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" > /etc/apt/sources.list.d/github-cli.list \
+  && apt-get update \
+  && apt-get install -y --no-install-recommends gh \
+  && apt-get purge -y --auto-remove curl \
+  && rm -rf /var/lib/apt/lists/*
+
+# pnpm via corepack, at the pinned version, cached where uid 1000 can read it.
+RUN corepack enable \
+  && corepack prepare "pnpm@${PNPM_VERSION}" --activate \
+  && chmod -R a+rX /opt/corepack
+
+COPY --from=agent-clis /opt/agent-clis /opt/agent-clis
+
+# node:*-bookworm-slim already owns uid/gid 1000 as `node`; rename it (and move its
+# home) rather than adding a second 1000 — one real passwd entry, HOME=/home/agent.
+RUN groupmod --new-name agent node \
+  && usermod --login agent --home /home/agent --move-home --shell /bin/sh node \
+  && install -d -o 1000 -g 1000 -m 0755 /home/agent
+
+ENV HOME="/home/agent"
+
+COPY --from=build --chown=1000:1000 /app/pruned/. /app/
+
+# Same preload as production-debian — see the note there. Set only AFTER /app exists:
+# every node started by an earlier RUN (corepack, above) would otherwise fail to
+# find the preload.
+ENV NODE_OPTIONS="--import=/app/build/src/register-workspace-type-stripping.js"
+
+COPY --chmod=0755 docker/agent-clis/entrypoint.sh /usr/local/bin/agent-entrypoint.sh
+
+USER 1000:1000
+
+# Same probe as production-debian, via the base image's node binary.
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD ["node", "-e", "require('http').get('http://127.0.0.1:'+String(process.env.PORT||'3000')+'/health',function(r){r.resume();r.on('end',function(){process.exit(r.statusCode===200?0:1)})}).on('error',function(){process.exit(1)})"]
+
+ENTRYPOINT ["/usr/local/bin/agent-entrypoint.sh"]
 CMD ["node", "build/src/main.js"]
 
 ################################################################################

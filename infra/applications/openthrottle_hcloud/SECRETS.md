@@ -120,6 +120,170 @@ a project, so a read/write token for opening one firewall can also delete the se
 Keep the box in a Hetzner project of its own, so that token reaches nothing else, and rotate it if
 the repository's Actions secrets are ever exposed.
 
+## Agents on this box (`agents_enabled`)
+
+Opt-in, off by default, and **a deliberate security trade**, so read this before setting
+`agents_enabled = true`. It runs the agent CLIs (claude, codex, gemini) inside `openthrottle-server`
+from the Dockerfile.NestJS `production-agents` image, so plans and chats can execute on the box.
+
+### The accepted risk
+
+The server spawns each CLI as a child process, so **there is no uid separation between the server and
+the agents.** An agent turn, which means anything a model, or a prompt injected into a repository, can
+make it do, can:
+
+- read every server secret. `JWT_SECRET`, `POSTGRES_PASSWORD`, `REDIS_PASSWORD`, `GITHUB_TOKEN` and the
+  model API keys are all in the server's environment, and `/proc/1/environ` is readable by the same
+  uid. The child's own environment is allowlisted; its parent's is not hidden from it.
+- reach Postgres and Redis over the compose network, with the credentials it just read.
+- use the GitHub PAT, and write anywhere under `/workspaces` and `/home/agent`.
+- make arbitrary outbound connections. Nothing here restricts egress.
+
+What still holds: the root filesystem is read-only, every capability is dropped, `no-new-privileges`
+is set, and the container has no access to the host, the Docker socket or the other services'
+volumes. Redis `requirepass` keeps a _different_ container, or anything that cannot read the server's
+environment, out of Redis. It does **not** protect Redis from an agent.
+
+That is acceptable for a **single-operator box** whose repositories and prompts you control, and not
+for anything multi-tenant or any repository you do not trust. If a run looks hostile, rotate in this
+order, all described under [Rotating a secret](#rotating-a-secret):
+
+1. the GitHub PAT (revoke it on GitHub first), then the model API keys,
+2. `JWT_SECRET`, the Postgres password and the Redis password,
+3. then look at what it did: `git log` in the affected checkout under `/workspaces`, and the PAT's
+   audit trail on GitHub.
+
+### What `agents_enabled` changes
+
+| Area           | Change                                                                                                                                                                                                          |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Image          | `openthrottle-server` and `bootstrap` run `server_agents_image` (the `sha-<sha>-agents` tag) instead of `server_image`.                                                                                         |
+| Healthcheck    | Probes with `node` on `PATH` (the image is Debian), not `/nodejs/bin/node`.                                                                                                                                     |
+| Writable paths | `/workspaces` and `/home/agent`, bind-mounted from the data volume (or the boot disk). `read_only: true` stays on.                                                                                              |
+| `.env`         | Adds `OPENTHROTTLE_WORKSPACE_ROOTS=/workspaces`, `OPENTHROTTLE_CHECKOUT_ROOT=/workspaces/repositories`, `OPENTHROTTLE_WORKTREE_ROOT=/workspaces/worktrees` and `REDIS_PASSWORD`.                                |
+| `HOME`         | `/home/agent`, set on the server service only. Not in `.env`: that file is also the systemd `EnvironmentFile` for the host-side nightly backup, and a `HOME` of `/home/agent` there would hide rclone's config. |
+| Redis          | `requirepass` from a `REDIS_PASSWORD` generated on the box (same idempotent mechanism as `JWT_SECRET`), and an authenticated healthcheck.                                                                       |
+| Memory         | `agents_server_mem_limit` (default `1280m`) instead of `640m`. Plan on `server_type = "cx33"`: see `infra/hetzner-topology.md`.                                                                                 |
+| Credentials    | An optional, operator-written `agent-secrets.env` is loaded by `openthrottle-server` only.                                                                                                                      |
+
+Only the server talks to Redis (BullMQ, the Apollo cache, the health ping and the plan-cancel channel
+all read `REDIS_PASSWORD` through the `REDIS_*` variables), so no other service needs the password
+beyond the shared `.env`.
+
+### Creating the GitHub token
+
+Use a **fine-grained personal access token**, never a classic one:
+
+1. GitHub → Settings → Developer settings → Personal access tokens → **Fine-grained tokens** →
+   Generate new token.
+2. **Resource owner**: the user or organisation that owns the repositories. An organisation may
+   require an owner to approve the token.
+3. **Repository access**: _Only select repositories_, and pick exactly the ones OpenThrottle should
+   work on. Not _All repositories_.
+4. **Repository permissions**: _Contents_ **Read and write**, _Pull requests_ **Read and write**,
+   _Metadata_ **Read-only** (GitHub adds this one itself). Nothing else.
+5. Set the shortest expiry you are willing to rotate (30–90 days) and put it in your calendar. An
+   expired token fails quietly: a `gh auth login failed` warning in the server log, then `git push`
+   errors inside agent turns.
+
+### `agent-secrets.env`
+
+A root-owned `0600` file **next to the compose file** (`/opt/openthrottle/agent-secrets.env`), written
+over SSH. It is never in `user_data`, never in Terraform state, and not created by `startup.sh`.
+Compose loads it as a second `env_file` on `openthrottle-server` only, marked `required: false`, so a
+box without it still boots; the agents then simply have no credentials.
+
+```bash
+ssh root@"$(terraform output -raw ipv4_address)"
+cd /opt/openthrottle
+
+# Heredoc input is not recorded in shell history. Omit any line you do not use.
+(umask 077 && cat > agent-secrets.env <<'EOF'
+GITHUB_TOKEN=github_pat_REPLACE_ME
+OT_GIT_USER_NAME=Your Name
+OT_GIT_USER_EMAIL=you@example.com
+ANTHROPIC_API_KEY=sk-ant-REPLACE_ME
+OPENAI_API_KEY=sk-REPLACE_ME
+GEMINI_API_KEY=REPLACE_ME
+EOF
+)
+chown root:root agent-secrets.env && chmod 0600 agent-secrets.env
+ls -l agent-secrets.env        # -rw------- 1 root root
+
+docker compose up -d --force-recreate openthrottle-server
+```
+
+- One `KEY=value` per line, no `export`, no quotes needed, no trailing spaces.
+- `GITHUB_TOKEN` is consumed by the image's entrypoint, which pipes it to `gh auth login` and runs
+  `gh auth setup-git`, writing the credential under `/home/agent` (the volume). `OT_GIT_USER_NAME` and
+  `OT_GIT_USER_EMAIL` become `git config --global user.name` / `user.email` there. Agent children
+  inherit `HOME` but not `GITHUB_TOKEN`, so the credential lives in the volume rather than in their
+  environment.
+- The three API keys reach the CLIs through the server's environment. Also supported, if you prefer a
+  subscription to a metered key: `CLAUDE_CODE_OAUTH_TOKEN` (from `claude setup-token`) and
+  `CODEX_API_KEY`.
+- **Docker Compose >= 2.24.0 is required.** The long-form `env_file` with `required: false` is
+  rejected as an unknown property on older versions, and then _every_ `docker compose` command on the
+  box fails, not only this service. Check `docker compose version` before enabling. The Docker apt
+  repository `startup.sh` installs from ships a newer one.
+- `startup.sh` re-asserts `root:root` / `0600` on the file whenever it exists, and logs when it does
+  not.
+
+Check it took effect:
+
+```bash
+docker compose exec -T openthrottle-server sh -c \
+  'gh auth status; git config --global user.name; git config --global user.email'
+```
+
+### Rotating a secret
+
+Each ends with a recreate so the container re-reads its environment. For the values `startup.sh`
+manages, edit `/opt/openthrottle/.secrets` and re-run the script: it rewrites `.env` from that file
+and never regenerates a value that is present.
+
+| Secret                                                                                              | Procedure                                                                                                                                                                                                                                                       |
+| --------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GITHUB_TOKEN`                                                                                      | Create the new PAT, edit `agent-secrets.env`, `docker compose up -d --force-recreate openthrottle-server`, **then** revoke the old one on GitHub. If `gh auth status` still shows the old token, delete `<agent-home>/.config/gh/hosts.yml` and recreate again. |
+| `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GEMINI_API_KEY`, `CLAUDE_CODE_OAUTH_TOKEN`, `CODEX_API_KEY` | Edit `agent-secrets.env`, `docker compose up -d --force-recreate openthrottle-server`. Revoke the old key at the provider.                                                                                                                                      |
+| `OT_GIT_USER_NAME`, `OT_GIT_USER_EMAIL`                                                             | Edit `agent-secrets.env`, recreate `openthrottle-server`. The entrypoint rewrites the global git config.                                                                                                                                                        |
+| `JWT_SECRET`                                                                                        | Put a new `JWT_SECRET=$(openssl rand -hex 32)` value in `.secrets`, re-run the startup script, `docker compose up -d --force-recreate`. Every issued session stops validating.                                                                                  |
+| `POSTGRES_PASSWORD`                                                                                 | Change it **in the database first** (it is only read at `initdb`, so editing the file alone locks the server out), then in `.secrets`, then recreate. Procedure below.                                                                                          |
+| `REDIS_PASSWORD`                                                                                    | Delete the `REDIS_PASSWORD=` line from `.secrets` (or set a new value), re-run the startup script, `docker compose up -d --force-recreate redis openthrottle-server`. Recreate both together: Redis takes the password at start.                                |
+
+`<agent-home>` is `/mnt/openthrottle-data/agent-home` with a data volume, otherwise
+`/opt/openthrottle/agent-home`.
+
+Rotating the Postgres password:
+
+```bash
+cd /opt/openthrottle
+NEW="$(openssl rand -hex 24)"
+set -a; . ./.env; set +a
+docker compose exec -T postgres psql -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" -v new="${NEW}" \
+  <<< "ALTER USER ${POSTGRES_USER} PASSWORD :'new';"
+sed -i "s/^POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=${NEW}/" .secrets
+bash /usr/local/sbin/openthrottle-startup.sh   # rewrites .env, recreates what changed
+```
+
+Expect a short outage while the server reconnects. If a step fails between the `ALTER` and the `sed`,
+the database and `.secrets` disagree: fix whichever is wrong before restarting anything.
+
+### Bumping the agent CLI versions
+
+The CLIs are not downloaded on the box. They are pinned in `docker/agent-clis/package.json` and
+`package-lock.json`, installed at image build time, and the image sets `DISABLE_AUTOUPDATER`.
+
+1. Dependabot (the npm entry for `/docker/agent-clis` in `.github/dependabot.yml`) opens a PR that
+   bumps the pins and the lockfile.
+2. Merging it runs `openthrottle-docker.yml`, which boot-checks and publishes a new
+   `openthrottle-server:sha-<sha>-agents`.
+3. Point the environment at it: change `server_agents_image` (same sha as `migrations_image`), then
+   roll it out. Because `user_data` is in `ignore_changes`, the variable alone does **not** reach a
+   running box. Use `.github/workflows/hetzner-deploy.yml` (it retags the compose file and keeps the
+   `-agents` suffix), or the render-and-re-run path in
+   [`README.md`](./README.md#rolling-a-change-out-to-an-existing-box).
+
 ## Would this also serve the GCP path?
 
 Partly, and it is worth being precise, since the contract is better off with one row for secrets than

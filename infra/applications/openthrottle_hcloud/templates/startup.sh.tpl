@@ -109,6 +109,28 @@ fi
 # A named volume would hide this: Docker copies the image's ownership onto an
 # empty one, but never onto a bind mount.
 install -d -m 0700 -o 999 -g 999 "$${DATA_DIR}"
+%{~ if agents_enabled }
+
+################################################################################
+# 2b. Agent directories (agents_enabled)
+#
+# Bind-mounted into openthrottle-server at /workspaces and /home/agent, its only
+# writable paths besides tmpfs. They must be owned by uid/gid 1000 — the image's
+# `agent` user — or the read-only server cannot write a checkout, a worktree or
+# the gh/CLI credentials. A named volume would not do: Docker copies ownership
+# from the image only for a directory that EXISTS in it, and /workspaces does
+# not. Re-running is safe: install -d on an existing directory only re-asserts
+# owner and mode, it never touches the contents.
+################################################################################
+readonly AGENT_HOME_DIR="${agents_home_dir}"
+readonly AGENT_WORKSPACE_DIR="${agents_workspace_dir}"
+
+install -d -m 0755 -o 1000 -g 1000 \
+  "$${AGENT_WORKSPACE_DIR}" "$${AGENT_WORKSPACE_DIR}/repositories" "$${AGENT_WORKSPACE_DIR}/worktrees"
+# 0700: HOME holds the GitHub credential and each CLI's login state.
+install -d -m 0700 -o 1000 -g 1000 "$${AGENT_HOME_DIR}"
+log "agent directories ready: $${AGENT_WORKSPACE_DIR}, $${AGENT_HOME_DIR}"
+%{~ endif }
 
 ################################################################################
 # 3. Secrets
@@ -140,6 +162,22 @@ SECRETSEOF
 else
   log "reusing existing secrets from $${SECRETS_FILE}"
 fi
+%{~ if agents_enabled }
+
+# REDIS_PASSWORD (agents_enabled): agent child processes share the server's
+# network, so Redis must demand a password. Generated once and reused like the
+# other two, and APPENDED when the secrets file already exists (a box that
+# predates agents), so enabling agents never regenerates JWT_SECRET or
+# POSTGRES_PASSWORD.
+if ! grep -q '^REDIS_PASSWORD=' "$${SECRETS_FILE}"; then
+  log "generating REDIS_PASSWORD"
+  (
+    umask 077
+    printf 'REDIS_PASSWORD=%s\n' "$(openssl rand -hex 24)" >> "$${SECRETS_FILE}"
+  )
+  chmod 0600 "$${SECRETS_FILE}"
+fi
+%{~ endif }
 
 set +u
 # shellcheck source=/dev/null  # generated at runtime; not available to analysis
@@ -175,6 +213,9 @@ POSTGRES_USER=${postgres_user}
 
 REDIS_HOST=${redis_host}
 REDIS_PORT=${redis_port}
+%{~ if agents_enabled }
+REDIS_PASSWORD=$${REDIS_PASSWORD}
+%{~ endif }
 
 JWT_SECRET=$${JWT_SECRET}
 
@@ -199,9 +240,35 @@ APP_URL_WEBSITE=https://${developer_domain}
 ROLLBAR_TOKEN=placeholder-rollbar-disabled
 
 OT_MCP_HTTP_PORT=3000
+%{~ if agents_enabled }
+
+# Agents (production-agents image): where the server clones, creates worktrees
+# and browses. /workspaces is a host bind mount owned by uid 1000. HOME is NOT
+# set here — see the server service in docker-compose.yml for why.
+OPENTHROTTLE_CHECKOUT_ROOT=/workspaces/repositories
+OPENTHROTTLE_WORKSPACE_ROOTS=/workspaces
+OPENTHROTTLE_WORKTREE_ROOT=/workspaces/worktrees
+%{~ endif }
 ENVEOF
 chmod 0600 "$${APP_DIR}/.env"
 umask 022
+%{~ if agents_enabled }
+
+# The operator-written credentials file, loaded by openthrottle-server only. It
+# is NOT created here: GITHUB_TOKEN and the model API keys must never pass
+# through user_data or Terraform state, so the operator writes it over SSH (see
+# SECRETS.md § "Agents on this box"). Compose treats it as optional
+# (required: false), so a missing file is not a boot failure — agents just start
+# without credentials. If it IS there, re-assert root:root 0600.
+readonly AGENT_SECRETS_FILE="$${APP_DIR}/agent-secrets.env"
+if [[ -f "$${AGENT_SECRETS_FILE}" ]]; then
+  chown root:root "$${AGENT_SECRETS_FILE}"
+  chmod 0600 "$${AGENT_SECRETS_FILE}"
+  log "agent credentials present at $${AGENT_SECRETS_FILE}"
+else
+  log "NOTE: $${AGENT_SECRETS_FILE} does not exist; agents will start with no GitHub token or API keys"
+fi
+%{~ endif }
 
 ################################################################################
 # 5. Caddyfile + compose
@@ -381,3 +448,6 @@ fi
 # will not serve. That is expected, not a failure.
 ################################################################################
 log "NEXT STEP (manual): docker compose run --rm bootstrap  # see SECRETS.md"
+%{~ if agents_enabled }
+log "NEXT STEP (agents): write $${AGENT_SECRETS_FILE} (root:root 0600), then: docker compose up -d openthrottle-server  # see SECRETS.md"
+%{~ endif }

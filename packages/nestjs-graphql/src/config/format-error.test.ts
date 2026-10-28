@@ -1,4 +1,4 @@
-import type { GraphQLFormattedError } from 'graphql';
+import { GraphQLError, type GraphQLFormattedError } from 'graphql';
 import { describe, expect, it, vi } from 'vitest';
 
 import { createFormatError, type FormatErrorLogger } from './format-error.ts';
@@ -88,5 +88,44 @@ describe('createFormatError', () => {
     );
 
     expect(result).not.toHaveProperty('extensions');
+  });
+
+  describe('production masking vs. deliberate errors', () => {
+    it('preserves the message of a GraphQLError with its own extensions.code', () => {
+      const logger = createLogger();
+      const format = createFormatError(logger, { maskInternalErrors: true });
+      const thrown = new GraphQLError(
+        'Set OPENTHROTTLE_WORKSPACE_ROOTS to browse folders',
+        { extensions: { code: 'WORKSPACE_ROOTS_NOT_CONFIGURED' } },
+      );
+
+      const result = format(thrown.toJSON(), thrown);
+
+      expect(result.message).toBe(
+        'Set OPENTHROTTLE_WORKSPACE_ROOTS to browse folders',
+      );
+      expect(result.extensions).toEqual({
+        code: 'WORKSPACE_ROOTS_NOT_CONFIGURED',
+      });
+      expect(logger.error).not.toHaveBeenCalled();
+    });
+
+    it('still masks an unclassified plain Error (INTERNAL_SERVER_ERROR) in production', () => {
+      const logger = createLogger();
+      const format = createFormatError(logger, { maskInternalErrors: true });
+      const thrown = new Error('ENOENT: no such file /srv/secret');
+      const formatted: GraphQLFormattedError = {
+        extensions: { code: 'INTERNAL_SERVER_ERROR' },
+        message: thrown.message,
+      };
+
+      const result = format(formatted, thrown);
+
+      expect(result.message).toBe('Internal server error');
+      expect(logger.error).toHaveBeenCalledWith(
+        'Unhandled GraphQL error',
+        thrown,
+      );
+    });
   });
 });

@@ -134,6 +134,29 @@ describe('codexConversationBackend', () => {
     }
   });
 
+  it('passes the allowlisted auth credentials through the env scrubber', async () => {
+    process.env[CODEX_BIN_ENV] = writeFakeBin(
+      'codex-auth-env.js',
+      `const present = ['CODEX_API_KEY', 'OPENAI_API_KEY'].map((key) => key + ':' + (process.env[key] === 'tok-' + key ? 'y' : 'n'));
+      process.stdout.write(JSON.stringify({ type: 'item.completed', item: { id: 'a', item_type: 'agent_message', text: present.join('|') } }) + '\\n');
+      process.stdout.write(JSON.stringify({ type: 'turn.completed', usage: {} }) + '\\n');`,
+    );
+    process.env.CODEX_API_KEY = 'tok-CODEX_API_KEY';
+    process.env.OPENAI_API_KEY = 'tok-OPENAI_API_KEY';
+    try {
+      const chunks = await collect({
+        cwd: dir,
+        messages: [{ content: 'hi', role: 'user' }],
+        model: 'm',
+      });
+      const textChunk = chunks.find((chunk) => chunk.kind === 'text');
+      expect(textChunk?.delta).toBe('CODEX_API_KEY:y|OPENAI_API_KEY:y');
+    } finally {
+      delete process.env.CODEX_API_KEY;
+      delete process.env.OPENAI_API_KEY;
+    }
+  });
+
   it('kills a hung process on the idle timeout and yields an idle-timeout error', async () => {
     process.env[CODEX_BIN_ENV] = hangBin();
     process.env[AGENT_IDLE_TIMEOUT_MS_ENV] = '200';

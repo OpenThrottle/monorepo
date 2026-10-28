@@ -64,6 +64,15 @@ module "openthrottle" {
   #   redis_host          move Postgres or Redis off the box with no application
   #                       change (SCALING.md rung 2b).
   #
+  #   agents_enabled    — off. Turning it on runs the agent CLIs inside the
+  #   server_agents_image server, as the same uid, with the server's secrets in
+  #                       reach: an accepted risk for a single-operator box
+  #                       only. Needs server_agents_image (the
+  #                       sha-<sha>-agents tag) and a cx33. GITHUB_TOKEN and the
+  #                       API keys are NEVER variables: write agent-secrets.env
+  #                       on the box. See applications/openthrottle_hcloud/
+  #                       SECRETS.md § "Agents on this box".
+  #
   #   mcp_domain        — empty keeps the MCP transport reachable only on the
   #                       compose network. It is guarded solely by
   #                       OPENTHROTTLE_MCP_AUTH_TOKEN, so publish it only if a

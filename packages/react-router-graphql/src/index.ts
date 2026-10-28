@@ -9,6 +9,7 @@ import {
   executeGraphql,
   executeGraphqlWithAuth as executeGraphqlWithAuthNodeJS,
   GRAPHQL_TIMEOUT_ERROR_PREFIX,
+  GraphqlResponseError,
 } from '@openthrottle/nodejs-graphql';
 import { getAuthTokenFromCookie } from '@openthrottle/react-router-auth';
 
@@ -214,6 +215,17 @@ export async function executeGraphqlWithAuth<
  * @public
  */
 export { executeGraphql };
+
+/**
+ * @description Error class thrown when a GraphQL response carries `errors`.
+ * Exposes the first error's `extensions.code` as `code` and the bare server
+ * message as `graphqlMessage`, so loaders/actions can branch on a stable code
+ * and show the server's own text (e.g. `error instanceof GraphqlResponseError`).
+ * Re-exported here so apps never deep-import `@openthrottle/nodejs-graphql`.
+ *
+ * @public
+ */
+export { GraphqlResponseError };
 
 export * from './hooks/createGraphqlWsClient';
 export * from './hooks/executeWsMutation';

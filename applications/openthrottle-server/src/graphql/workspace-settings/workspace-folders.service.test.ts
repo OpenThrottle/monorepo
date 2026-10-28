@@ -1,6 +1,13 @@
 import { execFile } from 'node:child_process';
 import { existsSync, realpathSync } from 'node:fs';
-import { mkdir, mkdtemp, rm } from 'node:fs/promises';
+import {
+  chmod,
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
 import { homedir, tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
@@ -33,6 +40,10 @@ import {
 import type { ForeignSkillMaterializationService } from '../../services/foreign-skill-injection/foreign-skill-materialization.service.ts';
 import { RepositoryInspectionService } from '../repository-inspection/repository-inspection.service.ts';
 import { NATIVE_PICKER_ENV } from './native-folder-picker.ts';
+import {
+  WorkspaceFolderError,
+  WorkspaceFolderErrorCode,
+} from './workspace-folders.errors.ts';
 import {
   CHECKOUT_ROOT_ENV,
   getCheckoutRoot,
@@ -327,24 +338,82 @@ describe('WorkspaceFoldersService', () => {
       expect(listing.parentPath).toBeNull();
     });
 
-    it('rejects paths outside the configured roots', async () => {
-      await expect(service.browseDirectory(userId, tmpdir())).rejects.toThrow(
-        'not within the configured workspace roots',
+    describe('user-facing failures', () => {
+      const expectCode = async (
+        promise: Promise<unknown>,
+        code: WorkspaceFolderErrorCode,
+      ): Promise<WorkspaceFolderError> => {
+        const error = await promise.catch((caught: unknown) => caught);
+        expect(error).toBeInstanceOf(WorkspaceFolderError);
+        if (!(error instanceof WorkspaceFolderError)) {
+          throw new Error('expected a WorkspaceFolderError');
+        }
+        expect(error.code).toBe(code);
+        expect(error.extensions.code).toBe(code);
+        return error;
+      };
+
+      it('rejects paths outside the configured roots', async () => {
+        const error = await expectCode(
+          service.browseDirectory(userId, tmpdir()),
+          WorkspaceFolderErrorCode.WORKSPACE_PATH_OUTSIDE_ROOTS,
+        );
+        expect(error.message).toContain(
+          'not within the configured workspace roots',
+        );
+      });
+
+      it('rejects relative paths', async () => {
+        const error = await expectCode(
+          service.browseDirectory(userId, 'relative'),
+          WorkspaceFolderErrorCode.WORKSPACE_PATH_NOT_ABSOLUTE,
+        );
+        expect(error.message).toContain('absolute path');
+      });
+
+      it('rejects a path that does not exist', async () => {
+        await expectCode(
+          service.browseDirectory(userId, join(workspaceRoot, 'nope')),
+          WorkspaceFolderErrorCode.WORKSPACE_PATH_NOT_FOUND,
+        );
+      });
+
+      it('rejects with a stable code naming the env var when roots are unset', async () => {
+        delete process.env[WORKSPACE_ROOTS_ENV];
+
+        const error = await expectCode(
+          service.browseDirectory(userId, workspaceRoot),
+          WorkspaceFolderErrorCode.WORKSPACE_ROOTS_NOT_CONFIGURED,
+        );
+        expect(error.message).toContain(WORKSPACE_ROOTS_ENV);
+      });
+
+      it('rejects the roots listing with the same code when roots are unset', async () => {
+        delete process.env[WORKSPACE_ROOTS_ENV];
+
+        await expectCode(
+          service.browseDirectory(userId),
+          WorkspaceFolderErrorCode.WORKSPACE_ROOTS_NOT_CONFIGURED,
+        );
+      });
+
+      it.skipIf(process.getuid?.() === 0)(
+        'rejects an unreadable directory (EACCES) as not readable',
+        async () => {
+          const locked = join(workspaceRoot, 'locked-dir');
+          await mkdir(locked, { recursive: true });
+          await chmod(locked, 0o000);
+          try {
+            await expectCode(
+              service.browseDirectory(userId, locked),
+              WorkspaceFolderErrorCode.WORKSPACE_PATH_NOT_READABLE,
+            );
+          } finally {
+            await chmod(locked, 0o755);
+            await rm(locked, { force: true, recursive: true });
+          }
+        },
       );
-    });
-
-    it('rejects relative paths', async () => {
-      await expect(service.browseDirectory(userId, 'relative')).rejects.toThrow(
-        'absolute path',
-      );
-    });
-
-    it('rejects when roots are unset', async () => {
-      delete process.env[WORKSPACE_ROOTS_ENV];
-
-      await expect(
-        service.browseDirectory(userId, workspaceRoot),
-      ).rejects.toThrow(WORKSPACE_ROOTS_ENV);
     });
   });
 
@@ -852,28 +921,208 @@ describe('WorkspaceFoldersService', () => {
       expect(payload.checkout).toBeDefined();
     }, 30_000);
 
-    it('throws when OPENTHROTTLE_CHECKOUT_ROOT is unset', async () => {
+    it('throws a user-facing error naming the env var when OPENTHROTTLE_CHECKOUT_ROOT is unset', async () => {
       delete process.env[CHECKOUT_ROOT_ENV];
 
-      await expect(
-        service.cloneRepository(userId, { gitUrl: `file://${gitRepoDir}` }),
-      ).rejects.toBeInstanceOf(BadRequestException);
+      const error = await service
+        .cloneRepository(userId, { gitUrl: `file://${gitRepoDir}` })
+        .catch((caught: unknown) => caught);
+
+      expect(error).toBeInstanceOf(WorkspaceFolderError);
+      if (error instanceof WorkspaceFolderError) {
+        expect(error.code).toBe(
+          WorkspaceFolderErrorCode.CHECKOUT_ROOT_NOT_CONFIGURED,
+        );
+        expect(error.message).toContain(CHECKOUT_ROOT_ENV);
+      }
       expect(vi.mocked(mockCheckoutsService.create)).not.toHaveBeenCalled();
     });
 
-    it('rejects an implausible git url', async () => {
-      await expect(
-        service.cloneRepository(userId, { gitUrl: 'not a git url' }),
-      ).rejects.toBeInstanceOf(BadRequestException);
+    it('throws a user-facing error when the git binary is missing (spawn ENOENT)', async () => {
+      const originalPath = process.env.PATH;
+      const emptyBin = await mkdtemp(join(tmpdir(), 'ot-empty-bin-'));
+      process.env.PATH = emptyBin;
+
+      try {
+        const error = await service
+          .cloneRepository(userId, {
+            gitUrl: `file://${gitRepoDir}`,
+            name: 'no-git',
+          })
+          .catch((caught: unknown) => caught);
+
+        expect(error).toBeInstanceOf(WorkspaceFolderError);
+        if (error instanceof WorkspaceFolderError) {
+          expect(error.code).toBe(WorkspaceFolderErrorCode.GIT_NOT_INSTALLED);
+        }
+      } finally {
+        process.env.PATH = originalPath;
+        await rm(emptyBin, { force: true, recursive: true });
+      }
+      expect(existsSync(join(cloneRoot, 'no-git'))).toBe(false);
       expect(vi.mocked(mockCheckoutsService.create)).not.toHaveBeenCalled();
+    });
+
+    it('throws a user-facing error when the checkout root cannot be created', async () => {
+      const blocker = join(cloneRoot, 'a-file');
+      await execFileAsync('touch', [blocker]);
+      process.env[CHECKOUT_ROOT_ENV] = join(blocker, 'nested');
+
+      const error = await service
+        .cloneRepository(userId, { gitUrl: `file://${gitRepoDir}` })
+        .catch((caught: unknown) => caught);
+
+      expect(error).toBeInstanceOf(WorkspaceFolderError);
+      if (error instanceof WorkspaceFolderError) {
+        expect(error.code).toBe(
+          WorkspaceFolderErrorCode.CHECKOUT_ROOT_NOT_WRITABLE,
+        );
+      }
+    });
+
+    it.each([
+      'not a git url',
+      'owner/repo/extra',
+      'owner/..',
+      'https://user:ghp_secret@github.com/o/r.git',
+    ])('rejects %j as a classified GIT_URL_INVALID error', async (gitUrl) => {
+      const error = await service
+        .cloneRepository(userId, { gitUrl })
+        .catch((caught: unknown) => caught);
+
+      expect(error).toBeInstanceOf(WorkspaceFolderError);
+      if (error instanceof WorkspaceFolderError) {
+        expect(error.code).toBe(WorkspaceFolderErrorCode.GIT_URL_INVALID);
+        expect(error.message).not.toContain('ghp_secret');
+      }
+      expect(vi.mocked(mockCheckoutsService.create)).not.toHaveBeenCalled();
+    });
+
+    describe('GitHub inputs (git stubbed so nothing touches the network)', () => {
+      const CANONICAL = 'https://github.com/openthrottle/monorepo.git';
+      const NORMALIZED = 'https://github.com/openthrottle/monorepo';
+      let stubDir: string;
+      let argvFile: string;
+      const savedEnv = {
+        path: process.env.PATH,
+        preferHttps: process.env.OPENTHROTTLE_GIT_PREFER_HTTPS,
+      };
+
+      /** `git clone` is faked (init + `remote add origin <url>`); all else is real git. */
+      beforeEach(async () => {
+        stubDir = await mkdtemp(join(tmpdir(), 'ot-stub-git-'));
+        argvFile = join(stubDir, 'clone-argv.txt');
+        const { stdout } = await execFileAsync('which', ['git']);
+        const script = [
+          '#!/bin/sh',
+          'if [ "$1" = "clone" ]; then',
+          `  printf '%s\\n' "$@" > '${argvFile}'`,
+          `  '${stdout.trim()}' init --quiet "$4" && '${stdout.trim()}' -C "$4" remote add origin "$3"`,
+          '  exit $?',
+          'fi',
+          `exec '${stdout.trim()}' "$@"`,
+          '',
+        ].join('\n');
+        await writeFile(join(stubDir, 'git'), script, { mode: 0o755 });
+        process.env.PATH = `${stubDir}:${savedEnv.path ?? ''}`;
+        vi.mocked(
+          mockRepositoriesService.findByNormalizedRemoteUrl,
+        ).mockResolvedValue(null);
+      });
+
+      afterEach(async () => {
+        process.env.PATH = savedEnv.path;
+        if (savedEnv.preferHttps === undefined) {
+          delete process.env.OPENTHROTTLE_GIT_PREFER_HTTPS;
+        } else {
+          process.env.OPENTHROTTLE_GIT_PREFER_HTTPS = savedEnv.preferHttps;
+        }
+        await rm(stubDir, { force: true, recursive: true });
+      });
+
+      const cloneArgv = async (): Promise<readonly string[]> =>
+        (await readFile(argvFile, 'utf8')).split('\n').filter(Boolean);
+
+      it.each([
+        'openthrottle/monorepo',
+        'https://github.com/openthrottle/monorepo',
+        'https://github.com/openthrottle/monorepo.git',
+        'git@github.com:openthrottle/monorepo.git',
+        'ssh://git@github.com/openthrottle/monorepo.git',
+      ])(
+        'registers %j under one normalized remote and names the folder after the repo',
+        async (gitUrl) => {
+          process.env.OPENTHROTTLE_GIT_PREFER_HTTPS = 'true';
+
+          await service.cloneRepository(userId, { gitUrl });
+
+          const [, url, target] = await cloneArgv().then((argv) =>
+            argv.slice(1),
+          );
+          expect(url).toBe(CANONICAL);
+          expect(new URL(url ?? '').username).toBe('');
+          expect(new URL(url ?? '').password).toBe('');
+          expect(target).toBe(join(cloneRoot, 'monorepo'));
+          expect(
+            vi.mocked(mockRepositoriesService.create),
+          ).toHaveBeenCalledWith(
+            expect.objectContaining({ normalizedRemoteUrl: NORMALIZED }),
+          );
+          expect(vi.mocked(mockCheckoutsService.create)).toHaveBeenCalledWith(
+            userId,
+            expect.objectContaining({ displayName: 'monorepo', managed: true }),
+          );
+        },
+        30_000,
+      );
+
+      it('leaves an explicit SSH URL on SSH when HTTPS is not preferred, with the same normalized remote', async () => {
+        delete process.env.OPENTHROTTLE_GIT_PREFER_HTTPS;
+
+        await service.cloneRepository(userId, {
+          gitUrl: 'git@github.com:openthrottle/monorepo.git',
+        });
+
+        expect((await cloneArgv())[2]).toBe(
+          'git@github.com:openthrottle/monorepo.git',
+        );
+        expect(vi.mocked(mockRepositoriesService.create)).toHaveBeenCalledWith(
+          expect.objectContaining({ normalizedRemoteUrl: NORMALIZED }),
+        );
+      }, 30_000);
+
+      it('still resolves the owner/repo shorthand to HTTPS when HTTPS is not preferred', async () => {
+        delete process.env.OPENTHROTTLE_GIT_PREFER_HTTPS;
+
+        await service.cloneRepository(userId, {
+          gitUrl: 'openthrottle/monorepo',
+        });
+
+        expect((await cloneArgv())[2]).toBe(CANONICAL);
+      }, 30_000);
+
+      it('lets an explicit name override the derived repo name', async () => {
+        await service.cloneRepository(userId, {
+          gitUrl: 'openthrottle/monorepo',
+          name: 'my-copy',
+        });
+
+        expect((await cloneArgv())[3]).toBe(join(cloneRoot, 'my-copy'));
+      }, 30_000);
     });
 
     it('leaves no partial directory or rows when the clone fails', async () => {
       const missing = join(workspaceRoot, 'does-not-exist-repo');
 
-      await expect(
-        service.cloneRepository(userId, { gitUrl: `file://${missing}` }),
-      ).rejects.toBeInstanceOf(BadRequestException);
+      const error = await service
+        .cloneRepository(userId, { gitUrl: `file://${missing}` })
+        .catch((caught: unknown) => caught);
+
+      expect(error).toBeInstanceOf(WorkspaceFolderError);
+      if (error instanceof WorkspaceFolderError) {
+        expect(error.code).toBe(WorkspaceFolderErrorCode.GIT_CLONE_FAILED);
+        expect(error.message).toContain('git clone failed');
+      }
 
       expect(existsSync(join(cloneRoot, 'does-not-exist-repo'))).toBe(false);
       expect(vi.mocked(mockCheckoutsService.create)).not.toHaveBeenCalled();

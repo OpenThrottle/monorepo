@@ -59,7 +59,10 @@ const CLAUDE_CONFIG_DIR_KEY = 'CLAUDE_CONFIG_DIR';
  */
 const ALLOWED_ENV_KEYS = [
   'ANTHROPIC_API_KEY',
+  'CLAUDE_CODE_OAUTH_TOKEN',
   CLAUDE_CONFIG_DIR_KEY,
+  // Set by the `production-agents` image, whose CLI install is read-only.
+  'DISABLE_AUTOUPDATER',
   'HOME',
   'LANG',
   'LC_ALL',

@@ -23,8 +23,9 @@ export interface CloneRepoDialogProps {
 /**
  * @description "Clone repo" sibling to the add-folder gesture: submits a git URL
  * (+ optional folder name) to the cloneRepository mutation, which clones into the
- * server's managed checkout root and registers it via the same pipeline. The
- * result renders in the shared AddFolderResult panel.
+ * server's managed checkout root and registers it via the same pipeline. The git
+ * URL field accepts GitHub `owner/repo` as well as full URLs (copy in
+ * WORKSPACE_FOLDERS_COPY). The result renders in the shared AddFolderResult panel.
  */
 export const CloneRepoDialog = (
   props: CloneRepoDialogProps,
@@ -72,7 +73,7 @@ export const CloneRepoDialog = (
               autoComplete="off"
               id="clone-repo-git-url"
               name="gitUrl"
-              placeholder="git@github.com:owner/repo.git"
+              placeholder={WORKSPACE_FOLDERS_COPY.cloneRepoUrlPlaceholder}
               required={true}
               spellCheck={false}
               type="text"
@@ -82,7 +83,12 @@ export const CloneRepoDialog = (
             <Label htmlFor="clone-repo-name">
               {WORKSPACE_FOLDERS_COPY.cloneRepoNameLabel}
             </Label>
-            <Input id="clone-repo-name" name="name" type="text" />
+            <Input
+              id="clone-repo-name"
+              name="name"
+              placeholder={WORKSPACE_FOLDERS_COPY.cloneRepoNamePlaceholder}
+              type="text"
+            />
           </div>
           <Button disabled={isCloning} type="submit">
             {isCloning ? 'Cloning…' : WORKSPACE_FOLDERS_COPY.cloneRepoButton}
