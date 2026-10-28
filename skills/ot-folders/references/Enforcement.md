@@ -28,11 +28,12 @@ trusting this table if the two ever disagree.
 | `audit-templates-compliance`             | `.tsx` vs generator templates                                                                              | advisory                                  | n/a                                                     | `pnpm run audit:templates-compliance`          | `docs/tools/templates/AGENT_USAGE.md`                   |
 | `audit-test-coverage`                    | repo-wide test coverage                                                                                    | advisory (warn-mode)                      | n/a                                                     | `pnpm run audit:test-coverage`                 | `docs/monorepo/test-coverage-audit.md`                  |
 
-**`--strict` gates R4/R5 only.** The shape audits exit non-zero on hoist
-violations and multi-component files. The R6 line count is reported but never
-fails the audit — ESLint's `max-lines` owns that cap, and the audit counts one
-line higher than ESLint does, so a file the audit lists at 211 can be at the cap
-and pass lint.
+**The component audit's `--strict` gates R4/R5/R6.** It exits non-zero on hoist
+violations, multi-component files, and authored components over the 210-line
+cap. R6 counts lines exactly as ESLint's `max-lines` does and repeats that cap on
+purpose: lint-staged runs `eslint --fix` before `prettier --write`, so prettier
+can reflow a file past 210 after lint has passed, and the audit re-checks the
+final content. The shadcn profile's VR6 cap stays report-only.
 
 `pnpm run nx:validate` runs all three `nx:validate-*` scripts, but
 `nx:validate-configurations` currently exits 1 in a clean checkout when

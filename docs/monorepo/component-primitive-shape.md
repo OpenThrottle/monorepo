@@ -235,9 +235,14 @@ in a component file, it moves.
   blank-line / comment counting options settled (our mandated markers and
   blank-line whitespace mean a bare skeleton already spends lines on structure —
   the initial cap counts physical lines and will be revisited).
-- This is a hard rule, enforced by ESLint `max-lines` scoped to component files,
-  not a suggestion. Genuinely-irreducible files use the [opt-out](#opt-out--last-resort)
-  pragma with a written reason, like any other rule.
+- This is a hard rule, enforced twice: by ESLint `max-lines` scoped to component
+  files, and by the strict audit (`pnpm run audit:component-shape:strict`), which
+  fails on R6 exactly as it does on R4/R5. Both count lines the same way. The
+  audit duplicates the lint rule on purpose: lint-staged runs `eslint --fix`
+  before `prettier --write`, so prettier can reflow a file past the cap after
+  lint has passed, and the audit re-checks the final content at commit, push and
+  CI. Genuinely-irreducible files use the [opt-out](#opt-out--last-resort)
+  pragma with a written reason, like any other rule; both enforcers honor it.
 
 ### R7 — Keep components UI-focused; extract logic into hooks
 
@@ -366,11 +371,12 @@ the plan `React component primitive-shape audit & continuous enforcement`:
   markers / normalizes whitespace / inserts an empty `FooProps`, plus **R6** via
   ESLint `max-lines` (210) scoped to component files. Runs in `nx lint`, the
   editor, and CI.
-- **Audit script** `component-shape:check` (cross-file: R4, R5 — file-scope
-  helper/data/config/hook hoisting and one-per-file) plus a repo-wide inventory
-  that reports R6 line counts (so the cap can be tuned) and **R7 advisory
-  signals** (hook/state/statement counts flagging "extract a `use<Name>` hook").
-  Runs in `check:local` and CI.
+- **Audit script** `audit:component-shape` (cross-file: R4, R5 — file-scope
+  helper/data/config/hook hoisting and one-per-file), plus **R6** re-checked on
+  the final file content (after prettier, which runs after `eslint --fix` in
+  lint-staged) and a repo-wide inventory with **R7 advisory signals**
+  (hook/state/statement counts flagging "extract a `use<Name>` hook"). `--strict`
+  fails on R4, R5 and R6. Runs in `check:local` and CI.
 
 Both share the scope globs and the opt-out pragma above so they can never
 disagree, and a contract test asserts freshly-generated components pass both —
@@ -384,8 +390,9 @@ lifecycle stages, all on the exact same single command so they can never drift:
 - **pre-commit** (`.husky/pre-commit`) — every commit (human or agent) must
   pass; it runs after `lint-staged`.
 - **pre-push** (`.husky/pre-push`) — every push must pass.
-- **CI** — the `🧱 Component primitive-shape audit` step in
-  `.github/workflows/continuous-integration.yml`.
+- **CI** — the `🧩 Strict audits (audit:strict)` step in
+  `.github/workflows/continuous-integration.yml`, whose `audit:*:strict` glob
+  runs the same command.
 
 All three source the same shared snippet (`.husky/utils/component-shape-gate.sh`)
 / run the same command; keep them in lockstep. Run it yourself with:
@@ -394,7 +401,7 @@ All three source the same shared snippet (`.husky/utils/component-shape-gate.sh`
 pnpm run audit:component-shape:strict
 ```
 
-When it fails, **fix the R4/R5 violation** it lists — do not bypass the hook
+When it fails, **fix the R4/R5/R6 violation** it lists — do not bypass the hook
 with `git commit --no-verify` (CLAUDE.md prohibits `--no-verify` and bypassing
 Husky). The autofix/scaffolding notes above and the rule references (R1–R7) tell
 you how to reshape the offending file.
