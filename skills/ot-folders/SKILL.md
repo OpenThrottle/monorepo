@@ -266,10 +266,12 @@ pnpm nx run monorepo:check-folder-vocabulary
 `check-folder-vocabulary` fails on any tracked path under a rule-4 junk-drawer
 folder and names the replacement; `check:local` and the CI `gates` job run it too.
 `pnpm run check:local:audit` runs the three shape audits. Note what `--strict` actually gates:
-it exits non-zero on **R4/R5 only** (hoist violations and multi-component files).
-R6, the 210-line count, is reported but never fails the audit — ESLint's
-`max-lines` owns that cap, and the audit's count runs one line higher than
-ESLint's, so a file the audit lists as 211 can be at the cap and pass lint.
+the component audit exits non-zero on **R4/R5/R6** (hoist violations,
+multi-component files, and authored components over the 210-line cap). Its R6
+count matches ESLint's `max-lines` exactly, and it repeats that cap on purpose:
+lint-staged runs `eslint --fix` before `prettier --write`, so prettier can reflow
+a file past 210 after lint has passed. The shadcn profile's VR6 cap stays
+report-only.
 
 **3 — New project, moved package, changed tags.**
 

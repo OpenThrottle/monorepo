@@ -224,8 +224,10 @@ your first PR.
   `@tools/generators` template); scaffold with the generator and run
   `pnpm run audit:component-shape`. The strict audit
   (`pnpm run audit:component-shape:strict`) is a **commit gate** — it runs at
-  pre-commit, pre-push, and CI on one identical command; fix any R4/R5 violation
-  rather than bypassing with `--no-verify`.
+  pre-commit, pre-push, and CI on one identical command; fix any R4/R5/R6
+  violation rather than bypassing with `--no-verify`. R6 (the 210-line cap)
+  repeats ESLint `max-lines` because prettier runs after `eslint --fix` in
+  lint-staged and can push a file past the cap; the audit sees the final file.
 - [docs/monorepo/route-primitive-shape.md](./docs/monorepo/route-primitive-shape.md)
   — the routing-layer sibling of the component shape: keeps React Router route
   modules under `app/routes/*.tsx` thin (only the framework surface + type
