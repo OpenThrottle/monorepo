@@ -88,7 +88,10 @@
     ],
     "targets": {
       "build": {
-        "executor": "nx:noop"
+        "executor": "nx:noop",
+        "metadata": {
+          "description": "Deliberately a no-op. The root `pnpm run build` script runs `nx run-many -t build` over `tag:type:package`, which includes this project, so inferring a build target from that script would make it call itself. Build the workspace with `pnpm run build` instead."
+        }
       },
       "dev": {
         "executor": "nx:noop"
