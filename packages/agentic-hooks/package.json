@@ -58,6 +58,7 @@
         "outputs": [
           "{workspaceRoot}/.claude/hooks/memory-index-guard.cjs",
           "{workspaceRoot}/.claude/hooks/plan-run-janitor.cjs",
+          "{workspaceRoot}/.claude/hooks/skill-usage-backfill.cjs",
           "{workspaceRoot}/.claude/hooks/skill-usage-capture.cjs",
           "{workspaceRoot}/.claude/hooks/skill-usage-complete.cjs",
           "{workspaceRoot}/.claude/hooks/skill-usage-drain.cjs",
@@ -94,6 +95,7 @@
           "{projectRoot}/src/**/*",
           "{workspaceRoot}/.claude/hooks/memory-index-guard.cjs",
           "{workspaceRoot}/.claude/hooks/plan-run-janitor.cjs",
+          "{workspaceRoot}/.claude/hooks/skill-usage-backfill.cjs",
           "{workspaceRoot}/.claude/hooks/skill-usage-capture.cjs",
           "{workspaceRoot}/.claude/hooks/skill-usage-complete.cjs",
           "{workspaceRoot}/.claude/hooks/skill-usage-drain.cjs",

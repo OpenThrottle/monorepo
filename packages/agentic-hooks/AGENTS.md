@@ -20,7 +20,10 @@ payload as `--plugin-dir` for orchestrated runs.
   tool's own transcript handling: Claude's lives in `transcript.ts` (line → `TokenUsageRecord`, no
   I/O) and `transcript-usage.ts` (checkpointed read at `Stop`; also reads the session's
   `subagents/agent-*.jsonl`, so `SubagentStop` need not be registered). The file offsets,
-  checkpoints and sending stay in `src/data/`.
+  checkpoints and sending stay in `src/data/`. The one-off operator backfill (`backfill.ts`, bundled
+  to `.claude/hooks/skill-usage-backfill.cjs`, registered as no hook) reuses that reader through
+  `transcript-backfill.ts`, `transcript-skills.ts` and `transcript-projects.ts`; see the README's
+  "Backfilling from transcripts".
 - `src/utils/` — `scope.ts` (ours | personal | third-party), `privacy.ts` (truncation + secret redaction),
   `logging.ts`.
 - `src/config/` — `env.ts`: endpoint resolution by location, the OpenThrottle-checkout

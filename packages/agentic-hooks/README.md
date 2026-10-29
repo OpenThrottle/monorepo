@@ -126,6 +126,32 @@ drift-checked byte-for-byte — the source is vetted by construction. Do **not**
 convenience in an interactive shell, or anywhere the hook commands could come from somewhere
 unaudited. Trusting once, interactively, is the cheap and correct thing there.
 
+## Backfilling from transcripts
+
+`skill-usage-backfill.cjs` is a one-off, **operator-run** CLI (no hook registers it, and the plugin
+payloads do not ship it) that recovers what live capture missed from this repository's Claude Code
+transcripts: skill invocations in a time window, and per-request token usage.
+
+```bash
+node .claude/hooks/skill-usage-backfill.cjs --dry-run   # counts per stream, day and project; sends nothing
+node .claude/hooks/skill-usage-backfill.cjs             # send; re-running is a no-op
+```
+
+Flags: `--since <ISO>` (default `2026-09-23`, inclusive) and `--until <ISO>` (default now, exclusive)
+bound the **skill** window only; tokens are not windowed. `--projects-dir <path>` (default
+`~/.claude/projects`), `--repo-root <path>`, `--no-worktrees`, `--timeout-ms <n>`.
+
+- **Only this repo is read.** The projects directory is never listed. The slugs of this repository's
+  checkouts (its root plus `git worktree list`) are derived and only those directories are opened;
+  a transcript whose recorded `cwd` is outside the checkouts is refused.
+- **Idempotent.** Token rows use `(source, session_id, request_id)`. Skill rows reuse the live
+  `hook_event_name` and the transcript's `tool_use_id` (Skill tool) or `promptId` + skill (slash
+  command), so they dedupe against themselves **and** against a live capture of the same invocation.
+- **Backfilled rows are identifiable** by `invocation_path` ending in `:backfill`
+  (`skill_tool:backfill`, `slash:backfill`) — that column is in no unique key.
+- A real run refuses to start with no endpoint (rather than buffering thousands of rows); transient
+  failures buffer for `skill-usage-drain`, permanent rejections are dead-lettered.
+
 ## Bundling
 
 Everything ships through `bundle-hooks`, which esbuild-bundles each adapter into a **self-contained
