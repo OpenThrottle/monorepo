@@ -1,23 +1,28 @@
+/**
+ * Markdown content styles.
+ *
+ * Every var() names a token from @openthrottle/react-router-shadcn's theme.css
+ * (--color-*) or Tailwind v4's theme (--font-*, --font-weight-*, --text-*), and
+ * carries a light-theme fallback. An undefined var() is invalid at computed-value
+ * time and fails silently, so the fallback keeps a renamed token visible.
+ * src/__tests__/index.css.test.ts enforces both halves.
+ */
 .markdown {
-  color: var(--color-muted-foreground);
-  font-size: var(--text-sm);
+  color: var(--color-muted-foreground, hsl(0 0% 45.1%));
+  font-size: var(--text-sm, 0.875rem);
   line-height: 1.5;
   word-wrap: break-word;
 }
 
-/**
- * Markdown content styles.
- * Uses style-guide theme tokens (--color-*, --font-*, --text-* from theme-v4.css).
- */
 .markdown h1,
 .markdown h2,
 .markdown h3,
 .markdown h4,
 .markdown h5,
 .markdown h6 {
-  color: var(--color-foreground);
-  font-family: var(--font-mono);
-  font-size: var(--text-lg);
+  color: var(--color-foreground, hsl(0 0% 3.9%));
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: var(--text-lg, 1.125rem);
 }
 
 .markdown h1,
@@ -27,13 +32,13 @@
 
 .markdown h3,
 .markdown h4 {
-  font-size: var(--text-base);
+  font-size: var(--text-base, 1rem);
   margin-bottom: 0.8rem;
 }
 
 .markdown h5,
 .markdown h6 {
-  font-size: var(--text-base);
+  font-size: var(--text-base, 1rem);
   margin-bottom: 0.6rem;
 }
 
@@ -55,7 +60,7 @@
 }
 
 .markdown a {
-  color: var(--color-accent);
+  color: var(--color-accent, hsl(0 100% 50%));
   text-decoration: underline;
   text-underline-offset: 2px;
 }
@@ -70,14 +75,13 @@
 
 .markdown p b,
 .markdown p strong {
-  font-weight: var(--font-bold);
+  font-weight: var(--font-weight-bold, 700);
 }
 
 .markdown pre {
-  background-color: var(--color-gray-9);
   border-radius: 0.5rem;
-  border: 1px solid var(--color-gray-7);
-  font-size: var(--text-base);
+  border: 1px solid var(--color-sidebar-border, hsl(220 13% 91%));
+  font-size: var(--text-base, 1rem);
   margin-bottom: 1rem;
   margin-top: 1rem;
   overflow: auto;
@@ -90,14 +94,18 @@
 }
 
 .markdown blockquote {
-  border: 1px solid var(--color-gray-7);
-  border-left: 4px solid var(--color-accent);
-  background-color: color-mix(in srgb, var(--color-accent) 20%, transparent);
+  border: 1px solid var(--color-sidebar-border, hsl(220 13% 91%));
+  border-left: 4px solid var(--color-accent, hsl(0 100% 50%));
+  background-color: color-mix(
+    in srgb,
+    var(--color-accent, hsl(0 100% 50%)) 20%,
+    transparent
+  );
   margin-top: 2rem;
   margin-bottom: 2rem;
   border-radius: 0 0.5rem 0.5rem 0;
   padding: 1rem;
-  font-size: var(--text-base);
+  font-size: var(--text-base, 1rem);
   font-style: italic;
 
   @apply text-foreground/70 text-sm;
@@ -134,7 +142,7 @@
 }
 
 .markdown hr {
-  border-color: var(--color-border);
+  border-color: var(--color-border, hsl(220 13% 91%));
   margin-top: 2.5rem;
   margin-bottom: 2.5rem;
 }
@@ -147,38 +155,6 @@
   font-family: monospace;
 }
 
-.markdown code[data-line-numbers] > [data-line]::before {
-  color: var(--color-gray-6);
-  margin-right: 1rem;
-  display: inline-block;
-  width: 1rem;
-  text-align: right;
-  counter-increment: line;
-  content: counter(line);
-}
-
-.markdown code[data-line-numbers-max-digits='2'] > [data-line]::before {
-  width: 2rem;
-}
-
-.markdown code[data-line-numbers-max-digits='3'] > [data-line]::before {
-  width: 3rem;
-}
-
-.markdown code [data-highlighted-chars] {
-  outline: 2px dotted var(--color-accent);
-  outline-offset: 0;
-  border-radius: 0.375rem;
-  padding-left: 0.25rem;
-  padding-right: 0.25rem;
-  padding-top: 0;
-  padding-bottom: 0;
-}
-
-.markdown code [data-highlighted-line] {
-  background-color: color-mix(in srgb, var(--color-gray-5) 20%, transparent);
-}
-
 .markdown code {
   @apply text-foreground/70 text-xs font-light;
 }
@@ -188,15 +164,4 @@
   word-break: break-word;
 
   @apply bg-card border-sidebar-border rounded-md border px-1.5 py-0.5;
-}
-
-.markdown :is(p, ol, ul) code {
-  background-color: var(--color-gray-9);
-  border: 1px solid var(--color-gray-7);
-  border-radius: 0.375rem;
-  padding-left: 0.375rem;
-  padding-right: 0.375rem;
-  padding-top: 0.125rem;
-  padding-bottom: 0.125rem;
-  /* font-size: var(--text-xs, 12px); */
 }
