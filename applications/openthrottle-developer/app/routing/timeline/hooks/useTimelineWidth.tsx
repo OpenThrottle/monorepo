@@ -1,5 +1,7 @@
 import * as React from 'react';
 
+import { TIMELINE_FALLBACK_WIDTH } from '~/routing/timeline/config/layout';
+
 export interface UseTimelineWidthOptions {
   /**
    * Width used before the element is measured, and in any environment that
@@ -15,8 +17,6 @@ export interface UseTimelineWidthResult {
   readonly width: number;
 }
 
-const DEFAULT_FALLBACK_WIDTH = 960;
-
 /**
  * Measures the chart body so the time scale can be built in pixels. Returns the
  * fallback until a real measurement arrives, so the first paint is laid out
@@ -25,7 +25,7 @@ const DEFAULT_FALLBACK_WIDTH = 960;
 export const useTimelineWidth = (
   options: UseTimelineWidthOptions = {},
 ): UseTimelineWidthResult => {
-  const { fallbackWidth = DEFAULT_FALLBACK_WIDTH } = options;
+  const { fallbackWidth = TIMELINE_FALLBACK_WIDTH } = options;
 
   // Hooks
   const ref = React.useRef<HTMLDivElement | null>(null);

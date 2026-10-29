@@ -17,30 +17,13 @@ import {
   useState,
 } from 'react';
 
+import { type PointerDragContext } from '../types';
 import {
   clampPointToRect,
   type Point,
   type Rect,
   snapPointToGrid,
 } from '../utils/geometry';
-
-/**
- * The live state passed to every drag callback.
- *
- * @public
- */
-export interface PointerDragContext {
-  /** `world - startWorld`, in inches (snapped/clamped). */
-  readonly deltaWorld: Point;
-  /** The originating pointer id. */
-  readonly pointerId: number;
-  /** Unsnapped, unclamped world point under the pointer. */
-  readonly rawWorld: Point;
-  /** World point (snapped + clamped) at pointerdown. */
-  readonly startWorld: Point;
-  /** Current world point: snapped to grid, then clamped to bounds. */
-  readonly world: Point;
-}
 
 /**
  * Configuration for {@link usePointerDrag}.
@@ -89,13 +72,16 @@ interface ActiveGesture {
 export function usePointerDrag(
   options: UsePointerDragOptions,
 ): UsePointerDragResult {
+  // Hooks
   // Keep the latest callbacks/config without re-binding window listeners.
   const optionsRef = useRef(options);
-  optionsRef.current = options;
-
   const gesture = useRef<ActiveGesture | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
+  // Setup
+  optionsRef.current = options;
+
+  // Handlers
   const resolve = useCallback((client: Point): { raw: Point; world: Point } => {
     const { bounds, clientToWorld, snapGrid } = optionsRef.current;
     const raw = clientToWorld(client);
@@ -176,6 +162,9 @@ export function usePointerDrag(
     [buildContext, handleMove, handleUp, resolve],
   );
 
+  // Markup
+
+  // Life Cycle
   // Tear down listeners if the component unmounts mid-gesture.
   useEffect(
     () => () => {
@@ -185,6 +174,8 @@ export function usePointerDrag(
     },
     [handleMove, handleUp],
   );
+
+  // 🔌 Short Circuit
 
   return { isDragging, start };
 }

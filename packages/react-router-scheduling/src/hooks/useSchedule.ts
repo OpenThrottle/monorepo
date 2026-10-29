@@ -1,20 +1,10 @@
 import '../utils/temporal-bootstrap';
 
-import { createCalendar } from '@schedule-x/calendar';
 import { useRef } from 'react';
 
-import { DEFAULT_VIEW } from '../config/defaults';
-import type { CalendarEvent, ScheduleConfig } from '../types';
-import { toEngineCallbacks } from '../utils/callbacks';
-import { isHostDark } from '../utils/dark-mode';
-import { toPlainDate } from '../utils/datetime';
-import { fromEngineEvent, toEngineEvent } from '../utils/events';
+import type { CalendarEvent, ScheduleConfig, ScheduleInstance } from '../types';
+import { createSchedule } from '../utils/create-schedule';
 import type { SchedulingPlugins } from '../utils/plugins';
-import { createSchedulingPlugins } from '../utils/plugins';
-import { resolveViews } from '../utils/views';
-
-/** The Schedule-X app instance backing a schedule. */
-export type ScheduleInstance = ReturnType<typeof createCalendar>;
 
 /**
  * A schedule: the underlying Schedule-X instance plus engine-agnostic event CRUD
@@ -42,53 +32,6 @@ export interface UseScheduleResult {
   update: (event: CalendarEvent) => void;
 }
 
-function createSchedule(config: ScheduleConfig): UseScheduleResult {
-  // events-service is the event store; force it on regardless of config so CRUD
-  // always works (a schedule without an event store is meaningless).
-  const plugins = createSchedulingPlugins({
-    ...config.plugins,
-    eventsService: true,
-  });
-  const eventsService = plugins.eventsService;
-
-  if (eventsService === undefined) {
-    throw new Error('useSchedule could not create the events-service plugin.');
-  }
-
-  const events = (config.events ?? []).map(toEngineEvent);
-  const callbacks = toEngineCallbacks(config.callbacks);
-  const instance = createCalendar(
-    {
-      callbacks,
-      events,
-      isDark: isHostDark(),
-      selectedDate:
-        config.date !== undefined ? toPlainDate(config.date) : undefined,
-      theme: 'shadcn',
-      views: resolveViews(config.views, config.defaultView ?? DEFAULT_VIEW),
-    },
-    plugins.list,
-  );
-
-  // Populate the event store explicitly so the schedule is usable standalone,
-  // with no calendar view rendered (agenda list / next-event widget).
-  eventsService.set(events);
-
-  return {
-    add: (event) => eventsService.add(toEngineEvent(event)),
-    all: () => eventsService.getAll().map(fromEngineEvent),
-    getById: (id) => {
-      const found = eventsService.get(id);
-      return found !== undefined ? fromEngineEvent(found) : undefined;
-    },
-    instance,
-    plugins,
-    remove: (id) => eventsService.remove(id),
-    set: (next) => eventsService.set(next.map(toEngineEvent)),
-    update: (event) => eventsService.update(toEngineEvent(event)),
-  };
-}
-
 /**
  * Create and own a schedule — a Schedule-X app instance plus engine-agnostic
  * event CRUD. The instance is created once for the lifetime of the component and
@@ -105,8 +48,6 @@ function createSchedule(config: ScheduleConfig): UseScheduleResult {
  * @public
  */
 export function useSchedule(config: ScheduleConfig = {}): UseScheduleResult {
-  // const {} = config;
-
   // Hooks
   const ref = useRef<UseScheduleResult | null>(null);
 

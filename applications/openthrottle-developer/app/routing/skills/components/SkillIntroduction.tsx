@@ -5,7 +5,6 @@ import { BrainCircuitIcon } from 'lucide-react';
 import * as React from 'react';
 
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
-import type { RunSkillPayload } from '~/routing/skills/components/RunSkillDialog';
 import { SkillDetailEditControls } from '~/routing/skills/components/SkillDetailEditControls';
 import { SkillIntroductionBadges } from '~/routing/skills/components/SkillIntroductionBadges';
 import { SkillOrphanRemoveButton } from '~/routing/skills/components/SkillOrphanRemoveButton';
@@ -19,6 +18,7 @@ import {
   SKILL_DETAIL_COPY,
   SKILL_RECORD_TAGS_COPY,
 } from '~/routing/skills/data/data.copy';
+import type { RunSkillPayload } from '~/routing/skills/types';
 import type { ModelInvocationBadge } from '~/routing/skills/utils/model-invocation-badge';
 
 export interface SkillIntroductionProps {

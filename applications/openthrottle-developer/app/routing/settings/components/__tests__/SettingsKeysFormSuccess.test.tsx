@@ -5,7 +5,7 @@ import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { SettingsKeysCreateCredentialActionData } from '~/routing/settings/hooks/useSettingsKeysForm';
+import type { SettingsKeysCreateCredentialActionData } from '~/routing/settings/types';
 
 import type { SettingsKeysFormSuccessProps } from '../SettingsKeysFormSuccess';
 import { SettingsKeysFormSuccess } from '../SettingsKeysFormSuccess';

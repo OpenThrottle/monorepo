@@ -1,6 +1,6 @@
 import type { RolloutFlagCatalog, RolloutHydrationState } from '../types';
 import type { RolloutResolvedValues } from '../utils';
-import { useRequiredRolloutContext } from './useRolloutContext';
+import { useRequiredRolloutContext } from './useRequiredRolloutContext';
 
 /**
  * Full resolved flag map plus hydration status / application key (debugging).

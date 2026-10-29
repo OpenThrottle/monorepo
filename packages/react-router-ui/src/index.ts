@@ -35,6 +35,14 @@ export * from './data/data.features';
 export * from './data/data.introductions';
 export * from './data/data.taglines';
 
+// 🏷️ Types
+export type { UsePlanRefResolverOptions as UsePlanRefResolverArgs } from './hooks/usePlanRefResolver';
+export type {
+  AudioCaptureStatus,
+  PlanRefMatch,
+  PlanRefResolverData,
+} from './types';
+
 // 🪝 React Hooks
 export * from './hooks/fetchServerMetrics';
 export * from './hooks/useAudio';

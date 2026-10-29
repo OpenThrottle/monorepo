@@ -52,6 +52,7 @@ lint but never had a rule file of their own:
 | [No `await` in loops](#no-await-in-loops)                             | **Enforced**                           | `no-await-in-loop`                                                    |
 | [Return types](#return-types)                                         | **Warned**                             | `explicit-module-boundary-types`                                      |
 | [Route primitive shape](#route-and-component-shape)                   | **Warned**                             | `openthrottle/route-primitive-shape`, `openthrottle/pre-hooks-unpack` |
+| [Hook primitive shape](#hook-shape)                                   | **Enforced**                           | `openthrottle/hook-primitive-shape` + `audit:hook-shape`              |
 | [Import order](#import-order)                                         | **Warned**                             | `simple-import-sort/imports`, `simple-import-sort/exports`            |
 | [Discriminated unions](#discriminated-unions)                         | Honor system                           | —                                                                     |
 | [`interface extends` over `&`](#interface-extends-over-)              | Honor system                           | —                                                                     |
@@ -716,6 +717,24 @@ The short version:
 - One component per file, exporting only the component and its props.
 - File-scope helpers, data and config are hoisted to a sibling `utils/`, `data/` or
   `config/` — or into a `use<Name>` hook.
+
+### Hook shape
+
+**Enforced** by the ESLint rule `openthrottle/hook-primitive-shape` plus
+`pnpm run audit:hook-shape:strict`. Full contract:
+[hook-primitive-shape.md](./hook-primitive-shape.md).
+
+The short version:
+
+- One `use*` hook per file, named after the file (`useFoo` in `useFoo.ts`), in a `hooks/`
+  folder. Never kebab-case.
+- Export only the hook, its `UseFooOptions` and its `UseFooResult`. Other types go to
+  `types.ts`, helpers to `utils/`, data to `data/`, tunables to `config/`.
+- No module-scope values. A value only the hook uses lives inside it. When an object or
+  array's identity matters (it reaches a dependency array, a memoized child, a context, or
+  the hook's return value), derive it with `React.useMemo`, or import a constant from
+  `data/` / `config/` when it doesn't depend on inputs.
+- The six section markers and an explicit return type, as in a component.
 
 ### File length caps
 

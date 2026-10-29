@@ -1,10 +1,15 @@
 import {
+  type ChatBackendCapabilities,
+  type ChatCheckoutOption,
   type ChatComposerMode,
+  type ChatMentionProvider,
+  type ChatModelGroup,
   type ChatModelOption,
   type ChatPermissionMode,
   type ChatPersonaOption,
   type ChatReasoningLevel,
   type ChatServiceTier,
+  type ChatSlashCommandProvider,
   parseFileMentions,
 } from '@openthrottle/react-router-chat';
 import {
@@ -25,7 +30,10 @@ import type { UseAgenticChatTurnResult } from '~/routing/home/hooks/useAgenticCh
 import type { UseConversationListResult } from '~/routing/home/hooks/useConversationList';
 import { useFileMentionProvider } from '~/routing/home/hooks/useFileMentionProvider';
 import { useSkillCommandProvider } from '~/routing/home/hooks/useSkillCommandProvider';
-import { useVoiceInput } from '~/routing/home/hooks/useVoiceInput';
+import {
+  useVoiceInput,
+  type UseVoiceInputResult,
+} from '~/routing/home/hooks/useVoiceInput';
 
 export interface UseHomeComposerOptions {
   /** Sidebar-backing conversation list; the composer refreshes it on new persisted turns. */
@@ -40,6 +48,41 @@ export interface UseHomeComposerOptions {
   turn: UseAgenticChatTurnResult;
 }
 
+export interface UseHomeComposerResult {
+  readonly capabilities: ChatBackendCapabilities;
+  readonly checkouts: ChatCheckoutOption[];
+  readonly composerTextAreaRef: React.RefObject<HTMLTextAreaElement | null>;
+  readonly draft: string;
+  readonly hasModels: boolean;
+  readonly hasRepositories: boolean;
+  readonly isCliBackend: boolean;
+  readonly mentionProvider: ChatMentionProvider | undefined;
+  readonly mode: ChatComposerMode;
+  readonly modelGroups: ChatModelGroup[];
+  readonly modelId: string | undefined;
+  readonly onSubmit: (message: string) => void;
+  readonly permissionMode: ChatPermissionMode | undefined;
+  readonly persist: boolean;
+  readonly personaId: string | undefined;
+  readonly personas: readonly ChatPersonaOption[];
+  readonly reasoning: ChatReasoningLevel | undefined;
+  readonly repositoryId: string | undefined;
+  readonly repositoryIds: readonly string[];
+  readonly serviceTier: ChatServiceTier | undefined;
+  readonly setDraft: React.Dispatch<React.SetStateAction<string>>;
+  readonly setMode: (mode: ChatComposerMode) => void;
+  readonly setModelId: (modelId: string) => void;
+  readonly setPermissionMode: (permissionMode: ChatPermissionMode) => void;
+  readonly setPersist: (persist: boolean) => void;
+  readonly setPersonaId: (personaId: string) => void;
+  readonly setReasoning: (reasoning: ChatReasoningLevel) => void;
+  readonly setRepositoryId: (repositoryId: string) => void;
+  readonly setRepositoryIds: (repositoryIds: readonly string[]) => void;
+  readonly setServiceTier: (serviceTier: ChatServiceTier) => void;
+  readonly slashCommandProvider: ChatSlashCommandProvider;
+  readonly voice: UseVoiceInputResult;
+}
+
 /**
  * @description All non-presentational state and behavior behind HomeComposer:
  * draft + persisted toolbar selections, capability-reconciled effective values,
@@ -47,7 +90,9 @@ export interface UseHomeComposerOptions {
  * sidebar-refresh effect. Extracted from HomeComposer per
  * component-primitive-shape R7 so the component stays UI-focused.
  */
-export const useHomeComposer = (options: UseHomeComposerOptions) => {
+export const useHomeComposer = (
+  options: UseHomeComposerOptions,
+): UseHomeComposerResult => {
   const { conversationList, models, repositories, turn } = options;
 
   // Hooks

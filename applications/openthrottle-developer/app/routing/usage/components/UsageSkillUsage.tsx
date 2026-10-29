@@ -16,7 +16,7 @@ import {
   SKILL_USAGE_COPY,
   type SkillUsageScopeFilter,
 } from '~/routing/usage/data/skill-usage-copy';
-import type { UsageBranchOption } from '~/routing/usage/hooks/useUsageBranchSearch';
+import type { UsageBranchOption } from '~/routing/usage/types';
 import { partitionSkillUsageByPresence } from '~/routing/usage/utils/partition-skill-usage-by-presence';
 
 export interface UsageSkillUsageProps {

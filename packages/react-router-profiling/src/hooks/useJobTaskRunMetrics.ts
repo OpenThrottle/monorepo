@@ -26,12 +26,20 @@ export function useJobTaskRunMetrics(
   jobId: string | null,
   options: UseJobTaskRunMetricsOptions = {},
 ): UseJobTaskRunMetricsResult {
-  const apiBaseUrl = options.apiBaseUrl ?? getMetricsApiBaseUrl();
+  const { apiBaseUrl = getMetricsApiBaseUrl() } = options;
 
+  // Hooks
   const [job, setJob] = React.useState<JobWithTaskRunMetrics | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<Error | null>(null);
 
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
   React.useEffect(() => {
     if (jobId == null || jobId === '') {
       setJob(null);
@@ -69,6 +77,8 @@ export function useJobTaskRunMetrics(
       controller.abort();
     };
   }, [apiBaseUrl, jobId]);
+
+  // 🔌 Short Circuit
 
   return { error, job, loading };
 }

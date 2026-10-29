@@ -30,3 +30,14 @@ export const TIMELINE_MARKER_SIZE = 9;
  * so drawing them individually costs DOM nodes and buys nothing.
  */
 export const TIMELINE_MARKER_COLLISION_PX = 10;
+
+/**
+ * Pixels the chart body scrolls per arrow-key press when panning by keyboard.
+ */
+export const TIMELINE_PAN_KEY_STEP = 80;
+
+/**
+ * Chart body width used before the element is measured, and in any environment
+ * that reports none (jsdom's ResizeObserver is a no-op).
+ */
+export const TIMELINE_FALLBACK_WIDTH = 960;

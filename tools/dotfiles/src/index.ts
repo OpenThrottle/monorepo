@@ -13,6 +13,7 @@ import pluginSimpleImportSort from 'eslint-plugin-simple-import-sort';
 import tslint from 'typescript-eslint';
 
 import { componentPrimitiveShape } from './rules/component-primitive-shape.ts';
+import { hookPrimitiveShape } from './rules/hook-primitive-shape.ts';
 import { planTaskStatusChokepoint } from './rules/plan-task-status-chokepoint.ts';
 import { preHooksUnpack } from './rules/pre-hooks-unpack.ts';
 import { routePrimitiveShape } from './rules/route-primitive-shape.ts';
@@ -220,6 +221,7 @@ export const eslintConfig = tslint.config([
       openthrottle: {
         rules: {
           'component-primitive-shape': componentPrimitiveShape,
+          'hook-primitive-shape': hookPrimitiveShape,
           'plan-task-status-chokepoint': planTaskStatusChokepoint,
           'pre-hooks-unpack': preHooksUnpack,
           'route-primitive-shape': routePrimitiveShape,
@@ -538,6 +540,32 @@ export const eslintConfig = tslint.config([
       // visible without breaking the build. Graduates to `error` later,
       // independently per surface.
       'openthrottle/pre-hooks-unpack': 'warn',
+    },
+  },
+
+  /**
+   * The hook primitive shape (docs/monorepo/hook-primitive-shape.md). Scoped to
+   * authored `use*` hook files under a `hooks/` folder; tests, stories and the
+   * vendored shadcn package (which carries its own hooks, held to the shadcn
+   * variant standard) are excluded. Enforced repo-wide at `error` now that every
+   * existing hook is at spec — regressions block the build. ESLint owns H1 (one
+   * hook named after the file), H2
+   * (exports), H3 (module-scope values), H4 (markers, autofix scaffolds) and H5
+   * (return type); H6 and the cross-file H3 check belong to the audit script.
+   * Use the first-line `hook-shape: opt-out` block-comment pragma for the
+   * genuinely-irreducible hook.
+   */
+  {
+    files: ['**/hooks/use*.{ts,tsx}'],
+    ignores: [
+      '**/*.stories.tsx',
+      '**/*.test.ts',
+      '**/*.test.tsx',
+      '**/__tests__/**',
+      '**/packages/react-router-shadcn/**',
+    ],
+    rules: {
+      'openthrottle/hook-primitive-shape': 'error',
     },
   },
 

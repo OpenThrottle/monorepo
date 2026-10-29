@@ -14,20 +14,14 @@ import { ChatComposerMicState } from '@openthrottle/react-router-chat';
 import { useAudioCapture } from '@openthrottle/react-router-ui';
 import * as React from 'react';
 
+import { VOICE_PHASE } from '~/routing/home/data/data.voice';
 import { useTranscriptionStream } from '~/routing/home/hooks/useTranscriptionStream';
 import { encodeFloat32ToInt16Base64 } from '~/routing/home/utils/audio-encoding';
-
-/** Lifecycle of one voice-input interaction. */
-const VOICE_PHASE = {
-  finalizing: 'finalizing',
-  idle: 'idle',
-  recording: 'recording',
-  starting: 'starting',
-} as const;
+import { joinDraftParts } from '~/routing/home/utils/join-draft-parts';
 
 type VoicePhase = (typeof VOICE_PHASE)[keyof typeof VOICE_PHASE];
 
-export interface UseVoiceInputArgs {
+export interface UseVoiceInputOptions {
   /** Current composer draft (frozen as the prefix when recording starts). */
   readonly draft: string;
   /** Called when the voice interaction finalizes (focus the composer). */
@@ -47,19 +41,6 @@ export interface UseVoiceInputResult {
   readonly toggle: () => Promise<void>;
 }
 
-/** Join the frozen prefix and a Whisper transcript without doubled spaces. */
-export function joinDraftParts(prefix: string, transcript: string): string {
-  const trimmedTranscript = transcript.trim();
-  if (prefix === '') {
-    return trimmedTranscript;
-  }
-  if (trimmedTranscript === '') {
-    return prefix;
-  }
-
-  return `${prefix.replace(/\s+$/, '')} ${trimmedTranscript}`;
-}
-
 /** Spike latency instrumentation: mic-start→first-partial, speech-end→final. */
 interface VoiceLatencyMarks {
   firstPartialAt: number | null;
@@ -67,8 +48,10 @@ interface VoiceLatencyMarks {
   speechEndAt: number | null;
 }
 
-export function useVoiceInput(args: UseVoiceInputArgs): UseVoiceInputResult {
-  const { draft, onDraftChange, onFinalized } = args;
+export function useVoiceInput(
+  options: UseVoiceInputOptions,
+): UseVoiceInputResult {
+  const { draft, onDraftChange, onFinalized } = options;
 
   // Hooks
   const [phase, setPhase] = React.useState<VoicePhase>(VOICE_PHASE.idle);
@@ -111,6 +94,8 @@ export function useVoiceInput(args: UseVoiceInputArgs): UseVoiceInputResult {
       : phase === VOICE_PHASE.idle
         ? ChatComposerMicState.idle
         : ChatComposerMicState.recording;
+  const liveTranscript = transcription.snapshot.transcript;
+  const isDone = transcription.snapshot.done;
 
   // Handlers
   const toggle = React.useCallback(async (): Promise<void> => {
@@ -167,6 +152,8 @@ export function useVoiceInput(args: UseVoiceInputArgs): UseVoiceInputResult {
     setPhase(VOICE_PHASE.recording);
   }, [draft, phase]);
 
+  // Markup
+
   // Life Cycle
 
   // Flush chunks buffered while the session was starting (in capture order).
@@ -180,7 +167,6 @@ export function useVoiceInput(args: UseVoiceInputArgs): UseVoiceInputResult {
   }, [isSessionLive]);
 
   // Live snapshots stream into the draft after the frozen prefix.
-  const liveTranscript = transcription.snapshot.transcript;
   React.useEffect(() => {
     if (phase !== VOICE_PHASE.recording && phase !== VOICE_PHASE.finalizing) {
       return;
@@ -202,7 +188,6 @@ export function useVoiceInput(args: UseVoiceInputArgs): UseVoiceInputResult {
   }, [liveTranscript, phase]);
 
   // Terminal snapshot → finalize: editable draft, cursor to the consumer.
-  const isDone = transcription.snapshot.done;
   React.useEffect(() => {
     if (!isDone || phase === VOICE_PHASE.idle) {
       return;

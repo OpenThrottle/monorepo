@@ -70,6 +70,22 @@ export interface ChatStreamChunk {
   readonly sortOrder: number;
 }
 
+/**
+ * The subscription payload shape the stream reads: one `conversationStreamChunkAdded`
+ * chunk per event. Structural, so each app's generated subscription result is
+ * assignable.
+ * @public
+ */
+export interface ConversationStreamSubscriptionData {
+  readonly conversationStreamChunkAdded: ChatStreamChunk;
+}
+
+/** Variables for the conversation-stream subscription. @public */
+export interface ConversationStreamSubscriptionVariables {
+  readonly [key: string]: unknown;
+  readonly conversationId: string;
+}
+
 /** Accumulated streaming state folded from {@link ChatStreamChunk}s. @public */
 export interface StreamState {
   /** Accumulated assistant body keyed by messageId (flat markdown fallback). */

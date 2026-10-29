@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { DEFAULT_VIEW } from '../config/defaults';
-import { CalendarView } from '../types';
+import type { CalendarView } from '../types';
 import { temporalToDate, toPlainDate } from '../utils/datetime';
+import { normalizeDate } from '../utils/normalize-date';
+import { shiftDate } from '../utils/shift-date';
 import { fromEngineViewName, toEngineViewName } from '../utils/views';
 import type { UseScheduleResult } from './useSchedule';
 
@@ -10,8 +12,6 @@ import type { UseScheduleResult } from './useSchedule';
 // events (those live in useSchedule); it reads the schedule's calendar-controls
 // plugin to drive the rendered view and selected date, mirroring that engine
 // state into React state so a toolbar can render from it.
-
-type EnginePlainDate = ReturnType<typeof toPlainDate>;
 
 /** Options for {@link useCalendar}. */
 export interface UseCalendarOptions {
@@ -44,27 +44,6 @@ export interface UseCalendarResult {
   view: CalendarView;
 }
 
-function shiftDate(
-  date: EnginePlainDate,
-  view: CalendarView,
-  direction: 1 | -1,
-): EnginePlainDate {
-  if (view === CalendarView.Day) {
-    return date.add({ days: direction });
-  }
-  if (view === CalendarView.Month) {
-    return date.add({ months: direction });
-  }
-  return date.add({ weeks: direction });
-}
-
-function normalizeDate(value: Date | string | undefined): Date {
-  if (value === undefined) {
-    return new Date();
-  }
-  return value instanceof Date ? value : new Date(value);
-}
-
 /**
  * Create a calendar view onto a {@link UseScheduleResult}: the active view and
  * selected date, plus `setView`/`setDate`/`next`/`prev`/`today` driven through
@@ -76,14 +55,18 @@ export function useCalendar(
   schedule: UseScheduleResult,
   options: UseCalendarOptions = {},
 ): UseCalendarResult {
-  const controls = schedule.plugins.calendarControls;
-  const [view, setViewState] = useState<CalendarView>(
-    options.defaultView ?? DEFAULT_VIEW,
-  );
-  const [date, setDateState] = useState<Date>(() =>
-    normalizeDate(options.defaultDate),
-  );
+  const { defaultDate, defaultView } = options;
 
+  // Hooks
+  const [view, setViewState] = useState<CalendarView>(
+    defaultView ?? DEFAULT_VIEW,
+  );
+  const [date, setDateState] = useState<Date>(() => normalizeDate(defaultDate));
+
+  // Setup
+  const controls = schedule.plugins.calendarControls;
+
+  // Handlers
   const setView = useCallback(
     (next: CalendarView) => {
       setViewState(next);
@@ -123,6 +106,9 @@ export function useCalendar(
     step(-1);
   }, [step]);
 
+  // Markup
+
+  // Life Cycle
   // Mirror engine-driven view/date changes back into React state. Schedule-X can
   // navigate itself (its own header controls, date-picker, drag navigation)
   // without going through `setView`/`setDate`, which would otherwise leave the
@@ -162,6 +148,8 @@ export function useCalendar(
       unsubscribeDate();
     };
   }, [controls]);
+
+  // 🔌 Short Circuit
 
   return { date, next, prev, setDate, setView, today, view };
 }

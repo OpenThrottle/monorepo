@@ -9,7 +9,7 @@ import {
   skillUsageCwdLabel,
   type SkillUsageScopeFilter,
 } from '~/routing/usage/data/skill-usage-copy';
-import type { UsageBranchOption } from '~/routing/usage/hooks/useUsageBranchSearch';
+import type { UsageBranchOption } from '~/routing/usage/types';
 import { skillUsageChipClass } from '~/routing/usage/utils/skill-usage-chip-class';
 import { buildUsageSearch } from '~/routing/usage/utils/usage-search';
 

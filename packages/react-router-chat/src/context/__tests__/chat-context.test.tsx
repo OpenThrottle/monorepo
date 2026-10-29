@@ -7,8 +7,9 @@ import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ChatDialog } from '../../components/ChatDialog';
+import { useChat } from '../../hooks/useChat';
 import type { ChatMessage } from '../../types';
-import { ChatProvider, useChat } from '../chat-context';
+import { ChatProvider } from '../chat-context';
 
 describe('ChatProvider', () => {
   let onSendMessage: ReturnType<typeof vi.fn<(message: string) => void>>;

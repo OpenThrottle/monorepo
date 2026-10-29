@@ -23,48 +23,10 @@ import {
   StopTranscriptionStreamDocument,
   TranscriptionStreamChunkAddedDocument,
 } from '~/__generated__/graphql';
+import { INITIAL_TRANSCRIPTION_SNAPSHOT } from '~/routing/home/data/data.transcription';
+import type { TranscriptionSnapshot } from '~/routing/home/types';
+import { reduceTranscriptionChunk } from '~/routing/home/utils/reduce-transcription-chunk';
 import { getGraphqlWsClient } from '~/services/graphql-ws-client';
-
-type TranscriptionChunk =
-  TranscriptionStreamChunkAddedSubscription['transcriptionStreamChunkAdded'];
-
-export interface TranscriptionSnapshot {
-  /** True once the terminal chunk arrived (stop, idle reap, or hard cap). */
-  readonly done: boolean;
-  /** Stream error carried by the terminal chunk (session reaped, upstream loss). */
-  readonly error: string | null;
-  /** sortOrder of the snapshot currently held (-1 before any chunk). */
-  readonly sortOrder: number;
-  /** Full transcript so far — replaced wholesale, never appended. */
-  readonly transcript: string;
-}
-
-export const INITIAL_TRANSCRIPTION_SNAPSHOT: TranscriptionSnapshot = {
-  done: false,
-  error: null,
-  sortOrder: -1,
-  transcript: '',
-};
-
-/**
- * Pure reducer: keep the highest-sortOrder snapshot (replace, never append).
- * Out-of-order or duplicate chunks are dropped; `done` latches once seen.
- */
-export function reduceTranscriptionChunk(
-  state: TranscriptionSnapshot,
-  chunk: TranscriptionChunk,
-): TranscriptionSnapshot {
-  if (chunk.sortOrder <= state.sortOrder) {
-    return state;
-  }
-
-  return {
-    done: state.done || chunk.done,
-    error: chunk.error ?? state.error,
-    sortOrder: chunk.sortOrder,
-    transcript: chunk.transcript,
-  };
-}
 
 export interface UseTranscriptionStreamResult {
   /** Start-mutation or stream error message; null while healthy. */
@@ -196,6 +158,8 @@ export function useTranscriptionStream(): UseTranscriptionStreamResult {
     setError(null);
     chunkIndexRef.current = 0;
   }, []);
+
+  // Markup
 
   // Life Cycle
   useSubscription(

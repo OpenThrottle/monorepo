@@ -28,16 +28,10 @@ import {
   pinchViewBox,
   type ViewBox,
   viewBoxToString,
-  type ViewportRect,
   type ZoomLimits,
   zoomViewBoxAt,
 } from '../utils/viewport';
-
-const WHEEL_ZOOM_STEP = 1.0015;
-const BUTTON_ZOOM_FACTOR = 1.25;
-const DEFAULT_MAX_ZOOM_IN = 8;
-const DEFAULT_MAX_ZOOM_OUT = 6;
-const DEFAULT_PADDING = 24;
+import { pointerCenter, rectOf } from '../utils/viewport-rect';
 
 /**
  * Configuration for {@link useViewport}.
@@ -85,29 +79,15 @@ export interface UseViewportResult {
   readonly zoomOut: () => void;
 }
 
-function rectOf(svg: SVGSVGElement | null): ViewportRect | null {
-  if (!svg) return null;
-  const r = svg.getBoundingClientRect();
-  return { height: r.height, left: r.left, top: r.top, width: r.width };
-}
-
-function pointerCenter(rect: ViewportRect): Point {
-  return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
-}
-
 /**
  * Manage the SVG viewBox and pan/zoom interaction for the floor canvas.
  *
  * @public
  */
 export function useViewport(options: UseViewportOptions): UseViewportResult {
-  const {
-    floor,
-    maxZoomIn = DEFAULT_MAX_ZOOM_IN,
-    maxZoomOut = DEFAULT_MAX_ZOOM_OUT,
-    padding = DEFAULT_PADDING,
-  } = options;
+  const { floor, maxZoomIn = 8, maxZoomOut = 6, padding = 24 } = options;
 
+  // Hooks
   const svgRef = useRef<SVGSVGElement | null>(null);
   const pointers = useRef<Map<number, Point>>(new Map());
 
@@ -115,11 +95,16 @@ export function useViewport(options: UseViewportOptions): UseViewportResult {
     fitViewBox(floor, floor, padding),
   );
 
+  // Setup
+  const wheelZoomStep = 1.0015;
+  const buttonZoomFactor = 1.25;
+
   const limits = useMemo<ZoomLimits>(() => {
     const base = Math.max(floor.width, floor.height);
     return { maxWidth: base * maxZoomOut, minWidth: base / maxZoomIn };
   }, [floor.width, floor.height, maxZoomIn, maxZoomOut]);
 
+  // Handlers
   const clientToWorld = useCallback(
     (client: Point): Point => {
       const rect = rectOf(svgRef.current);
@@ -156,16 +141,13 @@ export function useViewport(options: UseViewportOptions): UseViewportResult {
     [zoomAtClient],
   );
 
-  const zoomIn = useCallback(() => zoomStep(BUTTON_ZOOM_FACTOR), [zoomStep]);
-  const zoomOut = useCallback(
-    () => zoomStep(1 / BUTTON_ZOOM_FACTOR),
-    [zoomStep],
-  );
+  const zoomIn = useCallback(() => zoomStep(buttonZoomFactor), [zoomStep]);
+  const zoomOut = useCallback(() => zoomStep(1 / buttonZoomFactor), [zoomStep]);
 
   const onWheel = useCallback(
     (event: ReactWheelEvent) => {
       event.preventDefault();
-      const factor = WHEEL_ZOOM_STEP ** -event.deltaY;
+      const factor = wheelZoomStep ** -event.deltaY;
       zoomAtClient(factor, { x: event.clientX, y: event.clientY });
     },
     [zoomAtClient],
@@ -232,6 +214,12 @@ export function useViewport(options: UseViewportOptions): UseViewportResult {
     () => ({ onPointerDown, onPointerMove, onPointerUp }),
     [onPointerDown, onPointerMove, onPointerUp],
   );
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return {
     clientToWorld,

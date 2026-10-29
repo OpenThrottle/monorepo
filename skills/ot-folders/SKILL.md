@@ -6,8 +6,9 @@ description: >-
   a new directory included); deciding between
   app/global/ and app/routing/<area>/; deciding whether something is an
   application or a package; or when lint reports
-  openthrottle/component-primitive-shape, openthrottle/route-primitive-shape,
-  openthrottle/pre-hooks-unpack, max-lines, or
+  openthrottle/component-primitive-shape, openthrottle/hook-primitive-shape,
+  openthrottle/route-primitive-shape, openthrottle/pre-hooks-unpack, max-lines,
+  audit:hook-shape, or
   @nx/enforce-module-boundaries. NOT FOR scaffolding — generate the file with
   ot-generators first, then use this skill to place and shape it.
 metadata:
@@ -168,6 +169,12 @@ is a package, and that is the whole test.
   **parent directory name**. So `plans/components/PlanCard.tsx` must export
   `PlanCard`, and `plans/components/PlanCard/index.tsx` must too.
 - The component's props type is its name plus `Props` (`PlanCardProps`).
+- **One hook per file, named after the file, in a `hooks/` folder.** `useFoo` lives
+  in `hooks/useFoo.ts(x)` — camelCase, never `use-foo.ts`. It exports only the hook,
+  `UseFooOptions` and `UseFooResult`; every other type, helper or constant goes to
+  `types.ts`, `utils/`, `data/` or `config/`, and nothing else lives at module scope.
+  Full contract: `docs/monorepo/hook-primitive-shape.md` (H1–H6), enforced by
+  `openthrottle/hook-primitive-shape` and `pnpm run audit:hook-shape:strict`.
 
 ### What a component file may export, and what belongs in `data/`
 
@@ -297,8 +304,9 @@ pnpm run check:local
 
 See `docs/monorepo/CI-quality-gates.md`. In short:
 
-- **Blocking today:** `component-primitive-shape` (both profiles) at `error`, the
-  component `max-lines` cap, `@nx/enforce-module-boundaries`,
+- **Blocking today:** `component-primitive-shape` (both profiles) and
+  `hook-primitive-shape` at `error`, `audit:hook-shape:strict`, the component
+  `max-lines` cap, `@nx/enforce-module-boundaries`,
   `@nx/dependency-checks`, tag validation, and package entrypoints.
 - **Advisory today:** `route-primitive-shape`, `pre-hooks-unpack`, and the route
   `max-lines` cap are all `warn` — the warn-first rollout. Each application

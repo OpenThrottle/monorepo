@@ -16,7 +16,7 @@ import { getGraphqlWsClient } from '~/services/graphql-ws-client';
 
 type Chunk = AgentSetupChunkAddedSubscription['agentSetupChunkAdded'];
 
-export interface AgentSetupStreamState {
+export interface UseAgentSetupStreamResult {
   readonly chunks: readonly Chunk[];
   readonly done: boolean;
   readonly error: string | null;
@@ -25,7 +25,7 @@ export interface AgentSetupStreamState {
 /** Subscribe to a run's output. `runId` null/empty ⇒ inert (no subscription, empty state). */
 export function useAgentSetupStream(
   runId: string | null,
-): AgentSetupStreamState {
+): UseAgentSetupStreamResult {
   // Hooks
   const [byId, setById] = React.useState<ReadonlyMap<string, Chunk>>(
     () => new Map(),
@@ -33,9 +33,21 @@ export function useAgentSetupStream(
 
   // Setup
   const client = React.useMemo(() => getGraphqlWsClient(), []);
+  const result = React.useMemo((): UseAgentSetupStreamResult => {
+    const chunks = Array.from(byId.values()).sort(
+      (a, b) => a.sortOrder - b.sortOrder,
+    );
+    const terminal = chunks.find((chunk) => chunk.done);
+
+    return {
+      chunks,
+      done: terminal !== undefined,
+      error: terminal?.error ?? null,
+    };
+  }, [byId]);
 
   // Handlers
-  const onData = (data: AgentSetupChunkAddedSubscription) => {
+  const onData = (data: AgentSetupChunkAddedSubscription): void => {
     const chunk = data.agentSetupChunkAdded;
 
     setById((previous) => {
@@ -47,6 +59,8 @@ export function useAgentSetupStream(
       return next;
     });
   };
+
+  // Markup
 
   // Life Cycle
   React.useEffect(() => {
@@ -63,16 +77,6 @@ export function useAgentSetupStream(
   );
 
   // 🔌 Short Circuit
-  return React.useMemo(() => {
-    const chunks = Array.from(byId.values()).sort(
-      (a, b) => a.sortOrder - b.sortOrder,
-    );
-    const terminal = chunks.find((chunk) => chunk.done);
 
-    return {
-      chunks,
-      done: terminal !== undefined,
-      error: terminal?.error ?? null,
-    };
-  }, [byId]);
+  return result;
 }

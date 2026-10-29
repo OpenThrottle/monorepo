@@ -9,8 +9,16 @@ import * as React from 'react';
  * is never created. The interval is cleared on unmount and whenever `enabled` goes false.
  */
 export const useElapsedTicker = (enabled = true): string => {
+  // Hooks
   const [now, setNow] = React.useState(() => new Date().toISOString());
 
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
   React.useEffect(() => {
     if (!enabled) {
       return;
@@ -25,6 +33,8 @@ export const useElapsedTicker = (enabled = true): string => {
 
     return () => clearInterval(interval);
   }, [enabled]);
+
+  // 🔌 Short Circuit
 
   return now;
 };

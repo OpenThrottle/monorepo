@@ -12,11 +12,19 @@ import { useLocation, useNavigationType } from 'react-router';
 export const useScrollContainerRestoration = (
   containerRef: React.RefObject<HTMLDivElement | null>,
 ): void => {
+  // Hooks
   const scrollPositionsRef = React.useRef(new Map<string, number>());
   const previousPathnameRef = React.useRef<string | null>(null);
   const { key: locationKey, pathname } = useLocation();
   const navigationType = useNavigationType();
 
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
   React.useLayoutEffect(() => {
     const container = containerRef.current;
     if (!container) {
@@ -41,4 +49,6 @@ export const useScrollContainerRestoration = (
       scrollPositionsRef.current.set(locationKey, container.scrollTop);
     };
   }, [containerRef, locationKey, navigationType, pathname]);
+
+  // 🔌 Short Circuit
 };

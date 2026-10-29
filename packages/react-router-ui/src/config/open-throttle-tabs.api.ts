@@ -25,17 +25,6 @@ export interface OpenThrottleTabsProps extends TabsProps {
   readonly urlSync?: UrlSyncedTabConfig;
 }
 
-export interface UseUrlSyncedTabValueOptions<TTab extends string = string> {
-  readonly defaultValue: TTab;
-  readonly param: string;
-  readonly parse?: (raw: string | null) => TTab | undefined;
-}
-
-export interface UseUrlSyncedTabValueResult<TTab extends string = string> {
-  readonly onValueChange: (next: string) => void;
-  readonly value: TTab;
-}
-
 /**
  * Approach B — link tab bar list container (not Radix TabsList).
  * @public

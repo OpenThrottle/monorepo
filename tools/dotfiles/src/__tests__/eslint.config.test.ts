@@ -76,6 +76,20 @@ describe('eslintConfig flat config', () => {
     expect(selectors).toContain('TSEnumDeclaration');
   });
 
+  it('errors on the hook primitive shape, scoped to hook files', () => {
+    expect(ruleSeverity('openthrottle/hook-primitive-shape')).toBe('error');
+
+    const hookEntry = entries.find(
+      (entry) =>
+        entry.rules !== undefined &&
+        'openthrottle/hook-primitive-shape' in entry.rules,
+    );
+
+    expect(flattenFiles(hookEntry?.files)).toContain('**/hooks/use*.{ts,tsx}');
+    expect(hookEntry?.ignores).toContain('**/__tests__/**');
+    expect(hookEntry?.ignores).toContain('**/packages/react-router-shadcn/**');
+  });
+
   it('errors on enforce-module-boundaries', () => {
     expect(ruleSeverity('@nx/enforce-module-boundaries')).toBe('error');
   });

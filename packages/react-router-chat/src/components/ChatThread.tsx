@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 import * as React from 'react';
 
-import { usePinnedToBottom } from '../hooks/use-pinned-to-bottom';
+import { usePinnedToBottom } from '../hooks/usePinnedToBottom';
 import type { ChatMessage } from '../types';
 import { findLastUserMessageId } from '../utils/chat-thread';
 import { ChatRetryNotice } from './ChatRetryNotice';

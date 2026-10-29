@@ -85,3 +85,26 @@ export interface RepositoryCheckoutRow {
   unregistered: boolean;
   updatedAt: string | null;
 }
+
+/** A single directory entry returned by the enriched `browseDirectory`. */
+export interface WorkspaceBrowseEntry {
+  alreadyRegistered: boolean;
+  isGitRepo: boolean;
+  name: string;
+  path: string;
+}
+
+/** The rich listing payload the `browseDirectory` action returns. */
+export interface WorkspaceBrowseListing {
+  entries: WorkspaceBrowseEntry[];
+  isGitRepo: boolean;
+  parentPath: string | null;
+  path: string | null;
+}
+
+/** One clickable breadcrumb segment for the current path. */
+export interface WorkspaceBreadcrumbSegment {
+  label: string;
+  navigable: boolean;
+  path: string;
+}

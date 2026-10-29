@@ -8,6 +8,7 @@ import { IS_BROWSER } from '@openthrottle/react-router-utils';
 import * as React from 'react';
 
 import type { NotificationPermissionState } from '../types';
+import { getNotificationPermission } from '../utils/get-notification-permission';
 
 /** @public */
 export interface UseNotificationPermissionResult {
@@ -24,17 +25,6 @@ export interface UseNotificationPermissionResult {
   readonly requestPermission: () => Promise<NotificationPermissionState>;
 }
 
-function getPermission(): NotificationPermissionState {
-  if (!IS_BROWSER) return 'unsupported';
-  if (!window.isSecureContext) return 'unsupported';
-  if (typeof window.Notification === 'undefined') return 'unsupported';
-
-  const p = window.Notification.permission;
-  if (p === 'granted' || p === 'denied' || p === 'default') return p;
-
-  return 'unsupported';
-}
-
 /**
  * @description Exposes Web Notifications API permission state and a request function.
  * Use for "Enable desktop notifications" UI and to gate showing system notifications.
@@ -44,7 +34,7 @@ function getPermission(): NotificationPermissionState {
 export const useNotificationPermission =
   (): UseNotificationPermissionResult => {
     // Hooks
-    const [permission, setPermission] = React.useState<NotificationPermissionState>(getPermission); // prettier-ignore
+    const [permission, setPermission] = React.useState<NotificationPermissionState>(getNotificationPermission); // prettier-ignore
 
     // Setup
     const isSecureContext = IS_BROWSER && window.isSecureContext;

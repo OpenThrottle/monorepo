@@ -1,8 +1,8 @@
 import clsx from 'clsx';
 import * as React from 'react';
 
-import { useChatComposerMentions } from '../hooks/use-chat-composer-mentions';
-import { useChatComposerSlashCommands } from '../hooks/use-chat-composer-slash-commands';
+import { useChatComposerMentions } from '../hooks/useChatComposerMentions';
+import { useChatComposerSlashCommands } from '../hooks/useChatComposerSlashCommands';
 import type {
   ChatMentionProvider,
   ChatSlashCommandProvider,

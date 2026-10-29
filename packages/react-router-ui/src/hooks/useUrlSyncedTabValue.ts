@@ -1,24 +1,17 @@
 import * as React from 'react';
 import { useSearchParams } from 'react-router';
 
-import type {
-  UseUrlSyncedTabValueOptions,
-  UseUrlSyncedTabValueResult,
-} from '../config/open-throttle-tabs.api';
+import { coerceTab } from '../utils/coerce-tab';
 
-export type {
-  UseUrlSyncedTabValueOptions,
-  UseUrlSyncedTabValueResult,
-} from '../config/open-throttle-tabs.api';
+export interface UseUrlSyncedTabValueOptions<TTab extends string = string> {
+  readonly defaultValue: TTab;
+  readonly param: string;
+  readonly parse?: (raw: string | null) => TTab | undefined;
+}
 
-/**
- * Boundary helper: without a `parse` validator the raw URL string is trusted as
- * a `TTab`. The generic overload gives callers the narrow type while the
- * implementation just returns the string it was handed.
- */
-function coerceTab<TTab extends string>(raw: string): TTab;
-function coerceTab(raw: string): string {
-  return raw;
+export interface UseUrlSyncedTabValueResult<TTab extends string = string> {
+  readonly onValueChange: (next: string) => void;
+  readonly value: TTab;
 }
 
 /**
@@ -29,8 +22,11 @@ export function useUrlSyncedTabValue<TTab extends string = string>(
   options: UseUrlSyncedTabValueOptions<TTab>,
 ): UseUrlSyncedTabValueResult<TTab> {
   const { param, defaultValue, parse } = options;
+
+  // Hooks
   const [searchParams, setSearchParams] = useSearchParams();
 
+  // Setup
   const value = React.useMemo((): TTab => {
     const raw = searchParams.get(param);
     if (parse) {
@@ -42,6 +38,7 @@ export function useUrlSyncedTabValue<TTab extends string = string>(
     return coerceTab<TTab>(raw);
   }, [defaultValue, param, parse, searchParams]);
 
+  // Handlers
   const onValueChange = React.useCallback(
     (next: string): void => {
       const resolved: TTab = parse
@@ -58,6 +55,12 @@ export function useUrlSyncedTabValue<TTab extends string = string>(
     },
     [defaultValue, param, parse, searchParams, setSearchParams],
   );
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return { onValueChange, value };
 }

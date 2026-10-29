@@ -2,13 +2,8 @@ import { toast } from '@openthrottle/react-router-shadcn';
 import { getActionError } from '@openthrottle/react-router-utils';
 import * as React from 'react';
 
-/**
- * Resolves a toast message from an action result: either a static string or a
- * function deriving the message from the result (returning a falsy value to
- * suppress the toast).
- */
-type ToastMessage<TResult> =
-  string | ((result: TResult) => string | null | undefined);
+import type { ToastMessage } from '~/global/types';
+import { resolveToastMessage } from '~/global/utils/resolve-toast-message';
 
 export interface UseActionToastOptions<TResult> {
   /**
@@ -38,17 +33,6 @@ export interface UseActionToastOptions<TResult> {
   readonly success?: ToastMessage<TResult>;
 }
 
-const resolveMessage = <TResult>(
-  message: ToastMessage<TResult> | undefined,
-  result: TResult,
-): string | null => {
-  if (message == null) {
-    return null;
-  }
-  const value = typeof message === 'function' ? message(result) : message;
-  return typeof value === 'string' && value.length > 0 ? value : null;
-};
-
 /**
  * @public
  * @description Fires a single success or error Sonner toast on the transition
@@ -63,8 +47,17 @@ export const useActionToast = <TResult>(
   options: UseActionToastOptions<TResult>,
 ): void => {
   const { active, error, id, onError, onSuccess, success } = options;
+
+  // Hooks
   const wasActiveRef = React.useRef(false);
 
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
   React.useEffect(() => {
     const justCompleted = wasActiveRef.current && !active;
     wasActiveRef.current = active;
@@ -74,7 +67,7 @@ export const useActionToast = <TResult>(
     }
 
     const errorMessage =
-      resolveMessage(error, result) ?? getActionError(result);
+      resolveToastMessage(error, result) ?? getActionError(result);
     if (errorMessage != null) {
       toast.error(errorMessage, id != null ? { id } : undefined);
       onError?.(result);
@@ -87,10 +80,12 @@ export const useActionToast = <TResult>(
       return;
     }
 
-    const successMessage = resolveMessage(success, result);
+    const successMessage = resolveToastMessage(success, result);
     if (successMessage != null) {
       toast.success(successMessage, id != null ? { id } : undefined);
       onSuccess?.(result);
     }
   }, [active, error, id, onError, onSuccess, result, success]);
+
+  // 🔌 Short Circuit
 };

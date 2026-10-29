@@ -9,7 +9,7 @@ import { MessageSquarePlus } from 'lucide-react';
 import * as React from 'react';
 
 import { CHAT_CONVERSATION_SIDEBAR_COPY } from '../data/chat-conversation-sidebar.copy';
-import { useChatConversationSidebar } from '../hooks/use-chat-conversation-sidebar';
+import { useChatConversationSidebar } from '../hooks/useChatConversationSidebar';
 import type { AgentConversationListItem } from '../types';
 import { ChatConversationDeleteDialog } from './ChatConversationDeleteDialog';
 import { ChatConversationRow } from './ChatConversationRow';

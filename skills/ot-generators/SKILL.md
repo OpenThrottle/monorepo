@@ -113,6 +113,13 @@ Prefer **`--dry-run`** where supported before writing files.
 what a generator would have scaffolded is how files drift out of the primitive shape the
 [`ot-folders`](../ot-folders/SKILL.md) rules and the component ESLint rule then reject.
 
+**Hooks have the same contract.** `--subGenerator=hook` (`react --destination=<package>` or
+`react-router --application=<app> --folder=<area>`) emits a hook that already passes
+`openthrottle/hook-primitive-shape`: one `useFoo` in `hooks/useFoo.tsx`, its `UseFooOptions`
+and `UseFooResult` interfaces, an explicit return type and the six markers. A second hook gets
+its own generated file, never a second export
+([hook-primitive-shape.md](../../docs/monorepo/hook-primitive-shape.md)).
+
 ## Batch generation (`--name` comma-separated)
 
 Most `@tools/generators` sub-generators accept **multiple names in one invocation** via comma-separated `--name` values (spaces after commas are fine: `A, B, C`).
@@ -151,6 +158,7 @@ Per-generator markdown deep-dives live under `docs/tools/templates/` (e.g. `reac
 | **Generators package overview**                            | `tools/generators/README.md`                                               |
 | **Generator source**                                       | `tools/generators/src/generators/`                                         |
 | **Code style (component/data boundaries, shape)**          | `docs/monorepo/code-style.md`                                              |
+| **Hook shape (H1–H6)**                                     | `docs/monorepo/hook-primitive-shape.md`                                    |
 | **Monorepo entry**                                         | `AGENTS.md` (Generators / Nx sections)                                     |
 
 ## OpenThrottle and commits

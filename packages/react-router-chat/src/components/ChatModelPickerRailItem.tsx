@@ -8,10 +8,8 @@ import clsx from 'clsx';
 import { Star } from 'lucide-react';
 import * as React from 'react';
 
-import {
-  FAVORITES_GROUP_ID,
-  type ResolvedGroup,
-} from '../hooks/use-chat-model-picker';
+import { FAVORITES_GROUP_ID } from '../data/chat-model-picker-favorites';
+import type { ResolvedGroup } from '../types';
 
 export interface ChatModelPickerRailItemProps {
   readonly group: ResolvedGroup;

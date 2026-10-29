@@ -5,37 +5,13 @@ import {
 } from '@openthrottle/react-router-utils';
 import * as React from 'react';
 
-const DEFAULT_DEBOUNCE_MS = 250;
-
-const EMPTY_MATCHES: readonly PlanRefMatch[] = [];
-
-/**
- * @public
- * @description A minimal plan reference returned by the `resolvePlanRef` query
- * (mirrors the server `PlanRefObject`). Enough to render a confident ⌘K redirect
- * row and resolve a short fragment to its full id.
- */
-export interface PlanRefMatch {
-  readonly id: string;
-  readonly status: string;
-  readonly title: string;
-}
-
-/**
- * @public
- * @description Payload a resolver resource route returns for a lookup. `prefix`
- * echoes the normalized fragment the matches were resolved for, so the hook can
- * ignore data that belongs to a stale keystroke.
- */
-export interface PlanRefResolverData {
-  readonly matches: readonly PlanRefMatch[];
-  readonly prefix: string;
-}
+import { EMPTY_PLAN_REF_MATCHES } from '../data/data.plan-ref-resolver';
+import type { PlanRefMatch, PlanRefResolverData } from '../types';
 
 /**
  * @public
  */
-export interface UsePlanRefResolverArgs {
+export interface UsePlanRefResolverOptions {
   /**
    * @description Latest data returned by the resolver transport (e.g. a
    * `useFetcher().data`). Surfaced as `matches` only when its `prefix` matches
@@ -82,27 +58,44 @@ export interface UsePlanRefResolverResult {
  * @public
  * @description Debounced short-id-prefix resolver for command palettes. When the
  * query classifies as a short hex fragment (via the shared {@link classifyIdInput}),
- * it debounces a call to {@link UsePlanRefResolverArgs.load} with the normalized
+ * it debounces a call to {@link UsePlanRefResolverOptions.load} with the normalized
  * prefix and surfaces the correlated `{ loading, matches }`. Full UUIDs and
  * non-id text are ignored (no lookup), and matches for a stale prefix are never
  * shown. Transport-agnostic so every Commander consumer (developer, admin, …)
  * can reuse it with its own resolver resource route.
  */
 export function usePlanRefResolver(
-  args: UsePlanRefResolverArgs,
+  options: UsePlanRefResolverOptions,
 ): UsePlanRefResolverResult {
-  const { data, load, query, state } = args;
-  const debounceMs = args.debounceMs ?? DEFAULT_DEBOUNCE_MS;
+  const { data, load, query, state } = options;
 
-  const isFragment = classifyIdInput(query) === ID_INPUT_KIND.SHORT_FRAGMENT;
-  const normalized = isFragment ? normalizeIdFragment(query) : '';
-
+  // Hooks
   const [pending, setPending] = React.useState(false);
   const debounceRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Keep `load` stable-referenced so the scheduling effect keys only on the
   // normalized prefix, not on a new callback identity each render.
   const loadRef = React.useRef(load);
+
+  // Setup
+  const debounceMs = options.debounceMs ?? 250;
+
+  const isFragment = classifyIdInput(query) === ID_INPUT_KIND.SHORT_FRAGMENT;
+  const normalized = isFragment ? normalizeIdFragment(query) : '';
+
+  const hasFreshData = data !== undefined && data.prefix === normalized;
+  const matches =
+    isFragment && hasFreshData ? data.matches : EMPTY_PLAN_REF_MATCHES;
+  const loading =
+    isFragment &&
+    !hasFreshData &&
+    (pending || state === 'loading' || state === 'submitting');
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
   React.useEffect(() => {
     loadRef.current = load;
   }, [load]);
@@ -133,12 +126,7 @@ export function usePlanRefResolver(
     };
   }, [debounceMs, normalized]);
 
-  const hasFreshData = data !== undefined && data.prefix === normalized;
-  const matches = isFragment && hasFreshData ? data.matches : EMPTY_MATCHES;
-  const loading =
-    isFragment &&
-    !hasFreshData &&
-    (pending || state === 'loading' || state === 'submitting');
+  // 🔌 Short Circuit
 
   return { loading, matches };
 }

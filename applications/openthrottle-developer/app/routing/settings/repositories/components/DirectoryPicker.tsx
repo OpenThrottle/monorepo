@@ -12,7 +12,7 @@ import { BrowseEntryRow } from '~/routing/settings/repositories/components/Brows
 import type {
   WorkspaceBreadcrumbSegment,
   WorkspaceBrowseEntry,
-} from '~/routing/settings/repositories/hooks/useAddFolderDialog';
+} from '~/routing/settings/repositories/data/types';
 
 export interface DirectoryPickerProps {
   breadcrumbs: WorkspaceBreadcrumbSegment[];

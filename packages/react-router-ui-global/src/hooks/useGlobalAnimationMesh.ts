@@ -1,19 +1,8 @@
 import * as React from 'react';
 
-/**
- * Interactive dot-lattice mesh — a CSP-safe, canvas-based animated backdrop.
- *
- * Attach the returned ref to a `<canvas>` sized to fill its container. A
- * lattice of dots is pinned at grid intersections and wired to their
- * right/down neighbours; the pointer repels nearby dots (warping the lattice +
- * lighting it up) and they spring back home with damping. A faint idle wobble
- * keeps it breathing at rest.
- *
- * SSR-safe (all DOM work runs client-side in an effect) and degrades
- * gracefully: `prefers-reduced-motion: reduce` renders a single static frame
- * with no pointer reaction, and the animation pauses while the canvas is
- * scrolled out of view.
- */
+import { DEFAULT_GLOBAL_ANIMATION_MESH } from '../config/global-animation-mesh';
+import { smoothstep } from '../utils/smoothstep';
+
 interface MeshPoint {
   /** Home (base) grid position, before idle wobble. */
   baseX: number;
@@ -36,7 +25,7 @@ interface MeshPoint {
  * falls back to {@link DEFAULT_GLOBAL_ANIMATION_MESH}, so passing `{}`
  * reproduces the default look exactly.
  */
-export interface GlobalAnimationMeshConfig {
+export interface UseGlobalAnimationMeshOptions {
   /** Dot/line colour as an "r, g, b" triple (canvas cannot read CSS vars). */
   readonly color?: string;
   /** Damping applied to velocity each frame (lower = stiffer settle). */
@@ -68,57 +57,58 @@ export interface GlobalAnimationMeshConfig {
 }
 
 /**
- * Default dot-mesh tunables. Colour is a fixed light tint because the mesh is
- * designed to sit on a dark backdrop.
+ * Interactive dot-lattice mesh — a CSP-safe, canvas-based animated backdrop.
+ *
+ * Attach the returned ref to a `<canvas>` sized to fill its container. A
+ * lattice of dots is pinned at grid intersections and wired to their
+ * right/down neighbours; the pointer repels nearby dots (warping the lattice +
+ * lighting it up) and they spring back home with damping. A faint idle wobble
+ * keeps it breathing at rest.
+ *
+ * SSR-safe (all DOM work runs client-side in an effect) and degrades
+ * gracefully: `prefers-reduced-motion: reduce` renders a single static frame
+ * with no pointer reaction, and the animation pauses while the canvas is
+ * scrolled out of view.
  */
-export const DEFAULT_GLOBAL_ANIMATION_MESH = {
-  color: '243, 240, 234',
-  damping: 0.82,
-  dotAlpha: 0.26,
-  dotGlow: 0.6,
-  dotRadius: 1.4,
-  idleAmplitude: 2.4,
-  lineAlpha: 0.09,
-  lineGlow: 0.28,
-  maxDisplace: 42,
-  repelForce: 2.4,
-  repelRadius: 140,
-  spacing: 60,
-  spring: 0.08,
-} as const;
-
-const REVEAL_MS = 900;
-const TWO_PI = Math.PI * 2;
-
-const smoothstep = (t: number): number => t * t * (3 - 2 * t);
-
 export const useGlobalAnimationMesh = <
   T extends HTMLCanvasElement = HTMLCanvasElement,
 >(
-  config: GlobalAnimationMeshConfig = {},
+  options: UseGlobalAnimationMeshOptions = {},
 ): React.RefObject<T | null> => {
+  // Hooks
   const canvasRef = React.useRef<T>(null);
 
-  const color = config.color ?? DEFAULT_GLOBAL_ANIMATION_MESH.color;
-  const damping = config.damping ?? DEFAULT_GLOBAL_ANIMATION_MESH.damping;
-  const dotAlpha = config.dotAlpha ?? DEFAULT_GLOBAL_ANIMATION_MESH.dotAlpha;
-  const dotGlow = config.dotGlow ?? DEFAULT_GLOBAL_ANIMATION_MESH.dotGlow;
-  const dotRadius = config.dotRadius ?? DEFAULT_GLOBAL_ANIMATION_MESH.dotRadius;
-  const enabled = config.enabled ?? true;
+  // Setup
+  const color = options.color ?? DEFAULT_GLOBAL_ANIMATION_MESH.color;
+  const damping = options.damping ?? DEFAULT_GLOBAL_ANIMATION_MESH.damping;
+  const dotAlpha = options.dotAlpha ?? DEFAULT_GLOBAL_ANIMATION_MESH.dotAlpha;
+  const dotGlow = options.dotGlow ?? DEFAULT_GLOBAL_ANIMATION_MESH.dotGlow;
+  const dotRadius =
+    options.dotRadius ?? DEFAULT_GLOBAL_ANIMATION_MESH.dotRadius;
+  const enabled = options.enabled ?? true;
   const idleAmplitude =
-    config.idleAmplitude ?? DEFAULT_GLOBAL_ANIMATION_MESH.idleAmplitude;
-  const lineAlpha = config.lineAlpha ?? DEFAULT_GLOBAL_ANIMATION_MESH.lineAlpha;
-  const lineGlow = config.lineGlow ?? DEFAULT_GLOBAL_ANIMATION_MESH.lineGlow;
+    options.idleAmplitude ?? DEFAULT_GLOBAL_ANIMATION_MESH.idleAmplitude;
+  const lineAlpha =
+    options.lineAlpha ?? DEFAULT_GLOBAL_ANIMATION_MESH.lineAlpha;
+  const lineGlow = options.lineGlow ?? DEFAULT_GLOBAL_ANIMATION_MESH.lineGlow;
   const maxDisplace =
-    config.maxDisplace ?? DEFAULT_GLOBAL_ANIMATION_MESH.maxDisplace;
+    options.maxDisplace ?? DEFAULT_GLOBAL_ANIMATION_MESH.maxDisplace;
   const repelForce =
-    config.repelForce ?? DEFAULT_GLOBAL_ANIMATION_MESH.repelForce;
+    options.repelForce ?? DEFAULT_GLOBAL_ANIMATION_MESH.repelForce;
   const repelRadius =
-    config.repelRadius ?? DEFAULT_GLOBAL_ANIMATION_MESH.repelRadius;
-  const spacing = config.spacing ?? DEFAULT_GLOBAL_ANIMATION_MESH.spacing;
-  const spring = config.spring ?? DEFAULT_GLOBAL_ANIMATION_MESH.spring;
+    options.repelRadius ?? DEFAULT_GLOBAL_ANIMATION_MESH.repelRadius;
+  const spacing = options.spacing ?? DEFAULT_GLOBAL_ANIMATION_MESH.spacing;
+  const spring = options.spring ?? DEFAULT_GLOBAL_ANIMATION_MESH.spring;
 
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
   React.useEffect(() => {
+    const revealMs = 900;
+    const twoPi = Math.PI * 2;
+
     const canvas = canvasRef.current;
 
     if (!canvas || !enabled) {
@@ -184,8 +174,8 @@ export const useGlobalAnimationMesh = <
             baseX,
             baseY,
             glow: 0,
-            phaseX: (i * 0.7 + j * 1.3) % TWO_PI,
-            phaseY: (i * 1.1 + j * 0.5) % TWO_PI,
+            phaseX: (i * 0.7 + j * 1.3) % twoPi,
+            phaseY: (i * 1.1 + j * 0.5) % twoPi,
             vx: 0,
             vy: 0,
             x: baseX,
@@ -250,7 +240,7 @@ export const useGlobalAnimationMesh = <
 
         ctx.fillStyle = `rgba(${color}, ${alpha})`;
         ctx.beginPath();
-        ctx.arc(point.x, point.y, dotRadius + point.glow * 0.9, 0, TWO_PI);
+        ctx.arc(point.x, point.y, dotRadius + point.glow * 0.9, 0, twoPi);
         ctx.fill();
       }
     };
@@ -338,7 +328,7 @@ export const useGlobalAnimationMesh = <
       }
 
       const elapsed = now - startTime;
-      const reveal = smoothstep(Math.min(1, elapsed / REVEAL_MS));
+      const reveal = smoothstep(Math.min(1, elapsed / revealMs));
 
       step(elapsed);
       draw(reveal);
@@ -453,6 +443,8 @@ export const useGlobalAnimationMesh = <
     spacing,
     spring,
   ]);
+
+  // 🔌 Short Circuit
 
   return canvasRef;
 };

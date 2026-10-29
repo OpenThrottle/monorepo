@@ -310,18 +310,11 @@ signals make the pressure visible.
 
 The `hook` generator emits the **same skeleton** as a component, so an extracted
 `use<Name>` hook (per [R7](#r7--keep-components-ui-focused--extract-logic-into-hooks))
-is itself conformant. The parallel rules:
-
-- Named export `export const useFoo` paired with an exported
-  `export interface FooOptions {}` (the hook's analogue of `FooProps` — empty is
-  fine), accepting `(options: FooOptions)`.
-- The same six markers, same order, same whitespace.
-- Returns a **named object** of what the consumer needs (`return { value, onX }`),
-  not a bare tuple.
-- Lives in the sibling `hooks/` folder and is tested with `renderHook`.
-
-The audit applies R3 (markers) to `hooks/**/*.tsx` too; R1's naming check uses
-the `use*` + `*Options` pairing there instead of `*Props`.
+is itself conformant. Hooks have their own contract —
+[hook-primitive-shape.md](./hook-primitive-shape.md) (H1–H6: one hook per file, only
+the hook plus its `UseFooOptions` / `UseFooResult` exported, no module-scope values, the
+six markers, an explicit return type, camelCase in `hooks/`). Hooks are tested with
+`renderHook`.
 
 ## Scope
 

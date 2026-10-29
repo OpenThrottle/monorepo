@@ -1,4 +1,4 @@
-import type { QueueJobLogStreamStatus } from '~/routing/queues/hooks/useQueueJobLogs';
+import type { QueueJobLogStreamStatus } from '~/routing/queues/types';
 
 /** Log levels the console can filter by, in ascending severity. */
 export const QUEUE_JOB_LOG_LEVELS = ['debug', 'info', 'warn', 'error'] as const;

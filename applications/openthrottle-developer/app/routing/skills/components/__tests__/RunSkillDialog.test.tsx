@@ -9,8 +9,9 @@ import type { Mock } from 'vitest';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { SKILL_RUN_COPY } from '~/routing/skills/data/data.copy';
+import type { RunSkillPayload } from '~/routing/skills/types';
 
-import type { RunSkillDialogProps, RunSkillPayload } from '../RunSkillDialog';
+import type { RunSkillDialogProps } from '../RunSkillDialog';
 import { RunSkillDialog } from '../RunSkillDialog';
 
 type RunHandler = Mock<(payload: RunSkillPayload) => void>;

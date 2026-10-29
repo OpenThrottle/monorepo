@@ -28,14 +28,26 @@ export const usePromptEditor = (
   prompt: PromptDetail,
   actionData: PromptEditorActionData,
 ): UsePromptEditorResult => {
+  // Hooks
   const fetcher = useFetcher();
   const [content, setContent] = React.useState(prompt.content);
   const [isDirty, setIsDirty] = React.useState(false);
 
+  // Setup
   const isSubmitting = fetcher.state === 'submitting';
   const extension = prompt.filePath?.split('.').pop() ?? 'md';
   const language = getLanguageFromExt(extension);
 
+  const statusText = React.useMemo(() => {
+    if (isSubmitting) return 'Saving...';
+    if (actionData?.error) return actionData.error;
+    if (actionData?.success) return 'Saved';
+    if (isDirty) return 'Unsaved changes';
+
+    return '';
+  }, [actionData, isDirty, isSubmitting]);
+
+  // Handlers
   const handleEditorChange = (value: string | undefined): void => {
     const newContent = value ?? '';
     setContent(newContent);
@@ -78,15 +90,9 @@ export const usePromptEditor = (
     [handleSave],
   );
 
-  const statusText = React.useMemo(() => {
-    if (isSubmitting) return 'Saving...';
-    if (actionData?.error) return actionData.error;
-    if (actionData?.success) return 'Saved';
-    if (isDirty) return 'Unsaved changes';
+  // Markup
 
-    return '';
-  }, [actionData, isDirty, isSubmitting]);
-
+  // Life Cycle
   React.useEffect(() => {
     document.addEventListener('keydown', handleKeyDown);
 
@@ -100,6 +106,8 @@ export const usePromptEditor = (
       setIsDirty(false);
     }
   }, [actionData?.success]);
+
+  // 🔌 Short Circuit
 
   return {
     content,

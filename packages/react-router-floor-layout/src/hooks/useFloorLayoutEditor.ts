@@ -36,12 +36,10 @@ import {
   removeElement,
   updateElement,
 } from '../utils/layout-operations';
+import { ROTATE_SNAP_DEGREES } from '../utils/selection-transform';
 import { useFloorLayoutHistory } from './useFloorLayoutHistory';
 import { useSelectionKeyboard } from './useSelectionKeyboard';
 import { useViewport, type UseViewportResult } from './useViewport';
-
-/** Rotation snap step (degrees) — mirrors SelectionHandles' handle-drag snap. */
-const ROTATE_SNAP_DEGREES = 15;
 
 /**
  * Configuration for {@link useFloorLayoutEditor}.
@@ -131,8 +129,7 @@ export function useFloorLayoutEditor(
 ): UseFloorLayoutEditorResult {
   const { defaultValue, onChange, onSelectionChange, value } = options;
 
-  const isControlled = value !== undefined;
-
+  // Hooks
   const initialLayout = useMemo<FloorLayout>(
     () => value ?? defaultValue ?? createEmptyLayout({ id: createElementId() }),
     // Initial only — controlled updates flow through the sync effect below.
@@ -148,6 +145,8 @@ export function useFloorLayoutEditor(
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [snapEnabled, setSnapEnabled] = useState(true);
 
+  // Setup
+  const isControlled = value !== undefined;
   const layout = live ?? committed;
   const bounds = useMemo(() => floorBounds(layout), [layout]);
   const floor = useMemo(
@@ -155,10 +154,12 @@ export function useFloorLayoutEditor(
     [layout.height, layout.width],
   );
 
+  // `useViewport` needs the derived `floor`, so it is called here, after it.
   const viewport = useViewport({ floor });
   const selected =
     layout.elements.find((element) => element.id === selectedId) ?? null;
 
+  // Handlers
   const emit = useCallback(
     (next: FloorLayout) => {
       lastEmitted.current = next;
@@ -290,6 +291,9 @@ export function useFloorLayoutEditor(
     [],
   );
 
+  // Markup
+
+  // Life Cycle
   useSelectionKeyboard({
     enabled: selectedId !== null,
     gridSize: layout.gridSize,
@@ -330,6 +334,8 @@ export function useFloorLayoutEditor(
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [emit, redo, undo]);
+
+  // 🔌 Short Circuit
 
   return {
     bounds,

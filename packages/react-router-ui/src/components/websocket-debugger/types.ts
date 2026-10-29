@@ -11,6 +11,17 @@ export interface WebsocketDebuggerSocket {
   on(event: string, handler: (payload: NotificationPayload) => void): void;
 }
 
+/**
+ * @description Transport-agnostic fan-out of notification events: registers a
+ * listener and returns its unsubscribe function.
+ */
+export type WebsocketDebuggerEventSubscriber = (
+  listener: (
+    event: NotificationEventName,
+    payload: NotificationPayload,
+  ) => void,
+) => () => void;
+
 /** @description Maximum number of log entries retained in the debugger buffer. */
 export const WEBSOCKET_DEBUGGER_LOG_CAP = 200;
 

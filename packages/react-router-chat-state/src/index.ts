@@ -10,6 +10,7 @@ export * from './components/svg-base';
 
 // ⚙️ Configuration
 export * from './config/chat-capabilities';
+export * from './config/chat-session-permission-decay';
 
 // 📦 Data / Atoms
 export * from './data/atom.chat-toolbar';
@@ -17,7 +18,18 @@ export * from './data/chat-toolbar-seeds';
 
 // 🪝 React Hooks
 export * from './hooks/useHeaderChatController';
+/**
+ * Pre-split public names for the header chat controller's input and result.
+ * @public
+ */
+export type {
+  UseHeaderChatControllerResult as HeaderChatSurface,
+  UseHeaderChatControllerOptions as UseHeaderChatControllerConfig,
+} from './hooks/useHeaderChatController';
 export * from './hooks/useSessionPermissionDecay';
+
+// 🧾 Types
+export * from './types';
 
 // 🛠️ Utilities
 export * from './utils/chat-discovery-options';

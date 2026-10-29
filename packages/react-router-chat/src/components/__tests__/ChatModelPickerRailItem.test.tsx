@@ -5,10 +5,8 @@ import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
 
-import {
-  FAVORITES_GROUP_ID,
-  type ResolvedGroup,
-} from '../../hooks/use-chat-model-picker';
+import { FAVORITES_GROUP_ID } from '../../data/chat-model-picker-favorites';
+import type { ResolvedGroup } from '../../types';
 import type { ChatModelPickerRailItemProps } from '../ChatModelPickerRailItem';
 import { ChatModelPickerRailItem } from '../ChatModelPickerRailItem';
 

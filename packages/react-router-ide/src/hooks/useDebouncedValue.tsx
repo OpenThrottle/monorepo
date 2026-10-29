@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 
-/** Default debounce interval in milliseconds. */
-export const DEFAULT_DEBOUNCE_MS = 200;
+import { DEFAULT_DEBOUNCE_MS } from '../config/debounce';
 
 export interface UseDebouncedValueOptions<T> {
   /** Debounce interval in milliseconds. Defaults to {@link DEFAULT_DEBOUNCE_MS}. */

@@ -9,21 +9,21 @@ import * as React from 'react';
 import { useFetcher, useSearchParams } from 'react-router';
 
 export interface UseIdeWorkspaceResult {
-  details: IdeSymbolDetails | undefined;
-  detailsLoading: boolean;
-  exportsData: IdeExportsResult | undefined;
-  exportsLoading: boolean;
-  handleIndex: () => void;
-  handleSearch: (nextQuery: string) => void;
-  handleSelectRepository: (repositoryId: string) => void;
-  handleSelectSymbol: (symbol: ExportedSymbol) => void;
-  handleSemanticSearch: (nextQuery: string) => void;
-  handleTabChange: (value: string) => void;
-  indexBusy: boolean;
-  selectedSymbol: ExportedSymbol | undefined;
-  semanticData: IdeSemanticResult | undefined;
-  semanticLoading: boolean;
-  semanticQuery: string;
+  readonly details: IdeSymbolDetails | undefined;
+  readonly detailsLoading: boolean;
+  readonly exportsData: IdeExportsResult | undefined;
+  readonly exportsLoading: boolean;
+  readonly handleIndex: () => void;
+  readonly handleSearch: (nextQuery: string) => void;
+  readonly handleSelectRepository: (repositoryId: string) => void;
+  readonly handleSelectSymbol: (symbol: ExportedSymbol) => void;
+  readonly handleSemanticSearch: (nextQuery: string) => void;
+  readonly handleTabChange: (value: string) => void;
+  readonly indexBusy: boolean;
+  readonly selectedSymbol: ExportedSymbol | undefined;
+  readonly semanticData: IdeSemanticResult | undefined;
+  readonly semanticLoading: boolean;
+  readonly semanticQuery: string;
 }
 
 /**
@@ -35,6 +35,7 @@ export interface UseIdeWorkspaceResult {
 export const useIdeWorkspace = (
   selectedId: string | null,
 ): UseIdeWorkspaceResult => {
+  // Hooks
   const [_searchParams, setSearchParams] = useSearchParams();
   const exportsFetcher = useFetcher<IdeExportsResult>();
   const semanticFetcher = useFetcher<IdeSemanticResult>();
@@ -55,6 +56,9 @@ export const useIdeWorkspace = (
         : `/ide/symbol?repositoryId=${selectedId}`,
   });
 
+  // Setup
+
+  // Handlers
   const handleSelectRepository = (repositoryId: string): void => {
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
@@ -136,6 +140,9 @@ export const useIdeWorkspace = (
     selectSymbol(symbol);
   };
 
+  // Markup
+
+  // Life Cycle
   // After an index is enqueued, refresh status so the tab reflects "indexing".
   React.useEffect(() => {
     if (indexFetcher.state === 'idle' && indexFetcher.data !== undefined) {
@@ -151,6 +158,8 @@ export const useIdeWorkspace = (
     const timer = setTimeout(() => loadSemantic(semanticQuery), 2500);
     return () => clearTimeout(timer);
   }, [semanticFetcher.data, loadSemantic, semanticQuery]);
+
+  // 🔌 Short Circuit
 
   return {
     details,

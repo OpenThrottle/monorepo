@@ -16,6 +16,21 @@ export default [
   },
 
   /**
+   * Vendored shadcn hooks (`useIsMobile`, …) are out of scope for the hook
+   * shape (docs/monorepo/hook-primitive-shape.md § Scope): re-syncing from
+   * upstream must stay a diff, not a rewrite. Turned off here for the same
+   * reason as the component override below — the base config's
+   * `packages/react-router-shadcn/**` ignore can't match under nx's
+   * package-relative cwd.
+   */
+  {
+    files: ['**/hooks/use*.{ts,tsx}'],
+    rules: {
+      'openthrottle/hook-primitive-shape': 'off',
+    },
+  },
+
+  /**
    * The shadcn primitive variant of the component shape
    * (docs/monorepo/component-shape-shadcn-variant.md). These files are the
    * multi-export / forwardRef / cva primitive families the base authored shape

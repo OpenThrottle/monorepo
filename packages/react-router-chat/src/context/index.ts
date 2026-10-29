@@ -3,4 +3,4 @@ export type {
   ChatContextValue,
   ChatProviderProps,
 } from './chat-context';
-export { ChatProvider, useChat, useChatOptional } from './chat-context';
+export { ChatProvider } from './chat-context';

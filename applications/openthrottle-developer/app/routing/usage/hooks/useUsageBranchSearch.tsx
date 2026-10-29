@@ -1,28 +1,14 @@
 import * as React from 'react';
 import { useFetcher } from 'react-router';
 
-/** Resource route serving keystroke branch searches. */
-const USAGE_BRANCH_SEARCH_PATH = '/resources/usage-branches';
-
-/** Debounce between the last keystroke and hitting the resource route. */
-const DEFAULT_DEBOUNCE_MS = 200;
-
-/** One selectable branch with its invocation count. */
-export interface UsageBranchOption {
-  readonly branch: string;
-  readonly count: number;
-}
-
-/**
- * Payload the branch resource route returns. `query` echoes the normalized
- * search the items were resolved for, so a stale keystroke's response can be
- * discarded instead of flickering into the list.
- */
-export interface UsageBranchSearchData {
-  readonly hasMore: boolean;
-  readonly items: readonly UsageBranchOption[];
-  readonly query: string;
-}
+import {
+  DEFAULT_DEBOUNCE_MS,
+  USAGE_BRANCH_SEARCH_PATH,
+} from '~/routing/usage/config/usage-branch-search';
+import type {
+  UsageBranchOption,
+  UsageBranchSearchData,
+} from '~/routing/usage/types';
 
 export interface UseUsageBranchSearchOptions {
   readonly debounceMs?: number;
