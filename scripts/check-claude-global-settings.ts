@@ -256,6 +256,16 @@ export function runClaudeGlobalSettingsCheck(
     return { outcome, settingsPath };
   }
 
+  if (outcome.kind === 'invalid-json') {
+    // Worse than the AGENTS.md symptom below: Claude Code skips the whole
+    // file, so enabledPlugins and every user hook go with it. From 2026-09-23
+    // this, plus a comment in the repo's settings, stopped all skill capture.
+    logger.blank();
+    logger.warn(
+      `${settingsPath} is not valid JSON, so Claude Code ignores ALL of it — enabled plugins and their hooks included. Remove comments and trailing commas.`,
+    );
+  }
+
   logger.blank();
   logger.warn(
     "Claude Code will silently IGNORE this repo's AGENTS.md files until your user-global settings enable them.",
