@@ -64,9 +64,11 @@
   "type": "module",
   "types": "./src/index.ts",
   "devDependencies": {
+    "@openthrottle/react-router-shadcn": "workspace:^",
     "@testing-library/jest-dom": "catalog:",
     "@testing-library/react": "catalog:",
     "react-dom": "catalog:",
+    "tailwindcss": "catalog:",
     "vitest": "catalog:"
   }
 }
