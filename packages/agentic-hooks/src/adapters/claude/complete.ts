@@ -5,9 +5,11 @@
  * sessions, then does a small time-boxed JSONL drain. Additive only; fail-open
  * (always exits 0).
  *
- * A Claude `Stop` payload carries a session id and nothing else — no error
- * signal, no per-skill signal — so this path makes no quality claim and reports
- * no duration. See `completeOpenStartsForSession`.
+ * A Claude `Stop` payload carries `session_id`, `transcript_path` and `cwd`
+ * (`SubagentStop` adds `agent_id`, `agent_type` and `agent_transcript_path`;
+ * see `__tests__/fixtures/`). None of that is an error or per-skill signal, so
+ * this path makes no quality claim and reports no duration. See
+ * `completeOpenStartsForSession`.
  */
 import fs from 'node:fs';
 
