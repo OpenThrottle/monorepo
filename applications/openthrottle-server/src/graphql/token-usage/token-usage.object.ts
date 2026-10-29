@@ -66,6 +66,12 @@ export class TokenUsageRowObject {
   })
   reasoningTokens!: number | null;
 
+  @Field(() => String, {
+    description: `Producer of the row: openthrottle-chat (in-app chat) or claude-code (Claude Code hooks). Null for legacy rows written before sources were recorded, which are chat.`,
+    nullable: true,
+  })
+  source!: string | null;
+
   @Field(() => Float, {
     description: `Total tokens for the turn, when reported.`,
     nullable: true,

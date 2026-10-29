@@ -5611,6 +5611,8 @@ export type TokenUsageRowObject = {
   provider: Scalars['String']['output'];
   /** Reasoning tokens for the turn, when reported separately. */
   reasoningTokens?: Maybe<Scalars['Float']['output']>;
+  /** Producer of the row: openthrottle-chat (in-app chat) or claude-code (Claude Code hooks). Null for legacy rows written before sources were recorded, which are chat. */
+  source?: Maybe<Scalars['String']['output']>;
   /** Total tokens for the turn, when reported. */
   totalTokens?: Maybe<Scalars['Float']['output']>;
 };

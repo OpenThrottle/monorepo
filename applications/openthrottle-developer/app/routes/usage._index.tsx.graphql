@@ -27,6 +27,7 @@ fragment UsageTokenUsageRow on TokenUsageRowObject {
   outputTokens
   provider
   reasoningTokens
+  source
   totalTokens
 }
 

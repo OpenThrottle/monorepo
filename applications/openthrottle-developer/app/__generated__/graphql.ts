@@ -5611,6 +5611,8 @@ export type TokenUsageRowObject = {
   provider: Scalars['String']['output'];
   /** Reasoning tokens for the turn, when reported separately. */
   reasoningTokens?: Maybe<Scalars['Float']['output']>;
+  /** Producer of the row: openthrottle-chat (in-app chat) or claude-code (Claude Code hooks). Null for legacy rows written before sources were recorded, which are chat. */
+  source?: Maybe<Scalars['String']['output']>;
   /** Total tokens for the turn, when reported. */
   totalTokens?: Maybe<Scalars['Float']['output']>;
 };
@@ -11793,6 +11795,7 @@ export type UsageTokenUsageRowFragment = {
   outputTokens?: number | null;
   provider: string;
   reasoningTokens?: number | null;
+  source?: string | null;
   totalTokens?: number | null;
 };
 
@@ -11830,6 +11833,7 @@ export type GetUsageTokenUsageQuery = {
       outputTokens?: number | null;
       provider: string;
       reasoningTokens?: number | null;
+      source?: string | null;
       totalTokens?: number | null;
     }>;
     totals: {
@@ -14639,6 +14643,7 @@ export const UsageTokenUsageRowFragmentDoc = {
           { kind: 'Field', name: { kind: 'Name', value: 'outputTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'provider' } },
           { kind: 'Field', name: { kind: 'Name', value: 'reasoningTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'source' } },
           { kind: 'Field', name: { kind: 'Name', value: 'totalTokens' } },
         ],
       },
@@ -30906,6 +30911,7 @@ export const GetUsageTokenUsageDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'outputTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'provider' } },
           { kind: 'Field', name: { kind: 'Name', value: 'reasoningTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'source' } },
           { kind: 'Field', name: { kind: 'Name', value: 'totalTokens' } },
         ],
       },

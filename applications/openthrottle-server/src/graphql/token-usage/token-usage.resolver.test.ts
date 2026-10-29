@@ -91,6 +91,7 @@ describe('TokenUsageResolver', () => {
         outputTokens: 340,
         provider: 'claude',
         reasoningTokens: 34,
+        source: 'claude-code',
         totalTokens: 1540,
       }),
     ];
@@ -122,6 +123,7 @@ describe('TokenUsageResolver', () => {
       outputTokens: 340,
       provider: 'claude',
       reasoningTokens: 34,
+      source: 'claude-code',
       totalTokens: 1540,
     });
     expect(result.totals).toMatchObject({

@@ -48,7 +48,7 @@ export interface TokenUsageStatDefinition {
 export const TOKEN_USAGE_STATS: readonly TokenUsageStatDefinition[] = [
   {
     field: `totalTokens`,
-    hint: `Input + output across every turn in range.`,
+    hint: `Input + output across every request in range.`,
     kind: `tokens`,
     label: `Total tokens`,
   },
@@ -78,17 +78,46 @@ export const TOKEN_USAGE_STATS: readonly TokenUsageStatDefinition[] = [
   },
   {
     field: `costUsd`,
-    hint: `Reported cost, for backends that price a turn.`,
+    hint: `Reported cost, for backends that price a turn. Claude Code rows carry none.`,
     kind: `cost`,
     label: `Cost`,
   },
 ];
 
+/**
+ * Producer ids of `TokenUsageRowObject.source`, mirroring the server's
+ * `AGENT_TOKEN_USAGE_SOURCES` (`@openthrottle/nestjs-repositories`; the client
+ * cannot import that server package).
+ */
+export const TOKEN_USAGE_SOURCES = {
+  CHAT: 'openthrottle-chat',
+  CLAUDE_CODE: 'claude-code',
+} as const;
+
+/** Display labels for the known source ids. */
+export const TOKEN_USAGE_SOURCE_LABELS: Readonly<Record<string, string>> = {
+  [TOKEN_USAGE_SOURCES.CHAT]: `OpenThrottle chat`,
+  [TOKEN_USAGE_SOURCES.CLAUDE_CODE]: `Claude Code`,
+};
+
+/** Human label for a source id, falling back to the raw id for an unknown source. */
+export const tokenUsageSourceLabel = (id: string): string =>
+  TOKEN_USAGE_SOURCE_LABELS[id] ?? id;
+
 export const TOKEN_USAGE_COPY = {
-  emptyAllProviders: `No token usage recorded yet in this range. Usage is captured from persisted chat turns (Private-mode turns are not recorded).`,
+  emptyAllProviders: `No token usage recorded yet in this range. Usage is captured from persisted OpenThrottle chat turns (Private-mode turns are not recorded) and from interactive Claude Code sessions in this repository.`,
   emptyForProvider: (label: string): string =>
     `No ${label} token usage in this range.`,
   heading: `Model token usage`,
   intro: (rangeDays: number): string =>
-    `Per-turn token and cost accounting from persisted agent chat over the last ${rangeDays} days, normalized across every provider. Private-mode turns are excluded.`,
+    `Token accounting over the last ${rangeDays} days from two sources, normalized across every provider: persisted OpenThrottle chat turns (Private-mode turns are excluded) and interactive Claude Code sessions in this repository, read from the session transcript when a session stops, one row per API request. Chat turns report cost where the backend prices them; Claude Code transcripts carry no cost, so those rows show tokens only.`,
+  sources: {
+    columnCost: `Cost`,
+    columnInput: `Input`,
+    columnOutput: `Output`,
+    columnSource: `Source`,
+    columnTotal: `Total`,
+    columnTurns: `Turns`,
+    heading: `By source`,
+  },
 } as const;

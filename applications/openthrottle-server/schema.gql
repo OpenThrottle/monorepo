@@ -3440,6 +3440,11 @@ type TokenUsageRowObject {
   """Reasoning tokens for the turn, when reported separately."""
   reasoningTokens: Float
 
+  """
+  Producer of the row: openthrottle-chat (in-app chat) or claude-code (Claude Code hooks). Null for legacy rows written before sources were recorded, which are chat.
+  """
+  source: String
+
   """Total tokens for the turn, when reported."""
   totalTokens: Float
 }
