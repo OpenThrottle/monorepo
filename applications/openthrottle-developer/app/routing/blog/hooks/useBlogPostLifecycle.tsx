@@ -1,15 +1,13 @@
-import { toast } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 import { useFetcher } from 'react-router';
 
-import { BlogPostState } from '~/__generated__/graphql';
 import { BLOG_POST_LIFECYCLE_INTENT } from '~/routing/blog/config/defaults';
-import { BLOG_LIFECYCLE_COPY } from '~/routing/blog/data/data.copy';
 import type {
   BlogPostLifecycleRequest,
   BlogPostLifecycleResult,
 } from '~/routing/blog/types';
 import { isBlogPostLifecycleResult } from '~/routing/blog/utils/lifecycle-results';
+import { announceBlogPostLifecycleResult } from '~/routing/blog/utils/lifecycle-toasts';
 
 export interface UseBlogPostLifecycleResult {
   readonly archive: () => void;
@@ -20,28 +18,6 @@ export interface UseBlogPostLifecycleResult {
   readonly result: BlogPostLifecycleResult | null;
   readonly unpublish: () => void;
 }
-
-const announce = (result: BlogPostLifecycleResult): void => {
-  switch (result.outcome) {
-    case 'archived':
-      toast.success(BLOG_LIFECYCLE_COPY.toasts.archived);
-      break;
-    case 'lifecycleError':
-    case 'lifecycleNotFound':
-      toast.error(result.message);
-      break;
-    case 'published':
-      toast.success(
-        result.state === BlogPostState.Scheduled
-          ? BLOG_LIFECYCLE_COPY.toasts.scheduled
-          : BLOG_LIFECYCLE_COPY.toasts.published,
-      );
-      break;
-    case 'unpublished':
-      toast.success(BLOG_LIFECYCLE_COPY.toasts.unpublished);
-      break;
-  }
-};
 
 /**
  * @description Submits lifecycle actions (publish or schedule, unpublish,
@@ -79,7 +55,7 @@ export const useBlogPostLifecycle = (): UseBlogPostLifecycleResult => {
   React.useEffect(() => {
     if (result !== null && result !== announced.current) {
       announced.current = result;
-      announce(result);
+      announceBlogPostLifecycleResult(result);
     }
   }, [result]);
 

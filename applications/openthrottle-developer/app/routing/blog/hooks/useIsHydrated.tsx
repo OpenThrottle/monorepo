@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-const subscribe = (): (() => void) => () => undefined;
+import { subscribeToNothing } from '~/routing/blog/utils/external-stores';
 
 /**
  * @description `false` on the server and during the hydrating render, `true` on
@@ -11,7 +11,7 @@ const subscribe = (): (() => void) => () => undefined;
 export const useIsHydrated = (): boolean => {
   // Hooks
   const hydrated = React.useSyncExternalStore(
-    subscribe,
+    subscribeToNothing,
     () => true,
     () => false,
   );
