@@ -95,6 +95,16 @@ const branchSearchResponse = {
   },
 };
 
+const captureHealthResponse = {
+  captureHealth: [
+    {
+      lastCapturedAt: '2026-01-01T00:00:00.000Z',
+      source: 'claude-code',
+      stream: 'skill_events',
+    },
+  ],
+};
+
 const runLoader = (url: string) => {
   const request = new Request(url);
 
@@ -110,14 +120,15 @@ const runLoader = (url: string) => {
 describe('routes/usage._index.tsx', () => {
   describe('loader', () => {
     beforeEach(() => {
-      // Four parallel calls: daily stats, token usage, skill usage, and the
-      // first page of the branch dropdown.
+      // Five parallel calls: daily stats, token usage, skill usage, the first
+      // page of the branch dropdown, and per-source capture health.
       mockExecuteGraphqlWithAuth
         .mockReset()
         .mockResolvedValueOnce(dailyStatsResponse)
         .mockResolvedValueOnce(tokenUsageResponse)
         .mockResolvedValueOnce(skillUsageResponse)
-        .mockResolvedValueOnce(branchSearchResponse);
+        .mockResolvedValueOnce(branchSearchResponse)
+        .mockResolvedValueOnce(captureHealthResponse);
     });
 
     test('returns daily stats + token usage + skill usage for a 30-day window', async () => {
@@ -143,6 +154,7 @@ describe('routes/usage._index.tsx', () => {
         branchSearchResponse.skillUsageGitBranches.items,
       );
       expect(result.branchesHaveMore).toBe(true);
+      expect(result.captureHealth).toEqual(captureHealthResponse.captureHealth);
       // Disk-discovered slugs the leaderboard may link through to /skills/$slug.
       expect(Array.isArray(result.presentSkillSlugs)).toBe(true);
 
@@ -183,6 +195,14 @@ describe('routes/usage._index.tsx', () => {
           query: null,
           start: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
         }),
+      );
+
+      // Capture health is a workspace-wide query with no variables.
+      expect(mockExecuteGraphqlWithAuth).toHaveBeenNthCalledWith(
+        5,
+        expect.any(Request),
+        expect.anything(),
+        {},
       );
     });
 

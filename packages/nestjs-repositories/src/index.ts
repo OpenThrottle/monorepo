@@ -408,6 +408,11 @@ export type { WorkspaceLocalRepository } from './modules/workspace-settings/work
 export type { WorkspaceLocalRepositoryData } from './modules/workspace-settings/workspace-local-repository.entity.ts';
 export { NestjsRepositoriesModule } from './nestjs-repositories.module.ts';
 export { ProjectsLoaders } from './projects-loaders.ts';
+export type {
+  CaptureHealthRow,
+  CaptureHealthStream,
+} from './utils/capture-health.ts';
+export { CAPTURE_HEALTH_STREAMS } from './utils/capture-health.ts';
 export {
   resolveCompletedAtForStatusChange,
   type ResolveCompletedAtForStatusChangeInput,

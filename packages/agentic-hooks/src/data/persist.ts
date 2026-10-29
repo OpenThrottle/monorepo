@@ -6,8 +6,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { isRecord } from '@openthrottle/nodejs-utils';
-
 import { resolveAuthToken, resolveGraphqlUrl } from '../config/env.ts';
 import type {
   DrainFileResult,
@@ -27,6 +25,7 @@ import {
   toRecordSkillUsageInput,
   toRecordSkillUsageOutcomeInput,
 } from './events.ts';
+import { postGraphqlMutation } from './graphql.ts';
 import {
   appendJsonl,
   defaultJsonlPath,
@@ -37,35 +36,6 @@ import {
   startCorrelationKey,
 } from './jsonl.ts';
 import { drainStartsForSession, listStartsForSession } from './starts.ts';
-
-/**
- * Read GraphQL `errors` from a JSON payload. Returns null when there is no
- * non-empty `errors` array; otherwise the joined messages (possibly empty),
- * mirroring the original `payload?.errors?.length` truthiness check.
- */
-const readGraphqlErrors = (payload: unknown): string | null => {
-  if (
-    !isRecord(payload) ||
-    !Array.isArray(payload.errors) ||
-    !payload.errors.length
-  ) {
-    return null;
-  }
-  return payload.errors
-    .map((e) => (isRecord(e) && typeof e.message === 'string' ? e.message : ''))
-    .join('; ');
-};
-
-/** Read `data.<field>.id` from a JSON payload, or null when absent. */
-const readMutationId = (payload: unknown, field: string): string | null => {
-  if (isRecord(payload) && isRecord(payload.data)) {
-    const node = payload.data[field];
-    if (isRecord(node) && node.id != null) {
-      return String(node.id);
-    }
-  }
-  return null;
-};
 
 /**
  * Render an endpoint for a log line. Userinfo is stripped: an endpoint is
@@ -106,68 +76,15 @@ export const postSkillUsageEvent = async ({
   graphqlUrl: string | null;
   timeoutMs?: number;
 }): Promise<PostResult> => {
-  if (typeof fetchImpl !== 'function') {
-    return { ok: false, reason: 'fetch unavailable' };
-  }
-  if (!graphqlUrl) {
-    return { ok: false, reason: 'missing graphql url' };
-  }
-
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  };
-  if (authToken) {
-    headers.Authorization = `Bearer ${authToken}`;
-  }
-
-  let response;
-  try {
-    response = await fetchImpl(graphqlUrl, {
-      body: JSON.stringify({
-        query: RECORD_SKILL_USAGE_MUTATION,
-        variables: { input: toRecordSkillUsageInput(event) },
-      }),
-      headers,
-      method: 'POST',
-      signal: AbortSignal.timeout(timeoutMs),
-    });
-  } catch (err) {
-    const reason =
-      err instanceof Error && err.name === 'TimeoutError'
-        ? 'timeout'
-        : err instanceof Error
-          ? err.message
-          : String(err);
-    return { ok: false, reason };
-  }
-
-  let payload: unknown;
-  try {
-    payload = await response.json();
-  } catch (err) {
-    return {
-      ok: false,
-      reason: `invalid json (${response.status}): ${
-        err instanceof Error ? err.message : String(err)
-      }`,
-    };
-  }
-
-  const errorMsg = readGraphqlErrors(payload);
-  if (errorMsg !== null) {
-    return { ok: false, reason: errorMsg };
-  }
-
-  if (!response.ok) {
-    return { ok: false, reason: `http ${response.status}` };
-  }
-
-  const id = readMutationId(payload, 'recordSkillUsage');
-  if (!id) {
-    return { ok: false, reason: 'missing recordSkillUsage.id' };
-  }
-
-  return { id, ok: true };
+  return postGraphqlMutation({
+    authToken,
+    fetchImpl,
+    field: 'recordSkillUsage',
+    graphqlUrl,
+    query: RECORD_SKILL_USAGE_MUTATION,
+    timeoutMs,
+    variables: { input: toRecordSkillUsageInput(event) },
+  });
 };
 
 /**
@@ -188,68 +105,15 @@ export const postSkillUsageOutcome = async ({
   graphqlUrl: string | null;
   timeoutMs?: number;
 }): Promise<PostResult> => {
-  if (typeof fetchImpl !== 'function') {
-    return { ok: false, reason: 'fetch unavailable' };
-  }
-  if (!graphqlUrl) {
-    return { ok: false, reason: 'missing graphql url' };
-  }
-
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  };
-  if (authToken) {
-    headers.Authorization = `Bearer ${authToken}`;
-  }
-
-  let response;
-  try {
-    response = await fetchImpl(graphqlUrl, {
-      body: JSON.stringify({
-        query: RECORD_SKILL_USAGE_OUTCOME_MUTATION,
-        variables: { input: toRecordSkillUsageOutcomeInput(event) },
-      }),
-      headers,
-      method: 'POST',
-      signal: AbortSignal.timeout(timeoutMs),
-    });
-  } catch (err) {
-    const reason =
-      err instanceof Error && err.name === 'TimeoutError'
-        ? 'timeout'
-        : err instanceof Error
-          ? err.message
-          : String(err);
-    return { ok: false, reason };
-  }
-
-  let payload: unknown;
-  try {
-    payload = await response.json();
-  } catch (err) {
-    return {
-      ok: false,
-      reason: `invalid json (${response.status}): ${
-        err instanceof Error ? err.message : String(err)
-      }`,
-    };
-  }
-
-  const errorMsg = readGraphqlErrors(payload);
-  if (errorMsg !== null) {
-    return { ok: false, reason: errorMsg };
-  }
-
-  if (!response.ok) {
-    return { ok: false, reason: `http ${response.status}` };
-  }
-
-  const id = readMutationId(payload, 'recordSkillUsageOutcome');
-  if (!id) {
-    return { ok: false, reason: 'missing recordSkillUsageOutcome.id' };
-  }
-
-  return { id, ok: true };
+  return postGraphqlMutation({
+    authToken,
+    fetchImpl,
+    field: 'recordSkillUsageOutcome',
+    graphqlUrl,
+    query: RECORD_SKILL_USAGE_OUTCOME_MUTATION,
+    timeoutMs,
+    variables: { input: toRecordSkillUsageOutcomeInput(event) },
+  });
 };
 
 const resolveTimeout = (timeoutMs?: number): number =>
@@ -712,7 +576,13 @@ export const drainBufferedUsage = async ({
   repoRoot: string;
   timeoutMs?: number;
 }): Promise<{ events: DrainFileResult; outcomes: DrainFileResult }> => {
-  const empty = (): DrainFileResult => ({ retained: 0, sent: 0, skipped: 0 });
+  const empty = (): DrainFileResult => ({
+    deadLettered: 0,
+    reasons: {},
+    retained: 0,
+    sent: 0,
+    skipped: 0,
+  });
 
   if (process.env.OPENTHROTTLE_TELEMETRY_OFFLINE === '1') {
     return { events: empty(), outcomes: empty() };
@@ -754,5 +624,43 @@ export const drainBufferedUsage = async ({
       }),
   });
 
+  reportDeadLetters('events', events);
+  reportDeadLetters('outcomes', outcomes);
+
   return { events, outcomes };
 };
+
+/**
+ * Say so on stderr when a drain dead-lettered anything. Silence is how the
+ * 2026-09 outcome rejection went unnoticed for six weeks.
+ */
+const reportDeadLetters = (label: string, tally: DrainFileResult): void => {
+  if (tally.deadLettered > 0) {
+    logHookError(
+      `drain: ${tally.deadLettered} ${label} line(s) rejected by the server and moved to dead-letter — ${formatDrainReasons(tally)}`,
+    );
+  }
+};
+
+/**
+ * `reason ×n; reason ×n`, most frequent first — or `none`.
+ *
+ * @public
+ */
+export const formatDrainReasons = (tally: DrainFileResult): string => {
+  const entries = Object.entries(tally.reasons).sort((a, b) => b[1] - a[1]);
+  return entries.length
+    ? entries.map(([reason, count]) => `${reason} ×${count}`).join('; ')
+    : 'none';
+};
+
+/**
+ * One drain summary line for a stream.
+ *
+ * @public
+ */
+export const formatDrainFileResult = (
+  label: string,
+  tally: DrainFileResult,
+): string =>
+  `${label} sent=${tally.sent} retained=${tally.retained} dead-lettered=${tally.deadLettered} skipped=${tally.skipped} reasons: ${formatDrainReasons(tally)}`;

@@ -1069,6 +1069,19 @@ type BlogAdminPostListResult {
   items: [BlogPostAdminObject!]!
 }
 
+type CaptureHealthRowObject {
+  """Server receipt time of the newest row for this (stream, source)."""
+  lastCapturedAt: DateTime!
+
+  """
+  Capturing tool, e.g. claude-code, cursor, codex; unknown when the row carries no source.
+  """
+  source: String!
+
+  """Ingest stream: skill_events, skill_outcomes or token_usage."""
+  stream: String!
+}
+
 type CodeSearchMatch {
   """Raw source text of the matched chunk."""
   content: String!
@@ -4146,6 +4159,11 @@ type Query {
   Blog tags carried by at least one publicly visible post, ordered by name.
   """
   blogTags: [BlogTagObject!]!
+
+  """
+  When telemetry last arrived, per (stream, source): skill_events and skill_outcomes by source, token_usage by provider. A source that is absent has never captured; a stale lastCapturedAt means capture may be broken.
+  """
+  captureHealth: [CaptureHealthRowObject!]!
 
   """
   Natural-language code semantic search over a registered repository's indexed code. available=false when no embeddings provider is configured.

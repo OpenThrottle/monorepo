@@ -11,6 +11,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import type { NormalizedTokenUsage } from '@openthrottle/agentic-token-usage';
 import { Repository, type SelectQueryBuilder } from 'typeorm';
 
+import {
+  CAPTURE_HEALTH_STREAMS,
+  type CaptureHealthRow,
+  toCaptureHealthRows,
+} from '../../utils/capture-health.ts';
 import { AgentTokenUsage } from './agent-token-usage.entity.ts';
 
 /**
@@ -140,6 +145,23 @@ export class AgentTokenUsageService {
       totalTokens: toNumber(raw?.totalTokens),
       turnCount: toNumber(raw?.turnCount),
     };
+  }
+
+  /**
+   * When token usage last arrived, per source. Grouped by `provider` for now;
+   * a later task adds a `source` column to agent_token_usage and this grouping
+   * switches to it.
+   */
+  async listCaptureHealth(): Promise<CaptureHealthRow[]> {
+    const rows = await this.usageRepository
+      .createQueryBuilder('u')
+      .select('u.provider', 'source')
+      .addSelect('MAX(u.created_at)', 'lastCapturedAt')
+      .groupBy('u.provider')
+      .orderBy('u.provider', 'ASC')
+      .getRawMany<Record<string, unknown>>();
+
+    return toCaptureHealthRows(CAPTURE_HEALTH_STREAMS.TOKEN_USAGE, rows);
   }
 
   /** Shared user + [start, endExclusive) + optional-provider filter. */

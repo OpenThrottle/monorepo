@@ -98,7 +98,16 @@ export interface OutcomeEvent {
 
 /** Result of a single GraphQL post attempt. */
 export type PostResult =
-  { id: string; ok: true } | { ok: false; reason: string };
+  | { id: string; ok: true }
+  | {
+      ok: false;
+      /**
+       * True when the server rejected the payload itself (validation, 4xx), so
+       * re-sending the same line can never succeed. See data/graphql.ts.
+       */
+      permanent: boolean;
+      reason: string;
+    };
 
 /** Where an event ultimately landed. */
 export type PersistSink = 'jsonl' | 'server';
@@ -112,6 +121,10 @@ export interface PersistResult {
 
 /** Per-file drain tally. */
 export interface DrainFileResult {
+  /** Lines moved to the dead-letter file: the server rejected the payload. */
+  deadLettered: number;
+  /** Failure reason → line count, over retained AND dead-lettered lines. */
+  reasons: Record<string, number>;
   retained: number;
   sent: number;
   skipped: number;

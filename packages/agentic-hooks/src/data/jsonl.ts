@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { userConfigDir } from '../config/env.ts';
-import type { DrainFileResult } from '../types.ts';
+import type { DrainFileResult, PostResult } from '../types.ts';
 import { logHookError } from '../utils/logging.ts';
 
 /**
@@ -63,6 +63,65 @@ export const defaultJsonlPath = (): string =>
 export const defaultOutcomesJsonlPath = (): string =>
   path.join(resolveTelemetryDir(), OUTCOMES_JSONL_BASENAME);
 
+/**
+ * The dead-letter sibling of a buffer file: `events.jsonl` →
+ * `events.dead-letter.jsonl`. Lines land here when the server rejected the
+ * payload itself, so retrying them could never succeed. Each line wraps the
+ * original record with when and why, so nothing is discarded.
+ *
+ * @public
+ */
+export const deadLetterPathFor = (filePath: string): string =>
+  filePath.replace(/\.jsonl$/, '') + '.dead-letter.jsonl';
+
+/**
+ * Move every dead-lettered record back into its live buffer for another
+ * attempt — the operator's lever after a server-side fix. Returns how many
+ * lines were moved. Fail-open.
+ *
+ * @public
+ */
+export const replayDeadLetter = (filePath: string): number => {
+  const deadPath = deadLetterPathFor(filePath);
+  if (!fs.existsSync(deadPath)) {
+    return 0;
+  }
+
+  const claimed = `${deadPath}.replaying.${process.pid}`;
+  try {
+    fs.renameSync(deadPath, claimed);
+  } catch {
+    return 0;
+  }
+
+  const lines: string[] = [];
+  for (const raw of fs.readFileSync(claimed, 'utf8').split('\n')) {
+    if (!raw.trim()) {
+      continue;
+    }
+    try {
+      const wrapped: unknown = JSON.parse(raw);
+      lines.push(
+        JSON.stringify(
+          typeof wrapped === 'object' && wrapped !== null && 'line' in wrapped
+            ? wrapped.line
+            : wrapped,
+        ),
+      );
+    } catch {
+      logHookError('replay: skipping malformed dead-letter line');
+    }
+  }
+
+  if (lines.length) {
+    fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    fs.appendFileSync(filePath, `${lines.join('\n')}\n`, 'utf8');
+  }
+  fs.rmSync(claimed, { force: true });
+
+  return lines.length;
+};
+
 /** @public */
 export const defaultStartsDir = (): string =>
   path.join(resolveTelemetryDir(), STARTS_DIR_BASENAME);
@@ -110,6 +169,11 @@ export const startCorrelationKey = (
  * Nothing is lost on server-down (everything retained) and the operation is
  * idempotent — safe to re-run.
  *
+ * A line the server rejects PERMANENTLY (validation, 4xx) moves to the
+ * dead-letter file instead of being retried forever — 26 outcomes once sat in
+ * the retry loop for six weeks behind a server bug, invisible. Every failure's
+ * reason is tallied so the drain can say WHY it retained what it retained.
+ *
  * @public
  */
 export const drainJsonlFile = async <
@@ -123,9 +187,18 @@ export const drainJsonlFile = async <
   deadlineMs?: number;
   filePath: string;
   nowFn?: () => number;
-  post: (event: T) => Promise<{ ok: boolean; reason?: string }>;
+  post: (event: T) => Promise<PostResult>;
 }): Promise<DrainFileResult> => {
-  const result: DrainFileResult = { retained: 0, sent: 0, skipped: 0 };
+  const result: DrainFileResult = {
+    deadLettered: 0,
+    reasons: {},
+    retained: 0,
+    sent: 0,
+    skipped: 0,
+  };
+  const tally = (reason: string): void => {
+    result.reasons[reason] = (result.reasons[reason] ?? 0) + 1;
+  };
   if (!fs.existsSync(filePath)) {
     return result;
   }
@@ -139,6 +212,7 @@ export const drainJsonlFile = async <
   }
 
   const retain: string[] = [];
+  const deadLetter: string[] = [];
   try {
     let stopped = false;
 
@@ -169,18 +243,28 @@ export const drainJsonlFile = async <
         continue;
       }
 
-      let ok = false;
+      let res: PostResult;
       try {
         // eslint-disable-next-line no-await-in-loop -- ordered, per-line POST with retention semantics
-        const res = await post(event);
-        ok = Boolean(res && res.ok);
+        res = await post(event);
       } catch (err) {
         logHookError('drain: post threw', err);
+        res = { ok: false, permanent: false, reason: 'post threw' };
       }
 
-      if (ok) {
+      if (res.ok) {
         result.sent += 1;
+      } else if (res.permanent) {
+        tally(res.reason);
+        deadLetter.push(
+          JSON.stringify({
+            dead_lettered_at: new Date(nowFn()).toISOString(),
+            line: event,
+            reason: res.reason,
+          }),
+        );
       } else {
+        tally(res.reason);
         retain.push(trimmed);
       }
     }
@@ -210,6 +294,15 @@ export const drainJsonlFile = async <
     if (retain.length) {
       fs.appendFileSync(filePath, `${retain.join('\n')}\n`, 'utf8');
       result.retained = retain.length;
+    }
+
+    if (deadLetter.length) {
+      fs.appendFileSync(
+        deadLetterPathFor(filePath),
+        `${deadLetter.join('\n')}\n`,
+        'utf8',
+      );
+      result.deadLettered = deadLetter.length;
     }
 
     fs.rmSync(snapshotPath, { force: true });

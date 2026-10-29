@@ -710,6 +710,91 @@ describe('SkillUsageEventsService', () => {
     });
   });
 
+  describe('listCaptureHealth', () => {
+    it('maps event and outcome sources to stream-tagged rows', async () => {
+      const eventsQb = createQueryBuilderMock({
+        getRawMany: vi.fn().mockResolvedValue([
+          {
+            lastCapturedAt: new Date('2026-10-29T10:00:00.000Z'),
+            source: 'claude-code',
+          },
+          { lastCapturedAt: '2026-10-28T08:00:00.000Z', source: 'unknown' },
+        ]),
+      });
+      const outcomesQb = createQueryBuilderMock({
+        getRawMany: vi.fn().mockResolvedValue([
+          {
+            lastCapturedAt: new Date('2026-10-27T09:00:00.000Z'),
+            source: 'cursor',
+          },
+        ]),
+      });
+      const service = await buildService({
+        events: { createQueryBuilder: vi.fn().mockReturnValue(eventsQb) },
+        outcomes: { createQueryBuilder: vi.fn().mockReturnValue(outcomesQb) },
+      });
+
+      const rows = await service.listCaptureHealth();
+
+      expect(rows).toEqual([
+        {
+          lastCapturedAt: new Date('2026-10-29T10:00:00.000Z'),
+          source: 'claude-code',
+          stream: 'skill_events',
+        },
+        {
+          lastCapturedAt: new Date('2026-10-28T08:00:00.000Z'),
+          source: 'unknown',
+          stream: 'skill_events',
+        },
+        {
+          lastCapturedAt: new Date('2026-10-27T09:00:00.000Z'),
+          source: 'cursor',
+          stream: 'skill_outcomes',
+        },
+      ]);
+    });
+
+    it('takes MAX(received_at) grouped by a NULL-safe source and excludes fixtures', async () => {
+      const eventsQb = createQueryBuilderMock();
+      const outcomesQb = createQueryBuilderMock();
+      const service = await buildService({
+        events: { createQueryBuilder: vi.fn().mockReturnValue(eventsQb) },
+        outcomes: { createQueryBuilder: vi.fn().mockReturnValue(outcomesQb) },
+      });
+
+      await service.listCaptureHealth();
+
+      expect(eventsQb.select).toHaveBeenCalledWith(
+        expect.stringContaining(`'unknown'`),
+        'source',
+      );
+      expect(eventsQb.addSelect).toHaveBeenCalledWith(
+        'MAX(e.received_at)',
+        'lastCapturedAt',
+      );
+      expect(eventsQb.where).toHaveBeenCalledWith('e.is_fixture = FALSE');
+      expect(eventsQb.groupBy).toHaveBeenCalledWith(
+        expect.stringContaining('e.source'),
+      );
+      expect(outcomesQb.addSelect).toHaveBeenCalledWith(
+        'MAX(o.received_at)',
+        'lastCapturedAt',
+      );
+      expect(outcomesQb.groupBy).toHaveBeenCalledWith(
+        expect.stringContaining('o.source'),
+      );
+    });
+
+    describe('when nothing has been captured', () => {
+      it('returns no rows', async () => {
+        const service = await buildService({});
+
+        await expect(service.listCaptureHealth()).resolves.toEqual([]);
+      });
+    });
+  });
+
   describe('listByDay', () => {
     it('maps per-day ours/personal/third-party/total counts', async () => {
       const qb = createQueryBuilderMock({

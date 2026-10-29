@@ -111,3 +111,15 @@ query getUsageSkillUsage(
     totalCount
   }
 }
+
+fragment UsageCaptureHealthRow on CaptureHealthRowObject {
+  lastCapturedAt
+  source
+  stream
+}
+
+query getUsageCaptureHealth {
+  captureHealth {
+    ...UsageCaptureHealthRow
+  }
+}

@@ -161,13 +161,58 @@ var OUTCOMES_JSONL_BASENAME = "outcomes.jsonl";
 var resolveTelemetryDir = () => process.env.OPENTHROTTLE_TELEMETRY_DIR?.trim() || import_node_path2.default.join(userConfigDir(), TELEMETRY_DIR_BASENAME);
 var defaultJsonlPath = () => import_node_path2.default.join(resolveTelemetryDir(), EVENTS_JSONL_BASENAME);
 var defaultOutcomesJsonlPath = () => import_node_path2.default.join(resolveTelemetryDir(), OUTCOMES_JSONL_BASENAME);
+var deadLetterPathFor = (filePath) => filePath.replace(/\.jsonl$/, "") + ".dead-letter.jsonl";
+var replayDeadLetter = (filePath) => {
+  const deadPath = deadLetterPathFor(filePath);
+  if (!import_node_fs2.default.existsSync(deadPath)) {
+    return 0;
+  }
+  const claimed = `${deadPath}.replaying.${process.pid}`;
+  try {
+    import_node_fs2.default.renameSync(deadPath, claimed);
+  } catch {
+    return 0;
+  }
+  const lines = [];
+  for (const raw of import_node_fs2.default.readFileSync(claimed, "utf8").split("\n")) {
+    if (!raw.trim()) {
+      continue;
+    }
+    try {
+      const wrapped = JSON.parse(raw);
+      lines.push(
+        JSON.stringify(
+          typeof wrapped === "object" && wrapped !== null && "line" in wrapped ? wrapped.line : wrapped
+        )
+      );
+    } catch {
+      logHookError("replay: skipping malformed dead-letter line");
+    }
+  }
+  if (lines.length) {
+    import_node_fs2.default.mkdirSync(import_node_path2.default.dirname(filePath), { recursive: true });
+    import_node_fs2.default.appendFileSync(filePath, `${lines.join("\n")}
+`, "utf8");
+  }
+  import_node_fs2.default.rmSync(claimed, { force: true });
+  return lines.length;
+};
 var drainJsonlFile = async ({
   filePath,
   post,
   deadlineMs,
   nowFn = Date.now
 }) => {
-  const result = { retained: 0, sent: 0, skipped: 0 };
+  const result = {
+    deadLettered: 0,
+    reasons: {},
+    retained: 0,
+    sent: 0,
+    skipped: 0
+  };
+  const tally = (reason) => {
+    result.reasons[reason] = (result.reasons[reason] ?? 0) + 1;
+  };
   if (!import_node_fs2.default.existsSync(filePath)) {
     return result;
   }
@@ -178,6 +223,7 @@ var drainJsonlFile = async ({
     return result;
   }
   const retain = [];
+  const deadLetter = [];
   try {
     let stopped = false;
     const lines = import_node_fs2.default.readFileSync(snapshotPath, "utf8").split("\n");
@@ -203,16 +249,26 @@ var drainJsonlFile = async ({
         logHookError("drain: skipping malformed jsonl line");
         continue;
       }
-      let ok = false;
+      let res;
       try {
-        const res = await post(event);
-        ok = Boolean(res && res.ok);
+        res = await post(event);
       } catch (err) {
         logHookError("drain: post threw", err);
+        res = { ok: false, permanent: false, reason: "post threw" };
       }
-      if (ok) {
+      if (res.ok) {
         result.sent += 1;
+      } else if (res.permanent) {
+        tally(res.reason);
+        deadLetter.push(
+          JSON.stringify({
+            dead_lettered_at: new Date(nowFn()).toISOString(),
+            line: event,
+            reason: res.reason
+          })
+        );
       } else {
+        tally(res.reason);
         retain.push(trimmed);
       }
     }
@@ -239,6 +295,15 @@ var drainJsonlFile = async ({
       import_node_fs2.default.appendFileSync(filePath, `${retain.join("\n")}
 `, "utf8");
       result.retained = retain.length;
+    }
+    if (deadLetter.length) {
+      import_node_fs2.default.appendFileSync(
+        deadLetterPathFor(filePath),
+        `${deadLetter.join("\n")}
+`,
+        "utf8"
+      );
+      result.deadLettered = deadLetter.length;
     }
     import_node_fs2.default.rmSync(snapshotPath, { force: true });
   } catch (err) {
@@ -375,12 +440,41 @@ var toRecordSkillUsageOutcomeInput = (event) => {
 // packages/nodejs-utils/src/utils/is-record.ts
 var isRecord = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
 
-// packages/agentic-hooks/src/data/persist.ts
+// packages/agentic-hooks/src/data/graphql.ts
+var PERMANENT_GRAPHQL_CODES = [
+  "BAD_REQUEST",
+  "BAD_USER_INPUT",
+  "GRAPHQL_PARSE_FAILED",
+  "GRAPHQL_VALIDATION_FAILED"
+];
+var TRANSIENT_CLIENT_STATUSES = [401, 403, 408, 429];
+var isPermanentHttpStatus = (status) => status >= 400 && status < 500 && !TRANSIENT_CLIENT_STATUSES.includes(status);
+var readStatusCode = (extensions) => {
+  const original = extensions.originalError;
+  if (isRecord(original) && typeof original.statusCode === "number") {
+    return original.statusCode;
+  }
+  return null;
+};
 var readGraphqlErrors = (payload) => {
   if (!isRecord(payload) || !Array.isArray(payload.errors) || !payload.errors.length) {
     return null;
   }
-  return payload.errors.map((e) => isRecord(e) && typeof e.message === "string" ? e.message : "").join("; ");
+  let permanent = false;
+  const messages = [];
+  for (const error of payload.errors) {
+    if (!isRecord(error)) {
+      continue;
+    }
+    messages.push(typeof error.message === "string" ? error.message : "");
+    const extensions = isRecord(error.extensions) ? error.extensions : {};
+    const code = typeof extensions.code === "string" ? extensions.code : "";
+    const status = readStatusCode(extensions);
+    if (PERMANENT_GRAPHQL_CODES.includes(code) || status !== null && isPermanentHttpStatus(status)) {
+      permanent = true;
+    }
+  }
+  return { message: messages.join("; "), permanent };
 };
 var readMutationId = (payload, field) => {
   if (isRecord(payload) && isRecord(payload.data)) {
@@ -391,6 +485,73 @@ var readMutationId = (payload, field) => {
   }
   return null;
 };
+var transient = (reason) => ({
+  ok: false,
+  permanent: false,
+  reason
+});
+var postGraphqlMutation = async ({
+  authToken,
+  fetchImpl,
+  field,
+  graphqlUrl,
+  query,
+  timeoutMs,
+  variables
+}) => {
+  if (typeof fetchImpl !== "function") {
+    return transient("fetch unavailable");
+  }
+  if (!graphqlUrl) {
+    return transient("missing graphql url");
+  }
+  const headers = {
+    "Content-Type": "application/json"
+  };
+  if (authToken) {
+    headers.Authorization = `Bearer ${authToken}`;
+  }
+  let response;
+  try {
+    response = await fetchImpl(graphqlUrl, {
+      body: JSON.stringify({ query, variables }),
+      headers,
+      method: "POST",
+      signal: AbortSignal.timeout(timeoutMs)
+    });
+  } catch (err) {
+    const reason = err instanceof Error && err.name === "TimeoutError" ? "timeout" : err instanceof Error ? err.message : String(err);
+    return transient(reason);
+  }
+  let payload;
+  try {
+    payload = await response.json();
+  } catch (err) {
+    return {
+      ok: false,
+      permanent: isPermanentHttpStatus(response.status),
+      reason: `invalid json (${response.status}): ${err instanceof Error ? err.message : String(err)}`
+    };
+  }
+  const errors = readGraphqlErrors(payload);
+  if (errors !== null) {
+    return { ok: false, permanent: errors.permanent, reason: errors.message };
+  }
+  if (!response.ok) {
+    return {
+      ok: false,
+      permanent: isPermanentHttpStatus(response.status),
+      reason: `http ${response.status}`
+    };
+  }
+  const id = readMutationId(payload, field);
+  if (!id) {
+    return transient(`missing ${field}.id`);
+  }
+  return { id, ok: true };
+};
+
+// packages/agentic-hooks/src/data/persist.ts
 var DEFAULT_POST_TIMEOUT_MS = 750;
 var DEFAULT_ABANDONED_MS = 6 * 60 * 60 * 1e3;
 var postSkillUsageEvent = async ({
@@ -400,54 +561,15 @@ var postSkillUsageEvent = async ({
   timeoutMs = DEFAULT_POST_TIMEOUT_MS,
   fetchImpl = globalThis.fetch
 }) => {
-  if (typeof fetchImpl !== "function") {
-    return { ok: false, reason: "fetch unavailable" };
-  }
-  if (!graphqlUrl) {
-    return { ok: false, reason: "missing graphql url" };
-  }
-  const headers = {
-    "Content-Type": "application/json"
-  };
-  if (authToken) {
-    headers.Authorization = `Bearer ${authToken}`;
-  }
-  let response;
-  try {
-    response = await fetchImpl(graphqlUrl, {
-      body: JSON.stringify({
-        query: RECORD_SKILL_USAGE_MUTATION,
-        variables: { input: toRecordSkillUsageInput(event) }
-      }),
-      headers,
-      method: "POST",
-      signal: AbortSignal.timeout(timeoutMs)
-    });
-  } catch (err) {
-    const reason = err instanceof Error && err.name === "TimeoutError" ? "timeout" : err instanceof Error ? err.message : String(err);
-    return { ok: false, reason };
-  }
-  let payload;
-  try {
-    payload = await response.json();
-  } catch (err) {
-    return {
-      ok: false,
-      reason: `invalid json (${response.status}): ${err instanceof Error ? err.message : String(err)}`
-    };
-  }
-  const errorMsg = readGraphqlErrors(payload);
-  if (errorMsg !== null) {
-    return { ok: false, reason: errorMsg };
-  }
-  if (!response.ok) {
-    return { ok: false, reason: `http ${response.status}` };
-  }
-  const id = readMutationId(payload, "recordSkillUsage");
-  if (!id) {
-    return { ok: false, reason: "missing recordSkillUsage.id" };
-  }
-  return { id, ok: true };
+  return postGraphqlMutation({
+    authToken,
+    fetchImpl,
+    field: "recordSkillUsage",
+    graphqlUrl,
+    query: RECORD_SKILL_USAGE_MUTATION,
+    timeoutMs,
+    variables: { input: toRecordSkillUsageInput(event) }
+  });
 };
 var postSkillUsageOutcome = async ({
   event,
@@ -456,54 +578,15 @@ var postSkillUsageOutcome = async ({
   timeoutMs = DEFAULT_POST_TIMEOUT_MS,
   fetchImpl = globalThis.fetch
 }) => {
-  if (typeof fetchImpl !== "function") {
-    return { ok: false, reason: "fetch unavailable" };
-  }
-  if (!graphqlUrl) {
-    return { ok: false, reason: "missing graphql url" };
-  }
-  const headers = {
-    "Content-Type": "application/json"
-  };
-  if (authToken) {
-    headers.Authorization = `Bearer ${authToken}`;
-  }
-  let response;
-  try {
-    response = await fetchImpl(graphqlUrl, {
-      body: JSON.stringify({
-        query: RECORD_SKILL_USAGE_OUTCOME_MUTATION,
-        variables: { input: toRecordSkillUsageOutcomeInput(event) }
-      }),
-      headers,
-      method: "POST",
-      signal: AbortSignal.timeout(timeoutMs)
-    });
-  } catch (err) {
-    const reason = err instanceof Error && err.name === "TimeoutError" ? "timeout" : err instanceof Error ? err.message : String(err);
-    return { ok: false, reason };
-  }
-  let payload;
-  try {
-    payload = await response.json();
-  } catch (err) {
-    return {
-      ok: false,
-      reason: `invalid json (${response.status}): ${err instanceof Error ? err.message : String(err)}`
-    };
-  }
-  const errorMsg = readGraphqlErrors(payload);
-  if (errorMsg !== null) {
-    return { ok: false, reason: errorMsg };
-  }
-  if (!response.ok) {
-    return { ok: false, reason: `http ${response.status}` };
-  }
-  const id = readMutationId(payload, "recordSkillUsageOutcome");
-  if (!id) {
-    return { ok: false, reason: "missing recordSkillUsageOutcome.id" };
-  }
-  return { id, ok: true };
+  return postGraphqlMutation({
+    authToken,
+    fetchImpl,
+    field: "recordSkillUsageOutcome",
+    graphqlUrl,
+    query: RECORD_SKILL_USAGE_OUTCOME_MUTATION,
+    timeoutMs,
+    variables: { input: toRecordSkillUsageOutcomeInput(event) }
+  });
 };
 var resolveTimeout = (timeoutMs) => timeoutMs ?? (Number(process.env.OPENTHROTTLE_TELEMETRY_TIMEOUT_MS) || DEFAULT_POST_TIMEOUT_MS);
 var drainBufferedUsage = async ({
@@ -517,7 +600,13 @@ var drainBufferedUsage = async ({
   timeoutMs,
   nowFn = Date.now
 }) => {
-  const empty = () => ({ retained: 0, sent: 0, skipped: 0 });
+  const empty = () => ({
+    deadLettered: 0,
+    reasons: {},
+    retained: 0,
+    sent: 0,
+    skipped: 0
+  });
   if (process.env.OPENTHROTTLE_TELEMETRY_OFFLINE === "1") {
     return { events: empty(), outcomes: empty() };
   }
@@ -552,8 +641,22 @@ var drainBufferedUsage = async ({
       timeoutMs: resolvedTimeout
     })
   });
+  reportDeadLetters("events", events);
+  reportDeadLetters("outcomes", outcomes);
   return { events, outcomes };
 };
+var reportDeadLetters = (label, tally) => {
+  if (tally.deadLettered > 0) {
+    logHookError(
+      `drain: ${tally.deadLettered} ${label} line(s) rejected by the server and moved to dead-letter — ${formatDrainReasons(tally)}`
+    );
+  }
+};
+var formatDrainReasons = (tally) => {
+  const entries = Object.entries(tally.reasons).sort((a, b) => b[1] - a[1]);
+  return entries.length ? entries.map(([reason, count]) => `${reason} ×${count}`).join("; ") : "none";
+};
+var formatDrainFileResult = (label, tally) => `${label} sent=${tally.sent} retained=${tally.retained} dead-lettered=${tally.deadLettered} skipped=${tally.skipped} reasons: ${formatDrainReasons(tally)}`;
 
 // packages/agentic-hooks/src/data/plan-runs.ts
 var import_node_path4 = __toESM(require("node:path"), 1);
@@ -568,11 +671,19 @@ var parseArg = (flag) => {
 var main = async () => {
   try {
     const repoRoot = process.env.CLAUDE_PROJECT_DIR || process.env.OPEN_THROTTLE_REPO_ROOT || process.cwd();
+    if (process.argv.includes("--replay-dead-letter")) {
+      const replayed = replayDeadLetter(defaultJsonlPath()) + replayDeadLetter(defaultOutcomesJsonlPath());
+      process.stderr.write(
+        `[skill-usage-drain] replayed ${replayed} dead-lettered line(s)
+`
+      );
+    }
     const budgetRaw = parseArg("--budget-ms") || process.env.OPENTHROTTLE_TELEMETRY_DRAIN_BUDGET_MS || "";
     const budgetMs = budgetRaw === "" ? null : Number(budgetRaw) || null;
     const summary = await drainBufferedUsage({ budgetMs, repoRoot });
     process.stderr.write(
-      `[skill-usage-drain] events sent=${summary.events.sent} retained=${summary.events.retained} skipped=${summary.events.skipped}; outcomes sent=${summary.outcomes.sent} retained=${summary.outcomes.retained} skipped=${summary.outcomes.skipped}
+      `[skill-usage-drain] ${formatDrainFileResult("events", summary.events)}
+[skill-usage-drain] ${formatDrainFileResult("outcomes", summary.outcomes)}
 `
     );
   } catch (err) {

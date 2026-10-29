@@ -605,6 +605,16 @@ export type CancelPlanRunResultObject = {
   signaledActiveRunToStop: Scalars['Boolean']['output'];
 };
 
+export type CaptureHealthRowObject = {
+  __typename?: 'CaptureHealthRowObject';
+  /** Server receipt time of the newest row for this (stream, source). */
+  lastCapturedAt: Scalars['DateTime']['output'];
+  /** Capturing tool, e.g. claude-code, cursor, codex; unknown when the row carries no source. */
+  source: Scalars['String']['output'];
+  /** Ingest stream: skill_events, skill_outcomes or token_usage. */
+  stream: Scalars['String']['output'];
+};
+
 /** Drift detected by refreshCheckout, diffing the new scan against the previous snapshot. */
 export type CheckoutDriftObject = {
   __typename?: 'CheckoutDriftObject';
@@ -3201,6 +3211,8 @@ export type Query = {
   blogTags: Array<BlogTagObject>;
   /** Interactive directory listing for the in-app picker: immediate subdirectories (annotated with isGitRepo / alreadyRegistered) plus navigation context (current + parent path, current-is-git-repo). With no path, lists the configured workspace roots as entries. All paths are on the server host. */
   browseDirectory: WorkspaceDirectoryListingObject;
+  /** When telemetry last arrived, per (stream, source): skill_events and skill_outcomes by source, token_usage by provider. A source that is absent has never captured; a stale lastCapturedAt means capture may be broken. */
+  captureHealth: Array<CaptureHealthRowObject>;
   /** Index status for a registered repository: unavailable, indexing, ready, or notIndexed. */
   codeIndexStatus: CodeIndexStatusObject;
   /** Natural-language code semantic search over a registered repository's indexed code. available=false when no embeddings provider is configured. */
@@ -11860,6 +11872,27 @@ export type GetUsageSkillUsageQuery = {
   };
 };
 
+export type UsageCaptureHealthRowFragment = {
+  __typename?: 'CaptureHealthRowObject';
+  lastCapturedAt: any;
+  source: string;
+  stream: string;
+};
+
+export type GetUsageCaptureHealthQueryVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type GetUsageCaptureHealthQuery = {
+  __typename?: 'Query';
+  captureHealth: Array<{
+    __typename?: 'CaptureHealthRowObject';
+    lastCapturedAt: any;
+    source: string;
+    stream: string;
+  }>;
+};
+
 export type ScheduleFormAgentClisQueryVariables = Exact<{
   [key: string]: never;
 }>;
@@ -14674,6 +14707,27 @@ export const UsageSkillUsageFilterOptionsFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<UsageSkillUsageFilterOptionsFragment, unknown>;
+export const UsageCaptureHealthRowFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UsageCaptureHealthRow' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'CaptureHealthRowObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'lastCapturedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'source' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'stream' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<UsageCaptureHealthRowFragment, unknown>;
 export const GetMyPermissionsDocument = {
   kind: 'Document',
   definitions: [
@@ -31070,6 +31124,53 @@ export const GetUsageSkillUsageDocument = {
 } as unknown as DocumentNode<
   GetUsageSkillUsageQuery,
   GetUsageSkillUsageQueryVariables
+>;
+export const GetUsageCaptureHealthDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getUsageCaptureHealth' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'captureHealth' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'UsageCaptureHealthRow' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UsageCaptureHealthRow' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'CaptureHealthRowObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'lastCapturedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'source' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'stream' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetUsageCaptureHealthQuery,
+  GetUsageCaptureHealthQueryVariables
 >;
 export const ScheduleFormAgentClisDocument = {
   kind: 'Document',

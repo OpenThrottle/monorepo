@@ -11,6 +11,7 @@ describe('AgentTokenUsageService', () => {
   // signatures — mirrors the other repository service tests.
   const buildService = async (mockRepo: {
     create: ReturnType<typeof vi.fn>;
+    createQueryBuilder?: ReturnType<typeof vi.fn>;
     save: ReturnType<typeof vi.fn>;
   }): Promise<AgentTokenUsageService> => {
     const app = await Test.createTestingModule({
@@ -104,6 +105,69 @@ describe('AgentTokenUsageService', () => {
       reasoningTokens: null,
       totalTokens: 35,
       userId: 'user-9',
+    });
+  });
+
+  describe('listCaptureHealth', () => {
+    const buildHealthService = async (
+      getRawMany: ReturnType<typeof vi.fn>,
+    ): Promise<{
+      qb: Record<string, ReturnType<typeof vi.fn>>;
+      service: AgentTokenUsageService;
+    }> => {
+      const qb: Record<string, ReturnType<typeof vi.fn>> = {
+        addSelect: vi.fn(),
+        getRawMany,
+        groupBy: vi.fn(),
+        orderBy: vi.fn(),
+        select: vi.fn(),
+      };
+      for (const key of ['addSelect', 'groupBy', 'orderBy', 'select']) {
+        qb[key]?.mockReturnValue(qb);
+      }
+      const service = await buildService({
+        create: vi.fn(),
+        createQueryBuilder: vi.fn().mockReturnValue(qb),
+        save: vi.fn(),
+      });
+
+      return { qb, service };
+    };
+
+    it('maps providers to token_usage rows with their latest created_at', async () => {
+      const lastCapturedAt = new Date('2026-10-29T10:00:00.000Z');
+      const { service } = await buildHealthService(
+        vi.fn().mockResolvedValue([{ lastCapturedAt, source: 'claude' }]),
+      );
+
+      await expect(service.listCaptureHealth()).resolves.toEqual([
+        { lastCapturedAt, source: 'claude', stream: 'token_usage' },
+      ]);
+    });
+
+    it('selects MAX(created_at) grouped by provider', async () => {
+      const { qb, service } = await buildHealthService(
+        vi.fn().mockResolvedValue([]),
+      );
+
+      await service.listCaptureHealth();
+
+      expect(qb.select).toHaveBeenCalledWith('u.provider', 'source');
+      expect(qb.addSelect).toHaveBeenCalledWith(
+        'MAX(u.created_at)',
+        'lastCapturedAt',
+      );
+      expect(qb.groupBy).toHaveBeenCalledWith('u.provider');
+    });
+
+    describe('when no usage has been recorded', () => {
+      it('returns no rows', async () => {
+        const { service } = await buildHealthService(
+          vi.fn().mockResolvedValue([]),
+        );
+
+        await expect(service.listCaptureHealth()).resolves.toEqual([]);
+      });
     });
   });
 });

@@ -1,5 +1,6 @@
 // Components
 export * from './components/Accordion/index';
+export * from './components/Alert/index';
 export * from './components/AlertDialog/index';
 export * from './components/Avatar';
 export * from './components/Badge';

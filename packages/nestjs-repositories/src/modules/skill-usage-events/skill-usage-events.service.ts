@@ -10,6 +10,12 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, type SelectQueryBuilder } from 'typeorm';
 
+import {
+  CAPTURE_HEALTH_STREAMS,
+  CAPTURE_HEALTH_UNKNOWN_SOURCE,
+  type CaptureHealthRow,
+  toCaptureHealthRows,
+} from '../../utils/capture-health.ts';
 import { toLikeContainsPattern } from '../../utils/like-pattern.ts';
 import {
   isSkillUsageScope,
@@ -275,6 +281,13 @@ const resolveBranchSearchLimit = (limit?: number | null): number => {
   return Math.min(Math.max(Math.floor(limit), 1), BRANCH_SEARCH_MAX_LIMIT);
 };
 
+/**
+ * Source label for capture health: NULL and blank collapse to `unknown`.
+ * Shared by SELECT, GROUP BY and ORDER BY so Postgres sees one expression.
+ */
+const captureSourceExpression = (alias: string): string =>
+  `COALESCE(NULLIF(${alias}.source, ''), '${CAPTURE_HEALTH_UNKNOWN_SOURCE}')`;
+
 @Injectable()
 export class SkillUsageEventsService {
   constructor(
@@ -460,6 +473,44 @@ export class SkillUsageEventsService {
       ),
       totalCount: toNumber(row.totalCount),
     }));
+  }
+
+  /**
+   * When skill telemetry last arrived, per `source`, for both the start-event
+   * stream (`received_at` of skill_usage_events, fixtures excluded — a bring-up
+   * probe is not capture) and the outcome stream (skill_usage_outcomes). Uses
+   * server receipt time, not the client-reported `occurred_at`, so a client
+   * with a skewed clock cannot mask an ingest outage.
+   */
+  async listCaptureHealth(): Promise<CaptureHealthRow[]> {
+    const eventSource = captureSourceExpression('e');
+    const outcomeSource = captureSourceExpression('o');
+
+    const [eventRows, outcomeRows] = await Promise.all([
+      this.eventsRepository
+        .createQueryBuilder('e')
+        .select(eventSource, 'source')
+        .addSelect('MAX(e.received_at)', 'lastCapturedAt')
+        .where('e.is_fixture = FALSE')
+        .groupBy(eventSource)
+        .orderBy(eventSource, 'ASC')
+        .getRawMany<Record<string, unknown>>(),
+      this.outcomesRepository
+        .createQueryBuilder('o')
+        .select(outcomeSource, 'source')
+        .addSelect('MAX(o.received_at)', 'lastCapturedAt')
+        .groupBy(outcomeSource)
+        .orderBy(outcomeSource, 'ASC')
+        .getRawMany<Record<string, unknown>>(),
+    ]);
+
+    return [
+      ...toCaptureHealthRows(CAPTURE_HEALTH_STREAMS.SKILL_EVENTS, eventRows),
+      ...toCaptureHealthRows(
+        CAPTURE_HEALTH_STREAMS.SKILL_OUTCOMES,
+        outcomeRows,
+      ),
+    ];
   }
 
   /** Total invocation count for the filtered range. */

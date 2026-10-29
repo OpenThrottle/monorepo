@@ -12,6 +12,7 @@
 export * from './config/describe.ts';
 export * from './config/env.ts';
 export * from './data/events.ts';
+export * from './data/graphql.ts';
 export * from './data/jsonl.ts';
 export * from './data/persist.ts';
 export * from './data/plan-runs.ts';
