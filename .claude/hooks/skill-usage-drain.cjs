@@ -158,10 +158,17 @@ var resolveAuthToken = (repoRoot, options) => resolveOtEnv(repoRoot, "OPENTHROTT
 var TELEMETRY_DIR_BASENAME = "skill-usage";
 var EVENTS_JSONL_BASENAME = "events.jsonl";
 var OUTCOMES_JSONL_BASENAME = "outcomes.jsonl";
+var TOKEN_USAGE_JSONL_BASENAME = "token-usage.jsonl";
 var resolveTelemetryDir = () => process.env.OPENTHROTTLE_TELEMETRY_DIR?.trim() || import_node_path2.default.join(userConfigDir(), TELEMETRY_DIR_BASENAME);
 var defaultJsonlPath = () => import_node_path2.default.join(resolveTelemetryDir(), EVENTS_JSONL_BASENAME);
 var defaultOutcomesJsonlPath = () => import_node_path2.default.join(resolveTelemetryDir(), OUTCOMES_JSONL_BASENAME);
+var defaultTokenUsageJsonlPath = () => import_node_path2.default.join(resolveTelemetryDir(), TOKEN_USAGE_JSONL_BASENAME);
 var deadLetterPathFor = (filePath) => filePath.replace(/\.jsonl$/, "") + ".dead-letter.jsonl";
+var toDeadLetterLine = (record, reason, nowMs) => JSON.stringify({
+  dead_lettered_at: new Date(nowMs).toISOString(),
+  line: record,
+  reason
+});
 var replayDeadLetter = (filePath) => {
   const deadPath = deadLetterPathFor(filePath);
   if (!import_node_fs2.default.existsSync(deadPath)) {
@@ -197,11 +204,12 @@ var replayDeadLetter = (filePath) => {
   import_node_fs2.default.rmSync(claimed, { force: true });
   return lines.length;
 };
-var drainJsonlFile = async ({
-  filePath,
-  post,
+var drainSnapshot = async ({
+  batchSize,
   deadlineMs,
-  nowFn = Date.now
+  filePath,
+  nowFn,
+  postBatch
 }) => {
   const result = {
     deadLettered: 0,
@@ -210,8 +218,8 @@ var drainJsonlFile = async ({
     sent: 0,
     skipped: 0
   };
-  const tally = (reason) => {
-    result.reasons[reason] = (result.reasons[reason] ?? 0) + 1;
+  const tally = (reason, count) => {
+    result.reasons[reason] = (result.reasons[reason] ?? 0) + count;
   };
   if (!import_node_fs2.default.existsSync(filePath)) {
     return result;
@@ -225,51 +233,48 @@ var drainJsonlFile = async ({
   const retain = [];
   const deadLetter = [];
   try {
-    let stopped = false;
-    const lines = import_node_fs2.default.readFileSync(snapshotPath, "utf8").split("\n");
-    for (const line of lines) {
+    const parsed = [];
+    for (const line of import_node_fs2.default.readFileSync(snapshotPath, "utf8").split("\n")) {
       const trimmed = line.trim();
       if (!trimmed) {
         continue;
       }
-      if (stopped) {
-        retain.push(trimmed);
-        continue;
-      }
-      if (deadlineMs != null && nowFn() > deadlineMs) {
-        stopped = true;
-        retain.push(trimmed);
-        continue;
-      }
-      let event;
       try {
-        event = JSON.parse(trimmed);
+        parsed.push({ event: JSON.parse(trimmed), raw: trimmed });
       } catch {
         result.skipped += 1;
         logHookError("drain: skipping malformed jsonl line");
+      }
+    }
+    let stopped = false;
+    for (let start = 0; start < parsed.length; start += Math.max(1, batchSize)) {
+      const batch = parsed.slice(start, start + Math.max(1, batchSize));
+      if (!stopped && deadlineMs != null && nowFn() > deadlineMs) {
+        stopped = true;
+      }
+      if (stopped) {
+        retain.push(...batch.map((entry) => entry.raw));
         continue;
       }
       let res;
       try {
-        res = await post(event);
+        res = await postBatch(batch.map((entry) => entry.event));
       } catch (err) {
         logHookError("drain: post threw", err);
         res = { ok: false, permanent: false, reason: "post threw" };
       }
       if (res.ok) {
-        result.sent += 1;
+        result.sent += batch.length;
       } else if (res.permanent) {
-        tally(res.reason);
+        tally(res.reason, batch.length);
         deadLetter.push(
-          JSON.stringify({
-            dead_lettered_at: new Date(nowFn()).toISOString(),
-            line: event,
-            reason: res.reason
-          })
+          ...batch.map(
+            (entry) => toDeadLetterLine(entry.event, res.reason, nowFn())
+          )
         );
       } else {
-        tally(res.reason);
-        retain.push(trimmed);
+        tally(res.reason, batch.length);
+        retain.push(...batch.map((entry) => entry.raw));
       }
     }
   } catch (err) {
@@ -311,6 +316,25 @@ var drainJsonlFile = async ({
   }
   return result;
 };
+var drainJsonlFile = async ({
+  filePath,
+  post,
+  deadlineMs,
+  nowFn = Date.now
+}) => drainSnapshot({
+  batchSize: 1,
+  deadlineMs,
+  filePath,
+  nowFn,
+  postBatch: async ([event]) => event === void 0 ? { ok: true } : post(event)
+});
+var drainJsonlFileBatched = async ({
+  batchSize,
+  filePath,
+  postBatch,
+  deadlineMs,
+  nowFn = Date.now
+}) => drainSnapshot({ batchSize, deadlineMs, filePath, nowFn, postBatch });
 
 // packages/agentic-hooks/src/config/describe.ts
 var TELEMETRY_CONFIG_SOURCES = Object.freeze({
@@ -323,6 +347,12 @@ var TELEMETRY_CONFIG_SOURCES = Object.freeze({
   /** `~/.openthrottle/.env`. */
   USER_ENV: "user_env"
 });
+
+// packages/nodejs-utils/src/utils/is-record.ts
+var isRecord = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
+
+// packages/agentic-hooks/src/data/checkpoints.ts
+var DEFAULT_STALE_CHECKPOINT_MS = 6 * 60 * 60 * 1e3;
 
 // packages/agentic-hooks/src/utils/privacy.ts
 var PRIVACY_LEVELS = Object.freeze({
@@ -437,9 +467,6 @@ var toRecordSkillUsageOutcomeInput = (event) => {
   return input;
 };
 
-// packages/nodejs-utils/src/utils/is-record.ts
-var isRecord = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
-
 // packages/agentic-hooks/src/data/graphql.ts
 var PERMANENT_GRAPHQL_CODES = [
   "BAD_REQUEST",
@@ -476,28 +503,20 @@ var readGraphqlErrors = (payload) => {
   }
   return { message: messages.join("; "), permanent };
 };
-var readMutationId = (payload, field) => {
-  if (isRecord(payload) && isRecord(payload.data)) {
-    const node = payload.data[field];
-    if (isRecord(node) && node.id != null) {
-      return String(node.id);
-    }
-  }
-  return null;
-};
+var readMutationData = (payload, field) => isRecord(payload) && isRecord(payload.data) ? payload.data[field] : void 0;
 var transient = (reason) => ({
   ok: false,
   permanent: false,
   reason
 });
-var postGraphqlMutation = async ({
+var postMutation = async ({
   authToken,
   fetchImpl,
-  field,
   graphqlUrl,
   query,
   timeoutMs,
-  variables
+  variables,
+  field
 }) => {
   if (typeof fetchImpl !== "function") {
     return transient("fetch unavailable");
@@ -544,11 +563,96 @@ var postGraphqlMutation = async ({
       reason: `http ${response.status}`
     };
   }
-  const id = readMutationId(payload, field);
-  if (!id) {
-    return transient(`missing ${field}.id`);
+  return { data: readMutationData(payload, field), ok: true };
+};
+var postGraphqlMutation = async (args) => {
+  const posted = await postMutation(args);
+  if (!posted.ok) {
+    return posted;
   }
-  return { id, ok: true };
+  const node = posted.data;
+  if (isRecord(node) && node.id != null && String(node.id)) {
+    return { id: String(node.id), ok: true };
+  }
+  return transient(`missing ${args.field}.id`);
+};
+var postGraphqlMutationNode = async (args) => {
+  const posted = await postMutation(args);
+  if (!posted.ok) {
+    return posted;
+  }
+  if (!isRecord(posted.data)) {
+    return transient(`missing ${args.field}`);
+  }
+  return { node: posted.data, ok: true };
+};
+
+// packages/agentic-hooks/src/data/token-usage.ts
+var MAX_TOKEN_USAGE_BATCH = 500;
+var RECORD_TOKEN_USAGE_MUTATION = `
+mutation RecordTokenUsage($input: RecordTokenUsageInput!) {
+  recordTokenUsage(input: $input) {
+    inserted
+    skipped
+  }
+}
+`;
+var toRecordTokenUsageRow = (record) => ({
+  cacheReadTokens: record.cache_read_tokens,
+  cacheWriteTokens: record.cache_write_tokens,
+  costUsd: record.cost_usd,
+  cwd: record.cwd,
+  gitBranch: record.git_branch,
+  inputTokens: record.input_tokens,
+  model: record.model,
+  occurredAt: record.occurred_at,
+  outputTokens: record.output_tokens,
+  provider: record.provider,
+  rawUsageJson: record.raw_usage_json,
+  reasoningTokens: record.reasoning_tokens,
+  requestId: record.request_id,
+  sessionId: record.session_id,
+  source: record.source,
+  totalTokens: record.total_tokens
+});
+var postTokenUsageBatch = async ({
+  records,
+  graphqlUrl,
+  authToken = "",
+  timeoutMs,
+  fetchImpl = globalThis.fetch
+}) => {
+  if (!records.length) {
+    return { inserted: 0, ok: true, skipped: 0 };
+  }
+  if (records.length > MAX_TOKEN_USAGE_BATCH) {
+    return {
+      ok: false,
+      permanent: true,
+      reason: `batch of ${records.length} exceeds ${MAX_TOKEN_USAGE_BATCH}`
+    };
+  }
+  const posted = await postGraphqlMutationNode({
+    authToken,
+    fetchImpl,
+    field: "recordTokenUsage",
+    graphqlUrl,
+    query: RECORD_TOKEN_USAGE_MUTATION,
+    timeoutMs,
+    variables: { input: { rows: records.map(toRecordTokenUsageRow) } }
+  });
+  if (!posted.ok) {
+    return posted;
+  }
+  const { inserted, skipped } = posted.node;
+  if (typeof inserted !== "number" || typeof skipped !== "number") {
+    return {
+      ok: false,
+      permanent: false,
+      reason: "malformed recordTokenUsage result"
+    };
+  }
+  return { inserted, ok: true, skipped };
 };
 
 // packages/agentic-hooks/src/data/persist.ts
@@ -593,6 +697,7 @@ var drainBufferedUsage = async ({
   repoRoot,
   eventsPath,
   outcomesPath,
+  tokenUsagePath,
   budgetMs = 500,
   fetchImpl,
   graphqlUrl: graphqlUrlOverride,
@@ -608,11 +713,11 @@ var drainBufferedUsage = async ({
     skipped: 0
   });
   if (process.env.OPENTHROTTLE_TELEMETRY_OFFLINE === "1") {
-    return { events: empty(), outcomes: empty() };
+    return { events: empty(), outcomes: empty(), tokenUsage: empty() };
   }
   const graphqlUrl = graphqlUrlOverride ?? resolveGraphqlUrl(repoRoot);
   if (!graphqlUrl) {
-    return { events: empty(), outcomes: empty() };
+    return { events: empty(), outcomes: empty(), tokenUsage: empty() };
   }
   const authToken = authTokenOverride ?? resolveAuthToken(repoRoot);
   const resolvedTimeout = resolveTimeout(timeoutMs);
@@ -641,9 +746,23 @@ var drainBufferedUsage = async ({
       timeoutMs: resolvedTimeout
     })
   });
+  const tokenUsage = await drainJsonlFileBatched({
+    batchSize: MAX_TOKEN_USAGE_BATCH,
+    deadlineMs,
+    filePath: tokenUsagePath || defaultTokenUsageJsonlPath(),
+    nowFn,
+    postBatch: (batch) => postTokenUsageBatch({
+      authToken,
+      fetchImpl,
+      graphqlUrl,
+      records: batch,
+      timeoutMs: resolvedTimeout
+    })
+  });
   reportDeadLetters("events", events);
   reportDeadLetters("outcomes", outcomes);
-  return { events, outcomes };
+  reportDeadLetters("token usage", tokenUsage);
+  return { events, outcomes, tokenUsage };
 };
 var reportDeadLetters = (label, tally) => {
   if (tally.deadLettered > 0) {
@@ -672,7 +791,7 @@ var main = async () => {
   try {
     const repoRoot = process.env.CLAUDE_PROJECT_DIR || process.env.OPEN_THROTTLE_REPO_ROOT || process.cwd();
     if (process.argv.includes("--replay-dead-letter")) {
-      const replayed = replayDeadLetter(defaultJsonlPath()) + replayDeadLetter(defaultOutcomesJsonlPath());
+      const replayed = replayDeadLetter(defaultJsonlPath()) + replayDeadLetter(defaultOutcomesJsonlPath()) + replayDeadLetter(defaultTokenUsageJsonlPath());
       process.stderr.write(
         `[skill-usage-drain] replayed ${replayed} dead-lettered line(s)
 `
@@ -684,6 +803,7 @@ var main = async () => {
     process.stderr.write(
       `[skill-usage-drain] ${formatDrainFileResult("events", summary.events)}
 [skill-usage-drain] ${formatDrainFileResult("outcomes", summary.outcomes)}
+[skill-usage-drain] ${formatDrainFileResult("token-usage", summary.tokenUsage)}
 `
     );
   } catch (err) {

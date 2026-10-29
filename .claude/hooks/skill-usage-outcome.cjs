@@ -193,6 +193,12 @@ var TELEMETRY_CONFIG_SOURCES = Object.freeze({
   USER_ENV: "user_env"
 });
 
+// packages/nodejs-utils/src/utils/is-record.ts
+var isRecord = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
+
+// packages/agentic-hooks/src/data/checkpoints.ts
+var DEFAULT_STALE_CHECKPOINT_MS = 6 * 60 * 60 * 1e3;
+
 // packages/agentic-hooks/src/utils/privacy.ts
 var PRIVACY_LEVELS = Object.freeze({
   FULL: "full",
@@ -337,9 +343,6 @@ var toRecordSkillUsageOutcomeInput = (event) => {
   return input;
 };
 
-// packages/nodejs-utils/src/utils/is-record.ts
-var isRecord = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
-
 // packages/agentic-hooks/src/data/graphql.ts
 var PERMANENT_GRAPHQL_CODES = [
   "BAD_REQUEST",
@@ -376,28 +379,20 @@ var readGraphqlErrors = (payload) => {
   }
   return { message: messages.join("; "), permanent };
 };
-var readMutationId = (payload, field) => {
-  if (isRecord(payload) && isRecord(payload.data)) {
-    const node = payload.data[field];
-    if (isRecord(node) && node.id != null) {
-      return String(node.id);
-    }
-  }
-  return null;
-};
+var readMutationData = (payload, field) => isRecord(payload) && isRecord(payload.data) ? payload.data[field] : void 0;
 var transient = (reason) => ({
   ok: false,
   permanent: false,
   reason
 });
-var postGraphqlMutation = async ({
+var postMutation = async ({
   authToken,
   fetchImpl,
-  field,
   graphqlUrl,
   query,
   timeoutMs,
-  variables
+  variables,
+  field
 }) => {
   if (typeof fetchImpl !== "function") {
     return transient("fetch unavailable");
@@ -444,11 +439,18 @@ var postGraphqlMutation = async ({
       reason: `http ${response.status}`
     };
   }
-  const id = readMutationId(payload, field);
-  if (!id) {
-    return transient(`missing ${field}.id`);
+  return { data: readMutationData(payload, field), ok: true };
+};
+var postGraphqlMutation = async (args) => {
+  const posted = await postMutation(args);
+  if (!posted.ok) {
+    return posted;
   }
-  return { id, ok: true };
+  const node = posted.data;
+  if (isRecord(node) && node.id != null && String(node.id)) {
+    return { id: String(node.id), ok: true };
+  }
+  return transient(`missing ${args.field}.id`);
 };
 
 // packages/agentic-hooks/src/data/persist.ts

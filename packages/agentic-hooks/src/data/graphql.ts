@@ -14,7 +14,7 @@
  */
 import { isRecord } from '@openthrottle/nodejs-utils';
 
-import type { HookFetch, PostResult } from '../types.ts';
+import type { HookFetch, PostFailure, PostResult } from '../types.ts';
 
 /** Apollo / Nest codes meaning the payload itself was rejected. */
 const PERMANENT_GRAPHQL_CODES: readonly string[] = [
@@ -81,37 +81,22 @@ export const readGraphqlErrors = (
   return { message: messages.join('; '), permanent };
 };
 
-/** Read `data.<field>.id` from a JSON payload, or null when absent. */
-const readMutationId = (payload: unknown, field: string): string | null => {
-  if (isRecord(payload) && isRecord(payload.data)) {
-    const node = payload.data[field];
-    if (isRecord(node) && node.id != null) {
-      return String(node.id);
-    }
-  }
-  return null;
-};
+/** Read `data.<field>` from a JSON payload (undefined when absent). */
+const readMutationData = (payload: unknown, field: string): unknown =>
+  isRecord(payload) && isRecord(payload.data) ? payload.data[field] : undefined;
 
-const transient = (reason: string): PostResult => ({
+const transient = (reason: string): PostFailure => ({
   ok: false,
   permanent: false,
   reason,
 });
 
 /**
- * POST one mutation and read `data.<field>.id`. Never throws.
+ * The arguments every mutation POST takes.
  *
  * @public
  */
-export const postGraphqlMutation = async ({
-  authToken,
-  fetchImpl,
-  field,
-  graphqlUrl,
-  query,
-  timeoutMs,
-  variables,
-}: {
+export interface PostMutationArgs {
   authToken: string;
   fetchImpl: HookFetch;
   field: string;
@@ -119,7 +104,22 @@ export const postGraphqlMutation = async ({
   query: string;
   timeoutMs: number;
   variables: Record<string, unknown>;
-}): Promise<PostResult> => {
+}
+
+/**
+ * The mutation POST every stream shares: transport, timeout, and the one
+ * failure classification. On success it hands back `data.<field>` unread, so a
+ * caller picks the shape it needs (an id, a counts object).
+ */
+const postMutation = async ({
+  authToken,
+  fetchImpl,
+  graphqlUrl,
+  query,
+  timeoutMs,
+  variables,
+  field,
+}: PostMutationArgs): Promise<PostFailure | { data: unknown; ok: true }> => {
   if (typeof fetchImpl !== 'function') {
     return transient('fetch unavailable');
   }
@@ -179,10 +179,49 @@ export const postGraphqlMutation = async ({
     };
   }
 
-  const id = readMutationId(payload, field);
-  if (!id) {
-    return transient(`missing ${field}.id`);
+  return { data: readMutationData(payload, field), ok: true };
+};
+
+/**
+ * POST one mutation and read `data.<field>.id`. Never throws.
+ *
+ * @public
+ */
+export const postGraphqlMutation = async (
+  args: PostMutationArgs,
+): Promise<PostResult> => {
+  const posted = await postMutation(args);
+  if (!posted.ok) {
+    return posted;
   }
 
-  return { id, ok: true };
+  const node = posted.data;
+  if (isRecord(node) && node.id != null && String(node.id)) {
+    return { id: String(node.id), ok: true };
+  }
+
+  return transient(`missing ${args.field}.id`);
+};
+
+/**
+ * POST one mutation and return the parsed `data.<field>` object — for
+ * mutations that report counts rather than an id. Same failure classification
+ * as `postGraphqlMutation`; a success whose field is not an object is a
+ * transient failure. Never throws.
+ *
+ * @public
+ */
+export const postGraphqlMutationNode = async (
+  args: PostMutationArgs,
+): Promise<PostFailure | { node: Record<string, unknown>; ok: true }> => {
+  const posted = await postMutation(args);
+  if (!posted.ok) {
+    return posted;
+  }
+
+  if (!isRecord(posted.data)) {
+    return transient(`missing ${args.field}`);
+  }
+
+  return { node: posted.data, ok: true };
 };

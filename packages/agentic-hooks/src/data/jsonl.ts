@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { userConfigDir } from '../config/env.ts';
-import type { DrainFileResult, PostResult } from '../types.ts';
+import type { DrainFileResult, PostFailure, PostResult } from '../types.ts';
 import { logHookError } from '../utils/logging.ts';
 
 /**
@@ -23,7 +23,13 @@ export const EVENTS_JSONL_BASENAME = 'events.jsonl';
 export const OUTCOMES_JSONL_BASENAME = 'outcomes.jsonl';
 
 /** @public */
+export const TOKEN_USAGE_JSONL_BASENAME = 'token-usage.jsonl';
+
+/** @public */
 export const STARTS_DIR_BASENAME = 'starts';
+
+/** @public */
+export const CHECKPOINTS_DIR_BASENAME = 'checkpoints';
 
 /**
  * The directory holding buffered events, outcomes and start entries:
@@ -63,6 +69,14 @@ export const defaultJsonlPath = (): string =>
 export const defaultOutcomesJsonlPath = (): string =>
   path.join(resolveTelemetryDir(), OUTCOMES_JSONL_BASENAME);
 
+/** @public */
+export const defaultTokenUsageJsonlPath = (): string =>
+  path.join(resolveTelemetryDir(), TOKEN_USAGE_JSONL_BASENAME);
+
+/** @public */
+export const defaultCheckpointsDir = (): string =>
+  path.join(resolveTelemetryDir(), CHECKPOINTS_DIR_BASENAME);
+
 /**
  * The dead-letter sibling of a buffer file: `events.jsonl` →
  * `events.dead-letter.jsonl`. Lines land here when the server rejected the
@@ -73,6 +87,48 @@ export const defaultOutcomesJsonlPath = (): string =>
  */
 export const deadLetterPathFor = (filePath: string): string =>
   filePath.replace(/\.jsonl$/, '') + '.dead-letter.jsonl';
+
+/** One dead-letter line: the original record wrapped with when and why. */
+const toDeadLetterLine = (
+  record: unknown,
+  reason: string,
+  nowMs: number,
+): string =>
+  JSON.stringify({
+    dead_lettered_at: new Date(nowMs).toISOString(),
+    line: record,
+    reason,
+  });
+
+/**
+ * Append records straight to a buffer's dead-letter file — for a payload the
+ * server has already rejected, which must not enter the retry loop at all.
+ * Throws on I/O failure like `appendJsonl`; callers own the fail-open.
+ *
+ * @public
+ */
+export const appendDeadLetters = ({
+  filePath,
+  nowMs = Date.now(),
+  reason,
+  records,
+}: {
+  filePath: string;
+  nowMs?: number;
+  reason: string;
+  records: readonly object[];
+}): void => {
+  if (!records.length) {
+    return;
+  }
+  const deadPath = deadLetterPathFor(filePath);
+  fs.mkdirSync(path.dirname(deadPath), { recursive: true });
+  fs.appendFileSync(
+    deadPath,
+    `${records.map((record) => toDeadLetterLine(record, reason, nowMs)).join('\n')}\n`,
+    'utf8',
+  );
+};
 
 /**
  * Move every dead-lettered record back into its live buffer for another
@@ -161,33 +217,35 @@ export const startCorrelationKey = (
 };
 
 /**
- * Drain one buffered JSONL file to the server. Concurrent-writer safe via an
- * atomic rename: the live file is renamed to a private `.draining.<pid>`
- * snapshot (so writers immediately start a fresh file), the snapshot is posted
- * line-by-line, and any unsent/deadline-deferred lines are appended BACK to the
- * live file for the next attempt. Malformed lines are logged and dropped.
- * Nothing is lost on server-down (everything retained) and the operation is
- * idempotent — safe to re-run.
- *
- * A line the server rejects PERMANENTLY (validation, 4xx) moves to the
- * dead-letter file instead of being retried forever — 26 outcomes once sat in
- * the retry loop for six weeks behind a server bug, invisible. Every failure's
- * reason is tallied so the drain can say WHY it retained what it retained.
+ * What a batch POST must report: delivered, or a classified failure.
  *
  * @public
  */
-export const drainJsonlFile = async <
-  T extends object = Record<string, unknown>,
->({
-  filePath,
-  post,
+export type BatchPostResult = PostFailure | { ok: true };
+
+interface Parsed<T> {
+  event: T;
+  raw: string;
+}
+
+/**
+ * The shared drain mechanics: atomic rename to a private snapshot, post in
+ * batches, retain transient failures, dead-letter permanent ones, fold the
+ * snapshot back if it cannot be read. `drainJsonlFile` (one line per post) and
+ * `drainJsonlFileBatched` are both thin wrappers over this.
+ */
+const drainSnapshot = async <T extends object>({
+  batchSize,
   deadlineMs,
-  nowFn = Date.now,
+  filePath,
+  nowFn,
+  postBatch,
 }: {
-  deadlineMs?: number;
+  batchSize: number;
+  deadlineMs: number | undefined;
   filePath: string;
-  nowFn?: () => number;
-  post: (event: T) => Promise<PostResult>;
+  nowFn: () => number;
+  postBatch: (events: T[]) => Promise<BatchPostResult>;
 }): Promise<DrainFileResult> => {
   const result: DrainFileResult = {
     deadLettered: 0,
@@ -196,8 +254,8 @@ export const drainJsonlFile = async <
     sent: 0,
     skipped: 0,
   };
-  const tally = (reason: string): void => {
-    result.reasons[reason] = (result.reasons[reason] ?? 0) + 1;
+  const tally = (reason: string, count: number): void => {
+    result.reasons[reason] = (result.reasons[reason] ?? 0) + count;
   };
   if (!fs.existsSync(filePath)) {
     return result;
@@ -214,58 +272,57 @@ export const drainJsonlFile = async <
   const retain: string[] = [];
   const deadLetter: string[] = [];
   try {
-    let stopped = false;
-
-    const lines = fs.readFileSync(snapshotPath, 'utf8').split('\n');
-    for (const line of lines) {
+    const parsed: Array<Parsed<T>> = [];
+    for (const line of fs.readFileSync(snapshotPath, 'utf8').split('\n')) {
       const trimmed = line.trim();
       if (!trimmed) {
         continue;
       }
-
-      if (stopped) {
-        retain.push(trimmed);
-        continue;
-      }
-
-      if (deadlineMs != null && nowFn() > deadlineMs) {
-        stopped = true;
-        retain.push(trimmed);
-        continue;
-      }
-
-      let event: T;
       try {
-        event = JSON.parse(trimmed);
+        parsed.push({ event: JSON.parse(trimmed), raw: trimmed });
       } catch {
         result.skipped += 1;
         logHookError('drain: skipping malformed jsonl line');
+      }
+    }
+
+    let stopped = false;
+    for (
+      let start = 0;
+      start < parsed.length;
+      start += Math.max(1, batchSize)
+    ) {
+      const batch = parsed.slice(start, start + Math.max(1, batchSize));
+
+      if (!stopped && deadlineMs != null && nowFn() > deadlineMs) {
+        stopped = true;
+      }
+      if (stopped) {
+        retain.push(...batch.map((entry) => entry.raw));
         continue;
       }
 
-      let res: PostResult;
+      let res: BatchPostResult;
       try {
-        // eslint-disable-next-line no-await-in-loop -- ordered, per-line POST with retention semantics
-        res = await post(event);
+        // eslint-disable-next-line no-await-in-loop -- ordered, per-batch POST with retention semantics
+        res = await postBatch(batch.map((entry) => entry.event));
       } catch (err) {
         logHookError('drain: post threw', err);
         res = { ok: false, permanent: false, reason: 'post threw' };
       }
 
       if (res.ok) {
-        result.sent += 1;
+        result.sent += batch.length;
       } else if (res.permanent) {
-        tally(res.reason);
+        tally(res.reason, batch.length);
         deadLetter.push(
-          JSON.stringify({
-            dead_lettered_at: new Date(nowFn()).toISOString(),
-            line: event,
-            reason: res.reason,
-          }),
+          ...batch.map((entry) =>
+            toDeadLetterLine(entry.event, res.reason, nowFn()),
+          ),
         );
       } else {
-        tally(res.reason);
-        retain.push(trimmed);
+        tally(res.reason, batch.length);
+        retain.push(...batch.map((entry) => entry.raw));
       }
     }
   } catch (err) {
@@ -312,3 +369,68 @@ export const drainJsonlFile = async <
 
   return result;
 };
+
+/**
+ * Drain one buffered JSONL file to the server. Concurrent-writer safe via an
+ * atomic rename: the live file is renamed to a private `.draining.<pid>`
+ * snapshot (so writers immediately start a fresh file), the snapshot is posted
+ * line-by-line, and any unsent/deadline-deferred lines are appended BACK to the
+ * live file for the next attempt. Malformed lines are logged and dropped.
+ * Nothing is lost on server-down (everything retained) and the operation is
+ * idempotent — safe to re-run.
+ *
+ * A line the server rejects PERMANENTLY (validation, 4xx) moves to the
+ * dead-letter file instead of being retried forever — 26 outcomes once sat in
+ * the retry loop for six weeks behind a server bug, invisible. Every failure's
+ * reason is tallied so the drain can say WHY it retained what it retained.
+ *
+ * @public
+ */
+export const drainJsonlFile = async <
+  T extends object = Record<string, unknown>,
+>({
+  filePath,
+  post,
+  deadlineMs,
+  nowFn = Date.now,
+}: {
+  deadlineMs?: number;
+  filePath: string;
+  nowFn?: () => number;
+  post: (event: T) => Promise<PostResult>;
+}): Promise<DrainFileResult> =>
+  drainSnapshot<T>({
+    batchSize: 1,
+    deadlineMs,
+    filePath,
+    nowFn,
+    postBatch: async ([event]) =>
+      event === undefined ? { ok: true } : post(event),
+  });
+
+/**
+ * `drainJsonlFile` for a stream whose server mutation takes many rows at once:
+ * the same rename / retain / dead-letter mechanics, but lines are posted up to
+ * `batchSize` at a time. The outcome is per batch — a batch the server rejects
+ * permanently dead-letters every line in it with the reason, and a transient
+ * failure retains every line in it. Delivery is idempotent server-side for the
+ * streams that use this, so a retained batch re-sent later cannot double-count.
+ *
+ * @public
+ */
+export const drainJsonlFileBatched = async <
+  T extends object = Record<string, unknown>,
+>({
+  batchSize,
+  filePath,
+  postBatch,
+  deadlineMs,
+  nowFn = Date.now,
+}: {
+  batchSize: number;
+  deadlineMs?: number;
+  filePath: string;
+  nowFn?: () => number;
+  postBatch: (events: readonly T[]) => Promise<BatchPostResult>;
+}): Promise<DrainFileResult> =>
+  drainSnapshot<T>({ batchSize, deadlineMs, filePath, nowFn, postBatch });

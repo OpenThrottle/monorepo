@@ -12,8 +12,10 @@ import type {
   HookFetch,
   OutcomeEvent,
   PersistResult,
+  PersistTokenUsageResult,
   PostResult,
   SkillUsageOutcome,
+  TokenUsageRecord,
   UsageEvent,
 } from '../types.ts';
 import { logHookError } from '../utils/logging.ts';
@@ -27,15 +29,23 @@ import {
 } from './events.ts';
 import { postGraphqlMutation } from './graphql.ts';
 import {
+  appendDeadLetters,
   appendJsonl,
   defaultJsonlPath,
   defaultOutcomesJsonlPath,
   defaultStartsDir,
+  defaultTokenUsageJsonlPath,
   drainJsonlFile,
+  drainJsonlFileBatched,
   sanitizeSessionId,
   startCorrelationKey,
 } from './jsonl.ts';
 import { drainStartsForSession, listStartsForSession } from './starts.ts';
+import {
+  chunkTokenUsage,
+  MAX_TOKEN_USAGE_BATCH,
+  postTokenUsageBatch,
+} from './token-usage.ts';
 
 /**
  * Render an endpoint for a log line. Userinfo is stripped: an endpoint is
@@ -281,6 +291,134 @@ export const persistOutcomeEvent = async ({
     return {
       detail: err instanceof Error ? err.message : String(err),
       sink: 'jsonl',
+    };
+  }
+};
+
+/**
+ * Persist token-usage records to OT in batches of at most
+ * `MAX_TOKEN_USAGE_BATCH`; whatever cannot be delivered is buffered, never
+ * lost. Always resolves; never throws.
+ *
+ * - Offline, no endpoint, or a transient failure (network, timeout, 5xx, auth):
+ *   the unsent records are appended to `token-usage.jsonl` in the telemetry
+ *   directory for a later drain. After the first transient failure the
+ *   remaining batches are buffered WITHOUT another attempt, so a dead server
+ *   costs one bounded timeout, not one per batch.
+ * - A permanent rejection: that batch goes straight to the dead-letter file —
+ *   re-sending the same rows can never succeed — and the next batch is still
+ *   tried, since the rejection says nothing about it.
+ *
+ * Writes only under the telemetry directory, never `repoRoot` (which is read
+ * for endpoint configuration in OT checkouts and nothing else).
+ *
+ * @public
+ */
+export const persistTokenUsage = async ({
+  records,
+  repoRoot,
+  jsonlPath,
+  timeoutMs,
+  fetchImpl,
+  graphqlUrl: graphqlUrlOverride,
+  authToken: authTokenOverride,
+}: {
+  authToken?: string;
+  fetchImpl?: HookFetch;
+  graphqlUrl?: string | null;
+  jsonlPath?: string;
+  records: readonly TokenUsageRecord[];
+  repoRoot: string;
+  timeoutMs?: number;
+}): Promise<PersistTokenUsageResult> => {
+  const outPath = jsonlPath || defaultTokenUsageJsonlPath();
+  const tally = { buffered: 0, deadLettered: 0, inserted: 0, skipped: 0 };
+  let detail: string | null = null;
+
+  const buffer = (unsent: readonly TokenUsageRecord[]): void => {
+    try {
+      for (const record of unsent) {
+        appendJsonl(outPath, record);
+      }
+      tally.buffered += unsent.length;
+    } catch (err) {
+      logHookError('token usage jsonl append failed', err);
+    }
+  };
+
+  try {
+    const batches = chunkTokenUsage(records, MAX_TOKEN_USAGE_BATCH);
+    if (!batches.length) {
+      return { ...tally, detail };
+    }
+
+    const offline = process.env.OPENTHROTTLE_TELEMETRY_OFFLINE === '1';
+    const graphqlUrl = offline
+      ? null
+      : (graphqlUrlOverride ?? resolveGraphqlUrl(repoRoot));
+    if (offline || !graphqlUrl) {
+      buffer(records);
+      return {
+        ...tally,
+        detail: offline
+          ? 'OPENTHROTTLE_TELEMETRY_OFFLINE=1'
+          : 'missing graphql url',
+      };
+    }
+
+    const authToken = authTokenOverride ?? resolveAuthToken(repoRoot);
+    const resolvedTimeout = resolveTimeout(timeoutMs);
+
+    let serverDown = false;
+    for (const batch of batches) {
+      if (serverDown) {
+        buffer(batch);
+        continue;
+      }
+
+      // eslint-disable-next-line no-await-in-loop -- sequential on purpose: stop contacting a failing server after the first transient failure
+      const res = await postTokenUsageBatch({
+        authToken,
+        fetchImpl,
+        graphqlUrl,
+        records: batch,
+        timeoutMs: resolvedTimeout,
+      });
+
+      if (res.ok) {
+        tally.inserted += res.inserted;
+        tally.skipped += res.skipped;
+      } else if (res.permanent) {
+        detail = res.reason;
+        logHookError(
+          `token usage batch rejected; moved to dead-letter (${res.reason}) [endpoint ${forLog(graphqlUrl)}]`,
+        );
+        try {
+          appendDeadLetters({
+            filePath: outPath,
+            reason: res.reason,
+            records: batch,
+          });
+          tally.deadLettered += batch.length;
+        } catch (err) {
+          logHookError('token usage dead-letter append failed', err);
+        }
+      } else {
+        detail = res.reason;
+        serverDown = true;
+        logHookError(
+          `token usage post failed; falling back to jsonl (${res.reason}) [endpoint ${forLog(graphqlUrl)}]`,
+        );
+        buffer(batch);
+      }
+    }
+
+    return { ...tally, detail };
+  } catch (err) {
+    logHookError('persistTokenUsage failed', err);
+    return {
+      ...tally,
+      detail: err instanceof Error ? err.message : String(err),
     };
   }
 };
@@ -549,9 +687,11 @@ export const sweepAbandonedStarts = async ({
 };
 
 /**
- * Opportunistic/scheduled drain of both buffered files (events + outcomes) to
- * OT. Time-boxed via `budgetMs`. Respects OPENTHROTTLE_TELEMETRY_OFFLINE + a missing
- * URL (both → no-op). Fail-open.
+ * Opportunistic/scheduled drain of the buffered files (events, outcomes and
+ * token usage) to OT. Time-boxed via `budgetMs`, shared across the three
+ * streams. Respects OPENTHROTTLE_TELEMETRY_OFFLINE + a missing URL (both →
+ * no-op). Token-usage lines are sent in batches, not one POST per line.
+ * Fail-open.
  *
  * @public
  */
@@ -559,6 +699,7 @@ export const drainBufferedUsage = async ({
   repoRoot,
   eventsPath,
   outcomesPath,
+  tokenUsagePath,
   budgetMs = 500,
   fetchImpl,
   graphqlUrl: graphqlUrlOverride,
@@ -575,7 +716,12 @@ export const drainBufferedUsage = async ({
   outcomesPath?: string;
   repoRoot: string;
   timeoutMs?: number;
-}): Promise<{ events: DrainFileResult; outcomes: DrainFileResult }> => {
+  tokenUsagePath?: string;
+}): Promise<{
+  events: DrainFileResult;
+  outcomes: DrainFileResult;
+  tokenUsage: DrainFileResult;
+}> => {
   const empty = (): DrainFileResult => ({
     deadLettered: 0,
     reasons: {},
@@ -585,12 +731,12 @@ export const drainBufferedUsage = async ({
   });
 
   if (process.env.OPENTHROTTLE_TELEMETRY_OFFLINE === '1') {
-    return { events: empty(), outcomes: empty() };
+    return { events: empty(), outcomes: empty(), tokenUsage: empty() };
   }
 
   const graphqlUrl = graphqlUrlOverride ?? resolveGraphqlUrl(repoRoot);
   if (!graphqlUrl) {
-    return { events: empty(), outcomes: empty() };
+    return { events: empty(), outcomes: empty(), tokenUsage: empty() };
   }
   const authToken = authTokenOverride ?? resolveAuthToken(repoRoot);
   const resolvedTimeout = resolveTimeout(timeoutMs);
@@ -624,10 +770,26 @@ export const drainBufferedUsage = async ({
       }),
   });
 
+  const tokenUsage = await drainJsonlFileBatched<TokenUsageRecord>({
+    batchSize: MAX_TOKEN_USAGE_BATCH,
+    deadlineMs,
+    filePath: tokenUsagePath || defaultTokenUsageJsonlPath(),
+    nowFn,
+    postBatch: (batch) =>
+      postTokenUsageBatch({
+        authToken,
+        fetchImpl,
+        graphqlUrl,
+        records: batch,
+        timeoutMs: resolvedTimeout,
+      }),
+  });
+
   reportDeadLetters('events', events);
   reportDeadLetters('outcomes', outcomes);
+  reportDeadLetters('token usage', tokenUsage);
 
-  return { events, outcomes };
+  return { events, outcomes, tokenUsage };
 };
 
 /**

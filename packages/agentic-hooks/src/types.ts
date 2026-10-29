@@ -96,18 +96,84 @@ export interface OutcomeEvent {
   tool_use_id: string | null;
 }
 
+/** A failed GraphQL post attempt. */
+export interface PostFailure {
+  ok: false;
+  /**
+   * True when the server rejected the payload itself (validation, 4xx), so
+   * re-sending the same line can never succeed. See data/graphql.ts.
+   */
+  permanent: boolean;
+  reason: string;
+}
+
 /** Result of a single GraphQL post attempt. */
-export type PostResult =
-  | { id: string; ok: true }
-  | {
-      ok: false;
-      /**
-       * True when the server rejected the payload itself (validation, 4xx), so
-       * re-sending the same line can never succeed. See data/graphql.ts.
-       */
-      permanent: boolean;
-      reason: string;
-    };
+export type PostResult = PostFailure | { id: string; ok: true };
+
+/**
+ * One token-usage row, tool-neutral. Snake_case like the buffered `UsageEvent`
+ * and mapped to the camelCase GraphQL row in one place
+ * (`toRecordTokenUsageRow`). An adapter's transcript parser produces these;
+ * nothing downstream knows which tool they came from beyond `source`.
+ *
+ * @public
+ */
+export interface TokenUsageRecord {
+  readonly cache_read_tokens: number | null;
+  readonly cache_write_tokens: number | null;
+  readonly cost_usd: number | null;
+  readonly cwd: string | null;
+  readonly git_branch: string | null;
+  readonly input_tokens: number | null;
+  readonly model: string;
+  /** ISO-8601 time the turn was observed. */
+  readonly occurred_at: string;
+  readonly output_tokens: number | null;
+  readonly provider: string;
+  /** The producer's raw usage object, JSON-stringified; null when absent. */
+  readonly raw_usage_json: string | null;
+  readonly reasoning_tokens: number | null;
+  /** Producer request id; with `source` + `session_id` it is the dedupe key. */
+  readonly request_id: string | null;
+  readonly session_id: string | null;
+  /** Producer id, same vocabulary as `UsageEvent.source`. */
+  readonly source: string;
+  readonly total_tokens: number | null;
+}
+
+/**
+ * What `recordTokenUsage` reports back for one accepted batch.
+ *
+ * @public
+ */
+export interface TokenUsageBatchCounts {
+  readonly inserted: number;
+  readonly skipped: number;
+}
+
+/**
+ * Result of posting one token-usage batch.
+ *
+ * @public
+ */
+export type TokenUsageBatchResult =
+  PostFailure | (TokenUsageBatchCounts & { ok: true });
+
+/**
+ * Result of persisting token-usage records (server → JSONL fallback). Counts
+ * are rows: `buffered` went to the retry buffer, `deadLettered` to the
+ * dead-letter file because the server rejected them.
+ *
+ * @public
+ */
+export interface PersistTokenUsageResult {
+  readonly buffered: number;
+  readonly deadLettered: number;
+  /** Why anything was buffered or dead-lettered; null when all were sent. */
+  readonly detail: string | null;
+  readonly inserted: number;
+  readonly skipped: number;
+}
 
 /** Where an event ultimately landed. */
 export type PersistSink = 'jsonl' | 'server';

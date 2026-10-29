@@ -11,12 +11,15 @@
  */
 export * from './config/describe.ts';
 export * from './config/env.ts';
+export * from './data/checkpoints.ts';
 export * from './data/events.ts';
 export * from './data/graphql.ts';
 export * from './data/jsonl.ts';
 export * from './data/persist.ts';
 export * from './data/plan-runs.ts';
+export * from './data/read-new-bytes.ts';
 export * from './data/starts.ts';
+export * from './data/token-usage.ts';
 export * from './types.ts';
 export * from './utils/logging.ts';
 export * from './utils/privacy.ts';

@@ -165,6 +165,12 @@ var TELEMETRY_CONFIG_SOURCES = Object.freeze({
   USER_ENV: "user_env"
 });
 
+// packages/nodejs-utils/src/utils/is-record.ts
+var isRecord = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
+
+// packages/agentic-hooks/src/data/checkpoints.ts
+var DEFAULT_STALE_CHECKPOINT_MS = 6 * 60 * 60 * 1e3;
+
 // packages/agentic-hooks/src/utils/privacy.ts
 var PRIVACY_LEVELS = Object.freeze({
   FULL: "full",
@@ -186,9 +192,6 @@ var SKILL_USAGE_OUTCOMES = Object.freeze({
   SUCCESS: "success"
 });
 var SKILL_USAGE_QUALITY_OUTCOMES = Object.freeze([SKILL_USAGE_OUTCOMES.ERROR, SKILL_USAGE_OUTCOMES.SUCCESS]);
-
-// packages/nodejs-utils/src/utils/is-record.ts
-var isRecord = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
 
 // packages/agentic-hooks/src/data/persist.ts
 var DEFAULT_ABANDONED_MS = 6 * 60 * 60 * 1e3;

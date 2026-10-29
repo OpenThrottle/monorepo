@@ -12,6 +12,7 @@
 import {
   defaultJsonlPath,
   defaultOutcomesJsonlPath,
+  defaultTokenUsageJsonlPath,
   drainBufferedUsage,
   formatDrainFileResult,
   logHookError,
@@ -33,7 +34,8 @@ const main = async (): Promise<void> => {
     if (process.argv.includes('--replay-dead-letter')) {
       const replayed =
         replayDeadLetter(defaultJsonlPath()) +
-        replayDeadLetter(defaultOutcomesJsonlPath());
+        replayDeadLetter(defaultOutcomesJsonlPath()) +
+        replayDeadLetter(defaultTokenUsageJsonlPath());
       process.stderr.write(
         `[skill-usage-drain] replayed ${replayed} dead-lettered line(s)\n`,
       );
@@ -49,7 +51,8 @@ const main = async (): Promise<void> => {
     const summary = await drainBufferedUsage({ budgetMs, repoRoot });
     process.stderr.write(
       `[skill-usage-drain] ${formatDrainFileResult('events', summary.events)}\n` +
-        `[skill-usage-drain] ${formatDrainFileResult('outcomes', summary.outcomes)}\n`,
+        `[skill-usage-drain] ${formatDrainFileResult('outcomes', summary.outcomes)}\n` +
+        `[skill-usage-drain] ${formatDrainFileResult('token-usage', summary.tokenUsage)}\n`,
     );
   } catch (err) {
     logHookError('drain CLI failed', err);

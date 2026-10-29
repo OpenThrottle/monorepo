@@ -23,7 +23,10 @@ payload as `--plugin-dir` for orchestrated runs.
   predicate, git branch, the disable switches.
 - `src/data/` — `events.ts` (event construction + GraphQL inputs), `persist.ts` (POST → JSONL
   fallback, correlation, drain), `starts.ts` (identifiers-only start records used to compute
-  duration), `jsonl.ts`, `plan-runs.ts`.
+  duration), `jsonl.ts`, `plan-runs.ts`. Token usage: `token-usage.ts` (row mapping + batch POST,
+  `persistTokenUsage` in `persist.ts`, buffered to `token-usage.jsonl`), `checkpoints.ts` (per-session
+  byte offsets, `checkpoints/<session>.json`) and `read-new-bytes.ts` (complete-lines-only reader).
+  Keep the word "cursor" out of the core: the neutrality test bans it.
 - `scripts/bundle-hooks.ts` — the deterministic esbuild bundler and the generator for the plugin
   payload. Its `BUNDLES` list is the single source of truth for what gets bundled where.
 
