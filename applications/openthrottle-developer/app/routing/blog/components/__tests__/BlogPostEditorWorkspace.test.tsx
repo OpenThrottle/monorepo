@@ -6,7 +6,7 @@ import {
   MOCK_BLOG_TAGS,
   MOCK_EDITOR_DRAFT,
 } from '~/routing/blog/data/mock.blog-posts';
-import { toBlogPostEditorValues } from '~/routing/blog/utils/editor-values';
+import { toBlogPostEditorValues } from '~/routing/blog/utils/editor';
 import { renderWithProviders } from '~/testing/route-fixtures';
 
 import type { BlogPostEditorWorkspaceProps } from '../BlogPostEditorWorkspace';

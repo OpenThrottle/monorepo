@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
-import { formatBlogScheduledFor } from '~/routing/blog/utils/formatters';
+import { formatBlogScheduledFor } from '~/routing/blog/utils/lifecycle';
 import { renderWithProviders } from '~/testing/route-fixtures';
 
 import { BlogPostScheduledFor } from '../BlogPostScheduledFor';

@@ -31,8 +31,8 @@ import type {
   BlogPostActionResult,
   BlogPostEditorLoaderData,
 } from '~/routing/blog/types';
-import { didBlogPostLifecycleWrite } from '~/routing/blog/utils/lifecycle-results';
-import { didBlogPostSaveWrite } from '~/routing/blog/utils/save-results';
+import { didBlogPostSaveWrite } from '~/routing/blog/utils/editor';
+import { didBlogPostLifecycleWrite } from '~/routing/blog/utils/lifecycle';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

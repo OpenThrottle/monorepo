@@ -9,14 +9,14 @@ import {
 import { CalendarClockIcon, SendIcon } from 'lucide-react';
 import * as React from 'react';
 
-import { BLOG_LIFECYCLE_COPY } from '~/routing/blog/data/data.copy';
-import { formatBlogTimeZoneName } from '~/routing/blog/utils/formatters';
 import {
+  formatTimeZoneName,
   isoToDateTimeLocalValue,
   localDateTimeToUtcIso,
   toDateTimeLocalValue,
-  validateScheduleLocalDateTime,
-} from '~/routing/blog/utils/schedule';
+} from '~/global/utils/dates';
+import { BLOG_LIFECYCLE_COPY } from '~/routing/blog/data/data.copy';
+import { validateScheduleLocalDateTime } from '~/routing/blog/utils/lifecycle';
 
 export interface BlogPostPublishPopoverProps {
   /** `publish` offers publishing now; `reschedule` is for a scheduled post. */
@@ -126,7 +126,7 @@ export const BlogPostPublishPopover = (
             value={local}
           />
           <p className="text-muted-foreground text-xs">
-            {copy.timeZoneHint(formatBlogTimeZoneName(now, undefined))}
+            {copy.timeZoneHint(formatTimeZoneName(now, undefined))}
           </p>
           {error ? (
             <p className="text-destructive text-xs" id={errorId} role="alert">

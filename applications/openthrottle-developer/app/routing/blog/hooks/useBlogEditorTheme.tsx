@@ -1,13 +1,13 @@
-import { resolveThemeMode } from '@openthrottle/react-router-utils';
+import {
+  prefersColorSchemeDark,
+  resolveThemeMode,
+} from '@openthrottle/react-router-utils';
 import { useAtomValue } from 'jotai';
 import * as React from 'react';
 
 import { configAtom } from '~/global/data/atom.config';
+import { subscribeToPrefersDark } from '~/global/utils/external-stores';
 import { BLOG_EDITOR_MONACO_THEMES } from '~/routing/blog/config/defaults';
-import {
-  getPrefersDark,
-  subscribeToPrefersDark,
-} from '~/routing/blog/utils/external-stores';
 
 /**
  * @description The Monaco theme matching the app's appearance setting
@@ -18,7 +18,7 @@ export const useBlogEditorTheme = (): string => {
   const { theme } = useAtomValue(configAtom);
   const prefersDark = React.useSyncExternalStore(
     subscribeToPrefersDark,
-    getPrefersDark,
+    prefersColorSchemeDark,
     () => false,
   );
 

@@ -3,7 +3,7 @@ import { BotIcon } from 'lucide-react';
 import * as React from 'react';
 
 import { BLOG_COPY } from '~/routing/blog/data/data.copy';
-import { isAgentEditor } from '~/routing/blog/utils/editors';
+import { isAgentEditor } from '~/routing/blog/utils/posts';
 
 export interface BlogEditorBadgeProps {
   readonly lastEditedBy: string | null;

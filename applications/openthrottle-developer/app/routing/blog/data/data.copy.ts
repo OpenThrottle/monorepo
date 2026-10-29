@@ -144,6 +144,7 @@ export const BLOG_EDITOR_COPY = {
   editorLoading: `Loading editor…`,
   excerptHint: `Shown under the title and in post lists.`,
   excerptLabel: `Excerpt`,
+  invalidRequest: `The save request was malformed. Reload and try again.`,
   noAuthor: `No byline`,
   pageTitleFallback: `Post`,
   preview: `Preview`,
@@ -216,6 +217,7 @@ export const BLOG_LIFECYCLE_COPY = {
     },
   },
   errors: {
+    invalidRequest: `The request was malformed. Reload the page and try again.`,
     past: `Pick a time in the future.`,
     required: `Choose a date and time.`,
   },

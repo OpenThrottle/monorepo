@@ -1,8 +1,8 @@
 import { CalendarClockIcon } from 'lucide-react';
 import * as React from 'react';
 
-import { useIsHydrated } from '~/routing/blog/hooks/useIsHydrated';
-import { formatBlogScheduledFor } from '~/routing/blog/utils/formatters';
+import { useIsHydrated } from '~/global/hooks/useIsHydrated';
+import { formatBlogScheduledFor } from '~/routing/blog/utils/lifecycle';
 
 export interface BlogPostScheduledForProps {
   /** The go-live time as a UTC ISO timestamp. */

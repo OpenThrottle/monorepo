@@ -8,8 +8,8 @@ import {
 import * as React from 'react';
 
 import type { BlogPostListRowFragment } from '~/__generated__/graphql';
+import { useIsHydrated } from '~/global/hooks/useIsHydrated';
 import { BLOG_COPY } from '~/routing/blog/data/data.copy';
-import { useIsHydrated } from '~/routing/blog/hooks/useIsHydrated';
 
 import { BlogPostRow } from './BlogPostRow';
 

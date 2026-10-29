@@ -1,4 +1,4 @@
-const PREFERS_DARK_QUERY = '(prefers-color-scheme: dark)';
+import { PREFERS_DARK_QUERY } from '@openthrottle/react-router-utils';
 
 /**
  * @description `useSyncExternalStore` subscriber for a store that never changes:
@@ -9,7 +9,8 @@ export const subscribeToNothing = (): (() => void) => () => undefined;
 /**
  * @description `useSyncExternalStore` subscriber for the OS color-scheme
  * preference. Calls `onChange` whenever it flips; a no-op where `matchMedia`
- * is unavailable (the server, older test environments).
+ * is unavailable (the server, older test environments). Read the value with
+ * `prefersColorSchemeDark` from `@openthrottle/react-router-utils`.
  */
 export const subscribeToPrefersDark = (onChange: () => void): (() => void) => {
   if (typeof window === 'undefined' || !window.matchMedia) {
@@ -22,12 +23,3 @@ export const subscribeToPrefersDark = (onChange: () => void): (() => void) => {
 
   return () => query.removeEventListener('change', onChange);
 };
-
-/**
- * @description True when the OS prefers a dark color scheme; `false` where
- * `matchMedia` is unavailable.
- */
-export const getPrefersDark = (): boolean =>
-  typeof window !== 'undefined' &&
-  typeof window.matchMedia === 'function' &&
-  window.matchMedia(PREFERS_DARK_QUERY).matches;

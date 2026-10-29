@@ -4,12 +4,12 @@ import * as React from 'react';
 import { Link } from 'react-router';
 
 import type { BlogPostListRowFragment } from '~/__generated__/graphql';
+import { formatDateTime } from '~/global/utils/dates';
 import { BLOG_COPY } from '~/routing/blog/data/data.copy';
-import { isAgentEditor } from '~/routing/blog/utils/editors';
 import {
-  formatBlogDateTime,
   formatBlogPublishedLabel,
-} from '~/routing/blog/utils/formatters';
+  isAgentEditor,
+} from '~/routing/blog/utils/posts';
 
 import { BlogEditorBadge } from './BlogEditorBadge';
 import { BlogPostStateBadge } from './BlogPostStateBadge';
@@ -73,7 +73,7 @@ export const BlogPostRow = (props: BlogPostRowProps): React.ReactElement => {
       <TableCell>{post.author?.displayName ?? BLOG_COPY.noValue}</TableCell>
       <TableCell className="whitespace-nowrap">{publishedLabel}</TableCell>
       <TableCell className="whitespace-nowrap">
-        {formatBlogDateTime(post.updatedAt, timeZone)}
+        {formatDateTime(post.updatedAt, { timeZone, withTimeZoneName: true })}
       </TableCell>
       <TableCell>
         <BlogEditorBadge lastEditedBy={post.lastEditedBy ?? null} />

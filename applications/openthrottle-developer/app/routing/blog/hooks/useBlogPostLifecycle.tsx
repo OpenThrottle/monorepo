@@ -6,8 +6,10 @@ import type {
   BlogPostLifecycleRequest,
   BlogPostLifecycleResult,
 } from '~/routing/blog/types';
-import { isBlogPostLifecycleResult } from '~/routing/blog/utils/lifecycle-results';
-import { announceBlogPostLifecycleResult } from '~/routing/blog/utils/lifecycle-toasts';
+import {
+  announceBlogPostLifecycleResult,
+  isBlogPostLifecycleResult,
+} from '~/routing/blog/utils/lifecycle';
 
 export interface UseBlogPostLifecycleResult {
   readonly archive: () => void;

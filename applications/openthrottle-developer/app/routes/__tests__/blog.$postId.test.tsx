@@ -23,11 +23,11 @@ import type {
   BlogPostSaveRequest,
   BlogPostSaveResult,
 } from '~/routing/blog/types';
+import { parseBlogPostSaveRequest } from '~/routing/blog/utils/editor';
 import {
   isBlogPostLifecycleBody,
   parseBlogPostLifecycleRequest,
-} from '~/routing/blog/utils/lifecycle-results';
-import { parseBlogPostSaveRequest } from '~/routing/blog/utils/save-results';
+} from '~/routing/blog/utils/lifecycle';
 
 import Component, { shouldRevalidate } from '../blog.$postId';
 

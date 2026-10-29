@@ -9,8 +9,10 @@ import type {
   BlogPostSaveRequest,
   BlogPostSaveResult,
 } from '~/routing/blog/types';
-import { diffBlogPostEditorValues } from '~/routing/blog/utils/editor-values';
-import { isBlogPostSaveResult } from '~/routing/blog/utils/save-results';
+import {
+  diffBlogPostEditorValues,
+  isBlogPostSaveResult,
+} from '~/routing/blog/utils/editor';
 
 export interface UseBlogPostSaveOptions {
   readonly post: BlogEditorPost;

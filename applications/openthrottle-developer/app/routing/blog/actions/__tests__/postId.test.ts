@@ -23,7 +23,10 @@ const { requirePermission } =
   await import('~/global/utils/utils.permissions.server');
 const {
   ArchiveBlogPostEditorDocument,
+  BlogPostState,
+  PublishBlogPostEditorDocument,
   SetBlogPostEditorTagsDocument,
+  UnpublishBlogPostEditorDocument,
   UpdateBlogPostEditorDocument,
 } = await import('~/__generated__/graphql');
 const { runBlogPostEditorAction } = await import('../postId');
@@ -32,6 +35,9 @@ const mockExecute = vi.mocked(executeGraphqlWithAuth);
 const mockRequirePermission = vi.mocked(requirePermission);
 
 const UPDATED_AT = '2026-10-20T15:30:00.000Z';
+const FUTURE = '2099-06-15T17:30:00.000Z';
+const POST = { __typename: 'BlogPostAdminObject', id: 'post-1' };
+const NOT_FOUND = { __typename: 'BlogPostNotFoundError', message: 'gone' };
 
 const buildArgs = (body: unknown): Route.ActionArgs => {
   const request = new Request('http://localhost/blog/post-1', {
@@ -238,6 +244,159 @@ describe('routing/blog/actions/postId', () => {
 
     await expect(
       runBlogPostEditorAction(buildArgs(saveRequest())),
+    ).rejects.toBe(authError);
+  });
+});
+
+describe('routing/blog/actions/postId lifecycle intents', () => {
+  beforeEach(() => {
+    mockExecute.mockReset();
+    mockRequirePermission.mockReset();
+  });
+
+  test('publish now sends a null publishedAt', async () => {
+    mockExecute.mockResolvedValueOnce({
+      publishBlogPost: {
+        ...POST,
+        publishedAt: '2026-10-26T09:00:00.000Z',
+        state: BlogPostState.Live,
+      },
+    });
+
+    const result = await runBlogPostEditorAction(
+      buildArgs({
+        intent: 'publish',
+        publishedAt: null,
+      }),
+    );
+
+    expect(result).toEqual({
+      outcome: 'published',
+      publishedAt: '2026-10-26T09:00:00.000Z',
+      state: BlogPostState.Live,
+    });
+    expect(mockExecute).toHaveBeenCalledWith(
+      expect.any(Request),
+      PublishBlogPostEditorDocument,
+      { input: { id: 'post-1', publishedAt: null } },
+    );
+  });
+
+  test('schedule forwards the UTC timestamp', async () => {
+    mockExecute.mockResolvedValueOnce({
+      publishBlogPost: {
+        ...POST,
+        publishedAt: FUTURE,
+        state: BlogPostState.Scheduled,
+      },
+    });
+
+    const result = await runBlogPostEditorAction(
+      buildArgs({
+        intent: 'publish',
+        publishedAt: FUTURE,
+      }),
+    );
+
+    expect(result).toMatchObject({
+      outcome: 'published',
+      state: BlogPostState.Scheduled,
+    });
+    expect(mockExecute).toHaveBeenCalledWith(
+      expect.any(Request),
+      PublishBlogPostEditorDocument,
+      { input: { id: 'post-1', publishedAt: FUTURE } },
+    );
+  });
+
+  test('unpublish and archive call their own mutations', async () => {
+    mockExecute.mockResolvedValueOnce({ unpublishBlogPost: POST });
+    mockExecute.mockResolvedValueOnce({ archiveBlogPost: POST });
+
+    expect(
+      await runBlogPostEditorAction(
+        buildArgs({
+          intent: 'unpublish',
+        }),
+      ),
+    ).toEqual({ outcome: 'unpublished' });
+    expect(
+      await runBlogPostEditorAction(
+        buildArgs({
+          intent: 'archive',
+        }),
+      ),
+    ).toEqual({ outcome: 'archived' });
+    expect(mockExecute).toHaveBeenNthCalledWith(
+      1,
+      expect.any(Request),
+      UnpublishBlogPostEditorDocument,
+      { id: 'post-1' },
+    );
+    expect(mockExecute).toHaveBeenNthCalledWith(
+      2,
+      expect.any(Request),
+      ArchiveBlogPostEditorDocument,
+      { id: 'post-1' },
+    );
+  });
+
+  test('the not-found union branch is returned, not thrown', async () => {
+    mockExecute.mockResolvedValueOnce({ archiveBlogPost: NOT_FOUND });
+
+    expect(
+      await runBlogPostEditorAction(
+        buildArgs({
+          intent: 'archive',
+        }),
+      ),
+    ).toEqual({ message: 'gone', outcome: 'lifecycleNotFound' });
+  });
+
+  test('blog:write is required before anything else runs', async () => {
+    mockRequirePermission.mockRejectedValueOnce(
+      new Response('Not Found', { status: 404 }),
+    );
+
+    await expect(
+      runBlogPostEditorAction(buildArgs({ intent: 'archive' })),
+    ).rejects.toBeInstanceOf(Response);
+    expect(mockRequirePermission).toHaveBeenCalledWith(
+      expect.any(Request),
+      'blog:write',
+    );
+    expect(mockExecute).not.toHaveBeenCalled();
+  });
+
+  test('a malformed body is an error outcome and calls nothing', async () => {
+    const result = await runBlogPostEditorAction(
+      buildArgs({
+        intent: 'publish',
+        publishedAt: 'tomorrow',
+      }),
+    );
+
+    expect(result).toMatchObject({ outcome: 'lifecycleError' });
+    expect(mockExecute).not.toHaveBeenCalled();
+  });
+
+  test('a GraphQL error becomes an error outcome; auth errors still throw', async () => {
+    mockExecute.mockRejectedValueOnce(new Error('boom'));
+
+    expect(
+      await runBlogPostEditorAction(
+        buildArgs({
+          intent: 'unpublish',
+        }),
+      ),
+    ).toEqual({ message: 'boom', outcome: 'lifecycleError' });
+
+    const authError = new GraphqlAuthError('Unauthorized', 401);
+
+    mockExecute.mockRejectedValueOnce(authError);
+
+    await expect(
+      runBlogPostEditorAction(buildArgs({ intent: 'unpublish' })),
     ).rejects.toBe(authError);
   });
 });

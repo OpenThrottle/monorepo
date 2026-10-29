@@ -11,6 +11,14 @@ export type SetDocsFeatureFlag = (
   enabled: boolean,
 ) => void;
 
+/** How `formatDateTime` renders a date. */
+export interface FormatDateTimeOptions {
+  /** A pinned IANA zone (`UTC`), or `undefined` for the viewer's local zone. */
+  readonly timeZone: string | undefined;
+  /** Append the short zone name (`PDT`). */
+  readonly withTimeZoneName: boolean;
+}
+
 /** Setter returned by `usePersistentSetting`: a value or a functional updater. */
 export type PersistentSettingSetter<T> = (next: T | ((prev: T) => T)) => void;
 

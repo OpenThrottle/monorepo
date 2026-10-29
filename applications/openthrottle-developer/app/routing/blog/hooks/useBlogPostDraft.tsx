@@ -8,7 +8,7 @@ import type {
 import {
   isBlogPostEditorDirty,
   toBlogPostEditorValues,
-} from '~/routing/blog/utils/editor-values';
+} from '~/routing/blog/utils/editor';
 
 export interface UseBlogPostDraftResult {
   /** True when {@link values} differ from the loaded post. */

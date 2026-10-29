@@ -2,9 +2,9 @@ import { EditorWindow } from '@openthrottle/react-router-editor';
 import { Skeleton } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
+import { useIsHydrated } from '~/global/hooks/useIsHydrated';
 import { BLOG_EDITOR_COPY } from '~/routing/blog/data/data.copy';
 import { useBlogEditorTheme } from '~/routing/blog/hooks/useBlogEditorTheme';
-import { useIsHydrated } from '~/routing/blog/hooks/useIsHydrated';
 
 export interface BlogPostMarkdownEditorProps {
   readonly onChange: (bodyMarkdown: string) => void;

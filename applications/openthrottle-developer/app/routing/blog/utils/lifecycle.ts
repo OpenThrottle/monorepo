@@ -1,3 +1,4 @@
+import { toast } from '@openthrottle/react-router-shadcn';
 import { z } from 'zod/v3';
 
 import type {
@@ -5,7 +6,15 @@ import type {
   PublishBlogPostEditorMutation,
   UnpublishBlogPostEditorMutation,
 } from '~/__generated__/graphql';
+import { BlogPostState } from '~/__generated__/graphql';
+import {
+  formatDateTime,
+  formatTimeZoneName,
+  localDateTimeToUtcIso,
+  parseDate,
+} from '~/global/utils/dates';
 import { BLOG_POST_LIFECYCLE_INTENT } from '~/routing/blog/config/defaults';
+import { BLOG_COPY, BLOG_LIFECYCLE_COPY } from '~/routing/blog/data/data.copy';
 import type {
   BlogPostLifecycleRequest,
   BlogPostLifecycleResult,
@@ -118,3 +127,70 @@ export const didBlogPostLifecycleWrite = (value: unknown): boolean =>
   (value.outcome === 'archived' ||
     value.outcome === 'published' ||
     value.outcome === 'unpublished');
+
+/**
+ * @description Raises the one toast a finished lifecycle action owes: success
+ * for archive, publish, schedule and unpublish, error otherwise.
+ */
+export const announceBlogPostLifecycleResult = (
+  result: BlogPostLifecycleResult,
+): void => {
+  switch (result.outcome) {
+    case 'archived':
+      toast.success(BLOG_LIFECYCLE_COPY.toasts.archived);
+      break;
+    case 'lifecycleError':
+    case 'lifecycleNotFound':
+      toast.error(result.message);
+      break;
+    case 'published':
+      toast.success(
+        result.state === BlogPostState.Scheduled
+          ? BLOG_LIFECYCLE_COPY.toasts.scheduled
+          : BLOG_LIFECYCLE_COPY.toasts.published,
+      );
+      break;
+    case 'unpublished':
+      toast.success(BLOG_LIFECYCLE_COPY.toasts.unpublished);
+      break;
+  }
+};
+
+/**
+ * @description The inline error for a schedule input, or `null` when it is a
+ * usable future time. A time that is not strictly after `now` (epoch ms) is
+ * rejected, so a post can never be "scheduled" into the past.
+ */
+export const validateScheduleLocalDateTime = (
+  local: string,
+  now: number,
+): string | null => {
+  const iso = localDateTimeToUtcIso(local);
+
+  if (iso === null) {
+    return BLOG_LIFECYCLE_COPY.errors.required;
+  }
+
+  return Date.parse(iso) > now ? null : BLOG_LIFECYCLE_COPY.errors.past;
+};
+
+/**
+ * @description The "Scheduled for Nov 1, 2026, 9:00 AM (PST)" line. Pass
+ * `timeZone` to pin a zone (the server render pins `UTC`) or `undefined` for
+ * the viewer's local zone. An unparseable value renders as an em dash.
+ */
+export const formatBlogScheduledFor = (
+  iso: string,
+  timeZone: string | undefined,
+): string => {
+  const date = parseDate(iso);
+
+  if (date === null) {
+    return BLOG_COPY.noValue;
+  }
+
+  return BLOG_LIFECYCLE_COPY.scheduledFor(
+    formatDateTime(date, { timeZone, withTimeZoneName: false }),
+    formatTimeZoneName(date, timeZone),
+  );
+};

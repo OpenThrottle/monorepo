@@ -9,7 +9,7 @@ import {
   BLOG_STATE_TABS,
 } from '~/routing/blog/config/defaults';
 import { BLOG_COPY, BLOG_STATE_LABELS } from '~/routing/blog/data/data.copy';
-import { parseBlogState, toBlogStateParam } from '~/routing/blog/utils/parsers';
+import { parseBlogState, toBlogStateParam } from '~/routing/blog/utils/posts';
 
 export interface BlogPostStateTabsProps {
   readonly state: BlogPostState;

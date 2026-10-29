@@ -5,20 +5,37 @@ import {
 
 import type { Route } from '@/app/routes/+types/blog.$postId';
 import {
+  ArchiveBlogPostEditorDocument,
+  PublishBlogPostEditorDocument,
   SetBlogPostEditorTagsDocument,
+  UnpublishBlogPostEditorDocument,
   UpdateBlogPostEditorDocument,
 } from '~/__generated__/graphql';
-import { runBlogPostLifecycleAction } from '~/routing/blog/actions/lifecycle';
+import { PERMISSIONS } from '~/global/config/permissions';
+import { requirePermission } from '~/global/utils/utils.permissions.server';
 import { BLOG_POST_SAVE_INTENT } from '~/routing/blog/config/defaults';
-import type { BlogPostActionResult } from '~/routing/blog/types';
-import { isBlogPostLifecycleBody } from '~/routing/blog/utils/lifecycle-results';
+import {
+  BLOG_EDITOR_COPY,
+  BLOG_LIFECYCLE_COPY,
+} from '~/routing/blog/data/data.copy';
+import type {
+  BlogPostActionResult,
+  BlogPostLifecycleRequest,
+  BlogPostLifecycleResult,
+  BlogPostSaveResult,
+} from '~/routing/blog/types';
 import {
   parseBlogPostSaveRequest,
   toBlogPostTagsResult,
   toBlogPostUpdateResult,
-} from '~/routing/blog/utils/save-results';
-
-const INVALID_REQUEST = 'The save request was malformed. Reload and try again.';
+} from '~/routing/blog/utils/editor';
+import {
+  isBlogPostLifecycleBody,
+  parseBlogPostLifecycleRequest,
+  toBlogPostArchiveResult,
+  toBlogPostPublishResult,
+  toBlogPostUnpublishResult,
+} from '~/routing/blog/utils/lifecycle';
 
 /** Reads the JSON body; `null` when it is missing or not JSON. */
 const readJsonBody = async (request: Request): Promise<unknown> => {
@@ -29,44 +46,95 @@ const readJsonBody = async (request: Request): Promise<unknown> => {
   }
 };
 
-/**
- * @description Saves the editor's changes to one post. The body is the JSON
- * {@link import('~/routing/blog/types').BlogPostSaveRequest}:
- *
- * - `intent: 'save'` sends the loaded `updatedAt` as `expectedUpdatedAt`, so a
- *   concurrent edit returns `staleWrite` instead of being overwritten.
- * - `intent: 'overwrite'` resends the same changes without it.
- *
- * `updateBlogPost` always runs (an empty patch still performs the stale check),
- * then `setBlogPostTags` when the tag set changed. Every union error comes back
- * as a typed {@link import('~/routing/blog/types').BlogPostSaveResult}; nothing here throws for one. Auth
- * failures still throw, so the app's auth handling sees them.
- *
- * A body whose `intent` is `publish`, `unpublish` or `archive` is a lifecycle
- * action instead, handed to {@link runBlogPostLifecycleAction} (which demands
- * `blog:write`).
- */
-export const runBlogPostEditorAction = async (
-  args: Route.ActionArgs,
-): Promise<BlogPostActionResult> => {
-  const postId = args.params.postId;
-  const rawBody = await readJsonBody(args.request);
+const runLifecycleMutation = async (
+  request: Request,
+  postId: string,
+  body: BlogPostLifecycleRequest,
+): Promise<BlogPostLifecycleResult> => {
+  switch (body.intent) {
+    case 'archive': {
+      const { archiveBlogPost } = await executeGraphqlWithAuth(
+        request,
+        ArchiveBlogPostEditorDocument,
+        { id: postId },
+      );
 
-  if (isBlogPostLifecycleBody(rawBody)) {
-    return runBlogPostLifecycleAction(args.request, postId, rawBody);
+      return toBlogPostArchiveResult(archiveBlogPost);
+    }
+    case 'publish': {
+      const { publishBlogPost } = await executeGraphqlWithAuth(
+        request,
+        PublishBlogPostEditorDocument,
+        { input: { id: postId, publishedAt: body.publishedAt } },
+      );
+
+      return toBlogPostPublishResult(publishBlogPost);
+    }
+    case 'unpublish': {
+      const { unpublishBlogPost } = await executeGraphqlWithAuth(
+        request,
+        UnpublishBlogPostEditorDocument,
+        { id: postId },
+      );
+
+      return toBlogPostUnpublishResult(unpublishBlogPost);
+    }
+  }
+};
+
+/**
+ * Runs one lifecycle action (publish or schedule, unpublish, archive). Demands
+ * `blog:write` before anything else: the route's own gate only asks for
+ * `blog:draft`, and these actions publish.
+ */
+const runLifecycleAction = async (
+  request: Request,
+  postId: string,
+  rawBody: unknown,
+): Promise<BlogPostLifecycleResult> => {
+  await requirePermission(request, PERMISSIONS.BLOG_WRITE);
+
+  const body = parseBlogPostLifecycleRequest(rawBody);
+
+  if (body === null) {
+    return {
+      message: BLOG_LIFECYCLE_COPY.errors.invalidRequest,
+      outcome: 'lifecycleError',
+    };
   }
 
+  try {
+    return await runLifecycleMutation(request, postId, body);
+  } catch (error) {
+    if (isAuthError(error) || !(error instanceof Error)) {
+      throw error;
+    }
+
+    return { message: error.message, outcome: 'lifecycleError' };
+  }
+};
+
+/**
+ * Saves the editor's changes. `updateBlogPost` always runs (an empty patch
+ * still performs the stale check), then `setBlogPostTags` when the tag set
+ * changed.
+ */
+const runSaveAction = async (
+  request: Request,
+  postId: string,
+  rawBody: unknown,
+): Promise<BlogPostSaveResult> => {
   const body = parseBlogPostSaveRequest(rawBody);
 
   if (body === null) {
-    return { message: INVALID_REQUEST, outcome: 'error' };
+    return { message: BLOG_EDITOR_COPY.invalidRequest, outcome: 'error' };
   }
 
   const { changes, expectedUpdatedAt, intent, tagSlugs } = body;
 
   try {
     const { updateBlogPost } = await executeGraphqlWithAuth(
-      args.request,
+      request,
       UpdateBlogPostEditorDocument,
       {
         input: {
@@ -83,7 +151,7 @@ export const runBlogPostEditorAction = async (
     }
 
     const { setBlogPostTags } = await executeGraphqlWithAuth(
-      args.request,
+      request,
       SetBlogPostEditorTagsDocument,
       { input: { postId, tagSlugs } },
     );
@@ -96,4 +164,30 @@ export const runBlogPostEditorAction = async (
 
     return { message: error.message, outcome: 'error' };
   }
+};
+
+/**
+ * @description The editor route's action. The JSON body is either a save or a
+ * lifecycle action:
+ *
+ * - `intent: 'save'` sends the loaded `updatedAt` as `expectedUpdatedAt`, so a
+ *   concurrent edit returns `staleWrite` instead of being overwritten.
+ * - `intent: 'overwrite'` resends the same changes without it.
+ * - `intent: 'publish' | 'unpublish' | 'archive'` runs a lifecycle action,
+ *   which demands `blog:write` first.
+ *
+ * Every union error comes back as a typed
+ * {@link import('~/routing/blog/types').BlogPostActionResult}; nothing here
+ * throws for one. Auth failures still throw, so the app's auth handling sees
+ * them.
+ */
+export const runBlogPostEditorAction = async (
+  args: Route.ActionArgs,
+): Promise<BlogPostActionResult> => {
+  const postId = args.params.postId;
+  const rawBody = await readJsonBody(args.request);
+
+  return isBlogPostLifecycleBody(rawBody)
+    ? runLifecycleAction(args.request, postId, rawBody)
+    : runSaveAction(args.request, postId, rawBody);
 };

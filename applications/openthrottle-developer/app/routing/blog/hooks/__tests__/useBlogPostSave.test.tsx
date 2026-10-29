@@ -5,7 +5,7 @@ import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
 import { MOCK_EDITOR_DRAFT } from '~/routing/blog/data/mock.blog-posts';
-import { toBlogPostEditorValues } from '~/routing/blog/utils/editor-values';
+import { toBlogPostEditorValues } from '~/routing/blog/utils/editor';
 
 import { useBlogPostSave } from '../useBlogPostSave';
 

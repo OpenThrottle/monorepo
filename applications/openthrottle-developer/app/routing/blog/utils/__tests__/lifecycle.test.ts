@@ -4,18 +4,23 @@ import { BlogPostState } from '~/__generated__/graphql';
 
 import {
   didBlogPostLifecycleWrite,
+  formatBlogScheduledFor,
   isBlogPostLifecycleBody,
   isBlogPostLifecycleResult,
   parseBlogPostLifecycleRequest,
   toBlogPostArchiveResult,
   toBlogPostPublishResult,
   toBlogPostUnpublishResult,
-} from '../lifecycle-results';
+  validateScheduleLocalDateTime,
+} from '../lifecycle';
 
 const NOT_FOUND = {
   __typename: 'BlogPostNotFoundError',
   message: 'gone',
 } as const;
+
+const NOW = new Date(2026, 9, 26, 12, 0).getTime();
+const ISO = '2026-11-01T17:00:00.000Z';
 
 describe('isBlogPostLifecycleBody', () => {
   test.each(['archive', 'publish', 'unpublish'])('recognises %s', (intent) => {
@@ -121,5 +126,41 @@ describe('result guards', () => {
   test('a save result is not a lifecycle result', () => {
     expect(isBlogPostLifecycleResult({ outcome: 'saved' })).toBe(false);
     expect(isBlogPostLifecycleResult(undefined)).toBe(false);
+  });
+});
+
+describe('validateScheduleLocalDateTime', () => {
+  test('accepts a future time', () => {
+    expect(validateScheduleLocalDateTime('2026-10-26T12:01', NOW)).toBeNull();
+  });
+
+  test('rejects a past time and the present moment', () => {
+    expect(validateScheduleLocalDateTime('2026-10-26T11:59', NOW)).toBe(
+      'Pick a time in the future.',
+    );
+    expect(validateScheduleLocalDateTime('2026-10-26T12:00', NOW)).toBe(
+      'Pick a time in the future.',
+    );
+  });
+
+  test('rejects an empty value', () => {
+    expect(validateScheduleLocalDateTime('', NOW)).toBe(
+      'Choose a date and time.',
+    );
+  });
+});
+
+describe('formatBlogScheduledFor', () => {
+  test('reads "Scheduled for <date time> (<zone>)"', () => {
+    expect(formatBlogScheduledFor(ISO, 'UTC')).toBe(
+      'Scheduled for Nov 1, 2026, 5:00 PM (UTC)',
+    );
+    expect(formatBlogScheduledFor(ISO, 'America/Los_Angeles')).toBe(
+      'Scheduled for Nov 1, 2026, 9:00 AM (PST)',
+    );
+  });
+
+  test('renders an em dash for an unparseable value', () => {
+    expect(formatBlogScheduledFor('not-a-date', 'UTC')).toBe('—');
   });
 });

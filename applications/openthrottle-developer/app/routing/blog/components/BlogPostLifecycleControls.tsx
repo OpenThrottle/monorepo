@@ -20,12 +20,6 @@ type ConfirmAction = Extract<
   'archive' | 'moveToDraft' | 'unpublish'
 >;
 
-const CONFIRM_ICONS = {
-  archive: ArchiveIcon,
-  moveToDraft: FileEditIcon,
-  unpublish: EyeOffIcon,
-} as const;
-
 export interface BlogPostLifecycleControlsProps {
   /** The caller holds `blog:write`; without it nothing renders. */
   readonly canWrite: boolean;
@@ -53,6 +47,11 @@ export const BlogPostLifecycleControls = (
   );
 
   // Setup
+  const confirmIcons = {
+    archive: ArchiveIcon,
+    moveToDraft: FileEditIcon,
+    unpublish: EyeOffIcon,
+  } as const;
   const disabled = isDirty || lifecycle.isPending;
   const actions = BLOG_LIFECYCLE_ACTIONS[post.state];
   const publishedAt =
@@ -84,7 +83,7 @@ export const BlogPostLifecycleControls = (
       );
     }
 
-    const Icon = CONFIRM_ICONS[action];
+    const Icon = confirmIcons[action];
 
     return (
       <Button

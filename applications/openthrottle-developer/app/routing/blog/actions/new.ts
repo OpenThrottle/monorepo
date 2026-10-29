@@ -8,7 +8,7 @@ import { CreateBlogPostDraftDocument } from '~/__generated__/graphql';
 import { BLOG_DRAFT_SLUG_ATTEMPTS } from '~/routing/blog/config/defaults';
 import { BLOG_NEW_COPY } from '~/routing/blog/data/data.copy';
 import type { BlogPostCreateResult } from '~/routing/blog/types';
-import { generateBlogDraftSlug } from '~/routing/blog/utils/editor-values';
+import { generateBlogDraftSlug } from '~/routing/blog/utils/posts';
 
 type CreateResult = CreateBlogPostDraftMutation['createBlogPost'];
 

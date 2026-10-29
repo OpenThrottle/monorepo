@@ -3,9 +3,9 @@ import type { Blocker } from 'react-router';
 import { useRevalidator } from 'react-router';
 
 import { BlogPostState } from '~/__generated__/graphql';
+import { useUnsavedChangesGuard } from '~/global/hooks/useUnsavedChangesGuard';
 import { useBlogPostDraft } from '~/routing/blog/hooks/useBlogPostDraft';
 import { useBlogPostSave } from '~/routing/blog/hooks/useBlogPostSave';
-import { useUnsavedChangesGuard } from '~/routing/blog/hooks/useUnsavedChangesGuard';
 import type {
   BlogEditorPost,
   BlogPostEditorValues,
@@ -13,11 +13,11 @@ import type {
   BlogPostFieldErrors,
   BlogPostSaveResult,
 } from '~/routing/blog/types';
-import { validateBlogPostEditorValues } from '~/routing/blog/utils/editor-values';
 import {
   filterStaleFieldErrors,
   toBlogPostSaveFieldErrors,
-} from '~/routing/blog/utils/save-results';
+  validateBlogPostEditorValues,
+} from '~/routing/blog/utils/editor';
 
 export interface UseBlogPostEditorOptions {
   /** The caller holds `blog:write` (may edit posts that are not drafts). */

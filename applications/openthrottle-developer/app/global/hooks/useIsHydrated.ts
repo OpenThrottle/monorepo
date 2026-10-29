@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import { subscribeToNothing } from '~/routing/blog/utils/external-stores';
+import { subscribeToNothing } from '~/global/utils/external-stores';
 
 /**
  * @description `false` on the server and during the hydrating render, `true` on

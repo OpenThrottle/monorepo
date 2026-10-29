@@ -1,18 +1,73 @@
 import { describe, expect, test } from 'vitest';
 
 import { MOCK_EDITOR_DRAFT } from '~/routing/blog/data/mock.blog-posts';
-import { toBlogPostEditorValues } from '~/routing/blog/utils/editor-values';
 
 import {
   didBlogPostSaveWrite,
+  diffBlogPostEditorValues,
   filterStaleFieldErrors,
+  isBlogPostEditorDirty,
+  isSameTagSet,
   parseBlogPostSaveRequest,
+  toBlogPostEditorValues,
   toBlogPostSaveFieldErrors,
-} from '../save-results';
+  validateBlogPostEditorValues,
+} from '../editor';
 
-const values = toBlogPostEditorValues(MOCK_EDITOR_DRAFT);
+const base = toBlogPostEditorValues(MOCK_EDITOR_DRAFT);
 
-describe('routing/blog/utils/save-results', () => {
+describe('routing/blog/utils/editor', () => {
+  test('toBlogPostEditorValues holds unset fields as empty strings', () => {
+    expect(base).toMatchObject({
+      authorSlug: 'ada',
+      coverImageUrl: '',
+      seoTitle: '',
+      tagSlugs: ['engineering'],
+    });
+  });
+
+  test('diff sends only changed fields, emptied nullable fields as null', () => {
+    expect(
+      diffBlogPostEditorValues(MOCK_EDITOR_DRAFT, {
+        ...base,
+        authorSlug: '',
+        excerpt: '',
+        title: 'New',
+      }),
+    ).toEqual({
+      changes: { authorSlug: null, excerpt: null, title: 'New' },
+      tagSlugs: null,
+    });
+  });
+
+  test('diff sends the whole tag set only when it changed', () => {
+    expect(
+      diffBlogPostEditorValues(MOCK_EDITOR_DRAFT, {
+        ...base,
+        tagSlugs: ['engineering', 'releases'],
+      }).tagSlugs,
+    ).toEqual(['engineering', 'releases']);
+    expect(isSameTagSet(['a', 'b'], ['b', 'a'])).toBe(true);
+    expect(isBlogPostEditorDirty(MOCK_EDITOR_DRAFT, base)).toBe(false);
+  });
+
+  test('validation mirrors the server rules', () => {
+    expect(validateBlogPostEditorValues(base)).toEqual({});
+    expect(
+      validateBlogPostEditorValues({
+        ...base,
+        coverImageAlt: ' ',
+        coverImageUrl: 'https://x.test/a.png',
+        slug: 'Not Kebab',
+        title: '  ',
+      }),
+    ).toEqual({
+      coverImageAlt: 'Add alt text for the cover image.',
+      slug: expect.stringContaining('lowercase'),
+      title: 'A post needs a title.',
+    });
+  });
+
   test('parses a well-formed save body and rejects anything else', () => {
     const body = {
       changes: { title: 'x' },
@@ -66,8 +121,8 @@ describe('routing/blog/utils/save-results', () => {
     const errors = { slug: 'taken', title: 'bad' };
 
     expect(
-      filterStaleFieldErrors(errors, values, { ...values, slug: 'other' }),
+      filterStaleFieldErrors(errors, base, { ...base, slug: 'other' }),
     ).toEqual({ title: 'bad' });
-    expect(filterStaleFieldErrors(errors, null, values)).toEqual({});
+    expect(filterStaleFieldErrors(errors, null, base)).toEqual({});
   });
 });
