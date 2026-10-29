@@ -83,12 +83,17 @@ describe('authMiddleware', () => {
 
   describe('when there is no auth token', () => {
     it('redirects a protected route to /auth and clears the auth cookie', () => {
-      const result = runMiddleware(buildArgs('/dashboard'));
+      const args = buildArgs('/dashboard');
+      const result = runMiddleware(args);
 
       assertIsRedirectResponse(result);
       expect(result.status).toBe(302);
       expect(result.headers.get('Location')).toBe('/auth');
-      expect(result.headers.get('Set-Cookie')).toBe(getClearAuthCookieHeader());
+      // The clear header mirrors the request: https here, so it carries Secure.
+      expect(result.headers.get('Set-Cookie')).toBe(
+        getClearAuthCookieHeader({ request: args.request }),
+      );
+      expect(result.headers.get('Set-Cookie')).toContain('; Secure');
     });
 
     it('does not redirect a public route', () => {

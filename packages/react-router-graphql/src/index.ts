@@ -156,6 +156,25 @@ export interface ExecuteGraphqlWithAuthOptions {
 }
 
 /**
+ * @description Headers that carry the browser's address on an SSR call to
+ * openthrottle-server. The server rate-limits by client IP, but an SSR
+ * loader/action reaches it from the app's own process, so without these every
+ * user would share the app's IP. Forwards the `X-Forwarded-For` this request
+ * arrived with (set by Caddy, `tailscale serve` or the Vite proxy); the server
+ * honours it only from a private-network peer (`trust proxy`), so a browser
+ * cannot use it to pose as another IP.
+ *
+ * @public
+ */
+export function getForwardedClientHeaders(
+  request: Request,
+): Record<string, string> {
+  const forwardedFor = request.headers.get('x-forwarded-for')?.trim();
+
+  return forwardedFor ? { 'X-Forwarded-For': forwardedFor } : {};
+}
+
+/**
  * @description Runs executeGraphql with Authorization: Bearer <token> when
  * the request has an auth cookie. Use in loaders/actions that have access to the request.
  *
@@ -180,10 +199,11 @@ export async function executeGraphqlWithAuth<
   const cookieHeader = request.headers.get('cookie') ?? '';
   const token = getAuthTokenFromCookie(cookieHeader);
   const timeoutMs = options?.timeoutMs ?? DEFAULT_LOADER_TIMEOUT_MS;
+  const headers = getForwardedClientHeaders(request);
 
   if (!token) {
     try {
-      return await executeGraphql(document, variables, { timeoutMs });
+      return await executeGraphql(document, variables, { headers, timeoutMs });
     } catch (error) {
       throw classifyError(error, timeoutMs);
     }
@@ -191,6 +211,7 @@ export async function executeGraphqlWithAuth<
 
   try {
     return await executeGraphqlWithAuthNodeJS(token, document, variables, {
+      headers,
       timeoutMs,
     });
   } catch (error) {

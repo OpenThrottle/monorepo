@@ -9,7 +9,17 @@ import {
 
 vi.mock('@openthrottle/react-router-graphql', () => ({
   executeGraphql: vi.fn(),
+  getForwardedClientHeaders: (request: Request): Record<string, string> => {
+    const forwardedFor = request.headers.get('x-forwarded-for');
+    return forwardedFor ? { 'X-Forwarded-For': forwardedFor } : {};
+  },
 }));
+
+/** A request as Caddy delivers it: the browser's address in X-Forwarded-For. */
+const request = new Request('https://developer.example.com/auth', {
+  headers: { 'x-forwarded-for': '203.0.113.7' },
+});
+const forwarded = { headers: { 'X-Forwarded-For': '203.0.113.7' } };
 
 const mockExecute = vi.mocked(executeGraphql);
 
@@ -23,11 +33,17 @@ describe('callRegisterMutation', () => {
       register: { accessToken: 'register-token' },
     });
 
-    const result = await callRegisterMutation('user@example.com', 'secret');
+    const result = await callRegisterMutation(
+      'user@example.com',
+      'secret',
+      request,
+    );
 
-    expect(mockExecute).toHaveBeenCalledWith(expect.anything(), {
-      input: { email: 'user@example.com', password: 'secret' },
-    });
+    expect(mockExecute).toHaveBeenCalledWith(
+      expect.anything(),
+      { input: { email: 'user@example.com', password: 'secret' } },
+      forwarded,
+    );
     expect(result).toBe('register-token');
   });
 
@@ -36,7 +52,11 @@ describe('callRegisterMutation', () => {
       register: { accessToken: null },
     });
 
-    const result = await callRegisterMutation('user@example.com', 'secret');
+    const result = await callRegisterMutation(
+      'user@example.com',
+      'secret',
+      request,
+    );
 
     expect(result).toBeNull();
   });
@@ -52,18 +72,28 @@ describe('callLoginMutation', () => {
       login: { accessToken: 'login-token' },
     });
 
-    const result = await callLoginMutation('user@example.com', 'secret');
+    const result = await callLoginMutation(
+      'user@example.com',
+      'secret',
+      request,
+    );
 
-    expect(mockExecute).toHaveBeenCalledWith(expect.anything(), {
-      input: { email: 'user@example.com', password: 'secret' },
-    });
+    expect(mockExecute).toHaveBeenCalledWith(
+      expect.anything(),
+      { input: { email: 'user@example.com', password: 'secret' } },
+      forwarded,
+    );
     expect(result).toBe('login-token');
   });
 
   test('returns null when login is null', async () => {
     mockExecute.mockResolvedValueOnce({ login: null });
 
-    const result = await callLoginMutation('user@example.com', 'secret');
+    const result = await callLoginMutation(
+      'user@example.com',
+      'secret',
+      request,
+    );
 
     expect(result).toBeNull();
   });
@@ -73,7 +103,11 @@ describe('callLoginMutation', () => {
       login: { accessToken: null },
     });
 
-    const result = await callLoginMutation('user@example.com', 'secret');
+    const result = await callLoginMutation(
+      'user@example.com',
+      'secret',
+      request,
+    );
 
     expect(result).toBeNull();
   });

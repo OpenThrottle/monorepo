@@ -23,7 +23,7 @@ export const loader = async (args: Route.LoaderArgs) => {
 
   return redirect('/', {
     headers: {
-      'Set-Cookie': getClearAuthCookieHeader(),
+      'Set-Cookie': getClearAuthCookieHeader({ request }),
     },
   });
 };
@@ -44,7 +44,7 @@ export const action = async (args: Route.ActionArgs) => {
 
   return redirect('/', {
     headers: {
-      'Set-Cookie': getClearAuthCookieHeader(),
+      'Set-Cookie': getClearAuthCookieHeader({ request }),
     },
   });
 };

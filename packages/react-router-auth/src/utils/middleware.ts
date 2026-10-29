@@ -56,7 +56,7 @@ export const authMiddleware: MiddlewareFunction = (args) => {
     if (!isProd) console.log(message, { pathname, token });
 
     throw redirect('/auth', {
-      headers: { 'Set-Cookie': getClearAuthCookieHeader() },
+      headers: { 'Set-Cookie': getClearAuthCookieHeader({ request }) },
     });
   }
 

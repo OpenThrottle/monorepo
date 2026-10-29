@@ -157,12 +157,14 @@ pnpm nx run openthrottle-server:dev            # GraphQL API at http://localhost
 pnpm nx run openthrottle-developer:build
 ( cd applications/openthrottle-developer \
   && set -a && . ./.env.default && set +a \
-  && PORT=6020 NODE_ENV=production npx react-router-serve ./build/server/index.js )
+  && PORT=6020 NODE_ENV=production API_URL_EXTERNAL=http://localhost:6021 \
+     npx react-router-serve ./build/server/index.js )
 ```
 
 > `react-router-serve` does not auto-load env, so source `.env.default` (it sets
 > `APP_ENV`, `APP_NAME`, etc.) before serving or the routes 500 with
-> "APP_ENV is not set".
+> "APP_ENV is not set". It also has no `/api` proxy, so override the default
+> relative `API_URL_EXTERNAL="/api"` with the server's absolute URL, as above.
 
 For quick local authoring you can instead run `pnpm nx run openthrottle-developer:dev`,
 but verify the suite against the production build before relying on it.

@@ -69,8 +69,12 @@ services:
         condition: service_healthy
     env_file: .env
     # Per-app identity overrides the shared .env: each app's APP_URL is its OWN
-    # origin, and APP_NAME names its logs and cache namespaces.
+    # origin, and APP_NAME names its logs and cache namespaces. API_URL_EXTERNAL
+    # is relative so the browser calls the API on the developer domain itself,
+    # through Caddy's /api route (docs/monorepo/phone-access.md); SSR keeps
+    # API_URL_INTERNAL from the shared .env.
     environment:
+      API_URL_EXTERNAL: /api
       APP_NAME: openthrottle-developer
       APP_NAME_SHORT: OpenThrottle
       APP_URL: https://${developer_domain}

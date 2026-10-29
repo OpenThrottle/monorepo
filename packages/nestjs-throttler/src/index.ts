@@ -11,5 +11,9 @@ export {
   type ThrottlerTierOptions,
   validateNestjsThrottlerModuleOptions,
 } from './config/nestjs-throttler.options.ts';
+export {
+  DEFAULT_TRUST_PROXY,
+  resolveTrustProxy,
+} from './config/trust-proxy.ts';
 export { GqlThrottlerGuard } from './guards/gql-throttler.guard.ts';
 export { NestjsThrottlerModule } from './modules/nestjs-throttler.module.ts';
