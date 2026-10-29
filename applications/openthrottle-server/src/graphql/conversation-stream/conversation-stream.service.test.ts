@@ -280,6 +280,7 @@ describe('ConversationStreamService', () => {
       messageId: 'assistant-msg-1',
       model: 'claude-opus-4-8',
       provider: 'claude',
+      source: 'openthrottle-chat',
       usage: {
         costUsd: 0.04,
         inputTokens: 1200,
@@ -361,6 +362,7 @@ describe('ConversationStreamService', () => {
       messageId: 'assistant-msg-1',
       model: 'sonnet',
       provider: 'opencode',
+      source: 'openthrottle-chat',
       usage: {
         cacheReadTokens: 140,
         cacheWriteTokens: 0,

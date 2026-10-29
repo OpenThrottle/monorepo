@@ -28,6 +28,8 @@ export interface RecordTokenUsageInput {
   readonly messageId: string | null;
   readonly model: string | null;
   readonly provider: string;
+  /** Producer id for `agent_token_usage.source`; see AGENT_TOKEN_USAGE_SOURCES. */
+  readonly source: string;
   readonly usage: NormalizedTokenUsage;
   readonly userId: string;
 }
@@ -62,6 +64,9 @@ const exclusiveEndInstant = (end: string): string => {
 
   return date.toISOString();
 };
+
+/** The capture-health grouping key: the producer id, else the provider for pre-source rows. */
+const CAPTURE_SOURCE_EXPRESSION = "COALESCE(NULLIF(u.source, ''), u.provider)";
 
 /** SUM(expr) → number, coalescing NULL (no rows) to 0. */
 const toNumber = (value: unknown): number =>
@@ -101,6 +106,7 @@ export class AgentTokenUsageService {
       provider: input.provider,
       rawUsage: { ...usage },
       reasoningTokens: usage.reasoningTokens ?? null,
+      source: input.source,
       totalTokens: usage.totalTokens ?? null,
       userId: input.userId,
     });
@@ -148,17 +154,16 @@ export class AgentTokenUsageService {
   }
 
   /**
-   * When token usage last arrived, per source. Grouped by `provider` for now;
-   * a later task adds a `source` column to agent_token_usage and this grouping
-   * switches to it.
+   * When token usage last arrived, per source. Grouped by the producer id in
+   * `source`, falling back to `provider` for any row with a NULL or blank source.
    */
   async listCaptureHealth(): Promise<CaptureHealthRow[]> {
     const rows = await this.usageRepository
       .createQueryBuilder('u')
-      .select('u.provider', 'source')
+      .select(CAPTURE_SOURCE_EXPRESSION, 'source')
       .addSelect('MAX(u.created_at)', 'lastCapturedAt')
-      .groupBy('u.provider')
-      .orderBy('u.provider', 'ASC')
+      .groupBy(CAPTURE_SOURCE_EXPRESSION)
+      .orderBy(CAPTURE_SOURCE_EXPRESSION, 'ASC')
       .getRawMany<Record<string, unknown>>();
 
     return toCaptureHealthRows(CAPTURE_HEALTH_STREAMS.TOKEN_USAGE, rows);

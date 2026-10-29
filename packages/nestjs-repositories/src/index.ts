@@ -45,8 +45,14 @@ export type { AgentConversationMessageData } from './modules/agent-conversations
 export { AgentConversationMessage } from './modules/agent-conversations/agent-conversation-message.entity.ts';
 export type { AppendTurnResult } from './modules/agent-conversations/agent-conversations.service.ts';
 export { AgentConversationsService } from './modules/agent-conversations/agent-conversations.service.ts';
-export type { AgentTokenUsageData } from './modules/agent-token-usage/agent-token-usage.entity.ts';
-export { AgentTokenUsage } from './modules/agent-token-usage/agent-token-usage.entity.ts';
+export type {
+  AgentTokenUsageData,
+  AgentTokenUsageSource,
+} from './modules/agent-token-usage/agent-token-usage.entity.ts';
+export {
+  AGENT_TOKEN_USAGE_SOURCES,
+  AgentTokenUsage,
+} from './modules/agent-token-usage/agent-token-usage.entity.ts';
 export { AgentTokenUsageModule } from './modules/agent-token-usage/agent-token-usage.module.ts';
 export type {
   RecordTokenUsageInput,

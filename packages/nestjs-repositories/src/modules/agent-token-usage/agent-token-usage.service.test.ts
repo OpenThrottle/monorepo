@@ -37,6 +37,7 @@ describe('AgentTokenUsageService', () => {
       messageId: 'msg-1',
       model: 'claude-opus-4-8',
       provider: 'claude',
+      source: 'openthrottle-chat',
       usage: {
         cacheReadTokens: 900,
         cacheWriteTokens: 300,
@@ -69,6 +70,7 @@ describe('AgentTokenUsageService', () => {
         totalTokens: 1540,
       },
       reasoningTokens: null,
+      source: 'openthrottle-chat',
       totalTokens: 1540,
       userId: 'user-1',
     });
@@ -87,6 +89,7 @@ describe('AgentTokenUsageService', () => {
       messageId: null,
       model: null,
       provider: 'openai',
+      source: 'openthrottle-chat',
       usage: { outputTokens: 35, totalTokens: 35 },
       userId: 'user-9',
     });
@@ -103,6 +106,7 @@ describe('AgentTokenUsageService', () => {
       provider: 'openai',
       rawUsage: { outputTokens: 35, totalTokens: 35 },
       reasoningTokens: null,
+      source: 'openthrottle-chat',
       totalTokens: 35,
       userId: 'user-9',
     });
@@ -134,7 +138,7 @@ describe('AgentTokenUsageService', () => {
       return { qb, service };
     };
 
-    it('maps providers to token_usage rows with their latest created_at', async () => {
+    it('maps sources to token_usage rows with their latest created_at', async () => {
       const lastCapturedAt = new Date('2026-10-29T10:00:00.000Z');
       const { service } = await buildHealthService(
         vi.fn().mockResolvedValue([{ lastCapturedAt, source: 'claude' }]),
@@ -145,19 +149,22 @@ describe('AgentTokenUsageService', () => {
       ]);
     });
 
-    it('selects MAX(created_at) grouped by provider', async () => {
+    it('selects MAX(created_at) grouped by source, falling back to provider', async () => {
       const { qb, service } = await buildHealthService(
         vi.fn().mockResolvedValue([]),
       );
 
       await service.listCaptureHealth();
 
-      expect(qb.select).toHaveBeenCalledWith('u.provider', 'source');
+      const sourceExpression = "COALESCE(NULLIF(u.source, ''), u.provider)";
+
+      expect(qb.select).toHaveBeenCalledWith(sourceExpression, 'source');
       expect(qb.addSelect).toHaveBeenCalledWith(
         'MAX(u.created_at)',
         'lastCapturedAt',
       );
-      expect(qb.groupBy).toHaveBeenCalledWith('u.provider');
+      expect(qb.groupBy).toHaveBeenCalledWith(sourceExpression);
+      expect(qb.orderBy).toHaveBeenCalledWith(sourceExpression, 'ASC');
     });
 
     describe('when no usage has been recorded', () => {
