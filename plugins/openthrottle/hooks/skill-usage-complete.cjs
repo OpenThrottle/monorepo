@@ -33,7 +33,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 
 // packages/agentic-hooks/src/adapters/claude/complete.ts
-var import_node_fs6 = __toESM(require("node:fs"), 1);
+var import_node_fs7 = __toESM(require("node:fs"), 1);
 
 // packages/agentic-hooks/src/data/jsonl.ts
 var import_node_fs2 = __toESM(require("node:fs"), 1);
@@ -1068,11 +1068,47 @@ var normalizeClaudeStopPayload = (raw) => {
   };
 };
 
+// packages/agentic-hooks/src/adapters/claude/shadow.ts
+var import_node_fs6 = __toESM(require("node:fs"), 1);
+var import_node_path6 = __toESM(require("node:path"), 1);
+var CAPTURE_BUNDLE = "skill-usage-capture";
+var runningFromPlugin = (env, scriptPath) => {
+  const pluginRoot = env.CLAUDE_PLUGIN_ROOT?.trim();
+  if (!pluginRoot || !scriptPath) {
+    return false;
+  }
+  const relative = import_node_path6.default.relative(import_node_path6.default.resolve(pluginRoot), scriptPath);
+  return relative !== "" && !relative.startsWith("..");
+};
+var repoRegistersCapture = (repoRoot) => {
+  try {
+    const raw = import_node_fs6.default.readFileSync(
+      import_node_path6.default.join(repoRoot, ".claude", "settings.json"),
+      "utf8"
+    );
+    const parsed = JSON.parse(raw);
+    if (typeof parsed !== "object" || parsed === null || !("hooks" in parsed)) {
+      return false;
+    }
+    return JSON.stringify(parsed.hooks).includes(CAPTURE_BUNDLE);
+  } catch {
+    return false;
+  }
+};
+var isShadowedByRepoHooks = ({
+  env = process.env,
+  repoRoot,
+  scriptPath = process.argv[1]
+}) => runningFromPlugin(env, scriptPath) && repoRegistersCapture(repoRoot);
+
 // packages/agentic-hooks/src/adapters/claude/complete.ts
 var main = async () => {
   try {
     const repoRoot = process.env.CLAUDE_PROJECT_DIR || process.env.OPEN_THROTTLE_REPO_ROOT || process.cwd();
-    const stdinBuf = import_node_fs6.default.readFileSync(0, "utf8");
+    if (isShadowedByRepoHooks({ repoRoot })) {
+      return;
+    }
+    const stdinBuf = import_node_fs7.default.readFileSync(0, "utf8");
     if (!stdinBuf || !stdinBuf.trim()) {
       return;
     }

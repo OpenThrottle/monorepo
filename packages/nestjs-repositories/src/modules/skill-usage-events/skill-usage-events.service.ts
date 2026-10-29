@@ -8,7 +8,7 @@
 
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, type SelectQueryBuilder } from 'typeorm';
+import { IsNull, Repository, type SelectQueryBuilder } from 'typeorm';
 
 import {
   CAPTURE_HEALTH_STREAMS,
@@ -204,6 +204,23 @@ const exclusiveEndInstant = (end: string): string => {
 };
 
 /** COUNT/SUM raw → number, coalescing NULL (no rows) to 0. */
+/** The `id` of the first RETURNING row, or null when the insert was skipped. */
+const readFirstId = (raw: unknown): string | null => {
+  if (!Array.isArray(raw)) {
+    return null;
+  }
+  const first: unknown = raw[0];
+  if (
+    typeof first === 'object' &&
+    first !== null &&
+    'id' in first &&
+    typeof first.id === 'string'
+  ) {
+    return first.id;
+  }
+  return null;
+};
+
 const toNumber = (value: unknown): number => {
   return value == null ? 0 : Number(value);
 };
@@ -304,7 +321,10 @@ export class SkillUsageEventsService {
 
   /**
    * Insert one skill-usage event. Args are stored as-sent (client privacy
-   * seam already applied). Returns the saved row.
+   * seam already applied). Idempotent: an event whose key (tool_use_id, or
+   * prompt_id + skill_name for a prompt expansion) is already stored inserts
+   * nothing and returns the stored row, so a hook registered twice or a
+   * re-sent buffer line cannot double-count. See migration 134.
    */
   async recordSkillUsage(
     input: RecordSkillUsageInput,
@@ -328,7 +348,45 @@ export class SkillUsageEventsService {
       userId: input.userId ?? null,
     });
 
-    return this.eventsRepository.save(row);
+    // No conflict target: ON CONFLICT DO NOTHING covers both partial unique
+    // indexes, whichever key this row carries.
+    const result = await this.eventsRepository
+      .createQueryBuilder()
+      .insert()
+      .into(SkillUsageEvent)
+      .values(row)
+      .orIgnore()
+      .returning('id')
+      .execute();
+
+    const raw: unknown = result.raw;
+    const insertedId = readFirstId(raw);
+    if (insertedId !== null) {
+      return this.eventsRepository.findOneByOrFail({ id: insertedId });
+    }
+
+    // Conflict: NULLs never conflict in a unique index, so every key column
+    // is non-null here and plain equality finds the surviving row.
+    return this.eventsRepository.findOneOrFail({
+      where:
+        row.toolUseId !== null
+          ? {
+              duplicateOfId: IsNull(),
+              hookEventName: row.hookEventName ?? IsNull(),
+              sessionId: row.sessionId ?? IsNull(),
+              source: row.source ?? IsNull(),
+              toolUseId: row.toolUseId,
+            }
+          : {
+              duplicateOfId: IsNull(),
+              hookEventName: row.hookEventName ?? IsNull(),
+              promptId: row.promptId ?? IsNull(),
+              sessionId: row.sessionId ?? IsNull(),
+              skillName: row.skillName,
+              source: row.source ?? IsNull(),
+              toolUseId: IsNull(),
+            },
+    });
   }
 
   /**
@@ -743,7 +801,8 @@ export class SkillUsageEventsService {
       .andWhere('e.occurred_at < :endExclusive', {
         endExclusive: exclusiveEndInstant(query.end),
       })
-      .andWhere('e.is_fixture = FALSE');
+      .andWhere('e.is_fixture = FALSE')
+      .andWhere('e.duplicate_of_id IS NULL');
   }
 
   /** Date window + optional scope / gitBranch / cwd filters. */

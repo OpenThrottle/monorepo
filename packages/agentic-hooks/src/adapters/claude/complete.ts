@@ -18,6 +18,7 @@ import {
   sweepAbandonedStarts,
 } from '../../index.ts';
 import { CLAUDE_SOURCE, normalizeClaudeStopPayload } from './payload.ts';
+import { isShadowedByRepoHooks } from './shadow.ts';
 
 const main = async (): Promise<void> => {
   try {
@@ -25,6 +26,11 @@ const main = async (): Promise<void> => {
       process.env.CLAUDE_PROJECT_DIR ||
       process.env.OPEN_THROTTLE_REPO_ROOT ||
       process.cwd();
+
+    // The repository registers this same hook; let that copy do the work.
+    if (isShadowedByRepoHooks({ repoRoot })) {
+      return;
+    }
 
     const stdinBuf = fs.readFileSync(0, 'utf8');
     if (!stdinBuf || !stdinBuf.trim()) {

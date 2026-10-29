@@ -37,6 +37,7 @@ describe('SkillUsageResolver', () => {
     agentType: null,
     args: 'truncated args…',
     cwd: '/repo',
+    duplicateOfId: null,
     gitBranch: 'example-usage-tracking',
     hookEventName: 'PreToolUse',
     id: 'event-1',
