@@ -35,6 +35,36 @@ export interface RecordTokenUsageInput {
 }
 
 /**
+ * One hook-ingested usage row (Claude Code transcript line). `occurredAt` is
+ * the event time from the transcript and becomes `created_at`, so a late JSONL
+ * drain lands on the day the turn actually ran, not the day it was ingested.
+ */
+export interface TokenUsageBatchRow {
+  readonly cachedReadTokens: number | null;
+  readonly cachedWriteTokens: number | null;
+  readonly costUsd: number | null;
+  readonly cwd: string | null;
+  readonly gitBranch: string | null;
+  readonly inputTokens: number | null;
+  readonly model: string;
+  readonly occurredAt: Date;
+  readonly outputTokens: number | null;
+  readonly provider: string;
+  readonly rawUsage: Record<string, unknown> | null;
+  readonly reasoningTokens: number | null;
+  readonly requestId: string | null;
+  readonly sessionId: string | null;
+  readonly source: string;
+  readonly totalTokens: number | null;
+}
+
+/** Outcome of a batch ingest: rows written vs rows the unique index skipped. */
+export interface TokenUsageBatchResult {
+  readonly inserted: number;
+  readonly skipped: number;
+}
+
+/**
  * A user-scoped read over a date range: the caller's usage rows between `start`
  * and `end` (both YYYY-MM-DD, inclusive), optionally narrowed to one `provider`.
  */
@@ -112,6 +142,62 @@ export class AgentTokenUsageService {
     });
 
     return this.usageRepository.save(row);
+  }
+
+  /**
+   * Insert a batch of hook-ingested usage rows for `userId` in ONE multi-row
+   * `INSERT … ON CONFLICT DO NOTHING RETURNING id`. Re-sending a row whose
+   * `(source, session_id, request_id)` already exists is a no-op (the partial
+   * unique index `uq_agent_token_usage_request`), so `inserted` is the number
+   * of rows RETURNING gave back and `skipped` is the rest of the batch.
+   * `created_at` is set explicitly from each row's `occurredAt`.
+   */
+  async recordTokenUsageBatch(
+    userId: string,
+    rows: readonly TokenUsageBatchRow[],
+  ): Promise<TokenUsageBatchResult> {
+    if (rows.length === 0) {
+      return { inserted: 0, skipped: 0 };
+    }
+
+    const result = await this.usageRepository
+      .createQueryBuilder()
+      .insert()
+      .into(AgentTokenUsage)
+      .values(
+        rows.map((row) => {
+          // Opaque jsonb payload: typed as `object | null` so TypeORM's
+          // QueryDeepPartialEntity does not try to deep-map Record<string, unknown>.
+          const rawUsage: object | null = row.rawUsage;
+
+          return {
+            cachedReadTokens: row.cachedReadTokens,
+            cachedWriteTokens: row.cachedWriteTokens,
+            costUsd: row.costUsd,
+            createdAt: row.occurredAt,
+            cwd: row.cwd,
+            gitBranch: row.gitBranch,
+            inputTokens: row.inputTokens,
+            model: row.model,
+            outputTokens: row.outputTokens,
+            provider: row.provider,
+            rawUsage,
+            reasoningTokens: row.reasoningTokens,
+            requestId: row.requestId,
+            sessionId: row.sessionId,
+            source: row.source,
+            totalTokens: row.totalTokens,
+            userId,
+          };
+        }),
+      )
+      .orIgnore()
+      .returning('id')
+      .execute();
+
+    const inserted = Array.isArray(result.raw) ? result.raw.length : 0;
+
+    return { inserted, skipped: rows.length - inserted };
   }
 
   /**

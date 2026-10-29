@@ -3478,6 +3478,16 @@ type TokenUsageResultObject {
   totals: TokenUsageTotalsObject!
 }
 
+type RecordTokenUsageResultObject {
+  """Rows written by this call."""
+  inserted: Int!
+
+  """
+  Rows skipped because (source, sessionId, requestId) was already recorded.
+  """
+  skipped: Int!
+}
+
 type TranscriptionStreamChunkObject {
   """
   True exactly once, on the terminal chunk (stop, idle reap, or hard cap).
@@ -5709,6 +5719,11 @@ type Mutation {
   promoteTaskToPlan(input: PromoteTaskToPlanInput!): PromoteTaskToPlanResultObject!
 
   """
+  Batch-ingest hook-captured token usage rows (at most 500). Rows are attributed to the human user the authenticated principal acts as (human JWT, or a service account's acting user); a userId is never accepted from the client. Idempotent: rows whose (source, sessionId, requestId) already exist are skipped. created_at is the row's occurredAt, not ingest time. Any invalid row rejects the whole batch with BAD_REQUEST naming the row index.
+  """
+  recordTokenUsage(input: RecordTokenUsageInput!): RecordTokenUsageResultObject!
+
+  """
   Mint a transcription session: the server opens a websocket to the local WhisperLive service (WHISPER_SERVICE_URL — env-only, never client-supplied) and returns the session id to stream audio to. Must be executed over an authenticated graphql-ws connection (the audio mutations ride the same socket). A user's previous active session is closed first. Uses errorMessage for expected failures (unconfigured / unreachable).
   """
   startTranscriptionStream: StartTranscriptionStreamResult!
@@ -7305,6 +7320,73 @@ input PromoteTaskToPlanInput {
   Optional idempotency key: re-submitting the same key enqueues at most one promotion job. Letters, digits, and ._:- only.
   """
   idempotencyKey: String
+}
+
+input RecordTokenUsageInput {
+  """
+  Usage rows to ingest, at most 500 per call. The whole batch is rejected (BAD_REQUEST, naming the row index) if any row is invalid.
+  """
+  rows: [RecordTokenUsageRowInput!]!
+}
+
+input RecordTokenUsageRowInput {
+  """Cache-read tokens for the turn, when reported."""
+  cacheReadTokens: Float
+
+  """Cache-creation (cache-write) tokens for the turn, when reported."""
+  cacheWriteTokens: Float
+
+  """
+  Dollar cost of the turn when the producer priced it; null when unknown.
+  """
+  costUsd: Float
+
+  """Working directory the harness reported."""
+  cwd: String
+
+  """Git branch the harness reported."""
+  gitBranch: String
+
+  """Input/prompt tokens for the turn, when reported."""
+  inputTokens: Float
+
+  """Model the usage is attributed to. Must not be blank."""
+  model: String!
+
+  """
+  When the turn happened, as an ISO-8601 timestamp (the transcript timestamp). Stored as created_at, so a late JSONL drain lands on the day the turn actually ran.
+  """
+  occurredAt: String!
+
+  """Output/completion tokens for the turn, when reported."""
+  outputTokens: Float
+
+  """Provider identity (for example claude). Must not be blank."""
+  provider: String!
+
+  """
+  The raw provider usage payload, JSON-serialized (repo convention: no JSON scalar). Must parse to a JSON object; null to omit.
+  """
+  rawUsageJson: String
+
+  """Reasoning tokens for the turn, when reported separately."""
+  reasoningTokens: Float
+
+  """
+  Provider API request id. With source and sessionId it is the idempotency key: a re-sent row is skipped. A row without one is never deduplicated.
+  """
+  requestId: String
+
+  """The agent harness's own session id."""
+  sessionId: String
+
+  """
+  Producer id of the capturing tool (for example claude-code). Free text; must not be blank.
+  """
+  source: String!
+
+  """Total tokens for the turn, when reported."""
+  totalTokens: Float
 }
 
 input CreateUserInput {

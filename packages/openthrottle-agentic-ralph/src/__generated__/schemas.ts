@@ -94,6 +94,8 @@ import {
   RecordPlanRunHeartbeatInput,
   RecordSkillUsageInput,
   RecordSkillUsageOutcomeInput,
+  RecordTokenUsageInput,
+  RecordTokenUsageRowInput,
   RecordWorkArtifactInput,
   RefreshCheckoutInput,
   RegisterCliPlanRunInput,
@@ -1136,6 +1138,37 @@ export function RecordSkillUsageOutcomeInputSchema(): z.ZodObject<
     skillName: z.string().min(1),
     source: z.string().nullish(),
     toolUseId: z.string().nullish(),
+  });
+}
+
+export function RecordTokenUsageInputSchema(): z.ZodObject<
+  Properties<RecordTokenUsageInput>
+> {
+  return z.object({
+    rows: z.array(z.lazy(() => RecordTokenUsageRowInputSchema())),
+  });
+}
+
+export function RecordTokenUsageRowInputSchema(): z.ZodObject<
+  Properties<RecordTokenUsageRowInput>
+> {
+  return z.object({
+    cacheReadTokens: z.number().nullish(),
+    cacheWriteTokens: z.number().nullish(),
+    costUsd: z.number().nullish(),
+    cwd: z.string().nullish(),
+    gitBranch: z.string().nullish(),
+    inputTokens: z.number().nullish(),
+    model: z.string().min(1),
+    occurredAt: z.string().min(1),
+    outputTokens: z.number().nullish(),
+    provider: z.string().min(1),
+    rawUsageJson: z.string().nullish(),
+    reasoningTokens: z.number().nullish(),
+    requestId: z.string().nullish(),
+    sessionId: z.string().nullish(),
+    source: z.string().min(1),
+    totalTokens: z.number().nullish(),
   });
 }
 

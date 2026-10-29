@@ -112,6 +112,118 @@ describe('AgentTokenUsageService', () => {
     });
   });
 
+  describe('recordTokenUsageBatch', () => {
+    const occurredAt = new Date('2026-10-01T08:30:00.000Z');
+    const batchRow = {
+      cachedReadTokens: 900,
+      cachedWriteTokens: 300,
+      costUsd: null,
+      cwd: '/work/repo',
+      gitBranch: 'main',
+      inputTokens: 1200,
+      model: 'claude-opus-4-8',
+      occurredAt,
+      outputTokens: 340,
+      provider: 'claude',
+      rawUsage: { service_tier: 'standard' },
+      reasoningTokens: null,
+      requestId: 'req-1',
+      sessionId: 'sess-1',
+      source: 'claude-code',
+      totalTokens: 2740,
+    };
+
+    const buildBatchService = async (
+      raw: unknown,
+    ): Promise<{
+      qb: Record<string, ReturnType<typeof vi.fn>>;
+      service: AgentTokenUsageService;
+    }> => {
+      const qb: Record<string, ReturnType<typeof vi.fn>> = {
+        execute: vi.fn().mockResolvedValue({ raw }),
+        insert: vi.fn(),
+        into: vi.fn(),
+        orIgnore: vi.fn(),
+        returning: vi.fn(),
+        values: vi.fn(),
+      };
+      for (const key of ['insert', 'into', 'orIgnore', 'returning', 'values']) {
+        qb[key]?.mockReturnValue(qb);
+      }
+      const service = await buildService({
+        create: vi.fn(),
+        createQueryBuilder: vi.fn().mockReturnValue(qb),
+        save: vi.fn(),
+      });
+
+      return { qb, service };
+    };
+
+    it('inserts one multi-row ON CONFLICT DO NOTHING statement keyed to the user', async () => {
+      const { qb, service } = await buildBatchService([{ id: 'a' }]);
+
+      await service.recordTokenUsageBatch('user-1', [batchRow]);
+
+      expect(qb.orIgnore).toHaveBeenCalledOnce();
+      expect(qb.returning).toHaveBeenCalledWith('id');
+      expect(qb.execute).toHaveBeenCalledOnce();
+      expect(qb.values).toHaveBeenCalledWith([
+        {
+          cachedReadTokens: 900,
+          cachedWriteTokens: 300,
+          costUsd: null,
+          createdAt: occurredAt,
+          cwd: '/work/repo',
+          gitBranch: 'main',
+          inputTokens: 1200,
+          model: 'claude-opus-4-8',
+          outputTokens: 340,
+          provider: 'claude',
+          rawUsage: { service_tier: 'standard' },
+          reasoningTokens: null,
+          requestId: 'req-1',
+          sessionId: 'sess-1',
+          source: 'claude-code',
+          totalTokens: 2740,
+          userId: 'user-1',
+        },
+      ]);
+    });
+
+    it('counts RETURNING rows as inserted and the rest of the batch as skipped', async () => {
+      const { service } = await buildBatchService([{ id: 'a' }, { id: 'b' }]);
+
+      await expect(
+        service.recordTokenUsageBatch('user-1', [
+          batchRow,
+          { ...batchRow, requestId: 'req-2' },
+          { ...batchRow, requestId: 'req-3' },
+        ]),
+      ).resolves.toEqual({ inserted: 2, skipped: 1 });
+    });
+
+    describe('when every row conflicts', () => {
+      it('inserts none and skips the whole batch', async () => {
+        const { service } = await buildBatchService([]);
+
+        await expect(
+          service.recordTokenUsageBatch('user-1', [batchRow, batchRow]),
+        ).resolves.toEqual({ inserted: 0, skipped: 2 });
+      });
+    });
+
+    describe('when the batch is empty', () => {
+      it('skips the database round trip', async () => {
+        const { qb, service } = await buildBatchService([]);
+
+        await expect(
+          service.recordTokenUsageBatch('user-1', []),
+        ).resolves.toEqual({ inserted: 0, skipped: 0 });
+        expect(qb.execute).not.toHaveBeenCalled();
+      });
+    });
+  });
+
   describe('listCaptureHealth', () => {
     const buildHealthService = async (
       getRawMany: ReturnType<typeof vi.fn>,

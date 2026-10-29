@@ -120,3 +120,16 @@ export class TokenUsageResultObject {
   })
   totals!: TokenUsageTotalsObject;
 }
+
+@ObjectType()
+export class RecordTokenUsageResultObject {
+  @Field(() => Int, {
+    description: `Rows written by this call.`,
+  })
+  inserted!: number;
+
+  @Field(() => Int, {
+    description: `Rows skipped because (source, sessionId, requestId) was already recorded.`,
+  })
+  skipped!: number;
+}

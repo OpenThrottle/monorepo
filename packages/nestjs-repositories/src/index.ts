@@ -56,6 +56,8 @@ export {
 export { AgentTokenUsageModule } from './modules/agent-token-usage/agent-token-usage.module.ts';
 export type {
   RecordTokenUsageInput,
+  TokenUsageBatchResult,
+  TokenUsageBatchRow,
   TokenUsageRangeQuery,
   TokenUsageTotals,
 } from './modules/agent-token-usage/agent-token-usage.service.ts';

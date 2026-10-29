@@ -1957,6 +1957,8 @@ export type Mutation = {
   recordSkillUsage: SkillUsageEventObject;
   /** Record one opt-in outcome/duration enrichment for a skill we author. Correlates to a harness start by sessionId + skillName. Additive to PreToolUse capture — never a replacement. Missing outcomes are a valid state. */
   recordSkillUsageOutcome: SkillUsageOutcomeObject;
+  /** Batch-ingest hook-captured token usage rows (at most 500). Rows are attributed to the human user the authenticated principal acts as (human JWT, or a service account's acting user); a userId is never accepted from the client. Idempotent: rows whose (source, sessionId, requestId) already exist are skipped. created_at is the row's occurredAt, not ingest time. Any invalid row rejects the whole batch with BAD_REQUEST naming the row index. */
+  recordTokenUsage: RecordTokenUsageResultObject;
   recordWorkArtifact: WorkArtifactObject;
   /** Re-run inspection on an owned checkout and surface drift (path missing, remote changed, branch moved). */
   refreshCheckout: RefreshCheckoutPayloadObject;
@@ -2399,6 +2401,10 @@ export type MutationRecordSkillUsageArgs = {
 
 export type MutationRecordSkillUsageOutcomeArgs = {
   input: RecordSkillUsageOutcomeInput;
+};
+
+export type MutationRecordTokenUsageArgs = {
+  input: RecordTokenUsageInput;
 };
 
 export type MutationRecordWorkArtifactArgs = {
@@ -4039,6 +4045,54 @@ export type RecordSkillUsageOutcomeInput = {
   source?: InputMaybe<Scalars['String']['input']>;
   /** Optional tool_use_id for tighter start↔outcome correlation. */
   toolUseId?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type RecordTokenUsageInput = {
+  /** Usage rows to ingest, at most 500 per call. The whole batch is rejected (BAD_REQUEST, naming the row index) if any row is invalid. */
+  rows: Array<RecordTokenUsageRowInput>;
+};
+
+export type RecordTokenUsageResultObject = {
+  __typename?: 'RecordTokenUsageResultObject';
+  /** Rows written by this call. */
+  inserted: Scalars['Int']['output'];
+  /** Rows skipped because (source, sessionId, requestId) was already recorded. */
+  skipped: Scalars['Int']['output'];
+};
+
+export type RecordTokenUsageRowInput = {
+  /** Cache-read tokens for the turn, when reported. */
+  cacheReadTokens?: InputMaybe<Scalars['Float']['input']>;
+  /** Cache-creation (cache-write) tokens for the turn, when reported. */
+  cacheWriteTokens?: InputMaybe<Scalars['Float']['input']>;
+  /** Dollar cost of the turn when the producer priced it; null when unknown. */
+  costUsd?: InputMaybe<Scalars['Float']['input']>;
+  /** Working directory the harness reported. */
+  cwd?: InputMaybe<Scalars['String']['input']>;
+  /** Git branch the harness reported. */
+  gitBranch?: InputMaybe<Scalars['String']['input']>;
+  /** Input/prompt tokens for the turn, when reported. */
+  inputTokens?: InputMaybe<Scalars['Float']['input']>;
+  /** Model the usage is attributed to. Must not be blank. */
+  model: Scalars['String']['input'];
+  /** When the turn happened, as an ISO-8601 timestamp (the transcript timestamp). Stored as created_at, so a late JSONL drain lands on the day the turn actually ran. */
+  occurredAt: Scalars['String']['input'];
+  /** Output/completion tokens for the turn, when reported. */
+  outputTokens?: InputMaybe<Scalars['Float']['input']>;
+  /** Provider identity (for example claude). Must not be blank. */
+  provider: Scalars['String']['input'];
+  /** The raw provider usage payload, JSON-serialized (repo convention: no JSON scalar). Must parse to a JSON object; null to omit. */
+  rawUsageJson?: InputMaybe<Scalars['String']['input']>;
+  /** Reasoning tokens for the turn, when reported separately. */
+  reasoningTokens?: InputMaybe<Scalars['Float']['input']>;
+  /** Provider API request id. With source and sessionId it is the idempotency key: a re-sent row is skipped. A row without one is never deduplicated. */
+  requestId?: InputMaybe<Scalars['String']['input']>;
+  /** The agent harness's own session id. */
+  sessionId?: InputMaybe<Scalars['String']['input']>;
+  /** Producer id of the capturing tool (for example claude-code). Free text; must not be blank. */
+  source: Scalars['String']['input'];
+  /** Total tokens for the turn, when reported. */
+  totalTokens?: InputMaybe<Scalars['Float']['input']>;
 };
 
 export type RecordWorkArtifactInput = {
