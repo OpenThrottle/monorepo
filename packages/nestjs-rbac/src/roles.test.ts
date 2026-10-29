@@ -61,15 +61,32 @@ describe('roles', () => {
       }
     });
 
-    it('mcp and workflow-ralph have plans read/write only', () => {
-      for (const role of [ROLES.MCP, ROLES.WORKFLOW_RALPH] as const) {
-        const perms = ROLE_PERMISSIONS[role];
-        expect(perms).toEqual([
-          PERMISSIONS.PLANS_READ,
-          PERMISSIONS.PLANS_WRITE,
-        ]);
-        expect(perms).not.toContain(PERMISSIONS.USERS_WRITE);
+    it('blog:draft is held by admin and mcp only', () => {
+      expect(ROLE_PERMISSIONS[ROLES.ADMIN]).toContain(PERMISSIONS.BLOG_DRAFT);
+      expect(ROLE_PERMISSIONS[ROLES.MCP]).toContain(PERMISSIONS.BLOG_DRAFT);
+      for (const role of [
+        ROLES.USER,
+        ROLES.VIEWER,
+        ROLES.WORKFLOW_RALPH,
+      ] as const) {
+        expect(ROLE_PERMISSIONS[role]).not.toContain(PERMISSIONS.BLOG_DRAFT);
       }
+    });
+
+    it('mcp has blog draft plus plans read/write only', () => {
+      const perms = ROLE_PERMISSIONS[ROLES.MCP];
+      expect(perms).toEqual([
+        PERMISSIONS.BLOG_DRAFT,
+        PERMISSIONS.PLANS_READ,
+        PERMISSIONS.PLANS_WRITE,
+      ]);
+      expect(perms).not.toContain(PERMISSIONS.USERS_WRITE);
+    });
+
+    it('workflow-ralph has plans read/write only', () => {
+      const perms = ROLE_PERMISSIONS[ROLES.WORKFLOW_RALPH];
+      expect(perms).toEqual([PERMISSIONS.PLANS_READ, PERMISSIONS.PLANS_WRITE]);
+      expect(perms).not.toContain(PERMISSIONS.USERS_WRITE);
     });
   });
 

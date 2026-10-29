@@ -116,6 +116,14 @@ Both should report the `.nvmrc` version. MCP servers register when a session sta
 
 GraphQL-only — no direct Postgres access. Prerequisite for conversation tools: v1 persistence from plan `4fa6d16c-a1d4-4aba-923c-52e35e3deb66` (`agent_conversations` / `agent_conversation_messages` tables, `agentsRunChatTurn` with `persist: true`).
 
+## Blog authoring tools (draft-only)
+
+`list_blog_posts`, `get_blog_post`, `create_blog_post`, `update_blog_post`, `set_blog_post_tags`, `list_blog_tags`, `list_blog_authors`. They need a `blog:draft` service account and work on **DRAFT** posts only. There is deliberately **no** publish, schedule, unpublish, archive, tag-create or author-create tool: a human does those in the developer app at `/blog`, and editing a non-draft post returns `BlogPostPublishPermissionRequiredError`.
+
+- Results carry the server's typed union in `structuredContent.result` (every member has `__typename`) plus one human-readable line. Write results (and `get_blog_post`) also carry `structuredContent.editorUrl`, `<developer app URL>/blog/<postId>`.
+- `update_blog_post` **requires** `expectedUpdatedAt` (the `updatedAt` from your latest `get_blog_post`). On `BlogPostStaleWriteError` nothing was written: re-read with `get_blog_post`, then retry.
+- The editor link origin is `OPENTHROTTLE_DEVELOPER_URL`, falling back to `APP_URL_DEVELOPER`, then `http://localhost:6020`. The stdio launcher does not read `.env` for it; set it in the MCP client `env` if your developer app is not on `:6020`.
+
 ## The creating workspace (`workspacePath`)
 
 On the **stdio** transport the server captures its own working directory once at startup and sends

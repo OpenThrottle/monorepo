@@ -58,6 +58,14 @@ export class BlogTagsService {
   }
 
   /**
+   * @description Every tag (admin read: no visibility rule), ordered by name.
+   * @public
+   */
+  async findAllTags(): Promise<BlogTag[]> {
+    return this.blogTagRepository.find({ order: { id: 'ASC', name: 'ASC' } });
+  }
+
+  /**
    * @description Creates the tag with `slug`, or replaces its fields when it exists. A single
    * `INSERT ... ON CONFLICT (slug) DO UPDATE`, so a concurrent upsert of the same slug cannot
    * surface a unique violation — a slug collision is the update path, not an error.

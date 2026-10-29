@@ -20,6 +20,7 @@ export type Role = (typeof ROLES)[keyof typeof ROLES];
 
 /** Built-in permission identifiers (resource:action style). */
 export const PERMISSIONS = {
+  BLOG_DRAFT: 'blog:draft',
   BLOG_WRITE: 'blog:write',
   FLAGS_READ: 'flags:read',
   FLAGS_WRITE: 'flags:write',
@@ -64,7 +65,11 @@ export const ROLE_PERMISSIONS: Readonly<Record<Role, readonly Permission[]>> = {
     PERMISSIONS.SETTINGS_READ,
     PERMISSIONS.USERS_READ,
   ],
-  [ROLES.MCP]: [PERMISSIONS.PLANS_READ, PERMISSIONS.PLANS_WRITE],
+  [ROLES.MCP]: [
+    PERMISSIONS.BLOG_DRAFT,
+    PERMISSIONS.PLANS_READ,
+    PERMISSIONS.PLANS_WRITE,
+  ],
   [ROLES.WORKFLOW_RALPH]: [PERMISSIONS.PLANS_READ, PERMISSIONS.PLANS_WRITE],
 };
 

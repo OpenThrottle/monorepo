@@ -30,3 +30,28 @@ export const decodeBlogPostCursor = (value: string): BlogPostCursor | null => {
   if (!ISO_TIMESTAMP.test(publishedAt) || !UUID.test(id)) return null;
   return { id, publishedAt };
 };
+
+/**
+ * Keyset cursor for the admin list, ordered `updated_at DESC, id DESC`. Same wire format as
+ * {@link BlogPostCursor} (ISO timestamp at database precision, `|`, id), but typed separately so
+ * a public cursor is never mistaken for an admin one at the call site.
+ */
+export interface BlogPostAdminCursor {
+  readonly id: string;
+  readonly updatedAt: string;
+}
+
+export const encodeBlogPostAdminCursor = (
+  cursor: BlogPostAdminCursor,
+): string =>
+  encodeBlogPostCursor({ id: cursor.id, publishedAt: cursor.updatedAt });
+
+/** Returns `null` for anything that is not a cursor this module produced. */
+export const decodeBlogPostAdminCursor = (
+  value: string,
+): BlogPostAdminCursor | null => {
+  const decoded = decodeBlogPostCursor(value);
+  return decoded == null
+    ? null
+    : { id: decoded.id, updatedAt: decoded.publishedAt };
+};

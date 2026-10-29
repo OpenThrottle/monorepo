@@ -5,9 +5,11 @@ import type { BlogPost } from './blog-post.entity.ts';
  * @public
  */
 export const BLOG_WRITE_RESULT_KIND = {
+  COVER_ALT_REQUIRED: 'cover-alt-required',
   NOT_FOUND: 'not-found',
   OK: 'ok',
   SLUG_CONFLICT: 'slug-conflict',
+  STALE_WRITE: 'stale-write',
 } as const;
 
 /**
@@ -51,12 +53,34 @@ export interface BlogWriteSlugConflict {
 }
 
 /**
+ * The post would be stored with a cover image URL but no cover alt text. Nothing was written.
+ * @public
+ */
+export interface BlogWriteCoverAltRequired {
+  readonly kind: typeof BLOG_WRITE_RESULT_KIND.COVER_ALT_REQUIRED;
+}
+
+/**
+ * The post changed since the caller read it (`expectedUpdatedAt` did not match), so nothing was
+ * written. `currentUpdatedAt` is the post's `updated_at` now, for the caller to re-read against.
+ * @public
+ */
+export interface BlogWriteStaleWrite {
+  readonly currentUpdatedAt: Date;
+  readonly kind: typeof BLOG_WRITE_RESULT_KIND.STALE_WRITE;
+}
+
+/**
  * Outcome of a blog post write. Expected failures are values, not exceptions, so callers
  * branch on `kind` instead of a manual try/catch.
  * @public
  */
 export type BlogWriteResult<T> =
-  BlogWriteNotFound | BlogWriteOk<T> | BlogWriteSlugConflict;
+  | BlogWriteCoverAltRequired
+  | BlogWriteNotFound
+  | BlogWriteOk<T>
+  | BlogWriteSlugConflict
+  | BlogWriteStaleWrite;
 
 /** @public */
 export type BlogPostWriteResult = BlogWriteResult<BlogPost>;
@@ -78,4 +102,15 @@ export const blogWriteNotFound = (
 export const blogWriteSlugConflict = (slug: string): BlogWriteSlugConflict => ({
   kind: BLOG_WRITE_RESULT_KIND.SLUG_CONFLICT,
   slug,
+});
+
+export const blogWriteCoverAltRequired = (): BlogWriteCoverAltRequired => ({
+  kind: BLOG_WRITE_RESULT_KIND.COVER_ALT_REQUIRED,
+});
+
+export const blogWriteStaleWrite = (
+  currentUpdatedAt: Date,
+): BlogWriteStaleWrite => ({
+  currentUpdatedAt,
+  kind: BLOG_WRITE_RESULT_KIND.STALE_WRITE,
 });

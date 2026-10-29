@@ -1,5 +1,5 @@
 /**
- * @description GraphQL inputs for the `blog:write` mutations. Slugs are validated by the
+ * @description GraphQL inputs for the blog authoring mutations. Slugs are validated by the
  * repository services against the same pattern as the database CHECK constraints
  * (`^[a-z0-9]+(-[a-z0-9]+)*$`), so a malformed slug is a GraphQL error, not a constraint
  * violation. On the update input an omitted field is left unchanged and an explicit `null`
@@ -64,6 +64,12 @@ export class UpdateBlogPostInput {
 
   @Field(() => String, { nullable: true })
   coverImageUrl!: string | null | undefined;
+
+  @Field(() => Date, {
+    description: `The post's updatedAt as last read. When set and the post has changed since, nothing is written and BlogPostStaleWriteError is returned. Omit to skip the check.`,
+    nullable: true,
+  })
+  expectedUpdatedAt!: Date | null | undefined;
 
   @Field(() => String, { nullable: true })
   excerpt!: string | null | undefined;

@@ -31,3 +31,18 @@ export function assertNotBlank(value: string, field: string): void {
     throw new BadRequestException(`${field} must not be blank.`);
   }
 }
+
+/**
+ * @description True when a post would have a cover image but no alt text for it: a non-blank
+ * `coverImageUrl` with a null or blank `coverImageAlt`. Pass the post as it will be stored (for a
+ * partial update, the stored row with the patch merged on top).
+ * @public
+ */
+export function isCoverAltMissing(cover: {
+  readonly coverImageAlt?: string | null;
+  readonly coverImageUrl?: string | null;
+}): boolean {
+  const hasCover = (cover.coverImageUrl ?? '').trim().length > 0;
+  const hasAlt = (cover.coverImageAlt ?? '').trim().length > 0;
+  return hasCover && !hasAlt;
+}

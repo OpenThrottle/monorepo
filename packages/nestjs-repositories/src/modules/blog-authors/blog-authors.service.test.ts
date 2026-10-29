@@ -12,12 +12,14 @@ import { BlogAuthorsService } from './blog-authors.service.ts';
 describe('BlogAuthorsService', () => {
   type GetRepository = ReturnType<BlogAuthorsService['getRepository']>;
 
+  const find = vi.fn();
   const upsert = vi.fn();
   const findOneByOrFail = vi.fn();
   let service: BlogAuthorsService;
 
   beforeEach(async () => {
     vi.clearAllMocks();
+    find.mockResolvedValue(blogAuthorsFactory.buildList(2));
     const app = await Test.createTestingModule({
       providers: [
         BlogAuthorsService,
@@ -25,7 +27,7 @@ describe('BlogAuthorsService', () => {
         {
           provide: getRepositoryToken(BlogAuthor),
           useValue: createMock<GetRepository>({
-            find: () => Promise.resolve(blogAuthorsFactory.buildList(2)),
+            find,
             findOneByOrFail,
             upsert,
           }),
@@ -34,6 +36,24 @@ describe('BlogAuthorsService', () => {
     }).compile();
 
     service = app.get<BlogAuthorsService>(BlogAuthorsService);
+  });
+
+  describe('findAllAuthors', () => {
+    it('returns every author ordered by display name, then id', async () => {
+      const authors = blogAuthorsFactory.buildList(3);
+      find.mockResolvedValue(authors);
+
+      expect(await service.findAllAuthors()).toBe(authors);
+      expect(find).toHaveBeenCalledWith({
+        order: { displayName: 'ASC', id: 'ASC' },
+      });
+    });
+
+    it('returns an empty list when there are no authors', async () => {
+      find.mockResolvedValue([]);
+
+      expect(await service.findAllAuthors()).toEqual([]);
+    });
   });
 
   describe('getRepository', () => {

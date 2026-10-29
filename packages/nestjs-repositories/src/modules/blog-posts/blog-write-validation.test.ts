@@ -9,6 +9,7 @@ import {
   assertBlogSlug,
   assertNotBlank,
   BLOG_SLUG_PATTERN,
+  isCoverAltMissing,
 } from './blog-write-validation.ts';
 
 const MIGRATION = join(
@@ -67,5 +68,27 @@ describe('assertNotBlank', () => {
 
   it.each(['', '   ', '\n\t'])('rejects %j', (value) => {
     expect(() => assertNotBlank(value, 'title')).toThrow(BadRequestException);
+  });
+});
+
+describe('isCoverAltMissing', () => {
+  it.each([
+    [{ coverImageAlt: null, coverImageUrl: 'https://x.test/a.png' }],
+    [{ coverImageAlt: '', coverImageUrl: 'https://x.test/a.png' }],
+    [{ coverImageAlt: '   ', coverImageUrl: 'https://x.test/a.png' }],
+    [{ coverImageUrl: 'https://x.test/a.png' }],
+  ])('is true for a cover URL without alt text: %j', (cover) => {
+    expect(isCoverAltMissing(cover)).toBe(true);
+  });
+
+  it.each([
+    [{ coverImageAlt: 'A chart', coverImageUrl: 'https://x.test/a.png' }],
+    [{ coverImageAlt: null, coverImageUrl: null }],
+    [{ coverImageAlt: null, coverImageUrl: '' }],
+    [{ coverImageAlt: null, coverImageUrl: '  ' }],
+    [{ coverImageAlt: 'orphan alt', coverImageUrl: null }],
+    [{}],
+  ])('is false otherwise: %j', (cover) => {
+    expect(isCoverAltMissing(cover)).toBe(false);
   });
 });

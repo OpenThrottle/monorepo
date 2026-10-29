@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for OpenThrottle blog_posts table. Matches databases/migrations (131).
+ * @description TypeORM entity for OpenThrottle blog_posts table. Matches databases/migrations (131, 133).
  * Public visibility (`status = 'PUBLISHED' AND published_at <= now()`) is NOT encoded here —
  * it lives once, in `applyBlogPostVisibility` (blog-post-visibility.ts).
  */
@@ -34,6 +34,7 @@ export type BlogPostData = Pick<
   | 'createdAt'
   | 'excerpt'
   | 'id'
+  | 'lastEditedBy'
   | 'publishedAt'
   | 'seoDescription'
   | 'seoTitle'
@@ -86,6 +87,10 @@ export class BlogPost {
     type: 'timestamp with time zone',
   })
   publishedAt!: Date | null;
+
+  /** Caller identity of the most recent write (user display name or service account name). Migration 133. */
+  @Column({ name: 'last_edited_by', nullable: true, type: 'text' })
+  lastEditedBy!: string | null;
 
   @Column({ name: 'author_id', nullable: true, type: 'uuid' })
   authorId!: string | null;

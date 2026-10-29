@@ -66,22 +66,32 @@ export {
 } from './modules/blog-posts/blog-post.constants.ts';
 export type { BlogPostData } from './modules/blog-posts/blog-post.entity.ts';
 export { BlogPost } from './modules/blog-posts/blog-post.entity.ts';
-export { applyBlogPostVisibility } from './modules/blog-posts/blog-post-visibility.ts';
+export type { BlogPostState } from './modules/blog-posts/blog-post-visibility.ts';
+export {
+  applyBlogPostStateFilter,
+  applyBlogPostVisibility,
+  BLOG_POST_STATE,
+  deriveBlogPostState,
+} from './modules/blog-posts/blog-post-visibility.ts';
 export { BlogPostsModule } from './modules/blog-posts/blog-posts.module.ts';
 export type {
   BlogPostDraftInput,
   BlogPostPage,
   BlogPostPatch,
+  FindAdminBlogPostInput,
+  FindAdminBlogPostsInput,
   FindPublishedBlogPostsInput,
 } from './modules/blog-posts/blog-posts.service.ts';
 export { BlogPostsService } from './modules/blog-posts/blog-posts.service.ts';
 export type {
   BlogPostWriteResult,
+  BlogWriteCoverAltRequired,
   BlogWriteEntity,
   BlogWriteNotFound,
   BlogWriteOk,
   BlogWriteResult,
   BlogWriteSlugConflict,
+  BlogWriteStaleWrite,
 } from './modules/blog-posts/blog-write-result.ts';
 export {
   BLOG_WRITE_ENTITY,
@@ -91,6 +101,7 @@ export {
   assertBlogSlug,
   assertNotBlank,
   BLOG_SLUG_PATTERN,
+  isCoverAltMissing,
 } from './modules/blog-posts/blog-write-validation.ts';
 export type { BlogTagData } from './modules/blog-tags/blog-tag.entity.ts';
 export { BlogTag } from './modules/blog-tags/blog-tag.entity.ts';

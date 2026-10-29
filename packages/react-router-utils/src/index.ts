@@ -1,6 +1,7 @@
 // export * from './components';
 export * from './config/application';
 export * from './config/artwork';
+export * from './config/color-scheme';
 export * from './config/defaults';
 export * from './config/environment';
 export * from './config/features';
@@ -21,5 +22,6 @@ export * from './utils/id-fragment';
 export * from './utils/logger';
 export * from './utils/metadata';
 export * from './utils/parsers';
+export * from './utils/prefers-color-scheme-dark';
 export * from './utils/seo';
 export * from './utils/theme';

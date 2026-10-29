@@ -81,6 +81,7 @@ import {
   dataNavigationV2,
 } from '~/global/data/data.navigation';
 import { useCommanderOptions } from '~/global/hooks/useCommanderOptions';
+import { usePermissions } from '~/global/hooks/usePermissions';
 import type { CommanderSearchFields } from '~/global/utils/commander-empty-extras';
 import {
   buildCommanderEmptyStateExtras,
@@ -107,6 +108,8 @@ import {
   callLogoutMutation,
   callRegisterMutation,
 } from '~/global/utils/utils.auth';
+import { filterNavigationByPermission } from '~/global/utils/utils.permissions';
+import { fetchMyPermissions } from '~/global/utils/utils.permissions.server';
 import { useHeaderChatController } from '~/routing/home/hooks/useHeaderChatController';
 import { queueJobDetailPath } from '~/routing/queues/utils/queue-job-detail-path';
 import stylesheet from '~/styles.css?url';
@@ -255,9 +258,12 @@ export const loader = async (args: Route.LoaderArgs) => {
   // Probes return their own failure so the values stay properly typed (a `let`
   // assigned only inside these closures would be narrowed back to `null`,
   // dropping `RootLoaderFailure` from the loader's inferred return type).
-  const [healthFailure, userFailure] = await Promise.all([
+  const [healthFailure, userFailure, permissions] = await Promise.all([
     healthProbe(),
     userProbe(),
+    // Soft-fails to `[]` (never throws), so a permissions hiccup can't raise the
+    // root-loader failure banner or flip `userLoadOk`.
+    fetchMyPermissions(request),
   ]);
 
   // Prefer the user-step failure when both health and user fail so the banner shows the last/most specific error.
@@ -277,6 +283,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   return {
     canonical,
     env,
+    permissions,
     rootLoaderDiagnostics: diagnostics,
     rootLoaderFailure,
     serverHealth,
@@ -468,7 +475,14 @@ export default function App(): React.ReactElement {
   const revalidator = useRevalidator();
   const fetcher = useFetcher();
   const planRefFetcher = useFetcher<PlanRefResolverData>();
-  const navigation = data?.user ? dataNavigationV2 : dataNavigationGuest;
+  const permissions = usePermissions();
+  const navigation = React.useMemo(
+    () =>
+      data?.user
+        ? filterNavigationByPermission(dataNavigationV2, permissions)
+        : dataNavigationGuest,
+    [data?.user, permissions],
+  );
   const groups = useCommanderOptions(navigation);
   const { pathname } = useLocation();
   const [commanderOpen, setCommanderOpen] = React.useState(false);

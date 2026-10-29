@@ -1019,16 +1019,36 @@ type BlogPostAdminObject {
   id: ID!
 
   """
+  Who made the most recent write: a user's name or a service account's name. Null for posts last written before this was recorded.
+  """
+  lastEditedBy: String
+
+  """
   When the post goes (or went) live. Null for drafts. A PUBLISHED post with a value in the future is scheduled and not yet publicly visible.
   """
   publishedAt: DateTime
   seoDescription: String
   seoTitle: String
   slug: String!
+
+  """
+  Derived lifecycle state (DRAFT, SCHEDULED, LIVE, ARCHIVED), computed when the response is built from status and publishedAt.
+  """
+  state: BlogPostState!
   status: BlogPostStatus!
   tags: [BlogTagObject!]!
   title: String!
   updatedAt: DateTime!
+}
+
+"""
+Derived lifecycle state of a blog post as the authoring surface shows it. LIVE is the only publicly visible state; SCHEDULED is PUBLISHED with a future publishedAt.
+"""
+enum BlogPostState {
+  ARCHIVED
+  DRAFT
+  LIVE
+  SCHEDULED
 }
 
 """
@@ -1038,6 +1058,15 @@ enum BlogPostStatus {
   ARCHIVED
   DRAFT
   PUBLISHED
+}
+
+type BlogAdminPostListResult {
+  """
+  Opaque cursor of the last item; pass as `after` to fetch the next page. Null when the page is empty.
+  """
+  endCursor: String
+  hasNextPage: Boolean!
+  items: [BlogPostAdminObject!]!
 }
 
 type CodeSearchMatch {
@@ -4086,6 +4115,24 @@ type Query {
   agentCliSetupConfig: AgentCliSetupConfigObject!
 
   """
+  Every blog post in any state, most recently edited first, with cursor pagination. Optionally filtered to one or more derived states and to a case-insensitive title / slug search.
+  """
+  blogAdminPosts(state: [BlogPostState!], first: Int! = 10, after: String, search: String): BlogAdminPostListResult!
+
+  """
+  One blog post in any state, by id or by slug (exactly one of the two is required, otherwise the query is rejected). BlogPostNotFoundError when no such post exists.
+  """
+  blogAdminPost(id: ID, slug: String): BlogAdminPostResult!
+
+  """
+  Every blog tag (including tags no live post carries yet), ordered by name.
+  """
+  blogAdminTags: [BlogTagObject!]!
+
+  """Every blog author, ordered by display name."""
+  blogAdminAuthors: [BlogAuthorObject!]!
+
+  """
   A publicly visible blog post by slug. Null for an unknown slug and for any post that is not public (draft, archived, or scheduled in the future).
   """
   blogPost(slug: String!): BlogPostObject
@@ -4688,6 +4735,14 @@ input GetAgentConversationMessagesInput {
   offset: Int = 0
 }
 
+"""The post in any state, or BlogPostNotFoundError."""
+union BlogAdminPostResult = BlogPostAdminObject | BlogPostNotFoundError
+
+type BlogPostNotFoundError {
+  """Human-readable explanation."""
+  message: String!
+}
+
 input CodeSemanticSearchInput {
   """Max number of matches to return (default 10)."""
   limit: Int
@@ -5193,32 +5248,34 @@ type Mutation {
   mintSubscriptionToken: String!
 
   """
-  Create a blog post as a DRAFT. Returns BlogSlugConflictError when the slug is taken.
+  Create a blog post as a DRAFT. Returns BlogSlugConflictError when the slug is taken, BlogCoverAltRequiredError when a cover image has no alt text, and BlogReferenceNotFoundError for an unknown authorSlug.
   """
-  createBlogPost(input: CreateBlogPostInput!): BlogPostMutationResult!
+  createBlogPost(input: CreateBlogPostInput!): CreateBlogPostResult!
 
   """
-  Partially update a blog post. Returns BlogSlugConflictError when re-slugging onto a slug that is taken.
+  Partially update a blog post. A caller holding only blog:draft may edit DRAFT posts; for any other post it gets BlogPostPublishPermissionRequiredError. Also returns BlogPostNotFoundError, BlogSlugConflictError, BlogCoverAltRequiredError, BlogReferenceNotFoundError (unknown authorSlug) and, when expectedUpdatedAt no longer matches, BlogPostStaleWriteError.
   """
-  updateBlogPost(input: UpdateBlogPostInput!): BlogPostMutationResult!
+  updateBlogPost(input: UpdateBlogPostInput!): UpdateBlogPostResult!
 
   """
-  Publish a blog post: sets status PUBLISHED and publishedAt. Without publishedAt the post goes live now; a future publishedAt schedules it.
+  Publish a blog post: sets status PUBLISHED and publishedAt. Without publishedAt the post goes live now; a future publishedAt schedules it. Returns BlogPostNotFoundError for an unknown post.
   """
-  publishBlogPost(input: PublishBlogPostInput!): BlogPostAdminObject!
+  publishBlogPost(input: PublishBlogPostInput!): PublishBlogPostResult!
 
   """
-  Return a blog post to DRAFT and clear its publishedAt. It stops being publicly visible immediately.
+  Return a blog post to DRAFT and clear its publishedAt. It stops being publicly visible immediately. Returns BlogPostNotFoundError for an unknown post.
   """
-  unpublishBlogPost(id: ID!): BlogPostAdminObject!
+  unpublishBlogPost(id: ID!): UnpublishBlogPostResult!
 
   """
-  Archive a blog post. It stops being publicly visible; publishedAt is kept.
+  Archive a blog post. It stops being publicly visible; publishedAt is kept. Returns BlogPostNotFoundError for an unknown post.
   """
-  archiveBlogPost(id: ID!): BlogPostAdminObject!
+  archiveBlogPost(id: ID!): ArchiveBlogPostResult!
 
-  """Replace the full set of tags on a blog post by tag slug."""
-  setBlogPostTags(input: SetBlogPostTagsInput!): BlogPostAdminObject!
+  """
+  Replace the full set of tags on a blog post by tag slug. A caller holding only blog:draft may tag DRAFT posts; for any other post it gets BlogPostPublishPermissionRequiredError. Also returns BlogPostNotFoundError and BlogReferenceNotFoundError (unknown tag slug).
+  """
+  setBlogPostTags(input: SetBlogPostTagsInput!): SetBlogPostTagsResult!
 
   """
   Create the blog author with this slug, or replace its fields if it exists.
@@ -5848,9 +5905,33 @@ input RegisterInput {
 }
 
 """
-The saved post, or a BlogSlugConflictError when the slug is already used by another post.
+The new DRAFT post, or why it was not created: the slug is taken, a cover image has no alt text, or the author slug is unknown.
 """
-union BlogPostMutationResult = BlogPostAdminObject | BlogSlugConflictError
+union CreateBlogPostResult = BlogPostAdminObject | BlogCoverAltRequiredError | BlogReferenceNotFoundError | BlogSlugConflictError
+
+type BlogCoverAltRequiredError {
+  """Human-readable explanation."""
+  message: String!
+}
+
+type BlogReferenceNotFoundError {
+  """Which kind of record was not found."""
+  entity: BlogReferenceEntity!
+
+  """The slug that was not found."""
+  key: String!
+
+  """Human-readable explanation."""
+  message: String!
+}
+
+"""
+The kind of record a blog write referenced by slug that does not exist.
+"""
+enum BlogReferenceEntity {
+  AUTHOR
+  TAG
+}
 
 type BlogSlugConflictError {
   """Human-readable explanation."""
@@ -5878,6 +5959,26 @@ input CreateBlogPostInput {
 }
 
 """
+The updated post, or why nothing was written: the post or author does not exist, the slug is taken, a cover image would have no alt text, the post changed since expectedUpdatedAt, or the post is no longer a DRAFT and the caller lacks blog:write.
+"""
+union UpdateBlogPostResult = BlogPostAdminObject | BlogCoverAltRequiredError | BlogPostNotFoundError | BlogPostPublishPermissionRequiredError | BlogPostStaleWriteError | BlogReferenceNotFoundError | BlogSlugConflictError
+
+type BlogPostPublishPermissionRequiredError {
+  """Human-readable explanation."""
+  message: String!
+}
+
+type BlogPostStaleWriteError {
+  """
+  The post's updatedAt now; the value to send as expectedUpdatedAt after reloading.
+  """
+  currentUpdatedAt: DateTime!
+
+  """Human-readable explanation."""
+  message: String!
+}
+
+"""
 Partial update. Omitted fields are unchanged; null clears a nullable field. Status and publishedAt change only through publish / unpublish / archive.
 """
 input UpdateBlogPostInput {
@@ -5888,6 +5989,11 @@ input UpdateBlogPostInput {
   bodyMarkdown: String
   coverImageAlt: String
   coverImageUrl: String
+
+  """
+  The post's updatedAt as last read. When set and the post has changed since, nothing is written and BlogPostStaleWriteError is returned. Omit to skip the check.
+  """
+  expectedUpdatedAt: DateTime
   excerpt: String
   id: ID!
   seoDescription: String
@@ -5902,6 +6008,9 @@ input UpdateBlogPostInput {
   title: String
 }
 
+"""The published (or scheduled) post, or BlogPostNotFoundError."""
+union PublishBlogPostResult = BlogPostAdminObject | BlogPostNotFoundError
+
 input PublishBlogPostInput {
   id: ID!
 
@@ -5910,6 +6019,17 @@ input PublishBlogPostInput {
   """
   publishedAt: DateTime
 }
+
+"""The post returned to DRAFT, or BlogPostNotFoundError."""
+union UnpublishBlogPostResult = BlogPostAdminObject | BlogPostNotFoundError
+
+"""The archived post, or BlogPostNotFoundError."""
+union ArchiveBlogPostResult = BlogPostAdminObject | BlogPostNotFoundError
+
+"""
+The post with its new tag set, or why nothing was written: the post does not exist, a tag slug is unknown, or the post is no longer a DRAFT and the caller lacks blog:write.
+"""
+union SetBlogPostTagsResult = BlogPostAdminObject | BlogPostNotFoundError | BlogPostPublishPermissionRequiredError | BlogReferenceNotFoundError
 
 input SetBlogPostTagsInput {
   postId: ID!

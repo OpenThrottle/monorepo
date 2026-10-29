@@ -74,38 +74,39 @@ Consumed by docker-compose (which maps them onto the un-namespaced `PORT`,
 
 ## 3. Auth and bootstrap
 
-| Variable                                 | Used for                                                                                                        | Defaults                                                                                                 |
-| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `OPENTHROTTLE_MCP_AUTH_TOKEN`            | Bearer token the OT MCP server presents to the GraphQL API                                                      | ✅ root `.env.default` (empty), ✅ server `.env.default` (empty), ✅ `applications/openthrottle` (empty) |
-| `OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN` | Token for the agentic-ralph BullMQ worker's GraphQL calls                                                       | ✅ root (empty), ✅ server (empty)                                                                       |
-| `OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN`      | Shared fallback token for workflow-ralph GraphQL calls                                                          | ❌                                                                                                       |
-| `OPENTHROTTLE_AUTH_TOKEN`                | Generic token accepted by the OT MCP server (documented in `databases/README.md`)                               | ❌                                                                                                       |
-| `OPENTHROTTLE_BOOTSTRAP_USER_EMAIL`      | Seeded login user                                                                                               | ✅ root `developer@openthrottle.ai` (code default same)                                                  |
-| `OPENTHROTTLE_BOOTSTRAP_USER_PASSWORD`   | Seeded login password                                                                                           | ✅ root `FullThrottle2026!` (code default same)                                                          |
-| `OPENTHROTTLE_BOOTSTRAP_USER_GITHUB`     | Seeded user's GitHub handle                                                                                     | ✅ root (empty); code default `openthrottle-developer`                                                   |
-| `OPENTHROTTLE_ADMIN_URL`                 | Admin URL passed to `scripts/bootstrap-default-user.ts`; one of six required keys in `.bootstrap-secrets.local` | ❌ (lives in `.bootstrap-secrets.local`)                                                                 |
-| `OPENTHROTTLE_DEVELOPER_URL`             | Same, for the developer app                                                                                     | ❌ (same file)                                                                                           |
-| `OPENTHROTTLE_GITHUB_USER`               | Forces the author/assignee handle the OT MCP writes; falls back to `GITHUB_USER`                                | ❌                                                                                                       |
-| `OPENTHROTTLE_GITHUB_OWNER`              | Default GitHub org for the developer app                                                                        | ✅ developer `.env.default` `visormatt`; code default `openthrottle`                                     |
-| `OPENTHROTTLE_GITHUB_REPO`               | Default GitHub repo                                                                                             | ✅ developer `.env.default` `monorepo`; code default `monorepo`                                          |
+| Variable                                 | Used for                                                                                                        | Defaults                                                                                                     |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `OPENTHROTTLE_MCP_AUTH_TOKEN`            | Bearer token the OT MCP server presents to the GraphQL API                                                      | ✅ root `.env.default` (empty), ✅ server `.env.default` (empty), ✅ `applications/openthrottle` (empty)     |
+| `OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN` | Token for the agentic-ralph BullMQ worker's GraphQL calls                                                       | ✅ root (empty), ✅ server (empty)                                                                           |
+| `OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN`      | Shared fallback token for workflow-ralph GraphQL calls                                                          | ❌                                                                                                           |
+| `OPENTHROTTLE_AUTH_TOKEN`                | Generic token accepted by the OT MCP server (documented in `databases/README.md`)                               | ❌                                                                                                           |
+| `OPENTHROTTLE_BOOTSTRAP_USER_EMAIL`      | Seeded login user                                                                                               | ✅ root `developer@openthrottle.ai` (code default same)                                                      |
+| `OPENTHROTTLE_BOOTSTRAP_USER_PASSWORD`   | Seeded login password                                                                                           | ✅ root `FullThrottle2026!` (code default same)                                                              |
+| `OPENTHROTTLE_BOOTSTRAP_USER_GITHUB`     | Seeded user's GitHub handle                                                                                     | ✅ root (empty); code default `openthrottle-developer`                                                       |
+| `OPENTHROTTLE_ADMIN_URL`                 | Admin URL passed to `scripts/bootstrap-default-user.ts`; one of six required keys in `.bootstrap-secrets.local` | ❌ (lives in `.bootstrap-secrets.local`)                                                                     |
+| `OPENTHROTTLE_DEVELOPER_URL`             | Same, for the developer app. Also the origin the OT MCP uses for blog editor links (`<url>/blog/<postId>`)      | ✅ root `.env.default` `http://localhost:6020` (code default same); also a key in `.bootstrap-secrets.local` |
+| `OPENTHROTTLE_GITHUB_USER`               | Forces the author/assignee handle the OT MCP writes; falls back to `GITHUB_USER`                                | ❌                                                                                                           |
+| `OPENTHROTTLE_GITHUB_OWNER`              | Default GitHub org for the developer app                                                                        | ✅ developer `.env.default` `visormatt`; code default `openthrottle`                                         |
+| `OPENTHROTTLE_GITHUB_REPO`               | Default GitHub repo                                                                                             | ✅ developer `.env.default` `monorepo`; code default `monorepo`                                              |
 
 ## 4. OT MCP server
 
-| Variable                             | Used for                                                                  | Defaults                               |
-| ------------------------------------ | ------------------------------------------------------------------------- | -------------------------------------- |
-| `OT_MCP_HTTP_PORT`                   | HTTP transport port (Dockerfile healthcheck)                              | ❌; code default `6026`                |
-| `OT_MCP_HTTP_URL`                    | Endpoint used by `scripts/verify-openthrottle-mcp-env.ts`                 | ❌                                     |
-| `OT_MCP_AUTH_TOKEN_ENV_FILE`         | Path to the `.env` file the launcher recorded, re-read for token rotation | ❌ (set by the launcher)               |
-| `OT_MCP_TOKEN_REFRESH_MS`            | Throttle for re-reading that file; `0` disables                           | ❌; code default `5000`                |
-| `OT_MCP_TOKEN`                       | Token passed through to child agent MCP env                               | ❌                                     |
-| `OT_MCP_ALLOW_NO_TOKEN`              | `1` = let the env verifier pass with no token                             | ❌                                     |
-| `OT_MCP_SKIP_PREFLIGHT`              | `1` = skip the HTTP preflight on boot                                     | ❌                                     |
-| `OT_MCP_RESOLVE_ONLY`                | Non-empty = `run-openthrottle-mcp.ts` resolves the target and exits       | ❌                                     |
-| `OT_MCP_TARGET`                      | `worktree` prefers this worktree's server over the main checkout          | ❌                                     |
-| `OPENTHROTTLE_MCP_WORKSPACE_PATH`    | Workspace the stdio transport reports (plan↔repo linking)                 | ❌                                     |
-| `OPENTHROTTLE_GRAPHQL_URL`           | GraphQL endpoint for `@openthrottle/agentic-hooks`                        | ❌                                     |
-| `OPENTHROTTLE_WORKER_GRAPHQL_URL`    | GraphQL endpoint override for the agentic-ralph worker                    | Commented out in server `.env.default` |
-| `OPENTHROTTLE_WORKFLOWS_GRAPHQL_URL` | GraphQL endpoint for workflow-ralph                                       | ❌                                     |
+| Variable                             | Used for                                                                                       | Defaults                                                     |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `OT_MCP_HTTP_PORT`                   | HTTP transport port (Dockerfile healthcheck)                                                   | ❌; code default `6026`                                      |
+| `OT_MCP_HTTP_URL`                    | Endpoint used by `scripts/verify-openthrottle-mcp-env.ts`                                      | ❌                                                           |
+| `OT_MCP_AUTH_TOKEN_ENV_FILE`         | Path to the `.env` file the launcher recorded, re-read for token rotation                      | ❌ (set by the launcher)                                     |
+| `OT_MCP_TOKEN_REFRESH_MS`            | Throttle for re-reading that file; `0` disables                                                | ❌; code default `5000`                                      |
+| `OPENTHROTTLE_DEVELOPER_URL`         | Developer app origin for blog editor links in write results; falls back to `APP_URL_DEVELOPER` | ✅ root `.env.default`; code default `http://localhost:6020` |
+| `OT_MCP_TOKEN`                       | Token passed through to child agent MCP env                                                    | ❌                                                           |
+| `OT_MCP_ALLOW_NO_TOKEN`              | `1` = let the env verifier pass with no token                                                  | ❌                                                           |
+| `OT_MCP_SKIP_PREFLIGHT`              | `1` = skip the HTTP preflight on boot                                                          | ❌                                                           |
+| `OT_MCP_RESOLVE_ONLY`                | Non-empty = `run-openthrottle-mcp.ts` resolves the target and exits                            | ❌                                                           |
+| `OT_MCP_TARGET`                      | `worktree` prefers this worktree's server over the main checkout                               | ❌                                                           |
+| `OPENTHROTTLE_MCP_WORKSPACE_PATH`    | Workspace the stdio transport reports (plan↔repo linking)                                      | ❌                                                           |
+| `OPENTHROTTLE_GRAPHQL_URL`           | GraphQL endpoint for `@openthrottle/agentic-hooks`                                             | ❌                                                           |
+| `OPENTHROTTLE_WORKER_GRAPHQL_URL`    | GraphQL endpoint override for the agentic-ralph worker                                         | Commented out in server `.env.default`                       |
+| `OPENTHROTTLE_WORKFLOWS_GRAPHQL_URL` | GraphQL endpoint for workflow-ralph                                                            | ❌                                                           |
 
 ## 5. Agent CLI drivers
 

@@ -18,7 +18,9 @@ import {
   AssignRoleToServiceAccountInput,
   AssignRoleToUserInput,
   AttachWorkSessionSubjectInput,
+  BlogPostState,
   BlogPostStatus,
+  BlogReferenceEntity,
   CancelPlanRunInput,
   CleanQueueInput,
   CloneRepositoryInput,
@@ -180,7 +182,11 @@ export const definedNonNullAnySchema = z
   .any()
   .refine((v) => isDefinedNonNullAny(v));
 
+export const BlogPostStateSchema = z.nativeEnum(BlogPostState);
+
 export const BlogPostStatusSchema = z.nativeEnum(BlogPostStatus);
+
+export const BlogReferenceEntitySchema = z.nativeEnum(BlogReferenceEntity);
 
 export const CustomPromptTypeSchema = z.nativeEnum(CustomPromptType);
 
@@ -1521,6 +1527,7 @@ export function UpdateBlogPostInputSchema(): z.ZodObject<
     coverImageAlt: z.string().nullish(),
     coverImageUrl: z.string().nullish(),
     excerpt: z.string().nullish(),
+    expectedUpdatedAt: definedNonNullAnySchema.nullish(),
     id: z.string().min(1),
     seoDescription: z.string().nullish(),
     seoTitle: z.string().nullish(),

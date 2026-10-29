@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  decodeBlogPostAdminCursor,
   decodeBlogPostCursor,
+  encodeBlogPostAdminCursor,
   encodeBlogPostCursor,
 } from './blog-post-cursor.ts';
 
@@ -44,5 +46,28 @@ describe('blog post cursor', () => {
     ])('returns null for %s', (_label, value) => {
       expect(decodeBlogPostCursor(value)).toBeNull();
     });
+  });
+});
+
+describe('blog post admin cursor', () => {
+  const cursor = {
+    id: '00000000-0000-4000-8000-000000000001',
+    updatedAt: '2026-10-11T12:00:00.123456Z',
+  };
+
+  it('round-trips with microsecond precision', () => {
+    expect(
+      decodeBlogPostAdminCursor(encodeBlogPostAdminCursor(cursor)),
+    ).toEqual(cursor);
+  });
+
+  it('uses the same wire format as the public cursor', () => {
+    expect(encodeBlogPostAdminCursor(cursor)).toBe(
+      encodeBlogPostCursor({ id: cursor.id, publishedAt: cursor.updatedAt }),
+    );
+  });
+
+  it('rejects garbage', () => {
+    expect(decodeBlogPostAdminCursor('nope')).toBeNull();
   });
 });
