@@ -16,7 +16,11 @@ payload as `--plugin-dir` for orchestrated runs.
 - `src/types.ts` — **the producer contract.** `NormalizedInvocation` is the seam every adapter
   targets; `UsageEvent` / `OutcomeEvent` are what the core builds from it.
 - `src/adapters/<tool>/` — thin per-tool entrypoints **only**: `payload.ts` (a `<TOOL>_SOURCE`
-  producer id + a normalizer) and one file per hook event. Nothing else belongs here.
+  producer id + a normalizer) and one file per hook event. Nothing else belongs here, except the
+  tool's own transcript handling: Claude's lives in `transcript.ts` (line → `TokenUsageRecord`, no
+  I/O) and `transcript-usage.ts` (checkpointed read at `Stop`; also reads the session's
+  `subagents/agent-*.jsonl`, so `SubagentStop` need not be registered). The file offsets,
+  checkpoints and sending stay in `src/data/`.
 - `src/utils/` — `scope.ts` (ours | personal | third-party), `privacy.ts` (truncation + secret redaction),
   `logging.ts`.
 - `src/config/` — `env.ts`: endpoint resolution by location, the OpenThrottle-checkout

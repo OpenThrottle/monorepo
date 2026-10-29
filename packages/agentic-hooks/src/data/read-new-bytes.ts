@@ -30,13 +30,21 @@ export interface ReadNewBytesResult {
  * decoding, so multi-byte characters can never be cut in half. A missing or
  * unreadable file yields no lines and an unchanged offset. Fail-open.
  *
+ * `maxBytes` bounds how much is read in one call, so a huge first read cannot
+ * stall a hook: the window stops at the last complete line inside it and the
+ * rest is picked up by the next call. A single line longer than the cap is
+ * still read whole (the window doubles until it holds a newline), because
+ * otherwise the offset could never move past it.
+ *
  * @public
  */
 export const readNewBytes = ({
   filePath,
+  maxBytes,
   offset,
 }: {
   filePath: string;
+  maxBytes?: number;
   offset: number;
 }): ReadNewBytesResult => {
   const unchanged: ReadNewBytesResult = { lines: [], nextOffset: offset };
@@ -50,9 +58,22 @@ export const readNewBytes = ({
       return { lines: [], nextOffset: start };
     }
 
-    const buffer = Buffer.alloc(size - start);
-    const bytesRead = fs.readSync(fd, buffer, 0, buffer.length, start);
-    const lastNewline = buffer.subarray(0, bytesRead).lastIndexOf(NEWLINE);
+    const remaining = size - start;
+    let window =
+      maxBytes !== undefined && maxBytes > 0
+        ? Math.min(remaining, Math.floor(maxBytes))
+        : remaining;
+    let buffer = Buffer.alloc(0);
+    let lastNewline = -1;
+    while (lastNewline < 0) {
+      buffer = Buffer.alloc(window);
+      const bytesRead = fs.readSync(fd, buffer, 0, window, start);
+      lastNewline = buffer.subarray(0, bytesRead).lastIndexOf(NEWLINE);
+      if (window >= remaining) {
+        break;
+      }
+      window = Math.min(remaining, window * 2);
+    }
     if (lastNewline < 0) {
       return { lines: [], nextOffset: start };
     }

@@ -66,7 +66,41 @@ describe('normalizeClaudeStopPayload', () => {
         session_id: 'sess-stop',
         stop_hook_active: false,
       }),
-    ).toEqual({ hook_event_name: 'Stop', session_id: 'sess-stop' });
+    ).toEqual({
+      agent_transcript_path: null,
+      cwd: null,
+      hook_event_name: 'Stop',
+      session_id: 'sess-stop',
+      transcript_path: null,
+    });
+  });
+
+  it('keeps cwd and the transcript paths a Stop payload carries', () => {
+    expect(
+      normalizeClaudeStopPayload({
+        agent_transcript_path: '/t/s/subagents/agent-a1.jsonl',
+        cwd: '/repo',
+        hook_event_name: 'SubagentStop',
+        session_id: 'sess-sub',
+        transcript_path: '/t/s.jsonl',
+      }),
+    ).toEqual({
+      agent_transcript_path: '/t/s/subagents/agent-a1.jsonl',
+      cwd: '/repo',
+      hook_event_name: 'SubagentStop',
+      session_id: 'sess-sub',
+      transcript_path: '/t/s.jsonl',
+    });
+  });
+
+  it('treats blank or non-string paths as absent', () => {
+    expect(
+      normalizeClaudeStopPayload({
+        agent_transcript_path: 3,
+        session_id: 's',
+        transcript_path: '  ',
+      }),
+    ).toMatchObject({ agent_transcript_path: null, transcript_path: null });
   });
 
   it('preserves SubagentStop event name', () => {

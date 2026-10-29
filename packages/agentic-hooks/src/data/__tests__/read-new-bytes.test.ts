@@ -96,4 +96,38 @@ describe('readNewBytes', () => {
       readNewBytes({ filePath: path.join(tmpRoot, 'nope'), offset: 7 }),
     ).toEqual({ lines: [], nextOffset: 7 });
   });
+
+  describe('maxBytes', () => {
+    it('stops at the last complete line inside the window', () => {
+      fs.writeFileSync(filePath, 'aaa\nbbb\nccc\n');
+      expect(readNewBytes({ filePath, maxBytes: 9, offset: 0 })).toEqual({
+        lines: ['aaa', 'bbb'],
+        nextOffset: 8,
+      });
+    });
+
+    it('lets the next call resume where the capped read stopped', () => {
+      fs.writeFileSync(filePath, 'aaa\nbbb\nccc\n');
+      const first = readNewBytes({ filePath, maxBytes: 5, offset: 0 });
+      expect(first.lines).toEqual(['aaa']);
+      expect(
+        readNewBytes({ filePath, maxBytes: 5, offset: first.nextOffset }).lines,
+      ).toEqual(['bbb']);
+    });
+
+    it('still reads a single line longer than the cap', () => {
+      fs.writeFileSync(filePath, `${'x'.repeat(40)}\nshort\n`);
+      const result = readNewBytes({ filePath, maxBytes: 4, offset: 0 });
+      expect(result.lines[0]).toBe('x'.repeat(40));
+      expect(result.nextOffset).toBeGreaterThanOrEqual(41);
+    });
+
+    it('does not consume an unfinished line however large the cap', () => {
+      fs.writeFileSync(filePath, 'aaa\nbb');
+      expect(readNewBytes({ filePath, maxBytes: 100, offset: 0 })).toEqual({
+        lines: ['aaa'],
+        nextOffset: 4,
+      });
+    });
+  });
 });

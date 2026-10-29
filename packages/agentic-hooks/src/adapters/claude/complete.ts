@@ -2,8 +2,9 @@
  * Claude Code AUTOMATIC completion entrypoint (Stop / SubagentStop hook).
  * Resolves the open skill-starts recorded for this session into `session_ended`
  * outcomes, drains them (deduped), sweeps abandoned starts from long-dead
- * sessions, then does a small time-boxed JSONL drain. Additive only; fail-open
- * (always exits 0).
+ * sessions, folds the session transcript(s) into per-request token usage rows
+ * (see `transcript-usage.ts`), then does a small time-boxed JSONL drain.
+ * Additive only; fail-open (always exits 0).
  *
  * A Claude `Stop` payload carries `session_id`, `transcript_path` and `cwd`
  * (`SubagentStop` adds `agent_id`, `agent_type` and `agent_transcript_path`;
@@ -21,6 +22,7 @@ import {
 } from '../../index.ts';
 import { CLAUDE_SOURCE, normalizeClaudeStopPayload } from './payload.ts';
 import { isShadowedByRepoHooks } from './shadow.ts';
+import { captureTranscriptUsage } from './transcript-usage.ts';
 
 const main = async (): Promise<void> => {
   try {
@@ -67,6 +69,16 @@ const main = async (): Promise<void> => {
       currentSessionId: normalized.session_id,
       repoRoot,
       source: CLAUDE_SOURCE,
+    });
+
+    // Per-request token usage from the transcript(s) since the last Stop.
+    // Bounded per Stop (see MAX_TRANSCRIPT_BYTES_*); a capped read resumes at
+    // the next Stop, and a missing or unreadable transcript is just no rows.
+    await captureTranscriptUsage({
+      agentTranscriptPath: normalized.agent_transcript_path,
+      repoRoot,
+      sessionId: normalized.session_id,
+      transcriptPath: normalized.transcript_path,
     });
 
     // Opportunistic, time-boxed: flush any JSONL buffered while the server was

@@ -312,6 +312,7 @@ var settleAbandonedPlanRuns = async ({
 };
 
 // packages/agentic-hooks/src/adapters/claude/payload.ts
+var nonEmptyString = (value) => typeof value === "string" && value.trim() !== "" ? value : null;
 var normalizeClaudeStopPayload = (raw) => {
   if (!isRecord(raw)) {
     return null;
@@ -321,8 +322,11 @@ var normalizeClaudeStopPayload = (raw) => {
     return null;
   }
   return {
+    agent_transcript_path: nonEmptyString(raw.agent_transcript_path),
+    cwd: nonEmptyString(raw.cwd),
     hook_event_name: typeof raw.hook_event_name === "string" ? raw.hook_event_name : "Stop",
-    session_id: sessionId
+    session_id: sessionId,
+    transcript_path: nonEmptyString(raw.transcript_path)
   };
 };
 

@@ -92,15 +92,34 @@ export const normalizeClaudePayload = (
 };
 
 /**
+ * The fields of a Claude Code `Stop`/`SubagentStop` payload the completion
+ * emitter needs: session-scoped correlation plus where the transcripts live.
+ *
+ * @public
+ */
+export interface ClaudeStopPayload {
+  /** `SubagentStop` only: the subagent's own transcript file. */
+  readonly agent_transcript_path: string | null;
+  readonly cwd: string | null;
+  readonly hook_event_name: string;
+  readonly session_id: string;
+  /** The main session transcript (`<project>/<session id>.jsonl`). */
+  readonly transcript_path: string | null;
+}
+
+const nonEmptyString = (value: unknown): string | null =>
+  typeof value === 'string' && value.trim() !== '' ? value : null;
+
+/**
  * Parse a Claude Code `Stop`/`SubagentStop` payload into the fields the
- * completion emitter needs (session-scoped correlation). Returns null when
- * there is no usable session id.
+ * completion emitter needs (session-scoped correlation, transcript paths).
+ * Returns null when there is no usable session id.
  *
  * @public
  */
 export const normalizeClaudeStopPayload = (
   raw: unknown,
-): { hook_event_name: string; session_id: string } | null => {
+): ClaudeStopPayload | null => {
   if (!isRecord(raw)) {
     return null;
   }
@@ -110,8 +129,11 @@ export const normalizeClaudeStopPayload = (
     return null;
   }
   return {
+    agent_transcript_path: nonEmptyString(raw.agent_transcript_path),
+    cwd: nonEmptyString(raw.cwd),
     hook_event_name:
       typeof raw.hook_event_name === 'string' ? raw.hook_event_name : 'Stop',
     session_id: sessionId,
+    transcript_path: nonEmptyString(raw.transcript_path),
   };
 };
