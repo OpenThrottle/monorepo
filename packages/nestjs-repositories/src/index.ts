@@ -296,6 +296,7 @@ export type {
   SkillUsageOutcomeValue,
 } from './modules/skill-usage-events/skill-usage-outcomes.entity.ts';
 export {
+  isSkillUsageOutcome,
   SKILL_USAGE_CAPTURE_MODELS,
   SKILL_USAGE_OUTCOMES,
   SkillUsageOutcome,

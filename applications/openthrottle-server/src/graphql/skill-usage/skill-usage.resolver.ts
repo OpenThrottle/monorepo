@@ -12,13 +12,13 @@ import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { CurrentUser } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 import {
+  isSkillUsageOutcome,
   isSkillUsageScope,
   SKILL_USAGE_OUTCOMES,
   SKILL_USAGE_PRIVACY_LEVELS,
   SKILL_USAGE_SCOPE_LIST,
   SKILL_USAGE_SCOPES,
   SkillUsageEventsService,
-  type SkillUsageOutcomeValue,
   type SkillUsagePrivacyLevel,
   type SkillUsageScope,
 } from '@openthrottle/nestjs-repositories';
@@ -48,11 +48,6 @@ const isSkillUsagePrivacyLevel = (
   value === SKILL_USAGE_PRIVACY_LEVELS.FULL ||
   value === SKILL_USAGE_PRIVACY_LEVELS.NAME_ONLY ||
   value === SKILL_USAGE_PRIVACY_LEVELS.TRUNCATED;
-
-const isSkillUsageOutcome = (value: string): value is SkillUsageOutcomeValue =>
-  value === SKILL_USAGE_OUTCOMES.ABANDONED ||
-  value === SKILL_USAGE_OUTCOMES.ERROR ||
-  value === SKILL_USAGE_OUTCOMES.SUCCESS;
 
 const YYYY_MM_DD = /^\d{4}-\d{2}-\d{2}$/;
 

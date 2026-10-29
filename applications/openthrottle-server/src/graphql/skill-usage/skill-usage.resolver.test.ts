@@ -322,6 +322,31 @@ describe('SkillUsageResolver', () => {
       expect(result.source).toBe('claude-code');
     });
 
+    // Iterates the vocabulary rather than naming members, so a value the
+    // predicate forgets fails here — SESSION_ENDED was rejected for six weeks.
+    describe.each(Object.values(SKILL_USAGE_OUTCOMES))(
+      'when outcome is %s',
+      (outcome) => {
+        test('accepts it and passes it through', async () => {
+          recordSkillUsageOutcome.mockResolvedValue({
+            ...savedOutcome,
+            outcome,
+          });
+
+          const result = await resolver.recordSkillUsageOutcome({
+            occurredAt: new Date('2026-07-31T12:05:00.000Z'),
+            outcome,
+            skillName: 'ot-plans',
+          });
+
+          expect(recordSkillUsageOutcome).toHaveBeenLastCalledWith(
+            expect.objectContaining({ outcome }),
+          );
+          expect(result.outcome).toBe(outcome);
+        });
+      },
+    );
+
     describe('when outcome is invalid', () => {
       test('rejects with BadRequestException', async () => {
         await expect(
