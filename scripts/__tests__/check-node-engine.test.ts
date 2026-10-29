@@ -53,7 +53,7 @@ describe('the declared engines.node range', () => {
     ['23.0.0', false, 'an unsupported odd release line'],
     ['24.14.0', false, 'below the 24 CLI floor'],
     ['24.15.0', true, 'the exact Nest 12 CLI floor on the 24 line'],
-    ['24.18.0', true, 'the version pinned in .nvmrc'],
+    ['24.22.2', true, 'the version pinned in .nvmrc'],
     ['25.0.0', false, 'an unsupported odd release line'],
     ['26.0.0', true, 'the next supported line'],
     ['20.19.0', false, 'the Nest 12 runtime floor, but no CLI support'],
