@@ -404,7 +404,9 @@ describe('routes/blog.$postId.tsx', () => {
         expect(lifecycleRequests).toEqual([{ intent: 'archive' }]),
       );
       await waitFor(() => expect(loaderCalls()).toBe(callsBefore + 1));
-      expect(toastSuccess).toHaveBeenCalledWith('Post archived');
+      await waitFor(() =>
+        expect(toastSuccess).toHaveBeenCalledWith('Post archived'),
+      );
     });
 
     test('a post that no longer exists toasts an error and is not re-read', async () => {
