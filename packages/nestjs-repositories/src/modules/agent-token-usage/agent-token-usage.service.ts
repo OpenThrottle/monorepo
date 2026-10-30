@@ -11,6 +11,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import type { NormalizedTokenUsage } from '@openthrottle/agentic-token-usage';
 import { Repository, type SelectQueryBuilder } from 'typeorm';
 
+import { estimateAnthropicListPriceUsd } from '../../utils/anthropic-list-price.ts';
 import {
   CAPTURE_HEALTH_STREAMS,
   type CaptureHealthRow,
@@ -150,7 +151,9 @@ export class AgentTokenUsageService {
    * `(source, session_id, request_id)` already exists is a no-op (the partial
    * unique index `uq_agent_token_usage_request`), so `inserted` is the number
    * of rows RETURNING gave back and `skipped` is the rest of the batch.
-   * `created_at` is set explicitly from each row's `occurredAt`.
+   * `created_at` is set explicitly from each row's `occurredAt`. A row that
+   * reports no cost is priced at Anthropic list price when it can be priced
+   * exactly (see `estimateAnthropicListPriceUsd`); a reported cost is kept as is.
    */
   async recordTokenUsageBatch(
     userId: string,
@@ -173,7 +176,7 @@ export class AgentTokenUsageService {
           return {
             cachedReadTokens: row.cachedReadTokens,
             cachedWriteTokens: row.cachedWriteTokens,
-            costUsd: row.costUsd,
+            costUsd: row.costUsd ?? estimateAnthropicListPriceUsd(row),
             createdAt: row.occurredAt,
             cwd: row.cwd,
             gitBranch: row.gitBranch,

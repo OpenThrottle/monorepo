@@ -26,7 +26,7 @@ export class TokenUsageRowObject {
   conversationId!: string | null;
 
   @Field(() => Float, {
-    description: `Reported dollar cost of the turn, when priced.`,
+    description: `Dollar cost of the turn: reported by the producer, or an estimate at Anthropic list price for an unpriced Claude request. Null when it cannot be priced.`,
     nullable: true,
   })
   costUsd!: number | null;

@@ -3414,7 +3414,9 @@ type TokenUsageRowObject {
   """Source conversation id, when the usage came from chat; null otherwise."""
   conversationId: ID
 
-  """Reported dollar cost of the turn, when priced."""
+  """
+  Dollar cost of the turn: reported by the producer, or an estimate at Anthropic list price for an unpriced Claude request. Null when it cannot be priced.
+  """
   costUsd: Float
 
   """Turn completion timestamp."""
@@ -7342,7 +7344,7 @@ input RecordTokenUsageRowInput {
   cacheWriteTokens: Float
 
   """
-  Dollar cost of the turn when the producer priced it; null when unknown.
+  Dollar cost of the turn when the producer priced it. When null, the server estimates it at Anthropic list price if the request can be priced exactly.
   """
   costUsd: Float
 

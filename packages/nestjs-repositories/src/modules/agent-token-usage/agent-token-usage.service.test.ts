@@ -190,6 +190,56 @@ describe('AgentTokenUsageService', () => {
       ]);
     });
 
+    describe('when a row reports no cost', () => {
+      const pricedUsage = {
+        cache_creation: {
+          ephemeral_1h_input_tokens: 0,
+          ephemeral_5m_input_tokens: 300,
+        },
+        cache_creation_input_tokens: 300,
+        cache_read_input_tokens: 900,
+        input_tokens: 1200,
+        output_tokens: 340,
+      };
+
+      it('stores the list-price estimate for a priced model', async () => {
+        const { qb, service } = await buildBatchService([{ id: 'a' }]);
+
+        await service.recordTokenUsageBatch('user-1', [
+          { ...batchRow, model: 'claude-opus-5-5', rawUsage: pricedUsage },
+        ]);
+
+        // Opus 5.5: 1200×4 + 340×20 + 900×0.2 + 300×5 ($/MTok).
+        expect(qb.values).toHaveBeenCalledWith([
+          expect.objectContaining({
+            costUsd: expect.closeTo(
+              (1200 * 4 + 340 * 20 + 900 * 0.2 + 300 * 5) / 1e6,
+              10,
+            ),
+          }),
+        ]);
+      });
+    });
+
+    describe('when a row reports a cost', () => {
+      it('keeps the reported cost instead of estimating one', async () => {
+        const { qb, service } = await buildBatchService([{ id: 'a' }]);
+
+        await service.recordTokenUsageBatch('user-1', [
+          {
+            ...batchRow,
+            costUsd: 0.42,
+            model: 'claude-opus-5-5',
+            rawUsage: { input_tokens: 1, output_tokens: 1 },
+          },
+        ]);
+
+        expect(qb.values).toHaveBeenCalledWith([
+          expect.objectContaining({ costUsd: 0.42 }),
+        ]);
+      });
+    });
+
     it('counts RETURNING rows as inserted and the rest of the batch as skipped', async () => {
       const { service } = await buildBatchService([{ id: 'a' }, { id: 'b' }]);
 

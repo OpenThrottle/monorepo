@@ -21,7 +21,7 @@ export class RecordTokenUsageRowInput {
   cacheWriteTokens!: number | null;
 
   @Field(() => Float, {
-    description: `Dollar cost of the turn when the producer priced it; null when unknown.`,
+    description: `Dollar cost of the turn when the producer priced it. When null, the server estimates it at Anthropic list price if the request can be priced exactly.`,
     nullable: true,
   })
   costUsd!: number | null;

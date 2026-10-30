@@ -78,7 +78,7 @@ export const TOKEN_USAGE_STATS: readonly TokenUsageStatDefinition[] = [
   },
   {
     field: `costUsd`,
-    hint: `Reported cost, for backends that price a turn. Claude Code rows carry none.`,
+    hint: `Reported cost where the backend prices a turn. Claude Code rows are an estimate at Anthropic list prices.`,
     kind: `cost`,
     label: `Cost`,
   },
@@ -110,7 +110,7 @@ export const TOKEN_USAGE_COPY = {
     `No ${label} token usage in this range.`,
   heading: `Model token usage`,
   intro: (rangeDays: number): string =>
-    `Token accounting over the last ${rangeDays} days from two sources, normalized across every provider: persisted OpenThrottle chat turns (Private-mode turns are excluded) and interactive Claude Code sessions in this repository, read from the session transcript when a session stops, one row per API request. Chat turns report cost where the backend prices them; Claude Code transcripts carry no cost, so those rows show tokens only.`,
+    `Token accounting over the last ${rangeDays} days from two sources, normalized across every provider: persisted OpenThrottle chat turns (Private-mode turns are excluded) and interactive Claude Code sessions in this repository, read from the session transcript when a session stops, one row per API request. Chat turns report cost where the backend prices them. Claude Code transcripts carry no cost, so those rows are estimated at Anthropic's published list prices: subscription plans don't pay per token, and a request that can't be priced exactly shows no cost rather than $0.`,
   sources: {
     columnCost: `Cost`,
     columnInput: `Input`,

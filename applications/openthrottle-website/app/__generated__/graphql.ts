@@ -4065,7 +4065,7 @@ export type RecordTokenUsageRowInput = {
   cacheReadTokens?: InputMaybe<Scalars['Float']['input']>;
   /** Cache-creation (cache-write) tokens for the turn, when reported. */
   cacheWriteTokens?: InputMaybe<Scalars['Float']['input']>;
-  /** Dollar cost of the turn when the producer priced it; null when unknown. */
+  /** Dollar cost of the turn when the producer priced it. When null, the server estimates it at Anthropic list price if the request can be priced exactly. */
   costUsd?: InputMaybe<Scalars['Float']['input']>;
   /** Working directory the harness reported. */
   cwd?: InputMaybe<Scalars['String']['input']>;
@@ -5595,7 +5595,7 @@ export type TokenUsageRowObject = {
   cacheWriteTokens?: Maybe<Scalars['Float']['output']>;
   /** Source conversation id, when the usage came from chat; null otherwise. */
   conversationId?: Maybe<Scalars['ID']['output']>;
-  /** Reported dollar cost of the turn, when priced. */
+  /** Dollar cost of the turn: reported by the producer, or an estimate at Anthropic list price for an unpriced Claude request. Null when it cannot be priced. */
   costUsd?: Maybe<Scalars['Float']['output']>;
   /** Turn completion timestamp. */
   createdAt: Scalars['DateTime']['output'];
