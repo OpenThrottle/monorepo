@@ -9,11 +9,12 @@
  * toolbar button opens a confirm dialog, the mutation ENQUEUES a BullMQ job and
  * returns — no navigation, no client-side link to the new plan. The job then
  * creates the plan (title and description carried over, one seed task titled
- * "Break down and scope this plan") and closes the source task out as SKIPPED
- * with a `promoted` tag and a plain-text "Promoted into plan <id>." summary
- * line. The script's original "the new plan opens" and "click through the link"
- * beats described a UI that does not exist; the beats were rewritten around what
- * does — see `./episode.ts`.
+ * "Break down and scope this plan") and closes the source task out as PROMOTED
+ * (not finished here; the work continued as its own plan), still carrying the
+ * `promoted` tag for one release, with a plain-text "Promoted into plan <id>."
+ * summary line. The script's original "the new plan opens" and "click through
+ * the link" beats described a UI that does not exist; the beats were rewritten
+ * around what does — see `./episode.ts`.
  *
  * Recording preconditions:
  * - The server must be running its queue workers (the default PROCESS_ROLE runs
@@ -22,7 +23,7 @@
  *   worker on the same Redis steals the job and fails it against the dev
  *   database. Stop the dev stack, or give the recording server its own
  *   `OT_QUEUE_PREFIX` (this is exactly the race that env var exists for).
- * - Promotion MUTATES the demo database — the task goes SKIPPED and a new plan
+ * - Promotion MUTATES the demo database — the task goes PROMOTED and a new plan
  *   appears — so re-seed between takes, like every take of every flow.
  * - The waits on the new plan's row and on the provenance line are state waits:
  *   the job is asynchronous, and the dwell after the toast is pacing, not the
@@ -100,7 +101,7 @@ export const flow: DemoFlow = {
     waitFor('[data-testid="MarkdownRenderer"]'),
     dwell(3_200),
 
-    // 0:31 — the original task: SKIPPED, tagged, and a note naming the new plan.
+    // 0:31 — the original task: PROMOTED, and a note naming the new plan.
     navigate(`/plans/${PLAN_ID}/tasks/${TASK_ID}`, 'record'),
     waitFor('text=/Promoted into plan/'),
     dwell(2_800),

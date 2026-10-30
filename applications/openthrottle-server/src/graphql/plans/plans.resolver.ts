@@ -398,7 +398,7 @@ export class PlansResolver {
   }
 
   @ResolveField(() => Int, {
-    description: `Number of resolved tasks on this plan (status COMPLETED or SKIPPED). SKIPPED counts as done / won't be worked on (e.g. promoted).`,
+    description: `Number of resolved tasks on this plan (status COMPLETED, SKIPPED or PROMOTED). SKIPPED and PROMOTED count as done / won't be worked on here (PROMOTED continued as its own plan).`,
   })
   async tasksCompletedCount(@Parent() parent: PlanObject): Promise<number> {
     return this.loaders.tasksCompletedCountByPlanIdLoader.load(parent.id);

@@ -7,8 +7,8 @@
  * promotability and hands the job off.
  *
  * Promotable = the task exists, is not a lifecycle-hook task, and is not already
- * promoted (SKIPPED with the `promoted` tag — the same terminal state the worker's
- * idempotency guard recognizes). Returns a discriminated result the resolver maps to
+ * promoted (status PROMOTED, or the legacy `promoted` tag on a task promoted before that
+ * status existed — the same states the worker's idempotency guard recognizes). Returns a discriminated result the resolver maps to
  * the GraphQL result object; it never throws for validation failures.
  */
 
@@ -77,12 +77,13 @@ export class TaskPromotionEnqueueService {
     }
 
     if (task.status === PROMOTED_TASK_STATUS) {
-      const promotedTag = await this.tagsService
-        .getTaskTagsRepository()
-        .findOne({ where: { tag: PROMOTED_TAG, taskId } });
-      if (promotedTag != null) {
-        return { error: 'Task has already been promoted to a plan.' };
-      }
+      return { error: 'Task has already been promoted to a plan.' };
+    }
+    const promotedTag = await this.tagsService
+      .getTaskTagsRepository()
+      .findOne({ where: { tag: PROMOTED_TAG, taskId } });
+    if (promotedTag != null) {
+      return { error: 'Task has already been promoted to a plan.' };
     }
 
     const jobId = normalizedKey.key ?? `promote-${taskId}`;

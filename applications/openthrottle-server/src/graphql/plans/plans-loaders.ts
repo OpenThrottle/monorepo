@@ -16,10 +16,12 @@ import DataLoader from 'dataloader';
 
 /**
  * Task statuses that count as "resolved" for {@link PlansLoaders.tasksCompletedCountByPlanIdLoader}
- * — mirrors client `getResolvedTaskCount` (COMPLETED + SKIPPED).
+ * — mirrors client `getResolvedTaskCount` (COMPLETED + SKIPPED + PROMOTED; PROMOTED is
+ * resolved but not complete: the work continued as its own plan).
  */
 const RESOLVED_TASK_STATUSES = [
   TASK_STATUS.COMPLETED,
+  TASK_STATUS.PROMOTED,
   TASK_STATUS.SKIPPED,
 ] as const;
 

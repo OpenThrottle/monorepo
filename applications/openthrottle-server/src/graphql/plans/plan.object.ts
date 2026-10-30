@@ -69,7 +69,7 @@ export class PlanObject implements PlanData {
   taskCount?: number;
 
   @Field(() => Int, {
-    description: `Number of resolved tasks on this plan (status COMPLETED or SKIPPED). Mirrors client getResolvedTaskCount; SKIPPED counts as done / won't be worked on.`,
+    description: `Number of resolved tasks on this plan (status COMPLETED, SKIPPED or PROMOTED). Mirrors client getResolvedTaskCount; SKIPPED and PROMOTED count as done / won't be worked on here (PROMOTED continued as its own plan).`,
   })
   tasksCompletedCount?: number;
 

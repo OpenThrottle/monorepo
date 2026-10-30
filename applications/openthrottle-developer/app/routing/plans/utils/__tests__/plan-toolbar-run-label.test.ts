@@ -15,6 +15,10 @@ describe('getPlanToolbarRunButtonLabel', () => {
     expect(getPlanToolbarRunButtonLabel('PENDING')).toBe('Add to Queue');
   });
 
+  test('returns "Promoted" for PROMOTED', () => {
+    expect(getPlanToolbarRunButtonLabel('PROMOTED')).toBe('Promoted');
+  });
+
   test('returns "Queued" for QUEUED', () => {
     expect(getPlanToolbarRunButtonLabel('QUEUED')).toBe('Queued');
   });

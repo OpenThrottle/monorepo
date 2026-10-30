@@ -151,9 +151,10 @@ could be written:
   in every other task's array. Either deletion sweeps all sibling arrays, or the executor treats an
   unresolvable id as satisfied (silently parallelizing work that had a real dependency) or as
   blocking forever (deadlocking the plan). All three need deciding.
-- **SKIPPED / CANCELED dependencies.** `SKIPPED` means "deferred, may be revisited"
-  (`databases/README.md` § Status semantics) and is terminal for remaining-work purposes. A
-  dependency that is skipped is neither done nor pending, so each edge needs a rule for whether it
+- **SKIPPED / PROMOTED / CANCELED dependencies.** `SKIPPED` means "deferred, may be revisited"
+  (`databases/README.md` § Status semantics) and is terminal for remaining-work purposes; so is
+  `PROMOTED` (the work continued as its own plan, resolved here but not complete). A
+  dependency that is skipped or promoted is neither done nor pending, so each edge needs a rule for whether it
   releases its dependents — and "skipped counts as satisfied" is exactly how a task runs before the
   work it depended on.
 

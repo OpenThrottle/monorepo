@@ -551,6 +551,35 @@ describe('createWorkflowRalphOrchestrator terminal outcomes', () => {
     expect(run).not.toHaveBeenCalled();
   });
 
+  it('returns workflow_plan_already_terminal when the plan is PROMOTED', async () => {
+    const run = vi.fn(async () => '<promise>COMPLETE</promise>');
+    const iterationRunner: WorkflowRalphIterationRunner = { run };
+
+    const executeGraphqlV2 = asExecuteGraphqlV2(async (document) => {
+      const doc = document;
+      if (doc === GetServerHealthDocument) {
+        return { serverHealth: serverHealthOk };
+      }
+      if (doc === GetPlanDocument) {
+        return { plan: basePlan({ status: 'PROMOTED' }) };
+      }
+      if (doc === GetTasksByPlanIdDocument) {
+        return { tasksByPlanId: [baseTask(TASK_A, 'PENDING')] };
+      }
+      throw new Error('unmocked GraphQL document in test');
+    });
+
+    const orchestrator = createWorkflowRalphOrchestrator({
+      executeGraphqlV2,
+      iterationRunner,
+    });
+
+    const result = await orchestrator.execute({ context: { ...baseContext } });
+
+    expect(result.reason).toBe('workflow_plan_already_terminal');
+    expect(run).not.toHaveBeenCalled();
+  });
+
   it('returns workflow_tasks_exhausted (plan mode) and marks the plan COMPLETED when no task remains', async () => {
     const run = vi.fn(async () => '<promise>COMPLETE</promise>');
     const iterationRunner: WorkflowRalphIterationRunner = { run };
