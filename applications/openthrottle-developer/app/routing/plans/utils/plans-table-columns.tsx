@@ -21,6 +21,10 @@ import type { PlanCardFragment } from '~/__generated__/graphql';
 import type { PlansTableProps } from '~/routing/plans/components/PlansTable';
 import { PlansTableRowActions } from '~/routing/plans/components/PlansTableRowActions';
 import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
+import {
+  MOBILE_CARD_BLOCK_CLASS,
+  MOBILE_CARD_TITLE_CLASS,
+} from '~/routing/plans/data/data.mobile-card';
 import type { PlanStatusKey } from '~/routing/plans/types';
 import { PLANS_DETAIL_TAB_SEARCH_PARAM } from '~/routing/plans/utils/parsers';
 import { isPlanStatusKey } from '~/routing/plans/utils/utils.plans';
@@ -38,7 +42,7 @@ export const buildPlansTableColumns = (
           : 'PENDING';
 
         return (
-          <div className="p-2">
+          <div className="p-2 max-sm:p-0">
             <Link to={`/plans?status=${status}`} viewTransition={true}>
               <PlanStatusBadge status={statusKey} />
             </Link>
@@ -70,10 +74,12 @@ export const buildPlansTableColumns = (
         );
 
         return (
-          <div className="flex flex-col gap-4 overflow-hidden p-2">
-            <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <h2 className="line-clamp-1 min-w-0 text-sm font-medium text-ellipsis">
+          <div className="flex flex-col gap-4 overflow-hidden p-2 max-sm:contents">
+            <div className="max-sm:contents">
+              <div
+                className={`flex flex-wrap items-center gap-2 ${MOBILE_CARD_TITLE_CLASS}`}
+              >
+                <h2 className="line-clamp-1 min-w-0 text-sm font-medium text-ellipsis max-sm:line-clamp-2">
                   <Link
                     aria-label={`View plan: ${title}`}
                     className="hover:text-primary underline underline-offset-2"
@@ -87,7 +93,9 @@ export const buildPlansTableColumns = (
                 </h2>
               </div>
 
-              <div className="text-muted-foreground mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs">
+              <div
+                className={`text-muted-foreground mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs ${MOBILE_CARD_BLOCK_CLASS.meta}`}
+              >
                 <span
                   aria-label={`${tasksCompletedCount} of ${taskCount} tasks resolved`}
                   className="tabular-nums"
@@ -154,7 +162,9 @@ export const buildPlansTableColumns = (
             </div>
 
             {tags.length ? (
-              <div className="flex flex-wrap gap-2">
+              <div
+                className={`flex flex-wrap gap-2 ${MOBILE_CARD_BLOCK_CLASS.tags}`}
+              >
                 {tags.map((tag) => (
                   <Badge
                     aria-label={`Tag: ${tag.tag}`}
@@ -173,7 +183,9 @@ export const buildPlansTableColumns = (
               </div>
             ) : null}
 
-            <div className="flex flex-wrap items-center gap-2">
+            <div
+              className={`flex flex-wrap items-center gap-2 ${MOBILE_CARD_BLOCK_CLASS.description}`}
+            >
               <MarkdownRenderer
                 className="line-clamp-5 overflow-hidden [&_p]:!mb-0 [&_p]:!text-xs"
                 source={

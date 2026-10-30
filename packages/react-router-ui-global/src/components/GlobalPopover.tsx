@@ -140,7 +140,7 @@ export const GlobalPopover = (
   const defaultTrigger = (
     <Button
       aria-label={ariaLabel}
-      className="size-7"
+      className="size-7 pointer-coarse:size-11"
       size="icon"
       type="button"
       variant="ghost"

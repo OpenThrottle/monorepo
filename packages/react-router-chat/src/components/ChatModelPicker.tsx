@@ -124,7 +124,7 @@ export const ChatModelPicker = (
           aria-expanded={open}
           aria-label="Model"
           className={clsx(
-            'h-8 w-auto min-w-40 justify-between gap-2',
+            'h-8 w-auto min-w-40 justify-between gap-2 pointer-coarse:h-11',
             className,
           )}
           data-testid="ChatModelPicker-trigger"

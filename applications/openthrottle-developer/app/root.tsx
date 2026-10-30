@@ -344,12 +344,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const envHtml = `window.env = ${JSON.stringify(env)}`;
   const favicon = `${OPENTHROTTLE_BUCKET}/branding/icons/blue/favicon.ico`;
   const manifest = `/manifest.json`;
+  const appleTouchIcon = `/apple-touch-icon.png`;
 
   // `interactive-widget=resizes-content` shrinks the layout viewport when the
   // software keyboard opens, instead of letting it overlay the visual viewport.
   // The home composer is docked with `sticky bottom-0`, so without this the
-  // bar would pin to a bottom edge hidden behind the keyboard.
-  const viewport = `initial-scale=1, interactive-widget=resizes-content, maximum-scale=1, viewport-fit=cover, width=device-width`;
+  // bar would pin to a bottom edge hidden behind the keyboard. No `maximum-scale`:
+  // it blocks pinch-zoom on Android, and inputs are 16px so iOS never focus-zooms.
+  const viewport = `initial-scale=1, interactive-widget=resizes-content, viewport-fit=cover, width=device-width`;
   const _health = data?.serverHealth ?? {};
 
   // Handlers
@@ -407,7 +409,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <link href="https://fonts.gstatic.com" rel="preconnect" />
         <link href="https://s3-us-west-1.amazonaws.com" rel="preconnect" />
         <link href="https://www.googletagmanager.com" rel="preconnect" />
-        <link href={favicon} rel="apple-touch-icon" sizes="48x48" />
+        <link href={appleTouchIcon} rel="apple-touch-icon" sizes="180x180" />
         <link href={favicon} rel="favicon" />
         <link href={favicon} rel="icon" type="image/svg+xml" />
         <link href={favicon} rel="mask-icon" type="image/svg+xml" />

@@ -36,17 +36,25 @@ export const OpenThrottleBreadcrumbs = (
 
   return (
     <Breadcrumb className={className} data-testid="OpenThrottleBreadcrumbs">
-      <BreadcrumbList>
+      <BreadcrumbList className="min-w-0 flex-nowrap sm:flex-wrap">
         {links.map((link, index) => {
           const key = `${link.to.toString()}-${index}`;
+          // Phones only fit the nearest parent next to the current page.
+          const isHiddenOnPhones = index < links.length - 1;
 
           return (
             <React.Fragment key={key}>
-              <BreadcrumbItem>
+              {/* The root crumb is short; let the titles after it absorb the squeeze. */}
+              <BreadcrumbItem
+                className={cn(
+                  index === 0 ? 'shrink-0' : 'min-w-0',
+                  isHiddenOnPhones && 'max-sm:hidden',
+                )}
+              >
                 <BreadcrumbLink asChild={true}>
                   <Link
                     className={cn(
-                      'hover:text-accent transition-colors',
+                      'hover:text-accent transition-colors max-sm:truncate',
                       link.className,
                     )}
                     to={link.to}
@@ -56,13 +64,15 @@ export const OpenThrottleBreadcrumbs = (
                   </Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
-              <BreadcrumbSeparator />
+              <BreadcrumbSeparator
+                className={cn('shrink-0', isHiddenOnPhones && 'max-sm:hidden')}
+              />
             </React.Fragment>
           );
         })}
-        <BreadcrumbItem>
+        <BreadcrumbItem className="min-w-0">
           <BreadcrumbPage
-            className="text-accent! font-semibold"
+            className="text-accent! min-w-0 font-semibold max-sm:truncate"
             key="current-breadcrumb-page"
           >
             {Array.isArray(children) ? <>{children}</> : children}

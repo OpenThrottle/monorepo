@@ -20,6 +20,7 @@ import * as React from 'react';
 import type { NavLinkProps } from 'react-router';
 import { NavLink, useLocation } from 'react-router';
 
+import { useCloseMobileSidebar } from '../hooks/useCloseMobileSidebar';
 import { getPathFromTo } from '../utils/utils.global';
 
 export interface GlobalSidebarContentLinkProps extends NavLinkProps {
@@ -51,6 +52,7 @@ export const GlobalSidebarContent = (
   // Hooks
   const location = useLocation();
   const activeItemRef = React.useRef<HTMLLIElement | null>(null);
+  const closeMobileSidebar = useCloseMobileSidebar();
 
   // Setup
   const sections = Object.keys(data ?? {});
@@ -100,6 +102,7 @@ export const GlobalSidebarContent = (
               'text-muted-foreground pointer-events-none':
                 item.disabled && !isCharlieEnabled,
             })}
+            onClick={closeMobileSidebar}
             to={item.to}
             viewTransition={true}
           >

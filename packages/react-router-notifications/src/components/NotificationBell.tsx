@@ -74,7 +74,7 @@ export const NotificationBell = (
               ? `${unreadCount} unread notifications`
               : 'Notifications'
           }
-          className="relative size-6 shrink-0 rounded-full"
+          className="relative size-6 shrink-0 rounded-full pointer-coarse:size-11"
           data-testid="notification-bell-trigger"
           variant="ghost"
         >

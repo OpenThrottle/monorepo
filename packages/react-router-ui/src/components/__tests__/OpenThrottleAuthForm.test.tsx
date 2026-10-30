@@ -75,4 +75,16 @@ describe('OpenThrottleAuthForm Component', () => {
       password: 'secret',
     });
   });
+
+  test('inputs and submit grow to 44px on coarse pointers', () => {
+    expect(component.getByTestId('auth-email-input')).toHaveClass(
+      'pointer-coarse:h-11',
+    );
+    expect(component.getByTestId('auth-password-input')).toHaveClass(
+      'pointer-coarse:h-11',
+    );
+    expect(component.getByTestId('auth-submit-button')).toHaveClass(
+      'pointer-coarse:h-11',
+    );
+  });
 });
