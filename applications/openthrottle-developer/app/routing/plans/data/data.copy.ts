@@ -189,7 +189,7 @@ export const PLAN_TAB_OUTPUT_COPY = {
  * why the mutating actions are disabled. The `*Running*` strings cover an active
  * run (QUEUED / IN_PROGRESS) — Kill run stays available and is the intended
  * mid-run action. The `*Terminal*` strings cover a finished/abandoned plan
- * (COMPLETED / CANCELED / SKIPPED): there is no more work to do here, so the
+ * (COMPLETED / CANCELED / PROMOTED / SKIPPED): there is no more work to do here, so the
  * fix is to fall forward and ship a new plan rather than to unblock the action.
  */
 export const PLAN_EDITOR_ACTIONS_COPY = {
@@ -257,7 +257,7 @@ export const PLAN_TASK_TOOLBAR_COPY = {
   markCompleteRunningTooltip: `Unavailable while the plan run is active — kill the run first.`,
   markCompleteTerminalTooltip: `The plan is in a terminal state — create a new plan to change tasks.`,
   promoteConfirmLabel: `Promote`,
-  promoteDialogBody: `This creates a new plan from this task (carrying its title, description, and tags) and closes out this task (marks it SKIPPED and tags it "promoted"). This cannot be undone from here.`,
+  promoteDialogBody: `This creates a new plan from this task (carrying its title, description, and tags) and closes out this task (marks it PROMOTED, meaning the work continued as its own plan). This cannot be undone from here.`,
   promoteDialogTitle: `Promote task to a plan?`,
   promoteLabel: `Promote to Plan`,
   promoteRunningTooltip: `Unavailable while the plan run is active — kill the run first.`,

@@ -52,6 +52,7 @@ describe('tool descriptions reflect the canonical status set', () => {
       'COMPLETED',
       'IN_PROGRESS',
       'PENDING',
+      'PROMOTED',
       'QUEUED',
       'SKIPPED',
     ]) {

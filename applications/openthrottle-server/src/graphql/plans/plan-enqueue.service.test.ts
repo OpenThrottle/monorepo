@@ -571,6 +571,30 @@ describe('PlanEnqueueService', () => {
       });
     });
 
+    test('the QUEUED reset leaves COMPLETED and PROMOTED tasks alone', async () => {
+      await service.enqueueOrchestrator({
+        actorKind: 'user',
+        actorSub: 'user-42',
+        branch: 'feature/test',
+        idempotencyKey: null,
+        mode: null,
+        planId: mockPlan.id,
+        priority: null,
+        taskId: null,
+        workingDirectory: null,
+      });
+
+      const statusFilter = mockTaskUpdateQueryBuilder.andWhere.mock.calls.find(
+        ([clause]) => clause === 'task.status IN (:...fromStatuses)',
+      );
+      expect(statusFilter?.[1]).toEqual({
+        fromStatuses: expect.not.arrayContaining(['COMPLETED']),
+      });
+      expect(statusFilter?.[1]).toEqual({
+        fromStatuses: expect.not.arrayContaining(['PROMOTED']),
+      });
+    });
+
     test('a fatal task-status capture failure rolls back the enqueue transaction', async () => {
       mockTaskSelectGetMany.mockResolvedValue([
         { id: 'task-a', status: 'PENDING' },

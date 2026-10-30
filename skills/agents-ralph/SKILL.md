@@ -34,7 +34,7 @@ disable-model-invocation: false
 - Follow [`AGENTS.md`](../../AGENTS.md) § Code style, and the commit/PR skills —
   [`github-commit`](../github-commit/SKILL.md), [`github-pull-request`](../github-pull-request/SKILL.md),
   [`github-squash`](../github-squash/SKILL.md).
-- Task states: `BACKLOG`, `BLOCKED`, `CANCELED`, `COMPLETED`, `IN_PROGRESS`, `PENDING`, `QUEUED`, `SKIPPED`
+- Task states: `BACKLOG`, `BLOCKED`, `CANCELED`, `COMPLETED`, `IN_PROGRESS`, `PENDING`, `PROMOTED`, `QUEUED`, `SKIPPED`
 - **One task at a time.** Resume the lowest `sortOrder` `IN_PROGRESS` task first; otherwise pick the lowest `sortOrder` `PENDING` or `QUEUED`. Canonical list order is `sortOrder ASC`, `createdAt ASC` — not `createdAt` alone. Injected plan/task lists follow this order.
 - **Fix task order:** prefer MCP `reorder_plan_tasks` (GraphQL `reorderPlanTasks`) over delete-and-recreate when Ralph should run tasks in a different sequence. Batch `create_tasks` appends after the plan max when `sortOrder` is omitted per item.
 - **Commit frequently.** Run `/github-commit` when a task is completed and whenever the program needs to exit (e.g. before stopping or when handing off). Use conventional commits; include **Plan-Id** and **Task-Id** in the commit body or footer for traceability. A task that changes no tracked file needs no commit — don't make an empty or cosmetic one; the squash takes its Task-Id from OT ([`github-squash` § Footers](../github-squash/SKILL.md#footers)). Record commit hashes in task/stream as you go.

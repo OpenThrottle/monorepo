@@ -172,9 +172,9 @@ export const usePlanDetailRoute = (
     ? plan.status
     : 'PENDING';
 
-  // Resolved = COMPLETED or SKIPPED (skipped tasks are effectively done / won't
-  // be worked on, e.g. promoted into their own plan), so both count toward the
-  // Tasks-tab progress numerator.
+  // Resolved = COMPLETED, PROMOTED or SKIPPED (no more work to do here; promoted
+  // tasks continued as their own plan), so all count toward the Tasks-tab
+  // progress numerator.
   const resolvedTaskCount = getResolvedTaskCount(tasks);
 
   // Whether the page-level toolbar's Run/Queue is blocked. Reuses the config

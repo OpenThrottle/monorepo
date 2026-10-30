@@ -61,20 +61,40 @@ contract: [task-wave-encoding.md](./task-wave-encoding.md).
 
 ### Status lifecycle
 
-Both plans and tasks carry a `status` from a fixed enum. The canonical statuses are **`BACKLOG`**, **`BLOCKED`**, **`CANCELED`**, **`COMPLETED`**, **`IN_PROGRESS`**, **`PENDING`**, **`SKIPPED`** (plus **`QUEUED`** for plans only — set when a Run-plan job is enqueued in BullMQ until the worker picks it up).
+Both plans and tasks carry a `status` from a fixed enum. The canonical statuses are **`BACKLOG`**, **`BLOCKED`**, **`CANCELED`**, **`COMPLETED`**, **`IN_PROGRESS`**, **`PENDING`**, **`PROMOTED`**, **`SKIPPED`** (plus **`QUEUED`** for plans only — set when a Run-plan job is enqueued in BullMQ until the worker picks it up).
 
 The everyday task path is:
 
 ```text
 PENDING ──▶ IN_PROGRESS ──▶ COMPLETED
-                 │
-                 ├──▶ BLOCKED   (waiting on something; record why in summary)
-                 └──▶ SKIPPED / CANCELED
+   │             │
+   │             ├──▶ BLOCKED   (waiting on something; record why in summary)
+   │             └──▶ SKIPPED / CANCELED
+   │
+   └──▶ PROMOTED  (set by promote_task from any open status: the work continues as its own plan)
 ```
 
 - You **drive lifecycle by updating `status`** (via `update_task` / `update_plan`), not by recreating rows.
 - Transitioning into `COMPLETED` stamps `completed_at`; leaving `COMPLETED` clears it.
-- "Remaining work" (e.g. `get_remaining_tasks_for_plan`) means any status that is **not** `COMPLETED`, `SKIPPED`, or `CANCELED`.
+- "Remaining work" (e.g. `get_remaining_tasks_for_plan`) means any status that is **not** `COMPLETED`, `PROMOTED`, `SKIPPED`, or `CANCELED`.
+
+#### What `PROMOTED` means
+
+`PROMOTED` = **not finished here; the work continued as its own plan.** `promote_task` writes it on the source task. It is the only way a task reaches `PROMOTED` — you do not set it by hand.
+
+| Status      | Resolved (counts toward progress) | Terminal (no more work here) | Complete (the work was done here) |
+| ----------- | --------------------------------- | ---------------------------- | --------------------------------- |
+| `COMPLETED` | yes                               | yes                          | yes                               |
+| `PROMOTED`  | yes                               | yes                          | **no**                            |
+| `SKIPPED`   | yes                               | yes                          | no                                |
+| `CANCELED`  | no                                | yes                          | no                                |
+
+- **Resolved.** Plan progress (resolved/total) and the "no remaining tasks → plan `COMPLETED`" rollup treat `PROMOTED` exactly as they treated a promotion-`SKIPPED` before it existed — promoting a task never un-finishes its plan.
+- **Membership: plans and tasks.** `plan_task_status` is one shared Postgres enum, and `plan-task-status.constants.test.ts` asserts `TASK_STATUS === PLAN_STATUS − QUEUED`. A tasks-only `PROMOTED` would turn that into a two-exception rule and weaken the parity gate, so the value is valid on both. Promoting a _plan_ is not an operation today; the label is permitted, not used.
+- **Enum position:** `ADD VALUE 'PROMOTED' AFTER 'PENDING'`, giving `… QUEUED, PENDING, PROMOTED, SKIPPED` — next to the status it was split out of.
+- **The `promoted` tag is kept** alongside the status for one release. Readers accept **status or tag** (`status === 'PROMOTED' || tags include 'promoted'`), so rows promoted before the change and rows backfilled by migration render and guard identically. Retire the tag write once a release has shipped with the backfill applied and no reader still needs the fallback; that retirement is its own change.
+- **`SKIPPED` keeps its other two meanings:** "won't be worked on", and the reversible orphan soft-close written by tag-action rules (`SOFT_CLOSED_TASK_STATUS`). The soft-close is **not** a promotion and stays `SKIPPED` — `inject-task` revives a task by recognising exactly that value.
+- `PROMOTED` says the work moved, not **where**. Today a note on the source task names the new plan.
 
 ### From authored to executable
 

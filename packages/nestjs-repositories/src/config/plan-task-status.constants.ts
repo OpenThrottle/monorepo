@@ -2,7 +2,7 @@
  * @description Canonical source of truth for the plan/task status vocabulary.
  *
  * Mirrors the Postgres `plan_task_status` enum (databases/migrations/028 defines
- * the base seven, 029 adds QUEUED). No TS `enum` per docs/monorepo/code-style.md — an `as const`
+ * the base seven, 029 adds QUEUED, 136 adds PROMOTED). No TS `enum` per docs/monorepo/code-style.md — an `as const`
  * map. Every layer that needs the status vocabulary (entity column typing, the
  * GraphQL `registerEnumType`, resolver input validation) reads from here so the
  * DB enum, the schema, and the MCP tool contract can never silently diverge again.
@@ -27,6 +27,7 @@ export const PLAN_STATUS = {
   COMPLETED: 'COMPLETED',
   IN_PROGRESS: 'IN_PROGRESS',
   PENDING: 'PENDING',
+  PROMOTED: 'PROMOTED',
   QUEUED: 'QUEUED',
   SKIPPED: 'SKIPPED',
 } as const;
@@ -46,6 +47,7 @@ export const TASK_STATUS = {
   COMPLETED: 'COMPLETED',
   IN_PROGRESS: 'IN_PROGRESS',
   PENDING: 'PENDING',
+  PROMOTED: 'PROMOTED',
   SKIPPED: 'SKIPPED',
 } as const;
 

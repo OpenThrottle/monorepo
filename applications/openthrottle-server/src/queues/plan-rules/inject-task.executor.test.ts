@@ -570,22 +570,25 @@ describe('InjectTaskExecutor', () => {
       expect(taskUpdate).not.toHaveBeenCalled();
     });
 
-    it('is a no-op for a task in a terminal status', async () => {
-      taskFindOne.mockResolvedValue(
-        asMock<Task>({
-          id: taskId,
-          planId,
-          sortOrder: 1000,
-          status: 'COMPLETED',
-        }),
-      );
+    it.each(['CANCELED', 'COMPLETED', 'PROMOTED', 'SKIPPED'])(
+      'is a no-op for a task in the terminal status %s',
+      async (status) => {
+        taskFindOne.mockResolvedValue(
+          asMock<Task>({
+            id: taskId,
+            planId,
+            sortOrder: 1000,
+            status,
+          }),
+        );
 
-      await executor.reconcile(
-        buildReconcile({ placement: 'last', skillSlug: 'grilling' }),
-      );
+        await executor.reconcile(
+          buildReconcile({ placement: 'last', skillSlug: 'grilling' }),
+        );
 
-      expect(taskUpdate).not.toHaveBeenCalled();
-    });
+        expect(taskUpdate).not.toHaveBeenCalled();
+      },
+    );
 
     it("orders two 'last' siblings deterministically at base+GAP, base+2·GAP", async () => {
       const siblingA = '00000000-0000-4000-8000-0000000000aa';

@@ -305,7 +305,7 @@ type PlanObject {
   taskCount: Int!
 
   """
-  Number of resolved tasks on this plan (status COMPLETED or SKIPPED). Mirrors client getResolvedTaskCount; SKIPPED counts as done / won't be worked on.
+  Number of resolved tasks on this plan (status COMPLETED, SKIPPED or PROMOTED). Mirrors client getResolvedTaskCount; SKIPPED and PROMOTED count as done / won't be worked on here (PROMOTED continued as its own plan).
   """
   tasksCompletedCount: Int!
   title: String!
@@ -5074,6 +5074,7 @@ enum PlanTaskStatus {
   COMPLETED
   IN_PROGRESS
   PENDING
+  PROMOTED
   QUEUED
   SKIPPED
 }
@@ -5721,7 +5722,7 @@ type Mutation {
   detachHook(input: DetachHookInput!): Boolean!
 
   """
-  Promote a task into a new, first-class plan. Validates the task is promotable (exists, not a lifecycle hook, not already promoted) then enqueues an async task-promotion job (enqueue-after-validate, idempotency key doubles as the BullMQ job id). The job creates the plan, carries the task's tags, seeds an initial task, closes out the source task (→ SKIPPED + `promoted` tag), and records provenance. Returns the accepted job id; the new plan surfaces via the task-status subscription once the job completes.
+  Promote a task into a new, first-class plan. Validates the task is promotable (exists, not a lifecycle hook, not already promoted) then enqueues an async task-promotion job (enqueue-after-validate, idempotency key doubles as the BullMQ job id). The job creates the plan, carries the task's tags, seeds an initial task, closes out the source task (→ PROMOTED + `promoted` tag), and records provenance. Returns the accepted job id; the new plan surfaces via the task-status subscription once the job completes.
   """
   promoteTaskToPlan(input: PromoteTaskToPlanInput!): PromoteTaskToPlanResultObject!
 
@@ -6491,7 +6492,7 @@ input SetPlanStatusInput {
   planId: ID!
 
   """
-  New plan status — one of: BACKLOG, BLOCKED, CANCELED, COMPLETED, IN_PROGRESS, PENDING, QUEUED, SKIPPED. Normalized to uppercase. Provide this OR statusEnum.
+  New plan status — one of: BACKLOG, BLOCKED, CANCELED, COMPLETED, IN_PROGRESS, PENDING, PROMOTED, QUEUED, SKIPPED. Normalized to uppercase. Provide this OR statusEnum.
   """
   status: String @deprecated(reason: "Use statusEnum (typed PlanTaskStatus). String status is still accepted (normalized to uppercase) and validated against the canonical set.")
 

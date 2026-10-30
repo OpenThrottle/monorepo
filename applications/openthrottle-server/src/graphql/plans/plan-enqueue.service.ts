@@ -45,7 +45,7 @@ import { buildPlanRunConfigSnapshotFromJobData } from './enqueue-plan-run-config
 import type { RalphPlanRunTuningInput } from './plan.input.ts';
 import { PlanStatusService } from './plan-status.service.ts';
 
-/** Task statuses reset to QUEUED when a plan run is enqueued (COMPLETED tasks are left unchanged). */
+/** Task statuses reset to QUEUED when a plan run is enqueued (COMPLETED and PROMOTED tasks are left unchanged: PROMOTED work continued as its own plan, so re-running it here would duplicate it). */
 const ENQUEUE_TASK_STATUSES_TO_RESET = [
   'PENDING',
   'IN_PROGRESS',

@@ -22,7 +22,10 @@ import type { action as taskDetailAction } from '~/routes/plans.$planId.tasks.$t
 import { PLAN_TASK_TOOLBAR_COPY } from '~/routing/plans/data/data.copy';
 
 export interface PromoteTaskButtonProps {
-  /** True when the task has already been promoted (SKIPPED + `promoted` tag). */
+  /**
+   * True when the task has already been promoted (PROMOTED status, or the legacy
+   * SKIPPED + `promoted` tag).
+   */
   readonly isPromoted: boolean;
   /**
    * True when the parent plan run is active (QUEUED / IN_PROGRESS). Promotion is
@@ -31,9 +34,10 @@ export interface PromoteTaskButtonProps {
    */
   readonly planIsRunning?: boolean;
   /**
-   * True when the parent plan is terminal (COMPLETED / CANCELED / SKIPPED).
-   * Promotion is disabled with an explanatory tooltip and cannot open the
-   * confirm dialog — there is no more work to do on a finished/abandoned plan.
+   * True when the parent plan is terminal (COMPLETED / CANCELED / PROMOTED /
+   * SKIPPED). Promotion is disabled with an explanatory tooltip and cannot open
+   * the confirm dialog — there is no more work to do on a finished/abandoned
+   * plan.
    */
   readonly planIsTerminal?: boolean;
   readonly size?: 'sm' | 'xs';
